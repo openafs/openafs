@@ -36,42 +36,41 @@ RCSID
 
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
-/*  This system is organized in a hierarchical set of related modules.  Modules
-    at one level can only call modules at the same level or below.
-    
-    At the bottom level (0) we have R, RFTP, LWP and IOMGR, i.e. the basic
-    operating system primitives.
-    
-    At the next level (1) we have
-
-	VOTER--The module responsible for casting votes when asked.  It is also
-	responsible for determining whether this server should try to become
-	a synchronization site.
-	
-	BEACONER--The module responsible for sending keep-alives out when a
-	server is actually the sync site, or trying to become a sync site.
-	
-	DISK--The module responsible for representing atomic transactions
-	on the local disk.  It maintains a new-value only log.
-	
-	LOCK--The module responsible for locking byte ranges in the database file.
-	
-    At the next level (2) we have
-	  
-	RECOVERY--The module responsible for ensuring that all members of a quorum
-	have the same up-to-date database after a new synchronization site is
-	elected.  This module runs only on the synchronization site.
-	
-    At the next level (3) we have
-    
-	REMOTE--The module responsible for interpreting requests from the sync
-	site and applying them to the database, after obtaining the appropriate
-	locks.
-	
-    At the next level (4) we have
-    
-	UBIK--The module users call to perform operations on the database.
-*/
+/*!
+ * \file
+ * This system is organized in a hierarchical set of related modules.  Modules
+ * at one level can only call modules at the same level or below.
+ * 
+ * At the bottom level (0) we have R, RFTP, LWP and IOMGR, i.e. the basic
+ * operating system primitives.
+ *
+ * At the next level (1) we have
+ *
+ * \li VOTER--The module responsible for casting votes when asked.  It is also
+ * responsible for determining whether this server should try to become
+ * a synchronization site.
+ * \li BEACONER--The module responsible for sending keep-alives out when a
+ * server is actually the sync site, or trying to become a sync site.
+ * \li DISK--The module responsible for representing atomic transactions
+ * on the local disk.  It maintains a new-value only log.
+ * \li LOCK--The module responsible for locking byte ranges in the database file.
+ * 	
+ * At the next level (2) we have
+ *  
+ * \li RECOVERY--The module responsible for ensuring that all members of a quorum
+ * have the same up-to-date database after a new synchronization site is
+ * elected.  This module runs only on the synchronization site.
+ *	
+ * At the next level (3) we have
+ *
+ * \li REMOTE--The module responsible for interpreting requests from the sync
+ * site and applying them to the database, after obtaining the appropriate
+ * locks.
+ *
+ * At the next level (4) we have
+ *
+ * \li UBIK--The module users call to perform operations on the database.
+ */
 
 
 /* some globals */
@@ -90,18 +89,21 @@ static int BeginTrans();
 
 struct rx_securityClass *ubik_sc[3];
 
-/* perform an operation at a quorum, handling error conditions.  return 0 if
-    all worked, otherwise mark failing server as down and return UERROR
-
-    Note that if any server misses an update, we must wait BIGTIME seconds before
-    allowing the transaction to commit, to ensure that the missing and possibly still
-    functioning server times out and stop handing out old data.  This is done in the commit
-    code, where we wait for a server marked down to have stayed down for BIGTIME seconds
-    before we allow a transaction to commit.  A server that fails but comes back up won't give
-    out old data because it is sent the sync count along with the beacon message that
-    marks it as *really* up (beaconSinceDown).
-*/
 #define	CStampVersion	    1	/* meaning set ts->version */
+
+/*! 
+ * \brief Perform an operation at a quorum, handling error conditions.
+ * \return 0 if all worked and a quorum was contacted successfully
+ * \return otherwise mark failing server as down and return #UERROR
+ *
+ * \note If any server misses an update, we must wait #BIGTIME seconds before
+ * allowing the transaction to commit, to ensure that the missing and possibly still
+ * functioning server times out and stops handing out old data.  This is done in the commit
+ * code, where we wait for a server marked down to have stayed down for #BIGTIME seconds
+ * before we allow a transaction to commit.  A server that fails but comes back up won't give
+ * out old data because it is sent the sync count along with the beacon message that
+ * marks it as \b really up (\p beaconSinceDown).
+ */
 afs_int32
 ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, aparm4,
 	      aparm5)
@@ -176,11 +178,19 @@ ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, aparm4,
 	return rcode;
 }
 
-/* This routine initializes the ubik system for a set of servers.  It returns 0 for success, or an error code on failure.  The set of servers is specified by serverList; nServers gives the number of entries in this array.  Finally, dbase is the returned structure representing this instance of a ubik; it is passed to various calls below.  The variable pathName provides an initial prefix used for naming storage files used by this system.  It should perhaps be generalized to a low-level disk interface providing read, write, file enumeration and sync operations.
-
-    Note that the host named by myHost should not also be listed in serverList.
-*/
-
+/*! 
+ * \brief This routine initializes the ubik system for a set of servers.
+ * \return 0 for success, or an error code on failure.
+ * \param serverList set of servers specified; nServers gives the number of entries in this array.
+ * \param pathName provides an initial prefix used for naming storage files used by this system.  
+ * \param dbase the returned structure representing this instance of an ubik; it is passed to various calls below.  
+ *
+ * \todo This routine should perhaps be generalized to a low-level disk interface providing read, write, file enumeration and sync operations.
+ *
+ * \warning The host named by myHost should not also be listed in serverList.
+ *
+ * \see ubik_ServerInit(), ubik_ServerInitByInfo()
+ */
 int
 ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 		      struct afsconf_cell *info, char clones[],
@@ -354,6 +364,9 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
 
 }
 
+/*!
+ * \see ubik_ServerInitCommon()
+ */
 int
 ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
 		      struct afsconf_cell *info, char clones[],
@@ -367,6 +380,9 @@ ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
     return code;
 }
 
+/*!
+ * \see ubik_ServerInitCommon()
+ */
 int
 ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
 		char *pathName, struct ubik_dbase **dbase)
@@ -379,17 +395,18 @@ ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
     return code;
 }
 
-/*  This routine begins a read or write transaction on the transaction
-    identified by transPtr, in the dbase named by dbase.  An open mode of
-    ubik_READTRANS identifies this as a read transaction, while a mode of
-    ubik_WRITETRANS identifies this as a write transaction.  transPtr 
-    is set to the returned transaction control block. The readAny flag is
-    set to 0 or 1 by the wrapper functions ubik_BeginTrans() or 
-    ubik_BeginTransReadAny() below.
-
-    We can only begin transaction when we have an up-to-date database.
-*/
-
+/*!
+ * \brief This routine begins a read or write transaction on the transaction
+ * identified by transPtr, in the dbase named by dbase.
+ *
+ * An open mode of ubik_READTRANS identifies this as a read transaction, 
+ * while a mode of ubik_WRITETRANS identifies this as a write transaction.
+ * transPtr is set to the returned transaction control block. 
+ * The readAny flag is set to 0 or 1 by the wrapper functions ubik_BeginTrans() or 
+ * ubik_BeginTransReadAny() below.
+ *
+ * \note We can only begin transaction when we have an up-to-date database.
+ */
 static int
 BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 	   struct ubik_trans **transPtr, int readAny)
@@ -503,6 +520,9 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
     return 0;
 }
 
+/*!
+ * \see BeginTrans()
+ */
 int
 ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 		struct ubik_trans **transPtr)
@@ -510,6 +530,9 @@ ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
     return BeginTrans(dbase, transMode, transPtr, 0);
 }
 
+/*!
+ * \see BeginTrans()
+ */
 int
 ubik_BeginTransReadAny(register struct ubik_dbase *dbase, afs_int32 transMode,
 		       struct ubik_trans **transPtr)
@@ -517,7 +540,9 @@ ubik_BeginTransReadAny(register struct ubik_dbase *dbase, afs_int32 transMode,
     return BeginTrans(dbase, transMode, transPtr, 1);
 }
 
-/* this routine ends a read or write transaction by aborting it */
+/*!
+ * \brief This routine ends a read or write transaction by aborting it.
+ */
 int
 ubik_AbortTrans(register struct ubik_trans *transPtr)
 {
@@ -559,7 +584,10 @@ ubik_AbortTrans(register struct ubik_trans *transPtr)
     return (code ? code : code2);
 }
 
-/* This routine ends a read or write transaction on the open transaction identified by transPtr.  It returns an error code. */
+/*!
+ * \brief This routine ends a read or write transaction on the open transaction identified by transPtr.
+ * \return an error code.
+ */
 int
 ubik_EndTrans(register struct ubik_trans *transPtr)
 {
@@ -673,8 +701,13 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
     return 0;
 }
 
-/* This routine reads length bytes into buffer from the current position in the database.  The file pointer is updated appropriately (by adding the number of bytes actually transferred), and the length actually transferred is stored in the long integer pointed to by length.  Note that *length is an INOUT parameter: at the start it represents the size of the buffer, and when done, it contains the number of bytes actually transferred.  A short read returns zero for an error code. */
-
+/*!
+ * \brief This routine reads length bytes into buffer from the current position in the database.
+ * 
+ * The file pointer is updated appropriately (by adding the number of bytes actually transferred), and the length actually transferred is stored in the long integer pointed to by length.  A short read returns zero for an error code.
+ *
+ * \note *length is an INOUT parameter: at the start it represents the size of the buffer, and when done, it contains the number of bytes actually transferred.
+ */
 int
 ubik_Read(register struct ubik_trans *transPtr, char *buffer,
 	  afs_int32 length)
@@ -698,9 +731,11 @@ ubik_Read(register struct ubik_trans *transPtr, char *buffer,
     return code;
 }
 
-/* This routine will flush the io data in the iovec structures. It first
- * flushes to the local disk and then uses ContactQuorum to write it to 
- * the other servers.
+/*!
+ * \brief This routine will flush the io data in the iovec structures. 
+ *
+ * It first flushes to the local disk and then uses ContactQuorum to write it
+ * to the other servers.
  */
 int
 ubik_Flush(struct ubik_trans *transPtr)
@@ -826,8 +861,13 @@ ubik_Write(register struct ubik_trans *transPtr, char *buffer,
     return error;
 }
 
-/* This sets the file pointer associated with the current transaction to the appropriate file and byte position.  Unlike Unix files, a transaction is labelled by both a file number (fileid) and a byte position relative to the specified file (position). */
-
+/*!
+ * \brief This sets the file pointer associated with the current transaction
+ * to the appropriate file and byte position.
+ *
+ * Unlike Unix files, a transaction is labelled by both a file number \p fileid
+ * and a byte position relative to the specified file \p position.
+ */
 int
 ubik_Seek(register struct ubik_trans *transPtr, afs_int32 fileid,
 	  afs_int32 position)
@@ -846,8 +886,10 @@ ubik_Seek(register struct ubik_trans *transPtr, afs_int32 fileid,
     return code;
 }
 
-/* This call returns the file pointer associated with the specified transaction in fileid and position. */
-
+/*!
+ * \brief This call returns the file pointer associated with the specified
+ * transaction in \p fileid and \p position.
+ */
 int
 ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
 	  afs_int32 * position)
@@ -859,8 +901,10 @@ ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
     return 0;
 }
 
-/* This sets the file size for the currently-selected file to length bytes, if length is less than the file's current size. */
-
+/*!
+ * \brief This sets the file size for the currently-selected file to \p length
+ * bytes, if length is less than the file's current size.
+ */
 int
 ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
 {
@@ -897,7 +941,9 @@ ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
     return error;
 }
 
-/* set a lock; all locks are released on transaction end (commit/abort) */
+/*!
+ * \brief set a lock; all locks are released on transaction end (commit/abort)
+ */
 int
 ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
 	     int atype)
@@ -943,7 +989,9 @@ ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
     return error;
 }
 
-/* utility to wait for a version # to change */
+/*!
+ * \brief utility to wait for a version # to change
+ */
 int
 ubik_WaitVersion(register struct ubik_dbase *adatabase,
 		 register struct ubik_version *aversion)
@@ -962,7 +1010,9 @@ ubik_WaitVersion(register struct ubik_dbase *adatabase,
     }
 }
 
-/* utility to get the version of the dbase a transaction is dealing with */
+/*!
+ * \brief utility to get the version of the dbase a transaction is dealing with
+ */
 int
 ubik_GetVersion(register struct ubik_trans *atrans,
 		register struct ubik_version *avers)
@@ -971,11 +1021,14 @@ ubik_GetVersion(register struct ubik_trans *atrans,
     return 0;
 }
 
-/* Facility to simplify database caching.  Returns zero if last trans was done
-   on the local server and was successful.  If return value is non-zero and the
-   caller is a server caching part of the Ubik database, it should invalidate
-   that cache.  A return value of -1 means bad (NULL) argument. */
-
+/*!
+ * \brief Facility to simplify database caching.  
+ * \return zero if last trans was done on the local server and was successful.
+ * \return -1 means bad (NULL) argument.
+ * 
+ * If return value is non-zero and the caller is a server caching part of the 
+ * Ubik database, it should invalidate that cache.
+ */
 int
 ubik_CacheUpdate(register struct ubik_trans *atrans)
 {
@@ -984,6 +1037,14 @@ ubik_CacheUpdate(register struct ubik_trans *atrans)
     return vcmp(atrans->dbase->cachedVersion, atrans->dbase->version) != 0;
 }
 
+/*!
+ * "Who said anything about panicking?" snapped Arthur. 
+ * "This is still just the culture shock. You wait till I've settled down
+ * into the situation and found my bearings. \em Then I'll start panicking!"
+ * --Authur Dent
+ *
+ * \returns There is no return from panic.
+ */
 int
 panic(char *a, char *b, char *c, char *d)
 {
@@ -994,10 +1055,10 @@ panic(char *a, char *b, char *c, char *d)
     exit(1);			/* never know, though  */
 }
 
-/*
-** This functions takes an IP addresses as its parameter. It returns the
-** the primary IP address that is on the host passed in.
-*/
+/*!
+ * This function takes an IP addresses as its parameter. It returns the
+ * the primary IP address that is on the host passed in, or 0 if not found.
+ */
 afs_uint32
 ubikGetPrimaryInterfaceAddr(afs_uint32 addr)
 {

@@ -33,22 +33,22 @@ RCSID
 
 #define	PHSIZE	128
 static struct buffer {
-    struct ubik_dbase *dbase;	/* dbase within which the buffer resides */
-    afs_int32 file;		/* Unique cache key */
-    afs_int32 page;		/* page number */
+    struct ubik_dbase *dbase;	/*!< dbase within which the buffer resides */
+    afs_int32 file;		/*!< Unique cache key */
+    afs_int32 page;		/*!< page number */
     struct buffer *lru_next;
     struct buffer *lru_prev;
-    struct buffer *hashNext;	/* next dude in hash table */
-    char *data;			/* ptr to the data */
-    char lockers;		/* usage ref count */
-    char dirty;			/* is buffer modified */
-    char hashIndex;		/* back ptr to hash table */
+    struct buffer *hashNext;	/*!< next dude in hash table */
+    char *data;			/*!< ptr to the data */
+    char lockers;		/*!< usage ref count */
+    char dirty;			/*!< is buffer modified */
+    char hashIndex;		/*!< back ptr to hash table */
 } *Buffers;
 
 #define pHash(page) ((page) & (PHSIZE-1))
 
 afs_int32 ubik_nBuffers = NBUFFERS;
-static struct buffer *phTable[PHSIZE];	/* page hash table */
+static struct buffer *phTable[PHSIZE];	/*!< page hash table */
 static struct buffer *LruBuffer;
 static int nbuffers;
 static int calls = 0, ios = 0, lastb = 0;
@@ -62,7 +62,9 @@ static DTrunc(struct ubik_dbase *dbase, afs_int32 fid, afs_int32 length);
 
 static struct ubik_trunc *freeTruncList = 0;
 
-/* remove a transaction from the database's active transaction list.  Don't free it */
+/*!
+ * \brief Remove a transaction from the database's active transaction list.  Don't free it.
+ */
 static int
 unthread(struct ubik_trans *atrans)
 {
@@ -78,7 +80,9 @@ unthread(struct ubik_trans *atrans)
     return 2;			/* no entry */
 }
 
-/* some debugging assistance */
+/*!
+ * \brief some debugging assistance
+ */
 int
 udisk_Debug(struct ubik_debug *aparm)
 {
@@ -100,20 +104,21 @@ udisk_Debug(struct ubik_debug *aparm)
     return 0;
 }
 
-/* log format is defined here, and implicitly in recovery.c
+/*!
+ * \brief Write an opcode to the log.
+ *
+ * log format is defined here, and implicitly in recovery.c
  *
  * 4 byte opcode, followed by parameters, each 4 bytes long.  All integers
  * are in logged in network standard byte order, in case we want to move logs
  * from machine-to-machine someday.
  *
- * Begin transaction: opcode
- * Commit transaction: opcode, version (8 bytes)
- * Truncate file: opcode, file number, length
- * Abort transaction: opcode
- * Write data: opcode, file, position, length, <length> data bytes
+ * Begin transaction: opcode \n
+ * Commit transaction: opcode, version (8 bytes) \n
+ * Truncate file: opcode, file number, length \n
+ * Abort transaction: opcode \n
+ * Write data: opcode, file, position, length, <length> data bytes \n
  */
-
-/* write an opcode to the log */
 int
 udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
 {
@@ -141,7 +146,9 @@ udisk_LogOpcode(struct ubik_dbase *adbase, afs_int32 aopcode, int async)
     return code;
 }
 
-/* log a commit, never syncing */
+/*!
+ * \brief Log a commit, never syncing.
+ */
 int
 udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
 {
@@ -171,7 +178,9 @@ udisk_LogEnd(struct ubik_dbase *adbase, struct ubik_version *aversion)
     return code;
 }
 
-/* log a truncate operation, never syncing */
+/*!
+ * \brief Log a truncate operation, never syncing.
+ */
 int
 udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
 		  afs_int32 alength)
@@ -199,7 +208,9 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
     return 0;
 }
 
-/* write some data to the log, never syncing */
+/*!
+ * \brief Write some data to the log, never syncing.
+ */
 int
 udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, char *abuffer,
 		   afs_int32 apos, afs_int32 alen)
@@ -261,7 +272,9 @@ DInit(int abuffers)
     return 0;
 }
 
-/* Take a buffer and mark it as the least recently used buffer */
+/*!
+ * \brief Take a buffer and mark it as the least recently used buffer.
+ */
 static void
 Dlru(struct buffer *abuf)
 {
@@ -281,7 +294,9 @@ Dlru(struct buffer *abuf)
     LruBuffer = abuf;
 }
 
-/* Take a buffer and mark it as the most recently used buffer */
+/*!
+ * \brief Take a buffer and mark it as the most recently used buffer.
+ */
 static void
 Dmru(struct buffer *abuf)
 {
@@ -301,7 +316,9 @@ Dmru(struct buffer *abuf)
     LruBuffer->lru_prev = abuf;
 }
 
-/* get a pointer to a particular buffer */
+/*!
+ * \brief Get a pointer to a particular buffer.
+ */
 static char *
 DRead(struct ubik_dbase *dbase, afs_int32 fid, int page)
 {
@@ -351,7 +368,9 @@ DRead(struct ubik_dbase *dbase, afs_int32 fid, int page)
     return tb->data;
 }
 
-/* zap truncated pages */
+/*!
+ * \brief Zap truncated pages.
+ */
 static int
 DTrunc(struct ubik_dbase *dbase, afs_int32 fid, afs_int32 length)
 {
@@ -369,10 +388,13 @@ DTrunc(struct ubik_dbase *dbase, afs_int32 fid, afs_int32 length)
     return 0;
 }
 
-/* allocate a truncation entry.  We allocate special entries representing truncations, rather than
-    performing them immediately, so that we can abort a transaction easily by simply purging
-    the in-core memory buffers and discarding these truncation entries.
-*/
+/*!
+ * \brief Allocate a truncation entry.
+ *
+ * We allocate special entries representing truncations, rather than
+ * performing them immediately, so that we can abort a transaction easily by simply purging
+ * the in-core memory buffers and discarding these truncation entries.
+ */
 static struct ubik_trunc *
 GetTrunc(void)
 {
@@ -387,7 +409,9 @@ GetTrunc(void)
     return tt;
 }
 
-/* free a truncation entry */
+/*!
+ * \brief Free a truncation entry.
+ */
 static int
 PutTrunc(struct ubik_trunc *at)
 {
@@ -396,7 +420,9 @@ PutTrunc(struct ubik_trunc *at)
     return 0;
 }
 
-/* find a truncation entry for a file, if any */
+/*!
+ * \brief Find a truncation entry for a file, if any.
+ */
 static struct ubik_trunc *
 FindTrunc(struct ubik_trans *atrans, afs_int32 afile)
 {
@@ -408,7 +434,9 @@ FindTrunc(struct ubik_trans *atrans, afs_int32 afile)
     return (struct ubik_trunc *)0;
 }
 
-/* do truncates associated with trans, and free them */
+/*!
+ * \brief Do truncates associated with \p atrans, and free them.
+ */
 static int
 DoTruncs(struct ubik_trans *atrans)
 {
@@ -430,7 +458,9 @@ DoTruncs(struct ubik_trans *atrans)
     return (rcode);
 }
 
-/* mark a fid as invalid */
+/*!
+ * \brief Mark an \p fid as invalid.
+ */
 int
 udisk_Invalidate(struct ubik_dbase *adbase, afs_int32 afid)
 {
@@ -446,7 +476,9 @@ udisk_Invalidate(struct ubik_dbase *adbase, afs_int32 afid)
     return 0;
 }
 
-/* move this page into the correct hash bucket */
+/*!
+ * \brief Move this page into the correct hash bucket.
+ */
 static int
 FixupBucket(struct buffer *ap)
 {
@@ -470,7 +502,9 @@ FixupBucket(struct buffer *ap)
     return 0;
 }
 
-/* create a new slot for a particular dbase page */
+/*!
+ * \brief Create a new slot for a particular dbase page.
+ */
 static struct buffer *
 newslot(struct ubik_dbase *adbase, afs_int32 afid, afs_int32 apage)
 {
@@ -503,7 +537,9 @@ newslot(struct ubik_dbase *adbase, afs_int32 afid, afs_int32 apage)
     return pp;
 }
 
-/* Release a buffer, specifying whether or not the buffer has been modified by the locker. */
+/*!
+ * \brief Release a buffer, specifying whether or not the buffer has been modified by the locker.
+ */
 static void
 DRelease(char *ap, int flag)
 {
@@ -520,9 +556,12 @@ DRelease(char *ap, int flag)
     return;
 }
 
-/* flush all modified buffers, leaves dirty bits set (they're cleared
- * by DSync).  Note interaction with DSync: you call this thing first,
- * writing the buffers to the disk.  Then you call DSync to sync all the
+/*!
+ * \brief Flush all modified buffers, leaves dirty bits set (they're cleared
+ * by DSync()).  
+ *
+ * \note Note interaction with DSync(): you call this thing first,
+ * writing the buffers to the disk.  Then you call DSync() to sync all the
  * files that were written, and to clear the dirty bits.  You should
  * always call DFlush/DSync as a pair.
  */
@@ -547,7 +586,9 @@ DFlush(struct ubik_dbase *adbase)
     return 0;
 }
 
-/* flush all modified buffers */
+/*!
+ * \brief Flush all modified buffers.
+ */
 static int
 DAbort(struct ubik_dbase *adbase)
 {
@@ -565,7 +606,9 @@ DAbort(struct ubik_dbase *adbase)
     return 0;
 }
 
-/* must only be called after DFlush, due to its interpretation of dirty flag */
+/*!
+ * \attention DSync() must only be called after DFlush(), due to its interpretation of dirty flag.
+ */
 static int
 DSync(struct ubik_dbase *adbase)
 {
@@ -596,7 +639,9 @@ DSync(struct ubik_dbase *adbase)
     return rCode;
 }
 
-/* Same as read, only do not even try to read the page */
+/*!
+ * \brief Same as DRead(), only do not even try to read the page.
+ */
 static char *
 DNew(struct ubik_dbase *dbase, afs_int32 fid, int page)
 {
@@ -609,7 +654,9 @@ DNew(struct ubik_dbase *dbase, afs_int32 fid, int page)
     return tb->data;
 }
 
-/* read data from database */
+/*!
+ * \brief Read data from database.
+ */
 int
 udisk_read(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
 	   afs_int32 apos, afs_int32 alen)
@@ -641,7 +688,9 @@ udisk_read(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
     return 0;
 }
 
-/* truncate file */
+/*!
+ * \brief Truncate file.
+ */
 int
 udisk_truncate(struct ubik_trans *atrans, afs_int32 afile, afs_int32 alength)
 {
@@ -673,7 +722,9 @@ udisk_truncate(struct ubik_trans *atrans, afs_int32 afile, afs_int32 alength)
     return code;
 }
 
-/* write data to database, using logs */
+/*!
+ * \brief Write data to database, using logs.
+ */
 int
 udisk_write(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
 	    afs_int32 apos, afs_int32 alen)
@@ -728,7 +779,9 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
     return 0;
 }
 
-/* begin a new local transaction */
+/*!
+ * \brief Begin a new local transaction.
+ */
 int
 udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
 {
@@ -762,7 +815,9 @@ udisk_begin(struct ubik_dbase *adbase, int atype, struct ubik_trans **atrans)
     return 0;
 }
 
-/* commit transaction */
+/*!
+ * \brief Commit transaction.
+ */
 int
 udisk_commit(struct ubik_trans *atrans)
 {
@@ -841,7 +896,9 @@ udisk_commit(struct ubik_trans *atrans)
     return code;
 }
 
-/* abort transaction */
+/*!
+ * \brief Abort transaction.
+ */
 int
 udisk_abort(struct ubik_trans *atrans)
 {
@@ -874,8 +931,10 @@ udisk_abort(struct ubik_trans *atrans)
     return 0;
 }
 
-/* destroy a transaction after it has been committed or aborted.  if
- * it hasn't committed before you call this routine, we'll abort the
+/*!
+ * \brief Destroy a transaction after it has been committed or aborted.
+ *
+ * If it hasn't committed before you call this routine, we'll abort the
  * transaction for you.
  */
 int

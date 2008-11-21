@@ -40,13 +40,14 @@ RCSID
 #include "ubik.h"
 #include "ubik_int.h"
 
-/* statics used to determine if we're the sync site */
-static afs_int32 syncSiteUntil = 0;	/* valid only if amSyncSite */
-int ubik_amSyncSite = 0;	/* flag telling if I'm sync site */
-static nServers;		/* total number of servers */
-static char amIMagic = 0;	/* is this host the magic host */
-char amIClone = 0;		/* is this a clone which doesn't vote */
+/*! \name statics used to determine if we're the sync site */
+static afs_int32 syncSiteUntil = 0;	/*!< valid only if amSyncSite */
+int ubik_amSyncSite = 0;	/*!< flag telling if I'm sync site */
+static nServers;		/*!< total number of servers */
+static char amIMagic = 0;	/*!< is this host the magic host */
+char amIClone = 0;		/*!< is this a clone which doesn't vote */
 static char ubik_singleServer = 0;
+/*\}*/
 int (*ubik_CRXSecurityProc) ();
 char *ubik_CRXSecurityRock;
 afs_int32 ubikSecIndex;
@@ -54,7 +55,8 @@ struct rx_securityClass *ubikSecClass;
 static verifyInterfaceAddress();
 
 
-/* Module responsible for both deciding if we're currently the sync site,
+/*! \file
+ * Module responsible for both deciding if we're currently the sync site,
  * and keeping collecting votes so as to stay sync site.
  *
  * The basic module contacts all of the servers it can, trying to get them to vote
@@ -76,7 +78,7 @@ static verifyInterfaceAddress();
  * votes and decides for how long it is the synchronization site.
  */
 
-/* procedure called from debug rpc call to get this module's state for debugging */
+/*! \brief procedure called from debug rpc call to get this module's state for debugging */
 void
 ubeacon_Debug(aparm)
      register struct ubik_debug *aparm;
@@ -86,16 +88,21 @@ ubeacon_Debug(aparm)
     aparm->nServers = nServers;
 }
 
-/* procedure that determines whether this site has enough current votes to remain sync site.
- *  called from higher-level modules (everything but the vote module).
+/*!
+ * \brief Procedure that determines whether this site has enough current votes to remain sync site.
  *
- * If we're the sync site, check that our guarantees, obtained by the ubeacon_Interact
+ * Called from higher-level modules (everything but the vote module).
+ *
+ * If we're the sync site, check that our guarantees, obtained by the ubeacon_Interact()
  * light-weight process, haven't expired.  We're sync site as long as a majority of the
- * servers in existence have promised us unexpired guarantees.  The variable ubik_syncSiteUntil
+ * servers in existence have promised us unexpired guarantees.  The variable #ubik_syncSiteUntil
  * contains the time at which the latest of the majority of the sync site guarantees expires
- * (if the variable ubik_amSyncSite is true)
+ * (if the variable #ubik_amSyncSite is true)
  * This module also calls up to the recovery module if it thinks that the recovery module
- * may have to pick up a new database (which offucr sif we lose the sync site votes).
+ * may have to pick up a new database (which offucr sif [sic] we lose the sync site votes).
+ *
+ * \return 1 if local site is the sync site
+ * \return 0 if sync site is elsewhere
  */
 ubeacon_AmSyncSite()
 {
@@ -126,20 +133,8 @@ ubeacon_AmSyncSite()
     return rcode;
 }
 
-/* setup server list; called with two parms, first is my address, second is list of other servers
- * called only at initialization to set up the list of servers to contact for votes.  Just creates
- * the server structure.  Note that there are two connections in every server structure, one for
- * vote calls (which must always go through quickly) and one for database operations, which
- * are subject to waiting for locks.  If we used only one, the votes would sometimes get
- * held up behind database operations, and the sync site guarantees would timeout
- * even though the host would be up for communication.
- *
- * The "magic" host is the one with the lowest internet address.  It is
- * magic because its vote counts epsilon more than the others.  This acts
- * as a tie-breaker when we have an even number of hosts in the system.
- * For example, if the "magic" host is up in a 2 site system, then it
- * is sync site.  Without the magic host hack, if anyone crashed in a 2
- * site system, we'd be out of business.
+/*!
+ * \see ubeacon_InitServerListCommon()
  */
 ubeacon_InitServerListByInfo(ame, info, clones)
      afs_int32 ame;
@@ -152,6 +147,12 @@ ubeacon_InitServerListByInfo(ame, info, clones)
     return code;
 }
 
+/*!
+ * \param ame "address of me"
+ * \param aservers list of other servers
+ *
+ * \see ubeacon_InitServerListCommon()
+ */
 ubeacon_InitServerList(ame, aservers)
      afs_int32 ame;
      register afs_int32 aservers[];
@@ -164,6 +165,30 @@ ubeacon_InitServerList(ame, aservers)
     return code;
 }
 
+/*!
+ * \brief setup server list
+ *
+ * \param ame "address of me"
+ * \param aservers list of other servers
+ *
+ * called only at initialization to set up the list of servers to contact for votes.  Just creates
+ * the server structure.  
+ *
+ * The "magic" host is the one with the lowest internet address.  It is
+ * magic because its vote counts epsilon more than the others.  This acts
+ * as a tie-breaker when we have an even number of hosts in the system.
+ * For example, if the "magic" host is up in a 2 site system, then it
+ * is sync site.  Without the magic host hack, if anyone crashed in a 2
+ * site system, we'd be out of business.
+ *
+ * \note There are two connections in every server structure, one for
+ * vote calls (which must always go through quickly) and one for database operations, which
+ * are subject to waiting for locks.  If we used only one, the votes would sometimes get
+ * held up behind database operations, and the sync site guarantees would timeout
+ * even though the host would be up for communication.
+ *
+ * \see ubeacon_InitServerList(), ubeacon_InitServerListByInfo()
+ */
 ubeacon_InitServerListCommon(ame, info, clones, aservers)
      afs_int32 ame;
      struct afsconf_cell *info;
@@ -301,9 +326,11 @@ ubeacon_InitServerListCommon(ame, info, clones, aservers)
     return 0;
 }
 
-/* main lwp loop for code that sends out beacons.  This code only runs while
- * we're sync site or we want to be the sync site.  It runs in its very own light-weight
- * process.
+/*! 
+ * \brief main lwp loop for code that sends out beacons.
+ * 
+ * This code only runs while we're sync site or we want to be the sync site.
+ * It runs in its very own light-weight process.
  */
 void *
 ubeacon_Interact(void *dummy)
@@ -466,20 +493,23 @@ ubeacon_Interact(void *dummy)
     return NULL;
 }
 
-/* 
-* Input Param   : ame is the pointer to my IP address specified in the
-*                 CellServDB file. aservers is an array containing IP 
-*                 addresses of remote ubik servers. The array is 
-*                 terminated by a zero address.
-*
-* Algorithm     : Verify that my IP addresses 'ame' does actually exist
-*                 on this machine.  If any of my IP addresses are there 
-*                 in the remote server list 'aserver', remove them from 
-*                 this list.  Update global variable ubik_host[] with 
-*                 my IP addresses.
-*
-* Return Values : 0 on success, non-zero on failure
-*/
+/*!
+ * \brief Verify that a given IP addresses does actually exist on this machine.
+ *
+ * \param ame      the pointer to my IP address specified in the
+ *                 CellServDB file. 
+ * \param aservers an array containing IP 
+ *                 addresses of remote ubik servers. The array is 
+ *                 terminated by a zero address.
+ *
+ * Algorithm     : Verify that my IP addresses \p ame does actually exist
+ *                 on this machine.  If any of my IP addresses are there 
+ *                 in the remote server list \p aserver, remove them from 
+ *                 this list.  Update global variable \p ubik_host[] with 
+ *                 my IP addresses.
+ *
+ * \return 0 on success, non-zero on failure
+ */
 static
 verifyInterfaceAddress(ame, info, aservers)
      afs_uint32 *ame;		/* one of my interface addr in net byte order */
@@ -621,15 +651,17 @@ verifyInterfaceAddress(ame, info, aservers)
 }
 
 
-/* 
-* Input Param   : ubik_host is an array containing all my IP addresses.
-*
-* Algorithm     : Do an RPC to all remote ubik servers infroming them 
-*                 about my IP addresses. Get their IP addresses and
-*                 update my linked list of ubik servers 'ubik_servers'
-*
-* Return Values : 0 on success, non-zero on failure
-*/
+/*! 
+ * \brief Exchange IP address information with remote servers.
+ *
+ * \param ubik_host an array containing all my IP addresses.
+ *
+ * Algorithm     : Do an RPC to all remote ubik servers infroming them 
+ *                 about my IP addresses. Get their IP addresses and
+ *                 update my linked list of ubik servers \p ubik_servers
+ *
+ * \return 0 on success, non-zero on failure
+ */
 int
 updateUbikNetworkAddress(ubik_host)
      afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];

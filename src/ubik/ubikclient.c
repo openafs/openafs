@@ -46,11 +46,11 @@ RCSID
 #endif /* defined(UKERNEL) */
 
 
-short ubik_initializationState;	/* initial state is zero */
+short ubik_initializationState;	/*!< initial state is zero */
 
 
-/*
- * parse list for clients
+/*!
+ * \brief Parse list for clients.
  */
 int
 ubik_ParseClientList(int argc, char **argv, afs_int32 * aothers)
@@ -115,34 +115,34 @@ afs_random_once(void)
 }
 
 #endif
-/* 
- * Random number generator and constants from KnuthV2 2d ed, p170
+
+#if !defined(UKERNEL)
+/*! 
+ * \brief use time and pid to try to get some initial randomness.
+ */
+#define	ranstage(x)	(x)= (afs_uint32) (3141592621U*((afs_uint32)x)+1)
+
+/*! 
+ * \brief Random number generator and constants from KnuthV2 2d ed, p170
  *
- * Rules:
- * X = (aX + c) % m
- * m is a power of two 
- * a % 8 is 5
- * a is 0.73m  should be 0.01m .. 0.99m
- * c is more or less immaterial.  1 or a is suggested.
+ * Rules: \n
+ * X = (aX + c) % m \n
+ * m is a power of two \n
+ * a % 8 is 5 \n
+ * a is 0.73m  should be 0.01m .. 0.99m \n
+ * c is more or less immaterial.  1 or a is suggested. \n
  *
  * NB:  LOW ORDER BITS are not very random.  To get small random numbers,
  *      treat result as <1, with implied binary point, and multiply by 
  *      desired modulus.
+ *
  * NB:  Has to be unsigned, since shifts on signed quantities may preserve
  *      the sign bit.
  * 
  * In this case, m == 2^32, the mod operation is implicit. a == pi, which
  * is used because it has some interesting characteristics (lacks any
  * interesting bit-patterns).   
- * 
  */
-
-/* 
- * use time and pid to try to get some initial randomness.
- */
-#if !defined(UKERNEL)
-#define	ranstage(x)	(x)= (afs_uint32) (3141592621U*((afs_uint32)x)+1)
-
 unsigned int
 afs_random(void)
 {
@@ -171,14 +171,15 @@ afs_random(void)
 
 }
 
-/*
- * returns int 0..14 using the high bits of a pseudo-random number instead of
+/*!
+ * \brief Returns int 0..14 using the high bits of a pseudo-random number instead of
  * the low bits, as the low bits are "less random" than the high ones...
- * slight roundoff error exists, an excercise for the reader.
- * need to multiply by something with lots of ones in it, so multiply by 
+ * 
+ * \todo Slight roundoff error exists, an excercise for the reader.
+ *
+ * Need to multiply by something with lots of ones in it, so multiply by 
  * 8 or 16 is right out.
  */
-
 static unsigned int
 afs_randomMod15(void)
 {
@@ -268,11 +269,12 @@ ubik_ClientInit(register struct rx_connection **serverconns,
     return 0;
 }
 
-/* 
- * ubik_ClientDestroy - destroys a ubik connection.  It calls rx to destroy the
- * component rx connections, then frees the ubik connection structure.
+/*! 
+ * \brief Destroy an ubik connection.
+ *
+ * It calls rx to destroy the component rx connections, then frees the ubik
+ * connection structure.
  */
-
 afs_int32
 ubik_ClientDestroy(struct ubik_client * aclient)
 {
@@ -300,12 +302,11 @@ ubik_ClientDestroy(struct ubik_client * aclient)
     return 0;
 }
 
-/*
- * RefreshConn -- So that intermittent failures that cause connections to die
+/*!
+ * \brief So that intermittent failures that cause connections to die
  *     don't kill whole ubik connection, refresh them when the connection is in
  *     error.
  */
-
 struct rx_connection *
 ubik_RefreshConn(struct rx_connection *tc)
 {
@@ -357,9 +358,10 @@ ubik_client_init_mutex()
 static int *calls_needsync[SYNCCOUNT];	/* proc calls that need the sync site */
 static int synccount = 0;
 
-/*
+/*!
  * call this instead of stub and we'll guarantee to find a host that's up.
- * in the future, we should also put in a protocol to find the sync site
+ * 
+ * \todo In the future, we should also put in a protocol to find the sync site.
  */
 afs_int32
 ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
@@ -514,12 +516,13 @@ ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
 
 
 
-/*
- * call this after getting back a UNOTSYNC 
- * note that getting a UNOTSYNC error code back does *not* guarantee
+/*!
+ * \brief Call this after getting back a #UNOTSYNC.
+ *
+ * \note Getting a #UNOTSYNC error code back does \b not guarantee
  * that there is a sync site yet elected.  However, if there is a sync
  * site out there somewhere, and you're trying an operation that
- * requires a sync site, ubik will return UNOTSYNC, indicating the
+ * requires a sync site, ubik will return #UNOTSYNC, indicating the
  * operation won't work until you find a sync site
  */
 static int
@@ -570,15 +573,14 @@ try_GetSyncSite(register struct ubik_client *aclient, afs_int32 apos)
     return -1;
 }
 
-/* 
- * Create an internal version of ubik_CallIter that takes an additional
- * parameter - to indicate whether the ubik client handle has already
- * been locked.
- */
-
 #define NEED_LOCK 1
 #define NO_LOCK 0
 
+/*! 
+ * \brief Create an internal version of ubik_CallIter that takes an additional
+ * parameter - to indicate whether the ubik client handle has already
+ * been locked.
+ */
 static afs_int32
 CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
 	 p10, p11, p12, p13, p14, p15, p16, needlock)
@@ -668,9 +670,10 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
     return code;
 }
 
-/* 
- * call this instead of stub and we'll guarantee to find a host that's up.
- * in the future, we should also put in a protocol to find the sync site
+/*! 
+ * \brief Call this instead of stub and we'll guarantee to find a host that's up.
+ *
+ * \todo In the future, we should also put in a protocol to find the sync site.
  */
 afs_int32
 ubik_Call_New(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
@@ -745,8 +748,8 @@ ubik_Call_New(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
     return rcode;
 }
 
-/* 
- * This is part of an iterator.  It doesn't handle finding sync sites
+/*!
+ * \brief This is part of an iterator.  It doesn't handle finding sync sites.
  */
 afs_int32
 ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,

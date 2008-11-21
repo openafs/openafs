@@ -35,24 +35,23 @@ RCSID
 #include "ubik.h"
 #include "ubik_int.h"
 
-/* This module is responsible for determining when the system has
+/*! \file
+ * This module is responsible for determining when the system has
  * recovered to the point that it can handle new transactions.  It
  * replays logs, polls to determine the current dbase after a crash,
  * and distributes the new database to the others.
- */
-
-/* The sync site associates a version number with each database.  It
+ *
+ * The sync site associates a version number with each database.  It
  * broadcasts the version associated with its current dbase in every
  * one of its beacon messages.  When the sync site send a dbase to a
  * server, it also sends the db's version.  A non-sync site server can
  * tell if it has the right dbase version by simply comparing the
- * version from the beacon message (uvote_dbVersion) with the version
- * associated with the database (ubik_dbase->version).  The sync site
+ * version from the beacon message \p uvote_dbVersion with the version
+ * associated with the database \p ubik_dbase->version.  The sync site
  * itself simply has one counter to keep track of all of this (again
- * ubik_dbase->version).
- */
-
-/* sync site: routine called when the sync site loses its quorum; this
+ * \p ubik_dbase->version).
+ *
+ * sync site: routine called when the sync site loses its quorum; this
  * procedure is called "up" from the beacon package.  It resyncs the
  * dbase and nudges the recovery daemon to try to propagate out the
  * changes.  It also resets the recovery daemon's state, since
@@ -61,11 +60,12 @@ RCSID
  * servers.
  */
 
-/* if this flag is set, then ubik will use only the primary address 
-** ( the address specified in the CellServDB) to contact other 
-** ubik servers. Ubik recovery will not try opening connections 
-** to the alternate interface addresses. 
-*/
+/*!
+ * if this flag is set, then ubik will use only the primary address 
+ * (the address specified in the CellServDB) to contact other 
+ * ubik servers. Ubik recovery will not try opening connections 
+ * to the alternate interface addresses. 
+ */
 int ubikPrimaryAddrOnly;
 
 int
@@ -79,9 +79,13 @@ urecovery_ResetState(void)
     return 0;
 }
 
-/* sync site: routine called when a non-sync site server goes down; restarts recovery
+/*!
+ * \brief sync site
+ *
+ * routine called when a non-sync site server goes down; restarts recovery
  * process to send missing server the new db when it comes back up.
- * This routine should not do anything with variables used by non-sync site servers. 
+ *
+ * \note This routine should not do anything with variables used by non-sync site servers. 
  */
 int
 urecovery_LostServer(void)
@@ -93,7 +97,8 @@ urecovery_LostServer(void)
 #endif
 }
 
-/* return true iff we have a current database (called by both sync
+/*!
+ * return true iff we have a current database (called by both sync
  * sites and non-sync sites) How do we determine this?  If we're the
  * sync site, we wait until recovery has finished fetching and
  * re-labelling its dbase (it may still be trying to propagate it out
@@ -133,7 +138,9 @@ urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
     return rcode;
 }
 
-/* abort all transactions on this database */
+/*!
+ * \brief abort all transactions on this database
+ */
 int
 urecovery_AbortAll(struct ubik_dbase *adbase)
 {
@@ -144,7 +151,9 @@ urecovery_AbortAll(struct ubik_dbase *adbase)
     return 0;
 }
 
-/* this routine aborts the current remote transaction, if any, if the tid is wrong */
+/*!
+ * \brief this routine aborts the current remote transaction, if any, if the tid is wrong
+ */
 int
 urecovery_CheckTid(register struct ubik_tid *atid)
 {
@@ -168,17 +177,20 @@ urecovery_CheckTid(register struct ubik_tid *atid)
     return 0;
 }
 
-/* log format is defined here, and implicitly in disk.c
+/*!
+ * \brief replay logs
+ *
+ * log format is defined here, and implicitly in disk.c
  *
  * 4 byte opcode, followed by parameters, each 4 bytes long.  All integers
  * are in logged in network standard byte order, in case we want to move logs
  * from machine-to-machine someday.
  *
- * Begin transaction: opcode
- * Commit transaction: opcode, version (8 bytes)
- * Truncate file: opcode, file number, length
- * Abort transaction: opcode
- * Write data: opcode, file, position, length, <length> data bytes
+ * Begin transaction: opcode \n
+ * Commit transaction: opcode, version (8 bytes) \n
+ * Truncate file: opcode, file number, length \n
+ * Abort transaction: opcode \n
+ * Write data: opcode, file, position, length, <length> data bytes \n
  *
  * A very simple routine, it just replays the log.  Note that this is a new-value only log, which
  * implies that no uncommitted data is written to the dbase: one writes data to the log, including
@@ -189,8 +201,6 @@ urecovery_CheckTid(register struct ubik_tid *atid)
  * abort and the remaining dbase on the disk is exactly the right dbase, without having to read
  * the log.
  */
-
-/* replay logs */
 static int
 ReplayLog(register struct ubik_dbase *adbase)
 {
@@ -349,7 +359,9 @@ ReplayLog(register struct ubik_dbase *adbase)
     return code;
 }
 
-/* Called at initialization to figure out version of the dbase we really have.
+/*! \brief
+ * Called at initialization to figure out version of the dbase we really have.
+ *
  * This routine is called after replaying the log; it reads the restored labels.
  */
 static int
@@ -378,7 +390,9 @@ InitializeDB(register struct ubik_dbase *adbase)
     return 0;
 }
 
-/* initialize the local dbase
+/*!
+ * \brief initialize the local ubik_dbase
+ *
  * We replay the logs and then read the resulting file to figure out what version we've really got.
  */
 int
@@ -393,12 +407,14 @@ urecovery_Initialize(register struct ubik_dbase *adbase)
     return code;
 }
 
-/* Main interaction loop for the recovery manager
+/*!
+ * \brief Main interaction loop for the recovery manager
+ *
  * The recovery light-weight process only runs when you're the
  * synchronization site.  It performs the following tasks, if and only
  * if the prerequisite tasks have been performed successfully (it
  * keeps track of which ones have been performed in its bit map,
- * urecovery_state).
+ * \p urecovery_state).
  *
  * First, it is responsible for probing that all servers are up.  This
  * is the only operation that must be performed even if this is not
@@ -838,10 +854,11 @@ urecovery_Interact(void *dummy)
     return NULL;
 }
 
-/*
-** send a Probe to all the network address of this server 
-** Return 0  if success, else return 1
-*/
+/*!
+ * \brief send a Probe to all the network address of this server 
+ * 
+ * \return 0 if success, else return 1
+ */
 int
 DoProbe(struct ubik_server *server)
 {

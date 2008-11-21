@@ -25,7 +25,8 @@ RCSID
 #include "ubik.h"
 #include "ubik_int.h"
 
-/* Locks hang off of each transaction, with all the transaction hanging off of
+/*! \file
+ * Locks hang off of each transaction, with all the transaction hanging off of
  * the appropriate dbase.  This package expects to be used in a two-phase locking
  * protocol, so it doesn't provide a way to release anything but all of the locks in the
  * transaction.
@@ -36,12 +37,12 @@ RCSID
  *
  * It is the responsibility of the user to avoid deadlock by setting locks in a partial order.
  *
- * EWOULDBLOCK has been replaced in this file by EAGAIN. Many Unix's but not
- * all (eg. HP) do not replace EWOULDBLOCK with EAGAIN. The bad news is this
+ * #EWOULDBLOCK has been replaced in this file by #EAGAIN. Many Unix's but not
+ * all (eg. HP) do not replace #EWOULDBLOCK with #EAGAIN. The bad news is this
  * goes over the wire. The good news is that the code path is never triggered
  * as it requires ulock_getLock to be called with await = 0. And ulock_SetLock
  * isn't even used in this code base. Since NT doesn't have a native
- * EAGAIN, we are replacing all instances of EWOULDBLOCK with EAGAIN.
+ * #EAGAIN, we are replacing all instances of #EWOULDBLOCK with #EAGAIN.
  * 
  */
 
@@ -53,11 +54,13 @@ RCSID
 struct Lock rwlock;
 int rwlockinit = 1;
 
-/* Set a transaction lock.  Atype is LOCKREAD or LOCKWRITE, await is
- * true if you want to wait for the lock instead of returning
- * EWOULDLBOCK.
+/*!
+ * \brief Set a transaction lock.
+ * \param atype is #LOCKREAD or #LOCKWRITE.
+ * \param await is TRUE if you want to wait for the lock instead of returning
+ * #EWOULDBLOCK.
  *
- * The DBHOLD lock must be held.
+ * \note The #DBHOLD lock must be held.
  */
 ulock_getLock(atrans, atype, await)
      struct ubik_trans *atrans;
@@ -144,7 +147,9 @@ ulock_getLock(atrans, atype, await)
     return 0;
 }
 
-/* Release the transaction lock */
+/*!
+ * \brief Release the transaction lock.
+ */
 void
 ulock_relLock(atrans)
      struct ubik_trans *atrans;
@@ -167,7 +172,9 @@ ulock_relLock(atrans)
     return;
 }
 
-/* debugging hooks */
+/*!
+ * \brief debugging hooks
+ */
 ulock_Debug(aparm)
      struct ubik_debug *aparm;
 {

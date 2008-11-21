@@ -38,8 +38,9 @@ RCSID
 #define	UBIK_INTERNALS 1
 #include "ubik.h"
 
-/* these routines are called via the proc ptr in the ubik_dbase structure.  They provide access to
- * the physical disk, by converting the file numbers being processed (>= 0 for user data space, < 0
+/*! \file
+ * These routines are called via the proc ptr in the ubik_dbase structure.  They provide access to
+ * the physical disk, by converting the file numbers being processed ( >= 0 for user data space, < 0
  * for ubik system files, such as the log) to actual pathnames to open, read, write, truncate, sync,
  * etc.
  */
@@ -53,7 +54,9 @@ static struct fdcache {
 
 static char pbuffer[1024];
 
-/* beware, when using this function, of the header in front of most files */
+/*!
+ * \warning Beware, when using this function, of the header in front of most files.
+ */
 static int
 uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
 {
@@ -126,7 +129,9 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
     return fd;
 }
 
-/* close the file, maintaining ref count in cache structure */
+/*!
+ * \brief Close the file, maintaining ref count in cache structure.
+ */
 int
 uphys_close(register int afd)
 {
@@ -238,7 +243,11 @@ uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile,
     return code;
 }
 
-/* get number of dbase files */
+/*!
+ * \brief Get number of dbase files.
+ *
+ * \todo Really should scan dir for data.
+ */
 int
 uphys_getnfiles(register struct ubik_dbase *adbase)
 {
@@ -246,7 +255,9 @@ uphys_getnfiles(register struct ubik_dbase *adbase)
     return 1;
 }
 
-/* get database label, with aversion in host order */
+/*!
+ * \brief Get database label, with \p aversion in host order.
+ */
 int
 uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
 	       struct ubik_version *aversion)
@@ -268,7 +279,9 @@ uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
     return 0;
 }
 
-/* label database, with aversion in host order */
+/*!
+ * \brief Label database, with \p aversion in host order.
+ */
 int
 uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
 	       struct ubik_version *aversion)

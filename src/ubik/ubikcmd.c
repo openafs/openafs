@@ -31,10 +31,10 @@ RCSID
 #define UBIK_INTERNALS
 #include "ubik.h"
 
-/* This file contain useful subroutines for parsing command line args for ubik
- *   applications.
+/*! \file
+ * This file contain useful subroutines for parsing command line args for ubik
+ * applications.
  */
-
 ubik_ParseServerList(argc, argv, ahost, aothers)
      int argc;
      char **argv;

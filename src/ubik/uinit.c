@@ -43,9 +43,9 @@ RCSID
 #include <afs/afsint.h>
 #include <afs/cmd.h>
 
-/*
-  Get the appropriate type of ubik client structure out from the system.
-*/
+/*!
+ * \brief Get the appropriate type of ubik client structure out from the system.
+ */
 afs_int32
 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	       struct ubik_client **uclientp, int (*secproc) (),
