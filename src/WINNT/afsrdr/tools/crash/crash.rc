@@ -1,0 +1,15 @@
+/*
+ * Copyright 2008, Secure Endpoints Inc.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the MIT License.  
+ */
+
+/* Define VERSIONINFO resource */
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Redirector Crash"
+#define AFS_VERINFO_NAME "Crash"
+#define AFS_VERINFO_FILENAME "crash.exe"
+
+#include "..\..\AFS_component_version_number.h"
+#include "..\..\..\..\config\NTVersioninfo.rc"

@@ -263,6 +263,18 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\afslegal\lang))
 		$(MKDIR) $(OJT)\WINNT\afslegal\lang
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr))
+		$(MKDIR) $(OJT)\WINNT\afsrdr
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\gettrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\gettrace
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\settrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\settrace
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\crash))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\crash
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\afsreg))
 		$(MKDIR) $(OJT)\WINNT\afsreg
 !	ENDIF

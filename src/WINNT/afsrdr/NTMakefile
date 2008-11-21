@@ -16,7 +16,7 @@ DDK_ARCH=AMD64
 DDK_PLATFORM=WNET
 !ENDIF
 
-$(OUT)\ddkbuild.cmd:
+$(OUT)\ddkbuild.cmd: NTMakefile
         echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(AFSDEV_BUILDTYPE) > $@
         echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
         echo cd kernel >> $@
@@ -27,7 +27,7 @@ $(OUT)\ddkbuild.cmd:
         echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll AFSRedir.sys >> $@
         echo exit >> $@
 
-$(OUT)\ddkclean.cmd:
+$(OUT)\ddkclean.cmd: NTMakefile
         echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(AFSDEV_BUILDTYPE) > $@
         echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
         echo cd kernel >> $@
@@ -40,7 +40,13 @@ install: AFS_component_version_number.h $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd 
         type $(OUT)\ddkbuild.cmd
         cmd /c start /wait $(OUT)\ddkbuild.cmd
         $(COPY) kernel\AFSRedirInstall.inf build\$(CPU)\AFSRedirInstall.inf
-
+        cd tools/gettrace
+        $(MAKE) -f ntmakefile install
+        cd ../settrace
+        $(MAKE) -f ntmakefile install
+        cd ../crash
+        $(MAKE) -f ntmakefile install
+        cd ../..
 clean:: 
         $(DEL) $(OUT)\ddkbuild.cmd
         -type $(OUT)\ddkclean.cmd
@@ -58,3 +64,10 @@ clean::
         -$(DEL) *.suo
         cd ..
         -$(DEL) AFS_component_version_number.h
+        cd tools/gettrace
+        $(MAKE) -f ntmakefile clean
+        cd ../settrace
+        $(MAKE) -f ntmakefile clean
+        cd ../crash
+        $(MAKE) -f ntmakefile clean
+        cd ../..

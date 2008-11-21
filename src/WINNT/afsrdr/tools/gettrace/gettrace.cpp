@@ -3,6 +3,8 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <devioctl.h>
 
 #include "AFSUserCommon.h"
 
