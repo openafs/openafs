@@ -18,6 +18,24 @@ int main(int argc, char* argv[])
     HANDLE hControlDevice = NULL;
     char *pBuffer = NULL;
     DWORD dwError = 0;
+    DWORD dwBufferSize = 2000;
+
+    if( argc > 1)
+    {
+
+        if( strcmp(argv[ 1], "?"))
+        {
+
+            printf("Usage:GetTrace <Buffer size in KB (Default: 2000)>\n");
+
+            return 0;
+        }
+        else
+        {
+
+            dwBufferSize = atoi( argv[ 1]);
+        }
+    }
 
     hControlDevice = CreateFile( AFS_SYMLINK,
                                  GENERIC_READ | GENERIC_WRITE,
@@ -35,7 +53,9 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    pBuffer = (char *)malloc( 1024000);
+    dwBufferSize *= 1024;
+
+    pBuffer = (char *)malloc( dwBufferSize);
 
     if( pBuffer != NULL)
     {
@@ -45,7 +65,7 @@ int main(int argc, char* argv[])
                                    NULL,
                                    0,
                                    pBuffer,
-                                   1024000,
+                                   dwBufferSize,
                                    &bytesReturned,
                                    NULL);
 
