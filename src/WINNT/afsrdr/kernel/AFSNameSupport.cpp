@@ -709,6 +709,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                                                                      ulSubstituteIndex,
                                                                                      ntStatus);
 
+                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
                     try_return( ntStatus);
                 }
             }
@@ -732,6 +734,36 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 uniCurrentPath.Length += sizeof( WCHAR);
             }
+
+            //
+            // Check if the is a SymLink entry but has no Target FileID or Name. In this
+            // case it might be a DFS Link so let's go and evaluate it to be sure
+            //
+
+            if( pDirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK && 
+                pDirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
+                pDirEntry->DirectoryEntry.TargetFileId.Unique == 0 &&
+                pDirEntry->DirectoryEntry.TargetName.Length == 0)
+            {
+
+                ntStatus = AFSValidateSymLink( pDirEntry);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate possible DFS Link %wZ Status %08lX\n",
+                                                                                     FileObject,
+                                                                                     &pDirEntry->DirectoryEntry.FileName,
+                                                                                     ntStatus);
+
+                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                    break;
+                }
+            }
+
 
             //
             // Locate/create the Fcb for the current portion.
@@ -3020,7 +3052,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 continue;
             }
 
-            if( pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Hash == 0)
+            if( pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
+                pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Unique == 0)
             {
 
                 //
@@ -3057,7 +3090,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                     break;
                 }
 
-                if( pDirEntry->TargetFileId.Hash == 0)
+                if( pDirEntry->TargetFileId.Vnode == 0 &&
+                    pDirEntry->TargetFileId.Unique == 0)
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -3083,7 +3117,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
             stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId;
 
-            ASSERT( stTargetFileID.Hash != 0);
+            ASSERT( stTargetFileID.Vnode != 0 &&
+                    stTargetFileID.Unique != 0);
 
             //
             // Try to locate this FID. First the volume then the 
@@ -3467,6 +3502,7 @@ AFSProcessDFSLink( IN AFSFcb *Fcb,
     NTSTATUS ntStatus = STATUS_INVALID_DEVICE_REQUEST;
     UNICODE_STRING uniReparseName;
     UNICODE_STRING uniMUPDeviceName;
+    AFSDirEnumEntry *pDirEntry = NULL;
 
     __Enter
     {
@@ -3476,7 +3512,7 @@ AFSProcessDFSLink( IN AFSFcb *Fcb,
         // 
 
         RtlInitUnicodeString( &uniMUPDeviceName,
-                              L"\\Device\\MUP\\");
+                              L"\\Device\\MUP");
 
         uniReparseName.Length = 0;
         uniReparseName.Buffer = NULL;
@@ -3488,10 +3524,58 @@ AFSProcessDFSLink( IN AFSFcb *Fcb,
         if( Fcb->DirEntry->DirectoryEntry.TargetName.Length == 0)
         {
 
-            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            //
+            // Try to get one
+            //
+
+            ntStatus = AFSEvaluateTargetByID( &Fcb->DirEntry->DirectoryEntry.FileId,
+                                              0,
+                                              FALSE,
+                                              &pDirEntry);
+
+            if( !NT_SUCCESS( ntStatus) ||
+                pDirEntry->TargetNameLength == 0)
+            {
+
+                if( NT_SUCCESS( ntStatus) &&
+                    pDirEntry != NULL)
+                {
+
+                    ExFreePool( pDirEntry);
+                }
+
+                try_return( ntStatus = STATUS_INVALID_PARAMETER);
+            }
+
+            Fcb->DirEntry->DirectoryEntry.TargetName.Length = (USHORT)pDirEntry->TargetNameLength;
+
+            Fcb->DirEntry->DirectoryEntry.TargetName.MaximumLength = (USHORT)pDirEntry->TargetNameLength;
+
+            Fcb->DirEntry->DirectoryEntry.TargetName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                                                              Fcb->DirEntry->DirectoryEntry.TargetName.MaximumLength,
+                                                                                              AFS_NAME_BUFFER_TAG);
+
+            if( Fcb->DirEntry->DirectoryEntry.TargetName.Buffer == NULL)
+            {
+
+                Fcb->DirEntry->DirectoryEntry.TargetName.Length = 0;
+
+                Fcb->DirEntry->DirectoryEntry.TargetName.MaximumLength = 0;
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            RtlCopyMemory( Fcb->DirEntry->DirectoryEntry.TargetName.Buffer,
+                           ((char *)pDirEntry + pDirEntry->TargetNameOffset),
+                           Fcb->DirEntry->DirectoryEntry.TargetName.Length);
+
+            SetFlag( Fcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER);
+
+            ExFreePool( pDirEntry);
         }
 
         uniReparseName.MaximumLength = uniMUPDeviceName.Length +
+                                       sizeof( WCHAR) +
                                        Fcb->DirEntry->DirectoryEntry.TargetName.Length +
                                        sizeof( WCHAR);
 
@@ -3525,8 +3609,16 @@ AFSProcessDFSLink( IN AFSFcb *Fcb,
                        uniMUPDeviceName.Length);
 
         uniReparseName.Length = uniMUPDeviceName.Length;
+
+        if( Fcb->DirEntry->DirectoryEntry.TargetName.Buffer[ 0] != L'\\')
+        {
+
+            uniReparseName.Buffer[ uniReparseName.Length/sizeof( WCHAR)] = L'\\';
+
+            uniReparseName.Length += sizeof( WCHAR);
+        }
                        
-        RtlCopyMemory( &uniReparseName.Buffer[ uniReparseName.Length],
+        RtlCopyMemory( &uniReparseName.Buffer[ uniReparseName.Length/sizeof( WCHAR)],
                        Fcb->DirEntry->DirectoryEntry.TargetName.Buffer,
                        Fcb->DirEntry->DirectoryEntry.TargetName.Length);
 
@@ -3536,16 +3628,16 @@ AFSProcessDFSLink( IN AFSFcb *Fcb,
             RemainingPath->Length > 0)
         {
 
-            if( uniReparseName.Buffer[ uniReparseName.Length] != L'\\' &&
+            if( uniReparseName.Buffer[ (uniReparseName.Length/sizeof( WCHAR)) - 1] != L'\\' &&
                 RemainingPath->Buffer[ 0] != L'\\')
             {
 
-                uniReparseName.Buffer[ uniReparseName.Length] = L'\\';
+                uniReparseName.Buffer[ uniReparseName.Length/sizeof( WCHAR)] = L'\\';
 
                 uniReparseName.Length += sizeof( WCHAR);
             }
 
-            RtlCopyMemory( &uniReparseName.Buffer[ uniReparseName.Length],
+            RtlCopyMemory( &uniReparseName.Buffer[ uniReparseName.Length/sizeof( WCHAR)],
                            RemainingPath->Buffer,
                            RemainingPath->Length);
 

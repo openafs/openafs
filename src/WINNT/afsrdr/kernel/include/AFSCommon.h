@@ -924,6 +924,9 @@ NTSTATUS
 AFSEvaluateNode( IN AFSFcb *Fcb);
 
 NTSTATUS
+AFSValidateSymLink( IN AFSDirEntryCB *DirEntry);
+
+NTSTATUS
 AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB);
 
 BOOLEAN
@@ -1017,7 +1020,11 @@ void
 AFSWaitOnQueuedFlushes( IN AFSFcb *Fcb);
 
 void
-AFSWaitOnQueuedReleases();
+AFSWaitOnQueuedReleases( void);
+
+BOOLEAN
+AFSIsEqualFID( IN AFSFileID *FileId1,
+               IN AFSFileID *FileId2);
 
 //
 // Prototypes in AFSFastIoSupprt.cpp

@@ -1284,18 +1284,27 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
 
         pDirNode->DirectoryEntry.Links = DirEnumEntry->Links;
 
-        if( pDirNode->DirectoryEntry.FileType == 0)
+        //
+        // Check for the case where we ahve a filetype of SymLink but both the TargetFid and the 
+        // TagrteName are empty. In this case set the filetype to zero so we evaluate it later in
+        // the code
+        //
+
+        if( pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK && 
+            pDirNode->DirectoryEntry.TargetFileId.Vnode == 0 &&
+            pDirNode->DirectoryEntry.TargetFileId.Unique == 0 &&
+            pDirNode->DirectoryEntry.TargetName.Length == 0)
         {
 
             //
-            // If the FileID.Vnode is odd then mark it as a directory
+            // This will ensure we perform a validation on the node
             //
 
-            //if( (pDirNode->DirectoryEntry.FileId.Vnode % 2) != 0)
-            //{
-            
-            //    pDirNode->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
-            //}
+            pDirNode->DirectoryEntry.FileType = 0;
+        }
+
+        if( pDirNode->DirectoryEntry.FileType == 0)
+        {
 
             SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
         }
@@ -1553,7 +1562,8 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
                     uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
 
-                    if( RtlCompareUnicodeString( &uniTargetName,
+                    if( Fcb->DirEntry->DirectoryEntry.TargetName.Length == 0 ||
+                        RtlCompareUnicodeString( &uniTargetName,
                                                  &Fcb->DirEntry->DirectoryEntry.TargetName,
                                                  TRUE) != 0)
                     {
@@ -1631,12 +1641,9 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
         Fcb->DirEntry->DirectoryEntry.Links = pDirEntry->Links;
 
-        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-        {
-
-            Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-        }
-        else if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
+        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY ||
+            Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
+            Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
         {
 
             Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
@@ -1645,6 +1652,162 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
         {
 
             Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
+        }
+
+try_exit:
+
+        if( pDirEntry != NULL)
+        {
+
+            ExFreePool( pDirEntry);
+        }
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirEnumEntry *pDirEntry = NULL;
+    UNICODE_STRING uniTargetName;
+
+    __Enter
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSValidateSymLink Validating possible DFS Link %wZ\n",
+                                                          &DirEntry->DirectoryEntry.FileName);
+
+        ntStatus = AFSEvaluateTargetByID( &DirEntry->DirectoryEntry.FileId,
+                                          0,
+                                          FALSE,
+                                          &pDirEntry);
+
+        if( !NT_SUCCESS( ntStatus) ||
+            pDirEntry->FileType == 0)
+        {
+
+            try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
+        }
+
+        DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
+
+        DirEntry->DirectoryEntry.Expiration = pDirEntry->Expiration;
+
+        DirEntry->DirectoryEntry.DataVersion = pDirEntry->DataVersion;
+
+        //
+        // If the FileType is the same then nothing to do since it IS
+        // a SymLink
+        //
+
+        if( pDirEntry->FileType == DirEntry->DirectoryEntry.FileType)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSValidateSymLink Entry %wZ is a SymLink\n",
+                                                  &DirEntry->DirectoryEntry.FileName);
+
+            ASSERT( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK);
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
+        ASSERT( pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK);
+
+        DirEntry->DirectoryEntry.FileType = pDirEntry->FileType;
+
+        DirEntry->DirectoryEntry.CreationTime = pDirEntry->CreationTime;
+
+        DirEntry->DirectoryEntry.LastAccessTime = pDirEntry->LastAccessTime;
+
+        DirEntry->DirectoryEntry.LastWriteTime = pDirEntry->LastWriteTime;
+
+        DirEntry->DirectoryEntry.ChangeTime = pDirEntry->ChangeTime;
+
+        DirEntry->DirectoryEntry.EndOfFile = pDirEntry->EndOfFile;
+
+        DirEntry->DirectoryEntry.AllocationSize = pDirEntry->AllocationSize;
+
+        DirEntry->DirectoryEntry.FileAttributes = pDirEntry->FileAttributes;
+
+        DirEntry->DirectoryEntry.EaSize = pDirEntry->EaSize;
+
+        DirEntry->DirectoryEntry.Links = pDirEntry->Links;
+
+        DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+
+        //
+        // Update the target name information if needed
+        //
+
+        uniTargetName.Length = (USHORT)pDirEntry->TargetNameLength;
+
+        uniTargetName.MaximumLength = uniTargetName.Length;
+
+        uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
+
+        if( uniTargetName.Length == 0)
+        {
+
+            try_return( ntStatus = STATUS_SUCCESS);
+        }
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSValidateSymLink Updating entry %wZ to a DFS Link with target %wZ\n",
+                                                  &DirEntry->DirectoryEntry.FileName,
+                                                  &uniTargetName);
+
+        if( DirEntry->DirectoryEntry.TargetName.Length == 0 ||
+            RtlCompareUnicodeString( &uniTargetName,
+                                     &DirEntry->DirectoryEntry.TargetName,
+                                     TRUE) != 0)
+        {
+
+            //
+            // If we have enough space then just move in the name otherwise
+            // allocate a new buffer
+            //
+
+            if( DirEntry->DirectoryEntry.TargetName.Length < uniTargetName.Length)
+            {
+
+                WCHAR *pTmpBuffer = NULL;
+
+                pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                             uniTargetName.Length,
+                                                             AFS_NAME_BUFFER_TAG);
+
+                if( pTmpBuffer != NULL)
+                {
+
+                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+                }
+
+                if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
+                {
+
+                    ExFreePool( DirEntry->DirectoryEntry.TargetName.Buffer);
+                }
+
+                DirEntry->DirectoryEntry.TargetName.MaximumLength = uniTargetName.Length;
+
+                DirEntry->DirectoryEntry.TargetName.Buffer = pTmpBuffer;    
+
+                SetFlag( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER);
+            }
+
+            DirEntry->DirectoryEntry.TargetName.Length = uniTargetName.Length;
+
+            RtlCopyMemory( DirEntry->DirectoryEntry.TargetName.Buffer,
+                           uniTargetName.Buffer,
+                           DirEntry->DirectoryEntry.TargetName.Length);
         }
 
 try_exit:
@@ -3141,7 +3304,8 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 // For a mount point or symlink we need to ensure the target is the same
                 //
 
-                if( Fcb->DirEntry->DirectoryEntry.TargetFileId.Hash != pDirEntry->TargetFileId.Hash)
+                if( !AFSIsEqualFID( &Fcb->DirEntry->DirectoryEntry.TargetFileId,
+                                    &pDirEntry->TargetFileId))
                 {
 
                     //
@@ -3729,11 +3893,6 @@ AFSValidateDirectoryCache( IN AFSFcb *Dcb)
             if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID))
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSValidateDirectoryCache NOT Removing entry %wZ\n",
-                                                                   &pCurrentDirEntry->DirectoryEntry.FileName);
-
                 pCurrentDirEntry = (AFSDirEntryCB *)pCurrentDirEntry->ListEntry.fLink;
 
                 continue;
@@ -3913,11 +4072,6 @@ AFSValidateRootDirectoryCache( IN AFSFcb *Dcb)
 
             if( BooleanFlagOn( pCurrentDirEntry->Flags, AFS_DIR_ENTRY_VALID))
             {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSValidateRootDirectoryCache NOT Removing entry %wZ\n",
-                                                                   &pCurrentDirEntry->DirectoryEntry.FileName);
 
                 pCurrentDirEntry = (AFSDirEntryCB *)pCurrentDirEntry->ListEntry.fLink;
 
@@ -4109,18 +4263,15 @@ AFSWalkTargetChain( IN AFSFcb *ParentFcb,
             pTargetFcb = NULL;
 
             //
-            // If we are at a directory or a root node then we are done
+            // If we are at a node that is not a symlink or MP then we are done
             //
 
-            if( pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB ||
-                pCurrentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            if( pCurrentFcb->Header.NodeTypeCode != AFS_MOUNT_POINT_FCB &&
+                pCurrentFcb->Header.NodeTypeCode != AFS_SYMBOLIC_LINK_FCB)
             {
 
                 break;
             }
-
-            ASSERT( pCurrentFcb->Header.NodeTypeCode == AFS_MOUNT_POINT_FCB ||
-                    pCurrentFcb->Header.NodeTypeCode == AFS_SYMBOLIC_LINK_FCB);
         }
 
         *TargetFcb = pCurrentFcb;
@@ -4756,4 +4907,23 @@ AFSWaitOnQueuedReleases()
                            NULL);
 
     return;
+}
+
+BOOLEAN
+AFSIsEqualFID( IN AFSFileID *FileId1,
+               IN AFSFileID *FileId2)
+{
+
+    BOOLEAN bIsEqual = FALSE;
+
+    if( FileId1->Unique == FileId2->Unique &&
+        FileId1->Vnode == FileId2->Vnode &&
+        FileId1->Volume == FileId2->Volume &&
+        FileId1->Cell == FileId2->Cell)
+    {
+
+        bIsEqual = TRUE;
+    }
+
+    return bIsEqual;
 }

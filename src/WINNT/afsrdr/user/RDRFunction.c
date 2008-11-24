@@ -304,18 +304,34 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     case CM_SCACHETYPE_SYMLINK:
     case CM_SCACHETYPE_DFSLINK:
         {
+            char * mp = scp->mountPointStringp;
+
             pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
-            len = strlen(scp->mountPointStringp);
             wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
 
+            len = strlen(mp);
+            if ( len != 0 ) {
+                /* Strip off the msdfs: prefix from the target name for the file system */
+                if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+                    if (!strncmp("msdfs:", mp, 6)) {
+                        mp += 6;
+                        len -= 6;
+                    }
+                    /* only send one slash to the redirector */
+                    if (mp[0] == '\\' && mp[1] == '\\') {
+                        mp++;
+                        len--;
+                    }
+                }
 #ifdef UNICODE
-            cch = MultiByteToWideChar( CP_UTF8, 0, scp->mountPointStringp, 
-                                       len * sizeof(char),
-                                       wtarget, 
-                                       len * sizeof(WCHAR));
+                cch = MultiByteToWideChar( CP_UTF8, 0, mp, 
+                                           len * sizeof(char),
+                                           wtarget, 
+                                           len * sizeof(WCHAR));
 #else
-            mbstowcs(wtarget, scp->mountPointStringp, len);
+                mbstowcs(wtarget, mp, len);
 #endif
+            }
             pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
 
             if (dwFlags & RDR_POP_EVALUATE_SYMLINKS) {
@@ -351,8 +367,14 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 
                             cm_ReleaseSCache(targetScp);
                         } else {
-                            osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_EvaluateSymLink failed scp=0x%p code=0x%x", 
-                                      scp, code);
+                            if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+                                osi_Log0(afsd_logp, "RDR_PopulateCurrentEntry DFSLink Detected");
+                                pCurrentEntry->FileType = scp->fileType;
+                                code = 0;
+                            } else {
+                                osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_EvaluateSymLink failed scp=0x%p code=0x%x", 
+                                         scp, code);
+                            }
                         }
                     } else {
                         lock_ReleaseWrite(&linkParentScp->rw);

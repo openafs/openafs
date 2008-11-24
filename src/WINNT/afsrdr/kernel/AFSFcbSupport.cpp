@@ -304,6 +304,15 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
 
                 pFcb->Header.NodeTypeCode = AFS_SYMBOLIC_LINK_FCB;
             }
+            else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
+            {
+
+                //
+                // Reset the type to a dfs link type
+                //
+
+                pFcb->Header.NodeTypeCode = AFS_DFS_LINK_FCB;
+            }
             else
             {
 

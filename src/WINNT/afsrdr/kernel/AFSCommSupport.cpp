@@ -280,9 +280,10 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSEnumerateDirectory Inserting entry %08lX %wZ into parent %08lX Status %08lX\n",
+                                  "AFSEnumerateDirectory Inserting entry %08lX %wZ Type %08lX into parent %08lX\n",
                                                                             pDirNode,
                                                                             &pDirNode->DirectoryEntry.FileName,
+                                                                            pDirNode->DirectoryEntry.FileType,
                                                                             Dcb);
 
                     if( *DirListHead == NULL)
@@ -647,6 +648,14 @@ AFSVerifyDirectoryContent( IN AFSFcb *Dcb)
 
                     break;
                 }
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSVerifyDirectoryContent Inserting NEW entry %08lX %wZ Type %08lX into parent %08lX\n",
+                                                                            pDirNode,
+                                                                            &pDirNode->DirectoryEntry.FileName,
+                                                                            pDirNode->DirectoryEntry.FileType,
+                                                                            Dcb);
 
                 //
                 // Init the short name if we have one

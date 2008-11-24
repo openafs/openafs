@@ -577,6 +577,10 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( ntStatus == STATUS_REPARSE)
             {
 
+                bReleaseRootFcb = FALSE;
+
+                uniSubstitutedPathName.Buffer = NULL;
+
                 //
                 // Update the information and return
                 //
@@ -801,7 +805,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
 try_exit:
 
-        if( NT_SUCCESS( ntStatus))
+        if( NT_SUCCESS( ntStatus) &&
+            ntStatus != STATUS_REPARSE)
         {
 
             if( pCcb != NULL)
