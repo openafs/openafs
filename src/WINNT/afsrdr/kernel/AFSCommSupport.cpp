@@ -2656,8 +2656,6 @@ AFSProcessIrpRequest( IN PIRP Irp)
                     if( pEntry->RequestType == AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS)
                     {
 
-                        DbgPrint("AFSProcessIrpRequest Dedicated thread processing release\n");
-
                         if( pPrevEntry == NULL)
                         {
 

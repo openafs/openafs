@@ -1478,6 +1478,8 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
                     ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource);
 
+                    ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
+
                     //
                     // And init the directory specific stuff
                     //
@@ -1512,6 +1514,8 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
                     ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource);
 
+                    ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
+
                     Fcb->Header.NodeTypeCode = AFS_MOUNT_POINT_FCB;
 
                     Fcb->Specific.MountPoint.TargetFcb = NULL;
@@ -1529,6 +1533,8 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                     FsRtlUninitializeFileLock( &Fcb->Specific.File.FileLock);
 
                     ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource);
+
+                    ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
 
                     Fcb->Header.NodeTypeCode = AFS_SYMBOLIC_LINK_FCB;
 
@@ -1549,6 +1555,8 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                     FsRtlUninitializeFileLock( &Fcb->Specific.File.FileLock);
 
                     ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource);
+
+                    ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
 
                     Fcb->Header.NodeTypeCode = AFS_DFS_LINK_FCB;
 

@@ -170,7 +170,7 @@ typedef struct _AFS_NONPAGED_FCB
 
             LIST_ENTRY      DirtyExtentsList;
 
-            KSPIN_LOCK      DirtyExtentsListLock;
+            ERESOURCE       DirtyExtentsListLock;
 
             KEVENT          FlushEvent;
 
@@ -218,6 +218,7 @@ typedef struct _AFS_FSD_EXTENT
     //
     // And the extent itself
     //
+
     LARGE_INTEGER       FileOffset;
 
     LARGE_INTEGER       CacheOffset;

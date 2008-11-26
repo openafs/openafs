@@ -238,7 +238,7 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
             {
 
                 //
-                // Initialize the file specific informaiton
+                // Initialize the file specific information
                 //
 
                 FsRtlInitializeFileLock( &pFcb->Specific.File.FileLock,
@@ -276,7 +276,7 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
 
                 InitializeListHead( &pNPFcb->Specific.File.DirtyExtentsList);
 
-                KeInitializeSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock);
+                ExInitializeResourceLite( &pNPFcb->Specific.File.DirtyExtentsListLock);
 
                 KeInitializeEvent( &pNPFcb->Specific.File.FlushEvent, 
                                    SynchronizationEvent, 
@@ -1727,6 +1727,9 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
         //
 
         ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.ExtentsResource );
+
+        ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
+
     }
     else if( Fcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
     {
@@ -1753,6 +1756,8 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     ExDeleteResourceLite( &Fcb->NPFcb->Resource);
 
     ExDeleteResourceLite( &Fcb->NPFcb->PagingResource);
+
+
 
     //
     // The non paged region

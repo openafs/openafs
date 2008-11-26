@@ -388,9 +388,26 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
                 if( BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
                 {
 
-                    pRelease->FileExtents[ulProcessCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
+                    AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                                    TRUE);
 
-                    InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                    if( BooleanFlagOn( pEntry->Flags, AFS_EXTENT_DIRTY))
+                    {
+
+                        LONG dirtyCount;
+
+                        RemoveEntryList( &pEntry->DirtyList);
+
+                        pRelease->FileExtents[ulProcessCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
+
+                        dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+                        ASSERT( dirtyCount >= 0);
+
+                    }
+
+                    AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
                 }
 
                 pRelease->FileExtents[ulProcessCount].Length = pEntry->Size;
@@ -1884,7 +1901,6 @@ AFSReleaseFileExtents( IN  AFSFcb *Fcb,
     LIST_ENTRY          *le;
     NTSTATUS             ntStatus;
     ULONG                sizeLeft = BufferSize;
-    KIRQL                kIrql;
 
     ASSERT( ExIsResourceAcquiredExclusiveLite( &Fcb->NPFcb->Specific.File.ExtentsResource ));
 
@@ -1930,17 +1946,25 @@ AFSReleaseFileExtents( IN  AFSFcb *Fcb,
         if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
         {
 
-            KeAcquireSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                               &kIrql);
+            AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
+                            TRUE);
 
-            RemoveEntryList( &pExtent->DirtyList);
+            if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+            {
+                LONG dirtyCount;
 
-            KeReleaseSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                               kIrql);
+                RemoveEntryList( &pExtent->DirtyList);
 
-            InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
 
-            FileExtents[*ExtentCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
+                ASSERT( dirtyCount >= 0);
+
+                FileExtents[*ExtentCount].Flags |= AFS_EXTENT_FLAG_DIRTY;
+            
+            }
+
+            AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
         }
 
         FileExtents[*ExtentCount].Length = pExtent->Size;
@@ -2401,8 +2425,7 @@ AFSProcessReleaseFileExtents( IN PIRP Irp,
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
-        if (pExtents->FileId.Hash   != 0 ||
-            pExtents->FileId.Cell   != 0 ||
+        if (pExtents->FileId.Cell   != 0 ||
             pExtents->FileId.Volume != 0 ||
             pExtents->FileId.Vnode  != 0 ||
             pExtents->FileId.Unique != 0)
@@ -2756,8 +2779,7 @@ VOID AFSReleaseExtentsWork(AFSWorkItem *WorkItem)
 
         pExtents = (AFSReleaseFileExtentsCB*) pIrp->AssociatedIrp.SystemBuffer;
 
-        ASSERT(pExtents->FileId.Hash    == 0 &&
-               pExtents->FileId.Cell   == 0 &&
+        ASSERT(pExtents->FileId.Cell   == 0 &&
                pExtents->FileId.Volume == 0 &&
                pExtents->FileId.Vnode  == 0 &&
                pExtents->FileId.Unique == 0);
@@ -2947,6 +2969,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
     LIST_ENTRY          *le;
     AFSReleaseExtentsCB *pRelease = NULL;
     ULONG                count = 0;
+    ULONG                initialDirtyCount = 0;
     BOOLEAN              bExtentsLocked = FALSE;
     ULONG                total = 0;
     ULONG                sz = 0;
@@ -3006,6 +3029,12 @@ AFSFlushExtents( IN AFSFcb *Fcb)
         KeClearEvent( &Fcb->NPFcb->Specific.File.QueuedFlushEvent);
 
         //
+        // Initialize our local dirty list
+        //
+
+        InitializeListHead( &dirtyList);
+
+        //
         // Look for a start in the list to flush entries
         //
 
@@ -3040,6 +3069,8 @@ AFSFlushExtents( IN AFSFcb *Fcb)
             try_return( ntStatus);
         }
 
+        initialDirtyCount = Fcb->Specific.File.ExtentsDirtyCount;
+
         while( Fcb->Specific.File.ExtentsDirtyCount > 0)
         {
 
@@ -3051,17 +3082,37 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
             while( count < AFS_MAXIMUM_EXTENT_RELEASE_COUNT)
             {
+                LONG dirtyCount;
 
-                le = ExInterlockedRemoveHeadList( &pNPFcb->Specific.File.DirtyExtentsList,
-                                                  &pNPFcb->Specific.File.DirtyExtentsListLock);
+                AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
+                                TRUE);
 
-                if( le == NULL)
+                le = RemoveHeadList( &pNPFcb->Specific.File.DirtyExtentsList);
+
+                if( le == &pNPFcb->Specific.File.DirtyExtentsList)
                 {
+
+                    AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
 
                     break;
                 }
 
                 pExtent = DirtyExtentFor( le);
+
+                dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+                ASSERT(dirtyCount >= 0);
+
+                //
+                // Clear the flag in advance of the write - we'll put
+                // it back if it failed.  If we do things this was we
+                // know that the clear is pessimistic (any write which
+                // happens from now on will set the flag dirty again).
+                //
+
+                pExtent->Flags &= ~AFS_EXTENT_DIRTY;
+
+                AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
 
                 InsertTailList( &dirtyList,
                                 &pExtent->DirtyList);
@@ -3080,16 +3131,6 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
                 count ++;
 
-                InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
-
-                //
-                // Clear the flag in advance of the write - we'll put
-                // it back if it failed.  If we do things this was we
-                // know that the clear is pessimistic (any write which
-                // happens from now on will set the flag dirty again).
-                //
-
-                pExtent->Flags &= ~AFS_EXTENT_DIRTY;
             }
 
             //
@@ -3107,7 +3148,7 @@ AFSFlushExtents( IN AFSFcb *Fcb)
             }
 
             //
-            // Fire off the request syncrhonously
+            // Fire off the request synchronously
             //
 
             sz = sizeof( AFSReleaseExtentsCB ) + (count * sizeof ( AFSFileExtentCB ));
@@ -3181,9 +3222,11 @@ AFSFlushExtents( IN AFSFcb *Fcb)
 
                     pExtent = DirtyExtentFor( le);
 
-                    ExInterlockedInsertTailList( &pNPFcb->Specific.File.DirtyExtentsList,
-                                                 &pExtent->DirtyList,
-                                                 &pNPFcb->Specific.File.DirtyExtentsListLock);
+                    AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
+                                    TRUE);
+
+                    InsertTailList( &pNPFcb->Specific.File.DirtyExtentsList,
+                                    &pExtent->DirtyList);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
@@ -3194,6 +3237,9 @@ AFSFlushExtents( IN AFSFcb *Fcb)
                     pExtent->Flags |= AFS_EXTENT_DIRTY;
 
                     InterlockedIncrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+                    AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
                 }
 
                 break;
@@ -3299,26 +3345,36 @@ AFSMarkDirty( IN AFSFcb *Fcb,
             break;
         }
              
-        if (Offset->QuadPart < (pExtent->FileOffset.QuadPart + pExtent->Size))
+        if ( Offset->QuadPart < (pExtent->FileOffset.QuadPart + pExtent->Size) &&
+             !BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSMarkDirty Marking extent offset %I64X Length %08lX DIRTY\n",
+            AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
+                            TRUE);
+
+            if ( !BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY)) {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSMarkDirty Marking extent offset %I64X Length %08lX DIRTY\n",
                               pExtent->FileOffset.QuadPart,
                               pExtent->Size);        
 
-            ExInterlockedInsertTailList( &pNPFcb->Specific.File.DirtyExtentsList,
-                                         &pExtent->DirtyList,
-                                         &pNPFcb->Specific.File.DirtyExtentsListLock);
+                InsertTailList( &pNPFcb->Specific.File.DirtyExtentsList,
+                                &pExtent->DirtyList);
 
-            pExtent->Flags |= AFS_EXTENT_DIRTY;
+                pExtent->Flags |= AFS_EXTENT_DIRTY;
 
-            //
-            // Up the dirty count - no syncrhonization - this is but a hint
-            //
+                //
+                // Up the dirty count
+                //
+
+                InterlockedIncrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+            }
             
-            InterlockedIncrement( &Fcb->Specific.File.ExtentsDirtyCount);
+            AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
          }
 
         le = le->Flink;
@@ -3419,7 +3475,6 @@ AFSTrimExtents( IN AFSFcb *Fcb,
     AFSExtent           *pExtent;
     BOOLEAN              locked = FALSE;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
-    KIRQL                kIrql;
     LARGE_INTEGER        liAlignedOffset = {0,0};
     AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
@@ -3519,15 +3574,23 @@ AFSTrimExtents( IN AFSFcb *Fcb,
                 if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
                 {
 
-                    KeAcquireSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                                       &kIrql);
+                    AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
+                                    TRUE);
 
-                    RemoveEntryList( &pExtent->DirtyList);
+                    if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+                    {
+                        LONG dirtyCount;
 
-                    KeReleaseSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                                       kIrql);
+                        RemoveEntryList( &pExtent->DirtyList);
 
-                    InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                        dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+                        ASSERT(dirtyCount >= 0);
+
+                    }
+
+                    AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
                 }
 
                 for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++) 
@@ -3593,7 +3656,6 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
     AFSExtent           *pExtent;
     AFSFileExtentCB     *pFileExtents = Result;
     NTSTATUS             ntStatus = STATUS_SUCCESS;
-    KIRQL                kIrql;
     AFSDeviceExt        *pDevExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     __Enter
@@ -3624,15 +3686,24 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
                 if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
                 {
 
-                    KeAcquireSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                                       &kIrql);
+                    AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
+                                    TRUE);
 
-                    RemoveEntryList( &pExtent->DirtyList);
+                    if( BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
+                    {
 
-                    KeReleaseSpinLock( &pNPFcb->Specific.File.DirtyExtentsListLock,
-                                       kIrql);
+                        LONG dirtyCount;
 
-                    InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+                        RemoveEntryList( &pExtent->DirtyList);
+
+                        dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
+
+                        ASSERT( dirtyCount >= 0);
+
+                    }
+
+                    AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
+
                 }
 
                 for (ULONG i = 0; i < AFS_NUM_EXTENT_LISTS; i ++) 

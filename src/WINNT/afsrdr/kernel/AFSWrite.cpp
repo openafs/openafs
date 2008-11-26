@@ -1096,7 +1096,10 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
 #endif
 
-        AFSQueueFlushExtents( pFcb);
+        //
+        // already performed by AFSMarkDirty()
+        // AFSQueueFlushExtents( pFcb);
+        //
 
         if (!bPagingIo) 
         {
