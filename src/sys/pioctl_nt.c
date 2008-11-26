@@ -478,6 +478,32 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
     return bIsAFS;
 }
 
+static BOOL
+DriveIsGlobalAutoMapped(char *drivestr)
+{
+    DWORD dwResult;
+    HKEY hKey;
+    DWORD dwSubMountSize;
+    char szSubMount[260];
+    DWORD dwType;
+
+    dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                            AFSREG_CLT_SVC_PARAM_SUBKEY "\\GlobalAutoMapper", 
+                            0, KEY_QUERY_VALUE, &hKey);
+    if (dwResult != ERROR_SUCCESS)
+        return FALSE;
+
+    dwSubMountSize = sizeof(szSubMount);
+    dwType = REG_SZ;
+    dwResult = RegQueryValueEx(hKey, drivestr, 0, &dwType, szSubMount, &dwSubMountSize);
+    RegCloseKey(hKey);
+
+    if (dwResult == ERROR_SUCCESS && dwType == REG_SZ)
+        return TRUE;
+    else
+        return FALSE;
+}
+
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
@@ -497,6 +523,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD gle;
     DWORD dwSize = sizeof(szUser);
     int saveerrno;
+    UINT driveType;
 
     memset(HostName, '\0', sizeof(HostName));
     gethostname(HostName, sizeof(HostName));
@@ -511,23 +538,25 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
         if (drivep && (drivep - fileNamep) >= 1) {
-            UINT driveType;
             tbuffer[0] = *(drivep - 1);
             tbuffer[1] = ':';
-            tbuffer[2] = '\\';
-            tbuffer[3] = '\0';
+            tbuffer[2] = '\0';
 
             driveType = GetDriveType(tbuffer);
             switch (driveType) {
             case DRIVE_UNKNOWN:
             case DRIVE_REMOTE:
-                if (DriveIsMappedToAFS(tbuffer, netbiosName))
+                if (DriveIsMappedToAFS(tbuffer, netbiosName) ||
+                    DriveIsGlobalAutoMapped(tbuffer))
                     strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
                 else 
                     return -1;
                 break;
             default:
-                return -1;
+                if (DriveIsGlobalAutoMapped(tbuffer))
+                    strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                else 
+                    return -1;
             }
         } else if (fileNamep[0] == fileNamep[1] && 
 		   (fileNamep[0] == '\\' || fileNamep[0] == '/'))
@@ -552,7 +581,24 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if ( curdir[1] == ':' ) {
                 tbuffer[0] = curdir[0];
                 tbuffer[1] = ':';
-                strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+                tbuffer[2] = '\0';
+
+                driveType = GetDriveType(tbuffer);
+                switch (driveType) {
+                case DRIVE_UNKNOWN:
+                case DRIVE_REMOTE:
+                    if (DriveIsMappedToAFS(tbuffer, netbiosName) ||
+                        DriveIsGlobalAutoMapped(tbuffer))
+                        strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                    else 
+                        return -1;
+                    break;
+                default:
+                    if (DriveIsGlobalAutoMapped(tbuffer))
+                        strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                    else 
+                        return -1;
+                }
             } else if (curdir[0] == curdir[1] &&
                        (curdir[0] == '\\' || curdir[0] == '/')) 
             {
