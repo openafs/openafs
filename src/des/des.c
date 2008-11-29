@@ -41,6 +41,7 @@ RCSID
 
 #ifndef KERNEL
 #include <stdio.h>
+#include <string.h>
 #endif
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
