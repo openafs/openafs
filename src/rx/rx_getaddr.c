@@ -222,8 +222,8 @@ rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 }
 
 int
-rxi_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
-		      afs_uint32 mtuBuffer[], int maxSize)
+rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
+		     afs_uint32 mtuBuffer[], int maxSize)
 {
     int s;
 
@@ -419,8 +419,8 @@ rx_getAllAddr(afs_uint32 buffer[], int maxSize)
  * by afsi_SetServerIPRank().
  */
 int
-rxi_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
-		      afs_uint32 mtuBuffer[], int maxSize)
+rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
+                     afs_uint32 mtuBuffer[], int maxSize)
 {
     int s;
     int i, len, count = 0;

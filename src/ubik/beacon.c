@@ -528,10 +528,6 @@ verifyInterfaceAddress(ame, info, aservers)
 	    totalServers++;
     }
 
-#ifdef AFS_NT40_ENV
-    /* get all my interface addresses in net byte order */
-    count = rx_getAllAddr(myAddr, UBIK_MAX_INTERFACE_ADDR);
-#else
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
 	 * Find addresses we are supposed to register as per the netrestrict file
@@ -554,7 +550,6 @@ verifyInterfaceAddress(ame, info, aservers)
 	/* get all my interface addresses in net byte order */
 	count = rx_getAllAddr(myAddr, UBIK_MAX_INTERFACE_ADDR);
     }
-#endif
 
     if (count <= 0) {		/* no address found */
 	ubik_print("ubik: No network addresses found, aborting..");

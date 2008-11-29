@@ -1812,7 +1812,6 @@ SetupVL()
     extern int rxi_numNetAddrs;
     extern afs_uint32 rxi_NetAddrs[];
 
-#ifndef AFS_NT40_ENV
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
 	 * Find addresses we are supposed to register as per the netrestrict 
@@ -1830,7 +1829,6 @@ SetupVL()
 	}
 	FS_HostAddr_cnt = (afs_uint32) code;
     } else
-#endif
     {
 	FS_HostAddr_cnt = rx_getAllAddr(FS_HostAddrs, ADDRSPERSITE);
     }
