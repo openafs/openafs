@@ -236,6 +236,7 @@ EXPORTS
         rx_SetRxDeadTime                        @241
         rx_GetMinUdpBufSize                     @242
         rx_SetUdpBufSize                        @243        
+        rx_getAllAddrMaskMtu                    @244        
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

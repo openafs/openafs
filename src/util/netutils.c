@@ -30,12 +30,16 @@ RCSID
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #else
+#ifdef AFS_NT40_ENV
+#include <winsock2.h>
+#else 
 #ifdef __FreeBSD__
 #include <sys/types.h>
 #endif
 #include <netinet/in.h>
-#include <errno.h>
 #include <sys/errno.h>
+#endif
+#include <errno.h>
 #endif
 
 #include "assert.h"
@@ -116,7 +120,7 @@ extract_Addr(char *line, int maxSize)
  * caller can choose to ignore the entire file but should write
  * something to a log file).
  *
- * All addresses should be in NBO (as returned by rx_getAllAddr() and
+ * All addresses should be in NBO (as returned by rx_getAllAddrMaskMtu() and
  * parsed by extract_Addr().
  */
 /*
@@ -154,7 +158,7 @@ parseNetRestrictFile_int(afs_uint32 outAddrs[], afs_uint32 * mask,
     strcpy(reason, "");
 
     /* get all network interfaces from the kernel */
-    neaddrs = rxi_getAllAddrMaskMtu(eAddrs, eMask, eMtu, MAXIPADDRS);
+    neaddrs = rx_getAllAddrMaskMtu(eAddrs, eMask, eMtu, MAXIPADDRS);
     if (neaddrs <= 0) {
 	sprintf(reason, "No existing IP interfaces found");
 	return -1;
@@ -269,7 +273,7 @@ ParseNetInfoFile_int(afs_uint32 * final, afs_uint32 * mask, afs_uint32 * mtu,
 
     /* get all network interfaces from the kernel */
     existNu =
-	rxi_getAllAddrMaskMtu(existingAddr, existingMask, existingMtu,
+	rx_getAllAddrMaskMtu(existingAddr, existingMask, existingMtu,
 			      MAXIPADDRS);
     if (existNu < 0)
 	return existNu;
