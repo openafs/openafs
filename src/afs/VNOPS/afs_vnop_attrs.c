@@ -192,7 +192,6 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 {
     afs_int32 code;
     struct vrequest treq;
-    extern struct unixuser *afs_FindUser();
     struct unixuser *au;
     int inited = 0;
     OSI_VC_CONVERT(avc);

@@ -223,7 +223,7 @@ local_free(void *p, size_t n)
  *    1 - success
  */
 static int
-linux_alloc_init()
+linux_alloc_init(void)
 {
     /* initiate our pool of osi_linux_mem structs */
     al_mem_pool =
@@ -270,7 +270,7 @@ hash_bucket_stat(size_t index, unsigned key, void *data)
 
 /* get_hash_stats() : get hash table statistics */
 static void
-get_hash_stats()
+get_hash_stats(void)
 {
     int i;
 

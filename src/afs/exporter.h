@@ -50,15 +50,26 @@
 #endif
 #endif
 
+struct afs_exporter;
+
 struct exporterops {
-    int (*export_reqhandler) ();
-    void (*export_hold) ();
-    void (*export_rele) ();
-    int (*export_sysname) ();
-    void (*export_garbagecollect) ();
-    int (*export_statistics) ();
-    int (*export_checkhost) ();
-    afs_int32 (*export_gethost) ();
+    int (*export_reqhandler) (struct afs_exporter *exp,
+		    	      struct AFS_UCRED **cred,
+			      afs_uint32 host,
+			      afs_int32 pag,
+			      struct afs_exporter **expp);
+    void (*export_hold) (struct afs_exporter *exp);
+    void (*export_rele) (struct afs_exporter *exp);
+    int (*export_sysname) (struct afs_exporter *exp,
+		           char *inname,
+			   char **outname,
+			   int *num,
+			   int allpags);
+    void (*export_garbagecollect) (struct afs_exporter *exp,
+		    		   afs_int32 param);
+    int (*export_statistics) (struct afs_exporter *exp);
+    int (*export_checkhost) (struct afs_exporter *exp, afs_int32 host);
+    afs_int32 (*export_gethost) (struct afs_exporter *exp);
 };
 
 struct exporterstats {

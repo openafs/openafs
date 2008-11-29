@@ -147,8 +147,11 @@ int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 static int Prefetch(char *apath, struct afs_ioctl *adata, int afollow,
 		    struct AFS_UCRED *acred);
 
+typedef int (*pioctlFunction) (struct vcache *, int, struct vrequest *,
+			       char *, char *, afs_int32, afs_int32 *,
+			       struct AFS_UCRED **);
 
-static int (*(VpioctlSw[])) () = {
+static pioctlFunction VpioctlSw[] = {
     PBogus,			/* 0 */
 	PSetAcl,		/* 1 */
 	PGetAcl,		/* 2 */
@@ -221,7 +224,7 @@ static int (*(VpioctlSw[])) () = {
 	PGetVnodeXStatus2,	/* 69 - get caller access and some vcache status */
 };
 
-static int (*(CpioctlSw[])) () = {
+static pioctlFunction CpioctlSw[] = {
     PBogus,			/* 0 */
 	PNewAlias,		/* 1 -- create new cell alias */
 	PListAliases,		/* 2 -- list cell aliases */
@@ -383,16 +386,18 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
 #ifdef	AFS_AIX32_ENV
 #ifdef AFS_AIX51_ENV
 #ifdef __64BIT__
-kioctl(fdes, com, arg, ext, arg2, arg3)
+int
+kioctl(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
+	   caddr_t arg3)
 #else /* __64BIT__ */
-kioctl32(fdes, com, arg, ext, arg2, arg3)
+int
+kioctl32(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
+	     caddr_t arg3)
 #endif /* __64BIT__ */
-     caddr_t arg2, arg3;
 #else
-kioctl(fdes, com, arg, ext)
+int
+kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
 #endif
-     int fdes, com;
-     caddr_t arg, ext;
 {
     struct a {
 	int fd, com;
@@ -410,15 +415,12 @@ struct afs_ioctl_sys {
     int arg;
 };
 
-afs_xioctl(uap, rvp)
-     struct afs_ioctl_sys *uap;
-     rval_t *rvp;
+int 
+afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 {
 #elif defined(AFS_OSF_ENV)
-afs_xioctl(p, args, retval)
-     struct proc *p;
-     void *args;
-     long *retval;
+int 
+afs_xioctl(struct proc *p, void *args, long *retval)
 {
     struct a {
 	long fd;
@@ -428,10 +430,8 @@ afs_xioctl(p, args, retval)
 #elif defined(AFS_FBSD50_ENV)
 #define arg data
 int
-afs_xioctl(td, uap, retval)
-     struct thread *td;
-     register struct ioctl_args *uap;
-     register_t *retval;
+afs_xioctl(struct thread *td, register struct ioctl_args *uap, 
+	   register_t *retval)
 {
     struct proc *p = td->td_proc;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -442,10 +442,7 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(p, uap, retval)
-     struct proc *p;
-     register struct ioctl_args *uap;
-     register_t *retval;
+afs_xioctl(struct proc *p, register struct ioctl_args *uap, register_t *retval)
 {
 #elif defined(AFS_LINUX22_ENV)
 struct afs_ioctl_sys {
@@ -715,10 +712,7 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
 }
 
 #elif defined(AFS_OSF_ENV)
-afs_pioctl(p, args, retval)
-     struct proc *p;
-     void *args;
-     int *retval;
+afs_pioctl(struct proc *p, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -733,10 +727,7 @@ afs_pioctl(p, args, retval)
 
 #elif defined(AFS_FBSD50_ENV)
 int
-afs_pioctl(td, args, retval)
-     struct thread *td;
-     void *args;
-     int *retval;
+afs_pioctl(struct thread *td, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -752,10 +743,7 @@ afs_pioctl(td, args, retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs_pioctl(p, args, retval)
-     struct proc *p;
-     void *args;
-     int *retval;
+afs_pioctl(struct proc *p, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -787,21 +775,16 @@ afs_pioctl(p, args, retval)
 
 int
 #ifdef	AFS_SUN5_ENV
-afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
-     rval_t *rvp;
-     struct AFS_UCRED *credp;
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
+		   rval_t *vvp, struct AFS_UCRED *credp)
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_syscall_pioctl(path, com, cmarg, follow, credp)
-     struct AFS_UCRED *credp;
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
+		   struct AFS_UCRED *credp)
 #else
-afs_syscall_pioctl(path, com, cmarg, follow)
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif
 #endif
-     char *path;
-     unsigned int com;
-     caddr_t cmarg;
-     int follow;
 {
     struct afs_ioctl data;
 #ifdef AFS_NEED_CLIENTCONTEXT
@@ -1032,7 +1015,7 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     register afs_int32 function, device;
     afs_int32 inSize, outSize, outSizeMax;
     char *inData, *outData;
-    int (*(*pioctlSw)) ();
+    pioctlFunction *pioctlSw;
     int pioctlSwSize;
     struct afs_fakestat_state fakestate;
 
@@ -3439,10 +3422,7 @@ ReSortCells(int s, afs_int32 * l, int vlonly)
 
 static int debugsetsp = 0;
 static int
-afs_setsprefs(sp, num, vlonly)
-     struct spref *sp;
-     unsigned int num;
-     unsigned int vlonly;
+afs_setsprefs(struct spref *sp, unsigned int num, unsigned int vlonly)
 {
     struct srvAddr *sa;
     int i, j, k, matches, touchedSize;

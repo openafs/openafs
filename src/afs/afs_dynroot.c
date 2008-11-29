@@ -84,7 +84,7 @@ static int afs_dynSymlinkIndex = 0;
  * Set up a cell for dynroot if it's not there yet.
  */
 static int
-afs_dynrootCellInit()
+afs_dynrootCellInit(void)
 {
     if (!afs_dynrootCell) {
 	afs_int32 cellHosts[MAXCELLHOSTS];

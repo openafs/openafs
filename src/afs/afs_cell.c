@@ -54,7 +54,7 @@ static struct {
  * Terminate the AFSDB handler, used on shutdown.
  */
 void
-afs_StopAFSDB()
+afs_StopAFSDB(void)
 {
     if (afsdb_handler_running) {
 	afs_osi_Wakeup(&afsdb_req);
@@ -1066,7 +1066,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
  * Perform whatever initialization is necessary.
  */
 void
-afs_CellInit()
+afs_CellInit(void)
 {
     RWLOCK_INIT(&afs_xcell, "afs_xcell");
 #ifdef AFS_AFSDB_ENV
@@ -1083,7 +1083,7 @@ afs_CellInit()
  * Called on shutdown, should deallocate memory, etc.
  */
 void
-shutdown_cell()
+shutdown_cell(void)
 {
     struct afs_q *cq, *tq;
     struct cell *tc;
