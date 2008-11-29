@@ -38,12 +38,7 @@ RCSID
 #else
 #define DIRPAD 3
 #endif
-/**
- * A few definitions. This is until we have a proper header file
- * which ahs prototypes for all functions
- */
 
-extern struct DirEntry *afs_dir_GetBlob();
 /*
  * AFS readdir vnodeop and bulk stat support.
  */
@@ -234,9 +229,7 @@ int afs_rd_stash_i = 0;
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs_readdir_type(avc, ade)
-     struct DirEntry *ade;
-     struct vcache *avc;
+afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
 {
     struct VenusFid tfid;
     struct vcache *tvc;
@@ -284,18 +277,15 @@ afs_readdir_type(avc, ade)
 #endif
 char bufofzeros[64];		/* gotta fill with something */
 
-int
-afs_readdir_move(de, vc, auio, slen, rlen, off)
-     struct DirEntry *de;
-     struct vcache *vc;
-     struct uio *auio;
-     int slen;
 #ifdef AFS_SGI65_ENV
-     ssize_t rlen;
+int
+afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio, 
+		 int slen, ssize_t rlen, afs_size_t off)
 #else
-     int rlen;
+int
+afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio, 
+		 int slen, int rlen, afs_size_t off)
 #endif
-     afs_size_t off;
 {
     int code = 0;
     struct volume *tvp;
@@ -550,9 +540,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
  */
 
 void
-afs_bulkstat_send(avc, req)
-     struct vcache *avc;
-     struct vrequest *req;
+afs_bulkstat_send(struct vcache *avc, struct vrequest *req)
 {
     afs_rd_stash_i = 0;
 }
@@ -564,18 +552,15 @@ afs_bulkstat_send(avc, req)
 
 int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_readdir(OSI_VC_ARG(avc), auio, acred, eofp)
-     int *eofp;
+afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred, 
+	    int *eofp)
 #else
 #if defined(AFS_HPUX100_ENV)
-afs_readdir2(OSI_VC_ARG(avc), auio, acred)
+afs_readdir2(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 #else
-afs_readdir(OSI_VC_ARG(avc), auio, acred)
+afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 #endif
 #endif
-     OSI_VC_DECL(avc);
-     struct uio *auio;
-     struct AFS_UCRED *acred;
 {
     struct vrequest treq;
     register struct dcache *tdc;
@@ -921,14 +906,13 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
 #ifdef	AFS_OSF_ENV
-afs1_readdir(avc, auio, acred, eofp)
-     int *eofp;
+int
+afs1_readdir(struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred, 
+	     int *eofp)
 #else
-afs1_readdir(avc, auio, acred)
+int
+afs1_readdir(struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred)
 #endif
-     struct vcache *avc;
-     struct uio *auio;
-     struct AFS_UCRED *acred;
 {
     struct vrequest treq;
     register struct dcache *tdc;

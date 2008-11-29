@@ -16,29 +16,7 @@ RCSID
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
-
-extern int afs_noop();
-extern int afs_badop();
-
-extern int afs_open();
-extern int afs_close();
-extern int afs_getattr();
-extern int afs_setattr();
-extern int afs_access();
-extern int afs_lookup();
-extern int afs_create();
-extern int afs_remove();
-extern int afs_link();
-extern int afs_rename();
-extern int afs_mkdir();
-extern int afs_rmdir();
-extern int afs_readdir();
-extern int afs_symlink();
-extern int afs_readlink();
-extern int afs_fsync();
-extern int afs_lockctl();
-extern int afs_fid();
-
+    
 int
 afs_vrdwr(struct usr_vnode *avc, struct usr_uio *uio, int rw, int io,
 	  struct usr_ucred *cred)

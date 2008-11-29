@@ -339,7 +339,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
 #endif /* AFS_SGI64_ENV */
 #else /* SUN5 || SGI */
+#if defined(UKERNEL)
+	    code = afs_lookup(adp, aname, avcp, acred, 0);
+#else /* UKERNEL */
 	    code = afs_lookup(adp, aname, avcp, acred);
+#endif /* UKERNEL */
 #endif /* SUN5 || SGI */
 #endif /* !(AFS_OSF_ENV || AFS_DARWIN_ENV) */
 	goto done;

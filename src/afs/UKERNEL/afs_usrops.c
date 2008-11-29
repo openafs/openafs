@@ -254,21 +254,21 @@ usr_ioctl(void)
  * We do not support the inode related system calls
  */
 int
-afs_syscall_icreate(void)
+afs_syscall_icreate(long a, long b, long c, long d, long e, long f)
 {
     usr_assert(0);
     return 0;
 }
 
 int
-afs_syscall_iincdec(void)
+afs_syscall_iincdec(int dev, int inode, int inode_p1, int amount)
 {
     usr_assert(0);
     return 0;
 }
 
 int
-afs_syscall_iopen(void)
+afs_syscall_iopen(int dev, int inode, int usrmod)
 {
     usr_assert(0);
     return 0;

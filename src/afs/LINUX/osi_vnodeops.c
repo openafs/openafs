@@ -187,7 +187,6 @@ extern int BlobScan(struct dcache * afile, afs_int32 ablob);
 static int
 afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 {
-    extern struct DirEntry *afs_dir_GetBlob();
     struct vcache *avc = VTOAFS(FILE_INODE(fp));
     struct vrequest treq;
     register struct dcache *tdc;
@@ -1240,7 +1239,6 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
 				&& !(tvc->states & CUnlinked)) {
 	struct dentry *__dp;
 	char *__name;
-	extern char *afs_newname();
 
 	__dp = NULL;
 	__name = NULL;

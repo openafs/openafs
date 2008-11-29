@@ -105,11 +105,11 @@ uint32_t syscall_jump_code[] = {
 };
 #endif
 
-extern long afs_xsetgroups();
+extern long afs_xsetgroups(int gidsetsize, gid_t * grouplist);
 asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
 
 #ifdef AFS_LINUX24_ENV
-extern int afs_xsetgroups32();
+extern int afs_xsetgroups32(int gidsetsize, gid_t * grouplist);
 asmlinkage int (*sys_setgroups32p) (int gidsetsize,
 				    __kernel_gid32_t * grouplist);
 #endif

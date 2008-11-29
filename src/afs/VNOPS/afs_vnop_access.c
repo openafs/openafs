@@ -77,7 +77,6 @@ afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights,
 	 * _is_ cached, obviously), make sure this user has valid tokens
 	 * before bothering with the RPC.  */
 	struct unixuser *tu;
-	extern struct unixuser *afs_FindUser();
 	tu = afs_FindUser(areq->uid, avc->fid.Cell, READ_LOCK);
 	if (!tu) {
 	    return (arights & avc->anyAccess);

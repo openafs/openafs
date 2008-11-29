@@ -1092,7 +1092,6 @@ struct usr_inode {
 	unsigned long ic_spare[4];
     } i_ic;
 };
-extern struct usr_inode *iget();
 
 struct usr_fileops {
     int (*vno_rw) (void);
@@ -1109,7 +1108,7 @@ struct usr_file {
     char *f_data;
     long f_type;
 };
-extern struct usr_file *falloc();
+
 extern struct usr_file *getf(int);
 
 #ifdef	fid_len
@@ -1200,33 +1199,46 @@ struct usr_socket {
 #define NDIRSIZ_LEN(len) \
 ((sizeof (struct usr_dirent)+4 - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 
+struct vcache;
+#define AFS_UCRED usr_ucred
+#define AFS_FLOCK       flock
+
+
 struct usr_vnodeops {
     int (*vn_open) (char *path, int flags, int mode);
     int (*vn_close) (int fd);
-    int (*vn_rdwr) ();
+    int (*vn_rdwr) (struct usr_vnode *avc, struct usr_uio *uio, 
+		    int rw, int io, struct usr_ucred *cred);
     int (*vn_ioctl) (void);
     int (*vn_select) (void);
-    int (*vn_getattr) ();
-    int (*vn_setattr) ();
-    int (*vn_access) ();
-    int (*vn_lookup) ();
-    int (*vn_create) ();
-    int (*vn_remove) ();
-    int (*vn_link) ();
-    int (*vn_rename) ();
-    int (*vn_mkdir) ();
-    int (*vn_rmdir) ();
-    int (*vn_readdir) ();
-    int (*vn_symlink) ();
-    int (*vn_readlink) ();
-    int (*vn_fsync) ();
-    int (*vn_inactive) ();
-    int (*vn_bmap) ();
-    int (*vn_strategy) ();
-    int (*vn_bread) ();
-    int (*vn_brelse) ();
-    int (*vn_lockctl) ();
-    int (*vn_fid) ();
+    int (*vn_getattr) (struct vcache *avc, struct vattr *, struct AFS_UCRED *);
+    int (*vn_setattr) (struct vcache *avc, struct vattr *, struct AFS_UCRED *);
+    int (*vn_access) (struct vcache *avc, afs_int32, struct AFS_UCRED *);
+    int (*vn_lookup) (struct vcache *adp, char *, struct vcache **, 
+		      struct AFS_UCRED *, int);
+    int (*vn_create) (struct vcache *adp, char *, struct vattr *, 
+		      enum vcexcl, int, struct vcache **, struct AFS_UCRED *);
+    int (*vn_remove) (struct vcache *adp, char *, struct AFS_UCRED *);
+    int (*vn_link) (struct vcache *avc, struct vcache *adp, char *, 
+		    struct AFS_UCRED *);
+    int (*vn_rename) (struct vcache *aodp, char *, struct vcache *, char *,
+		      struct AFS_UCRED *);
+    int (*vn_mkdir) (struct vcache *adp, char *, struct vattr *, 
+		     struct vcache **, struct AFS_UCRED *);
+    int (*vn_rmdir) (struct vcache *adp, char *, struct AFS_UCRED *);
+    int (*vn_readdir) (struct vcache *avc, struct uio *, struct AFS_UCRED *);
+    int (*vn_symlink) (struct vcache *adp, char *, struct vattr *, char *,
+		       struct AFS_UCRED *);
+    int (*vn_readlink) (struct vcache *avc, struct uio *, struct AFS_UCRED *);
+    int (*vn_fsync) (struct vcache *avc, struct AFS_UCRED *);
+    int (*vn_inactive) (struct vcache *avc, struct AFS_UCRED *acred);
+    int (*vn_bmap) (void);
+    int (*vn_strategy) (void);
+    int (*vn_bread) (void);
+    int (*vn_brelse) (void);
+    int (*vn_lockctl) (struct vcache *, struct AFS_FLOCK *, int,
+		       struct AFS_UCRED *);
+    int (*vn_fid) (struct vcache *avc, struct fid **);
 };
 
 struct usr_fs {
@@ -1245,12 +1257,12 @@ extern struct usr_mount *getmp(unsigned long);
 typedef long usr_whymountroot_t;
 
 struct usr_vfsops {
-    int (*vfs_mount) ();
-    int (*vfs_unmount) ();
-    int (*vfs_root) ();
-    int (*vfs_statfs) ();
-    int (*vfs_mountroot) ();
-    int (*vfs_swapvp) ();
+    int (*vfs_mount) (struct vfs *, char *, caddr_t);
+    int (*vfs_unmount) (struct vfs *);
+    int (*vfs_root) (struct vfs *, struct vnode **);
+    int (*vfs_statfs) (struct vfs *, struct statfs *);
+    int (*vfs_mountroot) (struct vfs *);
+    int (*vfs_swapvp) (void);
 };
 
 struct usr_vfs {
@@ -1266,7 +1278,7 @@ struct usr_vfs {
 
 struct usr_sysent {
     char sy_narg;
-    int (*sy_call) ();
+    int (*sy_call) (void);
 };
 extern struct usr_sysent usr_sysent[];
 

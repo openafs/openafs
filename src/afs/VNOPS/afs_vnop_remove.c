@@ -46,10 +46,8 @@ extern afs_rwlock_t afs_xcbhash;
 afs_Wire(avc, areq)
 #else /* AFS_OSF_ENV */
 static void
-FetchWholeEnchilada(avc, areq)
+FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
 #endif
-     struct vrequest *areq;
-     register struct vcache *avc;
 {
     register afs_int32 nextChunk;
     register struct dcache *tdc;
@@ -86,8 +84,7 @@ FetchWholeEnchilada(avc, areq)
  *  Tests whether file is wired down, after unwiring the file if it
  *  is found to be inactive (ie not open and not being paged from).
  */
-afs_IsWired(avc)
-     register struct vcache *avc;
+afs_IsWired(register struct vcache *avc)
 {
     if (avc->states & CWired) {
 	if (osi_Active(avc)) {
@@ -222,10 +219,7 @@ char *Tnam1;
 /* Note that we don't set CDirty here, this is OK because the unlink
  * RPC is called synchronously */
 int
-afs_remove(OSI_VC_ARG(adp), aname, acred)
-     OSI_VC_DECL(adp);
-     char *aname;
-     struct AFS_UCRED *acred;
+afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 {
     struct vrequest treq;
     register struct dcache *tdc;

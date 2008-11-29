@@ -29,14 +29,11 @@ RCSID
 
 
 
-int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_ustrategy(abp, credp)
-     struct AFS_UCRED *credp;
+int afs_ustrategy(register struct buf *abp, struct AFS_UCRED *credp)
 #else
-afs_ustrategy(abp)
+int afs_ustrategy(register struct buf *abp)
 #endif
-     register struct buf *abp;
 {
     register afs_int32 code;
     struct uio tuio;

@@ -171,7 +171,7 @@ afs_osi_MaskUserLoop()
 }
 
 void 
-afs_osi_UnmaskUserLoop()
+afs_osi_UnmaskUserLoop(void)
 {
 #ifdef AFS_DARWIN_ENV
     afs_osi_fullSigRestore();

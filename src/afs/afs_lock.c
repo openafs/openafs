@@ -35,9 +35,8 @@ RCSID
 /* probably needed if lock_trace is enabled - should ifdef */
 int afs_trclock = 0;
 
-void Lock_Obtain();
-void Lock_ReleaseR();
-void Lock_ReleaseW();
+void Lock_ReleaseR(struct afs_lock *lock);
+void Lock_ReleaseW(struct afs_lock *lock);
 
 void
 Lock_Init(register struct afs_lock *lock)
