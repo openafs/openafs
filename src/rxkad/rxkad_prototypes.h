@@ -78,18 +78,19 @@ extern int rxkad_GetStats(struct rx_securityClass *aobj,
 extern rxkad_level rxkad_StringToLevel(char *string);
 extern char *rxkad_LevelToString(rxkad_level level);
 
+extern void rxkad_global_stats_init(void);
 
 /* rxkad_errs.c */
 
 /* rxkad_server.c */
 extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
-							      level, char
+							      level, void
 							      *get_key_rock,
 							      int (*get_key)
 
 
 							       
-							      (char
+							      (void
 							       *get_key_rock,
 							       int kvno,
 							       struct
