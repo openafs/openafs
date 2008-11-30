@@ -322,8 +322,10 @@ int chk_del_children_hook(void *hdata,
     /* Count unfinished dirty children. VDisconShadowed can still be set,
      * because we need it to remove the shadow dir.
      */
-    if (tvc && tvc->ddirty_flags) {
-	v->count++;
+    if (tvc) {
+	if (tvc->ddirty_flags)
+	    v->count++;
+
 	afs_PutVCache(tvc);
     }
 
