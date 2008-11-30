@@ -24,6 +24,7 @@ RCSID
 #include <sys/stat.h>
 #include <string.h>
 #include <afs/stds.h>
+#include <afs/com_err.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/com_err.h>
