@@ -45,6 +45,7 @@ RCSID
 #include <afs/vlserver.h>
 #include <afs/cmd.h>
 #include <afs/afsutil.h>
+#include <afs/com_err.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <afs/ptclient.h>

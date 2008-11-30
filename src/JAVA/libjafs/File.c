@@ -20,6 +20,7 @@
  */
 
 #include <afs/param.h>
+#include <afs/com_err.h>
 #include <errno.h>
 
 #include "Internal.h"
