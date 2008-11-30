@@ -246,6 +246,8 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 		    tvc->ddirty_flags |= VDisconRenameSameDir;
 	    	ReleaseWriteLock(&tvc->lock);
 	    }			/* if not previously renamed */
+
+	    afs_PutVCache(tvc);
 	} else {
 	    code = ENOENT;
 	}			/* if (tvc) */
