@@ -1228,7 +1228,7 @@ extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,
 		     struct AFS_UCRED *acred);
 #elif defined(AFS_SUN5_ENV)
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, 
-		     offset_t offset, acred);
+		     offset_t offset, struct AFS_UCRED *acred);
 #else
 extern int afs_close(OSI_VC_DECL(avc), afs_int32 aflags,  
 		     struct AFS_UCRED *acred);
