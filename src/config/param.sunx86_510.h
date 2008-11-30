@@ -38,6 +38,8 @@
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
+#define AFS_CACHE_VNODE_PATH 1
+
 #include <afs/afs_sysnames.h>
 
 #define AFS_GLOBAL_SUNLOCK	1	/* For global locking */
