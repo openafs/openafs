@@ -1624,7 +1624,7 @@ int afs_WriteVCacheDiscon(register struct vcache *avc,
 	if (!avc->ddirty_flags ||
 		(avc->ddirty_flags == VDisconShadowed)) {
 		/* Not in dirty list. */
-		AFS_DISCON_ADD_DIRTY(avc);
+		AFS_DISCON_ADD_DIRTY(avc, 1);
 	}
 
 	avc->ddirty_flags |= flags;

@@ -229,7 +229,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 
 	    /* Put it in the list only if it's fresh. */
 	    ObtainWriteLock(&afs_DDirtyVCListLock, 730);
-	    AFS_DISCON_ADD_DIRTY(tvc);
+	    AFS_DISCON_ADD_DIRTY(tvc, 1);
 	    ReleaseWriteLock(&afs_DDirtyVCListLock);
 	}
 
@@ -438,7 +438,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	if (!tvc->ddirty_flags) {
 	    /* Put it in the list only if it's fresh or has only been shadowed. */
 	    ObtainWriteLock(&afs_DDirtyVCListLock, 728);
-	    AFS_DISCON_ADD_DIRTY(tvc);
+	    AFS_DISCON_ADD_DIRTY(tvc, 1);
 	    ReleaseWriteLock(&afs_DDirtyVCListLock);
 	}
 
@@ -476,9 +476,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	ObtainWriteLock(&tvc->lock, 155);
 	tvc->states &= ~CUnique;	/* For the dfs xlator */
 	ReleaseWriteLock(&tvc->lock);
-	/* If disconnected, keep this vcache around for resync. */
-	if (!AFS_IS_DISCON_RW)
-	    afs_PutVCache(tvc);
+	afs_PutVCache(tvc);
     }
     ReleaseWriteLock(&adp->lock);
     /* don't worry about link count since dirs can not be hardlinked */

@@ -31,7 +31,7 @@
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
-#define MAX_LOCK_NUMBER 760
+#define MAX_LOCK_NUMBER 780
 #endif
 
 struct afs_bozoLock {

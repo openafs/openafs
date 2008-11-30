@@ -1283,11 +1283,10 @@ skip_file:
 	    	    /* We can discard the shadow dir now. */
 	    	    afs_DeleteShadowDir(tmp);
 
-		if (tmp->ddirty_flags & VDisconRemove)
-		    /* Drop the refcount on the deleted vnodes,
-		     * because we don't need them anymore.
-		     */
-		    afs_PutVCache(tmp);
+		/* Drop the refcount on this vnode because it's not in the
+		 * list anymore.
+		 */
+		 afs_PutVCache(tmp);
 
 	    	/* Only if sync was successfull,
 		 * clear flags and dirty references.
