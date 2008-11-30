@@ -26,6 +26,7 @@ RCSID
 #include <netdb.h>
 #include <netinet/in.h>
 #include <afs/stds.h>
+#include <afs/com_err.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include "afs/prs_fs.h"
