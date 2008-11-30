@@ -230,8 +230,8 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 			(tvc->ddirty_flags == VDisconShadowed)) {
 	    	    /* Add in dirty list.*/
 	 	    ObtainWriteLock(&afs_DDirtyVCListLock, 751);
-	    	    AFS_DISCON_ADD_DIRTY(tvc);
-	    	    ReleaseWriteLock(&afs_DDirtyVCListLock);
+		    AFS_DISCON_ADD_DIRTY(tvc, 1);
+		    ReleaseWriteLock(&afs_DDirtyVCListLock);
 		}
 
 	    	ObtainWriteLock(&tvc->lock, 750);

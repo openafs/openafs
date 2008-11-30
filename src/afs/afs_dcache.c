@@ -3832,7 +3832,7 @@ done:
     if (!ret_code) {
     	if (!avc->ddirty_flags) {
 	    ObtainWriteLock(&afs_DDirtyVCListLock, 763);
-	    AFS_DISCON_ADD_DIRTY(avc);
+	    AFS_DISCON_ADD_DIRTY(avc, 1);
 	    ReleaseWriteLock(&afs_DDirtyVCListLock);
 	}
 	avc->shVnode = shadow_fid.Fid.Vnode;

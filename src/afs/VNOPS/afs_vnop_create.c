@@ -465,8 +465,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		if (!tvc->ddirty_flags ||
 			(tvc->ddirty_flags == VDisconShadowed)) {
 	    	    /* Put it in the list only if it's fresh. */
-	    	    ObtainWriteLock(&afs_DDirtyVCListLock, 729);
-	    	    AFS_DISCON_ADD_DIRTY(tvc);
+		    ObtainWriteLock(&afs_DDirtyVCListLock, 729);
+	    	    AFS_DISCON_ADD_DIRTY(tvc, 0);
 	    	    ReleaseWriteLock(&afs_DDirtyVCListLock);
 		}
 

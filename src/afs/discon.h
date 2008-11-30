@@ -9,7 +9,7 @@
 #define AFS_DISCON_LOCK()
 #define AFS_DISCON_UNLOCK()
 
-#define AFS_DISCON_ADD_DIRTY(avc)
+#define AFS_DISCON_ADD_DIRTY(avc, lock)
 
 #else
 
@@ -66,14 +66,21 @@ extern void afs_RemoveAllConns();
 #define AFS_DISCON_LOCK() ObtainReadLock(&afs_discon_lock)
 #define AFS_DISCON_UNLOCK() ReleaseReadLock(&afs_discon_lock)
 
-#define AFS_DISCON_ADD_DIRTY(avc)				\
+/* Call with avc and afs_DDirtyVCListLock w locks held. */
+#define AFS_DISCON_ADD_DIRTY(avc, lock)				\
 do {								\
+    int retry = 0;						\
     if (!afs_DDirtyVCListStart) {				\
     	afs_DDirtyVCListStart = afs_DDirtyVCList = avc;		\
     } else {							\
     	afs_DDirtyVCList->ddirty_next = avc;			\
 	afs_DDirtyVCList = avc;					\
     }								\
+    if (lock)							\
+	ObtainWriteLock(&afs_xvcache, 763);			\
+    osi_vnhold(avc, 0);						\
+    if (lock)							\
+	ReleaseWriteLock(&afs_xvcache);				\
 } while(0);
 
 #endif /* AFS_DISCON_ENV */

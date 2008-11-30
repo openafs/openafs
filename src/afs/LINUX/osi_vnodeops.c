@@ -667,7 +667,7 @@ afs_linux_flush(struct file *fp)
 		    (vcp->ddirty_flags == VDisconShadowed)) {
 
 		    ObtainWriteLock(&afs_DDirtyVCListLock, 710);
-		    AFS_DISCON_ADD_DIRTY(vcp);
+		    AFS_DISCON_ADD_DIRTY(vcp, 1);
 		    ReleaseWriteLock(&afs_DDirtyVCListLock);
 		}
 
