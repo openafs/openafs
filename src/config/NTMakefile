@@ -266,14 +266,17 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\afsrdr))
 		$(MKDIR) $(OJT)\WINNT\afsrdr
 !	ENDIF
-!	IF (!EXIST($(OJT)\WINNT\afsrdr\gettrace))
-		$(MKDIR) $(OJT)\WINNT\afsrdr\gettrace
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools
 !	ENDIF
-!	IF (!EXIST($(OJT)\WINNT\afsrdr\settrace))
-		$(MKDIR) $(OJT)\WINNT\afsrdr\settrace
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\gettrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\gettrace
 !	ENDIF
-!	IF (!EXIST($(OJT)\WINNT\afsrdr\crash))
-		$(MKDIR) $(OJT)\WINNT\afsrdr\crash
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\settrace))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\settrace
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\afsrdr\tools\crash))
+		$(MKDIR) $(OJT)\WINNT\afsrdr\tools\crash
 !	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\afsreg))
 		$(MKDIR) $(OJT)\WINNT\afsreg
