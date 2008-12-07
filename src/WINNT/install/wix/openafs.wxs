@@ -118,13 +118,13 @@
        Impersonate="no"
        />
 
-    <CustomAction Id="InstallRdrDriver" Property="RUNDLL32EXE"
-                  Execute="deferred"
-                  ExeCommand='rundll32.exe [SETUPAPIDLL],InstallHinfSection DefaultInstall 128 [#file_RedirFltrInstall.inf]' />
+    <CustomAction Id="InstallRdrDriver" Directory="$(var.PISystemFolder)"
+                  Execute="deferred" Impersonate="no"
+                  ExeCommand='"[RUNDLL32EXE]" [SETUPAPIDLL],InstallHinfSection DefaultInstall 128 [#file_RedirFltrInstall.inf]' />
 
-    <CustomAction Id="UninstallRdrDriver" Property="RUNDLL32EXE"
-                  Execute="deferred" Return="ignore"
-                  ExeCommand='rundll32.exe [SETUPAPIDLL],InstallHinfSection DefaultUninstall 128 [#file_RedirFltrInstall.inf]' />
+    <CustomAction Id="UninstallRdrDriver" Directory="$(var.PISystemFolder)"
+                  Execute="deferred" Return="ignore" Impersonate="no"
+                  ExeCommand='"[RUNDLL32EXE]" [SETUPAPIDLL],InstallHinfSection DefaultUninstall 128 [#file_RedirFltrInstall.inf]' />
 
 	<?ifdef UseDllLoopbackInstaller?>
         <CustomAction

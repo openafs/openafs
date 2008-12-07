@@ -1477,6 +1477,7 @@
     <Directory Id="StartupFolder" Name="." />
     <Directory Id="WindowsVolume" Name="." />
     <Directory Id="WindowsFolder" Name="." />
+    <Directory Id="$(var.PISystemFolder)" Name="." />
   <?endif?>
 
 	<!-- Shared assembly runtime for VS 2005 -->
