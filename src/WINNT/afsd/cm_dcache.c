@@ -1101,15 +1101,15 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
             break;
 
         code = buf_Get(scp, &pageBase, reqp, &tbp);
-        if (code) {
+        if (code == 0) {
+            buf_Release(tbp);
+            tbp = NULL;
+        } else if (code && code != CM_ERROR_WOULDBLOCK) {
             lock_ObtainWrite(&scp->rw);
             cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
             return code;
         }
                 
-        buf_Release(tbp);
-        tbp = NULL;
-
         pageBase = LargeIntegerAdd(tblocksize, pageBase);
         collected += cm_data.buf_blockSize;
     }

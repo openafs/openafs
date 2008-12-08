@@ -198,8 +198,9 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
             osi_Log4(afsd_logp, "RevokeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                      scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
 
-            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
+            if (RDR_Initialized)
+                RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
 
             lock_ObtainWrite(&scp->rw);
             cm_DiscardSCache(scp);
@@ -239,7 +240,7 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
     tfid.volume = fidp->Volume;
     cm_RecordRacingRevoke(&tfid, CM_RACINGFLAG_CANCELVOL);
 
-    if (cellp)
+    if (cellp && RDR_Initialized)
         RDR_InvalidateVolume(cellp->cellID, fidp->Volume, AFS_INVALIDATE_CALLBACK);
 
     lock_ObtainWrite(&cm_scacheLock);
@@ -255,7 +256,7 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                 lock_ObtainWrite(&scp->rw);
                 osi_Log4(afsd_logp, "RevokeVolumeCallback Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                           scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
-                if (cellp == NULL)
+                if (cellp == NULL && RDR_Initialized)
                     RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                                          scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
                 cm_DiscardSCache(scp);
@@ -490,8 +491,9 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
                         cm_DiscardSCache(scp);
                         discarded = 1;
 
-                        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
+                        if (RDR_Initialized)
+                            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
                     }
                 }
                 lock_ReleaseWrite(&scp->rw);
@@ -1713,8 +1715,9 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
         cm_CallbackNotifyChange(scp);
         lock_ObtainWrite(&scp->rw);
 
-        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
+        if (RDR_Initialized)
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CALLBACK);
     } 
 
     if ( serverp ) {
@@ -1930,8 +1933,9 @@ void cm_CheckCBExpiration(void)
                 cm_DiscardSCache(scp);
                 lock_ReleaseWrite(&scp->rw);
 
-                RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                                     scp->fid.hash, scp->fileType, AFS_INVALIDATE_EXPIRED);
+                if (RDR_Initialized)
+                    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                         scp->fid.hash, scp->fileType, AFS_INVALIDATE_EXPIRED);
 
                 cm_CallbackNotifyChange(scp);
 

@@ -1608,7 +1608,8 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
 	    lock_ObtainWrite(&scp->rw);
             scp->flags |= CM_SCACHEFLAG_DELETED;
 	    lock_ReleaseWrite(&scp->rw);
-            if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+            if (RDR_Initialized && !(reqp->flags & CM_REQ_SOURCE_REDIR) &&
+                !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
                                       scp->fid.unique, scp->fid.hash,
                                       scp->fileType, AFS_INVALIDATE_DELETED))
                 buf_ClearRDRFlag(&scp->fid, "unlink");
@@ -3233,7 +3234,8 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
 	    lock_ObtainWrite(&scp->rw);
             scp->flags |= CM_SCACHEFLAG_DELETED;
 	    lock_ReleaseWrite(&scp->rw);
-            if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+            if (RDR_Initialized && !(reqp->flags & CM_REQ_SOURCE_REDIR) &&
+                !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode,
                                       scp->fid.unique, scp->fid.hash,
                                       scp->fileType, AFS_INVALIDATE_DELETED))
                 buf_ClearRDRFlag(&scp->fid, "rmdir");

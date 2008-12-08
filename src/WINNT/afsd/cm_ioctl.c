@@ -530,8 +530,9 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
         cm_DiscardSCache(scp);
         lock_ReleaseWrite(&scp->rw);
 
-        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
-                             scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
+        if (RDR_Initialized)
+            RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                                 scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
     }
 
     return code;
@@ -1108,7 +1109,8 @@ cm_IoctlDeleteMountPoint(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scac
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
-    if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+    if (RDR_Initialized &&
+        !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
                               scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED))
         buf_ClearRDRFlag(&scp->fid, "deleted mp");
 
@@ -2161,7 +2163,8 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
-    if (!RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+    if (RDR_Initialized && 
+        !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
                               scp->fid.hash, scp->fileType, AFS_INVALIDATE_DELETED))
         buf_ClearRDRFlag(&scp->fid, "deleted link");
 

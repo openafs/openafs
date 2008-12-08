@@ -237,6 +237,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     /* leave 5 seconds margin for sleep */
     if (reqp->flags & CM_REQ_NORETRY)
         timeLeft = 0;
+    else if ( reqp->flags & CM_REQ_SOURCE_REDIR )
+        timeLeft = 0xFFFFFFFF;
     else
         timeLeft = HardDeadtimeout - timeUsed;
 
@@ -260,8 +262,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     if (errorCode == CM_ERROR_TIMEDOUT) {
         if ( timeLeft > 5 ) {
+#if 0
             thrd_Sleep(3000);
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, cellp);
+#endif
             retry = 1;
         }
     }
@@ -586,8 +590,9 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
  			cm_DiscardSCache(pscp);
  			lock_ReleaseWrite(&pscp->rw);
 
-                        RDR_InvalidateObject(pscp->fid.cell, pscp->fid.volume, pscp->fid.vnode, pscp->fid.unique, 
-                                             pscp->fid.hash, pscp->fileType, AFS_INVALIDATE_DELETED);
+                        if (RDR_Initialized)
+                            RDR_InvalidateObject(pscp->fid.cell, pscp->fid.volume, pscp->fid.vnode, pscp->fid.unique, 
+                                                 pscp->fid.hash, pscp->fileType, AFS_INVALIDATE_DELETED);
 
  		    }
  		    cm_ReleaseSCache(pscp);

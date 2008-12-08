@@ -27,6 +27,8 @@
 #define TRACE_BUFFER 1
 #endif
 
+#define BUF_ERROR_TRUNC -2
+
 extern void afsi_log(char *pattern, ...);
 
 /* This module implements the buffer package used by the local transaction
@@ -479,6 +481,7 @@ long buf_Init(int newFile, cm_buf_ops_t *opsp, afs_uint64 nbuffers)
                 bp->waitCount = 0;
                 bp->waitRequests = 0;
                 bp->flags &= ~CM_BUF_WAITING;
+                bp->error = 0;
                 if (bp->flags & CM_BUF_REDIR) {
                     /* 
                      * extent was not returned by the file system driver.
@@ -1117,6 +1120,8 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
                     heldExtents.QuadPart = n_redir;
                     code = RDR_RequestExtentRelease(1024, heldExtents);
                 }
+                if (code)
+                    Sleep(100);
                 lock_ReleaseMutex(&buf_rdrReleaseExtentsLock);
                 if (code == 0)
                     goto retry;
@@ -1624,11 +1629,13 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
              */
             if (LargeIntegerLessThanOrEqualTo(*sizep, bufp->offset)) {
                 /* truncating the entire page */
-                if (reqp->flags & CM_REQ_SOURCE_SMB) {
+                if ((reqp->flags & CM_REQ_SOURCE_SMB) &&
+                    RDR_Initialized) {
                     RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
                                          scp->fid.unique, scp->fid.hash,
                                          scp->fileType, AFS_INVALIDATE_SMB);
                     bufp->flags &= ~CM_BUF_DIRTY;
+                    bufp->error = BUF_ERROR_TRUNC; 
                 } else {
                     /* Implicitly clear the redirector flag */
                     char buffer[1024];
