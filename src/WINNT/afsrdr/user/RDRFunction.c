@@ -849,7 +849,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
         if (bSkipStatus) {
             scp = cm_FindSCache(&Fid);
             if (!scp)
-                code = CM_ERROR_WOULDBLOCK;
+                code = cm_GetSCache(&Fid, &scp, userp, &req);
         } else {
             code = cm_GetSCache(&Fid, &scp, userp, &req);
         }
@@ -2055,6 +2055,11 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
             if (bBufRelease)
                 buf_Release(bufp);
         } else if ( code == CM_ERROR_WOULDBLOCK ) {
+            /* 
+             * TODO: queue up this extent and all remaining extents in the request so that 
+             * they can can be processed when extents become available.
+             */
+            DebugBreak();
             break;
         }
     }
@@ -2084,7 +2089,7 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
     return;
 }
 
-void
+BOOL
 RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                              IN AFSFileID FileId,
                              IN AFSRequestExtentsCB *RequestExtentsCB,
@@ -2120,7 +2125,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     pResultCB = *ResultCB = (AFSSetFileExtentsCB *)malloc( Length );
     if (*ResultCB == NULL) {
         *ResultBufferLength = 0;
-        return;
+        return FALSE;
     }
     *ResultBufferLength = Length;
 
@@ -2139,23 +2144,11 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                   code);
         smb_MapNTError(code, &status);
         pResultCB->ResultStatus = status;
-        return;
+        return FALSE;
     }
 
     lock_ObtainWrite(&scp->rw);
     bScpLocked = TRUE;
-
-    if ( scp->flags & CM_SCACHEFLAG_BULKREADING )
-    {
-        lock_ReleaseWrite(&scp->rw);
-        cm_ReleaseSCache(scp);
-        code = CM_ERROR_WOULDBLOCK;
-        osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync cm_SyncOp failure scp=0x%p code=0x%x",
-                 scp, code);
-        smb_MapNTError(code, &status);
-        pResultCB->ResultStatus = status;
-        return;
-    }
 
     /* start by looking up the file's end */
     code = cm_SyncOp(scp, NULL, userp, &req, PRSFS_READ,
@@ -2167,7 +2160,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                  scp, code);
         smb_MapNTError(code, &status);
         pResultCB->ResultStatus = status;
-        return;
+        return FALSE;
     }
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
@@ -2178,6 +2171,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
           code == 0 && ByteOffset.QuadPart < EndOffset.QuadPart; 
           ByteOffset.QuadPart += cm_data.blockSize)
     {
+      retry_loop:
         thyper.QuadPart = ByteOffset.QuadPart;
 
         if (bScpLocked) {
@@ -2262,6 +2256,19 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
             if ( bBufRelease )
                 buf_Release(bufp);
         } else if ( code == CM_ERROR_WOULDBLOCK ) {
+            /* 
+             * TODO: queue up this extent and all remaining extents in the request so that 
+             * they can can be processed when extents become available.  Or we can return
+             * what we have so far and have the request re-issued starting from where we
+             * left off.
+             */
+            if ( count == 0 ) {
+                Sleep(20);
+                goto retry_loop;
+            }
+
+            RequestExtentsCB->ByteOffset.QuadPart += count * cm_data.blockSize;
+            RequestExtentsCB->Length -= count * cm_data.blockSize;
             break;
         }
     }
@@ -2277,15 +2284,20 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
-    if (code && count == 0) {
-        osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync cm_SyncOp failure scp=0x%p code=0x%x",
+    if (code == CM_ERROR_WOULDBLOCK) {
+        osi_Log3(afsd_logp, "RDR_RequestFileExtentsAsync wouldblock scp=0x%p count=0x%x code=0x%x",
+                 scp, count, code);
+        return TRUE;
+    } else if (code) {
+        osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync failure scp=0x%p code=0x%x",
                  scp, code);
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
+        return FALSE;
     } else {
         osi_Log0(afsd_logp, "RDR_RequestFileExtentsAsync SUCCESS");
+        return FALSE;
     }
-    return;
 }
 
 
@@ -2374,11 +2386,22 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
         for ( count = 0; code == 0 && count < ReleaseExtentsCB->ExtentCount; count++) {
             thyper.QuadPart = ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart;
 
-            code = buf_Get(scp, &thyper, &req, &bufp);
-            if (code == 0) {
+            bufp = buf_Find(scp, &thyper);
+            if (bufp) {
                 lock_ObtainMutex(&bufp->mx);
-                if (bufp->flags & CM_BUF_DIRTY)
+                if (bufp->flags & CM_BUF_DIRTY) {
                     code = buf_CleanAsyncLocked(bufp, &req, NULL);
+
+                    /* 
+                     * if we retry we are just going to block the worker
+                     * thread for a longer period of time without necessarily
+                     * making any progress.   We have marked the buffer dirty
+                     * and will be able to write it to the file server the next
+                     * time the file system releases it.
+                     */
+                    if ( code == CM_ERROR_WOULDBLOCK )
+                        code = 0;
+                }
                 lock_ReleaseMutex(&bufp->mx);
                 buf_Release(bufp);
             }
@@ -2411,6 +2434,11 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
     AFSReleaseFileExtentsResultFileCB *pNextFileCB;
 
     RDR_InitReq(&req);
+
+    if ( ReleaseFileExtentsResultCB->FileCount == 0 ) {
+        osi_Log0(afsd_logp, "RDR_ProcessReleaseFileExtentsResult is empty");
+        return CM_ERROR_RETRY;
+    }
 
     for ( fileno = 0, pNextFileCB = &ReleaseFileExtentsResultCB->Files[0]; 
           fileno < ReleaseFileExtentsResultCB->FileCount; fileno++ ) {
@@ -2500,9 +2528,6 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
         p += sizeof(AFSFileExtentCB) * (pFileCB->ExtentCount - 1);
         pNextFileCB = (AFSReleaseFileExtentsResultFileCB *)p;
     }
-
-    if (fileno == 0)
-        code = CM_ERROR_RETRY;
 
     osi_Log1(afsd_logp, "RDR_ReleaseFileExtents DONE code=0x%x", code);
     return code;

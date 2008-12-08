@@ -1,4 +1,5 @@
 
+
 #define _WIN32_WINNT 0x0500
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NON_CONFORMING_SWPRINTFS
@@ -451,9 +452,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     cm_user_t *         userp = NULL;
     BOOL                bWow64 = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_WOW64) ? TRUE : FALSE;
     BOOL                bFast  = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_FAST_REQUEST) ? TRUE : FALSE;
+    BOOL                bRetry = FALSE;
 
     userp = RDR_UserFromCommRequest(RequestBuffer);
 
+  retry:
     //
     // Build up the string to display based on the request type. 
     //
@@ -661,11 +664,11 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                             RequestBuffer->ResultBufferLength,
                                             &pResultCB);
             else
-                RDR_RequestFileExtentsAsync( userp, RequestBuffer->FileId, 
-                                             pFileRequestExtentsCB,
-                                             bWow64,
-                                             &dwResultBufferLength,
-                                             &SetFileExtentsResultCB );
+                bRetry = RDR_RequestFileExtentsAsync( userp, RequestBuffer->FileId, 
+                                                      pFileRequestExtentsCB,
+                                                      bWow64,
+                                                      &dwResultBufferLength,
+                                                      &SetFileExtentsResultCB );
             break;
         }
 
@@ -994,8 +997,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
 
         if (SetFileExtentsResultCB) {
-            
-            if( (SetFileExtentsResultCB->ResultStatus != 0xC0000055) && 
+        
+            if( SetFileExtentsResultCB->ExtentCount != 0 &&
                 !RDR_DeviceIoControl( glDevHandle,
                                        IOCTL_AFS_SET_FILE_EXTENTS,
                                       (void *)SetFileExtentsResultCB,
@@ -1031,7 +1034,8 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             }
 
             free(SetFileExtentsResultCB);
-        } else {
+
+      } else {
             /* Must be out of memory */
             AFSSetFileExtentsCB SetFileExtentsResultCB;
             
@@ -1136,6 +1140,9 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
             osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
         }
     }
+
+    if (bRetry)
+        goto retry;
 
     if (userp) 
         RDR_ReleaseUser(userp);

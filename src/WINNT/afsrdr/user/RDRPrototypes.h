@@ -138,7 +138,7 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
                             IN DWORD ResultBufferLength,
                             IN OUT AFSCommResult **ResultCB);
 
-void
+BOOL
 RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
                              IN AFSFileID FileId,
                              IN AFSRequestExtentsCB *RequestExtentsCB,
