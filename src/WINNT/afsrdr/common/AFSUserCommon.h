@@ -83,6 +83,8 @@ typedef struct _AFS_COMM_REQUEST_BLOCK
 
     ULONG           ResultBufferLength;    /* Do not exceed this length in response */
 
+    LONG            QueueCount;     // Current outstanding requests in the queue
+
     WCHAR           Name[ 1];
 
 } AFSCommRequest;
