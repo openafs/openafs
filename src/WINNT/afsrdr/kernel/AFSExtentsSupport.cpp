@@ -473,9 +473,14 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
         // Reinitialize the dirty list as well
         //
 
+        AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock,
+                        TRUE);
+
         ASSERT( Fcb->Specific.File.ExtentsDirtyCount == 0);
 
         InitializeListHead( &Fcb->NPFcb->Specific.File.DirtyExtentsList);
+
+        AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
 
         Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
 
@@ -817,6 +822,7 @@ AFSRequestExtents( IN AFSFcb *Fcb,
     AFSExtent           *pFirstExtent;
     LARGE_INTEGER        liAlignedOffset;
     ULONG                ulAlignedLength = 0;
+    LARGE_INTEGER        liTimeOut;
     
     //
     // Check our extents, then fire off a request if we need to.
@@ -865,6 +871,8 @@ AFSRequestExtents( IN AFSFcb *Fcb,
     // ExtentsRequestComplete event we need to do with with the lock
     // EX
     //
+
+    liTimeOut.QuadPart = -(50000000);
     
     while (TRUE) 
     {
@@ -895,7 +903,7 @@ AFSRequestExtents( IN AFSFcb *Fcb,
                                           Executive,
                                           KernelMode,
                                           FALSE,
-                                          NULL);
+                                          &liTimeOut);
         if (!NT_SUCCESS(ntStatus)) 
         {
 
@@ -942,7 +950,9 @@ AFSRequestExtents( IN AFSFcb *Fcb,
             break;
         }
 
-        if (KeReadStateEvent( &pNPFcb->Specific.File.ExtentsRequestComplete )) {
+        if( KeReadStateEvent( &pNPFcb->Specific.File.ExtentsRequestComplete) ||
+            ntStatus == STATUS_TIMEOUT)
+        {
 
             ntStatus = pNPFcb->Specific.File.ExtentsRequestStatus;
 
@@ -2142,8 +2152,13 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
                     continue;
                 }
 
-                DbgPrint("AFSFindFcbToClean Have Fcb %wZ\n",
-                                      &pFcb->DirEntry->DirectoryEntry.FileName);
+                DbgPrint("AFSFindFcbToClean Have Fcb %wZ %u.%u.%u.%u\n",
+                          &pFcb->DirEntry->DirectoryEntry.FileName,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Unique
+                          );
              
                 //
                 // A hit a very palpable hit.  Pin it
@@ -2932,12 +2947,11 @@ AFSWaitForExtentMapping( AFSFcb *Fcb )
             try_return( ntStatus = Fcb->NPFcb->Specific.File.ExtentsRequestStatus);
         }
 
-        liTimeOut.QuadPart = -(100000000);
+        liTimeOut.QuadPart = -(50000000);
 
         ntStatus = KeWaitForSingleObject( &Fcb->NPFcb->Specific.File.ExtentsRequestComplete,
                                           Executive,
-                                          KernelMode,
-            
+                                          KernelMode, 
                                           FALSE,
                                           &liTimeOut);
 
@@ -3038,8 +3052,6 @@ AFSFlushExtents( IN AFSFcb *Fcb)
         // Look for a start in the list to flush entries
         //
 
-        le = pNPFcb->Specific.File.DirtyExtentsList.Flink;
-
         total = count;
             
         sz = sizeof( AFSReleaseExtentsCB ) + (AFS_MAXIMUM_EXTENT_RELEASE_COUNT * sizeof ( AFSFileExtentCB ));
@@ -3087,21 +3099,23 @@ AFSFlushExtents( IN AFSFcb *Fcb)
                 AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
                                 TRUE);
 
-                le = RemoveHeadList( &pNPFcb->Specific.File.DirtyExtentsList);
-
-                if( le == &pNPFcb->Specific.File.DirtyExtentsList)
+                if ( IsListEmpty( &pNPFcb->Specific.File.DirtyExtentsList))
                 {
 
                     AFSReleaseResource( &pNPFcb->Specific.File.DirtyExtentsListLock);
 
                     break;
                 }
+                
+                le = RemoveHeadList( &pNPFcb->Specific.File.DirtyExtentsList);
 
                 pExtent = DirtyExtentFor( le);
 
                 dirtyCount = InterlockedDecrement( &Fcb->Specific.File.ExtentsDirtyCount);
 
                 ASSERT(dirtyCount >= 0);
+
+                ASSERT( pExtent->Flags & AFS_EXTENT_DIRTY);
 
                 //
                 // Clear the flag in advance of the write - we'll put

@@ -1481,6 +1481,9 @@ AFSInsertDirectoryNode( IN AFSFcb *ParentDcb,
     __Enter
     {
 
+        ASSERT( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                DirEntry->DirectoryEntry.FileId.Vnode != 1);
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertDirectoryNode Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
@@ -1642,6 +1645,10 @@ AFSRemoveDirNodeFromParent( IN AFSFcb *ParentDcb,
 
     __Enter
     {
+
+        ASSERT( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                DirEntry->DirectoryEntry.FileId.Vnode != 1);
+
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,

@@ -4424,6 +4424,17 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
             try_return( ntStatus);
         }
 
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSValidateEntry Acquiring DirEntry lock %08lX EXCL %08lX\n",
+                                                                   &DirEntry->NPDirNode->Lock,
+                                                                   PsGetCurrentThread());
+
+        AFSAcquireExcl( &DirEntry->NPDirNode->Lock,
+                        TRUE);
+
+        bReleaseDirEntry = TRUE;
+
         if( PurgeContent &&
             DirEntry->Fcb != NULL)
         {
@@ -4445,17 +4456,6 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                 bReleaseFcb = TRUE;
             }
         }
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSValidateEntry Acquiring DirEntry lock %08lX EXCL %08lX\n",
-                                                                   &DirEntry->NPDirNode->Lock,
-                                                                   PsGetCurrentThread());
-
-        AFSAcquireExcl( &DirEntry->NPDirNode->Lock,
-                        TRUE);
-
-        bReleaseDirEntry = TRUE;
 
         //
         // This routine ensures that the current entry is valid by:
@@ -4934,4 +4934,43 @@ AFSIsEqualFID( IN AFSFileID *FileId1,
     }
 
     return bIsEqual;
+}
+
+NTSTATUS
+AFSResetDirectoryContent( IN AFSFcb *Dcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirEntryCB *pCurrentDirEntry = NULL;
+
+    __Enter
+    {
+
+        //
+        // Reset the directory list information
+        //
+
+        pCurrentDirEntry = Dcb->Specific.Directory.DirectoryNodeListHead;
+
+        while( pCurrentDirEntry != NULL)
+        {
+
+            AFSDeleteDirEntry( Dcb,
+                               pCurrentDirEntry);
+
+            pCurrentDirEntry = Dcb->Specific.Directory.DirectoryNodeListHead;
+        }
+
+        Dcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead = NULL;
+
+        Dcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead = NULL;
+
+        Dcb->Specific.Directory.ShortNameTree = NULL;
+
+        Dcb->Specific.Directory.DirectoryNodeListHead = NULL;
+
+        Dcb->Specific.Directory.DirectoryNodeListTail = NULL;
+    }
+
+    return ntStatus;
 }

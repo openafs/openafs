@@ -474,6 +474,9 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_SUCCESS);
         }
 
+        ASSERT( pFcb->RootFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY && 
+                pFcb->RootFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1);
+
         if( pFcb->RootFcb != NULL &&
             BooleanFlagOn( pFcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
         {
@@ -1507,6 +1510,9 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
 
         pSrcFcb->DirEntry->CaseInsensitiveTreeEntry.HashIndex = AFSGenerateCRC( &pSrcFcb->DirEntry->DirectoryEntry.FileName,
                                                                                 TRUE);
+
+        ASSERT( pSrcFcb->DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY || 
+                pSrcFcb->DirEntry->DirectoryEntry.FileId.Vnode != 1);
 
         if( pSrcFcb->DirEntry->DirectoryEntry.ShortNameLength > 0)
         {

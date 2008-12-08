@@ -1026,6 +1026,9 @@ BOOLEAN
 AFSIsEqualFID( IN AFSFileID *FileId1,
                IN AFSFileID *FileId2);
 
+NTSTATUS
+AFSResetDirectoryContent( IN AFSFcb *Dcb);
+
 //
 // Prototypes in AFSFastIoSupprt.cpp
 //

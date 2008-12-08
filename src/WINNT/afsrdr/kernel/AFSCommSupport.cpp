@@ -155,6 +155,11 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
             if( BooleanFlagOn( Dcb->Flags, AFS_FCB_INVALID))
             {
 
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSEnumerateDirectory Invalidation while enumerating directory %wZ\n",
+                              &Dcb->DirEntry->DirectoryEntry.FileName);
+
                 ntStatus = STATUS_ACCESS_DENIED;
 
                 break;
@@ -198,6 +203,9 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
 
                     break;
                 }
+
+                ASSERT( pDirNode->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                        pDirNode->DirectoryEntry.FileId.Vnode != 1);
 
                 //
                 // Set up the entry length
@@ -343,6 +351,11 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
 
             pDirQueryCB->EnumHandle = pDirEnumResponse->EnumHandle;
 
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSEnumerateDirectory EnumHandle %08lX\n",
+                          pDirQueryCB->EnumHandle);
+
             //
             // If the enumeration handle is -1 then we are done
             //
@@ -364,6 +377,17 @@ try_exit:
         {
 
             ExFreePool( pBuffer);
+        }
+
+        //
+        // If the processing failed then we should reset the directory content in the event
+        // it is re-enumerated
+        //
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSResetDirectoryContent( Dcb);
         }
     }
 
@@ -648,6 +672,9 @@ AFSVerifyDirectoryContent( IN AFSFcb *Dcb)
 
                     break;
                 }
+
+                ASSERT( pDirNode->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                        pDirNode->DirectoryEntry.FileId.Vnode != 1);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -1008,6 +1035,9 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
+
+        ASSERT( pDirNode->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                pDirNode->DirectoryEntry.FileId.Vnode != 1);
 
         //
         // Init the short name if we have one
@@ -2541,6 +2571,8 @@ AFSInsertRequest( IN AFSCommSrvcCB *CommSrvc,
 
         CommSrvc->RequestPoolTail = Entry;
 
+        InterlockedIncrement( &CommSrvc->QueueCount);
+
 try_exit:
 
         AFSReleaseResource( &CommSrvc->IrpPoolLock);
@@ -2756,6 +2788,8 @@ AFSProcessIrpRequest( IN PIRP Irp)
                 pRequest->RequestFlags = pEntry->RequestFlags;
 
                 pRequest->NameLength = pEntry->FileName.Length;
+
+                pRequest->QueueCount = InterlockedDecrement( &pCommSrvc->QueueCount);
 
                 if( pRequest->NameLength > 0)
                 {

@@ -623,6 +623,16 @@ AFSInitAFSRoot()
 
             pFcb->DirEntry->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
 
+            // 
+            // The AFS Global Root has a cell identifier of 0.
+            // It is a root volume therefore it has a Vnode/Unique of 1
+            //
+            pFcb->DirEntry->DirectoryEntry.FileId.Cell = 0;
+            pFcb->DirEntry->DirectoryEntry.FileId.Volume = 0;
+            pFcb->DirEntry->DirectoryEntry.FileId.Vnode = 1;
+            pFcb->DirEntry->DirectoryEntry.FileId.Unique = 1;
+            pFcb->DirEntry->DirectoryEntry.FileId.Hash = 0;
+
             pFcb->DirEntry->DirectoryEntry.FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
             pFcb->DirEntry->DirectoryEntry.FileName.Length = sizeof( WCHAR);
@@ -643,6 +653,9 @@ AFSInitAFSRoot()
         //
         // Go get the volume information from the service
         //
+
+        ASSERT( AFSGlobalRoot->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
+                AFSGlobalRoot->DirEntry->DirectoryEntry.FileId.Vnode == 1);
 
         ntStatus = AFSRetrieveVolumeInformation( &AFSGlobalRoot->DirEntry->DirectoryEntry.FileId,
                                                  &AFSGlobalRoot->DirEntry->Type.Volume.VolumeInformation);
@@ -1209,6 +1222,9 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
         // Go get the volume information from the service
         //
 
+        ASSERT( pFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
+                pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1);
+
         ntStatus = AFSRetrieveVolumeInformation( &pFcb->DirEntry->DirectoryEntry.FileId,
                                                  &pFcb->DirEntry->Type.Volume.VolumeInformation);
 
@@ -1470,9 +1486,12 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
         // Make this a volume FID
         //
 
-        pFcb->DirEntry->DirectoryEntry.FileId.Hash = 0;
-        pFcb->DirEntry->DirectoryEntry.FileId.Vnode = 1;
-        pFcb->DirEntry->DirectoryEntry.FileId.Unique = 1;
+        //pFcb->DirEntry->DirectoryEntry.FileId.Hash = 0;
+        //pFcb->DirEntry->DirectoryEntry.FileId.Vnode = 1;
+        //pFcb->DirEntry->DirectoryEntry.FileId.Unique = 1;
+
+        ASSERT( pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1 &&
+                pFcb->DirEntry->DirectoryEntry.FileId.Unique == 1);
 
         ASSERT( pFcb->DirEntry->DirectoryEntry.FileId.Cell != 0 &&
                 pFcb->DirEntry->DirectoryEntry.FileId.Volume != 0);

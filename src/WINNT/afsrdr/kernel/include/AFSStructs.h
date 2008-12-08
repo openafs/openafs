@@ -616,6 +616,8 @@ typedef struct _AFSFSD_SRVC_CONTROL_BLOCK
 
     ULONG                       IrpPoolControlFlag;
 
+    LONG                        QueueCount;
+
 } AFSCommSrvcCB, *PAFSCommSrvcCB;
 
 //

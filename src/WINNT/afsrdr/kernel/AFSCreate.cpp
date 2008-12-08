@@ -1283,6 +1283,10 @@ AFSProcessCreate( IN PIRP             Irp,
                                    FullFileName,
                                    ulAttributes);
 
+        ASSERT( ParentDcb->RootFcb == NULL ||
+                ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
+                ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1);
+
         if( ParentDcb->RootFcb != NULL &&
             BooleanFlagOn( ParentDcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
         {
@@ -2151,6 +2155,10 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                       "AFSProcessOverwriteSupersede (%08lX) Processing file %wZ\n",
                                                        Irp,
                                                        &Fcb->DirEntry->DirectoryEntry.FileName);
+
+        ASSERT( ParentDcb->RootFcb == NULL ||
+                ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
+                ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1);
 
         if( ParentDcb->RootFcb != NULL &&
             BooleanFlagOn( ParentDcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))

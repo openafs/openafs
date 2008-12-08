@@ -899,6 +899,9 @@ AFSLocateShortNameDirEntry( IN AFSDirEntryCB *RootNode,
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
 
+        ASSERT( RootNode->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                RootNode->DirectoryEntry.FileId.Vnode != 1);
+
         //
         // If the requestor is looking for the root node itself, then return it.
         //
@@ -917,7 +920,10 @@ AFSLocateShortNameDirEntry( IN AFSDirEntryCB *RootNode,
 
         while( pCurrentEntry != NULL)
         {
-        
+
+            ASSERT( pCurrentEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                    pCurrentEntry->DirectoryEntry.FileId.Vnode != 1);
+
             //
             // Greater values are to the right link.
             //
@@ -1025,8 +1031,11 @@ AFSInsertShortNameDirEntry( IN AFSDirEntryCB *RootNode,
         while( pCurrentEntry != NULL)
         {
         
+            ASSERT( pCurrentEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+                    pCurrentEntry->DirectoryEntry.FileId.Vnode != 1);
+
             //
-            // Greater vlued indices are to the right link
+            // Greater valued indices are to the right link
             //
 
             if( DirEntry->Type.Data.ShortNameTreeEntry.HashIndex > pCurrentEntry->Type.Data.ShortNameTreeEntry.HashIndex)
@@ -1105,9 +1114,24 @@ AFSRemoveShortNameDirEntry( IN AFSDirEntryCB **RootNode,
     AFSDirEntryCB *pCurrentNode = NULL;
     AFSDirEntryCB *pParentNode = NULL;
 
+    ASSERT( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+            DirEntry->DirectoryEntry.FileId.Vnode != 1);
+
     pRightNode = (AFSDirEntryCB *)DirEntry->Type.Data.ShortNameTreeEntry.rightLink;
     pLeftNode = (AFSDirEntryCB *)DirEntry->Type.Data.ShortNameTreeEntry.leftLink;
     pParentNode = (AFSDirEntryCB *)DirEntry->Type.Data.ShortNameTreeEntry.parentLink;
+
+    ASSERT( pRightNode == NULL ||
+            pRightNode->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+            pRightNode->DirectoryEntry.FileId.Vnode != 1);
+
+    ASSERT( pLeftNode == NULL ||
+            pLeftNode->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+            pLeftNode->DirectoryEntry.FileId.Vnode != 1);
+
+    ASSERT( pParentNode == NULL ||
+            pParentNode->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+            pParentNode->DirectoryEntry.FileId.Vnode != 1);
 
     __Enter
     {

@@ -207,6 +207,10 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_TOO_LATE );
         }
 
+        ASSERT( pFcb->RootFcb == NULL ||
+                pFcb->RootFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
+                pFcb->RootFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1);
+
         if( pFcb->RootFcb != NULL &&
             BooleanFlagOn( pFcb->RootFcb->DirEntry->Type.Volume.VolumeInformation.Characteristics, FILE_READ_ONLY_DEVICE))
         {
