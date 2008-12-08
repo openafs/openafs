@@ -3101,7 +3101,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC0000033L;	/* Object name invalid */
     }
     else if (code == CM_ERROR_WOULDBLOCK) {
-        NTStatus = 0xC0000055L;	/* Lock not granted */
+        NTStatus = 0xC00000D8L;	/* Can't wait */
     }
     else if (code == CM_ERROR_SHARING_VIOLATION) {
         NTStatus = 0xC0000043L; /* Sharing violation */
