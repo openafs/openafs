@@ -1,5 +1,7 @@
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
+#endif
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NON_CONFORMING_SWPRINTFS
 
@@ -451,11 +453,11 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     }
 
     (*ResultCB)->ResultBufferLength = dwMaxEntryLength = ResultBufferLength;
-
-    pDirEnumResp = (AFSDirEnumResp *)&(*ResultCB)->ResultData;
-
-    pCurrentEntry = (AFSDirEnumEntry *)&pDirEnumResp->Entry;
-    dwMaxEntryLength -= FIELD_OFFSET( AFSDirEnumResp, Entry);      /* AFSDirEnumResp */
+    if (ResultBufferLength) {
+        pDirEnumResp = (AFSDirEnumResp *)&(*ResultCB)->ResultData;
+        pCurrentEntry = (AFSDirEnumEntry *)&pDirEnumResp->Entry;
+        dwMaxEntryLength -= FIELD_OFFSET( AFSDirEnumResp, Entry);      /* AFSDirEnumResp */
+    }
 
     if (DirID.Cell != 0) {
         fid.cell   = DirID.Cell;
@@ -592,10 +594,11 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                   code, status);
     }
 
-    if (ResultBufferLength)
+    if (ResultBufferLength) {
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwMaxEntryLength;
 
-    pDirEnumResp->EnumHandle = (ULONG_PTR) enump;
+        pDirEnumResp->EnumHandle = (ULONG_PTR) enump;
+    }
 
     if (dscp)
         cm_ReleaseSCache(dscp);
@@ -656,7 +659,8 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
-    pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
+    if (ResultBufferLength)
+        pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
     if (ParentID.Cell != 0) {
         parentFid.cell   = ParentID.Cell;
@@ -726,7 +730,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
         wchar_t shortName[13]=L"";
 
         if (bVol) {
-            cm_Gen8Dot3VolNameW(scp->fid.cell, scp->fid.volume, shortName);
+            cm_Gen8Dot3VolNameW(scp->fid.cell, scp->fid.volume, shortName, NULL);
         } else if (!cm_Is8Dot3(wszName)) {
             cm_dirFid_t dfid;
 
@@ -805,7 +809,8 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     memset(*ResultCB, 0, size);
     (*ResultCB)->ResultBufferLength = ResultBufferLength;
     dwRemaining = ResultBufferLength;
-    pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
+    if (ResultBufferLength)
+        pCurrentEntry = (AFSDirEnumEntry *)&(*ResultCB)->ResultData;
 
     RDR_InitReq(&req);
     if ( bWow64 )
@@ -1849,11 +1854,9 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     lock_ReleaseWrite(&scp->rw);
         
     code = cm_CheckNTOpen(scp, OpenCB->DesiredAccess, OPEN_ALWAYS, userp, &req, &ldp);
-    if (code == 0) {
-        cm_CheckNTOpenDone(scp, userp, &req, &ldp);
-
+    if (code == 0)
         code = RDR_CheckAccess(scp, userp, &req, OpenCB->DesiredAccess, &pResultCB->GrantedAccess);
-    }
+    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
     cm_ReleaseSCache(scp);
 
     if (code) {
@@ -2318,7 +2321,8 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     osi_hyper_t thyper;
     cm_req_t    req;
     int         dirty = 0;
-    DWORD status;
+    int         released = 0;
+    DWORD       status;
 
     RDR_InitReq(&req);
     if ( bWow64 )
@@ -2327,7 +2331,6 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     osi_Log4(afsd_logp, "RDR_ReleaseFileExtents File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume, 
               FileId.Vnode, FileId.Unique);
-
 
     *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
     if (!(*ResultCB))
@@ -2364,13 +2367,15 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
 
             if (ReleaseExtentsCB->FileExtents[count].Flags) {
                 lock_ObtainMutex(&bufp->mx);
-                if ( ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_RELEASE ) {
+                if ( ReleaseExtentsCB->Flags & AFS_EXTENT_FLAG_RELEASE ||
+                     ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_RELEASE ) {
                     bufp->flags &= ~CM_BUF_REDIR;
                     buf_Release(bufp);
+                    released++;
                 }
                 if ( ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_DIRTY ) {
                     buf_SetDirty(bufp, 0, cm_data.blockSize, userp);
-                    dirty = 1;
+                    dirty++;
                 }
                 lock_ReleaseMutex(&bufp->mx);
             }
@@ -2383,7 +2388,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
     }
 
     if (dirty) {
-        for ( count = 0; code == 0 && count < ReleaseExtentsCB->ExtentCount; count++) {
+        for ( count = 0; code == 0 && count < ReleaseExtentsCB->ExtentCount && dirty > 0; count++, dirty--) {
             thyper.QuadPart = ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart;
 
             bufp = buf_Find(scp, &thyper);
@@ -2410,6 +2415,9 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
 
     cm_ReleaseSCache(scp);
 
+    osi_Log5(afsd_logp, "RDR_ReleaseFileExtents File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x Released %d",
+              FileId.Cell, FileId.Volume, 
+              FileId.Vnode, FileId.Unique, released);
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
@@ -2432,7 +2440,6 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
     cm_req_t    req;
     unsigned int fileno, extentno;
     AFSReleaseFileExtentsResultFileCB *pNextFileCB;
-
     RDR_InitReq(&req);
 
     if ( ReleaseFileExtentsResultCB->FileCount == 0 ) {
@@ -2447,6 +2454,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
         cm_fid_t         Fid;
         cm_scache_t *    scp = NULL;
         int              dirty = 0;
+        int              released = 0;
         char * p;
 
         userp = RDR_UserFromProcessId( pFileCB->ProcessId);
@@ -2491,13 +2499,15 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
 
                 if (pExtent->Flags) {
                     lock_ObtainMutex(&bufp->mx);
-                    if (pExtent->Flags & AFS_EXTENT_FLAG_RELEASE ) {
+                    if ( ReleaseFileExtentsResultCB->Flags & AFS_EXTENT_FLAG_RELEASE ||
+                         pExtent->Flags & AFS_EXTENT_FLAG_RELEASE ) {
                         bufp->flags &= ~CM_BUF_REDIR;
                         buf_Release(bufp);
+                        released++;
                     }
                     if ( pExtent->Flags & AFS_EXTENT_FLAG_DIRTY ) {
                         buf_SetDirty(bufp, 0, cm_data.blockSize, userp);
-                        dirty = 1;
+                        dirty++;
                     }
                     lock_ReleaseMutex(&bufp->mx);
                 }
@@ -2517,6 +2527,9 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
             } 
         }
 
+        osi_Log5(afsd_logp, "RDR_ProcessReleaseFileExtentsResult File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x Released %d",
+                  Fid.cell, Fid.volume, Fid.vnode, Fid.unique, released);
+
       cleanup_file:
         if (userp)
             cm_ReleaseUser(userp);
@@ -2529,7 +2542,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
         pNextFileCB = (AFSReleaseFileExtentsResultFileCB *)p;
     }
 
-    osi_Log1(afsd_logp, "RDR_ReleaseFileExtents DONE code=0x%x", code);
+    osi_Log1(afsd_logp, "RDR_ProcessReleaseFileExtentsResult DONE code=0x%x", code);
     return code;
 }
 

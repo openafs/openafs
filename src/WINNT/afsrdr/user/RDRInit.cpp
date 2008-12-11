@@ -1,6 +1,8 @@
 
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
+#endif
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NON_CONFORMING_SWPRINTFS
 #define UNICODE 1
