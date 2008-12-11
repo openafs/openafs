@@ -3231,9 +3231,9 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                                   "AFSBuildTargetDirectory Initializing root for %wZ\n",
                                                                         &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
 
-                    AFSInitRootForMountPoint( &stDirEnumEntry,
-                                              &stVolumeInfo,
-                                              &pVcb);
+                    ntStatus = AFSInitRootForMountPoint( &stDirEnumEntry,
+                                                         &stVolumeInfo,
+                                                         &pVcb);
 
                     if( pVcb != NULL)
                     {
@@ -3307,6 +3307,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 }
 
                 AFSReleaseResource( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock);
+
+                ntStatus = STATUS_SUCCESS;
 
                 break;
             }
@@ -3491,6 +3493,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                     AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
                 }
+
+                ntStatus = STATUS_SUCCESS;
 
                 break;
             }
