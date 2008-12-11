@@ -802,7 +802,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 // are not being used
                 //
                 if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
-                    0 != pFcb->Specific.File.LastServerFlush.QuadPart &&
+                    0 == pFcb->NPFcb->Specific.File.ExtentsRefCount &&
+                    0 != pFcb->Specific.File.LastExtentAccess.QuadPart &&
                     (liTime.QuadPart - pFcb->Specific.File.LastExtentAccess.QuadPart) >= 
                                 (AFS_SERVER_PURGE_SLEEP * pControlDeviceExt->Specific.Control.FcbPurgeTimeCount.QuadPart))
                 {

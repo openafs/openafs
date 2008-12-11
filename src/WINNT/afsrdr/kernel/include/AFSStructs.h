@@ -459,6 +459,13 @@ typedef struct AFS_FCB
 
         } VolumeRoot;
 
+        // 
+        // there are several places in the source code
+        // that take advantage of the fact that the 
+        // MountPoint and SymbolicLink structs in this
+        // union are identical.
+        //
+
         struct
         {
 

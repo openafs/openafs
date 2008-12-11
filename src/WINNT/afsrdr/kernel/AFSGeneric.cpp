@@ -2100,8 +2100,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                                     AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
                                        
                                     //
-                                    // And get rid of them (not this involves waiting
-                                    // for any writes or reads to the cache to complete
+                                    // And get rid of them (note this involves waiting
+                                    // for any writes or reads to the cache to complete)
                                     //
 
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
@@ -2293,8 +2293,8 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                         AFSReleaseResource( &pDcb->NPFcb->Specific.File.ExtentsResource);
                                        
                         //
-                        // And get rid of them (not this involves waiting
-                        // for any writes or reads to the cache to complete
+                        // And get rid of them (note this involves waiting
+                        // for any writes or reads to the cache to complete)
                         //
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
@@ -3193,8 +3193,8 @@ AFSInvalidateVolume( IN AFSFcb *Vcb,
                         AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
                                         
                         //
-                        // And get rid of them (not this involves waiting
-                        // for any writes or reads to the cache to complete
+                        // And get rid of them (note this involves waiting
+                        // for any writes or reads to the cache to complete)
                         //
          
                         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
@@ -3398,8 +3398,8 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 AFSReleaseResource( &Fcb->NPFcb->Specific.File.ExtentsResource);
 
                 //
-                // Get rid of them (this involves waiting
-                // for any writes or reads to the cache to complete
+                // Get rid of them (note this involves waiting
+                // for any writes or reads to the cache to complete)
                 //
          
                 AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
@@ -3765,8 +3765,8 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
                     AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
                                        
                     //
-                    // And get rid of them (not this involves waiting
-                    // for any writes or reads to the cache to complete
+                    // And get rid of them (note this involves waiting
+                    // for any writes or reads to the cache to complete)
                     //
          
                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
@@ -3946,8 +3946,8 @@ AFSValidateDirectoryCache( IN AFSFcb *Dcb)
                     AFSReleaseResource( &pFcb->NPFcb->Specific.File.ExtentsResource);
                                       
                     //
-                    // And get rid of them (not this involves waiting
-                    // for any writes or reads to the cache to complete
+                    // And get rid of them (note this involves waiting
+                    // for any writes or reads to the cache to complete)
                     //
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
@@ -4650,8 +4650,8 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                     AFSReleaseResource( &pCurrentFcb->NPFcb->Specific.File.ExtentsResource);
 
                     //
-                    // Get rid of them (this involves waiting
-                    // for any writes or reads to the cache to complete
+                    // Get rid of them (note this involves waiting
+                    // for any writes or reads to the cache to complete)
                     //
              
                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,

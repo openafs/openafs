@@ -1322,6 +1322,15 @@ try_exit:
     return ntStatus;
 }
 
+//
+// AFSInitRootForMountPoint started out as a function that would create 
+// a volume root Fcb based upon a MountPoint but it is also used when
+// a symbolicLink points to a volume that has never been seen before.
+//
+// It takes advantage of the fact that the Specific union for a
+// MountPoint and a SymbolicLink are the same.
+// 
+
 NTSTATUS
 AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
                           IN AFSVolumeInfoCB *VolumeInfoCB,
@@ -1483,18 +1492,13 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
         pFcb->DirEntry->DirectoryEntry.FileId = MountPointDirEntry->TargetFileId;
 
         //
-        // Make this a volume FID
+        // Make this a volume FID.  Don't assume the target is a volume root
+        // because we might have been passed a symbolicLink.
         //
 
-        //pFcb->DirEntry->DirectoryEntry.FileId.Hash = 0;
-        //pFcb->DirEntry->DirectoryEntry.FileId.Vnode = 1;
-        //pFcb->DirEntry->DirectoryEntry.FileId.Unique = 1;
-
-        ASSERT( pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1 &&
-                pFcb->DirEntry->DirectoryEntry.FileId.Unique == 1);
-
-        ASSERT( pFcb->DirEntry->DirectoryEntry.FileId.Cell != 0 &&
-                pFcb->DirEntry->DirectoryEntry.FileId.Volume != 0);
+        pFcb->DirEntry->DirectoryEntry.FileId.Hash = 0;
+        pFcb->DirEntry->DirectoryEntry.FileId.Vnode = 1;
+        pFcb->DirEntry->DirectoryEntry.FileId.Unique = 1;
 
         pFcb->DirEntry->DirectoryEntry.CreationTime.QuadPart = MountPointDirEntry->CreationTime.QuadPart;
         pFcb->DirEntry->DirectoryEntry.LastWriteTime.QuadPart = MountPointDirEntry->CreationTime.QuadPart;

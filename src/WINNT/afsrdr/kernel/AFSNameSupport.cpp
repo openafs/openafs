@@ -85,7 +85,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
         }
 
         //
-        // We will parse through the filename, locating the directory nodes until we encoutner a cache miss
+        // We will parse through the filename, locating the directory nodes until we encounter a cache miss
         // Starting at the root node
         //
 
@@ -759,6 +759,12 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                                                                      ntStatus);
 
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                    //
+                    // Update the failure status to a general failure
+                    // 
+    
+                    ntStatus = STATUS_INVALID_PARAMETER;
 
                     break;
                 }
@@ -2693,7 +2699,7 @@ AFSParseName( IN PIRP Irp,
             }
 
             //
-            // Resoufces are acquired above
+            // Resources are acquired above
             //
 
             *RootFcb = pTargetFcb;
@@ -3014,9 +3020,13 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
     
             //
             // If there is already a target Fcb then process it
+            // Note, this code takes advantage of the fact that the Specific union for 
+            // for SymbolicLink and MountPoint are the same.
             //
 
-            if( pCurrentFcb->Specific.SymbolicLink.TargetFcb != NULL)
+            if( (pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
+                 pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT) &&
+                pCurrentFcb->Specific.SymbolicLink.TargetFcb != NULL)
             {
 
                 pTargetFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb;
@@ -3045,7 +3055,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSBuildTargetDirectory Have final target for %wZ Target %wZ\n",
+                                  "AFSBuildTargetDirectory Have final target for Symlink/MountPoint %wZ Target %wZ\n",
                                                                 &Fcb->DirEntry->DirectoryEntry.FileName,
                                                                 &pTargetFcb->DirEntry->DirectoryEntry.FileName);
 
@@ -3059,7 +3069,9 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 continue;
             }
 
-            if( pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
+            if( (pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT ||
+                 pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK) &&
+                pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
                 pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Unique == 0)
             {
 
@@ -3152,6 +3164,11 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                                            ullIndex,
                                            &pVcb);
 
+            //
+            // We can be processing a request for a target that is on a volume
+            // we have never seen before.
+            //
+
             if( pVcb == NULL)
             {
 
@@ -3188,7 +3205,15 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                                                ullIndex,
                                                &pVcb);
 
-                if( pVcb == NULL)
+                //
+                // At this point if we do not have a volume root Fcb
+                // we can only create a volume root for the target of 
+                // a MountPoint or a SymbolicLink
+                //
+
+                if( pVcb == NULL &&
+                    (pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT ||
+                     pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK))
                 {
 
                     RtlCopyMemory( &stDirEnumEntry,
@@ -3287,7 +3312,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
             }
 
             //
-            // We have the volume ndoe so now search for the entry itself
+            // We have the volume node so now search for the entry itself
             //
 
             ullIndex = AFSCreateLowIndex( &stTargetFileID);

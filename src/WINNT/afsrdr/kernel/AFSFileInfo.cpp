@@ -1281,6 +1281,9 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
     UNICODE_STRING uniTargetName, uniSourceName;
     BOOLEAN bReplaceIfExists = FALSE;
     UNICODE_STRING uniShortName;
+    AFSDirEntryCB *pTargetDirEntry = NULL;
+    ULONG ulTargetCRC = 0;
+    BOOLEAN bTargetEntryExists = FALSE;
 
     __Enter
     {
@@ -1366,6 +1369,85 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
+        // We do not allow cross-volume renames to occur
+        //
+
+        if( pTargetDcb->RootFcb != pSrcFcb->RootFcb)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
+
+        //
+        // If the target exists be sure the ReplaceIfExists flag is set
+        //
+
+        ASSERT( pTargetDcb != NULL);
+
+        AFSAcquireShared( &pTargetDcb->NPFcb->Resource,
+                          TRUE);
+
+        ulTargetCRC = AFSGenerateCRC( &uniTargetName,
+                                      FALSE);
+
+        if( pTargetDcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+        {
+
+            AFSLocateCaseSensitiveDirEntry( pTargetDcb->Specific.Directory.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                            ulTargetCRC,
+                                            &pTargetDirEntry);
+        }
+        else
+        {
+
+            AFSLocateCaseSensitiveDirEntry( pTargetDcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseSensitiveTreeHead,
+                                            ulTargetCRC,
+                                            &pTargetDirEntry);
+        }
+
+        if( pTargetDirEntry == NULL)
+        {
+
+            //
+            // Missed so perform a case insensitive lookup
+            //
+
+            ulTargetCRC = AFSGenerateCRC( &uniTargetName,
+                                          TRUE);
+
+            if( pTargetDcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
+            {
+
+                AFSLocateCaseInsensitiveDirEntry( pTargetDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                  ulTargetCRC,
+                                                  &pTargetDirEntry);
+            }
+            else
+            {
+
+                AFSLocateCaseInsensitiveDirEntry( pTargetDcb->Specific.VolumeRoot.DirectoryNodeHdr.CaseInsensitiveTreeHead,
+                                                  ulTargetCRC,
+                                                  &pTargetDirEntry);
+            }
+        }
+
+        if( pTargetDirEntry != NULL)
+        {
+            
+            if( !bReplaceIfExists)
+            {
+
+                AFSReleaseResource( &pTargetDcb->NPFcb->Resource);
+
+                try_return( ntStatus = STATUS_OBJECT_NAME_COLLISION);
+            }
+
+            bTargetEntryExists = TRUE;
+        }
+
+        AFSReleaseResource( &pTargetDcb->NPFcb->Resource);
+
+        //
         // Extract off the final component name from the Fcb
         //
 
@@ -1376,35 +1458,40 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
 
         //
         // The quick check to see if they are not really performing a rename
-        // Do the names match?
+        // Do the names match? Only do this where the parent directories are
+        // the same
         //
 
-        if( FsRtlAreNamesEqual( &uniTargetName,
-                                &uniSourceName,
-                                TRUE,
-                                NULL)) 
+        if( pTargetDcb == pSrcFcb->ParentFcb)
         {
-
-            //
-            // Check for case only rename
-            //
-
-            if( !FsRtlAreNamesEqual( &uniTargetName,
-                                     &uniSourceName,
-                                     FALSE,
-                                     NULL)) 
+            
+            if( FsRtlAreNamesEqual( &uniTargetName,
+                                    &uniSourceName,
+                                    TRUE,
+                                    NULL)) 
             {
 
                 //
-                // Just move in the new case form of the name
+                // Check for case only rename
                 //
 
-                RtlCopyMemory( pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer,
-                               uniTargetName.Buffer,
-                               uniTargetName.Length);
-            }
+                if( !FsRtlAreNamesEqual( &uniTargetName,
+                                         &uniSourceName,
+                                         FALSE,
+                                         NULL)) 
+                {
 
-            try_return( ntStatus = STATUS_SUCCESS);
+                    //
+                    // Just move in the new case form of the name
+                    //
+
+                    RtlCopyMemory( pSrcFcb->DirEntry->DirectoryEntry.FileName.Buffer,
+                                   uniTargetName.Buffer,
+                                   uniTargetName.Length);
+                }
+
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
         }
 
         //
@@ -1426,7 +1513,7 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         // if the invalidate call is made
         //
 
-        AFSReleaseResource( &Fcb->NPFcb->Resource);
+        AFSReleaseResource( &pSrcFcb->NPFcb->Resource);
 
         ntStatus = AFSNotifyRename( pSrcFcb,
                                     pSrcFcb->ParentFcb,
@@ -1439,7 +1526,7 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
                                                            &Fcb->NPFcb->Resource,
                                                            PsGetCurrentThread());
 
-        AFSAcquireExcl( &Fcb->NPFcb->Resource,
+        AFSAcquireExcl( &pSrcFcb->NPFcb->Resource,
                         TRUE);
 
         if( !NT_SUCCESS( ntStatus))
@@ -1449,10 +1536,27 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
             // Attempt to re-insert the directory entry
             //
 
-            AFSInsertDirectoryNode( pSrcFcb->ParentFcb,
-                                    pSrcFcb->DirEntry);
+            if( !BooleanFlagOn( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
+            {
+
+                AFSInsertDirectoryNode( pSrcFcb->ParentFcb,
+                                        pSrcFcb->DirEntry);
+            }
 
             try_return( ntStatus);
+        }
+
+        //
+        // If we already have a target entry from the search above then just
+        // tag the current entry as requiring deletion
+        //
+
+        if( bTargetEntryExists)
+        {
+
+            SetFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+
+            try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //
@@ -1530,11 +1634,18 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
+        // Clear the 'free' flag in case it is set since we are going to reinsert it
+        // into the parent tree
+        //
+
+        ClearFlag( pSrcFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
+
+        //
         // Re-insert the directory entry
         // It has been updated in the above routine
         //
 
-        AFSInsertDirectoryNode( pSrcFcb->ParentFcb,
+        AFSInsertDirectoryNode( pTargetDcb,
                                 pSrcFcb->DirEntry);
 
 try_exit:

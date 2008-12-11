@@ -1065,6 +1065,11 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
 try_exit:
 
+        if (NT_SUCCESS( ntStatus )) 
+        {
+            KeQueryTickCount( &Fcb->Specific.File.LastExtentAccess );
+        }
+
         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRequestExtents Completed for %wZ Status %08lX\n",
@@ -2051,7 +2056,7 @@ AFSFindFcbToClean(ULONG IgnoreTime, AFSFcb *LastFcb, BOOLEAN Block)
     pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
     //
-    // Set the time after which we have a canddiate fcb
+    // Set the time after which we have a candidate fcb
     // 
     
     KeQueryTickCount( &since );
