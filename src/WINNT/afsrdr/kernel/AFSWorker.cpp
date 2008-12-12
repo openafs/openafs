@@ -592,6 +592,14 @@ AFSWorkerThread( IN PVOID Context)
                         break;
                     }
 
+                    case AFS_WORK_ENUMERATE_GLOBAL_ROOT:
+                    {
+
+                        AFSEnumerateGlobalRoot();
+
+                        break;
+                    }
+
                     default:
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
@@ -1947,6 +1955,75 @@ try_exit:
         AFSDbgLogMsg( 0,
                       0,
                       "EXCEPTION - AFSQueueAsyncWrite\n");
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueueGlobalRootEnumeration()
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+    
+    __try
+    {
+
+        pWorkItem = (AFSWorkItem *) ExAllocatePoolWithTag( NonPagedPool,
+                                                           sizeof(AFSWorkItem),
+                                                           AFS_WORK_ITEM_TAG);
+        if (NULL == pWorkItem) 
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueGlobalRootEnumeration Failed to allocate work item\n");        
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES );
+        }
+
+        RtlZeroMemory( pWorkItem, 
+                       sizeof(AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        pWorkItem->RequestType = AFS_WORK_ENUMERATE_GLOBAL_ROOT;
+            
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueGlobalRootEnumeration Workitem %08lX\n",
+                                      pWorkItem);        
+
+        ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueGlobalRootEnumeration Request complete Status %08lX\n",
+                                      ntStatus);        
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            if( pWorkItem != NULL)
+            {
+
+                ExFreePool( pWorkItem);
+            }
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueGlobalRootEnumeration Failed to queue request Status %08lX\n", ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueGlobalRootEnumeration\n");
     }
 
     return ntStatus;

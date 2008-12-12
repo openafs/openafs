@@ -1878,7 +1878,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         if( !NT_SUCCESS( ntStatus) ||
             pVcb == NULL) 
         {
-            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //
@@ -1960,7 +1960,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         if( !NT_SUCCESS( ntStatus) ||
             pDcb == NULL) 
         {
-            try_return( ntStatus = STATUS_UNSUCCESSFUL);
+            try_return( ntStatus = STATUS_SUCCESS);
         }
 
         //
@@ -4970,6 +4970,129 @@ AFSResetDirectoryContent( IN AFSFcb *Dcb)
         Dcb->Specific.Directory.DirectoryNodeListHead = NULL;
 
         Dcb->Specific.Directory.DirectoryNodeListTail = NULL;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSEnumerateGlobalRoot()
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSDirEntryCB *pDirGlobalDirNode = NULL;
+    UNICODE_STRING uniFullName;
+        
+    __Enter
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSEnumerateGlobalRoot Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
+                                                                             AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                                                                             PsGetCurrentThread());
+
+        AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                        TRUE);
+
+        if( BooleanFlagOn( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
+        {
+
+            try_return( ntStatus);
+        }
+
+        //
+        // Initialize the root information
+        //
+
+        AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.ContentIndex = 1;
+
+        //
+        // Enumerate the shares in the volume
+        //
+
+        ntStatus = AFSEnumerateDirectory( AFSGlobalRoot,
+                                          &AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr,
+                                          &AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead,
+                                          &AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail,
+                                          NULL,
+                                          TRUE);
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            try_return( ntStatus);
+        }
+
+        pDirGlobalDirNode = AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead;
+
+        //
+        // Indicate the node is initialized
+        //
+
+        SetFlag( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+
+        uniFullName.MaximumLength = PAGE_SIZE;
+        uniFullName.Length = 0;
+
+        uniFullName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                             uniFullName.MaximumLength,
+                                                             AFS_GENERIC_MEMORY_TAG);
+
+        if( uniFullName.Buffer == NULL)
+        {
+
+            //
+            // Reset the directory content
+            //
+
+            AFSResetDirectoryContent( AFSGlobalRoot);
+
+            ClearFlag( AFSGlobalRoot->Flags, AFS_FCB_DIRECTORY_ENUMERATED);
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        //
+        // Populate our list of entries in the NP enumeration list
+        //
+
+        while( pDirGlobalDirNode != NULL)
+        {
+
+            uniFullName.Buffer[ 0] = L'\\';
+            uniFullName.Buffer[ 1] = L'\\';
+
+            uniFullName.Length = 2 * sizeof( WCHAR);
+
+            RtlCopyMemory( &uniFullName.Buffer[ 2],
+                           AFSServerName.Buffer,
+                           AFSServerName.Length);
+                                               
+            uniFullName.Length += AFSServerName.Length;
+
+            uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)] = L'\\';
+
+            uniFullName.Length += sizeof( WCHAR);
+
+            RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
+                           pDirGlobalDirNode->DirectoryEntry.FileName.Buffer,
+                           pDirGlobalDirNode->DirectoryEntry.FileName.Length);
+
+            uniFullName.Length += pDirGlobalDirNode->DirectoryEntry.FileName.Length;
+
+            AFSAddConnectionEx( &uniFullName,
+                                RESOURCEDISPLAYTYPE_SHARE,
+                                0);
+
+            pDirGlobalDirNode = (AFSDirEntryCB *)pDirGlobalDirNode->ListEntry.fLink;
+        }
+
+        ExFreePool( uniFullName.Buffer);
+       
+try_exit:
+
+        AFSReleaseResource( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
     }
 
     return ntStatus;

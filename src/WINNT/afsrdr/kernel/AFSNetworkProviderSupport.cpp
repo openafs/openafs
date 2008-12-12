@@ -862,41 +862,19 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                 continue;
             }
 
-            /*
-            if( ulScope == RESOURCE_GLOBALNET)
+            if( ulRemainingLength < (ULONG)FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
+                                                         pConnection->RemoteName.Length +
+                                                         pConnection->Comment.Length)
             {
 
-                if( ulRemainingLength < (ULONG)FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
-                                                                   pConnection->ComponentName.Length +
-                                                                   pConnection->Comment.Length)
-                {
-
-                    break;
-                }
-
-                ConnectCB->RemoteNameLength = pConnection->ComponentName.Length;
-
-                RtlCopyMemory( ConnectCB->RemoteName,
-                               pConnection->ComponentName.Buffer,
-                               pConnection->ComponentName.Length);
+                break;
             }
-            else
-            {
-            */
-                if( ulRemainingLength < (ULONG)FIELD_OFFSET( AFSNetworkProviderConnectionCB, RemoteName) +
-                                                                   pConnection->RemoteName.Length +
-                                                                   pConnection->Comment.Length)
-                {
 
-                    break;
-                }
+            ConnectCB->RemoteNameLength = pConnection->RemoteName.Length;
 
-                ConnectCB->RemoteNameLength = pConnection->RemoteName.Length;
-
-                RtlCopyMemory( ConnectCB->RemoteName,
-                               pConnection->RemoteName.Buffer,
-                               pConnection->RemoteName.Length);
-            //}
+            RtlCopyMemory( ConnectCB->RemoteName,
+                           pConnection->RemoteName.Buffer,
+                           pConnection->RemoteName.Length);
 
             ConnectCB->LocalName = pConnection->LocalName;
 
@@ -1019,8 +997,8 @@ AFSInitializeConnectionInfo( IN AFSProviderConnectionCB *Connection,
                                Connection->Comment.MaximumLength);
 
                 RtlCopyMemory( Connection->Comment.Buffer,
-                               L"AFS Server",
-                               20);
+                               L"AFS Root",
+                               16);
             }
             else
             {

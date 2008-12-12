@@ -1029,6 +1029,9 @@ AFSIsEqualFID( IN AFSFileID *FileId1,
 NTSTATUS
 AFSResetDirectoryContent( IN AFSFcb *Dcb);
 
+NTSTATUS
+AFSEnumerateGlobalRoot( void);
+
 //
 // Prototypes in AFSFastIoSupprt.cpp
 //
@@ -1301,6 +1304,9 @@ NTSTATUS
 AFSQueueAsyncWrite( IN PDEVICE_OBJECT DeviceObject,
                     IN PIRP Irp,
                     IN HANDLE CallerProcess);
+
+NTSTATUS
+AFSQueueGlobalRootEnumeration( void);
 
 //
 // AFSRDRSupport.cpp Prototypes

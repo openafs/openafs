@@ -177,6 +177,7 @@ static inline void AFSBreakPoint() {
 #define AFS_WORK_ASYNCH_READ                    0x0003
 #define AFS_WORK_ASYNCH_WRITE                   0x0004
 #define AFS_WORK_REQUEST_BUILD_TARGET_FCB       0x0005
+#define AFS_WORK_ENUMERATE_GLOBAL_ROOT          0x0006
 
 //
 // Pool state

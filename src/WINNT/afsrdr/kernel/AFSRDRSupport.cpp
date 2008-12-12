@@ -448,6 +448,12 @@ AFSInitializeRedirector( IN AFSRedirectorInitInfo *RedirInitInfo)
             try_return( ntStatus);
         }
 
+        //
+        // Queue up an enumeration for the global root
+        //
+
+        ntStatus = AFSQueueGlobalRootEnumeration();
+
 try_exit:
 
         if( !NT_SUCCESS( ntStatus))
