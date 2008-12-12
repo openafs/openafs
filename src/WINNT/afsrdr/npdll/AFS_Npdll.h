@@ -31,47 +31,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <windows.h>
-#define _DECL_DLLMAIN
-#include <process.h>
-#include "AFS_Npdll.h"
 
-// NOTE:
-//
-// Function:	DllMain
-//
-// Return:	TRUE  => Success
-//		FALSE => Failure
+void ReadProviderNameString( void);
 
-BOOL 
-WINAPI 
-DllMain( HINSTANCE hDLLInst, 
-         DWORD fdwReason, 
-         LPVOID lpvReserved)
-{
-    BOOL	bStatus = TRUE;
-    WORD	wVersionRequested;
-
-    switch( fdwReason)    
-    {
-
-    case DLL_PROCESS_ATTACH:
-        ReadProviderNameString();
-        break;
-
-    case DLL_PROCESS_DETACH:
-        FreeProviderNameString();
-        break;
-
-    case DLL_THREAD_ATTACH:
-        break;
-
-    case DLL_THREAD_DETACH:
-        break;
-
-    default:
-        break;
-    }
-
-    return( bStatus);
-}
+void FreeProviderNameString( void);

@@ -30,7 +30,6 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0500
 #endif
@@ -38,6 +37,7 @@
 #include <windows.h>
 #include <windef.h>
 #include <winbase.h>
+#include <winreg.h>
 #include <winsvc.h>
 #include <winnetwk.h>
 #include <npapi.h>
@@ -49,6 +49,7 @@
 
 #include "AFSUserCommon.h"
 #include "AFSProvider.h"
+#include "AFS_Npdll.h"
 
 #include "stdio.h"
 
@@ -70,6 +71,74 @@ ULONG _cdecl AFSDbgPrint( PWCHAR Format, ... );
 
 #define OPENAFS_PROVIDER_NAME           L"OpenAFS Network"
 #define OPENAFS_PROVIDER_NAME_LENGTH    30
+
+static ULONG cbProviderNameLength;
+
+static wchar_t *szProviderName = NULL;
+
+static BOOL bFreeProviderName = FALSE;
+
+void
+ReadProviderNameString( void)
+{
+    HKEY hk;
+    DWORD code;
+    DWORD dwLen = 0;
+
+    code = RegOpenKeyExW( HKEY_LOCAL_MACHINE, 
+                         L"SYSTEM\\CurrentControlSet\\Services\\AFSRedirector\\NetworkProvider",
+                         0, KEY_QUERY_VALUE, &hk);
+
+    if ( code == ERROR_SUCCESS) {
+
+        code = RegQueryValueExW( hk, L"Name", NULL, NULL, NULL, &dwLen);
+
+        if ( code == ERROR_SUCCESS || code == ERROR_MORE_DATA) {
+
+            szProviderName = (wchar_t *)HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwLen + sizeof(wchar_t));
+
+            code = RegQueryValueExW( hk, L"Name", NULL, NULL, 
+                                     (LPBYTE) szProviderName, &dwLen);
+
+            if ( code == ERROR_SUCCESS) 
+            {
+                cbProviderNameLength = dwLen;
+            }
+        }
+
+        RegCloseKey( hk);
+    }
+
+    if ( szProviderName == NULL) {
+
+        szProviderName = OPENAFS_PROVIDER_NAME;
+
+        cbProviderNameLength = OPENAFS_PROVIDER_NAME_LENGTH;
+
+        bFreeProviderName = FALSE;
+    
+    } else {
+
+        bFreeProviderName = TRUE;
+    }
+
+}
+
+void
+FreeProviderNameString( void)
+{
+    if ( bFreeProviderName ) {
+
+        HeapFree( GetProcessHeap(), 0, szProviderName);
+
+        bFreeProviderName = FALSE;
+    }
+
+    szProviderName = NULL;
+
+    cbProviderNameLength = 0;
+}
+
 
 DWORD
 NPIsRedirectorStarted( void);
@@ -167,8 +236,8 @@ NPGetCaps( DWORD nIndex )
         {
 
             rc = WNNC_DLG_FORMATNETWORKNAME | 
-                        WNNC_DLG_GETRESOURCEINFORMATION |
-                        WNNC_DLG_GETRESOURCEPARENT;
+                 WNNC_DLG_GETRESOURCEINFORMATION |
+                 WNNC_DLG_GETRESOURCEPARENT;
 
             break;
         }
@@ -230,7 +299,7 @@ NPAddConnection3( HWND            hwndOwner,
         if( lpNetResource->lpLocalName != NULL)
         {
 
-            wchLocalName[0] = lpNetResource->lpLocalName[0];
+            wchLocalName[0] = towupper(lpNetResource->lpLocalName[0]);
             wchLocalName[1] = L':';
             wchLocalName[2] = L'\0';
         }
@@ -514,7 +583,9 @@ NPCancelConnection( LPWSTR  lpName,
         if( !dwError)
         {
 
-            AFSDbgPrint(L"NPCancelConnection Failed to cancel connection to file system\n");
+            DWORD gle = GetLastError();
+
+            AFSDbgPrint(L"NPCancelConnection Failed to cancel connection to file system - gle 0x%x\n", gle);
 
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
@@ -615,7 +686,7 @@ NPGetConnection( LPWSTR  lpLocalName,
             try_return( dwStatus = WN_BAD_LOCALNAME);
         }
 
-        wchLocalName[0] = lpLocalName[0];
+        wchLocalName[0] = towupper(lpLocalName[0]);
         wchLocalName[1] = L':';
         wchLocalName[2] = L'\0';
 
@@ -652,6 +723,10 @@ NPGetConnection( LPWSTR  lpLocalName,
 
         if( !dwError)
         {
+            DWORD gle = GetLastError();
+
+            AFSDbgPrint( L"NPGetConnection Failed to get connection from file system for local %s gle 0x%x\n", 
+                         wchLocalName, gle);
 
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
@@ -727,7 +802,7 @@ NPGetConnection3(
             try_return( dwStatus = WN_MORE_DATA);
         }
 
-        wchLocalName[0] = lpLocalName[0];
+        wchLocalName[0] = towupper(lpLocalName[0]);
         wchLocalName[1] = L':';
         wchLocalName[2] = L'\0';
 
@@ -769,7 +844,10 @@ NPGetConnection3(
         if( !dwError)
         {
 
-            AFSDbgPrint( L"NPGetConnection Failed to get connection from file system for local %s\n", wchLocalName);
+            DWORD gle = GetLastError();
+
+            AFSDbgPrint( L"NPGetConnection3 Failed to get connection from file system for local %s gle 0x%x\n", 
+                         wchLocalName, gle);
 
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
@@ -921,6 +999,7 @@ NPEnumResource( HANDLE  hEnum,
     DWORD            dwStatus = WN_NO_MORE_ENTRIES; //WN_SUCCESS;
     ULONG            dwCopyBytes;
     ULONG            EntriesCopied;
+    ULONG            EntriesRequested;
     ULONG            dwIndex;
     LPNETRESOURCE    pNetResource;
     ULONG            SpaceNeeded;
@@ -936,8 +1015,15 @@ NPEnumResource( HANDLE  hEnum,
     __Enter
     {
 
+        if ( szProviderName == NULL )
+        {
+                
+            ReadProviderNameString();
+        }
+
         pNetResource = (LPNETRESOURCE) lpBuffer;
         SpaceAvailable = *lpBufferSize;
+        EntriesRequested = *lpcCount;
         *lpcCount = EntriesCopied = 0;
         StringZone = (PWCHAR) ((char *)lpBuffer + *lpBufferSize);
 
@@ -1002,8 +1088,12 @@ NPEnumResource( HANDLE  hEnum,
 
             wcscpy( pConnectionCB->RemoteName,
                     pEnumCB->RemoteName);
-        }
+        } 
+        else if ( pEnumCB->Scope == RESOURCE_CONTEXT ) 
+        {
 
+            pConnectionCB->Scope = RESOURCE_GLOBALNET;
+        }
         dwError = DeviceIoControl( hControlDevice,
                                    IOCTL_AFS_LIST_CONNECTIONS,
                                    pConnectionCB,
@@ -1016,6 +1106,11 @@ NPEnumResource( HANDLE  hEnum,
         if( !dwError)
         {
 
+            DWORD gle = GetLastError();
+
+            AFSDbgPrint( L"NPEnumResource Failed to list connections from file system - gle 0x%x\n", 
+                         gle);
+
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
 
@@ -1027,7 +1122,7 @@ NPEnumResource( HANDLE  hEnum,
 
         dwIndex = pEnumCB->CurrentIndex;
 
-        while( TRUE)
+        while( EntriesCopied < EntriesRequested)
         {
 
             uniRemoteName.Length = (USHORT)pConnectionCB->RemoteNameLength;
@@ -1052,7 +1147,7 @@ NPEnumResource( HANDLE  hEnum,
                 SpaceNeeded += pConnectionCB->CommentLength + sizeof( WCHAR);           // comment
             }
 
-            SpaceNeeded += OPENAFS_PROVIDER_NAME_LENGTH + sizeof( WCHAR);           // provider name
+            SpaceNeeded += cbProviderNameLength + sizeof( WCHAR);           // provider name
 
             if( SpaceNeeded + sizeof( NETRESOURCE) > SpaceAvailable)
             {
@@ -1089,6 +1184,12 @@ NPEnumResource( HANDLE  hEnum,
 
             pNetResource->dwDisplayType = pConnectionCB->DisplayType;
 
+            if ( pNetResource->dwType == RESOURCETYPE_ANY &&
+                 pNetResource->dwDisplayType == RESOURCEDISPLAYTYPE_SHARE)
+            {
+                
+                pNetResource->dwType = RESOURCETYPE_DISK;
+            }
             pNetResource->dwUsage       = pConnectionCB->Usage;
 
             // setup string area at opposite end of buffer
@@ -1147,9 +1248,9 @@ NPEnumResource( HANDLE  hEnum,
 
             // copy provider name
             pNetResource->lpProvider = StringZone;
-            wcscpy( StringZone, OPENAFS_PROVIDER_NAME);
+            wcscpy( StringZone, szProviderName);
 
-            StringZone += (OPENAFS_PROVIDER_NAME_LENGTH / sizeof( WCHAR));
+            StringZone += (cbProviderNameLength / sizeof( WCHAR));
 
             *StringZone = L'\0';
 
@@ -1387,7 +1488,10 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
         if( !dwError)
         {
 
-            AFSDbgPrint(L"NPGetResourceInformation IOCtl failure\n");
+            DWORD gle = GetLastError();
+
+            AFSDbgPrint( L"NPGetResourceInformation Failed to get connection info from file system for local %S gle 0x%x\n", 
+                         lpNetResource->lpRemoteName, gle);
 
             try_return( dwStatus = WN_BAD_NETNAME);
         }        
@@ -1406,6 +1510,16 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
         ulRequiredLen = sizeof( NETRESOURCE);            
         
         ulRequiredLen += pConnectCB->RemoteNameLength + sizeof( WCHAR);        // remote name
+
+#if 0
+        // Never return the comment from a GetResourceInfo request
+        if ( pConnectCB->CommentLength > 0)
+        {
+
+            ulRequiredLen += pConnectCB->CommentLength + sizeof( WCHAR);       // comment
+        }
+#endif
+        ulRequiredLen += cbProviderNameLength + sizeof( WCHAR);                // provider name
 
         if( ulRequiredLen > *lpBufferSize)
         {
@@ -1434,6 +1548,32 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
                     pConnectCB->RemoteNameLength);
 
         pStringZone += (pConnectCB->RemoteNameLength / sizeof(WCHAR));
+
+#if 0
+        // Never return the comment from a GetResourceInfo request
+        if( pConnectCB->CommentLength > 0)
+        {
+
+            CopyMemory( pStringZone, 
+                        (void *)((char *)pConnectCB + pConnectCB->CommentOffset), 
+                        pConnectCB->CommentLength);
+
+            pStringZone += (pConnectCB->CommentLength / sizeof(WCHAR));
+
+            *pStringZone++ = L'\0';
+        }
+        else
+#endif
+        {
+
+            pNetResource->lpComment = NULL;
+        }
+
+        // copy provider name
+        pNetResource->lpProvider = pStringZone;
+        wcscpy( pStringZone, szProviderName);
+
+        pStringZone += (cbProviderNameLength / sizeof( WCHAR));
 
         *pStringZone++ = L'\0';
 
@@ -1508,22 +1648,26 @@ NPFormatNetworkName(
 
     pCurrentName += (dwLen - 1);
 
-    while( dwLen > 0)
+    if ( pCurrentName[ 0] != L'\\') 
     {
 
-        if( pCurrentName[ 0] == L'\\')
+        while( dwLen > 0)
         {
 
-            pCurrentName++;
+            if( pCurrentName[ 0] == L'\\')
+            {
 
-            break;
+                pCurrentName++;
+
+                break;
+            }
+
+            pCurrentName--;
+
+            dwLen--;
+
+            dwCurrentLen++;
         }
-
-        pCurrentName--;
-
-        dwLen--;
-
-        dwCurrentLen++;
     }
 
     if( *lpnLength  < dwCurrentLen * sizeof( WCHAR))
@@ -1568,7 +1712,37 @@ OpenRedirector()
         hControlDevice = NULL;
 
         AFSDbgPrint( L"Failed to open control device error: %d\n", GetLastError());
+    } 
+#if 0
+    //
+    // only do this if you want network shares to fail to mount
+    // when the file system is not yet ready
+    //
+    else {
+
+        AFSDriverStatusRespCB   respCB;
+        DWORD                   dwBytes;
+
+        memset( &respCB, '\0', sizeof( AFSDriverStatusRespCB));
+
+        if ( !DeviceIoControl( hControlDevice,
+                               IOCTL_AFS_STATUS_REQUEST,
+                               NULL,
+                               0,
+                               (void *)&respCB,
+                               sizeof( AFSDriverStatusRespCB),
+                               &dwBytes,
+                               NULL) ||
+             dwBytes != sizeof(AFSDriverStatusRespCB) ||
+             respCB.Status != AFS_DRIVER_STATUS_READY )
+        {
+                
+            CloseHandle( hControlDevice);
+
+            hControlDevice = NULL;
+        }
     }
+#endif
 
     return hControlDevice;
 }
