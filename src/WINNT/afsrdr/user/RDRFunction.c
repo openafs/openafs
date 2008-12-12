@@ -72,13 +72,13 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     size_t cm_CachePathLen = strlen(cm_CachePath);
     size_t err;
 
-    *pRedirInitInfoLen = sizeof(AFSRedirectorInitInfo) + (cm_CachePathLen) * sizeof(WCHAR);
+    *pRedirInitInfoLen = (DWORD) (sizeof(AFSRedirectorInitInfo) + (cm_CachePathLen) * sizeof(WCHAR));
     *ppRedirInitInfo = (AFSRedirectorInitInfo *)malloc(*pRedirInitInfoLen);
     (*ppRedirInitInfo)->Flags = smb_hideDotFiles ? AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES : 0;
     (*ppRedirInitInfo)->MaximumChunkLength = cm_data.chunkSize;
     (*ppRedirInitInfo)->ExtentCount.QuadPart = cm_data.buf_nbuffers;
     (*ppRedirInitInfo)->CacheBlockSize = cm_data.blockSize;
-    (*ppRedirInitInfo)->CacheFileNameLength = cm_CachePathLen * sizeof(WCHAR);
+    (*ppRedirInitInfo)->CacheFileNameLength = (ULONG) (cm_CachePathLen * sizeof(WCHAR));
     err = mbstowcs((*ppRedirInitInfo)->CacheFileName, cm_CachePath, (cm_CachePathLen + 1) *sizeof(WCHAR));
     if (err == -1) {
         free(*ppRedirInitInfo);
@@ -240,13 +240,13 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 
     len = wcslen(shortName);
     wcsncpy(pCurrentEntry->ShortName, shortName, len);
-    pCurrentEntry->ShortNameLength = len * sizeof(WCHAR);
+    pCurrentEntry->ShortNameLength = (CCHAR)(len * sizeof(WCHAR));
 
     pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
     len = wcslen(name);
     wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
     wcsncpy(wname, name, len);
-    pCurrentEntry->FileNameLength = sizeof(WCHAR) * len;
+    pCurrentEntry->FileNameLength = (ULONG)(sizeof(WCHAR) * len);
 
     osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry scp=0x%p fileType=%d", 
               scp, scp->fileType);
@@ -276,7 +276,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 #else
             mbstowcs(wtarget, scp->mountPointStringp, len);
 #endif
-            pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
+            pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
 
             if (dwFlags & RDR_POP_FOLLOW_MOUNTPOINTS) {
                 code = cm_FollowMountPoint(scp, dscp, userp, reqp, &targetScp);
@@ -334,7 +334,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                 mbstowcs(wtarget, mp, len);
 #endif
             }
-            pCurrentEntry->TargetNameLength = sizeof(WCHAR) * len;
+            pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
 
             if (dwFlags & RDR_POP_EVALUATE_SYMLINKS) {
                 cm_scache_t *targetScp = NULL;

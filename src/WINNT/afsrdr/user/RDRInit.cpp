@@ -1645,7 +1645,7 @@ RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList)
         requestBuffer->NumberOfNames = Count;
         for ( i=0 ; i<Count; i++) {
             size_t len = wcslen(NameList[i]);
-            requestBuffer->SysNames[i].Length = len * sizeof(WCHAR);
+            requestBuffer->SysNames[i].Length = (ULONG) (len * sizeof(WCHAR));
             StringCchCopyNW(requestBuffer->SysNames[i].String, AFS_MAX_SYSNAME_LENGTH, 
                             NameList[i], len);
         }

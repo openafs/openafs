@@ -425,7 +425,7 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
     if (relativePath[0] == relativePath[1] &&
          relativePath[1] == '\\' && 
-         !cm_ClientStrCmpNI(RDR_UNCName,relativePath+2,wcslen(RDR_UNCName))) 
+         !cm_ClientStrCmpNI(RDR_UNCName,relativePath+2,(int)wcslen(RDR_UNCName))) 
     {
         wchar_t shareName[256];
         wchar_t *sharePath;
@@ -668,7 +668,7 @@ RDR_ParseIoctlParent(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 
     if (tbuffer[0] == tbuffer[1] &&
         tbuffer[1] == '\\' && 
-        !cm_ClientStrCmpNI(RDR_UNCName,tbuffer+2, wcslen(RDR_UNCName))) 
+        !cm_ClientStrCmpNI(RDR_UNCName,tbuffer+2, (int)wcslen(RDR_UNCName))) 
     {
         wchar_t shareName[256];
         wchar_t *sharePath;
