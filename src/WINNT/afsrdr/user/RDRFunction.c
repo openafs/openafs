@@ -91,6 +91,26 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
 }
 
 cm_user_t *
+RDR_GetLocalSystemUser( void)
+{
+    cm_user_t *userp = NULL;
+    wchar_t cname[MAX_COMPUTERNAME_LENGTH+1];
+    int cnamelen = MAX_COMPUTERNAME_LENGTH+1;
+
+    GetComputerNameW(cname, &cnamelen);
+    _wcsupr(cname);
+
+    userp = smb_FindCMUserByName(L"S-1-5-18", cname, SMB_FLAG_CREATE);
+
+    if (!userp) {
+        userp = cm_rootUserp;
+        cm_HoldUser(userp);
+    }
+
+    return userp;
+}
+
+cm_user_t *
 RDR_UserFromProcessId( IN ULARGE_INTEGER ProcessId)
 {
     cm_user_t *userp = NULL;
@@ -1795,6 +1815,7 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
 {
     AFSFileOpenResultCB *pResultCB = NULL;
     cm_scache_t *scp = NULL;
+    cm_user_t   *sysUserp = NULL;
     cm_fid_t    Fid;
     cm_lock_data_t      *ldp = NULL;
     afs_uint32  code;
@@ -1832,7 +1853,7 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     if (code) {
         smb_MapNTError(code, &status);
         (*ResultCB)->ResultStatus = status;
-        osi_Log2(afsd_logp, "RDR_OpenFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
+        osi_Log2(afsd_logp, "RDR_OpenFileEntry cm_GetSCache FID failure code=0x%x status=0x%x",
                   code, status);
         return;
     }
@@ -1853,10 +1874,36 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     lock_ReleaseWrite(&scp->rw);
         
-    code = cm_CheckNTOpen(scp, OpenCB->DesiredAccess, OPEN_ALWAYS, userp, &req, &ldp);
-    if (code == 0)
-        code = RDR_CheckAccess(scp, userp, &req, OpenCB->DesiredAccess, &pResultCB->GrantedAccess);
-    cm_CheckNTOpenDone(scp, userp, &req, &ldp);
+    sysUserp = RDR_GetLocalSystemUser();
+
+    /*
+     * Skip the open check if the request is coming from the local system account.
+     * The local system has no tokens and therefore any requests sent to a file 
+     * server will fail.  Unfortunately, there are special system processes that 
+     * perform actions on files and directories in preparation for memory mapping
+     * executables.  If the open check fails, the real request from the user process
+     * will never be issued.  
+     *
+     * Permitting the file system to allow subsequent operations to proceed does
+     * not compromise security.  All requests to obtain file data or directory
+     * enumerations will subsequently fail if they are not submitted under the 
+     * context of a process for that have access to the necessary credentials.
+     */
+
+    if ( userp == sysUserp)
+    {
+        osi_Log1(afsd_logp, "RDR_OpenFileEntry LOCAL_SYSTEM access check skipped scp=0x%p",
+                 scp);
+        pResultCB->GrantedAccess = OpenCB->DesiredAccess;
+        code = 0;
+    } else {
+        code = cm_CheckNTOpen(scp, OpenCB->DesiredAccess, OPEN_ALWAYS, userp, &req, &ldp);
+        if (code == 0)
+            code = RDR_CheckAccess(scp, userp, &req, OpenCB->DesiredAccess, &pResultCB->GrantedAccess);
+        cm_CheckNTOpenDone(scp, userp, &req, &ldp);
+    }
+
+    cm_ReleaseUser(sysUserp);
     cm_ReleaseSCache(scp);
 
     if (code) {
