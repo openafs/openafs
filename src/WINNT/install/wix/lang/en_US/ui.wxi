@@ -1,4 +1,4 @@
-﻿<?xml version="1.0"?> 
+<?xml version="1.0"?> 
 <Include>
     <UI>
       <Property Id="DefaultUIFont">DlgFont8</Property>
@@ -734,7 +734,8 @@
           <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Text="[ButtonText_Next]">
-          <Publish Event="NewDialog" Value="ConfigCredsDlg">1</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">&amp;feaAfsCreds = 3</Publish>
+	  <Publish Event="NewDialog" Value="VerifyReadyDlg">&amp;feaAfsCreds &lt;&gt; 3</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
@@ -870,7 +871,8 @@
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
           <Publish Event="NewDialog" Value="AdminInstallPointDlg">InstallMode = "Server Image"</Publish>
           <Publish Event="NewDialog" Value="CustomizeDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient &lt;&gt; 3</Publish>
-          <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3 AND &amp;feaAfsCreds = 3</Publish>
+          <Publish Event="NewDialog" Value="ConfigClientDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3 AND &amp;feaAfsCreds &lt;&gt; 3</Publish>
           <Publish Event="NewDialog" Value="MaintenanceTypeDlg">InstallMode = "Repair"</Publish>
           <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
         </Control>

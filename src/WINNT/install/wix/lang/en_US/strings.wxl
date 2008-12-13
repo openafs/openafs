@@ -35,6 +35,13 @@
   <String Id="StrAFSClientDriverDesc">OpenAFS File System Redirector Kernel Driver</String>
   <String Id="StrAFSClientDriverDebugLongDesc">Debug Symbols</String>
   <String Id="StrAFSClientDriverDebugDesc">Debuging symbols for the OpenAFS File System Redirector Kernel Driver</String>
+  <String Id="StrAFSCredsLongDesc">AFSCREDS.EXE tool for authenticating to AFS.</String>
+  <String Id="StrAFSCredsDebugDesc">Debug symbols for AFS Authentication</String>
+  <String Id="StrAFSCredsDebugLongDesc">Debugging symbols for AFSCREDS.EXE</String>
+  <String Id="StrAfsConfigDesc">Client configuration tool</String>
+  <String Id="StrAfsConfigLongDesc">AFS_CONFIG.EXE tool for configuring the AFS client and managing AFS drive mappings.</String>
+  <String Id="StrAfsConfigDebugDesc">Debug symbols for configuration tool</String>
+  <String Id="StrAfsConfigDebugLongDesc">Debugging symbols for AFS_CONFIG.EXE.</String>
 
     <String Id="StrShlExtDesc">AFS Context Menu Shell Extension</String>
     <String Id="StrShlExt32Desc">AFS Context Menu Shell Extension  (32-bit)</String>
