@@ -77,9 +77,9 @@ setup:
 	-ln -fs ${KSRC}/@HOST_CPU@/include machine
 	-ln -fs ${KSRC}/netinet netinet
 	-ln -fs ${KSRC}/nfs nfs
-<all -i386_fbsd_80>
+<all -fbsd_71 -fbsd_80>
 	-ln -fs /usr/include/rpc rpc
-<i386_fbsd_80>
+<fbsd_71 fbsd_80>
 	-ln -fs ${KSRC}/rpc rpc
 <all>
 	-ln -fs ${KSRC}/sys sys
