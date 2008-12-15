@@ -26,27 +26,29 @@ AFS_OS_OBJS = \
 AFS_OS_NONFSOBJS = \
 	osi_vfsops.o
 
-
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
 KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
-	    -elf -mpreferred-stack-boundary=2 \
+	    -elf \
 <i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	     -mpreferred-stack-boundary=2 \
 	     -fformat-extensions \
-<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>	-include ${KBLD}/opt_global.h
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	-include ${KBLD}/opt_global.h -mpreferred-stack-boundary=2
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 	-mno-align-long-strings -fformat-extensions -fno-common -ffreestanding \
 	-I${KBLD} -include opt_global.h -fno-strict-aliasing
 <all>
 
+<amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80>
+KOPTS=-fPIC
+<all>
+
 DBUG = -O2
 #DBUG = -O -g
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-OPTF=${OPT} 
-OPTF2=${OPT2} 
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
-
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD
@@ -65,7 +67,7 @@ setup:
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
 	-ln -fs ${KSRC}/net net
-	-ln -fs ${KSRC}/i386/include machine
+	-ln -fs ${KSRC}/${CPUARCH}/include machine
 	-ln -fs ${KSRC}/netinet netinet
 	-ln -fs ${KSRC}/nfs nfs
 <all -i386_fbsd_80>

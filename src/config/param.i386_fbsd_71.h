@@ -2,8 +2,8 @@
 #define	AFS_PARAM_H
 
 /* Machine / Operating system information */
-#define SYS_NAME	"i386_fbsd_80"
-#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_80
+#define SYS_NAME	"i386_fbsd_71"
+#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_71
 
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
@@ -42,7 +42,6 @@
 #define AFS_FBSD62_ENV 1
 #define AFS_FBSD70_ENV 1
 #define AFS_FBSD71_ENV 1
-#define AFS_FBSD80_ENV 1
 #define AFS_X86_FBSD_ENV 1
 #define AFS_X86_FBSD40_ENV 1
 #define AFS_X86_FBSD42_ENV 1
@@ -54,7 +53,6 @@
 #define AFS_X86_FBSD62_ENV 1
 #define AFS_X86_FBSD70_ENV 1
 #define AFS_X86_FBSD71_ENV 1
-#define AFS_X86_FBSD80_ENV 1
 #define AFS_X86_ENV 1
 #define AFS_NONFSTRANS 1
 #define FTRUNC O_TRUNC
@@ -165,7 +163,6 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_USR_FBSD61_ENV	1
 #define AFS_USR_FBSD70_ENV	1
 #define AFS_USR_FBSD71_ENV	1
-#define AFS_USR_FBSD80_ENV	1
 #define AFS_USR_FBSD_ENV	1
 #define AFS_NONFSTRANS 1
 
