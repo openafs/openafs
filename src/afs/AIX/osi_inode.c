@@ -72,8 +72,8 @@ extern Simple_lock jfs_icache_lock;
 #define IWRITE_UNLOCK(ip)       simple_unlock(&((ip)->afs_inode_lock))
 
 #define	SYSENT(name, arglist, decls)			\
-name arglist						\
-decls {							\
+name decls 						\
+{							\
 	lock_t lockt;					\
 	int rval1 = 0;					\
 	label_t jmpbuf;					\
@@ -95,8 +95,7 @@ decls {							\
 							\
 	return(getuerror() ? -1 : rval1);		\
 }							\
-afs_syscall_ ## name arglist				\
-decls							\
+afs_syscall_ ## name decls				\
 
 
 /*
@@ -257,7 +256,7 @@ igetinode(dev, vfsp, inode, vpp, perror)
 #define INODESPECIAL	0xffffffff	/* ... from ../vol/viceonode.h  */
 #endif
 
-SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4),)
+SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4), (long dev, long near_inode, long param1, long param2, long param3, long param4))
 {
     struct inode *ip, *newip, *pip;
     register int err, rval1, rc = 0;
@@ -320,7 +319,7 @@ SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4),)
     return getuerror()? -1 : rval1;
 }
 
-SYSENT(iopen, (dev, inode, usrmod),)
+SYSENT(iopen, (dev, inode, usrmod),(int dev, int inode, int usrmod))
 {
     struct file *fp;
     register struct inode *ip;
@@ -388,7 +387,7 @@ idec(dev, inode, inode_p1)
 }
 
 
-SYSENT(iincdec, (dev, inode, inode_p1, amount),)
+SYSENT(iincdec, (dev, inode, inode_p1, amount),(int dev, int inode, int inode_p1, int amount))
 {
     register struct inode *ip;
     char error;

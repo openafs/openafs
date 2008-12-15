@@ -630,8 +630,8 @@ Afs_syscall()
 			       p->p_cred->pc_ucred);
 #else
 	code =
-	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
-			       uap->parm4);
+	    afs_syscall_pioctl((char *)uap->parm1, (unsigned int)uap->parm2, (caddr_t)uap->parm3,
+			       (int) uap->parm4);
 #endif
 	AFS_GUNLOCK();
     } else if (uap->syscall == AFSCALL_ICREATE) {

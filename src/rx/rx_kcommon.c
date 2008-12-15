@@ -126,14 +126,24 @@ rxi_GetUDPSocket(u_short port)
 
 #if !defined(AFS_LINUX26_ENV)
 void
+#ifdef AFS_AIX_ENV
+osi_Panic(char *msg, void *a1, void *a2, void *a3)
+#else
 osi_Panic(char *msg, ...)
+#endif
 {
+#ifdef AFS_AIX_ENV
+    if (!msg)
+        msg = "Unknown AFS panic";
+    printf(msg, a1, a2, a3);
+#else
     va_list ap;
     if (!msg)
 	msg = "Unknown AFS panic";
 
     va_start(ap, msg);
     vprintf(msg, ap);
+#endif
 #ifdef AFS_LINUX20_ENV
     * ((char *) 0) = 0; 
 #else
