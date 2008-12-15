@@ -7,6 +7,7 @@ EXPORTS
 	NPAddConnection3		    @38
 	NPCancelConnection		    @18
 	NPGetConnection			    @12
+        NPGetConnection3                    @39
 	NPOpenEnum			    @33	
 	NPEnumResource			    @34	
 	NPCloseEnum			    @35	

@@ -72,11 +72,13 @@ ULONG _cdecl AFSDbgPrint( PWCHAR Format, ... );
 #define OPENAFS_PROVIDER_NAME           L"OpenAFS Network"
 #define OPENAFS_PROVIDER_NAME_LENGTH    30
 
-static ULONG cbProviderNameLength;
+#define MAX_PROVIDER_NAME_LENGTH        256
 
-static wchar_t *szProviderName = NULL;
+static ULONG cbProviderNameLength = OPENAFS_PROVIDER_NAME_LENGTH;
 
-static BOOL bFreeProviderName = FALSE;
+static wchar_t wszProviderName[MAX_PROVIDER_NAME_LENGTH+1]=OPENAFS_PROVIDER_NAME;
+
+static BOOL bProviderNameRead = FALSE;
 
 void
 ReadProviderNameString( void)
@@ -85,58 +87,32 @@ ReadProviderNameString( void)
     DWORD code;
     DWORD dwLen = 0;
 
+    if ( bProviderNameRead )
+        return;
+
     code = RegOpenKeyExW( HKEY_LOCAL_MACHINE, 
                          L"SYSTEM\\CurrentControlSet\\Services\\AFSRedirector\\NetworkProvider",
                          0, KEY_QUERY_VALUE, &hk);
 
     if ( code == ERROR_SUCCESS) {
 
-        code = RegQueryValueExW( hk, L"Name", NULL, NULL, NULL, &dwLen);
+        dwLen = sizeof(wszProviderName);
 
-        if ( code == ERROR_SUCCESS || code == ERROR_MORE_DATA) {
+        code = RegQueryValueExW( hk, L"Name", NULL, NULL, 
+                                 (LPBYTE) wszProviderName, &dwLen);
 
-            szProviderName = (wchar_t *)HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, dwLen + sizeof(wchar_t));
+        if ( code == ERROR_SUCCESS) 
+        {
 
-            code = RegQueryValueExW( hk, L"Name", NULL, NULL, 
-                                     (LPBYTE) szProviderName, &dwLen);
+            wszProviderName[MAX_PROVIDER_NAME_LENGTH] = '\0';
 
-            if ( code == ERROR_SUCCESS) 
-            {
-                cbProviderNameLength = dwLen;
-            }
+            cbProviderNameLength = wcslen( wszProviderName) * sizeof( WCHAR);
         }
 
         RegCloseKey( hk);
     }
 
-    if ( szProviderName == NULL) {
-
-        szProviderName = OPENAFS_PROVIDER_NAME;
-
-        cbProviderNameLength = OPENAFS_PROVIDER_NAME_LENGTH;
-
-        bFreeProviderName = FALSE;
-    
-    } else {
-
-        bFreeProviderName = TRUE;
-    }
-
-}
-
-void
-FreeProviderNameString( void)
-{
-    if ( bFreeProviderName ) {
-
-        HeapFree( GetProcessHeap(), 0, szProviderName);
-
-        bFreeProviderName = FALSE;
-    }
-
-    szProviderName = NULL;
-
-    cbProviderNameLength = 0;
+    bProviderNameRead = TRUE;
 }
 
 
@@ -769,11 +745,10 @@ try_exit:
 
 DWORD 
 APIENTRY
-NPGetConnection3(
-  IN     LPCWSTR lpLocalName,
-  IN     DWORD dwLevel,
-  OUT    LPVOID lpBuffer,
-  IN OUT  LPDWORD lpBufferSize)
+NPGetConnection3( IN     LPCWSTR lpLocalName,
+                  IN     DWORD dwLevel,
+                  OUT    LPVOID lpBuffer,
+                  IN OUT LPDWORD lpBufferSize)
 {
 
     DWORD    dwStatus = WN_NOT_CONNECTED;
@@ -782,7 +757,6 @@ NPGetConnection3(
     DWORD    dwError = 0;
     DWORD    dwBufferSize = 0;
     HANDLE   hControlDevice = NULL;
-    DWORD    dwPassedLength = 0;
     NETCONNECTINFOSTRUCT *pNetInfo = (NETCONNECTINFOSTRUCT *)lpBuffer;
 
     __Enter
@@ -794,6 +768,15 @@ NPGetConnection3(
             try_return( dwStatus = WN_BAD_LOCALNAME);
         }
         
+        if( lpBuffer == NULL ||
+            lpBufferSize == NULL)
+        {
+
+            AFSDbgPrint( L"NPGetConnection3 No output buffer or size\n");
+
+            try_return( dwStatus = WN_BAD_VALUE);
+        }
+
         if( *lpBufferSize < sizeof( NETCONNECTINFOSTRUCT))
         {
 
@@ -1015,11 +998,7 @@ NPEnumResource( HANDLE  hEnum,
     __Enter
     {
 
-        if ( szProviderName == NULL )
-        {
-                
-            ReadProviderNameString();
-        }
+        ReadProviderNameString();
 
         pNetResource = (LPNETRESOURCE) lpBuffer;
         SpaceAvailable = *lpBufferSize;
@@ -1248,7 +1227,7 @@ NPEnumResource( HANDLE  hEnum,
 
             // copy provider name
             pNetResource->lpProvider = StringZone;
-            wcscpy( StringZone, szProviderName);
+            wcscpy( StringZone, wszProviderName);
 
             StringZone += (cbProviderNameLength / sizeof( WCHAR));
 
@@ -1440,15 +1419,21 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
     PWCHAR   pStringZone = NULL;
     UNICODE_STRING uniRemoteName;
     DWORD    ulRequiredLen = 0;
+    DWORD    dwPassedLength = *lpBufferSize;
+
 
     __Enter
     {
 
+        ReadProviderNameString();
+
         if( lpNetResource == NULL ||
-            lpNetResource->lpRemoteName == NULL)
+            lpNetResource->lpRemoteName == NULL ||
+            lpBuffer == NULL ||
+            lpBufferSize == NULL)
         {
 
-            AFSDbgPrint( L"NPGetResourceInformation No resource name\n");
+            AFSDbgPrint( L"NPGetResourceInformation No resource name, output buffer or size\n");
 
             try_return( dwStatus = WN_BAD_VALUE);
         }
@@ -1521,7 +1506,7 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
 #endif
         ulRequiredLen += cbProviderNameLength + sizeof( WCHAR);                // provider name
 
-        if( ulRequiredLen > *lpBufferSize)
+        if( ulRequiredLen > dwPassedLength)
         {
           
             *lpBufferSize = ulRequiredLen;
@@ -1549,6 +1534,8 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
 
         pStringZone += (pConnectCB->RemoteNameLength / sizeof(WCHAR));
 
+        *pStringZone++ = L'\0';
+
 #if 0
         // Never return the comment from a GetResourceInfo request
         if( pConnectCB->CommentLength > 0)
@@ -1571,7 +1558,7 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
 
         // copy provider name
         pNetResource->lpProvider = pStringZone;
-        wcscpy( pStringZone, szProviderName);
+        wcscpy( pStringZone, wszProviderName);
 
         pStringZone += (cbProviderNameLength / sizeof( WCHAR));
 

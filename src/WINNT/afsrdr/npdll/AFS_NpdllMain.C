@@ -60,7 +60,6 @@ DllMain( HINSTANCE hDLLInst,
         break;
 
     case DLL_PROCESS_DETACH:
-        FreeProviderNameString();
         break;
 
     case DLL_THREAD_ATTACH:

@@ -34,4 +34,3 @@
 
 void ReadProviderNameString( void);
 
-void FreeProviderNameString( void);
