@@ -65,8 +65,8 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSLockControl Acquiring Fcb lock %08lX SHARED %08lX\n",
-                                                          &pFcb->NPFcb->Resource,
-                                                          PsGetCurrentThread());
+                      &pFcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
@@ -125,9 +125,13 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLockControl (IRP_MN_LOCK) Failed to request lock for file %wZ Status %08lX\n", 
-                                                                    &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                                    ntStatus);
+                                  "AFSLockControl (IRP_MN_LOCK) Failed to request lock for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
+                                  &pFcb->DirEntry->DirectoryEntry.FileName,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     try_return( ntStatus);
                 }
@@ -154,9 +158,13 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLockControl (IRP_MN_UNLOCK_ALL/BY_KEY) Failed to request lock for file %wZ Status %08lX\n", 
-                                                                    &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                                    ntStatus);
+                                  "AFSLockControl (IRP_MN_UNLOCK_ALL/BY_KEY) Failed to request lock for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
+                                  &pFcb->DirEntry->DirectoryEntry.FileName,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
                 }
 
                 //
@@ -194,9 +202,13 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLockControl (IRP_MN_UNLOCK_SINGLE) Failed to request lock for file %wZ Status %08lX\n", 
-                                                                    &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                                    ntStatus);
+                                  "AFSLockControl (IRP_MN_UNLOCK_SINGLE) Failed to request lock for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
+                                  &pFcb->DirEntry->DirectoryEntry.FileName,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
                 }
 
                 break;

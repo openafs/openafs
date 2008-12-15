@@ -88,8 +88,8 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueryFileInfo Acquiring Fcb lock %08lX SHARED %08lX\n",
-                                                           &pFcb->NPFcb->Resource,
-                                                           PsGetCurrentThread());
+                      &pFcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
@@ -121,9 +121,13 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSQueryFileInfo Processing request %08lX for %wZ\n", 
-                                                        stFileInformationClass,
-                                                        &pFcb->DirEntry->DirectoryEntry.FileName);
+                      "AFSQueryFileInfo Processing request %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
+                      stFileInformationClass,
+                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         //
         // Process the request
@@ -365,9 +369,13 @@ try_exit:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSQueryFileInfo Failed to process request for %wZ Status %08lX\n", 
-                                                            &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                            ntStatus);
+                              "AFSQueryFileInfo Failed to process request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
+                              &pFcb->DirEntry->DirectoryEntry.FileName,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                              ntStatus);
             }
         }
     }
@@ -435,14 +443,14 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
         FileInformationClass = pIrpSp->Parameters.SetFile.FileInformationClass;
         
         //
-        // Grab teh Fcb EXCL
+        // Grab the Fcb EXCL
         //
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetFileInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                           &pFcb->NPFcb->Resource,
-                                                           PsGetCurrentThread());
+                      &pFcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pFcb->NPFcb->Resource,
                         TRUE);
@@ -465,7 +473,7 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
         else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
         {
 
-            DbgPrint("AFSSetFileInfo On share Info %d\n", FileInformationClass);
+            //DbgPrint("AFSSetFileInfo On share Info %d\n", FileInformationClass);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
@@ -491,9 +499,13 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSSetFileInfo Processing request %08lX for %wZ\n", 
-                                                        FileInformationClass,
-                                                        &pFcb->DirEntry->DirectoryEntry.FileName);
+                      "AFSSetFileInfo Processing request %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
+                      FileInformationClass,
+                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
         
         //
         // Ensure rename operations are synchronous
@@ -528,8 +540,12 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetFileInfo Deleting entry %wZ\n", 
-                                                &pFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSSetFileInfo Deleting entry %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
+                              &pFcb->DirEntry->DirectoryEntry.FileName,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSSetDispositionInfo( Irp, 
                                                   pFcb);
@@ -606,9 +622,13 @@ try_exit:
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSSetFileInfo Failed to process request for %wZ Status %08lX\n", 
-                                                            &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                            ntStatus);
+                              "AFSSetFileInfo Failed to process request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
+                              &pFcb->DirEntry->DirectoryEntry.FileName,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                              ntStatus);
             }
         }
     }
@@ -1523,8 +1543,8 @@ AFSSetRenameInfo( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetRenameInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                           &Fcb->NPFcb->Resource,
-                                                           PsGetCurrentThread());
+                      &Fcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pSrcFcb->NPFcb->Resource,
                         TRUE);
@@ -1697,8 +1717,8 @@ AFSSetAllocationInfo( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetAllocationInfo Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
-                                                           &Fcb->NPFcb->PagingResource,
-                                                           PsGetCurrentThread());
+                      &Fcb->NPFcb->PagingResource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &Fcb->NPFcb->PagingResource,
                           TRUE);
@@ -1822,7 +1842,7 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
 
         //
         // Tell the server
-        // Need to drop our lock on teh Fcb while this call is made since it could
+        // Need to drop our lock on the Fcb while this call is made since it could
         // result in the service invalidating the node requiring the lock
         //
 
@@ -1833,8 +1853,8 @@ AFSSetEndOfFileInfo( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSSetEndOfFileInfo Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                           &Fcb->NPFcb->Resource,
-                                                           PsGetCurrentThread());
+                      &Fcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &Fcb->NPFcb->Resource,
                         TRUE);

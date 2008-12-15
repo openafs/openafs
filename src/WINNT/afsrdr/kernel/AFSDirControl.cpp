@@ -190,8 +190,8 @@ AFSQueryDirectory( IN PIRP Irp)
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Acquiring Dcb lock %08lX EXCL %08lX\n",
-                                                          &pFcb->NPFcb->Resource,
-                                                          PsGetCurrentThread());
+                          &pFcb->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &pFcb->NPFcb->Resource,
                             TRUE);
@@ -214,8 +214,8 @@ AFSQueryDirectory( IN PIRP Irp)
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSQueryDirectory Acquiring Dcb lock %08lX SHARED %08lX\n",
-                                                          &pFcb->NPFcb->Resource,
-                                                          PsGetCurrentThread());
+                          &pFcb->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
@@ -325,7 +325,7 @@ AFSQueryDirectory( IN PIRP Irp)
                 }
             }
 
-            // Drop to shared on teh Fcb 
+            // Drop to shared on the Fcb 
             AFSConvertToShared( &pFcb->NPFcb->Resource);
         }
 
@@ -876,8 +876,8 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNotifyChangeDirectory Acquiring Dcb lock %08lX EXCL %08lX\n",
-                                                          &pFcb->NPFcb->Resource,
-                                                          PsGetCurrentThread());
+                      &pFcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pFcb->NPFcb->Resource,
                           TRUE);

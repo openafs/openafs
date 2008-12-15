@@ -53,7 +53,7 @@ AFSQueryQuota( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSQueryQuota Entry for FO %08lX\n", 
-                                    pIrpSp->FileObject);
+                      pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -86,7 +86,7 @@ AFSSetQuota( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSSetQuota Entry for FO %08lX\n", 
-                                    pIrpSp->FileObject);
+                      pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);

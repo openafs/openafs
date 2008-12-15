@@ -79,9 +79,17 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSInitFcb Initializing fcb for %wZ Parent %wZ\n",
-                                                  &DirEntry->DirectoryEntry.FileName,
-                                                  &ParentFcb->DirEntry->DirectoryEntry.FileName);
+                          "AFSInitFcb Initializing fcb for %wZ FID %08lX-%08lX-%08lX-%08lX Parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          &DirEntry->DirectoryEntry.FileName,
+                          DirEntry->DirectoryEntry.FileId.Cell,
+                          DirEntry->DirectoryEntry.FileId.Volume,
+                          DirEntry->DirectoryEntry.FileId.Vnode,
+                          DirEntry->DirectoryEntry.FileId.Unique,
+                          &ParentFcb->DirEntry->DirectoryEntry.FileName,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         }
         else
@@ -89,8 +97,12 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSInitFcb Initializing fcb for (PIOCtl/Share) Parent %wZ\n",
-                                                  &ParentFcb->DirEntry->DirectoryEntry.FileName);
+                          "AFSInitFcb Initializing fcb for (PIOCtl/Share) Parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          &ParentFcb->DirEntry->DirectoryEntry.FileName,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          ParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
         }
 
         usFcbLength = sizeof( AFSFcb);
@@ -171,8 +183,8 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                       &pNPFcb->Resource,
-                                                       PsGetCurrentThread());
+                      &pNPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pNPFcb->Resource,
                         TRUE);
@@ -343,8 +355,8 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitFcb Acquiring VolumeRoot FcbListLock lock %08lX EXCL %08lX\n",
-                                                           pFcb->RootFcb->Specific.VolumeRoot.FcbListLock,
-                                                           PsGetCurrentThread());
+                          pFcb->RootFcb->Specific.VolumeRoot.FcbListLock,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( pFcb->RootFcb->Specific.VolumeRoot.FcbListLock,
                             TRUE);
@@ -373,8 +385,8 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSInitFcb Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX EXCL %08lX\n",
-                                                           pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                                                           PsGetCurrentThread());
+                          pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( pFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
                             TRUE);
@@ -420,7 +432,7 @@ try_exit:
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSInitFcb Failed to initialize fcb Status %08lX\n",
-                                        ntStatus);
+                          ntStatus);
 
             if( DirEntry != NULL)
             {
@@ -745,8 +757,8 @@ AFSRemoveAFSRoot()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveAFSRoot Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
-                                                           &pDevExt->Specific.RDR.VolumeTreeLock,
-                                                           PsGetCurrentThread());
+                      &pDevExt->Specific.RDR.VolumeTreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pDevExt->Specific.RDR.VolumeTreeLock, 
                         TRUE);
@@ -758,8 +770,8 @@ AFSRemoveAFSRoot()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveAFSRoot Acquiring GlobalRoot lock %08lX EXCL %08lX\n",
-                                                           &AFSGlobalRoot->NPFcb->Resource,
-                                                           PsGetCurrentThread());
+                      &AFSGlobalRoot->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &AFSGlobalRoot->NPFcb->Resource,
                         TRUE);
@@ -767,8 +779,8 @@ AFSRemoveAFSRoot()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveAFSRoot Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
-                                                           AFSGlobalRoot->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock,
-                                                           PsGetCurrentThread());
+                      AFSGlobalRoot->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( AFSGlobalRoot->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock,
                         TRUE);
@@ -794,8 +806,8 @@ AFSRemoveAFSRoot()
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSRemoveAFSRoot Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                                   &pFcb->NPFcb->Resource,
-                                                                   PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -842,8 +854,8 @@ AFSRemoveAFSRoot()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveAFSRoot Acquiring VolumeRoot FcbListLock lock %08lX EXCL %08lX\n",
-                                                                   AFSGlobalRoot->Specific.VolumeRoot.FcbListLock,
-                                                                   PsGetCurrentThread());
+                      AFSGlobalRoot->Specific.VolumeRoot.FcbListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( AFSGlobalRoot->Specific.VolumeRoot.FcbListLock,
                         TRUE);
@@ -859,8 +871,8 @@ AFSRemoveAFSRoot()
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSRemoveAFSRoot Acquiring Fcb(2) lock %08lX EXCL %08lX\n",
-                                                                           &pFcb->NPFcb->Resource,
-                                                                           PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -873,9 +885,13 @@ AFSRemoveAFSRoot()
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSRemoveAFSRoot Processing Fcb (%08lX) for %wZ\n",
-                                                    pFcb,
-                                                    &pFcb->DirEntry->DirectoryEntry.FileName);
+                                      "AFSRemoveAFSRoot Processing Fcb (%08lX) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pFcb,
+                                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                         pFcb->DirEntry->Fcb = NULL;
 
@@ -916,7 +932,7 @@ AFSRemoveAFSRoot()
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSRemoveAFSRoot Processing Fcb (%08lX)\n",
-                                                    pFcb);
+                                      pFcb);
                     }
 
                     pNextFcb = (AFSFcb *)pFcb->ListEntry.fLink;                                    
@@ -964,8 +980,8 @@ AFSRemoveAFSRoot()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveAFSRoot Acquiring RDR VolumeListLock lock %08lX EXCL %08lX\n",
-                                                                           &pDevExt->Specific.RDR.VolumeListLock,
-                                                                           PsGetCurrentThread());
+                      &pDevExt->Specific.RDR.VolumeListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pDevExt->Specific.RDR.VolumeListLock,
                         TRUE);
@@ -978,8 +994,8 @@ AFSRemoveAFSRoot()
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRemoveAFSRoot Acquiring VolumeRoot FcbListLock lock %08lX EXCL %08lX\n",
-                                                                               pVcb->Specific.VolumeRoot.FcbListLock,
-                                                                               PsGetCurrentThread());
+                          pVcb->Specific.VolumeRoot.FcbListLock,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( pVcb->Specific.VolumeRoot.FcbListLock,
                             TRUE);
@@ -1014,8 +1030,8 @@ AFSRemoveAFSRoot()
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSRemoveAFSRoot Acquiring Fcb(3) lock %08lX EXCL %08lX\n",
-                                                                                       &pFcb->NPFcb->Resource,
-                                                                                       PsGetCurrentThread());
+                                  &pFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                     TRUE);
@@ -1036,8 +1052,8 @@ AFSRemoveAFSRoot()
                         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
                                       "AFSRemoveAFSRoot Acquiring Fcb extents lock %08lX EXCL %08lX\n",
-                                                                                           &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                                                                           PsGetCurrentThread());
+                                      &pFcb->NPFcb->Specific.File.ExtentsResource,
+                                      PsGetCurrentThread());
 
                         AFSAcquireExcl( &pFcb->NPFcb->Specific.File.ExtentsResource, 
                                         TRUE);
@@ -1057,8 +1073,12 @@ AFSRemoveAFSRoot()
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSRemoveAFSRoot Tearing down extents for %wZ\n",
-                                          &pFcb->DirEntry->DirectoryEntry.FileName);        
+                                      "AFSRemoveAFSRoot Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                         (VOID) AFSTearDownFcbExtents( pFcb);
                     }
@@ -1175,8 +1195,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                           &pNPFcb->Resource,
-                                                           PsGetCurrentThread());
+                      &pNPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pNPFcb->Resource,
                         TRUE);
@@ -1243,8 +1263,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Acquiring RDR VolumeTree.TreeLock lock %08lX EXCL %08lX\n",
-                                                           pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                                                           PsGetCurrentThread());
+                      pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
                         TRUE);
@@ -1252,10 +1272,10 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Adding volume FID %08lX:%08lX:%08lX:%08lX\n",
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
+                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
         if( pDeviceExt->Specific.RDR.VolumeTree.TreeHead == NULL)
         {
@@ -1276,8 +1296,8 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootFcb Acquiring RDR VolumeListLock lock %08lX EXCL %08lX\n",
-                                                           &pDeviceExt->Specific.RDR.VolumeListLock,
-                                                           PsGetCurrentThread());
+                      &pDeviceExt->Specific.RDR.VolumeListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pDeviceExt->Specific.RDR.VolumeListLock,
                         TRUE);
@@ -1405,8 +1425,8 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootForMountPoint Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                           &pNPFcb->Resource,
-                                                           PsGetCurrentThread());
+                      &pNPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pNPFcb->Resource,
                         TRUE);
@@ -1535,8 +1555,8 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootForMountPoint Acquiring RDR VolumeTree.TreeLock lock %08lX EXCL %08lX\n",
-                                                           pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                                                           PsGetCurrentThread());
+                      pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
                         TRUE);
@@ -1544,10 +1564,10 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootForMountPoint Adding volume FID %08lX:%08lX:%08lX:%08lX\n",
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
+                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
         if( pDeviceExt->Specific.RDR.VolumeTree.TreeHead == NULL)
         {
@@ -1568,8 +1588,8 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitRootForMountPoint Acquiring RDR VolumeListLock lock %08lX EXCL %08lX\n",
-                                                           &pDeviceExt->Specific.RDR.VolumeListLock,
-                                                           PsGetCurrentThread());
+                      &pDeviceExt->Specific.RDR.VolumeListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pDeviceExt->Specific.RDR.VolumeListLock,
                         TRUE);
@@ -1738,7 +1758,7 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSRemoveFcb Removing Fcb %08lX\n",
-                                         Fcb);
+                  Fcb);
 
     if( Fcb->Header.NodeTypeCode == AFS_FILE_FCB)
     {

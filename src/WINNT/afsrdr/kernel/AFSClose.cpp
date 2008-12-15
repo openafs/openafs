@@ -99,8 +99,8 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Acquiring GlobalRoot lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -246,8 +246,8 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSClose Acquiring Dcb lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -269,8 +269,8 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose Acquiring Parent lock %08lX EXCL %08lX\n",
-                                                         &pFcb->ParentFcb->NPFcb->Resource,
-                                                         PsGetCurrentThread());
+                                  &pFcb->ParentFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->ParentFcb->NPFcb->Resource,
                                       TRUE);
@@ -280,8 +280,8 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSClose Acquiring Fcb (DELETE) lock %08lX EXCL %08lX\n",
-                                                         &pFcb->NPFcb->Resource,
-                                                         PsGetCurrentThread());
+                                  &pFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -358,8 +358,12 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSClose Flushing extents for %wZ\n",
-                                              &pFcb->DirEntry->DirectoryEntry.FileName);        
+                                          "AFSClose Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                          &pFcb->DirEntry->DirectoryEntry.FileName,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
                             AFSFlushExtents( pFcb);
                         }
@@ -386,9 +390,13 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSClose Processing Fcb (%08lX) for %wZ for REMOVAL\n",
-                                                        pFcb,
-                                                        &pFcb->DirEntry->DirectoryEntry.FileName);
+                                          "AFSClose Processing Fcb (%08lX) for %wZ FID %08lX-%08lX-%08lX-%08lX for REMOVAL\n",
+                                          pFcb,
+                                          &pFcb->DirEntry->DirectoryEntry.FileName,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                             pFcb->DirEntry->Fcb = NULL;
 
@@ -429,7 +437,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE,
                                           "AFSClose Processing Fcb (%08lX) for REMOVAL\n",
-                                                        pFcb);
+                                          pFcb);
                         }
 
                         bDeleteFcb = TRUE;
@@ -464,7 +472,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                      AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                    AFS_TRACE_LEVEL_VERBOSE,
                                    "AFSClose Deleting Fcb (%08lX)\n",
-                                                        pFcb);
+                                   pFcb);
 
                     AFSRemoveFcb( pFcb);
                 }
@@ -555,7 +563,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSClose Processing unknown node type %d\n", 
-                                                    pFcb->Header.NodeTypeCode);
+                              pFcb->Header.NodeTypeCode);
 
                 break;
         }

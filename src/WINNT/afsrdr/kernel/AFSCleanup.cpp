@@ -124,8 +124,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring GlobalRoot lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
@@ -140,8 +140,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring PIOCtl lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -185,8 +185,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -198,8 +198,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Tearing down cache map for Fcb %08lX FileObject %08lX\n",
-                                                     pFcb,
-                                                     pFileObject);
+                              pFcb,
+                              pFileObject);
 
                 CcUninitializeCacheMap( pFileObject, 
                                         NULL, 
@@ -281,14 +281,18 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup Tearing down extents for %wZ\n",
-                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
+                                  "AFSCleanup Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  &pFcb->DirEntry->DirectoryEntry.FileName,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
                     AFSTearDownFcbExtents( pFcb);
 
                     //
                     // Try and notify the service about the delete
-                    // We need to drop teh locks on the Fcb since this may cause re-entrancy
+                    // We need to drop the locks on the Fcb since this may cause re-entrancy
                     // for the invalidation of the node
                     //
 
@@ -299,8 +303,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup Acquiring Fcb (DELETE) lock %08lX EXCL %08lX\n",
-                                                         &pFcb->NPFcb->Resource,
-                                                         PsGetCurrentThread());
+                                  &pFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -311,8 +315,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSCleanup Failed to notify service of deleted file %wZ Status %08lX\n", 
-                                                                            &pCcb->FullFileName,
-                                                                            ntStatus);
+                                      &pCcb->FullFileName,
+                                      ntStatus);
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -373,8 +377,12 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSCleanup Flushing extents for %wZ\n",
-                                          &pFcb->DirEntry->DirectoryEntry.FileName);        
+                                      "AFSCleanup Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
                         AFSFlushExtents( pFcb);
                     }
@@ -391,7 +399,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 //
-                // If there have been any updates to teh node then push it to 
+                // If there have been any updates to the node then push it to 
                 // the service
                 //
 
@@ -401,13 +409,13 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     ULONG ulNotifyFilter = 0;
 
                     //
-                    // Update teh change time
+                    // Update the change time
                     //
 
                     pFcb->DirEntry->DirectoryEntry.ChangeTime = pFcb->DirEntry->DirectoryEntry.LastAccessTime;
 
                     //
-                    // Need to drop our lock on teh Fcb while this call is made since it could
+                    // Need to drop our lock on the Fcb while this call is made since it could
                     // result in the service invalidating the node requiring the lock
                     //
 
@@ -419,8 +427,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup Acquiring Fcb (FILEINFO) lock %08lX EXCL %08lX\n",
-                                                         &pFcb->NPFcb->Resource,
-                                                         PsGetCurrentThread());
+                                  &pFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -500,8 +508,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring Dcb lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -545,8 +553,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSCleanup Acquiring Dcb (DELETE) lock %08lX EXCL %08lX\n",
-                                                         &pFcb->NPFcb->Resource,
-                                                         PsGetCurrentThread());
+                                  &pFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -557,8 +565,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSCleanup Failed to notify service of deleted directory %wZ Status %08lX\n", 
-                                                                            &pCcb->FullFileName,
-                                                                            ntStatus);
+                                      &pCcb->FullFileName,
+                                      ntStatus);
 
                         ntStatus = STATUS_SUCCESS;
 
@@ -584,7 +592,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 //
-                // If there have been any updates to teh node then push it to 
+                // If there have been any updates to the node then push it to 
                 // the service
                 //
 
@@ -601,7 +609,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     pFcb->DirEntry->DirectoryEntry.ChangeTime = pFcb->DirEntry->DirectoryEntry.LastAccessTime;
 
                     //
-                    // Need to drop our lock on teh Fcb while this call is made since it could
+                    // Need to drop our lock on the Fcb while this call is made since it could
                     // result in the service invalidating the node requiring the lock
                     //
 
@@ -613,8 +621,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring Dcb (FILEINFO) lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                                  &pFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                       TRUE);
@@ -684,8 +692,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCleanup Acquiring SPECIAL SHARE lock %08lX EXCL %08lX\n",
-                                                     &pFcb->NPFcb->Resource,
-                                                     PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                   TRUE);
@@ -718,7 +726,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSCleanup Processing unknown node type %d\n", 
-                                                            pFcb->Header.NodeTypeCode);
+                              pFcb->Header.NodeTypeCode);
 
                 break;
         }
@@ -740,8 +748,7 @@ try_exit:
         // Complete the request
         //
 
-        AFSCompleteRequest( Irp,
-                              ntStatus);
+        AFSCompleteRequest( Irp, ntStatus);
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
     {

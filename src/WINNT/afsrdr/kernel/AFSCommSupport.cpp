@@ -96,11 +96,11 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEnumerateDirectory Enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                                               &Dcb->DirEntry->DirectoryEntry.FileName,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Unique);
+                      &Dcb->DirEntry->DirectoryEntry.FileName,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         //
         // Loop on the information
@@ -138,9 +138,13 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSEnumerateDirectory Failed to enumerate directory %wZ Status %08lX\n",
-                                                                            &Dcb->DirEntry->DirectoryEntry.FileName,
-                                                                            ntStatus);
+                                  "AFSEnumerateDirectory Failed to enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  &Dcb->DirEntry->DirectoryEntry.FileName,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     ntStatus = STATUS_ACCESS_DENIED;
                 }
@@ -157,8 +161,12 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSEnumerateDirectory Invalidation while enumerating directory %wZ\n",
-                              &Dcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSEnumerateDirectory Invalidation while enumerating directory %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              &Dcb->DirEntry->DirectoryEntry.FileName,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = STATUS_ACCESS_DENIED;
 
@@ -288,11 +296,15 @@ AFSEnumerateDirectory( IN AFSFcb *Dcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSEnumerateDirectory Inserting entry %08lX %wZ Type %08lX into parent %08lX\n",
-                                                                            pDirNode,
-                                                                            &pDirNode->DirectoryEntry.FileName,
-                                                                            pDirNode->DirectoryEntry.FileType,
-                                                                            Dcb);
+                                  "AFSEnumerateDirectory Inserting entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX Type %08lX into parent %08lX\n",
+                                  pDirNode,
+                                  &pDirNode->DirectoryEntry.FileName,
+                                  pDirNode->DirectoryEntry.FileId.Cell,
+                                  pDirNode->DirectoryEntry.FileId.Volume,
+                                  pDirNode->DirectoryEntry.FileId.Vnode,
+                                  pDirNode->DirectoryEntry.FileId.Unique,
+                                  pDirNode->DirectoryEntry.FileType,
+                                  Dcb);
 
                     if( *DirListHead == NULL)
                     {
@@ -435,9 +447,13 @@ AFSEnumerateDirectoryNoResponse( IN AFSFcb *Dcb)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSEnumerateDirectoryNoResponse Failed to enumerate directory %wZ Status %08lX\n",
-                                                                            &Dcb->DirEntry->DirectoryEntry.FileName,
-                                                                            ntStatus);
+                              "AFSEnumerateDirectoryNoResponse Failed to enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              &Dcb->DirEntry->DirectoryEntry.FileName,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              Dcb->DirEntry->DirectoryEntry.FileId.Unique,
+                              ntStatus);
 
                 ntStatus = STATUS_ACCESS_DENIED;
             }
@@ -496,11 +512,11 @@ AFSVerifyDirectoryContent( IN AFSFcb *Dcb)
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSVerifyDirectoryContent Enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                                               &Dcb->DirEntry->DirectoryEntry.FileName,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                                               Dcb->DirEntry->DirectoryEntry.FileId.Unique);
+                      &Dcb->DirEntry->DirectoryEntry.FileName,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Dcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         //
         // Loop on the information
@@ -538,9 +554,13 @@ AFSVerifyDirectoryContent( IN AFSFcb *Dcb)
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSVerifyDirectoryContent Failed to enumerate directory %wZ Status %08lX\n",
-                                                                            &Dcb->DirEntry->DirectoryEntry.FileName,
-                                                                            ntStatus);
+                                  "AFSVerifyDirectoryContent Failed to enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  &Dcb->DirEntry->DirectoryEntry.FileName,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  Dcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     ntStatus = STATUS_ACCESS_DENIED;
                 }
@@ -678,11 +698,15 @@ AFSVerifyDirectoryContent( IN AFSFcb *Dcb)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyDirectoryContent Inserting NEW entry %08lX %wZ Type %08lX into parent %08lX\n",
-                                                                            pDirNode,
-                                                                            &pDirNode->DirectoryEntry.FileName,
-                                                                            pDirNode->DirectoryEntry.FileType,
-                                                                            Dcb);
+                              "AFSVerifyDirectoryContent Inserting NEW entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX Type %08lX into parent %08lX\n",
+                              pDirNode,
+                              &pDirNode->DirectoryEntry.FileName,
+                              pDirNode->DirectoryEntry.FileId.Cell,
+                              pDirNode->DirectoryEntry.FileId.Volume,
+                              pDirNode->DirectoryEntry.FileId.Vnode,
+                              pDirNode->DirectoryEntry.FileId.Unique,
+                              pDirNode->DirectoryEntry.FileType,
+                              Dcb);
 
                 //
                 // Init the short name if we have one
@@ -742,10 +766,14 @@ AFSVerifyDirectoryContent( IN AFSFcb *Dcb)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyDirectoryContent Inserting entry %08lX %wZ into parent %08lX Status %08lX\n",
-                                                                            pDirNode,
-                                                                            &pDirNode->DirectoryEntry.FileName,
-                                                                            Dcb);
+                              "AFSVerifyDirectoryContent Inserting entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX into parent %08lX Status %08lX\n",
+                              pDirNode,
+                              &pDirNode->DirectoryEntry.FileName,
+                              pDirNode->DirectoryEntry.FileId.Cell,
+                              pDirNode->DirectoryEntry.FileId.Volume,
+                              pDirNode->DirectoryEntry.FileId.Vnode,
+                              pDirNode->DirectoryEntry.FileId.Unique,
+                              Dcb);
 
                 if( Dcb->Specific.Directory.DirectoryNodeListHead == NULL)
                 {
@@ -856,8 +884,8 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNotifyFileCreate Notification for entry %wZ Parent DV %I64X\n",
-                                       FileName,
-                                       ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart);
+                      FileName,
+                      ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart);
 
         RtlZeroMemory( &stCreateCB,
                        sizeof( AFSFileCreateCB));
@@ -913,8 +941,8 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNotifyFileCreate Acquiring ParentFcb lock %08lX EXCL %08lX\n",
-                                                                  &ParentDcb->NPFcb->Resource,
-                                                                  PsGetCurrentThread());
+                      &ParentDcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &ParentDcb->NPFcb->Resource,
                         TRUE);
@@ -941,10 +969,10 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNotifyFileCreate DataVersions for entry %wZ Current Parent DV %I64X Old Parent DV %I64X Returned Parent DV %I64X\n",
-                                       FileName,
-                                       ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart,
-                                       liOldDataVersion.QuadPart,
-                                       pResultCB->ParentDataVersion.QuadPart);
+                      FileName,
+                      ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart,
+                      liOldDataVersion.QuadPart,
+                      pResultCB->ParentDataVersion.QuadPart);
 
         if( liOldDataVersion.QuadPart != pResultCB->ParentDataVersion.QuadPart - 1 ||
             liOldDataVersion.QuadPart != ParentDcb->DirEntry->DirectoryEntry.DataVersion.QuadPart)
@@ -953,7 +981,7 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSNotifyFileCreate Raced with an invalidate call and a re-enumeration for entry %wZ\n",
-                                           FileName);
+                          FileName);
 
             //
             // We raced so go and lookup the directory entry in the parent
@@ -983,7 +1011,7 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSNotifyFileCreate Located dir entry for file %wZ\n",
-                                           FileName);
+                              FileName);
 
                 *DirNode = pDirNode;
 
@@ -1010,7 +1038,7 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSNotifyFileCreate Creating new entry %wZ\n",
-                                       FileName);
+                      FileName);
 
         //
         // Initialize the directory entry
@@ -1599,8 +1627,8 @@ AFSProcessRequest( IN ULONG RequestType,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessRequest Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
-                                                         &pCommSrvc->IrpPoolLock,
-                                                         PsGetCurrentThread());
+                      &pCommSrvc->IrpPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
@@ -2310,8 +2338,8 @@ AFSInitIrpPool()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitIrpPool Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
-                                                         &pCommSrvc->IrpPoolLock,
-                                                         PsGetCurrentThread());
+                      &pCommSrvc->IrpPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                           TRUE);
@@ -2319,8 +2347,8 @@ AFSInitIrpPool()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInitIrpPool Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
-                                                         &pCommSrvc->ResultPoolLock,
-                                                         PsGetCurrentThread());
+                      &pCommSrvc->ResultPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                           TRUE);
@@ -2400,8 +2428,8 @@ AFSCleanupIrpPool()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSCleanupIrpPool Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
-                                                         &pCommSrvc->IrpPoolLock,
-                                                         PsGetCurrentThread());
+                      &pCommSrvc->IrpPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
@@ -2409,8 +2437,8 @@ AFSCleanupIrpPool()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSCleanupIrpPool Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
-                                                         &pCommSrvc->ResultPoolLock,
-                                                         PsGetCurrentThread());
+                      &pCommSrvc->ResultPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                         TRUE);
@@ -2540,8 +2568,8 @@ AFSInsertRequest( IN AFSCommSrvcCB *CommSrvc,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertRequest Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
-                                                         &CommSrvc->IrpPoolLock,
-                                                         PsGetCurrentThread());
+                      &CommSrvc->IrpPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &CommSrvc->IrpPoolLock,
                         TRUE);
@@ -2603,8 +2631,8 @@ AFSProcessIrpRequest( IN PIRP Irp)
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessIrpRequest Acquiring IrpPoolLock lock %08lX EXCL %08lX\n",
-                                                         &pCommSrvc->IrpPoolLock,
-                                                         PsGetCurrentThread());
+                      &pCommSrvc->IrpPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                         TRUE);
@@ -2657,8 +2685,8 @@ AFSProcessIrpRequest( IN PIRP Irp)
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessIrpRequest Acquiring IrpPoolLock (WAIT) lock %08lX EXCL %08lX\n",
-                                                             &pCommSrvc->IrpPoolLock,
-                                                             PsGetCurrentThread());
+                          &pCommSrvc->IrpPoolLock,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &pCommSrvc->IrpPoolLock,
                             TRUE);
@@ -2843,8 +2871,8 @@ AFSProcessIrpRequest( IN PIRP Irp)
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSProcessIrpRequest Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
-                                                                     &pCommSrvc->ResultPoolLock,
-                                                                     PsGetCurrentThread());
+                                  &pCommSrvc->ResultPoolLock,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                                     TRUE);
@@ -2923,8 +2951,8 @@ AFSProcessIrpResult( IN PIRP Irp)
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessIrpResult Acquiring ResultPoolLock lock %08lX EXCL %08lX\n",
-                                                                     &pCommSrvc->ResultPoolLock,
-                                                                     PsGetCurrentThread());
+                      &pCommSrvc->ResultPoolLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pCommSrvc->ResultPoolLock,
                           TRUE);

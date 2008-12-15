@@ -394,7 +394,7 @@ try_exit:
         if( !NT_SUCCESS( ntStatus))
         {
 
-            DbgPrint("AFS Driver Entry failed to initialize %08lX\n", ntStatus);
+            DbgPrint("AFS DriverEntry failed to initialize %08lX\n", ntStatus);
 
             if( AFSDeviceObject != NULL)
             {

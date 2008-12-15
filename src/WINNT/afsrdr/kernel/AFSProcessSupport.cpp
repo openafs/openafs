@@ -58,8 +58,8 @@ AFSProcessNotify( IN HANDLE  ParentId,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessNotify Acquiring Control ProcessTree.TreeLock lock %08lX EXCL %08lX\n",
-                                                              pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                                                              PsGetCurrentThread());
+                      pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                         TRUE);
@@ -139,8 +139,8 @@ AFSValidateProcessEntry()
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSValidateProcessEntry Acquiring Control ProcessTree.TreeLock lock %08lX SHARED %08lX\n",
-                                                              pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                                                              PsGetCurrentThread());
+                      pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           TRUE);
@@ -162,8 +162,8 @@ AFSValidateProcessEntry()
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSValidateProcessEntry Acquiring Control ProcessTree.TreeLock lock %08lX EXCL %08lX\n",
-                                                                  pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                                                                  PsGetCurrentThread());
+                          pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                             TRUE);
@@ -240,8 +240,8 @@ AFSIs64BitProcess( IN ULONGLONG ProcessId)
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSIs64BitProcess Acquiring Control ProcessTree.TreeLock lock %08lX SHARED %08lX\n",
-                                                              pDeviceExt->Specific.Control.ProcessTree.TreeLock,
-                                                              PsGetCurrentThread());
+                      pDeviceExt->Specific.Control.ProcessTree.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( pDeviceExt->Specific.Control.ProcessTree.TreeLock,
                           TRUE);

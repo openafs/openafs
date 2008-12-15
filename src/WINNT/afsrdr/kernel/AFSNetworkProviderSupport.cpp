@@ -54,8 +54,8 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSAddConnection Acquiring AFSProviderListLock lock %08lX EXCL %08lX\n",
-                                                              &AFSProviderListLock,
-                                                              PsGetCurrentThread());
+                      &AFSProviderListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &AFSProviderListLock,
                         TRUE);
@@ -282,8 +282,8 @@ AFSAddConnectionEx( IN UNICODE_STRING *RemoteName,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSAddConnectionEx Acquiring AFSProviderListLock lock %08lX EXCL %08lX\n",
-                                                              &AFSProviderListLock,
-                                                              PsGetCurrentThread());
+                      &AFSProviderListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &AFSProviderListLock,
                         TRUE);
@@ -506,8 +506,8 @@ AFSCancelConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSCancelConnection Acquiring AFSProviderListLock lock %08lX EXCL %08lX\n",
-                                                              &AFSProviderListLock,
-                                                              PsGetCurrentThread());
+                      &AFSProviderListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &AFSProviderListLock,
                         TRUE);
@@ -605,8 +605,8 @@ AFSGetConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSGetConnection Acquiring AFSProviderListLock lock %08lX SHARED %08lX\n",
-                                                              &AFSProviderListLock,
-                                                              PsGetCurrentThread());
+                      &AFSProviderListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( &AFSProviderListLock,
                           TRUE);
@@ -759,8 +759,8 @@ AFSListConnections( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSListConnections Acquiring AFSProviderListLock lock %08lX SHARED %08lX\n",
-                                                              &AFSProviderListLock,
-                                                              PsGetCurrentThread());
+                      &AFSProviderListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( &AFSProviderListLock,
                           TRUE);
@@ -1182,8 +1182,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEnumerateConnection Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
-                                                              AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                                              PsGetCurrentThread());
+                      AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
@@ -1228,8 +1228,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSEnumerateConnection Acquiring ShareEntry DirNode lock %08lX EXCL %08lX\n",
-                                                              &pShareDirEntry->NPDirNode->Lock,
-                                                              PsGetCurrentThread());
+                      &pShareDirEntry->NPDirNode->Lock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pShareDirEntry->NPDirNode->Lock,
                         TRUE);
@@ -1266,8 +1266,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEnumerateConnection Acquiring ShareEntry Fcb lock %08lX EXCL %08lX\n",
-                                                              &pShareDirEntry->Fcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                          &pShareDirEntry->Fcb->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &pShareDirEntry->Fcb->NPFcb->Resource,
                             TRUE);
@@ -1335,8 +1335,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEnumerateConnection Acquiring ShareEntry LinkTarget Fcb lock %08lX EXCL %08lX\n",
-                                                              &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                          &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
                             TRUE);
@@ -1358,8 +1358,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSEnumerateConnection Acquiring RDR VolumeTree.TreeLock lock %08lX SHARED %08lX\n",
-                                                              pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                                                              PsGetCurrentThread());
+                              pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
                                   TRUE);
@@ -1378,8 +1378,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSEnumerateConnection Acquiring ShareEntry LinkTarget Fcb lock %08lX EXCL %08lX\n",
-                                                              &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                          &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb->NPFcb->Resource,
                             TRUE);
@@ -1566,8 +1566,8 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSGetConnectionInfo Acquiring AFSProviderListLock lock %08lX SHARED %08lX\n",
-                                                              &AFSProviderListLock,
-                                                              PsGetCurrentThread());
+                      &AFSProviderListLock,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( &AFSProviderListLock,
                           TRUE);

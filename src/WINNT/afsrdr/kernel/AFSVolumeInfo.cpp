@@ -71,8 +71,8 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSQueryVolumeInfo Acquiring VolumeEntry DirNode lock %08lX EXCL %08lX\n",
-                                                              &pVolumeEntry->NPDirNode->Lock,
-                                                              PsGetCurrentThread());
+                      &pVolumeEntry->NPDirNode->Lock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pVolumeEntry->NPDirNode->Lock,
                         TRUE);
@@ -164,7 +164,7 @@ AFSQueryVolumeInfo( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSQueryVolumeInfo Invalid class %d\n", 
-                                                FsInformationClass);
+                              FsInformationClass);
 
                 ntStatus = STATUS_INVALID_PARAMETER;
             

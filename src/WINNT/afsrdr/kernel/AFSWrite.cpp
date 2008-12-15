@@ -146,7 +146,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
             {
 
-                DbgPrint("AFSCommonWrite on special share\n");
+                //DbgPrint("AFSCommonWrite on special share\n");
 
                 Irp->IoStatus.Information = ulByteCount;
 
@@ -321,8 +321,8 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonWrite Initialize caching on Fcb %08lX FileObject %08lX\n",
-                                  pFcb,
-                                  pFileObject);
+                              pFcb,
+                              pFileObject);
 
                 CcInitializeCacheMap( pFileObject,
                                       (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
@@ -443,8 +443,8 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonWrite Acquiring Fcb PagingIo lock %08lX SHARED %08lX\n",
-                                                         &pNPFcb->PagingResource,
-                                                         PsGetCurrentThread());
+                              &pNPFcb->PagingResource,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( &pNPFcb->PagingResource,
                                   TRUE);
@@ -467,8 +467,8 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonWrite Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                         &pNPFcb->Resource,
-                                                         PsGetCurrentThread());
+                              &pNPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pNPFcb->Resource,
                                 TRUE);
@@ -499,8 +499,8 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSCommonWrite Acquiring Fcb lock %08lX SHARED %08lX\n",
-                                                         &pNPFcb->Resource,
-                                                         PsGetCurrentThread());
+                              &pNPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( &pNPFcb->Resource,
                                   TRUE);
@@ -654,8 +654,8 @@ AFSIOCtlWrite( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSIOCtlWrite Acquiring Fcb lock %08lX SHARED %08lX\n",
-                                                         &pFcb->NPFcb->Resource,
-                                                         PsGetCurrentThread());
+                      &pFcb->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( &pFcb->NPFcb->Resource,
                           TRUE);
@@ -870,8 +870,8 @@ AFSNonCachedWrite( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSNonCachedWrite Acquiring Fcb extents lock %08lX SHARED %08lX\n",
-                                                         &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                                         PsGetCurrentThread());
+                              &pFcb->NPFcb->Specific.File.ExtentsResource,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource, TRUE );
                 bLocked = TRUE;
@@ -1228,12 +1228,31 @@ AFSCachedWrite( IN PDEVICE_OBJECT DeviceObject,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSCommonWrite (%08lX) Failed to process MDL read Status %08lX\n",
+                                  "AFSCachedWrite (%08lX) Failed to process MDL read Status %08lX\n",
                                   Irp,
                                   ntStatus);     
 
                     try_return( ntStatus);
                 }
+            }
+
+            if( pFileObject->PrivateCacheMap == NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCachedWrite Initialize caching on Fcb %08lX FileObject %08lX\n",
+                              pFcb,
+                              pFileObject);
+
+                CcInitializeCacheMap( pFileObject,
+                                      (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
+                                      FALSE,
+                                      &AFSCacheManagerCallbacks,
+                                      pFcb);
+
+                CcSetReadAheadGranularity( pFileObject, 
+                                           READ_AHEAD_GRANULARITY);
             }
 
             if( !CcCopyWrite( pFileObject,
@@ -1367,7 +1386,7 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
 
     //
     // Tell the server
-    // Need to drop our lock on teh Fcb while this call is made since it could
+    // Need to drop our lock on the Fcb while this call is made since it could
     // result in the service invalidating the node requiring the lock
     //
 
@@ -1378,8 +1397,8 @@ AFSExtendingWrite( IN AFSFcb *Fcb,
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSExtendingWrite Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                         &Fcb->NPFcb->Resource,
-                                                         PsGetCurrentThread());
+                  &Fcb->NPFcb->Resource,
+                  PsGetCurrentThread());
 
     AFSAcquireExcl( &Fcb->NPFcb->Resource,
                     TRUE);

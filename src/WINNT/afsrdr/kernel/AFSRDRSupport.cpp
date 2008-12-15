@@ -31,6 +31,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+//
+// File: AFSRDRSupport.cpp
+//
 #include "AFSCommon.h"
 
 NTSTATUS

@@ -537,9 +537,13 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonCreate (%08lX) File %wZ Pending DELETE\n",
+                              "AFSCommonCreate (%08lX) File %wZ FID %08lX-%08lX-%08lX-%08lX Pending DELETE\n",
                               Irp,
-                              &pFcb->DirEntry->DirectoryEntry.FileName);
+                              &pFcb->DirEntry->DirectoryEntry.FileName,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 try_return( ntStatus = STATUS_FILE_DELETED);
             }
@@ -670,8 +674,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSCommonCreate (%08lX) File %wZ name not found\n",
-                               Irp,
-                               &uniFileName);
+                          Irp,
+                          &uniFileName);
 
             //
             // Not found
@@ -751,10 +755,10 @@ try_exit:
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSCommonCreate (%08lX) FileObject %08lX FsContext %08lX FsContext2 %08lX\n",
-                               Irp,
-                               pFileObject,
-                               pFcb,
-                               pCcb);
+                          Irp,
+                          pFileObject,
+                          pFcb,
+                          pCcb);
 
             pFileObject->FsContext = (void *)pFcb;
 
@@ -875,7 +879,7 @@ AFSOpenAFSRoot( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenAFSRoot (%08lX) Failed to allocate Ccb\n",
-                               Irp);
+                          Irp);
 
             try_return( ntStatus);
         }
@@ -943,8 +947,8 @@ AFSOpenRoot( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenRoot (%08lX) Failed to validate root entry Status %08lX\n",
-                               Irp,
-                               ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -980,8 +984,8 @@ AFSOpenRoot( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenRoot (%08lX) Failed to open file in service Status %08lX\n",
-                               Irp,
-                               ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -1006,8 +1010,8 @@ AFSOpenRoot( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSOpenRoot (%08lX) Failed to enumerate directory Status %08lX\n",
-                                   Irp,
-                                   ntStatus);
+                              Irp,
+                              ntStatus);
 
                 try_return( ntStatus);
             }
@@ -1034,8 +1038,8 @@ AFSOpenRoot( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSOpenRoot (%08lX) Access check failure Status %08lX\n",
-                                   Irp,
-                                   ntStatus);
+                              Irp,
+                              ntStatus);
 
                 try_return( ntStatus);
             }
@@ -1054,8 +1058,8 @@ AFSOpenRoot( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenRoot (%08lX) Failed to allocate Ccb Status %08lX\n",
-                                   Irp,
-                                   ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -1183,9 +1187,9 @@ AFSProcessCreate( IN PIRP             Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSProcessCreate (%08lX) Creating file %wZ Attributes %08lX\n",
-                                   Irp,
-                                   FullFileName,
-                                   ulAttributes);
+                      Irp,
+                      FullFileName,
+                      ulAttributes);
 
         ASSERT( ParentDcb->RootFcb == NULL ||
                 ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
@@ -1219,8 +1223,8 @@ AFSProcessCreate( IN PIRP             Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessCreate (%08lX) Failed to create directory entry Status %08lX\n",
-                                   Irp,
-                                   ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -1237,8 +1241,8 @@ AFSProcessCreate( IN PIRP             Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessCreate (%08lX) Not allocating Fcb for file %wZ\n",
-                                   Irp,
-                                   FullFileName);
+                          Irp,
+                          FullFileName);
 
             *Fcb = pDirEntry->Fcb;
 
@@ -1262,8 +1266,8 @@ AFSProcessCreate( IN PIRP             Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessCreate (%08lX) Failed to initialize fcb Status %08lX\n",
-                                       Irp,
-                                       ntStatus);
+                              Irp,
+                              ntStatus);
 
                 try_return( ntStatus);
             }
@@ -1284,8 +1288,8 @@ AFSProcessCreate( IN PIRP             Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessCreate (%08lX) Failed to initialize ccb Status %08lX\n",
-                                   Irp,
-                                   ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -1309,7 +1313,7 @@ AFSProcessCreate( IN PIRP             Irp,
         }
 
         //
-        // Update teh last write time of the . and .. entries for the parent directory
+        // Update the last write time of the . and .. entries for the parent directory
         // If this is not the root directory
         //
 
@@ -1528,8 +1532,8 @@ AFSOpenTargetDirectory( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSOpenTargetDirectory (%08lX) Processing file %wZ\n",
-                                   Irp,
-                                   TargetName);
+                      Irp,
+                      TargetName);
 
         if( Fcb->Header.NodeTypeCode != AFS_DIRECTORY_FCB &&
             Fcb->Header.NodeTypeCode != AFS_ROOT_FCB)
@@ -1538,8 +1542,8 @@ AFSOpenTargetDirectory( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenTargetDirectory (%08lX) Directory not correct type %08lX\n",
-                                       Irp,
-                                       Fcb->Header.NodeTypeCode);
+                          Irp,
+                          Fcb->Header.NodeTypeCode);
 
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
@@ -1563,8 +1567,8 @@ AFSOpenTargetDirectory( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSOpenTargetDirectory (%08lX) Access check failure Status %08lX\n",
-                                           Irp,
-                                           ntStatus);
+                              Irp,
+                              ntStatus);
 
                 try_return( ntStatus);
             }
@@ -1583,8 +1587,8 @@ AFSOpenTargetDirectory( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenTargetDirectory (%08lX) Failed to initialize ccb Status %08lX\n",
-                                           Irp,
-                                           ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -1739,9 +1743,13 @@ AFSProcessOpen( IN PIRP Irp,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSProcessOpen (%08lX) Processing file %wZ\n",
-                                           Irp,
-                                           &Fcb->DirEntry->DirectoryEntry.FileName);
+                      "AFSProcessOpen (%08lX) Processing file %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      Irp,
+                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         //
         // Check if we should go and retrieve updated information for the node
@@ -1782,8 +1790,8 @@ AFSProcessOpen( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOpen (%08lX) Access check failure Status %08lX\n",
-                                                   Irp,
-                                                   ntStatus);
+                              Irp,
+                              ntStatus);
 
                 try_return( ntStatus);
             }
@@ -1818,8 +1826,8 @@ AFSProcessOpen( IN PIRP Irp,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSProcessOpen (%08lX) Failed to purge image section Status %08lX\n",
-                                                       Irp,
-                                                       ntStatus);
+                                  Irp,
+                                  ntStatus);
 
                     try_return( ntStatus);
                 }
@@ -1831,7 +1839,7 @@ AFSProcessOpen( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOpen (%08lX) Attempt to open file as directory\n",
-                                                       Irp);
+                              Irp);
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
             }
@@ -1850,7 +1858,7 @@ AFSProcessOpen( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOpen (%08lX) Attempt to open directory as file\n",
-                                                       Irp);
+                              Irp);
 
                 try_return( ntStatus = STATUS_FILE_IS_A_DIRECTORY);
             }
@@ -1891,8 +1899,8 @@ AFSProcessOpen( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%08lX) Failed to open file in service Status %08lX\n",
-                                                       Irp,
-                                                       ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -1908,9 +1916,9 @@ AFSProcessOpen( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%08lX) Failed to check access from service Desired %08lX Granted %08lX\n",
-                                                       Irp,
-                                                       *pDesiredAccess,
-                                                       stOpenResultCB.GrantedAccess);
+                          Irp,
+                          *pDesiredAccess,
+                          stOpenResultCB.GrantedAccess);
 
             try_return( ntStatus = STATUS_ACCESS_DENIED);
         }
@@ -1928,8 +1936,8 @@ AFSProcessOpen( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOpen (%08lX) Failed to initialize ccb Status %08lX\n",
-                                                       Irp,
-                                                       ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -2056,9 +2064,13 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSProcessOverwriteSupersede (%08lX) Processing file %wZ\n",
-                                                       Irp,
-                                                       &Fcb->DirEntry->DirectoryEntry.FileName);
+                      "AFSProcessOverwriteSupersede (%08lX) Processing file %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      Irp,
+                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         ASSERT( ParentDcb->RootFcb == NULL ||
                 ParentDcb->RootFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
@@ -2090,8 +2102,8 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%08lX) Failed to validate entry Status %08lX\n",
-                               Irp,
-                               ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -2115,8 +2127,8 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSProcessOverwriteSupersede (%08lX) Access check failure Status %08lX\n",
-                                                               Irp,
-                                                               ntStatus);
+                              Irp,
+                              ntStatus);
 
                 try_return( ntStatus);
             }
@@ -2134,7 +2146,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%08lX) File user mapped\n",
-                                                               Irp);
+                          Irp);
 
             try_return( ntStatus = STATUS_USER_MAPPED_FILE);
         }
@@ -2152,8 +2164,8 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%08lX) Failed to initialize ccb Status %08lX\n",
-                                                               Irp,
-                                                               ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -2199,8 +2211,8 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSProcessOverwriteSupersede (%08lX) Failed to update file information Status %08lX\n",
-                                                               Irp,
-                                                               ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -2208,8 +2220,8 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSProcessOverwriteSupersede Acquiring Fcb PagingIo lock %08lX EXCL %08lX\n",
-                                                                             Fcb->Header.PagingIoResource,
-                                                                             PsGetCurrentThread());
+                      Fcb->Header.PagingIoResource,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( Fcb->Header.PagingIoResource,
                         TRUE);
@@ -2280,7 +2292,7 @@ AFSProcessOverwriteSupersede( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // Return teh correct action
+        // Return the correct action
         //
 
         if( ulCreateDisposition == FILE_SUPERSEDE) 
@@ -2380,9 +2392,13 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSOpenIOCtlFcb (%08lX) Processing PIOCtl open in parent %wZ\n",
-                                                               Irp,
-                                                               &ParentDcb->DirEntry->DirectoryEntry.FileName);
+                      "AFSOpenIOCtlFcb (%08lX) Processing PIOCtl open in parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      Irp,
+                      &ParentDcb->DirEntry->DirectoryEntry.FileName,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         //
         // Allocate and initialize the Fcb for the file.
@@ -2422,8 +2438,8 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenIOCtlFcb (%08lX) Failed to initialize ccb Status %08lX\n",
-                                                                   Irp,
-                                                                   ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -2481,8 +2497,8 @@ AFSOpenIOCtlFcb( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenIOCtlFcb (%08lX) Failed service open Status %08lX\n",
-                                                                   Irp,
-                                                                   ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -2573,8 +2589,8 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSOpenSpecialShareFcb (%08lX) Processing Share %wZ open\n",
-                                                               Irp,
-                                                               ShareName);
+                      Irp,
+                      ShareName);
 
         //
         // Allocate and initialize the Fcb for the file.
@@ -2591,8 +2607,8 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenSpecialShareFcb (%08lX) Failed to initialize fcb Status %08lX\n",
-                                                                   Irp,
-                                                                   ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -2614,8 +2630,8 @@ AFSOpenSpecialShareFcb( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSOpenSpecialShareFcb (%08lX) Failed to initialize ccb Status %08lX\n",
-                                                                   Irp,
-                                                                   ntStatus);
+                          Irp,
+                          ntStatus);
 
             try_return( ntStatus);
         }

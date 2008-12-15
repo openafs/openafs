@@ -53,7 +53,7 @@ AFSSetSecurity( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSSetSecurity Entry for FO %08lX\n", 
-                                    pIrpSp->FileObject);
+                      pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);
@@ -85,7 +85,7 @@ AFSQuerySecurity( IN PDEVICE_OBJECT DeviceObject,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_ERROR,
                       "AFSQuerySecurity Entry for FO %08lX\n", 
-                                    pIrpSp->FileObject);
+                      pIrpSp->FileObject);
 
         AFSCompleteRequest( Irp,
                             ntStatus);

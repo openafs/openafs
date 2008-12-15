@@ -369,7 +369,7 @@ AFSInsertCaseSensitiveDirEntry( IN AFSDirEntryCB *RootNode,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSInsertCaseSensitiveDirEntry Attempt to re-insert a CRC %I64X\n", 
-                                                    DirEntry->CaseSensitiveTreeEntry.HashIndex);
+                              DirEntry->CaseSensitiveTreeEntry.HashIndex);
 
                 ASSERT( FALSE);
 
@@ -1593,7 +1593,7 @@ AFSInsertHashEntry( IN AFSBTreeEntry *TopNode,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_WARNING,
                               "AFSInsertHashEntry Attempt to re-insert a CRC %I64X\n", 
-                                                    FileIDEntry->HashIndex);
+                              FileIDEntry->HashIndex);
 
                 ASSERT( FALSE);
 

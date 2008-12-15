@@ -32,7 +32,7 @@
  */
 
 //
-// File: AFSRead.cpp
+// File: AFSIoSupport.cpp
 //
 
 #include "AFSCommon.h"

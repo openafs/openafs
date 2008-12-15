@@ -74,6 +74,26 @@ AFSCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
         __try 
         {
+
+            if( pFileObject->PrivateCacheMap == NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSCachedRead Initialize caching on Fcb %08lX FileObject %08lX\n",
+                              pFcb,
+                              pFileObject);
+
+                CcInitializeCacheMap( pFileObject,
+                                      (PCC_FILE_SIZES)&pFcb->Header.AllocationSize,
+                                      FALSE,
+                                      &AFSCacheManagerCallbacks,
+                                      pFcb);
+
+                CcSetReadAheadGranularity( pFileObject, 
+                                           READ_AHEAD_GRANULARITY);
+            }
+
             if( !CcCopyRead( pFileObject,
                              &StartingByte,
                              ByteCount,
@@ -231,11 +251,15 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSNonCachedRead (%08lX) Requesting extents for Offset %I64X Length %08lX File %wZ\n",
+                          "AFSNonCachedRead (%08lX) Requesting extents for Offset %I64X Length %08lX File %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                           Irp,
                           StartingByte.QuadPart,
                           ulReadByteCount,
-                          &pFcb->DirEntry->DirectoryEntry.FileName);
+                          &pFcb->DirEntry->DirectoryEntry.FileName,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
             ntStatus = AFSRequestExtents( pFcb, 
                                           &StartingByte, 
@@ -265,8 +289,8 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSNonCachedRead Acquiring Fcb extents lock %08lX SHARED %08lX\n",
-                                                              &pFcb->NPFcb->Specific.File.ExtentsResource,
-                                                              PsGetCurrentThread());
+                              &pFcb->NPFcb->Specific.File.ExtentsResource,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( &pFcb->NPFcb->Specific.File.ExtentsResource, TRUE );
                 bLocked = TRUE;
@@ -286,7 +310,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSNonCachedRead (%08lX) Extents mapped, referencing extents\n",
-                                            Irp);
+                                  Irp);
 
                     AFSReferenceExtents( pFcb ); 
                     bDerefExtents = TRUE;
@@ -316,7 +340,7 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSNonCachedRead (%08lX) Waiting for extents mapping\n",
-                              Irp);
+                          Irp);
 
             ntStatus =  AFSWaitForExtentMapping ( pFcb );
 
@@ -567,7 +591,7 @@ try_exit:
             AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSNonCachedRead (%08lX) Dereferencing extents\n",
-                              Irp);
+                          Irp);
 
             AFSDereferenceExtents( pFcb);
         }

@@ -66,8 +66,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSLocateNameEntry (FO: %08lX) Processing full name %wZ\n",
-                                                             FileObject,
-                                                             FullPathName);
+                      FileObject,
+                      FullPathName);
 
         RtlInitUnicodeString( &uniSysName,
                               L"*@SYS*");
@@ -104,8 +104,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSLocateNameEntry Acquiring ParentFcb lock %08lX EXCL %08lX\n",
-                                                              &pParentFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                          &pParentFcb->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &pParentFcb->NPFcb->Resource,
                             TRUE);
@@ -134,9 +134,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Verifying parent %wZ\n",
-                                                                     FileObject,
-                                                                     &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSLocateNameEntry (FO: %08lX) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              FileObject,
+                              &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSVerifyEntry( pParentFcb);
 
@@ -145,10 +149,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to verify parent %wZ Status %08lX\n",
-                                                                         FileObject,
-                                                                         &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                         ntStatus);
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to verify parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  FileObject,
+                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -165,9 +173,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Evaluating parent %wZ\n",
-                                                                     FileObject,
-                                                                     &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSLocateNameEntry (FO: %08lX) Evaluating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              FileObject,
+                              &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSEvaluateNode( pParentFcb);
 
@@ -176,10 +188,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate parent %wZ Status %08lX\n",
-                                                                         FileObject,
-                                                                         &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                         ntStatus);
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  FileObject,
+                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -208,9 +224,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Building link target for parent %wZ\n",
-                                                                         FileObject,
-                                                                         &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Building link target for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     //
                     // Go retrieve the target entry for this node
@@ -223,10 +243,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to build link target for parent %wZ Status %08lX\n",
-                                                                             FileObject,
-                                                                             &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                             ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to build link target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -240,9 +264,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSLocateNameEntry (FO: %08lX) Walking link chain for parent %wZ\n",
-                                                                     FileObject,
-                                                                     &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSLocateNameEntry (FO: %08lX) Walking link chain for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              FileObject,
+                              &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSWalkTargetChain( pParentFcb,
                                                &pParentFcb);
@@ -252,10 +280,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to walk link chain for parent %wZ Status %08lX\n",
-                                                                         FileObject,
-                                                                         &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                         ntStatus);
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to walk link chain for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  FileObject,
+                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     //
                     // Had a failure while walking the chain
@@ -293,9 +325,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Enumerating parent %wZ\n",
-                                                                     FileObject,
-                                                                     &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSLocateNameEntry (FO: %08lX) Enumerating parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              FileObject,
+                              &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSEnumerateDirectory( pParentFcb,
                                                   &pParentFcb->Specific.Directory.DirectoryNodeHdr,
@@ -309,10 +345,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to enumerate parent %wZ Status %08lX\n",
-                                                                         FileObject,
-                                                                         &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                         ntStatus);
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to enumerate parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  FileObject,
+                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -329,9 +369,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Enumerating root %wZ\n",
-                                                                         FileObject,
-                                                                         &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Enumerating root %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSEnumerateDirectory( pParentFcb,
                                                       &pParentFcb->Specific.VolumeRoot.DirectoryNodeHdr,
@@ -345,10 +389,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to enumerate root %wZ Status %08lX\n",
-                                                                             FileObject,
-                                                                             &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                             ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to enumerate root %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -368,9 +416,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Initializing worker for root %wZ\n",
-                                                                         FileObject,
-                                                                         &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Initializing worker for root %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     AFSInitVolumeWorker( pParentFcb);
                 }
@@ -380,9 +432,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSLocateNameEntry (FO: %08lX) Encountered file node %wZ in path processing\n",
-                                                                     FileObject,
-                                                                     &pParentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSLocateNameEntry (FO: %08lX) Encountered file node %wZ FID %08lX-%08lX-%08lX-%08lX in path processing\n",
+                              FileObject,
+                              &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = STATUS_OBJECT_NAME_INVALID;
 
@@ -421,8 +477,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSLocateNameEntry (FO: %08lX) Searching for entry %wZ case sensitive\n",
-                                                                     FileObject,
-                                                                     &uniSearchName);
+                              FileObject,
+                              &uniSearchName);
 
                 ulCRC = AFSGenerateCRC( &uniSearchName,
                                         FALSE);
@@ -452,8 +508,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
                                   "AFSLocateNameEntry (FO: %08lX) Searching for entry %wZ case insensitive\n",
-                                                                         FileObject,
-                                                                         &uniSearchName);
+                                  FileObject,
+                                  &uniSearchName);
 
                     ulCRC = AFSGenerateCRC( &uniSearchName,
                                             TRUE);
@@ -489,8 +545,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_VERBOSE_2,
                                           "AFSLocateNameEntry (FO: %08lX) Searching for entry %wZ short name\n",
-                                                                                 FileObject,
-                                                                                 &uniSearchName);
+                                          FileObject,
+                                          &uniSearchName);
 
                             if( pParentFcb->Header.NodeTypeCode == AFS_DIRECTORY_FCB)
                             {
@@ -525,9 +581,9 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE_2,
                                               "AFSLocateNameEntry (FO: %08lX) Processing @SYS substitution for %wZ Index %08lX\n",
-                                                                                     FileObject,
-                                                                                     &uniComponentName,
-                                                                                     ulSubstituteIndex);
+                                              FileObject,
+                                              &uniComponentName,
+                                              ulSubstituteIndex);
 
                                 //
                                 // If we already substituted a name then free up the buffer before
@@ -551,10 +607,10 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                                   AFS_TRACE_LEVEL_ERROR,
                                                   "AFSLocateNameEntry (FO: %08lX) Failed to locate substitute string for %wZ Index %08lX Status %08lX\n",
-                                                                                         FileObject,
-                                                                                         &uniComponentName,
-                                                                                         ulSubstituteIndex,
-                                                                                         ntStatus);
+                                                  FileObject,
+                                                  &uniComponentName,
+                                                  ulSubstituteIndex,
+                                                  ntStatus);
 
                                     bSubstituteName = FALSE;
 
@@ -578,10 +634,10 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                               AFS_TRACE_LEVEL_VERBOSE_2,
                                               "AFSLocateNameEntry (FO: %08lX) Located substitution %wZ for %wZ Index %08lX\n",
-                                                                                     FileObject,
-                                                                                     &uniSearchName,
-                                                                                     &uniComponentName,
-                                                                                     ulSubstituteIndex);
+                                              FileObject,
+                                              &uniSearchName,
+                                              &uniComponentName,
+                                              ulSubstituteIndex);
 
                                 //
                                 // Go reparse the name again
@@ -687,10 +743,10 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSLocateNameEntry (FO: %08lX) Substituting %wZ into %wZ Index %08lX\n",
-                                                                                     FileObject,
-                                                                                     &uniSearchName,
-                                                                                     &uniComponentName,
-                                                                                     ulSubstituteIndex);
+                              FileObject,
+                              &uniSearchName,
+                              &uniComponentName,
+                              ulSubstituteIndex);
 
                 ntStatus = AFSSubstituteNameInPath( FullPathName,
                                                     &uniComponentName,
@@ -703,11 +759,11 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSLocateNameEntry (FO: %08lX) Failure to substitute %wZ into %wZ Index %08lX Status %08lX\n",
-                                                                                     FileObject,
-                                                                                     &uniSearchName,
-                                                                                     &uniComponentName,
-                                                                                     ulSubstituteIndex,
-                                                                                     ntStatus);
+                                  FileObject,
+                                  &uniSearchName,
+                                  &uniComponentName,
+                                  ulSubstituteIndex,
+                                  ntStatus);
 
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -753,10 +809,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate possible DFS Link %wZ Status %08lX\n",
-                                                                                     FileObject,
-                                                                                     &pDirEntry->DirectoryEntry.FileName,
-                                                                                     ntStatus);
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate possible DFS Link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  FileObject,
+                                  &pDirEntry->DirectoryEntry.FileName,
+                                  pDirEntry->DirectoryEntry.FileId.Cell,
+                                  pDirEntry->DirectoryEntry.FileId.Volume,
+                                  pDirEntry->DirectoryEntry.FileId.Vnode,
+                                  pDirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -782,9 +842,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSLocateNameEntry (FO: %08lX) Locating Fcb for %wZ\n",
-                                                              FileObject,
-                                                              &pDirEntry->DirectoryEntry.FileName);
+                              "AFSLocateNameEntry (FO: %08lX) Locating Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              FileObject,
+                              &pDirEntry->DirectoryEntry.FileName,
+                              pDirEntry->DirectoryEntry.FileId.Cell,
+                              pDirEntry->DirectoryEntry.FileId.Volume,
+                              pDirEntry->DirectoryEntry.FileId.Vnode,
+                              pDirEntry->DirectoryEntry.FileId.Unique);
 
                 //
                 // See if we can first locate the Fcb since this could be a stand alone node
@@ -793,8 +857,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNameEntry Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
-                                                              pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                                                              PsGetCurrentThread());
+                              pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( pParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock, 
                                   TRUE);
@@ -813,18 +877,22 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
                                   "AFSLocateNameEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                              &pCurrentFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                                  &pCurrentFcb->NPFcb->Resource,
+                                  PsGetCurrentThread());
 
                     AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
                                     TRUE);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Located stand alone Fcb %08lX for %wZ\n",
-                                                                  FileObject,
-                                                                  pCurrentFcb,
-                                                                  &pDirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Located stand alone Fcb %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  pCurrentFcb,
+                                  &pDirEntry->DirectoryEntry.FileName,
+                                  pDirEntry->DirectoryEntry.FileId.Cell,
+                                  pDirEntry->DirectoryEntry.FileId.Volume,
+                                  pDirEntry->DirectoryEntry.FileId.Vnode,
+                                  pDirEntry->DirectoryEntry.FileId.Unique);
 
                     //
                     // If this is a stand alone Fcb then we will need to swap out the dir entry
@@ -872,9 +940,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Initializing Fcb for %wZ\n",
-                                                                  FileObject,
-                                                                  &pDirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Initializing Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pDirEntry->DirectoryEntry.FileName,
+                                  pDirEntry->DirectoryEntry.FileId.Cell,
+                                  pDirEntry->DirectoryEntry.FileId.Volume,
+                                  pDirEntry->DirectoryEntry.FileId.Vnode,
+                                  pDirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSInitFcb( pParentFcb,
                                            pDirEntry,
@@ -885,10 +957,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to initialize Fcb for %wZ Status %08lX\n",
-                                                                      FileObject,
-                                                                      &pDirEntry->DirectoryEntry.FileName,
-                                                                      ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to initialize Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pDirEntry->DirectoryEntry.FileName,
+                                      pDirEntry->DirectoryEntry.FileId.Cell,
+                                      pDirEntry->DirectoryEntry.FileId.Volume,
+                                      pDirEntry->DirectoryEntry.FileId.Vnode,
+                                      pDirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -897,10 +973,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Initialized Fcb %08lX for %wZ\n",
-                                                                  FileObject,
-                                                                  pCurrentFcb,
-                                                                  &pDirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Initialized Fcb %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  pCurrentFcb,
+                                  &pDirEntry->DirectoryEntry.FileName,
+                                  pDirEntry->DirectoryEntry.FileId.Cell,
+                                  pDirEntry->DirectoryEntry.FileId.Volume,
+                                  pDirEntry->DirectoryEntry.FileId.Vnode,
+                                  pDirEntry->DirectoryEntry.FileId.Unique);
                 }
             }
             else
@@ -911,8 +991,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSLocateNameEntry Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                              &pCurrentFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                              &pCurrentFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
                                 TRUE);
@@ -927,9 +1007,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSLocateNameEntry (FO: %08lX) Evaluating fcb for %wZ\n",
-                                                                  FileObject,
-                                                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSLocateNameEntry (FO: %08lX) Evaluating fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              FileObject,
+                              &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSEvaluateNode( pCurrentFcb);
 
@@ -938,10 +1022,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate fcb for %wZ Status %08lX\n",
-                                                                      FileObject,
-                                                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                      ntStatus);
+                                  "AFSLocateNameEntry (FO: %08lX) Failed to evaluate fcb for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  FileObject,
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -970,9 +1058,9 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_WARNING,
                                   "AFSLocateNameEntry (FO: %08lX) Have remaining component %wZ\n",
-                                                                  FileObject,
-                                                                  &uniRemainingPath);
-                }
+                                  FileObject,
+                                  &uniRemainingPath);
+                }       
 
                 //
                 // Ensure the node has been evaluated, if not then go do it now
@@ -983,9 +1071,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSLocateNameEntry (FO: %08lX) Evaluating fcb for %wZ\n",
-                                                                  FileObject,
-                                                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Evaluating fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSEvaluateNode( pCurrentFcb);
 
@@ -994,10 +1086,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to evaluate fcb for %wZ Status %08lX\n",
-                                                                      FileObject,
-                                                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                      ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to evaluate fcb for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -1014,9 +1110,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Verifying parent %wZ\n",
-                                                                         FileObject,
-                                                                         &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSVerifyEntry( pCurrentFcb);
 
@@ -1025,10 +1125,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to verify parent %wZ Status %08lX\n",
-                                                                             FileObject,
-                                                                             &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                             ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to verify parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -1057,9 +1161,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSLocateNameEntry (FO: %08lX) Building target for link %wZ\n",
-                                                                      FileObject,
-                                                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                      "AFSLocateNameEntry (FO: %08lX) Building target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                         //
                         // Go retrieve the target entry for this node
@@ -1072,10 +1180,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
-                                          "AFSLocateNameEntry (FO: %08lX) Failed to build target for link %wZ Status %08lX\n",
-                                                                          FileObject,
-                                                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                          ntStatus);
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to build target for link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          FileObject,
+                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                          ntStatus);
 
                             AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -1091,9 +1203,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSLocateNameEntry (FO: %08lX) Walking link chain for %wZ\n",
-                                                                      FileObject,
-                                                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Walking link chain for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSWalkTargetChain( pCurrentFcb,
                                                    &pCurrentFcb);
@@ -1103,10 +1219,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to walk link chain for %wZ Status %08lX\n",
-                                                                          FileObject,
-                                                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                          ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to walk link chain for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         //
                         // Had a failure while walking the chain
@@ -1164,9 +1284,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSLocateNameEntry (FO: %08lX) Enumerating directory %wZ\n",
-                                                                          FileObject,
-                                                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSLocateNameEntry (FO: %08lX) Enumerating directory %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  FileObject,
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSEnumerateDirectory( pCurrentFcb,
                                                       &pCurrentFcb->Specific.Directory.DirectoryNodeHdr,
@@ -1180,10 +1304,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to enumerate directory %wZ Status %08lX\n",
-                                                                          FileObject,
-                                                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                          ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to enumerate directory %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -1206,9 +1334,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSLocateNameEntry (FO: %08lX) Enuemrating root %wZ\n",
-                                                                          FileObject,
-                                                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                      "AFSLocateNameEntry (FO: %08lX) Enuemrating root %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                         ntStatus = AFSEnumerateDirectory( pCurrentFcb,
                                                           &pCurrentFcb->Specific.VolumeRoot.DirectoryNodeHdr,
@@ -1222,10 +1354,14 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to enumerate root %wZ Status %08lX\n",
-                                                                          FileObject,
-                                                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                                                          ntStatus);
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to enumerate root %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                             AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
@@ -1251,9 +1387,13 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSLocateNameEntry (FO: %08lX) Initializing worker for root %wZ\n",
-                                                                          FileObject,
-                                                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                      "AFSLocateNameEntry (FO: %08lX) Initializing worker for root %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                         AFSInitVolumeWorker( pCurrentFcb);
                     }
@@ -1322,10 +1462,14 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSCreateDirEntry Creating dir entry in parent %wZ Component %wZ Attribs %08lX\n",
-                                                                          &ParentDcb->DirEntry->DirectoryEntry.FileName,
-                                                                          ComponentName,
-                                                                          Attributes);
+                      "AFSCreateDirEntry Creating dir entry in parent %wZ FID %08lX-%08lX-%08lX-%08lX Component %wZ Attribs %08lX\n",
+                      &ParentDcb->DirEntry->DirectoryEntry.FileName,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      ParentDcb->DirEntry->DirectoryEntry.FileId.Unique,
+                      ComponentName,
+                      Attributes);
 
         //
         // OK, before inserting the node into the parent tree, issue
@@ -1357,11 +1501,15 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSCreateDirEntry Failed to create dir entry in parent %wZ Component %wZ Attribs %08lX Status %08lX\n",
-                                                                          &ParentDcb->DirEntry->DirectoryEntry.FileName,
-                                                                          ComponentName,
-                                                                          Attributes,
-                                                                          ntStatus);
+                          "AFSCreateDirEntry Failed to create dir entry in parent %wZ FID %08lX-%08lX-%08lX-%08lX Component %wZ Attribs %08lX Status %08lX\n",
+                          &ParentDcb->DirEntry->DirectoryEntry.FileName,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Unique,
+                          ComponentName,
+                          Attributes,
+                          ntStatus);
 
             try_return( ntStatus);
         }
@@ -1376,9 +1524,13 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSCreateDirEntry Inserting dir entry in parent %wZ Component %wZ\n",
-                                                                              &ParentDcb->DirEntry->DirectoryEntry.FileName,
-                                                                              ComponentName);
+                          "AFSCreateDirEntry Inserting dir entry in parent %wZ FID %08lX-%08lX-%08lX-%08lX Component %wZ\n",
+                          &ParentDcb->DirEntry->DirectoryEntry.FileName,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Unique,
+                          ComponentName);
 
             //
             // Insert the directory node
@@ -1392,9 +1544,13 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSCreateDirEntry Created stand alone dir entry in parent %wZ Component %wZ\n",
-                                                                              &ParentDcb->DirEntry->DirectoryEntry.FileName,
-                                                                              ComponentName);
+                          "AFSCreateDirEntry Created stand alone dir entry in parent %wZ FID %08lX-%08lX-%08lX-%08lX Component %wZ\n",
+                          &ParentDcb->DirEntry->DirectoryEntry.FileName,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          ParentDcb->DirEntry->DirectoryEntry.FileId.Unique,
+                          ComponentName);
 
             SetFlag( pDirNode->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
         }
@@ -1493,8 +1649,8 @@ AFSInsertDirectoryNode( IN AFSFcb *ParentDcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSInsertDirectoryNode Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
-                                                              ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                                              PsGetCurrentThread());
+                      ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
@@ -1555,10 +1711,14 @@ AFSInsertDirectoryNode( IN AFSFcb *ParentDcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInsertDirectoryNode Inserting entry %08lX %wZ into parent %08lX Status %08lX\n",
-                                                                            DirEntry,
-                                                                            &DirEntry->DirectoryEntry.FileName,
-                                                                            ParentDcb);
+                      "AFSInsertDirectoryNode Inserting entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX into parent %08lX Status %08lX\n",
+                      DirEntry,
+                      &DirEntry->DirectoryEntry.FileName,
+                      DirEntry->DirectoryEntry.FileId.Cell,
+                      DirEntry->DirectoryEntry.FileId.Volume,
+                      DirEntry->DirectoryEntry.FileId.Vnode,
+                      DirEntry->DirectoryEntry.FileId.Unique,
+                      ParentDcb);
 
         if( ParentDcb->Specific.Directory.DirectoryNodeListHead == NULL)
         {
@@ -1593,10 +1753,14 @@ AFSDeleteDirEntry( IN AFSFcb *ParentDcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSDeleteDirEntry Deleting dir entry in parent %08lX Entry %08lX %wZ\n",
-                                                                              ParentDcb,
-                                                                              DirEntry,
-                                                                              &DirEntry->DirectoryEntry.FileName);
+                      "AFSDeleteDirEntry Deleting dir entry in parent %08lX Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      ParentDcb,
+                      DirEntry,
+                      &DirEntry->DirectoryEntry.FileName,
+                      DirEntry->DirectoryEntry.FileId.Cell,
+                      DirEntry->DirectoryEntry.FileId.Volume,
+                      DirEntry->DirectoryEntry.FileId.Vnode,
+                      DirEntry->DirectoryEntry.FileId.Unique);
 
         if( ParentDcb != NULL)
         {
@@ -1658,16 +1822,20 @@ AFSRemoveDirNodeFromParent( IN AFSFcb *ParentDcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRemoveDirNodeFromParent Removing DirEntry %08lX %wZ from Parent %08lX\n",
-                                                              DirEntry,
-                                                              &DirEntry->DirectoryEntry.FileName,
-                                                              ParentDcb);
+                      "AFSRemoveDirNodeFromParent Removing DirEntry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX from Parent %08lX\n",
+                      DirEntry,
+                      &DirEntry->DirectoryEntry.FileName,
+                      DirEntry->DirectoryEntry.FileId.Cell,
+                      DirEntry->DirectoryEntry.FileId.Volume,
+                      DirEntry->DirectoryEntry.FileId.Vnode,
+                      DirEntry->DirectoryEntry.FileId.Unique,
+                      ParentDcb);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRemoveDirNodeFromParent Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
-                                                              ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                                              PsGetCurrentThread());
+                      ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( ParentDcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
                         TRUE);
@@ -1856,10 +2024,14 @@ AFSParseName( IN PIRP Irp,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSParseName (%08lX) Relative open for %wZ component %wZ\n",
-                                                           Irp,
-                                                           &pRelatedFcb->DirEntry->DirectoryEntry.FileName,
-                                                           &uniFullName);
+                          "AFSParseName (%08lX) Relative open for %wZ FID %08lX-%08lX-%08lX-%08lX component %wZ\n",
+                          Irp,
+                          &pRelatedFcb->DirEntry->DirectoryEntry.FileName,
+                          pRelatedFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          pRelatedFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          pRelatedFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          pRelatedFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                          &uniFullName);
 
             if( FsRtlDoesNameContainWildCards( &uniFullName))
             {
@@ -1867,8 +2039,8 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSParseName (%08lX) Component %wZ contains wild cards\n",
-                                                               Irp,
-                                                               &uniFullName);
+                              Irp,
+                              &uniFullName);
 
                 try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
             }
@@ -1886,8 +2058,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSParseName Acquiring RootFcb lock %08lX EXCL %08lX\n",
-                                                              &(*RootFcb)->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                          &(*RootFcb)->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &(*RootFcb)->NPFcb->Resource,
                             TRUE);
@@ -1902,9 +2074,9 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSParseName (%08lX) Volume %08lX:%08lX OFFLINE\n",
-                                                               Irp,
-                                                               (*RootFcb)->DirEntry->DirectoryEntry.FileId.Cell,
-                                                               (*RootFcb)->DirEntry->DirectoryEntry.FileId.Volume);
+                              Irp,
+                              (*RootFcb)->DirEntry->DirectoryEntry.FileId.Cell,
+                              (*RootFcb)->DirEntry->DirectoryEntry.FileId.Volume);
 
 
                 AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
@@ -1922,9 +2094,9 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSParseName (%08lX) Verifying root of volume %08lX:%08lX\n",
-                                                               Irp,
-                                                               (*RootFcb)->DirEntry->DirectoryEntry.FileId.Cell,
-                                                               (*RootFcb)->DirEntry->DirectoryEntry.FileId.Volume);
+                              Irp,
+                              (*RootFcb)->DirEntry->DirectoryEntry.FileId.Cell,
+                              (*RootFcb)->DirEntry->DirectoryEntry.FileId.Volume);
 
                 ntStatus = AFSVerifyEntry( *RootFcb);
 
@@ -1934,8 +2106,8 @@ AFSParseName( IN PIRP Irp,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSParseName (%08lX) Failed verification of root Status %08lX\n",
-                                                                   Irp,
-                                                                   ntStatus);
+                                  Irp,
+                                  ntStatus);
 
                     AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
 
@@ -1953,8 +2125,8 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSParseName Acquiring ParentFcb lock %08lX EXCL %08lX\n",
-                                                              &(*ParentFcb)->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                              &(*ParentFcb)->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &(*ParentFcb)->NPFcb->Resource,
                                 TRUE);
@@ -1968,9 +2140,13 @@ AFSParseName( IN PIRP Irp,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%08lX) Verifying parent %wZ\n",
-                                                                   Irp,
-                                                                   &(*ParentFcb)->DirEntry->DirectoryEntry.FileName);
+                                  "AFSParseName (%08lX) Verifying parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  Irp,
+                                  &(*ParentFcb)->DirEntry->DirectoryEntry.FileName,
+                                  (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Cell,
+                                  (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Volume,
+                                  (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSVerifyEntry( *ParentFcb);
 
@@ -1979,10 +2155,14 @@ AFSParseName( IN PIRP Irp,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSParseName (%08lX) Failed verification of parent %wZ Status %08lX\n",
-                                                                       Irp,
-                                                                       &(*ParentFcb)->DirEntry->DirectoryEntry.FileName,
-                                                                       ntStatus);
+                                      "AFSParseName (%08lX) Failed verification of parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      Irp,
+                                      &(*ParentFcb)->DirEntry->DirectoryEntry.FileName,
+                                      (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Cell,
+                                      (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Volume,
+                                      (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      (*ParentFcb)->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                         AFSReleaseResource( &(*ParentFcb)->NPFcb->Resource);
 
@@ -2017,7 +2197,7 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSParseName (%08lX) Failed to allocate full name buffer\n",
-                                                                       Irp);
+                              Irp);
 
                 AFSReleaseResource( &(*ParentFcb)->NPFcb->Resource);
 
@@ -2063,8 +2243,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSParseName (%08lX) Returning full name %wZ\n",
-                                                                   Irp,
-                                                                   &uniFullName);
+                          Irp,
+                          &uniFullName);
 
             try_return( ntStatus);
         }
@@ -2096,8 +2276,8 @@ AFSParseName( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
                       "AFSParseName (%08lX) Processing full name %wZ\n",
-                                                 Irp,
-                                                 &uniFullName);
+                      Irp,
+                      &uniFullName);
 
         //
         // No wild cards in the name
@@ -2110,8 +2290,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSParseName (%08lX) Name %wZ contains wild cards or too short\n",
-                                                 Irp,
-                                                 &uniFullName);
+                          Irp,
+                          &uniFullName);
 
             try_return( ntStatus = STATUS_OBJECT_NAME_INVALID);
         }
@@ -2140,8 +2320,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSParseName (%08lX) Name %wZ does not have server name\n",
-                                                 Irp,
-                                                 &uniComponentName);
+                          Irp,
+                          &uniComponentName);
 
             try_return( ntStatus = STATUS_BAD_NETWORK_NAME);
         }
@@ -2153,8 +2333,8 @@ AFSParseName( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSParseName Acquiring GlobalRoot lock %08lX SHARED %08lX\n",
-                                                              &AFSGlobalRoot->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                      &AFSGlobalRoot->NPFcb->Resource,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( &AFSGlobalRoot->NPFcb->Resource,
                           TRUE);
@@ -2165,7 +2345,7 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSParseName (%08lX) Global root OFFLINE\n",
-                                                 Irp);
+                          Irp);
 
             AFSReleaseResource( &AFSGlobalRoot->NPFcb->Resource);
 
@@ -2184,7 +2364,7 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSParseName (%08lX) Returning global root access\n",
-                                                 Irp);
+                          Irp);
 
             AFSReleaseResource( &AFSGlobalRoot->NPFcb->Resource);
 
@@ -2227,7 +2407,7 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSParseName (%08lX) Returning global root access\n",
-                                                     Irp);
+                              Irp);
 
                 AFSReleaseResource( &AFSGlobalRoot->NPFcb->Resource);
 
@@ -2262,7 +2442,7 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSParseName (%08lX) Returning root PIOCtl access\n",
-                                                     Irp);
+                              Irp);
 
                 AFSReleaseResource( &AFSGlobalRoot->NPFcb->Resource);
 
@@ -2283,8 +2463,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSParseName (%08lX) Returning root share name %wZ access\n",
-                                                     Irp,
-                                                     &uniComponentName);
+                          Irp,
+                          &uniComponentName);
 
             AFSReleaseResource( &AFSGlobalRoot->NPFcb->Resource);
 
@@ -2327,8 +2507,8 @@ AFSParseName( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSParseName Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX SHARED %08lX\n",
-                                                              AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                                              PsGetCurrentThread());
+                      AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                      PsGetCurrentThread());
 
         AFSAcquireShared( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                           TRUE);
@@ -2372,8 +2552,8 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSParseName Acquiring GlobalRoot DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
-                                                                      AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
-                                                                      PsGetCurrentThread());
+                              AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                 TRUE);
@@ -2423,8 +2603,8 @@ AFSParseName( IN PIRP Irp,
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_WARNING,
                                           "AFSParseName (%08lX) Cell name %wZ not found\n",
-                                                                 Irp,
-                                                                 &uniComponentName);
+                                          Irp,
+                                          &uniComponentName);
 
                             AFSReleaseResource( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
 
@@ -2442,8 +2622,8 @@ AFSParseName( IN PIRP Irp,
         AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSParseName Acquiring ShareEntry DirNode lock %08lX EXCL %08lX\n",
-                                                              &pShareDirEntry->NPDirNode->Lock,
-                                                              PsGetCurrentThread());
+                      &pShareDirEntry->NPDirNode->Lock,
+                      PsGetCurrentThread());
 
         AFSAcquireExcl( &pShareDirEntry->NPDirNode->Lock,
                         TRUE);
@@ -2495,8 +2675,8 @@ AFSParseName( IN PIRP Irp,
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSParseName (%08lX) Failed to initialize root fcb for cell name %wZ\n",
-                                                                 Irp,
-                                                                 &uniComponentName);
+                                      Irp,
+                                      &uniComponentName);
 
                         AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
 
@@ -2542,8 +2722,8 @@ AFSParseName( IN PIRP Irp,
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
                                       "AFSParseName (%08lX) Failed to initialize fcb for cell name %wZ\n",
-                                                                 Irp,
-                                                                 &uniComponentName);
+                                      Irp,
+                                      &uniComponentName);
 
                         AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
 
@@ -2564,8 +2744,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSParseName Acquiring ShareEntry Fcb lock %08lX EXCL %08lX\n",
-                                                              &pShareDirEntry->Fcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                          &pShareDirEntry->Fcb->NPFcb->Resource,
+                          PsGetCurrentThread());
 
             AFSAcquireExcl( &pShareDirEntry->Fcb->NPFcb->Resource,
                             TRUE);
@@ -2587,8 +2767,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSParseName (%08lX) Fcb for cell name %wZ invalid\n",
-                                                         Irp,
-                                                         &uniComponentName);
+                          Irp,
+                          &uniComponentName);
 
             //
             // The symlink or share entry has been deleted
@@ -2609,8 +2789,8 @@ AFSParseName( IN PIRP Irp,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSParseName (%08lX) Evaluating cell %wZ\n",
-                                                         Irp,
-                                                         &uniComponentName);
+                          Irp,
+                          &uniComponentName);
 
             ntStatus = AFSEvaluateNode( pShareDirEntry->Fcb);
 
@@ -2620,9 +2800,9 @@ AFSParseName( IN PIRP Irp,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSParseName (%08lX) Failed to evaluate cell %wZ Status %08lX\n",
-                                                             Irp,
-                                                             &uniComponentName,
-                                                             ntStatus);
+                              Irp,
+                              &uniComponentName,
+                              ntStatus);
 
                 AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
 
@@ -2649,9 +2829,13 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Building target for link %wZ\n",
-                                                             Irp,
-                                                             &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSParseName (%08lX) Building target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              Irp,
+                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 //
                 // Go retrieve the target entry for this node
@@ -2664,10 +2848,14 @@ AFSParseName( IN PIRP Irp,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSParseName (%08lX) Failed to build target for link %wZ Status %08lX\n",
-                                                                 Irp,
-                                                                 &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
-                                                                 ntStatus);
+                                  "AFSParseName (%08lX) Failed to build target for link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  Irp,
+                                  &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
 
@@ -2687,9 +2875,13 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Failed to walk target for link %wZ\n",
-                                                             Irp,
-                                                             &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSParseName (%08lX) Failed to walk target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              Irp,
+                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 //
                 // Had a failure while walking the chain
@@ -2738,9 +2930,13 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Root volume OFFLINE for %wZ\n",
-                                                             Irp,
-                                                             &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSParseName (%08lX) Root volume OFFLINE for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              Irp,
+                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
 
@@ -2760,9 +2956,13 @@ AFSParseName( IN PIRP Irp,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Verifying root volume %wZ\n",
-                                                             Irp,
-                                                             &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSParseName (%08lX) Verifying root volume %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              Irp,
+                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSVerifyEntry( *RootFcb);
 
@@ -2771,10 +2971,14 @@ AFSParseName( IN PIRP Irp,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%08lX) Failed to verify root volume %wZ Status %08lX\n",
-                                                                 Irp,
-                                                                 &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
-                                                                 ntStatus);
+                                  "AFSParseName (%08lX) Failed to verify root volume %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  Irp,
+                                  &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
 
                     AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
 
@@ -3009,9 +3213,13 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSBuildTargetDirectory Building target directory for %wZ PID %I64X\n",
-                                                    &Fcb->DirEntry->DirectoryEntry.FileName,
-                                                    ProcessID);
+                      "AFSBuildTargetDirectory Building target directory for %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X\n",
+                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                      ProcessID);
 
         pCurrentFcb = Fcb;
 
@@ -3034,8 +3242,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSBuildTargetDirectory Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                              &pTargetFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                              &pTargetFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
                                 TRUE);
@@ -3055,9 +3263,13 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSBuildTargetDirectory Have final target for Symlink/MountPoint %wZ Target %wZ\n",
-                                                                &Fcb->DirEntry->DirectoryEntry.FileName,
-                                                                &pTargetFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSBuildTargetDirectory Have final target for Symlink/MountPoint %wZ FID %08lX-%08lX-%08lX-%08lX Target %wZ\n",
+                                  &Fcb->DirEntry->DirectoryEntry.FileName,
+                                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  &pTargetFcb->DirEntry->DirectoryEntry.FileName);
 
                     AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
 
@@ -3083,8 +3295,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildTargetDirectory Evaluating target %wZ\n",
-                                                                &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSBuildTargetDirectory Evaluating target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
                                                   ProcessID,
@@ -3115,8 +3331,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildTargetDirectory Target %wZ service returned zero FID\n",
-                                                                    &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSBuildTargetDirectory Target %wZ FID %08lX-%08lX-%08lX-%08lX service returned zero FID\n",
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     if( pCurrentFcb != Fcb)
                     {
@@ -3149,8 +3369,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSBuildTargetDirectory Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
-                                                              &pDevExt->Specific.RDR.VolumeTreeLock,
-                                                              PsGetCurrentThread());
+                          &pDevExt->Specific.RDR.VolumeTreeLock,
+                          PsGetCurrentThread());
 
             AFSAcquireShared( &pDevExt->Specific.RDR.VolumeTreeLock,
                               TRUE);
@@ -3158,7 +3378,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSBuildTargetDirectory Locating volume for target %I64X\n",
-                                                                    ullIndex);
+                          ullIndex);
 
             ntStatus = AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
                                            ullIndex,
@@ -3228,8 +3448,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSBuildTargetDirectory Initializing root for %wZ\n",
-                                                                        &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                                  "AFSBuildTargetDirectory Initializing root for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     ntStatus = AFSInitRootForMountPoint( &stDirEnumEntry,
                                                          &stVolumeInfo,
@@ -3256,8 +3480,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSBuildTargetDirectory Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX EXCL %08lX\n",
-                                                              pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                                                              PsGetCurrentThread());
+                              pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
                                   TRUE);
@@ -3297,8 +3521,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildTargetDirectory Evaluated target of %wZ as root volume\n",
-                                                                    &pCurrentFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSBuildTargetDirectory Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
+                              &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 if( pCurrentFcb != Fcb)
                 {
@@ -3322,7 +3550,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
                           "AFSBuildTargetDirectory Locating file %I64X in volume\n",
-                                                                    ullIndex);
+                          ullIndex);
 
             ntStatus = AFSLocateHashEntry( pVcb->Specific.VolumeRoot.FileIDTree.TreeHead,
                                            ullIndex,
@@ -3335,8 +3563,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSBuildTargetDirectory Acquiring Fcb lock %08lX SHARED %08lX\n",
-                                                              &pTargetFcb->NPFcb->Resource,
-                                                              PsGetCurrentThread());
+                              &pTargetFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireShared( &pTargetFcb->NPFcb->Resource,
                                   TRUE);                
@@ -3358,7 +3586,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
                               "AFSBuildTargetDirectory Evaluating target of %I64X\n",
-                                                                        ullIndex);
+                              ullIndex);
 
                 ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
                                                   ProcessID,
@@ -3371,8 +3599,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSBuildTargetDirectory Failed to evaluate target of %I64X Status %08lX\n",
-                                                                            ullIndex,
-                                                                            ntStatus);
+                                  ullIndex,
+                                  ntStatus);
 
                     if( pCurrentFcb != Fcb)
                     {
@@ -3407,7 +3635,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSBuildTargetDirectory Failed to initialize dir entry for %wZ\n",
-                                                                            &uniDirName);
+                                  &uniDirName);
 
                     ExFreePool( pDirEntry);
 
@@ -3434,8 +3662,8 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSBuildTargetDirectory Failed to initialize fcb for dir entry %wZ Status %08lX\n",
-                                                                            &uniDirName,
-                                                                            ntStatus);
+                                  &uniDirName,
+                                  ntStatus);
 
                     ExFreePool( pDirEntry);
 
@@ -3479,8 +3707,12 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildTargetDirectory Located final target %wZ\n",
-                                                                            &pTargetFcb->DirEntry->DirectoryEntry.FileName);
+                              "AFSBuildTargetDirectory Located final target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              &pTargetFcb->DirEntry->DirectoryEntry.FileName,
+                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 InterlockedIncrement( &pTargetFcb->OpenReferenceCount);
 
@@ -3694,9 +3926,13 @@ AFSProcessDFSLink( IN AFSFcb *Fcb,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessDFSLink Reparsing access to Fcb %wZ to %wZ\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              &uniReparseName);
+                      "AFSProcessDFSLink Reparsing access to Fcb %wZ FID %08lX-%08lX-%08lX-%08lX to %wZ\n",
+                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                      &uniReparseName);
 
         //
         // Return status reparse ...

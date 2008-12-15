@@ -95,8 +95,12 @@ AFSFlushBuffers( IN PDEVICE_OBJECT DeviceObject,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFlushBuffers Flushing extents for %wZ\n",
-                                                      &pFcb->DirEntry->DirectoryEntry.FileName);        
+                      "AFSFlushBuffers Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
         ntStatus = AFSFlushExtents( pFcb );
 
