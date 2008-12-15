@@ -362,7 +362,11 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 #define osi_Assert(expr) \
     do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
 #else
+#if defined(KERNEL) && defined(AFS_AIX_ENV)
+extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
+#else
 extern void osi_Panic(char *fmt, ...);
+#endif
 #endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(register struct rx_peer *pp);
