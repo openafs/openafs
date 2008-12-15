@@ -239,7 +239,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="ld -b"
 		;;
 
-	*fbsd_*)
+	i386_fbsd_*)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
@@ -249,6 +249,18 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-pipe"
+		YACC="byacc"
+		;;
+
+	amd64_fbsd_*)
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-pthread"
+		PAM_CFLAGS="-O2 -pipe -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
+		TXLIBS="-lncurses"
+		XCFLAGS="-O2 -pipe -fPIC"
 		YACC="byacc"
 		;;
 

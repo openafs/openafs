@@ -2,8 +2,8 @@
 #define	AFS_PARAM_H
 
 /* Machine / Operating system information */
-#define SYS_NAME	"i386_fbsd_80"
-#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_80
+#define SYS_NAME	"amd64_fbsd_71"
+#define SYS_NAME_ID	SYS_NAME_ID_amd64_fbsd_71
 
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
@@ -24,6 +24,7 @@
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
 #define AFS_64BIT_ENV 1
 #define AFS_64BIT_CLIENT 1
+#define AFS_64BITPOINTER_ENV 1
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_FBSD_ENV 1
 #define AFS_FBSD40_ENV 1
@@ -42,7 +43,6 @@
 #define AFS_FBSD62_ENV 1
 #define AFS_FBSD70_ENV 1
 #define AFS_FBSD71_ENV 1
-#define AFS_FBSD80_ENV 1
 #define AFS_X86_FBSD_ENV 1
 #define AFS_X86_FBSD40_ENV 1
 #define AFS_X86_FBSD42_ENV 1
@@ -54,7 +54,6 @@
 #define AFS_X86_FBSD62_ENV 1
 #define AFS_X86_FBSD70_ENV 1
 #define AFS_X86_FBSD71_ENV 1
-#define AFS_X86_FBSD80_ENV 1
 #define AFS_X86_ENV 1
 #define AFS_NONFSTRANS 1
 #define FTRUNC O_TRUNC
@@ -165,7 +164,6 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_USR_FBSD61_ENV	1
 #define AFS_USR_FBSD70_ENV	1
 #define AFS_USR_FBSD71_ENV	1
-#define AFS_USR_FBSD80_ENV	1
 #define AFS_USR_FBSD_ENV	1
 #define AFS_NONFSTRANS 1
 
@@ -173,6 +171,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_SYSCALL 339
 #define AFS_NAMEI_ENV         1	/* User space interface to file system */
 #define AFS_64BIT_ENV 1
+#define AFS_64BITPOINTER_ENV 1
 #define AFS_64BIT_IOPS_ENV    1	/* Needed for NAMEI */
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV      1

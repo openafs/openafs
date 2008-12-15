@@ -35,24 +35,25 @@ AFS_OS_NONFSOBJS = \
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
 KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
-	-elf -mpreferred-stack-boundary=2 \
+	-elf \
 <i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	-mpreferred-stack-boundary=2 \
 	-fformat-extensions \
-<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
 	-include ${KBLD}/opt_global.h \
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	-include ${KBLD}/opt_global.h -mpreferred-stack-boundary=2 \
 <i386_fbsd_60>
 	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 \
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 	-mno-align-long-strings -fno-common -ffreestanding \
 	-I${KBLD} -include opt_global.h -fno-strict-aliasing \
+<amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80>
+KOPTS=-fPIC
 <all>
-
 
 DBUG = -O2
 #DBUG = -O -g
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
-OPTF=${OPT} 
-OPTF2=${OPT2} 
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 
