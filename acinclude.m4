@@ -456,9 +456,13 @@ case $system in
 		MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(x86_darwin)
                 ;;
-	*-freebsd*)
+	i386-*-freebsd*)
 		MKAFS_OSTYPE=FBSD
 		AC_MSG_RESULT(i386_fbsd)
+		;;
+	x86_64-*-freebsd*)
+		MKAFS_OSTYPE=FBSD
+		AC_MSG_RESULT(amd64_fbsd)
 		;;
 	*-netbsd*)
 		MKAFS_OSTYPE=NBSD
@@ -495,6 +499,12 @@ else
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
+			;;
+		x86_64-*-freebsd?.*)
+			v=${host#*freebsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h

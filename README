@@ -239,7 +239,7 @@ G  FreeBSD Notes
    You also need access to your kernel build directory for the opt_global.h
    include file.  Use the --with-bsd-kernel-build= configure option if your
    kernel build is not GENERIC in the standard place. If 
-   /usr/src/sys/i386/compile/GENERIC does not point to 
+   /usr/src/sys/${CPUARCH}/compile/GENERIC does not point to 
    /usr/obj/usr/src/sys/GENERIC you may need to resolve that and retry the 
    build.
 
