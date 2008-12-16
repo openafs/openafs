@@ -679,7 +679,11 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 #ifdef AFS_SGI61_ENV
 	if (((ioflag & IO_SYNC) || (ioflag & IO_DSYNC)) && (rw == UIO_WRITE)
 	    && !AFS_NFSXLATORREQ(cr)) {
-	    error = afs_fsync(avc, 0, cr);
+	    error = afs_fsync(avc, 0, cr
+#ifdef AFS_SGI65_ENV
+	                      , 0, 0
+#endif
+	                      );
 	}
 #else /* AFS_SGI61_ENV */
 	if ((ioflag & IO_SYNC) && (rw == UIO_WRITE) && !AFS_NFSXLATORREQ(cr)) {

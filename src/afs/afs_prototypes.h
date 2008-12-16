@@ -640,6 +640,10 @@ extern int afs_syscall_icreate(dev_t, long, long, long, long, long,
 extern int afs_syscall_iopen(dev_t, int, int, rval_t *, struct AFS_UCRED *);
 extern int afs_syscall_iincdec(dev_t, int, int, int, rval_t *, 
 			       struct AFS_UCRED *);
+#elif defined(AFS_SGI65_ENV)
+extern int afs_syscall_icreate(afs_uint32, afs_uint32, afs_uint32, afs_uint32, afs_uint32, afs_uint32, rval_t *);
+extern int afs_syscall_iopen(int, ino_t, int, rval_t *);
+extern int afs_syscall_iincdec(int, int, int, int);
 #elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_syscall_icreate(long, long, long, long, long, long, long*);
 extern int afs_syscall_iopen(int dev, int inode, int usrmod, long *retval);
