@@ -153,6 +153,8 @@ AFSQueryDirectory( IN PIRP Irp)
 
     BOOLEAN bReleaseMain = FALSE;
 
+    ULONG       ulTargetFileType = 0;
+
     __Enter
     {
 
@@ -747,26 +749,35 @@ AFSQueryDirectory( IN PIRP Irp)
                     pDirInfo->EndOfFile = pDirEntry->DirectoryEntry.EndOfFile;
                     pDirInfo->AllocationSize = pDirEntry->DirectoryEntry.AllocationSize;
                     
-                    if( pDirEntry->DirectoryEntry.FileType != 0)
+                    //
+                    // If this entry is a SYMLINK then we need to obtain the file type
+                    // for the target
+                    //
+
+                    if( pDirEntry->DirectoryEntry.FileType == 0 ||
+                        pDirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
                     {
 
-                        pDirInfo->FileAttributes = pDirEntry->DirectoryEntry.FileAttributes != 0 ?
-                                                                               pDirEntry->DirectoryEntry.FileAttributes :
-                                                                            FILE_ATTRIBUTE_NORMAL;
-                    }
-                    else
-                    {
+                        ulTargetFileType = AFSRetrieveTargetType( pFcb,
+                                                                  pDirEntry);
 
-                        if( (pDirEntry->DirectoryEntry.FileId.Vnode % 2) != 0)
-                        {
-
-                            pDirInfo->FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-                        }
-                        else
+                        if( ulTargetFileType == AFS_FILE_TYPE_FILE)
                         {
 
                             pDirInfo->FileAttributes = FILE_ATTRIBUTE_NORMAL;
                         }
+                        else
+                        {
+
+                            pDirInfo->FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
+                        }
+                    }
+                    else
+                    {
+
+                        pDirInfo->FileAttributes = pDirEntry->DirectoryEntry.FileAttributes != 0 ?
+                                                                     pDirEntry->DirectoryEntry.FileAttributes :
+                                                                            FILE_ATTRIBUTE_NORMAL;
                     }
 
                     pDirInfo->FileIndex = pDirEntry->DirectoryEntry.FileIndex; 

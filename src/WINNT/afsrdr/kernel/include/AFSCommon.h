@@ -1032,6 +1032,10 @@ AFSResetDirectoryContent( IN AFSFcb *Dcb);
 NTSTATUS
 AFSEnumerateGlobalRoot( void);
 
+ULONG
+AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
+                       IN AFSDirEntryCB *DirEntry);
+
 //
 // Prototypes in AFSFastIoSupprt.cpp
 //
