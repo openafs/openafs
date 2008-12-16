@@ -852,7 +852,7 @@ afs_closex(register struct file *afd)
 /* handle any closing cleanup stuff */
 int
 #if defined(AFS_SGI65_ENV)
-afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclost_t lastclose,
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
 	  struct AFS_UCRED *acred)
 #elif defined(AFS_SGI64_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
