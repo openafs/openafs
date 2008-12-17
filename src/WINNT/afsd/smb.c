@@ -3157,6 +3157,8 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     }
     else if (code == CM_ERROR_LOCK_NOT_GRANTED) {
         NTStatus = 0xC0000055L; /* Lock Not Granted */
+    } else if (code == ENOMEM) {
+        NTStatus = 0xC0000017L; /* Out of Memory */
     } else {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
