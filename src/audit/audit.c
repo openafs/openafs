@@ -16,6 +16,9 @@ RCSID
 #include <fcntl.h>
 #include <stdarg.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #ifdef AFS_AIX32_ENV
 #include <sys/audit.h>
 #else
@@ -555,8 +558,35 @@ osi_audit_check()
 }
 
 int
-osi_audit_file(FILE *out)
+osi_audit_file(char *fileName)
 {
-    auditout = out;
+    int tempfd, flags;
+    char oldName[MAXPATHLEN];
+    
+#ifndef AFS_NT40_ENV
+    struct stat statbuf;
+    
+    if ((lstat(fileName, &statbuf) == 0)
+        && (S_ISFIFO(statbuf.st_mode))) {
+        flags = O_WRONLY | O_NONBLOCK;
+    } else 
+#endif
+    {
+        strcpy(oldName, fileName);
+        strcat(oldName, ".old");
+        renamefile(fileName, oldName);
+        flags = O_WRONLY | O_TRUNC | O_CREAT;
+    }
+    tempfd = open(fileName, flags, 0666);
+    if (tempfd > -1) {
+        auditout = fdopen(tempfd, "a");
+        if (!auditout) {
+            printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+            return 1;
+        }
+    } else { 
+        printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+        return 1;
+    }
     return 0;
 }
