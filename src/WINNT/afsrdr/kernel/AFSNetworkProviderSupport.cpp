@@ -115,6 +115,16 @@ AFSAddConnection( IN AFSNetworkProviderConnectionCB *ConnectCB,
 
             USHORT usLength = uniRemoteName.Length;
 
+            if (uniRemoteName.Buffer[AFSServerName.Length/sizeof( WCHAR)] != L'\\') 
+            {
+
+                *ResultStatus = WN_BAD_NETNAME;
+
+                *ReturnOutputBufferLength = sizeof( ULONG);
+
+                try_return( ntStatus = STATUS_SUCCESS);
+            }
+
             uniRemoteName.Length = AFSServerName.Length;
 
             if( RtlCompareUnicodeString( &AFSServerName,
