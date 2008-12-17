@@ -577,6 +577,8 @@ typedef struct _AFS_WORK_ITEM
         {
             AFSFcb *Fcb;
 
+            ULONG FileType;
+
         } Fcb;
 
         struct

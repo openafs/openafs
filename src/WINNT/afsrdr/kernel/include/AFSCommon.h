@@ -494,6 +494,11 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
                          IN AFSFcb *Fcb);
 
 NTSTATUS
+AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
+                       IN AFSFcb *Fcb,
+                       OUT ULONG *TargetType);
+
+NTSTATUS
 AFSProcessDFSLink( IN AFSFcb *Fcb,
                    IN PFILE_OBJECT FileObject,
                    IN UNICODE_STRING *RemainingPath);
@@ -1292,6 +1297,10 @@ AFSShutdownVolumeWorker( IN AFSFcb *VolumeVcb);
 
 NTSTATUS
 AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb);
+
+NTSTATUS
+AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
+                            OUT PULONG FileType);
 
 NTSTATUS
 AFSQueueFlushExtents( IN AFSFcb *Fcb);

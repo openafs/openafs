@@ -439,7 +439,8 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
         uniComponentName.Length = 0;
         uniComponentName.Buffer = NULL;
 
-        if( uniFileName.Length > sizeof( WCHAR))
+        if( uniFileName.Length > sizeof( WCHAR) ||
+            uniFileName.Buffer[ 0] != L'\\')
         {
 
             uniSubstitutedPathName = uniFileName;

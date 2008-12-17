@@ -596,6 +596,22 @@ AFSWorkerThread( IN PVOID Context)
                         break;
                     }
 
+                    case AFS_WORK_REQUEST_BUILD_TARGET_SYMLINK:
+                    {
+
+                        pWorkItem->Status = AFSBuildSymlinkTarget( pWorkItem->ProcessID,
+                                                                   pWorkItem->Specific.Fcb.Fcb,
+                                                                   &pWorkItem->Specific.Fcb.FileType);
+
+                        freeWorkItem = FALSE;
+
+                        KeSetEvent( &pWorkItem->Event,
+                                    0,
+                                    FALSE);
+
+                        break;
+                    }
+
                     case AFS_WORK_ENUMERATE_GLOBAL_ROOT:
                     {
 
@@ -1586,7 +1602,7 @@ try_exit:
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueFcbInitialization Failed to queue request Status %08lX\n", ntStatus);
+                          "AFSQueueBuildTargetDirectory Failed to queue request Status %08lX\n", ntStatus);
         }
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
@@ -1594,7 +1610,128 @@ try_exit:
 
         AFSDbgLogMsg( 0,
                       0,
-                      "EXCEPTION - AFSQueueFcbInitialization\n");
+                      "EXCEPTION - AFSQueueBuildTargetDirectory\n");
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
+                            OUT PULONG FileType)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSWorkItem *pWorkItem = NULL;
+    
+    __try
+    {
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueBuildSymLinkTarget Queuing request for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);        
+
+        //
+        // Allocate our request structure and send it to the worker
+        //
+
+        pWorkItem = (AFSWorkItem *)ExAllocatePoolWithTag( NonPagedPool,
+                                                          sizeof( AFSWorkItem),
+                                                          AFS_WORK_ITEM_TAG);
+
+        if( pWorkItem == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueBuildSymLinkTarget Failed to allocate work item\n");
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        RtlZeroMemory( pWorkItem,
+                       sizeof( AFSWorkItem));
+
+        pWorkItem->Size = sizeof( AFSWorkItem);
+
+        //
+        // This will be a synchronous request
+        //
+
+        KeInitializeEvent( &pWorkItem->Event,
+                           NotificationEvent,
+                           FALSE);
+
+        pWorkItem->ProcessID = (ULONGLONG)PsGetCurrentProcessId();
+
+        pWorkItem->RequestFlags = AFS_SYNCHRONOUS_REQUEST;
+
+        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_TARGET_SYMLINK;
+
+        pWorkItem->Specific.Fcb.Fcb = Fcb;
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueBuildSymLinkTarget Workitem %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      pWorkItem,
+                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);        
+
+        ntStatus = AFSQueueWorkerRequest( pWorkItem);
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            ntStatus = pWorkItem->Status;
+
+            if( NT_SUCCESS( ntStatus))
+            {
+
+                *FileType = pWorkItem->Specific.Fcb.FileType;
+            }
+        }
+
+try_exit:
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSQueueBuildSymLinkTarget Processed request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX Type %08lX\n",
+                      &Fcb->DirEntry->DirectoryEntry.FileName,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                      ntStatus,
+                      *FileType);
+
+        if( pWorkItem != NULL)
+        {
+
+            ExFreePool( pWorkItem);
+        }
+
+        if( !NT_SUCCESS( ntStatus))
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                          "AFSQueueBuildSymLinkTarget Failed to queue request Status %08lX\n", ntStatus);
+        }
+    }
+    __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
+    {
+
+        AFSDbgLogMsg( 0,
+                      0,
+                      "EXCEPTION - AFSQueueBuildSymLinkTarget\n");
     }
 
     return ntStatus;

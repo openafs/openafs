@@ -5271,12 +5271,12 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
                               "AFSRetrieveTargetType Failed to evaluate possible link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                              &DirEntry->DirectoryEntry.FileName,
-                              DirEntry->DirectoryEntry.FileId.Cell,
-                              DirEntry->DirectoryEntry.FileId.Volume,
-                              DirEntry->DirectoryEntry.FileId.Vnode,
-                              DirEntry->DirectoryEntry.FileId.Unique,
-                              ntStatus);
+                                  &DirEntry->DirectoryEntry.FileName,
+                                  DirEntry->DirectoryEntry.FileId.Cell,
+                                  DirEntry->DirectoryEntry.FileId.Volume,
+                                  DirEntry->DirectoryEntry.FileId.Vnode,
+                                  DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
     
                 try_return( ntStatus);
             }
@@ -5332,8 +5332,8 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRetrieveTargetType Evaluated node %wZ to be of type %d (Not symlink)\n",
-                          &DirEntry->DirectoryEntry.FileName,
-                          DirEntry->DirectoryEntry.FileType);
+                                  &DirEntry->DirectoryEntry.FileName,
+                                  DirEntry->DirectoryEntry.FileType);
 
             try_return( ntStatus);
         }
@@ -5350,11 +5350,11 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSRetrieveTargetType Locating Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                          &DirEntry->DirectoryEntry.FileName,
-                          DirEntry->DirectoryEntry.FileId.Cell,
-                          DirEntry->DirectoryEntry.FileId.Volume,
-                          DirEntry->DirectoryEntry.FileId.Vnode,
-                          DirEntry->DirectoryEntry.FileId.Unique);
+                              &DirEntry->DirectoryEntry.FileName,
+                              DirEntry->DirectoryEntry.FileId.Cell,
+                              DirEntry->DirectoryEntry.FileId.Volume,
+                              DirEntry->DirectoryEntry.FileId.Vnode,
+                              DirEntry->DirectoryEntry.FileId.Unique);
 
             //
             // See if we can first locate the Fcb since this could be a stand alone node
@@ -5392,12 +5392,12 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSRetrieveTargetType Located stand alone Fcb %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              pCurrentFcb,
-                              &DirEntry->DirectoryEntry.FileName,
-                              DirEntry->DirectoryEntry.FileId.Cell,
-                              DirEntry->DirectoryEntry.FileId.Volume,
-                              DirEntry->DirectoryEntry.FileId.Vnode,
-                              DirEntry->DirectoryEntry.FileId.Unique);
+                                  pCurrentFcb,
+                                  &DirEntry->DirectoryEntry.FileName,
+                                  DirEntry->DirectoryEntry.FileId.Cell,
+                                  DirEntry->DirectoryEntry.FileId.Volume,
+                                  DirEntry->DirectoryEntry.FileId.Vnode,
+                                  DirEntry->DirectoryEntry.FileId.Unique);
 
                 //
                 // If this is a stand alone Fcb then we will need to swap out the dir entry
@@ -5446,11 +5446,11 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSRetrieveTargetType Initializing Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              &DirEntry->DirectoryEntry.FileName,
-                              DirEntry->DirectoryEntry.FileId.Cell,
-                              DirEntry->DirectoryEntry.FileId.Volume,
-                              DirEntry->DirectoryEntry.FileId.Vnode,
-                              DirEntry->DirectoryEntry.FileId.Unique);
+                                  &DirEntry->DirectoryEntry.FileName,
+                                  DirEntry->DirectoryEntry.FileId.Cell,
+                                  DirEntry->DirectoryEntry.FileId.Volume,
+                                  DirEntry->DirectoryEntry.FileId.Vnode,
+                                  DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSInitFcb( ParentFcb,
                                        DirEntry,
@@ -5462,12 +5462,12 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
                                   "AFSRetrieveTargetType Failed to initialize Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                  &DirEntry->DirectoryEntry.FileName,
-                                  DirEntry->DirectoryEntry.FileId.Cell,
-                                  DirEntry->DirectoryEntry.FileId.Volume,
-                                  DirEntry->DirectoryEntry.FileId.Vnode,
-                                  DirEntry->DirectoryEntry.FileId.Unique,
-                                  ntStatus);
+                                      &DirEntry->DirectoryEntry.FileName,
+                                      DirEntry->DirectoryEntry.FileId.Cell,
+                                      DirEntry->DirectoryEntry.FileId.Volume,
+                                      DirEntry->DirectoryEntry.FileId.Vnode,
+                                      DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
 
                     try_return( ntStatus);
                 }
@@ -5475,14 +5475,20 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSRetrieveTargetType Initialized Fcb %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              pCurrentFcb,
-                              &DirEntry->DirectoryEntry.FileName,
-                              DirEntry->DirectoryEntry.FileId.Cell,
-                              DirEntry->DirectoryEntry.FileId.Volume,
-                              DirEntry->DirectoryEntry.FileId.Vnode,
-                              DirEntry->DirectoryEntry.FileId.Unique);
-            }   
-        }       
+                                  pCurrentFcb,
+                                  &DirEntry->DirectoryEntry.FileName,
+                                  DirEntry->DirectoryEntry.FileId.Cell,
+                                  DirEntry->DirectoryEntry.FileId.Volume,
+                                  DirEntry->DirectoryEntry.FileId.Vnode,
+                                  DirEntry->DirectoryEntry.FileId.Unique);
+            }
+        }
+        else
+        {
+
+            AFSAcquireExcl( &DirEntry->Fcb->NPFcb->Resource,
+                            TRUE);
+        }
 
         pCurrentFcb = DirEntry->Fcb;
 
@@ -5493,69 +5499,20 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
                       "AFSRetrieveTargetType Building link target for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-        ntStatus = AFSQueueBuildTargetDirectory( pCurrentFcb);
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSRetrieveTargetType Failed to build link target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                          ntStatus);
-
-            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-
-            try_return( ntStatus);
-        }
-
-        //
-        // Now retrieve a pointer to the target entry
-        //
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSRetrieveTargetType Walking link chain for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-        ntStatus = AFSWalkTargetChain( pCurrentFcb,
-                                       &pCurrentFcb);
+        ntStatus = AFSQueueBuildSymLinkTarget( pCurrentFcb,
+                                               &ulFileType);
 
         if( !NT_SUCCESS( ntStatus))
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSRetrieveTargetType Failed to walk link chain for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                          ntStatus);
-
-            try_return( ntStatus);
+            ulFileType = 0;
         }
-
-        //
-        // Get the target type and return it
-        //
-
-        ulFileType = pCurrentFcb->DirEntry->DirectoryEntry.FileType;
 
         //
         // Drop our lock
