@@ -157,7 +157,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                                    NULL);
 
                 //
-                // If we ahve a Ccb then remove it from the Fcb chain
+                // If we have a Ccb then remove it from the Fcb chain
                 //
 
                 if( pCcb != NULL)
@@ -288,7 +288,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 }
 
                 //
-                // If we ahve a Ccb then remove it from the Fcb chain
+                // If we have a Ccb then remove it from the Fcb chain
                 //
 
                 if( pCcb != NULL)
@@ -495,7 +495,7 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 pCcb = (AFSCcb *)pIrpSp->FileObject->FsContext2;
 
                 //
-                // If we ahve a Ccb then remove it from the Fcb chain
+                // If we have a Ccb then remove it from the Fcb chain
                 //
 
                 if( pCcb != NULL)

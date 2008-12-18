@@ -960,7 +960,7 @@ AFSNotifyFileCreate( IN AFSFcb *ParentDcb,
         }
 
         //
-        // We may ahve raced with an invalidation call and a subsequent re-enumeration of this parent
+        // We may have raced with an invalidation call and a subsequent re-enumeration of this parent
         // and though we created the node, it is already in our list. If this is the case then
         // look up the entry rather than create a new entry
         // The check is to ensure the DV has been modified

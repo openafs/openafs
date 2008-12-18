@@ -1285,7 +1285,7 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
         pDirNode->DirectoryEntry.Links = DirEnumEntry->Links;
 
         //
-        // Check for the case where we ahve a filetype of SymLink but both the TargetFid and the 
+        // Check for the case where we have a filetype of SymLink but both the TargetFid and the 
         // TagrteName are empty. In this case set the filetype to zero so we evaluate it later in
         // the code
         //
@@ -1935,7 +1935,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         InterlockedDecrement( &pVcb->OpenReferenceCount);
 
         //
-        // If this is a volume fid then don;t worry about looking it up we ahve it
+        // If this is a volume fid then don;t worry about looking it up we have it
         //
 
         if( !AFSIsVolumeFID( &InvalidateCB->FileID))

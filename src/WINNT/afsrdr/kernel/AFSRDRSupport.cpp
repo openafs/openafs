@@ -135,7 +135,7 @@ AFSDeleteRDRDevice()
 {
 
     //
-    // Unregister with MUP if we ahve a handle
+    // Unregister with MUP if we have a handle
     //
 
     if( AFSMUPHandle != NULL)

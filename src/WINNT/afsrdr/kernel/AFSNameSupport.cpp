@@ -1515,7 +1515,7 @@ AFSCreateDirEntry( IN AFSFcb *ParentDcb,
         }
 
         //
-        // If we still ahve a valid parent then insert it into the tree
+        // If we still have a valid parent then insert it into the tree
         // otherwise we will re-evaluate the node on next access
         //
 
