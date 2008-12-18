@@ -4376,6 +4376,43 @@ AFSWalkTargetChain( IN AFSFcb *ParentFcb,
 
                 break;
             }
+
+            if( pCurrentFcb->Specific.SymbolicLink.TargetFcb == NULL)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSWalkTargetChain Building target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                //
+                // Go retrieve the target entry for this node
+                //
+
+                ntStatus = AFSQueueBuildTargetDirectory( pCurrentFcb);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSWalkTargetChainFailed to build target for link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                  ntStatus);
+
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                    try_return( ntStatus);
+                }
+            }
         }
 
         *TargetFcb = pCurrentFcb;
