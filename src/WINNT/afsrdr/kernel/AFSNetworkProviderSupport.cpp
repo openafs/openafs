@@ -985,7 +985,7 @@ AFSInitializeConnectionInfo( IN AFSProviderConnectionCB *Connection,
             DisplayType == RESOURCEDISPLAYTYPE_SERVER)
         {
 
-            Connection->Type = RESOURCETYPE_ANY;
+            Connection->Type = RESOURCETYPE_DISK;
 
             Connection->Scope = RESOURCE_GLOBALNET;
 
@@ -1031,9 +1031,9 @@ AFSInitializeConnectionInfo( IN AFSProviderConnectionCB *Connection,
             DisplayType == RESOURCEDISPLAYTYPE_SHARE)
         {
 
-            Connection->Type = RESOURCETYPE_ANY;
+            Connection->Type = RESOURCETYPE_DISK;
 
-            Connection->Scope = RESOURCE_CONNECTED;
+            Connection->Scope = RESOURCE_GLOBALNET;
 
             Connection->DisplayType = RESOURCEDISPLAYTYPE_SHARE;
 
@@ -1076,7 +1076,7 @@ AFSInitializeConnectionInfo( IN AFSProviderConnectionCB *Connection,
         // This is a sub directory within a share
         //
 
-        Connection->Type = RESOURCETYPE_ANY;
+        Connection->Type = RESOURCETYPE_DISK;
 
         Connection->Scope = RESOURCE_CONTEXT;
 
@@ -1088,8 +1088,6 @@ AFSInitializeConnectionInfo( IN AFSProviderConnectionCB *Connection,
         {
 
             Connection->Usage |= RESOURCEUSAGE_ATTACHED;
-
-            Connection->Scope = RESOURCE_CONNECTED;
         }
 
         Connection->Comment.Length = 26;
@@ -1603,6 +1601,116 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
             //
 
             pConnection = AFSLocateEnumRootEntry( &uniShareName);
+        }
+
+
+        if( pConnection == NULL)
+        {
+            UNICODE_STRING uniFullName;
+            AFSFileID stFileID;
+            AFSDirEnumEntry *pDirEnumEntry = NULL;
+
+            //
+            // Drop the lock, we will pick it up again later
+            //
+            
+            AFSReleaseResource( &AFSProviderListLock);
+
+            //
+            // Perform a case insensitive search
+            //
+
+            RtlZeroMemory( &stFileID,
+                           sizeof( AFSFileID));
+
+            //
+            // OK, ask the CM about this component name
+            //
+
+            ntStatus = AFSEvaluateTargetByName( &stFileID,
+                                                &uniShareName,
+                                                &pDirEnumEntry);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                try_return( ntStatus = STATUS_INVALID_PARAMETER);
+
+            }
+
+            // 
+            // Don't need this
+            //
+
+            ExFreePool( pDirEnumEntry);
+
+            //
+            // The share name is valid
+            // Allocate a new node and add it to our list
+            //
+            uniFullName.MaximumLength = PAGE_SIZE;
+            uniFullName.Length = 0;
+
+            uniFullName.Buffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                                 uniFullName.MaximumLength,
+                                                                 AFS_GENERIC_MEMORY_TAG);
+
+            if( uniFullName.Buffer == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            uniFullName.Buffer[ 0] = L'\\';
+            uniFullName.Buffer[ 1] = L'\\';
+
+            uniFullName.Length = 2 * sizeof( WCHAR);
+
+            RtlCopyMemory( &uniFullName.Buffer[ 2],
+                           AFSServerName.Buffer,
+                           AFSServerName.Length);
+                                               
+            uniFullName.Length += AFSServerName.Length;
+
+            uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)] = L'\\';
+
+            uniFullName.Length += sizeof( WCHAR);
+
+            RtlCopyMemory( &uniFullName.Buffer[ uniFullName.Length/sizeof( WCHAR)],
+                           uniShareName.Buffer,
+                           uniShareName.Length);
+
+            uniFullName.Length += uniShareName.Length;
+
+            AFSAcquireExcl( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                            TRUE);
+
+            ntStatus = AFSAddConnectionEx( &uniFullName,
+                                           RESOURCEDISPLAYTYPE_SHARE,
+                                           0);
+
+            AFSReleaseResource( AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr.TreeLock);
+
+            ExFreePool( uniFullName.Buffer);
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSGetConnectionInfo Acquiring AFSProviderListLock lock %08lX SHARED %08lX\n",
+                          &AFSProviderListLock,
+                          PsGetCurrentThread());
+
+            AFSAcquireShared( &AFSProviderListLock,
+                              TRUE);
+
+            if ( NT_SUCCESS( ntStatus) ) 
+            {
+                //
+                // Once again, locate the entry for the share we just created
+                //
+
+                pConnection = AFSLocateEnumRootEntry( &uniShareName);
+            }
+
         }
 
         if( pConnection == NULL)

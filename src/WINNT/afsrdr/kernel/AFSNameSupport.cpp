@@ -1853,7 +1853,8 @@ AFSRemoveDirNodeFromParent( IN AFSFcb *ParentDcb,
             AFSRemoveCaseInsensitiveDirEntry( &ParentDcb->Specific.Directory.DirectoryNodeHdr.CaseInsensitiveTreeHead,
                                               DirEntry);
 
-            if( DirEntry->Type.Data.ShortNameTreeEntry.HashIndex != 0)
+            if( ParentDcb->Specific.Directory.ShortNameTree &&
+                DirEntry->Type.Data.ShortNameTreeEntry.HashIndex != 0)
             {
 
                 //

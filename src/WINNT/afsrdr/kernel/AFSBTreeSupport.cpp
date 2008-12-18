@@ -1114,8 +1114,8 @@ AFSRemoveShortNameDirEntry( IN AFSDirEntryCB **RootNode,
     AFSDirEntryCB *pCurrentNode = NULL;
     AFSDirEntryCB *pParentNode = NULL;
 
-    ASSERT( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
-            DirEntry->DirectoryEntry.FileId.Vnode != 1);
+    //ASSERT( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_DIRECTORY ||
+    //        DirEntry->DirectoryEntry.FileId.Vnode != 1);
 
     pRightNode = (AFSDirEntryCB *)DirEntry->Type.Data.ShortNameTreeEntry.rightLink;
     pLeftNode = (AFSDirEntryCB *)DirEntry->Type.Data.ShortNameTreeEntry.leftLink;
