@@ -469,14 +469,14 @@ typedef struct AFS_FCB
         struct
         {
 
-            struct AFS_FCB  *TargetFcb;
+            struct AFS_FCB  *VolumeTargetFcb;
 
         } MountPoint;
 
         struct
         {
 
-            struct AFS_FCB  *TargetFcb;
+            ULONG   Reserved;
 
         } SymbolicLink;
 
@@ -576,6 +576,8 @@ typedef struct _AFS_WORK_ITEM
         struct
         {
             AFSFcb *Fcb;
+
+            AFSFcb **TargetFcb;
 
             ULONG FileType;
 

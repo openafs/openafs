@@ -581,11 +581,11 @@ AFSWorkerThread( IN PVOID Context)
                         break;
                     }
 
-                    case AFS_WORK_REQUEST_BUILD_TARGET_FCB:
+                    case AFS_WORK_REQUEST_BUILD_MOUNT_POINT_TARGET:
                     {
 
-                        pWorkItem->Status = AFSBuildTargetDirectory( pWorkItem->ProcessID,
-                                                                     pWorkItem->Specific.Fcb.Fcb);
+                        pWorkItem->Status = AFSBuildMountPointTarget( pWorkItem->ProcessID,
+                                                                      pWorkItem->Specific.Fcb.Fcb);
 
                         freeWorkItem = FALSE;
 
@@ -596,12 +596,13 @@ AFSWorkerThread( IN PVOID Context)
                         break;
                     }
 
-                    case AFS_WORK_REQUEST_BUILD_TARGET_SYMLINK:
+                    case AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET:
                     {
 
-                        pWorkItem->Status = AFSBuildSymlinkTarget( pWorkItem->ProcessID,
+                        pWorkItem->Status = AFSBuildSymLinkTarget( pWorkItem->ProcessID,
                                                                    pWorkItem->Specific.Fcb.Fcb,
-                                                                   &pWorkItem->Specific.Fcb.FileType);
+                                                                   &pWorkItem->Specific.Fcb.FileType,
+                                                                   pWorkItem->Specific.Fcb.TargetFcb);
 
                         freeWorkItem = FALSE;
 
@@ -1504,7 +1505,7 @@ AFSQueueWorkerRequestAtHead( IN AFSWorkItem *WorkItem)
 }
 
 NTSTATUS
-AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
+AFSQueueBuildMountPointTarget( IN AFSFcb *Fcb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -1515,7 +1516,7 @@ AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueBuildTargetDirectory Queuing request for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      "AFSQueueBuildMountPointTarget Queuing request for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                       &Fcb->DirEntry->DirectoryEntry.FileName,
                       Fcb->DirEntry->DirectoryEntry.FileId.Cell,
                       Fcb->DirEntry->DirectoryEntry.FileId.Volume,
@@ -1535,7 +1536,7 @@ AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueBuildTargetDirectory Failed to allocate work item\n");
+                          "AFSQueueBuildMountPointTarget Failed to allocate work item\n");
 
             try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
         }
@@ -1557,13 +1558,13 @@ AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb)
 
         pWorkItem->RequestFlags = AFS_SYNCHRONOUS_REQUEST;
 
-        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_TARGET_FCB;
+        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_MOUNT_POINT_TARGET;
 
         pWorkItem->Specific.Fcb.Fcb = Fcb;
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueBuildTargetDirectory Workitem %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      "AFSQueueBuildMountPointTarget Workitem %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                       pWorkItem,
                       &Fcb->DirEntry->DirectoryEntry.FileName,
                       Fcb->DirEntry->DirectoryEntry.FileId.Cell,
@@ -1583,7 +1584,7 @@ try_exit:
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueBuildTargetDirectory Processed request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                      "AFSQueueBuildMountPointTarget Processed request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                       &Fcb->DirEntry->DirectoryEntry.FileName,
                       Fcb->DirEntry->DirectoryEntry.FileId.Cell,
                       Fcb->DirEntry->DirectoryEntry.FileId.Volume,
@@ -1602,7 +1603,7 @@ try_exit:
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
-                          "AFSQueueBuildTargetDirectory Failed to queue request Status %08lX\n", ntStatus);
+                          "AFSQueueBuildMountPointTarget Failed to queue request Status %08lX\n", ntStatus);
         }
     }
     __except( AFSExceptionFilter( GetExceptionCode(), GetExceptionInformation()) )
@@ -1610,7 +1611,7 @@ try_exit:
 
         AFSDbgLogMsg( 0,
                       0,
-                      "EXCEPTION - AFSQueueBuildTargetDirectory\n");
+                      "EXCEPTION - AFSQueueBuildMountPointTarget\n");
     }
 
     return ntStatus;
@@ -1618,7 +1619,8 @@ try_exit:
 
 NTSTATUS
 AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
-                            OUT PULONG FileType)
+                            OUT PULONG FileType,
+                            OUT AFSFcb **TargetFcb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -1626,6 +1628,13 @@ AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
     
     __try
     {
+
+        // 
+        // Do not queue a build symlink target request if the target is being returned.
+        // otherwise resources end up held by the worker thread instead of the caller.
+        //
+
+        ASSERT(TargetFcb == NULL);
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1671,9 +1680,11 @@ AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
 
         pWorkItem->RequestFlags = AFS_SYNCHRONOUS_REQUEST;
 
-        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_TARGET_SYMLINK;
+        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET;
 
         pWorkItem->Specific.Fcb.Fcb = Fcb;
+
+        pWorkItem->Specific.Fcb.TargetFcb = TargetFcb;
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1695,7 +1706,11 @@ AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
             if( NT_SUCCESS( ntStatus))
             {
 
-                *FileType = pWorkItem->Specific.Fcb.FileType;
+                if( FileType != NULL)
+                {
+
+                    *FileType = pWorkItem->Specific.Fcb.FileType;
+                }
             }
         }
 
@@ -1710,7 +1725,7 @@ try_exit:
                       Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
                       Fcb->DirEntry->DirectoryEntry.FileId.Unique,
                       ntStatus,
-                      *FileType);
+                      pWorkItem->Specific.Fcb.FileType);
 
         if( pWorkItem != NULL)
         {

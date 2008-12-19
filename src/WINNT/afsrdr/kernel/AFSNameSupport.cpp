@@ -47,7 +47,7 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 {
 
     NTSTATUS          ntStatus = STATUS_SUCCESS;
-    AFSFcb           *pParentFcb = NULL, *pCurrentFcb = NULL;
+    AFSFcb           *pParentFcb = NULL, *pCurrentFcb = NULL, *pTargetFcb = NULL;
     UNICODE_STRING    uniPathName, uniComponentName, uniRemainingPath, uniSearchName;
     ULONG             ulCRC = 0;
     AFSDirEntryCB    *pDirEntry = NULL;
@@ -205,45 +205,32 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 ClearFlag( pParentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
             }
 
+
             //
-            // If this is a mount point or sym link then go get the real directory node
+            // If this is a mount point or symlink then go get the real directory node
             //
 
-            if( pParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
-                pParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+            switch ( pParentFcb->DirEntry->DirectoryEntry.FileType )
             {
 
-                ASSERT( pParentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
-
-                //
-                // Check if we have a target Fcb for this node
-                //
-
-                if( pParentFcb->Specific.SymbolicLink.TargetFcb == NULL)
+            case AFS_FILE_TYPE_SYMLINK:
                 {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSLocateNameEntry (FO: %08lX) Building link target for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  FileObject,
-                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
+                
                     //
-                    // Go retrieve the target entry for this node
+                    // Build the symlink target
                     //
 
-                    ntStatus = AFSQueueBuildTargetDirectory( pParentFcb);
+                    ntStatus = AFSBuildSymLinkTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                      pParentFcb,
+                                                      NULL,
+                                                      &pTargetFcb);
 
                     if( !NT_SUCCESS( ntStatus))
                     {
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_ERROR,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to build link target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      "AFSLocateNameEntry (FO: %08lX) Failed to build SL target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       FileObject,
                                       &pParentFcb->DirEntry->DirectoryEntry.FileName,
                                       pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
@@ -254,66 +241,107 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
+                        try_return( ntStatus);
+                    }
+
+                    ASSERT( pTargetFcb != NULL);
+
+                    pParentFcb = pTargetFcb;
+
+                    if ( pParentFcb->DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_MOUNTPOINT)
+                    {
+
                         break;
                     }
-                }
 
-                //
-                // Swap out where we are in the chain
-                //
+                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSLocateNameEntry (FO: %08lX) Walking link chain for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              FileObject,
-                              &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                              pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                ntStatus = AFSWalkTargetChain( pParentFcb,
-                                               &pParentFcb);
-
-                if( !NT_SUCCESS( ntStatus))
+            case AFS_FILE_TYPE_MOUNTPOINT:
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLocateNameEntry (FO: %08lX) Failed to walk link chain for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                  FileObject,
-                                  &pParentFcb->DirEntry->DirectoryEntry.FileName,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                  ntStatus);
+                    ASSERT( pParentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
 
                     //
-                    // Had a failure while walking the chain
+                    // Check if we have a target Fcb for this node
                     //
+
+                    if( pParentFcb->Specific.MountPoint.VolumeTargetFcb == NULL)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry (FO: %08lX) Building MP target for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                        //
+                        // Go retrieve the target entry for this node
+                        //
+
+                        ntStatus = AFSBuildMountPointTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                             pParentFcb);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to build MP target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          FileObject,
+                                          &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                          ntStatus);
+
+                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                            try_return( ntStatus);
+                        }
+                    }
+
+                    //
+                    // Swap out where we are in the chain
+                    //
+
+                    pTargetFcb = pParentFcb->Specific.MountPoint.VolumeTargetFcb;
+
+                    ASSERT( pTargetFcb != NULL);
+
+                    AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
+                                    TRUE);
+
+                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                    pParentFcb = pTargetFcb;
+
+                    break;
+
+                }
+
+            case AFS_FILE_TYPE_DFSLINK:
+                {
+
+                    //
+                    // This is a DFS link so we need to update the file name and return STATUS_REPARSE to the
+                    // system for it to reevaluate it
+                    //
+
+                    ntStatus = AFSProcessDFSLink( pParentFcb,
+                                                  FileObject,
+                                                  &uniRemainingPath);
+
+                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
                     try_return( ntStatus);
                 }
 
-                ASSERT( pParentFcb != NULL);
-            }
-            else if( pParentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
-            {
-
-                //
-                // This is a DFS link so we need to update the file name and return STATUS_REPARSE to the
-                // system for it to reevaluate it
-                //
-
-                ntStatus = AFSProcessDFSLink( pParentFcb,
-                                              FileObject,
-                                              &uniRemainingPath);
-
-                AFSReleaseResource( &pParentFcb->NPFcb->Resource);
-
-                try_return( ntStatus);
-            }
+            }   /* end of switch */
 
             //
             // If the parent is not initialized then do it now
@@ -1143,44 +1171,30 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 }
 
                 //
-                // If this is a mount point or sym link then go get the real directory node
+                // If this is a mount point or symlink then go get the real directory node
                 //
 
-                if( pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
-                    pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+                switch ( pCurrentFcb->DirEntry->DirectoryEntry.FileType)
                 {
 
-                    ASSERT( pCurrentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
-
-                    //
-                    // Check if we have a target Fcb for this node
-                    //
-
-                    if( pCurrentFcb->Specific.SymbolicLink.TargetFcb == NULL)
+                case AFS_FILE_TYPE_SYMLINK:
                     {
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSLocateNameEntry (FO: %08lX) Building target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                      FileObject,
-                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
+                    
                         //
-                        // Go retrieve the target entry for this node
+                        // Build the symlink target
                         //
 
-                        ntStatus = AFSQueueBuildTargetDirectory( pCurrentFcb);
+                        ntStatus = AFSBuildSymLinkTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                          pCurrentFcb,
+                                                          NULL,
+                                                          &pTargetFcb);
 
                         if( !NT_SUCCESS( ntStatus))
                         {
 
                             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                           AFS_TRACE_LEVEL_ERROR,
-                                          "AFSLocateNameEntry (FO: %08lX) Failed to build target for link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to build SL target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                           FileObject,
                                           &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                                           pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
@@ -1191,88 +1205,125 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                             AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
-                            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+                            try_return( ntStatus);
+                        }
+
+                        ASSERT( pTargetFcb != NULL);                    
+
+                        pCurrentFcb = pTargetFcb;
+
+                        if ( pCurrentFcb->DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_MOUNTPOINT)
+                        {
 
                             break;
                         }
                     }
 
-                    //
-                    // Swap out where we are in the chain
-                    //
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSLocateNameEntry (FO: %08lX) Walking link chain for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  FileObject,
-                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                    ntStatus = AFSWalkTargetChain( pCurrentFcb,
-                                                   &pCurrentFcb);
-
-                    if( !NT_SUCCESS( ntStatus))
+                case AFS_FILE_TYPE_MOUNTPOINT:
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSLocateNameEntry (FO: %08lX) Failed to walk link chain for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                      FileObject,
-                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                      ntStatus);
+                        ASSERT( pCurrentFcb->Specific.Directory.DirectoryNodeListHead == NULL);
 
                         //
-                        // Had a failure while walking the chain
+                        // Check if we have a target Fcb for this node
                         //
+
+                        if( pCurrentFcb->Specific.MountPoint.VolumeTargetFcb == NULL)
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_VERBOSE_2,
+                                          "AFSLocateNameEntry (FO: %08lX) Building target for MP %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                          FileObject,
+                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                            //
+                            // Go retrieve the target entry for this node
+                            //
+
+                            ntStatus = AFSBuildMountPointTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                                 pCurrentFcb);
+
+                            if( !NT_SUCCESS( ntStatus))
+                            {
+
+                                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                              AFS_TRACE_LEVEL_ERROR,
+                                              "AFSLocateNameEntry (FO: %08lX) Failed to build target for MP %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                              FileObject,
+                                              &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                              ntStatus);
+
+                                AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                                AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                                try_return( ntStatus);
+                            }
+                        }
+
+                        //
+                        // Swap out where we are in the chain
+                        //
+
+                        pTargetFcb = pCurrentFcb->Specific.MountPoint.VolumeTargetFcb;
+
+                        ASSERT( pTargetFcb != NULL);
+
+                        AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
+                                        TRUE);
+
+                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                        pCurrentFcb = pTargetFcb;
+
+                        //
+                        // If this is a root then the parent and current will be the same
+                        //
+
+                        if( pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
+                        {
+
+                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                            pParentFcb = pCurrentFcb;
+                        }
+
+                        break;
+                    }
+
+                case AFS_FILE_TYPE_DFSLINK:
+                    {
+
+                        //
+                        // This is a DFS link so we need to update the file name and return STATUS_REPARSE to the
+                        // system for it to reevaluate it
+                        //
+
+                        ntStatus = AFSProcessDFSLink( pCurrentFcb,
+                                                      FileObject,
+                                                      &uniRemainingPath);
 
                         AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                        if( pCurrentFcb != pParentFcb)
+                        {
+
+                            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+                        }
 
                         try_return( ntStatus);
                     }
 
-                    ASSERT( pCurrentFcb != NULL);
-
-                    //
-                    // If this is a root then the parent and current will be the same
-                    //
-
-                    if( pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
-                    {
-
-                        AFSReleaseResource( &pParentFcb->NPFcb->Resource);
-
-                        pParentFcb = pCurrentFcb;
-                    }
-                }
-                else if( pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
-                {
-
-                    //
-                    // This is a DFS link so we need to update the file name and return STATUS_REPARSE to the
-                    // system for it to reevaluate it
-                    //
-
-                    ntStatus = AFSProcessDFSLink( pCurrentFcb,
-                                                  FileObject,
-                                                  &uniRemainingPath);
-
-                    AFSReleaseResource( &pParentFcb->NPFcb->Resource);
-
-                    if( pCurrentFcb != pParentFcb)
-                    {
-
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    try_return( ntStatus);
-                }
+                } /* end of switch */
 
                 //
                 // If the entry is not initialized then do it now
@@ -2817,39 +2868,27 @@ AFSParseName( IN PIRP Irp,
         // Be sure we return a root or a directory
         //
 
-        if( pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
-            pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
+        switch ( pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType) 
         {
 
-            //
-            // Check if we have a target Fcb for this node
-            //
-
-            if( pShareDirEntry->Fcb->Specific.SymbolicLink.TargetFcb == NULL)
+        case AFS_FILE_TYPE_SYMLINK:
             {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Building target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              Irp,
-                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
+            
                 //
-                // Go retrieve the target entry for this node
+                // Build the symlink target
                 //
 
-                ntStatus = AFSQueueBuildTargetDirectory( pShareDirEntry->Fcb);
+                ntStatus = AFSBuildSymLinkTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                  pShareDirEntry->Fcb,
+                                                  NULL,
+                                                  &pTargetFcb);
 
                 if( !NT_SUCCESS( ntStatus))
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSParseName (%08lX) Failed to build target for link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  "AFSParseName (%08lX) Failed to build SL target for parent %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                   Irp,
                                   &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
                                   pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
@@ -2862,124 +2901,190 @@ AFSParseName( IN PIRP Irp,
 
                     try_return( ntStatus);
                 }
+
+                ASSERT( pTargetFcb != NULL);                    
+
+                if ( pTargetFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT) 
+                {
+
+                    pCurrentFcb = pTargetFcb;
+
+                    pTargetFcb = NULL;
+                 
+                    //
+                    // Check if we have a target Fcb for this node
+                    //
+
+                    if( pCurrentFcb->Specific.MountPoint.VolumeTargetFcb == NULL)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSParseName (%08lX) Building target for MP %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      Irp,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                        //
+                        // Go retrieve the target entry for this node
+                        //
+
+                        ntStatus = AFSBuildMountPointTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                             pCurrentFcb);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSParseName (%08lX) Failed to build target for MP %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          Irp,
+                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                          ntStatus);
+
+                            AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+                            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                            try_return( ntStatus);
+                        }
+                    }
+
+                    //
+                    // Swap out where we are in the chain
+                    //
+
+                    ASSERT( pTargetFcb != NULL);                    
+
+                    pTargetFcb = pCurrentFcb->Specific.MountPoint.VolumeTargetFcb;
+
+                    AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
+                                    TRUE);
+
+                    AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+                }
+
+                *RootFcb = pTargetFcb;
+
+                *ParentFcb = pTargetFcb;
+
+                break;
             }
 
-            //
-            // Swap out where we are in the chain
-            //
-
-            ntStatus = AFSWalkTargetChain( pShareDirEntry->Fcb,
-                                           &pTargetFcb);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Failed to walk target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              Irp,
-                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                //
-                // Had a failure while walking the chain
-                //
-
-                try_return( ntStatus);
-            }
-
-            //
-            // Resources are acquired above
-            //
-
-            *RootFcb = pTargetFcb;
-
-            *ParentFcb = pTargetFcb;
-        }
-        else if( pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
-        {
-
-            //
-            // This is a DFS link so we need to update the file name and return STATUS_REPARSE to the
-            // system for it to reevaluate the link
-            //
-
-            ntStatus = AFSProcessDFSLink( pShareDirEntry->Fcb,
-                                          pIrpSp->FileObject,
-                                          &uniRemainingPath);
-
-            AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
-
-            try_return( ntStatus);
-        }
-        else
-        {
-
-            *RootFcb = pShareDirEntry->Fcb;
-
-            *ParentFcb = pShareDirEntry->Fcb;
-           
-            if( BooleanFlagOn( (*RootFcb)->Flags, AFS_FCB_VOLUME_OFFLINE))
+        case AFS_FILE_TYPE_MOUNTPOINT:
             {
 
                 //
-                // The volume has been taken off line so fail the access
+                // Check if we have a target Fcb for this node
                 //
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSParseName (%08lX) Root volume OFFLINE for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              Irp,
-                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
-
-                *RootFcb = NULL;
-
-                *ParentFcb = NULL;
-
-                try_return( ntStatus = STATUS_DEVICE_NOT_READY);
-            }
-
-            //
-            // Check if the root requires verification due to an invalidation call
-            //
-
-            if( BooleanFlagOn( (*RootFcb)->Flags, AFS_FCB_VERIFY))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSParseName (%08lX) Verifying root volume %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              Irp,
-                              &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                ntStatus = AFSVerifyEntry( *RootFcb);
-
-                if( !NT_SUCCESS( ntStatus))
+                if( pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb == NULL)
                 {
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSParseName (%08lX) Failed to verify root volume %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                  "AFSParseName (%08lX) Building target for MP %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   Irp,
                                   &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
                                   pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
                                   pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
                                   pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                  ntStatus);
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                    //
+                    // Go retrieve the target entry for this node
+                    //
+
+                    ntStatus = AFSBuildMountPointTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                         pShareDirEntry->Fcb);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_ERROR,
+                                      "AFSParseName (%08lX) Failed to build target for MP %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      Irp,
+                                      &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
+
+                        AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+                        try_return( ntStatus);
+                    }
+                }
+
+                //
+                // Swap out where we are in the chain
+                //
+
+                pTargetFcb = pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb;
+
+                AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
+                                TRUE);
+
+                AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+                *RootFcb = pTargetFcb;
+
+                *ParentFcb = pTargetFcb;
+
+                break;
+            }
+
+        case AFS_FILE_TYPE_DFSLINK:
+            {
+
+                //
+                // This is a DFS link so we need to update the file name and return STATUS_REPARSE to the
+                // system for it to reevaluate the link
+                //
+
+                ntStatus = AFSProcessDFSLink( pShareDirEntry->Fcb,
+                                              pIrpSp->FileObject,
+                                              &uniRemainingPath);
+
+                AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+
+                try_return( ntStatus);
+            }
+        
+        default:
+            {
+
+                *RootFcb = pShareDirEntry->Fcb;
+
+                *ParentFcb = pShareDirEntry->Fcb;
+           
+                if( BooleanFlagOn( (*RootFcb)->Flags, AFS_FCB_VOLUME_OFFLINE))
+                {
+
+                    //
+                    // The volume has been taken off line so fail the access
+                    //
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_ERROR,
+                                  "AFSParseName (%08lX) Root volume OFFLINE for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  Irp,
+                                  &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                     AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
 
@@ -2987,8 +3092,54 @@ AFSParseName( IN PIRP Irp,
 
                     *ParentFcb = NULL;
 
-                    try_return( ntStatus);
+                    try_return( ntStatus = STATUS_DEVICE_NOT_READY);
+                
                 }
+
+                //
+                // Check if the root requires verification due to an invalidation call
+                //
+
+                if( BooleanFlagOn( (*RootFcb)->Flags, AFS_FCB_VERIFY))
+                {
+
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSParseName (%08lX) Verifying root volume %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  Irp,
+                                  &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                    ntStatus = AFSVerifyEntry( *RootFcb);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSParseName (%08lX) Failed to verify root volume %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                      Irp,
+                                      &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileName,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                      ntStatus);
+
+                        AFSReleaseResource( &(*RootFcb)->NPFcb->Resource);
+
+                        *RootFcb = NULL;
+
+                        *ParentFcb = NULL;
+
+                        try_return( ntStatus);
+                    }
+                }
+
+                break;
             }
         }
 
@@ -3192,8 +3343,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
-                         IN AFSFcb *Fcb)
+AFSBuildMountPointTarget( IN ULONGLONG ProcessID,
+                          IN AFSFcb *Fcb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -3214,7 +3365,7 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSBuildTargetDirectory Building target directory for %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X\n",
+                      "AFSBuildMountPointTarget Building target directory for %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X\n",
                       &Fcb->DirEntry->DirectoryEntry.FileName,
                       Fcb->DirEntry->DirectoryEntry.FileId.Cell,
                       Fcb->DirEntry->DirectoryEntry.FileId.Volume,
@@ -3224,534 +3375,206 @@ AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
 
         pCurrentFcb = Fcb;
 
-        while( TRUE)
+        //
+        // Do we need to evaluate the node?
+        //
+
+        if( pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
+            pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Unique == 0)
         {
-    
+
             //
-            // If there is already a target Fcb then process it
-            // Note, this code takes advantage of the fact that the Specific union for 
-            // for SymbolicLink and MountPoint are the same.
+            // Go evaluate the current target to get the target fid
             //
 
-            if( (pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
-                 pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT) &&
-                pCurrentFcb->Specific.SymbolicLink.TargetFcb != NULL)
-            {
+            stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.FileId;
 
-                pTargetFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildTargetDirectory Acquiring Fcb lock %08lX EXCL %08lX\n",
-                              &pTargetFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
-
-                AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
-                                TRUE);
-
-                if( pCurrentFcb != Fcb)
-                {
-
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                }
-
-                //
-                // If this is a final node then get out
-                //
-
-                if( AFSIsFinalNode( pTargetFcb))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSBuildTargetDirectory Have final target for Symlink/MountPoint %wZ FID %08lX-%08lX-%08lX-%08lX Target %wZ\n",
-                                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                  &pTargetFcb->DirEntry->DirectoryEntry.FileName);
-
-                    AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
-
-                    break;
-                }
-
-                pCurrentFcb = pTargetFcb;
-
-                continue;
-            }
-
-            if( (pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT ||
-                 pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK) &&
-                pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
-                pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Unique == 0)
-            {
-
-                //
-                // Go evaluate the current target to get the target fid
-                //
-
-                stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.FileId;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildTargetDirectory Evaluating target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE_2,
+                          "AFSBuildMountPointTarget Evaluating target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-                ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
-                                                  ProcessID,
-                                                  FALSE,
-                                                  &pDirEntry);
+            ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
+                                              ProcessID,
+                                              FALSE,
+                                              &pDirEntry);
 
-                if( !NT_SUCCESS( ntStatus))
-                {
+            if( !NT_SUCCESS( ntStatus))
+            {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildTargetDirectory Failed to evaluate target %wZ Status %08lX\n",
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSBuildMountPointTarget Failed to evaluate target %wZ Status %08lX\n",
                                                                     &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                                                                     ntStatus);
+                try_return( ntStatus);
+            }
 
-                    if( pCurrentFcb != Fcb)
-                    {
+            if( pDirEntry->TargetFileId.Vnode == 0 &&
+                pDirEntry->TargetFileId.Unique == 0)
+            {
 
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    break;
-                }
-
-                if( pDirEntry->TargetFileId.Vnode == 0 &&
-                    pDirEntry->TargetFileId.Unique == 0)
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildTargetDirectory Target %wZ FID %08lX-%08lX-%08lX-%08lX service returned zero FID\n",
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSBuildMountPointTarget Target %wZ FID %08lX-%08lX-%08lX-%08lX service returned zero FID\n",
                                   &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-                    if( pCurrentFcb != Fcb)
-                    {
-
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-
-                    break;
-                }
-
-                pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
-
-                ExFreePool( pDirEntry);
+                try_return( ntStatus = STATUS_ACCESS_DENIED);
             }
 
-            stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId;
+            pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
 
-            ASSERT( stTargetFileID.Vnode != 0 &&
-                    stTargetFileID.Unique != 0);
+            ExFreePool( pDirEntry);
+        }
 
-            //
-            // Try to locate this FID. First the volume then the 
-            // entry itself
-            //
+        stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId;
 
-            ullIndex = AFSCreateHighIndex( &stTargetFileID);
+        ASSERT( stTargetFileID.Vnode != 0 &&
+                stTargetFileID.Unique != 0);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSBuildTargetDirectory Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
+        //
+        // Try to locate this FID. First the volume then the 
+        // entry itself
+        //
+
+        ullIndex = AFSCreateHighIndex( &stTargetFileID);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE,
+                      "AFSBuildMountPointTarget Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
                           &pDevExt->Specific.RDR.VolumeTreeLock,
                           PsGetCurrentThread());
 
-            AFSAcquireShared( &pDevExt->Specific.RDR.VolumeTreeLock,
-                              TRUE);
+        AFSAcquireShared( &pDevExt->Specific.RDR.VolumeTreeLock,
+                          TRUE);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSBuildTargetDirectory Locating volume for target %I64X\n",
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_VERBOSE_2,
+                      "AFSBuildMountPointTarget Locating volume for target %I64X\n",
                           ullIndex);
+
+        ntStatus = AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
+                                       ullIndex,
+                                       &pVcb);
+
+        //
+        // We can be processing a request for a target that is on a volume
+        // we have never seen before.
+        //
+
+        if( pVcb == NULL)
+        {
+
+            AFSDirEnumEntryCB   stDirEnumEntry;
+            AFSVolumeInfoCB     stVolumeInfo;
+
+            AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
+
+            //
+            // Go get the volume information while we no longer have the lock. Trying to
+            // call the service while holding the tree lock can produce a deadlock due to
+            // invalidation
+            //
+
+            ntStatus = AFSRetrieveVolumeInformation( &stTargetFileID,
+                                                     &stVolumeInfo);
+
+            if( !NT_SUCCESS( ntStatus))
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSBuildMountPointTarget Failed to retrieve volume information on VolumeFID %08lX-%08lX\n",
+                                  stTargetFileID.Cell,
+                                  stTargetFileID.Volume);
+
+                try_return( ntStatus);
+            }
+
+            AFSAcquireExcl( &pDevExt->Specific.RDR.VolumeTreeLock,
+                            TRUE);
 
             ntStatus = AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
                                            ullIndex,
                                            &pVcb);
 
             //
-            // We can be processing a request for a target that is on a volume
-            // we have never seen before.
+            // At this point if we do not have a volume root Fcb
+            // we can only create a volume root for the target of 
+            // a MountPoint
             //
 
             if( pVcb == NULL)
             {
 
-                AFSDirEnumEntryCB   stDirEnumEntry;
-                AFSVolumeInfoCB     stVolumeInfo;
-
-                AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
-
-                //
-                // Go get the volume information while we no longer have the lock. Trying to
-                // call the service while holding the tree lock can produce a deadlock due to
-                // invalidation
-                //
-
-                ntStatus = AFSRetrieveVolumeInformation( &stTargetFileID,
-                                                         &stVolumeInfo);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    if( pCurrentFcb != Fcb)
-                    {
-
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    break;
-                }
-
-                AFSAcquireExcl( &pDevExt->Specific.RDR.VolumeTreeLock,
-                                TRUE);
-
-                ntStatus = AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
-                                               ullIndex,
-                                               &pVcb);
-
-                //
-                // At this point if we do not have a volume root Fcb
-                // we can only create a volume root for the target of 
-                // a MountPoint or a SymbolicLink
-                //
-
-                if( pVcb == NULL &&
-                    (pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT ||
-                     pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK))
-                {
-
-                    RtlCopyMemory( &stDirEnumEntry,
-                                   pCurrentFcb->DirEntry,
-                                   sizeof( AFSDirEnumEntryCB));
+                RtlCopyMemory( &stDirEnumEntry,
+                               pCurrentFcb->DirEntry,
+                               sizeof( AFSDirEnumEntryCB));
                                     
-                    stDirEnumEntry.TargetFileId = stTargetFileID;
+                stDirEnumEntry.TargetFileId = stTargetFileID;
 
-                    //
-                    // Go init the root of the volume
-                    //
+                //
+                // Go init the root of the volume
+                //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSBuildTargetDirectory Initializing root for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE_2,
+                              "AFSBuildMountPointTarget Initializing root for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-                    ntStatus = AFSInitRootForMountPoint( &stDirEnumEntry,
-                                                         &stVolumeInfo,
-                                                         &pVcb);
+                ntStatus = AFSInitRootForMountPoint( &stDirEnumEntry,
+                                                     &stVolumeInfo,
+                                                     &pVcb);
+                if( pVcb != NULL)
+                {
 
-                    if( pVcb != NULL)
+                    if( pVcb->Specific.VolumeRoot.VolumeWorkerContext.WorkerThreadObject == NULL &&
+                        !BooleanFlagOn( pVcb->Specific.VolumeRoot.VolumeWorkerContext.State, AFS_WORKER_INITIALIZED))
                     {
 
-                        if( pVcb->Specific.VolumeRoot.VolumeWorkerContext.WorkerThreadObject == NULL &&
-                            !BooleanFlagOn( pVcb->Specific.VolumeRoot.VolumeWorkerContext.State, AFS_WORKER_INITIALIZED))
-                        {
-
-                            AFSInitVolumeWorker( pVcb);
-                        }
-
-                        AFSReleaseResource( &pVcb->NPFcb->Resource);
+                        AFSInitVolumeWorker( pVcb);
                     }
+
+                    AFSReleaseResource( &pVcb->NPFcb->Resource);
                 }
             }
+        }
 
-            if( pVcb != NULL)
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildTargetDirectory Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX EXCL %08lX\n",
-                              pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                              PsGetCurrentThread());
-
-                AFSAcquireShared( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                                  TRUE);
-            }
-
-            AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
-
-            if( pVcb == NULL) 
-            {
-
-                if( pCurrentFcb != Fcb)
-                {
-
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                }
-
-                ntStatus = STATUS_UNSUCCESSFUL;
-
-                break;
-            }
-
-            //
-            // Check if this is a volume FID which could be the target of a 
-            // mount point. If so, then we are done
-            //
-
-            if( AFSIsVolumeFID( &stTargetFileID))
-            {
-
-                //
-                // It is pointing at a volume root so set the target and get out
-                //
-
-                InterlockedIncrement( &pVcb->OpenReferenceCount);
-
-                pCurrentFcb->Specific.SymbolicLink.TargetFcb = pVcb;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildTargetDirectory Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
-                              &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                if( pCurrentFcb != Fcb)
-                {
-
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                }
-
-                AFSReleaseResource( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock);
-
-                ntStatus = STATUS_SUCCESS;
-
-                break;
-            }
-
-            //
-            // We have the volume node so now search for the entry itself
-            //
-
-            ullIndex = AFSCreateLowIndex( &stTargetFileID);
+        if( pVcb != NULL)
+        {
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSBuildTargetDirectory Locating file %I64X in volume\n",
-                          ullIndex);
+                          "AFSBuildMountPointTarget Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
+                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-            ntStatus = AFSLocateHashEntry( pVcb->Specific.VolumeRoot.FileIDTree.TreeHead,
-                                           ullIndex,
-                                           &pTargetFcb);
+            InterlockedIncrement( &pVcb->OpenReferenceCount);
 
-            if( NT_SUCCESS( ntStatus) &&
-                pTargetFcb != NULL)
-            {
+            pCurrentFcb->Specific.MountPoint.VolumeTargetFcb = pVcb;
+        }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildTargetDirectory Acquiring Fcb lock %08lX SHARED %08lX\n",
-                              &pTargetFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+        AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
 
-                AFSAcquireShared( &pTargetFcb->NPFcb->Resource,
-                                  TRUE);                
-            }
+        if( pVcb == NULL) 
+        {
 
-            AFSReleaseResource( pVcb->Specific.VolumeRoot.FileIDTree.TreeLock);
-
-            //
-            // If we don't have a target fcb then go build one
-            //
-
-            if( pTargetFcb == NULL)
-            {
-
-                //
-                // Need to evaluate the entry to get a direnum cb
-                //
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildTargetDirectory Evaluating target of %I64X\n",
-                              ullIndex);
-
-                ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
-                                                  ProcessID,
-                                                  FALSE,
-                                                  &pDirEntry);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildTargetDirectory Failed to evaluate target of %I64X Status %08lX\n",
-                                  ullIndex,
-                                  ntStatus);
-
-                    if( pCurrentFcb != Fcb)
-                    {
-
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    break;
-                }
-
-                uniDirName.Length = (USHORT)pDirEntry->FileNameLength;
-
-                uniDirName.MaximumLength = uniDirName.Length;
-
-                uniDirName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->FileNameOffset);
-
-                uniTargetName.Length = (USHORT)pDirEntry->TargetNameLength;
-
-                uniTargetName.MaximumLength = uniTargetName.Length;
-
-                uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
-
-                pDirNode = AFSInitDirEntry( NULL,
-                                            &uniDirName,
-                                            &uniTargetName,
-                                            pDirEntry,
-                                            0);
-
-                if( pDirNode == NULL)
-                {
-                   
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildTargetDirectory Failed to initialize dir entry for %wZ\n",
-                                  &uniDirName);
-
-                    ExFreePool( pDirEntry);
-
-                    if( pCurrentFcb != Fcb)
-                    {
-
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                //
-                // Go initialize the Fcb
-                //
-
-                ntStatus = AFSInitFcb( pVcb,
-                                       pDirNode,
-                                       &pTargetFcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildTargetDirectory Failed to initialize fcb for dir entry %wZ Status %08lX\n",
-                                  &uniDirName,
-                                  ntStatus);
-
-                    ExFreePool( pDirEntry);
-
-                    AFSDeleteDirEntry( NULL,
-                                       pDirNode);
-
-                    if( pCurrentFcb != Fcb)
-                    {
-
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    try_return( ntStatus);
-                }
-
-                ExFreePool( pDirEntry);
-
-                InterlockedIncrement( &pTargetFcb->OpenReferenceCount);
-
-                //
-                // Tag this Fcb as a 'stand alone Fcb since it is not referencing a parent Fcb
-                // through the dir entry list
-                //
-
-                SetFlag( pTargetFcb->Flags, AFS_FCB_STANDALONE_NODE);
-
-                //
-                // Mark this directory node as requiring freeing since it is not in a parent list
-                //
-
-                SetFlag( pDirNode->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE);
-            }
-
-            //
-            // If the target Fcb is either a directory, root or a file
-            // then we are done
-            //
-
-            if( AFSIsFinalNode( pTargetFcb))
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildTargetDirectory Located final target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              &pTargetFcb->DirEntry->DirectoryEntry.FileName,
-                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pTargetFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                InterlockedIncrement( &pTargetFcb->OpenReferenceCount);
-
-                pCurrentFcb->Specific.SymbolicLink.TargetFcb = pTargetFcb;
-
-                AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
-
-                if( pCurrentFcb != Fcb)
-                {
-
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                }
-
-                ntStatus = STATUS_SUCCESS;
-
-                break;
-            }
-
-            //
-            // Update the current Fcbs target
-            //
-
-            pCurrentFcb->Specific.SymbolicLink.TargetFcb = pTargetFcb;
-
-            //
-            // If this is not the initial Fcb we are currently on then
-            // drop the lock
-            //
-
-            if( pCurrentFcb != Fcb)
-            {
-
-                AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-            }
-
-            pCurrentFcb = pTargetFcb;
-
-            pTargetFcb = NULL;
+            try_return( ntStatus = STATUS_UNSUCCESSFUL);
         }
                     
 try_exit:
@@ -3763,14 +3586,15 @@ try_exit:
 }
 
 NTSTATUS
-AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
+AFSBuildSymLinkTarget( IN ULONGLONG ProcessID,
                        IN AFSFcb *Fcb,
-                       OUT ULONG *TargetType)
+                       OUT ULONG *TargetType,
+                       OUT AFSFcb **TargetFcb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDevExt = (AFSDeviceExt *) AFSRDRDeviceObject->DeviceExtension;
-    AFSFcb *pTargetFcb = NULL, *pVcb = NULL, *pCurrentFcb = NULL;
+    AFSFcb *pTargetFcb = NULL, *pVcb = NULL, *pCurrentFcb = NULL, *pTopFcb = Fcb;
     AFSFileID stTargetFileID;
     AFSDirEnumEntry *pDirEntry = NULL;
     AFSDirEntryCB *pDirNode = NULL;
@@ -3786,17 +3610,26 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSBuildSymlinkTarget Building target for %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                      "AFSBuildSymLinkTarget Building target for %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X\n",
+                      &pTopFcb->DirEntry->DirectoryEntry.FileName,
+                      pTopFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                      pTopFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                      pTopFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                      pTopFcb->DirEntry->DirectoryEntry.FileId.Unique,
                       ProcessID);
 
-        pCurrentFcb = Fcb;
+        pCurrentFcb = pTopFcb;
 
-        *TargetType = 0;
+        if ( TargetType) 
+        {
+            
+            *TargetType = 0;
+        }
+        
+        if( TargetFcb != NULL)
+        {
+            *TargetFcb = NULL;
+        }
 
         while( TRUE)
         {
@@ -3804,116 +3637,70 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
             ASSERT( pCurrentFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK);
 
             //
-            // If there is already a target Fcb then process it
-            // Note, this code takes advantage of the fact that the Specific union for 
-            // for SymbolicLink and MountPoint are the same.
+            // Go evaluate the current target to get the target fid
             //
 
-            if( pCurrentFcb->Specific.SymbolicLink.TargetFcb != NULL)
-            {
+            stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.FileId;
 
-                pTargetFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildSymlinkTarget Acquiring Fcb lock %08lX EXCL %08lX\n",
-                              &pTargetFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
-
-                AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
-                                TRUE);
-
-                if( pCurrentFcb != Fcb)
-                {
-
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                }
-
-                if( pTargetFcb->DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_SYMLINK)
-                {
-
-                    AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
-
-                    *TargetType = pTargetFcb->DirEntry->DirectoryEntry.FileType;
-
-                    break;
-                }
-
-                pCurrentFcb = pTargetFcb;
-
-                continue;
-            }
-
-            if( pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
-                pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId.Unique == 0)
-            {
-
-                //
-                // Go evaluate the current target to get the target fid
-                //
-
-                stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.FileId;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildSymlinkTarget Evaluating target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE_2,
+                          "AFSBuildSymLinkTarget Evaluating target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-                ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
-                                                  ProcessID,
-                                                  FALSE,
-                                                  &pDirEntry);
+            ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
+                                              ProcessID,
+                                              FALSE,
+                                              &pDirEntry);
 
-                if( !NT_SUCCESS( ntStatus))
-                {
+            if( !NT_SUCCESS( ntStatus))
+            {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildSymlinkTarget Failed to evaluate target %wZ Status %08lX\n",
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSBuildSymLinkTarget Failed to evaluate target %wZ Status %08lX\n",
                                                                     &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                                                                     ntStatus);
 
-                    if( pCurrentFcb != Fcb)
-                    {
-
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    break;
-                }
-
-                if( pDirEntry->TargetFileId.Vnode == 0 &&
-                    pDirEntry->TargetFileId.Unique == 0)
+                if( pCurrentFcb != pTopFcb)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildSymlinkTarget Target %wZ FID %08lX-%08lX-%08lX-%08lX service returned zero FID\n",
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+                }
+
+                break;
+            }
+
+            if( pDirEntry->TargetFileId.Vnode == 0 &&
+                pDirEntry->TargetFileId.Unique == 0)
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSBuildSymLinkTarget Target %wZ FID %08lX-%08lX-%08lX-%08lX service returned zero FID\n",
                                   &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-                    if( pCurrentFcb != Fcb)
-                    {
+                if( pCurrentFcb != pTopFcb)
+                {
 
-                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-                    }
-
-                    ntStatus = STATUS_ACCESS_DENIED;
-
-                    break;
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
                 }
 
-                pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
+                ntStatus = STATUS_ACCESS_DENIED;
 
-                ExFreePool( pDirEntry);
+                break;
             }
+
+            pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId = pDirEntry->TargetFileId;
+
+            ExFreePool( pDirEntry);
 
             stTargetFileID = pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId;
 
@@ -3929,7 +3716,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSBuildSymlinkTarget Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
+                          "AFSBuildSymLinkTarget Acquiring RDR VolumeTreeLock lock %08lX EXCL %08lX\n",
                           &pDevExt->Specific.RDR.VolumeTreeLock,
                           PsGetCurrentThread());
 
@@ -3938,7 +3725,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSBuildSymlinkTarget Locating volume for target %I64X\n",
+                          "AFSBuildSymLinkTarget Locating volume for target %I64X\n",
                           ullIndex);
 
             ntStatus = AFSLocateHashEntry( pDevExt->Specific.RDR.VolumeTree.TreeHead,
@@ -3970,7 +3757,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    if( pCurrentFcb != Fcb)
+                    if( pCurrentFcb != pTopFcb)
                     {
 
                         AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
@@ -4007,7 +3794,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE_2,
-                                  "AFSBuildSymlinkTarget Initializing root for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                  "AFSBuildSymLinkTarget Initializing root for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
@@ -4038,7 +3825,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildSymlinkTarget Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX EXCL %08lX\n",
+                              "AFSBuildSymLinkTarget Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX EXCL %08lX\n",
                               pVcb->Specific.VolumeRoot.FileIDTree.TreeLock,
                               PsGetCurrentThread());
 
@@ -4051,7 +3838,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
             if( pVcb == NULL) 
             {
 
-                if( pCurrentFcb != Fcb)
+                if( pCurrentFcb != pTopFcb)
                 {
 
                     AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
@@ -4070,22 +3857,33 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
             if( AFSIsVolumeFID( &stTargetFileID))
             {
 
-                *TargetType = AFS_FILE_TYPE_DIRECTORY;
-
-                InterlockedIncrement( &pVcb->OpenReferenceCount);
-
-                pCurrentFcb->Specific.SymbolicLink.TargetFcb = pVcb;
+                if ( TargetType )
+                {
+                        
+                    *TargetType = AFS_FILE_TYPE_DIRECTORY;
+                }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildSymlinkTarget Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
+                              "AFSBuildSymLinkTarget Evaluated target of %wZ FID %08lX-%08lX-%08lX-%08lX as root volume\n",
                               &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
                               pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-                if( pCurrentFcb != Fcb)
+                //
+                // Return the target Fcb
+                //
+
+                if( TargetFcb != NULL)
+                {
+
+                    *TargetFcb = pCurrentFcb;
+
+                    AFSReleaseResource( &pTopFcb->NPFcb->Resource);
+                }
+                else if( pCurrentFcb != pTopFcb)
                 {
 
                     AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
@@ -4106,7 +3904,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
-                          "AFSBuildSymlinkTarget Locating file %I64X in volume\n",
+                          "AFSBuildSymLinkTarget Locating file %I64X in volume\n",
                           ullIndex);
 
             ntStatus = AFSLocateHashEntry( pVcb->Specific.VolumeRoot.FileIDTree.TreeHead,
@@ -4119,7 +3917,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSBuildSymlinkTarget Acquiring Fcb lock %08lX SHARED %08lX\n",
+                              "AFSBuildSymLinkTarget Acquiring Fcb lock %08lX SHARED %08lX\n",
                               &pTargetFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
@@ -4142,7 +3940,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildSymlinkTarget Evaluating target of %I64X\n",
+                              "AFSBuildSymLinkTarget Evaluating target of %I64X\n",
                               ullIndex);
 
                 ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
@@ -4155,11 +3953,11 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildSymlinkTarget Failed to evaluate target of %I64X Status %08lX\n",
+                                  "AFSBuildSymLinkTarget Failed to evaluate target of %I64X Status %08lX\n",
                                   ullIndex,
                                   ntStatus);
 
-                    if( pCurrentFcb != Fcb)
+                    if( pCurrentFcb != pTopFcb)
                     {
 
                         AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
@@ -4191,12 +3989,12 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
                    
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildSymlinkTarget Failed to initialize dir entry for %wZ\n",
+                                  "AFSBuildSymLinkTarget Failed to initialize dir entry for %wZ\n",
                                   &uniDirName);
 
                     ExFreePool( pDirEntry);
 
-                    if( pCurrentFcb != Fcb)
+                    if( pCurrentFcb != pTopFcb)
                     {
 
                         AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
@@ -4218,7 +4016,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                   AFS_TRACE_LEVEL_ERROR,
-                                  "AFSBuildSymlinkTarget Failed to initialize fcb for dir entry %wZ Status %08lX\n",
+                                  "AFSBuildSymLinkTarget Failed to initialize fcb for dir entry %wZ Status %08lX\n",
                                   &uniDirName,
                                   ntStatus);
 
@@ -4227,7 +4025,7 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
                     AFSDeleteDirEntry( NULL,
                                        pDirNode);
 
-                    if( pCurrentFcb != Fcb)
+                    if( pCurrentFcb != pTopFcb)
                     {
 
                         AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
@@ -4237,8 +4035,6 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
                 }
 
                 ExFreePool( pDirEntry);
-
-                InterlockedIncrement( &pTargetFcb->OpenReferenceCount);
 
                 //
                 // Tag this Fcb as a 'stand alone Fcb since it is not referencing a parent Fcb
@@ -4261,27 +4057,38 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
             if( pTargetFcb->DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_SYMLINK)
             {
 
-                *TargetType = pTargetFcb->DirEntry->DirectoryEntry.FileType;
+                if ( TargetType )
+                {
+
+                    *TargetType = pTargetFcb->DirEntry->DirectoryEntry.FileType;
+                }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSBuildSymlinkTarget Located final target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              "AFSBuildSymLinkTarget Located final target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                               &pTargetFcb->DirEntry->DirectoryEntry.FileName,
                               pTargetFcb->DirEntry->DirectoryEntry.FileId.Cell,
                               pTargetFcb->DirEntry->DirectoryEntry.FileId.Volume,
                               pTargetFcb->DirEntry->DirectoryEntry.FileId.Vnode,
                               pTargetFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
-                InterlockedIncrement( &pTargetFcb->OpenReferenceCount);
-
-                pCurrentFcb->Specific.SymbolicLink.TargetFcb = pTargetFcb;
-
-                AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
-
-                if( pCurrentFcb != Fcb)
+                if( TargetFcb != NULL)
                 {
 
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+                    *TargetFcb = pTargetFcb;
+
+                    AFSReleaseResource( &pTopFcb->NPFcb->Resource);
+                }
+                else 
+                {
+
+                    AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
+
+                    if( pCurrentFcb != pTopFcb)
+                    {
+
+                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+                    }
                 }
 
                 ntStatus = STATUS_SUCCESS;
@@ -4290,17 +4097,11 @@ AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
             }
 
             //
-            // Update the current Fcbs target
-            //
-
-            pCurrentFcb->Specific.SymbolicLink.TargetFcb = pTargetFcb;
-
-            //
             // If this is not the initial Fcb we are currently on then
             // drop the lock
             //
 
-            if( pCurrentFcb != Fcb)
+            if( pCurrentFcb != pTopFcb)
             {
 
                 AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);

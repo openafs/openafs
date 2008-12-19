@@ -1518,7 +1518,7 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
                     Fcb->Header.NodeTypeCode = AFS_MOUNT_POINT_FCB;
 
-                    Fcb->Specific.MountPoint.TargetFcb = NULL;
+                    Fcb->Specific.MountPoint.VolumeTargetFcb = NULL;
 
                     break;
                 }
@@ -1537,8 +1537,6 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                     ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
 
                     Fcb->Header.NodeTypeCode = AFS_SYMBOLIC_LINK_FCB;
-
-                    Fcb->Specific.SymbolicLink.TargetFcb = NULL;
 
                     break;
                 }
@@ -3343,12 +3341,11 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
         {
 
             case AFS_FILE_TYPE_MOUNTPOINT:
-            case AFS_FILE_TYPE_SYMLINK:
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry Updating metadata for SL/MP Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
+                              "AFSVerifyEntry Updating metadata for MP Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
                               &Fcb->DirEntry->DirectoryEntry.FileName,
                               Fcb->DirEntry->DirectoryEntry.FileId.Cell,
                               Fcb->DirEntry->DirectoryEntry.FileId.Volume,
@@ -3357,7 +3354,7 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                               pDirEntry->DataVersion.QuadPart);
 
                 //
-                // For a mount point or symlink we need to ensure the target is the same
+                // For a mount point we need to ensure the target is the same
                 //
 
                 if( !AFSIsEqualFID( &Fcb->DirEntry->DirectoryEntry.TargetFileId,
@@ -3369,16 +3366,41 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                     // nodes requires evaluation
                     //
 
-                    if( Fcb->Specific.SymbolicLink.TargetFcb != NULL)
+                    if( Fcb->Specific.MountPoint.VolumeTargetFcb != NULL)
                     {
 
-                        ASSERT( Fcb->Specific.SymbolicLink.TargetFcb->OpenReferenceCount != 0);
+                        ASSERT( Fcb->Specific.MountPoint.VolumeTargetFcb->OpenReferenceCount != 0);
 
-                        InterlockedDecrement( &Fcb->Specific.SymbolicLink.TargetFcb->OpenReferenceCount);
+                        InterlockedDecrement( &Fcb->Specific.MountPoint.VolumeTargetFcb->OpenReferenceCount);
 
-                        Fcb->Specific.SymbolicLink.TargetFcb = NULL;    
+                        Fcb->Specific.MountPoint.VolumeTargetFcb = NULL;    
                     }
                 }
+
+                //
+                // Update the metadata for the entry
+                //
+
+                AFSUpdateMetaData( Fcb->DirEntry,
+                                   pDirEntry);
+
+                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+
+                break;
+            }
+
+            case AFS_FILE_TYPE_SYMLINK:
+            {
+
+                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                              AFS_TRACE_LEVEL_VERBOSE,
+                              "AFSVerifyEntry Updating metadata for SL Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
+                              &Fcb->DirEntry->DirectoryEntry.FileName,
+                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,
+                              pDirEntry->DataVersion.QuadPart);
 
                 //
                 // Update the metadata for the entry
@@ -4294,137 +4316,6 @@ AFSValidateRootDirectoryCache( IN AFSFcb *Dcb)
     return ntStatus;
 }
 
-NTSTATUS
-AFSWalkTargetChain( IN AFSFcb *ParentFcb,
-                    OUT AFSFcb **TargetFcb)
-{
-
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-    AFSFcb *pCurrentFcb = ParentFcb, *pTargetFcb = NULL;
-
-    __Enter
-    {
-
-        while( TRUE)
-        {
-
-            //
-            // The initial parent is acquired before calling in
-            //
-
-            pTargetFcb = pCurrentFcb->Specific.SymbolicLink.TargetFcb;
-
-            ASSERT( pTargetFcb != NULL);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSWalkTargetChain Acquiring Fcb lock %08lX EXCL %08lX\n",
-                          &pTargetFcb->NPFcb->Resource,
-                          PsGetCurrentThread());
-
-            AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
-                            TRUE);
-
-            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-
-            //
-            // If this is a root node then see if it is OFFLINE
-            //
-
-            if( pTargetFcb->Header.NodeTypeCode == AFS_ROOT_FCB &&
-                BooleanFlagOn( pTargetFcb->Flags, AFS_FCB_VOLUME_OFFLINE))
-            {
-
-                //
-                // The volume has been taken off line so fail the access
-                //
-
-                AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
-
-                try_return( ntStatus = STATUS_DEVICE_NOT_READY);
-            }
-
-            //
-            // Check if we need to verify this node
-            //
-
-            if( BooleanFlagOn( pTargetFcb->Flags, AFS_FCB_VERIFY))
-            {
-
-                ntStatus = AFSVerifyEntry( pTargetFcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSReleaseResource( &pTargetFcb->NPFcb->Resource);
-
-                    try_return( ntStatus);
-                }
-            }
-
-            pCurrentFcb = pTargetFcb;
-
-            pTargetFcb = NULL;
-
-            //
-            // If we are at a node that is not a symlink or MP then we are done
-            //
-
-            if( pCurrentFcb->Header.NodeTypeCode != AFS_MOUNT_POINT_FCB &&
-                pCurrentFcb->Header.NodeTypeCode != AFS_SYMBOLIC_LINK_FCB)
-            {
-
-                break;
-            }
-
-            if( pCurrentFcb->Specific.SymbolicLink.TargetFcb == NULL)
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSWalkTargetChain Building target for link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-                //
-                // Go retrieve the target entry for this node
-                //
-
-                ntStatus = AFSQueueBuildTargetDirectory( pCurrentFcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSWalkTargetChainFailed to build target for link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                  ntStatus);
-
-                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
-
-                    try_return( ntStatus);
-                }
-            }
-        }
-
-        *TargetFcb = pCurrentFcb;
-
-try_exit:
-
-        NOTHING;
-    }
-
-    return ntStatus;
-}
-
 BOOLEAN
 AFSIsVolumeFID( IN AFSFileID *FileID)
 {
@@ -4676,7 +4567,6 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
         {
 
             case AFS_FILE_TYPE_MOUNTPOINT:
-            case AFS_FILE_TYPE_SYMLINK:
             {
 
                 if( pCurrentFcb != NULL)
@@ -4685,7 +4575,7 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                     ClearFlag( pCurrentFcb->Flags, AFS_FCB_VERIFY);
 
                     //
-                    // For a mount point or symlink we need to ensure the target is the same
+                    // For a mount point we need to ensure the target is the same
                     //
 
                     if( DirEntry->DirectoryEntry.DataVersion.QuadPart != pDirEnumEntry->DataVersion.QuadPart)
@@ -4693,7 +4583,7 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
 
                         AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                       AFS_TRACE_LEVEL_VERBOSE_2,
-                                      "AFSValidateEntry Entry %wZ FID %08lX-%08lX-%08lX-%08lX has different target ID\n",
+                                      "AFSValidateEntry MP Entry %wZ FID %08lX-%08lX-%08lX-%08lX has different target ID\n",
                                       &DirEntry->DirectoryEntry.FileName,
                                       DirEntry->DirectoryEntry.FileId.Cell,
                                       DirEntry->DirectoryEntry.FileId.Volume,
@@ -4705,14 +4595,14 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                         // nodes requires evaluation
                         //
 
-                        if( pCurrentFcb->Specific.SymbolicLink.TargetFcb != NULL)
+                        if( pCurrentFcb->Specific.MountPoint.VolumeTargetFcb != NULL)
                         {
 
-                            ASSERT( pCurrentFcb->Specific.SymbolicLink.TargetFcb->OpenReferenceCount != 0);
+                            ASSERT( pCurrentFcb->Specific.MountPoint.VolumeTargetFcb->OpenReferenceCount != 0);
 
-                            InterlockedDecrement( &pCurrentFcb->Specific.SymbolicLink.TargetFcb->OpenReferenceCount);
+                            InterlockedDecrement( &pCurrentFcb->Specific.MountPoint.VolumeTargetFcb->OpenReferenceCount);
 
-                            pCurrentFcb->Specific.SymbolicLink.TargetFcb = NULL;   
+                            pCurrentFcb->Specific.MountPoint.VolumeTargetFcb = NULL;   
 
                             //
                             // Go rebuild the target if this is not a fast call
@@ -4721,14 +4611,15 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                             if( !FastCall)
                             {
 
-                                ntStatus = AFSQueueBuildTargetDirectory( pCurrentFcb);
+                                ntStatus = AFSBuildMountPointTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                                     pCurrentFcb);
 
                                 if( !NT_SUCCESS( ntStatus))
                                 {
 
                                     AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                                                   AFS_TRACE_LEVEL_ERROR,
-                                                  "AFSValidateEntry Failed to build target of link entry %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                                  "AFSValidateEntry Failed to build target of mp entry %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                                   &DirEntry->DirectoryEntry.FileName,
                                                   DirEntry->DirectoryEntry.FileId.Cell,
                                                   DirEntry->DirectoryEntry.FileId.Volume,
@@ -4741,6 +4632,25 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                             }
                         }
                     }
+                }
+
+                //
+                // Update the metadata for the entry
+                //
+
+                AFSUpdateMetaData( DirEntry,
+                                   pDirEnumEntry);
+
+                break;
+            }
+
+            case AFS_FILE_TYPE_SYMLINK:
+            {
+
+                if( pCurrentFcb != NULL)
+                {
+
+                    ClearFlag( pCurrentFcb->Flags, AFS_FCB_VERIFY);
                 }
 
                 //
@@ -4919,7 +4829,7 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSValidateEntry Acquiring DirectoryNodeHdr.TrreeLock lock %08lX EXCL %08lX\n",
+                                  "AFSValidateEntry Acquiring DirectoryNodeHdr.TreeLock lock %08lX EXCL %08lX\n",
                                   pCurrentFcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
                                   PsGetCurrentThread());
 
@@ -5543,7 +5453,8 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                                   pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         ntStatus = AFSQueueBuildSymLinkTarget( pCurrentFcb,
-                                               &ulFileType);
+                                               &ulFileType,
+                                               NULL);
 
         if( !NT_SUCCESS( ntStatus))
         {

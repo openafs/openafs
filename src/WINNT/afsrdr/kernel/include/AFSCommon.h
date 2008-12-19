@@ -490,13 +490,14 @@ AFSCheckCellName( IN UNICODE_STRING *CellName,
                   OUT AFSDirEntryCB **ShareDirEntry);
 
 NTSTATUS
-AFSBuildTargetDirectory( IN ULONGLONG ProcessID,
-                         IN AFSFcb *Fcb);
+AFSBuildMountPointTarget( IN ULONGLONG ProcessID,
+                          IN AFSFcb *Fcb);
 
 NTSTATUS
-AFSBuildSymlinkTarget( IN ULONGLONG ProcessID,
+AFSBuildSymLinkTarget( IN ULONGLONG ProcessID,
                        IN AFSFcb *Fcb,
-                       OUT ULONG *TargetType);
+                       OUT ULONG *TargetType,
+                       OUT AFSFcb **TargetFcb);
 
 NTSTATUS
 AFSProcessDFSLink( IN AFSFcb *Fcb,
@@ -996,10 +997,6 @@ AFSValidateDirectoryCache( IN AFSFcb *Dcb);
 NTSTATUS
 AFSValidateRootDirectoryCache( IN AFSFcb *Dcb);
 
-NTSTATUS
-AFSWalkTargetChain( IN AFSFcb *ParentFcb,
-                    OUT AFSFcb **TargetFcb);
-
 BOOLEAN
 AFSIsVolumeFID( IN AFSFileID *FileID);
 
@@ -1296,11 +1293,12 @@ NTSTATUS
 AFSShutdownVolumeWorker( IN AFSFcb *VolumeVcb);
 
 NTSTATUS
-AFSQueueBuildTargetDirectory( IN AFSFcb *Fcb);
+AFSQueueBuildMountPointTarget( IN AFSFcb *Fcb);
 
 NTSTATUS
 AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
-                            OUT PULONG FileType);
+                            OUT PULONG FileType,
+                            OUT AFSFcb **TargetFcb);
 
 NTSTATUS
 AFSQueueFlushExtents( IN AFSFcb *Fcb);
