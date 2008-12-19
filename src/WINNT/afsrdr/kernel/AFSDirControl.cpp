@@ -153,7 +153,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
     BOOLEAN bReleaseMain = FALSE;
 
-    ULONG       ulTargetFileType = 0;
+    ULONG ulTargetFileType = 0;
 
     __Enter
     {
@@ -198,6 +198,8 @@ AFSQueryDirectory( IN PIRP Irp)
             AFSAcquireExcl( &pFcb->NPFcb->Resource,
                             TRUE);
 
+            bReleaseMain = TRUE;
+
             //
             // Tell the service to prime the cache of the directory content
             //
@@ -221,9 +223,9 @@ AFSQueryDirectory( IN PIRP Irp)
 
             AFSAcquireShared( &pFcb->NPFcb->Resource,
                               TRUE);
-        }
 
-        bReleaseMain = TRUE;
+            bReleaseMain = TRUE;
+        }
 
         //
         // Start processing the data
@@ -491,7 +493,7 @@ AFSQueryDirectory( IN PIRP Irp)
             case FileDirectoryInformation:
 
                 ulBaseLength = FIELD_OFFSET( FILE_DIRECTORY_INFORMATION,
-                                               FileName[0] );
+                                             FileName[0] );
                 break;
 
             case FileFullDirectoryInformation:
@@ -509,20 +511,20 @@ AFSQueryDirectory( IN PIRP Irp)
             case FileBothDirectoryInformation:
 
                 ulBaseLength = FIELD_OFFSET( FILE_BOTH_DIR_INFORMATION,
-                                               FileName[0] );
+                                             FileName[0] );
                 break;
 
             case FileIdBothDirectoryInformation:
 
                 ulBaseLength = FIELD_OFFSET( FILE_ID_BOTH_DIR_INFORMATION,
-                                               FileName[0] );
+                                             FileName[0] );
 
                 break;
 
             case FileIdFullDirectoryInformation:
 
                 ulBaseLength = FIELD_OFFSET( FILE_ID_FULL_DIR_INFORMATION,
-                                               FileName[0] );
+                                             FileName[0] );
 
                 break;
 
@@ -896,7 +898,7 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
         bReleaseLock = TRUE;
 
         //
-        // Check if the ndoe has already been deleted
+        // Check if the node has already been deleted
         //
 
         if( BooleanFlagOn( pFcb->Flags, AFS_FCB_DELETED))
@@ -904,23 +906,23 @@ AFSNotifyChangeDirectory( IN PIRP Irp)
 
             try_return( ntStatus = STATUS_FILE_DELETED);
         }
-		else if( BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE)) 
-		{
+        else if( BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE)) 
+        {
 			
             try_return( ntStatus = STATUS_DELETE_PENDING);
         }
 
         //  Call the Fsrtl package to process the request.
         FsRtlNotifyFullChangeDirectory( pFcb->NPFcb->NotifySync,
-								        &pFcb->NPFcb->DirNotifyList,
-								        pCcb,
-							            (PSTRING)&pCcb->FullFileName,
-								        bWatchTree,
-								        TRUE,
-								        ulCompletionFilter,
-								        Irp,
-								        NULL,
-								        NULL);
+                                        &pFcb->NPFcb->DirNotifyList,
+                                        pCcb,
+                                        (PSTRING)&pCcb->FullFileName,
+                                        bWatchTree,
+                                        TRUE,
+                                        ulCompletionFilter,
+                                        Irp,
+                                        NULL,
+                                        NULL);
 
         ntStatus = STATUS_PENDING;
 

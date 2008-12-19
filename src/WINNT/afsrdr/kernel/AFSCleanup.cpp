@@ -579,15 +579,15 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                         ASSERT( pFcb->ParentFcb != NULL);
 
-						FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
-												     &pFcb->ParentFcb->NPFcb->DirNotifyList,
-												     (PSTRING)&pCcb->FullFileName,
-												     (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-												     (PSTRING)NULL,
-												     (PSTRING)NULL,
-												     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
-												     (ULONG)FILE_ACTION_REMOVED,
-												     (PVOID)NULL );
+                        FsRtlNotifyFullReportChange( pFcb->ParentFcb->NPFcb->NotifySync,
+                                                     &pFcb->ParentFcb->NPFcb->DirNotifyList,
+                                                     (PSTRING)&pCcb->FullFileName,
+                                                     (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+                                                     (PSTRING)NULL,
+                                                     (PSTRING)NULL,
+                                                     (ULONG)FILE_NOTIFY_CHANGE_FILE_NAME,
+                                                     (ULONG)FILE_ACTION_REMOVED,
+                                                     (PVOID)NULL );
                     }
                 }
 
@@ -616,11 +616,11 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                     ntStatus = AFSUpdateFileInformation( DeviceObject,
-                                                           pFcb);
+                                                         pFcb);
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSCleanup Acquiring Dcb (FILEINFO) lock %08lX EXCL %08lX\n",
+                                  AFS_TRACE_LEVEL_VERBOSE,
+                                  "AFSCleanup Acquiring Dcb (FILEINFO) lock %08lX EXCL %08lX\n",
                                   &pFcb->NPFcb->Resource,
                                   PsGetCurrentThread());
 
@@ -633,7 +633,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                         ClearFlag( pFcb->Flags, AFS_FILE_MODIFIED);
                     }
 
-    				ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);                    
+                    ulNotifyFilter |= (FILE_NOTIFY_CHANGE_ATTRIBUTES);                    
 
                     if( pFcb->ParentFcb != NULL)
                     {
@@ -641,15 +641,15 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                         pParentDcb = pFcb->ParentFcb;
                     }
 
-               		FsRtlNotifyFullReportChange( pParentDcb->NPFcb->NotifySync,
-			    								 &pParentDcb->NPFcb->DirNotifyList,
-												 (PSTRING)&pCcb->FullFileName,
-												 (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
-												 (PSTRING)NULL,
-												 (PSTRING)NULL,
-												 (ULONG)ulNotifyFilter,
-												 (ULONG)FILE_ACTION_MODIFIED,
-												 (PVOID)NULL);
+                    FsRtlNotifyFullReportChange( pParentDcb->NPFcb->NotifySync,
+                                                 &pParentDcb->NPFcb->DirNotifyList,
+                                                 (PSTRING)&pCcb->FullFileName,
+                                                 (USHORT)(pCcb->FullFileName.Length - pFcb->DirEntry->DirectoryEntry.FileName.Length),
+                                                 (PSTRING)NULL,
+                                                 (PSTRING)NULL,
+                                                 (ULONG)ulNotifyFilter,
+                                                 (ULONG)FILE_ACTION_MODIFIED,
+                                                 (PVOID)NULL);
                 }
 
                 //
@@ -657,8 +657,8 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                 //
 
                 FsRtlNotifyCleanup( pFcb->NPFcb->NotifySync,
-									&pFcb->NPFcb->DirNotifyList,
-									pCcb);
+                                    &pFcb->NPFcb->DirNotifyList,
+                                    pCcb);
 
                 //
                 // Remove the share access at this time since we may not get the close for sometime on this FO.
@@ -696,7 +696,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                               PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
-                                  TRUE);
+                                TRUE);
 
                 ASSERT( pFcb->OpenHandleCount != 0);
 
