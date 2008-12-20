@@ -1205,6 +1205,8 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                             AFSReleaseResource( &pParentFcb->NPFcb->Resource);
 
+                            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
                             try_return( ntStatus);
                         }
 
@@ -2949,8 +2951,6 @@ AFSParseName( IN PIRP Irp,
                                           pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
                                           ntStatus);
 
-                            AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
-
                             AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
 
                             try_return( ntStatus);
@@ -2961,14 +2961,12 @@ AFSParseName( IN PIRP Irp,
                     // Swap out where we are in the chain
                     //
 
-                    ASSERT( pTargetFcb != NULL);                    
-
                     pTargetFcb = pCurrentFcb->Specific.MountPoint.VolumeTargetFcb;
+
+                    ASSERT( pTargetFcb != NULL);                    
 
                     AFSAcquireExcl( &pTargetFcb->NPFcb->Resource,
                                     TRUE);
-
-                    AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
 
                     AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
                 }
