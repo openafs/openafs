@@ -337,9 +337,9 @@ NPAddConnection3( HWND            hwndOwner,
 
         if( !dwError)
         {
-
+#ifdef AFS_DEBUG_TRACE
             AFSDbgPrint( L"NPAddConnection3 Failed to add connection to file system %d\n", GetLastError());
-
+#endif
             try_return( dwStatus = WN_OUT_OF_MEMORY);
         }
 
@@ -412,9 +412,9 @@ NPAddConnection3( HWND            hwndOwner,
                                            wchLocalName,
                                            uniConnectionName.Buffer))
                     {
-
+#ifdef AFS_DEBUG_TRACE
                         AFSDbgPrint(L"NPAddConnection3 Failed to assign drive\n");
-
+#endif
                         dwStatus = GetLastError();
                     }
                     else
@@ -558,11 +558,11 @@ NPCancelConnection( LPWSTR  lpName,
 
         if( !dwError)
         {
-
+#ifdef AFS_DEBUG_TRACE
             DWORD gle = GetLastError();
-
+       
             AFSDbgPrint(L"NPCancelConnection Failed to cancel connection to file system - gle 0x%x\n", gle);
-
+#endif
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
 
@@ -656,9 +656,9 @@ NPGetConnection( LPWSTR  lpLocalName,
 
         if( lstrlen( lpLocalName) == 0)
         {
-
+#ifdef AFS_DEBUG_TRACE
             AFSDbgPrint(L"NPGetConnection No local name\n");
-
+#endif
             try_return( dwStatus = WN_BAD_LOCALNAME);
         }
 
@@ -699,11 +699,12 @@ NPGetConnection( LPWSTR  lpLocalName,
 
         if( !dwError)
         {
+#ifdef AFS_DEBUG_TRACE
             DWORD gle = GetLastError();
 
             AFSDbgPrint( L"NPGetConnection Failed to get connection from file system for local %s gle 0x%x\n", 
                          wchLocalName, gle);
-
+#endif
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
 
@@ -771,9 +772,9 @@ NPGetConnection3( IN     LPCWSTR lpLocalName,
         if( lpBuffer == NULL ||
             lpBufferSize == NULL)
         {
-
+#ifdef AFS_DEBUG_TRACE
             AFSDbgPrint( L"NPGetConnection3 No output buffer or size\n");
-
+#endif
             try_return( dwStatus = WN_BAD_VALUE);
         }
 
@@ -826,12 +827,12 @@ NPGetConnection3( IN     LPCWSTR lpLocalName,
 
         if( !dwError)
         {
-
+#ifdef AFS_DEBUG_TRACE
             DWORD gle = GetLastError();
 
             AFSDbgPrint( L"NPGetConnection3 Failed to get connection from file system for local %s gle 0x%x\n", 
                          wchLocalName, gle);
-
+#endif
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
 
@@ -1084,12 +1085,12 @@ NPEnumResource( HANDLE  hEnum,
 
         if( !dwError)
         {
-
+#ifdef AFS_DEBUG_TRACE
             DWORD gle = GetLastError();
 
             AFSDbgPrint( L"NPEnumResource Failed to list connections from file system - gle 0x%x\n", 
                          gle);
-
+#endif
             try_return( dwStatus = WN_NOT_CONNECTED);
         }
 
@@ -1342,7 +1343,6 @@ AFSDbgPrint(
          rc = wvsprintf( wszbuffer, Format, marker );
          OutputDebugString( wszbuffer );
     }
-
     return rc;
 }
 
@@ -1432,9 +1432,9 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
             lpBuffer == NULL ||
             lpBufferSize == NULL)
         {
-
+#ifdef AFS_DEBUG_TRACE
             AFSDbgPrint( L"NPGetResourceInformation No resource name, output buffer or size\n");
-
+#endif
             try_return( dwStatus = WN_BAD_VALUE);
         }
 
@@ -1472,12 +1472,12 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
 
         if( !dwError)
         {
-
+#ifdef AFS_DEBUG_TRACE
             DWORD gle = GetLastError();
 
             AFSDbgPrint( L"NPGetResourceInformation Failed to get connection info from file system for local %S gle 0x%x\n", 
                          lpNetResource->lpRemoteName, gle);
-
+#endif
             try_return( dwStatus = WN_BAD_NETNAME);
         }        
 
@@ -1697,8 +1697,9 @@ OpenRedirector()
     {
 
         hControlDevice = NULL;
-
+#ifdef AFS_DEBUG_TRACE
         AFSDbgPrint( L"Failed to open control device error: %d\n", GetLastError());
+#endif
     } 
 #if 0
     //
