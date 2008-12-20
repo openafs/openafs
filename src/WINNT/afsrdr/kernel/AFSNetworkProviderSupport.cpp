@@ -1495,7 +1495,7 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
 
             ConnectCB->Scope = 0;
 
-            if( BooleanFlagOn( pDirEntry->DirectoryEntry.FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
+            if( BooleanFlagOn( AFSGetFileAttributes( pRootFcb, pDirEntry), FILE_ATTRIBUTE_DIRECTORY))
             {
 
                 ConnectCB->DisplayType = RESOURCEDISPLAYTYPE_DIRECTORY;

@@ -1300,37 +1300,13 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
             // This will ensure we perform a validation on the node
             //
 
-            pDirNode->DirectoryEntry.FileType = 0;
+            pDirNode->DirectoryEntry.FileType = AFS_FILE_TYPE_UNKNOWN;
         }
 
-        if( pDirNode->DirectoryEntry.FileType == 0)
+        if( pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_UNKNOWN)
         {
 
             SetFlag( pDirNode->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
-        }
-
-        if( pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY ||
-            pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
-            pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
-        {
-
-            pDirNode->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-        }
-        else if( pDirNode->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            pDirNode->DirectoryEntry.FileAttributes |= (FILE_ATTRIBUTE_REPARSE_POINT | FILE_ATTRIBUTE_DIRECTORY);
-        }
-
-        //
-        // If we are hiding DOT names then check this entry
-        //
-
-        if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES) &&
-            FileName->Buffer[ 0] == L'.')
-        {
-
-            pDirNode->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
         }
 
 try_exit:
@@ -1417,6 +1393,7 @@ NTSTATUS
 AFSEvaluateNode( IN AFSFcb *Fcb)
 {
 
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirEnumEntry *pDirEntry = NULL;
 
@@ -1428,9 +1405,14 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                                           FALSE,
                                           &pDirEntry);
 
-        if( !NT_SUCCESS( ntStatus) ||
-            pDirEntry->FileType == 0)
+        if( !NT_SUCCESS( ntStatus))
         {
+
+            if ( ntStatus == STATUS_ACCESS_DENIED )
+            {
+
+                try_return( ntStatus);
+            }
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
         }
@@ -1448,7 +1430,7 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
         if( pDirEntry->FileType != Fcb->DirEntry->DirectoryEntry.FileType)
         {
 
-            ASSERT( Fcb->DirEntry->DirectoryEntry.FileType == 0);
+            ASSERT( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_UNKNOWN);
 
             //
             // We default to a file so update the entry according to the new file type
@@ -1457,6 +1439,7 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
             switch( pDirEntry->FileType)
             {
 
+                case AFS_FILE_TYPE_UNKNOWN:
                 case AFS_FILE_TYPE_FILE:
                 {
 
@@ -1647,19 +1630,6 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
         Fcb->DirEntry->DirectoryEntry.Links = pDirEntry->Links;
 
-        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY ||
-            Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
-            Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
-        {
-
-            Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-        }
-        else if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            Fcb->DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
-        }
-
 try_exit:
 
         if( pDirEntry != NULL)
@@ -1676,6 +1646,7 @@ NTSTATUS
 AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
 {
 
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirEnumEntry *pDirEntry = NULL;
     UNICODE_STRING uniTargetName;
@@ -1698,7 +1669,7 @@ AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
                                           &pDirEntry);
 
         if( !NT_SUCCESS( ntStatus) ||
-            pDirEntry->FileType == 0)
+            pDirEntry->FileType == AFS_FILE_TYPE_UNKNOWN)
         {
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
@@ -1753,8 +1724,6 @@ AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
         DirEntry->DirectoryEntry.EaSize = pDirEntry->EaSize;
 
         DirEntry->DirectoryEntry.Links = pDirEntry->Links;
-
-        DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
         //
         // Update the target name information if needed
@@ -4390,27 +4359,6 @@ AFSUpdateMetaData( IN AFSDirEntryCB *DirEntry,
         DirEntry->DirectoryEntry.EaSize = DirEnumEntry->EaSize;
 
         DirEntry->DirectoryEntry.Links = DirEnumEntry->Links;
-
-        if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY)
-        {
-
-            DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-        }
-        else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
-        {
-
-            DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-        }
-        else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            DirEntry->DirectoryEntry.FileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-        }
-        else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DFSLINK)
-        {
-
-            DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-        }
     }
 
     return;
@@ -4503,7 +4451,12 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
         if( DirEntry->DirectoryEntry.Expiration.QuadPart >= liLocalSystemTime.QuadPart)
         {
 
-            ASSERT( DirEntry->DirectoryEntry.FileType != 0);
+            //
+            // A FileType of 0 at this point indicates that the user
+            // does not have read permission on the object and therefore
+            // cannot obtain any status info
+            // 
+            // ASSERT( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_UNKNOWN);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
@@ -5189,8 +5142,9 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                        IN AFSDirEntryCB *DirEntry)
 {
 
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    ULONG ulFileType = 0;
+    ULONG ulFileType = AFS_FILE_TYPE_UNKNOWN;
     AFSFcb *pCurrentFcb = NULL;
     ULONGLONG ullIndex = 0;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
@@ -5202,7 +5156,7 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
         // Be sure we have at least a target fid or type
         //
 
-        if( DirEntry->DirectoryEntry.FileType == 0 ||
+        if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_UNKNOWN ||
             ( DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
               DirEntry->DirectoryEntry.TargetFileId.Unique == 0))
         {
@@ -5257,12 +5211,6 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
             DirEntry->DirectoryEntry.EaSize = pDirEnumEntry->EaSize;
 
             DirEntry->DirectoryEntry.Links = pDirEnumEntry->Links;
-
-            if( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_FILE)
-            {
-
-                DirEntry->DirectoryEntry.FileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-            }
 
             ExFreePool( pDirEnumEntry);
         }
@@ -5459,7 +5407,7 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
         if( !NT_SUCCESS( ntStatus))
         {
 
-            ulFileType = 0;
+            ulFileType = AFS_FILE_TYPE_UNKNOWN;
         }
 
         //
@@ -5474,4 +5422,103 @@ try_exit:
     }
 
     return ulFileType;
+}
+
+ULONG
+AFSGetFileAttributes( IN AFSFcb *pParentFcb, 
+                      IN AFSDirEntryCB *pDirEntry)
+{
+    AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
+    ULONG ulFileAttributes = pDirEntry->DirectoryEntry.FileAttributes;
+
+    //
+    // If this entry is a SYMLINK then we need to obtain the file type
+    // for the target
+    //
+
+    switch ( pDirEntry->DirectoryEntry.FileType) 
+    {
+    case AFS_FILE_TYPE_UNKNOWN:
+    case AFS_FILE_TYPE_SYMLINK:
+        {
+
+            ULONG ulTargetFileType;
+            
+            if ( pParentFcb == NULL) 
+            {
+                ulTargetFileType = ((pDirEntry->DirectoryEntry.FileId.Vnode % 2) == 1 ? AFS_FILE_TYPE_DIRECTORY : AFS_FILE_TYPE_UNKNOWN);
+            } else {
+
+                ulTargetFileType = AFSRetrieveTargetType( pParentFcb, pDirEntry);
+            }
+
+            switch ( ulTargetFileType)
+            {       
+            case AFS_FILE_TYPE_MOUNTPOINT:
+                ulFileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+                break;
+
+            case AFS_FILE_TYPE_UNKNOWN:
+            case AFS_FILE_TYPE_FILE:
+                break;
+
+            case AFS_FILE_TYPE_DIRECTORY:
+            case AFS_FILE_TYPE_DFSLINK:
+            case AFS_FILE_TYPE_SYMLINK:
+            default:
+                ulFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+                break;
+            }
+
+            break;
+        }
+    case AFS_FILE_TYPE_MOUNTPOINT:
+        {
+        
+            ulFileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
+            break;
+        }
+
+    case AFS_FILE_TYPE_DIRECTORY:
+        {
+         
+            ulFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+            break;
+        }
+    case AFS_FILE_TYPE_DFSLINK:
+        {
+            
+            ulFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+            break;                
+        }
+
+    case AFS_FILE_TYPE_FILE:
+        {
+            
+            break;
+        }
+    }
+
+    //
+    // If we are hiding DOT names then check this entry
+    //
+
+    if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES) &&
+        pDirEntry->DirectoryEntry.FileName.Length > sizeof( WCHAR) &&
+        pDirEntry->DirectoryEntry.FileName.Buffer[ 0] == L'.' &&
+        !( pDirEntry->DirectoryEntry.FileName.Length == 2 * sizeof( WCHAR) && 
+           pDirEntry->DirectoryEntry.FileName.Buffer[ 1] == L'.')
+        )
+    {
+
+        ulFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+    }
+
+
+    if ( ulFileAttributes == 0 ) 
+    {
+        ulFileAttributes = FILE_ATTRIBUTE_NORMAL;
+    }
+
+    return ulFileAttributes;
 }

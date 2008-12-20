@@ -718,7 +718,7 @@ AFSQueryStandardInfo( IN PIRP Irp,
         Buffer->EndOfFile = Fcb->DirEntry->DirectoryEntry.EndOfFile;
         Buffer->NumberOfLinks = 0;
         Buffer->DeletePending = BooleanFlagOn( Fcb->Flags, AFS_FCB_PENDING_DELETE);
-        Buffer->Directory = BooleanFlagOn( Fcb->DirEntry->DirectoryEntry.FileAttributes, FILE_ATTRIBUTE_DIRECTORY);
+        Buffer->Directory = BooleanFlagOn( AFSGetFileAttributes( Fcb->ParentFcb, Fcb->DirEntry), FILE_ATTRIBUTE_DIRECTORY);
 
         *Length -= sizeof( FILE_STANDARD_INFORMATION);
     }
@@ -1139,18 +1139,18 @@ AFSSetBasicInfo( IN PIRP Irp,
             SetFlag( Fcb->Flags, AFS_FILE_MODIFIED);
         }
 
-		if( ulNotifyFilter > 0)
-		{
+        if( ulNotifyFilter > 0)
+        {
 
-    		FsRtlNotifyFullReportChange( pParentFcb->NPFcb->NotifySync,
-										 &pParentFcb->NPFcb->DirNotifyList,
-										 (PSTRING)&pCcb->FullFileName,
-										 (USHORT)(pCcb->FullFileName.Length - Fcb->DirEntry->DirectoryEntry.FileName.Length),
-										 (PSTRING)NULL,
-										 (PSTRING)NULL,
-										 (ULONG)ulNotifyFilter,
-										 (ULONG)FILE_ACTION_MODIFIED,
-										 (PVOID)NULL);
+            FsRtlNotifyFullReportChange( pParentFcb->NPFcb->NotifySync,
+                                         &pParentFcb->NPFcb->DirNotifyList,
+                                         (PSTRING)&pCcb->FullFileName,
+                                         (USHORT)(pCcb->FullFileName.Length - Fcb->DirEntry->DirectoryEntry.FileName.Length),
+                                         (PSTRING)NULL,
+                                         (PSTRING)NULL,
+                                         (ULONG)ulNotifyFilter,
+                                         (ULONG)FILE_ACTION_MODIFIED,
+                                         (PVOID)NULL);
         }
 
 try_exit:

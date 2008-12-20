@@ -114,7 +114,7 @@ AFSQueryDirectory( IN PIRP Irp)
     NTSTATUS dStatus = STATUS_SUCCESS;
     PIO_STACK_LOCATION pIrpSp;
 
-    AFSFcb *pFcb = NULL, *pParentDcb = NULL;
+    AFSFcb *pFcb = NULL;
 
     AFSCcb *pCcb = NULL;
     BOOLEAN bInitialQuery = FALSE;
@@ -153,7 +153,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
     BOOLEAN bReleaseMain = FALSE;
 
-    ULONG ulTargetFileType = 0;
+    ULONG ulTargetFileType = AFS_FILE_TYPE_UNKNOWN;
 
     __Enter
     {
@@ -563,7 +563,7 @@ AFSQueryDirectory( IN PIRP Irp)
                 if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY))
                 {
 
-                    if( !(pDirEntry->DirectoryEntry.FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+                    if( !(AFSGetFileAttributes( pFcb->ParentFcb, pDirEntry) & FILE_ATTRIBUTE_DIRECTORY))
                     {
 
                         if( pDirEntry->ListEntry.fLink != NULL)
@@ -720,7 +720,7 @@ AFSQueryDirectory( IN PIRP Irp)
             switch( FileInformationClass) 
             {
 
-                //  Now fill the base parts of the strucure that are applicable.
+                //  Now fill the base parts of the structure that are applicable.
                 case FileIdBothDirectoryInformation:
                 case FileBothDirectoryInformation:
 
@@ -750,38 +750,7 @@ AFSQueryDirectory( IN PIRP Irp)
                     pDirInfo->ChangeTime = pDirEntry->DirectoryEntry.LastWriteTime;
                     pDirInfo->EndOfFile = pDirEntry->DirectoryEntry.EndOfFile;
                     pDirInfo->AllocationSize = pDirEntry->DirectoryEntry.AllocationSize;
-                    
-                    //
-                    // If this entry is a SYMLINK then we need to obtain the file type
-                    // for the target
-                    //
-
-                    if( pDirEntry->DirectoryEntry.FileType == 0 ||
-                        pDirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
-                    {
-
-                        ulTargetFileType = AFSRetrieveTargetType( pFcb,
-                                                                  pDirEntry);
-
-                        if( ulTargetFileType == AFS_FILE_TYPE_FILE)
-                        {
-
-                            pDirInfo->FileAttributes = FILE_ATTRIBUTE_NORMAL;
-                        }
-                        else
-                        {
-
-                            pDirInfo->FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
-                        }
-                    }
-                    else
-                    {
-
-                        pDirInfo->FileAttributes = pDirEntry->DirectoryEntry.FileAttributes != 0 ?
-                                                                     pDirEntry->DirectoryEntry.FileAttributes :
-                                                                            FILE_ATTRIBUTE_NORMAL;
-                    }
-
+                    pDirInfo->FileAttributes = AFSGetFileAttributes( pFcb->ParentFcb, pDirEntry);
                     pDirInfo->FileIndex = pDirEntry->DirectoryEntry.FileIndex; 
                     pDirInfo->FileNameLength = pDirEntry->DirectoryEntry.FileName.Length;
 

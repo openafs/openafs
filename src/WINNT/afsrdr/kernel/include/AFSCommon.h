@@ -1038,6 +1038,10 @@ ULONG
 AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                        IN AFSDirEntryCB *DirEntry);
 
+ULONG
+AFSGetFileAttributes( IN AFSFcb *ParentFcb,
+                      IN AFSDirEntryCB *DirEntry);
+
 //
 // Prototypes in AFSFastIoSupprt.cpp
 //

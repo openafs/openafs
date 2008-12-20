@@ -246,7 +246,7 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
                 }
             }
             else if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_FILE ||
-                     DirEntry->DirectoryEntry.FileType == 0)
+                     DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_UNKNOWN)
             {
 
                 //
