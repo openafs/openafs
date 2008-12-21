@@ -2787,9 +2787,13 @@ AFSParseName( IN PIRP Irp,
             }
 
             InterlockedIncrement( &pShareDirEntry->Fcb->OpenReferenceCount);
+
+            AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
         }
         else
         {
+
+            AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
 
             //
             // Grab the root node exclusive before returning
@@ -2804,12 +2808,6 @@ AFSParseName( IN PIRP Irp,
             AFSAcquireExcl( &pShareDirEntry->Fcb->NPFcb->Resource,
                             TRUE);
         }
-
-        //
-        // Drop the volume lock
-        //
-
-        AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
 
         //
         // If this node has become invalid then fail the request now
