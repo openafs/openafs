@@ -43,8 +43,8 @@ extern void vFSLog(const char *format, va_list args);
 extern void SetLogThreadNumProgram(int (*func) (void) );
 
 /*@printflike@*/ extern void FSLog(const char *format, ...);
-#define ViceLog(level, str)  do { if ((level) <= LogLevel) (FSLog str) } while (0)
-#define vViceLog(level, str) do { if ((level) <= LogLevel) (vFSLog str) } while (0)
+#define ViceLog(level, str)  do { if ((level) <= LogLevel) (FSLog str); } while (0)
+#define vViceLog(level, str) do { if ((level) <= LogLevel) (vFSLog str); } while (0)
 
 extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);
