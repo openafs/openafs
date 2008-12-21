@@ -18,7 +18,11 @@ RCSID
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef AFS_NT40_ENV
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
 #ifdef AFS_AIX32_ENV
 #include <sys/audit.h>
 #else

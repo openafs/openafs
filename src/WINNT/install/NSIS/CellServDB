@@ -11,9 +11,9 @@
 193.170.243.12                  #baloo.oeaw.ac.at
 193.170.243.14                  #akela.oeaw.ac.at
 >cgv.tugraz.at          #CGV cell
-129.27.224.133                  #phobos.cgv.tugraz.at
-129.27.224.134                  #deimos.cgv.tugraz.at
-129.27.224.210                  #trinculo.cgv.tugraz.at
+129.27.218.30                   #phobos.cgv.tugraz.at
+129.27.218.31                   #deimos.cgv.tugraz.at
+129.27.218.32                   #trinculo.cgv.tugraz.at
 >itp.tugraz.at          #Institute of Theoretical and Computational Physics, TU Graz, Aus
 129.27.161.7                    #faepafs1.tu-graz.ac.at
 129.27.161.15                   #faepafs2.tu-graz.ac.at
@@ -44,6 +44,8 @@
 129.129.190.142                 #afs02.psi.ch
 >extundo.com            #Simon Josefsson's cell
 195.42.214.241                  #slipsten.extundo.com
+>freedaemon.com         #Free Daemon Consulting, Oklahoma City, OK, USA
+66.210.104.254                  #afs0.freedaemon.com
 >membrain.com           #membrain.com
 66.93.118.125                   #stormy
 130.85.24.11                    #weasel
@@ -206,20 +208,20 @@
 129.186.6.243                   #afsdb-2.iastate.edu
 129.186.142.243                 #afsdb-3.iastate.edu
 >athena.mit.edu         #MIT/Athena cell
-18.7.1.66                       #paris.mit.edu.
-18.7.1.74                       #chimera.mit.edu.
-18.158.0.37                     #prill.mit.edu.
+18.7.1.66                       #paris.mit.edu
+18.7.1.74                       #chimera.mit.edu
+18.158.0.37                     #prill.mit.edu
 >dev.mit.edu            #MIT/IS Development cell
-18.7.1.70                       #wham.mit.edu.
-18.92.1.219                     #click.mit.edu.
-18.92.1.220                     #whirr.mit.edu.
+18.7.1.70                       #wham.mit.edu
+18.92.1.219                     #click.mit.edu
+18.92.1.220                     #whirr.mit.edu
 >net.mit.edu            #MIT/Network Group cell
 18.7.7.73                       #gracie.mit.edu
 18.7.21.95                      #george.mit.edu
 >sipb.mit.edu           #MIT/SIPB cell
-18.181.0.19                     #reynelda.mit.edu.
-18.181.0.22                     #rosebud.mit.edu.
-18.181.0.23                     #ronald-ann.mit.edu.
+18.181.0.19                     #reynelda.mit.edu
+18.181.0.22                     #rosebud.mit.edu
+18.181.0.23                     #ronald-ann.mit.edu
 >soap.mit.edu           #MIT School Of Architecture & Planning
 18.89.1.204                     #crypt.mit.edu
 18.89.1.209                     #grotto.mit.edu
@@ -321,10 +323,6 @@
 141.211.43.104                  #linat04.grid.umich.edu
 >citi.umich.edu         #Center for Information Technology Integration
 141.211.133.5                   #babylon.citi.umich.edu
->lsa.umich.edu          #University of Michigan - College of LS&A
-141.211.211.53                  #gerow.lsa.umich.edu
-141.211.211.72                  #collines.lsa.umich.edu
-141.211.211.153                 #hodges.lsa.umich.edu
 >sph.umich.edu          #University of Michigan -- School of Public  Health
 141.211.51.137                  #afssph7.sph.umich.edu
 141.211.51.139                  #afssph0.sph.umich.edu
@@ -356,6 +354,8 @@
 144.92.13.16                    #moe.cae.wisc.edu
 >hep.wisc.edu           #University of Wisconsin -- High Energy Physics
 128.104.28.219                  #anise.hep.wisc.edu
+144.92.180.7                    #rosemary.hep.wisc.edu
+144.92.180.30                   #fennel.hep.wisc.edu
 >physics.wisc.edu       #Univ. of Wisconsin-Madison, Physics Department
 128.104.160.13                  #kendra.physics.wisc.edu
 128.104.160.14                  #fray.physics.wisc.edu
@@ -377,6 +377,8 @@
 >grif.fr                #GRIF cell
 192.54.208.18                   #node03.datagrid.cea.fr
 >in2p3.fr               #IN2P3 production cell
+134.158.104.11                  #ccafsdb01.in2p3.fr
+134.158.104.12                  #ccafsdb02.in2p3.fr
 134.158.232.11                  #ccafsdb1.in2p3.fr
 134.158.232.12                  #ccafsdb2.in2p3.fr
 134.158.232.13                  #ccafsdb3.in2p3.fr
@@ -406,6 +408,8 @@
 128.55.128.250                  #mars.nersc.gov
 128.55.128.252                  #alfred.nersc.gov
 128.55.128.254                  #lurch.nersc.gov
+>doe.atomki.hu          #Institute of Nuclear Research (MTA ATOMKI), Debrecen, Hungary
+193.6.179.31                    #afs.doe.atomki.hu
 >bme.hu                 #Budapest University of Technology and Economics
 152.66.241.6                    #afs.iit.bme.hu
 >kfki.hu                #Research Institute for Nuclear and Particle Physics - Budapest,H
@@ -449,6 +453,8 @@
 >pi.infn.it             #INFN, Sezione di Pisa
 131.114.134.26                  #unknownhost.pi.infn.it
 192.84.133.50                   #aix1.pi.infn.it
+>roma3.infn.it          #Istituto Nazionale di Fisica Nucleare (INFN), Italia
+193.205.159.17                  #afsrm3.roma3.infn.it
 >psm.it                 #Progetto San Marco, Universita' di Roma-1
 151.100.1.65                    #atlante.psm.uniroma1.it
 >tgrid.it               #CASPUR-CILEA-CINECA Grid Cell
@@ -587,3 +593,6 @@
 194.36.2.5                      #afs3.hep.man.ac.uk
 >rl.ac.uk               #Rutherford Appleton Lab, England
 130.246.183.164                 #wallace.cc.rl.ac.uk
+130.246.183.203                 #afs1.gridpp.rl.ac.uk
+130.246.183.204                 #afs2.gridpp.rl.ac.uk
+130.246.183.205                 #afs3.gridpp.rl.ac.uk
