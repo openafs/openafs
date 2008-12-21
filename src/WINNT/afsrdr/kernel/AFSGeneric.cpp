@@ -1439,6 +1439,7 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
             switch( pDirEntry->FileType)
             {
 
+                case AFS_FILE_TYPE_INVALID:
                 case AFS_FILE_TYPE_UNKNOWN:
                 case AFS_FILE_TYPE_FILE:
                 {
@@ -1669,7 +1670,8 @@ AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
                                           &pDirEntry);
 
         if( !NT_SUCCESS( ntStatus) ||
-            pDirEntry->FileType == AFS_FILE_TYPE_UNKNOWN)
+            pDirEntry->FileType == AFS_FILE_TYPE_UNKNOWN ||
+            pDirEntry->FileType == AFS_FILE_TYPE_INVALID)
         {
 
             try_return( ntStatus = STATUS_OBJECT_NAME_NOT_FOUND);
@@ -4456,7 +4458,6 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
             // does not have read permission on the object and therefore
             // cannot obtain any status info
             // 
-            // ASSERT( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_UNKNOWN);
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE_2,
@@ -5458,6 +5459,7 @@ AFSGetFileAttributes( IN AFSFcb *pParentFcb,
                 ulFileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
                 break;
 
+            case AFS_FILE_TYPE_INVALID:
             case AFS_FILE_TYPE_UNKNOWN:
             case AFS_FILE_TYPE_FILE:
                 break;
@@ -5492,6 +5494,7 @@ AFSGetFileAttributes( IN AFSFcb *pParentFcb,
             break;                
         }
 
+    case AFS_FILE_TYPE_INVALID:
     case AFS_FILE_TYPE_FILE:
         {
             
