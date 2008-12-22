@@ -1126,12 +1126,12 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 }
 
 /*!
- * VIOCETFID (22) - Get file ID quickly
+ * VIOCGETFID (22) - Get file ID quickly
  *
  * \ingroup pioctl
  *
  * \param[in] ain	not in use
- * \param[out] aout	not in use
+ * \param[out] aout	fid of requested file
  *
  * \retval EINVAL	Error if some of the initial arguments aren't set
  *
