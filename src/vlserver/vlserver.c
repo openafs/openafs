@@ -341,7 +341,7 @@ main(argc, argv)
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;
     ubik_CheckRXSecurityRock = (char *)tdir;
     code =
-	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, &clones,
+	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, clones,
 			      vl_dbaseName, &VL_dbase);
     if (code) {
 	printf("vlserver: Ubik init failed with code %d\n", code);
