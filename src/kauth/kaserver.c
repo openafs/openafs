@@ -391,7 +391,7 @@ main(argc, argv)
     else
 	code =
 	    ubik_ServerInitByInfo(myHost, htons(AFSCONF_KAUTHPORT), &cellinfo,
-				  &clones, dbpath, &KA_dbase);
+				  clones, dbpath, &KA_dbase);
 
     if (code) {
 	afs_com_err(whoami, code, "Ubik init failed");

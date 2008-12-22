@@ -511,7 +511,7 @@ main(argc, argv)
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
 				  htons(AFSCONF_BUDBPORT), 
 				  &cellinfo,
-				  &clones,              
+				  clones,              
 				  dbNamePtr,           /* name prefix */
 				  &BU_dbase);
 
