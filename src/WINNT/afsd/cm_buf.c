@@ -1629,21 +1629,21 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
              */
             if (LargeIntegerLessThanOrEqualTo(*sizep, bufp->offset)) {
                 /* truncating the entire page */
-                if ((reqp->flags & CM_REQ_SOURCE_SMB) &&
-                    RDR_Initialized) {
-                    RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
-                                         scp->fid.unique, scp->fid.hash,
-                                         scp->fileType, AFS_INVALIDATE_SMB);
+                if (reqp->flags & CM_REQ_SOURCE_REDIR) {
+                    /* Implicitly clear the redirector flag */
+
+                    if (bufp->flags & CM_BUF_REDIR) {
+                        osi_Log4(buf_logp,"buf_Truncate taking from file system bufp 0x%p vno 0x%x foffset 0x%x:%x", 
+                                 bufp, bufp->fid.vnode, bufp->offset.HighPart, bufp->offset.LowPart);
+                    }
+                    bufp->flags &= ~(CM_BUF_DIRTY|CM_BUF_REDIR);
+                } else {
+                    if (RDR_Initialized)
+                        RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
+                                             scp->fid.unique, scp->fid.hash,
+                                             scp->fileType, AFS_INVALIDATE_SMB);
                     bufp->flags &= ~CM_BUF_DIRTY;
                     bufp->error = BUF_ERROR_TRUNC; 
-                } else {
-                    /* Implicitly clear the redirector flag */
-                    char buffer[1024];
-                    sprintf(buffer, "buf_Truncate taking from file system  bufp 0x%p vno 0x%x foffset 0x%I64x\r\n", 
-                             bufp, bufp->fid.vnode, bufp->offset.QuadPart);
-                    OutputDebugString(buffer);
-
-                    bufp->flags &= ~(CM_BUF_DIRTY|CM_BUF_REDIR);
                 }
                 bufp->dirty_offset = 0;
                 bufp->dirty_length = 0;
@@ -2057,13 +2057,11 @@ long buf_ClearRDRFlag(cm_fid_t *fidp, char *reason)
 	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_REDIR)) {
             lock_ReleaseRead(&buf_globalLock);
             lock_ObtainMutex(&bp->mx);
-            {
-                char buffer[1024];
-                sprintf(buffer, "buf_ClearRDRFlag taking from file system [%s] bufp 0x%p vno 0x%x foffset 0x%I64x\r\n", 
-                         reason, bp, bp->fid.vnode, bp->offset.QuadPart);
-                OutputDebugString(buffer);
+            if (bp->flags & CM_BUF_REDIR) {
+                osi_Log4(buf_logp,"buf_ClearRDRFlag taking from file system bufp 0x%p vno 0x%x foffset 0x%x:%x", 
+                          bp, bp->fid.vnode, bp->offset.HighPart, bp->offset.LowPart);
+                bp->flags &= ~CM_BUF_REDIR;
             }
-            bp->flags &= ~CM_BUF_REDIR;
             buf_Release(bp);
             lock_ReleaseMutex(&bp->mx);
             lock_ObtainRead(&buf_globalLock);
