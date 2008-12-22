@@ -1134,36 +1134,56 @@ AFSRequestExtents( IN AFSFcb *Fcb,
             ulAlignedLength = (ULONG)(((ulAlignedLength / pDevExt->Specific.RDR.CacheBlockSize) + 1) * pDevExt->Specific.RDR.CacheBlockSize);
         }
 
-        request.ByteOffset = liAlignedOffset;
-        request.Length = ulAlignedLength;
+        //
+        // If the requested length is larger than the AFS cache manager's
+        // maximum rpc length, break the request up into multiple requests
+        // of the maximum rpc length.  these requests could be parallelized
+        // to improve performance.
+        //
+        do {
+                
+            request.ByteOffset = liAlignedOffset;
+            request.Length = ulAlignedLength > pDevExt->Specific.RDR.MaximumRPCLength ? pDevExt->Specific.RDR.MaximumRPCLength : ulAlignedLength;
 
-        ASSERT( ulAlignedLength <= pDevExt->Specific.RDR.MaximumRPCLength);
+            ASSERT( request.Length <= pDevExt->Specific.RDR.MaximumRPCLength);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRequestExtents Requesting extents for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      liAlignedOffset.QuadPart,
-                      ulAlignedLength);        
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRequestExtents Requesting extents for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX\n",
+                          &Fcb->DirEntry->DirectoryEntry.FileName,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
+                          liAlignedOffset.QuadPart,
+                          ulAlignedLength);        
 
-        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
-                                      0,
-                                      Fcb->Specific.File.ExtentProcessId,
-                                      NULL,
-                                      &Fcb->DirEntry->DirectoryEntry.FileId,
-                                      &request,
-                                      sizeof( AFSRequestExtentsCB ),
-                                      NULL,
-                                      NULL);
+            ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
+                                          0,
+                                          Fcb->Specific.File.ExtentProcessId,
+                                          NULL,
+                                          &Fcb->DirEntry->DirectoryEntry.FileId,
+                                          &request,
+                                          sizeof( AFSRequestExtentsCB ),
+                                          NULL,
+                                          NULL);
 
-        if (NT_SUCCESS( ntStatus )) 
-        {
-            KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
-        }
+            if( NT_SUCCESS( ntStatus)) 
+            {
+
+                KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
+            }
+
+            if ( request.Length == ulAlignedLength ||
+                 !NT_SUCCESS( ntStatus))
+            {
+                break;
+            }
+
+            ulAlignedLength -= pDevExt->Specific.RDR.MaximumRPCLength;
+            liAlignedOffset.QuadPart += pDevExt->Specific.RDR.MaximumRPCLength;
+
+        } while ( TRUE);
 
 try_exit:
 
@@ -1257,39 +1277,58 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
         RtlZeroMemory( &request, 
                        sizeof( AFSRequestExtentsCB));
 
-        request.ByteOffset = liAlignedOffset;
-        request.Length = ulAlignedLength;
+        //
+        // If the requested length is larger than the AFS cache manager's
+        // maximum rpc length, break the request up into multiple requests
+        // of the maximum rpc length.  these requests could be parallelized
+        // to improve performance.
+        //
+        do {
+                
+            request.ByteOffset = liAlignedOffset;
+            request.Length = ulAlignedLength > pDevExt->Specific.RDR.MaximumRPCLength ? pDevExt->Specific.RDR.MaximumRPCLength : ulAlignedLength;
 
-        ASSERT( ulAlignedLength <= pDevExt->Specific.RDR.MaximumRPCLength);
+            ASSERT( request.Length <= pDevExt->Specific.RDR.MaximumRPCLength);
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRequestExtentsAsync Requesting extents for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX Original Offset %I64X Len %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      liAlignedOffset.QuadPart,
-                      ulAlignedLength,
-                      Offset->QuadPart,
-                      Size);        
+            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRequestExtentsAsync Requesting extents for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX Original Offset %I64X Len %08lX\n",
+                          &Fcb->DirEntry->DirectoryEntry.FileName,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
+                          liAlignedOffset.QuadPart,
+                          ulAlignedLength,
+                          Offset->QuadPart,
+                          Size);        
 
-        ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
-                                      0,
-                                      Fcb->Specific.File.ExtentProcessId,
-                                      NULL,
-                                      &Fcb->DirEntry->DirectoryEntry.FileId,
-                                      &request,
-                                      sizeof( AFSRequestExtentsCB ),
-                                      NULL,
-                                      NULL);
+            ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
+                                          0,
+                                          Fcb->Specific.File.ExtentProcessId,
+                                          NULL,
+                                          &Fcb->DirEntry->DirectoryEntry.FileId,
+                                          &request,
+                                          sizeof( AFSRequestExtentsCB ),
+                                          NULL,
+                                          NULL);
 
-        if( NT_SUCCESS( ntStatus)) 
-        {
+            if( NT_SUCCESS( ntStatus)) 
+            {
 
-            KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
-        }
+                KeClearEvent( &pNPFcb->Specific.File.ExtentsRequestComplete );
+            }
+
+            if ( request.Length == ulAlignedLength ||
+                 !NT_SUCCESS( ntStatus))
+            {
+                break;
+            }
+
+            ulAlignedLength -= pDevExt->Specific.RDR.MaximumRPCLength;
+            liAlignedOffset.QuadPart += pDevExt->Specific.RDR.MaximumRPCLength;
+
+        } while ( TRUE);
 
 try_exit:
 
@@ -3533,7 +3572,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
               IN PLARGE_INTEGER Offset,
               IN ULONG   Count)
 {
-    LARGE_INTEGER  liEnd;
+    LARGE_INTEGER  liEnd, liOffset = *Offset;
     AFSExtent     *pExtent, *pDirtyHint;
     LIST_ENTRY    *le;
     AFSDeviceExt  *pRDRDeviceExt = NULL;
@@ -3542,12 +3581,12 @@ AFSMarkDirty( IN AFSFcb *Fcb,
 
     pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
-    liEnd.QuadPart = Offset->QuadPart + Count;
+    liEnd.QuadPart = liOffset.QuadPart + Count;
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
                   "AFSMarkDirty Marking offset %I64X count %08lX DIRTY for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                  Offset->QuadPart,
+                  liOffset.QuadPart,
                   Count,
                   &Fcb->DirEntry->DirectoryEntry.FileName,
                   Fcb->DirEntry->DirectoryEntry.FileId.Cell,
@@ -3563,7 +3602,7 @@ AFSMarkDirty( IN AFSFcb *Fcb,
 
     AFSAcquireShared( &Fcb->NPFcb->Specific.File.ExtentsResource, TRUE);
 
-    pExtent = AFSExtentForOffset( Fcb, Offset, TRUE);
+    pExtent = AFSExtentForOffset( Fcb, &liOffset, TRUE);
 
     if (NULL == pExtent)
     {
@@ -3574,22 +3613,18 @@ AFSMarkDirty( IN AFSFcb *Fcb,
         le = &pExtent->Lists[AFS_EXTENTS_LIST];
     }
 
-    while( le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
+    while( liOffset.QuadPart < liEnd.QuadPart &&
+           le != &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST])
     {
         pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
-        
-        if (pExtent->FileOffset.QuadPart >= liEnd.QuadPart) 
-        {
-            //
-            // All done!
-            //
 
-            break;
-        }
-             
-        if ( Offset->QuadPart < (pExtent->FileOffset.QuadPart + pExtent->Size) &&
+        ASSERT( AFSExtentContains( pExtent, &liOffset));
+
+        if ( liOffset.QuadPart < (pExtent->FileOffset.QuadPart + pExtent->Size) &&
              !BooleanFlagOn( pExtent->Flags, AFS_EXTENT_DIRTY))
         {
+
+            ASSERT( liOffset.QuadPart >= pExtent->FileOffset.QuadPart);
 
             AFSAcquireExcl( &pNPFcb->Specific.File.DirtyExtentsListLock, 
                             TRUE);
@@ -3620,6 +3655,9 @@ AFSMarkDirty( IN AFSFcb *Fcb,
          }
 
         le = le->Flink;
+    
+        liOffset.QuadPart = pExtent->FileOffset.QuadPart + pExtent->Size;
+
     }
 
     if ((Fcb->Specific.File.ExtentsDirtyCount * pRDRDeviceExt->Specific.RDR.CacheBlockSize) >
