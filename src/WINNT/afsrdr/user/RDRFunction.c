@@ -488,7 +488,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
 
         code = cm_GetSCache(&fid, &dscp, userp, &req);
         if (code) {
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             osi_Log2(afsd_logp, "RDR_EnumerateDirectory cm_GetSCache failure code=0x%x status=0x%x",
                       code, status);
@@ -505,7 +505,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, PRSFS_LOOKUP,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
@@ -608,7 +608,7 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
         (*ResultCB)->ResultStatus = STATUS_SUCCESS;
         osi_Log0(afsd_logp, "RDR_EnumerateDirectory SUCCESS");
     } else {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_EnumerateDirectory Failure code=0x%x status=0x%x",
                   code, status);
@@ -691,7 +691,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
 
         code = cm_GetSCache(&parentFid, &dscp, userp, &req);
         if (code) {
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByName cm_GetSCache parentFID failure code=0x%x status=0x%x",
                       code, status);
@@ -709,7 +709,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
@@ -771,7 +771,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                                         NULL, &dwRemaining);
         cm_ReleaseSCache(scp);
         if (code) {
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByName FAILURE code=0x%x status=0x%x",
                       code, status);
@@ -781,7 +781,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
             osi_Log0(afsd_logp, "RDR_EvaluateNodeByName SUCCESS");
         }
     } else if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_EvaluateNodeByName FAILURE code=0x%x status=0x%x",
                  code, status);
@@ -845,7 +845,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
 
         code = cm_GetSCache(&parentFid, &dscp, userp, &req);
         if (code) {
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByID cm_GetSCache parentFID failure code=0x%x status=0x%x",
                       code, status);
@@ -879,7 +879,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
             code = cm_GetSCache(&Fid, &scp, userp, &req);
         }
         if (code) {
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             cm_ReleaseSCache(dscp);
             osi_Log2(afsd_logp, "RDR_EvaluateNodeByID cm_GetSCache SourceFID failure code=0x%x status=0x%x",
@@ -898,7 +898,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
@@ -930,7 +930,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
     cm_ReleaseSCache(dscp);
 
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_EvaluateNodeByID FAILURE code=0x%x status=0x%x",
                  code, status);
@@ -993,7 +993,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&parentFid, &dscp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_CreateFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
                   code, status);
@@ -1004,7 +1004,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
@@ -1054,7 +1054,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         if (code) {     
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             lock_ReleaseWrite(&dscp->rw);
             cm_ReleaseSCache(dscp);
@@ -1085,7 +1085,7 @@ RDR_CreateFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
         osi_Log0(afsd_logp, "RDR_CreateFileEntry SUCCESS");
     } else {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_CreateFileEntry FAILURE code=0x%x status=0x%x",
@@ -1149,7 +1149,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&parentFid, &dscp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_UpdateFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
                   code, status);
@@ -1160,7 +1160,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&dscp->rw);
         cm_ReleaseSCache(dscp);
@@ -1188,7 +1188,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         cm_ReleaseSCache(dscp);
         osi_Log2(afsd_logp, "RDR_UpdateFileEntry cm_GetSCache object FID failure code=0x%x status=0x%x",
@@ -1201,7 +1201,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
                       CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_NEEDCALLBACK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         cm_ReleaseSCache(dscp);
@@ -1264,7 +1264,7 @@ RDR_UpdateFileEntry( IN cm_user_t *userp,
         (*ResultCB)->ResultBufferLength = ResultBufferLength - dwRemaining;
         osi_Log0(afsd_logp, "RDR_UpdateFileEntry SUCCESS");
     } else {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_UpdateFileEntry FAILURE code=0x%x status=0x%x",
@@ -1328,7 +1328,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&parentFid, &dscp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_DeleteFileEntry cm_GetSCache ParentFID failure code=0x%x status=0x%x",
                   code, status);
@@ -1339,7 +1339,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(dscp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         lock_ReleaseWrite(&dscp->rw);
@@ -1362,7 +1362,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
 
     code = cm_Lookup(dscp, FileName, 0, userp, &req, &scp);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         cm_ReleaseSCache(dscp);
@@ -1375,7 +1375,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         lock_ReleaseWrite(&scp->rw);
@@ -1404,7 +1404,7 @@ RDR_DeleteFileEntry( IN cm_user_t *userp,
         pResultCB->ParentDataVersion.QuadPart = dscp->dataVersion;
         osi_Log0(afsd_logp, "RDR_DeleteFileEntry SUCCESS");
     } else {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_DeleteFileEntry FAILURE code=0x%x status=0x%x",
@@ -1487,7 +1487,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     code = cm_GetSCache(&SourceParentFid, &oldDscp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache source parent failed code 0x%x", code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         return;
     }
@@ -1497,7 +1497,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) { 
         osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_SyncOp oldDscp 0x%p failed code 0x%x", oldDscp, code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&oldDscp->rw);
         cm_ReleaseSCache(oldDscp);
@@ -1518,7 +1518,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     code = cm_GetSCache(&TargetParentFid, &newDscp, userp, &req);
     if (code) {
         osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache target parent failed code 0x%x", code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         cm_ReleaseSCache(oldDscp);
         return;
@@ -1529,7 +1529,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
         osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_SyncOp newDscp 0x%p failed code 0x%x", newDscp, code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&newDscp->rw);
         cm_ReleaseSCache(oldDscp);
@@ -1589,7 +1589,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
         code = cm_GetSCache(&targetFid, &scp, userp, &req);
         if (code) {
             osi_Log1(afsd_logp, "RDR_RenameFileEntry cm_GetSCache target failed code 0x%x", code);
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             cm_ReleaseSCache(oldDscp);
             cm_ReleaseSCache(newDscp);
@@ -1602,7 +1602,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
                           CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
         if (code) {       
             osi_Log2(afsd_logp, "RDR_RenameFileEntry cm_SyncOp scp 0x%p failed code 0x%x", scp, code);
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             lock_ReleaseWrite(&scp->rw);
             cm_ReleaseSCache(oldDscp);
@@ -1632,7 +1632,7 @@ RDR_RenameFileEntry( IN cm_user_t *userp,
     } else {
         osi_Log3(afsd_logp, "RDR_RenameFileEntry cm_Rename oldDscp 0x%p newDscp 0x%p failed code 0x%x", 
                  oldDscp, newDscp, code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
     }
@@ -1682,7 +1682,7 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_FlushFileEntry cm_GetSCache FID failure code=0x%x status=0x%x",
                   code, status);
@@ -1693,7 +1693,7 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
@@ -1709,7 +1709,7 @@ RDR_FlushFileEntry( IN cm_user_t *userp,
     cm_ReleaseSCache(scp);
 
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_FlushFileEntry FAILURE code=0x%x status=0x%x",
                   code, status);
@@ -1851,7 +1851,7 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_OpenFileEntry cm_GetSCache FID failure code=0x%x status=0x%x",
                   code, status);
@@ -1862,7 +1862,7 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     code = cm_SyncOp(scp, NULL, userp, &req, 0,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {     
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         lock_ReleaseWrite(&scp->rw);
         cm_ReleaseSCache(scp);
@@ -1907,7 +1907,7 @@ RDR_OpenFileEntry( IN cm_user_t *userp,
     cm_ReleaseSCache(scp);
 
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_OpenFileEntry FAILURE code=0x%x status=0x%x",
                   code, status);
@@ -1978,7 +1978,7 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_RequestFileExtentsSync cm_GetSCache FID failure code=0x%x status=0x%x",
@@ -1994,7 +1994,7 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_BULKREAD);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log3(afsd_logp, "RDR_RequestFileExtentsSync cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
@@ -2130,7 +2130,7 @@ RDR_RequestFileExtentsSync( IN cm_user_t *userp,
     if (code && count == 0) {
         osi_Log2(afsd_logp, "RDR_RequestFileExtentsSync cm_SyncOp failure scp=0x%p code=0x%x",
                  scp, code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
     } else {
         (*ResultCB)->ResultStatus = 0;
@@ -2192,7 +2192,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     if (code) {
         osi_Log1(afsd_logp, "RDR_RequestFileExtentsAsync cm_GetSCache FID failure code=0x%x",
                   code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         pResultCB->ResultStatus = status;
         return FALSE;
     }
@@ -2208,7 +2208,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
         cm_ReleaseSCache(scp);
         osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync cm_SyncOp failure scp=0x%p code=0x%x",
                  scp, code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         pResultCB->ResultStatus = status;
         return FALSE;
     }
@@ -2341,7 +2341,7 @@ RDR_RequestFileExtentsAsync( IN cm_user_t *userp,
     } else if (code) {
         osi_Log2(afsd_logp, "RDR_RequestFileExtentsAsync failure scp=0x%p code=0x%x",
                  scp, code);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         return FALSE;
     } else {
@@ -2396,7 +2396,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_ReleaseFileExtents cm_GetSCache FID failure code=0x%x status=0x%x",
                   code, status);
@@ -2408,9 +2408,15 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
 
         bufp = buf_Find(scp, &thyper);
         if (bufp) {
-            osi_Log4(afsd_logp, "RDR_ReleaseFileExtents bufp 0x%p vno 0x%x foffset 0x%p coffset 0x%p",
+            osi_Log4(afsd_logp, "RDR_ReleaseFileExtents bufp 0x%p vno 0x%x foffset 0x%I64x coffset 0x%I64x",
                      bufp, bufp->fid.vnode, ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart, 
                      ReleaseExtentsCB->FileExtents[count].CacheOffset.QuadPart);
+
+            if (!(bufp->flags & CM_BUF_REDIR)) {
+                osi_Log4(afsd_logp, "RDR_ReleaseFileExtents extent vol 0x%x vno 0x%x foffset 0x%I64x coffset 0x%I64x not held by file system",
+                          scp->fid.volume, scp->fid.vnode, ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart, 
+                          ReleaseExtentsCB->FileExtents[count].CacheOffset.QuadPart);
+            }
 
             if (ReleaseExtentsCB->FileExtents[count].Flags) {
                 lock_ObtainMutex(&bufp->mx);
@@ -2423,12 +2429,12 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
                 if ( ReleaseExtentsCB->FileExtents[count].Flags & AFS_EXTENT_FLAG_DIRTY ) {
                     buf_SetDirty(bufp, 0, cm_data.blockSize, userp);
                     dirty++;
-                }
+                } 
                 lock_ReleaseMutex(&bufp->mx);
             }
             buf_Release(bufp);
         } else {
-            osi_Log4(afsd_logp, "RDR_ReleaseFileExtents unknown extent vol 0x%x vno 0x%x foffset 0x%p coffset 0x%p",
+            osi_Log4(afsd_logp, "RDR_ReleaseFileExtents unknown extent vol 0x%x vno 0x%x foffset 0x%I64x coffset 0x%I64x",
                      scp->fid.volume, scp->fid.vnode, ReleaseExtentsCB->FileExtents[count].FileOffset.QuadPart, 
                      ReleaseExtentsCB->FileExtents[count].CacheOffset.QuadPart);
         }
@@ -2466,7 +2472,7 @@ RDR_ReleaseFileExtents( IN cm_user_t *userp,
               FileId.Cell, FileId.Volume, 
               FileId.Vnode, FileId.Unique, released);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         osi_Log2(afsd_logp, "RDR_ReleaseFileExtents FAILURE code=0x%x status=0x%x",
                   code, status);
@@ -2540,9 +2546,15 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
 
             bufp = buf_Find(scp, &thyper);
             if (bufp) {
-                osi_Log3(afsd_logp, "RDR_ProcessReleaseFileExtentsResult bufp 0x%p foffset 0x%p coffset 0x%p",
+                osi_Log3(afsd_logp, "RDR_ProcessReleaseFileExtentsResult bufp 0x%p foffset 0x%I64x coffset 0x%I64x",
                           bufp, pFileCB->FileExtents[extentno].FileOffset.QuadPart, 
                           pFileCB->FileExtents[extentno].CacheOffset.QuadPart);
+
+                if (!(bufp->flags & CM_BUF_REDIR)) {
+                    osi_Log4(afsd_logp, "RDR_ReleaseFileExtents extent vol 0x%x vno 0x%x foffset 0x%I64x coffset 0x%I64x not held by file system",
+                              scp->fid.volume, scp->fid.vnode, pFileCB->FileExtents[extentno].FileOffset.QuadPart, 
+                              pFileCB->FileExtents[extentno].CacheOffset.QuadPart);
+                }
 
                 if (pExtent->Flags) {
                     lock_ObtainMutex(&bufp->mx);
@@ -2560,7 +2572,7 @@ RDR_ProcessReleaseFileExtentsResult( IN AFSReleaseFileExtentsResultCB *ReleaseFi
                 }
                 buf_Release(bufp);
             } else {
-                osi_Log4(afsd_logp, "RDR_ProcessReleaseFileExtentsResult unknown extent vol 0x%x vno 0x%x foffset 0x%p coffset 0x%p",
+                osi_Log4(afsd_logp, "RDR_ProcessReleaseFileExtentsResult unknown extent vol 0x%x vno 0x%x foffset 0x%I64x coffset 0x%I64x",
                           scp->fid.volume, scp->fid.vnode, pFileCB->FileExtents[extentno].FileOffset.QuadPart, 
                           pFileCB->FileExtents[extentno].CacheOffset.QuadPart);
             }
@@ -2758,7 +2770,7 @@ RDR_PioctlWrite( IN cm_user_t *userp,
 
     code = RDR_IoctlWrite(userp, pPioctlCB->RequestId, pPioctlCB->BufferLength, pPioctlCB->MappedBuffer, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         return;
     }
@@ -2798,7 +2810,7 @@ RDR_PioctlRead( IN cm_user_t *userp,
     code = RDR_IoctlRead(userp, pPioctlCB->RequestId, pPioctlCB->BufferLength, pPioctlCB->MappedBuffer, 
                          &pResultCB->BytesProcessed, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         return;
     }
@@ -2862,7 +2874,7 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_ByteRangeLockSync cm_GetSCache FID failure code=0x%x status=0x%x",
@@ -2877,7 +2889,7 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log3(afsd_logp, "RDR_ByteRangeLockSync cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
@@ -2966,7 +2978,7 @@ RDR_ByteRangeLockAsync( IN cm_user_t     *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->Result[0].Status = status;
         (*ResultCB)->Count = 0;
         *ResultBufferLength = sizeof(AFSSetByteRangeLockResultCB);
@@ -2982,7 +2994,7 @@ RDR_ByteRangeLockAsync( IN cm_user_t     *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->Result[0].Status = status;
         (*ResultCB)->Count = 0;
         *ResultBufferLength = sizeof(AFSSetByteRangeLockResultCB);
@@ -3077,7 +3089,7 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_ByteRangeUnlock cm_GetSCache FID failure code=0x%x status=0x%x",
@@ -3092,7 +3104,7 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log3(afsd_logp, "RDR_ByteRangeUnlock cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
@@ -3113,7 +3125,7 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
                        pBRURequestCB->Request[i].Length,
                        key, userp, &req);
 
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         pResultCB->Result[i].Status = status;
     }
 
@@ -3176,7 +3188,7 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
 
     code = cm_GetSCache(&Fid, &scp, userp, &req);
     if (code) {
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log2(afsd_logp, "RDR_ByteRangeUnlockAll cm_GetSCache FID failure code=0x%x status=0x%x",
@@ -3191,7 +3203,7 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_LOCK);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log3(afsd_logp, "RDR_ByteRangeUnlockAll cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
@@ -3208,7 +3220,7 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
     lock_ReleaseWrite(&scp->rw);
     cm_ReleaseSCache(scp);
 
-    smb_MapNTError(code, &status);
+    smb_MapNTError(cm_MapRPCError(code, &req), &status);
     (*ResultCB)->ResultStatus = status;
     osi_Log0(afsd_logp, "RDR_ByteRangeUnlockAll SUCCESS");
     return;
@@ -3281,7 +3293,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
 
         code = cm_GetSCache(&Fid, &scp, userp, &req);
         if (code) {
-            smb_MapNTError(code, &status);
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
             (*ResultCB)->ResultBufferLength = 0;
             osi_Log2(afsd_logp, "RDR_GetVolumeInfo cm_GetSCache FID failure code=0x%x status=0x%x",
@@ -3301,7 +3313,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) {
         lock_ReleaseWrite(&scp->rw);
-        smb_MapNTError(code, &status);
+        smb_MapNTError(cm_MapRPCError(code, &req), &status);
         (*ResultCB)->ResultStatus = status;
         (*ResultCB)->ResultBufferLength = 0;
         osi_Log3(afsd_logp, "RDR_GetVolumeInfo cm_SyncOp failure scp=0x%p code=0x%x status=0x%x",
@@ -3385,7 +3397,7 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
        cm_PutVolume(volp);
     cm_ReleaseSCache(scp);
 
-    smb_MapNTError(code, &status);
+    smb_MapNTError(cm_MapRPCError(code, &req), &status);
     (*ResultCB)->ResultStatus = status;
     osi_Log0(afsd_logp, "RDR_GetVolumeInfo SUCCESS");
     return;
