@@ -357,8 +357,10 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         port = rx_PortOf(peerp);
 
         tsp = cm_FindServerByIP(host, CM_SERVER_FILE);
-        if (tsp)
+        if (tsp) {
             cellp = tsp->cellp;
+            cm_PutServer(tsp);
+        }
 
         if (!cellp)
             osi_Log2(afsd_logp, "SRXAFSCB_CallBack from host 0x%x port %d",
