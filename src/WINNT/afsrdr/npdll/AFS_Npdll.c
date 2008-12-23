@@ -43,6 +43,8 @@
 #include <npapi.h>
 #include <winioctl.h>
 
+#define AFS_DEBUG_TRACE 1
+
 #ifndef WNNC_NET_OPENAFS
 #define WNNC_NET_OPENAFS     0x00390000
 #endif
@@ -62,8 +64,6 @@
 //
 // Common information
 //
-
-//#define AFS_DEBUG_TRACE         1
 
 ULONG _cdecl AFSDbgPrint( PWCHAR Format, ... );
 
@@ -1327,6 +1327,29 @@ NPCloseEnum( HANDLE hEnum )
     return WN_SUCCESS;
 }
 
+static BOOL
+Debug(void)
+{
+    static int init = 0;
+    static BOOL debug = 0;
+
+    if ( !init ) {
+        HKEY hk;
+
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, 
+                         TEXT("SYSTEM\\CurrentControlSet\\Services\\AFSRedirector\\NetworkProvider"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(BOOL);
+            DWORD dwType = REG_DWORD;
+            RegQueryValueEx (hk, TEXT("Debug"), NULL, &dwType, (PBYTE)&debug, &dwSize);
+            RegCloseKey (hk);
+        }
+        init = 1;
+    }
+
+    return debug;
+}
+
 ULONG
 _cdecl
 AFSDbgPrint(
@@ -1336,8 +1359,11 @@ AFSDbgPrint(
 {   
     ULONG rc = 0;
     WCHAR wszbuffer[255];
-
     va_list marker;
+
+    if ( !Debug() )
+        return 0;
+
     va_start( marker, Format );
     {
          rc = wvsprintf( wszbuffer, Format, marker );
