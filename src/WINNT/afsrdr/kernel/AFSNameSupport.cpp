@@ -320,6 +320,86 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
 
                     pParentFcb = pTargetFcb;
 
+                    //
+                    // Check if the mount point target directory requires verification
+                    //
+
+                    if( BooleanFlagOn( pParentFcb->Flags, AFS_FCB_VERIFY))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry (FO: %08lX) Verifying MP target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                        ntStatus = AFSVerifyEntry( pParentFcb);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to verify MP target %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          FileObject,
+                                          &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                          ntStatus);
+
+                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                            try_return( ntStatus);
+                        }
+                    }
+
+                    //
+                    // Ensure the mount point target node has been evaluated, if not then go do it now
+                    //
+
+                    if( BooleanFlagOn( pParentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry (FO: %08lX) Evaluating MP target %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pParentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                        ntStatus = AFSEvaluateNode( pParentFcb);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to evaluate MP target %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          FileObject,
+                                          &pParentFcb->DirEntry->DirectoryEntry.FileName,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pParentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                          ntStatus);
+
+                            AFSReleaseResource( &pParentFcb->NPFcb->Resource);
+
+                            try_return( ntStatus = STATUS_OBJECT_PATH_INVALID);
+                        }
+
+                        ClearFlag( pParentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
+                    }
+
                     break;
 
                 }
@@ -1382,6 +1462,45 @@ AFSLocateNameEntry( IN AFSFcb *RootFcb,
                 else if( pCurrentFcb->Header.NodeTypeCode == AFS_ROOT_FCB)
                 {
                     
+                    //
+                    // Check if the directory requires verification
+                    //
+
+                    if( BooleanFlagOn( pCurrentFcb->Flags, AFS_FCB_VERIFY))
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSLocateNameEntry (FO: %08lX) Verifying root %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      FileObject,
+                                      &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                        ntStatus = AFSVerifyEntry( pCurrentFcb);
+
+                        if( !NT_SUCCESS( ntStatus))
+                        {
+
+                            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                                          AFS_TRACE_LEVEL_ERROR,
+                                          "AFSLocateNameEntry (FO: %08lX) Failed to verify root %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                                          FileObject,
+                                          &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique,
+                                          ntStatus);
+
+                            AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                            try_return( ntStatus);
+                        }
+                    }
+
                     if( !BooleanFlagOn( pCurrentFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
                     {
 
