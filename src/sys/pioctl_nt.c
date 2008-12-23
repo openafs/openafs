@@ -637,21 +637,62 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     gethostname(HostName, sizeof(HostName));
     if (!DisableServiceManagerCheck() &&
         GetServiceStatus(HostName, TEXT("TransarcAFSDaemon"), &CurrentState) == NOERROR &&
-	CurrentState != SERVICE_RUNNING)
+        CurrentState != SERVICE_RUNNING) 
+    {
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl GetServiceStatus(%s) == %d\r\n",
+                    HostName, CurrentState);
+            errno = saveerrno;
+        }
 	return -1;
+    }
 
     if (RDR_Ready()) {
         usingRDR = TRUE;
+
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl Redirector is ready\r\n");
+            errno = saveerrno;
+        }
+
         if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, &hk) == 0)
         {
             DWORD dwSize = sizeof(netbiosName);
             DWORD dwType = REG_SZ;
             RegQueryValueExA (hk, "NetbiosName", NULL, &dwType, (PBYTE)netbiosName, &dwSize);
             RegCloseKey (hk);
+
+            if ( ioctlDebug ) {
+                saveerrno = errno;
+                fprintf(stderr, "pioctl NetbiosName = \"%s\"\r\n", netbiosName);
+                errno = saveerrno;
+            }
+        } else {
+            if ( ioctlDebug ) {
+                saveerrno = errno;
+                gle = GetLastError();
+                fprintf(stderr, "pioctl Unable to open \"HKLM\\%s\" using NetbiosName = \"AFS\" GLE=0x%x\r\n",
+                        HostName, CurrentState, gle);
+                errno = saveerrno;
+            }
         }
     } else {
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl Redirector is not ready\r\n");
+            errno = saveerrno;
+        }
+
         if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", netbiosName, sizeof(netbiosName)))
             lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+
+        if ( ioctlDebug ) {
+            saveerrno = errno;
+            fprintf(stderr, "pioctl NetbiosName = \"%s\"\r\n", netbiosName);
+            errno = saveerrno;
+        }
     }
 
     if (fileNamep) {
@@ -742,15 +783,21 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
 
+    if ( ioctlDebug ) {
+        saveerrno = errno;
+        fprintf(stderr, "pioctl filename = \"%s\"\r\n", tbuffer);
+        errno = saveerrno;
+    }
+    
     fflush(stdout);
     /* now open the file */
     fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_FLAG_WRITE_THROUGH, NULL);
 
-	fflush(stdout);
+    fflush(stdout);
 
-    if (!usingRDR && fh == INVALID_HANDLE_VALUE) {
+    if (fh == INVALID_HANDLE_VALUE) {
         int  gonext = 0;
 
         gle = GetLastError();
@@ -772,6 +819,10 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             }
             errno = saveerrno;
         }
+
+        /* with the redirector interface, fail immediately.  there is nothing to retry */
+        if (usingRDR)
+            return -1;
 
         if (!GetEnvironmentVariable("AFS_PIOCTL_SERVER", szClient, sizeof(szClient)))
             lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
