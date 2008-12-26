@@ -600,6 +600,8 @@ cm_DirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     LARGE_INTEGER       start;
     LARGE_INTEGER       end;
 
+    lock_AssertNone(&op->scp->rw);
+
     QueryPerformanceCounter(&start);
 
     osi_Log2(afsd_logp, "cm_DirLookup for op 0x%p, entry[%s]",
@@ -1498,13 +1500,8 @@ cm_DirPrefetchBuffers(cm_dirOp_t * op)
        contents just to make sure that we don't end up with buffers
        that was locally modified. */
 
-    if (op->scp->flags & CM_SCACHEFLAG_LOCAL) {
-        lock_ReleaseWrite(&op->scp->rw);
-        code = cm_FlushFile(op->scp, op->userp, &op->req);
-        if (code != 0)
-            return code;
-        lock_ObtainWrite(&op->scp->rw);
-    }
+    if (op->scp->flags & CM_SCACHEFLAG_LOCAL)
+        op->scp->bufDataVersionLow = op->scp->dataVersion;
 
     offset = ConvertLongToLargeInteger(0);
     while (LargeIntegerLessThan(offset, op->scp->length)) {
