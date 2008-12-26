@@ -1582,7 +1582,7 @@ cm_BPlusDirLookupOriginalName(cm_dirOp_t * op, clientchar_t *centry,
     normchar_t * entry = NULL;
 
     if (op->scp->dirBplus == NULL || 
-        op->dataVersion != op->scp->dirDataVersion) {
+        op->dataVersion > op->scp->dirDataVersion) {
         rc = EINVAL;
         goto done;
     }
@@ -1678,7 +1678,7 @@ cm_BPlusDirLookup(cm_dirOp_t * op, clientchar_t * centry, cm_fid_t * cfid)
     LARGE_INTEGER start, end;
 
     if (op->scp->dirBplus == NULL || 
-        op->dataVersion != op->scp->dirDataVersion) {
+        op->dataVersion > op->scp->dirDataVersion) {
         rc = EINVAL;
         goto done;
     }
