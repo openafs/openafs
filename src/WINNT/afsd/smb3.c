@@ -2746,6 +2746,7 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
         /* attributes, defined in WINNT.H:
          *	FILE_CASE_SENSITIVE_SEARCH	0x1
          *	FILE_CASE_PRESERVED_NAMES	0x2
+         *      FILE_UNICODE_ON_DISK            0x4
 	 *      FILE_VOLUME_QUOTAS              0x10
          *	<no name defined>		0x4000
          *	   If bit 0x4000 is not set, Windows 95 thinks
@@ -2755,6 +2756,8 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
         qi.u.FSattributeInfo.attributes = 0x4003;
         /* The maxCompLength is supposed to be in bytes */
 #ifdef SMB_UNICODE
+        qi.u.FSattributeInfo.attributes |= 0x04;
+
         if ((vcp->flags & SMB_VCFLAG_USEUNICODE) == SMB_VCFLAG_USEUNICODE)
             qi.u.FSattributeInfo.maxCompLength = MAX_PATH * sizeof(wchar_t);
         else {
