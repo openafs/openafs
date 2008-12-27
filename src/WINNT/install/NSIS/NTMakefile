@@ -3,7 +3,9 @@ RELDIR=WINNT\install\NSIS
 !INCLUDE ..\..\..\config\NTMakefile.version
 
 EXEDIR = $(DESTDIR)\WinInstall\Config
+!IFNDEF NSISDIR
 NSISDIR = C:\Program Files\NSIS
+!ENDIF
 
 # Revise the rule for compiling sources to use static libraries
 C2OBJ   = $(cc) /Fo$@ /Fd$*.pdb $(cflags) $(cdebug) $(cvars) $(afscflags) $(afscdefs) /c
