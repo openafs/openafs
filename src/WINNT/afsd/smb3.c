@@ -2757,15 +2757,8 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
         /* The maxCompLength is supposed to be in bytes */
 #ifdef SMB_UNICODE
         qi.u.FSattributeInfo.attributes |= 0x04;
-
-        if ((vcp->flags & SMB_VCFLAG_USEUNICODE) == SMB_VCFLAG_USEUNICODE)
-            qi.u.FSattributeInfo.maxCompLength = MAX_PATH * sizeof(wchar_t);
-        else {
 #endif
-        qi.u.FSattributeInfo.maxCompLength = MAX_PATH;
-#ifdef SMB_UNICODE
-        }
-#endif
+        qi.u.FSattributeInfo.maxCompLength = 255;
         smb_UnparseString(op, qi.u.FSattributeInfo.FSname, _C("AFS"), &sz, SMB_STRF_IGNORENUL);
         qi.u.FSattributeInfo.FSnameLength = sz;
 
