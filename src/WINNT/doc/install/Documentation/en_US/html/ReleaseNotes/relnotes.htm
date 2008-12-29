@@ -3671,6 +3671,76 @@ link is crossed the target of the link is concatenated with any remaining path
 components.&nbsp; The resulting name is re-injected to the top of the file system 
 stack for evaluation.</p>
 
+<h2 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
+style='mso-bookmark:_Toc115416145'><a name="_Toc213847246">3.50. Native File 
+System vs SMB-to-AFS Gateway Miscellany</a></span></h2>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+In general the native file system and SMB-to-AFS gateway interfaces provide the 
+same level of functionality.&nbsp; However, there are a few differences that are 
+worth pointing out:</p>
+<ul>
+	<li>
+	<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+	<b>NET VIEW \\AFS</b> can be used with the SMB-to-AFS gateway interface but 
+	not the Native File System driver.&nbsp; <b>NET VIEW</b> performs an 
+	enumeration of shares and printers via the CIFS Remote Admin Protocol 
+	instead of the WNetEnumResource() API.&nbsp; As the Native File System 
+	driver is not a remote CIFS device it cannot respond to these requests.&nbsp; 
+</li>
+<li>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+Users frequently use the <b>nbtstat -n</b> command to test to see if the AFS 
+client service is functioning.&nbsp; When the Native File System driver is in 
+use, there is no NetBIOS name registration to examine using <b>nbtstat</b>.&nbsp; 
+As a result there will be no AFS related entries to view.</li>
+<li>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+<b>Sysinternal's Process Monitor</b> cannot be used to monitor the file system 
+activity of the AFS Native File System driver.&nbsp; <b>Process Monitor</b> can 
+only be used to monitor Microsoft distributed file system drivers (LanmanWorkstation, 
+WebDAV, RDP) and third party drivers implemented as mini-filters.&nbsp; The AFS 
+Native File System driver is not a mini-filter driver.&nbsp; File system 
+monitoring can be performed using <b>FileSpy</b> distributed as part of the 
+Microsoft Installable File System Kit.&nbsp; Attach <b>FileSpy</b> to device 
+name \Device\AFSRedirector.</li>
+<li>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+When the AFS name space is viewed using the SMB-to-AFS gateway, the entire name 
+space appears to be a single volume served from a single server called &quot;AFS&quot; 
+under the &quot;Microsoft Network&quot;.&nbsp; When the Native File System driver is in 
+use, there is still a single server called &quot;AFS&quot; but it appears under the 
+&quot;OpenAFS Network&quot; and each AFS volume is reported as a distinct object.&nbsp; 
+Since each AFS volume is exposed as a distinct volume to Windows, there are 
+several benefits:<ul>
+	<li>
+	<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+	The volume ID for each volume as reported by Windows is the 32-bit AFS 
+	volume ID.</li>
+<li>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+The volume name for each volume as reported by Windows is the first 20 
+characters of the AFS volume name.</li>
+<li>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+Volume quotas and free space reports are based upon the actual AFS volume.</li>
+<li>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+AFS Mount Points are reported as file system reparse points.&nbsp; This permits 
+reparse point aware applications to display mount points with a different icon 
+or restrict their activities to a single volume.</li>
+</ul>
+</li>
+<li>
+<p style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+The SMB-to-AFS gateway must attempt to limit all file system requests to a 
+maximum of 45 seconds because the SMB protocol provides no mechanism for the 
+server to indicate to a client that the outstanding request is actively being 
+processed but will take a bit longer to complete.&nbsp;&nbsp; The Native File 
+System interface does not have similar limitations.&nbsp; As a result, the 
+timeouts used by the AFS cache manager are based on the Unix timeout values and 
+requests are not prematurely cancelled by the client.</li>
+</ul>
+
 <h1 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><span
 style='mso-bookmark:_Toc115416145'><a name="_Toc213847204"></a><a
 name="_Toc213844443"></a><a name="_Toc206421298"></a><a name="_Toc193871688"></a><a
@@ -3884,7 +3954,8 @@ none;text-underline:none'>Process Monitor</span></span></span><span
 style='mso-bookmark:_Toc115416150'></span></a><span style='mso-bookmark:_Toc115416150'>
 can be use to monitor the file operations requested by applications and their
 success or failure.&nbsp;&nbsp; <font color="#FF0000">[Process Monitor cannot 
-monitor file operations when the Native File System driver is in use.]</font></span></p>
+monitor file operations when the Native File System driver is in use.&nbsp; 
+Instead use FileSpy to monitor \Device\AFSRedirector.]</font></span></p>
 
 <p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>In
 Process Monitor, set a filter to include only events on file paths that refer
@@ -6770,6 +6841,9 @@ style='mso-bookmark:_Toc115416200'>Regkey:<br>
   setting this value to 0, the &quot;\\NetbiosName\all&quot; mount point will
   not be created.&nbsp; This allows the read-write versions of root.afs to be
   hidden.</p>
+	<p class=MsoBodyText style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+	<font color="#FF0000">[This value is only applicable to 
+	the SMB-toAFS gateway interface.]</font></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:36;height:78.5pt'>
@@ -7386,6 +7460,9 @@ style='mso-bookmark:_Toc115416239'>Regkey:<br>
   Default: 0x1</p>
   <p class=MsoBodyText>This value can be used to disable the use of SMB
   Asynchronous Store operations.&nbsp;</p>
+	<p class=MsoBodyText>
+	<font color="#FF0000">[This value is only applicable to 
+	the SMB-toAFS gateway interface.]</font></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:5;height:138.25pt'>
