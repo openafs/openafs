@@ -56,7 +56,7 @@ char afs_LclCellName[64];
 
 struct usr_vnode *afs_FileTable[MAX_OSI_FILES];
 int afs_FileFlags[MAX_OSI_FILES];
-int afs_FileOffsets[MAX_OSI_FILES];
+off_t afs_FileOffsets[MAX_OSI_FILES];
 
 #define MAX_CACHE_LOOPS 4
 
@@ -107,8 +107,8 @@ int usr_udpcksum = 0;
 
 usr_key_t afs_global_u_key;
 
-struct usr_proc *afs_global_procp;
-struct usr_ucred *afs_global_ucredp;
+struct usr_proc *afs_global_procp = NULL;
+struct usr_ucred *afs_global_ucredp = NULL;
 struct usr_sysent usr_sysent[200];
 
 #ifdef AFS_USR_OSF_ENV
@@ -1561,7 +1561,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	cacheStatEntries = cacheStatEntriesParam;
     }
     strcpy(cacheBaseDir, cacheBaseDirParam);
-    if (nDaemons != 0) {
+    if (nDaemonsParam != 0) {
 	nDaemons = nDaemonsParam;
     } else {
 	nDaemons = 3;
@@ -1846,7 +1846,11 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 			 (long)pathname_for_V[currVFile], 0, 0, 0);
 	}
     /*end for */
-#ifndef NETSCAPE_NSAPI
+/*#ifndef NETSCAPE_NSAPI*/
+#if 0
+/* this breaks solaris if the kernel-mode client has never been installed,
+ * and it doesn't seem to work now anyway, so just disable it */
+
     /*
      * Copy our tokens from the kernel to the user space client
      */
@@ -2691,6 +2695,7 @@ uafs_open_r(char *path, int flags, int mode)
 		errno = code;
 		return -1;
 	    }
+	    fileP = AFSTOV(vc);
 	} else {
 	    fileP = NULL;
 	    code = uafs_LookupName(nameP, dirP, &fileP, 1, 0);
@@ -2763,6 +2768,7 @@ uafs_open_r(char *path, int flags, int mode)
      */
     if ((flags & O_TRUNC) && (attrs.va_size != 0)) {
 	usr_vattr_null(&attrs);
+	attrs.va_mask = ATTR_SIZE;
 	attrs.va_size = 0;
 	code = afs_setattr(VTOAFS(fileP), &attrs, u.u_cred);
 	if (code != 0) {
@@ -2834,13 +2840,23 @@ uafs_write(int fd, char *buf, int len)
 {
     int retval;
     AFS_GLOCK();
-    retval = uafs_write_r(fd, buf, len);
+    retval = uafs_pwrite_r(fd, buf, len, afs_FileOffsets[fd]);
     AFS_GUNLOCK();
     return retval;
 }
 
 int
-uafs_write_r(int fd, char *buf, int len)
+uafs_pwrite(int fd, char *buf, int len, off_t offset)
+{
+    int retval;
+    AFS_GLOCK();
+    retval = uafs_pwrite_r(fd, buf, len, offset);
+    AFS_GUNLOCK();
+    return retval;
+}
+
+int
+uafs_pwrite_r(int fd, char *buf, int len, off_t offset)
 {
     int code;
     struct usr_uio uio;
@@ -2863,7 +2879,7 @@ uafs_write_r(int fd, char *buf, int len)
     iov[0].iov_len = len;
     uio.uio_iov = &iov[0];
     uio.uio_iovcnt = 1;
-    uio.uio_offset = afs_FileOffsets[fd];
+    uio.uio_offset = offset;
     uio.uio_segflg = 0;
     uio.uio_fmode = FWRITE;
     uio.uio_resid = len;
@@ -2890,13 +2906,23 @@ uafs_read(int fd, char *buf, int len)
 {
     int retval;
     AFS_GLOCK();
-    retval = uafs_read_r(fd, buf, len);
+    retval = uafs_pread_r(fd, buf, len, afs_FileOffsets[fd]);
     AFS_GUNLOCK();
     return retval;
 }
 
 int
-uafs_read_r(int fd, char *buf, int len)
+uafs_pread(int fd, char *buf, int len, off_t offset)
+{
+    int retval;
+    AFS_GLOCK();
+    retval = uafs_pread_r(fd, buf, len, offset);
+    AFS_GUNLOCK();
+    return retval;
+}
+
+int
+uafs_pread_r(int fd, char *buf, int len, off_t offset)
 {
     int code;
     struct usr_uio uio;
@@ -2920,7 +2946,7 @@ uafs_read_r(int fd, char *buf, int len)
     iov[0].iov_len = len;
     uio.uio_iov = &iov[0];
     uio.uio_iovcnt = 1;
-    uio.uio_offset = afs_FileOffsets[fd];
+    uio.uio_offset = offset;
     uio.uio_segflg = 0;
     uio.uio_fmode = FREAD;
     uio.uio_resid = len;
@@ -3104,6 +3130,7 @@ uafs_chmod_r(char *path, int mode)
 	return -1;
     }
     usr_vattr_null(&attrs);
+    attrs.va_mask = ATTR_MODE;
     attrs.va_mode = mode;
     code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     VN_RELE(vp);
@@ -3140,6 +3167,7 @@ uafs_fchmod_r(int fd, int mode)
 	return -1;
     }
     usr_vattr_null(&attrs);
+    attrs.va_mask = ATTR_MODE;
     attrs.va_mode = mode;
     code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     if (code != 0) {
@@ -3175,6 +3203,7 @@ uafs_truncate_r(char *path, int length)
 	return -1;
     }
     usr_vattr_null(&attrs);
+    attrs.va_mask = ATTR_SIZE;
     attrs.va_size = length;
     code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     VN_RELE(vp);
@@ -3211,6 +3240,7 @@ uafs_ftruncate_r(int fd, int length)
 	return -1;
     }
     usr_vattr_null(&attrs);
+    attrs.va_mask = ATTR_SIZE;
     attrs.va_size = length;
     code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     if (code != 0) {
