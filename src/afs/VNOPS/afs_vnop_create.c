@@ -224,6 +224,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    VATTR_INIT(attrs);
 		    VATTR_SET_SUPPORTED(attrs, va_data_size);
 		    VATTR_SET_ACTIVE(attrs, va_data_size);
+#elif defined(UKERNEL)
+		    attrs->va_mask = ATTR_SIZE;
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		    attrs->va_mask = AT_SIZE;
 #else
