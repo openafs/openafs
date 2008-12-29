@@ -1482,7 +1482,8 @@ Windows 2008 Server (32-bit and 64-bit Intel)</p>
 
 <p class=MsoNormal style='margin-left:14.15pt;text-indent:-14.15pt'><span
 style='font-size:9.0pt;font-family:Symbol'>·</span><span style='font-size:7.0pt;
-font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Microsoft Windows 7 (32-bit and 64-bit Intel) [experimental]</p>
+font-family:"Times New Roman","serif"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>Microsoft Windows 7 
+Beta 1 (32-bit and 64-bit Intel) [experimental]</p>
 
 <h3><a name="_Toc213844382"></a><a name="_Toc206421237"></a><a
 name="_Toc193871628"></a><a name="_Toc193871383"></a><a name="_Toc191662065"></a><a
@@ -4757,6 +4758,91 @@ are quoted using single quotes (e.g. 'a string'). An empty string is denoted as
 
 <p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>Numeric
 values should be authored as decimal strings.</p>
+<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+The feature selection states have been changed since version 1.5.56.&nbsp; The 
+OpenAFS for Windows MSI based installer now has four installation<br>
+types:</p>
+<ol>
+	<li>
+	<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+	IFS Based Client</p>
+	<ul>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Client redirector filter driver</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Network Identity Manager plug-in</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Core client binaries</p></li>
+	</ul>
+	</li>
+	<li>
+	<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+	SMB Based Client</p>
+	<ul>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Microsoft Loopback Adapter</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		AFSCreds.exe</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		AFS_Config.exe</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Network Identity Manager plug-in</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Core client binaries</p></li>
+	</ul>
+	</li>
+	<li>
+	<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+	Custom</p>
+	<ul>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		(Depends on what the user selects.&nbsp; However, the default selections will 
+		be as per the IFS Based Client)</p></li>
+	</ul>
+	</li>
+	<li>
+	<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+	Complete</p>
+	<ul>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Client redirector filter driver</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Network Identity Manager plug-in</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Core client binaries</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Server binaries</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Control Center binaries</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Software Development Kit</p></li>
+		<li>
+		<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+		Documentation for administrators</p></li>
+	</ul>
+	</li>
+</ol>
+<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+The default selections for 'Custom' installations and the client component 
+selection for 'Complete' installations is based on the default client 
+installation type which can be changed using the <b>USEREDIRECTOR</b> property.&nbsp; 
+Note that unless the <b>USEREDIRECTOR</b> property is set to '0', a 'Complete' 
+installation will not install all client components.</p>
 
 <h4 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><a
 name="_Toc191662143"></a><a name="_Toc152605106"></a><a name="_Toc115416164"></a><a
@@ -5059,19 +5145,21 @@ OpenAFS for Windows.</p>
  </tr>
  <tr style='mso-yfti-irow:13;mso-yfti-lastrow:yes'>
   <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
-  <h6><a name="_Toc191662162"></a><a name="_Toc152605125"></a><a
-  name="_Toc115416183"></a><a name="_Toc126872252"></a><a name="_Toc139993175"></a><span
-  style='mso-bookmark:_Toc191662162'><span style='mso-bookmark:_Toc152605125'><span
-  style='mso-bookmark:_Toc115416183'>USEDNS</span></span></span></h6>
-  <p class=MsoList>Registry key&nbsp;&nbsp;&nbsp; : <a
-  href="#_(Service_parameters):"><span class=Heading1Char><span
+  <h6><a name="_Toc213847247"></a><a name="_Toc213847248"></a>
+	<a
+  name="_Toc213847249"></a><a name="_Toc213847250"></a><a name="_Toc213847251"></a><span
+  style='mso-bookmark:_Toc115416183'>USEDNS</span></h6>
+  <p class=MsoList>Registry key&nbsp;&nbsp;&nbsp; : 
+	<a
+  href="#_(Service_parameters):" style="color: navy; text-decoration: underline; text-underline: single"><span class=Heading1Char><span
   style='font-size:14.0pt;mso-fareast-font-family:"MS Mincho";text-decoration:
   none;text-underline:none'>(Service parameters)</span></span></a></p>
-  <p class=MsoList>Registry value : <a href="#_Value_:_UseDNS"><span
+  <p class=MsoList>Registry value : 
+	<a href="#_Value_:_UseDNS" style="color: navy; text-decoration: underline; text-underline: single"><span
   class=Heading1Char><span style='font-size:14.0pt;mso-fareast-font-family:
   "MS Mincho";text-decoration:none;text-underline:none'>UseDNS</span></span></a></p>
   <p class=MsoList>Valid values&nbsp;&nbsp;&nbsp; : '1' or '0'</p>
-  </td>
+  <p>&nbsp;</td>
  </tr>
 </table>
 
@@ -5157,6 +5245,53 @@ future releases of OpenAFS.</p>
   </td>
  </tr>
 </table>
+
+<h5 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>
+<span style='mso-bookmark:
+_Toc115416169'>7.2.1.2.3 Feature Properties</span></h5>
+
+<p class=MsoNormal style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'>These
+properties are used to determine which installation OpenAFS for Windows 
+components should be installed by default.</p>
+
+<table class=MsoNormalTable border=1 cellspacing=3 cellpadding=0
+ style='mso-cellspacing:2.2pt;mso-yfti-tbllook:1184;mso-padding-alt:0in 0in 0in 0in' id="table3">
+ <tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <h6>USEREDIRECTOR</h6>
+  <p class=MsoList>Valid values&nbsp;&nbsp;&nbsp; : '1' or '0'<br>
+	<br>
+	If set to '0', prevents the installation of the redirector filter<br>
+	driver.&nbsp; Setting this to a non-zero value has the following<br>
+	side-effects:<br>
+	<br>
+	&nbsp;&nbsp; - AFSCreds.exe will not be installed<br>
+	&nbsp;&nbsp; - AFS_Config.exe will not be installed<br>
+	<br>
+	The USEREDIRECTOR value has precedence over the USEAFSCREDS and<br>
+	USEAFSCONFIG values.<br>
+	<br>
+	By default, the USEREDIRECTOR value is set to '1.'</p>
+  <p>&nbsp;</td>
+ </tr>
+ <tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <h6>USEAFSCONFIG</h6>
+	<p class="MsoNormal">Values: '1' or '0'<br>
+	<br>
+	If set to '0', prevents the installation of AFS_Config.exe.&nbsp; This<br>
+	value is ignored if USEREDIRECTOR is set to a non-zero value.</td>
+ </tr>
+ <tr style='mso-yfti-irow:0;mso-yfti-firstrow:yes'>
+  <td width=590 valign=top style='width:6.15in;padding:0in 5.4pt 0in 5.4pt'>
+  <h6>USEAFSCREDS</h6>
+	<p class="MsoNormal">Valid values : '1' or '0'<br>
+	<br>
+	If set to '0', AFSCreds.exe will not be installed.&nbsp; This value is<br>
+	ignored if USEREDIRECTOR is set to a non-zero value.<br>
+&nbsp;</td>
+ </tr>
+ </table>
 
 <h3 style='tab-stops:45.8pt 91.6pt 137.4pt 183.2pt 229.0pt 274.8pt 320.6pt 366.4pt 412.2pt 458.0pt 503.8pt 549.6pt 595.4pt 641.2pt 687.0pt 732.8pt'><a
 name="_Toc213844473"></a><a name="_Toc206421328"></a><a name="_Toc193871718"></a><a
