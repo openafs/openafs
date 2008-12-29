@@ -21,8 +21,9 @@
                 InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 
                 <Feature Id="feaLoopback" AllowAdvertise="no" Description="$(loc.StrLoopbackLongDesc)"
-                    Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrLoopbackDesc)">
+               Display="expand" InstallDefault="followParent" Level="1030" Title="$(loc.StrLoopbackDesc)">
                     <ComponentRef Id="rcm_Loopback"/>
+        <Condition Level="30">USEREDIRECTOR = 0</Condition>
                 </Feature>
 
             <Feature Id="feaNetIDMgrPlugin" AllowAdvertise="no" Description="$(loc.StrNIDMPluginLongDesc)"
@@ -43,9 +44,9 @@
 			<Condition Level="30">VersionNT = 500 And ServicePackLevel &lt; 3</Condition>
 		</Feature>
 				
-		<Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="30">
+      <Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="1030">
 			<ComponentRef Id="cmp_credsStartup" />
-			<Condition Level="130">CREDSSTARTUP = 0</Condition>
+	<Condition Level="30">CREDSSTARTUP &lt;&gt; 0 And USEAFSCREDS &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
 		</Feature>
 				
 		<?ifdef DebugSyms?>
@@ -62,39 +63,41 @@
                InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDriverDesc)">
         <ComponentRef Id="Drv_FSRDR" />
         <ComponentRef Id="Drv_FSRDR_NP" />
+        <Condition Level="1030">USEREDIRECTOR = 0</Condition>
         <?ifdef DebugSyms?>
         <Feature Id="feaClientDriverDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDriverDebugLongDesc)" Display="expand"
                  InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
           <ComponentRef Id="Drv_FSRDR_Debug" />
           <ComponentRef Id="Drv_FSRDR_NP_Debug" />
+          <Condition Level="1030">USEREDIRECTOR = 0</Condition>
         </Feature>
        <?endif?>
       </Feature>
 
       <Feature Id="feaAfsCreds" AllowAdvertise="no" Description="$(loc.StrAFSCredsLongDesc)" Display="expand"
-               InstallDefault="followParent" Level="30" Title="$(loc.StrAFSCredsDesc)">
+               InstallDefault="followParent" Level="1030" Title="$(loc.StrAFSCredsDesc)">
         <ComponentRef Id="cmf_afscreds_EXE" />
         <ComponentRef Id="cmf_afscreds_$(var.LanguageCode)_DLL" />
-        <Condition Level="130">USEAFSCREDS = 0</Condition>
+        <Condition Level="30">USEAFSCREDS &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
         <?ifdef DebugSyms?>
         <Feature Id="feaAfsCredsDebug" AllowAdvertise="no" Description="$(loc.StrAFSCredsDebugLongDesc)" Display="expand"
-                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSCredsDebugDesc)">
+                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSCredsDebugDesc)">
           <ComponentRef Id="cmp_AfsCredsDebug" />
-          <Condition Level="130">USEAFSCREDS = 0</Condition>
+          <Condition Level="$(var.DebugSymLowLevel)">USEAFSCREDS &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
         </Feature>
         <?endif?>
       </Feature>
 
       <Feature Id="feaAfsConfig" AllowAdvertise="no" Description="$(loc.StrAFSConfigLongDesc)" Display="expand"
-               InstallDefault="followParent" Level="30" Title="$(loc.StrAFSConfigDesc)">
+               InstallDefault="followParent" Level="1030" Title="$(loc.StrAFSConfigDesc)">
         <ComponentRef Id="cmf_afs_config_EXE" />
         <ComponentRef Id="cmf_afs_config_$(var.LanguageCode)_DLL" />
-        <Condition Level="130">USEAFSCONFIG = 0</Condition>
+        <Condition Level="30">USEAFSCONFIG &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
         <?ifdef DebugSyms?>
         <Feature Id="feaAfsConfigDebug" AllowAdvertise="no" Description="$(loc.StrAFSConfigDebugLongDesc)" Display="expand"
-                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSConfigDebugDesc)">
+                 InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSConfigDebugDesc)">
           <ComponentRef Id="cmp_ClientConfigDebug" />
-          <Condition Level="130">USEAFSCONFIG = 0</Condition>
+          <Condition Level="$(var.DebugSymLowLevel)">USEAFSCONFIG &lt;&gt; 0 And USEREDIRECTOR = 0</Condition>
         </Feature>
         <?endif?>
       </Feature>

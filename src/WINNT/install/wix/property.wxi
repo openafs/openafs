@@ -21,6 +21,7 @@
     <Property Id="CREDSQUIET">-q</Property>
     <Property Id="USEAFSCONFIG">1</Property>
     <Property Id="SMBAUTHTYPE">$(var.SMBAuthType)</Property>
+    <Property Id="USEREDIRECTOR">1</Property>
     <!-- empty property 
     <Property Id="CREDSSHOW"></Property>
     -->

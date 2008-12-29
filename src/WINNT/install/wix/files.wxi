@@ -726,13 +726,6 @@
                         </Directory> <!-- Sys Admin guide -->
                         <Directory Id="dirReleaseNotes_$(var.Language)" Name="Relea" LongName="ReleaseNotes" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\ReleaseNotes\">
                             <Component Id="cmp_Release_Notes_$(var.Language)" Guid="$(var.DocHtmlRelNotesGuid)">
-                                <File Id="fileawrns000_HTM_$(var.Language)" Name="awrns000.htm" LongName="awrns000.htm" KeyPath="yes" DiskId="1" />
-                                <File Id="fileawrns002_HTM_$(var.Language)" Name="awrns002.htm" LongName="awrns002.htm" DiskId="1" />
-                                <File Id="fileawrns003_HTM_$(var.Language)" Name="awrns003.htm" LongName="awrns003.htm" DiskId="1" />
-                                <File Id="fileawrns004_HTM_$(var.Language)" Name="awrns004.htm" LongName="awrns004.htm" DiskId="1" />
-                                <File Id="fileawrns005_HTM_$(var.Language)" Name="awrns005.htm" LongName="awrns005.htm" DiskId="1" />
-                                <File Id="fileawrns006_HTM_$(var.Language)" Name="awrns006.htm" LongName="awrns006.htm" DiskId="1" />
-                                <File Id="fileawrns007_HTM_$(var.Language)" Name="awrns007.htm" LongName="awrns007.htm" DiskId="1" />
                                 <File Id="fileframes_HTM_$(var.Language)" Name="relnot-f.htm" LongName="relnotes-frames.htm" DiskId="1" />
                                 <File Id="filelogo_HTM_$(var.Language)" Name="logo.htm" LongName="logo.htm" DiskId="1" />
                                 <File Id="filerelnotes_HTM_$(var.Language)" Name="relnotes.htm" LongName="relnotes.htm" DiskId="1" />
@@ -1478,12 +1471,14 @@
         <File Id="file_AFSRDFSProvider.dll" Name="AFSRDFSP.DLL" LongName="AFSRDFSProvider.dll" Vital="yes"
               Source="$(var.SrcDir)WINNT\afsrdr\build\$(env.CPU)\AFSRDFSProvider.dll"
               DiskId="1" />
+        <?ifndef BinsOnly?>
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Action="createKeyAndRemoveKeyOnUninstall" Id="reg_Rdr01" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Id="reg_Rdr02" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="ProviderPath" Type="expandable" Value="[#file_AFSRDFSProvider.dll]" Id="reg_Rdr03" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Class" Type="integer" Value="1" Id="reg_Rdr04" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="Name" Type="string" Value="OpenAFS Network" Id="reg_Rdr05" />
         <Registry Root="HKLM" Key="SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" Name="DeviceName" Type="string" Value="\Device\AFSRedirector" Id="reg_Rdr06" />
+        <?endif?>
       </Component>
       <Component Id="Drv_FSRDR_NP_Debug"
                  Guid="$(var.DrvFSRDRDebug_NP_guid)"
