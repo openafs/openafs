@@ -1,4 +1,72 @@
+Since 1.5.55
+
+ * Fix a race in rxi_WriteProc which could result
+   in a freed or in use packet being passed to 
+   rxi_PrepareSendPacket if the call is currently
+   in a transmit wait state.  Passing a freed packet
+   will result in a panic.  Passing an in use packet
+   might result in a call failure or perhaps data
+   corruption.
+
+ * Kerberos referrals broke the NIM AFS provider 
+   logic for automated configuration of the workstation
+   cell with a new identity.  Now if a referrals 
+   response is returned, assume the cell belongs to the
+   new identify.
+
+ * The interface to buf_CleanAsync() and 
+   buf_CleanAsyncLocked() has been changed to permit 
+   errors to be propagated to the caller.  
+
+ * During an enumeration of a directory, if the btree
+   has not yet been generated, return an error.
+
+ * When mapping CM_ERROR values to NTSTATUS values
+   do not treat 0 as an error.
+
+ * Avoid a cm_scache_t object reference count underflow
+   when renaming via the SMB interface.
+
+ * smb_IsMask() can be called with a non-8.3 input buffer.
+   Separate smb_IsMask() into smb_Is8Dot3Mask() for 8.3
+   input buffers and smb_IsMask() for non-8.3 input buffers.
+
+ * Add cm_buf_t error state to the "fs memdump" output.
+
+ * pioctl drive mapping checks need to take into account
+   Global Drive Mappings and SUBST assignments.
+
+ * Rename operations should not be permitted if the 
+   destination name collides with an existing name that
+   differs only by case UNLESS the collision is the object
+   that is being renamed.
+
+ * Increase the maximum number of background daemon threads
+   to 64.  Leave the default at 4.
+
+ * Set the FILE_UNICODE_ON_DISK flag when reporting the 
+   file system characteristics.
+
+ * Report the maximum component name length as 255 even
+   for Unicode as part of the file system characteristics.
+
+ * Add RX debugging information to "fs memdump" output
+   in checked builds.
+
+ * Refcount the cm_server_t objects returned by
+   cm_FindServerByIP()
+
+ * Fix the UAC manifest applied to afs_config.exe
+
+ * rxdebug now indicates if any RX_CONN flag is set
+   not just some of them
+
+ * Change the mapping of CM_ERROR_WOULDBLOCK from 
+   NTSTATUS_LOCK_NOT_GRANTED to NTSTATUS_CANT_WAIT
+
 Since 1.5.54
+
+ * Includes #GCO Public CellServDB 07 Nov 2008
 
  * Prevent separate cell entries from being created for
    "foobar.org" and "foobar.org." which can happen if

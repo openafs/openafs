@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.5.50 release of OpenAFS 
+This file is a rough list of known issues with the 1.5.55 release of OpenAFS 
 on Windows.  This list is not complete.  There are probably other issues which 
 can be found in the RT database or on the mailing list.
 
@@ -14,11 +14,6 @@ For all of these issues please review
   (i)   prevents use of AFS Gateway 
   (ii)  requires installation of loopback adapter
 
-(9) Convert to a native file system implementation built upon:
-     - a file system redirector
-     - a file system filter
-     - a network provider
-
 (12) AFS Integrated Logon:
 (12c) If network is not available must store the username and password 
       somewhere until such time as the network starts.
@@ -26,8 +21,6 @@ For all of these issues please review
 (16) Better EventLog handling
 
 (17) Named Pipes Support [requires modifications to AFS servers to support]
-
-(18) Memory Mapped File support
 
 (20) NSIS Installer issues
      (a) integration with KFW install script
@@ -110,7 +103,7 @@ List of unfunded projects:
   21. Add support for storing Extended Attributes on files
   22. Add support for storing Windows ACLs on files
   23. Remove submount creation as a side effect of drive creation
-  24. Finish conversion from string.h to strsafe.h for VS.NET 2005
+  24. Finish conversion from string.h to strsafe.h for VS 2005/2008
   25. Implement RX Statistics gathering interfaces and reporting tools
       (necessary to obtain profiling data)
   26. Implement RX Connection Pools in the Cache Manager allowing more than
