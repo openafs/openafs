@@ -1157,7 +1157,6 @@ rx_NewCall(register struct rx_connection *conn)
 {
     register int i;
     register struct rx_call *call;
-	register struct rx_connection *tconn;
     struct clock queueTime;
     SPLVAR;
 
@@ -2068,7 +2067,10 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
     call->nLeft = call->nFree = call->curlen = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-    rxi_FreePackets(0, &call->iovq);
+#ifdef DEBUG
+    call->iovqc -=
+#endif /* DEBUG */
+        rxi_FreePackets(0, &call->iovq);
 
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
@@ -2185,6 +2187,14 @@ rxi_FindService(register osi_socket socket, register u_short serviceId)
     return 0;
 }
 
+#ifdef DEBUG
+#ifdef KDUMP_RX_LOCK
+static struct rx_call_rx_lock *rx_allCallsp = 0;
+#else
+static struct rx_call *rx_allCallsp = 0;
+#endif
+#endif /* DEBUG */
+
 /* Allocate a call structure, for the indicated channel of the
  * supplied connection.  The mode and state of the call must be set by
  * the caller. Returns the call with mutex locked. */
@@ -2239,8 +2249,14 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     } else {
 
 	call = (struct rx_call *)rxi_Alloc(sizeof(struct rx_call));
-        rx_MutexIncrement(rx_stats.nCallStructs, rx_stats_mutex);
-	MUTEX_EXIT(&rx_freeCallQueue_lock);
+#ifdef DEBUG
+        call->allNextp = rx_allCallsp;
+        rx_allCallsp = call;
+        call->call_id = 
+#endif /* DEBUG */
+            rx_MutexIncrement(rx_stats.nCallStructs, rx_stats_mutex);
+        
+        MUTEX_EXIT(&rx_freeCallQueue_lock);
 	MUTEX_INIT(&call->lock, "call lock", MUTEX_DEFAULT, NULL);
 	MUTEX_ENTER(&call->lock);
 	CV_INIT(&call->cv_twind, "call twind", CV_DEFAULT, 0);
@@ -2251,6 +2267,9 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 	queue_Init(&call->tq);
 	queue_Init(&call->rq);
 	queue_Init(&call->iovq);
+#ifdef DEBUG
+        call->rqc = call->tqc = call->iovqc = 0;
+#endif /* DEBUG */
 	/* Bind the call to its connection structure (prereq for reset) */
 	call->conn = conn;
 	rxi_ResetCall(call, 1);
@@ -3298,6 +3317,9 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	     * the reader once all packets have been processed */
 	    np->flags |= RX_PKTFLAG_RQ;
 	    queue_Prepend(&call->rq, np);
+#ifdef DEBUG
+            call->rqc++;
+#endif /* DEBUG */
 	    call->nSoftAcks++;
 	    np = NULL;		/* We can't use this anymore */
 	    newPackets = 1;
@@ -3426,6 +3448,10 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	     * packet before which to insert the new packet, or at the
 	     * queue head if the queue is empty or the packet should be
 	     * appended. */
+            np->flags |= RX_PKTFLAG_RQ;
+#ifdef DEBUG
+            call->rqc++;
+#endif /* DEBUG */
 	    queue_InsertBefore(tp, np);
 	    call->nSoftAcks++;
 	    np = NULL;
@@ -3744,6 +3770,9 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	{
 	    queue_Remove(tp);
 	    tp->flags &= ~RX_PKTFLAG_TQ;
+#ifdef DEBUG
+            call->tqc--;
+#endif /* DEBUG */
 	    rxi_FreePacket(tp);	/* rxi_FreePacket mustn't wake up anyone, preemptively. */
 	}
     }
@@ -4355,7 +4384,10 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 	}
     } else {
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	rxi_FreePackets(0, &call->tq);
+#ifdef DEBUG
+        call->tqc -=
+#endif /* DEBUG */
+            rxi_FreePackets(0, &call->tq);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	call->flags &= ~RX_CALL_TQ_CLEARME;
     }
@@ -4380,7 +4412,15 @@ void
 rxi_ClearReceiveQueue(register struct rx_call *call)
 {
     if (queue_IsNotEmpty(&call->rq)) {
-	rx_packetReclaims += rxi_FreePackets(0, &call->rq);
+        u_short count;
+        
+        count = rxi_FreePackets(0, &call->rq);
+	rx_packetReclaims += count;
+#ifdef DEBUG
+        call->rqc -= count;
+        if ( call->rqc != 0 ) 
+            dpf(("rxi_ClearReceiveQueue call %x rqc %u != 0", call, call->rqc));
+#endif
 	call->flags &= ~(RX_CALL_RECEIVE_DONE | RX_CALL_HAVE_LAST);
     }
     if (call->state == RX_STATE_PRECALL) {
@@ -4524,6 +4564,9 @@ rxi_ConnectionError(register struct rx_connection *conn,
 void
 rxi_CallError(register struct rx_call *call, afs_int32 error)
 {
+#ifdef DEBUG
+    osirx_AssertMine(&call->lock, "rxi_CallError");
+#endif
     dpf(("rxi_CallError call %x error %d call->error %d", call, error, call->error));
     if (call->error)
 	error = call->error;
@@ -4555,7 +4598,9 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     register int flags;
     register struct rx_peer *peer;
     struct rx_packet *packet;
-
+#ifdef DEBUG
+    osirx_AssertMine(&call->lock, "rxi_ResetCall");
+#endif
     dpf(("rxi_ResetCall(call %x, newcall %d)\n", call, newcall));
 
     /* Notify anyone who is waiting for asynchronous packet arrival */
@@ -4633,12 +4678,19 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     
     if (call->currentPacket) {
         call->currentPacket->flags &= ~RX_PKTFLAG_CP;
-	rxi_FreePacket(call->currentPacket);
-	call->currentPacket = (struct rx_packet *)0;
+        call->currentPacket->flags |= RX_PKTFLAG_IOVQ;
+        queue_Prepend(&call->iovq, call->currentPacket);
+#ifdef DEBUG
+        call->iovqc++;
+#endif /* DEBUG */
+        call->currentPacket = (struct rx_packet *)0;
     }
     call->curlen = call->nLeft = call->nFree = 0;
 
-    rxi_FreePackets(0, &call->iovq);
+#ifdef DEBUG
+    call->iovqc -= 
+#endif
+        rxi_FreePackets(0, &call->iovq);
 
     call->error = 0;
     call->twind = call->conn->twind[call->channel];
@@ -5407,6 +5459,9 @@ rxi_Start(struct rxevent *event,
 			    && (p->flags & RX_PKTFLAG_ACKED)) {
 			    queue_Remove(p);
 			    p->flags &= ~RX_PKTFLAG_TQ;
+#ifdef DEBUG
+                            call->tqc--;
+#endif
 			    rxi_FreePacket(p);
 			} else
 			    missing = 1;
@@ -7957,5 +8012,66 @@ DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
 	return FALSE;
     }
 }
+
+#ifdef AFS_NT40_ENV
+int rx_DumpCalls(FILE *outputFile, char *cookie)
+{
+#ifdef DEBUG
+    int zilch;
+#ifdef KDUMP_RX_LOCK
+    struct rx_call_rx_lock *c;
+#else
+    struct rx_call *c;
+#endif
+    char output[2048];
+
+    sprintf(output, "%s - Start dumping all Rx Calls - count=%u\r\n", cookie, rx_stats.nCallStructs);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    for (c = rx_allCallsp; c; c = c->allNextp) {
+        u_short rqc, tqc, iovqc;
+        struct rx_packet *p, *np;
+
+        MUTEX_ENTER(&c->lock);
+        queue_Count(&c->rq, p, np, rx_packet, rqc);
+        queue_Count(&c->tq, p, np, rx_packet, tqc);
+        queue_Count(&c->iovq, p, np, rx_packet, iovqc);
+
+        sprintf(output, "%s - call=0x%p, id=%u, state=%u, mode=%u, conn=%p, epoch=%u, cid=%u, callNum=%u, connFlags=0x%x, flags=0x%x, "
+                "rqc=%u,%u, tqc=%u,%u, iovqc=%u,%u, "
+                "lstatus=%u, rstatus=%u, error=%d, timeout=%u, "
+                "resendEvent=%d, timeoutEvt=%d, keepAliveEvt=%d, delayedAckEvt=%d, delayedAbortEvt=%d, abortCode=%d, abortCount=%d, "
+                "lastSendTime=%u, lastRecvTime=%u, lastSendData=%u"
+#ifdef RX_ENABLE_LOCKS
+                ", refCount=%u"
+#endif
+#ifdef RX_REFCOUNT_CHECK
+                ", refCountBegin=%u, refCountResend=%u, refCountDelay=%u, "
+                "refCountAlive=%u, refCountPacket=%u, refCountSend=%u, refCountAckAll=%u, refCountAbort=%u"
+#endif
+                "\r\n",
+                cookie, c, c->call_id, (afs_uint32)c->state, (afs_uint32)c->mode, c->conn, c->conn?c->conn->epoch:0, c->conn?c->conn->cid:0,
+                c->callNumber?*c->callNumber:0, c->conn?c->conn->flags:0, c->flags,
+                (afs_uint32)c->rqc, (afs_uint32)rqc, (afs_uint32)c->tqc, (afs_uint32)tqc, (afs_uint32)c->iovqc, (afs_uint32)iovqc, 
+                (afs_uint32)c->localStatus, (afs_uint32)c->remoteStatus, c->error, c->timeout, 
+                c->resendEvent?1:0, c->timeoutEvent?1:0, c->keepAliveEvent?1:0, c->delayedAckEvent?1:0, c->delayedAbortEvent?1:0,
+                c->abortCode, c->abortCount, c->lastSendTime, c->lastReceiveTime, c->lastSendData
+#ifdef RX_ENABLE_LOCKS
+                , (afs_uint32)c->refCount
+#endif
+#ifdef RX_REFCOUNT_CHECK
+                , c->refCDebug[0],c->refCDebug[1],c->refCDebug[2],c->refCDebug[3],c->refCDebug[4],c->refCDebug[5],c->refCDebug[6],c->refCDebug[7]
+#endif
+                );
+        MUTEX_EXIT(&c->lock);
+
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+    sprintf(output, "%s - End dumping all Rx Calls\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif /* DEBUG */
+    return 0;
+}
+#endif /* AFS_NT40_ENV */
 #endif
 

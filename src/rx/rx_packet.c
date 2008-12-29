@@ -95,7 +95,10 @@ RCSID
 /* rxdb_fileID is used to identify the lock location, along with line#. */
 static int rxdb_fileID = RXDB_FILE_RX_PACKET;
 #endif /* RX_LOCKS_DB */
-struct rx_packet *rx_mallocedP = 0;
+static struct rx_packet *rx_mallocedP = 0;
+#ifdef DEBUG
+static afs_uint32       rx_packet_id = 0;
+#endif
 
 extern char cml_version_number[];
 
@@ -559,6 +562,10 @@ rxi_MorePackets(int apackets)
 
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
+#ifdef DEBUG
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* DEBUG */
         rx_mallocedP = p;
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
@@ -600,6 +607,10 @@ rxi_MorePackets(int apackets)
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
+#ifdef DEBUG
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* DEBUG */
 	rx_mallocedP = p;
     }
 
@@ -642,6 +653,10 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 	
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
+#ifdef DEBUG
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* DEBUG */
         rx_mallocedP = p;
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
@@ -699,6 +714,10 @@ rxi_MorePacketsNoLock(int apackets)
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
+#ifdef DEBUG
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* DEBUG */
 	rx_mallocedP = p;
     }
 
@@ -903,6 +922,8 @@ rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
  *
  * [IN] p             -- packet from which continuation buffers will be freed
  * [IN] first         -- iovec offset of first continuation buffer to free
+ *                       any value less than 2, the min number of iovecs,
+ *                       is treated as if it is 2.
  * [IN] flush_global  -- if nonzero, we will flush overquota packets to the
  *                       global free pool before returning
  *
@@ -2656,9 +2677,10 @@ rxi_PrepareSendPacket(register struct rx_call *call,
         MUTEX_EXIT(&rx_freePktQ_lock);
 #endif /* !RX_ENABLE_TSFPQ */
 
-	p->niovecs = i;
+        p->niovecs = i;
     }
-    p->wirevec[i - 1].iov_len += len;
+    if (len)
+        p->wirevec[i - 1].iov_len += len;
     RXS_PreparePacket(conn->securityObject, call, p);
 }
 
@@ -2716,3 +2738,42 @@ rxi_AdjustDgramPackets(int frags, int mtu)
     }
     return (2 + (maxMTU / (RX_JUMBOBUFFERSIZE + RX_JUMBOHEADERSIZE)));
 }
+
+#ifdef AFS_NT40_ENV
+/* 
+ * This function can be used by the Windows Cache Manager
+ * to dump the list of all rx packets so that we can determine
+ * where the packet leakage is.
+ */
+int rx_DumpPackets(FILE *outputFile, char *cookie)
+{
+#ifdef DEBUG
+    int zilch;
+    struct rx_packet *p;
+    char output[2048];
+
+    NETPRI;
+    MUTEX_ENTER(&rx_freePktQ_lock);
+    sprintf(output, "%s - Start dumping all Rx Packets - count=%u\r\n", cookie, rx_packet_id);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    for (p = rx_mallocedP; p; p = p->allNextp) {
+        sprintf(output, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
+                cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec, p->retryTime.sec, p->retryTime.usec, 
+                p->firstSerial, p->niovecs, (afs_uint32)p->flags, (afs_uint32)p->backoff, (afs_uint32)p->length,
+                p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.serial,
+                (afs_uint32)p->header.type, (afs_uint32)p->header.flags, (afs_uint32)p->header.userStatus, 
+                (afs_uint32)p->header.securityIndex, (afs_uint32)p->header.serviceId);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+
+    sprintf(output, "%s - End dumping all Rx Packets\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    MUTEX_EXIT(&rx_freePktQ_lock);
+    USERPRI;
+#endif /* DEBUG */
+    return 0;
+}
+#endif /* AFS_NT40_ENV */
+

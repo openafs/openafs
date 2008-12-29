@@ -91,6 +91,8 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     cm_DumpSCache(afsi_file, "a", 0);
     cm_DumpBufHashTable(afsi_file, "a", 0);
     smb_DumpVCP(afsi_file, "a", 0);			
+    rx_DumpPackets(afsi_file, "a");
+    rx_DumpCalls(afsi_file, "a");
     afsi_log("--- end   dump ---");
     
 #ifdef DEBUG
