@@ -247,3 +247,6 @@ EXPORTS
         rx_WritevAlloc                          @2006
         rxi_MorePackets                         @2007
 
+; for debugging
+        rx_DumpCalls                            @9998
+        rx_DumpPackets                          @9999

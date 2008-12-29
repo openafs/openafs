@@ -271,6 +271,11 @@ struct rx_packet {
     afs_uint32 wirehead[RX_HEADER_SIZE / sizeof(afs_int32)];
     afs_uint32 localdata[RX_CBUFFERSIZE / sizeof(afs_int32)];
     afs_uint32 extradata[RX_EXTRABUFFERSIZE / sizeof(afs_int32)];
+#ifdef DEBUG
+    /* For debugging */
+    struct rx_packet *allNextp; /* A list of all packets */
+    afs_uint32  packetId;       /* An unique id number for debugging */
+#endif
 };
 
 /* Macro to convert continuation buffer pointers to packet pointers */
@@ -357,5 +362,10 @@ struct rx_packet {
  * security header */
 /* DEPRECATED */
 #define	rx_UserDataOf(conn, packet)	(((char *) (packet)->wirevec[1].iov_base) + (conn)->securityHeaderSize)
+
+#ifdef AFS_NT40_ENV
+/* Debugging for Windows Cache Manager - fs memdump */
+int rx_DumpPackets(FILE *outputFile, char *cookie);
+#endif /* AFS_NT40_ENV */
 
 #endif /* _RX_PACKET_ */

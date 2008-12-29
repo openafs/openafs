@@ -496,7 +496,7 @@ struct rx_call {
     u_short nCwindAcks;		/* Number acks received at current cwind */
     u_short ssthresh;		/* The slow start threshold */
     u_short nDgramPackets;	/* Packets per AFS 3.5 jumbogram */
-    u_short nAcks;		/* The number of consecttive acks */
+    u_short nAcks;		/* The number of consecutive acks */
     u_short nNacks;		/* Number packets acked that follow the
 				 * first negatively acked packet */
     u_short nSoftAcks;		/* The number of delayed soft acks */
@@ -546,6 +546,19 @@ struct rx_call {
     afs_hyper_t bytesSent;	/* Number bytes sent */
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
+
+#ifdef DEBUG
+    u_short tqc;                /* packet count in tq */
+    u_short rqc;                /* packet count in rq */
+    u_short iovqc;              /* packet count in iovq */
+
+#ifdef KDUMP_RX_LOCK
+    struct rx_call_rx_lock *allNextp;
+#else
+    struct rx_call *allNextp;
+#endif
+    afs_uint32 call_id;
+#endif
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -1060,6 +1073,8 @@ typedef struct rx_interface_stat {
 #define RX_STATS_SERVICE_ID 409
 
 #ifdef AFS_NT40_ENV
+extern int rx_DumpCalls(FILE *outputFile, char *cookie);
+
 #define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
 #define rx_MutexAdd(object, addend, mutex) InterlockedAdd(&object, addend)
 #define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
