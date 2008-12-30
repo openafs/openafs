@@ -24,7 +24,9 @@ $(OUT)\ddkbuild.cmd: NTMakefile
         echo cd ..\npdll >> $@
         echo build.exe -M >> $@
         echo cd ..\build\$(CPU) >> $@
+!IFDEF CODESIGN_KERNEL
         echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll AFSRedir.sys >> $@
+!ENDIF
         echo exit >> $@
 
 $(OUT)\ddkclean.cmd: NTMakefile
