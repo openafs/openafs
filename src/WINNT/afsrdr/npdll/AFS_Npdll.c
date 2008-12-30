@@ -321,7 +321,7 @@ NPAddConnection3( HWND            hwndOwner,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_NO_NETWORK);
+            try_return( dwStatus = WN_NET_ERROR);
         }
 
 
@@ -544,7 +544,7 @@ NPCancelConnection( LPWSTR  lpName,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_NO_NETWORK);
+            try_return( dwStatus = WN_NET_ERROR);
         }
 
         dwError = DeviceIoControl( hControlDevice,
@@ -685,7 +685,7 @@ NPGetConnection( LPWSTR  lpLocalName,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_NO_NETWORK);
+            try_return( dwStatus = WN_NET_ERROR);
         }
 
         dwError = DeviceIoControl( hControlDevice,
@@ -813,7 +813,7 @@ NPGetConnection3( IN     LPCWSTR lpLocalName,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_NO_NETWORK);
+            try_return( dwStatus = WN_NET_ERROR);
         }
 
         dwError = DeviceIoControl( hControlDevice,
@@ -1040,7 +1040,7 @@ NPEnumResource( HANDLE  hEnum,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_NO_NETWORK);
+            try_return( dwStatus = WN_NET_ERROR);
         }
 
         //
@@ -1484,7 +1484,7 @@ NPGetResourceInformation( LPNETRESOURCE   lpNetResource,
         if( hControlDevice == NULL)
         {
 
-            try_return( dwStatus = WN_NO_NETWORK);
+            try_return( dwStatus = WN_NET_ERROR);
         }
 
         dwError = DeviceIoControl( hControlDevice,
