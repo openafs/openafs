@@ -599,7 +599,7 @@ afsrdr: netidmgr_plugin
         $(CD) ..\..\..
 
 extra: afsrdr
-        IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
+!       IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
         echo ***** $@
             $(DOCD) $(SRC)\WINNT\$@
 	    $(CD) $(SRC)\WINNT\$@
