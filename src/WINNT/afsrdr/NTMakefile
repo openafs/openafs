@@ -21,13 +21,19 @@ $(OUT)\ddkbuild.cmd: NTMakefile
         echo cd /d $(AFSROOT)\src\WINNT\afsrdr >> $@
         echo cd kernel >> $@
         echo build.exe -M >> $@
-        echo cd ..\npdll >> $@
-        echo build.exe -M >> $@
+        echo if errorlevel neq 0 exit 1 >> $@
         echo cd ..\build\$(CPU) >> $@
 !IFDEF CODESIGN_KERNEL
-        echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll AFSRedir.sys >> $@
+        echo $(CODESIGN_KERNEL) AFSRedir.sys >> $@
 !ENDIF
-        echo exit >> $@
+        echo cd ..\..\npdll >> $@
+        echo build.exe -M >> $@
+        echo if errorlevel neq 0 exit 1 >> $@
+        echo cd ..\build\$(CPU) >> $@
+!IFDEF CODESIGN_KERNEL
+        echo $(CODESIGN_KERNEL) AFSRDFSProvider.dll >> $@
+!ENDIF
+        echo exit 0 >> $@
 
 $(OUT)\ddkclean.cmd: NTMakefile
         echo CALL "$(NTDDKDIR)\bin\setenv.bat" $(NTDDKDIR) $(DDK_ARCH) $(DDK_PLATFORM) $(AFSDEV_BUILDTYPE) > $@
@@ -36,11 +42,15 @@ $(OUT)\ddkclean.cmd: NTMakefile
         echo build.exe -c -0 >> $@
         echo cd ..\npdll >> $@
         echo build.exe -c -0 >> $@
-        echo exit >> $@
+        echo exit 0 >> $@
 
 install: AFS_component_version_number.h $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd kernel\AFSRedirInstall.inf
         type $(OUT)\ddkbuild.cmd
+        -$(DEL) build\$(CPU)\AFSRedir.sys
+        -$(DEL) build\$(CPU)\AFSRDFSProvider.dll
         cmd /c start /wait $(OUT)\ddkbuild.cmd
+        cmd /c if not exist build\$(CPU)\AFSRedir.sys exit 1
+        cmd /c if not exist build\$(CPU)\AFSRDFSProvider.dll exit 1
         $(COPY) kernel\AFSRedirInstall.inf build\$(CPU)\AFSRedirInstall.inf
         cd tools/gettrace
         $(MAKE) -f ntmakefile install
@@ -49,6 +59,8 @@ install: AFS_component_version_number.h $(OUT)\ddkbuild.cmd $(OUT)\ddkclean.cmd 
         cd ../crash
         $(MAKE) -f ntmakefile install
         cd ../..
+        $(COPY) build\$(CPU)\* $(TARGETPATH)
+
 clean:: 
         $(DEL) $(OUT)\ddkbuild.cmd
         -type $(OUT)\ddkclean.cmd
