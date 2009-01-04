@@ -76,6 +76,7 @@ static DWORD Exit = false;
 
 DWORD  dwOvEvIdx = 0;
 
+/* returns 0 on success */
 extern "C" DWORD
 RDR_Initialize(void)
 {
@@ -84,6 +85,13 @@ RDR_Initialize(void)
     HKEY parmKey;
     DWORD dummyLen;
     DWORD numSvThreads = CM_CONFIGDEFAULT_SVTHREADS;
+
+    /* 
+     * Using the windows paging file to back the cache is not
+     * supported by the file system driver.
+     */
+    if ( cm_data.cacheType == CM_BUF_CACHETYPE_VIRTUAL )
+        return -1;
 
     dwRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                          0, KEY_QUERY_VALUE, &parmKey);
