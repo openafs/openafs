@@ -96,7 +96,7 @@ RCSID
 static int rxdb_fileID = RXDB_FILE_RX_PACKET;
 #endif /* RX_LOCKS_DB */
 static struct rx_packet *rx_mallocedP = 0;
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
 static afs_uint32       rx_packet_id = 0;
 #endif
 
@@ -562,10 +562,10 @@ rxi_MorePackets(int apackets)
 
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
         rx_mallocedP = p;
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
@@ -607,10 +607,10 @@ rxi_MorePackets(int apackets)
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
 	rx_mallocedP = p;
     }
 
@@ -653,10 +653,10 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 	
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
         rx_mallocedP = p;
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
@@ -714,10 +714,10 @@ rxi_MorePacketsNoLock(int apackets)
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         p->packetId = rx_packet_id++;
         p->allNextp = rx_mallocedP;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
 	rx_mallocedP = p;
     }
 
@@ -2747,7 +2747,7 @@ rxi_AdjustDgramPackets(int frags, int mtu)
  */
 int rx_DumpPackets(FILE *outputFile, char *cookie)
 {
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
     int zilch;
     struct rx_packet *p;
     char output[2048];
@@ -2772,7 +2772,7 @@ int rx_DumpPackets(FILE *outputFile, char *cookie)
 
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
     return 0;
 }
 #endif /* AFS_NT40_ENV */

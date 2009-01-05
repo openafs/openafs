@@ -271,7 +271,7 @@ struct rx_packet {
     afs_uint32 wirehead[RX_HEADER_SIZE / sizeof(afs_int32)];
     afs_uint32 localdata[RX_CBUFFERSIZE / sizeof(afs_int32)];
     afs_uint32 extradata[RX_EXTRABUFFERSIZE / sizeof(afs_int32)];
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
     /* For debugging */
     struct rx_packet *allNextp; /* A list of all packets */
     afs_uint32  packetId;       /* An unique id number for debugging */
