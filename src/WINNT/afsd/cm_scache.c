@@ -718,9 +718,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     }
 	  
     if (cm_freelanceEnabled && special) {
-        char mp[MOUNTPOINTLEN] = "";
-        afs_uint32 fileType;
-
         lock_ReleaseWrite(&cm_scacheLock);
         osi_Log0(afsd_logp,"cm_GetSCache Freelance and special");
 
@@ -729,19 +726,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
             cm_reInitLocalMountPoints();	// start reinit
         }
 
-        lock_ObtainMutex(&cm_Freelance_Lock);
-        if (fidp->vnode >= 2 && fidp->vnode - 2 < cm_noLocalMountPoints) {
-            strncpy(mp,(cm_localMountPoints+fidp->vnode-2)->mountPointStringp, MOUNTPOINTLEN);
-            mp[MOUNTPOINTLEN-1] = '\0';
-            if ( !strnicmp(mp, "msdfs:", strlen("msdfs:")) )
-                fileType = CM_SCACHETYPE_DFSLINK;
-            else
-                fileType = (cm_localMountPoints+fidp->vnode-2)->fileType;
-        } else {
-            fileType = CM_SCACHETYPE_INVALID;
-
-        }
-        lock_ReleaseMutex(&cm_Freelance_Lock);
         lock_ObtainWrite(&cm_scacheLock);
         if (scp == NULL) {
             scp = cm_GetNewSCache();    /* returns scp->rw held */
@@ -768,10 +752,13 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         }
         scp->refCount = 1;
 	osi_Log1(afsd_logp,"cm_GetSCache (freelance) sets refCount to 1 scp 0x%x", scp);
-        scp->fileType = fileType;
-        scp->length.LowPart = (DWORD)strlen(mp)+4;
+
+        /* must be called after the scp->fid is set */
+        cm_FreelanceFetchMountPointString(scp);
+        cm_FreelanceFetchFileType(scp);
+        
+        scp->length.LowPart = (DWORD)strlen(scp->mountPointStringp)+4;
         scp->length.HighPart = 0;
-        strncpy(scp->mountPointStringp,mp,MOUNTPOINTLEN);
         scp->owner=0x0;
         scp->unixModeBits=0777;
         scp->clientModTime=FakeFreelanceModTime;

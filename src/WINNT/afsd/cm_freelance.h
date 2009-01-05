@@ -21,6 +21,9 @@ extern long cm_FreelanceRemoveSymlink(char *toremove);
 extern long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp);
 extern long cm_FreelanceMountPointExists(char * filename, int prefix_ok);
 extern long cm_FreelanceSymlinkExists(char * filename, int prefix_ok);
+extern long cm_FreelanceFetchMountPointString(cm_scache_t *scp);
+extern long cm_FreelanceFetchFileType(cm_scache_t *scp);
+
 extern int cm_clearLocalMountPointChange();
 extern int cm_FakeRootFid(cm_fid_t *fidp);
 
