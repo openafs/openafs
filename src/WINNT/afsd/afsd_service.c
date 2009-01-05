@@ -1285,7 +1285,7 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         code = afsd_InitDaemons(&reason);
         if (code != 0) {
             afsi_log("afsd_InitDaemons failed: %s (code = %d)", reason, code);
-			osi_panic(reason, __FILE__, __LINE__);
+            osi_panic(reason, __FILE__, __LINE__);
         }
 
         /* allow an exit to be called post rx initialization */
@@ -1327,17 +1327,26 @@ afsd_Main(DWORD argc, LPTSTR *argv)
         /* Notify any volume status handlers that the cache manager has started */
         cm_VolStatus_Service_Started();
 
-        code = RDR_Initialize();
-        RDR_Initialized = !code;
-        afsi_log("RDR_Initialize returned: (code = %d)", code);
+        /*
+         * Using the windows paging file to back the cache is not
+         * supported by the file system driver.
+         */
+        if ( cm_data.cacheType != CM_BUF_CACHETYPE_VIRTUAL )
+        {
+            code = RDR_Initialize();
+            RDR_Initialized = !code;
+            afsi_log("RDR_Initialize returned: (code = %d)", code);
 
-        if (RDR_Initialized) {
-            if (cm_sysNameCount)
-                RDR_SysName( AFS_SYSNAME_ARCH_32BIT, cm_sysNameCount, cm_sysNameList );
+            if (RDR_Initialized) {
+                if (cm_sysNameCount)
+                    RDR_SysName( AFS_SYSNAME_ARCH_32BIT, cm_sysNameCount, cm_sysNameList );
 #ifdef _WIN64
-            if (cm_sysName64Count)
-                RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysName64Count, cm_sysName64List );
+                if (cm_sysName64Count)
+                    RDR_SysName( AFS_SYSNAME_ARCH_64BIT, cm_sysName64Count, cm_sysName64List );
 #endif
+            }
+        } else {
+            afsi_log("RDR_Initialize skipped due to NonPersistentCache");
         }
 
         /* 
