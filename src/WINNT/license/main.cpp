@@ -216,8 +216,8 @@ BOOL TranslateFile (LPTSTR psz)
    DWORD cbSource;
    if ((cbSource = GetFileSize (hFile, NULL)) != 0)
       {
-      LPTSTR abSource = (LPTSTR)malloc(cbSource + 1);
-	  memset(abSource, 0x00, cbSource + 1);
+      LPTSTR abSource = (LPTSTR)malloc(cbSource + 4);
+	  memset(abSource, 0x00, cbSource + 4);
 
       DWORD dwRead;
       if (!ReadFile (hFile, abSource, cbSource, &dwRead, NULL) || cbSource != dwRead)
@@ -232,7 +232,7 @@ BOOL TranslateFile (LPTSTR psz)
          memset (abTarget, 0x00, cbTarget);
 
          BOOL fDefault = FALSE;
-         WideCharToMultiByte (g::CodePage, 0, (LPCWSTR)abSource, cbSource, abTarget, cbTarget, TEXT(" "), &fDefault);
+         WideCharToMultiByte (g::CodePage, 0, (LPCWSTR)abSource, -1, abTarget, cbTarget, TEXT(" "), &fDefault);
 
          rc = FormatFile (psz, abTarget);
 
