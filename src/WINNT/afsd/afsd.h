@@ -98,10 +98,6 @@ extern BOOL reportSessionStartups;
 #ifdef AFS_FREELANCE_CLIENT
 extern char *cm_FakeRootDir;				// the fake root.afs directory
 
-extern int cm_noLocalMountPoints;			// no. of fake mountpoints
-
-extern cm_localMountPoint_t* cm_localMountPoints;	// array of fake mountpoints
-
 extern int cm_fakeDirSize;				// size (in bytes) of fake root.afs directory
 
 extern int cm_fakeDirCallback;				// state of the fake root.afs directory. indicates
