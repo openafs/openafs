@@ -710,6 +710,8 @@ AFSQueryStandardInfo( IN PIRP Irp,
 
     if( *Length >= sizeof( FILE_STANDARD_INFORMATION))
     {
+        ULONG ulAttrs;
+        AFSFcb * pParentFcb = NULL;
 
         RtlZeroMemory( Buffer, 
                        *Length);
@@ -718,7 +720,19 @@ AFSQueryStandardInfo( IN PIRP Irp,
         Buffer->EndOfFile = Fcb->DirEntry->DirectoryEntry.EndOfFile;
         Buffer->NumberOfLinks = 0;
         Buffer->DeletePending = BooleanFlagOn( Fcb->Flags, AFS_FCB_PENDING_DELETE);
-        Buffer->Directory = BooleanFlagOn( AFSGetFileAttributes( Fcb->ParentFcb, Fcb->DirEntry), FILE_ATTRIBUTE_DIRECTORY);
+        
+        if ( Fcb->ParentFcb )
+        {
+            pParentFcb = Fcb->ParentFcb;
+        }
+        else if (Fcb->DirEntry->DirectoryEntry.FileId.Vnode == 1)
+        {   
+            pParentFcb = Fcb;
+        }
+
+        ulAttrs = AFSGetFileAttributes( pParentFcb, Fcb->DirEntry);
+
+        Buffer->Directory = BooleanFlagOn( ulAttrs, FILE_ATTRIBUTE_DIRECTORY);
 
         *Length -= sizeof( FILE_STANDARD_INFORMATION);
     }

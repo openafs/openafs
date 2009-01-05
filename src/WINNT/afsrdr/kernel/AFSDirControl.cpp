@@ -563,7 +563,18 @@ AFSQueryDirectory( IN PIRP Irp)
                 if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY))
                 {
 
-                    if( !(AFSGetFileAttributes( pFcb->ParentFcb, pDirEntry) & FILE_ATTRIBUTE_DIRECTORY))
+                    AFSFcb * pParentFcb = NULL;
+
+                    if ( pFcb->ParentFcb )
+                    {
+                        pParentFcb = pFcb->ParentFcb;
+                    }
+                    else if (pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1)
+                    {   
+                        pParentFcb = pFcb;
+                    }
+
+                    if( !(AFSGetFileAttributes( pParentFcb, pDirEntry) & FILE_ATTRIBUTE_DIRECTORY))
                     {
 
                         if( pDirEntry->ListEntry.fLink != NULL)
@@ -750,7 +761,22 @@ AFSQueryDirectory( IN PIRP Irp)
                     pDirInfo->ChangeTime = pDirEntry->DirectoryEntry.LastWriteTime;
                     pDirInfo->EndOfFile = pDirEntry->DirectoryEntry.EndOfFile;
                     pDirInfo->AllocationSize = pDirEntry->DirectoryEntry.AllocationSize;
-                    pDirInfo->FileAttributes = AFSGetFileAttributes( pFcb->ParentFcb, pDirEntry);
+
+                    {
+                        AFSFcb * pParentFcb = NULL;
+
+                        if ( pFcb->ParentFcb )
+                        {
+                            pParentFcb = pFcb->ParentFcb;
+                        }
+                        else if (pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1)
+                        {   
+                            pParentFcb = pFcb;
+                        }
+
+                        pDirInfo->FileAttributes = AFSGetFileAttributes( pParentFcb, pDirEntry);
+                    }
+
                     pDirInfo->FileIndex = pDirEntry->DirectoryEntry.FileIndex; 
                     pDirInfo->FileNameLength = pDirEntry->DirectoryEntry.FileName.Length;
 
