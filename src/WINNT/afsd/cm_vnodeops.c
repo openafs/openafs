@@ -808,68 +808,79 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 {
     long code;
-    cm_buf_t *bufp;
+    cm_buf_t *bufp = NULL;
     osi_hyper_t thyper;
     int tlen;
 
     if (scp->mountPointStringp[0]) 
         return 0;
         
-    /* otherwise, we have to read it in */
-    lock_ReleaseWrite(&scp->rw);
+#ifdef AFS_FREELANCE_CLIENT
+    /* File servers do not have data for freelance entries */
+    if (cm_freelanceEnabled &&
+        scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+        scp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+    {       
+        code = cm_FreelanceFetchMountPointString(scp);
+    } else 
+#endif /* AFS_FREELANCE_CLIENT */        
+    {
+        /* otherwise, we have to read it in */
+        lock_ReleaseWrite(&scp->rw);
 
-    thyper.LowPart = thyper.HighPart = 0;
-    code = buf_Get(scp, &thyper, &bufp);
+        thyper.LowPart = thyper.HighPart = 0;
+        code = buf_Get(scp, &thyper, &bufp);
 
-    lock_ObtainWrite(&scp->rw);
-    if (code)
-        return code;
-
-    while (1) {
-        code = cm_SyncOp(scp, bufp, userp, reqp, 0,
-                          CM_SCACHESYNC_READ | CM_SCACHESYNC_NEEDCALLBACK);
+        lock_ObtainWrite(&scp->rw);
         if (code)
+            return code;
+
+        while (1) {
+            code = cm_SyncOp(scp, bufp, userp, reqp, 0,
+                              CM_SCACHESYNC_READ | CM_SCACHESYNC_NEEDCALLBACK);
+            if (code)
+                goto done;
+
+            cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+
+            if (cm_HaveBuffer(scp, bufp, 0)) 
+                break;
+
+            /* otherwise load buffer */
+            code = cm_GetBuffer(scp, bufp, NULL, userp, reqp);
+            if (code)
+                goto done;
+        }
+        /* locked, has callback, has valid data in buffer */
+        if ((tlen = scp->length.LowPart) > MOUNTPOINTLEN - 1) 
+            return CM_ERROR_TOOBIG;
+        if (tlen <= 0) {
+            code = CM_ERROR_INVAL;
             goto done;
+        }
 
-	cm_SyncOpDone(scp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
-
-        if (cm_HaveBuffer(scp, bufp, 0)) 
-            break;
-
-        /* otherwise load buffer */
-        code = cm_GetBuffer(scp, bufp, NULL, userp, reqp);
-        if (code)
+        /* someone else did the work while we were out */
+        if (scp->mountPointStringp[0]) {
+            code = 0;
             goto done;
-    }
-    /* locked, has callback, has valid data in buffer */
-    if ((tlen = scp->length.LowPart) > MOUNTPOINTLEN - 1) 
-        return CM_ERROR_TOOBIG;
-    if (tlen <= 0) {
-        code = CM_ERROR_INVAL;
-        goto done;
-    }
+        }
 
-    /* someone else did the work while we were out */
-    if (scp->mountPointStringp[0]) {
+        /* otherwise, copy out the link */
+        memcpy(scp->mountPointStringp, bufp->datap, tlen);
+
+        /* now make it null-terminated.  Note that the original contents of a
+         * link that is a mount point is "#volname." where "." is there just to
+         * be turned into a null.  That is, we can trash the last char of the
+         * link without damaging the vol name.  This is a stupid convention,
+         * but that's the protocol.
+         */
+        scp->mountPointStringp[tlen-1] = 0;
         code = 0;
-        goto done;
+
+      done:
+        if (bufp) 
+            buf_Release(bufp);
     }
-
-    /* otherwise, copy out the link */
-    memcpy(scp->mountPointStringp, bufp->datap, tlen);
-
-    /* now make it null-terminated.  Note that the original contents of a
-     * link that is a mount point is "#volname." where "." is there just to
-     * be turned into a null.  That is, we can trash the last char of the
-     * link without damaging the vol name.  This is a stupid convention,
-     * but that's the protocol.
-     */
-    scp->mountPointStringp[tlen-1] = 0;
-    code = 0;
-
-  done:
-    if (bufp) 
-        buf_Release(bufp);
     return code;
 }
 
@@ -1628,51 +1639,64 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
 
     lock_AssertWrite(&linkScp->rw);
     if (!linkScp->mountPointStringp[0]) {
-        /* read the link data */
-        lock_ReleaseWrite(&linkScp->rw);
-        thyper.LowPart = thyper.HighPart = 0;
-        code = buf_Get(linkScp, &thyper, &bufp);
-        lock_ObtainWrite(&linkScp->rw);
-        if (code) 
-            return code;
-        while (1) {
-            code = cm_SyncOp(linkScp, bufp, userp, reqp, 0,
-                              CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
-            if (code) {
-                buf_Release(bufp);
+        
+#ifdef AFS_FREELANCE_CLIENT
+	/* File servers do not have data for freelance entries */
+        if (cm_freelanceEnabled &&
+            linkScp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+            linkScp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+        {
+            code = cm_FreelanceFetchMountPointString(linkScp);
+        } else 
+#endif /* AFS_FREELANCE_CLIENT */        
+        {
+            /* read the link data from the file server*/
+            lock_ReleaseWrite(&linkScp->rw);
+            thyper.LowPart = thyper.HighPart = 0;
+            code = buf_Get(linkScp, &thyper, &bufp);
+            lock_ObtainWrite(&linkScp->rw);
+            if (code) 
                 return code;
-            }
-	    cm_SyncOpDone(linkScp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+            while (1) {
+                code = cm_SyncOp(linkScp, bufp, userp, reqp, 0,
+                                  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
+                if (code) {
+                    buf_Release(bufp);
+                    return code;
+                }
+                cm_SyncOpDone(linkScp, bufp, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_READ);
 
-            if (cm_HaveBuffer(linkScp, bufp, 0)) 
-                break;
+                if (cm_HaveBuffer(linkScp, bufp, 0)) 
+                    break;
 
-            code = cm_GetBuffer(linkScp, bufp, NULL, userp, reqp);
-            if (code) {
+                code = cm_GetBuffer(linkScp, bufp, NULL, userp, reqp);
+                if (code) {
+                    buf_Release(bufp);
+                    return code;
+                }
+            } /* while loop to get the data */
+
+            /* now if we still have no link read in,
+             * copy the data from the buffer */
+            if ((temp = linkScp->length.LowPart) >= MOUNTPOINTLEN) {
                 buf_Release(bufp);
-                return code;
+                return CM_ERROR_TOOBIG;
+            }       
+
+            /* otherwise, it fits; make sure it is still null (could have
+             * lost race with someone else referencing this link above),
+             * and if so, copy in the data.
+             */
+            if (!linkScp->mountPointStringp[0]) {
+                strncpy(linkScp->mountPointStringp, bufp->datap, temp);
+                linkScp->mountPointStringp[temp] = 0;	/* null terminate */
             }
-        } /* while loop to get the data */
-                
-        /* now if we still have no link read in,
-         * copy the data from the buffer */
-        if ((temp = linkScp->length.LowPart) >= MOUNTPOINTLEN) {
             buf_Release(bufp);
-            return CM_ERROR_TOOBIG;
         }
+        
+        if ( !strnicmp(linkScp->mountPointStringp, "msdfs:", strlen("msdfs:")) )
+            linkScp->fileType = CM_SCACHETYPE_DFSLINK;
 
-        /* otherwise, it fits; make sure it is still null (could have
-         * lost race with someone else referencing this link above),
-         * and if so, copy in the data.
-         */
-        if (!linkScp->mountPointStringp[0]) {
-            strncpy(linkScp->mountPointStringp, bufp->datap, temp);
-            linkScp->mountPointStringp[temp] = 0;	/* null terminate */
-
-            if ( !strnicmp(linkScp->mountPointStringp, "msdfs:", strlen("msdfs:")) )
-                 linkScp->fileType = CM_SCACHETYPE_DFSLINK;
-        }
-        buf_Release(bufp);
     }	/* don't have sym link contents cached */
 
     return 0;

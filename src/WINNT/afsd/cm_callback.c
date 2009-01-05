@@ -1739,10 +1739,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     // cm_MergeStatus and mark that cm_fakeDirCallback is 2
     if (cm_freelanceEnabled) {
         if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
-             scp->fid.unique==0x1 &&
-             scp->fid.vnode==0x1) {
-            
+            scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
             // Start by indicating that we're in the process
             // of fetching the callback
             lock_ObtainMutex(&cm_Freelance_Lock);
@@ -1764,10 +1761,6 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             lock_ReleaseMutex(&cm_Freelance_Lock);
 
             return 0;
-        }
-
-        if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
-            osi_Log0(afsd_logp,"cm_getcallback should NEVER EVER get here... ");
         }
     }
 #endif /* AFS_FREELANCE_CLIENT */
