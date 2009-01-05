@@ -547,7 +547,7 @@ struct rx_call {
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
 
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
     u_short tqc;                /* packet count in tq */
     u_short rqc;                /* packet count in rq */
     u_short iovqc;              /* packet count in iovq */

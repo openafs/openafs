@@ -2013,9 +2013,9 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
     call->nLeft = call->nFree = call->curlen = 0;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
     call->iovqc -=
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
         rxi_FreePackets(0, &call->iovq);
 
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
@@ -2195,11 +2195,11 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
     } else {
 
 	call = (struct rx_call *)rxi_Alloc(sizeof(struct rx_call));
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         call->allNextp = rx_allCallsp;
         rx_allCallsp = call;
         call->call_id = 
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
             rx_MutexIncrement(rx_stats.nCallStructs, rx_stats_mutex);
         
         MUTEX_EXIT(&rx_freeCallQueue_lock);
@@ -2213,9 +2213,9 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 	queue_Init(&call->tq);
 	queue_Init(&call->rq);
 	queue_Init(&call->iovq);
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         call->rqc = call->tqc = call->iovqc = 0;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
 	/* Bind the call to its connection structure (prereq for reset) */
 	call->conn = conn;
 	rxi_ResetCall(call, 1);
@@ -3297,9 +3297,9 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	     * the reader once all packets have been processed */
 	    np->flags |= RX_PKTFLAG_RQ;
 	    queue_Prepend(&call->rq, np);
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
             call->rqc++;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
 	    call->nSoftAcks++;
 	    np = NULL;		/* We can't use this anymore */
 	    newPackets = 1;
@@ -3429,9 +3429,9 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	     * queue head if the queue is empty or the packet should be
 	     * appended. */
             np->flags |= RX_PKTFLAG_RQ;
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
             call->rqc++;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
 	    queue_InsertBefore(tp, np);
 	    call->nSoftAcks++;
 	    np = NULL;
@@ -3750,9 +3750,9 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	{
 	    queue_Remove(tp);
 	    tp->flags &= ~RX_PKTFLAG_TQ;
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
             call->tqc--;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
 	    rxi_FreePacket(tp);	/* rxi_FreePacket mustn't wake up anyone, preemptively. */
 	}
     }
@@ -4366,9 +4366,9 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 	}
     } else {
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         call->tqc -=
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->tq);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	call->flags &= ~RX_CALL_TQ_CLEARME;
@@ -4398,7 +4398,7 @@ rxi_ClearReceiveQueue(register struct rx_call *call)
         
         count = rxi_FreePackets(0, &call->rq);
 	rx_packetReclaims += count;
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         call->rqc -= count;
         if ( call->rqc != 0 ) 
             dpf(("rxi_ClearReceiveQueue call %x rqc %u != 0", call, call->rqc));
@@ -4654,14 +4654,14 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
         call->currentPacket->flags &= ~RX_PKTFLAG_CP;
         call->currentPacket->flags |= RX_PKTFLAG_IOVQ;
         queue_Prepend(&call->iovq, call->currentPacket);
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
         call->iovqc++;
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
         call->currentPacket = (struct rx_packet *)0;
     }
     call->curlen = call->nLeft = call->nFree = 0;
 
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
     call->iovqc -= 
 #endif
         rxi_FreePackets(0, &call->iovq);
@@ -5435,7 +5435,7 @@ rxi_Start(struct rxevent *event,
 			    && (p->flags & RX_PKTFLAG_ACKED)) {
 			    queue_Remove(p);
 			    p->flags &= ~RX_PKTFLAG_TQ;
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
                             call->tqc--;
 #endif
 			    rxi_FreePacket(p);
@@ -7987,7 +7987,7 @@ DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
 #ifdef AFS_NT40_ENV
 int rx_DumpCalls(FILE *outputFile, char *cookie)
 {
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
     int zilch;
 #ifdef KDUMP_RX_LOCK
     struct rx_call_rx_lock *c;
@@ -8040,7 +8040,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
     }
     sprintf(output, "%s - End dumping all Rx Calls\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
     return 0;
 }
 #endif /* AFS_NT40_ENV */
