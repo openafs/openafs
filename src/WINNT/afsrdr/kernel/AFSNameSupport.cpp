@@ -4060,7 +4060,7 @@ AFSBuildSymLinkTarget( IN ULONGLONG ProcessID,
 
                 ntStatus = AFSEvaluateTargetByID( &stTargetFileID,
                                                   ProcessID,
-                                                  FALSE,
+                                                  TRUE,
                                                   &pDirEntry);
 
                 if( !NT_SUCCESS( ntStatus))
