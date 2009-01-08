@@ -5378,6 +5378,9 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                                   DirEntry->DirectoryEntry.FileId.Vnode,
                                   DirEntry->DirectoryEntry.FileId.Unique);
             }
+
+            // Increment the Open Reference Count
+            InterlockedIncrement( &pCurrentFcb->OpenReferenceCount);
         }
         else
         {
