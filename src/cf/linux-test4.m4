@@ -825,6 +825,22 @@ AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
     AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
   fi])
 
+AC_DEFUN([LINUX_HAVE_I_SIZE_READ], [
+  AC_MSG_CHECKING([for linux i_size_read()])
+  AC_CACHE_VAL([ac_cv_linux_i_size_read], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[i_size_read(NULL);],
+      ac_cv_linux_i_size_read=yes,
+      ac_cv_linux_i_size_read=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_i_size_read)
+  if test "x$ac_cv_linux_i_size_read" = "xyes"; then
+    AC_DEFINE([HAVE_LINUX_I_SIZE_READ], 1, [define if your kernel has i_size_read()])
+  fi])
+
 AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
   AC_MSG_CHECKING([for linux/freezer.h existance])
   AC_CACHE_VAL([ac_cv_linux_freezer_h_exists], [
