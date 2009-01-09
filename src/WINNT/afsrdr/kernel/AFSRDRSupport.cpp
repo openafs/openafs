@@ -215,6 +215,8 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
                 if( uniPathName.Length >= AFSServerName.Length + sizeof( WCHAR))
                 {
 
+                    USHORT usLength = uniPathName.Length;
+
                     uniPathName.Length = AFSServerName.Length;
 
                     //
@@ -223,9 +225,17 @@ AFSRDRDeviceControl( IN PDEVICE_OBJECT DeviceObject,
 
                     uniPathName.Buffer = &uniPathName.Buffer[ 1];
 
+
+                    //
+                    // Check to see if the first (or only) component
+                    // of the path matches the server name
+                    //
+
                     if( RtlCompareUnicodeString( &AFSServerName,
                                                  &uniPathName,
-                                                 TRUE) == 0)
+                                                 TRUE) == 0 &&
+                        ( usLength == AFSServerName.Length + sizeof( WCHAR) ||
+                          uniPathName.Buffer[ AFSServerName.Length / sizeof( WCHAR)] == '\\'))
                     {
 
                         ntStatus = STATUS_SUCCESS;
