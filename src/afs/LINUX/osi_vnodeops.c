@@ -1581,7 +1581,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 
     code = afs_write(vcp, &tuio, f_flags, credp, 0);
 
-    ip->i_size = vcp->m.Length;
+    i_size_write(ip, vcp->m.Length);
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
     if (!code) {
@@ -1635,13 +1635,13 @@ afs_linux_writepage(struct page *pp)
 #endif
 
     inode = (struct inode *)mapping->host;
-    end_index = inode->i_size >> PAGE_CACHE_SHIFT;
+    end_index = i_size_read(inode) >> PAGE_CACHE_SHIFT;
 
     /* easy case */
     if (pp->index < end_index)
 	goto do_it;
     /* things got complicated... */
-    offset = inode->i_size & (PAGE_CACHE_SIZE - 1);
+    offset = i_size_read(inode) & (PAGE_CACHE_SIZE - 1);
     /* OK, are we completely out? */
     if (pp->index >= end_index + 1 || !offset)
 	return -EIO;
@@ -1684,7 +1684,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 
     code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);
 
-    ip->i_size = vcp->m.Length;
+    i_size_write(ip, vcp->m.Length);
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
     if (!code) {

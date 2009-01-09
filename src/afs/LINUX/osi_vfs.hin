@@ -78,4 +78,9 @@ typedef struct vattr {
 
 #define VATTR_NULL(A) memset(A, 0, sizeof(struct vattr))
 
+#ifndef HAVE_LINUX_I_SIZE_READ
+#define i_size_read(X) ((X)->i_size)
+#define i_size_write(X,Y) (X)->i_size = Y
+#endif
+
 #endif /* OSI_VFS_H_ */
