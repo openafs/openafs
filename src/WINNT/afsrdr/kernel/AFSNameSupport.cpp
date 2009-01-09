@@ -3948,10 +3948,10 @@ AFSBuildSymLinkTarget( IN ULONGLONG ProcessID,
                                   TRUE);
             }
 
-            AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
-
             if( pVcb == NULL) 
             {
+
+                AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
 
                 if( pCurrentFcb != pTopFcb)
                 {
@@ -3994,11 +3994,15 @@ AFSBuildSymLinkTarget( IN ULONGLONG ProcessID,
                 if( TargetFcb != NULL)
                 {
 
-                    *TargetFcb = pCurrentFcb;
+                    AFSAcquireExcl( &pVcb->NPFcb->Resource, 
+                                    TRUE);
 
-                    AFSReleaseResource( &pTopFcb->NPFcb->Resource);
+                    *TargetFcb = pVcb;
                 }
-                else if( pCurrentFcb != pTopFcb)
+                
+                AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
+                    
+                if( pCurrentFcb != pTopFcb)
                 {
 
                     AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
@@ -4010,6 +4014,8 @@ AFSBuildSymLinkTarget( IN ULONGLONG ProcessID,
 
                 break;
             }
+
+            AFSReleaseResource( &pDevExt->Specific.RDR.VolumeTreeLock);
 
             //
             // We have the volume node so now search for the entry itself
