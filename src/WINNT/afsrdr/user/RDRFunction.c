@@ -326,35 +326,10 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     case CM_SCACHETYPE_SYMLINK:
     case CM_SCACHETYPE_DFSLINK:
         {
-            char * mp = scp->mountPointStringp;
+            char * mp; 
 
             pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
             wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
-
-            len = strlen(mp);
-            if ( len != 0 ) {
-                /* Strip off the msdfs: prefix from the target name for the file system */
-                if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
-                    if (!strncmp("msdfs:", mp, 6)) {
-                        mp += 6;
-                        len -= 6;
-                    }
-                    /* only send one slash to the redirector */
-                    if (mp[0] == '\\' && mp[1] == '\\') {
-                        mp++;
-                        len--;
-                    }
-                }
-#ifdef UNICODE
-                cch = MultiByteToWideChar( CP_UTF8, 0, mp, 
-                                           len * sizeof(char),
-                                           wtarget, 
-                                           len * sizeof(WCHAR));
-#else
-                mbstowcs(wtarget, mp, len);
-#endif
-            }
-            pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
 
             if (dwFlags & RDR_POP_EVALUATE_SYMLINKS) {
                 cm_scache_t *targetScp = NULL;
@@ -398,6 +373,32 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                                          scp, code);
                             }
                         }
+
+                        mp = scp->mountPointStringp;
+                        len = strlen(mp);
+                        if ( len != 0 ) {
+                            /* Strip off the msdfs: prefix from the target name for the file system */
+                            if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+                                if (!strncmp("msdfs:", mp, 6)) {
+                                    mp += 6;
+                                    len -= 6;
+                                }
+                                /* only send one slash to the redirector */
+                                if (mp[0] == '\\' && mp[1] == '\\') {
+                                    mp++;
+                                    len--;
+                                }
+                            }
+#ifdef UNICODE
+                            cch = MultiByteToWideChar( CP_UTF8, 0, mp, 
+                                                       len * sizeof(char),
+                                                       wtarget, 
+                                                       len * sizeof(WCHAR));
+#else
+                            mbstowcs(wtarget, mp, len);
+#endif
+                        }
+                        pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
                     } else {
                         lock_ReleaseWrite(&linkParentScp->rw);
                         osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_SyncOp link parent failed scp=0x%p code=0x%x", 
