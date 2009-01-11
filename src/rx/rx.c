@@ -165,6 +165,10 @@ static unsigned int rxi_rpc_process_stat_cnt;
  */
 
 extern pthread_mutex_t rx_stats_mutex;
+extern pthread_mutex_t rx_waiting_mutex;
+extern pthread_mutex_t rx_quota_mutex;
+extern pthread_mutex_t rx_pthread_mutex;
+extern pthread_mutex_t rx_packets_mutex;
 extern pthread_mutex_t des_init_mutex;
 extern pthread_mutex_t des_random_mutex;
 extern pthread_mutex_t rx_clock_mutex;
@@ -192,6 +196,14 @@ rxi_InitPthread(void)
     assert(pthread_mutex_init(&rx_clock_mutex, (const pthread_mutexattr_t *)0)
 	   == 0);
     assert(pthread_mutex_init(&rx_stats_mutex, (const pthread_mutexattr_t *)0)
+	   == 0);
+    assert(pthread_mutex_init(&rx_waiting_mutex, (const pthread_mutexattr_t *)0)
+	   == 0);
+    assert(pthread_mutex_init(&rx_quota_mutex, (const pthread_mutexattr_t *)0)
+	   == 0);
+    assert(pthread_mutex_init(&rx_pthread_mutex, (const pthread_mutexattr_t *)0)
+	   == 0);
+    assert(pthread_mutex_init(&rx_packets_mutex, (const pthread_mutexattr_t *)0)
 	   == 0);
     assert(pthread_mutex_init
 	   (&rxi_connCacheMutex, (const pthread_mutexattr_t *)0) == 0);
@@ -256,18 +268,39 @@ pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
 assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
 /*
  * The rx_stats_mutex mutex protects the following global variables:
- * rxi_dataQuota
- * rxi_minDeficit
- * rxi_availProcs
- * rxi_totalMin
  * rxi_lowConnRefCount
  * rxi_lowPeerRefCount
  * rxi_nCalls
  * rxi_Alloccnt
  * rxi_Allocsize
- * rx_nFreePackets
  * rx_tq_debug
  * rx_stats
+ */
+
+/*
+ * The rx_quota_mutex mutex protects the following global variables:
+ * rxi_dataQuota
+ * rxi_minDeficit
+ * rxi_availProcs
+ * rxi_totalMin
+ */
+
+/* 
+ * The rx_freePktQ_lock protects the following global variables:
+ * rx_nFreePackets 
+ */
+
+/*
+ * The rx_packets_mutex mutex protects the following global variables:
+ * rx_nPackets
+ * rx_TSFPQLocalMax
+ * rx_TSFPQGlobSize
+ * rx_TSFPQMaxProcs
+ */
+
+/*
+ * The rx_pthread_mutex mutex protects the following global variables:
+ * rxi_pthread_hinum
  */
 #else
 #define INIT_PTHREAD_LOCKS
@@ -457,6 +490,10 @@ rx_InitHost(u_int host, u_int port)
     rxdb_init();
 #endif /* RX_LOCKS_DB */
     MUTEX_INIT(&rx_stats_mutex, "rx_stats_mutex", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_waiting_mutex, "rx_waiting_mutex", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_quota_mutex, "rx_quota_mutex", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_pthread_mutex, "rx_pthread_mutex", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_packets_mutex, "rx_packets_mutex", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&freeSQEList_lock, "freeSQEList lock", MUTEX_DEFAULT, 0);
@@ -538,7 +575,7 @@ rx_InitHost(u_int host, u_int port)
     rx_SetEpoch(tv.tv_sec);	/* Start time of this package, rxkad
 				 * will provide a randomer value. */
 #endif
-    rx_MutexAdd(rxi_dataQuota, rx_extraQuota, rx_stats_mutex);	/* + extra pkts caller asked to rsrv */
+    rx_MutexAdd(rxi_dataQuota, rx_extraQuota, rx_stats_quota);	/* + extra pkts caller asked to rsrv */
     /* *Slightly* random start time for the cid.  This is just to help
      * out with the hashing function at the peer */
     rx_nextCid = ((tv.tv_sec ^ tv.tv_usec) << RX_CIDSHIFT);
@@ -600,7 +637,8 @@ QuotaOK(register struct rx_service *aservice)
     /* otherwise, can use only if there are enough to allow everyone
      * to go to their min quota after this guy starts.
      */
-    MUTEX_ENTER(&rx_stats_mutex);
+
+    MUTEX_ENTER(&rx_quota_mutex);
     if ((aservice->nRequestsRunning < aservice->minProcs)
 	|| (rxi_availProcs > rxi_minDeficit)) {
 	aservice->nRequestsRunning++;
@@ -609,10 +647,10 @@ QuotaOK(register struct rx_service *aservice)
 	if (aservice->nRequestsRunning <= aservice->minProcs)
 	    rxi_minDeficit--;
 	rxi_availProcs--;
-	MUTEX_EXIT(&rx_stats_mutex);
+	MUTEX_EXIT(&rx_quota_mutex);
 	return 1;
     }
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_quota_mutex);
 
     return 0;
 }
@@ -621,11 +659,11 @@ static void
 ReturnToServerPool(register struct rx_service *aservice)
 {
     aservice->nRequestsRunning--;
-    MUTEX_ENTER(&rx_stats_mutex);
+    MUTEX_ENTER(&rx_quota_mutex);
     if (aservice->nRequestsRunning < aservice->minProcs)
 	rxi_minDeficit++;
     rxi_availProcs++;
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_quota_mutex);
 }
 
 #else /* RX_ENABLE_LOCKS */
@@ -726,13 +764,13 @@ rx_StartServer(int donateMe)
 	service = rx_services[i];
 	if (service == (struct rx_service *)0)
 	    break;
-	MUTEX_ENTER(&rx_stats_mutex);
+	MUTEX_ENTER(&rx_quota_mutex);
 	rxi_totalMin += service->minProcs;
 	/* below works even if a thread is running, since minDeficit would
 	 * still have been decremented and later re-incremented.
 	 */
 	rxi_minDeficit += service->minProcs;
-	MUTEX_EXIT(&rx_stats_mutex);
+	MUTEX_EXIT(&rx_quota_mutex);
     }
 
     /* Turn on reaping of idle server connections */
@@ -1689,7 +1727,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 
 	    if (call->flags & RX_CALL_WAIT_PROC) {
 		call->flags &= ~RX_CALL_WAIT_PROC;
-		rx_MutexDecrement(rx_nWaiting, rx_stats_mutex);
+		rx_MutexDecrement(rx_nWaiting, rx_waiting_mutex);
 	    }
 
 	    if (call->state != RX_STATE_PRECALL || call->error) {
@@ -3083,7 +3121,8 @@ static int
 TooLow(struct rx_packet *ap, struct rx_call *acall)
 {
     int rc = 0;
-    MUTEX_ENTER(&rx_stats_mutex);
+
+    MUTEX_ENTER(&rx_quota_mutex);
     if (((ap->header.seq != 1) && (acall->flags & RX_CALL_CLEARED)
 	 && (acall->state == RX_STATE_PRECALL))
 	|| ((rx_nFreePackets < rxi_dataQuota + 2)
@@ -3091,7 +3130,7 @@ TooLow(struct rx_packet *ap, struct rx_call *acall)
 		 && (acall->flags & RX_CALL_READER_WAIT)))) {
 	rc = 1;
     }
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_quota_mutex);
     return rc;
 }
 #endif /* KERNEL */
@@ -4219,10 +4258,10 @@ rxi_AttachServerProc(register struct rx_call *call,
 
 	if (!(call->flags & RX_CALL_WAIT_PROC)) {
 	    call->flags |= RX_CALL_WAIT_PROC;
-	    MUTEX_ENTER(&rx_stats_mutex);
-	    rx_nWaiting++;
-	    rx_nWaited++;
-	    MUTEX_EXIT(&rx_stats_mutex);
+            MUTEX_ENTER(&rx_waiting_mutex);
+            rx_nWaiting++;
+            rx_nWaited++;
+            MUTEX_EXIT(&rx_waiting_mutex);
 	    rxi_calltrace(RX_CALL_ARRIVAL, call);
 	    SET_CALL_QUEUE_LOCK(call, &rx_serverPool_lock);
 	    queue_Append(&rx_incomingCallQueue, call);
@@ -4249,9 +4288,10 @@ rxi_AttachServerProc(register struct rx_call *call,
 	    call->flags &= ~RX_CALL_WAIT_PROC;
 	    if (queue_IsOnQueue(call)) {
 		queue_Remove(call);
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_nWaiting--;
-		MUTEX_EXIT(&rx_stats_mutex);
+                
+                MUTEX_ENTER(&rx_waiting_mutex);
+                rx_nWaiting--;
+                MUTEX_EXIT(&rx_waiting_mutex);
 	    }
 	}
 	call->state = RX_STATE_ACTIVE;
@@ -4744,9 +4784,10 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
 	if (queue_IsOnQueue(call)) {
 	    queue_Remove(call);
 	    if (flags & RX_CALL_WAIT_PROC) {
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_nWaiting--;
-		MUTEX_EXIT(&rx_stats_mutex);
+                
+                MUTEX_ENTER(&rx_waiting_mutex);
+                rx_nWaiting--;
+                MUTEX_EXIT(&rx_waiting_mutex);
 	    }
 	}
 	MUTEX_EXIT(call->call_queue_lock);
@@ -7007,11 +7048,10 @@ shutdown_rx(void)
 
     rxi_FreeAllPackets();
 
-    MUTEX_ENTER(&rx_stats_mutex);
+    MUTEX_ENTER(&rx_quota_mutex);
     rxi_dataQuota = RX_MAX_QUOTA;
     rxi_availProcs = rxi_totalMin = rxi_minDeficit = 0;
-    MUTEX_EXIT(&rx_stats_mutex);
-
+    MUTEX_EXIT(&rx_quota_mutex);
     rxinit_status = 1;
     UNLOCK_RX_INIT;
 }

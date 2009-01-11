@@ -267,6 +267,7 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
  * by each call to AllocPacketBufs() will increase indefinitely without a cap on the transfer
  * glob size.  A cap of 64 is selected because that will produce an allocation of greater than
  * three times that amount which is greater than half of ncalls * maxReceiveWindow. 
+ * Must be called under rx_packets_mutex.
  */
 #define RX_TS_FPQ_COMPUTE_LIMITS \
     do { \
@@ -308,9 +309,9 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
         (rx_ts_info_p)->_FPQ.ltog_xfer += tsize; \
         if ((rx_ts_info_p)->_FPQ.delta) { \
-            MUTEX_ENTER(&rx_stats_mutex); \
+            MUTEX_ENTER(&rx_packets_mutex); \
             RX_TS_FPQ_COMPUTE_LIMITS; \
-            MUTEX_EXIT(&rx_stats_mutex); \
+            MUTEX_EXIT(&rx_packets_mutex); \
            (rx_ts_info_p)->_FPQ.delta = 0; \
         } \
     } while(0)
@@ -328,9 +329,9 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
         (rx_ts_info_p)->_FPQ.ltog_xfer += (num_transfer); \
         if ((rx_ts_info_p)->_FPQ.delta) { \
-            MUTEX_ENTER(&rx_stats_mutex); \
+            MUTEX_ENTER(&rx_packets_mutex); \
             RX_TS_FPQ_COMPUTE_LIMITS; \
-            MUTEX_EXIT(&rx_stats_mutex); \
+            MUTEX_EXIT(&rx_packets_mutex); \
             (rx_ts_info_p)->_FPQ.delta = 0; \
         } \
     } while(0)
@@ -601,14 +602,18 @@ EXT int rxi_callAbortDelay GLOBALSINIT(3000);
 EXT int rxi_fcfs_thread_num GLOBALSINIT(0);
 EXT pthread_key_t rx_thread_id_key;
 /* keep track of pthread numbers - protected by rx_stats_mutex, 
-   except in rx_Init() before mutex exists! */
+ * except in rx_Init() before mutex exists! */
 EXT int rxi_pthread_hinum GLOBALSINIT(0);
 #else
 #define rxi_fcfs_thread_num (0)
 #endif
 
 #if defined(RX_ENABLE_LOCKS)
-EXT afs_kmutex_t rx_stats_mutex;	/* used to activate stats gathering */
+EXT afs_kmutex_t rx_stats_mutex;	/* used to protect stats gathering */
+EXT afs_kmutex_t rx_waiting_mutex;	/* used to protect waiting counters */
+EXT afs_kmutex_t rx_quota_mutex;	/* used to protect quota counters */
+EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */
+EXT afs_kmutex_t rx_packets_mutex;	/* used to protect packet counters */
 #endif
 
 EXT2 int rx_enable_stats GLOBALSINIT(0);

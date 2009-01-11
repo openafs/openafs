@@ -549,10 +549,11 @@ rxi_MorePackets(int apackets)
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
     /* TSFPQ patch also needs to keep track of total packets */
-    MUTEX_ENTER(&rx_stats_mutex);
+
+    MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_packets_mutex);
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
@@ -641,10 +642,10 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
     /* TSFPQ patch also needs to keep track of total packets */
-    MUTEX_ENTER(&rx_stats_mutex);
+    MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_packets_mutex);
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
@@ -724,10 +725,10 @@ rxi_MorePacketsNoLock(int apackets)
     rx_nFreePackets += apackets;
 #ifdef RX_ENABLE_TSFPQ
     /* TSFPQ patch also needs to keep track of total packets */
-    MUTEX_ENTER(&rx_stats_mutex);
+    MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_packets_mutex);
 #endif /* RX_ENABLE_TSFPQ */
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();

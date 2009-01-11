@@ -289,6 +289,7 @@ rx_ServerProc(void *unused)
 {
     int threadID;
 
+/* jaltman - rxi_dataQuota is protected by a mutex everywhere else */
     rxi_MorePackets(rx_maxReceiveWindow + 2);	/* alloc more packets */
     rxi_dataQuota += rx_initSendWindow;	/* Reserve some pkts for hard times */
     /* threadID is used for making decisions in GetCall.  Get it by bumping
