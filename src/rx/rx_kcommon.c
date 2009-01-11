@@ -328,9 +328,11 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 				 RX_PACKET_CLASS_RECV_CBUF)) {
 		rxi_FreePacket(tp);
 		tp = NULL;
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_stats.noPacketBuffersOnRead++;
-		MUTEX_EXIT(&rx_stats_mutex);
+                if (rx_stats_active) {
+                    MUTEX_ENTER(&rx_stats_mutex);
+                    rx_stats.noPacketBuffersOnRead++;
+                    MUTEX_EXIT(&rx_stats_mutex);
+                }
 	    }
 	}
     } else {
@@ -339,9 +341,11 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 	 * should do this at a higher layer and let other
 	 * end know we're losing.
 	 */
-	MUTEX_ENTER(&rx_stats_mutex);
-	rx_stats.bogusPacketOnRead++;
-	MUTEX_EXIT(&rx_stats_mutex);
+        if (rx_stats_active) {
+            MUTEX_ENTER(&rx_stats_mutex);
+            rx_stats.bogusPacketOnRead++;
+            MUTEX_EXIT(&rx_stats_mutex);
+        }
 	/* I DON"T LIKE THIS PRINTF -- PRINTFS MAKE THINGS VERY VERY SLOOWWW */
 	dpf(("rx: packet dropped: bad ulen=%d\n", asize));
 	tp = NULL;
@@ -1176,10 +1180,12 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	p->length = nbytes - RX_HEADER_SIZE;;
 	if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	    if (nbytes <= 0) {
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_stats.bogusPacketOnRead++;
-		rx_stats.bogusHost = from.sin_addr.s_addr;
-		MUTEX_EXIT(&rx_stats_mutex);
+                if (rx_stats_active) {
+                    MUTEX_ENTER(&rx_stats_mutex);
+                    rx_stats.bogusPacketOnRead++;
+                    rx_stats.bogusHost = from.sin_addr.s_addr;
+                    MUTEX_EXIT(&rx_stats_mutex);
+                }
 		dpf(("B: bogus packet from [%x,%d] nb=%d",
 		     from.sin_addr.s_addr, from.sin_port, nbytes));
 	    }
@@ -1191,9 +1197,11 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    *host = from.sin_addr.s_addr;
 	    *port = from.sin_port;
 	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_stats.packetsRead[p->header.type - 1]++;
-		MUTEX_EXIT(&rx_stats_mutex);
+                if (rx_stats_active) {
+                    MUTEX_ENTER(&rx_stats_mutex);
+                    rx_stats.packetsRead[p->header.type - 1]++;
+                    MUTEX_EXIT(&rx_stats_mutex);
+                }
 	    }
 
 	    /* Free any empty packet buffers at the end of this packet */
