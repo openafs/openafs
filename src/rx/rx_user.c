@@ -151,15 +151,26 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 
 	len1 = 32766;
 	len2 = rx_UdpBufSize;
-	greedy =
-	    (setsockopt
-	     (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
-	      sizeof(len2)) >= 0);
-	if (!greedy) {
-	    len2 = 32766;	/* fall back to old size... uh-oh! */
-	}
 
-	greedy =
+        /* find the size closest to rx_UdpBufSize that will be accepted */
+        while (!greedy && len2 > len1) {
+            greedy =
+                (setsockopt
+                  (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
+                   sizeof(len2)) >= 0);
+            if (!greedy)
+                len2 /= 2;
+        }
+
+        /* but do not let it get smaller than 32K */ 
+        if (len2 < len1)
+            len2 = len1;
+
+        if (len1 < len2)
+            len1 = len2;
+
+
+        greedy =
 	    (setsockopt
 	     (socketFd, SOL_SOCKET, SO_SNDBUF, (char *)&len1,
 	      sizeof(len1)) >= 0)
