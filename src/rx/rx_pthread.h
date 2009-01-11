@@ -33,7 +33,6 @@
 #include <pthread.h>
 
 typedef pthread_mutex_t afs_kmutex_t;
-typedef pthread_rwlock_t afs_krwlock_t;
 typedef pthread_cond_t afs_kcondvar_t;
 #ifdef	RX_ENABLE_LOCKS
 #define MUTEX_ISMINE(l) (pthread_mutex_trylock(l) == EDEADLK)
@@ -47,7 +46,6 @@ typedef pthread_cond_t afs_kcondvar_t;
 
 #include <pthread.h>
 typedef pthread_mutex_t afs_kmutex_t;
-typedef pthread_rwlock_t afs_krwlock_t;
 typedef pthread_cond_t afs_kcondvar_t;
 
 #if !defined(pthread_yield) && defined(AFS_SUN5_ENV)
@@ -76,10 +74,6 @@ typedef pthread_cond_t afs_kcondvar_t;
 extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #ifdef AFS_PTHREAD_ENV
-#if !defined(PTHREAD_RWLOCK_INITIALIZER) && defined(AFS_DARWIN80_ENV)
-#define PTHREAD_RWLOCK_INITIALIZER {0x2DA8B3B4, {0}}
-#endif
-
 #ifdef MUTEX_INIT
 #undef MUTEX_INIT
 #endif
@@ -129,46 +123,6 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #undef CV_BROADCAST
 #endif
 #define CV_BROADCAST(cv) osi_Assert(pthread_cond_broadcast(cv) == 0)
-
-#ifdef RWLOCK_INIT
-#undef RWLOCK_INIT
-#endif
-#define RWLOCK_INIT(a, b, c, d) osi_Assert(pthread_rwlock_init(a, NULL) == 0)
-
-#ifdef RWLOCK_DESTROY
-#undef RWLOCK_DESTROY
-#endif
-#define RWLOCK_DESTROY(l) osi_Assert(pthread_rwlock_destroy(l) == 0)
-
-#ifdef RWLOCK_UPLOCK
-#undef RWLOCK_UPLOCK
-#endif
-#define RWLOCK_UPLOCK(l) do {osi_Assert(pthread_rwlock_unlock(l) == 0); osi_Assert(pthread_rwlock_wrlock(l) == 0);} while (0)
-
-#ifdef RWLOCK_WRLOCK
-#undef RWLOCK_WRLOCK
-#endif
-#define RWLOCK_WRLOCK(l) osi_Assert(pthread_rwlock_wrlock(l) == 0)
-
-#ifdef RWLOCK_RDLOCK
-#undef RWLOCK_RDLOCK
-#endif
-#define RWLOCK_RDLOCK(l) osi_Assert(pthread_rwlock_rdlock(l) == 0)
-
-#ifdef RWLOCK_TRYWRLOCK
-#undef RWLOCK_TRYWRLOCK
-#endif
-#define RWLOCK_TRYWRLOCK(l) pthread_rwlock_trywrlock(l) ? 0 : 1
-
-#ifdef RWLOCK_TRYRDLOCK
-#undef RWLOCK_TRYRDLOCK
-#endif
-#define RWLOCK_TRYRDLOCK(l) pthread_rwlock_tryrdlock(l) ? 0 : 1
-
-#ifdef RWLOCK_UNLOCK
-#undef RWLOCK_UNLOCK
-#endif
-#define RWLOCK_UNLOCK(l) osi_Assert(pthread_rwlock_unlock(l) == 0)
 
 #endif /* AFS_PTHREAD_ENV */
 

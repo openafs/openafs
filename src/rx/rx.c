@@ -242,9 +242,9 @@ rxi_InitPthread(void)
 	       0);
     CV_INIT(&rx_waitingForPackets_cv, "rx_waitingForPackets_cv", CV_DEFAULT,
 	    0);
-    RWLOCK_INIT(&rx_peerHashTable_lock, "rx_peerHashTable_lock", MUTEX_DEFAULT,
+    MUTEX_INIT(&rx_peerHashTable_lock, "rx_peerHashTable_lock", MUTEX_DEFAULT,
 	       0);
-    RWLOCK_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
+    MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
 	       0);
     MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxi_keyCreate_lock, "rxi_keyCreate_lock", MUTEX_DEFAULT, 0);
@@ -464,9 +464,9 @@ rx_InitHost(u_int host, u_int port)
 	       0);
     CV_INIT(&rx_waitingForPackets_cv, "rx_waitingForPackets_cv", CV_DEFAULT,
 	    0);
-    RWLOCK_INIT(&rx_peerHashTable_lock, "rx_peerHashTable_lock", MUTEX_DEFAULT,
+    MUTEX_INIT(&rx_peerHashTable_lock, "rx_peerHashTable_lock", MUTEX_DEFAULT,
 	       0);
-    RWLOCK_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
+    MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
 	       0);
     MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
 #if defined(AFS_HPUX110_ENV)
@@ -538,7 +538,7 @@ rx_InitHost(u_int host, u_int port)
     rx_SetEpoch(tv.tv_sec);	/* Start time of this package, rxkad
 				 * will provide a randomer value. */
 #endif
-    rx_MutexAdd(rxi_dataQuota, rx_extraQuota, rx_stats_mutex); /* + extra pkts caller asked to rsrv */
+    rx_MutexAdd(rxi_dataQuota, rx_extraQuota, rx_stats_mutex);	/* + extra pkts caller asked to rsrv */
     /* *Slightly* random start time for the cid.  This is just to help
      * out with the hashing function at the peer */
     rx_nextCid = ((tv.tv_sec ^ tv.tv_usec) << RX_CIDSHIFT);
@@ -787,7 +787,7 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
     dpf(("rx_NewConnection(host %x, port %u, service %u, securityObject %x, serviceSecurityIndex %d)\n", ntohl(shost), ntohs(sport), sservice, securityObject, serviceSecurityIndex));
 
     NETPRI;
-    RWLOCK_WRLOCK(&rx_connHashTable_lock);
+    MUTEX_ENTER(&rx_connHashTable_lock);
 
     /* 
      * allocate the connection and all of its clones.
@@ -855,7 +855,7 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
 	rx_MutexIncrement(rx_stats.nClientConns, rx_stats_mutex);
     }
 	
-    RWLOCK_UNLOCK(&rx_connHashTable_lock);
+    MUTEX_EXIT(&rx_connHashTable_lock);
     USERPRI;
     return conn;
 }
@@ -894,7 +894,7 @@ rxi_CleanupConnection(struct rx_connection *conn)
      * idle time to now. rxi_ReapConnections will reap it if it's still
      * idle (refCount == 0) after rx_idlePeerTime (60 seconds) have passed.
      */
-    RWLOCK_WRLOCK(&rx_peerHashTable_lock);
+    MUTEX_ENTER(&rx_peerHashTable_lock);
     if (conn->peer->refCount < 2) {
 	conn->peer->idleWhen = clock_Sec();
 	if (conn->peer->refCount < 1) {
@@ -903,7 +903,7 @@ rxi_CleanupConnection(struct rx_connection *conn)
 	}
     }
     conn->peer->refCount--;
-    RWLOCK_UNLOCK(&rx_peerHashTable_lock);
+    MUTEX_EXIT(&rx_peerHashTable_lock);
 
     if (conn->type == RX_SERVER_CONNECTION)
 	rx_MutexDecrement(rx_stats.nServerConns, rx_stats_mutex);
@@ -936,7 +936,7 @@ rxi_DestroyConnection(register struct rx_connection *conn)
 {
     register struct rx_connection *tconn, *dtconn;
     
-    RWLOCK_WRLOCK(&rx_connHashTable_lock);
+    MUTEX_ENTER(&rx_connHashTable_lock);
     
     /* destroy any clones that might exist */
     if (!rx_IsClonedConn(conn)) {
@@ -968,12 +968,12 @@ rxi_DestroyConnection(register struct rx_connection *conn)
     /* conn should be at the head of the cleanup list */
     if (conn == rx_connCleanup_list) {
 	rx_connCleanup_list = rx_connCleanup_list->next;
-	RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	MUTEX_EXIT(&rx_connHashTable_lock);
 	rxi_CleanupConnection(conn);
     }
 #ifdef RX_ENABLE_LOCKS
     else {
-	RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	MUTEX_EXIT(&rx_connHashTable_lock);
     }
 #endif /* RX_ENABLE_LOCKS */
 }
@@ -994,7 +994,9 @@ rxi_DestroyConnectionNoLock(register struct rx_connection *conn)
     if (conn->refCount > 0)
 	conn->refCount--;
     else {
-	rx_MutexIncrement(rxi_lowConnRefCount, rx_stats_mutex);
+	MUTEX_ENTER(&rx_stats_mutex);
+	rxi_lowConnRefCount++;
+	MUTEX_EXIT(&rx_stats_mutex);
     }
 
     if ((conn->refCount > 0) || (conn->flags & RX_CONN_BUSY)) {
@@ -1054,7 +1056,7 @@ rxi_DestroyConnectionNoLock(register struct rx_connection *conn)
     if (havecalls) {
 	/* Don't destroy the connection if there are any call
 	 * structures still in use */
-	rx_MutexOr(conn->flags, RX_CONN_DESTROY_ME, conn->conn_data_lock);
+        rx_MutexOr(conn->flags, RX_CONN_DESTROY_ME, conn->conn_data_lock);
 	USERPRI;
 	return;
     }
@@ -1194,9 +1196,9 @@ rx_NewCall(register struct rx_connection *conn)
 #else
         osi_rxSleep(conn);
 #endif
-	rx_MutexDecrement(conn->makeCallWaiters, conn->conn_data_lock);
+        rx_MutexDecrement(conn->makeCallWaiters, conn->conn_data_lock);
     } else {
-	MUTEX_EXIT(&conn->conn_data_lock);
+        MUTEX_EXIT(&conn->conn_data_lock);
     }
 
     /* search for next free call on this connection or 
@@ -2107,7 +2109,7 @@ rx_Finalize(void)
     }
     rxi_DeleteCachedConnections();
     if (rx_connHashTable) {
-	RWLOCK_WRLOCK(&rx_connHashTable_lock);
+	MUTEX_ENTER(&rx_connHashTable_lock);
 	for (conn_ptr = &rx_connHashTable[0], conn_end =
 	     &rx_connHashTable[rx_hashTableSize]; conn_ptr < conn_end;
 	     conn_ptr++) {
@@ -2131,11 +2133,11 @@ rx_Finalize(void)
 	    struct rx_connection *conn;
 	    conn = rx_connCleanup_list;
 	    rx_connCleanup_list = rx_connCleanup_list->next;
-	    RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    rxi_CleanupConnection(conn);
-	    RWLOCK_WRLOCK(&rx_connHashTable_lock);
+	    MUTEX_ENTER(&rx_connHashTable_lock);
 	}
-	RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	MUTEX_EXIT(&rx_connHashTable_lock);
 #endif /* RX_ENABLE_LOCKS */
     }
     rxi_flushtrace();
@@ -2388,7 +2390,7 @@ rxi_SetPeerMtu(register afs_uint32 host, register afs_uint32 port, int mtu)
     struct rx_peer **peer_ptr, **peer_end;
     int hashIndex;
 
-    RWLOCK_RDLOCK(&rx_peerHashTable_lock);
+    MUTEX_ENTER(&rx_peerHashTable_lock);
     if (port == 0) {
        for (peer_ptr = &rx_peerHashTable[0], peer_end =
                 &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
@@ -2416,7 +2418,7 @@ rxi_SetPeerMtu(register afs_uint32 host, register afs_uint32 port, int mtu)
            }
        }
     }
-    RWLOCK_UNLOCK(&rx_peerHashTable_lock);
+    MUTEX_EXIT(&rx_peerHashTable_lock);
 }
 
 /* Find the peer process represented by the supplied (host,port)
@@ -2432,7 +2434,7 @@ rxi_FindPeer(register afs_uint32 host, register u_short port,
     register struct rx_peer *pp;
     int hashIndex;
     hashIndex = PEER_HASH(host, port);
-    RWLOCK_RDLOCK(&rx_peerHashTable_lock);
+    MUTEX_ENTER(&rx_peerHashTable_lock);
     for (pp = rx_peerHashTable[hashIndex]; pp; pp = pp->next) {
 	if ((pp->host == host) && (pp->port == port))
             break;
@@ -2445,7 +2447,6 @@ rxi_FindPeer(register afs_uint32 host, register u_short port,
 	    MUTEX_INIT(&pp->peer_lock, "peer_lock", MUTEX_DEFAULT, 0);
 	    queue_Init(&pp->congestionQueue);
 	    queue_Init(&pp->rpcStats);
-	    RWLOCK_UPLOCK(&rx_peerHashTable_lock);
 	    pp->next = rx_peerHashTable[hashIndex];
 	    rx_peerHashTable[hashIndex] = pp;
 	    rxi_InitPeerParams(pp);
@@ -2457,7 +2458,7 @@ rxi_FindPeer(register afs_uint32 host, register u_short port,
     }
     if (origPeer)
 	origPeer->refCount--;
-    RWLOCK_UNLOCK(&rx_peerHashTable_lock);
+    MUTEX_EXIT(&rx_peerHashTable_lock);
     return pp;
 }
 
@@ -2482,7 +2483,7 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
     int hashindex, flag, i;
     register struct rx_connection *conn;
     hashindex = CONN_HASH(host, port, cid, epoch, type);
-    RWLOCK_RDLOCK(&rx_connHashTable_lock);
+    MUTEX_ENTER(&rx_connHashTable_lock);
     rxLastConn ? (conn = rxLastConn, flag = 0) : (conn =
 						  rx_connHashTable[hashindex],
 						  flag = 1);
@@ -2495,7 +2496,7 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 		 * like this, and there seems to be some CM bug that makes this
 		 * happen from time to time -- in which case, the fileserver
 		 * asserts. */
-		RWLOCK_UNLOCK(&rx_connHashTable_lock);
+		MUTEX_EXIT(&rx_connHashTable_lock);
 		return (struct rx_connection *)0;
 	    }
 	    if (pp->host == host && pp->port == port)
@@ -2518,23 +2519,26 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
     if (!conn) {
 	struct rx_service *service;
 	if (type == RX_CLIENT_CONNECTION) {
-	    RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    return (struct rx_connection *)0;
 	}
 	service = rxi_FindService(socket, serviceId);
 	if (!service || (securityIndex >= service->nSecurityObjects)
 	    || (service->securityObjects[securityIndex] == 0)) {
-	    RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    return (struct rx_connection *)0;
 	}
 	conn = rxi_AllocConnection();	/* This bzero's the connection */
 	MUTEX_INIT(&conn->conn_call_lock, "conn call lock", MUTEX_DEFAULT, 0);
 	MUTEX_INIT(&conn->conn_data_lock, "conn data lock", MUTEX_DEFAULT, 0);
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
+	conn->next = rx_connHashTable[hashindex];
+	rx_connHashTable[hashindex] = conn;
 	conn->peer = rxi_FindPeer(host, port, 0, 1);
 	conn->type = RX_SERVER_CONNECTION;
 	conn->lastSendTime = clock_Sec();	/* don't GC immediately */
 	conn->epoch = epoch;
+	conn->cid = cid & RX_CIDMASK;
 	/* conn->serial = conn->lastSerial = 0; */
 	/* conn->timeout = 0; */
 	conn->ackRate = RX_FAST_ACK_RATE;
@@ -2551,10 +2555,6 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 	    conn->twind[i] = rx_initSendWindow;
 	    conn->rwind[i] = rx_initReceiveWindow;
 	}
-	RWLOCK_UPLOCK(&rx_connHashTable_lock);
-	conn->next = rx_connHashTable[hashindex];
-	rx_connHashTable[hashindex] = conn;
-	conn->cid = cid & RX_CIDMASK;
 	/* Notify security object of the new connection */
 	RXS_NewConnection(conn->securityObject, conn);
 	/* XXXX Connection timeout? */
@@ -2566,7 +2566,7 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
     rx_MutexIncrement(conn->refCount, conn->conn_data_lock);
 
     rxLastConn = conn;		/* store this connection as the last conn used */
-    RWLOCK_UNLOCK(&rx_connHashTable_lock);
+    MUTEX_EXIT(&rx_connHashTable_lock);
     return conn;
 }
 
@@ -4249,7 +4249,9 @@ rxi_AttachServerProc(register struct rx_call *call,
 	    call->flags &= ~RX_CALL_WAIT_PROC;
 	    if (queue_IsOnQueue(call)) {
 		queue_Remove(call);
-		rx_MutexDecrement(rx_nWaiting, rx_stats_mutex);
+		MUTEX_ENTER(&rx_stats_mutex);
+		rx_nWaiting--;
+		MUTEX_EXIT(&rx_stats_mutex);
 	    }
 	}
 	call->state = RX_STATE_ACTIVE;
@@ -4742,7 +4744,9 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
 	if (queue_IsOnQueue(call)) {
 	    queue_Remove(call);
 	    if (flags & RX_CALL_WAIT_PROC) {
-		rx_MutexDecrement(rx_nWaiting, rx_stats_mutex);
+		MUTEX_ENTER(&rx_stats_mutex);
+		rx_nWaiting--;
+		MUTEX_EXIT(&rx_stats_mutex);
 	    }
 	}
 	MUTEX_EXIT(call->call_queue_lock);
@@ -6005,7 +6009,7 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
     {
 	struct rx_connection **conn_ptr, **conn_end;
 	int i, havecalls = 0;
-	RWLOCK_WRLOCK(&rx_connHashTable_lock);
+	MUTEX_ENTER(&rx_connHashTable_lock);
 	for (conn_ptr = &rx_connHashTable[0], conn_end =
 	     &rx_connHashTable[rx_hashTableSize]; conn_ptr < conn_end;
 	     conn_ptr++) {
@@ -6066,11 +6070,11 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 	    struct rx_connection *conn;
 	    conn = rx_connCleanup_list;
 	    rx_connCleanup_list = rx_connCleanup_list->next;
-	    RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    rxi_CleanupConnection(conn);
-	    RWLOCK_WRLOCK(&rx_connHashTable_lock);
+	    MUTEX_ENTER(&rx_connHashTable_lock);
 	}
-	RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	MUTEX_EXIT(&rx_connHashTable_lock);
 #endif /* RX_ENABLE_LOCKS */
     }
 
@@ -6080,7 +6084,7 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 	struct rx_peer **peer_ptr, **peer_end;
 	int code;
 	MUTEX_ENTER(&rx_rpc_stats);
-	RWLOCK_RDLOCK(&rx_peerHashTable_lock);
+	MUTEX_ENTER(&rx_peerHashTable_lock);
 	for (peer_ptr = &rx_peerHashTable[0], peer_end =
 	     &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	     peer_ptr++) {
@@ -6111,14 +6115,13 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 			rxi_Free(rpc_stat, space);
 			rxi_rpc_peer_stat_cnt -= num_funcs;
 		    }
+		    rxi_FreePeer(peer);
                     rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
-		    RWLOCK_UPLOCK(&rx_peerHashTable_lock);
 		    if (peer == *peer_ptr) {
 			*peer_ptr = next;
 			prev = next;
 		    } else
 			prev->next = next;
-		    rxi_FreePeer(peer);
 		} else {
 		    if (code) {
 			MUTEX_EXIT(&peer->peer_lock);
@@ -6127,7 +6130,7 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 		}
 	    }
 	}
-	RWLOCK_UNLOCK(&rx_peerHashTable_lock);
+	MUTEX_EXIT(&rx_peerHashTable_lock);
 	MUTEX_EXIT(&rx_rpc_stats);
     }
 
@@ -6940,7 +6943,7 @@ shutdown_rx(void)
 		for (queue_Scan
 		     (&peer->rpcStats, rpc_stat, nrpc_stat,
 		      rx_interface_stat)) {
-		    int num_funcs;
+		    unsigned int num_funcs;
 		    if (!rpc_stat)
 			break;
 		    queue_Remove(&rpc_stat->queue_header);
@@ -6966,7 +6969,7 @@ shutdown_rx(void)
     }
     for (i = 0; i < rx_hashTableSize; i++) {
 	register struct rx_connection *tc, *ntc;
-	RWLOCK_RDLOCK(&rx_connHashTable_lock);
+	MUTEX_ENTER(&rx_connHashTable_lock);
 	for (tc = rx_connHashTable[i]; tc; tc = ntc) {
 	    ntc = tc->next;
 	    for (j = 0; j < RX_MAXCALLS; j++) {
@@ -6976,7 +6979,7 @@ shutdown_rx(void)
 	    }
 	    rxi_Free(tc, sizeof(*tc));
 	}
-	RWLOCK_UNLOCK(&rx_connHashTable_lock);
+	MUTEX_EXIT(&rx_connHashTable_lock);
     }
 
     MUTEX_ENTER(&freeSQEList_lock);
@@ -6990,8 +6993,8 @@ shutdown_rx(void)
     MUTEX_EXIT(&freeSQEList_lock);
     MUTEX_DESTROY(&freeSQEList_lock);
     MUTEX_DESTROY(&rx_freeCallQueue_lock);
-    RWLOCK_DESTROY(&rx_connHashTable_lock);
-    RWLOCK_DESTROY(&rx_peerHashTable_lock);
+    MUTEX_DESTROY(&rx_connHashTable_lock);
+    MUTEX_DESTROY(&rx_peerHashTable_lock);
     MUTEX_DESTROY(&rx_serverPool_lock);
 
     osi_Free(rx_connHashTable,
@@ -7767,7 +7770,7 @@ rx_disablePeerRPCStats(void)
 	rx_enable_stats = 0;
     }
 
-    RWLOCK_RDLOCK(&rx_peerHashTable_lock);
+    MUTEX_ENTER(&rx_peerHashTable_lock);
     for (peer_ptr = &rx_peerHashTable[0], peer_end =
 	 &rx_peerHashTable[rx_hashTableSize]; peer_ptr < peer_end;
 	 peer_ptr++) {
@@ -7806,7 +7809,7 @@ rx_disablePeerRPCStats(void)
 	    }
 	}
     }
-    RWLOCK_UNLOCK(&rx_peerHashTable_lock);
+    MUTEX_EXIT(&rx_peerHashTable_lock);
     MUTEX_EXIT(&rx_rpc_stats);
 }
 

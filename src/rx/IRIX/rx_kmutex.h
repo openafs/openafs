@@ -28,7 +28,6 @@
 #define mutex_tryenter(m) cpsema(m)
 #endif /* mutex_tryenter */
 typedef kmutex_t afs_kmutex_t;
-typedef afs_kmutex_t afs_krwlock_t;
 typedef kcondvar_t afs_kcondvar_t;
 
 #ifndef	CV_DEFAULT
@@ -37,15 +36,6 @@ typedef kcondvar_t afs_kcondvar_t;
 #ifndef	MUTEX_DEFAULT
 #define	MUTEX_DEFAULT	0
 #endif
-
-#define RWLOCK_INIT(a, b, c, d) MUTEX_INIT(a,b,c,d)
-#define RWLOCK_DESTROY(l)       MUTEX_DESTROY(l)
-#define RWLOCK_UPLOCK(l) 
-#define RWLOCK_WRLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_RDLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_TRYWRLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_TRYRDLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_UNLOCK(l)        MUTEX_EXIT(l)
 
 #ifdef AFS_SGI62_ENV
 #define MUTEX_INIT(m, nm, type , a)  mutex_init(m, type, nm)

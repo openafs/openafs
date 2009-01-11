@@ -44,18 +44,8 @@
 #define CV_SIGNAL(_cv)		e_wakeup_one(_cv)
 #define CV_BROADCAST(_cv)	e_wakeup(_cv)
 typedef simple_lock_data afs_kmutex_t;
-typedef afs_kmutex_t afs_krwlock_t;
 typedef tid_t afs_kcondvar_t;
 
-
-#define RWLOCK_INIT(a, b, c, d) MUTEX_INIT(a,b,c,d)
-#define RWLOCK_DESTROY(l)       MUTEX_DESTROY(l)
-#define RWLOCK_UPLOCK(l) 
-#define RWLOCK_WRLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_RDLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_TRYWRLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_TRYRDLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_UNLOCK(l)        MUTEX_EXIT(l)
 
 #define	LOCK_INIT(a, b)		lock_alloc((void*)(a), LOCK_ALLOC_PIN, 1, 1), \
 				simple_lock_init((void *)(a))

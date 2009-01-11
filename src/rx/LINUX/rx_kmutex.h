@@ -49,8 +49,6 @@ typedef struct afs_kmutex {
     int owner;
 } afs_kmutex_t;
 
-typedef afs_kmutex_t afs_krwlock_t;
-
 #ifndef set_current_state
 #define set_current_state(X) current->state=X
 #endif
@@ -69,15 +67,6 @@ MUTEX_ISMINE(afs_kmutex_t * l)
 {
     return l->owner == current->pid;
 }
-
-#define RWLOCK_INIT(a, b, c, d) MUTEX_INIT(a,b,c,d)
-#define RWLOCK_DESTROY(l)       MUTEX_DESTROY(l)
-#define RWLOCK_UPLOCK(l) 
-#define RWLOCK_WRLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_RDLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_TRYWRLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_TRYRDLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_UNLOCK(l)        MUTEX_EXIT(l)
 
 #define MUTEX_INIT(a,b,c,d)	afs_mutex_init(a)
 #define MUTEX_DESTROY(a)

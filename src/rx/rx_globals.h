@@ -523,8 +523,8 @@ EXT struct rx_connection **rx_connHashTable;
 EXT struct rx_connection *rx_connCleanup_list GLOBALSINIT(0);
 EXT afs_uint32 rx_hashTableSize GLOBALSINIT(257);	/* Prime number */
 #ifdef RX_ENABLE_LOCKS
-EXT afs_krwlock_t rx_peerHashTable_lock;
-EXT afs_krwlock_t rx_connHashTable_lock;
+EXT afs_kmutex_t rx_peerHashTable_lock;
+EXT afs_kmutex_t rx_connHashTable_lock;
 #endif /* RX_ENABLE_LOCKS */
 
 #define CONN_HASH(host, port, cid, epoch, type) ((((cid)>>RX_CIDSHIFT)%rx_hashTableSize))

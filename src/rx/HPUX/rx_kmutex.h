@@ -138,16 +138,6 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #define AFS_RX_ORDER 30
 
-typedef afs_kmutex_t afs_krwlock_t;
-#define RWLOCK_INIT(a, b, c, d) MUTEX_INIT(a,b,c,d)
-#define RWLOCK_DESTROY(l)       MUTEX_DESTROY(l)
-#define RWLOCK_UPLOCK(l) 
-#define RWLOCK_WRLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_RDLOCK(l)        MUTEX_ENTER(l)
-#define RWLOCK_TRYWRLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_TRYRDLOCK(l)     MUTEX_TRYENTER(l)
-#define RWLOCK_UNLOCK(l)        MUTEX_EXIT(l)
-
 #define MUTEX_INIT(a,b,c,d) b_initsema((a), 1, AFS_RX_ORDER, (b))
 #define MUTEX_DESTROY(a)
 
@@ -172,15 +162,6 @@ typedef afs_kmutex_t afs_krwlock_t;
 #else /* AFS_HPUX110_ENV */
 
 #define osirx_AssertMine(addr, msg)
-
-#define RWLOCK_INIT(a, b, c, d) 
-#define RWLOCK_DESTROY(l)       
-#define RWLOCK_UPLOCK(l) 
-#define RWLOCK_WRLOCK(l)        
-#define RWLOCK_RDLOCK(l)        
-#define RWLOCK_TRYWRLOCK(l)     
-#define RWLOCK_TRYRDLOCK(l)     
-#define RWLOCK_UNLOCK(l)        
 
 #define MUTEX_DESTROY(a)
 #define MUTEX_ENTER(a)

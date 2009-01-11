@@ -64,6 +64,7 @@
 #endif
 #endif /* KERNEL */
 
+
 /* Configurable parameters */
 #define	RX_IDLE_DEAD_TIME	60	/* default idle dead time */
 #define	RX_MAX_SERVICES		20	/* Maximum number of services that may be installed */
@@ -283,7 +284,6 @@ struct rx_connection {
     afs_uint32 callNumber[RX_MAXCALLS];	/* Current call numbers */
     afs_uint32 rwind[RX_MAXCALLS];
     u_short twind[RX_MAXCALLS];
-    u_short serviceId;		/* To stamp on requests (clients only) */
     afs_uint32 serial;		/* Next outgoing packet serial number */
     afs_uint32 lastSerial;	/* # of last packet received, for computing skew */
     afs_int32 maxSerial;	/* largest serial number seen on incoming packets */
@@ -295,6 +295,7 @@ struct rx_connection {
     int abortCount;		/* count of abort messages sent */
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
+    u_short serviceId;		/* To stamp on requests (clients only) */
     afs_uint32 refCount;		/* Reference count */
     u_char flags;		/* Defined below */
     u_char type;		/* Type of connection, defined below */
@@ -312,8 +313,7 @@ struct rx_connection {
     u_short hardDeadTime;	/* hard max for call execution */
     u_short idleDeadTime;	/* max time a call can be idle (no data) */
     u_char ackRate;		/* how many packets between ack requests */
-    u_char spareb;
-    afs_int32 makeCallWaiters;	/* how many rx_NewCalls are waiting */
+    u_char makeCallWaiters;	/* how many rx_NewCalls are waiting */
     afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */

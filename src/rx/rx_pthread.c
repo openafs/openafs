@@ -358,7 +358,9 @@ rxi_StartListener(void)
 	dpf(("Unable to create Rx event handling thread\n"));
 	exit(1);
     }
-    rx_MutexIncrement(rxi_pthread_hinum, rx_stats_mutex);
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
     AFS_SIGSET_RESTORE();
 
     assert(pthread_mutex_lock(&listener_mutex) == 0);
@@ -395,7 +397,9 @@ rxi_Listen(osi_socket sock)
 	dpf(("Unable to create socket listener thread\n"));
 	exit(1);
     }
-    rx_MutexIncrement(rxi_pthread_hinum, rx_stats_mutex);
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
     AFS_SIGSET_RESTORE();
     return 0;
 }
