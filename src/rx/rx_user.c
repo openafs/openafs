@@ -195,9 +195,11 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	if (!greedy)
 	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
-	MUTEX_ENTER(&rx_stats_mutex);
-	rx_stats.socketGreedy = greedy;
-	MUTEX_EXIT(&rx_stats_mutex);
+	if (rx_stats_active) {
+            MUTEX_ENTER(&rx_stats_mutex);
+            rx_stats.socketGreedy = greedy;
+            MUTEX_EXIT(&rx_stats_mutex);
+        }
     }
 
 #ifdef AFS_LINUX22_ENV

@@ -545,6 +545,8 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 #define	rxi_AllocConnection()	(struct rx_connection *) rxi_Alloc(sizeof(struct rx_connection))
 #define rxi_FreeConnection(conn) (rxi_Free(conn, sizeof(struct rx_connection)))
 
+EXT afs_int32 rx_stats_active GLOBALSINIT(1);	/* boolean - rx statistics gathering */
+
 #ifdef RXDEBUG
 /* Some debugging stuff */
 EXT FILE *rx_debugFile;		/* Set by the user to a stdio file for debugging output */

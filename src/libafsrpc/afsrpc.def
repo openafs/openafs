@@ -237,6 +237,8 @@ EXPORTS
         rx_GetMinUdpBufSize                     @242
         rx_SetUdpBufSize                        @243        
         rx_getAllAddrMaskMtu                    @244        
+        rx_stats_active                         @245 DATA
+        rx_StatsOnOff                           @246
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

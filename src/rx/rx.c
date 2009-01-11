@@ -890,7 +890,8 @@ rx_NewConnection(afs_uint32 shost, u_short sport, u_short sservice,
         tconn->refCount++;    /* no lock required since only this thread knows */
 	tconn->next = rx_connHashTable[hashindex];
 	rx_connHashTable[hashindex] = tconn;
-	rx_MutexIncrement(rx_stats.nClientConns, rx_stats_mutex);
+        if (rx_stats_active)
+            rx_MutexIncrement(rx_stats.nClientConns, rx_stats_mutex);
     }
 	
     MUTEX_EXIT(&rx_connHashTable_lock);
@@ -937,16 +938,20 @@ rxi_CleanupConnection(struct rx_connection *conn)
 	conn->peer->idleWhen = clock_Sec();
 	if (conn->peer->refCount < 1) {
 	    conn->peer->refCount = 1;
-	    rx_MutexIncrement(rxi_lowPeerRefCount, rx_stats_mutex);
+	    if (rx_stats_active)
+                rx_MutexIncrement(rxi_lowPeerRefCount, rx_stats_mutex);
 	}
     }
     conn->peer->refCount--;
     MUTEX_EXIT(&rx_peerHashTable_lock);
 
-    if (conn->type == RX_SERVER_CONNECTION)
-	rx_MutexDecrement(rx_stats.nServerConns, rx_stats_mutex);
-    else
-	rx_MutexDecrement(rx_stats.nClientConns, rx_stats_mutex);
+    if (rx_stats_active) 
+    {
+        if (conn->type == RX_SERVER_CONNECTION)
+            rx_MutexDecrement(rx_stats.nServerConns, rx_stats_mutex);
+        else
+            rx_MutexDecrement(rx_stats.nClientConns, rx_stats_mutex);
+    }
 #ifndef KERNEL
     if (conn->specific) {
 	int i;
@@ -1032,9 +1037,11 @@ rxi_DestroyConnectionNoLock(register struct rx_connection *conn)
     if (conn->refCount > 0)
 	conn->refCount--;
     else {
-	MUTEX_ENTER(&rx_stats_mutex);
-	rxi_lowConnRefCount++;
-	MUTEX_EXIT(&rx_stats_mutex);
+        if (rx_stats_active) {
+            MUTEX_ENTER(&rx_stats_mutex);
+            rxi_lowConnRefCount++;
+            MUTEX_EXIT(&rx_stats_mutex);
+        }
     }
 
     if ((conn->refCount > 0) || (conn->flags & RX_CONN_BUSY)) {
@@ -1575,7 +1582,8 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	    (*tservice->afterProc) (call, code);
 
 	rx_EndCall(call, code);
-	rx_MutexIncrement(rxi_nCalls, rx_stats_mutex);
+	if (rx_stats_active)
+            rx_MutexIncrement(rxi_nCalls, rx_stats_mutex);
     }
 }
 
@@ -2272,7 +2280,8 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 	call = queue_First(&rx_freeCallQueue, rx_call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	queue_Remove(call);
-        rx_MutexDecrement(rx_stats.nFreeCallStructs, rx_stats_mutex);
+        if (rx_stats_active)
+            rx_MutexDecrement(rx_stats.nFreeCallStructs, rx_stats_mutex);
 	MUTEX_EXIT(&rx_freeCallQueue_lock);
 	MUTEX_ENTER(&call->lock);
 	CLEAR_CALL_QUEUE_LOCK(call);
@@ -2367,7 +2376,8 @@ rxi_FreeCall(register struct rx_call *call)
 #else /* AFS_GLOBAL_RXLOCK_KERNEL */
     queue_Append(&rx_freeCallQueue, call);
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-    rx_MutexIncrement(rx_stats.nFreeCallStructs, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.nFreeCallStructs, rx_stats_mutex);
     MUTEX_EXIT(&rx_freeCallQueue_lock);
 
     /* Destroy the connection if it was previously slated for
@@ -2401,7 +2411,8 @@ rxi_Alloc(register size_t size)
 {
     register char *p;
 
-    rx_MutexAdd1Increment2(rxi_Allocsize, (afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexAdd1Increment2(rxi_Allocsize, (afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
 
 p = (char *)
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
@@ -2418,7 +2429,8 @@ p = (char *)
 void
 rxi_Free(void *addr, register size_t size)
 {
-    rx_MutexAdd1Decrement2(rxi_Allocsize, -(afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexAdd1Decrement2(rxi_Allocsize, -(afs_int32)size, rxi_Alloccnt, rx_stats_mutex);
     osi_Free(addr, size);
 }
 
@@ -2488,7 +2500,8 @@ rxi_FindPeer(register afs_uint32 host, register u_short port,
 	    pp->next = rx_peerHashTable[hashIndex];
 	    rx_peerHashTable[hashIndex] = pp;
 	    rxi_InitPeerParams(pp);
-	    rx_MutexIncrement(rx_stats.nPeerStructs, rx_stats_mutex);
+	    if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.nPeerStructs, rx_stats_mutex);
 	}
     }
     if (pp && create) {
@@ -2598,7 +2611,8 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 	/* XXXX Connection timeout? */
 	if (service->newConnProc)
 	    (*service->newConnProc) (conn);
-        rx_MutexIncrement(rx_stats.nServerConns, rx_stats_mutex);
+        if (rx_stats_active)
+            rx_MutexIncrement(rx_stats.nServerConns, rx_stats_mutex);
     }
 
     rx_MutexIncrement(conn->refCount, conn->conn_data_lock);
@@ -2786,7 +2800,8 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	     * then, since this is a client connection we're getting data for
 	     * it must be for the previous call.
 	     */
-	    rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
+	    if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
 	    rx_MutexDecrement(conn->refCount, conn->conn_data_lock);
 	    return np;
 	}
@@ -2796,7 +2811,8 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 
     if (type == RX_SERVER_CONNECTION) {	/* We're the server */
 	if (np->header.callNumber < currentCallNumber) {
-	    rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
+	    if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
 #ifdef	RX_ENABLE_LOCKS
 	    if (call)
 		MUTEX_EXIT(&call->lock);
@@ -2827,7 +2843,8 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 		tp = rxi_SendCallAbort(call, np, 1, 0);
 		MUTEX_EXIT(&call->lock);
 		rx_MutexDecrement(conn->refCount, conn->conn_data_lock);
-                rx_MutexIncrement(rx_stats.nBusies, rx_stats_mutex);
+                if (rx_stats_active)
+                    rx_MutexIncrement(rx_stats.nBusies, rx_stats_mutex);
 		return tp;
 	    }
 	    rxi_KeepAliveOn(call);
@@ -2886,7 +2903,8 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 		tp = rxi_SendCallAbort(call, np, 1, 0);
 		MUTEX_EXIT(&call->lock);
 		rx_MutexDecrement(conn->refCount, conn->conn_data_lock);
-                rx_MutexIncrement(rx_stats.nBusies, rx_stats_mutex);
+                if (rx_stats_active)
+                    rx_MutexIncrement(rx_stats.nBusies, rx_stats_mutex);
 		return tp;
 	    }
 	    rxi_KeepAliveOn(call);
@@ -2897,7 +2915,8 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	/* Ignore all incoming acknowledgements for calls in DALLY state */
 	if (call && (call->state == RX_STATE_DALLY)
 	    && (np->header.type == RX_PACKET_TYPE_ACK)) {
-	    rx_MutexIncrement(rx_stats.ignorePacketDally, rx_stats_mutex);
+	    if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.ignorePacketDally, rx_stats_mutex);
 #ifdef  RX_ENABLE_LOCKS
 	    if (call) {
 		MUTEX_EXIT(&call->lock);
@@ -2910,7 +2929,8 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	/* Ignore anything that's not relevant to the current call.  If there
 	 * isn't a current call, then no packet is relevant. */
 	if (!call || (np->header.callNumber != currentCallNumber)) {
-	    rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
+	    if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
 #ifdef	RX_ENABLE_LOCKS
 	    if (call) {
 		MUTEX_EXIT(&call->lock);
@@ -2971,7 +2991,8 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 		 * XXX interact badly with the server-restart detection 
 		 * XXX code in receiveackpacket.  */
 		if (ntohl(rx_GetInt32(np, FIRSTACKOFFSET)) < call->tfirst) {
-                    rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
+                    if (rx_stats_active)
+                        rx_MutexIncrement(rx_stats.spuriousPacketsRead, rx_stats_mutex);
 		    MUTEX_EXIT(&call->lock);
 		    rx_MutexDecrement(conn->refCount, conn->conn_data_lock);
 		    return np;
@@ -3266,7 +3287,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
     int isFirst;
     struct rx_packet *tnp;
     struct clock when, now;
-    rx_MutexIncrement(rx_stats.dataPacketsRead, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.dataPacketsRead, rx_stats_mutex);
 
 #ifdef KERNEL
     /* If there are no packet buffers, drop this new packet, unless we can find
@@ -3276,7 +3298,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	MUTEX_ENTER(&rx_freePktQ_lock);
 	rxi_NeedMorePackets = TRUE;
 	MUTEX_EXIT(&rx_freePktQ_lock);
-        rx_MutexIncrement(rx_stats.noPacketBuffersOnRead, rx_stats_mutex);
+        if (rx_stats_active)
+            rx_MutexIncrement(rx_stats.noPacketBuffersOnRead, rx_stats_mutex);
 	call->rprev = np->header.serial;
 	rxi_calltrace(RX_TRACE_DROP, call);
 	dpf(("packet %x dropped on receipt - quota problems", np));
@@ -3341,7 +3364,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	    /* Check to make sure it is not a duplicate of one already queued */
 	    if (queue_IsNotEmpty(&call->rq)
 		&& queue_First(&call->rq, rx_packet)->header.seq == seq) {
-                rx_MutexIncrement(rx_stats.dupPacketsRead, rx_stats_mutex);
+                if (rx_stats_active)
+                    rx_MutexIncrement(rx_stats.dupPacketsRead, rx_stats_mutex);
 		dpf(("packet %x dropped on receipt - duplicate", np));
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
@@ -3429,7 +3453,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	    /* If the new packet's sequence number has been sent to the
 	     * application already, then this is a duplicate */
 	    if (seq < call->rnext) {
-                rx_MutexIncrement(rx_stats.dupPacketsRead, rx_stats_mutex);
+                if (rx_stats_active)
+                    rx_MutexIncrement(rx_stats.dupPacketsRead, rx_stats_mutex);
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
 		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
@@ -3456,7 +3481,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 		 0, queue_Scan(&call->rq, tp, nxp, rx_packet)) {
 		/*Check for duplicate packet */
 		if (seq == tp->header.seq) {
-                    rx_MutexIncrement(rx_stats.dupPacketsRead, rx_stats_mutex);
+                    if (rx_stats_active)
+                        rx_MutexIncrement(rx_stats.dupPacketsRead, rx_stats_mutex);
 		    rxevent_Cancel(call->delayedAckEvent, call,
 				   RX_CALL_REFCOUNT_DELAY);
 		    np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE,
@@ -3700,7 +3726,8 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
     u_short maxMTU = 0;		/* Set if peer supports AFS 3.4a jumbo datagrams */
     int maxDgramPackets = 0;	/* Set if peer supports AFS 3.5 jumbo datagrams */
 
-    rx_MutexIncrement(rx_stats.ackPacketsRead, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.ackPacketsRead, rx_stats_mutex);
     ap = (struct rx_ackPacket *)rx_DataOf(np);
     nbytes = rx_Contiguous(np) - (int)((ap->acks) - (u_char *) ap);
     if (nbytes < 0)
@@ -4599,7 +4626,8 @@ rxi_ConnectionError(register struct rx_connection *conn,
             }
 	}
         rx_SetConnError(conn, error);
-        rx_MutexIncrement(rx_stats.fatalErrors, rx_stats_mutex);
+        if (rx_stats_active)
+            rx_MutexIncrement(rx_stats.fatalErrors, rx_stats_mutex);
     }
 }
 
@@ -5037,7 +5065,8 @@ rxi_SendAck(register struct rx_call *call,
 		nbytes -= p->wirevec[i].iov_len;
 	}
     }
-    rx_MutexIncrement(rx_stats.ackPacketsSent, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.ackPacketsSent, rx_stats_mutex);
 #ifndef RX_ENABLE_TSFPQ
     if (!optionalPacket)
 	rxi_FreePacket(p);
@@ -5061,7 +5090,8 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     peer->nSent += len;
     if (resending)
 	peer->reSends += len;
-    rx_MutexIncrement(rx_stats.dataPacketsSent, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.dataPacketsSent, rx_stats_mutex);
     MUTEX_EXIT(&peer->peer_lock);
 
     if (list[len - 1]->header.flags & RX_LAST_PACKET) {
@@ -5096,7 +5126,8 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
 	 * packet until the congestion window reaches the ack rate. */
 	if (list[i]->header.serial) {
 	    requestAck = 1;
-	    rx_MutexIncrement(rx_stats.dataPacketsReSent, rx_stats_mutex);
+            if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.dataPacketsReSent, rx_stats_mutex);
 	} else {
 	    /* improved RTO calculation- not Karn */
 	    list[i]->firstSent = *now;
@@ -5111,7 +5142,8 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
 	peer->nSent++;
 	if (resending)
 	    peer->reSends++;
-        rx_MutexIncrement(rx_stats.dataPacketsSent, rx_stats_mutex);
+        if (rx_stats_active)
+            rx_MutexIncrement(rx_stats.dataPacketsSent, rx_stats_mutex);
 	MUTEX_EXIT(&peer->peer_lock);
 
 	/* Tag this packet as not being the last in this group,
@@ -5335,7 +5367,8 @@ rxi_Start(struct rxevent *event,
     }
     if (call->error) {
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
-        rx_MutexIncrement(rx_tq_debug.rxi_start_in_error, rx_stats_mutex);
+        if (rx_stats_active)
+            rx_MutexIncrement(rx_tq_debug.rxi_start_in_error, rx_stats_mutex);
 #endif
 	return;
     }
@@ -5410,7 +5443,8 @@ rxi_Start(struct rxevent *event,
 		    if (p->flags & RX_PKTFLAG_ACKED) {
 			/* Since we may block, don't trust this */
 			usenow.sec = usenow.usec = 0;
-                        rx_MutexIncrement(rx_stats.ignoreAckedPacket, rx_stats_mutex);
+                        if (rx_stats_active)
+                            rx_MutexIncrement(rx_stats.ignoreAckedPacket, rx_stats_mutex);
 			continue;	/* Ignore this packet if it has been acknowledged */
 		    }
 
@@ -5477,7 +5511,8 @@ rxi_Start(struct rxevent *event,
 		     * the time to reset the call. This will also inform the using
 		     * process that the call is in an error state.
 		     */
-                    rx_MutexIncrement(rx_tq_debug.rxi_start_aborted, rx_stats_mutex);
+                    if (rx_stats_active)
+                        rx_MutexIncrement(rx_tq_debug.rxi_start_aborted, rx_stats_mutex);
 		    call->flags &= ~RX_CALL_TQ_BUSY;
 		    if (call->tqWaiters || (call->flags & RX_CALL_TQ_WAIT)) {
 			dpf(("call %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
@@ -5962,19 +5997,21 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 	return;			/* somebody set the clock back, don't count this time. */
     }
     clock_Sub(rttp, sentp);
-    MUTEX_ENTER(&rx_stats_mutex);
-    if (clock_Lt(rttp, &rx_stats.minRtt))
-	rx_stats.minRtt = *rttp;
-    if (clock_Gt(rttp, &rx_stats.maxRtt)) {
-	if (rttp->sec > 60) {
-	    MUTEX_EXIT(&rx_stats_mutex);
-	    return;		/* somebody set the clock ahead */
-	}
-	rx_stats.maxRtt = *rttp;
+    if (rx_stats_active) {
+        MUTEX_ENTER(&rx_stats_mutex);
+        if (clock_Lt(rttp, &rx_stats.minRtt))
+            rx_stats.minRtt = *rttp;
+        if (clock_Gt(rttp, &rx_stats.maxRtt)) {
+            if (rttp->sec > 60) {
+                MUTEX_EXIT(&rx_stats_mutex);
+                return;		/* somebody set the clock ahead */
+            }
+            rx_stats.maxRtt = *rttp;
+        }
+        clock_Add(&rx_stats.totalRtt, rttp);
+        rx_stats.nRttSamples++;
+        MUTEX_EXIT(&rx_stats_mutex);
     }
-    clock_Add(&rx_stats.totalRtt, rttp);
-    rx_stats.nRttSamples++;
-    MUTEX_EXIT(&rx_stats_mutex);
 
     /* better rtt calculation courtesy of UMich crew (dave,larry,peter,?) */
 
@@ -6157,7 +6194,8 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 			rxi_rpc_peer_stat_cnt -= num_funcs;
 		    }
 		    rxi_FreePeer(peer);
-                    rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
+                    if (rx_stats_active)
+                        rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
 		    if (peer == *peer_ptr) {
 			*peer_ptr = next;
 			prev = next;
@@ -6395,6 +6433,12 @@ void
 rx_DebugOnOff(int on)
 {
     rxdebug_active = on;
+}
+
+void
+rx_StatsOnOff(int on)
+{
+    rx_stats_active = on;
 }
 #endif /* AFS_NT40_ENV */
 
@@ -7000,7 +7044,8 @@ shutdown_rx(void)
 		}
 		next = peer->next;
 		rxi_FreePeer(peer);
-                rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
+                if (rx_stats_active)
+                    rx_MutexDecrement(rx_stats.nPeerStructs, rx_stats_mutex);
 	    }
 	}
     }
