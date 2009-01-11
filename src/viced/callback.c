@@ -532,19 +532,21 @@ InitCallBack(int nblks)
     tfirst = CBtime(FT_ApproxTime());
     /* N.B. The "-1", below, is because
      * FE[0] and CB[0] are not used--and not allocated */
-    FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry)))) - 1;
+    FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry))));
     if (!FE) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
 	assert(0);
     }
+    FE--;  /* FE[0] is supposed to point to junk */
     cbstuff.nFEs = nblks;
     while (cbstuff.nFEs)
 	FreeFE(&FE[cbstuff.nFEs]);	/* This is correct */
-    CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack)))) - 1;
+    CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack))));
     if (!CB) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
 	assert(0);
     }
+    CB--;  /* CB[0] is supposed to point to junk */
     cbstuff.nCBs = nblks;
     while (cbstuff.nCBs)
 	FreeCB(&CB[cbstuff.nCBs]);	/* This is correct */
