@@ -42,6 +42,15 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
+#ifdef UKERNEL
+/*
+ * Always use 64-bit file offsets for UKERNEL code. Needed for UKERNEL stuff to
+ * play nice with some other interfaces like FUSE. We technically only would
+ * need to define this when building for such interfaces, but set it always to
+ * try and reduce potential confusion. 
+ */
+#define _FILE_OFFSET_BITS 64
+#endif
 
 #undef AFS_AFSDB_ENV
 #undef AFS_LARGEFILE_ENV
