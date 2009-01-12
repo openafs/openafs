@@ -95,7 +95,7 @@ osi_UFSOpen(afs_int32 ainode)
 	osi_Panic("Can't open inode %d\n", ainode);
 #endif
     afile->filp = filp;
-    afile->size = i_size_read(FILE_INODE(filp)->i_size);
+    afile->size = i_size_read(FILE_INODE(filp));
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
