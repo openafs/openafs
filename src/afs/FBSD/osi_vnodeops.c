@@ -1044,8 +1044,7 @@ afs_vop_ioctl(ap)
     if (((ap->a_command >> 8) & 0xff) == 'V') {
 	/* This is a VICEIOCTL call */
 	AFS_GLOCK();
-	error = HandleIoctl(tvc, NULL /*Not used */ ,
-			    ap->a_command, ap->a_data);
+	error = HandleIoctl(tvc, ap->a_command, ap->a_data);
 	AFS_GUNLOCK();
 	return (error);
     } else {

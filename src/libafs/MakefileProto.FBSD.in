@@ -34,6 +34,10 @@ AFS_OS_NONFSOBJS = \
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
 KBLD = @BSD_KERNEL_BUILD@
+<amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80>
+KOPTS = -fPIC
+<all>
+
 KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
 	-elf \
 <i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
@@ -46,9 +50,7 @@ KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
 	-mno-mmx -mno-3dnow -mno-sse -mno-sse2 \
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 	-mno-align-long-strings -fno-common -ffreestanding \
-	-I${KBLD} -include opt_global.h -fno-strict-aliasing \
-<amd64_fbsd_70 amd64_fbsd_71 amd64_fbsd_80>
-KOPTS=-fPIC
+	-I${KBLD} -include opt_global.h -fno-strict-aliasing
 <all>
 
 DBUG = -O2
