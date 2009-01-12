@@ -575,7 +575,7 @@ rx_InitHost(u_int host, u_int port)
     rx_SetEpoch(tv.tv_sec);	/* Start time of this package, rxkad
 				 * will provide a randomer value. */
 #endif
-    rx_MutexAdd(rxi_dataQuota, rx_extraQuota, rx_stats_quota);	/* + extra pkts caller asked to rsrv */
+    rx_MutexAdd(rxi_dataQuota, rx_extraQuota, rx_quota_mutex);	/* + extra pkts caller asked to rsrv */
     /* *Slightly* random start time for the cid.  This is just to help
      * out with the hashing function at the peer */
     rx_nextCid = ((tv.tv_sec ^ tv.tv_usec) << RX_CIDSHIFT);
