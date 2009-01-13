@@ -546,7 +546,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	avc->states |= CDirty;
 
 	code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
-#ifdef AFS_LINUX_26_ENV
+#ifdef AFS_LINUX26_ENV
 	/* We must update the Linux kernel's idea of file size as soon as
 	 * possible, to avoid racing with delayed writepages delivered by
 	 * pdflush */
