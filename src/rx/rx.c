@@ -2787,9 +2787,10 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    call = rxi_NewCall(conn, channel);
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	    *call->callNumber = np->header.callNumber;
+#ifdef RXDEBUG
 	    if (np->header.callNumber == 0) 
 		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
-
+#endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
 	    hzero(call->bytesSent);
@@ -2851,9 +2852,10 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	    }
 	    rxi_ResetCall(call, 0);
 	    *call->callNumber = np->header.callNumber;
+#ifdef RXDEBUG
 	    if (np->header.callNumber == 0) 
 		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
-
+#endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
 	    hzero(call->bytesSent);
@@ -6373,10 +6375,10 @@ rxi_ComputeRate(register struct rx_peer *peer, register struct rx_call *call,
 #endif /* ADAPT_WINDOW */
 
 
-#ifdef RXDEBUG
 void
 rxi_DebugInit(void)
 {
+#ifdef RXDEBUG
 #ifdef AFS_NT40_ENV
 #define TRACE_OPTION_DEBUGLOG 4
     HKEY parmKey;
@@ -6399,27 +6401,33 @@ rxi_DebugInit(void)
     }
     RegCloseKey (parmKey);
 #endif /* AFS_NT40_ENV */
+#endif
 }
 
-#ifdef AFS_NT40_ENV
 void
 rx_DebugOnOff(int on)
 {
+#ifdef RXDEBUG
+#ifdef AFS_NT40_ENV
     rxdebug_active = on;
+#endif
+#endif
 }
 
 void
 rx_StatsOnOff(int on)
 {
+#ifdef RXDEBUG
     rx_stats_active = on;
+#endif
 }
-#endif /* AFS_NT40_ENV */
 
 
 /* Don't call this debugging routine directly; use dpf */
 void
 rxi_DebugPrint(char *format, ...)
 {
+#ifdef RXDEBUG
     va_list ap;
 #ifdef AFS_NT40_ENV
     char msg[512];
@@ -6453,8 +6461,10 @@ rxi_DebugPrint(char *format, ...)
     putc('\n', rx_Log);
     va_end(ap);
 #endif
+#endif
 }
 
+#ifndef KERNEL
 /*
  * This function is used to process the rx_stats structure that is local
  * to a process as well as an rx_stats structure received from a remote
@@ -6465,6 +6475,7 @@ void
 rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 		   afs_int32 freePackets, char version)
 {
+#ifdef RXDEBUG
     int i;
 
     if (size != sizeof(struct rx_statistics)) {
@@ -6539,7 +6550,9 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 #if	!defined(AFS_PTHREAD_ENV) && !defined(AFS_USE_GETTIMEOFDAY)
     fprintf(file, "   %d clock updates\n", clock_nUpdates);
 #endif
-
+#else
+    fprintf(file, "ERROR: compiled without RXDEBUG\n");
+#endif
 }
 
 /* for backward compatibility */
@@ -6569,8 +6582,9 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 	    "max out packet skew %d\n", peer->ifMTU, (int)peer->inPacketSkew,
 	    (int)peer->outPacketSkew);
 }
+#endif
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && defined(RXDEBUG)
 /*
  * This mutex protects the following static variables:
  * counter
@@ -6583,6 +6597,7 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 #define UNLOCK_RX_DEBUG
 #endif /* AFS_PTHREAD_ENV */
 
+#ifdef RXDEBUG
 static int
 MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	      u_char type, void *inputData, size_t inputLength,
@@ -6688,15 +6703,19 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     memcpy(outputData, tp, code);
     return code;
 }
+#endif /* RXDEBUG */
 
 afs_int32
 rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint16 remotePort, struct rx_debugStats * stat,
 		  afs_uint32 * supportedValues)
 {
+#ifndef RXDEBUG
+     afs_int32 rc = -1;
+#else
+    afs_int32 rc = 0;
     struct rx_debugIn in;
     afs_int32 *lp = (afs_int32 *) stat;
-    afs_int32 rc = 0;
 
     *supportedValues = 0;
     in.type = htonl(RX_DEBUGI_GETSTATS);
@@ -6747,7 +6766,7 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
         stat->nWaited = ntohl(stat->nWaited);
         stat->nPackets = ntohl(stat->nPackets);
     }
-
+#endif
     return rc;
 }
 
@@ -6756,10 +6775,13 @@ rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint16 remotePort, struct rx_statistics * stat,
 		  afs_uint32 * supportedValues)
 {
+#ifndef RXDEBUG
+     afs_int32 rc = -1;
+#else
+    afs_int32 rc = 0;
     struct rx_debugIn in;
     afs_int32 *lp = (afs_int32 *) stat;
     int i;
-    afs_int32 rc = 0;
 
     /*
      * supportedValues is currently unused, but added to allow future
@@ -6784,7 +6806,7 @@ rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
 	    *lp = ntohl(*lp);
 	}
     }
-
+#endif
     return rc;
 }
 
@@ -6793,10 +6815,14 @@ rx_GetServerVersion(osi_socket socket, afs_uint32 remoteAddr,
 		    afs_uint16 remotePort, size_t version_length,
 		    char *version)
 {
+#ifdef RXDEBUG
     char a[1] = { 0 };
     return MakeDebugCall(socket, remoteAddr, remotePort,
 			 RX_PACKET_TYPE_VERSION, a, 1, version,
 			 version_length);
+#else
+    return -1;
+#endif
 }
 
 afs_int32
@@ -6806,8 +6832,11 @@ rx_GetServerConnections(osi_socket socket, afs_uint32 remoteAddr,
 			struct rx_debugConn * conn,
 			afs_uint32 * supportedValues)
 {
-    struct rx_debugIn in;
+#ifndef RXDEBUG
+    afs_int32 rc = -1;
+#else
     afs_int32 rc = 0;
+    struct rx_debugIn in;
     int i;
 
     /*
@@ -6879,7 +6908,7 @@ rx_GetServerConnections(osi_socket socket, afs_uint32 remoteAddr,
 	conn->epoch = ntohl(conn->epoch);
 	conn->natMTU = ntohl(conn->natMTU);
     }
-
+#endif
     return rc;
 }
 
@@ -6889,8 +6918,11 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 		  afs_uint32 debugSupportedValues, struct rx_debugPeer * peer,
 		  afs_uint32 * supportedValues)
 {
-    struct rx_debugIn in;
+#ifndef RXDEBUG
+    afs_int32 rc = -1;
+#else
     afs_int32 rc = 0;
+    struct rx_debugIn in;
 
     /*
      * supportedValues is currently unused, but added to allow future
@@ -6941,10 +6973,9 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 	peer->bytesReceived.high = ntohl(peer->bytesReceived.high);
 	peer->bytesReceived.low = ntohl(peer->bytesReceived.low);
     }
-
+#endif
     return rc;
 }
-#endif /* RXDEBUG */
 
 void
 shutdown_rx(void)
