@@ -13,7 +13,16 @@
 RCSID
     ("$Header$");
 
-#ifdef RXDEBUG
+#ifndef RXDEBUG
+char rxi_tracename[80] = "\0Tracing not compiled in";
+#ifdef DUMPTRACE
+int
+main(int argc, char **argv)
+{
+    return 0;
+}
+#endif
+#else
 #include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
@@ -184,5 +193,4 @@ main(int argc, char **argv)
 }
 
 #endif /* DUMPTRACE */
-
-#endif
+#endif /* RXDEBUG */

@@ -547,11 +547,13 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 
 EXT afs_int32 rx_stats_active GLOBALSINIT(1);	/* boolean - rx statistics gathering */
 
-#ifdef RXDEBUG
+#ifndef KERNEL
 /* Some debugging stuff */
 EXT FILE *rx_debugFile;		/* Set by the user to a stdio file for debugging output */
 EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to that file */
+#endif
 
+#ifdef RXDEBUG
 #define rx_Log rx_debugFile
 #ifdef AFS_NT40_ENV
 EXT int rxdebug_active;
@@ -566,6 +568,9 @@ EXT int rxdebug_active;
 #define rx_Log_event rxevent_debugFile
 
 EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
+#else
+#define dpf(args)
+#endif /* RXDEBUG */
 
 #ifndef KERNEL
 /*
@@ -580,10 +585,6 @@ EXT rx_destructor_t *rxi_keyCreate_destructor GLOBALSINIT(NULL);
 EXT afs_kmutex_t rxi_keyCreate_lock;
 #endif /* RX_ENABLE_LOCKS */
 #endif /* !KERNEL */
-
-#else
-#define dpf(args)
-#endif /* RXDEBUG */
 
 /*
  * SERVER ONLY: Threshholds used to throttle error replies to looping
