@@ -164,75 +164,55 @@ static unsigned int rxi_rpc_process_stat_cnt;
  * to ease NT porting
  */
 
-extern pthread_mutex_t rx_stats_mutex;
-extern pthread_mutex_t rx_waiting_mutex;
-extern pthread_mutex_t rx_quota_mutex;
-extern pthread_mutex_t rx_pthread_mutex;
-extern pthread_mutex_t rx_packets_mutex;
-extern pthread_mutex_t des_init_mutex;
-extern pthread_mutex_t des_random_mutex;
-extern pthread_mutex_t rx_clock_mutex;
-extern pthread_mutex_t rxi_connCacheMutex;
-extern pthread_mutex_t rx_event_mutex;
-extern pthread_mutex_t osi_malloc_mutex;
-extern pthread_mutex_t event_handler_mutex;
-extern pthread_mutex_t listener_mutex;
-extern pthread_mutex_t rx_if_init_mutex;
-extern pthread_mutex_t rx_if_mutex;
-extern pthread_mutex_t rxkad_client_uid_mutex;
-extern pthread_mutex_t rxkad_random_mutex;
+extern afs_kmutex_t rx_stats_mutex;
+extern afs_kmutex_t rx_waiting_mutex;
+extern afs_kmutex_t rx_quota_mutex;
+extern afs_kmutex_t rx_pthread_mutex;
+extern afs_kmutex_t rx_packets_mutex;
+extern afs_kmutex_t des_init_mutex;
+extern afs_kmutex_t des_random_mutex;
+extern afs_kmutex_t rx_clock_mutex;
+extern afs_kmutex_t rxi_connCacheMutex;
+extern afs_kmutex_t rx_event_mutex;
+extern afs_kmutex_t osi_malloc_mutex;
+extern afs_kmutex_t event_handler_mutex;
+extern afs_kmutex_t listener_mutex;
+extern afs_kmutex_t rx_if_init_mutex;
+extern afs_kmutex_t rx_if_mutex;
+extern afs_kmutex_t rxkad_client_uid_mutex;
+extern afs_kmutex_t rxkad_random_mutex;
 
-extern pthread_cond_t rx_event_handler_cond;
-extern pthread_cond_t rx_listener_cond;
+extern afs_kcondvar_t rx_event_handler_cond;
+extern afs_kcondvar_t rx_listener_cond;
 
-static pthread_mutex_t epoch_mutex;
-static pthread_mutex_t rx_init_mutex;
-static pthread_mutex_t rx_debug_mutex;
-static pthread_mutex_t rx_rpc_stats;
+static afs_kmutex_t epoch_mutex;
+static afs_kmutex_t rx_init_mutex;
+static afs_kmutex_t rx_debug_mutex;
+static afs_kmutex_t rx_rpc_stats;
 
 static void
 rxi_InitPthread(void)
 {
-    assert(pthread_mutex_init(&rx_clock_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init(&rx_stats_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init(&rx_waiting_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init(&rx_quota_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init(&rx_pthread_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init(&rx_packets_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init
-	   (&rxi_connCacheMutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init(&rx_init_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init(&epoch_mutex, (const pthread_mutexattr_t *)0) ==
-	   0);
-    assert(pthread_mutex_init(&rx_event_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init(&des_init_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init
-	   (&des_random_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init
-	   (&osi_malloc_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init
-	   (&event_handler_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init(&listener_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
-    assert(pthread_mutex_init
-	   (&rx_if_init_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init(&rx_if_mutex, (const pthread_mutexattr_t *)0) ==
-	   0);
-    assert(pthread_mutex_init
-	   (&rxkad_client_uid_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init
-	   (&rxkad_random_mutex, (const pthread_mutexattr_t *)0) == 0);
-    assert(pthread_mutex_init(&rx_debug_mutex, (const pthread_mutexattr_t *)0)
-	   == 0);
+    MUTEX_INIT(&rx_clock_mutex, "clock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_stats_mutex, "stats", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_waiting_mutex, "waiting", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_quota_mutex, "quota", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_pthread_mutex, "pthread", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_packets_mutex, "packets", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&epoch_mutex, "epoch", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_init_mutex, "init", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_event_mutex, "event", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&des_init_mutex, "des", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&des_random_mutex, "random", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&osi_malloc_mutex, "malloc", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&event_handler_mutex, "event handler", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rxi_connCacheMutex, "conn cache", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&listener_mutex, "listener", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_if_init_mutex, "if init", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_if_mutex, "if", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rxkad_client_uid_mutex, "uid", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
 
     assert(pthread_cond_init
 	   (&rx_event_handler_cond, (const pthread_condattr_t *)0) == 0);
@@ -403,8 +383,8 @@ struct rx_serverQueueEntry *rx_waitingForPacket = 0;
  * rx_epoch
  */
 
-#define LOCK_EPOCH assert(pthread_mutex_lock(&epoch_mutex)==0)
-#define UNLOCK_EPOCH assert(pthread_mutex_unlock(&epoch_mutex)==0)
+#define LOCK_EPOCH MUTEX_ENTER(&epoch_mutex)
+#define UNLOCK_EPOCH MUTEX_EXIT(&epoch_mutex)
 #else
 #define LOCK_EPOCH
 #define UNLOCK_EPOCH
@@ -434,8 +414,8 @@ int rxinit_status = 1;
  * rxinit_status
  */
 
-#define LOCK_RX_INIT assert(pthread_mutex_lock(&rx_init_mutex)==0)
-#define UNLOCK_RX_INIT assert(pthread_mutex_unlock(&rx_init_mutex)==0)
+#define LOCK_RX_INIT MUTEX_ENTER(&rx_init_mutex)
+#define UNLOCK_RX_INIT MUTEX_EXIT(&rx_init_mutex)
 #else
 #define LOCK_RX_INIT
 #define UNLOCK_RX_INIT
@@ -6617,8 +6597,8 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
  * counter
  */
 
-#define LOCK_RX_DEBUG assert(pthread_mutex_lock(&rx_debug_mutex)==0)
-#define UNLOCK_RX_DEBUG assert(pthread_mutex_unlock(&rx_debug_mutex)==0)
+#define LOCK_RX_DEBUG MUTEX_ENTER(&rx_debug_mutex)
+#define UNLOCK_RX_DEBUG MUTEX_EXIT(&rx_debug_mutex)
 #else
 #define LOCK_RX_DEBUG
 #define UNLOCK_RX_DEBUG

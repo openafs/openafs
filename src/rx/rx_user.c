@@ -60,9 +60,9 @@ RCSID
  * Inited
  */
 
-pthread_mutex_t rx_if_init_mutex;
-#define LOCK_IF_INIT assert(pthread_mutex_lock(&rx_if_init_mutex)==0)
-#define UNLOCK_IF_INIT assert(pthread_mutex_unlock(&rx_if_init_mutex)==0)
+afs_kmutex_t rx_if_init_mutex;
+#define LOCK_IF_INIT MUTEX_ENTER(&rx_if_init_mutex)
+#define UNLOCK_IF_INIT MUTEX_EXIT(&rx_if_init_mutex)
 
 /*
  * The rx_if_mutex mutex protects the following global variables:
@@ -71,9 +71,9 @@ pthread_mutex_t rx_if_init_mutex;
  * myNetMasks
  */
 
-pthread_mutex_t rx_if_mutex;
-#define LOCK_IF assert(pthread_mutex_lock(&rx_if_mutex)==0)
-#define UNLOCK_IF assert(pthread_mutex_unlock(&rx_if_mutex)==0)
+afs_kmutex_t rx_if_mutex;
+#define LOCK_IF MUTEX_ENTER(&rx_if_mutex)
+#define UNLOCK_IF MUTEX_EXIT(&rx_if_mutex)
 #else
 #define LOCK_IF_INIT
 #define UNLOCK_IF_INIT

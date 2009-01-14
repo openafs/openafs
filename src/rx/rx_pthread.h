@@ -114,6 +114,11 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #endif
 #define CV_WAIT(cv, l) osi_Assert(pthread_cond_wait(cv, l) == 0)
 
+#ifdef CV_TIMEDWAIT
+#undef CV_TIMEDWAIT
+#endif
+#define CV_TIMEDWAIT(cv, l, t) pthread_cond_timedwait(cv, l, t)
+
 #ifdef CV_SIGNAL
 #undef CV_SIGNAL
 #endif
