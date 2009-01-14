@@ -109,9 +109,9 @@ afs_kmutex_t rxevent_lock;
  */
 
 #include <assert.h>
-pthread_mutex_t rx_event_mutex;
-#define LOCK_EV_INIT assert(pthread_mutex_lock(&rx_event_mutex)==0)
-#define UNLOCK_EV_INIT assert(pthread_mutex_unlock(&rx_event_mutex)==0)
+afs_kmutex_t rx_event_mutex;
+#define LOCK_EV_INIT MUTEX_ENTER(&rx_event_mutex)
+#define UNLOCK_EV_INIT MUTEX_EXIT(&rx_event_mutex)
 #else
 #define LOCK_EV_INIT
 #define UNLOCK_EV_INIT

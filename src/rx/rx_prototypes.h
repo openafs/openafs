@@ -596,8 +596,8 @@ extern void rx_FlushWrite(struct rx_call *call);
 
 /* rx_user.c */
 #ifdef AFS_PTHREAD_ENV
-extern pthread_mutex_t rx_if_init_mutex;
-extern pthread_mutex_t rx_if_mutex;
+extern afs_kmutex_t rx_if_init_mutex;
+extern afs_kmutex_t rx_if_mutex;
 #endif
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern void osi_AssertFailU(const char *expr, const char *file, int line);
