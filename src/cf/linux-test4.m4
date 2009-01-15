@@ -1133,3 +1133,32 @@ AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
   if test "x$ac_cv_linux_write_begin" = "xyes"; then
     AC_DEFINE([HAVE_WRITE_BEGIN], 1, [define if your kernel has a write_begin() address space op])
   fi])
+
+AC_DEFUN([LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], [
+  AC_MSG_CHECKING([for linux grab_cache_page_write_begin()])
+  AC_CACHE_VAL([ac_cv_linux_grab_cache_page_write_begin], [
+    AC_TRY_KBUILD(
+[#include <linux/pagemap.h>],
+[grab_cache_page_write_begin(NULL, 0, 0);],
+      ac_cv_linux_grab_cache_page_write_begin=yes,
+      ac_cv_linux_grab_cache_page_write_begin=no)])
+  AC_MSG_RESULT($ac_cv_linux_grab_cache_page_write_begin)
+  if test "x$ac_cv_linux_grab_cache_page_write_begin" = "xyes"; then
+    AC_DEFINE([HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], 1, [define if your kernel has grab_cache_page_write_begin()])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
+  AC_MSG_CHECKING([if struct task has cred])
+  AC_CACHE_VAL([ac_cv_linux_struct_task_has_cred], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>
+#include <linux/cred.h>],
+[struct task_struct _t;
+uid_t _u;
+_u =_t.cred->uid ;],
+      ac_cv_linux_struct_task_has_cred=yes,
+      ac_cv_linux_struct_task_has_cred=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_task_has_cred)
+  if test "x$ac_cv_linux_struct_task_has_cred" = "xyes"; then
+    AC_DEFINE([STRUCT_TASK_HAS_CRED], 1, [define if struct task has a cred pointer])
+  fi])

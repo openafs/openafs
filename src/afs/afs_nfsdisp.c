@@ -378,8 +378,8 @@ void
 afs_nfs2_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_GETATTR, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -393,8 +393,8 @@ void
 afs_nfs2_setattr(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_SETATTR, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -408,8 +408,8 @@ void
 afs_nfs2_lookup(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_LOOKUP, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -426,8 +426,8 @@ void
 afs_nfs2_readlink(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_READLINK, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -441,8 +441,8 @@ void
 afs_nfs2_read(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_READ, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -456,8 +456,8 @@ void
 afs_nfs2_write(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_WRITE, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -471,8 +471,8 @@ void
 afs_nfs2_create(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_CREATE, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -489,8 +489,8 @@ void
 afs_nfs2_remove(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_REMOVE, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -504,8 +504,8 @@ void
 afs_nfs2_rename(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_RENAME, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -519,8 +519,8 @@ void
 afs_nfs2_link(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_LINK, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -534,8 +534,8 @@ void
 afs_nfs2_symlink(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_SYMLINK, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -549,8 +549,8 @@ void
 afs_nfs2_mkdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_MKDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -567,8 +567,8 @@ void
 afs_nfs2_rmdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_RMDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -582,8 +582,8 @@ void
 afs_nfs2_readdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_READDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -597,8 +597,8 @@ void
 afs_nfs2_statfs(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs2_dispatcher(0, RFS_STATFS, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs2_noaccess((struct afs_nfs2_resp *)xp);
@@ -633,8 +633,8 @@ void
 afs_acl2_getacl(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs2_dispatcher(1, ACLPROC2_GETACL, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -650,8 +650,8 @@ void
 afs_acl2_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs2_dispatcher(1, ACLPROC2_SETACL, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -667,8 +667,8 @@ void
 afs_acl2_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs2_dispatcher(1, ACLPROC2_GETATTR, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -684,8 +684,8 @@ void
 afs_acl2_access(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs2_dispatcher(1, ACLPROC2_ACCESS, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -702,8 +702,8 @@ void
 afs_acl2_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs2_dispatcher(1, ACLPROC2_GETXATTRDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1140,8 +1140,8 @@ afs_nfs3_getattr(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_GETATTR, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1158,8 +1158,8 @@ afs_nfs3_setattr(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_SETATTR, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1176,8 +1176,8 @@ afs_nfs3_lookup(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_LOOKUP, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1199,8 +1199,8 @@ afs_nfs3_access(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_ACCESS, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1217,8 +1217,8 @@ afs_nfs3_readlink(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_READLINK, (char *)args, &exp, rp,
 			    crp);
@@ -1236,8 +1236,8 @@ afs_nfs3_read(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs3_dispatcher(0, NFSPROC3_READ, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
@@ -1253,8 +1253,8 @@ afs_nfs3_write(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_WRITE, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1271,8 +1271,8 @@ afs_nfs3_create(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_CREATE, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1294,8 +1294,8 @@ afs_nfs3_mkdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_MKDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1317,8 +1317,8 @@ afs_nfs3_symlink(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_SYMLINK, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1340,8 +1340,8 @@ afs_nfs3_mknod(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_MKNOD, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1363,8 +1363,8 @@ afs_nfs3_remove(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_REMOVE, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1381,8 +1381,8 @@ afs_nfs3_rmdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_RMDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1399,8 +1399,8 @@ afs_nfs3_rename(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_RENAME, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1417,8 +1417,8 @@ afs_nfs3_link(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call = afs_nfs3_dispatcher(0, NFSPROC3_LINK, (char *)args, &exp, rp, crp);
     if (call > 1)
 	afs_nfs3_noaccess((struct afs_nfs3_resp *)xp);
@@ -1434,8 +1434,8 @@ afs_nfs3_readdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_READDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1452,8 +1452,8 @@ afs_nfs3_readdirplus(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_READDIRPLUS, (char *)args, &exp, rp,
 			    crp);
@@ -1473,8 +1473,8 @@ afs_nfs3_fsstat(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_FSSTAT, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1491,8 +1491,8 @@ afs_nfs3_fsinfo(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_FSINFO, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1509,8 +1509,8 @@ afs_nfs3_pathconf(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_PATHCONF, (char *)args, &exp, rp,
 			    crp);
@@ -1528,8 +1528,8 @@ afs_nfs3_commit(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
     afs_nfs3_resp dummy;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(0, NFSPROC3_COMMIT, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1570,8 +1570,8 @@ void
 afs_acl3_getacl(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(1, ACLPROC3_GETACL, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1587,8 +1587,8 @@ void
 afs_acl3_setacl(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(1, ACLPROC3_SETACL, (char *)args, &exp, rp, crp);
     if (call > 1)
@@ -1605,8 +1605,8 @@ void
 afs_acl3_getxattrdir(char *args, char *xp, char *exp, char *rp, char *crp)
 {
     u_int call;
-    struct cred *svcred = curthread->t_cred;
-    curthread->t_cred = (struct cred *)crp;
+    struct AFS_UCRED *svcred = curthread->t_cred;
+    curthread->t_cred = (struct AFS_UCRED *)crp;
     call =
 	afs_nfs3_dispatcher(1, ACLPROC3_GETXATTRDIR, (char *)args, &exp, rp, crp);
     if (call > 1)
