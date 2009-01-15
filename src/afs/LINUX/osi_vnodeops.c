@@ -2128,7 +2128,11 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+#if defined(HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN)
+    page = grab_cache_page_write_begin(mapping, index, flags);
+#else
     page = __grab_cache_page(mapping, index);
+#endif
     *pagep = page;
 
     return 0;

@@ -513,10 +513,15 @@ afs_osi_proc2cred(AFS_PROC * pr)
 	|| (pr->state == TASK_UNINTERRUPTIBLE)
 	|| (pr->state == TASK_STOPPED)) {
 	cr.cr_ref = 1;
-	cr.cr_uid = pr->uid;
+	cr.cr_uid = task_uid(pr);
 #if defined(AFS_LINUX26_ENV)
+#if defined(STRUCT_TASK_HAS_CRED)
+	get_group_info(pr->cred->group_info);
+	cr.cr_group_info = pr->cred->group_info;
+#else
 	get_group_info(pr->group_info);
 	cr.cr_group_info = pr->group_info;
+#endif
 #else
 	cr.cr_ngroups = pr->ngroups;
 	memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
