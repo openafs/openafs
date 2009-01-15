@@ -78,7 +78,11 @@ osi_UFSOpen(afs_int32 ainode)
 #endif
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
+#if defined(STRUCT_TASK_HAS_CRED)
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
+#else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
+#endif
     if (IS_ERR(filp))
 	osi_Panic("Can't open inode %d\n", ainode);
     afile->filp = filp;
