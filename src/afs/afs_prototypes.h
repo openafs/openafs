@@ -279,6 +279,12 @@ extern int afs_WriteDCache(register struct dcache *adc, int atime);
 extern int afs_wakeup(register struct vcache *avc);
 extern int afs_InitCacheFile(char *afile, ino_t ainode);
 extern int afs_DCacheMissingChunks(struct vcache *avc);
+extern struct dcache *afs_ObtainDCacheForWriting(struct vcache *avc, 
+						 afs_size_t filePos, 
+						 afs_size_t len, 
+						 struct vrequest *areq,
+						 int noLock);
+
 
 /* afs_disconnected.c */
 
@@ -779,6 +785,8 @@ extern int afs_StoreMini(register struct vcache *avc, struct vrequest *areq);
 extern int afs_StoreAllSegments(register struct vcache *avc,
 				struct vrequest *areq, int sync);
 extern int afs_InvalidateAllSegments(struct vcache *avc);
+extern int afs_ExtendSegments(struct vcache *avc,
+			      afs_size_t alen, struct vrequest *areq);
 extern int afs_TruncateAllSegments(register struct vcache *avc,
 				   afs_size_t alen, struct vrequest *areq,
 				   struct AFS_UCRED *acred);

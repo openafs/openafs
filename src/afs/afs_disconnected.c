@@ -605,7 +605,7 @@ int afs_ProcessOpCreate(struct vcache *avc,
 
     tname = afs_osi_Alloc(AFSNAMEMAX);
     if (!tname) {
-	printf("afs_ProcessOpCreate: Couldn't find file name\n");
+	printf("afs_ProcessOpCreate: Couldn't alloc space for file name\n");
 	return ENOMEM;
     }
 
