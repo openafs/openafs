@@ -545,12 +545,18 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	ObtainWriteLock(&avc->lock, 128);
 	avc->states |= CDirty;
 
-	code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
+        if (AFS_IS_DISCONNECTED && tsize >=avc->m.Length) {
+	    /* If we're growing the file, and we're disconnected, we need
+ 	     * to make the relevant dcache chunks appear ourselves. */
+	    code = afs_ExtendSegments(avc, tsize, &treq);
+	} else {
+	    code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
+	}
 #ifdef AFS_LINUX26_ENV
 	/* We must update the Linux kernel's idea of file size as soon as
 	 * possible, to avoid racing with delayed writepages delivered by
 	 * pdflush */
-	if (code == 0) 
+	if (code == 0)
 	    i_size_write(AFSTOV(avc), tsize);
 #endif
 	/* if date not explicitly set by this call, set it ourselves, since we

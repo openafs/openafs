@@ -3642,6 +3642,90 @@ shutdown_dcache(void)
 
 }
 
+/*!
+ * Get a dcache ready for writing, respecting the current cache size limits
+ *
+ * len is required because afs_GetDCache with flag == 4 expects the length 
+ * field to be filled. It decides from this whether it's necessary to fetch 
+ * data into the chunk before writing or not (when the whole chunk is 
+ * overwritten!).
+ *
+ * \param avc 		The vcache to fetch a dcache for
+ * \param filePos 	The start of the section to be written
+ * \param len		The length of the section to be written
+ * \param areq
+ * \param noLock
+ *
+ * \return If successful, a reference counted dcache with tdc->lock held. Lock
+ *         must be released and afs_PutDCache() called to free dcache. 
+ *         NULL on  failure
+ *
+ * \note avc->lock must be held on entry. Function may release and reobtain 
+ *       avc->lock and GLOCK.
+ */
+
+struct dcache *
+afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos, 
+			   afs_size_t len, struct vrequest *areq,
+			   int noLock) {
+    struct dcache *tdc = NULL;
+    afs_size_t offset;
+
+    /* read the cached info */
+    if (noLock) {
+	tdc = afs_FindDCache(avc, filePos);
+	if (tdc)
+	    ObtainWriteLock(&tdc->lock, 657);
+    } else if (afs_blocksUsed >
+    	       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
+	tdc = afs_FindDCache(avc, filePos);
+	if (tdc) {
+	    ObtainWriteLock(&tdc->lock, 658);
+	    if (!hsame(tdc->f.versionNo, avc->m.DataVersion)
+		|| (tdc->dflags & DFFetching)) {
+		ReleaseWriteLock(&tdc->lock);
+		afs_PutDCache(tdc);
+		tdc = NULL;
+	    }
+	}
+	if (!tdc) {
+	    afs_MaybeWakeupTruncateDaemon();
+	    while (afs_blocksUsed >
+		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
+		ReleaseWriteLock(&avc->lock);
+		if (afs_blocksUsed - afs_blocksDiscarded >
+		    PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
+		    afs_WaitForCacheDrain = 1;
+		    afs_osi_Sleep(&afs_WaitForCacheDrain);
+		}
+		afs_MaybeFreeDiscardedDCache();
+		afs_MaybeWakeupTruncateDaemon();
+		ObtainWriteLock(&avc->lock, 509);
+	    }
+	    avc->states |= CDirty;
+	    tdc = afs_GetDCache(avc, filePos, areq, &offset, &len, 4);
+	    if (tdc)
+		ObtainWriteLock(&tdc->lock, 659);
+	}
+    } else {
+	tdc = afs_GetDCache(avc, filePos, areq, &offset, &len, 4);
+	if (tdc)
+	    ObtainWriteLock(&tdc->lock, 660);
+    }
+    if (tdc) {
+	if (!(afs_indexFlags[tdc->index] & IFDataMod)) {
+	    afs_stats_cmperf.cacheCurrDirtyChunks++;
+	    afs_indexFlags[tdc->index] |= IFDataMod;	/* so it doesn't disappear */
+	}
+	if (!(tdc->f.states & DWriting)) {
+	    /* don't mark entry as mod if we don't have to */
+	    tdc->f.states |= DWriting;
+	    tdc->dflags |= DFEntryMod;
+	}
+    }
+    return tdc;
+}
+
 #if defined(AFS_DISCON_ENV)
 
 /*!

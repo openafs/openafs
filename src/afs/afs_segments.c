@@ -920,6 +920,68 @@ afs_InvalidateAllSegments(struct vcache *avc)
     return 0;
 }
 
+/*! 
+ * 
+ * Extend a cache file
+ *
+ * \param avc pointer to vcache to extend data for
+ * \param alen Length to extend file to
+ * \param areq
+ *
+ * \note avc must be write locked. May release and reobtain avc and GLOCK
+ */
+int
+afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq) {
+    afs_size_t offset, toAdd;
+    struct osi_file *tfile;
+    afs_int32 code = 0;
+    struct dcache *tdc;
+    void *zeros;
+
+    zeros = (void *) afs_osi_Alloc(AFS_PAGESIZE);
+    if (zeros == NULL)
+	return ENOMEM;
+    memset(zeros, 0, AFS_PAGESIZE);
+
+    while (avc->m.Length < alen) {
+        tdc = afs_ObtainDCacheForWriting(avc, avc->m.Length, alen - avc->m.Length, areq, 0);
+        if (!tdc) {
+	    code = EIO;
+	    break;
+        }
+
+	toAdd = alen - avc->m.Length;
+
+        offset = avc->m.Length - AFS_CHUNKTOBASE(tdc->f.chunk);
+	if (offset + toAdd > AFS_CHUNKTOSIZE(tdc->f.chunk)) {
+	    toAdd = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;
+	}
+#if defined(LINUX_USE_FH)
+        tfile = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
+#else
+        tfile = afs_CFileOpen(tdc->f.inode);
+#endif
+	while(tdc->validPos < avc->m.Length + toAdd) {
+	     afs_size_t towrite;
+
+	     towrite = (avc->m.Length + toAdd) - tdc->validPos;
+	     if (towrite > AFS_PAGESIZE) towrite = AFS_PAGESIZE;
+
+	     code = afs_CFileWrite(tfile, 
+			           tdc->validPos - AFS_CHUNKTOBASE(tdc->f.chunk), 
+				   zeros, towrite);
+	     tdc->validPos += towrite;
+	}
+	afs_CFileClose(tfile);
+	afs_AdjustSize(tdc, offset + toAdd );
+	avc->m.Length += toAdd;
+	ReleaseWriteLock(&tdc->lock);
+	afs_PutDCache(tdc);
+    }
+
+    afs_osi_Free(zeros, AFS_PAGESIZE);
+    return code;
+}
 
 /*
  * afs_TruncateAllSegments

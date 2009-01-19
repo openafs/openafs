@@ -110,8 +110,6 @@ afs_StoreOnLastReference(register struct vcache *avc,
     return code;
 }
 
-
-
 int
 afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	     struct AFS_UCRED *acred, int noLock)
@@ -217,66 +215,13 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
-	/* 
-	 *  The following line is necessary because afs_GetDCache with
-	 *  flag == 4 expects the length field to be filled. It decides
-	 *  from this whether it's necessary to fetch data into the chunk
-	 *  before writing or not (when the whole chunk is overwritten!).
-	 */
-	len = totalLength;	/* write this amount by default */
-	if (noLock) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 653);
-	} else if (afs_blocksUsed >
-		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc) {
-		ObtainWriteLock(&tdc->lock, 654);
-		if (!hsame(tdc->f.versionNo, avc->m.DataVersion)
-		    || (tdc->dflags & DFFetching)) {
-		    ReleaseWriteLock(&tdc->lock);
-		    afs_PutDCache(tdc);
-		    tdc = NULL;
-		}
-	    }
-	    if (!tdc) {
-		afs_MaybeWakeupTruncateDaemon();
-		while (afs_blocksUsed >
-		       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-		    ReleaseWriteLock(&avc->lock);
-		    if (afs_blocksUsed - afs_blocksDiscarded >
-			PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-			afs_WaitForCacheDrain = 1;
-			afs_osi_Sleep(&afs_WaitForCacheDrain);
-		    }
-		    afs_MaybeFreeDiscardedDCache();
-		    afs_MaybeWakeupTruncateDaemon();
-		    ObtainWriteLock(&avc->lock, 506);
-		}
-		avc->states |= CDirty;
-		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-		if (tdc)
-		    ObtainWriteLock(&tdc->lock, 655);
-	    }
-	} else {
-	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 656);
-	}
+	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
+					 noLock);
 	if (!tdc) {
 	    error = EIO;
 	    break;
 	}
-	if (!(afs_indexFlags[tdc->index] & IFDataMod)) {
-	    afs_stats_cmperf.cacheCurrDirtyChunks++;
-	    afs_indexFlags[tdc->index] |= IFDataMod;	/* so it doesn't disappear */
-	}
-	if (!(tdc->f.states & DWriting)) {
-	    /* don't mark entry as mod if we don't have to */
-	    tdc->f.states |= DWriting;
-	    tdc->dflags |= DFEntryMod;
-	}
+
 	len = totalLength;	/* write this amount by default */
 	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */
@@ -483,66 +428,11 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
-	/* 
-	 *  The following line is necessary because afs_GetDCache with
-	 *  flag == 4 expects the length field to be filled. It decides
-	 *  from this whether it's necessary to fetch data into the chunk
-	 *  before writing or not (when the whole chunk is overwritten!).
-	 */
-	len = totalLength;	/* write this amount by default */
-	/* read the cached info */
-	if (noLock) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 657);
-	} else if (afs_blocksUsed >
-		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc) {
-		ObtainWriteLock(&tdc->lock, 658);
-		if (!hsame(tdc->f.versionNo, avc->m.DataVersion)
-		    || (tdc->dflags & DFFetching)) {
-		    ReleaseWriteLock(&tdc->lock);
-		    afs_PutDCache(tdc);
-		    tdc = NULL;
-		}
-	    }
-	    if (!tdc) {
-		afs_MaybeWakeupTruncateDaemon();
-		while (afs_blocksUsed >
-		       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-		    ReleaseWriteLock(&avc->lock);
-		    if (afs_blocksUsed - afs_blocksDiscarded >
-			PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-			afs_WaitForCacheDrain = 1;
-			afs_osi_Sleep(&afs_WaitForCacheDrain);
-		    }
-		    afs_MaybeFreeDiscardedDCache();
-		    afs_MaybeWakeupTruncateDaemon();
-		    ObtainWriteLock(&avc->lock, 509);
-		}
-		avc->states |= CDirty;
-		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-		if (tdc)
-		    ObtainWriteLock(&tdc->lock, 659);
-	    }
-	} else {
-	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 660);
-	}
+	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
+					 noLock);
 	if (!tdc) {
 	    error = EIO;
 	    break;
-	}
-	if (!(afs_indexFlags[tdc->index] & IFDataMod)) {
-	    afs_stats_cmperf.cacheCurrDirtyChunks++;
-	    afs_indexFlags[tdc->index] |= IFDataMod;	/* so it doesn't disappear */
-	}
-	if (!(tdc->f.states & DWriting)) {
-	    /* don't mark entry as mod if we don't have to */
-	    tdc->f.states |= DWriting;
-	    tdc->dflags |= DFEntryMod;
 	}
 #if defined(LINUX_USE_FH)
 	tfile = (struct osi_file *)osi_UFSOpen_fh(&tdc->f.fh, tdc->f.fh_type);
