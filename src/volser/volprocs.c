@@ -1068,6 +1068,7 @@ VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
     }
     VUpdateVolume(&error, vp);
     tt->vflags = aflags;
+    tt->rxCallPtr = (struct rx_call *)0;
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
 
