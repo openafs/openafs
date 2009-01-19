@@ -112,7 +112,7 @@ non-administrative user to obtain this listing.
 
 =head1 PRIVILEGE REQUIRED
 
-Members of the groups system:ptsviewers and system:administrators can
+Members of the system:ptsviewers and system:administrators groups can
 always use this command in any of its variations.  Additionally, a user
 can always list the groups to which they belong, and the owner of a group
 can always list the members of the group.
@@ -126,14 +126,14 @@ flags):
 
 =item *
 
-If it is a hypen, the default permissions described above apply.
+If it is a hyphen, the default permissions described above apply.
 
 =item *
 
 If it is lowercase C<m> and the B<-nameorid> argument specifies a group,
-members of that group can also list the other members.  A privacy flag of
-C<m> only changes the permissions when set for a group.  Setting this flag
-for a user or a machine has no effect.
+then members of that group can also list the other members.  A privacy
+flag of C<m> only changes the permissions when set for a group.  Setting
+this flag for a user or a machine has no effect.
 
 =item *
 
