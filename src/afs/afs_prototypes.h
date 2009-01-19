@@ -30,6 +30,7 @@ extern void DRelease(register struct buffer *bp, int flag);
 extern int DVOffset(register void *ap);
 extern void DZap(struct dcache * fid);
 extern void DFlush(void);
+extern void DFlushDCache(struct dcache *);
 extern void *DNew(register struct dcache * fid, register int page);
 extern void shutdown_bufferpackage(void);
 

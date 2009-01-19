@@ -3763,6 +3763,9 @@ int afs_MakeShadowDir(struct vcache *avc)
 
 		ReleaseWriteLock(&afs_xdcache);
 
+		/* Make sure and flush dir buffers back into the disk cache */
+		DFlushDCache(tdc);
+
 		/* Alloc a 4k block. */
 		data = (char *) afs_osi_Alloc(4096);
 		if (!data) {

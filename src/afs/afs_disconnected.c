@@ -271,10 +271,12 @@ int afs_GetVnodeName(struct vcache *avc,
 
     if (tdc) {
 	tnf.fid = &avc->fid;
-   	tnf.name_len = 0;
+   	tnf.name_len = -1;
     	tnf.name = aname;
     	afs_dir_EnumerateDir(tdc, &get_vnode_name_hook, &tnf);
 	afs_PutDCache(tdc);
+	if (tnf.name_len == -1)
+	    code = ENOENT;
     } else {
         code = ENOENT;
     }
