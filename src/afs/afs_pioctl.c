@@ -88,7 +88,7 @@ DECL_PIOCTL(PFlushMount);
 DECL_PIOCTL(PRxStatProc);
 DECL_PIOCTL(PRxStatPeer);
 DECL_PIOCTL(PPrefetchFromTape);
-DECL_PIOCTL(PResidencyCmd);
+DECL_PIOCTL(PFsCmd);
 DECL_PIOCTL(PCallBackAddr);
 DECL_PIOCTL(PNewUuid);
 /*
@@ -182,7 +182,7 @@ static int (*(VpioctlSw[])) () = {
 	PBogus,			/* 64 -- arla: force cache check */
 	PBogus,			/* 65 -- arla: break callback */
 	PPrefetchFromTape,	/* 66 -- MR-AFS: prefetch file from tape */
-	PResidencyCmd,		/* 67 -- MR-AFS: generic commnd interface */
+	PFsCmd,			/* 67 -- RXOSD: generic commnd interface */
 	PBogus,			/* 68 -- arla: fetch stats */
 	PGetVnodeXStatus2,	/* 69 - get caller access and some vcache status */
 };
@@ -3781,21 +3781,21 @@ DECL_PIOCTL(PPrefetchFromTape)
     return code;
 }
 
-DECL_PIOCTL(PResidencyCmd)
+DECL_PIOCTL(PFsCmd)
 {
     register afs_int32 code;
     struct conn *tc;
     struct vcache *tvc;
-    struct ResidencyCmdInputs *Inputs;
-    struct ResidencyCmdOutputs *Outputs;
+    struct FsCmdInputs *Inputs;
+    struct FsCmdOutputs *Outputs;
     struct VenusFid tfid;
     struct AFSFid *Fid;
 
-    Inputs = (struct ResidencyCmdInputs *)ain;
-    Outputs = (struct ResidencyCmdOutputs *)aout;
+    Inputs = (struct FsCmdInputs *)ain;
+    Outputs = (struct FsCmdOutputs *)aout;
     if (!avc)
 	return EINVAL;
-    if (!ain || ainSize != sizeof(struct ResidencyCmdInputs))
+    if (!ain || ainSize != sizeof(struct FsCmdInputs))
 	return EINVAL;
 
     Fid = &Inputs->fid;
@@ -3819,8 +3819,8 @@ DECL_PIOCTL(PResidencyCmd)
 	    if (tc) {
 		RX_AFS_GUNLOCK();
 		code =
-		    RXAFS_ResidencyCmd(tc->id, Fid, Inputs,
-				       (struct ResidencyCmdOutputs *)aout);
+		    RXAFS_FsCmd(tc->id, Fid, Inputs, 
+					(struct FsCmdOutputs *)aout);
 		RX_AFS_GLOCK();
 	    } else
 		code = -1;
@@ -3844,7 +3844,7 @@ DECL_PIOCTL(PResidencyCmd)
     afs_PutVCache(tvc);
 
     if (!code) {
-	*aoutSize = sizeof(struct ResidencyCmdOutputs);
+	*aoutSize = sizeof(struct FsCmdOutputs);
     }
     return code;
 }
