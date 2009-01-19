@@ -2776,6 +2776,30 @@ afs_PutVCache(register struct vcache *avc)
 
 
 /*!
+ * Reset a vcache entry, so local contents are ignored, and the
+ * server will be reconsulted next time the vcache is used
+ * 
+ * \param avc Pointer to the cache entry to reset
+ * \param acred 
+ *
+ * \note avc must be write locked on entry
+ */
+void
+afs_ResetVCache(struct vcache *avc, struct AFS_UCRED *acred) {
+    ObtainWriteLock(&afs_xcbhash, 456);
+    afs_DequeueCallback(avc);
+    avc->states &= ~(CStatd | CDirty);	/* next reference will re-stat */
+    ReleaseWriteLock(&afs_xcbhash);
+    /* now find the disk cache entries */
+    afs_TryToSmush(avc, acred, 1);
+    osi_dnlc_purgedp(avc);
+    if (avc->linkData && !(avc->states & CCore)) {
+	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
+	avc->linkData = NULL;
+    }
+}
+
+/*!
  * Sleepa when searching for a vcache. Releases all the pending locks,
  * sleeps then obtains the previously released locks.
  *

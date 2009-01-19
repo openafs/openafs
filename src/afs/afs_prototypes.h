@@ -987,6 +987,7 @@ extern int afs_RemoteLookup(register struct VenusFid *afid,
 			    struct AFSCallBack *CallBackp,
 			    struct server **serverp,
 			    struct AFSVolSync *tsyncp);
+extern void afs_ResetVCache(struct vcache *, struct AFS_UCRED *);
 extern afs_int32 afs_NFSFindVCache(struct vcache **avcp,
 				   struct VenusFid *afid);
 extern void afs_vcacheInit(int astatSize);
