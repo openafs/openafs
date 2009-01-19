@@ -174,14 +174,43 @@ struct SmallFid {
 /* The actual number of bytes in the SmallFid, not the sizeof struct. */
 #define SIZEOF_SMALLFID 10
 
+/* Queues 
+ * ------
+ *
+ *  Circular queues, implemented with pointers. Structures may contain as many
+ *  queues as required, which may be located at any point within the structure,
+ *  providing the QEntry macro is used to translate between a queue pointer, and
+ *  the address of its containing structure
+ */
 
-/*
-  * Queues implemented with both pointers and short offsets into a disk file.
-  */
 struct afs_q {
     struct afs_q *next;
     struct afs_q *prev;
 };
+
+#define	QInit(q)    ((q)->prev = (q)->next = (q))
+#define	QAdd(q,e)   ((e)->next = (q)->next, (e)->prev = (q), \
+			(q)->next->prev = (e), (q)->next = (e))
+#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next, (e)->prev = NULL, (e)->next = NULL)
+#define	QNext(e)    ((e)->next)
+#define QPrev(e)    ((e)->prev)
+#define QEmpty(q)   ((q)->prev == (q))
+/* this one takes q1 and sticks it on the end of q2 - that is, the other end, not the end
+ * that things are added onto.  q1 shouldn't be empty, it's silly */
+#define QCat(q1,q2) ((q2)->prev->next = (q1)->next, (q1)->next->prev=(q2)->prev, (q1)->prev->next=(q2), (q2)->prev=(q1)->prev, (q1)->prev=(q1)->next=(q1))
+
+/* Given a pointer to an afs_q within a structure, go back to the address of
+ * the parent structure
+ */
+
+#define QEntry(queue, structure, member) \
+	((structure *)((char *)(queue)-(char *)(&((structure *)NULL)->member)))
+
+/* And implement operations for individual lists in terms of the above macro */
+
+#define QTOV(e)	    QEntry(e, struct vcache, vlruq)
+#define QTOC(e)	    QEntry(e, struct cell, lruq)
+#define QTOVH(e)    QEntry(e, struct vcache, vhashq)
 
 struct vrequest {
     afs_int32 uid;		/* user id making the request */
@@ -324,29 +353,6 @@ struct conn {
 	( (tvc)->fid.Fid.Unique == (afid)->Fid.Unique || \
 	 (!(afid)->Fid.Unique && ((tvc)->states & CUnique))))
 
-
-/*
-  * Operations on circular queues implemented with pointers.  Note: these queue
-  * objects are always located at the beginning of the structures they are linking.
-  */
-#define	QInit(q)    ((q)->prev = (q)->next = (q))
-#define	QAdd(q,e)   ((e)->next = (q)->next, (e)->prev = (q), \
-			(q)->next->prev = (e), (q)->next = (e))
-#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next, (e)->prev = NULL, (e)->next = NULL)
-#define	QNext(e)    ((e)->next)
-#define QPrev(e)    ((e)->prev)
-#define QEmpty(q)   ((q)->prev == (q))
-/* this one takes q1 and sticks it on the end of q2 - that is, the other end, not the end
- * that things are added onto.  q1 shouldn't be empty, it's silly */
-#define QCat(q1,q2) ((q2)->prev->next = (q1)->next, (q1)->next->prev=(q2)->prev, (q1)->prev->next=(q2), (q2)->prev=(q1)->prev, (q1)->prev=(q1)->next=(q1))
-/*
- * Do lots of address arithmetic to go from vlruq to the base of the vcache
- * structure.  Don't move struct vnode, since we think of a struct vcache as
- * a specialization of a struct vnode
- */
-#define	QTOV(e)	    ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vlruq))) - ((char *)(e)))))
-#define	QTOC(e)	    ((struct cell *)((char *) (e)))
-#define	QTOVH(e)   ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vhashq))) - ((char *)(e)))))
 
 #define	SRVADDR_MH	1
 #define	SRVADDR_ISDOWN	0x20	/* same as SRVR_ISDOWN */
