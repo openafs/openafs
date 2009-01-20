@@ -389,7 +389,7 @@ struct AccessHistoryOld {
     afs_uint32 Residency4;
 };
 
-struct FsCmdInputs {
+struct ResidencyCmdInputs {
     afs_int32  command;
     struct AFSFid fid;
     afs_int64  int64s[MAXCMDINT64S];
@@ -397,7 +397,7 @@ struct FsCmdInputs {
     char       chars[MAXCMDCHARS];
 };
 
-struct FsCmdOutputs {
+struct ResidencyCmdOutputs {
     afs_int32  code;
     struct AFSFetchStatus status;
     afs_int64  int64s[MAXCMDINT64S];
@@ -656,10 +656,10 @@ DFSSymlink(
   AFSVolSync *Sync
 ) = 163;
 
-FsCmd(
+ResidencyCmd(
   IN AFSFid *Fid,
-  IN struct FsCmdInputs *Inputs,
-  OUT struct FsCmdOutputs *Outputs
+  IN struct ResidencyCmdInputs *Inputs,
+  OUT struct ResidencyCmdOutputs *Outputs
 ) = 220;
 
 InlineBulkStatus(
