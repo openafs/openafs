@@ -2613,22 +2613,42 @@ clientchar_t *smb_ParseASCIIBlock(smb_packet_t * pktp, unsigned char *inp,
                                   char **chainpp, int flags)
 {
     size_t cb;
+    afs_uint32 type = *inp++;
 
-    if (*inp++ != 0x4) 
-        return NULL;
+    /* 
+     * The first byte specifies the type of the input string.
+     * CIFS TR 1.0 3.2.10.  This function only parses null terminated
+     * strings.
+     */
+    switch (type) {
+    /* Length Counted */
+    case 0x1: /* Data Block */
+    case 0x5: /* Variable Block */
+        cb = *inp++ << 16 | *inp++;
+        break;
+
+    /* Null-terminated string */
+    case 0x4: /* ASCII */
+    case 0x3: /* Pathname */
+    case 0x2: /* Dialect */
+        cb = sizeof(pktp->data) - (inp - pktp->data);
+        if (inp < pktp->data || inp >= pktp->data + sizeof(pktp->data)) {
+#ifdef DEBUG_UNICODE
+            DebugBreak();
+#endif
+            cb = sizeof(pktp->data);
+        }
+        break;
+
+    default:
+        return NULL;            /* invalid input */
+    }
 
 #ifdef SMB_UNICODE
-    if (!WANTS_UNICODE(pktp))
+    if (type == 0x2 /* Dialect */ || !WANTS_UNICODE(pktp))
         flags |= SMB_STRF_FORCEASCII;
 #endif
 
-    cb = sizeof(pktp->data) - (inp - pktp->data);
-    if (inp < pktp->data || inp >= pktp->data + sizeof(pktp->data)) {
-#ifdef DEBUG_UNICODE
-        DebugBreak();
-#endif
-        cb = sizeof(pktp->data);
-    }
     return smb_ParseStringBuf(pktp->data, &pktp->stringsp, inp, &cb, chainpp, flags);
 }
 
@@ -4076,6 +4096,8 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         char *tbp;
         tbp = smb_GetSMBData(inp, NULL);
         pathp = smb_ParseASCIIBlock(inp, tbp, &tbp, SMB_STRF_ANSIPATH);
+        if (!pathp)
+            return CM_ERROR_BADSMB;
     }
     tp = cm_ClientStrRChr(pathp, '\\');
     if (!tp)
@@ -4247,7 +4269,8 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp,
                                 SMB_STRF_ANSIPATH|SMB_STRF_FORCEASCII);
-    osi_assertx(pathp != NULL, "null path");
+    if (!pathp)
+        return CM_ERROR_BADSMB;
     statBlockp = smb_ParseVblBlock(tp, &tp, &statLen);
     osi_assertx(statBlockp != NULL, "null statBlock");
     if (statLen == 0) {
@@ -4544,12 +4567,12 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp,
                                 SMB_STRF_ANSIPATH|SMB_STRF_FORCEASCII);
-    inCookiep = smb_ParseVblBlock(tp, &tp, &dataLength);
-
-    /* bail out if request looks bad */
-    if (!tp || !pathp) {
+    if (!pathp)
         return CM_ERROR_BADSMB;
-    }
+
+    inCookiep = smb_ParseVblBlock(tp, &tp, &dataLength);
+    if (!tp)
+        return CM_ERROR_BADSMB;
 
     /* We can handle long names */
     if (vcp->flags & SMB_VCFLAG_USENT)
@@ -5057,7 +5080,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     pdata = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, pdata, NULL, SMB_STRF_ANSIPATH);
     if (!pathp)
-        return CM_ERROR_BADFD;
+        return CM_ERROR_BADSMB;
     osi_Log1(smb_logp, "SMB receive check path %S",
              osi_LogSaveClientString(smb_logp, pathp));
         
@@ -5428,6 +5451,8 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     datap = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, datap, NULL, SMB_STRF_ANSIPATH);
+    if (!pathp)
+        return CM_ERROR_BADSMB;
 
     osi_Log1(smb_logp, "SMB receive open file [%S]", osi_LogSaveClientString(smb_logp, pathp));
 
@@ -5655,6 +5680,8 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
+    if (!pathp)
+        return CM_ERROR_BADSMB;
 
     osi_Log1(smb_logp, "SMB receive unlink %S",
              osi_LogSaveClientString(smb_logp, pathp));
@@ -6207,7 +6234,11 @@ smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     tp = smb_GetSMBData(inp, NULL);
     oldPathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
+    if (!oldPathp)
+        return CM_ERROR_BADSMB;
     newPathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
+    if (!newPathp)
+        return CM_ERROR_BADSMB;
 
     osi_Log2(smb_logp, "smb rename [%S] to [%S]",
              osi_LogSaveClientString(smb_logp, oldPathp),
@@ -6301,6 +6332,8 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
+    if (!pathp)
+        return CM_ERROR_BADSMB;
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
@@ -7691,12 +7724,14 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
-
-    if (cm_ClientStrCmp(pathp, _C("\\")) == 0)
-        return CM_ERROR_EXISTS;
+    if (!pathp)
+        return CM_ERROR_BADSMB;
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
+
+    if (cm_ClientStrCmp(pathp, _C("\\")) == 0)
+        return CM_ERROR_EXISTS;
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -7820,6 +7855,8 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(inp, tp, &tp, SMB_STRF_ANSIPATH);
+    if (!pathp)
+        return CM_ERROR_BADSMB;
 
     if (!cm_IsValidClientString(pathp)) {
 #ifdef DEBUG
