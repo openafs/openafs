@@ -5673,6 +5673,8 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     pathp = smb_ParseASCIIBlock(inp, smb_GetSMBData(inp, NULL), NULL,
                                 SMB_STRF_ANSIPATH);
+    if (!pathp)
+        return CM_ERROR_BADSMB;
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
@@ -8890,7 +8892,11 @@ long smb_ReceiveNTRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     tp = smb_GetSMBData(inp, NULL);
     oldPathp = smb_ParseASCIIBlock(inp, tp, &tp, 0);
+    if (!oldPathp)
+        return CM_ERROR_BADSMB;
     newPathp = smb_ParseASCIIBlock(inp, tp, &tp, 0);
+    if (!newPathp)
+        return CM_ERROR_BADSMB;
 
     osi_Log3(smb_logp, "NTRename for [%S]->[%S] type [%s]",
              osi_LogSaveClientString(smb_logp, oldPathp),
