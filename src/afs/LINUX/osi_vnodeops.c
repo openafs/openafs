@@ -662,20 +662,8 @@ afs_linux_flush(struct file *fp)
 				&treq,
 				AFS_SYNC | AFS_LASTSTORE);
 	} else {
-#if defined(AFS_DISCON_ENV)
-		if (!vcp->ddirty_flags ||
-		    (vcp->ddirty_flags == VDisconShadowed)) {
-
-		    ObtainWriteLock(&afs_DDirtyVCListLock, 710);
-		    AFS_DISCON_ADD_DIRTY(vcp, 1);
-		    ReleaseWriteLock(&afs_DDirtyVCListLock);
-		}
-
-		/* Set disconnected write flag. */
-		vcp->ddirty_flags |= VDisconWriteOsiFlush;
-#endif
+		afs_DisconAddDirty(vcp, VDisconWriteOsiFlush, 1);
 	}
-
 	ConvertWToSLock(&vcp->lock);
     }
     code = afs_CheckCode(code, &treq, 54);
@@ -1799,6 +1787,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	 maybe_lock_kernel();
 #endif
 	 AFS_GLOCK();
+	 AFS_DISCON_LOCK();
 	 afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip, ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32, 99999);	/* not a possible code value */
 
 	 code = afs_rdwr(avc, auio, UIO_READ, 0, credp);
@@ -1806,6 +1795,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	 afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
 				ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32,
 				code);
+	 AFS_DISCON_UNLOCK();
 	 AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
 	 maybe_unlock_kernel();
@@ -2012,6 +2002,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 
     credp = crref();
     AFS_GLOCK();
+    AFS_DISCON_LOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
@@ -2039,6 +2030,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, code);
 
+    AFS_DISCON_UNLOCK();
     AFS_GUNLOCK();
     crfree(credp);
 

@@ -596,9 +596,10 @@ struct SimpleLocks {
 #define VDisconWriteFlush	0x00000800	/* Write op on normal fsync/flush. */
 #define VDisconWriteOsiFlush	0x00001000	/* Write op on osi flush. */
 
-#define VDisconShadowed		0x00002000	/* Shadowed dir. */
-#define VDisconRemove		0x00004000	/* Remove vnop. */
-#define VDisconCreate		0x00008000	/* Create vnop. */
+#define VDisconRemove		0x00002000	/* Remove vnop. */
+#define VDisconCreate		0x00004000	/* Create vnop. */
+#define VDisconCreated		0x00008000	/* A file that was created during
+						   this resync operation */
 #define VDisconRename		0x00010000	/* Rename vnop. */
 #define VDisconRenameSameDir	0x00020000	/* Rename in same dir. */
 
@@ -685,10 +686,11 @@ struct vcache {
 #endif
     struct vcache *hnext;	/* Hash next */
     struct afs_q vhashq;	/* Hashed per-volume list */
-
 #if defined(AFS_DISCON_ENV)
-    /*! Next element in afs_DDirtyVCList. Lock it with afs_DDirtyVCListLock. */
-    struct vcache *ddirty_next;
+    /*! Queue of dirty vcaches. Lock with afs_disconDirtyLock */
+    struct afs_q dirtyq;
+    /*! Queue of vcaches with shadow entries. Lock with afs_disconDirtyLock */
+    struct afs_q shadowq;
     /*! Disconnected flags for this vcache element. */
     uint32_t ddirty_flags;
     /*! Shadow vnode + unique keep the shadow dir location. */

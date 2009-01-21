@@ -91,7 +91,7 @@ afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname,
 	goto done;
     }
     
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED) {
         code = ENETDOWN;
         goto done;
     }

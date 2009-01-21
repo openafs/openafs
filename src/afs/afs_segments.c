@@ -216,11 +216,9 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    osi_VM_StoreAllSegments(avc);
     }
     if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
-        if (!AFS_IS_LOGGING) {
-            /* This will probably make someone sad ... */
-	    /*printf("Net down in afs_StoreSegments\n");*/
-            return ENETDOWN;
-        }
+	/* This will probably make someone sad ... */
+	/*printf("Net down in afs_StoreSegments\n");*/
+	return ENETDOWN;
     }
     ConvertWToSLock(&avc->lock);
 

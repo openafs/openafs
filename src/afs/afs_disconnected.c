@@ -21,16 +21,15 @@ RCSID("$Header$");
 	((vc->m.DataVersion.low == fstat.DataVersion) && \
      	(vc->m.DataVersion.high == fstat.dataVersionHigh))
 
-/*! Global list of dirty vcaches. */
-/*! Last added element. */
-struct vcache *afs_DDirtyVCList = NULL;
-/*! Head of list. */
-struct vcache *afs_DDirtyVCListStart = NULL;
-/*! Previous element in the list. */
-struct vcache *afs_DDirtyVCListPrev = NULL;
+/*! Circular queue of dirty vcaches */
+struct afs_q afs_disconDirty;
 
-/*! Locks list of dirty vcaches. */
-afs_rwlock_t afs_DDirtyVCListLock;
+/*! Circular queue of vcaches with shadow directories */
+struct afs_q afs_disconShadow;
+
+/*! Locks both of these lists. Must be write locked for anything other than
+ *  list traversal */
+afs_rwlock_t afs_disconDirtyLock;
 
 extern afs_int32 *afs_dvhashTbl;	/*Data cache hash table */
 extern afs_int32 *afs_dchashTbl;	/*Data cache hash table */
@@ -38,8 +37,7 @@ extern afs_int32 *afs_dvnextTbl;	/*Dcache hash table links */
 extern afs_int32 *afs_dcnextTbl;	/*Dcache hash table links */
 extern struct dcache **afs_indexTable;	/*Pointers to dcache entries */
 
-/*! Vnode number. On file creation, use the current
- *  value and increment it.
+/*! Vnode number. On file creation, use the current value and increment it.
  */
 afs_uint32 afs_DisconVnode = 2;
 
@@ -53,6 +51,9 @@ enum {
 
 afs_int32 afs_ConflictPolicy = SERVER_WINS;
 
+static void afs_DisconResetVCache(struct vcache *, struct AFS_UCRED *);
+static void afs_DisconDiscardAllShadows(int, struct AFS_UCRED *);
+
 /*!
  * Find the first dcache of a file that has the specified fid.
  * Similar to afs_FindDCache, only that it takes a fid instead
@@ -62,10 +63,10 @@ afs_int32 afs_ConflictPolicy = SERVER_WINS;
  *
  * \return The found dcache or NULL.
  */
-struct dcache *afs_FindDCacheByFid(register struct VenusFid *afid)
+struct dcache *afs_FindDCacheByFid(struct VenusFid *afid)
 {
-    register afs_int32 i, index;
-    register struct dcache *tdc = NULL;
+    afs_int32 i, index;
+    struct dcache *tdc = NULL;
 
     i = DVHash(afid);
     ObtainWriteLock(&afs_xdcache, 758);
@@ -150,6 +151,8 @@ int get_parent_dir_fid_hook(void *hdata,
  *
  * \param avc The file's vhash entry.
  * \param afid Put the fid here.
+ *
+ * \return 0 on success, -1 on failure
  */
 int afs_GetParentDirFid(struct vcache *avc, struct VenusFid *afid)
 {
@@ -170,6 +173,8 @@ int afs_GetParentDirFid(struct vcache *avc, struct VenusFid *afid)
 	    /* Lookup each entry for the fid. It should be the first. */
     	    afs_dir_EnumerateDir(tdc, &get_parent_dir_fid_hook, afid);
     	    afs_PutDCache(tdc);
+	} else {
+	    return -1;
 	}
     }
 
@@ -321,12 +326,12 @@ int chk_del_children_hook(void *hdata,
     tvc = afs_FindVCache(&tfid, 0, 1);
     ReleaseSharedLock(&afs_xvcache);
 
-    /* Count unfinished dirty children. VDisconShadowed can still be set,
-     * because we need it to remove the shadow dir.
-     */
+    /* Count unfinished dirty children. */
     if (tvc) {
-	if (tvc->ddirty_flags)
+	ObtainReadLock(&tvc->lock);
+	if (tvc->ddirty_flags || tvc->shVnode)
 	    v->count++;
+	ReleaseReadLock(&tvc->lock);
 
 	afs_PutVCache(tvc);
     }
@@ -348,7 +353,7 @@ int afs_CheckDeletedChildren(struct vcache *avc)
     struct DirtyChildrenCount dcc;
     struct VenusFid shadow_fid;
 
-    if (!(avc->ddirty_flags & VDisconShadowed))
+    if (!avc->shVnode)
     	/* Empty dir. */
     	return 0;
 
@@ -476,7 +481,7 @@ void afs_DbgListDirEntries(struct VenusFid *afid)
 int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
 {
     struct VenusFid old_pdir_fid, new_pdir_fid;
-    char *old_name, *new_name;
+    char *old_name = NULL, *new_name = NULL;
     struct AFSFetchStatus OutOldDirStatus, OutNewDirStatus;
     struct AFSVolSync tsync;
     struct afs_conn *tc;
@@ -498,8 +503,7 @@ int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     code = afs_GetVnodeName(avc, &old_pdir_fid, old_name, 1);
     if (code) {
 	printf("afs_ProcessOpRename: Couldn't find old name.\n");
-	code = ENOENT;
-	goto end2;
+	goto done;
     }
 
     /* Alloc data first. */
@@ -507,7 +511,7 @@ int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     if (!new_name) {
 	printf("afs_ProcessOpRename: Couldn't alloc space for new name.\n");
 	code = ENOMEM;
-	goto end2;
+	goto done;
     }
 
     if (avc->ddirty_flags & VDisconRenameSameDir) {
@@ -522,7 +526,7 @@ int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     	if (!new_pdir_fid.Fid.Unique) {
 	    printf("afs_ProcessOpRename: Couldn't find new parent dir FID.\n");
 	    code = ENOENT;
-	    goto end1;
+	    goto done;
         }
     }
 
@@ -530,8 +534,7 @@ int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     code = afs_GetVnodeName(avc, &new_pdir_fid, new_name, 0);
     if (code) {
 	printf("afs_ProcessOpRename: Couldn't find new name.\n");
-	code = ENOENT;
-	goto end1;
+	goto done;
     }
 
     /* Send to data to server. */
@@ -563,10 +566,11 @@ int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
 
     if (code)
     	printf("afs_ProcessOpRename: server code=%u\n", code);
-end1:
-    afs_osi_Free(new_name, AFSNAMEMAX);
-end2:
-    afs_osi_Free(old_name, AFSNAMEMAX);
+done:
+    if (new_name)
+	afs_osi_Free(new_name, AFSNAMEMAX);
+    if (old_name)
+	afs_osi_Free(old_name, AFSNAMEMAX);
     return code;
 }
 
@@ -599,7 +603,7 @@ int afs_ProcessOpCreate(struct vcache *avc,
     pdir_fid.Fid.Unique = 0;
     afs_GetParentDirFid(avc, &pdir_fid);
     if (!pdir_fid.Fid.Unique) {
-	printf("afs_ProcessOpCreate: Couldn't find parent dir'sFID.\n");
+	printf("afs_ProcessOpCreate: Couldn't find parent dir's FID.\n");
 	return ENOENT;
     }
 
@@ -613,7 +617,6 @@ int afs_ProcessOpCreate(struct vcache *avc,
     code = afs_GetVnodeName(avc, &pdir_fid, tname, 0);
     if (code) {
 	printf("afs_ProcessOpCreate: Couldn't find file name\n");
-	code = ENOENT;
 	goto end;
     }
 
@@ -629,12 +632,9 @@ int afs_ProcessOpCreate(struct vcache *avc,
 
     if (tdp->ddirty_flags & VDisconCreate) {
     	/* If the parent dir has been created locally, defer
-	 * this vnode for later by moving it to the end.
-	 */
-	afs_DDirtyVCList->ddirty_next = avc;
-	afs_DDirtyVCList = avc;
-	printf("afs_ProcessOpRemove: deferring this vcache\n");
-    	code = ENOTEMPTY;
+	 * this vnode for later */
+	printf("afs_ProcessOpCreate: deferring this vcache\n");
+    	code = EAGAIN;
 	goto end;
     }
 
@@ -714,7 +714,6 @@ int afs_ProcessOpCreate(struct vcache *avc,
     /* TODO: Handle errors. */
     if (code) {
 	printf("afs_ProcessOpCreate: error while creating vnode on server, code=%d .\n", code);
-	code = EIO;
 	goto end;
     }
 
@@ -772,7 +771,6 @@ int afs_ProcessOpCreate(struct vcache *avc,
 	afs_vhashT[hash] = avc->hnext;
     } else {
         /* More elements in hash chain. */
- 	//for (tvc = afs_vhashT[hash]; tdp; tdp = tdp->hnext) {
  	for (tvc = afs_vhashT[hash]; tvc; tvc = tvc->hnext) {
 	    if (tvc->hnext == avc) {
 		tvc->hnext = avc->hnext;
@@ -780,12 +778,12 @@ int afs_ProcessOpCreate(struct vcache *avc,
 	    }
         }
     }                           /* if (!afs_vhashT[i]->hnext) */
-    QRemove(&afs_vhashTV[hash]);
+    QRemove(&avc->vhashq);
 
     /* Insert hash in new position. */
     avc->hnext = afs_vhashT[new_hash];
     afs_vhashT[new_hash] = avc;
-    QAdd(&afs_vhashTV[new_hash], &avc->vhashq);
+    QAdd(&afs_vhashTV[VCHashV(&newFid)], &avc->vhashq);
 
     ReleaseWriteLock(&afs_xvcache);
 
@@ -813,7 +811,6 @@ int afs_ProcessOpCreate(struct vcache *avc,
 
  		afs_indexUnique[tdc->index] = newFid.Fid.Unique;
 		memcpy(&tdc->f.fid, &newFid, sizeof(struct VenusFid));
-                //afs_MaybeWakeupTruncateDaemon();
            }                   /* if fid match */
 	}                       /* if uniquifier match */
     	if (tdc)
@@ -842,7 +839,7 @@ end:
 /*!
  * Remove a vnode on the server, be it file or directory.
  * Not much to do here only get the parent dir's fid and call the
- * removel rpc.
+ * removal rpc.
  *
  * \param avc The deleted vcache
  * \param areq
@@ -874,7 +871,7 @@ int afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
 
     tname = afs_osi_Alloc(AFSNAMEMAX);
     if (!tname) {
-	printf("afs_ProcessOpRemove: Couldn't find file name\n");
+	printf("afs_ProcessOpRemove: Couldn't alloc space for file name\n");
 	return ENOMEM;
     }
 
@@ -882,7 +879,6 @@ int afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
     code = afs_GetVnodeName(avc, &pdir_fid, tname, 1);
     if (code) {
 	printf("afs_ProcessOpRemove: Couldn't find file name\n");
-	code = ENOENT;
 	goto end;
     }
 
@@ -890,9 +886,7 @@ int afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
 	/* Deleted children of this dir remain unsynchronized.
 	 * Defer this vcache.
 	 */
-	afs_DDirtyVCList->ddirty_next = avc;
-	afs_DDirtyVCList = avc;
-    	code = ENOTEMPTY;
+    	code = EAGAIN;
 	goto end;
     }
 
@@ -1066,7 +1060,7 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
  * \param acred User credentials.
  *
  * \return If all files synchronized succesfully, return 0, otherwise
- * return 1.
+ * return error code
  *
  * \note For now, it's the request from the PDiscon pioctl.
  *
@@ -1078,51 +1072,39 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
     struct AFSFetchStatus fstat;
     struct AFSCallBack callback;
     struct AFSVolSync tsync;
-    struct vcache *shList, *shListStart;
-    int code;
-    int sync_failed = 0;
-    int ret_code = 0;
-    int defered = 0;
+    int code = 0;
+    int ucode;
     afs_int32 start = 0;
     XSTATS_DECLS;
     //AFS_STATCNT(afs_ResyncDisconFiles);
 
-    shList = shListStart = NULL;
+    ObtainWriteLock(&afs_disconDirtyLock, 707);
 
-    ObtainReadLock(&afs_DDirtyVCListLock);
+    while (!QEmpty(&afs_disconDirty)) {
+	tvc = QEntry(QPrev(&afs_disconDirty), struct vcache, dirtyq);
 
-    tvc = afs_DDirtyVCListStart;
-    while (tvc) {
+	/* Can't lock tvc whilst holding the discon dirty lock */
+	ReleaseWriteLock(&afs_disconDirtyLock);
 
 	/* Get local write lock. */
-	ObtainWriteLock(&tvc->lock, 704);
-  	sync_failed = 0;
+	ObtainWriteLock(&tvc->lock, 705);
 
-	if ((tvc->ddirty_flags & VDisconRemove) &&
-	    (tvc->ddirty_flags & VDisconCreate)) {
-	   /* Data created and deleted locally. The server doesn't
-	    * need to know about this, so we'll just skip this file
-	    * from the dirty list.
-	    */
-	    goto skip_file;
-
-	} else if (tvc->ddirty_flags & VDisconRemove) {
+	if (tvc->ddirty_flags & VDisconRemove) {
 	    /* Delete the file on the server and just move on
 	     * to the next file. After all, it has been deleted
 	     * we can't replay any other operation it.
 	     */
 	    code = afs_ProcessOpRemove(tvc, areq);
-	    if (code == ENOTEMPTY)
-	    	defered = 1;
-	    goto skip_file;
+	    goto next_file;
 
 	} else if (tvc->ddirty_flags & VDisconCreate) {
 	    /* For newly created files, we don't need a server lock. */
 	    code = afs_ProcessOpCreate(tvc, areq, acred);
-	    if (code == ENOTEMPTY)
-	    	defered = 1;
 	    if (code)
-	    	goto skip_file;
+	    	goto next_file;
+
+	    tvc->ddirty_flags &= ~VDisconCreate;
+	    tvc->ddirty_flags |= VDisconCreated;
 	}
 
   	/* Get server write lock. */
@@ -1148,17 +1130,14 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 			SHARED_LOCK,
 			NULL));
 
-	if (code) {
-	    sync_failed = 1;
-	    goto skip_file;
-	}
+	if (code)
+	    goto next_file;
 
-	if ((tvc->ddirty_flags & VDisconRename) &&
-		!(tvc->ddirty_flags & VDisconCreate)) {
-	    /* Rename file only if it hasn't been created locally. */
+	if (tvc->ddirty_flags & VDisconRename) {
+	    /* If we're renaming the file, do so now */
 	    code = afs_ProcessOpRename(tvc, areq);
 	    if (code)
-	    	goto skip_file;
+	    	goto unlock_srv_file;
 	}
 
 	/* Issue a FetchStatus to get info about DV and callbacks. */
@@ -1188,13 +1167,12 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 			NULL));
 
 	if (code) {
-	    sync_failed = 1;
 	    goto unlock_srv_file;
 	}
 
 	if ((dv_match(tvc, fstat) && (tvc->m.Date == fstat.ServerModTime)) ||
 	    	(afs_ConflictPolicy == CLIENT_WINS) ||
-		(tvc->ddirty_flags & VDisconCreate)) {
+		(tvc->ddirty_flags & VDisconCreated)) {
 	    /*
 	     * Send changes to the server if there's data version match, or
 	     * client wins policy has been selected or file has been created
@@ -1209,38 +1187,12 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 
 	} else if (afs_ConflictPolicy == SERVER_WINS) {
 	    /* DV mismatch, apply collision resolution policy. */
-	    /* Dequeue whatever callback is on top (XXX: propably none). */
-      	    ObtainWriteLock(&afs_xcbhash, 706);
-	    afs_DequeueCallback(tvc);
-	    tvc->callback = NULL;
-	    tvc->states &= ~(CStatd | CDirty | CUnique);
-	    ReleaseWriteLock(&afs_xcbhash);
-
-	    /* Save metadata. File length gets updated as well because we
-	     * just removed CDirty from the avc.
-	     */
-	    //afs_ProcessFS(tvc, &fstat, areq);
-
 	    /* Discard this files chunks and remove from current dir. */
-	    afs_TryToSmush(tvc, acred, 1);
-	    osi_dnlc_purgedp(tvc);
-	    if (tvc->linkData && !(tvc->states & CCore)) {
-		/* Take care of symlinks. */
-		afs_osi_Free(tvc->linkData, strlen(tvc->linkData) + 1);
-		tvc->linkData = NULL;
-	    }
-
-	    /* Otherwise file content's won't be synchronized. */
+	    afs_ResetVCache(tvc, acred);
 	    tvc->truncPos = AFS_NOTRUNC;
-
 	} else {
 	    printf("afs_ResyncDisconFiles: no resolution policy selected.\n");
 	}		/* if DV match or client wins policy */
-
-	if (code) {
-	    sync_failed = 1;
-	    printf("Sync FAILED.\n");
-	}
 
 unlock_srv_file:
 	/* Release server write lock. */
@@ -1249,89 +1201,123 @@ unlock_srv_file:
 	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
 	    	RX_AFS_GUNLOCK();
-		code = RXAFS_ReleaseLock(tc->id,
+		ucode = RXAFS_ReleaseLock(tc->id,
 				(struct AFSFid *) &tvc->fid.Fid,
 				&tsync);
 		RX_AFS_GLOCK();
 		XSTATS_END_TIME;
 	    } else
-		code = -1;
+		ucode = -1;
 	} while (afs_Analyze(tc,
-			code,
+			ucode,
 			&tvc->fid,
 			areq,
 			AFS_STATS_FS_RPCIDX_RELEASELOCK,
 			SHARED_LOCK,
 			NULL));
 
-skip_file:
-	/* Pop this dirty vc out. */
-	tmp = tvc;
-	tvc = tvc->ddirty_next;
-
-	if (!defered) {
-	    /* Vnode not deferred. Clean it up. */
-	    if (!sync_failed) {
-	    	if (tmp->ddirty_flags == VDisconShadowed) {
-		    /* Dirs that have only the shadow flag set might still
-		     * be used so keep them in a different list, that gets
-		     * deleted after resync is done.
-		     */
-		    if (!shListStart)
-		    	shListStart = shList = tmp;
-		    else {
-		    	shList->ddirty_next = tmp;
-			shList = tmp;
-		    }
-		} else if (tmp->ddirty_flags & VDisconShadowed)
-	    	    /* We can discard the shadow dir now. */
-	    	    afs_DeleteShadowDir(tmp);
-
-		/* Drop the refcount on this vnode because it's not in the
-		 * list anymore.
-		 */
-		 afs_PutVCache(tmp);
-
-	    	/* Only if sync was successfull,
-		 * clear flags and dirty references.
-		 */
-	    	tmp->ddirty_next = NULL;
-	    	tmp->ddirty_flags = 0;
-	    } else
-	    	ret_code = 1;
+next_file:
+	ObtainWriteLock(&afs_disconDirtyLock, 710);
+	if (code == 0) {
+	    /* Replayed successfully - pull the vcache from the 
+	     * disconnected list */
+	    tvc->ddirty_flags = 0;
+	    QRemove(&tvc->dirtyq);
+	    afs_PutVCache(tvc);
 	} else {
-	    tmp->ddirty_next = NULL;
-	    defered = 0;
-	}			/* if (!defered) */
+	    if (code == EAGAIN)	{
+		/* Operation was deferred. Pull it from the current place in 
+		 * the list, and stick it at the end again */
+		QRemove(&tvc->dirtyq);
+	   	QAdd(&afs_disconDirty, &tvc->dirtyq);
+	    } else {
+		/* Failed - keep state as is, and let the user know we died */
+		ReleaseWriteLock(&tvc->lock);
+		break;
+	    }
+	}
 
 	/* Release local write lock. */
-	ReleaseWriteLock(&tmp->lock);
+	ReleaseWriteLock(&tvc->lock);
     }			/* while (tvc) */
 
-    /* Delete the rest of shadow dirs. */
-    tvc = shListStart;
-    while (tvc) {
-    	ObtainWriteLock(&tvc->lock, 764);
+    if (code) {
+        ReleaseWriteLock(&afs_disconDirtyLock);
+	return code;
+    }
+
+    /* Dispose of all of the shadow directories */
+    afs_DisconDiscardAllShadows(0, acred);
+
+    ReleaseWriteLock(&afs_disconDirtyLock);
+    return code;
+}
+
+/*!
+ * Discard all of our shadow directory copies. If squash is true, then
+ * we also invalidate the vcache holding the shadow directory, to ensure
+ * that any disconnected changes are deleted
+ * 
+ * \param squash
+ * \param acred
+ *
+ * \note afs_disconDirtyLock must be held on entry. It will be released
+ * and reobtained
+ */
+
+static void
+afs_DisconDiscardAllShadows(int squash, struct AFS_UCRED *acred) {
+   struct vcache *tvc;
+
+   while (!QEmpty(&afs_disconShadow)) {
+	tvc = QEntry(QNext(&afs_disconShadow), struct vcache, shadowq);
+
+	/* Must release the dirty lock to be able to get a vcache lock */
+	ReleaseWriteLock(&afs_disconDirtyLock);
+	ObtainWriteLock(&tvc->lock, 706);
 
 	afs_DeleteShadowDir(tvc);
 	tvc->shVnode = 0;
 	tvc->shUnique = 0;
 
-	tmp = tvc;
-	tvc = tvc->ddirty_next;
-	tmp->ddirty_next = NULL;
+	if (squash)
+	   afs_ResetVCache(tvc, acred);
 
-	ReleaseWriteLock(&tmp->lock);
+	ObtainWriteLock(&afs_disconDirtyLock, 709);
+	QRemove(&tvc->shadowq);
+
+	ReleaseWriteLock(&tvc->lock);
     }				/* while (tvc) */
+}
 
-    if (ret_code == 0) {
-    	/* NULLIFY dirty list only if resync complete. */
-	afs_DDirtyVCListStart = NULL;
-	afs_DDirtyVCList = NULL;
+/*!
+ * This function throws away the whole disconnected state, allowing
+ * the cache manager to reconnect to a server if we get into a state
+ * where reconiliation is impossible.
+ *
+ * \param acred
+ *
+ */
+void 
+afs_DisconDiscardAll(struct AFS_UCRED *acred) {
+    struct vcache *tvc;
+
+    ObtainWriteLock(&afs_disconDirtyLock, 717);
+    while (!QEmpty(&afs_disconDirty)) {
+	tvc = QEntry(QPrev(&afs_disconDirty), struct vcache, dirtyq);
+	ReleaseWriteLock(&afs_disconDirtyLock);
+
+	ObtainWriteLock(&tvc->lock, 718);
+	afs_ResetVCache(tvc, acred);
+	tvc->truncPos = AFS_NOTRUNC;
+	ReleaseWriteLock(&tvc->lock);
+	afs_PutVCache(tvc);
+	ObtainWriteLock(&afs_disconDirtyLock, 719);
     }
-    ReleaseReadLock(&afs_DDirtyVCListLock);
 
-    return ret_code;
+    afs_DisconDiscardAllShadows(1, acred);
+
+    ReleaseWriteLock(&afs_disconDirtyLock);
 }
 
 /*!
@@ -1342,21 +1328,26 @@ skip_file:
 void afs_DbgDisconFiles()
 {
     struct vcache *tvc;
+    struct afs_q *q;
     int i = 0;
 
-    tvc = afs_DDirtyVCListStart;
     printf("List of dirty files: \n");
-    while (tvc) {
+
+    ObtainReadLock(&afs_disconDirtyLock);
+    for (q = QPrev(&afs_disconDirty); q != &afs_disconDirty; q = QPrev(q)) {
+        tvc = QEntry(q, struct vcache, dirtyq);
+
 	printf("Cell=%u Volume=%u VNode=%u Unique=%u\n",
 		tvc->fid.Cell,
 		tvc->fid.Fid.Volume,
 		tvc->fid.Fid.Vnode,
 		tvc->fid.Fid.Unique);
-	tvc = tvc->ddirty_next;
+
 	i++;
 	if (i >= 30)
 	    osi_Panic("afs_DbgDisconFiles: loop in dirty list\n");
     }
+    ReleaseReadLock(&afs_disconDirtyLock);
 }
 
 /*!

@@ -47,7 +47,7 @@ static struct vnode *volumeVnode;
 #endif
 #if defined(AFS_DISCON_ENV)
 afs_rwlock_t afs_discon_lock;
-extern afs_rwlock_t afs_DDirtyVCListLock;
+extern afs_rwlock_t afs_disconDirtyLock;
 #endif
 
 /*
@@ -116,7 +116,9 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     AFS_RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
 #ifdef AFS_DISCON_ENV
     AFS_RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
-    AFS_RWLOCK_INIT(&afs_DDirtyVCListLock, "afs_DDirtyVCListLock");
+    AFS_RWLOCK_INIT(&afs_disconDirtyLock, "afs_disconDirtyLock");
+    QInit(&afs_disconDirty);
+    QInit(&afs_disconShadow);
 #endif
     osi_dnlc_init();
 

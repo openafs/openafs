@@ -3755,24 +3755,18 @@ int afs_MakeShadowDir(struct vcache *avc)
     if (vType(avc) != VDIR)
     	return ENOTDIR;
 
+    if (avc->shVnode || avc->shUnique)
+	return EEXIST;
+
     /* Generate a fid for the shadow dir. */
     shadow_fid.Cell = avc->fid.Cell;
     shadow_fid.Fid.Volume = avc->fid.Fid.Volume;
     afs_GenShadowFid(&shadow_fid);
 
-    /* For each dcache, do copy it into a new fresh one. */
+    /* For each dcache, copy it into a new fresh one. */
+    ObtainWriteLock(&afs_xdcache, 716);
     i = DVHash(&avc->fid);
     for (index = afs_dvhashTbl[i]; index != NULLIDX; index = i) {
-    	/* Making sure that this isn't going to get locked twice. */
-	if (!lock_held) {
-	    /* XXX: Moved it from outside of the loop.
-	     * Maybe it's not quite okay because of the use of
-	     * dvhashTbl (once) in the for statement.
-	     */
-	    ObtainWriteLock(&afs_xdcache, 716);
-	    lock_held = 1;
-	}
-
         i = afs_dvnextTbl[index];
         if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
             tdc = afs_GetDSlot(index, NULL);
@@ -3780,39 +3774,33 @@ int afs_MakeShadowDir(struct vcache *avc)
 	    ReleaseReadLock(&tdc->tlock);
 
 	    if (!FidCmp(&tdc->f.fid, &avc->fid)) {
-
-		/* Got a dir's dcache. */
-		lock_held = 0;
-
 		/* Get a fresh dcache. */
 		new_dc = afs_AllocDCache(avc, 0, 0, &shadow_fid);
 
-		/* Unlock hash for now. Don't need it during operations on the
-		 * dcache. Oh, and we can't use it because of the locking
-		 * hierarchy...
+		/* XXX - The lock ordering here is broken. We can't lock
+		 * tdc whilst we're holding xdcache, and we can't free 
+		 * xdcache without having to start again on the hash chain
+		 * we're currently on
 		 */
-		/* XXX: So much for lock ierarchy, the afs_AllocDCache doesn't
-		 * respect it.
-		 */
-		//ReleaseWriteLock(&afs_xdcache);
-
 		ObtainReadLock(&tdc->lock);
+
+		ObtainReadLock(&tdc->mflock);
 
 		/* Set up the new fid. */
 		/* Copy interesting data from original dir dcache. */
-		new_dc->mflags = tdc->mflags;
-		new_dc->dflags = tdc->dflags;
-		new_dc->f.modTime = tdc->f.modTime;
-		new_dc->f.versionNo = tdc->f.versionNo;
-		new_dc->f.states = tdc->f.states;
-		new_dc->f.chunk= tdc->f.chunk;
-		new_dc->f.chunkBytes = tdc->f.chunkBytes;
+		new_dc->mflags = tdc->mflags; /* tdc->mflock */
+		new_dc->dflags = tdc->dflags; /* tdc->lock */
+		new_dc->f.modTime = tdc->f.modTime; /* tdc->lock */
+		new_dc->f.versionNo = tdc->f.versionNo; /* tdc->lock */
+		new_dc->f.states = tdc->f.states; /* tdc->lock */
+		new_dc->f.chunk= tdc->f.chunk; /* tdc->lock */
+		new_dc->f.chunkBytes = tdc->f.chunkBytes; /* tdc->lock */
 
+		ReleaseReadLock(&tdc->mflock);
 		/*
 		 * Now add to the two hash chains - note that i is still set
 		 * from the above DCHash call.
 		 */
-		//ObtainWriteLock(&afs_xdcache, 713);
 
 		j = DCHash(&shadow_fid, 0);
 		afs_dcnextTbl[new_dc->index] = afs_dchashTbl[j];
@@ -3887,23 +3875,25 @@ int afs_MakeShadowDir(struct vcache *avc)
 		ReleaseReadLock(&tdc->lock);
 
 		afs_PutDCache(new_dc);
+		ObtainWriteLock(&afs_xdcache, 720);
+		
 	    }			/* if dcache fid match */
             afs_PutDCache(tdc);
         }			/* if unuiquifier match */
     }
 done:
-    if (lock_held)
-	ReleaseWriteLock(&afs_xdcache);
+    ReleaseWriteLock(&afs_xdcache);
 
     if (!ret_code) {
-    	if (!avc->ddirty_flags) {
-	    ObtainWriteLock(&afs_DDirtyVCListLock, 763);
-	    AFS_DISCON_ADD_DIRTY(avc, 1);
-	    ReleaseWriteLock(&afs_DDirtyVCListLock);
-	}
+	ObtainWriteLock(&afs_xvcache, 763);
+	ObtainWriteLock(&afs_disconDirtyLock, 765);
+	QAdd(&afs_disconShadow, &avc->shadowq);
+	osi_vnhold(avc, 0);
+	ReleaseWriteLock(&afs_disconDirtyLock);
+	ReleaseWriteLock(&afs_xvcache);
+
 	avc->shVnode = shadow_fid.Fid.Vnode;
 	avc->shUnique = shadow_fid.Fid.Unique;
-	avc->ddirty_flags |= VDisconShadowed;
     }
 
     return ret_code;
@@ -3932,7 +3922,9 @@ void afs_DeleteShadowDir(struct vcache *avc)
 	afs_DiscardDCache(tdc);
     	afs_PutDCache(tdc);
     }
-    /* Remove shadowed dir flag. */
-    avc->ddirty_flags &= ~VDisconShadowed;
+    avc->shVnode = avc->shUnique = 0;
+    ObtainWriteLock(&afs_disconDirtyLock, 708);
+    QRemove(&avc->shadowq);
+    ReleaseWriteLock(&afs_disconDirtyLock);
 }
 #endif

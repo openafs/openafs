@@ -393,6 +393,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
+    if (AFS_IS_DISCON_RW)
+	adp->m.LinkCount++;
+
     newFid.Cell = adp->fid.Cell;
     newFid.Fid.Volume = adp->fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
@@ -442,8 +445,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    if (origCBs == finalCBs && origZaps == finalZaps) {
 		tvc->states |= CStatd;	/* we've fake entire thing, so don't stat */
 		tvc->states &= ~CBulkFetching;
-		tvc->cbExpires = CallBack.ExpirationTime;
-		afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
+		if (!AFS_IS_DISCON_RW) {
+		    tvc->cbExpires = CallBack.ExpirationTime;
+		    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
+		}
 	    } else {
 		afs_DequeueCallback(tvc);
 		tvc->states &= ~(CStatd | CUnique);
@@ -452,36 +457,20 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    osi_dnlc_purgedp(tvc);
 	    }
 	    ReleaseWriteLock(&afs_xcbhash);
-	    if (!AFS_IS_DISCON_RW)
-	    	afs_ProcessFS(tvc, &OutFidStatus, &treq);
+	    if (AFS_IS_DISCON_RW) {
+#if defined(AFS_DISCON_ENV)
+		afs_DisconAddDirty(tvc, VDisconCreate, 0);
+		afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VREG);
+#endif
+	    } else {
+		afs_ProcessFS(tvc, &OutFidStatus, &treq);
+	    }
+
 	    tvc->parentVnode = adp->fid.Fid.Vnode;
 	    tvc->parentUnique = adp->fid.Fid.Unique;
 	    ReleaseWriteLock(&tvc->lock);
 	    *avcp = tvc;
 	    code = 0;
-
-	    if (AFS_IS_DISCON_RW) {
-#if defined(AFS_DISCON_ENV)
-	    	/* After tvc has been created, we can do various ops on it. */
-		/* Add to dirty list. */
-		if (!tvc->ddirty_flags ||
-			(tvc->ddirty_flags == VDisconShadowed)) {
-	    	    /* Put it in the list only if it's fresh. */
-		    ObtainWriteLock(&afs_DDirtyVCListLock, 729);
-	    	    AFS_DISCON_ADD_DIRTY(tvc, 0);
-	    	    ReleaseWriteLock(&afs_DDirtyVCListLock);
-		}
-
-		/* Set create flag. */
-		ObtainWriteLock(&tvc->lock, 730);
-		afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VREG);
-		tvc->ddirty_flags |= VDisconCreate;
-		ReleaseWriteLock(&tvc->lock);
-
-#endif				/* #ifdef AFS_DISCON_ENV */
-    	    }			/* if (AFS_IS_DISCON_RW) */
-
-
 	} else
 	    code = ENOENT;
     } else {

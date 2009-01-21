@@ -84,22 +84,9 @@ afs_StoreOnLastReference(register struct vcache *avc,
 	 * afs_{rd,wr} routines which means the vcache is a perfect candidate
 	 * for flushing!
 	 */
-
-#ifdef AFS_DISCON_ENV
      } else if (AFS_IS_DISCON_RW) {
-	/* Disconnected. */
-
-	if (!avc->ddirty_flags ||
-		(avc->ddirty_flags == VDisconShadowed)) {
-
-  	    /* Add to disconnected dirty list. */
-	    AFS_DISCON_ADD_DIRTY(avc, 1);
-	}
-
-	/* Set disconnected write flag. */
-	avc->ddirty_flags |= VDisconWriteClose;
-#endif
-    }		/* if not disconnected */
+	afs_DisconAddDirty(avc, VDisconWriteClose, 0);
+     }		/* if not disconnected */
 
 #if defined(AFS_SGI_ENV)
     osi_Assert(avc->opens > 0 && avc->execsOrWriters > 0);
@@ -655,7 +642,8 @@ afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
     register afs_int32 code;
 
     if (afs_stats_cmperf.cacheCurrDirtyChunks <=
-	afs_stats_cmperf.cacheMaxDirtyChunks)
+	afs_stats_cmperf.cacheMaxDirtyChunks
+	|| AFS_IS_DISCONNECTED)
 	return 0;		/* nothing to do */
     /* otherwise, call afs_StoreDCache (later try to do this async, if possible) */
     afs_Trace2(afs_iclSetp, CM_TRACE_PARTIALWRITE, ICL_TYPE_POINTER, avc,
@@ -974,22 +962,10 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
 
 #if defined(AFS_DISCON_ENV)
 	} else {
-	    /* Disconnected flush. */
-	    ObtainWriteLock(&afs_DDirtyVCListLock, 708);
-
-	    if (!avc->ddirty_flags ||
-	    	(avc->ddirty_flags == VDisconShadowed)) {
-
-		/* Add to disconnected dirty list. */
-		AFS_DISCON_ADD_DIRTY(avc, 1);
-	    }
 
 	    UpgradeSToWLock(&avc->lock, 711);
-	    /* Set disconnected write flag. */
-	    avc->ddirty_flags |= VDisconWriteFlush;
+	    afs_DisconAddDirty(avc, VDisconWriteFlush, 1);
 	    ConvertWToSLock(&avc->lock);
-
-	    ReleaseWriteLock(&afs_DDirtyVCListLock);
 #endif
     	}		/* if not disconnected */
     }			/* if (avc->execsOrWriters > 0) */

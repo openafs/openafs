@@ -68,7 +68,7 @@ static struct ltable {
 #endif
 #ifdef AFS_DISCON_ENV
     { "afs_discon_lock", (char *)&afs_discon_lock},
-    { "afs_DDirtyVCListLock", (char *)&afs_DDirtyVCListLock},
+    { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},
 #endif
 };
 unsigned long lastCallBack_vnode;

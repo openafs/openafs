@@ -501,7 +501,7 @@ DFlushDCache(struct dcache *adc)
     for (i = 0; i <= PHPAGEMASK; i++)
         for (tb = phTable[pHash(adc->index, i)]; tb; tb = tb->hashNext)
 	    if (tb->fid == adc->index) {
-		ObtainWriteLock(&tb->lock, 702);
+		ObtainWriteLock(&tb->lock, 701);
 		tb->lockers++;
 		ReleaseReadLock(&afs_bufferLock);
 		if (tb->dirty) {
