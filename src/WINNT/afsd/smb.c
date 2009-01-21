@@ -8798,14 +8798,17 @@ void smb_Server(VOID *parmp)
             if (smbp->com == 0x1d) {
                 /* Special handling for Write Raw */
                 raw_write_cont_t rwc;
-                EVENT_HANDLE rwevent;
-                char eventName[MAX_PATH];
             
                 smb_DispatchPacket(vcp, bufp, outbufp, ncbp, &rwc);
                 if (rwc.code == 0) {
-                    rwevent = thrd_CreateEvent(NULL, FALSE, FALSE, TEXT("smb_Server() rwevent"));
+                    EVENT_HANDLE rwevent;
+                    char eventName[MAX_PATH];
+
+                    snprintf(eventName, "smb_Server() rwevent %d", myIdx);
+                    rwevent = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
                     if ( GetLastError() == ERROR_ALREADY_EXISTS )
                         osi_Log1(smb_logp, "Event Object Already Exists: %s", osi_LogSaveString(smb_logp, eventName));
+
                     ncbp->ncb_command = NCBRECV | ASYNCH;
                     ncbp->ncb_lsn = (unsigned char) vcp->lsn;
                     ncbp->ncb_lana_num = vcp->lana;
