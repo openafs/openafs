@@ -999,7 +999,9 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
     struct vcache *vcp = VTOAFS(ip);
 
     AFS_GLOCK();
-    (void) afs_InactiveVCache(vcp, NULL);
+    if (!AFS_IS_DISCONNECTED || (vcp->states & CUnlinked)) {
+	(void) afs_InactiveVCache(vcp, NULL);
+    }
     AFS_GUNLOCK();
 #ifdef DCACHE_NFSFS_RENAMED
 #ifdef AFS_LINUX26_ENV
