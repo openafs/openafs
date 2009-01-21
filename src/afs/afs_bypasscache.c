@@ -533,7 +533,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
     struct vrequest *areq;
     afs_int32 code, length_hi, bytes, locked;    
 	
-    register struct conn *tc;
+    register struct afs_conn *tc;
     afs_int32 i;
     struct rx_call *tcall;
     struct tlocal1 {

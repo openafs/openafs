@@ -228,7 +228,7 @@ int
 HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 	    pid_t clid, int onlymine)
 {
-    struct conn *tc;
+    struct afs_conn *tc;
     struct SimpleLocks *slp, *tlp, **slpp;
     afs_int32 code;
     struct AFSVolSync tsync;
@@ -828,7 +828,7 @@ HandleGetLock(register struct vcache *avc, register struct AFS_FLOCK *af,
 static int
 GetFlockCount(struct vcache *avc, struct vrequest *areq)
 {
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code;
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;

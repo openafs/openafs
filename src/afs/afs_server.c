@@ -288,7 +288,7 @@ static void
 CheckVLServer(register struct srvAddr *sa, struct vrequest *areq)
 {
     register struct server *aserver = sa->server;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code;
 
     AFS_STATCNT(CheckVLServer);
@@ -531,7 +531,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     struct vrequest treq;
     struct server *ts;
     struct srvAddr *sa;
-    struct conn *tc;
+    struct afs_conn *tc;
     afs_int32 i, j;
     afs_int32 code;
     afs_int32 start, end = 0, delta;
@@ -540,7 +540,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     char tbuffer[CVBS];
     int srvAddrCount;
     struct srvAddr **addrs;
-    struct conn **conns;
+    struct afs_conn **conns;
     int nconns;
     struct rx_connection **rxconns;      
     afs_int32 *conntimer, *deltas, *results;
@@ -554,7 +554,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     if (AFS_IS_DISCONNECTED)
         return;
 
-    conns = (struct conn **)0;
+    conns = (struct afs_conn **)0;
     rxconns = (struct rx_connection **) 0;
     conntimer = 0;
     nconns = 0;
@@ -584,7 +584,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     ReleaseReadLock(&afs_xsrvAddr);
     ReleaseReadLock(&afs_xserver);
 
-    conns = (struct conn **)afs_osi_Alloc(j * sizeof(struct conn *));
+    conns = (struct afs_conn **)afs_osi_Alloc(j * sizeof(struct afs_conn *));
     rxconns = (struct rx_connection **)afs_osi_Alloc(j * sizeof(struct rx_connection *));
     conntimer = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
     deltas = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
@@ -752,7 +752,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     }
     
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
-    afs_osi_Free(conns, j * sizeof(struct conn *));
+    afs_osi_Free(conns, j * sizeof(struct afs_conn *));
     afs_osi_Free(rxconns, j * sizeof(struct rx_connection *));
     afs_osi_Free(conntimer, j * sizeof(afs_int32));
     afs_osi_Free(deltas, j * sizeof(afs_int32));
@@ -1859,7 +1859,7 @@ void afs_RemoveAllConns()
     int i;
     struct server *ts, *nts;
     struct srvAddr *sa;
-    struct conn *tc, *ntc;
+    struct afs_conn *tc, *ntc;
 
     ObtainReadLock(&afs_xserver);
     ObtainWriteLock(&afs_xconn, 1001);
@@ -1876,7 +1876,7 @@ void afs_RemoveAllConns()
                         AFS_GUNLOCK();
                         rx_DestroyConnection(tc->id);
                         AFS_GLOCK();
-                        afs_osi_Free(tc, sizeof(struct conn));
+                        afs_osi_Free(tc, sizeof(struct afs_conn));
                         tc = ntc;
                     }
                     sa->conns = NULL;
