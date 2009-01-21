@@ -136,6 +136,18 @@ osi_Panic(char *msg, ...)
     if (!msg)
         msg = "Unknown AFS panic";
     printf(msg, a1, a2, a3);
+    panic(msg);
+#elif defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)
+    char buf[256];
+    va_list ap;
+    if (!msg)
+	msg = "Unknown AFS panic";
+
+    va_start(ap, msg);
+    vsnprintf(buf, sizeof(buf), msg, ap);
+    va_end(ap);
+    printf(buf);
+    panic(buf);
 #else
     va_list ap;
     if (!msg)
@@ -143,11 +155,12 @@ osi_Panic(char *msg, ...)
 
     va_start(ap, msg);
     vprintf(msg, ap);
-#endif
-#ifdef AFS_LINUX20_ENV
+    va_end(ap);
+# ifdef AFS_LINUX20_ENV
     * ((char *) 0) = 0; 
-#else
+# else
     panic(msg);
+# endif
 #endif
 }
 
