@@ -420,19 +420,11 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	}
 
     	/* Make a shadow copy of the parent dir (if not done already).
-	 * There's no need to make a shadow copy of the deleted directory
-	 * because a dir must be empty in order to be rmdir'ed.
-	 * If the deleted dir has no shadow, it means that it was empty.
+	 * If we were created locally, then we don't need to have a shadow
+	 * directory (as there's no server state to remember)
 	 */
-	if (!adp->shVnode) {
-	    /* If tdc available, then it is locked.
-	     * afs_MakeShadowDir unlocks it.
-	     */
-	    if (tdc)
-	    	ReleaseSharedLock(&tdc->lock);
-	    afs_MakeShadowDir(adp);
-	    if (tdc)
-	    	ObtainSharedLock(&tdc->lock, 732);
+	if (!adp->shVnode && !(adp->ddirty_flags & VDisconCreate)) {
+	    afs_MakeShadowDir(adp, tdc);
 	}
 
 	adp->m.LinkCount--;

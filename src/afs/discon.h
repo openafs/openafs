@@ -43,7 +43,7 @@ extern void afs_GenDisconStatus(struct vcache *adp,
 					struct vattr *attrs,
 					struct vrequest *areq,
 					int file_type);
-extern int afs_MakeShadowDir(struct vcache *avc);
+extern int afs_MakeShadowDir(struct vcache *avc, struct dcache *adc);
 extern void afs_DeleteShadowDir(struct vcache *avc);
 extern struct dcache *afs_FindDCacheByFid(struct VenusFid *afid);
 extern void afs_UpdateStatus(struct vcache *avc,
