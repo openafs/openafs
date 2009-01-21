@@ -935,8 +935,9 @@ restart:
     tvc->callback = serverp;    /* to minimize chance that clear
 				 * request is lost */
 #if defined(AFS_DISCON_ENV)
-    tvc->ddirty_next = NULL;
     tvc->ddirty_flags = 0;
+    tvc->shVnode = 0;
+    tvc->shUnique = 0;
 #endif
 
     i = VCHash(afid);
@@ -1617,20 +1618,8 @@ int afs_WriteVCacheDiscon(register struct vcache *avc,
      	flags |= VDisconTrunc;
      }
 
-    ObtainWriteLock(&afs_DDirtyVCListLock, 701);
-
-    if (flags) {
-    	/* Add to disconnected dirty list and set dirty flag.*/
-	if (!avc->ddirty_flags ||
-		(avc->ddirty_flags == VDisconShadowed)) {
-		/* Not in dirty list. */
-		AFS_DISCON_ADD_DIRTY(avc, 1);
-	}
-
-	avc->ddirty_flags |= flags;
-    }
-
-    ReleaseWriteLock(&afs_DDirtyVCListLock);
+    if (flags)
+	afs_DisconAddDirty(avc, flags, 1);
 
     /* XXX: How about the rest of the fields? */
 

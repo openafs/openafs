@@ -7,6 +7,9 @@ directory or online at http://www.openafs.org/dl/license10.html
 
 Locking order (in order of locking) --
 
+0.1 afs_discon_lock. Locks the current disconnected state, so it
+    can't be changed under active operations
+
 1.  PVN lock in cache entry.  Locks out pvn operations on vnode from
 our own layer.
 
@@ -21,19 +24,24 @@ Locking order between dcache entries is in increasing offset order.
 However, if it turns out we never need to lock multiple dcache's,
 we should just say it's not allowed, and simplify things.
 
-5. afs_xdcache.  Protects the dcache hash tables and afs_index* in
+5.  afs_xdcache.  Protects the dcache hash tables and afs_index* in
 afs_dcache.c.  As with afs_xvcache below, a newly created dcache
 entries can be locked while holding afs_xdcache.
 
 Bugs: afs_xvcache locked before afs_xdcache in afs_remove, afs_symlink,
 etc in the file afs_vnodeops.c
 
-6. afs_xvcache.  Must be able to load new cache entries while holding
+6.  afs_xvcache.  Must be able to load new cache entries while holding
 locks on others.  Note this means you can't lock a cache entry while
 holding either of this lock, unless, as in afs_create, the cache entry
 is actually created while the afs_xvcache is held.
 
-6a. afs_xvreclaim. Protects the lookaside reclaim list. Locked inside xvcache in FlushReclaimedVcaches via NewVCache or the 1 min loop.
+6a. afs_disconDirtyLock. Protects the disconnected dirty and shadow
+vcache queues. Must be after afs_xvcache, because we lock this whilst
+hold xvcache in afs_create.
+
+6b. afs_xvreclaim. Protects the lookaside reclaim list. Locked inside 
+xvcache in FlushReclaimedVcaches via NewVCache or the 1 min loop.
 
 7. afs_xvcb.  Volume callback lock.  Locked before afs_xserver in
 afs_RemoveVCB.

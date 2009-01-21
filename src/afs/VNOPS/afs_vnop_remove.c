@@ -314,7 +314,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 142);
 #if defined(AFS_DISCON_ENV)
-    if (AFS_IS_DISCON_RW && !(adp->ddirty_flags & VDisconShadowed))
+    if (AFS_IS_DISCON_RW && !adp->shVnode)
 	/* Make shadow copy of parent dir. */
     	afs_MakeShadowDir(adp);
 #endif
@@ -364,24 +364,27 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 
 #if defined(AFS_DISCON_ENV)
     if (AFS_IS_DISCON_RW) {
-	/* Add removed file vcache to dirty list. */
+	/* Can't hold a dcache lock whilst we're getting a vcache one */
+	if (tdc)
+	    ReleaseSharedLock(&tdc->lock);
 
-	if (!tvc->ddirty_flags ||
-		(tvc->ddirty_flags == VDisconShadowed)) {
-	    /* Add to list only if fresh. */
-	    ObtainWriteLock(&afs_DDirtyVCListLock, 725);
-	    AFS_DISCON_ADD_DIRTY(tvc, 1);
-	    ReleaseWriteLock(&afs_DDirtyVCListLock);
-	}
+        /* XXX - We're holding adp->lock still, and we've got no 
+	 * guarantee about whether the ordering matches the lock hierarchy */
+	ObtainWriteLock(&tvc->lock, 713);
 
-	ObtainWriteLock(&tvc->lock, 726);
-	tvc->ddirty_flags |= VDisconRemove;
-	ReleaseWriteLock(&tvc->lock);
-
-	//ObtainWriteLock(&adp->lock, 751);
+	/* If we were locally created, then we don't need to do very
+	 * much beyond ensuring that we don't exist anymore */	
+    	if (tvc->ddirty_flags & VDisconCreate) {
+	    afs_DisconRemoveDirty(tvc);
+	} else {
+	    /* Add removed file vcache to dirty list. */
+	    afs_DisconAddDirty(tvc, VDisconRemove, 1);
+        }
 	adp->m.LinkCount--;
-	//ReleaseWriteLock(&adp->lock);
-    }
+	ReleaseWriteLock(&tvc->lock);
+	if (tdc)
+	    ObtainSharedLock(&tdc->lock, 714);
+     }
 #endif
 
     if (tvc && osi_Active(tvc)) {
@@ -448,11 +451,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	}
 	if (tdc)
 	    afs_PutDCache(tdc);
-	/* Don't decrease refcount for this vcache if disconnected, we will
-	 * need it during replay.
-	 */
-	if (!AFS_IS_DISCON_RW)
-	    afs_PutVCache(tvc);
+	afs_PutVCache(tvc);
     } else {
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }

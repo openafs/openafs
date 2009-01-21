@@ -204,21 +204,16 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	ReleaseSharedLock(&afs_xvcache);
 
 	if (tvc) {
-	    if (!(tvc->ddirty_flags & VDisconRename)) {
-		/* We only care about vnodes that haven't been
-		 * renamed. Those that have been renamed at least once
-		 * already have an asociated shadow dir and the flags set
-		 * for the first old location, which is what interests us
-		 * when reconnecting.
+	    ObtainWriteLock(&tvc->lock, 750);
+	    if (!(tvc->ddirty_flags & (VDisconRename|VDisconCreate))) {
+		/* If the vnode was created locally, then we don't care
+		 * about recording the rename - we'll do it automatically
+		 * on replay. If we've already renamed, we've already stored
+		 * the required information about where we came from.
 		 */
-
-	    	if (!(aodp->ddirty_flags & VDisconShadowed) &&
-			!(tvc->ddirty_flags & VDisconCreate)) {
-	    	    /*
-		     * Make shadow copy of parent dir only.
-		     * Files that are created locally and renamed,
-		     * don't need a shadow dir, so skip this step.
-		     */
+		
+		if (!aodp->shVnode) {
+	    	    /* Make shadow copy of parent dir only. */
 		    if (tdc1)
 	    	    	ReleaseWriteLock(&tdc1->lock);
     	    	    afs_MakeShadowDir(aodp);
@@ -226,27 +221,19 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    	    	ObtainWriteLock(&tdc1->lock, 753);
 	        }
 
-		if (!tvc->ddirty_flags ||
-			(tvc->ddirty_flags == VDisconShadowed)) {
-	    	    /* Add in dirty list.*/
-	 	    ObtainWriteLock(&afs_DDirtyVCListLock, 751);
-		    AFS_DISCON_ADD_DIRTY(tvc, 1);
-		    ReleaseWriteLock(&afs_DDirtyVCListLock);
-		}
+		afs_DisconAddDirty(tvc, 
+				   VDisconRename 
+				     | (oneDir ? VDisconRenameSameDir:0), 
+				   1);
 
-	    	ObtainWriteLock(&tvc->lock, 750);
 	    	/* Save old parent dir fid so it will be searchable
 	     	 * in the shadow dir.
 	     	 */
     	    	tvc->oldVnode = aodp->fid.Fid.Vnode;
 	    	tvc->oldUnique = aodp->fid.Fid.Unique;
-	    	/* Set discon state flag. */
-	    	tvc->ddirty_flags |= VDisconRename;
-	    	if (oneDir)
-		    tvc->ddirty_flags |= VDisconRenameSameDir;
-	    	ReleaseWriteLock(&tvc->lock);
-	    }			/* if not previously renamed */
+	    }
 
+	    ReleaseWriteLock(&tvc->lock);
 	    afs_PutVCache(tvc);
 	} else {
 	    code = ENOENT;
@@ -317,12 +304,19 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    }
 	}
 
+
 	/* update dir link counts */
-	aodp->m.LinkCount = AFS_IS_DISCON_RW ?
-			(aodp->m.LinkCount - 1):OutOldDirStatus.LinkCount;
-	if (!oneDir)
-	    andp->m.LinkCount = AFS_IS_DISCON_RW ?
-	    		(andp->m.LinkCount + 1):OutNewDirStatus.LinkCount;
+	if (AFS_IS_DISCON_RW) {
+	    if (!oneDir) {
+		aodp->m.LinkCount--;
+		andp->m.LinkCount++;
+	    }
+	    /* If we're in the same directory, link count doesn't change */
+	} else {
+	    aodp->m.LinkCount = OutOldDirStatus.LinkCount;
+	    if (!oneDir)
+		andp->m.LinkCount = OutNewDirStatus.LinkCount;
+	}
 
     } else {			/* operation failed (code != 0) */
 	if (code < 0) {

@@ -90,6 +90,11 @@ afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights,
 	}
     }
 
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
+	/* If we get this far, we have to ask the network. But we can't, so
+	 * they're out of luck... */
+	return 0;
+    } else
     {				/* Ok, user has valid tokens, go ask the server. */
 	struct AFSFetchStatus OutStatus;
 	afs_int32 code;

@@ -321,10 +321,10 @@ afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
     afs_int32 markeddown;
 
  
-    if (AFS_IS_DISCONNECTED) {
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
 	/* SXW - This may get very tired after a while. We should try and
 	 *       intercept all RPCs before they get here ... */
-	/*printf("afs_Analyze: disconnected\n");*/
+	/* printf("afs_Analyze: disconnected\n"); */
 	afs_FinalizeReq(areq);
 	if (aconn) {
 	    /* SXW - I suspect that this will _never_ happen - we shouldn't

@@ -33,7 +33,6 @@ afs_int32 afs_showflags = GAGUSER | GAGCONSOLE;	/* show all messages */
 
 #ifdef AFS_DISCON_ENV
 afs_int32 afs_is_disconnected;
-afs_int32 afs_is_logging;
 afs_int32 afs_is_discon_rw;
 /* On reconnection, turn this knob on until it finishes,
  * then turn it off.
@@ -4690,9 +4689,12 @@ DECL_PIOCTL(PDiscon)
 	    afs_in_sync = 0;
 
 	    if (code && !force) {
-	    	printf("Files not synchronized properly, still in discon state. \
-						Please retry or use \"force\".\n");
+	    	printf("Files not synchronized properly, still in discon state. \n"
+		       "Please retry or use \"force\".\n");
 	    } else {
+		if (force) {
+		    afs_DisconDiscardAll(*acred);
+		}
 		afs_is_disconnected = 0;
 		afs_is_discon_rw = 0;
 		printf("\nSync succeeded. You are back online.\n");

@@ -102,7 +102,6 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     ObtainWriteLock(&adp->lock, 153);
 
     if (!AFS_IS_DISCON_RW) {
-
     	do {
 	    tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
 	    if (tc) {
@@ -195,7 +194,6 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	/* Generate a new vcache and fill it. */
 	tvc = afs_NewVCache(&newFid, NULL);
 	if (tvc) {
-	    code = 0;
 	    *avcp = tvc;
 	} else {
 	    code = ENOENT;
@@ -223,21 +221,12 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	if (code)
 	    printf("afs_mkdir: afs_dirMakeDir code = %u\n", code);
 
-	/* Add to dirty list. */
-	if (!tvc->ddirty_flags ||
-		(tvc->ddirty_flags == VDisconShadowed)) {
-
-	    /* Put it in the list only if it's fresh. */
-	    ObtainWriteLock(&afs_DDirtyVCListLock, 730);
-	    AFS_DISCON_ADD_DIRTY(tvc, 1);
-	    ReleaseWriteLock(&afs_DDirtyVCListLock);
-	}
+	afs_PutDCache(new_dc);
 
 	ObtainWriteLock(&tvc->lock, 731);
+	afs_DisconAddDirty(tvc, VDisconCreate, 1);
 	/* Update length in the vcache. */
 	tvc->m.Length = new_dc->f.chunkBytes;
-	/* Set create flag. */
-	tvc->ddirty_flags |= VDisconCreate;
 	ReleaseWriteLock(&tvc->lock);
 #endif				/* #ifdef AFS_DISCON_ENV */
     } else {
@@ -389,6 +378,13 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 #if defined(AFS_DISCON_ENV)
     	/* Disconnected. */
 
+	if (!tdc) {
+	    ReleaseWriteLock(&adp->lock);
+	    printf("afs_rmdir: No local dcache!\n");
+	    code = ENETDOWN;
+	    goto done;
+	}
+	
 	if (!tvc) {
 	    /* Find the vcache. */
 	    struct VenusFid tfid;
@@ -400,13 +396,14 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	    ObtainSharedLock(&afs_xvcache, 764);
 	    tvc = afs_FindVCache(&tfid, 0, 1 /* do xstats */ );
 	    ReleaseSharedLock(&afs_xvcache);
-
+	    
 	    if (!tvc) {
 		printf("afs_rmdir: Can't find dir's vcache!\n");
 		ReleaseSharedLock(&tdc->lock);
-		afs_PutDCache(tdc);	/* drop ref count */
-    		ReleaseWriteLock(&adp->lock);
-	    	goto done;
+	        afs_PutDCache(tdc);	/* drop ref count */
+    	        ReleaseWriteLock(&adp->lock);
+		code = ENETDOWN;
+	        goto done;
 	    }
 	}
 
@@ -415,6 +412,9 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	     * deleted.
 	     */
 	    ReleaseSharedLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    afs_PutVCache(tvc);
+	    ReleaseWriteLock(&adp->lock);
 	    code = ENOTEMPTY;
 	    goto done;
 	}
@@ -424,7 +424,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	 * because a dir must be empty in order to be rmdir'ed.
 	 * If the deleted dir has no shadow, it means that it was empty.
 	 */
-	if (!(adp->ddirty_flags & VDisconShadowed)) {
+	if (!adp->shVnode) {
 	    /* If tdc available, then it is locked.
 	     * afs_MakeShadowDir unlocks it.
 	     */
@@ -434,18 +434,6 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	    if (tdc)
 	    	ObtainSharedLock(&tdc->lock, 732);
 	}
-
-	if (!tvc->ddirty_flags) {
-	    /* Put it in the list only if it's fresh or has only been shadowed. */
-	    ObtainWriteLock(&afs_DDirtyVCListLock, 728);
-	    AFS_DISCON_ADD_DIRTY(tvc, 1);
-	    ReleaseWriteLock(&afs_DDirtyVCListLock);
-	}
-
-	/* Now add the vcache to the dirty list. */
-	ObtainWriteLock(&tvc->lock, 727);
-	tvc->ddirty_flags |= VDisconRemove;
-	ReleaseWriteLock(&tvc->lock);
 
 	adp->m.LinkCount--;
 #endif				/* #ifdef AFS_DISCON_ENV */
@@ -466,7 +454,6 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	afs_PutDCache(tdc);	/* drop ref count */
     }
 
-
     if (tvc)
 	osi_dnlc_purgedp(tvc);	/* get rid of any entries for this directory */
     else
@@ -475,6 +462,17 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     if (tvc) {
 	ObtainWriteLock(&tvc->lock, 155);
 	tvc->states &= ~CUnique;	/* For the dfs xlator */
+#if AFS_DISCON_ENV
+	if (AFS_IS_DISCON_RW) {
+	    if (tvc->ddirty_flags & VDisconCreate) {
+		/* If we we were created whilst disconnected, removal doesn't
+		 * need to get logged. Just go away gracefully */
+		afs_DisconRemoveDirty(tvc);
+	    } else {
+		afs_DisconAddDirty(tvc, VDisconRemove, 1);
+	    }
+	}
+#endif
 	ReleaseWriteLock(&tvc->lock);
 	afs_PutVCache(tvc);
     }
