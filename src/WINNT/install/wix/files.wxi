@@ -402,7 +402,6 @@
                             <File Id="file_CmdRef_1_aklog_html" Name="aklog.htm" LongName="aklog.html" DiskId="1" />
                             <File Id="file_CmdRef_1_cmdebug_html" Name="cmdebug.htm" LongName="cmdebug.html" DiskId="1" />
                             <File Id="file_CmdRef_1_dlog_html" Name="dlog.htm" LongName="dlog.html" DiskId="1" />
-                            <File Id="file_CmdRef_1_dpass_html"  Name="dpass.htm"  LongName="dpass.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_html"  Name="fs.htm"  LongName="fs.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_apropos_html"  Name="fs_aprop.htm"  LongName="fs_apropos.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_checkservers_html"  Name="fs_chsrv.htm"  LongName="fs_checkservers.html"  DiskId="1"  />
@@ -455,7 +454,6 @@
                             <File Id="file_CmdRef_1_knfs_html"  Name="knfs.htm"  LongName="knfs.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_kpasswd_html"  Name="kpasswd.htm"  LongName="kpasswd.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_livesys_html"  Name="livesys.htm"  LongName="livesys.html"  DiskId="1"  />
-                            <File Id="file_CmdRef_1_package_test_html"  Name="pack_tst.htm"  LongName="package_test.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_pagsh_html"  Name="pagsh.htm"  LongName="pagsh.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_pts_html"  Name="pts.htm"  LongName="pts.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_pts_adduser_html"  Name="pts_addu.htm"  LongName="pts_adduser.html"  DiskId="1"  />
@@ -560,7 +558,6 @@
                             <File Id="file_CmdRef_5_NetInfo_html"  Name="NetInfo.htm"  LongName="NetInfo.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_NetRestrict_html"  Name="NetRestr.htm"  LongName="NetRestrict.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_NoAuth_html"  Name="NoAuth.htm"  LongName="NoAuth.html"    DiskId="1"  />
-                            <File Id="file_CmdRef_5_package_html"  Name="package.htm"  LongName="package.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_prdb_DB0_html"  Name="prdb_DB0.htm"  LongName="prdb.DB0.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_Salvage_fs_html"  Name="SalvageF.htm"  LongName="Salvage.fs.html"    DiskId="1"  />
                             <File Id="file_CmdRef_5_Salvage_lock_html"  Name="SalvageL.htm"  LongName="Salvage.lock.html"    DiskId="1"  />
@@ -681,7 +678,6 @@
                             <File Id="file_CmdRef_8_kas_unlock_html"  Name="kas_unlo.htm"  LongName="kas_unlock.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_kdb_html"  Name="kdb.htm"  LongName="kdb.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_kpwvalid_html"  Name="kpwvalid.htm"  LongName="kpwvalid.html"  DiskId="1"  />
-                            <File Id="file_CmdRef_8_package_html"  Name="package.htm"  LongName="package.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_prdb_check_html"  Name="prdb_che.htm"  LongName="prdb_check.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_ptserver_html"  Name="ptserver.htm"  LongName="ptserver.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_pt_util_html"  Name="pt_util.htm"  LongName="pt_util.html"  DiskId="1"  />
