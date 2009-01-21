@@ -48,7 +48,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     afs_uint32 now = 0;
     struct vrequest treq;
     afs_int32 code;
-    struct conn *tc;
+    struct afs_conn *tc;
     struct VenusFid newFid;
     struct dcache *tdc;
     afs_size_t offset, len;

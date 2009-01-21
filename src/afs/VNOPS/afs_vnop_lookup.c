@@ -648,7 +648,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     AFSCBFids fidParm;		/* file ID parm for bulk stat */
     AFSBulkStats statParm;	/* stat info parm for bulk stat */
     int fidIndex = 0;		/* which file were stating */
-    struct conn *tcp = 0;	/* conn for call */
+    struct afs_conn *tcp = 0;	/* conn for call */
     AFSCBs cbParm;		/* callback parm for bulk stat */
     struct server *hostp = 0;	/* host we got callback from */
     long startTime;		/* time we started the call,

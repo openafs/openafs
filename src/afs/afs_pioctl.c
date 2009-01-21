@@ -1167,7 +1167,7 @@ int dummy_PSetAcl(char *ain, char *aout)
 DECL_PIOCTL(PSetAcl)
 {
     register afs_int32 code;
-    struct conn *tconn;
+    struct afs_conn *tconn;
     struct AFSOpaque acl;
     struct AFSVolSync tsync;
     struct AFSFetchStatus OutStatus;
@@ -1296,7 +1296,7 @@ DECL_PIOCTL(PGetAcl)
     struct AFSVolSync tsync;
     struct AFSFetchStatus OutStatus;
     afs_int32 code;
-    struct conn *tconn;
+    struct afs_conn *tconn;
     struct AFSFid Fid;
     XSTATS_DECLS;
 
@@ -1623,7 +1623,7 @@ DECL_PIOCTL(PGetVolumeStatus)
     char volName[32];
     char *offLineMsg = afs_osi_Alloc(256);
     char *motd = afs_osi_Alloc(256);
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
     register char *cp;
@@ -1693,7 +1693,7 @@ DECL_PIOCTL(PSetVolumeStatus)
     char volName[32];
     char *offLineMsg = afs_osi_Alloc(256);
     char *motd = afs_osi_Alloc(256);
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
     struct AFSStoreVolumeStatus storeStat;
@@ -2232,7 +2232,7 @@ DECL_PIOCTL(PCheckAuth)
 {
     int i;
     struct srvAddr *sa;
-    struct conn *tc;
+    struct afs_conn *tc;
     struct unixuser *tu;
     afs_int32 retValue;
 
@@ -2516,7 +2516,7 @@ DECL_PIOCTL(PGetCacheSize)
  */
 DECL_PIOCTL(PRemoveCallBack)
 {
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code = 0;
     struct AFSCallBack CallBacks_Array[1];
     struct AFSCBFids theFids;
@@ -2750,7 +2750,7 @@ DECL_PIOCTL(PRemoveMount)
     char *bufp;
     struct sysname_info sysState;
     afs_size_t offset, len;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register struct dcache *tdc;
     register struct vcache *tvc;
     struct AFSFetchStatus OutDirStatus;
@@ -4359,7 +4359,7 @@ DECL_PIOCTL(PPrefetchFromTape)
 {
     register afs_int32 code, code1;
     afs_int32 bytes;
-    struct conn *tc;
+    struct afs_conn *tc;
     struct rx_call *tcall;
     struct AFSVolSync tsync;
     struct AFSFetchStatus OutStatus;
@@ -4424,7 +4424,7 @@ DECL_PIOCTL(PPrefetchFromTape)
 DECL_PIOCTL(PResidencyCmd)
 {
     register afs_int32 code;
-    struct conn *tc;
+    struct afs_conn *tc;
     struct vcache *tvc;
     struct ResidencyCmdInputs *Inputs;
     struct ResidencyCmdOutputs *Outputs;
@@ -4557,7 +4557,7 @@ DECL_PIOCTL(PCallBackAddr)
     int srvAddrCount;
     struct server *ts;
     struct srvAddr *sa;
-    struct conn *tc;
+    struct afs_conn *tc;
     afs_int32 i, j;
     struct unixuser *tu;
     struct srvAddr **addrs;

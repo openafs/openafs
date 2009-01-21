@@ -11,7 +11,7 @@
 #define _AFS_PROTOTYPES_H_
 
 /* afs_analyze.c */
-extern int afs_Analyze(register struct conn *aconn, afs_int32 acode,
+extern int afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 		       struct VenusFid *afid, register struct vrequest *areq,
 		       int op, afs_int32 locktype, struct cell *cellp);
 
@@ -175,22 +175,22 @@ extern struct cell *afs_GetRealCellByIndex(register afs_int32 cellindex,
 extern afs_int32 cryptall;
 extern afs_rwlock_t afs_xinterface;
 extern afs_rwlock_t afs_xconn;
-extern struct conn *afs_Conn(register struct VenusFid *afid,
+extern struct afs_conn *afs_Conn(register struct VenusFid *afid,
 			     register struct vrequest *areq,
 			     afs_int32 locktype);
-extern struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
+extern struct afs_conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 				 afs_int32 acell, struct unixuser *tu,
 				 int force_if_down, afs_int32 create,
 				 afs_int32 locktype);
-extern struct conn *afs_ConnByMHosts(struct server *ahosts[],
+extern struct afs_conn *afs_ConnByMHosts(struct server *ahosts[],
 				     unsigned short aport, afs_int32 acell,
 				     register struct vrequest *areq,
 				     afs_int32 locktype);
-extern struct conn *afs_ConnByHost(struct server *aserver,
+extern struct afs_conn *afs_ConnByHost(struct server *aserver,
 				   unsigned short aport, afs_int32 acell,
 				   struct vrequest *areq, int aforce,
 				   afs_int32 locktype);
-extern void afs_PutConn(register struct conn *ac, afs_int32 locktype);
+extern void afs_PutConn(register struct afs_conn *ac, afs_int32 locktype);
 extern void ForceNewConnections(struct srvAddr *sap);
 
 
