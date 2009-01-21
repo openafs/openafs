@@ -3751,23 +3751,23 @@ afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos,
 #if defined(AFS_DISCON_ENV)
 
 /*!
- * Make a shadow copy of a dir's dcaches. It's used for disconnected
+ * Make a shadow copy of a dir's dcache. It's used for disconnected
  * operations like remove/create/rename to keep the original directory data.
  * On reconnection, we can diff the original data with the server and get the
  * server changes and with the local data to get the local changes.
  *
  * \param avc The dir vnode.
+ * \param adc The dir dcache.
  *
  * \return 0 for success.
  *
- * \note The only lock allowed to be set is the dir's vcache entry, and it
- * must be set in write mode.
  * \note The vcache entry must be write locked.
+ * \note The dcache entry must be read locked.
  */
-int afs_MakeShadowDir(struct vcache *avc)
+int afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 {
-    int j, i, index, code, ret_code = 0, offset, trans_size, block;
-    struct dcache *tdc, *new_dc = NULL;
+    int i, code, ret_code = 0, written, trans_size;
+    struct dcache *new_dc = NULL;
     struct osi_file *tfile_src, *tfile_dst;
     struct VenusFid shadow_fid;
     char *data;
@@ -3785,126 +3785,81 @@ int afs_MakeShadowDir(struct vcache *avc)
     shadow_fid.Fid.Volume = avc->fid.Fid.Volume;
     afs_GenShadowFid(&shadow_fid);
 
-    /* For each dcache, copy it into a new fresh one. */
     ObtainWriteLock(&afs_xdcache, 716);
-    i = DVHash(&avc->fid);
-    for (index = afs_dvhashTbl[i]; index != NULLIDX; index = i) {
-        i = afs_dvnextTbl[index];
-        if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
-            tdc = afs_GetDSlot(index, NULL);
 
-	    ReleaseReadLock(&tdc->tlock);
+    /* Get a fresh dcache. */
+    new_dc = afs_AllocDCache(avc, 0, 0, &shadow_fid);
 
-	    if (!FidCmp(&tdc->f.fid, &avc->fid)) {
-		/* Get a fresh dcache. */
-		new_dc = afs_AllocDCache(avc, 0, 0, &shadow_fid);
+    ObtainReadLock(&adc->mflock);
 
-		/* XXX - The lock ordering here is broken. We can't lock
-		 * tdc whilst we're holding xdcache, and we can't free 
-		 * xdcache without having to start again on the hash chain
-		 * we're currently on
-		 */
-		ObtainReadLock(&tdc->lock);
+    /* Set up the new fid. */
+    /* Copy interesting data from original dir dcache. */
+    new_dc->mflags = adc->mflags;
+    new_dc->dflags = adc->dflags;
+    new_dc->f.modTime = adc->f.modTime;
+    new_dc->f.versionNo = adc->f.versionNo;
+    new_dc->f.states = adc->f.states;
+    new_dc->f.chunk= adc->f.chunk;
+    new_dc->f.chunkBytes = adc->f.chunkBytes;
 
-		ObtainReadLock(&tdc->mflock);
+    ReleaseReadLock(&adc->mflock);
+    
+    /* Now add to the two hash chains */
+    i = DCHash(&shadow_fid, 0);
+    afs_dcnextTbl[new_dc->index] = afs_dchashTbl[i];
+    afs_dchashTbl[i] = new_dc->index;
 
-		/* Set up the new fid. */
-		/* Copy interesting data from original dir dcache. */
-		new_dc->mflags = tdc->mflags; /* tdc->mflock */
-		new_dc->dflags = tdc->dflags; /* tdc->lock */
-		new_dc->f.modTime = tdc->f.modTime; /* tdc->lock */
-		new_dc->f.versionNo = tdc->f.versionNo; /* tdc->lock */
-		new_dc->f.states = tdc->f.states; /* tdc->lock */
-		new_dc->f.chunk= tdc->f.chunk; /* tdc->lock */
-		new_dc->f.chunkBytes = tdc->f.chunkBytes; /* tdc->lock */
+    i = DVHash(&shadow_fid);
+    afs_dvnextTbl[new_dc->index] = afs_dvhashTbl[i];
+    afs_dvhashTbl[i] = new_dc->index;
 
-		ReleaseReadLock(&tdc->mflock);
-		/*
-		 * Now add to the two hash chains - note that i is still set
-		 * from the above DCHash call.
-		 */
-
-		j = DCHash(&shadow_fid, 0);
-		afs_dcnextTbl[new_dc->index] = afs_dchashTbl[j];
-		afs_dchashTbl[j] = new_dc->index;
-
-		j = DVHash(&shadow_fid);
-		afs_dvnextTbl[new_dc->index] = afs_dvhashTbl[j];
-		afs_dvhashTbl[j] = new_dc->index;
-		afs_MaybeWakeupTruncateDaemon();
-
-		ReleaseWriteLock(&afs_xdcache);
-
-		/* Make sure and flush dir buffers back into the disk cache */
-		DFlushDCache(tdc);
-
-		/* Alloc a 4k block. */
-		data = (char *) afs_osi_Alloc(4096);
-		if (!data) {
-		    printf("afs_MakeShadowDir: could not alloc data\n");
-		    ret_code = ENOMEM;
-		    goto done;
-		}
-
-		/* Open the files. */
-		tfile_src = afs_CFileOpen(tdc->f.inode);
-		tfile_dst = afs_CFileOpen(new_dc->f.inode);
-
-		/* Init no of blocks to be read and offset. */
-		block = (tdc->f.chunkBytes / 4096);
-		offset = 0;
-
-		/* And now copy dir dcache data into this dcache,
-		 * 4k at a time.
-		 */
-		while (block >= 0) {
-
-		    /* Last chunk might have less bytes to transfer. */
-		    if (!block) {
-		    	/* Last block. */
-		    	trans_size = (tdc->f.chunkBytes % 4096);
-			if (!trans_size)
-			    /* An exact no of 4k blocks. */
-			    break;
-		    } else
-		    	trans_size = 4096;
-
-		    /* Read a chunk from the dcache. */
-		    code = afs_CFileRead(tfile_src, offset, data, trans_size);
-		    if (code < trans_size) {
-		    	/* Can't access file, stop doing stuff and return error. */
-		    	ret_code = EIO;
-		    	break;
-		    }
-
-		    /* Write it to the new dcache. */
-		    code = afs_CFileWrite(tfile_dst, offset, data, trans_size);
-		    if (code < trans_size) {
-		    	ret_code = EIO;
-		    	break;
-		    }
-
-		    block--;
-		    offset += 4096;
-		}		/* while (block) */
-
-		afs_CFileClose(tfile_dst);
-		afs_CFileClose(tfile_src);
-
-		afs_osi_Free(data, 4096);
-
-		ReleaseWriteLock(&new_dc->lock);
-		ReleaseReadLock(&tdc->lock);
-
-		afs_PutDCache(new_dc);
-		ObtainWriteLock(&afs_xdcache, 720);
-		
-	    }			/* if dcache fid match */
-            afs_PutDCache(tdc);
-        }			/* if unuiquifier match */
-    }
-done:
     ReleaseWriteLock(&afs_xdcache);
+
+    /* Alloc a 4k block. */
+    data = (char *) afs_osi_Alloc(4096);
+    if (!data) {
+	printf("afs_MakeShadowDir: could not alloc data\n");
+	ret_code = ENOMEM;
+	goto done;
+    }
+
+    /* Open the files. */
+    tfile_src = afs_CFileOpen(adc->f.inode);
+    tfile_dst = afs_CFileOpen(new_dc->f.inode);
+
+    /* And now copy dir dcache data into this dcache,
+     * 4k at a time.
+     */
+    written = 0;
+    while (written < adc->f.chunkBytes) {
+	trans_size = adc->f.chunkBytes - written;
+	if (trans_size > 4096)
+	    trans_size = 4096;
+
+	/* Read a chunk from the dcache. */
+	code = afs_CFileRead(tfile_src, written, data, trans_size);
+	if (code < trans_size) {
+	    ret_code = EIO;
+	    break;
+	}
+
+	/* Write it to the new dcache. */
+	code = afs_CFileWrite(tfile_dst, written, data, trans_size);
+	if (code < trans_size) {
+	    ret_code = EIO;
+	    break;
+	}
+
+	written+=trans_size;
+    }
+
+    afs_CFileClose(tfile_dst);
+    afs_CFileClose(tfile_src);
+
+    afs_osi_Free(data, 4096);
+
+    ReleaseWriteLock(&new_dc->lock);
+    afs_PutDCache(new_dc);
 
     if (!ret_code) {
 	ObtainWriteLock(&afs_xvcache, 763);
@@ -3918,6 +3873,7 @@ done:
 	avc->shUnique = shadow_fid.Fid.Unique;
     }
 
+done:
     return ret_code;
 }
 

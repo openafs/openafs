@@ -313,11 +313,6 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 142);
-#if defined(AFS_DISCON_ENV)
-    if (AFS_IS_DISCON_RW && !adp->shVnode)
-	/* Make shadow copy of parent dir. */
-    	afs_MakeShadowDir(adp);
-#endif
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 638);
 
@@ -364,6 +359,11 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 
 #if defined(AFS_DISCON_ENV)
     if (AFS_IS_DISCON_RW) {
+	if (!adp->shVnode && !(adp->ddirty_flags & VDisconCreate)) {
+    	    /* Make shadow copy of parent dir. */
+	    afs_MakeShadowDir(adp, tdc);
+	}
+
 	/* Can't hold a dcache lock whilst we're getting a vcache one */
 	if (tdc)
 	    ReleaseSharedLock(&tdc->lock);
