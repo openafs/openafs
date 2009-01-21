@@ -1852,8 +1852,6 @@ void afs_ActivateServer(struct srvAddr *sap) {
     }
 }
 
-#ifdef AFS_DISCON_ENV
-
 void afs_RemoveAllConns()
 {
     int i;
@@ -1891,7 +1889,24 @@ void afs_RemoveAllConns()
     
 }
 
-#endif /* AFS_DISCON_ENV */
+void afs_MarkAllServersUp()
+{
+    int i;
+    struct server *ts;
+    struct srvAddr *sa;
+
+    ObtainWriteLock(&afs_xserver, 721);
+    ObtainWriteLock(&afs_xsrvAddr, 722);
+    for (i = 0; i< NSERVERS; i++) {
+	for (ts = afs_servers[i]; ts; ts = ts->next) {
+	    for (sa = ts->addr; sa; sa = sa->next_sa) {
+		afs_MarkServerUpOrDown(sa, 0);
+	    }
+	}
+    }
+    ReleaseWriteLock(&afs_xsrvAddr);
+    ReleaseWriteLock(&afs_xserver);
+}
 
 void shutdown_server()
 {

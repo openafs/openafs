@@ -829,7 +829,7 @@ void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
 extern int afs_HaveCallBacksFrom(struct server *aserver);
 extern void shutdown_server(void);
 extern void afs_RemoveAllConns(void);
-
+extern void afs_MarkAllServersUp(void);
 
 /* afs_osidnlc.c */
 extern int osi_dnlc_enter(struct vcache *adp, char *aname, struct vcache *avc,

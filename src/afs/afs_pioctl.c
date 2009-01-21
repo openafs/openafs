@@ -4685,12 +4685,14 @@ DECL_PIOCTL(PDiscon)
 	    ObtainWriteLock(&afs_discon_lock, 998);
 
 	    afs_in_sync = 1;
+	    afs_MarkAllServersUp();
 	    code = afs_ResyncDisconFiles(areq, *acred);
 	    afs_in_sync = 0;
 
 	    if (code && !force) {
 	    	printf("Files not synchronized properly, still in discon state. \n"
 		       "Please retry or use \"force\".\n");
+		mode = 0;
 	    } else {
 		if (force) {
 		    afs_DisconDiscardAll(*acred);
@@ -4711,7 +4713,7 @@ DECL_PIOCTL(PDiscon)
 
     memcpy(aout, &mode, sizeof(afs_int32));
     *aoutSize = sizeof(afs_int32);
-    return 0;
+    return code;
 #else
     return EINVAL;
 #endif
