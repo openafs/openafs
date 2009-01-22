@@ -44,7 +44,7 @@ struct osimem {
     struct osimem *next;
 };
 
-
+#if !defined(AFS_OBSD44_ENV)
 void *
 afs_osi_Alloc(size_t x)
 {
@@ -124,7 +124,7 @@ afs_osi_FreeStr(char *x)
     afs_osi_Free(x, strlen(x) + 1);
 }
 
-
+#endif
 
 /* free space allocated by AllocLargeSpace.  Also called by mclput when freeing
  * a packet allocated by osi_NetReceive. */

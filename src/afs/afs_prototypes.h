@@ -548,7 +548,9 @@ extern void *afs_osi_Alloc_NoSleep(size_t x);
 #ifndef afs_osi_Free
 extern void afs_osi_Free(void *x, size_t asize);
 #endif
+#if !defined(AFS_OBSD44_ENV)
 extern void afs_osi_FreeStr(char *x);
+#endif
 extern void osi_FreeLargeSpace(void *adata);
 extern void osi_FreeSmallSpace(void *adata);
 extern void *osi_AllocLargeSpace(size_t size);

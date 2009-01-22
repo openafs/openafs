@@ -51,6 +51,8 @@ RCSID
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
+#include <sys/types.h>
+#include <sys/malloc.h>
 
 /*
  * afs_suser() returns true if the caller is superuser, false otherwise.
@@ -74,20 +76,94 @@ afs_osi_suser(void *credp)
 #endif
 }
 
-void *
-afs_nbsd_Alloc(size_t asize)
-{
-    void *p;
+/*
+ * reworked for netbsd and openbsd at 4.0/4.4
+ */
 
-    MALLOC(p, void *, asize, M_AFSGENERIC, M_WAITOK);
-    return p;
+#if defined(AFS_OBSD42_ENV)
+/* ripped out MALLOC/FREE */
+
+void *
+osi_obsd_Alloc(size_t asize, int cansleep)
+{
+  void *p;
+  int glocked;
+
+  if (cansleep) {
+    glocked = ISAFS_GLOCK();
+    if (glocked)
+      AFS_GUNLOCK();
+    p = malloc(asize, M_AFSGENERIC, M_WAITOK);
+    if (glocked)
+      AFS_GLOCK();
+  } else {
+    p = malloc(asize, M_AFSGENERIC, M_NOWAIT);
+  }
+
+  return (p);
 }
 
 void
-afs_nbsd_Free(void *p, size_t asize)
+osi_obsd_Free(void *p, size_t asize)
 {
-    FREE(p, M_AFSGENERIC);
+  free(p, M_AFSGENERIC);
 }
+
+#else
+void *
+osi_obsd_Alloc(size_t asize, int cansleep)
+{
+  void *p;
+  int glocked;
+
+  if (cansleep) {
+    glocked = ISAFS_GLOCK();
+    if (glocked)
+      AFS_GUNLOCK();
+    MALLOC(p, void *, asize, M_AFSGENERIC, M_WAITOK);
+    if (glocked)
+      AFS_GLOCK();
+  } else {
+    MALLOC(p, void *, asize, M_AFSGENERIC, M_NOWAIT);
+  }
+
+  return (p);
+}
+
+void
+osi_obsd_Free(void *p, size_t asize)
+{
+  FREE(p, M_AFSGENERIC);
+}
+#endif
+
+#if 0 /* XXX */
+/* I speculate this usage may be more correct than definitions
+ * in afs_osi_alloc.c, which I discarded successfully for FreeBSD 7+,
+ * and am trying to discard for NetBSD 4.x, but until tested, I'm
+ * not rocking the boat.  Matt.
+ */
+   
+void
+osi_FreeLargeSpace(void *p)
+{
+  osi_obsd_Free(p, 0);
+}
+
+void
+osi_FreeSmallSpace(void *p)
+{
+  osi_obsd_Free(p, 0);
+}
+
+void *
+osi_AllocLargeSpace(size_t size)
+{
+  AFS_ASSERT_GLOCK();
+  AFS_STATCNT(osi_AllocLargeSpace);
+  return (osi_obsd_Alloc(size, 1));
+}
+#endif
 
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)

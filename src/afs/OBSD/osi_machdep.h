@@ -54,8 +54,37 @@
 #define AFS_UIOUSER	UIO_USERSPACE
 
 /* malloc */
-#define AFS_KALLOC(s)	afs_nbsd_Alloc(s)
-#define AFS_KFREE(p, s)	afs_nbsd_Free((p), (s))
+inline void afs_osi_Free(void *buf, size_t asize);
+inline void afs_osi_FreeStr(char *x);
+extern void *osi_obsd_Alloc(size_t asize, int cansleep);
+extern void osi_obsd_Free(void *p, size_t asize);
+
+#define afs_osi_Alloc_NoSleep(asize) osi_obsd_Alloc((asize), 0)
+#define afs_osi_Alloc(asize) osi_obsd_Alloc((asize), 1)
+#define afs_osi_FreeStr(s) afs_osi_Free((s), strlen((s)) + 1)
+#define afs_osi_Free(buf, asize) osi_obsd_Free((buf), (asize))
+
+#ifdef AFS_KALLOC
+#undef AFS_KALLOC
+#define AFS_KALLOC(s) osi_obsd_Alloc((s), 1 /* cansleep */)
+#endif
+
+#ifdef AFS_KFREE
+#undef AFS_KFREE
+#define AFS_KFREE(p, s) (osi_obsd_Free((p), (s)))
+#endif
+
+#ifdef AFS_OBSD42_ENV
+/* removed, live with it */
+#define BSD_KMALLOC(p, ptype, msize, mtype, mflags)     \
+  (p) = malloc((msize), (mtype), (mflags))
+
+#define BSD_KFREE(p, mflags) \
+  free((p), (mflags))
+#else
+#define BSD_KMALLOC MALLOC
+#define BSD_KFREE KFREE
+#endif /* AFS_OBSD42_ENV */
 
 /* proc, cred */
 #define	AFS_PROC	struct proc
@@ -92,11 +121,11 @@
 /* This is not always in scope yet */
 struct vcache;
 
-extern int afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg,
+extern int afs_obsd_lookupname(char *fnamep, enum uio_seg segflg,
 			       int followlink, struct vnode **compvpp);
-extern void afs_nbsd_getnewvnode(struct vcache *tvc);
-extern void *afs_nbsd_Alloc(size_t asize);
-extern void afs_nbsd_Free(void *p, size_t asize);
+extern void afs_obsd_getnewvnode(struct vcache *tvc);
+extern void *afs_obsd_Alloc(size_t asize);
+extern void afs_obsd_Free(void *p, size_t asize);
 extern int afs_vget();
 
 #undef gop_lookupname
@@ -111,6 +140,49 @@ extern int afs_vget();
 
 #ifdef KERNEL
 
+#ifdef AFS_OBSD44_ENV
+/* Revert to classical, BSD locks */
+
+extern struct lock afs_global_lock;
+extern struct proc *afs_global_owner;
+
+#ifdef AFS_GLOBAL_SUNLOCK
+
+#if defined(LOCKDEBUG)
+
+#define AFS_GLOCK() \
+  do { \
+  _lockmgr(&afs_global_lock, LK_EXCLUSIVE, NULL, __FILE__, __LINE__); \
+  } while(0);
+#define AFS_GUNLOCK() \
+  do { \
+  _lockmgr(&afs_global_lock, LK_RELEASE, NULL, __FILE__, __LINE__); \
+  } while(0);
+
+#else
+
+#define AFS_GLOCK() \
+  do { \
+  lockmgr(&afs_global_lock, LK_EXCLUSIVE, NULL); \
+  } while(0);
+#define AFS_GUNLOCK() \
+  do { \
+  lockmgr(&afs_global_lock, LK_RELEASE, NULL); \
+  } while(0);
+#endif /* LOCKDEBUG */
+#define ISAFS_GLOCK() (lockstatus(&afs_global_lock) == LK_EXCLUSIVE)
+#else
+extern struct lock afs_global_lock;
+#define AFS_GLOCKP(p)
+#define AFS_GUNLOCKP(p)
+#define AFS_ASSERT_GLOCK()
+#define ISAFS_GLOCK() 1
+#endif
+
+#else
+/* I don't see doing locks this way for older kernels, either,
+ * but, smart folks wrote this
+ */
 #define AFS_GLOCK() AFS_GLOCKP(curproc)
 #define AFS_GUNLOCK() AFS_GUNLOCKP(curproc)
 #ifdef AFS_GLOBAL_SUNLOCK
@@ -138,6 +210,8 @@ extern struct lock afs_global_lock;
 #define AFS_ASSERT_GLOCK()
 #define ISAFS_GLOCK() 1
 #endif
+
+#endif /* AFS_OBSD44_ENV */
 
 #undef SPLVAR
 #define SPLVAR int splvar
