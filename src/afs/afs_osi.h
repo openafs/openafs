@@ -117,7 +117,9 @@ struct afs_osi_WaitHandle {
 /*
  * Alloc declarations.
  */
+#if !defined(AFS_OBSD44_ENV)
 #define afs_osi_Alloc_NoSleep afs_osi_Alloc
+#endif
 
 /*
  * Vnode related macros

@@ -32,6 +32,11 @@
 RCSID
     ("$Header$");
 
+#if defined(AFS_OBSD44_ENV) && defined(KERNEL) && !defined(UKERNEL)
+/* XXX osi_alloc, please find and fix */
+#include "osi_machdep.h"
+#endif
+
 #if !defined(NeXT)
 
 /*
@@ -44,6 +49,7 @@ RCSID
  */
 
 #if defined(KERNEL) && !defined(UKERNEL)
+
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
