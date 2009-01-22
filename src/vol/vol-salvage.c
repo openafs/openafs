@@ -1731,7 +1731,9 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 	    p = strrchr(dp->d_name, '.');
 	    if (p != NULL && strcmp(p, VHDREXT) == 0) {
 		int fd;
-		if ((fd = afs_open(dp->d_name, O_RDONLY)) != -1
+		char name[64];
+		sprintf(name, "%s/%s", fileSysPath, dp->d_name);
+		if ((fd = afs_open(name, O_RDONLY)) != -1
 		    && read(fd, (char *)&diskHeader, sizeof(diskHeader))
 		    == sizeof(diskHeader)
 		    && diskHeader.stamp.magic == VOLUMEHEADERMAGIC) {
@@ -1765,7 +1767,9 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    int error = 0;
 	    int fd;
-	    if ((fd = afs_open(dp->d_name, O_RDONLY)) == -1
+	    char name[64];
+	    sprintf(name, "%s/%s", fileSysPath, dp->d_name);
+	    if ((fd = afs_open(name, O_RDONLY)) == -1
 		|| read(fd, &diskHeader, sizeof(diskHeader))
 		!= sizeof(diskHeader)
 		|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
@@ -2352,23 +2356,26 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
     }
 
     if (isp->volSummary == NULL) {
-	char name[64];
-	(void)afs_snprintf(name, sizeof name, VFORMAT, afs_cast_uint32(isp->volumeId));
+	char path[64];
+	char headerName[64];
+	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
+	(void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
 	    return -1;
 	}
 	if (!Showmode)
-	    Log("No header file for volume %u; %screating %s/%s\n",
+	    Log("No header file for volume %u; %screating %s\n",
 		isp->volumeId, (Testing ? "it would have been " : ""),
-		fileSysPathName, name);
-	headerFd = afs_open(name, O_RDWR | O_CREAT | O_TRUNC, 0644);
+		path);
+	headerFd = afs_open(path, O_RDWR | O_CREAT | O_TRUNC, 0644);
 	assert(headerFd != -1);
 	isp->volSummary = (struct VolumeSummary *)
 	    malloc(sizeof(struct VolumeSummary));
-	isp->volSummary->fileName = ToString(name);
+	isp->volSummary->fileName = ToString(headerName);
     } else {
-	char name[64];
+	char path[64];
+	char headerName[64];
 	/* hack: these two fields are obsolete... */
 	isp->volSummary->header.volumeAcl = 0;
 	isp->volSummary->header.volumeMountTable = 0;
@@ -2378,18 +2385,18 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	     sizeof(struct VolumeHeader))) {
 	    /* We often remove the name before calling us, so we make a fake one up */
 	    if (isp->volSummary->fileName) {
-		strcpy(name, isp->volSummary->fileName);
+		strcpy(headerName, isp->volSummary->fileName);
 	    } else {
-	      (void)afs_snprintf(name, sizeof name, VFORMAT, afs_cast_uint32(isp->volumeId));
-		isp->volSummary->fileName = ToString(name);
+		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
+		isp->volSummary->fileName = ToString(headerName);
 	    }
-
-	    Log("Header file %s is damaged or no longer valid%s\n", name,
+	    (void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);
+	    Log("Header file %s is damaged or no longer valid%s\n", path,
 		(check ? "" : "; repairing"));
 	    if (check)
 		return -1;
 
-	    headerFd = afs_open(name, O_RDWR | O_TRUNC, 0644);
+	    headerFd = afs_open(path, O_RDWR | O_TRUNC, 0644);
 	    assert(headerFd != -1);
 	}
     }
