@@ -1558,7 +1558,7 @@ afs_vop_strategy(ap)
 {
     int error;
     AFS_GLOCK();
-    error = afs_ustrategy(ap->a_bp);
+    error = afs_ustrategy(ap->a_bp, osi_cred());
     AFS_GUNLOCK();
     return error;
 }
