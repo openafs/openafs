@@ -44,7 +44,7 @@ afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *, afs_int32 );
 afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *) ;
 afs_int32 bcdb_deleteDump(afs_int32, afs_int32, afs_int32, budb_dumpsList *);
 /*note the pinter to the function comes from ubik/ubikclient ubik_Call function.*/
-afs_int32 bcdb_listDumps (int (), afs_int32,afs_int32,afs_int32, budb_dumpsList *,
+afs_int32 bcdb_listDumps (afs_int32, afs_int32,afs_int32,afs_int32, budb_dumpsList *,
  budb_dumpsList *);
 afs_int32 bcdb_DeleteVDP(char *, char *, afs_int32 );
 afs_int32 bcdb_FindClone(afs_int32, char *, afs_int32 *);
@@ -109,7 +109,7 @@ afs_int32 bcdb_deleteDump(afs_int32 dumpID, afs_int32 fromTime, afs_int32 toTime
     return (code);
 }
 
-afs_int32 bcdb_listDumps (int (*sflags) (), afs_int32 groupId,afs_int32 fromTime, afs_int32 toTime,budb_dumpsList *dumps, budb_dumpsList *flags)
+afs_int32 bcdb_listDumps (afs_int32 sflags, afs_int32 groupId,afs_int32 fromTime, afs_int32 toTime,budb_dumpsList *dumps, budb_dumpsList *flags)
 {
     afs_int32 code, sflag = 0;
     budb_dumpsList dumpsList, *dumpsPtr;
