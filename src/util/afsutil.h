@@ -115,11 +115,19 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 
 /* Abort on error, possibly trapping to debugger or dumping a trace. */
      void afs_NTAbort(void);
-#endif /* NT40 */
+#endif /* AFS_NT40_ENV */
 
      typedef char b32_string_t[8];
 /* b64_string_t is 8 bytes, in stds.h */
      typedef char lb64_string_t[12];
+
+#ifndef HAVE_STRLCAT
+extern size_t strlcat(char *dst, const char *src, size_t siz);
+#endif
+
+#ifndef HAVE_STRLCPY
+extern size_t strlcpy(char *dst, const char *src, size_t siz);
+#endif
 
 #ifndef UKERNEL
 #include "afs/ktime.h"
