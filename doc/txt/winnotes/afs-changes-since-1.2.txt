@@ -1,3 +1,29 @@
+Since 1.5.56
+ * Undo the "UAC manifest fix" applied to afs_config.exe.
+
+ * Fixed some additional race conditions in the Rx library
+
+ * Ensure that Freelance allocation of vnodes follow 
+   the AFS convention of odd vnodes are directories 
+   and everything else is an even vnode.
+
+ * Add Freelance logic to mount point and symlink 
+   evaluation functions.
+
+ * Enhance smb_ParseASCIIBlock() so that it can handle
+   all of the STRING formats defined by the CIFS Technical
+   Report 1.0.  
+
+ * Validate the output of smb_ParseASCIIBlock() in all
+   callers.  Return CM_ERROR_BADSMB if the STRING field
+   cannot be parsed.  CM_ERROR_BADSMB will cause the
+   contents of the packet to be logged.
+
+ * If multiple SMB Raw Write operations were taking 
+   place at the same time, there could be data corruption
+   because unique event objects were not generated for 
+   each Netbios receive operation.
+
 Since 1.5.55
 
  * Fix a race in rxi_WriteProc which could result
