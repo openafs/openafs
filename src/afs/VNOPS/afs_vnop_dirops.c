@@ -216,7 +216,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ObtainWriteLock(&afs_xdcache, 739);
 	code = afs_dir_MakeDir(new_dc,
 				(afs_int32 *) &newFid.Fid,
-				(afs_int32) &adp->fid.Fid);
+				(afs_int32 *) &adp->fid.Fid);
 	ReleaseWriteLock(&afs_xdcache);
 	if (code)
 	    printf("afs_mkdir: afs_dirMakeDir code = %u\n", code);
