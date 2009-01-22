@@ -1204,7 +1204,7 @@ extern int afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp,
 #endif
 	
 /* VNOPS/afs_vnop_strategy.c */
-#if defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 extern int afs_ustrategy(register struct buf *adp, struct AFS_UCRED *credp);
 #else
 extern int afs_ustrategy(register struct buf *adp);
