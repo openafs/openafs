@@ -67,7 +67,7 @@ afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *veptr)
 {
     afs_int32 code;
 
-    code = ubik_Call(BUDB_AddVolume, udbHandle.uh_client, 0, veptr);
+    code = ubik_BUDB_AddVolume(udbHandle.uh_client, 0, veptr);
     return (code);
 }
 
@@ -78,7 +78,7 @@ afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *veptr, afs_int32 cou
 
     volumeList.budb_volumeList_len = count;
     volumeList.budb_volumeList_val = veptr;
-    code = ubik_Call(BUDB_AddVolumes, udbHandle.uh_client, 0, &volumeList);
+    code = ubik_BUDB_AddVolumes(udbHandle.uh_client, 0, &volumeList);
     return (code);
 }
 
@@ -87,7 +87,7 @@ afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
 
-    code = ubik_Call(BUDB_CreateDump, udbHandle.uh_client, 0, deptr);
+    code = ubik_BUDB_CreateDump(udbHandle.uh_client, 0, deptr);
     return (code);
 }
 
@@ -102,7 +102,7 @@ afs_int32 bcdb_deleteDump(afs_int32 dumpID, afs_int32 fromTime, afs_int32 toTime
     dumpsPtr = (dumps ? dumps : &dumpsList);
 
     code =
-	ubik_Call(BUDB_DeleteDump, udbHandle.uh_client, 0, dumpID, fromTime,
+	ubik_BUDB_DeleteDump(udbHandle.uh_client, 0, dumpID, fromTime,
 		  toTime, dumpsPtr);
     if (dumpsList.budb_dumpsList_val)
 	free(dumpsList.budb_dumpsList_val);
@@ -124,7 +124,7 @@ afs_int32 bcdb_listDumps (int (*sflags) (), afs_int32 groupId,afs_int32 fromTime
     flagsPtr = (flags ? flags : &flagsList);
 
     code =
-	ubik_Call(BUDB_ListDumps, udbHandle.uh_client, 0, sflags, "", groupId,
+	ubik_BUDB_ListDumps(udbHandle.uh_client, 0, sflags, "", groupId,
 		  fromTime, toTime, dumpsPtr, flagsPtr);
 
     if (dumpsList.budb_dumpsList_val)
@@ -140,7 +140,7 @@ afs_int32 bcdb_DeleteVDP(char *dumpSetName, char *dumpPath, afs_int32 dumpID)
     afs_int32 code;
 
     code =
-	ubik_Call(BUDB_DeleteVDP, udbHandle.uh_client, 0, dumpSetName,
+	ubik_BUDB_DeleteVDP(udbHandle.uh_client, 0, dumpSetName,
 		  dumpPath, dumpID);
     return (code);
 }
@@ -163,7 +163,7 @@ afs_int32 bcdb_FindClone(afs_int32 dumpID, char *volName, afs_int32 *clonetime)
 {
     afs_int32 code;
     code =
-	ubik_Call(BUDB_FindClone, udbHandle.uh_client, 0, dumpID, volName,
+	ubik_BUDB_FindClone(udbHandle.uh_client, 0, dumpID, volName,
 		  clonetime);
     return (code);
 }
@@ -192,7 +192,7 @@ bcdb_FindDump(volumeName, beforeDate, deptr)
 {
     afs_int32 code;
     code =
-	ubik_Call(BUDB_FindDump, udbHandle.uh_client, 0, volumeName,
+	ubik_BUDB_FindDump(udbHandle.uh_client, 0, volumeName,
 		  beforeDate, deptr);
     return (code);
 }
@@ -217,7 +217,7 @@ bcdb_FindDumpByID(dumpID, deptr)
     dl.budb_dumpList_val = 0;
 
     /* outline algorithm */
-    code = ubik_Call(BUDB_GetDumps, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_DUMPID, "",	/* no name */
+    code = ubik_BUDB_GetDumps(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_DUMPID, "",	/* no name */
 		     dumpID,	/* start */
 		     0,		/* end */
 		     0,		/* index */
@@ -303,7 +303,7 @@ bcdb_FindLatestDump(volSetName, dumpPath, deptr)
 {
     afs_int32 code;
     code =
-	ubik_Call(BUDB_FindLatestDump, udbHandle.uh_client, 0, volSetName,
+	ubik_BUDB_FindLatestDump(udbHandle.uh_client, 0, volSetName,
 		  dumpPath, deptr);
     return (code);
 }
@@ -331,7 +331,7 @@ bcdb_FindTape(dumpid, tapeName, teptr)
     tl.budb_tapeList_val = 0;
 
     code =
-	ubik_Call(BUDB_GetTapes, udbHandle.uh_client, 0, BUDB_MAJORVERSION,
+	ubik_BUDB_GetTapes(udbHandle.uh_client, 0, BUDB_MAJORVERSION,
 		  BUDB_OP_TAPENAME | BUDB_OP_DUMPID, tapeName, dumpid, 0, 0,
 		  &next, &dbTime, &tl);
 
@@ -364,7 +364,7 @@ bcdb_FindTapeSeq(dumpid, tapeSeq, teptr)
     tl.budb_tapeList_val = 0;
 
     code =
-	ubik_Call(BUDB_GetTapes, udbHandle.uh_client, 0, BUDB_MAJORVERSION,
+	ubik_BUDB_GetTapes(udbHandle.uh_client, 0, BUDB_MAJORVERSION,
 		  BUDB_OP_TAPESEQ | BUDB_OP_DUMPID, "", dumpid, tapeSeq, 0,
 		  &next, &dbTime, &tl);
     if (code)
@@ -412,7 +412,7 @@ bcdb_FindVolumes(dumpID, volumeName, returnArray, last, next, maxa, nEntries)
     vl.budb_volumeList_val = returnArray;
 
     /* outline algorithm */
-    code = ubik_Call(BUDB_GetVolumes, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME | BUDB_OP_DUMPID, volumeName,	/* name */
+    code = ubik_BUDB_GetVolumes(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME | BUDB_OP_DUMPID, volumeName,	/* name */
 		     dumpID,	/* start */
 		     0,		/* end */
 		     last,	/* index */
@@ -428,7 +428,7 @@ bcdb_FinishDump(deptr)
      register struct budb_dumpEntry *deptr;
 {
     afs_int32 code;
-    code = ubik_Call(BUDB_FinishDump, udbHandle.uh_client, 0, deptr);
+    code = ubik_BUDB_FinishDump(udbHandle.uh_client, 0, deptr);
     return (code);
 }
 
@@ -436,7 +436,7 @@ bcdb_FinishTape(teptr)
      register struct budb_tapeEntry *teptr;
 {
     afs_int32 code;
-    code = ubik_Call(BUDB_FinishTape, udbHandle.uh_client, 0, teptr);
+    code = ubik_BUDB_FinishTape(udbHandle.uh_client, 0, teptr);
     return (code);
 
 }
@@ -461,7 +461,7 @@ bcdb_LookupVolume(volumeName, returnArray, last, next, maxa, nEntries)
     vl.budb_volumeList_val = returnArray;
 
     /* outline algorithm */
-    code = ubik_Call(BUDB_GetVolumes, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME, volumeName,	/* name */
+    code = ubik_BUDB_GetVolumes(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME, volumeName,	/* name */
 		     0,		/* start */
 		     0,		/* end */
 		     last,	/* index */
@@ -481,7 +481,7 @@ bcdb_UseTape(teptr, newFlag)
      afs_int32 *newFlag;
 {
     afs_int32 code;
-    code = ubik_Call(BUDB_UseTape, udbHandle.uh_client, 0, teptr, newFlag);
+    code = ubik_BUDB_UseTape(udbHandle.uh_client, 0, teptr, newFlag);
     return (code);
 }
 
@@ -532,7 +532,7 @@ bcdb_GetTextFile(register udbClientTextP ctPtr)
 	offset = nextOffset;
 	charList.charListT_len = bufferSize;
 	code =
-	    ubik_Call(BUDB_GetText, udbHandle.uh_client, 0, ctPtr->lockHandle,
+	    ubik_BUDB_GetText(udbHandle.uh_client, 0, ctPtr->lockHandle,
 		      ctPtr->textType, bufferSize, offset, &nextOffset,
 		      &charList);
 
@@ -550,7 +550,7 @@ bcdb_GetTextFile(register udbClientTextP ctPtr)
 
     /* get text version */
     code =
-	ubik_Call(BUDB_GetTextVersion, udbHandle.uh_client, 0,
+	ubik_BUDB_GetTextVersion(udbHandle.uh_client, 0,
 		  ctPtr->textType, &ctPtr->textVersion);
     if (code)
 	ERROR(code);
@@ -609,7 +609,7 @@ bcdb_SaveTextFile(ctPtr)
     if (fileSize == 0) {
 	charList.charListT_len = 0;
 	code =
-	    ubik_Call(BUDB_SaveText, udbHandle.uh_client, 0,
+	    ubik_BUDB_SaveText(udbHandle.uh_client, 0,
 		      ctPtr->lockHandle, ctPtr->textType, 0,
 		      BUDB_TEXT_COMPLETE, &charList);
 	goto error_exit;
@@ -629,7 +629,7 @@ bcdb_SaveTextFile(ctPtr)
 
 	charList.charListT_len = chunkSize;
 	code =
-	    ubik_Call(BUDB_SaveText, udbHandle.uh_client, 0,
+	    ubik_BUDB_SaveText(udbHandle.uh_client, 0,
 		      ctPtr->lockHandle, ctPtr->textType, offset,
 		      (chunkSize == fileSize) ? BUDB_TEXT_COMPLETE : 0,
 		      &charList);
@@ -654,8 +654,7 @@ bcdb_FindLastTape(dumpID, dumpEntry, tapeEntry, volEntry)
      struct budb_tapeEntry *tapeEntry;
      struct budb_volumeEntry *volEntry;
 {
-    return (ubik_Call
-	    (BUDB_FindLastTape, udbHandle.uh_client, 0, dumpID, dumpEntry,
+    return (ubik_BUDB_FindLastTape(udbHandle.uh_client, 0, dumpID, dumpEntry,
 	     tapeEntry, volEntry));
 }
 
@@ -664,8 +663,7 @@ bcdb_MakeDumpAppended(appendedDumpID, initialDumpID, startTapeSeq)
      afs_int32 initialDumpID;
      afs_int32 startTapeSeq;
 {
-    return (ubik_Call
-	    (BUDB_MakeDumpAppended, udbHandle.uh_client, 0, appendedDumpID,
+    return (ubik_BUDB_MakeDumpAppended(udbHandle.uh_client, 0, appendedDumpID,
 	     initialDumpID, startTapeSeq));
 }
 
@@ -719,7 +717,7 @@ bc_LockText(ctPtr)
 
     while (1) {
 	code =
-	    ubik_Call(BUDB_GetLock, udbHandle.uh_client, 0,
+	    ubik_BUDB_GetLock(udbHandle.uh_client, 0,
 		      udbHandle.uh_instanceId, ctPtr->textType, timeout,
 		      &ctPtr->lockHandle);
 	if ((code != BUDB_LOCKED) && (code != BUDB_SELFLOCKED)) {
@@ -763,7 +761,7 @@ bc_UnlockText(ctPtr)
 	return (0);
 
     code =
-	ubik_Call(BUDB_FreeLock, udbHandle.uh_client, 0, ctPtr->lockHandle);
+	ubik_BUDB_FreeLock(udbHandle.uh_client, 0, ctPtr->lockHandle);
     ctPtr->lockHandle = 0;
 
     /* Don't try to analyse the error. Let the lock timeout */
@@ -786,7 +784,7 @@ bc_CheckTextVersion(ctPtr)
 	return (BC_VERSIONMISMATCH);
 
     code =
-	ubik_Call(BUDB_GetTextVersion, udbHandle.uh_client, 0,
+	ubik_BUDB_GetTextVersion(udbHandle.uh_client, 0,
 		  ctPtr->textType, &tversion);
     if (code)
 	return (code);
@@ -1088,7 +1086,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
     for (i = 0; i < info.numServers; i++)
 	rx_SetConnDeadTime(udbHandle.uh_client->conns[i], 1);
     code =
-	ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
+	ubik_BUDB_GetInstanceId(udbHandle.uh_client, 0,
 		  &udbHandle.uh_instanceId);
 
     /* Reset dead time back up to default */
@@ -1098,7 +1096,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
     /* If did not find a site on first quick pass, try again */
     if (code == -1)
 	code =
-	    ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
+	    ubik_BUDB_GetInstanceId(udbHandle.uh_client, 0,
 		      &udbHandle.uh_instanceId);
     if (code) {
 	afs_com_err(whoami, code, "; Can't access backup database");
@@ -1340,7 +1338,7 @@ udbLocalInit()
     }
 
     code =
-	ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
+	ubik_BUDB_GetInstanceId(udbHandle.uh_client, 0,
 		  &udbHandle.uh_instanceId);
     if (code) {
 	afs_com_err(whoami, code, "; Can't estblish instance Id");
