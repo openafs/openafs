@@ -12,6 +12,10 @@
 
 #else
 
+#if !defined(inline) && !defined(__GNUC__)
+#define inline
+#endif
+
 extern afs_int32    afs_is_disconnected;
 extern afs_int32    afs_is_discon_rw;
 extern afs_int32    afs_in_sync;
