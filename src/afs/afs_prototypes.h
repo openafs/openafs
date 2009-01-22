@@ -1174,7 +1174,7 @@ extern int afs_rd_stash_i;
 extern int afs_readdir(OSI_VC_DECL(avc), struct uio *auio, 
 		       struct AFS_UCRED *acred, int *eofp);
 #elif defined(AFS_HPUX100_ENV)
-extern int afs_readdir2(OIS_VC_DECL(avc), struct uio *auio, 
+extern int afs_readdir2(OSI_VC_DECL(avc), struct uio *auio, 
 		        struct AFS_UCRED *acred);
 #else
 extern int afs_readdir(OSI_VC_DECL(avc), struct uio *auio, 
