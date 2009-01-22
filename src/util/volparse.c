@@ -9,7 +9,6 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
 RCSID
     ("$Header$");
 
@@ -17,6 +16,11 @@ RCSID
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+
+#include "afsutil.h"
+
+/* maximum number of partitions - must match vol/voldefs.h */
+#define VOLMAXPARTS 255
 
 /**
  * map a partition id from any partition-style name.
@@ -44,11 +48,11 @@ volutil_GetPartitionID(char *aname)
     if (tc >= '0' && tc <= '9') {
 	temp = atoi(aname);
 	/* this next check is to make the syntax less ambiguous when discriminating
-	 * between volume numbers and partition IDs.  This less things like
-	 * bos salvage do some reasonability checks its input w/o checking
+	 * between volume numbers and partition IDs.  This lets things like
+	 * bos salvage do some reasonability checks on its input w/o checking
 	 * to see if the partition is really on the server.
 	 */
-	if (temp < 0 || temp > 25)
+	if (temp < 0 || temp >= VOLMAXPARTS)
 	    return -1;
 	else
 	    return temp;
@@ -76,7 +80,8 @@ volutil_GetPartitionID(char *aname)
 	    return -1;		/* wrongo */
 	if (ascii[1] < 'a' || ascii[1] > 'z')
 	    return -1;		/* just as bad */
-	return (ascii[0] - 'a') * 26 + (ascii[1] - 'a') + 26;
+	temp = (ascii[0] - 'a') * 26 + (ascii[1] - 'a') + 26;
+        return (temp >= VOLMAXPARTS ? -1 : temp);
     }
 }
 
@@ -102,7 +107,7 @@ volutil_PartitionName2_r(afs_int32 part, char *tbuffer, size_t buflen)
     char tempString[3];
     register int i;
 
-    if (part < 0 || part >= (26 * 26 + 26)) {
+    if (part < 0 || part >= VOLMAXPARTS) {
 	return -2;
     }
 
@@ -229,7 +234,7 @@ util_GetInt32(register char *as, afs_int32 * aval)
     negative = 0;
 
     /* skip over leading spaces */
-    while ((tc = *as)) {
+    for (; tc = *as; as++) {
 	if (tc != ' ' && tc != '\t')
 	    break;
     }
@@ -252,12 +257,11 @@ util_GetInt32(register char *as, afs_int32 * aval)
 	base = 10;
 
     /* compute the # itself */
-    while ((tc = *as)) {
+    for (; tc = *as; as++) {
 	if (!ismeta(tc, base))
 	    return -1;
 	total *= base;
 	total += getmeta(tc);
-	as++;
     }
 
     if (negative)
@@ -277,7 +281,7 @@ util_GetUInt32(register char *as, afs_uint32 * aval)
     total = 0;			/* initialize things */
 
     /* skip over leading spaces */
-    while ((tc = *as)) {
+    for (; tc = *as; as++) {
 	if (tc != ' ' && tc != '\t')
 	    break;
     }
@@ -294,12 +298,11 @@ util_GetUInt32(register char *as, afs_uint32 * aval)
 	base = 10;
 
     /* compute the # itself */
-    while ((tc = *as)) {
+    for (;tc = *as; as++) {
 	if (!ismeta(tc, base))
 	    return -1;
 	total *= base;
 	total += getmeta(tc);
-	as++;
     }
 
     *aval = total;
