@@ -841,6 +841,22 @@ AC_DEFUN([LINUX_HAVE_I_SIZE_READ], [
     AC_DEFINE([HAVE_LINUX_I_SIZE_READ], 1, [define if your kernel has i_size_read()])
   fi])
 
+AC_DEFUN([LINUX_HAVE_D_ALLOC_ANON], [
+  AC_MSG_CHECKING([for linux d_alloc_anon()])
+  AC_CACHE_VAL([ac_cv_linux_d_alloc_anon], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/dcache.h>],
+[d_alloc_anon(NULL);],
+      ac_cv_linux_d_alloc_anon=yes,
+      ac_cv_linux_d_alloc_anon=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_d_alloc_anon)
+  if test "x$ac_cv_linux_d_alloc_anon" = "xyes"; then
+    AC_DEFINE([HAVE_LINUX_D_ALLOC_ANON], 1, [define if your kernel has d_alloc_anon()])
+  fi])
+
 AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
   AC_MSG_CHECKING([for linux/freezer.h existance])
   AC_CACHE_VAL([ac_cv_linux_freezer_h_exists], [

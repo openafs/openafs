@@ -27,6 +27,8 @@ RCSID
 #include "afs/afs_dynroot.h"
 #include "h/smp_lock.h"
 
+#if !defined(AFS_NONFSTRANS)
+
 /* #define OSI_EXPORT_DEBUG */
 
 extern struct dentry_operations afs_dentry_operations;
@@ -956,3 +958,5 @@ struct export_operations afs_export_ops = {
     .get_name   = afs_export_get_name,
     .get_parent = afs_export_get_parent,
 };
+
+#endif
