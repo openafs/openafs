@@ -1393,6 +1393,12 @@ afs_DCacheMissingChunks(struct vcache *avc)
     totalLength--;
     totalChunks = (AFS_CHUNK(totalLength) + 1);
 
+    /* If we're a directory, we only ever have one chunk, regardless of
+     * the size of the dir.
+     */
+    if (avc->fid.Fid.Vnode & 1 || vType(avc) == VDIR)
+	totalChunks = 1;
+    
     /*
      printf("Should have %d chunks for %u bytes\n",
     		totalChunks, (totalLength + 1));
