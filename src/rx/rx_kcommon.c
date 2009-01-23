@@ -137,7 +137,7 @@ osi_Panic(char *msg, ...)
         msg = "Unknown AFS panic";
     printf(msg, a1, a2, a3);
     panic(msg);
-#elif defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)
+#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
     char buf[256];
     va_list ap;
     if (!msg)
