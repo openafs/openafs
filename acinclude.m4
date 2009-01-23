@@ -917,6 +917,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_SYSCTL_TABLE_CHECKING
 		 LINUX_HAVE_IGET
 		 LINUX_HAVE_I_SIZE_READ
+		 LINUX_HAVE_D_ALLOC_ANON
+		 if test "x$ac_cv_linux_d_alloc_anon" = "xno"; then
+		   AC_DEFINE([AFS_NONFSTRANS], 1, [define to disable the nfs translator])
+		 fi
 		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
 	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
