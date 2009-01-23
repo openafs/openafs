@@ -58,7 +58,7 @@ extern struct backing_dev_info afs_backing_dev_info;
 
 extern struct vcache *afs_globalVp;
 extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX24_ENV)
 /* Some uses of BKL are perhaps not needed for bypass or memcache--
  * why don't we try it out? */
 extern struct afs_cacheOps afs_UfsCacheOps;
@@ -74,7 +74,7 @@ extern struct afs_cacheOps afs_UfsCacheOps;
 	if(afs_cacheType == &afs_UfsCacheOps)	       \
 	    unlock_kernel();			       \
     } while(0);
-#endif /* AFS_CACHE_BYPASS */
+#endif /* AFS_LINUX24_ENV */
 
 static ssize_t
 afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
