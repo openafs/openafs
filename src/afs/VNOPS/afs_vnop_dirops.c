@@ -91,9 +91,11 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	goto done;
     }
    
-    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW)
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
 	/*printf("Network is down in afs_mkdir\n");*/
 	code = ENETDOWN;
+	goto done;
+    }
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = osi_Time();
     InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
@@ -151,7 +153,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    /* If not mount point, generate a new fid. */
 	    newFid.Cell = adp->fid.Cell;
     	    newFid.Fid.Volume = adp->fid.Fid.Volume;
-	    afs_GenFakeFid(&newFid, VDIR);
+	    afs_GenFakeFid(&newFid, VDIR, 1);
 	}
     	/* XXX: If mount point???*/
 
