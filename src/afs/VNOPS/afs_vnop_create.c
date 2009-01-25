@@ -372,7 +372,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	/* Generate a fake FID for disconnected mode. */
 	newFid.Cell = adp->fid.Cell;
 	newFid.Fid.Volume = adp->fid.Fid.Volume;
-	afs_GenFakeFid(&newFid, VREG);
+	afs_GenFakeFid(&newFid, VREG, 1);
 #endif
     }				/* if (!AFS_IS_DISCON_RW) */
 

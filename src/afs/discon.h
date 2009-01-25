@@ -28,18 +28,14 @@ extern afs_int32    afs_ConflictPolicy;
 
 extern afs_uint32 afs_DisconVnode; /* XXX: not protected. */
 
-/* For afs_GenFakeFid. */
-extern struct vcache *afs_FindVCache(struct VenusFid *afid,
-					afs_int32 *retry,
-					afs_int32 flag);
-
 extern int afs_WriteVCacheDiscon(register struct vcache *avc,
 					register struct AFSStoreStatus *astatus,
 					struct vattr *attrs);
 extern int afs_ResyncDisconFiles(struct vrequest *areq,
 					struct AFS_UCRED *acred);
 extern void afs_RemoveAllConns(void);
-extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype);
+extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, 
+			   int lock);
 extern void afs_GenShadowFid(struct VenusFid *afid);
 extern void afs_GenDisconStatus(struct vcache *adp,
 					struct vcache *avc,
