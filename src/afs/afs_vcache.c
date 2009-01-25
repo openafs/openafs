@@ -3282,7 +3282,6 @@ shutdown_vcache(void)
 	QInit(&afs_vhashTV[i]);
 }
 
-#ifdef AFS_DISCON_ENV
 void afs_DisconGiveUpCallbacks() {
     int i;
     struct vcache *tvc;
@@ -3307,4 +3306,25 @@ void afs_DisconGiveUpCallbacks() {
     /*printf("gone\n");*/
 }
 
-#endif
+/*!
+ *
+ * Clear the Statd flag from all vcaches
+ *
+ * This function removes the Statd flag from all vcaches. It's used by 
+ * disconnected mode to tidy up during reconnection
+ *
+ */
+void afs_ClearAllStatdFlag() {
+    int i;
+    struct vcache *tvc;
+   
+    ObtainWriteLock(&afs_xvcache, 715);
+
+    for (i = 0; i < VCSIZE; i++) {
+	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    tvc->states &= ~(CStatd|CUnique);
+	}
+    }
+    ReleaseWriteLock(&afs_xvcache);
+}
+

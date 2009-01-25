@@ -4701,6 +4701,7 @@ DECL_PIOCTL(PDiscon)
 		afs_is_discon_rw = 0;
 		printf("\nSync succeeded. You are back online.\n");
 	    }
+	    afs_ClearAllStatdFlag();
 
 	    ReleaseWriteLock(&afs_discon_lock);
 	    break;

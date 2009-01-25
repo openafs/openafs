@@ -1003,7 +1003,7 @@ extern afs_int32 afs_NFSFindVCache(struct vcache **avcp,
 extern void afs_vcacheInit(int astatSize);
 extern void shutdown_vcache(void);
 extern void afs_DisconGiveUpCallbacks(void);
-
+extern void afs_ClearAllStatdFlag(void);
 
 /* VNOPS/afs_vnop_access.c */
 extern afs_int32 afs_GetAccessBits(register struct vcache *avc,
