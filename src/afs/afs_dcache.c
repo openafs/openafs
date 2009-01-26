@@ -3889,4 +3889,46 @@ void afs_DeleteShadowDir(struct vcache *avc)
     QRemove(&avc->shadowq);
     ReleaseWriteLock(&afs_disconDirtyLock);
 }
+
+/*!
+ * Populate a dcache with empty chunks up to a given file size,
+ * used before extending a file in order to avoid 'holes' which
+ * we can't access in disconnected mode.
+ *
+ * \param avc   The vcache which is being extended (locked)
+ * \param alen  The new length of the file
+ *
+ */
+void afs_PopulateDCache(struct vcache *avc, afs_size_t apos, struct vrequest *areq) {
+    struct dcache *tdc;
+    afs_size_t len, offset;
+    afs_int32 start, end;
+
+    /* We're doing this to deal with the situation where we extend
+     * by writing after lseek()ing past the end of the file . If that 
+     * extension skips chunks, then those chunks won't be created, and 
+     * GetDCache will assume that they have to be fetched from the server. 
+     * So, for each chunk between the current file position, and the new 
+     * length we GetDCache for that chunk.
+     */
+
+    if (AFS_CHUNK(apos) == 0 || apos <= avc->m.Length) 
+	return;
+
+    if (avc->m.Length == 0)
+	start = 0;
+    else 
+    	start = AFS_CHUNK(avc->m.Length)+1;
+
+    end = AFS_CHUNK(apos);
+
+    while (start<end) {
+	len = AFS_CHUNKTOSIZE(start);
+	tdc = afs_GetDCache(avc, AFS_CHUNKTOBASE(start), areq, &offset, &len, 4);
+	if (tdc)
+	    afs_PutDCache(tdc);
+	start++;
+    }
+}
+
 #endif
