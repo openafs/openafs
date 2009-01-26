@@ -2186,6 +2186,12 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
     if (!locked)
 	lock_ObtainRead(&scp->dirlock);
 
+    /* 
+     * Hold a reference to the directory so that it wont' be
+     * recycled while the enumeration is active. 
+     */
+    cm_HoldSCache(scp);
+
     if (scp->dirBplus == NULL) {
 	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate No BPlus Tree");
         rc = CM_ERROR_WOULDBLOCK;
@@ -2285,6 +2291,8 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 	nextLeafNode = getnextnode(leafNode);
     }   
 
+    enump->dscp = scp;
+
   done:
     if (!locked)
 	lock_ReleaseRead(&scp->dirlock);
@@ -2292,7 +2300,10 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
     /* if we failed, cleanup any mess */
     if (rc != 0) {
 	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate rc != 0");
-	if (enump) {
+       
+        /* release the directory because we failed to generate an enumeration object */
+        cm_ReleaseSCache(scp);
+        if (enump) {
 	    for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
 		free(enump->entry[count].name);
 	    }
@@ -2307,8 +2318,9 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 }
 
 long 
-cm_BPlusDirEnumBulkStat(cm_scache_t *dscp, cm_direnum_t *enump, cm_user_t *userp, cm_req_t *reqp)
+cm_BPlusDirEnumBulkStat(cm_direnum_t *enump, cm_user_t *userp, cm_req_t *reqp)
 {
+    cm_scache_t *dscp = enump->dscp;
     cm_bulkStat_t *bsp;
     afs_uint32 count;
     afs_uint32 code;
@@ -2387,6 +2399,9 @@ cm_BPlusDirFreeEnumeration(cm_direnum_t *enump)
     osi_Log0(afsd_logp, "cm_BPlusDirFreeEnumeration");
 
     if (enump) {
+        /* Release the directory object */
+        cm_ReleaseSCache(enump->dscp);
+
 	for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
 	    free(enump->entry[count].name);
 	}
