@@ -230,7 +230,7 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
      * offset only applies to the first iovec.
      */
     r = resid;
-    while ((resid > 0) && (i < RX_MAXWVECS)) {
+    while ((resid > 0) && (i <= RX_MAXWVECS)) {
 	if (i >= packet->niovecs)
 	    if (rxi_AllocDataBuf(packet, resid, RX_PACKET_CLASS_SEND_CBUF) > 0)	/* ++niovecs as a side-effect */
 		break;
