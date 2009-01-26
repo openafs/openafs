@@ -946,6 +946,7 @@ extern afs_int32 afs_vcount;
 extern int afsvnumbers;
 extern afs_rwlock_t afs_xvreclaim;
 extern afs_rwlock_t afs_xvcache;
+extern afs_rwlock_t afs_xvcdirty;
 extern afs_lock_t afs_xvcb;
 extern struct afs_q VLRU;
 extern afs_int32 vcachegen;
@@ -954,6 +955,8 @@ extern struct afs_q afs_vhashTV[VCSIZE];
 extern afs_int32 afs_bulkStatsLost;
 extern int afs_norefpanic;
 extern struct vcache *ReclaimedVCList;
+extern ino_t vcacheMetaInode;
+extern struct osi_file *afs_vcacheMetaInodep;
 
 extern void afs_FlushReclaimedVcaches(void);
 void afs_vcacheInit(int astatSize);

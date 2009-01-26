@@ -93,7 +93,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
 	    goto done;
 	} else {
 	    if (!afs_AccessOK
-		(tvc, ((tvc->states & CForeign) ? PRSFS_READ : PRSFS_LOOKUP),
+		(tvc, ((tvc->f.states & CForeign) ? PRSFS_READ : PRSFS_LOOKUP),
 		 &treq, CHECK_MODE_BITS)) {
 		code = EACCES;
 		printf("afs_Open: no access for dir\n");
@@ -153,8 +153,8 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     if (aflags & FTRUNC) {
 	/* this fixes touch */
 	ObtainWriteLock(&tvc->lock, 123);
-	tvc->m.Date = osi_Time();
-	tvc->states |= CDirty;
+	tvc->f.m.Date = osi_Time();
+	tvc->f.states |= CDirty;
 	ReleaseWriteLock(&tvc->lock);
     }
     ObtainReadLock(&tvc->lock);

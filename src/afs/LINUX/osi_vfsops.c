@@ -198,7 +198,7 @@ afs_root(struct super_block *afsp)
     register struct vcache *tvp = 0;
 
     AFS_STATCNT(afs_root);
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	cred_t *credp = crref();

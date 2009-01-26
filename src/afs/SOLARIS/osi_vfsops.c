@@ -120,7 +120,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp)
     AFS_STATCNT(afs_root);
 
 again:
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	if (MUTEX_HELD(&vp->v_lock)) {

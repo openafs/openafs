@@ -25,7 +25,7 @@ osi_Active(register struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
 #if defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    if ((avc->opens > 0) || (avc->states & CMAPPED))
+    if ((avc->opens > 0) || (avc->f.states & CMAPPED))
 	return 1;		/* XXX: Warning, verify this XXX  */
 #elif defined(AFS_SGI_ENV)
     if ((avc->opens > 0) || AFS_VN_MAPPED(AFSTOV(avc)))
@@ -65,7 +65,7 @@ osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
     /* If we've already purged this version, or if we're the ones
      * writing this version, don't flush it (could lose the
      * data we're writing). */
-    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0)
+    if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)
 	|| ((avc->execsOrWriters > 0) && afs_DirtyPages(avc))) {
 	ReleaseReadLock(&avc->lock);
 	return;
@@ -73,21 +73,21 @@ osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
     ReleaseReadLock(&avc->lock);
     ObtainWriteLock(&avc->lock, 10);
     /* Check again */
-    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0)
+    if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)
 	|| ((avc->execsOrWriters > 0) && afs_DirtyPages(avc))) {
 	ReleaseWriteLock(&avc->lock);
 	return;
     }
     if (hiszero(avc->mapDV)) {
-	hset(avc->mapDV, avc->m.DataVersion);
+	hset(avc->mapDV, avc->f.m.DataVersion);
 	ReleaseWriteLock(&avc->lock);
 	return;
     }
 
     AFS_STATCNT(osi_FlushPages);
-    hset(origDV, avc->m.DataVersion);
+    hset(origDV, avc->f.m.DataVersion);
     afs_Trace3(afs_iclSetp, CM_TRACE_FLUSHPAGES, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->m.Length);
+	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->f.m.Length);
 
     ReleaseWriteLock(&avc->lock);
 #ifdef AFS_FBSD70_ENV
@@ -127,11 +127,11 @@ osi_FlushText_really(register struct vcache *vp)
 
     AFS_STATCNT(osi_FlushText);
     /* see if we've already flushed this data version */
-    if (hcmp(vp->m.DataVersion, vp->flushDV) <= 0)
+    if (hcmp(vp->f.m.DataVersion, vp->flushDV) <= 0)
 	return;
 
     MObtainWriteLock(&afs_ftf, 317);
-    hset(fdv, vp->m.DataVersion);
+    hset(fdv, vp->f.m.DataVersion);
 
     /* why this disgusting code below?
      *    xuntext, called by xrele, doesn't notice when it is called
@@ -232,7 +232,7 @@ osi_VMDirty_p(struct vcache *avc)
 #endif /* AFS_AIX32_ENV */
 
 #if defined (AFS_SUN5_ENV)
-    if (avc->states & CMAPPED) {
+    if (avc->f.states & CMAPPED) {
 	struct page *pg;
 	for (pg = avc->v.v_s.v_Pages; pg; pg = pg->p_vpnext) {
 	    if (pg->p_mod) {

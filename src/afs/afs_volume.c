@@ -331,25 +331,25 @@ loop:
 		if ((flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))
 		    || (tvc->mvid
 			&& inVolList(tvc->mvid, nvols, volumeID, cellID)))
-		    tvc->states &= ~CMValid;
+		    tvc->f.states &= ~CMValid;
 
 		/* If the volume that this file belongs to was reset earlier,
 		 * then we should remove its callback.
 		 * Again, if forced, always do it.
 		 */
-		if ((tvc->states & CRO)
-		    && (inVolList(&tvc->fid, nvols, volumeID, cellID)
+		if ((tvc->f.states & CRO)
+		    && (inVolList(&tvc->f.fid, nvols, volumeID, cellID)
 			|| (flags & AFS_VOLCHECK_FORCE))) {
 
-                    if (tvc->states & CVInit) {
+                    if (tvc->f.states & CVInit) {
                         ReleaseReadLock(&afs_xvcache);
-			afs_osi_Sleep(&tvc->states);
+			afs_osi_Sleep(&tvc->f.states);
                         goto loop;
                     }
 #ifdef AFS_DARWIN80_ENV
-                    if (tvc->states & CDeadVnode) {
+                    if (tvc->f.states & CDeadVnode) {
                         ReleaseReadLock(&afs_xvcache);
-			afs_osi_Sleep(&tvc->states);
+			afs_osi_Sleep(&tvc->f.states);
                         goto loop;
                     }
 		    tvp = AFSTOV(tvc);
@@ -370,9 +370,9 @@ loop:
 		    ObtainWriteLock(&afs_xcbhash, 485);
 		    /* LOCKXXX: We aren't holding tvc write lock? */
 		    afs_DequeueCallback(tvc);
-		    tvc->states &= ~CStatd;
+		    tvc->f.states &= ~CStatd;
 		    ReleaseWriteLock(&afs_xcbhash);
-		    if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
+		    if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 			osi_dnlc_purgedp(tvc);
 
 #ifdef AFS_DARWIN80_ENV

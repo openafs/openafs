@@ -238,17 +238,17 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
      * 1. The cache data is being fetched by another process.
      * 2. The cache data is no longer valid
      */
-    while ((avc->states & CStatd)
+    while ((avc->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseSharedLock(&avc->lock);
 	afs_osi_Sleep(&tdc->validPos);
 	ObtainSharedLock(&avc->lock, 812);
 	ObtainReadLock(&tdc->lock);
     }
-    if (!(avc->states & CStatd)
-	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+    if (!(avc->f.states & CStatd)
+	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseSharedLock(&avc->lock);
 	afs_PutDCache(tdc);
@@ -258,7 +258,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     /* Set the readdir-in-progress flag, and downgrade the lock
      * to shared so others will be able to acquire a read lock.
      */
-    avc->states |= CReadDir;
+    avc->f.states |= CReadDir;
     avc->dcreaddir = tdc;
     avc->readdir_pid = MyPidxx;
     ConvertWToSLock(&avc->lock);
@@ -277,7 +277,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (!de)
 	    break;
 
-	ino = afs_calc_inum (avc->fid.Fid.Volume, ntohl(de->fid.vnode));
+	ino = afs_calc_inum (avc->f.fid.Fid.Volume, ntohl(de->fid.vnode));
 
 	if (de->name)
 	    len = strlen(de->name);
@@ -298,16 +298,16 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	    struct VenusFid afid;
 	    struct vcache *tvc;
 	    int vtype;
-	    afid.Cell = avc->fid.Cell;
-	    afid.Fid.Volume = avc->fid.Fid.Volume;
+	    afid.Cell = avc->f.fid.Cell;
+	    afid.Fid.Volume = avc->f.fid.Fid.Volume;
 	    afid.Fid.Vnode = ntohl(de->fid.vnode);
 	    afid.Fid.Unique = ntohl(de->fid.vunique);
-	    if ((avc->states & CForeign) == 0 && (ntohl(de->fid.vnode) & 1)) {
+	    if ((avc->f.states & CForeign) == 0 && (ntohl(de->fid.vnode) & 1)) {
 		type = DT_DIR;
 	    } else if ((tvc = afs_FindVCache(&afid, 0, 0))) {
 		if (tvc->mvstat) {
 		    type = DT_DIR;
-		} else if (((tvc->states) & (CStatd | CTruth))) {
+		} else if (((tvc->f.states) & (CStatd | CTruth))) {
 		    /* CTruth will be set if the object has
 		     *ever* been statd */
 		    vtype = vType(tvc);
@@ -348,7 +348,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);
     UpgradeSToWLock(&avc->lock, 813);
-    avc->states &= ~CReadDir;
+    avc->f.states &= ~CReadDir;
     avc->dcreaddir = 0;
     avc->readdir_pid = 0;
     ReleaseSharedLock(&avc->lock);
@@ -413,7 +413,7 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
     code = generic_file_mmap(fp, vmap);
     AFS_GLOCK();
     if (!code)
-	vcp->states |= CMAPPED;
+	vcp->f.states |= CMAPPED;
 
 out:
     AFS_GUNLOCK();
@@ -770,7 +770,7 @@ check_bad_parent(struct dentry *dp)
     struct vcache *vcp = VTOAFS(dp->d_inode), *avc = NULL;
     struct vcache *pvc = VTOAFS(dp->d_parent->d_inode);
 
-    if (vcp->mvid->Fid.Volume != pvc->fid.Fid.Volume) {	/* bad parent */
+    if (vcp->mvid->Fid.Volume != pvc->f.fid.Fid.Volume) {	/* bad parent */
 	credp = crref();
 
 	/* force a lookup, so vcp->mvid is fixed up */
@@ -807,7 +807,7 @@ afs_linux_revalidate(struct dentry *dp)
 
 #ifdef notyet
     /* Make this a fast path (no crref), since it's called so often. */
-    if (vcp->states & CStatd) {
+    if (vcp->f.states & CStatd) {
 
 	if (*dp->d_name.name != '/' && vcp->mvstat == 2)	/* root vnode */
 	    check_bad_parent(dp);	/* check and correct mvid */
@@ -885,7 +885,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 	    goto good_dentry;
 
 	if (vcp->mvstat == 1) {         /* mount point */
-	    if (vcp->mvid && (vcp->states & CMValid)) {
+	    if (vcp->mvid && (vcp->f.states & CMValid)) {
 		int tryEvalOnly = 0;
 		int code = 0;
 		struct vrequest treq;
@@ -931,7 +931,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 	 * isn't enough since the vnode may have been renamed.
 	 */
 
-	if (hgetlo(pvcp->m.DataVersion) > dp->d_time || !(vcp->states & CStatd)) {
+	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd)) {
 
 	    credp = crref();
 	    afs_lookup(pvcp, dp->d_name.name, &tvc, credp);
@@ -942,7 +942,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 		goto bad_dentry;
 
 	    vattr2inode(AFSTOV(vcp), &vattr);
-	    dp->d_time = hgetlo(pvcp->m.DataVersion);
+	    dp->d_time = hgetlo(pvcp->f.m.DataVersion);
 	}
 
 	/* should we always update the attributes at this point? */
@@ -951,7 +951,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     } else {
 #ifdef notyet
 	pvcp = VTOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
-	if (hgetlo(pvcp->m.DataVersion) > dp->d_time)
+	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time)
 	    goto bad_dentry;
 #endif
 
@@ -999,7 +999,7 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
     struct vcache *vcp = VTOAFS(ip);
 
     AFS_GLOCK();
-    if (!AFS_IS_DISCONNECTED || (vcp->states & CUnlinked)) {
+    if (!AFS_IS_DISCONNECTED || (vcp->f.states & CUnlinked)) {
 	(void) afs_InactiveVCache(vcp, NULL);
     }
     AFS_GUNLOCK();
@@ -1019,7 +1019,7 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 static int
 afs_dentry_delete(struct dentry *dp)
 {
-    if (dp->d_inode && (VTOAFS(dp->d_inode)->states & CUnlinked))
+    if (dp->d_inode && (VTOAFS(dp->d_inode)->f.states & CUnlinked))
 	return 1;		/* bad inode? */
 
     return 0;
@@ -1075,7 +1075,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 	afs_fill_inode(ip, &vattr);
 	insert_inode_hash(ip);
 	dp->d_op = &afs_dentry_operations;
-	dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
+	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
     AFS_GUNLOCK();
@@ -1134,7 +1134,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	    insert_inode_hash(ip);
     }
     dp->d_op = &afs_dentry_operations;
-    dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
+    dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
     AFS_GUNLOCK();
 
 #if defined(AFS_LINUX24_ENV)
@@ -1226,7 +1226,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     maybe_lock_kernel();
 #endif
     if (VREFCOUNT(tvc) > 1 && tvc->opens > 0
-				&& !(tvc->states & CUnlinked)) {
+				&& !(tvc->f.states & CUnlinked)) {
 	struct dentry *__dp;
 	char *__name;
 
@@ -1256,7 +1256,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
                 crfree(tvc->uncred);
             }
             tvc->uncred = credp;
-	    tvc->states |= CUnlinked;
+	    tvc->f.states |= CUnlinked;
 #ifdef DCACHE_NFSFS_RENAMED
 #ifdef AFS_LINUX26_ENV
 	    spin_lock(&dp->d_lock);
@@ -1272,7 +1272,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
 	AFS_GUNLOCK();
 
 	if (!code) {
-	    __dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
+	    __dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	    d_move(dp, __dp);
 	}
 	dput(__dp);
@@ -1340,7 +1340,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 	afs_fill_inode(ip, &vattr);
 
 	dp->d_op = &afs_dentry_operations;
-	dp->d_time = hgetlo(VTOAFS(dip)->m.DataVersion);
+	dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
 	d_instantiate(dp, ip);
     }
     AFS_GUNLOCK();
@@ -1887,7 +1887,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	       ICL_TYPE_INT32, 99999);
 
     ObtainReadLock(&vcp->lock);
-    if (vcp->states & CPageWrite) {
+    if (vcp->f.states & CPageWrite) {
 	ReleaseReadLock(&vcp->lock);
 	AFS_GUNLOCK();
 	maybe_unlock_kernel();
@@ -1910,8 +1910,8 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 
     code = afs_write(vcp, &tuio, f_flags, credp, 0);
 
-    i_size_write(ip, vcp->m.Length);
-    ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
+    i_size_write(ip, vcp->f.m.Length);
+    ip->i_blocks = ((vcp->f.m.Length + 1023) >> 10) << 1;
 
     if (!code) {
 	struct vrequest treq;
@@ -2014,14 +2014,14 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 
     code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);
 
-    i_size_write(ip, vcp->m.Length);
-    ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
+    i_size_write(ip, vcp->f.m.Length);
+    ip->i_blocks = ((vcp->f.m.Length + 1023) >> 10) << 1;
 
     if (!code) {
 	struct vrequest treq;
 
 	ObtainWriteLock(&vcp->lock, 533);
-	vcp->m.Date = osi_Time();   /* set modification time */
+	vcp->f.m.Date = osi_Time();   /* set modification time */
 	if (!afs_InitReq(&treq, credp))
 	    code = afs_DoPartialWrite(vcp, &treq);
 	ReleaseWriteLock(&vcp->lock);

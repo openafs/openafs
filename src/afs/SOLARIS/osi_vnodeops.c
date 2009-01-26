@@ -342,8 +342,8 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
     ObtainReadLock(&tdc->lock);
 
     /* Check to see whether the cache entry is still valid */
-    if (!(avc->states & CStatd)
-	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+    if (!(avc->f.states & CStatd)
+	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_BozonUnlock(&avc->pvnLock, avc);
@@ -520,7 +520,7 @@ afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags,
     if (len) {
 	endPos = (afs_offs_t) off + len;	/* position we're supposed to write up to */
 	while ((afs_offs_t) toff < endPos
-	       && (afs_offs_t) toff < avc->m.Length) {
+	       && (afs_offs_t) toff < avc->f.m.Length) {
 	    /* If not invalidating pages use page_lookup_nowait to avoid reclaiming
 	     * them from the free list
 	     */
@@ -606,8 +606,8 @@ afs_putapage(struct vnode *vp, struct page *pages, u_int * offp,
      * XXX Find a kluster that fits in one block (or page). We also
      * adjust the i/o if the file space is less than a while page. XXX
      */
-    if (off + tlen > avc->m.Length) {
-	tlen = avc->m.Length - off;
+    if (off + tlen > avc->f.m.Length) {
+	tlen = avc->f.m.Length - off;
     }
     /* can't call mapout with 0 length buffers (rmfree panics) */
     if (((tlen >> 24) & 0xff) == 0xff) {
@@ -720,9 +720,9 @@ afs_nfsrdwr(register struct vcache *avc, struct uio *auio, enum uio_rw arw,
     /* adjust parameters when appending files */
     if ((ioflag & IO_APPEND) && arw == UIO_WRITE) {
 #if defined(AFS_SUN56_ENV)
-	auio->uio_loffset = avc->m.Length;	/* write at EOF position */
+	auio->uio_loffset = avc->f.m.Length;	/* write at EOF position */
 #else
-	auio->uio_offset = avc->m.Length;	/* write at EOF position */
+	auio->uio_offset = avc->f.m.Length;	/* write at EOF position */
 #endif
     }
     if (auio->afsio_offset < 0 || (auio->afsio_offset + auio->uio_resid) < 0) {
@@ -785,19 +785,19 @@ afs_nfsrdwr(register struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	 * to hold the results (since afs_putpage will be called to force the I/O */
 	size = auio->afsio_resid + auio->afsio_offset;	/* new file size */
 	appendLength = size;
-	origLength = avc->m.Length;
-	if (size > avc->m.Length) {
+	origLength = avc->f.m.Length;
+	if (size > avc->f.m.Length) {
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->m.Length), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(size));
-	    avc->m.Length = size;	/* file grew */
+	    avc->f.m.Length = size;	/* file grew */
 	}
-	avc->states |= CDirty;	/* Set the dirty bit */
-	avc->m.Date = osi_Time();	/* Set file date (for ranlib) */
+	avc->f.states |= CDirty;	/* Set the dirty bit */
+	avc->f.m.Date = osi_Time();	/* Set file date (for ranlib) */
     } else {
 	mode = S_READ;		/* map-in read-only */
-	origLength = avc->m.Length;
+	origLength = avc->f.m.Length;
     }
 
     if (acred && AFS_NFSXLATORREQ(acred)) {
@@ -866,7 +866,7 @@ afs_nfsrdwr(register struct vcache *avc, struct uio *auio, enum uio_rw arw,
 	    break;		/* nothing to transfer, we're done */
 	}
 	if (arw == UIO_WRITE)
-	    avc->states |= CDirty;	/* may have been cleared by DoPartialWrite */
+	    avc->f.states |= CDirty;	/* may have been cleared by DoPartialWrite */
 
 	/* Before dropping lock, hold the chunk (create it if necessary).  This
 	 * serves two purposes:  (1) Ensure Cache Truncate Daemon doesn't try
@@ -925,12 +925,12 @@ afs_nfsrdwr(register struct vcache *avc, struct uio *auio, enum uio_rw arw,
 		AFS_GLOCK();
 		dcp_newpage = afs_FindDCache(avc, pageBase);
 		if (dcp_newpage
-		    && hsame(avc->m.DataVersion, dcp_newpage->f.versionNo)) {
+		    && hsame(avc->f.m.DataVersion, dcp_newpage->f.versionNo)) {
 		    ObtainWriteLock(&avc->lock, 251);
 		    ObtainWriteLock(&avc->vlock, 576);
 		    ObtainReadLock(&dcp_newpage->lock);
 		    if ((avc->activeV == 0)
-			&& hsame(avc->m.DataVersion, dcp_newpage->f.versionNo)
+			&& hsame(avc->f.m.DataVersion, dcp_newpage->f.versionNo)
 			&& !(dcp_newpage->dflags & (DFFetching))) {
 			AFS_GUNLOCK();
 			segmap_pagecreate(segkmap, raddr, rsize, 1);
@@ -977,7 +977,7 @@ afs_nfsrdwr(register struct vcache *avc, struct uio *auio, enum uio_rw arw,
     if (didFakeOpen) {
 	afs_FakeClose(avc, acred);
     }
-    if (arw == UIO_WRITE && (avc->states & CDirty)) {
+    if (arw == UIO_WRITE && (avc->f.states & CDirty)) {
 	code2 = afs_DoPartialWrite(avc, &treq);
 	if (!code)
 	    code = code2;
@@ -1053,7 +1053,7 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, u_int len,
     }
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, cred);	/* ensure old pages are gone */
-    avc->states |= CMAPPED;	/* flag cleared at afs_inactive */
+    avc->f.states |= CMAPPED;	/* flag cleared at afs_inactive */
     afs_BozonUnlock(&avc->pvnLock, avc);
 
     AFS_GUNLOCK();
@@ -1791,7 +1791,7 @@ afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
      * lose the open count for volume roots (mvstat 2), even though they
      * will get VOP_INACTIVE'd when released by afs_PutFakeStat().
      */
-    if (avc->opens > 0 && avc->mvstat == 0 && !(avc->states & CCore))
+    if (avc->opens > 0 && avc->mvstat == 0 && !(avc->f.states & CCore))
 	avc->opens = avc->execsOrWriters = 0;
 
     afs_InactiveVCache(avc, acred);
