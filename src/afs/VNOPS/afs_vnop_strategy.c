@@ -122,7 +122,7 @@ int afs_ustrategy(register struct buf *abp)
 	     * to it, go ahead and write protect the page. This way we will detect
 	     * storing beyond EOF in the future
 	     */
-	    if (dbtob(abp->b_blkno) + abp->b_bcount > tvc->m.Length) {
+	    if (dbtob(abp->b_blkno) + abp->b_bcount > tvc->f.m.Length) {
 		if ((abp->b_flags & B_PFSTORE) == 0) {
 		    AFS_GUNLOCK();
 		    vm_protectp(tvc->segid, dbtob(abp->b_blkno) / PAGESIZE,
@@ -164,12 +164,12 @@ int afs_ustrategy(register struct buf *abp)
 	 * XXX It this really right? Ideally we should always write block size multiple
 	 * and not any arbitrary size, right? XXX
 	 */
-	len = MIN(len, tvc->m.Length - dbtob(abp->b_blkno));
+	len = MIN(len, tvc->f.m.Length - dbtob(abp->b_blkno));
 #endif
 #ifdef AFS_OSF_ENV
 	len =
 	    MIN(abp->b_bcount,
-		(VTOAFS(abp->b_vp))->m.Length - dbtob(abp->b_blkno));
+		(VTOAFS(abp->b_vp))->f.m.Length - dbtob(abp->b_blkno));
 #endif /* AFS_OSF_ENV */
 	tuio.afsio_resid = len;
 #if defined(AFS_XBSD_ENV)

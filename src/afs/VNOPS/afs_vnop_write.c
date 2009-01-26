@@ -49,8 +49,8 @@ afs_StoreOnLastReference(register struct vcache *avc,
      * ourselves now. If we're called by the CCore clearer, the CCore
      * flag will already be clear, so we don't have to worry about
      * clearing it twice. */
-    if (avc->states & CCore) {
-	avc->states &= ~CCore;
+    if (avc->f.states & CCore) {
+	avc->f.states &= ~CCore;
 #if defined(AFS_SGI_ENV)
 	osi_Assert(avc->opens > 0 && avc->execsOrWriters > 0);
 #endif
@@ -138,7 +138,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(totalLength), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     if (!noLock) {
 	afs_MaybeWakeupTruncateDaemon();
 	ObtainWriteLock(&avc->lock, 126);
@@ -152,8 +152,8 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	 * Since we are called via strategy, we need to trim the write to
 	 * the actual size of the file
 	 */
-	osi_Assert(filePos <= avc->m.Length);
-	diff = avc->m.Length - filePos;
+	osi_Assert(filePos <= avc->f.m.Length);
+	diff = avc->f.m.Length - filePos;
 	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
 	totalLength = AFS_UIO_RESID(auio);
     }
@@ -163,7 +163,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if	defined(AFS_SUN56_ENV)
 	auio->uio_loffset = 0;
 #endif
-	filePos = avc->m.Length;
+	filePos = avc->f.m.Length;
 	AFS_UIO_SETOFFSET(auio, filePos);
     }
 #endif
@@ -171,7 +171,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
      * Note that we use startDate rather than calling osi_Time() here.
      * This is to avoid counting lock-waiting time in file date (for ranlib).
      */
-    avc->m.Date = startDate;
+    avc->f.m.Date = startDate;
 
 #if	defined(AFS_HPUX_ENV)
 #if	defined(AFS_HPUX101_ENV)
@@ -197,7 +197,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #else
     afs_FakeOpen(avc);
 #endif
-    avc->states |= CDirty;
+    avc->f.states |= CDirty;
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
@@ -261,18 +261,18 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	filePos += len;
 #if defined(AFS_SGI_ENV)
 	/* afs_xwrite handles setting m.Length */
-	osi_Assert(filePos <= avc->m.Length);
+	osi_Assert(filePos <= avc->f.m.Length);
 #else
-	if (filePos > avc->m.Length) {
+	if (filePos > avc->f.m.Length) {
 #if AFS_DISCON_ENV
 	    if (AFS_IS_DISCON_RW)
    		afs_PopulateDCache(avc, filePos, &treq);
 #endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->m.Length), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(filePos));
-	    avc->m.Length = filePos;
+	    avc->f.m.Length = filePos;
 	}
 #endif
 	ReleaseWriteLock(&tdc->lock);
@@ -355,7 +355,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(totalLength), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     if (!noLock) {
 	afs_MaybeWakeupTruncateDaemon();
 	ObtainWriteLock(&avc->lock, 556);
@@ -369,8 +369,8 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	 * Since we are called via strategy, we need to trim the write to
 	 * the actual size of the file
 	 */
-	osi_Assert(filePos <= avc->m.Length);
-	diff = avc->m.Length - filePos;
+	osi_Assert(filePos <= avc->f.m.Length);
+	diff = avc->f.m.Length - filePos;
 	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
 	totalLength = AFS_UIO_RESID(auio);
     }
@@ -380,15 +380,15 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if     defined(AFS_SUN56_ENV)
 	auio->uio_loffset = 0;
 #endif
-	filePos = avc->m.Length;
-	AFS_UIO_SETOFFSET(auio, avc->m.Length);
+	filePos = avc->f.m.Length;
+	AFS_UIO_SETOFFSET(auio, avc->f.m.Length);
     }
 #endif
     /*
      * Note that we use startDate rather than calling osi_Time() here.
      * This is to avoid counting lock-waiting time in file date (for ranlib).
      */
-    avc->m.Date = startDate;
+    avc->f.m.Date = startDate;
 
 #if	defined(AFS_HPUX_ENV)
 #if 	defined(AFS_HPUX101_ENV)
@@ -414,7 +414,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #else
     afs_FakeOpen(avc);
 #endif
-    avc->states |= CDirty;
+    avc->f.states |= CDirty;
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
@@ -485,11 +485,11 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 		("\n\n\n*** Cache partition is full - decrease cachesize!!! ***\n\n\n");
 #elif defined(AFS_SGI_ENV)
 	AFS_GUNLOCK();
-	avc->states |= CWritingUFS;
+	avc->f.states |= CWritingUFS;
 	AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_WRITE);
 	AFS_VOP_WRITE(tfile->vnode, &tuio, IO_ISLOCKED, afs_osi_credp, code);
 	AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_WRITE);
-	avc->states &= ~CWritingUFS;
+	avc->f.states &= ~CWritingUFS;
 	AFS_GLOCK();
 #elif defined(AFS_OSF_ENV)
 	{
@@ -573,18 +573,18 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	filePos += len;
 #if defined(AFS_SGI_ENV)
 	/* afs_xwrite handles setting m.Length */
-	osi_Assert(filePos <= avc->m.Length);
+	osi_Assert(filePos <= avc->f.m.Length);
 #else
-	if (filePos > avc->m.Length) {
+	if (filePos > avc->f.m.Length) {
 # ifdef AFS_DISCON_ENV
 	    if (AFS_IS_DISCON_RW)
 		afs_PopulateDCache(avc, filePos, &treq);
 # endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->m.Length), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(filePos));
-	    avc->m.Length = filePos;
+	    avc->f.m.Length = filePos;
 	}
 #endif
 	osi_UFSClose(tfile);
@@ -655,7 +655,7 @@ afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
 	return 0;		/* nothing to do */
     /* otherwise, call afs_StoreDCache (later try to do this async, if possible) */
     afs_Trace2(afs_iclSetp, CM_TRACE_PARTIALWRITE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
 
 #if	defined(AFS_SUN5_ENV)
     code = afs_StoreAllSegments(avc, areq, AFS_ASYNC | AFS_VMSYNC_INVAL);
@@ -801,7 +801,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
     HandleFlock(avc, LOCK_UN, &treq, OSI_GET_CURRENT_PID(), 1 /*onlymine */ );
 #endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
-    afs_chkpgoob(&avc->v, btoc(avc->m.Length));
+    afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
 #elif	defined(AFS_SUN5_ENV)
     if (count > 1) {
 	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
@@ -906,7 +906,7 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
 	ReleaseWriteLock(&avc->lock);
     }
 #ifdef	AFS_OSF_ENV
-    if ((VREFCOUNT(avc) <= 2) && (avc->states & CUnlinked)) {
+    if ((VREFCOUNT(avc) <= 2) && (avc->f.states & CUnlinked)) {
 	afs_remunlink(avc, 1);	/* ignore any return code */
     }
 #endif

@@ -54,7 +54,7 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
     }
 
     len = strlen(aname);
-    avc->m.Length = len;
+    avc->f.m.Length = len;
 
     ObtainWriteLock(&tdc->lock, 720);
     afs_AdjustSize(tdc, len);
@@ -129,7 +129,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     /** If the volume is read-only, return error without making an RPC to the
       * fileserver
       */
-    if (adp->states & CRO) {
+    if (adp->f.states & CRO) {
 	code = EROFS;
 	goto done;
     }
@@ -151,7 +151,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	alen++;			/* add in the null */
     }
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
-    volp = afs_FindVolume(&adp->fid, READ_LOCK);	/*parent is also in same vol */
+    volp = afs_FindVolume(&adp->f.fid, READ_LOCK);	/*parent is also in same vol */
     ObtainWriteLock(&adp->lock, 156);
     if (tdc)
 	ObtainWriteLock(&tdc->lock, 636);
@@ -159,16 +159,16 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     /* XXX Pay attention to afs_xvcache around the whole thing!! XXX */
     if (!AFS_IS_DISCON_RW) {
 	do {
-	    tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
 	    if (tc) {
 		hostp = tc->srvr->server;
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
-		if (adp->states & CForeign) {
+		if (adp->f.states & CForeign) {
 		    now = osi_Time();
 		    RX_AFS_GUNLOCK();
 		    code = 
 			RXAFS_DFSSymlink(tc->id, 
-					 (struct AFSFid *)&adp->fid.Fid,
+					 (struct AFSFid *)&adp->f.fid.Fid,
 					 aname, atargetName, &InStatus,
 					 (struct AFSFid *)&newFid.Fid,
 					 &OutFidStatus, &OutDirStatus, 
@@ -177,7 +177,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		} else {
 		    RX_AFS_GUNLOCK();
 		    code =
-			RXAFS_Symlink(tc->id, (struct AFSFid *)&adp->fid.Fid,
+			RXAFS_Symlink(tc->id, (struct AFSFid *)&adp->f.fid.Fid,
 				      aname, atargetName, &InStatus,
 				      (struct AFSFid *)&newFid.Fid, 
 				      &OutFidStatus, &OutDirStatus, &tsync);
@@ -187,12 +187,12 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    } else
 		code = -1;
 	} while (afs_Analyze
-		    (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
+		    (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
 		     SHARED_LOCK, NULL));
     } else {
 #ifdef AFS_DISCON_ENV
-	newFid.Cell = adp->fid.Cell;
-	newFid.Fid.Volume = adp->fid.Fid.Volume;
+	newFid.Cell = adp->f.fid.Cell;
+	newFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afs_GenFakeFid(&newFid, VREG, 0);
 #endif
     }
@@ -202,7 +202,7 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	if (code < 0) {
 	    ObtainWriteLock(&afs_xcbhash, 499);
 	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
+	    adp->f.states &= ~CStatd;
 	    ReleaseWriteLock(&afs_xcbhash);
 	    osi_dnlc_purgedp(adp);
 	}
@@ -229,8 +229,8 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
-    newFid.Cell = adp->fid.Cell;
-    newFid.Fid.Volume = adp->fid.Fid.Volume;
+    newFid.Cell = adp->f.fid.Cell;
+    newFid.Fid.Volume = adp->f.fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
 
     /* now we're done with parent dir, create the link's entry.  Note that
@@ -245,11 +245,11 @@ afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
     ObtainWriteLock(&tvc->lock, 157);
     ObtainWriteLock(&afs_xcbhash, 500);
-    tvc->states |= CStatd;	/* have valid info */
-    tvc->states &= ~CBulkFetching;
+    tvc->f.states |= CStatd;	/* have valid info */
+    tvc->f.states &= ~CBulkFetching;
 
-    if (adp->states & CForeign) {
-	tvc->states |= CForeign;
+    if (adp->f.states & CForeign) {
+	tvc->f.states |= CForeign;
 	/* We don't have to worry about losing the callback since we're doing it 
 	 * under the afs_xvcache lock actually, afs_NewVCache may drop the 
 	 * afs_xvcache lock, if it calls afs_FlushVCache */
@@ -323,7 +323,7 @@ afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
 	    afs_PutDCache(tdc);
 	    return EFAULT;
 	}
-	if (avc->m.Mode & 0111)
+	if (avc->f.m.Mode & 0111)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */
@@ -367,7 +367,7 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 	tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 0);
 	afs_Trace3(afs_iclSetp, CM_TRACE_UFSLINK, ICL_TYPE_POINTER, avc,
 		   ICL_TYPE_POINTER, tdc, ICL_TYPE_OFFSET,
-		   ICL_HANDLE_OFFSET(avc->m.Length));
+		   ICL_HANDLE_OFFSET(avc->f.m.Length));
 	if (!tdc) {
 	    if (AFS_IS_DISCONNECTED)
 	        return ENETDOWN;
@@ -379,7 +379,7 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 	    afs_PutDCache(tdc);
 	    return EFAULT;
 	}
-	if (avc->m.Mode & 0111)
+	if (avc->f.m.Mode & 0111)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */

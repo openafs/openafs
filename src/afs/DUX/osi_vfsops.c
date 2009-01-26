@@ -136,7 +136,7 @@ mp_afs_root(struct mount *afsp, struct vnode **avpp)
 
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	if (afs_globalVp) {
@@ -299,15 +299,15 @@ mp_afs_vptofh(struct vnode *avn, struct fid *fidp)
     if (afs_NFSRootOnly && (avc == afs_globalVp))
 	rootvp = 1;
     if (!afs_NFSRootOnly || rootvp) {
-	tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
-	Sfid.Volume = avc->fid.Fid.Volume;
-	fidp->fid_reserved = avc->fid.Fid.Vnode;
+	tcell = afs_GetCell(avc->f.fid.Cell, READ_LOCK);
+	Sfid.Volume = avc->f.fid.Fid.Volume;
+	fidp->fid_reserved = avc->f.fid.Fid.Vnode;
 	Sfid.CellAndUnique =
-	    ((tcell->cellIndex << 24) + (avc->fid.Fid.Unique & 0xffffff));
+	    ((tcell->cellIndex << 24) + (avc->f.fid.Fid.Unique & 0xffffff));
 	afs_PutCell(tcell, READ_LOCK);
-	if (avc->fid.Fid.Vnode > 0xffff)
+	if (avc->f.fid.Fid.Vnode > 0xffff)
 	    afs_fid_vnodeoverflow++;
-	if (avc->fid.Fid.Unique > 0xffffff)
+	if (avc->f.fid.Fid.Unique > 0xffffff)
 	    afs_fid_uniqueoverflow++;
     } else {
 	fidp->fid_reserved = AFS_XLATOR_MAGIC;

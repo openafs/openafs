@@ -54,15 +54,15 @@ FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
     afs_size_t pos, offset, len;
 
     AFS_STATCNT(FetchWholeEnchilada);
-    if ((avc->states & CStatd) == 0)
+    if ((avc->f.states & CStatd) == 0)
 	return;			/* don't know size */
     for (nextChunk = 0; nextChunk < 1024; nextChunk++) {	/* sanity check on N chunks */
 	pos = AFS_CHUNKTOBASE(nextChunk);
 #if	defined(AFS_OSF_ENV)
-	if (pos >= avc->m.Length)
+	if (pos >= avc->f.m.Length)
 	    break;		/* all done */
 #else /* AFS_OSF_ENV */
-	if (pos >= avc->m.Length)
+	if (pos >= avc->f.m.Length)
 	    return;		/* all done */
 #endif
 	tdc = afs_GetDCache(avc, pos, areq, &offset, &len, 0);
@@ -75,7 +75,7 @@ FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
 	afs_PutDCache(tdc);
     }
 #if defined(AFS_OSF_ENV)
-    avc->states |= CWired;
+    avc->f.states |= CWired;
 #endif /* AFS_OSF_ENV */
 }
 
@@ -86,11 +86,11 @@ FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
  */
 afs_IsWired(register struct vcache *avc)
 {
-    if (avc->states & CWired) {
+    if (avc->f.states & CWired) {
 	if (osi_Active(avc)) {
 	    return 1;
 	}
-	avc->states &= ~CWired;
+	avc->f.states &= ~CWired;
     }
     return 0;
 }
@@ -108,19 +108,19 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     XSTATS_DECLS;
     if (!AFS_IS_DISCONNECTED) {
         do {
-	    tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
+	    tc = afs_Conn(&adp->f.fid, treqp, SHARED_LOCK);
 	    if (tc) {
 	        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
 	        RX_AFS_GUNLOCK();
 	        code =
-		    RXAFS_RemoveFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
+		    RXAFS_RemoveFile(tc->id, (struct AFSFid *)&adp->f.fid.Fid,
 		  		     aname, &OutDirStatus, &tsync);
 	        RX_AFS_GLOCK();
 	        XSTATS_END_TIME;
 	    } else
 	        code = -1;
         } while (afs_Analyze
-	         (tc, code, &adp->fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
+	         (tc, code, &adp->f.fid, treqp, AFS_STATS_FS_RPCIDX_REMOVEFILE,
 	          SHARED_LOCK, NULL));
     }
 
@@ -138,7 +138,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	if (code < 0) {
 	    ObtainWriteLock(&afs_xcbhash, 497);
 	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
+	    adp->f.states &= ~CStatd;
 	    ReleaseWriteLock(&afs_xcbhash);
 	    osi_dnlc_purgedp(adp);
 	}
@@ -174,9 +174,9 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	ObtainWriteLock(&tvc->lock, 141);
 	/* note that callback will be broken on the deleted file if there are
 	 * still >0 links left to it, so we'll get the stat right */
-	tvc->m.LinkCount--;
-	tvc->states &= ~CUnique;	/* For the dfs xlator */
-	if (tvc->m.LinkCount == 0 && !osi_Active(tvc)) {
+	tvc->f.m.LinkCount--;
+	tvc->f.states &= ~CUnique;	/* For the dfs xlator */
+	if (tvc->f.m.LinkCount == 0 && !osi_Active(tvc)) {
 	    if (!AFS_NFSXLATORREQ(acred))
 		afs_TryToSmush(tvc, acred, 0);
 	}
@@ -292,7 +292,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     /** If the volume is read-only, return error without making an RPC to the
       * fileserver
       */
-    if (adp->states & CRO) {
+    if (adp->f.states & CRO) {
 #ifdef  AFS_OSF_ENV
 	afs_PutVCache(tvc);
 #endif
@@ -320,8 +320,8 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
      * Make sure that the data in the cache is current. We may have
      * received a callback while we were waiting for the write lock.
      */
-    if (!(adp->states & CStatd)
-	|| (tdc && !hsame(adp->m.DataVersion, tdc->f.versionNo))) {
+    if (!(adp->f.states & CStatd)
+	|| (tdc && !hsame(adp->f.m.DataVersion, tdc->f.versionNo))) {
 	ReleaseWriteLock(&adp->lock);
 	if (tdc) {
 	    ReleaseSharedLock(&tdc->lock);
@@ -343,8 +343,8 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	    if (code == 0) {
 		afs_int32 cached = 0;
 
-		unlinkFid.Cell = adp->fid.Cell;
-		unlinkFid.Fid.Volume = adp->fid.Fid.Volume;
+		unlinkFid.Cell = adp->f.fid.Cell;
+		unlinkFid.Fid.Volume = adp->f.fid.Fid.Volume;
 		if (unlinkFid.Fid.Unique == 0) {
 		    tvc =
 			afs_LookupVCache(&unlinkFid, &treq, &cached, adp,
@@ -359,7 +359,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 
 #if defined(AFS_DISCON_ENV)
     if (AFS_IS_DISCON_RW) {
-	if (!adp->shVnode && !(adp->ddirty_flags & VDisconCreate)) {
+	if (!adp->f.shadow.vnode && !(adp->f.ddirty_flags & VDisconCreate)) {
     	    /* Make shadow copy of parent dir. */
 	    afs_MakeShadowDir(adp, tdc);
 	}
@@ -374,13 +374,13 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 
 	/* If we were locally created, then we don't need to do very
 	 * much beyond ensuring that we don't exist anymore */	
-    	if (tvc->ddirty_flags & VDisconCreate) {
+    	if (tvc->f.ddirty_flags & VDisconCreate) {
 	    afs_DisconRemoveDirty(tvc);
 	} else {
 	    /* Add removed file vcache to dirty list. */
 	    afs_DisconAddDirty(tvc, VDisconRemove, 1);
         }
-	adp->m.LinkCount--;
+	adp->f.m.LinkCount--;
 	ReleaseWriteLock(&tvc->lock);
 	if (tdc)
 	    ObtainSharedLock(&tdc->lock, 714);
@@ -421,10 +421,10 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 #endif
 #ifdef	AFS_AIX_ENV
     if (tvc && VREFCOUNT_GT(tvc, 2) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked)) {
+	&& !(tvc->f.states & CUnlinked)) {
 #else
     if (tvc && VREFCOUNT_GT(tvc, 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked)) {
+	&& !(tvc->f.states & CUnlinked)) {
 #endif
 	char *unlname = afs_newname();
 
@@ -445,7 +445,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 		crfree(tvc->uncred);
 	    }
 	    tvc->uncred = acred;
-	    tvc->states |= CUnlinked;
+	    tvc->f.states |= CUnlinked;
 	} else {
 	    osi_FreeSmallSpace(unlname);
 	}
@@ -490,7 +490,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
     }
 #endif
 
-    if (avc->mvid && (doit || (avc->states & CUnlinkedDel))) {
+    if (avc->mvid && (doit || (avc->f.states & CUnlinkedDel))) {
 	if ((code = afs_InitReq(&treq, avc->uncred))) {
 	    ReleaseWriteLock(&avc->lock);
 	} else {
@@ -511,14 +511,14 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    /* We'll only try this once. If it fails, just release the vnode.
 	     * Clear after doing hold so that NewVCache doesn't find us yet.
 	     */
-	    avc->states &= ~(CUnlinked | CUnlinkedDel);
+	    avc->f.states &= ~(CUnlinked | CUnlinkedDel);
 
 	    ReleaseWriteLock(&avc->lock);
 
-	    dirFid.Cell = avc->fid.Cell;
-	    dirFid.Fid.Volume = avc->fid.Fid.Volume;
-	    dirFid.Fid.Vnode = avc->parentVnode;
-	    dirFid.Fid.Unique = avc->parentUnique;
+	    dirFid.Cell = avc->f.fid.Cell;
+	    dirFid.Fid.Volume = avc->f.fid.Fid.Volume;
+	    dirFid.Fid.Vnode = avc->f.parent.vnode;
+	    dirFid.Fid.Unique = avc->f.parent.unique;
 	    adp = afs_GetVCache(&dirFid, &treq, NULL, NULL);
 
 	    if (adp) {

@@ -120,7 +120,7 @@ afs_root(struct vfs *afsp, struct vnode **avpp, char *unused1)
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
 
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	if (afs_globalVp) {

@@ -78,7 +78,7 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
     OSI_VFS_CONVERT(afsp);
 
     AFS_STATCNT(afs_root);
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	if (afs_globalVp) {

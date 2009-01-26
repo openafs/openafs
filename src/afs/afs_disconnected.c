@@ -18,8 +18,8 @@ RCSID("$Header$");
 #ifdef AFS_DISCON_ENV
 
 #define dv_match(vc, fstat) 				 \
-	((vc->m.DataVersion.low == fstat.DataVersion) && \
-     	(vc->m.DataVersion.high == fstat.dataVersionHigh))
+	((vc->f.m.DataVersion.low == fstat.DataVersion) && \
+     	(vc->f.m.DataVersion.high == fstat.dataVersionHigh))
 
 /*! Circular queue of dirty vcaches */
 struct afs_q afs_disconDirty;
@@ -103,21 +103,21 @@ struct dcache *afs_FindDCacheByFid(struct VenusFid *afid)
  */
 int afs_GenStoreStatus(struct vcache *avc, struct AFSStoreStatus *astat)
 {
-    if (!avc || !astat || !avc->ddirty_flags)
+    if (!avc || !astat || !avc->f.ddirty_flags)
     	return 0;
 
     /* Clean up store stat. */
     memset(astat, 0, sizeof(struct AFSStoreStatus));
 
-    if (avc->ddirty_flags & VDisconSetTime) {
+    if (avc->f.ddirty_flags & VDisconSetTime) {
 	/* Update timestamp. */
-	astat->ClientModTime = avc->m.Date;
+	astat->ClientModTime = avc->f.m.Date;
 	astat->Mask |= AFS_SETMODTIME;
     }
 
-    if (avc->ddirty_flags & VDisconSetMode) {
+    if (avc->f.ddirty_flags & VDisconSetMode) {
 	/* Copy the mode bits. */
-	astat->UnixModeBits = avc->m.Mode;
+	astat->UnixModeBits = avc->f.m.Mode;
 	astat->Mask |= AFS_SETMODE;
    }
 
@@ -160,19 +160,19 @@ int afs_GetParentDirFid(struct vcache *avc, struct VenusFid *afid)
 {
     struct dcache *tdc;
 
-    afid->Cell = avc->fid.Cell;
-    afid->Fid.Volume = avc->fid.Fid.Volume;
+    afid->Cell = avc->f.fid.Cell;
+    afid->Fid.Volume = avc->f.fid.Fid.Volume;
 
     switch (vType(avc)) {
     case VREG:
     case VLNK:
 	/* Normal files have the dir fid embedded in the vcache. */
-	afid->Fid.Vnode = avc->parentVnode;
-	afid->Fid.Unique = avc->parentUnique;
+	afid->Fid.Vnode = avc->f.parent.vnode;
+	afid->Fid.Unique = avc->f.parent.unique;
 	break;
     case VDIR:
 	/* If dir or parent dir created locally*/
-	tdc = afs_FindDCacheByFid(&avc->fid);
+	tdc = afs_FindDCacheByFid(&avc->f.fid);
     	if (tdc) {
 	    afid->Fid.Unique = 0;
 	    /* Lookup each entry for the fid. It should be the first. */
@@ -251,12 +251,12 @@ int afs_GetVnodeName(struct vcache *avc,
 	/* For deleted files, get the shadow dir's tdc: */
 
 	/* Get the parent dir's vcache that contains the shadow fid. */
-	parent_fid.Cell = avc->fid.Cell;
-	parent_fid.Fid.Volume = avc->fid.Fid.Volume;
-	if (avc->ddirty_flags & VDisconRename) {
+	parent_fid.Cell = avc->f.fid.Cell;
+	parent_fid.Fid.Volume = avc->f.fid.Fid.Volume;
+	if (avc->f.ddirty_flags & VDisconRename) {
 	    /* For renames the old dir fid is needed. */
-	    parent_fid.Fid.Vnode = avc->oldVnode;
-	    parent_fid.Fid.Unique = avc->oldUnique;
+	    parent_fid.Fid.Vnode = avc->f.oldParent.vnode;
+	    parent_fid.Fid.Unique = avc->f.oldParent.unique;
 	} else {
 	    parent_fid.Fid.Vnode = afid->Fid.Vnode;
 	    parent_fid.Fid.Unique = afid->Fid.Unique;
@@ -270,10 +270,10 @@ int afs_GetVnodeName(struct vcache *avc,
 	    return ENOENT;
 	}
 
-	shadow_fid.Cell = parent_vc->fid.Cell;
-    	shadow_fid.Fid.Volume = parent_vc->fid.Fid.Volume;
-    	shadow_fid.Fid.Vnode = parent_vc->shVnode;
-    	shadow_fid.Fid.Unique = parent_vc->shUnique;
+	shadow_fid.Cell = parent_vc->f.fid.Cell;
+    	shadow_fid.Fid.Volume = parent_vc->f.fid.Fid.Volume;
+    	shadow_fid.Fid.Vnode = parent_vc->f.shadow.vnode;
+    	shadow_fid.Fid.Unique = parent_vc->f.shadow.unique;
 
 	afs_PutVCache(parent_vc);
 
@@ -287,7 +287,7 @@ int afs_GetVnodeName(struct vcache *avc,
     }			/* if (deleted) */
 
     if (tdc) {
-	tnf.fid = &avc->fid;
+	tnf.fid = &avc->f.fid;
    	tnf.name_len = -1;
     	tnf.name = aname;
     	afs_dir_EnumerateDir(tdc, &get_vnode_name_hook, &tnf);
@@ -330,8 +330,8 @@ int chk_del_children_hook(void *hdata,
     	return 0;
 
     /* Get this file's vcache. */
-    tfid.Cell = v->vc->fid.Cell;
-    tfid.Fid.Volume = v->vc->fid.Fid.Volume;
+    tfid.Cell = v->vc->f.fid.Cell;
+    tfid.Fid.Volume = v->vc->f.fid.Fid.Volume;
     tfid.Fid.Vnode = vnode;
     tfid.Fid.Unique = unique;
 
@@ -342,7 +342,7 @@ int chk_del_children_hook(void *hdata,
     /* Count unfinished dirty children. */
     if (tvc) {
 	ObtainReadLock(&tvc->lock);
-	if (tvc->ddirty_flags || tvc->shVnode)
+	if (tvc->f.ddirty_flags || tvc->f.shadow.vnode)
 	    v->count++;
 	ReleaseReadLock(&tvc->lock);
 
@@ -366,14 +366,14 @@ int afs_CheckDeletedChildren(struct vcache *avc)
     struct DirtyChildrenCount dcc;
     struct VenusFid shadow_fid;
 
-    if (!avc->shVnode)
+    if (!avc->f.shadow.vnode)
     	/* Empty dir. */
     	return 0;
 
-    shadow_fid.Cell = avc->fid.Cell;
-    shadow_fid.Fid.Volume = avc->fid.Fid.Volume;
-    shadow_fid.Fid.Vnode = avc->shVnode;
-    shadow_fid.Fid.Unique = avc->shUnique;
+    shadow_fid.Cell = avc->f.fid.Cell;
+    shadow_fid.Fid.Volume = avc->f.fid.Fid.Volume;
+    shadow_fid.Fid.Vnode = avc->f.shadow.vnode;
+    shadow_fid.Fid.Unique = avc->f.shadow.unique;
 
     dcc.count = 0;
 
@@ -422,8 +422,8 @@ int fix_children_fids_hook(void *hdata,
 
 	/* Change the fields. */
 	if (tvc) {
-	    tvc->parentVnode = afid->Fid.Vnode;
-	    tvc->parentUnique = afid->Fid.Unique;
+	    tvc->f.parent.vnode = afid->Fid.Vnode;
+	    tvc->f.parent.unique = afid->Fid.Unique;
 
 	    afs_PutVCache(tvc);
 	}
@@ -526,7 +526,7 @@ afs_GetParentVCache(struct vcache *avc, int deleted, struct VenusFid *afid,
 	goto end;
     }
 
-    if ((*adp)->ddirty_flags & VDisconCreate) {
+    if ((*adp)->f.ddirty_flags & VDisconCreate) {
 	printf("afs_GetParentVCache: deferring until parent exists\n");
 	code = EAGAIN;
 	goto end;
@@ -556,10 +556,10 @@ int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
     XSTATS_DECLS;
 
     /* Get old dir vcache. */
-    old_pdir_fid.Cell = avc->fid.Cell;
-    old_pdir_fid.Fid.Volume = avc->fid.Fid.Volume;
-    old_pdir_fid.Fid.Vnode = avc->oldVnode;
-    old_pdir_fid.Fid.Unique = avc->oldUnique;
+    old_pdir_fid.Cell = avc->f.fid.Cell;
+    old_pdir_fid.Fid.Volume = avc->f.fid.Fid.Volume;
+    old_pdir_fid.Fid.Vnode = avc->f.oldParent.vnode;
+    old_pdir_fid.Fid.Unique = avc->f.oldParent.unique;
 
     /* Get old name. */
     old_name = (char *) afs_osi_Alloc(AFSNAMEMAX);
@@ -581,7 +581,7 @@ int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
 	goto done;
     }
 
-    if (avc->ddirty_flags & VDisconRenameSameDir) {
+    if (avc->f.ddirty_flags & VDisconRenameSameDir) {
     	/* If we're in the same dir, don't do the lookups all over again,
 	 * just copy fid and vcache from the old dir.
 	 */
@@ -710,14 +710,14 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	
     /* Set status. */
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
-    InStatus.ClientModTime = avc->m.Date;
-    InStatus.Owner = avc->m.Owner;
+    InStatus.ClientModTime = avc->f.m.Date;
+    InStatus.Owner = avc->f.m.Owner;
     InStatus.Group = (afs_int32) acred->cr_gid;
     /* Only care about protection bits. */
-    InStatus.UnixModeBits = avc->m.Mode & 0xffff;
+    InStatus.UnixModeBits = avc->f.m.Mode & 0xffff;
 
     do {
-	tc = afs_Conn(&tdp->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&tdp->f.fid, areq, SHARED_LOCK);
 	if (tc) {
 	    switch (vType(avc)) {
 	    case VREG:
@@ -726,7 +726,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 		XSTATS_START_TIME(op);
                 RX_AFS_GUNLOCK();
                 code = RXAFS_CreateFile(tc->id,
-					(struct AFSFid *)&tdp->fid.Fid,
+					(struct AFSFid *)&tdp->f.fid.Fid,
 					tname, &InStatus,
 					(struct AFSFid *) &newFid.Fid,
 					&OutFidStatus, &OutDirStatus,
@@ -739,7 +739,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 		op = AFS_STATS_FS_RPCIDX_MAKEDIR;
 		XSTATS_START_TIME(op);
                 RX_AFS_GUNLOCK();
-		code = RXAFS_MakeDir(tc->id, (struct AFSFid *) &tdp->fid.Fid,
+		code = RXAFS_MakeDir(tc->id, (struct AFSFid *) &tdp->f.fid.Fid,
 				     tname, &InStatus,
 				     (struct AFSFid *) &newFid.Fid,
 				     &OutFidStatus, &OutDirStatus,
@@ -753,7 +753,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 		XSTATS_START_TIME(op);
 		RX_AFS_GUNLOCK();
 		code = RXAFS_Symlink(tc->id,
-				(struct AFSFid *) &tdp->fid.Fid,
+				(struct AFSFid *) &tdp->f.fid.Fid,
 				tname, ttargetName, &InStatus,
 				(struct AFSFid *) &newFid.Fid,
 				&OutFidStatus, &OutDirStatus, &tsync);
@@ -767,7 +767,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	    }
         } else
 	    code = -1;
-    } while (afs_Analyze(tc, code, &tdp->fid, areq, op, SHARED_LOCK, NULL));
+    } while (afs_Analyze(tc, code, &tdp->f.fid, areq, op, SHARED_LOCK, NULL));
 
     /* TODO: Handle errors. */
     if (code) {
@@ -776,17 +776,17 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     }
 
     /* The rpc doesn't set the cell number. */
-    newFid.Cell = avc->fid.Cell;
+    newFid.Cell = avc->f.fid.Cell;
 
     /*
      * Change the fid in the dir entry.
      */
 
     /* Seek the dir's dcache. */
-    tdc = afs_FindDCacheByFid(&tdp->fid);
+    tdc = afs_FindDCacheByFid(&tdp->f.fid);
     if (tdc) {
     	/* And now change the fid in the parent dir entry. */
-    	afs_dir_ChangeFid(tdc, tname, &avc->fid.Fid.Vnode, &newFid.Fid.Vnode);
+    	afs_dir_ChangeFid(tdc, tname, &avc->f.fid.Fid.Vnode, &newFid.Fid.Vnode);
     	afs_PutDCache(tdc);
     }
 
@@ -794,15 +794,16 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	/* Change fid in the dir for the "." entry. ".." has alredy been
 	 * handled by afs_FixChildrenFids when processing the parent dir.
 	 */
-	tdc = afs_FindDCacheByFid(&avc->fid);
+	tdc = afs_FindDCacheByFid(&avc->f.fid);
 	if (tdc) {
-   	    afs_dir_ChangeFid(tdc, ".", &avc->fid.Fid.Vnode, &newFid.Fid.Vnode);
+   	    afs_dir_ChangeFid(tdc, ".", &avc->f.fid.Fid.Vnode, 
+			      &newFid.Fid.Vnode);
 
-	    if (avc->m.LinkCount >= 2)
-	        /* For non empty dirs, fix children's parentVnode and parentUnique
-	    	 * reference.
+	    if (avc->f.m.LinkCount >= 2)
+	        /* For non empty dirs, fix children's parentVnode and 
+		 * parentUnique reference.
 	     	 */
-	    	afs_FixChildrenFids(&avc->fid, &newFid);
+	    	afs_FixChildrenFids(&avc->f.fid, &newFid);
 
 	    afs_PutDCache(tdc);
 	}
@@ -816,7 +817,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     ObtainWriteLock(&afs_xvcache, 735);
 
     /* Old fid hash. */
-    hash = VCHash(&avc->fid);
+    hash = VCHash(&avc->f.fid);
     /* New fid hash. */
     new_hash = VCHash(&newFid);
 
@@ -846,14 +847,14 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     ReleaseWriteLock(&afs_xvcache);
 
     /* Do the same thing for all dcaches. */
-    hash = DVHash(&avc->fid);
+    hash = DVHash(&avc->f.fid);
     ObtainWriteLock(&afs_xdcache, 743);
     for (index = afs_dvhashTbl[hash]; index != NULLIDX; index = hash) {
         hash = afs_dvnextTbl[index];
         tdc = afs_GetDSlot(index, NULL);
         ReleaseReadLock(&tdc->tlock);
-	if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
-            if (!FidCmp(&tdc->f.fid, &avc->fid)) {
+	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
+            if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 
 		/* Safer but slower. */
  		afs_HashOutDCache(tdc, 0);
@@ -877,7 +878,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     ReleaseWriteLock(&afs_xdcache);
 
     /* Now we can set the new fid. */
-    memcpy(&avc->fid, &newFid, sizeof(struct VenusFid));
+    memcpy(&avc->f.fid, &newFid, sizeof(struct VenusFid));
 
 end:
     if (tdp)
@@ -1011,18 +1012,18 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
     XSTATS_DECLS;
 
     /* Start multiplexing dirty operations from ddirty_flags field: */
-    if (avc->ddirty_flags & VDisconSetAttrMask) {
+    if (avc->f.ddirty_flags & VDisconSetAttrMask) {
 	/* Setattr OPS: */
 	/* Turn dirty vc data into a new store status... */
 	if (afs_GenStoreStatus(avc, &sstat) > 0) {
 	    do {
-		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+		tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 		if (tc) {
 		    /* ... and send it. */
 		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STORESTATUS);
 		    RX_AFS_GUNLOCK();
 		    code = RXAFS_StoreStatus(tc->id,
-				(struct AFSFid *) &avc->fid.Fid,
+				(struct AFSFid *) &avc->f.fid.Fid,
 				&sstat,
 				&fstat,
 				&tsync);
@@ -1034,7 +1035,7 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
 
 	} while (afs_Analyze(tc,
 			code,
-			&avc->fid,
+			&avc->f.fid,
 			areq,
 			AFS_STATS_FS_RPCIDX_STORESTATUS,
 			SHARED_LOCK,
@@ -1046,7 +1047,7 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
     if (code)
     	return code;
 
-    if (avc->ddirty_flags &
+    if (avc->f.ddirty_flags &
 	(VDisconTrunc
 	| VDisconWriteClose
 	| VDisconWriteFlush
@@ -1054,14 +1055,14 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
 
 	/* Truncate OP: */
 	do {
-	    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	    if (tc) {
 		/* Set storing flags. XXX: A tad inefficient ... */
-		if (avc->ddirty_flags & VDisconWriteClose)
+		if (avc->f.ddirty_flags & VDisconWriteClose)
 		    flags |= AFS_LASTSTORE;
-		if (avc->ddirty_flags & VDisconWriteOsiFlush)
+		if (avc->f.ddirty_flags & VDisconWriteOsiFlush)
 		    flags |= (AFS_SYNC | AFS_LASTSTORE);
-		if (avc->ddirty_flags & VDisconWriteFlush)
+		if (avc->f.ddirty_flags & VDisconWriteFlush)
 		    flags |= AFS_SYNC;
 
 		/* Try to send store to server. */
@@ -1072,7 +1073,7 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
 
 	} while (afs_Analyze(tc,
 			code,
-			&avc->fid,
+			&avc->f.fid,
 			areq,
 			AFS_STATS_FS_RPCIDX_STOREDATA,
 			SHARED_LOCK,
@@ -1120,7 +1121,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 	/* Get local write lock. */
 	ObtainWriteLock(&tvc->lock, 705);
 
-	if (tvc->ddirty_flags & VDisconRemove) {
+	if (tvc->f.ddirty_flags & VDisconRemove) {
 	    /* Delete the file on the server and just move on
 	     * to the next file. After all, it has been deleted
 	     * we can't replay any other operation it.
@@ -1128,24 +1129,24 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 	    code = afs_ProcessOpRemove(tvc, areq);
 	    goto next_file;
 
-	} else if (tvc->ddirty_flags & VDisconCreate) {
+	} else if (tvc->f.ddirty_flags & VDisconCreate) {
 	    /* For newly created files, we don't need a server lock. */
 	    code = afs_ProcessOpCreate(tvc, areq, acred);
 	    if (code)
 	    	goto next_file;
 
-	    tvc->ddirty_flags &= ~VDisconCreate;
-	    tvc->ddirty_flags |= VDisconCreated;
+	    tvc->f.ddirty_flags &= ~VDisconCreate;
+	    tvc->f.ddirty_flags |= VDisconCreated;
 	}
 
   	/* Get server write lock. */
   	do {
-	    tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
   	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
   		RX_AFS_GUNLOCK();
   		code = RXAFS_SetLock(tc->id,
-					(struct AFSFid *)&tvc->fid.Fid,
+					(struct AFSFid *)&tvc->f.fid.Fid,
 					LockWrite,
 					&tsync);
 		RX_AFS_GLOCK();
@@ -1155,7 +1156,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 
 	} while (afs_Analyze(tc,
 			code,
-			&tvc->fid,
+			&tvc->f.fid,
 			areq,
 			AFS_STATS_FS_RPCIDX_SETLOCK,
 			SHARED_LOCK,
@@ -1164,7 +1165,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 	if (code)
 	    goto next_file;
 
-	if (tvc->ddirty_flags & VDisconRename) {
+	if (tvc->f.ddirty_flags & VDisconRename) {
 	    /* If we're renaming the file, do so now */
 	    code = afs_ProcessOpRename(tvc, areq);
 	    if (code)
@@ -1173,14 +1174,14 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 
 	/* Issue a FetchStatus to get info about DV and callbacks. */
 	do {
-	    tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
 	    if (tc) {
 	    	tvc->callback = tc->srvr->server;
 		start = osi_Time();
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
 		RX_AFS_GUNLOCK();
 		code = RXAFS_FetchStatus(tc->id,
-				(struct AFSFid *)&tvc->fid.Fid,
+				(struct AFSFid *)&tvc->f.fid.Fid,
 				&fstat,
 				&callback,
 				&tsync);
@@ -1191,7 +1192,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 
 	} while (afs_Analyze(tc,
 			code,
-			&tvc->fid,
+			&tvc->f.fid,
 			areq,
 			AFS_STATS_FS_RPCIDX_FETCHSTATUS,
 			SHARED_LOCK,
@@ -1201,9 +1202,9 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 	    goto unlock_srv_file;
 	}
 
-	if ((dv_match(tvc, fstat) && (tvc->m.Date == fstat.ServerModTime)) ||
+	if ((dv_match(tvc, fstat) && (tvc->f.m.Date == fstat.ServerModTime)) ||
 	    	(afs_ConflictPolicy == CLIENT_WINS) ||
-		(tvc->ddirty_flags & VDisconCreated)) {
+		(tvc->f.ddirty_flags & VDisconCreated)) {
 	    /*
 	     * Send changes to the server if there's data version match, or
 	     * client wins policy has been selected or file has been created
@@ -1213,14 +1214,14 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 	    * XXX: Checking server attr changes by timestamp might not the
 	    * most elegant solution, but it's the most viable one that we could find.
 	    */
-	    afs_UpdateStatus(tvc, &tvc->fid, areq, &fstat, &callback, start);
+	    afs_UpdateStatus(tvc, &tvc->f.fid, areq, &fstat, &callback, start);
 	    code = afs_SendChanges(tvc, areq);
 
 	} else if (afs_ConflictPolicy == SERVER_WINS) {
 	    /* DV mismatch, apply collision resolution policy. */
 	    /* Discard this files chunks and remove from current dir. */
 	    afs_ResetVCache(tvc, acred);
-	    tvc->truncPos = AFS_NOTRUNC;
+	    tvc->f.truncPos = AFS_NOTRUNC;
 	} else {
 	    printf("afs_ResyncDisconFiles: no resolution policy selected.\n");
 	}		/* if DV match or client wins policy */
@@ -1228,12 +1229,12 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 unlock_srv_file:
 	/* Release server write lock. */
 	do {
-	    tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
 	    if (tc) {
 	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
 	    	RX_AFS_GUNLOCK();
 		ucode = RXAFS_ReleaseLock(tc->id,
-				(struct AFSFid *) &tvc->fid.Fid,
+				(struct AFSFid *) &tvc->f.fid.Fid,
 				&tsync);
 		RX_AFS_GLOCK();
 		XSTATS_END_TIME;
@@ -1241,7 +1242,7 @@ unlock_srv_file:
 		ucode = -1;
 	} while (afs_Analyze(tc,
 			ucode,
-			&tvc->fid,
+			&tvc->f.fid,
 			areq,
 			AFS_STATS_FS_RPCIDX_RELEASELOCK,
 			SHARED_LOCK,
@@ -1252,7 +1253,7 @@ next_file:
 	if (code == 0) {
 	    /* Replayed successfully - pull the vcache from the 
 	     * disconnected list */
-	    tvc->ddirty_flags = 0;
+	    tvc->f.ddirty_flags = 0;
 	    QRemove(&tvc->dirtyq);
 	    afs_PutVCache(tvc);
 	} else {
@@ -1263,7 +1264,8 @@ next_file:
 	   	QAdd(&afs_disconDirty, &tvc->dirtyq);
 	    } else {
 		/* Failed - keep state as is, and let the user know we died */
-		ReleaseWriteLock(&tvc->lock);
+
+    		ReleaseWriteLock(&tvc->lock);
 		break;
 	    }
 	}
@@ -1308,8 +1310,8 @@ afs_DisconDiscardAllShadows(int squash, struct AFS_UCRED *acred) {
 	ObtainWriteLock(&tvc->lock, 706);
 
 	afs_DeleteShadowDir(tvc);
-	tvc->shVnode = 0;
-	tvc->shUnique = 0;
+	tvc->f.shadow.vnode = 0;
+	tvc->f.shadow.unique = 0;
 
 	if (squash)
 	   afs_ResetVCache(tvc, acred);
@@ -1340,7 +1342,7 @@ afs_DisconDiscardAll(struct AFS_UCRED *acred) {
 
 	ObtainWriteLock(&tvc->lock, 718);
 	afs_ResetVCache(tvc, acred);
-	tvc->truncPos = AFS_NOTRUNC;
+	tvc->f.truncPos = AFS_NOTRUNC;
 	ReleaseWriteLock(&tvc->lock);
 	afs_PutVCache(tvc);
 	ObtainWriteLock(&afs_disconDirtyLock, 719);
@@ -1369,10 +1371,10 @@ void afs_DbgDisconFiles()
         tvc = QEntry(q, struct vcache, dirtyq);
 
 	printf("Cell=%u Volume=%u VNode=%u Unique=%u\n",
-		tvc->fid.Cell,
-		tvc->fid.Fid.Volume,
-		tvc->fid.Fid.Vnode,
-		tvc->fid.Fid.Unique);
+		tvc->f.fid.Cell,
+		tvc->f.fid.Fid.Volume,
+		tvc->f.fid.Fid.Vnode,
+		tvc->f.fid.Fid.Unique);
 
 	i++;
 	if (i >= 30)
@@ -1398,6 +1400,7 @@ void afs_GenShadowFid(struct VenusFid *afid)
 
     /* Try generating a fid that isn't used in the vhash. */
     do {
+	/* Shadow Fids are always directories */
     	afid->Fid.Vnode = afs_DisconVnode + 1;
 
     	i = DVHash(afid);
@@ -1455,8 +1458,8 @@ void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, int lock)
 	ObtainWriteLock(&afs_xvcache, 736);
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-        if (tvc->fid.Fid.Unique > max_unique)
-	    max_unique = tvc->fid.Fid.Unique;
+        if (tvc->f.fid.Fid.Unique > max_unique)
+	    max_unique = tvc->f.fid.Fid.Unique;
     }
     if (lock)
 	ReleaseWriteLock(&afs_xvcache);
@@ -1483,48 +1486,48 @@ void afs_GenDisconStatus(struct vcache *adp, struct vcache *avc,
 			 struct VenusFid *afid, struct vattr *attrs,
 			 struct vrequest *areq, int file_type)
 {
-    memcpy(&avc->fid, afid, sizeof(struct VenusFid));
-    avc->m.Mode = attrs->va_mode;
+    memcpy(&avc->f.fid, afid, sizeof(struct VenusFid));
+    avc->f.m.Mode = attrs->va_mode;
     /* Used to do this:
-     * avc->m.Owner = attrs->va_uid;
+     * avc->f.m.Owner = attrs->va_uid;
      * But now we use the parent dir's ownership,
      * there's no other way to get a server owner id.
      * XXX: Does it really matter?
      */
-    avc->m.Group = adp->m.Group;
-    avc->m.Owner = adp->m.Owner;
-    hset64(avc->m.DataVersion, 0, 0);
-    avc->m.Length = attrs->va_size;
-    avc->m.Date = osi_Time();
+    avc->f.m.Group = adp->f.m.Group;
+    avc->f.m.Owner = adp->f.m.Owner;
+    hset64(avc->f.m.DataVersion, 0, 0);
+    avc->f.m.Length = attrs->va_size;
+    avc->f.m.Date = osi_Time();
     switch(file_type) {
       case VREG:
 	vSetType(avc, VREG);
-        avc->m.Mode |= S_IFREG;
-	avc->m.LinkCount = 1;
-	avc->parentVnode = adp->fid.Fid.Vnode;
-	avc->parentUnique = adp->fid.Fid.Unique;
+        avc->f.m.Mode |= S_IFREG;
+	avc->f.m.LinkCount = 1;
+	avc->f.parent.vnode = adp->f.fid.Fid.Vnode;
+	avc->f.parent.unique = adp->f.fid.Fid.Unique;
 	break;
       case VDIR:
         vSetType(avc, VDIR);
-        avc->m.Mode |= S_IFDIR;
-	avc->m.LinkCount = 2;
+        avc->f.m.Mode |= S_IFDIR;
+	avc->f.m.LinkCount = 2;
 	break;
       case VLNK:
 	vSetType(avc, VLNK);
-	avc->m.Mode |= S_IFLNK;
-	if ((avc->m.Mode & 0111) == 0)
+	avc->f.m.Mode |= S_IFLNK;
+	if ((avc->f.m.Mode & 0111) == 0)
 	    avc->mvstat = 1;
-	avc->parentVnode = adp->fid.Fid.Vnode;
-	avc->parentUnique = adp->fid.Fid.Unique;
+	avc->f.parent.vnode = adp->f.fid.Fid.Vnode;
+	avc->f.parent.unique = adp->f.fid.Fid.Unique;
 	break;
       default:
 	break;
     }
-    avc->anyAccess = adp->anyAccess;
+    avc->f.anyAccess = adp->f.anyAccess;
     afs_AddAxs(avc->Access, areq->uid, adp->Access->axess);
 
     avc->callback = NULL;
-    avc->states |= CStatd;
-    avc->states &= ~CBulkFetching;
+    avc->f.states |= CStatd;
+    avc->f.states &= ~CBulkFetching;
 }
 #endif

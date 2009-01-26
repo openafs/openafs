@@ -63,6 +63,9 @@ char *makesname();
 #endif /* AFS_SGI64_ENV */
 
 /* Exported variables */
+#ifdef AFS_DISCON_ENV
+afs_rwlock_t afs_xvcdirty;	/*Lock: discon vcache dirty list mgmt */
+#endif
 afs_rwlock_t afs_xvcache;	/*Lock: alloc new stat cache entries */
 afs_rwlock_t afs_xvreclaim;	/*Lock: entries reclaimed, not on free list */
 afs_lock_t afs_xvcb;		/*Lock: fids on which there are callbacks */
@@ -79,6 +82,12 @@ struct afs_q afs_vhashTV[VCSIZE];
 static struct afs_cbr *afs_cbrHashT[CBRSIZE];
 afs_int32 afs_bulkStatsLost;
 int afs_norefpanic = 0;
+
+
+/* Disk backed vcache definitions 
+ * Both protected by xvcache */
+static int afs_nextVcacheSlot = 0;
+static struct afs_slotlist *afs_freeSlotList = NULL;
 
 /* Forward declarations */
 static afs_int32 afs_QueueVCB(struct vcache *avc);
@@ -139,7 +148,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     *slept = 0;
     AFS_STATCNT(afs_FlushVCache);
     afs_Trace2(afs_iclSetp, CM_TRACE_FLUSHV, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, avc->states);
+	       ICL_TYPE_INT32, avc->f.states);
 #ifdef  AFS_OSF_ENV
     AFS_GUNLOCK();
     VN_LOCK(AFSTOV(avc));
@@ -150,7 +159,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     if (code)
 	goto bad;
 
-    if (avc->states & CVFlushed) {
+    if (avc->f.states & CVFlushed) {
 	code = EBUSY;
 	goto bad;
     }
@@ -159,18 +168,18 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	refpanic("LRU vs. Free inconsistency");
     }
 #endif
-    avc->states |= CVFlushed;
+    avc->f.states |= CVFlushed;
     /* pull the entry out of the lruq and put it on the free list */
     QRemove(&avc->vlruq);
 
     /* keep track of # of files that we bulk stat'd, but never used
      * before they got recycled.
      */
-    if (avc->states & CBulkStat)
+    if (avc->f.states & CBulkStat)
 	afs_bulkStatsLost++;
     vcachegen++;
     /* remove entry from the hash chain */
-    i = VCHash(&avc->fid);
+    i = VCHash(&avc->f.fid);
     uvc = &afs_vhashT[i];
     for (wvc = *uvc; wvc; uvc = &wvc->hnext, wvc = *uvc) {
 	if (avc == wvc) {
@@ -213,14 +222,14 @@ afs_FlushVCache(struct vcache *avc, int *slept)
      * server only tracks them on a per-volume basis, and we don't
      * know whether we still have some other files from the same
      * volume. */
-    if ((avc->states & CRO) == 0 && avc->callback) {
+    if ((avc->f.states & CRO) == 0 && avc->callback) {
 	afs_QueueVCB(avc);
     }
     ObtainWriteLock(&afs_xcbhash, 460);
     afs_DequeueCallback(avc);	/* remove it from queued callbacks list */
-    avc->states &= ~(CStatd | CUnique);
+    avc->f.states &= ~(CStatd | CUnique);
     ReleaseWriteLock(&afs_xcbhash);
-    if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+    if ((avc->f.states & CForeign) || (avc->f.fid.Fid.Vnode & 1))
 	osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
     else
 	osi_dnlc_purgevp(avc);
@@ -230,7 +239,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
      * optimistic synchronization algorithm
      */
     afs_allZaps++;
-    if (avc->fid.Fid.Vnode & 1)
+    if (avc->f.fid.Fid.Vnode & 1)
 	afs_oddZaps++;
     else
 	afs_evenZaps++;
@@ -242,7 +251,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     if (avc->vlruq.prev || avc->vlruq.next) {
 	refpanic("LRU vs. Free inconsistency");
     }
-    avc->states |= CVFlushed;
+    avc->f.states |= CVFlushed;
 #else
     /* This should put it back on the vnode free list since usecount is 1 */
     afs_vcount--;
@@ -286,15 +295,15 @@ void
 afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
 {
     AFS_STATCNT(afs_inactive);
-    if (avc->states & CDirty) {
+    if (avc->f.states & CDirty) {
 	/* we can't keep trying to push back dirty data forever.  Give up. */
 	afs_InvalidateAllSegments(avc);	/* turns off dirty bit */
     }
-    avc->states &= ~CMAPPED;	/* mainly used by SunOS 4.0.x */
-    avc->states &= ~CDirty;	/* Turn it off */
-    if (avc->states & CUnlinked) {
+    avc->f.states &= ~CMAPPED;	/* mainly used by SunOS 4.0.x */
+    avc->f.states &= ~CDirty;	/* Turn it off */
+    if (avc->f.states & CUnlinked) {
 	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache)) {
-	    avc->states |= CUnlinkedDel;
+	    avc->f.states |= CUnlinkedDel;
 	    return;
 	}
 	afs_remunlink(avc, 1);	/* ignore any return code */
@@ -513,7 +522,7 @@ afs_QueueVCB(struct vcache *avc)
      */
     MObtainWriteLock(&afs_xvcb, 274);
     tcbp = afs_AllocCBR();
-    tcbp->fid = avc->fid.Fid;
+    tcbp->fid = avc->f.fid.Fid;
 
     tcbp->next = tsp->cbrs;
     if (tsp->cbrs)
@@ -592,17 +601,17 @@ afs_FlushReclaimedVcaches(void)
 	    tmpReclaimedVCList = tvc;
 	    printf("Reclaim list flush %lx failed: %d\n", (unsigned long) tvc, code);
 	}
-        if (tvc->states & (CVInit
+        if (tvc->f.states & (CVInit
 #ifdef AFS_DARWIN80_ENV
 			  | CDeadVnode
 #endif
            )) {
-	   tvc->states &= ~(CVInit
+	   tvc->f.states &= ~(CVInit
 #ifdef AFS_DARWIN80_ENV
 			    | CDeadVnode
 #endif
 	   );
-	   afs_osi_Wakeup(&tvc->states);
+	   afs_osi_Wakeup(&tvc->f.states);
 	}
     }
     if (tmpReclaimedVCList) 
@@ -645,9 +654,9 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     afs_FlushReclaimedVcaches();
 
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
-#if defined(AFS_OSF30_ENV) || defined(AFS_LINUX22_ENV)
+# if defined(AFS_OSF30_ENV) || defined(AFS_LINUX22_ENV)
     if (afs_vcount >= afs_maxvcount)
-#else
+# else
     /*
      * If we are using > 33 % of the total system vnodes for AFS vcache
      * entries or we are using the maximum number of vcache entries,
@@ -656,7 +665,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
      * we _must_ free some -- no choice).
      */
     if (((3 * afs_vcount) > nvnode) || (afs_vcount >= afs_maxvcount))
-#endif
+# endif
     {
 	int i;
 	char *panicstr;
@@ -665,7 +674,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
 	    tvc = QTOV(tq);
 	    uq = QPrev(tq);
-	    if (tvc->states & CVFlushed) {
+	    if (tvc->f.states & CVFlushed) {
 		refpanic("CVFlushed on VLRU");
 	    } else if (i++ > afs_maxvcount) {
 		refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
@@ -675,14 +684,14 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 		refpanic("refcnt 0 on VLRU");
 	    }
 
-#if defined(AFS_LINUX22_ENV)
+# if defined(AFS_LINUX22_ENV)
 	    if (tvc != afs_globalVp && VREFCOUNT(tvc) > 1 && tvc->opens == 0) {
                 struct dentry *dentry;
                 struct list_head *cur, *head;
                 AFS_GUNLOCK();
-#if defined(AFS_LINUX24_ENV)
+#  if defined(AFS_LINUX24_ENV)
                 spin_lock(&dcache_lock);
-#endif
+#  endif /* AFS_LINUX24_ENV */
 		head = &(AFSTOV(tvc))->i_dentry;
 
 restart:
@@ -695,31 +704,31 @@ restart:
 
 		    dget_locked(dentry);
 
-#if defined(AFS_LINUX24_ENV)
+#  if defined(AFS_LINUX24_ENV)
 		    spin_unlock(&dcache_lock);
-#endif
+#  endif /* AFS_LINUX24_ENV */
 		    if (d_invalidate(dentry) == -EBUSY) {
 			dput(dentry);
 			/* perhaps lock and try to continue? (use cur as head?) */
 			goto inuse;
 		    }
 		    dput(dentry);
-#if defined(AFS_LINUX24_ENV)
+#  if defined(AFS_LINUX24_ENV)
 		    spin_lock(&dcache_lock);
-#endif
+#  endif /* AFS_LINUX24_ENV */
 		    goto restart;
 		}		    
-#if defined(AFS_LINUX24_ENV)
+#  if defined(AFS_LINUX24_ENV)
 		spin_unlock(&dcache_lock);
-#endif
+#  endif /* AFS_LINUX24_ENV */
 	    inuse:
 		AFS_GLOCK();
 	    }
-#endif
+# endif /* AFS_LINUX22_ENV */
 
 	    if (VREFCOUNT_GT(tvc,0) && !VREFCOUNT_GT(tvc,1) &&
 		tvc->opens == 0
-		&& (tvc->states & CUnlinkedDel) == 0) {
+		&& (tvc->f.states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
 		if (code == 0) {
 		    anumber--;
@@ -753,15 +762,15 @@ restart:
     if (!ip)
 	osi_Panic("afs_NewVCache: no more inodes");
     AFS_GLOCK();
-#if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
+#  if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
     tvc = VTOAFS(ip);
-#else
+#  else
     tvc = afs_osi_Alloc(sizeof(struct vcache));
     ip->u.generic_ip = tvc;
     tvc->v = ip;
-#endif
+#  endif
 }
-#else
+# else
     AFS_GUNLOCK();
     if (getnewvnode(MOUNT_AFS, &Afs_vnodeops, &nvc)) {
 	/* What should we do ???? */
@@ -771,9 +780,24 @@ restart:
 
     tvc = nvc;
     tvc->nextfree = NULL;
-#endif
+# endif
     afs_vcount++;
-#else /* AFS_OSF_ENV */
+
+    /* If we create a new inode, we either give it a new slot number,
+     * or if one's available, use a slot number from the slot free list
+     */
+    if (afs_freeSlotList != NULL) {
+       struct afs_slotlist *tmp;
+   
+       tvc->diskSlot = afs_freeSlotList->slot;
+       tmp = afs_freeSlotList;
+       afs_freeSlotList = tmp->next;
+       afs_osi_Free(tmp, sizeof(struct afs_slotlist));
+    }  else {
+       tvc->diskSlot = afs_nextVcacheSlot++;
+    }
+
+#else /* AFS_OSF_ENV || AFS_LINUX22_ENV */
     /* pull out a free cache entry */
     if (!freeVCList) {
         int loop = 0;
@@ -782,24 +806,24 @@ restart:
 	    tvc = QTOV(tq);
 	    uq = QPrev(tq);
 
-	    if (tvc->states & CVFlushed) {
+	    if (tvc->f.states & CVFlushed) {
 		refpanic("CVFlushed on VLRU");
 	    } else if (i++ > 2 * afs_cacheStats) {	/* even allowing for a few xallocs... */
 		refpanic("Increase -stat parameter of afsd(VLRU cycle?)");
 	    } else if (QNext(uq) != tq) {
 		refpanic("VLRU inconsistent");
-	    } else if (tvc->states & CVInit) {
+	    } else if (tvc->f.states & CVInit) {
 		continue;
             }
 
            if (!VREFCOUNT_GT(tvc,0)
-#if defined(AFS_DARWIN_ENV) && !defined(UKERNEL) && !defined(AFS_DARWIN80_ENV)
+# if defined(AFS_DARWIN_ENV) && !defined(UKERNEL) && !defined(AFS_DARWIN80_ENV)
                || ((VREFCOUNT(tvc) == 1) && 
                    (UBCINFOEXISTS(AFSTOV(tvc))))
-#endif
-               && tvc->opens == 0 && (tvc->states & CUnlinkedDel) == 0) {
-#if defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#ifdef AFS_DARWIN80_ENV
+# endif
+               && tvc->opens == 0 && (tvc->f.states & CUnlinkedDel) == 0) {
+# if defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#  ifdef AFS_DARWIN80_ENV
 	        vnode_t tvp = AFSTOV(tvc);
 		/* VREFCOUNT_GT only sees usecounts, not iocounts */
 		/* so this may fail to actually recycle the vnode now */
@@ -827,7 +851,7 @@ restart:
 		    code = EBUSY;
 		} else
 		    code = 0;
-#else
+#  else /* AFS_DARWIN80_ENV */
                 /*
                  * vgone() reclaims the vnode, which calls afs_FlushVCache(),
                  * then it puts the vnode on the free list.
@@ -840,10 +864,10 @@ restart:
                 fv_slept = 0;
                 code = 0;
                 AFS_GLOCK();
-#endif
-#else
+#  endif
+# else /* AFS_DARWIN80_ENV || AFS_XBSD_ENV */
                 code = afs_FlushVCache(tvc, &fv_slept);
-#endif
+# endif /* AFS_DARWIN80_ENV || AFS_XBSD_ENV */
 		if (code == 0) {
 		    anumber--;
 		}
@@ -864,13 +888,29 @@ restart:
 	/* none free, making one is better than a panic */
 	afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
 	tvc = (struct vcache *)afs_osi_Alloc(sizeof(struct vcache));
-#if defined(AFS_DARWIN_ENV) && !defined(UKERNEL)
+# if defined(AFS_DARWIN_ENV) && !defined(UKERNEL)
 	tvc->v = NULL; /* important to clean this, or use memset 0 */
-#endif
-#ifdef	KERNEL_HAVE_PIN
+# endif
+# ifdef	KERNEL_HAVE_PIN
 	pin((char *)tvc, sizeof(struct vcache));	/* XXX */
+# endif
+
+#ifdef AFS_DISCON_ENV
+	/* If we create a new inode, we either give it a new slot number,
+         * or if one's available, use a slot number from the slot free list
+         */
+        if (afs_freeSlotList != NULL) {
+	    struct afs_slotlist *tmp;
+	
+            tvc->diskSlot = afs_freeSlotList->slot;
+            tmp = afs_freeSlotList;
+	    afs_freeSlotList = tmp->next;
+	    afs_osi_Free(tmp, sizeof(struct afs_slotlist));
+        } else {
+	    tvc->diskSlot = afs_nextVcacheSlot++;
+        }
 #endif
-#if defined(AFS_SGI_ENV)
+# if defined(AFS_SGI_ENV)
 	{
 	    char name[METER_NAMSZ];
 	    memset(tvc, 0, sizeof(struct vcache));
@@ -902,9 +942,23 @@ restart:
 #endif
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
+
+# if AFS_DISCON_ENV
+    /* We need to preserve the slot that we're being stored into on
+     * disk */
+    { 
+	afs_uint32 slot;
+        slot = tvc->diskSlot;
+	memset((char *)tvc, 0, sizeof(struct vcache));
+	tvc->diskSlot = slot;
+    }
+# else
     memset((char *)tvc, 0, sizeof(struct vcache));
+# endif
+
 #else
     tvc->uncred = 0;
+    memset(&(tvc->f), 0, sizeof(struct fvcache));
 #endif
 
     RWLOCK_INIT(&tvc->lock, "vcache lock");
@@ -912,32 +966,28 @@ restart:
     RWLOCK_INIT(&tvc->vlock, "vcache vlock");
 #endif /* defined(AFS_SUN5_ENV) */
 
-    tvc->parentVnode = 0;
     tvc->mvid = NULL;
     tvc->linkData = NULL;
     tvc->cbExpires = 0;
     tvc->opens = 0;
     tvc->execsOrWriters = 0;
     tvc->flockCount = 0;
-    tvc->anyAccess = 0;
-    tvc->states = CVInit;
+    tvc->f.states = CVInit;
     tvc->last_looker = 0;
-    tvc->fid = *afid;
+    tvc->f.fid = *afid;
     tvc->asynchrony = -1;
     tvc->vc_error = 0;
 #ifdef AFS_TEXT_ENV
     tvc->flushDV.low = tvc->flushDV.high = AFS_MAXDV;
 #endif
     hzero(tvc->mapDV);
-    tvc->truncPos = AFS_NOTRUNC;        /* don't truncate until we need to */
-    hzero(tvc->m.DataVersion);  /* in case we copy it into flushDV */
+    tvc->f.truncPos = AFS_NOTRUNC;        /* don't truncate until we need to */
+    hzero(tvc->f.m.DataVersion);  /* in case we copy it into flushDV */
     tvc->Access = NULL;
     tvc->callback = serverp;    /* to minimize chance that clear
 				 * request is lost */
 #if defined(AFS_DISCON_ENV)
-    tvc->ddirty_flags = 0;
-    tvc->shVnode = 0;
-    tvc->shUnique = 0;
+    QZero(&tvc->metadirty);
 #endif
 
     i = VCHash(afid);
@@ -1153,8 +1203,8 @@ restart:
     osi_dnlc_purgedp(tvc);	/* this may be overkill */
     memset((char *)&(tvc->callsort), 0, sizeof(struct afs_q));
     tvc->slocks = NULL;
-    tvc->states &=~ CVInit;
-    afs_osi_Wakeup(&tvc->states);
+    tvc->f.states &=~ CVInit;
+    afs_osi_Wakeup(&tvc->f.states);
 
     return tvc;
 
@@ -1184,10 +1234,10 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
     ObtainReadLock(&afs_xvcache);
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-            if (tvc->states & CVInit) continue;
+            if (tvc->f.states & CVInit) continue;
 #ifdef AFS_DARWIN80_ENV
-            if (tvc->states & CDeadVnode &&
-                (tvc->states & (CCore|CUnlinkedDel) ||
+            if (tvc->f.states & CDeadVnode &&
+                (tvc->f.states & (CCore|CUnlinkedDel) ||
                  tvc->flockCount)) panic("Dead vnode has core/unlinkedel/flock");
 #endif
 	    if (doflocks && tvc->flockCount != 0) {
@@ -1199,20 +1249,20 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		    afs_InitReq(&treq, afs_osi_credp);
 		    treq.flags |= O_NONBLOCK;
 
-		    tc = afs_Conn(&tvc->fid, &treq, SHARED_LOCK);
+		    tc = afs_Conn(&tvc->f.fid, &treq, SHARED_LOCK);
 		    if (tc) {
 			XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_EXTENDLOCK);
 			RX_AFS_GUNLOCK();
 			code =
 			    RXAFS_ExtendLock(tc->id,
-					     (struct AFSFid *)&tvc->fid.Fid,
+					     (struct AFSFid *)&tvc->f.fid.Fid,
 					     &tsync);
 			RX_AFS_GLOCK();
 			XSTATS_END_TIME;
 		    } else
 			code = -1;
 		} while (afs_Analyze
-			 (tc, code, &tvc->fid, &treq,
+			 (tc, code, &tvc->f.fid, &treq,
 			  AFS_STATS_FS_RPCIDX_EXTENDLOCK, SHARED_LOCK, NULL));
 
 		ReleaseWriteLock(&tvc->lock);
@@ -1225,7 +1275,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 #endif
 	    }
 	    didCore = 0;
-	    if ((tvc->states & CCore) || (tvc->states & CUnlinkedDel)) {
+	    if ((tvc->f.states & CCore) || (tvc->f.states & CUnlinkedDel)) {
 		/*
 		 * Don't let it evaporate in case someone else is in
 		 * this code.  Also, drop the afs_xvcache lock while
@@ -1244,8 +1294,8 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		AFS_RWLOCK((vnode_t *) tvc, VRWLOCK_WRITE);
 #endif
 		ObtainWriteLock(&tvc->lock, 52);
-		if (tvc->states & CCore) {
-		    tvc->states &= ~CCore;
+		if (tvc->f.states & CCore) {
+		    tvc->f.states &= ~CCore;
 		    /* XXXX Find better place-holder for cred XXXX */
 		    cred = (struct AFS_UCRED *)tvc->linkData;
 		    tvc->linkData = NULL;	/* XXX */
@@ -1262,10 +1312,10 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		    osi_FlushText(tvc);
 		    didCore = 1;
 		    if (code && code != VNOVNODE) {
-			afs_StoreWarn(code, tvc->fid.Fid.Volume,
+			afs_StoreWarn(code, tvc->f.fid.Fid.Volume,
 				      /* /dev/console */ 1);
 		    }
-		} else if (tvc->states & CUnlinkedDel) {
+		} else if (tvc->f.states & CUnlinkedDel) {
 		    /*
 		     * Ignore errors
 		     */
@@ -1363,12 +1413,12 @@ afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
     /* otherwise we must fetch the status info */
 
     ObtainWriteLock(&avc->lock, 53);
-    if (avc->states & CStatd) {
+    if (avc->f.states & CStatd) {
 	ReleaseWriteLock(&avc->lock);
 	return 0;
     }
     ObtainWriteLock(&afs_xcbhash, 461);
-    avc->states &= ~(CStatd | CUnique);
+    avc->f.states &= ~(CStatd | CUnique);
     avc->callback = NULL;
     afs_DequeueCallback(avc);
     ReleaseWriteLock(&afs_xcbhash);
@@ -1378,13 +1428,13 @@ afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
      * it's possible that the contents of this directory, or this
      * file's name have changed, thus invalidating the dnlc contents.
      */
-    if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+    if ((avc->f.states & CForeign) || (avc->f.fid.Fid.Vnode & 1))
 	osi_dnlc_purgedp(avc);
     else
 	osi_dnlc_purgevp(avc);
 
     /* fetch the status info */
-    tvc = afs_GetVCache(&avc->fid, areq, NULL, avc);
+    tvc = afs_GetVCache(&avc->f.fid, areq, NULL, avc);
     if (!tvc)
 	return ENOENT;
     /* Put it back; caller has already incremented vrefCount */
@@ -1424,7 +1474,7 @@ afs_SimpleVStat(register struct vcache *avc,
 #if defined(AFS_SGI_ENV)
 	osi_Assert((valusema(&avc->vc_rwlock) <= 0)
 		   && (OSI_GET_LOCKID() == avc->vc_rwlockid));
-	if (length < avc->m.Length) {
+	if (length < avc->f.m.Length) {
 	    vnode_t *vp = (vnode_t *) avc;
 
 	    osi_Assert(WriteLocked(&avc->lock));
@@ -1437,26 +1487,26 @@ afs_SimpleVStat(register struct vcache *avc,
 #endif
 	/* if writing the file, don't fetch over this value */
 	afs_Trace3(afs_iclSetp, CM_TRACE_SIMPLEVSTAT, ICL_TYPE_POINTER, avc,
-		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length),
 		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
-	avc->m.Length = length;
-	avc->m.Date = astat->ClientModTime;
+	avc->f.m.Length = length;
+	avc->f.m.Date = astat->ClientModTime;
     }
-    avc->m.Owner = astat->Owner;
-    avc->m.Group = astat->Group;
-    avc->m.Mode = astat->UnixModeBits;
+    avc->f.m.Owner = astat->Owner;
+    avc->f.m.Group = astat->Group;
+    avc->f.m.Mode = astat->UnixModeBits;
     if (vType(avc) == VREG) {
-	avc->m.Mode |= S_IFREG;
+	avc->f.m.Mode |= S_IFREG;
     } else if (vType(avc) == VDIR) {
-	avc->m.Mode |= S_IFDIR;
+	avc->f.m.Mode |= S_IFDIR;
     } else if (vType(avc) == VLNK) {
-	avc->m.Mode |= S_IFLNK;
-	if ((avc->m.Mode & 0111) == 0)
+	avc->f.m.Mode |= S_IFLNK;
+	if ((avc->f.m.Mode & 0111) == 0)
 	    avc->mvstat = 1;
     }
-    if (avc->states & CForeign) {
+    if (avc->f.states & CForeign) {
 	struct axscache *ac;
-	avc->anyAccess = astat->AnonymousAccess;
+	avc->f.anyAccess = astat->AnonymousAccess;
 #ifdef badidea
 	if ((astat->CallerAccess & ~astat->AnonymousAccess))
 	    /*   USED TO SAY :
@@ -1479,7 +1529,6 @@ afs_SimpleVStat(register struct vcache *avc,
 	    else		/* not found, add a new one if possible */
 		afs_AddAxs(avc->Access, areq->uid, astat->CallerAccess);
     }
-
 
 }				/*afs_SimpleVStat */
 
@@ -1509,21 +1558,21 @@ afs_WriteVCache(register struct vcache *avc,
     XSTATS_DECLS;
     AFS_STATCNT(afs_WriteVCache);
     afs_Trace2(afs_iclSetp, CM_TRACE_WVCACHE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STORESTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_StoreStatus(tc->id, (struct AFSFid *)&avc->fid.Fid,
+		RXAFS_StoreStatus(tc->id, (struct AFSFid *)&avc->f.fid.Fid,
 				  astatus, &OutStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_STORESTATUS,
+	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STORESTATUS,
 	      SHARED_LOCK, NULL));
 
     UpgradeSToWLock(&avc->lock, 20);
@@ -1535,14 +1584,14 @@ afs_WriteVCache(register struct vcache *avc,
 	 * it thought we were doing this after fetching new status
 	 * over a file being written.
 	 */
-	avc->m.Date = OutStatus.ClientModTime;
+	avc->f.m.Date = OutStatus.ClientModTime;
     } else {
 	/* failure, set up to check with server next time */
 	ObtainWriteLock(&afs_xcbhash, 462);
 	afs_DequeueCallback(avc);
-	avc->states &= ~(CStatd | CUnique);	/* turn off stat valid flag */
+	avc->f.states &= ~(CStatd | CUnique);	/* turn off stat valid flag */
 	ReleaseWriteLock(&afs_xcbhash);
-	if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+	if ((avc->f.states & CForeign) || (avc->f.fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
     }
     ConvertWToSLock(&avc->lock);
@@ -1578,32 +1627,32 @@ int afs_WriteVCacheDiscon(register struct vcache *avc,
 
     	/* Set attributes. */
     	if (astatus->Mask & AFS_SETMODTIME) {
-		avc->m.Date = astatus->ClientModTime;
+		avc->f.m.Date = astatus->ClientModTime;
 		flags |= VDisconSetTime;
 	}
 
 	if (astatus->Mask & AFS_SETOWNER) {
 		printf("Not allowed yet. \n");
-		//avc->m.Owner = astatus->Owner;
+		//avc->f.m.Owner = astatus->Owner;
 	}
 
 	if (astatus->Mask & AFS_SETGROUP) {
 		printf("Not allowed yet. \n");
-		//avc->m.Group =  astatus->Group;
+		//avc->f.m.Group =  astatus->Group;
 	}
 
 	if (astatus->Mask & AFS_SETMODE) {
-		avc->m.Mode = astatus->UnixModeBits;
+		avc->f.m.Mode = astatus->UnixModeBits;
 
 #if 0 	/* XXX: Leaving this out, so it doesn't mess up the file type flag.*/
 
 		if (vType(avc) == VREG) {
-			avc->m.Mode |= S_IFREG;
+			avc->f.m.Mode |= S_IFREG;
 		} else if (vType(avc) == VDIR) {
-			avc->m.Mode |= S_IFDIR;
+			avc->f.m.Mode |= S_IFDIR;
 		} else if (vType(avc) == VLNK) {
-			avc->m.Mode |= S_IFLNK;
-			if ((avc->m.Mode & 0111) == 0)
+			avc->f.m.Mode |= S_IFLNK;
+			if ((avc->f.m.Mode & 0111) == 0)
 				avc->mvstat = 1;
 		}
 #endif
@@ -1671,35 +1720,35 @@ afs_ProcessFS(register struct vcache *avc,
 	 *  values.
 	 */
 	afs_Trace3(afs_iclSetp, CM_TRACE_PROCESSFS, ICL_TYPE_POINTER, avc,
-		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length),
 		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
-	avc->m.Length = length;
-	avc->m.Date = astat->ClientModTime;
+	avc->f.m.Length = length;
+	avc->f.m.Date = astat->ClientModTime;
     }
-    hset64(avc->m.DataVersion, astat->dataVersionHigh, astat->DataVersion);
-    avc->m.Owner = astat->Owner;
-    avc->m.Mode = astat->UnixModeBits;
-    avc->m.Group = astat->Group;
-    avc->m.LinkCount = astat->LinkCount;
+    hset64(avc->f.m.DataVersion, astat->dataVersionHigh, astat->DataVersion);
+    avc->f.m.Owner = astat->Owner;
+    avc->f.m.Mode = astat->UnixModeBits;
+    avc->f.m.Group = astat->Group;
+    avc->f.m.LinkCount = astat->LinkCount;
     if (astat->FileType == File) {
 	vSetType(avc, VREG);
-	avc->m.Mode |= S_IFREG;
+	avc->f.m.Mode |= S_IFREG;
     } else if (astat->FileType == Directory) {
 	vSetType(avc, VDIR);
-	avc->m.Mode |= S_IFDIR;
+	avc->f.m.Mode |= S_IFDIR;
     } else if (astat->FileType == SymbolicLink) {
-	if (afs_fakestat_enable && (avc->m.Mode & 0111) == 0) {
+	if (afs_fakestat_enable && (avc->f.m.Mode & 0111) == 0) {
 	    vSetType(avc, VDIR);
-	    avc->m.Mode |= S_IFDIR;
+	    avc->f.m.Mode |= S_IFDIR;
 	} else {
 	    vSetType(avc, VLNK);
-	    avc->m.Mode |= S_IFLNK;
+	    avc->f.m.Mode |= S_IFLNK;
 	}
-	if ((avc->m.Mode & 0111) == 0) {
+	if ((avc->f.m.Mode & 0111) == 0) {
 	    avc->mvstat = 1;
 	}
     }
-    avc->anyAccess = astat->AnonymousAccess;
+    avc->f.anyAccess = astat->AnonymousAccess;
 #ifdef badidea
     if ((astat->CallerAccess & ~astat->AnonymousAccess))
 	/*   USED TO SAY :
@@ -1845,9 +1894,9 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
     if (tvc) {
 	if (cached)
 	    *cached = 1;
-	osi_Assert((tvc->states & CVInit) == 0);
+	osi_Assert((tvc->f.states & CVInit) == 0);
 	/* If we are in readdir, return the vnode even if not statd */
-	if ((tvc->states & CStatd) || afs_InReadDir(tvc)) {
+	if ((tvc->f.states & CStatd) || afs_InReadDir(tvc)) {
 	    ReleaseSharedLock(&afs_xvcache);
 	    return tvc;
 	}
@@ -1872,7 +1921,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 
     ObtainWriteLock(&tvc->lock, 54);
 
-    if (tvc->states & CStatd) {
+    if (tvc->f.states & CStatd) {
 	ReleaseWriteLock(&tvc->lock);
 	return tvc;
     }
@@ -1964,7 +2013,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 #endif
 
     ObtainWriteLock(&afs_xcbhash, 464);
-    tvc->states &= ~CUnique;
+    tvc->f.states &= ~CUnique;
     tvc->callback = 0;
     afs_DequeueCallback(tvc);
     ReleaseWriteLock(&afs_xcbhash);
@@ -1975,16 +2024,16 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
     if (tvp) {
 	if ((tvp->states & VForeign)) {
 	    if (newvcache)
-		tvc->states |= CForeign;
+		tvc->f.states |= CForeign;
 	    if (newvcache && (tvp->rootVnode == afid->Fid.Vnode)
 		&& (tvp->rootUnique == afid->Fid.Unique)) {
 		tvc->mvstat = 2;
 	    }
 	}
 	if (tvp->states & VRO)
-	    tvc->states |= CRO;
+	    tvc->f.states |= CRO;
 	if (tvp->states & VBackup)
-	    tvc->states |= CBackup;
+	    tvc->f.states |= CBackup;
 	/* now copy ".." entry back out of volume structure, if necessary */
 	if (tvc->mvstat == 2 && tvp->dotdot.Fid.Volume != 0) {
 	    if (!tvc->mvid)
@@ -2002,9 +2051,9 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 
 	if (afs_DynrootNewVnode(tvc, &OutStatus)) {
 	    afs_ProcessFS(tvc, &OutStatus, areq);
-	    tvc->states |= CStatd | CUnique;
-	    tvc->parentVnode  = OutStatus.ParentVnode;
-	    tvc->parentUnique = OutStatus.ParentUnique;
+	    tvc->f.states |= CStatd | CUnique;
+	    tvc->f.parent.vnode  = OutStatus.ParentVnode;
+	    tvc->f.parent.unique = OutStatus.ParentUnique;
 	    code = 0;
 	} else {
 
@@ -2024,9 +2073,13 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	     * its parent.
 	     */
             if (!code && OutStatus.FileType != Directory &&
-		!tvc->parentVnode) {
-		tvc->parentVnode  = OutStatus.ParentVnode;
-		tvc->parentUnique = OutStatus.ParentUnique;
+		!tvc->f.parent.vnode) {
+		tvc->f.parent.vnode  = OutStatus.ParentVnode;
+		tvc->f.parent.unique = OutStatus.ParentUnique;
+		/* XXX - SXW - It's conceivable we should mark ourselves
+		 *             as dirty again here, incase we've been raced
+		 *             out of the FetchStatus call.
+		 */
             }
 	}
     }
@@ -2094,14 +2147,14 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	}
 	ObtainReadLock(&tvc->lock);
 
-	if (tvc->states & CStatd) {
+	if (tvc->f.states & CStatd) {
 	    if (cached) {
 		*cached = 1;
 	    }
 	    ReleaseReadLock(&tvc->lock);
 	    return tvc;
 	}
-	tvc->states &= ~CUnique;
+	tvc->f.states &= ~CUnique;
 
 	ReleaseReadLock(&tvc->lock);
 	afs_PutVCache(tvc);
@@ -2120,7 +2173,7 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
         code = ENETDOWN;
     } else 
         code =
-	    afs_RemoteLookup(&adp->fid, areq, aname, &nfid, &OutStatus, 
+	    afs_RemoteLookup(&adp->f.fid, areq, aname, &nfid, &OutStatus, 
 	                     &CallBack, &serverp, &tsync);
 
 #if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
@@ -2159,15 +2212,15 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     if (tvp) {
 	if ((tvp->states & VForeign)) {
 	    if (newvcache)
-		tvc->states |= CForeign;
+		tvc->f.states |= CForeign;
 	    if (newvcache && (tvp->rootVnode == afid->Fid.Vnode)
 		&& (tvp->rootUnique == afid->Fid.Unique))
 		tvc->mvstat = 2;
 	}
 	if (tvp->states & VRO)
-	    tvc->states |= CRO;
+	    tvc->f.states |= CRO;
 	if (tvp->states & VBackup)
-	    tvc->states |= CBackup;
+	    tvc->f.states |= CBackup;
 	/* now copy ".." entry back out of volume structure, if necessary */
 	if (tvc->mvstat == 2 && tvp->dotdot.Fid.Volume != 0) {
 	    if (!tvc->mvid)
@@ -2180,9 +2233,9 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     if (code) {
 	ObtainWriteLock(&afs_xcbhash, 465);
 	afs_DequeueCallback(tvc);
-	tvc->states &= ~(CStatd | CUnique);
+	tvc->f.states &= ~(CStatd | CUnique);
 	ReleaseWriteLock(&afs_xcbhash);
-	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
+	if ((tvc->f.states & CForeign) || (tvc->f.fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
 	if (tvp)
 	    afs_PutVolume(tvp, READ_LOCK);
@@ -2196,28 +2249,28 @@ afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 	if (CallBack.ExpirationTime) {
 	    tvc->callback = serverp;
 	    tvc->cbExpires = CallBack.ExpirationTime + now;
-	    tvc->states |= CStatd | CUnique;
-	    tvc->states &= ~CBulkFetching;
+	    tvc->f.states |= CStatd | CUnique;
+	    tvc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), tvp);
-	} else if (tvc->states & CRO) {
+	} else if (tvc->f.states & CRO) {
 	    /* adapt gives us an hour. */
 	    tvc->cbExpires = 3600 + osi_Time();
-	     /*XXX*/ tvc->states |= CStatd | CUnique;
-	    tvc->states &= ~CBulkFetching;
+	     /*XXX*/ tvc->f.states |= CStatd | CUnique;
+	    tvc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(tvc, CBHash(3600), tvp);
 	} else {
 	    tvc->callback = NULL;
 	    afs_DequeueCallback(tvc);
-	    tvc->states &= ~(CStatd | CUnique);
-	    if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
+	    tvc->f.states &= ~(CStatd | CUnique);
+	    if ((tvc->f.states & CForeign) || (tvc->f.fid.Fid.Vnode & 1))
 		osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
 	}
     } else {
 	afs_DequeueCallback(tvc);
-	tvc->states &= ~CStatd;
-	tvc->states &= ~CUnique;
+	tvc->f.states &= ~CStatd;
+	tvc->f.states &= ~CUnique;
 	tvc->callback = NULL;
-	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
+	if ((tvc->f.states & CForeign) || (tvc->f.fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
     }
     ReleaseWriteLock(&afs_xcbhash);
@@ -2282,10 +2335,10 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
     ObtainSharedLock(&afs_xvcache, 7);
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-	if (!FidCmp(&(tvc->fid), afid)) {
-            if (tvc->states & CVInit) {
+	if (!FidCmp(&(tvc->f.fid), afid)) {
+            if (tvc->f.states & CVInit) {
 		ReleaseSharedLock(&afs_xvcache);
-		afs_osi_Sleep(&tvc->states);
+		afs_osi_Sleep(&tvc->f.states);
 		goto rootvc_loop;
             }
 #ifdef	AFS_OSF_ENV
@@ -2300,9 +2353,9 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 		continue;
 #endif /* AFS_OSF_ENV */
 #ifdef AFS_DARWIN80_ENV
-            if (tvc->states & CDeadVnode) {
+            if (tvc->f.states & CDeadVnode) {
 		ReleaseSharedLock(&afs_xvcache);
-		afs_osi_Sleep(&tvc->states);
+		afs_osi_Sleep(&tvc->f.states);
 		goto rootvc_loop;
             }
 	    tvp = AFSTOV(tvc);
@@ -2320,7 +2373,7 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	}
     }
 
-    if (!haveStatus && (!tvc || !(tvc->states & CStatd))) {
+    if (!haveStatus && (!tvc || !(tvc->f.states & CStatd))) {
 	/* Mount point no longer stat'd or unknown. FID may have changed. */
 #ifdef AFS_OSF_ENV
 	if (tvc)
@@ -2386,12 +2439,12 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 
     ReleaseWriteLock(&afs_xvcache);
 
-    if (tvc->states & CStatd) {
+    if (tvc->f.states & CStatd) {
 	return tvc;
     } else {
 
 	ObtainReadLock(&tvc->lock);
-	tvc->states &= ~CUnique;
+	tvc->f.states &= ~CUnique;
 	tvc->callback = NULL;	/* redundant, perhaps */
 	ReleaseReadLock(&tvc->lock);
     }
@@ -2402,11 +2455,11 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_FreeAllAxs(&(tvc->Access));
 
     if (newvcache)
-	tvc->states |= CForeign;
+	tvc->f.states |= CForeign;
     if (tvolp->states & VRO)
-	tvc->states |= CRO;
+	tvc->f.states |= CRO;
     if (tvolp->states & VBackup)
-	tvc->states |= CBackup;
+	tvc->f.states |= CBackup;
     /* now copy ".." entry back out of volume structure, if necessary */
     if (newvcache && (tvolp->rootVnode == afid->Fid.Vnode)
 	&& (tvolp->rootUnique == afid->Fid.Unique)) {
@@ -2437,9 +2490,9 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	ObtainWriteLock(&afs_xcbhash, 467);
 	afs_DequeueCallback(tvc);
 	tvc->callback = NULL;
-	tvc->states &= ~(CStatd | CUnique);
+	tvc->f.states &= ~(CStatd | CUnique);
 	ReleaseWriteLock(&afs_xcbhash);
-	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
+	if ((tvc->f.states & CForeign) || (tvc->f.fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
 	ReleaseWriteLock(&tvc->lock);
 	afs_PutVCache(tvc);
@@ -2448,25 +2501,25 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 
     ObtainWriteLock(&afs_xcbhash, 468);
     if (origCBs == afs_allCBs) {
-	tvc->states |= CTruth;
+	tvc->f.states |= CTruth;
 	tvc->callback = serverp;
 	if (CallBack.ExpirationTime != 0) {
 	    tvc->cbExpires = CallBack.ExpirationTime + start;
-	    tvc->states |= CStatd;
-	    tvc->states &= ~CBulkFetching;
+	    tvc->f.states |= CStatd;
+	    tvc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), tvolp);
-	} else if (tvc->states & CRO) {
+	} else if (tvc->f.states & CRO) {
 	    /* adapt gives us an hour. */
 	    tvc->cbExpires = 3600 + osi_Time();
-	     /*XXX*/ tvc->states |= CStatd;
-	    tvc->states &= ~CBulkFetching;
+	     /*XXX*/ tvc->f.states |= CStatd;
+	    tvc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(tvc, CBHash(3600), tvolp);
 	}
     } else {
 	afs_DequeueCallback(tvc);
 	tvc->callback = NULL;
-	tvc->states &= ~(CStatd | CUnique);
-	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
+	tvc->f.states &= ~(CStatd | CUnique);
+	if ((tvc->f.states & CForeign) || (tvc->f.fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
     }
     ReleaseWriteLock(&afs_xcbhash);
@@ -2506,37 +2559,36 @@ afs_UpdateStatus(struct vcache *avc,
 
     volp = afs_GetVolume(afid, areq, READ_LOCK);
     ObtainWriteLock(&afs_xcbhash, 469);
-    avc->states |= CTruth;
+    avc->f.states |= CTruth;
     if (avc->callback /* check for race */ ) {
 	if (acb->ExpirationTime != 0) {
 	    avc->cbExpires = acb->ExpirationTime + start;
-	    avc->states |= CStatd;
-	    avc->states &= ~CBulkFetching;
+	    avc->f.states |= CStatd;
+	    avc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(avc, CBHash(acb->ExpirationTime), volp);
-    	} else if (avc->states & CRO) {
+    	} else if (avc->f.states & CRO) {
 	    /* ordinary callback on a read-only volume -- AFS 3.2 style */
 	    avc->cbExpires = 3600 + start;
-	    avc->states |= CStatd;
-	    avc->states &= ~CBulkFetching;
+	    avc->f.states |= CStatd;
+	    avc->f.states &= ~CBulkFetching;
 	    afs_QueueCallback(avc, CBHash(3600), volp);
     	} else {
 	    afs_DequeueCallback(avc);
 	    avc->callback = NULL;
-	    avc->states &= ~(CStatd | CUnique);
-	    if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+	    avc->f.states &= ~(CStatd | CUnique);
+	    if ((avc->f.states & CForeign) || (avc->f.fid.Fid.Vnode & 1))
 	    	osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
     	}
     } else {
     	afs_DequeueCallback(avc);
     	avc->callback = NULL;
-    	avc->states &= ~(CStatd | CUnique);
-    	if ((avc->states & CForeign) || (avc->fid.Fid.Vnode & 1))
+    	avc->f.states &= ~(CStatd | CUnique);
+    	if ((avc->f.states & CForeign) || (avc->f.fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(avc);	/* if it (could be) a directory */
     }
     ReleaseWriteLock(&afs_xcbhash);
     if (volp)
     	afs_PutVolume(volp, READ_LOCK);
-
 }
 
 /*!
@@ -2658,8 +2710,8 @@ afs_StuffVcache(register struct VenusFid *afid,
     ReleaseSharedLock(&afs_xvcache);
     ObtainWriteLock(&tvc->lock, 58);
 
-    tvc->states &= ~CStatd;
-    if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
+    tvc->f.states &= ~CStatd;
+    if ((tvc->f.states & CForeign) || (tvc->f.fid.Fid.Vnode & 1))
 	osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
 
     /* Is it always appropriate to throw away all the access rights? */
@@ -2669,11 +2721,11 @@ afs_StuffVcache(register struct VenusFid *afid,
     tvp = afs_GetVolume(afid, areq, READ_LOCK);
     if (tvp) {
 	if (newvcache && (tvp->states & VForeign))
-	    tvc->states |= CForeign;
+	    tvc->f.states |= CForeign;
 	if (tvp->states & VRO)
-	    tvc->states |= CRO;
+	    tvc->f.states |= CRO;
 	if (tvp->states & VBackup)
-	    tvc->states |= CBackup;
+	    tvc->f.states |= CBackup;
 	/*
 	 * Now, copy ".." entry back out of volume structure, if
 	 * necessary
@@ -2702,20 +2754,20 @@ afs_StuffVcache(register struct VenusFid *afid,
     ObtainWriteLock(&afs_xcbhash, 470);
     if (CallBack->ExpirationTime != 0) {
 	tvc->cbExpires = CallBack->ExpirationTime + osi_Time() - 1;
-	tvc->states |= CStatd;
-	tvc->states &= ~CBulkFetching;
+	tvc->f.states |= CStatd;
+	tvc->f.states &= ~CBulkFetching;
 	afs_QueueCallback(tvc, CBHash(CallBack->ExpirationTime), tvp);
-    } else if (tvc->states & CRO) {
+    } else if (tvc->f.states & CRO) {
 	/* old-fashioned AFS 3.2 style */
 	tvc->cbExpires = 3600 + osi_Time();
-	 /*XXX*/ tvc->states |= CStatd;
-	tvc->states &= ~CBulkFetching;
+	 /*XXX*/ tvc->f.states |= CStatd;
+	tvc->f.states &= ~CBulkFetching;
 	afs_QueueCallback(tvc, CBHash(3600), tvp);
     } else {
 	afs_DequeueCallback(tvc);
 	tvc->callback = NULL;
-	tvc->states &= ~(CStatd | CUnique);
-	if ((tvc->states & CForeign) || (tvc->fid.Fid.Vnode & 1))
+	tvc->f.states &= ~(CStatd | CUnique);
+	if ((tvc->f.states & CForeign) || (tvc->f.fid.Fid.Vnode & 1))
 	    osi_dnlc_purgedp(tvc);	/* if it (could be) a directory */
     }
     ReleaseWriteLock(&afs_xcbhash);
@@ -2777,12 +2829,12 @@ void
 afs_ResetVCache(struct vcache *avc, struct AFS_UCRED *acred) {
     ObtainWriteLock(&afs_xcbhash, 456);
     afs_DequeueCallback(avc);
-    avc->states &= ~(CStatd | CDirty);	/* next reference will re-stat */
+    avc->f.states &= ~(CStatd | CDirty);    /* next reference will re-stat */
     ReleaseWriteLock(&afs_xcbhash);
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
     osi_dnlc_purgedp(avc);
-    if (avc->linkData && !(avc->states & CCore)) {
+    if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
     }
@@ -2807,7 +2859,7 @@ static void findvc_sleep(struct vcache *avc, int flag) {
 	    ReleaseReadLock(&afs_xvcache);
 	}
     }
-    afs_osi_Sleep(&avc->states);
+    afs_osi_Sleep(&avc->f.states);
     if (flag & IS_SLOCK) {
 	    ObtainSharedLock(&afs_xvcache, 341);
     } else {
@@ -2851,7 +2903,7 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	if (FidMatches(afid, tvc)) {
-            if (tvc->states & CVInit) {
+            if (tvc->f.states & CVInit) {
 		findvc_sleep(tvc, flag);
 		goto findloop;
             }
@@ -2864,7 +2916,7 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 		continue;
 #endif /* AFS_OSF_ENV */
 #ifdef  AFS_DARWIN80_ENV
-            if (tvc->states & CDeadVnode) {
+            if (tvc->f.states & CDeadVnode) {
                 findvc_sleep(tvc, flag);
 		goto findloop;
             }
@@ -2893,14 +2945,14 @@ afs_FindVCache(struct VenusFid *afid, afs_int32 * retry, afs_int32 flag)
 	    return 0;
 #endif
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
-	tvc->states |= CUBCinit;
+	tvc->f.states |= CUBCinit;
 	AFS_GUNLOCK();
 	if (UBCINFOMISSING(AFSTOV(tvc)) ||
 	    UBCINFORECLAIMED(AFSTOV(tvc))) {
 	  ubc_info_init(AFSTOV(tvc));
 	}
 	AFS_GLOCK();
-	tvc->states &= ~CUBCinit;
+	tvc->f.states &= ~CUBCinit;
 #endif
 	/*
 	 * only move to front of vlru if we have proper vcache locking)
@@ -2988,13 +3040,13 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
     i = VCHash(afid);
     for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	/* Match only on what we have.... */
-	if (((tvc->fid.Fid.Vnode & 0xffff) == afid->Fid.Vnode)
-	    && (tvc->fid.Fid.Volume == afid->Fid.Volume)
-	    && ((tvc->fid.Fid.Unique & 0xffffff) == afid->Fid.Unique)
-	    && (tvc->fid.Cell == afid->Cell)) {
-	    if (tvc->states & CVInit) {
+	if (((tvc->f.fid.Fid.Vnode & 0xffff) == afid->Fid.Vnode)
+	    && (tvc->f.fid.Fid.Volume == afid->Fid.Volume)
+	    && ((tvc->f.fid.Fid.Unique & 0xffffff) == afid->Fid.Unique)
+	    && (tvc->f.fid.Cell == afid->Cell)) {
+	    if (tvc->f.states & CVInit) {
 		ReleaseSharedLock(&afs_xvcache);
-		afs_osi_Sleep(&tvc->states);
+		afs_osi_Sleep(&tvc->f.states);
 		goto loop;
             }
 #ifdef  AFS_OSF_ENV
@@ -3008,9 +3060,9 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 	    }
 #endif /* AFS_OSF_ENV */
 #ifdef  AFS_DARWIN80_ENV
-            if (tvc->states & CDeadVnode) {
+            if (tvc->f.states & CDeadVnode) {
 		ReleaseSharedLock(&afs_xvcache);
-		afs_osi_Sleep(&tvc->states);
+		afs_osi_Sleep(&tvc->f.states);
 		goto loop;
             }
 	    tvp = AFSTOV(tvc);
@@ -3292,7 +3344,7 @@ void afs_DisconGiveUpCallbacks() {
     /* Somehow, walk the set of vcaches, with each one coming out as tvc */
     for (i = 0; i < VCSIZE; i++) {
         for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-            if ((tvc->states & CRO) == 0 && tvc->callback) {
+            if ((tvc->f.states & CRO) == 0 && tvc->callback) {
                 afs_QueueVCB(tvc);
                 tvc->callback = NULL;
                 nq++;
@@ -3322,9 +3374,8 @@ void afs_ClearAllStatdFlag() {
 
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-	    tvc->states &= ~(CStatd|CUnique);
+	    tvc->f.states &= ~(CStatd|CUnique);
 	}
     }
     ReleaseWriteLock(&afs_xvcache);
 }
-

@@ -208,8 +208,8 @@ afs_CheckCallbacks(unsigned int secs)
 	    /* Get the volume, and if its callback expiration time is more than secs
 	     * seconds into the future, update this vcache entry and requeue it below
 	     */
-	    if ((tvc->states & CRO)
-		&& (tvp = afs_FindVolume(&(tvc->fid), READ_LOCK))) {
+	    if ((tvc->f.states & CRO)
+		&& (tvp = afs_FindVolume(&(tvc->f.fid), READ_LOCK))) {
 		if (tvp->expireTime > now + secs) {
 		    tvc->cbExpires = tvp->expireTime;	/* XXX race here */
 		} else {
@@ -219,9 +219,9 @@ afs_CheckCallbacks(unsigned int secs)
 			    /* What about locking xvcache or vrefcount++ or
 			     * write locking tvc? */
 			    QRemove(tq);
-			    tvc->states &= ~(CStatd | CMValid | CUnique);
-                            if (!(tvc->states & (CVInit|CVFlushed)) &&
-                                (tvc->fid.Fid.Vnode & 1 ||
+			    tvc->f.states &= ~(CStatd | CMValid | CUnique);
+                            if (!(tvc->f.states & (CVInit|CVFlushed)) &&
+                                (tvc->f.fid.Fid.Vnode & 1 ||
                                  (vType(tvc) == VDIR)))
 				osi_dnlc_purgedp(tvc);
 			    tvc->dchint = NULL;	/*invalidate em */
@@ -236,9 +236,9 @@ afs_CheckCallbacks(unsigned int secs)
 		 * What about locking xvcache or vrefcount++ or write locking tvc?
 		 */
 		QRemove(tq);
-		tvc->states &= ~(CStatd | CMValid | CUnique);
-                if (!(tvc->states & (CVInit|CVFlushed)) &&
-                    (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
+		tvc->f.states &= ~(CStatd | CMValid | CUnique);
+                if (!(tvc->f.states & (CVInit|CVFlushed)) &&
+                    (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 		    osi_dnlc_purgedp(tvc);
 	    }
 	}
@@ -307,11 +307,11 @@ afs_FlushCBs(void)
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    tvc->callback = 0;
 	    tvc->dchint = NULL;	/* invalidate hints */
-	    tvc->states &= ~(CStatd);
+	    tvc->f.states &= ~(CStatd);
 	    if (QPrev(&(tvc->callsort)))
 		QRemove(&(tvc->callsort));
-	    if (!(tvc->states & (CVInit|CVFlushed)) &&
-                ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)))
+	    if (!(tvc->f.states & (CVInit|CVFlushed)) &&
+                ((tvc->f.fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)))
 		osi_dnlc_purgedp(tvc);
 	}
 
@@ -338,9 +338,9 @@ afs_FlushServerCBs(struct server *srvp)
 	    if (tvc->callback == srvp) {
 		tvc->callback = 0;
 		tvc->dchint = NULL;	/* invalidate hints */
-		tvc->states &= ~(CStatd);
-		if (!(tvc->states & (CVInit|CVFlushed)) &&
-                    ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))) {
+		tvc->f.states &= ~(CStatd);
+		if (!(tvc->f.states & (CVInit|CVFlushed)) &&
+                    ((tvc->f.fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))) {
 		    osi_dnlc_purgedp(tvc);
 		}
 		afs_DequeueCallback(tvc);

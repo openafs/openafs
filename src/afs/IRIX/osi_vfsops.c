@@ -274,7 +274,7 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
     OSI_VFS_CONVERT(afsp);
 
     AFS_STATCNT(afs_root);
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	if (afs_globalVp) {
@@ -459,7 +459,7 @@ afs_sync(OSI_VFS_DECL(afsp),
 
 	AFS_GUNLOCK();
 	if (flags & SYNC_CLOSE) {
-	    PFLUSHINVALVP(vp, (off_t) 0, (off_t) tvc->m.Length);
+	    PFLUSHINVALVP(vp, (off_t) 0, (off_t) tvc->f.m.Length);
 	}
 #ifdef AFS_SGI61_ENV
 	else if (flags & SYNC_PDFLUSH) {
@@ -472,18 +472,18 @@ afs_sync(OSI_VFS_DECL(afsp),
 
 	if ((flags & SYNC_DELWRI) && AFS_VN_DIRTY(vp)) {
 #ifdef AFS_SGI61_ENV
-	    PFLUSHVP(vp, (off_t) tvc->m.Length,
+	    PFLUSHVP(vp, (off_t) tvc->f.m.Length,
 		     (flags & SYNC_WAIT) ? 0 : B_ASYNC, error);
 #else /* AFS_SGI61_ENV */
 	    if (flags & SYNC_WAIT)
 		/* push all and wait */
-		PFLUSHVP(vp, (off_t) tvc->m.Length, (off_t) 0, error);
+		PFLUSHVP(vp, (off_t) tvc->f.m.Length, (off_t) 0, error);
 	    else if (flags & SYNC_BDFLUSH) {
 		/* push oldest */
 		error = pdflush(vp, B_ASYNC);
 	    } else {
 		/* push all but don't wait */
-		PFLUSHVP(vp, (off_t) tvc->m.Length, (off_t) B_ASYNC, error);
+		PFLUSHVP(vp, (off_t) tvc->f.m.Length, (off_t) B_ASYNC, error);
 	    }
 #endif /* AFS_SGI61_ENV */
 	}

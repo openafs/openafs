@@ -62,7 +62,7 @@ extern void afs_DisconDiscardAll(struct AFS_UCRED *);
 
 /* Call with avc lock held */
 static inline void afs_DisconAddDirty(struct vcache *avc, int operation, int lock) {
-    if (!avc->ddirty_flags) {
+    if (!avc->f.ddirty_flags) {
 	if (lock) 
 	    ObtainWriteLock(&afs_xvcache, 702);
 	ObtainWriteLock(&afs_disconDirtyLock, 703);
@@ -72,7 +72,7 @@ static inline void afs_DisconAddDirty(struct vcache *avc, int operation, int loc
 	if (lock)
 	    ReleaseWriteLock(&afs_xvcache);
     }
-    avc->ddirty_flags |= operation;
+    avc->f.ddirty_flags |= operation;
 } 
 
 /* Call with avc lock held */
@@ -80,9 +80,8 @@ static inline void afs_DisconRemoveDirty(struct vcache *avc) {
     ObtainWriteLock(&afs_disconDirtyLock, 704);
     QRemove(&avc->dirtyq);
     ReleaseWriteLock(&afs_disconDirtyLock);
-    avc->ddirty_flags = 0;
+    avc->f.ddirty_flags = 0;
     afs_PutVCache(avc);
 }
-
 #endif /* AFS_DISCON_ENV */
 #endif /* _DISCON_H */

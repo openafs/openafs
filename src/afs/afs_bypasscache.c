@@ -141,7 +141,7 @@ void afs_TransitionToBypass(register struct vcache *avc, register struct AFS_UCR
     if(!avc)
 	return;
 		
-    if(avc->states & FCSBypass)
+    if(avc->f.states & FCSBypass)
 	osi_Panic("afs_TransitionToBypass: illegal transition to bypass--already FCSBypass\n");		
 		
     if(aflags & TRANSChangeDesiredBit)
@@ -158,7 +158,7 @@ void afs_TransitionToBypass(register struct vcache *avc, register struct AFS_UCR
 	
     /* If we never cached this, just change state */
     if(setDesire && (!avc->cachingStates & FCSBypass)) {
-	avc->states |= FCSBypass;
+	avc->f.states |= FCSBypass;
 	goto done;
     }
 	/* cg2v, try to store any chunks not written 20071204 */
@@ -173,11 +173,11 @@ void afs_TransitionToBypass(register struct vcache *avc, register struct AFS_UCR
     afs_DequeueCallback(avc);
 	ReleaseWriteLock(&afs_xcbhash);
 #endif	
-    avc->states &= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
+    avc->f.states &= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
     osi_dnlc_purgedp(avc);
-    if (avc->linkData && !(avc->states & CCore)) {
+    if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
     }		
@@ -213,7 +213,7 @@ void afs_TransitionToCaching(register struct vcache *avc, register struct AFS_UC
     if(!avc)
 	return;
 		
-    if(!avc->states & FCSBypass)
+    if(!avc->f.states & FCSBypass)
 	osi_Panic("afs_TransitionToCaching: illegal transition to caching--already caching\n");		
 		
     if(aflags & TRANSChangeDesiredBit)
@@ -231,12 +231,12 @@ void afs_TransitionToCaching(register struct vcache *avc, register struct AFS_UC
     /* Ok, we actually do need to flush */
     ObtainWriteLock(&afs_xcbhash, 957);
     afs_DequeueCallback(avc);
-    avc->states &= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
+    avc->f.states &= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
     ReleaseWriteLock(&afs_xcbhash);
     /* now find the disk cache entries */
     afs_TryToSmush(avc, acred, 1);
     osi_dnlc_purgedp(avc);
-    if (avc->linkData && !(avc->states & CCore)) {
+    if (avc->linkData && !(avc->f.states & CCore)) {
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
     }
@@ -339,7 +339,7 @@ afs_NoCacheFetchProc(register struct rx_call *acall,
 	 * We do not do this for AFS file servers because they sometimes
 	 * return large negative numbers as the transfer size.
 	 */
-	if (avc->states & CForeign) {
+	if (avc->f.states & CForeign) {
 	    moredata = length & 0x80000000;
 	    length &= ~0x80000000;
 	} else {
@@ -549,7 +549,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
 	
     tcallspec = (struct tlocal1 *) osi_Alloc(sizeof(struct tlocal1));
     do {
-		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK /* ignored */);
+		tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK /* ignored */);
 		if (tc) {
 			avc->callback = tc->srvr->server;
 			i = osi_Time();
@@ -557,7 +557,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
 #ifdef AFS_64BIT_CLIENT
 			if(!afs_serverHasNo64Bit(tc)) {
 				code = StartRXAFS_FetchData64(tcall,
-											  (struct AFSFid *) &avc->fid.Fid,
+											  (struct AFSFid *) &avc->f.fid.Fid,
 											  auio->uio_offset, 
 											  bparms->length);
 				if (code == 0) {
@@ -585,7 +585,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
 						if (!tcall)
 							tcall = rx_NewCall(tc->id);						
 						code = StartRXAFS_FetchData(tcall,
-													(struct AFSFid *) &avc->fid.Fid,
+													(struct AFSFid *) &avc->f.fid.Fid,
 													pos, bparms->length);
 						COND_RE_GLOCK(locked);
 					}
@@ -594,7 +594,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
 			} /* afs_serverHasNo64Bit */
 #else
 			code = StartRXAFS_FetchData(tcall,
-										(struct AFSFid *) &avc->fid.Fid,
+										(struct AFSFid *) &avc->f.fid.Fid,
 										auio->uio_offset, bparms->length);
 #endif
 
@@ -628,7 +628,7 @@ afs_PrefetchNoCache(register struct vcache *avc,
 #endif
 			goto done;
 		}
-    } while (afs_Analyze(tc, code, &avc->fid, areq,
+    } while (afs_Analyze(tc, code, &avc->f.fid, areq,
 						 AFS_STATS_FS_RPCIDX_FETCHDATA,
 						 SHARED_LOCK,0));
 done:

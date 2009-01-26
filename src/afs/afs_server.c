@@ -275,7 +275,7 @@ afs_HaveCallBacksFrom(struct server *aserver)
 	     * from the required host
 	     */
 	    if (aserver == tvc->callback && tvc->cbExpires >= now
-		&& ((tvc->states & CRO) == 0))
+		&& ((tvc->f.states & CRO) == 0))
 		return 1;
 	}
     }

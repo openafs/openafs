@@ -82,11 +82,11 @@ static int afs_encode_fh(struct dentry *de, __u32 *fh, int *max_len,
 
 #ifdef OSI_EXPORT_DEBUG
     printk("afs: encode_fh(0x%08x/%d/%d.%d)\n",
-	   tvc->fid.Cell,      tvc->fid.Fid.Volume,
-	   tvc->fid.Fid.Vnode, tvc->fid.Fid.Unique);
+	   tvc->f.fid.Cell,      tvc->f.fid.Fid.Volume,
+	   tvc->f.fid.Fid.Vnode, tvc->f.fid.Fid.Unique);
 #endif
-    if (afs_IsDynrootAnyFid(&tvc->fid)) {
-	vntype = VNUM_TO_VNTYPE(tvc->fid.Fid.Vnode);
+    if (afs_IsDynrootAnyFid(&tvc->f.fid)) {
+	vntype = VNUM_TO_VNTYPE(tvc->f.fid.Fid.Vnode);
 	switch (vntype) {
 	    case 0:
 		/* encode as a normal filehandle */
@@ -101,7 +101,7 @@ static int afs_encode_fh(struct dentry *de, __u32 *fh, int *max_len,
 	    case VN_TYPE_CELL:
 	    case VN_TYPE_ALIAS:
 		AFS_GLOCK();
-		tc = afs_GetCellByIndex(VNUM_TO_CIDX(tvc->fid.Fid.Vnode),
+		tc = afs_GetCellByIndex(VNUM_TO_CIDX(tvc->f.fid.Fid.Vnode),
 					READ_LOCK);
 		if (!tc) {
 		    AFS_GUNLOCK();
@@ -111,15 +111,15 @@ static int afs_encode_fh(struct dentry *de, __u32 *fh, int *max_len,
 		afs_PutCell(tc, READ_LOCK);
 		AFS_GUNLOCK();
 		if (vntype == VN_TYPE_MOUNT) {
-		    fh[4] = htonl(tvc->fid.Fid.Unique);
+		    fh[4] = htonl(tvc->f.fid.Fid.Unique);
 		    *max_len = 5;
 		    return AFSFH_DYN_MOUNT;
 		}
 		*max_len = 4;
 		if (vntype == VN_TYPE_CELL) {
-		    return AFSFH_DYN_RO_CELL | VNUM_TO_RW(tvc->fid.Fid.Vnode);
+		    return AFSFH_DYN_RO_CELL | VNUM_TO_RW(tvc->f.fid.Fid.Vnode);
 		} else {
-		    return AFSFH_DYN_RO_LINK | VNUM_TO_RW(tvc->fid.Fid.Vnode);
+		    return AFSFH_DYN_RO_LINK | VNUM_TO_RW(tvc->f.fid.Fid.Vnode);
 		}
 
 	    case VN_TYPE_SYMLINK:
@@ -134,16 +134,16 @@ static int afs_encode_fh(struct dentry *de, __u32 *fh, int *max_len,
     if (*max_len < 7) {
 	/* not big enough for a migratable filehandle */
 	/* always encode in network order */
-	fh[0] = htonl(tvc->fid.Cell);
-	fh[1] = htonl(tvc->fid.Fid.Volume);
-	fh[2] = htonl(tvc->fid.Fid.Vnode);
-	fh[3] = htonl(tvc->fid.Fid.Unique);
+	fh[0] = htonl(tvc->f.fid.Cell);
+	fh[1] = htonl(tvc->f.fid.Fid.Volume);
+	fh[2] = htonl(tvc->f.fid.Fid.Vnode);
+	fh[3] = htonl(tvc->f.fid.Fid.Unique);
 	*max_len = 4;
 	return AFSFH_NET_VENUSFID;
     }
 
     AFS_GLOCK();
-    tc = afs_GetCell(tvc->fid.Cell, READ_LOCK);
+    tc = afs_GetCell(tvc->f.fid.Cell, READ_LOCK);
     if (!tc) {
 	AFS_GUNLOCK();
 	return 255;
@@ -152,9 +152,9 @@ static int afs_encode_fh(struct dentry *de, __u32 *fh, int *max_len,
     afs_PutCell(tc, READ_LOCK);
     AFS_GUNLOCK();
     /* always encode in network order */
-    fh[4] = htonl(tvc->fid.Fid.Volume);
-    fh[5] = htonl(tvc->fid.Fid.Vnode);
-    fh[6] = htonl(tvc->fid.Fid.Unique);
+    fh[4] = htonl(tvc->f.fid.Fid.Volume);
+    fh[5] = htonl(tvc->f.fid.Fid.Vnode);
+    fh[6] = htonl(tvc->f.fid.Fid.Unique);
 
     *max_len = 7;
     return AFSFH_NET_CELLFID;
@@ -318,12 +318,12 @@ static int update_dir_parent(struct vrequest *areq, struct vcache *adp)
     int code;
 
 redo:
-    if (!(adp->states & CStatd)) {
+    if (!(adp->f.states & CStatd)) {
 	if ((code = afs_VerifyVCache2(adp, areq))) {
 #ifdef OSI_EXPORT_DEBUG
 	    printk("afs: update_dir_parent(0x%08x/%d/%d.%d): VerifyVCache2: %d\n",
-		   adp->fid.Cell,      adp->fid.Fid.Volume,
-		   adp->fid.Fid.Vnode, adp->fid.Fid.Unique, code);
+		   adp->f.fid.Cell,      adp->f.fid.Fid.Volume,
+		   adp->f.fid.Fid.Vnode, adp->f.fid.Fid.Unique, code);
 #endif
 	    return code;
 	}
@@ -333,8 +333,8 @@ redo:
     if (!tdc) {
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: update_dir_parent(0x%08x/%d/%d.%d): no dcache\n",
-	       adp->fid.Cell,      adp->fid.Fid.Volume,
-	       adp->fid.Fid.Vnode, adp->fid.Fid.Unique);
+	       adp->f.fid.Cell,      adp->f.fid.Fid.Volume,
+	       adp->f.fid.Fid.Vnode, adp->f.fid.Fid.Unique);
 #endif
 	return EIO;
     }
@@ -350,24 +350,24 @@ redo:
      * 1. The cache data is being fetched by another process.
      * 2. The cache data is no longer valid
      */
-    while ((adp->states & CStatd)
+    while ((adp->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(adp->m.DataVersion, tdc->f.versionNo)) {
+	   && hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseSharedLock(&adp->lock);
 	afs_osi_Sleep(&tdc->validPos);
 	ObtainSharedLock(&adp->lock, 802);
 	ObtainReadLock(&tdc->lock);
     }
-    if (!(adp->states & CStatd)
-	|| !hsame(adp->m.DataVersion, tdc->f.versionNo)) {
+    if (!(adp->f.states & CStatd)
+	|| !hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseSharedLock(&adp->lock);
 	afs_PutDCache(tdc);
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: update_dir_parent(0x%08x/%d/%d.%d): dir changed; retrying\n",
-	       adp->fid.Cell,      adp->fid.Fid.Volume,
-	       adp->fid.Fid.Vnode, adp->fid.Fid.Unique);
+	       adp->f.fid.Cell,      adp->f.fid.Fid.Volume,
+	       adp->f.fid.Fid.Vnode, adp->f.fid.Fid.Unique);
 #endif
 	goto redo;
     }
@@ -381,19 +381,19 @@ redo:
 
     if (!code) {
 	UpgradeSToWLock(&adp->lock, 803);
-	adp->parentVnode  = tfid.Fid.Vnode;
-	adp->parentUnique = tfid.Fid.Unique;
+	adp->f.parent.vnode  = tfid.Fid.Vnode;
+	adp->f.parent.unique = tfid.Fid.Unique;
     }
 #ifdef OSI_EXPORT_DEBUG
     if (code) {
 	printk("afs: update_dir_parent(0x%08x/%d/%d.%d): afs_dir_Lookup: %d\n",
-	       adp->fid.Cell,      adp->fid.Fid.Volume,
-	       adp->fid.Fid.Vnode, adp->fid.Fid.Unique, code);
+	       adp->f.fid.Cell,      adp->f.fid.Fid.Volume,
+	       adp->f.fid.Fid.Vnode, adp->f.fid.Fid.Unique, code);
     } else {
 	printk("afs: update_dir_parent(0x%08x/%d/%d.%d) => %d.%d\n",
-	       adp->fid.Cell,      adp->fid.Fid.Volume,
-	       adp->fid.Fid.Vnode, adp->fid.Fid.Unique,
-	       adp->parentVnode,   adp->parentUnique);
+	       adp->f.fid.Cell,      adp->f.fid.Fid.Volume,
+	       adp->f.fid.Fid.Vnode, adp->f.fid.Fid.Unique,
+	       adp->parent.vnode,   adp->parent.unique);
     }
 #endif
     ReleaseSharedLock(&adp->lock);
@@ -415,12 +415,12 @@ static int UnEvalFakeStat(struct vrequest *areq, struct vcache **vcpp)
 	return 0;
 
     /* Figure out what FID to look for */
-    tvp = afs_GetVolume(&(*vcpp)->fid, 0, READ_LOCK);
+    tvp = afs_GetVolume(&(*vcpp)->f.fid, 0, READ_LOCK);
     if (!tvp) {
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: UnEvalFakeStat(0x%08x/%d/%d.%d): no volume\n",
-	       (*vcpp)->fid.Cell,      (*vcpp)->fid.Fid.Volume,
-	       (*vcpp)->fid.Fid.Vnode, (*vcpp)->fid.Fid.Unique);
+	       (*vcpp)->f.fid.Cell,      (*vcpp)->f.fid.Fid.Volume,
+	       (*vcpp)->f.fid.Fid.Vnode, (*vcpp)->f.fid.Fid.Unique);
 #endif
 	return ENOENT;
     }
@@ -431,8 +431,8 @@ static int UnEvalFakeStat(struct vrequest *areq, struct vcache **vcpp)
     if (!tvc) {
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: UnEvalFakeStat(0x%08x/%d/%d.%d): GetVCache(0x%08x/%d/%d.%d) failed\n",
-	       (*vcpp)->fid.Cell,      (*vcpp)->fid.Fid.Volume,
-	       (*vcpp)->fid.Fid.Vnode, (*vcpp)->fid.Fid.Unique,
+	       (*vcpp)->f.fid.Cell,      (*vcpp)->f.fid.Fid.Volume,
+	       (*vcpp)->f.fid.Fid.Vnode, (*vcpp)->f.fid.Fid.Unique,
 	       tfid.Cell,          tfid.Fid.Volume,
 	       tfid.Fid.Vnode,     tfid.Fid.Unique);
 #endif
@@ -500,7 +500,7 @@ static struct dentry *get_dentry_from_fid(cred_t *credp, struct VenusFid *afid)
      * at parentVnode on directories, except for VIOCGETVCXSTATUS.
      * So, if this fails, we don't really care very much.
      */
-    if (vType(vcp) == VDIR && vcp->mvstat != 2 && !vcp->parentVnode)
+    if (vType(vcp) == VDIR && vcp->mvstat != 2 && !vcp->f.parent.vnode)
 	update_dir_parent(&treq, vcp);
 
     /*
@@ -621,10 +621,10 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: get_name(%s, 0x%08x/%d/%d.%d): this is the dynmount dir\n",
 	       parent->d_name.name ? (char *)parent->d_name.name : "?",
-	       vcp->fid.Cell,      vcp->fid.Fid.Volume,
-	       vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique);
+	       vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
+	       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique);
 #endif
-	data.fid = vcp->fid;
+	data.fid = vcp->f.fid;
 	if (VTOAFS(parent->d_inode) == afs_globalVp)
 	    strcpy(name, AFS_DYNROOT_MOUNTNAME);
 	else
@@ -634,13 +634,13 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 
     /* Figure out what FID to look for */
     if (vcp->mvstat == 2) { /* volume root */
-	tvp = afs_GetVolume(&vcp->fid, 0, READ_LOCK);
+	tvp = afs_GetVolume(&vcp->f.fid, 0, READ_LOCK);
 	if (!tvp) {
 #ifdef OSI_EXPORT_DEBUG
 	    printk("afs: get_name(%s, 0x%08x/%d/%d.%d): no volume for root\n",
 		   parent->d_name.name ? (char *)parent->d_name.name : "?",
-		   vcp->fid.Cell,      vcp->fid.Fid.Volume,
-		   vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique);
+		   vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
+		   vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique);
 #endif
 	    code = ENOENT;
 	    goto done;
@@ -648,7 +648,7 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 	data.fid = tvp->mtpoint;
 	afs_PutVolume(tvp, READ_LOCK);
     } else {
-	data.fid = vcp->fid;
+	data.fid = vcp->f.fid;
     }
 
     vcp = VTOAFS(parent->d_inode);
@@ -657,8 +657,8 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 	   parent->d_name.name ? (char *)parent->d_name.name : "?",
 	   data.fid.Cell,      data.fid.Fid.Volume,
 	   data.fid.Fid.Vnode, data.fid.Fid.Unique,
-	   vcp->fid.Cell,      vcp->fid.Fid.Volume,
-	   vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique);
+	   vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
+	   vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique);
 #endif
 
     code = afs_InitReq(&treq, credp);
@@ -706,8 +706,8 @@ static int afs_export_get_name(struct dentry *parent, char *name,
     if (code)
 	goto done;
 
-    if (vcp->fid.Cell != data.fid.Cell ||
-	vcp->fid.Fid.Volume != data.fid.Fid.Volume) {
+    if (vcp->f.fid.Cell != data.fid.Cell ||
+	vcp->f.fid.Fid.Volume != data.fid.Fid.Volume) {
 	/* parent is not the expected cell and volume; thus it
 	 * cannot possibly contain the fid we are looking for */
 #ifdef OSI_EXPORT_DEBUG
@@ -715,7 +715,7 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 	       parent->d_name.name ? (char *)parent->d_name.name : "?",
 	       data.fid.Cell,      data.fid.Fid.Volume,
 	       data.fid.Fid.Vnode, data.fid.Fid.Unique,
-	       vcp->fid.Cell,      vcp->fid.Fid.Volume);
+	       vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume);
 #endif
 	code = ENOENT;
 	goto done;
@@ -723,15 +723,15 @@ static int afs_export_get_name(struct dentry *parent, char *name,
 
 
 redo:
-    if (!(vcp->states & CStatd)) {
+    if (!(vcp->f.states & CStatd)) {
 	if ((code = afs_VerifyVCache2(vcp, &treq))) {
 #ifdef OSI_EXPORT_DEBUG
 	    printk("afs: get_name(%s, 0x%08x/%d/%d.%d): VerifyVCache2(0x%08x/%d/%d.%d): %d\n",
 		   parent->d_name.name ? (char *)parent->d_name.name : "?",
 		   data.fid.Cell,      data.fid.Fid.Volume,
 		   data.fid.Fid.Vnode, data.fid.Fid.Unique,
-		   vcp->fid.Cell,      vcp->fid.Fid.Volume,
-		   vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique, code);
+		   vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
+		   vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique, code);
 #endif
 	    goto done;
 	}
@@ -744,8 +744,8 @@ redo:
 	       parent->d_name.name ? (char *)parent->d_name.name : "?",
 	       data.fid.Cell,      data.fid.Fid.Volume,
 	       data.fid.Fid.Vnode, data.fid.Fid.Unique,
-	       vcp->fid.Cell,      vcp->fid.Fid.Volume,
-	       vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique, code);
+	       vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
+	       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique, code);
 #endif
 	code = EIO;
 	goto done;
@@ -760,17 +760,17 @@ redo:
      * 1. The cache data is being fetched by another process.
      * 2. The cache data is no longer valid
      */
-    while ((vcp->states & CStatd)
+    while ((vcp->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(vcp->m.DataVersion, tdc->f.versionNo)) {
+	   && hsame(vcp->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&vcp->lock);
 	afs_osi_Sleep(&tdc->validPos);
 	ObtainReadLock(&vcp->lock);
 	ObtainReadLock(&tdc->lock);
     }
-    if (!(vcp->states & CStatd)
-	|| !hsame(vcp->m.DataVersion, tdc->f.versionNo)) {
+    if (!(vcp->f.states & CStatd)
+	|| !hsame(vcp->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&vcp->lock);
 	afs_PutDCache(tdc);
@@ -779,8 +779,8 @@ redo:
 	       parent->d_name.name ? (char *)parent->d_name.name : "?",
 	       data.fid.Cell,      data.fid.Fid.Volume,
 	       data.fid.Fid.Vnode, data.fid.Fid.Unique,
-	       vcp->fid.Cell,      vcp->fid.Fid.Volume,
-	       vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique);
+	       vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
+	       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique);
 #endif
 	goto redo;
     }
@@ -802,8 +802,8 @@ redo:
 	       parent->d_name.name ? (char *)parent->d_name.name : "?",
 	       data.fid.Cell,      data.fid.Fid.Volume,
 	       data.fid.Fid.Vnode, data.fid.Fid.Unique,
-	       vcp->fid.Cell,      vcp->fid.Fid.Volume,
-	       vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique, code);
+	       vcp->f.fid.Cell,      vcp->f.fid.Fid.Volume,
+	       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique, code);
 #endif
     }
 
@@ -855,10 +855,10 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 
     if (afs_IsDynrootMount(vcp)) {
 	/* the dynmount directory; parent is always the AFS root */
-	tfid = afs_globalVp->fid;
+	tfid = afs_globalVp->f.fid;
 
     } else if (afs_IsDynrootAny(vcp) &&
-	       VNUM_TO_VNTYPE(vcp->fid.Fid.Vnode) == VN_TYPE_MOUNT) {
+	       VNUM_TO_VNTYPE(vcp->f.fid.Fid.Vnode) == VN_TYPE_MOUNT) {
 	/* a mount point in the dynmount directory */
 	afs_GetDynrootMountFid(&tfid);
 
@@ -870,12 +870,12 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 	    ReleaseReadLock(&vcp->lock);
 	} else {
 	    ReleaseReadLock(&vcp->lock);
-	    tcell = afs_GetCell(vcp->fid.Cell, READ_LOCK);
+	    tcell = afs_GetCell(vcp->f.fid.Cell, READ_LOCK);
 	    if (!tcell) {
 #ifdef OSI_EXPORT_DEBUG
 		printk("afs: get_parent(0x%08x/%d/%d.%d): no cell\n",
-		       vcp->fid.Cell, vcp->fid.Fid.Volume,
-		       vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique);
+		       vcp->f.fid.Cell, vcp->f.fid.Fid.Volume,
+		       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique);
 #endif
 		dp = ERR_PTR(-ENOENT);
 		goto done;
@@ -886,18 +886,18 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 
 	    afs_GetDynrootMountFid(&tfid);
 	    tfid.Fid.Vnode = VNUM_FROM_TYPEID(VN_TYPE_MOUNT, cellidx << 2);
-	    tfid.Fid.Unique = vcp->fid.Fid.Volume;
+	    tfid.Fid.Unique = vcp->f.fid.Fid.Volume;
 	}
 
     } else {
 	/* any other vnode */
-	if (vType(vcp) == VDIR && !vcp->parentVnode && vcp->mvstat != 1) {
+	if (vType(vcp) == VDIR && !vcp->f.parent.vnode && vcp->mvstat != 1) {
 	    code = afs_InitReq(&treq, credp);
 	    if (code) {
 #ifdef OSI_EXPORT_DEBUG
 		printk("afs: get_parent(0x%08x/%d/%d.%d): InitReq: %d\n",
-		       vcp->fid.Cell, vcp->fid.Fid.Volume,
-		       vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique, code);
+		       vcp->f.fid.Cell, vcp->f.fid.Fid.Volume,
+		       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique, code);
 #endif
 		dp = ERR_PTR(-ENOENT);
 		goto done;
@@ -906,8 +906,8 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 		if (code) {
 #ifdef OSI_EXPORT_DEBUG
 		    printk("afs: get_parent(0x%08x/%d/%d.%d): update_dir_parent: %d\n",
-			   vcp->fid.Cell, vcp->fid.Fid.Volume,
-			   vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique, code);
+			   vcp->f.fid.Cell, vcp->f.fid.Fid.Volume,
+			   vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique, code);
 #endif
 		    dp = ERR_PTR(-ENOENT);
 		    goto done;
@@ -915,16 +915,16 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
 	    }
 	}
 
-	tfid.Cell       = vcp->fid.Cell;
-	tfid.Fid.Volume = vcp->fid.Fid.Volume;
-	tfid.Fid.Vnode  = vcp->parentVnode;
-	tfid.Fid.Unique = vcp->parentUnique;
+	tfid.Cell       = vcp->f.fid.Cell;
+	tfid.Fid.Volume = vcp->f.fid.Fid.Volume;
+	tfid.Fid.Vnode  = vcp->f.parent.vnode;
+	tfid.Fid.Unique = vcp->f.parent.unique;
     }
 
 #ifdef OSI_EXPORT_DEBUG
     printk("afs: get_parent(0x%08x/%d/%d.%d): => 0x%08x/%d/%d.%d\n",
-	   vcp->fid.Cell, vcp->fid.Fid.Volume,
-	   vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique,
+	   vcp->f.fid.Cell, vcp->f.fid.Fid.Volume,
+	   vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique,
 	   tfid.Cell, tfid.Fid.Volume, tfid.Fid.Vnode, tfid.Fid.Unique);
 #endif
 
@@ -932,8 +932,8 @@ static struct dentry *afs_export_get_parent(struct dentry *child)
     if (!dp) {
 #ifdef OSI_EXPORT_DEBUG
 	printk("afs: get_parent(0x%08x/%d/%d.%d): no dentry\n",
-	       vcp->fid.Cell, vcp->fid.Fid.Volume,
-	       vcp->fid.Fid.Vnode, vcp->fid.Fid.Unique);
+	       vcp->f.fid.Cell, vcp->f.fid.Fid.Volume,
+	       vcp->f.fid.Fid.Vnode, vcp->f.fid.Fid.Unique);
 #endif
 	dp = ERR_PTR(-ENOENT);
     }

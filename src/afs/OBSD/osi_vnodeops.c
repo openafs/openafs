@@ -1025,9 +1025,9 @@ afs_nbsd_print(void *v)
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(ap->a_vp);
 
-    printf("tag %d, fid: %d.%x.%x.%x, ", vp->v_tag, vc->fid.Cell,
-	   (int)vc->fid.Fid.Volume, (int)vc->fid.Fid.Vnode,
-	   (int)vc->fid.Fid.Unique);
+    printf("tag %d, fid: %d.%x.%x.%x, ", vp->v_tag, vc->f.fid.Cell,
+	   (int)vc->f.fid.Fid.Volume, (int)vc->f.fid.Fid.Vnode,
+	   (int)vc->f.fid.Fid.Unique);
     lockmgr_printinfo(&vc->rwlock);
     printf("\n");
     return 0;
