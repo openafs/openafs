@@ -97,6 +97,18 @@ typedef struct FSSYNC_VolOp_command {
     struct offlineInfo * volumes;
 } FSSYNC_VolOp_command;
 
+
+/**
+ * volume operation processing state.
+ */
+enum FSSYNC_VolOpState {
+    FSSYNC_VolOpPending        = 0, /**< volume operation request received */
+    FSSYNC_VolOpDenied         = 1, /**< volume operation request denied */
+    FSSYNC_VolOpRunningOnline  = 2, /**< volume operation is running while volume is online */
+    FSSYNC_VolOpRunningOffline = 3, /**< volume operation is running while volume is offline */
+    FSSYNC_VolOpRunningUnknown = 4, /**< volume operation is running; VVolOpLeaveOnline_r resolution unknown */
+};
+
 /**
  * volume operation information node.
  *
@@ -110,6 +122,7 @@ typedef struct FSSYNC_VolOp_command {
 typedef struct FSSYNC_VolOp_info {
     SYNC_command_hdr com;
     FSSYNC_VolOp_hdr vop;
+    enum FSSYNC_VolOpState vol_op_state; 
 } FSSYNC_VolOp_info;
 
 

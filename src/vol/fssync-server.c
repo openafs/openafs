@@ -741,6 +741,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    if (VIsErrorState(V_attachState(vp))) {
 		goto deny;
 	    }
+            if (vp->salvage.requested) {
+                goto deny;
+            }
 	    break;
 
 	default:
@@ -761,6 +764,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	     * will evaluate the vol op metadata to determine whether
 	     * attaching the volume would be safe */
 	    VRegisterVolOp_r(vp, &info);
+	    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
 	    goto done;
 	default:
 	    break;
@@ -797,6 +801,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		    vcom->hdr->reason == V_DUMP ? "dump" : 
 		    "UNKNOWN");
 	    }
+#ifdef AFS_DEMAND_ATTACH_FS
+            vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOnline;
+#endif
 	    VPutVolume_r(vp);
 	} else {
 	    if (VVolOpSetVBusy_r(vp, &info)) {
@@ -812,7 +819,19 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		strlcpy(vcom->v->partName, vp->partition->name, sizeof(vcom->v->partName));
 	    }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+            VOfflineForVolOp_r(&error, vp, "A volume utility is running.");
+            if (error==0) {
+                assert(vp->nUsers==0);
+                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline; 
+            }
+            else {
+		VDeregisterVolOp_r(vp);
+                code = SYNC_DENIED;
+            }
+#else
 	    VOffline_r(vp, "A volume utility is running.");
+#endif
 	    vp = NULL;
 	}
     }
@@ -1430,6 +1449,7 @@ FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info)
 {
     memcpy(&info->com, vcom->hdr, sizeof(SYNC_command_hdr));
     memcpy(&info->vop, vcom->vop, sizeof(FSSYNC_VolOp_hdr));
+    info->vol_op_state = FSSYNC_VolOpPending;
 }
 
 /**
