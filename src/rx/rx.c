@@ -6387,7 +6387,7 @@ rxi_DebugInit(void)
 {
 #ifdef RXDEBUG
 #ifdef AFS_NT40_ENV
-#define TRACE_OPTION_DEBUGLOG 4
+#define TRACE_OPTION_RX_DEBUG 16
     HKEY parmKey;
     DWORD dummyLen;
     DWORD TraceOption;
@@ -6404,7 +6404,7 @@ rxi_DebugInit(void)
     code = RegQueryValueEx(parmKey, "TraceOption", NULL, NULL,
 			   (BYTE *) &TraceOption, &dummyLen);
     if (code == ERROR_SUCCESS) {
-	rxdebug_active = (TraceOption & TRACE_OPTION_DEBUGLOG) ? 1 : 0;
+	rxdebug_active = (TraceOption & TRACE_OPTION_RX_DEBUG) ? 1 : 0;
     }
     RegCloseKey (parmKey);
 #endif /* AFS_NT40_ENV */
