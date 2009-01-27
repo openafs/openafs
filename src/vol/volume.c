@@ -2322,7 +2322,19 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	/* check for pending volume operations */
 	if (vp->pending_vol_op) {
 	    /* see if the pending volume op requires exclusive access */
-	    if (!VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
+	    switch (vp->pending_vol_op->vol_op_state) {
+	    case FSSYNC_VolOpPending:
+		/* this should never happen */
+		assert(vp->pending_vol_op->vol_op_state != FSSYNC_VolOpPending);
+		break;
+
+	    case FSSYNC_VolOpRunningUnknown:
+		vp->pending_vol_op->vol_op_state = 
+		    (VVolOpLeaveOnline_r(vp, vp->pending_vol_op) ? 
+		     FSSYNC_VolOpRunningOnline : FSSYNC_VolOpRunningOffline);
+		/* fall through */
+
+	    case FSSYNC_VolOpRunningOffline:
 		/* mark the volume down */
 		*ec = VOFFLINE;
 		VChangeState_r(vp, VOL_STATE_UNATTACHED);
@@ -2777,7 +2789,8 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	 *   - VOL_STATE_SHUTTING_DOWN
 	 */
 	if ((V_attachState(vp) == VOL_STATE_ERROR) ||
-	    (V_attachState(vp) == VOL_STATE_SHUTTING_DOWN)) {
+	    (V_attachState(vp) == VOL_STATE_SHUTTING_DOWN) ||
+	    (V_attachState(vp) == VOL_STATE_GOING_OFFLINE)) {
 	    *ec = VNOVOL;
 	    vp = NULL;
 	    break;
@@ -2801,7 +2814,6 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	/* allowable states:
 	 *   - PREATTACHED
 	 *   - ATTACHED
-	 *   - GOING_OFFLINE
 	 *   - SALVAGING
 	 */
 
@@ -2889,7 +2901,12 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	/*
 	 * this test MUST happen after the volume header is loaded
 	 */
-	if (vp->pending_vol_op && !VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
+        
+         /* only valid before/during demand attachment */
+         assert(!vp->pending_vol_op || vp->pending_vol_op != FSSYNC_VolOpRunningUnknown);
+        
+         /* deny getvolume due to running mutually exclusive vol op */
+         if (vp->pending_vol_op && vp->pending_vol_op->vol_op_state==FSSYNC_VolOpRunningOffline) {
 	   /* 
 	    * volume cannot remain online during this volume operation.
 	    * notify client. 
@@ -3152,6 +3169,67 @@ VOffline_r(Volume * vp, char *message)
 	VPutVolume_r(vp);
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * Take a volume offline in order to perform a volume operation.
+ *
+ * @param[inout] ec       address in which to store error code
+ * @param[in]    vp       volume object pointer
+ * @param[in]    message  volume offline status message
+ *
+ * @pre
+ *    - VOL_LOCK is held
+ *    - caller MUST hold a heavyweight ref on vp
+ *
+ * @post
+ *    - volume is taken offline
+ *    - if possible, volume operation is promoted to running state
+ *    - on failure, *ec is set to nonzero
+ *
+ * @note Although this function does not return any value, it may
+ *       still fail to promote our pending volume operation to
+ *       a running state.  Any caller MUST check the value of *ec,
+ *       and MUST NOT blindly assume success.
+ *
+ * @warning if the caller does not hold a lightweight ref on vp,
+ *          then it MUST NOT reference vp after this function
+ *          returns to the caller.
+ *
+ * @internal volume package internal use only
+ */
+void
+VOfflineForVolOp_r(Error *ec, Volume *vp, char *message)
+{
+    assert(vp->pending_vol_op);
+    if (!V_inUse(vp)) {
+	VPutVolume_r(vp);
+        *ec = 1;
+	return;
+    }
+    if (V_offlineMessage(vp)[0] == '\0')
+	strncpy(V_offlineMessage(vp), message, sizeof(V_offlineMessage(vp)));
+    V_offlineMessage(vp)[sizeof(V_offlineMessage(vp)) - 1] = '\0';
+
+    vp->goingOffline = 1;
+    VChangeState_r(vp, VOL_STATE_GOING_OFFLINE);
+    VCreateReservation_r(vp);
+    VPutVolume_r(vp);
+
+    /* Wait for the volume to go offline */
+    while (!VIsOfflineState(V_attachState(vp))) {
+        /* do not give corrupted volumes to the volserver */
+        if (vp->salvage.requested && vp->pending_vol_op->com.programType != salvageServer) {
+           *ec = 1; 
+	   goto error;
+        }
+	VWaitStateChange_r(vp);
+    }
+    *ec = 0; 
+ error:
+    VCancelReservation_r(vp);
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 void
 VOffline(Volume * vp, char *message)
@@ -3796,11 +3874,12 @@ VDeregisterVolOp_r(Volume * vp)
 int
 VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo)
 {
-    return (vopinfo->com.command == FSYNC_VOL_NEEDVOLUME &&
+    return (vopinfo->vol_op_state == FSSYNC_VolOpRunningOnline ||
+	    (vopinfo->com.command == FSYNC_VOL_NEEDVOLUME &&
 	    (vopinfo->com.reason == V_READONLY ||
 	     (!VolumeWriteable(vp) &&
 	      (vopinfo->com.reason == V_CLONE ||
-	       vopinfo->com.reason == V_DUMP))));
+	       vopinfo->com.reason == V_DUMP)))));
 }
 
 /**
