@@ -129,6 +129,10 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	goto error;
     }
 
+#ifdef AFS_NT40_ENV
+    rxi_xmit_init(socketFd);
+#endif /* AFS_NT40_ENV */
+
     taddr.sin_addr.s_addr = ahost;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short) port;
