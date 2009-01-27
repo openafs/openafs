@@ -1506,7 +1506,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             code = StartRXAFS_FetchData64(rxcallp, &tfid, biod.offset.QuadPart, biod.length);
 
             if (code == 0) {
-                temp = rx_Read(rxcallp, (char *) &nbytes_hi, sizeof(afs_int32));
+                temp = rx_Read32(rxcallp, &nbytes_hi);
                 if (temp == sizeof(afs_int32)) {
                     nbytes_hi = ntohl(nbytes_hi);
                 } else {
@@ -1540,7 +1540,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         }
 
         if (code == 0) {
-            temp  = rx_Read(rxcallp, (char *)&nbytes, sizeof(afs_int32));
+            temp  = rx_Read32(rxcallp, &nbytes);
             if (temp == sizeof(afs_int32)) {
                 nbytes = ntohl(nbytes);
                 FillInt64(length_found, nbytes_hi, nbytes);
@@ -1561,7 +1561,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
         /* now copy the data out of the pipe and put it in the buffer */
         if (code == 0) {
-            temp  = rx_Read(rxcallp, (char *)&nbytes, sizeof(afs_int32));
+            temp  = rx_Read32(rxcallp, &nbytes);
             if (temp == sizeof(afs_int32)) {
                 nbytes = ntohl(nbytes);
                 if (nbytes > biod.length) 
