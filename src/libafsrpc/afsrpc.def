@@ -239,14 +239,16 @@ EXPORTS
         rx_getAllAddrMaskMtu                    @244        
         rx_stats_active                         @245 DATA
         rx_StatsOnOff                           @246
+        rx_ReadvProc                            @247
+        rx_WritevProc                           @248
+        rx_WritevAlloc                          @249
+        rx_ReadProc32                           @250
+        rx_WriteProc32                          @251
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
         rx_TSFPQLocalMax                        @2002 DATA
         rx_TSFPQMaxProcs                        @2003 DATA
-        rx_ReadvProc                            @2004
-        rx_WritevProc                           @2005
-        rx_WritevAlloc                          @2006
         rxi_MorePackets                         @2007
 
 ; for debugging
