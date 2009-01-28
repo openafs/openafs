@@ -564,7 +564,7 @@ struct rx_call {
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
     u_int lastSendData;		/* Last time a nonping was sent on this call */
-    void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
+    void (*arrivalProc) (struct rx_call * call, void * mh, int index);	/* Procedure to call when reply is received */
     void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
     afs_uint32 lastAcked;	/* last packet "hard" acked by receiver */
@@ -589,10 +589,19 @@ struct rx_call {
 #ifdef RX_REFCOUNT_CHECK
     short refCDebug[RX_CALL_REFCOUNT_MAX];
 #endif				/* RX_REFCOUNT_CHECK */
+
+    /* 
+     * iov, iovNBytes, iovMax, and iovNext are set in rxi_ReadvProc()
+     * and adjusted by rxi_FillReadVec().  iov does not own the buffers
+     * it refers to.  The buffers belong to the packets stored in iovq.
+     * Only one call to rx_ReadvProc() can be active at a time.
+     */
+
     int iovNBytes;		/* byte count for current iovec */
     int iovMax;			/* number elements in current iovec */
     int iovNext;		/* next entry in current iovec */
     struct iovec *iov;		/* current iovec */
+
     struct clock queueTime;	/* time call was queued */
     struct clock startTime;	/* time call was started */
     afs_hyper_t bytesSent;	/* Number bytes sent */

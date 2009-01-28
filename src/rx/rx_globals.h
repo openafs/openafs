@@ -271,7 +271,7 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
  */
 #define RX_TS_FPQ_COMPUTE_LIMITS \
     do { \
-        register int newmax, newglob; \
+        int newmax, newglob; \
         newmax = (rx_nPackets * 9) / (10 * rx_TSFPQMaxProcs); \
         newmax = (newmax >= 15) ? newmax : 15; \
         newglob = newmax / 5; \
@@ -297,9 +297,9 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
    rx_freePktQ_lock must be held. default is to reduce the queue size to 40% ofmax */
 #define RX_TS_FPQ_LTOG(rx_ts_info_p) \
     do { \
-        register int i; \
-        register struct rx_packet * p; \
-        register int tsize = (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize; \
+        int i; \
+        struct rx_packet * p; \
+        int tsize = (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize; \
 	if (tsize <= 0) break; \
         for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
              i < tsize; i++,p=queue_Prev(p, rx_packet)); \
@@ -318,8 +318,8 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
 /* same as above, except user has direct control over number to transfer */
 #define RX_TS_FPQ_LTOG2(rx_ts_info_p,num_transfer) \
     do { \
-        register int i; \
-        register struct rx_packet * p; \
+        int i; \
+        struct rx_packet * p; \
         if (num_transfer <= 0) break; \
         for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
 	     i < (num_transfer); i++,p=queue_Prev(p, rx_packet)); \
@@ -339,8 +339,8 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
    rx_freePktQ_lock must be held. */
 #define RX_TS_FPQ_GTOL(rx_ts_info_p) \
     do { \
-        register int i, tsize; \
-        register struct rx_packet * p; \
+        int i, tsize; \
+        struct rx_packet * p; \
         tsize = (rx_TSFPQGlobSize <= rx_nFreePackets) ? \
                  rx_TSFPQGlobSize : rx_nFreePackets; \
         for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
@@ -354,8 +354,8 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
 /* same as above, except user has direct control over number to transfer */
 #define RX_TS_FPQ_GTOL2(rx_ts_info_p,num_transfer) \
     do { \
-        register int i, tsize; \
-        register struct rx_packet * p; \
+        int i, tsize; \
+        struct rx_packet * p; \
         tsize = (num_transfer); \
         if (tsize > rx_nFreePackets) tsize = rx_nFreePackets; \
         for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
@@ -381,8 +381,8 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
  */
 #define RX_TS_FPQ_QCHECKOUT(rx_ts_info_p,num_transfer,q) \
     do { \
-        register int i; \
-        register struct rx_packet *p; \
+        int i; \
+        struct rx_packet *p; \
         if (num_transfer > (rx_ts_info_p)->_FPQ.len) num_transfer = (rx_ts_info_p)->_FPQ.len; \
         for (i=0, p=queue_First(&((rx_ts_info_p)->_FPQ), rx_packet); \
              i < num_transfer; \
@@ -409,7 +409,7 @@ void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to glob
  * since caller already knows length of (q) for other reasons */
 #define RX_TS_FPQ_QCHECKIN(rx_ts_info_p,num_transfer,q) \
     do { \
-        register struct rx_packet *p, *np; \
+        struct rx_packet *p, *np; \
         for (queue_Scan((q), p, np, rx_packet)) { \
             RX_FPQ_MARK_FREE(p); \
         } \

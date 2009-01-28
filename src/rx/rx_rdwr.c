@@ -103,13 +103,13 @@ static int rxdb_fileID = RXDB_FILE_RX_RDWR;
  * LOCKS USED -- called at netpri with rx global lock and call->lock held.
  */
 int
-rxi_ReadProc(register struct rx_call *call, register char *buf,
-	     register int nbytes)
+rxi_ReadProc(struct rx_call *call, char *buf,
+	     int nbytes)
 {
-    register struct rx_packet *cp = call->currentPacket;
-    register struct rx_packet *rp;
-    register int requestCount;
-    register unsigned int t;
+    struct rx_packet *cp = call->currentPacket;
+    struct rx_packet *rp;
+    int requestCount;
+    unsigned int t;
 
 /* XXXX took out clock_NewTime from here.  Was it needed? */
     requestCount = nbytes;
@@ -140,7 +140,7 @@ rxi_ReadProc(register struct rx_call *call, register char *buf,
 		    rp = queue_First(&call->rq, rx_packet);
 		    if (rp->header.seq == call->rnext) {
 			afs_int32 error;
-			register struct rx_connection *conn = call->conn;
+			struct rx_connection *conn = call->conn;
 			queue_Remove(rp);
 			rp->flags &= ~RX_PKTFLAG_RQ;
 #ifdef RXDEBUG_PACKET
@@ -225,9 +225,13 @@ rxi_ReadProc(register struct rx_call *call, register char *buf,
 		    }
 		}
 
-/*
-MTUXXX  doesn't there need to be an "else" here ??? 
-*/
+                /* 
+                 * If we reach this point either we have no packets in the
+                 * receive queue or the next packet in the queue is not the
+                 * one we are looking for.  There is nothing else for us to
+                 * do but wait for another packet to arrive.
+                 */
+
 		/* Are there ever going to be any more packets? */
 		if (call->flags & RX_CALL_RECEIVE_DONE) {
 		    return requestCount - nbytes;
@@ -434,7 +438,7 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 {
     int didConsume = 0;
     int didHardAck = 0;
-    register unsigned int t;
+    unsigned int t;
     struct rx_packet *rp;
     struct rx_packet *curp;
     struct iovec *call_iov;
@@ -454,7 +458,7 @@ rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 		rp = queue_First(&call->rq, rx_packet);
 		if (rp->header.seq == call->rnext) {
 		    afs_int32 error;
-		    register struct rx_connection *conn = call->conn;
+		    struct rx_connection *conn = call->conn;
 		    queue_Remove(rp);
 		    rp->flags &= ~RX_PKTFLAG_RQ;
 #ifdef RXDEBUG_PACKET
@@ -690,12 +694,12 @@ rx_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
  * LOCKS USED -- called at netpri with rx global lock and call->lock held. */
 
 int
-rxi_WriteProc(register struct rx_call *call, register char *buf,
-	      register int nbytes)
+rxi_WriteProc(struct rx_call *call, char *buf,
+	      int nbytes)
 {
     struct rx_connection *conn = call->conn;
-    register struct rx_packet *cp = call->currentPacket;
-    register unsigned int t;
+    struct rx_packet *cp = call->currentPacket;
+    unsigned int t;
     int requestCount = nbytes;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
@@ -818,7 +822,7 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 
 	if (cp && (int)call->nFree < nbytes) {
 	    /* Try to extend the current buffer */
-	    register int len, mud;
+	    int len, mud;
 	    len = cp->length;
 	    mud = rx_MaxUserDataSize(call);
 	    if (mud > len) {
@@ -922,7 +926,7 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 
 /* Optimization for marshalling 32 bit arguments */
 int
-rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
+rx_WriteProc32(struct rx_call *call, afs_int32 * value)
 {
     int bytes;
     int tcurlen;
@@ -1029,7 +1033,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     tcurpos = call->curpos;
     tcurlen = call->curlen;
     do {
-	register unsigned int t;
+	unsigned int t;
 
 	if (tnFree == 0) {
 	    /* current packet is full, allocate a new one */
@@ -1054,7 +1058,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 
 	if (tnFree < nbytes) {
 	    /* try to extend the current packet */
-	    register int len, mud;
+	    int len, mud;
 	    len = cp->length;
 	    mud = rx_MaxUserDataSize(call);
 	    if (mud > len) {
@@ -1316,9 +1320,9 @@ rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 /* Flush any buffered data to the stream, switch to read mode
  * (clients) or to EOF mode (servers) */
 void
-rxi_FlushWrite(register struct rx_call *call)
+rxi_FlushWrite(struct rx_call *call)
 {
-    register struct rx_packet *cp = NULL;
+    struct rx_packet *cp = NULL;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
     if (queue_IsNotEmpty(&call->iovq)) {

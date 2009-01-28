@@ -251,7 +251,7 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
 int
 rxi_AllocPackets(int class, int num_pkts, struct rx_queue * q)
 {
-    register struct rx_packet *p, *np;
+    struct rx_packet *p, *np;
 
     num_pkts = AllocPacketBufs(class, num_pkts, q);
 
@@ -266,7 +266,7 @@ rxi_AllocPackets(int class, int num_pkts, struct rx_queue * q)
 static int
 AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 {
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     int transfer;
     SPLVAR;
 
@@ -375,8 +375,8 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 int
 rxi_FreePackets(int num_pkts, struct rx_queue * q)
 {
-    register struct rx_ts_info_t * rx_ts_info;
-    register struct rx_packet *c, *nc;
+    struct rx_ts_info_t * rx_ts_info;
+    struct rx_packet *c, *nc;
     SPLVAR;
 
     osi_Assert(num_pkts >= 0);
@@ -417,7 +417,7 @@ int
 rxi_FreePackets(int num_pkts, struct rx_queue *q)
 {
     struct rx_queue cbs;
-    register struct rx_packet *p, *np;
+    struct rx_packet *p, *np;
     int qlen = 0;
     SPLVAR;
 
@@ -502,7 +502,7 @@ rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
 {
     int i, nv;
     struct rx_queue q;
-    register struct rx_packet *cb, *ncb;
+    struct rx_packet *cb, *ncb;
 
     /* compute the number of cbuf's we need */
     nv = nb / RX_CBUFFERSIZE;
@@ -537,7 +537,7 @@ void
 rxi_MorePackets(int apackets)
 {
     struct rx_packet *p, *e;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     int getme;
     SPLVAR;
 
@@ -631,7 +631,7 @@ void
 rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 {
     struct rx_packet *p, *e;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     int getme;
     SPLVAR;
 
@@ -687,7 +687,7 @@ void
 rxi_MorePacketsNoLock(int apackets)
 {
 #ifdef RX_ENABLE_TSFPQ
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
 #endif /* RX_ENABLE_TSFPQ */
     struct rx_packet *p, *e;
     int getme;
@@ -751,8 +751,8 @@ rxi_FreeAllPackets(void)
 void
 rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
 {
-    register struct rx_ts_info_t * rx_ts_info;
-    register int xfer;
+    struct rx_ts_info_t * rx_ts_info;
+    int xfer;
     SPLVAR;
 
     RX_TS_INFO_GET(rx_ts_info);
@@ -814,7 +814,7 @@ rx_CheckPackets(void)
 void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     dpf(("Free %lx\n", (unsigned long)p));
 
     RX_TS_INFO_GET(rx_ts_info);
@@ -839,7 +839,7 @@ rxi_FreePacketNoLock(struct rx_packet *p)
 void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     dpf(("Free %lx\n", (unsigned long)p));
 
     RX_TS_INFO_GET(rx_ts_info);
@@ -937,7 +937,7 @@ static int
 rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global)
 {
     struct iovec *iov;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
 
     RX_TS_INFO_GET(rx_ts_info);
 
@@ -997,7 +997,7 @@ rxi_TrimDataBufs(struct rx_packet *p, int first)
 {
     int length;
     struct iovec *iov, *end;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     SPLVAR;
 
     if (first != 1)
@@ -1116,8 +1116,8 @@ rxi_FreePacket(struct rx_packet *p)
 struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
-    register struct rx_packet *p;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_packet *p;
+    struct rx_ts_info_t * rx_ts_info;
 
     RX_TS_INFO_GET(rx_ts_info);
 
@@ -1179,7 +1179,7 @@ rxi_AllocPacketNoLock(int class)
 struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
-    register struct rx_packet *p;
+    struct rx_packet *p;
 
 #ifdef KERNEL
     if (rxi_OverQuota(class)) {
@@ -1239,8 +1239,8 @@ rxi_AllocPacketNoLock(int class)
 struct rx_packet *
 rxi_AllocPacketTSFPQ(int class, int pull_global)
 {
-    register struct rx_packet *p;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_packet *p;
+    struct rx_ts_info_t * rx_ts_info;
 
     RX_TS_INFO_GET(rx_ts_info);
 
@@ -1276,7 +1276,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
 struct rx_packet *
 rxi_AllocPacket(int class)
 {
-    register struct rx_packet *p;
+    struct rx_packet *p;
 
     p = rxi_AllocPacketTSFPQ(class, RX_TS_FPQ_PULL_GLOBAL);
     return p;
@@ -1285,7 +1285,7 @@ rxi_AllocPacket(int class)
 struct rx_packet *
 rxi_AllocPacket(int class)
 {
-    register struct rx_packet *p;
+    struct rx_packet *p;
 
     MUTEX_ENTER(&rx_freePktQ_lock);
     p = rxi_AllocPacketNoLock(class);
@@ -1300,11 +1300,11 @@ rxi_AllocPacket(int class)
  * Called with call locked.
  */
 struct rx_packet *
-rxi_AllocSendPacket(register struct rx_call *call, int want)
+rxi_AllocSendPacket(struct rx_call *call, int want)
 {
-    register struct rx_packet *p = (struct rx_packet *)0;
-    register int mud;
-    register unsigned delta;
+    struct rx_packet *p = (struct rx_packet *)0;
+    int mud;
+    unsigned delta;
 
     SPLVAR;
     mud = call->MTU - RX_HEADER_SIZE;
@@ -1391,11 +1391,11 @@ rxi_AllocSendPacket(register struct rx_call *call, int want)
 #else
 /* count the number of used FDs */
 static int
-CountFDs(register int amax)
+CountFDs(int amax)
 {
     struct stat tstat;
-    register int i, code;
-    register int count;
+    int i, code;
+    int count;
 
     count = 0;
     for (i = 0; i < amax; i++) {
@@ -1420,13 +1420,13 @@ CountFDs(register int amax)
  * the data length of the packet is stored in the packet structure.
  * The header is decoded. */
 int
-rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * host,
+rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	       u_short * port)
 {
     struct sockaddr_in from;
     int nbytes;
     afs_int32 rlen;
-    register afs_int32 tlen, savelen;
+    afs_int32 tlen, savelen;
     struct msghdr msg;
     rx_computelen(p, tlen);
     rx_SetDataSize(p, tlen);	/* this is the size of the user data area */
@@ -1491,7 +1491,9 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial, 
 	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, 
 	      p->length));
+#ifdef RX_TRIMDATABUFS
 	rxi_TrimDataBufs(p, 1);
+#endif
 	return 0;
     } 
 #endif
@@ -1528,9 +1530,10 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	    }
 	}
 
+#ifdef RX_TRIMDATABUFS
 	/* Free any empty packet buffers at the end of this packet */
 	rxi_TrimDataBufs(p, 1);
-
+#endif 
 	return 1;
     }
 }
@@ -1546,7 +1549,7 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
  * last two pad bytes. */
 
 struct rx_packet *
-rxi_SplitJumboPacket(register struct rx_packet *p, afs_int32 host, short port,
+rxi_SplitJumboPacket(struct rx_packet *p, afs_int32 host, short port,
 		     int first)
 {
     struct rx_packet *np;
@@ -1639,9 +1642,9 @@ osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec, int nvecs,
  * The message is NOT changed.
  */
 static int
-cpytoc(mblk_t * mp, register int off, register int len, register char *cp)
+cpytoc(mblk_t * mp, int off, int len, char *cp)
 {
-    register int n;
+    int n;
 
     for (; mp && len > 0; mp = mp->b_cont) {
 	if (mp->b_datap->db_type != M_DATA) {
@@ -1661,10 +1664,10 @@ cpytoc(mblk_t * mp, register int off, register int len, register char *cp)
  * This sucks, anyway, do it like m_cpy.... below 
  */
 static int
-cpytoiovec(mblk_t * mp, int off, int len, register struct iovec *iovs,
+cpytoiovec(mblk_t * mp, int off, int len, struct iovec *iovs,
 	   int niovs)
 {
-    register int m, n, o, t, i;
+    int m, n, o, t, i;
 
     for (i = -1, t = 0; i < niovs && mp && len > 0; mp = mp->b_cont) {
 	if (mp->b_datap->db_type != M_DATA) {
@@ -1760,7 +1763,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
      struct rx_packet *phandle;
      int hdr_len, data_len;
 {
-    register int code;
+    int code;
 
     code =
 	m_cpytoiovec(amb, hdr_len, data_len, phandle->wirevec,
@@ -1776,7 +1779,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 /* send a response to a debug packet */
 
 struct rx_packet *
-rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
+rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		       afs_int32 ahost, short aport, int istack)
 {
     struct rx_debugIn tin;
@@ -1840,7 +1843,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
     case RX_DEBUGI_GETALLCONN:
     case RX_DEBUGI_GETCONN:{
 	    int i, j;
-	    register struct rx_connection *tc;
+	    struct rx_connection *tc;
 	    struct rx_call *tcall;
 	    struct rx_debugConn tconn;
 	    int all = (tin.type == RX_DEBUGI_GETALLCONN);
@@ -1949,7 +1952,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 
     case RX_DEBUGI_GETPEER:{
 	    int i;
-	    register struct rx_peer *tp;
+	    struct rx_peer *tp;
 	    struct rx_debugPeer tpeer;
 
 
@@ -2078,7 +2081,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 }
 
 struct rx_packet *
-rxi_ReceiveVersionPacket(register struct rx_packet *ap, osi_socket asocket,
+rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 			 afs_int32 ahost, short aport, int istack)
 {
     afs_int32 tl;
@@ -2187,7 +2190,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
     int code;
     struct sockaddr_in addr;
-    register struct rx_peer *peer = conn->peer;
+    struct rx_peer *peer = conn->peer;
     osi_socket socket;
 #ifdef RXDEBUG
     char deliveryType = 'S';
@@ -2331,7 +2334,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     int waslocked;
 #endif
     struct sockaddr_in addr;
-    register struct rx_peer *peer = conn->peer;
+    struct rx_peer *peer = conn->peer;
     osi_socket socket;
     struct rx_packet *p = NULL;
     struct iovec wirevec[RX_MAXIOVECS];
@@ -2515,14 +2518,14 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
  * in rx.h.  Bug: there's a lot of duplication between this and other
  * routines.  This needs to be cleaned up. */
 struct rx_packet *
-rxi_SendSpecial(register struct rx_call *call,
-		register struct rx_connection *conn,
+rxi_SendSpecial(struct rx_call *call,
+		struct rx_connection *conn,
 		struct rx_packet *optionalPacket, int type, char *data,
 		int nbytes, int istack)
 {
     /* Some of the following stuff should be common code for all
      * packet sends (it's repeated elsewhere) */
-    register struct rx_packet *p;
+    struct rx_packet *p;
     unsigned int i = 0;
     int savelen = 0, saven = 0;
     int channel, callNumber;
@@ -2591,9 +2594,9 @@ rxi_SendSpecial(register struct rx_call *call,
  * the net byte order representation in the wire representation of the
  * packet, which is what is actually sent out on the wire) */
 void
-rxi_EncodePacketHeader(register struct rx_packet *p)
+rxi_EncodePacketHeader(struct rx_packet *p)
 {
-    register afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
+    afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
 
     memset((char *)buf, 0, RX_HEADER_SIZE);
     *buf++ = htonl(p->header.epoch);
@@ -2610,9 +2613,9 @@ rxi_EncodePacketHeader(register struct rx_packet *p)
 
 /* Decode the packet's header (from net byte order to a struct header) */
 void
-rxi_DecodePacketHeader(register struct rx_packet *p)
+rxi_DecodePacketHeader(struct rx_packet *p)
 {
-    register afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
+    afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
     afs_uint32 temp;
 
     p->header.epoch = ntohl(*buf);
@@ -2644,10 +2647,10 @@ rxi_DecodePacketHeader(register struct rx_packet *p)
 }
 
 void
-rxi_PrepareSendPacket(register struct rx_call *call,
-		      register struct rx_packet *p, register int last)
+rxi_PrepareSendPacket(struct rx_call *call,
+		      struct rx_packet *p, int last)
 {
-    register struct rx_connection *conn = call->conn;
+    struct rx_connection *conn = call->conn;
     int i;
     ssize_t len;		/* len must be a signed type; it can go negative */
 
