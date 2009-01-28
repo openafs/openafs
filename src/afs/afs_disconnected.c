@@ -1138,7 +1138,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 	    tvc->f.ddirty_flags &= ~VDisconCreate;
 	    tvc->f.ddirty_flags |= VDisconCreated;
 	}
-
+#if 0
   	/* Get server write lock. */
   	do {
 	    tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
@@ -1164,7 +1164,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 
 	if (code)
 	    goto next_file;
-
+#endif
 	if (tvc->f.ddirty_flags & VDisconRename) {
 	    /* If we're renaming the file, do so now */
 	    code = afs_ProcessOpRename(tvc, areq);
@@ -1228,6 +1228,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
 
 unlock_srv_file:
 	/* Release server write lock. */
+#if 0
 	do {
 	    tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
 	    if (tc) {
@@ -1247,7 +1248,7 @@ unlock_srv_file:
 			AFS_STATS_FS_RPCIDX_RELEASELOCK,
 			SHARED_LOCK,
 			NULL));
-
+#endif
 next_file:
 	ObtainWriteLock(&afs_disconDirtyLock, 710);
 	if (code == 0) {
