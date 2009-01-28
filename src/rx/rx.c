@@ -1621,27 +1621,32 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 		if (!QuotaOK(service)) {
 		    continue;
 		}
+		MUTEX_ENTER(&rx_pthread_mutex);
 		if (tno == rxi_fcfs_thread_num
 		    || !tcall->queue_item_header.next) {
+		    MUTEX_EXIT(&rx_pthread_mutex);
 		    /* If we're the fcfs thread , then  we'll just use 
 		     * this call. If we haven't been able to find an optimal 
 		     * choice, and we're at the end of the list, then use a 
 		     * 2d choice if one has been identified.  Otherwise... */
 		    call = (choice2 ? choice2 : tcall);
 		    service = call->conn->service;
-		} else if (!queue_IsEmpty(&tcall->rq)) {
-		    struct rx_packet *rp;
-		    rp = queue_First(&tcall->rq, rx_packet);
-		    if (rp->header.seq == 1) {
-			if (!meltdown_1pkt
-			    || (rp->header.flags & RX_LAST_PACKET)) {
-			    call = tcall;
-			} else if (rxi_2dchoice && !choice2
-				   && !(tcall->flags & RX_CALL_CLEARED)
-				   && (tcall->rprev > rxi_HardAckRate)) {
-			    choice2 = tcall;
-			} else
-			    rxi_md2cnt++;
+		} else {
+		    MUTEX_EXIT(&rx_pthread_mutex);
+		    if (!queue_IsEmpty(&tcall->rq)) {
+			struct rx_packet *rp;
+			rp = queue_First(&tcall->rq, rx_packet);
+			if (rp->header.seq == 1) {
+			    if (!meltdown_1pkt
+				|| (rp->header.flags & RX_LAST_PACKET)) {
+				call = tcall;
+			    } else if (rxi_2dchoice && !choice2
+				       && !(tcall->flags & RX_CALL_CLEARED)
+				       && (tcall->rprev > rxi_HardAckRate)) {
+				choice2 = tcall;
+			    } else
+				rxi_md2cnt++;
+			}
 		    }
 		}
 		if (call) {
@@ -1789,27 +1794,32 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	for (queue_Scan(&rx_incomingCallQueue, tcall, ncall, rx_call)) {
 	    service = tcall->conn->service;
 	    if (QuotaOK(service)) {
+		MUTEX_ENTER(&rx_pthread_mutex);
 		if (tno == rxi_fcfs_thread_num
 		    || !tcall->queue_item_header.next) {
+		    MUTEX_EXIT(&rx_pthread_mutex);
 		    /* If we're the fcfs thread, then  we'll just use 
 		     * this call. If we haven't been able to find an optimal 
 		     * choice, and we're at the end of the list, then use a 
 		     * 2d choice if one has been identified.  Otherwise... */
 		    call = (choice2 ? choice2 : tcall);
 		    service = call->conn->service;
-		} else if (!queue_IsEmpty(&tcall->rq)) {
-		    struct rx_packet *rp;
-		    rp = queue_First(&tcall->rq, rx_packet);
-		    if (rp->header.seq == 1
-			&& (!meltdown_1pkt
-			    || (rp->header.flags & RX_LAST_PACKET))) {
-			call = tcall;
-		    } else if (rxi_2dchoice && !choice2
-			       && !(tcall->flags & RX_CALL_CLEARED)
-			       && (tcall->rprev > rxi_HardAckRate)) {
-			choice2 = tcall;
-		    } else
-			rxi_md2cnt++;
+		} else {
+		    MUTEX_EXIT(&rx_pthread_mutex);
+		    if (!queue_IsEmpty(&tcall->rq)) {
+			struct rx_packet *rp;
+			rp = queue_First(&tcall->rq, rx_packet);
+			if (rp->header.seq == 1
+			    && (!meltdown_1pkt
+				|| (rp->header.flags & RX_LAST_PACKET))) {
+			    call = tcall;
+			} else if (rxi_2dchoice && !choice2
+				   && !(tcall->flags & RX_CALL_CLEARED)
+				   && (tcall->rprev > rxi_HardAckRate)) {
+			    choice2 = tcall;
+			} else
+			    rxi_md2cnt++;
+		    }
 		}
 	    }
 	    if (call)
