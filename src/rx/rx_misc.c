@@ -52,9 +52,9 @@ RCSID
  * (network) system error code.
  */
 int
-hton_syserr_conv(register afs_int32 code)
+hton_syserr_conv(afs_int32 code)
 {
-    register afs_int32 err;
+    afs_int32 err;
 
     if (code == ENOSPC)
 	err = VDISKFULL;
@@ -75,7 +75,7 @@ hton_syserr_conv(register afs_int32 code)
 int
 ntoh_syserr_conv(int code)
 {
-    register afs_int32 err;
+    afs_int32 err;
 
     if (code == VDISKFULL)
 	err = ENOSPC;

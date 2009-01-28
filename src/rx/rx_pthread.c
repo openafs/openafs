@@ -215,7 +215,7 @@ rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
 {
     unsigned int host;
     u_short port;
-    register struct rx_packet *p = (struct rx_packet *)0;
+    struct rx_packet *p = (struct rx_packet *)0;
 
     MUTEX_ENTER(&listener_mutex);
     while (!listeners_started) {
@@ -444,7 +444,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 }
 
 struct rx_ts_info_t * rx_ts_info_init() {
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     rx_ts_info = (rx_ts_info_t *) malloc(sizeof(rx_ts_info_t));
     assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
     memset(rx_ts_info, 0, sizeof(rx_ts_info_t));
