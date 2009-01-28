@@ -446,6 +446,12 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	    }
 	    tvc->uncred = acred;
 	    tvc->f.states |= CUnlinked;
+	    /* if rename succeeded, remove should not */
+	    ObtainWriteLock(&tvc->lock, 715);
+	    if (tvc->f.ddirty_flags & VDisconRemove) {
+		tvc->f.ddirty_flags &= ~VDisconRemove;
+	    }
+	    ReleaseWriteLock(&tvc->lock);
 	} else {
 	    osi_FreeSmallSpace(unlname);
 	}
