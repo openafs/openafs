@@ -342,7 +342,7 @@ int chk_del_children_hook(void *hdata,
     /* Count unfinished dirty children. */
     if (tvc) {
 	ObtainReadLock(&tvc->lock);
-	if (tvc->f.ddirty_flags || tvc->f.shadow.vnode)
+	if (tvc->f.ddirty_flags)
 	    v->count++;
 	ReleaseReadLock(&tvc->lock);
 
