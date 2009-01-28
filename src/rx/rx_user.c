@@ -200,9 +200,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
 	if (rx_stats_active) {
-            MUTEX_ENTER(&rx_stats_mutex);
-            rx_stats.socketGreedy = greedy;
-            MUTEX_EXIT(&rx_stats_mutex);
+	    rx_AtomicSwap(&rx_stats.socketGreedy, greedy, rx_stats_mutex);
         }
     }
 

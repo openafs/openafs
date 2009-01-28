@@ -255,6 +255,8 @@ do {\
 		rx_max_clones_per_connection = v; \
 } while(0);
 
+typedef afs_int32 rx_atomic_t;
+
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
 
 /* A connection is an authenticated communication path, allowing 
@@ -296,7 +298,7 @@ struct rx_connection {
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
-    afs_uint32 refCount;		/* Reference count */
+    rx_atomic_t refCount;	/* Reference count */
     u_char flags;		/* Defined below */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
@@ -417,7 +419,8 @@ struct rx_peer {
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    afs_uint32 refCount;		/* Reference count for this structure */
+    rx_atomic_t refCount;		/* Reference count */
+
 
     /* Congestion control parameters */
     u_char burstSize;		/* Reinitialization size for the burst parameter */
@@ -852,47 +855,47 @@ struct rx_securityClass {
  * must equal sizeof(afs_int32). */
 
 struct rx_statistics {		/* General rx statistics */
-    int packetRequests;		/* Number of packet allocation requests */
-    int receivePktAllocFailures;
-    int sendPktAllocFailures;
-    int specialPktAllocFailures;
-    int socketGreedy;		/* Whether SO_GREEDY succeeded */
-    int bogusPacketOnRead;	/* Number of inappropriately short packets received */
-    int bogusHost;		/* Host address from bogus packets */
-    int noPacketOnRead;		/* Number of read packets attempted when there was actually no packet to read off the wire */
-    int noPacketBuffersOnRead;	/* Number of dropped data packets due to lack of packet buffers */
-    int selects;		/* Number of selects waiting for packet or timeout */
-    int sendSelects;		/* Number of selects forced when sending packet */
-    int packetsRead[RX_N_PACKET_TYPES];	/* Total number of packets read, per type */
-    int dataPacketsRead;	/* Number of unique data packets read off the wire */
-    int ackPacketsRead;		/* Number of ack packets read */
-    int dupPacketsRead;		/* Number of duplicate data packets read */
-    int spuriousPacketsRead;	/* Number of inappropriate data packets */
-    int packetsSent[RX_N_PACKET_TYPES];	/* Number of rxi_Sends: packets sent over the wire, per type */
-    int ackPacketsSent;		/* Number of acks sent */
-    int pingPacketsSent;	/* Total number of ping packets sent */
-    int abortPacketsSent;	/* Total number of aborts */
-    int busyPacketsSent;	/* Total number of busies sent received */
-    int dataPacketsSent;	/* Number of unique data packets sent */
-    int dataPacketsReSent;	/* Number of retransmissions */
-    int dataPacketsPushed;	/* Number of retransmissions pushed early by a NACK */
-    int ignoreAckedPacket;	/* Number of packets with acked flag, on rxi_Start */
+    rx_atomic_t packetRequests;		/* Number of packet allocation requests */
+    rx_atomic_t receivePktAllocFailures;
+    rx_atomic_t sendPktAllocFailures;
+    rx_atomic_t specialPktAllocFailures;
+    rx_atomic_t socketGreedy;		/* Whether SO_GREEDY succeeded */
+    rx_atomic_t bogusPacketOnRead;	/* Number of inappropriately short packets received */
+    rx_atomic_t bogusHost;		/* Host address from bogus packets */
+    rx_atomic_t noPacketOnRead;		/* Number of read packets attempted when there was actually no packet to read off the wire */
+    rx_atomic_t noPacketBuffersOnRead;	/* Number of dropped data packets due to lack of packet buffers */
+    rx_atomic_t selects;		/* Number of selects waiting for packet or timeout */
+    rx_atomic_t sendSelects;		/* Number of selects forced when sending packet */
+    rx_atomic_t packetsRead[RX_N_PACKET_TYPES];	/* Total number of packets read, per type */
+    rx_atomic_t dataPacketsRead;	/* Number of unique data packets read off the wire */
+    rx_atomic_t ackPacketsRead;		/* Number of ack packets read */
+    rx_atomic_t dupPacketsRead;		/* Number of duplicate data packets read */
+    rx_atomic_t spuriousPacketsRead;	/* Number of inappropriate data packets */
+    rx_atomic_t packetsSent[RX_N_PACKET_TYPES];	/* Number of rxi_Sends: packets sent over the wire, per type */
+    rx_atomic_t ackPacketsSent;		/* Number of acks sent */
+    rx_atomic_t pingPacketsSent;	/* Total number of ping packets sent */
+    rx_atomic_t abortPacketsSent;	/* Total number of aborts */
+    rx_atomic_t busyPacketsSent;	/* Total number of busies sent received */
+    rx_atomic_t dataPacketsSent;	/* Number of unique data packets sent */
+    rx_atomic_t dataPacketsReSent;	/* Number of retransmissions */
+    rx_atomic_t dataPacketsPushed;	/* Number of retransmissions pushed early by a NACK */
+    rx_atomic_t ignoreAckedPacket;	/* Number of packets with acked flag, on rxi_Start */
     struct clock totalRtt;	/* Total round trip time measured (use to compute average) */
     struct clock minRtt;	/* Minimum round trip time measured */
     struct clock maxRtt;	/* Maximum round trip time measured */
-    int nRttSamples;		/* Total number of round trip samples */
-    int nServerConns;		/* Total number of server connections */
-    int nClientConns;		/* Total number of client connections */
-    int nPeerStructs;		/* Total number of peer structures */
-    int nCallStructs;		/* Total number of call structures allocated */
-    int nFreeCallStructs;	/* Total number of previously allocated free call structures */
-    int netSendFailures;
-    afs_int32 fatalErrors;
-    int ignorePacketDally;	/* packets dropped because call is in dally state */
-    int receiveCbufPktAllocFailures;
-    int sendCbufPktAllocFailures;
-    int nBusies;
-    int spares[4];
+    rx_atomic_t nRttSamples;		/* Total number of round trip samples */
+    rx_atomic_t nServerConns;		/* Total number of server connections */
+    rx_atomic_t nClientConns;		/* Total number of client connections */
+    rx_atomic_t nPeerStructs;		/* Total number of peer structures */
+    rx_atomic_t nCallStructs;		/* Total number of call structures allocated */
+    rx_atomic_t nFreeCallStructs;	/* Total number of previously allocated free call structures */
+    rx_atomic_t netSendFailures;
+    rx_atomic_t fatalErrors;
+    rx_atomic_t ignorePacketDally;	/* packets dropped because call is in dally state */
+    rx_atomic_t receiveCbufPktAllocFailures;
+    rx_atomic_t sendCbufPktAllocFailures;
+    rx_atomic_t nBusies;
+    rx_atomic_t spares[4];
 };
 
 /* structures for debug input and output packets */

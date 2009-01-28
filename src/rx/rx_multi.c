@@ -17,9 +17,11 @@ RCSID
 #include "afs/sysincludes.h"
 #include "rx/rx_internal.h"
 #include "rx/rx.h"
+#include "rx/rx_globals.h"
 #else /* KERNEL */
 # include "rx_internal.h"
 # include "rx.h"
+# include "rx_globals.h"
 #endif /* KERNEL */
 
 /*
