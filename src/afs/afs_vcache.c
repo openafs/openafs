@@ -783,6 +783,7 @@ restart:
 # endif
     afs_vcount++;
 
+#ifdef AFS_DISCON_ENV
     /* If we create a new inode, we either give it a new slot number,
      * or if one's available, use a slot number from the slot free list
      */
@@ -796,6 +797,7 @@ restart:
     }  else {
        tvc->diskSlot = afs_nextVcacheSlot++;
     }
+#endif
 
 #else /* AFS_OSF_ENV || AFS_LINUX22_ENV */
     /* pull out a free cache entry */
