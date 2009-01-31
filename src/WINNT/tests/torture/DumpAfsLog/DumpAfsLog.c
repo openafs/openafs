@@ -2,7 +2,7 @@
 //
 
 #include <windows.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
 #include <io.h>
@@ -15,10 +15,10 @@ int main(int argc, char* argv[])
     int     i;
     int     Count;
     int     SecondsDelay;
-    int     SecondsToRun;
+    time_t  SecondsToRun;
     int     NewSessionDeadlock;
     int     NewSessionDeadlockCount;
-    int     SecondsToDelay;
+    time_t  SecondsToDelay;
     int     MiniDump;
     int     rc;
     char    HostName[512];
@@ -183,14 +183,14 @@ int main(int argc, char* argv[])
 */
         ++Count;
         time(&StartTime);
-        if (StartTime > (time_t)SecondsToRun)
+        if (StartTime > SecondsToRun)
             break;
         printf("Type Q to stop DumpAfsLog\n");
         SecondsToDelay = StartTime + SecondsDelay;
         while (1)
         {
             time(&StartTime);
-            if (StartTime > (time_t)SecondsToDelay)
+            if (StartTime > SecondsToDelay)
                 break;
             rc = GetConsoleInput(hStdin);
             Sleep(500);

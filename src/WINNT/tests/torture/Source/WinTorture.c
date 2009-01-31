@@ -37,9 +37,8 @@ char    *ClientText = "streamfiles.txt";
 char    PathToSecondDir[256];
 int     ThreadStatus[MAX_HANDLES];
 int     verbose;
-int     BufferSize = 256*1024;
+static int     BufferSize = 256*1024;
 int     UseLocker = 0;
-//int     UseUnicode = 0;
 int     EndOnError;
 int     AfsTrace;
 int     ChronLog;
@@ -299,7 +298,7 @@ int main(int argc, char *argv[])
 {
     int         i;
     int         LoopCount;
-    int         SecondsToRun;
+    time_t      SecondsToRun;
     int         NumberOfIterations;
     int         StressTestUsed = 0;
     int         rc;
@@ -596,7 +595,7 @@ int main(int argc, char *argv[])
         if (SecondsToRun != 0)
         {
             time(&StartTime);
-            if (StartTime > (time_t)SecondsToRun)
+            if (StartTime > SecondsToRun)
             {
                 break;
             }

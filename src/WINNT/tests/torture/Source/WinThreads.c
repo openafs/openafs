@@ -1,14 +1,15 @@
 #include <windows.h>
-#include <includes.h>
+#include "includes.h"
 #include "common.h"
 #ifdef HAVE_HESOID
     #include "ResolveLocker.h"
     int ResolveLocker(USER_OPTIONS *attachOption);
 #endif
-#ifdef HAVE_AFS_SOURCE
-    #include <smb_iocons.h>
-    #include <afsint.h>
-    #include <pioctl_nt.h>
+#ifndef NO_AFS_SOURCE
+    #include <afs\stds.h>
+    #include <afs\smb_iocons.h>
+    #include <afs\afsint.h>
+    #include <afs\pioctl_nt.h>
 #else
     #define VIOCGETVOLSTAT  0x7
     #define afs_int32   int
@@ -36,8 +37,8 @@
             void *in;
 	    void *out;
     } viceIoctl_t;
+extern long pioctl(char *pathp, long opcode, struct ViceIoctl *blob, int follow);
 #endif
-long pioctl(char *pathp, long opcode, struct ViceIoctl *blob, int follow);
 
 #define MAX_PARAMS 20
 #define ival(s) strtol(s, NULL, 0)
@@ -75,6 +76,7 @@ __declspec( thread ) int    LogID = 0;
 __declspec( thread ) int    LineCount = 0;
 __declspec( thread ) int    *pThreadStatus;
 __declspec( thread ) DWORD  TickCount1,TickCount2, MilliTickStart;
+__declspec( thread ) int    BufferSize = 4096;
 __declspec( thread ) char   *IoBuffer = NULL;
 __declspec( thread ) char   AfsLocker[256];
 __declspec( thread ) char   OriginalAfsLocker[256];
@@ -90,8 +92,7 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
 {
     int         j;
     int         rc;
-    int         count;
-    int         BufferSize;
+    size_t      count;
     int         ProcessID;
     char        EventName[64];
     char        FileName[256];
@@ -154,24 +155,24 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
     {
         LastKnownError = 0;
         for (j = 0; j <= CMD_MAX_CMD; j++)
-            {
-                WinCommandInfo[j].count = 0;
-                WinCommandInfo[j].min_sec = 0;
-                WinCommandInfo[j].max_sec = 0;
-                WinCommandInfo[j].MilliSeconds = 0;
-                WinCommandInfo[j].total_sec = 0;
-                WinCommandInfo[j].total_sum_of_squares = 0;
-                WinCommandInfo[j].ErrorCount = 0;
-                WinCommandInfo[j].ErrorTime = 0;
-                ThreadCommandInfo[j].count = 0;
-                ThreadCommandInfo[j].min_sec = 1000;
-                ThreadCommandInfo[j].max_sec = 0;
-                ThreadCommandInfo[j].MilliSeconds = 0;
-                ThreadCommandInfo[j].total_sec = 0;
-                ThreadCommandInfo[j].total_sum_of_squares = 0;
-                ThreadCommandInfo[j].ErrorCount = 0;
-                ThreadCommandInfo[j].ErrorTime = 0;
-            }
+        {
+            WinCommandInfo[j].count = 0;
+            WinCommandInfo[j].min_sec = 0;
+            WinCommandInfo[j].max_sec = 0;
+            WinCommandInfo[j].MilliSeconds = 0;
+            WinCommandInfo[j].total_sec = 0;
+            WinCommandInfo[j].total_sum_of_squares = 0;
+            WinCommandInfo[j].ErrorCount = 0;
+            WinCommandInfo[j].ErrorTime = 0;
+            ThreadCommandInfo[j].count = 0;
+            ThreadCommandInfo[j].min_sec = 1000;
+            ThreadCommandInfo[j].max_sec = 0;
+            ThreadCommandInfo[j].MilliSeconds = 0;
+            ThreadCommandInfo[j].total_sec = 0;
+            ThreadCommandInfo[j].total_sum_of_squares = 0;
+            ThreadCommandInfo[j].ErrorCount = 0;
+            ThreadCommandInfo[j].ErrorTime = 0;
+        }
 
         run_netbench(ProcessNumber, ClientText, PathToSecondDir);
         if (LastKnownError != ERROR_NETNAME_DELETED)
@@ -308,7 +309,7 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
                 (*(pPtr - 1)) = '\0';
             }
         }
-        TotalBytesRead += (strlen(line) + IncreaseBy);
+        TotalBytesRead += (DWORD)(strlen(line) + IncreaseBy);
         SetFilePointer(hFile, TotalBytesRead, 0, FILE_BEGIN);
         strcpy(line1, line);
         if (rc = WaitForSingleObject(PauseEventHandle, 0) == WAIT_OBJECT_0)

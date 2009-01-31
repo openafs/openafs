@@ -1,0 +1,31 @@
+#                                                                                                                                
+# Copyright (c) 2009 Secure Endpoints Inc.
+#
+
+RELDIR=WINNT\tests\torture
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+install:
+        cd Source
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..\DumpAfsLog
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..\Stress
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..\StopStressTest
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..
+
+clean::
+        cd Source
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..\DumpAfsLog
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..\Stress
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..\StopStressTest
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..
+        
+

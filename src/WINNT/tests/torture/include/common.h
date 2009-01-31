@@ -140,9 +140,9 @@ typedef struct {
         } PARAMETERLIST;
 
 typedef struct {
-	int fd;
-	int handle;
-    char *name; 
+        HANDLE fd;
+        int handle;
+        char *name; 
 	int reads, writes;
 } FTABLE;
 

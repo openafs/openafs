@@ -1,0 +1,35 @@
+#                                                                                                                                
+# Copyright (c) 2009 Secure Endpoints Inc.
+#
+
+AFSDEV_AUXCDEFINES=-I..\include
+RELDIR=WINNT\tests\torture\stopstresstest
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+idirs:
+!       if !(exist($(OJT)\WINNT\tests))
+                md $(OJT)\WINNT\tests
+!       endif
+!       if !(exist($(OJT)\WINNT\tests\torture))
+                md $(OJT)\WINNT\tests\torture
+!       endif
+!       if !(exist($(OJT)\WINNT\tests\torture\stopstresstest))
+                md $(OJT)\WINNT\tests\torture\stopstresstest
+!       endif
+
+EXEDIR = $(DESTDIR)\bin
+
+OBJS = 	$(OUT)\StopStressTest.obj
+
+$(EXEDIR)\StopStressTest.exe: $(OBJS)
+        $(EXECONLINK) 
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(EXEPREP)
+        $(CODESIGN_USERLAND)
+
+install: idirs $(EXEDIR)\StopStressTest.exe
+
+clean::
+        
+

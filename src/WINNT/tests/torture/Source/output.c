@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <includes.h>
+#include "includes.h"
 #include "common.h"
 
 extern int  ChronLog;
@@ -12,11 +12,11 @@ void LogStats(char *FileName, int ToLog, int Iteration, int NumberOfProcesses, i
               char *HostName, int ProcessNumber, struct cmd_struct CommandInfo[],
               char *CommandLine, char *TargetDirectory)
 {
-	struct cmd_struct TotalCommandInfo[CMD_MAX_CMD + 1];
-	int         i;
+    struct cmd_struct TotalCommandInfo[CMD_MAX_CMD + 1];
+    int         i;
     int         j;
     int         LineCount;
-	unsigned    grand_total = 0;
+    unsigned    grand_total = 0;
     char        AsciiTime[32];
     FILE        *fp;
     struct tm   *newtime;
@@ -32,18 +32,18 @@ void LogStats(char *FileName, int ToLog, int Iteration, int NumberOfProcesses, i
     if (ToLog)
         fp = fopen(FileName, "a+");
 
-	for (j = 0; j <= CMD_MAX_CMD; j++)
+    for (j = 0; j <= CMD_MAX_CMD; j++)
     {
-		TotalCommandInfo[j].count = 0;
-		TotalCommandInfo[j].min_sec = 0;
-		TotalCommandInfo[j].ErrorTime = 0;
-		TotalCommandInfo[j].max_sec = 0;
-		TotalCommandInfo[j].MilliSeconds = 0;
-		TotalCommandInfo[j].total_sec = 0;
-		TotalCommandInfo[j].total_sum_of_squares = 0;
-		TotalCommandInfo[j].ErrorCount = 0;
-		TotalCommandInfo[j].ErrorTime = 0;
-	}
+        TotalCommandInfo[j].count = 0;
+        TotalCommandInfo[j].min_sec = 0;
+        TotalCommandInfo[j].ErrorTime = 0;
+        TotalCommandInfo[j].max_sec = 0;
+        TotalCommandInfo[j].MilliSeconds = 0;
+        TotalCommandInfo[j].total_sec = 0;
+        TotalCommandInfo[j].total_sum_of_squares = 0;
+        TotalCommandInfo[j].ErrorCount = 0;
+        TotalCommandInfo[j].ErrorTime = 0;
+    }
 
     for (i = 0; i <= CMD_MAX_CMD; i++)
     {

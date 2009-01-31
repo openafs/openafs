@@ -42,13 +42,13 @@ __declspec( thread ) extern EXIT_STATUS *pExitStatus;
 __declspec( thread ) extern DWORD   LastKnownError;
 extern void LogMessage(int ProcessNumber, char *HostName, char *FileName, char *message, int LogID);
 
-int  CreateObject(const char *fname, uint32 DesiredAccess,
+HANDLE CreateObject(const char *fname, uint32 DesiredAccess,
                   uint32 FileAttributes, uint32 ShareAccess,
                   uint32 CreateDisposition, uint32 CreateOptions);
 void DumpAFSLog(char * HostName, int LogID);
 int  FindHandle(int handle);
 int  GetFileList(char *Mask, void (*fn)(file_info *, const char *, void *), void *state);
-BOOL GetFileInfo(char *FileName, int fnum, uint16 *mode, size_t *size,
+BOOL GetFileInfo(char *FileName, HANDLE fd, uint16 *mode, size_t *size,
 		        time_t *c_time, time_t *a_time, time_t *m_time, 
 		        time_t *w_time);
 BOOL GetPathInfo(const char *fname, time_t *c_time, time_t *a_time, time_t *m_time, 
@@ -59,7 +59,7 @@ void EndFirstTimer(int cmd, int Type);
 void StartSecondTime(int cmd);
 void EndSecondTime(int cmd);
 void SubstituteString(char *s,const char *pattern,const char *insert, size_t len);
-int  SystemCall(char *command);
+intptr_t  SystemCall(char *command);
 HANDLE WinFindFirstFile(char *Mask, void **FileData, char *cFileName, int *dwFileAttributes);
 int  WinFindNextFile(HANDLE hFind, void **FileData, char *cFileName, int *dwFileAttributes);
 
@@ -394,7 +394,7 @@ int nb_DeleteFile(char *path)
 
 int nb_xcopy(char *Source, char *Destination)
 {
-    DWORD   rc;
+    intptr_t   rc;
     char    FileName[128];
     char    temp[512];
     char    command[256];
@@ -464,7 +464,7 @@ int nb_Move(char *Source, char *Destination)
 
 int nb_createx(char *fname, unsigned create_options, unsigned create_disposition, int handle)
 {
-    int     fd;
+    HANDLE  fd;
     int     i;
     uint32  desired_access;
     char    FileName[128];
@@ -486,21 +486,18 @@ int nb_createx(char *fname, unsigned create_options, unsigned create_disposition
 
     StartFirstTimer();
     fd = CreateObject(path, 
-                        desired_access,
-                        0x0,
-                        FILE_SHARE_READ|FILE_SHARE_WRITE, 
-                        create_disposition, 
-                        create_options);
+                       desired_access,
+                       0x0,
+                       FILE_SHARE_READ|FILE_SHARE_WRITE, 
+                       create_disposition, 
+                       create_options);
 
-    if (fd == -1 && handle != -1)
+    if (fd == INVALID_HANDLE_VALUE && handle != -1)
     {
         if (create_options & FILE_DIRECTORY_FILE)
         {
-            int rc;
-
-            rc = GetLastError();
-        if ((rc != ERROR_FILE_NOT_FOUND) && (rc != ERROR_PATH_NOT_FOUND))
-            if (rc != ERROR_ALREADY_EXISTS)
+            DWORD rc = GetLastError();
+            if ((rc != ERROR_FILE_NOT_FOUND) && (rc != ERROR_PATH_NOT_FOUND) && (rc != ERROR_ALREADY_EXISTS))
             {
                 EndFirstTimer(CMD_NTCREATEX, 0);
                 SetLastError(rc);
@@ -530,15 +527,14 @@ int nb_createx(char *fname, unsigned create_options, unsigned create_disposition
     if (create_options & FILE_DIRECTORY_FILE)
         fd = 0;
 
-    if (fd != -1 && handle == -1)
+    if (fd != INVALID_HANDLE_VALUE && handle == -1)
     {
-        if (fd > 1)
-            CloseHandle((HANDLE)fd);
+        CloseHandle(fd);
         nb_unlink(fname);
         return(0);
     }
 
-    if (fd == -1 && handle == -1)
+    if (fd == INVALID_HANDLE_VALUE && handle == -1)
         return(0);
 
     for (i = 0; i < MAX_FILES; i++) 
@@ -563,7 +559,7 @@ int nb_createx(char *fname, unsigned create_options, unsigned create_disposition
 int nb_writex(int handle, int offset, int size, int ret_size)
 {
     int     i;
-    int     status;
+    ssize_t status;
     char    FileName[128];
     char    temp[512];
 
@@ -576,7 +572,6 @@ int nb_writex(int handle, int offset, int size, int ret_size)
         return(-1);
     StartFirstTimer();
     status = nb_write(ftable[i].fd, IoBuffer, offset, size);
-
     if (status != ret_size) 
     {
         EndFirstTimer(CMD_WRITEX, 0);
@@ -640,7 +635,7 @@ int nb_lock(int handle, int offset, int size, int timeout, unsigned char locktyp
 int nb_readx(int handle, int offset, int size, int ret_size)
 {
     int     i;
-    int     ret;
+    ssize_t ret;
     char    FileName[128];
     char    temp[512];
 
@@ -657,7 +652,7 @@ int nb_readx(int handle, int offset, int size, int ret_size)
         EndFirstTimer(CMD_READX, 0);
         LeaveThread(0, "", CMD_READX);
         if (ret == 0)
-            sprintf(temp, "File: read failed on index=%d, offset=%d ReadSize=%d ActualRead=%d handle=%d\n",
+            sprintf(temp, "File: read failed on index=%d, offset=%d ReadSize=%d ActualRead=%d handle=%p\n",
                     handle, offset, size, ret, ftable[i].fd);
         if (ret == -1)
             sprintf(temp, "File: %s. On read, cannot set file pointer\n", ftable[i].name);
@@ -816,7 +811,7 @@ if (!Flag)
     return(0);
 }
 
-int nb_qfileinfo(int fnum)
+int nb_qfileinfo(int handle)
 {
     int     i;
     int     rc;
@@ -825,7 +820,7 @@ int nb_qfileinfo(int fnum)
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
-    if ((i = FindHandle(fnum)) == -1)
+    if ((i = FindHandle(handle)) == -1)
         return(-1);
 
     StartFirstTimer();
@@ -919,14 +914,15 @@ int nb_findfirst(char *mask)
     return(0);
 }
 
-int nb_flush(int fnum)
+int nb_flush(int handle)
 {
     int i;
 
-    if ((i = FindHandle(fnum)) == -1)
+    if ((i = FindHandle(handle)) == -1)
         return(-1);
+
+    FlushFileBuffers(ftable[i].fd);
     return(0);
-	/* hmmm, we don't have cli_flush() yet */
 }
 
 static int total_deleted;
@@ -1151,9 +1147,9 @@ void EndSecondTime(int cmd)
 }
 
 
-int SystemCall(char *command)
+intptr_t SystemCall(char *command)
 {
-    int     rc;
+    intptr_t rc;
     char    *argv[6];
 
     argv[0] = getenv("COMSPEC");
@@ -1167,20 +1163,21 @@ int SystemCall(char *command)
     return(rc);
 }
 
-int CreateObject(const char *fname, uint32 DesiredAccess,
+HANDLE CreateObject(const char *fname, uint32 DesiredAccess,
 		 uint32 FileAttributes, uint32 ShareAccess,
 		 uint32 CreateDisposition, uint32 CreateOptions)
 {
-    int   fd;
+    HANDLE   fd;
     DWORD dwCreateDisposition = 0;
     DWORD dwDesiredAccess = 0;
     DWORD dwShareAccess = 0;
 
     if (CreateOptions & FILE_DIRECTORY_FILE)
     {
-        fd = CreateDirectory(fname, NULL);
-        if (fd == 0)
-            fd = -1;
+        if (!CreateDirectory(fname, NULL))
+            fd = INVALID_HANDLE_VALUE;
+        else 
+            fd = 0;
     }
     else
     {
@@ -1194,21 +1191,21 @@ int CreateObject(const char *fname, uint32 DesiredAccess,
         dwCreateDisposition = OPEN_ALWAYS;
         if (CreateDisposition == 1)
             dwCreateDisposition = OPEN_EXISTING;
-        fd = (int)CreateFile(fname, dwDesiredAccess, ShareAccess, NULL, dwCreateDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
+        fd = CreateFile(fname, dwDesiredAccess, ShareAccess, NULL, dwCreateDisposition, FILE_ATTRIBUTE_NORMAL, NULL);
     }
 
     return(fd);
 }
 
-BOOL nb_close1(int fnum)
+BOOL nb_close1(HANDLE fd)
 {
     int dwFlags = 0;
     int rc = 1;
 
-    if (fnum > 0)
+    if (fd != INVALID_HANDLE_VALUE)
     {
-        if (rc = GetHandleInformation((HANDLE)fnum, &dwFlags))
-            CloseHandle((HANDLE)fnum);
+        if (rc = GetHandleInformation(fd, &dwFlags))
+            CloseHandle(fd);
     }
     return(rc);
 }
@@ -1361,7 +1358,6 @@ BOOL GetPathInfo(const char *fname,
     SYSTEMTIME  SystemTime;
     struct tm   tm_time;
 
-//    rc = WinGetFileAttributesEx(UseUnicode, (char *)fname, &FileInfo);
     rc = GetFileAttributesEx(fname, GetFileExInfoStandard, &FileInfo);
     if (rc != 0)
     {
@@ -1401,7 +1397,7 @@ BOOL GetPathInfo(const char *fname,
 /****************************************************************************
 send a qfileinfo call
 ****************************************************************************/
-BOOL GetFileInfo(char *FileName, int fnum, 
+BOOL GetFileInfo(char *FileName, HANDLE fd, 
                    uint16 *mode, size_t *size,
                    time_t *c_time, time_t *a_time, time_t *m_time, 
                    time_t *w_time)
@@ -1451,23 +1447,23 @@ BOOL GetFileInfo(char *FileName, int fnum,
   Read size bytes at offset offset using SMBreadX.
 ****************************************************************************/
 
-ssize_t nb_read(int fnum, char *IoBuffer, off_t offset, size_t size)
+ssize_t nb_read(HANDLE fd, char *IoBuffer, off_t offset, size_t size)
 {
-	ssize_t total = 0;
+    DWORD   total = 0;
     int     rc;
     DWORD   LowDword;
 
-	if (size == 0) 
-		return(0);
+    if (size == 0) 
+        return(0);
 
-    LowDword = SetFilePointer((HANDLE)fnum, offset, 0, FILE_BEGIN);
+    LowDword = SetFilePointer(fd, offset, 0, FILE_BEGIN);
 
     if (LowDword == INVALID_SET_FILE_POINTER)
         return(-1);
-    rc = ReadFile((HANDLE)fnum, IoBuffer, size, &total, NULL);
-
+    rc = ReadFile(fd, IoBuffer, (DWORD)size, &total, NULL);
     if (!rc)
         return(rc);
+
     return(total);
 }
 
@@ -1475,19 +1471,19 @@ ssize_t nb_read(int fnum, char *IoBuffer, off_t offset, size_t size)
   write to a file
 ****************************************************************************/
 
-ssize_t nb_write(int fnum, char *IoBuffer, off_t offset, size_t size)
+ssize_t nb_write(HANDLE fd, char *IoBuffer, off_t offset, size_t size)
 {
-	int     bwritten = 0;
+    DWORD   bwritten = 0;
     int     rc;
     DWORD   LowDword;
 
-    LowDword = SetFilePointer((HANDLE)fnum, offset, 0, FILE_BEGIN);
+    LowDword = SetFilePointer(fd, offset, 0, FILE_BEGIN);
     if (LowDword == INVALID_SET_FILE_POINTER)
         return(-1);
-    rc = WriteFile((HANDLE)fnum, IoBuffer, size, &bwritten, NULL);
-
+    rc = WriteFile(fd, IoBuffer, (DWORD)size, &bwritten, NULL);
     if (!rc)
         return(rc);
-    FlushFileBuffers((HANDLE)fnum);
+    FlushFileBuffers(fd);
     return(bwritten);
 }
+
