@@ -176,7 +176,7 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
 
         run_netbench(ProcessNumber, ClientText, PathToSecondDir);
         if (LastKnownError != ERROR_NETNAME_DELETED)
-            break;
+            break; 
         sprintf(temp, "entered error %d processing\n", LastKnownError);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
 

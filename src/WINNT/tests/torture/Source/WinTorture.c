@@ -321,7 +321,7 @@ int main(int argc, char *argv[])
     char        buffer[512];
     char        FileName[256];
     char        MoveFileName[256];
-    char        Locker[64];
+    char        Locker[256];
     char        command[512];
     char        DateTime[512];
     char        WorkingDirectory[512];
@@ -534,9 +534,14 @@ int main(int argc, char *argv[])
     {
 #endif /* HAVE_HESOID */
         strcpy(AfsLocker, Locker);
+#if 0
+        /* jaltman - this makes no sense.  why strip off the server name and leave
+         * an absolute path on the local disk?
+         */
         if (!strnicmp(Locker, "\\\\afs\\", strlen("\\\\afs\\")))
             strcpy(TargetDirectory, &Locker[strlen("\\\\afs\\")]);
         else
+#endif
             strcpy(TargetDirectory, Locker);
 #ifdef HAVE_HESOID
     }

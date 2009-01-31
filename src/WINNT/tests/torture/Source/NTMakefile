@@ -26,13 +26,13 @@ OBJS = 	$(OUT)\nbio.obj \
 	$(OUT)\WinThreads.obj \
 	$(OUT)\WinTorture.obj \
 
-$(EXEDIR)\torture.exe: $(OBJS)
+$(EXEDIR)\wintorture.exe: $(OBJS)
         $(EXECONLINK) psapi.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(EXEPREP)
         $(CODESIGN_USERLAND)
 
-install: idirs $(EXEDIR)\torture.exe
+install: idirs $(EXEDIR)\wintorture.exe
 
 clean::
         

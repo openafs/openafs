@@ -32,6 +32,7 @@ __declspec( thread ) extern int     AfsTrace;
 __declspec( thread ) extern int     *pThreadStatus;
 __declspec( thread ) extern int     LogID;
 __declspec( thread ) extern char    *IoBuffer;
+__declspec( thread ) extern int     BufferSize;
 __declspec( thread ) extern char    AfsLocker[256];
 __declspec( thread ) extern char    OriginalAfsLocker[256];
 __declspec( thread ) extern char    HostName[256];
@@ -94,7 +95,7 @@ int nb_unlink(char *fname)
     if (!rc)
     {
         LeaveThread(0, "", CMD_UNLINK);
-        sprintf(temp, "FILE: DeleteFile %s failed\n", fname);
+        sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", fname, GetLastError());
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -127,7 +128,7 @@ int nb_Xrmdir(char *Directory, char *type)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if (strlen(Directory) == 0)
     {
-        return(LeaveThread(1, "rmdir failed no path found\n", CMD_XRMDIR));
+        return(LeaveThread(1, "rmdir failed no path specified\n", CMD_XRMDIR));
     }
     strcpy(NewDirectory, Directory);
     memset(command, '\0', sizeof(command));
@@ -146,7 +147,7 @@ int nb_Xrmdir(char *Directory, char *type)
         EndFirstTimer(CMD_XRMDIR, 0);
         sprintf(temp, "rmdir failed on %s\n", command);
         LeaveThread(rc, temp, CMD_XRMDIR);
-        sprintf(temp, "FAILURE: Thread %d - rmdir failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "FAILURE: Thread %d - Xrmdir failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -166,7 +167,7 @@ int nb_Mkdir(char *Directory)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if (strlen(Directory) == 0)
     {
-        return(LeaveThread(1, "mkdir failed on no path found\n", CMD_MKDIR));
+        return(LeaveThread(1, "mkdir failed on no path specified\n", CMD_MKDIR));
     }
     strcpy(NewDirectory, Directory);
     memset(command, '\0', sizeof(command));
@@ -181,7 +182,7 @@ int nb_Mkdir(char *Directory)
         EndFirstTimer(CMD_MKDIR, 0);
         sprintf(temp,  "mkdir failed on %s\n", command);
         LeaveThread(rc, temp, CMD_MKDIR);
-        sprintf(temp, "ERROR: Thread %d - mkdir failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "ERROR: Thread %d - mkdir failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -199,7 +200,7 @@ int nb_Attach(char *Locker, char *Drive)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if (strlen(Locker) == 0)
     {
-        return(LeaveThread(1, "attach failed no locker found\n", CMD_ATTACH));
+        return(LeaveThread(1, "attach failed no locker specified\n", CMD_ATTACH));
     }
     memset(command, '\0', sizeof(command));
     strcpy(command,"attach -q ");
@@ -219,7 +220,7 @@ int nb_Attach(char *Locker, char *Drive)
         EndFirstTimer(CMD_ATTACH, 0);
         sprintf(pExitStatus->Reason, "attach failed on %s\n", command);
         pExitStatus->ExitStatus = rc;
-        sprintf(temp, "ERROR: Thread %d - attach failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "ERROR: Thread %d - attach failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
     }
     EndFirstTimer(CMD_ATTACH, 1);
@@ -259,7 +260,7 @@ int nb_Detach(char *Name, char *type)
         EndFirstTimer(CMD_DETACH, 0);
         sprintf(temp, "detach failed on %s\n", command);
         LeaveThread(rc, temp, CMD_DETACH);
-        sprintf(temp, "ERROR: Thread %d - detach failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "ERROR: Thread %d - detach failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -282,7 +283,7 @@ int nb_CreateFile(char *path, DWORD size)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if (strlen(path) == 0)
     {
-        return(LeaveThread(1, "nb_DeleteFile failed no path found\n", CMD_CREATEFILE));
+        return(LeaveThread(1, "nb_DeleteFile failed no path specified\n", CMD_CREATEFILE));
     }
 
     strcpy(NewPath, path);
@@ -298,10 +299,11 @@ int nb_CreateFile(char *path, DWORD size)
 
     if (fHandle == INVALID_HANDLE_VALUE)
     {
+        rc = GetLastError();
         EndFirstTimer(CMD_CREATEFILE, 0);
-        sprintf(temp, "Create file failed on %s\n", NewPath);
-        LeaveThread(0, "", CMD_CREATEFILE);
-        sprintf(temp, "ERROR: Thread %d - Create file failed on\n    %s\n", ProcessNumber, NewPath);
+        sprintf(temp, "Create file failed on \"%s\" GLE(0x%x)\n", NewPath, rc);
+        LeaveThread(0, temp, CMD_CREATEFILE);
+        sprintf(temp, "ERROR: Thread %d - Create file failed on \"%s\" GLE(0x%x)\n", ProcessNumber, NewPath, rc);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -332,7 +334,7 @@ int nb_CopyFile(char *Source, char *Destination)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if ((strlen(Source) == 0) || (strlen(Destination) == 0))
     {
-        return(LeaveThread(1, "nb_CopyFile failed to copy files: either source or destination path not found\n", CMD_COPYFILES));
+        return(LeaveThread(1, "nb_CopyFile failed to copy files: either source or destination path not specified\n", CMD_COPYFILES));
     }
     strcpy(NewSource, Source);
     strcpy(NewDestination, Destination);
@@ -346,9 +348,9 @@ int nb_CopyFile(char *Source, char *Destination)
     if (rc)
     {
         EndFirstTimer(CMD_COPYFILES, 0);
-        sprintf(temp, "copy failed on %s\n", command);
+        sprintf(temp, "copy failed on \"%s\"\n", command);
         LeaveThread(rc, temp, CMD_COPYFILES);
-        sprintf(temp, "FAILURE: Thread %d - copy failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "FAILURE: Thread %d - copy failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         if (verbose)
             printf("%s", temp);
@@ -369,7 +371,7 @@ int nb_DeleteFile(char *path)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if (strlen(path) == 0)
     {
-        return(LeaveThread(1, "nb_DeleteFile failed to delete files: no path found\n", CMD_DELETEFILES));
+        return(LeaveThread(1, "nb_DeleteFile failed to delete files: no path specified\n", CMD_DELETEFILES));
     }
     strcpy(NewPath, path);
 
@@ -382,9 +384,9 @@ int nb_DeleteFile(char *path)
     if (rc)
     {
         EndFirstTimer(CMD_DELETEFILES, 0);
-        sprintf(temp, "del failed on %s\n", NewPath);
+        sprintf(temp, "del failed on \"%s\"\n", NewPath);
         LeaveThread(rc, temp, CMD_DELETEFILES);
-        sprintf(temp, "ERROR: Thread %d - del failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "ERROR: Thread %d - del failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -417,10 +419,9 @@ int nb_xcopy(char *Source, char *Destination)
     if (rc)
     {
         EndFirstTimer(CMD_XCOPY, 0);
-//        sprintf(temp, "xcopy failed on %s\n", command);
-//        LeaveThread(rc, temp, CMD_XCOPY);
-        LeaveThread(0, "", CMD_XCOPY);
-        sprintf(temp, "FAIURE: Thread %d - xcopy failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "xcopy failed on %s\n", command);
+        LeaveThread((int)rc, temp, CMD_XCOPY);
+        sprintf(temp, "FAIURE: Thread %d - xcopy failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -452,9 +453,9 @@ int nb_Move(char *Source, char *Destination)
     if (rc)
     {
         EndFirstTimer(CMD_MOVE, 0);
-        sprintf(temp, "move failed on %s\n", command);
+        sprintf(temp, "move failed on \"%s\"\n", command);
         LeaveThread(rc, temp, CMD_MOVE);
-        sprintf(temp, "FAILURE: Thread %d - move failed on\n    %s\n", ProcessNumber, command);
+        sprintf(temp, "FAILURE: Thread %d - move failed on \"%s\"\n", ProcessNumber, command);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -496,19 +497,13 @@ int nb_createx(char *fname, unsigned create_options, unsigned create_disposition
     {
         if (create_options & FILE_DIRECTORY_FILE)
         {
-            DWORD rc = GetLastError();
-            if ((rc != ERROR_FILE_NOT_FOUND) && (rc != ERROR_PATH_NOT_FOUND) && (rc != ERROR_ALREADY_EXISTS))
-            {
-                EndFirstTimer(CMD_NTCREATEX, 0);
-                SetLastError(rc);
-                LeaveThread(0, "", CMD_NTCREATEX);
-                sprintf(temp, "Directory: unable to create directory %s\n", path);
-                if (verbose)
-                    printf("%s", temp);
-                LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
-                return(-1);
-            }
-            fd = 0;
+            EndFirstTimer(CMD_NTCREATEX, 0);
+            LeaveThread(0, "", CMD_NTCREATEX);
+            sprintf(temp, "Directory: unable to create directory %s\n", path);
+            if (verbose)
+                printf("%s", temp);
+            LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
+            return(-1);
         }
         else
         {
@@ -523,9 +518,6 @@ int nb_createx(char *fname, unsigned create_options, unsigned create_disposition
     }
 
     EndFirstTimer(CMD_NTCREATEX, 1);
-
-    if (create_options & FILE_DIRECTORY_FILE)
-        fd = 0;
 
     if (fd != INVALID_HANDLE_VALUE && handle == -1)
     {
@@ -566,7 +558,7 @@ int nb_writex(int handle, int offset, int size, int ret_size)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
     if (IoBuffer[0] == 0) 
-        memset(IoBuffer, 1, sizeof(IoBuffer));
+        memset(IoBuffer, 1, BufferSize);
 
     if ((i = FindHandle(handle)) == -1)
         return(-1);
@@ -652,10 +644,10 @@ int nb_readx(int handle, int offset, int size, int ret_size)
         EndFirstTimer(CMD_READX, 0);
         LeaveThread(0, "", CMD_READX);
         if (ret == 0)
-            sprintf(temp, "File: read failed on index=%d, offset=%d ReadSize=%d ActualRead=%d handle=%p\n",
-                    handle, offset, size, ret, ftable[i].fd);
+            sprintf(temp, "File: read failed on index=%d, offset=%d ReadSize=%d ActualRead=%d handle=%p GLE(0x%x)\n",
+                    handle, offset, size, ret, ftable[i].fd, GetLastError());
         if (ret == -1)
-            sprintf(temp, "File: %s. On read, cannot set file pointer\n", ftable[i].name);
+            sprintf(temp, "File: %s. On read, cannot set file pointer GLE(0x%x)\n", ftable[i].name, GetLastError());
         if (verbose)
             printf("%s", temp);
         nb_close(handle);
@@ -719,7 +711,7 @@ int nb_rmdir(char *fname)
     if (!rc)
     {
         LeaveThread(0, "", CMD_RMDIR);
-        sprintf(temp, "Directory: RemoveDirectory %s failed\n", fname);
+        sprintf(temp, "Directory: RemoveDirectory %s failed GLE(0x%x)\n", fname, GetLastError());
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -750,7 +742,7 @@ int nb_rename(char *old, char *New)
     if (!rc)
     {
         LeaveThread(0, "", CMD_RENAME);
-        sprintf(temp, "File: rename %s %s failed\n", old, New);
+        sprintf(temp, "File: rename %s %s failed GLE(0x%x)\n", old, New, GetLastError());
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -766,7 +758,7 @@ int nb_qpathinfo(char *fname, int Type)
     int     rc;
     char    FileName[128];
     char    temp[512];
-static Flag = 0;
+    int     Flag = 0;
 
     if (Type == 1111)
         Flag = 1;
@@ -787,26 +779,26 @@ static Flag = 0;
             rc = 0;
     }
 
-if (!Flag)
-{
-    if (Type)
+    if (!Flag)
     {
-        if (rc)
-            rc = 0;
-        else
-            rc = 1;
+        if (Type)
+        {
+            if (rc)
+                rc = 0;
+            else
+                rc = 1;
+        }
+        if (!rc)
+        {
+            EndFirstTimer(CMD_QUERY_PATH_INFO, 0);
+            LeaveThread(0, "", CMD_QUERY_PATH_INFO);
+            sprintf(temp, "File: qpathinfo failed for %s GLE(0x%x)\n", path, GetLastError());
+            if (verbose)
+                printf("%s", temp);
+            LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
+            return(-1);
+        }
     }
-    if (!rc)
-    {
-        EndFirstTimer(CMD_QUERY_PATH_INFO, 0);
-        LeaveThread(0, "", CMD_QUERY_PATH_INFO);
-        sprintf(temp, "File: qpathinfo failed for %s\n", path);
-        if (verbose)
-            printf("%s", temp);
-        LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
-        return(-1);
-    }
-}
     EndFirstTimer(CMD_QUERY_PATH_INFO, 1);
     return(0);
 }
@@ -830,7 +822,7 @@ int nb_qfileinfo(int handle)
     {
         EndFirstTimer(CMD_QUERY_FILE_INFO, 0);
         LeaveThread(0, "", CMD_QUERY_FILE_INFO);
-        sprintf(temp, "File: qfileinfo failed for %s\n", ftable[i].name);
+        sprintf(temp, "File: qfileinfo failed for %s GLE(0x%x)\n", ftable[i].name, GetLastError());
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -866,7 +858,7 @@ int nb_qfsinfo(int level)
     {
         EndFirstTimer(CMD_QUERY_FS_INFO, 0);
         LeaveThread(0, "", CMD_QUERY_FS_INFO);
-        strcpy(temp, "File: Disk free space failed\n");
+        sprintf(temp, "File: Disk free space failed GLE(0x%x)\n", GetLastError());
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -950,7 +942,7 @@ void delete_fn(file_info *finfo, const char *name, void *state)
         if (!rc)
         {
             LeaveThread(0, "", CMD_UNLINK);
-            sprintf(temp, "FILE: DeleteFile %s failed\n", name);
+            sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", name, GetLastError());
             if (verbose)
                 printf("%s", temp);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -1171,13 +1163,21 @@ HANDLE CreateObject(const char *fname, uint32 DesiredAccess,
     DWORD dwCreateDisposition = 0;
     DWORD dwDesiredAccess = 0;
     DWORD dwShareAccess = 0;
+    DWORD dwFlags = 0;
 
     if (CreateOptions & FILE_DIRECTORY_FILE)
     {
-        if (!CreateDirectory(fname, NULL))
+        DWORD rc;
+
+        if (!CreateDirectory(fname, NULL) && (rc = GetLastError()) != ERROR_ALREADY_EXISTS) 
+        {
+            SetLastError(rc);
             fd = INVALID_HANDLE_VALUE;
-        else 
-            fd = 0;
+        }
+        else
+        {
+            fd = CreateFile(fname, 0, FILE_SHARE_DELETE | FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+        }
     }
     else
     {
@@ -1217,15 +1217,15 @@ BOOL nb_close1(HANDLE fd)
   ****************************************************************************/
 int nb_list_old(const char *Mask, void (*fn)(file_info *, const char *, void *), void *state)
 {
-	int     num_received = 0;
-	pstring mask;
+    int     num_received = 0;
+    pstring mask;
     char    temp[512];
     char    cFileName[1024];
     int     dwFileAttributes;
     HANDLE  hFind;
     void    *FileData;
 
-	strcpy(mask,Mask);
+    strcpy(mask,Mask);
 
 
     if (!strcmp(&mask[strlen(mask)-2], "\"*"))
