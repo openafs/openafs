@@ -101,7 +101,7 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
     char        WorkingDirectory[512];
     char        ClientText[128];
     char        PathToSecondDir[256];
-    char        temp[256];
+    char        temp[512];
     BOOL        PrintStats;
     PARAMETERLIST *pParameterList;
     struct cmd_struct *WinCommandInfo;
@@ -192,7 +192,7 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
             if ((count > 3) || (rc == WINTORTURE_ASFDLL_NOTFOUND) || (rc == WINTORTURE_ASFPIOCTL_NOTFOUND))
             {
                 LastKnownError = 0;
-                strcpy(temp, "AFS client appears to be off-line\n");
+                sprintf(temp, "AFS path \"%s\" appears to be off-line\n", OriginalAfsLocker);
                 strcpy(pExitStatus->Reason, temp);
                 pExitStatus->ExitStatus = 1;
                 (*pThreadStatus) = 0;
@@ -203,12 +203,12 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
                 LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
                 break;
             }
-            strcpy(temp, "AFS is online, sleeping 10 seconds before continuing\n");
+            sprintf(temp, "AFS path \"%s\" is online, sleeping 10 seconds before continuing\n", OriginalAfsLocker);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
             ++count;
             Sleep(10 * 1000);
         }
-        sprintf(temp, "leaving error %d processing\n", LastKnownError);
+        sprintf(temp, "leaving error 0x%x processing\n", LastKnownError);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         if (count > 3)
             break;
@@ -565,17 +565,17 @@ int IsOnline(char *strPath)
     int     rc;
     struct  ViceIoctl blob;
     struct  VolumeStatus *status;
-    PPIOCTL ppioctl;
-    HINSTANCE hAfsDll;
+    static PPIOCTL ppioctl = NULL;
+    static HINSTANCE hAfsDll = NULL;
 
     rc = WaitForSingleObject(OSMutexHandle, 5 * 1000);
     bret = FALSE;
-    hAfsDll = NULL;
-    hAfsDll = LoadLibrary(AFSDLL);
+    if (hAfsDll == NULL)
+        hAfsDll = LoadLibrary(AFSDLL);
     if (hAfsDll)
     {
-        ppioctl = NULL;
-        ppioctl = (PPIOCTL)GetProcAddress(hAfsDll, "pioctl");
+        if (ppioctl == NULL)
+            ppioctl = (PPIOCTL)GetProcAddress(hAfsDll, "pioctl");
         if (ppioctl != NULL)
         {
             blob.in_size = 0;
@@ -591,15 +591,13 @@ int IsOnline(char *strPath)
         }
         else
             bret = WINTORTURE_ASFPIOCTL_NOTFOUND;
-
-        FreeLibrary(hAfsDll);
-        hAfsDll = NULL;
     }
     else
         bret = WINTORTURE_ASFDLL_NOTFOUND;
 
     if (rc == WAIT_OBJECT_0)
         ReleaseMutex(OSMutexHandle);
+
     return(bret);
 }
 
