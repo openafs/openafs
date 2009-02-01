@@ -1,5 +1,8 @@
 openafs (1.4.7.dfsg1-7) UNRELEASED; urgency=low
 
+  * Make dynroot the default for new installations.  It works much better
+    with systems that don't bring up their network until late in the boot
+    process, such as wireless laptops.  (LP: #318605)
   * Mention libpam-afs-session instead of libpam-openafs-session in the
     description of libpam-openafs-kaserver, and mention libpam-krb5 by
     name.  Thanks, Philipp Kaluza.  (Closes: #501308)
