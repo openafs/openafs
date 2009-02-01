@@ -21,6 +21,7 @@
 
 #include "includes.h"
 #include "common.h"
+#include <stdlib.h>
 
 extern int verbose;
 
@@ -41,6 +42,8 @@ __declspec( thread ) extern FTABLE  ftable[MAX_FILES];
 __declspec( thread ) extern struct  cmd_struct ThreadCommandInfo[CMD_MAX_CMD + 1];
 __declspec( thread ) extern EXIT_STATUS *pExitStatus;
 __declspec( thread ) extern DWORD   LastKnownError;
+__declspec( thread ) int EnforcePathInfoErrors = 0;
+
 extern void LogMessage(int ProcessNumber, char *HostName, char *FileName, char *message, int LogID);
 
 HANDLE CreateObject(const char *fname, uint32 DesiredAccess,
@@ -554,11 +557,15 @@ int nb_writex(int handle, int offset, int size, int ret_size)
     ssize_t status;
     char    FileName[128];
     char    temp[512];
+    unsigned char magic = (unsigned char)getpid();
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
-    if (IoBuffer[0] == 0) 
-        memset(IoBuffer, 1, BufferSize);
+    if (IoBuffer[0] != magic ||
+        IoBuffer[1] != magic ||
+        IoBuffer[2] != magic ||
+        IoBuffer[3] != magic)
+        memset(IoBuffer, magic, BufferSize);
 
     if ((i = FindHandle(handle)) == -1)
         return(-1);
@@ -751,17 +758,36 @@ int nb_rename(char *old, char *New)
     return(0);
 }
 
-
+/* 
+ * Type is used to determine whether the file is expected 
+ * to exist or not.  It is overloaded (temporarily) to control
+ * Flag which indicates whether an error is treated as an error
+ * or not.  The StreamFiles.txt script does not have the Type
+ * parameter set correctly for all 120,000+ lines.  As a result
+ * it is not possible to enforce the presence test throughout
+ * the entire script.
+ */
 int nb_qpathinfo(char *fname, int Type)
 {
     pstring path;
     int     rc;
     char    FileName[128];
     char    temp[512];
-    int     Flag = 0;
+    DWORD   gle;
 
-    if (Type == 1111)
-        Flag = 1;
+    if (Type == 1111) {
+        EnforcePathInfoErrors = 1;
+        Type = 1;
+    } else if (Type == 1001) {
+        EnforcePathInfoErrors = 0;
+        Type = 1;
+    } else if (Type == 1000) {
+        EnforcePathInfoErrors = 0;
+        Type = 0;
+    } else if (Type == 1110) {
+        EnforcePathInfoErrors = 1;
+        Type = 0;
+    }
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
@@ -770,7 +796,8 @@ int nb_qpathinfo(char *fname, int Type)
 
     StartFirstTimer();
     rc = GetPathInfo(path, NULL, NULL, NULL, NULL, NULL);
-
+    if (rc == 0)
+        gle = GetLastError();
     if (strstr(fname, "~TS"))
     {
         if (rc == 0)
@@ -779,7 +806,7 @@ int nb_qpathinfo(char *fname, int Type)
             rc = 0;
     }
 
-    if (!Flag)
+    if (!EnforcePathInfoErrors)
     {
         if (Type)
         {
@@ -792,7 +819,7 @@ int nb_qpathinfo(char *fname, int Type)
         {
             EndFirstTimer(CMD_QUERY_PATH_INFO, 0);
             LeaveThread(0, "", CMD_QUERY_PATH_INFO);
-            sprintf(temp, "File: qpathinfo failed for %s GLE(0x%x)\n", path, GetLastError());
+            sprintf(temp, "File: qpathinfo failed for %s type %d GLE(0x%x)\n", path, Type, gle);
             if (verbose)
                 printf("%s", temp);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);

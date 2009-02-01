@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdlib.h>
 #include "includes.h"
 #include "common.h"
 #ifdef HAVE_HESOID
@@ -142,6 +143,7 @@ DWORD WINAPI StressTestThread(LPVOID lpThreadParameter)
         SetEvent(hWinEventHandle);
         ExitThread(1);
     }
+    memset(IoBuffer, (unsigned char)getpid(), BufferSize);
 
     ShutDownEventHandle = CreateEvent(NULL, TRUE, FALSE, "AfsShutdownEvent");
     PauseEventHandle = CreateEvent(NULL, TRUE, FALSE, "AfsPauseEvent");
