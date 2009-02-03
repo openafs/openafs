@@ -708,7 +708,7 @@ PrintCounters()
     int processSize = 0;
     char tbuffer[32];
 
-    TM_GetTimeOfDay(&tpl, 0);
+    FT_GetTimeOfDay(&tpl, 0);
     Statistics = 1;
     ViceLog(0,
 	    ("Vice was last started at %s\n",
@@ -2217,7 +2217,7 @@ main(int argc, char *argv[])
 	    (void *)&fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
-    TM_GetTimeOfDay(&tp, 0);
+    FT_GetTimeOfDay(&tp, 0);
 
 #ifndef AFS_QUIETFS_ENV
     if (console != NULL) { 

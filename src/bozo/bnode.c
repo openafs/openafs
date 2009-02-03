@@ -144,7 +144,7 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
 
     bnode_CoreName(abnode, aproc->coreName, tbuffer);
 #ifdef BOZO_SAVE_CORES
-    TM_GetTimeOfDay(&Start, 0);
+    FT_GetTimeOfDay(&Start, 0);
     TimeFields = localtime(&Start.tv_sec);
     sprintf(FileName, "%s.%d%02d%02d%02d%02d%02d", tbuffer,
 	    TimeFields->tm_year, TimeFields->tm_mon + 1, TimeFields->tm_mday,
