@@ -16,6 +16,7 @@ my $rootbase="/var/lib/mock/";
 my $resultbase="/tmp/result/";
 my $stashbase="/disk/scratch/repository/";
 my $mockcommand = "/usr/bin/mock";
+my $resultfile;
 my $buildall = 0;
 my $ignorerelease = 1;
 my @newrpms;
@@ -134,6 +135,26 @@ my %platconf = ( "fedora-5-i386" => { osver => "fc5",
 					basearch => "x86_64",
 					updaterepo => "updates-released",
 					results => "fedora-9/x86_64" },
+		 "fedora-10-i386" => { osver => "fc10",
+				      kmod => '1',
+				      basearch => 'i386',
+				      updaterepo => "updates-released",
+				      results => 'fedora-10/i386' },
+		 "fedora-10-x86_64" => { osver => "fc10",
+					kmod => "1",
+					basearch => "x86_64",
+					updaterepo => "updates-released",
+					results => "fedora-10/x86_64" },
+		 "fedora-11-i386" => { osver => "fc11",
+				      kmod => '1',
+				      basearch => 'i386',
+#				      updaterepo => "updates-released",
+				      results => 'fedora-11/i386' },
+		 "fedora-11-x86_64" => { osver => "fc11",
+					kmod => "1",
+					basearch => "x86_64",
+#					updaterepo => "updates-released",
+					results => "fedora-11/x86_64" },
 		 "fedora-development-i386" => { osver => "fcd",
 					  kmod => '1',
 					  basearch => 'i386',
@@ -153,6 +174,7 @@ my %badkernels = (
 
 my $help;
 my $ok = GetOptions("resultdir=s" => \$resultbase,
+		    "resultlist=s" => \$resultfile,
 		    "help" => \$help);
 
 my @platforms = @ARGV;
@@ -234,7 +256,7 @@ foreach my $platform (@platforms) {
 	  next if ($variant eq "xen0"); # Fedora 5 has some bad xen0 kernel-devels
 	  next if ($variant eq "smp");
       }
-      if ($platform=~/fedora-8/ || $platform=~/fedora-9/ || $platform=~/fedora-development/) {
+      if ($platform=~/fedora-8/ || $platform=~/fedora-9/ || $platform=~/fedora-10/ || $platform=~/fedora-development/) {
 	  next if ($variant =~/debug$/); # Fedora 8 debug kernels are bad
       }
       print "$arch : $variant : $version\n";
@@ -282,7 +304,7 @@ foreach my $platform (@platforms) {
 		   $osver.".".$oafsrelease.".".$basearch.".rpm ".
 		   $resultdir) == 0
           or die "Copy failed with : $!\n";
-      push @newrpms, $mockresults."/".$rpm."-".$oafsversion."-".
+      push @newrpms, $resultdir."/".$rpm."-".$oafsversion."-".
 		     $osver.".".$oafsrelease.".".$basearch.".rpm";
     }
   } else {
@@ -342,7 +364,7 @@ foreach my $platform (@platforms) {
           }
           system("cp ".$mockresults."/kmod-openafs-".$variant.$oafsversion."-".$oafsrelease.".".$kversion.".".$arch.".rpm $resultdir") == 0
             or die "Copy failed with : $!\n";
-	  push @newrpms, $mockresults."/kmod-openafs-".$variant.$oafsversion."-".$oafsrelease.".".$kversion.".".$arch.".rpm";
+	  push @newrpms, $resultdir."/kmod-openafs-".$variant.$oafsversion."-".$oafsrelease.".".$kversion.".".$arch.".rpm";
         }
       } else {
          print "All kernel modules already built for $version on $arch\n";
@@ -384,4 +406,8 @@ foreach my $platform (@platforms) {
 print "=====================================================================\n";
 print "All builds complete\nBuilt:\n";
 print join("\n",@newrpms);
+if (defined($resultfile)) {
+  my $resultfh=new IO::File $resultfile, 'w';
+  print $resultfh join("\n",@newrpms);
+}
 
