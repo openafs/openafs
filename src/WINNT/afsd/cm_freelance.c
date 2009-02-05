@@ -385,11 +385,10 @@ int cm_reInitLocalMountPoints() {
 
     osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
-
     lock_ObtainWrite(&cm_scacheLock);
     lock_ObtainMutex(&cm_Freelance_Lock);  /* always scache then freelance lock */
     for (i=1; i<=cm_noLocalMountPoints; i++) {
-        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, i, 1);
+        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, i*2, i);
         hash = CM_SCACHE_HASH(&aFid);
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             if (scp != cm_data.rootSCachep && cm_FidCmp(&scp->fid, &aFid) == 0) {
@@ -1068,7 +1067,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
 
     /* cm_reInitLocalMountPoints(); */
     if (fidp)
-        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints, 1);
+        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints*2, cm_noLocalMountPoints);
     cm_noteLocalMountPointChange();
     return 0;
 }
@@ -1275,7 +1274,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 
     /* cm_reInitLocalMountPoints(); */
     if (fidp)
-        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints, 1);
+        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints*2, cm_noLocalMountPoints);
     cm_noteLocalMountPointChange();
     return 0;
 }
