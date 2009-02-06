@@ -2669,6 +2669,8 @@ afs_msg_newcred(khm_int32 msg_subtype,
                 khm_handle csp_cell = NULL;
                 BOOL bgetLinked = 0;
 
+                _progress(i, l->n_rows);
+
                 if (l->rows[i].flags &
                     (DLGROW_FLAG_DONE | DLGROW_FLAG_DELETED))
 
@@ -2786,6 +2788,8 @@ afs_msg_newcred(khm_int32 msg_subtype,
                     }
                 }
             }
+
+            _progress(1,1);
 
         _skip_tokens:
 
