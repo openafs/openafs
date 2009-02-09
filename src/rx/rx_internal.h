@@ -99,7 +99,7 @@ static inline afs_int32 rx_AtomicSwap_int(afs_int32 *oldval, afs_int32 newval) {
 #define rx_AtomicIncrement(object, mutex) rx_MutexIncrement(object, mutex)
 #define rx_AtomicOr(object, operand, mutex) rx_MutexOr(object, operand, mutex)
 #define rx_AtomicAnd(object, operand, mutex) rx_MutexAnd(object, operand, mutex)
-#define rx_AtomicAdd_NL(object, addend) object += addend
+#define rx_AtomicAdd_NL(object, addend) (object += addend)
 #define rx_AtomicAdd(object, addend, mutex) rx_MutexAdd(object, addand, mutex)
 #define rx_AtomicDecrement_NL(object) (object)--
 #define rx_AtomicDecrement(object, mutex) rx_MutexDecrement(object, mutex)
