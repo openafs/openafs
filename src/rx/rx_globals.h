@@ -282,9 +282,9 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
    rx_freePktQ_lock must be held. default is to reduce the queue size to 40% ofmax */
 #define RX_TS_FPQ_LTOG(rx_ts_info_p) \
     do { \
-        register int i; \
-        register struct rx_packet * p; \
-        register int tsize = (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize; \
+        int i; \
+        struct rx_packet * p; \
+        int tsize = MIN((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize); \
 	if (tsize <= 0) break; \
         for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
              i < tsize; i++,p=queue_Prev(p, rx_packet)); \
