@@ -33,9 +33,10 @@
 /* Reasons (these could be communicated to venus or converted to messages) */
 
 #define FSYNC_WHATEVER		0	/* XXXX */
-#define FSYNC_SALVAGE		1	/* volume is being salvaged */
+#define FSYNC_READONLY		1	/* volume is readonly */
 #define FSYNC_MOVE		2	/* volume is being moved */
 #define FSYNC_OPERATOR		3	/* operator forced volume offline */
+#define FSYNC_SALVAGE		4	/* volume is being salvaged */
 
 
 /* Replies (1 byte) */

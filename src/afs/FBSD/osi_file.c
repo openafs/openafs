@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_file.c,v 1.13.2.2 2007/12/13 19:18:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_file.c,v 1.13.2.3 2008/08/26 14:02:14 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -50,7 +50,9 @@ osi_UFSOpen(afs_int32 ainode)
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
-#if defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD80_ENV)
+    VOP_UNLOCK(vp, 0);
+#elif defined(AFS_FBSD50_ENV)
     VOP_UNLOCK(vp, 0, curthread);
 #else
     VOP_UNLOCK(vp, 0, curproc);
@@ -71,7 +73,11 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
-#if defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD80_ENV)
+    vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+    VOP_UNLOCK(afile->vnode, 0);
+#elif defined(AFS_FBSD50_ENV)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curthread);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
     VOP_UNLOCK(afile->vnode, LK_EXCLUSIVE, curthread);
@@ -105,7 +111,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 {
     struct vattr tvattr;
     struct vnode *vp;
-    register afs_int32 code;
+    register afs_int32 code, glocked;
     AFS_STATCNT(osi_Truncate);
 
     MObtainWriteLock(&afs_xosi, 321);
@@ -115,8 +121,13 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
      * have very slow truncates, even when the file is already
      * small enough.  Check now and save some time.
      */
-    AFS_GUNLOCK();
-#if defined(AFS_FBSD50_ENV)
+    glocked = ISAFS_GLOCK();
+    if (glocked)
+      AFS_GUNLOCK();
+#if defined(AFS_FBSD80_ENV)
+    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+#elif defined(AFS_FBSD50_ENV)
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
 #else
@@ -135,12 +146,15 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 #endif
 
 out:
-#if defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD80_ENV)
+    VOP_UNLOCK(vp, 0);
+#elif defined(AFS_FBSD50_ENV)
     VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
 #else
     VOP_UNLOCK(vp, LK_EXCLUSIVE, curproc);
 #endif
-    AFS_GLOCK();
+    if (glocked)
+      AFS_GLOCK();
     MReleaseWriteLock(&afs_xosi);
     return code;
 }

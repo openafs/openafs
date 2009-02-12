@@ -86,11 +86,13 @@ extern int afs_shuttingdown;
 #define	AFS_NRXPACKETS	80
 #define	AFS_RXDEADTIME	50
 #define AFS_HARDDEADTIME	120
+#define	AFS_IDLEDEADTIME	50
 #define AFS_BLKBITS	12
 #define AFS_BLKSIZE	(1 << AFS_BLKBITS)
 
 extern afs_int32 afs_rx_deadtime;
 extern afs_int32 afs_rx_harddead;
+extern afs_int32 afs_rx_idledead;
 
 struct sysname_info {
     char *name;
@@ -181,11 +183,14 @@ struct vrequest {
     afs_int32 uid;		/* user id making the request */
     afs_int32 busyCount;	/* how many busies we've seen so far */
     afs_int32 flags;		/* things like O_SYNC, O_NONBLOCK go here */
-    char initd;			/* if non-zero, non-uid fields meaningful */
+    char initd;			/* if non-zero, Error fields meaningful */
     char accessError;		/* flags for overriding error return code */
     char volumeError;		/* encountered a missing or busy volume */
     char networkError;		/* encountered network problems */
     char permWriteError;	/* fileserver returns permenent error. */
+    char tokenError;            /* a token error other than expired. */
+    char idleError;             /* the server idled too long */
+    char skipserver[MAXHOSTS];
 };
 #define VOLMISSING 1
 #define VOLBUSY 2
@@ -549,7 +554,11 @@ struct SimpleLocks {
 #define CUnlinkedDel	0x00040000
 #define CVFlushed	0x00080000
 #define CCore1		0x00100000	/* osf1 core file; not same as CCore above */
+#ifdef AFS_LINUX22_ENV
+#define CPageWrite      0x00200000      /* to detect vm deadlock - linux */
+#else
 #define CWritingUFS	0x00200000	/* to detect vm deadlock - used by sgi */
+#endif
 #define CCreating	0x00400000	/* avoid needless store after open truncate */
 #define CPageHog	0x00800000	/* AIX - dumping large cores is a page hog. */
 #define CDCLock		0x02000000	/* Vnode lock held over call to GetDownD */

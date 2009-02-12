@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.19 2008/04/09 16:40:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.20 2008/08/22 04:32:01 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -479,7 +479,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     pp->natMTU = MIN(pp->ifMTU, OLD_MAX_PACKET_SIZE);
     pp->ifDgramPackets =
 	MIN(rxi_nDgramPackets,
-	    rxi_AdjustDgramPackets(RX_MAX_FRAGS, pp->ifMTU));
+	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->maxDgramPackets = 1;
 
     /* Initialize slow start parameters */

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH vlserver 8 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH vlserver 8 "OpenAFS" "24/Aug/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -190,7 +190,7 @@
 .SH "NAME"
 vlserver \- Initializes the Volume Location Server
 .SH "SYNOPSIS"
-\fBvlserver\fR <<\ [\fB\-p\fR\ <\fIlwp\ processes\fR] >>> [\fB\-nojumbo\fR]
+\fBvlserver\fR <<\ [\fB\-p\fR\ <\fIlwp\ processes\fR] >>> [\fB\-nojumbo\fR] [\fB\-jumbo\fR] <<\ [\fB\-d\fR\ <\fIdebug\ level\fR] >>>
     [\fB\-allow-dotted-principal\fR] [\fB\-enable_peer_stats\fR] [\fB\-enable_process_stats\fR] 
     [\fB\-help\fR]
 .SH "DESCRIPTION"
@@ -232,12 +232,19 @@ suites. Provide the command name and all option names in full.
 .Ip "\fB\-p\fR <\fIlwp processes\fR>" 4
 Sets the number of server lightweight processes (LWPs) to run.  Provide an
 integer between \f(CW4\fR and \f(CW16\fR. The default is \f(CW9\fR.
-.Ip "\fB\-nojumbo\fR" 4
-Prohibits the server from sending or receiving jumbograms. A jumbogram is
+.Ip "\fB\-d\fR <\fIdebug level\fR>" 4
+Sets the detail level for the debugging trace written to the
+\fI/usr/afs/logs/VLLog\fR file. Provide one of the following values, each
+of which produces an increasingly detailed trace: \f(CW0\fR, \f(CW1\fR, \f(CW5\fR, \f(CW25\fR,
+and \f(CW125\fR. 
+.Ip "\fB\-jumbo\fR" 4
+Allows the server to send and receive jumbograms. A jumbogram is
 a large-size packet composed of 2 to 4 normal Rx data packets that share
-the same header. The \s-1VL\s0 Server uses jumbograms by default, but some
+the same header. The \s-1VL\s0 Server does not use jumbograms by default, as some
 routers are not capable of properly breaking the jumbogram into smaller
 packets and reassembling them.
+.Ip "\fB\-nojumbo\fR" 4
+Deprecated; Jumbograms are disabled by default. 
 .Ip "\fB\-enable_peer_stats\fR" 4
 Activates the collection of Rx statistics and allocates memory for their
 storage. For each connection with a specific \s-1UDP\s0 port on another machine,
@@ -300,6 +307,10 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Header "OPTIONS"
 
 .IX Item "\fB\-p\fR <\fIlwp processes\fR>"
+
+.IX Item "\fB\-d\fR <\fIdebug level\fR>"
+
+.IX Item "\fB\-jumbo\fR"
 
 .IX Item "\fB\-nojumbo\fR"
 

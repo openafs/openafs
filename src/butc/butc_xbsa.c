@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/butc_xbsa.c,v 1.8.2.1 2007/07/16 20:43:31 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/butc_xbsa.c,v 1.8.2.2 2008/07/11 09:54:43 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/stds.h>
@@ -34,6 +34,22 @@ extern int debugLevel;
 char resourceType[20] = "LFS FILE SYSTEM";
 #define GOODSTR(s) ((s)?(s):"<NULL>")
 
+#ifdef NEW_XBSA
+BSA_Int16 (*XBSAInit)(long *, SecurityToken *, ObjectOwner *, char **);
+BSA_Int16 (*XBSABeginTxn)(long);
+BSA_Int16 (*XBSAEndTxn)(long, Vote);
+BSA_Int16 (*XBSATerminate)(long);
+BSA_Int16 (*XBSAQueryObject)(long, QueryDescriptor *, ObjectDescriptor *);
+BSA_Int16 (*XBSAGetObject)(long, ObjectDescriptor *, DataBlock *);
+BSA_Int16 (*XBSAEndData)(long);
+BSA_Int16 (*XBSACreateObject)(long, ObjectDescriptor *, DataBlock *);
+BSA_Int16 (*XBSADeleteObject)(long, CopyType, ObjectName *, CopyId *);
+BSA_Int16 (*XBSAMarkObjectInactive)(long, ObjectName *);
+BSA_Int16 (*XBSASendData)(long, DataBlock *);
+BSA_Int16 (*XBSAGetData)(long, DataBlock *);
+void (*XBSAQueryApiVersion)(ApiVersion *);
+BSA_Int16 (*XBSAGetEnvironment)(long, ObjectOwner *, char **);
+#else
 BSA_Int16(*XBSAInit) (BSA_UInt32 *, SecurityToken *, ObjectOwner *, char **);
 BSA_Int16(*XBSABeginTxn) (BSA_UInt32);
 BSA_Int16(*XBSAEndTxn) (BSA_UInt32, Vote);
@@ -49,7 +65,7 @@ BSA_Int16(*XBSASendData) (BSA_UInt32, DataBlock *);
 BSA_Int16(*XBSAGetData) (BSA_UInt32, DataBlock *);
 BSA_Int16(*XBSAQueryApiVersion) (ApiVersion *);
 BSA_Int16(*XBSAGetEnvironment) (BSA_UInt32, ObjectOwner *, char **);
-
+#endif
 
 xbsa_error(int rc, struct butx_transactionInfo *info)
 {
@@ -122,6 +138,7 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
 
     switch (serverType) {
     case XBSA_SERVER_TYPE_ADSM:
+#ifndef NEW_XBSA
 #if defined(AFS_AIX_ENV)
 	dynlib =
 	    dlopen("/usr/lib/libXApi.a(bsashr10.o)",
@@ -137,6 +154,7 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
 #else
 	dynlib = NULL;
 #endif
+#endif
 	break;
     default:
 	ELog(0, "xbsa_MountLibrary: The serverType %d is not recognized\n",
@@ -145,15 +163,18 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
 	break;
     }
 
+#ifndef NEW_XBSA
     if (dynlib == NULL) {
 	ELog(0,
 	     "xbsa_MountLibrary: The dlopen call to load the XBSA shared library failed\n");
 	return (BUTX_NOLIBRARY);
     }
+#endif
 
     memset(info, 0, sizeof(struct butx_transactionInfo));
     XBSA_SET_SERVER_TYPE(info->serverType, serverType);
 
+#ifndef NEW_XBSA
 #if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
     XBSAInit = (BSA_Int16(*)
 		(BSA_UInt32 *, SecurityToken *, ObjectOwner *,
@@ -204,10 +225,40 @@ xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType)
 	     "xbsa_MountLibrary: The dlopen call to load the XBSA shared library failed\n");
 	return (BUTX_NOLIBRARY);
     }
-
     XBSAQueryApiVersion(&(info->apiVersion));
 #endif
+#else
+#if defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
+    XBSAInit                    = BSAInit;
+    XBSABeginTxn                = BSABeginTxn;
+    XBSAEndTxn                  = BSAEndTxn;
+    XBSATerminate               = BSATerminate;
+    XBSAQueryObject             = BSAQueryObject;
+    XBSAGetObject               = BSAGetObject;
+    XBSAEndData                 = BSAEndData;
+    XBSACreateObject            = BSACreateObject;
+    XBSAMarkObjectInactive      = BSAMarkObjectInactive;
+    XBSADeleteObject            = BSADeleteObject;
+    XBSASendData                = BSASendData;
+    XBSAGetData                 = BSAGetData;
+    XBSAQueryApiVersion         = BSAQueryApiVersion;
+    XBSAGetEnvironment          = BSAGetEnvironment;
+    
+    if (!XBSAInit || !XBSABeginTxn || !XBSAEndTxn || !XBSATerminate ||
+	!XBSAQueryObject || !XBSAGetObject || !XBSAEndData ||
+	!XBSACreateObject || !XBSADeleteObject || !XBSAMarkObjectInactive ||
+	!XBSASendData || !XBSAGetData || !XBSAQueryApiVersion ||
+	!XBSAGetEnvironment) {
+	ELog(0,"xbsa_MountLibrary: The dlopen call to load the XBSA shared library failed\n");
+	return(BUTX_NOLIBRARY);
+    }
+    XBSAQueryApiVersion(&(info->apiVersion));
+#endif
+#endif
 
+#ifdef DEBUG_BUTC
+	printf("xbsa_MountLibrary : XBSA function Pointers initialised. \n");
+#endif
     /*
      * Verify the API version
      */
