@@ -1283,6 +1283,7 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+    char addr[16];
 
     if (!volp || !statep) {
 #ifdef DEBUG
@@ -1293,28 +1294,49 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
-        if (tsrp->status == srv_deleted)
-            continue;
         tsp = tsrp->server;
+        sprintf(addr, "%d.%d.%d.%d", 
+                 ((tsp->addr.sin_addr.s_addr & 0xff)),
+                 ((tsp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                 ((tsp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                 ((tsp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+
+        if (tsrp->status == srv_deleted) {
+            osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s deleted", 
+                     statep->ID, osi_LogSaveString(afsd_logp,addr));
+            continue;
+        }
         if (tsp) {
             cm_GetServerNoLock(tsp);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
                 if (tsrp->status == srv_busy) {
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s busy", 
+                              statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allOffline = 0;
                     someBusy = 1;
                 } else if (tsrp->status == srv_offline) {
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s offline", 
+                              statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allBusy = 0;
                     someOffline = 1;
                 } else {
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s online", 
+                              statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allOffline = 0;
                     allBusy = 0;
                 }
+            } else {
+                osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s online", 
+                          statep->ID, osi_LogSaveString(afsd_logp,addr));
             }
             cm_PutServerNoLock(tsp);
         }
     }   
     lock_ReleaseWrite(&cm_serverLock);
+
+    osi_Log5(afsd_logp, "cm_UpdateVolumeStatusInt allDown %d allBusy %d someBusy %d someOffline %d allOffline %d", 
+             allDown, allBusy, someBusy, someOffline, allOffline);
 
     if (allDown)
 	newStatus = vl_alldown;
