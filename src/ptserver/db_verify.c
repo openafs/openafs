@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16.2.5 2007/10/31 04:13:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16.2.6 2008/10/27 23:54:10 shadow Exp $");
 
 /*
  *                      (3) Define a structure, idused, instead of an
@@ -395,8 +395,9 @@ WalkNextChain(char map[],		/* one byte per db entry */
     struct prentry c;		/* continuation entry */
     afs_int32 na;		/* next thread */
     int ni;
-    afs_int32 eid;
-    int count;			/* number of members */
+    afs_int32 eid = 0;
+    int count = 0;		/* number of members, set to > 9999 if */
+    				/* list ends early */
     int i;
     int noErrors = 1;
     int length;			/* length of chain */
@@ -410,7 +411,6 @@ WalkNextChain(char map[],		/* one byte per db entry */
 	head = ntohl(e->next);
 	eid = ntohl(e->id);
 	bit = MAP_CONT;
-	count = 0;		/* set to >9999 if list ends early */
 #if defined(SUPERGROUPS)
 	sgcount = 0;
 	sghead = ntohl(g->next);
@@ -713,7 +713,7 @@ WalkOwnedChain(char map[],		/* one byte per db entry */
     struct prentry c;		/* continuation entry */
     afs_int32 na;		/* next thread */
     int ni;
-    afs_int32 eid;
+    afs_int32 eid = 0;
     int length;			/* length of chain */
 
     if (e) {

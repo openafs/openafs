@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/restore.c,v 1.8.2.9 2007/11/26 21:21:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/restore.c,v 1.8.2.10 2008/10/18 15:23:37 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -164,7 +164,8 @@ bc_Restorer(aindex)
     afs_int32 tapedumpid, parent;
 
     afs_int32 nentries = 0;
-    afs_int32 last, next, ve, vecount;
+    afs_int32 last = 0;
+    afs_int32 next, ve, vecount;
     struct bc_tapeItem *ti, *pti, *nti;
     struct bc_tapeList *tapeList = (struct bc_tapeList *)0;
     struct bc_tapeList *tle, *ptle, *ntle;

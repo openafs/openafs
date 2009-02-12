@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH CellServDB 5 "OpenAFS" "5/Jan/2006" "AFS File Reference"
+.TH CellServDB 5 "OpenAFS" "13/Jul/2008" "AFS File Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -196,13 +196,13 @@ database server machines in the local cell and any foreign cell that is to
 be accessible from the local client machine.  The other version is used on
 servers and lists only the database servers in the local cell.
 .Sh "Client CellServDB"
-The client version of the CellServDB file lists the database server
-machines in the local cell and any foreign cell that is to be accessible
-from the local client machine. Database server machines run the
-Authentication Server, Backup Server, Protection Server, and Volume
-Location (\s-1VL\s0) Server (the \fBkaserver\fR, \fBbuserver\fR, \fBptserver\fR, and
-\fBvlserver\fR) processes, which maintain the cell's administrative \s-1AFS\s0
-databases.
+Along with \s-1AFSDB\s0 entries in \s-1DNS\s0, the client version of the CellServDB file
+lists the database server machines in the local cell and any foreign cell
+that is to be accessible from the local client machine. Database server
+machines run the Authentication Server (optional), Backup Server,
+Protection Server, and Volume Location (\s-1VL\s0) Server (the \fBkaserver\fR,
+\fBbuserver\fR, \fBptserver\fR, and \fBvlserver\fR) processes, which maintain the
+cell's administrative \s-1AFS\s0 databases.
 .PP
 The Cache Manager and other processes running on a client machine use the
 list of a cell's database server machines when performing several common
@@ -221,11 +221,12 @@ Protection Server when users create protection groups or request
 information from the Protection Database.
 .PP
 The Cache Manager reads the CellServDB file into kernel memory as it
-initializes, and not again until the machine next reboots. To enable users
-on the local machine to continue accessing the cell correctly, update the
-file whenever a database server machine is added to or removed from a
-cell. To update the kernel-resident list of database server machines
-without rebooting, use the \fBfs newcell\fR command.
+initializes, and not again until the machine next reboots or the client
+service restarts. To enable users on the local machine to continue
+accessing the cell correctly, update the file whenever a database server
+machine is added to or removed from a cell. To update the kernel-resident
+list of database server machines without rebooting, use the \fBfs newcell\fR
+command.
 .PP
 The \fICellServDB\fR file is in \s-1ASCII\s0 format and must reside in the
 \fI/usr/vice/etc\fR directory on each \s-1AFS\s0 client machine. Use a text editor
@@ -239,15 +240,16 @@ to access, whereas the server version lists only the local cell's database
 server machines.
 .Sh "Server CellServDB"
 The server version of the \fICellServDB\fR file lists the local cell's
-database server machines. These machines run the Authentication Server,
-Backup Server, Protection Server, and Volume Location (\s-1VL\s0) Server (the
-\fBkaserver\fR, \fBbuserver\fR, \fBptserver\fR, and \fBvlserver\fR) processes, which
-maintain the cell's administrative \s-1AFS\s0 databases. The initial version of
-the file is created with the \fBbos setcellname\fR command during the
-installation of the cell's server machine, which is automatically recorded
-as the cell's first database server machine. When adding or removing
-database server machines, be sure to update this file appropriately. It
-must reside in the \fI/usr/afs/etc\fR directory on each \s-1AFS\s0 server machine.
+database server machines. These machines run the Authentication Server
+(optional), Backup Server, Protection Server, and Volume Location (\s-1VL\s0)
+Server (the \fBkaserver\fR, \fBbuserver\fR, \fBptserver\fR, and \fBvlserver\fR)
+processes, which maintain the cell's administrative \s-1AFS\s0 databases. The
+initial version of the file is created with the \fBbos setcellname\fR command
+during the installation of the cell's server machine, which is
+automatically recorded as the cell's first database server machine. When
+adding or removing database server machines, be sure to update this file
+appropriately. It must reside in the \fI/usr/afs/etc\fR directory on each \s-1AFS\s0
+server machine.
 .PP
 The database server processes consult the \fICellServDB\fR file to learn
 about their peers, with which they must maintain constant connections in
@@ -271,7 +273,7 @@ In cells that use the Update Server to distribute the contents of the
 \fI/usr/afs/etc\fR directory, it is customary to edit only the copy of the
 file stored on the system control machine. Otherwise, edit the file on
 each server machine individually. For instructions on adding and removing
-database server machine, see the \fI\s-1IBM\s0 \s-1AFS\s0 Quick Beginnings\fR chapter on
+database server machine, see the \fIOpenAFS Quick Start\fR chapter on
 installing additional server machines.
 .Sh "CellServDB Format"
 Both \fICellServDB\fR files have the same format:
@@ -318,6 +320,7 @@ The following example shows entries for two cells in a client
 \&   192.12.108.55        #testdb2.abc.com
 .Ve
 .SH "SEE ALSO"
+the \fIafsd(8)\fR manpage,
 the \fIbos_addhost(8)\fR manpage,
 the \fIbos_listhosts(8)\fR manpage,
 the \fIbos_removehost(8)\fR manpage,
@@ -331,7 +334,7 @@ the \fIvlserver(8)\fR manpage,
 the \fIupclient(8)\fR manpage,
 the \fIupserver(8)\fR manpage
 .PP
-\fIIBM AFS Quick Beginnings\fR
+\fIOpenAFS Quick Start\fR
 .SH "COPYRIGHT"
 IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
 .PP
