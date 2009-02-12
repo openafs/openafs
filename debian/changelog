@@ -34,6 +34,7 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
     addition to ntp, allowing for openntpd.  (Closes: #508258)
   * Add ${misc:Depends} to all dependencies.
   * Add explanations for the Lintian overrides.
+  * Use set -e instead of #!/bin/sh -e in maintainer scripts.
   * Translation updates:
     - Spanish, thanks Francisco Javier Cuadrado.  (Closes: #514452)
 
