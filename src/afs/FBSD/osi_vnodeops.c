@@ -48,7 +48,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.18.2.4 2005/05/23 21:26:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.18.2.5 2008/08/26 14:02:14 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -95,6 +95,11 @@ static vop_setattr_t	afs_vop_setattr;
 static vop_strategy_t	afs_vop_strategy;
 static vop_symlink_t	afs_vop_symlink;
 static vop_write_t	afs_vop_write;
+#if defined(AFS_FBSD70_ENV) && !defined(AFS_FBSD90_ENV)
+static vop_lock1_t      afs_vop_lock;
+static vop_unlock_t     afs_vop_unlock;
+static vop_islocked_t   afs_vop_islocked;
+#endif
 
 struct vop_vector afs_vnodeops = {
 	.vop_default =		&default_vnodeops,
@@ -128,6 +133,11 @@ struct vop_vector afs_vnodeops = {
 	.vop_strategy =		afs_vop_strategy,
 	.vop_symlink =		afs_vop_symlink,
 	.vop_write =		afs_vop_write,
+#if defined(AFS_FBSD70_ENV) && !defined(AFS_FBSD90_ENV)
+	.vop_lock1 =            afs_vop_lock,
+	.vop_unlock =           afs_vop_unlock,
+	.vop_islocked =         afs_vop_islocked,
+#endif
 };
 
 #else /* AFS_FBSD60_ENV */
@@ -213,6 +223,11 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_write_desc, (vop_t *) afs_vop_write},	/* write */
     {&vop_ioctl_desc, (vop_t *) afs_vop_ioctl},	/* XXX ioctl */
     /*{ &vop_seek_desc, afs_vop_seek }, *//* seek */
+#if defined(AFS_FBSD70_ENV) && !defined(AFS_FBSD90_ENV)
+    {&vop_lock1_desc, (vop_t *) afs_vop_lock}, /* lock */
+    {&vop_unlock_desc, (vop_t *) afs_vop_unlock}, /* unlock */
+    {&vop_islocked_desc, (vop_t *) afs_vop_islocked}, /* islocked */
+#endif
     {NULL, NULL}
 };
 struct vnodeopv_desc afs_vnodeop_opv_desc =
@@ -232,6 +247,123 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 #ifdef AFS_FBSD50_ENV
 #define a_p a_td
 #endif
+
+#if defined(AFS_FBSD80_ENV)
+#define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags))
+#define MA_VOP_LOCK(vp, flags, p) (VOP_LOCK(vp, flags))
+#define MA_VOP_UNLOCK(vp, flags, p) (VOP_UNLOCK(vp, flags))
+#else
+#define ma_vn_lock(vp, flags, p) (vn_lock(vp, flags, p))
+#define MA_VOP_LOCK(vp, flags, p) (VOP_LOCK(vp, flags, p))
+#define MA_VOP_UNLOCK(vp, flags, p) (VOP_UNLOCK(vp, flags, p))
+#endif
+
+#ifdef AFS_FBSD70_ENV
+#ifndef AFS_FBSD80_ENV
+/* From kern_lock.c */
+#define	COUNT(td, x)	if ((td)) (td)->td_locks += (x)
+#define LK_ALL (LK_HAVE_EXCL | LK_WANT_EXCL | LK_WANT_UPGRADE | \
+	LK_SHARE_NONZERO | LK_WAIT_NONZERO)
+
+static __inline void
+sharelock(struct thread *td, struct lock *lkp, int incr) {
+	lkp->lk_flags |= LK_SHARE_NONZERO;
+	lkp->lk_sharecount += incr;
+	COUNT(td, incr);
+}
+#endif
+
+/*
+ * Standard lock, unlock and islocked functions.
+ */
+int
+afs_vop_lock(ap)
+    struct vop_lock1_args /* {
+			     struct vnode *a_vp;
+			     int a_flags;
+			     struct thread *a_td;
+			     char *file;
+			     int line;
+			     } */ *ap;
+{
+    struct vnode *vp = ap->a_vp;
+    struct lock *lkp = vp->v_vnlock;
+
+#if 0 && defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
+    afs_warn("afs_vop_lock: tid %d pid %d \"%s\"\n", curthread->td_tid,
+	     curthread->td_proc->p_pid, curthread->td_name);
+    kdb_backtrace();
+#endif
+
+#ifdef AFS_FBSD80_ENV
+    return (_lockmgr_args(lkp, ap->a_flags, VI_MTX(vp),
+			  LK_WMESG_DEFAULT, LK_PRIO_DEFAULT, LK_TIMO_DEFAULT,
+			  ap->a_file, ap->a_line));
+#else
+    return (_lockmgr(lkp, ap->a_flags, VI_MTX(vp), ap->a_td, ap->a_file, ap->a_line));
+#endif
+}
+
+/* See above. */
+int
+afs_vop_unlock(ap)
+    struct vop_unlock_args /* {
+			      struct vnode *a_vp;
+			      int a_flags;
+			      struct thread *a_td;
+			      } */ *ap;
+{
+    struct vnode *vp = ap->a_vp;
+    struct lock *lkp = vp->v_vnlock;
+
+#ifdef AFS_FBSD80_ENV
+    int code;
+    u_int op;
+    op = ((ap->a_flags) | LK_RELEASE) & LK_TYPE_MASK;
+    int glocked = ISAFS_GLOCK();
+    if (glocked)
+	AFS_GUNLOCK();
+    if ((op & (op - 1)) != 0) {
+      afs_warn("afs_vop_unlock: Shit.\n");
+      goto done;
+    }
+    code = lockmgr(lkp, ap->a_flags | LK_RELEASE, VI_MTX(vp));
+ done:
+    if (glocked)
+	AFS_GLOCK();
+    return(code);
+#else
+    /* possibly in current code path where this
+     * forces trace, we should have had a (shared? not
+     * necessarily, see _lockmgr in kern_lock.c) lock
+     * and that's the real bug.  but. 
+     */
+    critical_enter();
+    if ((lkp->lk_exclusivecount == 0) &&
+	(!(lkp->lk_flags & LK_SHARE_NONZERO))) {
+	sharelock(ap->a_td, lkp, 1);
+    }
+    critical_exit();
+    return (lockmgr(lkp, ap->a_flags | LK_RELEASE, VI_MTX(vp),
+		    ap->a_td));
+#endif
+}
+
+/* See above. */
+int
+afs_vop_islocked(ap)
+    struct vop_islocked_args /* {
+				struct vnode *a_vp;
+				struct thread *a_td; (not in 80)
+				} */ *ap;
+{
+#ifdef AFS_FBSD80_ENV
+    return (lockstatus(ap->a_vp->v_vnlock));
+#else
+    return (lockstatus(ap->a_vp->v_vnlock, ap->a_td));
+#endif
+}
+#endif /* 70 */
 
 /*
  * Mosty copied from sys/ufs/ufs/ufs_vnops.c:ufs_pathconf().
@@ -346,25 +478,39 @@ afs_vop_lookup(ap)
 #else
     struct proc *p = ap->a_cnp->cn_proc;
 #endif
+
+    dvp = ap->a_dvp;
+    if (dvp->v_type != VDIR) {
+#ifndef AFS_FBSD70_ENV
+	*ap->a_vpp = 0;
+#endif
+	return ENOTDIR;
+    }
+
+    if ((flags & ISDOTDOT) && (dvp->v_vflag & VV_ROOT))
+	return EIO;
+
     GETNAME();
 
     lockparent = flags & LOCKPARENT;
     wantparent = flags & (LOCKPARENT | WANTPARENT);
 
-    if (ap->a_dvp->v_type != VDIR) {
-	*ap->a_vpp = 0;
-	DROPNAME();
-	return ENOTDIR;
-    }
-    dvp = ap->a_dvp;
+#ifdef AFS_FBSD80_ENV
+    cnp->cn_flags |= MPSAFE; /* steel */
+#endif
+
+#ifndef AFS_FBSD70_ENV
     if (flags & ISDOTDOT)
 	VOP_UNLOCK(dvp, 0, p);
+#endif
+
     AFS_GLOCK();
     error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
     AFS_GUNLOCK();
+
     if (error) {
 	if (flags & ISDOTDOT)
-	    VOP_LOCK(dvp, LK_EXCLUSIVE | LK_RETRY, p);
+	    MA_VOP_LOCK(dvp, LK_EXCLUSIVE | LK_RETRY, p);
 	if ((cnp->cn_nameiop == CREATE || cnp->cn_nameiop == RENAME)
 	    && (flags & ISLASTCN) && error == ENOENT)
 	    error = EJUSTRETURN;
@@ -381,10 +527,10 @@ afs_vop_lookup(ap)
      * we also always return the vnode locked. */
 
     if (flags & ISDOTDOT) {
-	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	/* always return the child locked */
 	if (lockparent && (flags & ISLASTCN)
-	    && (error = vn_lock(dvp, LK_EXCLUSIVE, p))) {
+	    && (error = ma_vn_lock(dvp, LK_EXCLUSIVE, p))) {
 	    vput(vp);
 	    DROPNAME();
 	    return (error);
@@ -393,9 +539,12 @@ afs_vop_lookup(ap)
 	/* they're the same; afs_lookup() already ref'ed the leaf.
 	 * It came in locked, so we don't need to ref OR lock it */
     } else {
-	if (!lockparent || !(flags & ISLASTCN))
-	    VOP_UNLOCK(dvp, 0, p);	/* done with parent. */
-	vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	if (!lockparent || !(flags & ISLASTCN)) {
+#ifndef AFS_FBSD70_ENV /* 6 too? */
+	    MA_VOP_UNLOCK(dvp, 0, p);	/* done with parent. */
+#endif
+	}
+	ma_vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, p);
 	/* always return the child locked */
     }
     *ap->a_vpp = vp;
@@ -440,7 +589,7 @@ afs_vop_create(ap)
 
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
-	vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY, p);
+	ma_vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY, p);
     } else
 	*ap->a_vpp = 0;
 
@@ -746,7 +895,11 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 	     * now tell them that it is ok to use.
 	     */
 	    if (!code) {
-		if (m->flags & PG_WANTED)
+#if defined(AFS_FBSD70_ENV)
+		if (m->oflags & VPO_WANTED)
+#else
+	        if (m->flags & PG_WANTED)
+#endif
 		    vm_page_activate(m);
 		else
 		    vm_page_deactivate(m);
@@ -1008,14 +1161,14 @@ afs_vop_link(ap)
 	error = EISDIR;
 	goto out;
     }
-    if ((error = vn_lock(vp, LK_EXCLUSIVE, p)) != 0) {
+    if ((error = ma_vn_lock(vp, LK_EXCLUSIVE, p)) != 0) {
 	goto out;
     }
     AFS_GLOCK();
     error = afs_link(VTOAFS(vp), VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
     if (dvp != vp)
-	VOP_UNLOCK(vp, 0, p);
+	MA_VOP_UNLOCK(vp, 0, p);
   out:
     DROPNAME();
     return error;
@@ -1104,7 +1257,7 @@ afs_vop_rename(ap)
 	vput(fvp);
 	return (error);
     }
-    if ((error = vn_lock(fvp, LK_EXCLUSIVE, p)) != 0)
+    if ((error = ma_vn_lock(fvp, LK_EXCLUSIVE, p)) != 0)
 	goto abortit;
 
     MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
@@ -1167,7 +1320,7 @@ afs_vop_mkdir(ap)
     }
     if (vcp) {
 	*ap->a_vpp = AFSTOV(vcp);
-	vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY, p);
+	ma_vn_lock(AFSTOV(vcp), LK_EXCLUSIVE | LK_RETRY, p);
     } else
 	*ap->a_vpp = 0;
     DROPNAME();
@@ -1222,9 +1375,9 @@ afs_vop_symlink(struct vop_symlink_args *ap)
 	if (error == 0) {
 	    newvp = AFSTOV(vcp);
 #ifdef AFS_FBSD50_ENV
-	    vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_thread);
+	    ma_vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_thread);
 #else
-	    vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_proc);
+	    ma_vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_proc);
 #endif
 	}
     }
@@ -1317,7 +1470,9 @@ afs_vop_inactive(ap)
     AFS_GLOCK();
     afs_InactiveVCache(VTOAFS(vp), 0);	/* decrs ref counts */
     AFS_GUNLOCK();
-    VOP_UNLOCK(vp, 0, ap->a_p);
+#ifndef AFS_FBSD80_ENV
+    MA_VOP_UNLOCK(vp, 0, ap->a_p);
+#endif
     return 0;
 }
 
@@ -1358,8 +1513,13 @@ afs_vop_reclaim(struct vop_reclaim_args *ap)
     if (code)
 	printf("afs_vop_reclaim: afs_FlushVCache failed code %d\n", code);
 #ifdef AFS_FBSD60_ENV
-    else
+    else {
 	vnode_destroy_vobject(vp);
+#ifndef AFS_FBSD70_ENV
+	vfs_hash_remove(vp);
+#endif
+	vp->v_data = 0;
+    }
 #endif
     return 0;
 }

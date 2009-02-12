@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.45 2008/03/17 17:57:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.53 2008/09/25 17:26:47 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -166,6 +166,7 @@ extern pthread_cond_t rx_listener_cond;
 static pthread_mutex_t epoch_mutex;
 static pthread_mutex_t rx_init_mutex;
 static pthread_mutex_t rx_debug_mutex;
+static pthread_mutex_t rx_rpc_stats;
 
 static void
 rxi_InitPthread(void)
@@ -211,6 +212,25 @@ rxi_InitPthread(void)
     assert(pthread_key_create(&rx_ts_info_key, NULL) == 0);
  
     rxkad_global_stats_init();
+
+    MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock", MUTEX_DEFAULT, 0);
+#ifdef	RX_ENABLE_LOCKS
+#ifdef RX_LOCKS_DB
+    rxdb_init();
+#endif /* RX_LOCKS_DB */
+    MUTEX_INIT(&freeSQEList_lock, "freeSQEList lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rx_freeCallQueue_lock, "rx_freeCallQueue_lock", MUTEX_DEFAULT,
+	       0);
+    CV_INIT(&rx_waitingForPackets_cv, "rx_waitingForPackets_cv", CV_DEFAULT,
+	    0);
+    MUTEX_INIT(&rx_peerHashTable_lock, "rx_peerHashTable_lock", MUTEX_DEFAULT,
+	       0);
+    MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
+	       0);
+    MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&rxi_keyCreate_lock, "rxi_keyCreate_lock", MUTEX_DEFAULT, 0);
+#endif /* RX_ENABLE_LOCKS */
 }
 
 pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
@@ -258,7 +278,7 @@ assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
  * to manipulate the queue.
  */
 
-#ifdef RX_ENABLE_LOCKS
+#if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
 static afs_kmutex_t rx_rpc_stats;
 void rxi_StartUnlocked();
 #endif
@@ -411,7 +431,7 @@ rx_InitHost(u_int host, u_int port)
 	UNLOCK_RX_INIT;
 	return RX_ADDRINUSE;
     }
-#ifdef	RX_ENABLE_LOCKS
+#if defined(RX_ENABLE_LOCKS) && defined(KERNEL)
 #ifdef RX_LOCKS_DB
     rxdb_init();
 #endif /* RX_LOCKS_DB */
@@ -428,19 +448,16 @@ rx_InitHost(u_int host, u_int port)
     MUTEX_INIT(&rx_connHashTable_lock, "rx_connHashTable_lock", MUTEX_DEFAULT,
 	       0);
     MUTEX_INIT(&rx_serverPool_lock, "rx_serverPool_lock", MUTEX_DEFAULT, 0);
-#ifndef KERNEL
-    MUTEX_INIT(&rxi_keyCreate_lock, "rxi_keyCreate_lock", MUTEX_DEFAULT, 0);
-#endif /* !KERNEL */
-#if defined(KERNEL) && defined(AFS_HPUX110_ENV)
+#if defined(AFS_HPUX110_ENV)
     if (!uniprocessor)
 	rx_sleepLock = alloc_spinlock(LAST_HELD_ORDER - 10, "rx_sleepLock");
-#endif /* KERNEL && AFS_HPUX110_ENV */
-#endif /* RX_ENABLE_LOCKS */
+#endif /* AFS_HPUX110_ENV */
+#endif /* RX_ENABLE_LOCKS && KERNEL */
 
     rxi_nCalls = 0;
     rx_connDeadTime = 12;
     rx_tranquil = 0;		/* reset flag */
-    memset((char *)&rx_stats, 0, sizeof(struct rx_stats));
+    memset((char *)&rx_stats, 0, sizeof(struct rx_statistics));
     htable = (char *)
 	osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
     PIN(htable, rx_hashTableSize * sizeof(struct rx_connection *));	/* XXXXX */
@@ -751,7 +768,7 @@ rx_NewConnection(register afs_uint32 shost, u_short sport, u_short sservice,
     conn = rxi_AllocConnection();
 #ifdef	RX_ENABLE_LOCKS
     MUTEX_INIT(&conn->conn_call_lock, "conn call lock", MUTEX_DEFAULT, 0);
-    MUTEX_INIT(&conn->conn_data_lock, "conn call lock", MUTEX_DEFAULT, 0);
+    MUTEX_INIT(&conn->conn_data_lock, "conn data lock", MUTEX_DEFAULT, 0);
     CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 #endif
     NETPRI;
@@ -1176,7 +1193,7 @@ rx_NewCall(register struct rx_connection *conn)
     MUTEX_ENTER(&call->lock);
     rxi_WaitforTQBusy(call);
     if (call->flags & RX_CALL_TQ_CLEARME) {
-	rxi_ClearTransmitQueue(call, 0);
+	rxi_ClearTransmitQueue(call, 1);
 	queue_Init(&call->tq);
     }
     MUTEX_EXIT(&call->lock);
@@ -1325,6 +1342,7 @@ rx_NewServiceHost(afs_uint32 host, u_short port, u_short serviceId,
 	    service->minProcs = 0;
 	    service->maxProcs = 1;
 	    service->idleDeadTime = 60;
+	    service->idleDeadErr = 0;
 	    service->connDeadTime = rx_connDeadTime;
 	    service->executeRequestProc = serviceProc;
 	    service->checkReach = 0;
@@ -2126,7 +2144,7 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 	/* Now, if TQ wasn't cleared earlier, do it now. */
 	if (call->flags & RX_CALL_TQ_CLEARME) {
-	    rxi_ClearTransmitQueue(call, 0);
+	    rxi_ClearTransmitQueue(call, 1);
 	    queue_Init(&call->tq);
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
@@ -2134,6 +2152,7 @@ rxi_NewCall(register struct rx_connection *conn, register int channel)
 	call->conn = conn;
 	rxi_ResetCall(call, 1);
     } else {
+
 	call = (struct rx_call *)rxi_Alloc(sizeof(struct rx_call));
 
 	MUTEX_EXIT(&rx_freeCallQueue_lock);
@@ -2249,7 +2268,13 @@ rxi_Alloc(register size_t size)
     rxi_Allocsize += size;
     MUTEX_EXIT(&rx_stats_mutex);
 
-    p = (char *)osi_Alloc(size);
+    p = (char *)
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+	afs_osi_Alloc_NoSleep(size)
+#else
+        osi_Alloc(size)
+#endif
+	;
 
     if (!p)
 	osi_Panic("rxi_Alloc error");
@@ -2399,6 +2424,7 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 	conn->specific = NULL;
 	rx_SetConnDeadTime(conn, service->connDeadTime);
 	rx_SetConnIdleDeadTime(conn, service->idleDeadTime);
+	rx_SetServerConnIdleDeadErr(conn, service->idleDeadErr);
 	/* Notify security object of the new connection */
 	RXS_NewConnection(conn->securityObject, conn);
 	/* XXXX Connection timeout? */
@@ -2914,6 +2940,7 @@ rxi_ReceivePacket(register struct rx_packet *np, osi_socket socket,
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 	rxi_ClearTransmitQueue(call, 0);
+	rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
 	break;
     default:
 	/* Should not reach here, unless the peer is broken: send an abort
@@ -3920,6 +3947,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	&& call->tfirst + call->nSoftAcked >= call->tnext) {
 	call->state = RX_STATE_DALLY;
 	rxi_ClearTransmitQueue(call, 0);
+        rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     } else if (!queue_IsEmpty(&call->tq)) {
 	rxi_Start(0, call, 0, istack);
     }
@@ -4184,7 +4212,6 @@ rxi_SetAcksInTransmitQueue(register struct rx_call *call)
     }
 
     rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
-    rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     call->tfirst = call->tnext;
     call->nSoftAcked = 0;
 
@@ -4225,7 +4252,6 @@ rxi_ClearTransmitQueue(register struct rx_call *call, register int force)
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 
     rxevent_Cancel(call->resendEvent, call, RX_CALL_REFCOUNT_RESEND);
-    rxevent_Cancel(call->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE);
     call->tfirst = call->tnext;	/* implicitly acknowledge all data already sent */
     call->nSoftAcked = 0;
 
@@ -4381,7 +4407,7 @@ rxi_CallError(register struct rx_call *call, afs_int32 error)
 {
     if (call->error)
 	error = call->error;
-#ifdef RX_GLOBAL_RXLOCK_KERNEL
+#ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (!((call->flags & RX_CALL_TQ_BUSY) || (call->tqWaiters > 0))) {
 	rxi_ResetCall(call, 0);
     }
@@ -4456,7 +4482,6 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     MUTEX_EXIT(&peer->peer_lock);
 
     flags = call->flags;
-    rxi_ClearReceiveQueue(call);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     if (flags & RX_CALL_TQ_BUSY) {
 	call->flags = RX_CALL_TQ_CLEARME | RX_CALL_TQ_BUSY;
@@ -4464,8 +4489,8 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     } else
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
     {
-	rxi_ClearTransmitQueue(call, 0);
-	queue_Init(&call->tq);
+	rxi_ClearTransmitQueue(call, 1);
+	/* why init the queue if you just emptied it? queue_Init(&call->tq); */
 	if (call->tqWaiters || (flags & RX_CALL_TQ_WAIT)) {
 	    dpf(("rcall %x has %d waiters and flags %d\n", call, call->tqWaiters, call->flags));
 	}
@@ -4479,7 +4504,9 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
 	    call->tqWaiters--;
 	}
     }
-    queue_Init(&call->rq);
+
+    rxi_ClearReceiveQueue(call);
+    /* why init the queue if you just emptied it? queue_Init(&call->rq); */
     call->error = 0;
     call->rwind = rx_initReceiveWindow;
     call->twind = rx_initSendWindow;
@@ -4877,7 +4904,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     /* Update last send time for this call (for keep-alive
      * processing), and for the connection (so that we can discover
      * idle connections) */
-    conn->lastSendTime = call->lastSendTime = clock_Sec();
+    call->lastSendData = conn->lastSendTime = call->lastSendTime = clock_Sec();
 }
 
 /* When sending packets we need to follow these rules:
@@ -5110,7 +5137,12 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		nXmitPackets = 0;
 		maxXmitPackets = MIN(call->twind, call->cwind);
 		xmitList = (struct rx_packet **)
-		    osi_Alloc(maxXmitPackets * sizeof(struct rx_packet *));
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+		    /* XXXX else we must drop any mtx we hold */
+		    afs_osi_Alloc_NoSleep(maxXmitPackets * sizeof(struct rx_packet *));
+#else
+		osi_Alloc(maxXmitPackets * sizeof(struct rx_packet *));
+#endif
 		if (xmitList == NULL)
 		    osi_Panic("rxi_Start, failed to allocate xmit list");
 		for (queue_Scan(&call->tq, p, nxp, rx_packet)) {
@@ -5347,6 +5379,9 @@ rxi_Send(register struct rx_call *call, register struct rx_packet *p,
      * processing), and for the connection (so that we can discover
      * idle connections) */
     conn->lastSendTime = call->lastSendTime = clock_Sec();
+    /* Don't count keepalives here, so idleness can be tracked. */
+    if (p->header.type != RX_PACKET_TYPE_ACK)
+	call->lastSendData = call->lastSendTime;
 }
 
 
@@ -5369,7 +5404,7 @@ rxi_CheckCall(register struct rx_call *call)
     afs_uint32 now;
     afs_uint32 deadTime;
 
-#ifdef RX_GLOBAL_RXLOCK_KERNEL
+#ifdef AFS_GLOBAL_RXLOCK_KERNEL
     if (call->flags & RX_CALL_TQ_BUSY) {
 	/* Call is active and will be reset by rxi_Start if it's
 	 * in an error state.
@@ -5417,6 +5452,13 @@ rxi_CheckCall(register struct rx_call *call)
 	&& ((call->startWait + conn->idleDeadTime) < now)) {
 	if (call->state == RX_STATE_ACTIVE) {
 	    rxi_CallError(call, RX_CALL_TIMEOUT);
+	    return -1;
+	}
+    }
+    if (call->lastSendData && conn->idleDeadTime && (conn->idleDeadErr != 0)
+        && ((call->lastSendData + conn->idleDeadTime) < now)) {
+	if (call->state == RX_STATE_ACTIVE) {
+	    rxi_CallError(call, conn->idleDeadErr);
 	    return -1;
 	}
     }
@@ -6093,15 +6135,15 @@ rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6,
  * checking.
  */
 void
-rx_PrintTheseStats(FILE * file, struct rx_stats *s, int size,
+rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 		   afs_int32 freePackets, char version)
 {
     int i;
 
-    if (size != sizeof(struct rx_stats)) {
+    if (size != sizeof(struct rx_statistics)) {
 	fprintf(file,
 		"Unexpected size of stats structure: was %d, expected %d\n",
-		size, sizeof(struct rx_stats));
+		size, sizeof(struct rx_statistics));
     }
 
     fprintf(file, "rx stats: free packets %d, allocs %d, ", (int)freePackets,
@@ -6376,7 +6418,7 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 
 afs_int32
 rx_GetServerStats(osi_socket socket, afs_uint32 remoteAddr,
-		  afs_uint16 remotePort, struct rx_stats * stat,
+		  afs_uint16 remotePort, struct rx_statistics * stat,
 		  afs_uint32 * supportedValues)
 {
     struct rx_debugIn in;

@@ -50,7 +50,7 @@ Generic install command.  Options are:
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/pinstall/Attic/install.c,v 1.23 2003/08/08 21:54:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pinstall/Attic/install.c,v 1.23.2.1 2008/07/28 12:17:41 shadow Exp $");
 
 #include <stdio.h>
 #include <pwd.h>
@@ -183,9 +183,6 @@ quickStrip(char *iname, char *oname, int ignored, int copy_only)
 {
     int pid;
     pid_t status;
-    static char *env[] = {
-	0,
-    };
     static char *strip[] = {
 	"strip", 0, 0,
     };
@@ -204,7 +201,7 @@ quickStrip(char *iname, char *oname, int ignored, int copy_only)
     case 0:			/* child        */
 	copy[1] = iname;
 	copy[2] = oname;
-	execve("/bin/cp", copy, env);
+	execv("/bin/cp", copy);
 	perror("/bin/cp");
 	exit(1);
 
@@ -249,7 +246,7 @@ quickStrip(char *iname, char *oname, int ignored, int copy_only)
 #else
 #define	STRIP_BIN	"/bin/strip"
 #endif
-	execve(STRIP_BIN, strip, env);
+	execv(STRIP_BIN, strip);
 	perror(STRIP_BIN);
 	exit(1);
 
@@ -275,9 +272,6 @@ static int
 quickStrip(char *iname, char *oname, int ignored, int copy_only)
 {
     int pid, status;
-    static char *env[] = {
-	0,
-    };
     static char *strip[] = {
 	"strip", 0, 0,
     };
@@ -296,7 +290,7 @@ quickStrip(char *iname, char *oname, int ignored, int copy_only)
     case 0:			/* child        */
 	copy[1] = iname;
 	copy[2] = oname;
-	execve("/bin/cp", copy, env);
+	execv("/bin/cp", copy);
 	perror("/bin/cp");
 	exit(1);
 
@@ -334,7 +328,7 @@ quickStrip(char *iname, char *oname, int ignored, int copy_only)
 
     case 0:			/* child        */
 	strip[1] = oname;
-	execve("/bin/strip", strip, env);
+	execv("/bin/strip", strip);
 	perror("/bin/strip");
 	exit(1);
 

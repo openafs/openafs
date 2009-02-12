@@ -502,6 +502,18 @@ AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK], [
     CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_link)])
 
+AC_DEFUN([LINUX_KERNEL_HLIST_UNHASHED], [
+  AC_MSG_CHECKING([for hlist_unhashed])
+  AC_CACHE_VAL([ac_cv_linux_kernel_hlist_unhashed], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/list.h>],
+[hlist_unhashed(0);],
+      ac_cv_linux_kernel_hlist_unhashed=yes,
+      ac_cv_linux_kernel_hlist_unhashed=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_kernel_hlist_unhashed)])
 
 AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], [
   AC_MSG_CHECKING([for gfp_mask in struct address_space])
@@ -993,3 +1005,55 @@ AC_DEFUN([LINUX_EXPORTS_RCU_READ_LOCK], [
     AC_DEFINE([EXPORTED_RCU_READ_LOCK], 1, [define if rcu_read_lock() is usable])
   fi])
  
+AC_DEFUN([LINUX_EXPORTS_FIND_TASK_BY_PID], [
+  AC_MSG_CHECKING([if find_task_by_pid is usable])
+  AC_CACHE_VAL([ac_cv_linux_exports_find_task_by_pid], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>],
+[pid_t p;
+find_task_by_pid(p);],
+      ac_cv_linux_exports_find_task_by_pid=yes,
+      ac_cv_linux_exports_find_task_by_pid=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_find_task_by_pid)
+  if test "x$ac_cv_linux_exports_find_task_by_pid" = "xyes"; then
+    AC_DEFINE([EXPORTED_FIND_TASK_BY_PID], 1, [define if find_task_by_pid() is usable])
+  fi])
+ 
+AC_DEFUN([LINUX_EXPORTS_PROC_ROOT_FS], [
+  AC_MSG_CHECKING([if proc_root_fs is defined and exported])
+  AC_CACHE_VAL([ac_cv_linux_exports_proc_root_fs], [
+    AC_TRY_KBUILD(
+[#include <linux/proc_fs.h>],
+[struct proc_dir_entry *p = proc_root_fs;],
+      ac_cv_linux_exports_proc_root_fs=yes,
+      ac_cv_linux_exports_proc_root_fs=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_proc_root_fs)
+  if test "x$ac_cv_linux_exports_proc_root_fs" = "xyes"; then
+    AC_DEFINE([EXPORTED_PROC_ROOT_FS], 1, [define if proc_root_fs is exported])
+  fi])
+ 
+AC_DEFUN([LINUX_SEMAPHORE_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/semaphore.h existance])
+  AC_CACHE_VAL([ac_cv_linux_semaphore_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/semaphore.h>],
+[return;],
+      ac_cv_linux_semaphore_h_exists=yes,
+      ac_cv_linux_semaphore_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_semaphore_h_exists)
+  if test "x$ac_cv_linux_semaphore_h_exists" = "xyes"; then
+    AC_DEFINE([LINUX_SEMAPHORE_H], 1, [define if linux/semaphore.h exists])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
+  AC_MSG_CHECKING([for linux write_begin() address space op])
+  AC_CACHE_VAL([ac_cv_linux_write_begin], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[simple_write_begin(NULL, NULL, 0, 0, 0, NULL, NULL);],
+      ac_cv_linux_write_begin=yes,
+      ac_cv_linux_write_begin=no)])
+  AC_MSG_RESULT($ac_cv_linux_write_begin)
+  if test "x$ac_cv_linux_write_begin" = "xyes"; then
+    AC_DEFINE([HAVE_WRITE_BEGIN], 1, [define if your kernel has a write_begin() address space op])
+  fi])

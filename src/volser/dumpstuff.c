@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.25.2.10 2008/01/21 14:11:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/dumpstuff.c,v 1.25.2.12 2008/10/10 14:43:04 shadow Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -76,7 +76,7 @@ struct iod {
     struct rx_call *call;	/* call to which to write, might be an array */
     int device;			/* dump device ID for volume */
     int parentId;		/* dump parent ID for volume */
-    struct DiskPartition *dumpPartition;	/* Dump partition. */
+    struct DiskPartition64 *dumpPartition;	/* Dump partition. */
     struct rx_call **calls;	/* array of pointers to calls */
     int ncalls;			/* how many calls/codes in array */
     int *codes;			/* one return code for each call */
@@ -1207,8 +1207,8 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 				  V_parentId(vp), vnodeNumber,
 				  vnode->uniquifier, vnode->dataVersion);
 		    if (!VALID_INO(ino)) {
-			perror("unable to allocate inode");
-			Log("1 Volser: ReadVnodes: Restore aborted\n");
+			Log("1 Volser: ReadVnodes: IH_CREATE: %s - restore aborted\n",
+                            afs_error_message(errno));
 			return VOLSERREAD_DUMPERROR;
 		    }
 		    nearInode = ino;
@@ -1216,6 +1216,8 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 		    IH_INIT(tmpH, vp->device, V_parentId(vp), ino);
 		    fdP = IH_OPEN(tmpH);
 		    if (fdP == NULL) {
+			Log("1 Volser: ReadVnodes: IH_OPEN: %s - restore aborted\n",
+                            afs_error_message(errno));
 			IH_RELEASE(tmpH);
 			return VOLSERREAD_DUMPERROR;
 		    }

@@ -20,9 +20,15 @@
 
 #include <afsconfig.h>
 #include "afs/param.h"
+#ifdef AFS_FBSD70_ENV
+#include <sys/param.h>
+#include <sys/vnode.h>
+     void
+     vgonel(struct vnode *vp, struct thread *td);
+#endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vm.c,v 1.11.2.2 2005/05/23 21:23:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vm.c,v 1.11.2.3 2008/08/26 14:02:14 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -52,7 +58,10 @@ RCSID
 #define VOP_GETVOBJECT(vp, objp) (*(objp) = (vp)->v_object)
 #endif
 
-#ifdef AFS_FBSD50_ENV
+#if defined(AFS_FBSD80_ENV)
+#define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY)
+#define unlock_vnode(v)	VOP_UNLOCK((v), 0)
+#elif defined(AFS_FBSD50_ENV)
 #define	lock_vnode(v)	vn_lock((v), LK_EXCLUSIVE | LK_RETRY, curthread)
 #define unlock_vnode(v)	VOP_UNLOCK((v), 0, curthread)
 #else
@@ -96,23 +105,29 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
     if (CheckLock(&avc->lock))
 	return EBUSY;
 
+    return(0);
+
     AFS_GUNLOCK();
     vp = AFSTOV(avc);
+#ifndef AFS_FBSD70_ENV
     lock_vnode(vp);
+#endif
     if (VOP_GETVOBJECT(vp, &obj) == 0) {
 	VM_OBJECT_LOCK(obj);
 	vm_object_page_remove(obj, 0, 0, FALSE);
-#if 0
+#if 1
 	if (obj->ref_count == 0) {
-	    vgonel(vp, curproc);
 	    simple_lock(&vp->v_interlock);
+	    vgonel(vp, curthread);
 	    vp->v_tag = VT_AFS;
 	    SetAfsVnode(vp);
 	}
 #endif
 	VM_OBJECT_UNLOCK(obj);
     }
+#ifndef AFS_FBSD70_ENV
     unlock_vnode(vp);
+#endif
     AFS_GLOCK();
 
     return 0;
@@ -146,25 +161,31 @@ osi_VM_StoreAllSegments(struct vcache *avc)
      */
     do {
 	anyio = 0;
+#ifdef AFS_FBSD80_ENV
 	lock_vnode(vp);
+#endif
 	if (VOP_GETVOBJECT(vp, &obj) == 0 && (obj->flags & OBJ_MIGHTBEDIRTY)) {
-	    /* XXX - obj locking? */
+#ifdef AFS_FBSD80_ENV
 	    unlock_vnode(vp);
+#endif
 #ifdef AFS_FBSD50_ENV
 	    if (!vget(vp, LK_EXCLUSIVE | LK_RETRY, curthread)) {
 #else
-	    if (!vget(vp, LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
+		if (!vget(vp, LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
 #endif
-		if (VOP_GETVOBJECT(vp, &obj) == 0) {
-		    VM_OBJECT_LOCK(obj);
-		    vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
-		    VM_OBJECT_UNLOCK(obj);
-		    anyio = 1;
+		    if (VOP_GETVOBJECT(vp, &obj) == 0) {
+			VM_OBJECT_LOCK(obj);
+			vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
+			VM_OBJECT_UNLOCK(obj);
+			anyio = 1;
+		    }
+		    vput(vp);
 		}
-		vput(vp);
 	    }
-	} else
-	    unlock_vnode(vp);
+#ifdef AFS_FBSD80_ENV
+	    else
+		unlock_vnode(vp);
+#endif
     } while (anyio && (--tries > 0));
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 94);
@@ -184,52 +205,44 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     struct vnode *vp;
     struct vm_object *obj;
-    int anyio, tries;
+    int anyio, tries, code;
 
-    ReleaseWriteLock(&avc->lock);
-    AFS_GUNLOCK();
-    tries = 5;
+    SPLVAR;
+
     vp = AFSTOV(avc);
-    do {
-	anyio = 0;
-	lock_vnode(vp);
-	/* See the comments above. */
-	if (VOP_GETVOBJECT(vp, &obj) == 0 && (obj->flags & OBJ_MIGHTBEDIRTY)) {
-	    /* XXX - obj locking */
-	    unlock_vnode(vp);
-#ifdef AFS_FBSD50_ENV
-	    if (!vget(vp, LK_EXCLUSIVE | LK_RETRY, curthread)) {
-#else
-	    if (!vget(vp, LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
-#endif
-		if (VOP_GETVOBJECT(vp, &obj) == 0) {
-		    VM_OBJECT_LOCK(obj);
-		    /*
-		     * Do we really want OBJPC_SYNC?  OBJPC_INVAL would be
-		     * faster, if invalidation is really what we are being
-		     * asked to do.  (It would make more sense, too, since
-		     * otherwise this function is practically identical to
-		     * osi_VM_StoreAllSegments().)  -GAW
-		     */
-		    vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
-		    VM_OBJECT_UNLOCK(obj);
-		    anyio = 1;
-		}
-		vput(vp);
-	    }
-	} else
-	    unlock_vnode(vp);
-    } while (anyio && (--tries > 0));
-    lock_vnode(vp);
-    if (VOP_GETVOBJECT(vp, &obj) == 0) {
-	VM_OBJECT_LOCK(obj);
-	vm_object_page_remove(obj, 0, 0, FALSE);
-	VM_OBJECT_UNLOCK(obj);
+
+    if (vp->v_iflag & VI_DOOMED) {
+      USERPRI;
+      return 0;
     }
-    unlock_vnode(vp);
-    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0); */
-    AFS_GLOCK();
-    ObtainWriteLock(&avc->lock, 59);
+
+    if (vp->v_bufobj.bo_object != NULL) {
+      VM_OBJECT_LOCK(vp->v_bufobj.bo_object);
+      /*
+       * Do we really want OBJPC_SYNC?  OBJPC_INVAL would be
+       * faster, if invalidation is really what we are being
+       * asked to do.  (It would make more sense, too, since
+       * otherwise this function is practically identical to
+       * osi_VM_StoreAllSegments().)  -GAW
+       */
+
+      /*
+       * Dunno.  We no longer resemble osi_VM_StoreAllSegments,
+       * though maybe that's wrong, now.  And OBJPC_SYNC is the
+       * common thing in 70 file systems, it seems.  Matt.
+       */
+
+      vm_object_page_clean(vp->v_bufobj.bo_object, 0, 0, OBJPC_SYNC);
+      VM_OBJECT_UNLOCK(vp->v_bufobj.bo_object);
+    }
+
+    tries = 5;
+    code = vinvalbuf(vp, V_SAVE, curthread, PCATCH, 0);
+    while (code && (tries > 0)) {
+      code = vinvalbuf(vp, V_SAVE, curthread, PCATCH, 0);
+      --tries;
+    }
+    USERPRI;
 }
 
 /* Purge VM for a file when its callback is revoked.

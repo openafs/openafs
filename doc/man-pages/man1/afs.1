@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH AFS 1 "OpenAFS" "27/Feb/2006" "AFS Command Reference"
+.TH AFS 1 "OpenAFS" "27/Jun/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -205,7 +205,7 @@ Manager, and other miscellaneous file system functions.
 Interface for tracing Cache Manager operations when debugging problems.
 .Ip "kas" 4
 Interface to the Authentication Server for administering security and
-authentication information.
+authentication information. This aspect of OpenAFS has been deprecated.
 .Ip "pts" 4
 Interface to the Protection Server for administering \s-1AFS\s0 \s-1ID\s0 and group
 membership information.
@@ -450,7 +450,7 @@ Partitions that house \s-1AFS\s0 volumes must have names of the form
 \fI/vicep\fIx\fR\fR or \fI/vicep\fIxx\fR\fR, where the variable final portion is one
 or two lowercase letters. By convention, the first server partition
 created on a file server machine is called \fI/vicepa\fR, the second
-\fI/vicepb\fR, and so on.  The \fI\s-1IBM\s0 \s-1AFS\s0 Quick Beginnings\fR explains how to
+\fI/vicepb\fR, and so on.  The \fIOpenAFS QuickStart Guide\fR explains how to
 configure and name a file server machine's partitions in preparation for
 storing \s-1AFS\s0 volumes on them.
 .PP
@@ -472,6 +472,8 @@ and so on through
 .Vb 1
 \&   /vicepiv    =     vicepiv     =      iv     =      255
 .Ve
+\fI/vicepiv\fR is the last permissible \s-1AFS\s0 partition name. In practice it
+will not work well; stopping with \fI/vicepiu\fR is highly recommended.
 A cell's full name usually matches its Internet domain name (such as
 \fBstateu.edu\fR for the State University or \f(CWabc.com\fR for \s-1ABC\s0
 Corporation). Some \s-1AFS\s0 commands accept unambiguous shortened forms,

@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.10.2.3 2007/10/30 15:24:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.10.2.5 2008/10/18 19:26:17 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
@@ -75,20 +75,21 @@ struct volser_trans *
 NewTrans(afs_int32 avol, afs_int32 apart)
 {
     /* set volid, next, partition */
-    register struct volser_trans *tt;
+    struct volser_trans *tt, *newtt;
     struct timeval tp;
     struct timezone tzp;
 
+    newtt = (struct volser_trans *)malloc(sizeof(struct volser_trans));
     VTRANS_LOCK;
     /* don't allow the same volume to be attached twice */
     for (tt = allTrans; tt; tt = tt->next) {
 	if ((tt->volid == avol) && (tt->partition == apart)) {
 	    VTRANS_UNLOCK;
+	    free(newtt);
 	    return (struct volser_trans *)0;	/* volume busy */
 	}
     }
-    VTRANS_UNLOCK;
-    tt = (struct volser_trans *)malloc(sizeof(struct volser_trans));
+    tt = newtt;
     memset(tt, 0, sizeof(struct volser_trans));
     tt->volid = avol;
     tt->partition = apart;
@@ -98,7 +99,6 @@ NewTrans(afs_int32 avol, afs_int32 apart)
     gettimeofday(&tp, &tzp);
     tt->creationTime = tp.tv_sec;
     tt->time = FT_ApproxTime();
-    VTRANS_LOCK;
     tt->tid = transCounter++;
     tt->next = allTrans;
     allTrans = tt;

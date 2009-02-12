@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16.2.4 2007/10/30 15:24:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16.2.5 2008/08/16 19:56:26 shadow Exp $");
 
 #include <afs/stds.h>
 #include <string.h>
@@ -47,13 +47,14 @@ RCSID
 #include "volint.h"
 #include "lockdata.h"
 
+#include <vsutils_prototypes.h>
+
 struct ubik_client *cstruct;
 static rxkad_level vsu_rxkad_level = rxkad_clear;
 
 static void
-ovlentry_to_nvlentry(oentryp, nentryp)
-     struct vldbentry *oentryp;
-     struct nvldbentry *nentryp;
+ovlentry_to_nvlentry(struct vldbentry *oentryp,
+                     struct nvldbentry *nentryp)
 {
     register int i;
 
@@ -71,10 +72,9 @@ ovlentry_to_nvlentry(oentryp, nentryp)
     nentryp->flags = oentryp->flags;
 }
 
-static
-nvlentry_to_ovlentry(nentryp, oentryp)
-     struct nvldbentry *nentryp;
-     struct vldbentry *oentryp;
+static int
+nvlentry_to_ovlentry(struct nvldbentry *nentryp,
+                     struct vldbentry *oentryp)
 {
     register int i;
 
@@ -102,8 +102,8 @@ nvlentry_to_ovlentry(nentryp, oentryp)
 
 static int newvlserver = 0;
 
-VLDB_CreateEntry(entryp)
-     struct nvldbentry *entryp;
+int
+VLDB_CreateEntry(struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
     register int code;
@@ -128,9 +128,8 @@ VLDB_CreateEntry(entryp)
     return code;
 }
 
-VLDB_GetEntryByID(volid, voltype, entryp)
-     afs_int32 volid, voltype;
-     struct nvldbentry *entryp;
+int
+VLDB_GetEntryByID(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
     register int code;
@@ -155,9 +154,8 @@ VLDB_GetEntryByID(volid, voltype, entryp)
     return code;
 }
 
-VLDB_GetEntryByName(namep, entryp)
-     char *namep;
-     struct nvldbentry *entryp;
+int
+VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
     register int code;
@@ -181,9 +179,8 @@ VLDB_GetEntryByName(namep, entryp)
     return code;
 }
 
-VLDB_ReplaceEntry(volid, voltype, entryp, releasetype)
-     afs_int32 volid, voltype, releasetype;
-     struct nvldbentry *entryp;
+int 
+VLDB_ReplaceEntry(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
 {
     struct vldbentry oentry;
     register int code;
@@ -213,11 +210,10 @@ VLDB_ReplaceEntry(volid, voltype, entryp, releasetype)
 }
 
 
-
-VLDB_ListAttributes(attrp, entriesp, blkentriesp)
-     VldbListByAttributes *attrp;
-     afs_int32 *entriesp;
-     nbulkentries *blkentriesp;
+int
+VLDB_ListAttributes(VldbListByAttributes *attrp,
+                    afs_int32 *entriesp,
+                    nbulkentries *blkentriesp)
 {
     bulkentries arrayEntries;
     register int code, i;
@@ -254,14 +250,13 @@ VLDB_ListAttributes(attrp, entriesp, blkentriesp)
     return code;
 }
 
-VLDB_ListAttributesN2(attrp, name, thisindex, nentriesp, blkentriesp,
-		      nextindexp)
-     VldbListByAttributes *attrp;
-     char *name;
-     afs_int32 thisindex;
-     afs_int32 *nentriesp;
-     nbulkentries *blkentriesp;
-     afs_int32 *nextindexp;
+int
+VLDB_ListAttributesN2(VldbListByAttributes *attrp,
+                      char *name,
+                      afs_int32 thisindex,
+                      afs_int32 *nentriesp,
+                      nbulkentries *blkentriesp,
+                      afs_int32 *nextindexp)
 {
     afs_int32 code;
 
@@ -287,8 +282,8 @@ struct cacheips {
 struct cacheips cacheips[GETADDRUCACHESIZE];
 int cacheip_index = 0;
 
-VLDB_IsSameAddrs(serv1, serv2, errorp)
-     afs_int32 serv1, serv2, *errorp;
+int
+VLDB_IsSameAddrs(afs_int32 serv1, afs_int32 serv2, afs_int32 *errorp)
 {
     register int code;
     ListAddrByAttributes attrs;
@@ -377,8 +372,7 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
   to get a rxkad_clear connection, simply don't call this.
 */
 void
-vsu_SetCrypt(cryptflag)
-     int cryptflag;
+vsu_SetCrypt(int cryptflag)
 {
     if (cryptflag) {
 	vsu_rxkad_level = rxkad_crypt;
@@ -392,13 +386,8 @@ vsu_SetCrypt(cryptflag)
   Get the appropriate type of ubik client structure out from the system.
 */
 afs_int32
-vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
-     int noAuthFlag;
-     int (*secproc) ();
-     char *cellName;
-     struct ubik_client **uclientp;
-     char *confDir;
-     afs_int32 sauth;
+vsu_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth, 
+	       struct ubik_client **uclientp, int (*secproc)())
 {
     afs_int32 code, scIndex, i;
     struct afsconf_cell info;
@@ -420,8 +409,7 @@ vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
  * and return the result as <rname>.
  */
 int
-vsu_ExtractName(rname, name)
-     char rname[], name[];
+vsu_ExtractName(char rname[], char name[])
 {
     char sname[VOLSER_OLDMAXVOLNAME + 1];
     int total;
@@ -449,12 +437,8 @@ vsu_ExtractName(rname, name)
 
 /* returns 0 if failed */
 afs_uint32
-vsu_GetVolumeID(astring, acstruct, errp)
-     struct ubik_client *acstruct;
-     afs_int32 *errp;
-     char *astring;
+vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
 {
-    afs_uint32 value;
     char volname[VOLSER_OLDMAXVOLNAME + 1];
     struct nvldbentry entry;
     afs_int32 vcode = 0;
