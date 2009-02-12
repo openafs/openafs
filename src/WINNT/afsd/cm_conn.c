@@ -364,8 +364,9 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                         }
                         lock_ReleaseWrite(&cm_serverLock);
                         if (free_svr_list) {
-                            cm_FreeServerList(&serversp, 0);
-                            *serverspp = serversp = NULL;
+                            cm_FreeServerList(serverspp, 0);
+                            serverspp = NULL;
+                            serversp = NULL;
                             free_svr_list = 0;
                         }
 
@@ -445,8 +446,9 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         }
 
         if (free_svr_list) {
-            cm_FreeServerList(&serversp, 0);
-            *serverspp = serversp = NULL;
+            cm_FreeServerList(serverspp, 0);
+            serverspp = NULL;
+            serversp = NULL;
             free_svr_list = 0;
         }
         retry = 1;
@@ -459,6 +461,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         char addr[16];
         char *format;
 	DWORD msgID;
+
+        /* In case of timeout */
+        reqp->volumeError = errorCode;
+
         switch ( errorCode ) {
         case VNOVOL:
 	    msgID = MSG_SERVER_REPORTS_VNOVOL;
@@ -498,11 +504,14 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    LogEvent(EVENTLOG_WARNING_TYPE, msgID, addr, fidp->volume);
         }
 
-        /* Mark server offline for this volume */
+        /* 
+         * Mark server offline for this volume or delete the volume
+         * from the server list if it was moved or is not present.
+         */
         if (!serversp && fidp) {
             code = cm_GetServerList(fidp, userp, reqp, &serverspp);
             if (code == 0) {
-                serversp = *serverspp = NULL;
+                serversp = *serverspp;
                 free_svr_list = 1;
             }
         }
@@ -511,23 +520,39 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
             if (tsrp->status == srv_deleted)
                 continue;
+
+            sprintf(addr, "%d.%d.%d.%d",
+                     ((tsrp->server->addr.sin_addr.s_addr & 0xff)),
+                     ((tsrp->server->addr.sin_addr.s_addr & 0xff00)>> 8),
+                     ((tsrp->server->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                     ((tsrp->server->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+
             if (tsrp->server == serverp) {
                 /* REDIRECT */
                 if (errorCode == VMOVED || errorCode == VNOVOL) {
+                    osi_Log2(afsd_logp, "volume %d not present on server %s", 
+                             fidp->volume, osi_LogSaveString(afsd_logp,addr));
                     tsrp->status = srv_deleted;
                     if (fidp)
                         cm_RemoveVolumeFromServer(serverp, fidp->volume);
                 } else {
+                    osi_Log2(afsd_logp, "volume %d instance on server %s marked offline", 
+                             fidp->volume, osi_LogSaveString(afsd_logp,addr));
                     tsrp->status = srv_offline;
                 }
+                /* break; */
+            } else {
+                osi_Log3(afsd_logp, "volume %d exists on server %s with status %u", 
+                         fidp->volume, osi_LogSaveString(afsd_logp,addr), tsrp->status);
             }
         }   
         lock_ReleaseWrite(&cm_serverLock);
 
         /* Free the server list before cm_ForceUpdateVolume is called */
         if (free_svr_list) {
-            cm_FreeServerList(&serversp, 0);
-            *serverspp = serversp = NULL;
+            cm_FreeServerList(serverspp, 0);
+            serverspp = NULL;
+            serversp = NULL;
             free_svr_list = 0;
         }
 
@@ -538,10 +563,14 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
             if (code == 0)
                 statep = cm_VolumeStateByID(volp, fidp->volume);
 
-            if (errorCode == VMOVED || errorCode == VNOVOL) {
+            if ((errorCode == VMOVED || errorCode == VNOVOL) &&
+                !(reqp->flags & CM_REQ_VOLUME_UPDATED)) 
+            {
                 code = cm_ForceUpdateVolume(fidp, userp, reqp);
                 if (code) 
                     timeLeft = 0;   /* prevent a retry on failure */
+                else
+                    reqp->flags |= CM_REQ_VOLUME_UPDATED;
                 osi_Log3(afsd_logp, "cm_Analyze called cm_ForceUpdateVolume cell %u vol %u code 0x%x",
                         fidp->cell, fidp->volume, code);
             }
@@ -828,6 +857,16 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     /* drop this on the way out */
     if (connp)
         cm_PutConn(connp);
+
+    /* 
+     * clear the volume updated flag if we succeed.
+     * this way the flag will not prevent a subsequent volume 
+     * from being updated if necessary.
+     */
+    if (errorCode == 0)
+    {
+        reqp->flags &= ~CM_REQ_VOLUME_UPDATED;
+    }
 
     /* retry until we fail to find a connection */
     return retry;
