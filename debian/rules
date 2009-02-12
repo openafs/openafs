@@ -185,6 +185,7 @@ install-stamp: build-stamp install-source-stamp
 	    afs-newcell ) \
 	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
 
+	install -d debian/$(srcpkg)/usr/share/doc/$(srcpkg)
 	install -m 644 debian/openafs-client.NEWS \
 	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
 
