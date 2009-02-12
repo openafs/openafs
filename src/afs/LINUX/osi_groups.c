@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.16 2008/06/09 03:39:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.17 2009/01/15 13:27:43 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -50,7 +50,7 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     crset(*cr);
 
-#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
+#if defined(STRUCT_TASK_STRUCT_HAS_PARENT) && !defined(STRUCT_TASK_HAS_CRED)
     if (change_parent) {
 	old_info = current->parent->group_info;
 	get_group_info(group_info);
@@ -246,12 +246,12 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
 
 #ifdef KEY_ALLOC_NEEDS_STRUCT_TASK
 	keyring = key_alloc(__key_type_keyring, desc,
-			    task->uid, task->gid, task,
+			    task_uid(task), task_gid(task), task,
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #else
 	keyring = key_alloc(__key_type_keyring, desc,
-			    task->uid, task->gid,
+			    task_uid(task), task_gid(task),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #endif
@@ -269,9 +269,9 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
 
     /* install the keyring */
     spin_lock_irq(&task->sighand->siglock);
-    old = task->signal->session_keyring;
+    old = task_session_keyring(task);
     smp_wmb();
-    task->signal->session_keyring = keyring;
+    task_session_keyring(task) = keyring;
     spin_unlock_irq(&task->sighand->siglock);
 
     if (old)
@@ -337,7 +337,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 
 	(void) install_session_keyring(current, NULL);
 
-	if (current->signal->session_keyring) {
+	if (current_session_keyring()) {
 	    struct key *key;
 	    key_perm_t perm;
 
@@ -352,7 +352,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 
 	    if (!IS_ERR(key)) {
 		key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
-					 current->signal->session_keyring, NULL);
+					 current_session_keyring(), NULL);
 		key_put(key);
 	    }
 	}
@@ -549,26 +549,28 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
 {
     int code;
     afs_uint32 *userpag, pag = NOPAG;
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     int g0, g1;
+#endif
 
     if (key->uid != 0 || key->gid != 0)
 	return -EPERM;
 
     code = -EINVAL;
-    get_group_info(current->group_info);
+    get_group_info(current_group_info());
 
     if (datalen != sizeof(afs_uint32) || !data)
 	goto error;
 
-    if (current->group_info->ngroups < NUMPAGGROUPS)
+    if (current_group_info()->ngroups < NUMPAGGROUPS)
 	goto error;
 
     /* ensure key being set matches current pag */
 #ifdef AFS_LINUX26_ONEGROUP_ENV
-    pag = afs_get_pag_from_groups(current->group_info);
+    pag = afs_get_pag_from_groups(current_group_info());
 #else
-    g0 = GROUP_AT(current->group_info, 0);
-    g1 = GROUP_AT(current->group_info, 1);
+    g0 = GROUP_AT(current_group_info(), 0);
+    g1 = GROUP_AT(current_group_info(), 1);
 
     pag = afs_get_pag_from_groups(g0, g1);
 #endif
@@ -584,7 +586,7 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     code = 0;
 
 error:
-    put_group_info(current->group_info);
+    put_group_info(current_group_info());
     return code;
 }
 
@@ -651,8 +653,8 @@ void osi_keyring_init(void)
 #else
 	p = find_task_by_vpid(1);
 #endif
-	if (p && p->user->session_keyring)
-	    __key_type_keyring = p->user->session_keyring->type;
+	if (p && task_user(p)->session_keyring)
+	    __key_type_keyring = task_user(p)->session_keyring->type;
 # ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_unlock(&tasklist_lock);

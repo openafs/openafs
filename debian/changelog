@@ -13,6 +13,8 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
     - STABLE14-linux-truncate-cleanup-20090113: further truncation fix.
     - STABLE14-osi-probe-check-result-cope-with-enoent-20090115: fix for
       syscall probing.
+    - STABLE14-linux-2629-20090115: support for 2.6.29 kernels.
+      (Closes: #513680)
   * Make dynroot the default for new installations.  It works much better
     with systems that don't bring up their network until late in the boot
     process, such as wireless laptops.  (LP: #249240, #318605)

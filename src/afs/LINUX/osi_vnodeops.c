@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.74 2009/01/09 14:58:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.75 2009/01/15 13:27:43 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -1791,7 +1791,11 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+#if defined(HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN)
+    page = grab_cache_page_write_begin(mapping, index, flags);
+#else
     page = __grab_cache_page(mapping, index);
+#endif
     *pagep = page;
 
     return 0;
