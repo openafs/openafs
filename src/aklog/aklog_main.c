@@ -1,5 +1,5 @@
 /* 
- * $Id: aklog_main.c,v 1.1.2.26 2008/04/01 18:15:53 shadow Exp $
+ * $Id: aklog_main.c,v 1.1.2.28 2008/10/29 19:44:10 shadow Exp $
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
@@ -36,7 +36,7 @@
 
 #include <afsconfig.h>
 RCSID
-     ("$Header: /cvs/openafs/src/aklog/aklog_main.c,v 1.1.2.26 2008/04/01 18:15:53 shadow Exp $");
+     ("$Header: /cvs/openafs/src/aklog/aklog_main.c,v 1.1.2.28 2008/10/29 19:44:10 shadow Exp $");
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -463,7 +463,27 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	retry = 1;
 	
 	while(retry) {
-	    
+
+	    /* This code tries principals in the following, much debated,
+	     * order:
+	     * 
+	     * If the realm is specified on the command line we do
+	     *    - afs/cell@COMMAND-LINE-REALM
+	     *    - afs@COMMAND-LINE-REALM
+	     * 
+	     * Otherwise, we do
+	     *    - afs/cell@REALM-FROM-USERS-PRINCIPAL
+	     *    - afs/cell@krb5_get_host_realm(db-server)
+	     *   Then, if krb5_get_host_realm(db-server) is non-empty
+	     *      - afs@ krb5_get_host_realm(db-server)
+	     *   Otherwise
+	     *      - afs/cell@ upper-case-domain-of-db-server
+	     *      - afs@ upper-case-domain-of-db-server
+	     * 
+	     * In all cases, the 'afs@' variant is only tried where the
+	     * cell and the realm match case-insensitively.
+	     */
+		
 	    /* Cell on command line - use that one */
 	    if (realm && realm[0]) {
 		realm_of_cell = realm;
@@ -528,8 +548,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 				    "%s.\n", progname, cell_to_use);
 			    exit(AKLOG_MISC);
 			}
-			printf("We've deduced that we need to authenticate to"
-			       " realm %s.\n", realm_of_cell);
+			if (dflag) {
+			    printf("We've deduced that we need to authenticate"
+			           " to realm %s.\n", realm_of_cell);
+			}
 		    }
 		    status = get_credv5(context, AFSKEY, cell_to_use, 
 				        realm_of_cell, &v5cred);

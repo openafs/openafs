@@ -38,6 +38,7 @@ COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
 COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
+LINUX_KERNEL_BUILD=@LINUX_KERNEL_BUILD@
 
 # System specific build commands and flags
 <linux26 linux_26>
@@ -50,26 +51,26 @@ DEFINES = $(COMMON_DEFINES)
 CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
 DEFINES = $(COMMON_DEFINES) -DCPU=586
 
-<amd64_linux24 amd64_linux26>
+<amd64_linux22 amd64_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel -mno-red-zone
 DEFINES = $(COMMON_DEFINES) 
 
-<i386_umlinux22 i386_umlinux24 i386_umlinux26>
+<i386_umlinux22 i386_umlinux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -Wno-strict-prototypes -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
 DEFINES = $(COMMON_DEFINES) -DCPU=586
 
 <i386_umlinux26>
 EXTRA_CFLAGS = -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
 
-<alpha_linux_22 alpha_linux_24 alpha_linux_26>
+<alpha_linux_22 alpha_linux_24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
 DEFINES = $(COMMON_DEFINES)
 
-<s390_linux22 s390_linux24 s390_linux26>
+<s390_linux22 s390_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
 DEFINES = $(COMMON_DEFINES) -D__s390__ 
 
-<s390x_linux22 s390x_linux24 s390x_linux26>
+<s390x_linux22 s390x_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
 DEFINES = $(COMMON_DEFINES) -D__s390x__ 
 
@@ -85,7 +86,7 @@ CCFLAGS = $(COMMON_KERN_CFLAGS) \
       -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
 DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
 
-<ppc_linux22 ppc_linux24 ppc64_linux24 ppc64_linux26>
+<ppc_linux22 ppc_linux24 ppc64_linux22 ppc64_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
 DEFINES = $(COMMON_DEFINES) -D__powerpc__
 
@@ -255,7 +256,7 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: openafs.ko
 .FORCE:
 openafs.ko: .FORCE
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_BUILD} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
 <all -linux26 -linux_26 -umlinux26>
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_LISTQUOTA 1 "OpenAFS" "19/Feb/2008" "AFS Command Reference"
+.TH FS_LISTQUOTA 1 "OpenAFS" "12/Jul/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -253,8 +253,8 @@ The following example shows the output for the volume \f(CWuser.smith\fR:
 .SH "PRIVILEGE REQUIRED"
 The issuer must have the \f(CWl\fR (lookup) permission on the ACL of the root
 directory of the volume that houses the file or directory named by the
-\fB\-path\fR argument, and on the ACL of each directory that precedes it in
-the pathname.
+\fB\-path\fR argument, and \f(CWl\fR (list) permission on the ACL of each 
+directory that precedes it in the pathname.
 .SH "SEE ALSO"
 the \fIfs_diskfree(1)\fR manpage,
 the \fIfs_examine(1)\fR manpage,

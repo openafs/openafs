@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.4 2008/03/17 15:38:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.5 2008/08/26 14:02:24 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -181,11 +181,19 @@ rxepoch_Allocate(struct clock *when)
 	ep = (struct rxepoch *)rxi_Alloc(sizeof(struct rxepoch));
 	queue_Append(&rxepoch_free, &ep[0]), rxepoch_nFree++;
 #else
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+	ep = (struct rxepoch *)
+	    afs_osi_Alloc_NoSleep(sizeof(struct rxepoch) * rxepoch_allocUnit);
+	xsp = xfreemallocs;
+	xfreemallocs =
+	    (struct xfreelist *)afs_osi_Alloc_NoSleep(sizeof(struct xfreelist));
+#else
 	ep = (struct rxepoch *)
 	    osi_Alloc(sizeof(struct rxepoch) * rxepoch_allocUnit);
 	xsp = xfreemallocs;
 	xfreemallocs =
 	    (struct xfreelist *)osi_Alloc(sizeof(struct xfreelist));
+#endif
 	xfreemallocs->mem = (void *)ep;
 	xfreemallocs->size = sizeof(struct rxepoch) * rxepoch_allocUnit;
 	xfreemallocs->next = xsp;
@@ -264,11 +272,20 @@ _rxevent_Post(struct clock *when, struct clock *now, void (*func) (),
 	ev = (struct rxevent *)rxi_Alloc(sizeof(struct rxevent));
 	queue_Append(&rxevent_free, &ev[0]), rxevent_nFree++;
 #else
+
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+	ev = (struct rxevent *)afs_osi_Alloc_NoSleep(sizeof(struct rxevent) *
+					 rxevent_allocUnit);
+	xsp = xfreemallocs;
+	xfreemallocs =
+	    (struct xfreelist *)afs_osi_Alloc_NoSleep(sizeof(struct xfreelist));
+#else
 	ev = (struct rxevent *)osi_Alloc(sizeof(struct rxevent) *
 					 rxevent_allocUnit);
 	xsp = xfreemallocs;
 	xfreemallocs =
 	    (struct xfreelist *)osi_Alloc(sizeof(struct xfreelist));
+#endif
 	xfreemallocs->mem = (void *)ev;
 	xfreemallocs->size = sizeof(struct rxevent) * rxevent_allocUnit;
 	xfreemallocs->next = xsp;

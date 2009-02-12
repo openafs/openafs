@@ -70,7 +70,7 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 
 /* Need a thead safe ctime for pthread builds. Use std ctime for LWP */
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-#ifdef AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) && !defined(_POSIX_PTHREAD_SEMANTICS) && (_POSIX_C_SOURCE - 0 < 199506L)
 #define afs_ctime(C, B, L) ctime_r(C, B, L)
 #else
 /* Cast is for platforms which do not prototype ctime_r */

@@ -33,7 +33,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.33.2.12 2007/12/11 21:31:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.33.2.13 2008/06/29 03:26:04 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -239,14 +239,14 @@ afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
 }				/*MarkServerUpOrDown */
 
 
-void
+afs_int32
 afs_ServerDown(struct srvAddr *sa)
 {
     register struct server *aserver = sa->server;
 
     AFS_STATCNT(ServerDown);
-    if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN)
-	return;
+    if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN) 
+	return 0;
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
     if (sa->sa_portal == aserver->cell->vlport)
 	print_internet_address
@@ -254,7 +254,7 @@ afs_ServerDown(struct srvAddr *sa)
     else
 	print_internet_address("afs: Lost contact with file server ", sa, "",
 			       1);
-
+    return 1;
 }				/*ServerDown */
 
 

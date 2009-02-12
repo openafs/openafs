@@ -73,6 +73,7 @@
 #define SYS_NAME_ID_rs_aix43		 705
 #define SYS_NAME_ID_rs_aix52		 706
 #define SYS_NAME_ID_rs_aix53		 707
+#define SYS_NAME_ID_rs_aix61		 708
 
 #define SYS_NAME_ID_sun3_411		 906
 #define SYS_NAME_ID_sun3x_411		 912
@@ -184,6 +185,9 @@
 #define SYS_NAME_ID_i386_fbsd_53        2108
 #define SYS_NAME_ID_i386_fbsd_60        2112
 #define SYS_NAME_ID_i386_fbsd_61        2113
+#define SYS_NAME_ID_i386_fbsd_62        2114
+#define SYS_NAME_ID_i386_fbsd_70        2115
+#define SYS_NAME_ID_i386_fbsd_80        2116
 
 #define SYS_NAME_ID_ia64_linux2		2200
 #define SYS_NAME_ID_ia64_linux22	2201

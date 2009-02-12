@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_misc.c,v 1.9.2.1 2005/03/11 06:50:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_misc.c,v 1.9.2.2 2008/08/26 14:02:14 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -35,12 +35,12 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	       struct vnode **vpp)
 {
     struct nameidata n;
-    int flags, error, wasowned;
+    int flags, error, glocked;
 
 #ifdef AFS_FBSD50_ENV
-    wasowned = mtx_owned(&afs_global_mtx);
-    if (wasowned)
-	mtx_unlock(&afs_global_mtx);
+    glocked = ISAFS_GLOCK();
+    if (glocked)
+	AFS_GUNLOCK();
 #endif
 
     flags = 0;
@@ -49,21 +49,30 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	flags |= FOLLOW;
     else
 	flags |= NOFOLLOW;
+#ifdef AFS_FBSD80_ENV
+    flags |= MPSAFE; /* namei must take GIANT if needed */
+#endif
     NDINIT(&n, LOOKUP, flags, seg, aname, curproc);
     if ((error = namei(&n)) != 0) {
 #ifdef AFS_FBSD50_ENV
-	if (wasowned)
-	    mtx_lock(&afs_global_mtx);
+	if (glocked)
+	    AFS_GLOCK();
 #endif
 	return error;
     }
     *vpp = n.ni_vp;
-    /* should we do this? */
+    /* XXX should we do this?  Usually NOT (matt) */
+#if defined(AFS_FBSD80_ENV)
+    /*VOP_UNLOCK(n.ni_vp, 0);*/
+#elif defined(AFS_FBSD50_ENV)
+    VOP_UNLOCK(n.ni_vp, 0, curthread);
+#else
     VOP_UNLOCK(n.ni_vp, 0, curproc);
+#endif
     NDFREE(&n, NDF_ONLY_PNBUF);
 #ifdef AFS_FBSD50_ENV
-    if (wasowned)
-	mtx_lock(&afs_global_mtx);
+    if (glocked)
+	AFS_GLOCK();
 #endif
     return 0;
 }
@@ -105,18 +114,18 @@ osi_fbsd_alloc(size_t size, int dropglobal)
 {
 	void *rv;
 #ifdef AFS_FBSD50_ENV
-	int wasowned;
+	int glocked;
 
 	if (dropglobal) {
-		wasowned = mtx_owned(&afs_global_mtx);
-		if (wasowned)
-			mtx_unlock(&afs_global_mtx);
-		rv = malloc(size, M_AFS, M_WAITOK);
-		if (wasowned)
-			mtx_lock(&afs_global_mtx);
+	    glocked = ISAFS_GLOCK();
+	    if (glocked)
+		AFS_GUNLOCK();
+	    rv = malloc(size, M_AFS, M_WAITOK);
+	    if (glocked)
+		AFS_GLOCK();
 	} else
 #endif
-		rv = malloc(size, M_AFS, M_NOWAIT);
+	    rv = malloc(size, M_AFS, M_NOWAIT);
 
 	return (rv);
 }
@@ -124,46 +133,5 @@ osi_fbsd_alloc(size_t size, int dropglobal)
 void
 osi_fbsd_free(void *p)
 {
-
-	free(p, M_AFS);
-}
-
-void
-osi_AllocMoreSSpace(afs_int32 preallocs)
-{
-	;
-}
-
-void
-osi_FreeLargeSpace(void *p)
-{
-	osi_fbsd_free(p);
-}
-
-void
-osi_FreeSmallSpace(void *p)
-{
-	osi_fbsd_free(p);
-}
-
-void *
-osi_AllocLargeSpace(size_t size)
-{
-	AFS_ASSERT_GLOCK();
-	AFS_STATCNT(osi_AllocLargeSpace);
-	return (osi_fbsd_alloc(size, 1));
-}
-
-void *
-osi_AllocSmallSpace(size_t size)
-{
-	AFS_ASSERT_GLOCK();
-	AFS_STATCNT(osi_AllocSmallSpace);
-	return (osi_fbsd_alloc(size, 1));
-}
-
-void
-shutdown_osinet(void)
-{
-	;
+       free(p, M_AFS);
 }

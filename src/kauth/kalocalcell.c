@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kalocalcell.c,v 1.8.2.2 2007/10/30 15:23:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kalocalcell.c,v 1.8.2.3 2008/10/27 23:54:09 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/pthread_glock.h"
@@ -79,7 +79,7 @@ ka_CellConfig(const char *dir)
 char *
 ka_LocalCell(void)
 {
-    int code;
+    int code = 0;
 
     LOCK_GLOBAL_MUTEX;
     if (conf) {

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_CONVERTROTORW 1 "OpenAFS" "25/Dec/2007" "AFS Command Reference"
+.TH VOS_CONVERTROTORW 1 "OpenAFS" "30/Jun/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -201,9 +201,6 @@ when the original Read/Write volume is no longer available.  It's normal use
 is to recover the Read/Write volume from a replica after a failed disk,
 failed server, or accidental deletion.
 .SH "CAUTIONS"
-This command can only be used with namei AFS file servers.  If used on an
-inode AFS file server, it will fail with an error.
-.PP
 The command name is case-sensitive.  It must be issued with the capital \*(L"RO\*(R"
 and \*(L"RW\*(R".
 .SH "OPTIONS"

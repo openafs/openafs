@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.18.2.6 2008/03/17 15:28:55 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.18.2.7 2008/07/07 17:16:26 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -418,7 +418,7 @@ afsinit(struct vfssw *vfsswp, int fstype)
 
 #ifdef AFS_SUN510_ENV
 #ifdef AFS_SUN511_ENV
-static struct vfsdef_v4 afs_vfsdef = {
+static vfsdef_t afs_vfsdef = {
     VFSDEF_VERSION,
     "afs",
     afsinit,

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_SYNCVLDB 1 "OpenAFS" "11/Nov/2007" "AFS Command Reference"
+.TH VOS_SYNCVLDB 1 "OpenAFS" "6/Sep/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -192,11 +192,11 @@ vos_syncvldb \- Verifies VLDB entries for volumes residing at specified site
 .SH "SYNOPSIS"
 \fBvos syncvldb\fR <<\ [\fB\-server\fR\ <\fImachine\ name\fR] >>>
     <<\ [\fB\-partition\fR\ <\fIpartition\ name\fR] >>> <<\ [\fB\-volume\fR\ <\fIvolume\ name\ or\ ID\fR] >>>
-    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-dryrun\fR] [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR]
     [\fB\-help\fR]
 .PP
 \fBvos syncv\fR <<\ [\fB\-s\fR\ <\fImachine\ name\fR] >>> <<\ [\fB\-p\fR\ <\fIpartition\ name\fR] >>>
-    <<\ [\fB\-vo\fR\ <\fIvolume\ name\ or\ ID\fR] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR]
+    <<\ [\fB\-vo\fR\ <\fIvolume\ name\ or\ ID\fR] >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-d\fR] [\fB\-n\fR] [\fB\-l\fR]
     [\fB\-ve\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBvos syncvldb\fR command verifies that the status of the volumes housed
@@ -250,6 +250,8 @@ verify the \s-1VLDB\s0 entry. This argument can be combined with the \fB\-server
 .Ip "\fB\-cell\fR <\fIcell name\fR>" 4
 Names the cell in which to run the command. Do not combine this argument
 with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-dryrun\fR" 4
+Show the actions which would be taken, but do not make changes.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. Do not
 combine this flag with the \fB\-localauth\fR flag. For more details, see
@@ -308,6 +310,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-volume\fR <\fIvolume name or \s-1ID\s0\fR>"
 
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-dryrun\fR"
 
 .IX Item "\fB\-noauth\fR"
 
