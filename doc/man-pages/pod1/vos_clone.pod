@@ -1,0 +1,155 @@
+=head1 NAME
+
+vos_clone - Creates a shared-space copy of a volume on a partition
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vos clone> S<<< [B<-id>] <I<volume name or ID>> >>>
+    S<<< [B<-server>] <I<server name>> >>>
+    S<<< [B<-partition>] <I<partition name>> >>>
+    S<<< [B<-toname> <I<volume name on destination>>] >>>
+    S<<< [B<-toid> <I<volume ID on destination>>] >>> [B<-offline>] [B<-readonly>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>]
+    [B<-localauth>] [B<-verbose>] [B<-encrypt>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<vos clone> command creates a copy-on-write copy of a volume on the
+same partition and server ass the parent volume.
+
+A clone is a copy of a volume that does only stores the changes from the
+parent volume. Cloning is a primitive operation that is used by the B<vos
+move>, B<vos backup>, and B<vos release> commands. A clone functions using
+the same mechanism as a backup volume, but it is persistent. Clone volumes
+can be used as point-in-time copies of the parent vollume, but they must be
+used with care.
+
+=head1 CAUTIONS
+
+This command is not used during normal OpenAFS administration and may
+have adverse effects on the VLDB if not used properly! This command
+should only be used by an expert.
+
+Deleting or moving the parent volume makes the clone volume inaccessible,
+but the clone volume remains in the VLDB and on disk, and it needs to be
+cleaned up manually.
+
+There is a maximum limitation of 7 clones when using the namei
+fileserver. You may safely create up to 4 clones using the B<vos clone>
+command. The other three clone slots are used by the backup volume, a
+read-only replica and the temporary clone that is created when executing a
+B<vos move>, B<vos dump>, or other B<vos> commands.
+
+Some commands do not work properly on clone volumes. B<vos move> is one
+such command.
+
+Currently, the maximum size of a volume is 2 terabytes (2^31 bytes).
+
+=head1 OPTIONS
+
+=over 4
+
+=item [B<-id>] <I<volume name or ID>>
+
+Specifies either the complete name or volume ID number of a read/write
+volume.
+
+=item [B<-server>] <I<machine name>>
+
+Identifies the file server machine where the source volume resides. Provide
+the machine's IP address or its host name (either fully qualified or using
+an unambiguous abbreviation). For details, see L<vos(1)>.
+
+=item [B<-partition>] <I<partition name>>
+
+Names the partition where the source volume resides. Provide the full
+partition name (for, example, B</vicepa>) or one of the abbreviated forms
+described in L<vos(1)>.
+
+=item B<-toname> <I<volume name for new copy>>
+
+The complete name of the new volume to create.
+
+=item B<-toid> <I<volume id for new copy>>
+
+The complete id of the new volume to create.
+
+=item B<-offline>
+
+Leaves the new volume flagged as off-line in the volume database.
+
+=item B<-readonly>
+
+Flags the new volume as read-only in the volume database.
+
+=item B<-cell> <I<cell name>>
+
+Names the cell in which to run the command. Do not combine this argument
+with the B<-localauth> flag. For more details, see L<vos(1)>.
+
+=item B<-noauth>
+
+Assigns the unprivileged identity C<anonymous> to the issuer. Do not
+combine this flag with the B<-localauth> flag. For more details, see
+L<vos(1)>.
+
+=item B<-localauth>
+
+Constructs a server ticket using a key from the local
+F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents
+it to the Volume Server and Volume Location Server during mutual
+authentication. Do not combine this flag with the B<-cell> argument or
+B<-noauth> flag. For more details, see L<vos(1)>.
+
+=item B<-verbose>
+
+Produces on the standard output stream a detailed trace of the command's
+execution. If this argument is omitted, only warnings and error messages
+appear.
+
+=item B<-encrypt>
+
+Encrypts the command so that the operation's results are not transmitted
+across the network in clear text.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+This command has no output unless C<-verbose> is specified or there is
+an error.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be listed in the F</usr/afs/etc/UserList> file on the
+machines specified with the B<-toserver> and B<-fromserver> arguments and
+on each database server machine.  If the B<-localauth> flag is included,
+the issuer must instead be logged on to a server machine as the local
+superuser C<root>.
+
+=head1 SEE ALSO
+
+L<vos(1)>,
+L<vos_backup(1)>,
+L<vos_copy(1)>,
+L<vos_move(1)>,
+L<vos_shadow(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2008 Jason Edgecombe <jason@rampaginggeek.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Jason Edgecombe for
+OpenAFS.

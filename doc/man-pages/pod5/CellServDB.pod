@@ -12,13 +12,13 @@ servers and lists only the database servers in the local cell.
 
 =head2 Client CellServDB
 
-The client version of the CellServDB file lists the database server
-machines in the local cell and any foreign cell that is to be accessible
-from the local client machine. Database server machines run the
-Authentication Server, Backup Server, Protection Server, and Volume
-Location (VL) Server (the B<kaserver>, B<buserver>, B<ptserver>, and
-B<vlserver>) processes, which maintain the cell's administrative AFS
-databases.
+Along with AFSDB entries in DNS, the client version of the CellServDB file
+lists the database server machines in the local cell and any foreign cell
+that is to be accessible from the local client machine. Database server
+machines run the Authentication Server (optional), Backup Server,
+Protection Server, and Volume Location (VL) Server (the B<kaserver>,
+B<buserver>, B<ptserver>, and B<vlserver>) processes, which maintain the
+cell's administrative AFS databases.
 
 The Cache Manager and other processes running on a client machine use the
 list of a cell's database server machines when performing several common
@@ -47,11 +47,12 @@ information from the Protection Database.
 =back
 
 The Cache Manager reads the CellServDB file into kernel memory as it
-initializes, and not again until the machine next reboots. To enable users
-on the local machine to continue accessing the cell correctly, update the
-file whenever a database server machine is added to or removed from a
-cell. To update the kernel-resident list of database server machines
-without rebooting, use the B<fs newcell> command.
+initializes, and not again until the machine next reboots or the client
+service restarts. To enable users on the local machine to continue
+accessing the cell correctly, update the file whenever a database server
+machine is added to or removed from a cell. To update the kernel-resident
+list of database server machines without rebooting, use the B<fs newcell>
+command.
 
 The F<CellServDB> file is in ASCII format and must reside in the
 F</usr/vice/etc> directory on each AFS client machine. Use a text editor
@@ -67,15 +68,16 @@ server machines.
 =head2 Server CellServDB
 
 The server version of the F<CellServDB> file lists the local cell's
-database server machines. These machines run the Authentication Server,
-Backup Server, Protection Server, and Volume Location (VL) Server (the
-B<kaserver>, B<buserver>, B<ptserver>, and B<vlserver>) processes, which
-maintain the cell's administrative AFS databases. The initial version of
-the file is created with the B<bos setcellname> command during the
-installation of the cell's server machine, which is automatically recorded
-as the cell's first database server machine. When adding or removing
-database server machines, be sure to update this file appropriately. It
-must reside in the F</usr/afs/etc> directory on each AFS server machine.
+database server machines. These machines run the Authentication Server
+(optional), Backup Server, Protection Server, and Volume Location (VL)
+Server (the B<kaserver>, B<buserver>, B<ptserver>, and B<vlserver>)
+processes, which maintain the cell's administrative AFS databases. The
+initial version of the file is created with the B<bos setcellname> command
+during the installation of the cell's server machine, which is
+automatically recorded as the cell's first database server machine. When
+adding or removing database server machines, be sure to update this file
+appropriately. It must reside in the F</usr/afs/etc> directory on each AFS
+server machine.
 
 The database server processes consult the F<CellServDB> file to learn
 about their peers, with which they must maintain constant connections in
@@ -109,7 +111,7 @@ In cells that use the Update Server to distribute the contents of the
 F</usr/afs/etc> directory, it is customary to edit only the copy of the
 file stored on the system control machine. Otherwise, edit the file on
 each server machine individually. For instructions on adding and removing
-database server machine, see the I<IBM AFS Quick Beginnings> chapter on
+database server machine, see the I<OpenAFS Quick Start> chapter on
 installing additional server machines.
 
 =head2 CellServDB Format
@@ -178,6 +180,7 @@ F<CellServDB> file and illustrates the required format.
 
 =head1 SEE ALSO
 
+L<afsd(8)>,
 L<bos_addhost(8)>,
 L<bos_listhosts(8)>,
 L<bos_removehost(8)>,
@@ -191,7 +194,7 @@ L<vlserver(8)>,
 L<upclient(8)>,
 L<upserver(8)>
 
-I<IBM AFS Quick Beginnings>
+I<OpenAFS Quick Start>
 
 =head1 COPYRIGHT
 

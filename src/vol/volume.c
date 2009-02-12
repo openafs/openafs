@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.10 2007/06/23 13:46:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.15 2008/10/28 00:54:49 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -164,7 +164,7 @@ extern void *calloc(), *realloc();
 /* Forward declarations */
 static Volume *attach2(Error * ec, char *path,
 		       register struct VolumeHeader *header,
-		       struct DiskPartition *partp, int isbusy);
+		       struct DiskPartition64 *partp, int isbusy);
 static void FreeVolume(Volume * vp);
 static void VScanUpdateList(void);
 static void InitLRU(int howMany);
@@ -176,10 +176,9 @@ static void DeleteVolumeFromHashTable(register Volume * vp);
 static int VHold(Volume * vp);
 static int VHold_r(Volume * vp);
 static void GetBitmap(Error * ec, Volume * vp, VnodeClass class);
-static void GetVolumePath(Error * ec, VolId volumeId, char **partitionp,
-			  char **namep);
 static void VReleaseVolumeHandles_r(Volume * vp);
 static void VCloseVolumeHandles_r(Volume * vp);
+void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep);
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
 				 * defined when not linked with vice, XXXX */
@@ -213,7 +212,7 @@ ffs(x)
 #include "rx/rx_queue.h"
 typedef struct diskpartition_queue_t {
     struct rx_queue queue;
-    struct DiskPartition * diskP;
+    struct DiskPartition64 * diskP;
 } diskpartition_queue_t;
 typedef struct vinitvolumepackage_thread_t {
     struct rx_queue queue;
@@ -300,7 +299,7 @@ VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 	return -1;
 
     if (programType == fileServer) {
-	struct DiskPartition *diskP;
+	struct DiskPartition64 *diskP;
 #ifdef AFS_PTHREAD_ENV
 	struct vinitvolumepackage_thread_t params;
 	struct diskpartition_queue_t * dpq;
@@ -396,7 +395,7 @@ VInitVolumePackageThread(void * args) {
 
     DIR *dirp;
     struct dirent *dp;
-    struct DiskPartition *diskP;
+    struct DiskPartition64 *diskP;
     struct vinitvolumepackage_thread_t * params;
     struct diskpartition_queue_t * dpq;
 
@@ -697,7 +696,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     struct afs_stat status;
     struct VolumeDiskHeader diskHeader;
     struct VolumeHeader iheader;
-    struct DiskPartition *partp;
+    struct DiskPartition64 *partp;
     char path[64];
     int isbusy = 0;
     *ec = 0;
@@ -838,7 +837,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
 private Volume *
 attach2(Error * ec, char *path, register struct VolumeHeader * header,
-	struct DiskPartition * partp, int isbusy)
+	struct DiskPartition64 * partp, int isbusy)
 {
     register Volume *vp;
 
@@ -1008,7 +1007,7 @@ Volume *
 VAttachVolume_r(Error * ec, VolumeId volumeId, int mode)
 {
     char *part, *name;
-    GetVolumePath(ec, volumeId, &part, &name);
+    VGetVolumePath(ec, volumeId, &part, &name);
     if (*ec) {
 	register Volume *vp;
 	Error error;
@@ -1355,8 +1354,9 @@ void
 VDetachVolume_r(Error * ec, Volume * vp)
 {
     VolumeId volume;
-    struct DiskPartition *tpartp;
-    int notifyServer, useDone;
+    struct DiskPartition64 *tpartp;
+    int notifyServer = 0;
+    int useDone = FSYNC_ON;
 
     *ec = 0;			/* always "succeeds" */
     if (programType == volumeUtility) {
@@ -1670,13 +1670,13 @@ GetBitmap(Error * ec, Volume * vp, VnodeClass class)
 #endif /* BITMAP_LATER */
 }
 
-static void
-GetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
+void 
+VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
 {
     static char partition[VMAXPATHLEN], name[VMAXPATHLEN];
     char path[VMAXPATHLEN];
     int found = 0;
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
 
     *ec = 0;
     name[0] = '/';

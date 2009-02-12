@@ -1,0 +1,284 @@
+=head1 NAME
+
+klog.krb5 - Authenticates to Kerberos and obtains a token
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<klog.krb5> [B<-x>] S<<< [B<-principal> <I<user name>>] >>>
+    [-password <I<user's password>>] S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-k> <I<realm>>] >>> [B<-pipe>] [B<-silent>]
+    S<<< [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
+    [B<-setpag>] [B<-tmp>] [B<-noprdb>] [B<-unwrap>] [B<-help>]
+
+B<klog.krb5> [B<-x>] S<<< [B<-pr> <I<user name>>] >>>
+    S<<< [B<-pa> <I<user's password>>] >>>
+    S<<< [B<-c> <I<cell name>>] >>>
+    B<<< [B<-k> <I<realm>>] >>> [B<-pi>] [B<-si>]
+    S<<< [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
+    [B<-se>] [B<-t>] [B<-n>] [B<-u>] [B<-h>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<klog.krb5> command obtains a Kerberos v5 ticket from a Kerberos
+KDC and, from the ticket, an AFS token and then stores it in the Cache
+Manager.  The Cache Manager keeps the token in kernel memory and uses it
+when obtaining authenticated access to the AFS filespace.  This command
+does not affect the issuer's identity (UNIX UID) on the local file system.
+
+By default, the command interpreter obtains a token for the AFS user name
+that matches the issuer's local user name.  To specify an alternate user,
+include the B<-principal> argument.  The user named by the B<-principal>
+argument does not have to appear in the local password file (the
+F</etc/passwd> file or equivalent).
+
+By default, the command interpreter obtains a token for the local cell, as
+defined by the AFSCELL environment variable set in the command shell or by
+the F</usr/vice/etc/ThisCell> file on the local machine.  To specify an
+alternate cell, include the B<-cell> argument.  A user can have tokens in
+multiple cells simultaneously, but only one token per cell per connection
+to the client machine.  If the user's credential structure already
+contains a token for the requested cell, the token resulting from this
+command replaces it.
+
+By default, the command interpreter obtains a Kerberos ticket for the
+local realm.  To specify a different Kerberos realm, include the B<-k>
+argument.  The Kerberos realm name need not match the AFS cell name.
+B<klog.krb5> will request a ticket for the principal C<afs/I<cell>> where
+I<cell> is the cell name for which the user is requesting tokens, falling
+back on the principal C<afs> if that principal does not work.
+
+The lifetime of the token resulting from this command is the smallest of
+the following:
+
+=over 4
+
+=item *
+
+The lifetime specified by the issuer with the B<-lifetime> argument if
+that argument was given.
+
+=item *
+
+The maximum ticket lifetime recorded for the C<afs/I<cell>> principal in
+thet Kerberos database.
+
+=item *
+
+The maximum ticket lifetime recorded in the specified user's Kerberos
+database entry.
+
+=back
+
+=head1 CAUTIONS
+
+By default, this command does not create a new process authentication
+group (PAG); see the description of the B<pagsh> command to learn about
+PAGs.  If a cell does not use an AFS-modified login utility, users must
+include B<-setpag> option to this command, or issue the B<pagsh> command
+before this one, to have their tokens stored in a credential structure
+that is identified by PAG rather than by local UID.  Users should be aware
+that B<-setpag> will not work on some systems, most notably recent Linux
+systems, and using B<pagsh> is preferrable and more reliable.
+
+When a credential structure is identified by local UID, the potential
+security exposure is that the local superuser C<root> can use the UNIX
+B<su> command to assume any other identity and automatically inherit the
+tokens associated with that UID.  Identifying the credential structure by
+PAG makes it more difficult (but not impossible) for the local superuser
+to obtain tokens of other users.
+
+If the B<-password> argument is used, the specified password cannot begin
+with a hyphen, because it is interpreted as another option name.  Use of
+the B<-password> argument is not recommended in any case.
+
+By default, it is possible to issue this command on a properly configured
+NFS client machine that is accessing AFS via the NFS/AFS Translator,
+assuming that the NFS client machine is a supported system type. However,
+if the translator machine's administrator has enabled UID checking by
+including the B<-uidcheck on> argument to the B<fs exportafs> command, the
+command fails with an error message similar to the following:
+
+   Warning: Remote pioctl to <translator_machine> has failed (err=8). . .
+   Unable to authenticate to AFS because a pioctl failed.
+
+Enabling UID checking means that the credential structure in which tokens
+are stored on the translator machine must be identified by a UID that
+matches the local UID of the process that is placing the tokens in the
+credential structure.  After the B<klog.krb5> command interpreter obtains
+the token on the NFS client, it passes it to the remote executor daemon on
+the translator machine, which makes the system call that stores the token
+in a credential structure on the translator machine.  The remote executor
+generally runs as the local superuser C<root>, so in most cases its local
+UID (normally zero) does not match the local UID of the user who issued
+the B<klog.krb5> command on the NFS client machine.
+
+Issuing the B<klog.krb5> command on an NFS client machine creates a
+security exposure: the command interpreter passes the token across the
+network to the remote executor daemon in clear text mode.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-x>
+
+Appears only for backwards compatibility.  Its former function is now the
+default behavior of this command.
+
+=item B<-principal> <I<user name>>
+
+Specifies the user name to authenticate.  If this argument is omitted, the
+default value is the local user name.
+
+=item B<-password> <I<user's password>>
+
+Specifies the issuer's password (or that of the alternate user identified
+by the B<-principal> argument).  Omit this argument to have the command
+interpreter prompt for the password, in which case it does not echo
+visibly in the command shell.
+
+=item B<-cell> <I<cell name>>
+
+Specifies the cell for which to obtain a token.  During a single login
+session on a given machine, a user can be authenticated in multiple cells
+simultaneously, but can have only one token at a time for each of them
+(that is, can only authenticate under one identity per cell per session on
+a machine).  It is acceptable to abbreviate the cell name to the shortest
+form that distinguishes it from the other cells listed in the
+F</usr/vice/etc/CellServDB> file on the client machine on which the
+command is issued.
+
+If this argument is omitted, the command is executed in the local cell, as
+defined
+
+=over 4
+
+=item *
+
+First, by the value of the environment variable AFSCELL.
+
+=item *
+
+Second, in the F</usr/vice/etc/ThisCell> file on the client machine on
+which the command is issued.
+
+=back
+
+=item B<-k> <I<realm>>
+
+Obtain tickets and tokens from the <I<realm>> Kerberos realm.  If this
+option is not given, B<klog.krb5> defaults to using the default local
+realm.  The Kerberos realm name need not match the AFS cell name.
+
+=item B<-pipe>
+
+Suppresses all output to the standard output stream, including prompts and
+error messages. The B<klog.krb5> command interpreter expects to receive
+the password from the standard input stream. Do not use this argument; it
+is designed for use by application programs rather than human users.
+
+=item B<-silent>
+
+Suppresses some of the trace messages that the B<klog.krb5> command
+produces on the standard output stream by default.  It still reports on
+major problems encountered.
+
+=item B<-lifetime> <I<ticket lifetime>
+
+Requests a specific lifetime for the token.  Provide a number of hours and
+optionally minutes and seconds in the format I<hh>[B<:>I<mm>[B<:>I<ss>]].
+
+=item B<-setpag>
+
+Creates a process authentication group (PAG) prior to requesting
+authentication. The token is associated with the newly created PAG.
+
+=item B<-tmp>
+
+Creates a Kerberos-style ticket file rather than only obtaining tokens.
+The ticket file will be stored in the default Kerberos ticket cache
+location, which is usually in the F</tmp> directory of the local machine
+(but depends on the Kerberos implementation used).
+
+=item B<-noprdb>
+
+By default, B<klog.krb5> looks up the user's AFS ID in the Protection
+Server and associates the token with that AFS ID.  This is helpful when
+looking at the output of commands like B<tokens> but is not required.  If
+this option is given, this behavior is suppressed and B<klog.krb5> will
+store the token under a generic name.  You may wish this if, for example,
+you have problems contacting the Protection Server for an AFS cell for
+some reason.
+
+=item B<-unwrap>
+
+Normally, B<klog.krb5> uses the Kerberos service ticket for the AFS
+principal as the AFS token.  If this option is given, B<klog.krb5> creates
+a different, simplified AFS token form based on the service ticket (the
+so-called "rxkad 2b" token).  Normally, this is not necessary.  However,
+if you are using older OpenAFS software that cannot handle large ticket
+sizes in conjunction with Active Directory as the Kerberos server, using
+B<-unwrap> can shrink the AFS token size so that older software can handle
+it more easily.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+If the B<-tmp> flag is included, the following message confirms that a
+Kerberos ticket cache was created:
+
+   Wrote ticket file to /tmp/krb5cc_1000_rENJoZ
+
+The path to the cache will vary, of course.
+
+=head1 EXAMPLES
+
+Most often, this command is issued without arguments. The appropriate
+password is for the person currently logged into the local system.  The
+ticket's lifetime is calculated as described in L<DESCRIPTION>.
+
+   % klog.krb5
+   Password for user@EXAMPLE.ORG:
+
+The following example authenticates the user as admin in the ABC
+Corporation's test cell:
+
+   % klog.krb5 -principal admin -cell test.abc.com
+   Password for admin@ABC.COM:
+
+In the following, the issuer requests a ticket lifetime of 104 hours 30
+minutes (4 days 8 hours 30 minutes).
+
+   % klog.krb5 -lifetime 104:30
+   Password for user@EXAMPLE.ORG:
+
+=head1 PRIVILEGE REQUIRED
+
+None
+
+=head1 SEE ALSO
+
+L<aklog(1)>,
+L<fs_exportafs(1)>,
+L<pagsh(1)>,
+L<tokens(1)>
+
+=head1 COPYRIGHT
+
+IBM Corporation 2000. <http://www.ibm.com/> All Rights Reserved.
+
+This documentation is covered by the IBM Public License Version 1.0.  It
+was converted from HTML to POD by software written by Chas Williams and
+Russ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.

@@ -597,12 +597,13 @@ as you copy the script.
 </PRE>
 <P><LI>Copy the AFS kernel module to the local <B>/usr/sys/BINARY</B>
 directory. 
-<P>If the machine's kernel supports NFS server functionality:
+<P>If the machine's kernel supports NFS server functionality and is to be
+used as an NFS translator:
 <PRE>  
    # <B>cp bin/libafs.o /usr/sys/BINARY/afs.mod</B>   
 </PRE> 
-<P>If the machine's kernel does not support NFS server
-functionality:
+<P>If the machine's kernel does not support NFS server functionality
+or is not to be used as an NFS translator:
 <PRE>  
    # <B>cp bin/libafs.nonfs.o /usr/sys/BINARY/afs.mod</B>
    
@@ -823,12 +824,14 @@ you copy the file.
 </PRE>
 <P><LI>Copy the AFS kernel module to the local <B>/usr/conf/lib</B>
 directory. 
-<P>If the machine's kernel supports NFS server functionality:
+<P>If the machine's kernel supports NFS server functionality and is to be
+used as an NFS translator:
 <PRE>   
    # <B>cp bin/libafs.a /usr/conf/lib</B>   
 </PRE>
-<P>If the machine's kernel does not support NFS server functionality,
-change the file's name as you copy it:
+<P>If the machine's kernel does not support NFS server functionality
+or is not to be used as an NFS translator, change the file's name as 
+you copy it:
 <PRE>   
    # <B>cp bin/libafs.nonfs.a /usr/conf/lib/libafs.a</B>
    
@@ -1205,18 +1208,20 @@ AFS kernel library file.
 <B>IP</B><VAR>xx</VAR> portion of the library file name must match the value
 previously returned by the <B>uname -m</B> command. Also choose the
 file appropriate to whether the machine's kernel supports NFS server
-functionality (NFS must be supported for the machine to act as an NFS/AFS
+functionality and is to be used as an NFS translator (NFS must be 
+supported for the machine to act as an NFS/AFS
 Translator). Single- and multiprocessor machines use the same library
 file. 
 <P>(You can choose to copy all of the kernel library files into the <B>
 /usr/vice/etc/sgiload</B> directory, but they require a significant amount
 of space.) 
-<P>If the machine's kernel supports NFS server functionality:
+<P>If the machine's kernel supports NFS server functionality and is to be
+used as an NFS translator:
 <PRE>   
    # <B>cp -p  usr/vice/etc/sgiload/libafs.IP</B><VAR>xx</VAR><B>.o  /usr/vice/etc/sgiload</B>   
 </PRE> 
-<P>If the machine's kernel does not support NFS server
-functionality:
+<P>If the machine's kernel does not support NFS server functionality
+or is not to be used as an NFS translator:
 <PRE>   
    # <B>cp -p  usr/vice/etc/sgiload/libafs.IP</B><VAR>xx</VAR><B>.nonfs.o</B>   \
                    <B>/usr/vice/etc/sgiload</B>
@@ -1266,15 +1271,17 @@ directory.
 <B>/var/sysgen/boot/afs.a</B>; the <B>IP</B><VAR>xx</VAR>
 portion of the library file name must match the value previously returned by
 the <B>uname -m</B> command. Also choose the file appropriate to
-whether the machine's kernel supports NFS server functionality (NFS must
-be supported for the machine to act as an NFS/AFS Translator). Single-
+whether the machine's kernel supports NFS server functionality and is 
+to be used as an NFS translator (NFS must be supported for the machine
+to act as an NFS/AFS Translator). Single-
 and multiprocessor machines use the same library file. 
-<P>If the machine's kernel supports NFS server functionality:
+<P>If the machine's kernel supports NFS server functionality and is to be
+used as an NFS translator:
 <PRE>   
    # <B>cp -p   bin/libafs.IP</B><VAR>xx</VAR><B>.a   /var/sysgen/boot/afs.a</B>   
 </PRE> 
-<P>If the machine's kernel does not support NFS server
-functionality:
+<P>If the machine's kernel does not support NFS server functionality
+or is not to be used as an NFS translator:
 <PRE>   
    # <B>cp -p  bin/libafs.IP</B><VAR>xx</VAR><B>.nonfs.a  /var/sysgen/boot/afs.a</B>
    
@@ -1686,26 +1693,25 @@ you copy the script.
 <P><LI>Copy the appropriate AFS kernel library file to the local file
 <B>/kernel/fs/afs</B>. 
 <P>If the machine is running Solaris 2.6 or the 32-bit version of
-Solaris 7, its kernel supports NFS server functionality, and the
-<B>nfsd</B> process is running:
+Solaris 7, its kernel supports NFS server functionality and is to be
+used as an NFS translator, and the <B>nfsd</B> process is running:
 <PRE>   
    # <B>cp -p modload/libafs.o /kernel/fs/afs</B>   
 </PRE> 
 <P>If the machine is running Solaris 2.6 or the 32-bit version of
-Solaris 7, and its kernel does not support NFS server functionality or the
-<B>nfsd</B> process is not running:
+Solaris 7, and its kernel does not support NFS server functionality, is
+not to be used as an NFS translator, or the <B>nfsd</B> process is not running:
 <PRE>   
    # <B>cp -p modload/libafs.nonfs.o /kernel/fs/afs</B>   
 </PRE> 
 <P>If the machine is running the 64-bit version of Solaris 7, its kernel
-supports NFS server functionality, and the <B>nfsd</B> process is
+supports NFS server functionality and is to be used as an NFS translator, and the <B>nfsd</B> process is
 running:
 <PRE>   
    # <B>cp -p modload/libafs64.o /kernel/fs/sparcv9/afs</B>   
 </PRE> 
 <P>If the machine is running the 64-bit version of Solaris 7, and its
-kernel does not support NFS server functionality or the <B>nfsd</B>
-process is not running:
+kernel does not support NFS server functionality, is not to be used as an NFS translator or the <B>nfsd</B> process is not running:
 <PRE>   
    # <B>cp -p modload/libafs64.nonfs.o /kernel/fs/sparcv9/afs</B>
    

@@ -88,7 +88,7 @@ tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 syscall.o: syscall.s
 	@set -x; case "$(SYS_NAME)" in \
 	 sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sun4x_5?? | sunx86_5? | sunx86_5?? ) \
-		$(CPP) -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
+		$(PATH_CPP) -P ${SFLAGS} ${srcdir}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	 sgi_* |*_darwin* ) \
@@ -104,7 +104,7 @@ syscall.o: syscall.s
 		${AS} syscall.S -o syscall.o ;  \
 		$(RM) -f syscall.S ;;\
 	 *) \
-		$(CPP) -P ${SFLAGS} ${srcdir}/syscall.s syscall.ss; \
+		$(PATH_CPP) -P ${SFLAGS} ${srcdir}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
 	esac
@@ -215,7 +215,7 @@ ${TOP_LIBDIR}/${LIBAFSSETPAG_DARWIN}: ${LIBAFSSETPAG_DARWIN}
 
 afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 	@set -x; case ${SYS_NAME} in \
-		rs_aix5* ) \
+		rs_aix[56]* ) \
 			cp -p ${srcdir}/afs5.exp afs.exp ;; \
 		rs_aix* ) \
 			cp -p ${srcdir}/afs4.exp afs.exp ;; \
@@ -225,7 +225,7 @@ afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 
 afsl.exp: ${srcdir}/afsl4.exp ${srcdir}/afsl5.exp
 	@set -x; case ${SYS_NAME} in \
-		rs_aix5* ) \
+		rs_aix[56]* ) \
 			cp -p ${srcdir}/afsl5.exp afsl.exp ;; \
 		rs_aix* ) \
 			cp -p ${srcdir}/afsl4.exp afsl.exp ;; \

@@ -11,11 +11,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.8 2008/03/10 22:35:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.9 2008/06/30 20:31:41 rra Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <dirent.h>
 #include <errno.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -99,13 +100,45 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
     char tbuffer[256];
     struct stat tstat;
     register afs_int32 code;
+    char *corefile = NULL;
 #ifdef BOZO_SAVE_CORES
     struct timeval Start;
     struct tm *TimeFields;
     char FileName[256];
 #endif
 
+    /* Linux always appends the PID to core dumps from threaded processes, so
+     * we have to scan the directory to find core files under another name. */
     code = stat(AFSDIR_SERVER_CORELOG_FILEPATH, &tstat);
+    if (code) {
+        DIR *logdir;
+        struct dirent *file;
+        char *p;
+        size_t length;
+        unsigned long pid;
+
+        logdir = opendir(AFSDIR_LOGS_DIR);
+        if (logdir == NULL)
+            return;
+        while ((file = readdir(logdir)) != NULL) {
+            if (strncmp(file->d_name, "core.", 5) != 0)
+                continue;
+            pid = atol(file->d_name + 5);
+            if (pid == aproc->pid) {
+                length = strlen(AFSDIR_LOGS_DIR) + strlen(file->d_name) + 2;
+                corefile = malloc(length);
+                if (corefile == NULL) {
+                    closedir(logdir);
+                    return;
+                }
+                snprintf(corefile, length, "%s/%s", AFSDIR_LOGS_DIR,
+                         file->d_name);
+                code = 0;
+                break;
+            }
+        }
+        closedir(logdir);
+    }
     if (code)
 	return;
 
@@ -118,7 +151,12 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
 	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
     strcpy(tbuffer, FileName);
 #endif
-    code = renamefile(AFSDIR_SERVER_CORELOG_FILEPATH, tbuffer);
+    if (corefile == NULL)
+        code = renamefile(AFSDIR_SERVER_CORELOG_FILEPATH, tbuffer);
+    else {
+        code = renamefile(corefile, tbuffer);
+        free(corefile);
+    }
 }
 
 int

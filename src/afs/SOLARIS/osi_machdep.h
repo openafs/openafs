@@ -59,6 +59,8 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 #define gop_rdwr(rw,gp,base,len,offset,segflg,ioflag,ulimit,cr,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(ioflag),(ulimit),(cr),(aresid))
+#define gop_lookupname(fnamep,segflg,followlink,compvpp) \
+  lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 
 
 #if defined(AFS_SUN510_ENV)

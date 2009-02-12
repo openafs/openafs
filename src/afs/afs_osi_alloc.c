@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_alloc.c,v 1.10.2.3 2007/12/13 19:18:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_alloc.c,v 1.10.2.5 2008/08/26 14:02:10 shadow Exp $");
 
 
 
@@ -19,7 +19,7 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-#ifndef AFS_FBSD_ENV
+
 
 #ifdef AFS_AIX41_ENV
 #include "sys/lockl.h"
@@ -146,18 +146,18 @@ shutdown_osinet(void)
 
 	while ((tp = freePacketList)) {
 	    freePacketList = tp->next;
+	    afs_osi_Free(tp, AFS_LRALLOCSIZ);
 #ifdef  KERNEL_HAVE_PIN
 	    unpin(tp, AFS_LRALLOCSIZ);
 #endif
-	    afs_osi_Free(tp, AFS_LRALLOCSIZ);
 	}
 
 	while ((tp = freeSmallList)) {
 	    freeSmallList = tp->next;
+	    afs_osi_Free(tp, AFS_SMALLOCSIZ);
 #ifdef  KERNEL_HAVE_PIN
 	    unpin(tp, AFS_SMALLOCSIZ);
 #endif
-	    afs_osi_Free(tp, AFS_SMALLOCSIZ);
 	}
 	LOCK_INIT(&osi_fsplock, "osi_fsplock");
 	LOCK_INIT(&osi_flplock, "osi_flplock");
@@ -170,4 +170,4 @@ shutdown_osinet(void)
 		 afs_stats_cmperf.SmallBlocksActive);
     }
 }
-#endif
+

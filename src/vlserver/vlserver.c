@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.12 2008/04/01 16:55:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.18.2.14 2008/10/18 15:10:57 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -63,10 +63,11 @@ extern int afsconf_ServerAuth();
 static void *CheckSignal(void*);
 int LogLevel = 0;
 int smallMem = 0;
-int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
+int rxJumbograms = 0;		/* default is to not send and receive jumbo grams */
 int rxMaxMTU = -1;
 afs_int32 rxBind = 0;
 int rxkadDisableDotCheck = 0;
+int debuglevel = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
@@ -166,7 +167,6 @@ main(argc, argv)
     for (index = 1; index < argc; index++) {
 	if (strcmp(argv[index], "-noauth") == 0) {
 	    noAuth = 1;
-
 	} else if (strcmp(argv[index], "-p") == 0) {
 	    lwps = atoi(argv[++index]);
 	    if (lwps > MAXLWP) {
@@ -174,10 +174,17 @@ main(argc, argv)
 		       lwps, MAXLWP);
 		lwps = MAXLWP;
 	    }
-
+	} else if (strcmp(argv[index], "-d") == 0) {
+	    if ((index + 1) >= argc) {
+		fprintf(stderr, "missing argument for -d\n"); 
+		return -1; 
+	    }
+	    debuglevel = atoi(argv[++index]);
+	    LogLevel = debuglevel;
 	} else if (strcmp(argv[index], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
-
+	} else if (strcmp(argv[index], "-jumbo") == 0) {
+	    rxJumbograms = 1;
 	} else if (strcmp(argv[index], "-rxbind") == 0) {
 	    rxBind = 1;
 	} else if (strcmp(argv[index], "-allow-dotted-principals") == 0) {
@@ -187,7 +194,7 @@ main(argc, argv)
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
 		return -1; 
 	    }
-	    rxMaxMTU = atoi(argv[++i]);
+	    rxMaxMTU = atoi(argv[++index]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
@@ -249,14 +256,14 @@ main(argc, argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif

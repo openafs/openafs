@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/clone.c,v 1.17.2.6 2007/10/30 15:24:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/clone.c,v 1.17.2.7 2008/08/16 19:15:48 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -175,7 +175,6 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);
-    struct DiskPartition *partition = rwvp->partition;
     Device device = rwvp->device;
 
     /* Open the RW volume's index file and seek to beginning */

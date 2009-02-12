@@ -32,12 +32,16 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/map.c,v 1.3.2.2 2007/08/11 23:50:02 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/map.c,v 1.3.2.3 2008/08/26 14:02:26 shadow Exp $");
 
 #ifdef SUPERGROUPS
 #include <errno.h>
 #include "map.h"
+#ifdef STDLIB_HAS_MALLOC_PROTOS
+#include <stdlib.h>
+#else
 #include "malloc.h"
+#endif
 
 #undef PRINT_MAP_ERROR
 /* #define MAP_DEBUG /**/

@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.15 2008/04/19 21:56:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.16 2008/06/09 03:39:44 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -646,7 +646,11 @@ void osi_keyring_init(void)
 #  endif
 	    rcu_read_lock();
 # endif
+#if defined(EXPORTED_FIND_TASK_BY_PID)
 	p = find_task_by_pid(1);
+#else
+	p = find_task_by_vpid(1);
+#endif
 	if (p && p->user->session_keyring)
 	    __key_type_keyring = p->user->session_keyring->type;
 # ifdef EXPORTED_TASKLIST_LOCK

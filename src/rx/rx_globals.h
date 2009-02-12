@@ -481,7 +481,7 @@ EXT afs_kcondvar_t rx_waitingForPackets_cv;
 #endif
 EXT char rx_waitingForPackets;	/* Processes set and wait on this variable when waiting for packet buffers */
 
-EXT struct rx_stats rx_stats;
+EXT struct rx_statistics rx_stats;
 
 EXT struct rx_peer **rx_peerHashTable;
 EXT struct rx_connection **rx_connHashTable;
@@ -521,7 +521,7 @@ EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to 
 #ifdef DPF_FSLOG
 #define dpf(args) FSLog args
 #else
-#define dpf(args) if (rx_debugFile) rxi_DebugPrint args; else
+#define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)
 #endif 
 #endif
 #define rx_Log_event rxevent_debugFile
