@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/FBSD/rx_knet.c,v 1.14.2.1 2005/04/14 02:31:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/FBSD/rx_knet.c,v 1.14.2.2 2008/08/26 14:02:25 shadow Exp $");
 
 #ifdef AFS_FBSD40_ENV
 #include <sys/malloc.h>
@@ -77,6 +77,8 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
     return code;
 }
 
+#define so_is_disconn(so) ((so)->so_state & SS_ISDISCONNECTED)
+
 extern int rxk_ListenerPid;
 void
 osi_StopListener(void)
@@ -88,15 +90,43 @@ osi_StopListener(void)
      * soclose() is currently protected by Giant,
      * but pfind and psignal are MPSAFE.
      */
-    AFS_GUNLOCK();
+    int haveGlock = ISAFS_GLOCK();
+    if (haveGlock)
+	AFS_GUNLOCK();
+    soshutdown(rx_socket, 2);
+#ifndef AFS_FBSD70_ENV
     soclose(rx_socket);
+#endif
     p = pfind(rxk_ListenerPid);
+    afs_warn("osi_StopListener: rxk_ListenerPid %lx\n", p);
     if (p)
 	psignal(p, SIGUSR1);
 #ifdef AFS_FBSD50_ENV
     PROC_UNLOCK(p);
 #endif
-    AFS_GLOCK();
+#ifdef AFS_FBSD70_ENV
+    {
+      /* Avoid destroying socket until osi_NetReceive has
+       * had a chance to clean up */
+      int tries;
+      struct mtx s_mtx;
+
+      MUTEX_INIT(&s_mtx, "rx_shutdown_mutex", MUTEX_DEFAULT, 0);
+      MUTEX_ENTER(&s_mtx);
+      tries = 3;
+      while ((tries > 0) && (!so_is_disconn(rx_socket))) {
+	msleep(&osi_StopListener, &s_mtx, PSOCK | PCATCH,
+	       "rx_shutdown_timedwait", 1 * hz);
+	--tries;
+      }
+      if (so_is_disconn(rx_socket))
+	soclose(rx_socket);
+      MUTEX_EXIT(&s_mtx);
+      MUTEX_DESTROY(&s_mtx);
+    }
+#endif
+    if (haveGlock)
+	AFS_GLOCK();
 }
 
 int

@@ -5,6 +5,84 @@ dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
+AH_VERBATIM([RCSID],
+[#define RCSID(msg) \
+static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
+#undef HAVE_CONNECT
+#undef HAVE_GETHOSTBYNAME
+#undef HAVE_RES_SEARCH
+#undef HAVE_SOCKET
+#undef STRUCT_SOCKADDR_HAS_SA_LEN
+#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
+# if ENDIANESS_IN_SYS_PARAM_H
+#  ifndef KERNEL
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   if BYTE_ORDER == BIG_ENDIAN
+#   define WORDS_BIGENDIAN 1
+#   endif
+#  else
+#   if defined(AUTOCONF_FOUND_BIGENDIAN)
+#    define WORDS_BIGENDIAN 1
+#   else
+#    undef WORDS_BIGENDIAN
+#   endif
+#  endif
+# else
+#  if defined(AUTOCONF_FOUND_BIGENDIAN)
+#   define WORDS_BIGENDIAN 1
+#  else
+#   undef WORDS_BIGENDIAN
+#  endif
+# endif
+#else
+# if defined(__BIG_ENDIAN__)
+#  define WORDS_BIGENDIAN 1
+# else
+#  undef WORDS_BIGENDIAN
+# endif
+#endif])
+
+#undef AFS_AFSDB_ENV
+#undef AFS_LARGEFILE_ENV
+#undef AFS_NAMEI_ENV
+#undef BITMAP_LATER
+#undef BOS_RESTRICTED_MODE
+#undef BOS_NEW_CONFIG
+#undef FAST_RESTART
+#undef FULL_LISTVOL_SWITCH
+#undef COMPLETION_H_EXISTS
+#undef DEFINED_FOR_EACH_PROCESS
+#undef DEFINED_PREV_TASK
+#undef EXPORTED_KALLSYMS_ADDRESS
+#undef EXPORTED_KALLSYMS_SYMBOL
+#undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_IA32_SYS_CALL_TABLE
+#undef EXPORTED_TASKLIST_LOCK
+#undef INODE_SETATTR_NOT_VOID
+#undef IRIX_HAS_MEM_FUNCS
+#undef RECALC_SIGPENDING_TAKES_VOID
+#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+#undef STRUCT_FS_HAS_FS_ROLLED
+#undef STRUCT_INODE_HAS_I_DEVICES
+#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_ALLOC_SEM
+#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+#undef STRUCT_TASK_STRUCT_HAS_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_SIG
+#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
+#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+#undef ssize_t
+#undef SIZEOF_TIME_T
+#undef HAVE_STRUCT_BUF
+#undef HAVE_ARPA_NAMESER_COMPAT_H
+/* glue for RedHat kernel bug */
+#undef ENABLE_REDHAT_BUILDSYS
+#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
+#include "redhat-fix.h"
+#endif
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
@@ -26,7 +104,7 @@ AC_ARG_ENABLE( bos-new-config,
 AC_ARG_ENABLE( largefile-fileserver,
 [  --disable-largefile-fileserver       disable large file support in fileserver],, enable_largefile_fileserver="yes")
 AC_ARG_ENABLE( namei-fileserver,
-[  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
+[  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="default")
 AC_ARG_ENABLE( supergroups,
 [  --enable-supergroups 		enable support for nested pts groups],, enable_supergroups="no")
 AC_ARG_ENABLE( fast-restart,
@@ -42,6 +120,9 @@ AC_ARG_WITH(dux-kernel-headers,
 )
 AC_ARG_WITH(linux-kernel-headers,
 [  --with-linux-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
+)
+AC_ARG_WITH(linux-kernel-build,
+[  --with-linux-kernel-build=path    	use the kernel build found at path(optional, defaults to /usr/src/linux-2.4, then /usr/src/linux)]
 )
 AC_ARG_WITH(bsd-kernel-headers,
 [  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
@@ -89,9 +170,9 @@ AC_ARG_ENABLE(warnings,
 enable_login="no"
 
 dnl weird ass systems
-AC_AIX
+dnl AC_AIX
 AC_ISC_POSIX
-AC_MINIX
+dnl AC_MINIX
 
 dnl Various compiler setup.
 AC_TYPE_PID_T
@@ -132,15 +213,20 @@ case $system in
 		     LINUX_KERNEL_PATH="/usr/src/linux"
 		   fi
 		 fi
-               if test -f "$LINUX_KERNEL_PATH/include/linux/utsrelease.h"; then
-		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		 if test "x$with_linux_kernel_build" != "x"; then
+			 LINUX_KERNEL_BUILD="$with_linux_kernel_build"
+		 else
+		   LINUX_KERNEL_BUILD=$LINUX_KERNEL_PATH
+		 fi
+               if test -f "$LINUX_KERNEL_BUILD/include/linux/utsrelease.h"; then
+		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		 LINUX_VERSION="$linux_kvers"
                else
-		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
-		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		 if test -f "$LINUX_KERNEL_BUILD/include/linux/version.h"; then
+		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		  if test "x$linux_kvers" = "x"; then
-		    if test -f "$LINUX_KERNEL_PATH/include/linux/version-up.h"; then
-		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		    if test -f "$LINUX_KERNEL_BUILD/include/linux/version-up.h"; then
+		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
 		      if test "x$linux_kvers" = "x"; then
 
 		        AC_MSG_ERROR(Linux headers lack version definition [2])
@@ -159,7 +245,7 @@ case $system in
                     enable_kernel_module="no"
                  fi
                fi
-		 if test ! -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
+		 if test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
 		     enable_kernel_module="no"
 		 fi
 		 if test "x$enable_kernel_module" = "xno"; then
@@ -537,6 +623,10 @@ else
 			AFS_SYSNAME="rs_aix53"
 			enable_pam="no"
 			;;
+		power*-ibm-aix6.1*)
+			AFS_SYSNAME="rs_aix61"
+			enable_pam="no"
+			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
 			enable_pam="no"
@@ -603,6 +693,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_EXPORTS_FIND_TASK_BY_PID
 		 LINUX_EXPORTS_PROC_ROOT_FS
                  LINUX_HAVE_CURRENT_KERNEL_TIME
+                 LINUX_HAVE_WRITE_BEGIN_AOP
                  LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
 		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
@@ -644,6 +735,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
+		 LINUX_KERNEL_HLIST_UNHASHED
                  LINUX_KEY_TYPE_H_EXISTS
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
@@ -732,16 +824,16 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
 		 fi
                  if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_SYS_CALL_TABLE)
+                  AC_DEFINE(EXPORTED_SYS_CALL_TABLE, 1, [define if your linux kernel exports sys_call_table])
                  fi
                  if test "x$ac_cv_linux_exports_ia32_sys_call_table" = "xyes"; then
-                  AC_DEFINE(EXPORTED_IA32_SYS_CALL_TABLE)
+                  AC_DEFINE(EXPORTED_IA32_SYS_CALL_TABLE, 1, [define if your linux kernel exports ia32_sys_call_table])
                  fi
                  if test "x$ac_cv_linux_exports_kallsyms_symbol" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL)
+                  AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL, 1, [define if your linux kernel exports kallsyms])
                  fi
                  if test "x$ac_cv_linux_exports_kallsyms_address" = "xyes"; then
-                  AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS)
+                  AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS, 1, [define if your linux kernel exports kallsyms address])
                  fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
 		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
@@ -817,6 +909,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_PAGE_FOLLOW_LINK, 1, [define if your linux kernel provides page_follow_link])
+		 fi
+		 if test "x$ac_cv_linux_kernel_hlist_unhashed" = "xyes" ; then
+		  AC_DEFINE(HAVE_KERNEL_HLIST_UNHASHED, 1, [define if your linux kernel provides hlist_unhashed])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
@@ -1027,7 +1122,7 @@ else
   #include <resolv.h>
   ], [static int i; i = 0;],
   [AC_MSG_RESULT(yes)
-   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H)],
+   AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H, 1, [define if arpa/nameser_compat.h exists])],
   [AC_MSG_RESULT(no)
    ])
 
@@ -1144,6 +1239,21 @@ fi
 
 if test "$enable_namei_fileserver" = "yes"; then
 	AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+else
+	if test "$enable_namei_fileserver" = "default"; then
+		case $host in
+			*-solaris2.10*)
+				AC_MSG_WARN(Some Solaris 10 versions are not safe with the inode fileserver. Forcing namei. Override with --disable-namei-fileserver)
+				AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+				;;
+			*-solaris2.11*)
+				AC_MSG_WARN(Solaris 11 versions are not safe with the inode fileserver. Forcing namei. Override with --disable-namei-fileserver)
+				AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+				;;
+			*)
+				;;
+		esac
+	fi
 fi
 
 if test "$enable_afsdb" = "yes"; then
@@ -1157,20 +1267,33 @@ XBSA_CFLAGS=""
 if test "$enable_tivoli_tsm" = "yes"; then
 	XBSADIR1=/usr/tivoli/tsm/client/api/bin/xopen
 	XBSADIR2=/opt/tivoli/tsm/client/api/bin/xopen
+	XBSADIR3=/usr/tivoli/tsm/client/api/bin/sample
+	XBSADIR4=/opt/tivoli/tsm/client/api/bin/sample
 
-	if test -r "$XBSADIR1/xbsa.h"; then
+	if test -r "$XBSADIR3/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR3"
+		XBSA_XLIBS="-ldl"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR4/dsmapifp.h"; then
+		XBSA_CFLAGS="-Dxbsa -DNEW_XBSA -I$XBSADIR4"
+		XBSA_XLIBS="-ldl"
+		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
+	elif test -r "$XBSADIR1/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR1"
+		XBSA_XLIBS=""
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	elif test -r "$XBSADIR2/xbsa.h"; then
 		XBSA_CFLAGS="-Dxbsa -I$XBSADIR2"
+		XBSA_XLIBS=""
 		AC_MSG_RESULT([yes, $XBSA_CFLAGS])
 	else
-		AC_MSG_RESULT([no, missing xbsa.h header file])
+		AC_MSG_RESULT([no, missing xbsa.h and dsmapifp.h header files])
 	fi
 else
 	AC_MSG_RESULT([no])
 fi
 AC_SUBST(XBSA_CFLAGS)
+AC_SUBST(XBSA_XLIBS) 
 
 dnl checks for header files.
 AC_HEADER_STDC
@@ -1229,7 +1352,7 @@ main()
 }], ac_cv_sizeof_time_t=`cat conftestval`, ac_cv_sizeof_time_t=0)
 ])
 AC_MSG_RESULT($ac_cv_sizeof_time_t)
-AC_DEFINE_UNQUOTED(SIZEOF_TIME_T, $ac_cv_sizeof_time_t)
+AC_DEFINE_UNQUOTED(SIZEOF_TIME_T, $ac_cv_sizeof_time_t, [define if time_t is defined])
 
 AC_CHECK_FUNCS(timegm)
 AC_CHECK_FUNCS(daemon)
@@ -1281,6 +1404,7 @@ AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
+AC_SUBST(LINUX_KERNEL_BUILD)
 AC_SUBST(BSD_KERNEL_PATH)
 AC_SUBST(BSD_KERNEL_BUILD)
 AC_SUBST(LINUX_VERSION)

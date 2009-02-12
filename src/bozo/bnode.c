@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.8 2008/03/10 22:35:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.9 2008/06/30 20:31:41 rra Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>

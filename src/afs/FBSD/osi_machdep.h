@@ -59,7 +59,14 @@
 #undef afs_osi_Alloc_NoSleep
 #define afs_osi_Alloc_NoSleep(size) osi_fbsd_alloc((size), 0)
 
-#define VN_RELE(vp)		vrele(vp)
+#ifdef AFS_FBSD80_ENV
+#define VN_RELE(vp)				\
+  do {						\
+    vrele(vp);					\
+  } while(0);
+#else
+#define VN_RELE(vp)             vrele(vp)
+#endif
 #define VN_HOLD(vp)		VREF(vp)
 
 #ifdef AFS_FBSD60_ENV
@@ -84,10 +91,8 @@ extern struct mtx afs_global_mtx;
 #define AFS_GLOCK() mtx_lock(&afs_global_mtx)
 #define AFS_GUNLOCK() mtx_unlock(&afs_global_mtx)
 #define ISAFS_GLOCK() (mtx_owned(&afs_global_mtx))
-
 #else /* FBSD50 */
 extern struct lock afs_global_lock;
-
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
 #define afs_suser(x)	(!suser(curproc))
 #define osi_getpid()	(curproc->p_pid)

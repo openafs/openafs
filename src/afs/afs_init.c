@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.7 2007/10/10 17:43:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.8 2008/06/12 17:25:03 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -116,8 +116,8 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
      */
     if (aVolumes < 50)
 	aVolumes = 50;
-    else if (aVolumes > 3000)
-	aVolumes = 3000;
+    else if (aVolumes > 32767)
+	aVolumes = 32767;
 
     tv = (struct volume *)afs_osi_Alloc(aVolumes * sizeof(struct volume));
     for (i = 0; i < aVolumes - 1; i++)

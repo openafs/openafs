@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.64 2008/04/15 12:29:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.73 2008/11/08 16:49:59 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -50,6 +50,7 @@ RCSID
 #endif
 
 extern struct vcache *afs_globalVp;
+extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
 
 
 static ssize_t
@@ -744,7 +745,7 @@ afs_linux_revalidate(struct dentry *dp)
     credp = crref();
     code = afs_getattr(vcp, &vattr, credp);
     if (!code)
-        vattr2inode(AFSTOV(vcp), &vattr);
+        afs_fill_inode(AFSTOV(vcp), &vattr);
 
     AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
@@ -789,11 +790,13 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     cred_t *credp = NULL;
     struct vcache *vcp, *pvcp, *tvc = NULL;
     int valid;
+    struct afs_fakestat_state fakestate;
 
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
     AFS_GLOCK();
+    afs_InitFakeStat(&fakestate);
 
     if (dp->d_inode) {
 
@@ -805,8 +808,28 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 
 	if (vcp->mvstat == 1) {         /* mount point */
 	    if (vcp->mvid && (vcp->states & CMValid)) {
-		/* a mount point, not yet replaced by its directory */
-		goto bad_dentry;
+		int tryEvalOnly = 0;
+		int code = 0;
+		struct vrequest treq;
+
+		credp = crref();
+		code = afs_InitReq(&treq, credp);
+		if (
+#ifdef AFS_DARWIN_ENV
+		    (strcmp(dp->d_name.name, ".DS_Store") == 0) ||
+		    (strcmp(dp->d_name.name, "Contents") == 0) ||
+#endif
+		    (strcmp(dp->d_name.name, ".directory") == 0)) {
+		    tryEvalOnly = 1;
+		}
+		if (tryEvalOnly)
+		    code = afs_TryEvalFakeStat(&vcp, &fakestate, &treq);
+		else
+		    code = afs_EvalFakeStat(&vcp, &fakestate, &treq);
+		if ((tryEvalOnly && vcp->mvstat == 1) || code) {
+		    /* a mount point, not yet replaced by its directory */
+		    goto bad_dentry;
+		}
 	    }
 	} else
 	    if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
@@ -870,6 +893,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     /* Clean up */
     if (tvc)
 	afs_PutVCache(tvc);
+    afs_PutFakeStat(&fakestate);
     AFS_GUNLOCK();
     if (credp)
 	crfree(credp);
@@ -884,7 +908,10 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     return valid;
 
   bad_dentry:
-    valid = 0;
+    if (have_submounts(dp))
+	valid = 1;
+    else 
+	valid = 0;
     goto done;
 }
 
@@ -1012,7 +1039,15 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
-	if (hlist_unhashed(&ip->i_hash))
+	if (
+#ifdef HAVE_KERNEL_HLIST_UNHASHED
+	    hlist_unhashed(&ip->i_hash)
+#elif defined(AFS_LINUX26_ENV)
+	    ip->i_hash.pprev == NULL
+#else
+	    ip->i_hash.prev == NULL
+#endif
+	    )
 	    insert_inode_hash(ip);
     }
     dp->d_op = &afs_dentry_operations;
@@ -1263,13 +1298,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 #if defined(AFS_LINUX26_ENV)
     /* Prevent any new references during rename operation. */
     lock_kernel();
-#endif
-    /* Remove old and new entries from name hash. New one will change below.
-     * While it's optimal to catch failures and re-insert newdp into hash,
-     * it's also error prone and in that case we're already dealing with error
-     * cases. Let another lookup put things right, if need be.
-     */
-#if defined(AFS_LINUX26_ENV)
+
     if (!d_unhashed(newdp)) {
 	d_drop(newdp);
 	rehash = newdp;
@@ -1289,6 +1318,9 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     AFS_GLOCK();
     code = afs_rename(VTOAFS(oldip), oldname, VTOAFS(newip), newname, credp);
     AFS_GUNLOCK();
+
+    if (!code)
+	olddp->d_time = 0;      /* force to revalidate */
 
     if (rehash)
 	d_rehash(rehash);
@@ -1525,6 +1557,26 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
 
+    ObtainReadLock(&vcp->lock);
+    if (vcp->states & CPageWrite) {
+	ReleaseReadLock(&vcp->lock);
+	AFS_GUNLOCK();
+	unlock_kernel();
+	crfree(credp);
+	kunmap(pp);
+#ifdef AFS_LINUX26_ENV
+#if defined(WRITEPAGE_ACTIVATE)
+	return WRITEPAGE_ACTIVATE;
+#else
+	return AOP_WRITEPAGE_ACTIVATE;
+#endif
+#else
+	/* should mark it dirty? */
+	return(0); 
+#endif
+    }
+    ReleaseReadLock(&vcp->lock);
+
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, f_flags, credp, 0);
@@ -1686,7 +1738,7 @@ afs_linux_permission(struct inode *ip, int mode)
     return -code;
 }
 
-#if defined(AFS_LINUX24_ENV)
+#if defined(AFS_LINUX24_ENV) && !(LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) && defined(HAVE_WRITE_BEGIN))
 static int
 afs_linux_commit_write(struct file *file, struct page *page, unsigned offset,
 		       unsigned to)
@@ -1713,8 +1765,37 @@ afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 #endif
     return 0;
 }
+#endif
 
-extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) && defined(HAVE_WRITE_BEGIN)
+static int
+afs_linux_write_end(struct file *file, struct address_space *mapping,
+                                loff_t pos, unsigned len, unsigned copied,
+                                struct page *page, void *fsdata)
+{
+    int code;
+    pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+    unsigned from = pos & (PAGE_CACHE_SIZE - 1);
+
+    code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,
+                                    from, copied);
+    unlock_page(page);
+    page_cache_release(page);
+    return code;
+}
+
+static int
+afs_linux_write_begin(struct file *file, struct address_space *mapping,
+                                loff_t pos, unsigned len, unsigned flags,
+                                struct page **pagep, void **fsdata)
+{
+    struct page *page;
+    pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+    page = __grab_cache_page(mapping, index);
+    *pagep = page;
+
+    return 0;
+}
 #endif
 
 static struct inode_operations afs_file_iops = {
@@ -1738,8 +1819,13 @@ static struct inode_operations afs_file_iops = {
 static struct address_space_operations afs_file_aops = {
   .readpage =		afs_linux_readpage,
   .writepage =		afs_linux_writepage,
-  .commit_write =	afs_linux_commit_write,
-  .prepare_write =	afs_linux_prepare_write,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) && defined(HAVE_WRITE_BEGIN)
+  .write_begin =        afs_linux_write_begin,
+  .write_end =          afs_linux_write_end,
+#else
+  .commit_write =       afs_linux_commit_write,
+  .prepare_write =      afs_linux_prepare_write,
+#endif
 };
 #endif
 

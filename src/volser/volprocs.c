@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34.2.13 2008/03/17 17:14:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34.2.17 2008/08/16 20:07:57 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -98,7 +98,7 @@ VolSetIdsTypes(), VolSetDate(), VolSetFlags();
 int 
 VPFullUnlock()
 {
-    register struct DiskPartition *tp;
+    register struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
 	if (tp->lock_fd != -1) {
 	    close(tp->lock_fd);	/* releases flock held on this partition */
@@ -286,6 +286,33 @@ SAFSVolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition
 		     *partition)
 {
     afs_int32 code;
+    struct diskPartition64 *dp = (struct diskPartition64 *)
+      malloc(sizeof(struct diskPartition64));
+
+    code = VolPartitionInfo(acid, pname, dp);
+    if (!code) {
+	strncpy(partition->name, dp->name, 32);
+	strncpy(partition->devName, dp->devName, 32);
+	partition->lock_fd = dp->lock_fd;
+	if (dp->free > MAX_AFS_INT32)
+	    partition->free = MAX_AFS_INT32;
+	else
+	    partition->free = dp->free;
+	if (dp->minFree > MAX_AFS_INT32)
+	    partition->minFree = MAX_AFS_INT32;
+	else
+	    partition->minFree = dp->minFree;
+    }
+    free(dp);
+    osi_auditU(acid, VS_ParInfEvent, code, AUD_STR, pname, AUD_END);
+    return code;
+}
+
+afs_int32
+SAFSVolPartitionInfo64(struct rx_call *acid, char *pname, 
+			struct diskPartition64 *partition)
+{
+    afs_int32 code;
 
     code = VolPartitionInfo(acid, pname, partition);
     osi_auditU(acid, VS_ParInfEvent, code, AUD_STR, pname, AUD_END);
@@ -293,10 +320,10 @@ SAFSVolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition
 }
 
 afs_int32
-VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition 
+VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
 		 *partition)
 {
-    register struct DiskPartition *dp;
+    register struct DiskPartition64 *dp;
 
 /*
     if (!afsconf_SuperUser(tdir, acid, caller)) return VOLSERBAD_ACCESS;
@@ -425,7 +452,7 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
 	return EIO;
     }
     V_uniquifier(vp) = 1;
-    V_creationDate(vp) = V_copyDate(vp);
+    V_updateDate(vp) = V_creationDate(vp) = V_copyDate(vp);
     V_inService(vp) = V_blessed(vp) = 1;
     V_type(vp) = atype;
     AssignVolumeName(&V_disk(vp), aname, 0);
@@ -821,6 +848,11 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	LogError(error);
 	goto fail;
     }
+    /* VUpdateVolume succeeded. Mark it in service so there's no window 
+     * between FSYNC_VOL_ON and VolSetFlags where it's offline with no  
+     * specialStatus; this is a reclone and this volume started online  
+     */
+    V_inService(clonevp) = 1;
     VDetachVolume(&error, clonevp);	/* allow file server to get it's hands on it */
     clonevp = NULL;
     VUpdateVolume(&error, originalvp);
@@ -839,7 +871,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     DeleteTrans(ttc, 1);
 
     {
-	struct DiskPartition *tpartp = originalvp->partition;
+	struct DiskPartition64 *tpartp = originalvp->partition;
 	FSYNC_askfs(cloneId, tpartp->name, FSYNC_RESTOREVOLUME, 0);
     }
     return 0;
@@ -1658,8 +1690,7 @@ VolListPartitions(struct rx_call *acid, struct pIDs *partIds)
     namehead[7] = '\0';
     for (i = 0; i < 26; i++) {
 	namehead[6] = i + 'a';
-	if (VGetPartition(namehead, 0))
-	    partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
+	partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
     }
 
     return 0;
@@ -1683,7 +1714,7 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
     struct stat rbuf, pbuf;
     char namehead[9];
     struct partList partList;
-    struct DiskPartition *dp;
+    struct DiskPartition64 *dp;
     int i, j = 0, k;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator */
@@ -1771,7 +1802,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 {
     volintInfo *pntr;
     register struct Volume *tv;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     struct volser_trans *ttc;
     char pname[9], volname[20];
     afs_int32 error = 0;
@@ -1945,7 +1976,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     volintXInfo *xInfoP;	/*Ptr to the extended vol info */
     register struct Volume *tv;	/*Volume ptr */
     struct volser_trans *ttc;	/*Volume transaction ptr */
-    struct DiskPartition *partP;	/*Ptr to partition */
+    struct DiskPartition64 *partP;	/*Ptr to partition */
     char pname[9], volname[20];	/*Partition, volume names */
     afs_int32 error;		/*Error code */
     afs_int32 code;		/*Return code */
@@ -2159,7 +2190,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 {
     volintInfo *pntr;
     register struct Volume *tv;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     struct volser_trans *ttc;
     afs_int32 allocSize = 1000;	/*to be changed to a larger figure */
     char pname[9], volname[20];
@@ -2364,7 +2395,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 
     volintXInfo *xInfoP;	/*Ptr to the extended vol info */
     register struct Volume *tv;	/*Volume ptr */
-    struct DiskPartition *partP;	/*Ptr to partition */
+    struct DiskPartition64 *partP;	/*Ptr to partition */
     struct volser_trans *ttc;	/*Volume transaction ptr */
     afs_int32 allocSize = 1000;	/*To be changed to a larger figure */
     char pname[9], volname[20];	/*Partition, volume names */
@@ -2791,7 +2822,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
     DIR *dirp;
     register struct volser_trans *ttc;
     char pname[16], volname[20];
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     afs_int32 ret = ENODEV;
     afs_int32 volid;
 
