@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.15 2008/02/06 01:43:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.18 2008/10/12 18:44:46 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -58,6 +58,11 @@ osi_Init(void)
     usimple_lock_init(&afs_global_lock);
     afs_global_owner = (thread_t) 0;
 #elif defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD80_ENV) && defined(WITNESS)
+    /* "lock_initalized" (sic) can panic, checks a flag bit
+     * is unset _before_ init */
+    memset(&afs_global_mtx, 0, sizeof(struct mtx));
+#endif
     mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if !defined(AFS_DARWIN80_ENV)
@@ -134,6 +139,7 @@ osi_Active(register struct vcache *avc)
 void
 osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 {
+    int vfslocked;
     afs_hyper_t origDV;
     ObtainReadLock(&avc->lock);
     /* If we've already purged this version, or if we're the ones
@@ -164,9 +170,19 @@ osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->m.Length);
 
     ReleaseWriteLock(&avc->lock);
+#ifdef AFS_FBSD70_ENV
+    vfslocked = VFS_LOCK_GIANT(AFSTOV(avc)->v_mount);
+#endif
+#ifndef AFS_FBSD70_ENV
     AFS_GUNLOCK();
+#endif
     osi_VM_FlushPages(avc, credp);
+#ifndef AFS_FBSD70_ENV
     AFS_GLOCK();
+#endif
+#ifdef AFS_FBSD70_ENV
+    VFS_UNLOCK_GIANT(vfslocked);
+#endif
     ObtainWriteLock(&avc->lock, 88);
 
     /* do this last, and to original version, since stores may occur
@@ -826,16 +842,16 @@ afs_osi_TraverseProcTable()
 #if !defined(LINUX_KEYRING_SUPPORT)
     struct task_struct *p;
 
-#ifdef EXPORTED_TASKLIST_LOCK
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
     if (&tasklist_lock)
-       read_lock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
+	read_lock(&tasklist_lock);
+#endif /* EXPORTED_TASKLIST_LOCK */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
     else
-#endif
+#endif /* EXPORTED_TASKLIST_LOCK && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
 	rcu_read_lock();
-#endif
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
 
 #ifdef DEFINED_FOR_EACH_PROCESS
     for_each_process(p) if (p->pid) {
@@ -860,16 +876,16 @@ afs_osi_TraverseProcTable()
 	afs_GCPAGs_perproc_func(p);
     }
 #endif
-#ifdef EXPORTED_TASKLIST_LOCK
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
     if (&tasklist_lock)
-       read_unlock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
+	read_unlock(&tasklist_lock);
+#endif /* EXPORTED_TASKLIST_LOCK */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
     else
-#endif
+#endif /* EXPORTED_TASKLIST_LOCK && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
 	rcu_read_unlock();
-#endif
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
 #endif
 }
 #endif

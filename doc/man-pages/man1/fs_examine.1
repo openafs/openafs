@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_EXAMINE 1 "OpenAFS" "11/Nov/2007" "AFS Command Reference"
+.TH FS_EXAMINE 1 "OpenAFS" "12/Jul/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -262,10 +262,10 @@ the partition housing it:
 \&   The partition has 336662 blocks available out of 4177920
 .Ve
 .SH "PRIVILEGE REQUIRED"
-The issuer must have the \f(CWl\fR (lookup) permission on the ACL of the root
+The issuer must have the \f(CWr\fR (read) permission on the ACL of the root
 directory of the volume that houses the file or directory named by the
-\fB\-path\fR argument, and on the ACL of each directory that precedes it in
-the pathname.
+\fB\-path\fR argument, and \f(CWl\fR (list) permission on the ACL of each 
+directory that precedes it in the pathname.
 .SH "SEE ALSO"
 the \fIfs_listquota(1)\fR manpage,
 the \fIfs_quota(1)\fR manpage,

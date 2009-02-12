@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH fileserver 8 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH fileserver 8 "OpenAFS" "24/Aug/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -203,7 +203,7 @@ fileserver \- Initializes the File Server component of the fs process
     <<\ [\fB\-busyat\fR\ <\fI<\ redirect\ clients\ when\ queue\ \fR\ n\ >>] >>>
     [\fB\-nobusy\fR] <<\ [\fB\-rxpck\fR\ <\fInumber\ of\ rx\ extra\ packets\fR] >>>
     [\fB\-rxdbg\fR] [\fB\-rxdbge\fR] <<\ [\fB\-rxmaxmtu\fR\ <\fIbytes\fR] >>>
-    [\fB\-allow-dotted-principal\fR]
+    [\fB\-allow-dotted-principal\fR] [\fB\-jumbo\fR] [\fB\-nojumbo\fR]
     <<\ [\fB\-rxbind\fR\ <\fIaddress\ to\ bind\ the\ Rx\ socket\ to\fR] >>>
     <<\ [\fB\-vattachpar\fR\ <\fInumber\ of\ volume\ attach\ threads\fR] >>>
     <<\ [\fB\-m\fR\ <\fImin\ percentage\ spare\ in\ partition\fR] >>>
@@ -500,6 +500,13 @@ listed in the local \fI/usr/afs/etc/ThisCell\fR file.
 .Ip "\fB\-udpsize\fR <\fIsize of socket buffer in bytes\fR>" 4
 Sets the size of the \s-1UDP\s0 buffer, which is 64 \s-1KB\s0 by default. Provide a
 positive integer, preferably larger than the default.
+.Ip "\fB\-jumbo\fR" 4
+Allows the server to send and receive jumbograms. A jumbogram is
+a large-size packet composed of 2 to 4 normal Rx data packets that share
+the same header. The fileserver does not use jumbograms by default, as some
+routers are not capable of properly breaking the jumbogram into smaller
+packets and reassembling them.
+.Ip "\fB\-nojumbo\fR    Deprecated; jumbograms are disabled by default." 4
 .Ip "\fB\-enable_peer_stats\fR" 4
 Activates the collection of Rx statistics and allocates memory for their
 storage. For each connection with a specific \s-1UDP\s0 port on another machine,
@@ -815,6 +822,10 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-realm\fR <\fIKerberos realm name\fR>"
 
 .IX Item "\fB\-udpsize\fR <\fIsize of socket buffer in bytes\fR>"
+
+.IX Item "\fB\-jumbo\fR"
+
+.IX Item "\fB\-nojumbo\fR    Deprecated; jumbograms are disabled by default."
 
 .IX Item "\fB\-enable_peer_stats\fR"
 

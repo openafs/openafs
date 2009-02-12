@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.7.2.3 2007/04/10 18:43:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.7.2.4 2008/09/27 20:54:49 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <afs/afs_Admin.h>
@@ -2508,7 +2508,7 @@ util_RXDebugBasicStats(rxdebugHandle_p handle, struct rx_debugStats *stats,
  */
 
 int ADMINAPI
-util_RXDebugRxStats(rxdebugHandle_p handle, struct rx_stats *stats,
+util_RXDebugRxStats(rxdebugHandle_p handle, struct rx_statistics *stats,
 		    afs_uint32 * supportedValues, afs_status_p st)
 {
     int rc = 0;

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH volserver 8 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH volserver 8 "OpenAFS" "24/Aug/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -192,6 +192,8 @@ volserver \- Initializes the Volume Server component of the fs process
 .SH "SYNOPSIS"
 \fBvolserver\fR [\fB\-log\fR] <<\ [\fB\-p\fR\ <\fInumber\ of\ processes\fR] >>>
     <<\ [\fB\-udpsize\fR\ <\fIsize\ of\ socket\ buffer\ in\ bytes\fR] >>>
+    <<\ [\fB\-d\fR\ <\fIdebug\ level\fR] >>>
+    [\fB\-nojumbo\fR] [\fB\-jumbo\fR] 
     [\fB\-enable_peer_stats\fR] [\fB\-enable_process_stats\fR] 
     [\fB\-allow-dotted-principal\fR] [\fB\-help\fR]
 .SH "DESCRIPTION"
@@ -219,6 +221,11 @@ change the number, use the \fB\-p\fR argument.
 This command does not use the syntax conventions of the AFS command
 suites. Provide the command name and all option names in full.
 .SH "OPTIONS"
+.Ip "\fB\-d\fR <\fIdebug level\fR>" 4
+Sets the detail level for the debugging trace written to the
+\fI/usr/afs/logs/VolserLog\fR file. Provide one of the following values, each
+of which produces an increasingly detailed trace: \f(CW0\fR, \f(CW1\fR, \f(CW5\fR, \f(CW25\fR,
+and \f(CW125\fR. 
 .Ip "\fB\-log\fR" 4
 Records in the /usr/afs/logs/VolserLog file the names of all users who
 successfully initiate a \fBvos\fR command. The Volume Server also records any
@@ -230,6 +237,14 @@ integer between \f(CW4\fR and \f(CW16\fR. The default is \f(CW9\fR.
 .Ip "\fB\-udpsize\fR <\fIsize of socket buffer\fR>" 4
 Sets the size of the \s-1UDP\s0 buffer in bytes, which is 64 \s-1KB\s0 by
 default. Provide a positive integer, preferably larger than the default.
+.Ip "\fB\-jumbo\fR" 4
+Allows the server to send and receive jumbograms. A jumbogram is
+a large-size packet composed of 2 to 4 normal Rx data packets that share
+the same header. The volserver does not use jumbograms by default, as some
+routers are not capable of properly breaking the jumbogram into smaller
+packets and reassembling them.
+.Ip "\fB\-nojumbo\fR" 4
+Deprecated; jumbograms are disabled by default.
 .Ip "\fB\-enable_peer_stats\fR" 4
 Activates the collection of Rx statistics and allocates memory for their
 storage. For each connection with a specific \s-1UDP\s0 port on another machine,
@@ -290,11 +305,17 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Header "OPTIONS"
 
+.IX Item "\fB\-d\fR <\fIdebug level\fR>"
+
 .IX Item "\fB\-log\fR"
 
 .IX Item "\fB\-p\fR <\fInumber of processes\fR>"
 
 .IX Item "\fB\-udpsize\fR <\fIsize of socket buffer\fR>"
+
+.IX Item "\fB\-jumbo\fR"
+
+.IX Item "\fB\-nojumbo\fR"
 
 .IX Item "\fB\-enable_peer_stats\fR"
 

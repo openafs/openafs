@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osidnlc.c,v 1.8.2.6 2007/10/19 20:40:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osidnlc.c,v 1.8.2.7 2008/08/26 14:02:10 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -62,6 +62,14 @@ int dnlct;
 #define TRACE(e,s)		/* if (dnlct == 256) dnlct = 0; dnlctracetable[dnlct].event = e; dnlctracetable[dnlct++].slot = s; */
 
 #define dnlcHash(ts, hval) for (hval=0; *ts; ts++) { hval *= 173;  hval  += *ts;   }
+
+#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
+#define ma_critical_enter critical_enter
+#define ma_critical_exit critical_exit
+#else
+#define ma_critical_enter() {}
+#define ma_critical_exit() {}
+#endif
 
 static struct nc *
 GetMeAnEntry(void)
@@ -201,12 +209,17 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
     vnode_t tvp;
 #endif
 
-    if (!afs_usednlc)
-	return 0;
+    ma_critical_enter();
+
+    if (!afs_usednlc) {
+      ma_critical_exit();
+      return 0;
+    }
 
     dnlcHash(ts, key);		/* leaves ts pointing at the NULL */
     if (ts - aname >= AFSNCNAMESIZE) {
-	return 0;
+      ma_critical_exit();
+      return 0;
     }
     skey = key & (NHSIZE - 1);
 
@@ -231,6 +244,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ReleaseReadLock(&afs_xdnlc);
 	    ReleaseReadLock(&afs_xvcache);
 	    osi_dnlc_purge();
+	    ma_critical_exit();
 	    return (0);
 	}
     }
@@ -251,6 +265,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ReleaseReadLock(&afs_xvcache);
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
+	    ma_critical_exit();
 	    return 0;
 	}
 #ifdef	AFS_OSF_ENV
@@ -262,6 +277,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ReleaseReadLock(&afs_xvcache);
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
+	    ma_critical_exit();
 	    return 0;
 	}
 	if (vnode_ref(tvp)) {
@@ -271,10 +287,18 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    AFS_GLOCK();
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
+	    ma_critical_exit();
 	    return 0;
 	}
 #else
+#ifdef AFS_FBSD50_ENV
+	/* can't sleep in a critical section */
+	ma_critical_exit();
 	osi_vnhold(tvc, 0);
+	ma_critical_enter();
+#else
+	osi_vnhold(tvc, 0);
+#endif /* AFS_FBSD80_ENV */
 #endif
 #endif
 	ReleaseReadLock(&afs_xvcache);
@@ -313,6 +337,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 #endif
     }
 
+    ma_critical_exit();
     return tvc;
 }
 

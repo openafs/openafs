@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.8 2007/10/31 04:13:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.9 2008/10/03 20:40:05 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -3408,7 +3408,7 @@ print_rxstats(kmem)
     off_t symoff;
     char sysname[100];
     afs_int32 count, i;
-    struct rx_stats rx_stats;
+    struct rx_statistics rx_stats;
 
     printf("\n\nPrinting some general RX stats...\n\n");
     findsym("rx_stats", &symoff);
@@ -3473,7 +3473,7 @@ print_rx(kmem)
     char sysname[100], c;
     afs_int32 count, i, ar[100];
     short sm;
-    struct rx_stats rx_stats;
+    struct rx_statistics rx_stats;
 
     printf("\n\nPrinting some RX globals...\n\n");
     findsym("rx_extraQuota", &symoff);
