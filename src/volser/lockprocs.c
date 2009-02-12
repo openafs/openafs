@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/lockprocs.c,v 1.8.2.2 2007/11/26 21:21:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/lockprocs.c,v 1.8.2.3 2008/08/16 19:56:25 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -37,15 +37,16 @@ RCSID
 #include "volser.h"
 #include "lockdata.h"
 
+#include <vsutils_prototypes.h>
+#include <lockprocs_prototypes.h>
+
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.
  * If type is zero, will match first index of ANY type (RW, BK, or RO).
  * If server is zero, will match first index of ANY server and partition 
  * Zero is a valid partition field.
  */
 int
-FindIndex(entry, server, part, type)
-     struct nvldbentry *entry;
-     afs_int32 server, part, type;
+FindIndex(struct nvldbentry *entry, afs_int32 server, afs_int32 part, afs_int32 type)
 {
     int e;
     afs_int32 error = 0;
@@ -77,9 +78,8 @@ FindIndex(entry, server, part, type)
 
 /* Changes the rw site only */
 void
-SetAValue(entry, oserver, opart, nserver, npart, type)
-     struct nvldbentry *entry;
-     afs_int32 oserver, opart, nserver, npart, type;
+SetAValue(struct nvldbentry *entry, afs_int32 oserver, afs_int32 opart,
+          afs_int32 nserver, afs_int32 npart, afs_int32 type)
 {
     int e;
     afs_int32 error = 0;
@@ -103,26 +103,24 @@ SetAValue(entry, oserver, opart, nserver, npart, type)
 
 /* Changes the RW site only */
 void
-Lp_SetRWValue(entry, oserver, opart, nserver, npart)
-     struct nvldbentry *entry;
-     afs_int32 oserver, opart, nserver, npart;
+Lp_SetRWValue(struct nvldbentry *entry, afs_int32 oserver, afs_int32 opart, 
+              afs_int32 nserver, afs_int32 npart)
 {
     SetAValue(entry, oserver, opart, nserver, npart, ITSRWVOL);
 }
 
 /* Changes the RO site only */
 void
-Lp_SetROValue(entry, oserver, opart, nserver, npart)
-     struct nvldbentry *entry;
-     afs_int32 oserver, opart, nserver, npart;
+Lp_SetROValue(struct nvldbentry *entry, afs_int32 oserver, 
+              afs_int32 opart, afs_int32 nserver, afs_int32 npart)
 {
     SetAValue(entry, oserver, opart, nserver, npart, ITSROVOL);
 }
 
 /* Returns success if this server and partition matches the RW entry */
-Lp_Match(server, part, entry)
-     afs_int32 server, part;
-     struct nvldbentry *entry;
+int 
+Lp_Match(afs_int32 server, afs_int32 part,
+         struct nvldbentry *entry)
 {
     if (FindIndex(entry, server, part, ITSRWVOL) == -1)
 	return 0;
@@ -130,24 +128,22 @@ Lp_Match(server, part, entry)
 }
 
 /* Return the index of the RO entry (plus 1) if it exists, else return 0 */
-Lp_ROMatch(server, part, entry)
-     afs_int32 server, part;
-     struct nvldbentry *entry;
+int 
+Lp_ROMatch(afs_int32 server, afs_int32 part, struct nvldbentry *entry)
 {
     return (FindIndex(entry, server, part, ITSROVOL) + 1);
 }
 
 /* Return the index of the RW entry if it exists, else return -1 */
-Lp_GetRwIndex(entry)
-     struct nvldbentry *entry;
+int 
+Lp_GetRwIndex(struct nvldbentry *entry)
 {
     return (FindIndex(entry, 0, 0, ITSRWVOL));
 }
 
 /*initialize queue pointed by <ahead>*/
 void
-Lp_QInit(ahead)
-     struct qHead *ahead;
+Lp_QInit(struct qHead *ahead)
 {
     ahead->count = 0;
     ahead->next = NULL;
@@ -155,9 +151,7 @@ Lp_QInit(ahead)
 
 /*add <elem> in front of queue <ahead> */
 void
-Lp_QAdd(ahead, elem)
-     struct qHead *ahead;
-     struct aqueue *elem;
+Lp_QAdd(struct qHead *ahead, struct aqueue *elem)
 {
     struct aqueue *temp;
 
@@ -173,11 +167,8 @@ Lp_QAdd(ahead, elem)
     }
 }
 
-Lp_QScan(ahead, id, success, elem)
-     struct qHead *ahead;
-     struct aqueue **elem;
-     afs_int32 id;
-     int *success;
+int 
+Lp_QScan(struct qHead *ahead, afs_int32 id, int *success, struct aqueue **elem)
 {
     struct aqueue *cptr;
 
@@ -197,10 +188,7 @@ Lp_QScan(ahead, id, success, elem)
 /*return the element in the beginning of the queue <ahead>, free
 *the space used by that element . <success> indicates if enumeration was ok*/
 void
-Lp_QEnumerate(ahead, success, elem)
-     struct qHead *ahead;
-     struct aqueue *elem;
-     int *success;
+Lp_QEnumerate(struct qHead *ahead, int *success, struct aqueue *elem)
 {
     int i;
     struct aqueue *temp;
@@ -223,8 +211,7 @@ Lp_QEnumerate(ahead, success, elem)
 }
 
 void
-Lp_QTraverse(ahead)
-     struct qHead *ahead;
+Lp_QTraverse(struct qHead *ahead)
 {
     int count;
     struct aqueue *old, *new;

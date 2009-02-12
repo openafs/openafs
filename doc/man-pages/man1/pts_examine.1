@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS_EXAMINE 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH PTS_EXAMINE 1 "OpenAFS" "5/Jun/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -192,16 +192,16 @@ pts_examine \- Displays a Protection Database entry
 .SH "SYNOPSIS"
 \fBpts examine\fR <<\ \fB\-nameorid\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>>
     <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR] 
-    [\fB\-force\fR] [\fB\-help\fR]
+    [\fB\-force\fR] [\fB\-auth\fR] [\fB\-help\fR]
 .PP
 \fBpts e\fR <<\ \fB\-na\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
+    [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-a\fR] [\fB\-h\fR]
 .PP
 \fBpts check\fR <<\ \fB\-na\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
+    [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-a\fR] [\fB\-h\fR]
 .PP
 \fBpts che\fR <<\ \fB\-na\fR\ <\fIuser\ or\ group\ name\ or\ id\fR+ >>> <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-h\fR]
+    [\fB\-no\fR] [\fB\-l\fR] [\fB\-f\fR] [\fB\-a\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBpts examine\fR command displays information from the Protection
 Database entry of each user, machine or group specified by the
@@ -227,6 +227,9 @@ Constructs a server ticket using a key from the local
 .Ip "\fB\-force\fR" 4
 Enables the command to continue executing as far as possible when errors
 or other problems occur, rather than halting execution at the first error.
+.Ip "\fB\-auth\fR" 4
+Run using the user's current authentication. This is the default unless
+the \fB\-noauth\fR or \fB\-localauth\fR options are used.
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -314,14 +317,23 @@ group and the entry's owner (as well as the user for a user entry).
 The default privacy flags for group entries are \f(CWS-M--\fR, meaning that all
 users can display the entry and the members of the group, but only the
 entry owner and members of the system:administrators group can perform
-other functions.
+other functions. The defaults for the privacy flags may be changed by
+running \fBptserver\fR with the \fB\-default_access\fR option. See the \fIptserver(8)\fR manpage
+for more discussion of the \fB\-default_access\fR option.
 .Ip "group quota" 4
 The number of additional groups the user is allowed to create. The \fBpts
 createuser\fR command sets it to 20 for both users and machines, but it has
 no meaningful interpretation for a machine, because it is not possible to
 authenticate as a machine. Similarly, it has no meaning in group entries
-and the \fBpts creategroup\fR command sets it to 0 (zero); do not change this
-value.
+that only deal with the local cell and the \fBpts creategroup\fR command sets
+it to 0 (zero); do not change this value.
+.Sp
+When using cross-realm authentication, a special group of the form
+system:authuser@\s-1FOREIGN\s0.\s-1REALM\s0 is created by an administrator and used.  If
+the group quota for this special group is greater than zero, then aklog
+will automatically register foreign users in the local \s-1PTS\s0 database, add
+the foreign user to the system:authuser@\s-1FOREIGN\s0.\s-1REALM\s0, and decrement the
+group quota by one.
 .SH "EXAMPLES"
 The following example displays the user entry for \f(CWterry\fR and the machine
 entry \f(CW158.12.105.44\fR.
@@ -393,6 +405,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-localauth\fR"
 
 .IX Item "\fB\-force\fR"
+
+.IX Item "\fB\-auth\fR"
 
 .IX Item "\fB\-help\fR"
 

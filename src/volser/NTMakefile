@@ -16,6 +16,8 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 
 INCFILES = \
 	$(INCFILEDIR)\volser_prototypes.h \
+	$(INCFILEDIR)\vsutils_prototypes.h \
+	$(INCFILEDIR)\lockprocs_prototypes.h \
 	$(INCFILEDIR)\volser.h \
 	$(INCFILEDIR)\volint.h
 

@@ -7,11 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <assert.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/utils.c,v 1.15.2.2 2008/02/04 17:53:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/utils.c,v 1.15.2.3 2008/06/12 18:37:44 shadow Exp $");
 
 #include <sys/types.h>
 #include <lock.h>
@@ -294,6 +295,7 @@ FindByID(register struct ubik_trans *at, afs_int32 aid)
 	return 0;
     if (aid == tentry.id)
 	return entry;
+    assert(entry != tentry.nextID);
     entry = tentry.nextID;
     while (entry != 0) {
 	memset(&tentry, 0, sizeof(tentry));
@@ -302,6 +304,7 @@ FindByID(register struct ubik_trans *at, afs_int32 aid)
 	    return 0;
 	if (aid == tentry.id)
 	    return entry;
+	assert(entry != tentry.nextID);
 	entry = tentry.nextID;
     }
     return 0;
@@ -325,6 +328,7 @@ FindByName(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct pre
 	return 0;
     if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
 	return entry;
+    assert(entry != tentryp->nextName);
     entry = tentryp->nextName;
     while (entry != 0) {
 	memset(tentryp, 0, sizeof(struct prentry));
@@ -333,6 +337,7 @@ FindByName(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct pre
 	    return 0;
 	if ((strncmp(aname, tentryp->name, PR_MAXNAMELEN)) == 0)
 	    return entry;
+	assert(entry != tentryp->nextName);
 	entry = tentryp->nextName;
     }
     return 0;
@@ -462,6 +467,7 @@ RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? i
     if (code)
 	return PRDBFAIL;
     while (aid != tentry.id) {
+	assert(trail != current);
 	trail = current;
 	current = tentry.nextID;
 	if (current == 0)
@@ -539,6 +545,7 @@ RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
     if (code)
 	return PRDBFAIL;
     while (strcmp(aname, tentry.name)) {
+	assert(trail != current);
 	trail = current;
 	current = tentry.nextName;
 	if (current == 0)

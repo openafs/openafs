@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.16 2007/11/26 21:21:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.18 2008/10/10 14:43:02 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -993,8 +993,10 @@ GetFreeTag(IHandle_t * ih, int vno)
 	if ((row & coldata) == 0)
 	    break;
     }
-    if (col >= NAMEI_MAXVOLS)
+    if (col >= NAMEI_MAXVOLS) {
+	errno = ENOSPC;
 	goto badGetFreeTag;
+    }
 
     coldata = 1 << (col * 3);
     row |= coldata;
@@ -1563,7 +1565,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     DIR *dirp;
     Inode ino;
     struct dirent *dp;
-    struct DiskPartition *partP;
+    struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
     char volname[20];

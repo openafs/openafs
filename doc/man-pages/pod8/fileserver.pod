@@ -20,7 +20,7 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-busyat> <I<< redirect clients when queue > n >>>] >>>
     [B<-nobusy>] S<<< [B<-rxpck> <I<number of rx extra packets>>] >>>
     [B<-rxdbg>] [B<-rxdbge>] S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
-    [B<-allow-dotted-principal>]
+    [B<-allow-dotted-principal>] [B<-jumbo>] [B<-nojumbo>]
     S<<< [B<-rxbind> <I<address to bind the Rx socket to>>] >>>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
@@ -403,6 +403,18 @@ listed in the local F</usr/afs/etc/ThisCell> file.
 
 Sets the size of the UDP buffer, which is 64 KB by default. Provide a
 positive integer, preferably larger than the default.
+
+=item B<-jumbo>
+
+Allows the server to send and receive jumbograms. A jumbogram is
+a large-size packet composed of 2 to 4 normal Rx data packets that share
+the same header. The fileserver does not use jumbograms by default, as some
+routers are not capable of properly breaking the jumbogram into smaller
+packets and reassembling them.
+
+=item B<-nojumbo>
+  
+Deprecated; jumbograms are disabled by default.
 
 =item B<-enable_peer_stats>
 

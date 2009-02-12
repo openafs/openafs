@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17.2.3 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17.2.4 2008/05/02 00:59:48 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -2215,6 +2215,6 @@ DeleteDump(void *param)
 	code = BUTX_DELETENOVOL;
 	setStatus(taskId, TASK_ERROR);
     }
-    return (code);
+    return (void *)(code);
 }
 #endif

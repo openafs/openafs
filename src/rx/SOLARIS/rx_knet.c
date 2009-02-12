@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19.2.4 2008/03/17 15:28:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19.2.5 2008/07/07 17:15:37 shadow Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
@@ -67,6 +67,10 @@ int (*sockfs_sounbind)
   (struct sonode *, int);
 void (*sockfs_sockfree)
   (struct sonode *);
+#endif
+
+#ifndef UDP_MOD_NAME
+#define UDP_MOD_NAME "udp"
 #endif
 
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
