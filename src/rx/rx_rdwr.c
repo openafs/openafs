@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.12 2008/12/28 21:08:13 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.13 2009/01/05 23:17:48 jaltman Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -231,6 +231,8 @@ MTUXXX  doesn't there need to be an "else" here ???
 		    osi_rxSleep(&call->rq);
 #endif
 		}
+                /* cp is no longer valid since we may have given up the lock */
+                cp = call->currentPacket;
 
 		call->startWait = 0;
 #ifdef RX_ENABLE_LOCKS
@@ -1056,7 +1058,7 @@ rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
 int
 rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 {
-    struct rx_packet *cp = call->currentPacket;
+    struct rx_packet *cp = NULL;
     int nextio;
     int requestCount;
     struct rx_queue tmpq;
@@ -1079,6 +1081,8 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #endif /* RX_ENABLE_LOCKS */
     }
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+    /* cp is no longer valid since we may have given up the lock */
+    cp = call->currentPacket;
 
     if (call->error) {
 	if (cp) {
@@ -1177,6 +1181,8 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 #endif
 	call->startWait = 0;
     }
+    /* cp is no longer valid since we may have given up the lock */
+    cp = call->currentPacket;
 
     if (call->error) {
 	if (cp) {
@@ -1208,7 +1214,7 @@ rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 void
 rxi_FlushWrite(register struct rx_call *call)
 {
-    register struct rx_packet *cp = call->currentPacket;
+    register struct rx_packet *cp = NULL;
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
     if (queue_IsNotEmpty(&call->iovq)) {
@@ -1247,6 +1253,9 @@ rxi_FlushWrite(register struct rx_call *call)
 #endif /* RX_ENABLE_LOCKS */
 	}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+
+        /* cp is no longer valid since we may have given up the lock */
+        cp = call->currentPacket;
 
 	if (cp) {
 	    /* cp->length is only supposed to be the user's data */
