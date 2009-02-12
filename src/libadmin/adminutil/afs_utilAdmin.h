@@ -136,7 +136,7 @@ extern int ADMINAPI util_RXDebugBasicStats(rxdebugHandle_p handle,
 					   afs_status_p st);
 
 extern int ADMINAPI util_RXDebugRxStats(rxdebugHandle_p handle,
-					struct rx_stats *stats,
+					struct rx_statistics *stats,
 					afs_uint32 * supportedStats,
 					afs_status_p st);
 

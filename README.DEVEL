@@ -68,6 +68,9 @@ Compiles on gcc-using machines should strive to handle using
 Routines shall be defined in source prior to use if possible, and 
 prototyped in block at top of file if static.
 
+API documentation in the code should be done using Qt-style Doxygen
+comments.
+
 If you make a routine or variable static, be sure and remove it from
 the AIX .exp files.
 

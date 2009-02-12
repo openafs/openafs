@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.9 2008/03/17 15:38:40 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.11 2008/10/02 11:55:03 jaltman Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -323,6 +323,16 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 	call->curpos = tcurpos + nbytes;
 	call->curlen = tcurlen - nbytes;
 	call->nLeft = tnLeft - nbytes;
+
+        if (!call->nLeft) {
+            /* out of packet.  Get another one. */
+            NETPRI;
+            MUTEX_ENTER(&call->lock);
+            rxi_FreePacket(call->currentPacket);
+            call->currentPacket = (struct rx_packet *)0;
+            MUTEX_EXIT(&call->lock);
+            USERPRI;
+        }
 	return nbytes;
     }
 
@@ -375,6 +385,15 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
 	call->curpos = tcurpos + sizeof(afs_int32);
 	call->curlen = tcurlen - sizeof(afs_int32);
 	call->nLeft = tnLeft - sizeof(afs_int32);
+        if (!call->nLeft) {
+            /* out of packet.  Get another one. */
+            NETPRI;
+            MUTEX_ENTER(&call->lock);
+            rxi_FreePacket(call->currentPacket);
+            call->currentPacket = (struct rx_packet *)0;
+            MUTEX_EXIT(&call->lock);
+            USERPRI;
+        }
 	return sizeof(afs_int32);
     }
 
@@ -1081,6 +1100,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 	    hadd32(call->bytesSent, cp->length);
 	    rxi_PrepareSendPacket(call, cp, 0);
 	    queue_Append(&tmpq, cp);
+            cp = call->currentPacket = (struct rx_packet *)0;
 
 	    /* The head of the iovq is now the current packet */
 	    if (nbytes) {

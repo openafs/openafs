@@ -700,7 +700,7 @@ extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
 				    afs_int32 addr_uniquifier);
 extern void ForceAllNewConnections(void);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
-extern void afs_ServerDown(struct srvAddr *sa);
+extern afs_int32 afs_ServerDown(struct srvAddr *sa);
 extern void afs_CountServers(void);
 extern void afs_CheckServers(int adown, struct cell *acellp);
 extern unsigned int afs_random(void);

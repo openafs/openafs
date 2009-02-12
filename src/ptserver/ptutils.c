@@ -24,7 +24,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptutils.c,v 1.18.2.5 2007/10/30 15:24:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptutils.c,v 1.18.2.6 2008/10/26 07:51:37 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -294,7 +294,7 @@ AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
 	return 1;
     if (cid == SYSADMINID)
 	return 1;		/* special case fileserver */
-    if (restricted && ((mem == PRP_ADD_MEM) || (mem == any == 0)))
+    if (restricted && ((mem == PRP_ADD_MEM) || (mem == PRP_REMOVE_MEM)) && (any == 0))
 	return 0;
     if (tentry) {
 	flags = tentry->flags;

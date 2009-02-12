@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_SYNCSERV 1 "OpenAFS" "11/Nov/2007" "AFS Command Reference"
+.TH VOS_SYNCSERV 1 "OpenAFS" "6/Sep/2008" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -192,10 +192,10 @@ vos_syncserv \- Verifies VLDB entries that mention a specified site
 .SH "SYNOPSIS"
 \fBvos syncserv\fR <<\ \fB\-server\fR\ <\fImachine\ name\fR >>>
     <<\ [\fB\-partition\fR\ <\fIpartition\ name\fR] >>> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR] [\fB\-help\fR]
+    [\fB\-dryrun\fR] [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR] [\fB\-help\fR]
 .PP
 \fBvos syncs\fR <<\ \fB\-s\fR\ <\fImachine\ name\fR >>> <<\ [\fB\-p\fR\ <\fIpartition\ name\fR] >>>
-    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
+    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-d\fR] [\fB\-n\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBvos syncserv\fR command verifies that each volume mentioned in a VLDB
 entry actually exists at the site indicated in the entry. It checks all
@@ -228,6 +228,8 @@ details, see the \fIvos(1)\fR manpage.
 .Ip "\fB\-cell\fR <\fIcell name\fR>" 4
 Names the cell in which to run the command. Do not combine this argument
 with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
+.Ip "\fB\-dryrun\fR" 4
+Show the actions which would be taken, but do not make changes.
 .Ip "\fB\-noauth\fR" 4
 Assigns the unprivileged identity \f(CWanonymous\fR to the issuer. Do not
 combine this flag with the \fB\-localauth\fR flag. For more details, see
@@ -284,6 +286,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-partition\fR <\fIpartition name\fR>"
 
 .IX Item "\fB\-cell\fR <\fIcell name\fR>"
+
+.IX Item "\fB\-dryrun\fR"
 
 .IX Item "\fB\-noauth\fR"
 

@@ -49,21 +49,17 @@ fi
 # find out whether we have 32 or 64 bit kernel
 
 kernel=32
-if [ -x /bin/w64 ]; then
-    /bin/w64 >/dev/null 2>&1
-    if [ $? -eq 0 ]; then
-        kernel=64
-    fi
+if [ -x /usr/sbin/bootinfo ]; then
+	kernel=`/usr/sbin/bootinfo -K`
 fi
 
 # Load AFS into the kernel
 
+echo "$0: Loading $kernel bit kernel AFS modules"
 cd /usr/vice/etc/dkload
 if [ $kernel -eq 32 ]; then
-    echo "32-bit kernel found"
     ./cfgexport -a export.ext${ExportExt} && ./cfgafs -a afs.ext.32
 else
-    echo "64-bit kernel assumed"
     ./cfgexport64 -a export64.ext${ExportExt} && ./cfgafs64 -a afs.ext.64
 fi
 if [ $? -ne 0 ]; then

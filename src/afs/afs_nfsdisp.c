@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_nfsdisp.c,v 1.18.2.3 2005/10/13 18:26:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_nfsdisp.c,v 1.18.2.4 2008/08/13 23:49:37 shadow Exp $");
 
 /* Ugly Ugly Ugly  but precludes conflicting XDR macros; We want kernel xdr */
 #define __XDR_INCLUDE__
@@ -177,7 +177,7 @@ nfs2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp,
     }
 
     /* Ok if arg 1 is in AFS or if 2 args and arg 2 is in AFS */
-    if (is_afs_fh(fhp1)) {
+    if (fhp1 && is_afs_fh(fhp1)) {
 	*fhpp = fhp1;
 	if (fhp2)
 	    *fh2pp = fhp2;
@@ -237,7 +237,7 @@ acl2_to_afs_call(int which, caddr_t * args, fhandle_t ** fhpp)
 	return NULL;
     }
 
-    if (is_afs_fh(fhp)) {
+    if (fhp && is_afs_fh(fhp)) {
 	*fhpp = fhp;
 	return 1;
     }
@@ -972,7 +972,7 @@ nfs3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp, nfs_fh3 ** fh2pp)
 	return NULL;
     }
 
-    if (is_afs_fh3(fhp1)) {
+    if (fhp1 && is_afs_fh3(fhp1)) {
 	*fhpp = fhp1;
 	if (fhp2)
 	    *fh2pp = fhp2;
@@ -1016,7 +1016,7 @@ acl3_to_afs_call(int which, caddr_t * args, nfs_fh3 ** fhpp)
 	return NULL;
     }
 
-    if (is_afs_fh3(fhp)) {
+    if (fhp && is_afs_fh3(fhp)) {
 	*fhpp = fhp;
 	return 1;
     }

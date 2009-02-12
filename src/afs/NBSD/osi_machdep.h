@@ -37,6 +37,9 @@ extern struct timeval time;
 
 #define afs_bufferpages bufpages
 
+#undef gop_lookupname
+#define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+
 #define osi_vnhold(avc,r)  do { \
        if ((avc)->vrefCount) { VN_HOLD((struct vnode *)(avc)); } \
        else osi_Panic("refcnt==0");  } while(0)

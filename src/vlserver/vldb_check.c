@@ -26,6 +26,16 @@
 #define REFBK 0x4000            /* linked from something (BK) */
 #define REFN  0x8000            /* linked from something (name) */
 
+#define MULTRW 0x10000         /* multiply-chained (RW) */
+#define MULTRO 0x20000         /* multiply-chained (RO) */
+#define MULTBK 0x40000         /* multiply-chained (BK) */
+#define MULTN  0x80000         /* multiply-chained (name) */
+
+#define MISRWH 0x100000          /* mischained (RW) */
+#define MISROH 0x200000          /* mischained (RO) */
+#define MISBKH 0x400000          /* mischained (BK) */
+#define MISNH  0x800000          /* mischained (name) */
+
 #define vldbread(x,y,z) vldbio(x,y,z,0)
 #define vldbwrite(x,y,z) vldbio(x,y,z,1)
 
@@ -33,7 +43,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vldb_check.c,v 1.11.2.5 2007/12/11 20:45:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vlserver/vldb_check.c,v 1.11.2.7 2008/10/27 23:54:11 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -62,6 +72,8 @@ int fd;
 int listentries, listservers, listheader, listuheader, verbose;
 
 int fix = 0;
+int fixed = 0;
+int passes = 0;
 
 struct er {
     long addr;
@@ -404,7 +416,7 @@ writeentry(afs_int32 addr, struct nvlentry *vlentryp)
 
     if (verbose)
 	printf("Writing back entry at addr %u\n", addr);
-
+    fixed++;
     for (i = 0; i < MAXTYPES; i++)
 	vlentryp->volumeId[i] = htonl(vlentryp->volumeId[i]);
     vlentryp->flags = htonl(vlentryp->flags);
@@ -489,7 +501,9 @@ ReadAllEntries(struct vlheader *header)
     int freecount = 0, mhcount = 0, vlcount = 0;
     int rwcount = 0, rocount = 0, bkcount = 0;
     struct nvlentry vlentry;
-    afs_uint32 addr, entrysize, maxvolid = 0;
+    afs_uint32 addr;
+    afs_uint32 entrysize = 0;
+    afs_uint32 maxvolid = 0;
 
     if (verbose)
 	printf("Read each entry in the database\n");
@@ -558,7 +572,8 @@ ReadAllEntries(struct vlheader *header)
 	    entrysize = VL_ADDREXTBLK_SIZE;
 	    mhcount++;
 	} else {
-	    printf("Unknown entry at %u\n", addr);
+	    printf("Unknown entry at %u. Aborting\n", addr);
+	    break;
 	}
     }
     if (verbose) {
@@ -663,10 +678,10 @@ FollowNameHash(struct vlheader *header)
 		printf
 		    ("Name Hash %d: Bad entry '%s': Already in the name hash\n",
 		     i, vlentry.name);
+		record[rindex].type |= MULTN;
 		break;
 	    }
 	    record[rindex].type |= NH;
-
 	    record[rindex].type |= REFN;
 
 	    chainlength++;
@@ -677,6 +692,7 @@ FollowNameHash(struct vlheader *header)
 		printf
 		    ("Name Hash %d: Bad entry '%s': Incorrect name hash chain (should be in %d)\n",
 		     i, vlentry.name, NameHash(vlentry.name));
+		record[rindex].type |= MULTN;
 	    }
 	}
 	if (chainlength > longest)
@@ -703,7 +719,7 @@ FollowIdHash(struct vlheader *header)
     int count = 0, longest = 0, shortest = -1, chainlength;
     struct nvlentry vlentry;
     afs_uint32 addr;
-    afs_int32 i, j, hash, type, rindex, ref;
+    afs_int32 i, j, hash, type, rindex, ref, badref, badhash;
 
     /* Now follow the RW, RO, and BK Hash Tables */
     if (verbose)
@@ -711,6 +727,8 @@ FollowIdHash(struct vlheader *header)
     for (i = 0; i < MAXTYPES; i++) {
 	hash = ((i == 0) ? RWH : ((i == 1) ? ROH : BKH));
 	ref = ((i == 0) ? REFRW : ((i == 1) ? REFRO : REFBK));
+	badref = ((i == 0) ? MULTRW : ((i == 1) ? MULTRO : MULTBK));
+	badhash = ((i == 0) ? MULTRW : ((i == 1) ? MULTRO : MULTBK));
 	count = longest = 0;
 	shortest = -1;
 
@@ -734,8 +752,9 @@ FollowIdHash(struct vlheader *header)
 		}
 		if (record[rindex].type & hash) {
 		    printf
-			("%s Id Hash %d: Bad entry '%s': Already in the the hash table\n",
+			("%s Id Hash %d: Bad entry '%s': Already in the hash table\n",
 			 vtype(i), j, vlentry.name);
+		    record[rindex].type |= badref;
 		    break;
 		}
 		record[rindex].type |= hash;
@@ -750,6 +769,8 @@ FollowIdHash(struct vlheader *header)
 			("%s Id Hash %d: Bad entry '%s': Incorrect Id hash chain (should be in %d)\n",
 			 vtype(i), j, vlentry.name,
 			 IdHash(vlentry.volumeId[i]));
+		    record[rindex].type |= badhash;
+		    printf("%d: %x\n", rindex, record[rindex].type);
 		}
 	    }
 
@@ -1026,10 +1047,10 @@ CheckIpAddrs(struct vlheader *header)
 
 void 
 FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp, 
-       struct nvlentry *vlentry) {
+       struct nvlentry *vlentry, afs_uint32 hash) {
     SetHashEnd(addr, type, tmp);
-    printf("linked unlinked chain %u (index %d) to end of chain\n", 
-	   tmp, ADDR(tmp));
+    printf("linked unlinked chain %u (index %d) to end of chain %d for %s hash\n", 
+	   tmp, ADDR(tmp), hash, type==NH?"Name":(type==RWH?"RW":(type==ROH?"RO":"BK")));
 }
 
 int
@@ -1038,7 +1059,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     char *dbfile;
     afs_int32 maxentries, type, tmp;
     struct vlheader header;
-    struct nvlentry vlentry;
+    struct nvlentry vlentry, vlentry2;
     int i, j, help = 0;
 
     dbfile = as->parms[0].items->data;	/* -database */
@@ -1049,6 +1070,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     verbose = (as->parms[5].items ? 1 : 0);	/* -verbose  */
     fix = (as->parms[6].items ? 1 : 0);	/* -fix  */
 
+ restart:
     /* open the vldb database file */
     fd = open(dbfile, (fix > 0)?O_RDWR:O_RDONLY, 0);
     if (fd < 0) {
@@ -1085,18 +1107,19 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     /* Follow the chain of free entries */
     FollowFreeChain(&header);
 
-    /* Now check the record we have been keeping for inconsistancies
+    /* Now check the record we have been keeping for inconsistencies
      * For valid vlentries, also check that the server we point to is 
      * valid (the serveraddrs array).
      */
     if (verbose)
 	printf("Verify each volume entry\n");
     for (i = 0; i < maxentries; i++) {
-	int nextp;
-	int reft;
-	int hash;
-	int *nextpp;
-	char *which;
+	int nextp = 0;
+	int reft = 0;
+	int hash = 0;
+        int nexthash = 0;
+	int *nextpp = NULL;
+	char *which = NULL;
 
 	if (record[i].type == 0)
 	    continue;
@@ -1152,6 +1175,58 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		which = "BK";
 		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
 		foundbad = 1;
+	    }
+
+	    if (record[ADDR(vlentry.nextNameHash)].type & MULTN) {
+		nextp = ADDR(vlentry.nextNameHash);
+		reft = REFN;
+		hash = NameHash(vlentry.name);
+		nextpp = &vlentry.nextNameHash;
+		which = "name";
+		sprintf(volidbuf, "");
+		readentry(nextp, &vlentry2, &type);
+		nexthash = NameHash(vlentry2.name);
+		if (hash != nexthash)
+		    foundbad = 1;
+	    }
+
+	    if ((record[ADDR(vlentry.nextIdHash[0])].type & MULTRW)) {
+		nextp = ADDR(vlentry.nextIdHash[0]);
+		reft = REFRW;
+		hash = IdHash(vlentry.volumeId[0]);
+		nextpp = &(vlentry.nextIdHash[0]);
+		which = "RW";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[0]);
+		readentry(nextp, &vlentry2, &type);
+		nexthash = IdHash(vlentry2.volumeId[0]);
+		if (hash != nexthash)
+		    foundbad = 1;
+	    }
+
+	    if ((record[ADDR(vlentry.nextIdHash[1])].type & MULTRO)) {
+		nextp = ADDR(vlentry.nextIdHash[1]);
+		reft = REFRO;
+		hash = IdHash(vlentry.volumeId[1]);
+		nextpp = &(vlentry.nextIdHash[1]);
+		which = "RO";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[1]);
+		readentry(nextp, &vlentry2, &type);
+		nexthash = IdHash(vlentry2.volumeId[1]);
+		if (hash != nexthash)
+		    foundbad = 1;
+	    }
+
+	    if ((record[ADDR(vlentry.nextIdHash[2])].type & MULTBK)) {
+		nextp = ADDR(vlentry.nextIdHash[2]);
+		reft = REFBK;
+		hash = IdHash(vlentry.volumeId[2]);
+		nextpp = &(vlentry.nextIdHash[2]);
+		which = "BK";
+		sprintf(volidbuf, "id %u ", vlentry.volumeId[2]);
+		readentry(nextp, &vlentry2, &type);
+		nexthash = IdHash(vlentry2.volumeId[2]);
+		if (hash != nexthash)
+		    foundbad = 1;
 	    }
 
 	    if (foundbad) {
@@ -1217,19 +1292,84 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	}
     }
 
+    if (verbose)
+	printf("Verify each chain head\n");
+
+    {
+	afs_uint32 addr;
+	int hash;
+
+	for (j = 0; j < HASHSIZE; j++) {
+	    for (addr = header.VolnameHash[j]; j < HASHSIZE; j++) {
+		if (record[ADDR(addr)].type & MULTN) {
+		    hash = NameHash(vlentry.name);
+		    if (hash != j) {
+			header.VolnameHash[j] = vlentry.nextNameHash;
+			vlentry.nextNameHash = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+	    }
+	}
+	for (i = 0; i <= 2; i++) {
+	    for (j = 0; j < HASHSIZE; j++) {
+		addr = header.VolidHash[i][j]; 
+		if (i == 0 && (record[ADDR(addr)].type & MULTRW)) {
+		    hash = IdHash(vlentry.volumeId[i]);
+		    if (hash != j) {
+			header.VolidHash[i][j] = vlentry.nextIdHash[i];
+			vlentry.nextIdHash[i] = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+
+		if (i == 1 && (record[ADDR(addr)].type & MULTRO)) {
+		    hash = IdHash(vlentry.volumeId[i]);
+		    if (hash != j) {
+			header.VolidHash[i][j] = vlentry.nextIdHash[i];
+			vlentry.nextIdHash[i] = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+
+		if (i == 2 && (record[ADDR(addr)].type & MULTBK)) {
+		    hash = IdHash(vlentry.volumeId[i]);
+		    if (hash != j) {
+			header.VolidHash[i][j] = vlentry.nextIdHash[i];
+			vlentry.nextIdHash[i] = 0;
+			if (fix)
+			    writeentry(record[i].addr, &vlentry);
+		    }
+		}
+	    }
+	}
+    }
     /* By the time we get here, unchained entries are really unchained */
     printf("Scanning %u entries for possible repairs\n", maxentries);
     for (i = 0; i < maxentries; i++) {
+	int *nextpp;
 	if (record[i].type & VL) {
 	    readentry(record[i].addr, &vlentry, &type);
-	    if (!(record[i].type & REFN) && (strlen(vlentry.name)>0)) {
+	    if (!(record[i].type & REFN)) {
 		printf("%d: Record %u (type 0x%x) not in a name chain\n", i, 
 		       record[i].addr, record[i].type);
-		if (fix) {
-		    if (header.VolnameHash[NameHash(vlentry.name)] == 0)
-			header.VolnameHash[NameHash(vlentry.name)] = record[i].addr;
-		    else
-			FixBad(i, header.VolnameHash[NameHash(vlentry.name)], NH, record[i].addr, &vlentry);
+		if (strlen(vlentry.name)>0) {
+		    if (fix) {
+			if (header.VolnameHash[NameHash(vlentry.name)] == 0)
+			    header.VolnameHash[NameHash(vlentry.name)] = record[i].addr;
+			else
+			    FixBad(i, header.VolnameHash[NameHash(vlentry.name)], NH, record[i].addr, &vlentry, NameHash(vlentry.name));
+		    }
+		} else {
+		    nextpp = &vlentry.nextNameHash;
+		    if (fix && *nextpp) {
+			printf(", unchaining");
+			*nextpp = 0;
+			writeentry(record[i].addr, &vlentry);
+		    }
 		}
 	    }
 	    if (vlentry.volumeId[0] && !(record[i].type & REFRW)) {
@@ -1239,7 +1379,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    if (header.VolidHash[0][IdHash(vlentry.volumeId[0])] == 0)
 			header.VolidHash[0][IdHash(vlentry.volumeId[0])] = record[i].addr;
 		    else
-			FixBad(i, header.VolidHash[0][IdHash(vlentry.volumeId[0])], RWH, record[i].addr, &vlentry);
+			FixBad(i, header.VolidHash[0][IdHash(vlentry.volumeId[0])], RWH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[0]));
 		}
 	    }
 	    if (vlentry.volumeId[1] && !(record[i].type & REFRO)) {
@@ -1249,7 +1389,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    if (header.VolidHash[1][IdHash(vlentry.volumeId[1])] == 0)
 			header.VolidHash[1][IdHash(vlentry.volumeId[1])] = record[i].addr;
 		    else
-			FixBad(i, header.VolidHash[1][IdHash(vlentry.volumeId[1])], ROH, record[i].addr, &vlentry);
+			FixBad(i, header.VolidHash[1][IdHash(vlentry.volumeId[1])], ROH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[1]));
 		}
 	    }
 	    if (vlentry.volumeId[2] && !(record[i].type & REFBK)) {
@@ -1259,7 +1399,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    if (header.VolidHash[2][IdHash(vlentry.volumeId[2])] == 0)
 			header.VolidHash[2][IdHash(vlentry.volumeId[2])] = record[i].addr;
 		    else
-			FixBad(i, header.VolidHash[2][IdHash(vlentry.volumeId[2])], BKH, record[i].addr, &vlentry);
+			FixBad(i, header.VolidHash[2][IdHash(vlentry.volumeId[2])], BKH, record[i].addr, &vlentry, IdHash(vlentry.volumeId[2]));
 		}
 
 	    }
@@ -1268,6 +1408,16 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     if (fix) 
 	writeheader(&header);
 
+    close(fd);
+
+    if (fixed) {
+      fixed=0;
+      passes++;
+      if (passes < 20)
+	goto restart;
+      else
+	return 1;
+    }
     return 0;
 }
 

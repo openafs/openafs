@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.16 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bosserver.c,v 1.23.2.17 2008/10/18 15:10:57 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -826,12 +826,12 @@ main(int argc, char **argv, char **envp)
 	else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
 	    rxkadDisableDotCheck = 1;
 	}
-	else if (!strcmp(argv[i], "-rxmaxmtu")) {
-	    if ((i + 1) >= argc) {
+	else if (!strcmp(argv[code], "-rxmaxmtu")) {
+	    if ((code + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
 		exit(1); 
 	    }
-	    rxMaxMTU = atoi(argv[++i]);
+	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
 		printf("rxMaxMTU %d invalid; must be between %d-%d\n",

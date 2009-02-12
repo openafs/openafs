@@ -24,7 +24,6 @@ struct ktc_token {
     char ticket[MAXKTCTICKETLEN];
 };
 
-#ifdef AFS_NT40_ENV
 extern int ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 			struct ktc_principal *client, afs_int32 flags);
 
@@ -37,6 +36,8 @@ extern int ktc_ListTokens(int cellNum, int *cellNumP,
 extern int ktc_ForgetToken(struct ktc_principal *server);
 
 extern int ktc_ForgetAllTokens(void);
+
+#ifdef AFS_NT40_ENV
 
 /* Flags for the flag word sent along with a token */
 #define PIOCTL_LOGON		0x1	/* invoked from integrated logon */

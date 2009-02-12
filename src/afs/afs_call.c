@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.30 2008/04/18 14:06:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.32 2008/06/29 03:26:03 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -110,6 +110,7 @@ char afs_cachebasedir[1024];
 
 afs_int32 afs_rx_deadtime = AFS_RXDEADTIME;
 afs_int32 afs_rx_harddead = AFS_HARDDEADTIME;
+afs_int32 afs_rx_idledead = AFS_IDLEDEADTIME;
 
 static int
   Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval);
@@ -2901,10 +2902,10 @@ afs_icl_LogFreeUse(register struct afs_icl_log *logp)
     ObtainWriteLock(&logp->lock, 189);
     if (--logp->setCount == 0) {
 	/* no more users -- free it (but keep log structure around) */
+	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 #ifdef	KERNEL_HAVE_PIN
 	unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
-	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 	logp->firstUsed = logp->firstFree = 0;
 	logp->logElements = 0;
 	logp->datap = NULL;
@@ -2927,10 +2928,10 @@ afs_icl_LogSetSize(register struct afs_icl_log *logp, afs_int32 logSize)
 	logp->logElements = 0;
 
 	/* free and allocate a new one */
+	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 #ifdef	KERNEL_HAVE_PIN
 	unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
-	afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 	logp->datap =
 	    (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * logSize);
 #ifdef	KERNEL_HAVE_PIN
@@ -2954,10 +2955,10 @@ afs_icl_ZapLog(register struct afs_icl_log *logp)
 	    /* found the dude we want to remove */
 	    *lpp = logp->nextp;
 	    osi_FreeSmallSpace(logp->name);
+	    afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 #ifdef KERNEL_HAVE_PIN
 	    unpin((char *)logp->datap, sizeof(afs_int32) * logp->logSize);
 #endif
-	    afs_osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 	    osi_FreeSmallSpace(logp);
 	    break;		/* won't find it twice */
 	}
@@ -3215,10 +3216,10 @@ afs_icl_ZapSet(register struct afs_icl_set *setp)
 	    /* found the dude we want to remove */
 	    *lpp = setp->nextp;
 	    osi_FreeSmallSpace(setp->name);
+	    afs_osi_Free(setp->eventFlags, ICL_DEFAULTEVENTS);
 #ifdef	KERNEL_HAVE_PIN
 	    unpin((char *)setp->eventFlags, ICL_DEFAULTEVENTS);
 #endif
-	    afs_osi_Free(setp->eventFlags, ICL_DEFAULTEVENTS);
 	    for (i = 0; i < ICL_LOGSPERSET; i++) {
 		if ((tlp = setp->logs[i]))
 		    afs_icl_LogReleNL(tlp);
