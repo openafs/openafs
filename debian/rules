@@ -57,8 +57,8 @@ IGNORE += -Xknfs -Xrmtsysd
 
 # These variable is used only by get-orig-source, which will normally only be
 # run by maintainers.
-VERSION   = 1.4.7
-DEBVERS   = 1.4.7.dfsg1
+VERSION   = 1.4.8
+DEBVERS   = 1.4.8.dfsg1
 UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
 
 # Download the upstream source, merge in the doc tarball, and do the
