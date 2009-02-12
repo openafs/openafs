@@ -33,6 +33,7 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
   * Allow time-daemon to satisfy the openafs-fileserver recommends in
     addition to ntp, allowing for openntpd.  (Closes: #508258)
   * Add ${misc:Depends} to all dependencies.
+  * Add explanations for the Lintian overrides.
   * Translation updates:
     - Spanish, thanks Francisco Javier Cuadrado.  (Closes: #514452)
 

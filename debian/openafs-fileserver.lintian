@@ -1,1 +1,3 @@
-openafs-fileserver: non-standard-dir-perm
+# /etc/openafs/server contains the KeyFile for the server, so it's kept
+# locked down as an extra precaution.
+openafs-fileserver: non-standard-dir-perm etc/openafs/server/ 0700 != 0755

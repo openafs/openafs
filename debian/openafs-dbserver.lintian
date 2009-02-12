@@ -1,1 +1,3 @@
-openafs-dbserver: non-standard-dir-perm
+# The database directory should be kept locked down to prevent reading
+# database information that may not be accessible without authentication.
+openafs-dbserver: non-standard-dir-perm var/lib/openafs/db/ 0700 != 0755
