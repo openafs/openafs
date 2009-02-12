@@ -9,6 +9,7 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
     - STABLE14-libuafs-updates-20081229: prerequisite for other deltas.
     - STABLE14-linux-truncate-race-20090109: avoid race condition during
       truncation.
+    - STABLE14-linux-i-size-20090112: further fix for truncation race.
   * Make dynroot the default for new installations.  It works much better
     with systems that don't bring up their network until late in the boot
     process, such as wireless laptops.  (LP: #249240, #318605)

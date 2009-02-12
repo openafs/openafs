@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.17 2009/01/09 14:58:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.18 2009/01/12 14:19:29 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include "h/module.h" /* early to avoid printf->printk mapping */
@@ -82,7 +82,7 @@ osi_UFSOpen(afs_int32 ainode)
     if (IS_ERR(filp))
 	osi_Panic("Can't open inode %d\n", ainode);
     afile->filp = filp;
-    afile->size = i_size_read(FILE_INODE(filp)->i_size);
+    afile->size = i_size_read(FILE_INODE(filp));
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
