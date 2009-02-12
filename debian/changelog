@@ -7,6 +7,8 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
     - Include vos clone man page.  (LP: #324449)
   * Apply upstream CVS deltas:
     - STABLE14-libuafs-updates-20081229: prerequisite for other deltas.
+    - STABLE14-linux-truncate-race-20090109: avoid race condition during
+      truncation.
   * Make dynroot the default for new installations.  It works much better
     with systems that don't bring up their network until late in the boot
     process, such as wireless laptops.  (LP: #249240, #318605)

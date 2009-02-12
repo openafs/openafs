@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.12 2008/12/29 21:26:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.13 2009/01/09 14:58:03 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -530,6 +530,13 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	ObtainWriteLock(&avc->lock, 128);
 	avc->states |= CDirty;
 	code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
+#ifdef AFS_LINUX_26_ENV
+	/* We must update the Linux kernel's idea of file size as soon as
+	 * possible, to avoid racing with delayed writepages delivered by
+	 * pdflush */
+	if (code == 0) 
+	    i_size_write(AFSTOV(avc), tsize);
+#endif
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
 	if (!(astat.Mask & AFS_SETMODTIME)) {
