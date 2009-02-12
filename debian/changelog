@@ -32,6 +32,14 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
     Kaseorg and Lutz Goehring for suggestions.  (LP: #295897)
   * Allow time-daemon to satisfy the openafs-fileserver recommends in
     addition to ntp, allowing for openntpd.  (Closes: #508258)
+  * Update to debhelper compatibility level V7.
+    - Use dh where possible in debian/rules.
+    - Use dh_lintian to install Lintian overrides.
+    - Eliminate the configure target and do all the work in build.
+    - Do more in the install target and less in binary, matching the
+      default command stacks in dh.
+    - Use a debian/clean configuration file to let dh clean do more of the
+      work rather than using rm commands in debian/rules.
   * Add ${misc:Depends} to all dependencies.
   * Add explanations for the Lintian overrides.
   * Use set -e instead of #!/bin/sh -e in maintainer scripts.
