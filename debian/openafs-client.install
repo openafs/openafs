@@ -121,6 +121,7 @@ debian/tmp/usr/share/man/man1/vos_backup.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_backupsys.1         usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_changeaddr.1        usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_changeloc.1         usr/share/man/man1
+debian/tmp/usr/share/man/man1/vos_clone.1             usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_convertROtoRW.1     usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_copy.1              usr/share/man/man1
 debian/tmp/usr/share/man/man1/vos_create.1            usr/share/man/man1

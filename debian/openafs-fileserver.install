@@ -20,6 +20,7 @@ debian/tmp/usr/share/man/man5/SalvageLog.5            usr/share/man/man5
 debian/tmp/usr/share/man/man5/UserList.5              usr/share/man/man5
 debian/tmp/usr/share/man/man5/VolserLog.5             usr/share/man/man5
 debian/tmp/usr/share/man/man5/afs_volume_header.5     usr/share/man/man5
+debian/tmp/usr/share/man/man5/krb.conf.5              usr/share/man/man5
 debian/tmp/usr/share/man/man5/salvage.lock.5          usr/share/man/man5
 debian/tmp/usr/share/man/man5/sysid.5                 usr/share/man/man5
 
