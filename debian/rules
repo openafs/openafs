@@ -97,7 +97,8 @@ build-stamp:
 	    --enable-bos-new-config \
 	    --enable-debug --enable-lwp-debug \
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
-	chmod a+x src/libafs/make_kbuild_makefile.pl
+	chmod a+x config.sub src/libafs/make_kbuild_makefile.pl \
+	    src/config/make_vnode.pl
 	dh build --after configure
 	$(MAKE) libafs_tree
 	touch $@
@@ -137,6 +138,7 @@ install-stamp: build-stamp
 	install -d debian/$(dkmspkg)/usr/src
 	mv debian/$(srcpkg)/usr/src/modules/$(package) \
 	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
+	rm -rf debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/debian
 	rmdir debian/$(srcpkg)/usr/src/modules
 	sed -e 's/[@]VERSION[@]/$(VERSION)/' debian/dkms.conf.in \
 	    > debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/dkms.conf
