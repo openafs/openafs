@@ -92,7 +92,7 @@ load_client() {
     if [ -z "$LIBAFS" ] ; then
         choose_client
     fi
-    if [ ! -f "$MODULEDIR/$LIBAFS" ] -a [ ! -f "$DKMSDIR/$LIBAFS" ] ; then
+    if [ ! -f "$MODULEDIR/$LIBAFS" -a ! -f "$DKMSDIR/$LIBAFS" ] ; then
         echo ""
         cat <<EOF >&2
 AFS module $MODULEDIR/$LIBAFS does not exist.
