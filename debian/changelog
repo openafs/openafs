@@ -36,6 +36,20 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
     Kaseorg and Lutz Goehring for suggestions.  (LP: #295897)
   * Allow time-daemon to satisfy the openafs-fileserver recommends in
     addition to ntp, allowing for openntpd.  (Closes: #508258)
+  * General improvements to debconf configuration handling.
+    - Do not abort the config script if we have no default realm and
+      dnsdomainname fails.  (LP: #274886, #318132)
+    - Do not abort postinst if we can't resolve any host name for the
+      cell.  Just continue in that case, omitting any configuration for
+      the local cell.  (LP: #322054)
+    - Correctly set the default for AFS_CRYPT from the existing config.
+    - The cache size is high, not critical, since we have a default.
+    - Don't create the client ThisCell if no local cell was specified.
+    - Improve the leading comment in afs.conf.client.  Users can edit it,
+      but any changes other than the setting values will be lost.
+    - Remove the openafs-fileserver/bosconfig_moved template, which would
+      only be shown on upgrades from pre-1.2.0 versions.
+    - Standardize coding style and always quote strings.
   * Update to debhelper compatibility level V7.
     - Use dh where possible in debian/rules.
     - Use dh_lintian to install Lintian overrides.
