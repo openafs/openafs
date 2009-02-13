@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs 1.4.2-4\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2008-05-24 17:41-0700\n"
-"PO-Revision-Date: 2007-01-08 20:44+0800\n"
+"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"PO-Revision-Date: 2009-02-13 09:25-0800\n"
 "Last-Translator: Chun Tian (binghe) <binghe.lisp@gmail.com>\n"
 "Language-Team: Internationalization <debian-i18n@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -209,38 +209,15 @@ msgstr ""
 "AFS 文件服务器属于一个单元.  它们有该单元的 Kerberos 服务密钥并且为该单元提供"
 "卷服务. 正常情况下, 这个单元跟工作站上的客户端属于的那个单元是同一个."
 
-#. Type: boolean
-#. Description
-#: ../openafs-fileserver.templates:2001
-msgid "Upgrading will move files to new locations; continue?"
-msgstr "升级将移动文件到新的位置; 继续吗?"
-
-#. Type: boolean
-#. Description
-#: ../openafs-fileserver.templates:2001
-msgid ""
-"Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular, "
-"files in /etc/openafs/server-local have been distributed to other "
-"locations.  The BosConfig file is now located in /etc/openafs and the other "
-"files are located in /var/lib/openafs.  If you continue with this upgrade, "
-"these files will be moved.  You should use the bos restart command to reload "
-"your servers.  Any configuration changes made before you do so will be lost."
-msgstr ""
-"在 OpenAFS 1.1 和 OpenAFS 1.2 之间, 一些文件的位置移动了.  特别是, /etc/"
-"openafs/server-local 里的文件已经被分发到其他位置了.  BosConfig 文件现在位"
-"于 /etc/openafs 目录里而其他文件位于 /var/lib/openafs.  如果您继续进行升级, "
-"这些文件将会被移动.  您应该用 bos restart 命令重加载您的服务器.  在您操作之前"
-"的任何配置改动将丢失."
-
 #. Type: note
 #. Description
-#: ../openafs-fileserver.templates:3001
+#: ../openafs-fileserver.templates:2001
 msgid "OpenAFS file server probably does not work!"
 msgstr "OpenAFS 文件服务器可能不会工作!"
 
 #. Type: note
 #. Description
-#: ../openafs-fileserver.templates:3001
+#: ../openafs-fileserver.templates:2001
 msgid ""
 "You are running the OpenAFS file server package on an alpha.  This probably "
 "doesn't work; the DES code is flaky on the alpha, along with the threaded "

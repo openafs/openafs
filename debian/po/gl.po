@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2008-05-24 17:41-0700\n"
-"PO-Revision-Date: 2008-05-17 21:49+0100\n"
+"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"PO-Revision-Date: 2009-02-13 09:23-0800\n"
 "Last-Translator: Jacobo Tarrio <jtarrio@debian.org>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "MIME-Version: 1.0\n"
@@ -225,41 +225,15 @@ msgstr ""
 "Kerberos desa cela e serven volumes na cela. Normalmente, esta cela é a "
 "mesma cela á que pertence o cliente da estación de traballo."
 
-#. Type: boolean
-#. Description
-#: ../openafs-fileserver.templates:2001
-msgid "Upgrading will move files to new locations; continue?"
-msgstr ""
-"Ao actualizar hanse trasladar ficheiros a novas ubicacións; ¿continuar?"
-
-#. Type: boolean
-#. Description
-#: ../openafs-fileserver.templates:2001
-msgid ""
-"Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular, "
-"files in /etc/openafs/server-local have been distributed to other "
-"locations.  The BosConfig file is now located in /etc/openafs and the other "
-"files are located in /var/lib/openafs.  If you continue with this upgrade, "
-"these files will be moved.  You should use the bos restart command to reload "
-"your servers.  Any configuration changes made before you do so will be lost."
-msgstr ""
-"Trasladáronse varios ficheiros entre Openafs 1.1 e Openafs 1.2. En "
-"particular, os ficheiros de /etc/openafs/server-local distribuironse a "
-"outras ubicacións. O ficheiro BosConfig agora está situado en /etc/openafs, "
-"e os outros ficheiros están situados en /var/lib/openafs. Se continúa a "
-"actualización, hanse trasladar eses ficheiros. Debería empregar a orde \"bos "
-"restart\" para recargar os servidores. Hanse perder os cambios na "
-"configuración que faga antes diso."
-
 #. Type: note
 #. Description
-#: ../openafs-fileserver.templates:3001
+#: ../openafs-fileserver.templates:2001
 msgid "OpenAFS file server probably does not work!"
 msgstr "O servidor de ficheiros OpenAFS probablemente non funcione"
 
 #. Type: note
 #. Description
-#: ../openafs-fileserver.templates:3001
+#: ../openafs-fileserver.templates:2001
 msgid ""
 "You are running the OpenAFS file server package on an alpha.  This probably "
 "doesn't work; the DES code is flaky on the alpha, along with the threaded "

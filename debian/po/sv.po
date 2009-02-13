@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openafs\n"
 "Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
-"POT-Creation-Date: 2008-05-24 17:41-0700\n"
-"PO-Revision-Date: 2008-07-31 15:51+0100\n"
+"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"PO-Revision-Date: 2009-02-13 09:24-0800\n"
 "Last-Translator: Martin Bagge <brother@bsnet.se>\n"
 "Language-Team: Swedish <debian-l10n-swedish@lists.debian.org>\n"
 "MIME-Version: 1.0\n"
@@ -225,40 +225,15 @@ msgstr ""
 "och tillhandahåller volymer i den cellen. Vanligen är denna cell samma cell "
 "som arbetsstationens klient tillhör."
 
-#. Type: boolean
-#. Description
-#: ../openafs-fileserver.templates:2001
-msgid "Upgrading will move files to new locations; continue?"
-msgstr ""
-"Uppgraderingen kommer att flytta filer till ny plats, vill du fortsätta?"
-
-#. Type: boolean
-#. Description
-#: ../openafs-fileserver.templates:2001
-msgid ""
-"Between Openafs 1.1 and Openafs 1.2, several files moved.  In particular, "
-"files in /etc/openafs/server-local have been distributed to other "
-"locations.  The BosConfig file is now located in /etc/openafs and the other "
-"files are located in /var/lib/openafs.  If you continue with this upgrade, "
-"these files will be moved.  You should use the bos restart command to reload "
-"your servers.  Any configuration changes made before you do so will be lost."
-msgstr ""
-"Mellan Openafs 1.1 och Openafs 1.2 flyttades ett flertal filer. Framförallt "
-"gäller det filer i /etc/openafs/server-local som numera finns på andra "
-"platser. BosConfig finns numera i /etc/openafs medans övriga filer finns i /"
-"var/lib/openafs. Om du fortsätter den här uppgraderingen kommer dessa filer "
-"att flyttas. Använd kommandot bos restart för att ladda om dina servrar. "
-"Förändringar i inställningarna innan detta är gjort kommer att förstöras."
-
 #. Type: note
 #. Description
-#: ../openafs-fileserver.templates:3001
+#: ../openafs-fileserver.templates:2001
 msgid "OpenAFS file server probably does not work!"
 msgstr "Filservern OpenAFS fungerar troligen inte!"
 
 #. Type: note
 #. Description
-#: ../openafs-fileserver.templates:3001
+#: ../openafs-fileserver.templates:2001
 msgid ""
 "You are running the OpenAFS file server package on an alpha.  This probably "
 "doesn't work; the DES code is flaky on the alpha, along with the threaded "
