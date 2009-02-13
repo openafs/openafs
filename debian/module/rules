@@ -81,13 +81,8 @@ install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean -k
-	cd src/libafs && make install
 	install -d -g root -o root -m 755 $(moduledir)
-	install -g root -o root -m 755 debian/tmp/lib/openafs/*o $(moduledir)/
-	if test -f $(moduledir)/openafs.o \
-	        -a ! -f $(moduledir)/openafs.mp.o ; then \
-	    ln $(moduledir)/openafs.o $(moduledir)/openafs.mp.o || exit 1 ; \
-	fi
+	install -g root -o root -m 755 src/libafs/MODLOAD-*/*.ko $(moduledir)/
 	touch $@
 
 binary: binary-arch binary-indep
