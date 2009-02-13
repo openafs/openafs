@@ -65,6 +65,7 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
   * Add ${misc:Depends} to all dependencies.
   * Add explanations for the Lintian overrides.
   * Use set -e instead of #!/bin/sh -e in maintainer scripts.
+  * Remove server documentation from openafs-modules-source.
   * Translation updates:
     - Spanish, thanks Francisco Javier Cuadrado.  (Closes: #514452)
 

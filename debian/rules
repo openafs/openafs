@@ -5,9 +5,6 @@
 # Uncomment this to turn on verbose mode. 
 #export DH_VERBOSE=1
 
-# This has to be exported to make some magic below work.
-export DH_OPTIONS
-
 # Tell Autoconf the correct system types.
 DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
 DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
@@ -109,13 +106,18 @@ clean:
 	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
 	dh clean
 
-# Rules for building the openafs-modules-source package.  We generate both a
-# DKMS package and a typical source tarball package usable by
-# module-assistant.
-install-source-stamp:
-	dh_testdir
-	dh_testroot
-	rm -rf debian/$(srcpkg)
+install: install-stamp
+install-stamp: build-stamp
+	dh install --until dh_prep
+	mkdir -p $(CURDIR)/debian/tmp
+	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
+	rm -f debian/tmp/usr/bin/klog.krb
+	chmod +x debian/afs-rootvol debian/afs-newcell
+	dh_installdirs
+	dh_install --fail-missing $(IGNORE)
+	dh_installinit -popenafs-client -r -- defaults 25 20
+	dh_installinit -popenafs-fileserver -r
+
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	find . \( -name \*.o -o -path ./debian -o -path \*/.svn \
 	    -o -path ./src/WINNT -o -path ./doc -o -path ./obj \
@@ -143,26 +145,7 @@ install-source-stamp:
 	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
 	sed -e 's/[@]VERSION[@]/$(VERSION)/' debian/dkms.conf.in \
 	    > debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/dkms.conf
-	touch $@
 
-install: install-stamp
-install-stamp: DH_OPTIONS=
-install-stamp: build-stamp install-source-stamp
-	dh install --until dh_prep
-	mkdir -p $(CURDIR)/debian/tmp
-	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
-	rm -f debian/tmp/usr/bin/klog.krb
-	chmod +x debian/afs-rootvol debian/afs-newcell
-	dh_installdirs
-	dh_install --fail-missing $(IGNORE)
-	dh_installinit -popenafs-client -r -- defaults 25 20
-	dh_installinit -popenafs-fileserver -r
-
-	set -e; for pkg in $(LINTIAN_PACKAGES) ; do \
-	    install -d debian/$$pkg/usr/share/lintian/overrides; \
-	    install -m 644 -c debian/$$pkg.lintian \
-	        debian/$$pkg/usr/share/lintian/overrides/$$pkg; \
-	done
 	set -e; for pkg in $(DOC_PACKAGES) ; do \
 	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
 	done
