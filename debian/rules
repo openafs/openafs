@@ -141,7 +141,7 @@ install-source-stamp:
 	install -d debian/$(dkmspkg)/usr/src
 	mv debian/$(srcpkg)/usr/src/modules/$(package) \
 	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
-	sed -e 's/[@]VERSION[@]/$(VERSION)' debian/dkms.conf.in \
+	sed -e 's/[@]VERSION[@]/$(VERSION)/' debian/dkms.conf.in \
 	    > debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/dkms.conf
 	touch $@
 
