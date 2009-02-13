@@ -31,6 +31,7 @@ SYS_NAME  := $(shell sh debian/sysname)
 
 package    = openafs
 srcpkg     = openafs-modules-source
+dkmspkg    = openafs-modules-dkms
 
 # The /usr/share/doc directory for these packages should be a symlink to
 # /usr/share/doc/openafs-client.  Any package on this list must depend on
@@ -108,7 +109,9 @@ clean:
 	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
 	dh clean
 
-# Rules for building the openafs-modules-source package.
+# Rules for building the openafs-modules-source package.  We generate both a
+# DKMS package and a typical source tarball package usable by
+# module-assistant.
 install-source-stamp:
 	dh_testdir
 	dh_testroot
@@ -132,11 +135,14 @@ install-source-stamp:
 	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
 	find debian/$(srcpkg) -type f -not -perm -100 | xargs chmod 644
 	chmod 775 debian/$(srcpkg)/usr/src/modules
-	cd debian/$(srcpkg)/usr/src && \
-	    tar cf $(package).tar modules && \
-	    rm -r modules
-	gzip -9 debian/$(srcpkg)/usr/src/$(package).tar
-	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.gz
+	cd debian/$(srcpkg)/usr/src && tar cf $(package).tar modules
+	bzip2 debian/$(srcpkg)/usr/src/$(package).tar
+	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.bz2
+	install -d debian/$(dkmspkg)/usr/src
+	mv debian/$(srcpkg)/usr/src/modules/$(package) \
+	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
+	sed -e 's/[@]VERSION[@]/$(VERSION)' debian/dkms.conf.in \
+	    > debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/dkms.conf
 	touch $@
 
 install: install-stamp

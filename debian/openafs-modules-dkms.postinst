@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+# Get the package version, which is the version of openafs-modules-dkms
+# without the dfsg part and without the Debian version.
+package=openafs-modules-dkms
+version=`dpkg-query -W -f='${Version}' "$package" | sed 's/[.+-].*//'`
+
+dkms add -m openafs -v "$version"
+if [ "$1" = 'configure' ] ; then
+    dkms build -m openafs -v "$version"
+    dkms install -m openafs -v "$version" --force
+fi
+
+#DEBHELPER#

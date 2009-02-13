@@ -30,6 +30,7 @@ PATH=/bin:/usr/bin:/sbin:/usr/sbin
 CACHEINFO=${CACHEINFO:-/etc/openafs/cacheinfo}
 MODULEROOT=${MODULEROOT:-/lib/modules/`uname -r`}
 MODULEDIR=${MODULEDIR:-$MODULEROOT/fs}
+DKMSDIR=${DKMSDIR:-$MODULEROOT/updates/dkms}
 
 exec 3>/dev/null
 exec </dev/null
@@ -65,7 +66,12 @@ choose_client() {
     # exists and this is an SMP system, use it; otherwise, use the default
     # value.  Unset $MP if not using it so that we can use it later in the
     # call to modprobe.
-    if [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.o" ] ; then
+    #
+    # Assume that if we're using DKMS, we won't have a .mp and we'll always
+    # have a *.ko module name.
+    if [ -f "$DKMSDIR/openafs.ko" ] ; then
+        LIBAFS=openafs.ko
+    elif [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.o" ] ; then
         LIBAFS=openafs${MP}.o
     elif [ -n "$MP" -a -f "$MODULEDIR/openafs${MP}.ko" ] ; then
         LIBAFS=openafs${MP}.ko
@@ -86,7 +92,7 @@ load_client() {
     if [ -z "$LIBAFS" ] ; then
         choose_client
     fi
-    if [ ! -f "$MODULEDIR/$LIBAFS" ] ; then
+    if [ ! -f "$MODULEDIR/$LIBAFS" ] -a [ ! -f "$DKMSDIR/$LIBAFS" ] ; then
         echo ""
         cat <<EOF >&2
 AFS module $MODULEDIR/$LIBAFS does not exist.

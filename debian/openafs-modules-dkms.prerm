@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+# Get the package version, which is the version of openafs-modules-dkms
+# without the dfsg part and without the Debian version.  I hope this is always
+# correct when running prerm and we won't get the new version.
+package=openafs-modules-dkms
+version=`dpkg-query -W -f='${Version}' "$package" | sed 's/[.+-].*//'`
+
+dkms remove -m openafs -v "$version" --all
+
+#DEBHELPER#
