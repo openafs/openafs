@@ -44,6 +44,10 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
       default command stacks in dh.
     - Use a debian/clean configuration file to let dh clean do more of the
       work rather than using rm commands in debian/rules.
+  * Abort the config script rather than exiting successfully if the
+    debconf shell module is not available.  The config script should never
+    be run in the absence of debconf, so if this fails, something deeper
+    is wrong and we shouldn't blindly continue.
   * Add ${misc:Depends} to all dependencies.
   * Add explanations for the Lintian overrides.
   * Use set -e instead of #!/bin/sh -e in maintainer scripts.
