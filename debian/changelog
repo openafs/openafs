@@ -21,6 +21,8 @@ openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
       could result in reuse of freed memory.
     - STABLE14-rx-do-not-race-current-packet-20090105: fix rx race
       condition.
+  * Use make libafs_tree to generate the tree for the kernel module
+    compile rather than copying the entire source tree.
   * Add initial DKMS support via an openafs-modules-dkms package, based on
     work by Robert Gerlach.  (LP: #288743)
   * Compress the source in openafs-modules-source with bzip2 instead of

@@ -99,6 +99,7 @@ build-stamp:
 	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 	chmod a+x src/libafs/make_kbuild_makefile.pl
 	dh build --after configure
+	$(MAKE) libafs_tree
 	touch $@
 
 clean:
@@ -119,19 +120,12 @@ install-stamp: build-stamp
 	dh_installinit -popenafs-fileserver -r
 
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
-	find . \( -name \*.o -o -path ./debian -o -path \*/.svn \
-	    -o -path ./src/WINNT -o -path ./doc -o -path ./obj \
-	    -o -path ./$(SYS_NAME) -o -path ./.pc \) -prune -o -print | \
-	        cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
+	cd libafs_tree && find . -print | \
+	    cpio -admp $(CURDIR)/debian/$(srcpkg)/usr/src/modules/$(package)
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
 	cp debian/changelog debian/copyright debian/module/* \
 	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
 	chmod 755 debian/$(srcpkg)/usr/src/modules/$(package)/debian/rules
-	rm -f debian/$(srcpkg)/usr/src/modules/$(package)/*-stamp
-	cd debian/$(srcpkg)/usr/src/modules/$(package) && \
-	    $(MAKE) distclean
-	-cd debian/$(srcpkg)/usr/src/modules/$(package) && \
-	    rm -rf src/libafs/rx src/libafs/afs src/libafs/afsint
 	chown -R root.src debian/$(srcpkg)
 	find debian/$(srcpkg) -type d | xargs chmod 755
 	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
@@ -143,6 +137,7 @@ install-stamp: build-stamp
 	install -d debian/$(dkmspkg)/usr/src
 	mv debian/$(srcpkg)/usr/src/modules/$(package) \
 	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
+	rmdir debian/$(srcpkg)/usr/src/modules
 	sed -e 's/[@]VERSION[@]/$(VERSION)/' debian/dkms.conf.in \
 	    > debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/dkms.conf
 
