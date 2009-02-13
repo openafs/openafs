@@ -72,9 +72,11 @@ build-stamp: configure-stamp
 clean:
 	dh_testdir
 	dh_testroot
-	rm -f install-stamp build-stamp configure-stamp
-	[ ! -f Makefile ] || $(MAKE) distclean
-	dh_clean
+	rm -rf src/libafs/MODLOAD-*
+	dh_clean Makefile config.log config.status src/libafs/Makefile \
+	    src/libafs/Makefile.common src/libafs/asm src/libafs/asm-generic \
+	    src/libafs/h src/libafs/linux src/libafs/net src/libafs/netinet \
+	    src/libafs/rpc src/libafs/sys
 
 install: install-stamp
 install-stamp: build-stamp
