@@ -627,6 +627,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 
 	if (! do524) {
 	    char *p;
+	    char k4name[ANAME_SZ], k4inst[INST_SZ], k4realm[REALM_SZ];
 	    int len;
 
 	    if (dflag)
