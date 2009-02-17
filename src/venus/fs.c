@@ -307,12 +307,15 @@ static char *
 Parent(char *apath)
 {
     char *tp;
-    strcpy(tspace, apath);
+    strlcpy(tspace, apath, sizeof(tspace));
     tp = strrchr(tspace, '/');
-    if (tp) {
-	*tp = 0;
-    } else
-	strcpy(tspace, ".");
+    if (tp == (char *)tspace)
+	tp++;
+    else if (tp == (char *)NULL) {
+	tp      = (char *)tspace;
+	*(tp++) = '.';
+    }
+    *tp = '\0';
     return tspace;
 }
 
@@ -1685,7 +1688,11 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	 * Find rightmost slash, if any.
 	 */
 	last_component = (char *)strrchr(true_name, '/');
-	if (last_component) {
+	if (last_component == (char *)true_name) {
+	    strcpy(parent_dir, "/");
+	    last_component++;
+	}
+	else if (last_component != (char *)NULL) {
 	    /*
 	     * Found it.  Designate everything before it as the parent directory,
 	     * everything after it as the final component.
@@ -4035,7 +4042,11 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	 * Find rightmost slash, if any.
 	 */
 	last_component = (char *)strrchr(true_name, '/');
-	if (last_component) {
+	if (last_component == (char *)true_name) {
+	    strcpy(parent_dir, "/");
+	    last_component++;
+	}
+	else if (last_component != (char *)NULL) {
 	    /*
 	     * Found it.  Designate everything before it as the parent directory,
 	     * everything after it as the final component.
