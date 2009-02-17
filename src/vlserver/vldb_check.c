@@ -36,6 +36,10 @@
 #define MISBKH 0x400000          /* mischained (BK) */
 #define MISNH  0x800000          /* mischained (name) */
 
+#define VLDB_CHECK_NO_VLDB_CHECK_ERROR 0
+#define VLDB_CHECK_WARNING  1
+#define VLDB_CHECK_ERROR    2
+#define VLDB_CHECK_FATAL    4
 #define vldbread(x,y,z) vldbio(x,y,z,0)
 #define vldbwrite(x,y,z) vldbio(x,y,z,1)
 
@@ -45,6 +49,7 @@
 RCSID
     ("$Header$");
 
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -69,17 +74,46 @@ RCSID
 #define ADDR(x) (x/sizeof(struct nvlentry))
 
 int fd;
-int listentries, listservers, listheader, listuheader, verbose;
+int listentries, listservers, listheader, listuheader, verbose, quiet;
 
 int fix = 0;
 int fixed = 0;
 int passes = 0;
+/* if quiet, don't send anything to stdout */
+int quiet = 0; 
+/*  error level. 0 = no error, 1 = warning, 2 = error, 4 = fatal */
+int error_level  = 0; 
 
 struct er {
     long addr;
     int type;
 } *record;
 int serveraddrs[MAXSERVERID + 2];
+
+/*  Used to control what goes to stdout based on quiet flag */
+void 
+quiet_println(const char *fmt,...) {
+    va_list args;                                             
+    if (!quiet) {
+        va_start(args, fmt);                                      
+        vfprintf(stdout, fmt, args);                              
+        va_end(args);                                             
+    }
+}
+
+/*  Used to set the error level and ship messages to stderr */
+void                                                   
+log_error(int eval, const char *fmt, ...)                          
+{                                                             
+    va_list args;                                             
+    if (error_level < eval) error_level  = eval ;  /*  bump up the severity */
+    va_start(args, fmt);                                      
+    vfprintf(stderr, fmt, args);                              
+    va_end(args);                                             
+
+    if (error_level  == VLDB_CHECK_FATAL) exit(VLDB_CHECK_FATAL);
+}  
+
 
 #if 0
 int
@@ -98,16 +132,16 @@ readUbikHeader()
 
     offset = lseek(fd, 0, 0);
     if (offset != 0) {
-	printf("error: lseek to 0 failed: %d %d\n", offset, errno);
-	return (-1);
+	log_error(VLDB_CHECK_FATAL,"error: lseek to 0 failed: %d %d\n", offset, errno);
+	return (VLDB_CHECK_FATAL);
     }
 
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	printf("error: read of %d bytes failed: %d %d\n", sizeof(uheader), r,
+	log_error(VLDB_CHECK_FATAL,"error: read of %d bytes failed: %d %d\n", sizeof(uheader), r,
 	       errno);
-	return (-1);
+	return (VLDB_CHECK_FATAL);
     }
 
     uheader.magic = ntohl(uheader.magic);
@@ -116,18 +150,18 @@ readUbikHeader()
     uheader.version.counter = ntohl(uheader.version.counter);
 
     if (listuheader) {
-	printf("Ubik Header\n");
-	printf("   Magic           = 0x%x\n", uheader.magic);
-	printf("   Size            = %u\n", uheader.size);
-	printf("   Version.epoch   = %u\n", uheader.version.epoch);
-	printf("   Version.counter = %u\n", uheader.version.counter);
+	quiet_println("Ubik Header\n");
+	quiet_println("   Magic           = 0x%x\n", uheader.magic);
+	quiet_println("   Size            = %u\n", uheader.size);
+	quiet_println("   Version.epoch   = %u\n", uheader.version.epoch);
+	quiet_println("   Version.counter = %u\n", uheader.version.counter);
     }
 
     if (uheader.size != HDRSIZE)
-	printf("Ubik header size is %u (should be %u)\n", uheader.size,
+	log_error(VLDB_CHECK_WARNING,"VLDB_CHECK_WARNING: Ubik header size is %u (should be %u)\n", uheader.size,
 	       HDRSIZE);
     if (uheader.magic != UBIK_MAGIC)
-	printf("Ubik header magic is 0x%x (should be 0x%x)\n", uheader.magic,
+	log_error(VLDB_CHECK_ERROR,"Ubik header magic is 0x%x (should be 0x%x)\n", uheader.magic,
 	       UBIK_MAGIC);
 
     return (0);
@@ -142,7 +176,7 @@ vldbio(int position, char *buffer, int size, int rdwr)
     p = position + HDRSIZE;
     offset = lseek(fd, p, 0);
     if (offset != p) {
-	printf("error: lseek to %d failed: %d %d\n", p, offset, errno);
+	log_error(VLDB_CHECK_FATAL,"error: lseek to %d failed: %d %d\n", p, offset, errno);
 	return (-1);
     }
 
@@ -152,7 +186,7 @@ vldbio(int position, char *buffer, int size, int rdwr)
 	r = read(fd, buffer, size);
 
     if (r != size) {
-	printf("error: %s of %d bytes failed: %d %d\n", rdwr==1?"write":"read",
+	log_error(VLDB_CHECK_FATAL,"error: %s of %d bytes failed: %d %d\n", rdwr==1?"write":"read",
 	       size, r, errno);
 	return (-1);
     }
@@ -212,7 +246,7 @@ readheader(struct vlheader *headerp)
 {
     int i, j;
 
-    vldbread(0, headerp, sizeof(*headerp));
+    vldbread(0, (char *)headerp, sizeof(*headerp));
 
     headerp->vital_header.vldbversion =
 	ntohl(headerp->vital_header.vldbversion);
@@ -240,35 +274,35 @@ readheader(struct vlheader *headerp)
 	    headerp->VolidHash[i][j] = ntohl(headerp->VolidHash[i][j]);
 
     if (listheader) {
-	printf("vldb header\n");
-	printf("   vldbversion      = %u\n",
+	quiet_println("vldb header\n");
+	quiet_println("   vldbversion      = %u\n",
 	       headerp->vital_header.vldbversion);
-	printf("   headersize       = %u [actual=%u]\n",
+	quiet_println("   headersize       = %u [actual=%u]\n",
 	       headerp->vital_header.headersize, sizeof(*headerp));
-	printf("   freePtr          = 0x%x\n", headerp->vital_header.freePtr);
-	printf("   eofPtr           = %u\n", headerp->vital_header.eofPtr);
-	printf("   allocblock calls = %10u\n", headerp->vital_header.allocs);
-	printf("   freeblock  calls = %10u\n", headerp->vital_header.frees);
-	printf("   MaxVolumeId      = %u\n",
+	quiet_println("   freePtr          = 0x%x\n", headerp->vital_header.freePtr);
+	quiet_println("   eofPtr           = %u\n", headerp->vital_header.eofPtr);
+	quiet_println("   allocblock calls = %10u\n", headerp->vital_header.allocs);
+	quiet_println("   freeblock  calls = %10u\n", headerp->vital_header.frees);
+	quiet_println("   MaxVolumeId      = %u\n",
 	       headerp->vital_header.MaxVolumeId);
-	printf("   rw vol entries   = %u\n",
+	quiet_println("   rw vol entries   = %u\n",
 	       headerp->vital_header.totalEntries[0]);
-	printf("   ro vol entries   = %u\n",
+	quiet_println("   ro vol entries   = %u\n",
 	       headerp->vital_header.totalEntries[1]);
-	printf("   bk vol entries   = %u\n",
+	quiet_println("   bk vol entries   = %u\n",
 	       headerp->vital_header.totalEntries[2]);
-	printf("   multihome info   = 0x%x (%u)\n", headerp->SIT,
+	quiet_println("   multihome info   = 0x%x (%u)\n", headerp->SIT,
 	       headerp->SIT);
-	printf("   server ip addr   table: size = %d entries\n",
+	quiet_println("   server ip addr   table: size = %d entries\n",
 	       MAXSERVERID + 1);
-	printf("   volume name hash table: size = %d buckets\n", HASHSIZE);
-	printf("   volume id   hash table: %d tables with %d buckets each\n",
+	quiet_println("   volume name hash table: size = %d buckets\n", HASHSIZE);
+	quiet_println("   volume id   hash table: %d tables with %d buckets each\n",
 	       MAXTYPES, HASHSIZE);
     }
 
     /* Check the header size */
     if (headerp->vital_header.headersize != sizeof(*headerp))
-	printf("Header reports its size as %d (should be %d)\n",
+	log_error(VLDB_CHECK_WARNING,"Header reports its size as %d (should be %d)\n",
 	       headerp->vital_header.headersize, sizeof(*headerp));
     return;
 }
@@ -303,7 +337,7 @@ writeheader(struct vlheader *headerp)
 	for (j = 0; j < HASHSIZE; j++)
 	    headerp->VolidHash[i][j] = htonl(headerp->VolidHash[i][j]);
 
-    vldbwrite(0, headerp, sizeof(*headerp));
+    vldbwrite(0, (char *)headerp, sizeof(*headerp));
 }
 
 void
@@ -312,7 +346,7 @@ readMH(afs_int32 addr, struct extentaddr *mhblockP)
     int i, j;
     struct extentaddr *e;
 
-    vldbread(addr, mhblockP, VL_ADDREXTBLK_SIZE);
+    vldbread(addr, (char *)mhblockP, VL_ADDREXTBLK_SIZE);
 
     mhblockP->ex_count = ntohl(mhblockP->ex_count);
     mhblockP->ex_flags = ntohl(mhblockP->ex_flags);
@@ -335,7 +369,7 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
 {
     int i;
 
-    vldbread(addr, vlentryp, sizeof(*vlentryp));
+    vldbread(addr, (char *)vlentryp, sizeof(*vlentryp));
 
     for (i = 0; i < MAXTYPES; i++)
 	vlentryp->volumeId[i] = ntohl(vlentryp->volumeId[i]);
@@ -361,47 +395,47 @@ readentry(afs_int32 addr, struct nvlentry *vlentryp, afs_int32 *type)
     }
 
     if (listentries) {
-	printf("address %u: ", addr);
+	quiet_println("address %u: ", addr);
 	if (vlentryp->flags == VLCONTBLOCK) {
-	    printf("mh extension block\n");
+	    quiet_println("mh extension block\n");
 	} else if (vlentryp->flags == VLFREE) {
-	    printf("free vlentry\n");
+	    quiet_println("free vlentry\n");
 	} else {
-	    printf("vlentry %s\n", vlentryp->name);
-	    printf("   rw id = %u ; ro id = %u ; bk id = %u\n",
+	    quiet_println("vlentry %s\n", vlentryp->name);
+	    quiet_println("   rw id = %u ; ro id = %u ; bk id = %u\n",
 		   vlentryp->volumeId[0], vlentryp->volumeId[1],
 		   vlentryp->volumeId[2]);
-	    printf("   flags         =");
+	    quiet_println("   flags         =");
 	    if (vlentryp->flags & VLF_RWEXISTS)
-		printf(" rw");
+		quiet_println(" rw");
 	    if (vlentryp->flags & VLF_ROEXISTS)
-		printf(" ro");
+		quiet_println(" ro");
 	    if (vlentryp->flags & VLF_BACKEXISTS)
-		printf(" bk");
+		quiet_println(" bk");
 	    if (vlentryp->flags & 0xffff8fff)
-		printf(" errorflag(0x%x)", vlentryp->flags);
-	    printf("\n");
-	    printf("   LockAfsId     = %d\n", vlentryp->LockAfsId);
-	    printf("   LockTimestamp = %d\n", vlentryp->LockTimestamp);
-	    printf("   cloneId       = %u\n", vlentryp->cloneId);
-	    printf
+		quiet_println(" errorflag(0x%x)", vlentryp->flags);
+	    quiet_println("\n");
+	    quiet_println("   LockAfsId     = %d\n", vlentryp->LockAfsId);
+	    quiet_println("   LockTimestamp = %d\n", vlentryp->LockTimestamp);
+	    quiet_println("   cloneId       = %u\n", vlentryp->cloneId);
+	    quiet_println
 		("   next hash for rw = %u ; ro = %u ; bk = %u ; name = %u\n",
 		 vlentryp->nextIdHash[0], vlentryp->nextIdHash[1],
 		 vlentryp->nextIdHash[2], vlentryp->nextNameHash);
 	    for (i = 0; i < NMAXNSERVERS; i++) {
 		if (vlentryp->serverNumber[i] != 255) {
-		    printf("   server %d ; partition %d ; flags =",
+		    quiet_println("   server %d ; partition %d ; flags =",
 			   vlentryp->serverNumber[i],
 			   vlentryp->serverPartition[i]);
 		    if (vlentryp->serverFlags[i] & VLSF_RWVOL)
-			printf(" rw");
+			quiet_println(" rw");
 		    if (vlentryp->serverFlags[i] & VLSF_ROVOL)
-			printf(" ro");
+			quiet_println(" ro");
 		    if (vlentryp->serverFlags[i] & VLSF_BACKVOL)
-			printf(" bk");
+			quiet_println(" bk");
 		    if (vlentryp->serverFlags[i] & VLSF_NEWREPSITE)
-			printf(" newro");
-		    printf("\n");
+			quiet_println(" newro");
+		    quiet_println("\n");
 		}
 	    }
 	}
@@ -414,8 +448,7 @@ writeentry(afs_int32 addr, struct nvlentry *vlentryp)
 {
     int i;
 
-    if (verbose)
-	printf("Writing back entry at addr %u\n", addr);
+    if (verbose) quiet_println("Writing back entry at addr %u\n", addr);
     fixed++;
     for (i = 0; i < MAXTYPES; i++)
 	vlentryp->volumeId[i] = htonl(vlentryp->volumeId[i]);
@@ -431,7 +464,7 @@ writeentry(afs_int32 addr, struct nvlentry *vlentryp)
 	vlentryp->serverPartition[i] = htonl(vlentryp->serverPartition[i]);
 	vlentryp->serverFlags[i] = htonl(vlentryp->serverFlags[i]);
     }
-    vldbwrite(addr, vlentryp, sizeof(*vlentryp));
+    vldbwrite(addr, (char *)vlentryp, sizeof(*vlentryp));
 }
 
 void
@@ -446,12 +479,12 @@ readSIT(int base, int addr)
     vldbread(addr, sitbuf, VL_ADDREXTBLK_SIZE);
     extent = (struct extentaddr *)sitbuf;
 
-    printf("multihome info block: base %d\n", base);
+    quiet_println("multihome info block: base %d\n", base);
     if (base == 0) {
-	printf("   count = %u\n", ntohl(extent->ex_count));
-	printf("   flags = %u\n", ntohl(extent->ex_flags));
+	quiet_println("   count = %u\n", ntohl(extent->ex_count));
+	quiet_println("   flags = %u\n", ntohl(extent->ex_flags));
 	for (i = 0; i < VL_MAX_ADDREXTBLKS; i++) {
-	    printf("   contaddrs[%d] = %u\n", i,
+	    quiet_println("   contaddrs[%d] = %u\n", i,
 		   ntohl(extent->ex_contaddrs[i]));
 	}
     }
@@ -464,9 +497,9 @@ readSIT(int base, int addr)
 	if (j >= VL_MAX_ADDREXTBLKS)
 	    continue;
 
-	printf("   base %d index %d:\n", base, i);
+	quiet_println("   base %d index %d:\n", base, i);
 
-	printf("       afsuuid    = (%x %x %x /%d/%d/ /%x/%x/%x/%x/%x/%x/)\n",
+	quiet_println("       afsuuid    = (%x %x %x /%d/%d/ /%x/%x/%x/%x/%x/%x/)\n",
 	       ntohl(extent[i].ex_hostuuid.time_low),
 	       ntohl(extent[i].ex_hostuuid.time_mid),
 	       ntohl(extent[i].ex_hostuuid.time_hi_and_version),
@@ -478,11 +511,11 @@ readSIT(int base, int addr)
 	       ntohl(extent[i].ex_hostuuid.node[3]),
 	       ntohl(extent[i].ex_hostuuid.node[4]),
 	       ntohl(extent[i].ex_hostuuid.node[5]));
-	printf("       uniquifier = %u\n", ntohl(extent[i].ex_uniquifier));
+	quiet_println("       uniquifier = %u\n", ntohl(extent[i].ex_uniquifier));
 	for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
 	    a = ntohl(extent[i].ex_addrs[j]);
 	    if (a) {
-		printf("       %d.%d.%d.%d\n", (a >> 24) & 0xff,
+		quiet_println("       %d.%d.%d.%d\n", (a >> 24) & 0xff,
 		       (a >> 16) & 0xff, (a >> 8) & 0xff, (a) & 0xff);
 	    }
 	}
@@ -505,8 +538,7 @@ ReadAllEntries(struct vlheader *header)
     afs_uint32 entrysize = 0;
     afs_uint32 maxvolid = 0;
 
-    if (verbose)
-	printf("Read each entry in the database\n");
+    if (verbose) quiet_println("Read each entry in the database\n");
     for (addr = header->vital_header.headersize;
 	 addr < header->vital_header.eofPtr; addr += entrysize) {
 
@@ -514,7 +546,7 @@ ReadAllEntries(struct vlheader *header)
 	readentry(addr, &vlentry, &type);
 	if (type == VL) {
 	    if (!(vlentry.flags & VLF_RWEXISTS))
-		printf("WARNING: VLDB entry '%s' has no RW volume\n",
+		log_error(VLDB_CHECK_WARNING,"VLDB_CHECK_WARNING: VLDB entry '%s' has no RW volume\n",
 		       vlentry.name);
 
 	    for (i = 0; i < MAXTYPES; i++)
@@ -540,12 +572,12 @@ ReadAllEntries(struct vlheader *header)
 		    continue;
  		}
 		if (e) {
-		    printf
-			("VLDB entry '%s' contains an unknown RW/RO index serverFlag\n",
+		   log_error 
+			(VLDB_CHECK_ERROR,"VLDB entry '%s' contains an unknown RW/RO index serverFlag\n",
 			 vlentry.name);
 		    e = 0;
 		}
-		printf
+		quiet_println
 		    ("   index %d : serverNumber %d : serverPartition %d : serverFlag %d\n",
 		     j, vlentry.serverNumber[j], vlentry.serverPartition[j],
 		     vlentry.serverFlags[j]);
@@ -554,7 +586,7 @@ ReadAllEntries(struct vlheader *header)
 
 	rindex = addr / sizeof(vlentry);
 	if (record[rindex].type) {
-	    printf("INTERNAL ERROR: record holder %d already in use\n",
+	    log_error(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: record holder %d already in use\n",
 		   rindex);
 	    return;
 	}
@@ -572,20 +604,20 @@ ReadAllEntries(struct vlheader *header)
 	    entrysize = VL_ADDREXTBLK_SIZE;
 	    mhcount++;
 	} else {
-	    printf("Unknown entry at %u. Aborting\n", addr);
+	    log_error(VLDB_CHECK_ERROR, "Unknown entry at %u. Aborting\n", addr);
 	    break;
 	}
     }
     if (verbose) {
-	printf("Found %d entries, %d free entries, %d multihomed blocks\n",
+	quiet_println("Found %d entries, %d free entries, %d multihomed blocks\n",
 	       vlcount, freecount, mhcount);
-	printf("Found %d RW volumes, %d BK volumes, %d RO volumes\n", rwcount,
+	quiet_println("Found %d RW volumes, %d BK volumes, %d RO volumes\n", rwcount,
 	       bkcount, rocount);
     }
 
     /* Check the maxmimum volume id in the header */
     if (maxvolid != header->vital_header.MaxVolumeId - 1)
-	printf
+	quiet_println
 	    ("Header's maximum volume id is %u and largest id found in VLDB is %u\n",
 	     header->vital_header.MaxVolumeId, maxvolid);
 }
@@ -619,19 +651,19 @@ SetHashEnd(long addr, int type, long new)
 	if (next < 1) {
 	    switch(type & 0xf0) {
 	    case RWH:
-	      if (vlentry.nextIdHash[0] != 0) {printf("bwoop\n");}
+	      if (vlentry.nextIdHash[0] != 0) {quiet_println("bwoop\n");}
 		vlentry.nextIdHash[0] = new;
 		break;
 	    case ROH:
-	      if (vlentry.nextIdHash[1] != 0) {printf("bwoop\n");}
+	      if (vlentry.nextIdHash[1] != 0) {quiet_println("bwoop\n");}
 		vlentry.nextIdHash[1] = new;
 		break;
 	    case BKH:
-	      if (vlentry.nextIdHash[2] != 0) {printf("bwoop\n");}
+	      if (vlentry.nextIdHash[2] != 0) {quiet_println("bwoop\n");}
 		vlentry.nextIdHash[2] = new;
 		break;
 	    case NH:
-	      if (vlentry.nextNameHash != 0) {printf("bwoop\n");}
+	      if (vlentry.nextNameHash != 0) {quiet_println("bwoop\n");}
 		vlentry.nextNameHash = new;
 		break;
 	    }
@@ -655,14 +687,13 @@ FollowNameHash(struct vlheader *header)
     afs_int32 i, type, rindex;
 
     /* Now follow the Name Hash Table */
-    if (verbose)
-	printf("Check Volume Name Hash\n");
+    if (verbose) quiet_println("Check Volume Name Hash\n");
     for (i = 0; i < HASHSIZE; i++) {
 	chainlength = 0;
 	for (addr = header->VolnameHash[i]; addr; addr = vlentry.nextNameHash) {
 	    readentry(addr, &vlentry, &type);
 	    if (type != VL) {
-		printf("Name Hash %d: Bad entry at %u: Not a valid vlentry\n",
+		log_error(VLDB_CHECK_ERROR,"Name Hash %d: Bad entry at %u: Not a valid vlentry\n",
 		       i, addr);
 		continue;
 	    }
@@ -670,13 +701,13 @@ FollowNameHash(struct vlheader *header)
 	    rindex = addr / sizeof(vlentry);
 
 	    if (record[rindex].addr != addr && record[rindex].addr) {
-		printf
-		    ("INTERNAL ERROR: addresses %u and %u use same record slot %d\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
 		     record[rindex].addr, addr, rindex);
 	    }
 	    if (record[rindex].type & NH) {
-		printf
-		    ("Name Hash %d: Bad entry '%s': Already in the name hash\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"Name Hash %d: Bad entry '%s': Already in the name hash\n",
 		     i, vlentry.name);
 		record[rindex].type |= MULTN;
 		break;
@@ -689,8 +720,8 @@ FollowNameHash(struct vlheader *header)
 
 	    /* Hash the name and check if in correct hash table */
 	    if (NameHash(vlentry.name) != i) {
-		printf
-		    ("Name Hash %d: Bad entry '%s': Incorrect name hash chain (should be in %d)\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"Name Hash %d: Bad entry '%s': Incorrect name hash chain (should be in %d)\n",
 		     i, vlentry.name, NameHash(vlentry.name));
 		record[rindex].type |= MULTN;
 	    }
@@ -701,7 +732,7 @@ FollowNameHash(struct vlheader *header)
 	    shortest = chainlength;
     }
     if (verbose) {
-	printf
+	quiet_println
 	    ("%d entries in name hash, longest is %d, shortest is %d, average length is %f\n",
 	     count, longest, shortest, ((float)count / (float)HASHSIZE));
     }
@@ -722,8 +753,7 @@ FollowIdHash(struct vlheader *header)
     afs_int32 i, j, hash, type, rindex, ref, badref, badhash;
 
     /* Now follow the RW, RO, and BK Hash Tables */
-    if (verbose)
-	printf("Check RW, RO, and BK id Hashes\n");
+    if (verbose) quiet_println("Check RW, RO, and BK id Hashes\n");
     for (i = 0; i < MAXTYPES; i++) {
 	hash = ((i == 0) ? RWH : ((i == 1) ? ROH : BKH));
 	ref = ((i == 0) ? REFRW : ((i == 1) ? REFRO : REFBK));
@@ -738,21 +768,21 @@ FollowIdHash(struct vlheader *header)
 		 addr = vlentry.nextIdHash[i]) {
 		readentry(addr, &vlentry, &type);
 		if (type != VL) {
-		    printf
-			("%s Id Hash %d: Bad entry at %u: Not a valid vlentry\n",
+		   log_error 
+			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry at %u: Not a valid vlentry\n",
 			 vtype(i), j, addr);
 		    continue;
 		}
 
 		rindex = addr / sizeof(vlentry);
 		if (record[rindex].addr != addr && record[rindex].addr) {
-		    printf
-			("INTERNAL ERROR: addresses %u and %u use same record slot %d\n",
+		   log_error 
+			(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
 			 record[rindex].addr, addr, rindex);
 		}
 		if (record[rindex].type & hash) {
-		    printf
-			("%s Id Hash %d: Bad entry '%s': Already in the hash table\n",
+		   log_error 
+			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry '%s': Already in the hash table\n",
 			 vtype(i), j, vlentry.name);
 		    record[rindex].type |= badref;
 		    break;
@@ -765,8 +795,8 @@ FollowIdHash(struct vlheader *header)
 
 		/* Hash the id and check if in correct hash table */
 		if (IdHash(vlentry.volumeId[i]) != j) {
-		    printf
-			("%s Id Hash %d: Bad entry '%s': Incorrect Id hash chain (should be in %d)\n",
+		   log_error 
+			(VLDB_CHECK_ERROR,"%s Id Hash %d: Bad entry '%s': Incorrect Id hash chain (should be in %d)\n",
 			 vtype(i), j, vlentry.name,
 			 IdHash(vlentry.volumeId[i]));
 		    record[rindex].type |= badhash;
@@ -780,10 +810,9 @@ FollowIdHash(struct vlheader *header)
 		shortest = chainlength;
 	}
 	if (verbose) {
-	    printf
+	    quiet_println
 		("%d entries in %s hash, longest is %d, shortest is %d, average length is %f\n",
-		 count, vtype(i), longest, shortest,
-		 ((float)count / (float)HASHSIZE));
+		 count, vtype(i), longest, shortest,((float)count / (float)HASHSIZE));
 	}
     }
     return;
@@ -802,26 +831,25 @@ FollowFreeChain(struct vlheader *header)
     afs_int32 type, rindex;
 
     /* Now follow the Free Chain */
-    if (verbose)
-	printf("Check Volume Free Chain\n");
+    if (verbose) quiet_println("Check Volume Free Chain\n");
     for (addr = header->vital_header.freePtr; addr;
 	 addr = vlentry.nextIdHash[0]) {
 	readentry(addr, &vlentry, &type);
 	if (type != FR) {
-	    printf
-		("Free Chain %d: Bad entry at %u: Not a valid free vlentry (0x%x)\n",
+	   log_error 
+		(VLDB_CHECK_ERROR,"Free Chain %d: Bad entry at %u: Not a valid free vlentry (0x%x)\n",
 		 count, addr, type);
 	    continue;
 	}
 
 	rindex = addr / sizeof(vlentry);
 	if (record[rindex].addr != addr && record[rindex].addr) {
-	    printf
-		("INTERNAL ERROR: addresses %u and %u use same record slot %d\n",
+	   log_error 
+		(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
 		 record[rindex].addr, addr, rindex);
 	}
 	if (record[rindex].type & FRC) {
-	    printf("Free Chain: Bad entry at %u: Already in the free chain\n",
+	    log_error(VLDB_CHECK_ERROR,"Free Chain: Bad entry at %u: Already in the free chain\n",
 		   addr);
 	    break;
 	}
@@ -830,7 +858,7 @@ FollowFreeChain(struct vlheader *header)
 	count++;
     }
     if (verbose)
-	printf("%d entries on free chain\n", count);
+     quiet_println("%d entries on free chain\n", count);
     return;
 }
 
@@ -866,7 +894,7 @@ CheckIpAddrs(struct vlheader *header)
     memset(&nulluuid, 0, sizeof(nulluuid));
 
     if (verbose)
-	printf("Check Multihomed blocks\n");
+	quiet_println("Check Multihomed blocks\n");
 
     if (header->SIT) {
 	/* Read the first MH block and from it, gather the 
@@ -874,8 +902,8 @@ CheckIpAddrs(struct vlheader *header)
 	 */
 	readMH(header->SIT, MHblock);
 	if (MHblock->ex_flags != VLCONTBLOCK) {
-	    printf
-		("Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
+	   log_error 
+		(VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		 header->SIT);
 	}
 
@@ -884,8 +912,8 @@ CheckIpAddrs(struct vlheader *header)
 	}
 
 	if (header->SIT != caddrs[0]) {
-	    printf
-		("MH block does not point to self %u in header, %u in block\n",
+	   log_error 
+		(VLDB_CHECK_ERROR,"MH block does not point to self %u in header, %u in block\n",
 		 header->SIT, caddrs[0]);
 	}
 
@@ -896,20 +924,20 @@ CheckIpAddrs(struct vlheader *header)
 
 	    readMH(caddrs[i], MHblock);
 	    if (MHblock->ex_flags != VLCONTBLOCK) {
-		printf
-		    ("Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"Multihomed Block 0: Bad entry at %u: Not a valid multihomed block\n",
 		     header->SIT);
 	    }
 
 	    rindex = caddrs[i] / sizeof(vlentry);
 	    if (record[rindex].addr != caddrs[i] && record[rindex].addr) {
-		printf
-		    ("INTERNAL ERROR: addresses %u and %u use same record slot %d\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
 		     record[rindex].addr, caddrs[i], rindex);
 	    }
 	    if (record[rindex].type & FRC) {
-		printf
-		    ("MH Blocks Chain %d: Bad entry at %u: Already a MH block\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"MH Blocks Chain %d: Bad entry at %u: Already a MH block\n",
 		     i, record[rindex].addr);
 		break;
 	    }
@@ -944,8 +972,8 @@ CheckIpAddrs(struct vlheader *header)
 
 		if (memcmp(&e->ex_hostuuid, &nulluuid, sizeof(afsUUID)) == 0) {
 		    if (ipindex != -1) {
-			printf
-			    ("Server Addrs index %d references null MH block %d, index %d\n",
+		        log_error	
+			    (VLDB_CHECK_ERROR,"Server Addrs index %d references null MH block %d, index %d\n",
 			     ipindex, i, j);
 			serveraddrs[ipindex] = 0;	/* avoids printing 2nd error below */
 		    }
@@ -963,8 +991,8 @@ CheckIpAddrs(struct vlheader *header)
 		if (ipaddrs) {
 		    mhentries++;
 		    if (ipindex == -1) {
-			printf
-			    ("MH block %d, index %d: Not referenced by server addrs\n",
+		        log_error    	
+			    (VLDB_CHECK_ERROR,"MH block %d, index %d: Not referenced by server addrs\n",
 			     i, j);
 		    } else {
 			serveraddrs[ipindex] = ipaddrs;	/* It is good */
@@ -972,33 +1000,33 @@ CheckIpAddrs(struct vlheader *header)
 		}
 
 		if (listservers && ipaddrs) {
-		    printf("MH block %d, index %d:", i, j);
+		    quiet_println("MH block %d, index %d:", i, j);
 		    for (m = 0; m < VL_MAXIPADDRS_PERMH; m++) {
 			if (!e->ex_addrs[m])
 			    continue;
-			printf(" %d.%d.%d.%d",
+			quiet_println(" %d.%d.%d.%d",
 			       (e->ex_addrs[m] & 0xff000000) >> 24,
 			       (e->ex_addrs[m] & 0x00ff0000) >> 16,
 			       (e->ex_addrs[m] & 0x0000ff00) >> 8,
 			       (e->ex_addrs[m] & 0x000000ff));
 		    }
-		    printf("\n");
+		    quiet_println("\n");
 		}
 	    }
 /*
  *      if (mhentries != MHblock->ex_count) {
- *	   printf("MH blocks says it has %d entries (found %d)\n",
+ *	   quiet_println("MH blocks says it has %d entries (found %d)\n",
  *		  MHblock->ex_count, mhentries);
  *	}
  */
 	}
     }
     if (verbose)
-	printf("%d multihomed blocks\n", mhblocks);
+	quiet_println("%d multihomed blocks\n", mhblocks);
 
     /* Check the server addresses */
     if (verbose)
-	printf("Check server addresses\n");
+	quiet_println("Check server addresses\n");
     mhentries = regentries = 0;
     for (i = 0; i <= MAXSERVERID; i++) {
 	if (header->IpMappedAddr[i]) {
@@ -1006,22 +1034,22 @@ CheckIpAddrs(struct vlheader *header)
 		mhentries++;
 		if (((header->IpMappedAddr[i] & 0x00ff0000) >> 16) >
 		    VL_MAX_ADDREXTBLKS)
-		    printf
-			("IP Addr for entry %d: Multihome block is bad (%d)\n",
+		   log_error 
+			(VLDB_CHECK_ERROR,"IP Addr for entry %d: Multihome block is bad (%d)\n",
 			 i, ((header->IpMappedAddr[i] & 0x00ff0000) >> 16));
 		if (((header->IpMappedAddr[i] & 0x0000ffff) > VL_MHSRV_PERBLK)
 		    || ((header->IpMappedAddr[i] & 0x0000ffff) < 1))
-		    printf
-			("IP Addr for entry %d: Multihome index is bad (%d)\n",
+		    log_error 
+			(VLDB_CHECK_ERROR,"IP Addr for entry %d: Multihome index is bad (%d)\n",
 			 i, (header->IpMappedAddr[i] & 0x0000ffff));
 		if (serveraddrs[i] == -1) {
-		    printf
-			("warning: IP Addr for entry %d: Multihome entry has no ip addresses\n",
+		    log_error 
+			(VLDB_CHECK_WARNING,"warning: IP Addr for entry %d: Multihome entry has no ip addresses\n",
 			 i);
 		    serveraddrs[i] = 0;
 		}
 		if (listservers) {
-		    printf("   Server ip addr %d = MH block %d, index %d\n",
+		    quiet_println("   Server ip addr %d = MH block %d, index %d\n",
 			   i, (header->IpMappedAddr[i] & 0x00ff0000) >> 16,
 			   (header->IpMappedAddr[i] & 0x0000ffff));
 		}
@@ -1029,7 +1057,7 @@ CheckIpAddrs(struct vlheader *header)
 		regentries++;
 		serveraddrs[i] = 1;	/* It is good */
 		if (listservers) {
-		    printf("   Server ip addr %d = %d.%d.%d.%d\n", i,
+		    quiet_println("   Server ip addr %d = %d.%d.%d.%d\n", i,
 			   (header->IpMappedAddr[i] & 0xff000000) >> 24,
 			   (header->IpMappedAddr[i] & 0x00ff0000) >> 16,
 			   (header->IpMappedAddr[i] & 0x0000ff00) >> 8,
@@ -1039,7 +1067,7 @@ CheckIpAddrs(struct vlheader *header)
 	}
     }
     if (verbose) {
-	printf("%d simple entries, %d multihomed entries, Total = %d\n",
+	quiet_println("%d simple entries, %d multihomed entries, Total = %d\n",
 	       regentries, mhentries, mhentries + regentries);
     }
     return;
@@ -1049,13 +1077,14 @@ void
 FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp, 
        struct nvlentry *vlentry, afs_uint32 hash) {
     SetHashEnd(addr, type, tmp);
-    printf("linked unlinked chain %u (index %d) to end of chain %d for %s hash\n", 
+    quiet_println("linked unlinked chain %u (index %d) to end of chain %d for %s hash\n", 
 	   tmp, ADDR(tmp), hash, type==NH?"Name":(type==RWH?"RW":(type==ROH?"RO":"BK")));
 }
 
 int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
+    error_level  = 0;  /*  start clean with no error status */
     char *dbfile;
     afs_int32 maxentries, type, tmp;
     struct vlheader header;
@@ -1068,13 +1097,21 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     listservers = (as->parms[3].items ? 1 : 0);	/* -servers  */
     listentries = (as->parms[4].items ? 1 : 0);	/* -entries  */
     verbose = (as->parms[5].items ? 1 : 0);	/* -verbose  */
-    fix = (as->parms[6].items ? 1 : 0);	/* -fix  */
+    quiet = (as->parms[6].items ? 1 : 0);  /* -quiet */
+    fix = (as->parms[7].items ? 1 : 0);    /* -fix  */
+
+    /* sanity check */
+    if (quiet && (verbose || listuheader || listheader ||listservers \
+                || listentries)) {
+        log_error(VLDB_CHECK_FATAL," -quiet cannot be used other display flags\n");
+        return VLDB_CHECK_FATAL;
+    }
 
  restart:
     /* open the vldb database file */
     fd = open(dbfile, (fix > 0)?O_RDWR:O_RDONLY, 0);
     if (fd < 0) {
-	printf("can't open file '%s'. error = %d\n", dbfile, errno);
+	log_error(VLDB_CHECK_FATAL,"can't open file '%s'. error = %d\n", dbfile, errno);
 	return 0;
     }
 
@@ -1082,8 +1119,8 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     readUbikHeader();
     readheader(&header);
     if (header.vital_header.vldbversion < 3) {
-	printf("does not support vldb with version less than 3\n");
-	return 0;
+	log_error(VLDB_CHECK_FATAL,"does not support vldb with version less than 3\n");
+	return VLDB_CHECK_FATAL;
     }
 
     maxentries = (header.vital_header.eofPtr / sizeof(vlentry)) + 1;
@@ -1112,7 +1149,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
      * valid (the serveraddrs array).
      */
     if (verbose)
-	printf("Verify each volume entry\n");
+	quiet_println("Verify each volume entry\n");
     for (i = 0; i < maxentries; i++) {
 	int nextp = 0;
 	int reft = 0;
@@ -1134,7 +1171,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    readentry(record[i].addr, &vlentry, &type);
 
 	    if (InvalidVolname(vlentry.name))
-		printf("Volume '%s' at addr %u has an invalid name\n",
+		log_error(VLDB_CHECK_ERROR,"Volume '%s' at addr %u has an invalid name\n",
 		       vlentry.name, record[i].addr);
 
 	    if (!(record[i].type & NH)) {
@@ -1230,71 +1267,69 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    }
 
 	    if (foundbad) {
-		printf("%d: Volume '%s' %snot found in %s hash %d", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Volume '%s' %snot found in %s hash %d", i, 
 		       vlentry.name, volidbuf, which, hash);
 		if (nextp) {
-		    printf(" (next %d", nextp);
+		    log_error(VLDB_CHECK_ERROR," (next %d", nextp);
 		    if (!(record[nextp].type & reft)) {
-			printf(" not in chain ");
+			log_error(VLDB_CHECK_ERROR," not in chain ");
 			record[nextp].type |= reft;
 		    } else if (nextp != 0) {
-			printf(" next in chain");
+			log_error(VLDB_CHECK_ERROR," next in chain");
 			if (fix) {
-			    printf(", unchaining");
+			    log_error(VLDB_CHECK_ERROR,", unchaining");
 			    *nextpp = 0;
 			    writeentry(record[i].addr, &vlentry);
 			}
 		    }
-		    printf(")");
+		    log_error(VLDB_CHECK_ERROR,")");
 		}
-		printf("\n");
+		log_error(VLDB_CHECK_ERROR,"\n");
 	    }
 	
 	    for (j = 0; j < NMAXNSERVERS; j++) {
 		if ((vlentry.serverNumber[j] != 255)
 		    && (serveraddrs[vlentry.serverNumber[j]] == 0)) {
-		    printf
-			("Volume '%s', index %d points to empty server entry %d\n",
+		   log_error 
+			(VLDB_CHECK_ERROR,"Volume '%s', index %d points to empty server entry %d\n",
 			 vlentry.name, j, vlentry.serverNumber[j]);
 		}
 	    }
 	
 	    if (record[i].type & 0xffff0f00)
-		printf
-		    ("Volume '%s' id %u also found on other chains (0x%x)\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"Volume '%s' id %u also found on other chains (0x%x)\n",
 		     vlentry.name, vlentry.volumeId[0], record[i].type);
 	    
 	    /* A free entry */
 	} else if (record[i].type & FR) {
 	    if (!(record[i].type & FRC))
-		printf("Free vlentry at %u not on free chain\n",
+		log_error(VLDB_CHECK_ERROR,"Free vlentry at %u not on free chain\n",
 		       record[i].addr);
 	    
 	    if (record[i].type & 0xfffffdf0)
-		printf
-		    ("Free vlentry at %u also found on other chains (0x%x)\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"Free vlentry at %u also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
 	    
 	    /* A multihomed entry */
 	} else if (record[i].type & MH) {
 	    if (!(record[i].type & MHC))
-		printf("Multihomed block at %u is orphaned\n",
+		log_error(VLDB_CHECK_ERROR,"Multihomed block at %u is orphaned\n",
 		       record[i].addr);
 	    
 	    if (record[i].type & 0xfffffef0)
-		printf
-		    ("Multihomed block at %u also found on other chains (0x%x)\n",
+	        log_error	
+		    (VLDB_CHECK_ERROR,"Multihomed block at %u also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
 	    
 	} else {
-	    printf("Unknown entry type at %u (0x%x)\n", record[i].addr,
+	    log_error(VLDB_CHECK_ERROR,"Unknown entry type at %u (0x%x)\n", record[i].addr,
 		   record[i].type);
 	}
     }
 
-    if (verbose)
-	printf("Verify each chain head\n");
-
+    if (verbose)  quiet_println("Verify each chain head\n");
     {
 	afs_uint32 addr;
 	int hash;
@@ -1313,16 +1348,18 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    }
 	}
 	for (i = 0; i <= 2; i++) {
-	    for (j = 0; j < HASHSIZE; j++) {
-		addr = header.VolidHash[i][j]; 
+         for (j = 0, addr = header.VolidHash[i][j]; j < HASHSIZE; j++) {
+        if (verbose) quiet_println("got %d %d %d\n", i, j, ADDR(addr));
 		if (i == 0 && (record[ADDR(addr)].type & MULTRW)) {
 		    hash = IdHash(vlentry.volumeId[i]);
 		    if (hash != j) {
 			header.VolidHash[i][j] = vlentry.nextIdHash[i];
 			vlentry.nextIdHash[i] = 0;
-			if (fix)
+			if (fix) {
+                         quiet_println("fix %d %d %d\n", i, j, ADDR(addr));
 			    writeentry(record[i].addr, &vlentry);
 		    }
+		}
 		}
 
 		if (i == 1 && (record[ADDR(addr)].type & MULTRO)) {
@@ -1330,9 +1367,11 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    if (hash != j) {
 			header.VolidHash[i][j] = vlentry.nextIdHash[i];
 			vlentry.nextIdHash[i] = 0;
-			if (fix)
+			if (fix) {
+                         quiet_println("fix %d %d %d\n", i, j, addr);
 			    writeentry(record[i].addr, &vlentry);
 		    }
+		}
 		}
 
 		if (i == 2 && (record[ADDR(addr)].type & MULTBK)) {
@@ -1340,21 +1379,23 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		    if (hash != j) {
 			header.VolidHash[i][j] = vlentry.nextIdHash[i];
 			vlentry.nextIdHash[i] = 0;
-			if (fix)
+			if (fix) {
+                         quiet_println("fix %d %d %d\n", i, j, addr);
 			    writeentry(record[i].addr, &vlentry);
 		    }
 		}
 	    }
 	}
     }
+    }
     /* By the time we get here, unchained entries are really unchained */
-    printf("Scanning %u entries for possible repairs\n", maxentries);
+    quiet_println("Scanning %u entries for possible repairs\n", maxentries);
     for (i = 0; i < maxentries; i++) {
 	int *nextpp;
 	if (record[i].type & VL) {
 	    readentry(record[i].addr, &vlentry, &type);
 	    if (!(record[i].type & REFN)) {
-		printf("%d: Record %u (type 0x%x) not in a name chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a name chain\n", i, 
 		       record[i].addr, record[i].type);
 		if (strlen(vlentry.name)>0) {
 		    if (fix) {
@@ -1373,7 +1414,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		}
 	    }
 	    if (vlentry.volumeId[0] && !(record[i].type & REFRW)) {
-		printf("%d: Record %u (type 0x%x) not in a RW chain\n", i,
+		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a RW chain\n", i,
 		       record[i].addr, record[i].type);
 		if (fix) {
 		    if (header.VolidHash[0][IdHash(vlentry.volumeId[0])] == 0)
@@ -1383,7 +1424,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		}
 	    }
 	    if (vlentry.volumeId[1] && !(record[i].type & REFRO)) {
-		printf("%d: Record %u (type 0x%x) not in a RO chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a RO chain\n", i, 
 		       record[i].addr, record[i].type);
 		if (fix) {
 		    if (header.VolidHash[1][IdHash(vlentry.volumeId[1])] == 0)
@@ -1393,7 +1434,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		}
 	    }
 	    if (vlentry.volumeId[2] && !(record[i].type & REFBK)) {
-		printf("%d: Record %u (type 0x%x) not in a BK chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a BK chain\n", i, 
 		       record[i].addr, record[i].type);
 		if (fix) {
 		    if (header.VolidHash[2][IdHash(vlentry.volumeId[2])] == 0)
@@ -1418,7 +1459,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
       else
 	return 1;
     }
-    return 0;
+    return error_level;
 }
 
 int
@@ -1438,6 +1479,7 @@ main(int argc, char **argv)
 		"Display server list");
     cmd_AddParm(ts, "-entries", CMD_FLAG, CMD_OPTIONAL, "Display entries");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");
+    cmd_AddParm(ts, "-quiet", CMD_FLAG, CMD_OPTIONAL, "quiet");
     cmd_AddParm(ts, "-fix", CMD_FLAG, CMD_OPTIONAL, "attempt to patch the database (potentially dangerous)");
 
     return cmd_Dispatch(argc, argv);
