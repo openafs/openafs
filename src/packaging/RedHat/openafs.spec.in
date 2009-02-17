@@ -32,7 +32,7 @@
 # If we're building for a 2.4 series kernel, then fedora style kmods aren't
 # appropriate - disable them.
 
-%define kern24 %([ `echo "%{kernvers}" | sed -e 's/^\([0-9]*\.[0-9]*\)\..*/\1/'` = "2.4" ] && echo 1 || echo 0)
+%define kern24 %([ "`echo "%{kernvers}" | sed -e 's/^\([0-9]*\.[0-9]*\)\..*/\1/'`" = "2.4" ] && echo 1 || echo 0)
 
 %if %{kern24}
 %define fedorakmod 0
@@ -1049,7 +1049,7 @@ PACKAGE_VERSION="%{dkms_version}"
 
 # Items below here should not have to change with each driver version
 PACKAGE_NAME="%{name}"
-MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; ./configure --with-linux-kernel-headers=\${kernel_source_dir}; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/openafs.ko ."
+MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --with-linux-kernel-headers=\${kernel_source_dir}; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
 CLEAN="make -C src/libafs clean"
 
 BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
