@@ -1084,13 +1084,13 @@ FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp,
 int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
-    error_level  = 0;  /*  start clean with no error status */
     char *dbfile;
     afs_int32 maxentries, type, tmp;
     struct vlheader header;
     struct nvlentry vlentry, vlentry2;
     int i, j, help = 0;
 
+    error_level = 0;  /*  start clean with no error status */
     dbfile = as->parms[0].items->data;	/* -database */
     listuheader = (as->parms[1].items ? 1 : 0);	/* -uheader  */
     listheader = (as->parms[2].items ? 1 : 0);	/* -vheader  */
