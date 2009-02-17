@@ -1689,6 +1689,7 @@ VCloseVnodeFiles_r(Volume * vp)
 
     for (i = 0; i < vec_len; i++) {
 	IH_REALLYCLOSE(ih_vec[i]);
+        IH_RELEASE(ih_vec[i]);
     }
 
     free(ih_vec);
