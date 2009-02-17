@@ -1529,6 +1529,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			     ntohs(host->port)));
 		    host->hostFlags |= HOSTDELETED;
 		    host->hostFlags &= ~HWHO_INPROGRESS;
+		    host->hostFlags |= ALTADDR;
 		    h_Unlock_r(host);
 		    if (!held)
 			h_Release_r(host);
@@ -1544,6 +1545,7 @@ h_GetHost_r(struct rx_connection *tcon)
                  */
                 removeAddress_r(host, haddr, hport);
                 host->hostFlags &= ~HWHO_INPROGRESS;
+		host->hostFlags |= ALTADDR;
                 h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
@@ -1579,6 +1581,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    removeAddress_r(host, host->host, host->port);
 		}
 		host->hostFlags &= ~HWHO_INPROGRESS;
+		host->hostFlags |= ALTADDR;
 		h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
@@ -1648,6 +1651,7 @@ h_GetHost_r(struct rx_connection *tcon)
 			 afs_inet_ntoa_r(haddr, hoststr), ntohs(hport), code));
 		removeAddress_r(host, haddr, hport);
 		host->hostFlags &= ~HWHO_INPROGRESS;
+		host->hostFlags |= ALTADDR;
 		h_Unlock_r(host);
 		if (!held)
 		    h_Release_r(host);
