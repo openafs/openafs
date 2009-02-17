@@ -147,7 +147,7 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
     FT_GetTimeOfDay(&Start, 0);
     TimeFields = localtime(&Start.tv_sec);
     sprintf(FileName, "%s.%d%02d%02d%02d%02d%02d", tbuffer,
-	    TimeFields->tm_year, TimeFields->tm_mon + 1, TimeFields->tm_mday,
+	    TimeFields->tm_year + 1900, TimeFields->tm_mon + 1, TimeFields->tm_mday,
 	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
     strcpy(tbuffer, FileName);
 #endif
