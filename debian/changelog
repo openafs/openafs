@@ -1,4 +1,4 @@
-openafs (1.4.8.dfsg1-1) UNRELEASED; urgency=low
+openafs (1.4.8.dfsg1-1) unstable; urgency=low
 
   * New upstream release.  (Closes: #511535)
     - Support 2.6.28 kernels.  (LP: #303112)
