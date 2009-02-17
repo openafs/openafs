@@ -959,6 +959,7 @@ VCloseVnodeFiles_r(Volume * vp)
 	for (vnp = VnodeHashTable[i]; vnp; vnp = vnp->hashNext) {
 	    if (vnp->volumePtr == vp) {
 		IH_REALLYCLOSE(vnp->handle);
+		IH_RELEASE(vnp->handle);
 	    }
 	}
     }
