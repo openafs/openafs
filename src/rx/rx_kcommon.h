@@ -142,6 +142,7 @@ typedef unsigned short etap_event_t;
 #ifdef KERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
+#include "rx/rx_internal.h"
 #endif
 #if defined(AFS_OBSD_ENV)
 #include "afs/sysincludes.h"
