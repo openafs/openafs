@@ -242,7 +242,7 @@ pass1()
 	    if (ndb < 0) {
 		if (debug)
 #if	defined(AFS_SUN56_ENV)
-		    printf("bad size %lld ndb %d:",
+		    printf("bad size %" AFS_INT64_FMT " ndb %d:",
 #else
 		    printf("bad size %d ndb %d:",
 #endif

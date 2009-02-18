@@ -1284,10 +1284,10 @@ static void
 print_vol_stats_viceP(struct DiskPartitionStats64 * stats)
 {
     printf("DiskPartitionStats64 = {\n");
-    printf("\tfree = %lld\n", stats->free);
-    printf("\tminFree = %lld\n", stats->minFree);
-    printf("\ttotalUsable = %lld\n", stats->totalUsable);
-    printf("\tf_files = %lld\n", stats->f_files);
+    printf("\tfree = %" AFS_INT64_FMT "\n", stats->free);
+    printf("\tminFree = %" AFS_INT64_FMT "\n", stats->minFree);
+    printf("\ttotalUsable = %" AFS_INT64_FMT "\n", stats->totalUsable);
+    printf("\tf_files = %" AFS_INT64_FMT "\n", stats->f_files);
 #ifdef AFS_DEMAND_ATTACH_FS
     printf("\tvol_list_len = %d\n", stats->vol_list_len);
 #endif

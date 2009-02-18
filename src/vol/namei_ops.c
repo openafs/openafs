@@ -732,7 +732,7 @@ namei_dec(IHandle_t * ih, Inode ino, int p1)
 	} else {
 	    IHandle_t *th;
 	    IH_INIT(th, ih->ih_dev, ih->ih_vid, ino);
-	    Log("Warning: Lost ref on ihandle dev %d vid %d ino %lld\n",
+	    Log("Warning: Lost ref on ihandle dev %d vid %d ino %" AFS_INT64_FMT "\n",
 		th->ih_dev, th->ih_vid, (int64_t) th->ih_ino);
 	    IH_RELEASE(th);
 	  

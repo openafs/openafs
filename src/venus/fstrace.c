@@ -396,7 +396,7 @@ DisplayRecord(outFilep, alp, rsize)
 			fprintf(outFilep, "%s", printfStrings[pfpix++]);
 			break;
 		    case 2:	/* signed integer */
-			fprintf(outFilep, "%lld", printfParms[pfpix++]);
+			fprintf(outFilep, "%" AFS_INT64_FMT, printfParms[pfpix++]);
 			break;
 		    case 3:	/* unsigned integer */
 			fprintf(outFilep, "%llu", printfParms[pfpix++]);
@@ -470,7 +470,7 @@ DisplayRecord(outFilep, alp, rsize)
 		    tempParam = alp[pix];
 		    tempParam <<= 32;
 		    tempParam |= alp[pix + 1];
-		    fprintf(outFilep, "p%d:%lld ", i, tempParam);
+		    fprintf(outFilep, "p%d:%" AFS_INT64_FMT " ", i, tempParam);
 #else /* AFS_SGI61_ENV */
 		    fprintf(outFilep, "p%d:%d ", i, alp[pix]);
 #endif /* AFS_SGI61_ENV */

@@ -3019,7 +3019,7 @@ print_dcache(kmem, dcp, dp, pnt)
 #endif
 #ifdef AFS_SGI62_ENV
     printf
-	("\tf.chunk=%d, f.inode=%lld, f.chunkBytes=%d, f.states=%x",
+	("\tf.chunk=%d, f.inode=%" AFS_INT64_FMT ", f.chunkBytes=%d, f.states=%x",
 	 dcp->f.chunk, dcp->f.inode, dcp->f.chunkBytes, dcp->f.states);
 #else
     printf
@@ -3345,10 +3345,10 @@ print_global_afs_cache(kmem)
 #ifdef AFS_SGI62_ENV
     findsym("cacheInode", &symoff);
     kread(kmem, symoff, (char *)&inode, sizeof inode);
-    printf("\tcacheInode = 0x%llx (%lld)\n", inode, inode);
+    printf("\tcacheInode = 0x%llx (%" AFS_INT64_FMT ")\n", inode, inode);
     findsym("volumeInode", &symoff);
     kread(kmem, symoff, (char *)&inode, sizeof inode);
-    printf("\tvolumeInode = 0x%llx (%lld)\n", inode, inode);
+    printf("\tvolumeInode = 0x%llx (%" AFS_INT64_FMT ")\n", inode, inode);
 #else
     findsym("cacheInode", &symoff);
     kread(kmem, symoff, (char *)&count, sizeof count);

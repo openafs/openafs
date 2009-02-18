@@ -991,7 +991,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	if (afsd_debug) {
 	    printf("%s: Current directory entry:\n", rn);
 #ifdef AFS_SGI62_ENV
-	    printf("\tinode=%lld, reclen=%d, name='%s'\n", currp->d_ino,
+	    printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
 #else
 	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
