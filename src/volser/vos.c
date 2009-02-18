@@ -505,7 +505,7 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 		*totalOK += 1;
 	    } else {
 		fprintf(STDOUT, "Off-line");
-		*totalNotOK++;
+		*totalNotOK += 1;
 	    }
 	    if (pntr->needsSalvaged == 1)
 		fprintf(STDOUT, "**needs salvage**");
