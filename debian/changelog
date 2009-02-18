@@ -1,5 +1,14 @@
 openafs (1.4.8.dfsg1-2) UNRELEASED; urgency=low
 
+  * Make openafs-modules-source architecture-specific (arch: any instead
+    of arch: all).  The new method for generating the kernel source tree
+    only generates correct build machinery for the architecture on which
+    it was built, making the package architecture-specific.  The generated
+    tree is so much smaller that this still only uses about 1MB of archive
+    space more than the old method and makes each openafs-modules-source
+    package much smaller.  This is a workaround until we can fix
+    libafs_tree to include enough build machinery to handle all Linux
+    architectures from one source tree.  (Closes: #516023)
   * Explicitly remove *-stamp files in the clean target of the module
     build until the module build is upgraded to debhelper 7.
 
