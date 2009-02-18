@@ -72,7 +72,7 @@ build-stamp: configure-stamp
 clean:
 	dh_testdir
 	dh_testroot
-	rm -rf src/libafs/MODLOAD-*
+	rm -rf src/libafs/MODLOAD-* *-stamp
 	dh_clean Makefile config.log config.status src/libafs/Makefile \
 	    src/libafs/Makefile.common src/libafs/asm src/libafs/asm-generic \
 	    src/libafs/h src/libafs/linux src/libafs/net src/libafs/netinet \

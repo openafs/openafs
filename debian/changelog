@@ -1,3 +1,10 @@
+openafs (1.4.8.dfsg1-2) UNRELEASED; urgency=low
+
+  * Explicitly remove *-stamp files in the clean target of the module
+    build until the module build is upgraded to debhelper 7.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 18 Feb 2009 13:48:17 -0800
+
 openafs (1.4.8.dfsg1-1) unstable; urgency=low
 
   * New upstream release.  (Closes: #511535)
