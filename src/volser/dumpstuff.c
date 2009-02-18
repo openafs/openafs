@@ -560,7 +560,6 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	return VOLSERDUMPERROR;
     }
     howMany = (afs_sfsize_t) tstatfs.f_bsize;
-    Log("DumpFile: fstatfs returned block size of %lld; howMany=%lld", tstatfs.f_bsize, howMany);
 #else
     howMany = status.st_blksize;
 #endif /* AFS_AIX_ENV */

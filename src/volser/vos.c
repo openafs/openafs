@@ -2184,7 +2184,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     if (TESTM)
-	fprintf(STDOUT, "target partition %s free space %d\n", toPartName,
+	fprintf(STDOUT, "target partition %s free space %" AFS_INT64_FMT "\n", toPartName,
 		partition.free);
 
     p = (volintInfo *) 0;
@@ -2335,7 +2335,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     if (TESTM)
-	fprintf(STDOUT, "target partition %s free space %d\n", toPartName,
+	fprintf(STDOUT, "target partition %s free space %" AFS_INT64_FMT "\n", toPartName,
 		partition.free);
 
     p = (volintInfo *) 0;
@@ -2519,7 +2519,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     if (TESTM)
-	fprintf(STDOUT, "target partition %s free space %d\n", toPartName,
+	fprintf(STDOUT, "target partition %s free space %" AFS_INT64_FMT "\n", toPartName,
 		partition.free);
 
     /* Don't do this again if we did it above */
@@ -5063,7 +5063,7 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	    fprintf(STDOUT,
-		    "Free space on partition %s: %lld K blocks out of total %lld\n",
+		    "Free space on partition %s: %" AFS_INT64_FMT " K blocks out of total %" AFS_INT64_FMT "\n",
 		    pname, partition.free, partition.minFree);
 	    sumPartitions++;
             AddUInt64(sumFree,partition.free,&sumFree);

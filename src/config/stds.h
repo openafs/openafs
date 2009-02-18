@@ -284,4 +284,13 @@ typedef struct afsUUID afsUUID;
 #define static_inline static inline
 #endif
 
+/* A macro that can be used when printf'ing 64 bit integers, as Unix and 
+ * windows use a different format string
+ */
+#ifdef AFS_NT40_ENV
+#define AFS_INT64_FMT "l64d"
+#else
+#define AFS_INT64_FMT "lld"
+#endif
+
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

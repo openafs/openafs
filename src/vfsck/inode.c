@@ -492,7 +492,7 @@ pinode(ino)
     if (preen)
 	printf("%s: ", devname);
 #if	defined(AFS_SUN56_ENV)
-    printf("SIZE=%lld ", dp->di_size);
+    printf("SIZE=%" AFS_INT64_FMT " ", dp->di_size);
 #else
     printf("SIZE=%ld ", dp->di_size);
 #endif

@@ -1657,7 +1657,7 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	 AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
 			 BlocksPreallocatedForVnode))) {
 	ViceLog(25,
-		("Insufficient space to allocate %lld blocks\n",
+		("Insufficient space to allocate %" AFS_INT64_FMT " blocks\n",
 		 (afs_intmax_t) BlocksPreallocatedForVnode));
 	return (errorCode);
     }
