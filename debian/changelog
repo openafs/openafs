@@ -1,4 +1,4 @@
-openafs (1.4.8.dfsg1-2) UNRELEASED; urgency=low
+openafs (1.4.8.dfsg1-2) unstable; urgency=low
 
   * Make openafs-modules-source architecture-specific (arch: any instead
     of arch: all).  The new method for generating the kernel source tree
