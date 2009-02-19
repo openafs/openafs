@@ -686,10 +686,39 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     clientchar_t usern[SMB_MAX_USERNAME_LENGTH];
     char *secBlobOut = NULL;
     int  secBlobOutLength = 0;
+    int  maxBufferSize = 0;
+    int  maxMpxCount = 0;
+    int  vcNumber = 0;
 
     /* Check for bad conns */
     if (vcp->flags & SMB_VCFLAG_REMOTECONN)
         return CM_ERROR_REMOTECONN;
+
+    /* maxBufferSize */
+    maxBufferSize = smb_GetSMBParm(inp, 2);
+    maxMpxCount = smb_GetSMBParm(inp, 3);
+    vcNumber = smb_GetSMBParm(inp, 4);
+
+    osi_Log3(smb_logp, "SESSION_SETUP_ANDX with MaxBufferSize=%d, MaxMpxCount=%d, VCNumber=%d",
+             maxBufferSize, maxMpxCount, vcNumber);
+
+    if (maxMpxCount > smb_maxMpxRequests) {
+        LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_MAX_MPX_COUNT, maxMpxCount, smb_maxMpxRequests);
+        osi_Log2(smb_logp, "MaxMpxCount for client is too large (Client=%d, Server=%d)",
+                 maxMpxCount, smb_maxMpxRequests);
+    }
+
+    if (maxBufferSize < SMB_PACKETSIZE) {
+        LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_MAX_BUFFER_SIZE, maxBufferSize, SMB_PACKETSIZE);
+        osi_Log2(smb_logp, "MaxBufferSize for client is too small (Client=%d, Server=%d)",
+                 maxBufferSize, SMB_PACKETSIZE);
+    }
+
+    if (vcNumber == 0) {
+        LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_RESET_ALL_VCS);
+        osi_Log0(smb_logp, "Resetting all VCs");
+        smb_MarkAllVCsDead(vcp);
+    }
 
     if (vcp->flags & SMB_VCFLAG_USENT) {
         if (smb_authType == SMB_AUTH_EXTENDED) {
