@@ -819,6 +819,61 @@ void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosTime)
     *unixTimep = dosTime + smb_localZero;
 }
 
+void smb_MarkAllVCsDead(smb_vc_t * exclude)
+{
+    smb_vc_t *vcp;
+    smb_vc_t **vcp_to_cleanup = NULL;
+    int n_to_cleanup = 0;
+    int i;
+
+    osi_Log1(smb_logp, "Marking all VCs as dead excluding %p", exclude);
+
+    lock_ObtainWrite(&smb_globalLock);	/* for dead_sessions[] */
+    lock_ObtainWrite(&smb_rctLock);
+    for (vcp = smb_allVCsp; vcp; vcp = vcp->nextp) {
+
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+                      __FILE__, __LINE__);
+
+        if (vcp == exclude)
+            continue;
+
+        lock_ObtainMutex(&vcp->mx);
+        if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+            vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+            lock_ReleaseMutex(&vcp->mx);
+            dead_sessions[vcp->session] = TRUE;
+        } else {
+            lock_ReleaseMutex(&vcp->mx);
+        }
+        n_to_cleanup ++;
+    }
+
+    vcp_to_cleanup = malloc(sizeof(vcp_to_cleanup[0]) * n_to_cleanup);
+    i = 0;
+    for (vcp = smb_allVCsp; vcp; vcp = vcp->nextp) {
+        if (vcp == exclude)
+            continue;
+
+        vcp_to_cleanup[i++] = vcp;
+        smb_HoldVCNoLock(vcp);
+    }
+
+    osi_assert(i == n_to_cleanup);
+
+    lock_ReleaseWrite(&smb_rctLock);
+    lock_ReleaseWrite(&smb_globalLock);
+
+    for (i=0; i < n_to_cleanup; i++) {
+        smb_CleanupDeadVC(vcp_to_cleanup[i]);
+        smb_ReleaseVC(vcp_to_cleanup[i]);
+        vcp_to_cleanup[i] = 0;
+    }
+
+    free(vcp_to_cleanup);
+}
+
 #ifdef DEBUG_SMB_REFCOUNT
 smb_vc_t *smb_FindVCDbg(unsigned short lsn, int flags, int lana, char *file, long line)
 #else
@@ -834,11 +889,14 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
 		       __FILE__, __LINE__);
 
+        lock_ObtainMutex(&vcp->mx);
         if (lsn == vcp->lsn && lana == vcp->lana &&
 	    !(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+            lock_ReleaseMutex(&vcp->mx);
             smb_HoldVCNoLock(vcp);
             break;
         }
+        lock_ReleaseMutex(&vcp->mx);
     }
     if (!vcp && (flags & SMB_FLAG_CREATE)) {
         vcp = malloc(sizeof(*vcp));
