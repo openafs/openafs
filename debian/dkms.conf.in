@@ -11,4 +11,4 @@ AUTOINSTALL=yes
 MAKE[0]="./configure --with-linux-kernel-headers=${kernel_source_dir}
     && make
     && mv src/libafs/MODLOAD-*/openafs.ko ."
-CLEAN="rm -f openafs.ko && make distclean"
+CLEAN="rm -f openafs.ko && make -C src/libafs clean"
