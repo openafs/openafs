@@ -7510,7 +7510,7 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 
     rawBuf = rwcp->buf;
     code = smb_WriteData(fidp, &rwcp->offset, rwcp->count, rawBuf, userp,
-						 &written);
+                         &written);
 
     if (rwcp->writeMode & 0x1) {	/* synchronous */
         smb_t *op;
