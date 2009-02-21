@@ -1666,30 +1666,61 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
     return fidp;
 }
 
+
+/* Must not be called with scp->rw held because smb_ReleaseFID might be called */
 #ifdef DEBUG_SMB_REFCOUNT
 smb_fid_t *smb_FindFIDByScacheDbg(smb_vc_t *vcp, cm_scache_t * scp, char *file, long line)
 #else
 smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp)
 #endif
 {
-    smb_fid_t *fidp = NULL;
-    int newFid = 0;
+    smb_fid_t *fidp = NULL, *nextp = NULL;
         
     if (!scp)
         return NULL;
 
+    /* 
+     * If the fidp->scp changes out from under us then
+     * we must not grab a refCount.  It means the *fidp
+     * was processed by smb_CloseFID() and the *fidp is 
+     * no longer valid for use.
+     */
     lock_ObtainWrite(&smb_rctLock);
-    for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
+	for(fidp = vcp->fidsp, (fidp ? fidp->refCount++ : 0); fidp; fidp = nextp, nextp = NULL) {
+        nextp = (smb_fid_t *) osi_QNext(&fidp->q);
+        if (nextp)
+            nextp->refCount++;
+
         if (scp == fidp->scp) {
+            lock_ReleaseWrite(&smb_rctLock);
             lock_ObtainMutex(&fidp->mx);
+            lock_ObtainWrite(&smb_rctLock);
             if (scp == fidp->scp) {
-                fidp->refCount++;   
                 lock_ReleaseMutex(&fidp->mx);
                 break;
             }
             lock_ReleaseMutex(&fidp->mx);
         }
+
+        if (fidp->refCount > 1) {
+            fidp->refCount--;
+        } else {
+            lock_ReleaseWrite(&smb_rctLock);
+            smb_ReleaseFID(fidp);
+            lock_ObtainWrite(&smb_rctLock);
+        }
     }
+
+    if (nextp) {
+        if (nextp->refCount > 1) {
+            nextp->refCount--;
+        } else {
+            lock_ReleaseWrite(&smb_rctLock);
+            smb_ReleaseFID(nextp);
+            lock_ObtainWrite(&smb_rctLock);
+        }
+    }
+
 #ifdef DEBUG_SMB_REFCOUNT
     if (fidp) {
         afsi_log("%s:%d smb_FindFIDByScache fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
@@ -1697,7 +1728,7 @@ smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp)
       }
 #endif
     lock_ReleaseWrite(&smb_rctLock);
-    return fidp;
+    return (fidp);
 }
 
 #ifdef DEBUG_SMB_REFCOUNT
@@ -1715,8 +1746,8 @@ void smb_HoldFIDNoLock(smb_fid_t *fidp)
 }
 
 
-/* smb_ReleaseFID cannot be called while an cm_scache_t mutex lock is held */
-/* the sm_fid_t->mx and smb_rctLock must not be held */
+/* smb_ReleaseFID cannot be called while a cm_scache_t rwlock is held */
+/* the smb_fid_t->mx and smb_rctLock must not be held */
 #ifdef DEBUG_SMB_REFCOUNT
 void smb_ReleaseFIDDbg(smb_fid_t *fidp, char *file, long line)
 #else
@@ -3500,7 +3531,13 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         goto send1;
 
     lock_ObtainMutex(&fidp->mx);
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
         lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
         code = CM_ERROR_NOSUCHFILE;
@@ -6523,7 +6560,14 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     userp = smb_GetUserFromVCP(vcp, inp);
 
     lock_ObtainMutex(&fidp->mx);
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+    if (!fidp->scp || (fidp->flags & SMB_FID_IOCTL)) {
+        cm_ReleaseUser(userp);
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
         lock_ReleaseMutex(&fidp->mx);
         cm_ReleaseUser(userp);
         smb_CloseFID(vcp, fidp, NULL, 0);
@@ -6531,14 +6575,7 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_NOSUCHFILE;
     }
 
-    if (fidp->flags & SMB_FID_IOCTL) {
-        cm_ReleaseUser(userp);
-        lock_ReleaseMutex(&fidp->mx);
-        smb_ReleaseFID(fidp);
-        return CM_ERROR_BADFD;
-    }
-
-    if (fidp->scp && (fidp->flags & SMB_FID_OPENWRITE) && smb_AsyncStore != 2) {
+    if ((fidp->flags & SMB_FID_OPENWRITE) && smb_AsyncStore != 2) {
         cm_scache_t * scp = fidp->scp;
         cm_HoldSCache(scp);
         lock_ReleaseMutex(&fidp->mx);
@@ -7319,14 +7356,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
         
-	lock_ObtainMutex(&fidp->mx);
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
-        lock_ReleaseMutex(&fidp->mx);
-        smb_CloseFID(vcp, fidp, NULL, 0);
-        smb_ReleaseFID(fidp);
-        return CM_ERROR_NOSUCHFILE;
-    }
-
+    lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
         code = smb_IoctlWrite(fidp, vcp, inp, outp);
@@ -7339,6 +7369,13 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
     }
 
     scp = fidp->scp;
@@ -7452,7 +7489,13 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     fidp = smb_FindFID(vcp, fd, 0);
 
     lock_ObtainMutex(&fidp->mx);
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
         lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
         smb_ReleaseFID(fidp);
@@ -7567,18 +7610,19 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         return CM_ERROR_BADFD;
 
     lock_ObtainMutex(&fidp->mx);
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
         lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
         smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHFILE;
     }
 
-    if (!fidp->scp) {
-        lock_ReleaseMutex(&fidp->mx);
-        smb_ReleaseFID(fidp);
-        return CM_ERROR_BADFDOP;
-    }
     scp = fidp->scp;
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
@@ -7723,14 +7767,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!fidp)
         return CM_ERROR_BADFD;
 
-	lock_ObtainMutex(&fidp->mx);
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
-        lock_ReleaseMutex(&fidp->mx);
-        smb_CloseFID(vcp, fidp, NULL, 0);
-        smb_ReleaseFID(fidp);
-        return CM_ERROR_NOSUCHFILE;
-    }
-
+    lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
         code = smb_IoctlRead(fidp, vcp, inp, outp);
@@ -7741,8 +7778,16 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!fidp->scp) {
         lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
-        return CM_ERROR_BADFDOP;
+        return CM_ERROR_BADFD;
     }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
     scp = fidp->scp;
     cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
@@ -8167,23 +8212,17 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	return CM_ERROR_BADFD;
 
     lock_ObtainMutex(&fidp->mx);
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
-        lock_ReleaseMutex(&fidp->mx);
-        smb_CloseFID(vcp, fidp, NULL, 0);
-        smb_ReleaseFID(fidp);
-        return CM_ERROR_NOSUCHFILE;
-    }
-
-    if (fidp->flags & SMB_FID_IOCTL) {
+    if (!fidp->scp || (fidp->flags & SMB_FID_IOCTL)) {
 	lock_ReleaseMutex(&fidp->mx);
 	smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
 
-    if (!fidp->scp) {
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
         lock_ReleaseMutex(&fidp->mx);
+        smb_CloseFID(vcp, fidp, NULL, 0);
         smb_ReleaseFID(fidp);
-        return CM_ERROR_BADFDOP;
+        return CM_ERROR_NOSUCHFILE;
     }
 
     lock_ReleaseMutex(&fidp->mx);

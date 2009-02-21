@@ -3247,7 +3247,6 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     return CM_ERROR_BADOP;
 #else
     long code = 0;
-    smb_fid_t *fidp;
     unsigned short infoLevel;
     clientchar_t * pathp;
     smb_tran2Packet_t *outp;
@@ -3369,25 +3368,6 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         return 0;
     }
 
-    fidp = smb_FindFIDByScache(vcp, scp);
-    if (!fidp) {
-        cm_ReleaseSCache(scp);
-        cm_ReleaseUser(userp);
-	smb_SendTran2Error(vcp, p, opx, code);
-        return 0;
-    }
-
-    lock_ObtainMutex(&fidp->mx);
-    if (!(fidp->flags & SMB_FID_OPENWRITE)) {
-	lock_ReleaseMutex(&fidp->mx);
-        cm_ReleaseSCache(scp);
-        smb_ReleaseFID(fidp);
-        cm_ReleaseUser(userp);
-        smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOACCESS);
-        return 0;
-    }
-    lock_ReleaseMutex(&fidp->mx);
-
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, 0);
 
     outp->totalParms = 2;
@@ -3410,10 +3390,6 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         }
 	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 
-	lock_ReleaseWrite(&scp->rw);
-	lock_ObtainMutex(&fidp->mx);
-	lock_ObtainRead(&scp->rw);
-
         /* prepare for setattr call */
         attr.mask = CM_ATTRMASK_LENGTH;
         attr.length.LowPart = spi->u.QPstandardInfo.dataSize;
@@ -3422,7 +3398,6 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 	if (spi->u.QPstandardInfo.lastWriteDateTime != 0) {
 	    smb_UnixTimeFromSearchTime(&attr.clientModTime, spi->u.QPstandardInfo.lastWriteDateTime);
             attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
-            fidp->flags |= SMB_FID_MTIMESETDONE;
         }
 		
         if (spi->u.QPstandardInfo.attributes != 0) {
@@ -3440,7 +3415,6 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
             }
         }
         lock_ReleaseRead(&scp->rw);
-	lock_ReleaseMutex(&fidp->mx);
 
         /* call setattr */
         if (attr.mask)
@@ -3456,7 +3430,6 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
   done:
     cm_ReleaseSCache(scp);
     cm_ReleaseUser(userp);
-    smb_ReleaseFID(fidp);
     if (code == 0) 
         smb_SendTran2Packet(vcp, outp, opx);
     else 
@@ -3653,7 +3626,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 
     lock_ObtainMutex(&fidp->mx);
     if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
-		lock_ReleaseMutex(&fidp->mx);
+        lock_ReleaseMutex(&fidp->mx);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOSUCHFILE);
         smb_CloseFID(vcp, fidp, NULL, 0);
         smb_ReleaseFID(fidp);
@@ -6683,7 +6656,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
 
-	lock_ObtainMutex(&fidp->mx);
+    lock_ObtainMutex(&fidp->mx);
     if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
         lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
