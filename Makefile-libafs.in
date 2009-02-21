@@ -7,3 +7,10 @@
 
 all: 
 	cd src && cd libafs && $(MAKE)
+
+clean:
+	cd src && cd libafs && $(MAKE) clean
+
+distclean: clean
+	rm -f Makefile src/config/Makefile.config src/config/Makefile.version \
+		src/libafs/Makefile.common src/libafs/Makefile
