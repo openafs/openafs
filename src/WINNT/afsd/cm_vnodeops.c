@@ -3366,9 +3366,6 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     } else {
         code = 0;
     }
-    cm_ReleaseSCache(oldScp);
-    oldScp = NULL;
-
     if (code) 
         goto done;
 
@@ -3549,31 +3546,28 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                        userp, CM_MERGEFLAG_DIROP);
     lock_ReleaseWrite(&oldDscp->rw);
 
-    if (code == 0) {
-        if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
-
+    if (code == 0 && cm_CheckDirOpForSingleChange(&oldDirOp)) {
 #ifdef USE_BPLUS
-            diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
-            if (diropCode == CM_ERROR_INEXACT_MATCH)
-                diropCode = 0;
-            else if (diropCode == EINVAL)
+        diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
+        if (diropCode == CM_ERROR_INEXACT_MATCH)
+            diropCode = 0;
+        else if (diropCode == EINVAL)
 #endif
-                diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
+            diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
 
-            if (diropCode == 0) {
-                if (oneDir) {
-                    diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
-#ifdef USE_BPLUS
-                    cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
+        if (diropCode == 0) {
+            if (oneDir) {
+                diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
+#ifdef USE_BPLUS        
+                cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
 #endif
-                }
+            }
                 
-                if (diropCode == 0) { 
-                    diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
+            if (diropCode == 0) { 
+                diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
 #ifdef USE_BPLUS
-                    cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
-#endif
-                }
+                cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
+#endif  
             }
         }
     }
@@ -3592,6 +3586,17 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                             userp, CM_MERGEFLAG_DIROP);
         lock_ReleaseWrite(&newDscp->rw);
 
+#if 0 
+        /* 
+         * The following optimization does not work.  
+         * When the file server processed a RXAFS_Rename() request the 
+         * FID of the object being moved between directories is not 
+         * preserved.  The client does not know the new FID nor the 
+         * version number of the target.  Not only can we not create
+         * the directory entry in the new directory, but we can't 
+         * preserve the cached data for the file.  It must be re-read
+         * from the file server.  - jaltman, 2009/02/20
+         */
         if (code == 0) {
             /* we only make the local change if we successfully made
                the change in the old directory AND there was only one
@@ -3603,10 +3608,23 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
 #endif
             }
         }
+#endif /* 0 */
         cm_EndDirOp(&newDirOp);
     }
 
+    /* 
+     * After the rename the file server has invalidated the callbacks
+     * on the file that was moved nor do we have a directory reference 
+     * to it anymore.
+     */
+    lock_ObtainWrite(&oldScp->rw);
+    cm_DiscardSCache(oldScp);
+    lock_ReleaseWrite(&oldScp->rw);
+
   done:
+    if (oldScp)
+        cm_ReleaseSCache(oldScp);
+
     if (free_oldNamep)
         free(oldNamep);
 
