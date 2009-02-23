@@ -447,7 +447,7 @@ KFW_initialize(void)
             LoadFuncs(CCAPI_DLL, ccapi_fi, &hCCAPI, 0, 1, 0, 0);
 
             if ( KFW_is_available() ) {
-                char rootcell[MAXCELLCHARS+1];
+                char rootcell[CELL_MAXNAMELEN+1];
 #ifdef USE_MS2MIT
                 KFW_import_windows_lsa();
 #endif /* USE_MS2MIT */
