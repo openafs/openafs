@@ -1173,7 +1173,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
                         code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
                 }
             }
-            if (!found || code < 0) {   /* add mount point failed, so give up */
+            if (!found || code) {   /* add mount point failed, so give up */
                 if (flags & CM_FLAG_CHECKPATH)
                     code = CM_ERROR_NOSUCHPATH;
                 else
