@@ -1537,7 +1537,7 @@ int cm_HaveCallback(cm_scache_t *scp)
                 lock_ObtainWrite(&scp->rw);      // now get the lock back 
                 return 0;
             }
-            return 1;			// no change
+            return (cm_data.fakeDirVersion == scp->dataVersion);
         }
         return 0;
     }
