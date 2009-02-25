@@ -98,7 +98,10 @@ RCSID
 /* rxdb_fileID is used to identify the lock location, along with line#. */
 static int rxdb_fileID = RXDB_FILE_RX_PACKET;
 #endif /* RX_LOCKS_DB */
-struct rx_packet *rx_mallocedP = 0;
+static struct rx_packet *rx_mallocedP = 0;
+#ifdef RXDEBUG_PACKET
+static afs_uint32       rx_packet_id = 0;
+#endif
 
 extern char cml_version_number[];
 
@@ -230,7 +233,7 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
      * offset only applies to the first iovec.
      */
     r = resid;
-    while ((resid > 0) && (i < RX_MAXWVECS)) {
+    while ((resid > 0) && (i <= RX_MAXWVECS)) {
 	if (i >= packet->niovecs)
 	    if (rxi_AllocDataBuf(packet, resid, RX_PACKET_CLASS_SEND_CBUF) > 0)	/* ++niovecs as a side-effect */
 		break;
@@ -251,7 +254,7 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
 int
 rxi_AllocPackets(int class, int num_pkts, struct rx_queue * q)
 {
-    register struct rx_packet *p, *np;
+    struct rx_packet *p, *np;
 
     num_pkts = AllocPacketBufs(class, num_pkts, q);
 
@@ -266,7 +269,7 @@ rxi_AllocPackets(int class, int num_pkts, struct rx_queue * q)
 static int
 AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 {
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     int transfer;
     SPLVAR;
 
@@ -313,22 +316,24 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 
     if (overq) {
 	rxi_NeedMorePackets = TRUE;
-	switch (class) {
-	case RX_PACKET_CLASS_RECEIVE:
-	    rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SEND:
-	    rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SPECIAL:
-            rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_RECV_CBUF:
-	    rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SEND_CBUF:
-	    rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
-	    break;
+        if (rx_stats_active) {
+            switch (class) {
+            case RX_PACKET_CLASS_RECEIVE:
+                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SEND:
+                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SPECIAL:
+                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_RECV_CBUF:
+                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SEND_CBUF:
+                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                break;
+            }
 	}
     }
 
@@ -373,8 +378,8 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
 int
 rxi_FreePackets(int num_pkts, struct rx_queue * q)
 {
-    register struct rx_ts_info_t * rx_ts_info;
-    register struct rx_packet *c, *nc;
+    struct rx_ts_info_t * rx_ts_info;
+    struct rx_packet *c, *nc;
     SPLVAR;
 
     osi_Assert(num_pkts >= 0);
@@ -415,7 +420,7 @@ int
 rxi_FreePackets(int num_pkts, struct rx_queue *q)
 {
     struct rx_queue cbs;
-    register struct rx_packet *p, *np;
+    struct rx_packet *p, *np;
     int qlen = 0;
     SPLVAR;
 
@@ -500,7 +505,7 @@ rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
 {
     int i, nv;
     struct rx_queue q;
-    register struct rx_packet *cb, *ncb;
+    struct rx_packet *cb, *ncb;
 
     /* compute the number of cbuf's we need */
     nv = nb / RX_CBUFFERSIZE;
@@ -535,7 +540,7 @@ void
 rxi_MorePackets(int apackets)
 {
     struct rx_packet *p, *e;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     int getme;
     SPLVAR;
 
@@ -549,10 +554,11 @@ rxi_MorePackets(int apackets)
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
     /* TSFPQ patch also needs to keep track of total packets */
-    MUTEX_ENTER(&rx_stats_mutex);
+
+    MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_packets_mutex);
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
@@ -562,6 +568,10 @@ rxi_MorePackets(int apackets)
 
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
+#ifdef RXDEBUG_PACKET
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* RXDEBUG_PACKET */
         rx_mallocedP = p;
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
@@ -603,6 +613,10 @@ rxi_MorePackets(int apackets)
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
+#ifdef RXDEBUG_PACKET
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* RXDEBUG_PACKET */
 	rx_mallocedP = p;
     }
 
@@ -620,7 +634,7 @@ void
 rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 {
     struct rx_packet *p, *e;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     int getme;
     SPLVAR;
 
@@ -633,10 +647,10 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
     /* TSFPQ patch also needs to keep track of total packets */
-    MUTEX_ENTER(&rx_stats_mutex);
+    MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_packets_mutex);
 
     for (e = p + apackets; p < e; p++) {
         RX_PACKET_IOV_INIT(p);
@@ -645,6 +659,10 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
 	
         NETPRI;
         MUTEX_ENTER(&rx_freePktQ_lock);
+#ifdef RXDEBUG_PACKET
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* RXDEBUG_PACKET */
         rx_mallocedP = p;
         MUTEX_EXIT(&rx_freePktQ_lock);
         USERPRI;
@@ -672,7 +690,7 @@ void
 rxi_MorePacketsNoLock(int apackets)
 {
 #ifdef RX_ENABLE_TSFPQ
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
 #endif /* RX_ENABLE_TSFPQ */
     struct rx_packet *p, *e;
     int getme;
@@ -702,16 +720,20 @@ rxi_MorePacketsNoLock(int apackets)
 	p->niovecs = 2;
 
 	queue_Append(&rx_freePacketQueue, p);
+#ifdef RXDEBUG_PACKET
+        p->packetId = rx_packet_id++;
+        p->allNextp = rx_mallocedP;
+#endif /* RXDEBUG_PACKET */
 	rx_mallocedP = p;
     }
 
     rx_nFreePackets += apackets;
 #ifdef RX_ENABLE_TSFPQ
     /* TSFPQ patch also needs to keep track of total packets */
-    MUTEX_ENTER(&rx_stats_mutex);
+    MUTEX_ENTER(&rx_packets_mutex);
     rx_nPackets += apackets;
     RX_TS_FPQ_COMPUTE_LIMITS;
-    MUTEX_EXIT(&rx_stats_mutex);
+    MUTEX_EXIT(&rx_packets_mutex);
 #endif /* RX_ENABLE_TSFPQ */
     rxi_NeedMorePackets = FALSE;
     rxi_PacketsUnWait();
@@ -732,8 +754,8 @@ rxi_FreeAllPackets(void)
 void
 rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit)
 {
-    register struct rx_ts_info_t * rx_ts_info;
-    register int xfer;
+    struct rx_ts_info_t * rx_ts_info;
+    int xfer;
     SPLVAR;
 
     RX_TS_INFO_GET(rx_ts_info);
@@ -795,7 +817,7 @@ rx_CheckPackets(void)
 void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     dpf(("Free %lx\n", (unsigned long)p));
 
     RX_TS_INFO_GET(rx_ts_info);
@@ -820,7 +842,7 @@ rxi_FreePacketNoLock(struct rx_packet *p)
 void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     dpf(("Free %lx\n", (unsigned long)p));
 
     RX_TS_INFO_GET(rx_ts_info);
@@ -906,6 +928,8 @@ rxi_FreeDataBufsNoLock(struct rx_packet *p, afs_uint32 first)
  *
  * [IN] p             -- packet from which continuation buffers will be freed
  * [IN] first         -- iovec offset of first continuation buffer to free
+ *                       any value less than 2, the min number of iovecs,
+ *                       is treated as if it is 2.
  * [IN] flush_global  -- if nonzero, we will flush overquota packets to the
  *                       global free pool before returning
  *
@@ -916,7 +940,7 @@ static int
 rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global)
 {
     struct iovec *iov;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
 
     RX_TS_INFO_GET(rx_ts_info);
 
@@ -976,7 +1000,7 @@ rxi_TrimDataBufs(struct rx_packet *p, int first)
 {
     int length;
     struct iovec *iov, *end;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_ts_info_t * rx_ts_info;
     SPLVAR;
 
     if (first != 1)
@@ -1095,36 +1119,39 @@ rxi_FreePacket(struct rx_packet *p)
 struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
-    register struct rx_packet *p;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_packet *p;
+    struct rx_ts_info_t * rx_ts_info;
 
     RX_TS_INFO_GET(rx_ts_info);
 
 #ifdef KERNEL
     if (rxi_OverQuota(class)) {
 	rxi_NeedMorePackets = TRUE;
-	switch (class) {
-	case RX_PACKET_CLASS_RECEIVE:
-	    rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SEND:
-	    rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SPECIAL:
-            rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_RECV_CBUF:
-	    rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SEND_CBUF:
-	    rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
-	    break;
+        if (rx_stats_active) {
+            switch (class) {
+            case RX_PACKET_CLASS_RECEIVE:
+                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SEND:
+                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SPECIAL:
+                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_RECV_CBUF:
+                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SEND_CBUF:
+                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                break;
+            }
 	}
         return (struct rx_packet *)0;
     }
 #endif /* KERNEL */
 
-    rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
     if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
 
 #ifdef KERNEL
@@ -1155,33 +1182,36 @@ rxi_AllocPacketNoLock(int class)
 struct rx_packet *
 rxi_AllocPacketNoLock(int class)
 {
-    register struct rx_packet *p;
+    struct rx_packet *p;
 
 #ifdef KERNEL
     if (rxi_OverQuota(class)) {
 	rxi_NeedMorePackets = TRUE;
-	switch (class) {
-	case RX_PACKET_CLASS_RECEIVE:
-	    rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SEND:
-	    rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SPECIAL:
-            rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_RECV_CBUF:
-	    rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
-	    break;
-	case RX_PACKET_CLASS_SEND_CBUF:
-	    rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
-	    break;
-	}
+        if (rx_stats_active) {
+            switch (class) {
+            case RX_PACKET_CLASS_RECEIVE:
+                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SEND:
+                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SPECIAL:
+                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_RECV_CBUF:
+                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                break;
+            case RX_PACKET_CLASS_SEND_CBUF:
+                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                break;
+            }
+        }
 	return (struct rx_packet *)0;
     }
 #endif /* KERNEL */
 
-    rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
 
 #ifdef KERNEL
     if (queue_IsEmpty(&rx_freePacketQueue))
@@ -1212,12 +1242,13 @@ rxi_AllocPacketNoLock(int class)
 struct rx_packet *
 rxi_AllocPacketTSFPQ(int class, int pull_global)
 {
-    register struct rx_packet *p;
-    register struct rx_ts_info_t * rx_ts_info;
+    struct rx_packet *p;
+    struct rx_ts_info_t * rx_ts_info;
 
     RX_TS_INFO_GET(rx_ts_info);
 
-    rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
     if (pull_global && queue_IsEmpty(&rx_ts_info->_FPQ)) {
         MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -1248,7 +1279,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
 struct rx_packet *
 rxi_AllocPacket(int class)
 {
-    register struct rx_packet *p;
+    struct rx_packet *p;
 
     p = rxi_AllocPacketTSFPQ(class, RX_TS_FPQ_PULL_GLOBAL);
     return p;
@@ -1257,7 +1288,7 @@ rxi_AllocPacket(int class)
 struct rx_packet *
 rxi_AllocPacket(int class)
 {
-    register struct rx_packet *p;
+    struct rx_packet *p;
 
     MUTEX_ENTER(&rx_freePktQ_lock);
     p = rxi_AllocPacketNoLock(class);
@@ -1272,11 +1303,11 @@ rxi_AllocPacket(int class)
  * Called with call locked.
  */
 struct rx_packet *
-rxi_AllocSendPacket(register struct rx_call *call, int want)
+rxi_AllocSendPacket(struct rx_call *call, int want)
 {
-    register struct rx_packet *p = (struct rx_packet *)0;
-    register int mud;
-    register unsigned delta;
+    struct rx_packet *p = (struct rx_packet *)0;
+    int mud;
+    unsigned delta;
 
     SPLVAR;
     mud = call->MTU - RX_HEADER_SIZE;
@@ -1363,11 +1394,11 @@ rxi_AllocSendPacket(register struct rx_call *call, int want)
 #else
 /* count the number of used FDs */
 static int
-CountFDs(register int amax)
+CountFDs(int amax)
 {
     struct stat tstat;
-    register int i, code;
-    register int count;
+    int i, code;
+    int count;
 
     count = 0;
     for (i = 0; i < amax; i++) {
@@ -1392,13 +1423,13 @@ CountFDs(register int amax)
  * the data length of the packet is stored in the packet structure.
  * The header is decoded. */
 int
-rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * host,
+rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	       u_short * port)
 {
     struct sockaddr_in from;
     int nbytes;
     afs_int32 rlen;
-    register afs_int32 tlen, savelen;
+    afs_int32 tlen, savelen;
     struct msghdr msg;
     rx_computelen(p, tlen);
     rx_SetDataSize(p, tlen);	/* this is the size of the user data area */
@@ -1437,12 +1468,15 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
     p->length = (nbytes - RX_HEADER_SIZE);
     if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	if (nbytes < 0 && errno == EWOULDBLOCK) {
-            rx_MutexIncrement(rx_stats.noPacketOnRead, rx_stats_mutex);
+            if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.noPacketOnRead, rx_stats_mutex);
 	} else if (nbytes <= 0) {
-	    MUTEX_ENTER(&rx_stats_mutex);
-	    rx_stats.bogusPacketOnRead++;
-	    rx_stats.bogusHost = from.sin_addr.s_addr;
-	    MUTEX_EXIT(&rx_stats_mutex);
+            if (rx_stats_active) {
+                MUTEX_ENTER(&rx_stats_mutex);
+                rx_stats.bogusPacketOnRead++;
+                rx_stats.bogusHost = from.sin_addr.s_addr;
+                MUTEX_EXIT(&rx_stats_mutex);
+            }
 	    dpf(("B: bogus packet from [%x,%d] nb=%d", ntohl(from.sin_addr.s_addr),
 		 ntohs(from.sin_port), nbytes));
 	}
@@ -1460,7 +1494,9 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	      p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(*host), ntohs(*port), p->header.serial, 
 	      p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, 
 	      p->length));
+#ifdef RX_TRIMDATABUFS
 	rxi_TrimDataBufs(p, 1);
+#endif
 	return 0;
     } 
 #endif
@@ -1472,7 +1508,8 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	*port = from.sin_port;
 	if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
 	    struct rx_peer *peer;
-            rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
+            if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
 	    /*
 	     * Try to look up this peer structure.  If it doesn't exist,
 	     * don't create a new one - 
@@ -1496,9 +1533,10 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
 	    }
 	}
 
+#ifdef RX_TRIMDATABUFS
 	/* Free any empty packet buffers at the end of this packet */
 	rxi_TrimDataBufs(p, 1);
-
+#endif 
 	return 1;
     }
 }
@@ -1514,7 +1552,7 @@ rxi_ReadPacket(osi_socket socket, register struct rx_packet *p, afs_uint32 * hos
  * last two pad bytes. */
 
 struct rx_packet *
-rxi_SplitJumboPacket(register struct rx_packet *p, afs_int32 host, short port,
+rxi_SplitJumboPacket(struct rx_packet *p, afs_int32 host, short port,
 		     int first)
 {
     struct rx_packet *np;
@@ -1607,9 +1645,9 @@ osi_NetSend(osi_socket socket, void *addr, struct iovec *dvec, int nvecs,
  * The message is NOT changed.
  */
 static int
-cpytoc(mblk_t * mp, register int off, register int len, register char *cp)
+cpytoc(mblk_t * mp, int off, int len, char *cp)
 {
-    register int n;
+    int n;
 
     for (; mp && len > 0; mp = mp->b_cont) {
 	if (mp->b_datap->db_type != M_DATA) {
@@ -1629,10 +1667,10 @@ cpytoc(mblk_t * mp, register int off, register int len, register char *cp)
  * This sucks, anyway, do it like m_cpy.... below 
  */
 static int
-cpytoiovec(mblk_t * mp, int off, int len, register struct iovec *iovs,
+cpytoiovec(mblk_t * mp, int off, int len, struct iovec *iovs,
 	   int niovs)
 {
-    register int m, n, o, t, i;
+    int m, n, o, t, i;
 
     for (i = -1, t = 0; i < niovs && mp && len > 0; mp = mp->b_cont) {
 	if (mp->b_datap->db_type != M_DATA) {
@@ -1728,7 +1766,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
      struct rx_packet *phandle;
      int hdr_len, data_len;
 {
-    register int code;
+    int code;
 
     code =
 	m_cpytoiovec(amb, hdr_len, data_len, phandle->wirevec,
@@ -1744,7 +1782,7 @@ rx_mb_to_packet(amb, free, hdr_len, data_len, phandle)
 /* send a response to a debug packet */
 
 struct rx_packet *
-rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
+rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 		       afs_int32 ahost, short aport, int istack)
 {
     struct rx_debugIn tin;
@@ -1808,7 +1846,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
     case RX_DEBUGI_GETALLCONN:
     case RX_DEBUGI_GETCONN:{
 	    int i, j;
-	    register struct rx_connection *tc;
+	    struct rx_connection *tc;
 	    struct rx_call *tcall;
 	    struct rx_debugConn tconn;
 	    int all = (tin.type == RX_DEBUGI_GETALLCONN);
@@ -1917,7 +1955,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 
     case RX_DEBUGI_GETPEER:{
 	    int i;
-	    register struct rx_peer *tp;
+	    struct rx_peer *tp;
 	    struct rx_debugPeer tpeer;
 
 
@@ -2016,6 +2054,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 		return ap;
 
 	    /* Since its all int32s convert to network order with a loop. */
+        if (rx_stats_active)
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    s = (afs_int32 *) & rx_stats;
 	    for (i = 0; i < sizeof(rx_stats) / sizeof(afs_int32); i++, s++)
@@ -2023,6 +2062,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 
 	    tl = ap->length;
 	    ap->length = sizeof(rx_stats);
+        if (rx_stats_active)
 	    MUTEX_EXIT(&rx_stats_mutex);
 	    rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
 	    ap->length = tl;
@@ -2044,7 +2084,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 }
 
 struct rx_packet *
-rxi_ReceiveVersionPacket(register struct rx_packet *ap, osi_socket asocket,
+rxi_ReceiveVersionPacket(struct rx_packet *ap, osi_socket asocket,
 			 afs_int32 ahost, short aport, int istack)
 {
     afs_int32 tl;
@@ -2153,7 +2193,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
     int code;
     struct sockaddr_in addr;
-    register struct rx_peer *peer = conn->peer;
+    struct rx_peer *peer = conn->peer;
     osi_socket socket;
 #ifdef RXDEBUG
     char deliveryType = 'S';
@@ -2238,7 +2278,8 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	     osi_NetSend(socket, &addr, p->wirevec, p->niovecs,
 			 p->length + RX_HEADER_SIZE, istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
-            rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+            if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
 	    p->retryTime = p->timeSent;	/* resend it very soon */
 	    clock_Addmsec(&(p->retryTime),
 			  10 + (((afs_uint32) p->backoff) << 8));
@@ -2278,7 +2319,8 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     }
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
-    rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
     MUTEX_ENTER(&peer->peer_lock);
     hadd32(peer->bytesSent, p->length);
     MUTEX_EXIT(&peer->peer_lock);
@@ -2295,7 +2337,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     int waslocked;
 #endif
     struct sockaddr_in addr;
-    register struct rx_peer *peer = conn->peer;
+    struct rx_peer *peer = conn->peer;
     osi_socket socket;
     struct rx_packet *p = NULL;
     struct iovec wirevec[RX_MAXIOVECS];
@@ -2423,7 +2465,8 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	     osi_NetSend(socket, &addr, &wirevec[0], len + 1, length,
 			 istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
-            rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+            if (rx_stats_active)
+                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
 	    for (i = 0; i < len; i++) {
 		p = list[i];
 		p->retryTime = p->timeSent;	/* resend it very soon */
@@ -2460,7 +2503,8 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
-    rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+    if (rx_stats_active)
+        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
     MUTEX_ENTER(&peer->peer_lock);
     hadd32(peer->bytesSent, p->length);
     MUTEX_EXIT(&peer->peer_lock);
@@ -2477,14 +2521,14 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
  * in rx.h.  Bug: there's a lot of duplication between this and other
  * routines.  This needs to be cleaned up. */
 struct rx_packet *
-rxi_SendSpecial(register struct rx_call *call,
-		register struct rx_connection *conn,
+rxi_SendSpecial(struct rx_call *call,
+		struct rx_connection *conn,
 		struct rx_packet *optionalPacket, int type, char *data,
 		int nbytes, int istack)
 {
     /* Some of the following stuff should be common code for all
      * packet sends (it's repeated elsewhere) */
-    register struct rx_packet *p;
+    struct rx_packet *p;
     unsigned int i = 0;
     int savelen = 0, saven = 0;
     int channel, callNumber;
@@ -2553,9 +2597,9 @@ rxi_SendSpecial(register struct rx_call *call,
  * the net byte order representation in the wire representation of the
  * packet, which is what is actually sent out on the wire) */
 void
-rxi_EncodePacketHeader(register struct rx_packet *p)
+rxi_EncodePacketHeader(struct rx_packet *p)
 {
-    register afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
+    afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
 
     memset((char *)buf, 0, RX_HEADER_SIZE);
     *buf++ = htonl(p->header.epoch);
@@ -2572,9 +2616,9 @@ rxi_EncodePacketHeader(register struct rx_packet *p)
 
 /* Decode the packet's header (from net byte order to a struct header) */
 void
-rxi_DecodePacketHeader(register struct rx_packet *p)
+rxi_DecodePacketHeader(struct rx_packet *p)
 {
-    register afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
+    afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
     afs_uint32 temp;
 
     p->header.epoch = ntohl(*buf);
@@ -2606,10 +2650,10 @@ rxi_DecodePacketHeader(register struct rx_packet *p)
 }
 
 void
-rxi_PrepareSendPacket(register struct rx_call *call,
-		      register struct rx_packet *p, register int last)
+rxi_PrepareSendPacket(struct rx_call *call,
+		      struct rx_packet *p, int last)
 {
-    register struct rx_connection *conn = call->conn;
+    struct rx_connection *conn = call->conn;
     int i;
     ssize_t len;		/* len must be a signed type; it can go negative */
 
@@ -2658,9 +2702,10 @@ rxi_PrepareSendPacket(register struct rx_call *call,
         MUTEX_EXIT(&rx_freePktQ_lock);
 #endif /* !RX_ENABLE_TSFPQ */
 
-	p->niovecs = i;
+        p->niovecs = i;
     }
-    p->wirevec[i - 1].iov_len += len;
+    if (len)
+        p->wirevec[i - 1].iov_len += len;
     RXS_PreparePacket(conn->securityObject, call, p);
 }
 
@@ -2718,3 +2763,42 @@ rxi_AdjustDgramPackets(int frags, int mtu)
     }
     return (2 + (maxMTU / (RX_JUMBOBUFFERSIZE + RX_JUMBOHEADERSIZE)));
 }
+
+#ifdef AFS_NT40_ENV
+/* 
+ * This function can be used by the Windows Cache Manager
+ * to dump the list of all rx packets so that we can determine
+ * where the packet leakage is.
+ */
+int rx_DumpPackets(FILE *outputFile, char *cookie)
+{
+#ifdef RXDEBUG_PACKET
+    int zilch;
+    struct rx_packet *p;
+    char output[2048];
+
+    NETPRI;
+    MUTEX_ENTER(&rx_freePktQ_lock);
+    sprintf(output, "%s - Start dumping all Rx Packets - count=%u\r\n", cookie, rx_packet_id);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    for (p = rx_mallocedP; p; p = p->allNextp) {
+        sprintf(output, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
+                cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec, p->retryTime.sec, p->retryTime.usec, 
+                p->firstSerial, p->niovecs, (afs_uint32)p->flags, (afs_uint32)p->backoff, (afs_uint32)p->length,
+                p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.serial,
+                (afs_uint32)p->header.type, (afs_uint32)p->header.flags, (afs_uint32)p->header.userStatus, 
+                (afs_uint32)p->header.securityIndex, (afs_uint32)p->header.serviceId);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+
+    sprintf(output, "%s - End dumping all Rx Packets\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+    MUTEX_EXIT(&rx_freePktQ_lock);
+    USERPRI;
+#endif /* RXDEBUG_PACKET */
+    return 0;
+}
+#endif /* AFS_NT40_ENV */
+

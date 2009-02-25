@@ -86,7 +86,7 @@ xdr_void(void)
  * XDR integers
  */
 bool_t
-xdr_int(register XDR * xdrs, int *ip)
+xdr_int(XDR * xdrs, int *ip)
 {
     afs_int32 l;
 
@@ -113,7 +113,7 @@ xdr_int(register XDR * xdrs, int *ip)
  * XDR unsigned integers
  */
 bool_t
-xdr_u_int(register XDR * xdrs, u_int * uip)
+xdr_u_int(XDR * xdrs, u_int * uip)
 {
     afs_uint32 l;
 
@@ -141,7 +141,7 @@ xdr_u_int(register XDR * xdrs, u_int * uip)
  * XDR long integers
  */
 bool_t
-xdr_long(register XDR * xdrs, long *lp)
+xdr_long(XDR * xdrs, long *lp)
 {
     afs_int32 l;
 
@@ -168,7 +168,7 @@ xdr_long(register XDR * xdrs, long *lp)
  * XDR unsigned long integers
  */
 bool_t
-xdr_u_long(register XDR * xdrs, u_long * ulp)
+xdr_u_long(XDR * xdrs, u_long * ulp)
 {
     afs_uint32 l;
 
@@ -196,7 +196,7 @@ xdr_u_long(register XDR * xdrs, u_long * ulp)
  * XDR chars
  */
 bool_t
-xdr_char(register XDR * xdrs, char *sp)
+xdr_char(XDR * xdrs, char *sp)
 {
     afs_int32 l;
 
@@ -223,7 +223,7 @@ xdr_char(register XDR * xdrs, char *sp)
  * XDR unsigned chars
  */
 bool_t
-xdr_u_char(register XDR * xdrs, u_char * usp)
+xdr_u_char(XDR * xdrs, u_char * usp)
 {
     afs_uint32 l;
 
@@ -251,7 +251,7 @@ xdr_u_char(register XDR * xdrs, u_char * usp)
  * XDR short integers
  */
 bool_t
-xdr_short(register XDR * xdrs, short *sp)
+xdr_short(XDR * xdrs, short *sp)
 {
     afs_int32 l;
 
@@ -278,7 +278,7 @@ xdr_short(register XDR * xdrs, short *sp)
  * XDR unsigned short integers
  */
 bool_t
-xdr_u_short(register XDR * xdrs, u_short * usp)
+xdr_u_short(XDR * xdrs, u_short * usp)
 {
     afs_uint32 l;
 
@@ -306,7 +306,7 @@ xdr_u_short(register XDR * xdrs, u_short * usp)
  * XDR booleans
  */
 bool_t
-xdr_bool(register XDR * xdrs, bool_t * bp)
+xdr_bool(XDR * xdrs, bool_t * bp)
 {
     afs_int32 lb;
 
@@ -333,7 +333,7 @@ xdr_bool(register XDR * xdrs, bool_t * bp)
  * XDR enumerations
  */
 bool_t
-xdr_enum(register XDR * xdrs, enum_t * ep)
+xdr_enum(XDR * xdrs, enum_t * ep)
 {
     enum sizecheck { SIZEVAL };	/* used to find the size of an enum */
 
@@ -351,9 +351,9 @@ xdr_enum(register XDR * xdrs, enum_t * ep)
  * cp points to the opaque object and cnt gives the byte length.
  */
 bool_t
-xdr_opaque(register XDR * xdrs, caddr_t cp, register u_int cnt)
+xdr_opaque(XDR * xdrs, caddr_t cp, u_int cnt)
 {
-    register u_int rndup;
+    u_int rndup;
     int crud[BYTES_PER_XDR_UNIT];
     char xdr_zero[BYTES_PER_XDR_UNIT] = { 0, 0, 0, 0 };
 
@@ -401,11 +401,11 @@ xdr_opaque(register XDR * xdrs, caddr_t cp, register u_int cnt)
  * If *cpp is NULL maxsize bytes are allocated
  */
 bool_t
-xdr_bytes(register XDR * xdrs, char **cpp, register u_int * sizep,
+xdr_bytes(XDR * xdrs, char **cpp, u_int * sizep,
 	  u_int maxsize)
 {
-    register char *sp = *cpp;	/* sp is the actual string pointer */
-    register u_int nodesize;
+    char *sp = *cpp;	/* sp is the actual string pointer */
+    u_int nodesize;
 
     /*
      * first deal with the length since xdr bytes are counted
@@ -463,10 +463,10 @@ xdr_bytes(register XDR * xdrs, char **cpp, register u_int * sizep,
 	xdrproc_t dfault;	* default xdr routine *
 */
 bool_t
-xdr_union(register XDR * xdrs, enum_t * dscmp, caddr_t unp,
+xdr_union(XDR * xdrs, enum_t * dscmp, caddr_t unp,
 	  struct xdr_discrim * choices, xdrproc_t dfault)
 {
-    register enum_t dscm;
+    enum_t dscm;
 
     /*
      * we deal with the discriminator;  it's an enum
@@ -508,9 +508,9 @@ xdr_union(register XDR * xdrs, enum_t * dscmp, caddr_t unp,
  * of the string as specified by a protocol.
  */
 bool_t
-xdr_string(register XDR * xdrs, char **cpp, u_int maxsize)
+xdr_string(XDR * xdrs, char **cpp, u_int maxsize)
 {
-    register char *sp = *cpp;	/* sp is the actual string pointer */
+    char *sp = *cpp;	/* sp is the actual string pointer */
     u_int size;
     u_int nodesize;
 
@@ -575,7 +575,7 @@ xdr_string(register XDR * xdrs, char **cpp, u_int maxsize)
  */
 #ifndef	KERNEL
 bool_t
-xdr_wrapstring(register XDR * xdrs, char **cpp)
+xdr_wrapstring(XDR * xdrs, char **cpp)
 {
     if (xdr_string(xdrs, cpp, BUFSIZ)) {
 	return (TRUE);

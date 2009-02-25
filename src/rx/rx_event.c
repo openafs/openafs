@@ -109,9 +109,9 @@ afs_kmutex_t rxevent_lock;
  */
 
 #include <assert.h>
-pthread_mutex_t rx_event_mutex;
-#define LOCK_EV_INIT assert(pthread_mutex_lock(&rx_event_mutex)==0)
-#define UNLOCK_EV_INIT assert(pthread_mutex_unlock(&rx_event_mutex)==0)
+afs_kmutex_t rx_event_mutex;
+#define LOCK_EV_INIT MUTEX_ENTER(&rx_event_mutex)
+#define UNLOCK_EV_INIT MUTEX_EXIT(&rx_event_mutex)
 #else
 #define LOCK_EV_INIT
 #define UNLOCK_EV_INIT
@@ -218,8 +218,8 @@ _rxevent_Post(struct clock *when, struct clock *now,
 	      void (*func) (struct rxevent *, void *, void *, int), 
 	      void *arg, void *arg1, int arg2, int newargs)
 {
-    register struct rxevent *ev, *evqe, *evqpr;
-    register struct rxepoch *ep, *epqe, *epqpr;
+    struct rxevent *ev, *evqe, *evqpr;
+    struct rxepoch *ep, *epqe, *epqpr;
     int isEarliest = 0;
 
     MUTEX_ENTER(&rxevent_lock);
@@ -268,7 +268,7 @@ _rxevent_Post(struct clock *when, struct clock *now,
     /* If we're short on free event entries, create a block of new ones and add
      * them to the free queue */
     if (queue_IsEmpty(&rxevent_free)) {
-	register int i;
+	int i;
 #if	defined(AFS_AIX32_ENV) && defined(KERNEL)
 	ev = (struct rxevent *)rxi_Alloc(sizeof(struct rxevent));
 	queue_Append(&rxevent_free, &ev[0]), rxevent_nFree++;
@@ -393,8 +393,8 @@ int rxevent_Cancel_type = 0;
 #endif
 
 void
-rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
-		 register int type)
+rxevent_Cancel_1(struct rxevent *ev, struct rx_call *call,
+		 int type)
 {
 #ifdef RXDEBUG
     if (rx_Log_event) {
@@ -448,8 +448,8 @@ rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
 int
 rxevent_RaiseEvents(struct clock *next)
 {
-    register struct rxepoch *ep;
-    register struct rxevent *ev;
+    struct rxepoch *ep;
+    struct rxevent *ev;
     volatile struct clock now;
     MUTEX_ENTER(&rxevent_lock);
 

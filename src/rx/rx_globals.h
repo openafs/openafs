@@ -265,10 +265,11 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
  * by each call to AllocPacketBufs() will increase indefinitely without a cap on the transfer
  * glob size.  A cap of 64 is selected because that will produce an allocation of greater than
  * three times that amount which is greater than half of ncalls * maxReceiveWindow. 
+ * Must be called under rx_packets_mutex.
  */
 #define RX_TS_FPQ_COMPUTE_LIMITS \
     do { \
-        register int newmax, newglob; \
+        int newmax, newglob; \
         newmax = (rx_nPackets * 9) / (10 * rx_TSFPQMaxProcs); \
         newmax = (newmax >= 15) ? newmax : 15; \
         newglob = newmax / 5; \
@@ -294,9 +295,9 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
    rx_freePktQ_lock must be held. default is to reduce the queue size to 40% ofmax */
 #define RX_TS_FPQ_LTOG(rx_ts_info_p) \
     do { \
-        register int i; \
-        register struct rx_packet * p; \
-        register int tsize = (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize; \
+        int i; \
+        struct rx_packet * p; \
+        int tsize = MIN((rx_ts_info_p)->_FPQ.len, (rx_ts_info_p)->_FPQ.len - rx_TSFPQLocalMax + 3 *  rx_TSFPQGlobSize); \
 	if (tsize <= 0) break; \
         for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
              i < tsize; i++,p=queue_Prev(p, rx_packet)); \
@@ -306,17 +307,17 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
         (rx_ts_info_p)->_FPQ.ltog_xfer += tsize; \
         if ((rx_ts_info_p)->_FPQ.delta) { \
-            MUTEX_ENTER(&rx_stats_mutex); \
+            MUTEX_ENTER(&rx_packets_mutex); \
             RX_TS_FPQ_COMPUTE_LIMITS; \
-            MUTEX_EXIT(&rx_stats_mutex); \
+            MUTEX_EXIT(&rx_packets_mutex); \
            (rx_ts_info_p)->_FPQ.delta = 0; \
         } \
     } while(0)
 /* same as above, except user has direct control over number to transfer */
 #define RX_TS_FPQ_LTOG2(rx_ts_info_p,num_transfer) \
     do { \
-        register int i; \
-        register struct rx_packet * p; \
+        int i; \
+        struct rx_packet * p; \
         if (num_transfer <= 0) break; \
         for (i=0,p=queue_Last(&((rx_ts_info_p)->_FPQ), rx_packet); \
 	     i < (num_transfer); i++,p=queue_Prev(p, rx_packet)); \
@@ -326,9 +327,9 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
         (rx_ts_info_p)->_FPQ.ltog_ops++; \
         (rx_ts_info_p)->_FPQ.ltog_xfer += (num_transfer); \
         if ((rx_ts_info_p)->_FPQ.delta) { \
-            MUTEX_ENTER(&rx_stats_mutex); \
+            MUTEX_ENTER(&rx_packets_mutex); \
             RX_TS_FPQ_COMPUTE_LIMITS; \
-            MUTEX_EXIT(&rx_stats_mutex); \
+            MUTEX_EXIT(&rx_packets_mutex); \
             (rx_ts_info_p)->_FPQ.delta = 0; \
         } \
     } while(0)
@@ -336,8 +337,8 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
    rx_freePktQ_lock must be held. */
 #define RX_TS_FPQ_GTOL(rx_ts_info_p) \
     do { \
-        register int i, tsize; \
-        register struct rx_packet * p; \
+        int i, tsize; \
+        struct rx_packet * p; \
         tsize = (rx_TSFPQGlobSize <= rx_nFreePackets) ? \
                  rx_TSFPQGlobSize : rx_nFreePackets; \
         for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
@@ -351,8 +352,8 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
 /* same as above, except user has direct control over number to transfer */
 #define RX_TS_FPQ_GTOL2(rx_ts_info_p,num_transfer) \
     do { \
-        register int i, tsize; \
-        register struct rx_packet * p; \
+        int i, tsize; \
+        struct rx_packet * p; \
         tsize = (num_transfer); \
         if (tsize > rx_nFreePackets) tsize = rx_nFreePackets; \
         for (i=0,p=queue_First(&rx_freePacketQueue, rx_packet); \
@@ -378,8 +379,8 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
  */
 #define RX_TS_FPQ_QCHECKOUT(rx_ts_info_p,num_transfer,q) \
     do { \
-        register int i; \
-        register struct rx_packet *p; \
+        int i; \
+        struct rx_packet *p; \
         if (num_transfer > (rx_ts_info_p)->_FPQ.len) num_transfer = (rx_ts_info_p)->_FPQ.len; \
         for (i=0, p=queue_First(&((rx_ts_info_p)->_FPQ), rx_packet); \
              i < num_transfer; \
@@ -406,7 +407,7 @@ EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to 
  * since caller already knows length of (q) for other reasons */
 #define RX_TS_FPQ_QCHECKIN(rx_ts_info_p,num_transfer,q) \
     do { \
-        register struct rx_packet *p, *np; \
+        struct rx_packet *p, *np; \
         for (queue_Scan((q), p, np, rx_packet)) { \
             RX_FPQ_MARK_FREE(p); \
         } \
@@ -542,11 +543,15 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 #define	rxi_AllocConnection()	(struct rx_connection *) rxi_Alloc(sizeof(struct rx_connection))
 #define rxi_FreeConnection(conn) (rxi_Free(conn, sizeof(struct rx_connection)))
 
-#ifdef RXDEBUG
+EXT afs_int32 rx_stats_active GLOBALSINIT(1);	/* boolean - rx statistics gathering */
+
+#ifndef KERNEL
 /* Some debugging stuff */
 EXT FILE *rx_debugFile;		/* Set by the user to a stdio file for debugging output */
 EXT FILE *rxevent_debugFile;	/* Set to an stdio descriptor for event logging to that file */
+#endif
 
+#ifdef RXDEBUG
 #define rx_Log rx_debugFile
 #ifdef AFS_NT40_ENV
 EXT int rxdebug_active;
@@ -561,6 +566,9 @@ EXT int rxdebug_active;
 #define rx_Log_event rxevent_debugFile
 
 EXT char *rx_packetTypes[RX_N_PACKET_TYPES] GLOBALSINIT(RX_PACKET_TYPES);	/* Strings defined in rx.h */
+#else
+#define dpf(args)
+#endif /* RXDEBUG */
 
 #ifndef KERNEL
 /*
@@ -575,10 +583,6 @@ EXT rx_destructor_t *rxi_keyCreate_destructor GLOBALSINIT(NULL);
 EXT afs_kmutex_t rxi_keyCreate_lock;
 #endif /* RX_ENABLE_LOCKS */
 #endif /* !KERNEL */
-
-#else
-#define dpf(args)
-#endif /* RXDEBUG */
 
 /*
  * SERVER ONLY: Threshholds used to throttle error replies to looping
@@ -599,14 +603,18 @@ EXT int rxi_callAbortDelay GLOBALSINIT(3000);
 EXT int rxi_fcfs_thread_num GLOBALSINIT(0);
 EXT pthread_key_t rx_thread_id_key;
 /* keep track of pthread numbers - protected by rx_stats_mutex, 
-   except in rx_Init() before mutex exists! */
+ * except in rx_Init() before mutex exists! */
 EXT int rxi_pthread_hinum GLOBALSINIT(0);
 #else
 #define rxi_fcfs_thread_num (0)
 #endif
 
 #if defined(RX_ENABLE_LOCKS)
-EXT afs_kmutex_t rx_stats_mutex;	/* used to activate stats gathering */
+EXT afs_kmutex_t rx_stats_mutex;	/* used to protect stats gathering */
+EXT afs_kmutex_t rx_waiting_mutex;	/* used to protect waiting counters */
+EXT afs_kmutex_t rx_quota_mutex;	/* used to protect quota counters */
+EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */
+EXT afs_kmutex_t rx_packets_mutex;	/* used to protect packet counters */
 #endif
 
 EXT2 int rx_enable_stats GLOBALSINIT(0);

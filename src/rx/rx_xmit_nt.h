@@ -10,14 +10,11 @@
 #ifndef _RX_XMIT_NT_H_
 #define _RX_XMIT_NT_H_
 
-
 typedef struct iovec
-#ifndef AFS_DJGPP_ENV
 {
-    void *iov_base;
-    int iov_len;
+    unsigned long iov_len;
+    char *iov_base;
 }
-#endif
 iovec_t;
 
 struct msghdr {
@@ -33,4 +30,6 @@ extern int rxi_sendmsg(osi_socket socket, struct msghdr *msgP, int flags);
 #define sendmsg rxi_sendmsg
 extern int rxi_recvmsg(osi_socket socket, struct msghdr *msgP, int flags);
 #define recvmsg rxi_recvmsg
+
+extern void rxi_xmit_init(osi_socket socket);
 #endif /* _RX_XMIT_NT_H_ */

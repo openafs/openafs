@@ -32,6 +32,11 @@
 RCSID
     ("$Header$");
 
+#if defined(AFS_OBSD44_ENV) && defined(KERNEL) && !defined(UKERNEL)
+/* XXX osi_alloc, please find and fix */
+#include "osi_machdep.h"
+#endif
+ 
 #if !defined(NeXT)
 
 /*
@@ -44,6 +49,7 @@ RCSID
  */
 
 #if defined(KERNEL) && !defined(UKERNEL)
+
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
@@ -77,14 +83,14 @@ RCSID
 */
 #ifdef	KERNEL
 bool_t
-xdr_arrayN(register XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
+xdr_arrayN(XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
 	   u_int elsize, xdrproc_t elproc)
 {
-    register u_int i;
-    register caddr_t target = *addrp;
-    register u_int c;		/* the actual element count */
-    register bool_t stat = TRUE;
-    register u_int nodesize;
+    u_int i;
+    caddr_t target = *addrp;
+    u_int c;		/* the actual element count */
+    bool_t stat = TRUE;
+    u_int nodesize;
 
     i = ((~0) >> 1) / elsize;
     if (maxsize > i)

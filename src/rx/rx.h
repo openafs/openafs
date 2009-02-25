@@ -496,7 +496,7 @@ struct rx_call {
     u_short nCwindAcks;		/* Number acks received at current cwind */
     u_short ssthresh;		/* The slow start threshold */
     u_short nDgramPackets;	/* Packets per AFS 3.5 jumbogram */
-    u_short nAcks;		/* The number of consecttive acks */
+    u_short nAcks;		/* The number of consecutive acks */
     u_short nNacks;		/* Number packets acked that follow the
 				 * first negatively acked packet */
     u_short nSoftAcks;		/* The number of delayed soft acks */
@@ -512,7 +512,7 @@ struct rx_call {
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
     u_int lastSendData;		/* Last time a nonping was sent on this call */
-    void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
+    void (*arrivalProc) (struct rx_call * call, void * mh, int index);	/* Procedure to call when reply is received */
     void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
     afs_uint32 lastAcked;	/* last packet "hard" acked by receiver */
@@ -537,15 +537,37 @@ struct rx_call {
 #ifdef RX_REFCOUNT_CHECK
     short refCDebug[RX_CALL_REFCOUNT_MAX];
 #endif				/* RX_REFCOUNT_CHECK */
+
+    /* 
+     * iov, iovNBytes, iovMax, and iovNext are set in rxi_ReadvProc()
+     * and adjusted by rxi_FillReadVec().  iov does not own the buffers
+     * it refers to.  The buffers belong to the packets stored in iovq.
+     * Only one call to rx_ReadvProc() can be active at a time.
+     */
+
     int iovNBytes;		/* byte count for current iovec */
     int iovMax;			/* number elements in current iovec */
     int iovNext;		/* next entry in current iovec */
     struct iovec *iov;		/* current iovec */
+
     struct clock queueTime;	/* time call was queued */
     struct clock startTime;	/* time call was started */
     afs_hyper_t bytesSent;	/* Number bytes sent */
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
+
+#ifdef RXDEBUG_PACKET
+    u_short tqc;                /* packet count in tq */
+    u_short rqc;                /* packet count in rq */
+    u_short iovqc;              /* packet count in iovq */
+
+#ifdef KDUMP_RX_LOCK
+    struct rx_call_rx_lock *allNextp;
+#else
+    struct rx_call *allNextp;
+#endif
+    afs_uint32 call_id;
+#endif
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -1060,6 +1082,8 @@ typedef struct rx_interface_stat {
 #define RX_STATS_SERVICE_ID 409
 
 #ifdef AFS_NT40_ENV
+extern int rx_DumpCalls(FILE *outputFile, char *cookie);
+
 #define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
 #define rx_MutexAdd(object, addend, mutex) InterlockedAdd(&object, addend)
 #define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)

@@ -59,9 +59,9 @@ RCSID
  * Inited
  */
 
-pthread_mutex_t rx_if_init_mutex;
-#define LOCK_IF_INIT assert(pthread_mutex_lock(&rx_if_init_mutex)==0)
-#define UNLOCK_IF_INIT assert(pthread_mutex_unlock(&rx_if_init_mutex)==0)
+afs_kmutex_t rx_if_init_mutex;
+#define LOCK_IF_INIT MUTEX_ENTER(&rx_if_init_mutex)
+#define UNLOCK_IF_INIT MUTEX_EXIT(&rx_if_init_mutex)
 
 /*
  * The rx_if_mutex mutex protects the following global variables:
@@ -70,9 +70,9 @@ pthread_mutex_t rx_if_init_mutex;
  * myNetMasks
  */
 
-pthread_mutex_t rx_if_mutex;
-#define LOCK_IF assert(pthread_mutex_lock(&rx_if_mutex)==0)
-#define UNLOCK_IF assert(pthread_mutex_unlock(&rx_if_mutex)==0)
+afs_kmutex_t rx_if_mutex;
+#define LOCK_IF MUTEX_ENTER(&rx_if_mutex)
+#define UNLOCK_IF MUTEX_EXIT(&rx_if_mutex)
 #else
 #define LOCK_IF_INIT
 #define UNLOCK_IF_INIT
@@ -129,6 +129,10 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	goto error;
     }
 
+#ifdef AFS_NT40_ENV
+    rxi_xmit_init(socketFd);
+#endif /* AFS_NT40_ENV */
+
     taddr.sin_addr.s_addr = ahost;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short) port;
@@ -165,15 +169,26 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 
 	len1 = 32766;
 	len2 = rx_UdpBufSize;
-	greedy =
-	    (setsockopt
-	     (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
-	      sizeof(len2)) >= 0);
-	if (!greedy) {
-	    len2 = 32766;	/* fall back to old size... uh-oh! */
-	}
 
-	greedy =
+        /* find the size closest to rx_UdpBufSize that will be accepted */
+        while (!greedy && len2 > len1) {
+            greedy =
+                (setsockopt
+                  (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
+                   sizeof(len2)) >= 0);
+            if (!greedy)
+                len2 /= 2;
+        }
+
+        /* but do not let it get smaller than 32K */ 
+        if (len2 < len1)
+            len2 = len1;
+
+        if (len1 < len2)
+            len1 = len2;
+
+
+        greedy =
 	    (setsockopt
 	     (socketFd, SOL_SOCKET, SO_SNDBUF, (char *)&len1,
 	      sizeof(len1)) >= 0)
@@ -184,9 +199,11 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	if (!greedy)
 	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
-	MUTEX_ENTER(&rx_stats_mutex);
-	rx_stats.socketGreedy = greedy;
-	MUTEX_EXIT(&rx_stats_mutex);
+        if (rx_stats_active) {
+            MUTEX_ENTER(&rx_stats_mutex);
+            rx_stats.socketGreedy = greedy;
+            MUTEX_EXIT(&rx_stats_mutex);
+        }
     }
 #endif /* AFS_DJGPP_ENV */
 
@@ -309,19 +326,52 @@ rx_getAllAddr(afs_uint32 * buffer, int maxSize)
     /* The IP address list can change so we must query for it */
     rx_GetIFInfo();
 
-#ifndef AFS_NT40_ENV
+#ifdef AFS_DJGPP_ENV
     /* we don't want to use the loopback adapter which is first */
     /* this is a bad bad hack.
      * and doesn't hold true on Windows.
      */
     if ( rxi_numNetAddrs > 1 )
         offset = 1;
-#endif /* AFS_NT40_ENV */
+#endif /* AFS_DJGPP_ENV */
 
     for (count = 0; offset < rxi_numNetAddrs && maxSize > 0;
 	 count++, offset++, maxSize--)
 	buffer[count] = htonl(rxi_NetAddrs[offset]);
 
+    return count;
+}
+
+/* this function returns the total number of interface addresses
+ * the buffer has to be passed in by the caller. It also returns
+ * the matching interface mask and mtu.  All values are returned
+ * in network byte order.
+ */
+int
+rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
+                     afs_uint32 mtuBuffer[], int maxSize)
+{
+    int count = 0, offset = 0;
+
+    /* The IP address list can change so we must query for it */
+    rx_GetIFInfo();
+
+#ifdef AFS_DJGPP_ENV
+    /* we don't want to use the loopback adapter which is first */
+    /* this is a bad bad hack.
+     * and doesn't hold true on Windows.
+     */
+    if ( rxi_numNetAddrs > 1 )
+        offset = 1;
+#endif /* AFS_DJGPP_ENV */
+
+    for (count = 0; 
+         offset < rxi_numNetAddrs && maxSize > 0;
+         count++, offset++, maxSize--) {
+	addrBuffer[count] = htonl(rxi_NetAddrs[offset]);
+	maskBuffer[count] = htonl(myNetMasks[offset]);
+	mtuBuffer[count]  = htonl(myNetMTUs[offset]);
+    }
     return count;
 }
 #endif

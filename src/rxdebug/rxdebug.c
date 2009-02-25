@@ -409,6 +409,14 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		    printf(" DESTROYED");
 		if (tconn.flags & RX_CONN_USING_PACKET_CKSUM)
 		    printf(" pktCksum");
+                if (tconn.flags & RX_CONN_KNOW_WINDOW)
+                    printf(" knowWindow");
+                if (tconn.flags & RX_CONN_RESET)
+                    printf(" reset");
+                if (tconn.flags & RX_CONN_BUSY)
+                    printf(" busy");
+                if (tconn.flags & RX_CONN_ATTACHWAIT)
+                    printf(" attachWait");
 		printf(", ");
 	    }
 	    printf("security index %d, ", tconn.securityIndex);
