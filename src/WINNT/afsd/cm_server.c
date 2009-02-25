@@ -926,6 +926,11 @@ cm_FindServerByIP(afs_uint32 ipaddr, int type)
             tsp->addr.sin_addr.S_un.S_addr == ipaddr)
             break;
     }
+
+    /* bump ref count if we found the server */
+    if (tsp) 
+        cm_GetServerNoLock(tsp);
+
     lock_ReleaseRead(&cm_serverLock);
 
     return tsp;
