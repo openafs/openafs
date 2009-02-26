@@ -1,0 +1,31 @@
+#                                                                                                                                
+# Copyright (c) 2009 Secure Endpoints Inc.
+#
+
+RELDIR=WINNT\tests
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+install:
+        cd largefiles
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..\nmtest
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..\torture
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..\winflock
+        $(MAKECMD) /nologo /f NTMakefile install
+        cd ..
+
+clean::
+        cd largefiles
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..\nmtest
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..\torture
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..\winflock
+        $(MAKECMD) /nologo /f NTMakefile clean
+        cd ..
+        
+

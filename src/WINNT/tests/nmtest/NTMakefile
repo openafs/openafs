@@ -1,0 +1,31 @@
+#                                                                                                                                
+# Copyright (c) 2009 Secure Endpoints Inc.
+#
+
+RELDIR=WINNT\tests\nmtest
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+idirs:
+!       if !(exist($(OJT)\WINNT\tests))
+                md $(OJT)\WINNT\tests
+!       endif
+!       if !(exist($(OJT)\WINNT\tests\nmtest))
+                md $(OJT)\WINNT\tests\nmtest
+!       endif
+
+EXEDIR = $(DESTDIR)\bin
+
+OBJS = $(OUT)\nmtest.obj
+
+$(EXEDIR)\nmtest.exe: $(OBJS)
+        $(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib userenv.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(EXEPREP)
+        $(CODESIGN_USERLAND)
+
+install: idirs $(EXEDIR)\nmtest.exe
+
+clean::
+        
+

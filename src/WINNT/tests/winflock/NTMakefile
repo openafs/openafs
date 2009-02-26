@@ -1,0 +1,35 @@
+#                                                                                                                                
+# Copyright (c) 2009 Secure Endpoints Inc.
+#
+
+RELDIR=WINNT\tests\winflock
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+idirs:
+!       if !(exist($(OJT)\WINNT\tests))
+                md $(OJT)\WINNT\tests
+!       endif
+!       if !(exist($(OJT)\WINNT\tests\winflock))
+                md $(OJT)\WINNT\tests\winflock
+!       endif
+
+EXEDIR = $(DESTDIR)\bin
+
+OBJS =  $(OUT)\main.obj \
+        $(OUT)\sync.obj \
+        $(OUT)\tests.obj
+
+LIBS =  $(DESTDIR)\lib\afs\afsutil.lib
+
+$(EXEDIR)\winflock.exe: $(OBJS) $(LIBS)
+        $(EXECONLINK) 
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(EXEPREP)
+        $(CODESIGN_USERLAND)
+
+install: idirs $(EXEDIR)\winflock.exe
+
+clean::
+        
+
