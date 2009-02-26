@@ -286,7 +286,7 @@ int nb_CreateFile(char *path, DWORD size)
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if (strlen(path) == 0)
     {
-        return(LeaveThread(1, "nb_DeleteFile failed no path specified\n", CMD_CREATEFILE));
+        return(LeaveThread(1, "nb_CreateFile failed no path specified\n", CMD_CREATEFILE));
     }
 
     strcpy(NewPath, path);
@@ -312,7 +312,7 @@ int nb_CreateFile(char *path, DWORD size)
     }
     EndFirstTimer(CMD_CREATEFILE, 1);
     Moved = SetFilePointer(fHandle,
-                           size,
+                           size - sizeof(Buffer) <= 0 ? 0 : size - sizeof(Buffer),
                            NULL,
                            FILE_BEGIN);
     memset(Buffer, 'A', sizeof(Buffer));

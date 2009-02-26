@@ -386,7 +386,7 @@ BOOL run_netbench(int client, char *ClientText, char *PathToSecondDir)
             printf("ERROR: You are using a dbench 1 load file\n");
             if (GetHandleInformation((HANDLE)hWinEventHandle, &dwFlags))
                 break;
-		}
+        }
         if (!strcmp(params[0], "BM_SETUP"))
         {
             bm_state = BM_SETUP;
