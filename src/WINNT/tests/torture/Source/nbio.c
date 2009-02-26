@@ -312,7 +312,7 @@ int nb_CreateFile(char *path, DWORD size)
     }
     EndFirstTimer(CMD_CREATEFILE, 1);
     Moved = SetFilePointer(fHandle,
-                           size - sizeof(buffer) <= 0 ? 0 : size - sizeof(buffer),
+                           size - sizeof(Buffer) <= 0 ? 0 : size - sizeof(Buffer),
                            NULL,
                            FILE_BEGIN);
     memset(Buffer, 'A', sizeof(Buffer));
