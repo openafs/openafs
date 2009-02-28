@@ -1058,7 +1058,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                     bplus_free_tree++;
                     freeBtree(scp->dirBplus);
                     scp->dirBplus = NULL;
-                    scp->dirDataVersion = -1;
+                    scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
                 }
 
                 if (!scp->dirBplus) {

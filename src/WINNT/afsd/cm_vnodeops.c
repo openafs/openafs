@@ -5038,7 +5038,7 @@ void cm_LockMarkSCacheLost(cm_scache_t * scp)
     }
 
     scp->serverLock = -1;
-    scp->lockDataVersion = -1;
+    scp->lockDataVersion = CM_SCACHE_VERSION_BAD;
     lock_ReleaseWrite(&cm_scacheLock);
 }
 
