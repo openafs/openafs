@@ -1719,7 +1719,7 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
         }
         else	/* add a new server without a cell */
         {
-            tsp = cm_NewServer(&tmp, type, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
+            tsp = cm_NewServer(&tmp, type, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
             tsp->ipRank = rank;
         }
 	lock_ObtainMutex(&tsp->mx);
@@ -3053,6 +3053,7 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     cm_DumpVolumes(hLogFile, cookie, 1);
     cm_DumpSCache(hLogFile, cookie, 1);
     cm_DumpBufHashTable(hLogFile, cookie, 1);
+    cm_DumpServers(hLogFile, cookie, 1);
     smb_DumpVCP(hLogFile, cookie, 1);
 
     CloseHandle(hLogFile);                          

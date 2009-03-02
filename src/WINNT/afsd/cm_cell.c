@@ -52,7 +52,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
         }
     }       
     else
-        tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, probe ? 0 : CM_FLAG_NOPROBE);
+        tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, NULL, probe ? 0 : CM_FLAG_NOPROBE);
 
     /* Insert the vlserver into a sorted list, sorted by server rank */
     tsrp = cm_NewServerRef(tsp, 0);
