@@ -321,6 +321,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         afs_int32 bkID;
         afs_int32 serverNumber[NMAXNSERVERS];
         afs_int32 serverFlags[NMAXNSERVERS];
+        afsUUID   serverUUID[NMAXNSERVERS];
         afs_int32 rwServers_alldown = 1;
         afs_int32 roServers_alldown = 1;
         afs_int32 bkServers_alldown = 1;
@@ -330,6 +331,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 	if (freelance)
 	    rwServers_alldown = 0;
 #endif
+
+        memset(serverUUID, 0, sizeof(serverUUID));
 
         switch ( method ) {
         case 0:
@@ -406,6 +409,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     for (k = 0; k < nentries && j < NMAXNSERVERS; j++, k++) {
                         serverFlags[j] = uvldbEntry.serverFlags[i];
                         serverNumber[j] = addrp[k];
+                        serverUUID[j] = uuid;
                     }
 
                     free(addrs.bulkaddrs_val);  /* This is wrong */
@@ -491,19 +495,48 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tempAddr = htonl(serverNumber[i]);
             tsockAddr.sin_addr.s_addr = tempAddr;
             tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
+            if (tsp && (method == 2) && (tsp->flags & CM_SERVERFLAG_UUID)) {
+                /* 
+                 * Check to see if the uuid of the server we know at this address
+                 * matches the uuid of the server we are being told about by the
+                 * vlserver.  If not, ...?
+                 */
+                if (!afs_uuid_equal(&serverUUID[i], &tsp->uuid)) {
+                    char uuid1[128], uuid2[128];
+                    char hoststr[16];
+
+                    afsUUID_to_string(&serverUUID[i], uuid1, sizeof(uuid1));
+                    afsUUID_to_string(&tsp->uuid, uuid2, sizeof(uuid2));
+                    afs_inet_ntoa_r(serverNumber[i], hoststr);
+
+                    osi_Log3(afsd_logp, "cm_UpdateVolumeLocation UUIDs do not match! %s != %s (%s)",
+                              osi_LogSaveString(afsd_logp, uuid1),
+                              osi_LogSaveString(afsd_logp, uuid2),
+                              osi_LogSaveString(afsd_logp, hoststr));
+                }
+            }
             if (!tsp) {
                 /* cm_NewServer will probe the server which in turn will
                  * update the state on the volume group object */
                 lock_ReleaseWrite(&volp->rw);
-                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, 0);
+                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, &serverUUID[i], 0);
                 lock_ObtainWrite(&volp->rw);
             }
-            /* if this server was created by fs setserverprefs */
-            if ( !tsp->cellp ) 
-                tsp->cellp = cellp;
-
             osi_assertx(tsp != NULL, "null cm_server_t");
                         
+            /*
+             * if this server was created by fs setserverprefs
+             * then it won't have either a cell assignment or 
+             * a server uuid.
+             */
+            if ( !tsp->cellp ) 
+                tsp->cellp = cellp;
+            if ( (method == 2) && !(tsp->flags & CM_SERVERFLAG_UUID) && 
+                 !afs_uuid_is_nil(&serverUUID[i])) {
+                tsp->uuid = serverUUID[i];
+                tsp->flags |= CM_SERVERFLAG_UUID;
+            }
+
             /* and add it to the list(s). */
             /*
              * Each call to cm_NewServerRef() increments the

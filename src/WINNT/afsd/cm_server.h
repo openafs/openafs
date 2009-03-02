@@ -37,6 +37,7 @@ typedef struct cm_server {
     unsigned short ipRank;		/* server priority */
     cm_server_vols_t *  vols;           /* by mx */
     time_t downTime;                    /* by mx */
+    afsUUID uuid;                       /* by mx */
 } cm_server_t;
 
 enum repstate {srv_not_busy, srv_busy, srv_offline, srv_deleted};
@@ -60,6 +61,7 @@ typedef struct cm_serverRef {
 #define CM_SERVERFLAG_NO64BIT   0x8     /* server has no support for
                                            64-bit operations. */
 #define CM_SERVERFLAG_NOINLINEBULK 0x10	/* server has no support for inline bulk */
+#define CM_SERVERFLAG_UUID      0x20    /* server uuid is known */
 
 /* flags for procedures */
 #define CM_FLAG_CHECKUPSERVERS		1	/* check working servers */
@@ -78,7 +80,7 @@ typedef struct cm_serverRef {
 #define CM_MAXINTERFACE_ADDR          16
 
 extern cm_server_t *cm_NewServer(struct sockaddr_in *addrp, int type,
-	struct cm_cell *cellp, afs_uint32 flags);
+	struct cm_cell *cellp, afsUUID *uuidp, afs_uint32 flags);
 
 extern cm_serverRef_t *cm_NewServerRef(struct cm_server *serverp, afs_uint32 volID);
 
@@ -129,6 +131,8 @@ extern cm_server_t * cm_FindServerByIP(afs_uint32 addr, int type);
 extern void cm_SetLanAdapterChangeDetected(void);
 
 extern void cm_RemoveVolumeFromServer(cm_server_t * serverp, afs_uint32 volID);
+
+extern int cm_DumpServers(FILE *outputFile, char *cookie, int lock);
 
 /* Protected by cm_syscfgLock (rw) */
 extern int cm_noIPAddr;         /* number of client network interfaces */
