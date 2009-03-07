@@ -6068,8 +6068,11 @@ rxi_ReapConnections(struct rxevent *unused, void *unused1, void *unused2)
 		for (i = 0; i < RX_MAXCALLS; i++) {
 		    call = conn->call[i];
 		    if (call) {
+			int code;
 			havecalls = 1;
-			MUTEX_ENTER(&call->lock);
+			code = MUTEX_TRYENTER(&call->lock);
+			if (!code)
+			    continue;
 #ifdef RX_ENABLE_LOCKS
 			result = rxi_CheckCall(call, 1);
 #else /* RX_ENABLE_LOCKS */
