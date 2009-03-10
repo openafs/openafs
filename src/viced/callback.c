@@ -1806,7 +1806,8 @@ int
 DumpCallBackState(void)
 {
     int fd, oflag;
-    afs_uint32 magic = MAGIC, now = FT_ApproxTime(), freelisthead;
+    afs_uint32 magic = MAGIC, freelisthead;
+    time_t now = FT_ApproxTime();
 
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef AFS_NT40_ENV
