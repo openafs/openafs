@@ -52,7 +52,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 	return EBUSY;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    truncate_inode_pages(&ip->i_data, 0);
+    return vmtruncate(ip, 0);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
     truncate_inode_pages(ip, 0);
 #else
@@ -131,9 +131,7 @@ void
 osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    struct inode *ip = AFSTOV(avc);
-
-    truncate_inode_pages(&ip->i_data, 0);
+    vmtruncate(AFSTOV(avc), 0);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
     struct inode *ip = AFSTOV(avc);
 
@@ -153,9 +151,7 @@ void
 osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    struct inode *ip = AFSTOV(avc);
-
-    truncate_inode_pages(&ip->i_data, alen);
+    vmtruncate(AFSTOV(avc), alen);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
     struct inode *ip = AFSTOV(avc);
 
