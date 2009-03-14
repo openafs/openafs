@@ -2171,7 +2171,8 @@ cm_BPlusEnumAlloc(afs_uint32 entries)
 
 long 
 cm_BPlusDirEnumerate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, 
-                     afs_uint32 locked, clientchar_t * maskp, cm_direnum_t **enumpp)
+                     afs_uint32 locked, clientchar_t * maskp, 
+                     afs_uint32 fetchStatus, cm_direnum_t **enumpp)
 {
     afs_uint32 count = 0, slot, numentries;
     Nptr leafNode = NONODE, nextLeafNode;
@@ -2295,6 +2296,7 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
     enump->dscp = scp;
     enump->userp = userp;
     enump->reqFlags = reqp->flags;
+    enump->fetchStatus = fetchStatus;
 
   done:
     if (!locked)
@@ -2451,7 +2453,8 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 	return CM_ERROR_INVAL;
     }
 
-    if (!(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS)) 
+    if (enump->fetchStatus && 
+        !(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS))
         cm_BPlusDirEnumBulkStatNext(enump);
 
     *entrypp = &enump->entry[enump->next++];
@@ -2495,7 +2498,7 @@ cm_BPlusDirEnumTest(cm_scache_t * dscp, cm_user_t *userp, cm_req_t *reqp, afs_ui
 
     osi_Log0(afsd_logp, "cm_BPlusDirEnumTest start");
 
-    for (code = cm_BPlusDirEnumerate(dscp, userp, reqp, locked, NULL, &enump); code == 0; ) {
+    for (code = cm_BPlusDirEnumerate(dscp, userp, reqp, locked, NULL, 1, &enump); code == 0; ) {
 	code = cm_BPlusDirNextEnumEntry(enump, &entryp);
 	if (code == 0 || code == CM_ERROR_STOPNOW) {
 	    char buffer[1024];
