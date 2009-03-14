@@ -185,6 +185,8 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK       0x00000011
 #define AFS_REQUEST_TYPE_BYTE_RANGE_UNLOCK_ALL   0x00000012
 #define AFS_REQUEST_TYPE_GET_VOLUME_INFO         0x00000013
+#define AFS_REQUEST_TYPE_HOLD_FID                0x00000014
+#define AFS_REQUEST_TYPE_RELEASE_FID             0x00000015
 
 //
 // Request Flags, these are passed up from the file system
@@ -203,10 +205,19 @@ typedef struct _AFS_COMM_RESULT_BLOCK
 #define AFS_REQUEST_FLAG_WOW64                   0x00000004 // On 64-bit systems, set if the request 
                                                             // originated from a WOW64 process
 
-#define AFS_REQUEST_FLAG_FAST_REQUEST            0x00000008 // if the request is set, the cache manager
+#define AFS_REQUEST_FLAG_FAST_REQUEST            0x00000008 // if this flag is set, the cache manager
                                                             // responds to the request using a minimum
                                                             // of file server interaction
 
+#define AFS_REQUEST_FLAG_HOLD_FID                0x00000010 // if this flag is set, the cache manager
+                                                            // maintains a reference count on the 
+                                                            // evaluated file object just as if 
+                                                            // AFS_REQUEST_TYPE_HOLD_FID was issued.
+                                                            // The reference count must be released
+                                                            // using AFS_REQUEST_TYPE_RELEASE_FID.
+                                                            // This flag is only valid on 
+                                                            // AFS_REQUEST_TYPE_EVALUATE_BY_NAME and
+                                                            // AFS_REQUEST_TYPE_EVALUATE_BY_ID.
 //
 // Request Flags, these are passed down from the sevice
 //
@@ -239,6 +250,8 @@ typedef struct _AFS_REDIR_INIT_INFO_CB
     ULONG       MaximumChunkLength;     // Maximum RPC length issued so we should limit
                                         // requests for data to this length
 
+    AFSFileID   GlobalFileId;           // AFS FID of the Global root.afs volume
+
     LARGE_INTEGER  ExtentCount;         // Number of extents in the current data cache
 
     ULONG       CacheBlockSize;         // Size, in bytes, of the current cache block
@@ -247,6 +260,7 @@ typedef struct _AFS_REDIR_INIT_INFO_CB
 
     WCHAR       CacheFileName[ 1];      // Fully qualified cache file name in the form
                                         // \??\C:\OPenAFSDir\CacheFile.dat
+
 } AFSRedirectorInitInfo;
 
 //
@@ -983,6 +997,65 @@ typedef struct _AFS_BYTE_RANGE_UNLOCK_RESULT_CB
     AFSByteRangeLockResult      Result[1];
 
 } AFSByteRangeUnlockResultCB;
+
+
+//
+// Hold Fid Request Control Block
+//
+
+typedef struct _AFS_HOLD_FID_REQUEST_CB
+{
+        
+    ULONG                       Count;
+
+    AFSFileID                   FileID[ 1];
+
+} AFSHoldFidRequestCB;
+
+
+typedef struct _AFS_FID_RESULT
+{
+
+    AFSFileID                   FileID;
+
+    ULONG                       RefCount;
+
+    ULONG                       Status;
+
+} AFSFidResult;
+
+typedef struct _AFS_HOLD_FID_RESULT_CB
+{
+        
+    ULONG                       Count;
+
+    AFSFidResult                Result[ 1];
+
+} AFSHoldFidResultCB;
+
+
+//
+// Release Fid Request Control Block
+//
+
+typedef struct _AFS_RELEASE_FID_REQUEST_CB
+{
+        
+    ULONG                       Count;
+
+    AFSFileID                   FileID[ 1];
+
+} AFSReleaseFidRequestCB;
+
+typedef struct _AFS_RELEASE_FID_RESULT_CB
+{
+        
+    ULONG                       Count;
+
+    AFSFidResult                Result[ 1];
+
+} AFSReleaseFidResultCB;
+
 
 //
 // Trace configuration cb
