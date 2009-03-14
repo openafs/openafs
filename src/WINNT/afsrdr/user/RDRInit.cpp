@@ -7,8 +7,9 @@
 #define _CRT_NON_CONFORMING_SWPRINTFS
 #define UNICODE 1
 
-#include <ntstatus.h>
 #include <windows.h>
+typedef LONG NTSTATUS, *PNTSTATUS;      // not declared in ntstatus.h
+#include <ntstatus.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -455,7 +456,9 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     cm_user_t *         userp = NULL;
     BOOL                bWow64 = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_WOW64) ? TRUE : FALSE;
     BOOL                bFast  = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_FAST_REQUEST) ? TRUE : FALSE;
+    BOOL                bHoldFid = (RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_HOLD_FID) ? TRUE : FALSE;
     BOOL                bRetry = FALSE;
+    BOOL                bUnsupported = FALSE;
 
     userp = RDR_UserFromCommRequest(RequestBuffer);
 
@@ -508,7 +511,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
 
             RDR_EvaluateNodeByID( userp, pEvalTargetCB->ParentId,
                                   RequestBuffer->FileId,
-                                  bWow64, bFast,
+                                  bWow64, bFast, bHoldFid,
                                   RequestBuffer->ResultBufferLength,
                                   &pResultCB);
             break;
@@ -533,7 +536,7 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                                     RequestBuffer->Name,
                                     RequestBuffer->NameLength,
                                     RequestBuffer->RequestFlags & AFS_REQUEST_FLAG_CASE_SENSITIVE ? TRUE : FALSE,
-                                    bWow64, bFast,
+                                    bWow64, bFast, bHoldFid,
                                     RequestBuffer->ResultBufferLength,
                                     &pResultCB);
             break;
@@ -930,7 +933,61 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
                 break;
             }
 
+    case AFS_REQUEST_TYPE_HOLD_FID:
+            {
+
+                AFSHoldFidRequestCB *pHoldFidCB = (AFSHoldFidRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_HOLD_FID Index %08lX\n", 
+                              RequestBuffer->RequestIndex);
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                RDR_HoldFid( userp, 
+                             RequestBuffer->ProcessId,
+                             pHoldFidCB,
+                             bFast,
+                             RequestBuffer->ResultBufferLength,
+                             &pResultCB);
+             
+                break;
+            }
+
+    case AFS_REQUEST_TYPE_RELEASE_FID:
+            {
+
+                AFSReleaseFidRequestCB *pReleaseFidCB = (AFSReleaseFidRequestCB *)((char *)RequestBuffer->Name + RequestBuffer->DataOffset);
+
+                if (afsd_logp->enabled) {
+                    swprintf( wchBuffer, L"ProcessRequest Processing AFS_REQUEST_TYPE_RELEASE_FID Index %08lX\n", 
+                              RequestBuffer->RequestIndex);
+
+                    osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+                }
+
+                RDR_ReleaseFid( userp, 
+                                RequestBuffer->ProcessId,
+                                pReleaseFidCB,
+                                bFast,
+                                RequestBuffer->ResultBufferLength,
+                                &pResultCB);
+
+                break;
+            }
+
     default:
+            
+            bUnsupported = TRUE;
+
+            if (afsd_logp->enabled) {
+                swprintf( wchBuffer, L"ProcessRequest Received unknown request type %08lX Index %08lX\n", 
+                          RequestBuffer->RequestType,
+                          RequestBuffer->RequestIndex);
+
+                osi_Log1(afsd_logp, "%S", osi_LogSaveStringW(afsd_logp, wchBuffer));
+            }
 
             break;
     }
@@ -938,9 +995,13 @@ RDR_ProcessRequest( AFSCommRequest *RequestBuffer)
     if( BooleanFlagOn( RequestBuffer->RequestFlags, AFS_REQUEST_FLAG_SYNCHRONOUS))
     {
 	if (pResultCB == NULL) {
-	    /* We failed probably due to a memory allocation error */
+	    // We failed probably due to a memory allocation error 
+            // unless the unsupported flag was set.
 	    pResultCB = &stResultCB;
-	    pResultCB->ResultStatus = STATUS_NO_MEMORY;
+            if ( bUnsupported )
+                pResultCB->ResultStatus = STATUS_NOT_IMPLEMENTED;
+            else
+                pResultCB->ResultStatus = STATUS_NO_MEMORY;
 	}
 
         //

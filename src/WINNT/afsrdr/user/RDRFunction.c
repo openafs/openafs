@@ -76,6 +76,11 @@ RDR_SetInitParams( OUT AFSRedirectorInitInfo **ppRedirInitInfo, OUT DWORD * pRed
     *ppRedirInitInfo = (AFSRedirectorInitInfo *)malloc(*pRedirInitInfoLen);
     (*ppRedirInitInfo)->Flags = smb_hideDotFiles ? AFS_REDIR_INIT_FLAG_HIDE_DOT_FILES : 0;
     (*ppRedirInitInfo)->MaximumChunkLength = cm_data.chunkSize;
+    (*ppRedirInitInfo)->GlobalFileId.Cell   = cm_data.rootFid.cell;  
+    (*ppRedirInitInfo)->GlobalFileId.Volume = cm_data.rootFid.volume;
+    (*ppRedirInitInfo)->GlobalFileId.Vnode  = cm_data.rootFid.vnode; 
+    (*ppRedirInitInfo)->GlobalFileId.Unique = cm_data.rootFid.unique;
+    (*ppRedirInitInfo)->GlobalFileId.Hash   = cm_data.rootFid.hash;  
     (*ppRedirInitInfo)->ExtentCount.QuadPart = cm_data.buf_nbuffers;
     (*ppRedirInitInfo)->CacheBlockSize = cm_data.blockSize;
     (*ppRedirInitInfo)->CacheFileNameLength = (ULONG) (cm_CachePathLen * sizeof(WCHAR));
@@ -195,9 +200,9 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     DWORD      dwEntryLength;
     afs_uint32 code = 0, code2 = 0;
 
-    osi_Log4(afsd_logp, "RDR_PopulateCurrentEntry dscp=0x%p scp=0x%p name=%S short=%S", 
+    osi_Log5(afsd_logp, "RDR_PopulateCurrentEntry dscp=0x%p scp=0x%p name=%S short=%S flags=0x%x", 
              dscp, scp, osi_LogSaveStringW(afsd_logp, name), 
-             osi_LogSaveStringW(afsd_logp, shortName));
+             osi_LogSaveStringW(afsd_logp, shortName), dwFlags);
     osi_Log1(afsd_logp, "... maxLength=%d", dwMaxEntryLength);
 
     if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t)) {
@@ -281,7 +286,7 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
     else
     switch (scp->fileType) {
     case CM_SCACHETYPE_MOUNTPOINT:
-        if ((code = cm_ReadMountPoint(scp, userp, reqp)) == 0) {
+        if ((code2 = cm_ReadMountPoint(scp, userp, reqp)) == 0) {
             cm_scache_t *targetScp = NULL;
 
             pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
@@ -299,9 +304,9 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
             pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
 
             if (dwFlags & RDR_POP_FOLLOW_MOUNTPOINTS) {
-                code = cm_FollowMountPoint(scp, dscp, userp, reqp, &targetScp);
+                code2 = cm_FollowMountPoint(scp, dscp, userp, reqp, &targetScp);
 
-                if (code == 0) {
+                if (code2 == 0) {
                     pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
                     pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
                     pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
@@ -315,43 +320,86 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                     cm_ReleaseSCache(targetScp);
                 } else {
                     osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_FollowMountPoint failed scp=0x%p code=0x%x", 
-                              scp, code);
+                              scp, code2);
                 }
             }
         } else {
             osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_ReadMountPoint failed scp=0x%p code=0x%x", 
-                      scp, code);
+                      scp, code2);
         }
         break;
     case CM_SCACHETYPE_SYMLINK:
     case CM_SCACHETYPE_DFSLINK:
         {
-            char * mp; 
-
             pCurrentEntry->TargetNameOffset = pCurrentEntry->FileNameOffset + pCurrentEntry->FileNameLength;
             wtarget = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->TargetNameOffset);
 
             if (dwFlags & RDR_POP_EVALUATE_SYMLINKS) {
+                char * mp; 
+
+                code2 = cm_HandleLink(scp, userp, reqp);
+                if (code2 == 0) {
+                    mp = scp->mountPointStringp;
+                    len = strlen(mp);
+                    if ( len != 0 ) {
+                        /* Strip off the msdfs: prefix from the target name for the file system */
+                        if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
+                            osi_Log0(afsd_logp, "RDR_PopulateCurrentEntry DFSLink Detected");
+                            pCurrentEntry->FileType = scp->fileType;
+
+                            if (!strncmp("msdfs:", mp, 6)) {
+                                mp += 6;
+                                len -= 6;
+                            }
+                            /* only send one slash to the redirector */
+                            if (mp[0] == '\\' && mp[1] == '\\') {
+                                mp++;
+                                len--;
+                            }
+                        }
+#ifdef UNICODE
+                        cch = MultiByteToWideChar( CP_UTF8, 0, mp, 
+                                                   len * sizeof(char),
+                                                   wtarget, 
+                                                   len * sizeof(WCHAR));
+#else
+                        mbstowcs(wtarget, mp, len);
+#endif
+                    }
+                    pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
+                } else {
+                    osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_HandleLink failed scp=0x%p code=0x%x", 
+                             scp, code2);
+                }
+            }
+
+#if 0
+            /* 
+             * The following block of code should be removed once the file system
+             * is evaluating target paths on its own. 
+             */
+            if (dwFlags & RDR_POP_EVALUATE_SYMLINKS) {
                 cm_scache_t *targetScp = NULL;
                 cm_scache_t *linkParentScp = NULL;
                 cm_fid_t fid;
+
 
                 cm_SetFid(&fid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
 
                 linkParentScp = cm_FindSCache(&fid);
                 if (linkParentScp) {
                     lock_ObtainWrite(&linkParentScp->rw);
-                    code = cm_SyncOp( linkParentScp, NULL, userp, reqp, PRSFS_LOOKUP,
+                    code2 = cm_SyncOp( linkParentScp, NULL, userp, reqp, PRSFS_LOOKUP,
                                       CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-                    if (code == 0) {
+                    if (code2 == 0) {
                         cm_SyncOpDone( linkParentScp, NULL, 
                                        CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
                         lock_ReleaseWrite(&linkParentScp->rw);
 
                         lock_ReleaseWrite(&scp->rw);
-                        code = cm_EvaluateSymLink(linkParentScp, scp, &targetScp, userp, reqp);
+                        code2 = cm_EvaluateSymLink(linkParentScp, scp, &targetScp, userp, reqp);
                         lock_ObtainWrite(&scp->rw);
-                        if (code == 0) {
+                        if (code2 == 0) {
                             pCurrentEntry->TargetFileId.Cell = targetScp->fid.cell;
                             pCurrentEntry->TargetFileId.Volume = targetScp->fid.volume;
                             pCurrentEntry->TargetFileId.Vnode = targetScp->fid.vnode;
@@ -364,45 +412,18 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
 
                             cm_ReleaseSCache(targetScp);
                         } else {
-                            if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
-                                osi_Log0(afsd_logp, "RDR_PopulateCurrentEntry DFSLink Detected");
+                            if (scp->fileType == CM_SCACHETYPE_DFSLINK || scp->fileType == CM_SCACHETYPE_INVALID) {
                                 pCurrentEntry->FileType = scp->fileType;
                                 code = 0;
                             } else {
                                 osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_EvaluateSymLink failed scp=0x%p code=0x%x", 
-                                         scp, code);
+                                         scp, code2);
                             }
                         }
-
-                        mp = scp->mountPointStringp;
-                        len = strlen(mp);
-                        if ( len != 0 ) {
-                            /* Strip off the msdfs: prefix from the target name for the file system */
-                            if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
-                                if (!strncmp("msdfs:", mp, 6)) {
-                                    mp += 6;
-                                    len -= 6;
-                                }
-                                /* only send one slash to the redirector */
-                                if (mp[0] == '\\' && mp[1] == '\\') {
-                                    mp++;
-                                    len--;
-                                }
-                            }
-#ifdef UNICODE
-                            cch = MultiByteToWideChar( CP_UTF8, 0, mp, 
-                                                       len * sizeof(char),
-                                                       wtarget, 
-                                                       len * sizeof(WCHAR));
-#else
-                            mbstowcs(wtarget, mp, len);
-#endif
-                        }
-                        pCurrentEntry->TargetNameLength = (ULONG)(sizeof(WCHAR) * len);
                     } else {
                         lock_ReleaseWrite(&linkParentScp->rw);
                         osi_Log2(afsd_logp, "RDR_PopulateCurrentEntry cm_SyncOp link parent failed scp=0x%p code=0x%x", 
-                                 linkParentScp, code);
+                                 linkParentScp, code2);
                     }
                     cm_ReleaseSCache(linkParentScp);
                 } else {
@@ -410,8 +431,10 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                               fid.cell, fid.volume, fid.vnode, fid.unique);
                 }
             }
+#endif /* 0 */
         }
         break;
+
     default:
         pCurrentEntry->TargetNameOffset = 0;
         pCurrentEntry->TargetNameLength = 0;
@@ -426,6 +449,102 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
         *pdwRemainingLength = dwMaxEntryLength - dwEntryLength;
 
     osi_Log3(afsd_logp, "RDR_PopulateCurrentEntry Success FileNameLength=%d TargetNameLength=%d RemainingLength=%d",
+              pCurrentEntry->FileNameLength, pCurrentEntry->TargetNameLength, *pdwRemainingLength);
+
+    return code;
+}
+
+afs_uint32
+RDR_PopulateCurrentEntryNoScp( IN  AFSDirEnumEntry * pCurrentEntry,
+                               IN  DWORD             dwMaxEntryLength,
+                               IN  cm_scache_t     * dscp,
+                               IN  cm_fid_t        * fidp,
+                               IN  cm_user_t       * userp,
+                               IN  cm_req_t        * reqp,
+                               IN  wchar_t         * name,
+                               IN  wchar_t         * shortName,
+                               IN  DWORD             dwFlags,
+                               OUT AFSDirEnumEntry **ppNextEntry,
+                               OUT DWORD           * pdwRemainingLength)
+{
+    FILETIME ft;
+    WCHAR *  wname;
+    size_t   len;
+    DWORD      dwEntryLength;
+    afs_uint32 code = 0, code2 = 0;
+
+    osi_Log4(afsd_logp, "RDR_PopulateCurrentEntryNoEntry dscp=0x%p name=%S short=%S flags=0x%x", 
+             dscp, osi_LogSaveStringW(afsd_logp, name), 
+             osi_LogSaveStringW(afsd_logp, shortName), dwFlags);
+    osi_Log1(afsd_logp, "... maxLength=%d", dwMaxEntryLength);
+
+    if (dwMaxEntryLength < sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t)) {
+        if (ppNextEntry)
+            *ppNextEntry = pCurrentEntry;
+        if (pdwRemainingLength)
+            *pdwRemainingLength = dwMaxEntryLength;
+        osi_Log2(afsd_logp, "RDR_PopulateCurrentEntryNoEntry Not Enough Room for Entry %d < %d",
+                 dwMaxEntryLength, sizeof(AFSDirEnumEntry) + (MAX_PATH + MOUNTPOINTLEN) * sizeof(wchar_t));
+        return CM_ERROR_TOOBIG;
+    }
+
+    if (!name)
+        name = L"";
+    if (!shortName)
+        shortName = L"";
+
+    dwEntryLength = sizeof(AFSDirEnumEntry);
+
+    pCurrentEntry->FileId.Cell = fidp->cell;
+    pCurrentEntry->FileId.Volume = fidp->volume;
+    pCurrentEntry->FileId.Vnode = fidp->vnode;
+    pCurrentEntry->FileId.Unique = fidp->unique;
+    pCurrentEntry->FileId.Hash = fidp->hash;
+
+    pCurrentEntry->FileType = CM_SCACHETYPE_UNKNOWN;
+
+    pCurrentEntry->DataVersion.QuadPart = CM_SCACHE_VERSION_BAD;
+
+    smb_LargeSearchTimeFromUnixTime(&ft, 0);
+    pCurrentEntry->Expiration.LowPart = ft.dwLowDateTime;
+    pCurrentEntry->Expiration.HighPart = ft.dwHighDateTime;
+
+    smb_LargeSearchTimeFromUnixTime(&ft, 0);
+    pCurrentEntry->CreationTime.LowPart = ft.dwLowDateTime;
+    pCurrentEntry->CreationTime.HighPart = ft.dwHighDateTime;
+    pCurrentEntry->LastAccessTime = pCurrentEntry->CreationTime;
+    pCurrentEntry->LastWriteTime = pCurrentEntry->CreationTime;
+    pCurrentEntry->ChangeTime = pCurrentEntry->CreationTime;
+
+    pCurrentEntry->EndOfFile.QuadPart = 0;
+    pCurrentEntry->AllocationSize.QuadPart = 0;
+    pCurrentEntry->FileAttributes = 0;
+    if (smb_hideDotFiles && smb_IsDotFile(name))
+        pCurrentEntry->FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+    pCurrentEntry->EaSize = 0;
+    pCurrentEntry->Links = 0;
+
+    len = wcslen(shortName);
+    wcsncpy(pCurrentEntry->ShortName, shortName, len);
+    pCurrentEntry->ShortNameLength = (CCHAR)(len * sizeof(WCHAR));
+
+    pCurrentEntry->FileNameOffset = sizeof(AFSDirEnumEntry);
+    len = wcslen(name);
+    wname = (WCHAR *)((PBYTE)pCurrentEntry + pCurrentEntry->FileNameOffset);
+    wcsncpy(wname, name, len);
+    pCurrentEntry->FileNameLength = (ULONG)(sizeof(WCHAR) * len);
+
+    pCurrentEntry->TargetNameOffset = 0;
+    pCurrentEntry->TargetNameLength = 0;
+
+    dwEntryLength += pCurrentEntry->FileNameLength + pCurrentEntry->TargetNameLength;
+    dwEntryLength += (dwEntryLength % 8) ? 8 - (dwEntryLength % 8) : 0;   /* quad align */
+    if (ppNextEntry)
+        *ppNextEntry = (AFSDirEnumEntry *)((PBYTE)pCurrentEntry + dwEntryLength);
+    if (pdwRemainingLength)
+        *pdwRemainingLength = dwMaxEntryLength - dwEntryLength;
+
+    osi_Log3(afsd_logp, "RDR_PopulateCurrentEntryNoScp Success FileNameLength=%d TargetNameLength=%d RemainingLength=%d",
               pCurrentEntry->FileNameLength, pCurrentEntry->TargetNameLength, *pdwRemainingLength);
 
     return code;
@@ -535,14 +654,8 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
 
         code = cm_BeginDirOp(dscp, userp, &req, CM_DIRLOCK_READ, &dirop);
         if (code == 0) {
-            code = cm_BPlusDirEnumerate(dscp, TRUE, NULL, &enump);
-            if (code == 0 && !bSkipStatus) {
-                code = cm_BPlusDirEnumBulkStat(dscp, enump, userp, &req);
-                if (code) {
-                    osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BPlusDirEnumBulkStat failure code=0x%x",
-                              code);
-                }
-            } else {
+            code = cm_BPlusDirEnumerate(dscp, userp, &req, TRUE, NULL, !bSkipStatus, &enump);
+            if (code) {
                 osi_Log1(afsd_logp, "RDR_EnumerateDirectory cm_BPlusDirEnumerate failure code=0x%x",
                           code);
             }
@@ -577,27 +690,45 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
                 goto getnextentry;
             }
 
-            code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
+            if ( bSkipStatus ) {
+                scp = cm_FindSCache(&entryp->fid);
+                code = 0;
+            } else {
+                code = cm_GetSCache(&entryp->fid, &scp, userp, &req);
+            }
+
             if (!code) {
-                code = RDR_PopulateCurrentEntry(pCurrentEntry, dwMaxEntryLength, 
-                                                dscp, scp, userp, &req, 
-                                                entryp->name, entryp->shortName,
-                                                (bWow64 ? RDR_POP_WOW64 : 0) | 
-                                                (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0),
-                                                &pCurrentEntry, &dwMaxEntryLength);
-                cm_ReleaseSCache(scp);
+                if (scp) {
+                    code = RDR_PopulateCurrentEntry(pCurrentEntry, dwMaxEntryLength, 
+                                                     dscp, scp, userp, &req, 
+                                                     entryp->name, entryp->shortName,
+                                                     (bWow64 ? RDR_POP_WOW64 : 0) | 
+                                                     (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0),
+                                                     &pCurrentEntry, &dwMaxEntryLength);
+                    cm_ReleaseSCache(scp);
+                } else {
+                    code = RDR_PopulateCurrentEntryNoScp( pCurrentEntry, dwMaxEntryLength,
+                                                          dscp, &entryp->fid, userp, &req,
+                                                          entryp->name, entryp->shortName,
+                                                          (bWow64 ? RDR_POP_WOW64 : 0),
+                                                          &pCurrentEntry, &dwMaxEntryLength);
+                }
                 if (stopnow)
                     goto outofspace;
                 goto getnextentry;
             } else {
                 osi_Log2(afsd_logp, "RDR_EnumerateDirectory cm_GetSCache failure scp=0x%p code=0x%x",
-                         scp, code);
+                          scp, code);
                 if (stopnow)
                     goto outofspace;
                 goto getnextentry;
             }
         }
     }
+
+    if (enump && ResultBufferLength == 0) 
+        code = cm_BPlusDirEnumBulkStat(enump);
+
   outofspace:
 
     if (code || enump->next == enump->count || ResultBufferLength == 0) {
@@ -634,6 +765,7 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                         IN DWORD    FileNameLength,
                         IN BOOL     CaseSensitive,
                         IN BOOL     bWow64,
+                        IN BOOL     bHoldFid,
                         IN BOOL     bSkipStatus,
                         IN DWORD    ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB)
@@ -770,7 +902,11 @@ RDR_EvaluateNodeByName( IN cm_user_t *userp,
                                         (bSkipStatus ? RDR_POP_NO_GETSTATUS : 0) |
                                         RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
                                         NULL, &dwRemaining);
-        cm_ReleaseSCache(scp);
+        if ( code || !bHoldFid) 
+        {
+            cm_ReleaseSCache(scp);
+        }
+
         if (code) {
             smb_MapNTError(cm_MapRPCError(code, &req), &status);
             (*ResultCB)->ResultStatus = status;
@@ -802,6 +938,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
                       IN AFSFileID SourceID,
                       IN BOOL      bWow64,
                       IN BOOL      bSkipStatus,
+                      IN BOOL      bHoldFid,
                       IN DWORD     ResultBufferLength,
                       IN OUT AFSCommResult **ResultCB)
 {
@@ -927,7 +1064,10 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
                                     RDR_POP_FOLLOW_MOUNTPOINTS | RDR_POP_EVALUATE_SYMLINKS,
                                     NULL, &dwRemaining);
 
-    cm_ReleaseSCache(scp);
+    if ( code || !bHoldFid) 
+    {
+        cm_ReleaseSCache(scp);
+    }
     cm_ReleaseSCache(dscp);
 
     if (code) {
@@ -2845,6 +2985,8 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
     osi_Log4(afsd_logp, "RDR_ByteRangeLockSync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume, 
               FileId.Vnode, FileId.Unique);
+    osi_Log2(afsd_logp, "... ProcessId 0x%x:%x",
+              ProcessId.HighPart, ProcessId.LowPart);
 
     Length = sizeof( AFSByteRangeLockResultCB) + ((pBRLRequestCB->Count - 1) * sizeof(AFSByteRangeLockResult));
     if (Length > ResultBufferLength) {
@@ -2899,17 +3041,30 @@ RDR_ByteRangeLockSync( IN cm_user_t     *userp,
     }
 
     /* the scp is now locked and current */
-    for ( i=0; i<pBRLRequestCB->Count; i++ ) {
-        key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
+    key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
 
+    for ( i=0; i<pBRLRequestCB->Count; i++ ) {
         pResultCB->Result[i].LockType = pBRLRequestCB->Request[i].LockType;
         pResultCB->Result[i].Offset = pBRLRequestCB->Request[i].Offset;
         pResultCB->Result[i].Length = pBRLRequestCB->Request[i].Length;
 
-        code = cm_Lock(scp, pBRLRequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
+        code = cm_Lock(scp, 
+                       pBRLRequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
                        pBRLRequestCB->Request[i].Offset, 
                        pBRLRequestCB->Request[i].Length,
                        key, 0, userp, &req, NULL);
+
+        if (code) {
+            osi_Log4(afsd_logp, "RDR_ByteRangeLockSync FAILURE code 0x%x type 0x%u offset 0x%x:%x", 
+                     code, 
+                     pBRLRequestCB->Request[i].LockType,
+                     pBRLRequestCB->Request[i].Offset.HighPart,
+                     pBRLRequestCB->Request[i].Offset.LowPart);
+            osi_Log2(afsd_logp, "... length 0x%x:%x", 
+                     pBRLRequestCB->Request[i].Length.HighPart, 
+                     pBRLRequestCB->Request[i].Length.LowPart);
+        }
+
         switch (code) {
         case 0:
             pResultCB->Result[i].Status = 0;
@@ -2957,6 +3112,8 @@ RDR_ByteRangeLockAsync( IN cm_user_t     *userp,
     osi_Log4(afsd_logp, "RDR_ByteRangeLockAsync File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume, 
               FileId.Vnode, FileId.Unique);
+    osi_Log2(afsd_logp, "... ProcessId 0x%x:%x",
+              ProcessId.HighPart, ProcessId.LowPart);
 
     Length = sizeof( AFSSetByteRangeLockResultCB) + ((pABRLRequestCB->Count - 1) * sizeof(AFSByteRangeLockResult));
     *ResultCB = (AFSSetByteRangeLockResultCB *)malloc( Length );
@@ -3005,17 +3162,30 @@ RDR_ByteRangeLockAsync( IN cm_user_t     *userp,
     }
 
     /* the scp is now locked and current */
-    for ( i=0; i<pABRLRequestCB->Count; i++ ) {
-        key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
+    key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
 
+    for ( i=0; i<pABRLRequestCB->Count; i++ ) {
         pResultCB->Result[i].LockType = pABRLRequestCB->Request[i].LockType;
         pResultCB->Result[i].Offset = pABRLRequestCB->Request[i].Offset;
         pResultCB->Result[i].Length = pABRLRequestCB->Request[i].Length;
 
-        code = cm_Lock(scp, pABRLRequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
+        code = cm_Lock(scp, 
+                       pABRLRequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
                        pABRLRequestCB->Request[i].Offset, 
                        pABRLRequestCB->Request[i].Length,
                        key, 0, userp, &req, NULL);
+
+        if (code) {
+            osi_Log4(afsd_logp, "RDR_ByteRangeLockAsync FAILURE code 0x%x type 0x%u offset 0x%x:%x", 
+                     code, 
+                     pABRLRequestCB->Request[i].LockType,
+                     pABRLRequestCB->Request[i].Offset.HighPart,
+                     pABRLRequestCB->Request[i].Offset.LowPart);
+            osi_Log2(afsd_logp, "... length 0x%x:%x", 
+                     pABRLRequestCB->Request[i].Length.HighPart, 
+                     pABRLRequestCB->Request[i].Length.LowPart);
+        }
+
         switch (code) {
         case 0:
             pResultCB->Result[i].Status = 0;
@@ -3061,6 +3231,8 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
     osi_Log4(afsd_logp, "RDR_ByteRangeUnlock File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume, 
               FileId.Vnode, FileId.Unique);
+    osi_Log2(afsd_logp, "... ProcessId 0x%x:%x",
+              ProcessId.HighPart, ProcessId.LowPart);
 
     Length = sizeof( AFSByteRangeUnlockResultCB) + ((pBRURequestCB->Count - 1) * sizeof(AFSByteRangeLockResult));
     if (Length > ResultBufferLength) {
@@ -3114,18 +3286,28 @@ RDR_ByteRangeUnlock( IN cm_user_t     *userp,
     }
 
     /* the scp is now locked and current */
-    for ( i=0; i<pBRURequestCB->Count; i++ ) {
-        key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
+    key = cm_GenerateKey(CM_SESSION_IFS, ProcessId.QuadPart, 0);
 
+    for ( i=0; i<pBRURequestCB->Count; i++ ) {
         pResultCB->Result[i].LockType = pBRURequestCB->Request[i].LockType;
         pResultCB->Result[i].Offset = pBRURequestCB->Request[i].Offset;
         pResultCB->Result[i].Length = pBRURequestCB->Request[i].Length;
 
-        code = cm_Unlock(scp, pBRURequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
-                       pBRURequestCB->Request[i].Offset, 
-                       pBRURequestCB->Request[i].Length,
-                       key, userp, &req);
+        code = cm_Unlock(scp, 
+                         pBRURequestCB->Request[i].LockType == AFS_BYTE_RANGE_LOCK_TYPE_SHARED,
+                         pBRURequestCB->Request[i].Offset, 
+                         pBRURequestCB->Request[i].Length,
+                         key, CM_UNLOCK_FLAG_MATCH_RANGE, userp, &req);
 
+        if (code) {
+            osi_Log4(afsd_logp, "RDR_ByteRangeUnlock FAILURE code 0x%x type 0x%u offset 0x%x:%x", 
+                     code, pBRURequestCB->Request[i].LockType,
+                     pBRURequestCB->Request[i].Offset.HighPart,
+                     pBRURequestCB->Request[i].Offset.LowPart);
+            osi_Log2(afsd_logp, "... length 0x%x:%x", 
+                     pBRURequestCB->Request[i].Length.HighPart, 
+                     pBRURequestCB->Request[i].Length.LowPart);
+        }
         smb_MapNTError(cm_MapRPCError(code, &req), &status);
         pResultCB->Result[i].Status = status;
     }
@@ -3148,7 +3330,6 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
                         IN OUT AFSCommResult **ResultCB)
 {
     AFSByteRangeUnlockResultCB *pResultCB = NULL;
-    DWORD       Length;
     cm_scache_t *scp = NULL;
     cm_fid_t    Fid;
     afs_uint32  code;
@@ -3163,22 +3344,14 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
     osi_Log4(afsd_logp, "RDR_ByteRangeUnlockAll File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
               FileId.Cell, FileId.Volume, 
               FileId.Vnode, FileId.Unique);
+    osi_Log2(afsd_logp, "... ProcessId 0x%x:%x",
+              ProcessId.HighPart, ProcessId.LowPart);
 
-    Length = sizeof( AFSCommResult);
-    if (Length > ResultBufferLength) {
-        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult));
-        if (!(*ResultCB))
-            return;
-        memset( *ResultCB, 0, sizeof(AFSCommResult));
-        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
-        return;
-    }
-
-    *ResultCB = (AFSCommResult *)malloc( Length );
+    *ResultCB = (AFSCommResult *)malloc( sizeof( AFSCommResult));
     if (!(*ResultCB))
 	return;
-    memset( *ResultCB, '\0', Length );
-    (*ResultCB)->ResultBufferLength = Length;
+    memset( *ResultCB, '\0', sizeof( AFSCommResult));
+    (*ResultCB)->ResultBufferLength = 0;
 
     /* Allocate the extents from the buffer package */
     Fid.cell = FileId.Cell;
@@ -3223,7 +3396,11 @@ RDR_ByteRangeUnlockAll( IN cm_user_t     *userp,
 
     smb_MapNTError(cm_MapRPCError(code, &req), &status);
     (*ResultCB)->ResultStatus = status;
-    osi_Log0(afsd_logp, "RDR_ByteRangeUnlockAll SUCCESS");
+
+    if (code)
+        osi_Log1(afsd_logp, "RDR_ByteRangeUnlockAll FAILURE code 0x%x", code);
+    else 
+        osi_Log0(afsd_logp, "RDR_ByteRangeUnlockAll SUCCESS");
     return;
         
 }
@@ -3401,6 +3578,148 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
     smb_MapNTError(cm_MapRPCError(code, &req), &status);
     (*ResultCB)->ResultStatus = status;
     osi_Log0(afsd_logp, "RDR_GetVolumeInfo SUCCESS");
+    return;
+}
+
+void
+RDR_HoldFid( IN cm_user_t     *userp,
+             IN ULARGE_INTEGER ProcessId,
+             IN AFSHoldFidRequestCB * pHoldFidCB,
+             IN BOOL bFast,
+             IN DWORD ResultBufferLength,
+             IN OUT AFSCommResult **ResultCB)
+{
+    AFSHoldFidResultCB *pResultCB = NULL;
+    DWORD       index;
+    DWORD       Length;
+    cm_req_t    req;
+
+    RDR_InitReq(&req);
+
+    osi_Log1(afsd_logp, "RDR_HoldFid Count=%u", pHoldFidCB->Count);
+
+    Length = sizeof(AFSHoldFidResultCB) + (pHoldFidCB->Count-1) * sizeof(AFSFidResult);
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult) );
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+    *ResultCB = (AFSCommResult *)malloc( Length + sizeof( AFSCommResult) );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
+    pResultCB = (AFSHoldFidResultCB *)(*ResultCB)->ResultData;
+
+    for ( index = 0; index < pHoldFidCB->Count; index++ )
+    {
+        cm_scache_t *scp = NULL;
+        cm_fid_t    Fid;
+        afs_uint32  code;
+        DWORD       status;
+
+        Fid.cell   = pResultCB->Result[index].FileID.Cell   = pHoldFidCB->FileID[index].Cell;
+        Fid.volume = pResultCB->Result[index].FileID.Volume = pHoldFidCB->FileID[index].Volume;
+        Fid.vnode  = pResultCB->Result[index].FileID.Vnode  = pHoldFidCB->FileID[index].Vnode;
+        Fid.unique = pResultCB->Result[index].FileID.Unique = pHoldFidCB->FileID[index].Unique;
+        Fid.hash   = pResultCB->Result[index].FileID.Hash   = pHoldFidCB->FileID[index].Hash;
+
+        osi_Log4( afsd_logp, 
+                  "RDR_HoldFid File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+                  Fid.cell, Fid.volume, Fid.vnode, Fid.unique);
+        
+        code = cm_GetSCache(&Fid, &scp, userp, &req);
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
+            osi_Log2( afsd_logp, "RDR_HoldFid cm_GetSCache FID failure code=0x%x status=0x%x",
+                      code, status);
+            pResultCB->Result[index].Status = status;
+            pResultCB->Result[index].RefCount = 0;
+        } else {
+            pResultCB->Result[index].Status = 0;
+            pResultCB->Result[index].RefCount = scp->refCount;
+        }
+    }
+
+  _done:
+    (*ResultCB)->ResultStatus = 0;
+    osi_Log0(afsd_logp, "RDR_HoldFid SUCCESS");
+    return;
+}
+
+void
+RDR_ReleaseFid( IN cm_user_t     *userp,
+                IN ULARGE_INTEGER ProcessId,
+                IN AFSReleaseFidRequestCB * pReleaseFidCB,
+                IN BOOL bFast,
+                IN DWORD ResultBufferLength,
+                IN OUT AFSCommResult **ResultCB)
+{
+    AFSReleaseFidResultCB *pResultCB = NULL;
+    DWORD       index;
+    DWORD       Length;
+    cm_req_t    req;
+
+    RDR_InitReq(&req);
+
+    osi_Log1(afsd_logp, "RDR_ReleaseFid Count=%u", pReleaseFidCB->Count);
+
+    Length = sizeof(AFSReleaseFidResultCB) + (pReleaseFidCB->Count-1) * sizeof(AFSFidResult);
+    if (Length > ResultBufferLength) {
+        *ResultCB = (AFSCommResult *)malloc(sizeof(AFSCommResult) );
+        if (!(*ResultCB))
+            return;
+        memset( *ResultCB, 0, sizeof(AFSCommResult));
+        (*ResultCB)->ResultStatus = STATUS_BUFFER_OVERFLOW;
+        return;
+    }
+    *ResultCB = (AFSCommResult *)malloc( Length + sizeof( AFSCommResult) );
+    if (!(*ResultCB))
+	return;
+    memset( *ResultCB, '\0', Length );
+    (*ResultCB)->ResultBufferLength = Length;
+    pResultCB = (AFSReleaseFidResultCB *)(*ResultCB)->ResultData;
+
+    for ( index = 0; index < pReleaseFidCB->Count; index++ )
+    {
+        cm_scache_t *scp = NULL;
+        cm_fid_t    Fid;
+        afs_uint32  code;
+        DWORD       status;
+
+        Fid.cell   = pResultCB->Result[index].FileID.Cell   = pReleaseFidCB->FileID[index].Cell;
+        Fid.volume = pResultCB->Result[index].FileID.Volume = pReleaseFidCB->FileID[index].Volume;
+        Fid.vnode  = pResultCB->Result[index].FileID.Vnode  = pReleaseFidCB->FileID[index].Vnode;
+        Fid.unique = pResultCB->Result[index].FileID.Unique = pReleaseFidCB->FileID[index].Unique;
+        Fid.hash   = pResultCB->Result[index].FileID.Hash   = pReleaseFidCB->FileID[index].Hash;
+
+        osi_Log4( afsd_logp, 
+                  "RDR_ReleaseFid File FID cell=0x%x vol=0x%x vn=0x%x uniq=0x%x",
+                  Fid.cell, Fid.volume, Fid.vnode, Fid.unique);
+        
+        code = cm_GetSCache(&Fid, &scp, userp, &req);
+        if (code) {
+            smb_MapNTError(cm_MapRPCError(code, &req), &status);
+            osi_Log2( afsd_logp, "RDR_ReleaseFid cm_GetSCache FID failure code=0x%x status=0x%x",
+                      code, status);
+            pResultCB->Result[index].Status = status;
+            pResultCB->Result[index].RefCount = 0;
+        } else {
+            /* Release twice to release the hold from the file system */
+            cm_ReleaseSCache(scp);
+
+            pResultCB->Result[index].Status = 0;
+            pResultCB->Result[index].RefCount = scp->refCount - 1;
+            cm_ReleaseSCache(scp);
+        }
+    }
+
+  _done:
+    (*ResultCB)->ResultStatus = 0;
+    osi_Log0(afsd_logp, "RDR_ReleaseFid SUCCESS");
     return;
 }
 

@@ -62,12 +62,13 @@ RDR_EnumerateDirectory( IN cm_user_t *userp,
 void
 RDR_EvaluateNodeByName( IN cm_user_t *userp,
                         IN AFSFileID ParentID,
-                        IN WCHAR   *Name,
-                        IN DWORD    NameLength,
-                        IN BOOL     CaseSensitive,
-                        IN BOOL bWow64,
-                        IN BOOL bQueryStatus,
-                        IN DWORD    ResultBufferLength,
+                        IN WCHAR     *Name,
+                        IN DWORD     NameLength,
+                        IN BOOL      CaseSensitive,
+                        IN BOOL      bWow64,
+                        IN BOOL      bQueryStatus,
+                        IN BOOL      bHoldFid,
+                        IN DWORD     ResultBufferLength,
                         IN OUT AFSCommResult **ResultCB);
     
 void
@@ -76,6 +77,7 @@ RDR_EvaluateNodeByID( IN cm_user_t *userp,
                       IN AFSFileID SourceID,
                       IN BOOL bWow64,
                       IN BOOL bQueryStatus,
+                      IN BOOL      bHoldFid,
                       IN DWORD    ResultBufferLength,
                       IN OUT AFSCommResult **ResultCB);
     
@@ -240,6 +242,22 @@ RDR_GetVolumeInfo( IN cm_user_t     *userp,
                    IN BOOL bWow64,
                    IN DWORD ResultBufferLength,
                    IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_HoldFid( IN cm_user_t     *userp,
+             IN ULARGE_INTEGER ProcessId,
+             IN AFSHoldFidRequestCB * pHoldFidCB,
+             IN BOOL bFast,
+             IN DWORD ResultBufferLength,
+             IN OUT AFSCommResult **ResultCB);
+
+void
+RDR_ReleaseFid( IN cm_user_t     *userp,
+                IN ULARGE_INTEGER ProcessId,
+                IN AFSReleaseFidRequestCB * pReleaseFidCB,
+                IN BOOL bFast,
+                IN DWORD ResultBufferLength,
+                IN OUT AFSCommResult **ResultCB);
 
 extern DWORD 
 RDR_SysName(ULONG Architecture, ULONG Count, WCHAR **NameList);
