@@ -2354,7 +2354,7 @@ cm_IoctlSetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
         ioctlp->flags |= CM_IOCTLFLAG_LOGON;
     }
 
-    cm_ResetACLCache(userp);
+    cm_ResetACLCache(cellp, userp);
 
     if (release_userp)
 	cm_ReleaseUser(userp);
@@ -2577,7 +2577,7 @@ cm_IoctlDelToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     lock_ReleaseMutex(&userp->mx);
 
-    cm_ResetACLCache(userp);
+    cm_ResetACLCache(cellp, userp);
 
     return 0;
 }
@@ -2612,7 +2612,7 @@ cm_IoctlDelAllToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     lock_ReleaseMutex(&userp->mx);
 
-    cm_ResetACLCache(userp);
+    cm_ResetACLCache(NULL, userp);
 
     return 0;
 }

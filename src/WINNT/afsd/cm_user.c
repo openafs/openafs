@@ -189,7 +189,7 @@ void cm_CheckTokenCache(time_t now)
             lock_ReleaseMutex(&userp->mx);
             if (bExpired) {
                 bExpired=FALSE;
-                cm_ResetACLCache(userp);
+                cm_ResetACLCache(NULL, userp);
             }
         }
     }

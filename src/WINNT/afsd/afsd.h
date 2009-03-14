@@ -38,9 +38,9 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_diskcache95.h"
 #endif /* DISKCACHE95 */
 #include "cm_conn.h"
+#include "cm_cell.h"
 #include "cm_aclent.h"
 #include "cm_server.h"
-#include "cm_cell.h"
 #include "cm_volstat.h"
 #include "cm_volume.h"
 #include "cm_dcache.h"

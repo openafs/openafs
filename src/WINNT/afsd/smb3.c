@@ -6124,7 +6124,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         key = cm_GenerateKey(vcp->vcID, pid, fidp->fid);
 
-        code = cm_Unlock(scp, LockType, LOffset, LLength, key, userp, &req);
+        code = cm_Unlock(scp, LockType, LOffset, LLength, key, 0, userp, &req);
 
         if (code) 
             goto done;
@@ -6246,7 +6246,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
                 wlNext = (smb_waitingLock_t *) osi_QNext(&wl->q);
 
-                ul_code = cm_Unlock(scp, LockType, wl->LOffset, wl->LLength, wl->key, userp, &req);
+                ul_code = cm_Unlock(scp, LockType, wl->LOffset, wl->LLength, wl->key, 0, userp, &req);
                 
                 if(ul_code != 0) {
                     osi_Log1(smb_logp, "smb_ReceiveV3Locking cm_Unlock returns code %d", ul_code);
