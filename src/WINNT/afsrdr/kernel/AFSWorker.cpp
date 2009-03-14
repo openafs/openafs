@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -540,15 +540,6 @@ AFSWorkerThread( IN PVOID Context)
                     case AFS_WORK_FLUSH_FCB:
                     {
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSWorkerThread Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                      &pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileName,
-                                      pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                         (VOID)AFSFlushExtents( pWorkItem->Specific.Fcb.Fcb);
  
                         ASSERT( pWorkItem->Specific.Fcb.Fcb->OpenReferenceCount != 0);
@@ -596,13 +587,164 @@ AFSWorkerThread( IN PVOID Context)
                         break;
                     }
 
-                    case AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET:
+                    case AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET_INFO:
                     {
+
+                        AFSFcb *pParentFcb = NULL;
+                        UNICODE_STRING uniFullName;
+                        AFSNameArrayHdr *pNameArray = NULL;
+                        WCHAR *pBuffer = NULL;
+
+                        uniFullName.Length = 0;
+                        uniFullName.Buffer = NULL;
+
+                        //
+                        // Grab the top fcb lock while performing this call, it gets released in 
+                        // the call itself
+                        //
+
+                        AFSAcquireExcl( &pWorkItem->Specific.Fcb.Fcb->NPFcb->Resource,
+                                        TRUE);
+
+                        pParentFcb = pWorkItem->Specific.Fcb.Fcb->ParentFcb;
+
+                        //
+                        // Build up the full name
+                        //
+
+                        pWorkItem->Status = AFSBuildRootName( pParentFcb,
+                                                              &pWorkItem->Specific.Fcb.Fcb->DirEntry->DirectoryEntry.FileName,
+                                                              &uniFullName);
+
+                        if( !NT_SUCCESS( pWorkItem->Status))
+                        {
+
+                            AFSReleaseResource( &pWorkItem->Specific.Fcb.Fcb->NPFcb->Resource);
+
+                            freeWorkItem = FALSE;
+
+                            KeSetEvent( &pWorkItem->Event,
+                                        0,
+                                        FALSE);
+
+                            break;
+                        }
+
+                        //
+                        // Save this off since we will adjust the string lower ...
+                        //
+
+                        pBuffer = uniFullName.Buffer;
+
+                        //
+                        // Build a name array for this request
+                        //
+
+                        pNameArray = AFSInitNameArray();
+
+                        if( pNameArray == NULL)
+                        {
+
+                            ExFreePool( pBuffer);
+
+                            AFSReleaseResource( &pWorkItem->Specific.Fcb.Fcb->NPFcb->Resource);
+
+                            pWorkItem->Status = STATUS_INSUFFICIENT_RESOURCES;
+
+                            freeWorkItem = FALSE;
+
+                            KeSetEvent( &pWorkItem->Event,
+                                        0,
+                                        FALSE);
+
+                            break;
+                        }
+
+                        //
+                        // We populate up to the current parent, if they are different
+                        //
+
+                        if( pWorkItem->Specific.Fcb.NameArray == NULL)
+                        {
+
+                            pWorkItem->Status = AFSPopulateNameArray( pNameArray,
+                                                                      &uniFullName,
+                                                                      pParentFcb);
+                        }
+                        else
+                        {
+
+                            pWorkItem->Status = AFSPopulateNameArrayFromRelatedArray( pNameArray,
+                                                                                      pWorkItem->Specific.Fcb.NameArray,
+                                                                                      pParentFcb);
+
+                        }
+
+                        if( !NT_SUCCESS( pWorkItem->Status))
+                        {
+
+                            AFSFreeNameArray( pNameArray);
+
+                            ExFreePool( pBuffer);
+
+                            AFSReleaseResource( &pWorkItem->Specific.Fcb.Fcb->NPFcb->Resource);
+
+                            freeWorkItem = FALSE;
+
+                            KeSetEvent( &pWorkItem->Event,
+                                        0,
+                                        FALSE);
+
+                            break;
+                        }
+
+                        //
+                        // The name array does not include the current entry so we need
+                        // to add this entry in
+                        //
+
+                        if( pParentFcb != NULL)
+                        {
+
+                            pWorkItem->Status = AFSInsertNextElement( pNameArray,
+                                                                      pParentFcb);
+                        }
+
+                        if( !NT_SUCCESS( pWorkItem->Status))
+                        {
+
+                            AFSFreeNameArray( pNameArray);
+
+                            ExFreePool( pBuffer);
+
+                            AFSReleaseResource( &pWorkItem->Specific.Fcb.Fcb->NPFcb->Resource);
+
+                            freeWorkItem = FALSE;
+
+                            KeSetEvent( &pWorkItem->Event,
+                                        0,
+                                        FALSE);
+
+                            break;
+                        }
+
+                        //
+                        // Go get the target ...
+                        //
 
                         pWorkItem->Status = AFSBuildSymLinkTarget( pWorkItem->ProcessID,
                                                                    pWorkItem->Specific.Fcb.Fcb,
-                                                                   &pWorkItem->Specific.Fcb.FileType,
-                                                                   pWorkItem->Specific.Fcb.TargetFcb);
+                                                                   NULL,
+                                                                   pNameArray,
+                                                                   AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL,
+                                                                   &pWorkItem->Specific.Fcb.FileInfo,
+                                                                   NULL);
+
+                        ASSERT(!ExIsResourceAcquiredLite( &pWorkItem->Specific.Fcb.Fcb->NPFcb->Resource));
+
+                        AFSFreeNameArray( pNameArray);
+
+                        ExFreePool( pBuffer);
 
                         freeWorkItem = FALSE;
 
@@ -660,6 +802,9 @@ AFSVolumeWorkerThread( IN PVOID Context)
     LONG TimeOut;
     KTIMER Timer;
     BOOLEAN bDirtyData = FALSE;
+    UNICODE_STRING      uniUnknownName;
+
+    RtlInitUnicodeString( &uniUnknownName, L"<unknown>");
 
     pControlDeviceExt = (AFSDeviceExt *)AFSDeviceObject->DeviceExtension;
 
@@ -762,15 +907,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
                         // Now perform another flush on the file
                         //
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSVolumeWorkerThread Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX on shutdown\n",
-                                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                         AFSFlushExtents( pFcb);
 
                         //
@@ -805,15 +941,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                         >= pControlDeviceExt->Specific.Control.FcbFlushTimeCount.QuadPart)
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVolumeWorkerThread Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     AFSFlushExtents( pFcb);
                 }
                 else if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
@@ -824,23 +951,15 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     // The file has been marked as invalid.  Dump it
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVolumeWorkerThread Tearing down extents for invalid %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     AFSTearDownFcbExtents( pFcb );
                 }
 
                 //
-                // If the extents haven't been used recently *and*
+                // If there are extents and they haven't been used recently *and*
                 // are not being used
                 //
                 if (pFcb->Header.NodeTypeCode == AFS_FILE_FCB &&
+                    0 != pFcb->Specific.File.ExtentCount &&
                     0 == pFcb->NPFcb->Specific.File.ExtentsRefCount &&
                     0 != pFcb->Specific.File.LastExtentAccess.QuadPart &&
                     (liTime.QuadPart - pFcb->Specific.File.LastExtentAccess.QuadPart) >= 
@@ -867,15 +986,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
                     // Tear em down we'll not be needing them again
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSVolumeWorkerThread Tearing down extents for idle %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     AFSTearDownFcbExtents( pFcb );
                 }
 
@@ -885,7 +995,8 @@ AFSVolumeWorkerThread( IN PVOID Context)
                 //
 
                 if( !BooleanFlagOn( pVolumeVcb->Flags, AFS_FCB_VOLUME_OFFLINE) &&
-                    !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID))
+                    !BooleanFlagOn( pFcb->Flags, AFS_FCB_INVALID) &&
+                    0 != pFcb->Specific.File.ExtentCount )
                     //&&
                     //AFSAllocationMemoryLevel <= 1024000 * 5) // We keep it to 5 MB
                 {
@@ -1089,15 +1200,6 @@ AFSVolumeWorkerThread( IN PVOID Context)
                                         
                                         }
 
-                                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                                      AFS_TRACE_LEVEL_VERBOSE,
-                                                      "AFSVolumeWorkerThread Tearing down extents for offline %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                                         (VOID)AFSTearDownFcbExtents( pFcb);
                                     }
 
@@ -1209,6 +1311,14 @@ AFSVolumeWorkerThread( IN PVOID Context)
 
                                                 InterlockedDecrement( &pCurrentDirEntry->Fcb->OpenReferenceCount);
                                             }
+
+                                            DbgPrint("AFSVolumeWorker Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                                      pCurrentDirEntry,
+                                                      &pCurrentDirEntry->DirectoryEntry.FileName,
+                                                      pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                                                      pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                                                      pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                                                      pCurrentDirEntry->DirectoryEntry.FileId.Unique);
 
                                             AFSDeleteDirEntry( pFcb,
                                                                pCurrentDirEntry);
@@ -1619,7 +1729,8 @@ try_exit:
 
 NTSTATUS
 AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
-                            OUT PULONG FileType,
+                            IN AFSNameArrayHdr *NameArray,
+                            OUT AFSFileInfoCB *FileInformation,
                             OUT AFSFcb **TargetFcb)
 {
 
@@ -1634,7 +1745,12 @@ AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
         // otherwise resources end up held by the worker thread instead of the caller.
         //
 
-        ASSERT(TargetFcb == NULL);
+        if( FileInformation == NULL ||
+            TargetFcb != NULL)
+        {
+
+            try_return( ntStatus = STATUS_INVALID_PARAMETER);
+        }
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1680,11 +1796,13 @@ AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
 
         pWorkItem->RequestFlags = AFS_SYNCHRONOUS_REQUEST;
 
-        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET;
+        pWorkItem->RequestType = AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET_INFO;
 
         pWorkItem->Specific.Fcb.Fcb = Fcb;
 
         pWorkItem->Specific.Fcb.TargetFcb = TargetFcb;
+
+        pWorkItem->Specific.Fcb.NameArray = NameArray;
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
@@ -1703,14 +1821,18 @@ AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
 
             ntStatus = pWorkItem->Status;
 
-            if( NT_SUCCESS( ntStatus))
+            if( NT_SUCCESS( ntStatus) &&
+                ntStatus != STATUS_REPARSE)
             {
 
-                if( FileType != NULL)
-                {
+                RtlCopyMemory( FileInformation,
+                               &pWorkItem->Specific.Fcb.FileInfo,
+                               sizeof( AFSFileInfoCB));
+            }
+            else
+            {
 
-                    *FileType = pWorkItem->Specific.Fcb.FileType;
-                }
+                ntStatus = STATUS_INVALID_PARAMETER;
             }
         }
 
@@ -1718,14 +1840,13 @@ try_exit:
 
         AFSDbgLogMsg( AFS_SUBSYSTEM_WORKER_PROCESSING,
                       AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSQueueBuildSymLinkTarget Processed request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX Type %08lX\n",
+                      "AFSQueueBuildSymLinkTarget Processed request for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                       &Fcb->DirEntry->DirectoryEntry.FileName,
                       Fcb->DirEntry->DirectoryEntry.FileId.Cell,
                       Fcb->DirEntry->DirectoryEntry.FileId.Volume,
                       Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
                       Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                      ntStatus,
-                      pWorkItem->Specific.Fcb.FileType);
+                      ntStatus);
 
         if( pWorkItem != NULL)
         {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1176,6 +1176,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
     AFSFcb *pRootFcb = NULL, *pCurrentFcb = NULL;
     AFSDirEntryCB *pDirEntry = NULL;
     ULONG ulIndex = 0;
+    BOOLEAN bContinueProcessing = TRUE;
+    AFSFileInfoCB stFileInformation;
 
     __Enter
     {
@@ -1288,145 +1290,136 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
         AFSReleaseResource( &pShareDirEntry->NPDirNode->Lock);
 
         //
-        // Ensure the root node has been evaluated, if not then go do it now
+        // Go until we get to the directory or root
         //
 
-        if( BooleanFlagOn( pShareDirEntry->Fcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED))
+        pCurrentFcb = pShareDirEntry->Fcb;
+
+        while( bContinueProcessing)
         {
-
-            ntStatus = AFSEvaluateNode( pShareDirEntry->Fcb);
-
-            if( !NT_SUCCESS( ntStatus))
-            {
-
-                AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
-
-                try_return( ntStatus);
-            }
-
-            ClearFlag( pShareDirEntry->Fcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
-        }
-
-        //
-        // Be sure we return a root or a directory
-        //
-
-        if( pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
-        {
-
+           
             //
-            // Build the symlink target
+            // Ensure the root node has been evaluated, if not then go do it now
             //
 
-            ntStatus = AFSBuildSymLinkTarget( (ULONGLONG)PsGetCurrentProcessId(),
-                                              pShareDirEntry->Fcb,
-                                              NULL,
-                                              &pRootFcb);
-
-            if( !NT_SUCCESS( ntStatus))
+            if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED))
             {
 
-                AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
+                ntStatus = AFSEvaluateNode( (ULONGLONG)PsGetCurrentProcessId(),
+                                            pCurrentFcb);
 
-                try_return( ntStatus);
-            }
-
-            if ( pRootFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT )
-            {
-
-                pCurrentFcb = pRootFcb;
-
-                pRootFcb = NULL;
-
-                //
-                // Check if we have a target Fcb for this node
-                //
-
-                if( pCurrentFcb->Specific.MountPoint.VolumeTargetFcb == NULL)
+                if( !NT_SUCCESS( ntStatus))
                 {
+
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                    try_return( ntStatus);
+                }
+
+                ClearFlag( pCurrentFcb->DirEntry->Flags, AFS_DIR_ENTRY_NOT_EVALUATED);
+            }
+
+            switch( pCurrentFcb->DirEntry->DirectoryEntry.FileType)
+            {
+
+                case AFS_FILE_TYPE_SYMLINK:
+                {
+
+                    //
+                    // Build the symlink target
+                    //
+
+                    ntStatus = AFSBuildSymLinkTarget( (ULONGLONG)PsGetCurrentProcessId(),
+                                                      pCurrentFcb,
+                                                      NULL,
+                                                      NULL,
+                                                      0,
+                                                      NULL,
+                                                      &pRootFcb);
+
+                    if( !NT_SUCCESS( ntStatus) ||
+                        ntStatus == STATUS_REPARSE)
+                    {
+
+                        try_return( ntStatus = STATUS_INVALID_PARAMETER);
+                    }
+
+                    pCurrentFcb = pRootFcb;
+
+                    pRootFcb = NULL;
+
+                    continue;
+                }
+
+                case AFS_FILE_TYPE_MOUNTPOINT:
+                {
+
+                    //
+                    // Check if we have a target Fcb for this node
+                    //
+
+                    if( pCurrentFcb->Specific.MountPoint.VolumeTargetFcb == NULL)
+                    {
+
+                        AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                      AFS_TRACE_LEVEL_VERBOSE,
+                                      "AFSEnumerateConnection Acquiring RDR VolumeTree.TreeLock lock %08lX SHARED %08lX\n",
+                                      pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
+                                      PsGetCurrentThread());
+
+                        AFSAcquireShared( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
+                                          TRUE);
+
+                        AFSLocateHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
+                                            AFSCreateHighIndex( &pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId),
+                                            &pCurrentFcb->Specific.MountPoint.VolumeTargetFcb);
+
+                        AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
+                    }
+
+                    if( pCurrentFcb->Specific.MountPoint.VolumeTargetFcb == NULL)
+                    {
+
+                        AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+                        try_return( ntStatus = STATUS_ACCESS_DENIED);
+                    }
+
+                    //
+                    // Swap out where we are in the chain
+                    //
 
                     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                                   AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSEnumerateConnection Acquiring RDR VolumeTree.TreeLock lock %08lX SHARED %08lX\n",
-                                  pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
+                                  "AFSEnumerateConnection Acquiring ShareEntry LinkTarget Fcb lock %08lX EXCL %08lX\n",
+                                  &pCurrentFcb->Specific.MountPoint.VolumeTargetFcb->NPFcb->Resource,
                                   PsGetCurrentThread());
 
-                    AFSAcquireShared( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                                      TRUE);
+                    AFSAcquireExcl( &pCurrentFcb->Specific.MountPoint.VolumeTargetFcb->NPFcb->Resource,
+                                    TRUE);
 
-                    AFSLocateHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
-                                        AFSCreateHighIndex( &pCurrentFcb->DirEntry->DirectoryEntry.TargetFileId),
-                                        &pCurrentFcb->Specific.MountPoint.VolumeTargetFcb);
+                    AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
 
-                    AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
+                    pCurrentFcb = pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb;
+
+                    continue;
                 }
 
-                //
-                // Swap out where we are in the chain
-                //
+                default:
+                {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSEnumerateConnection Acquiring ShareEntry LinkTarget Fcb lock %08lX EXCL %08lX\n",
-                              &pCurrentFcb->Specific.MountPoint.VolumeTargetFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
+                    pRootFcb = pCurrentFcb;
 
-                AFSAcquireExcl( &pCurrentFcb->Specific.MountPoint.VolumeTargetFcb->NPFcb->Resource,
-                                TRUE);
+                    //
+                    // We're done ...
+                    //
 
-                AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+                    bContinueProcessing = FALSE;
 
-                pRootFcb = pCurrentFcb->Specific.MountPoint.VolumeTargetFcb;
+                    break;
+                }
             }
-        }
-        else if( pShareDirEntry->Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
-        {
-
-            //
-            // Check if we have a target Fcb for this node
-            //
-
-            if( pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb == NULL)
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSEnumerateConnection Acquiring RDR VolumeTree.TreeLock lock %08lX SHARED %08lX\n",
-                              pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                              PsGetCurrentThread());
-
-                AFSAcquireShared( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
-                                  TRUE);
-
-                AFSLocateHashEntry( pDeviceExt->Specific.RDR.VolumeTree.TreeHead,
-                                    AFSCreateHighIndex( &pShareDirEntry->Fcb->DirEntry->DirectoryEntry.TargetFileId),
-                                    &pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb);
-
-                AFSReleaseResource( pDeviceExt->Specific.RDR.VolumeTree.TreeLock);
-            }
-
-            //
-            // Swap out where we are in the chain
-            //
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSEnumerateConnection Acquiring ShareEntry LinkTarget Fcb lock %08lX EXCL %08lX\n",
-                          &pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb->NPFcb->Resource,
-                          PsGetCurrentThread());
-
-            AFSAcquireExcl( &pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb->NPFcb->Resource,
-                            TRUE);
-
-            AFSReleaseResource( &pShareDirEntry->Fcb->NPFcb->Resource);
-
-            pRootFcb = pShareDirEntry->Fcb->Specific.MountPoint.VolumeTargetFcb;
-        }
-        else
-        {
-
-            pRootFcb = pShareDirEntry->Fcb;
-        }
+        } // End of while()
 
         //
         // If the entry is not initialized then do it now
@@ -1437,7 +1430,8 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
             !BooleanFlagOn( pRootFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
         {
 
-            ntStatus = AFSEnumerateDirectory( pRootFcb,
+            ntStatus = AFSEnumerateDirectory( (ULONGLONG)PsGetCurrentProcessId(),
+                                              pRootFcb,
                                               &pRootFcb->Specific.Directory.DirectoryNodeHdr,
                                               &pRootFcb->Specific.Directory.DirectoryNodeListHead,
                                               &pRootFcb->Specific.Directory.DirectoryNodeListTail,
@@ -1495,7 +1489,15 @@ AFSEnumerateConnection( IN OUT AFSNetworkProviderConnectionCB *ConnectCB,
 
             ConnectCB->Scope = 0;
 
-            if( BooleanFlagOn( AFSGetFileAttributes( pRootFcb, pDirEntry), FILE_ATTRIBUTE_DIRECTORY))
+            RtlZeroMemory( &stFileInformation,
+                           sizeof( AFSFileInfoCB));
+
+            AFSGetFileInformation( pRootFcb,
+                                   NULL,
+                                   pDirEntry, 
+                                   &stFileInformation);
+
+            if( BooleanFlagOn( stFileInformation.FileAttributes, FILE_ATTRIBUTE_DIRECTORY))
             {
 
                 ConnectCB->DisplayType = RESOURCEDISPLAYTYPE_DIRECTORY;
@@ -1653,7 +1655,8 @@ AFSGetConnectionInfo( IN AFSNetworkProviderConnectionCB *ConnectCB,
             // OK, ask the CM about this component name
             //
 
-            ntStatus = AFSEvaluateTargetByName( &stFileID,
+            ntStatus = AFSEvaluateTargetByName( (ULONGLONG)PsGetCurrentProcessId(),
+                                                &stFileID,
                                                 &uniShareName,
                                                 &pDirEnumEntry);
 

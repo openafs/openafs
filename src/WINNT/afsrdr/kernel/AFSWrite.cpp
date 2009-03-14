@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -184,15 +184,6 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSCommonWrite (%08lX) Processing file %wZ Offset %I64X Length %08lX Irp Flags %08lX\n",
-                      Irp,
-                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                      liStartingByte.QuadPart,
-                      ulByteCount,
-                      Irp->Flags);
-
         //
         // Is the Cache not there yet?  Exit.
         //
@@ -226,7 +217,7 @@ AFSCommonWrite( IN PDEVICE_OBJECT DeviceObject,
         //
         // We need to know on whose behalf we have been called (which
         // we will eventually tell to the server - for non paging
-        // writes).  If we were posted then we were told.  If this si
+        // writes).  If we were posted then we were told.  If this is
         // the first time we saw the irp then we grab it now.
         //
         if( NULL == OnBehalfOf ) 
@@ -764,9 +755,9 @@ try_exit:
 // This function is called when we know we have to read from the AFS Cache.
 //
 // It ensures that we have exents for the entirety of the write and
-// then pinns the extents into memory (meaning that although we may
+// then pins the extents into memory (meaning that although we may
 // add we will not remopve).  Then it creates a scatter gather write
-// and filres off the irps
+// and fires off the irps
 //
 static
 NTSTATUS

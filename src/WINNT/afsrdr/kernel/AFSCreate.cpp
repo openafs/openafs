@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -116,10 +116,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN             bReleaseParent = FALSE, bReleaseFcb = FALSE;
     PACCESS_MASK        pDesiredAccess = NULL;
     BOOLEAN             bFreeNameString = FALSE;
-    UNICODE_STRING      uniComponentName, uniTargetName, uniPathName, uniFullFileName;
+    UNICODE_STRING      uniComponentName, uniTargetName, uniPathName, uniRootFileName, uniParsedFileName;
     AFSFcb             *pRootFcb = NULL;
     BOOLEAN             bReleaseRootFcb = FALSE;
     UNICODE_STRING      uniSubstitutedPathName;
+    UNICODE_STRING      uniRelativeName;
+    AFSNameArrayHdr    *pNameArray = NULL;
 
     __Enter
     {
@@ -143,6 +145,9 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
         uniSubstitutedPathName.Buffer = NULL;
         uniSubstitutedPathName.Length = 0;
+
+        uniRelativeName.Buffer = NULL;
+        uniRelativeName.Length = 0;
 
         //
         // Validate the process entry
@@ -222,10 +227,12 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
         ntStatus = AFSParseName( Irp,
                                  &uniFileName,
-                                 &uniFullFileName,
+                                 &uniParsedFileName,
+                                 &uniRootFileName,
                                  &bFreeNameString,
                                  &pRootFcb,
-                                 &pParentDcb);
+                                 &pParentDcb,
+                                 &pNameArray);
 
         if( !NT_SUCCESS( ntStatus))
         {
@@ -443,11 +450,26 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             uniFileName.Buffer[ 0] != L'\\')
         {
 
-            uniSubstitutedPathName = uniFileName;
+            uniSubstitutedPathName = uniRootFileName;
 
-            ntStatus = AFSLocateNameEntry( pRootFcb,
+            //
+            // Drop the root if it is different then the parent
+            //
+
+            if( pRootFcb != pParentDcb)
+            {
+
+                AFSReleaseResource( &pRootFcb->NPFcb->Resource);
+            }
+
+            bReleaseRootFcb = FALSE;
+
+            ntStatus = AFSLocateNameEntry( (ULONGLONG)PsGetCurrentProcessId(),
                                            pFileObject,
-                                           &uniFileName,
+                                           &uniRootFileName,
+                                           &uniParsedFileName,
+                                           pNameArray,
+                                           AFS_LOCATE_FLAGS_SUBSTITUTE_NAME,
                                            &pParentDcb,
                                            &pFcb,
                                            &uniComponentName);
@@ -462,8 +484,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                 // The routine above released the root while walking the
                 // branch
                 //
-
-                bReleaseRootFcb = FALSE;
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
@@ -482,8 +502,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             if( ntStatus == STATUS_REPARSE)
             {
 
-                bReleaseRootFcb = FALSE;
-
                 uniSubstitutedPathName.Buffer = NULL;
 
                 //
@@ -496,31 +514,36 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
             }
 
             //
+            // May have had the parent dropped during re-entrant processing ...
+            //
+
+            if( ntStatus == STATUS_OBJECT_NAME_NOT_FOUND &&
+                !ExIsResourceAcquiredLite( &pParentDcb->NPFcb->Resource))
+            {
+
+                AFSAcquireExcl( &pParentDcb->NPFcb->Resource,
+                                TRUE);
+            }        
+
+            //
+            // Release the parent on 'successful' return from above routine
+            //
+
+            bReleaseParent = TRUE;
+
+            //
             // If we re-allocated the name then update our substitue name
             //
 
-            if( uniSubstitutedPathName.Buffer != uniFileName.Buffer)
+            if( uniSubstitutedPathName.Buffer != uniRootFileName.Buffer)
             {
 
-                uniSubstitutedPathName = uniFileName;
+                uniSubstitutedPathName = uniRootFileName;
             }
             else
             {
 
                 uniSubstitutedPathName.Buffer = NULL;
-            }
-
-            //
-            // If the parent is not the root then we'll release the parent
-            // not the root since it was already released
-            //
-
-            if( pParentDcb != pRootFcb)
-            {
-
-                bReleaseParent = TRUE;
-
-                bReleaseRootFcb = FALSE;
             }
         }
 
@@ -535,16 +558,6 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
 
             if( BooleanFlagOn( pFcb->Flags, AFS_FCB_PENDING_DELETE))
             {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSCommonCreate (%08lX) File %wZ FID %08lX-%08lX-%08lX-%08lX Pending DELETE\n",
-                              Irp,
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 try_return( ntStatus = STATUS_FILE_DELETED);
             }
@@ -613,7 +626,7 @@ AFSCommonCreate( IN PDEVICE_OBJECT DeviceObject,
                                          pParentDcb,
                                          &uniFileName,
                                          &uniComponentName,
-                                         &uniFullFileName,
+                                         &uniRootFileName,
                                          &pFcb,
                                          &pCcb);
 
@@ -736,8 +749,8 @@ try_exit:
                 }
                 else
                 {
-
-                    pCcb->FullFileName = uniFullFileName;
+                 
+                    pCcb->FullFileName = uniRootFileName;
 
                     if( bFreeNameString)
                     {
@@ -747,6 +760,14 @@ try_exit:
                         bFreeNameString = FALSE;
                     }
                 }
+
+                //
+                // Save off the name array for this instance
+                //
+
+                pCcb->NameArray = pNameArray;
+
+                pNameArray = NULL;
             }
 
             //
@@ -816,17 +837,28 @@ try_exit:
             }
         }
 
+        //
+        // Free up the name array ...
+        //
+
+        if( pNameArray != NULL)
+        {
+
+            AFSFreeNameArray( pNameArray);
+        }
+
         if( bFreeNameString)
         {
 
-            ExFreePool( uniFullFileName.Buffer);
+            ExFreePool( uniRootFileName.Buffer);
         }
 
         //
         // Release the Fcbs
         //
 
-        if( bReleaseParent)
+        if( bReleaseParent &&
+            ExIsResourceAcquiredLite( &pParentDcb->NPFcb->Resource))
         {
 
             AFSReleaseResource( &pParentDcb->NPFcb->Resource);
@@ -998,7 +1030,8 @@ AFSOpenRoot( IN PIRP Irp,
         if( !BooleanFlagOn( RootFcb->Flags, AFS_FCB_DIRECTORY_ENUMERATED))
         {
 
-            ntStatus = AFSEnumerateDirectory( RootFcb,
+            ntStatus = AFSEnumerateDirectory( (ULONGLONG)PsGetCurrentProcessId(),
+                                              RootFcb,
                                               &RootFcb->Specific.VolumeRoot.DirectoryNodeHdr,
                                               &RootFcb->Specific.VolumeRoot.DirectoryNodeListHead,
                                               &RootFcb->Specific.VolumeRoot.DirectoryNodeListTail,
@@ -1466,6 +1499,14 @@ try_exit:
                     // Remove the dir entry from the parent
                     //
 
+                    DbgPrint("AFSProcessCreate Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                              pDirEntry,
+                              &pDirEntry->DirectoryEntry.FileName,
+                              pDirEntry->DirectoryEntry.FileId.Cell,
+                              pDirEntry->DirectoryEntry.FileId.Volume,
+                              pDirEntry->DirectoryEntry.FileId.Vnode,
+                              pDirEntry->DirectoryEntry.FileId.Unique);
+
                     AFSDeleteDirEntry( ParentDcb,
                                        pDirEntry);
                 }
@@ -1490,7 +1531,7 @@ try_exit:
             {
 
                 //
-                // Mark the Fcb as invalid so our workler thread will clean it up
+                // Mark the Fcb as invalid so our worker thread will clean it up
                 //
 
                 (*Fcb)->Header.NodeTypeCode = AFS_INVALID_FCB;

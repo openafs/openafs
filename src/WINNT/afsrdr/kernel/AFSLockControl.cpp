@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,16 +123,6 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
                 if( !NT_SUCCESS( ntStatus))
                 {
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLockControl (IRP_MN_LOCK) Failed to request lock for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                  ntStatus);
-
                     try_return( ntStatus);
                 }
 
@@ -152,20 +142,6 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
                                               0,
                                               NULL,
                                               NULL);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLockControl (IRP_MN_UNLOCK_ALL/BY_KEY) Failed to request lock for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                  ntStatus);
-                }
 
                 //
                 // Even on a failure we need to notify the rtl package of the unlock
@@ -197,20 +173,6 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
                                               (void *)&stUnlockResultCB,
                                               &ulResultLen);
 
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSLockControl (IRP_MN_UNLOCK_SINGLE) Failed to request lock for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                                  ntStatus);
-                }
-
                 break;
             }
 
@@ -220,7 +182,7 @@ AFSLockControl( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // Below here we won;t complete the request, it is handled by the lock package
+        // Below here we won't complete the request, it is handled by the lock package
         //
 
         bCompleteRequest = FALSE;

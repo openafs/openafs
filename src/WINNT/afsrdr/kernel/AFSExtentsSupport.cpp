@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -67,15 +67,6 @@ AFSReferenceExtents( IN AFSFcb *Fcb)
 
     AFSAcquireShared( &pNPFcb->Specific.File.ExtentsResource, TRUE );
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSReferenceExtents Clearing ExtentsNotBusy event for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
     InterlockedIncrement( &pNPFcb->Specific.File.ExtentsRefCount );
     KeClearEvent( &pNPFcb->Specific.File.ExtentsNotBusy );
 
@@ -109,16 +100,6 @@ AFSDereferenceExtents( IN AFSFcb *Fcb)
 
     i = InterlockedDecrement( &pNPFcb->Specific.File.ExtentsRefCount );
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSDereferenceExtents ExtentsRefCount %d (1) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                  pNPFcb->Specific.File.ExtentsRefCount,
-                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
     if (0 != i) 
     {
         //
@@ -143,16 +124,6 @@ AFSDereferenceExtents( IN AFSFcb *Fcb)
 
     i = InterlockedDecrement( &pNPFcb->Specific.File.ExtentsRefCount );
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSDereferenceExtents ExtentsRefCount %d (2) for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                  pNPFcb->Specific.File.ExtentsRefCount,
-                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
     if (0 != i) 
     {
         //
@@ -164,15 +135,6 @@ AFSDereferenceExtents( IN AFSFcb *Fcb)
 
     KeQueryTickCount( &Fcb->Specific.File.LastExtentAccess);
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSDereferenceExtents Setting ExtentsNotBusy event for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
     KeSetEvent( &pNPFcb->Specific.File.ExtentsNotBusy,
                 0,
                 FALSE );
@@ -181,7 +143,7 @@ AFSDereferenceExtents( IN AFSFcb *Fcb)
 }
 
 //
-// Returns with Extents lock EX and noone using them.
+// Returns with Extents lock EX and no one using them.
 //
 
 VOID 
@@ -193,29 +155,11 @@ AFSLockForExtentsTrim( IN AFSFcb *Fcb)
     while (TRUE) 
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSLockForExtentsTrim Waiting for ExtentsNotBusy event for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
         ntStatus = KeWaitForSingleObject( &pNPFcb->Specific.File.ExtentsNotBusy,
                                           Executive,
                                           KernelMode,
                                           FALSE,
                                           NULL);
-        
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSLockForExtentsTrim ExtentsNotBusy event for %wZ FID %08lX-%08lX-%08lX-%08lX SET\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);
         
         if (!NT_SUCCESS(ntStatus)) 
         {
@@ -242,15 +186,6 @@ AFSLockForExtentsTrim( IN AFSFcb *Fcb)
 
             return;
         }
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSLockForExtentsTrim Retrying wait for ExtentsNotBusy event for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
         //
         // Try again
@@ -313,15 +248,6 @@ AFSLockForExtentsTrimNoWait( IN AFSFcb *Fcb)
         
         return FALSE;
     }
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSLockForExtentsTrimNoWait ExtentsNotBusy %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
     return TRUE;
 }
@@ -456,45 +382,24 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
                 pRelease->FileExtents[ulProcessCount].CacheOffset = pEntry->CacheOffset;
                 pRelease->FileExtents[ulProcessCount].FileOffset = pEntry->FileOffset;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSTearDownFcbExtents Releasing extent for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Len %08lX Flags %lX\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                              pEntry->FileOffset.QuadPart,
-                              pEntry->Size,
-                              pRelease->FileExtents[ulProcessCount].Flags);
-
                 ulProcessCount ++;
                 le = le->Flink;
                 ExFreePoolWithTag( pEntry, AFS_EXTENT_TAG );
                 AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
                 InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+                InterlockedDecrement( &AFSExtentCount);
             }
 
             //
             // Send the request down.  We cannot send this down
-            // asynchronously - if we did that we could requeast them
+            // asynchronously - if we did that we could request them
             // back before the service got this request and then this
             // request would be a corruption.
             //
 
             sz = sizeof( AFSReleaseExtentsCB ) + (ulProcessCount * sizeof ( AFSFileExtentCB ));
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSTearDownFcbExtents Sending AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS for file %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X Count %lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          hExtentProcessId,
-                          ulProcessCount);
 
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
@@ -505,17 +410,6 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
                                           sz,
                                           NULL,
                                           NULL);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSTearDownFcbExtents AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS for file %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X Completed %lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          hExtentProcessId,
-                          ntStatus);
 
             ASSERT( STATUS_SUCCESS == ntStatus || STATUS_DEVICE_NOT_READY == ntStatus );
 
@@ -556,17 +450,7 @@ NTSTATUS AFSTearDownFcbExtents( IN AFSFcb *Fcb )
         //
         ASSERT(NT_SUCCESS(ntStatus) || STATUS_DEVICE_NOT_READY == ntStatus );
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSTearDownFcbExtents Completed for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
-      try_exit:
-
+try_exit:
 
         if (locked)
         {
@@ -903,32 +787,10 @@ AFSRequestExtents( IN AFSFcb *Fcb,
     //
     pFirstExtent = NULL;
 
-    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSRequestExtents File %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX\n",
-                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                  Offset->QuadPart,
-                  Size);        
-
     *FullyMapped = AFSDoExtentsMapRegion( Fcb, Offset, Size, &pFirstExtent, &pExtent );
 
     if (*FullyMapped) 
     {
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRequestExtents File %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX Fully mapped\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      Offset->QuadPart,
-                      Size);        
 
         ASSERT(AFSExtentContains(pFirstExtent, Offset));
         LARGE_INTEGER end = *Offset;
@@ -951,16 +813,6 @@ AFSRequestExtents( IN AFSFcb *Fcb,
         if (!NT_SUCCESS( pNPFcb->Specific.File.ExtentsRequestStatus)) 
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSRequestExtents File %wZ FID %08lX-%08lX-%08lX-%08lX Failure from service Status %08lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          pNPFcb->Specific.File.ExtentsRequestStatus);        
-
             //
             // The cache has been torn down.  Nothing to wait for
             //
@@ -969,16 +821,6 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
             break;
         }
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRequestExtents Waiting on ExtentsRequestComplete event for file %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique
-                      );
 
         ntStatus = KeWaitForSingleObject( &pNPFcb->Specific.File.ExtentsRequestComplete,
                                           Executive,
@@ -994,16 +836,6 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
             continue;
         }
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRequestExtents ExtentsRequestComplete event SET for file %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique
-                      );
 
         //
         // Lock resource EX and look again
@@ -1025,16 +857,6 @@ AFSRequestExtents( IN AFSFcb *Fcb,
             //
             ntStatus = pNPFcb->Specific.File.ExtentsRequestStatus;
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSRequestExtents File %wZ FID %08lX-%08lX-%08lX-%08lX Failure from service Status %08lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          ntStatus);        
-
             AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
 
             break;
@@ -1048,16 +870,6 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
             if( !NT_SUCCESS( ntStatus))
             {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSRequestExtents File %wZ FID %08lX-%08lX-%08lX-%08lX Failure from service Status %08lX\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                              ntStatus);        
 
                 AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );
             }
@@ -1089,17 +901,6 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
         if (*FullyMapped) 
         {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRequestExtents File %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX Fully mapped (Second check)\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          Offset->QuadPart,
-                          Size);        
 
             ASSERT(AFSExtentContains(pFirstExtent, Offset));
             LARGE_INTEGER end = *Offset;
@@ -1147,17 +948,6 @@ AFSRequestExtents( IN AFSFcb *Fcb,
 
             ASSERT( request.Length <= pDevExt->Specific.RDR.MaximumRPCLength);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRequestExtents Requesting extents for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          liAlignedOffset.QuadPart,
-                          ulAlignedLength);        
-
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
                                           0,
                                           Fcb->Specific.File.ExtentProcessId,
@@ -1192,16 +982,6 @@ try_exit:
             KeQueryTickCount( &Fcb->Specific.File.LastExtentAccess );
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRequestExtents Completed for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
-    
         AFSReleaseResource( &pNPFcb->Specific.File.ExtentsResource );    
     }
 
@@ -1237,17 +1017,6 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
 
         if( bRegionMapped) 
         {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRequestExtentsAsync File %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX Fully mapped\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          Offset->QuadPart,
-                          Size);        
 
             try_return( ntStatus = STATUS_SUCCESS);
         }
@@ -1290,19 +1059,6 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
 
             ASSERT( request.Length <= pDevExt->Specific.RDR.MaximumRPCLength);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRequestExtentsAsync Requesting extents for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Length %08lX Original Offset %I64X Len %08lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          liAlignedOffset.QuadPart,
-                          ulAlignedLength,
-                          Offset->QuadPart,
-                          Size);        
-
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_REQUEST_FILE_EXTENTS,
                                           0,
                                           Fcb->Specific.File.ExtentProcessId,
@@ -1332,15 +1088,7 @@ AFSRequestExtentsAsync( IN AFSFcb *Fcb,
 
 try_exit:
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRequestExtentsAsync Completed for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
+        NOTHING;
     }
 
     return ntStatus;
@@ -1375,18 +1123,6 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
 
     __Enter 
     {
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessExtentsResult Entered for %wZ FID %08lX-%08lX-%08lX-%08lX Count %08lX Starting offset %I64X Size %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      Count,
-                      pFileExtents->FileOffset.QuadPart,
-                      pFileExtents->Length);        
 
         //
         // Find where to put the extents
@@ -1537,16 +1273,7 @@ AFSProcessExtentsResult( IN AFSFcb *Fcb,
 
                 InterlockedIncrement( &Fcb->Specific.File.ExtentCount);
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSProcessExtentsResult Adding extent for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Len %08lX\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                              pFileExtents->FileOffset.QuadPart,
-                              pFileExtents->Length);        
+                InterlockedIncrement( &AFSExtentCount);
 
                 //
                 // Insert into list
@@ -1732,16 +1459,6 @@ try_exit:
                                      Result);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessExtentsResult Completed for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX Setting ExtentsRequestComplete event\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
-
 #if AFS_VALIDATE_EXTENTS
         VerifyExtentsLists(Fcb);
 #endif
@@ -1845,16 +1562,6 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
         if( SetExtents->ResultStatus != STATUS_SUCCESS)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSProcessSetFileExtents Failed to retrieve extents for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
-                          &pFcb->DirEntry->DirectoryEntry.FileName,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          SetExtents->ResultStatus);        
-
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
                           "AFSProcessSetFileExtents Acquiring Fcb extents lock %08lX EXCL %08lX\n",
@@ -1878,16 +1585,6 @@ AFSProcessSetFileExtents( IN AFSSetFileExtentsCB *SetExtents )
         ntStatus = AFSProcessExtentsResult ( pFcb, 
                                              SetExtents->ExtentCount, 
                                              SetExtents->FileExtents );
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSProcessSetFileExtents Completed for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
-                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
 
 try_exit:
 
@@ -1917,28 +1614,8 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
     __Enter 
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSReleaseSpecifiedExtents Entered for %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique
-                      );
-
         if (BufferSize < (Extents->ExtentCount * sizeof(AFSFileExtentCB)))
         {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSReleaseSpecifiedExtents Buffer too small for %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique
-                          );
 
             try_return(STATUS_BUFFER_TOO_SMALL);
         }
@@ -1950,30 +1627,10 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
         // Flush out anything which might be dirty
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSReleaseSpecifiedExtents Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique
-                      );
-
         ntStatus = AFSFlushExtents( Fcb);
 
         if (!NT_SUCCESS(ntStatus)) 
         {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSReleaseSpecifiedExtents Failed flush extents for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          ntStatus);        
 
             try_return( ntStatus );
         }
@@ -2012,17 +1669,6 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
         {
             pExtent = ExtentFor( le, AFS_EXTENTS_LIST);
             
-            AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSReleaseSpecifiedExtents For %wZ FID %08lX-%08lX-%08lX-%08lX locating offset %I64X Len %08lX\n", 
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          pExtent->FileOffset.QuadPart,
-                          pExtent->Size);        
-
             if (pExtent->FileOffset.QuadPart < Extents->FileExtents[ulExtentCount].FileOffset.QuadPart) 
             {
                 //
@@ -2040,17 +1686,6 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
             } 
             else 
             {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSReleaseSpecifiedExtents For %wZ FID %08lX-%08lX-%08lX-%08lX releasing offset %I64X Len %08lX\n", 
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                              pExtent->FileOffset.QuadPart,
-                              pExtent->Size);        
 
                 //
                 // This is one to purge
@@ -2082,20 +1717,12 @@ AFSReleaseSpecifiedExtents( IN  AFSReleaseFileExtentsCB *Extents,
                 AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
                 InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+                InterlockedDecrement( &AFSExtentCount);
             }
         }
 
 try_exit:
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSReleaseSpecifiedExtents Completed for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n", 
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
 
         if (locked) 
         {
@@ -2192,17 +1819,6 @@ AFSReleaseFileExtents( IN  AFSFcb *Fcb,
         FileExtents[*ExtentCount].CacheOffset = pExtent->CacheOffset;
         FileExtents[*ExtentCount].FileOffset = pExtent->FileOffset;
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSReleaseFileExtents Releasing extent on %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Len %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      pExtent->FileOffset.QuadPart,
-                      pExtent->Size);        
-
         le = le->Flink;
         *ExtentCount = (*ExtentCount) + 1;
         sizeLeft -= sizeof(AFSFileExtentCB);
@@ -2234,6 +1850,8 @@ AFSReleaseFileExtents( IN  AFSFcb *Fcb,
         AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
         InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+        InterlockedDecrement( &AFSExtentCount);
     }
     if (le == &Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST]) 
     {
@@ -2509,17 +2127,6 @@ AFSCleanExtentsOnVolume(IN PVOID Buffer,
         //
         Fcbs[(*FileCount)] = pFcb;
         InterlockedIncrement( &pFcb->OpenReferenceCount);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSCleanExtentsOnVolume Cleaning file %wZ FID %08lX:%08lX:%08lX:%08lX ExtentCount %lX\n",
-                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Unique,
-                      pFile->ExtentCount
-                      );
 
         //
         // Populate the rest of the field
@@ -2846,16 +2453,6 @@ AFSProcessReleaseFileExtents( IN PIRP Irp,
             if (!NT_SUCCESS(ntStatus)) 
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                              AFS_TRACE_LEVEL_ERROR,
-                              "AFSProcessReleaseFileExtents Failed to release extents for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                              ntStatus);        
-
                 try_return( ntStatus );
             }
             
@@ -2904,16 +2501,6 @@ AFSProcessReleaseFileExtents( IN PIRP Irp,
                     pRelease->Flags = AFS_EXTENT_FLAG_RELEASE;
                     pRelease->ExtentCount = pFile->ExtentCount;
                     RtlCopyMemory( pRelease->FileExtents, pFile->FileExtents, pFile->ExtentCount * sizeof ( AFSFileExtentCB ));
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSProcessReleaseFileExtents Calling AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS for %wZ FID %08lX-%08lX-%08lX-%08lX PID %I64X\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                                  pFile->ProcessId.QuadPart);
 
                     ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                               AFS_REQUEST_FLAG_SYNCHRONOUS,
@@ -3084,7 +2671,9 @@ VOID AFSReleaseExtentsWork(AFSWorkItem *WorkItem)
                 if( bBlockRequest)
                 {
 
-                    //DbgPrint("AFSReleaseExtentsWork Blocked on all files and REALLY don't have anything to give up ...\n");
+                    AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
+                                  AFS_TRACE_LEVEL_VERBOSE_2,
+                                  "AFSReleaseExtentsWork Blocked on all files and REALLY don't have anything to give up ...\n");
 
                     ntStatus = STATUS_DEVICE_NOT_READY;
 
@@ -3437,16 +3026,6 @@ AFSFlushExtents( IN AFSFcb *Fcb)
                         0,
                         FALSE);
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSFlushExtents Calling AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS for %wZ FID %08lX-%08lX-%08lX-%08lX count %d\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          count);        
-
             ntStatus = AFSProcessRequest( AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS,
                                           AFS_REQUEST_FLAG_SYNCHRONOUS,
                                           (ULONGLONG)hExtentProcessId,
@@ -3456,18 +3035,6 @@ AFSFlushExtents( IN AFSFcb *Fcb)
                                           sz,
                                           NULL,
                                           NULL);
-
-            ASSERT( ntStatus == STATUS_SUCCESS);
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSFlushExtents Call AFS_REQUEST_TYPE_RELEASE_FILE_EXTENTS for %wZ FID %08lX-%08lX-%08lX-%08lX COMPLETE Status %08lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                          ntStatus);        
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
@@ -3582,17 +3149,6 @@ AFSMarkDirty( IN AFSFcb *Fcb,
     pRDRDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
 
     liEnd.QuadPart = liOffset.QuadPart + Count;
-
-    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                  AFS_TRACE_LEVEL_VERBOSE,
-                  "AFSMarkDirty Marking offset %I64X count %08lX DIRTY for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                  liOffset.QuadPart,
-                  Count,
-                  &Fcb->DirEntry->DirectoryEntry.FileName,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                  Fcb->DirEntry->DirectoryEntry.FileId.Unique);
 
     AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                   AFS_TRACE_LEVEL_VERBOSE,
@@ -3761,12 +3317,6 @@ AFSTrimExtents( IN AFSFcb *Fcb,
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSTrimExtents For file %wZ Offset %I64X\n",
-                                            &Fcb->DirEntry->DirectoryEntry.FileName,
-                                            FileSize->QuadPart);        
-
         //
         // Get an aligned offset
         //
@@ -3789,7 +3339,7 @@ AFSTrimExtents( IN AFSFcb *Fcb,
         }
 
         //
-        // Ensure that noone is working with the extents and grab the
+        // Ensure that no one is working with the extents and grab the
         // lock
         //
 
@@ -3881,14 +3431,6 @@ AFSTrimExtents( IN AFSFcb *Fcb,
                     }
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSTrimExtents Trimming extent for %wZ %08lX-%08lX Offset %I64X Len %08lX\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                              pExtent->FileOffset.QuadPart,
-                              pExtent->Size); 
                 //      
                 // and free
                 //
@@ -3896,6 +3438,8 @@ AFSTrimExtents( IN AFSFcb *Fcb,
                 AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
                 InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+                InterlockedDecrement( &AFSExtentCount);
             }
         }
 
@@ -3909,16 +3453,6 @@ AFSTrimExtents( IN AFSFcb *Fcb,
         locked = FALSE;
 
 try_exit:
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSTrimExtents Completed for file %wZ Status %08lX FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
 
         if (locked)
         {
@@ -3944,16 +3478,6 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
 
     __Enter
     {
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSTrimSpecifiedExtents For file %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique
-                      );
 
         le = Fcb->Specific.File.ExtentsLists[AFS_EXTENTS_LIST].Flink;
 
@@ -4003,17 +3527,6 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
                     }
                 }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSTrimSpecifiedExtents Trimming extent for %wZ FID %08lX-%08lX-%08lX-%08lX Offset %I64X Len %08lX\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                              pExtent->FileOffset.QuadPart,
-                              pExtent->Size); 
-
                 //
                 // and free
                 //
@@ -4021,6 +3534,8 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
                 AFSAllocationMemoryLevel -= sizeof( AFSExtent);
 
                 InterlockedDecrement( &Fcb->Specific.File.ExtentCount);
+
+                InterlockedDecrement( &AFSExtentCount);
 
                 //
                 // Next extent we are looking for
@@ -4037,16 +3552,6 @@ AFSTrimSpecifiedExtents( IN AFSFcb *Fcb,
         //
 
         Fcb->NPFcb->Specific.File.ExtentsRequestStatus = STATUS_SUCCESS;
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSTrimSpecifiedExtents Completed for file %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,                                            
-                      ntStatus);        
     }
 
     return;

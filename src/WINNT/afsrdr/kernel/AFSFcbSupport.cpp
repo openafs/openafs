@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -232,6 +232,14 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
                 ExInitializeResourceLite( &pNPFcb->Specific.Directory.DirectoryTreeLock);
 
                 pFcb->Specific.Directory.DirectoryNodeHdr.TreeLock = &pNPFcb->Specific.Directory.DirectoryTreeLock;
+
+                //
+                // Initialize our event for processing directory enum calls
+                //
+
+                KeInitializeEvent( &pNPFcb->Specific.Directory.DirectoryEnumEvent,
+                                   NotificationEvent,
+                                   FALSE);
 
                 //
                 // Initialize the directory
@@ -495,7 +503,7 @@ try_exit:
 //
 
 NTSTATUS
-AFSInitAFSRoot()
+AFSInitAFSRoot( IN AFSRedirectorInitInfo *RedirInitInfo)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -572,6 +580,14 @@ AFSInitAFSRoot()
 
             ExInitializeResourceLite( &pNPFcb->Specific.VolumeRoot.FcbListLock);
 
+            //
+            // Initialize our event for processing directory enum calls
+            //
+
+            KeInitializeEvent( &pNPFcb->Specific.VolumeRoot.DirectoryEnumEvent,
+                               NotificationEvent,
+                               FALSE);
+
             pFcb->Header.Resource = &pNPFcb->Resource;
 
             pFcb->Specific.VolumeRoot.DirectoryNodeHdr.TreeLock = &pNPFcb->Specific.VolumeRoot.DirectoryTreeLock;
@@ -625,7 +641,7 @@ AFSInitAFSRoot()
             }
 
             //
-            // Initialize the non-paged portion of the dire entry
+            // Initialize the non-paged portion of the directory entry
             //
 
             AFSInitNonPagedDirEntry( pFcb->DirEntry);
@@ -637,14 +653,14 @@ AFSInitAFSRoot()
             pFcb->DirEntry->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
 
             // 
-            // The AFS Global Root has a cell identifier of 0.
-            // It is a root volume therefore it has a Vnode/Unique of 1
+            // The AFS Global Root has a cell identifier passed in from the init info
             //
-            pFcb->DirEntry->DirectoryEntry.FileId.Cell = 0;
-            pFcb->DirEntry->DirectoryEntry.FileId.Volume = 0;
-            pFcb->DirEntry->DirectoryEntry.FileId.Vnode = 1;
-            pFcb->DirEntry->DirectoryEntry.FileId.Unique = 1;
-            pFcb->DirEntry->DirectoryEntry.FileId.Hash = 0;
+
+            pFcb->DirEntry->DirectoryEntry.FileId.Cell = RedirInitInfo->GlobalFileId.Cell;
+            pFcb->DirEntry->DirectoryEntry.FileId.Volume = RedirInitInfo->GlobalFileId.Volume;
+            pFcb->DirEntry->DirectoryEntry.FileId.Vnode = RedirInitInfo->GlobalFileId.Vnode;
+            pFcb->DirEntry->DirectoryEntry.FileId.Unique = RedirInitInfo->GlobalFileId.Unique;
+            pFcb->DirEntry->DirectoryEntry.FileId.Hash = RedirInitInfo->GlobalFileId.Hash;
 
             pFcb->DirEntry->DirectoryEntry.FileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
@@ -667,10 +683,8 @@ AFSInitAFSRoot()
         // Go get the volume information from the service
         //
 
-        ASSERT( AFSGlobalRoot->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
-                AFSGlobalRoot->DirEntry->DirectoryEntry.FileId.Vnode == 1);
-
-        ntStatus = AFSRetrieveVolumeInformation( &AFSGlobalRoot->DirEntry->DirectoryEntry.FileId,
+        ntStatus = AFSRetrieveVolumeInformation( (ULONGLONG)PsGetCurrentProcessId(),
+                                                 &AFSGlobalRoot->DirEntry->DirectoryEntry.FileId,
                                                  &AFSGlobalRoot->DirEntry->Type.Volume.VolumeInformation);
 
         if( !NT_SUCCESS( ntStatus))
@@ -836,6 +850,14 @@ AFSRemoveAFSRoot()
             }
             else
             {
+
+                DbgPrint("AFSRemoveAFSRoot Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          pCurrentDirEntry,
+                          &pCurrentDirEntry->DirectoryEntry.FileName,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Unique);
 
                 AFSDeleteDirEntry( AFSGlobalRoot,
                                    pCurrentDirEntry);
@@ -1072,15 +1094,6 @@ AFSRemoveAFSRoot()
                         // for any writes or reads to the cache to complete
                         //
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSRemoveAFSRoot Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
                         (VOID) AFSTearDownFcbExtents( pFcb);
                     }
 
@@ -1124,7 +1137,8 @@ try_exit:
 //
 
 NTSTATUS
-AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
+AFSInitRootFcb( IN ULONGLONG ProcessID,
+                IN AFSDirEntryCB *RootDirEntry,
                 OUT AFSFcb **RootVcb)
 {
 
@@ -1210,6 +1224,14 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
 
         ExInitializeResourceLite( &pNPFcb->Specific.VolumeRoot.FcbListLock);
 
+        //
+        // Initialize our event for processing directory enum calls
+        //
+
+        KeInitializeEvent( &pNPFcb->Specific.VolumeRoot.DirectoryEnumEvent,
+                           NotificationEvent,
+                           FALSE);
+
         pFcb->Header.Resource = &pNPFcb->Resource;
 
         pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
@@ -1243,10 +1265,10 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
         // Go get the volume information from the service
         //
 
-        ASSERT( pFcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_DIRECTORY &&
-                pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1);
+        pFcb->DirEntry->DirectoryEntry.FileType = AFS_FILE_TYPE_DIRECTORY;
 
-        ntStatus = AFSRetrieveVolumeInformation( &pFcb->DirEntry->DirectoryEntry.FileId,
+        ntStatus = AFSRetrieveVolumeInformation( ProcessID,
+                                                 &pFcb->DirEntry->DirectoryEntry.FileId,
                                                  &pFcb->DirEntry->Type.Volume.VolumeInformation);
 
         if( !NT_SUCCESS( ntStatus))
@@ -1269,14 +1291,6 @@ AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
 
         AFSAcquireExcl( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
                         TRUE);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitRootFcb Adding volume FID %08lX:%08lX:%08lX:%08lX\n",
-                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
         if( pDeviceExt->Specific.RDR.VolumeTree.TreeHead == NULL)
         {
@@ -1440,6 +1454,14 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
 
         ExInitializeResourceLite( &pNPFcb->Specific.VolumeRoot.FcbListLock);
 
+        //
+        // Initialize our event for processing directory enum calls
+        //
+
+        KeInitializeEvent( &pNPFcb->Specific.VolumeRoot.DirectoryEnumEvent,
+                           NotificationEvent,
+                           FALSE);
+
         pFcb->Header.Resource = &pNPFcb->Resource;
 
         pFcb->Header.PagingIoResource = &pNPFcb->PagingResource;
@@ -1499,7 +1521,7 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
         }
 
         //
-        // Initialize the non-paged portion of the dire entry
+        // Initialize the non-paged portion of the directory entry
         //
 
         AFSInitNonPagedDirEntry( pFcb->DirEntry);
@@ -1561,14 +1583,6 @@ AFSInitRootForMountPoint( IN AFSDirEnumEntryCB *MountPointDirEntry,
 
         AFSAcquireExcl( pDeviceExt->Specific.RDR.VolumeTree.TreeLock,
                         TRUE);
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInitRootForMountPoint Adding volume FID %08lX:%08lX:%08lX:%08lX\n",
-                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
         if( pDeviceExt->Specific.RDR.VolumeTree.TreeHead == NULL)
         {
@@ -1675,6 +1689,14 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb,
             while( pCurrentDirEntry != NULL)
             {
 
+                DbgPrint("AFSRemoveRootFcb Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          pCurrentDirEntry,
+                          &pCurrentDirEntry->DirectoryEntry.FileName,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Unique);
+
                 AFSDeleteDirEntry( RootFcb,
                                    pCurrentDirEntry);
 
@@ -1697,7 +1719,7 @@ AFSRemoveRootFcb( IN AFSFcb *RootFcb,
         ExDeleteResourceLite( &RootFcb->NPFcb->Specific.VolumeRoot.FcbListLock);
 
         //
-        // Sync notif object
+        // Sync notify object
         //
 
         FsRtlNotifyUninitializeSync( &RootFcb->NPFcb->NotifySync);
@@ -1782,7 +1804,7 @@ AFSRemoveFcb( IN AFSFcb *Fcb)
     }
 
     //
-    // Sync notif object
+    // Sync notify object
     //
 
     FsRtlNotifyUninitializeSync( &Fcb->NPFcb->NotifySync);

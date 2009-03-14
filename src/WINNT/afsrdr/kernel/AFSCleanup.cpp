@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -127,9 +127,14 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                               &pFcb->NPFcb->Resource,
                               PsGetCurrentThread());
 
+                AFSAcquireExcl( &pFcb->NPFcb->Resource,
+                                  TRUE);
+
                 ASSERT( pFcb->OpenHandleCount != 0);
 
                 InterlockedDecrement( &pFcb->OpenHandleCount);
+
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
 
                 break;
             }
@@ -279,15 +284,6 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
                     // the file
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSCleanup Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     AFSTearDownFcbExtents( pFcb);
 
                     //
@@ -374,15 +370,6 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     if( pFcb->Specific.File.ExtentsDirtyCount)
                     {
-
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSCleanup Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
                         AFSFlushExtents( pFcb);
                     }
@@ -542,7 +529,7 @@ AFSCleanup( IN PDEVICE_OBJECT DeviceObject,
 
                     //
                     // Try and notify the service about the delete
-                    // Need to drop the lock so we don;t lock when the
+                    // Need to drop the lock so we don't lock when the
                     // invalidate call is made
                     //
 

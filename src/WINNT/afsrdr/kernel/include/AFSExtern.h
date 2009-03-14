@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,6 +83,8 @@ extern UNICODE_STRING      AFSPIOCtlName;
 extern ULONG               AFSAllocationMemoryLevel;
 
 extern UNICODE_STRING      AFSGlobalRootName;
+
+extern LONG                AFSExtentCount;
 
 extern ERESOURCE           AFSDbgLogLock;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,6 +80,8 @@ UNICODE_STRING      AFSPIOCtlName;
 ULONG               AFSAllocationMemoryLevel = 0;
 
 UNICODE_STRING      AFSGlobalRootName;
+
+LONG                AFSExtentCount = 0;
 
 //
 // Max Length IO (Mb)

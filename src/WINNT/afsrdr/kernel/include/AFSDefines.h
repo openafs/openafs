@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,6 +124,7 @@ static inline void AFSBreakPoint() {
 #define AFS_EXTENTS_RESULT_TAG       'XEFA'
 #define AFS_SYS_NAME_NODE_TAG        'NSFA'
 #define AFS_REPARSE_NAME_TAG         'NRFA'
+#define AFS_NAME_ARRAY_TAG           'ANFA'
 
 #define __Enter
 
@@ -178,7 +179,7 @@ static inline void AFSBreakPoint() {
 #define AFS_WORK_ASYNCH_WRITE                   0x0004
 #define AFS_WORK_REQUEST_BUILD_MOUNT_POINT_TARGET 0x0005
 #define AFS_WORK_ENUMERATE_GLOBAL_ROOT          0x0006
-#define AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET   0x0007
+#define AFS_WORK_REQUEST_BUILD_SYMLINK_TARGET_INFO 0x0007
 
 //
 // Pool state
@@ -231,10 +232,9 @@ static inline void AFSBreakPoint() {
 #define AFS_FCB_DELETED                                      0x00000010
 #define AFS_UPDATE_WRITE_TIME                                0x00000020
 #define AFS_FCB_INSERTED_ID_TREE                             0x00000040
-#define AFS_FCB_STANDALONE_NODE                              0x00000080
-#define AFS_FCB_VOLUME_OFFLINE                               0x00000100
-#define AFS_FCB_DELETE_FCB_ON_CLOSE                          0x00000200
-#define AFS_FCB_VERIFY                                       0x00000400
+#define AFS_FCB_VOLUME_OFFLINE                               0x00000080
+#define AFS_FCB_DELETE_FCB_ON_CLOSE                          0x00000100
+#define AFS_FCB_VERIFY                                       0x00000200
 
 //
 // Fcb lifetime in seconds
@@ -460,5 +460,30 @@ DEFINE_GUID (GUID_SD_AFS_REDIRECTOR_CONTROL_OBJECT,
 
 #define AFS_DEVICE_FLAG_HIDE_DOT_NAMES          0x00000001
 #define AFS_DEVICE_FLAG_REDIRECTOR_SHUTDOWN     0x00000002
+
+//
+// Maximum elements in name array
+//
+
+#define AFS_MAX_NAME_ARRAY_COUNT                128
+
+//
+// Name Array flags
+//
+
+#define AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT        0x00000001
+
+//
+// Maximum recursion depth
+//
+
+#define AFS_MAX_RECURSION_COUNT                 20
+
+//
+// LocateNameEntry flags
+//
+
+#define AFS_LOCATE_FLAGS_SUBSTITUTE_NAME        0x00000001
+#define AFS_LOCATE_FLAGS_NO_MP_TARGET_EVAL      0x00000002
 
 #endif /* _AFS_DEFINES_H */

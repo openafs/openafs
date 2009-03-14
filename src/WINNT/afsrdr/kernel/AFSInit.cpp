@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,7 +123,7 @@ DriverEntry( PDRIVER_OBJECT DriverObject,
         if( BooleanFlagOn( AFSDebugFlags, AFS_DBG_FLAG_BREAK_ON_ENTRY))
         {
 
-            DbgPrint("AFS DriverEntrty - Break on entry\n");
+            DbgPrint("AFS DriverEntry - Break on entry\n");
 
             AFSBreakPoint();
 

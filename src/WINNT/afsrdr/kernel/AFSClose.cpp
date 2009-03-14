@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -295,6 +295,18 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                 {
 
                     //
+                    // If we have a name array then delete it
+                    //
+
+                    if( pCcb->NameArray != NULL)
+                    {
+
+                        AFSFreeNameArray( pCcb->NameArray);
+
+                        pCcb->NameArray = NULL;
+                    }
+
+                    //
                     // Remove the Ccb and de-allocate it
                     //
 
@@ -356,15 +368,6 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                         if( pFcb->Specific.File.ExtentsDirtyCount)
                         {
 
-                            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                          AFS_TRACE_LEVEL_VERBOSE,
-                                          "AFSClose Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                          &pFcb->DirEntry->DirectoryEntry.FileName,
-                                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                          pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                             AFSFlushExtents( pFcb);
                         }
 
@@ -403,9 +406,25 @@ AFSClose( IN PDEVICE_OBJECT DeviceObject,
                             if( !BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
                             {
 
-                                AFSRemoveDirNodeFromParent( AFSGlobalRoot,
+                                DbgPrint("AFSClose removing dir node from parent %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                          pFcb->DirEntry,
+                                          &pFcb->DirEntry->DirectoryEntry.FileName,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                          pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+
+                                AFSRemoveDirNodeFromParent( pFcb->ParentFcb,
                                                             pFcb->DirEntry);
                             }
+
+                            DbgPrint("AFSClose ExFreePool %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                      pFcb->DirEntry,
+                                      &pFcb->DirEntry->DirectoryEntry.FileName,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
+                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                             if( BooleanFlagOn( pFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
                             {

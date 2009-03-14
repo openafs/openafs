@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -140,27 +140,13 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 ntStatus = STATUS_NOT_IMPLEMENTED;
             
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing OpLock request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
                 break;
 
             case FSCTL_LOCK_VOLUME:
                     
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_LOCK_VOLUME request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_LOCK_VOLUME request\n");
 
                 break;
 
@@ -168,12 +154,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_UNLOCK_VOLUME request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_UNLOCK_VOLUME request\n");
 
                 break;
 
@@ -181,12 +162,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_DISMOUNT_VOLUME request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_DISMOUNT_VOLUME request\n");
 
                 break;
 
@@ -194,12 +170,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_MARK_VOLUME_DIRTY request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_MARK_VOLUME_DIRTY request\n");
 
                 break;
 
@@ -207,12 +178,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_DIRTY request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_DIRTY request\n");
 
                 break;
 
@@ -220,12 +186,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_MOUNTED request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_VOLUME_MOUNTED request\n");
 
                 break;
 
@@ -233,12 +194,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_IS_PATHNAME_VALID request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_IS_PATHNAME_VALID request\n");
 
                 break;
 
@@ -246,12 +202,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_QUERY_RETRIEVAL_POINTERS request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_QUERY_RETRIEVAL_POINTERS request\n");
 
                 break;
 
@@ -259,12 +210,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_FILESYSTEM_GET_STATISTICS request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_FILESYSTEM_GET_STATISTICS request\n");
 
                 break;
 
@@ -272,12 +218,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_GET_VOLUME_BITMAP request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_GET_VOLUME_BITMAP request\n");
 
                 break;
 
@@ -285,12 +226,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
                 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_GET_RETRIEVAL_POINTERS request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_GET_RETRIEVAL_POINTERS request\n");
 
                 break;
 
@@ -298,12 +234,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_MOVE_FILE request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_MOVE_FILE request\n");
 
                 break;
 
@@ -311,12 +242,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_ALLOW_EXTENDED_DASD_IO request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_ALLOW_EXTENDED_DASD_IO request\n");
 
                 break;
 
@@ -326,12 +252,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_GET_REPARSE_POINT request\n");
 
                 break;
 
@@ -339,12 +260,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing FSCTL_SET_REPARSE_POINT request\n");
 
                 break;
 
@@ -352,13 +268,7 @@ AFSProcessUserFsRequest( IN PIRP Irp)
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE_2,
-                              "AFSProcessUserFsRequest Processing default (%08lX) request on %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              ulFsControlCode,
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
+                              "AFSProcessUserFsRequest Processing default (%08lX) request\n");
 
                 break;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -875,6 +875,9 @@ AFSInitializeControlDevice()
 
         ExInitializeResourceLite( &pDeviceExt->Specific.Control.ExtentReleaseResource);
 
+        ExInitializeResourceLite( &pDeviceExt->Specific.Control.SysName32ListLock);
+
+        ExInitializeResourceLite( &pDeviceExt->Specific.Control.SysName64ListLock);
 
         //
         // And the events
@@ -1286,7 +1289,7 @@ AFSInitDirEntry( IN AFSFileID *ParentFileID,
 
         //
         // Check for the case where we have a filetype of SymLink but both the TargetFid and the 
-        // TagrteName are empty. In this case set the filetype to zero so we evaluate it later in
+        // TargetName are empty. In this case set the filetype to zero so we evaluate it later in
         // the code
         //
 
@@ -1390,18 +1393,20 @@ AFSCheckForReadOnlyAccess( IN ACCESS_MASK DesiredAccess)
 }
 
 NTSTATUS
-AFSEvaluateNode( IN AFSFcb *Fcb)
+AFSEvaluateNode( IN ULONGLONG ProcessID,
+                 IN AFSFcb *Fcb)
 {
 
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDirEnumEntry *pDirEntry = NULL;
+    UNICODE_STRING uniTargetName;
 
     __Enter
     {
 
         ntStatus = AFSEvaluateTargetByID( &Fcb->DirEntry->DirectoryEntry.FileId,
-                                          0,
+                                          ProcessID,
                                           FALSE,
                                           &pDirEntry);
 
@@ -1479,6 +1484,14 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                     Fcb->Specific.Directory.DirectoryNodeHdr.TreeLock = &Fcb->NPFcb->Specific.Directory.DirectoryTreeLock;
 
                     //
+                    // Initialize our event for processing directory enum calls
+                    //
+
+                    KeInitializeEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent,
+                                       NotificationEvent,
+                                       FALSE);
+
+                    //
                     // Initialize the directory
                     //
 
@@ -1528,8 +1541,6 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                 case AFS_FILE_TYPE_DFSLINK:
                 {
 
-                    UNICODE_STRING uniTargetName;
-
                     //
                     // Tear down file specific stuff
                     //
@@ -1541,64 +1552,6 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
                     ExDeleteResourceLite( &Fcb->NPFcb->Specific.File.DirtyExtentsListLock);
 
                     Fcb->Header.NodeTypeCode = AFS_DFS_LINK_FCB;
-
-                    //
-                    // Update the target name information if needed
-                    //
-
-                    uniTargetName.Length = (USHORT)pDirEntry->TargetNameLength;
-
-                    uniTargetName.MaximumLength = uniTargetName.Length;
-
-                    uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
-
-                    if( Fcb->DirEntry->DirectoryEntry.TargetName.Length == 0 ||
-                        RtlCompareUnicodeString( &uniTargetName,
-                                                 &Fcb->DirEntry->DirectoryEntry.TargetName,
-                                                 TRUE) != 0)
-                    {
-
-                        //
-                        // If we have enough space then just move in the name otherwise
-                        // allocate a new buffer
-                        //
-
-                        if( Fcb->DirEntry->DirectoryEntry.TargetName.Length < uniTargetName.Length)
-                        {
-
-                            WCHAR *pTmpBuffer = NULL;
-
-                            pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
-                                                                         uniTargetName.Length,
-                                                                         AFS_NAME_BUFFER_TAG);
-
-                            if( pTmpBuffer != NULL)
-                            {
-
-                                ntStatus = STATUS_INSUFFICIENT_RESOURCES;
-
-                                break;
-                            }
-
-                            if( BooleanFlagOn( Fcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
-                            {
-
-                                ExFreePool( Fcb->DirEntry->DirectoryEntry.TargetName.Buffer);
-                            }
-
-                            Fcb->DirEntry->DirectoryEntry.TargetName.MaximumLength = uniTargetName.Length;
-
-                            Fcb->DirEntry->DirectoryEntry.TargetName.Buffer = pTmpBuffer;    
-
-                            SetFlag( Fcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER);
-                        }
-
-                        Fcb->DirEntry->DirectoryEntry.TargetName.Length = uniTargetName.Length;
-
-                        RtlCopyMemory( Fcb->DirEntry->DirectoryEntry.TargetName.Buffer,
-                                       uniTargetName.Buffer,
-                                       Fcb->DirEntry->DirectoryEntry.TargetName.Length);
-                    }
 
                     break;
                 }
@@ -1631,6 +1584,58 @@ AFSEvaluateNode( IN AFSFcb *Fcb)
 
         Fcb->DirEntry->DirectoryEntry.Links = pDirEntry->Links;
 
+        //
+        // If we have a target name then see if it needs updating ...
+        //
+
+        if( pDirEntry->TargetNameLength > 0)
+        {
+
+            //
+            // Update the target name information if needed
+            //
+
+            uniTargetName.Length = (USHORT)pDirEntry->TargetNameLength;
+
+            uniTargetName.MaximumLength = uniTargetName.Length;
+
+            uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
+
+            if( Fcb->DirEntry->DirectoryEntry.TargetName.Length == 0 ||
+                RtlCompareUnicodeString( &uniTargetName,
+                                         &Fcb->DirEntry->DirectoryEntry.TargetName,
+                                         TRUE) != 0)
+            {
+
+                //
+                // Update the target name
+                //
+
+                ntStatus = AFSUpdateTargetName( &Fcb->DirEntry->DirectoryEntry.TargetName,
+                                                &Fcb->DirEntry->Flags,
+                                                uniTargetName.Buffer,
+                                                uniTargetName.Length);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    try_return( ntStatus);
+                }
+            }
+        }
+
+        //
+        // If this is a file then update the sizes in the header as well
+        //
+
+        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_FILE)
+        {
+
+            Fcb->Header.AllocationSize.QuadPart  = Fcb->DirEntry->DirectoryEntry.AllocationSize.QuadPart;
+            Fcb->Header.FileSize.QuadPart        = Fcb->DirEntry->DirectoryEntry.EndOfFile.QuadPart;
+            Fcb->Header.ValidDataLength.QuadPart = Fcb->DirEntry->DirectoryEntry.EndOfFile.QuadPart;
+        }
+
 try_exit:
 
         if( pDirEntry != NULL)
@@ -1644,7 +1649,8 @@ try_exit:
 }
 
 NTSTATUS
-AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
+AFSValidateSymLink( IN ULONGLONG ProcessID,
+                    IN AFSDirEntryCB *DirEntry)
 {
 
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
@@ -1655,17 +1661,8 @@ AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSValidateSymLink Validating possible DFS Link %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &DirEntry->DirectoryEntry.FileName,
-                      DirEntry->DirectoryEntry.FileId.Cell,
-                      DirEntry->DirectoryEntry.FileId.Volume,
-                      DirEntry->DirectoryEntry.FileId.Vnode,
-                      DirEntry->DirectoryEntry.FileId.Unique);
-
         ntStatus = AFSEvaluateTargetByID( &DirEntry->DirectoryEntry.FileId,
-                                          0,
+                                          ProcessID,
                                           FALSE,
                                           &pDirEntry);
 
@@ -1684,6 +1681,42 @@ AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
         DirEntry->DirectoryEntry.DataVersion = pDirEntry->DataVersion;
 
         //
+        // Update the target name information if needed
+        //
+
+        uniTargetName.Length = (USHORT)pDirEntry->TargetNameLength;
+
+        uniTargetName.MaximumLength = uniTargetName.Length;
+
+        uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
+
+        if( uniTargetName.Length > 0)
+        {
+
+            if( DirEntry->DirectoryEntry.TargetName.Length == 0 ||
+                RtlCompareUnicodeString( &uniTargetName,
+                                         &DirEntry->DirectoryEntry.TargetName,
+                                         TRUE) != 0)
+            {
+
+                //
+                // Update the target name
+                //
+
+                ntStatus = AFSUpdateTargetName( &DirEntry->DirectoryEntry.TargetName,
+                                                &DirEntry->Flags,
+                                                uniTargetName.Buffer,
+                                                uniTargetName.Length);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+                }
+            }
+        }
+
+        //
         // If the FileType is the same then nothing to do since it IS
         // a SymLink
         //
@@ -1691,21 +1724,10 @@ AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
         if( pDirEntry->FileType == DirEntry->DirectoryEntry.FileType)
         {
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSValidateSymLink Entry %wZ FID %08lX-%08lX-%08lX-%08lX is a SymLink\n",
-                          &DirEntry->DirectoryEntry.FileName,
-                          DirEntry->DirectoryEntry.FileId.Cell,
-                          DirEntry->DirectoryEntry.FileId.Volume,
-                          DirEntry->DirectoryEntry.FileId.Vnode,
-                          DirEntry->DirectoryEntry.FileId.Unique);
-
             ASSERT( pDirEntry->FileType == AFS_FILE_TYPE_SYMLINK);
 
             try_return( ntStatus = STATUS_SUCCESS);
         }
-
-        ASSERT( pDirEntry->FileType == AFS_FILE_TYPE_DFSLINK);
 
         DirEntry->DirectoryEntry.FileType = pDirEntry->FileType;
 
@@ -1726,78 +1748,6 @@ AFSValidateSymLink( IN AFSDirEntryCB *DirEntry)
         DirEntry->DirectoryEntry.EaSize = pDirEntry->EaSize;
 
         DirEntry->DirectoryEntry.Links = pDirEntry->Links;
-
-        //
-        // Update the target name information if needed
-        //
-
-        uniTargetName.Length = (USHORT)pDirEntry->TargetNameLength;
-
-        uniTargetName.MaximumLength = uniTargetName.Length;
-
-        uniTargetName.Buffer = (WCHAR *)((char *)pDirEntry + pDirEntry->TargetNameOffset);
-
-        if( uniTargetName.Length == 0)
-        {
-
-            try_return( ntStatus = STATUS_SUCCESS);
-        }
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSValidateSymLink Updating entry %wZ FID %08lX-%08lX-%08lX-%08lX to a DFS Link with target %wZ\n",
-                      &DirEntry->DirectoryEntry.FileName,
-                      DirEntry->DirectoryEntry.FileId.Cell,
-                      DirEntry->DirectoryEntry.FileId.Volume,
-                      DirEntry->DirectoryEntry.FileId.Vnode,
-                      DirEntry->DirectoryEntry.FileId.Unique,
-                      &uniTargetName);
-
-        if( DirEntry->DirectoryEntry.TargetName.Length == 0 ||
-            RtlCompareUnicodeString( &uniTargetName,
-                                     &DirEntry->DirectoryEntry.TargetName,
-                                     TRUE) != 0)
-        {
-
-            //
-            // If we have enough space then just move in the name otherwise
-            // allocate a new buffer
-            //
-
-            if( DirEntry->DirectoryEntry.TargetName.Length < uniTargetName.Length)
-            {
-
-                WCHAR *pTmpBuffer = NULL;
-
-                pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
-                                                             uniTargetName.Length,
-                                                             AFS_NAME_BUFFER_TAG);
-
-                if( pTmpBuffer != NULL)
-                {
-
-                    try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
-                }
-
-                if( BooleanFlagOn( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
-                {
-
-                    ExFreePool( DirEntry->DirectoryEntry.TargetName.Buffer);
-                }
-
-                DirEntry->DirectoryEntry.TargetName.MaximumLength = uniTargetName.Length;
-
-                DirEntry->DirectoryEntry.TargetName.Buffer = pTmpBuffer;    
-
-                SetFlag( DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER);
-            }
-
-            DirEntry->DirectoryEntry.TargetName.Length = uniTargetName.Length;
-
-            RtlCopyMemory( DirEntry->DirectoryEntry.TargetName.Buffer,
-                           uniTargetName.Buffer,
-                           DirEntry->DirectoryEntry.TargetName.Length);
-        }
 
 try_exit:
 
@@ -1948,16 +1898,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
         // Get the target of the node if it is a mount point or sym link
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSInvalidateCache Invalidating Fcb %wZ FID %08lX-%08lX-%08lX-%08lX Reason %08lX\n",
-                      &pDcb->DirEntry->DirectoryEntry.FileName,
-                      pDcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pDcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pDcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pDcb->DirEntry->DirectoryEntry.FileId.Unique,
-                      InvalidateCB->Reason);
-
         if( pDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK ||
             pDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT)
         {
@@ -2089,17 +2029,7 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                                     // for any writes or reads to the cache to complete)
                                     //
 
-                                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                                  AFS_TRACE_LEVEL_VERBOSE,
-                                                  "AFSInvalidateCache Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
-                                    (VOID) AFSTearDownFcbExtents( pFcb);
-                                        
+                                    (VOID) AFSTearDownFcbExtents( pFcb);                                        
                                 }
 
                                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
@@ -2144,6 +2074,14 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                             }
                             else
                             {
+
+                                DbgPrint("AFSInvalidateCache Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                                          pCurrentDirEntry,
+                                          &pCurrentDirEntry->DirectoryEntry.FileName,
+                                          pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                                          pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                                          pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                                          pCurrentDirEntry->DirectoryEntry.FileId.Unique);
 
                                 AFSDeleteDirEntry( pDcb,
                                                    pCurrentDirEntry);
@@ -2286,15 +2224,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
                         // for any writes or reads to the cache to complete)
                         //
 
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSInvalidateCache Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                      &pDcb->DirEntry->DirectoryEntry.FileName,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                         (VOID) AFSTearDownFcbExtents( pDcb);
 
                         break;
@@ -2365,15 +2294,6 @@ AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB)
 
                 if( pDcb->DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_FILE)
                 {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSInvalidateCache (AFS_INVALIDATE_FLUSHED) Invalidating file entry for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pDcb->DirEntry->DirectoryEntry.FileName,
-                                  pDcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pDcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pDcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pDcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
                     //
                     // Purge the system cache for the file
@@ -2848,15 +2768,17 @@ try_exit:
 }
 
 NTSTATUS
-AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
-                         IN UNICODE_STRING *ComponentName,
+AFSSubstituteNameInPath( IN OUT UNICODE_STRING *FullPathName,
+                         IN OUT UNICODE_STRING *ComponentName,
                          IN UNICODE_STRING *SubstituteName,
+                         IN OUT UNICODE_STRING *RemainingPath,
                          IN BOOLEAN FreePathName)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
     UNICODE_STRING uniPathName;
     USHORT usPrefixNameLen = 0;
+    SHORT  sNameLenDelta = 0;
 
     __Enter
     {
@@ -2866,28 +2788,36 @@ AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
         // then just moves things around
         //
 
-        if( FullPathName->MaximumLength > FullPathName->Length - 
-                                                    ComponentName->Length + 
-                                                    SubstituteName->Length)
-        {
+        sNameLenDelta = SubstituteName->Length - ComponentName->Length;
 
-            usPrefixNameLen = (USHORT)(ComponentName->Buffer - FullPathName->Buffer);
+        usPrefixNameLen = (USHORT)(ComponentName->Buffer - FullPathName->Buffer);
+
+        if( FullPathName->MaximumLength > FullPathName->Length + sNameLenDelta)
+        {
 
             if( FullPathName->Length > usPrefixNameLen + ComponentName->Length)
             {
 
-                RtlMoveMemory( &FullPathName->Buffer[ ((usPrefixNameLen + SubstituteName->Length)/sizeof( WCHAR)) + 1],
-                               &FullPathName->Buffer[ ((usPrefixNameLen + ComponentName->Length)/sizeof( WCHAR)) + 1],
-                               FullPathName->Length - usPrefixNameLen - ComponentName->Length);
+                RtlMoveMemory( &FullPathName->Buffer[ ((usPrefixNameLen*sizeof( WCHAR) + SubstituteName->Length)/sizeof( WCHAR))],
+                               &FullPathName->Buffer[ ((usPrefixNameLen*sizeof( WCHAR) + ComponentName->Length)/sizeof( WCHAR))],
+                               FullPathName->Length - usPrefixNameLen*sizeof( WCHAR) - ComponentName->Length);
             }
 
-            RtlCopyMemory( &FullPathName->Buffer[ (usPrefixNameLen/sizeof( WCHAR)) + 1],
+            RtlCopyMemory( &FullPathName->Buffer[ usPrefixNameLen],
                            SubstituteName->Buffer,
                            SubstituteName->Length);
 
-            FullPathName->Length = FullPathName->Length - 
-                                          ComponentName->Length + 
-                                          SubstituteName->Length;
+            FullPathName->Length += sNameLenDelta;
+
+            ComponentName->Length += sNameLenDelta;
+
+            ComponentName->MaximumLength = ComponentName->Length;
+
+            if ( RemainingPath->Buffer)
+            {
+                 
+                RemainingPath->Buffer += sNameLenDelta/sizeof( WCHAR);
+            }
 
             try_return( ntStatus);
         }
@@ -2933,6 +2863,20 @@ AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
             RtlCopyMemory( &uniPathName.Buffer[ (usPrefixNameLen + SubstituteName->Length)/sizeof( WCHAR)],
                            &FullPathName->Buffer[ (usPrefixNameLen + ComponentName->Length)/sizeof( WCHAR)],
                            FullPathName->Length - usPrefixNameLen - ComponentName->Length);
+        }
+
+        ComponentName->Buffer = uniPathName.Buffer + (ComponentName->Buffer - FullPathName->Buffer);
+        
+        ComponentName->Length += sNameLenDelta;
+
+        ComponentName->MaximumLength = ComponentName->Length;
+
+        if ( RemainingPath->Buffer)
+        {
+                 
+            RemainingPath->Buffer = uniPathName.Buffer 
+                + (RemainingPath->Buffer - FullPathName->Buffer)
+                + sNameLenDelta/sizeof( WCHAR);
         }
 
         if( FreePathName)
@@ -3054,8 +2998,11 @@ AFSReadServerName()
         // Move in the paths
         //
 
+        RtlZeroMemory( paramPath.Buffer,
+                       paramPath.MaximumLength);
+
         RtlCopyMemory( &paramPath.Buffer[ 0], 
-                       L"\\TransarcAFSDaemon\\Parameters", 
+                       L"\\TransarcAFSDaemon\\Parameters",
                        58);
         
         paramPath.Length = 58; 
@@ -3194,15 +3141,6 @@ AFSInvalidateVolume( IN AFSFcb *Vcb,
                         // for any writes or reads to the cache to complete)
                         //
          
-                        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                      AFS_TRACE_LEVEL_VERBOSE,
-                                      "AFSInvalidateVolume Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                         (VOID) AFSTearDownFcbExtents( pFcb);
                     }
 
@@ -3232,7 +3170,8 @@ AFSInvalidateVolume( IN AFSFcb *Vcb,
 }
 
 NTSTATUS
-AFSVerifyEntry( IN AFSFcb *Fcb)
+AFSVerifyEntry( IN ULONGLONG ProcessID,
+                IN AFSFcb *Fcb)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
@@ -3241,32 +3180,13 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
     __Enter
     {
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSVerifyEntry Verifying Fcb %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique);
-
         ntStatus = AFSEvaluateTargetByID( &Fcb->DirEntry->DirectoryEntry.FileId,
-                                          0, // Called in context
+                                          ProcessID,
                                           FALSE,
                                           &pDirEntry);
 
         if( !NT_SUCCESS( ntStatus))
         {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_ERROR,
-                          "AFSVerifyEntry Failed to evalute Fcb %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
-                          &Fcb->DirEntry->DirectoryEntry.FileName,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                          ntStatus);
 
             //
             // Mark the entry as invalid and fail the request
@@ -3314,16 +3234,6 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
             case AFS_FILE_TYPE_MOUNTPOINT:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry Updating metadata for MP Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                              pDirEntry->DataVersion.QuadPart);
-
                 //
                 // For a mount point we need to ensure the target is the same
                 //
@@ -3352,10 +3262,14 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( Fcb->DirEntry,
-                                   pDirEntry);
+                ntStatus = AFSUpdateMetaData( Fcb->DirEntry,
+                                              pDirEntry);
 
-                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+                if( NT_SUCCESS( ntStatus))
+                {
+
+                    ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+                }
 
                 break;
             }
@@ -3363,40 +3277,23 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
             case AFS_FILE_TYPE_SYMLINK:
             {
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry Updating metadata for SL Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                              pDirEntry->DataVersion.QuadPart);
-
                 //
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( Fcb->DirEntry,
-                                   pDirEntry);
+                ntStatus = AFSUpdateMetaData( Fcb->DirEntry,
+                                              pDirEntry);
 
-                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+                if( NT_SUCCESS( ntStatus))
+                {
 
+                    ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+                }
                 break;
             }
 
-            case AFS_FILE_FCB:
+            case AFS_FILE_TYPE_FILE:
             {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry Updating metadata for file Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                              pDirEntry->DataVersion.QuadPart);
 
                 //
                 // For a file where the data version has become invalid we need to 
@@ -3447,15 +3344,6 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 // for any writes or reads to the cache to complete)
                 //
          
-                AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                 (VOID) AFSTearDownFcbExtents( Fcb);
   
                 //
@@ -3496,9 +3384,15 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( Fcb->DirEntry,
-                                   pDirEntry);
+                ntStatus = AFSUpdateMetaData( Fcb->DirEntry,
+                                              pDirEntry);
 
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    break;
+                }
+                
                 //
                 // Update file sizes
                 //
@@ -3510,29 +3404,16 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 break;
             }
 
-            case AFS_ROOT_FCB:
-            case AFS_DIRECTORY_FCB:
+            case AFS_FILE_TYPE_DIRECTORY:
             {
 
                 AFSFcb *pCurrentFcb = NULL;
                 AFSDirEntryCB *pCurrentDirEntry = NULL;
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry Updating metadata for directory Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                              pDirEntry->DataVersion.QuadPart);
-
                 //
                 // For a directory or root entry flush the content of
                 // the directory enumeration.
                 //
-
-                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
@@ -3564,8 +3445,14 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( Fcb->DirEntry,
-                                   pDirEntry);
+                ntStatus = AFSUpdateMetaData( Fcb->DirEntry,
+                                              pDirEntry);
+
+                if( NT_SUCCESS( ntStatus))
+                {
+
+                    ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+                }
 
                 break;
             }
@@ -3574,16 +3461,6 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
             {
 
                 UNICODE_STRING uniTargetName;
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSVerifyEntry Updating metadata for DFS Link Fcb %wZ FID %08lX-%08lX-%08lX-%08lX DV %I64X\n",
-                              &Fcb->DirEntry->DirectoryEntry.FileName,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                              pDirEntry->DataVersion.QuadPart);
 
                 //
                 // For a DFS link need to check the target name has not changed
@@ -3601,55 +3478,33 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
                 {
 
                     //
-                    // If we have enough space then just move in the name otherwise
-                    // allocate a new buffer
+                    // Update the target name
                     //
 
-                    if( Fcb->DirEntry->DirectoryEntry.TargetName.Length < uniTargetName.Length)
+                    ntStatus = AFSUpdateTargetName( &Fcb->DirEntry->DirectoryEntry.TargetName,
+                                                    &Fcb->DirEntry->Flags,
+                                                    uniTargetName.Buffer,
+                                                    uniTargetName.Length);
+
+                    if( !NT_SUCCESS( ntStatus))
                     {
 
-                        WCHAR *pTmpBuffer = NULL;
-
-                        pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
-                                                                     uniTargetName.Length,
-                                                                     AFS_NAME_BUFFER_TAG);
-
-                        if( pTmpBuffer == NULL)
-                        {
-
-                            ntStatus = STATUS_INSUFFICIENT_RESOURCES;
-
-                            break;
-                        }
-
-                        if( BooleanFlagOn( Fcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
-                        {
-
-                            ExFreePool( Fcb->DirEntry->DirectoryEntry.TargetName.Buffer);
-                        }
-
-                        Fcb->DirEntry->DirectoryEntry.TargetName.MaximumLength = uniTargetName.Length;
-
-                        Fcb->DirEntry->DirectoryEntry.TargetName.Buffer = pTmpBuffer;    
-
-                        SetFlag( Fcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER);
+                        break;
                     }
-
-                    Fcb->DirEntry->DirectoryEntry.TargetName.Length = uniTargetName.Length;
-
-                    RtlCopyMemory( Fcb->DirEntry->DirectoryEntry.TargetName.Buffer,
-                                   uniTargetName.Buffer,
-                                   Fcb->DirEntry->DirectoryEntry.TargetName.Length);
                 }
 
                 //
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( Fcb->DirEntry,
-                                   pDirEntry);
+                ntStatus = AFSUpdateMetaData( Fcb->DirEntry,
+                                              pDirEntry);
 
-                ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+                if( NT_SUCCESS( ntStatus))
+                {
+
+                    ClearFlag( Fcb->Flags, AFS_FCB_VERIFY);
+                }
 
                 break;
             }
@@ -3665,16 +3520,6 @@ AFSVerifyEntry( IN AFSFcb *Fcb)
         }
 
  try_exit:
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSVerifyEntry Verification for Fcb %wZ FID %08lX-%08lX-%08lX-%08lX Complete Status %08lX\n",
-                      &Fcb->DirEntry->DirectoryEntry.FileName,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      Fcb->DirEntry->DirectoryEntry.FileId.Unique,
-                      ntStatus);
 
         if( pDirEntry != NULL)
         {
@@ -3838,15 +3683,6 @@ AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus)
                     // for any writes or reads to the cache to complete)
                     //
          
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSSetVolumeState Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     (VOID) AFSTearDownFcbExtents( pFcb);
                 }
 
@@ -3979,15 +3815,6 @@ AFSValidateDirectoryCache( IN AFSFcb *Dcb)
                 continue;
             }
 
-            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSValidateDirectoryCache Removing entry %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                          &pCurrentDirEntry->DirectoryEntry.FileName,
-                          pCurrentDirEntry->DirectoryEntry.FileId.Cell,
-                          pCurrentDirEntry->DirectoryEntry.FileId.Volume,
-                          pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
-                          pCurrentDirEntry->DirectoryEntry.FileId.Unique);
-
             pFcb = pCurrentDirEntry->Fcb;
 
             if( pFcb != NULL)
@@ -4027,23 +3854,14 @@ AFSValidateDirectoryCache( IN AFSFcb *Dcb)
                     // for any writes or reads to the cache to complete)
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSValidateDirectoryCache Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     (VOID) AFSTearDownFcbExtents( pFcb);                                       
                 }
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
                               AFS_TRACE_LEVEL_VERBOSE,
                               "AFSValidateDirectoryCache Acquiring Fcb lock %08lX EXCL %08lX\n",
-                                                                           &pFcb->NPFcb->Resource,
-                                                                           PsGetCurrentThread());
+                              &pFcb->NPFcb->Resource,
+                              PsGetCurrentThread());
 
                 AFSAcquireExcl( &pFcb->NPFcb->Resource,
                                 TRUE);
@@ -4076,11 +3894,27 @@ AFSValidateDirectoryCache( IN AFSFcb *Dcb)
 
                 AFSReleaseResource( &pFcb->NPFcb->Resource);
 
+                DbgPrint("Removing Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          pCurrentDirEntry,
+                          &pCurrentDirEntry->DirectoryEntry.FileName,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Unique);
+
                 AFSRemoveDirNodeFromParent( Dcb,
                                             pCurrentDirEntry);
             }
             else
             {
+
+                DbgPrint("AFSValidateDirectoryCache Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          pCurrentDirEntry,
+                          &pCurrentDirEntry->DirectoryEntry.FileName,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Unique);
 
                 AFSDeleteDirEntry( Dcb,
                                    pCurrentDirEntry);
@@ -4215,15 +4049,6 @@ AFSValidateRootDirectoryCache( IN AFSFcb *Dcb)
                     // for any writes or reads to the cache to complete
                     //
 
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSValidateRootDirectoryCache Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pFcb->DirEntry->DirectoryEntry.FileName,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     (VOID) AFSTearDownFcbExtents( pFcb);                                       
                 }
 
@@ -4269,6 +4094,14 @@ AFSValidateRootDirectoryCache( IN AFSFcb *Dcb)
             }
             else
             {
+
+                DbgPrint("AFSValidateRootDirectoryEntry Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                          pCurrentDirEntry,
+                          &pCurrentDirEntry->DirectoryEntry.FileName,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                          pCurrentDirEntry->DirectoryEntry.FileId.Unique);
 
                 AFSDeleteDirEntry( Dcb,
                                    pCurrentDirEntry);
@@ -4328,10 +4161,13 @@ AFSIsFinalNode( IN AFSFcb *Fcb)
     return bIsFinalNode;
 }
 
-void
+NTSTATUS
 AFSUpdateMetaData( IN AFSDirEntryCB *DirEntry,
                    IN AFSDirEnumEntry *DirEnumEntry)
 {
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    UNICODE_STRING uniTargetName;
 
     __Enter
     {
@@ -4361,9 +4197,49 @@ AFSUpdateMetaData( IN AFSDirEntryCB *DirEntry,
         DirEntry->DirectoryEntry.EaSize = DirEnumEntry->EaSize;
 
         DirEntry->DirectoryEntry.Links = DirEnumEntry->Links;
+
+        if( DirEnumEntry->TargetNameLength > 0)
+        {
+
+            //
+            // Update the target name information if needed
+            //
+
+            uniTargetName.Length = (USHORT)DirEnumEntry->TargetNameLength;
+
+            uniTargetName.MaximumLength = uniTargetName.Length;
+
+            uniTargetName.Buffer = (WCHAR *)((char *)DirEnumEntry + DirEnumEntry->TargetNameOffset);
+
+            if( DirEntry->DirectoryEntry.TargetName.Length == 0 ||
+                RtlCompareUnicodeString( &uniTargetName,
+                                         &DirEntry->DirectoryEntry.TargetName,
+                                         TRUE) != 0)
+            {
+
+                //
+                // Update the target name
+                //
+
+                ntStatus = AFSUpdateTargetName( &DirEntry->DirectoryEntry.TargetName,
+                                                &DirEntry->Flags,
+                                                uniTargetName.Buffer,
+                                                uniTargetName.Length);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    try_return( ntStatus);
+                }
+            }
+        }
+
+try_exit:
+
+        NOTHING;
     }
 
-    return;
+    return ntStatus;
 }
 
 NTSTATUS
@@ -4382,7 +4258,7 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
     {
 
         //
-        // If we have an Fcb hanging off the dire entry then be sure to acquire the locks in the
+        // If we have an Fcb hanging off the directory entry then be sure to acquire the locks in the
         // correct order
         //
 
@@ -4592,8 +4468,8 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( DirEntry,
-                                   pDirEnumEntry);
+                ntStatus = AFSUpdateMetaData( DirEntry,
+                                              pDirEnumEntry);
 
                 break;
             }
@@ -4611,13 +4487,13 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( DirEntry,
-                                   pDirEnumEntry);
+                ntStatus = AFSUpdateMetaData( DirEntry,
+                                              pDirEnumEntry);
 
                 break;
             }
 
-            case AFS_FILE_FCB:
+            case AFS_FILE_TYPE_FILE:
             {
 
                 //
@@ -4682,15 +4558,6 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                     // for any writes or reads to the cache to complete)
                     //
              
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                                  AFS_TRACE_LEVEL_VERBOSE,
-                                  "AFSValidateEntry Tearing down extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);        
-
                     (VOID) AFSTearDownFcbExtents( pCurrentFcb);
       
                     //
@@ -4737,8 +4604,14 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( DirEntry,
-                                   pDirEnumEntry);
+                ntStatus = AFSUpdateMetaData( DirEntry,
+                                              pDirEnumEntry);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    break;
+                }
 
                 if( DirEntry->Fcb != NULL)
                 {
@@ -4755,8 +4628,7 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                 break;
             }
 
-            case AFS_ROOT_FCB:
-            case AFS_DIRECTORY_FCB:
+            case AFS_FILE_TYPE_DIRECTORY:
             {
 
                 AFSDirEntryCB *pCurrentDirEntry = NULL;
@@ -4828,8 +4700,8 @@ AFSValidateEntry( IN AFSDirEntryCB *DirEntry,
                 // Update the metadata for the entry
                 //
 
-                AFSUpdateMetaData( DirEntry,
-                                   pDirEnumEntry);
+                ntStatus = AFSUpdateMetaData( DirEntry,
+                                              pDirEnumEntry);
 
                 break;
             }
@@ -4995,6 +4867,14 @@ AFSResetDirectoryContent( IN AFSFcb *Dcb)
         while( pCurrentDirEntry != NULL)
         {
 
+            DbgPrint("AFSResetDirectoryContent Deleting Entry %08lX %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+                      pCurrentDirEntry,
+                      &pCurrentDirEntry->DirectoryEntry.FileName,
+                      pCurrentDirEntry->DirectoryEntry.FileId.Cell,
+                      pCurrentDirEntry->DirectoryEntry.FileId.Volume,
+                      pCurrentDirEntry->DirectoryEntry.FileId.Vnode,
+                      pCurrentDirEntry->DirectoryEntry.FileId.Unique);
+
             AFSDeleteDirEntry( Dcb,
                                pCurrentDirEntry);
 
@@ -5051,7 +4931,8 @@ AFSEnumerateGlobalRoot()
         // Enumerate the shares in the volume
         //
 
-        ntStatus = AFSEnumerateDirectory( AFSGlobalRoot,
+        ntStatus = AFSEnumerateDirectory( (ULONGLONG)PsGetCurrentProcessId(),
+                                          AFSGlobalRoot,
                                           &AFSGlobalRoot->Specific.Directory.DirectoryNodeHdr,
                                           &AFSGlobalRoot->Specific.Directory.DirectoryNodeListHead,
                                           &AFSGlobalRoot->Specific.Directory.DirectoryNodeListTail,
@@ -5138,28 +5019,35 @@ try_exit:
     return ntStatus;
 }
 
-ULONG
-AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
-                       IN AFSDirEntryCB *DirEntry)
+NTSTATUS
+AFSRetrieveTargetInformation( IN AFSFcb *ParentFcb,
+                              IN AFSNameArrayHdr *NameArray,
+                              IN AFSDirEntryCB *DirEntry,
+                              OUT AFSFileInfoCB *FileInformation)
 {
 
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
     NTSTATUS ntStatus = STATUS_SUCCESS;
-    ULONG ulFileType = AFS_FILE_TYPE_UNKNOWN;
     AFSFcb *pCurrentFcb = NULL;
     ULONGLONG ullIndex = 0;
     AFSDirEnumEntry *pDirEnumEntry = NULL;
+    UNICODE_STRING uniTargetName;
 
     __Enter
     {
+
+        ASSERT( !ExIsResourceAcquiredLite( &ParentFcb->NPFcb->Resource));
 
         //
         // Be sure we have at least a target fid or type
         //
 
         if( DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_UNKNOWN ||
+            DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_MOUNTPOINT &&
             ( DirEntry->DirectoryEntry.TargetFileId.Vnode == 0 &&
-              DirEntry->DirectoryEntry.TargetFileId.Unique == 0))
+              DirEntry->DirectoryEntry.TargetFileId.Unique == 0) ||
+            DirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK &&
+              DirEntry->DirectoryEntry.TargetName.Length == 0)
         {
 
             ntStatus = AFSEvaluateTargetByID( &DirEntry->DirectoryEntry.FileId,
@@ -5172,7 +5060,7 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                               AFS_TRACE_LEVEL_ERROR,
-                              "AFSRetrieveTargetType Failed to evaluate possible link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              "AFSRetrieveTargetInformation Failed to evaluate possible link %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                   &DirEntry->DirectoryEntry.FileName,
                                   DirEntry->DirectoryEntry.FileId.Cell,
                                   DirEntry->DirectoryEntry.FileId.Volume,
@@ -5213,6 +5101,44 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
 
             DirEntry->DirectoryEntry.Links = pDirEnumEntry->Links;
 
+            if( pDirEnumEntry->TargetNameLength > 0)
+            {
+
+                //
+                // Update the target name information if needed
+                //
+
+                uniTargetName.Length = (USHORT)pDirEnumEntry->TargetNameLength;
+
+                uniTargetName.MaximumLength = uniTargetName.Length;
+
+                uniTargetName.Buffer = (WCHAR *)((char *)pDirEnumEntry + pDirEnumEntry->TargetNameOffset);
+
+                AFSUpdateName( &uniTargetName); // Need backslashes for comparison
+
+                if( DirEntry->DirectoryEntry.TargetName.Length == 0 ||
+                    RtlCompareUnicodeString( &uniTargetName,
+                                             &DirEntry->DirectoryEntry.TargetName,
+                                             TRUE) != 0)
+                {
+
+                    //
+                    // Update the target name
+                    //
+
+                    ntStatus = AFSUpdateTargetName( &DirEntry->DirectoryEntry.TargetName,
+                                                    &DirEntry->Flags,
+                                                    uniTargetName.Buffer,
+                                                    uniTargetName.Length);
+
+                    if( !NT_SUCCESS( ntStatus))
+                    {
+
+                        try_return( ntStatus);
+                    }
+                }
+            }
+
             ExFreePool( pDirEnumEntry);
         }
 
@@ -5223,13 +5149,15 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
         if( DirEntry->DirectoryEntry.FileType != AFS_FILE_TYPE_SYMLINK)
         {
 
-            ulFileType = DirEntry->DirectoryEntry.FileType;
-
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRetrieveTargetType Evaluated node %wZ to be of type %d (Not symlink)\n",
-                                  &DirEntry->DirectoryEntry.FileName,
-                                  DirEntry->DirectoryEntry.FileType);
+                          "AFSRetrieveTargetInformation Evaluated node %wZ FID %08lX-%08lX-%08lX-%08lX to be of type %d (Not symlink)\n",
+                          &DirEntry->DirectoryEntry.FileName,
+                          DirEntry->DirectoryEntry.FileId.Cell,
+                          DirEntry->DirectoryEntry.FileId.Volume,
+                          DirEntry->DirectoryEntry.FileId.Vnode,
+                          DirEntry->DirectoryEntry.FileId.Unique,
+                          DirEntry->DirectoryEntry.FileType);
 
             try_return( ntStatus);
         }
@@ -5245,119 +5173,23 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
 
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRetrieveTargetType Locating Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                              &DirEntry->DirectoryEntry.FileName,
-                              DirEntry->DirectoryEntry.FileId.Cell,
-                              DirEntry->DirectoryEntry.FileId.Volume,
-                              DirEntry->DirectoryEntry.FileId.Vnode,
-                              DirEntry->DirectoryEntry.FileId.Unique);
-
-            //
-            // See if we can first locate the Fcb since this could be a stand alone node
-            //
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSRetrieveTargetType Acquiring VolumeRoot FileIDTree.TreeLock lock %08lX SHARED %08lX\n",
-                          ParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock,
-                          PsGetCurrentThread());
-
-            AFSAcquireShared( ParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock, 
-                              TRUE);
-
-            ullIndex = AFSCreateLowIndex( &DirEntry->DirectoryEntry.FileId);
-
-            AFSLocateHashEntry( ParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeHead,
-                                ullIndex,
-                                &pCurrentFcb);
-
-            AFSReleaseResource( ParentFcb->RootFcb->Specific.VolumeRoot.FileIDTree.TreeLock);
-
-            if( pCurrentFcb != NULL)
-            {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_LOCK_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSRetrieveTargetType Acquiring Fcb lock %08lX EXCL %08lX\n",
-                              &pCurrentFcb->NPFcb->Resource,
-                              PsGetCurrentThread());
-
-                AFSAcquireExcl( &pCurrentFcb->NPFcb->Resource,
-                                TRUE);
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSRetrieveTargetType Located stand alone Fcb %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  pCurrentFcb,
+                          "AFSRetrieveTargetInformation Initializing Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   &DirEntry->DirectoryEntry.FileName,
                                   DirEntry->DirectoryEntry.FileId.Cell,
                                   DirEntry->DirectoryEntry.FileId.Volume,
                                   DirEntry->DirectoryEntry.FileId.Vnode,
                                   DirEntry->DirectoryEntry.FileId.Unique);
 
-                //
-                // If this is a stand alone Fcb then we will need to swap out the dir entry
-                // control block and update the DirEntry Fcb pointer
-                //
+            ntStatus = AFSInitFcb( ParentFcb,
+                                   DirEntry,
+                                   &pCurrentFcb);
 
-                if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_RELEASE_DIRECTORY_NODE))
-                {
-
-                    if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_RELEASE_NAME_BUFFER))
-                    {
-
-                        ExFreePool( pCurrentFcb->DirEntry->DirectoryEntry.FileName.Buffer);
-                    }
-
-                    if( BooleanFlagOn( pCurrentFcb->DirEntry->Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
-                    {
-
-                        ExFreePool( pCurrentFcb->DirEntry->DirectoryEntry.TargetName.Buffer);
-                    }
-
-                    AFSAllocationMemoryLevel -= sizeof( AFSDirEntryCB) + 
-                                                        pCurrentFcb->DirEntry->DirectoryEntry.FileName.Length +
-                                                        pCurrentFcb->DirEntry->DirectoryEntry.TargetName.Length;
-
-                    ExFreePool( pCurrentFcb->DirEntry);
-
-                    pCurrentFcb->DirEntry = DirEntry;
-                }
-
-                if( BooleanFlagOn( pCurrentFcb->Flags, AFS_FCB_STANDALONE_NODE))
-                {
-
-                    pCurrentFcb->ParentFcb = ParentFcb;
-
-                    pCurrentFcb->RootFcb = ParentFcb->RootFcb;
-
-                    ClearFlag( pCurrentFcb->Flags, AFS_FCB_STANDALONE_NODE);
-                }
-
-                DirEntry->Fcb = pCurrentFcb;
-            }
-            else
+            if( !NT_SUCCESS( ntStatus))
             {
 
                 AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSRetrieveTargetType Initializing Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &DirEntry->DirectoryEntry.FileName,
-                                  DirEntry->DirectoryEntry.FileId.Cell,
-                                  DirEntry->DirectoryEntry.FileId.Volume,
-                                  DirEntry->DirectoryEntry.FileId.Vnode,
-                                  DirEntry->DirectoryEntry.FileId.Unique);
-
-                ntStatus = AFSInitFcb( ParentFcb,
-                                       DirEntry,
-                                       &pCurrentFcb);
-
-                if( !NT_SUCCESS( ntStatus))
-                {
-
-                    AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                                  AFS_TRACE_LEVEL_ERROR,
-                                  "AFSRetrieveTargetType Failed to initialize Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
+                              AFS_TRACE_LEVEL_ERROR,
+                              "AFSRetrieveTargetInformation Failed to initialize Fcb for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX\n",
                                       &DirEntry->DirectoryEntry.FileName,
                                       DirEntry->DirectoryEntry.FileId.Cell,
                                       DirEntry->DirectoryEntry.FileId.Volume,
@@ -5365,22 +5197,18 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
                                       DirEntry->DirectoryEntry.FileId.Unique,
                                       ntStatus);
 
-                    try_return( ntStatus);
-                }
+                try_return( ntStatus);
+            }
 
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSRetrieveTargetType Initialized Fcb %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_VERBOSE,
+                          "AFSRetrieveTargetInformation Initialized Fcb %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
                                   pCurrentFcb,
                                   &DirEntry->DirectoryEntry.FileName,
                                   DirEntry->DirectoryEntry.FileId.Cell,
                                   DirEntry->DirectoryEntry.FileId.Volume,
                                   DirEntry->DirectoryEntry.FileId.Vnode,
                                   DirEntry->DirectoryEntry.FileId.Unique);
-            }
-
-            // Increment the Open Reference Count
-            InterlockedIncrement( &pCurrentFcb->OpenReferenceCount);
         }
         else
         {
@@ -5392,139 +5220,875 @@ AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
         pCurrentFcb = DirEntry->Fcb;
 
         //
-        // Now we have a starting Fcb for the node, walk the links to the end node
+        // Increment the Open Reference Count
         //
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSRetrieveTargetType Building link target for parent %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                                  &pCurrentFcb->DirEntry->DirectoryEntry.FileName,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                                  pCurrentFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
-        ntStatus = AFSQueueBuildSymLinkTarget( pCurrentFcb,
-                                               &ulFileType,
-                                               NULL);
-
-        if( !NT_SUCCESS( ntStatus))
-        {
-
-            ulFileType = AFS_FILE_TYPE_UNKNOWN;
-        }
+        InterlockedIncrement( &pCurrentFcb->OpenReferenceCount);
 
         //
-        // Drop our lock
+        // Drop our lock for the below call ...
         //
 
         AFSReleaseResource( &pCurrentFcb->NPFcb->Resource);
+
+        //
+        // Now we have a starting Fcb for the node, walk the links to the end node
+        //
+
+        ntStatus = AFSQueueBuildSymLinkTarget( pCurrentFcb,
+                                               NameArray,
+                                               FileInformation,
+                                               NULL);
+
+        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                      AFS_TRACE_LEVEL_ERROR,
+                      "AFSRetrieveTargetInformation Target link built for %wZ FID %08lX-%08lX-%08lX-%08lX Status %08lX Attr %0lX Size %08lX\n",
+                      &DirEntry->DirectoryEntry.FileName,
+                      DirEntry->DirectoryEntry.FileId.Cell,
+                      DirEntry->DirectoryEntry.FileId.Volume,
+                      DirEntry->DirectoryEntry.FileId.Vnode,
+                      DirEntry->DirectoryEntry.FileId.Unique,
+                      ntStatus,
+                      FileInformation->FileAttributes,
+                      FileInformation->EndOfFile.LowPart);
+        //
+        // Remove the ref count on the node
+        //
+
+        InterlockedDecrement( &pCurrentFcb->OpenReferenceCount);
 
 try_exit:
 
         NOTHING;
     }
 
-    return ulFileType;
+    return ntStatus;
 }
 
-ULONG
-AFSGetFileAttributes( IN AFSFcb *pParentFcb, 
-                      IN AFSDirEntryCB *pDirEntry)
+NTSTATUS
+AFSGetFileInformation( IN AFSFcb *pParentFcb,
+                       IN AFSNameArrayHdr *NameArray,
+                       IN AFSDirEntryCB *pDirEntry,
+                       OUT AFSFileInfoCB *FileInformation)
 {
+    NTSTATUS ntStatus = STATUS_SUCCESS;
     AFSDeviceExt *pDeviceExt = (AFSDeviceExt *)AFSRDRDeviceObject->DeviceExtension;
-    ULONG ulFileAttributes = pDirEntry->DirectoryEntry.FileAttributes;
+    ULONG ulTargetFileType = 0;
 
-    //
-    // If this entry is a SYMLINK then we need to obtain the file type
-    // for the target
-    //
-
-    switch ( pDirEntry->DirectoryEntry.FileType) 
+    __Enter
     {
-    case AFS_FILE_TYPE_UNKNOWN:
-    case AFS_FILE_TYPE_SYMLINK:
+
+        //
+        // If this entry is a SYMLINK then we need to obtain the file type
+        // for the target
+        //
+
+        ulTargetFileType = pDirEntry->DirectoryEntry.FileType;
+
+        if( ulTargetFileType == AFS_FILE_TYPE_UNKNOWN ||
+            ulTargetFileType == AFS_FILE_TYPE_SYMLINK)
         {
 
-            ULONG ulTargetFileType;
-            
-            if ( pParentFcb == NULL) 
+            ulTargetFileType = ((pDirEntry->DirectoryEntry.FileId.Vnode % 2) == 1 ? AFS_FILE_TYPE_DIRECTORY : AFS_FILE_TYPE_UNKNOWN);
+
+            if( ulTargetFileType == AFS_FILE_TYPE_UNKNOWN)
             {
-                ulTargetFileType = ((pDirEntry->DirectoryEntry.FileId.Vnode % 2) == 1 ? AFS_FILE_TYPE_DIRECTORY : AFS_FILE_TYPE_UNKNOWN);
-            } else {
 
-                ulTargetFileType = AFSRetrieveTargetType( pParentFcb, pDirEntry);
+                ntStatus = AFSRetrieveTargetInformation( pParentFcb,
+                                                         NameArray,
+                                                         pDirEntry, 
+                                                         FileInformation);
+
+                //
+                // If this failed or the dir entry file type is a symlink then get out ...
+                //
+
+                if( !NT_SUCCESS( ntStatus) ||
+                    pDirEntry->DirectoryEntry.FileType == AFS_FILE_TYPE_SYMLINK)
+                {
+
+                    //
+                    // On success then the target of the symlink information has been returned
+                    // in the FileInformation block
+                    //
+
+                    try_return( ntStatus);
+                }
+
+                ulTargetFileType = pDirEntry->DirectoryEntry.FileType;
             }
+        }
 
-            switch ( ulTargetFileType)
-            {       
-            case AFS_FILE_TYPE_MOUNTPOINT:
-                ulFileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-                break;
+        switch ( ulTargetFileType) 
+        {
 
-            case AFS_FILE_TYPE_INVALID:
-            case AFS_FILE_TYPE_UNKNOWN:
-            case AFS_FILE_TYPE_FILE:
-                break;
-
-            case AFS_FILE_TYPE_DIRECTORY:
-            case AFS_FILE_TYPE_DFSLINK:
             case AFS_FILE_TYPE_SYMLINK:
-            default:
-                ulFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
+            {
+
+                //
+                // Should not have a symlink here
+                //
+
+                ASSERT( FALSE);
+
                 break;
+            }
+
+            case AFS_FILE_TYPE_MOUNTPOINT:
+            {
+            
+                FileInformation->FileAttributes = (pDirEntry->DirectoryEntry.FileAttributes |
+                                                                FILE_ATTRIBUTE_DIRECTORY | 
+                                                                FILE_ATTRIBUTE_REPARSE_POINT);
+
+                FileInformation->CreationTime = pDirEntry->DirectoryEntry.CreationTime;
+
+                FileInformation->LastAccessTime = pDirEntry->DirectoryEntry.LastAccessTime;
+
+                FileInformation->LastWriteTime = pDirEntry->DirectoryEntry.LastWriteTime;
+
+                FileInformation->ChangeTime = pDirEntry->DirectoryEntry.ChangeTime;
+
+                break;
+            }
+
+            case AFS_FILE_TYPE_DFSLINK:
+            case AFS_FILE_TYPE_DIRECTORY:
+            {
+             
+                FileInformation->FileAttributes = (pDirEntry->DirectoryEntry.FileAttributes | FILE_ATTRIBUTE_DIRECTORY);
+
+                FileInformation->CreationTime = pDirEntry->DirectoryEntry.CreationTime;
+
+                FileInformation->LastAccessTime = pDirEntry->DirectoryEntry.LastAccessTime;
+
+                FileInformation->LastWriteTime = pDirEntry->DirectoryEntry.LastWriteTime;
+
+                FileInformation->ChangeTime = pDirEntry->DirectoryEntry.ChangeTime;
+
+                break;
+            }
+
+            case AFS_FILE_TYPE_UNKNOWN:
+            case AFS_FILE_TYPE_INVALID:
+            case AFS_FILE_TYPE_FILE:
+            {
+            
+                FileInformation->FileAttributes = pDirEntry->DirectoryEntry.FileAttributes;
+
+                FileInformation->CreationTime = pDirEntry->DirectoryEntry.CreationTime;
+
+                FileInformation->LastAccessTime = pDirEntry->DirectoryEntry.LastAccessTime;
+
+                FileInformation->LastWriteTime = pDirEntry->DirectoryEntry.LastWriteTime;
+
+                FileInformation->ChangeTime = pDirEntry->DirectoryEntry.ChangeTime;
+
+                FileInformation->AllocationSize = pDirEntry->DirectoryEntry.AllocationSize;
+
+                FileInformation->EndOfFile = pDirEntry->DirectoryEntry.EndOfFile;
+
+                break;
+            }
+        }
+
+try_exit:
+
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            //
+            // If we are hiding DOT names then check this entry
+            //
+
+            if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES) &&
+                pDirEntry->DirectoryEntry.FileName.Length > sizeof( WCHAR) &&
+                pDirEntry->DirectoryEntry.FileName.Buffer[ 0] == L'.' &&
+                !( pDirEntry->DirectoryEntry.FileName.Length == 2 * sizeof( WCHAR) && 
+                   pDirEntry->DirectoryEntry.FileName.Buffer[ 1] == L'.')
+                   )
+            {
+
+                FileInformation->FileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+            }
+
+            if ( FileInformation->FileAttributes == 0 ) 
+            {
+                FileInformation->FileAttributes = FILE_ATTRIBUTE_NORMAL;
+            }
+        }
+    }
+
+    return ntStatus;
+}
+
+BOOLEAN
+AFSIsRelativeName( IN UNICODE_STRING *Name)
+{
+
+    BOOLEAN bIsRelative = FALSE;
+
+    if( Name->Buffer[ 0] != L'\\')
+    {
+
+        bIsRelative = TRUE;
+    }
+    
+    return bIsRelative;
+}
+
+void
+AFSUpdateName( IN UNICODE_STRING *Name)
+{
+
+    USHORT usIndex = 0;
+
+    while( usIndex < Name->Length/sizeof( WCHAR))
+    {
+
+        if( Name->Buffer[ usIndex] == L'/')
+        {
+
+            Name->Buffer[ usIndex] = L'\\';
+        }
+
+        usIndex++;
+    }
+
+    return;
+}
+
+NTSTATUS
+AFSUpdateTargetName( IN OUT UNICODE_STRING *TargetName,
+                     IN OUT ULONG *Flags,
+                     IN WCHAR *NameBuffer,
+                     IN USHORT NameLength)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    WCHAR *pTmpBuffer = NULL;
+
+    __Enter
+    {
+
+        //
+        // If we have enough space then just move in the name otherwise
+        // allocate a new buffer
+        //
+
+        if( TargetName->Length < NameLength)
+        {
+
+            pTmpBuffer = (WCHAR *)ExAllocatePoolWithTag( PagedPool,
+                                                         NameLength,
+                                                         AFS_NAME_BUFFER_TAG);
+
+            if( pTmpBuffer == NULL)
+            {
+
+                try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+            }
+
+            if( BooleanFlagOn( *Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER))
+            {
+
+                ExFreePool( TargetName->Buffer);
+            }
+
+            TargetName->MaximumLength = NameLength;
+
+            TargetName->Buffer = pTmpBuffer;    
+
+            SetFlag( *Flags, AFS_DIR_RELEASE_TARGET_NAME_BUFFER);
+        }
+
+        TargetName->Length = NameLength;
+
+        RtlCopyMemory( TargetName->Buffer,
+                       NameBuffer,
+                       TargetName->Length);
+
+        //
+        // Update the name in the buffer
+        //
+
+        AFSUpdateName( TargetName);
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+AFSNameArrayHdr *
+AFSInitNameArray()
+{
+
+    AFSNameArrayHdr *pNameArray = NULL;
+
+    __Enter
+    {
+
+        pNameArray = (AFSNameArrayHdr *)ExAllocatePoolWithTag( PagedPool,
+                                                               sizeof( AFSNameArrayHdr) +
+                                                                    (AFS_MAX_NAME_ARRAY_COUNT * sizeof( AFSNameArrayCB)),
+                                                               AFS_NAME_ARRAY_TAG);
+
+        if( pNameArray == NULL)
+        {
+
+            AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
+                          AFS_TRACE_LEVEL_ERROR,
+                              "AFSInitNameArray Failed to allocate name array\n");        
+
+            try_return( pNameArray);
+        }
+
+        RtlZeroMemory( pNameArray,
+                       sizeof( AFSNameArrayHdr) +
+                          ((AFS_MAX_NAME_ARRAY_COUNT - 1) * sizeof( AFSNameArrayCB)));
+
+        pNameArray->MaxElementCount = AFS_MAX_NAME_ARRAY_COUNT;
+
+        pNameArray->CurrentEntry = &pNameArray->TopElement[ 0];
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return pNameArray;
+}
+
+NTSTATUS
+AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
+                      IN UNICODE_STRING *Path,
+                      IN AFSFcb *ParentFcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSNameArrayCB *pCurrentElement = NULL;
+    UNICODE_STRING uniComponentName, uniRemainingPath;
+    AFSFcb *pCurrentParent = NULL;
+    ULONG  ulTotalCount = 0;
+    ULONG ulIndex = 0;
+    USHORT usLength = 0;
+
+    __Enter
+    {
+
+        //
+        // Init some info in the header
+        //
+
+        pCurrentElement = &NameArray->TopElement[ 0];
+
+        NameArray->CurrentEntry = pCurrentElement;
+
+        //
+        // The first entry points at the root
+        //
+
+        pCurrentElement->Fcb = ParentFcb->RootFcb;
+
+        InterlockedIncrement( &ParentFcb->RootFcb->OpenReferenceCount);
+
+        pCurrentElement->Component = ParentFcb->RootFcb->DirEntry->DirectoryEntry.FileName;
+
+        pCurrentElement->FileId    = ParentFcb->RootFcb->DirEntry->DirectoryEntry.FileId;
+
+        NameArray->Count = 1;
+
+        NameArray->ComponentCount = 1;
+
+        //
+        // If the root is the parent then we are done ...
+        //
+
+        if( ParentFcb->RootFcb == ParentFcb)
+        {
+
+            try_return( ntStatus);
+        }
+
+        //
+        // We are starting somewhere in the middle of the path
+        //
+
+        ulIndex = 1;
+
+        pCurrentParent = ParentFcb;
+
+        while( TRUE)
+        {
+
+            pCurrentParent = pCurrentParent->ParentFcb;
+
+            if( pCurrentParent == NULL)
+            {
+
+                //
+                // We included the root above
+                //
+
+                break;
+            }
+
+            ulIndex++;
+        }
+
+        ASSERT( ulIndex != 0);
+
+        //
+        // Go to the correct entry
+        //
+
+        pCurrentElement += (ulIndex - 1);
+
+        NameArray->CurrentEntry = pCurrentElement;
+
+        pCurrentParent = ParentFcb;
+
+        //
+        // Loop through the name path setting up each entry, up to the current parent
+        //
+
+        ulTotalCount = 1; // for the root
+
+        while( ulIndex > 0)
+        {
+
+            pCurrentElement->Component = pCurrentParent->DirEntry->DirectoryEntry.FileName;
+
+            pCurrentElement->FileId    = pCurrentParent->DirEntry->DirectoryEntry.FileId;
+
+            pCurrentElement->Fcb = pCurrentParent;
+
+            InterlockedIncrement( &pCurrentParent->OpenReferenceCount);
+
+            ulIndex--;
+
+            if( ulIndex == 0)
+            {                
+
+                break;
+            }
+
+            ulTotalCount++;
+
+            InterlockedIncrement( &NameArray->Count);
+
+            InterlockedIncrement( &NameArray->ComponentCount);
+
+            if( ulTotalCount == AFS_MAX_NAME_ARRAY_COUNT)
+            {
+
+                ntStatus = STATUS_INVALID_PARAMETER;
+
+                break;
+            }
+
+            pCurrentElement--;
+
+            pCurrentParent = pCurrentParent->ParentFcb;
+        }
+
+        //
+        // Adjust the passed in pathname to reflect where we are in the processing
+        // of the name
+        //
+
+        if( Path != NULL)
+        {
+
+            pCurrentElement = &NameArray->TopElement[ 1]; // Start at the first non-root entry
+
+            while( pCurrentElement->Fcb != NULL)
+            {
+
+                if( BooleanFlagOn( pCurrentElement->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT))
+                {
+
+                    pCurrentElement++;
+
+                    continue;
+                }
+
+                usLength = (sizeof( WCHAR) + pCurrentElement->Fcb->DirEntry->DirectoryEntry.FileName.Length);
+
+                Path->Length -= usLength;
+
+                Path->Buffer = &Path->Buffer[ (usLength/sizeof( WCHAR))];
+
+                pCurrentElement++;
+            }
+        }
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
+                                      IN AFSNameArrayHdr *RelatedNameArray,
+                                      IN AFSFcb *ParentFcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSNameArrayCB *pCurrentElement = NULL, *pCurrentRelatedElement = NULL;
+    UNICODE_STRING uniComponentName, uniRemainingPath;
+    AFSFcb *pCurrentParent = NULL;
+    ULONG  ulTotalCount = 0;
+    ULONG ulIndex = 0;
+    USHORT usLength = 0;
+
+    __Enter
+    {
+
+        //
+        // Init some info in the header
+        //
+
+        pCurrentElement = &NameArray->TopElement[ 0];
+
+        pCurrentRelatedElement = &RelatedNameArray->TopElement[ 0];        
+
+        NameArray->Count = 0;
+
+        NameArray->ComponentCount = RelatedNameArray->ComponentCount;
+
+        //
+        // Populate the name array with the data from the related array
+        //
+
+        while( TRUE)
+        {
+           
+            pCurrentElement->Fcb = pCurrentRelatedElement->Fcb;
+
+            pCurrentElement->Component = pCurrentElement->Fcb->DirEntry->DirectoryEntry.FileName;
+            
+            pCurrentElement->FileId    = pCurrentElement->Fcb->DirEntry->DirectoryEntry.FileId;
+            
+            InterlockedIncrement( &pCurrentElement->Fcb->OpenReferenceCount);
+
+            InterlockedIncrement( &NameArray->Count);
+
+            if( pCurrentElement->Fcb == ParentFcb ||
+                NameArray->Count == RelatedNameArray->Count)
+            {
+
+                //
+                // Done ...
+                //
+
+                break;
+            }
+
+            pCurrentElement++;
+
+            pCurrentRelatedElement++;
+        }
+
+        NameArray->CurrentEntry = pCurrentElement;
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSFreeNameArray( IN AFSNameArrayHdr *NameArray)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSNameArrayCB *pCurrentElement = NULL;
+    
+    __Enter
+    {
+
+        pCurrentElement = &NameArray->TopElement[ 0];
+
+        while( TRUE)
+        {
+
+            if( pCurrentElement->Fcb == NULL)
+            {
+
+                break;
+            }
+
+            InterlockedDecrement( &pCurrentElement->Fcb->OpenReferenceCount);
+
+            pCurrentElement++;
+        }
+
+        ExFreePool( NameArray);
+    }
+
+    return ntStatus;
+}
+
+NTSTATUS
+AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
+                      IN AFSFcb *Fcb)
+{
+
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+
+    __Enter
+    {
+
+        if( NameArray->Count == AFS_MAX_NAME_ARRAY_COUNT)
+        {
+
+            try_return( ntStatus = STATUS_INSUFFICIENT_RESOURCES);
+        }
+
+        if( NameArray->CurrentEntry->Fcb == Fcb)
+        {
+
+            try_return( ntStatus);
+        }
+
+        NameArray->CurrentEntry++;
+
+        InterlockedIncrement( &NameArray->Count);
+
+        InterlockedIncrement( &Fcb->OpenReferenceCount);
+
+        NameArray->CurrentEntry->Fcb = Fcb;
+
+        NameArray->CurrentEntry->Component = Fcb->DirEntry->DirectoryEntry.FileName;
+
+        NameArray->CurrentEntry->FileId    = Fcb->DirEntry->DirectoryEntry.FileId;
+
+        if( Fcb->ParentFcb == NULL)
+        {
+
+            SetFlag( NameArray->CurrentEntry->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+        }
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return ntStatus;
+}
+
+void
+AFSReplaceCurrentElement( IN AFSNameArrayHdr *NameArray,
+                          IN AFSFcb *Fcb)
+{
+
+    InterlockedDecrement( &NameArray->CurrentEntry->Fcb->OpenReferenceCount);
+
+    InterlockedIncrement( &Fcb->OpenReferenceCount);
+
+    NameArray->CurrentEntry->Fcb = Fcb;
+
+    NameArray->CurrentEntry->Component = Fcb->DirEntry->DirectoryEntry.FileName;
+
+    NameArray->CurrentEntry->FileId    = Fcb->DirEntry->DirectoryEntry.FileId;
+
+    if( Fcb->ParentFcb == NULL)
+    {
+
+        SetFlag( NameArray->CurrentEntry->Flags, AFS_NAME_ARRAY_FLAG_ROOT_ELEMENT);
+    }
+
+    return;
+}
+
+AFSFcb *
+AFSBackupEntry( IN AFSNameArrayHdr *NameArray)
+{
+
+    AFSFcb *pCurrentFcb = NULL;
+
+    __Enter
+    {
+
+        if( NameArray->Count == 0)
+        {
+
+            try_return( pCurrentFcb = NULL);
+        }
+
+        InterlockedDecrement( &NameArray->CurrentEntry->Fcb->OpenReferenceCount);
+
+        NameArray->CurrentEntry->Fcb = NULL;
+
+        NameArray->CurrentEntry--;
+
+        InterlockedDecrement( &NameArray->Count);
+
+        pCurrentFcb = NameArray->CurrentEntry->Fcb;
+
+try_exit:
+
+        NOTHING;
+    }
+
+    return pCurrentFcb;
+}
+
+void
+AFSDumpNameArray( IN AFSNameArrayHdr *NameArray)
+{
+
+    AFSNameArrayCB *pCurrentElement = NULL;
+    
+    pCurrentElement = &NameArray->TopElement[ 0];
+    
+    DbgPrint("AFSDumpNameArray Start (%d)\n", NameArray->Count);
+
+    while( pCurrentElement->Fcb != NULL)
+    {
+
+        DbgPrint("FID %08lX-%08lX-%08lX-%08lX %wZ\n", 
+                  pCurrentElement->FileId.Cell,   
+                  pCurrentElement->FileId.Volume, 
+                  pCurrentElement->FileId.Vnode,  
+                  pCurrentElement->FileId.Unique,
+                  &pCurrentElement->Component);
+
+        pCurrentElement++;
+    }
+
+    DbgPrint("AFSDumpNameArray End\n\n");
+
+    return;
+}
+
+void
+AFSSetEnumerationEvent( IN AFSFcb *Fcb)
+{
+
+    //
+    // Depending on the type of node, set the event
+    //
+
+    switch( Fcb->Header.NodeTypeCode)
+    {
+
+        case AFS_DIRECTORY_FCB:
+        {
+
+            KeSetEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent,
+                        0,
+                        FALSE);
+
+            InterlockedIncrement( &Fcb->NPFcb->Specific.Directory.DirectoryEnumCount);
+
+            break;
+        }
+
+        case AFS_ROOT_FCB:
+        case AFS_ROOT_ALL:
+        {
+
+            KeSetEvent( &Fcb->NPFcb->Specific.VolumeRoot.DirectoryEnumEvent,
+                        0,
+                        FALSE);
+
+            InterlockedIncrement( &Fcb->NPFcb->Specific.VolumeRoot.DirectoryEnumCount);
+
+            break;
+        }
+    }
+
+    return;
+}
+
+void
+AFSClearEnumerationEvent( IN AFSFcb *Fcb)
+{
+
+    //
+    // Depending on the type of node, set the event
+    //
+
+    switch( Fcb->Header.NodeTypeCode)
+    {
+
+        case AFS_DIRECTORY_FCB:
+        {
+
+            ASSERT( Fcb->NPFcb->Specific.Directory.DirectoryEnumCount > 0);
+
+            if( InterlockedDecrement( &Fcb->NPFcb->Specific.Directory.DirectoryEnumCount) == 0)
+            {
+                
+                KeClearEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent);
             }
 
             break;
         }
-    case AFS_FILE_TYPE_MOUNTPOINT:
-        {
-        
-            ulFileAttributes |= (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_REPARSE_POINT);
-            break;
-        }
 
-    case AFS_FILE_TYPE_DIRECTORY:
+        case AFS_ROOT_FCB:
+        case AFS_ROOT_ALL:
         {
-         
-            ulFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-            break;
-        }
-    case AFS_FILE_TYPE_DFSLINK:
-        {
-            
-            ulFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
-            break;                
-        }
 
-    case AFS_FILE_TYPE_INVALID:
-    case AFS_FILE_TYPE_FILE:
-        {
-            
+            ASSERT( Fcb->NPFcb->Specific.VolumeRoot.DirectoryEnumCount > 0);
+
+            if( InterlockedDecrement( &Fcb->NPFcb->Specific.VolumeRoot.DirectoryEnumCount) == 0)
+            {
+                
+                KeClearEvent( &Fcb->NPFcb->Specific.VolumeRoot.DirectoryEnumEvent);
+            }
+
             break;
         }
     }
+
+    return;
+}
+    
+BOOLEAN
+AFSIsEnumerationInProcess( IN AFSFcb *Fcb)
+{
+
+    BOOLEAN bIsInProcess = FALSE;
 
     //
-    // If we are hiding DOT names then check this entry
+    // Depending on the type of node, set the event
     //
 
-    if( BooleanFlagOn( pDeviceExt->DeviceFlags, AFS_DEVICE_FLAG_HIDE_DOT_NAMES) &&
-        pDirEntry->DirectoryEntry.FileName.Length > sizeof( WCHAR) &&
-        pDirEntry->DirectoryEntry.FileName.Buffer[ 0] == L'.' &&
-        !( pDirEntry->DirectoryEntry.FileName.Length == 2 * sizeof( WCHAR) && 
-           pDirEntry->DirectoryEntry.FileName.Buffer[ 1] == L'.')
-        )
+    switch( Fcb->Header.NodeTypeCode)
     {
 
-        ulFileAttributes |= FILE_ATTRIBUTE_HIDDEN;
+        case AFS_DIRECTORY_FCB:
+        {
+
+            if( KeReadStateEvent( &Fcb->NPFcb->Specific.Directory.DirectoryEnumEvent))
+            {
+                
+                bIsInProcess = TRUE;
+            }
+
+            break;
+        }
+
+        case AFS_ROOT_FCB:
+        case AFS_ROOT_ALL:
+        {
+
+            if( KeReadStateEvent( &Fcb->NPFcb->Specific.VolumeRoot.DirectoryEnumEvent))
+            {
+                
+                bIsInProcess = TRUE;
+            }
+
+            break;
+        }
     }
 
-
-    if ( ulFileAttributes == 0 ) 
-    {
-        ulFileAttributes = FILE_ATTRIBUTE_NORMAL;
-    }
-
-    return ulFileAttributes;
+    return bIsInProcess;
 }

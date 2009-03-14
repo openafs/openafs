@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -155,6 +155,10 @@ AFSQueryDirectory( IN PIRP Irp)
 
     ULONG ulTargetFileType = AFS_FILE_TYPE_UNKNOWN;
 
+    AFSFileInfoCB       stFileInfo;
+
+    BOOLEAN         bGetFileInfo = TRUE;
+
     __Enter
     {
 
@@ -169,8 +173,16 @@ AFSQueryDirectory( IN PIRP Irp)
             pFcb->Header.NodeTypeCode != AFS_ROOT_ALL)
         {
 
+            pFcb = NULL;
+
             try_return( ntStatus = STATUS_INVALID_PARAMETER);
         }
+
+        //
+        // Set the enumeration event ...
+        //
+
+        AFSSetEnumerationEvent( pFcb);
 
         //  Reference our input parameters to make things easier
         ulUserBufferLength = pIrpSp->Parameters.QueryDirectory.Length;
@@ -209,6 +221,10 @@ AFSQueryDirectory( IN PIRP Irp)
             if( !NT_SUCCESS( ntStatus))
             {
 
+                AFSReleaseResource( &pFcb->NPFcb->Resource);
+
+                bReleaseMain = FALSE;
+
                 try_return( ntStatus);
             }
         }
@@ -226,6 +242,20 @@ AFSQueryDirectory( IN PIRP Irp)
 
             bReleaseMain = TRUE;
         }
+
+        //
+        // Grab the directory node hdr tree lock shared while parsing the directory
+        // contents
+        //
+
+        AFSAcquireShared( pFcb->Specific.Directory.DirectoryNodeHdr.TreeLock,
+                          TRUE);
+
+        //
+        // We can now safely drop the lock on the node
+        //
+
+        AFSReleaseResource( &pFcb->NPFcb->Resource);
 
         //
         // Start processing the data
@@ -328,9 +358,6 @@ AFSQueryDirectory( IN PIRP Irp)
                                    pCcb->MaskName.Length);
                 }
             }
-
-            // Drop to shared on the Fcb 
-            AFSConvertToShared( &pFcb->NPFcb->Resource);
         }
 
         // Check if we need to start from index
@@ -548,6 +575,8 @@ AFSQueryDirectory( IN PIRP Irp)
                 try_return( ntStatus);
             }
 
+            bGetFileInfo = TRUE;
+
             //
             // Apply the name filter if there is one
             //
@@ -563,18 +592,46 @@ AFSQueryDirectory( IN PIRP Irp)
                 if( BooleanFlagOn( pCcb->Flags, CCB_FLAG_DIR_OF_DIRS_ONLY))
                 {
 
-                    AFSFcb * pParentFcb = NULL;
+                    //
+                    // Go grab the file information for this entry
+                    //
 
-                    if ( pFcb->ParentFcb )
+                    RtlZeroMemory( &stFileInfo,
+                                   sizeof( AFSFileInfoCB));
+
+                    ntStatus = AFSGetFileInformation( pFcb,
+                                                      pCcb->NameArray,
+                                                      pDirEntry,
+                                                      &stFileInfo);
+
+                    if( !NT_SUCCESS( ntStatus))
                     {
-                        pParentFcb = pFcb->ParentFcb;
-                    }
-                    else if (pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1)
-                    {   
-                        pParentFcb = pFcb;
+
+                        //
+                        // Should we bail, move on to the next entry or fake the information?
+                        // For now fake the information
+                        //
+
+                        stFileInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+
+                        stFileInfo.AllocationSize.QuadPart = 0;
+
+                        stFileInfo.EndOfFile.QuadPart = 0;
+
+                        stFileInfo.CreationTime = pDirEntry->DirectoryEntry.CreationTime;
+
+                        stFileInfo.LastAccessTime = pDirEntry->DirectoryEntry.LastAccessTime;
+
+                        stFileInfo.LastWriteTime = pDirEntry->DirectoryEntry.LastWriteTime;
+
+                        stFileInfo.ChangeTime = pDirEntry->DirectoryEntry.ChangeTime;
+
+                        ntStatus = STATUS_SUCCESS;
                     }
 
-                    if( !(AFSGetFileAttributes( pParentFcb, pDirEntry) & FILE_ATTRIBUTE_DIRECTORY))
+                    bGetFileInfo = FALSE;
+
+                    if( !(stFileInfo.FileAttributes & FILE_ATTRIBUTE_DIRECTORY))
                     {
 
                         if( pDirEntry->ListEntry.fLink != NULL)
@@ -691,6 +748,47 @@ AFSQueryDirectory( IN PIRP Irp)
                 continue;
             }
 
+            if( bGetFileInfo)
+            {
+
+                //
+                // Go grab the file information for this entry
+                //
+
+                RtlZeroMemory( &stFileInfo,
+                               sizeof( AFSFileInfoCB));
+
+                ntStatus = AFSGetFileInformation( pFcb,
+                                                  pCcb->NameArray,
+                                                  pDirEntry,
+                                                  &stFileInfo);
+
+                if( !NT_SUCCESS( ntStatus))
+                {
+
+                    //
+                    // Should we bail, move on to the next entry or fake the information?
+                    // For now fake the information
+                    //
+
+                    stFileInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+
+                    stFileInfo.AllocationSize.QuadPart = 0;
+
+                    stFileInfo.EndOfFile.QuadPart = 0;
+
+                    stFileInfo.CreationTime = pDirEntry->DirectoryEntry.CreationTime;
+
+                    stFileInfo.LastAccessTime = pDirEntry->DirectoryEntry.LastAccessTime;
+
+                    stFileInfo.LastWriteTime = pDirEntry->DirectoryEntry.LastWriteTime;
+
+                    stFileInfo.ChangeTime = pDirEntry->DirectoryEntry.ChangeTime;
+
+                    ntStatus = STATUS_SUCCESS;
+                }
+            }
+
             //
             // Be sure the information is valid
             // We don't worry about entries while enumerating the directory
@@ -702,7 +800,7 @@ AFSQueryDirectory( IN PIRP Irp)
 
             //  Here are the rules concerning filling up the buffer:
             //
-            //  1.  The Io system garentees that there will always be
+            //  1.  The Io system guarantees that there will always be
             //      enough room for at least one base record.
             //
             //  2.  If the full first record (including file name) cannot
@@ -755,27 +853,15 @@ AFSQueryDirectory( IN PIRP Irp)
 
                     pDirInfo = (PFILE_DIRECTORY_INFORMATION)&pBuffer[ ulNextEntry];
 
-                    pDirInfo->CreationTime = pDirEntry->DirectoryEntry.CreationTime;
-                    pDirInfo->LastWriteTime = pDirEntry->DirectoryEntry.LastWriteTime;
-                    pDirInfo->LastAccessTime = pDirEntry->DirectoryEntry.LastAccessTime;
-                    pDirInfo->ChangeTime = pDirEntry->DirectoryEntry.LastWriteTime;
-                    pDirInfo->EndOfFile = pDirEntry->DirectoryEntry.EndOfFile;
-                    pDirInfo->AllocationSize = pDirEntry->DirectoryEntry.AllocationSize;
+                    pDirInfo->CreationTime = stFileInfo.CreationTime;
+                    pDirInfo->LastWriteTime = stFileInfo.LastWriteTime;
+                    pDirInfo->LastAccessTime = stFileInfo.LastAccessTime;
+                    pDirInfo->ChangeTime = stFileInfo.LastWriteTime;
+                    
+                    pDirInfo->EndOfFile = stFileInfo.EndOfFile;
+                    pDirInfo->AllocationSize = stFileInfo.AllocationSize;
 
-                    {
-                        AFSFcb * pParentFcb = NULL;
-
-                        if ( pFcb->ParentFcb )
-                        {
-                            pParentFcb = pFcb->ParentFcb;
-                        }
-                        else if (pFcb->DirEntry->DirectoryEntry.FileId.Vnode == 1)
-                        {   
-                            pParentFcb = pFcb;
-                        }
-
-                        pDirInfo->FileAttributes = AFSGetFileAttributes( pParentFcb, pDirEntry);
-                    }
+                    pDirInfo->FileAttributes = stFileInfo.FileAttributes;
 
                     pDirInfo->FileIndex = pDirEntry->DirectoryEntry.FileIndex; 
                     pDirInfo->FileNameLength = pDirEntry->DirectoryEntry.FileName.Length;
@@ -842,7 +928,13 @@ try_exit:
         if( bReleaseMain)
         {
 
-            AFSReleaseResource( &pFcb->NPFcb->Resource);
+            AFSReleaseResource( pFcb->Specific.Directory.DirectoryNodeHdr.TreeLock);
+        }
+
+        if( pFcb != NULL)
+        {
+
+            AFSClearEnumerationEvent( pFcb);
         }
     } 
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -139,7 +139,8 @@ AFSUnload( IN PDRIVER_OBJECT DriverObject);
 //
 
 NTSTATUS
-AFSEnumerateDirectory( IN AFSFcb *Dcb,
+AFSEnumerateDirectory( IN ULONGLONG ProcessID,
+                       IN AFSFcb *Dcb,
                        IN OUT AFSDirHdr      *DirectoryHdr,
                        IN OUT AFSDirEntryCB **DirListHead,
                        IN OUT AFSDirEntryCB **DirListTail,
@@ -179,12 +180,14 @@ AFSEvaluateTargetByID( IN AFSFileID *SourceFileId,
                        OUT AFSDirEnumEntry **DirEnumEntry);
 
 NTSTATUS
-AFSEvaluateTargetByName( IN AFSFileID *ParentFileId,
+AFSEvaluateTargetByName( IN ULONGLONG ProcessID,
+                         IN AFSFileID *ParentFileId,
                          IN PUNICODE_STRING SourceName,
                          OUT AFSDirEnumEntry **DirEnumEntry);
 
 NTSTATUS
-AFSRetrieveVolumeInformation( IN AFSFileID *FileID,
+AFSRetrieveVolumeInformation( IN ULONGLONG ProcessID,
+                              IN AFSFileID *FileID,
                               OUT AFSVolumeInfoCB *VolumeInformation);
 
 NTSTATUS
@@ -409,13 +412,14 @@ AFSInitFcb( IN AFSFcb          *ParentFcb,
             IN OUT AFSFcb     **Fcb);
 
 NTSTATUS
-AFSInitAFSRoot( void);
+AFSInitAFSRoot( IN AFSRedirectorInitInfo *RedirInitInfo);
 
 NTSTATUS
 AFSRemoveAFSRoot( void);
 
 NTSTATUS
-AFSInitRootFcb( IN AFSDirEntryCB *RootDirEntry,
+AFSInitRootFcb( IN ULONGLONG ProcessID,
+                IN AFSDirEntryCB *RootDirEntry,
                 OUT AFSFcb **RootVcb);
 
 NTSTATUS
@@ -443,10 +447,13 @@ AFSRemoveCcb( IN AFSFcb *Fcb,
 //
 
 NTSTATUS
-AFSLocateNameEntry( IN AFSFcb *RootFcb,
+AFSLocateNameEntry( IN ULONGLONG ProcessID,
                     IN PFILE_OBJECT FileObject,
-                    IN UNICODE_STRING *FullPathName,
-                    IN OUT AFSFcb **ParentFcb,
+                    IN UNICODE_STRING *RootPathName,
+                    IN UNICODE_STRING *ParsedPathName,
+                    IN AFSNameArrayHdr *NameArray,
+                    IN ULONG Flags,
+                    IN OUT AFSFcb **ParentFcb,                    
                     OUT AFSFcb **Fcb,
                     OUT PUNICODE_STRING ComponentName);
 
@@ -480,13 +487,16 @@ AFSFixupTargetName( IN OUT PUNICODE_STRING FileName,
 NTSTATUS 
 AFSParseName( IN PIRP Irp,
               OUT PUNICODE_STRING FileName,
-              OUT PUNICODE_STRING FullFileName,
+              OUT PUNICODE_STRING ParsedFileName,
+              OUT PUNICODE_STRING RootFileName,
               OUT BOOLEAN *FreeNameString,
               OUT AFSFcb **RootFcb,
-              OUT AFSFcb **ParentFcb);
+              OUT AFSFcb **ParentFcb,
+              OUT AFSNameArrayHdr **NameArray);
 
 NTSTATUS
-AFSCheckCellName( IN UNICODE_STRING *CellName,
+AFSCheckCellName( IN ULONGLONG ProcessID,
+                  IN UNICODE_STRING *CellName,
                   OUT AFSDirEntryCB **ShareDirEntry);
 
 NTSTATUS
@@ -496,13 +506,37 @@ AFSBuildMountPointTarget( IN ULONGLONG ProcessID,
 NTSTATUS
 AFSBuildSymLinkTarget( IN ULONGLONG ProcessID,
                        IN AFSFcb *Fcb,
-                       OUT ULONG *TargetType,
+                       IN PFILE_OBJECT FileObject,
+                       IN AFSNameArrayHdr *NameArray,
+                       IN ULONG Flags,
+                       OUT AFSFileInfoCB *FileInfo,
                        OUT AFSFcb **TargetFcb);
 
 NTSTATUS
 AFSProcessDFSLink( IN AFSFcb *Fcb,
                    IN PFILE_OBJECT FileObject,
                    IN UNICODE_STRING *RemainingPath);
+
+NTSTATUS
+AFSBuildTargetBranch( IN ULONGLONG ProcessID,
+                      IN UNICODE_STRING *TargetName,
+                      IN PFILE_OBJECT FileObject,
+                      IN AFSNameArrayHdr *NameArray,
+                      IN ULONG Flags,
+                      OUT AFSFcb **TargetFcb);
+
+NTSTATUS
+AFSBuildRelativeTargetBranch( IN ULONGLONG ProcessID,
+                              IN AFSNameArrayHdr *NameArray,
+                              IN PFILE_OBJECT FileObject,
+                              IN UNICODE_STRING *TargetName,
+                              IN ULONG Flags,
+                              OUT AFSFcb **TargetFcb);
+
+NTSTATUS
+AFSBuildRootName( IN AFSFcb *StartFcb,
+                  IN UNICODE_STRING *AdditionalComponent,
+                  OUT UNICODE_STRING *CompleteName);
 
 //
 // AFSNetworkProviderSupport.cpp
@@ -604,6 +638,7 @@ AFSQueryBasicInfo( IN PIRP Irp,
 NTSTATUS
 AFSQueryStandardInfo( IN PIRP Irp,
                       IN AFSFcb *Fcb,
+                      IN AFSCcb *Ccb,
                       IN OUT PFILE_STANDARD_INFORMATION Buffer,
                       IN OUT PLONG Length);
 
@@ -927,10 +962,12 @@ BOOLEAN
 AFSCheckForReadOnlyAccess( IN ACCESS_MASK DesiredAccess);
 
 NTSTATUS
-AFSEvaluateNode( IN AFSFcb *Fcb);
+AFSEvaluateNode( IN ULONGLONG ProcessID,
+                 IN AFSFcb *Fcb);
 
 NTSTATUS
-AFSValidateSymLink( IN AFSDirEntryCB *DirEntry);
+AFSValidateSymLink( IN ULONGLONG ProcessID,
+                    IN AFSDirEntryCB *DirEntry);
 
 NTSTATUS
 AFSInvalidateCache( IN AFSInvalidateCacheCB *InvalidateCB);
@@ -967,9 +1004,10 @@ void
 AFSResetSysNameList( IN AFSSysNameCB *SysNameList);
 
 NTSTATUS
-AFSSubstituteNameInPath( IN UNICODE_STRING *FullPathName,
-                         IN UNICODE_STRING *ComponentName,
+AFSSubstituteNameInPath( IN OUT UNICODE_STRING *FullPathName,
+                         IN OUT UNICODE_STRING *ComponentName,
                          IN UNICODE_STRING *SubstituteName,
+                         IN OUT UNICODE_STRING *RemainingPath,
                          IN BOOLEAN FreePathName);
 
 void
@@ -983,7 +1021,8 @@ AFSInvalidateVolume( IN AFSFcb *Vcb,
                      IN ULONG Reason);
 
 NTSTATUS
-AFSVerifyEntry( IN AFSFcb *Fcb);
+AFSVerifyEntry( IN ULONGLONG ProcessID,
+                IN AFSFcb *Fcb);
 
 NTSTATUS
 AFSSetVolumeState( IN AFSVolumeStatusCB *VolumeStatus);
@@ -1003,7 +1042,7 @@ AFSIsVolumeFID( IN AFSFileID *FileID);
 BOOLEAN
 AFSIsFinalNode( IN AFSFcb *Fcb);
 
-void
+NTSTATUS
 AFSUpdateMetaData( IN AFSDirEntryCB *DirEntry,
                    IN AFSDirEnumEntry *DirEnumEntry);
 
@@ -1034,13 +1073,68 @@ AFSResetDirectoryContent( IN AFSFcb *Dcb);
 NTSTATUS
 AFSEnumerateGlobalRoot( void);
 
-ULONG
-AFSRetrieveTargetType( IN AFSFcb *ParentFcb,
-                       IN AFSDirEntryCB *DirEntry);
+NTSTATUS
+AFSRetrieveTargetInformation( IN AFSFcb *ParentFcb,
+                              IN AFSNameArrayHdr *NameArray,
+                              IN AFSDirEntryCB *DirEntry,
+                              OUT AFSFileInfoCB *FileInformation);
 
-ULONG
-AFSGetFileAttributes( IN AFSFcb *ParentFcb,
-                      IN AFSDirEntryCB *DirEntry);
+NTSTATUS
+AFSGetFileInformation( IN AFSFcb *ParentFcb,
+                       IN AFSNameArrayHdr *NameArray,
+                       IN AFSDirEntryCB *DirEntry,
+                       OUT AFSFileInfoCB *FileInformation);
+
+BOOLEAN
+AFSIsRelativeName( IN UNICODE_STRING *Name);
+
+void
+AFSUpdateName( IN UNICODE_STRING *Name);
+
+NTSTATUS
+AFSUpdateTargetName( IN OUT UNICODE_STRING *TargetName,
+                     IN OUT ULONG *Flags,
+                     IN WCHAR *NameBuffer,
+                     IN USHORT NameLength);
+
+AFSNameArrayHdr *
+AFSInitNameArray( void);
+
+NTSTATUS
+AFSPopulateNameArray( IN AFSNameArrayHdr *NameArray,
+                      IN UNICODE_STRING *Path,
+                      IN AFSFcb *ParentFcb);
+
+NTSTATUS
+AFSPopulateNameArrayFromRelatedArray( IN AFSNameArrayHdr *NameArray,
+                                      IN AFSNameArrayHdr *RelatedNameArray,
+                                      IN AFSFcb *ParentFcb);
+
+NTSTATUS
+AFSFreeNameArray( IN AFSNameArrayHdr *NameArray);
+
+NTSTATUS
+AFSInsertNextElement( IN AFSNameArrayHdr *NameArray,
+                      IN AFSFcb *Fcb);
+
+void
+AFSReplaceCurrentElement( IN AFSNameArrayHdr *NameArray,
+                          IN AFSFcb *Fcb);
+
+AFSFcb *
+AFSBackupEntry( IN AFSNameArrayHdr *NameArray);
+
+void
+AFSDumpNameArray( IN IN AFSNameArrayHdr *NameArray);
+
+void
+AFSSetEnumerationEvent( IN AFSFcb *Fcb);
+
+void
+AFSClearEnumerationEvent( IN AFSFcb *Fcb);
+    
+BOOLEAN
+AFSIsEnumerationInProcess( IN AFSFcb *Fcb);
 
 //
 // Prototypes in AFSFastIoSupprt.cpp
@@ -1301,7 +1395,8 @@ AFSQueueBuildMountPointTarget( IN AFSFcb *Fcb);
 
 NTSTATUS
 AFSQueueBuildSymLinkTarget( IN AFSFcb *Fcb,
-                            OUT PULONG FileType,
+                            IN AFSNameArrayHdr *NameArray,
+                            OUT AFSFileInfoCB *FileInformation,
                             OUT AFSFcb **TargetFcb);
 
 NTSTATUS

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,15 +92,6 @@ AFSFlushBuffers( IN PDEVICE_OBJECT DeviceObject,
         //
         // Now, flush to the server - if there is stuff to do
         //
-
-        AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSFlushBuffers Flushing extents for %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);        
 
         ntStatus = AFSFlushExtents( pFcb );
 

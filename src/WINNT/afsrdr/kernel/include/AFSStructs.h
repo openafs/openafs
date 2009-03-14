@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -187,6 +187,10 @@ typedef struct _AFS_NONPAGED_FCB
 
             ERESOURCE       DirectoryTreeLock;
 
+            KEVENT          DirectoryEnumEvent;
+
+            LONG            DirectoryEnumCount;
+
         } Directory;
 
         struct
@@ -197,6 +201,10 @@ typedef struct _AFS_NONPAGED_FCB
             ERESOURCE       FileIDTreeLock;
 
             ERESOURCE       FcbListLock;
+
+            KEVENT          DirectoryEnumEvent;
+
+            LONG            DirectoryEnumCount;
 
         } VolumeRoot;
 
@@ -518,6 +526,12 @@ typedef struct _AFS_CCB
 
     UNICODE_STRING FullFileName;
 
+    //
+    // Name array for this open
+    //
+
+    struct _AFS_NAME_ARRAY_HEADER  *NameArray;
+
 } AFSCcb;
 
 // Read and writes can fan out and so they are syncrhonized via one of
@@ -543,6 +557,25 @@ typedef struct _AFS_IO_RUNS {
     PIRP          ChildIrp;
     ULONG         ByteCount;
 } AFSIoRun;
+
+typedef struct _AFS_FILE_INFO_CB
+{
+
+    ULONG           FileAttributes;
+
+    LARGE_INTEGER   AllocationSize;
+
+    LARGE_INTEGER   EndOfFile;
+
+    LARGE_INTEGER   CreationTime;
+
+    LARGE_INTEGER   LastAccessTime;
+
+    LARGE_INTEGER   LastWriteTime;
+
+    LARGE_INTEGER   ChangeTime;
+
+} AFSFileInfoCB;
 
 //
 // Work item
@@ -579,7 +612,9 @@ typedef struct _AFS_WORK_ITEM
 
             AFSFcb **TargetFcb;
 
-            ULONG FileType;
+            AFSFileInfoCB   FileInfo;
+
+            struct _AFS_NAME_ARRAY_HEADER *NameArray;            
 
         } Fcb;
 
@@ -1020,5 +1055,41 @@ typedef struct _AFSFSD_PROVIDER_CONNECTION_CB
     UNICODE_STRING Comment;
 
 } AFSProviderConnectionCB;
+
+//
+// Name array element and header
+//
+
+typedef struct _AFS_NAME_ARRAY_ELEMENT
+{
+
+    UNICODE_STRING      Component;
+
+    AFSFileID           FileId;
+
+    AFSFcb             *Fcb;
+
+    ULONG               Flags;
+
+} AFSNameArrayCB;
+
+typedef struct _AFS_NAME_ARRAY_HEADER
+{
+
+    AFSNameArrayCB      *CurrentEntry;
+
+    LONG                 Count;
+
+    LONG                 ComponentCount;
+
+    LONG                 RecursionCount;
+
+    ULONG                Flags;
+
+    ULONG                MaxElementCount;
+
+    AFSNameArrayCB       TopElement[ 1];
+
+} AFSNameArrayHdr;
 
 #endif /* _AFS_STRUCTS_H */

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -119,16 +119,6 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_INVALID_DEVICE_REQUEST);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSQueryFileInfo Processing request %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                      stFileInformationClass,
-                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
-
         //
         // Process the request
         //
@@ -162,6 +152,7 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
                 ntStatus = AFSQueryStandardInfo( Irp,
                                                  pFcb,
+                                                 pCcb,
                                                  &pAllInfo->StandardInformation, 
                                                  &lLength);
 
@@ -267,6 +258,7 @@ AFSQueryFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
                 AFSQueryStandardInfo( Irp,
                                       pFcb,
+                                      pCcb,
                                       (PFILE_STANDARD_INFORMATION)pBuffer, 
                                       &lLength);
 
@@ -473,8 +465,6 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
         else if( pFcb->Header.NodeTypeCode == AFS_SPECIAL_SHARE_FCB)
         {
 
-            //DbgPrint("AFSSetFileInfo On share Info %d\n", FileInformationClass);
-
             AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
                           AFS_TRACE_LEVEL_ERROR,
                           "AFSSetFileInfo Failing request against SpecialShare Fcb\n");
@@ -497,16 +487,6 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus = STATUS_ACCESS_DENIED);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE_2,
-                      "AFSSetFileInfo Processing request %08lX for %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                      FileInformationClass,
-                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                      pFcb->DirEntry->DirectoryEntry.FileId.Unique);
-        
         //
         // Ensure rename operations are synchronous
         //
@@ -537,15 +517,6 @@ AFSSetFileInfo( IN PDEVICE_OBJECT DeviceObject,
 
             case FileDispositionInformation:
             {
-
-                AFSDbgLogMsg( AFS_SUBSYSTEM_FILE_PROCESSING,
-                              AFS_TRACE_LEVEL_VERBOSE,
-                              "AFSSetFileInfo Deleting entry %wZ FID %08lX-%08lX-%08lX-%08lX\n", 
-                              &pFcb->DirEntry->DirectoryEntry.FileName,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                              pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
                 ntStatus = AFSSetDispositionInfo( Irp, 
                                                   pFcb);
@@ -682,7 +653,7 @@ AFSQueryBasicInfo( IN PIRP Irp,
         Buffer->ChangeTime = Fcb->DirEntry->DirectoryEntry.ChangeTime;
         Buffer->FileAttributes = Fcb->DirEntry->DirectoryEntry.FileAttributes;
 
-        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_ROOT_FCB)
+        if( Fcb->Header.NodeTypeCode == AFS_ROOT_FCB)
         {
 
             Buffer->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
@@ -702,11 +673,13 @@ AFSQueryBasicInfo( IN PIRP Irp,
 NTSTATUS
 AFSQueryStandardInfo( IN PIRP Irp,
                       IN AFSFcb *Fcb,
+                      IN AFSCcb *Ccb,
                       IN OUT PFILE_STANDARD_INFORMATION Buffer,
                       IN OUT PLONG Length)
 {
 
     NTSTATUS ntStatus = STATUS_SUCCESS;
+    AFSFileInfoCB stFileInformation;
 
     if( *Length >= sizeof( FILE_STANDARD_INFORMATION))
     {
@@ -716,8 +689,6 @@ AFSQueryStandardInfo( IN PIRP Irp,
         RtlZeroMemory( Buffer, 
                        *Length);
 
-        Buffer->AllocationSize = Fcb->DirEntry->DirectoryEntry.AllocationSize;
-        Buffer->EndOfFile = Fcb->DirEntry->DirectoryEntry.EndOfFile;
         Buffer->NumberOfLinks = 0;
         Buffer->DeletePending = BooleanFlagOn( Fcb->Flags, AFS_FCB_PENDING_DELETE);
         
@@ -725,14 +696,37 @@ AFSQueryStandardInfo( IN PIRP Irp,
         {
             pParentFcb = Fcb->ParentFcb;
         }
-        else if (Fcb->DirEntry->DirectoryEntry.FileId.Vnode == 1)
+        else
         {   
             pParentFcb = Fcb;
         }
 
-        ulAttrs = AFSGetFileAttributes( pParentFcb, Fcb->DirEntry);
+        RtlZeroMemory( &stFileInformation,
+                       sizeof( AFSFileInfoCB));
 
-        Buffer->Directory = BooleanFlagOn( ulAttrs, FILE_ATTRIBUTE_DIRECTORY);
+        ntStatus = AFSGetFileInformation( pParentFcb,
+                                          Ccb->NameArray,
+                                          Fcb->DirEntry, 
+                                          &stFileInformation);
+                                        
+        if( NT_SUCCESS( ntStatus))
+        {
+
+            Buffer->AllocationSize = stFileInformation.AllocationSize;
+
+            Buffer->EndOfFile = stFileInformation.EndOfFile;
+
+            Buffer->Directory = BooleanFlagOn( stFileInformation.FileAttributes, FILE_ATTRIBUTE_DIRECTORY);
+        }
+        else
+        {
+
+            Buffer->AllocationSize = Fcb->DirEntry->DirectoryEntry.AllocationSize;
+
+            Buffer->EndOfFile = Fcb->DirEntry->DirectoryEntry.EndOfFile;
+
+            Buffer->Directory = FALSE;
+        }
 
         *Length -= sizeof( FILE_STANDARD_INFORMATION);
     }
@@ -756,8 +750,6 @@ AFSQueryInternalInfo( IN PIRP Irp,
 
     if( *Length >= sizeof( FILE_INTERNAL_INFORMATION))
     {
-
-        //Buffer->IndexNumber.QuadPart = Fcb->DirEntry->DirectoryEntry.FileId.QuadPart;
 
         *Length -= sizeof( FILE_INTERNAL_INFORMATION);
     }
@@ -1046,7 +1038,7 @@ AFSQueryNetworkInfo( IN PIRP Irp,
 
         Buffer->FileAttributes = Fcb->DirEntry->DirectoryEntry.FileAttributes;
 
-        if( Fcb->DirEntry->DirectoryEntry.FileType == AFS_ROOT_FCB)
+        if( Fcb->Header.NodeTypeCode == AFS_ROOT_FCB)
         {
 
             Buffer->FileAttributes |= FILE_ATTRIBUTE_REPARSE_POINT;
@@ -1284,7 +1276,7 @@ AFSSetDispositionInfo( IN PIRP Irp,
         {
 
             //
-            // OK, should be good to go, set the flag in the fo
+            // OK, should be good to go, set the flag in the file object
             //
 
             pIrpSp->FileObject->DeletePending = pBuffer->DeleteFile;

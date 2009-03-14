@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -248,18 +248,6 @@ AFSNonCachedRead( IN PDEVICE_OBJECT DeviceObject,
 
         while (TRUE) 
         {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSNonCachedRead (%08lX) Requesting extents for Offset %I64X Length %08lX File %wZ FID %08lX-%08lX-%08lX-%08lX\n",
-                          Irp,
-                          StartingByte.QuadPart,
-                          ulReadByteCount,
-                          &pFcb->DirEntry->DirectoryEntry.FileName,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Cell,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Volume,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Vnode,
-                          pFcb->DirEntry->DirectoryEntry.FileId.Unique);
 
             ntStatus = AFSRequestExtents( pFcb, 
                                           &StartingByte, 
@@ -727,15 +715,6 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
             try_return( ntStatus);
         }
 
-        AFSDbgLogMsg( AFS_SUBSYSTEM_IO_PROCESSING,
-                      AFS_TRACE_LEVEL_VERBOSE,
-                      "AFSCommonRead (%08lX) Processing file %wZ Offset %I64X Length %08lX Irp Flags %08lX\n",
-                      Irp,
-                      &pFcb->DirEntry->DirectoryEntry.FileName,
-                      liStartingByte.QuadPart,
-                      ulByteCount,
-                      Irp->Flags);
-
         //
         // No fileobject yet?  Bail.
         //
@@ -806,7 +785,7 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         }
 
         //
-        // We acquire the main/paging reosurce first to synchronize
+        // We acquire the main/paging resource first to synchronize
         // against size checks.
         //
 
@@ -930,14 +909,6 @@ AFSCommonRead( IN PDEVICE_OBJECT DeviceObject,
         //
         if( !bPagingIo && !bNonCachedIo)
         {
-
-            AFSDbgLogMsg( AFS_SUBSYSTEM_EXTENT_PROCESSING,
-                          AFS_TRACE_LEVEL_VERBOSE,
-                          "AFSCommonRead (%08lX) Requesting extents for Offset %I64X Length %08lX File %wZ\n",
-                          Irp,
-                          liStartingByte.QuadPart,
-                          ulByteCount,
-                          &pFcb->DirEntry->DirectoryEntry.FileName);
 
             ntStatus = AFSRequestExtentsAsync( pFcb, &liStartingByte, ulByteCount);
 
