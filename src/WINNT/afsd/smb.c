@@ -3977,7 +3977,7 @@ void smb_WaitingLocksDaemon()
                 
                     if (wl->state == SMB_WAITINGLOCKSTATE_DONE)
                         cm_Unlock(scp, wlRequest->lockType, wl->LOffset, 
-                                  wl->LLength, wl->key, NULL, &req);
+                                  wl->LLength, wl->key, 0, NULL, &req);
 
                     osi_QRemove((osi_queue_t **) &wlRequest->locks, &wl->q);
 

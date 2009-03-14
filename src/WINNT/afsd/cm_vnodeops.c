@@ -148,7 +148,7 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp, NULL);
 
         if (code == 0) {
-            cm_Unlock(scp, sLockType, LOffset, LLength, key, userp, reqp);
+            cm_Unlock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp);
         } else {
             /* In this case, we allow the file open to go through even
                though we can't enforce mandatory locking on the
@@ -300,7 +300,7 @@ extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *req
     lock_ObtainWrite(&scp->rw);
     if (*ldpp) {
 	cm_Unlock(scp, (*ldpp)->sLockType, (*ldpp)->LOffset, (*ldpp)->LLength, 
-		  (*ldpp)->key, userp, reqp);
+		  (*ldpp)->key, 0, userp, reqp);
 	free(*ldpp);
 	*ldpp = NULL;
     }
@@ -4823,6 +4823,7 @@ long cm_Unlock(cm_scache_t *scp,
                unsigned char sLockType,
                LARGE_INTEGER LOffset, LARGE_INTEGER LLength,
                cm_key_t key, 
+               afs_uint32 flags,
                cm_user_t *userp, 
                cm_req_t *reqp)
 {
@@ -4831,12 +4832,19 @@ long cm_Unlock(cm_scache_t *scp,
     cm_file_lock_t *fileLock;
     osi_queue_t *q;
     int release_userp = FALSE;
+    int exact_match = !(flags & CM_UNLOCK_FLAG_MATCH_RANGE);
+    int lock_found  = 0;
+    LARGE_INTEGER RangeEnd;
 
     osi_Log4(afsd_logp, "cm_Unlock scp 0x%p type 0x%x offset %d length %d",
              scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
-    osi_Log3(afsd_logp, "... key <0x%x,0x%x,0x%x>",
-             key.process_id, key.session_id, key.file_id);
+    osi_Log4(afsd_logp, "... key <0x%x,0x%x,0x%x> flags 0x%x",
+             key.process_id, key.session_id, key.file_id, flags);
 
+    if (!exact_match)
+        RangeEnd.QuadPart = LOffset.QuadPart + LLength.QuadPart;
+
+  try_again:
     lock_ObtainRead(&cm_scacheLock);
 
     for (q = scp->fileLocksH; q; q = osi_QNext(q)) {
@@ -4859,21 +4867,39 @@ long cm_Unlock(cm_scache_t *scp,
             osi_assertx(FALSE, "invalid fid value");
         }
 #endif
-        if (!IS_LOCK_DELETED(fileLock) &&
-            cm_KeyEquals(&fileLock->key, &key, 0) &&
-            fileLock->range.offset == LOffset.QuadPart &&
-            fileLock->range.length == LLength.QuadPart) {
-            break;
+        if (exact_match) {
+            if (!IS_LOCK_DELETED(fileLock) &&
+                 cm_KeyEquals(&fileLock->key, &key, 0) &&
+                 fileLock->range.offset == LOffset.QuadPart &&
+                 fileLock->range.length == LLength.QuadPart) {
+                lock_found = 1;
+                break;
+            }
+        } else {
+
+            if (!IS_LOCK_DELETED(fileLock) &&
+                 cm_KeyEquals(&fileLock->key, &key, 0) &&
+                 fileLock->range.offset >= LOffset.QuadPart &&
+                 fileLock->range.offset < RangeEnd.QuadPart &&
+                 (fileLock->range.offset + fileLock->range.length) <= RangeEnd.QuadPart) {
+                lock_found = 1;
+                break;
+            }
         }
     }
 
     if (!q) {
-        osi_Log0(afsd_logp, "cm_Unlock lock not found; failure");
-        
         lock_ReleaseRead(&cm_scacheLock);
 
-        /* The lock didn't exist anyway. *shrug* */
-        return CM_ERROR_RANGE_NOT_LOCKED;
+        if (lock_found && !exact_match) {
+            code = 0;
+            goto done;
+        } else {
+            osi_Log0(afsd_logp, "cm_Unlock lock not found; failure");
+        
+            /* The lock didn't exist anyway. *shrug* */
+            return CM_ERROR_RANGE_NOT_LOCKED;
+        }
     }
 
     /* discard lock record */
@@ -4998,8 +5024,13 @@ long cm_Unlock(cm_scache_t *scp,
         }
     }
 
-    if (release_userp)
+    if (release_userp) {
         cm_ReleaseUser(userp);
+        release_userp = FALSE;
+    }
+
+    if (!exact_match)
+        goto try_again;         /* might be more than one lock in the range */
 
  done:
 
