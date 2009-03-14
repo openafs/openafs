@@ -342,7 +342,7 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
  * Invalidate ACL info for a user that has just	obtained or lost tokens.
  */
 void 
-cm_ResetACLCache(cm_user_t *userp)
+cm_ResetACLCache(cm_cell_t *cellp, cm_user_t *userp)
 {
     cm_scache_t *scp;
     int hash;
@@ -350,13 +350,16 @@ cm_ResetACLCache(cm_user_t *userp)
     lock_ObtainWrite(&cm_scacheLock);
     for (hash=0; hash < cm_data.scacheHashTableSize; hash++) {
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
-            cm_HoldSCacheNoLock(scp);
-            lock_ReleaseWrite(&cm_scacheLock);
-            lock_ObtainWrite(&scp->rw);
-            cm_InvalidateACLUser(scp, userp);
-            lock_ReleaseWrite(&scp->rw);
-            lock_ObtainWrite(&cm_scacheLock);
-            cm_ReleaseSCacheNoLock(scp);
+            if (cellp == NULL || 
+                scp->fid.cell == cellp->cellID) {
+                cm_HoldSCacheNoLock(scp);
+                lock_ReleaseWrite(&cm_scacheLock);
+                lock_ObtainWrite(&scp->rw);
+                cm_InvalidateACLUser(scp, userp);
+                lock_ReleaseWrite(&scp->rw);
+                lock_ObtainWrite(&cm_scacheLock);
+                cm_ReleaseSCacheNoLock(scp);
+            }
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);
