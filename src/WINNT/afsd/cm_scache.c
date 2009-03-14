@@ -298,9 +298,10 @@ cm_scache_t *cm_GetNewSCache(void)
             if (scp->refCount == 0 && scp->bufReadsp == NULL && scp->bufWritesp == NULL) {
                 if (!buf_DirtyBuffersExist(&scp->fid) && 
                     (!RDR_Initialized || 
+                     !cm_HaveCallback(scp) ||
                      !RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
                                            scp->fid.unique, scp->fid.hash,
-                                           scp->fileType, AFS_INVALIDATE_FLUSHED))) {
+                                           scp->fileType, AFS_INVALIDATE_EXPIRED))) {
                     cm_fid_t   fid;
                     afs_uint32 fileType;
 

@@ -332,7 +332,7 @@ void cm_InvalidateACLUser(cm_scache_t *scp, cm_user_t *userp)
             cm_ReleaseUser(aclp->userp);
             aclp->userp = NULL;
             aclp->backp = (struct cm_scache *) 0;
-            if (RDR_Initialized)
+            if (RDR_Initialized && cm_HaveCallback(scp))
                 RDR_InvalidateObject(scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                                      scp->fid.hash, scp->fileType, AFS_INVALIDATE_CREDS);
             break;
