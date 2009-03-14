@@ -204,9 +204,11 @@ extern long cm_UnlockByKey(cm_scache_t * scp,
                            cm_user_t * userp,
                            cm_req_t * reqp);
 
+#define CM_UNLOCK_FLAG_MATCH_RANGE      0x01
+
 extern long cm_Unlock(cm_scache_t *scp, unsigned char sLockType,
                       LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
-                      cm_user_t *userp, cm_req_t *reqp);
+                      afs_uint32 flags, cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_LockCheckRead(cm_scache_t *scp, 
                              LARGE_INTEGER LOffset, 
