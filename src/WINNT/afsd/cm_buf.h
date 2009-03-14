@@ -205,6 +205,8 @@ extern long buf_DirtyBuffersExist(cm_fid_t * fidp);
 
 extern long buf_CleanDirtyBuffers(cm_scache_t *scp);
 
+extern long buf_RDRBuffersExist(cm_fid_t *fidp);
+
 extern long buf_ClearRDRFlag(cm_fid_t *fidp, char * reason);
 
 extern long buf_ForceDataVersion(cm_scache_t * scp, afs_uint64 fromVersion, afs_uint64 toVersion);

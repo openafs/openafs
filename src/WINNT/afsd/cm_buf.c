@@ -168,7 +168,7 @@ void buf_ReleaseLocked(cm_buf_t *bp, afs_uint32 writeLocked)
             lock_ConvertRToW(&buf_globalLock);
 
         if (bp->refCount == 0 &&
-            !(bp->flags & CM_BUF_INLRU)) {
+            !(bp->flags & CM_BUF_INLRU|CM_BUF_REDIR)) {
             osi_QAdd((osi_queue_t **) &cm_data.buf_freeListp, &bp->q);
 
             /* watch for transition from empty to one element */
@@ -2039,6 +2039,21 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
 
     for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->allp, bcount++) {
 	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY))
+	    return 1;
+    }
+    return 0;
+}
+
+long buf_RDRBuffersExist(cm_fid_t *fidp)
+{
+    cm_buf_t *bp;
+    afs_uint32 bcount = 0;
+    afs_uint32 i;
+
+    i = BUF_FILEHASH(fidp);
+
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->allp, bcount++) {
+	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_REDIR))
 	    return 1;
     }
     return 0;
