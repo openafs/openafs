@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 Kernel Drivers, LLC.
+ * Copyright (c) 2008, 2009 Kernel Drivers, LLC.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -524,7 +524,7 @@ NPCancelConnection( LPWSTR  lpName,
         if( bLocalName)
         {
 
-            pConnectCB->LocalName = lpName[0];
+            pConnectCB->LocalName = towupper(lpName[0]);
 
             pConnectCB->RemoteNameLength = 0;
         }
