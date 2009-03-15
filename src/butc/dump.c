@@ -358,6 +358,13 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 		}
 	    }
 
+#ifdef xbsa
+	    /* Set aside space for the trailing volume header when using large buffers. */
+	    if (XBSAMAXBUFFER < toread + sizeof(hostVolumeHeader)) {
+		toread = XBSAMAXBUFFER - sizeof(hostVolumeHeader);
+	    }
+#endif
+
 	    /* Read some volume data. */
 	    if (fragmentvolume) {
 		bytesread = 0;
