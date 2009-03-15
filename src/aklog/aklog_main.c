@@ -643,6 +643,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    if (dflag)
 	    	printf("Using Kerberos V5 ticket natively\n");
 
+#ifndef HAVE_NO_KRB5_524
 	    status = krb5_524_conv_principal (context, v5cred->client, &k4name, &k4inst, &k4realm);
 	    if (status) {
 		afs_com_err(progname, status, "while converting principal "
@@ -654,6 +655,22 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		strcat (username, ".");
 		strcat (username, k4inst);
 	    }
+#else
+	    len = min(get_princ_len(context, v5cred->client, 0),
+		      second_comp(context, v5cred->client) ?
+		      MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
+	    strncpy(username, get_princ_str(context, v5cred->client, 0), len);
+	    username[len] = '\0';
+	    
+	    if (second_comp(context, v5cred->client)) {
+		strcat(username, ".");
+		p = username + strlen(username);
+		len = min(get_princ_len(context, v5cred->client, 1),
+			  MAXKTCNAMELEN - strlen(username) - 1);
+		strncpy(p, get_princ_str(context, v5cred->client, 1), len);
+		p[len] = '\0';
+	    }
+#endif
 
 	    memset(&atoken, 0, sizeof(atoken));
 	    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
