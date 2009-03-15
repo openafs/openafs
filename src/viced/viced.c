@@ -698,6 +698,8 @@ ClearXStatValues()
 
 }				/*ClearXStatValues */
 
+int CopyOnWrite_calls = 0, CopyOnWrite_off0 = 0, CopyOnWrite_size0 = 0;
+afs_fsize_t CopyOnWrite_maxsize = 0;
 
 static void
 PrintCounters()
@@ -741,6 +743,9 @@ PrintCounters()
     ViceLog(0,
 	    ("There are %d workstations, %d are active (req in < 15 mins), %d marked \"down\"\n",
 	     workstations, activeworkstations, delworkstations));
+    ViceLog(0, ("CopyOnWrite: calls %d off0 %d size0 %d maxsize 0x%llx\n",
+		CopyOnWrite_calls, CopyOnWrite_off0, CopyOnWrite_size0, CopyOnWrite_maxsize));
+
     Statistics = 0;
 
 }				/*PrintCounters */
