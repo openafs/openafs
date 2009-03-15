@@ -299,7 +299,7 @@ afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp,
     else
 	tdc = afs_GetDCache(avc, (afs_offs_t) off, &treq, &offset, &nlen, 1);
     if (!tdc)
-	return EINVAL;
+	return afs_CheckCode(EINVAL, &treq, 62);
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
 	afs_PutDCache(tdc);
