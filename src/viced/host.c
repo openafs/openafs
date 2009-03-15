@@ -189,7 +189,7 @@ static struct host *HTFree = 0;	/* first free file entry */
  */
 static struct h_AddrHashChain *hostAddrHashTable[h_HASHENTRIES];
 static struct h_UuidHashChain *hostUuidHashTable[h_HASHENTRIES];
-#define h_HashIndex(hostip) ((hostip) & (h_HASHENTRIES-1))
+#define h_HashIndex(hostip) (ntohl(hostip) & (h_HASHENTRIES-1))
 #define h_UuidHashIndex(uuidp) (((int)(afs_uuid_hash(uuidp))) & (h_HASHENTRIES-1))
 
 struct HTBlock {		/* block of HTSPERBLOCK file entries */
