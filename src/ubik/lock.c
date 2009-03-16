@@ -14,10 +14,13 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <stdarg.h>
+#include <errno.h>
+
 #ifndef AFS_NT40_ENV
 #include <sys/file.h>
 #endif
-#include <errno.h>
+
 #include <lock.h>
 #include <rx/xdr.h>
 
@@ -62,9 +65,8 @@ int rwlockinit = 1;
  *
  * \note The #DBHOLD lock must be held.
  */
-ulock_getLock(atrans, atype, await)
-     struct ubik_trans *atrans;
-     int atype, await;
+extern int
+ulock_getLock(struct ubik_trans *atrans, int atype, int await)
 {
     struct ubik_dbase *dbase = atrans->dbase;
 
@@ -151,8 +153,7 @@ ulock_getLock(atrans, atype, await)
  * \brief Release the transaction lock.
  */
 void
-ulock_relLock(atrans)
-     struct ubik_trans *atrans;
+ulock_relLock(struct ubik_trans *atrans)
 {
     if (rwlockinit)
 	return;
@@ -175,8 +176,8 @@ ulock_relLock(atrans)
 /*!
  * \brief debugging hooks
  */
-ulock_Debug(aparm)
-     struct ubik_debug *aparm;
+void
+ulock_Debug(struct ubik_debug *aparm)
 {
     if (rwlockinit) {
 	aparm->anyReadLocks = 0;
@@ -185,5 +186,4 @@ ulock_Debug(aparm)
 	aparm->anyReadLocks = rwlock.readers_reading;
 	aparm->anyWriteLocks = ((rwlock.excl_locked == WRITE_LOCK) ? 1 : 0);
     }
-    return 0;
 }

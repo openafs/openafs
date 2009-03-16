@@ -557,20 +557,30 @@ SVOTE_GetSyncSite(register struct rx_call * rxcall,
     return 0;
 }
 
-int
-ubik_dprint(char *a, char *b, char *c, char *d, char *e, char *f, char *g,
-	    char *h)
+void
+ubik_dprint(const char *format, ...)
 {
-    ViceLog(5, (a, b, c, d, e, f, g, h));
-    return 0;
+    va_list ap;
+
+    va_start(ap, format);
+    vViceLog(5, (format, ap));
+    va_end(ap);
 }
 
-int
-ubik_print(char *a, char *b, char *c, char *d, char *e, char *f, char *g,
-	   char *h)
+void
+ubik_vprint(const char *format, va_list ap)
 {
-    ViceLog(0, (a, b, c, d, e, f, g, h));
-    return 0;
+    vViceLog(0, (format, ap));
+}
+
+void
+ubik_print(const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    ubik_vprint(format, ap);
+    va_end(ap);
 }
 
 /*!

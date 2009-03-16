@@ -14,6 +14,11 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <assert.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <time.h>
@@ -23,12 +28,10 @@ RCSID
 #include <netinet/in.h>
 #include <sys/time.h>
 #endif
-#include <assert.h>
+
 #include <lock.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <errno.h>
 #include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
@@ -458,7 +461,7 @@ urecovery_Interact(void *dummy)
 #ifndef OLD_URECOVERY
     char pbuffer[1028];
     int flen, fd = -1;
-    afs_int32 epoch, pass;
+    afs_int32 pass;
 #endif
 
     /* otherwise, begin interaction */

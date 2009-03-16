@@ -14,14 +14,17 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
-#include <errno.h>
-#include <string.h>
+
 #include <lock.h>
 #include <rx/xdr.h>
 
@@ -55,10 +58,10 @@ static int calls = 0, ios = 0, lastb = 0;
 static char *BufferData;
 static struct buffer *newslot(struct ubik_dbase *adbase, afs_int32 afid,
 			      afs_int32 apage);
-static initd = 0;
+static int initd = 0;
 #define	BADFID	    0xffffffff
 
-static DTrunc(struct ubik_dbase *dbase, afs_int32 fid, afs_int32 length);
+static int DTrunc(struct ubik_dbase *dbase, afs_int32 fid, afs_int32 length);
 
 static struct ubik_trunc *freeTruncList = 0;
 
@@ -83,7 +86,7 @@ unthread(struct ubik_trans *atrans)
 /*!
  * \brief some debugging assistance
  */
-int
+void
 udisk_Debug(struct ubik_debug *aparm)
 {
     struct buffer *tb;
@@ -101,7 +104,6 @@ udisk_Debug(struct ubik_debug *aparm)
 		aparm->writeLockedPages++;
 	}
     }
-    return 0;
 }
 
 /*!
@@ -212,7 +214,7 @@ udisk_LogTruncate(struct ubik_dbase *adbase, afs_int32 afile,
  * \brief Write some data to the log, never syncing.
  */
 int
-udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, char *abuffer,
+udisk_LogWriteData(struct ubik_dbase *adbase, afs_int32 afile, void *abuffer,
 		   afs_int32 apos, afs_int32 alen)
 {
     struct ubik_stat ustat;
@@ -441,7 +443,7 @@ static int
 DoTruncs(struct ubik_trans *atrans)
 {
     struct ubik_trunc *tt, *nt;
-    int (*tproc) ();
+    int (*tproc) (struct ubik_dbase *, afs_int32, afs_int32);
     afs_int32 rcode = 0, code;
 
     tproc = atrans->dbase->truncate;
@@ -658,7 +660,7 @@ DNew(struct ubik_dbase *dbase, afs_int32 fid, int page)
  * \brief Read data from database.
  */
 int
-udisk_read(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
+udisk_read(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	   afs_int32 apos, afs_int32 alen)
 {
     char *bp;
@@ -679,7 +681,7 @@ udisk_read(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
 	if (len > alen)
 	    len = alen;
 	memcpy(abuffer, bp + offset, len);
-	abuffer += len;
+	abuffer = (char *)abuffer + len;
 	apos += len;
 	alen -= len;
 	totalLen += len;
@@ -726,7 +728,7 @@ udisk_truncate(struct ubik_trans *atrans, afs_int32 afile, afs_int32 alength)
  * \brief Write data to database, using logs.
  */
 int
-udisk_write(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
+udisk_write(struct ubik_trans *atrans, afs_int32 afile, void *abuffer,
 	    afs_int32 apos, afs_int32 alen)
 {
     char *bp;
@@ -770,7 +772,7 @@ udisk_write(struct ubik_trans *atrans, afs_int32 afile, char *abuffer,
 	if (len > alen)
 	    len = alen;
 	memcpy(bp + offset, abuffer, len);
-	abuffer += len;
+	abuffer = (char *)abuffer + len;
 	apos += len;
 	alen -= len;
 	totalLen += len;
@@ -847,8 +849,8 @@ udisk_commit(struct ubik_trans *atrans)
 	     * marked down and when we detect it is up again, we will 
 	     * send the entire database to it.
 	     */
-	    ContactQuorum(DISK_SetVersion, atrans, 1 /*CStampVersion */ ,
-			  &oldversion, &newversion);
+	    ContactQuorum_DISK_SetVersion( atrans, 1 /*CStampVersion */ ,
+					   &oldversion, &newversion);
 	    urecovery_state |= UBIK_RECLABELDB;
 	}
 
@@ -952,7 +954,7 @@ udisk_end(struct ubik_trans *atrans)
     if (atrans->flags & TRSETLOCK) {
 	atrans->flags |= TRSTALE;
 	ulock_relLock(atrans);
-	return;
+	return UINTERNAL;
     }
 #endif /* UBIK_PAUSE */
     if (!(atrans->flags & TRDONE))

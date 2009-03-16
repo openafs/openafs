@@ -15,7 +15,11 @@ RCSID
 
 #include <sys/types.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
+#include <signal.h>
+#include <time.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
@@ -24,24 +28,20 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include <signal.h>
-#include <afs/afsutil.h>
-#include <time.h>
 
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/cmd.h>
+#include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
 #include "ubik_int.h"
-
-/*! needed by Irix. Include a header to get it, or leave it alone. */
-extern struct hostent *hostutil_GetHostByName();
 
 static short
 PortNumber(register char *aport)

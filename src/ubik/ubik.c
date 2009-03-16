@@ -14,6 +14,10 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <time.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
@@ -21,9 +25,8 @@ RCSID
 #include <netinet/in.h>
 #include <sys/param.h>
 #endif
-#include <time.h>
+
 #include <lock.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
@@ -80,12 +83,13 @@ struct ubik_stats ubik_stats;
 afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
 afs_int32 ubik_epochTime = 0;
 afs_int32 urecovery_state = 0;
-int (*ubik_SRXSecurityProc) ();
-char *ubik_SRXSecurityRock;
+int (*ubik_SRXSecurityProc) (void *, struct rx_securityClass **, afs_int32 *);
+void *ubik_SRXSecurityRock;
 struct ubik_server *ubik_servers;
 short ubik_callPortal;
 
-static int BeginTrans();
+static int BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
+	   	      struct ubik_trans **transPtr, int readAny);
 
 struct rx_securityClass *ubik_sc[3];
 
@@ -97,20 +101,17 @@ struct rx_securityClass *ubik_sc[3];
  * \return otherwise mark failing server as down and return #UERROR
  *
  * \note If any server misses an update, we must wait #BIGTIME seconds before
- * allowing the transaction to commit, to ensure that the missing and possibly still
- * functioning server times out and stops handing out old data.  This is done in the commit
- * code, where we wait for a server marked down to have stayed down for #BIGTIME seconds
- * before we allow a transaction to commit.  A server that fails but comes back up won't give
- * out old data because it is sent the sync count along with the beacon message that
+ * allowing the transaction to commit, to ensure that the missing and 
+ * possibly still functioning server times out and stops handing out old 
+ * data.  This is done in the commit code, where we wait for a server marked 
+ * down to have stayed down for #BIGTIME seconds before we allow a transaction 
+ * to commit.  A server that fails but comes back up won't give out old data 
+ * because it is sent the sync count along with the beacon message that
  * marks it as \b really up (\p beaconSinceDown).
  */
 afs_int32
-ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, aparm4,
-	      aparm5)
-     int (*aproc) ();
-     int aflags;
-     register struct ubik_trans *atrans;
-     long aparm0, aparm1, aparm2, aparm3, aparm4, aparm5;
+ContactQuorum_NoArguments(afs_int32 (*proc)(struct rx_connection *, ubik_tid *),
+	       		  register struct ubik_trans *atrans, int aflags)
 {
     register struct ubik_server *ts;
     register afs_int32 code;
@@ -124,25 +125,176 @@ ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, aparm4,
 	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
 	    continue;		/* not up-to-date, don't bother */
 	}
-	code =
-	    (*aproc) (ts->disk_rxcid, &atrans->tid, aparm0, aparm1, aparm2,
-		      aparm3, aparm4, aparm5);
-	if ((aproc == DISK_WriteV) && (code <= -450) && (code > -500)) {
+	code = (*proc)(ts->disk_rxcid, &atrans->tid);
+	if (code) {		/* failure */
+	    rcode = code;
+	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
+	    ts->currentDB = 0;
+	    ts->beaconSinceDown = 0;
+	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	} else {		/* success */
+	    if (!ts->isClone)
+		okcalls++;	/* count up how many worked */
+	    if (aflags & CStampVersion) {
+		ts->version = atrans->dbase->version;
+	    }
+	}
+    }
+    /* return 0 if we successfully contacted a quorum, otherwise return error code.  We don't have to contact ourselves (that was done locally) */
+    if (okcalls + 1 >= ubik_quorum)
+	return 0;
+    else
+	return rcode;
+}
+
+afs_int32
+ContactQuorum_DISK_Lock(register struct ubik_trans *atrans, int aflags,afs_int32 file,
+			afs_int32 position, afs_int32 length, afs_int32 type)
+{
+    register struct ubik_server *ts;
+    register afs_int32 code;
+    afs_int32 rcode, okcalls;
+
+    rcode = 0;
+    okcalls = 0;
+    for (ts = ubik_servers; ts; ts = ts->next) {
+	/* for each server */
+	if (!ts->up || !ts->currentDB) {
+	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
+	    continue;		/* not up-to-date, don't bother */
+	}
+	code = DISK_Lock(ts->disk_rxcid, &atrans->tid, file, position, length,
+			   type);
+	if (code) {		/* failure */
+	    rcode = code;
+	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
+	    ts->currentDB = 0;
+	    ts->beaconSinceDown = 0;
+	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	} else {		/* success */
+	    if (!ts->isClone)
+		okcalls++;	/* count up how many worked */
+	    if (aflags & CStampVersion) {
+		ts->version = atrans->dbase->version;
+	    }
+	}
+    }
+    /* return 0 if we successfully contacted a quorum, otherwise return error code.  We don't have to contact ourselves (that was done locally) */
+    if (okcalls + 1 >= ubik_quorum)
+	return 0;
+    else
+	return rcode;
+}
+
+afs_int32
+ContactQuorum_DISK_Write(register struct ubik_trans *atrans, int aflags,
+			 afs_int32 file, afs_int32 position, bulkdata *data)
+{
+    register struct ubik_server *ts;
+    register afs_int32 code;
+    afs_int32 rcode, okcalls;
+
+    rcode = 0;
+    okcalls = 0;
+    for (ts = ubik_servers; ts; ts = ts->next) {
+	/* for each server */
+	if (!ts->up || !ts->currentDB) {
+	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
+	    continue;		/* not up-to-date, don't bother */
+	}
+	code = DISK_Write(ts->disk_rxcid, &atrans->tid, file, position, data);
+	if (code) {		/* failure */
+	    rcode = code;
+	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
+	    ts->currentDB = 0;
+	    ts->beaconSinceDown = 0;
+	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	} else {		/* success */
+	    if (!ts->isClone)
+		okcalls++;	/* count up how many worked */
+	    if (aflags & CStampVersion) {
+		ts->version = atrans->dbase->version;
+	    }
+	}
+    }
+    /* return 0 if we successfully contacted a quorum, otherwise return error code.  We don't have to contact ourselves (that was done locally) */
+    if (okcalls + 1 >= ubik_quorum)
+	return 0;
+    else
+	return rcode;
+}
+
+afs_int32
+ContactQuorum_DISK_Truncate(register struct ubik_trans *atrans, int aflags,
+			    afs_int32 file, afs_int32 length)
+{
+    register struct ubik_server *ts;
+    register afs_int32 code;
+    afs_int32 rcode, okcalls;
+
+    rcode = 0;
+    okcalls = 0;
+    for (ts = ubik_servers; ts; ts = ts->next) {
+	/* for each server */
+	if (!ts->up || !ts->currentDB) {
+	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
+	    continue;		/* not up-to-date, don't bother */
+	}
+	code = DISK_Truncate(ts->disk_rxcid, &atrans->tid, file, length);
+	if (code) {		/* failure */
+	    rcode = code;
+	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
+	    ts->currentDB = 0;
+	    ts->beaconSinceDown = 0;
+	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	} else {		/* success */
+	    if (!ts->isClone)
+		okcalls++;	/* count up how many worked */
+	    if (aflags & CStampVersion) {
+		ts->version = atrans->dbase->version;
+	    }
+	}
+    }
+    /* return 0 if we successfully contacted a quorum, otherwise return error code.  We don't have to contact ourselves (that was done locally) */
+    if (okcalls + 1 >= ubik_quorum)
+	return 0;
+    else
+	return rcode;
+}
+
+afs_int32
+ContactQuorum_DISK_WriteV(register struct ubik_trans *atrans, int aflags,
+			  iovec_wrt * io_vector, iovec_buf *io_buffer)
+{
+    register struct ubik_server *ts;
+    register afs_int32 code;
+    afs_int32 rcode, okcalls;
+
+    rcode = 0;
+    okcalls = 0;
+    for (ts = ubik_servers; ts; ts = ts->next) {
+	/* for each server */
+	if (!ts->up || !ts->currentDB) {
+	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
+	    continue;		/* not up-to-date, don't bother */
+	}
+
+	code = DISK_WriteV(ts->disk_rxcid, &atrans->tid, io_vector, io_buffer);
+
+	if ((code <= -450) && (code > -500)) {
 	    /* An RPC interface mismatch (as defined in comerr/error_msg.c).
 	     * Un-bulk the entries and do individual DISK_Write calls
 	     * instead of DISK_WriteV.
 	     */
-	    iovec_wrt *iovec_infoP = (iovec_wrt *) aparm0;
-	    iovec_buf *iovec_dataP = (iovec_buf *) aparm1;
 	    struct ubik_iovec *iovec =
-		(struct ubik_iovec *)iovec_infoP->iovec_wrt_val;
-	    char *iobuf = (char *)iovec_dataP->iovec_buf_val;
+		(struct ubik_iovec *)io_vector->iovec_wrt_val;
+	    char *iobuf = (char *)io_buffer->iovec_buf_val;
 	    bulkdata tcbs;
 	    afs_int32 i, offset;
 
-	    for (i = 0, offset = 0; i < iovec_infoP->iovec_wrt_len; i++) {
+	    for (i = 0, offset = 0; i < io_vector->iovec_wrt_len; i++) {
 		/* Sanity check for going off end of buffer */
-		if ((offset + iovec[i].length) > iovec_dataP->iovec_buf_len) {
+		if ((offset + iovec[i].length) > io_buffer->iovec_buf_len) {
 		    code = UINTERNAL;
 		    break;
 		}
@@ -157,6 +309,47 @@ ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, aparm4,
 		offset += iovec[i].length;
 	    }
 	}
+
+	if (code) {		/* failure */
+	    rcode = code;
+	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
+	    ts->currentDB = 0;
+	    ts->beaconSinceDown = 0;
+	    urecovery_LostServer();	/* tell recovery to try to resend dbase later */
+	} else {		/* success */
+	    if (!ts->isClone)
+		okcalls++;	/* count up how many worked */
+	    if (aflags & CStampVersion) {
+		ts->version = atrans->dbase->version;
+	    }
+	}
+    }
+    /* return 0 if we successfully contacted a quorum, otherwise return error code.  We don't have to contact ourselves (that was done locally) */
+    if (okcalls + 1 >= ubik_quorum)
+	return 0;
+    else
+	return rcode;
+}
+
+afs_int32
+ContactQuorum_DISK_SetVersion(register struct ubik_trans *atrans, int aflags, 
+			      ubik_version *OldVersion,
+			      ubik_version *NewVersion)
+{
+    register struct ubik_server *ts;
+    register afs_int32 code;
+    afs_int32 rcode, okcalls;
+
+    rcode = 0;
+    okcalls = 0;
+    for (ts = ubik_servers; ts; ts = ts->next) {
+	/* for each server */
+	if (!ts->up || !ts->currentDB) {
+	    ts->currentDB = 0;	/* db is no longer current; we just missed an update */
+	    continue;		/* not up-to-date, don't bother */
+	}
+	code = DISK_SetVersion(ts->disk_rxcid, &atrans->tid, OldVersion, 
+			       NewVersion);
 	if (code) {		/* failure */
 	    rcode = code;
 	    ts->up = 0;		/* mark as down now; beacons will no longer be sent */
@@ -214,7 +407,6 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
     struct rx_securityClass *secClass;
 
     struct rx_service *tservice;
-    extern int VOTE_ExecuteRequest(), DISK_ExecuteRequest();
     extern int rx_stackSize;
 
     initialize_U_error_table();
@@ -504,11 +696,11 @@ BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode,
 #endif /* UBIK_PAUSE */
 
 	/* next try to start transaction on appropriate number of machines */
-	code = ContactQuorum(DISK_Begin, tt, 0);
+	code = ContactQuorum_NoArguments(DISK_Begin, tt, 0);
 	if (code) {
 	    /* we must abort the operation */
 	    udisk_abort(tt);
-	    ContactQuorum(DISK_Abort, tt, 0);	/* force aborts to the others */
+	    ContactQuorum_NoArguments(DISK_Abort, tt, 0); /* force aborts to the others */
 	    udisk_end(tt);
 	    DBRELE(dbase);
 	    return code;
@@ -577,7 +769,7 @@ ubik_AbortTrans(register struct ubik_trans *transPtr)
     }
 
     /* now it is safe to try remote abort */
-    code = ContactQuorum(DISK_Abort, transPtr, 0);
+    code = ContactQuorum_NoArguments(DISK_Abort, transPtr, 0);
     code2 = udisk_abort(transPtr);
     udisk_end(transPtr);
     DBRELE(dbase);
@@ -637,7 +829,7 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
     /* now it is safe to do commit */
     code = udisk_commit(transPtr);
     if (code == 0)
-	code = ContactQuorum(DISK_Commit, transPtr, CStampVersion);
+	code = ContactQuorum_NoArguments(DISK_Commit, transPtr, CStampVersion);
     if (code) {
 	/* failed to commit, so must return failure.  Try to clear locks first, just for fun
 	 * Note that we don't know if this transaction will eventually commit at this point.
@@ -645,7 +837,7 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
 	 * we lose.  If we contact a majority of sites, then we won't be here: contacting
 	 * a majority guarantees commit, since it guarantees that one dude will be a
 	 * member of the next quorum. */
-	ContactQuorum(DISK_ReleaseLocks, transPtr, 0);
+	ContactQuorum_NoArguments(DISK_ReleaseLocks, transPtr, 0);
 	udisk_end(transPtr);
 	DBRELE(dbase);
 	return code;
@@ -689,7 +881,7 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
      * The transaction is committed anyway, since we succeeded in contacting a quorum
      * at the start (when invoking the DiskCommit function).
      */
-    ContactQuorum(DISK_ReleaseLocks, transPtr, 0);
+    ContactQuorum_NoArguments(DISK_ReleaseLocks, transPtr, 0);
 
   success:
     udisk_end(transPtr);
@@ -709,7 +901,7 @@ ubik_EndTrans(register struct ubik_trans *transPtr)
  * \note *length is an INOUT parameter: at the start it represents the size of the buffer, and when done, it contains the number of bytes actually transferred.
  */
 int
-ubik_Read(register struct ubik_trans *transPtr, char *buffer,
+ubik_Read(register struct ubik_trans *transPtr, void *buffer,
 	  afs_int32 length)
 {
     register afs_int32 code;
@@ -756,11 +948,11 @@ ubik_Flush(struct ubik_trans *transPtr)
 
     /* Update the rest of the servers in the quorum */
     code =
-	ContactQuorum(DISK_WriteV, transPtr, 0, &transPtr->iovec_info,
-		      &transPtr->iovec_data);
+	ContactQuorum_DISK_WriteV(transPtr, 0, &transPtr->iovec_info,
+				  &transPtr->iovec_data);
     if (code) {
 	udisk_abort(transPtr);
-	ContactQuorum(DISK_Abort, transPtr, 0);	/* force aborts to the others */
+	ContactQuorum_NoArguments(DISK_Abort, transPtr, 0); /* force aborts to the others */
 	transPtr->iovec_info.iovec_wrt_len = 0;
 	transPtr->iovec_data.iovec_buf_len = 0;
 	ERROR_EXIT(code);
@@ -776,7 +968,7 @@ ubik_Flush(struct ubik_trans *transPtr)
 }
 
 int
-ubik_Write(register struct ubik_trans *transPtr, char *buffer,
+ubik_Write(register struct ubik_trans *transPtr, void *buffer,
 	   afs_int32 length)
 {
     struct ubik_iovec *iovec;
@@ -791,7 +983,7 @@ ubik_Write(register struct ubik_trans *transPtr, char *buffer,
     if (length > IOVEC_MAXBUF) {
 	for (pos = 0, len = length; len > 0; len -= size, pos += size) {
 	    size = ((len < IOVEC_MAXBUF) ? len : IOVEC_MAXBUF);
-	    code = ubik_Write(transPtr, &buffer[pos], size);
+	    code = ubik_Write(transPtr, buffer+pos, size);
 	    if (code)
 		return (code);
 	}
@@ -926,13 +1118,13 @@ ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
     code = udisk_truncate(transPtr, transPtr->seekFile, length);
     if (!code) {
 	code =
-	    ContactQuorum(DISK_Truncate, transPtr, 0, transPtr->seekFile,
-			  length);
+	    ContactQuorum_DISK_Truncate(transPtr, 0, transPtr->seekFile,
+			  		length);
     }
     if (code) {
 	/* we must abort the operation */
 	udisk_abort(transPtr);
-	ContactQuorum(DISK_Abort, transPtr, 0);	/* force aborts to the others */
+	ContactQuorum_NoArguments(DISK_Abort, transPtr, 0); /* force aborts to the others */
 	ERROR_EXIT(code);
     }
 
@@ -973,13 +1165,13 @@ ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
 	/* now do the operation locally, and propagate it out */
 	code = ulock_getLock(atrans, atype, 1);
 	if (code == 0) {
-	    code = ContactQuorum(DISK_Lock, atrans, 0, 0, 1 /*unused */ ,
-				 1 /*unused */ , LOCKWRITE);
+	    code = ContactQuorum_DISK_Lock(atrans, 0, 0, 1 /*unused */ ,
+				 	   1 /*unused */ , LOCKWRITE);
 	}
 	if (code) {
 	    /* we must abort the operation */
 	    udisk_abort(atrans);
-	    ContactQuorum(DISK_Abort, atrans, 0);	/* force aborts to the others */
+	    ContactQuorum_NoArguments(DISK_Abort, atrans, 0); /* force aborts to the others */
 	    ERROR_EXIT(code);
 	}
     }
@@ -1045,11 +1237,16 @@ ubik_CacheUpdate(register struct ubik_trans *atrans)
  *
  * \returns There is no return from panic.
  */
-int
-panic(char *a, char *b, char *c, char *d)
+void
+panic(char *format, ...)
 {
+    va_list ap;
+
+    va_start(ap, format);
     ubik_print("Ubik PANIC: ");
-    ubik_print(a, b, c, d);
+    ubik_vprint(format, ap);
+    va_end(ap);
+
     abort();
     ubik_print("BACK FROM ABORT\n");	/* shouldn't come back */
     exit(1);			/* never know, though  */
