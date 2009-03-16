@@ -323,6 +323,7 @@ dnl Various compiler setup.
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
+AC_TYPE_SOCKLEN_T
 AC_CHECK_TYPES(sig_t, , ,
   [#include <sys/types.h>
    #include <signal.h> ])
