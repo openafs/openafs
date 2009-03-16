@@ -79,11 +79,11 @@ static struct statfs *_fs_buf;
 static struct statfs *_fs_ptr;
 static int _fs_count;
 
-static error __P((int));
-static fstabscan __P((void));
+static void error(int);
+static int fstabscan(void);
 
-static
-fstabscan()
+static int
+fstabscan(void)
 {
     if (_fs_count <= 0)
 	return (0);
@@ -101,7 +101,7 @@ fstabscan()
 }
 
 struct fstab *
-getfsent()
+getfsent(void)
 {
     if (!_fs_buf && !setfsent() || !fstabscan())
 	return ((struct fstab *)NULL);
@@ -109,8 +109,7 @@ getfsent()
 }
 
 struct fstab *
-getfsspec(name)
-     register const char *name;
+getfsspec(const char *name)
 {
     if (setfsent())
 	while (fstabscan())
@@ -120,8 +119,7 @@ getfsspec(name)
 }
 
 struct fstab *
-getfsfile(name)
-     register const char *name;
+getfsfile(const char *name)
 {
     if (setfsent())
 	while (fstabscan())
@@ -130,7 +128,8 @@ getfsfile(name)
     return ((struct fstab *)NULL);
 }
 
-setfsent()
+int
+setfsent(void)
 {
     long bufsize;
 
@@ -156,7 +155,7 @@ setfsent()
 }
 
 void
-endfsent()
+endfsent(void)
 {
     if (_fs_buf) {
 	free(_fs_buf);
@@ -165,9 +164,8 @@ endfsent()
     _fs_count = 0;
 }
 
-static
-error(err)
-     int err;
+static void
+error(int err)
 {
     char *p;
 
