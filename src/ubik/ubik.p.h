@@ -10,6 +10,8 @@
 #ifndef UBIK_H
 #define UBIK_H
 
+#include <stdarg.h>
+
 /* these are now appended by the error table compiler */
 #if 0
 /* ubik error codes */
