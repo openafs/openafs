@@ -30,7 +30,8 @@ RCSID
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-
+#include <unistd.h>
+    
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <stdio.h>
@@ -48,9 +49,9 @@ RCSID
 
 #if !defined(UKERNEL)
 int
-afsconf_CheckAuth(register struct afsconf_dir *adir, 
-		  register struct rx_call *acall)
+afsconf_CheckAuth(void *arock, struct rx_call *acall)
 {
+    struct afsconf_dir *adir = (struct afsconf_dir *) arock;
     int rc;
     LOCK_GLOBAL_MUTEX;
     rc = ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);
