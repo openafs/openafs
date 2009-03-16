@@ -25,7 +25,7 @@ RCSID
 #include <afs/bubasics.h>
 #include "budb_errs.h"
 #include "database.h"
-
+#include "budb_prototypes.h"
 
 /* block and structure allocation routines */
 
@@ -33,7 +33,7 @@ static int nEntries[NBLOCKTYPES];
 static int sizeEntries[NBLOCKTYPES];
 
 afs_int32
-InitDBalloc()
+InitDBalloc(void)
 {
     nEntries[0] = 0;
     sizeEntries[0] = 0;
@@ -60,10 +60,9 @@ InitDBalloc()
  */
 
 afs_int32
-AllocBlock(ut, block, aP)
-     struct ubik_trans *ut;
-     struct block *block;	/* copy of data */
-     dbadr *aP;			/* db addr of block */
+AllocBlock(struct ubik_trans *ut, 
+	   struct block *block, /* copy of data */
+	   dbadr *aP)		/* db addr of block */
 {
     dbadr a;
 
@@ -96,10 +95,9 @@ AllocBlock(ut, block, aP)
  */
 
 afs_int32
-FreeBlock(ut, bh, a)
-     struct ubik_trans *ut;
-     struct blockHeader *bh;	/* copy of data */
-     dbadr a;			/* db address of block */
+FreeBlock(struct ubik_trans *ut,
+	  struct blockHeader *bh,	/* copy of data */
+	  dbadr a)			/* db address of block */
 {
     if (a != BlockBase(a))
 	db_panic("Block addr no good");
@@ -121,12 +119,7 @@ FreeBlock(ut, bh, a)
  */
 
 afs_int32
-AllocStructure(ut, type, related, saP, s)
-     struct ubik_trans *ut;
-     char type;
-     dbadr related;
-     dbadr *saP;
-     char *s;
+AllocStructure(struct ubik_trans *ut, char type, dbadr related, dbadr *saP, void *s)
 {
     dbadr a;			/* block addr */
     struct block b;		/* copy of data */
@@ -141,11 +134,11 @@ AllocStructure(ut, type, related, saP, s)
     }
     bs = (afs_int32 *) b.a;	/* ptr to first structure of block */
 
-    if (db.h.freePtrs[type] == 0) {
+    if (db.h.freePtrs[(int) type] == 0) {
 	/* no free items of specified type */
 
 	if (AllocBlock(ut, &b, &a)
-	    || set_header_word(ut, freePtrs[type], htonl(a))
+	    || set_header_word(ut, freePtrs[(int) type], htonl(a))
 	    ) {
 	    return BUDB_IO;
 	}
@@ -153,7 +146,7 @@ AllocStructure(ut, type, related, saP, s)
 	b.h.next = 0;
 	b.h.type = type;
 	b.h.flags = 0;
-	b.h.nFree = ntohs(nEntries[type] - 1);
+	b.h.nFree = ntohs(nEntries[(int) type] - 1);
 	*bs = 1;		/* not free anymore */
 
 	if (dbwrite(ut, a, (char *)&b, sizeof(b)))
@@ -167,7 +160,7 @@ AllocStructure(ut, type, related, saP, s)
 	 */
 
 	while (1) {
-	    a = ntohl(db.h.freePtrs[type]);
+	    a = ntohl(db.h.freePtrs[(int) type]);
 	    if (dbread(ut, a, (char *)&b, sizeof(b)))
 		return BUDB_IO;
 
@@ -178,8 +171,8 @@ AllocStructure(ut, type, related, saP, s)
 	    /* Completely empty blocks go to generic free list if there are
 	     * more blocks on this free list 
 	     */
-	    if (b.h.next && (nFree == nEntries[type]) && (count-- > 0)) {
-		if (set_header_word(ut, freePtrs[type], b.h.next)
+	    if (b.h.next && (nFree == nEntries[(int) type]) && (count-- > 0)) {
+		if (set_header_word(ut, freePtrs[(int) type], b.h.next)
 		    || FreeBlock(ut, &b.h, a)
 		    ) {
 		    return BUDB_IO;
@@ -189,7 +182,7 @@ AllocStructure(ut, type, related, saP, s)
 		/* we found a free structure */
 		if (nFree == 1) {
 		    /* if last free one: unthread block */
-		    if (set_header_word(ut, freePtrs[type], b.h.next))
+		    if (set_header_word(ut, freePtrs[(int) type], b.h.next))
 			return BUDB_IO;
 		}
 		break;
@@ -202,10 +195,10 @@ AllocStructure(ut, type, related, saP, s)
 	i = 0;
 	while (*bs) {
 	    i++;
-	    bs = (afs_int32 *) ((char *)bs + sizeEntries[type]);
+	    bs = (afs_int32 *) ((char *)bs + sizeEntries[(int) type]);
 	}
 
-	if (i >= nEntries[type])
+	if (i >= nEntries[(int) type])
 	    db_panic("free count inconsistent with block");
 
 	b.h.nFree = htons(nFree - 1);
@@ -224,10 +217,9 @@ AllocStructure(ut, type, related, saP, s)
 
 
 afs_int32
-FreeStructure(ut, type, sa)
-     struct ubik_trans *ut;
-     char type;			/* type of structure to allocate */
-     dbadr sa;			/* db addr of structure */
+FreeStructure(struct ubik_trans *ut,
+	      char type,		/* type of structure to allocate */
+	      dbadr sa)			/* db addr of structure */
 {
     struct blockHeader bh;	/* header of containing block */
     dbadr a;			/* db address of block */
@@ -244,11 +236,11 @@ FreeStructure(ut, type, sa)
 	db_panic("block and structure of different types");
 
     bh.nFree = htons(nFree = ntohs(bh.nFree) + 1);
-    if (nFree > nEntries[type])
+    if (nFree > nEntries[(int) type])
 	db_panic("free count too large");
     if (nFree == 1) {		/* add to free list for type */
-	bh.next = db.h.freePtrs[type];
-	if (set_header_word(ut, freePtrs[type], htonl(a)))
+	bh.next = db.h.freePtrs[(int) type];
+	if (set_header_word(ut, freePtrs[(int) type], htonl(a)))
 	    return BUDB_IO;
     }
 

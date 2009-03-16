@@ -47,6 +47,7 @@ RCSID
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
+#include "budb_prototypes.h"
 #include "error_macros.h"
 #include "globals.h"
 #include "afs/audit.h"
@@ -59,13 +60,43 @@ RCSID
 extern struct ubik_dbase *BU_dbase;
 extern struct afsconf_dir *BU_conf;	/* for getting cell info */
 
-afs_int32 AddVolume(), AddVolumes(), CreateDump(), DoDeleteDump(),
-DoDeleteTape(), ListDumps();
-afs_int32 DeleteVDP(), FindClone(), FindDump(), FindLatestDump();
-afs_int32 FinishDump(), FinishTape(), GetDumps(), getExpiration(),
-T_DumpDatabase();
-afs_int32 makeAppended(), MakeDumpAppended(), FindLastTape(), GetTapes();
-afs_int32 GetVolumes(), UseTape(), T_DumpHashTable(), T_GetVersion();
+afs_int32 AddVolume(struct rx_call *, struct budb_volumeEntry *);
+afs_int32 AddVolumes(struct rx_call *, struct budb_volumeList *);
+afs_int32 CreateDump(struct rx_call *, struct budb_dumpEntry *);
+afs_int32 DoDeleteDump(struct rx_call *, dumpId, Date, Date, budb_dumpsList *);
+afs_int32 DoDeleteTape(struct rx_call *, struct budb_tapeEntry *);
+afs_int32 ListDumps(struct rx_call *, afs_int32, afs_int32, Date, Date, 
+		    budb_dumpsList *, budb_dumpsList *);
+afs_int32 DeleteVDP(struct rx_call *, char *, char *, afs_int32);
+afs_int32 FindClone(struct rx_call *, afs_int32, char *, afs_int32 *);
+afs_int32 FindDump(struct rx_call *, char *, afs_int32, 
+		   struct budb_dumpEntry *);
+afs_int32 FindLatestDump(struct rx_call *, char *, char *, 
+			 struct budb_dumpEntry *);
+afs_int32 FinishDump(struct rx_call *, struct budb_dumpEntry *);
+afs_int32 FinishTape(struct rx_call *, struct budb_tapeEntry *);
+afs_int32 GetDumps(struct rx_call *, afs_int32, afs_int32, char *, 
+		   afs_int32, afs_int32, afs_int32, afs_int32 *,
+		   afs_int32 *, budb_dumpList *);
+afs_int32 getExpiration(struct ubik_trans *ut, struct tape *);
+afs_int32 makeAppended(struct ubik_trans *ut, afs_int32, afs_int32, 
+		       afs_int32);
+afs_int32 MakeDumpAppended(struct rx_call *, afs_int32, afs_int32,
+			   afs_int32);
+afs_int32 FindLastTape(struct rx_call *, afs_int32, struct budb_dumpEntry *,
+		       struct budb_tapeEntry *, struct budb_volumeEntry *);
+afs_int32 GetTapes(struct rx_call *, afs_int32, afs_int32, char *, afs_int32,
+		   afs_int32, afs_int32, afs_int32 *, afs_int32 *,
+		   budb_tapeList *);
+afs_int32 GetVolumes(struct rx_call *, afs_int32, afs_int32, char *,
+		     afs_int32, afs_int32, afs_int32, afs_int32 *,
+		     afs_int32 *, budb_volumeList *);
+afs_int32 UseTape(struct rx_call *, struct budb_tapeEntry *, int *);
+afs_int32 T_DumpHashTable(struct rx_call *, int, char *);
+afs_int32 T_GetVersion(struct rx_call *, int *);
+afs_int32 T_DumpDatabase(struct rx_call *, char *);
+
+int volFragsDump(struct ubik_trans *, FILE *, dbadr);
 
 /* Text block management */
 
@@ -94,14 +125,14 @@ static int procsInited = 0;
 
 /* This variable is protected by the procsInited flag. */
 
-static int (*rebuildDatabase) ();
+static int (*rebuildDatabase) (struct ubik_trans *);
 
 /* AwaitInitialization 
  * Wait unitl budb has initialized (InitProcs). If it hasn't
  * within 5 seconds, then return no quorum.
  */
 afs_int32
-AwaitInitialization()
+AwaitInitialization(void)
 {
     afs_int32 start = 0;
 
@@ -125,8 +156,7 @@ AwaitInitialization()
  */
 
 char *
-tailCompPtr(pathNamePtr)
-     char *pathNamePtr;
+tailCompPtr(char *pathNamePtr)
 {
     char *ptr;
     ptr = strrchr(pathNamePtr, '/');
@@ -148,8 +178,7 @@ tailCompPtr(pathNamePtr)
  */
 
 int
-callPermitted(call)
-     struct rx_call *call;
+callPermitted(struct rx_call *call)
 {
     int permitted = 0;
     struct afsconf_dir *acdir;
@@ -179,10 +208,9 @@ callPermitted(call)
  */
 
 afs_int32
-InitRPC(ut, lock, this_op)
-     struct ubik_trans **ut;
-     int lock;			/* indicate read/write transaction */
-     int this_op;		/* opcode of RCP, for COUNT_ABO */
+InitRPC(struct ubik_trans **ut,
+	int lock,		/* indicate read/write transaction */
+	int this_op)		/* opcode of RCP, for COUNT_ABO */
 {
     int code;
     float wait = 0.91;		/* start waiting for 1 second */
@@ -190,7 +218,7 @@ InitRPC(ut, lock, this_op)
   start:
     /* wait for server initialization to finish if this is not InitProcs calling */
     if (this_op)
-	if (code = AwaitInitialization())
+	if ((code = AwaitInitialization()))
 	    return code;
 
     for (code = UNOQUORUM; code == UNOQUORUM;) {
@@ -217,7 +245,7 @@ InitRPC(ut, lock, this_op)
 	Log("Have established quorum\n");
 
     /* set lock at posiion 1, for 1 byte of type lock */
-    if (code = ubik_SetLock(*ut, 1, 1, lock)) {
+    if ((code = ubik_SetLock(*ut, 1, 1, lock))) {
 	ubik_AbortTrans(*ut);
 	return code;
     }
@@ -225,20 +253,20 @@ InitRPC(ut, lock, this_op)
     /* check that dbase is initialized and setup cheader */
     if (lock == LOCKREAD) {
 	/* init but don't fix because this is read only */
-	if (code = CheckInit(*ut, 0)) {
+	if ((code = CheckInit(*ut, 0))) {
 	    ubik_AbortTrans(*ut);
-	    if (code = InitRPC(ut, LOCKWRITE, 0)) {	/* Now fix the database */
+	    if ((code = InitRPC(ut, LOCKWRITE, 0))) {	/* Now fix the database */
 		LogError(code, "InitRPC: InitRPC failed\n");
 		return code;
 	    }
-	    if (code = ubik_EndTrans(*ut)) {
+	    if ((code = ubik_EndTrans(*ut))) {
 		LogError(code, "InitRPC: ubik_EndTrans failed\n");
 		return code;
 	    }
 	    goto start;		/* now redo the read transaction */
 	}
     } else {
-	if (code = CheckInit(*ut, rebuildDatabase)) {
+	if ((code = CheckInit(*ut, rebuildDatabase))) {
 	    ubik_AbortTrans(*ut);
 	    return code;
 	}
@@ -249,8 +277,7 @@ InitRPC(ut, lock, this_op)
 
 /* This is called to initialize a newly created database */
 static int
-initialize_database(ut)
-     struct ubik_trans *ut;
+initialize_database(struct ubik_trans *ut)
 {
     return 0;
 }
@@ -259,7 +286,7 @@ static int noAuthenticationRequired;	/* global state */
 static int recheckNoAuth;	/* global state */
 
 afs_int32
-InitProcs()
+InitProcs(void)
 {
     struct ubik_trans *ut;
     afs_int32 code = 0;
@@ -287,7 +314,7 @@ InitProcs()
 
     rebuildDatabase = initialize_database;
 
-    if (code = InitRPC(&ut, LOCKREAD, 0)) {
+    if ((code = InitRPC(&ut, LOCKREAD, 0))) {
 	LogError(code, "InitProcs: InitRPC failed\n");
 	return code;
     }
@@ -311,8 +338,7 @@ struct returnList {
 };
 
 static void
-InitReturnList(list)
-     struct returnList *list;
+InitReturnList(struct returnList *list)
 {
     list->nElements = 0;
     list->allocSize = 0;
@@ -320,8 +346,7 @@ InitReturnList(list)
 }
 
 static void
-FreeReturnList(list)
-     struct returnList *list;
+FreeReturnList(struct returnList *list)
 {
     if (list->elements)
 	free(list->elements);
@@ -334,10 +359,7 @@ FreeReturnList(list)
  * with SendReturnList(). The first *to_skipP are not recorded.
  */
 static afs_int32
-AddToReturnList(list, a, to_skipP)
-     struct returnList *list;
-     dbadr a;
-     afs_int32 *to_skipP;
+AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
 {
     char *tmp;
     afs_int32 size;
@@ -375,10 +397,7 @@ AddToReturnList(list, a, to_skipP)
 }
 
 afs_int32
-FillVolEntry(ut, va, vol)
-     struct ubik_trans *ut;
-     dbadr va;
-     struct budb_volumeEntry *vol;
+FillVolEntry(struct ubik_trans *ut, dbadr va, struct budb_volumeEntry *vol)
 {
     struct dump d;
     struct tape t;
@@ -414,10 +433,7 @@ FillVolEntry(ut, va, vol)
 }
 
 afs_int32
-FillDumpEntry(ut, da, dump)
-     struct ubik_trans *ut;
-     dbadr da;
-     struct budb_dumpEntry *dump;
+FillDumpEntry(struct ubik_trans *ut, dbadr da, struct budb_dumpEntry *dump)
 {
     struct dump d, ad;
 
@@ -459,10 +475,7 @@ FillDumpEntry(ut, da, dump)
 }
 
 afs_int32
-FillTapeEntry(ut, ta, tape)
-     struct ubik_trans *ut;
-     dbadr ta;
-     struct budb_tapeEntry *tape;
+FillTapeEntry(struct ubik_trans *ut, dbadr ta, struct budb_tapeEntry *tape)
 {
     struct tape t;
     struct dump d;
@@ -472,7 +485,7 @@ FillTapeEntry(ut, ta, tape)
 	return BUDB_IO;
 
     /* Get the tape's expiration date */
-    if (code = getExpiration(ut, &t))
+    if ((code = getExpiration(ut, &t)))
 	return (code);
 
     strcpy(tape->name, t.name);
@@ -503,20 +516,21 @@ FillTapeEntry(ut, ta, tape)
  *      if there are more and how many to skip on the next request.
  */
 static afs_int32
-SendReturnList(ut, list, FillProc, e_size, index, nextIndexP, dbTimeP, eList)
-     struct ubik_trans *ut;
-     struct returnList *list;	/* list of elements to return */
-afs_int32(*FillProc) ();	/* proc to fill entry */
-     int e_size;		/* size of each element */
-     afs_int32 index;		/* index from previous call */
-     afs_int32 *nextIndexP;	/* if more elements are available */
-     afs_int32 *dbTimeP;	/* time of last db update */
-     budb_dumpList *eList;	/* rxgen list structure (e.g.) */
+SendReturnList(struct ubik_trans *ut,
+	       struct returnList *list,	/* list of elements to return */
+	       afs_int32(*FillProc) (struct ubik_trans *, dbadr da, 
+		       		     budb_dumpEntry *),	
+	       				/* proc to fill entry */
+	       int e_size,		/* size of each element */
+	       afs_int32 index,		/* index from previous call */
+	       afs_int32 *nextIndexP,	/* if more elements are available */
+	       afs_int32 *dbTimeP,	/* time of last db update */
+	       budb_dumpList *eList)	/* rxgen list structure (e.g.) */
 {
     afs_int32 code;
     int to_return;
     int i;
-    char *e;
+    void *e;
 
     *nextIndexP = -1;
     *dbTimeP = ntohl(db.h.lastUpdate);
@@ -542,7 +556,7 @@ afs_int32(*FillProc) ();	/* proc to fill entry */
 
     e = (char *)(eList->budb_dumpList_val);
     for (i = 0; i < to_return; i++, e += e_size) {
-	code = (*FillProc) (ut, list->elements[i], e);
+	code = (*FillProc) (ut, list->elements[i], (budb_dumpEntry *) e);
 	if (code)
 	    return code;
     }
@@ -555,10 +569,7 @@ afs_int32(*FillProc) ();	/* proc to fill entry */
 /* Come here to delete a volInfo structure. */
 
 static afs_int32
-DeleteVolInfo(ut, via, vi)
-     struct ubik_trans *ut;
-     dbadr via;
-     struct volInfo *vi;
+DeleteVolInfo(struct ubik_trans *ut, dbadr via, struct volInfo *vi)
 {
     afs_int32 code;
     dbadr hvia;
@@ -594,10 +605,7 @@ DeleteVolInfo(ut, via, vi)
    write it out. */
 
 static afs_int32
-DeleteVolFragment(ut, va, v)
-     struct ubik_trans *ut;
-     dbadr va;
-     struct volFragment *v;
+DeleteVolFragment(struct ubik_trans *ut, dbadr va, struct volFragment *v)
 {
     afs_int32 code;
     struct volInfo vi;
@@ -614,9 +622,9 @@ DeleteVolFragment(ut, va, v)
     if (code)
 	return code;
     if (vi.firstFragment == 0)
-	if (code = DeleteVolInfo(ut, via, &vi))
+	if ((code = DeleteVolInfo(ut, via, &vi)))
 	    return code;
-    if (code = FreeStructure(ut, volFragment_BLOCK, va))
+    if ((code = FreeStructure(ut, volFragment_BLOCK, va)))
 	return code;
 
     /* decrement frag counter */
@@ -632,10 +640,7 @@ DeleteVolFragment(ut, va, v)
  * also responsible for writing the tape out if necessary. */
 
 static afs_int32
-DeleteTape(ut, ta, t)
-     struct ubik_trans *ut;
-     dbadr ta;
-     struct tape *t;
+DeleteTape(struct ubik_trans *ut, dbadr ta, struct tape *t)
 {
     afs_int32 code;
     struct dump d;
@@ -664,10 +669,7 @@ DeleteTape(ut, ta, t)
 }
 
 static afs_int32
-DeleteDump(ut, da, d)
-     struct ubik_trans *ut;
-     dbadr da;
-     struct dump *d;
+DeleteDump(struct ubik_trans *ut, dbadr da, struct dump *d)
 {
     afs_int32 code = 0;
 
@@ -704,9 +706,7 @@ DeleteDump(ut, da, d)
  */
 
 static int
-VolInfoMatch(vol, vi)
-     struct budb_volumeEntry *vol;
-     struct volInfo *vi;
+VolInfoMatch(struct budb_volumeEntry *vol, struct volInfo *vi)
 {
     return ((strcmp(vol->name, vi->name) == 0) &&	/* same volume name */
 	    (vol->id == ntohl(vi->id)) &&	/* same volume id */
@@ -724,11 +724,8 @@ VolInfoMatch(vol, vi)
  */
 
 static afs_int32
-GetVolInfo(ut, volP, viaP, viP)
-     struct ubik_trans *ut;
-     struct budb_volumeEntry *volP;
-     dbadr *viaP;
-     struct volInfo *viP;
+GetVolInfo(struct ubik_trans *ut, struct budb_volumeEntry *volP, dbadr *viaP,
+	   struct volInfo *viP)
 {
     dbadr hvia, via;
     struct volInfo hvi;
@@ -818,11 +815,8 @@ GetVolInfo(ut, volP, viaP, viP)
  */
 
 afs_int32
-deleteSomeVolumesFromTape(ut, tapeAddr, tapePtr, maxVolumesToDelete)
-     struct ubik_trans *ut;
-     dbadr tapeAddr;
-     struct tape *tapePtr;
-     int maxVolumesToDelete;
+deleteSomeVolumesFromTape(struct ubik_trans *ut, dbadr tapeAddr,
+			  struct tape *tapePtr, int maxVolumesToDelete)
 {
     dbadr volFragAddr, nextVolFragAddr, dumpAddr;
     struct volFragment volFrag;
@@ -888,10 +882,7 @@ deleteSomeVolumesFromTape(ut, tapeAddr, tapePtr, maxVolumesToDelete)
  */
 
 afs_int32
-deleteDump(call, id, dumps)
-     struct rx_call *call;
-     dumpId id;
-     budb_dumpsList *dumps;
+deleteDump(struct rx_call *call, dumpId id, budb_dumpsList *dumps)
 {
     struct ubik_trans *ut;
     dbadr dumpAddr, tapeAddr, appendedDump;
@@ -1032,16 +1023,11 @@ struct wantDumpRock {
 
 
 int
-wantDump(dumpAddrParam, dumpParam, dumpListPtrParam)
-     char *dumpAddrParam;
-     char *dumpParam;
-     char *dumpListPtrParam;
+wantDump(dbadr dumpAddr, void *dumpParam, void *dumpListPtrParam)
 {
-    dbadr dumpAddr;
     struct dump *dumpPtr;
     struct wantDumpRock *rockPtr;
 
-    dumpAddr = (dbadr) dumpAddrParam;
     dumpPtr = (struct dump *)dumpParam;
     rockPtr = (struct wantDumpRock *)dumpListPtrParam;
 
@@ -1057,17 +1043,12 @@ wantDump(dumpAddrParam, dumpParam, dumpListPtrParam)
 }
 
 int
-rememberDump(dumpAddrParam, dumpParam, dumpListPtrParam)
-     char *dumpAddrParam;
-     char *dumpParam;
-     char *dumpListPtrParam;
+rememberDump(dbadr dumpAddr, void *dumpParam, void *dumpListPtrParam)
 {
-    dbadr dumpAddr;
     struct dump *dumpPtr;
     struct wantDumpRock *rockPtr;
     struct chosenDump *ptr, *deletedPtr, **nextPtr;
 
-    dumpAddr = (dbadr) dumpAddrParam;
     dumpPtr = (struct dump *)dumpParam;
     rockPtr = (struct wantDumpRock *)dumpListPtrParam;
 
@@ -1106,9 +1087,7 @@ rememberDump(dumpAddrParam, dumpParam, dumpListPtrParam)
  */
 
 afs_int32
-SBUDB_AddVolume(call, vol)
-     struct rx_call *call;
-     struct budb_volumeEntry *vol;
+SBUDB_AddVolume(struct rx_call *call, struct budb_volumeEntry *vol)
 {
     afs_int32 code;
 
@@ -1119,9 +1098,7 @@ SBUDB_AddVolume(call, vol)
 }
 
 afs_int32
-AddVolume(call, vol)
-     struct rx_call *call;
-     struct budb_volumeEntry *vol;
+AddVolume(struct rx_call *call, struct budb_volumeEntry *vol)
 {
     struct ubik_trans *ut;
     dbadr da, ta, via, va;
@@ -1235,9 +1212,7 @@ AddVolume(call, vol)
 
 
 afs_int32
-SBUDB_AddVolumes(call, vols)
-     struct rx_call *call;
-     struct budb_volumeList *vols;
+SBUDB_AddVolumes(struct rx_call *call, struct budb_volumeList *vols)
 {
     afs_int32 code;
 
@@ -1247,9 +1222,7 @@ SBUDB_AddVolumes(call, vols)
 }
 
 afs_int32
-AddVolumes(call, vols)
-     struct rx_call *call;
-     struct budb_volumeList *vols;
+AddVolumes(struct rx_call *call, struct budb_volumeList *vols)
 {
     struct budb_volumeEntry *vol, *vol1;
     struct ubik_trans *ut;
@@ -1387,9 +1360,7 @@ AddVolumes(call, vols)
  */
 
 afs_int32
-SBUDB_CreateDump(call, dump)
-     struct rx_call *call;
-     struct budb_dumpEntry *dump;
+SBUDB_CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
 {
     afs_int32 code;
 
@@ -1404,9 +1375,7 @@ SBUDB_CreateDump(call, dump)
 }
 
 afs_int32
-CreateDump(call, dump)
-     struct rx_call *call;
-     struct budb_dumpEntry *dump;
+CreateDump(struct rx_call *call, struct budb_dumpEntry *dump)
 {
     struct ubik_trans *ut;
     dbadr findDumpAddr, da;
@@ -1553,12 +1522,8 @@ CreateDump(call, dump)
 }
 
 afs_int32
-SBUDB_DeleteDump(call, id, fromTime, toTime, dumps)
-     struct rx_call *call;
-     dumpId id;
-     Date fromTime;
-     Date toTime;
-     budb_dumpsList *dumps;
+SBUDB_DeleteDump(struct rx_call *call, dumpId id, Date fromTime, Date toTime,
+		 budb_dumpsList *dumps)
 {
     afs_int32 code;
 
@@ -1570,12 +1535,8 @@ SBUDB_DeleteDump(call, id, fromTime, toTime, dumps)
 #define MAXOFFS 30
 
 afs_int32
-DoDeleteDump(call, id, fromTime, toTime, dumps)
-     struct rx_call *call;
-     dumpId id;
-     Date fromTime;
-     Date toTime;
-     budb_dumpsList *dumps;
+DoDeleteDump(struct rx_call *call, dumpId id, Date fromTime, Date toTime,
+     	     budb_dumpsList *dumps)
 {
     afs_int32 code = 0;
 
@@ -1588,12 +1549,9 @@ DoDeleteDump(call, id, fromTime, toTime, dumps)
 }
 
 afs_int32
-SBUDB_ListDumps(call, sflags, name, groupid, fromTime, toTime, dumps, flags)
-     struct rx_call *call;
-     afs_int32 sflags, groupid;
-     char *name;
-     Date fromTime, toTime;
-     budb_dumpsList *dumps, *flags;
+SBUDB_ListDumps(struct rx_call *call, afs_int32 sflags, char *name, 
+		afs_int32 groupid, Date fromTime, Date toTime, 
+		budb_dumpsList *dumps, budb_dumpsList *flags)
 {
     afs_int32 code;
 
@@ -1603,11 +1561,9 @@ SBUDB_ListDumps(call, sflags, name, groupid, fromTime, toTime, dumps, flags)
 }
 
 afs_int32
-ListDumps(call, sflags, groupid, fromTime, toTime, dumps, flags)
-     struct rx_call *call;
-     afs_int32 sflags, groupid;
-     Date fromTime, toTime;
-     budb_dumpsList *dumps, *flags;
+ListDumps(struct rx_call *call, afs_int32 sflags, afs_int32 groupid, 
+	  Date fromTime, Date toTime, budb_dumpsList *dumps, 
+	  budb_dumpsList *flags)
 {
     struct ubik_trans *ut;
     struct memoryHashTable *mht;
@@ -1738,9 +1694,8 @@ ListDumps(call, sflags, groupid, fromTime, toTime, dumps, flags)
 }
 
 afs_int32
-SBUDB_DeleteTape(call, tape)
-     struct rx_call *call;
-     struct budb_tapeEntry *tape;	/* tape info */
+SBUDB_DeleteTape(struct rx_call *call,
+		 struct budb_tapeEntry *tape)	/* tape info */
 {
     afs_int32 code;
 
@@ -1751,9 +1706,8 @@ SBUDB_DeleteTape(call, tape)
 }
 
 afs_int32
-DoDeleteTape(call, tape)
-     struct rx_call *call;
-     struct budb_tapeEntry *tape;	/* tape info */
+DoDeleteTape(struct rx_call *call,
+	     struct budb_tapeEntry *tape)	/* tape info */
 {
     struct ubik_trans *ut;
     struct tape t;
@@ -1806,11 +1760,8 @@ DoDeleteTape(call, tape)
  */
 
 afs_int32
-SBUDB_DeleteVDP(call, dsname, dumpPath, curDumpId)
-     struct rx_call *call;
-     char *dsname;
-     char *dumpPath;
-     afs_int32 curDumpId;
+SBUDB_DeleteVDP(struct rx_call *call, char *dsname, char *dumpPath,
+		afs_int32 curDumpId)
 {
     afs_int32 code;
 
@@ -1820,11 +1771,8 @@ SBUDB_DeleteVDP(call, dsname, dumpPath, curDumpId)
 }
 
 afs_int32
-DeleteVDP(call, dsname, dumpPath, curDumpId)
-     struct rx_call *call;
-     char *dsname;
-     char *dumpPath;
-     afs_int32 curDumpId;
+DeleteVDP(struct rx_call *call, char *dsname, char *dumpPath,
+	  afs_int32 curDumpId)
 {
     struct dump dump;
     dbadr dumpAddr;
@@ -1894,11 +1842,8 @@ DeleteVDP(call, dsname, dumpPath, curDumpId)
  */
 
 afs_int32
-SBUDB_FindClone(call, dumpID, volName, clonetime)
-     struct rx_call *call;
-     afs_int32 dumpID;
-     char *volName;
-     afs_int32 *clonetime;
+SBUDB_FindClone(struct rx_call *call, afs_int32 dumpID, char *volName,
+		afs_int32 *clonetime)
 {
     afs_int32 code;
 
@@ -1908,11 +1853,8 @@ SBUDB_FindClone(call, dumpID, volName, clonetime)
 }
 
 afs_int32
-FindClone(call, dumpID, volName, clonetime)
-     struct rx_call *call;
-     afs_int32 dumpID;
-     char *volName;
-     afs_int32 *clonetime;
+FindClone(struct rx_call *call, afs_int32 dumpID, char *volName,
+	  afs_int32 *clonetime)
 {
     struct ubik_trans *ut;
     dbadr da, hvia, via, vfa;
@@ -1994,11 +1936,8 @@ FindClone(call, dumpID, volName, clonetime)
  *	Re-write to do lookups by volume name.
  */
 afs_int32
-FindClone(call, dumpID, volName, clonetime)
-     struct rx_call *call;
-     afs_int32 dumpID;
-     char *volName;
-     afs_int32 *clonetime;
+FindClone(struct rx_call *call, afs_int32 dumpID, char *volName,
+	  afs_int32 *clonetime)
 {
     struct ubik_trans *ut;
     dbadr diskAddr, tapeAddr, volFragmentAddr;
@@ -2085,11 +2024,8 @@ FindClone(call, dumpID, volName, clonetime)
  */
 
 afs_int32
-SBUDB_FindDump(call, volumeName, beforeDate, deptr)
-     struct rx_call *call;
-     char *volumeName;
-     afs_int32 beforeDate;
-     struct budb_dumpEntry *deptr;
+SBUDB_FindDump(struct rx_call *call, char *volumeName, afs_int32 beforeDate,
+	       struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
 
@@ -2099,11 +2035,8 @@ SBUDB_FindDump(call, volumeName, beforeDate, deptr)
 }
 
 afs_int32
-FindDump(call, volumeName, beforeDate, deptr)
-     struct rx_call *call;
-     char *volumeName;
-     afs_int32 beforeDate;
-     struct budb_dumpEntry *deptr;
+FindDump(struct rx_call *call, char *volumeName, afs_int32 beforeDate,
+	 struct budb_dumpEntry *deptr)
 {
     struct ubik_trans *ut;
     dbadr volInfoAddr, volFragmentAddr;
@@ -2192,10 +2125,8 @@ FindDump(call, volumeName, beforeDate, deptr)
  */
 
 afs_int32
-SBUDB_FindLatestDump(call, vsname, dumpPath, dumpentry)
-     struct rx_call *call;
-     char *vsname, *dumpPath;
-     struct budb_dumpEntry *dumpentry;
+SBUDB_FindLatestDump(struct rx_call *call, char *vsname, char *dumpPath,
+		     struct budb_dumpEntry *dumpentry)
 {
     afs_int32 code;
 
@@ -2205,10 +2136,8 @@ SBUDB_FindLatestDump(call, vsname, dumpPath, dumpentry)
 }
 
 afs_int32
-FindLatestDump(call, vsname, dumpPath, dumpentry)
-     struct rx_call *call;
-     char *vsname, *dumpPath;
-     struct budb_dumpEntry *dumpentry;
+FindLatestDump(struct rx_call *call, char *vsname, char *dumpPath,
+	       struct budb_dumpEntry *dumpentry)
 {
     struct ubik_trans *ut;
     dbadr curdbaddr, retdbaddr, firstdbaddr;
@@ -2328,9 +2257,7 @@ FindLatestDump(call, vsname, dumpPath, dumpentry)
 
 
 afs_int32
-SBUDB_FinishDump(call, dump)
-     struct rx_call *call;
-     struct budb_dumpEntry *dump;
+SBUDB_FinishDump(struct rx_call *call, struct budb_dumpEntry *dump)
 {
     afs_int32 code;
 
@@ -2341,9 +2268,7 @@ SBUDB_FinishDump(call, dump)
 }
 
 afs_int32
-FinishDump(call, dump)
-     struct rx_call *call;
-     struct budb_dumpEntry *dump;
+FinishDump(struct rx_call *call, struct budb_dumpEntry *dump)
 {
     struct ubik_trans *ut;
     dbadr a;
@@ -2391,9 +2316,7 @@ FinishDump(call, dump)
 }
 
 afs_int32
-SBUDB_FinishTape(call, tape)
-     struct rx_call *call;
-     struct budb_tapeEntry *tape;
+SBUDB_FinishTape(struct rx_call *call, struct budb_tapeEntry *tape)
 {
     afs_int32 code;
 
@@ -2404,9 +2327,7 @@ SBUDB_FinishTape(call, tape)
 }
 
 afs_int32
-FinishTape(call, tape)
-     struct rx_call *call;
-     struct budb_tapeEntry *tape;
+FinishTape(struct rx_call *call, struct budb_tapeEntry *tape)
 {
     struct ubik_trans *ut;
     dbadr a;
@@ -2498,18 +2419,16 @@ FinishTape(call, tape)
  */
 
 afs_int32
-SBUDB_GetDumps(call, majorVersion, flags, name, start, end, index, nextIndexP,
-	       dbTimeP, dumps)
-     struct rx_call *call;
-     afs_int32 majorVersion;	/* version of interface structures */
-     afs_int32 flags;		/* search & select controls */
-     char *name;		/* s&s parameters */
-     afs_int32 start;
-     afs_int32 end;
-     afs_int32 index;		/* start index of returned entries */
-     afs_int32 *nextIndexP;	/* output index for next call */
-     afs_int32 *dbTimeP;
-     budb_dumpList *dumps;	/* pointer to buffer */
+SBUDB_GetDumps(struct rx_call *call,
+	       afs_int32 majorVersion,	/* version of interface structures */
+	       afs_int32 flags,		/* search & select controls */
+	       char *name,		/* s&s parameters */
+	       afs_int32 start,
+	       afs_int32 end,
+	       afs_int32 index,		/* start index of returned entries */
+	       afs_int32 *nextIndexP,	/* output index for next call */
+	       afs_int32 *dbTimeP,
+	       budb_dumpList *dumps)	/* pointer to buffer */
 {
     afs_int32 code;
 
@@ -2521,18 +2440,16 @@ SBUDB_GetDumps(call, majorVersion, flags, name, start, end, index, nextIndexP,
 }
 
 afs_int32
-GetDumps(call, majorVersion, flags, name, start, end, index, nextIndexP,
-	 dbTimeP, dumps)
-     struct rx_call *call;
-     afs_int32 majorVersion;	/* version of interface structures */
-     afs_int32 flags;		/* search & select controls */
-     char *name;		/* s&s parameters */
-     afs_int32 start;
-     afs_int32 end;
-     afs_int32 index;		/* start index of returned entries */
-     afs_int32 *nextIndexP;	/* output index for next call */
-     afs_int32 *dbTimeP;
-     budb_dumpList *dumps;	/* pointer to buffer */
+GetDumps(struct rx_call *call,
+	 afs_int32 majorVersion, /* version of interface structures */
+	 afs_int32 flags,	 /* search & select controls */
+	 char *name,		 /* s&s parameters */
+	 afs_int32 start,
+	 afs_int32 end,
+	 afs_int32 index,	 /* start index of returned entries */
+	 afs_int32 *nextIndexP,	 /* output index for next call */
+	 afs_int32 *dbTimeP,
+	 budb_dumpList *dumps)	 /* pointer to buffer */
 {
     struct ubik_trans *ut;
     dbadr da;
@@ -2666,8 +2583,6 @@ GetDumps(call, majorVersion, flags, name, start, end, index, nextIndexP,
 	struct wantDumpRock rock;
 	struct chosenDump *ptr, *nextPtr;
 
-	extern wantDump(), rememberDump();
-
 	/* no other flags should be set */
 
 	/* end specifies how many dumps */
@@ -2712,9 +2627,7 @@ GetDumps(call, majorVersion, flags, name, start, end, index, nextIndexP,
  * expiration tape into the given tape structure.
  */
 afs_int32
-getExpiration(ut, tapePtr)
-     struct ubik_trans *ut;
-     struct tape *tapePtr;
+getExpiration(struct ubik_trans *ut, struct tape *tapePtr)
 {
     dbadr ad;
     struct dump d;
@@ -2752,7 +2665,7 @@ getExpiration(ut, tapePtr)
 	    tapePtr->expires = t.expires;
 
 	/* Step to and read the next appended dump */
-	if (ad = ntohl(d.appendedDumpChain)) {
+	if ((ad = ntohl(d.appendedDumpChain))) {
 	    eval = dbread(ut, ad, &d, sizeof(d));
 	    if (eval)
 		ERROR(eval);
@@ -2765,11 +2678,8 @@ getExpiration(ut, tapePtr)
 
 /* Mark the following dump as appended to another, intial dump */
 afs_int32
-makeAppended(ut, appendedDumpID, initialDumpID, startTapeSeq)
-     struct ubik_trans *ut;
-     afs_int32 appendedDumpID;
-     afs_int32 initialDumpID;
-     afs_int32 startTapeSeq;
+makeAppended(struct ubik_trans *ut, afs_int32 appendedDumpID, 
+	     afs_int32 initialDumpID, afs_int32 startTapeSeq)
 {
     dbadr ada, da, lastDumpAddr;
     struct dump ad, d;
@@ -2843,11 +2753,8 @@ makeAppended(ut, appendedDumpID, initialDumpID, startTapeSeq)
 }
 
 afs_int32
-SBUDB_MakeDumpAppended(call, appendedDumpID, initialDumpID, startTapeSeq)
-     struct rx_call *call;
-     afs_int32 appendedDumpID;
-     afs_int32 initialDumpID;
-     afs_int32 startTapeSeq;
+SBUDB_MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID, 
+		       afs_int32 initialDumpID, afs_int32 startTapeSeq)
 {
     afs_int32 code;
 
@@ -2859,11 +2766,8 @@ SBUDB_MakeDumpAppended(call, appendedDumpID, initialDumpID, startTapeSeq)
 }
 
 afs_int32
-MakeDumpAppended(call, appendedDumpID, initialDumpID, startTapeSeq)
-     struct rx_call *call;
-     afs_int32 appendedDumpID;
-     afs_int32 initialDumpID;
-     afs_int32 startTapeSeq;
+MakeDumpAppended(struct rx_call *call, afs_int32 appendedDumpID, 
+		 afs_int32 initialDumpID, afs_int32 startTapeSeq)
 {
     struct ubik_trans *ut;
     afs_int32 eval, code = 0;
@@ -2889,12 +2793,10 @@ MakeDumpAppended(call, appendedDumpID, initialDumpID, startTapeSeq)
 
 /* Find the last tape of a dump-set. This includes any appended dumps */
 afs_int32
-SBUDB_FindLastTape(call, dumpID, dumpEntry, tapeEntry, volEntry)
-     struct rx_call *call;
-     afs_int32 dumpID;
-     struct budb_dumpEntry *dumpEntry;
-     struct budb_tapeEntry *tapeEntry;
-     struct budb_volumeEntry *volEntry;
+SBUDB_FindLastTape(struct rx_call *call, afs_int32 dumpID, 
+		   struct budb_dumpEntry *dumpEntry, 
+		   struct budb_tapeEntry *tapeEntry, 
+		   struct budb_volumeEntry *volEntry)
 {
     afs_int32 code;
 
@@ -2904,12 +2806,10 @@ SBUDB_FindLastTape(call, dumpID, dumpEntry, tapeEntry, volEntry)
 }
 
 afs_int32
-FindLastTape(call, dumpID, dumpEntry, tapeEntry, volEntry)
-     struct rx_call *call;
-     afs_int32 dumpID;
-     struct budb_dumpEntry *dumpEntry;
-     struct budb_tapeEntry *tapeEntry;
-     struct budb_volumeEntry *volEntry;
+FindLastTape(struct rx_call *call, afs_int32 dumpID, 
+	     struct budb_dumpEntry *dumpEntry, 
+	     struct budb_tapeEntry *tapeEntry, 
+	     struct budb_volumeEntry *volEntry)
 {
     struct ubik_trans *ut;
     struct dump d;
@@ -3027,18 +2927,16 @@ FindLastTape(call, dumpID, dumpEntry, tapeEntry, volEntry)
 
 
 afs_int32
-SBUDB_GetTapes(call, majorVersion, flags, name, start, end, index, nextIndexP,
-	       dbTimeP, tapes)
-     struct rx_call *call;
-     afs_int32 majorVersion;	/* version of interface structures */
-     afs_int32 flags;		/* search & select controls */
-     char *name;		/* s&s parameters */
-     afs_int32 start;
-     afs_int32 end;		/* reserved: MBZ */
-     afs_int32 index;		/* start index of returned entries */
-     afs_int32 *nextIndexP;	/* output index for next call */
-     afs_int32 *dbTimeP;
-     budb_tapeList *tapes;	/* pointer to buffer */
+SBUDB_GetTapes(struct rx_call *call,
+ 	       afs_int32 majorVersion,	/* version of interface structures */
+	       afs_int32 flags,		/* search & select controls */
+	       char *name,		/* s&s parameters */
+	       afs_int32 start,
+	       afs_int32 end,		/* reserved: MBZ */
+	       afs_int32 index,		/* start index of returned entries */
+	       afs_int32 *nextIndexP,	/* output index for next call */
+	       afs_int32 *dbTimeP,
+	       budb_tapeList *tapes)	/* pointer to buffer */
 {
     afs_int32 code;
 
@@ -3050,18 +2948,16 @@ SBUDB_GetTapes(call, majorVersion, flags, name, start, end, index, nextIndexP,
 }
 
 afs_int32
-GetTapes(call, majorVersion, flags, name, start, end, index, nextIndexP,
-	 dbTimeP, tapes)
-     struct rx_call *call;
-     afs_int32 majorVersion;	/* version of interface structures */
-     afs_int32 flags;		/* search & select controls */
-     char *name;		/* s&s parameters */
-     afs_int32 start;
-     afs_int32 end;		/* reserved: MBZ */
-     afs_int32 index;		/* start index of returned entries */
-     afs_int32 *nextIndexP;	/* output index for next call */
-     afs_int32 *dbTimeP;
-     budb_tapeList *tapes;	/* pointer to buffer */
+GetTapes(struct rx_call *call,
+	 afs_int32 majorVersion, /* version of interface structures */
+	 afs_int32 flags,	 /* search & select controls */
+	 char *name,		 /* s&s parameters */
+	 afs_int32 start,
+	 afs_int32 end,		 /* reserved: MBZ */
+	 afs_int32 index,	 /* start index of returned entries */
+	 afs_int32 *nextIndexP,  /* output index for next call */
+	 afs_int32 *dbTimeP,
+	 budb_tapeList *tapes)	 /* pointer to buffer */
 {
     struct ubik_trans *ut;
     dbadr da, ta;
@@ -3188,18 +3084,16 @@ GetTapes(call, majorVersion, flags, name, start, end, index, nextIndexP,
  */
 
 afs_int32
-SBUDB_GetVolumes(call, majorVersion, flags, name, start, end, index,
-		 nextIndexP, dbTimeP, volumes)
-     struct rx_call *call;
-     afs_int32 majorVersion;	/* version of interface structures */
-     afs_int32 flags;		/* search & select controls */
-     char *name;		/*  - parameters for search */
-     afs_int32 start;		/*  - usage depends which BUDP_OP_* */
-     afs_int32 end;		/*  - bits are set */
-     afs_int32 index;		/* start index of returned entries */
-     afs_int32 *nextIndexP;	/* output index for next call */
-     afs_int32 *dbTimeP;
-     budb_volumeList *volumes;	/* pointer to buffer */
+SBUDB_GetVolumes(struct rx_call *call,
+		 afs_int32 majorVersion, /* version of interface structures */
+		 afs_int32 flags,	 /* search & select controls */
+		 char *name,		 /*  - parameters for search */
+		 afs_int32 start,	 /*  - usage depends which BUDP_OP */
+		 afs_int32 end,		 /*  - bits are set */
+		 afs_int32 index,	 /* start index of returned entries */
+		 afs_int32 *nextIndexP,	 /* output index for next call */
+		 afs_int32 *dbTimeP,
+		 budb_volumeList *volumes) /* pointer to buffer */
 {
     afs_int32 code;
 
@@ -3211,18 +3105,16 @@ SBUDB_GetVolumes(call, majorVersion, flags, name, start, end, index,
 }
 
 afs_int32
-GetVolumes(call, majorVersion, flags, name, start, end, index, nextIndexP,
-	   dbTimeP, volumes)
-     struct rx_call *call;
-     afs_int32 majorVersion;	/* version of interface structures */
-     afs_int32 flags;		/* search & select controls */
-     char *name;		/*  - parameters for search */
-     afs_int32 start;		/*  - usage depends which BUDP_OP_* */
-     afs_int32 end;		/*  - bits are set */
-     afs_int32 index;		/* start index of returned entries */
-     afs_int32 *nextIndexP;	/* output index for next call */
-     afs_int32 *dbTimeP;
-     budb_volumeList *volumes;	/* pointer to buffer */
+GetVolumes(struct rx_call *call,
+	   afs_int32 majorVersion,	/* version of interface structures */
+	   afs_int32 flags,		/* search & select controls */
+	   char *name,			/*  - parameters for search */
+	   afs_int32 start,		/*  - usage depends which BUDP_OP_* */
+	   afs_int32 end,		/*  - bits are set */
+	   afs_int32 index,		/* start index of returned entries */
+	   afs_int32 *nextIndexP,	/* output index for next call */
+	   afs_int32 *dbTimeP,
+	   budb_volumeList *volumes)	/* pointer to buffer */
 {
     struct ubik_trans *ut;
     dbadr via;
@@ -3373,7 +3265,7 @@ GetVolumes(call, majorVersion, flags, name, start, end, index, nextIndexP,
     if (eval)
 	ABORT(eval);
 
-  error_exit:
+  /* error_exit: */
     FreeReturnList(&vollist);
     code = ubik_EndTrans(ut);
     return code;
@@ -3385,10 +3277,9 @@ GetVolumes(call, majorVersion, flags, name, start, end, index, nextIndexP,
 }
 
 afs_int32
-SBUDB_UseTape(call, tape, new)
-     struct rx_call *call;
-     struct budb_tapeEntry *tape;	/* tape info */
-     afs_int32 *new;		/* set if tape is new */
+SBUDB_UseTape(struct rx_call *call,
+	      struct budb_tapeEntry *tape,	/* tape info */
+	      afs_int32 *new)			/* set if tape is new */
 {
     afs_int32 code;
 
@@ -3399,10 +3290,9 @@ SBUDB_UseTape(call, tape, new)
 }
 
 afs_int32
-UseTape(call, tape, new)
-     struct rx_call *call;
-     struct budb_tapeEntry *tape;	/* tape info */
-     int *new;			/* set if tape is new */
+UseTape(struct rx_call *call,
+	struct budb_tapeEntry *tape,	/* tape info */
+	int *new)			/* set if tape is new */
 {
     struct ubik_trans *ut;
     dbadr da, a;
@@ -3491,10 +3381,7 @@ UseTape(call, tape, new)
  */
 
 afs_int32
-SBUDB_T_DumpHashTable(call, type, filename)
-     struct rx_call *call;
-     afs_int32 type;
-     char *filename;
+SBUDB_T_DumpHashTable(struct rx_call *call, afs_int32 type, char *filename)
 {
     afs_int32 code;
 
@@ -3504,10 +3391,7 @@ SBUDB_T_DumpHashTable(call, type, filename)
 }
 
 afs_int32
-T_DumpHashTable(call, type, filename)
-     struct rx_call *call;
-     int type;
-     char *filename;
+T_DumpHashTable(struct rx_call *call, int type, char *filename)
 {
     struct ubik_trans *ut;
     struct memoryHashTable *mht;
@@ -3601,9 +3485,7 @@ T_DumpHashTable(call, type, filename)
 }
 
 afs_int32
-SBUDB_T_GetVersion(call, majorVersion)
-     struct rx_call *call;
-     afs_int32 *majorVersion;
+SBUDB_T_GetVersion(struct rx_call *call, afs_int32 *majorVersion)
 {
     afs_int32 code;
 
@@ -3613,9 +3495,7 @@ SBUDB_T_GetVersion(call, majorVersion)
 }
 
 afs_int32
-T_GetVersion(call, majorVersion)
-     struct rx_call *call;
-     int *majorVersion;
+T_GetVersion(struct rx_call *call, int *majorVersion)
 {
     struct ubik_trans *ut;
     afs_int32 code;
@@ -3635,9 +3515,7 @@ T_GetVersion(call, majorVersion)
  */
 
 afs_int32
-SBUDB_T_DumpDatabase(call, filename)
-     struct rx_call *call;
-     char *filename;
+SBUDB_T_DumpDatabase(struct rx_call *call, char *filename)
 {
     afs_int32 code;
 
@@ -3647,9 +3525,7 @@ SBUDB_T_DumpDatabase(call, filename)
 }
 
 afs_int32
-T_DumpDatabase(call, filename)
-     struct rx_call *call;
-     char *filename;
+T_DumpDatabase(struct rx_call *call, char *filename)
 {
     FILE *dumpfid;
     int entrySize;
@@ -3802,10 +3678,7 @@ T_DumpDatabase(call, filename)
 }
 
 int
-volFragsDump(ut, dumpfid, dbAddr)
-     struct ubik_trans *ut;
-     FILE *dumpfid;
-     dbadr dbAddr;
+volFragsDump(struct ubik_trans *ut, FILE *dumpfid, dbadr dbAddr)
 {
     struct volFragment hostVolFragment, diskVolFragment;
     afs_int32 code;
@@ -3833,8 +3706,9 @@ volFragsDump(ut, dumpfid, dbAddr)
  *	currently used for debug only
  */
 
-volFragmentDiskToHost(diskVfPtr, hostVfPtr)
-     struct volFragment *diskVfPtr, *hostVfPtr;
+void
+volFragmentDiskToHost(struct volFragment *diskVfPtr, 
+		      struct volFragment *hostVfPtr)
 {
     hostVfPtr->vol = ntohl(diskVfPtr->vol);
     hostVfPtr->sameNameChain = ntohl(diskVfPtr->sameNameChain);
@@ -3849,8 +3723,8 @@ volFragmentDiskToHost(diskVfPtr, hostVfPtr)
     hostVfPtr->sequence = ntohs(diskVfPtr->sequence);
 }
 
-volInfoDiskToHost(diskViPtr, hostViPtr)
-     struct volInfo *diskViPtr, *hostViPtr;
+void
+volInfoDiskToHost(struct volInfo *diskViPtr, struct volInfo *hostViPtr)
 {
     strcpy(hostViPtr->name, diskViPtr->name);
     hostViPtr->nameHashChain = ntohl(diskViPtr->nameHashChain);
@@ -3864,8 +3738,8 @@ volInfoDiskToHost(diskViPtr, hostViPtr)
     hostViPtr->nFrags = ntohl(diskViPtr->nFrags);
 }
 
-tapeDiskToHost(diskTapePtr, hostTapePtr)
-     struct tape *diskTapePtr, *hostTapePtr;
+void
+tapeDiskToHost(struct tape *diskTapePtr, struct tape *hostTapePtr)
 {
     strcpy(hostTapePtr->name, diskTapePtr->name);
     hostTapePtr->nameHashChain = ntohl(diskTapePtr->nameHashChain);
@@ -3883,8 +3757,8 @@ tapeDiskToHost(diskTapePtr, hostTapePtr)
     hostTapePtr->useCount = ntohl(diskTapePtr->useCount);
 }
 
-dumpDiskToHost(diskDumpPtr, hostDumpPtr)
-     struct dump *diskDumpPtr, *hostDumpPtr;
+void
+dumpDiskToHost(struct dump *diskDumpPtr, struct dump *hostDumpPtr)
 {
     hostDumpPtr->id = ntohl(diskDumpPtr->id);
     hostDumpPtr->idHashChain = ntohl(diskDumpPtr->idHashChain);
@@ -3908,9 +3782,7 @@ dumpDiskToHost(diskDumpPtr, hostDumpPtr)
 #endif /* notdef */
 
 int
-checkHash(ut, hashType)
-     struct ubik_trans *ut;
-     int hashType;
+checkHash(struct ubik_trans *ut, int hashType)
 {
     struct memoryHashTable *mhtPtr;
     int entrySize, hashTableLength;

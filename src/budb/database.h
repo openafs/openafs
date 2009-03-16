@@ -311,9 +311,11 @@ extern struct memoryDB db;
 #define MAX(x,y)        ((x) > (y) ? (x) : (y))
 #endif /* notdef */
 
-struct memoryHashTable *ht_GetType();
-extern afs_uint32 ht_HashEntry();
-extern dbadr ht_LookupBucket();
+struct memoryHashTable *ht_GetType(int type, int *e_sizeP);
+extern afs_uint32 ht_HashEntry(struct memoryHashTable *mht, char *e);
+extern dbadr ht_LookupBucket(struct ubik_trans *ut, 
+			     struct memoryHashTable *mht,
+			     afs_uint32 hash, int old);
 
 extern afs_int32 dbwrite(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len);
 extern afs_int32 dbread(struct ubik_trans *ut, afs_int32 pos, void *buff, afs_int32 len);

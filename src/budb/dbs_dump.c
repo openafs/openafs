@@ -40,10 +40,13 @@ RCSID
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
+#include "budb_prototypes.h"
 #include "error_macros.h"
 #include "globals.h"
 #include "afs/audit.h"
 
+afs_int32 DumpDB(struct rx_call *, int, afs_int32, charListT *, afs_int32 *);
+afs_int32 RestoreDbHeader(struct rx_call *, struct DbHeader *);
 void *dumpWatcher(void *);
 
 /* dump ubik database - interface routines */
@@ -53,8 +56,7 @@ void *dumpWatcher(void *);
  */
 
 afs_int32
-badEntry(dbAddr)
-     afs_uint32 dbAddr;
+badEntry(afs_uint32 dbAddr)
 {
     /* return entry ok */
     return (0);
@@ -91,14 +93,9 @@ setupDbDump(void *param)
 }
 
 
-afs_int32 DumpDB(), RestoreDbHeader();
 afs_int32
-SBUDB_DumpDB(call, firstcall, maxLength, charListPtr, done)
-     struct rx_call *call;
-     int firstcall;
-     afs_int32 maxLength;
-     charListT *charListPtr;
-     afs_int32 *done;
+SBUDB_DumpDB(struct rx_call *call, int firstcall, afs_int32 maxLength, 
+	     charListT *charListPtr, afs_int32 *done)
 {
     afs_int32 code;
 
@@ -108,12 +105,11 @@ SBUDB_DumpDB(call, firstcall, maxLength, charListPtr, done)
 }
 
 afs_int32
-DumpDB(call, firstcall, maxLength, charListPtr, done)
-     struct rx_call *call;
-     int firstcall;		/* 1 - init.  0 - no init */
-     afs_int32 maxLength;
-     charListT *charListPtr;
-     afs_int32 *done;
+DumpDB(struct rx_call *call,
+       int firstcall,		/* 1 - init.  0 - no init */
+       afs_int32 maxLength,
+       charListT *charListPtr,
+       afs_int32 *done)
 {
 #ifdef AFS_PTHREAD_ENV
     pthread_t dumperPid, watcherPid;
@@ -275,9 +271,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 }
 
 afs_int32
-SBUDB_RestoreDbHeader(call, header)
-     struct rx_call *call;
-     struct DbHeader *header;
+SBUDB_RestoreDbHeader(struct rx_call *call, struct DbHeader *header)
 {
     afs_int32 code;
 
@@ -287,9 +281,7 @@ SBUDB_RestoreDbHeader(call, header)
 }
 
 afs_int32
-RestoreDbHeader(call, header)
-     struct rx_call *call;
-     struct DbHeader *header;
+RestoreDbHeader(struct rx_call *call, struct DbHeader *header)
 {
     struct ubik_trans *ut = 0;
     afs_int32 code = 0;
