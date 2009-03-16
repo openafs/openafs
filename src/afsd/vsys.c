@@ -24,9 +24,8 @@ RCSID
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int 
+main(int argc, char **argv)
 {
     afs_int32 code;
     int i, counter;
