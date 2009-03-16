@@ -24,13 +24,13 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <unistd.h>
 #endif
 #include <sys/stat.h>
 #include <stdlib.h>		/* for realpath() */
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-#include <unistd.h>
     
 #include <rx/xdr.h>
 #include <rx/rx.h>
