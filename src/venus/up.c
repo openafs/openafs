@@ -44,8 +44,10 @@ RCSID
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 
 #include <afs/venus.h>
+#include <afs/sys_prototypes.h>
 
 /* ************************************************************* */
 
@@ -273,7 +275,7 @@ Copy(char *file1, char *file2, short recursive, int level)
 
 	    if (verbose) {
 		printf("  Copy file %s to %s (%u Bytes)\n", file1, file2,
-		       s1.st_size);
+		       (unsigned int) s1.st_size);
 		fflush(stdout);
 	    }
 
@@ -356,7 +358,8 @@ Copy(char *file1, char *file2, short recursive, int level)
 	    if (s1.st_size != s2.st_size) {
 		fprintf(stderr,
 			"WARNING: New file %s is %u bytes long; should be %u\n",
-			file2, s2.st_size, s1.st_size);
+			file2, (unsigned int) s2.st_size, 
+			(unsigned int) s1.st_size);
 	    }
 	}
 
