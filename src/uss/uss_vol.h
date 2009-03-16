@@ -18,7 +18,7 @@
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_vol_GetServer();
+extern afs_int32 uss_vol_GetServer(char *a_name);
     /*
      * Summary:
      *    Given the string name of a desired host, find its address.
@@ -30,7 +30,7 @@ extern afs_int32 uss_vol_GetServer();
      *    Host address in network byte order.
      */
 
-extern afs_int32 uss_vol_GetPartitionID();
+extern afs_int32 uss_vol_GetPartitionID(char *a_name);
     /*
      * Summary:
      *    Get partition id from a name.
@@ -42,7 +42,10 @@ extern afs_int32 uss_vol_GetPartitionID();
      *    Numeric partition name, or -1 on failure.
      */
 
-extern afs_int32 uss_vol_CreateVol();
+extern afs_int32 uss_vol_CreateVol(char *a_volname, char *a_server, 
+				   char *a_partition, char *a_quota, 
+				   char *a_mpoint, char *a_owner, 
+				   char *a_acl);
     /*
      * Summary:
      *    Create a volume, set its disk quota, and mount it at the
@@ -63,7 +66,9 @@ extern afs_int32 uss_vol_CreateVol();
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_vol_DeleteVol();
+extern afs_int32 uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, 
+				   char *a_servName, afs_int32 a_servID, 
+				   char *a_partName, afs_int32 a_partID);
     /*
      * Summary:
      *    Delete the given volume.
@@ -82,7 +87,7 @@ extern afs_int32 uss_vol_DeleteVol();
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_vol_GetVolInfoFromMountPoint();
+extern afs_int32 uss_vol_GetVolInfoFromMountPoint(char *a_mountpoint);
     /*
      * Summary:
      *    Given a mountpoint, pull out the name of the volume mounted
@@ -98,6 +103,7 @@ extern afs_int32 uss_vol_GetVolInfoFromMountPoint();
      *    Other error code if problem occurred in lower-level call.
      */
 
+#if 0
 extern afs_int32 uss_vol_DeleteMountPoint();
     /*
      * Summary:
@@ -111,5 +117,5 @@ extern afs_int32 uss_vol_DeleteMountPoint();
      *    1 if there was a problem in the routine itself, or
      *    Other error code if problem occurred in lower-level call.
      */
-
+#endif
 #endif /* _USS_VOL_H_ */

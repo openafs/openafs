@@ -25,6 +25,7 @@ RCSID
 #include "uss_common.h"		/*Common definitions */
 #include "uss_procs.h"		/*Defs from procs module */
 #include "uss_fs.h"		/*CacheManager ops */
+#include "uss_acl.h"
 #include <sys/stat.h>
 #include <pwd.h>
 #include <netdb.h>
@@ -32,20 +33,19 @@ RCSID
 
 #include <string.h>
 
+#include <afs/com_err.h>
 #include <afs/vlserver.h>
+#include <afs/vldbint.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <rx/rx_globals.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
 #include <afs/keys.h>
+#include <afs/afsutil.h>
 #include <ubik.h>
 
-extern struct rx_connection *UV_Bind();
 extern int line;
-extern int VL_GetEntryByID();
-extern char *hostutil_GetNameByINet();
-
 
 /*
  * ---------------------- Private definitions ---------------------
@@ -101,14 +101,11 @@ static struct rx_connection
  *------------------------------------------------------------------------*/
 
 static afs_int32
-InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
-     int a_noAuthFlag;
-     char *a_confDir;
-     char *a_cellName;
-
+InitThisModule(int a_noAuthFlag, char *a_confDir, char *a_cellName)
 {				/*InitThisModule */
-
+#ifdef USS_VOL_DB
     static char rn[] = "uss_vol:InitThisModule";
+#endif
     register afs_int32 code;	/*Return code */
     struct afsconf_dir *tdir;	/*Ptr to conf dir info */
     struct afsconf_cell info;	/*Info about chosen cell */
@@ -295,13 +292,8 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-char *hostutil_GetNameByINet();
-
 static void
-HostIDToHostName(a_hostID, a_hostName)
-     afs_int32 a_hostID;
-     char *a_hostName;
-
+HostIDToHostName(afs_int32 a_hostID, char *a_hostName)
 {				/*HostIDToHostName */
 
     strcpy(a_hostName, hostutil_GetNameByINet(a_hostID));
@@ -332,14 +324,11 @@ HostIDToHostName(a_hostID, a_hostName)
  *------------------------------------------------------------------------*/
 
 static afs_int32
-PartIDToPartName(a_partID, a_partName)
-     afs_int32 a_partID;
-     char *a_partName;
-
+PartIDToPartName(afs_int32 a_partID, char *a_partName)
 {				/*PartIDToPartName */
-
+#ifdef USS_VOL_DB
     static char rn[] = "PartIDToPartName";
-
+#endif
 #ifdef USS_VOL_DB
     printf("[%s] Translating partition id %d to its name\n", rn, a_partID);
 #endif /* USS_VOL_DB */
@@ -379,9 +368,7 @@ PartIDToPartName(a_partID, a_partName)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_vol_GetServer(a_name)
-     char *a_name;
-
+uss_vol_GetServer(char *a_name)
 {				/*uss_vol_GetServer */
 
     register struct hostent *th;
@@ -409,6 +396,8 @@ uss_vol_GetServer(a_name)
 
 }				/*uss_vol_GetServer */
 
+/* XXX - This function is unused, and could be deleted */
+#if 0
 /*------------------------------------------------------------------------
  * static GetVolumeType
  *
@@ -430,9 +419,7 @@ uss_vol_GetServer(a_name)
  *------------------------------------------------------------------------*/
 
 static afs_int32
-GetVolumeType(a_type)
-     char *a_type;
-
+GetVolumeType(char *a_type)
 {				/*GetVolumeType */
 
     if (!strcmp(a_type, "ro"))
@@ -445,7 +432,7 @@ GetVolumeType(a_type)
 	return (-1);
 
 }				/*GetVolumeType */
-
+#endif
 
 /*------------------------------------------------------------------------
  * EXPORTED uss_Vol_GetPartitionID
@@ -458,9 +445,7 @@ GetVolumeType(a_type)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_vol_GetPartitionID(a_name)
-     char *a_name;
-
+uss_vol_GetPartitionID(char *a_name)
 {				/*uss_vol_GetPartitionID */
 
     register char tc;
@@ -544,13 +529,12 @@ uss_vol_GetPartitionID(a_name)
  *------------------------------------------------------------------------*/
 
 static int
-CheckDoubleMount(a_mp, a_oldmp)
-     char *a_mp;
-     char *a_oldmp;
-
+CheckDoubleMount(char *a_mp, char *a_oldmp)
 {				/*CheckDoubleMount */
 
+#ifdef USS_VOL_DB
     static char rn[] = "uss_vol:CheckDoubleMount";
+#endif
     int start, len, mlen, tlen;
     int i = 0;
     struct passwd *pws;
@@ -627,19 +611,13 @@ CheckDoubleMount(a_mp, a_oldmp)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
-		  a_owner, a_acl)
-     char *a_volname;
-     char *a_server;
-     char *a_partition;
-     char *a_quota;
-     char *a_mpoint;
-     char *a_owner;
-     char *a_acl;
-
+uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
+		  char *a_quota, char *a_mpoint, char *a_owner, 
+		  char *a_acl)
 {				/*uss_vol_CreateVol */
-
+#ifdef USS_VOL_DB
     static char rn[] = "uss_vol_CreateVol";	/*Routine name */
+#endif
     afs_int32 pname;		/*Partition name */
     afs_int32 volid, code;	/*Volume ID, return code */
     afs_int32 saddr;		/*Socket info for server */
@@ -850,7 +828,7 @@ uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
      * Set the volume disk quota.
      */
     if (!uss_DryRun) {
-	if (code = uss_acl_SetDiskQuota(a_mpoint, atoi(a_quota)))
+	if ((code = uss_acl_SetDiskQuota(a_mpoint, atoi(a_quota))))
 	    return (code);
     } /*Dry run */
     else {
@@ -923,15 +901,8 @@ uss_vol_CreateVol(a_volname, a_server, a_partition, a_quota, a_mpoint,
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_vol_DeleteVol(a_volName, a_volID, a_servName, a_servID, a_partName,
-		  a_partID)
-     char *a_volName;
-     afs_int32 a_volID;
-     char *a_servName;
-     afs_int32 a_servID;
-     char *a_partName;
-     afs_int32 a_partID;
-
+uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, char *a_servName, 
+		  afs_int32 a_servID, char *a_partName, afs_int32  a_partID)
 {				/*uss_vol_DeleteVol */
 
     static char rn[] = "uss_vol_DeleteVol";	/*Routine name */
@@ -993,11 +964,8 @@ uss_vol_DeleteVol(a_volName, a_volID, a_servName, a_servID, a_partName,
  *------------------------------------------------------------------------*/
 
 static afs_int32
-GetServerAndPart(a_vldbEntryP, a_servIDP, a_partIDP)
-     struct vldbentry *a_vldbEntryP;
-     afs_int32 *a_servIDP;
-     afs_int32 *a_partIDP;
-
+GetServerAndPart(struct vldbentry *a_vldbEntryP, afs_int32 *a_servIDP,
+		 afs_int32 *a_partIDP)
 {				/*GetServerAndPart */
 
     /*
@@ -1022,12 +990,11 @@ GetServerAndPart(a_vldbEntryP, a_servIDP, a_partIDP)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_vol_GetVolInfoFromMountPoint(a_mountpoint)
-     char *a_mountpoint;
-
+uss_vol_GetVolInfoFromMountPoint(char *a_mountpoint)
 {				/*uss_vol_GetVolInfoFromMountPoint */
-
+#ifdef USS_VOL_DB
     static char rn[] = "uss_vol_GetVolInfoFromMountPoint";
+#endif
     register afs_int32 code;	/*Return code */
     uss_VolumeStatus_t *statusP;	/*Ptr to returned status */
     afs_int32 volID;		/*Volume ID */
@@ -1101,7 +1068,7 @@ uss_vol_GetVolInfoFromMountPoint(a_mountpoint)
 	if (code)
 	    return (code);
     }
-    code = ubik_Call(VL_GetEntryByID, uconn_vldbP, 0, volID, -1, &vldbEntry);
+    code = ubik_VL_GetEntryByID( uconn_vldbP, 0, volID, -1, &vldbEntry);
     if (code) {
 	printf("%s: Can't fetch VLDB entry for volume ID %d\n", uss_whoami,
 	       volID);
