@@ -317,7 +317,6 @@ dnl AC_MINIX
 dnl Various compiler setup.
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_TYPE_SIGNAL
 COMPILER_HAS_FUNCTION_MACRO
 
 dnl Checks for programs.
@@ -1556,6 +1555,7 @@ else
     AC_MSG_RESULT(no)
 fi
 
+AC_TYPE_SOCKLEN_T
 AC_TYPE_SIGNAL
 AC_CHECK_TYPE(ssize_t, int)
 AC_CHECK_TYPES(sig_t, , ,
