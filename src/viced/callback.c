@@ -124,7 +124,10 @@ RCSID
 
 extern afsUUID FS_HostUUID;
 extern int hostCount;
+
+#ifndef INTERPRET_DUMP
 static int ShowProblems = 1;
+#endif
 
 struct cbcounters cbstuff;
 
@@ -153,7 +156,9 @@ static int TimeOuts[] = {
 };				/* Anything more: MinTimeOut */
 
 /* minimum time given for a call back */
+#ifndef INTERPRET_DUMP
 static int MinTimeOut = (7 * 60);
+#endif
 
 /* Heads of CB queues; a timeout index is 1+index into this array */
 static afs_uint32 timeout[CB_NUM_TIMEOUT_QUEUES];
@@ -168,6 +173,8 @@ struct object {
 
 /* Prototypes for static routines */
 static struct FileEntry *FindFE(register AFSFid * fid);
+
+#ifndef INTERPRET_DUMP
 static struct CallBack *iGetCB(register int *nused);
 static int iFreeCB(register struct CallBack *cb, register int *nused);
 static struct FileEntry *iGetFE(register int *nused);
@@ -188,11 +195,12 @@ static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 static int MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 				      struct VCBParams *parms, int deletefe);
 static int MultiBreakVolumeCallBack(struct host *host, int isheld,
-				    struct VCBParams *parms);
+				    void *rock);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
-					 struct VCBParams *parms);
+					 void *rock);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
+#endif
 
 #define GetCB() ((struct CallBack *)iGetCB(&cbstuff.nCBs))
 #define GetFE() ((struct FileEntry *)iGetFE(&cbstuff.nFEs))
@@ -1157,9 +1165,10 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 ** isheld is 1 if the host is held in BreakVolumeCallBacks
 */
 static int
-MultiBreakVolumeCallBack(struct host *host, int isheld,
-			 struct VCBParams *parms)
+MultiBreakVolumeCallBack(struct host *host, int isheld, void *rock)
 {
+    struct VCBParams *parms = (struct VCBParams *) rock;
+    
     int retval;
     H_LOCK;
     retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 1);
@@ -1172,9 +1181,9 @@ MultiBreakVolumeCallBack(struct host *host, int isheld,
 ** isheld is 1 if the host is held in BreakVolumeCallBacks
 */
 static int
-MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
-			      struct VCBParams *parms)
+MultiBreakVolumeLaterCallBack(struct host *host, int isheld, void *rock)
 {
+    struct VCBParams *parms = (struct VCBParams *)rock;
     int retval;
     H_LOCK;
     retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 0);
@@ -1243,7 +1252,7 @@ BreakVolumeCallBacks(afs_uint32 volume)
     henumParms.fid = &fid;
     henumParms.thead = tthead;
     H_UNLOCK;
-    h_Enumerate(MultiBreakVolumeCallBack, (char *)&henumParms);
+    h_Enumerate(MultiBreakVolumeCallBack, &henumParms);
     H_LOCK;
     if (henumParms.ncbas) {	/* do left-overs */
 	struct AFSCBFids tf;
@@ -1472,9 +1481,9 @@ static int lih_host_held;
  * are held by other threads.
  */
 static int
-lih0_r(register struct host *host, register int held,
-      register struct host *hostp)
+lih0_r(register struct host *host, register int held, void *rock)
 {
+    struct host *hostp = (struct host *) rock;
     if (host->cblist
 	&& (hostp && host != hostp) 
 	&& (!held && !h_OtherHolds_r(host))
@@ -1496,9 +1505,10 @@ lih0_r(register struct host *host, register int held,
  * prevent held hosts from being selected.
  */
 static int
-lih1_r(register struct host *host, register int held,
-      register struct host *hostp)
+lih1_r(register struct host *host, register int held, void *rock)
 {
+    struct host *hostp = (struct host *) rock;
+
     if (host->cblist
 	&& (hostp && host != hostp) 
 	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
