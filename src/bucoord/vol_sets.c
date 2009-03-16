@@ -29,19 +29,17 @@ RCSID
 #include <afs/bubasics.h>
 #include "bc.h"
 #include "error_macros.h"
-
+#include "bucoord_prototypes.h"
+    
 /* code to manage volumesets
  * specific to the ubik database implementation
  */
 
-afs_int32 bc_UpdateVolumeSet();
 extern struct bc_config *bc_globalConfig;
 extern struct udbHandleS udbHandle;
 extern char *whoami;
-extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf, char *name);
-extern void FreeVolumeSet(struct bc_volumeSet *avset);
 
-static ListVolSet();
+static int ListVolSet(struct bc_volumeSet *aset);
 
 /* ------------------------------------
  * command level routines
@@ -373,7 +371,7 @@ bc_ListVolSetCmd(struct cmd_syndesc *as, void *arock)
     }
 
     /* figure out volume set to list */
-    if (ti = as->parms[0].items) {
+    if ((ti = as->parms[0].items)) {
 	/* for each volume set in the command item list */
 	for (; ti; ti = ti->next) {
 	    tset = bc_FindVolumeSet(bc_globalConfig, ti->data);
@@ -403,9 +401,9 @@ bc_ListVolSetCmd(struct cmd_syndesc *as, void *arock)
  * ------------------------------------
  */
 
-bc_ClearVolumeSets()
+int
+bc_ClearVolumeSets(void)
 {
-    struct udbHandleS *uhptr = &udbHandle;
     struct bc_volumeSet *vsPtr, *vsNextPtr, **vsPrev;
 
     extern struct bc_config *bc_globalConfig;
@@ -434,15 +432,14 @@ bc_ClearVolumeSets()
  */
 
 int
-bc_ParseVolumeSet()
+bc_ParseVolumeSet(void)
 {
-    static char rn[] = "bc_ParseVolumeSet";	/*Routine name */
     char tbuffer[1024];		/*Buffer for reading config file */
     char vsname[256];		/*Volume set name */
     char serverName[256];	/*Server name */
     char partName[256];		/*Partition name */
     register struct bc_volumeEntry *tve;	/*Ptr to generated volume spec struct */
-    register struct bc_volumeSet *tvs;	/*Ptr to volume set struct */
+    register struct bc_volumeSet *tvs = NULL;	/*Ptr to volume set struct */
     struct bc_volumeEntry **ppve, *pve;
     struct bc_volumeSet **ppvs, *pvs;
     register afs_int32 code;	/*Generalized return code */
@@ -596,7 +593,8 @@ bc_ParseVolumeSet()
  *	save the current volume set information to disk
  */
 
-bc_SaveVolumeSet()
+int
+bc_SaveVolumeSet(void)
 {
     register afs_int32 code = 0;
     register struct bc_volumeSet *tset;
@@ -657,7 +655,7 @@ bc_SaveVolumeSet()
 }
 
 afs_int32
-bc_UpdateVolumeSet()
+bc_UpdateVolumeSet(void)
 {
     struct udbHandleS *uhptr = &udbHandle;
     udbClientTextP ctPtr;

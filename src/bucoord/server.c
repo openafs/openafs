@@ -22,10 +22,9 @@ RCSID
 #include <rx/rx.h>
 
 /* services available on incoming message port */
-BC_Print(acall, acode, aflags, amessage)
-     struct rx_call *acall;
-     afs_int32 acode, aflags;
-     char *amessage;
+int
+BC_Print(struct rx_call *acall, afs_int32 acode, afs_int32 aflags, 
+	 char *amessage)
 {
     struct rx_connection *tconn;
     struct rx_peer *tpeer;

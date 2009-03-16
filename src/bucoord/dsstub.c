@@ -43,15 +43,12 @@ static FILE * OpenDump(afs_int32 , char * );
 FILE * OpenTape(char * , char * );
 static afs_int32 ScanForChildren(afs_int32 );
 static afs_int32 DeleteDump(afs_int32 );
-static afs_int32 DeleteTape(char * );
 char * tailCompPtr(char *);
 afs_int32 ScanDumpHdr(register FILE *, char *, char *, afs_int32 *, afs_int32 *,
   afs_int32 *, afs_int32 *);
-static afs_int32 ScanTapeHdr(register FILE *, afs_int32 *, afs_int32 *, afs_int32 *);
 afs_int32 ScanTapeVolume(FILE *, char *, afs_int32 *, char *, afs_int32 *, afs_int32 *,
    afs_int32 *, afs_int32 *);
 afs_int32 ScanVolClone(FILE *, char *, afs_int32 *);
-static int SeekDump(register FILE *afile, afs_int32 apos);
 
 
 /* basic format of a tape file is a file, whose name is "T<tapename>.db", and
@@ -70,9 +67,6 @@ static int SeekDump(register FILE *afile, afs_int32 apos);
  * again, all space-separated.
  * Note that dumpEndTime is stored and returned in the dump creation time field.
  */
-
-static afs_int32 DeleteDump();
-afs_int32 ScanDumpHdr();
 
 /* return the tape file name corresponding to a particular tape */
 
@@ -144,7 +138,7 @@ static afs_int32 ScanForChildren(afs_int32 aparentID)
 	return -1;
 
     for (tde = readdir(tdir); tde; tde = readdir(tdir)) {
-	code = sscanf(tde->d_name, "D%ld.db", &dumpID);
+	code = sscanf(tde->d_name, "D%ld.db", (long int *) &dumpID);
 	if (code != 1)
 	    continue;
 
@@ -183,6 +177,7 @@ static afs_int32 DeleteDump(afs_int32 adumpID)
     return code;
 }
 
+#if 0
 static afs_int32 DeleteTape(char * atapeName)
 {
     register char *tp;
@@ -191,13 +186,15 @@ static afs_int32 DeleteTape(char * atapeName)
     code = unlink(tp);
     return code;
 }
+#endif
 
 /* tailCompPtr
  *	name is a pathname style name, determine trailing name and return
  *	pointer to it
  */
 
-char * tailCompPtr(char *pathNamePtr)
+char *
+tailCompPtr(char *pathNamePtr)
 {
     char *ptr;
     ptr = strrchr(pathNamePtr, '/');
@@ -237,7 +234,8 @@ ScanDumpHdr(register FILE *afile, char *aname, char *dumpName, afs_int32 *aparen
 	return -1;
     code =
 	sscanf(tbuffer, "%d %d %s %s %ld %ld %ld %ld", &dbmagic, &dbversion,
-	       aname, dumpName, aparent, aincTime, acreateTime, alevel);
+	       aname, dumpName, (long int *) aparent, (long int *) aincTime, 
+	       (long int *) acreateTime, (long int *) alevel);
     if (code != 8)
 	return -1;
 
@@ -248,6 +246,7 @@ ScanDumpHdr(register FILE *afile, char *aname, char *dumpName, afs_int32 *aparen
     return 0;
 }
 
+#if 0
 /* scan a tape header out of a tape file, leaving the file ptr positioned just past the header */
 static afs_int32 ScanTapeHdr(register FILE *afile, afs_int32 *adumpID, afs_int32 *aseq, afs_int32 *adamage)
 {
@@ -258,11 +257,13 @@ static afs_int32 ScanTapeHdr(register FILE *afile, afs_int32 *adumpID, afs_int32
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
     if (!tp)
 	return -1;
-    code = sscanf(tbuffer, "%ld %ld %ld", adumpID, aseq, adamage);
+    code = sscanf(tbuffer, "%ld %ld %ld", (long int *)adumpID, 
+		  (long int *)aseq, (long int *)adamage);
     if (code != 3)
 	return -1;
     return 0;
 }
+#endif
 
 /* ScanTapeVolume
  *	scan a tape volume record from a dump file, leaving the file ptr
@@ -287,8 +288,10 @@ afs_int32 ScanTapeVolume(FILE *afile, char *avolName, afs_int32 *avolID, char *a
 	    return 1;		/* eof */
     }
     code =
-	sscanf(tbuffer, "%s %ld %s %ld %ld %ld %ld", avolName, avolID,
-	       atapeName, apos, aseq, alastp, cloneTime);
+	sscanf(tbuffer, "%s %ld %s %ld %ld %ld %ld", avolName, 
+	       (long int *) avolID, atapeName, (long int *)apos, 
+	       (long int *) aseq, (long int *) alastp, 
+	       (long int *) cloneTime);
     if (code != 7)
 	return -1;		/* bad input line */
     return 0;
@@ -320,6 +323,7 @@ afs_int32 ScanVolClone(FILE *tdump, char *volName, afs_int32 *cloneTime)
     return (-1);
 }
 
+#if 0
 /* seek a dump file (after a header scan has been done) to position apos */
 static int SeekDump(register FILE *afile, afs_int32 apos)
 {
@@ -337,3 +341,4 @@ static int SeekDump(register FILE *afile, afs_int32 apos)
     }
     return 0;
 }
+#endif

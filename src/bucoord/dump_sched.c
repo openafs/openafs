@@ -35,17 +35,17 @@ RCSID
 #include <afs/bubasics.h>
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_prototypes.h"
 
 /* code to manage dump schedules 
  * specific to the ubik database implementation
  */
 
-afs_int32 bc_UpdateDumpSchedule();
 extern struct bc_config *bc_globalConfig;
 extern struct udbHandleS udbHandle;
 extern char *whoami;
 
-static ListDumpSchedule();
+static int ListDumpSchedule(struct bc_dumpSchedule *adump, int alevel);
 
 /* ------------------------------------
  * command level routines
@@ -67,8 +67,6 @@ bc_AddDumpCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 expType, expDate;
     register struct cmd_item *ti;
     udbClientTextP ctPtr;
-
-    afs_int32 bc_ParseExpiration();
 
     /* if an expiration date has been specified */
     if (as->parms[1].items) {
@@ -209,8 +207,6 @@ ListDumpSchedule(register struct bc_dumpSchedule *adump, int alevel)
     register int i;
     register struct bc_dumpSchedule *child;
 
-    char *tailCompPtr();
-
     /* sanity check for loops */
     if (alevel > 100) {
 	printf("backup: recursing listing dump schedule\n");
@@ -307,8 +303,6 @@ bc_SetExpCmd(struct cmd_syndesc *as, void *arock)
     udbClientTextP ctPtr;
     register int code;
 
-    afs_int32 bc_ParseExpiration();
-
     /* if an expiration date has been specified */
     if (as->parms[1].items) {
 	code = bc_ParseExpiration(&as->parms[1], &expType, &expDate);
@@ -379,7 +373,8 @@ bc_SetExpCmd(struct cmd_syndesc *as, void *arock)
  * ------------------------------------
  */
 
-bc_ParseDumpSchedule()
+int
+bc_ParseDumpSchedule(void)
 {
     char tbuffer[1024];
     char dsname[256], period[64];
@@ -462,15 +457,14 @@ bc_ParseDumpSchedule()
     return 0;
 }
 
-
-bc_SaveDumpSchedule()
+int
+bc_SaveDumpSchedule(void)
 {
     struct bc_dumpSchedule *tdump;
     udbClientTextP ctPtr;
     afs_int32 code = 0;
 
     extern struct bc_config *bc_globalConfig;
-    extern afs_int32 filesize();
 
     /* setup the right ptr */
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];
@@ -521,7 +515,7 @@ bc_SaveDumpSchedule()
  */
 
 afs_int32
-bc_UpdateDumpSchedule()
+bc_UpdateDumpSchedule(void)
 {
     struct bc_dumpSchedule *dumpPtr, *nextDumpPtr;
     struct udbHandleS *uhptr = &udbHandle;
