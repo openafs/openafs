@@ -101,7 +101,7 @@ extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
 extern int DirHash(register char *string);
 
 extern int DStat(int *abuffers, int *acalls, int *aios);
-extern void DRelease();
+extern void DRelease(struct buffer *bp, int flag);
 extern int DVOffset(register void *ap);
 extern int DFlushVolume(register afs_int32 vid);
 extern int DFlushEntry(register afs_int32 *fid);
@@ -110,8 +110,8 @@ extern int DFlushEntry(register afs_int32 *fid);
    in afs_prototypes.h */
 #ifndef KERNEL
 extern int DInit(int abuffers);
-extern void *DRead();
-extern int DFlush();
+extern void *DRead(register afs_int32 *fid, register int page);
+extern int DFlush(void);
 extern void *DNew(register afs_int32 *fid, register int page);
 extern void DZap(register afs_int32 *fid);
 #endif
