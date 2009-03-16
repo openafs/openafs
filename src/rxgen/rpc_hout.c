@@ -102,6 +102,8 @@ print_datadef(definition * def)
     case DEF_CONST:
 	pconstdef(def);
 	break;
+    default:
+	break;
     }
     if (def->def_kind != DEF_PROGRAM && def->def_kind != DEF_CONST
 	&& (!IsRxgenDefinition(def))) {
@@ -243,6 +245,8 @@ psproc1(definition * defp, int callTconnF, char *type, char *prefix,
 		break;
 	    case DEF_INOUTPARAM:
 		f_print(fout, ",\n\t/*I/O*/ ");
+		break;
+	    default:
 		break;
 	    }
 	    if (plist->pl.param_flag & OUT_STRING) {

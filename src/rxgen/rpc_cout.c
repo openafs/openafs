@@ -92,6 +92,8 @@ emit(definition * def)
     case DEF_TYPEDEF:
 	emit_typedef(def);
 	break;
+    default:
+	break;
     }
     print_trailer();
 }
@@ -377,6 +379,8 @@ print_hout(declaration * dec)
 	    f_print(fout, "\tu_int %s_len;\n", dec->name);
 	    f_print(fout, "\t%s%s *%s_val;\n", prefix, dec->type, dec->name);
 	    f_print(fout, "} %s", dec->name);
+	    break;
+	default:
 	    break;
 	}
 	f_print(fout, ";\n");
