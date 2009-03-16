@@ -968,12 +968,13 @@ ubik_Flush(struct ubik_trans *transPtr)
 }
 
 int
-ubik_Write(register struct ubik_trans *transPtr, void *buffer,
+ubik_Write(register struct ubik_trans *transPtr, void *vbuffer,
 	   afs_int32 length)
 {
     struct ubik_iovec *iovec;
     afs_int32 code, error = 0;
     afs_int32 pos, len, size;
+    char * buffer = (char *)vbuffer;
 
     if (transPtr->type != UBIK_WRITETRANS)
 	return UBADTYPE;

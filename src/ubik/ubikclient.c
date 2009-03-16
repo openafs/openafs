@@ -33,13 +33,13 @@ RCSID
 #include <afs/pthread_glock.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lock.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
+#include <unistd.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #endif
