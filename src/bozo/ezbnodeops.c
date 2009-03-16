@@ -17,6 +17,7 @@ RCSID
 #include <errno.h>
 #include <sys/stat.h>
 #include <lwp.h>
+#include <rx/rx.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #endif
@@ -29,10 +30,17 @@ RCSID
 #include "bnode.h"
 #include "bosprototypes.h"
 
-static int ez_timeout(), ez_getstat(), ez_setstat(), ez_delete();
-static int ez_procexit(), ez_getstring(), ez_getparm(), ez_restartp();
-static int ez_hascore();
-struct bnode *ez_create();
+
+struct bnode *ez_create(char *, char *, char *, char *, char *, char *);
+static int ez_hascore(struct bnode *bnode);
+static int ez_restartp(struct bnode *bnode);
+static int ez_delete(struct bnode *bnode);
+static int ez_timeout(struct bnode *bnode);
+static int ez_getstat(struct bnode *bnode, afs_int32 *status);
+static int ez_setstat(struct bnode *bnode, afs_int32 status);
+static int ez_procexit(struct bnode *bnode, struct bnode_proc *proc);
+static int ez_getstring(struct bnode *bnode, char *abuffer, afs_int32 alen);
+static int ez_getparm(struct bnode *bnode, afs_int32, char *, afs_int32);
 
 #define	SDTIME		60	/* time in seconds given to a process to evaporate */
 
@@ -50,7 +58,7 @@ struct bnode_ops ezbnode_ops = {
 };
 
 static int
-ez_hascore(register struct ezbnode *abnode)
+ez_hascore(struct bnode *abnode)
 {
     char tbuffer[256];
 
@@ -62,8 +70,9 @@ ez_hascore(register struct ezbnode *abnode)
 }
 
 static int
-ez_restartp(register struct ezbnode *abnode)
+ez_restartp(struct bnode *bn)
 {
+    struct ezbnode *abnode = (struct ezbnode *)bn;
     struct bnode_token *tt;
     register afs_int32 code;
     struct stat tstat;
@@ -87,15 +96,18 @@ ez_restartp(register struct ezbnode *abnode)
 }
 
 static int
-ez_delete(struct ezbnode *abnode)
+ez_delete(struct bnode *bn)
 {
+    struct ezbnode *abnode = (struct ezbnode *)bn;
+    
     free(abnode->command);
     free(abnode);
     return 0;
 }
 
 struct bnode *
-ez_create(char *ainstance, char *acommand)
+ez_create(char *ainstance, char *acommand, char *unused1, char *unused2, 
+	  char *unused3, char *unused4)
 {
     struct ezbnode *te;
     char *cmdpath;
@@ -107,7 +119,7 @@ ez_create(char *ainstance, char *acommand)
 
     te = (struct ezbnode *)malloc(sizeof(struct ezbnode));
     memset(te, 0, sizeof(struct ezbnode));
-    if (bnode_InitBnode(te, &ezbnode_ops, ainstance) != 0) {
+    if (bnode_InitBnode((struct bnode *)te, &ezbnode_ops, ainstance) != 0) {
 	free(te);
 	return NULL;
     }
@@ -117,20 +129,24 @@ ez_create(char *ainstance, char *acommand)
 
 /* called to SIGKILL a process if it doesn't terminate normally */
 static int
-ez_timeout(struct ezbnode *abnode)
+ez_timeout(struct bnode *bn)
 {
+    struct ezbnode *abnode = (struct ezbnode *)bn;
+	
     if (!abnode->waitingForShutdown)
 	return 0;		/* spurious */
     /* send kill and turn off timer */
     bnode_StopProc(abnode->proc, SIGKILL);
     abnode->killSent = 1;
-    bnode_SetTimeout(abnode, 0);
+    bnode_SetTimeout((struct bnode *)abnode, 0);
     return 0;
 }
 
 static int
-ez_getstat(struct ezbnode *abnode, afs_int32 * astatus)
+ez_getstat(struct bnode *bn, afs_int32 * astatus)
 {
+    struct ezbnode *abnode = (struct ezbnode *)bn;
+    
     register afs_int32 temp;
     if (abnode->waitingForShutdown)
 	temp = BSTAT_SHUTTINGDOWN;
@@ -143,8 +159,10 @@ ez_getstat(struct ezbnode *abnode, afs_int32 * astatus)
 }
 
 static int
-ez_setstat(register struct ezbnode *abnode, afs_int32 astatus)
+ez_setstat(struct bnode *bn, afs_int32 astatus)
 {
+    struct ezbnode *abnode = (struct ezbnode *)bn;
+    
     struct bnode_proc *tp;
     register afs_int32 code;
 
@@ -153,7 +171,7 @@ ez_setstat(register struct ezbnode *abnode, afs_int32 astatus)
     if (astatus == BSTAT_NORMAL && !abnode->running) {
 	/* start up */
 	abnode->lastStart = FT_ApproxTime();
-	code = bnode_NewProc(abnode, abnode->command, NULL, &tp);
+	code = bnode_NewProc((struct bnode *)abnode, abnode->command, NULL, &tp);
 	if (code)
 	    return code;
 	abnode->running = 1;
@@ -163,40 +181,43 @@ ez_setstat(register struct ezbnode *abnode, afs_int32 astatus)
 	/* start shutdown */
 	bnode_StopProc(abnode->proc, SIGTERM);
 	abnode->waitingForShutdown = 1;
-	bnode_SetTimeout(abnode, SDTIME);
+	bnode_SetTimeout((struct bnode *)abnode, SDTIME);
 	return 0;
     }
     return 0;
 }
 
 static int
-ez_procexit(struct ezbnode *abnode, struct bnode_proc *aproc)
+ez_procexit(struct bnode *bn, struct bnode_proc *aproc)
 {
+    struct ezbnode *abnode = (struct ezbnode *)bn;
+
     /* process has exited */
     register afs_int32 code;
 
     abnode->waitingForShutdown = 0;
     abnode->running = 0;
     abnode->killSent = 0;
-    abnode->proc = (struct bnode_proc *)0;
-    bnode_SetTimeout(abnode, 0);	/* clear timer */
+    abnode->proc = NULL;
+    bnode_SetTimeout((struct bnode *) abnode, 0);	/* clear timer */
     if (abnode->b.goal)
-	code = ez_setstat(abnode, BSTAT_NORMAL);
+	code = ez_setstat((struct bnode *) abnode, BSTAT_NORMAL);
     else
 	code = 0;
     return code;
 }
 
 static int
-ez_getstring(struct ezbnode *abnode, char *abuffer, afs_int32 alen)
+ez_getstring(struct bnode *abnode, char *abuffer, afs_int32 alen)
 {
     return -1;			/* don't have much to add */
 }
 
-static
-ez_getparm(struct ezbnode *abnode, afs_int32 aindex, char *abuffer,
+static int
+ez_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
 	   afs_int32 alen)
 {
+    struct ezbnode *abnode = (struct ezbnode *) bn;
     if (aindex > 0)
 	return BZDOM;
     strcpy(abuffer, abnode->command);

@@ -15,6 +15,7 @@ RCSID
 
 #include <sys/types.h>
 #include <lwp.h>
+#include <rx/rx.h>
 #include <errno.h>
 #include <stdio.h>
 #ifdef	AFS_SUN5_ENV
@@ -99,40 +100,34 @@ struct fsbnode {
     char needsClock;		/* do we need clock ticks */
 };
 
-
-
 struct bnode * fs_create(char *ainstance, char *afilecmd, char *avolcmd, 
 			 char *asalcmd, char *ascancmd);
 struct bnode * dafs_create(char *ainstance, char *afilecmd, char *avolcmd, 
 			   char * asalsrvcmd, char *asalcmd, char *ascancmd);
 
-static int fs_hascore(register struct ezbnode *abnode);
-static int fs_restartp(register struct fsbnode *abnode);
-static int SetSalFlag(register struct fsbnode *abnode, register int aflag);
-static int RestoreSalFlag(register struct fsbnode *abnode);
-static int fs_delete(struct fsbnode *abnode);
-static int fs_timeout(struct fsbnode *abnode);
-static int fs_getstat(struct fsbnode *abnode, afs_int32 * astatus);
-static int fs_setstat(register struct fsbnode *abnode, afs_int32 astatus);
-static int fs_procexit(struct fsbnode *abnode, struct bnode_proc *aproc);
-static int fs_getstring(struct fsbnode *abnode, char *abuffer, afs_int32 alen);
-
-
-static int fs_getparm(struct fsbnode *abnode, afs_int32 aindex, 
+static int fs_hascore(struct bnode *abnode);
+static int fs_restartp(struct bnode *abnode);
+static int fs_delete(struct bnode *abnode);
+static int fs_timeout(struct bnode *abnode);
+static int fs_getstat(struct bnode *abnode, afs_int32 * astatus);
+static int fs_setstat(struct bnode *abnode, afs_int32 astatus);
+static int fs_procexit(struct bnode *abnode, struct bnode_proc *aproc);
+static int fs_getstring(struct bnode *abnode, char *abuffer, afs_int32 alen);
+static int fs_getparm(struct bnode *abnode, afs_int32 aindex, 
 		      char *abuffer, afs_int32 alen);
-static int dafs_getparm(struct fsbnode *abnode, afs_int32 aindex, 
+static int dafs_getparm(struct bnode *abnode, afs_int32 aindex, 
 			char *abuffer, afs_int32 alen);
+
+static int SetSalFlag(struct fsbnode *abnode, int aflag);
+static int RestoreSalFlag(struct fsbnode *abnode);
+static void SetNeedsClock(struct fsbnode *);
+static int NudgeProcs(struct fsbnode *);
 
 #ifdef AFS_NT40_ENV
 static void AppendExecutableExtension(char *cmd);
 #else
 #define AppendExecutableExtension(x)
 #endif
-
-static void SetNeedsClock(register struct fsbnode *ab);
-static int NudgeProcs(register struct fsbnode *abnode);
-
-
 
 struct bnode_ops fsbnode_ops = {
     fs_create,
@@ -161,6 +156,13 @@ struct bnode_ops dafsbnode_ops = {
     fs_hascore,
 };
 
+/* Quick inline function to safely convert a fsbnode to a bnode without
+ * dropping type information
+ */
+
+inline struct bnode * fsbnode2bnode(struct fsbnode *abnode) {
+    return (struct bnode *) abnode;
+}
 
 /* Function to tell whether this bnode has a core file or not.  You might
  * think that this could be in bnode.c, and decide what core files to check
@@ -169,7 +171,7 @@ struct bnode_ops dafsbnode_ops = {
  * time the query is done.
  */
 static int
-fs_hascore(register struct ezbnode *abnode)
+fs_hascore(struct bnode *abnode)
 {
     char tbuffer[256];
 
@@ -203,8 +205,9 @@ fs_hascore(register struct ezbnode *abnode)
 }
 
 static int
-fs_restartp(register struct fsbnode *abnode)
+fs_restartp(struct bnode *bn)
 {
+    struct fsbnode *abnode = (struct fsbnode *)bn;
     struct bnode_token *tt;
     register afs_int32 code;
     struct stat tstat;
@@ -342,8 +345,10 @@ copystr(register char *a)
 }
 
 static int
-fs_delete(struct fsbnode *abnode)
+fs_delete(struct bnode *bn)
 {
+    struct fsbnode *abnode = (struct fsbnode *)bn;
+    
     free(abnode->filecmd);
     free(abnode->volcmd);
     free(abnode->salcmd);
@@ -381,8 +386,9 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
     char *fileCmdpath, *volCmdpath, *salCmdpath, *scanCmdpath;
     int bailout = 0;
 
-    te = fileCmdpath = volCmdpath = salCmdpath = scanCmdpath = NULL;
-
+    fileCmdpath = volCmdpath = salCmdpath = scanCmdpath = NULL;
+    te = NULL; 
+    
     /* construct local paths from canonical (wire-format) paths */
     if (ConstructLocalBinPath(afilecmd, &fileCmdpath)) {
 	bozo_Log("BNODE: command path invalid '%s'\n", afilecmd);
@@ -458,11 +464,12 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	te->scancmd = scanCmdpath;
     else
 	te->scancmd = NULL;
-    if (bnode_InitBnode(te, &fsbnode_ops, ainstance) != 0) {
+    if (bnode_InitBnode(fsbnode2bnode(te), &fsbnode_ops, ainstance) != 0) {
 	bailout = 1;
 	goto done;
     }
-    bnode_SetTimeout(te, POLLTIME);	/* ask for timeout activations every 10 seconds */
+    bnode_SetTimeout(fsbnode2bnode(te), POLLTIME);	
+    		/* ask for timeout activations every 10 seconds */
     RestoreSalFlag(te);		/* restore needsSalvage flag based on file's existence */
     SetNeedsClock(te);		/* compute needsClock field */
 
@@ -481,7 +488,7 @@ fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
 	return NULL;
     }
 
-    return (struct bnode *)te;
+    return fsbnode2bnode(te);
 }
 
 /* create a demand attach fs bnode */
@@ -495,8 +502,9 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
     char *fileCmdpath, *volCmdpath, *salsrvCmdpath, *salCmdpath, *scanCmdpath;
     int bailout = 0;
 
-    te = fileCmdpath = volCmdpath = salsrvCmdpath = salCmdpath = scanCmdpath = NULL;
-
+    fileCmdpath = volCmdpath = salsrvCmdpath = salCmdpath = scanCmdpath = NULL;
+    te = NULL;
+    
     /* construct local paths from canonical (wire-format) paths */
     if (ConstructLocalBinPath(afilecmd, &fileCmdpath)) {
 	bozo_Log("BNODE: command path invalid '%s'\n", afilecmd);
@@ -585,11 +593,12 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	te->scancmd = scanCmdpath;
     else
 	te->scancmd = NULL;
-    if (bnode_InitBnode(te, &dafsbnode_ops, ainstance) != 0) {
+    if (bnode_InitBnode(fsbnode2bnode(te), &dafsbnode_ops, ainstance) != 0) {
 	bailout = 1;
 	goto done;
     }
-    bnode_SetTimeout(te, POLLTIME);	/* ask for timeout activations every 10 seconds */
+    bnode_SetTimeout(fsbnode2bnode(te), POLLTIME);	
+    		/* ask for timeout activations every 10 seconds */
     RestoreSalFlag(te);		/* restore needsSalvage flag based on file's existence */
     SetNeedsClock(te);		/* compute needsClock field */
 
@@ -610,13 +619,15 @@ dafs_create(char *ainstance, char *afilecmd, char *avolcmd,
 	return NULL;
     }
 
-    return (struct bnode *)te;
+    return fsbnode2bnode(te);
 }
 
 /* called to SIGKILL a process if it doesn't terminate normally */
 static int
-fs_timeout(struct fsbnode *abnode)
+fs_timeout(struct bnode *bn)
 {
+    struct fsbnode *abnode = (struct fsbnode *)bn;
+    
     register afs_int32 now;
 
     now = FT_ApproxTime();
@@ -671,8 +682,10 @@ fs_timeout(struct fsbnode *abnode)
 }
 
 static int
-fs_getstat(struct fsbnode *abnode, afs_int32 * astatus)
+fs_getstat(struct bnode *bn, afs_int32 * astatus)
 {
+    struct fsbnode *abnode = (struct fsbnode *) bn;
+    
     register afs_int32 temp;
     if (abnode->volSDW || abnode->fileSDW || abnode->salSDW
 	|| abnode->scanSDW || abnode->salsrvSDW)
@@ -694,14 +707,16 @@ fs_getstat(struct fsbnode *abnode, afs_int32 * astatus)
 }
 
 static int
-fs_setstat(register struct fsbnode *abnode, afs_int32 astatus)
+fs_setstat(struct bnode *abnode, afs_int32 astatus)
 {
-    return NudgeProcs(abnode);
+    return NudgeProcs((struct fsbnode *) abnode);
 }
 
 static int
-fs_procexit(struct fsbnode *abnode, struct bnode_proc *aproc)
+fs_procexit(struct bnode *bn, struct bnode_proc *aproc)
 {
+   struct fsbnode *abnode = (struct fsbnode *)bn;
+   
     /* process has exited */
 
     if (aproc == abnode->volProc) {
@@ -760,10 +775,10 @@ SetNeedsClock(register struct fsbnode *ab)
 	ab->needsClock = 0;	/* halted normally */
     else
 	ab->needsClock = 1;	/* other */
-    if (ab->needsClock && !bnode_PendingTimeout(ab))
-	bnode_SetTimeout(ab, POLLTIME);
+    if (ab->needsClock && !bnode_PendingTimeout(fsbnode2bnode(ab)))
+	bnode_SetTimeout(fsbnode2bnode(ab), POLLTIME);
     if (!ab->needsClock)
-	bnode_SetTimeout(ab, 0);
+	bnode_SetTimeout(fsbnode2bnode(ab), 0);
 }
 
 static int
@@ -783,14 +798,14 @@ NudgeProcs(register struct fsbnode *abnode)
 		bozo_Log("Salvager running along with file server!\n");
 		bozo_Log("Emergency shutdown\n");
 		emergency = 1;
-		bnode_SetGoal(abnode, BSTAT_SHUTDOWN);
+		bnode_SetGoal(fsbnode2bnode(abnode), BSTAT_SHUTDOWN);
 		bnode_StopProc(abnode->salProc, SIGKILL);
 		SetNeedsClock(abnode);
 		return -1;
 	    }
 	    if (!abnode->volRunning) {
 		abnode->lastVolStart = FT_ApproxTime();
-		code = bnode_NewProc(abnode, abnode->volcmd, "vol", &tp);
+		code = bnode_NewProc(fsbnode2bnode(abnode), abnode->volcmd, "vol", &tp);
 		if (code == 0) {
 		    abnode->volProc = tp;
 		    abnode->volRunning = 1;
@@ -800,7 +815,7 @@ NudgeProcs(register struct fsbnode *abnode)
 		if (!abnode->salsrvRunning) {
 		    abnode->lastSalsrvStart = FT_ApproxTime();
 		    code =
-			bnode_NewProc(abnode, abnode->salsrvcmd, "salsrv",
+			bnode_NewProc(fsbnode2bnode(abnode), abnode->salsrvcmd, "salsrv",
 				      &tp);
 		    if (code == 0) {
 			abnode->salsrvProc = tp;
@@ -812,7 +827,7 @@ NudgeProcs(register struct fsbnode *abnode)
 		if (!abnode->scanRunning) {
 		    abnode->lastScanStart = FT_ApproxTime();
 		    code =
-			bnode_NewProc(abnode, abnode->scancmd, "scanner",
+			bnode_NewProc(fsbnode2bnode(abnode), abnode->scancmd, "scanner",
 				      &tp);
 		    if (code == 0) {
 			abnode->scanProc = tp;
@@ -828,7 +843,7 @@ NudgeProcs(register struct fsbnode *abnode)
 		if (!abnode->fileRunning) {
 		    abnode->lastFileStart = FT_ApproxTime();
 		    code =
-			bnode_NewProc(abnode, abnode->filecmd, "file", &tp);
+			bnode_NewProc(fsbnode2bnode(abnode), abnode->filecmd, "file", &tp);
 		    if (code == 0) {
 			abnode->fileProc = tp;
 			abnode->fileRunning = 1;
@@ -837,7 +852,7 @@ NudgeProcs(register struct fsbnode *abnode)
 		}
 		if (!abnode->volRunning) {
 		    abnode->lastVolStart = FT_ApproxTime();
-		    code = bnode_NewProc(abnode, abnode->volcmd, "vol", &tp);
+		    code = bnode_NewProc(fsbnode2bnode(abnode), abnode->volcmd, "vol", &tp);
 		    if (code == 0) {
 			abnode->volProc = tp;
 			abnode->volRunning = 1;
@@ -846,7 +861,7 @@ NudgeProcs(register struct fsbnode *abnode)
 		if (abnode->salsrvcmd && !abnode->salsrvRunning) {
 		    abnode->lastSalsrvStart = FT_ApproxTime();
 		    code =
-			bnode_NewProc(abnode, abnode->salsrvcmd, "salsrv",
+			bnode_NewProc(fsbnode2bnode(abnode), abnode->salsrvcmd, "salsrv",
 				      &tp);
 		    if (code == 0) {
 			abnode->salsrvProc = tp;
@@ -856,7 +871,7 @@ NudgeProcs(register struct fsbnode *abnode)
 		if (abnode->scancmd && !abnode->scanRunning) {
 		    abnode->lastScanStart = FT_ApproxTime();
 		    code =
-			bnode_NewProc(abnode, abnode->scancmd, "scanner",
+			bnode_NewProc(fsbnode2bnode(abnode), abnode->scancmd, "scanner",
 				      &tp);
 		    if (code == 0) {
 			abnode->scanProc = tp;
@@ -888,7 +903,7 @@ NudgeProcs(register struct fsbnode *abnode)
 		    return 0;
 		/* otherwise, it is safe to start salvager */
 		if (!abnode->salRunning) {
-		    code = bnode_NewProc(abnode, abnode->salcmd, "salv", &tp);
+		    code = bnode_NewProc(fsbnode2bnode(abnode), abnode->salcmd, "salv", &tp);
 		    if (code == 0) {
 			abnode->salProc = tp;
 			abnode->salRunning = 1;
@@ -929,8 +944,10 @@ NudgeProcs(register struct fsbnode *abnode)
 }
 
 static int
-fs_getstring(struct fsbnode *abnode, char *abuffer, afs_int32 alen)
+fs_getstring(struct bnode *bn, char *abuffer, afs_int32 alen)
 {
+    struct fsbnode *abnode = (struct fsbnode *)bn;
+    
     if (alen < 40)
 	return -1;
     if (abnode->b.goal == 1) {
@@ -971,9 +988,11 @@ fs_getstring(struct fsbnode *abnode, char *abuffer, afs_int32 alen)
 }
 
 static int
-fs_getparm(struct fsbnode *abnode, afs_int32 aindex, char *abuffer,
+fs_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
 	   afs_int32 alen)
 {
+    struct fsbnode *abnode = (struct fsbnode *)bn;
+    
     if (aindex == 0)
 	strcpy(abuffer, abnode->filecmd);
     else if (aindex == 1)
@@ -988,9 +1007,11 @@ fs_getparm(struct fsbnode *abnode, afs_int32 aindex, char *abuffer,
 }
 
 static int
-dafs_getparm(struct fsbnode *abnode, afs_int32 aindex, char *abuffer,
+dafs_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
 	     afs_int32 alen)
 {
+    struct fsbnode *abnode = (struct fsbnode *)bn;
+    
     if (aindex == 0)
 	strcpy(abuffer, abnode->filecmd);
     else if (aindex == 1)
