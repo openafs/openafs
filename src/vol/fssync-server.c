@@ -15,15 +15,6 @@
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
-#ifdef notdef
-
-/* All this is going away in early 1989 */
-int newVLDB;			/* Compatibility flag */
-
-#endif
-static int newVLDB = 1;
-
-
 #ifndef AFS_PTHREAD_ENV
 #define USUAL_PRIORITY (LWP_MAX_PRIORITY - 2)
 
@@ -104,7 +95,7 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-int (*V_BreakVolumeCallbacks) ();
+int (*V_BreakVolumeCallbacks) (VolumeId volume);
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
@@ -133,16 +124,16 @@ static SYNC_server_state_t fssync_server_state =
 
 /* Forward declarations */
 static void * FSYNC_sync(void *);
-static void FSYNC_newconnection();
-static void FSYNC_com();
-static void FSYNC_Drop();
-static void AcceptOn();
-static void AcceptOff();
-static void InitHandler();
-static int AddHandler();
-static int FindHandler();
-static int FindHandler_r();
-static int RemoveHandler();
+static void FSYNC_newconnection(int afd);
+static void FSYNC_com(int fd);
+static void FSYNC_Drop(int fd);
+static void AcceptOn(void);
+static void AcceptOff(void);
+static void InitHandler(void);
+static int AddHandler(int fd, void (*aproc)(int));
+static int FindHandler(int afd);
+static int FindHandler_r(int afd);
+static int RemoveHandler(int afd);
 #if defined(HAVE_POLL) && defined (AFS_PTHREAD_ENV)
 static void CallHandler(struct pollfd *fds, int nfds, int mask);
 static void GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds);
@@ -154,7 +145,9 @@ extern int LogLevel;
 
 static afs_int32 FSYNC_com_VolOp(int fd, SYNC_command * com, SYNC_response * res);
 
+#ifdef AFS_DEMAND_ATTACH_FS
 static afs_int32 FSYNC_com_VolError(FSSYNC_VolOp_command * com, SYNC_response * res);
+#endif
 static afs_int32 FSYNC_com_VolOn(FSSYNC_VolOp_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VolOff(FSSYNC_VolOp_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VolMove(FSSYNC_VolOp_command * com, SYNC_response * res);
@@ -171,11 +164,13 @@ static afs_int32 FSYNC_com_VnQry(int fd, SYNC_command * com, SYNC_response * res
 static afs_int32 FSYNC_com_StatsOp(int fd, SYNC_command * com, SYNC_response * res);
 
 static afs_int32 FSYNC_com_StatsOpGeneral(FSSYNC_StatsOp_command * scom, SYNC_response * res);
+
+#ifdef AFS_DEMAND_ATTACH_FS
 static afs_int32 FSYNC_com_StatsOpViceP(FSSYNC_StatsOp_command * scom, SYNC_response * res);
 static afs_int32 FSYNC_com_StatsOpHash(FSSYNC_StatsOp_command * scom, SYNC_response * res);
 static afs_int32 FSYNC_com_StatsOpHdr(FSSYNC_StatsOp_command * scom, SYNC_response * res);
 static afs_int32 FSYNC_com_StatsOpVLRU(FSSYNC_StatsOp_command * scom, SYNC_response * res);
-
+#endif
 
 static void FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info);
 
@@ -221,13 +216,8 @@ static fd_set FSYNC_readfds;
 static void *
 FSYNC_sync(void * args)
 {
-#ifdef USE_UNIX_SOCKETS
-    char tbuffer[AFSDIR_PATH_MAX];
-#endif /* USE_UNIX_SOCKETS */
-    int on = 1;
     extern int VInit;
     int code;
-    int numTries;
 #ifdef AFS_PTHREAD_ENV
     int tid;
 #endif
@@ -304,6 +294,7 @@ FSYNC_sync(void * args)
 	    CallHandler(&FSYNC_readfds);
 #endif
     }
+    return NULL; /* hush now, little gcc */
 }
 
 static void
@@ -314,7 +305,8 @@ FSYNC_newconnection(int afd)
 #else  /* USE_UNIX_SOCKETS */
     struct sockaddr_in other;
 #endif
-    int junk, fd;
+    int fd;
+    socklen_t junk;
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
     if (fd == -1) {
@@ -585,7 +577,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 #else /* !AFS_DEMAND_ATTACH_FS */
     tvolName[0] = '/';
-    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, vcom->vop->volume);
+    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, afs_cast_uint32(vcom->vop->volume));
     tvolName[sizeof(tvolName)-1] = '\0';
 
     vp = VAttachVolumeByName_r(&error, vcom->vop->partName, tvolName,
@@ -631,10 +623,11 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     FSSYNC_VolOp_info info;
     afs_int32 code = SYNC_OK;
     int i;
-    Volume * vp, * nvp;
+    Volume * vp;
     Error error;
 #ifdef AFS_DEMAND_ATTACH_FS
     int reserved = 0;
+    Volume *nvp;
 #endif
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
@@ -1168,7 +1161,6 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     afs_int32 code = SYNC_FAILED;
     Error error;
     Volume * vp;
-    int hdr_ok = 0;
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
@@ -1209,7 +1201,6 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	goto done;
     }
 
- load_done:
     memcpy(res->payload.buf, &V_disk(vp), sizeof(VolumeDiskData));
     res->hdr.response_len += sizeof(VolumeDiskData);
 #ifndef AFS_DEMAND_ATTACH_FS
@@ -1495,7 +1486,7 @@ FSYNC_Drop(int fd)
 	    Volume *vp;
 
 	    tvolName[0] = '/';
-	    sprintf(&tvolName[1], VFORMAT, p[i].volumeID);
+	    sprintf(&tvolName[1], VFORMAT, afs_cast_uint32(p[i].volumeID));
 	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName,
 				       V_VOLUPD);
 	    if (vp)
@@ -1516,7 +1507,7 @@ FSYNC_Drop(int fd)
 static int AcceptHandler = -1;	/* handler id for accept, if turned on */
 
 static void
-AcceptOn()
+AcceptOn(void)
 {
     if (AcceptHandler == -1) {
 	assert(AddHandler(fssync_server_state.fd, FSYNC_newconnection));
@@ -1525,7 +1516,7 @@ AcceptOn()
 }
 
 static void
-AcceptOff()
+AcceptOff(void)
 {
     if (AcceptHandler != -1) {
 	assert(RemoveHandler(fssync_server_state.fd));
@@ -1536,10 +1527,10 @@ AcceptOff()
 /* The multiple FD handling code. */
 
 static int HandlerFD[MAXHANDLERS];
-static int (*HandlerProc[MAXHANDLERS]) ();
+static void (*HandlerProc[MAXHANDLERS]) (int);
 
 static void
-InitHandler()
+InitHandler(void)
 {
     register int i;
     ObtainWriteLock(&FSYNC_handler_lock);
@@ -1585,7 +1576,7 @@ CallHandler(fd_set * fdsetp)
 #endif
 
 static int
-AddHandler(int afd, int (*aproc) ())
+AddHandler(int afd, void (*aproc) (int))
 {
     register int i;
     ObtainWriteLock(&FSYNC_handler_lock);

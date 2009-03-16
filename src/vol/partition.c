@@ -350,7 +350,7 @@ VCheckPartition(char *part, char *devname)
 
 	dirp = opendir(part);
 	assert(dirp);
-	while (dp = readdir(dirp)) {
+	while ((dp = readdir(dirp))) {
 	    if (dp->d_name[0] == 'V') {
 		Log("This program is compiled with AFS_NAMEI_ENV, but partition %s seems to contain volumes which don't use the namei-interface; aborting\n", part);
 		closedir(dirp);
@@ -417,7 +417,7 @@ VIsAlwaysAttach(char *part)
  * partitions, in the NAMEI fileserver.
  */
 void
-VAttachPartitions2()
+VAttachPartitions2(void)
 {
 #ifdef AFS_NAMEI_ENV
     DIR *dirp;
@@ -628,7 +628,7 @@ VAttachPartitions(void)
 	exit(-1);
     }
 
-    while (fsent = getfsent()) {
+    while ((fsent = getfsent())) {
 	if (strcmp(fsent->fs_type, "rw") != 0)
 	    continue;
 
@@ -901,7 +901,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 void
 VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 {
-    int fd, bsize, code;
+    int bsize, code;
     afs_int64 totalblks, free, used, availblks;
     int reserved;
 #ifdef afs_statvfs

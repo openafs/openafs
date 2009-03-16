@@ -50,7 +50,8 @@ RCSID
 #include "viceinode.h"
 #include "volinodes.h"
 #include <afs/afssyscalls.h>
-
+#include <afs/afsutil.h>
+    
 #ifdef _AIX
 #include <time.h>
 #endif
@@ -106,7 +107,7 @@ date(time_t date)
 {
 #define MAX_DATE_RESULT	100
     static char results[8][MAX_DATE_RESULT];
-    static next;
+    static int next;
     struct tm *tm = localtime(&date);
     char buf[32];
 
@@ -334,7 +335,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 #ifdef AFS_NT40_ENV
 #include <direct.h>
 struct DiskPartition64 *
-FindCurrentPartition()
+FindCurrentPartition(void)
 {
     int dr = _getdrive();
     struct DiskPartition64 *dp;
@@ -351,7 +352,7 @@ FindCurrentPartition()
 }
 #else
 struct DiskPartition64 *
-FindCurrentPartition()
+FindCurrentPartition(void)
 {
     char partName[1024];
     char tmp = '\0';

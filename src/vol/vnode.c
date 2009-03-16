@@ -25,6 +25,7 @@ RCSID
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
@@ -72,8 +73,7 @@ RCSID
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 
-private void StickOnLruChain_r(register Vnode * vnp,
-			       register struct VnodeClassInfo *vcp);
+void VNLog(afs_int32 aop, afs_int32 anparms, ... );
 
 extern int LogLevel;
 
@@ -109,17 +109,13 @@ extern int LogLevel;
 static afs_int32 theLog[THELOGSIZE];
 static afs_int32 vnLogPtr = 0;
 void
-VNLog(afs_int32 aop, afs_int32 anparms, afs_int32 av1, afs_int32 av2, 
-      afs_int32 av3, afs_int32 av4)
+VNLog(afs_int32 aop, afs_int32 anparms, ... )
 {
     register afs_int32 temp;
-    afs_int32 data[4];
+    va_list ap;
 
-    /* copy data to array */
-    data[0] = av1;
-    data[1] = av2;
-    data[2] = av3;
-    data[3] = av4;
+    va_start(ap, anparms);
+
     if (anparms > 4)
 	anparms = 4;		/* do bounds checking */
 
@@ -128,10 +124,11 @@ VNLog(afs_int32 aop, afs_int32 anparms, afs_int32 av1, afs_int32 av2,
     if (vnLogPtr >= THELOGSIZE)
 	vnLogPtr = 0;
     for (temp = 0; temp < anparms; temp++) {
-	theLog[vnLogPtr++] = data[temp];
+	theLog[vnLogPtr++] = va_arg(ap, afs_int32);
 	if (vnLogPtr >= THELOGSIZE)
 	    vnLogPtr = 0;
     }
+    va_end(ap);
 }
 
 /* VolumeHashOffset -- returns a new value to be stored in the
@@ -592,7 +589,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 {
     register Vnode *vnp;
     VnodeId vnodeNumber;
-    int bitNumber, code;
+    int bitNumber;
     register struct VnodeClassInfo *vcp;
     VnodeClass class;
     Unique unique;
@@ -1114,10 +1111,8 @@ Vnode *
 VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 {				/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
     register Vnode *vnp;
-    int code;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
-    Volume * oldvp = NULL;
 
     *ec = 0;
 
@@ -1317,7 +1312,6 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
     int writeLocked;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
-    int code;
 
     *ec = 0;
     assert(Vn_refcount(vnp) != 0);
@@ -1453,7 +1447,6 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
     int writeLocked;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
-    int code;
 #ifdef AFS_PTHREAD_ENV
     pthread_t thisProcess;
 #else /* AFS_PTHREAD_ENV */
@@ -1515,7 +1508,6 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 	} else {
 	    VnStore(ec, vp, vnp, vcp, class);
 	}
-    sane:
 	vcp->writes++;
 	vnp->changed_newTime = vnp->changed_oldTime = 0;
     }

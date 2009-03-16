@@ -33,14 +33,13 @@ Perror(char *err, int a1, int a2, int a3)
 int
 main(int argc, char **argv)
 {
-    int error = 0;
-    struct stat status;
-    int dev, fd, inode;
-
 #if defined(AFS_NT40_ENV) || defined(AFS_NAMEI_ENV)
     fprintf(stderr, "gi not supported on NT or NAMEI systems.\n");
     exit(1);
 #else
+    int error = 0;
+    struct stat status;
+    int dev, fd, inode;
 
     argc--;
     argv++;

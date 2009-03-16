@@ -77,6 +77,18 @@ RCSID
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
 
+
+/*
+ * This lock controls access to the handler array.
+ */
+struct Lock SALVSYNC_handler_lock;
+
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/*
+ * SALVSYNC is a feature specific to the demand attach fileserver
+ */
+
 /* Forward declarations */
 static void * SALVSYNC_syncThread(void *);
 static void SALVSYNC_newconnection(int fd);
@@ -91,18 +103,6 @@ static int FindHandler(register int afd);
 static int FindHandler_r(register int afd);
 static int RemoveHandler(register int afd);
 static void GetHandler(fd_set * fdsetp, int *maxfdp);
-
-
-/*
- * This lock controls access to the handler array.
- */
-struct Lock SALVSYNC_handler_lock;
-
-
-#ifdef AFS_DEMAND_ATTACH_FS
-/*
- * SALVSYNC is a feature specific to the demand attach fileserver
- */
 
 static int AllocNode(struct SalvageQueueNode ** node);
 

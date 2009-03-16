@@ -56,7 +56,7 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-int (*vol_PollProc) () = 0;	/* someone must init this */
+int (*vol_PollProc) (void) = 0;	/* someone must init this */
 
 #define ERROR_EXIT(code) {error = code; goto error_exit;}
 
@@ -80,8 +80,7 @@ struct clone_head {
     struct clone_items *last;
 };
 
-void CloneVolume();
-void CloneVolume_r();
+void CloneVolume(Error *, Volume *, Volume *, Volume *);
 
 static int
 ci_AddItem(struct clone_head *ah, Inode aino)
@@ -124,7 +123,7 @@ ci_InitHead(struct clone_head *ah)
 
 /* apply a function to all dudes in the set */
 int
-ci_Apply(struct clone_head *ah, int (*aproc) (), char *arock)
+ci_Apply(struct clone_head *ah, int (*aproc) (Inode,  void *), void *arock)
 {
     register struct clone_items *ti;
     register int i;
@@ -177,7 +176,6 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);
-    Device device = rwvp->device;
 
     /* Open the RW volume's index file and seek to beginning */
     IH_COPY(rwH, rwvp->vnodeIndex[class].handle);

@@ -63,7 +63,7 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-int (*V_BreakVolumeCallbacks) ();
+int (*V_BreakVolumeCallbacks) (VolumeId);
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
@@ -211,7 +211,6 @@ SYNC_disconnect(SYNC_client_state * state)
 afs_int32
 SYNC_closeChannel(SYNC_client_state * state)
 {
-    afs_int32 code;
     SYNC_command com;
     SYNC_response res;
     SYNC_PROTO_BUF_DECL(ores);
@@ -631,7 +630,6 @@ SYNC_putRes(SYNC_server_state_t * state,
 int
 SYNC_verifyProtocolString(char * buf, size_t len)
 {
-    int ret = 0;
     size_t s_len;
 
     s_len = afs_strnlen(buf, len);

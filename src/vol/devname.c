@@ -92,7 +92,6 @@ vol_DevName(dev_t adev, char *wpath)
 {
     static char pbuffer[128];
     char pbuf[128], *ptr;
-    int code, i;
 #ifdef	AFS_SUN5_ENV
     struct mnttab mnt;
     FILE *mntfile;
@@ -238,7 +237,6 @@ afs_rawname(char *devfile)
 {
     static char rawname[100];
     struct stat statbuf;
-    char *p;
     int code, i;
 
     i = strlen(devfile);

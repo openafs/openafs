@@ -115,7 +115,7 @@ void
 SetSalvageDirHandle(DirHandle * dir, afs_int32 volume, Device device,
 		    Inode inode)
 {
-    static SalvageCacheCheck = 1;
+    static int SalvageCacheCheck = 1;
     memset(dir, 0, sizeof(DirHandle));
 
     dir->dirh_device = device;

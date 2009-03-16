@@ -58,6 +58,4 @@ LINKTABLEMAGIC, LINKTABLEVERSION}, VI_LINKTABLE,
    we require the table to be ordered */
 #define MAXINODETYPE VI_LINKTABLE
 
-Volume *VWaitAttachVolume();
-
 #endif /* __volinodes_h_ */
