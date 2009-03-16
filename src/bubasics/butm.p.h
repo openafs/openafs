@@ -48,7 +48,7 @@ struct butm_tapeInfo {
 	afs_int32(*writeFileEnd) (struct butm_tapeInfo *);
 	afs_int32(*writeEOT) (struct butm_tapeInfo *);
 	afs_int32(*setSize) (struct butm_tapeInfo *, afs_uint32);
-	afs_int32(*getSize) (struct butm_tapeInfo *, afs_uint32);
+	afs_int32(*getSize) (struct butm_tapeInfo *, afs_uint32 *);
     } ops;
     char name[BU_MAXTAPELEN];
     afs_int32 position;		/* current position of tape */
