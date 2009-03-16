@@ -1558,11 +1558,13 @@ fi
 
 AC_TYPE_SIGNAL
 AC_CHECK_TYPE(ssize_t, int)
-AC_CHECK_TYPE([sig_t], ,
-    [AC_DEFINE([sig_t], [int],
-        [Define to int if <signal.h> does not define.])],
-[#include <sys/types.h>
-#include <signal.h>])
+AC_CHECK_TYPES(sig_t, , ,
+  [#include <sys/types.h>
+   #include <signal.h> ])
+AH_BOTTOM(
+[#ifndef HAVE_SIG_T
+typedef RETSIGTYPE (*sig_t) ();
+#endif])
 AC_CHECK_TYPE([sig_atomic_t], ,
     [AC_DEFINE([sig_atomic_t], [int],
         [Define to int if <signal.h> does not define.])],
