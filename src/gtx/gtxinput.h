@@ -8,3 +8,6 @@
  */
 
 /* Input structure  */
+
+void *gtx_InputServer(void *);
+

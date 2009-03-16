@@ -44,7 +44,7 @@ struct gator_light_crparams {
 
 /*Light object's creation routine*/
 
-extern int gator_light_create();
+extern int gator_light_create(struct onode *, struct onode_createparams *);
     /*
      * Summary:
      *    Create a gator light object.
@@ -62,7 +62,7 @@ extern int gator_light_create();
 
 /*Light object's generic onode routines*/
 
-extern int gator_light_destroy();
+extern int gator_light_destroy(struct onode *);
     /*
      * Summary:
      *    Destroy a gator light object.
@@ -75,7 +75,7 @@ extern int gator_light_destroy();
      *    Error value otherwise.
      */
 
-extern int gator_light_display();
+extern int gator_light_display(struct onode *);
     /*
      * Summary:
      *    Display/redraw a gator light object.
@@ -88,7 +88,7 @@ extern int gator_light_display();
      *    Error value otherwise.
      */
 
-extern int gator_light_release();
+extern int gator_light_release(struct onode *);
     /*
      * Summary:
      *    Drop the refcount on a gator light object.
@@ -106,7 +106,7 @@ extern int gator_light_release();
  * Additional, light-specific operations.
  */
 
-extern int gator_light_set();
+extern int gator_light_set(struct onode *, int);
     /*
      * Summary:
      *    Set the value of the given gator light object.

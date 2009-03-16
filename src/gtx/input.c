@@ -17,7 +17,6 @@ RCSID
 #include <sys/types.h>
 #endif
 #include <lwp.h>
-
 #include "gtxobjects.h"
 #include "gtxwindows.h"
 #include "gtxcurseswin.h"
@@ -66,9 +65,8 @@ gtx_InputServer(void *param)
 }
 
 struct gwin *
-gtx_Init(astartInput, atype)
-     int atype;			/* type of window to create */
-     int astartInput;
+gtx_Init(int astartInput, 
+	 int atype)			/* type of window to create */
 {
     PROCESS junk;
     struct onode_initparams oi_params;	/* object init params */

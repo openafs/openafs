@@ -47,9 +47,7 @@ static int objdict_debug;	/*Is debugging turned on? */
  *------------------------------------------------------------------------*/
 
 int
-gator_objdict_init(adebug)
-     int adebug;
-
+gator_objdict_init(int adebug)
 {				/*gator_objdict_init */
 
     static char rn[] = "gator_objdict_init";	/*Routine name */
@@ -90,9 +88,7 @@ gator_objdict_init(adebug)
  *------------------------------------------------------------------------*/
 
 int
-gator_objdict_add(objtoadd)
-     struct onode *objtoadd;
-
+gator_objdict_add(struct onode *objtoadd)
 {				/*gator_objdict_add */
 
     static char rn[] = "gator_objdict_add";	/*Routine name */
@@ -128,9 +124,7 @@ gator_objdict_add(objtoadd)
  *------------------------------------------------------------------------*/
 
 int
-gator_objdict_delete(objtodelete)
-     struct onode *objtodelete;
-
+gator_objdict_delete(struct onode *objtodelete)
 {				/*gator_objdict_delete */
 
     static char rn[] = "gator_objdict_delete";	/*Routine name */
@@ -166,9 +160,7 @@ gator_objdict_delete(objtodelete)
  *------------------------------------------------------------------------*/
 
 struct onode *
-gator_objdict_lookup(nametofind)
-     char *nametofind;
-
+gator_objdict_lookup(char *nametofind)
 {				/*gator_objdict_lookup */
 
     static char rn[] = "gator_objdict_lookup";	/*Routine name */

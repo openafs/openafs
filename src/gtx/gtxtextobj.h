@@ -38,7 +38,7 @@ struct gator_textobj_params {
 
 /*Text object's creation routine*/
 
-extern int gator_text_create();
+extern int gator_text_create(struct onode *, struct onode_createparams *);
     /*
      * Summary:
      *    Create a gator text object.
@@ -56,7 +56,7 @@ extern int gator_text_create();
 
 /*Text object's generic onode routines*/
 
-extern int gator_text_destroy();
+extern int gator_text_destroy(struct onode *);
     /*
      * Summary:
      *    Destroy a gator text object.
@@ -69,7 +69,7 @@ extern int gator_text_destroy();
      *    Error value otherwise.
      */
 
-extern int gator_text_display();
+extern int gator_text_display(struct onode *);
     /*
      * Summary:
      *    Display/redraw a gator text object.
@@ -82,7 +82,7 @@ extern int gator_text_display();
      *    Error value otherwise.
      */
 
-extern int gator_text_release();
+extern int gator_text_release(struct onode *);
     /*
      * Summary:
      *    Drop the refcount on a gator text object.
@@ -100,7 +100,7 @@ extern int gator_text_release();
  * Additional, text-specific operations.
  */
 
-extern int gator_text_Scroll();
+extern int gator_text_Scroll(struct onode *, int, int);
     /*
      * Summary:
      *    Scroll a text object some number of lines.
@@ -115,7 +115,7 @@ extern int gator_text_Scroll();
      *    Error value otherwise.
      */
 
-extern int gator_text_Write();
+extern int gator_text_Write(struct onode *, char *, int, int, int);
     /*
      * Summary:
      *    Write the given string to the end of the gator text object.
@@ -133,7 +133,7 @@ extern int gator_text_Write();
      *    Error value otherwise.
      */
 
-extern int gator_text_BlankLine();
+extern int gator_text_BlankLine(struct onode *, int);
     /*
      * Summary:
      *    Write a given number of blank lines to the given text object.

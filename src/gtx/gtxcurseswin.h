@@ -43,7 +43,7 @@ struct gator_cursesgwin_params {
 
 /*Curses initialization routine*/
 
-extern int gator_cursesgwin_init();
+extern int gator_cursesgwin_init(int adebug);
     /*
      * Summary:
      *    Initialize the curses window package.
@@ -58,7 +58,7 @@ extern int gator_cursesgwin_init();
 
 /*Curses window's creation routine*/
 
-extern struct gwin *gator_cursesgwin_create();
+extern struct gwin *gator_cursesgwin_create(struct gator_cursesgwin_params *);
     /*
      * Summary:
      *    Create a curses window.
@@ -73,7 +73,7 @@ extern struct gwin *gator_cursesgwin_create();
 
 /*Curses cleanup routine*/
 
-extern int gator_cursesgwin_cleanup();
+extern int gator_cursesgwin_cleanup(struct gwin *);
     /*
      * Summary:
      *    Clean up after the curses window package.
@@ -90,7 +90,7 @@ extern struct gwinbaseops gator_curses_gwinbops;
 
 /*Curses window's routines*/
 
-extern int gator_cursesgwin_box();
+extern int gator_cursesgwin_box(struct gwin *);
     /*
      * Summary:
      *    Draw a box around the given curses window.
@@ -104,7 +104,7 @@ extern int gator_cursesgwin_box();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_clear();
+extern int gator_cursesgwin_clear(struct gwin *);
     /*
      * Summary:
      *    Clear out the given curses window.
@@ -118,7 +118,7 @@ extern int gator_cursesgwin_clear();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_destroy();
+extern int gator_cursesgwin_destroy(struct gwin *);
     /*
      * Summary:
      *    Destroy the given curses window.
@@ -131,7 +131,7 @@ extern int gator_cursesgwin_destroy();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_display();
+extern int gator_cursesgwin_display(struct gwin *);
     /*
      * Summary:
      *    Display/redraw the given curses window.
@@ -144,7 +144,7 @@ extern int gator_cursesgwin_display();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_drawline();
+extern int gator_cursesgwin_drawline(struct gwin *, struct gwin_lineparams *);
     /*
      * Summary:
      *    Draw a line between two points in the given curses
@@ -160,7 +160,8 @@ extern int gator_cursesgwin_drawline();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_drawrectangle();
+extern int gator_cursesgwin_drawrectangle(struct gwin *, 
+					  struct gwin_rectparams *);
     /*
      * Summary:
      *    Draw a rectangle in the given curses window.
@@ -175,7 +176,7 @@ extern int gator_cursesgwin_drawrectangle();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_drawchar();
+extern int gator_cursesgwin_drawchar(struct gwin *, struct gwin_charparams *);
     /*
      * Summary:
      *    Draw a character in the given curses window.
@@ -190,7 +191,7 @@ extern int gator_cursesgwin_drawchar();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_drawstring();
+extern int gator_cursesgwin_drawstring(struct gwin *, struct gwin_strparams *);
     /*
      * Summary:
      *    Draw a string in the given curses window.
@@ -205,7 +206,7 @@ extern int gator_cursesgwin_drawstring();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_invert();
+extern int gator_cursesgwin_invert(struct gwin *, struct gwin_invparams *);
     /*
      * Summary:
      *    Invert a region in the given curses window.
@@ -220,10 +221,11 @@ extern int gator_cursesgwin_invert();
      *    Error value otherwise.
      */
 
-extern int gator_cursesgwin_getchar();
+extern int gator_cursesgwin_getchar(struct gwin *);
 
-extern int gator_cursesgwin_getdimensions();
+extern int gator_cursesgwin_getdimensions(struct gwin *,
+					  struct gwin_sizeparams *aparms);
 
-extern int gator_cursesgwin_wait();
+extern int gator_cursesgwin_wait(struct gwin *);
 
 #endif /* __gator_curseswindows_h */
