@@ -31,15 +31,13 @@ RCSID
 #include <gtxdumbwin.h>		/*Dumb terminal window package */
 #include <gtxX11win.h>		/*X11 window package */
 #include <gtxframe.h>		/*Frame package */
+#include <gtxinput.h>
 #include <stdio.h>		/*Standard I/O stuff */
 #include <cmd.h>		/*Command interpretation library */
 #include <fsprobe.h>		/*Interface for fsprobe module */
 #include <errno.h>
-
-
-extern struct hostent *hostutil_GetHostByName();
-extern int gtx_InputServer();
-extern int gethostname();
+#include <afs/afsutil.h>
+#include <netdb.h>
 
 /*
  * Command line parameter indicies.
@@ -209,9 +207,7 @@ static char scout_LightLabelUnd[] =
  *------------------------------------------------------------------------*/
 
 static void
-scout_CleanExit(a_exitval)
-     int a_exitval;
-
+scout_CleanExit(int a_exitval)
 {				/*scout_CleanExit */
 
     static char rn[] = "scout_CleanExit";	/*Routine name */
@@ -255,13 +251,7 @@ scout_CleanExit(a_exitval)
  *------------------------------------------------------------------------*/
 
 static struct onode *
-mini_initLightObject(a_name, a_x, a_y, a_width, a_win)
-     char *a_name;
-     int a_x;
-     int a_y;
-     int a_width;
-     struct gwin *a_win;
-
+mini_initLightObject(char *a_name, int a_x, int a_y, int a_width, struct gwin *a_win)
 {				/*mini_initLightObject */
 
     static char rn[] = "mini_initLightObject";	/*Routine name */
@@ -349,10 +339,7 @@ mini_initLightObject(a_name, a_x, a_y, a_width, a_win)
  *------------------------------------------------------------------------*/
 
 static int
-scout_initDiskLightObjects(a_line, a_win)
-     struct mini_line *a_line;
-     struct gwin *a_win;
-
+scout_initDiskLightObjects(struct mini_line *a_line, struct gwin *a_win)
 {				/*scout_initDiskLightObjects */
 
     static char rn[] = "scout_initDiskLightObjects";	/*Routine name */
@@ -454,15 +441,9 @@ scout_initDiskLightObjects(a_line, a_win)
  *------------------------------------------------------------------------*/
 
 int
-mini_justify(a_srcbuff, a_dstbuff, a_dstwidth, a_justification, a_rightTrunc,
-	     a_isLabeledDisk)
-     char *a_srcbuff;
-     char *a_dstbuff;
-     int a_dstwidth;
-     int a_justification;
-     int a_rightTrunc;
-     int a_isLabeledDisk;
-
+mini_justify(char *a_srcbuff, char *a_dstbuff, int a_dstwidth, 
+	     int a_justification, int a_rightTrunc,
+	     int a_isLabeledDisk)
 {				/*mini_justify */
 
     static char rn[] = "mini_justify";	/*Routine name */
@@ -593,13 +574,9 @@ mini_justify(a_srcbuff, a_dstbuff, a_dstwidth, a_justification, a_rightTrunc,
  *------------------------------------------------------------------------*/
 
 static void
-scout_SetNonDiskLightLine(a_srvline, a_linenum)
-     struct mini_line *a_srvline;
-     int a_linenum;
-
+scout_SetNonDiskLightLine(struct mini_line *a_srvline, int a_linenum)
 {				/*scout_SetNonDiskLightLine */
 
-    static char rn[] = "scout_SetNonDiskLightLine";	/*Routine name */
     struct gator_lightobj *nondisk_lightdata;	/*Non-disk light data field */
     struct gwin_strparams *nondisk_strparams;	/*Associated string params */
 
@@ -665,9 +642,7 @@ scout_SetNonDiskLightLine(a_srvline, a_linenum)
  *------------------------------------------------------------------------*/
 
 static int
-scout_RecomputeLightLocs(a_srvline)
-     struct mini_line *a_srvline;
-
+scout_RecomputeLightLocs(struct mini_line *a_srvline)
 {				/*scout_RecomputeLightLocs */
 
     static char rn[] = "scout_RecomputeLightLocs";	/*Routine name */
@@ -815,11 +790,7 @@ scout_RecomputeLightLocs(a_srvline)
  *------------------------------------------------------------------------*/
 
 static int
-scout_FindUsedDisk(a_diskname, a_srvline, a_record_added)
-     char *a_diskname;
-     struct mini_line *a_srvline;
-     int *a_record_added;
-
+scout_FindUsedDisk(char *a_diskname, struct mini_line *a_srvline, int *a_record_added)
 {				/*scout_FindUsedDisk */
 
     static char rn[] = "scout_FindUsedDisk";	/*Routine name */
@@ -988,10 +959,7 @@ scout_FindUsedDisk(a_diskname, a_srvline, a_record_added)
  *------------------------------------------------------------------------*/
 
 static void
-scout_RemoveInactiveDisk(a_srvline, a_used_idx)
-     struct mini_line *a_srvline;
-     int a_used_idx;
-
+scout_RemoveInactiveDisk(struct mini_line *a_srvline, int a_used_idx)
 {				/*scout_RemoveInactiveDisk */
 
     static char rn[] = "scout_RemoveInactiveDisk";	/*Routine name */
@@ -1033,14 +1001,10 @@ scout_RemoveInactiveDisk(a_srvline, a_used_idx)
  *------------------------------------------------------------------------*/
 
 static int
-mini_PrintDiskStats(a_srvline, a_stats, a_probeOK, a_width_changed,
-		    a_fix_line_num, a_delta_line_num)
-     struct mini_line *a_srvline;
-     struct ProbeViceStatistics *a_stats;
-     int a_probeOK;
-     int a_fix_line_num;
-     int a_delta_line_num;
-
+mini_PrintDiskStats(struct mini_line *a_srvline, 
+		    struct ProbeViceStatistics *a_stats, 
+		    int a_probeOK, int a_width_changed,
+		    int a_fix_line_num, int a_delta_line_num)
 {				/*mini_PrintDiskStats */
 
     static char rn[] = "mini_PrintDiskStats";	/*Routine name */
@@ -1164,7 +1128,7 @@ mini_PrintDiskStats(a_srvline, a_stats, a_probeOK, a_width_changed,
 	 * An AFS partition name must be prefixed by `/vicep`.
 	 */
 	if (scout_debug) {
-	    fprintf(scout_debugfd, "[%s] Disk stats at 0x%x for disk '%s'\n",
+	    fprintf(scout_debugfd, "[%s] Disk stats at %p for disk '%s'\n",
 		    rn, curr_diskstat, curr_diskstat->Name);
 	    fflush(scout_debugfd);
 	}
@@ -1301,7 +1265,7 @@ mini_PrintDiskStats(a_srvline, a_stats, a_probeOK, a_width_changed,
  *------------------------------------------------------------------------*/
 
 int
-FS_Handler()
+FS_Handler(void)
 {				/*FS_Handler */
 
     static char rn[] = "FS_Handler";	/*Routine name */
@@ -1521,12 +1485,8 @@ FS_Handler()
  *------------------------------------------------------------------------*/
 
 static int
-init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
-     struct sockaddr_in *a_skt;
-     int a_lineNum;
-     struct mini_line *a_line;
-     char *a_srvname;
-
+init_mini_line(struct sockaddr_in *a_skt, int a_lineNum, 
+	       struct mini_line *a_line, char *a_srvname)
 {				/*init_mini_line */
 
     static char rn[] = "init_mini_line";	/*Routine name */
@@ -1651,11 +1611,7 @@ init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
  *------------------------------------------------------------------------*/
 
 static int
-execute_scout(a_numservers, a_srvname, a_pkg)
-     int a_numservers;
-     struct cmd_item *a_srvname;
-     int a_pkg;
-
+execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 {				/*execute_scout */
 
     static char rn[] = "execute_scout";	/*Routine name */
@@ -1827,7 +1783,7 @@ execute_scout(a_numservers, a_srvname, a_pkg)
 
 	/*Debugging */
 	if (scout_debug)
-	    fprintf(scout_debugfd, "[%s] Scout label is '%s', %d chars\n", rn,
+	    fprintf(scout_debugfd, "[%s] Scout label is '%s', %lu chars\n", rn,
 		    lightdata->label, strlen(lightdata->label));
     }
 
@@ -1983,7 +1939,7 @@ execute_scout(a_numservers, a_srvname, a_pkg)
 			     &gxlistener_ID);	/*Returned LWP process ID */
 #endif /* 0 */
 
-    code = gtx_InputServer(scout_gwin);
+    code = (int) gtx_InputServer(scout_gwin);
     if (code) {
 	fprintf(stderr,
 		"[%s] Error exit from gtx_InputServer(), error is %d\n", rn,
@@ -2035,9 +1991,7 @@ execute_scout(a_numservers, a_srvname, a_pkg)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static int countServers(a_firstItem)
-     struct cmd_item *a_firstItem;
-
+static int countServers(struct cmd_item *a_firstItem)
 {				/*countServers */
 
     int list_len;		/*List length */
@@ -2087,9 +2041,7 @@ static int countServers(a_firstItem)
  *	As specified.
  *------------------------------------------------------------------------*/
 
-static void scout_AdoptThresholds(a_thresh_item)
-     struct cmd_item *a_thresh_item;
-
+static void scout_AdoptThresholds(struct cmd_item *a_thresh_item)
 {				/*scout_AdoptThresholds */
 
     static char rn[] = "scout_AdoptThresholds";	/*Routine name */
@@ -2117,7 +2069,7 @@ static void scout_AdoptThresholds(a_thresh_item)
 	    if (scout_debug) {
 		fprintf(scout_debugfd,
 			"[%s] Setting conn attn value to %d (default %d)\n",
-			rn, curr_value, scout_attn_conn);
+			rn, atoi(curr_value), scout_attn_conn);
 		fflush(scout_debugfd);
 	    }
 	    scout_attn_conn = atoi(curr_value);
@@ -2142,8 +2094,8 @@ static void scout_AdoptThresholds(a_thresh_item)
 	    else {
 		if (scout_debug) {
 		    fprintf(scout_debugfd,
-			    "[%s] New disk attn value: %s min free (default %d)\n",
-			    rn, atoi(curr_value), scout_attn_disk_pcused);
+			    "[%s] New disk attn value: %s min free (default %f)\n",
+			    rn, curr_value, scout_attn_disk_pcused);
 		    fflush(scout_debugfd);
 		}
 		scout_attn_disk_mode = SCOUT_DISKM_MINFREE;
@@ -2153,7 +2105,7 @@ static void scout_AdoptThresholds(a_thresh_item)
 	    if (scout_debug) {
 		fprintf(scout_debugfd,
 			"[%s] Setting fetch attn value to %d (default %d)\n",
-			rn, curr_value, scout_attn_fetch);
+			rn, atoi(curr_value), scout_attn_fetch);
 		fflush(scout_debugfd);
 	    }
 	    scout_attn_fetch = atoi(curr_value);
@@ -2161,7 +2113,7 @@ static void scout_AdoptThresholds(a_thresh_item)
 	    if (scout_debug) {
 		fprintf(scout_debugfd,
 			"[%s] Setting store attn value to %d (default %d)\n",
-			rn, curr_value, scout_attn_store);
+			rn, atoi(curr_value), scout_attn_store);
 		fflush(scout_debugfd);
 	    }
 	    scout_attn_store = atoi(curr_value);
@@ -2169,7 +2121,7 @@ static void scout_AdoptThresholds(a_thresh_item)
 	    if (scout_debug) {
 		fprintf(scout_debugfd,
 			"[%s] Setting workstation attn value to %d (default %d)\n",
-			rn, curr_value, scout_attn_workstations);
+			rn, atoi(curr_value), scout_attn_workstations);
 		fflush(scout_debugfd);
 	    }
 	    scout_attn_workstations = atoi(curr_value);
@@ -2320,10 +2272,8 @@ static int scoutInit(struct cmd_syndesc *as, void *arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
-
+int
+main(int argc, char **argv)
 {				/*main */
 
     register afs_int32 code;	/*Return code */
