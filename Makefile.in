@@ -450,7 +450,7 @@ afs_depinstall: pinstall comerr
 dir_depinstall: pinstall
 	${COMPILE_PART1} dir ${COMPILE_DEPINSTALL}
 
-sys_depinstall: pinstall
+sys_depinstall: pinstall rxgen
 	${COMPILE_PART1} sys ${COMPILE_DEPINSTALL}
 
 kauth_depinstall: pinstall rxgen comerr

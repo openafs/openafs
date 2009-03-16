@@ -32,18 +32,20 @@ RCSID
 #include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>    
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 #include <rx/xdr.h>
 #include "rmtsys.h"
+#include "sys_prototypes.h"
 
 
 #define	NOPAG	    0xffffffff	/* Also defined in afs/afs.h */
 static afs_int32 hostAddr = 0;
 static int hostAddrLookup = 0;
 char *afs_server = 0, server_name[128];
-static afs_int32 SetClientCreds();
+static afs_int32 SetClientCreds(struct clientcred *creds, afs_uint32 * groups);
 int afs_get_pag_from_groups(afs_uint32 g0, afs_uint32 g1);
 void afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p);
 
@@ -58,7 +60,6 @@ afs_int32
 GetAfsServerAddr(char *syscall)
 {
     register struct hostent *th;
-    char *getenv();
 
     if (hostAddrLookup) {
 	/* Take advantage of caching and assume that the remote host
@@ -158,8 +159,9 @@ setpag(void)
 {
     struct rx_connection *conn;
     clientcred creds;
-    afs_int32 errorcode, errornumber, newpag, ngroups, j, groups[NGROUPS_MAX];
-
+    afs_int32 errorcode, errornumber, newpag, ngroups, j;
+    afs_uint32 groups[NGROUPS_MAX];
+    
     if (!(conn = rx_connection(&errorcode, "setpag"))) {
 	/* Remote call can't be performed for some reason.
 	 * Try the local 'setpag' system call ... */
@@ -219,14 +221,10 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     afs_uint32 groups[NGROUPS_MAX];
     rmtbulk InData, OutData;
     char pathname[256], *pathp = pathname, *inbuffer;
-#if 0/*ndef HAVE_GETCWD*/	/* XXX enable when autoconf happens */
-    extern char *getwd();
-#define getcwd(x,y) getwd(x)
-#endif
     if (!(conn = rx_connection(&errorcode, "pioctl"))) {
 	/* Remote call can't be performed for some reason.
 	 * Try the local 'pioctl' system call ... */
-	errorcode = lpioctl(path, cmd, data, follow);
+	errorcode = lpioctl(path, cmd, (char *)data, follow);
 	return errorcode;
     }
     (void)SetClientCreds(&creds, groups);
@@ -323,7 +321,7 @@ afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p)
 
 
 static afs_int32
-SetClientCreds(struct clientcred *creds, afs_int32 * groups)
+SetClientCreds(struct clientcred *creds, afs_uint32 * groups)
 {
     afs_int32 ngroups;
 

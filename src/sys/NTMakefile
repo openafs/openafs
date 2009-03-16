@@ -15,7 +15,8 @@ RELDIR=sys
 
 INCFILES =\
 	$(DESTDIR)\include\afs\afssyscalls.h \
-	$(DESTDIR)\include\afs\pioctl_nt.h
+	$(DESTDIR)\include\afs\pioctl_nt.h \
+	$(DESTDIR)\include\afs\sys_prototypes.h
 
 # Library to install
 
