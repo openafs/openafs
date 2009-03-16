@@ -20,13 +20,13 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
-#include <afs/afsutil.h>
 #include <lock.h>
 #include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsutil.h>
 #include <time.h>
+#include <stdarg.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
@@ -506,11 +506,11 @@ SVOTE_DebugOld(struct rx_call * rxcall,
     aparm->syncTime = syncTime;
 
     aparm->amSyncSite = ubik_amSyncSite;
-    ubeacon_Debug(aparm);
+    ubeacon_Debug((ubik_debug *)aparm);
 
-    udisk_Debug(aparm);
+    udisk_Debug((ubik_debug *)aparm);
 
-    ulock_Debug(aparm);
+    ulock_Debug((ubik_debug *)aparm);
 
     /* Get the recovery state. The label of the database may not have 
      * been written yet but set the flag so udebug behavior remains.

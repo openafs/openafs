@@ -147,7 +147,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     if (code == RXGEN_OPCODE) {
 	oldServer = 1;		/* talking to a pre 3.5 server */
 	memset(&udebug, 0, sizeof(udebug));
-	code = VOTE_DebugOld(tconn, &udebug);
+	code = VOTE_DebugOld(tconn, (ubik_debug_old *)&udebug);
     }
 
     if (code) {
@@ -276,7 +276,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    if (code < 0) {
 		if (oldServer) {	/* pre 3.5 server */
 		    memset(&usdebug, 0, sizeof(usdebug));
-		    code = VOTE_SDebugOld(tconn, i, &usdebug);
+		    code = VOTE_SDebugOld(tconn, i, (ubik_sdebug_old *)&usdebug);
 		} else
 		    code = VOTE_SDebug(tconn, i, &usdebug);
 	    }
