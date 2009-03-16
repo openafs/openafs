@@ -1528,6 +1528,8 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 			f_print(fout, "\n\t%s = 0;", plist->pl.param_name);
 			plist->pl.string_name = NULL;
 			break;
+		    default:
+			break;
 		    }
 		}
 	    }
@@ -1676,6 +1678,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 			somefrees = 1;
 			f_print(fout, "\tif (!%s) goto fail1;\n",
 				plist->scode);
+			break;
+		    default:
 			break;
 		    }
 		}
