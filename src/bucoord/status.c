@@ -27,7 +27,7 @@ RCSID
 #include <afs/bubasics.h>
 #include "bc.h"
 #include "error_macros.h"
-
+#include "bucoord_prototypes.h"
 
 extern dlqlinkT statusHead;	/* chain of status blocks */
 extern struct Lock statusQueueLock;	/* access control for status chain */
@@ -39,7 +39,7 @@ extern struct Lock cmdLineLock;	/* lock on the cmdLine */
  */
 
 void
-initStatus()
+initStatus(void)
 {
     dlqInit(&statusHead);
     Lock_Init(&statusQueueLock);
@@ -49,25 +49,24 @@ initStatus()
 /* lock managment */
 
 void
-lock_Status()
+lock_Status(void)
 {
     ObtainWriteLock(&statusQueueLock);
 }
 
 void
-unlock_Status()
+unlock_Status(void)
 {
     ReleaseWriteLock(&statusQueueLock);
 }
 
 void
-lock_cmdLine()
+lock_cmdLine(void)
 {
     ObtainWriteLock(&cmdLineLock);
 }
-
 void
-unlock_cmdLine()
+unlock_cmdLine(void)
 {
     ReleaseWriteLock(&cmdLineLock);
 }
@@ -75,13 +74,9 @@ unlock_cmdLine()
 /* general */
 
 void
-clearStatus(taskId, flags)
-     afs_uint32 taskId;
-     afs_uint32 flags;
+clearStatus(afs_uint32 taskId, afs_uint32 flags)
 {
     statusP ptr;
-
-    extern statusP findStatus();
 
     ObtainWriteLock(&statusQueueLock);
     ptr = findStatus(taskId);
@@ -95,7 +90,7 @@ clearStatus(taskId, flags)
 }
 
 statusP
-createStatusNode()
+createStatusNode(void)
 {
     statusP ptr;
 
@@ -115,8 +110,7 @@ createStatusNode()
 }
 
 void
-deleteStatusNode(ptr)
-     statusP ptr;
+deleteStatusNode(statusP ptr)
 {
     ObtainWriteLock(&statusQueueLock);
     dlqUnlink((dlqlinkP) ptr);
@@ -128,8 +122,7 @@ deleteStatusNode(ptr)
 }
 
 statusP
-findStatus(taskId)
-     afs_uint32 taskId;
+findStatus(afs_uint32 taskId)
 {
     statusP ptr = 0;
     dlqlinkP dlqPtr;
@@ -147,9 +140,7 @@ findStatus(taskId)
 }
 
 void
-setStatus(taskId, flags)
-     afs_uint32 taskId;
-     afs_uint32 flags;
+setStatus(afs_uint32 taskId, afs_uint32 flags)
 {
     statusP ptr;
 

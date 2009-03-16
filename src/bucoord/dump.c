@@ -39,15 +39,11 @@ RCSID
 
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_prototypes.h"
 
 struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 
-extern char *bc_CopyString();
-extern void bc_HandleMisc();
 extern char *whoami;
-extern char *tailCompPtr();
-extern statusP createStatusNode();
-extern afs_int32 bc_jobNumber();
 
 extern afs_int32 lastTaskCode;
 
@@ -59,7 +55,8 @@ extern afs_int32 lastTaskCode;
  *	aindex - index into dumpTask array, contains all the information 
  * 		 relevant to the dump
  */
-bc_Dumper(aindex)
+int
+bc_Dumper(int aindex)
 {
     struct rx_connection *tconn;
     register struct bc_volumeDump *tde;
@@ -179,8 +176,7 @@ bc_Dumper(aindex)
  */
 
 void
-freeDumpTaskVolumeList(vdptr)
-     struct bc_volumeDump *vdptr;
+freeDumpTaskVolumeList(struct bc_volumeDump *vdptr)
 {
     struct bc_volumeDump *nextVdPtr;
 
@@ -240,24 +236,14 @@ bc_DmpRstStart(void *param)
  *		bc_Restorer for doing restores
  */
 
-bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer,
-	       adestPartition, afromDate, anewExt, aoldFlag, aparent, alevel,
-	       aproc, ports, portCount, dsptr, append, dontExecute)
-     struct bc_config *aconfig;
-     char *adname;
-     char *avname;
-     struct bc_volumeDump *avolsToDump;
-     struct sockaddr_in *adestServer;
-     afs_int32 adestPartition;
-     afs_int32 afromDate;
-     char *anewExt;
-     int aoldFlag;
-     afs_int32 aparent, alevel;
-     int (*aproc) ();
-     afs_int32 *ports;
-     afs_int32 portCount;
-     struct bc_dumpSchedule *dsptr;
-     int append, dontExecute;
+int
+bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname, 
+	       struct bc_volumeDump *avolsToDump, 
+	       struct sockaddr_in *adestServer,
+	       afs_int32 adestPartition, afs_int32 afromDate, char *anewExt, 
+	       int aoldFlag, afs_int32 aparent, afs_int32 alevel,
+	       int (*aproc) (int), afs_int32 *ports, afs_int32 portCount, 
+	       struct bc_dumpSchedule *dsptr, int append, int dontExecute)
 {
     register int i;
     register afs_int32 code;
@@ -339,9 +325,7 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer,
  */
 
 afs_int32
-bc_FindDumpSlot(dumpID, port)
-     afs_int32 dumpID;
-     afs_int32 port;
+bc_FindDumpSlot(afs_int32 dumpID, afs_int32 port)
 {
     int i;
 
@@ -361,11 +345,9 @@ bc_FindDumpSlot(dumpID, port)
  *	label a tape
  */
 
-bc_LabelTape(afsname, pname, size, config, port)
-     char *afsname, *pname;
-     struct bc_config *config;
-     afs_int32 port;
-     afs_int32 size;
+int
+bc_LabelTape(char *afsname, char *pname, afs_int32 size, 
+	     struct bc_config *config, afs_int32 port)
 {
     struct rx_connection *tconn;
     afs_int32 code = 0;
@@ -411,9 +393,8 @@ bc_LabelTape(afsname, pname, size, config, port)
  *	a tape
  */
 
-bc_ReadLabel(config, port)
-     struct bc_config *config;
-     afs_int32 port;
+int
+bc_ReadLabel(struct bc_config *config, afs_int32 port)
 {
     struct rx_connection *tconn;
     struct tc_tapeLabel label;
@@ -445,19 +426,17 @@ bc_ReadLabel(config, port)
 	printf("Tape read was labelled : <NULL>  size : %u\n", label.size);
     } else if (!label.tapeId) {
 	printf("Tape read was labelled : %s size : %lu Kbytes\n", tname,
-	       label.size);
+	       (long unsigned int) label.size);
     } else {
 	printf("Tape read was labelled : %s (%lu) size : %lu Kbytes\n", tname,
-	       label.tapeId, label.size);
+	       (long unsigned int) label.tapeId, (long unsigned int) label.size);
     }
 
     return 0;
 }
 
-bc_ScanDumps(config, dbAddFlag, port)
-     struct bc_config *config;
-     afs_int32 dbAddFlag;
-     afs_int32 port;
+int
+bc_ScanDumps(struct bc_config *config, afs_int32 dbAddFlag, afs_int32 port)
 {
     struct rx_connection *tconn;
     statusP statusPtr;
@@ -493,12 +472,9 @@ bc_ScanDumps(config, dbAddFlag, port)
 
 /* get a connection to the tape controller */
 afs_int32
-bc_GetConn(aconfig, aport, tconn)
-     struct bc_config *aconfig;
-     afs_int32 aport;
-     struct rx_connection **tconn;
+bc_GetConn(struct bc_config *aconfig, afs_int32 aport, 
+	   struct rx_connection **tconn)
 {
-    afs_int32 code = 0;
     afs_uint32 host;
     unsigned short port;
     static struct rx_securityClass *rxsc;
@@ -536,8 +512,8 @@ bc_GetConn(aconfig, aport, tconn)
  *	-1 - not compatible
  */
 
-CheckTCVersion(tconn)
-     struct rx_connection *tconn;
+int
+CheckTCVersion(struct rx_connection *tconn)
 {
     struct tc_tcInfo tci;
     afs_int32 code;
@@ -552,10 +528,9 @@ CheckTCVersion(tconn)
     return 0;
 }
 
-ConnectButc(config, port, tconn)
-     struct bc_config *config;
-     afs_int32 port;
-     struct rx_connection **tconn;
+int
+ConnectButc(struct bc_config *config, afs_int32 port, 
+	    struct rx_connection **tconn)
 {
     afs_int32 code;
 
