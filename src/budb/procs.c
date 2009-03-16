@@ -530,7 +530,7 @@ SendReturnList(struct ubik_trans *ut,
     afs_int32 code;
     int to_return;
     int i;
-    void *e;
+    char *e;
 
     *nextIndexP = -1;
     *dbTimeP = ntohl(db.h.lastUpdate);
