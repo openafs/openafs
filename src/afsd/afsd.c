@@ -190,7 +190,6 @@ static io_connect_t root_port;
 static IONotificationPortRef notify;
 static io_object_t iterator;
 static CFRunLoopSourceRef source;
-static DNSSDState dnsstate;
 
 static int event_pid;
 
@@ -304,7 +303,9 @@ static int vCacheSize = 200;	/* # of volume cache entries */
 static int rootVolSet = 0;	/*True if root volume name explicitly set */
 int addrNum;			/*Cell server address index being printed */
 static int cacheFlags = 0;	/*Flags to cache manager */
+#ifdef AFS_AIX32_ENV
 static int nBiods = 5;		/* AIX3.1 only */
+#endif
 static int preallocs = 400;	/* Def # of allocated memory blocks */
 static int enable_peer_stats = 0;	/* enable rx stats */
 static int enable_process_stats = 0;	/* enable rx stats */
@@ -349,15 +350,14 @@ int missing_CellInfoFile = 1;	/*Is the CELLINFOFILE missing? */
 int afsd_rmtsys = 0;		/* Default: don't support rmtsys */
 struct afs_cacheParams cparams;	/* params passed to cache manager */
 
-static int HandleMTab();
+static int HandleMTab(void);
+int PartSizeOverflow(char *path, int cs);
 
 #ifdef AFS_DARWIN_ENV
 static void
 afsd_sleep_callback(void * refCon, io_service_t service, 
 		    natural_t messageType, void * messageArgument )
 {
-    afs_int32 code;
-    
     switch (messageType) {
     case kIOMessageCanSystemSleep:
 	/* Idle sleep is about to kick in; can 
@@ -397,7 +397,7 @@ static void
 afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
 {
     /* parse multihomed address files */
-    afs_int32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
+    afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	mtubuf[MAXIPADDRS];
     char reason[1024];
     afs_int32 code;
@@ -431,7 +431,6 @@ afsd_ipaddr_callback (SCDynamicStoreRef store, CFArrayRef changed_keys, void *in
 
 static void 
 afsd_event_cleanup(int signo) {
-    DNSSDState *query = &dnsstate;
 
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
     CFRelease (source);
@@ -443,7 +442,7 @@ afsd_event_cleanup(int signo) {
 }
 
 /* Adapted from "Living in a Dynamic TCP/IP Environment" technote. */
-static Boolean
+static void
 afsd_install_events(void)
 {
     SCDynamicStoreContext ctx = {0};
@@ -695,10 +694,7 @@ PartSizeOverflow(char *path, int cs)
   *---------------------------------------------------------------------------*/
 
 static int
-doGetXFileNumber(fname, filechar, maxNum)
-     char *fname;
-     char filechar;
-     int maxNum;
+doGetXFileNumber(char *fname, char filechar, int maxNum)
 {
     int computedVNumber;	/*The computed file number we return */
     int filenameLen;		/*Number of chars in filename */
@@ -736,17 +732,13 @@ doGetXFileNumber(fname, filechar, maxNum)
 }
 
 int
-GetVFileNumber(fname, maxFile)
-     char *fname;
-     int maxFile;
+GetVFileNumber(char *fname, int maxFile)
 {
     return doGetXFileNumber(fname, 'V', maxFile);
 }
 
 int
-GetDDirNumber(fname, maxDir)
-     char *fname;
-     int maxDir;
+GetDDirNumber(char *fname, int maxDir)
 {
     return doGetXFileNumber(fname, 'D', maxDir);
 }
@@ -776,9 +768,7 @@ GetDDirNumber(fname, maxDir)
   *---------------------------------------------------------------------------*/
 
 static int
-CreateCacheSubDir(basename, dirNum)
-     char *basename;
-     int dirNum;
+CreateCacheSubDir(char *basename, int dirNum)
 {
     static char rn[] = "CreateCacheSubDir";	/* Routine Name */
     char dir[1024];
@@ -805,9 +795,8 @@ CreateCacheSubDir(basename, dirNum)
 }
 
 static int
-MoveCacheFile(basename, fromDir, toDir, cacheFile, maxDir)
-     char *basename;
-     int fromDir, toDir, cacheFile, maxDir;
+MoveCacheFile(char *basename, int fromDir, int toDir, int cacheFile, 
+	      int maxDir)
 {
     static char rn[] = "MoveCacheFile";
     char from[1024], to[1024];
@@ -849,9 +838,7 @@ MoveCacheFile(basename, fromDir, toDir, cacheFile, maxDir)
 }
 
 int
-CreateCacheFile(fname, statp)
-     char *fname;
-     struct stat *statp;
+CreateCacheFile(char *fname, struct stat *statp)
 {
     static char rn[] = "CreateCacheFile";	/*Routine name */
     int cfd;			/*File descriptor to AFS cache file */
@@ -939,11 +926,10 @@ UnlinkUnwantedFile(char *rn, char *fullpn_FileToDelete, char *fileToDelete)
 
 
 static int
-doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
-     int *vFilesFound;
-     char *directory;		/* /path/to/cache/directory */
-     int dirNum;		/* current directory number */
-     int maxDir;		/* maximum directory number */
+doSweepAFSCache(int *vFilesFound, 
+     	        char *directory,	/* /path/to/cache/directory */
+		int dirNum,		/* current directory number */
+		int maxDir)		/* maximum directory number */
 {
     static char rn[] = "doSweepAFSCache";	/* Routine Name */
     char fullpn_FileToDelete[1024];	/*File to be deleted from cache */
@@ -1343,8 +1329,7 @@ CheckCacheBaseDir(char *dir)
 }
 
 int
-SweepAFSCache(vFilesFound)
-     int *vFilesFound;
+SweepAFSCache(int *vFilesFound)
 {
     static char rn[] = "SweepAFSCache";	/*Routine name */
     int maxDir = (cacheFiles + nFilesPerDir - 1) / nFilesPerDir;
@@ -1429,7 +1414,7 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
     return 0;
 }
 
-static
+static int
 ConfigCellAlias(struct afsconf_cellalias *aca,
 		void *arock, struct afsconf_dir *adir)
 {
@@ -1439,8 +1424,8 @@ ConfigCellAlias(struct afsconf_cellalias *aca,
 }
 
 #ifdef AFS_AFSDB_ENV
-static
-AfsdbLookupHandler()
+static void
+AfsdbLookupHandler(void)
 {
     afs_int32 kernelMsg[64];
     char acellName[128];
@@ -1524,6 +1509,7 @@ AfsdbLookupHandler()
 #endif
 #endif
 
+int
 mainproc(struct cmd_syndesc *as, void *arock)
 {
     static char rn[] = "afsd";	/*Name of this routine */
@@ -1535,12 +1521,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
     int cacheIteration;		/*How many times through cache verification */
     int vFilesFound;		/*How many data cache files were found in sweep */
     struct afsconf_dir *cdir;	/* config dir */
-    FILE *logfd;
     char *fsTypeMsg = NULL;
 #ifdef	AFS_SUN5_ENV
     struct stat st;
 #endif
-    afs_int32 vfs1_type = -1;
 #ifdef AFS_SGI65_ENV
     struct sched_param sp;
 #endif
@@ -1986,7 +1970,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     /* initialize the rx random number generator from user space */
     {
 	/* parse multihomed address files */
-	afs_int32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
+	afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	    mtubuf[MAXIPADDRS];
 	char reason[1024];
 	code =
@@ -2411,7 +2395,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 #include "AFS_component_version_number.c"
 
 
-
+int
 main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
@@ -2505,7 +2489,7 @@ main(int argc, char **argv)
 #endif
 
 static int
-HandleMTab()
+HandleMTab(void)
 {
 #if (defined (AFS_SUN_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)) && !defined(AFS_SUN58_ENV)
     FILE *tfilep;
@@ -2585,8 +2569,9 @@ HandleMTab()
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
 
-call_syscall(param1, param2, param3, param4, param5, param6, param7)
-     long param1, param2, param3, param4, param5, param6, param7;
+int
+call_syscall(long param1, long param2, long param3, long param4, long param5, 
+	     long param6, long  param7)
 {
     int error;
 #ifdef AFS_LINUX20_ENV
@@ -2637,7 +2622,7 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
 #endif
 
     if (afsd_debug)
-	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
+	printf("SScall(%d, %d, %ld)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
 	       error);
     return (error);
 }
