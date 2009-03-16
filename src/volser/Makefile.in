@@ -56,6 +56,7 @@ SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \
 
 all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volser.h \
+	${TOP_INCDIR}/afs/vsutils_prototypes.h \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
 
@@ -132,6 +133,9 @@ install: \
 ${DEST}/include/afs/volser.h: volser.h
 	${INSTALL} $? $@
 
+${DEST}/include/afs/vsutils_prototypes.h: vsutils_prototypes.h
+	${INSTALL} $? $@
+
 ${DEST}/include/afs/volint.h: volint.h
 	${INSTALL} $? $@
 
@@ -182,6 +186,12 @@ ${DESTDIR}${includedir}/afs/volser.h: volser.h
 ${TOP_INCDIR}/afs/volser.h: volser.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/afs/vsutils_prototypes.h: vsutils_prototypes.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/vsutils_prototypes.h: vsutils_prototypes.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/afs/volint.h: volint.h
 	${INSTALL} $? $@
 
@@ -218,6 +228,7 @@ dest: \
 	${DEST}/etc/restorevol \
 	${DEST}/etc/voldump \
 	${DEST}/include/afs/volser.h \
+	${DEST}/include/afs/vsutils_prototypes.h \
 	${DEST}/include/afs/volint.h \
 	${DEST}/etc/vos \
 	${DEST}/root.server/usr/afs/bin/vos \

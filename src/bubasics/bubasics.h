@@ -162,9 +162,9 @@ typedef dlqlinkT *dlqlinkP;
 	}
 
 /* function typing */
-extern dlqlinkP dlqFront();
-extern dlqlinkP dlqUnlinkb();
-extern dlqlinkP dlqUnlinkf();
+extern dlqlinkP dlqFront(dlqlinkP);
+extern dlqlinkP dlqUnlinkb(dlqlinkP);
+extern dlqlinkP dlqUnlinkf(dlqlinkP);
 
 /* -----------------------------
  * Status management
