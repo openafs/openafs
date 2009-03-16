@@ -86,8 +86,7 @@ static sigtype sig_restore();
 static push_signals(), pop_signals();
 #endif
 
-int des_read_pw_string(char *, int, char *, int);
-void des_string_to_key(char *, des_cblock *);
+#include "des_prototypes.h"
 
 /*** Routines ****************************************************** */
 int
@@ -128,11 +127,7 @@ static void catch(int);
  * Returns 0 on success, non-zero on failure.
  */
 int
-des_read_pw_string(s, maxa, prompt, verify)
-     char *s;
-     int maxa;
-     char *prompt;
-     int verify;
+des_read_pw_string(char *s, int maxa, char *prompt, int verify)
 {
     int ok = 0, cnt1 = 0;
     char *ptr;

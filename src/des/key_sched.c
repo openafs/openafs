@@ -44,7 +44,7 @@ RCSID
 typedef char key[64];
 
 /* the following are really void but cc86 doesnt allow it */
-static int make_key_sched();
+static int make_key_sched(key Key, des_key_schedule Schedule);
 
 #ifdef AFS_DUX40_ENV
 #pragma weak des_key_sched = afs_des_key_sched
