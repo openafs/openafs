@@ -119,6 +119,6 @@ des_string_to_key(char *str, register des_cblock * key)
     des_fixup_key_parity(key);
 
     if (des_debug)
-	fprintf(stdout, "\nResulting string_to_key = 0x%lx 0x%lx\n",
+	fprintf(stdout, "\nResulting string_to_key = 0x%x 0x%x\n",
 		*((afs_uint32 *) key), *((afs_uint32 *) key + 1));
 }
