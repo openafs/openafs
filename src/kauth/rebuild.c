@@ -43,12 +43,12 @@ char *whoami = "kadb_check";
 int fd;
 FILE *out;
 
-void badEntry();
+void badEntry(afs_int32, afs_int32);
 
 int listuheader, listkheader, listentries, verbose;
 
 int
-readUbikHeader()
+readUbikHeader(void)
 {
     int offset, r;
     struct ubik_hdr uheader;
@@ -62,7 +62,7 @@ readUbikHeader()
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	printf("error: read of %d bytes failed: %d %d\n", sizeof(uheader), r,
+	printf("error: read of %lu bytes failed: %d %d\n", sizeof(uheader), r,
 	       errno);
 	return (-1);
     }
@@ -91,8 +91,7 @@ readUbikHeader()
 }
 
 void
-PrintHeader(header)
-     struct kaheader *header;
+PrintHeader(struct kaheader *header)
 {
     printf("Version          = %d\n", header->version);
     printf("HeaderSize       = %d\n", header->headerSize);
@@ -110,9 +109,7 @@ PrintHeader(header)
 }
 
 void
-PrintEntry(index, entry)
-     afs_int32 index;
-     struct kaentry *entry;
+PrintEntry(afs_int32 index, struct kaentry *entry)
 {
     int i;
     char Time[100];
@@ -234,8 +231,7 @@ ntohEntry(struct kaentry *entryp)
 
 char principal[64];
 char *
-EntryName(entryp)
-     struct kaentry *entryp;
+EntryName(struct kaentry *entryp)
 {
     char name[32], inst[32];
 
@@ -254,8 +250,7 @@ EntryName(entryp)
 }
 
 void
-RebuildEntry(entryp)
-     struct kaentry *entryp;
+RebuildEntry(struct kaentry *entryp)
 {
     char key[33];
     char flags[128];
@@ -305,8 +300,8 @@ RebuildEntry(entryp)
 	    ntohl(entryp->key_version));
 }
 
-CheckHeader(header)
-     struct kaheader *header;
+int
+CheckHeader(struct kaheader *header)
 {
     afs_int32 i, code = 0;
 
@@ -362,8 +357,7 @@ CheckHeader(header)
 }
 
 afs_int32
-NameHash(entryp)
-     struct kaentry *entryp;
+NameHash(struct kaentry *entryp)
 {
     unsigned int hash;
     int i;
@@ -379,10 +373,8 @@ NameHash(entryp)
     return (hash % HASHSIZE);
 }
 
-readDB(offset, buffer, size)
-     afs_int32 offset;
-     char *buffer;
-     afs_int32 size;
+int
+readDB(afs_int32 offset, void *buffer, afs_int32 size)
 {
     afs_int32 code;
 
@@ -610,8 +602,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 }
 
 void
-badEntry(e, i)
-     afs_int32 e, i;
+badEntry(afs_int32 e, afs_int32 i)
 {
     int offset;
     struct kaentry entry;
@@ -643,9 +634,8 @@ badEntry(e, i)
     fprintf(stderr, " ]\n");
 }
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
 

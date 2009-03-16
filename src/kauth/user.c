@@ -50,11 +50,14 @@ RCSID
 #include <afs/auth.h>
 #include <afs/ptint.h>
 #include <afs/pterror.h>
+#include <afs/ptuser.h>
 #include <afs/ptserver.h>
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */
+#include <des.h>
+#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
 #endif /* defined(UKERNEL) */
@@ -66,7 +69,6 @@ GetTickets(char *name, char *instance, char *realm,
 	   afs_int32 * pwexpires, afs_int32 flags)
 {
     afs_int32 code;
-    struct ktc_token token;
 
     code = ka_GetAuthToken(name, instance, realm, key, lifetime, pwexpires);
     memset(key, 0, sizeof(*key));
@@ -147,13 +149,17 @@ ka_GetAFSTicket(char *name, char *instance, char *realm, Date lifetime,
 #endif
 
 afs_int32
-ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance, char *realm, char *password, Date lifetime, afs_int32 * password_expires,	/* days 'til, or don't change if not set */
+ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance, 
+			   char *realm, char *password, Date lifetime, 
+			   afs_int32 * password_expires,	/* days 'til, or don't change if not set */
 			   afs_int32 spare2, char **reasonP)
 {
     int remainingTime = 0;
     struct ktc_encryptionKey key;
     afs_int32 code, dosetpag = 0;
-    int (*old) ();
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
+    sig_t old;
+#endif
 
     if (reasonP)
 	*reasonP = "";

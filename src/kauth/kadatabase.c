@@ -34,12 +34,10 @@ extern Date cheaderReadTime;	/* time cheader last read in */
 
 #define inc_header_word(tt,field) kawrite ((tt), ((char *)&(cheader.field) - (char *)&cheader), ((cheader.field = (htonl(ntohl(cheader.field)+1))), (char *)&(cheader.field)), sizeof(afs_int32))
 
-static int index_OK();
+static int index_OK(afs_int32);
 
 afs_int32
-NameHash(aname, ainstance)
-     register char *aname;
-     register char *ainstance;
+NameHash(register char *aname, register char *ainstance)
 {
     register unsigned int hash;
     register int i;
@@ -56,11 +54,7 @@ NameHash(aname, ainstance)
 /* package up seek and write into one procedure for ease of use */
 
 afs_int32
-kawrite(tt, pos, buff, len)
-     struct ubik_trans *tt;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+kawrite(struct ubik_trans *tt, afs_int32 pos, char *buff, afs_int32 len)
 {
     afs_int32 code;
 
@@ -74,11 +68,7 @@ kawrite(tt, pos, buff, len)
 /* same thing for read */
 
 afs_int32
-karead(tt, pos, buff, len)
-     struct ubik_trans *tt;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+karead(struct ubik_trans *tt, afs_int32 pos, char *buff, afs_int32 len)
 {
     afs_int32 code;
 
@@ -108,8 +98,7 @@ static afs_int32 maxKeyLifetime;
 static int dbfixup = 0;
 
 void
-init_kadatabase(initFlags)
-     int initFlags;		/* same as init_kaprocs (see which) */
+init_kadatabase(int initFlags)
 {
     Lock_Init(&cheader_lock);
     Lock_Init(&keycache_lock);
@@ -131,9 +120,8 @@ init_kadatabase(initFlags)
    manner, to avoid bogusly reinitializing the db.  */
 
 afs_int32
-CheckInit(at, db_init)
-     struct ubik_trans *at;
-     int (*db_init) ();		/* procedure to call if rebuilding DB */
+CheckInit(struct ubik_trans *at,
+          int (*db_init) (struct ubik_trans *))		/* procedure to call if rebuilding DB */
 {
     register afs_int32 code;
     afs_int32 iversion;
@@ -208,9 +196,7 @@ CheckInit(at, db_init)
    zeroed entry.  If zero is returned, a Ubik I/O error can be assumed.  */
 
 afs_int32
-AllocBlock(at, tentry)
-     register struct ubik_trans *at;
-     struct kaentry *tentry;
+AllocBlock(struct ubik_trans *at, struct kaentry *tentry)
 {
     register afs_int32 code;
     afs_int32 temp;
@@ -241,9 +227,7 @@ AllocBlock(at, tentry)
    Returns zero for success or an error code on failure. */
 
 afs_int32
-FreeBlock(at, index)
-     struct ubik_trans *at;
-     afs_int32 index;
+FreeBlock(struct ubik_trans *at, afs_int32 index)
 {
     struct kaentry tentry;
     int code;
@@ -274,12 +258,8 @@ FreeBlock(at, index)
    returned. */
 
 afs_int32
-FindBlock(at, aname, ainstance, toP, tentry)
-     struct ubik_trans *at;
-     char *aname;
-     char *ainstance;
-     afs_int32 *toP;
-     struct kaentry *tentry;
+FindBlock(struct ubik_trans *at, char *aname, char *ainstance, afs_int32 *toP, 
+	  struct kaentry *tentry)
 {
     register afs_int32 i, code;
     register afs_int32 to;
@@ -308,10 +288,8 @@ FindBlock(at, aname, ainstance, toP, tentry)
    returns zero if there were no errors. */
 
 afs_int32
-ThreadBlock(at, index, tentry)
-     struct ubik_trans *at;
-     afs_int32 index;
-     struct kaentry *tentry;
+ThreadBlock(struct ubik_trans *at, afs_int32 index, 
+	    struct kaentry *tentry)
 {
     int code;
     int hi;			/* hash index */
@@ -333,9 +311,7 @@ ThreadBlock(at, index, tentry)
    error code. */
 
 afs_int32
-UnthreadBlock(at, aentry)
-     struct ubik_trans *at;
-     struct kaentry *aentry;
+UnthreadBlock(struct ubik_trans *at, struct kaentry *aentry)
 {
     register afs_int32 i, code;
     register afs_int32 to;
@@ -381,11 +357,8 @@ UnthreadBlock(at, aentry)
    remaining count is negative.  */
 
 afs_int32
-NextBlock(at, index, tentry, remaining)
-     struct ubik_trans *at;
-     afs_int32 index;
-     struct kaentry *tentry;
-     afs_int32 *remaining;
+NextBlock(struct ubik_trans *at, afs_int32 index, struct kaentry *tentry, 
+	  afs_int32 *remaining)
 {
     int code;
     afs_int32 last;
@@ -421,11 +394,8 @@ NextBlock(at, index, tentry, remaining)
    and pointer to the user entry. */
 
 afs_int32
-ka_NewKey(tt, tentryaddr, tentry, key)
-     struct ubik_trans *tt;
-     afs_int32 tentryaddr;
-     struct kaentry *tentry;
-     struct ktc_encryptionKey *key;
+ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr, 
+	  struct kaentry *tentry, struct ktc_encryptionKey *key)
 {
     struct kaOldKeys okeys;	/* old keys block */
     afs_int32 okeysaddr, nextaddr;	/* offset of old keys block */
@@ -598,16 +568,13 @@ ka_NewKey(tt, tentryaddr, tentry, key)
 }
 
 afs_int32
-ka_DelKey(tt, tentryaddr, tentry)
-     struct ubik_trans *tt;
-     afs_int32 tentryaddr;
-     struct kaentry *tentry;
+ka_DelKey(struct ubik_trans *tt, afs_int32 tentryaddr, 
+	  struct kaentry *tentry)
 {
     int code;
     struct kaOldKeys okeys;	/* old keys block */
     afs_int32 okeysaddr, nextaddr;	/* offset of old keys block */
     afs_int32 prevptr = 0;
-    Date now = time(0);
 
     es_Report("DelKey for %s.%s\n", tentry->userID.name,
 	      tentry->userID.instance);
@@ -659,8 +626,7 @@ ka_DelKey(tt, tentryaddr, tentry)
 }
 
 void
-ka_debugKeyCache(info)
-     struct ka_debugInfo *info;
+ka_debugKeyCache(struct ka_debugInfo *info)
 {
     int i;
 
@@ -704,12 +670,8 @@ ka_debugKeyCache(info)
 /* Add a key to the key cache, expanding it if necessary. */
 
 void
-ka_Encache(name, inst, kvno, key, superseded)
-     char *name;
-     char *inst;
-     afs_int32 kvno;
-     struct ktc_encryptionKey *key;
-     Date superseded;
+ka_Encache(char *name, char *inst, afs_int32 kvno, 
+	   struct ktc_encryptionKey *key, Date superseded)
 {
     int i;
 
@@ -757,12 +719,8 @@ ka_Encache(name, inst, kvno, key, superseded)
    with tt==0, since Rx can't call Ubik. */
 
 afs_int32
-ka_LookupKvno(tt, name, inst, kvno, key)
-     struct ubik_trans *tt;
-     char *name;
-     char *inst;
-     afs_int32 kvno;
-     struct ktc_encryptionKey *key;
+ka_LookupKvno(struct ubik_trans *tt, char *name, char *inst, afs_int32 kvno, 
+	      struct ktc_encryptionKey *key)
 {
     int i;
     int code = 0;
@@ -826,12 +784,11 @@ ka_LookupKvno(tt, name, inst, kvno, key)
 /* Look up the primary key and key version for a principal. */
 
 afs_int32
-ka_LookupKey(tt, name, inst, kvno, key)
-     struct ubik_trans *tt;
-     char *name;
-     char *inst;
-     afs_int32 *kvno;		/* returned */
-     struct ktc_encryptionKey *key;	/* copied out */
+ka_LookupKey(struct ubik_trans *tt, 
+	     char *name, 
+	     char *inst, 
+	     afs_int32 *kvno, 			/* returned */
+	     struct ktc_encryptionKey *key)	/* copied out */
 {
     int i;
     afs_int32 to;
@@ -878,8 +835,7 @@ ka_LookupKey(tt, name, inst, kvno, key)
    Ubik needs to use Rx. */
 
 afs_int32
-ka_FillKeyCache(tt)
-     struct ubik_trans *tt;
+ka_FillKeyCache(struct ubik_trans *tt)
 {
     int nfound;
     afs_int32 ko;
@@ -921,9 +877,7 @@ ka_FillKeyCache(tt)
 }
 
 afs_int32
-update_admin_count(tt, delta)
-     struct ubik_trans *tt;
-     int delta;
+update_admin_count(struct ubik_trans *tt, int delta)
 {
     afs_int32 to;
     afs_int32 code;
@@ -938,8 +892,7 @@ update_admin_count(tt, delta)
 }
 
 static int
-index_OK(index)
-     afs_int32 index;
+index_OK(afs_int32 index)
 {
     if ((index < sizeof(cheader)) || (index >= ntohl(cheader.eofPtr))
 	|| ((index - sizeof(cheader)) % sizeof(kaentry) != 0))
@@ -950,9 +903,7 @@ index_OK(index)
 #define LEGALCHARS ".ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
 
 int
-name_instance_legal(name, instance)
-     char *name;
-     char *instance;
+name_instance_legal(char *name, char *instance)
 {
     int code;
 
@@ -971,10 +922,9 @@ name_instance_legal(name, instance)
     return code;
 }
 
+#if 0
 static int
-string_legal(str, map)
-     char *str;
-     char *map;
+string_legal(char *str, char *map)
 {
     int slen;
 
@@ -983,3 +933,5 @@ string_legal(str, map)
 	return 0;		/* with trailing null must fit in data base */
     return (slen == strspn(str, map));	/* strspn returns length(str) if all chars in map */
 }
+#endif
+
