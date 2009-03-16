@@ -217,7 +217,7 @@ tptserver: cmd comerr ptserver tubik libafsrpc libafsauthent
 		echo Not building MT ptserver for ${SYS_NAME} ;; \
 	esac
 
-kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall
+kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall sys_depinstall
 	${COMPILE_PART1} kauth ${COMPILE_PART2}
 
 dauth: cmd comerr ubik cmd auth kauth comerr
