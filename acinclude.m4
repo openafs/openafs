@@ -323,6 +323,11 @@ dnl Various compiler setup.
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
+AC_CHECK_TYPE([sig_t], ,
+    [AC_DEFINE([sig_t], [int],
+        [Define to int if <signal.h> does not define.])],
+[#include <sys/types.h>
+#include <signal.h>])
 COMPILER_HAS_FUNCTION_MACRO
 
 dnl Checks for programs.
