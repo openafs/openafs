@@ -49,8 +49,10 @@ RCSID
 #include <stdlib.h>
 #include <assert.h>
 #include <afs/ptclient.h>
-
-
+#include <afs/ptuser.h>
+#include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
+    
 #define	MAXHOSTS 13
 #define	OMAXHOSTS 8
 #define MAXCELLHOSTS 8
@@ -63,23 +65,26 @@ static char space[MAXSIZE];
 static char tspace[1024];
 static struct ubik_client *uclient;
 
-static int GetClientAddrsCmd(), SetClientAddrsCmd(), FlushMountCmd();
-static int RxStatProcCmd(), RxStatPeerCmd(), GetFidCmd(), UuidCmd();
-
-extern char *hostutil_GetNameByINet();
-extern struct hostent *hostutil_GetHostByName();
-
+static int GetClientAddrsCmd(struct cmd_syndesc *, void *);
+static int SetClientAddrsCmd(struct cmd_syndesc *, void *);
+static int FlushMountCmd(struct cmd_syndesc *, void *);
+static int RxStatProcCmd(struct cmd_syndesc *, void *);
+static int RxStatPeerCmd(struct cmd_syndesc *, void *);
+static int GetFidCmd(struct cmd_syndesc *, void *);
+static int UuidCmd(struct cmd_syndesc *, void *);
 
 static char pn[] = "fs";
 static int rxInitDone = 0;
 
-static void ZapList();
-static int PruneList();
-static CleanAcl();
+struct AclEntry;
+struct Acl;
+static void ZapList(struct AclEntry *);
+static int PruneList(struct AclEntry **, int);
+static int CleanAcl(struct Acl *, char *);
 static int SetVolCmd(struct cmd_syndesc *as, void *arock);
-static GetCellName();
-static VLDBInit();
-static void Die();
+static int GetCellName(char *, struct afsconf_cell *);
+static int VLDBInit(int, struct afsconf_cell *);
+static void Die(int, char *);
 
 /*
  * Character to use between name and rights in printed representation for
@@ -114,8 +119,7 @@ struct vcxstat2 {
 };
 
 static void
-ZapAcl(acl)
-     struct Acl *acl;
+ZapAcl(struct Acl *acl)
 {
     if (!acl)
 	return;
@@ -124,10 +128,8 @@ ZapAcl(acl)
     free(acl);
 }
 
-static
-foldcmp(a, b)
-     char *a;
-     char *b;
+static int
+foldcmp(char *a, char *b)
 {
     char t, u;
     while (1) {
@@ -869,9 +871,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     struct ViceIoctl blob;
     struct Acl *fa, *ta = 0;
     struct AclEntry *tp;
-    struct cmd_item *ti, *ui;
-    int plusp;
-    afs_int32 rights;
+    struct cmd_item *ti;
     int clear;
     int idf = getidf(as, parm_copyacl_id);
     int error = 0;
@@ -970,14 +970,14 @@ GetCell(char *fname, char *cellname)
  * negative sign), then it might be bad. We then query the ptserver
  * to see.
  */
-static
+static int
 BadName(char *aname, char *fname)
 {
     afs_int32 tc, code, id;
     char *nm;
     char cell[MAXCELLCHARS];
 
-    for (nm = aname; tc = *nm; nm++) {
+    for (nm = aname; (tc = *nm); nm++) {
 	/* all must be '-' or digit to be bad */
 	if (tc != '-' && (tc < '0' || tc > '9'))
 	    return 0;
@@ -999,7 +999,7 @@ BadName(char *aname, char *fname)
 
 /* clean up an access control list of its bad entries; return 1 if we made
    any changes to the list, and 0 otherwise */
-static
+static int
 CleanAcl(struct Acl *aa, char *fname)
 {
     struct AclEntry *te, **le, *ne;
@@ -1778,7 +1778,7 @@ defect #3069
 
     /* Check for a cellname in the volume specification, and complain
      * if it doesn't match what was specified with -cell */
-    if (tmpName = strchr(volName, ':')) {
+    if ((tmpName = strchr(volName, ':'))) {
 	*tmpName = '\0';
 	if (cellName) {
 	    if (strcasecmp(cellName, volName)) {
@@ -1912,8 +1912,6 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 j;
     afs_int32 temp;
     char *tp;
-    char tbuffer[128];
-    afs_int32 interval;
     struct afsconf_cell info;
     struct chservinfo checkserv;
 
@@ -2008,8 +2006,6 @@ MessagesCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
     struct ViceIoctl blob;
-    afs_int32 j;
-    afs_int32 temp;
     struct gaginfo gagflags;
     struct cmd_item *show;
 
@@ -2020,7 +2016,7 @@ MessagesCmd(struct cmd_syndesc *as, void *arock)
     blob.out = space;
     memset(space, 0, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
 
-    if (show = as->parms[0].items) {
+    if ((show = as->parms[0].items)) {
 	if (!strcasecmp(show->data, "user"))
 	    gagflags.showflags |= GAGUSER;
 	else if (!strcasecmp(show->data, "console"))
@@ -2068,7 +2064,7 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
-PreCacheCmd(struct cmd_syndesc *as, char *arock)
+PreCacheCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2206,9 +2202,9 @@ GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
     }
 
     if (percentBlocks > 90)
-	printf("[cache size usage over 90%, consider increasing cache size]\n");
+	printf("[cache size usage over 90%%, consider increasing cache size]\n");
     if (percentFiles > 90)
-	printf("[cache file usage over 90%, consider increasing '-files' argument to afsd]\n");
+	printf("[cache file usage over 90%%, consider increasing '-files' argument to afsd]\n");
 	 
     return 0;
 }
@@ -2218,8 +2214,7 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     afs_int32 i, j;
-    char *tcp, *tp;
-    afs_int32 clear;
+    char *tp;
     struct ViceIoctl blob;
     int resolve;
 
@@ -2302,7 +2297,6 @@ CallBackRxConnCmd(struct cmd_syndesc *as, void *arock)
     struct cmd_item *ti;
     afs_int32 hostAddr;
     struct hostent *thp;
-    char *tp;
     int setp;
     
     ti = as->parms[0].items;
@@ -2373,7 +2367,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     char *tp, *cellname = 0;
     struct hostent *thp;
     afs_int32 fsport = 0, vlport = 0;
-    afs_int32 magic, scount;	/* Number of servers to pass in pioctl call */
+    afs_int32 scount;		/* Number of servers to pass in pioctl call */
 
     /* Yuck!
      * With the NEWCELL pioctl call, 3.4 clients take an array of
@@ -2711,7 +2705,7 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	}
 	exp = 1;
     }
-    if (ti = as->parms[2].items) {	/* -noconvert */
+    if ((ti = as->parms[2].items)) {	/* -noconvert */
 	if (strcmp(ti->data, "on") == 0)
 	    mode = 2;
 	else if (strcmp(ti->data, "off") == 0)
@@ -2721,7 +2715,7 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
     }
-    if (ti = as->parms[3].items) {	/* -uidcheck */
+    if ((ti = as->parms[3].items)) {	/* -uidcheck */
 	if (strcmp(ti->data, "on") == 0)
 	    pwsync = 3;
 	else if (strcmp(ti->data, "off") == 0)
@@ -2731,7 +2725,7 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
     }
-    if (ti = as->parms[4].items) {	/* -submounts */
+    if ((ti = as->parms[4].items)) {	/* -submounts */
 	if (strcmp(ti->data, "on") == 0)
 	    smounts = 3;
 	else if (strcmp(ti->data, "off") == 0)
@@ -2741,7 +2735,7 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
     }
-    if (ti = as->parms[5].items) {	/* -clipags */
+    if ((ti = as->parms[5].items)) {	/* -clipags */
 	if (strcmp(ti->data, "on") == 0)
 	    clipags = 3;
 	else if (strcmp(ti->data, "off") == 0)
@@ -2751,7 +2745,7 @@ ExportAfsCmd(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
     }
-    if (ti = as->parms[6].items) {	/* -pagcb */
+    if ((ti = as->parms[6].items)) {	/* -pagcb */
 	if (strcmp(ti->data, "on") == 0)
 	    pagcb = 3;
 	else if (strcmp(ti->data, "off") == 0)
@@ -3000,7 +2994,6 @@ addServer(char *name, afs_int32 rank)
     struct setspref *ssp;
     struct spref *sp;
     struct hostent *thostent;
-    afs_uint32 addr;
     int error = 0;
 
 #ifndef MAXUSHORT
@@ -3036,7 +3029,7 @@ addServer(char *name, afs_int32 rank)
 
 	if (debug)
 	    fprintf(stderr, "adding server %s, rank %d, ip addr 0x%lx\n",
-		    name, sp->rank, sp->server.s_addr);
+		    name, sp->rank, (long unsigned int) sp->server.s_addr);
     }
 
     return error;
@@ -3077,7 +3070,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
 	    perror(ti->data);
 	    error = -1;
 	} else {
-	    while (fscanf(infd, "%79s%ld", name, &rank) != EOF) {
+	    while (fscanf(infd, "%79s%ld", name, (long int *)&rank) != EOF) {
 		code = addServer(name, (unsigned short)rank);
 		if (code)
 		    error = code;
@@ -3087,7 +3080,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
 
     ti = as->parms[3].items;	/* -stdin */
     if (ti) {
-	while (scanf("%79s%ld", name, &rank) != EOF) {
+	while (scanf("%79s%ld", name, (long int *)&rank) != EOF) {
 	    code = addServer(name, (unsigned short)rank);
 	    if (code)
 		error = code;
@@ -3155,7 +3148,7 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     struct cmd_item *ti;
     char *name, tbuffer[20];
-    afs_int32 rank, addr;
+    afs_int32 addr;
     FILE *outfd;
     int resolve;
     int vlservers = 0;
@@ -3857,8 +3850,6 @@ static int
 GetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    struct cmd_item *ti;
-    char *name;
     struct ViceIoctl blob;
     struct sprefrequest *in;
     struct sprefinfo *out;
@@ -3904,11 +3895,10 @@ SetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code, addr;
     struct cmd_item *ti;
-    char name[80];
     struct ViceIoctl blob;
     struct setspref *ssp;
     int sizeUsed = 0, i, flag;
-    afs_int32 existingAddr[1024];	/* existing addresses on this host */
+    afs_uint32 existingAddr[1024];	/* existing addresses on this host */
     int existNu;
     int error = 0;
 
@@ -4099,7 +4089,6 @@ RxStatProcCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     afs_int32 flags = 0;
     struct ViceIoctl blob;
-    struct cmd_item *ti;
 
     if (as->parms[0].items) {	/* -enable */
 	flags |= AFSCALL_RXSTATS_ENABLE;
@@ -4134,7 +4123,6 @@ RxStatPeerCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 code;
     afs_int32 flags = 0;
     struct ViceIoctl blob;
-    struct cmd_item *ti;
 
     if (as->parms[0].items) {	/* -enable */
 	flags |= AFSCALL_RXSTATS_ENABLE;
