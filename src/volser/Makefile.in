@@ -60,8 +60,12 @@ SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \
 
 all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volser.h \
+	${TOP_INCDIR}/afs/vsutils_prototypes.h \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
+
+${TOP_INCDIR}/afs/vsutils_prototypes.h: vsutils_prototypes.h
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/volser.h: volser.h
 	${INSTALL_DATA} $? $@
@@ -141,6 +145,7 @@ install: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	${INSTALL_PROGRAM} voldump ${DESTDIR}${sbindir}/voldump
 	${INSTALL_DATA} volser.h ${DESTDIR}${includedir}/afs/volser.h
 	${INSTALL_DATA} volint.h ${DESTDIR}${includedir}/afs/volint.h
+	${INSTALL_DATA} vsutils_prototypes.h ${DESTDIR}${includedir}/afs/vsutils_prototypes.h
 	${INSTALL_PROGRAM} vos ${DESTDIR}${sbindir}/vos
 	${INSTALL_PROGRAM} vos ${DESTDIR}${afssrvsbindir}/vos
 	${INSTALL_DATA} libvolser.a ${DESTDIR}${libdir}/afs/libvolser.a
@@ -170,6 +175,7 @@ dest: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	${INSTALL_PROGRAM} voldump ${DEST}/etc/voldump
 	${INSTALL_DATA} volser.h ${DEST}/include/afs/volser.h
 	${INSTALL_DATA} volint.h ${DEST}/include/afs/volint.h
+	${INSTALL_DATA} vsutils_prototypes.h ${DEST}/include/afs/vsutils_prototypes.h
 	${INSTALL_PROGRAM} vos ${DEST}/etc/vos
 	${INSTALL_PROGRAM} vos ${DEST}/root.server/usr/afs/bin/vos
 	${INSTALL_DATA} libvolser.a ${DEST}/lib/afs/libvolser.a

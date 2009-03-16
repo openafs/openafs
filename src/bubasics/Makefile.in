@@ -59,16 +59,16 @@ butc.cs.c: butc.h
 butc.ss.c: butc.h
 
 bumon.xdr.c: bumon.xg
-	${RXGEN} -c -o $@ ${srcdir}/bumon.xg
+	${RXGEN} -A -c -o $@ ${srcdir}/bumon.xg
 
 bumon.ss.c: bumon.xg
-	${RXGEN} -S -o $@ ${srcdir}/bumon.xg
+	${RXGEN} -A -S -o $@ ${srcdir}/bumon.xg
 
 bumon.cs.c: bumon.xg
-	${RXGEN} -C -o $@ ${srcdir}/bumon.xg
+	${RXGEN} -A -C -o $@ ${srcdir}/bumon.xg
 
 bumon.h: bumon.xg
-	${RXGEN} -h -o $@ ${srcdir}/bumon.xg
+	${RXGEN} -A -h -o $@ ${srcdir}/bumon.xg
 
 bumon.xdr.c: bumon.h
 bumon.ss.c: bumon.h
