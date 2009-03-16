@@ -65,6 +65,7 @@ RCSID
 #include "auth.h"
 #include <afs/venus.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 
 #endif /* defined(UKERNEL) */
 
@@ -494,7 +495,7 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code;
+    register afs_int32 code = 0;
     int index;
     char *stp, *cellp;		/* secret token ptr */
     struct ClearToken ct;
@@ -698,7 +699,7 @@ ktc_ListTokens(int aprevIndex,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code;
+    register afs_int32 code = 0 ;
     register char *tp;
     afs_int32 temp, index;
 
