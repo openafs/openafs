@@ -37,7 +37,10 @@ RCSID
 static char mn[] = "gator_objects";	/*Module name */
 int objects_debug;		/*Is debugging output on? */
 
-int (*on_create[GATOR_NUM_OBJTYPES]) ();	/*Array of ptrs to creation functions */
+int (*on_create[GATOR_NUM_OBJTYPES]) (struct onode *, 
+				      struct onode_createparams *);
+				        /*Array of ptrs to creation functions */
+
 struct onodeops objops[GATOR_NUM_OBJTYPES];	/*Per-type op arrays */
 
 
@@ -63,9 +66,7 @@ struct onodeops objops[GATOR_NUM_OBJTYPES];	/*Per-type op arrays */
  *--------------------------------------------------------------------------------*/
 
 int
-gator_objects_init(params)
-     struct onode_initparams *params;
-
+gator_objects_init(struct onode_initparams *params)
 {				/*gator_objects_init */
 
     static char rn[] = "gator_objects_init";	/*Routine name */
@@ -169,9 +170,7 @@ gator_objects_init(params)
  *--------------------------------------------------------------------------------*/
 
 struct onode *
-gator_objects_create(params)
-     struct onode_createparams *params;
-
+gator_objects_create(struct onode_createparams *params)
 {				/*gator_objects_create */
 
     static char rn[] = "gator_objects_create";	/*Routine name */
@@ -185,17 +184,17 @@ gator_objects_create(params)
 	fprintf(stderr, "\tWidth=%d, height=%d\n", params->cr_width,
 		params->cr_height);
 	fprintf(stderr, "\tHelpstring='%s'\n", params->cr_helpstring);
-	fprintf(stderr, "\tWindow struct at 0x%x\n", params->cr_window);
+	fprintf(stderr, "\tWindow struct at %p\n", params->cr_window);
     }
 
     if (objects_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %d bytes for new onode structure\n", mn,
+		"[%s:%s] Allocating %lu bytes for new onode structure\n", mn,
 		rn, sizeof(struct onode));
     new_onode = (struct onode *)malloc(sizeof(struct onode));
     if (new_onode == NULL) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %d bytes for new onode structure; errno is %d\n",
+		"[%s:%s] Can't allocate %lu bytes for new onode structure; errno is %d\n",
 		mn, rn, sizeof(struct onode), errno);
 	return (NULL);
     }
@@ -206,8 +205,7 @@ gator_objects_create(params)
      *      we'll create a scrollable text help object with it ****
      */
     if (objects_debug)
-	fprintf(stderr, "[%s:%s] Filling in onode fields\n", mn, rn,
-		sizeof(struct onode));
+	fprintf(stderr, "[%s:%s] Filling in onode fields\n", mn, rn);
     new_onode->o_type = params->cr_type;
     strcpy(new_onode->o_name, params->cr_name);
     new_onode->o_x = params->cr_x;
@@ -248,7 +246,7 @@ gator_objects_create(params)
     if (params->cr_prev_obj != NULL) {
 	if (objects_debug)
 	    fprintf(stderr,
-		    "[%s:%s] Setting o_nextobj pointer in the previous object located at 0x%x (previous value was 0x%x)\n",
+		    "[%s:%s] Setting o_nextobj pointer in the previous object located at %p (previous value was %p)\n",
 		    mn, rn, params->cr_prev_obj,
 		    params->cr_prev_obj->o_nextobj);
 	params->cr_prev_obj->o_nextobj = new_onode;
@@ -256,7 +254,7 @@ gator_objects_create(params)
     if (params->cr_parent_obj != NULL) {
 	if (objects_debug)
 	    fprintf(stderr,
-		    "[%s:%s] Setting o_downobj pointer in the parent object located at 0x%x (previous value was 0x%x)\n",
+		    "[%s:%s] Setting o_downobj pointer in the parent object located at %p (previous value was %p)\n",
 		    mn, rn, params->cr_parent_obj,
 		    params->cr_parent_obj->o_downobj);
 	params->cr_parent_obj->o_downobj = new_onode;
@@ -290,9 +288,7 @@ gator_objects_create(params)
  *--------------------------------------------------------------------------------*/
 
 struct onode *
-gator_objects_lookup(onode_name)
-     char *onode_name;
-
+gator_objects_lookup(char *onode_name)
 {				/*gator_objects_lookup */
 
     static char rn[] = "gator_objects_lookup";	/*Routine name */

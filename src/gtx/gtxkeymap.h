@@ -24,11 +24,11 @@ struct keymap_entry {
     char pad[3];		/* padding */
     char *name;			/* descriptive name of function, if function */
     union {			/* value (proc, submap, etc) */
-	int (*proc) ();
+	int (*proc) (void *, void *);
 	struct keymap_map *submap;
-	char *generic;
+	void *generic;
     } u;
-    char *rock;			/* rock to use */
+    void *rock;			/* rock to use */
 };
 
 struct keymap_map {
@@ -42,11 +42,15 @@ struct keymap_state {
     struct keymap_map *currentMap;
 };
 
-extern struct keymap_map *keymap_Create();
-extern int keymap_BindToString();
-extern int keymap_Delete();
-extern int keymap_InitState();
-extern int keymap_ProcessState();
-extern int keymap_ResetState();
+extern struct keymap_map *keymap_Create(void);
+extern int keymap_BindToString(struct keymap_map *, char *,
+			       int (*aproc)(void *, void *), char *, void *);
+extern int keymap_Delete(struct keymap_map *);
+extern int keymap_InitState(struct keymap_state *, struct keymap_map *);
+extern int keymap_ProcessKey(struct keymap_state *, int, void *);
+extern int keymap_ResetState(struct keymap_state *);
+
+extern char *gtx_CopyString(char *);
+
 
 #endif /* define for file */

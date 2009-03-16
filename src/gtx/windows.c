@@ -59,9 +59,7 @@ struct gwin gator_basegwin;	/*Base gator window */
  *--------------------------------------------------------------------------------*/
 
 int
-gw_init(params)
-     struct gwin_initparams *params;
-
+gw_init(struct gwin_initparams *params)
 {				/*gw_init */
 
     static char rn[] = "gw_init";	/*Routine name */

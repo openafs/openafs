@@ -35,7 +35,7 @@ struct gator_X11gwin_params {
 
 /*X11 initialization routine*/
 
-extern int gator_X11gwin_init();
+extern int gator_X11gwin_init(int);
     /*
      * Summary:
      *    Initialize the X11 window package.
@@ -50,7 +50,7 @@ extern int gator_X11gwin_init();
 
 /*X11 window's creation routine*/
 
-extern struct gwin *gator_X11gwin_create();
+extern struct gwin *gator_X11gwin_create(struct gator_X11gwin_params *);
     /*
      * Summary:
      *    Create a X11 window.
@@ -65,7 +65,7 @@ extern struct gwin *gator_X11gwin_create();
 
 /*X11 cleanup routine*/
 
-extern int gator_X11gwin_cleanup();
+extern int gator_X11gwin_cleanup(struct gwin *);
     /*
      * Summary:
      *    Clean up after the X11 window package.
@@ -82,7 +82,7 @@ extern struct gwinbaseops gator_X11_gwinbops;
 
 /*X11 window's routines*/
 
-extern int gator_X11gwin_box();
+extern int gator_X11gwin_box(struct gwin *);
     /*
      * Summary:
      *    Draw a box around the given X11 window.
@@ -96,7 +96,7 @@ extern int gator_X11gwin_box();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_clear();
+extern int gator_X11gwin_clear(struct gwin *);
     /*
      * Summary:
      *    Clear out the given X11 window.
@@ -110,7 +110,7 @@ extern int gator_X11gwin_clear();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_destroy();
+extern int gator_X11gwin_destroy(struct gwin *);
     /*
      * Summary:
      *    Destroy the given X11 window.
@@ -123,7 +123,7 @@ extern int gator_X11gwin_destroy();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_display();
+extern int gator_X11gwin_display(struct gwin *);
     /*
      * Summary:
      *    Display/redraw the given X11 window.
@@ -136,7 +136,7 @@ extern int gator_X11gwin_display();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_drawline();
+extern int gator_X11gwin_drawline(struct gwin *, struct gwin_lineparams *);
     /*
      * Summary:
      *    Draw a line between two points in the given X11
@@ -152,7 +152,8 @@ extern int gator_X11gwin_drawline();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_drawrectangle();
+extern int gator_X11gwin_drawrectangle(struct gwin *, 
+				       struct gwin_rectparams *);
     /*
      * Summary:
      *    Draw a rectangle in the given X11 window.
@@ -167,7 +168,8 @@ extern int gator_X11gwin_drawrectangle();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_drawchar();
+extern int gator_X11gwin_drawchar(struct gwin *,
+				  struct gwin_charparams *);
     /*
      * Summary:
      *    Draw a character in the given X11 window.
@@ -182,7 +184,8 @@ extern int gator_X11gwin_drawchar();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_drawstring();
+extern int gator_X11gwin_drawstring(struct gwin *,
+				    struct gwin_strparams *);
     /*
      * Summary:
      *    Draw a string in the given X11 window.
@@ -197,7 +200,8 @@ extern int gator_X11gwin_drawstring();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_invert();
+extern int gator_X11gwin_invert(struct gwin *,
+				struct gwin_invparams *);
     /*
      * Summary:
      *    Invert a region in the given X11 window.
@@ -212,10 +216,11 @@ extern int gator_X11gwin_invert();
      *    Error value otherwise.
      */
 
-extern int gator_X11gwin_getchar();
+extern int gator_X11gwin_getchar(struct gwin *);
 
-extern int gator_X11gwin_getdimensions();
+extern int gator_X11gwin_getdimensions(struct gwin *,
+				       struct gwin_sizeparams *);
 
-extern int gator_X11gwin_wait();
+extern int gator_X11gwin_wait(struct gwin *);
 
 #endif /* __gator_X11windows_h */

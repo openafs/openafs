@@ -35,7 +35,7 @@ struct gator_dumbgwin_params {
 
 /*Dumb windows initialization routine*/
 
-extern int gator_dumbgwin_init();
+extern int gator_dumbgwin_init(int);
     /*
      * Summary:
      *    Initialize the dumb window package.
@@ -50,7 +50,7 @@ extern int gator_dumbgwin_init();
 
 /*Dumb window's creation routine*/
 
-extern struct gwin *gator_dumbgwin_create();
+extern struct gwin *gator_dumbgwin_create(struct gator_dumbgwin_params *);
     /*
      * Summary:
      *    Create a dumb window.
@@ -65,7 +65,7 @@ extern struct gwin *gator_dumbgwin_create();
 
 /*Dumb cleanup routine*/
 
-extern int gator_dumbgwin_cleanup();
+extern int gator_dumbgwin_cleanup(struct gwin *);
     /*
      * Summary:
      *    Clean up after the dumb window package.
@@ -82,7 +82,7 @@ extern struct gwinbaseops gator_dumb_gwinbops;
 
 /*Dumb window's routines*/
 
-extern int gator_dumbgwin_box();
+extern int gator_dumbgwin_box(struct gwin *);
     /*
      * Summary:
      *    Draw a box around the given dumb window.
@@ -96,7 +96,7 @@ extern int gator_dumbgwin_box();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_clear();
+extern int gator_dumbgwin_clear(struct gwin *);
     /*
      * Summary:
      *    Clear out the given dumb window.
@@ -110,7 +110,7 @@ extern int gator_dumbgwin_clear();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_destroy();
+extern int gator_dumbgwin_destroy(struct gwin *);
     /*
      * Summary:
      *    Destroy the given dumb window.
@@ -123,7 +123,7 @@ extern int gator_dumbgwin_destroy();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_display();
+extern int gator_dumbgwin_display(struct gwin *);
     /*
      * Summary:
      *    Display/redraw the given dumb window.
@@ -136,7 +136,7 @@ extern int gator_dumbgwin_display();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_drawline();
+extern int gator_dumbgwin_drawline(struct gwin *, struct gwin_lineparams *);
     /*
      * Summary:
      *    Draw a line between two points in the given dumb
@@ -152,7 +152,8 @@ extern int gator_dumbgwin_drawline();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_drawrectangle();
+extern int gator_dumbgwin_drawrectangle(struct gwin *, 
+					struct gwin_rectparams *);
     /*
      * Summary:
      *    Draw a rectangle in the given dumb window.
@@ -167,7 +168,8 @@ extern int gator_dumbgwin_drawrectangle();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_drawchar();
+extern int gator_dumbgwin_drawchar(struct gwin *,
+				   struct gwin_charparams *);
     /*
      * Summary:
      *    Draw a character in the given dumb window.
@@ -182,7 +184,7 @@ extern int gator_dumbgwin_drawchar();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_drawstring();
+extern int gator_dumbgwin_drawstring(struct gwin *, struct gwin_strparams *);
     /*
      * Summary:
      *    Draw a string in the given dumb window.
@@ -197,7 +199,7 @@ extern int gator_dumbgwin_drawstring();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_invert();
+extern int gator_dumbgwin_invert(struct gwin *, struct gwin_invparams *);
     /*
      * Summary:
      *    Invert a region in the given dumb window.
@@ -212,11 +214,12 @@ extern int gator_dumbgwin_invert();
      *    Error value otherwise.
      */
 
-extern int gator_dumbgwin_getchar();
+extern int gator_dumbgwin_getchar(struct gwin *gwp);
     /* get a character from a window */
 
-extern int gator_dumbgwin_getdimensions();
+extern int gator_dumbgwin_getdimensions(struct gwin *, 
+					struct gwin_sizeparams *);
 
-extern int gator_dumbgwin_wait();
+extern int gator_dumbgwin_wait(struct gwin *gwp);
 
 #endif /* __gator_dumbwindows_h */

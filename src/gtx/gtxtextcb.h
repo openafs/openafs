@@ -54,7 +54,7 @@ struct gator_textcb_hdr {
 /*
   * Operations for text circular buffers.
   */
-extern int gator_textcb_Init();
+extern int gator_textcb_Init(int);
     /*
      * Summary:
      *    Initialize this package.  MUST BE THE FIRST ROUTINE CALLED!
@@ -67,7 +67,7 @@ extern int gator_textcb_Init();
      *    Error code otherwise.
      */
 
-extern struct gator_textcb_hdr *gator_textcb_Create();
+extern struct gator_textcb_hdr *gator_textcb_Create(int, int);
     /*
      * Summary:
      *    Create a new text circular buffer.
@@ -81,7 +81,8 @@ extern struct gator_textcb_hdr *gator_textcb_Create();
      *    Null pointer otherwise.
      */
 
-extern int gator_textcb_Write();
+extern int gator_textcb_Write(struct gator_textcb_hdr *, char *a_textToWrite,
+			      int, int, int);
     /*
      * Summary:
      *    Write the given string to the text circular buffer.  Line
@@ -100,7 +101,7 @@ extern int gator_textcb_Write();
      *    Error code otherwise.
      */
 
-extern int gator_textcb_BlankLine();
+extern int gator_textcb_BlankLine(struct gator_textcb_hdr *, int);
     /*
      * Summary:
      *    Write out some number of blank lines to the given circular
@@ -115,7 +116,7 @@ extern int gator_textcb_BlankLine();
      *    Error code otherwise.
      */
 
-extern int gator_textcb_Delete();
+extern int gator_textcb_Delete(struct gator_textcb_hdr *a_cbhdr);
     /*
      * Summary:
      *    Delete the storage used by the given circular buffer, including

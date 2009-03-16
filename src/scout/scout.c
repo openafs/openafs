@@ -219,7 +219,7 @@ scout_CleanExit(int a_exitval)
 
     if (scout_gtx_initialized) {
 	gtxframe_exitValue = a_exitval;
-	gtxframe_ExitCmd((char *)(&gtxframe_exitValue));
+	gtxframe_ExitCmd((void *)(&gtxframe_exitValue), NULL);
     } else
 	exit(a_exitval);
 

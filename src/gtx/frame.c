@@ -9,7 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
+#include <afs/stds.h>
 RCSID
     ("$Header$");
 
@@ -28,15 +28,14 @@ RCSID
 #include "gtxkeymap.h"
 #include "gtxframe.h"
 
-extern char *gtx_CopyString();
 static struct keymap_map *recursiveMap = 0;
 static char menubuffer[1024];	/*Buffer for menu selections */
 int gtxframe_exitValue = 0;	/*Program exit value */
 
-gtxframe_CtrlUCmd(awindow, arock)
-     char *arock;
-     struct gwin *awindow;
+int
+gtxframe_CtrlUCmd(void *aparam, void *arock)
 {
+    struct gwin *awindow = (struct gwin *) aparam;
     struct gtx_frame *tframe;
 
     tframe = awindow->w_frame;
@@ -46,10 +45,11 @@ gtxframe_CtrlUCmd(awindow, arock)
     return 0;
 }
 
-gtxframe_CtrlHCmd(awindow, arock)
-     char *arock;
-     struct gwin *awindow;
+int
+gtxframe_CtrlHCmd(void *aparam, void *arock)
 {
+    struct gwin *awindow = (struct gwin *) aparam;
+    
     register struct gtx_frame *tframe;
     register char *tp;
     register int pos;
@@ -64,10 +64,11 @@ gtxframe_CtrlHCmd(awindow, arock)
     return 0;
 }
 
-gtxframe_RecursiveEndCmd(awindow, arock)
-     char *arock;
-     register struct gwin *awindow;
+int
+gtxframe_RecursiveEndCmd(void *aparam, void *arock)
 {
+    struct gwin *awindow = (struct gwin *) aparam;
+    
     register struct gtx_frame *tframe;
 
     tframe = awindow->w_frame;
@@ -76,10 +77,11 @@ gtxframe_RecursiveEndCmd(awindow, arock)
     return 0;
 }
 
-gtxframe_RecursiveErrCmd(awindow, arock)
-     char *arock;
-     register struct gwin *awindow;
+int
+gtxframe_RecursiveErrCmd(void *aparam, void *arock)
 {
+    struct gwin *awindow = (struct gwin *) aparam;
+    
     register struct gtx_frame *tframe;
 
     tframe = awindow->w_frame;
@@ -88,10 +90,13 @@ gtxframe_RecursiveErrCmd(awindow, arock)
     return 0;
 }
 
-gtxframe_SelfInsertCmd(awindow, arock)
-     int arock;
-     struct gwin *awindow;
+int
+gtxframe_SelfInsertCmd(void *aparam, void *rockparam)
 {
+    struct gwin *awindow = (struct gwin *) aparam;
+    
+    int arock = (int) rockparam;
+    
     register struct gtx_frame *tframe;
     register int pos;
     register char *tp;
@@ -106,9 +111,8 @@ gtxframe_SelfInsertCmd(awindow, arock)
 }
 
 /* save map, setup recursive map and install it */
-static
-SaveMap(aframe)
-     register struct gtx_frame *aframe;
+static int
+SaveMap(struct gtx_frame *aframe)
 {
     char tstring[2];
     register int i;
@@ -137,7 +141,7 @@ SaveMap(aframe)
 	    tstring[0] = i;
 	    tstring[1] = 0;
 	    keymap_BindToString(recursiveMap, tstring, gtxframe_SelfInsertCmd,
-				NULL, i);
+				NULL, (void *)i);
 	}
     }
     aframe->savemap = aframe->keymap;
@@ -147,9 +151,8 @@ SaveMap(aframe)
 }
 
 /* Restore map to previous value */
-static
-RestoreMap(aframe)
-     register struct gtx_frame *aframe;
+static int
+RestoreMap(struct gtx_frame *aframe)
 {
     aframe->keymap = aframe->savemap;
     aframe->savemap = (struct keymap_map *)0;
@@ -157,9 +160,8 @@ RestoreMap(aframe)
     return 0;
 }
 
-gtxframe_SetFrame(awin, aframe)
-     struct gtx_frame *aframe;
-     struct gwin *awin;
+int
+gtxframe_SetFrame(struct gwin *awin, struct gtx_frame *aframe)
 {
     if (awin->w_frame) {
 	/* Unthread this frame */
@@ -171,17 +173,14 @@ gtxframe_SetFrame(awin, aframe)
 }
 
 struct gtx_frame *
-gtxframe_GetFrame(awin)
-     struct gwin *awin;
+gtxframe_GetFrame(struct gwin *awin)
 {
     return awin->w_frame;
 }
 
 /* Add a menu string to display list */
-gtxframe_AddMenu(aframe, alabel, astring)
-     char *alabel;
-     char *astring;
-     struct gtx_frame *aframe;
+int
+gtxframe_AddMenu(struct gtx_frame *aframe, char *alabel, char *astring)
 {
     register struct gtxframe_menu *tmenu;
 
@@ -214,9 +213,8 @@ gtxframe_AddMenu(aframe, alabel, astring)
 }
 
 /* Delete a given menu from a frame*/
-gtxframe_DeleteMenu(aframe, alabel)
-     struct gtx_frame *aframe;
-     char *alabel;
+int
+gtxframe_DeleteMenu(struct gtx_frame *aframe, char *alabel)
 {
     register struct gtxframe_menu *tm, **lm;
 
@@ -234,8 +232,8 @@ gtxframe_DeleteMenu(aframe, alabel)
 }
 
 /* Function to remove all known menus */
-gtxframe_ClearMenus(aframe)
-     struct gtx_frame *aframe;
+int
+gtxframe_ClearMenus(struct gtx_frame *aframe)
 {
 
     register struct gtxframe_menu *tm, *nm;
@@ -253,12 +251,9 @@ gtxframe_ClearMenus(aframe)
     return 0;
 }
 
-gtxframe_AskForString(aframe, aprompt, adefault, aresult, aresultSize)
-     register struct gtx_frame *aframe;
-     char *aprompt;
-     char *adefault;
-     char *aresult;
-     int aresultSize;
+int
+gtxframe_AskForString(struct gtx_frame *aframe, char *aprompt, 
+		      char *adefault, char *aresult, int aresultSize)
 {
     register int code;
     register char *tp;
@@ -310,9 +305,8 @@ gtxframe_AskForString(aframe, aprompt, adefault, aresult, aresultSize)
     return (code);
 }
 
-gtxframe_DisplayString(aframe, amsgLine)
-     char *amsgLine;
-     register struct gtx_frame *aframe;
+int
+gtxframe_DisplayString(struct gtx_frame *aframe, char *amsgLine)
 {
     if (aframe->messageLine)
 	free(aframe->messageLine);
@@ -321,8 +315,8 @@ gtxframe_DisplayString(aframe, amsgLine)
 }
 
 /* Called by input processor to try to clear the dude */
-gtxframe_ClearMessageLine(aframe)
-     struct gtx_frame *aframe;
+int
+gtxframe_ClearMessageLine(struct gtx_frame *aframe)
 {
     /* If we haven't shown message long enough yet, just return */
     if (aframe->flags & GTXFRAME_NEWDISPLAY)
@@ -333,9 +327,8 @@ gtxframe_ClearMessageLine(aframe)
     return (0);
 }
 
-static
-ShowMessageLine(aframe)
-     struct gtx_frame *aframe;
+static int
+ShowMessageLine(struct gtx_frame *aframe)
 {
     struct gwin_strparams strparms;
     struct gwin_sizeparams sizeparms;
@@ -372,9 +365,7 @@ ShowMessageLine(aframe)
 
 /* Exit function, returning whatever has been put in its argument */
 int
-gtxframe_ExitCmd(a_exitValuep)
-     char *a_exitValuep;
-
+gtxframe_ExitCmd(void *a_exitValuep, void *arock)
 {				/*gtxframe_ExitCmd */
 
     int exitval;		/*Value we've been asked to exit with */
@@ -388,7 +379,7 @@ gtxframe_ExitCmd(a_exitValuep)
 }				/*gtxframe_ExitCmd */
 
 struct gtx_frame *
-gtxframe_Create()
+gtxframe_Create(void)
 {
     struct gtx_frame *tframe;
     struct keymap_map *newkeymap;
@@ -439,8 +430,8 @@ gtxframe_Create()
     return (tframe);
 }
 
-gtxframe_Delete(aframe)
-     register struct gtx_frame *aframe;
+int
+gtxframe_Delete(struct gtx_frame *aframe)
 {
     keymap_Delete(aframe->keymap);
     free(aframe->keystate);
@@ -450,9 +441,8 @@ gtxframe_Delete(aframe)
     return 0;
 }
 
-gtxframe_Display(aframe, awm)
-     struct gwin *awm;
-     register struct gtx_frame *aframe;
+int
+gtxframe_Display(struct gtx_frame *aframe, struct gwin *awm)
 {
     register struct gtxframe_dlist *tlist;
     register struct gtxframe_menu *tm;
@@ -486,9 +476,8 @@ gtxframe_Display(aframe, awm)
 }
 
 /* Add an object to a window's display list */
-gtxframe_AddToList(aframe, aobj)
-     struct onode *aobj;
-     register struct gtx_frame *aframe;
+int
+gtxframe_AddToList(struct gtx_frame *aframe, struct onode *aobj)
 {
     register struct gtxframe_dlist *tlist;
 
@@ -515,9 +504,8 @@ gtxframe_AddToList(aframe, aobj)
 }
 
 /* Remove an object from a display list, if it is already there */
-gtxframe_RemoveFromList(aframe, aobj)
-     struct onode *aobj;
-     register struct gtx_frame *aframe;
+int
+gtxframe_RemoveFromList(struct gtx_frame *aframe, struct onode *aobj)
 {
     register struct gtxframe_dlist *tlist, **plist;
 
@@ -533,8 +521,8 @@ gtxframe_RemoveFromList(aframe, aobj)
 }
 
 /* Clear out everything on the display list for the given frame*/
-gtxframe_ClearList(aframe)
-     register struct gtx_frame *aframe;
+int
+gtxframe_ClearList(struct gtx_frame *aframe)
 {
     register struct gtxframe_dlist *tlist, *nlist;
 

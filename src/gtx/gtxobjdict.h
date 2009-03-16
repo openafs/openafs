@@ -18,7 +18,7 @@
 
 #include "gtxobjects.h"		/*Standard gator object defns */
 
-extern int gator_objdict_init();
+extern int gator_objdict_init(int adebug);
     /*
      * Summary:
      *    Initialize the gator object dictionary package.
@@ -31,7 +31,7 @@ extern int gator_objdict_init();
      *    Error value otherwise.
      */
 
-extern int gator_objdict_add();
+extern int gator_objdict_add(struct onode *objtoadd);
     /*
      * Summary:
      *    Add an entry to the gator object dictionary.
@@ -44,7 +44,7 @@ extern int gator_objdict_add();
      *    Error value otherwise.
      */
 
-extern int gator_objdict_delete();
+extern int gator_objdict_delete(struct onode *objtodelete);
     /*
      * Summary:
      *    Delete an entry from the gator object dictionary.
@@ -57,7 +57,7 @@ extern int gator_objdict_delete();
      *    Error value otherwise.
      */
 
-extern struct onode *gator_objdict_lookup();
+extern struct onode *gator_objdict_lookup(char *nametofind);
     /*
      * Summary:
      *    Look up a gator object by name.
