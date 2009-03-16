@@ -13,7 +13,8 @@ LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 all: depinstall ${TOP_LIBDIR}/librxstat.a 
 
 depinstall: \
-	${TOP_INCDIR}/rx/rxstat.h Krxstat.cs.c Krxstat.ss.c Krxstat.xdr.c
+	${TOP_INCDIR}/rx/rxstat.h ${TOP_INCDIR}/rx/rxstat_prototypes.h Krxstat.cs.c \
+	Krxstat.ss.c Krxstat.xdr.c
 
 #
 # Build targets
@@ -59,6 +60,9 @@ ${DEST}/lib/librxstat.a: librxstat.a
 ${DEST}/include/rx/rxstat.h: rxstat.h
 	${INSTALL} $? $@
 
+${DEST}/include/rx/rxstat_prototypes.h: rxstat_prototypes.h
+	${INSTALL} $? $@
+
 #
 # Misc. targets
 #
@@ -72,11 +76,17 @@ ${DESTDIR}${includedir}/rx/rxstat.h: rxstat.h
 ${TOP_INCDIR}/rx/rxstat.h: rxstat.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/rx/rxstat_prototypes.h: rxstat_prototypes.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rxstat_prototypes.h: rxstat_prototypes.h
+	${INSTALL} $? $@
+	
 ${DESTDIR}${libdir}/librxstat.a: librxstat.a
 	${INSTALL} $? $@
 
 ${TOP_LIBDIR}/librxstat.a: librxstat.a
 	${INSTALL} $? $@
 
-dest:   ${DEST}/include/rx/rxstat.h ${DEST}/lib/librxstat.a
+dest:   ${DEST}/include/rx/rxstat.h ${DEST}/include/rx/rxstat_prototypes.h ${DEST}/lib/librxstat.a
 
