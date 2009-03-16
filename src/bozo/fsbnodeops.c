@@ -160,7 +160,7 @@ struct bnode_ops dafsbnode_ops = {
  * dropping type information
  */
 
-inline struct bnode * fsbnode2bnode(struct fsbnode *abnode) {
+static_inline struct bnode * fsbnode2bnode(struct fsbnode *abnode) {
     return (struct bnode *) abnode;
 }
 
