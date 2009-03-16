@@ -17,17 +17,20 @@
 #define	BOP_RESTARTP(bnode)	((*(bnode)->ops->restartp)((bnode)))
 #define BOP_HASCORE(bnode)	((*(bnode)->ops->hascore)((bnode)))
 
+struct bnode_proc;
+
 struct bnode_ops {
-    struct bnode *(*create) ( /* variable args */ );
-    int (*timeout) ( /* bnode */ );
-    int (*getstat) ( /* bnode, status */ );
-    int (*setstat) ( /* bnode, status */ );
-    int (*delete) ( /* bnode */ );
-    int (*procexit) ( /* bnode, proc */ );
-    int (*getstring) ( /* bnode, buffer, bufLen */ );
-    int (*getparm) ( /* bnode, parmIndex, buffer, bufLen */ );
-    int (*restartp) ( /* bnode */ );
-    int (*hascore) ( /* bnode */ );
+    struct bnode *(*create) ( char *, char *, char *, char *, char *, char *);
+    int (*timeout) ( struct bnode * );
+    int (*getstat) ( struct bnode *, afs_int32 * );
+    int (*setstat) ( struct bnode *, afs_int32 );
+    int (*delete) ( struct bnode * );
+    int (*procexit) ( struct bnode *, struct bnode_proc * );
+    int (*getstring) ( struct bnode *, char *abuffer, afs_int32 alen );
+    int (*getparm) ( struct bnode *, afs_int32 aindex, char *abuffer, 
+		     afs_int32 alen);
+    int (*restartp) ( struct bnode *);
+    int (*hascore) ( struct bnode *);
 };
 
 struct bnode_type {
