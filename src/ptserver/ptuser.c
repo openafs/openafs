@@ -247,7 +247,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 }
 
 int
-pr_End()
+pr_End(void)
 {
     int code = 0;
 

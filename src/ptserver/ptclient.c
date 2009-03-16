@@ -64,9 +64,7 @@ osi_audit()
 #endif /* !AFS_PTHREAD_ENV */
 
 int
-GetToken(format, l)
-     char *format;
-     afs_int32 *l;
+GetToken(char *format, afs_int32 *l)
 {
     int c;
 

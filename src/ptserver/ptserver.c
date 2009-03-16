@@ -139,11 +139,12 @@ RCSID
 #include <afs/auth.h>
 #include <afs/keys.h>
 #include "ptserver.h"
+#include "ptprototypes.h"
 #include "error_macros.h"
 #include "afs/audit.h"
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
-
+#include <rx/rxstat.h>
 
 /* make	all of these into a structure if you want */
 struct prheader cheader;
@@ -153,9 +154,6 @@ struct afsconf_dir *prdir;
 #if defined(SUPERGROUPS)
 extern afs_int32 depthsg;
 #endif
-
-extern int afsconf_ServerAuth();
-extern int afsconf_CheckAuth();
 
 int pr_realmNameLen;
 char *pr_realmName;
@@ -177,8 +175,7 @@ extern int prp_user_default;
 #include "AFS_component_version_number.c"
 
 int
-prp_access_mask(s)
-    char *s;
+prp_access_mask(char *s)
 {
     int r;
     if (*s >= '0' && *s <= '9') {
@@ -216,7 +213,6 @@ main(int argc, char **argv)
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
     extern int RXSTATS_ExecuteRequest();
-    extern int PR_ExecuteRequest();
 #if 0
     struct ktc_encryptionKey tkey;
 #endif
@@ -472,11 +468,11 @@ main(int argc, char **argv)
     if (kerberosKeys) {
 	/* initialize ubik */
 	ubik_CRXSecurityProc = afsconf_ClientAuth;
-	ubik_CRXSecurityRock = (char *)prdir;
+	ubik_CRXSecurityRock = prdir;
 	ubik_SRXSecurityProc = afsconf_ServerAuth;
-	ubik_SRXSecurityRock = (char *)prdir;
+	ubik_SRXSecurityRock = prdir;
 	ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-	ubik_CheckRXSecurityRock = (char *)prdir;
+	ubik_CheckRXSecurityRock = prdir;
     }
     /* The max needed is when deleting an entry.  A full CoEntry deletion
      * required removal from 39 entries.  Each of which may refers to the entry
