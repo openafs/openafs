@@ -124,7 +124,7 @@ static SYNC_server_state_t fssync_server_state =
 
 /* Forward declarations */
 static void * FSYNC_sync(void *);
-static void FSYNC_newconnection(int afd);
+static void FSYNC_newconnection(osi_socket afd);
 static void FSYNC_com(int fd);
 static void FSYNC_Drop(int fd);
 static void AcceptOn(void);
@@ -298,14 +298,14 @@ FSYNC_sync(void * args)
 }
 
 static void
-FSYNC_newconnection(int afd)
+FSYNC_newconnection(osi_socket afd)
 {
 #ifdef USE_UNIX_SOCKETS
     struct sockaddr_un other;
 #else  /* USE_UNIX_SOCKETS */
     struct sockaddr_in other;
 #endif
-    int fd;
+    osi_socket fd;
     socklen_t junk;
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
