@@ -56,6 +56,7 @@ RCSID
 #include "ptint.h"
 #include "pterror.h"
 #include "ptserver.h"
+#include "ptuser.h"
 
 struct prheader cheader;
 int fd;
@@ -85,7 +86,7 @@ printheader(struct prheader *h)
 }
 
 static afs_int32
-pr_Read(afs_int32 pos, char *buff, afs_int32 len)
+pr_Read(afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code;
 
@@ -110,7 +111,7 @@ pr_Read(afs_int32 pos, char *buff, afs_int32 len)
  */
 
 afs_int32
-ReadHeader()
+ReadHeader(void)
 {
     afs_int32 code;
 
@@ -138,14 +139,14 @@ IDHash(afs_int32 x)
 }
 
 static afs_int32
-NameHash(register unsigned char *aname)
+NameHash(register char *aname)
 {
     /* returns hash bucket for aname */
     register unsigned int hash = 0;
     register int i;
 /* stolen directly from the HashString function in the vol package */
     for (i = strlen(aname), aname += i - 1; i--; aname--)
-	hash = (hash * 31) + (*aname - 31);
+	hash = (hash * 31) + (*(unsigned char *)aname - 31);
     return (hash % HASHSIZE);
 }
 

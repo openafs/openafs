@@ -44,8 +44,8 @@ RCSID
 #endif
 
 #undef PRINT_MAP_ERROR
-/* #define MAP_DEBUG /**/
-/* #define NEED_READ_WRITE /**/
+/* #define MAP_DEBUG */
+/* #define NEED_READ_WRITE */
 
 #define LSHIFT 5
 #define MSHIFT 8		/* XXX make this 8 in the production version... */

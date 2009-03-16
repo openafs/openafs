@@ -34,7 +34,7 @@ afs_int32 IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid,
 			afs_int32 depth);
 #endif
 
-afs_int32
+static afs_int32
 IDHash(afs_int32 x)
 {
     /* returns hash bucket for x */
@@ -42,20 +42,20 @@ IDHash(afs_int32 x)
 }
 
 afs_int32
-NameHash(register unsigned char *aname)
+NameHash(register char *aname)
 {
     /* returns hash bucket for aname */
     register unsigned int hash = 0;
-    register int i;
+    register size_t i;
 /* stolen directly from the HashString function in the vol package */
     for (i = strlen(aname), aname += i - 1; i--; aname--)
-	hash = (hash * 31) + (*aname - 31);
+	hash = (hash * 31) + (*(unsigned char *)aname - 31);
     return (hash % HASHSIZE);
 }
 
 
 afs_int32
-pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, char *buff, afs_int32 len)
+pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, void *buff, afs_int32 len)
 {
     /* package up seek and write into one procedure for ease of use */
     afs_int32 code;
@@ -72,7 +72,7 @@ pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, char *buff, afs_in
 }
 
 afs_int32
-pr_Read(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, char *buff, afs_int32 len)
+pr_Read(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, void *buff, afs_int32 len)
 {
     /* same thing for read */
     afs_int32 code;
@@ -349,7 +349,7 @@ AllocID(register struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
     /* allocs an id from the proper area of address space, based on flag */
     register afs_int32 code = 1;
     register afs_int32 i = 0;
-    register maxcount = 50;	/* to prevent infinite loops */
+    register int maxcount = 50;	/* to prevent infinite loops */
 
     if (flag & PRGRP) {
 	*aid = ntohl(cheader.maxGroup);
@@ -433,12 +433,12 @@ NameToID(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *a
 }
 
 int
-IDCmp(afs_int32 *a, afs_int32 *b)
+IDCmp(const void *a, const void *b)
 {
     /* used to sort CPS's so that comparison with acl's is easier */
-    if (*a > *b) {
+    if (*(afs_int32 *)a > *(afs_int32 *)b) {
 	return 1;
-    } else if (*a == *b) {
+    } else if (*(afs_int32 *)a == *(afs_int32 *)b) {
 	return 0;
     } else /* (*a < *b) */ {
 	return -1;
