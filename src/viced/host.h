@@ -232,24 +232,24 @@ extern struct host *h_Alloc_r(register struct rx_connection *r_con);
 extern int h_Lookup_r(afs_uint32 hostaddr, afs_uint16 hport,
 		      int *heldp, struct host **hostp);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
-extern void h_Enumerate(int (*proc) (), char *param);
-extern void h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param);
+extern void h_Enumerate(int (*proc) (struct host *, int, void *), void *param);
+extern void h_Enumerate_r(int (*proc) (struct host *, int, void *), struct host *enumstart, void *param);
 extern struct host *h_GetHost_r(struct rx_connection *tcon);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
 extern struct client *h_ID2Client(afs_int32 vid);
 extern int GetClient(struct rx_connection *tcon, struct client **cp);
 extern int PutClient(struct client **cp);
-extern void h_PrintStats();
-extern void h_PrintClients();
-extern void h_GetWorkStats();
+extern void h_PrintStats(void);
+extern void h_PrintClients(void);
+extern void h_GetWorkStats(int *, int *, int *, afs_int32);
 extern void h_flushhostcps(register afs_uint32 hostaddr,
 			   register afs_uint16 hport);
 extern void h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 		  afs_int32 * a_diffSubnetP, afs_int32 * a_diffNetworkP);
 extern int h_NBLock_r(register struct host *host);
-extern void h_DumpHosts();
-extern void h_InitHostPackage();
+extern void h_DumpHosts(void);
+extern void h_InitHostPackage(void);
 extern void h_CheckHosts();
 struct Interface *MultiVerifyInterface_r();
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);

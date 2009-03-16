@@ -1298,7 +1298,7 @@ ParseArgs(int argc, char *argv[])
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
-	    }
+		}
 	} else if (!strcmp(argv[i], "-realm")) {
 	    extern char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
 	    extern int  num_lrealms;
