@@ -38,6 +38,7 @@ RCSID
 #endif
 #include <string.h>
 #include <des.h>
+#include <des_prototypes.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/com_err.h>
@@ -45,6 +46,7 @@ RCSID
 #include "kaserver.h"
 #include "kalog.h"
 #include "kaport.h"
+#include "kauth_internal.h"
 #include "afs/audit.h"
 
 extern struct ubik_dbase *KA_dbase;
@@ -52,10 +54,30 @@ struct kaheader cheader;
 Date cheaderReadTime;		/* time cheader last read in */
 extern struct afsconf_dir *KA_conf;	/* for getting cell info */
 
-afs_int32 kamCreateUser(), ChangePassWord(), kamSetPassword(), kamSetFields(),
-kamDeleteUser();
-afs_int32 kamGetEntry(), kamListEntry(), kamGetStats(), kamGetPassword(),
-kamGetRandomKey(), kamDebug();
+afs_int32 kamCreateUser(struct rx_call *call, char *aname, char *ainstance, 
+		        EncryptionKey ainitpw);
+afs_int32 ChangePassWord(struct rx_call *call, char *aname, char *ainstance, 
+		         ka_CBS *arequest, ka_BBS *oanswer);
+afs_int32 kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
+	                 afs_int32 akvno, EncryptionKey apassword);
+afs_int32 kamSetFields(struct rx_call *call, char *aname, char *ainstance,
+		       afs_int32 aflags, Date aexpiration, 
+		       afs_int32 alifetime, afs_int32 amaxAssociates,
+		       afs_uint32 misc_auth_bytes, afs_int32 spare2);
+afs_int32 kamDeleteUser(struct rx_call *call, char *aname, char *ainstance);
+afs_int32 kamGetEntry(struct rx_call *call, char *aname, char *ainstance,
+		      afs_int32 aversion, kaentryinfo *aentry);
+afs_int32 kamListEntry(struct rx_call *call, afs_int32 previous_index,
+		       afs_int32 *index, afs_int32 *count, kaident *name);
+afs_int32 kamGetStats(struct rx_call *call, afs_int32 version, 
+		      afs_int32 *admin_accounts, kasstats *statics,
+		      kadstats *dynamics);
+afs_int32 kamGetPassword(struct rx_call *call, char *name, 
+		         EncryptionKey *password);
+afs_int32 kamGetRandomKey(struct rx_call *call, EncryptionKey *key);
+afs_int32 kamDebug(struct rx_call *call, afs_int32 version,
+		   int checkDB, struct ka_debugInfo *info);
+
 char lrealm[MAXKTCREALMLEN];
 
 #ifndef EXPIREPW		/* password expiration default yes */
@@ -74,10 +96,17 @@ extern int npwSums;
 static afs_int32 autoCPWInterval;
 static afs_int32 autoCPWUpdates;
 
-static afs_int32 set_password();	/* forward */
-extern afs_int32 InitAuthServ();	/* forward */
-static afs_int32 impose_reuse_limits();	/* forward */
-static int create_user();	/* forward */
+static afs_int32 set_password(struct ubik_trans *tt, char *name, 
+			      char *instance, EncryptionKey *password, 
+			      afs_int32 kvno, afs_int32 caller);
+
+extern afs_int32 InitAuthServ(struct ubik_trans **tt, int lock,
+			      int *this_op);
+static afs_int32 impose_reuse_limits(EncryptionKey *password, 
+				     struct kaentry *tentry);
+static int create_user(struct ubik_trans *tt, char *name, char *instance,
+		       EncryptionKey *key, afs_int32 caller, 
+		       afs_int32 flags);
 
 /* This routine is called whenever an RPC interface needs the time.  It uses
    the current time to randomize a 128 bit value that is used to change the
@@ -93,10 +122,9 @@ static afs_int32 totalUpdates = 0;
    ptr should be zero and the return code need not be checked. */
 
 static afs_int32
-get_time(timeP, tt, admin)
-     Date *timeP;
-     struct ubik_trans *tt;	/* tt != 0: a write transaction */
-     int admin;			/* the caller is an admin user */
+get_time(Date *timeP,
+         struct ubik_trans *tt,	/* tt != 0: a write transaction */
+         int admin)		/* the caller is an admin user */
 {
     /* random value used to change Admin & TGS keys, this is at risk during
      * multi-threaded operation, but I think the consequences are fairly
@@ -204,13 +232,12 @@ static int kaprocsInited = 0;
 
 /* This variable is protected by the kaprocsInited flag. */
 
-static int (*rebuildDatabase) ();
+static int (*rebuildDatabase) (struct ubik_trans *);
 
 /* This is called to initialize the database */
 
 static int
-initialize_database(tt)
-     struct ubik_trans *tt;
+initialize_database(struct ubik_trans *tt)
 {
     struct ktc_encryptionKey key;
     int code;
@@ -235,9 +262,7 @@ initialize_database(tt)
    parameter passes some information about the command line arguments. */
 
 afs_int32
-init_kaprocs(lclpath, initFlags)
-     char *lclpath;
-     int initFlags;
+init_kaprocs(char *lclpath, int initFlags)
 {
     int code;
     struct ubik_trans *tt;
@@ -277,7 +302,7 @@ init_kaprocs(lclpath, initFlags)
     init_kadatabase(initFlags);
     rebuildDatabase = initialize_database;
 
-    if (code = InitAuthServ(&tt, LOCKREAD, 0)) {
+    if ((code = InitAuthServ(&tt, LOCKREAD, 0))) {
 	printf("init_kaprocs: InitAuthServ failed: code = %d\n", code);
 	return code;
     }
@@ -317,8 +342,7 @@ static char tgsPrincipal[256];
 static char tgsServerPrincipal[256];
 
 void
-save_principal(p, n, i, c)
-     char *p, *n, *i, *c;
+save_principal(char *p, char *n, char *i, char *c)
 {
     int s = 255;
     int l;
@@ -350,11 +374,10 @@ save_principal(p, n, i, c)
 }
 
 static afs_int32
-check_auth(call, at, admin, acaller_id)
-     struct rx_call *call;
-     struct ubik_trans *at;
-     int admin;			/* require caller to be ADMIN */
-     afs_int32 *acaller_id;
+check_auth(struct rx_call *call,
+	   struct ubik_trans *at,
+	   int admin,			/* require caller to be ADMIN */
+	   afs_int32 *acaller_id)
 {
     rxkad_level level;
     char name[MAXKTCNAMELEN];
@@ -443,7 +466,7 @@ check_auth(call, at, admin, acaller_id)
 }
 
 afs_int32
-AwaitInitialization()
+AwaitInitialization(void)
 {
     afs_int32 start = 0;
     while (!kaprocsInited) {
@@ -460,10 +483,9 @@ AwaitInitialization()
    the database header into core */
 
 afs_int32
-InitAuthServ(tt, lock, this_op)
-     struct ubik_trans **tt;
-     int lock;			/* indicate read/write transaction */
-     int *this_op;		/* opcode of RPC proc, for COUNT_ABO */
+InitAuthServ(struct ubik_trans **tt,
+	     int lock,		/* indicate read/write transaction */
+	     int *this_op)	/* opcode of RPC proc, for COUNT_ABO */
 {
     int code;
     afs_int32 start = 0;	/* time started waiting for quorum */
@@ -471,7 +493,7 @@ InitAuthServ(tt, lock, this_op)
 
     /* Wait for server initialization to finish if not during init_kaprocs */
     if (this_op)
-	if (code = AwaitInitialization())
+	if ((code = AwaitInitialization()))
 	    return code;
 
     for (code = UNOQUORUM; code == UNOQUORUM;) {
@@ -500,7 +522,7 @@ InitAuthServ(tt, lock, this_op)
     }
     if (code)
 	return code;
-    if (code = ubik_SetLock(*tt, 1, 1, lock)) {
+    if ((code = ubik_SetLock(*tt, 1, 1, lock))) {
 	if (this_op)
 	    COUNT_ABO;
 	ubik_AbortTrans(*tt);
@@ -518,16 +540,16 @@ InitAuthServ(tt, lock, this_op)
 	     * in CheckInit before nuking the database.  Since this may now get
 	     * a UNOQUORUM we'll just do this from the top.
 	     */
-	    if (code = InitAuthServ(tt, LOCKWRITE, this_op))
+	    if ((code = InitAuthServ(tt, LOCKWRITE, this_op)))
 		return code;
-	    if (code = ubik_EndTrans(*tt))
+	    if ((code = ubik_EndTrans(*tt)))
 		return code;
 
 	    /* now open the read transaction that was originally requested. */
 	    return InitAuthServ(tt, lock, this_op);
 	}
     } else {
-	if (code = CheckInit(*tt, rebuildDatabase)) {
+	if ((code = CheckInit(*tt, rebuildDatabase))) {
 	    if (this_op)
 		COUNT_ABO;
 	    ubik_AbortTrans(*tt);
@@ -542,22 +564,16 @@ InitAuthServ(tt, lock, this_op)
 /* returns true if name is specially known by AuthServer */
 
 static int
-special_name(name, instance)
-     char *name;
-     char *instance;
+special_name(char *name, char *instance)
+
 {
     return ((!strcmp(name, KA_TGS_NAME) && !strcmp(instance, lrealm))
 	    || (strcmp(name, KA_ADMIN_NAME) == 0));
 }
 
 static int
-create_user(tt, name, instance, key, caller, flags)
-     struct ubik_trans *tt;
-     char *name;
-     char *instance;
-     EncryptionKey *key;
-     afs_int32 caller;
-     afs_int32 flags;
+create_user(struct ubik_trans *tt, char *name, char *instance,
+	    EncryptionKey *key, afs_int32 caller, afs_int32 flags)
 {
     register int code;
     afs_int32 to;
@@ -581,7 +597,7 @@ create_user(tt, name, instance, key, caller, flags)
     if (special_name(name, instance)) {	/* this overrides key & version */
 	tentry.flags = htonl(ntohl(tentry.flags) | KAFSPECIAL);
 	tentry.key_version = htonl(-1);	/* don't save this key */
-	if (code = ka_NewKey(tt, to, &tentry, key))
+	if ((code = ka_NewKey(tt, to, &tentry, key)))
 	    return code;
     } else {
 	memcpy(&tentry.key, key, sizeof(tentry.key));
@@ -614,11 +630,8 @@ create_user(tt, name, instance, key, caller, flags)
 /* Put actual stub routines here */
 
 afs_int32
-SKAM_CreateUser(call, aname, ainstance, ainitpw)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     EncryptionKey ainitpw;
+SKAM_CreateUser(struct rx_call *call, char *aname, char *ainstance,
+		EncryptionKey ainitpw)
 {
     afs_int32 code;
 
@@ -630,11 +643,8 @@ SKAM_CreateUser(call, aname, ainstance, ainitpw)
 
 
 afs_int32
-kamCreateUser(call, aname, ainstance, ainitpw)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     EncryptionKey ainitpw;
+kamCreateUser(struct rx_call *call, char *aname, char *ainstance, 
+	      EncryptionKey ainitpw)
 {
     register int code;
     struct ubik_trans *tt;
@@ -645,7 +655,7 @@ kamCreateUser(call, aname, ainstance, ainitpw)
 	return KABADKEY;
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
-    if (code = InitAuthServ(&tt, LOCKWRITE, this_op))
+    if ((code = InitAuthServ(&tt, LOCKWRITE, this_op)))
 	return code;
     code = check_auth(call, tt, 1, &caller);
     if (code) {
@@ -666,12 +676,8 @@ kamCreateUser(call, aname, ainstance, ainitpw)
 }
 
 afs_int32
-SKAA_ChangePassword(call, aname, ainstance, arequest, oanswer)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     ka_CBS *arequest;
-     ka_BBS *oanswer;
+SKAA_ChangePassword(struct rx_call *call, char *aname, char *ainstance,
+		    ka_CBS *arequest, ka_BBS *oanswer)
 {
     afs_int32 code;
 
@@ -682,12 +688,8 @@ SKAA_ChangePassword(call, aname, ainstance, arequest, oanswer)
 }
 
 afs_int32
-ChangePassWord(call, aname, ainstance, arequest, oanswer)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     ka_CBS *arequest;
-     ka_BBS *oanswer;
+ChangePassWord(struct rx_call *call, char *aname, char *ainstance, 
+	       ka_CBS *arequest, ka_BBS *oanswer)
 {
     register int code;
     struct ubik_trans *tt;
@@ -705,7 +707,7 @@ ChangePassWord(call, aname, ainstance, arequest, oanswer)
 	return KABADNAME;
     if (strcmp(ainstance, KA_ADMIN_NAME) == 0)
 	return KABADNAME;
-    if (code = InitAuthServ(&tt, LOCKWRITE, this_op))
+    if ((code = InitAuthServ(&tt, LOCKWRITE, this_op)))
 	return code;
 
     code = FindBlock(tt, aname, ainstance, &to, &tentry);
@@ -722,7 +724,7 @@ ChangePassWord(call, aname, ainstance, arequest, oanswer)
     }
 
     /* decrypt request w/ user password */
-    if (code = des_key_sched(&tentry.key, user_schedule))
+    if ((code = des_key_sched(&tentry.key, user_schedule)))
 	es_Report("In KAChangePassword: key_sched returned %d\n", code);
     des_pcbc_encrypt(arequest->SeqBody, &request,
 		     min(arequest->SeqLen, sizeof(request)), user_schedule,
@@ -785,9 +787,7 @@ ChangePassWord(call, aname, ainstance, arequest, oanswer)
 }
 
 static afs_int32
-impose_reuse_limits(password, tentry)
-     EncryptionKey *password;
-     struct kaentry *tentry;
+impose_reuse_limits(EncryptionKey *password, struct kaentry *tentry)
 {
     int code;
     Date now;
@@ -823,13 +823,8 @@ impose_reuse_limits(password, tentry)
 
 
 static afs_int32
-set_password(tt, name, instance, password, kvno, caller)
-     struct ubik_trans *tt;
-     char *name;
-     char *instance;
-     EncryptionKey *password;
-     afs_int32 kvno;
-     afs_int32 caller;
+set_password(struct ubik_trans *tt, char *name, char *instance, 
+	     EncryptionKey *password, afs_int32 kvno, afs_int32 caller)
 {
     afs_int32 code;
     afs_int32 to;		/* offset of block */
@@ -860,7 +855,7 @@ set_password(tt, name, instance, password, kvno, caller)
 
     if (special_name(name, instance)) {	/* set key over rides key_version */
 	tentry.flags = htonl(ntohl(tentry.flags) | KAFSPECIAL);
-	if (code = ka_NewKey(tt, to, &tentry, password))
+	if ((code = ka_NewKey(tt, to, &tentry, password)))
 	    return (code);
     } else {
 	memcpy(&tentry.key, password, sizeof(tentry.key));
@@ -893,12 +888,8 @@ set_password(tt, name, instance, password, kvno, caller)
 }
 
 afs_int32
-SKAM_SetPassword(call, aname, ainstance, akvno, apassword)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 akvno;
-     EncryptionKey apassword;
+SKAM_SetPassword(struct rx_call *call, char *aname, char *ainstance,
+		 afs_int32 akvno, EncryptionKey apassword)
 {
     afs_int32 code;
 
@@ -909,12 +900,8 @@ SKAM_SetPassword(call, aname, ainstance, akvno, apassword)
 }
 
 afs_int32
-kamSetPassword(call, aname, ainstance, akvno, apassword)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 akvno;
-     EncryptionKey apassword;
+kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
+	       afs_int32 akvno, EncryptionKey apassword)
 {
     register int code;
     struct ubik_trans *tt;
@@ -929,13 +916,13 @@ kamSetPassword(call, aname, ainstance, akvno, apassword)
 
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
-    if (code = InitAuthServ(&tt, LOCKWRITE, this_op))
+    if ((code = InitAuthServ(&tt, LOCKWRITE, this_op)))
 	return code;
     code = check_auth(call, tt, 0, &caller);
     if (code) {
 	goto abort;
     }
-    if (code = karead(tt, caller, &tentry, sizeof(tentry))) {
+    if ((code = karead(tt, caller, &tentry, sizeof(tentry)))) {
 	code = KAIO;
 	goto abort;
     }
@@ -969,8 +956,7 @@ kamSetPassword(call, aname, ainstance, akvno, apassword)
 }
 
 static Date
-CoerseLifetime(start, end)
-     Date start, end;
+CoerseLifetime(Date start, Date end)
 {
     unsigned char kerberosV4Life;
     kerberosV4Life = time_to_life(start, end);
@@ -979,13 +965,12 @@ CoerseLifetime(start, end)
 }
 
 static afs_int32
-GetEndTime(start, reqEnd, expiration, caller, server, endP)
-     IN Date start;		/* start time of ticket */
-     IN Date reqEnd;		/* requested end time */
-     IN Date expiration;	/* authorizing ticket's expiration */
-     IN struct kaentry *caller;
-     IN struct kaentry *server;
-     OUT Date *endP;		/* actual end time */
+GetEndTime(Date start,		/* start time of ticket */
+	   Date reqEnd,		/* requested end time */
+	   Date expiration,	/* authorizing ticket's expiration */
+	   struct kaentry *caller,
+	   struct kaentry *server,
+	   Date *endP)		/* actual end time */
 {
     Date cExp, sExp;
     Date cLife, sLife;
@@ -1015,17 +1000,10 @@ GetEndTime(start, reqEnd, expiration, caller, server, endP)
 }
 
 static afs_int32
-PrepareTicketAnswer(oanswer, challenge, ticket, ticketLen, sessionKey, start,
-		    end, caller, server, cell, label)
-     ka_BBS *oanswer;
-     afs_int32 challenge;
-     char *ticket;
-     afs_int32 ticketLen;
-     struct ktc_encryptionKey *sessionKey;
-     Date start, end;
-     struct kaentry *caller, *server;
-     char *cell;
-     char *label;
+PrepareTicketAnswer(ka_BBS *oanswer, afs_int32 challenge, char *ticket,
+		    afs_int32 ticketLen, struct ktc_encryptionKey *sessionKey,
+		    Date start, Date end, struct kaentry *caller, 
+		    struct kaentry *server, char *cell, char *label)
 {
     afs_int32 code;
     struct ka_ticketAnswer *answer;
@@ -1086,14 +1064,8 @@ PrepareTicketAnswer(oanswer, challenge, ticket, ticketLen, sessionKey, start,
    is normally disabled for these two principals. */
 
 static afs_int32
-Authenticate(version, call, aname, ainstance, start, end, arequest, oanswer)
-     int version;
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     Date start, end;
-     ka_CBS *arequest;
-     ka_BBS *oanswer;
+Authenticate(int version, struct rx_call *call, char *aname, char *ainstance, 
+	     Date start, Date end, ka_CBS *arequest, ka_BBS *oanswer)
 {
     int code;
     struct ubik_trans *tt;
@@ -1120,7 +1092,7 @@ Authenticate(version, call, aname, ainstance, start, end, arequest, oanswer)
     COUNT_REQ(Authenticate);
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;
     get_time(&now, 0, 0);
 
@@ -1150,7 +1122,7 @@ Authenticate(version, call, aname, ainstance, start, end, arequest, oanswer)
     save_principal(authPrincipal, aname, ainstance, 0);
 
     /* decrypt request w/ user password */
-    if (code = des_key_sched(&tentry.key, user_schedule))
+    if ((code = des_key_sched(&tentry.key, user_schedule)))
 	es_Report("In KAAuthenticate: key_sched returned %d\n", code);
     des_pcbc_encrypt(arequest->SeqBody, &request,
 		     min(arequest->SeqLen, sizeof(request)), user_schedule,
@@ -1309,13 +1281,9 @@ Authenticate(version, call, aname, ainstance, start, end, arequest, oanswer)
 }
 
 afs_int32
-SKAA_Authenticate_old(call, aname, ainstance, start, end, arequest, oanswer)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     Date start, end;
-     ka_CBS *arequest;
-     ka_BBS *oanswer;
+SKAA_Authenticate_old(struct rx_call *call, char *aname, char *ainstance,
+		      Date start, Date end, ka_CBS *arequest, 
+		      ka_BBS *oanswer)
 {
     int code;
 
@@ -1330,13 +1298,8 @@ SKAA_Authenticate_old(call, aname, ainstance, start, end, arequest, oanswer)
 }
 
 afs_int32
-SKAA_Authenticate(call, aname, ainstance, start, end, arequest, oanswer)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     Date start, end;
-     ka_CBS *arequest;
-     ka_BBS *oanswer;
+SKAA_Authenticate(struct rx_call *call, char *aname, char *ainstance, 
+		  Date start, Date end, ka_CBS *arequest, ka_BBS *oanswer)
 {
     int code;
 
@@ -1350,13 +1313,8 @@ SKAA_Authenticate(call, aname, ainstance, start, end, arequest, oanswer)
 }
 
 afs_int32
-SKAA_AuthenticateV2(call, aname, ainstance, start, end, arequest, oanswer)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     Date start, end;
-     ka_CBS *arequest;
-     ka_BBS *oanswer;
+SKAA_AuthenticateV2(struct rx_call *call, char *aname, char *ainstance, 
+		    Date start, Date end, ka_CBS *arequest, ka_BBS *oanswer)
 {
     int code;
 
@@ -1370,17 +1328,15 @@ SKAA_AuthenticateV2(call, aname, ainstance, start, end, arequest, oanswer)
 }
 
 afs_int32
-SKAM_SetFields(call, aname, ainstance, aflags, aexpiration, alifetime,
-	       amaxAssociates, misc_auth_bytes, spare2)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 aflags;
-     Date aexpiration;
-     afs_int32 alifetime;
-     afs_int32 amaxAssociates;
-     afs_uint32 misc_auth_bytes;	/* 4 bytes, each 0 means unspecified */
-     afs_int32 spare2;
+SKAM_SetFields(struct rx_call *call,
+	       char *aname,
+	       char *ainstance,
+	       afs_int32 aflags,
+	       Date aexpiration,
+	       afs_int32 alifetime,
+	       afs_int32 amaxAssociates,
+	       afs_uint32 misc_auth_bytes,	/* 4 bytes, each 0 means unspecified */
+	       afs_int32 spare2)
 {
     afs_int32 code;
 
@@ -1394,17 +1350,15 @@ SKAM_SetFields(call, aname, ainstance, aflags, aexpiration, alifetime,
 }
 
 afs_int32
-kamSetFields(call, aname, ainstance, aflags, aexpiration, alifetime,
-	     amaxAssociates, misc_auth_bytes, spare2)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 aflags;
-     Date aexpiration;
-     afs_int32 alifetime;
-     afs_int32 amaxAssociates;
-     afs_uint32 misc_auth_bytes;	/* 4 bytes, each 0 means unspecified */
-     afs_int32 spare2;
+kamSetFields(struct rx_call *call,
+	     char *aname,
+	     char *ainstance,
+	     afs_int32 aflags,
+	     Date aexpiration,
+	     afs_int32 alifetime,
+	     afs_int32 amaxAssociates,
+	     afs_uint32 misc_auth_bytes, 	/* 4 bytes, each 0 means unspecified */
+	     afs_int32 spare2)
 {
     afs_int32 code;
     Date now;
@@ -1426,7 +1380,7 @@ kamSetFields(call, aname, ainstance, aflags, aexpiration, alifetime,
 	return KABADARGUMENT;	/* arguments no good */
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
-    if (code = InitAuthServ(&tt, LOCKWRITE, this_op))
+    if ((code = InitAuthServ(&tt, LOCKWRITE, this_op)))
 	return code;
     code = check_auth(call, tt, 1, &caller);
     if (code) {
@@ -1452,13 +1406,13 @@ kamSetFields(call, aname, ainstance, aflags, aexpiration, alifetime,
 		delta = -1;
 	    else
 		delta = 1;
-	    if (code = update_admin_count(tt, delta))
+	    if ((code = update_admin_count(tt, delta)))
 		goto abort;
 	}
 	tentry.flags =
 	    htonl((ntohl(tentry.flags) & ~KAF_SETTABLE_FLAGS) | aflags);
     }
-    if (code = get_time(&now, tt, 1))
+    if ((code = get_time(&now, tt, 1)))
 	goto abort;
     if (aexpiration) {
 	tentry.user_expiration = htonl(aexpiration);
@@ -1536,10 +1490,7 @@ kamSetFields(call, aname, ainstance, aflags, aexpiration, alifetime,
 /* delete a user */
 
 afs_int32
-SKAM_DeleteUser(call, aname, ainstance)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
+SKAM_DeleteUser(struct rx_call *call, char *aname, char *ainstance)
 {
     afs_int32 code;
 
@@ -1550,10 +1501,7 @@ SKAM_DeleteUser(call, aname, ainstance)
 }
 
 afs_int32
-kamDeleteUser(call, aname, ainstance)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
+kamDeleteUser(struct rx_call *call, char *aname, char *ainstance)
 {
     register int code;
     struct ubik_trans *tt;
@@ -1566,7 +1514,7 @@ kamDeleteUser(call, aname, ainstance)
     COUNT_REQ(DeleteUser);
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
-    if (code = InitAuthServ(&tt, LOCKWRITE, this_op))
+    if ((code = InitAuthServ(&tt, LOCKWRITE, this_op)))
 	return code;
     code = check_auth(call, tt, 1, &caller);
     if (code) {
@@ -1590,11 +1538,11 @@ kamDeleteUser(call, aname, ainstance)
 
     /* track all AuthServer identities */
     if (special_name(aname, ainstance))
-	if (code = ka_DelKey(tt, to, &tentry))
+	if ((code = ka_DelKey(tt, to, &tentry)))
 	    goto abort;
 
     if (ntohl(tentry.flags) & KAFADMIN)	/* keep admin count up-to-date */
-	if (code = update_admin_count(tt, -1))
+	if ((code = update_admin_count(tt, -1)))
 	    goto abort;
 
     if ((code = UnthreadBlock(tt, &tentry)) || (code = FreeBlock(tt, to)) || (code = get_time(0, tt, 1))	/* update randomness */
@@ -1615,12 +1563,11 @@ kamDeleteUser(call, aname, ainstance)
  * will be unlocked.
  */
 afs_int32
-SKAM_GetEntry(call, aname, ainstance, aversion, aentry)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 aversion;	/* major version assumed by caller */
-     kaentryinfo *aentry;	/* entry data copied here */
+SKAM_GetEntry(struct rx_call *call,
+	      char *aname,
+	      char *ainstance,
+	      afs_int32 aversion,	/* major version assumed by caller */
+	      kaentryinfo *aentry)	/* entry data copied here */
 {
     afs_int32 code;
 
@@ -1631,12 +1578,11 @@ SKAM_GetEntry(call, aname, ainstance, aversion, aentry)
 }
 
 afs_int32
-kamGetEntry(call, aname, ainstance, aversion, aentry)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 aversion;	/* major version assumed by caller */
-     kaentryinfo *aentry;	/* entry data copied here */
+kamGetEntry(struct rx_call *call,
+	    char *aname,
+	    char *ainstance,
+	    afs_int32 aversion,		/* major version assumed by caller */
+	    kaentryinfo *aentry)	/* entry data copied here */
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1653,7 +1599,7 @@ kamGetEntry(call, aname, ainstance, aversion, aentry)
 	return KAOLDINTERFACE;
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;
     code = check_auth(call, tt, 0, &callerIndex);
     if (code) {
@@ -1664,7 +1610,7 @@ kamGetEntry(call, aname, ainstance, aversion, aentry)
 	code = KANOENT;
 	goto abort;
     } else {
-	if (code = karead(tt, callerIndex, &caller, sizeof(caller))) {
+	if ((code = karead(tt, callerIndex, &caller, sizeof(caller)))) {
 	    code = KAIO;
 	    goto abort;
 	}
@@ -1743,12 +1689,11 @@ kamGetEntry(call, aname, ainstance, aversion, aentry)
 }
 
 afs_int32
-SKAM_ListEntry(call, previous_index, index, count, name)
-     struct rx_call *call;
-     afs_int32 previous_index;	/* last entry ret'd or 0 for first */
-     afs_int32 *index;		/* index of this entry */
-     afs_int32 *count;		/* total entries in database */
-     kaident *name;		/* name & instance of this entry */
+SKAM_ListEntry(struct rx_call *call,
+	       afs_int32 previous_index, /* last entry ret'd or 0 for first */
+	       afs_int32 *index,	 /* index of this entry */
+	       afs_int32 *count,	 /* total entries in database */
+	       kaident *name)		 /* name & instance of this entry */
 {
     afs_int32 code;
 
@@ -1759,12 +1704,11 @@ SKAM_ListEntry(call, previous_index, index, count, name)
 
 
 afs_int32
-kamListEntry(call, previous_index, index, count, name)
-     struct rx_call *call;
-     afs_int32 previous_index;	/* last entry ret'd or 0 for first */
-     afs_int32 *index;		/* index of this entry */
-     afs_int32 *count;		/* total entries in database */
-     kaident *name;		/* name & instance of this entry */
+kamListEntry(struct rx_call *call,
+	     afs_int32 previous_index,	/* last entry ret'd or 0 for first */
+	     afs_int32 *index,		/* index of this entry */
+	     afs_int32 *count,		/* total entries in database */
+	     kaident *name)		/* name & instance of this entry */
 {
     register int code;
     struct ubik_trans *tt;
@@ -1772,7 +1716,7 @@ kamListEntry(call, previous_index, index, count, name)
     struct kaentry tentry;
 
     COUNT_REQ(ListEntry);
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;
     code = check_auth(call, tt, 1, &caller);
     if (code) {
@@ -1803,17 +1747,15 @@ kamListEntry(call, previous_index, index, count, name)
 }
 
 static afs_int32
-GetTicket(version, call, kvno, authDomain, aticket, sname, sinstance, atimes,
-	  oanswer)
-     int version;
-     struct rx_call *call;
-     afs_int32 kvno;
-     char *authDomain;
-     ka_CBS *aticket;
-     char *sname;
-     char *sinstance;
-     ka_CBS *atimes;		/* encrypted start & end time */
-     ka_BBS *oanswer;
+GetTicket(int version,
+	  struct rx_call *call,
+	  afs_int32 kvno,
+	  char *authDomain,
+	  ka_CBS *aticket,
+	  char *sname,
+	  char *sinstance,
+	  ka_CBS *atimes,		/* encrypted start & end time */
+	  ka_BBS *oanswer)
 {
     afs_int32 code;
     int import, export;
@@ -1844,7 +1786,7 @@ GetTicket(version, call, kvno, authDomain, aticket, sname, sinstance, atimes,
 	return KABADNAME;
     if (atimes->SeqLen != sizeof(times))
 	return KABADARGUMENT;
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;
 
     export = import = 0;
@@ -1869,7 +1811,7 @@ GetTicket(version, call, kvno, authDomain, aticket, sname, sinstance, atimes,
     }
     save_principal(tgsPrincipal, name, instance, cell);
 
-    if (code = get_time(&now, 0, 0))
+    if ((code = get_time(&now, 0, 0)))
 	goto abort;
 
     code = tkt_CheckTimes(start, expiration, now);
@@ -2022,16 +1964,14 @@ GetTicket(version, call, kvno, authDomain, aticket, sname, sinstance, atimes,
 }
 
 afs_int32
-SKAT_GetTicket_old(call, kvno, authDomain, aticket, sname, sinstance, atimes,
-		   oanswer)
-     struct rx_call *call;
-     afs_int32 kvno;
-     char *authDomain;
-     ka_CBS *aticket;
-     char *sname;
-     char *sinstance;
-     ka_CBS *atimes;		/* encrypted start & end time */
-     ka_BBS *oanswer;
+SKAT_GetTicket_old(struct rx_call *call,
+		   afs_int32 kvno,
+		   char *authDomain,
+		   ka_CBS *aticket,
+		   char *sname,
+		   char *sinstance,
+		   ka_CBS *atimes,		/* encrypted start & end time */
+		   ka_BBS *oanswer)
 {
     int code;
 
@@ -2046,16 +1986,14 @@ SKAT_GetTicket_old(call, kvno, authDomain, aticket, sname, sinstance, atimes,
 }
 
 afs_int32
-SKAT_GetTicket(call, kvno, authDomain, aticket, sname, sinstance, atimes,
-	       oanswer)
-     struct rx_call *call;
-     afs_int32 kvno;
-     char *authDomain;
-     ka_CBS *aticket;
-     char *sname;
-     char *sinstance;
-     ka_CBS *atimes;		/* encrypted start & end time */
-     ka_BBS *oanswer;
+SKAT_GetTicket(struct rx_call *call,
+	       afs_int32 kvno,
+	       char *authDomain,
+	       ka_CBS *aticket,
+	       char *sname,
+	       char *sinstance,
+	       ka_CBS *atimes,		/* encrypted start & end time */
+	       ka_BBS *oanswer)
 {
     int code;
 
@@ -2068,12 +2006,9 @@ SKAT_GetTicket(call, kvno, authDomain, aticket, sname, sinstance, atimes,
 }
 
 afs_int32
-SKAM_GetStats(call, version, admin_accounts, statics, dynamics)
-     struct rx_call *call;
-     afs_int32 version;
-     afs_int32 *admin_accounts;
-     kasstats *statics;
-     kadstats *dynamics;
+SKAM_GetStats(struct rx_call *call, afs_int32 version, 
+	      afs_int32 *admin_accounts, kasstats *statics,
+	      kadstats *dynamics)
 {
     afs_int32 code;
 
@@ -2083,12 +2018,9 @@ SKAM_GetStats(call, version, admin_accounts, statics, dynamics)
 }
 
 afs_int32
-kamGetStats(call, version, admin_accounts, statics, dynamics)
-     struct rx_call *call;
-     afs_int32 version;
-     afs_int32 *admin_accounts;
-     kasstats *statics;
-     kadstats *dynamics;
+kamGetStats(struct rx_call *call, afs_int32 version, 
+	    afs_int32 *admin_accounts, kasstats *statics,
+	    kadstats *dynamics)
 {
     afs_int32 code;
     struct ubik_trans *tt;
@@ -2097,7 +2029,7 @@ kamGetStats(call, version, admin_accounts, statics, dynamics)
     COUNT_REQ(GetStats);
     if (version != KAMAJORVERSION)
 	return KAOLDINTERFACE;
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;
     code = check_auth(call, tt, 1, &caller);
     if (code) {
@@ -2160,10 +2092,7 @@ kamGetStats(call, version, admin_accounts, statics, dynamics)
 }
 
 afs_int32
-SKAM_GetPassword(call, name, password)
-     struct rx_call *call;
-     char *name;
-     EncryptionKey *password;
+SKAM_GetPassword(struct rx_call *call, char *name, EncryptionKey *password)
 {
     afs_int32 code;
 
@@ -2173,10 +2102,7 @@ SKAM_GetPassword(call, name, password)
 }
 
 afs_int32
-kamGetPassword(call, name, password)
-     struct rx_call *call;
-     char *name;
-     EncryptionKey *password;
+kamGetPassword(struct rx_call *call, char *name, EncryptionKey *password)
 {
     int code = KANOAUTH;
     COUNT_REQ(GetPassword);
@@ -2224,9 +2150,7 @@ kamGetPassword(call, name, password)
 }
 
 afs_int32
-SKAM_GetRandomKey(call, key)
-     struct rx_call *call;
-     EncryptionKey *key;
+SKAM_GetRandomKey(struct rx_call *call, EncryptionKey *key)
 {
     afs_int32 code;
 
@@ -2236,14 +2160,12 @@ SKAM_GetRandomKey(call, key)
 }
 
 afs_int32
-kamGetRandomKey(call, key)
-     struct rx_call *call;
-     EncryptionKey *key;
+kamGetRandomKey(struct rx_call *call, EncryptionKey *key)
 {
     int code;
 
     COUNT_REQ(GetRandomKey);
-    if (code = AwaitInitialization())
+    if ((code = AwaitInitialization()))
 	return code;
     code = des_random_key(key);
     if (code)
@@ -2252,11 +2174,10 @@ kamGetRandomKey(call, key)
 }
 
 afs_int32
-SKAM_Debug(call, version, checkDB, info)
-     struct rx_call *call;
-     afs_int32 version;
-     int checkDB;		/* start a transaction to examine DB */
-     struct ka_debugInfo *info;
+SKAM_Debug(struct rx_call *call,
+	   afs_int32 version,
+	   int checkDB,		/* start a transaction to examine DB */
+	   struct ka_debugInfo *info)
 {
     afs_int32 code;
 
@@ -2266,11 +2187,10 @@ SKAM_Debug(call, version, checkDB, info)
 }
 
 afs_int32
-kamDebug(call, version, checkDB, info)
-     struct rx_call *call;
-     afs_int32 version;
-     int checkDB;		/* start a transaction to examine DB */
-     struct ka_debugInfo *info;
+kamDebug(struct rx_call *call,
+	 afs_int32 version,
+	 int checkDB,		/* start a transaction to examine DB */
+	 struct ka_debugInfo *info)
 {
 /*  COUNT_REQ (Debug); */
     if (sizeof(struct kaentry) != sizeof(struct kaOldKeys))
@@ -2330,13 +2250,15 @@ kamDebug(call, version, checkDB, info)
  * a tacked-on-the-side data file.
  * prob'ly ought to check the noauth flag.
  */
-#define ABORTIF(A) {if(code= A){goto abort;}}
+#define ABORTIF(A) {if((code = A)){goto abort;}}
 afs_int32
-SKAM_Unlock(call, aname, ainstance, spare1, spare2, spare3, spare4)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 spare1, spare2, spare3, spare4;
+SKAM_Unlock(struct rx_call *call,
+	    char *aname,
+	    char *ainstance,
+	    afs_int32 spare1, 
+	    afs_int32 spare2, 
+	    afs_int32 spare3, 
+	    afs_int32 spare4)
 {
     register int code;
     struct ubik_trans *tt;
@@ -2349,7 +2271,7 @@ SKAM_Unlock(call, aname, ainstance, spare1, spare2, spare3, spare4)
 	code = KABADNAME;
 	goto exit;
     }
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	goto exit;
 
     ABORTIF(check_auth(call, tt, 1, &caller));
@@ -2374,13 +2296,14 @@ SKAM_Unlock(call, aname, ainstance, spare1, spare2, spare3, spare4)
 }
 
 afs_int32
-SKAM_LockStatus(call, aname, ainstance, lockeduntil, spare1, spare2, spare3,
-		spare4)
-     struct rx_call *call;
-     char *aname;
-     char *ainstance;
-     afs_int32 *lockeduntil;
-     afs_int32 spare1, spare2, spare3, spare4;
+SKAM_LockStatus(struct rx_call *call,
+		char *aname,
+		char *ainstance,
+		afs_int32 *lockeduntil,
+		afs_int32 spare1, 
+		afs_int32 spare2, 
+		afs_int32 spare3, 
+		afs_int32 spare4)
 {
     register int code;
     struct ubik_trans *tt;
@@ -2396,10 +2319,10 @@ SKAM_LockStatus(call, aname, ainstance, lockeduntil, spare1, spare2, spare3,
 	code = KABADNAME;
 	goto exit;
     }
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	goto exit;
 
-    if (code = check_auth(call, tt, 0, &callerIndex))
+    if ((code = check_auth(call, tt, 0, &callerIndex)))
 	goto abort;
 
     if (!noAuthenticationRequired && callerIndex) {
@@ -2415,7 +2338,7 @@ SKAM_LockStatus(call, aname, ainstance, lockeduntil, spare1, spare2, spare3,
 	}
     }
 
-    if (code = FindBlock(tt, aname, ainstance, &to, &tentry))
+    if ((code = FindBlock(tt, aname, ainstance, &to, &tentry)))
 	goto abort;
 
     if (to == 0) {

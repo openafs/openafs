@@ -61,8 +61,7 @@ struct sockaddr_in *servers;
 
 
 void
-perrorexit(str)
-char *str;
+perrorexit(char *str)
 {
     perror(str);
     exit(1);
@@ -70,9 +69,7 @@ char *str;
 
 
 void
-setup_servers(argc, argv)
-int argc;
-char **argv;
+setup_servers(int argc, char **argv)
 {
     int i;
     u_int fwdaddr;
@@ -127,8 +124,7 @@ char **argv;
 
 
 int
-setup_socket(port)
-u_short port;
+setup_socket(u_short port)
 {
     int s, rv;
     struct sockaddr_in sin;
@@ -150,8 +146,7 @@ u_short port;
 
 
 int
-packet_is_reply(from)
-struct sockaddr_in *from;
+packet_is_reply(struct sockaddr_in *from)
 {
     int i;
 
@@ -170,9 +165,7 @@ struct sockaddr_in *from;
 
 
 int
-main(argc, argv)
-int argc;
-char **argv;
+main(int argc, char **argv)
 {
     int c, s, rv;
     u_short port;
@@ -214,7 +207,7 @@ char **argv;
     for (;;) {
 	char buf[BUFFER_SIZE], *bufp, *sendptr;
 	struct sockaddr_in from, reply, *to;
-	int fromlen, sendlen;
+	size_t fromlen, sendlen;
 
 	bufp = buf + 8;
 	fromlen = sizeof(from);

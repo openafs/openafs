@@ -77,7 +77,9 @@ int CommandProc(struct cmd_syndesc *, void *);
 
 static int zero_argc;
 static char **zero_argv;
-extern int init_child(), give_to_child(), terminate_child();
+extern int init_child(char *myname);
+extern int give_to_child(char *pw);
+extern int terminate_child(char *pw);
 
 #ifdef AFS_NT40_ENV
 struct passwd {
@@ -87,10 +89,8 @@ char userName[128];
 DWORD userNameLen;
 #endif
 
-main(argc, argv, envp)
-     int argc;
-     char *argv[];
-     char **envp;
+int
+main(int argc, char *argv[], char **envp)
 {
     struct cmd_syndesc *ts;
     afs_int32 code;
@@ -140,9 +140,7 @@ main(argc, argv, envp)
 
 
 static void
-getpipepass(gpbuf, len)
-     char *gpbuf;
-     int len;
+getpipepass(char *gpbuf, int len)
 {
     /* read a password from stdin, stop on \n or eof */
     register int i, tc;
@@ -157,11 +155,7 @@ getpipepass(gpbuf, len)
 }
 
 static afs_int32
-read_pass(passwd, len, prompt, verify)
-     char *passwd;
-     int len;
-     char *prompt;
-     int verify;
+read_pass(char *passwd, int len, char *prompt, int verify)
 {
     afs_int32 code;
     code = read_pw_string(passwd, len, prompt, verify);
@@ -173,9 +167,7 @@ read_pass(passwd, len, prompt, verify)
 }
 
 static int
-password_ok(newpw, insist)
-     char *newpw;
-     int *insist;
+password_ok(char *newpw, int *insist)
 {
     if (insist == 0) {
 	/* see if it is reasonable, but don't get so obnoxious */
@@ -192,7 +184,7 @@ static int Pipe = 0;		/* reading from a pipe */
 
 #if TIMEOUT
 int
-timedout()
+timedout(void)
 {
     if (!Pipe)
 	fprintf(stderr, "%s: timed out\n", rn);
@@ -201,6 +193,8 @@ timedout()
 #endif
 
 char passwd[BUFSIZ], npasswd[BUFSIZ], verify[BUFSIZ];
+
+int
 CommandProc(struct cmd_syndesc *as, void *arock)
 {
     char name[MAXKTCNAMELEN] = "";
@@ -382,7 +376,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	strcpy(realm, lcell);
 #endif /* freelance */
 
-    if (code = ka_CellToRealm(realm, realm, &local)) {
+    if ((code = ka_CellToRealm(realm, realm, &local))) {
 	if (!Pipe)
 	    afs_com_err(rn, code, "Can't convert cell to realm");
 	exit(1);
@@ -445,7 +439,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    memset(verify, 0, sizeof(verify));
 	}
     }
-    if (code = password_bad(npasswd)) {	/* assmt here! */
+    if ((code = password_bad(npasswd))) {	/* assmt here! */
 	goto no_change_no_msg;
     }
 #if TRUNCATEPASSWORD
@@ -554,7 +548,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	conn = 0;
     }
     rx_Finalize();
-    terminate_child();
+    terminate_child(NULL);
     exit(code);
 
   no_change:			/* yuck, yuck, yuck */
@@ -565,6 +559,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     memset(npasswd, 0, sizeof(npasswd));
     printf("Password for '%s' in cell '%s' unchanged.\n\n", pw->pw_name,
 	   cell);
-    terminate_child();
+    terminate_child(NULL);
     exit(code ? code : 1);
 }

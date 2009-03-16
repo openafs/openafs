@@ -90,7 +90,7 @@ ka_LocalCell(void)
     conf = afs_cdir;
     strcpy(cell_name, afs_LclCellName);
 #else /* UKERNEL */
-    if (conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH)) {
+    if ((conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	code = afsconf_GetLocalCell(conf, cell_name, sizeof(cell_name));
 /* leave conf open so we can lookup other cells */
 /* afsconf_Close (conf); */
@@ -147,7 +147,7 @@ ka_ExpandCell(char *cell, char *fullCell, int *alocal)
 int
 ka_CellToRealm(char *cell, char *realm, int *local)
 {
-    int code;
+    int code = 0;
 
     LOCK_GLOBAL_MUTEX;
     code = ka_ExpandCell(cell, realm, local);
