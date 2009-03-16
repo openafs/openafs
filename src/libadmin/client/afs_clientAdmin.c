@@ -38,6 +38,7 @@ RCSID
 #include <string.h>
 #include <afs/kautils.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <rx/rx_null.h>
 #include <rx/rxkad.h>
 #include <afs/dirpath.h>

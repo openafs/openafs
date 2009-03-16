@@ -25,6 +25,9 @@ RCSID
 #endif
 #include <string.h>
 
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_clientAdmin.h>
@@ -36,7 +39,6 @@ pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
-#include <rx/rxstat.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>
@@ -51,8 +53,6 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include <afs/bosint.h>
 #include <ubik.h>
 #include <ubik_int.h>
-
-extern int RXSTATS_RetrieveProcessRPCStats();
 
 void
 Usage()

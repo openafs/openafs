@@ -21,6 +21,9 @@
 
 #include <pthread.h>
 
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_utilAdmin.h>
 
