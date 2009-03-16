@@ -14,6 +14,10 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <time.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
@@ -22,9 +26,7 @@ RCSID
 #include <sys/param.h>
 #include <netdb.h>
 #endif
-#include <time.h>
 #include <lock.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 
@@ -35,11 +37,9 @@ RCSID
  * This file contain useful subroutines for parsing command line args for ubik
  * applications.
  */
-ubik_ParseServerList(argc, argv, ahost, aothers)
-     int argc;
-     char **argv;
-     afs_int32 *ahost;
-     afs_int32 *aothers;
+int
+ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost, 
+		     afs_int32 *aothers)
 {
     register afs_int32 i;
     register char *tp;

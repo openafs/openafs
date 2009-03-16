@@ -30,6 +30,7 @@ RCSID
 #include <stdio.h>
 #include <rx/rx.h>
 #include <lock.h>
+#define UBIK_LEGACY_CALLITER 1
 #include <ubik.h>
 #ifndef AFS_NT40_ENV
 #include <pwd.h>

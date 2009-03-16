@@ -14,6 +14,10 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <stdarg.h>
+#include <string.h>
+#include <errno.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <io.h>
@@ -32,8 +36,7 @@ RCSID
 #endif
 
 #include <lock.h>
-#include <errno.h>
-#include <string.h>
+#include <afs/afsutil.h>
 
 #define	UBIK_INTERNALS 1
 #include "ubik.h"
@@ -60,7 +63,6 @@ static char pbuffer[1024];
 static int
 uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
 {
-    char temp[20];
     register int fd;
     static int initd;
     register int i;
@@ -188,7 +190,7 @@ uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat)
 
 int
 uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
-	   register char *abuffer, afs_int32 apos, afs_int32 alength)
+	   register void *abuffer, afs_int32 apos, afs_int32 alength)
 {
     register int fd;
     register afs_int32 code;
@@ -208,7 +210,7 @@ uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
 
 int
 uphys_write(register struct ubik_dbase *adbase, afs_int32 afile,
-	    register char *abuffer, afs_int32 apos, afs_int32 alength)
+	    register void *abuffer, afs_int32 apos, afs_int32 alength)
 {
     register int fd;
     register afs_int32 code;

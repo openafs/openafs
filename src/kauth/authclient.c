@@ -19,6 +19,8 @@
 RCSID
     ("$Header$");
 
+#define UBIK_LEGACY_CALLITER 1
+
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
