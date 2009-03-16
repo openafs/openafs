@@ -35,6 +35,7 @@ RCSID
 #include "globals.h"
 #include "error_macros.h"
 #include "budb_errs.h"
+#include "budb_prototypes.h"
 #include "afs/audit.h"
 
 
@@ -61,8 +62,7 @@ dumpSyncP dumpSyncPtr = &dumpSync;
  */
 
 afs_int32
-canWrite(fid)
-     int fid;
+canWrite(int fid)
 {
     afs_int32 code = 0;
     extern dumpSyncP dumpSyncPtr;
@@ -104,8 +104,7 @@ canWrite(fid)
  */
 
 void
-haveWritten(nbytes)
-     afs_int32 nbytes;
+haveWritten(afs_int32 nbytes)
 {
     afs_int32 code = 0;
     extern dumpSyncP dumpSyncPtr;
@@ -130,8 +129,7 @@ haveWritten(nbytes)
  */
 
 void
-doneWriting(error)
-     afs_int32 error;
+doneWriting(afs_int32 error)
 {
     afs_int32 code = 0;
 
@@ -178,9 +176,7 @@ doneWriting(error)
  */
 
 afs_int32
-writeStructHeader(fid, type)
-     int fid;
-     afs_int32 type;
+writeStructHeader(int fid, afs_int32 type)
 {
     struct structDumpHeader hostDumpHeader, netDumpHeader;
 
@@ -231,9 +227,7 @@ writeStructHeader(fid, type)
  */
 
 afs_int32
-writeTextHeader(fid, type)
-     int fid;
-     afs_int32 type;
+writeTextHeader(int fid, afs_int32 type)
 {
     struct structDumpHeader hostDumpHeader, netDumpHeader;
 
@@ -273,8 +267,7 @@ writeTextHeader(fid, type)
 }
 
 afs_int32
-writeDbHeader(fid)
-     int fid;
+writeDbHeader(int fid)
 {
     struct DbHeader header;
     afs_int32 curtime;
@@ -317,9 +310,7 @@ writeDbHeader(fid)
  */
 
 afs_int32
-writeDump(fid, dumpPtr)
-     int fid;
-     dbDumpP dumpPtr;
+writeDump(int fid, dbDumpP dumpPtr)
 {
     struct budb_dumpEntry dumpEntry;
     afs_int32 code = 0, tcode;
@@ -342,10 +333,7 @@ writeDump(fid, dumpPtr)
 }
 
 afs_int32
-writeTape(fid, tapePtr, dumpid)
-     int fid;
-     struct tape *tapePtr;
-     afs_int32 dumpid;
+writeTape(int fid, struct tape *tapePtr, afs_int32 dumpid)
 {
     struct budb_tapeEntry tapeEntry;
     afs_int32 code = 0, tcode;
@@ -373,13 +361,8 @@ writeTape(fid, tapePtr, dumpid)
 /* combines volFragment and volInfo */
 
 afs_int32
-writeVolume(ut, fid, volFragmentPtr, volInfoPtr, dumpid, tapeName)
-     struct ubik_trans *ut;
-     int fid;
-     struct volFragment *volFragmentPtr;
-     struct volInfo *volInfoPtr;
-     afs_int32 dumpid;
-     char *tapeName;
+writeVolume(struct ubik_trans *ut, int fid, struct volFragment *volFragmentPtr,
+	    struct volInfo *volInfoPtr, afs_int32 dumpid, char *tapeName)
 {
     struct budb_volumeEntry budbVolume;
     afs_int32 code = 0;
@@ -416,8 +399,7 @@ writeVolume(ut, fid, volFragmentPtr, volInfoPtr, dumpid, tapeName)
  */
 
 afs_int32
-checkLock(textType)
-     afs_int32 textType;
+checkLock(afs_int32 textType)
 {
     db_lockP lockPtr;
 
@@ -435,9 +417,8 @@ checkLock(textType)
  *	check the integrity of the specified text type
  */
 
-checkText(ut, textType)
-     struct ubik_trans *ut;
-     afs_int32 textType;
+int
+checkText(struct ubik_trans *ut, afs_int32 textType)
 {
     struct textBlock *tbPtr;
     afs_int32 nBytes = 0;	/* accumulated actual size */
@@ -482,10 +463,7 @@ checkText(ut, textType)
  */
 
 afs_int32
-writeText(ut, fid, textType)
-     struct ubik_trans *ut;
-     int fid;
-     int textType;
+writeText(struct ubik_trans *ut, int fid, int textType)
 {
     struct textBlock *tbPtr;
     afs_int32 textSize, writeSize;
@@ -542,9 +520,7 @@ writeText(ut, fid, textType)
 #define MAXAPPENDS 200
 
 afs_int32
-writeDatabase(ut, fid)
-     struct ubik_trans *ut;
-     int fid;
+writeDatabase(struct ubik_trans *ut, int fid)
 {
     dbadr dbAddr, dbAppAddr;
     struct dump diskDump, apDiskDump;
@@ -798,8 +774,7 @@ writeDatabase(ut, fid)
 #ifdef notdef
 
 afs_int32
-canWrite(fid)
-     int fid;
+canWrite(int fid)
 {
     afs_int32 in, out, except;
     struct timeval tp;

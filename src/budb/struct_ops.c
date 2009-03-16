@@ -29,7 +29,7 @@ RCSID
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
-
+#include "budb_prototypes.h"
 
 /* ----------------------------------
  * structure printing utilities
@@ -108,9 +108,7 @@ printDumpEntry(struct budb_dumpEntry *deptr)
  */
 
 void
-printHashTable(fid, htptr)
-     FILE *fid;
-     struct hashTable *htptr;
+printHashTable(FILE *fid, struct hashTable *htptr)
 {
     fprintf(fid, "functionType = %d\n", htptr->functionType);
     fprintf(fid, "threadOffset = %d\n", htptr->threadOffset);
@@ -126,9 +124,7 @@ printHashTable(fid, htptr)
  *	print the hash table structure, i.e. the header structure.
  */
 int
-printMemoryHashTable(fid, mhtptr)
-     FILE *fid;
-     struct memoryHashTable *mhtptr;
+printMemoryHashTable(FILE *fid, struct memoryHashTable *mhtptr)
 {
     fprintf(fid, "threadOffset = %d\n", mhtptr->threadOffset);
     fprintf(fid, "length = %d\n", mhtptr->length);
@@ -139,8 +135,7 @@ printMemoryHashTable(fid, mhtptr)
 }
 
 int
-printPrincipal(ptr)
-     struct ktc_principal *ptr;
+printPrincipal(struct budb_principal *ptr)
 {
     printf("name = %s\n", ptr->name);
     printf("instance = %s\n", ptr->instance);
@@ -149,8 +144,7 @@ printPrincipal(ptr)
 }
 
 int
-printStructDumpHeader(ptr)
-     struct structDumpHeader *ptr;
+printStructDumpHeader(struct structDumpHeader *ptr)
 {
     printf("type = %d\n", ptr->type);
     printf("structure version = %d\n", ptr->structversion);
@@ -215,9 +209,8 @@ printTapeEntry(struct budb_tapeEntry *teptr)
 }
 
 int
-printTapeSet(tsptr, nss)
-     struct budb_tapeSet *tsptr;
-     afs_int32 nss;		/* is the tapeserver name an accurate name */
+printTapeSet(struct budb_tapeSet *tsptr,
+	     afs_int32 nss)	/* is the tapeserver name an accurate name */
 {
     printf("Group id  = %d\n", tsptr->id);
     printf("tapeServer = %s%s\n", tsptr->tapeServer,
@@ -285,9 +278,7 @@ printVolFragment(FILE *fid, struct volFragment *vfptr)
 }
 
 int
-printVolInfo(fid, viptr)
-     FILE *fid;
-     struct volInfo *viptr;
+printVolInfo(FILE *fid, struct volInfo *viptr)
 {
     fprintf(fid, "name = %s\n", viptr->name);
     fprintf(fid, "nameHashChain = %d\n", viptr->nameHashChain);
@@ -313,8 +304,8 @@ printVolInfo(fid, viptr)
  */
 
 void
-volFragment_ntoh(netVfPtr, hostVfPtr)
-     struct volFragment *netVfPtr, *hostVfPtr;
+volFragment_ntoh(struct volFragment *netVfPtr, 
+		 struct volFragment *hostVfPtr)
 {
     hostVfPtr->vol = ntohl(netVfPtr->vol);
     hostVfPtr->sameNameChain = ntohl(netVfPtr->sameNameChain);
@@ -330,8 +321,8 @@ volFragment_ntoh(netVfPtr, hostVfPtr)
 }
 
 void
-volInfo_ntoh(netViPtr, hostViPtr)
-     struct volInfo *netViPtr, *hostViPtr;
+volInfo_ntoh(struct volInfo *netViPtr, 
+	     struct volInfo *hostViPtr)
 {
     strcpy(hostViPtr->name, netViPtr->name);
     hostViPtr->nameHashChain = ntohl(netViPtr->nameHashChain);
@@ -346,8 +337,8 @@ volInfo_ntoh(netViPtr, hostViPtr)
 }
 
 void
-tape_ntoh(netTapePtr, hostTapePtr)
-     struct tape *netTapePtr, *hostTapePtr;
+tape_ntoh(struct tape *netTapePtr, 
+	  struct tape *hostTapePtr)
 {
     strcpy(hostTapePtr->name, netTapePtr->name);
     hostTapePtr->nameHashChain = ntohl(netTapePtr->nameHashChain);
@@ -368,8 +359,8 @@ tape_ntoh(netTapePtr, hostTapePtr)
 }
 
 void
-dump_ntoh(netDumpPtr, hostDumpPtr)
-     struct dump *netDumpPtr, *hostDumpPtr;
+dump_ntoh(struct dump *netDumpPtr, 
+	  struct dump *hostDumpPtr)
 {
     hostDumpPtr->id = ntohl(netDumpPtr->id);
     hostDumpPtr->idHashChain = ntohl(netDumpPtr->idHashChain);
@@ -391,8 +382,8 @@ dump_ntoh(netDumpPtr, hostDumpPtr)
 }
 
 void
-DbHeader_ntoh(netptr, hostptr)
-     struct DbHeader *netptr, *hostptr;
+DbHeader_ntoh(struct DbHeader *netptr, 
+	      struct DbHeader *hostptr)
 {
     hostptr->dbversion = ntohl(netptr->dbversion);
     hostptr->created = ntohl(netptr->created);
@@ -403,8 +394,8 @@ DbHeader_ntoh(netptr, hostptr)
 }
 
 void
-dumpEntry_ntoh(netptr, hostptr)
-     struct budb_dumpEntry *netptr, *hostptr;
+dumpEntry_ntoh(struct budb_dumpEntry *netptr, 
+	       struct budb_dumpEntry *hostptr)
 {
     hostptr->id = ntohl(netptr->id);
     hostptr->initialDumpID = ntohl(netptr->initialDumpID);
@@ -423,27 +414,27 @@ dumpEntry_ntoh(netptr, hostptr)
     principal_ntoh(&netptr->dumper, &hostptr->dumper);
 }
 
-principal_hton(hostptr, netptr)
-     struct ktc_principal *hostptr, *netptr;
+void
+principal_hton(struct budb_principal *hostptr, 
+	       struct budb_principal *netptr)
 {
     strcpy(netptr->name, hostptr->name);
     strcpy(netptr->instance, hostptr->instance);
     strcpy(netptr->cell, hostptr->cell);
-    return 0;
 }
 
-principal_ntoh(netptr, hostptr)
-     struct ktc_principal *netptr, *hostptr;
+void
+principal_ntoh(struct budb_principal *netptr, 
+	       struct budb_principal *hostptr)
 {
     strcpy(hostptr->name, netptr->name);
     strcpy(hostptr->instance, netptr->instance);
     strcpy(hostptr->cell, netptr->cell);
-    return 0;
 }
 
 void
-structDumpHeader_hton(hostPtr, netPtr)
-     struct structDumpHeader *hostPtr, *netPtr;
+structDumpHeader_hton(struct structDumpHeader *hostPtr, 
+		      struct structDumpHeader *netPtr)
 {
     netPtr->type = htonl(hostPtr->type);
     netPtr->structversion = htonl(hostPtr->structversion);
@@ -451,8 +442,8 @@ structDumpHeader_hton(hostPtr, netPtr)
 }
 
 void
-structDumpHeader_ntoh(netPtr, hostPtr)
-     struct structDumpHeader *hostPtr, *netPtr;
+structDumpHeader_ntoh(struct structDumpHeader *netPtr, 
+		      struct structDumpHeader *hostPtr)
 {
     hostPtr->type = ntohl(netPtr->type);
     hostPtr->structversion = ntohl(netPtr->structversion);
@@ -460,8 +451,8 @@ structDumpHeader_ntoh(netPtr, hostPtr)
 }
 
 void
-tapeEntry_ntoh(netptr, hostptr)
-     struct budb_tapeEntry *netptr, *hostptr;
+tapeEntry_ntoh(struct budb_tapeEntry *netptr, 
+	       struct budb_tapeEntry *hostptr)
 {
     strcpy(hostptr->name, netptr->name);
     hostptr->flags = ntohl(netptr->flags);
@@ -479,8 +470,8 @@ tapeEntry_ntoh(netptr, hostptr)
 }
 
 int
-tapeSet_hton(hostptr, netptr)
-     struct budb_tapeSet *hostptr, *netptr;
+tapeSet_hton(struct budb_tapeSet *hostptr, 
+	     struct budb_tapeSet *netptr)
 {
     netptr->id = htonl(hostptr->id);
     strcpy(netptr->tapeServer, hostptr->tapeServer);
@@ -492,8 +483,8 @@ tapeSet_hton(hostptr, netptr)
 }
 
 int
-tapeSet_ntoh(netptr, hostptr)
-     struct budb_tapeSet *netptr, *hostptr;
+tapeSet_ntoh(struct budb_tapeSet *netptr, 
+	     struct budb_tapeSet *hostptr)
 {
     hostptr->id = ntohl(netptr->id);
     strcpy(hostptr->tapeServer, netptr->tapeServer);
@@ -505,8 +496,8 @@ tapeSet_ntoh(netptr, hostptr)
 }
 
 void
-textBlock_hton(hostptr, netptr)
-     struct textBlock *hostptr, *netptr;
+textBlock_hton(struct textBlock *hostptr, 
+	       struct textBlock *netptr)
 {
     netptr->version = htonl(hostptr->version);
     netptr->size = htonl(hostptr->size);
@@ -516,8 +507,8 @@ textBlock_hton(hostptr, netptr)
 }
 
 void
-textBlock_ntoh(netptr, hostptr)
-     struct textBlock *netptr, *hostptr;
+textBlock_ntoh(struct textBlock *netptr, 
+	       struct textBlock *hostptr)
 {
     hostptr->version = ntohl(netptr->version);
     hostptr->size = ntohl(netptr->size);
@@ -527,8 +518,7 @@ textBlock_ntoh(netptr, hostptr)
 }
 
 void
-textLock_hton(hostptr, netptr)
-     db_lockP hostptr, netptr;
+textLock_hton(db_lockP hostptr, db_lockP netptr)
 {
     netptr->type = htonl(hostptr->type);
     netptr->lockState = htonl(hostptr->lockState);
@@ -539,8 +529,7 @@ textLock_hton(hostptr, netptr)
 }
 
 void
-textLock_ntoh(netptr, hostptr)
-     db_lockP netptr, hostptr;
+textLock_ntoh(db_lockP netptr, db_lockP hostptr)
 {
     hostptr->type = ntohl(netptr->type);
     hostptr->lockState = ntohl(netptr->lockState);
@@ -551,8 +540,8 @@ textLock_ntoh(netptr, hostptr)
 }
 
 void
-volumeEntry_ntoh(netptr, hostptr)
-     struct budb_volumeEntry *netptr, *hostptr;
+volumeEntry_ntoh(struct budb_volumeEntry *netptr, 
+		 struct budb_volumeEntry *hostptr)
 {
     strcpy(hostptr->name, netptr->name);
     hostptr->flags = ntohl(netptr->flags);
@@ -578,9 +567,8 @@ volumeEntry_ntoh(netptr, hostptr)
  */
 
 void
-copy_ktcPrincipal_to_budbPrincipal(ktcPtr, budbPtr)
-     struct ktc_principal *ktcPtr;
-     struct budb_principal *budbPtr;
+copy_ktcPrincipal_to_budbPrincipal(struct ktc_principal *ktcPtr,
+				   struct budb_principal *budbPtr)
 {
     strncpy(budbPtr->name, ktcPtr->name, sizeof(budbPtr->name));
     strncpy(budbPtr->instance, ktcPtr->instance, sizeof(budbPtr->instance));
@@ -592,9 +580,8 @@ copy_ktcPrincipal_to_budbPrincipal(ktcPtr, budbPtr)
  *	dumpPtr - host format
  */
 
-dumpToBudbDump(dumpPtr, budbDumpPtr)
-     dbDumpP dumpPtr;
-     struct budb_dumpEntry *budbDumpPtr;
+int
+dumpToBudbDump(dbDumpP dumpPtr, struct budb_dumpEntry *budbDumpPtr)
 {
     budbDumpPtr->id = dumpPtr->id;
     budbDumpPtr->initialDumpID = dumpPtr->initialDumpID;
@@ -615,9 +602,8 @@ dumpToBudbDump(dumpPtr, budbDumpPtr)
     return (0);
 }
 
-tapeToBudbTape(tapePtr, budbTapePtr)
-     struct tape *tapePtr;
-     struct budb_tapeEntry *budbTapePtr;
+int
+tapeToBudbTape(struct tape *tapePtr, struct budb_tapeEntry *budbTapePtr)
 {
     strcpy(budbTapePtr->name, tapePtr->name);
     budbTapePtr->flags = tapePtr->flags;
@@ -634,10 +620,9 @@ tapeToBudbTape(tapePtr, budbTapePtr)
     return (0);
 }
 
-volsToBudbVol(volFragPtr, volInfoPtr, budbVolPtr)
-     struct volFragment *volFragPtr;
-     struct volInfo *volInfoPtr;
-     struct budb_volumeEntry *budbVolPtr;
+int
+volsToBudbVol(struct volFragment *volFragPtr, struct volInfo *volInfoPtr,
+	      struct budb_volumeEntry *budbVolPtr)
 {
     strcpy(budbVolPtr->name, volInfoPtr->name);
     budbVolPtr->flags = volInfoPtr->flags;
@@ -670,9 +655,8 @@ volsToBudbVol(volFragPtr, volInfoPtr, budbVolPtr)
  *	n - error
  */
 
-default_tapeset(tapesetPtr, dumpname)
-     struct budb_tapeSet *tapesetPtr;
-     char *dumpname;
+int
+default_tapeset(struct budb_tapeSet *tapesetPtr, char *dumpname)
 {
     memset(tapesetPtr, 0, sizeof(*tapesetPtr));
 
