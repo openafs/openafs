@@ -32,7 +32,8 @@
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_procs_BuildDir();
+extern afs_int32 uss_procs_BuildDir(char *a_path, char *a_mode, 
+				    char *a_owner, char *a_access);
     /*
      * Summary:
      *    Create and fully set up a directory for the user.
@@ -49,7 +50,8 @@ extern afs_int32 uss_procs_BuildDir();
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_procs_CpFile();
+extern afs_int32 uss_procs_CpFile(char *a_path, char *a_mode, 
+				  char *a_owner, char *a_proto);
     /*
      * Summary:
      *    Copy the given file to the user's directory.
@@ -66,7 +68,8 @@ extern afs_int32 uss_procs_CpFile();
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_procs_EchoToFile();
+extern afs_int32 uss_procs_EchoToFile(char *a_path, char *a_mode, 
+		                      char *a_owner, char *a_content);
     /*
      * Summary:
      *    Put the specified contents into the given file.
@@ -83,7 +86,7 @@ extern afs_int32 uss_procs_EchoToFile();
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_procs_Exec();
+extern afs_int32 uss_procs_Exec(char *a_command);
     /*
      * Summary:
      *    Execute the given Unix command.
@@ -97,7 +100,8 @@ extern afs_int32 uss_procs_Exec();
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern afs_int32 uss_procs_SetLink();
+extern afs_int32 uss_procs_SetLink(char *a_path1, char *a_path2, 
+				   char a_type);
     /*
      * Summary:
      *    Create either the given symbolic or hard link.
@@ -113,7 +117,7 @@ extern afs_int32 uss_procs_SetLink();
      *    Other error code if problem occurred in lower-level call.
      */
 
-extern int uss_procs_AddToDirPool();
+extern int uss_procs_AddToDirPool(char *a_dirToAdd);
     /*
      * Summary:
      *    Add the given pathname to the $AUTH directory pool
@@ -125,7 +129,7 @@ extern int uss_procs_AddToDirPool();
      *    Result of addition.
      */
 
-extern FILE *uss_procs_FindAndOpen();
+extern FILE *uss_procs_FindAndOpen(char *a_fileToOpen);
     /*
      * Summary:
      *    Given a template filename, get that file open and return the
@@ -140,7 +144,7 @@ extern FILE *uss_procs_FindAndOpen();
      *    NULL otherwise.
      */
 
-extern void uss_procs_PrintErr();
+extern void uss_procs_PrintErr(int a_lineNum, char *a_fmt, ... );
     /*
      * Summary:
      *    Print out an error connected with template file parsing.
@@ -148,17 +152,12 @@ extern void uss_procs_PrintErr();
      * Args:
      *    int a_lineNum : Template file line number having the error.
      *    char *a_fmt   : Format string to use.
-     *    char *a_1     : First arg to print.
-     *    char *a_2     : Second ...
-     *    char *a_3     : Third ...
-     *    char *a_4     : Fourth ...
-     *    char *a_5     : Fifth ...
      *
      * Returns:
      *    Nothing.
      */
 
-extern int uss_procs_GetOwner();
+extern int uss_procs_GetOwner(char *a_ownerStr);
     /*
      * Summary:
      *    Translate the owner string to the owner uid.

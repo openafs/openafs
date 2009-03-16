@@ -145,7 +145,7 @@ extern struct uss_subdir *uss_currentDir;	/*Current directory */
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern void uss_common_Init();
+extern void uss_common_Init(void);
     /*
      * Summary:
      *    Set up various common uss variables, especially the saved
@@ -158,7 +158,7 @@ extern void uss_common_Init();
      *    Nothing.
      */
 
-extern void uss_common_Reset();
+extern void uss_common_Reset(void);
     /*
      * Summary:
      *    Reset some common uss variables to their idle or
@@ -171,7 +171,8 @@ extern void uss_common_Reset();
      *    Nothing.
      */
 
-extern char *uss_common_FieldCp();
+extern char *uss_common_FieldCp(char *a_to, char *a_from, char a_separator,
+				int a_maxChars, int *a_overflowP);
     /*
      * Summary:
      *    Copy a ``field'', as terminated by the given separator, or

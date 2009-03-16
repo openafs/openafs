@@ -24,7 +24,7 @@
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_ptserver_AddUser();
+extern afs_int32 uss_ptserver_AddUser(char *a_user, char *a_uid);
     /*
      * Summary:
      *    Register the given user with the Protection Server.
@@ -39,7 +39,7 @@ extern afs_int32 uss_ptserver_AddUser();
      *    Code returned from a lower-level call.
      */
 
-extern afs_int32 uss_ptserver_DelUser();
+extern afs_int32 uss_ptserver_DelUser(char *a_name);
     /*
      * Summary:
      *    Delete the given user from the Protection Server.
@@ -52,7 +52,7 @@ extern afs_int32 uss_ptserver_DelUser();
      *    Code returned from a lower-level call.
      */
 
-extern afs_int32 uss_ptserver_XlateUser();
+extern afs_int32 uss_ptserver_XlateUser(char *a_user, afs_int32 *a_uidP);
     /*
      * Summary:
      *    Ask the Protection Server to translate the given user
