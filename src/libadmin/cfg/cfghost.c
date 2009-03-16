@@ -39,6 +39,9 @@ RCSID
 #include <unistd.h>
 #endif /* AFS_NT40_ENV */
 
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_utilAdmin.h>

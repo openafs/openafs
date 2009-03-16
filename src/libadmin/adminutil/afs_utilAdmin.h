@@ -48,7 +48,12 @@ extern int ADMINAPI CellHandleIsValid(const void *cellHandle,
 				      afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsGetBegin(struct rx_connection *conn,
-					  int (*rpc) (), void **iterationIdP,
+					  int (*rpc) (struct rx_connection *,
+						      afs_uint32, afs_uint32 *,
+						      afs_uint32 *, afs_uint32 *,
+						      afs_uint32 *, 
+						      struct rpcStats *), 
+					  void **iterationIdP,
 					  afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsGetNext(const void *iterationId,
@@ -59,18 +64,22 @@ extern int ADMINAPI util_RPCStatsGetDone(const void *iterationId,
 					 afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsStateGet(struct rx_connection *conn,
-					  int (*rpc) (),
+					  int (*rpc) (struct rx_connection *,
+						      afs_RPCStatsState_p),
 					  afs_RPCStatsState_p state,
 					  afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsStateEnable(struct rx_connection *conn,
-					     int (*rpc) (), afs_status_p st);
+					     int (*rpc) (struct rx_connection *), 
+					     afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsStateDisable(struct rx_connection *conn,
-					      int (*rpc) (), afs_status_p st);
+					      int (*rpc) (struct rx_connection *), 
+					      afs_status_p st);
 
 extern int ADMINAPI util_RPCStatsClear(struct rx_connection *conn,
-				       int (*rpc) (),
+				       int (*rpc) (struct rx_connection *, 
+					           afs_RPCStatsClearFlag_t),
 				       afs_RPCStatsClearFlag_t flag,
 				       afs_status_p st);
 

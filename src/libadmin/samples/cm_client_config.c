@@ -23,6 +23,10 @@ RCSID
 #include <winsock2.h>
 #include <pthread.h>
 #endif
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
@@ -34,7 +38,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: cm_client_config <host> <port>\n");
     exit(1);
@@ -107,7 +111,7 @@ main(int argc, char *argv[])
     }
 
 
-    printf("\nClient configuration for %s (port %d):\n\n", srvrName,
+    printf("\nClient configuration for %s (port %ld):\n\n", srvrName,
 	   srvrPort);
     printf("    clientVersion:  %d\n", config.clientVersion);
     printf("    serverVersion:  %d\n", config.serverVersion);

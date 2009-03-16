@@ -19,7 +19,6 @@ RCSID
 #include <string.h>
 #include <afs/afs_Admin.h>
 #include "afs_AdminInternal.h"
-#include "afs_utilAdmin.h"
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>
 #include <afs/dirpath.h>
@@ -42,6 +41,7 @@ RCSID
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+#include "afs_utilAdmin.h"
 
 /*
  * AIX 4.2 has PTHREAD_CREATE_UNDETACHED and not PTHREAD_CREATE_JOINABLE
@@ -1321,7 +1321,11 @@ DestroyRPCStats(void *rpc_specific, afs_status_p st)
  */
 
 int ADMINAPI
-util_RPCStatsGetBegin(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsGetBegin(struct rx_connection *conn, 
+		      int (*rpc) (struct rx_connection *,
+				  afs_uint32, afs_uint32 *,
+				  afs_uint32 *, afs_uint32 *,
+				  afs_uint32 *, struct rpcStats *),
 		      void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
@@ -1515,7 +1519,9 @@ util_RPCStatsGetDone(const void *iterationId, afs_status_p st)
  */
 
 int ADMINAPI
-util_RPCStatsStateGet(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsStateGet(struct rx_connection *conn, 
+		      int (*rpc) (struct rx_connection *,
+			      	  afs_RPCStatsState_p),
 		      afs_RPCStatsState_p state, afs_status_p st)
 {
     int rc = 0;
@@ -1571,7 +1577,8 @@ util_RPCStatsStateGet(struct rx_connection *conn, int (*rpc) (),
  */
 
 int ADMINAPI
-util_RPCStatsStateEnable(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsStateEnable(struct rx_connection *conn, 
+		         int (*rpc) (struct rx_connection *),
 			 afs_status_p st)
 {
     int rc = 0;
@@ -1622,7 +1629,8 @@ util_RPCStatsStateEnable(struct rx_connection *conn, int (*rpc) (),
  */
 
 int ADMINAPI
-util_RPCStatsStateDisable(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsStateDisable(struct rx_connection *conn, 
+			  int (*rpc) (struct rx_connection *),
 			  afs_status_p st)
 {
     int rc = 0;
@@ -1676,7 +1684,9 @@ util_RPCStatsStateDisable(struct rx_connection *conn, int (*rpc) (),
  */
 
 int ADMINAPI
-util_RPCStatsClear(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsClear(struct rx_connection *conn, 
+		   int (*rpc) (struct rx_connection *,
+			       afs_RPCStatsClearFlag_t),
 		   afs_RPCStatsClearFlag_t flag, afs_status_p st)
 {
     int rc = 0;

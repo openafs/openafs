@@ -17,6 +17,8 @@ RCSID
 #include <string.h>
 
 #include <afs/stds.h>
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 #include "afs_kasAdmin.h"
 #include "../adminutil/afs_AdminInternal.h"
 #include <afs/afs_AdminErrors.h>

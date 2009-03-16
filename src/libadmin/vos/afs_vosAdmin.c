@@ -30,12 +30,13 @@ RCSID
 #endif
 #include "afs_vosAdmin.h"
 #include "../adminutil/afs_AdminInternal.h"
-#include <afs/afs_utilAdmin.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
 #include <afs/partition.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
+#include <afs/afs_utilAdmin.h>
 #include "vosutils.h"
 #include "vsprocs.h"
 #include "lockprocs.h"

@@ -23,6 +23,10 @@ RCSID
 #include <winsock2.h>
 #include <pthread.h>
 #endif
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>

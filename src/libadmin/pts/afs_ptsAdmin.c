@@ -15,6 +15,8 @@ RCSID
 
 #include <stdio.h>
 #include <afs/stds.h>
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 #include "afs_ptsAdmin.h"
 #include "../adminutil/afs_AdminInternal.h"
 #include <afs/afs_AdminErrors.h>

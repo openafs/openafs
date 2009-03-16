@@ -16,6 +16,7 @@
 #include <afs/voldefs.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <afs/vlserver.h>
 #include <afs/nfs.h>
 #include <afs/afsint.h>
