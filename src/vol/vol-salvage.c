@@ -880,6 +880,7 @@ DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp)
     vsp->fileName = 0;
 }
 
+int
 CompareInodes(const void *_p1, const void *_p2)
 {
     register const struct ViceInodeInfo *p1 = _p1;
@@ -982,7 +983,7 @@ CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
 {
     int volume = ip->u.vnode.volumeId;
     int rwvolume = volume;
-    register n, nSpecial;
+    register int n, nSpecial;
     register Unique maxunique;
     n = nSpecial = 0;
     maxunique = 0;
@@ -3299,7 +3300,7 @@ PrintInodeList(void)
     register struct ViceInodeInfo *ip;
     struct ViceInodeInfo *buf;
     struct afs_stat status;
-    register nInodes;
+    register int nInodes;
 
     assert(afs_fstat(inodeFd, &status) == 0);
     buf = (struct ViceInodeInfo *)malloc(status.st_size);
@@ -3364,8 +3365,7 @@ Fork(void)
 }
 
 void
-Exit(code)
-     int code;
+Exit(int code)
 {
     if (ShowLog)
 	showlog();

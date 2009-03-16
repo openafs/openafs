@@ -29,7 +29,8 @@ RCSID
 #else
 #include <strings.h>
 #endif
-
+#include <afs/afsutil.h>
+    
 #include <afs/assert.h>
 #include "nfs.h"
 #include "lwp.h"
@@ -54,7 +55,6 @@ RCSID
 
 
 struct Lock localLock;
-char *vol_DevName();
 
 #define MAXATONCE	100
 /* structure containing neatly packed set of inodes and the # of times we'll have

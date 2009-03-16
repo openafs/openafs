@@ -191,7 +191,9 @@ static void ReleaseVolumeHeader(register struct volHeader *hd);
 static void FreeVolumeHeader(register Volume * vp);
 static void AddVolumeToHashTable(register Volume * vp, int hashid);
 static void DeleteVolumeFromHashTable(register Volume * vp);
+#if 0
 static int VHold(Volume * vp);
+#endif
 static int VHold_r(Volume * vp);
 static void VGetBitmap_r(Error * ec, Volume * vp, VnodeClass class);
 static void VReleaseVolumeHandles_r(Volume * vp);
@@ -200,7 +202,9 @@ static void LoadVolumeHeader(Error * ec, Volume * vp);
 static int VCheckOffline(register Volume * vp);
 static int VCheckDetach(register Volume * vp);
 static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flags);
+#if 0
 static int VolumeExternalName_r(VolumeId volumeId, char * name, size_t len);
+#endif
 
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
 				 * defined when not linked with vice, XXXX */
@@ -575,8 +579,6 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 	assert(pthread_cond_destroy(&params.thread_done_cv) == 0);
 
 #else /* AFS_PTHREAD_ENV */
-	DIR *dirp;
-	struct dirent *dp;
 
 	/* Attach all the volumes in this partition */
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
@@ -1754,7 +1756,7 @@ VAttachVolumeByName(Error * ec, char *partition, char *name, int mode)
 Volume *
 VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 {
-    register Volume *vp = NULL, *svp = NULL;
+    register Volume *vp = NULL;
     int fd, n;
     struct afs_stat status;
     struct VolumeDiskHeader diskHeader;
@@ -1765,6 +1767,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     VolId volumeId;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolumeStats stats_save;
+    Volume *svp = NULL;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
     *ec = 0;
@@ -2320,9 +2323,8 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	Log("VAttachVolume: Error reading diskDataHandle vol header %s; error=%u\n", path, *ec);
     }
 
- disk_header_loaded:
-
 #ifdef AFS_DEMAND_ATTACH_FS
+ disk_header_loaded:
     if (!*ec) {
 
 	/* check for pending volume operations */
@@ -2615,6 +2617,7 @@ VHold_r(register Volume * vp)
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+#if 0
 static int
 VHold(register Volume * vp)
 {
@@ -2624,6 +2627,7 @@ VHold(register Volume * vp)
     VOL_UNLOCK;
     return retVal;
 }
+#endif
 
 
 /***************************************************/
@@ -3638,7 +3642,6 @@ VCheckDetach(register Volume * vp)
 static int
 VCheckOffline(register Volume * vp)
 {
-    Volume * rvp = NULL;
     int ret = 0;
 
     if (vp->goingOffline && !vp->nUsers) {
@@ -4962,11 +4965,13 @@ VolumeExternalName(VolumeId volumeId)
  *
  * @internal volume package internal use only.
  */
+#ifdef AFS_DEMAND_ATTACH_FS
 static int
 VolumeExternalName_r(VolumeId volumeId, char * name, size_t len)
 {
     return afs_snprintf(name, len, VFORMAT, volumeId);
 }
+#endif
 
 
 /***************************************************/
@@ -6729,7 +6734,10 @@ Volume *
 VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint)
 {
     register int looks = 0;
-    Volume * vp, *np, *pp;
+    Volume * vp, *np;
+#ifdef AFS_DEMAND_ATTACH_FS
+    Volume *pp;
+#endif
     VolumeHashChainHead * head;
     *ec = 0;
 

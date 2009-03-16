@@ -31,6 +31,7 @@ RCSID
 #include <string.h>
 #include <sys/stat.h>
 #include <afs/assert.h>
+#include <afs/afsutil.h>
 
 #include <rx/xdr.h>
 #include "afs/afsint.h"
@@ -52,10 +53,13 @@ RCSID
 /* forward declarations */
 static int ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
 			    afs_int32 * aoffset);
+#if 0
 static void PurgeIndex(Volume * vp, VnodeClass class);
+static void PurgeHeader(Volume * vp);
+#endif 
+
 static void PurgeIndex_r(Volume * vp, VnodeClass class);
 static void PurgeHeader_r(Volume * vp);
-static void PurgeHeader(Volume * vp);
 
 /* No lock needed. Only the volserver will call this, and only one transaction
  * can have a given volume (volid/partition pair) in use at a time 
@@ -159,6 +163,7 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
     return -1;
 }
 
+#if 0
 static void
 PurgeIndex(Volume * vp, VnodeClass class)
 {
@@ -166,6 +171,7 @@ PurgeIndex(Volume * vp, VnodeClass class)
     PurgeIndex_r(vp, class);
     VOL_UNLOCK;
 }
+#endif
 
 static void
 PurgeIndex_r(Volume * vp, VnodeClass class)
@@ -197,6 +203,7 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
     FDH_CLOSE(fdP);
 }
 
+#if 0
 static void
 PurgeHeader(Volume * vp)
 {
@@ -204,6 +211,7 @@ PurgeHeader(Volume * vp)
     PurgeHeader_r(vp);
     VOL_UNLOCK;
 }
+#endif
 
 static void
 PurgeHeader_r(Volume * vp)

@@ -141,7 +141,12 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0, seenany = 0;
+    afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+   
+#ifdef FAST_RESTART
+    afs_int32  seenany = 0;
+#endif
+    
     struct DiskPartition64 *partP;
 
 #ifdef AFS_SGI_VNODE_GLUE

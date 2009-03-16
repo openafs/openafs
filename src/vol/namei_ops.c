@@ -1492,10 +1492,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
  */
 
 static afs_int32
-convertVolumeInfo(fdr, fdw, vid)
-     int fdr;
-     int fdw;
-     afs_uint32 vid;
+convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
 {
     struct VolumeDiskData vd;
     char *p;
@@ -1561,7 +1558,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     char smallSeen = 0;
     char largeSeen = 0;
     char linkSeen = 0;
-    int code, fd, fd2, found;
+    int code, fd, fd2;
     char *p;
     DIR *dirp;
     Inode ino;
@@ -1569,7 +1566,6 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     struct DiskPartition64 *partP;
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
-    char volname[20];
     char headername[16];
     afs_int32 error = 0;
 

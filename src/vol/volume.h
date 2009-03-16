@@ -128,8 +128,9 @@ extern ProgramType programType;	/* The type of program using the package */
 
 /* Some initialization parameters for the volume package */
 /* Add new initialization parameters here */
-extern int (*V_BreakVolumeCallbacks) ();
-extern int (*vol_PollProc) ();
+extern int (*V_BreakVolumeCallbacks) (VolumeId);
+extern int (*vol_PollProc) (void);
+
 #define	DOPOLL	((vol_PollProc)? (*vol_PollProc)() : 0)
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -787,6 +788,8 @@ extern void VTakeOffline(register Volume * vp);
 extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
 extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
 			   char **namep);
+extern char *vol_DevName(dev_t adev, char *wpath);
+
 #ifdef AFS_DEMAND_ATTACH_FS
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
