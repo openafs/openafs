@@ -30,6 +30,7 @@ all: \
     ${TOP_INCDIR}/afs/afssyscalls.h \
     ${TOP_INCDIR}/afs/afs.exp \
     ${TOP_INCDIR}/afs/xfsattrs.h \
+    ${TOP_INCDIR}/afs/sys_prototypes.h \
     ${TOP_LIBDIR}/afs.exp \
     ${TOP_LIBDIR}/libsys.a \
     ${KERNELDIR}/afs/xfsattrs.h \
@@ -56,6 +57,9 @@ ${TOP_LIBDIR}/afs.exp: afs.exp
 ${TOP_INCDIR}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL_DATA} $? $@
 
+${TOP_INCDIR}/afs/sys_prototypes.h: sys_prototypes.h
+	${INSTALL} $? $@
+
 ${TOP_LIBDIR}/libsys.a: libsys.a
 	${INSTALL_DATA} $? $@
 
@@ -75,6 +79,7 @@ depinstall: \
 	${TOP_INCDIR}/afs/rmtsys.h \
 	${TOP_INCDIR}/afs/afs.exp \
 	${TOP_INCDIR}/afs/xfsattrs.h \
+	${TOP_INCDIR}/afs/sys_prototypes.h \
 	${KERNELDIR}/afs/xfsattrs.h \
 	${UKERNELDIR}/afs/afsl.exp \
 	Krmtsys.cs.c Krmtsys.h Krmtsys.xdr.c rmtsys.h 

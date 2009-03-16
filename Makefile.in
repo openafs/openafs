@@ -419,7 +419,7 @@ afs_depinstall: config comerr
 dir_depinstall: config
 	${COMPILE_PART1} dir ${COMPILE_DEPINSTALL}
 
-sys_depinstall: config
+sys_depinstall: config rxgen
 	${COMPILE_PART1} sys ${COMPILE_DEPINSTALL}
 
 kauth_depinstall: config rxgen comerr

@@ -19,10 +19,10 @@ RCSID
     ("$Header$");
 
 #include <afs/afs_args.h>
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
 #include <unistd.h>
-#else
 #include <stdio.h>
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 
+# include <sys/syscall.h>
 #endif
 #include "afssyscalls.h"
 
@@ -48,9 +48,11 @@ lsetpag(void)
 int
 lsetpag(void)
 {
-    int errcode, rval;
+    int errcode;
 
 #ifdef AFS_LINUX20_ENV
+    int rval;
+    
     rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
     
     if(rval)

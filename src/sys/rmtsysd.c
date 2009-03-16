@@ -33,9 +33,7 @@ RCSID
 #include <stdio.h>
 #include <rx/xdr.h>
 #include "rmtsys.h"
-
-
-extern RMTSYS_ExecuteRequest();
+#include "sys_prototypes.h"
 
 #define N_SECURITY_OBJECTS 1	/* No real security yet */
 

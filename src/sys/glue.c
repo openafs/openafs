@@ -20,11 +20,8 @@ RCSID
 #include <afs/afs_args.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
 #include <unistd.h>
-#else
 #include <stdio.h>
-#endif
 #ifdef AFS_SUN5_ENV
 #include <fcntl.h>
 #endif
