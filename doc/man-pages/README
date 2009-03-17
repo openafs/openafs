@@ -247,7 +247,6 @@ Known Problems
        restorevol
        rmtsysd
        tokens.krb
-       vos setfields
        vsys
 
    * Add -noresolve to the documentation of all the vos commands.

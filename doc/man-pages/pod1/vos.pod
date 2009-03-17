@@ -90,6 +90,10 @@ A command to report Volume Server status: B<vos status>.
 
 =item *
 
+A command to change volume fields: B<vos setfields>.
+
+=item *
+
 Commands to obtain help: B<vos apropos> and B<vos help>.
 
 =back
@@ -211,6 +215,13 @@ command is issued.
 The B<-fromserver> and B<-toserver> arguments to the B<vos move> command
 also accept these name formats.
 
+=item B<-noresolve>
+
+Shows all servers as IP addresses instead of the DNS name. This is very
+useful when the server address is registered as 127.0.0.1 or when dealing
+with multi-homed servers. The B<-noresolve> option is available in OpenAFS
+versions 1.4.8 or later and 1.5.35 or later.
+
 =item B<-verbose>
 
 Produces on the standard output stream a detailed trace of the command's
@@ -261,6 +272,7 @@ L<vos_remove(1)>,
 L<vos_remsite(1)>,
 L<vos_rename(1)>,
 L<vos_restore(1)>,
+L<vos_setfields(1)>,
 L<vos_shadow(1)>,
 L<vos_size(1)>,
 L<vos_status(1)>,
