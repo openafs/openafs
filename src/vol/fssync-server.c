@@ -125,15 +125,15 @@ static SYNC_server_state_t fssync_server_state =
 /* Forward declarations */
 static void * FSYNC_sync(void *);
 static void FSYNC_newconnection(osi_socket afd);
-static void FSYNC_com(int fd);
-static void FSYNC_Drop(int fd);
+static void FSYNC_com(osi_socket fd);
+static void FSYNC_Drop(osi_socket fd);
 static void AcceptOn(void);
 static void AcceptOff(void);
 static void InitHandler(void);
-static int AddHandler(int fd, void (*aproc)(int));
-static int FindHandler(int afd);
-static int FindHandler_r(int afd);
-static int RemoveHandler(int afd);
+static int AddHandler(osi_socket fd, void (*aproc)(int));
+static int FindHandler(osi_socket afd);
+static int FindHandler_r(osi_socket afd);
+static int RemoveHandler(osi_socket afd);
 #if defined(HAVE_POLL) && defined (AFS_PTHREAD_ENV)
 static void CallHandler(struct pollfd *fds, int nfds, int mask);
 static void GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds);
@@ -143,7 +143,7 @@ static void GetHandler(fd_set * fdsetp, int *maxfdp);
 #endif
 extern int LogLevel;
 
-static afs_int32 FSYNC_com_VolOp(int fd, SYNC_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
 #ifdef AFS_DEMAND_ATTACH_FS
 static afs_int32 FSYNC_com_VolError(FSSYNC_VolOp_command * com, SYNC_response * res);
@@ -159,9 +159,9 @@ static afs_int32 FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * com, SYNC_response
 static afs_int32 FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-static afs_int32 FSYNC_com_VnQry(int fd, SYNC_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VnQry(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
-static afs_int32 FSYNC_com_StatsOp(int fd, SYNC_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_StatsOp(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
 static afs_int32 FSYNC_com_StatsOpGeneral(FSSYNC_StatsOp_command * scom, SYNC_response * res);
 
@@ -321,7 +321,7 @@ FSYNC_newconnection(osi_socket afd)
 /* this function processes commands from an fssync file descriptor (fd) */
 afs_int32 FS_cnt = 0;
 static void
-FSYNC_com(int fd)
+FSYNC_com(osi_socket fd)
 {
     SYNC_command com;
     SYNC_response res;
@@ -407,7 +407,7 @@ FSYNC_com(int fd)
 }
 
 static afs_int32
-FSYNC_com_VolOp(int fd, SYNC_command * com, SYNC_response * res)
+FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res)
 {
     int i;
     afs_int32 code = SYNC_OK;
@@ -1239,7 +1239,7 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 static afs_int32
-FSYNC_com_VnQry(int fd, SYNC_command * com, SYNC_response * res)
+FSYNC_com_VnQry(osi_socket fd, SYNC_command * com, SYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
     FSSYNC_VnQry_hdr * qry = com->payload.buf;
@@ -1291,7 +1291,7 @@ FSYNC_com_VnQry(int fd, SYNC_command * com, SYNC_response * res)
 }
 
 static afs_int32
-FSYNC_com_StatsOp(int fd, SYNC_command * com, SYNC_response * res)
+FSYNC_com_StatsOp(osi_socket fd, SYNC_command * com, SYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
     FSSYNC_StatsOp_command scom;
@@ -1471,7 +1471,7 @@ FSYNC_partMatch(FSSYNC_VolOp_command * vcom, Volume * vp, int match_anon)
 
 
 static void
-FSYNC_Drop(int fd)
+FSYNC_Drop(osi_socket fd)
 {
     struct offlineInfo *p;
     int i;
@@ -1526,7 +1526,7 @@ AcceptOff(void)
 
 /* The multiple FD handling code. */
 
-static int HandlerFD[MAXHANDLERS];
+static osi_socket HandlerFD[MAXHANDLERS];
 static void (*HandlerProc[MAXHANDLERS]) (int);
 
 static void
@@ -1576,7 +1576,7 @@ CallHandler(fd_set * fdsetp)
 #endif
 
 static int
-AddHandler(int afd, void (*aproc) (int))
+AddHandler(osi_socket afd, void (*aproc) (int))
 {
     register int i;
     ObtainWriteLock(&FSYNC_handler_lock);
@@ -1594,7 +1594,7 @@ AddHandler(int afd, void (*aproc) (int))
 }
 
 static int
-FindHandler(register int afd)
+FindHandler(register osi_socket afd)
 {
     register int i;
     ObtainReadLock(&FSYNC_handler_lock);
@@ -1609,7 +1609,7 @@ FindHandler(register int afd)
 }
 
 static int
-FindHandler_r(register int afd)
+FindHandler_r(register osi_socket afd)
 {
     register int i;
     for (i = 0; i < MAXHANDLERS; i++)
@@ -1621,7 +1621,7 @@ FindHandler_r(register int afd)
 }
 
 static int
-RemoveHandler(register int afd)
+RemoveHandler(register osi_socket afd)
 {
     ObtainWriteLock(&FSYNC_handler_lock);
     HandlerFD[FindHandler_r(afd)] = -1;
@@ -1652,13 +1652,13 @@ static void
 GetHandler(fd_set * fdsetp, int *maxfdp)
 {
     register int i;
-    register int maxfd = -1;
+    register osi_socket maxfd = -1;
     FD_ZERO(fdsetp);
     ObtainReadLock(&FSYNC_handler_lock);	/* just in case */
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] != -1) {
 	    FD_SET(HandlerFD[i], fdsetp);
-	    if (maxfd < HandlerFD[i])
+	    if (maxfd < HandlerFD[i] || maxfd == (osi_socket)-1)
 		maxfd = HandlerFD[i];
 	}
     *maxfdp = maxfd;
