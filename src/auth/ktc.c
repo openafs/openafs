@@ -1667,7 +1667,7 @@ ktc_newpag(void)
     if (pag == -1) {
 	sprintf(fname, "%s%d", prefix, getuid());
     } else {
-	sprintf(fname, "%sp%ld", prefix, (long int) pag);
+	sprintf(fname, "%sp%lu", prefix, afs_cast_uint32(pag));
     }
     ktc_set_tkt_string(fname);
 

@@ -139,7 +139,7 @@ readUbikHeader()
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	log_error(VLDB_CHECK_FATAL,"error: read of %d bytes failed: %d %d\n", sizeof(uheader), r,
+	log_error(VLDB_CHECK_FATAL,"error: read of %lu bytes failed: %d %d\n", sizeof(uheader), r,
 	       errno);
 	return (VLDB_CHECK_FATAL);
     }
@@ -277,7 +277,7 @@ readheader(struct vlheader *headerp)
 	quiet_println("vldb header\n");
 	quiet_println("   vldbversion      = %u\n",
 	       headerp->vital_header.vldbversion);
-	quiet_println("   headersize       = %u [actual=%u]\n",
+	quiet_println("   headersize       = %u [actual=%lu]\n",
 	       headerp->vital_header.headersize, sizeof(*headerp));
 	quiet_println("   freePtr          = 0x%x\n", headerp->vital_header.freePtr);
 	quiet_println("   eofPtr           = %u\n", headerp->vital_header.eofPtr);
@@ -302,7 +302,7 @@ readheader(struct vlheader *headerp)
 
     /* Check the header size */
     if (headerp->vital_header.headersize != sizeof(*headerp))
-	log_error(VLDB_CHECK_WARNING,"Header reports its size as %d (should be %d)\n",
+	log_error(VLDB_CHECK_WARNING,"Header reports its size as %d (should be %lu)\n",
 	       headerp->vital_header.headersize, sizeof(*headerp));
     return;
 }
@@ -702,7 +702,7 @@ FollowNameHash(struct vlheader *header)
 
 	    if (record[rindex].addr != addr && record[rindex].addr) {
 	        log_error	
-		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
+		    (VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %ld and %u use same record slot %d\n",
 		     record[rindex].addr, addr, rindex);
 	    }
 	    if (record[rindex].type & NH) {
@@ -777,7 +777,7 @@ FollowIdHash(struct vlheader *header)
 		rindex = addr / sizeof(vlentry);
 		if (record[rindex].addr != addr && record[rindex].addr) {
 		   log_error 
-			(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
+			(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %ld and %u use same record slot %d\n",
 			 record[rindex].addr, addr, rindex);
 		}
 		if (record[rindex].type & hash) {
@@ -845,7 +845,7 @@ FollowFreeChain(struct vlheader *header)
 	rindex = addr / sizeof(vlentry);
 	if (record[rindex].addr != addr && record[rindex].addr) {
 	   log_error 
-		(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %u use same record slot %d\n",
+		(VLDB_CHECK_ERROR,"INTERNAL VLDB_CHECK_ERROR: addresses %u and %ld use same record slot %d\n",
 		 record[rindex].addr, addr, rindex);
 	}
 	if (record[rindex].type & FRC) {
@@ -937,7 +937,7 @@ CheckIpAddrs(struct vlheader *header)
 	    }
 	    if (record[rindex].type & FRC) {
 	        log_error	
-		    (VLDB_CHECK_ERROR,"MH Blocks Chain %d: Bad entry at %u: Already a MH block\n",
+		    (VLDB_CHECK_ERROR,"MH Blocks Chain %d: Bad entry at %ld: Already a MH block\n",
 		     i, record[rindex].addr);
 		break;
 	    }
@@ -1077,7 +1077,7 @@ void
 FixBad(afs_uint32 idx, afs_uint32 addr, afs_uint32 type, afs_uint32 tmp, 
        struct nvlentry *vlentry, afs_uint32 hash) {
     SetHashEnd(addr, type, tmp);
-    quiet_println("linked unlinked chain %u (index %d) to end of chain %d for %s hash\n", 
+    quiet_println("linked unlinked chain %u (index %lu) to end of chain %d for %s hash\n", 
 	   tmp, ADDR(tmp), hash, type==NH?"Name":(type==RWH?"RW":(type==ROH?"RO":"BK")));
 }
 
@@ -1171,7 +1171,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    readentry(record[i].addr, &vlentry, &type);
 
 	    if (InvalidVolname(vlentry.name))
-		log_error(VLDB_CHECK_ERROR,"Volume '%s' at addr %u has an invalid name\n",
+		log_error(VLDB_CHECK_ERROR,"Volume '%s' at addr %ld has an invalid name\n",
 		       vlentry.name, record[i].addr);
 
 	    if (!(record[i].type & NH)) {
@@ -1304,23 +1304,23 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    /* A free entry */
 	} else if (record[i].type & FR) {
 	    if (!(record[i].type & FRC))
-		log_error(VLDB_CHECK_ERROR,"Free vlentry at %u not on free chain\n",
+		log_error(VLDB_CHECK_ERROR,"Free vlentry at %ld not on free chain\n",
 		       record[i].addr);
 	    
 	    if (record[i].type & 0xfffffdf0)
 	        log_error	
-		    (VLDB_CHECK_ERROR,"Free vlentry at %u also found on other chains (0x%x)\n",
+		    (VLDB_CHECK_ERROR,"Free vlentry at %ld also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
 	    
 	    /* A multihomed entry */
 	} else if (record[i].type & MH) {
 	    if (!(record[i].type & MHC))
-		log_error(VLDB_CHECK_ERROR,"Multihomed block at %u is orphaned\n",
+		log_error(VLDB_CHECK_ERROR,"Multihomed block at %ld is orphaned\n",
 		       record[i].addr);
 	    
 	    if (record[i].type & 0xfffffef0)
 	        log_error	
-		    (VLDB_CHECK_ERROR,"Multihomed block at %u also found on other chains (0x%x)\n",
+		    (VLDB_CHECK_ERROR,"Multihomed block at %ld also found on other chains (0x%x)\n",
 		     record[i].addr, record[i].type);
 	    
 	} else {
@@ -1395,7 +1395,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	if (record[i].type & VL) {
 	    readentry(record[i].addr, &vlentry, &type);
 	    if (!(record[i].type & REFN)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a name chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a name chain\n", i, 
 		       record[i].addr, record[i].type);
 		if (strlen(vlentry.name)>0) {
 		    if (fix) {
@@ -1414,7 +1414,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		}
 	    }
 	    if (vlentry.volumeId[0] && !(record[i].type & REFRW)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a RW chain\n", i,
+		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RW chain\n", i,
 		       record[i].addr, record[i].type);
 		if (fix) {
 		    if (header.VolidHash[0][IdHash(vlentry.volumeId[0])] == 0)
@@ -1424,7 +1424,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		}
 	    }
 	    if (vlentry.volumeId[1] && !(record[i].type & REFRO)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a RO chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a RO chain\n", i, 
 		       record[i].addr, record[i].type);
 		if (fix) {
 		    if (header.VolidHash[1][IdHash(vlentry.volumeId[1])] == 0)
@@ -1434,7 +1434,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		}
 	    }
 	    if (vlentry.volumeId[2] && !(record[i].type & REFBK)) {
-		log_error(VLDB_CHECK_ERROR,"%d: Record %u (type 0x%x) not in a BK chain\n", i, 
+		log_error(VLDB_CHECK_ERROR,"%d: Record %ld (type 0x%x) not in a BK chain\n", i, 
 		       record[i].addr, record[i].type);
 		if (fix) {
 		    if (header.VolidHash[2][IdHash(vlentry.volumeId[2])] == 0)

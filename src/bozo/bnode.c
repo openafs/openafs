@@ -702,15 +702,15 @@ SendNotifierData(register int fd, register struct bnode_proc *tp)
 	buf1 = "(null)";
     (void)sprintf(bufp, "coreName: %s\n", buf1);
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "pid: %ld\n", (long int)tp->pid);
+    (void)sprintf(bufp, "pid: %ld\n", afs_cast_int32(tp->pid));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastExit: %ld\n", (long int)tp->lastExit);
+    (void)sprintf(bufp, "lastExit: %ld\n", afs_cast_int32(tp->lastExit));
     bufp += strlen(bufp);
 #ifdef notdef
-    (void)sprintf(bufp, "lastSignal: %ld\n", (long int)tp->lastSignal);
+    (void)sprintf(bufp, "lastSignal: %ld\n", afs_cast_int32(tp->lastSignal));
     bufp += strlen(bufp);
 #endif
-    (void)sprintf(bufp, "flags: %ld\n", (long int)tp->flags);
+    (void)sprintf(bufp, "flags: %ld\n", afs_cast_int32(tp->flags));
     bufp += strlen(bufp);
     (void)sprintf(bufp, "END bnode_proc\n");
     bufp += strlen(bufp);
@@ -727,21 +727,21 @@ SendNotifierData(register int fd, register struct bnode_proc *tp)
     bufp += strlen(bufp);
     (void)sprintf(bufp, "name: %s\n", tb->name);
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "rsTime: %ld\n", (long int)tb->rsTime);
+    (void)sprintf(bufp, "rsTime: %ld\n", afs_cast_int32(tb->rsTime));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "rsCount: %ld\n", (long int)tb->rsCount);
+    (void)sprintf(bufp, "rsCount: %ld\n", afs_cast_int32(tb->rsCount));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "procStartTime: %ld\n", (long int)tb->procStartTime);
+    (void)sprintf(bufp, "procStartTime: %ld\n", afs_cast_int32(tb->procStartTime));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "procStarts: %ld\n", (long int)tb->procStarts);
+    (void)sprintf(bufp, "procStarts: %ld\n", afs_cast_int32(tb->procStarts));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastAnyExit: %ld\n", (long int)tb->lastAnyExit);
+    (void)sprintf(bufp, "lastAnyExit: %ld\n", afs_cast_int32(tb->lastAnyExit));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastErrorExit: %ld\n", (long int)tb->lastErrorExit);
+    (void)sprintf(bufp, "lastErrorExit: %ld\n", afs_cast_int32(tb->lastErrorExit));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "errorCode: %ld\n", (long int)tb->errorCode);
+    (void)sprintf(bufp, "errorCode: %ld\n", afs_cast_int32(tb->errorCode));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "errorSignal: %ld\n", (long int)tb->errorSignal);
+    (void)sprintf(bufp, "errorSignal: %ld\n", afs_cast_int32(tb->errorSignal));
     bufp += strlen(bufp);
 /*
     (void) sprintf(bufp, "lastErrorName: %s\n", tb->lastErrorName);

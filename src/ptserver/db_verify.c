@@ -212,7 +212,7 @@ readUbikHeader(struct misc_data *misc)
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	printf("error: read of %d bytes failed: %d %d\n", sizeof(uheader), r,
+	printf("error: read of %lu bytes failed: %d %d\n", sizeof(uheader), r,
 	       errno);
 	return (-1);
     }

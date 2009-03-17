@@ -796,7 +796,7 @@ GetConfigParams(char *filename, afs_int32 port)
 	statusSize *= BufferSize;
 	if (statusSize < 0)
 	    statusSize = 0x7fffffff;	/*max size */
-	printf("Status every %ld Bytes\n", statusSize);
+	printf("Status every %ld Bytes\n", afs_cast_int32(statusSize));
     }
 
   error_exit:

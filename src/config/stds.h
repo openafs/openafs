@@ -293,4 +293,11 @@ typedef struct afsUUID afsUUID;
 #define AFS_INT64_FMT "lld"
 #endif
 
+/* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
+ * printf statemements with %ld and %lu
+ */
+
+static_inline long int afs_cast_int32(afs_int32 d) { return (long int) d; }
+static_inline unsigned long int afs_cast_uint32(afs_uint32 d) { return (unsigned long int) d; }
+
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */
