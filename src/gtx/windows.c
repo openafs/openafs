@@ -114,7 +114,7 @@ gw_init(params)
 	    fprintf(stderr, "[%s:%s] Initializing for the X11 package\n", mn,
 		    rn);
 	gwinbops = gator_X11_gwinbops;
-	code = gator_X11gwin_init(params);
+	code = gator_X11gwin_init(gwin_debug);
 	if (code) {
 	    fprintf(stderr,
 		    "[%s:%s] Error in X11 initialization routine, gator_X11gwin_init(): %d\n",
