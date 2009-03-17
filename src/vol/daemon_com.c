@@ -129,10 +129,10 @@ SYNC_getAddr(SYNC_endpoint_t * endpoint, SYNC_sockaddr_t * addr)
  * @post socket of domain specified in endpoint structure is created and
  *       returned to caller.
  */
-int
+osi_socket
 SYNC_getSock(SYNC_endpoint_t * endpoint)
 {
-    int sd;
+    osi_socket sd;
     assert((sd = socket(endpoint->domain, SOCK_STREAM, 0)) >= 0);
     return sd;
 }
@@ -501,7 +501,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
  */
 afs_int32
 SYNC_getCom(SYNC_server_state_t * state,
-	    int fd,
+	    osi_socket fd,
 	    SYNC_command * com)
 {
     int n;
@@ -577,7 +577,7 @@ SYNC_getCom(SYNC_server_state_t * state,
  */
 afs_int32
 SYNC_putRes(SYNC_server_state_t * state, 
-	    int fd,
+	    osi_socket fd,
 	    SYNC_response * res)
 {
     int n;
