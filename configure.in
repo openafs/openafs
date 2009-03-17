@@ -11,7 +11,7 @@ AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
 AC_PROG_CC
-AC_PATH_PROGS([PATH_CPP], [cpp], , [$PATH:/lib:/usr/ccs/lib])
+AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
 OPENAFS_CONFIGURE_COMMON
 
