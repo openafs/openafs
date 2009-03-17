@@ -278,10 +278,13 @@ typedef struct afsUUID afsUUID;
 
 #ifdef AFS_HPUX_ENV
 #define static_inline static __inline
+#define hdr_static_inline static __inline
 #elif defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
 #define static_inline static
+#define hdr_static_inline
 #else
 #define static_inline static inline
+#define hdr_static_inline static inline
 #endif
 
 /* A macro that can be used when printf'ing 64 bit integers, as Unix and 
@@ -297,7 +300,7 @@ typedef struct afsUUID afsUUID;
  * printf statemements with %ld and %lu
  */
 
-static_inline long int afs_cast_int32(afs_int32 d) { return (long int) d; }
-static_inline unsigned long int afs_cast_uint32(afs_uint32 d) { return (unsigned long int) d; }
+hdr_static_inline long int afs_cast_int32(afs_int32 d) { return (long int) d; }
+hdr_static_inline unsigned long int afs_cast_uint32(afs_uint32 d) { return (unsigned long int) d; }
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */
