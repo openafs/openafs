@@ -380,7 +380,7 @@ sub authorize {
   my $self = shift;
   my $principal = shift || 'admin';
   #run("echo \"Proceeding w/o authentication\"|klog -pipe ${principal}\@$self->{'realm'}");
-  run("klog $principal\@$self->{'realm'}");
+  run("klog $principal");
 }
 
 1;
