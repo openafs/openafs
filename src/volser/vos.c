@@ -904,7 +904,7 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 		}
 
 		fprintf(STDOUT, "name\t\t%s\n", a_xInfoP->name);
-		fprintf(STDOUT, "id\t\t%lu\n", a_xInfoP->volid);
+		fprintf(STDOUT, "id\t\t%lu\n", afs_cast_uint32(a_xInfoP->volid));
 		fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
 		fprintf(STDOUT, "part\t\t%s\n", pname);
 		switch (a_xInfoP->status) {
@@ -918,9 +918,12 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 			fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
 			return;
 		}
-		fprintf(STDOUT, "backupID\t%lu\n", a_xInfoP->backupID);
-		fprintf(STDOUT, "parentID\t%lu\n", a_xInfoP->parentID);
-		fprintf(STDOUT, "cloneID\t\t%lu\n", a_xInfoP->cloneID);
+		fprintf(STDOUT, "backupID\t%lu\n", 
+			afs_cast_uint32(a_xInfoP->backupID));
+		fprintf(STDOUT, "parentID\t%lu\n", 
+			afs_cast_uint32(a_xInfoP->parentID));
+		fprintf(STDOUT, "cloneID\t\t%lu\n", 
+			afs_cast_uint32(a_xInfoP->cloneID));
 		fprintf(STDOUT, "inUse\t\t%s\n", a_xInfoP->inUse ? "Y" : "N");
 		switch (a_xInfoP->type) {
 		case 0:
@@ -936,15 +939,20 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 			fprintf(STDOUT, "type\t\t?\n");
 			break;
 		}
-		fprintf(STDOUT, "creationDate\t%-9lu\t%s", a_xInfoP->creationDate,
+		fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
+			afs_cast_uint32(a_xInfoP->creationDate),
 			vos_ctime(&a_xInfoP->creationDate));
-		fprintf(STDOUT, "accessDate\t%-9lu\t%s", a_xInfoP->accessDate,
+		fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
+			afs_cast_uint32(a_xInfoP->accessDate),
 			vos_ctime(&a_xInfoP->accessDate));
-		fprintf(STDOUT, "updateDate\t%-9lu\t%s", a_xInfoP->updateDate,
+		fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
+			afs_cast_uint32(a_xInfoP->updateDate),
 			vos_ctime(&a_xInfoP->updateDate));
-		fprintf(STDOUT, "backupDate\t%-9lu\t%s", a_xInfoP->backupDate,
+		fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
+			afs_cast_uint32(a_xInfoP->backupDate),
 			vos_ctime(&a_xInfoP->backupDate));
-		fprintf(STDOUT, "copyDate\t%-9lu\t%s", a_xInfoP->copyDate,
+		fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
+			afs_cast_uint32(a_xInfoP->copyDate),
 			vos_ctime(&a_xInfoP->copyDate));
 		
 		fprintf(STDOUT, "diskused\t%u\n", a_xInfoP->size);
@@ -1051,7 +1059,8 @@ DisplayFormat2(server, partition, pntr)
 	partition_cache = partition;
     }
     fprintf(STDOUT, "name\t\t%s\n", pntr->name);
-    fprintf(STDOUT, "id\t\t%lu\n", pntr->volid);
+    fprintf(STDOUT, "id\t\t%lu\n", 
+	    afs_cast_uint32(pntr->volid));
     fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
     fprintf(STDOUT, "part\t\t%s\n", pname);
     switch (pntr->status) {
@@ -1065,9 +1074,12 @@ DisplayFormat2(server, partition, pntr)
 	fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
 	return;
     }
-    fprintf(STDOUT, "backupID\t%lu\n", pntr->backupID);
-    fprintf(STDOUT, "parentID\t%lu\n", pntr->parentID);
-    fprintf(STDOUT, "cloneID\t\t%lu\n", pntr->cloneID);
+    fprintf(STDOUT, "backupID\t%lu\n", 
+	    afs_cast_uint32(pntr->backupID));
+    fprintf(STDOUT, "parentID\t%lu\n", 
+	    afs_cast_uint32(pntr->parentID));
+    fprintf(STDOUT, "cloneID\t\t%lu\n", 
+	    afs_cast_uint32(pntr->cloneID));
     fprintf(STDOUT, "inUse\t\t%s\n", pntr->inUse ? "Y" : "N");
     fprintf(STDOUT, "needsSalvaged\t%s\n", pntr->needsSalvaged ? "Y" : "N");
     /* 0xD3 is from afs/volume.h since I had trouble including the file */
@@ -1086,25 +1098,35 @@ DisplayFormat2(server, partition, pntr)
 	fprintf(STDOUT, "type\t\t?\n");
 	break;
     }
-    fprintf(STDOUT, "creationDate\t%-9lu\t%s", pntr->creationDate,
+    fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
+	    afs_cast_uint32(pntr->creationDate),
 	    vos_ctime(&pntr->creationDate));
-    fprintf(STDOUT, "accessDate\t%-9lu\t%s", pntr->accessDate,
+    fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
+	    afs_cast_uint32(pntr->accessDate),
 	    vos_ctime(&pntr->accessDate));
-    fprintf(STDOUT, "updateDate\t%-9lu\t%s", pntr->updateDate,
+    fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
+	    afs_cast_uint32(pntr->updateDate),
 	    vos_ctime(&pntr->updateDate));
-    fprintf(STDOUT, "backupDate\t%-9lu\t%s", pntr->backupDate,
+    fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
+	    afs_cast_uint32(pntr->backupDate),
 	    vos_ctime(&pntr->backupDate));
-    fprintf(STDOUT, "copyDate\t%-9lu\t%s", pntr->copyDate,
+    fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
+	    afs_cast_uint32(pntr->copyDate),
 	    vos_ctime(&pntr->copyDate));
-    fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", pntr->flags);
+    fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", 
+	    afs_cast_uint32(pntr->flags));
     fprintf(STDOUT, "diskused\t%u\n", pntr->size);
     fprintf(STDOUT, "maxquota\t%u\n", pntr->maxquota);
-    fprintf(STDOUT, "minquota\t%lu\t(Optional)\n", pntr->spare0);
+    fprintf(STDOUT, "minquota\t%lu\t(Optional)\n", 
+	    afs_cast_uint32(pntr->spare0));
     fprintf(STDOUT, "filecount\t%u\n", pntr->filecount);
     fprintf(STDOUT, "dayUse\t\t%u\n", pntr->dayUse);
-    fprintf(STDOUT, "weekUse\t\t%lu\t(Optional)\n", pntr->spare1);
-    fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n", pntr->spare2);
-    fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n", pntr->spare3);
+    fprintf(STDOUT, "weekUse\t\t%lu\t(Optional)\n",
+	    afs_cast_uint32(pntr->spare1));
+    fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n", 
+	    afs_cast_uint32(pntr->spare2));
+    fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n", 
+	    afs_cast_uint32(pntr->spare3));
     return;
 }
 

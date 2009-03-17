@@ -330,7 +330,7 @@ CheckHeader(struct kaheader *header)
     if (header->headerSize != sizeof(struct kaheader)) {
 	code++;
 	fprintf(stderr,
-		"HEADER SIZE WRONG: file indicates %d, should be %d\n",
+		"HEADER SIZE WRONG: file indicates %d, should be %lu\n",
 		header->headerSize, sizeof(struct kaheader));
     }
     if (header->hashsize != HASHSIZE) {
@@ -436,7 +436,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     if ((info.st_size - UBIK_HEADERSIZE) % UBIK_BUFFERSIZE)
 	fprintf(stderr,
 		"DATABASE SIZE INCONSISTENT: was %d, should be (n*%d + %d), for integral n\n",
-		info.st_size, UBIK_BUFFERSIZE, UBIK_HEADERSIZE);
+		(int) info.st_size, UBIK_BUFFERSIZE, UBIK_HEADERSIZE);
 
     readUbikHeader();
 
@@ -503,7 +503,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    i = NameHash(&entry);
 	    if (i != j) {
 		fprintf(stderr,
-			"Entry %d, %s, found in hash chain %d (should be %d)\n",
+			"Entry %lu, %s, found in hash chain %d (should be %d)\n",
 			((index -
 			  sizeof(struct kaheader)) / sizeof(struct kaentry)),
 			EntryName(&entry), j, i);

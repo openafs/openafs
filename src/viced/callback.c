@@ -2816,8 +2816,8 @@ main(int argc, char **argv)
     now = ReadDump(*argv);
     if (stats || noptions == 0) {
 	time_t uxtfirst = UXtime(tfirst);
-	printf("The time of the dump was %u %s", now, ctime(&now));
-	printf("The last time cleanup ran was %u %s", uxtfirst,
+	printf("The time of the dump was %u %s", (unsigned int) now, ctime(&now));
+	printf("The last time cleanup ran was %u %s", (unsigned int) uxtfirst,
 	       ctime(&uxtfirst));
 	PrintCallBackStats();
     }
@@ -2881,7 +2881,7 @@ PrintCB(register struct CallBack *cb, afs_uint32 now)
     if (fe == NULL)
 	return;
 
-    printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %d secs at %s",
+    printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %lu secs at %s",
 	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status, fe->status,
 	   expires - now, ctime(&expires));
 }

@@ -1112,7 +1112,8 @@ Statistics(struct cmd_syndesc *as, void *arock)
     printf("Hash table utilization = %f%%\n",
 	   (double)dynamics.hashTableUtilization / 100.0);
     ka_timestr(dynamics.start_time, bob, KA_TIMESTR_LEN);
-    printf("From host %lx started at %s:\n", dynamics.host, bob);
+    printf("From host %lx started at %s:\n", 
+	   afs_cast_uint32(dynamics.host), bob);
 
 #define print_stat(name) if (dynamics.name.requests) printf ("  of %d requests for %s, %d were aborted.\n", dynamics.name.requests, # name, dynamics.name.aborts)
     print_stat(Authenticate);
@@ -1202,7 +1203,8 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
 	     timeOffset, now - start);
     }
     ka_timestr(info.startTime, bob, KA_TIMESTR_LEN);
-    printf("From host %lx started %sat %s:\n", info.host,
+    printf("From host %lx started %sat %s:\n", 
+	   afs_cast_uint32(info.host),
 	   (info.noAuth ? "w/o authorization " : ""), bob);
     ka_timestr(info.lastTrans, bob, KA_TIMESTR_LEN);
     printf("Last trans was %s at %s\n", info.lastOperation, bob);
@@ -1216,8 +1218,9 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
     printf("Next autoCPW at %s or in %d updates.\n", bob,
 	   info.updatesRemaining);
     if (info.cheader_lock || info.keycache_lock)
-	printf("locks: cheader %08lx, keycache %08lx\n", info.cheader_lock,
-	       info.keycache_lock);
+	printf("locks: cheader %08lx, keycache %08lx\n", 
+		afs_cast_uint32(info.cheader_lock),
+	        afs_cast_uint32(info.keycache_lock));
     printf("Last authentication for %s, last admin user was %s\n",
 	   info.lastAuth, info.lastAdmin);
     printf("Last TGS op was a %s ticket was for %s\n", info.lastTGSServer,

@@ -9,6 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 RCSID
     ("$Header$");
@@ -124,7 +125,8 @@ main(int argc, char **argv)
 		temp = 0;
 		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0) {
-		    printf("SAMPLE_Inc #1 failed with code %ld\n", code);
+		    printf("SAMPLE_Inc #1 failed with code %ld\n", 
+			   afs_cast_int32(code));
 		} else {
 		    printf("SAMPLE_Inc #1 succeeded, incremented integer\n");
 		}
@@ -139,7 +141,8 @@ main(int argc, char **argv)
 		temp = 0;
 		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0)
-		    printf("SAMPLE_Inc #2 failed with code %ld\n", code);
+		    printf("SAMPLE_Inc #2 failed with code %ld\n", 
+			   afs_cast_int32(code));
 		else
 		    printf("SAMPLE_Inc #2 succeeded, incremented integer\n");
 
