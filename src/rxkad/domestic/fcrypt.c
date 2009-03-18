@@ -113,7 +113,7 @@ fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
 /* IN int encrypt; * 0 ==> decrypt, else encrypt */
 afs_int32
 fc_ecb_encrypt(void * clear, void * cipher,
-	       fc_KeySchedule schedule, int encrypt)
+	       const fc_KeySchedule schedule, int encrypt)
 {
     afs_uint32 L, R;
     volatile afs_uint32 S, P;
@@ -202,7 +202,7 @@ fc_ecb_encrypt(void * clear, void * cipher,
 */
 afs_int32
 fc_cbc_encrypt(void *input, void *output, afs_int32 length,
-	       fc_KeySchedule key, afs_uint32 * xor, int encrypt)
+	       const fc_KeySchedule key, afs_uint32 * xor, int encrypt)
 {
     afs_uint32 i, j;
     afs_uint32 t_input[2];

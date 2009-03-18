@@ -520,7 +520,9 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 void
 afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 {
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     unsigned short g0, g1;
+#endif
 
 
     AFS_STATCNT(afs_get_groups_from_pag);
@@ -542,10 +544,12 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 
 
 afs_int32
-PagInCred(const struct AFS_UCRED *cred)
+PagInCred(struct AFS_UCRED *cred)
 {
     afs_int32 pag;
+#if !defined(AFS_LINUX26_ONEGROUP_ENV)
     gid_t g0, g1;
+#endif
 #if defined(AFS_SUN510_ENV)
     const gid_t *gids;
     int ngroups;

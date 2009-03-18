@@ -1924,7 +1924,7 @@ DECL_PIOCTL(PGetTokens)
     register afs_int32 i;
     register struct unixuser *tu;
     register char *cp;
-    afs_int32 iterator;
+    afs_int32 iterator = 0;
     int newStyle;
 
     AFS_STATCNT(PGetTokens);

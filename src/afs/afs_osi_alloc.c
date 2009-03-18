@@ -168,7 +168,7 @@ osi_AllocLargeSpace(size_t size)
 
     AFS_STATCNT(osi_AllocLargeSpace);
     if (size > AFS_LRALLOCSIZ)
-	osi_Panic("osi_AllocLargeSpace: size=%d\n", size);
+	osi_Panic("osi_AllocLargeSpace: size=%d\n", (int)size);
     afs_stats_cmperf.LargeBlocksActive++;
     if (!freePacketList) {
 	char *p;
@@ -202,7 +202,7 @@ osi_AllocSmallSpace(size_t size)
 
     AFS_STATCNT(osi_AllocSmallSpace);
     if (size > AFS_SMALLOCSIZ)
-	osi_Panic("osi_AllocSmallS: size=%d\n", size);
+	osi_Panic("osi_AllocSmallS: size=%d\n", (int)size);
 
     if (!freeSmallList) {
 	afs_stats_cmperf.SmallBlocksAlloced++;

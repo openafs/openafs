@@ -3257,7 +3257,8 @@ rxi_ReceiveDataPacket(struct rx_call *call,
     int newPackets = 0;
     int didHardAck = 0;
     int haveLast = 0;
-    afs_uint32 seq, serial, flags;
+    afs_uint32 seq; 
+    afs_uint32 serial=0, flags=0;
     int isFirst;
     struct rx_packet *tnp;
     struct clock when, now;

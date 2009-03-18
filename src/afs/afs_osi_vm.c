@@ -49,7 +49,9 @@ osi_Active(register struct vcache *avc)
 void
 osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 {
+#ifdef AFS_FBSD70_ENV
     int vfslocked;
+#endif
     afs_hyper_t origDV;
 #if defined(AFS_CACHE_BYPASS)
     /* The optimization to check DV under read lock below is identical a 

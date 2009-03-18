@@ -130,7 +130,7 @@ static inline time_t osi_Time(void) {
 #undef TO_USER_SPACE
 #undef TO_KERNEL_SPACE
 #endif
-#define KERNEL_SPACE_DECL mm_segment_t _fs_space_decl
+#define KERNEL_SPACE_DECL mm_segment_t _fs_space_decl={0}
 #define TO_USER_SPACE() { _fs_space_decl = get_fs(); set_fs(get_ds()); }
 #define TO_KERNEL_SPACE() set_fs(_fs_space_decl)
 

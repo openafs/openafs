@@ -567,7 +567,9 @@ afs_GetDownD(int anumber, int *aneedSpace, afs_int32 buckethint)
     afs_uint32 maxVictimPtr;	/* where it is */
     int discard;
     int curbucket;
+#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
     int vfslocked;
+#endif
 
 #if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
     vfslocked = VFS_LOCK_GIANT(afs_globalVFS);

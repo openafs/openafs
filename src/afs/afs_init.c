@@ -252,7 +252,7 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
 int
 afs_InitCellInfo(char *afile)
 {
-    ino_t inode;
+    ino_t inode = 0;
     int code;
 #if defined(LINUX_USE_FH)
     struct fid fh;
