@@ -55,6 +55,9 @@
 #if defined(EXPORTED_INIT_MM)
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#ifdef AFS_LINUX26_ENV
+#include <scsi/scsi.h> /* for scsi_command_size */
+#endif
 #ifndef OSI_PROBE_STANDALONE
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -68,9 +71,6 @@
 #include <linux/init.h>
 #include <linux/unistd.h>
 #include <linux/mm.h>
-#ifdef AFS_LINUX26_ENV
-#include <scsi/scsi.h> /* for scsi_command_size */
-#endif
 
 #if defined(AFS_PPC64_LINUX26_ENV)
 #include <asm/abs_addr.h>

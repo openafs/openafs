@@ -231,7 +231,7 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
 
 #define SIGN 0x80000000
 #define hadd32(a,i) \
-    (((((a).low ^ (int)(i)) & SIGN) \
+    ((void)((((a).low ^ (int)(i)) & SIGN) \
       ? (((((a).low + (int)(i)) & SIGN) == 0) && (a).high++) \
       : (((a).low & (int)(i) & SIGN) && (a).high++)), \
      (a).low += (int)(i))

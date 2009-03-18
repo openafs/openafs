@@ -166,7 +166,9 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
          int change_parent)
 {
     struct group_info *group_info;
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     gid_t g0, g1;
+#endif
     struct group_info *tmp;
     int i;
 #ifdef AFS_LINUX26_ONEGROUP_ENV

@@ -668,7 +668,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 # endif
     {
 	int i;
-	char *panicstr;
 
 	i = 0;
 	for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
@@ -3175,7 +3174,9 @@ afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 void
 afs_vcacheInit(int astatSize)
 {
+#if (!defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)) || defined(AFS_SGI_ENV)
     register struct vcache *tvp;
+#endif
     int i;
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
     if (!afs_maxvcount) {

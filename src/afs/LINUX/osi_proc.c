@@ -18,6 +18,9 @@ RCSID
     ("$Header$");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+#include <linux/seq_file.h>
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/nfsclient.h"
@@ -33,10 +36,6 @@ RCSID
 #include <linux/init.h>
 #include <linux/sched.h>
 #include <linux/kernel.h>
-
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
-#include <linux/seq_file.h>
-#endif
 
 struct proc_dir_entry *openafs_procfs;
 

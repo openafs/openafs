@@ -643,7 +643,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     multi_Rx(rxconns,nconns)
       {
 	tv.tv_sec = tv.tv_usec = 0;
-	multi_RXAFS_GetTime(&tv.tv_sec, &tv.tv_usec);
+	multi_RXAFS_GetTime((afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
 	tc = conns[multi_i];
 	sa = tc->srvr;
 	if (conntimer[multi_i] == 1)

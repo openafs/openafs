@@ -669,6 +669,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;
+    dotdot.Cell = 0;
+    dotdot.Fid.Unique = 0;
+    dotdot.Fid.Vnode = 0;
 #ifdef AFS_DARWIN80_ENV
     panic("bulkstatus doesn't work on AFS_DARWIN80_ENV. don't call it");
 #endif

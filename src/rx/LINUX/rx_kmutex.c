@@ -45,7 +45,7 @@ afs_mutex_enter(afs_kmutex_t * l)
     down(&l->sem);
 #endif
     if (l->owner)
-	osi_Panic("mutex_enter: 0x%x held by %d", l, l->owner);
+	osi_Panic("mutex_enter: 0x%lx held by %d", (unsigned long)l, l->owner);
     l->owner = current->pid;
 }
 
@@ -66,7 +66,7 @@ void
 afs_mutex_exit(afs_kmutex_t * l)
 {
     if (l->owner != current->pid)
-	osi_Panic("mutex_exit: 0x%x held by %d", l, l->owner);
+	osi_Panic("mutex_exit: 0x%lx held by %d", (unsigned long)l, l->owner);
     l->owner = 0;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
     mutex_unlock(&l->mutex);
@@ -93,7 +93,7 @@ afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 #else
     struct wait_queue wait = { current, NULL };
 #endif
-
+    sigemptyset(&saved_set);
     seq = cv->seq;
     
     set_current_state(TASK_INTERRUPTIBLE);

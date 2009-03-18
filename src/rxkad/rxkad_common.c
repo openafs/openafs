@@ -221,7 +221,7 @@ rxkad_DeriveXORInfo(struct rx_connection *aconnp, fc_KeySchedule * aschedule,
 
     rxkad_SetupEndpoint(aconnp, &tendpoint);
     memcpy((void *)xor, aivec, 2 * sizeof(afs_int32));
-    fc_cbc_encrypt(&tendpoint, &tendpoint, sizeof(tendpoint), aschedule, xor,
+    fc_cbc_encrypt(&tendpoint, &tendpoint, sizeof(tendpoint), *aschedule, xor,
 		   ENCRYPT);
     memcpy(aresult,
 	   ((char *)&tendpoint) + sizeof(tendpoint) - ENCRYPTIONBLOCKSIZE,
@@ -286,7 +286,7 @@ ComputeSum(struct rx_packet *apacket, fc_KeySchedule * aschedule,
     word[0] ^= aivec[0];
     word[1] ^= aivec[1];
     /* encrypts word as if it were a character string */
-    fc_ecb_encrypt(word, word, aschedule, ENCRYPT);
+    fc_ecb_encrypt(word, word, *aschedule, ENCRYPT);
     t = ntohl(word[1]);
     t = (t >> 16) & 0xffff;
     if (t == 0)
@@ -353,7 +353,7 @@ rxkad_NewConnection(struct rx_securityClass *aobj,
 	    return RXKADINCONSISTENCY;
 	rxkad_SetLevel(aconn, tcp->level);	/* set header and trailer sizes */
 	rxkad_AllocCID(aobj, aconn);	/* CHANGES cid AND epoch!!!! */
-	rxkad_DeriveXORInfo(aconn, tcp->keysched, tcp->ivec, tccp->preSeq);
+	rxkad_DeriveXORInfo(aconn, (fc_KeySchedule *)tcp->keysched, (char *)tcp->ivec, (char *)tccp->preSeq);
 	INC_RXKAD_STATS(connections[rxkad_LevelIndex(tcp->level)]);
     }
 
@@ -415,7 +415,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 {
     struct rx_connection *tconn;
     rxkad_level level;
-    fc_KeySchedule *schedule;
+    const fc_KeySchedule *schedule;
     fc_InitializationVector *ivec;
     int len;
     int nlen = 0;
@@ -439,7 +439,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	    INC_RXKAD_STATS(checkPackets[rxkad_StatIndex(rxkad_server, level)]);
 	    sconn->stats.packetsReceived++;
 	    sconn->stats.bytesReceived += len;
-	    schedule = (fc_KeySchedule *) sconn->keysched;
+	    schedule = (const fc_KeySchedule *) sconn->keysched;
 	    ivec = (fc_InitializationVector *) sconn->ivec;
 	} else {
 	    INC_RXKAD_STATS(expired);
@@ -461,12 +461,12 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	cconn->stats.packetsReceived++;
 	cconn->stats.bytesReceived += len;
 	preSeq = cconn->preSeq;
-	schedule = (fc_KeySchedule *) tcp->keysched;
+	schedule = (const fc_KeySchedule *) tcp->keysched;
 	ivec = (fc_InitializationVector *) tcp->ivec;
     }
 
     if (checkCksum) {
-	code = ComputeSum(apacket, schedule, preSeq);
+	code = ComputeSum(apacket, (fc_KeySchedule *)schedule, preSeq);
 	if (code != rx_GetPacketCksum(apacket))
 	    return RXKADSEALEDINCON;
     }
@@ -476,11 +476,11 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	return 0;		/* shouldn't happen */
     case rxkad_auth:
 	rx_Pullup(apacket, 8);	/* the following encrypts 8 bytes only */
-	fc_ecb_encrypt(rx_DataOf(apacket), rx_DataOf(apacket), schedule,
+	fc_ecb_encrypt(rx_DataOf(apacket), rx_DataOf(apacket), *schedule,
 		       DECRYPT);
 	break;
     case rxkad_crypt:
-	code = rxkad_DecryptPacket(tconn, schedule, ivec, len, apacket);
+	code = rxkad_DecryptPacket(tconn, schedule, (const fc_InitializationVector *)ivec, len, apacket);
 	if (code)
 	    return code;
 	break;
@@ -571,7 +571,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
 			      nlen - (len + rx_GetSecurityHeaderSize(tconn)));
 	}
 	rx_Pullup(apacket, 8);	/* the following encrypts 8 bytes only */
-	fc_ecb_encrypt(rx_DataOf(apacket), rx_DataOf(apacket), schedule,
+	fc_ecb_encrypt(rx_DataOf(apacket), rx_DataOf(apacket), *schedule,
 		       ENCRYPT);
 	break;
     case rxkad_crypt:
@@ -580,7 +580,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	    rxi_RoundUpPacket(apacket,
 			      nlen - (len + rx_GetSecurityHeaderSize(tconn)));
 	}
-	code = rxkad_EncryptPacket(tconn, schedule, ivec, nlen, apacket);
+	code = rxkad_EncryptPacket(tconn, (const fc_KeySchedule *)schedule,  (const fc_InitializationVector *)ivec, nlen, apacket);
 	if (code)
 	    return code;
 	break;

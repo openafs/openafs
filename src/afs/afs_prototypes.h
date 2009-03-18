@@ -535,7 +535,7 @@ extern void shutdown_osinet(void);
 extern int afs_osi_suser(void *credp);
 extern void afs_osi_TraverseProcTable(void);
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
-extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC * pr);
+extern struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC * pr);
 #endif
 
 /* afs_osi_alloc.c */
@@ -584,7 +584,7 @@ extern afs_uint32 afs_get_pag_from_groups(struct group_info *gi);
 #endif
 #endif
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
-extern afs_int32 PagInCred(const struct AFS_UCRED *cred);
+extern afs_int32 PagInCred(struct AFS_UCRED *cred);
 
 /* afs_osi_uio.c */
 extern int afsio_copy(struct uio *ainuio, struct uio *aoutuio,

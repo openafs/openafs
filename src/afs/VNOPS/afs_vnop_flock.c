@@ -570,7 +570,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 #endif
     /* Java VMs ask for l_len=(long)-1 regardless of OS/CPU; bottom 32 bits
      * sometimes get masked off by OS */
-    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7ffffffffffffffe))
+    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7ffffffffffffffeLL))
 	af->l_len = 0;
     /* next line makes byte range locks always succeed,
      * even when they should block */
