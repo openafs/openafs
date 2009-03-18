@@ -2471,7 +2471,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             if ( WANTS_DFS_PATHNAMES(p) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
-                return CM_ERROR_BADSHARENAME;
+                return CM_ERROR_NOSUCHPATH;
         }
 #endif /* DFS_SUPPORT */
 
@@ -2501,7 +2501,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             if ( WANTS_DFS_PATHNAMES(p) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
-                return CM_ERROR_BADSHARENAME;
+                return CM_ERROR_NOSUCHPATH;
         }
 #endif /* DFS_SUPPORT */
 
@@ -3043,7 +3043,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                         if ( WANTS_DFS_PATHNAMES(p) || pnc )
                             code = CM_ERROR_PATH_NOT_COVERED;
                         else
-                            code = CM_ERROR_BADSHARENAME;
+                            code = CM_ERROR_NOSUCHPATH;
                     } else
 #endif /* DFS_SUPPORT */
                     if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
@@ -3092,7 +3092,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         if ( WANTS_DFS_PATHNAMES(p) || pnc )
             code = CM_ERROR_PATH_NOT_COVERED;
         else
-            code = CM_ERROR_BADSHARENAME;
+            code = CM_ERROR_NOSUCHPATH;
         smb_SendTran2Error(vcp, p, opx, code);
         smb_FreeTran2Packet(outp);
         return 0;
@@ -3330,7 +3330,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
                         if ( WANTS_DFS_PATHNAMES(p) || pnc )
                             code = CM_ERROR_PATH_NOT_COVERED;
                         else
-                            code = CM_ERROR_BADSHARENAME;
+                            code = CM_ERROR_NOSUCHPATH;
                     } else
 #endif /* DFS_SUPPORT */
                     if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
@@ -4568,7 +4568,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
         if ( WANTS_DFS_PATHNAMES(p) || pnc )
 	    code = CM_ERROR_PATH_NOT_COVERED;
 	else
-	    code = CM_ERROR_BADSHARENAME;
+	    code = CM_ERROR_NOSUCHPATH;
 	smb_SendTran2Error(vcp, p, opx, code);
 	smb_FreeTran2Packet(outp);
 	return 0;
@@ -5088,7 +5088,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 if ( WANTS_DFS_PATHNAMES(p) || pnc )
                     code = CM_ERROR_PATH_NOT_COVERED;
                 else
-                    code = CM_ERROR_BADSHARENAME;
+                    code = CM_ERROR_NOSUCHPATH;
                 smb_SendTran2Error(vcp, p, opx, code);
                 smb_FreeTran2Packet(outp);
                 lock_ReleaseMutex(&dsp->mx);
@@ -5779,7 +5779,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -5801,7 +5801,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
-                return CM_ERROR_BADSHARENAME;
+                return CM_ERROR_NOSUCHPATH;
         }
 #endif /* DFS_SUPPORT */
         /* otherwise, scp points to the parent directory.  Do a lookup,
@@ -7043,7 +7043,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
-                    return CM_ERROR_BADSHARENAME;
+                    return CM_ERROR_NOSUCHPATH;
             }
 #endif /* DFS_SUPPORT */
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
@@ -7077,7 +7077,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
-                return CM_ERROR_BADSHARENAME;
+                return CM_ERROR_NOSUCHPATH;
         }
 #endif /* DFS_SUPPORT */
         /* we might have scp but not dscp */
@@ -7117,7 +7117,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                         return CM_ERROR_PATH_NOT_COVERED;
                     else
-                        return CM_ERROR_BADSHARENAME;
+                        return CM_ERROR_NOSUCHPATH;
                 }
 #endif /* DFS_SUPPORT */
 
@@ -7865,7 +7865,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
-                    return CM_ERROR_BADSHARENAME;
+                    return CM_ERROR_NOSUCHPATH;
             }
 #endif /* DFS_SUPPORT */
             code = cm_Lookup(dscp, (lastNamep)?(lastNamep+1):realPathp, CM_FLAG_FOLLOW,
@@ -7899,7 +7899,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
             if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                 return CM_ERROR_PATH_NOT_COVERED;
             else
-                return CM_ERROR_BADSHARENAME;
+                return CM_ERROR_NOSUCHPATH;
         }
 #endif /* DFS_SUPPORT */
     }
@@ -7924,7 +7924,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
                 if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
-                    return CM_ERROR_BADSHARENAME;
+                    return CM_ERROR_NOSUCHPATH;
             }
 #endif /* DFS_SUPPORT */
         } else
