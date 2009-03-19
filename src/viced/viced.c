@@ -348,7 +348,7 @@ ResetCheckDescriptors(void)
 }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+int *
 threadNum(void)
 {
     return pthread_getspecific(rx_thread_id_key);
@@ -357,7 +357,7 @@ threadNum(void)
 
 /* proc called by rxkad module to get a key */
 static int
-get_key(char *arock, register afs_int32 akvno, char *akey)
+get_key(char *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
 {
     /* find the key */
     static struct afsconf_key tkey;
@@ -367,7 +367,7 @@ get_key(char *arock, register afs_int32 akvno, char *akey)
 	ViceLog(0, ("conf dir not open\n"));
 	return 1;
     }
-    code = afsconf_GetKey(confDir, akvno, tkey.key);
+    code = afsconf_GetKey(confDir, akvno, (struct ktc_encryptionKey *)tkey.key);
     if (code) {
 	ViceLog(0, ("afsconf_GetKey failure: kvno %d code %d\n", akvno, code));
 	return code;
