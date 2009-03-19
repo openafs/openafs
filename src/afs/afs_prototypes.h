@@ -534,7 +534,7 @@ extern void shutdown_osinet(void);
 extern int afs_osi_suser(void *credp);
 extern void afs_osi_TraverseProcTable(void);
 #if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_PROC)
-extern struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC * pr);
+extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC * pr);
 #endif
 
 /* afs_osi_alloc.c */
