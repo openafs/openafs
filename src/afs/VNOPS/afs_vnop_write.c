@@ -264,7 +264,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	osi_Assert(filePos <= avc->f.m.Length);
 #else
 	if (filePos > avc->f.m.Length) {
-#if AFS_DISCON_ENV
+#if defined(AFS_DISCON_ENV)
 	    if (AFS_IS_DISCON_RW)
    		afs_PopulateDCache(avc, filePos, &treq);
 #endif
@@ -576,10 +576,10 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	osi_Assert(filePos <= avc->f.m.Length);
 #else
 	if (filePos > avc->f.m.Length) {
-# ifdef AFS_DISCON_ENV
+#if defined(AFS_DISCON_ENV)
 	    if (AFS_IS_DISCON_RW)
 		afs_PopulateDCache(avc, filePos, &treq);
-# endif
+#endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,

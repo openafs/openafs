@@ -457,7 +457,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     if (tvc) {
 	ObtainWriteLock(&tvc->lock, 155);
 	tvc->f.states &= ~CUnique;	/* For the dfs xlator */
-#if AFS_DISCON_ENV
+#if defined(AFS_DISCON_ENV)
 	if (AFS_IS_DISCON_RW) {
 	    if (tvc->f.ddirty_flags & VDisconCreate) {
 		/* If we we were created whilst disconnected, removal doesn't
