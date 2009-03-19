@@ -260,7 +260,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
      */
     avc->f.states |= CReadDir;
     avc->dcreaddir = tdc;
-    avc->readdir_pid = MyPidxx;
+    avc->readdir_pid = MyPidxx2Pid(MyPidxx);
     ConvertWToSLock(&avc->lock);
 
     /* Fill in until we get an error or we're done. This implementation
