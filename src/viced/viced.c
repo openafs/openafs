@@ -1083,7 +1083,8 @@ ParseArgs(int argc, char *argv[])
 		return -1;
 	    }
 	} else if (!strcmp(argv[i], "-realm")) {
-	    extern char local_realm[AFS_REALM_SZ];
+	    extern char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
+	    extern int  num_lrealms;
 	    if ((i + 1) >= argc) {
 		fprintf(stderr, "missing argument for -realm\n"); 
 		return -1; 
@@ -1094,7 +1095,15 @@ ParseArgs(int argc, char *argv[])
 		     AFS_REALM_SZ);
 		return -1;
 	    }
-	    strncpy(local_realm, argv[i], AFS_REALM_SZ);
+	    if (num_lrealms == -1) 
+		num_lrealms = 0;
+	    if (num_lrealms >= AFS_NUM_LREALMS) {
+		printf
+		    ("a maximum of %d -realm arguments can be specified.\n",
+		     AFS_NUM_LREALMS);
+		return -1;
+	    }
+	    strncpy(local_realms[num_lrealms++], argv[i], AFS_REALM_SZ);
 	} else if (!strcmp(argv[i], "-udpsize")) {
 	    if ((i + 1) >= argc) {
 		printf("You have to specify -udpsize <integer value>\n");
