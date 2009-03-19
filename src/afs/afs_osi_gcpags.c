@@ -499,7 +499,7 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return rv;
 }
 #elif defined(AFS_LINUX22_ENV)
-struct AFS_UCRED *
+const struct AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
     struct AFS_UCRED *rv = NULL;
