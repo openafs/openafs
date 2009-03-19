@@ -1180,7 +1180,7 @@ struct memCacheEntry {
 /*#define afs_DirtyPages(avc)	(((avc)->f.states & CDirty) || osi_VMDirty_p((avc)))*/
 #define	afs_DirtyPages(avc)	((avc)->f.states & CDirty)
 
-#define afs_InReadDir(avc) (((avc)->f.states & CReadDir) && (avc)->readdir_pid == MyPidxx)
+#define afs_InReadDir(avc) (((avc)->f.states & CReadDir) && (avc)->readdir_pid == MyPidxx2Pid(MyPidxx))
 
 /* The PFlush algorithm makes use of the fact that Fid.Unique is not used in
   below hash algorithms.  Change it if need be so that flushing algorithm
