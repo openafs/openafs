@@ -290,27 +290,22 @@ typedef struct afsUUID afsUUID;
  */
 #ifdef AFS_NT40_ENV
 #define static_inline __inline static
-
-#ifdef AFS_64BIT_ENV
-static_inline afs_int64  afs_cast_int32(afs_int32 d) { return (afs_int64) d; }
-static_inline afs_uint64 afs_cast_uint32(afs_uint32 d) { return (afs_uint64) d; }
-#else
-static_inline long long afs_cast_int32(afs_int32 d) { return (long long) d; }
-static_inline unsigned long long afs_cast_uint32(afs_uint32 d) { return (unsigned long long) d; }
-#endif
-#else /* AFS_NT40_ENV */
-#ifdef AFS_HPUX_ENV
+#define hdr_static_inline(x) __inline static x
+#elif defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV)
 #define static_inline static __inline
-#define hdr_static_inline static __inline
-#elif defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+#define hdr_static_inline(x) static __inline x
+#elif defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)
 #define static_inline static
-#define hdr_static_inline
+#define hdr_static_inline(x) static x
+#elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
+#define static_inline static
+#define hdr_static_inline(x) x
 #else
 #define static_inline static inline
-#define hdr_static_inline static inline
+#define hdr_static_inline(x) static inline x
 #endif
-hdr_static_inline long long afs_cast_int32(afs_int32 d) { return (long long) d; }
-hdr_static_inline unsigned long long afs_cast_uint32(afs_uint32 d) { return (unsigned long long) d; }
-#endif /* AFS_NT40_ENV */
+
+hdr_static_inline(afs_int64) afs_cast_int32(afs_int32 d) { return (afs_int64) d; }
+hdr_static_inline(afs_uint64) afs_cast_uint32(afs_uint32 d) { return (afs_uint64) d; }
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */
