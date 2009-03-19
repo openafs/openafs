@@ -101,7 +101,7 @@ struct fsbnode {
 };
 
 struct bnode * fs_create(char *ainstance, char *afilecmd, char *avolcmd, 
-			 char *asalcmd, char *ascancmd);
+			 char *asalcmd, char *ascancmd, char *unused);
 struct bnode * dafs_create(char *ainstance, char *afilecmd, char *avolcmd, 
 			   char * asalsrvcmd, char *asalcmd, char *ascancmd);
 
@@ -378,7 +378,7 @@ AppendExecutableExtension(char *cmd)
 
 struct bnode *
 fs_create(char *ainstance, char *afilecmd, char *avolcmd, char *asalcmd,
-	  char *ascancmd)
+	  char *ascancmd, char *unused)
 {
     struct stat tstat;
     register struct fsbnode *te;
