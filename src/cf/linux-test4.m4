@@ -772,16 +772,39 @@ request_key(NULL, NULL, NULL);
 AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
   AC_MSG_CHECKING([if key_alloc() takes a struct task *])
   AC_CACHE_VAL([ac_cv_key_alloc_needs_struct_task], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
 #include <linux/key.h>
 ],
-[(void) key_alloc(NULL, NULL, 0, 0, NULL, 0, 0);],
+[struct task *t;
+(void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);],
       ac_cv_key_alloc_needs_struct_task=yes,
-      ac_cv_key_alloc_needs_struct_task=no)])
+      ac_cv_key_alloc_needs_struct_task=no)
+    CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_key_alloc_needs_struct_task)
   if test "x$ac_cv_key_alloc_needs_struct_task" = "xyes"; then
     AC_DEFINE([KEY_ALLOC_NEEDS_STRUCT_TASK], 1, [define if key_alloc takes a struct task *])
+  fi])
+
+AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
+  AC_MSG_CHECKING([if key_alloc() takes credentials])
+  AC_CACHE_VAL([ac_cv_key_alloc_needs_cred], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
+    AC_TRY_KBUILD(
+[#include <linux/rwsem.h>
+#include <linux/key.h>
+],
+[struct cred *c = NULL;
+(void) key_alloc(NULL, NULL, 0, 0, c, 0, 0);],
+      ac_cv_key_alloc_needs_cred=yes,
+      ac_cv_key_alloc_needs_cred=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_key_alloc_needs_cred)
+  if test "x$ac_cv_key_alloc_needs_cred" = "xyes"; then
+    AC_DEFINE([KEY_ALLOC_NEEDS_CRED], 1, [define if key_alloc takes credentials])
   fi])
 
 AC_DEFUN([LINUX_DO_SYNC_READ], [

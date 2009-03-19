@@ -244,9 +244,14 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
 	not_in_quota = KEY_ALLOC_IN_QUOTA;
 	sprintf(desc, "_ses.%u", task->tgid);
 
-#ifdef KEY_ALLOC_NEEDS_STRUCT_TASK
+#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
 	keyring = key_alloc(__key_type_keyring, desc,
 			    task_uid(task), task_gid(task), task,
+			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
+			    not_in_quota);
+#elif defined(KEY_ALLOC_NEEDS_CRED)
+	keyring = key_alloc(__key_type_keyring, desc,
+			    task_uid(task), task_gid(task), current_cred(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #else
@@ -344,8 +349,10 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 	    perm = KEY_POS_VIEW | KEY_POS_SEARCH;
 	    perm |= KEY_USR_VIEW | KEY_USR_SEARCH;
 
-#ifdef KEY_ALLOC_NEEDS_STRUCT_TASK
+#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
 	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current, perm, 1);
+#elif defined(KEY_ALLOC_NEEDS_CRED)
+	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current_cred(), perm, 1);
 #else
 	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, 1);
 #endif
