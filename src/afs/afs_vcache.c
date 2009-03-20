@@ -623,7 +623,7 @@ afs_FlushReclaimedVcaches(void)
 #endif
 }
 
-static int
+int
 afs_ShakeLooseVCaches(afs_int32 anumber)
 {
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
