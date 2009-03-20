@@ -126,6 +126,7 @@ struct uio;
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
 #define AFS_ENV			1
 #define AFS_USR_HPUX_ENV    	1
+#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 
 #include <afs/afs_sysnames.h>
 
