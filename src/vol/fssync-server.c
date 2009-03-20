@@ -1527,7 +1527,7 @@ AcceptOff(void)
 /* The multiple FD handling code. */
 
 static osi_socket HandlerFD[MAXHANDLERS];
-static void (*HandlerProc[MAXHANDLERS]) (int);
+static void (*HandlerProc[MAXHANDLERS]) (osi_socket);
 
 static void
 InitHandler(void)
