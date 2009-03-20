@@ -17,7 +17,9 @@ RCSID
 #include <signal.h>
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #include <errno.h>
 #endif
 #endif

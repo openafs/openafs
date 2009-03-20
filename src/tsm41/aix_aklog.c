@@ -24,7 +24,9 @@ RCSID
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/file.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #include <errno.h>
 #include <usersec.h>
 #include <syslog.h>
