@@ -99,9 +99,9 @@ typedef struct osi_rwlockStat {
 
 typedef void (osi_watchProc_t)(void *rockp, long actualMs, void *lockp);
 
-extern void lock_InitializeRWLockStat(osi_rwlock_t *, char *);
+extern void lock_InitializeRWLockStat(osi_rwlock_t *, char *, unsigned short level);
 
-extern void lock_InitializeMutexStat(osi_mutex_t *, char *);
+extern void lock_InitializeMutexStat(osi_mutex_t *, char *, unsigned short level);
 
 extern osi_activeInfo_t *osi_QueueActiveInfo(osi_qiStat_t *, int);
 

@@ -641,7 +641,7 @@ static void lock_FinalizeRWLockStat(osi_rwlock_t *lockp)
 	LeaveCriticalSection(&osi_statFDCS);
 }
 
-void lock_InitializeRWLockStat(osi_rwlock_t *lockp, char *namep)
+void lock_InitializeRWLockStat(osi_rwlock_t *lockp, char *namep, unsigned short level)
 {
 	osi_rwlockStat_t *realp;
 	
@@ -660,7 +660,7 @@ void lock_InitializeRWLockStat(osi_rwlock_t *lockp, char *namep)
 	LeaveCriticalSection(&osi_statFDCS);
 }
 
-void lock_InitializeMutexStat(osi_mutex_t *lockp, char *namep)
+void lock_InitializeMutexStat(osi_mutex_t *lockp, char *namep, unsigned short level)
 {
 	osi_mutexStat_t *realp;
 	
