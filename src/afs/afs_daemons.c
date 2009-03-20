@@ -42,6 +42,8 @@ static int rxepoch_checked = 0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
 	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
 
+extern int afsd_dynamic_vcaches;
+
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
 afs_int32 afs_gcpags = AFS_GCPAGS;
@@ -136,13 +138,13 @@ afs_Daemon(void)
     struct afs_exporter *exporter;
     afs_int32 now;
     afs_int32 last3MinCheck, last10MinCheck, last60MinCheck, lastNMinCheck;
-    afs_int32 last1MinCheck;
+    afs_int32 last1MinCheck, last5MinCheck;
     afs_uint32 lastCBSlotBump;
     char cs_warned = 0;
 
     AFS_STATCNT(afs_Daemon);
     last1MinCheck = last3MinCheck = last60MinCheck = last10MinCheck =
-	lastNMinCheck = 0;
+    last5MinCheck = lastNMinCheck = 0;
 
     afs_rootFid.Fid.Volume = 0;
     while (afs_initState < 101)
@@ -168,6 +170,7 @@ afs_Daemon(void)
     last3MinCheck = now - 90 + ((afs_random() & 0x7fffffff) % 180);
     last60MinCheck = now - 1800 + ((afs_random() & 0x7fffffff) % 3600);
     last10MinCheck = now - 300 + ((afs_random() & 0x7fffffff) % 600);
+    last5MinCheck = now - 150 + ((afs_random() & 0x7fffffff) % 300);
     lastNMinCheck = now - 90 + ((afs_random() & 0x7fffffff) % 180);
 
     /* start off with afs_initState >= 101 (basic init done) */
@@ -211,6 +214,19 @@ afs_Daemon(void)
 					 * tickets */
 	    last3MinCheck = now;
 	}
+#ifdef AFS_MAXVCOUNT_ENV
+    if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
+        /* start with trying to drop us back to our base usage */
+        int anumber;
+        if (afs_maxvcount <= afs_cacheStats) 
+        anumber = VCACHE_FREE;
+        else
+        anumber = VCACHE_FREE + (afs_maxvcount - afs_cacheStats);
+
+        afs_ShakeLooseVCaches(anumber);
+        last5MinCheck = now;
+    }
+#endif
 	if (!afs_CheckServerDaemonStarted) {
 	    /* Do the check here if the correct afsd is not installed. */
 	    if (!cs_warned) {

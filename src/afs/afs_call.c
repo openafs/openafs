@@ -794,7 +794,8 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	    afs_CacheInit(cparms.cacheScaches, cparms.cacheFiles,
 			  cparms.cacheBlocks, cparms.cacheDcaches,
 			  cparms.cacheVolumes, cparms.chunkSize,
-			  cparms.memCacheFlag, cparms.inodes, cparms.users);
+			  cparms.memCacheFlag, cparms.inodes, cparms.users, 
+			  cparms.dynamic_vcaches);
 
     } else if (parm == AFSOP_CACHEINODE) {
 	ino_t ainode = parm2;

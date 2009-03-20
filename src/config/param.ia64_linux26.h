@@ -40,6 +40,7 @@
 #define AFS_64BIT_CLIENT	1	
 
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
+#define AFS_MAXVCOUNT_ENV       1
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #include <linux/init.h>

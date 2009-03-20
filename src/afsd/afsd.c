@@ -32,6 +32,9 @@
   *	-nosettime  Don't keep checking the time to avoid drift (default).
   *     -settime    Keep checking the time to avoid drift.
   *	-verbose     Be chatty.
+  *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
+  *                          the size of the vcache/stat cache pool, 
+  *                          but increase that pool dynamically as needed.
   *	-debug	   Print out additional debugging info.
   *	-kerndev    [OBSOLETE] The kernel device for AFS.
   *	-dontfork   [OBSOLETE] Don't fork off as a new process.
@@ -320,6 +323,7 @@ static int enable_splitcache = 0;
 #ifdef notdef
 static int inodes = 60;		/* VERY conservative, but has to be */
 #endif
+int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
 int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
@@ -1747,6 +1751,25 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    }
 	}
     }
+    if (as->parms[35].items) {
+#ifdef AFS_MAXVCOUNT_ENV
+       /* -disable-dynamic-vcaches */
+       afsd_dynamic_vcaches = FALSE;
+#else
+       printf("afsd: Error toggling flag, dynamically allocated vcaches not supported on your platform\n");
+       exit(1);
+#endif
+    }
+#ifdef AFS_MAXVCOUNT_ENV
+    else {
+       /* -dynamic-vcaches */
+       afsd_dynamic_vcaches = TRUE;
+    }
+
+    if (afsd_verbose)
+    printf("afsd: %s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
+#endif
+
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
@@ -2085,6 +2108,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     cparams.chunkSize = chunkSize;
     cparams.setTimeFlag = cacheSetTime;
     cparams.memCacheFlag = cacheFlags;
+    cparams.dynamic_vcaches = afsd_dynamic_vcaches;
 #ifdef notdef
     cparams.inodes = inodes;
 #endif
@@ -2473,6 +2497,8 @@ main(int argc, char **argv)
 		"set rx_extraPackets to this value");
     cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL,
 		"Percentage RW versus RO in cache (specify as 60/40)");
+     cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, 
+        "disable stat/vcache cache growing as needed");
 
     return (cmd_Dispatch(argc, argv));
 }
