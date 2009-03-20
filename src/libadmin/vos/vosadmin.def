@@ -46,15 +46,4 @@ EXPORTS
 	vos_VolumeQuotaChange					@44
 	vos_VLDBUnlock						@45
 	vos_VolumeGet2						@46
-	vos_ClearVolUpdateCounter			@47
-
-
-
-
-
-
-
-	RXAFS_function_names					@54 DATA
-	RXAFSCB_function_names					@55 DATA
-	VL_function_names					@56 DATA
-	AFSVolfunction_names					@57 DATA
+	vos_ClearVolUpdateCounter			        @47
