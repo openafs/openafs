@@ -941,6 +941,7 @@ extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
 
 /* afs_vcache.c */
+extern int afs_ShakeLooseVCaches(afs_int32 anumber);
 extern afs_int32 afs_maxvcount;
 extern afs_int32 afs_vcount;
 extern int afsvnumbers;
