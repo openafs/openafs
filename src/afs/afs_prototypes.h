@@ -419,7 +419,7 @@ extern int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles,
 			 afs_int32 ablocks, afs_int32 aDentries,
 			 afs_int32 aVolumes, afs_int32 achunk,
 			 afs_int32 aflags, afs_int32 ninodes,
-			 afs_int32 nusers);
+			 afs_int32 nusers, afs_int32 dynamic_vcaches);
 extern void afs_ComputeCacheParms(void);
 extern int afs_InitCacheInfo(register char *afile);
 extern int afs_InitVolumeInfo(char *afile);

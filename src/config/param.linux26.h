@@ -31,6 +31,7 @@
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */
 #define AFS_USE_GETTIMEOFDAY	1	/* use gettimeofday to implement rx clock */
+#define AFS_MAXVCOUNT_ENV       1
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #define AFS_GLOBAL_SUNLOCK
