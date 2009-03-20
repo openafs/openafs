@@ -21,7 +21,9 @@
 #include <stdlib.h>
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #endif
 
 RCSID
