@@ -130,7 +130,7 @@ static void FSYNC_Drop(osi_socket fd);
 static void AcceptOn(void);
 static void AcceptOff(void);
 static void InitHandler(void);
-static int AddHandler(osi_socket fd, void (*aproc)(int));
+static int AddHandler(osi_socket fd, void (*aproc)(osi_socket));
 static int FindHandler(osi_socket afd);
 static int FindHandler_r(osi_socket afd);
 static int RemoveHandler(osi_socket afd);
@@ -1576,7 +1576,7 @@ CallHandler(fd_set * fdsetp)
 #endif
 
 static int
-AddHandler(osi_socket afd, void (*aproc) (int))
+AddHandler(osi_socket afd, void (*aproc) (osi_socket))
 {
     register int i;
     ObtainWriteLock(&FSYNC_handler_lock);
