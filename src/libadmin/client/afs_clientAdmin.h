@@ -165,7 +165,7 @@ extern int ADMINAPI afsclient_RXDebugOpen(const char *serverName,
 					  afs_status_p st);
 
 extern int ADMINAPI afsclient_RXDebugOpenPort(const char *serverName,
-					      int serverPort,
+                                              const int serverPort,
 					      rxdebugHandle_p *
 					      rxdebugHandleP,
 					      afs_status_p st);
