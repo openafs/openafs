@@ -281,8 +281,10 @@ typedef struct afsUUID afsUUID;
  */
 #ifdef AFS_NT40_ENV
 #define AFS_INT64_FMT "l64d"
+#define AFS_PTR_FMT   "p"
 #else
 #define AFS_INT64_FMT "lld"
+#define AFS_PTR_FMT   "x"
 #endif
 
 /* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
