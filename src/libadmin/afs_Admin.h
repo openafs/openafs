@@ -71,11 +71,12 @@ typedef struct afs_ClientConfig {
 } afs_ClientConfig_t, *afs_ClientConfig_p;
 
 #if AFS_NT40_ENV
-typedef HANDLE rxdebugSocket_t;
+typedef SOCKET rxdebugSocket_t;
+#define INVALID_RXDEBUG_SOCKET	INVALID_SOCKET
 #else /* AFS_NT40_ENV */
 typedef int rxdebugSocket_t;
-#endif /* AFS_NT40_ENV */
 #define INVALID_RXDEBUG_SOCKET	((rxdebugSocket_t)-1)
+#endif /* AFS_NT40_ENV */
 
 typedef struct {
     rxdebugSocket_t sock;
