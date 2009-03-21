@@ -51,9 +51,11 @@ if test X$with_krb5 = Xyes; then
 fi
 
 BUILD_KRB5=no
+MAKE_KRB5=#
 if test X$conf_krb5 = XYES; then
 	AC_MSG_RESULT([Configuring support for Kerberos 5 utilities])
 	BUILD_KRB5=yes
+	MAKE_KRB5=
 	save_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
@@ -122,6 +124,7 @@ if test "x$ac_cv_krb5_cc_register_exists" = "xyes"; then
 fi
 
 AC_SUBST(BUILD_KRB5)
+AC_SUBST(MAKE_KRB5)
 AC_SUBST(KRB5CFLAGS)
 AC_SUBST(KRB5LIBS)
 
