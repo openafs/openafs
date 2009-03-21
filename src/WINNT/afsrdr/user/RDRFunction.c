@@ -351,11 +351,11 @@ RDR_PopulateCurrentEntry( IN  AFSDirEnumEntry * pCurrentEntry,
                                 mp += 6;
                                 len -= 6;
                             }
-                            /* only send one slash to the redirector */
-                            if (mp[0] == '\\' && mp[1] == '\\') {
-                                mp++;
-                                len--;
-                            }
+                        }
+                        /* only send one slash to the redirector */
+                        if (mp[0] == '\\' && mp[1] == '\\') {
+                            mp++;
+                            len--;
                         }
 #ifdef UNICODE
                         cch = MultiByteToWideChar( CP_UTF8, 0, mp, 
