@@ -605,8 +605,12 @@ extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern int rxi_HandleSocketError(int socket);
 
 #if defined(AFS_AIX32_ENV) && !defined(KERNEL)
+#ifndef osi_Alloc
 extern void *osi_Alloc(afs_int32 x);
+#endif
+#ifndef osi_Free
 extern void osi_Free(void *x, afs_int32 size);
+#endif
 #endif /* defined(AFS_AIX32_ENV) && !defined(KERNEL) */
 
 extern void rx_GetIFInfo(void);
