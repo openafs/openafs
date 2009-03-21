@@ -42,7 +42,7 @@ AC_ARG_WITH([krb5],
     [AS_HELP_STRING([--with-krb5],
         [support for Kerberos 5 (manual configuration)])])
 
-if test X$with_krb5 = Xyes; then
+if test X$with_krb5 != X; then
         if test X$conf_krb5 = XYES; then
 		AC_MSG_ERROR([--with-krb5-config and --with-krb5 are mutually exclusive, choose only one])
 	fi
