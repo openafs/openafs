@@ -329,7 +329,10 @@ AC_CHECK_TYPES(sig_t, , ,
    #include <signal.h> ])
 AH_BOTTOM(
 [#ifndef HAVE_SIG_T
+#ifndef SIG_T_DEFINED
+#define SIG_T_DEFINED
 typedef RETSIGTYPE (*sig_t) ();
+#endif
 #endif])
 COMPILER_HAS_FUNCTION_MACRO
 
