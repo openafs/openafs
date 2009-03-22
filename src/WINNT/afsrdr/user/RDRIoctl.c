@@ -538,7 +538,7 @@ RDR_ParseIoctlPath(RDR_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	    }
         }
     } else {
-        code = cm_GetSCache(&ioctlp->rootFid, &substRootp, userp, reqp);
+        code = cm_GetSCache(&ioctlp->parentFid, &substRootp, userp, reqp);
         if (code) {
 	    osi_Log1(afsd_logp,"RDR_ParseIoctlPath [6] code 0x%x", code);
             if (free_path)
