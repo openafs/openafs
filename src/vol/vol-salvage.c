@@ -336,13 +336,13 @@ childJob_t myjob = { SALVAGER_MAGIC, NOT_CHILD, "" };
 void
 ObtainSalvageLock(void)
 {
-    int salvageLock;
+    FD_t salvageLock;
 
 #ifdef AFS_NT40_ENV
     salvageLock =
-	(int)CreateFile(AFSDIR_SERVER_SLVGLOCK_FILEPATH, 0, 0, NULL,
+	(FD_t)CreateFile(AFSDIR_SERVER_SLVGLOCK_FILEPATH, 0, 0, NULL,
 			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (salvageLock == (int)INVALID_HANDLE_VALUE) {
+    if (salvageLock == INVALID_FD) {
 	fprintf(stderr,
 		"salvager:  There appears to be another salvager running!  Aborted.\n");
 	Exit(1);
@@ -790,7 +790,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
      * modified to actually do that so that the NT crt can be used there.
      */
     inodeFd =
-	_open_osfhandle((long)nt_open(inodeListPath, O_RDWR, 0), O_RDWR);
+	_open_osfhandle((intptr_t)nt_open(inodeListPath, O_RDWR, 0), O_RDWR);
     nt_unlink(inodeListPath);	/* NT's crt unlink won't if file is open. */
 #else
     inodeFd = afs_open(inodeListPath, O_RDONLY);

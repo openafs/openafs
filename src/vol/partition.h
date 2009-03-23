@@ -57,7 +57,7 @@ struct DiskPartition64 {
     char *devName;		/* Device mounted on */
     Device device;		/* device number */
     afs_int32 index;            /* partition index (0<=x<=VOLMAXPARTS) */
-    int lock_fd;		/* File descriptor of this partition if locked; otherwise -1;
+    FD_t lock_fd;		/* File descriptor of this partition if locked; otherwise -1;
 				 * Not used by the file server */
     afs_int64 free;		/* Total number of blocks (1K) presumed
 				 * available on this partition (accounting
