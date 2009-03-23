@@ -3890,6 +3890,7 @@ void afs_DeleteShadowDir(struct vcache *avc)
     ObtainWriteLock(&afs_disconDirtyLock, 708);
     QRemove(&avc->shadowq);
     ReleaseWriteLock(&afs_disconDirtyLock);
+    afs_PutVCache(avc); /* Because we held it when we added to the queue */
 }
 
 /*!
