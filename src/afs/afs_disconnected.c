@@ -1317,10 +1317,8 @@ afs_DisconDiscardAllShadows(int squash, struct AFS_UCRED *acred) {
 	if (squash)
 	   afs_ResetVCache(tvc, acred);
 
-	ObtainWriteLock(&afs_disconDirtyLock, 709);
-	QRemove(&tvc->shadowq);
-
 	ReleaseWriteLock(&tvc->lock);
+	ObtainWriteLock(&afs_disconDirtyLock, 709);
     }				/* while (tvc) */
 }
 
