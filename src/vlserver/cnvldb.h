@@ -28,11 +28,11 @@ struct vlheader_1 {
     afs_int32 VolidHash[3][8191];
 };
 struct vlentry_1 {
-    afs_int32 volumeId[3];
+    afs_uint32 volumeId[3];
     afs_int32 flags;
     afs_int32 LockAfsId;
     afs_int32 LockTimestamp;
-    afs_int32 cloneId;
+    afs_uint32 cloneId;
     afs_int32 spares0;
     afs_int32 nextIdHash[3];
     afs_int32 nextNameHash;
@@ -58,11 +58,11 @@ struct vlheader_2 {
 };
 
 struct vlentry_2 {
-    afs_int32 volumeId[3];
+    afs_uint32 volumeId[3];
     afs_int32 flags;
     afs_int32 LockAfsId;
     afs_int32 LockTimestamp;
-    afs_int32 cloneId;
+    afs_uint32 cloneId;
     afs_int32 spares0;
     afs_int32 nextIdHash[3];
     afs_int32 nextNameHash;
@@ -88,11 +88,11 @@ struct vlheader_3 {
 
 
 struct vlentry_3 {
-    afs_int32 volumeId[3];
+    afs_uint32 volumeId[3];
     afs_int32 flags;
     afs_int32 LockAfsId;
     afs_int32 LockTimestamp;
-    afs_int32 cloneId;
+    afs_uint32 cloneId;
     afs_int32 nextIdHash[3];
     afs_int32 nextNameHash;
     char name[65];

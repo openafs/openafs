@@ -35,7 +35,7 @@ struct VldbUpdateEntry {
 	afs_int32	flags;
 	afs_uint32	ReadOnlyId;
 	afs_uint32	BackupId;
-	afs_int32	cloneId;
+	afs_uint32	cloneId;
 	afs_int32	nModifiedRepsites;
 	afs_uint32	RepsitesMask[OMAXNSERVERS];
 	afs_int32	RepsitesTargetServer[OMAXNSERVERS];
@@ -76,7 +76,7 @@ struct VldbListByAttributes {
 	afs_int32	server;
 	afs_int32	partition;
 	afs_int32	spares3;
-	afs_int32	volumeid;
+	afs_uint32	volumeid;
 	afs_int32	flag;
 };
 
@@ -96,7 +96,7 @@ struct vldbentry   {
 	afs_int32	serverPartition[OMAXNSERVERS];	/* Server Partition number */
 	afs_int32	serverFlags[OMAXNSERVERS];	/* Server flags */
 	afs_uint32	volumeId[MAXTYPES];		/* Corresponding volume of each type */
-	afs_int32	cloneId;				/* Used during cloning */
+	afs_uint32	cloneId;			/* Used during cloning */
 	afs_int32	flags;				/* General flags */
 };
 
@@ -107,7 +107,7 @@ struct nvldbentry   {
 	afs_int32	serverPartition[NMAXNSERVERS];	/* Server Partition number */
 	afs_int32	serverFlags[NMAXNSERVERS];	/* Server flags */
 	afs_uint32	volumeId[MAXTYPES];		/* Corresponding volume of each type */
-	afs_int32	cloneId;			/* Used during cloning */
+	afs_uint32	cloneId;			/* Used during cloning */
 	afs_int32	flags;				/* General flags */
 	afs_int32	matchindex;
 	afs_int32	spares2;
@@ -140,7 +140,7 @@ struct uvldbentry   {
 	afs_int32	serverPartition[NMAXNSERVERS];	/* Server Partition number */
 	afs_int32	serverFlags[NMAXNSERVERS];	/* Server flags */
 	afs_uint32	volumeId[MAXTYPES];		/* Corresponding volume of each type */
-	afs_int32	cloneId;			/* Used during cloning */
+	afs_uint32	cloneId;			/* Used during cloning */
 	afs_int32	flags;				/* General flags */
 	afs_int32	spares1;			/* The server index we matched */
 	afs_int32	spares2;
@@ -162,7 +162,7 @@ struct vital_vlheader {
     afs_int32    eofPtr;			    /* first free byte in file */
     afs_int32    allocs;			    /* total calls to AllocBlock */
     afs_int32    frees;			    /* total calls to FreeBlock */
-    afs_int32    MaxVolumeId;		    /* Global volume id holder */
+    afs_uint32   MaxVolumeId;		    /* Global volume id holder */
     afs_int32    totalEntries[MAXTYPES];	    /* Total entries by voltype in vldb */
 };
 
@@ -287,43 +287,43 @@ CreateEntry(
 ) = VLCREATEENTRY;
 
 DeleteEntry(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype
 ) = VLDELETEENTRY;
 
 GetEntryByID(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype,
   OUT vldbentry *entry
 ) = VLGETENTRYBYID;
 
 GetNewVolumeId(
-  IN afs_int32 bumpcount,
-  OUT afs_int32 *newvolumid
+  IN afs_uint32 bumpcount,
+  OUT afs_uint32 *newvolumid
 ) = VLGETNEWVOLUMEID;
 
 ReplaceEntry(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype,
   vldbentry *newentry,
   afs_int32 ReleaseType
 ) = VLREPLACEENTRY;
 
 UpdateEntry(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype,
   VldbUpdateEntry *UpdateEntry,
   afs_int32 ReleaseType
 ) = VLUPDATEENTRY;
 
 SetLock(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype,
   afs_int32 voloper
 ) = VLSETLOCK;
 
 ReleaseLock(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype,
   afs_int32 ReleaseType
 ) = VLRELEASELOCK;
@@ -361,8 +361,8 @@ GetAddrs(
 ) = VLGETADDRS;
 
 ChangeAddr(
-  IN afs_int32 ip1,
-  afs_int32 ip2
+  IN afs_uint32 ip1,
+  afs_uint32 ip2
 ) = VLCHANGEADDR;
 
 
@@ -371,13 +371,13 @@ CreateEntryN(
 ) = VLCREATEENTRYN;
 
 GetEntryByIDN(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype,
   OUT nvldbentry *entry
 ) = VLGETENTRYBYIDN;
 
 ReplaceEntryN(
-  IN afs_int32 Volid,
+  IN afs_uint32 Volid,
   afs_int32 voltype,
   nvldbentry *newentry,
   afs_int32 ReleaseType

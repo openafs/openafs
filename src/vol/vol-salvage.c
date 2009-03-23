@@ -981,8 +981,8 @@ void
 CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
 		  register struct InodeSummary *summary)
 {
-    int volume = ip->u.vnode.volumeId;
-    int rwvolume = volume;
+    VolumeId volume = ip->u.vnode.volumeId;
+    VolumeId rwvolume = volume;
     register int n, nSpecial;
     register Unique maxunique;
     n = nSpecial = 0;
@@ -1008,7 +1008,7 @@ CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
 }
 
 int
-OnlyOneVolume(struct ViceInodeInfo *inodeinfo, int singleVolumeNumber, void *rock)
+OnlyOneVolume(struct ViceInodeInfo *inodeinfo, afs_uint32 singleVolumeNumber, void *rock)
 {
     if (inodeinfo->u.vnode.vnodeNumber == INODESPECIAL)
 	return (inodeinfo->u.special.parentId == singleVolumeNumber);
@@ -1293,7 +1293,7 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 		    || (vsp->header.id == singleVolumeNumber
 			|| vsp->header.parent == singleVolumeNumber)) {
 		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
-				       VFORMAT, vsp->header.id);
+				       VFORMAT, afs_cast_uint32(vsp->header.id));
 		    if (singleVolumeNumber 
 			&& vsp->header.id != singleVolumeNumber)
 			AskOffline(vsp->header.id, fileSysPartition->name);
@@ -1744,7 +1744,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
     if (isp->volSummary == NULL) {
 	char path[64];
 	char headerName[64];
-	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, isp->volumeId);
+	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
 	(void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
@@ -1773,7 +1773,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    if (isp->volSummary->fileName) {
 		strcpy(headerName, isp->volSummary->fileName);
 	    } else {
-		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, isp->volumeId);
+		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
 		isp->volSummary->fileName = ToString(headerName);
 	    }
 	    (void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);

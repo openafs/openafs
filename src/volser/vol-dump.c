@@ -170,7 +170,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     int err = 0;
-    int volumeId = 0;
+    afs_uint32 volumeId = 0;
     char *partName = 0;
     char *fileName = NULL;
     struct DiskPartition64 *partP = NULL;
@@ -192,7 +192,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     if ((ti = as->parms[0].items))
 	partName = ti->data;
     if ((ti = as->parms[1].items))
-	volumeId = atoi(ti->data);
+	volumeId = (afs_uint32)atoi(ti->data);
     if ((ti = as->parms[2].items))
 	fileName = ti->data;
     if ((ti = as->parms[3].items))

@@ -127,7 +127,7 @@ VLDB_CreateEntry(afs_cell_handle_p cellHandle, struct nvldbentry *entryp,
 }
 
 int
-aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
+aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_uint32 volid,
 		  afs_int32 voltype, struct nvldbentry *entryp,
 		  afs_status_p st)
 {
@@ -202,7 +202,7 @@ aVLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
 }
 
 int
-VLDB_ReplaceEntry(afs_cell_handle_p cellHandle, afs_int32 volid,
+VLDB_ReplaceEntry(afs_cell_handle_p cellHandle, afs_uint32 volid,
 		  afs_int32 voltype, struct nvldbentry *entryp,
 		  afs_int32 releasetype, afs_status_p st)
 {
@@ -398,7 +398,7 @@ VLDB_IsSameAddrs(afs_cell_handle_p cellHandle, afs_int32 serv1,
  */
 
 int
-GetVolumeInfo(afs_cell_handle_p cellHandle, unsigned int volid,
+GetVolumeInfo(afs_cell_handle_p cellHandle, afs_uint32 volid,
 	      struct nvldbentry *rentry, afs_int32 * server,
 	      afs_int32 * partition, afs_int32 * voltype, afs_status_p st)
 {

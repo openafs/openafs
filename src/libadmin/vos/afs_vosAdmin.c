@@ -41,6 +41,16 @@ RCSID
 #include "vsprocs.h"
 #include "lockprocs.h"
 
+/* File descriptors are HANDLE's on NT. The following typedef helps catch
+ * type errors. Duplicated from vol/ihandle.h
+ */
+#ifdef AFS_NT40_ENV
+typedef HANDLE FD_t;
+#else
+typedef int FD_t;
+#endif
+#define INVALID_FD ((FD_t)-1)
+
 typedef struct file_server {
     int begin_magic;
     int is_valid;

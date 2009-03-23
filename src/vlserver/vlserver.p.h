@@ -39,7 +39,7 @@ struct vlheader {
     struct vital_vlheader vital_header;	/* all small critical stuff are in here */
     afs_uint32 IpMappedAddr[MAXSERVERID + 1];	/* Mapping of ip addresses to relative ones */
     afs_int32 VolnameHash[HASHSIZE];	/* hash table for vol names */
-    afs_int32 VolidHash[MAXTYPES][HASHSIZE];	/* hash table for vol ids */
+    afs_uint32 VolidHash[MAXTYPES][HASHSIZE];	/* hash table for vol ids */
     afs_int32 SIT;		/* spare for poss future use */
 };
 
@@ -63,7 +63,7 @@ struct vlentry {
     afs_int32 flags;		/* General flags */
     afs_int32 LockAfsId;	/* Person who locked entry */
     afs_int32 LockTimestamp;	/* lock time stamp */
-    afs_int32 cloneId;		/* used during cloning */
+    afs_uint32 cloneId;		/* used during cloning */
     afs_int32 spares0;		/* XXXX was AssociatedChain XXXX */
     afs_int32 nextIdHash[MAXTYPES];	/* Next id hash table pointer (or freelist ->[0]) */
     afs_int32 nextNameHash;	/* Next name hash table pointer */
@@ -82,7 +82,7 @@ struct nvlentry {
     afs_int32 flags;		/* General flags */
     afs_int32 LockAfsId;	/* Person who locked entry */
     afs_int32 LockTimestamp;	/* lock time stamp */
-    afs_int32 cloneId;		/* used during cloning */
+    afs_uint32 cloneId;		/* used during cloning */
     afs_int32 nextIdHash[MAXTYPES];	/* Next id hash table pointer (or freelist ->[0]) */
     afs_int32 nextNameHash;	/* Next name hash table pointer */
     char name[VL_MAXNAMELEN];	/* Volume name */

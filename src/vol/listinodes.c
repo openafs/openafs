@@ -36,7 +36,7 @@ RCSID
  */
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       afs_uint32 (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     Log("ListViceInodes not implemented for this platform!\n");
@@ -193,7 +193,7 @@ struct dinode *ginode();
 
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     FILE *inodeFile = NULL;
@@ -660,7 +660,7 @@ xfs_RenameFiles(char *dir, xfs_Rename_t * renames, int n_renames)
 
 int
 xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-		   int (*judgeInode) (), int judgeParam, int *forcep,
+		   int (*judgeInode) (), afs_uint32 judgeParam, int *forcep,
 		   int forceR, char *wpath, void *rock)
 {
     FILE *inodeFile = NULL;
@@ -882,7 +882,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     FILE *inodeFile = NULL;
@@ -948,7 +948,7 @@ BUFAREA sblk;
 extern char *afs_rawname();
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     union {
@@ -1435,7 +1435,7 @@ getDevName(char *pbuffer, char *wpath)
 
 #ifdef FSSYNC_BUILD_CLIENT
 int
-inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
+inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 {
     char dir_name[512], oldpath[512], newpath[512];
     char volname[20];
@@ -1456,7 +1456,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
 
     memset(&specinos, 0, sizeof(specinos));
 	   
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
     fd = open(oldpath, O_RDONLY);
     if (fd < 0) {
@@ -1559,7 +1559,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     }
 #endif
 
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(h.id));
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
     fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
     if (fd < 0) {

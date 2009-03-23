@@ -222,7 +222,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     int err = 0;
-    int volumeId = 0;
+    afs_uint32 volumeId = 0;
     char *partName = 0;
     struct DiskPartition64 *partP = NULL;
 
@@ -323,7 +323,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    }
 	}
 	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
-			   (unsigned long)volumeId);
+			   afs_cast_uint32(volumeId));
 	if (dsizeOnly && !saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");

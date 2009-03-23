@@ -1,10 +1,11 @@
 #ifndef	_VSUTILS_PROTOTYPES_H
 #define _VSUTILS_PROTOTYPES_H
 /* vsutils.c */
+
 extern int VLDB_CreateEntry(struct nvldbentry *entryp);
-extern int VLDB_GetEntryByID(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp);
+extern int VLDB_GetEntryByID(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp);
 extern int VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp);
-extern int VLDB_ReplaceEntry(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype);
+extern int VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype);
 extern int VLDB_ListAttributes(VldbListByAttributes *attrp, afs_int32 *entriesp, nbulkentries *blkentriesp);
 extern int VLDB_ListAttributesN2(VldbListByAttributes *attrp, char *name, afs_int32 thisindex,
            afs_int32 *nentriesp, nbulkentries *blkentriesp, afs_int32 *nextindexp);
