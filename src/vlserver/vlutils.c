@@ -600,7 +600,7 @@ FreeBlock(trans, blockindex)
 afs_int32
 FindByID(trans, volid, voltype, tentry, error)
      struct ubik_trans *trans;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype;
      struct nvlentry *tentry;
      afs_int32 *error;

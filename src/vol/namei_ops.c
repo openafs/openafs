@@ -1090,8 +1090,8 @@ static int namei_ListAFSSubDirs(IHandle_t * dirIH,
 						  struct ViceInodeInfo *,
 						  char *, char *), FILE * fp,
 				int (*judgeFun) (struct ViceInodeInfo *,
-						 int vid, void *),
-				int singleVolumeNumber, void *rock);
+						 afs_uint32 vid, void *),
+				afs_uint32 singleVolumeNumber, void *rock);
 
 
 /* WriteInodeInfo
@@ -1142,8 +1142,8 @@ VerifyDirPerms(char *path)
  */
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (struct ViceInodeInfo * info, int vid, void *rock),
-	       int singleVolumeNumber, int *forcep, int forceR, char *wpath, 
+	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
+	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath, 
 	       void *rock)
 {
     FILE *fp = (FILE *) - 1;
@@ -1219,8 +1219,8 @@ int
 namei_ListAFSFiles(char *dev,
 		   int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
 				    char *), FILE * fp,
-		   int (*judgeFun) (struct ViceInodeInfo *, int, void *),
-		   int singleVolumeNumber, void *rock)
+		   int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
+		   afs_uint32 singleVolumeNumber, void *rock)
 {
     IHandle_t ih;
     namei_t name;
@@ -1291,8 +1291,8 @@ static int
 namei_ListAFSSubDirs(IHandle_t * dirIH,
 		     int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
 				      char *), FILE * fp,
-		     int (*judgeFun) (struct ViceInodeInfo *, int, void *),
-		     int singleVolumeNumber, void *rock)
+		     int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
+		     afs_uint32 singleVolumeNumber, void *rock)
 {
     IHandle_t myIH = *dirIH;
     namei_t name;
@@ -1544,7 +1544,7 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
  */
 
 int
-namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
+namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 {
 #ifdef FSSYNC_BUILD_CLIENT
     namei_t n;
@@ -1569,7 +1569,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     char headername[16];
     afs_int32 error = 0;
 
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
     fd = open(oldpath, O_RDONLY);
     if (fd < 0) {
@@ -1719,7 +1719,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     h.smallVnodeIndex_hi = h.id;
     h.largeVnodeIndex_hi = h.id;
     h.linkTable_hi = h.id;
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(h.id));
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
     fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
     if (fd < 0) {

@@ -116,10 +116,10 @@ extern struct volser_trans *QI_GlobalWriteTrans;
 /*flags used for interfacing with the  backup system */
 struct volDescription {		/*used for interfacing with the backup system */
     char volName[VOLSER_MAXVOLNAME];	/* should be VNAMESIZE as defined in volume.h */
-    afs_int32 volId;
+    afs_uint32 volId;
     int volSize;
     afs_int32 volFlags;
-    afs_int32 volCloneId;
+    afs_uint32 volCloneId;
 };
 
 struct partList {		/*used by the backup system */

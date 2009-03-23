@@ -50,47 +50,47 @@ extern int ubik_Call_New();
 
 extern int UV_NukeVolume(afs_cell_handle_p cellHandle,
 			 struct rx_connection *server, unsigned int partition,
-			 unsigned int volumeId, afs_status_p st);
+			 afs_uint32 volumeId, afs_status_p st);
 
 extern int UV_CreateVolume(afs_cell_handle_p cellHandle,
 			   struct rx_connection *server,
 			   unsigned int partition, const char *volumeName,
-			   unsigned int quota, unsigned int *volumeId,
+			   unsigned int quota, afs_uint32 *volumeId,
 			   afs_status_p st);
 
 extern int UV_DeleteVolume(afs_cell_handle_p cellHandle,
 			   struct rx_connection *server,
-			   unsigned int partition, unsigned int volumeId,
+			   unsigned int partition, afs_uint32 volumeId,
 			   afs_status_p st);
 
-extern int UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
+extern int UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 			 afs_int32 afromserver, afs_int32 afrompart,
 			 afs_int32 atoserver, afs_int32 atopart,
 			 afs_status_p st);
 
 extern int UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
-			   afs_int32 apart, afs_int32 avolid,
+			   afs_int32 apart, afs_uint32 avolid,
 			   afs_status_p st);
 
-extern int UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
+extern int UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 			    afs_int32 afromserver, afs_int32 afrompart,
 			    int forceflag, afs_status_p st);
 
-extern int UV_DumpVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
+extern int UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 			 afs_int32 afromserver, afs_int32 afrompart,
 			 afs_int32 fromdate, const char *filename,
 			 afs_status_p st);
 
 extern int UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
-			    afs_int32 topart, afs_int32 tovolid,
+			    afs_int32 topart, afs_uint32 tovolid,
 			    const char *tovolname, int flags,
 			    const char *dumpFile, afs_status_p st);
 
 extern int UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server,
-		      afs_int32 part, afs_int32 volid, afs_status_p st);
+		      afs_int32 part, afs_uint32 volid, afs_status_p st);
 
 extern int UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server,
-			 afs_int32 part, afs_int32 volid, afs_status_p st);
+			 afs_int32 part, afs_uint32 volid, afs_status_p st);
 
 extern int UV_ListPartitions(struct rx_connection *server,
 			     struct partList *ptrPartList, afs_int32 * cntp,
@@ -101,13 +101,13 @@ extern int UV_XListVolumes(struct rx_connection *server, afs_int32 a_partID,
 			   afs_int32 * a_numEntsInResultP, afs_status_p st);
 
 extern int UV_XListOneVolume(struct rx_connection *server, afs_int32 a_partID,
-			     afs_int32 a_volID,
+			     afs_uint32 a_volID,
 			     struct volintXInfo **a_resultPP,
 			     afs_status_p st);
 
 extern int UV_ListOneVolume(struct rx_connection *server, afs_int32 a_partID,
-		  afs_int32 a_volID, struct volintInfo **a_resultPP,
-		  afs_status_p st);
+                            afs_uint32 a_volID, struct volintInfo **a_resultPP,
+                            afs_status_p st);
 			    
 extern int UV_SyncVldb(afs_cell_handle_p cellHandle,
 		       struct rx_connection *server, afs_int32 apart,
@@ -127,11 +127,11 @@ extern int UV_VolserStatus(struct rx_connection *server,
 
 extern int UV_VolumeZap(afs_cell_handle_p cellHandle,
 			struct rx_connection *serverHandle,
-			unsigned int partition, unsigned int volumeId,
+			unsigned int partition, afs_uint32 volumeId,
 			afs_status_p st);
 
 extern int UV_SetVolume(struct rx_connection *server, afs_int32 partition,
-			afs_int32 volid, afs_int32 transflag,
+			afs_uint32 volid, afs_int32 transflag,
 			afs_int32 setflag, unsigned int sleep,
 			afs_status_p st);
 
