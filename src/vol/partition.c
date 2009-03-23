@@ -271,7 +271,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     strncpy(dp->devName, devname, strlen(devname) + 1);
     dp->device = dev;
 #endif
-    dp->lock_fd = -1;
+    dp->lock_fd = INVALID_FD;
     dp->flags = 0;
     dp->f_files = 1;		/* just a default value */
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
@@ -1094,15 +1094,15 @@ VLockPartition_r(char *name)
 
     if (!dp)
 	return;
-    if (dp->lock_fd == -1) {
+    if (dp->lock_fd == INVALID_FD) {
 	char path[64];
 	int rc;
 	(void)sprintf(path, "%s\\%s", VPartitionPath(dp), LOCKFILE);
 	dp->lock_fd =
-	    (int)CreateFile(path, GENERIC_WRITE,
+	    (FD_t)CreateFile(path, GENERIC_WRITE,
 			    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 			    CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
-	assert(dp->lock_fd != (int)INVALID_HANDLE_VALUE);
+	assert(dp->lock_fd != INVALID_FD);
 
 	memset((char *)&lap, 0, sizeof(lap));
 	rc = LockFileEx((HANDLE) dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1,
@@ -1123,7 +1123,7 @@ VUnlockPartition_r(char *name)
 
     UnlockFileEx((HANDLE) dp->lock_fd, 0, 1, 0, &lap);
     CloseHandle((HANDLE) dp->lock_fd);
-    dp->lock_fd = -1;
+    dp->lock_fd = INVALID_FD;
 }
 #else /* AFS_NT40_ENV */
 
