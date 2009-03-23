@@ -101,29 +101,29 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 		       }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+int
 threadNum(void)
 {
     return pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
-static afs_int32
+static void
 MyBeforeProc(struct rx_call *acall)
 {
     VTRANS_LOCK;
     runningCalls++;
     VTRANS_UNLOCK;
-    return 0;
+    return;
 }
 
-static afs_int32
+static void
 MyAfterProc(struct rx_call *acall, afs_int32 code)
 {
     VTRANS_LOCK;
     runningCalls--;
     VTRANS_UNLOCK;
-    return 0;
+    return;
 }
 
 /* Called every GCWAKEUP seconds to try to unlock all our partitions,
