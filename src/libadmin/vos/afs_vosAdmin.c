@@ -33,6 +33,7 @@ RCSID
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
+#include <afs/ihandle.h>
 #include <afs/partition.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
