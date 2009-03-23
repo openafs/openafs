@@ -1652,14 +1652,17 @@ static void
 GetHandler(fd_set * fdsetp, int *maxfdp)
 {
     register int i;
-    register osi_socket maxfd = -1;
+    register int maxfd = -1;
     FD_ZERO(fdsetp);
     ObtainReadLock(&FSYNC_handler_lock);	/* just in case */
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] != -1) {
 	    FD_SET(HandlerFD[i], fdsetp);
-	    if (maxfd < HandlerFD[i] || maxfd == (osi_socket)-1)
+#ifndef AFS_NT40_ENV
+            /* On Windows the nfds parameter to select() is ignored */
+	    if (maxfd < HandlerFD[i] || maxfd == (int)-1)
 		maxfd = HandlerFD[i];
+#endif /* AFS_NT40_ENV */
 	}
     *maxfdp = maxfd;
     ReleaseReadLock(&FSYNC_handler_lock);	/* just in case */
