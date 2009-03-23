@@ -315,7 +315,7 @@ ResetCheckDescriptors(void)
 }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+int
 threadNum(void)
 {
     return pthread_getspecific(rx_thread_id_key);
@@ -324,7 +324,7 @@ threadNum(void)
 
 /* proc called by rxkad module to get a key */
 static int
-get_key(char *arock, register afs_int32 akvno, char *akey)
+get_key(void *arock, register afs_int32 akvno, char *akey)
 {
     /* find the key */
     static struct afsconf_key tkey;
