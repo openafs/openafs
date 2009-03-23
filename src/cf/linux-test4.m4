@@ -787,7 +787,7 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
 [#include <linux/rwsem.h>
 #include <linux/key.h>
 ],
-[struct task *t;
+[struct task_struct *t=NULL;
 (void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);],
       ac_cv_key_alloc_needs_struct_task=yes,
       ac_cv_key_alloc_needs_struct_task=no)
