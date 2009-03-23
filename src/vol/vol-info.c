@@ -322,7 +322,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    }
 	}
 	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
-			   (unsigned long)volumeId);
+			   afs_cast_uint32(volumeId));
 	if (dsizeOnly && !saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");

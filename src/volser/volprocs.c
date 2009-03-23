@@ -152,7 +152,7 @@ ConvertVolume(afs_int32 avol, char *aname, afs_int32 asize)
     if (asize < 18)
 	return -1;
     /* It's better using the Generic VFORMAT since otherwise we have to make changes to too many places... The 14 char limitation in names hits us again in AIX; print in field of 9 digits (still 10 for the rest), right justified with 0 padding */
-    (void)afs_snprintf(aname, asize, VFORMAT, (unsigned long)avol);
+    (void)afs_snprintf(aname, asize, VFORMAT, afs_cast_uint32(avol));
     return 0;
 }
 

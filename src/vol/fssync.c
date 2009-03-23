@@ -527,7 +527,7 @@ defect #2080 for details.
 	if (v)
 	    v->volumeID = 0;
 	tvolName[0] = '/';
-	sprintf(&tvolName[1], VFORMAT, command.volume);
+	sprintf(&tvolName[1], VFORMAT, afs_cast_uint32(command.volume));
 
 	vp = VAttachVolumeByName_r(&error, command.partName, tvolName,
 				   V_VOLUPD);
@@ -667,7 +667,7 @@ FSYNC_Drop(int fd)
 	    Volume *vp;
 
 	    tvolName[0] = '/';
-	    sprintf(&tvolName[1], VFORMAT, p[i].volumeID);
+	    sprintf(&tvolName[1], VFORMAT, afs_cast_uint32(p[i].volumeID));
 	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName,
 				       V_VOLUPD);
 	    if (vp)

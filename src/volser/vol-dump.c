@@ -241,7 +241,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
 
-    (void)afs_snprintf(name1, sizeof name1, VFORMAT, (unsigned long)volumeId);
+    (void)afs_snprintf(name1, sizeof name1, VFORMAT, afs_cast_uint32(volumeId));
     HandleVolume(partP, name1, fileName, fromtime);
     return 0;
 }

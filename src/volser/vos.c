@@ -546,13 +546,13 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 	    qPut(&busyHead, pntr->volid);
 	    if (disp)
 		fprintf(STDOUT, "**** Volume %lu is busy ****\n",
-			(unsigned long)pntr->volid);
+			afs_cast_uint32(pntr->volid));
 	} else {
 	    *totalNotOK += 1;
 	    qPut(&notokHead, pntr->volid);
 	    if (disp)
 		fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
-			(unsigned long)pntr->volid);
+			afs_cast_uint32(pntr->volid));
 	}
 	fprintf(STDOUT, "\n");
     } else {			/* default listing */
@@ -581,13 +581,13 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 	    qPut(&busyHead, pntr->volid);
 	    if (disp)
 		fprintf(STDOUT, "**** Volume %lu is busy ****\n",
-			(unsigned long)pntr->volid);
+			afs_cast_uint32(pntr->volid));
 	} else {
 	    *totalNotOK += 1;
 	    qPut(&notokHead, pntr->volid);
 	    if (disp)
 		fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
-			(unsigned long)pntr->volid);
+			afs_cast_uint32(pntr->volid));
 	}
     }
 }
@@ -776,14 +776,14 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 	    qPut(&busyHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "**** Volume %lu is busy ****\n",
-			(unsigned long)a_xInfoP->volid);
+			afs_cast_uint32(a_xInfoP->volid));
 	} /*Busy volume */
 	else {
 	    (*a_totalNotOKP)++;
 	    qPut(&notokHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
-			(unsigned long)a_xInfoP->volid);
+			afs_cast_uint32(a_xInfoP->volid));
 	}			/*Screwed volume */
 	fprintf(STDOUT, "\n");
     } /*Long listing */
@@ -815,14 +815,14 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 	    qPut(&busyHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "**** Volume %lu is busy ****\n",
-			(unsigned long)a_xInfoP->volid);
+			afs_cast_uint32(a_xInfoP->volid));
 	} /*Busy volume */
 	else {
 	    (*a_totalNotOKP)++;
 	    qPut(&notokHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
-			(unsigned long)a_xInfoP->volid);
+			afs_cast_uint32(a_xInfoP->volid));
 	}			/*Screwed volume */
     }				/*Default listing */
 }				/*XDisplayFormat */
@@ -977,14 +977,14 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 	    qPut(&busyHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "BUSY_VOL\t%lu\n",
-			(unsigned long)a_xInfoP->volid);
+			afs_cast_uint32(a_xInfoP->volid));
 	} /*Busy volume */
 	else {
 	    (*a_totalNotOKP)++;
 	    qPut(&notokHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "COULD_NOT_ATTACH\t%lu\n",
-			(unsigned long)a_xInfoP->volid);
+			afs_cast_uint32(a_xInfoP->volid));
 	}			/*Screwed volume */
     } /*Long listing */
     else {
@@ -1014,14 +1014,14 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 	    qPut(&busyHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "VOLUME_BUSY\t%lu\n",
-			(unsigned long)a_xInfoP->volid);
+			afs_cast_uint32(a_xInfoP->volid));
 	} /*Busy volume */
 	else {
 	    (*a_totalNotOKP)++;
 	    qPut(&notokHead, a_xInfoP->volid);
 	    if (a_showProblems)
 		fprintf(STDOUT, "COULD_NOT_ATTACH_VOLUME\t%lu\n",
-			(unsigned long)a_xInfoP->volid);
+		        afs_cast_uint32(a_xInfoP->volid));
 	}			/*Screwed volume */
     }				/*Default listing */
 }				/*XDisplayFormat */
@@ -1147,14 +1147,14 @@ DisplayVolumes(server, part, pntr, count, longlist, fast, quiet)
 	while (busyHead.count) {
 	    qGet(&busyHead, &volid);
 	    fprintf(STDOUT, "**** Volume %lu is busy ****\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	}
     }
     if (totalNotOK) {
 	while (notokHead.count) {
 	    qGet(&notokHead, &volid);
 	    fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	}
     }
     if (!quiet) {
@@ -1235,14 +1235,14 @@ XDisplayVolumes(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
 	while (busyHead.count) {
 	    qGet(&busyHead, &volid);
 	    fprintf(STDOUT, "**** Volume %lu is busy ****\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	}
     }
     if (totalNotOK) {
 	while (notokHead.count) {
 	    qGet(&notokHead, &volid);
 	    fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	}
     }
 
@@ -1328,14 +1328,14 @@ XDisplayVolumes2(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
 	while (busyHead.count) {
 	    qGet(&busyHead, &volid);
 	    fprintf(STDOUT, "BUSY_VOL\t%lu\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	}
     }
     if (totalNotOK) {
 	while (notokHead.count) {
 	    qGet(&notokHead, &volid);
 	    fprintf(STDOUT, "COULD_NOT_ATTACH\t%lu\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	}
     }
 
@@ -1556,14 +1556,14 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
 
     if (verbose) {
 	fprintf(STDOUT, "Fetching VLDB entry for %lu .. ",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	fflush(STDOUT);
     }
     vcode = VLDB_GetEntryByID(volid, -1, &entry);
     if (vcode) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume number %lu from VLDB \n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	return (vcode);
     }
     if (verbose)
@@ -1705,7 +1705,7 @@ SetFields(register struct cmd_syndesc *as, void *arock)
     if (code) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume number %lu from VLDB \n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	return (code);
     }
     MapHostToNetwork(&entry);
@@ -1737,7 +1737,7 @@ SetFields(register struct cmd_syndesc *as, void *arock)
     if (code)
 	fprintf(STDERR,
 		"Could not update volume info fields for volume number %lu\n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
     return (code);
 }
 
@@ -1949,7 +1949,7 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
     }
     MapPartIdIntoName(pnum, part);
     fprintf(STDOUT, "Volume %lu created on partition %s of %s\n",
-	    (unsigned long)volid, part, as->parms[0].items->data);
+	    afs_cast_uint32(volid), part, as->parms[0].items->data);
 
     return 0;
 }
@@ -2035,7 +2035,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 	if (code) {
 	    fprintf(STDERR,
 		    "Could not fetch the entry for volume %lu from VLDB\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	    PrintError("", code);
 	    return (code);
 	}
@@ -2093,7 +2093,7 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 
     MapPartIdIntoName(partition, pname);
     fprintf(STDOUT, "Volume %lu on partition %s server %s deleted\n",
-	    (unsigned long)volid, pname, hostutil_GetNameByINet(server));
+	    afs_cast_uint32(volid), pname, hostutil_GetNameByINet(server));
     return 0;
 }
 
@@ -2188,16 +2188,16 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
     code = UV_ListOneVolume(fromserver, frompart, volid, &p);
     if (code) {
 	fprintf(STDERR, "vos:cannot access volume %lu\n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	exit(1);
     }
     if (TESTM)
-	fprintf(STDOUT, "volume %lu size %d\n", (unsigned long)volid,
+	fprintf(STDOUT, "volume %lu size %d\n", afs_cast_uint32(volid),
 		p->size);
     if (partition.free <= p->size) {
 	fprintf(STDERR,
 		"vos: no space on target partition %s to move volume %lu\n",
-		toPartName, (unsigned long)volid);
+		toPartName, afs_cast_uint32(volid));
 	free(p);
 	exit(1);
     }
@@ -2219,7 +2219,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
     MapPartIdIntoName(topart, toPartName);
     MapPartIdIntoName(frompart, fromPartName);
     fprintf(STDOUT, "Volume %lu moved from %s %s to %s %s \n",
-	    (unsigned long)volid, as->parms[1].items->data, fromPartName,
+	    afs_cast_uint32(volid), as->parms[1].items->data, fromPartName,
 	    as->parms[3].items->data, toPartName);
 
     return 0;
@@ -2339,14 +2339,14 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
     code = UV_ListOneVolume(fromserver, frompart, volid, &p);
     if (code) {
 	fprintf(STDERR, "vos:cannot access volume %lu\n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	exit(1);
     }
 
     if (partition.free <= p->size) {
 	fprintf(STDERR,
 		"vos: no space on target partition %s to copy volume %lu\n",
-		toPartName, (unsigned long)volid);
+		toPartName, afs_cast_uint32(volid));
 	free(p);
 	exit(1);
     }
@@ -2364,7 +2364,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
     MapPartIdIntoName(topart, toPartName);
     MapPartIdIntoName(frompart, fromPartName);
     fprintf(STDOUT, "Volume %lu copied from %s %s to %s on %s %s \n",
-	    (unsigned long)volid, as->parms[1].items->data, fromPartName,
+	    afs_cast_uint32(volid), as->parms[1].items->data, fromPartName,
 	    tovolume, as->parms[4].items->data, toPartName);
 
     return 0;
@@ -2464,7 +2464,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
 	code = UV_ListOneVolume(fromserver, frompart, volid, &p);
 	if (code) {
 	    fprintf(STDERR, "vos:cannot access volume %lu\n",
-		(unsigned long)volid);
+		    afs_cast_uint32(volid));
 	    exit(1);
 	}
 	strcpy(toVolName, p->name);
@@ -2525,7 +2525,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
 	code = UV_ListOneVolume(fromserver, frompart, volid, &p);
 	if (code) {
 	    fprintf(STDERR, "vos:cannot access volume %lu\n",
-		(unsigned long)volid);
+		    afs_cast_uint32(volid));
 	    exit(1);
 	}
     }
@@ -2540,7 +2540,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
     if (partition.free <= p->size) {
 	fprintf(STDERR,
 		"vos: no space on target partition %s to copy volume %lu\n",
-		toPartName, (unsigned long)volid);
+		toPartName, afs_cast_uint32(volid));
 	free(p);
 	if (q) free(q);
 	exit(1);
@@ -2560,7 +2560,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
     MapPartIdIntoName(topart, toPartName);
     MapPartIdIntoName(frompart, fromPartName);
     fprintf(STDOUT, "Volume %lu shadowed from %s %s to %s %s \n",
-	    (unsigned long)volid, as->parms[1].items->data, fromPartName,
+	    afs_cast_uint32(volid), as->parms[1].items->data, fromPartName,
 	    as->parms[3].items->data, toPartName);
 
     return 0;
@@ -2730,7 +2730,7 @@ BackupVolume(register struct cmd_syndesc *as, void *arock)
 	if (!code) {
 	    fprintf(STDERR,
 		    "FATAL ERROR: backup volume %lu exists on server %lu\n",
-		    (unsigned long)buvolid, (unsigned long)buserver);
+		    afs_cast_uint32(buvolid), (unsigned long)buserver);
 	    exit(1);
 	}
     }
@@ -3124,7 +3124,7 @@ RestoreVolume(register struct cmd_syndesc *as, void *arock)
 	    if (vol_elsewhere) {
 		fprintf(STDERR,
 			"%s volume %lu already exists on a different server/part; not allowed\n",
-			readonly ? "RO" : "RW", (unsigned long)avolid);
+			readonly ? "RO" : "RW", afs_cast_uint32(avolid));
 		exit(1);
 	    }
 	}
@@ -3896,7 +3896,7 @@ VolumeZap(register struct cmd_syndesc *as, void *arock)
 	    backupid = entry.volumeId[BACKVOL];
 	fprintf(STDERR,
 		"Warning: Entry for volume number %lu exists in VLDB (but we're zapping it anyway!)\n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
     }
     if (zapbackupid) {
 	volintInfo *pntr = (volintInfo *) 0;
@@ -3917,7 +3917,7 @@ VolumeZap(register struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	    fprintf(STDOUT, "Backup Volume %lu deleted\n",
-		    (unsigned long)backupid);
+		    afs_cast_uint32(backupid));
 	}
     }
     code = UV_VolumeZap(server, part, volid);
@@ -3925,7 +3925,7 @@ VolumeZap(register struct cmd_syndesc *as, void *arock)
 	PrintDiagnostics("zap", code);
 	exit(1);
     }
-    fprintf(STDOUT, "Volume %lu deleted\n", (unsigned long)volid);
+    fprintf(STDOUT, "Volume %lu deleted\n", afs_cast_uint32(volid));
 
     return 0;
 }
@@ -4092,7 +4092,7 @@ GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *vo
     if (vcode) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume %lu from VLDB \n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	PrintError("", vcode);
 	return (vcode);
     }
@@ -4107,7 +4107,7 @@ GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *vo
 	if (index == -1) {
 	    fprintf(STDERR,
 		    "RO volume is not found in VLDB entry for volume %lu\n",
-		    (unsigned long)volid);
+		    afs_cast_uint32(volid));
 	    return -1;
 	}
 
@@ -4120,7 +4120,7 @@ GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *vo
     if (index == -1) {
 	fprintf(STDERR,
 		"RW Volume is not found in VLDB entry for volume %lu\n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	return -1;
     }
     if (volid == rentry->volumeId[RWVOL]) {
@@ -4137,7 +4137,7 @@ GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *vo
     }
     fprintf(STDERR,
             "unexpected volume type for volume %lu\n",
-            (unsigned long)volid);
+            afs_cast_uint32(volid));
     return -1;
 }
 
@@ -4939,7 +4939,7 @@ UnlockVLDB(register struct cmd_syndesc *as, void *arock)
     if (totalE)
 	fprintf(STDOUT,
 		"Could not lock %lu VLDB entries of %lu locked entries\n",
-		(unsigned long)totalE, (unsigned long)nentries);
+		afs_cast_uint32(totalE), (unsigned long)nentries);
     else {
 	if (as->parms[0].items) {
 	    fprintf(STDOUT,
@@ -5406,7 +5406,7 @@ ConvertRO(register struct cmd_syndesc *as, void *arock)
     if (vcode) {
 	fprintf(STDERR,
 		"Could not fetch the entry for volume %lu from VLDB\n",
-		(unsigned long)volid);
+		afs_cast_uint32(volid));
 	PrintError("convertROtoRW", code);
 	return vcode;
     }
@@ -5473,7 +5473,7 @@ ConvertRO(register struct cmd_syndesc *as, void *arock)
     if (code) {
 	fprintf(STDERR,
 		"Converting RO volume %lu to RW volume failed with code %d\n",
-		(unsigned long)volid, code);
+		afs_cast_uint32(volid), code);
 	PrintError("convertROtoRW ", code);
 	return -1;
     }
