@@ -320,7 +320,7 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
     struct VnodeExtract *e;
     afs_uint64 size;
     afs_uint64 offset;
-    Inode ino, newino, nearInode;
+    Inode ino, newino;
     afs_uint32 newVn;
 
     fdP = IH_OPEN(vol->vnodeIndex[class].handle);
@@ -360,6 +360,11 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 		FdHandle_t *infdP = 0;
 		FdHandle_t *outfdP = 0;
 		char *tbuf = malloc(2048);
+		Inode nearInode;
+#if defined(NEARINODE_HINT)
+		V_pref(vol,nearInode)
+#endif
+
 	        newino = IH_CREATE(V_linkHandle(vol), V_device(vol),
 			        VPartitionPath(V_partition(vol)),
 			        nearInode, V_parentId(vol), 
@@ -389,6 +394,10 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 	        ino = VNDISK_GET_INO(vnode);
 	        if (ino) {
 		    IHandle_t *h, *newh;
+		    Inode nearInode;
+#if defined(NEARINODE_HINT)
+		    V_pref(vol,nearInode)
+#endif
 	            IH_INIT(h, vol->device, V_parentId(vol), ino);
 	            if (e->parent == where) 
 		        vnode->parent = 1;
@@ -515,6 +524,7 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     afs_uint64 offset, size;
     afs_int32 class = vSmall;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
+    Inode nearInode = 0;
     AFSFid fid;
     struct timeval now;
     afs_uint32 newvN;
@@ -553,6 +563,9 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     vnode.parent = vN;
 
     newvN = (offset >> (VnodeClassInfo[class].logSize - 1)) - 1 + class;
+#if defined(NEARINODE_HINT)
+    V_pref(vol,nearInode)
+#endif
     newino = IH_CREATE(V_linkHandle(vol), V_device(vol),
 		VPartitionPath(V_partition(vol)), nearInode,
                 V_parentId(vol), newvN, vnode.uniquifier, 1);
