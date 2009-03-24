@@ -2922,7 +2922,7 @@ afs_int32
 SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new, 
 		   afs_uint32 where, afs_int32 verbose)
 {
-#ifdef AFS_NAMEI_ENV
+#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
     afs_int32 code, code2;
     Volume *vol=0, *newvol=0;
     struct volser_trans *tt = 0, *tt2 = 0;

@@ -8,7 +8,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifdef AFS_NAMEI_ENV
+#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
 #include <sys/types.h>
 #include <stdio.h>
 #ifdef AFS_PTHREAD_ENV
@@ -92,7 +92,6 @@ ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class,
     struct VnodeExtract *e;
     afs_uint32 size;
     afs_uint32 offset;
-    afs_uint32 vN; 
 
     *length = 0;
     if (parent)
@@ -247,7 +246,6 @@ FindVnodes(struct Msg *m, afs_uint32 where,
 static afs_int32 
 copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
 {
-    afs_int32 code;
     FdHandle_t *infdP, *outfdP;
     char *tbuf;
     afs_size_t size;
@@ -325,7 +323,6 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
     afs_uint64 size;
     afs_uint64 offset;
     Inode ino, newino;
-    afs_uint32 newVn;
 
     fdP = IH_OPEN(vol->vnodeIndex[class].handle);
     if (!fdP) {
@@ -364,8 +361,8 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 		FdHandle_t *infdP = 0;
 		FdHandle_t *outfdP = 0;
 		char *tbuf = malloc(2048);
-		Inode nearInode;
 #if defined(NEARINODE_HINT)
+		Inode nearInode;
 		V_pref(vol,nearInode)
 #endif
 
@@ -582,9 +579,9 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
 	return EIO;
     }
     FDH_SEEK(fdP2, 0, 0);
-    sprintf(&symlink, "#%s", V_name(newvol));
+    sprintf(symlink, "#%s", V_name(newvol));
     size = strlen(symlink) + 1;
-    if (FDH_WRITE(fdP2, &symlink, size) != size) {
+    if (FDH_WRITE(fdP2, symlink, size) != size) {
 	Log("split volume: couldn't write mountpoint %u.%u.%u\n", 
 		V_id(vol), newvN, vnode.uniquifier);
 	return EIO;
@@ -684,7 +681,7 @@ deleteVnodes(Volume *vol, afs_int32 class,
 	    *blocks += (size + 0x3ff) >> 10;
 	    ino = VNDISK_GET_INO(vnode);
 	    if (ino) {
-		IHandle_t *h, *newh;
+		IHandle_t *h;
 	        IH_INIT(h, vol->device, V_parentId(vol), ino);
 		    IH_DEC(h, ino, V_parentId(vol));
 #ifdef AFS_RXOSD_SUPPORT
@@ -759,7 +756,7 @@ split_volume(struct rx_call *call, Volume *vol, Volume *newvol,
 	rx_Write(m->call, m->line, strlen(m->line));
     }
     code = findName(vol, parVnode, where, rootVnode->uniquifier, 
-			&name,  sizeof(name));
+                    name,  sizeof(name));
     if (code) {
 	sprintf(m->line, 
 		"splitvolume: could'nt find name of %u in directory %u.%u.%u.\n",
