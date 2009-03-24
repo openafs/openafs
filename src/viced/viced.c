@@ -318,7 +318,7 @@ ResetCheckDescriptors(void)
 int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (int)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
