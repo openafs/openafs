@@ -90,6 +90,7 @@ VOLSERVER_EXEOBJS = \
 	$(OUT)\volmain.obj \
 	$(OUT)\volprocs.obj \
 	$(OUT)\voltrans.obj \
+	$(OUT)\vol_split.obj \
 	$(OUT)\volserver.res
 	
 
