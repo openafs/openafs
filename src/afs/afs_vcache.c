@@ -3072,7 +3072,7 @@ shutdown_vcache(void)
      */
 
     {
-	register struct afs_q *tq, *uq;
+	register struct afs_q *tq, *uq = NULL;
 	register struct vcache *tvc;
 	for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	    tvc = QTOV(tq);
@@ -3127,7 +3127,8 @@ shutdown_vcache(void)
 		    tvc->linkData = 0;
 		}
 
-		afs_FreeAllAxs(&(tvc->Access));
+		if (tvc->Access)
+		    afs_FreeAllAxs(&(tvc->Access));
 	    }
 	    afs_vhashT[i] = 0;
 	}
