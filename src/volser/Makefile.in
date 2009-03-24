@@ -52,7 +52,7 @@ VOLDUMP_LIBS = \
 
 VSOBJS=vsprocs.o vsutils.o lockprocs.o volint.xdr.o volerr.o 
 SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \
- volint.cs.o dumpstuff.o volint.ss.o volint.xdr.o
+ volint.cs.o dumpstuff.o volint.ss.o volint.xdr.o vol_split.o
 
 all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volser.h \
@@ -115,6 +115,7 @@ vsprocs.o: vsprocs.c ${VINCLS} ${RINCLS} ${INTINCLS}
 physio.o: physio.c ${VINCLS}
 common.o: common.c ${VINCLS}
 lockprocs.o: lockprocs.c ${VINCLS} ${INTINCLS} ${RINCLS}
+vol_split.o: vol_split.c ${VINCLS} ${INTINCLS} ${RINCLS}
 
 #
 # Installation targets
@@ -241,4 +242,4 @@ check-splint::
 	    vos.c restorevol.c \
 	    vsprocs.c vsutils.c lockprocs.c volerr.c \
 	    volmain.c volprocs.c physio.c common.c voltrans.c \
-	    dumpstuff.c
+	    dumpstuff.c vol_split.c

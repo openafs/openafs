@@ -2918,6 +2918,87 @@ SAFSVolGetSize(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     return code;
 }
 
+afs_int32
+SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new, 
+		   afs_uint32 where, afs_int32 verbose)
+{
+    afs_int32 code, code2;
+    Volume *vol=0, *newvol=0;
+    struct volser_trans *tt = 0, *tt2 = 0;
+    char caller[MAXKTCNAMELEN];
+    char line[128];
+
+    if (!afsconf_SuperUser(tdir, acall, caller)) 
+        return EPERM;
+
+    vol = VAttachVolume(&code, vid, V_VOLUPD);
+    if (!vol) {
+        if (!code)
+            code = ENOENT;
+        return code;
+    }
+    newvol = VAttachVolume(&code, new, V_VOLUPD);
+    if (!newvol) {
+        VDetachVolume(&code2, vol);
+        if (!code)
+            code = ENOENT;
+        return code;
+    }
+    if (V_device(vol) != V_device(newvol) 
+	|| V_uniquifier(newvol) != 2) {
+        if (V_device(vol) != V_device(newvol)) {
+            sprintf(line, "Volumes %u and %u are not in the same partition, aborted.\n",
+		    vid, new);
+            rx_Write(acall, line, strlen(line));
+        }
+        if (V_uniquifier(newvol) != 2) {
+            sprintf(line, "Volume %u is not freshly created, aborted.\n", new);
+            rx_Write(acall, line, strlen(line));
+        }
+        line[0] = 0;
+        rx_Write(acall, line, 1);
+        VDetachVolume(&code2, vol);
+        VDetachVolume(&code2, newvol);
+        return EINVAL;
+    }
+    tt = NewTrans(vid, V_device(vol));
+    if (!tt) {
+        sprintf(line, "Couldn't create transaction for %u, aborted.\n", vid);
+        rx_Write(acall, line, strlen(line));
+        line[0] = 0;
+        rx_Write(acall, line, 1);
+        VDetachVolume(&code2, vol);
+        VDetachVolume(&code2, newvol);
+        return VOLSERVOLBUSY;
+    } 
+    tt->iflags = ITBusy;
+    tt->vflags = 0;
+    strcpy(tt->lastProcName, "SplitVolume");
+
+    tt2 = NewTrans(new, V_device(newvol));
+    if (!tt2) {
+        sprintf(line, "Couldn't create transaction for %u, aborted.\n", new);
+        rx_Write(acall, line, strlen(line));
+        line[0] = 0;
+        rx_Write(acall, line, 1);
+        DeleteTrans(tt, 1);
+        VDetachVolume(&code2, vol);
+        VDetachVolume(&code2, newvol);
+        return VOLSERVOLBUSY;
+    } 
+    tt2->iflags = ITBusy;
+    tt2->vflags = 0;
+    strcpy(tt2->lastProcName, "SplitVolume");
+
+    code = split_volume(acall, vol, newvol, where, verbose);
+
+    VDetachVolume(&code2, vol);
+    DeleteTrans(tt, 1);
+    VDetachVolume(&code2, newvol);
+    DeleteTrans(tt2, 1);
+    return code;
+}
+
 /* GetPartName - map partid (a decimal number) into pname (a string)
  * Since for NT we actually want to return the drive name, we map through the
  * partition struct.

@@ -86,6 +86,7 @@ extern void *DNew(register afs_int32 *fid, register int page);
 #define	LookupOffset	afs_dir_LookupOffset
 #define	EnumerateDir	afs_dir_EnumerateDir
 #define	IsEmpty		afs_dir_IsEmpty
+#define InverseLookup   afs_dir_InverseLookup
 
 #if defined(AFS_DISCON_ENV)
 #define ChangeFid	afs_dir_ChangeFid
@@ -544,6 +545,65 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 	    return 0;
 	}
     }
+}
+
+static struct DirEntry *
+FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
+{
+    /* Find a directory entry, given the vnode and uniquifier of a object.  
+     * This entry returns a pointer to a locked buffer.  If no entry is found,
+     * however, no items are left locked, and a null pointer is returned 
+     * instead. 
+     */
+    register int i;
+    register struct DirHeader *dhp;
+    register unsigned short *lp;
+    register struct DirEntry *tp;
+    dhp = (struct DirHeader *) DRead(dir,0);
+    if (!dhp) return 0;
+    for (i=0; i<NHASHENT; i++) {
+	if (dhp->hashTable[i] != 0) {
+	    tp = GetBlob(dir,(u_short)ntohs(dhp->hashTable[i]));
+	    if (!tp) { /* should not happen */
+		DRelease(dhp, 0);
+		return 0;
+	    }
+	    while(tp) {
+		if (vnode == ntohl(tp->fid.vnode) 
+		    && unique == ntohl(tp->fid.vunique)) { 
+		    DRelease(dhp,0);
+		    return tp;
+		}
+		lp = &(tp->next);
+		if (tp->next == 0)
+		    break;
+		tp = GetBlob(dir,(u_short)ntohs(tp->next));
+		DRelease(lp,0);
+	    }
+	    DRelease(lp,0);
+	}
+    }
+    DRelease(dhp,0);
+    return (struct DirEntry *)0;
+}
+
+int
+InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name, 
+	       afs_uint32 length)
+{
+    /* Look for the name pointing to given vnode and unique in a directory */
+    register struct DirEntry *entry;
+    int code = 0;
+    
+    entry = FindFid(dir, vnode, unique);
+    if (!entry)
+	return ENOENT;
+    if (strlen(entry->name) >= length)
+	code = E2BIG;
+    else
+	strcpy(name, entry->name);
+    DRelease(entry, 0);
+    return code;
 }
 
 #if defined(AFS_DISCON_ENV)
