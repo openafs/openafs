@@ -17,13 +17,14 @@ RCSID
 #include <sys/stat.h>
 #include <string.h>
 #include <dirent.h>
+#include <afs/ihandle.h>
 #include <afs/partition.h>
 
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
  * Overwrites abuffer with the corrected name.
  */
-EnsureDevice(abuffer)
-     char *abuffer;
+int
+EnsureDevice(char *abuffer)
 {
     struct dirent *dp;
     char pbuffer[128];
