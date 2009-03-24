@@ -33,14 +33,6 @@ RCSID
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
-#include <afs/ihandle.h>
-#include <afs/partition.h>
-#include <rx/rx.h>
-#include <rx/rxstat.h>
-#include <afs/afs_utilAdmin.h>
-#include "vosutils.h"
-#include "vsprocs.h"
-#include "lockprocs.h"
 
 /* File descriptors are HANDLE's on NT. The following typedef helps catch
  * type errors. Duplicated from vol/ihandle.h
@@ -51,6 +43,14 @@ typedef HANDLE FD_t;
 typedef int FD_t;
 #endif
 #define INVALID_FD ((FD_t)-1)
+
+#include <afs/partition.h>
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+#include <afs/afs_utilAdmin.h>
+#include "vosutils.h"
+#include "vsprocs.h"
+#include "lockprocs.h"
 
 typedef struct file_server {
     int begin_magic;
