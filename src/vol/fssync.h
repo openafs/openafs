@@ -106,7 +106,7 @@ enum FSSYNC_VolOpState {
     FSSYNC_VolOpDenied         = 1, /**< volume operation request denied */
     FSSYNC_VolOpRunningOnline  = 2, /**< volume operation is running while volume is online */
     FSSYNC_VolOpRunningOffline = 3, /**< volume operation is running while volume is offline */
-    FSSYNC_VolOpRunningUnknown = 4, /**< volume operation is running; VVolOpLeaveOnline_r resolution unknown */
+    FSSYNC_VolOpRunningUnknown = 4 /**< volume operation is running; VVolOpLeaveOnline_r resolution unknown */
 };
 
 /**
