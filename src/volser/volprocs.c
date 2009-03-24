@@ -2922,6 +2922,7 @@ afs_int32
 SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new, 
 		   afs_uint32 where, afs_int32 verbose)
 {
+#ifdef AFS_NAMEI_ENV
     afs_int32 code, code2;
     Volume *vol=0, *newvol=0;
     struct volser_trans *tt = 0, *tt2 = 0;
@@ -2997,6 +2998,9 @@ SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
     VDetachVolume(&code2, newvol);
     DeleteTrans(tt2, 1);
     return code;
+#else
+    return VOLSERBADOP;
+#endif
 }
 
 /* GetPartName - map partid (a decimal number) into pname (a string)

@@ -8,6 +8,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef AFS_NAMEI_ENV
 #include <sys/types.h>
 #include <stdio.h>
 #ifdef AFS_PTHREAD_ENV
@@ -75,11 +76,12 @@ struct Msg {
     char line[1024];
 };
 
-afs_int32 ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class, 
-			struct VnodeExtract **list,
-			afs_int32 *length, afs_uint32 where, 
-			struct VnodeDiskObject *vd,
-		        afs_int32 *parent, struct VnodeDiskObject *parentvd)
+static afs_int32 
+ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class, 
+	      struct VnodeExtract **list,
+	      afs_int32 *length, afs_uint32 where, 
+	      struct VnodeDiskObject *vd,
+	      afs_int32 *parent, struct VnodeDiskObject *parentvd)
 {
     afs_int32 code = 0;
     char buf[SIZEOF_LARGEDISKVNODE];
@@ -174,10 +176,11 @@ Bad_Extract:
     return code;
 }
 
-afs_int32 FindVnodes(struct Msg *m, afs_uint32 where, 
-			struct VnodeExtract *list, afs_int32 length, 
-			struct VnodeExtract *dlist, afs_int32 dlength, 
-			afs_int32 *needed, afs_int32 class)
+static afs_int32 
+FindVnodes(struct Msg *m, afs_uint32 where, 
+	   struct VnodeExtract *list, afs_int32 length, 
+	   struct VnodeExtract *dlist, afs_int32 dlength, 
+	   afs_int32 *needed, afs_int32 class)
 {
     afs_int32 i, j, found = 0;
     afs_int32 parent = 0;
@@ -241,7 +244,8 @@ afs_int32 FindVnodes(struct Msg *m, afs_uint32 where,
     return 0;
 }
     
-afs_int32 copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
+static afs_int32 
+copyDir(struct Msg *m, IHandle_t *inh, IHandle_t *outh)
 {
     afs_int32 code;
     FdHandle_t *infdP, *outfdP;
@@ -495,9 +499,9 @@ Bad_Copy:
     return code;
 }
 
-afs_int32
-findName(Volume *vol, struct VnodeDiskObject *vd, afs_uint32 vN, afs_uint32 un, 
-		char *name,afs_int32 length)
+static afs_int32
+findName(Volume *vol, struct VnodeDiskObject *vd, afs_uint32 vN, 
+	 afs_uint32 un, char *name,afs_int32 length)
 {
     afs_int32 code;
     Inode ino;
@@ -511,7 +515,7 @@ findName(Volume *vol, struct VnodeDiskObject *vd, afs_uint32 vN, afs_uint32 un,
     return code;
 }
 
-afs_int32
+static afs_int32
 createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent, 
 		afs_uint32 vN,  struct VnodeDiskObject *vd, char *name)
 {
@@ -635,9 +639,10 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     return code;
 }
 
-afs_int32 deleteVnodes(Volume *vol, afs_int32 class, 
-			struct VnodeExtract *list, afs_int32 length,
-			afs_uint64 *blocks)
+static afs_int32 
+deleteVnodes(Volume *vol, afs_int32 class, 
+	     struct VnodeExtract *list, afs_int32 length,
+	     afs_uint64 *blocks)
 {
     afs_int32 i, code = 0;
     char buf[SIZEOF_LARGEDISKVNODE];
@@ -702,9 +707,10 @@ Bad_Delete:
 	FDH_CLOSE(fdP);
     return code;
 }
+
 afs_int32 
 split_volume(struct rx_call *call, Volume *vol, Volume *newvol, 
-		afs_uint32 where, afs_int32 verbose)
+	     afs_uint32 where, afs_int32 verbose)
 {
     afs_int32 code = 0;
     struct VnodeExtract *dirList = 0;
@@ -843,7 +849,9 @@ split_volume(struct rx_call *call, Volume *vol, Volume *newvol,
     }
 
     V_diskused(newvol) = blocks;
-    /*V_osdFlag(newvol) = V_osdFlag(vol);*/
+#ifdef AFS_RXOSD_SUPPORT
+    V_osdFlag(newvol) = V_osdFlag(vol);
+#endif
     V_filecount(newvol) = filesNeeded + dirsNeeded;
     V_destroyMe(newvol) = 0;
     V_maxquota(newvol) = V_maxquota(vol);
@@ -897,3 +905,4 @@ split_volume(struct rx_call *call, Volume *vol, Volume *newvol,
     free(m);
     return code;
 }
+#endif
