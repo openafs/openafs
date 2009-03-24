@@ -797,6 +797,79 @@ namei_inc(IHandle_t * h, Inode ino, int p1)
     return code;
 }
 
+int
+namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget)
+{
+    afs_int32 code;
+    namei_t nameLink;
+    namei_t nameTarget;
+    
+    /* Convert handle to file name. */
+    namei_HandleToName(&nameLink, hLink);
+    namei_HandleToName(&nameTarget, hTarget);
+    
+    unlink(nameLink.n_path);
+    code = link(nameTarget.n_path, nameLink.n_path);
+    return code;
+}
+
+int
+namei_copy_on_write(IHandle_t *h)
+{
+    afs_int32 fd, code = 0;
+    namei_t name;
+    FdHandle_t *fdP;
+    struct afs_stat tstat;
+    
+    namei_HandleToName(&name, h);
+    if (afs_stat(name.n_path, &tstat) < 0) 
+	return EIO;
+    if (tstat.st_nlink > 1) {                   /* do a copy on write */
+	char path[259];
+	char *buf;
+	afs_size_t size;
+	afs_int32 tlen;
+	
+	fdP = IH_OPEN(h);
+	if (!fdP)
+	    return EIO;
+	strcpy(&path, name.n_path);
+	strcat(&path, "-tmp");
+	fd = afs_open(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
+	if (fd < 0) {
+	    FDH_CLOSE(fdP);
+	    return EIO;
+	}
+	buf = malloc(8192);
+	if (!buf) {
+	    close(fd);
+	    unlink(path);
+	    FDH_CLOSE(fdP);
+	    return ENOMEM;
+	}
+	size = tstat.st_size;
+	FDH_SEEK(fdP, 0, 0);
+	while (size) {
+	    tlen = size > 8192 ? 8192 : size;
+	    if (FDH_READ(fdP, buf, tlen) != tlen) 
+		break;
+	    if (write(fd, buf, tlen) != tlen) 
+		break;
+	    size -= tlen;
+	}
+	close(fd);
+	FDH_REALLYCLOSE(fdP);
+	free(buf);
+	if (size)
+	    code = EIO;
+	else {
+	    unlink(name.n_path);
+	    code = rename(path, name.n_path);
+	}
+    }
+    return code;
+}
+
 /************************************************************************
  * File Name Structure
  ************************************************************************

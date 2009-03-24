@@ -51,6 +51,15 @@ statindex 16
 #define     VOLGETSIZE          65537
 #define     VOLDUMPV2           65538
 #define     VOLDISKPART64       65539
+#define     VOLOSDSUPPORT       65540
+#define     VOLTRAVERSE         65541
+#define     VOLWIPECAND         65542
+#define     OLDVOLSALVAGE       65543
+#define     VOLARCHCANDold      65544
+#define     VOLSALVAGE          65545
+#define     VOLLISTOBJECTS      65546
+#define     VOLSPLIT            65547
+#define     VOLARCHCAND         65548
 
 /* Bits for flags for DumpV2 */
 %#define     VOLDUMPV2_OMITDIRS 1
@@ -434,3 +443,10 @@ proc PartitionInfo64(
     IN string name<>,
     OUT struct diskPartition64 *partition
 ) = VOLDISKPART64;
+
+proc SplitVolume (
+  IN afs_uint32 vid,
+  IN afs_uint32 new,
+  IN afs_uint32 where,
+  IN afs_int32 verbose
+) split = VOLSPLIT;
