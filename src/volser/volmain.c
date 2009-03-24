@@ -79,8 +79,8 @@ int GlobalVolType;
 int VolumeChanged;		/* XXXX */
 static char busyFlags[MAXHELPERS];
 struct volser_trans *QI_GlobalWriteTrans = 0;
-extern void AFSVolExecuteRequest();
-extern void RXSTATS_ExecuteRequest();
+extern int AFSVolExecuteRequest(struct rx_call*);
+extern int RXSTATS_ExecuteRequest(struct rx_call*);
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
@@ -104,7 +104,7 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (int)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -466,7 +466,7 @@ main(int argc, char **argv)
 	assert(pthread_attr_init(&tattr) == 0);
 	assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
-	assert(pthread_create(&tid, &tattr, (void *)BKGLoop, NULL) == 0);
+	assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);
