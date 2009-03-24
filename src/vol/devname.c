@@ -82,6 +82,7 @@ RCSID
 #ifndef ITIMER_REAL
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
+#include "ihandle.h"
 #include "partition.h"
 
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
