@@ -1,5 +1,8 @@
 # Openafs Spec $Revision$
 
+# TEMPORARY fix for patch fuzz so we can build on Fedora 10
+%define _default_patch_fuzz 2
+
 %define afsvers @VERSION@
 %define pkgvers @LINUX_PKGVER@
 # for beta/rc releases make pkgrel 0.X.<tag>
@@ -32,7 +35,7 @@
 # If we're building for a 2.4 series kernel, then fedora style kmods aren't
 # appropriate - disable them.
 
-%define kern24 %([ "`echo "%{kernvers}" | sed -e 's/^\([0-9]*\.[0-9]*\)\..*/\1/'`" = "2.4" ] && echo 1 || echo 0)
+%define kern24 %([ `echo "%{kernvers}" | sed -e 's/^\([0-9]*\.[0-9]*\)\..*/\1/'` = "2.4" ] && echo 1 || echo 0)
 
 %if %{kern24}
 %define fedorakmod 0
@@ -266,7 +269,7 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: http://dl.central.org/dl/cellservdb/CellServDB.2008-04-23
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2008-11-07
 
 Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
@@ -1014,7 +1017,7 @@ tar cf - -C ${sysname}/dest bin include | tar xf - -C $RPM_BUILD_ROOT%{_prefix}
 tar cf - -C ${sysname}/dest/lib . | tar xf - -C $RPM_BUILD_ROOT%{_libdir}
 tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
-tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
+tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
 # Link kpasswd to kapasswd
 ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
@@ -1432,12 +1435,14 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %dir %{_prefix}/vice
 %dir %{_prefix}/vice/cache
 %dir %{_prefix}/vice/etc
+%dir %{_prefix}/vice/etc/C
 %{_prefix}/vice/etc/CellServDB.dist
 %config %{_prefix}/vice/etc/ThisCell
 %config %{_prefix}/vice/etc/cacheinfo
 %{_bindir}/cmdebug
 %{_bindir}/up
 %{_prefix}/vice/etc/afsd
+%{_prefix}/vice/etc/C/afszcm.cat
 %{pamdir}/pam_afs.krb.so.1
 %{pamdir}/pam_afs.krb.so
 %{pamdir}/pam_afs.so.1
@@ -1449,6 +1454,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/cacheinfo.*
 %{_mandir}/man8/afsd.*
 %{_mandir}/man5/CellAlias.*
+%{_mandir}/man5/afszcm.cat.*
 
 %files server
 %defattr(-,root,root)
