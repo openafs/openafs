@@ -95,7 +95,7 @@
 #define MAX(A,B) ((A) > (B) ? (A) : (B))
 #endif
 #endif /* KERNEL */
-
+#define USE_UCONTEXT           /* should be in afsconfig.h */
 
 #endif /* _PARAM_IA64_LINUX20_H_ */
 
