@@ -45,8 +45,10 @@ pragma Off(Prototype_override_warnings);
 #endif */
 
 #define MAX_AFS_INT32 0x7FFFFFFF
+#define MIN_AFS_INT32 (-MAX_AFS_INT32 - 1)
 #define MAX_AFS_UINT32 0xFFFFFFFF
 #define MAX_AFS_INT64 0x7FFFFFFFFFFFFFFFL
+#define MIN_AFS_INT64 (-MAX_AFS_INT64 - 1)
 #define MAX_AFS_UINT64 0xFFFFFFFFFFFFFFFFL
 
 typedef short afs_int16;

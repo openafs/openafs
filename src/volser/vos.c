@@ -1691,7 +1691,7 @@ SetFields(register struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items) {
 	/* -max <quota> */
-	code = util_GetInt32(as->parms[1].items->data, &info.maxquota);
+	code = util_GetHumanInt32(as->parms[1].items->data, &info.maxquota);
 	if (code) {
 	    fprintf(STDERR, "invalid quota value\n");
 	    return code;
@@ -1902,13 +1902,7 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[3].items) {
-	if (!IsNumeric(as->parms[3].items->data)) {
-	    fprintf(STDERR, "Initial quota %s should be numeric.\n",
-		    as->parms[3].items->data);
-	    return EINVAL;
-	}
-
-	code = util_GetInt32(as->parms[3].items->data, &quota);
+	code = util_GetHumanInt32(as->parms[3].items->data, &quota);
 	if (code) {
 	    fprintf(STDERR, "vos: bad integer specified for quota.\n");
 	    return code;

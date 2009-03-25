@@ -201,6 +201,7 @@ extern afs_int32 volutil_PartitionName2_r(afs_int32 part, char *tbuffer, size_t 
 extern char *volutil_PartitionName(int avalue);
 extern afs_int32 util_GetInt32(register char *as, afs_int32 * aval);
 extern afs_uint32 util_GetUInt32(register char *as, afs_uint32 * aval);
+extern afs_int32 util_GetHumanInt32(register char *as, afs_int32 * aval);
 
 /* winsock_nt.c */
 

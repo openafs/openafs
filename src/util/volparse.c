@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 #include <string.h>
+#include <errno.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -304,5 +305,39 @@ util_GetUInt32(register char *as, afs_uint32 * aval)
     }
 
     *aval = total;
+    return 0;
+}
+
+static const char power_letter[] = {
+    'K',  /* kibi */
+    'M',  /* mebi */
+    'G',  /* gibi */
+    'T',  /* tebi */
+};
+
+afs_int32
+util_GetHumanInt32(register char *as, afs_int32 * aval)
+{
+    long value;
+    char * unit;
+    long mult = 1;
+    int exponent = 0;
+
+    errno = 0;
+    value = strtol(as, &unit, 0);
+    if (errno)
+	return -1;
+    if (unit[0] != 0) {
+	for (exponent = 0; exponent < sizeof(power_letter) && power_letter[exponent] != unit[0]; exponent++) {
+	    mult *= 1024;
+	}
+	if (exponent == sizeof(power_letter))
+	    return -1;
+    }
+    if (value > MAX_AFS_INT32 / mult || value < MIN_AFS_INT32 / mult)
+	return -1;
+
+    *aval = value * mult;
+
     return 0;
 }

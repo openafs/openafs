@@ -1399,7 +1399,7 @@ SetVolCmd(struct cmd_syndesc *as, void *arock)
 	status->MinQuota = status->MaxQuota = -1;
 	offmsg = NULL;
 	if (as->parms[1].items) {
-	    code = util_GetInt32(as->parms[1].items->data, &status->MaxQuota);
+	    code = util_GetHumanInt32(as->parms[1].items->data, &status->MaxQuota);
 	    if (code) {
 		fprintf(stderr, "%s: bad integer specified for quota.\n", pn);
 		error = 1;
@@ -2106,7 +2106,7 @@ SetCacheSizeCmd(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
     if (as->parms[0].items) {
-	code = util_GetInt32(as->parms[0].items->data, &temp);
+	code = util_GetHumanInt32(as->parms[0].items->data, &temp);
 	if (code) {
 	    fprintf(stderr, "%s: bad integer specified for cache size.\n",
 		    pn);
