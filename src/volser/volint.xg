@@ -446,7 +446,7 @@ proc PartitionInfo64(
 
 proc SplitVolume (
   IN afs_uint32 vid,
-  IN afs_uint32 new,
+  IN afs_uint32 newid,
   IN afs_uint32 where,
   IN afs_int32 verbose
 ) split = VOLSPLIT;
