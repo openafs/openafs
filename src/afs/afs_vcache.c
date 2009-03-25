@@ -324,6 +324,8 @@ afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
  * \return The allocated afs_cbr.
  */
 static struct afs_cbr *afs_cbrSpace = 0;
+/* if alloc limit below changes, fix me! */
+static struct afs_cbr *afs_cbrHeads[2];
 struct afs_cbr *
 afs_AllocCBR(void)
 {
@@ -345,6 +347,7 @@ afs_AllocCBR(void)
 	    }
 	    tsp[AFS_NCBRS - 1].next = 0;
 	    afs_cbrSpace = tsp;
+	    afs_cbrHeads[afs_stats_cmperf.CallBackAlloced] = tsp;
 	    afs_stats_cmperf.CallBackAlloced++;
 	}
     }
@@ -3350,8 +3353,9 @@ shutdown_vcache(void)
     /*
      * Free any leftover callback queue
      */
-    for (tsp = afs_cbrSpace; tsp; tsp = nsp) {
-	nsp = tsp->next;
+    for (i = 0; i < afs_stats_cmperf.CallBackAlloced; i++) {
+	tsp = afs_cbrHeads[i];
+	afs_cbrHeads[i] = 0;
 	afs_osi_Free((char *)tsp, AFS_NCBRS * sizeof(struct afs_cbr));
     }
     afs_cbrSpace = 0;
