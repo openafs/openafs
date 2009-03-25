@@ -1257,6 +1257,7 @@ CopyOnWrite2(FdHandle_t *targFdP, FdHandle_t *newFdP, afs_fsize_t off, afs_fsize
     FDH_SEEK(targFdP, off, SEEK_SET);
     FDH_SEEK(newFdP, off, SEEK_SET);
 
+    if (size > FDH_SIZE(targFdP) - off) size = FDH_SIZE(targFdP) - off;
     while (size > 0) {
 	if (size > COPYBUFFSIZE) {	/* more than a buffer */
 	    length = COPYBUFFSIZE;
@@ -7203,7 +7204,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
     afs_fsize_t NewLength;	/* size after this store completes */
     afs_sfsize_t adjustSize;	/* bytes to call VAdjust... with */
     int linkCount = 0;		/* link count on inode */
-    afs_fsize_t CoW_off = 0, CoW_len = 0;
+    afs_fsize_t CoW_off, CoW_len;
     FdHandle_t *fdP, *origfdP = NULL;
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 
@@ -7274,18 +7275,15 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 		return (errorCode);
 	    }
 
-	    if (Pos == 0) 
-		CoW_off = Length;	/* only copy remaining parts of file */
-	    if (Length <= FileLength)
-		CoW_len = FileLength - Length;
+	    CoW_len = (FileLength >= (Length + Pos)) ? FileLength - Length : Pos;
 	    CopyOnWrite_calls++;
 	    if (CoW_len == 0) CopyOnWrite_size0++;
-	    if (CoW_off == 0) CopyOnWrite_off0++;
+	    if (Pos == 0) CopyOnWrite_off0++;
 	    if (CoW_len > CopyOnWrite_maxsize) CopyOnWrite_maxsize = CoW_len;
 
 	    ViceLog(1, ("StoreData : calling CopyOnWrite on vnode %lu.%lu (%s) off 0x%llx size 0x%llx\n",
-			V_id(volptr), targetptr->vnodeNumber, V_name(volptr), CoW_off, CoW_len));
-	    if ((errorCode = CopyOnWrite(targetptr, volptr, CoW_off, CoW_len))) {
+			V_id(volptr), targetptr->vnodeNumber, V_name(volptr), 0, Pos));
+	    if ((errorCode = CopyOnWrite(targetptr, volptr, 0, Pos))) {
 		ViceLog(25, ("StoreData : CopyOnWrite failed\n"));
 		volptr->partition->flags &= ~PART_DONTUPDATE;
 		FDH_CLOSE(origfdP);
@@ -7426,7 +7424,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 	 */
 	targetptr->changed_newTime = 1;
 	if (origfdP && (bytesTransfered < Length))	/* Need to "finish" CopyOnWrite still */
-	    CopyOnWrite2(origfdP, fdP, bytesTransfered, Length - bytesTransfered);
+	    CopyOnWrite2(origfdP, fdP, Pos + bytesTransfered, NewLength - Pos - bytesTransfered);
 	if (origfdP) FDH_CLOSE(origfdP);
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
@@ -7435,7 +7433,14 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 					 nBlocks(NewLength)), 0);
 	return errorCode;
     }
-    if (origfdP) FDH_CLOSE(origfdP);
+    if (origfdP) {					/* finish CopyOnWrite */
+	if ( (CoW_off = Pos + Length) < NewLength) {
+	    errorCode = CopyOnWrite2(origfdP, fdP, CoW_off, CoW_len = NewLength - CoW_off);
+	    ViceLog(1, ("StoreData : CopyOnWrite2 on vnode %lu.%lu (%s) off 0x%llx size 0x%llx returns %d\n",
+                        V_id(volptr), targetptr->vnodeNumber, V_name(volptr), CoW_off, CoW_len, errorCode));
+	}
+	FDH_CLOSE(origfdP);
+    }
     FDH_CLOSE(fdP);
 
     FT_GetTimeOfDay(&StopTime, 0);
