@@ -161,6 +161,7 @@ rx_ServerProc(void *unused)
 	/* assert(newcall != NULL); */
     }
     AFS_GLOCK();
+    return NULL;
 }
 
 /*
