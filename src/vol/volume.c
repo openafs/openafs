@@ -196,7 +196,7 @@ static void LoadVolumeHeader(Error * ec, Volume * vp);
 static int VCheckOffline(register Volume * vp);
 static int VCheckDetach(register Volume * vp);
 static Volume * GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flags);
-#if 0
+#ifdef AFS_DEMAND_ATTACH_FS
 static int VolumeExternalName_r(VolumeId volumeId, char * name, size_t len);
 #endif
 
