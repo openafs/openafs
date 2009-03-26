@@ -753,6 +753,7 @@ SendNotifierData(register int fd, register struct bnode_proc *tp)
     if (write(fd, buffer, len) < 0) {
 	return -1;
     }
+    return 0;
 }
 
 int

@@ -1495,8 +1495,8 @@ DbVerify(call, status, orphans, host)
  *	do a simple sanity check on the database header
  */
 
-check_header(callerst)
-     char *callerst;
+void
+check_header(char *callerst)
 {
     static int iteration_count = 0;
     afs_int32 eof;
