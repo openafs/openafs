@@ -246,7 +246,7 @@ static struct {
 static void
 usage(char * prog)
 {
-    fprintf(stderr, "usage: %s [<state dump file>]\n");
+    fprintf(stderr, "usage: %s [<state dump file>]\n", prog);
 }
 
 int
