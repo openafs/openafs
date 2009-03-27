@@ -996,10 +996,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     }
     nam->m_len = sizeof(myaddr);
     memcpy(mtod(nam, caddr_t), &myaddr, sizeof(myaddr));
-#ifdef AFS_SGI65_ENV
+#if defined(AFS_SGI65_ENV)
     BHV_PDATA(&bhv) = (void *)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
+#elif defined(AFS_OBSD44_ENV)
+    code = sobind(newSocket, nam, osi_curproc());
 #else
     code = sobind(newSocket, nam);
 #endif

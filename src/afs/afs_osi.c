@@ -435,6 +435,8 @@ afs_osi_Alloc(size_t x)
     return osi_linux_alloc(x, 1);
 #elif defined(AFS_FBSD_ENV)
     return osi_fbsd_alloc(x, 1);
+#elif defined(AFS_OBSD_ENV)
+    return osi_obsd_Alloc(x, 1);
 #else
     size = x;
     tm = (struct osimem *)AFS_KALLOC(size);

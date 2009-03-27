@@ -160,7 +160,11 @@ int afs_nbsd_advlock(void *);
 /* Global vfs data structures for AFS. */
 int (**afs_vnodeop_p) __P((void *));
 struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
+#ifdef AFS_OBSD44_ENV /* feel free to zero in on this */
+  {&vop_default_desc, eopnotsupp},
+#else
     {&vop_default_desc, vn_default_error},
+#endif
     {&vop_lookup_desc, afs_nbsd_lookup},	/* lookup */
     {&vop_create_desc, afs_nbsd_create},	/* create */
     {&vop_mknod_desc, afs_nbsd_mknod},		/* mknod */
@@ -207,11 +211,11 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 #define GETNAME()	\
     struct componentname *cnp = ap->a_cnp; \
     char *name; \
-    MALLOC(name, char *, cnp->cn_namelen+1, M_TEMP, M_WAITOK); \
+    BSD_KMALLOC(name, char *, cnp->cn_namelen+1, M_TEMP, M_WAITOK); \
     bcopy(cnp->cn_nameptr, name, cnp->cn_namelen); \
     name[cnp->cn_namelen] = '\0'
 
-#define DROPNAME() FREE(name, M_TEMP)
+#define DROPNAME() BSD_KFREE(name, M_TEMP)
 
 #ifdef AFS_OBSD36_ENV
 #define DROPCNP(cnp) pool_put(&namei_pool, (cnp)->cn_pnbuf)
@@ -687,10 +691,10 @@ afs_nbsd_rename(void *v)
     if ((code = vn_lock(fvp, LK_EXCLUSIVE | LK_RETRY, curproc)))
 	goto abortit;
 
-    MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
+    BSD_KMALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
     bcopy(fcnp->cn_nameptr, fname, fcnp->cn_namelen);
     fname[fcnp->cn_namelen] = '\0';
-    MALLOC(tname, char *, tcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
+    BSD_KMALLOC(tname, char *, tcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
     bcopy(tcnp->cn_nameptr, tname, tcnp->cn_namelen);
     tname[tcnp->cn_namelen] = '\0';
 
@@ -702,8 +706,8 @@ afs_nbsd_rename(void *v)
     AFS_GUNLOCK();
 
     VOP_UNLOCK(fvp, 0, curproc);
-    FREE(fname, M_TEMP);
-    FREE(tname, M_TEMP);
+    BSD_KFREE(fname, M_TEMP);
+    BSD_KFREE(tname, M_TEMP);
     if (code)
 	goto abortit;		/* XXX */
     if (tdvp == tvp)
