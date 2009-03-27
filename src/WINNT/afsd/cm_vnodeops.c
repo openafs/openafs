@@ -1932,17 +1932,13 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
                         fid_count = i+1;
                     } else {
                         /* add the new fid to the list */
-                        for ( i=0; i<fid_count; i++) {
-                            if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
-                                code = CM_ERROR_TOO_MANY_SYMLINKS;
-                                cm_ReleaseSCache(nscp);
-                                nscp = NULL;
-                                break;
-                            }
-                        }
-                        if (i == fid_count && fid_count < MAX_FID_COUNT) {
-                            fids[fid_count++] = nscp->fid;
-                        }
+                        if (fid_count == MAX_FID_COUNT) {
+                            code = CM_ERROR_TOO_MANY_SYMLINKS;
+                            cm_ReleaseSCache(nscp);
+                            nscp = NULL;
+                            break;
+                        }       
+                        fids[fid_count++] = nscp->fid;
                     }
                 }
 
