@@ -176,7 +176,7 @@ InitThisModule(int a_noAuthFlag, char *a_confDir, char *a_cellName)
 	    /*
 	     * We got a ticket, go for an authenticated connection.
 	     */
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
+	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
 		scIndex = 2;	/*Kerberos */
 	    else {
 		fprintf(stderr, "%s: Funny kvno (%d) in ticket, proceeding\n",
