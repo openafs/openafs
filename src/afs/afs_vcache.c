@@ -313,6 +313,8 @@ afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
  * held, so we don't have to worry about blocking in osi_Alloc.
  */
 static struct afs_cbr *afs_cbrSpace = 0;
+/* if alloc limit below changes, fix me! */
+static struct afs_cbr *afs_cbrHeads[2];
 struct afs_cbr *
 afs_AllocCBR(void)
 {
@@ -334,6 +336,7 @@ afs_AllocCBR(void)
 	    }
 	    tsp[AFS_NCBRS - 1].next = 0;
 	    afs_cbrSpace = tsp;
+	    afs_cbrHeads[afs_stats_cmperf.CallBackAlloced] = tsp;
 	    afs_stats_cmperf.CallBackAlloced++;
 	}
     }
@@ -3022,7 +3025,7 @@ shutdown_vcache(void)
      */
 
     {
-	register struct afs_q *tq, *uq;
+	register struct afs_q *tq, *uq = NULL;
 	register struct vcache *tvc;
 	for (tq = VLRU.prev; tq != &VLRU; tq = uq) {
 	    tvc = QTOV(tq);
@@ -3077,7 +3080,8 @@ shutdown_vcache(void)
 		    tvc->linkData = 0;
 		}
 
-		afs_FreeAllAxs(&(tvc->Access));
+		if (tvc->Access)
+		    afs_FreeAllAxs(&(tvc->Access));
 	    }
 	    afs_vhashT[i] = 0;
 	}
@@ -3085,8 +3089,9 @@ shutdown_vcache(void)
     /*
      * Free any leftover callback queue
      */
-    for (tsp = afs_cbrSpace; tsp; tsp = nsp) {
-	nsp = tsp->next;
+    for (i = 0; i < afs_stats_cmperf.CallBackAlloced; i++) {
+	tsp = afs_cbrHeads[i];
+	afs_cbrHeads[i] = 0;
 	afs_osi_Free((char *)tsp, AFS_NCBRS * sizeof(struct afs_cbr));
     }
     afs_cbrSpace = 0;
