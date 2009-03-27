@@ -847,7 +847,7 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 		afs_com_err(whoami, code, 0,
 			"; Can't get AFS tokens - running unauthenticated");
 	    } else {
-		if ((ttoken->kvno < 0) || (ttoken->kvno > 255))
+		if ((ttoken->kvno < 0) || (ttoken->kvno > 256))
 		    afs_com_err(whoami, 0,
 			    "Funny kvno (%d) in ticket, proceeding",
 			    ttoken->kvno);
@@ -987,7 +987,7 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
 		afs_com_err(whoami, code,
 			"; Can't get tokens - running unauthenticated");
 	    } else {
-		if ((token.kvno < 0) || (token.kvno > 255))
+		if ((token.kvno < 0) || (token.kvno > 256))
 		    afs_com_err(whoami, 0,
 			    "Unexpected kvno (%d) in ticket - proceeding",
 			    token.kvno);
