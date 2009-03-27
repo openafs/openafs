@@ -131,7 +131,9 @@ void
 osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    invalidate_remote_inode(AFSTOV(avc));
+    struct inode *ip = AFSTOV(avc);
+    
+    truncate_inode_pages(&ip->i_data, 0);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
     struct inode *ip = AFSTOV(avc);
 
