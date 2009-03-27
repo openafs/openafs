@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.9 2008/10/27 23:54:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.10 2008/11/30 19:49:41 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -615,12 +615,12 @@ SDISK_SendFile(rxcall, file, length, avers)
 #endif
     if (!code) 
 	code = rename(pbuffer, tbuffer);
-    if (!code) 
-	code = (*ubik_dbase->open) (ubik_dbase, 0);
-    if (!code)
+    if (!code) {
+	(*ubik_dbase->open) (ubik_dbase, 0);
 #endif
-    code = (*ubik_dbase->setlabel) (dbase, file, avers);
+	code = (*ubik_dbase->setlabel) (dbase, file, avers);
 #ifndef OLD_URECOVERY
+    }
 #ifdef AFS_NT40_ENV
     afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
     unlink(pbuffer);
