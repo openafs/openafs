@@ -374,12 +374,4 @@ Language=English
 MaxBufferSize for client is too small (Client=%1, Server=%2).
 .
 
-MessageId=
-Severity=Informational
-Facility=System
-SymbolicName=MSG_SMB_RESET_ALL_VCS
-Language=English
-Windows SMB Redirector requests reset of all SMB virtual circuits.
-.
-
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */

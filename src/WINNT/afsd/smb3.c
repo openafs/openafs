@@ -715,7 +715,6 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     }
 
     if (vcNumber == 0) {
-        LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_SMB_RESET_ALL_VCS);
         osi_Log0(smb_logp, "Resetting all VCs");
         smb_MarkAllVCsDead(vcp);
     }
