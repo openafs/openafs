@@ -8356,25 +8356,30 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         if (dp->procp) {
             /* we have a recognized operation */
             char * opName = myCrt_Dispatch(inp->inCom);
+            smb_t *smbp;
 
-            if (inp->inCom == 0x1d)
+            smbp = (smb_t *) inp;
+
+            osi_Log5(smb_logp,"Dispatch %s mid 0x%x vcp 0x%p lana %d lsn %d",
+                      opName, smbp->mid, vcp,vcp->lana,vcp->lsn);
+            if (inp->inCom == 0x1d) {
                 /* Raw Write */
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp, rwcp);
-            else {
-                osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",
-                         opName,vcp,vcp->lana,vcp->lsn);
+            } else {
                 code = (*(dp->procp)) (vcp, inp, outp);
-                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%p lana %d lsn %d",
-                         code,vcp,vcp->lana,vcp->lsn);
-#ifdef LOG_PACKET
-                if ( code == CM_ERROR_BADSMB ||
-                     code == CM_ERROR_BADOP )
-                     smb_LogPacket(inp);
-#endif /* LOG_PACKET */
             }   
+            osi_Log5(smb_logp,"Dispatch return code 0x%x mid 0x%x vcp 0x%p lana %d lsn %d",
+                      code, smbp->mid, vcp,vcp->lana,vcp->lsn);
 
             newTime = GetTickCount();
-            osi_Log2(smb_logp, "Dispatch %s duration %d ms", opName, newTime - oldTime);
+            osi_Log3(smb_logp, "Dispatch %s mid 0x%x duration %d ms", 
+                     opName, smbp->mid, newTime - oldTime);
+
+#ifdef LOG_PACKET
+            if ( code == CM_ERROR_BADSMB ||
+                 code == CM_ERROR_BADOP )
+                smb_LogPacket(inp);
+#endif /* LOG_PACKET */
 
             /* ReceiveV3Tran2A handles its own logging */
             if (inp->inCom != 0x32 && newTime - oldTime > 45000) {
