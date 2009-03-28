@@ -195,7 +195,6 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     case MSG_SERVICE_ERROR_STOP:
     case MSG_CRYPT_OFF:
     case MSG_CRYPT_ON:
-    case MSG_SMB_RESET_ALL_VCS:
 	break;
     case MSG_FLUSH_BAD_SHARE_NAME:
     case MSG_FLUSH_OPEN_ENUM_ERROR:
