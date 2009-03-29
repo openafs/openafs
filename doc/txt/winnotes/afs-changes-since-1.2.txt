@@ -1,3 +1,88 @@
+Since 1.5.57
+ * Discovered that XP/2003 supports a variant on recvmsg 
+   called WSARecvMsg.  The input parameters are mostly 
+   compatible with the Posix recvmsg.  This will save 
+   multiple memcpy() calls per received packet.
+
+ * Discovered that Vista/2008 supports a variant on 
+   sendmsg called WSASendMsg.  The input parameters 
+   are mostly compatible with the Posix sendmsg.  This 
+   will save multiple memcpy() calls per sent packet.
+
+ * Exporting rx_ReadProc32, rx_WriteProc32 from afsrpc.dll 
+   and utilizing rx_ReadProc32 from within the cache manager 
+   as part of the FetchData operations.  rx_ReadProc32 and 
+   rx_WriteProc32 are optimized versions of rx_ReadProc and 
+   rx_WriteProc for use when reading 32-bit integer values.
+
+ * The Network Identity Manager AFS provider now reports 
+   progress events.  These provide a better user experience 
+   with Network Identity Manager 2.0.
+
+ * [RT 124293] A race condition exists which permits the 
+   scp field of the an smb_fid_t object to become invalid 
+   after a request on the smb_fid_t has begun.  Remove the 
+   race by protecting all access to the scp field with the 
+   smb_fid_t mx mutex and obtaining a local reference on 
+   the cm_scache_t object for the length of the request.
+
+ * [RT 124276] If the vldb is out of sync with the contents 
+   of the file servers, afsd_service will retry too many 
+   times when a file server reports a volume as not being 
+   present.  Now if the list reported by the vldb is the 
+   same as the previously seen list, then the retry is 
+   aborted.
+
+ * [RT 124276] Read-only volume failover was broken in 
+   1.5.53 whenever accessing a volume results in VNOVOL or 
+   VMOVED.
+
+ * [RT 124276] Prior to 1.3.70 the volume server reference 
+   list was not reference counted and would be prematurely 
+   freed while in use.  When reference counting was added 
+   in 1.3.70 a bug was introduced that could result in 
+   service reference list corruption.
+
+ * Add Windows Application Event Log warning messages for 
+   "Client SMB MPX value too large" and 
+   "Client SMB Buffer Size too small".
+
+ * Renaming of files across directory boundaries would result 
+   in an invalid handle error when attempting to access the 
+   files after the move.
+
+ * Fix the handling of Tran2 Set Path Info RPCs.  Do not fail 
+   when a smb file descriptor cannot be found.  The whole point 
+   of using a Path Info function is because an smb file 
+   descriptor wasn't allocated.
+
+ * More edge cases in which dynamic addition of Freelance 
+   root.afs entries would get the wrong FID or where the 
+   root.afs directory would not be refreshed.
+
+ * Buffer overflow could occur if the workstation cell name was 
+   longer than 64 characters.  Crashes could occur in 
+   afscreds.exe, afslogon.dll, and afsd_service.exe.
+
+ * VNOSERVICE and VOFFLINE errors were leaking and were exposed 
+   to the smb client.
+
+ * Improve consistency of the bad data version value used for 
+   cm_scache fields.
+
+ * Log file server uuid values as part of the cm_server object 
+   when available.  Dump the cm_server object list in response 
+   to "fs memdump".
+
+ * Optimize the performance of resetting access control lists 
+   when tokens are set or removed.
+
+ * Fix vos.exe so that it can work with very large volume 
+   identifiers
+
+ * Remove symlink recursion tests and increase max symlink count 
+   to 64 from 16.
+
 Since 1.5.56
  * Undo the "UAC manifest fix" applied to afs_config.exe.
 
