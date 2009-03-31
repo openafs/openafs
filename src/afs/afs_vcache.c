@@ -784,7 +784,7 @@ afs_AllocVCache(void)
     /* track the peak */
     if (afsd_dynamic_vcaches && afs_maxvcount < afs_vcount) {
 	afs_maxvcount = afs_vcount;
-	printf("peak vnodes: %d\n", afs_maxvcount);
+	/*printf("peak vnodes: %d\n", afs_maxvcount);*/
     }
 #endif
     afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
