@@ -336,7 +336,9 @@ osi_proc_init(void)
     entry = create_proc_entry("unixusers", 0, openafs_procfs);
     if (entry) {
 	entry->proc_fops = &afs_unixuser_fops;
+#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
 	entry->owner = THIS_MODULE;
+#endif
     }
     entry = create_proc_entry(PROC_CELLSERVDB_NAME, 0, openafs_procfs);
     if (entry)
@@ -344,7 +346,9 @@ osi_proc_init(void)
 #else
     entry = create_proc_info_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_info);
 #endif
+#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
     entry->owner = THIS_MODULE;
+#endif
 }
 
 void
