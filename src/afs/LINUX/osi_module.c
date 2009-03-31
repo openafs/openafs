@@ -258,7 +258,9 @@ afsproc_init(void)
 
     entry1->proc_fops = &afs_syscall_fops;
 
+#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
     entry1->owner = THIS_MODULE;
+#endif
 
 #ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
     entry2 = create_proc_entry(PROC_CELLSERVDB_NAME, 0, openafs_procfs);
