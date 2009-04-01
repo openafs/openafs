@@ -1020,7 +1020,7 @@ BOOL CALLBACK MemMgr_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
          MemMgr_StoreSettings();
          l.hManager = NULL;
          KillTimer (hDlg, l.idTimer);
-         l.idTimer = -1;
+         l.idTimer = (UINT_PTR)-1;
          break;
 
       case WM_SIZE:
