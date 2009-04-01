@@ -39,10 +39,19 @@ DDK_INCL = $(NTDDKDIR)\INC\API
 !ERROR netcfgx.h header file cannot be found.  DDK improperly configured.
 !ENDIF
 
+# DDK version 6001 and above contain SDK header files and come with
+# its own set of runtime header files.  We want to use the Platform
+# SDK header files.
+INCLUDE=$(INCLUDE);$(DDK_INCL)
+
 # afsloopback.dll
 
-DLLSOURCEFILES = loopbackutils.cpp renameconnection.cpp wmi.cpp
-DLLOBJFILES =  $(OUT)\loopbackutils.obj $(OUT)\renameconnection.obj $(OUT)\wmi.obj
+DLLSOURCEFILES = loopbackutils.cpp wmi.cpp renameconnection.cpp
+
+# The order of these files is significant.  The first in the list
+# should be an .obj that includes <afx.h> at the top of the source
+# file.  See Q148652
+DLLOBJFILES =  $(OUT)\renameconnection.obj $(OUT)\loopbackutils.obj $(OUT)\wmi.obj
 
 $(EXERES) : instloop.rc AFS_component_version_number.h
 
@@ -57,7 +66,7 @@ $(OUT)\renameconnection.obj: renameconnection.cpp
 	$(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(OUT)\wmi.obj: wmi.cpp
-	$(STATICC2OBJ)  -I$(DDK_INCL) -c -DUNICODE -D_UNICODE /Fo$@ $**
+	$(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(DLLFILE): $(DLLOBJFILES) $(DLLRES)
 	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $** $(DLLLIBFILES)
@@ -66,7 +75,7 @@ $(DLLFILE): $(DLLOBJFILES) $(DLLRES)
 
 # instloop.exe
 
-EXEOBJFILES = $(OUT)\instloop.obj $(DLLOBJFILES)
+EXEOBJFILES = $(DLLOBJFILES) $(OUT)\instloop.obj
 #EXELIBFILES = $(MEDIABINDIR)\afsloopback.lib
 
 $(OUT)\instloop.obj: instloop.c
