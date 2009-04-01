@@ -244,6 +244,7 @@ EXPORTS
         rx_WritevAlloc                          @249
         rx_ReadProc32                           @250
         rx_WriteProc32                          @251
+        xdr_free                                @252
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA
