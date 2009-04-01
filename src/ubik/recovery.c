@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/recovery.c,v 1.13.2.7 2008/10/18 15:24:57 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ubik/recovery.c,v 1.13.2.9 2009/03/20 03:49:16 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -578,7 +578,7 @@ urecovery_Interact(void *dummy)
 	    }
 #ifndef OLD_URECOVERY
 	    flen = length;
-	    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+	    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 	    fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	    if (fd < 0) {
 		code = errno;
@@ -639,27 +639,27 @@ urecovery_Interact(void *dummy)
 #ifdef OLD_URECOVERY
 		(*ubik_dbase->sync) (ubik_dbase, 0);	/* get data out first */
 #else
-		afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB0", ubik_dbase->pathName);
+		afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #ifdef AFS_NT40_ENV
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 		code = unlink(pbuffer);
 		if (!code)
 		    code = rename(tbuffer, pbuffer);
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #endif
 		if (!code) 
 		    code = rename(pbuffer, tbuffer);
-		if (!code) 
-		    code = (*ubik_dbase->open) (ubik_dbase, 0);
-		if (!code)
+		if (!code) {
+		    (*ubik_dbase->open) (ubik_dbase, 0);
 #endif
-		/* after data is good, sync disk with correct label */
-		code =
-		    (*ubik_dbase->setlabel) (ubik_dbase, 0,
-					     &ubik_dbase->version);
+		    /* after data is good, sync disk with correct label */
+		    code =
+			(*ubik_dbase->setlabel) (ubik_dbase, 0,
+						 &ubik_dbase->version);
 #ifndef OLD_URECOVERY
+		}
 #ifdef AFS_NT40_ENV
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 		unlink(pbuffer);
 #endif
 #endif

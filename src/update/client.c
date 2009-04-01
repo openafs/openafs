@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.2.2 2007/10/30 15:24:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.2.3 2009/02/03 19:44:51 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -449,7 +449,7 @@ FetchFile(struct rx_call *call, char *remoteFile, char *localFile, int dirFlag)
     if (fstat(fd, &status) < 0) {
 	afs_com_err(whoami, errno, "Could not stat %s", localFile);
 	close(fd);
-	printf("could not stast %s\n", localFile);
+	printf("could not stat %s\n", localFile);
 	return UPDATE_ERROR;
     }
     if (update_ReceiveFile(fd, call, &status))
@@ -676,6 +676,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
     if (errcode) {
 	printf("failed to fetch file %s \n", filename);
 	afs_com_err(whoami, errcode, "fetching file");
+        unlink(newfile);
 	return 1;
     }
 
@@ -686,6 +687,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
 	       (unsigned int)mode);
 	afs_com_err(whoami, errno, "could not change protection on %s to %u",
 		newfile, mode);
+        unlink(newfile);
 	return 1;
     }
 #ifdef AFS_NT40_ENV
@@ -713,6 +715,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
 	afs_com_err(whoami, errno,
 		"could not change access and modify times on %s to %u %u",
 		newfile, atime, mtime);
+        unlink(newfile);
 	return 1;
     }
 

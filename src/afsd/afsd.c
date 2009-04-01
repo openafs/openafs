@@ -32,6 +32,9 @@
   *	-nosettime  Don't keep checking the time to avoid drift (default).
   *     -settime    Keep checking the time to avoid drift.
   *	-verbose     Be chatty.
+  *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
+  *                          the size of the vcache/stat cache pool, 
+  *                          but increase that pool dynamically as needed.
   *	-debug	   Print out additional debugging info.
   *	-kerndev    [OBSOLETE] The kernel device for AFS.
   *	-dontfork   [OBSOLETE] Don't fork off as a new process.
@@ -58,7 +61,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.25 2007/10/31 22:32:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.26 2009/03/20 02:32:59 shadow Exp $");
 
 #define VFS 1
 
@@ -312,6 +315,7 @@ static int enable_nomount = 0;	/* do not mount */
 #ifdef notdef
 static int inodes = 60;		/* VERY conservative, but has to be */
 #endif
+int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
 int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
@@ -1736,6 +1740,25 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	}
     }
     
+    if (as->parms[34].items) {
+#ifdef AFS_MAXVCOUNT_ENV
+       /* -disable-dynamic-vcaches */
+       afsd_dynamic_vcaches = FALSE;
+#else
+       printf("afsd: Error toggling flag, dynamically allocated vcaches not supported on your platform\n");
+       exit(1);
+#endif
+    }
+#ifdef AFS_MAXVCOUNT_ENV
+    else {
+       /* -dynamic-vcaches */
+       afsd_dynamic_vcaches = TRUE;
+    }
+
+    if (afsd_verbose)
+    printf("afsd: %s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
+#endif
+
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
@@ -2073,6 +2096,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     cparams.chunkSize = chunkSize;
     cparams.setTimeFlag = cacheSetTime;
     cparams.memCacheFlag = cacheFlags;
+    cparams.dynamic_vcaches = afsd_dynamic_vcaches;
 #ifdef notdef
     cparams.inodes = inodes;
 #endif
@@ -2445,6 +2469,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL,
                "set the time");
     cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL, "set rx_extraPackets to this value");
+    cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, "disable stat/vcache cache growing as needed");
     return (cmd_Dispatch(argc, argv));
 }
 

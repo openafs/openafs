@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.10 2007/12/13 18:54:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.11 2009/03/20 22:45:37 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -56,7 +56,9 @@ RCSID
 #include <sys/lockf.h>
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #endif
 #endif
 #ifdef HAVE_UNISTD_H

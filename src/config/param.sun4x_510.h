@@ -34,6 +34,8 @@
 #define AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 #endif /* AFS_NAMEI_ENV */
 
+#define AFS_CACHE_VNODE_PATH 1
+
 #include <afs/afs_sysnames.h>
 
 #define AFS_GLOBAL_SUNLOCK	1	/* For global locking */
@@ -53,6 +55,7 @@
 #define AFS_HAVE_FFS		1	/* Use system's ffs. */
 #define AFS_HAVE_VXFS		1	/* Support cache on Veritas vxfs file system */
 #define AFS_HAVE_STATVFS	1	/* System supports statvfs */
+#define AFS_HAVE_STATVFS64	1	/* System supports statvfs64 */
 #define AFS_VM_RDWR_ENV		1	/* read/write implemented via VM */
 #define AFS_USE_GETTIMEOFDAY	1	/* use gettimeofday to implement rx clock */
 

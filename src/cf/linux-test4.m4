@@ -772,16 +772,39 @@ request_key(NULL, NULL, NULL);
 AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
   AC_MSG_CHECKING([if key_alloc() takes a struct task *])
   AC_CACHE_VAL([ac_cv_key_alloc_needs_struct_task], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
 #include <linux/key.h>
 ],
-[(void) key_alloc(NULL, NULL, 0, 0, NULL, 0, 0);],
+[struct task_struct *t=NULL;
+(void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);],
       ac_cv_key_alloc_needs_struct_task=yes,
-      ac_cv_key_alloc_needs_struct_task=no)])
+      ac_cv_key_alloc_needs_struct_task=no)
+    CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_key_alloc_needs_struct_task)
   if test "x$ac_cv_key_alloc_needs_struct_task" = "xyes"; then
     AC_DEFINE([KEY_ALLOC_NEEDS_STRUCT_TASK], 1, [define if key_alloc takes a struct task *])
+  fi])
+
+AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
+  AC_MSG_CHECKING([if key_alloc() takes credentials])
+  AC_CACHE_VAL([ac_cv_key_alloc_needs_cred], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
+    AC_TRY_KBUILD(
+[#include <linux/rwsem.h>
+#include <linux/key.h>
+],
+[struct cred *c = NULL;
+(void) key_alloc(NULL, NULL, 0, 0, c, 0, 0);],
+      ac_cv_key_alloc_needs_cred=yes,
+      ac_cv_key_alloc_needs_cred=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_key_alloc_needs_cred)
+  if test "x$ac_cv_key_alloc_needs_cred" = "xyes"; then
+    AC_DEFINE([KEY_ALLOC_NEEDS_CRED], 1, [define if key_alloc takes credentials])
   fi])
 
 AC_DEFUN([LINUX_DO_SYNC_READ], [
@@ -814,6 +837,22 @@ AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
   AC_MSG_RESULT($ac_cv_linux_generic_file_aio_read)
   if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
     AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_I_SIZE_READ], [
+  AC_MSG_CHECKING([for linux i_size_read()])
+  AC_CACHE_VAL([ac_cv_linux_i_size_read], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[i_size_read(NULL);],
+      ac_cv_linux_i_size_read=yes,
+      ac_cv_linux_i_size_read=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_i_size_read)
+  if test "x$ac_cv_linux_i_size_read" = "xyes"; then
+    AC_DEFINE([HAVE_LINUX_I_SIZE_READ], 1, [define if your kernel has i_size_read()])
   fi])
 
 AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
@@ -1045,6 +1084,19 @@ AC_DEFUN([LINUX_SEMAPHORE_H_EXISTS], [
     AC_DEFINE([LINUX_SEMAPHORE_H], 1, [define if linux/semaphore.h exists])
   fi])
 
+AC_DEFUN([LINUX_HAVE_BDI_INIT], [
+  AC_MSG_CHECKING([for linux bdi_init()])
+  AC_CACHE_VAL([ac_cv_linux_bdi_init], [
+    AC_TRY_KBUILD(
+[#include <linux/backing-dev.h>],
+[bdi_init(NULL);],
+      ac_cv_linux_bdi_init=yes,
+      ac_cv_linux_bdi_init=no)])
+  AC_MSG_RESULT($ac_cv_linux_bdi_init)
+  if test "x$ac_cv_linux_bdi_init" = "xyes"; then
+    AC_DEFINE([HAVE_BDI_INIT], 1, [define if your kernel has a bdi_init()])
+  fi])
+
 AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
   AC_MSG_CHECKING([for linux write_begin() address space op])
   AC_CACHE_VAL([ac_cv_linux_write_begin], [
@@ -1056,4 +1108,33 @@ AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
   AC_MSG_RESULT($ac_cv_linux_write_begin)
   if test "x$ac_cv_linux_write_begin" = "xyes"; then
     AC_DEFINE([HAVE_WRITE_BEGIN], 1, [define if your kernel has a write_begin() address space op])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], [
+  AC_MSG_CHECKING([for linux grab_cache_page_write_begin()])
+  AC_CACHE_VAL([ac_cv_linux_grab_cache_page_write_begin], [
+    AC_TRY_KBUILD(
+[#include <linux/pagemap.h>],
+[grab_cache_page_write_begin(NULL, 0, 0);],
+      ac_cv_linux_grab_cache_page_write_begin=yes,
+      ac_cv_linux_grab_cache_page_write_begin=no)])
+  AC_MSG_RESULT($ac_cv_linux_grab_cache_page_write_begin)
+  if test "x$ac_cv_linux_grab_cache_page_write_begin" = "xyes"; then
+    AC_DEFINE([HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], 1, [define if your kernel has grab_cache_page_write_begin()])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
+  AC_MSG_CHECKING([if struct task has cred])
+  AC_CACHE_VAL([ac_cv_linux_struct_task_has_cred], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>
+#include <linux/cred.h>],
+[struct task_struct _t;
+uid_t _u;
+_u =_t.cred->uid ;],
+      ac_cv_linux_struct_task_has_cred=yes,
+      ac_cv_linux_struct_task_has_cred=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_task_has_cred)
+  if test "x$ac_cv_linux_struct_task_has_cred" = "xyes"; then
+    AC_DEFINE([STRUCT_TASK_HAS_CRED], 1, [define if struct task has a cred pointer])
   fi])

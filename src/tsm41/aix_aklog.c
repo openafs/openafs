@@ -9,9 +9,10 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/com_err.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/tsm41/aix_aklog.c,v 1.1.4.6 2008/01/03 18:05:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/tsm41/aix_aklog.c,v 1.1.4.8 2009/03/20 22:45:38 shadow Exp $");
 
 #if defined(AFS_AIX51_ENV)
 #include <sys/types.h>
@@ -23,7 +24,9 @@ RCSID
 #include <netdb.h>
 #include <sys/socket.h>
 #include <sys/file.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #include <errno.h>
 #include <usersec.h>
 #include <syslog.h>

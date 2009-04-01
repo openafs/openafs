@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_EXAMINE 1 "OpenAFS" "19/Feb/2008" "AFS Command Reference"
+.TH VOS_EXAMINE 1 "OpenAFS" "1/Feb/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -294,7 +294,13 @@ expressed in kilobyte blocks in the \f(CWMaxQuota\fR field.
 .Ip "\(bu" 4
 The date and time the volume was created, in the \f(CWCreation\fR field. If the
 volume has been restored with the \fBbackup diskrestore\fR, \fBbackup
-volrestore\fR, or \fBvos restore\fR command, this is the restore time.
+volrestore\fR, or \fBvos restore\fR command, this is the restore time. For a
+read-only volume, this is the last release time.
+.Ip "\(bu" 4
+The date and time this copy of this volume was created, in the \f(CWCopy\fR
+field.  This is the time when the volume was created on this server and
+partition.  For read-only volumes, it is not updated by a release (unlike
+the Creation date).  The copy date is not stored in volume dumps.
 .Ip "\(bu" 4
 The date and time when the contents of the volume last changed, in the
 \f(CWLast Update\fR field. For read-only and backup volumes, it matches the
@@ -377,13 +383,14 @@ The following example shows output for the ABC Corporation volume called
 \fI/afs/abc.com/usr\fR directory). For the sake of illustration, the output
 shows the volume as locked.
 .PP
-.Vb 14
+.Vb 15
 \&   % vos examine usr
 \&   usr                           536870981 RW   3459 K On-line
 \&        fs2.abc.com /vicepb
 \&        RWrite 5360870981   ROnly 536870982   Backup 536870983
 \&        MaxQuota      40000 K
 \&        Creation    Mon Jun 12 15:22:06 1989
+\&        Copy        Mon Jun 12 15:22:06 1989
 \&        Last Update Fri Jun 16 09:34:35 1989
 \&        5719 accesses in the past day (i.e., vnode references)
 \&        RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
@@ -396,13 +403,14 @@ shows the volume as locked.
 The following example shows the output for the volume \f(CWuser.terry\fR using
 the \fB\-extended\fR flag. The volume has no read-only replication sites.
 .PP
-.Vb 33
+.Vb 34
 \&   % vos examine -id user.terry -extended
 \&   user.terry         354287190 RW    2302 K used 119 files On-line
 \&       fs4.abc.com /vicepc
 \&       RWrite 354287190 ROnly          0 Backup 354287192
 \&       MaxQuota       5000 K
 \&       Creation    Wed Nov 25 17:38:57 1992
+\&       Copy        Wed Nov 25 17:38:57 1992
 \&       Last Update Tue Dec 15 10:46:20 1992
 \&       598 accesses in the past day (i.e., vnode references)
 \&                         Raw Read/Write Stats
@@ -500,6 +508,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "Off-line"
 
 .IX Item "Off-line**needs salvage**"
+
+.IX Item "\(bu"
 
 .IX Item "\(bu"
 

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.16 2008/03/26 04:10:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.19 2009/01/15 13:27:43 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include "h/module.h" /* early to avoid printf->printk mapping */
@@ -78,11 +78,15 @@ osi_UFSOpen(afs_int32 ainode)
 #endif
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
+#if defined(STRUCT_TASK_HAS_CRED)
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
+#else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
+#endif
     if (IS_ERR(filp))
 	osi_Panic("Can't open inode %d\n", ainode);
     afile->filp = filp;
-    afile->size = FILE_INODE(filp)->i_size;
+    afile->size = i_size_read(FILE_INODE(filp));
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
@@ -133,7 +137,7 @@ osi_UFSOpen(afs_int32 ainode)
 	code = filp->f_op->open(tip, filp);
     if (code)
 	osi_Panic("Can't open inode %d\n", ainode);
-    afile->size = tip->i_size;
+    afile->size = i_size_read(tip);
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
@@ -148,7 +152,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     register afs_int32 code;
     AFS_STATCNT(osi_Stat);
     MObtainWriteLock(&afs_xosi, 320);
-    astat->size = OSIFILE_INODE(afile)->i_size;
+    astat->size = i_size_read(OSIFILE_INODE(afile));
 #if defined(AFS_LINUX26_ENV)
     astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
     astat->atime = OSIFILE_INODE(afile)->i_atime.tv_sec;
@@ -238,7 +242,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
 #else
-    inode->i_size = asize;
+    i_size_write(inode, asize);
     if (inode->i_sb->s_op && inode->i_sb->s_op->notify_change) {
 	code = inode->i_sb->s_op->notify_change(&afile->dentry, &newattrs);
     }

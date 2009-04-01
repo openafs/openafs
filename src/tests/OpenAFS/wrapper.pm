@@ -77,7 +77,7 @@ want to touch (e.g. B<vos dump> when the output file is stdout).
 
 If specified, the path to be used for the program to execute, instead of
 deriving it from the command name.  This is useful when we want the
-command's argv[0] (which is always I<$cmd}) to be different from the
+command's argv[0] (which is always I<$cmd>) to be different from the
 path to the program.
 
 =item errors_last

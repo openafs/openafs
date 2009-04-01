@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.31 2008/08/22 19:17:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.32 2009/03/15 18:42:34 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -83,6 +83,7 @@ static void *c_start(struct seq_file *m, loff_t *pos)
 	struct afs_q *cq, *tq;
 	loff_t n = 0;
 
+	AFS_GLOCK();
 	ObtainReadLock(&afs_xcell);
 	for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 		tq = QNext(cq);
@@ -91,8 +92,9 @@ static void *c_start(struct seq_file *m, loff_t *pos)
 			break;
 	}
 	if (cq == &CellLRU)
-		return NULL;
+		cq = NULL;
 
+	AFS_GUNLOCK();
 	return cq;
 }
 
@@ -100,18 +102,23 @@ static void *c_next(struct seq_file *m, void *p, loff_t *pos)
 {
 	struct afs_q *cq = p, *tq;
 
+
+	AFS_GLOCK();
 	(*pos)++;
 	tq = QNext(cq);
 
 	if (tq == &CellLRU)
-		return NULL;
+		tq = NULL;
 
+	AFS_GUNLOCK();
 	return tq;
 }
 
 static void c_stop(struct seq_file *m, void *p)
 {
+	AFS_GLOCK();
 	ReleaseReadLock(&afs_xcell);
+	AFS_GUNLOCK();
 }
 
 static int c_show(struct seq_file *m, void *p)

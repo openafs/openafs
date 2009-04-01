@@ -102,11 +102,13 @@ Salvager by default salvages them serially to avoid the inefficiency of
 constantly moving the disk head from one partition to another. However,
 this strategy is often not ideal if the partitions are configured as
 logical volumes that span multiple disks. To force the Salvager to salvage
-logical volumes in parallel, provide the string C<all> as the value for
-the B<-parallel> argument. Provide a positive integer to specify the
-number of subprocesses to run in parallel (for example, C<-parallel 5all>
-for five subprocesses), or omit the integer to run up to four
-subprocesses, depending on the number of logical volumes being salvaged.
+logical volumes in parallel as if they were on separate disks, provide the
+string C<all> as the value for the B<-parallel> argument.
+
+To set both parameters at the same time, append the number of Salvager
+processes to the string C<all>. For example, C<-parallel all5> treats
+each partition as a separate disk and runs five Salvager processes, thus
+salvaging five partitions at a time.
 
 The Salvager creates temporary files as it runs, by default writing them
 to the partition it is salvaging. The number of files can be quite large,
@@ -230,7 +232,7 @@ volumes. Use this value only with such logical volumes.
 The BOS Server never starts more Salvager subprocesses than there are
 partitions, and always starts only one process to salvage a single
 volume. If this argument is omitted, up to four Salvager subprocesses run
-in parallel.
+in parallel but partitions on the same device are salvaged serially.
 
 =item B<-tmpdir> <I<name of dir to place tmp files>>
 
