@@ -144,6 +144,7 @@ sub AFS_vos_move {
 #: - id           ID of this volume
 #: - kind         Kind of volume (RW, RO, or BK)
 #: - inuse        Disk space in use
+#: - state        On-line or Off-line
 #: - maxquota     Maximum disk usage quota
 #: - minquota     Minimum disk usage quota (optional)
 #: - stamp_create Time when volume was originally created
@@ -172,7 +173,7 @@ sub AFS_vos_examine {
   push(@args, '-cell', $cell ? $cell : $AFS_Parms{'cell'});
   %result = &wrapper('vos', \@args,
 		     [$vos_err_parse,
-		      ['^(\S+)\s*(\d+)\s*(RW|RO|BK)\s*(\d+)\s*K',          'name', 'id', 'kind', 'inuse'],
+		      ['^(\S+)\s*(\d+)\s*(RW|RO|BK)\s*(\d+)\s*K\s*([-\w]+)',          'name', 'id', 'kind', 'inuse', 'state'],
 		      ['MaxQuota\s*(\d+)\s*K',                             'maxquota'     ],
 		      ['MinQuota\s*(\d+)\s*K',                             'minquota'     ],
 		      ['Creation\s*(.*\S+)',                               'stamp_create' ],

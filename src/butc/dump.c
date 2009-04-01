@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17.2.4 2008/05/02 00:59:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.17.2.5 2009/03/15 18:19:37 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -357,6 +357,13 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 			toread = dataSize;
 		}
 	    }
+
+#ifdef xbsa
+	    /* Set aside space for the trailing volume header when using large buffers. */
+	    if (XBSAMAXBUFFER < toread + sizeof(hostVolumeHeader)) {
+		toread = XBSAMAXBUFFER - sizeof(hostVolumeHeader);
+	    }
+#endif
 
 	    /* Read some volume data. */
 	    if (fragmentvolume) {

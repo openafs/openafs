@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS 1 "OpenAFS" "13/Jul/2008" "AFS Command Reference"
+.TH VOS 1 "OpenAFS" "16/Mar/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -252,6 +252,8 @@ Commands to lock and unlock \s-1VLDB\s0 entries: \fBvos lock\fR, \fBvos unlock\f
 .Ip "\(bu" 4
 A command to report Volume Server status: \fBvos status\fR.
 .Ip "\(bu" 4
+A command to change volume fields: \fBvos setfields\fR.
+.Ip "\(bu" 4
 Commands to obtain help: \fBvos apropos\fR and \fBvos help\fR.
 .SH "CAUTIONS"
 Currently, the maximum size of a volume is 2 terabytes (2^31 bytes)
@@ -354,6 +356,11 @@ command is issued.
 .Sp
 The \fB\-fromserver\fR and \fB\-toserver\fR arguments to the \fBvos move\fR command
 also accept these name formats.
+.Ip "\fB\-noresolve\fR" 4
+Shows all servers as \s-1IP\s0 addresses instead of the \s-1DNS\s0 name. This is very
+useful when the server address is registered as 127.0.0.1 or when dealing
+with multi-homed servers. The \fB\-noresolve\fR option is available in OpenAFS
+versions 1.4.8 or later and 1.5.35 or later.
 .Ip "\fB\-verbose\fR" 4
 Produces on the standard output stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
@@ -397,6 +404,7 @@ the \fIvos_remove(1)\fR manpage,
 the \fIvos_remsite(1)\fR manpage,
 the \fIvos_rename(1)\fR manpage,
 the \fIvos_restore(1)\fR manpage,
+the \fIvos_setfields(1)\fR manpage,
 the \fIvos_shadow(1)\fR manpage,
 the \fIvos_size(1)\fR manpage,
 the \fIvos_status(1)\fR manpage,
@@ -442,6 +450,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Item "\(bu"
 
+.IX Item "\(bu"
+
 .IX Header "CAUTIONS"
 
 .IX Header "OPTIONS"
@@ -461,6 +471,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-partition\fR <\fIpartition name\fR>"
 
 .IX Item "\fB\-server\fR <\fImachine name\fR>"
+
+.IX Item "\fB\-noresolve\fR"
 
 .IX Item "\fB\-verbose\fR"
 

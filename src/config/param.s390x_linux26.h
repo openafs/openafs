@@ -43,6 +43,7 @@
 #define AFS_LINUX_64BIT_KERNEL  1
 #define AFS_64BIT_IOPS_ENV  1
 #define AFS_NAMEI_ENV     1	/* User space interface to file system */
+#define AFS_MAXVCOUNT_ENV       1
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 

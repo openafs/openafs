@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.18 2008/10/10 14:43:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/namei_ops.c,v 1.21.2.19 2009/03/23 18:19:57 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -1572,7 +1572,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     char headername[16];
     afs_int32 error = 0;
 
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
     fd = open(oldpath, O_RDONLY);
     if (fd < 0) {
@@ -1722,7 +1722,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     h.smallVnodeIndex_hi = h.id;
     h.largeVnodeIndex_hi = h.id;
     h.linkTable_hi = h.id;
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(h.id));
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
     fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
     if (fd < 0) {

@@ -41,7 +41,16 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 # else
 #  undef WORDS_BIGENDIAN
 # endif
-#endif])
+#endif
+#ifdef UKERNEL
+/*
+ * Always use 64-bit file offsets for UKERNEL code. Needed for UKERNEL stuff to
+ * play nice with some other interfaces like FUSE. We technically only would
+ * need to define this when building for such interfaces, but set it always to
+ * try and reduce potential confusion. 
+ */
+#define _FILE_OFFSET_BITS 64
+#endif
 
 #undef AFS_AFSDB_ENV
 #undef AFS_LARGEFILE_ENV
@@ -82,7 +91,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef ENABLE_REDHAT_BUILDSYS
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
 #include "redhat-fix.h"
-#endif
+#endif])
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
@@ -320,9 +329,13 @@ case $system in
 		MKAFS_OSTYPE=DARWIN
                 AC_MSG_RESULT(x86_darwin)
                 ;;
-	*-freebsd*)
+	i386-*-freebsd*)
 		MKAFS_OSTYPE=FBSD
 		AC_MSG_RESULT(i386_fbsd)
+		;;
+	x86_64-*-freebsd*)
+		MKAFS_OSTYPE=FBSD
+		AC_MSG_RESULT(amd64_fbsd)
 		;;
 	*-netbsd*)
 		MKAFS_OSTYPE=NBSD
@@ -354,6 +367,12 @@ else
 			vm=${v#*.}
 			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
 			;;
+		x86_64-*-freebsd?.*)
+			v=${host#*freebsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
+			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
 			AFS_SYSNAME="i386_nbsd15"
@@ -378,11 +397,11 @@ else
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="amd64_nbsd20"
 			;;
-		x86_64-*-netbsd*3.[0-8]*)
+		x86_64-*-netbsd*3.[[0-8]]*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="amd64_nbsd30"
 			;;
-		x86_64-*-netbsd*4.[0-8]*)
+		x86_64-*-netbsd*4.[[0-8]]*)
 			AFS_PARAM_COMMON=param.nbsd40.h
 			AFS_SYSNAME="amd64_nbsd40"
 			;;
@@ -694,7 +713,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_EXPORTS_PROC_ROOT_FS
                  LINUX_HAVE_CURRENT_KERNEL_TIME
                  LINUX_HAVE_WRITE_BEGIN_AOP
+                 LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
+                 LINUX_STRUCT_TASK_HAS_CRED
                  LINUX_KMEM_CACHE_INIT
+		 LINUX_HAVE_BDI_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
 		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 		 LINUX_CONFIG_H_EXISTS
@@ -760,12 +782,14 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
+		 LINUX_KEY_ALLOC_NEEDS_CRED
 		 LINUX_DO_SYNC_READ
 		 LINUX_GENERIC_FILE_AIO_READ
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_SYSCTL_TABLE_CHECKING
 		 LINUX_HAVE_IGET
+		 LINUX_HAVE_I_SIZE_READ
 		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
 	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
@@ -1302,7 +1326,7 @@ AC_HEADER_DIRENT
 AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
-AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h)
+AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h sys/pag.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h)
 

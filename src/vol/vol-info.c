@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18.2.5 2008/08/16 19:15:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18.2.6 2009/03/23 18:19:57 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -322,7 +322,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    }
 	}
 	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
-			   (unsigned long)volumeId);
+			   afs_cast_uint32(volumeId));
 	if (dsizeOnly && !saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");

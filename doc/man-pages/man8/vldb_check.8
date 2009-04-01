@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH vldb_check 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH vldb_check 8 "OpenAFS" "16/Feb/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -191,7 +191,7 @@
 vldb_check \- Checks the integrity of the VLDB
 .SH "SYNOPSIS"
 \fBvldb_check\fR <<\ \fB\-database\fR\ <\fIvldb\ file\fR >>> [\fB\-uheader\fR] [\fB\-vheader\fR]
-    [\fB\-servers\fR] [\fB\-entries\fR] [\fB\-verbose\fR] [\fB\-help\fR]
+    [\fB\-servers\fR] [\fB\-entries\fR] [\fB\-quiet\fR | \fB\-verbose\fR] [\fB\-help\fR]
 .PP
 \fBvldb_check\fR <<\ \fB\-d\fR\ <\fIvldb\ file\fR >>> [\fB\-u\fR] [\fB\-vh\fR] [\fB\-s\fR] [\fB\-e\fR]
     [\fB\-ve\fR] [\fB\-h\fR]
@@ -222,9 +222,12 @@ registered for each file server machine in the cell.
 .Ip "\fB\-entries\fR" 4
 Outputs every volume entry in the database. The information includes the
 volume's name and the volume \s-1ID\s0 number for each of its versions.
+.Ip "\fB\-quiet\fR" 4
+Blocks output from going to stdout. Output to stderr is not blocked. Cannot
+be used with \-verbose, \-uheader, \-servers or \-entries.
 .Ip "\fB\-verbose\fR" 4
 Reports additional information about the database, including the number of
-entries for each type of volume.
+entries for each type of volume. Cannot be used with \-quiet.
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
 ignored.
@@ -235,6 +238,16 @@ are provided, the output written to the standard output stream includes
 additional information as described for each option in the \fIOPTIONS\fR manpage.  The
 output is intended for debugging purposes and is meaningful to someone
 familiar with the internal structure of the VLDB.
+.PP
+The \fB\-quiet\fR option can be used to supress the standard output stream
+so that the command can be used more easily inside scripts. 
+.PP
+The command exits with one of the following completion codes:
+.PP
+0: No errors or warnings have been encountered.
+1: One or more warnings encountered.
+2: One or more warnings and/or errors encountered.
+4: A fatal or internal error has occurred and the program cannot proceed.
 .SH "PRIVILEGE REQUIRED"
 The issuer must be logged in as the local superuser \f(CWroot\fR.
 .SH "SEE ALSO"
@@ -271,6 +284,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-servers\fR <\fIauthentication servers\fR>+"
 
 .IX Item "\fB\-entries\fR"
+
+.IX Item "\fB\-quiet\fR"
 
 .IX Item "\fB\-verbose\fR"
 
