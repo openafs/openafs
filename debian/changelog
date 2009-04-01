@@ -1,6 +1,8 @@
 openafs (1.4.9~pre2+dfsg1-1) UNRELEASED; urgency=low
 
   * New upstream testing release.
+    - Use +dfsg instead of .dfsg for saner version sorting.
+  * Update debian/watch for +dfsg naming instead of .dfsg.
   * Translation updates:
     - Japanese, thanks Hideki Yamane.  (Closes: #521518)
 
