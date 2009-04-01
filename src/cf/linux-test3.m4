@@ -1,12 +1,8 @@
 AC_DEFUN([LINUX_KERNEL_LINUX_SYSCALL_H],[
   AC_MSG_CHECKING(for linux/syscall.h in kernel)
-  if test -f "${LINUX_KERNEL_PATH}/include/linux/syscall.h"; then
-    ac_linux_syscall=yes
-    AC_MSG_RESULT($ac_linux_syscall)
-  else
-    ac_linux_syscall=no
-    AC_MSG_RESULT($ac_linux_syscall)
-  fi
+  AC_TRY_KBUILD([#include <linux/syscall.h>], [],
+    [ac_linux_syscall=yes], [ac_linux_syscall=no])
+  AC_MSG_RESULT($ac_linux_syscall)
 ])
 
 AC_DEFUN([LINUX_NEED_RHCONFIG],[
@@ -16,17 +12,16 @@ if test "x$enable_redhat_buildsys" = "xyes"; then
   AC_MSG_WARN(Configured to build from a Red Hat SPEC file)
 else
   AC_MSG_CHECKING(for redhat kernel configuration)
-  if test -f "${LINUX_KERNEL_PATH}/include/linux/rhconfig.h"; then
-    ac_linux_rhconfig=yes
+  AC_TRY_KBUILD([#include <linux/rhconfig.h>], [],
+    [ac_linux_rhconfig=yes], [ac_linux_rhconfig=no])
+  AC_MSG_RESULT($ac_linux_rhconfig)
+  if test $ac_linux_rhconfig = yes; then
     RHCONFIG_SP="-D__BOOT_KERNEL_UP=1 -D__BOOT_KERNEL_SMP=0"
     RHCONFIG_MP="-D__BOOT_KERNEL_UP=0 -D__BOOT_KERNEL_SMP=1"
     AC_MSG_RESULT($ac_linux_rhconfig)
     if test ! -f "/boot/kernel.h"; then
         AC_MSG_WARN([/boot/kernel.h does not exist. build may fail])
     fi
-  else
-    ac_linux_rhconfig=no
-    AC_MSG_RESULT($ac_linux_rhconfig)
   fi
 fi
 AC_SUBST(RHCONFIG_SP)
@@ -76,11 +71,9 @@ AC_SUBST(MPS)
 
 AC_DEFUN([LINUX_KERNEL_SELINUX],[
 AC_MSG_CHECKING(for SELinux kernel)
-save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_kernel_is_selinux,
 [
-AC_TRY_COMPILE(
+AC_TRY_KBUILD(
   [#include <linux/autoconf.h>],
   [#ifndef CONFIG_SECURITY_SELINUX
    #error not SELINUX
@@ -88,15 +81,11 @@ AC_TRY_COMPILE(
   ac_cv_linux_kernel_is_selinux=yes,
   ac_cv_linux_kernel_is_selinux=no)])
 AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
-CPPFLAGS="$save_CPPFLAGS"])
+])
 
 AC_DEFUN([LINUX_KERNEL_LINUX_SEQ_FILE_H],[
   AC_MSG_CHECKING(for linux/seq_file.h in kernel)
-  if test -f "${LINUX_KERNEL_PATH}/include/linux/seq_file.h"; then
-    ac_linux_seq_file=yes
-    AC_MSG_RESULT($ac_linux_seq_file)
-  else
-    ac_linux_seq_file=no
-    AC_MSG_RESULT($ac_linux_seq_file)
-  fi
+  AC_TRY_KBUILD([#include <linux/seq_file.h>], [],
+    [ac_linux_seq_file=yes], [ac_linux_seq_file=no])
+  AC_MSG_RESULT($ac_linux_seq_file)
 ])
