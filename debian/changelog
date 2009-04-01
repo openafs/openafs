@@ -8,6 +8,9 @@ openafs (1.4.9~pre2+dfsg1-1) UNRELEASED; urgency=low
     probes to always use kbuild and generate stub headers in the paths
     that OpenAFS expects that include the linux headers.  Patch from Aaron
     M. Ucko.  (Closes: #521745)
+  * Build PIC versions of libafsauthent and libafsrpc and install them in
+    libopenafs-dev for use when AFS code should be embedded into shared
+    libraries.  Patch from Garrett Wollman.
   * Update debian/watch for +dfsg naming instead of .dfsg.
   * Translation updates:
     - Japanese, thanks Hideki Yamane.  (Closes: #521518)
