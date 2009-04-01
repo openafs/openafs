@@ -2261,9 +2261,10 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                     pathname = inp->stringsp->wdata;
             }
 
-            afsi_log("Request %s duration %d ms user %S tid \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
+            afsi_log("Request %s duration %d ms user 0x%x \"%S\" pid 0x%x mid 0x%x tid 0x%x \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
                       myCrt_2Dispatch(asp->opcode), newTime - oldTime,
-                      uidp ? uidp->unp->name : NULL,
+                      asp->uid, uidp ? uidp->unp->name : NULL,
+                      asp->pid, asp->mid, asp->tid,
                       treepath,
                       pathname, 
                       afid.cell, afid.volume, afid.vnode, afid.unique);
