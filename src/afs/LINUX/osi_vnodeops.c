@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.73 2008/11/08 16:49:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.77 2009/03/19 04:54:50 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -47,6 +47,7 @@ RCSID
 
 #if defined(AFS_LINUX26_ENV)
 #define UnlockPage(pp) unlock_page(pp)
+extern struct backing_dev_info afs_backing_dev_info;
 #endif
 
 extern struct vcache *afs_globalVp;
@@ -1581,7 +1582,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 
     code = afs_write(vcp, &tuio, f_flags, credp, 0);
 
-    ip->i_size = vcp->m.Length;
+    i_size_write(ip, vcp->m.Length);
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
     if (!code) {
@@ -1635,13 +1636,13 @@ afs_linux_writepage(struct page *pp)
 #endif
 
     inode = (struct inode *)mapping->host;
-    end_index = inode->i_size >> PAGE_CACHE_SHIFT;
+    end_index = i_size_read(inode) >> PAGE_CACHE_SHIFT;
 
     /* easy case */
     if (pp->index < end_index)
 	goto do_it;
     /* things got complicated... */
-    offset = inode->i_size & (PAGE_CACHE_SIZE - 1);
+    offset = i_size_read(inode) & (PAGE_CACHE_SIZE - 1);
     /* OK, are we completely out? */
     if (pp->index >= end_index + 1 || !offset)
 	return -EIO;
@@ -1684,7 +1685,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 
     code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);
 
-    ip->i_size = vcp->m.Length;
+    i_size_write(ip, vcp->m.Length);
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
     if (!code) {
@@ -1791,7 +1792,11 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+#if defined(HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN)
+    page = grab_cache_page_write_begin(mapping, index, flags);
+#else
     page = __grab_cache_page(mapping, index);
+#endif
     *pagep = page;
 
     return 0;
@@ -1925,6 +1930,9 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
     if (vattr)
 	vattr2inode(ip, vattr);
 
+#if defined(AFS_LINUX26_ENV)
+    ip->i_mapping->backing_dev_info = &afs_backing_dev_info;
+#endif
 /* Reset ops if symlink or directory. */
     if (S_ISREG(ip->i_mode)) {
 	ip->i_op = &afs_file_iops;

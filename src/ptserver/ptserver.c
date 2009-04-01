@@ -113,7 +113,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.12 2008/08/25 01:15:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.14 2008/12/22 19:23:32 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -336,35 +336,10 @@ main(int argc, char **argv)
 	}
 #endif
 	else if (strncmp(arg, "-auditlog", alen) == 0) {
-	    int tempfd, flags;
-	    FILE *auditout;
-	    char oldName[MAXPATHLEN];
 	    char *fileName = argv[++a];
 
-#ifndef AFS_NT40_ENV
-	    struct stat statbuf;
-
-	    if ((lstat(fileName, &statbuf) == 0) 
-		&& (S_ISFIFO(statbuf.st_mode))) {
-		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
-#endif
-	    {
-		strcpy(oldName, fileName);
-		strcat(oldName, ".old");
-		renamefile(fileName, oldName);
-		flags = O_WRONLY | O_TRUNC | O_CREAT;
-	    }
-	    tempfd = open(fileName, flags, 0666);
-	    if (tempfd > -1) {
-		auditout = fdopen(tempfd, "a");
-		if (auditout) {
-		    osi_audit_file(auditout);
-		    osi_audit(PTS_StartEvent, 0, AUD_END);
-		} else
-		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+            osi_audit_file(fileName);
+            osi_audit(PTS_StartEvent, 0, AUD_END);
 	}
 	else if (!strncmp(arg, "-rxmaxmtu", alen)) {
 	    if ((a + 1) >= argc) {
@@ -536,7 +511,7 @@ main(int argc, char **argv)
     }
 
     code =
-	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, &clones,
+	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, clones,
 			      pr_dbaseName, &dbase);
     if (code) {
 	afs_com_err(whoami, code, "Ubik init failed");

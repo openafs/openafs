@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.12 2008/03/17 15:28:55 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.13 2009/03/15 18:13:55 shadow Exp $");
 
 /*
  * SOLARIS/osi_vnodeops.c
@@ -363,7 +363,7 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
     else
 	tdc = afs_GetDCache(avc, (afs_offs_t) off, &treq, &offset, &nlen, 1);
     if (!tdc)
-	return EINVAL;
+	return afs_CheckCode(EINVAL, &treq, 62);
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
 	afs_PutDCache(tdc);

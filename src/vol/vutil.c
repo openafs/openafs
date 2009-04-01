@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.15.2.3 2008/09/04 18:17:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.15.2.4 2009/03/23 18:19:57 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -171,7 +171,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     vol.stamp.magic = VOLUMEINFOMAGIC;
     vol.stamp.version = VOLUMEINFOVERSION;
     vol.destroyMe = DESTROY_ME;
-    (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, vol.id);
+    (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(vol.id));
     (void)afs_snprintf(volumePath, sizeof volumePath, "%s/%s",
 		       VPartitionPath(partition), headerName);
     fd = afs_open(volumePath, O_CREAT | O_EXCL | O_WRONLY, 0600);

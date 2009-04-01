@@ -164,7 +164,7 @@ struct ubik_dbase {
     int (*sync) (struct ubik_dbase * adbase, afs_int32 afile);
     int (*stat) (struct ubik_dbase * adbase, afs_int32 afid,
 		 struct ubik_stat * astat);
-    int (*open) (struct ubik_dbase * adbase, afs_int32 afid);
+    void (*open) (struct ubik_dbase * adbase, afs_int32 afid);
     int (*setlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/* set the version label */
     int (*getlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/* retrieve the version label */
     int (*getnfiles) (struct ubik_dbase * adbase);	/* find out number of files */

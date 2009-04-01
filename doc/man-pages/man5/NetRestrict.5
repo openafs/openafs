@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH NetRestrict 5 "OpenAFS" "19/Jun/2007" "AFS File Reference"
+.TH NetRestrict 5 "OpenAFS" "6/Jan/2009" "AFS File Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -243,10 +243,7 @@ the peer processes on other database machines in the cell.
 .PP
 The \fINetRestrict\fR file is in \s-1ASCII\s0 format. One \s-1IP\s0 address appears on each
 line, in dotted decimal format. The order of the addresses is not
-significant. The value \f(CW255\fR is a wildcard that represents all possible
-addresses in that field. For example, the value \f(CW192.12.105.255\fR
-indicates that the File Server or database server processes do not
-register or use any of the addresses in the \f(CW192.12.105\fR subnet.
+significant. 
 .PP
 To display the File Server interface addresses registered in the \s-1VLDB\s0, use
 the \fBvos listaddrs\fR command.

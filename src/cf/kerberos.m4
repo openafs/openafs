@@ -1,5 +1,5 @@
 dnl
-dnl $Id: kerberos.m4,v 1.1.2.16 2008/04/18 20:50:28 shadow Exp $
+dnl $Id: kerberos.m4,v 1.1.2.18 2009/03/21 16:30:15 shadow Exp $
 dnl
 dnl Kerberos autoconf glue
 dnl
@@ -37,7 +37,7 @@ fi
 
 AC_ARG_WITH([krb5], [--with-krb5 Support for Kerberos 5 (manual configuration)])
 
-if test X$with_krb5 = Xyes; then
+if test X$with_krb5 != X; then
         if test X$conf_krb5 = XYES; then
 		AC_MSG_ERROR([--with-krb5-config and --with-krb5 are mutually exclusive, choose only one])
 	fi
@@ -51,9 +51,11 @@ if test X$with_krb5 = Xyes; then
 fi
 
 BUILD_KRB5=no
+MAKE_KRB5=#
 if test X$conf_krb5 = XYES; then
 	AC_MSG_RESULT([Configuring support for Kerberos 5 utilities])
 	BUILD_KRB5=yes
+	MAKE_KRB5=
 	save_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
@@ -122,6 +124,7 @@ if test "x$ac_cv_krb5_cc_register_exists" = "xyes"; then
 fi
 
 AC_SUBST(BUILD_KRB5)
+AC_SUBST(MAKE_KRB5)
 AC_SUBST(KRB5CFLAGS)
 AC_SUBST(KRB5LIBS)
 

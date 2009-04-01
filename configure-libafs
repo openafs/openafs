@@ -787,6 +787,7 @@ XLIBKVM
 XLIBS
 KRB5_CONFIG
 BUILD_KRB5
+MAKE_KRB5
 KRB5CFLAGS
 KRB5LIBS
 HELPER_SPLINT
@@ -2181,7 +2182,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs-libafs
- VERSION=1.4.8
+ VERSION=1.4.9pre2
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2329,10 +2330,10 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers src/config/afsconfig.h"
 
-MACOS_VERSION=1.4.8
-LINUX_PKGVER=1.4.8
-#LINUX_PKGREL=0.pre3
-LINUX_PKGREL=1.1
+MACOS_VERSION=1.4.9fc2
+LINUX_PKGVER=1.4.9
+#LINUX_PKGREL=1.1
+LINUX_PKGREL=0.pre2
 
 
 
@@ -4603,47 +4604,6 @@ fi
 
 
 
-#undef AFS_AFSDB_ENV
-#undef AFS_LARGEFILE_ENV
-#undef AFS_NAMEI_ENV
-#undef BITMAP_LATER
-#undef BOS_RESTRICTED_MODE
-#undef BOS_NEW_CONFIG
-#undef FAST_RESTART
-#undef FULL_LISTVOL_SWITCH
-#undef COMPLETION_H_EXISTS
-#undef DEFINED_FOR_EACH_PROCESS
-#undef DEFINED_PREV_TASK
-#undef EXPORTED_KALLSYMS_ADDRESS
-#undef EXPORTED_KALLSYMS_SYMBOL
-#undef EXPORTED_SYS_CALL_TABLE
-#undef EXPORTED_IA32_SYS_CALL_TABLE
-#undef EXPORTED_TASKLIST_LOCK
-#undef INODE_SETATTR_NOT_VOID
-#undef IRIX_HAS_MEM_FUNCS
-#undef RECALC_SIGPENDING_TAKES_VOID
-#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
-#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
-#undef STRUCT_FS_HAS_FS_ROLLED
-#undef STRUCT_INODE_HAS_I_DEVICES
-#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
-#undef STRUCT_INODE_HAS_I_ALLOC_SEM
-#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
-#undef STRUCT_TASK_STRUCT_HAS_PARENT
-#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
-#undef STRUCT_TASK_STRUCT_HAS_SIG
-#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
-#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
-#undef ssize_t
-#undef SIZEOF_TIME_T
-#undef HAVE_STRUCT_BUF
-#undef HAVE_ARPA_NAMESER_COMPAT_H
-/* glue for RedHat kernel bug */
-#undef ENABLE_REDHAT_BUILDSYS
-#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
-#include "redhat-fix.h"
-#endif
-
 { echo "$as_me:$LINENO: checking host system type" >&5
 echo $ECHO_N "checking host system type... $ECHO_C" >&6; }
 if test "${ac_cv_host+set}" = set; then
@@ -6168,10 +6128,15 @@ echo "${ECHO_T}ppc_darwin" >&6; }
                 { echo "$as_me:$LINENO: result: x86_darwin" >&5
 echo "${ECHO_T}x86_darwin" >&6; }
                 ;;
-	*-freebsd*)
+	i386-*-freebsd*)
 		MKAFS_OSTYPE=FBSD
 		{ echo "$as_me:$LINENO: result: i386_fbsd" >&5
 echo "${ECHO_T}i386_fbsd" >&6; }
+		;;
+	x86_64-*-freebsd*)
+		MKAFS_OSTYPE=FBSD
+		{ echo "$as_me:$LINENO: result: amd64_fbsd" >&5
+echo "${ECHO_T}amd64_fbsd" >&6; }
 		;;
 	*-netbsd*)
 		MKAFS_OSTYPE=NBSD
@@ -6207,6 +6172,12 @@ echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6; }
 			vm=${v#*.}
 			AFS_SYSNAME="i386_fbsd_${vM}${vm}"
 			;;
+		x86_64-*-freebsd?.*)
+			v=${host#*freebsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
+			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
 			AFS_SYSNAME="i386_nbsd15"
@@ -6231,11 +6202,11 @@ echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6; }
 			AFS_PARAM_COMMON=param.nbsd20.h
 			AFS_SYSNAME="amd64_nbsd20"
 			;;
-		x86_64-*-netbsd*3.0-8*)
+		x86_64-*-netbsd*3.[0-8]*)
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="amd64_nbsd30"
 			;;
-		x86_64-*-netbsd*4.0-8*)
+		x86_64-*-netbsd*4.[0-8]*)
 			AFS_PARAM_COMMON=param.nbsd40.h
 			AFS_SYSNAME="amd64_nbsd40"
 			;;
@@ -7022,7 +6993,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_linux_kbuild_requires_extra_cflags=no
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7136,7 +7107,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then :
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7265,7 +7236,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_find_task_by_pid=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7390,7 +7361,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_proc_root_fs=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7514,7 +7485,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_have_current_kernel_time=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7631,7 +7602,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_write_begin=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7719,6 +7690,260 @@ _ACEOF
 
   fi
 
+  { echo "$as_me:$LINENO: checking for linux grab_cache_page_write_begin()" >&5
+echo $ECHO_N "checking for linux grab_cache_page_write_begin()... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_grab_cache_page_write_begin+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/pagemap.h>
+
+void conftest(void)
+{
+grab_cache_page_write_begin(NULL, 0, 0);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_grab_cache_page_write_begin=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_grab_cache_page_write_begin=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/pagemap.h>
+int
+main ()
+{
+grab_cache_page_write_begin(NULL, 0, 0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_grab_cache_page_write_begin=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_grab_cache_page_write_begin=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_grab_cache_page_write_begin" >&5
+echo "${ECHO_T}$ac_cv_linux_grab_cache_page_write_begin" >&6; }
+  if test "x$ac_cv_linux_grab_cache_page_write_begin" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN 1
+_ACEOF
+
+  fi
+
+  { echo "$as_me:$LINENO: checking if struct task has cred" >&5
+echo $ECHO_N "checking if struct task has cred... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_struct_task_has_cred+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/sched.h>
+#include <linux/cred.h>
+
+void conftest(void)
+{
+struct task_struct _t;
+uid_t _u;
+_u =_t.cred->uid ;
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_struct_task_has_cred=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_struct_task_has_cred=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/sched.h>
+#include <linux/cred.h>
+int
+main ()
+{
+struct task_struct _t;
+uid_t _u;
+_u =_t.cred->uid ;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_struct_task_has_cred=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_struct_task_has_cred=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_struct_task_has_cred" >&5
+echo "${ECHO_T}$ac_cv_linux_struct_task_has_cred" >&6; }
+  if test "x$ac_cv_linux_struct_task_has_cred" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define STRUCT_TASK_HAS_CRED 1
+_ACEOF
+
+  fi
+
   { echo "$as_me:$LINENO: checking for new kmem_cache init function parameters" >&5
 echo $ECHO_N "checking for new kmem_cache init function parameters... $ECHO_C" >&6; }
   if test "${ac_cv_linux_kmem_cache_init+set}" = set; then
@@ -7758,7 +7983,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_kmem_cache_init=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7842,6 +8067,130 @@ fi
   { echo "$as_me:$LINENO: result: $ac_cv_linux_kmem_cache_init" >&5
 echo "${ECHO_T}$ac_cv_linux_kmem_cache_init" >&6; }
 
+  { echo "$as_me:$LINENO: checking for linux bdi_init()" >&5
+echo $ECHO_N "checking for linux bdi_init()... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_bdi_init+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/backing-dev.h>
+
+void conftest(void)
+{
+bdi_init(NULL);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_bdi_init=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_bdi_init=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/backing-dev.h>
+int
+main ()
+{
+bdi_init(NULL);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_bdi_init=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_bdi_init=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_bdi_init" >&5
+echo "${ECHO_T}$ac_cv_linux_bdi_init" >&6; }
+  if test "x$ac_cv_linux_bdi_init" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_BDI_INIT 1
+_ACEOF
+
+  fi
+
   { echo "$as_me:$LINENO: checking whether kmem_cache_t exists" >&5
 echo $ECHO_N "checking whether kmem_cache_t exists... $ECHO_C" >&6; }
   if test "${ac_cv_linux_have_kmem_cache_t+set}" = set; then
@@ -7878,7 +8227,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_have_kmem_cache_t=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -7995,7 +8344,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_kmem_cache_create_takes_dtor=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8112,7 +8461,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_config_h_exists=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8240,7 +8589,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_completion_h_exists=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8361,7 +8710,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_semaphore_h_exists=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8487,7 +8836,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_defines_for_each_process=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8608,7 +8957,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_defines_prev_task=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8728,7 +9077,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_super_has_alloc_inode=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8847,7 +9196,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_address_space_has_page_lock=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -8966,7 +9315,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_address_space_has_gfp_mask=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9085,7 +9434,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_alloc_sem=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9204,7 +9553,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_blkbits=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9330,7 +9679,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_blksize=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9449,7 +9798,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_truncate_sem=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9568,7 +9917,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9687,7 +10036,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_devices=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9806,7 +10155,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_mmap_shared=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -9925,7 +10274,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_mutex=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10044,7 +10393,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_sb_list=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10163,7 +10512,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_i_security=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10282,7 +10631,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_inotify_lock=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10401,7 +10750,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_inode_has_inotify_sem=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10522,7 +10871,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_inode_setattr_returns_int=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10645,7 +10994,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_write_inode_returns_int=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10769,7 +11118,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_i_create_takes_nameidata=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -10894,7 +11243,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_i_lookup_takes_nameidata=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11019,7 +11368,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_i_permission_takes_nameidata=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11145,7 +11494,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_i_put_link_takes_cookie=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11270,7 +11619,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_d_revalidate_takes_nameidata=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11393,7 +11742,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_f_flush_takes_fl_owner_t=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11518,7 +11867,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_a_writepage_takes_writeback_control=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11641,7 +11990,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_fop_has_flock=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11760,7 +12109,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_fop_has_sendfile=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -11880,7 +12229,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_fs_struct_fop_has_splice=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12025,7 +12374,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_kernel_posix_lock_file_wait_arg=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12216,7 +12565,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_kernel_sock_create_v=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12335,7 +12684,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_kernel_page_follow_link=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12455,7 +12804,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_kernel_hlist_unhashed=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12573,7 +12922,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_key_type_h_exists=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12725,7 +13074,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_recalc_sigpending_takes_void=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12843,7 +13192,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_parent=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -12962,7 +13311,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_real_parent=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13081,7 +13430,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_sig=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13200,7 +13549,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_sighand=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13319,7 +13668,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_sigmask_lock=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13438,7 +13787,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_rlim=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13557,7 +13906,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_signal_rlim=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13676,7 +14025,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_exit_state=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13795,7 +14144,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_tgid=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -13914,7 +14263,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_todo=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14033,7 +14382,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sched_struct_task_struct_has_thread_info=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14155,7 +14504,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_tasklist_lock=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14276,7 +14625,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_get_sb_has_struct_vfsmount=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14396,7 +14745,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_statfs_takes_dentry=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14516,7 +14865,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_freezer_h_exists=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14650,7 +14999,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_func_refrigerator_takes_pf_freeze=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14782,7 +15131,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_keyring_support=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14888,6 +15237,8 @@ echo $ECHO_N "checking if key_alloc() takes a struct task *... $ECHO_C" >&6; }
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
 
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
 
   if test $AFS_SYSKVERS -ge 26 ; then
       rm -fr conftest.dir
@@ -14913,14 +15264,15 @@ _ACEOF
 
 void conftest(void)
 {
-(void) key_alloc(NULL, NULL, 0, 0, NULL, 0, 0);
+struct task_struct *t=NULL;
+(void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);
 }
 
 MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_key_alloc_needs_struct_task=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -14948,7 +15300,8 @@ cat >>conftest.$ac_ext <<_ACEOF
 int
 main ()
 {
-(void) key_alloc(NULL, NULL, 0, 0, NULL, 0, 0);
+struct task_struct *t=NULL;
+(void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);
   ;
   return 0;
 }
@@ -14998,6 +15351,7 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
   CPPFLAGS="$ac_save_CPPFLAGS"
   fi
+    CPPFLAGS="$save_CPPFLAGS"
 fi
 
   { echo "$as_me:$LINENO: result: $ac_cv_key_alloc_needs_struct_task" >&5
@@ -15006,6 +15360,139 @@ echo "${ECHO_T}$ac_cv_key_alloc_needs_struct_task" >&6; }
 
 cat >>confdefs.h <<\_ACEOF
 #define KEY_ALLOC_NEEDS_STRUCT_TASK 1
+_ACEOF
+
+  fi
+
+  { echo "$as_me:$LINENO: checking if key_alloc() takes credentials" >&5
+echo $ECHO_N "checking if key_alloc() takes credentials... $ECHO_C" >&6; }
+  if test "${ac_cv_key_alloc_needs_cred+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/rwsem.h>
+#include <linux/key.h>
+
+
+void conftest(void)
+{
+struct cred *c = NULL;
+(void) key_alloc(NULL, NULL, 0, 0, c, 0, 0);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_key_alloc_needs_cred=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_key_alloc_needs_cred=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/rwsem.h>
+#include <linux/key.h>
+
+int
+main ()
+{
+struct cred *c = NULL;
+(void) key_alloc(NULL, NULL, 0, 0, c, 0, 0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_key_alloc_needs_cred=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_key_alloc_needs_cred=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+    CPPFLAGS="$save_CPPFLAGS"
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_key_alloc_needs_cred" >&5
+echo "${ECHO_T}$ac_cv_key_alloc_needs_cred" >&6; }
+  if test "x$ac_cv_key_alloc_needs_cred" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define KEY_ALLOC_NEEDS_CRED 1
 _ACEOF
 
   fi
@@ -15048,7 +15535,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_do_sync_read=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -15175,7 +15662,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_generic_file_aio_read=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -15305,7 +15792,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_init_work_has_data=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -15428,7 +15915,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_register_sysctl_table_noflag=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -15547,7 +16034,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_sysctl_table_checking=no
     else
       sed '/^ *+/d' conftest.err >&5
@@ -15667,7 +16154,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_have_iget=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -15749,6 +16236,133 @@ fi
   { echo "$as_me:$LINENO: result: $ac_cv_linux_have_iget" >&5
 echo "${ECHO_T}$ac_cv_linux_have_iget" >&6; }
 
+  { echo "$as_me:$LINENO: checking for linux i_size_read()" >&5
+echo $ECHO_N "checking for linux i_size_read()... $ECHO_C" >&6; }
+  if test "${ac_cv_linux_i_size_read+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+
+  if test $AFS_SYSKVERS -ge 26 ; then
+      rm -fr conftest.dir
+  if test "x$ac_linux_kbuild_requires_extra_cflags" = "xyes" ; then
+    CFLAGS_PREFIX='EXTRA_'
+  fi
+  if mkdir conftest.dir &&
+    cat >conftest.dir/Makefile <<_ACEOF &&
+${CFLAGS_PREFIX}CFLAGS += $CPPFLAGS
+
+obj-m += conftest.o
+_ACEOF
+    cat >conftest.dir/conftest.c <<\_ACEOF &&
+/* confdefs.h */
+_ACEOF
+    cat confdefs.h >>conftest.dir/conftest.c &&
+    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+/* end confdefs.h */
+#include <linux/module.h>
+#include <linux/fs.h>
+
+void conftest(void)
+{
+i_size_read(NULL);
+}
+
+MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
+_ACEOF
+    echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
+    make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    then ac_cv_linux_i_size_read=yes
+    else
+      sed '/^ *+/d' conftest.err >&5
+      echo "$as_me: failed using Makefile:" >&5
+      sed 's/^/| /' conftest.dir/Makefile >&5
+      echo "$as_me: and program was:" >&5
+      sed 's/^/| /' conftest.dir/conftest.c >&5
+      ac_cv_linux_i_size_read=no
+  fi; rm -fr conftest.err conftest.dir
+  else
+
+  ac_save_CPPFLAGS="$CPPFLAGS"
+  CPPFLAGS="-I$LINUX_KERNEL_PATH/include -D__KERNEL__ -Werror-implicit-function-declaration $CPPFLAGS"
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <linux/kernel.h>
+#include <linux/fs.h>
+int
+main ()
+{
+i_size_read(NULL);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_i_size_read=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_linux_i_size_read=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+  CPPFLAGS="$ac_save_CPPFLAGS"
+  fi
+    CPPFLAGS="$save_CPPFLAGS"
+fi
+
+  { echo "$as_me:$LINENO: result: $ac_cv_linux_i_size_read" >&5
+echo "${ECHO_T}$ac_cv_linux_i_size_read" >&6; }
+  if test "x$ac_cv_linux_i_size_read" = "xyes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_LINUX_I_SIZE_READ 1
+_ACEOF
+
+  fi
+
   { echo "$as_me:$LINENO: checking for path in struct nameidata" >&5
 echo $ECHO_N "checking for path in struct nameidata... $ECHO_C" >&6; }
   if test "${ac_cv_linux_struct_nameidata_has_path+set}" = set; then
@@ -15786,7 +16400,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_struct_nameidata_has_path=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -15905,7 +16519,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_init_mm=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16024,7 +16638,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_sys_chdir=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16143,7 +16757,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_sys_close=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16262,7 +16876,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_sys_open=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16381,7 +16995,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_sys_wait4=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16499,7 +17113,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_rcu_read_lock=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16640,7 +17254,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_config_smp=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16783,7 +17397,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_kallsyms_address=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -16904,7 +17518,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_kallsyms_symbol=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -17025,7 +17639,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_sys_call_table=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -17146,7 +17760,7 @@ MODULE_LICENSE("http://www.openafs.org/dl/license10.html");
 _ACEOF
     echo make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 &&
     make -C $LINUX_KERNEL_BUILD M=$SRCDIR_PARENT/conftest.dir modules KBUILD_VERBOSE=1 >&5 2>conftest.err &&
-    ! grep -i "^WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
+    ! grep -i "WARNING: .* undefined!$" conftest.err >/dev/null 2>&1
     then ac_cv_linux_exports_ia32_sys_call_table=yes
     else
       sed '/^ *+/d' conftest.err >&5
@@ -20522,7 +21136,8 @@ done
 
 
 
-for ac_header in sys/mount.h strings.h termios.h signal.h poll.h
+
+for ac_header in sys/mount.h strings.h termios.h signal.h poll.h sys/pag.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -23306,7 +23921,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="ld -b"
 		;;
 
-	*fbsd_*)
+	i386_fbsd_*)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-pthread"
@@ -23315,6 +23930,18 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -pipe"
+		YACC="byacc"
+		;;
+
+	amd64_fbsd_*)
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-pthread"
+		PAM_CFLAGS="-O2 -pipe -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
+		TXLIBS="-lncurses"
+		XCFLAGS="-O2 -pipe -fPIC"
 		YACC="byacc"
 		;;
 
@@ -23546,7 +24173,7 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_70)
-		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
+		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
 		KROOT=
@@ -24403,7 +25030,7 @@ if test "${with_krb5+set}" = set; then
 fi
 
 
-if test X$with_krb5 = Xyes; then
+if test X$with_krb5 != X; then
         if test X$conf_krb5 = XYES; then
 		{ { echo "$as_me:$LINENO: error: --with-krb5-config and --with-krb5 are mutually exclusive, choose only one" >&5
 echo "$as_me: error: --with-krb5-config and --with-krb5 are mutually exclusive, choose only one" >&2;}
@@ -24421,10 +25048,12 @@ echo "$as_me: WARNING: KRB5LIBS is not set" >&2;}
 fi
 
 BUILD_KRB5=no
+MAKE_KRB5=#
 if test X$conf_krb5 = XYES; then
 	{ echo "$as_me:$LINENO: result: Configuring support for Kerberos 5 utilities" >&5
 echo "${ECHO_T}Configuring support for Kerberos 5 utilities" >&6; }
 	BUILD_KRB5=yes
+	MAKE_KRB5=
 	save_CPPFLAGS="$CPPFLAGS"
 	CPPFLAGS="$CPPFLAGS $KRB5CFLAGS"
 	save_LIBS="$LIBS"
@@ -25437,6 +26066,7 @@ fi
 
 
 
+
 TOP_SRCDIR="${srcdir}/src"
 case $TOP_SRCDIR in
         /*)
@@ -26326,11 +26956,11 @@ XLIBKVM!$XLIBKVM$ac_delim
 XLIBS!$XLIBS$ac_delim
 KRB5_CONFIG!$KRB5_CONFIG$ac_delim
 BUILD_KRB5!$BUILD_KRB5$ac_delim
+MAKE_KRB5!$MAKE_KRB5$ac_delim
 KRB5CFLAGS!$KRB5CFLAGS$ac_delim
 KRB5LIBS!$KRB5LIBS$ac_delim
 HELPER_SPLINT!$HELPER_SPLINT$ac_delim
 HELPER_SPLINTCFG!$HELPER_SPLINTCFG$ac_delim
-LIBOBJS!$LIBOBJS$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -26372,10 +27002,11 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 1; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 2; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

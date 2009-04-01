@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_cred.c,v 1.10.2.3 2006/12/19 02:29:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_cred.c,v 1.10.2.4 2009/01/15 13:27:43 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -79,15 +79,15 @@ crref(void)
 {
     cred_t *cr = crget();
 
-    cr->cr_uid = current->fsuid;
-    cr->cr_ruid = current->uid;
-    cr->cr_gid = current->fsgid;
-    cr->cr_rgid = current->gid;
+    cr->cr_uid = current_fsuid();
+    cr->cr_ruid = current_uid();
+    cr->cr_gid = current_fsgid();
+    cr->cr_rgid = current_gid();
 
 #if defined(AFS_LINUX26_ENV)
     task_lock(current);
-    get_group_info(current->group_info);
-    cr->cr_group_info = current->group_info;
+    get_group_info(current_group_info());
+    cr->cr_group_info = current_group_info();
     task_unlock(current);
 #else
     memcpy(cr->cr_groups, current->groups, NGROUPS * sizeof(gid_t));
@@ -101,10 +101,20 @@ crref(void)
 void
 crset(cred_t * cr)
 {
+#if defined(STRUCT_TASK_HAS_CRED)
+    struct cred *new_creds;
+
+    new_creds = prepare_creds();
+    new_creds->fsuid = cr->cr_uid;
+    new_creds->uid = cr->cr_ruid;
+    new_creds->fsgid = cr->cr_gid;
+    new_creds->gid = cr->cr_rgid;
+#else
     current->fsuid = cr->cr_uid;
     current->uid = cr->cr_ruid;
     current->fsgid = cr->cr_gid;
     current->gid = cr->cr_rgid;
+#endif
 #if defined(AFS_LINUX26_ENV)
 {
     struct group_info *old_info;
@@ -113,8 +123,14 @@ crset(cred_t * cr)
     get_group_info(cr->cr_group_info);
 
     task_lock(current);
+#if defined(STRUCT_TASK_HAS_CRED)
+    old_info = current->cred->group_info;
+    new_creds->group_info = cr->cr_group_info;
+    commit_creds(new_creds);
+#else
     old_info = current->group_info;
     current->group_info = cr->cr_group_info;
+#endif
     task_unlock(current);
 
     put_group_info(old_info);
