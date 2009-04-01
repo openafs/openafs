@@ -617,6 +617,7 @@ int afsd_InitCM(char **reasonP)
     int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
     int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
     int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
+    DWORD dwPriority;
 
     WSAStartup(0x0101, &WSAjunk);
 
@@ -665,6 +666,16 @@ int afsd_InitCM(char **reasonP)
                          msgBuf);
         osi_panic(buf, __FILE__, __LINE__);
     }
+
+    dummyLen = sizeof(dwPriority);
+    code = RegQueryValueEx(parmKey, "PriorityClass", NULL, NULL,
+                            (BYTE *) &dwPriority, &dummyLen);
+    if (code != ERROR_SUCCESS || dwPriority == 0) {
+        dwPriority = HIGH_PRIORITY_CLASS;
+    }
+    if (dwPriority != GetPriorityClass(GetCurrentProcess()))
+        SetPriorityClass(GetCurrentProcess(), dwPriority);
+    afsi_log("PriorityClass 0x%x", GetPriorityClass(GetCurrentProcess()));
 
     dummyLen = sizeof(lockOrderValidation);
     code = RegQueryValueEx(parmKey, "LockOrderValidation", NULL, NULL,
