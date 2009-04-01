@@ -51,7 +51,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.21.2.9 2007/10/30 15:24:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptprocs.c,v 1.21.2.10 2009/03/19 03:45:02 shadow Exp $");
 
 #include <afs/stds.h>
 #include <ctype.h>
@@ -637,7 +637,7 @@ nameToID(call, aname, aid)
 
 	if (cell && afs_is_foreign_ticket_name(nameinst,NULL,cell,pr_realmName))
 	    code = NameToID(tt, aname->namelist_val[i], &aid->idlist_val[i]);
-	else
+	else 
 	    code = NameToID(tt, nameinst, &aid->idlist_val[i]);
 
 	if (code != PRSUCCESS)

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH salvager 8 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH salvager 8 "OpenAFS" "1/Feb/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -262,11 +262,13 @@ Salvager by default salvages them serially to avoid the inefficiency of
 constantly moving the disk head from one partition to another. However,
 this strategy is often not ideal if the partitions are configured as
 logical volumes that span multiple disks. To force the Salvager to salvage
-logical volumes in parallel, provide the string \f(CWall\fR as the value for
-the \fB\-parallel\fR argument. Provide a positive integer to specify the
-number of subprocesses to run in parallel (for example, \f(CW-parallel 5all\fR
-for five subprocesses), or omit the integer to run up to four
-subprocesses, depending on the number of logical volumes being salvaged.
+logical volumes in parallel as if they were on separate disks, provide the
+string \f(CWall\fR as the value for the \fB\-parallel\fR argument.
+.PP
+To set both parameters at the same time, append the number of Salvager
+processes to the string \f(CWall\fR. For example, \f(CW-parallel all5\fR treats
+each partition as a separate disk and runs five Salvager processes, thus
+salvaging five partitions at a time.
 .PP
 The Salvager creates temporary files as it runs, by default writing them
 to the partition it is salvaging. The number of files can be quite large,
@@ -353,7 +355,7 @@ volumes. Use this value only with such logical volumes.
 The \s-1BOS\s0 Server never starts more Salvager subprocesses than there are
 partitions, and always starts only one process to salvage a single
 volume. If this argument is omitted, up to four Salvager subprocesses run
-in parallel.
+in parallel but partitions on the same device are salvaged serially.
 .Ip "\fB\-tmpdir\fR <\fIname of dir to place tmp files\fR>" 4
 Names a local disk directory in which the Salvager places the temporary
 files it creates during a salvage operation, instead of writing them to

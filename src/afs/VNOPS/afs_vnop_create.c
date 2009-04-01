@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.10 2007/12/08 18:00:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.11 2008/12/29 21:26:25 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -217,6 +217,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    VATTR_INIT(attrs);
 		    VATTR_SET_SUPPORTED(attrs, va_data_size);
 		    VATTR_SET_ACTIVE(attrs, va_data_size);
+#elif defined(UKERNEL)
+		    attrs->va_mask = ATTR_SIZE;
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		    attrs->va_mask = AT_SIZE;
 #else

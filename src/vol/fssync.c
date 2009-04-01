@@ -51,15 +51,15 @@ static int newVLDB = 1;
 #include <afs/afsutil.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/Attic/fssync.c,v 1.26.2.10 2008/04/01 20:05:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/Attic/fssync.c,v 1.26.2.12 2009/03/23 18:19:57 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
-#include <unistd.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <time.h>
 #else
+#include <unistd.h>
 #include <sys/param.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -527,7 +527,7 @@ defect #2080 for details.
 	if (v)
 	    v->volumeID = 0;
 	tvolName[0] = '/';
-	sprintf(&tvolName[1], VFORMAT, command.volume);
+	sprintf(&tvolName[1], VFORMAT, afs_cast_uint32(command.volume));
 
 	vp = VAttachVolumeByName_r(&error, command.partName, tvolName,
 				   V_VOLUPD);
@@ -667,7 +667,7 @@ FSYNC_Drop(int fd)
 	    Volume *vp;
 
 	    tvolName[0] = '/';
-	    sprintf(&tvolName[1], VFORMAT, p[i].volumeID);
+	    sprintf(&tvolName[1], VFORMAT, afs_cast_uint32(p[i].volumeID));
 	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName,
 				       V_VOLUPD);
 	    if (vp)

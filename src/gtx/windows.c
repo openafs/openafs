@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/gtx/windows.c,v 1.6 2003/07/15 23:15:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/gtx/windows.c,v 1.6.2.1 2009/03/17 02:39:43 shadow Exp $");
 
 /* On DUX "IN" is a variable in curses.h, so this can be a bit of a problem */
 #ifdef IN
@@ -114,7 +114,7 @@ gw_init(params)
 	    fprintf(stderr, "[%s:%s] Initializing for the X11 package\n", mn,
 		    rn);
 	gwinbops = gator_X11_gwinbops;
-	code = gator_X11gwin_init(params);
+	code = gator_X11gwin_init(gwin_debug);
 	if (code) {
 	    fprintf(stderr,
 		    "[%s:%s] Error in X11 initialization routine, gator_X11gwin_init(): %d\n",

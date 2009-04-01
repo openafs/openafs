@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.11 2006/11/10 00:08:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.14 2009/01/13 19:37:28 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -344,7 +344,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 #elif	defined(AFS_AIX_ENV)
 /* Boy, was this machine dependent bogosity hard to swallow????.... */
     if (av->va_mode != -1) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MODE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MODE) {
@@ -363,7 +363,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if     defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_gid)) {
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_GID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_GID) {
@@ -383,7 +383,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if     defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_uid)) {
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_UID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_UID) {
@@ -403,7 +403,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if     defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_modify_time)) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MTIME) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MTIME) {
@@ -482,7 +482,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
      */
 #if	defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
@@ -515,19 +515,28 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 #endif
 #if	defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
 #elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
-#else
+#elif	defined(AFS_AIX41_ENV)
     if (attrs->va_size != -1) {
+#else
+    if (attrs->va_size != ~0) {
 #endif
 	afs_size_t tsize = attrs->va_size;
 	ObtainWriteLock(&avc->lock, 128);
 	avc->states |= CDirty;
 	code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
+#ifdef AFS_LINUX26_ENV
+	/* We must update the Linux kernel's idea of file size as soon as
+	 * possible, to avoid racing with delayed writepages delivered by
+	 * pdflush */
+	if (code == 0) 
+	    i_size_write(AFSTOV(avc), tsize);
+#endif
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
 	if (!(astat.Mask & AFS_SETMODTIME)) {

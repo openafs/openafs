@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.30 2008/08/25 01:15:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.58.2.36 2009/03/25 13:07:27 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -315,16 +315,16 @@ ResetCheckDescriptors(void)
 }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (int)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
 /* proc called by rxkad module to get a key */
 static int
-get_key(char *arock, register afs_int32 akvno, char *akey)
+get_key(void *arock, register afs_int32 akvno, char *akey)
 {
     /* find the key */
     static struct afsconf_key tkey;
@@ -1090,7 +1090,7 @@ ParseArgs(int argc, char *argv[])
 		     AFS_REALM_SZ);
 		return -1;
 	    }
-	    if (num_lrealms == -1)
+	    if (num_lrealms == -1) 
 		num_lrealms = 0;
 	    if (num_lrealms >= AFS_NUM_LREALMS) {
 		printf
@@ -1129,34 +1129,9 @@ ParseArgs(int argc, char *argv[])
 	    rx_enableProcessRPCStats();
 	}
 	else if (strcmp(argv[i], "-auditlog") == 0) {
-	    int tempfd, flags;
-	    FILE *auditout;
-	    char oldName[MAXPATHLEN];
 	    char *fileName = argv[++i];
-	    
-#ifndef AFS_NT40_ENV
-	    struct stat statbuf;
-	    
-	    if ((lstat(fileName, &statbuf) == 0) 
-		&& (S_ISFIFO(statbuf.st_mode))) {
-		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
-#endif
-	    {
-		strcpy(oldName, fileName);
-		strcat(oldName, ".old");
-		renamefile(fileName, oldName);
-		flags = O_WRONLY | O_TRUNC | O_CREAT;
-	    }
-	    tempfd = open(fileName, flags, 0666);
-	    if (tempfd > -1) {
-		auditout = fdopen(tempfd, "a");
-		if (auditout) {
-		    osi_audit_file(auditout);
-		} else
-		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+
+            osi_audit_file(fileName);
 	}
 #ifndef AFS_NT40_ENV
 	else if (strcmp(argv[i], "-syslog") == 0) {

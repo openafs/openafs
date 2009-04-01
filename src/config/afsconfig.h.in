@@ -115,6 +115,9 @@
 /* define if arpa/nameser_compat.h exists */
 #undef HAVE_ARPA_NAMESER_COMPAT_H
 
+/* define if your kernel has a bdi_init() */
+#undef HAVE_BDI_INIT
+
 /* define if you have connect */
 #undef HAVE_CONNECT
 
@@ -154,6 +157,9 @@
 
 /* Define to 1 if you have the `getprogname' function. */
 #undef HAVE_GETPROGNAME
+
+/* define if your kernel has grab_cache_page_write_begin() */
+#undef HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
 
 /* define if your kernel has iget */
 #undef HAVE_IGET
@@ -223,6 +229,9 @@
 
 /* define if krb5_prompt has type */
 #undef HAVE_KRB5_PROMPT_TYPE
+
+/* define if your kernel has i_size_read() */
+#undef HAVE_LINUX_I_SIZE_READ
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
@@ -361,6 +370,9 @@
    */
 #undef HAVE_SYS_NDIR_H
 
+/* Define to 1 if you have the <sys/pag.h> header file. */
+#undef HAVE_SYS_PAG_H
+
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
 
@@ -438,6 +450,9 @@
 
 /* define if irix has memcpy and friends */
 #undef IRIX_HAS_MEM_FUNCS
+
+/* define if key_alloc takes credentials */
+#undef KEY_ALLOC_NEEDS_CRED
 
 /* define if key_alloc takes a struct task * */
 #undef KEY_ALLOC_NEEDS_STRUCT_TASK
@@ -526,6 +541,56 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #  undef WORDS_BIGENDIAN
 # endif
 #endif
+#ifdef UKERNEL
+/*
+ * Always use 64-bit file offsets for UKERNEL code. Needed for UKERNEL stuff to
+ * play nice with some other interfaces like FUSE. We technically only would
+ * need to define this when building for such interfaces, but set it always to
+ * try and reduce potential confusion. 
+ */
+#define _FILE_OFFSET_BITS 64
+#endif
+
+#undef AFS_AFSDB_ENV
+#undef AFS_LARGEFILE_ENV
+#undef AFS_NAMEI_ENV
+#undef BITMAP_LATER
+#undef BOS_RESTRICTED_MODE
+#undef BOS_NEW_CONFIG
+#undef FAST_RESTART
+#undef FULL_LISTVOL_SWITCH
+#undef COMPLETION_H_EXISTS
+#undef DEFINED_FOR_EACH_PROCESS
+#undef DEFINED_PREV_TASK
+#undef EXPORTED_KALLSYMS_ADDRESS
+#undef EXPORTED_KALLSYMS_SYMBOL
+#undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_IA32_SYS_CALL_TABLE
+#undef EXPORTED_TASKLIST_LOCK
+#undef INODE_SETATTR_NOT_VOID
+#undef IRIX_HAS_MEM_FUNCS
+#undef RECALC_SIGPENDING_TAKES_VOID
+#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+#undef STRUCT_FS_HAS_FS_ROLLED
+#undef STRUCT_INODE_HAS_I_DEVICES
+#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_ALLOC_SEM
+#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+#undef STRUCT_TASK_STRUCT_HAS_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_SIG
+#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
+#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+#undef ssize_t
+#undef SIZEOF_TIME_T
+#undef HAVE_STRUCT_BUF
+#undef HAVE_ARPA_NAMESER_COMPAT_H
+/* glue for RedHat kernel bug */
+#undef ENABLE_REDHAT_BUILDSYS
+#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
+#include "redhat-fix.h"
+#endif
 
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
@@ -612,6 +677,9 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 /* define if your struct super_operations has alloc_inode */
 #undef STRUCT_SUPER_HAS_ALLOC_INODE
+
+/* define if struct task has a cred pointer */
+#undef STRUCT_TASK_HAS_CRED
 
 /* define if your struct task_struct has exit_state */
 #undef STRUCT_TASK_STRUCT_HAS_EXIT_STATE

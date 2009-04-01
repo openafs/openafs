@@ -155,7 +155,7 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #endif
 
 /* cred struct */
-typedef struct cred {		/* maps to task field: */
+typedef struct afs_cred {		/* maps to task field: */
     int cr_ref;
     uid_t cr_uid;		/* euid */
     uid_t cr_ruid;		/* uid */
@@ -167,10 +167,34 @@ typedef struct cred {		/* maps to task field: */
     gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
     int cr_ngroups;
 #endif
-    struct cred *cr_next;
+    struct afs_cred *cr_next;
 } cred_t;
-#define AFS_UCRED cred
+#define AFS_UCRED afs_cred
 #define AFS_PROC struct task_struct
+#if !defined(current_cred)
+#define current_gid() (current->gid)
+#define current_uid() (current->uid)
+#define current_fsgid() (current->fsgid)
+#define current_fsuid() (current->fsuid)
+#endif
+#if defined(STRUCT_TASK_HAS_CRED)
+#define current_group_info() (current->cred->group_info)
+#define task_gid(task) (task->cred->gid)
+#define task_user(task) (task->cred->user)
+#define task_session_keyring(task) (task->cred->tgcred->session_keyring)
+#define current_session_keyring() (current->cred->tgcred->session_keyring)
+#else
+#define current_group_info() (current->group_info)
+#if !defined(task_gid)
+#define task_gid(task) (task->gid)
+#endif
+#if !defined(task_uid)
+#define task_uid(task) (task->uid)
+#endif
+#define task_user(task) (task->user)
+#define task_session_keyring(task) (task->signal->session_keyring)
+#define current_session_keyring() (current->signal->session_keyring)
+#endif
 #define crhold(c) (c)->cr_ref++
 
 /* UIO manipulation */

@@ -58,9 +58,7 @@ AUTH_KRB_OBJS = \
 		aix_ktc_krb.o \
 
 AUTHLIBS= \
-		afs_dynamic_auth \
-		aklog_dynamic_auth \
-		afs_dynamic_kerbauth
+		afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
 
 IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp 
 LDFLAGS = -eafs_initialize ${IMPORTS} -lsys -lcsys -lc
@@ -71,7 +69,7 @@ all: $(AUTHLIBS)
 install install.noversion:
 
 clean:
-	$(RM) -f $(AUTHLIBS) $(AUTHFILES) so_locations
+	$(RM) -f *.o $(AUTHLIBS) $(AUTHFILES) so_locations
 
 afs_dynamic_auth: ${AUTH_OBJS} ${AFSLIBS} ${AUTHFILES}
 	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
@@ -100,6 +98,8 @@ aix_auth.o:
 		${CC} ${CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
 	rs_aix5*) \
 		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
+	rs_aix6*) \
+		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	*) \
 		echo "not building aix lam binary for ${SYS_NAME}" ;; \
 	esac
@@ -114,7 +114,9 @@ ${DEST}/root.client/usr/vice/etc/afs_dynamic_auth: afs_dynamic_auth
 ${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth: afs_dynamic_kerbauth
 	${INSTALL} $? $@
 
+${DEST}/root.client/usr/vice/etc/aklog_dynamic_auth: aklog_dynamic_auth
+	${INSTALL} $? $@
+
 dest: \
-	${DEST}/root.client/usr/vice/etc/afs_dynamic_auth \
-	${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth
+	${DEST}/root.client/usr/vice/etc/afs_dynamic_auth ${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth @MAKE_KRB5@ ${DEST}/root.client/usr/vice/etc/aklog_dynamic_auth
 

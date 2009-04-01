@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.9 2008/06/30 20:31:41 rra Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.10 2009/02/17 04:32:30 shadow Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -147,7 +147,7 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
     TM_GetTimeOfDay(&Start, 0);
     TimeFields = localtime(&Start.tv_sec);
     sprintf(FileName, "%s.%d%02d%02d%02d%02d%02d", tbuffer,
-	    TimeFields->tm_year, TimeFields->tm_mon + 1, TimeFields->tm_mday,
+	    TimeFields->tm_year + 1900, TimeFields->tm_mon + 1, TimeFields->tm_mday,
 	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
     strcpy(tbuffer, FileName);
 #endif

@@ -584,6 +584,7 @@ if ($unwind) {
     unwind($os->command('remove', "$path->{'afsconfdir'}/ThisCell"));
     unwind($os->command('remove', "$path->{'afsconfdir'}/CellServDB"));
     unwind($os->command('remove', "$path->{'afsconfdir'}/UserList"));
+    unwind($os->command('remove', "$path->{'afsconfdir'}/KeyFile"));
     unwind($os->command('remove', "$path->{'afsbosconfigdir'}/BosConfig"));
     unwind($os->command('fileserver-stop'));
 }
@@ -680,7 +681,7 @@ print "debug: Starting the fileserver...\n" if $debug;
 if ($with_dafs) {
   run( "$bos create $server dafs dafs ".
        "-cmd \"$path->{'afssrvlibexecdir'}/fileserver $options_fileserver\" ".
-       "-cmd \"$path->{'afssrvlibexecdir'}/volserver $options_volserver\"".
+       "-cmd \"$path->{'afssrvlibexecdir'}/volserver $options_volserver\" ".
        "-cmd \"$path->{'afssrvlibexecdir'}/salvageserver $options_salvageserver\" ".
        "-cmd \"$path->{'afssrvlibexecdir'}/salvager $options_salvager\" ".
        "-noauth");
