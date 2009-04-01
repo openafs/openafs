@@ -134,14 +134,17 @@ LIBOBJS = \
 
 LIBAFSRPC = libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}.${LIBAFSRPCMINOR}
 
-all: ${TOP_LIBDIR}/${LIBAFSRPC}
+all: ${TOP_LIBDIR}/${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc_pic.a
 
-install: ${DESTDIR}${libdir}/${LIBAFSRPC}
+install: ${DESTDIR}${libdir}/${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc_pic.a
 
 ${DEST}/lib/${LIBAFSRPC}: ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${DEST}/lib/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSRPC} ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
+
+${DEST}/lib/libafsrpc_pic.a: libafsrpc_pic.a
+	${INSTALL} libafsrpc_pic.a ${DEST}/lib/libafsrpc_pic.a
 
 ${LIBAFSRPC}: ${LIBOBJS}
 	case ${SYS_NAME} in \
@@ -156,6 +159,11 @@ ${LIBAFSRPC}: ${LIBOBJS}
 	*) \
 		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	esac
+
+libafsrpc_pic.a: ${LIBOBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
 
 rx_event.o: ${RX}/rx_event.c
 	${CCRULE}
@@ -418,10 +426,16 @@ ${DESTDIR}${libdir}/${LIBAFSRPC}: ${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSRPC} ${DESTDIR}${libdir}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
+${DESTDIR}${libdir}/libafsrpc_pic.a: libafsrpc_pic.a
+	${INSTALL} libafsrpc_pic.a ${DESTDIR}${libdir}/libafsrpc_pic.a
+
 ${TOP_LIBDIR}/${LIBAFSRPC}: ${LIBAFSRPC}
 	${INSTALL} ${LIBAFSRPC} ${TOP_LIBDIR}/${LIBAFSRPC}
 	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}
 
-dest: ${DEST}/lib/${LIBAFSRPC}
+${TOP_LIBDIR}/libafsrpc_pic.a: libafsrpc_pic.a
+	${INSTALL} libafsrpc_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a
+
+dest: ${DEST}/lib/${LIBAFSRPC} ${DEST}/lib/libafsrpc_pic.a
 
