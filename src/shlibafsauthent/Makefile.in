@@ -104,9 +104,12 @@ ${DEST}/lib/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
-all: ${TOP_LIBDIR}/${LIBAFSAUTHENT}
+${DEST}/lib/libafsauthent_pic.a: libafsauthent_pic.a
+	${INSTALL} ${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent_pic.a
 
-install: ${DESTDIR}${libdir}/${LIBAFSAUTHENT}
+all: ${TOP_LIBDIR}/${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent_pic.a
+
+install: ${DESTDIR}${libdir}/${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent_pic.a
 
 ${LIBAFSAUTHENT}: ${LIBOBJS}
 	case ${SYS_NAME} in \
@@ -119,6 +122,11 @@ ${LIBAFSAUTHENT}: ${LIBOBJS}
 	*) \
 		${SHLIB_LINKER} -o ${LIBAFSAUTHENT} ${LIBOBJS} -L${TOP_LIBDIR} -lafsrpc ${MT_LIBS};; \
 	esac
+
+libafsauthent_pic.a: ${LIBOBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
 
 audit.o: ${AUDIT}/audit.c
 	${CCRULE}
@@ -276,9 +284,15 @@ ${DESTDIR}${libdir}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${DESTDIR}${libdir}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
+${DESTDIR}${libdir}/libafsauthent_pic.a: libafsauthent_pic.a
+	${INSTALL} libafsauthent_pic.a ${DESTDIR}${libdir}/libafsauthent_pic.a
+
 ${TOP_LIBDIR}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
 	${INSTALL} ${LIBAFSAUTHENT} ${TOP_LIBDIR}/${LIBAFSAUTHENT}
 	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}
 	-ln -f -s ${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}
 
-dest: ${DEST}/lib/${LIBAFSAUTHENT}
+${TOP_LIBDIR}/libafsauthent_pic.a: libafsauthent_pic.a
+	${INSTALL} libafsauthent_pic.a ${TOP_LIBDIR}/libafsauthent_pic.a
+
+dest: ${DEST}/lib/${LIBAFSAUTHENT} ${DEST}/lib/libafsauthent_pic.a
