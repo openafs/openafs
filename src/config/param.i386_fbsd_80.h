@@ -41,6 +41,7 @@
 #define AFS_FBSD61_ENV 1
 #define AFS_FBSD62_ENV 1
 #define AFS_FBSD70_ENV 1
+#define AFS_FBSD71_ENV 1
 #define AFS_FBSD80_ENV 1
 #define AFS_X86_FBSD_ENV 1
 #define AFS_X86_FBSD40_ENV 1
@@ -52,6 +53,7 @@
 #define AFS_X86_FBSD60_ENV 1 /* added at 70--ie, some changes should port <-- */
 #define AFS_X86_FBSD62_ENV 1
 #define AFS_X86_FBSD70_ENV 1
+#define AFS_X86_FBSD71_ENV 1
 #define AFS_X86_FBSD80_ENV 1
 #define AFS_X86_ENV 1
 #define AFS_NONFSTRANS 1
@@ -162,6 +164,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define AFS_USR_FBSD60_ENV	1
 #define AFS_USR_FBSD61_ENV	1
 #define AFS_USR_FBSD70_ENV	1
+#define AFS_USR_FBSD71_ENV	1
 #define AFS_USR_FBSD80_ENV	1
 #define AFS_USR_FBSD_ENV	1
 #define AFS_NONFSTRANS 1

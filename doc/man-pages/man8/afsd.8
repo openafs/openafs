@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH afsd 8 "OpenAFS" "9/Mar/2008" "AFS Command Reference"
+.TH afsd 8 "OpenAFS" "19/Mar/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -212,6 +212,7 @@ afsd \- Initializes the Cache Manager and starts related daemons
      [\fB\-settime\fR] [\fB\-shutdown\fR]
      <<\ [\fB\-splitcache\fR\ <\fIRW/RO\ ratio\fR] >>>
      <<\ [\fB\-stat\fR\ <\fInumber\ of\ stat\ entries\fR] >>> [\fB\-verbose\fR]
+     [\fB\-disable-dynamic-vcaches\fR] 
      <<\ [\fB\-volumes\fR\ <\fInumber\ of\ volume\ entries\fR] >>>
      [\fB\-waitclose\fR]
 .SH "DESCRIPTION"
@@ -683,6 +684,11 @@ standard output stream.
 .Ip "\fB\-volumes\fR <\fInumber of volume entries\fR>" 4
 Specifies the number of memory structures to allocate for storing volume
 location information. The default value is \f(CW50\fR.
+.Ip "\fB\-disable-dynamic-vcaches\fR" 4
+By default, dynamic vcache overrides the \fB\-stat\fR option by using the value of
+\fB\-stat\fR (or the default) as the initial size of the stat (or vcache) pool and
+increases the pool dynamically as needed on supported platforms. This flag will
+disable this new functionality and honor the \*(L'\-stat\*(R' setting.
 .Ip "\fB\-waitclose\fR" 4
 Has no effect on the operation of the Cache Manager. The behavior it
 affected in previous versions of the Cache Manager, to perform synchronous
@@ -873,6 +879,8 @@ Russ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-verbose\fR"
 
 .IX Item "\fB\-volumes\fR <\fInumber of volume entries\fR>"
+
+.IX Item "\fB\-disable-dynamic-vcaches\fR"
 
 .IX Item "\fB\-waitclose\fR"
 

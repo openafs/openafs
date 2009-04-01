@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.6 2007/12/28 22:16:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.7 2009/02/17 04:37:59 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -959,6 +959,7 @@ VCloseVnodeFiles_r(Volume * vp)
 	for (vnp = VnodeHashTable[i]; vnp; vnp = vnp->hashNext) {
 	    if (vnp->volumePtr == vp) {
 		IH_REALLYCLOSE(vnp->handle);
+		IH_RELEASE(vnp->handle);
 	    }
 	}
     }

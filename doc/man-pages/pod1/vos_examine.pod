@@ -177,7 +177,15 @@ expressed in kilobyte blocks in the C<MaxQuota> field.
 
 The date and time the volume was created, in the C<Creation> field. If the
 volume has been restored with the B<backup diskrestore>, B<backup
-volrestore>, or B<vos restore> command, this is the restore time.
+volrestore>, or B<vos restore> command, this is the restore time. For a
+read-only volume, this is the last release time.
+
+=item *
+
+The date and time this copy of this volume was created, in the C<Copy>
+field.  This is the time when the volume was created on this server and
+partition.  For read-only volumes, it is not updated by a release (unlike
+the Creation date).  The copy date is not stored in volume dumps.
 
 =item *
 
@@ -312,6 +320,7 @@ shows the volume as locked.
         RWrite 5360870981   ROnly 536870982   Backup 536870983
         MaxQuota      40000 K
         Creation    Mon Jun 12 15:22:06 1989
+        Copy        Mon Jun 12 15:22:06 1989
         Last Update Fri Jun 16 09:34:35 1989
         5719 accesses in the past day (i.e., vnode references)
         RWrite: 5360870981   ROnly: 536870982   Backup: 536870983
@@ -330,6 +339,7 @@ the B<-extended> flag. The volume has no read-only replication sites.
        RWrite 354287190 ROnly          0 Backup 354287192
        MaxQuota       5000 K
        Creation    Wed Nov 25 17:38:57 1992
+       Copy        Wed Nov 25 17:38:57 1992
        Last Update Tue Dec 15 10:46:20 1992
        598 accesses in the past day (i.e., vnode references)
                          Raw Read/Write Stats

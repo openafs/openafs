@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.10 2008/11/30 19:49:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.11 2009/03/20 03:49:16 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -550,7 +550,7 @@ SDISK_SendFile(rxcall, file, length, avers)
     (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
 #ifndef OLD_URECOVERY
     flen = length;
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (fd < 0) {
 	code = errno;
@@ -605,13 +605,13 @@ SDISK_SendFile(rxcall, file, length, avers)
 #ifdef OLD_URECOVERY
     (*ubik_dbase->sync) (dbase, file);
 #else
-    afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB0", ubik_dbase->pathName);
+    afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #ifdef AFS_NT40_ENV
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     code = unlink(pbuffer);
     if (!code)
 	code = rename(tbuffer, pbuffer);
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #endif
     if (!code) 
 	code = rename(pbuffer, tbuffer);
@@ -622,7 +622,7 @@ SDISK_SendFile(rxcall, file, length, avers)
 #ifndef OLD_URECOVERY
     }
 #ifdef AFS_NT40_ENV
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     unlink(pbuffer);
 #endif
 #endif

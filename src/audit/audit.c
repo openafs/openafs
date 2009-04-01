@@ -11,11 +11,18 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8.2.12 2006/10/13 19:42:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/audit/audit.c,v 1.8.2.16 2009/03/19 03:45:01 shadow Exp $");
 
 #include <fcntl.h>
 #include <stdarg.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#ifndef AFS_NT40_ENV
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
 #ifdef AFS_AIX32_ENV
 #include <sys/audit.h>
 #else
@@ -233,24 +240,21 @@ printbuf(FILE *out, int rec, char *audEvent, char *afsName, afs_int32 hostId,
 	    break;
 	case AUD_FIDS:		/* array of Fids */
 	    vaFids = va_arg(vaList, struct AFSCBFids *);
-	    vaFid = NULL;
 
 	    if (vaFids) {
                 int i;
-                if (vaFid)
+                
+                vaFid = vaFids->AFSCBFids_val;
+                
+                if (vaFid) {
                     fprintf(out, "FIDS %u FID %u:%u:%u ", vaFids->AFSCBFids_len, vaFid->Volume,
                              vaFid->Vnode, vaFid->Unique);
-                else
+                    for ( i = 1; i < vaFids->AFSCBFids_len; i++, vaFid++ ) 
+                        fprintf(out, "FID %u:%u:%u ", vaFid->Volume,
+                                vaFid->Vnode, vaFid->Unique);
+                } else
                     fprintf(out, "FIDS 0 FID 0:0:0 ");
 
-                for ( i = 1; i < vaFids->AFSCBFids_len; i++ ) {
-                    vaFid = vaFids->AFSCBFids_val;
-                    if (vaFid)
-                        fprintf(out, "FID %u:%u:%u ", vaFid->Volume,
-                                 vaFid->Vnode, vaFid->Unique);
-                    else
-                        fprintf(out, "FID 0:0:0 ");
-                }
             }
 	    break;
 	default:
@@ -470,7 +474,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 				break;
 			    }
 			}
-			/* If yes, then make sure that the name is not present in
+			/* If yes, then make sure that the name is not present in 
   			 * an exclusion list */
 			if (lrealm_match) {
 			    char uname[256];
@@ -483,7 +487,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
 				lrealm_match = 0;
 			}
 
-			if (!lrealm_match) {
+			if (!lrealm_match) {	
                             if (strlen(vname) + 1 + clen >= sizeof(vname))
                                 goto done;
                             strcat(vname, "@");
@@ -558,8 +562,35 @@ osi_audit_check()
 }
 
 int
-osi_audit_file(FILE *out)
+osi_audit_file(char *fileName)
 {
-    auditout = out;
+    int tempfd, flags;
+    char oldName[MAXPATHLEN];
+    
+#ifndef AFS_NT40_ENV
+    struct stat statbuf;
+    
+    if ((lstat(fileName, &statbuf) == 0)
+        && (S_ISFIFO(statbuf.st_mode))) {
+        flags = O_WRONLY | O_NONBLOCK;
+    } else 
+#endif
+    {
+        strcpy(oldName, fileName);
+        strcat(oldName, ".old");
+        renamefile(fileName, oldName);
+        flags = O_WRONLY | O_TRUNC | O_CREAT;
+    }
+    tempfd = open(fileName, flags, 0666);
+    if (tempfd > -1) {
+        auditout = fdopen(tempfd, "a");
+        if (!auditout) {
+            printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+            return 1;
+        }
+    } else { 
+        printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+        return 1;
+    }
     return 0;
 }

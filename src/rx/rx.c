@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.54 2008/12/22 17:15:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.55 2009/03/07 14:11:01 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -5789,8 +5789,11 @@ rxi_ReapConnections(void)
 		for (i = 0; i < RX_MAXCALLS; i++) {
 		    call = conn->call[i];
 		    if (call) {
+			int code;
 			havecalls = 1;
-			MUTEX_ENTER(&call->lock);
+			code = MUTEX_TRYENTER(&call->lock);
+			if (!code)
+			    continue;
 #ifdef RX_ENABLE_LOCKS
 			result = rxi_CheckCall(call, 1);
 #else /* RX_ENABLE_LOCKS */

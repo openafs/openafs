@@ -83,7 +83,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.27 2008/03/11 17:40:55 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.55.2.30 2009/03/19 20:13:23 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
@@ -532,19 +532,21 @@ InitCallBack(int nblks)
     tfirst = CBtime(FT_ApproxTime());
     /* N.B. The "-1", below, is because
      * FE[0] and CB[0] are not used--and not allocated */
-    FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry)))) - 1;
+    FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry))));
     if (!FE) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
 	assert(0);
     }
+    FE--;  /* FE[0] is supposed to point to junk */
     cbstuff.nFEs = nblks;
     while (cbstuff.nFEs)
 	FreeFE(&FE[cbstuff.nFEs]);	/* This is correct */
-    CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack)))) - 1;
+    CB = ((struct CallBack *)(calloc(nblks, sizeof(struct CallBack))));
     if (!CB) {
 	ViceLog(0, ("Failed malloc in InitCallBack\n"));
 	assert(0);
     }
+    CB--;  /* CB[0] is supposed to point to junk */
     cbstuff.nCBs = nblks;
     while (cbstuff.nCBs)
 	FreeCB(&CB[cbstuff.nCBs]);	/* This is correct */
@@ -1797,6 +1799,8 @@ PrintCallBackStats(void)
 }
 
 #define MAGIC 0x12345678	/* To check byte ordering of dump when it is read in */
+#define MAGICV2 0x12345679      /* To check byte ordering & version of dump when it is read in */
+
 
 #ifndef INTERPRET_DUMP
 
@@ -1804,7 +1808,7 @@ int
 DumpCallBackState(void)
 {
     int fd, oflag;
-    afs_uint32 magic = MAGIC, now = FT_ApproxTime(), freelisthead;
+    afs_uint32 magic = MAGICV2, now = (afs_int32) FT_ApproxTime(), freelisthead;
 
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef AFS_NT40_ENV
@@ -1842,11 +1846,14 @@ DumpCallBackState(void)
 /* This is only compiled in for the callback analyzer program */
 /* Returns the time of the dump */
 time_t
-ReadDump(char *file)
+ReadDump(char *file, int timebits)
 {
     int fd, oflag;
     afs_uint32 magic, freelisthead;
     afs_uint32 now;
+#ifdef AFS_64BIT_ENV
+    afs_int64 now64;
+#endif
 
     oflag = O_RDONLY;
 #ifdef AFS_NT40_ENV
@@ -1858,15 +1865,25 @@ ReadDump(char *file)
 	exit(1);
     }
     read(fd, &magic, sizeof(magic));
-    if (magic != MAGIC) {
-	fprintf(stderr,
-		"Magic number of %s is invalid.  You might be trying to\n",
-		file);
-	fprintf(stderr,
-		"run this program on a machine type with a different byte ordering.\n");
-	exit(1);
+    if (magic == MAGICV2) {
+	timebits = 32;
+    } else {
+	if (magic != MAGIC) {
+	    fprintf(stderr,
+		    "Magic number of %s is invalid.  You might be trying to\n",
+		    file);
+	    fprintf(stderr,
+		    "run this program on a machine type with a different byte ordering.\n");
+	    exit(1);
+	}
     }
-    read(fd, &now, sizeof(now));
+#ifdef AFS_64BIT_ENV
+    if (timebits == 64) {
+	read(fd, &now64, sizeof(afs_int64));
+	now = (afs_int32) now64;
+    } else
+#endif
+	read(fd, &now, sizeof(afs_int32));
     read(fd, &cbstuff, sizeof(cbstuff));
     read(fd, TimeOuts, sizeof(TimeOuts));
     read(fd, timeout, sizeof(timeout));
@@ -1898,8 +1915,9 @@ main(int argc, char **argv)
     static AFSFid fid;
     register struct FileEntry *fe;
     register struct CallBack *cb;
-    time_t now;
-
+    afs_int32 now;
+    int timebits = 32;
+    
     memset(&fid, 0, sizeof(fid));
     argc--;
     argv++;
@@ -1931,6 +1949,19 @@ main(int argc, char **argv)
 	    all = 1;
 	} else if (!strcmp(*argv, "-raw")) {
 	    raw = 1;
+	} else if (!strcmp(*argv, "-timebits")) {
+	    if (argc < 1) {
+		err++;
+		break;
+	    }
+	    argc--;
+	    timebits = atoi(*++argv);
+	    if ((timebits != 32)
+#ifdef AFS_64BIT_ENV
+		&& (timebits != 64)
+#endif
+		) 
+		err++;
 	} else if (!strcmp(*argv, "-volume")) {
 	    if (argc < 1) {
 		err++;
@@ -1944,12 +1975,16 @@ main(int argc, char **argv)
     }
     if (err || argc != 1) {
 	fprintf(stderr,
-		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] [-all] callbackdumpfile\n");
+		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] [-all] [-timebits 32"
+#ifdef AFS_64BIT_ENV
+		"|64"
+#endif
+		"] callbackdumpfile\n");
 	fprintf(stderr,
 		"[cbid is shown for each host in the hosts.dump file]\n");
 	exit(1);
     }
-    now = ReadDump(*argv);
+    now = ReadDump(*argv, timebits);
     if (stats || noptions == 0) {
 	time_t uxtfirst = UXtime(tfirst);
 	printf("The time of the dump was %u %s", now, ctime(&now));

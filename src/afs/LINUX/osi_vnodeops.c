@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.75 2009/01/15 13:27:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.77 2009/03/19 04:54:50 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -47,6 +47,7 @@ RCSID
 
 #if defined(AFS_LINUX26_ENV)
 #define UnlockPage(pp) unlock_page(pp)
+extern struct backing_dev_info afs_backing_dev_info;
 #endif
 
 extern struct vcache *afs_globalVp;
@@ -1929,6 +1930,9 @@ afs_fill_inode(struct inode *ip, struct vattr *vattr)
     if (vattr)
 	vattr2inode(ip, vattr);
 
+#if defined(AFS_LINUX26_ENV)
+    ip->i_mapping->backing_dev_info = &afs_backing_dev_info;
+#endif
 /* Reset ops if symlink or directory. */
     if (S_ISREG(ip->i_mode)) {
 	ip->i_op = &afs_file_iops;

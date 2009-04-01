@@ -21,11 +21,13 @@
 #include <stdlib.h>
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_util.c,v 1.12.2.6 2007/12/13 18:54:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/pam/afs_util.c,v 1.12.2.7 2009/03/20 22:45:38 shadow Exp $");
 
 #include "afs_util.h"
 

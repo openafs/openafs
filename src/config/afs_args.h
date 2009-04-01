@@ -141,6 +141,7 @@ struct afs_cacheParams {
     afs_int32 memCacheFlag;
     afs_int32 inodes;
     afs_int32 users;
+    afs_int32 dynamic_vcaches;
 };
 
 /*

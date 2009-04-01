@@ -92,7 +92,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.19 2008/10/27 23:54:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-salvage.c,v 1.41.2.20 2009/03/23 18:19:57 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1787,7 +1787,7 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 		    || (vsp->header.id == singleVolumeNumber
 			|| vsp->header.parent == singleVolumeNumber)) {
 		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
-				       VFORMAT, vsp->header.id);
+				       VFORMAT, afs_cast_uint32(vsp->header.id));
 		    if (singleVolumeNumber
 			&& vsp->header.id != singleVolumeNumber)
 			AskOffline(vsp->header.id);
@@ -2237,7 +2237,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 
     if (isp->volSummary == NULL) {
 	char name[64];
-	(void)afs_snprintf(name, sizeof name, VFORMAT, isp->volumeId);
+	(void)afs_snprintf(name, sizeof name, VFORMAT, afs_cast_uint32(isp->volumeId));
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
 	    return -1;
@@ -2264,7 +2264,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    if (isp->volSummary->fileName) {
 		strcpy(name, isp->volSummary->fileName);
 	    } else {
-		(void)afs_snprintf(name, sizeof name, VFORMAT, isp->volumeId);
+	      (void)afs_snprintf(name, sizeof name, VFORMAT, afs_cast_uint32(isp->volumeId));
 		isp->volSummary->fileName = ToString(name);
 	    }
 

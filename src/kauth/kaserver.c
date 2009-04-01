@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.8 2008/03/10 22:35:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.17.2.10 2008/12/22 19:23:32 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -249,34 +249,9 @@ main(argc, argv)
 		lclpath = dbpath;
 	}
 	else if (strncmp(arg, "-auditlog", arglen) == 0) {
-	    int tempfd, flags;
-	    FILE *auditout;
-	    char oldName[MAXPATHLEN];
 	    char *fileName = argv[++a];
 	    
-#ifndef AFS_NT40_ENV
-	    struct stat statbuf;
-	    
-	    if ((lstat(fileName, &statbuf) == 0) 
-		&& (S_ISFIFO(statbuf.st_mode))) {
-		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
-#endif
-	    {
-		strcpy(oldName, fileName);
-		strcat(oldName, ".old");
-		renamefile(fileName, oldName);
-		flags = O_WRONLY | O_TRUNC | O_CREAT;
-	    }
-	    tempfd = open(fileName, flags, 0666);
-	    if (tempfd > -1) {
-		auditout = fdopen(tempfd, "a");
-		if (auditout) {
-		    osi_audit_file(auditout);
-		} else
-		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    osi_audit_file(fileName);
 	} else if (strcmp(arg, "-localfiles") == 0)
 	    lclpath = argv[++a];
 	else if (strcmp(arg, "-servers") == 0)
@@ -416,7 +391,7 @@ main(argc, argv)
     else
 	code =
 	    ubik_ServerInitByInfo(myHost, htons(AFSCONF_KAUTHPORT), &cellinfo,
-				  &clones, dbpath, &KA_dbase);
+				  clones, dbpath, &KA_dbase);
 
     if (code) {
 	afs_com_err(whoami, code, "Ubik init failed");

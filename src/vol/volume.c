@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.15 2008/10/28 00:54:49 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.16 2009/03/23 18:19:57 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -1680,7 +1680,7 @@ VGetVolumePath(Error * ec, VolId volumeId, char **partitionp, char **namep)
 
     *ec = 0;
     name[0] = '/';
-    (void)afs_snprintf(&name[1], (sizeof name) - 1, VFORMAT, volumeId);
+    (void)afs_snprintf(&name[1], (sizeof name) - 1, VFORMAT, afs_cast_uint32(volumeId));
     for (dp = DiskPartitionList; dp; dp = dp->next) {
 	struct afs_stat status;
 	strcpy(path, VPartitionPath(dp));
@@ -1712,7 +1712,7 @@ char *
 VolumeExternalName(VolumeId volumeId)
 {
     static char name[VMAXPATHLEN];
-    (void)afs_snprintf(name, sizeof name, VFORMAT, volumeId);
+    (void)afs_snprintf(name, sizeof name, VFORMAT, afs_cast_uint32(volumeId));
     return name;
 }
 

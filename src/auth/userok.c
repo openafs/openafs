@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/userok.c,v 1.12.2.3 2008/02/29 04:46:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/userok.c,v 1.12.2.4 2009/03/19 03:44:59 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -444,7 +444,7 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 	    }
 	}
 
-	/* If yes, then make sure that the name is not present in
+	/* If yes, then make sure that the name is not present in 
 	 * an exclusion list */
 	if (lrealm_match) {
 	    if (tinst[0])
