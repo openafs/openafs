@@ -1,5 +1,6 @@
-openafs (1.4.8.dfsg1-4) UNRELEASED; urgency=low
+openafs (1.4.9~pre2+dfsg1-1) UNRELEASED; urgency=low
 
+  * New upstream testing release.
   * Translation updates:
     - Japanese, thanks Hideki Yamane.  (Closes: #521518)
 
