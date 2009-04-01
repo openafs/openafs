@@ -376,7 +376,7 @@ extern int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles,
 			 afs_int32 ablocks, afs_int32 aDentries,
 			 afs_int32 aVolumes, afs_int32 achunk,
 			 afs_int32 aflags, afs_int32 ninodes,
-			 afs_int32 nusers);
+			 afs_int32 nusers, afs_int32 dynamic_vcaches);
 extern void afs_ComputeCacheParms(void);
 extern int afs_InitCacheInfo(register char *afile);
 extern int afs_InitVolumeInfo(char *afile);
@@ -823,6 +823,7 @@ extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
 
 /* afs_vcache.c */
+extern int afs_ShakeLooseVCaches(afs_int32 anumber);
 extern afs_int32 afs_maxvcount;
 extern afs_int32 afs_vcount;
 extern int afsvnumbers;

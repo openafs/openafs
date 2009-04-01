@@ -648,6 +648,8 @@ void * dynlib = NULL ;
 #endif
 #if defined(AFS_AIX_ENV)
         dynlib = dlopen("/usr/lib/libApiDS.a(dsmapish.o)", RTLD_NOW | RTLD_LOCAL | RTLD_MEMBER);
+#elif defined (AFS_AMD64_LINUX26_ENV)
+	dynlib = dlopen("/usr/lib64/libApiTSM64.so", RTLD_NOW | RTLD_LOCAL);
 #elif defined(AFS_SUN5_ENV) || defined(AFS_LINUX26_ENV)
         dynlib = dlopen("/usr/lib/libApiDS.so", RTLD_NOW | RTLD_LOCAL);
 #else

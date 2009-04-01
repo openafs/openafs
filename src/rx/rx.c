@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.53 2008/09/25 17:26:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.55 2009/03/07 14:11:01 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -5380,7 +5380,7 @@ rxi_Send(register struct rx_call *call, register struct rx_packet *p,
      * idle connections) */
     conn->lastSendTime = call->lastSendTime = clock_Sec();
     /* Don't count keepalives here, so idleness can be tracked. */
-    if (p->header.type != RX_PACKET_TYPE_ACK)
+    if ((p->header.type != RX_PACKET_TYPE_ACK) || (((struct rx_ackPacket *)rx_DataOf(p))->reason != RX_ACK_PING))
 	call->lastSendData = call->lastSendTime;
 }
 
@@ -5789,8 +5789,11 @@ rxi_ReapConnections(void)
 		for (i = 0; i < RX_MAXCALLS; i++) {
 		    call = conn->call[i];
 		    if (call) {
+			int code;
 			havecalls = 1;
-			MUTEX_ENTER(&call->lock);
+			code = MUTEX_TRYENTER(&call->lock);
+			if (!code)
+			    continue;
 #ifdef RX_ENABLE_LOCKS
 			result = rxi_CheckCall(call, 1);
 #else /* RX_ENABLE_LOCKS */

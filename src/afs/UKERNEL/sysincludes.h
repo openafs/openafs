@@ -1017,22 +1017,28 @@ struct usr_statfs {
     unsigned long f_files;
 };
 
+#define ATTR_MODE	(1 << 0)
+#define ATTR_UID	(1 << 1)
+#define ATTR_GID	(1 << 2)
+#define ATTR_MTIME	(1 << 3)
+#define ATTR_SIZE	(1 << 4)
+
 struct usr_vattr {
-    long va_mask;
+    int va_mask;	/* bitmask of ATTR_* values above */
     usr_vtype_t va_type;
-    unsigned short va_mode;
-    long va_uid;
-    long va_gid;
-    unsigned long va_fsid;
-    unsigned long va_nodeid;
-    unsigned long va_nlink;
-    unsigned long va_size;
+    mode_t va_mode;
+    uid_t va_uid;
+    gid_t va_gid;
+    int va_fsid;
+    ino_t va_nodeid;
+    nlink_t va_nlink;
+    afs_size_t va_size;
     struct timeval va_atime;
     struct timeval va_mtime;
     struct timeval va_ctime;
-    unsigned long va_rdev;
+    dev_t va_rdev;
     unsigned long va_blocksize;
-    unsigned long va_blocks;
+    blkcnt_t va_blocks;
     unsigned long va_vcode;
 };
 

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.32 2008/06/29 03:26:03 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.33 2009/03/20 02:32:59 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -825,7 +825,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_CacheInit(cparms.cacheScaches, cparms.cacheFiles,
 			  cparms.cacheBlocks, cparms.cacheDcaches,
 			  cparms.cacheVolumes, cparms.chunkSize,
-			  cparms.memCacheFlag, cparms.inodes, cparms.users);
+			  cparms.memCacheFlag, cparms.inodes, cparms.users, 
+			  cparms.dynamic_vcaches);
 
     } else if (parm == AFSOP_CACHEINODE) {
 	ino_t ainode = parm2;

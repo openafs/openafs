@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/server.c,v 1.14.2.9 2008/03/10 22:35:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/server.c,v 1.14.2.11 2008/12/22 19:23:31 shadow Exp $");
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -220,33 +220,9 @@ argHandler(struct cmd_syndesc *as, void *arock)
 	ubik_nBuffers = 0;
 
     if (as->parms[7].items != 0) {
-	int tempfd, flags;
-	FILE *auditout;
-	char oldName[MAXPATHLEN];
 	char *fileName = as->parms[7].items->data;
-#ifndef AFS_NT40_ENV
-	struct stat statbuf;
 
-	if ((lstat(fileName, &statbuf) == 0) 
-	    && (S_ISFIFO(statbuf.st_mode))) {
-	    flags = O_WRONLY | O_NONBLOCK;
-	} else 
-#endif
-	{
-	    strcpy(oldName, fileName);
-	    strcat(oldName, ".old");
-	    renamefile(fileName, oldName);
-	    flags = O_WRONLY | O_TRUNC | O_CREAT;
-	}
-	tempfd = open(fileName, flags, 0666);
-	if (tempfd > -1) {
-	    auditout = fdopen(tempfd, "a");
-	    if (auditout) {
-		osi_audit_file(auditout);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	} else
-	    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+        osi_audit_file(fileName);
     }
 
     return 0;
@@ -535,7 +511,7 @@ main(argc, argv)
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
 				  htons(AFSCONF_BUDBPORT), 
 				  &cellinfo,
-				  &clones,              
+				  clones,              
 				  dbNamePtr,           /* name prefix */
 				  &BU_dbase);
 

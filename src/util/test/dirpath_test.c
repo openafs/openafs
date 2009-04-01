@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/test/dirpath_test.c,v 1.5 2003/07/15 23:17:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/test/dirpath_test.c,v 1.5.2.1 2009/03/19 03:45:03 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/afsutil.h>
@@ -124,6 +124,8 @@ main(int argc, char *argv[])
 	   AFSDIR_SERVER_FILELOG_FILEPATH);
     printf("AFSDIR_SERVER_AUDIT_FILEPATH = %s\n",
 	   AFSDIR_SERVER_AUDIT_FILEPATH);
+    printf("AFSDIR_SERVER_KRB_EXCL_FILEPATH  = %s\n",
+	   AFSDIR_SERVER_KRB_EXCL_FILEPATH);
     printf("\n");
     printf("\n");
     printf("AFSDIR_CLIENT_THISCELL_FILEPATH = %s\n",
