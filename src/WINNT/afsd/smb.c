@@ -8392,7 +8392,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 cm_fid_t afid = {0,0,0,0,0};
 
                 uidp = smb_FindUID(vcp, smbp->uid, 0);
-                smb_LookupTIDPath(vcp,((smb_t *)inp)->tid, &treepath);
+                smb_LookupTIDPath(vcp, smbp->tid, &treepath);
                 fidp = smb_FindFID(vcp, inp->fid, 0);
 
                 if (fidp) {
@@ -8406,9 +8406,10 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                         pathname = inp->stringsp->wdata;
                 }
 
-                afsi_log("Request %s duration %d ms user %S tid \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
-                          opName, newTime - oldTime,
-                          uidp ? uidp->unp->name : NULL,
+                afsi_log("Request %s duration %d ms user 0x%x \"%S\" pid 0x%x mid 0x%x tid 0x%x \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
+                          opName, newTime - oldTime, 
+                          smbp->uid, uidp ? uidp->unp->name : NULL,
+                          smbp->pid, smbp->mid, smbp->tid,
                           treepath,
                           pathname, 
                           afid.cell, afid.volume, afid.vnode, afid.unique);
