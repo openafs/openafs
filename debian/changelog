@@ -2,6 +2,12 @@ openafs (1.4.9~pre2+dfsg1-1) UNRELEASED; urgency=low
 
   * New upstream testing release.
     - Use +dfsg instead of .dfsg for saner version sorting.
+  * Debian's 2.6.29 packages no longer include symlinks from the
+    architecture-specific header tree to the common header tree and
+    instead overlay both header trees using kbuild.  Change the Autoconf
+    probes to always use kbuild and generate stub headers in the paths
+    that OpenAFS expects that include the linux headers.  Patch from Aaron
+    M. Ucko.  (Closes: #521745)
   * Update debian/watch for +dfsg naming instead of .dfsg.
   * Translation updates:
     - Japanese, thanks Hideki Yamane.  (Closes: #521518)
