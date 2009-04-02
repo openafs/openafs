@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_vol.c,v 1.10.2.2 2007/10/30 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/uss/uss_vol.c,v 1.10.2.3 2009/03/27 15:47:43 shadow Exp $");
 
 #include "uss_vol.h"		/*Interface to this module */
 #include "uss_common.h"		/*Common definitions */
@@ -180,7 +180,7 @@ InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
 	    /*
 	     * We got a ticket, go for an authenticated connection.
 	     */
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
+	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
 		scIndex = 2;	/*Kerberos */
 	    else {
 		fprintf(stderr, "%s: Funny kvno (%d) in ticket, proceeding\n",
