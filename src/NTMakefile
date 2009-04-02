@@ -662,8 +662,8 @@ man-pages:
 
 NSIS.i386: loopback man-pages
    @echo ***** Making NSIS Installer
-   $(DOCD) $(SRC)\WINNT\install\$@
-   $(CD) $(SRC)\WINNT\install\$@
+   $(DOCD) $(SRC)\WINNT\install\NSIS
+   $(CD) $(SRC)\WINNT\install\NSIS
    $(NTMAKE)
    $(CD) ..\..\..\..
 
