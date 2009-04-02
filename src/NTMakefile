@@ -41,91 +41,91 @@ NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 DOCD=$(SRC)\DOLASTCMP.BAT
 
 config:
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\config
 	$(CD) $(SRC)\config
 	$(NTMAKE)
 	$(CD) ..\..
 
 procmgmt_headers: config
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\procmgmt
 	$(CD) $(SRC)\procmgmt
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 afsreg_headers:
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsreg
 	$(CD) $(SRC)\WINNT\afsreg
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
 lwp_headers:
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\lwp
 	$(CD) $(SRC)\lwp
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 util: procmgmt_headers afsreg_headers lwp_headers
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 comerr: util
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 afs: comerr
-      echo ***** $@
+      @echo ***** $@
       $(DOCD) $(SRC)\afs
       $(CD) $(SRC)\afs
       $(NTMAKE)
       $(CD) ..\..
 
 cmd: afs
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 afsreg: cmd
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 eventlog: afsreg
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 lwp: eventlog
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 rxgen: lwp
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 des: rxgen
-     echo ***** $@
+     @echo ***** $@
 !	IF (EXIST($(SRC)\des\NTMakefile))
 		$(DOCD) $(SRC)\des
 		$(CD) $(SRC)\des
@@ -139,461 +139,461 @@ des: rxgen
 !	ENDIF
 
 rx: des
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 rxdebug: rx
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 ubik_headers: rxdebug
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\ubik
 	$(CD) $(SRC)\ubik
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 rxstat: ubik_headers
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 rxkad: rxstat
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 pthread: rxkad
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 procmgmt: pthread
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 fsint: procmgmt
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 audit: fsint
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 osi_headers: audit
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\client_osi
 	$(CD) $(SRC)\WINNT\client_osi
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
 libacl_headers: osi_headers
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libacl
 	$(CD) $(SRC)\libacl
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 cm_headers: libacl_headers
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
 auth_headers: cm_headers
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\auth
 	$(CD) $(SRC)\auth
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 vlserver_headers: auth_headers
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\vlserver
 	$(CD) $(SRC)\vlserver
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
 afsdobjs: vlserver_headers
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
 	$(NTMAKE_OBJS)
 	$(CD) ..\..\..
 
 sys: afsdobjs
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 auth: sys
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..	
 
 ubik: auth
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..	
 
 ptserver: ubik
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..	
 
 libacl: ptserver
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 kauth: libacl
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 vlserver: kauth
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 usd: vlserver
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 bubasics: usd
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 budb:	bubasics
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 butm:  budb
-     echo ***** $@
+     @echo ***** $@
      $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 dir: butm
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 vol: dir
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 volser: vol
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 viced: volser
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 update: viced
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 bucoord: update
-     echo ***** $@
+     @echo ***** $@
      $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 butc:   bucoord
-     echo ***** $@
+     @echo ***** $@
      $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 bozo: butc
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 bosctlsvc: bozo
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 bu_utils: bosctlsvc
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 libafsrpc: bu_utils
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 libafsauthent: libafsrpc
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 tviced: libafsauthent
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 tbutc:  tviced
-     echo ***** $@
+     @echo ***** $@
      $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@
      $(NTMAKE)
      $(CD) ..\..
 
 talocale: tbutc
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 license: talocale
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_osi: license
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afsd: client_osi
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 libadmin: afsd
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 adminutil: libadmin
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 vos: adminutil
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client: vos
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 kas: client
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 pts: kas
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 bos: pts
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 cfg: bos
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\$@
 	$(CD) $(SRC)\libadmin\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 admintest: cfg
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\libadmin\test
 	$(CD) $(SRC)\libadmin\test
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afsadmsvr: admintest
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afsusrmgr: afsadmsvr
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afssvrmgr: afsusrmgr
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afssvrcfg: afssvrmgr
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 afssvrcpa: afssvrcfg
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_talocale: afssvrcpa
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\talocale
 	$(CD) $(SRC)\WINNT\talocale
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_cpa: client_talocale
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_config: client_cpa
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_exp: client_config
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 client_creds: client_exp
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 aklog: client_creds
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 
 xstat: aklog
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 netidmgr_plugin: xstat
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
@@ -662,8 +662,8 @@ man-pages:
 
 NSIS.i386: loopback man-pages
    @echo ***** Making NSIS Installer
-   $(DOCD) $(SRC)\WINNT\install\$@
-   $(CD) $(SRC)\WINNT\install\$@
+   $(DOCD) $(SRC)\WINNT\install\NSIS
+   $(CD) $(SRC)\WINNT\install\NSIS
    $(NTMAKE)
    $(CD) ..\..\..\..
 
