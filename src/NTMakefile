@@ -601,24 +601,24 @@ netidmgr_plugin: xstat
 
 extra: netidmgr_plugin
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
-     echo ***** $@
+     @echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
 	$(NTMAKE)
 	$(CD) ..\..\..
 !	ELSE
-     echo ***** Skipping $@ ***** Not found.
+     @echo ***** Skipping $@ ***** Not found.
 !	ENDIF
                 
 finale: extra
-     echo ***** $@
+     @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
 install: finale
-	echo Build Finished Successfully
+	@echo Build Finished Successfully
         
 
 # Clean target for obj tree
@@ -647,28 +647,33 @@ mkdir:
 	-@copy $(SRC)\config\NTLANG.BAT .
 
 loopback:
-   echo ***** Making Loopback Adapter Utility DLL
+   @echo ***** Making Loopback Adapter Utility DLL
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
 man-pages: 
-   echo ***** $@
+   @echo ***** $@
    $(DOCD) $(DOC)\man-pages
    $(CD) $(DOC)\man-pages
    $(NTMAKE)
    $(CD) ..\..
 
-NSIS: loopback man-pages
-   echo ***** Making NSIS Installer
+NSIS.i386: loopback man-pages
+   @echo ***** Making NSIS Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
+NSIS.AMD64:
+   @echo Skipping NSIS Installer on non-x86 platforms; not implemented
+
+NSIS: NSIS.$(CPU)
+
 wix: loopback man-pages
-   echo ***** Making Wix MSI Installer
+   @echo ***** Making Wix MSI Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
