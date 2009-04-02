@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/UKERNEL/rx_knet.c,v 1.10.2.4 2008/03/10 22:35:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/UKERNEL/rx_knet.c,v 1.10.2.5 2009/03/26 14:30:42 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -161,6 +161,7 @@ rx_ServerProc(void *unused)
 	/* assert(newcall != NULL); */
     }
     AFS_GLOCK();
+    return NULL;
 }
 
 /*

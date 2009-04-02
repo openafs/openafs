@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.32 2009/03/15 18:42:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.33 2009/03/31 12:16:50 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -258,7 +258,9 @@ afsproc_init(void)
 
     entry1->proc_fops = &afs_syscall_fops;
 
+#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
     entry1->owner = THIS_MODULE;
+#endif
 
 #ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
     entry2 = create_proc_entry(PROC_CELLSERVDB_NAME, 0, openafs_procfs);

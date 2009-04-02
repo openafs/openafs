@@ -26,11 +26,17 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_arrayn.c,v 1.8.2.2 2005/04/03 18:15:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_arrayn.c,v 1.8.2.3 2009/03/27 15:55:46 shadow Exp $");
+
+#if defined(AFS_OBSD44_ENV) && defined(KERNEL) && !defined(UKERNEL)
+/* XXX osi_alloc, please find and fix */
+#include "osi_machdep.h"
+#endif
 
 #if !defined(NeXT)
 
@@ -44,6 +50,7 @@ RCSID
  */
 
 #if defined(KERNEL) && !defined(UKERNEL)
+
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"

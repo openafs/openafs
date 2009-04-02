@@ -715,6 +715,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_HAVE_WRITE_BEGIN_AOP
                  LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
                  LINUX_STRUCT_TASK_HAS_CRED
+                 LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER
                  LINUX_KMEM_CACHE_INIT
 		 LINUX_HAVE_BDI_INIT
 		 LINUX_HAVE_KMEM_CACHE_T
