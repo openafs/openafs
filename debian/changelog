@@ -1,6 +1,14 @@
-openafs (1.4.9~pre2+dfsg1-1) UNRELEASED; urgency=low
+openafs (1.4.10+dfsg1-1) UNRELEASED; urgency=low
 
-  * New upstream testing release.
+  * New upstream release.
+    - Avoid a potential kernel memory overrun if more items than requested
+      are returned from an InlineBulk or BulkStatus message.
+    - Avoid converting negative errors into invalid kernel memory
+      pointers.
+    - Preliminary support for 2.6.30 kernels.
+    - Dynamic vcache allocation support to deal with inotify vcache
+      pinning.
+    - Do appropriate locking for CellServDB in /proc.
     - Use +dfsg instead of .dfsg for saner version sorting.
   * Debian's 2.6.29 packages no longer include symlinks from the
     architecture-specific header tree to the common header tree and
@@ -15,7 +23,7 @@ openafs (1.4.9~pre2+dfsg1-1) UNRELEASED; urgency=low
   * Translation updates:
     - Japanese, thanks Hideki Yamane.  (Closes: #521518)
 
- -- Russ Allbery <rra@debian.org>  Sat, 28 Mar 2009 12:07:58 -0700
+ -- Russ Allbery <rra@debian.org>  Thu, 02 Apr 2009 15:13:10 -0700
 
 openafs (1.4.8.dfsg1-3) unstable; urgency=low
 
