@@ -5,7 +5,7 @@ Maintainer: Russ Allbery <rra@debian.org>
 Uploaders: Sam Hartman <hartmans@debian.org>
 Build-Depends: debhelper (>= 7), autoconf, automake, bison, comerr-dev,
  flex, libkrb5-dev, libncurses5-dev, libpam0g-dev, perl
-Standards-Version: 3.8.0
+Standards-Version: 3.8.1
 Homepage: http://www.openafs.org/
 Vcs-Git: git://git.debian.org/git/pkg-k5-afs/openafs.git
 Vcs-Browser: http://git.debian.org/?p=pkg-k5-afs/openafs.git

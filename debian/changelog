@@ -20,6 +20,7 @@ openafs (1.4.10+dfsg1-1) UNRELEASED; urgency=low
     libopenafs-dev for use when AFS code should be embedded into shared
     libraries.  Patch from Garrett Wollman.
   * Update debian/watch for +dfsg naming instead of .dfsg.
+  * Update standards version to 3.8.1 (no changes required).
   * Translation updates:
     - Japanese, thanks Hideki Yamane.  (Closes: #521518)
 
