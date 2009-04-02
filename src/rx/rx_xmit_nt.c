@@ -23,6 +23,10 @@ RCSID
 #if defined(AFS_NT40_ENV)
 
 #include <winsock2.h>
+#if (_WIN32_WINNT < 0x0501)
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0501
+#endif
 #include <mswsock.h>
 
 #if (_WIN32_WINNT < 0x0600)
