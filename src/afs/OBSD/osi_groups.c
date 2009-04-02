@@ -19,7 +19,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_groups.c,v 1.5.2.1 2006/06/23 14:21:12 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_groups.c,v 1.5.2.2 2009/03/27 15:55:45 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afs/afsincludes.h"
@@ -47,10 +47,12 @@ Afs_xsetgroups(p, args, retval)
     struct vrequest treq;
 
     AFS_STATCNT(afs_xsetgroups);
-    AFS_GLOCKP(p);
+    AFS_GLOCK();
+
+    p = osi_curproc();
 
     code = afs_InitReq(&treq, p->p_rcred);
-    AFS_GUNLOCKP(p);
+    AFS_GUNLOCK();
     if (code)
 	return code;
 
@@ -61,10 +63,10 @@ Afs_xsetgroups(p, args, retval)
      */
     if (PagInCred(p->p_rcred) == NOPAG) {
 	if (((treq.uid >> 24) & 0xff) == 'A') {
-	    AFS_GLOCKP(p);
+	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
 	    AddPag(p, treq.uid, &p->p_rcred);
-	    AFS_GUNLOCKP(p);
+	    AFS_GUNLOCK();
 	}
     }
     return code;

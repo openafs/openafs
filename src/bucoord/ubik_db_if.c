@@ -13,7 +13,7 @@
 #include <afs/stds.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/ubik_db_if.c,v 1.10.2.4 2009/01/22 19:33:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/ubik_db_if.c,v 1.10.2.5 2009/03/27 13:46:13 shadow Exp $");
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -883,7 +883,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 		afs_com_err(whoami, code, 0,
 			"; Can't get AFS tokens - running unauthenticated");
 	    } else {
-		if ((ttoken->kvno < 0) || (ttoken->kvno > 255))
+		if ((ttoken->kvno < 0) || (ttoken->kvno > 256))
 		    afs_com_err(whoami, 0,
 			    "Funny kvno (%d) in ticket, proceeding",
 			    ttoken->kvno);
@@ -1026,7 +1026,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 		afs_com_err(whoami, code,
 			"; Can't get tokens - running unauthenticated");
 	    } else {
-		if ((token.kvno < 0) || (token.kvno > 255))
+		if ((token.kvno < 0) || (token.kvno > 256))
 		    afs_com_err(whoami, 0,
 			    "Unexpected kvno (%d) in ticket - proceeding",
 			    token.kvno);
