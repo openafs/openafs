@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.2.2 2007/10/30 15:23:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.2.3 2009/03/26 14:30:44 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -1495,8 +1495,8 @@ DbVerify(call, status, orphans, host)
  *	do a simple sanity check on the database header
  */
 
-check_header(callerst)
-     char *callerst;
+void
+check_header(char *callerst)
 {
     static int iteration_count = 0;
     afs_int32 eof;

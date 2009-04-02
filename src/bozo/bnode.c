@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.10 2009/02/17 04:32:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.17.2.11 2009/03/26 14:30:46 shadow Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -753,6 +753,7 @@ SendNotifierData(register int fd, register struct bnode_proc *tp)
     if (write(fd, buffer, len) < 0) {
 	return -1;
     }
+    return 0;
 }
 
 int

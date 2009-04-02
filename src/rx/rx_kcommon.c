@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.20 2008/08/22 04:32:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.21 2009/03/27 15:55:45 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -996,10 +996,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     }
     nam->m_len = sizeof(myaddr);
     memcpy(mtod(nam, caddr_t), &myaddr, sizeof(myaddr));
-#ifdef AFS_SGI65_ENV
+#if defined(AFS_SGI65_ENV)
     BHV_PDATA(&bhv) = (void *)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
+#elif defined(AFS_OBSD44_ENV)
+    code = sobind(newSocket, nam, osi_curproc());
 #else
     code = sobind(newSocket, nam);
 #endif

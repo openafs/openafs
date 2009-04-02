@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.54 2009/03/25 19:34:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.55 2009/03/31 12:41:47 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -784,7 +784,7 @@ afs_AllocVCache(void)
     /* track the peak */
     if (afsd_dynamic_vcaches && afs_maxvcount < afs_vcount) {
 	afs_maxvcount = afs_vcount;
-	printf("peak vnodes: %d\n", afs_maxvcount);
+	/*printf("peak vnodes: %d\n", afs_maxvcount);*/
     }
 #endif
     afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
