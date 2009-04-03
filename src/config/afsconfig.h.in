@@ -672,6 +672,9 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 /* define if your struct nameidata has path */
 #undef STRUCT_NAMEIDATA_HAS_PATH
 
+/* define if struct proc_dir_entry has an owner member */
+#undef STRUCT_PROC_DIR_ENTRY_HAS_OWNER
+
 /* define if you struct sockaddr sa_len */
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
 
