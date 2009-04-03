@@ -144,8 +144,6 @@ void OutputDebugF(clientchar_t * format, ...) {
     va_start( args, format );
     cm_ClientStrPrintfV(vbuffer, lengthof(vbuffer), format, args);
     osi_Log1(smb_logp, "%S", osi_LogSaveClientString(smb_logp, vbuffer));
-    cm_ClientStrCat(vbuffer, lengthof(vbuffer), _C("\n"));
-    OutputDebugStringW(vbuffer);
 }
 
 void OutputDebugHexDump(unsigned char * buffer, int len) {
@@ -159,8 +157,6 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
         if(!(i%16)) {
             if(i) {
                 osi_Log1(smb_logp, "%s", osi_LogSaveString(smb_logp, buf));
-                StringCchCatA(buf, lengthof(buf), "\r\n");
-                OutputDebugString(buf);
             }
             StringCchPrintfA(buf, lengthof(buf), "%5x", i);
             memset(buf+5,' ',80);
@@ -180,8 +176,6 @@ void OutputDebugHexDump(unsigned char * buffer, int len) {
     }    
     if(i) {
         osi_Log1(smb_logp, "%s", osi_LogSaveString(smb_logp, buf));
-        StringCchCatA(buf, lengthof(buf), "\r\n");
-        OutputDebugString(buf);
     }   
 }
 
