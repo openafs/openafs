@@ -10080,13 +10080,12 @@ void smb_Init(osi_log_t *logp, int useV3,
                                                     );
 
                 if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
-                    char message[AFSPATHMAX];
-                    sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
-                                       nts, ntsEx);
-                    OutputDebugString(message);
-                    afsi_log(message);
+                    osi_Log2(smb_logp, "MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
+                             nts, ntsEx);
+
+                    afsi_log("MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x", nts, ntsEx);
                 } else {
-                    OutputDebugString("MsV1_0SetProcessOption success");
+                    osi_Log0(smb_logp, "MsV1_0SetProcessOption success");
                     afsi_log("MsV1_0SetProcessOption success");
                 }
                 /* END - code from Larry */
