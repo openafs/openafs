@@ -45,6 +45,10 @@ RCSID
 #define pageoff(pp) pp->offset
 #endif
 
+#ifndef MAX_ERRNO
+#define MAX_ERRNO 1000L
+#endif
+
 #if defined(AFS_LINUX26_ENV)
 #define UnlockPage(pp) unlock_page(pp)
 extern struct backing_dev_info afs_backing_dev_info;
