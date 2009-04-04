@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.19 2009/01/15 13:27:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.20 2009/03/27 15:55:43 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -435,6 +435,8 @@ afs_osi_Alloc(size_t x)
     return osi_linux_alloc(x, 1);
 #elif defined(AFS_FBSD_ENV)
     return osi_fbsd_alloc(x, 1);
+#elif defined(AFS_OBSD_ENV)
+    return osi_obsd_Alloc(x, 1);
 #else
     size = x;
     tm = (struct osimem *)AFS_KALLOC(size);

@@ -45,6 +45,10 @@ RCSID
 #define pageoff(pp) pp->offset
 #endif
 
+#ifndef MAX_ERRNO
+#define MAX_ERRNO 1000L
+#endif
+
 #if defined(AFS_LINUX26_ENV)
 #define UnlockPage(pp) unlock_page(pp)
 extern struct backing_dev_info afs_backing_dev_info;
@@ -1087,8 +1091,10 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
     if (code == ENOENT)
 	return ERR_PTR(0);
-    else
+    else if ((code >= 0) && (code <= MAX_ERRNO))
 	return ERR_PTR(-code);
+    else 
+	return ERR_PTR(-EIO);
 #else
     if (code == ENOENT)
 	code = 0;
@@ -1429,7 +1435,10 @@ afs_linux_follow_link(struct dentry *dp, struct dentry *basep,
 
     if (code < 0) {
 	dput(basep);
-	res = ERR_PTR(code);
+	if (code < -MAX_ERRNO)
+	    res = ERR_PTR(-EIO);
+	else
+	    res = ERR_PTR(code);
     } else {
 	name[code] = '\0';
 	res = lookup_dentry(name, basep, follow);

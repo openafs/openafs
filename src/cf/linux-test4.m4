@@ -773,7 +773,7 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
   AC_MSG_CHECKING([if key_alloc() takes a struct task *])
   AC_CACHE_VAL([ac_cv_key_alloc_needs_struct_task], [
     save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
 #include <linux/key.h>
@@ -792,7 +792,7 @@ AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
   AC_MSG_CHECKING([if key_alloc() takes credentials])
   AC_CACHE_VAL([ac_cv_key_alloc_needs_cred], [
     save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
 #include <linux/key.h>
@@ -1137,4 +1137,18 @@ _u =_t.cred->uid ;],
   AC_MSG_RESULT($ac_cv_linux_struct_task_has_cred)
   if test "x$ac_cv_linux_struct_task_has_cred" = "xyes"; then
     AC_DEFINE([STRUCT_TASK_HAS_CRED], 1, [define if struct task has a cred pointer])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER], [
+  AC_MSG_CHECKING([if struct proc_dir_entry_has_owner])
+  AC_CACHE_VAL([ac_cv_linux_struct_proc_dir_entry_has_owner], [
+    AC_TRY_KBUILD(
+[#include <linux/proc_fs.h>],
+[struct proc_dir_entry _p;
+_p.owner= "";],
+      ac_cv_linux_struct_proc_dir_entry_has_owner=yes,
+      ac_cv_linux_struct_proc_dir_entry_has_owner=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_proc_dir_entry_has_owner)
+  if test "x$ac_cv_linux_struct_proc_dir_entry_has_owner" = "xyes"; then
+    AC_DEFINE([STRUCT_PROC_DIR_ENTRY_HAS_OWNER], 1, [define if struct proc_dir_entry has an owner member])
   fi])
