@@ -3183,7 +3183,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 #endif /* COMMENT */
     }
     else if (code == CM_ERROR_BADSHARENAME) {
-        NTStatus = 0xC00000CCL;	/* Bad network name */
+        NTStatus = 0xC00000BEL;	/* Bad network path (server valid, share bad) */
     }
     else if (code == CM_ERROR_NOIPC) {
 #ifdef COMMENT
@@ -3254,7 +3254,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC000022DL; /* Retry */
     } 
     else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
-        NTStatus = 0xC00000BEL; /* Bad Network Path */
+        NTStatus = 0xC000003AL; /* Path not found */
     } 
     else if (code >= ERROR_TABLE_BASE_RXK && code < ERROR_TABLE_BASE_RXK + 256) {
 	NTStatus = 0xC0000322L; /* No Kerberos key */
