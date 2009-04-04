@@ -15364,7 +15364,7 @@ echo $ECHO_N "checking if key_alloc() takes a struct task *... $ECHO_C" >&6; }
 else
 
     save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
 
   if test $AFS_SYSKVERS -ge 26 ; then
       rm -fr conftest.dir
@@ -15497,7 +15497,7 @@ echo $ECHO_N "checking if key_alloc() takes credentials... $ECHO_C" >&6; }
 else
 
     save_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS -Werror"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
 
   if test $AFS_SYSKVERS -ge 26 ; then
       rm -fr conftest.dir
