@@ -83,7 +83,7 @@ int FindHandle(int handle)
 int nb_unlink(char *fname)
 {
     int     rc;
-    char    temp[256];
+    char    temp[512];
     char    FileName[128];
     pstring path;
 
@@ -98,7 +98,7 @@ int nb_unlink(char *fname)
     if (!rc)
     {
         LeaveThread(0, "", CMD_UNLINK);
-        sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", fname, GetLastError());
+        sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", path, GetLastError());
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -949,7 +949,7 @@ static int total_deleted;
 void delete_fn(file_info *finfo, const char *name, void *state)
 {
     int     rc;
-    char    temp[256];
+    char    temp[512];
     char    s[1024];
     char    FileName[128];
 
@@ -1002,7 +1002,7 @@ int nb_deltree(char *dname)
     if (!rc)
     {
         char FileName[256];
-        char temp[128];
+        char temp[512];
         int  rc;
 
         rc = GetLastError();
