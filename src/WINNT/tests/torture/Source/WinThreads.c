@@ -583,6 +583,7 @@ int IsOnline(char *strPath)
             blob.in_size = 0;
             blob.out_size = sizeof(space);
             blob.out = space;
+#if 0
             if (!(code = ppioctl(strPath, VIOCGETVOLSTAT, &blob, 1)))
             {
                 bret = WINTORTURE_ASFDLL_ONLINE;
@@ -590,6 +591,22 @@ int IsOnline(char *strPath)
                 if (!status->Online || !status->InService || !status->Blessed || status->NeedsSalvage)
                     bret = WINTORTURE_ASFDLL_OFFLINE;
             }
+#else
+            errno = 0;
+            code = ppioctl(strPath, VIOC_PATH_AVAILABILITY, &blob, 1);
+            if (!code) {
+                switch (errno) {
+                case ENXIO:
+                case ENOSYS:
+                case EBUSY:
+                    bret = WINTORTURE_ASFDLL_OFFLINE;
+                    break;
+                default:
+                    bret = WINTORTURE_ASFDLL_ONLINE;
+                    break;
+                }
+            }
+#endif 
         }
         else
             bret = WINTORTURE_ASFPIOCTL_NOTFOUND;
