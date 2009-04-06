@@ -636,8 +636,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int nskip;			/* # of slots in the LRU queue to skip */
     struct vcache *lruvcp;	/* vcache ptr of our goal pos in LRU queue */
     struct dcache *dcp;		/* chunk containing the dir block */
-    char *statMemp;		/* status memory block */
-    char *cbfMemp;		/* callback and fid memory block */
     afs_size_t temp;		/* temp for holding chunk length, &c. */
     struct AFSFid *fidsp;	/* file IDs were collecting */
     struct AFSCallBack *cbsp;	/* call back pointers */
@@ -698,13 +696,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * one for fids and callbacks, and one for stat info.  Well set
      * up our pointers to the memory from there, too.
      */
-    statMemp = osi_AllocLargeSpace(nentries * sizeof(AFSFetchStatus));
-    statsp = (struct AFSFetchStatus *)statMemp;
-    cbfMemp =
-	osi_AllocLargeSpace(nentries *
-			    (sizeof(AFSCallBack) + sizeof(AFSFid)));
-    fidsp = (AFSFid *) cbfMemp;
-    cbsp = (AFSCallBack *) (cbfMemp + nentries * sizeof(AFSFid));
+    statsp = (AFSFetchStatus *) 
+	    osi_Alloc(AFSCBMAX * sizeof(AFSFetchStatus));
+    fidsp = (AFSFid *) osi_AllocLargeSpace(nentries * sizeof(AFSFid));
+    cbsp = (AFSCallBack *) 
+	    osi_Alloc(AFSCBMAX * sizeof(AFSCallBack));
 
     /* next, we must iterate over the directory, starting from the specified
      * cookie offset (dirCookie), and counting out nentries file entries.
@@ -1192,8 +1188,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	code = 0;
     }
   done2:
-    osi_FreeLargeSpace(statMemp);
-    osi_FreeLargeSpace(cbfMemp);
+    osi_FreeLargeSpace((char *)fidsp);
+    osi_Free((char *)statsp, AFSCBMAX * sizeof(AFSFetchStatus));
+    osi_Free((char *)cbsp, AFSCBMAX * sizeof(AFSCallBack));
     return code;
 }
 

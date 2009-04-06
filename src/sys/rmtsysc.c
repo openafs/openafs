@@ -239,8 +239,14 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     InData.rmtbulk_len = data->in_size;
     InData.rmtbulk_val = inbuffer;
     inparam_conversion(cmd, InData.rmtbulk_val, 0);
-    OutData.rmtbulk_len = data->out_size;
-    OutData.rmtbulk_val = data->out;
+
+    OutData.rmtbulk_len = MAXBUFFERLEN * sizeof(*OutData.rmtbulk_val);
+    OutData.rmtbulk_val = malloc(OutData.rmtbulk_len); 
+    if (!OutData.rmtbulk_val) {
+	free(inbuffer);
+	return -1;
+    }
+
     /* We always need to pass absolute pathnames to the remote pioctl since we
      * lose the current directory value when doing an rpc call. Below we
      * prepend the current absolute path directory, if the name is relative */
@@ -277,8 +283,15 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     if (!errorcode) {
 	/* Do the conversions back to the host order; store the results back
 	 * on the same buffer */
-	outparam_conversion(cmd, OutData.rmtbulk_val, 1);
+	if (data->out_size < OutData.rmtbulk_len) {
+	    errno = EINVAL;
+	    errorcode = -1;
+	} else {
+	    memcpy(data->out, OutData.rmtbulk_val, data->out_size);
+	    outparam_conversion(cmd, data->out, 1);
+	}
     }
+    free(OutData.rmtbulk_val);
     free(inbuffer);
     return errorcode;
 }
