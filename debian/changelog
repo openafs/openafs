@@ -1,4 +1,4 @@
-openafs (1.4.10+dfsg1-1) UNRELEASED; urgency=low
+openafs (1.4.10+dfsg1-1) unstable; urgency=high
 
   * New upstream release.
     - OPENAFS-SA-2009-001: Avoid a potential kernel memory overrun if more
@@ -26,7 +26,7 @@ openafs (1.4.10+dfsg1-1) UNRELEASED; urgency=low
   * Translation updates:
     - Japanese, thanks Hideki Yamane.  (Closes: #521518)
 
- -- Russ Allbery <rra@debian.org>  Thu, 02 Apr 2009 15:13:10 -0700
+ -- Russ Allbery <rra@debian.org>  Mon, 06 Apr 2009 15:49:34 -0700
 
 openafs (1.4.8.dfsg1-3) unstable; urgency=low
 

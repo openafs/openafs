@@ -1,3 +1,14 @@
+openafs (1.4.10+dfsg1-1) unstable; urgency=high
+
+  This release of OpenAFS contains security fixes in the kernel module.
+  Be sure to also upgrade openafs-modules-source, build a new kernel
+  module for your system following the instructions in
+  /usr/share/doc/openafs-client/README.modules.gz, and then either stop
+  and restart openafs-client or reboot the system to reload the kernel
+  module.
+
+ -- Russ Allbery <rra@debian.org>  Mon, 06 Apr 2009 15:51:14 -0700
+
 openafs (1.4.2-6) unstable; urgency=medium
 
   As of this release of the OpenAFS kernel module, all cells, including
