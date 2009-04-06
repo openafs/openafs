@@ -1,10 +1,11 @@
 openafs (1.4.10+dfsg1-1) UNRELEASED; urgency=low
 
   * New upstream release.
-    - Avoid a potential kernel memory overrun if more items than requested
-      are returned from an InlineBulk or BulkStatus message.
-    - Avoid converting negative errors into invalid kernel memory
-      pointers.
+    - OPENAFS-SA-2009-001: Avoid a potential kernel memory overrun if more
+      items than requested are returned from an InlineBulk or BulkStatus
+      message.  (CVE-2009-1251)
+    - OPENAFS-SA-2009-002: Avoid converting negative errors into invalid
+      kernel memory pointers.  (CVE-2009-1250)
     - Preliminary support for 2.6.30 kernels.
     - Dynamic vcache allocation support to deal with inotify vcache
       pinning.
