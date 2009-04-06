@@ -1849,7 +1849,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
     } else {
         userp = smb_GetTran2User(vcp, p);
         if (!userp) {
-            osi_Log1(smb_logp,"ReceiveTran2GetDfsReferral unable to resolve user [%d]", p->uid);
+            osi_Log1(smb_logp,"ReceiveRAPNetShareGetInfo unable to resolve user [%d]", p->uid);
             return CM_ERROR_BADSMB;
         }   
         code = cm_NameI(cm_data.rootSCachep, shareName,
@@ -3896,10 +3896,10 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             /* 
              * We have a requested path.  Check to see if it is something 
              * we know about.
-			 *
-			 * But be careful because the name that we might be searching
-			 * for might be a known name with the final character stripped
-			 * off.  If we 
+             *
+             * But be careful because the name that we might be searching
+             * for might be a known name with the final character stripped
+             * off.
              */
             code = cm_NameI(cm_data.rootSCachep, &requestFileName[nbnLen+2],
                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
