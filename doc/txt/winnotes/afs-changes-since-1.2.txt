@@ -1,3 +1,35 @@
+Since 1.5.58
+ * PriorityClass of afsd_service.exe process raised to 
+   "High" to match the priority of the system services 
+   that are waiting for afsd_service.exe to respond.
+   Configurable using [TransarcAFSDaemon\Parameters]
+   DWORD "PriorityClass" value.  (use values from Win32
+   API)
+
+ * Change error reporting of CM_ERROR_BADSHARENAME to
+   use the correct error (NTSTATUS_BAD_NETWORK_PATH).
+   The error we were sending would cause the smb 
+   redirector to drop the connection.
+
+ * Change the error reporting of CM_ERROR_ALLOFFLINE
+   and CM_ERROR_ALLDOWN to return NTSTATUS_PATH_NOT_FOUND.
+   Previous we would return Bad Network Path which 
+   would cause the smb redirector to cancel all file
+   handles on the same "share".
+
+ * A debug version of afsd_service.exe can now be used
+   with a release version of afsrpc.dll (or vice versa).
+   afsrpc.dll now implements and exports xdr_free().
+
+ * Removed all unprotected OutputDebugString() calls as
+   those calls can block for up to 10 seconds if there 
+   is contention for the globally shared memory or if
+   the debugger fails to read data in a timely manner.
+
+ * Visual Studio 2008, WDK 6.1 and DDK 6.1 are now 
+   supported for builds.  The production releases still
+   use VS 2005.
+
 Since 1.5.57
  * Discovered that XP/2003 supports a variant on recvmsg 
    called WSARecvMsg.  The input parameters are mostly 
