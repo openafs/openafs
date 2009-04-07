@@ -9409,6 +9409,290 @@ exit_thread:
 }
 
 static void
+configureBackConnectionHostNames(void)
+{
+    /* On Windows XP SP2, Windows 2003 SP1, and all future Windows operating systems
+     * there is a restriction on the use of SMB authentication on loopback connections.
+     * There are two work arounds available:
+     * 
+     *   (1) We can disable the check for matching host names.  This does not
+     *   require a reboot:
+     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa]
+     *     "DisableLoopbackCheck"=dword:00000001
+     *
+     *   (2) We can add the AFS SMB/CIFS service name to an approved list.  This
+     *   does require a reboot:
+     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0]
+     *     "BackConnectionHostNames"=multi-sz
+     *
+     * The algorithm will be:
+     *   (1) Check to see if cm_NetbiosName exists in the BackConnectionHostNames list
+     *   (2a) If not, add it to the list.  (This will not take effect until the next reboot.)
+     *   (2b1)    and check to see if DisableLoopbackCheck is set.
+     *   (2b2)    If not set, set the DisableLoopbackCheck value to 0x1 
+     *   (2b3)                and create HKLM\SOFTWARE\OpenAFS\Client  UnsetDisableLoopbackCheck
+     *   (2c) else If cm_NetbiosName exists in the BackConnectionHostNames list,
+     *             check for the UnsetDisableLoopbackCheck value.  
+     *             If set, set the DisableLoopbackCheck flag to 0x0 
+     *             and delete the UnsetDisableLoopbackCheck value
+     *
+     * Starting in Longhorn Beta 1, an entry in the BackConnectionHostNames value will
+     * force Windows to use the loopback authentication mechanism for the specified 
+     * services.
+     */
+    HKEY hkLsa;
+    HKEY hkMSV10;
+    HKEY hkClient;
+    DWORD dwType;
+    DWORD dwSize, dwAllocSize;
+    DWORD dwValue;
+    PBYTE pHostNames = NULL, pName = NULL;
+    BOOL  bNameFound = FALSE;   
+
+    /* BackConnectionHostNames and DisableLoopbackCheck */
+    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                       "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0",
+                       0,
+                       KEY_READ|KEY_WRITE,
+                       &hkMSV10) == ERROR_SUCCESS )
+    {
+        if ((RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
+			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) &&
+            (dwType == REG_MULTI_SZ)) 
+        {
+	    dwAllocSize += 1 /* in case the source string is not nul terminated */
+		+ (DWORD)strlen(cm_NetbiosName) + 2;
+	    pHostNames = malloc(dwAllocSize);
+	    dwSize = dwAllocSize;
+            if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, 
+				 pHostNames, &dwSize) == ERROR_SUCCESS) 
+            {
+		for (pName = pHostNames; 
+		     (pName - pHostNames < (int) dwSize) && *pName ; 
+		     pName += strlen(pName) + 1)
+		{
+		    if ( !stricmp(pName, cm_NetbiosName) ) {
+			bNameFound = TRUE;
+			break;
+		    }   
+		}
+	    }
+        }
+             
+        if ( !bNameFound ) {
+            size_t size = strlen(cm_NetbiosName) + 2;
+            if ( !pHostNames ) {
+                pHostNames = malloc(size);
+		pName = pHostNames;
+            }
+            StringCbCopyA(pName, size, cm_NetbiosName);
+            pName += size - 1;
+            *pName = '\0';  /* add a second nul terminator */
+
+            dwType = REG_MULTI_SZ;
+	    dwSize = (DWORD)(pName - pHostNames + 1);
+            RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
+
+            if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                               "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+                               0,
+                               KEY_READ|KEY_WRITE,
+                               &hkLsa) == ERROR_SUCCESS )
+            {
+                dwSize = sizeof(DWORD);
+                if ( RegQueryValueEx( hkLsa, "DisableLoopbackCheck", 0, &dwType, (LPBYTE)&dwValue, &dwSize) != ERROR_SUCCESS ||
+                     dwValue == 0 ) {
+                    dwType = REG_DWORD;
+                    dwSize = sizeof(DWORD);
+                    dwValue = 1;
+                    RegSetValueEx( hkLsa, "DisableLoopbackCheck", 0, dwType, (LPBYTE)&dwValue, dwSize);
+
+                    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                                        AFSREG_CLT_OPENAFS_SUBKEY,
+                                        0,
+                                        NULL,
+                                        REG_OPTION_NON_VOLATILE,
+                                        KEY_READ|KEY_WRITE,
+                                        NULL,
+                                        &hkClient,
+                                        NULL) == ERROR_SUCCESS) {
+
+                        dwType = REG_DWORD;
+                        dwSize = sizeof(DWORD);
+                        dwValue = 1;
+                        RegSetValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, dwType, (LPBYTE)&dwValue, dwSize);
+                        RegCloseKey(hkClient);
+                    }
+                    RegCloseKey(hkLsa);
+                }
+            }
+        } else {
+            if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                                AFSREG_CLT_OPENAFS_SUBKEY,
+                                0,
+                                NULL,
+                                REG_OPTION_NON_VOLATILE,
+                                KEY_READ|KEY_WRITE,
+                                NULL,
+                                &hkClient,
+                                NULL) == ERROR_SUCCESS) {
+
+                dwSize = sizeof(DWORD);
+                if ( RegQueryValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS &&
+                     dwValue == 1 ) {
+                    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                                       "SYSTEM\\CurrentControlSet\\Control\\Lsa",
+                                       0,
+                                       KEY_READ|KEY_WRITE,
+                                       &hkLsa) == ERROR_SUCCESS )
+                    {
+                        RegDeleteValue(hkLsa, "DisableLoopbackCheck");
+                        RegCloseKey(hkLsa);
+                    }
+                }
+                RegDeleteValue(hkClient, "RemoveDisableLoopbackCheck");
+                RegCloseKey(hkClient);
+            }
+        }
+
+        if (pHostNames) {
+            free(pHostNames);
+            pHostNames = NULL;
+        }
+
+        RegCloseKey(hkMSV10);
+    }
+}
+
+
+static void
+configureExtendedSMBSessionTimeouts(void)
+{
+    /*
+     * In a Hot Fix to Windows 2003 SP2, the smb redirector was given the following
+     * new functionality:
+     *
+     *  [HKLM\SYSTEM\CurrentControlSet\Services\LanManWorkstation\Parameters]
+     *   "ReconnectableServers"            REG_MULTI_SZ
+     *   "ExtendedSessTimeout"             REG_DWORD  (seconds)
+     *   "ServersWithExtendedSessTimeout"  REG_MULTI_SZ 
+     *  
+     * These values can be used to prevent the smb redirector from timing out
+     * smb connection to the afs smb server prematurely.
+     */
+    HKEY hkLanMan;
+    DWORD dwType;
+    DWORD dwSize, dwAllocSize;
+    DWORD dwValue;
+    PBYTE pHostNames = NULL, pName = NULL;
+    BOOL  bNameFound = FALSE;   
+
+    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
+                       "SYSTEM\\CurrentControlSet\\Services\\LanManWorkstation\\Parameters",
+                       0,
+                       KEY_READ|KEY_WRITE,
+                       &hkLanMan) == ERROR_SUCCESS )
+    {
+        if ((RegQueryValueEx( hkLanMan, "ReconnectableServers", 0, 
+			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) &&
+            (dwType == REG_MULTI_SZ)) 
+        {
+	    dwAllocSize += 1 /* in case the source string is not nul terminated */
+		+ (DWORD)strlen(cm_NetbiosName) + 2;
+	    pHostNames = malloc(dwAllocSize);
+	    dwSize = dwAllocSize;
+            if (RegQueryValueEx( hkLanMan, "ReconnectableServers", 0, &dwType, 
+				 pHostNames, &dwSize) == ERROR_SUCCESS) 
+            {
+		for (pName = pHostNames; 
+		     (pName - pHostNames < (int) dwSize) && *pName ; 
+		     pName += strlen(pName) + 1)
+		{
+		    if ( !stricmp(pName, cm_NetbiosName) ) {
+			bNameFound = TRUE;
+			break;
+		    }   
+		}
+	    }
+        }
+             
+        if ( !bNameFound ) {
+            size_t size = strlen(cm_NetbiosName) + 2;
+            if ( !pHostNames ) {
+                pHostNames = malloc(size);
+		pName = pHostNames;
+            }
+            StringCbCopyA(pName, size, cm_NetbiosName);
+            pName += size - 1;
+            *pName = '\0';  /* add a second nul terminator */
+
+            dwType = REG_MULTI_SZ;
+	    dwSize = (DWORD)(pName - pHostNames + 1);
+            RegSetValueEx( hkLanMan, "ReconnectableServers", 0, dwType, pHostNames, dwSize);
+        }
+
+        if (pHostNames) {
+            free(pHostNames);
+            pHostNames = NULL;
+        }
+        
+        if ((RegQueryValueEx( hkLanMan, "ServersWithExtendedSessTimeout", 0, 
+			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) &&
+            (dwType == REG_MULTI_SZ)) 
+        {
+	    dwAllocSize += 1 /* in case the source string is not nul terminated */
+		+ (DWORD)strlen(cm_NetbiosName) + 2;
+	    pHostNames = malloc(dwAllocSize);
+	    dwSize = dwAllocSize;
+            if (RegQueryValueEx( hkLanMan, "ServersWithExtendedSessTimeout", 0, &dwType, 
+				 pHostNames, &dwSize) == ERROR_SUCCESS) 
+            {
+		for (pName = pHostNames; 
+		     (pName - pHostNames < (int) dwSize) && *pName ; 
+		     pName += strlen(pName) + 1)
+		{
+		    if ( !stricmp(pName, cm_NetbiosName) ) {
+			bNameFound = TRUE;
+			break;
+		    }   
+		}
+	    }
+        }
+             
+        if ( !bNameFound ) {
+            size_t size = strlen(cm_NetbiosName) + 2;
+            if ( !pHostNames ) {
+                pHostNames = malloc(size);
+		pName = pHostNames;
+            }
+            StringCbCopyA(pName, size, cm_NetbiosName);
+            pName += size - 1;
+            *pName = '\0';  /* add a second nul terminator */
+
+            dwType = REG_MULTI_SZ;
+	    dwSize = (DWORD)(pName - pHostNames + 1);
+            RegSetValueEx( hkLanMan, "ServersWithExtendedSessTimeout", 0, dwType, pHostNames, dwSize);
+        }
+
+        if (pHostNames) {
+            free(pHostNames);
+            pHostNames = NULL;
+        }
+
+        if ((RegQueryValueEx( hkLanMan, "ExtendedSessTimeout", 0, 
+                              &dwType, (LPBYTE)&dwValue, &dwAllocSize) != ERROR_SUCCESS) ||
+             (dwType != REG_DWORD)) 
+        {
+            dwType = REG_DWORD;
+	    dwSize = sizeof(dwValue);
+            dwValue = 600;      /* 10 minutes */
+            RegSetValueEx( hkLanMan, "ExtendedSessTimeout", 0, dwType, (const BYTE *)&dwValue, dwSize);
+        }
+        RegCloseKey(hkLanMan);
+    }
+}
+
+static void
 smb_LanAdapterChangeThread(void *param)
 {
     /* 
@@ -9702,6 +9986,12 @@ void smb_StartListeners(int locked)
     }
 
     afsi_log("smb_StartListeners");
+    /* Ensure the AFS Netbios Name is registered to allow loopback access */
+    configureBackConnectionHostNames();
+
+    /* Configure Extended SMB Session Timeouts */
+    configureExtendedSMBSessionTimeouts();
+
     smb_ListenerState = SMB_LISTENER_STARTED;
     cm_VolStatus_Network_Started(cm_NetbiosName
 #ifdef _WIN64

@@ -86,8 +86,8 @@ char cm_HostName[200];
 long cm_HostAddr;
 unsigned short cm_callbackport = CM_DEFAULT_CALLBACKPORT;
 
-char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
-clientchar_t cm_NetbiosNameC[MAX_NB_NAME_LENGTH] = _C("");
+char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "NOT.YET.SET";
+clientchar_t cm_NetbiosNameC[MAX_NB_NAME_LENGTH] = _C("NOT.YET.SET");
 
 char cm_CachePath[MAX_PATH];
 DWORD cm_ValidateCache = 1;
@@ -239,159 +239,6 @@ void afsd_ForceTrace(BOOL flush)
         FlushFileBuffers(handle);
     CloseHandle(handle);
 }
-
-static void
-configureBackConnectionHostNames(void)
-{
-    /* On Windows XP SP2, Windows 2003 SP1, and all future Windows operating systems
-     * there is a restriction on the use of SMB authentication on loopback connections.
-     * There are two work arounds available:
-     * 
-     *   (1) We can disable the check for matching host names.  This does not
-     *   require a reboot:
-     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa]
-     *     "DisableLoopbackCheck"=dword:00000001
-     *
-     *   (2) We can add the AFS SMB/CIFS service name to an approved list.  This
-     *   does require a reboot:
-     *   [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0]
-     *     "BackConnectionHostNames"=multi-sz
-     *
-     * The algorithm will be:
-     *   (1) Check to see if cm_NetbiosName exists in the BackConnectionHostNames list
-     *   (2a) If not, add it to the list.  (This will not take effect until the next reboot.)
-     *   (2b1)    and check to see if DisableLoopbackCheck is set.
-     *   (2b2)    If not set, set the DisableLoopbackCheck value to 0x1 
-     *   (2b3)                and create HKLM\SOFTWARE\OpenAFS\Client  UnsetDisableLoopbackCheck
-     *   (2c) else If cm_NetbiosName exists in the BackConnectionHostNames list,
-     *             check for the UnsetDisableLoopbackCheck value.  
-     *             If set, set the DisableLoopbackCheck flag to 0x0 
-     *             and delete the UnsetDisableLoopbackCheck value
-     *
-     * Starting in Longhorn Beta 1, an entry in the BackConnectionHostNames value will
-     * force Windows to use the loopback authentication mechanism for the specified 
-     * services.
-     */
-    HKEY hkLsa;
-    HKEY hkMSV10;
-    HKEY hkClient;
-    DWORD dwType;
-    DWORD dwSize, dwAllocSize;
-    DWORD dwValue;
-    PBYTE pHostNames = NULL, pName = NULL;
-    BOOL  bNameFound = FALSE;   
-
-    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                       "SYSTEM\\CurrentControlSet\\Control\\Lsa\\MSV1_0",
-                       0,
-                       KEY_READ|KEY_WRITE,
-                       &hkMSV10) == ERROR_SUCCESS )
-    {
-        if ((RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, 
-			     &dwType, NULL, &dwAllocSize) == ERROR_SUCCESS) &&
-            (dwType == REG_MULTI_SZ)) 
-        {
-	    dwAllocSize += 1 /* in case the source string is not nul terminated */
-		+ strlen(cm_NetbiosName) + 2;
-	    pHostNames = malloc(dwAllocSize);
-	    dwSize = dwAllocSize;
-            if (RegQueryValueEx( hkMSV10, "BackConnectionHostNames", 0, &dwType, 
-				 pHostNames, &dwSize) == ERROR_SUCCESS) 
-            {
-		for (pName = pHostNames; 
-		     (pName - pHostNames < (int) dwSize) && *pName ; 
-		     pName += strlen(pName) + 1)
-		{
-		    if ( !stricmp(pName, cm_NetbiosName) ) {
-			bNameFound = TRUE;
-			break;
-		    }   
-		}
-	    }
-        }
-             
-        if ( !bNameFound ) {
-            size_t size = strlen(cm_NetbiosName) + 2;
-            if ( !pHostNames ) {
-                pHostNames = malloc(size);
-		pName = pHostNames;
-            }
-            StringCbCopyA(pName, size, cm_NetbiosName);
-            pName += size - 1;
-            *pName = '\0';  /* add a second nul terminator */
-
-            dwType = REG_MULTI_SZ;
-	    dwSize = pName - pHostNames + 1;
-            RegSetValueEx( hkMSV10, "BackConnectionHostNames", 0, dwType, pHostNames, dwSize);
-
-            if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                               "SYSTEM\\CurrentControlSet\\Control\\Lsa",
-                               0,
-                               KEY_READ|KEY_WRITE,
-                               &hkLsa) == ERROR_SUCCESS )
-            {
-                dwSize = sizeof(DWORD);
-                if ( RegQueryValueEx( hkLsa, "DisableLoopbackCheck", 0, &dwType, (LPBYTE)&dwValue, &dwSize) != ERROR_SUCCESS ||
-                     dwValue == 0 ) {
-                    dwType = REG_DWORD;
-                    dwSize = sizeof(DWORD);
-                    dwValue = 1;
-                    RegSetValueEx( hkLsa, "DisableLoopbackCheck", 0, dwType, (LPBYTE)&dwValue, dwSize);
-
-                    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                                        AFSREG_CLT_OPENAFS_SUBKEY,
-                                        0,
-                                        NULL,
-                                        REG_OPTION_NON_VOLATILE,
-                                        KEY_READ|KEY_WRITE,
-                                        NULL,
-                                        &hkClient,
-                                        NULL) == ERROR_SUCCESS) {
-
-                        dwType = REG_DWORD;
-                        dwSize = sizeof(DWORD);
-                        dwValue = 1;
-                        RegSetValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, dwType, (LPBYTE)&dwValue, dwSize);
-                        RegCloseKey(hkClient);
-                    }
-                    RegCloseKey(hkLsa);
-                }
-            }
-        } else {
-            if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                                AFSREG_CLT_OPENAFS_SUBKEY,
-                                0,
-                                NULL,
-                                REG_OPTION_NON_VOLATILE,
-                                KEY_READ|KEY_WRITE,
-                                NULL,
-                                &hkClient,
-                                NULL) == ERROR_SUCCESS) {
-
-                dwSize = sizeof(DWORD);
-                if ( RegQueryValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, &dwType, (LPBYTE)&dwValue, &dwSize) == ERROR_SUCCESS &&
-                     dwValue == 1 ) {
-                    if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                                       "SYSTEM\\CurrentControlSet\\Control\\Lsa",
-                                       0,
-                                       KEY_READ|KEY_WRITE,
-                                       &hkLsa) == ERROR_SUCCESS )
-                    {
-                        RegDeleteValue(hkLsa, "DisableLoopbackCheck");
-                        RegCloseKey(hkLsa);
-                    }
-                }
-                RegDeleteValue(hkClient, "RemoveDisableLoopbackCheck");
-                RegCloseKey(hkClient);
-            }
-        }
-        RegCloseKey(hkMSV10);
-    }
-
-    if (pHostNames)
-	free(pHostNames);
-}
-
 
 static void afsd_InitServerPreferences(void)
 {
@@ -900,15 +747,15 @@ int afsd_InitCM(char **reasonP)
                             (LPBYTE) cm_mountRootC, &cm_mountRootCLen);
     if (code == ERROR_SUCCESS) {
         afsi_log("Mount root %S", cm_mountRootC);
-        cm_mountRootCLen = cm_ClientStrLen(cm_mountRootC);
+        cm_mountRootCLen = (DWORD)cm_ClientStrLen(cm_mountRootC);
     } else {
         cm_ClientStrCpy(cm_mountRootC, lengthof(cm_mountRootC), _C("/afs"));
-        cm_mountRootCLen = cm_ClientStrLen(cm_mountRootC);
+        cm_mountRootCLen = (DWORD)cm_ClientStrLen(cm_mountRootC);
         /* Don't log */
     }
 
     cm_ClientStringToFsString(cm_mountRootC, -1, cm_mountRoot, lengthof(cm_mountRoot));
-    cm_mountRootLen = cm_FsStrLen(cm_mountRoot);
+    cm_mountRootLen = (DWORD)cm_FsStrLen(cm_mountRoot);
 
     dummyLen = sizeof(buf);
     code = RegQueryValueEx(parmKey, "CachePath", NULL, &regType,
@@ -1326,9 +1173,6 @@ int afsd_InitCM(char **reasonP)
     cm_initParams.cacheSize = cacheSize;
     cm_initParams.setTime = 0;
     cm_initParams.memCache = 1;
-
-    /* Ensure the AFS Netbios Name is registered to allow loopback access */
-    configureBackConnectionHostNames();
 
     /* init user daemon, and other packages */
     cm_InitUser();
