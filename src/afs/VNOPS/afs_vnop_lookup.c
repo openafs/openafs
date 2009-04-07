@@ -1077,7 +1077,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	afs_PutVolume(volp, READ_LOCK);
 
     /* If we did the InlineBulk RPC pull out the return code */
-    if (inlinebulk) {
+    if (inlinebulk && code == 0) {
 	if ((&statsp[0])->errorCode) {
 	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp,
 			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL);
