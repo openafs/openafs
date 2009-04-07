@@ -105,7 +105,7 @@ static inline afs_int32 rx_AtomicSwap_int(afs_int32 *oldval, afs_int32 newval) {
 #define rx_AtomicDecrement(object, mutex) rx_MutexDecrement(object, mutex)
 #define rx_AtomicSwap_NL(oldval, newval) rx_AtomicSwap_int(oldval, newval)
 #define rx_AtomicSwap(oldval, newval, mutex) rx_AtomicSwap_int(oldval, newval)
-static inline afs_int32 rx_AtomicSwap_int(afs_int32 *oldval, afs_int32 newval) {
+static_inline afs_int32 rx_AtomicSwap_int(afs_int32 *oldval, afs_int32 newval) {
     afs_int32 ret = *oldval;
     *oldval = newval;
     return ret;
