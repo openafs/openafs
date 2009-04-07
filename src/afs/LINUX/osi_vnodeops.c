@@ -50,6 +50,10 @@ RCSID
 #define pageoff(pp) pp->offset
 #endif
 
+#ifndef MAX_ERRNO
+#define MAX_ERRNO 1000L
+#endif
+
 #if defined(AFS_LINUX26_ENV)
 #define LockPage(pp) lock_page(pp)
 #define UnlockPage(pp) unlock_page(pp)
