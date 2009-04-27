@@ -144,4 +144,4 @@ struct bc_dumpTask {
 #define	BC_MAXSIMDUMPS	    64
 #define BC_MAXPORTS	    128	/* max number of port offsets for volrestore */
 /* debugging support */
-#define	dprintf(x)
+#define	afs_dprintf(x)
