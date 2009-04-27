@@ -601,7 +601,7 @@ bcdb_SaveTextFile(ctPtr)
 
     fileSize = (afs_int32) filesize(ctPtr->textStream);
 
-    dprintf(("filesize is %d\n", fileSize));
+    afs_dprintf(("filesize is %d\n", fileSize));
 
     rewind(ctPtr->textStream);
 
@@ -1390,7 +1390,7 @@ bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
 	ERROR(errno);
 #endif
 
-    dprintf(("file is %s\n", tmpFileName));
+    afs_dprintf(("file is %s\n", tmpFileName));
 
   normal_exit:
     return code;
