@@ -55,8 +55,8 @@ RCSID
 #endif /* defined(AFS_HPUX_ENV) */
 #ifdef	TCP_DEBUG
 #include <sys/syslog.h>
-#	define	DPRINTF(args)	dprintf args
-dprintf(args)
+#	define	DPRINTF(args)	afs_dprintf args
+afs_dprintf(args)
      char *args;
 {
     char **argv;

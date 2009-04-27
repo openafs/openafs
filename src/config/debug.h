@@ -112,21 +112,21 @@ if(!(x)) { fprintf(stderr, "assertion failed: line %d, file %s\n",\
 
 #if defined(AFS_DEBUG)
 #if defined(lint)
-#define dprintf(flag, str) printf str
+#define afs_dprintf(flag, str) printf str
 #define dlprintf(flag, level, str) printf str
 #define dmprintf(flag, bit, str) printf str
 #else /* lint */
-#define dprintf(flag, str) \
+#define afs_dprintf(flag, str) \
       (void)((flag) ? \
 	     ( osi_dp str, osi_dp("\t%s, %d\n", __FILE__, __LINE__)):0)
-#define dlprintf(flag, level, str) dprintf(((flag) >= (level)), str)
-#define dmprintf(flag, bit, str) dprintf(((flag)&(1<<((bit)-1))), str)
+#define dlprintf(flag, level, str) afs_dprintf(((flag) >= (level)), str)
+#define dmprintf(flag, bit, str) afs_dprintf(((flag)&(1<<((bit)-1))), str)
 
 #endif /* lint */
 
 #else /* AFS_DEBUG */
 
-#define dprintf(flag, str)
+#define afs_dprintf(flag, str)
 #define dlprintf(flag, level,str)
 #define dmprintf(flag, bit, str)
 
