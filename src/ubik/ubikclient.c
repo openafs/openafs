@@ -28,6 +28,7 @@ RCSID
 #define UBIK_LEGACY_CALLITER 1
 #include "ubik.h"
 #include "afs/pthread_glock.h"
+#include <netdb.h>
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>

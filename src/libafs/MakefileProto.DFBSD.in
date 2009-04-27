@@ -1,0 +1,103 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+#
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o \
+	osi_module.o 
+
+#AFS_OS_NFSOBJS = \
+#	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+
+# System specific build commands and flags
+KSRC = @BSD_KERNEL_PATH@
+KBLD = @BSD_KERNEL_BUILD@
+
+KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
+	-elf 
+
+DBUG = -O2
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+
+# Name of directory to hold object files and libraries.
+KOBJ = MODLOAD
+
+# This tells Makefile.common to use it's single directory build target.
+COMPDIRS = single_compdir
+INSTDIRS = single_instdir
+DESTDIRS = single_destdir
+
+#include Makefile.common
+all:
+	echo "skipping"
+
+setup:
+	echo "skipping"
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafsnfs.ko
+LIBAFSNONFS = libafs.ko
+
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
+
+
+# Without this line, gmake tries to build libafs
+.PHONY: libafs
+
+# libafs:	$(LIBAFS) $(LIBAFSNONFS)
+libafs:	$(LIBAFSNONFS)
+# install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
+install_libafs:	$(INST_LIBAFSNONFS)
+# dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+dest_libafs:	$(DEST_LIBAFSNONFS)
+#libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+#install_libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+#dest_libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+
+$(INST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	   echo "Skipping kernel module build"
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	   echo "Skipping kernel module build"

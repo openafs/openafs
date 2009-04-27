@@ -983,6 +983,8 @@ doSweepAFSCache(int *vFilesFound,
 #ifdef AFS_SGI62_ENV
 	    printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
+#elif defined(AFS_DFBSD_ENV)
+	    printf("\tinode=%d, name='%s'\n", currp->d_ino, currp->d_name);
 #else
 	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);

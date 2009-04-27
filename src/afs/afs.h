@@ -782,7 +782,9 @@ struct vcache {
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV
+#if !defined(AFS_DFBSD_ENV)
     struct lock rwlock;
+#endif
 #endif
 
     struct VenusFid *mvid;	/* Either parent dir (if root) or root (if mt pt) */

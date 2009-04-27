@@ -492,6 +492,10 @@ case $system in
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(i386_obsd)
 		;;
+	*-dragonfly*)
+		MKAFS_OSTYPE=DFBSD
+		AC_MSG_RESULT(i386_dfbsd)
+		;;
         *)
                 AC_MSG_RESULT($system)
                 ;;
@@ -525,6 +529,12 @@ else
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
+			;;
+		i386-*-dragonfly2.2*)
+			AFS_SYSNAME="i386_dfbsd_23"
+			;;
+		i386-*-dragonfly2.3*)
+			AFS_SYSNAME="i386_dfbsd_23"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -1366,6 +1376,9 @@ fi
 
 PTHREAD_LIBS=error
 if test "x$MKAFS_OSTYPE" = OBSD; then
+        PTHREAD_LIBS="-pthread"
+fi
+if test "x$MKAFS_OSTYPE" = xDFBSD; then
         PTHREAD_LIBS="-pthread"
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
