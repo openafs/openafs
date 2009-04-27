@@ -14,7 +14,7 @@
 #ifndef AFS_NT40_ENV
 #include <sys/ioctl.h>
 #endif
-#if defined(__sun) && defined(__SVR4)
+#if (defined(__sun) && defined(__SVR4)) || defined(AFS_DFBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
 # include <sys/ioccom.h>
 #endif
 

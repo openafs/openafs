@@ -20,6 +20,7 @@ RCSID
 #include "afsincludes.h"
 #include "des/des.h"
 #include "rx/rxkad.h"
+#include <netdb.h>
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -234,7 +235,7 @@ afsconf_FindService(register const char *aname)
 #if     defined(AFS_OSF_ENV) 
     ts = getservbyname(aname, "");
 #else
-    ts = getservbyname(aname, NULL);
+    ts = (struct servent *) getservbyname(aname, NULL);
 #endif
     if (ts) {
 	/* we found it in /etc/services, so we use this value */

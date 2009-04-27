@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -1314,8 +1315,13 @@ SweepAFSCache(int *vFilesFound)
     for (currp = readdir(cdirp); currp; currp = readdir(cdirp)) {
 	if (afsd_debug) {
 	    printf("%s: Current directory entry:\n", rn);
+#if defined(AFS_USR_DFBSD_ENV)
+	    printf("\tinode=%d, name='%s'\n", currp->d_ino,
+		   currp->d_name);
+#else
 	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
+#endif
 	}
 
 	/*
@@ -2066,6 +2072,7 @@ uafs_SetTokens(char *tbuffer, int tlen)
     iob.in_size = tlen;
     iob.out = &outbuf[0];
     iob.out_size = sizeof(outbuf);
+
     rc = call_syscall(AFSCALL_PIOCTL, 0, _VICEIOCTL(3), (long)&iob, 0, 0);
     if (rc != 0) {
 	errno = rc;

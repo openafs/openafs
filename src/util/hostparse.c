@@ -20,6 +20,7 @@ RCSID
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
 #include "afs/afsutil.h"
+#include <netdb.h>
 #else /* UKERNEL */
 #include <stdio.h>
 #include <sys/types.h>
