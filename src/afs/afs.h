@@ -687,7 +687,9 @@ struct vcache {
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV
+#if !defined(AFS_DFBSD_ENV)
     struct lock rwlock;
+#endif
 #endif
     afs_int32 parentVnode;	/* Parent dir, if a file. */
     afs_int32 parentUnique;

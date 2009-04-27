@@ -45,6 +45,11 @@ RCSID
 
 #define NIFS		512
 
+#if defined(AFS_USR_DFBSD_ENV)
+#include <net/if.h>
+#include <sys/sockio.h>
+#endif
+
 #ifdef KERNEL
 /* only used for generating random noise */
 
@@ -328,7 +333,7 @@ rx_getAllAddr(afs_int32 buffer[], int maxSize)
 /* this function returns the total number of interface addresses
 ** the buffer has to be passed in by the caller
 */
-#else
+#else /* UKERNEL indirectly, on DARWIN or XBSD */
 static int
 rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 {
@@ -337,6 +342,7 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
     struct ifconf ifc;
     struct ifreq ifs[NIFS], *ifr;
     struct sockaddr_in *a;
+    /* can't ever be AFS_DARWIN_ENV or AFS_XBSD_ENV, no? */
 #if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     char *cp, *cplim, *cpnext;	/* used only for AIX 41 */
 #endif

@@ -345,6 +345,10 @@ case $system in
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(i386_obsd)
 		;;
+	*-dragonfly*)
+		MKAFS_OSTYPE=DFBSD
+		AC_MSG_RESULT(i386_dfbsd)
+		;;
         *)
                 AC_MSG_RESULT($system)
                 ;;
@@ -372,6 +376,12 @@ else
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
+			;;
+		i386-*-dragonfly2.2*)
+			AFS_SYSNAME="i386_dfbsd_23"
+			;;
+		i386-*-dragonfly2.3*)
+			AFS_SYSNAME="i386_dfbsd_23"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -1195,6 +1205,9 @@ if test "x$PTHREAD_LIBS" = xerror; then
         # pthread_attr_init is a macro under HPUX 11.0 and 11.11
         AC_CHECK_LIB(pthread, pthread_attr_destroy,
                 PTHREAD_LIBS="-lpthread")
+fi
+if test "x$MKAFS_OSTYPE" = xDFBSD; then
+        PTHREAD_LIBS="-pthread"
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
         AC_MSG_WARN(*** Unable to locate working posix thread library ***)

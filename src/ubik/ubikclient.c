@@ -27,6 +27,7 @@ RCSID
 #include "afs/rxgen_consts.h"
 #include "ubik.h"
 #include "afs/pthread_glock.h"
+#include <netdb.h>
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
