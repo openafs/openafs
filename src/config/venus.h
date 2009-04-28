@@ -174,6 +174,7 @@ struct cm_initparams {
 #define VIOC_SETRXKCRYPT        _VICEIOCTL(56)	/* Set rxkad enc flag */
 #define VIOC_PREFETCHTAPE       _VICEIOCTL(66)	/* osd prefetch from tape */
 #define VIOC_FS_CMD      	_VICEIOCTL(67)	/* fs extensions for osd etc. */
+#define VIOC_RESIDENCY_CMD      VIOC_FS_CMD
 #define VIOC_STATISTICS         _VICEIOCTL(68)	/* arla: fetch statistics */
 #define VIOC_GETVCXSTATUS2      _VICEIOCTL(69)  /* vcache statistics */
 

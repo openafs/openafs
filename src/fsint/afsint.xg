@@ -666,6 +666,13 @@ FsCmd(
   OUT struct FsCmdOutputs *Outputs
 ) = 220;
 
+#ifdef RPC_CLIENT
+%int RXAFS_ResidencyCmd(struct rx_connection *z_conn, AFSFid *Fid, struct FsCmdInputs *Inputs, struct FsCmdOutputs *Outputs)
+%{
+%  return RXAFS_FsCmd(z_conn, Fid, Inputs, Outputs);
+%}
+#endif
+
 InlineBulkStatus(
   IN  AFSCBFids *FidsArray,
   OUT AFSBulkStats *StatArray,
