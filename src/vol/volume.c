@@ -2331,10 +2331,13 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 		break;
 
 	    case FSSYNC_VolOpRunningUnknown:
-		vp->pending_vol_op->vol_op_state = 
-		    (VVolOpLeaveOnline_r(vp, vp->pending_vol_op) ? 
-		     FSSYNC_VolOpRunningOnline : FSSYNC_VolOpRunningOffline);
-		/* fall through */
+		if (VVolOpLeaveOnline_r(vp, vp->pending_vol_op)) {
+		    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOnline;
+		    break;
+		} else {
+		    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline;
+		    /* fall through to take volume offline */
+		}
 
 	    case FSSYNC_VolOpRunningOffline:
 		/* mark the volume down */
