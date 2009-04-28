@@ -393,7 +393,7 @@ struct AccessHistoryOld {
     afs_uint32 Residency4;
 };
 
-struct ResidencyCmdInputs {
+struct FsCmdInputs {
     afs_int32  command;
     struct AFSFid fid;
     afs_int64  int64s[MAXCMDINT64S];
@@ -401,7 +401,7 @@ struct ResidencyCmdInputs {
     char       chars[MAXCMDCHARS];
 };
 
-struct ResidencyCmdOutputs {
+struct FsCmdOutputs {
     afs_int32  code;
     struct AFSFetchStatus status;
     afs_int64  int64s[MAXCMDINT64S];
@@ -660,11 +660,18 @@ DFSSymlink(
   AFSVolSync *Sync
 ) = 163;
 
-ResidencyCmd(
+FsCmd(
   IN AFSFid *Fid,
-  IN struct ResidencyCmdInputs *Inputs,
-  OUT struct ResidencyCmdOutputs *Outputs
+  IN struct FsCmdInputs *Inputs,
+  OUT struct FsCmdOutputs *Outputs
 ) = 220;
+
+#ifdef RPC_CLIENT
+%int RXAFS_ResidencyCmd(struct rx_connection *z_conn, AFSFid *Fid, struct FsCmdInputs *Inputs, struct FsCmdOutputs *Outputs)
+%{
+%  return RXAFS_FsCmd(z_conn, Fid, Inputs, Outputs);
+%}
+#endif
 
 InlineBulkStatus(
   IN  AFSCBFids *FidsArray,
