@@ -9439,6 +9439,9 @@ configureBackConnectionHostNames(void)
      * Starting in Longhorn Beta 1, an entry in the BackConnectionHostNames value will
      * force Windows to use the loopback authentication mechanism for the specified 
      * services.
+     * 
+     * Do not permit the "DisableLoopbackCheck" value to be removed within the same
+     * service session that set it.  
      */
     HKEY hkLsa;
     HKEY hkMSV10;
@@ -9448,6 +9451,7 @@ configureBackConnectionHostNames(void)
     DWORD dwValue;
     PBYTE pHostNames = NULL, pName = NULL;
     BOOL  bNameFound = FALSE;   
+    static BOOL bLoopbackCheckDisabled = FALSE;
 
     /* BackConnectionHostNames and DisableLoopbackCheck */
     if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
@@ -9521,12 +9525,13 @@ configureBackConnectionHostNames(void)
                         dwSize = sizeof(DWORD);
                         dwValue = 1;
                         RegSetValueEx( hkClient, "RemoveDisableLoopbackCheck", 0, dwType, (LPBYTE)&dwValue, dwSize);
+                        bLoopbackCheckDisabled = TRUE;
                         RegCloseKey(hkClient);
                     }
                     RegCloseKey(hkLsa);
                 }
             }
-        } else {
+        } else if (!bLoopbackCheckDisabled) {
             if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
                                 AFSREG_CLT_OPENAFS_SUBKEY,
                                 0,
