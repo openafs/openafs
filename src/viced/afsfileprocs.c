@@ -1986,11 +1986,21 @@ SRXAFS_DFSSymlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 }
 
 afs_int32
-SRXAFS_ResidencyCmd(struct rx_call * acall, struct AFSFid * Fid,
-		    struct ResidencyCmdInputs * Inputs,
-		    struct ResidencyCmdOutputs * Outputs)
+SRXAFS_FsCmd(struct rx_call * acall, struct AFSFid * Fid,
+		    struct FsCmdInputs * Inputs,
+		    struct FsCmdOutputs * Outputs)
 {
-    return EINVAL;
+    afs_int32 code = 0;
+    struct AFSCallBack callback;
+    struct AFSVolSync sync;
+
+    switch (Inputs->command) {
+    default:
+        code = EINVAL;
+    }
+    ViceLog(1,("FsCmd: cmd = %d, code=%d\n", 
+			Inputs->command, Outputs->code));
+    return code;
 }
 
 #ifdef AFS_NT40_ENV
