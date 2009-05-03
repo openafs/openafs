@@ -66,7 +66,6 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 static int
 afs_setgroups(cred_t **cr, int ngroups, gid_t * gidset, int change_parent)
 {
-    int ngrps;
     int i;
     gid_t *gp;
 
@@ -166,7 +165,9 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
          int change_parent)
 {
     struct group_info *group_info;
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     gid_t g0, g1;
+#endif
     struct group_info *tmp;
     int i;
 #ifdef AFS_LINUX26_ONEGROUP_ENV

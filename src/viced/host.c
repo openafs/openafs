@@ -46,8 +46,8 @@ RCSID
 #include <afs/ptclient.h>
 #include <afs/ptuser.h>
 #include <afs/prs_fs.h>
-#include <afs/auth.h>
 #include <afs/afsutil.h>
+#include <rx/rxkad.h>
 #include <afs/com_err.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>
@@ -60,6 +60,10 @@ RCSID
 #include "../util/afsutil_prototypes.h"
 #include "../tviced/serialize_state.h"
 #endif /* AFS_DEMAND_ATTACH_FS */
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <afs/rxk5_utilafs.h>
+#endif
 
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t host_glock_mutex;
@@ -265,15 +269,11 @@ hpr_Initialize(struct ubik_client **uclient)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc = 0;
     struct afsconf_dir *tdir;
-    char tconfDir[100] = "";
-    char tcell[64] = "";
-    struct ktc_token ttoken;
     afs_int32 scIndex;
     struct afsconf_cell info;
     afs_int32 i;
-    char cellstr[64];
 
     tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (!tdir) {
@@ -281,75 +281,41 @@ hpr_Initialize(struct ubik_client **uclient)
 	return -1;
     }
     
-    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
+    code = afsconf_GetCellInfo(tdir, NULL, "afsprot", &info);
     if (code) {
-	ViceLog(0, ("hpr_Initialize: Could not get local cell. [%d]", code));
-	afsconf_Close(tdir);
-	return code;
-    }
-    
-    code = afsconf_GetCellInfo(tdir, cellstr, "afsprot", &info);
-    if (code) {
-	ViceLog(0, ("hpr_Initialize: Could not locate cell %s in %s/%s", cellstr, confDir, AFSDIR_CELLSERVDB_FILE));
-	afsconf_Close(tdir);
-	return code;
+	ViceLog(0, ("hpr_Initialize: Could not locate local cell. [%d]", code));
+	goto Done;
     }
     
     code = rx_Init(0);
     if (code) {
 	ViceLog(0, ("hpr_Initialize: Could not initialize rx."));
-	afsconf_Close(tdir);
-        return code;
+	goto Done;
     }
     
-    scIndex = 2;
-    sc[0] = 0;
-    sc[1] = 0;
-    sc[2] = 0;
-    /* Most callers use secLevel==1, however, the fileserver uses secLevel==2
-     * to force use of the KeyFile.  secLevel == 0 implies -noauth was
-     * specified. */
-    if ((afsconf_GetLatestKey(tdir, 0, 0) == 0)) {
-        code = afsconf_ClientAuthSecure(tdir, &sc[2], &scIndex);
-        if (code)
-	    ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
-        if (code)
-            scIndex = 0;        /* use noauth */
-        if (scIndex != 2)
-            /* if there was a problem, an unauthenticated conn is returned */
-            sc[scIndex] = sc[2];
-    } else {
-        struct ktc_principal sname;
-        strcpy(sname.cell, info.name);
-        sname.instance[0] = 0;
-        strcpy(sname.name, "afs");
-        code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-        if (code)
-            scIndex = 0;
-        else {
-            if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
-                /* this is a kerberos ticket, set scIndex accordingly */
-                scIndex = 2;
-            else {
-                ViceLog(0, ("hpr_Initialize: funny kvno (%d) in ticket, proceeding", ttoken.kvno));
-                scIndex = 2;
-            }
-            sc[2] =
-                rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-                                              ttoken.kvno, ttoken.ticketLen,
-                                              ttoken.ticket);
-        }
+    scIndex = 0;
+    /* The fileserver always uses the KeyFile or keytab (-localauth) */
+    code = afsconf_ClientAuthSecure(tdir, &sc, &scIndex);
+    if (code) {
+	ViceLog(0, ("hpr_Initialize: clientauthsecure returns %d %s (so trying noauth)", code, afs_error_message(code)));
+	scIndex = 0;        /* use noauth */
     }
-    if ((scIndex == 0) && (sc[0] == 0))
-        sc[0] = rxnull_NewClientSecurityObject();
-    if ((scIndex == 0))
-	ViceLog(0, ("hpr_Initialize: Could not get afs tokens, running unauthenticated. [%d]", code));
+
+    /*  ... unless something goes wrong */
+    if (!sc) {
+	sc = rxnull_NewClientSecurityObject();
+	scIndex = 0;        /* use noauth */
+    }
+    if (!scIndex) {
+        ViceLog(0,
+	    ("hpr_Initialize: Could not get afs tokens, running unauthenticated."));
+    }
     
     memset(serverconns, 0, sizeof(serverconns));        /* terminate list!!! */
     for (i = 0; i < info.numServers; i++) {
         serverconns[i] =
             rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-                             info.hostAddr[i].sin_port, PRSRV, sc[scIndex],
+                             info.hostAddr[i].sin_port, PRSRV, sc,
                              scIndex);
     }
 
@@ -357,8 +323,12 @@ hpr_Initialize(struct ubik_client **uclient)
     if (code) {
 	ViceLog(0, ("hpr_Initialize: ubik client init failed. [%d]", code));
     }
-    afsconf_Close(tdir);
-    code = rxs_Release(sc[scIndex]);
+
+    code = rxs_Release(sc);
+    sc = 0;
+Done:
+    if (tdir) afsconf_Close(tdir);
+    if (sc) rxs_Release(sc);
     return code;
 }
 
@@ -2134,6 +2104,7 @@ h_FindClient_r(struct rx_connection *tcon)
     char tcell[MAXKTCREALMLEN];
     int fail = 0;
     int created = 0;
+    int bad_vice_id = 0;
 
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client && client->sid == rxr_CidOf(tcon) 
@@ -2156,6 +2127,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	client = NULL;
     }
 
+    strcpy(uname, "?");
     authClass = rx_SecurityClassOf((struct rx_connection *)tcon);
     ViceLog(5,
 	    ("FindClient: authenticating connection: authClass=%d\n",
@@ -2199,7 +2171,49 @@ h_FindClient_r(struct rx_connection *tcon)
 		expTime = 0x7fffffff;
 	    }
 	}
-    } else {
+#ifdef AFS_RXK5
+    } else if (authClass == 5) {
+	int lvl, expires, kvno, enctype;
+	char *client, *server;
+
+	if (code = rxk5_GetServerInfo2(tcon, &lvl, 
+				      &expires, &client, &server, &kvno, 
+				      &enctype)) {
+	    ViceLog(1, ("Failed to get rxk5 ticket info\n"));
+	    viceid = AnonymousID;
+	    expTime = 0x7fffffff;
+	} else {
+	    char* avname, *avrealm;
+	    expTime = expires;
+	    if(afs_rxk5_parse_name_k5(confDir, client, &avname, 1)) {
+		bad_vice_id = 1;
+		goto viceid_map_done;
+	    }
+	    avrealm = strchr(avname, '@');
+	    if (avrealm) *avrealm++ = 0;
+	    else avrealm = localcellname;
+
+	    /* translate the name to a vice id */
+	    /* avname already contains name.inst */
+	    strncpy(uname, avname, sizeof(uname));
+	    code = MapName_r(uname, avrealm, &viceid);
+	    if (code) {
+		ViceLog(1,
+			("failed to map name=%s, cell=%s -> code=%d\n", uname,
+			 tcell, code));
+		fail = 1;
+		bad_vice_id = 1;
+	    }
+
+	    free(avname);
+      	}
+#endif
+      } else {
+	bad_vice_id = 1;	/* unknown security class */
+    }
+
+ viceid_map_done:    
+    if(bad_vice_id) {
 	viceid = AnonymousID;	/* unknown security class */
 	expTime = 0x7fffffff;
     }
@@ -2272,10 +2286,10 @@ h_FindClient_r(struct rx_connection *tcon)
 	    if (code) {
 		char hoststr[16];
 		ViceLog(0,
-			("pr_GetCPS failed(%d) for user %d, host %x (%s:%d)\n",
-			 code, viceid, client->host, 
+			("pr_GetCPS failed(%d) for user %d, host %x (%s:%d), principal %s\n",
+			 code, viceid, client->host,
                          afs_inet_ntoa_r(client->host->host,hoststr),
-			 ntohs(client->host->port)));
+			 ntohs(client->host->port), uname));
 
 		/* Although ubik_Call (called by pr_GetCPS) traverses thru
 		 * all protection servers and reevaluates things if no

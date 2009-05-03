@@ -32,7 +32,7 @@ SET _WIN32_IE=0x500
 REM ########################################################################
 REM Location of base folder where source lies, build directory
 REM e.g. AFSROOT\SRC is source directory of the build tree (8.3 short name)
-set AFSROOT=C:\SRC\OpenAFS
+set AFSROOT=R:\dev\openafs
 
 REM ########################################################################
 REM NTMakefile required definitions:
@@ -42,6 +42,9 @@ REM                  "1300" for VC7 (.NET)
 REM                  "1310" for .NET 2003
 REM                  "1400" for VC8 (VS2005)
 set AFSVER_CL=1400
+
+REM Support rxk5
+set BUILD_RXK5=TRUE
 
 REM ########################################################################
 REM NTMakefile optional definitions:

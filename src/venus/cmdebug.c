@@ -626,6 +626,7 @@ main(int argc, char **argv)
     }
 #endif
 
+    initialize_rx_error_table();
     rx_Init(0);
 
     ts = cmd_CreateSyntax(NULL, CommandProc, NULL, "query afs cache manager");

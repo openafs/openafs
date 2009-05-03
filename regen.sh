@@ -35,7 +35,7 @@ if [ $skipman ] ; then
 else 
     # Rebuild the man pages, to not require those building from source to have
     # pod2man available.
-    if test -d doc/man-pages ; then
+    if test -e doc/man-pages/generate-man ; then
         echo "Building man pages"
         (cd doc/man-pages && ./generate-man)
     fi

@@ -50,6 +50,11 @@ public class AFSException extends Exception
   {
     super(reason);
   }
+  public AFSException(String reason, int errno, Throwable cause)
+  {
+    super(reason, cause);
+    this.errno = errno;
+  }
   /**
    * Constructs an <code>AFSException</code> with the specified error code. 
    * This constructor will also generate the appropriate error message

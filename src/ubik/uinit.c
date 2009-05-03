@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -36,8 +36,13 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#endif
+#include <afs/auth.h>
 #include <afs/keys.h>
 #include <ubik.h>
 #include <afs/afsint.h>
@@ -49,120 +54,172 @@ RCSID
 afs_int32
 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	       struct ubik_client **uclientp, int (*secproc) (),
-	       char *funcName, afs_int32 gen_rxkad_level, 
+	       char *funcName, afs_int32 gen_rxkad_level,
 	       afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 	       afs_uint32 server, afs_uint32 port, afs_int32 usrvid)
 {
     afs_int32 code, scIndex, i;
     struct afsconf_cell info;
     struct afsconf_dir *tdir;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
     struct rx_securityClass *sc;
+#ifdef AFS_RXK5
+    afs_int32 afs_rxk5_p = 0;
+    krb5_creds *k5_creds = 0, in_creds[1];
+    krb5_context k5context = 0;
+    char* afs_k5_princ = 0;
+    krb5_ccache cc = 0;
+#endif
     /* This must change if VLDB_MAXSERVERS becomes larger than MAXSERVERS */
     static struct rx_connection *serverconns[MAXSERVERS];
-    char cellstr[64];
 
+#ifdef AFS_RXK5
+    memset(in_creds, 0, sizeof *in_creds);
+#define NOAUTH_DEFAULT	env_afs_rxk5_default()
+#else
+#define NOAUTH_DEFAULT	FORCE_KTC
+#endif
+    switch(noAuthFlag & (FORCE_NOAUTH|FORCE_K5CC|FORCE_KTC)) {
+    case 0:
+	noAuthFlag = NOAUTH_DEFAULT;
+	break;
+    default:
+	break;
+    }
     code = rx_Init(0);
     if (code) {
-	fprintf(stderr, "%s: could not initialize rx.\n", funcName);
+	afs_com_err(funcName, code, "so could not initialize rx.");
 	return code;
     }
     rx_SetRxDeadTime(deadtime);
 
     if (sauth) {		/* -localauth */
-	tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
-	if (!tdir) {
+	if (!confDir
+		|| !strcmp(confDir, "")
+		|| !strcmp(confDir, AFSDIR_CLIENT_ETC_DIRPATH))
+	    confDir = (char *) AFSDIR_SERVER_ETC_DIRPATH;
+    }
+
+    tdir = afsconf_Open(confDir);
+    if (!tdir) {
+	if (confDir && strcmp(confDir, ""))
 	    fprintf(stderr,
-		    "%s: Could not process files in configuration directory (%s).\n",
-		    funcName, AFSDIR_SERVER_ETC_DIRPATH);
-	    return -1;
-	}
-	code = afsconf_ClientAuth(tdir, &sc, &scIndex);	/* sets sc,scIndex */
+		"%s: Could not process files in configuration directory (%s).\n",
+		funcName, confDir);
+	else
+	    fprintf(stderr,
+		"%s: No configuration directory specified.\n",
+		funcName);
+	return -1;
+    }
+    if (!cellName) cellName = tdir->cellName;
+    code =
+	afsconf_GetCellInfo(tdir, cellName, serviceid,
+			    &info);
+    if (code) {
+	afsconf_Close(tdir);
+	afs_com_err(funcName, code, "so can't find cell %s's hosts in %s/%s",
+		cellName, confDir, AFSDIR_CELLSERVDB_FILE);
+	return -1;
+    }
+
+    scIndex = 1;
+    sc = 0;
+
+    if (noAuthFlag & FORCE_NOAUTH) {	/* -noauth */
+	scIndex = 0;
+    } else if (sauth) {		/* -localauth */
+	code = afsconf_ClientAuthEx(tdir, &sc, &scIndex,
+		noAuthFlag & (FORCE_RXK5|FORCE_RXKAD));	/* sets sc,scIndex */
 	if (code) {
 	    afsconf_Close(tdir);
-	    fprintf(stderr,
-		    "%s: Could not get security object for -localAuth\n",
-		    funcName);
+	    afs_com_err(funcName, code,
+		"so can't get security object for -localauth");
 	    return -1;
 	}
-	code =
-	    afsconf_GetCellInfo(tdir, tdir->cellName, serviceid,
-				&info);
-	if (code) {
-	    afsconf_Close(tdir);
-	    fprintf(stderr,
-		    "%s: can't find cell %s's hosts in %s/%s\n",
-		    funcName, cellName, AFSDIR_SERVER_ETC_DIRPATH,
-		    AFSDIR_CELLSERVDB_FILE);
-	    exit(1);
-	}
-    } else {			/* not -localauth */
-	tdir = afsconf_Open(confDir);
-	if (!tdir) {
-	    fprintf(stderr,
-		    "%s: Could not process files in configuration directory (%s).\n",
-		    funcName, confDir);
-	    return -1;
-	}
+#ifdef AFS_RXK5
+    } else if (noAuthFlag & FORCE_K5CC) { /* -k5 */
+	char *what;
 
-	if (!cellName) {
-	    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
-	    if (code) {
-		fprintf(stderr,
-			"%s: can't get local cellname, check %s/%s\n",
-			funcName, confDir, AFSDIR_THISCELL_FILE);
-		exit(1);
-	    }
-	    cellName = cellstr;
-	}
+	scIndex = 5;
+	code = ENOMEM;
+	what = "get_afs_krb5_svc_princ";
+	afs_k5_princ = get_afs_krb5_svc_princ(&info);
+	if (!afs_k5_princ) goto Failed;
 
-	code =
-	    afsconf_GetCellInfo(tdir, cellName, serviceid, &info);
+	what = "krb5_init_context";
+	code = krb5_init_context(&k5context);
+	if(code) goto Failed;
+
+	what = "krb5_cc_default";
+	code = krb5_cc_default(k5context, &cc); /* in MIT is pointer to ctxt? */
+	if(code) goto Failed;
+
+	what = "krb5_cc_get_principal";
+	code = krb5_cc_get_principal(k5context, cc, &in_creds->client);
+	if(code) goto Failed;
+
+	what = "krb5_parse_name";
+	code = krb5_parse_name(k5context, afs_k5_princ,	&in_creds->server);
+	if(code) goto Failed;
+
+	/* this stays for now (eg, get from cm) */
+	what = "krb5_get_credentials";
+	code = krb5_get_credentials(k5context, 0, cc, in_creds, &k5_creds);
+	if(code) goto Failed;
+
+	if (!gen_rxkad_level) ++gen_rxkad_level;
+	sc = rxk5_NewClientSecurityObject(gen_rxkad_level, k5_creds, 0);
+    Failed:
 	if (code) {
-	    fprintf(stderr,
-		    "%s: can't find cell %s's hosts in %s/%s\n",
-		    funcName, cellName, confDir, AFSDIR_CELLSERVDB_FILE);
-	    exit(1);
+	    if (afs_k5_princ)
+		afs_com_err(funcName, code, "in %s for %s", what, afs_k5_princ);
+	    else
+		afs_com_err(funcName, code, "in %s", what);
 	}
-	if (noAuthFlag)		/* -noauth */
+#endif /* rxk5 */
+    } else if (noAuthFlag & FORCE_KTC) { /* -k4 */
+	struct ktc_token ttoken;
+	struct pioctl_set_token afstoken[1];
+
+	memset(afstoken, 0, sizeof *afstoken);
+	code = ktc_GetTokenEx(0, info.name, afstoken);
+	if (code) {		/* did not get ticket */
+	    afs_com_err(funcName, code,
+		"so could not get afs tokens, running unauthenticated.");
 	    scIndex = 0;
-	else {			/* not -noauth */
-	    strcpy(sname.cell, info.name);
-	    sname.instance[0] = 0;
-	    strcpy(sname.name, "afs");
-	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	    if (code) {		/* did not get ticket */
+#ifdef AFS_RXK5
+	} else if (!(code = afstoken_to_v5cred(afstoken, in_creds))) {	/* got a k5 ticket */
+	    scIndex = 5;
+	    if (!gen_rxkad_level) ++gen_rxkad_level;
+	    sc=rxk5_NewClientSecurityObject(gen_rxkad_level, in_creds, 0);
+#endif
+	} else if (!(code = afstoken_to_token(afstoken, &ttoken, sizeof ttoken, 0, 0))) {	/* got a k5 ticket */
+	    scIndex = 2;
+	    if ((ttoken.kvno < 0) || (ttoken.kvno > 256)) {
+/* formerly vab */
 		fprintf(stderr,
-			"%s: Could not get afs tokens, running unauthenticated.\n",
-			funcName);
-		scIndex = 0;
-	    } else {		/* got a ticket */
-		scIndex = 2;
-		if ((ttoken.kvno < 0) || (ttoken.kvno > 256)) {
-		    fprintf(stderr,
-			    "%s: funny kvno (%d) in ticket, proceeding\n",
-			    funcName, ttoken.kvno);
-		}
+			"%s: funny kvno (%d) in ticket, proceeding\n",
+			funcName, ttoken.kvno);
 	    }
-	}
-
-	switch (scIndex) {
-	case 0:
-	    sc = rxnull_NewClientSecurityObject();
-	    break;
-	case 2:
 	    sc = rxkad_NewClientSecurityObject(gen_rxkad_level,
-					       &ttoken.sessionKey,
-					       ttoken.kvno, ttoken.ticketLen,
-					       ttoken.ticket);
-	    break;
-	default:
-	    fprintf(stderr, "%s: unsupported security index %d\n",
-		    funcName, scIndex);
-	    exit(1);
-	    break;
+					   &ttoken.sessionKey,
+					   ttoken.kvno,
+					   ttoken.ticketLen,
+					   ttoken.ticket);
+	} else {		/* got a whatzits */
+	    char msg[48];
+	    afs_get_tokens_type_msg(afstoken, msg, sizeof msg);
+	    fprintf(stderr, "%s: no recognized tokens in %s\n", funcName, msg);
 	}
+SkipSc:
+	free_afs_token(afstoken);
+    }
+
+    if (!sc) {
+	if (scIndex)
+	    fprintf(stderr,"%s: running unauthenticated.\n", funcName);
+	scIndex = 0;
+	sc = rxnull_NewClientSecurityObject();
     }
 
     afsconf_Close(tdir);
@@ -177,7 +234,8 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
 	    fprintf(stderr,
 		    "%s: info.numServers=%d (> maxservers=%d)\n",
 		    funcName, info.numServers, maxservers);
-	    exit(1);
+	    code = EDOM;	/* XXX */
+	    goto Done;
 	}
 	for (i = 0; i < info.numServers; i++) {
 	    serverconns[i] =
@@ -190,12 +248,29 @@ ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
     if (uclientp) {
 	*uclientp = 0;
 	code = ubik_ClientInit(serverconns, uclientp);
-	if (code) {
-	    fprintf(stderr, "%s: ubik client init failed.\n", funcName);
-	    return code;
-	}
+	if (code)
+	    afs_com_err(funcName, code, "ubik client init failed.");
     }
-    return 0;
+Done:
+    if (secproc)
+	;
+    else if (code)
+	rxs_Release(sc);
+    else
+	code = rxs_Release(sc);
+#if defined(AFS_RXK5)
+    if (afs_k5_princ) free(afs_k5_princ);
+    if (k5context) {
+	if (cc)
+	    krb5_cc_close(k5context, cc);
+	if (k5_creds)
+	    krb5_free_creds(k5context, k5_creds);
+	krb5_free_principal(k5context, in_creds->client);
+	krb5_free_principal(k5context, in_creds->server);
+	krb5_free_context(k5context);
+    }
+#endif
+    return code;
 }
 
 

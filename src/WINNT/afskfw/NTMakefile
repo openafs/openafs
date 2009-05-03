@@ -1,0 +1,70 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL"  -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash -DSMB_UNICODE
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+############################################################################
+# Definitions for installing header files
+
+INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
+
+INCFILES =\
+        $(INCFILEDIR)\afskfw.h \
+        $(INCFILEDIR)\afskfw_funcs.h
+
+############################################################################
+# afskfw.lib
+
+AFSKFWLIB = $(DESTDIR)\lib\afskfw.lib
+
+AFSKFWLIB_OBJS =\
+      $(OUT)\afskfw.obj
+
+$(AFSKFWLIB_OBJS):
+
+$(AFSKFWLIB): $(AFSKFWLIB_OBJS)
+	$(LIBARCH)
+
+
+############################################################################
+# afskfw_funcs.dll
+
+AFSKFW_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\afskfw_funcs.dll
+
+AFSKFW_FUNCS_IMPLIB = $(DESTDIR)\lib\afskfw_funcs.lib
+
+AFSKFW_FUNCS_LIB_OBJS =\
+      $(OUT)\afskfw_funcs.obj
+
+AFSKFW_FUNCS_LIBS=\
+	dnsapi.lib \
+	mpr.lib \
+	secur32.lib
+
+$(AFSKFW_DLLFILE): $(AFSKFW_FUNCS_LIB_OBJS)
+	$(DLLGUILINK) /def:afskfw_funcs.def $(AFSKFW_FUNCS_LIBS) 
+	$(_VC_MANIFEST_EMBED_DLL)
+	$(COPY) $(DESTDIR)\root.client\usr\vice\etc\afskfw_funcs.lib \
+		$(AFSKFW_FUNCS_IMPLIB)
+
+install_headers: $(INCFILES)
+
+install_objs: $(AFSKFWLIB) $(AFSKFW_DLLFILE)
+
+install: install_headers install_objs \
+	$(AFSKFW_DLLFILE)
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) $(AFSKFW_DLLFILE)
+
+mkdir:

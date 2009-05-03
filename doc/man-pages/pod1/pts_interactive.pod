@@ -1,16 +1,18 @@
 =head1 NAME
 
-pts_interactive - Enters interactive mode
+pts_interactive - issue multiple pts commands
 
 =head1 SYNOPSIS
 
 =for html
 <div class="synopsis">
 
-B<pts interactive> S<<< [B<-cell>] <I<cell name>> >>> [B<-noauth>]
-    [B<-auth>] [B<-localauth>] [B<-force>]
+B<pts interactive>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>]
+    [B<-auth>] [B<-localauth>] [B<-help>]
 
-B<pts in> S<<< [B<-c>] <I<cell name>> >>> [B<-n>] [B<-f>]
+B<pts in>
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-help>]
 
 =for html
 </div>
@@ -41,21 +43,12 @@ change to catch up.
 
 =head1 OPTIONS
 
-B<pts interactive> only takes the standard B<pts> options.
-
 =over 4
 
 =item B<-cell> <I<cell name>>
 
 Names the cell in which to run the command. For more details, see
 L<pts(1)>.
-
-=item B<-force>
-
-Enables the command to continue executing as far as possible when errors
-or other problems occur, rather than halting execution at the first error.
-This is useful for bulk operations where you would like to continue even
-if one of many operations fails.
 
 =item B<-noauth>
 
@@ -68,60 +61,29 @@ Constructs a server ticket using a key from the local
 F</usr/afs/etc/KeyFile> file. Do not combine this flag with the 
 B<-cell> or B<-noauth> options. For more details, see L<pts(1)>.
 
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
 =back
-
-=head1 OUTPUT
-
-The output is the same as if each individual command were run from the
-command line.
 
 =head1 EXAMPLES
 
-Here is an example of a B<pts interactive> session:
+The following example removes jones from system:administrators, then
+adds smith to the same group.
 
    % pts interactive
-   pts> examine admin
-   Name: admin, id: 1, owner: system:administrators, creator: anonymous,
-     membership: 2, flags: S----, group quota: 20.
-   pts> help
-   pts: Commands are:
-   adduser         add a user to a group
-   apropos         search by help text
-   chown           change ownership of a group
-   creategroup     create a new group
-   createuser      create a new user
-   delete          delete a user or group from database
-   examine         examine an entry
-   help            get help on commands
-   interactive     enter interactive mode
-   listentries     list users/groups in the protection database
-   listmax         list max id
-   listowned       list groups owned by an entry or zero id gets orphaned groups
-   membership      list membership of a user or group
-   quit            exit program
-   removeuser      remove a user from a group
-   rename          rename user or group
-   setfields       set fields for an entry
-   setmax          set max id
-   sleep           pause for a bit
-   source          read commands from file
-   pts> quit
-   %
-
-=head1 PRIVILEGE REQUIRED
-
-The same privilege is required to run the command in interactive mode as
-is required to run the command by itself on the command line. Some
-commands such as B<pts createuser> require that the user belong to the
-system:administrators group, while others do not.
+   > removeuser jones system:administrators
+   > adduser smith system:administrators
+   > quit
+   % 
 
 =head1 SEE ALSO
 
 L<pts(1)>,
-L<pts_quit(1)>,
-L<pts_sleep(1)>,
 L<pts_source(1)>,
-L<ptserver(8)>
+L<pts_sleep(1)>
 
 =head1 COPYRIGHT
 

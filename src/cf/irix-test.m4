@@ -14,7 +14,7 @@ ac_cv_irix_sys_systm_h_has_mem_funcs=no,
 ac_cv_irix_sys_systm_h_has_mem_funcs=yes)])
 CPPFLAGS="$save_CPPFLAGS"
 if test "$ac_cv_irix_sys_systm_h_has_mem_funcs" = "yes"; then
-  AC_DEFINE(IRIX_HAS_MEM_FUNCS, 1, [define if irix has memcpy and friends])
+  AC_DEFINE([IRIX_HAS_MEM_FUNCS], 1, [define if irix has memcpy and friends])
 fi
 AC_MSG_RESULT($ac_cv_irix_sys_systm_h_has_mem_funcs)
 ])

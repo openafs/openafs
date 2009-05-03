@@ -8,7 +8,7 @@
 #ifndef __AKLOG_H__
 #define __AKLOG_H__
 
-#include <krb5.h>
+/* #include <krb5.h> */
 #include "linked_list.h"
 #include <afsconfig.h>
 
@@ -65,7 +65,7 @@ struct credentials {
     int     lifetime;
     int     kvno;
     struct ktext ticket_st;
-    int32_t    issue_date;
+    afs_int32    issue_date;
     char    pname[ANAME_SZ];
     char    pinst[INST_SZ];
 };
@@ -103,5 +103,7 @@ struct afsconf_cell {
 #define AKLOG_DIALOG_NAME		"aklog"
 
 #endif /* WINDOWS */
+
+int afs_krb5_skip_ticket_wrapper(char *, size_t, char **, size_t *);
 
 #endif /* __AKLOG_H__ */

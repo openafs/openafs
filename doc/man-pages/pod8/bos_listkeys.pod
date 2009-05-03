@@ -31,6 +31,14 @@ Displaying actual keys on the standard output stream (by including the
 B<-showkey> flag) is a security exposure. Displaying a checksum is
 sufficient for most purposes.
 
+KeyFile entries can only be used with rxkad, des, kerberos 4, and fcrypt,
+so provide less security overall.
+You should only use this if the lesser security is acceptable and you
+have older clients that only work with rxkad.
+Otherwise, create and use a keytab with stronger encryption types,
+for use with rxk5.
+See L<afs.keytab(5)> for more information.
+
 =head1 OPTIONS
 
 =over 4
@@ -128,6 +136,7 @@ included.
 
 =head1 SEE ALSO
 
+L<afs.keytab(5)>,
 L<KeyFile(5)>,
 L<UserList(5)>,
 L<bos_addkey(8)>,

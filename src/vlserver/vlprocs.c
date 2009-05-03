@@ -41,7 +41,7 @@ extern extent_mod;
 extern struct afsconf_dir *vldb_confdir;
 extern struct ubik_dbase *VL_dbase;
 struct vlheader cheader;	/* kept in network byte order */
-extern afs_uint32 HostAddress[];	/* host addresses kept in host byte order */
+extern afs_uint32 vl_HostAddress[];	/* host addresses kept in host byte order */
 int maxnservers;
 struct extentaddr *ex_addr[VL_MAX_ADDREXTBLKS] = { 0, 0, 0, 0 };
 static char rxinfo_str[128];	/* Need rxinfo string to be non-local */
@@ -84,18 +84,41 @@ rxinfo(rxcall)
     char tcell[64];
     afs_uint32 exp;
     struct in_addr hostAddr;
+    int scIndex;
+#ifdef AFS_RXK5
+    int lvl, expires, kvno, enctype;
+    char *princ;
+#endif
 
     tconn = rx_ConnectionOf(rxcall);
     hostAddr.s_addr = rx_HostOf(rx_PeerOf(tconn));
-    code =
-	rxkad_GetServerInfo(rxcall->conn, NULL, &exp, tname, tinst, tcell,
-			    NULL);
-    if (!code)
-	sprintf(rxinfo_str, "%s %s%s%s%s%s", inet_ntoa(hostAddr), tname,
-		tinst?".":"", tinst?tinst:"", tcell?"@":"", tcell?tcell:"");
-    else
-	sprintf(rxinfo_str, "%s noauth", inet_ntoa(hostAddr));
-    return (rxinfo_str);
+    scIndex = tconn->securityIndex;
+    switch(scIndex) {
+	case 2:
+	    code =
+		rxkad_GetServerInfo(rxcall->conn, NULL, &exp, tname, 
+				    tinst, tcell, NULL);
+	    if (!code)
+		sprintf(rxinfo_str, "%s %s%s%s%s%s", inet_ntoa(hostAddr), 
+			tname, tinst?".":"", tinst?tinst:"", tcell?"@":"", 
+			tcell?tcell:"");
+	    else
+		sprintf(rxinfo_str, "%s noauth", inet_ntoa(hostAddr));
+	    break;
+	case 5:
+#ifdef AFS_RXK5
+	    if (code = rxk5_GetServerInfo(rxcall->conn, &lvl,
+					  &expires, &princ, &kvno,
+					  &enctype)) {
+            break;
+        } else {
+	    /* TODO: review wrt cell mapping, foreign cells */
+	    sprintf(rxinfo_str, "%s %s", inet_ntoa(hostAddr), princ);
+	}
+#endif
+	    break;
+    }
+	    return (rxinfo_str);
 }
 
 /* This is called to initialize the database, set the appropriate locks and make sure that the vldb header is valid */
@@ -2020,10 +2043,10 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
     for (srvidx = 0; srvidx <= MAXSERVERID; srvidx++) {
 	willChangeEntry = 0;
 	WillReplaceEntry = 1;
-	if ((HostAddress[srvidx] & 0xff000000) == 0xff000000) {
+	if ((vl_HostAddress[srvidx] & 0xff000000) == 0xff000000) {
 	    /* The server is registered as a multihomed */
-	    base = (HostAddress[srvidx] >> 16) & 0xff;
-	    index = HostAddress[srvidx] & 0x0000ffff;
+	    base = (vl_HostAddress[srvidx] >> 16) & 0xff;
+	    index = vl_HostAddress[srvidx] & 0x0000ffff;
 	    if (base >= VL_MAX_ADDREXTBLKS) {
 		VLog(0,
 		     ("Internal error: Multihome extent base is too large. Base %d index %d\n",
@@ -2070,7 +2093,7 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	     * See if the addresses to register will replace this server entry.
 	     */
 	    for (k = 0; k < cnt; k++) {
-		if (HostAddress[srvidx] == addrs[k]) {
+		if (vl_HostAddress[srvidx] == addrs[k]) {
 		    willChangeEntry = 1;
 		    WillChange[count] = srvidx;
 		    WillReplaceEntry = 1;
@@ -2109,8 +2132,8 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	    VLog(0,
 		 ("   It would have replaced the existing VLDB server entry:\n"));
 	    VLog(0, ("      entry %d: [", FoundUuid));
-	    base = (HostAddress[FoundUuid] >> 16) & 0xff;
-	    index = HostAddress[FoundUuid] & 0x0000ffff;
+	    base = (vl_HostAddress[FoundUuid] >> 16) & 0xff;
+	    index = vl_HostAddress[FoundUuid] & 0x0000ffff;
 	    exp = &ex_addr[base][index];
 	    for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
 		if (!exp->ex_addrs[mhidx])
@@ -2129,10 +2152,10 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	for (j = 0; j < count; j++) {
 	    srvidx = WillChange[j];
 	    VLog(0, ("      entry %d: ", srvidx));
-	    if ((HostAddress[srvidx] & 0xff000000) == 0xff000000) {
+	    if ((vl_HostAddress[srvidx] & 0xff000000) == 0xff000000) {
 		VLog(0, ("["));
-		base = (HostAddress[srvidx] >> 16) & 0xff;
-		index = HostAddress[srvidx] & 0x0000ffff;
+		base = (vl_HostAddress[srvidx] >> 16) & 0xff;
+		index = vl_HostAddress[srvidx] & 0x0000ffff;
 		exp = &ex_addr[base][index];
 		for (mhidx = 0; mhidx < VL_MAXIPADDRS_PERMH; mhidx++) {
 		    if (!exp->ex_addrs[mhidx])
@@ -2143,7 +2166,7 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 		}
 		VLog(0, ("]"));
 	    } else {
-		PADDR(HostAddress[srvidx]);
+		PADDR(vl_HostAddress[srvidx]);
 	    }
 	    VLog(0, ("\n"));
 	}
@@ -2169,8 +2192,8 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	/* Found the entry with same uuid. See if we need to change it */
 	int change = 0;
 
-	fbase = (HostAddress[FoundUuid] >> 16) & 0xff;
-	index = HostAddress[FoundUuid] & 0x0000ffff;
+	fbase = (vl_HostAddress[FoundUuid] >> 16) & 0xff;
+	index = vl_HostAddress[FoundUuid] & 0x0000ffff;
 	exp = &ex_addr[fbase][index];
 
 	/* Determine if the entry has changed */
@@ -2218,9 +2241,9 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	}
 
 	/* Have an entry that needs to be replaced */
-	if ((HostAddress[ReplaceEntry] & 0xff000000) == 0xff000000) {
-	    fbase = (HostAddress[ReplaceEntry] >> 16) & 0xff;
-	    index = HostAddress[ReplaceEntry] & 0x0000ffff;
+	if ((vl_HostAddress[ReplaceEntry] & 0xff000000) == 0xff000000) {
+	    fbase = (vl_HostAddress[ReplaceEntry] >> 16) & 0xff;
+	    index = vl_HostAddress[ReplaceEntry] & 0x0000ffff;
 	    exp = &ex_addr[fbase][index];
 
 	    VLog(0, 
@@ -2236,10 +2259,10 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	    VLog(0, ("]\n"));
 	} else {
 	    /* Not a mh entry. So we have to create a new mh entry and 
-	     * put it on the ReplaceEntry slot of the HostAddress array.
+	     * put it on the ReplaceEntry slot of the vl_HostAddress array.
 	     */
 	    VLog(0, ("   It will replace existing entry %d, ", ReplaceEntry));
-	    PADDR(HostAddress[ReplaceEntry]);
+	    PADDR(vl_HostAddress[ReplaceEntry]);
 	    VLog(0,(", in the VLDB (new uuid):\n"));
 
 	    code =
@@ -2251,7 +2274,7 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	}
     } else {
 	/* There is no entry for this server, must create a new mh entry as
-	 * well as use a new slot of the HostAddress array.
+	 * well as use a new slot of the vl_HostAddress array.
 	 */
 	VLog(0, ("   It will create a new entry in the VLDB.\n"));
 	code = FindExtentBlock(trans, uuidp, 1, -1, &exp, &fbase);
@@ -2296,8 +2319,8 @@ SVL_RegisterAddrs(rxcall, uuidp, spare1, addrsp)
 	if (willReplaceCnt && (WillChange[i] == ReplaceEntry))
 	    continue;
 
-	base = (HostAddress[WillChange[i]] >> 16) & 0xff;
-	index = HostAddress[WillChange[i]] & 0x0000ffff;
+	base = (vl_HostAddress[WillChange[i]] >> 16) & 0xff;
+	index = vl_HostAddress[WillChange[i]] & 0x0000ffff;
 	tex = &ex_addr[fbase][index];
 
 	if (++m == 1)
@@ -2909,13 +2932,13 @@ vlentry_to_vldbentry(VlEntry, VldbEntry)
     for (i = 0; i < OMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID)
 	    break;
-	if ((HostAddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
+	if ((vl_HostAddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
 	    0xff000000) {
 	    struct extentaddr *exp;
 	    int base, index;
 
-	    base = (HostAddress[j] >> 16) & 0xff;
-	    index = HostAddress[j] & 0x0000ffff;
+	    base = (vl_HostAddress[j] >> 16) & 0xff;
+	    index = vl_HostAddress[j] & 0x0000ffff;
 	    exp = &ex_addr[base][index];
 	    /* For now return the first ip address back */
 	    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
@@ -2926,7 +2949,7 @@ vlentry_to_vldbentry(VlEntry, VldbEntry)
 	    }
 	} else
 	    VldbEntry->serverNumber[i] =
-		HostAddress[VlEntry->serverNumber[i]];
+		vl_HostAddress[VlEntry->serverNumber[i]];
 	VldbEntry->serverPartition[i] = VlEntry->serverPartition[i];
 	VldbEntry->serverFlags[i] = VlEntry->serverFlags[i];
     }
@@ -2951,13 +2974,13 @@ vlentry_to_nvldbentry(VlEntry, VldbEntry)
     for (i = 0; i < NMAXNSERVERS; i++) {
 	if (VlEntry->serverNumber[i] == BADSERVERID)
 	    break;
-	if ((HostAddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
+	if ((vl_HostAddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
 	    0xff000000) {
 	    struct extentaddr *exp;
 	    int base, index;
 
-	    base = (HostAddress[j] >> 16) & 0xff;
-	    index = HostAddress[j] & 0x0000ffff;
+	    base = (vl_HostAddress[j] >> 16) & 0xff;
+	    index = vl_HostAddress[j] & 0x0000ffff;
 	    exp = &ex_addr[base][index];
 	    /* For now return the first ip address back */
 	    for (j = 0; j < VL_MAXIPADDRS_PERMH; j++) {
@@ -2968,7 +2991,7 @@ vlentry_to_nvldbentry(VlEntry, VldbEntry)
 	    }
 	} else
 	    VldbEntry->serverNumber[i] =
-		HostAddress[VlEntry->serverNumber[i]];
+		vl_HostAddress[VlEntry->serverNumber[i]];
 	VldbEntry->serverPartition[i] = VlEntry->serverPartition[i];
 	VldbEntry->serverFlags[i] = VlEntry->serverFlags[i];
     }
@@ -2993,14 +3016,14 @@ vlentry_to_uvldbentry(VlEntry, VldbEntry)
 	    break;
 	VldbEntry->serverFlags[i] = VlEntry->serverFlags[i];
 	VldbEntry->serverUnique[i] = 0;
-	if ((HostAddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
+	if ((vl_HostAddress[j = VlEntry->serverNumber[i]] & 0xff000000) ==
 	    0xff000000) {
 	    struct extentaddr *exp;
 	    int base, index;
 	    afsUUID tuuid;
 
-	    base = (HostAddress[j] >> 16) & 0xff;
-	    index = HostAddress[j] & 0x0000ffff;
+	    base = (vl_HostAddress[j] >> 16) & 0xff;
+	    index = vl_HostAddress[j] & 0x0000ffff;
 	    exp = &ex_addr[base][index];
 	    tuuid = exp->ex_hostuuid;
 	    afs_ntohuuid(&tuuid);
@@ -3009,7 +3032,7 @@ vlentry_to_uvldbentry(VlEntry, VldbEntry)
 	    VldbEntry->serverUnique[i] = ntohl(exp->ex_uniquifier);
 	} else {
 	    VldbEntry->serverNumber[i].time_low =
-		HostAddress[VlEntry->serverNumber[i]];
+		vl_HostAddress[VlEntry->serverNumber[i]];
 	}
 	VldbEntry->serverPartition[i] = VlEntry->serverPartition[i];
 
@@ -3082,11 +3105,11 @@ IpAddrToRelAddr(ipaddr, atrans)
     struct extentaddr *exp;
 
     for (i = 0; i <= MAXSERVERID; i++) {
-	if (HostAddress[i] == ipaddr)
+	if (vl_HostAddress[i] == ipaddr)
 	    return i;
-	if ((HostAddress[i] & 0xff000000) == 0xff000000) {
-	    base = (HostAddress[i] >> 16) & 0xff;
-	    index = HostAddress[i] & 0x0000ffff;
+	if ((vl_HostAddress[i] & 0xff000000) == 0xff000000) {
+	    base = (vl_HostAddress[i] >> 16) & 0xff;
+	    index = vl_HostAddress[i] & 0x0000ffff;
 	    if (base >= VL_MAX_ADDREXTBLKS) {
 		VLog(0,
 		     ("Internal error: Multihome extent base is too large. Base %d index %d\n",
@@ -3124,7 +3147,7 @@ IpAddrToRelAddr(ipaddr, atrans)
 			    DOFFSET(0, &cheader, &cheader.IpMappedAddr[i]),
 			    (char *)&cheader.IpMappedAddr[i],
 			    sizeof(afs_int32));
-		HostAddress[i] = ipaddr;
+		vl_HostAddress[i] = ipaddr;
 		if (code)
 		    return -1;
 		return i;
@@ -3168,9 +3191,9 @@ ChangeIPAddr(ipaddr1, ipaddr2, atrans)
     }
 
     for (i = 0; i <= MAXSERVERID; i++) {
-	if ((HostAddress[i] & 0xff000000) == 0xff000000) {
-	    base = (HostAddress[i] >> 16) & 0xff;
-	    index = HostAddress[i] & 0x0000ffff;
+	if ((vl_HostAddress[i] & 0xff000000) == 0xff000000) {
+	    base = (vl_HostAddress[i] >> 16) & 0xff;
+	    index = vl_HostAddress[i] & 0x0000ffff;
 	    if ((base >= VL_MAX_ADDREXTBLKS) || (index >= VL_MHSRV_PERBLK)) {
 		VLog(0,
 		     ("Internal error: Multihome extent addr is too large. Base %d index %d\n",
@@ -3188,7 +3211,7 @@ ChangeIPAddr(ipaddr1, ipaddr2, atrans)
 	    if (mhidx < VL_MAXIPADDRS_PERMH) {
 		break;
 	    }
-	} else if (HostAddress[i] == ipaddr1) {
+	} else if (vl_HostAddress[i] == ipaddr1) {
 	    exp = NULL;
 	    break;
 	}
@@ -3265,7 +3288,7 @@ ChangeIPAddr(ipaddr1, ipaddr2, atrans)
 	vlwrite(atrans, DOFFSET(0, &cheader, &cheader.IpMappedAddr[i]),
 		(char *)
 		&cheader.IpMappedAddr[i], sizeof(afs_int32));
-    HostAddress[i] = ipaddr2;
+    vl_HostAddress[i] = ipaddr2;
     if (code)
 	return VL_IO;
 

@@ -5,6 +5,7 @@ config.cache
 config.status
 configure
 configure-libafs
+errors
 hp_ux102
 hp_ux110
 i386_linux22

@@ -54,6 +54,9 @@ RCSID
 #endif
 #include "update.h"
 #include "global.h"
+#ifdef AFS_RXK5	
+#include <afs/rxk5_utilafs.h>
+#endif
 
 char *whoami;
 static int verbose;
@@ -80,14 +83,6 @@ GetServer(char *aname)
     return addr;
 }
 
-
-int
-osi_audit()
-{
-/* this sucks but it works for now.
-*/
-    return 0;
-}
 
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
@@ -117,7 +112,7 @@ main(int argc, char **argv)
     unsigned int interval;
     afs_int32 host;
     int a, cnt;
-    rxkad_level level;
+    afs_int32 force_flags;
 
     char dirbuf[MAXSIZE], filename[MAXSIZE];
     struct filestr *dirname, *ModFiles, *okhostfiles;
@@ -136,6 +131,7 @@ main(int argc, char **argv)
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
+    initialize_rx_error_table();
     whoami = argv[0];
 #ifdef AFS_NT40_ENV
     /* dummy signal call to force afsprocmgmt.dll to load on NT */
@@ -165,7 +161,7 @@ main(int argc, char **argv)
 
     verbose = 0;
     interval = TIMEOUT;
-    level = rxkad_crypt;	/* safest default */
+    force_flags = FORCE_SECURE;	/* safest default */
     strcpy(hostname, "");
 
     /* Note that IsArg only checks as many bytes as specified in the command line arg,
@@ -180,15 +176,25 @@ main(int argc, char **argv)
 	    if (IsArg("-time"))
 		interval = atol(argv[++a]);
 	    else if (IsArg("-crypt"))
-		level = rxkad_crypt;
+		force_flags |= FORCE_SECURE;
 	    else if (IsArg("-clear"))
-		level = rxkad_clear;
+		force_flags &= ~FORCE_SECURE;
+#ifdef AFS_RXK5
+	    else if (IsArg("-k4"))
+		force_flags |= FORCE_RXKAD;
+	    else if (IsArg("-k5"))
+		force_flags |= FORCE_RXK5;
+#endif
 	    else if (IsArg("-verbose"))
 		verbose++;
 	    else {
 	      usage:
 		printf
-		    ("Usage: upclient <hostname> [-crypt] [-clear] [-t <retry time>] [-verbose]* <dir>+ [-help]\n");
+		    ("Usage: upclient <hostname> [-crypt] [-clear] "
+#ifdef AFS_RXK5
+"-k4 -k5 "
+#endif
+"[-t <retry time>] [-verbose]* <dir>+ [-help]\n");
 		exit(1);
 	    }
 	} else if (strlen(hostname) == 0)
@@ -199,8 +205,6 @@ main(int argc, char **argv)
 	    AddToList(&dirname, filename);
 	}
     }
-    if (level == -1)
-	goto usage;
     if (strlen(hostname) == 0)
 	goto usage;
     host = GetServer(hostname);
@@ -223,14 +227,7 @@ main(int argc, char **argv)
 	exit(1);
     }
 
-    if (level == rxkad_crypt)
-	errcode = afsconf_ClientAuthSecure(cdir, &sc, &scIndex);
-    else if (level == rxkad_clear)
-	errcode = afsconf_ClientAuth(cdir, &sc, &scIndex);
-    else {
-	printf("Unsupported security level %d\n", level);
-	exit(1);
-    }
+    errcode = afsconf_ClientAuthEx(cdir, &sc, &scIndex, force_flags);
     if (errcode) {
 	afs_com_err(whoami, errcode, "Couldn't get security obect for localAuth");
 	exit(1);

@@ -72,7 +72,8 @@ EXPORTS
 	afs_error_message			@76
 	rx_socket				@77 DATA
 ;	AssertionFailed				@79
-	afs_winsockInit				@80
+; matt -- fix in afsutil
+;	afs_winsockInit				@80
 	rxevent_debugFile			@81 DATA
 	rx_debugFile				@82 DATA
         rx_connDeadTime                         @83 DATA
@@ -239,6 +240,33 @@ EXPORTS
         rx_getAllAddrMaskMtu                    @244        
         rx_stats_active                         @245 DATA
         rx_StatsOnOff                           @246
+
+; rxk5
+	rxi_ConnectionError			@1234
+	osi_free				@1235
+	rxi_SetCallNumberVector			@1236
+	rxi_CallError				@1237
+	rxi_Alloc				@1238
+	rx_SlowWritePacket			@1239
+	rxi_RoundUpPacket			@1240
+	rx_SlowReadPacket			@1241
+	rxk5_NewClientSecurityObject		@1242
+	rxk5_NewServerSecurityObject		@1243
+	rxk5_GetServerInfo			@1244
+	rxk5_GetServerInfo2			@1245
+	rxk5_get_context			@1246
+	rxk5_default_get_key			@1247
+	lcstring				@1248
+	stolower				@1249
+	strcompose				@1250
+	ucstring				@1251
+ ;	add_error_table				@1252
+ ;	remove_error_table			@1252
+	afs_error_table_name			@1253
+	afs_error_table_name_r			@1254
+	rx_justReceived				@1255
+	rx_almostSent				@1256
+	rxi_Free				@1257
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

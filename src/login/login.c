@@ -230,12 +230,6 @@ SIAENTITY *entity = NULL;
 #define	NOPAG	0xffffffff
 #endif
 
-/* For avoiding making an osi_audit call when non-root */
-osi_audit()
-{
-    return 0;
-}
-
 static void
 timedout(x)
 {

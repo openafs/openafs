@@ -99,8 +99,10 @@ EXELIBS = \
         $(DESTDIR)\lib\afsrxkad.lib \
         $(DESTDIR)\lib\afsdes.lib \
         $(DESTDIR)\lib\afskfw.lib \
+        $(DESTDIR)\lib\afskfw_funcs.lib \
 	$(DESTDIR)\lib\afs\AfsClass.lib \
-	$(DESTDIR)\lib\afs\TaAfsAppLib.lib
+	$(DESTDIR)\lib\afs\TaAfsAppLib.lib \
+	$(DESTDIR)\lib\afs\afscom_err.lib
 
 ############################################################################
 

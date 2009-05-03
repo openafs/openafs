@@ -1,0 +1,69 @@
+File organization
+
+kernel		basic crypto only
+	cache manager
+user server	basic crypto, asn1, keytab
+	ptserver, volserver, etc.
+user client	basic crypto, asn1, ccache, tgs_req
+	pts, vos, etc.
+user init-auth	basic crypto, asn1, ccache, as_req, s2k
+	klog, aklog
+
+The kernel part is critical.  It *must* not contain any files or
+functions more than absolutely necessary.  Also note: krb5_context
+there is "special" - it contains no profile data.  Dividing things
+up in userland is less critical; more a matter of taste.
+
+basic crypto:
+	k5s_ck.o
+	k5s_evp.o
+	k5s_rn.o
+	k5s_cm.o
+	k5s_in.o
+crypto -des	e_des.o des_cbc.o des_cfb.o des_ecb.o des_ofb.o
+crypto -des or -des3	des.o
+crypto -des3	e_des3.o des3_cbc.o des3_cfb.o des3_ecb.o des3_ofb.o
+crypto -rc4	e_rc4.o rc4.o
+crypto -aes	e_aes.o aes_cbc.o aes_cfb.o aes_ecb.o aes_ofb.o rijndael.o
+[ experimental, obselete:
+crypto -cast	e_cast.o cast_cbc.o cast_cfb.o cast_ecb.o cast_ofb.o cast.o
+crypto -rc6	e_rc6.o rc6_cbc.o rc6_cfb.o rc6_ecb.o rc6_ofb.o rc6.o
+]
+crypto hash:	m_crc32.o m_md4.o m_md5.o md4c.o md5c.o m_sha1.o shs.o
+
+userland basic:
+	k5s_cf.o
+	k5s_er.o
+	k5s_tr.o
+server:
+	k5s_sc.o
+	k5s_sv.o
+	k5s_sk.o
+	k5s_si.o
+client:
+	k5s_ci.o
+	k5s_cc.o
+	k5s_a1.c	- to handle existing tickets
+	k5s_cg.o	- to get a new ticket
+	k5s_a2.c	- to get a new ticket
+	k5s_io.o	- to get a new ticket
+	k5s_cs.o	- to get a new ticket
+	k5s_hr.o	- to get a new ticket
+	k5s_a3.o	- to forge a ticket (-localauth)
+	k5s_kd.o	- to forge a ticket (-localauth)
+	k5s_cc.o
+	k5s_mc.o
+	[ k5s_dc.o k5s_ac.o ]
+initial authentication:
+	k5s_cn.o
+	k5s_a4.o
+	k5s_bl.o
+	k5s_pw.o
+	k5s_pb.o	- aes only
+	crypt.o		- des only (also cast/rc6 "crypt" s2k)
+to write a keytab
+	k5s_sw.o
+
+userland test utilities link against objects directly to
+make it easier to detect inadvertent dependencies by violating
+the above organizational principals.

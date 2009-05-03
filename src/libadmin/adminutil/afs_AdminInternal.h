@@ -30,9 +30,9 @@ typedef struct afs_token_handle {
     char cell[MAXCELLCHARS];
     struct ktc_token afs_token;
     struct ktc_token kas_token;
-    struct rx_securityClass *afs_sc[3];
-    struct rx_securityClass *afs_encrypt_sc[3];
-    struct rx_securityClass *kas_sc[3];
+    struct rx_securityClass *afs_sc;
+    struct rx_securityClass *afs_encrypt_sc;
+    struct rx_securityClass *kas_sc;
     struct ktc_principal client;
     int end_magic;
 } afs_token_handle_t, *afs_token_handle_p;

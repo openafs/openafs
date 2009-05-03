@@ -67,12 +67,6 @@ static int CommandProc(struct cmd_syndesc *, void *);
 static int zero_argc;
 static char **zero_argv;
 
-int
-osi_audit()
-{
-    return 0;
-}
-
 main(argc, argv)
      int argc;
      char *argv[];
@@ -164,6 +158,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     int code;
     int i, dosetpag;
     Date lifetime;		/* requested ticket lifetime */
+    struct cmd_item *itp;
 
     struct passwd pwent;
     struct passwd *pw = &pwent;
@@ -209,7 +204,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     }
 
     code = ka_Init(0);
-    p if (code || !(lcell = ka_LocalCell())) {
+    if (code || !(lcell = ka_LocalCell())) {
       nocell:
 	if (!Silent)
 	    afs_com_err(rn, code, "Can't get local cell name!");

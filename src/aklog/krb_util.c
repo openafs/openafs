@@ -18,19 +18,40 @@ RCSID
 #endif
 #include <afs/stds.h>
 #include "aklog.h"
+#include "afsconfig.h"
+#if USING_K5SSL
+#include "k5ssl/k5ssl.h"
+#else
 #include <krb5.h>
+
+#ifdef AFS_RXK5
+#ifdef AFS_NT40_ENV
+#if defined(USING_MIT)
+#include <rx/rxk5_ntfixprotos.h>
+#include <afs/afskfw_funcs.h>
+#endif
+#endif
+#endif
+
+#endif
 
 #ifndef MAX_HSTNM
 #define MAX_HSTNM 100
 #endif
 
+#if AFS_NT40_ENV
 #include <afs/cellconfig.h>
+#else
+/* hack so this builds in clean environment */
+#include <auth/cellconfig.p.h>
+#endif
 
 #include <string.h>
 #include <ctype.h>
 
 #define S_AD_SZ sizeof(struct sockaddr_in)
 
+/* XXX returns static storage, so not thread safe. */
 char *afs_realm_of_cell(krb5_context context, struct afsconf_cell *cellconfig, int fallback)
 {
     static char krbrlm[REALM_SZ+1];

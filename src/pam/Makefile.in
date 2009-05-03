@@ -8,19 +8,20 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a 
 
   LIBSA = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a
 AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
 	  ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libaudit.a \
-          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a \
+          ${TOP_LIBDIR}/libcmd.a \
 	  ${TOP_LIBDIR}/util.a
 
 LDFLAGS = ${SHLIB_LDFLAGS}
    LIBS = ${TOP_LIBDIR}/libkauth.a ${LIBSA} ${TOP_LIBDIR}/libauth.a \
-	  ${AFSLIBS} ${PAM_LIBS} @LIB_AFSDB@
+	  ${AFSLIBS} $(LIBCOM_ERR) ${PAM_LIBS} @LIB_AFSDB@
   KLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${LIBSA} ${TOP_LIBDIR}/libauth.krb.a \
-	  ${AFSLIBS} ${PAM_LIBS} @LIB_AFSDB@
+	  ${AFSLIBS} $(LIBCOM_ERR) ${PAM_LIBS} @LIB_AFSDB@
  SHOBJS = afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o

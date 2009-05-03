@@ -8,6 +8,10 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+@ENABLE_RXK5@RXK5=${TOP_LIBDIR}/librxk5.a
+
 INCLS=${TOP_INCDIR}/ubik.h \
 	       	${TOP_INCDIR}/lwp.h \
 	       	${TOP_INCDIR}/lock.h  \
@@ -21,9 +25,9 @@ OBJS =		adkint.cs.o adkint.xdr.o
 LIBS=${TOP_LIBDIR}/libkauth.a \
 		${TOP_LIBDIR}/libauth.a \
 		${TOP_LIBDIR}/libcmd.a \
-	        ${TOP_LIBDIR}/libcom_err.a \
 		${TOP_LIBDIR}/libubik.a \
 		${TOP_LIBDIR}/librxkad.a \
+		${RXK5} \
 		${TOP_LIBDIR}/libdes.a \
 		${TOP_LIBDIR}/librx.a \
 	        ${TOP_LIBDIR}/liblwp.a \
@@ -33,11 +37,11 @@ LIBS=${TOP_LIBDIR}/libkauth.a \
 CELL=		`pwd|awk -F/ '{print $$3}'`
 USNS=		cellname
 
-include ../config/Makefile.version
+all: dlog dpass
 
 noversion:	install
 
-all: dlog dpass
+include ../config/Makefile.version
 
 clean:
 		$(RM) -f adkint.h adkint.cs.c adkint.ss.c adkint.xdr.c *.o dlog dpass AFS_component_version_number.c
@@ -56,17 +60,18 @@ adkint.h: adkint.xg
 
 dlog:		dlog.o $(VERS) $(OBJS) $(LIBS)
 		$(CC) ${LDFLAGS} -o dlog dlog.o $(VERS) $(OBJS) ${LIBS} \
-				${XLIBS}
+			${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS}
 
 dlog.o: 	dlog.c adkint.h
 
 dpass:		dpass.o $(VERS) $(LIBS)
-		$(CC) ${LDFLAGS} -o dpass dpass.o $(VERS) $(LIBS) ${XLIBS}
+		$(CC) ${LDFLAGS} -o dpass dpass.o $(VERS) $(LIBS) $(LIBCOM_ERR) \
+	${XLIBS} ${RXK5}
 
 # Test version of dlog just checks ASN.1 date conversion.
 dlog_test:	dlog.c $(OBJS) $(LIBS)
 		$(CC) $(LDFLAGS) -DDLOG_TEST -o dlog_test dlog.c $(OBJS) \
-			$(LIBS) ${XLIBS}
+			$(LIBS) $(LIBCOM_ERR) ${XLIBS} ${RXK5}
 
 ${DEST}/bin/dlog: dlog
 	${INSTALL} $? $@

@@ -11,6 +11,18 @@ RELDIR=tbutc
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+
+RXK5LIBS=\
+	$(DESTDIR)\lib\afskfw_funcs.lib
+
+K5OBJS=\
+	$(OUT)\rxk5_utilafs.obj \
+	$(OUT)\rxk5_tkt.obj
+!ENDIF
+
 SRCDIR = ..\butc
 
 ############################################################################
@@ -60,7 +72,7 @@ BUTCOBJS   = $(OUT)\dbentries.obj \
          $(OUT)\tcmain.obj \
          $(OUT)\list.obj \
          $(OUT)\recoverDb.obj \
-	     $(OUT)\tcudbprocs.obj \
+         $(OUT)\tcudbprocs.obj \
          $(OUT)\dump.obj \
          $(OUT)\tcstatus.obj \
          $(OUT)\butc_xbsa.obj \
@@ -74,10 +86,12 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afs\afsbubasics.lib \
 	     $(VOLSERLIBS) \
              $(BUTMLIBS) \
+             $(RXK5LIBS) \
 	     $(DESTDIR)\lib\afs\afsvldb.lib \
 	     $(DESTDIR)\lib\afs\afskauth.lib \
 	     $(DESTDIR)\lib\afs\afsauth.lib \
 	     $(DESTDIR)\lib\afsrpc.lib \
+	     $(DESTDIR)\lib\afsauthent.lib \
              $(DESTDIR)\lib\afsrxkad.lib \
 	     $(DESTDIR)\lib\afsubik.lib \
              $(DESTDIR)\lib\afs\afsutil.lib \
@@ -190,6 +204,6 @@ install: all
 noversion: install
 
 mkdir:
-	
+
 clean::
 	$(DEL) $(BUTCRES)

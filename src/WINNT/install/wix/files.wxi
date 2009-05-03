@@ -1095,9 +1095,15 @@
                     <Component Win64="$(var.Win64)" Id="cmf_afsshare_EXE" Guid="$(var.cmf_afsshare_EXE_guid)">
                         <File Id="fileafsshare_EXE" Name="afsshare.exe" LongName="afsshare.exe" KeyPath="yes" DiskId="1" />
                     </Component>
+
                     <Component Win64="$(var.Win64)" Id="cmf_libosi_DLL" Guid="$(var.cmf_libosi_DLL_guid)">
                         <File Id="filelibosi_DLL" Name="libosi.dll" LongName="libosi.dll" KeyPath="yes" DiskId="1" />
                     </Component>
+
+                    <Component Win64="$(var.Win64)" Id="cmf_afskfw_funcs_DLL" Guid="$(var.cmf_afskfw_funcs_DLL_guid)">
+                        <File Id="fileafskfw_funcs_DLL" Name="AFSKFW~1.DLL" LongName="afskfw_funcs.dll" KeyPath="yes" DiskId="1" />
+                    </Component>
+
                     <Component Win64="$(var.Win64)" Id="cmf_libafsconf_DLL" Guid="$(var.cmf_libafsconf_DLL_guid)">
                         <File Id="filelibafsconf_DLL" Name="libafscf.dll" LongName="libafsconf.dll" KeyPath="yes" DiskId="1" />
                     </Component>

@@ -62,6 +62,7 @@
 	<?define cmf_afscreds_EXE_guid="1E4ECD3C-1E7D-4B7B-A224-790108678654"?>
 	<?define cmp_credsStartup_guid="ADE0BD2A-423A-4299-BC63-0F884028C572"?>
 	<?define cmf_afs_shl_ext_DLL_guid="F749C3B1-6627-4E3E-99A8-4A01744DCA14"?>
+	<?define cmf_afskfw_funcs_DLL_guid="b46dff88-14f7-4981-82a6-225f48ca4aed"?>
 	<?define cmf_afsd_service_EXE_guid="B5F06506-3308-438A-A288-7CD80BBC6D2A"?>
 	<?define cmf_symlink_EXE_guid="DB85779D-CD1A-4579-9CF5-020CBB947412"?>
 	<?define cmf_kpasswd_EXE_guid="A355F023-9DDA-40C8-A265-74BB13761455"?>
@@ -166,6 +167,7 @@
 	<?define cmf_afscreds_EXE_guid="A17567CF-866E-49AF-A717-0B4F17CA88D4"?>
 	<?define cmp_credsStartup_guid="3F40BA8D-16A2-4990-A74F-35AF3012E3F8"?>
 	<?define cmf_afs_shl_ext_DLL_guid="E4C51111-F9ED-418D-9DE0-ED8777CED5C9"?>
+	<?define cmf_afskfw_funcs_DLL_guid="338a206b-ee34-47d7-a81a-7f2c2e44063f"?>
 	<?define cmf_afsd_service_EXE_guid="37A90054-505D-4C57-B489-7EF4D97B86F6"?>
 	<?define cmf_symlink_EXE_guid="01513839-36E5-418D-8337-04B5D74337CD"?>
 	<?define cmf_kpasswd_EXE_guid="D362743B-6BF3-49CD-8B58-8DE56BCB0143"?>

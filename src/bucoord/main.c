@@ -33,7 +33,6 @@ RCSID
 #include <afs/bubasics.h>
 #include <fcntl.h>
 #include <afs/afsutil.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <ubik.h>
@@ -47,7 +46,7 @@ RCSID
 #include "bc.h"			/*Backup Coordinator structs and defs */
 #include "bucoord_prototypes.h"
 
-int localauth, interact;
+int authflags, interact;
 char tcell[64];
 
 extern int bc_AddDumpCmd();
@@ -87,18 +86,11 @@ extern int bc_saveDbCmd();
 struct bc_config *bc_globalConfig;	/*Ptr to global BC configuration info */
 
 struct ubik_client *cstruct;	/* Ptr to Ubik client structure */
-struct ktc_token ttoken;	/* The token */
+Date token_exptime;		/* When the connection's ticket expires */
 
 static const char *DefaultConfDir;	/*Default backup config directory */
 static int bcInit = 0;		/* backupInit called yet ? */
 char *whoami = "backup";
-
-/* dummy routine for the audit work.  It should do nothing since audits */
-/* occur at the server level and bos is not a server. */
-osi_audit()
-{
-    return 0;
-}
 
 /*
  * Initialize all the error tables that may be used by com_err
@@ -119,6 +111,10 @@ InitErrTabs()
     initialize_BUDB_error_table();
     initialize_BUCD_error_table();
     initialize_KTC_error_table();
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
 }
 
 /* 
@@ -280,12 +276,12 @@ backupInit()
     rx_SetRxDeadTime(60);
 
     /* VLDB initialization */
-    code = vldbClientInit(0, localauth, tcell, &cstruct, &ttoken);
+    code = vldbClientInit(authflags, tcell, &cstruct, &token_exptime);
     if (code)
 	return (code);
 
     /* Backup database initialization */
-    code = udbClientInit(0, localauth, tcell);
+    code = udbClientInit(authflags, tcell);
     if (code)
 	return (code);
 
@@ -330,11 +326,18 @@ MyBeforeProc(register struct cmd_syndesc *as, void *arock)
 
     /* Handling the command line opcode */
     if (!bcInit) {
-	localauth = ((as && as->parms[14].items) ? 1 : 0);
+	authflags = ((as && as->parms[14].items) ? 2 : 1);
 	if (as && as->parms[15].items)
 	    strcpy(tcell, as->parms[15].items->data);
 	else
 	    tcell[0] = '\0';
+#ifdef AFS_RXK5
+	if (as && as->parms[16].items) authflags |= FORCE_KTC;
+	if (as && as->parms[17].items) authflags |= FORCE_K5CC|FORCE_RXK5;
+	if (as && as->parms[18].items) authflags |= FORCE_RXKAD;
+	if (!(authflags & (FORCE_K5CC|FORCE_KTC|FORCE_RXKAD)))
+	    authflags |= env_afs_rxk5_default();
+#endif
 
 	code = backupInit();
 	if (code) {
@@ -473,6 +476,11 @@ add_std_args(ts)
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
 		"local authentication");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
+#ifdef AFS_RXK5
+    cmd_AddParm(ts, "-ktc", CMD_FLAG, CMD_OPTIONAL, "use ktc token for security");
+    cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, "use rxk5 security");
+    cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, "use rxkad security");
+#endif
 }
 
 

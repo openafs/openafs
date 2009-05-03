@@ -95,7 +95,7 @@ init_random_int32(void)
 
     gettimeofday(&key, NULL);
     LOCK_RM;
-    fc_keysched((struct ktc_encryptionKey*)&key, random_int32_schedule);
+    fc_keysched((struct ktc_encryptionKey*)&key, &random_int32_schedule);
     UNLOCK_RM;
 }
 
@@ -106,7 +106,7 @@ get_random_int32(void)
     afs_int32 rc;
 
     LOCK_RM;
-    fc_ecb_encrypt(&seed, &seed, random_int32_schedule, ENCRYPT);
+    fc_ecb_encrypt(&seed, &seed, &random_int32_schedule, ENCRYPT);
     rc = seed.tv_sec;
     UNLOCK_RM;
     return rc;
@@ -371,7 +371,7 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	afs_uint32 cksum;	/* observed cksum */
 	struct rxkad_endpoint endpoint;	/* connections endpoint */
 	int i;
-	afs_uint32 xor[2];
+	fc_InitializationVector xor[1];
 
 	memcpy(xor, sconn->ivec, 2 * sizeof(afs_int32));
 	fc_cbc_encrypt(&v2r.encrypted, &v2r.encrypted, sizeof(v2r.encrypted),

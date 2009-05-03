@@ -49,6 +49,7 @@ struct prheader {
 };
 
 extern struct prheader cheader;
+extern struct afsconf_dir *prdir;
 
 #define set_header_word(tt,field,value) \
   pr_Write ((tt), 0, (afs_int32)((char *)&(cheader.field) - (char *)&cheader),   \

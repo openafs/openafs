@@ -16,6 +16,17 @@
 RCSID
     ("$Header$");
 
+#ifdef AFS_RXK5
+/* BEWARE: this code uses "u".  Must include heimdal krb5.h (u field name)
+ * before libuafs afs/sysincludes.h (libuafs makes u a function.)
+ */
+#ifdef USING_K5SSL
+#include <k5ssl.h>
+#else
+#include <krb5.h>
+#endif
+#endif
+
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 
@@ -43,6 +54,10 @@ RCSID
 #include <netinet/ip6.h>
 #endif
 #include <inet/ip.h>
+#endif
+#ifdef AFS_RXK5
+#include <rx/rxk5.h>
+#include <afs/rxk5_tkt.h>
 #endif
 
 
@@ -118,12 +133,24 @@ afs_GCUserData(int aforce)
 	    /* Don't garbage collect users in use now (refCount) */
 	    if (tu->refCount == 0) {
 		if (tu->states & UHasTokens) {
+#ifdef AFS_RXK5
+		  rxk5_creds *rxk5creds = (rxk5_creds*) tu->rxk5creds;
+		  if( rxk5creds ? rxk5creds->k5creds->times.endtime < (now - NOTOKTIMEOUT):
+		      tu->ct.EndTimestamp < (now - NOTOKTIMEOUT)) {
+		    struct cell *tcell = afs_GetCell(tu->cell, READ_LOCK);
+		    afs_warn
+		      ("afs: Tokens for user of AFS id %d for cell %s expired now\n",
+		       tu->vid, tcell->cellName);
+		    afs_PutCell(tcell, READ_LOCK);
+#else
 		    /*
 		     * Give ourselves a little extra slack, in case we
 		     * reauthenticate
 		     */
-		    if (tu->ct.EndTimestamp < now - NOTOKTIMEOUT)
+		    if (tu->ct.EndTimestamp < now - NOTOKTIMEOUT) {
+#endif
 			delFlag = 1;
+		    }
 		} else {
 		    if (aforce || (tu->tokenTime < now - NOTOKTIMEOUT))
 			delFlag = 1;
@@ -131,6 +158,16 @@ afs_GCUserData(int aforce)
 	    }
 	    nu = tu->next;
 	    if (delFlag) {
+#ifdef AFS_RXK5
+	      if(tu->rxk5creds) {
+		krb5_context k5context;
+		k5context = rxk5_get_context(0);
+		afs_warn("Expired rxk5 connection found for user %d, and GC'd\n",
+			 tu->vid);
+		rxk5_free_creds(k5context, (rxk5_creds*) tu->rxk5creds);
+		tu->rxk5creds = NULL;
+	      }
+#endif
 		*lu = tu->next;
 #ifndef AFS_PAG_MANAGER
 		RemoveUserConns(tu);
@@ -182,16 +219,26 @@ afs_CheckTokenCache(void)
 	     * check expiration
 	     */
 	    if (!(tu->states & UTokensBad) && tu->vid != UNDEFVID) {
+#ifdef AFS_RXK5
+	      rxk5_creds *rxk5creds = (rxk5_creds*) tu->rxk5creds;
+	      if( rxk5creds ? rxk5creds->k5creds->times.endtime < now :
+		  tu->ct.EndTimestamp < now) {
+#else
 		if (tu->ct.EndTimestamp < now) {
+#endif
 		    /*
 		     * This token has expired, warn users and reset access
 		     * cache.
 		     */
-#ifdef notdef
-		    /* I really hate this message - MLK */
+#ifdef AFS_RXK5
+		  /* I really hate this message - MLK */
+		  {
+		    struct cell *tcell = afs_GetCell(tu->cell, READ_LOCK);
 		    afs_warn
-			("afs: Tokens for user of AFS id %d for cell %s expired now\n",
-			 tu->vid, afs_GetCell(tu->cell)->cellName);
+		      ("afs: Tokens for user of AFS id %d for cell %s expired now\n",
+			 tu->vid, tcell->cellName);
+		    afs_PutCell(tcell, READ_LOCK);
+		  }
 #endif
 		    tu->states |= (UTokensBad | UNeedsReset);
 		}

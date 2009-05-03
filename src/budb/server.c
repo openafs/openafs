@@ -37,9 +37,14 @@ RCSID
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
+#include <afs/com_err.h>
+#ifdef AFS_RXK5
+#include <rx/rxk5errors.h>
+#include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#endif
 #include <afs/bubasics.h>
 #include <afs/afsutil.h>
-#include <afs/com_err.h>
 #include <errno.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -362,10 +367,12 @@ main(argc, argv)
     char  clones[MAXHOSTSPERCELL];
 
     struct rx_service *tservice;
-    struct rx_securityClass *sca[3];
-
-    extern int afsconf_ServerAuth();
-    extern int afsconf_CheckAuth();
+#ifdef AFS_RXK5
+#define MAX_SC_LEN 6
+#else
+#define MAX_SC_LEN 3
+#endif
+    struct rx_securityClass *sca[MAX_SC_LEN];
 
     extern int rx_stackSize;
     extern int BUDB_ExecuteRequest();
@@ -398,6 +405,10 @@ main(argc, argv)
     osi_audit(BUDB_StartEvent, 0, AUD_END);
 
     initialize_BUDB_error_table();
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
     initializeArgHandler();
 
     /* Initialize dirpaths */
@@ -481,7 +492,7 @@ main(argc, argv)
 	LogDebug(1, "Using server list from %s cell database.\n", lcell);
 
 	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo, 
-					    &clones); 
+					    clones); 
 	code =
 	    convert_cell_to_ubik(&cellinfo, &globalConfPtr->myHost,
 				 globalConfPtr->serverList);
@@ -548,17 +559,28 @@ main(argc, argv)
 	ERROR(code);
     }
 
+    memset(sca, 0, MAX_SC_LEN * sizeof *sca);
     sca[RX_SCINDEX_NULL] = rxnull_NewServerSecurityObject();
     sca[RX_SCINDEX_VAB] = 0;
+#ifdef AFS_RXK5
+    if (have_afs_keyfile(BU_conf))
+#endif
     sca[RX_SCINDEX_KAD] =
 	rxkad_NewServerSecurityObject(rxkad_clear, BU_conf, afsconf_GetKey,
 				      NULL);
+#ifdef AFS_RXK5
+    if (have_afs_rxk5_keytab(BU_conf->name))
+    sca[RX_SCINDEX_K5] =
+	rxk5_NewServerSecurityObject(rxk5_auth,
+	    get_afs_rxk5_keytab(BU_conf->name),
+	    rxk5_default_get_key, 0, 0);
+#endif
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
 
     tservice =
-	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase", sca, 3,
+	rx_NewServiceHost(host, 0, BUDB_SERVICE, "BackupDatabase", sca, MAX_SC_LEN,
 		      BUDB_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	LogError(0, "Could not create backup database rx service\n");
@@ -629,14 +651,14 @@ LogDebug(level, a, b, c, d, e, f, g, h, i)
 }
 
 static char *
-TimeStamp(time_t t)
+TimeStamp_bu(time_t t)
 {
     struct tm *lt;
-    static char timestamp[20];
+    static char TimeStamp_bu[20];
 
     lt = localtime(&t);
-    strftime(timestamp, 20, "%m/%d/%Y %H:%M:%S", lt);
-    return timestamp;
+    strftime(TimeStamp_bu, 20, "%m/%d/%Y %H:%M:%S", lt);
+    return TimeStamp_bu;
 }
 
  /*VARARGS*/
@@ -648,7 +670,7 @@ Log(a, b, c, d, e, f, g, h, i)
     globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
     if (globalConfPtr->log != NULL) {
 	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
+	fprintf(globalConfPtr->log, "%s ", TimeStamp_bu(now));
 
 	fprintf(globalConfPtr->log, a, b, c, d, e, f, g, h, i);
 	fflush(globalConfPtr->log);
@@ -668,7 +690,7 @@ LogError(code, a, b, c, d, e, f, g, h, i)
 
     if (globalConfPtr->log != NULL) {
 	now = time(0);
-	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
+	fprintf(globalConfPtr->log, "%s ", TimeStamp_bu(now));
 
 	if (code)
 	    fprintf(globalConfPtr->log, "%s: %s\n", afs_error_table_name(code),

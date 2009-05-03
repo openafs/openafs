@@ -26,14 +26,15 @@
 #include "Internal.h"
 #include "org_openafs_jafs_File.h"
 
-#include <sys/stat.h>
+#include <string.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <jni.h>
 #include <pthread.h>
 /*#include <afs/afs_usrops.h>*/
 #include <afs/prs_fs.h>
 #include <sys/time.h>
-#include <unistd.h>
+#include <sys/stat.h>
 
 /* Access Rights */
 #define UAFS_READ 1

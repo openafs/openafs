@@ -17,7 +17,16 @@
 RCSID
     ("$Header$");
 
+
 #if defined(UKERNEL)
+#include "afs/cellconfig.h"
+#ifdef AFS_RXK5
+/* BEWARE: this code uses "u".  Must include heimdal krb5.h (u field name)
+ * before libuafs afs/sysincludes.h (libuafs makes u a function.)
+ */
+#include <rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/stds.h"
@@ -26,7 +35,6 @@ RCSID
 #include "des/des_prototypes.h"
 #include "rx/rxkad.h"
 #include "rx/rx.h"
-#include "afs/cellconfig.h"
 #include "afs/keys.h"
 #include "afs/auth.h"
 #include "afs/pthread_glock.h"
@@ -42,16 +50,27 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+#if defined(AFS_RXK5) && !defined(AFS_NT40_ENV)
 #include <string.h>
 #include <stdio.h>
 #include <des.h>
+#endif
+#if !defined(AFS_RXK5) || !defined(AFS_NT40_ENV)
+#			include <stdio.h>	// XXX why?
+#			include <des/des.h>	// XXX why?
 #include <des_prototypes.h>
+#endif
 #include <rx/rxkad.h>
 #include <rx/rx.h>
 #include "cellconfig.h"
 #include "keys.h"
 #include "auth.h"
+#ifdef AFS_RXK5
+#include <rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#endif
 #endif /* defined(UKERNEL) */
+#include <errno.h>
 
 /* return a null security object if nothing else can be done */
 static afs_int32
@@ -65,34 +84,50 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 }
 
 #if !defined(UKERNEL)
-/* Return an appropriate security class and index */
+/* Return an appropriate set of security classes and indexes */
+	/* this is mainly for use by ubik servers */
+
 afs_int32
-afsconf_ServerAuth(register struct afsconf_dir *adir, 
-		   struct rx_securityClass **astr, 
-		   afs_int32 *aindex)
+afsconf_ServerAuth(void *parm1,
+    struct rx_securityClass **sc,
+    afs_int32 maxindex)
 {
-    register struct rx_securityClass *tclass;
+    int i, r;
+    struct afsconf_dir *adir = parm1;
 
     LOCK_GLOBAL_MUTEX;
-    tclass = (struct rx_securityClass *)
-	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
-    if (tclass) {
-	*astr = tclass;
-	*aindex = 2;		/* kerberos security index */
-	UNLOCK_GLOBAL_MUTEX;
-	return 0;
-    } else {
-	UNLOCK_GLOBAL_MUTEX;
-	return 2;
+    r = 0;
+    if (maxindex
+	    && (sc[0] = rxnull_NewServerSecurityObject())) {
+	if (!r) r = 1;
     }
+#ifdef AFS_RXK5
+    if (maxindex > 5
+	    && have_afs_rxk5_keytab(adir->name)
+	    && (sc[5] = rxk5_NewServerSecurityObject(rxk5_auth,
+		get_afs_rxk5_keytab(adir->name),
+		rxk5_default_get_key, 0, 0))) {
+	if (r < 6) r = 6;
+    } else
+#endif
+    if (maxindex > 2
+#ifdef AFS_RXK5
+	    && have_afs_keyfile(adir)
+#endif
+	    && (sc[2] = rxkad_NewServerSecurityObject(0, (char *) adir,
+		afsconf_GetKey, NULL))) {
+	if (r < 3) r = 3;
+    }
+    UNLOCK_GLOBAL_MUTEX;
+    return r;
 }
 #endif /* !defined(UKERNEL) */
 
 static afs_int32
-GenericAuth(struct afsconf_dir *adir, 
-	    struct rx_securityClass **astr, 
-	    afs_int32 *aindex, 
-	    rxkad_level enclevel)
+GenericAuth(struct afsconf_dir *adir,
+    struct rx_securityClass **astr,
+    afs_int32 *aindex,
+    afs_int32 flags)
 {
     char tbuffer[256];
     struct ktc_encryptionKey key, session;
@@ -100,9 +135,47 @@ GenericAuth(struct afsconf_dir *adir,
     afs_int32 kvno;
     afs_int32 ticketLen;
     register afs_int32 code;
+    rxkad_level enclevel;
+#ifdef AFS_RXK5
+    krb5_creds *k5_creds, in_creds[1];
+    krb5_context k5context;
+#endif
+
+    enclevel = (flags & FORCE_SECURE) ? rxkad_crypt : rxkad_clear;
+
+    if (!(flags & (FORCE_K5CC|FORCE_KTC)))
+	flags |= (FORCE_K5CC|FORCE_KTC);
+    
+#ifdef AFS_RXK5
+    
+    if((flags & FORCE_K5CC) && have_afs_rxk5_keytab(adir->name)) {
+
+	k5context = rxk5_get_context(0);
+		
+	/* forge credentials using the k5 key of afs */
+	memset(in_creds, 0, sizeof *in_creds);
+	code = default_afs_rxk5_forge(k5context, adir, 0, in_creds);
+	if(code) {
+	    return code;
+	}
+	k5_creds = in_creds;
+	/* enclevel could be 0 or 2.  set output to be auth or crypt. */
+	tclass = rxk5_NewClientSecurityObject(rxk5_auth + (enclevel==rxkad_crypt),
+		k5_creds, 0);
+	
+	*astr = tclass;
+        *aindex = 5;	
+	goto out;
+    }
+    
+#endif
 
     /* first, find the right key and kvno to use */
-    code = afsconf_GetLatestKey(adir, &kvno, &key);
+    if ((flags & FORCE_KTC)) {
+	code = afsconf_GetLatestKey(adir, &kvno, &key);
+	if (code && (flags & FORCE_FAILAUTH))
+	    return code;
+    } else code = EDOM;
     if (code) {
 	return QuickAuth(astr, aindex);
     }
@@ -136,6 +209,8 @@ GenericAuth(struct afsconf_dir *adir,
 				      tbuffer);
     *astr = tclass;
     *aindex = 2;		/* kerberos security index */
+ 
+out:   
     return 0;
 }
 
@@ -149,7 +224,7 @@ afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
-    rc = GenericAuth(adir, astr, aindex, rxkad_clear);
+    rc = GenericAuth(adir, astr, aindex, 0);
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }
@@ -166,7 +241,26 @@ afsconf_ClientAuthSecure(struct afsconf_dir *adir,
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
-    rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
+    rc = GenericAuth(adir, astr, aindex, FORCE_SECURE);
+    UNLOCK_GLOBAL_MUTEX;
+    return rc;
+}
+
+/* build a fake ticket for 'afs' using keys from adir, returning an
+ * appropriate security class and index.  This one, unlike the above,
+ * tells rxkad to encrypt the data, too.
+ */
+afs_int32
+afsconf_ClientAuthEx(adir, astr, aindex, flags)
+     struct afsconf_dir *adir;
+     struct rx_securityClass **astr;
+     afs_int32 *aindex;
+     afs_int32 flags;
+{
+    afs_int32 rc;
+
+    LOCK_GLOBAL_MUTEX;
+    rc = GenericAuth(adir, astr, aindex, flags);
     UNLOCK_GLOBAL_MUTEX;
     return rc;
 }

@@ -270,6 +270,16 @@ extern afs_int32 cm_IoctlUnicodeControl(struct cm_ioctl *ioctlp, struct cm_user 
 
 extern void TranslateExtendedChars(char *str);
 
+#if 0 /* XXXX ifsify */
+extern afs_int32 cm_IoctlSetTokens2(cm_ioctl_t *ioctlp, cm_user_t *userp);
+
+extern afs_int32 cm_IoctlGetTokens2(cm_ioctl_t *ioctlp, cm_user_t *userp);
+
+extern afs_int32 cm_IoctlSetProperties(cm_ioctl_t *ioctlp, cm_user_t *userp);
+
+extern afs_int32 cm_IoctlGetProperties(cm_ioctl_t *ioctlp, cm_user_t *userp);
+#endif
+
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 #endif /*  __CM_IOCTL_H_ENV__ */

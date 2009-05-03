@@ -74,6 +74,7 @@ main(argc, argv)
      * General Setup 
      * ------------- */
     initialize_BUTM_error_table();
+    initialize_rx_error_table();
 
     tapeInfo.structVersion = BUTM_MAJORVERSION;
 

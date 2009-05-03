@@ -1280,7 +1280,9 @@ public class Server implements Serializable, Comparable
     //r += "\tAddress: " + getIPAddress()[0] + "\n";
 
     // restart times:
+System.err.println("org.openafs.jafs.Server.getInfo: get general restart time for " + name);
     r += "\tGeneral restart date: " + getGeneralRestartTime() + "\n";
+System.err.println("org.openafs.jafs.Server.getInfo: get binary restart time for " + name);
     r += "\tBinary restart date: " + getBinaryRestartTime() + "\n";
     
     if ( isFileServer() && !isBadFileServer() ) {

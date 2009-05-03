@@ -57,6 +57,7 @@ RCSID
 #include <rx/rx.h>
 #endif /* UKERNEL */
 #include <afs/afsutil.h>
+#include <rx/rxkad.h>
 #include "cellconfig.h"
 #include "keys.h"
 #ifdef AFS_NT40_ENV
@@ -250,7 +251,6 @@ afsconf_FindService(register const char *aname)
 static int
 TrimLine(char *abuffer)
 {
-    char tbuffer[256];
     register char *tp;
     register int tc;
 
@@ -260,8 +260,8 @@ TrimLine(char *abuffer)
 	    break;
 	tp++;
     }
-    strcpy(tbuffer, tp);
-    strcpy(abuffer, tbuffer);
+    if (tp != abuffer)
+	memmove(abuffer, tp, strlen(tp) + 1);
     return 0;
 }
 
@@ -1316,7 +1316,7 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno,
     }
     if (bestk) {		/* found any  */
 	if (akey)
-	    memcpy(akey, bestk->key, 8);	/* copy out latest key */
+	    memcpy(akey->data, bestk->key, 8);	/* copy out latest key */
 	if (avno)
 	    *avno = bestk->kvno;	/* and kvno to caller */
 	UNLOCK_GLOBAL_MUTEX;
@@ -1324,6 +1324,24 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno,
     }
     UNLOCK_GLOBAL_MUTEX;
     return AFSCONF_NOTFOUND;	/* didn't find any keys */
+}
+
+/* see if we have a keyfile (so should still do rxkad on the server) */
+int
+have_afs_keyfile(struct afsconf_dir *adir)
+{
+    register int maxa;
+    register afs_int32 code;
+
+    LOCK_GLOBAL_MUTEX;
+    if ((code = afsconf_Check(adir))) {
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
+    }
+    maxa = adir->keystr->nkeys;
+
+    UNLOCK_GLOBAL_MUTEX;
+    return !!maxa;
 }
 
 /* get a particular key */
@@ -1345,7 +1363,7 @@ afsconf_GetKey(void *rock, int avno, struct ktc_encryptionKey *akey)
 
     for (tk = adir->keystr->key, i = 0; i < maxa; i++, tk++) {
 	if (tk->kvno == avno) {
-	    memcpy(akey, tk->key, 8);
+	    memcpy(akey->data, tk->key, 8);
 	    UNLOCK_GLOBAL_MUTEX;
 	    return 0;
 	}

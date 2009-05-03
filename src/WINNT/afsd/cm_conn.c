@@ -10,6 +10,14 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifdef AFS_RXK5
+#if defined(AFS_NT40_ENV) && defined(USING_MIT)
+#include <krb5.h>
+#include <rx/rxk5_ntfixprotos.h>
+#endif /* AFS_NT40_ENV && MIT */
+#include <rx/rxk5.h>
+#include <afs/rxk5_tkt.h>
+#endif /* AFS_RXK5 */
 #include <windows.h>
 #include <string.h>
 #include <malloc.h>
@@ -611,7 +619,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    forcing_new = 1;
 	}
         lock_ReleaseMutex(&serverp->mx);
-	cm_ForceNewConnections(serverp);
+		cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
             retry = 1;
     }
@@ -624,6 +632,12 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                 ucellp->ticketp = NULL;
             }
             ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+			if(ucellp->rxk5creds) {
+				krb5_context  k5context = rxk5_get_context(0);
+	      		rxk5_free_creds(k5context, (rxk5_creds*) ucellp->rxk5creds);
+	      		ucellp->rxk5creds = NULL;
+		  		ucellp->flags &= ~CM_UCELLFLAG_RXK5;
+			}
             ucellp->gen++;
             lock_ReleaseMutex(&userp->mx);
             if ( timeLeft > 2 )
@@ -649,7 +663,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	retry = 1;
       }
     } else if (errorCode == VICECONNBAD || errorCode == VICETOKENDEAD) {
-	cm_ForceNewConnections(serverp);
+		cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
             retry = 1;
     } else {
@@ -953,6 +967,29 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         port = htons(7000);
         serviceID = 1;
     }
+#ifdef AFS_RXK5
+    if (ucellp->flags & CM_UCELLFLAG_RXK5) {
+        secIndex = 5;
+	
+    	/* if you don't want security, why use rxk5? */
+	if(cryptall)
+		tcp->cryptlevel = rxk5_crypt;
+	else
+		tcp->cryptlevel = rxk5_auth;
+		
+	if(ucellp->rxk5creds) {
+		rxk5_creds *rxk5creds = (rxk5_creds*) ucellp->rxk5creds;
+		secObjp = rxk5_NewClientSecurityObject(
+					tcp->cryptlevel,
+					rxk5creds->k5creds, 
+					0);
+	} else {
+		/* yuk, won't happen */
+		return EINVAL;
+	}
+    } 
+    else
+#endif
     if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
         secIndex = 2;
         switch (cryptall) {
@@ -964,6 +1001,11 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
             break;
         default:
             tcp->cryptlevel = rxkad_crypt;
+#if 0
+	/* this is a myth.  See note in viced/viced.c */
+	    if (serverp->type == CM_SERVER_FILE)
+		secIndex = 3;	/* ! */
+#endif
         }
         secObjp = rxkad_NewClientSecurityObject(tcp->cryptlevel,
                                                 &ucellp->sessionKey, ucellp->kvno,

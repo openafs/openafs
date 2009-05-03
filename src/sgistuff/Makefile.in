@@ -8,6 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
 
 #
 # This must be built after inetd has built ta-rauth.o and after rsh
@@ -21,11 +22,11 @@ LIBDIR=${TOP_LIBDIR}/
 AFSLIBS=${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a ${LIBDIR}/libubik.a \
 	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
-          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a
 KAFSLIBS=${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a ${LIBDIR}/libubik.a \
 	  ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
-          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a
 AUTHFILES=ta-rauth.o rcmd.o herror.o
 AUTHLIBS=afsauthlib.so afskauthlib.so
 TARGETS=$(AUTHLIBS) 
@@ -38,10 +39,10 @@ clean:
 	$(RM) -f $(AUTHLIBS) $(AUTHFILES) 
 
 afsauthlib.so: sgi_auth.o ${AFSLIBS} ${AUTHFILES}
-	$(LD) ${LDFLAGS} -shared -all -o afsauthlib.so sgi_auth.o $(AFSLIBS) ${AUTHFILES}
+	$(LD) ${LDFLAGS} -shared -all -o afsauthlib.so sgi_auth.o ${AUTHFILES} $(AFSLIBS) $(LIBCOM_ERR)
 
 afskauthlib.so: sgi_auth.o ${KAFSLIBS} ${AUTHFILES}
-	$(LD) ${LDFLAGS} -shared -all -o afskauthlib.so sgi_auth.o $(KAFSLIBS) ${AUTHFILES}
+	$(LD) ${LDFLAGS} -shared -all -o afskauthlib.so sgi_auth.o ${AUTHFILES} $(KAFSLIBS) $(LIBCOM_ERR)
 
 ta-rauth.o: ta-rauth.c
 	${CC} ${CFLAGS} -c ta-rauth.c

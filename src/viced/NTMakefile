@@ -11,6 +11,18 @@ RELDIR=viced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+RXK5LIBS = $(RXK5LIBS) \
+	$(DESTDIR)\lib\afs\afspioctl.lib \
+	$(DESTDIR)\lib\afs\afsprot.lib \
+	$(DESTDIR)\lib\afsubik.lib \
+	$(DESTDIR)\lib\cm_config.obj
+!ENDIF
+
 ############################################################################
 # Definitions for installing header files
 
@@ -89,7 +101,7 @@ $(CBDRES): cbd.rc AFS_component_version_number.h
 install:  $(INCFILES) $(CBD)
 
 mkdir:
-	
+
 clean::
 	$(DEL) $(EXERES)
 	$(DEL) $(CBDRES)

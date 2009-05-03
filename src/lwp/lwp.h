@@ -361,30 +361,20 @@ extern unsigned int FT_ApproxTime(void);
 extern int LWP_WaitForKeystroke(int seconds);	/* -1 => forever */
 extern int LWP_GetResponseKey(int seconds, char *key);
 extern int LWP_GetLine(char *linebuf, int len);
-#ifdef AFS_NT40_ENV
+#ifndef AFS_NT40_ENV
 /* lwp.c */
-extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
-extern int LWP_CreateProcess(int (*funP) (), int stacksize, int priority,
-			     void *argP, char *name, PROCESS * pid);
-extern int LWP_DestroyProcess(PROCESS pid);
-extern int LWP_DispatchProcess(void);
-extern int LWP_WaitProcess(void *event);
-extern int LWP_INTERNALSIGNAL(void *event, int yield);
-extern int LWP_QWait(void);
-extern int LWP_QSignal(PROCESS pid);
-#else
 extern int LWP_CurrentProcess(PROCESS * pid);
-extern int LWP_INTERNALSIGNAL(void *event, int yield);
 extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
 extern int LWP_CreateProcess(void *(*ep)(void *), int stacksize, int priority,
 			     void *parm, char *name, PROCESS * pid);
 extern int LWP_DestroyProcess(PROCESS pid);
-extern int LWP_DispatchProcess(void);
-extern int LWP_WaitProcess(void *event);
 extern PROCESS LWP_ThreadId(void);
-extern int LWP_QWait(void);
-extern int LWP_QSignal(register PROCESS pid);
 #endif
+extern int LWP_DispatchProcess(void);
+extern int LWP_QWait(void);
+extern int LWP_QSignal(PROCESS pid);
+extern int LWP_WaitProcess(void *event);
+extern int LWP_INTERNALSIGNAL(void *event, int yield);
 
 extern afs_int32 savecontext(void (*ep)(void), 
 			     struct lwp_context *savearea, char *sp);

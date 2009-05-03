@@ -40,6 +40,10 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
+#ifdef AFS_RXK5
+#include "rxk5.h"
+#include "rxk5errors.h"
+#endif
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/auth.h>
@@ -56,7 +60,7 @@ int lwps = 9;
 
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
-afs_uint32 HostAddress[MAXSERVERID + 1];
+afs_uint32 vl_HostAddress[MAXSERVERID + 1];
 extern int afsconf_CheckAuth();
 extern int afsconf_ServerAuth();
 
@@ -135,7 +139,12 @@ main(argc, argv)
     register afs_int32 code;
     afs_int32 myHost;
     struct rx_service *tservice;
-    struct rx_securityClass *sc[3];
+#ifdef AFS_RXK5
+#define RXSC_LEN 6
+#else
+#define RXSC_LEN 3
+#endif
+    struct rx_securityClass *sc[RXSC_LEN];
     extern int VL_ExecuteRequest();
     extern int RXSTATS_ExecuteRequest();
     struct afsconf_dir *tdir;
@@ -164,6 +173,9 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
+#endif
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
 #endif
     osi_audit_init();
 
@@ -355,15 +367,27 @@ main(argc, argv)
     }
     rx_SetRxDeadTime(50);
 
-    memset(HostAddress, 0, sizeof(HostAddress));
+    memset(vl_HostAddress, 0, sizeof(vl_HostAddress));
     initialize_dstats();
 
+    memset(sc, 0, RXSC_LEN * sizeof *sc);
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = (struct rx_securityClass *)0;
-    sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
-
+#ifdef AFS_RXK5
+    if (have_afs_keyfile(tdir))
+#endif
+	sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
+#ifdef AFS_RXK5
+    /* rxk5 */
+    if(have_afs_rxk5_keytab(tdir->name)) {
+	sc[5] = rxk5_NewServerSecurityObject(rxk5_auth,
+	    get_afs_rxk5_keytab(tdir->name), 
+	    rxk5_default_get_key, 0, 0);
+        /* rxk5 now owns the keytab filename memory */
+    }
+#endif
     tservice =
-	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server", sc, 3,
+	rx_NewServiceHost(host, 0, USER_SERVICE_ID, "Vldb server", sc, RXSC_LEN,
 		      VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create VLDB_SERVICE rx service\n");
@@ -380,7 +404,7 @@ main(argc, argv)
     }
 
     tservice =
-	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, 3,
+	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", sc, RXSC_LEN,
 		      RXSTATS_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create rpc stats rx service\n");
@@ -396,6 +420,13 @@ main(argc, argv)
     }
     ViceLog(0,
 	    ("Starting AFS vlserver %d (%s)\n", VLDBVERSION_4, commandLine));
+
+    ViceLog(0,
+	    ("Vlserver security classes:%s%s%s\n",
+	     sc[2] ? " rxkad" : "",
+	     (RXSC_LEN > 4) && sc[4] ? " rxgk" : "",
+	     (RXSC_LEN > 5) && sc[5] ? " rxk5" : ""));
+
     printf("%s\n", cml_version_number);	/* Goes to the log */
 
     /* allow super users to manage RX statistics */

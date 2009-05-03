@@ -32,8 +32,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <stdio.h>
-#include <aklog.h>
+#include <aklog.h>	/* only for the prototypes */
+#ifdef USING_K5SSL
+#include "k5ssl.h"
+#else
 #include <krb5.h>
+#endif
 #include "skipwrap.h"
 
 /* evil hack */
@@ -82,7 +86,7 @@ int
 afs_krb5_skip_ticket_wrapper(char *tix, size_t tixlen, char **enc, size_t *enclen)
 {
     char *p = tix;
-    size_t l = tixlen;
+    unsigned l = tixlen;
     int code;
     int num;
 

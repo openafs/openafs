@@ -32,8 +32,12 @@ RCSID
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
 #include <afs/afsutil.h>
+#ifdef AFS_RXK5	
+#include <afs/rxk5_utilafs.h>
+#endif
 #include <afs/com_err.h>
 
 #undef FOREIGN
@@ -49,9 +53,9 @@ struct sourcestack {
     struct sourcestack *s_next;
     FILE *s_file;
 } *shead;
-
 struct authstate {
     int sec;
+    int authtype;
     const char *confdir;
     char cell[MAXCELLCHARS];
 };
@@ -131,18 +135,9 @@ popsource()
 }
 
 int
-osi_audit()
-{
-/* OK, this REALLY sucks bigtime, but I can't tell who is calling
- * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
- * anyway.  It's gonna give somebody fits to debug, I know, I know.
- */
-    return 0;
-}
-
-int
 GetGlobals(struct cmd_syndesc *as, void *arock)
 {
+    int authtype;
     struct authstate *state = (struct authstate *) arock;
     afs_int32 code;
     char *cell = NULL;
@@ -180,15 +175,27 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	changed = 1;
 	sec = 1;
     }
-    if (as->parms[18].items || as->parms[20].items) { /* -test, -localauth */
+#ifdef AFS_RXK5	
+    if (as->parms[22].items) { /* -k5 */
 	changed = 1;
-	confdir = AFSDIR_SERVER_ETC_DIRPATH;
-    } else {
-	if (sec == 2)
-	    confdir = AFSDIR_SERVER_ETC_DIRPATH;
-	else
-	    confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+	authtype = (FORCE_RXK5 | FORCE_K5CC);
     }
+    if (as->parms[23].items) { /* -k4 */
+	changed = 1;
+	authtype = FORCE_RXKAD;
+    }
+    if (as->parms[24].items) { /* -ktc */
+	changed = 1;
+	authtype = FORCE_KTC;
+    }
+#endif	
+
+    if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
+	changed = 1,
+	confdir = AFSDIR_SERVER_ETC_DIRPATH;
+    } else
+	confdir = AFSDIR_CLIENT_ETC_DIRPATH;
+
     if (changed) {
 	CleanUp(as, arock);
 	code = pr_Initialize(sec, confdir, cell);
@@ -200,6 +207,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	return code;
     }
     state->sec = sec;
+    state->authtype = authtype;
     state->confdir = confdir;
     if (cell && cell != state->cell)
         strncpy(state->cell, cell, MAXCELLCHARS-1);
@@ -1026,6 +1034,14 @@ add_std_args(register struct cmd_syndesc *ts)
 		"use local authentication");
     cmd_AddParm(ts, "-auth", CMD_FLAG, CMD_OPTIONAL,
 		"use user's authentication (default)");
+#ifdef AFS_RXK5
+    cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, 
+    		"use rxk5 security");
+    cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, 
+    		"use rxkad security");
+    cmd_AddParm(ts, "-ktc", CMD_FLAG, CMD_OPTIONAL, 
+    		"use kernel token for security");
+#endif	
 }
 
 /*
@@ -1050,7 +1066,7 @@ main(int argc, char **argv)
     int parsec;
     char *parsev[CMD_MAXPARMS];
     char *savec;
-    struct authstate state;
+    struct authstate state[1];
 
 #ifdef WIN32
     WSADATA WSAjunk;
@@ -1075,8 +1091,8 @@ main(int argc, char **argv)
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    memset(&state, 0, sizeof(state));
-    state.sec = 1; /* default is auth */
+    memset(state, 0, sizeof *state);
+    state->sec = 1;
 
     ts = cmd_CreateSyntax("creategroup", CreateGroup, NULL,
 			  "create a new group");
@@ -1179,7 +1195,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-delay", CMD_SINGLE, 0, "seconds");
     add_std_args(ts);
 
-    cmd_SetBeforeProc(GetGlobals, &state);
+    cmd_SetBeforeProc(GetGlobals, state);
 
     finished = 1;
     source = NULL;

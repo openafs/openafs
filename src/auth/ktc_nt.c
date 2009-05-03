@@ -12,6 +12,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef AFS_RXK5
+#include "rxk5_utilafs.h"
+#include "rxk5_tkt.h"
+#endif
+
 RCSID
     ("$Header$");
 
@@ -27,12 +32,22 @@ RCSID
 #include <afs/smb_iocons.h>
 #include <afs/pioctl_nt.h>
 #include "afs/afsrpc.h"
+#include "cm_rpc.h" /* token_event_u */
 #include <afs/vice.h>
 #include "auth.h"
+#include <afs_token.h>
 #include <afs/afsutil.h>
 
 /* TBUFFERSIZE must be at least 512 larger than KTCMAXTICKETSIZE */
 #define TBUFFERSIZE 12512
+
+/* Why was TBUFFERSIZE not already sized by Unix MAXKTCTICKETLEN and
+ * MAXKTCREALMLEN ? */
+
+#define MAXPIOCTLTOKENLEN \
+(3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
+
+#define ENOTCONN                WSAENOTCONN
 
 /* Forward declarations for local token cache. */
 static int SetLocalToken(struct ktc_principal *aserver,
@@ -173,6 +188,79 @@ send_key(afs_uuid_t uuid, char sessionKey[8])
 }
 
 RPC_STATUS
+send_key_ex(afs_uuid_t uuid, afs_token_wrapper_t wrapped_token[1])
+{
+    RPC_STATUS status;
+    char *stringBinding = NULL;
+    ULONG authnLevel, authnSvc;
+    char serverName[256];
+    char *serverNamep = serverName;
+    char encrypt[32];
+    BOOL encryptionOff = FALSE;
+    char protseq[32];
+
+    /* Encryption on by default */
+    if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
+	if (!strcmpi(encrypt, "OFF"))
+	    encryptionOff = TRUE;
+
+    /* Protocol sequence is local by default */
+    if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
+	strcpy(protseq, "ncalrpc");
+
+    /* Server name */
+    getservername(&serverNamep, sizeof(serverName));
+
+    status = RpcStringBindingCompose("",	/* obj uuid */
+				     protseq, serverNamep, "",	/* endpoint */
+				     "",	/* protocol options */
+				     &stringBinding);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    status = RpcBindingFromStringBinding(stringBinding, &hAfsHandle);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    /*
+     * On Windows 95/98, we must resolve the binding before calling
+     * SetAuthInfo.  On Windows NT, we don't have to resolve yet,
+     * but it does no harm.
+     */
+    status = RpcEpResolveBinding(hAfsHandle, afsrpc_v1_0_c_ifspec);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    if (encryptionOff) {
+	authnLevel = RPC_C_AUTHN_LEVEL_NONE;
+	authnSvc = RPC_C_AUTHN_WINNT;
+    } else {
+	authnLevel = RPC_C_AUTHN_LEVEL_PKT_PRIVACY;
+	authnSvc = RPC_C_AUTHN_WINNT;
+    }
+
+    status =
+	RpcBindingSetAuthInfo(hAfsHandle, NULL, authnLevel, authnSvc, NULL,
+			      RPC_C_AUTHZ_NONE);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    RpcTryExcept {
+        status = AFSRPC_SetToken2(uuid, wrapped_token);
+    }
+    RpcExcept(1) {
+        status = RpcExceptionCode();
+    }
+    RpcEndExcept cleanup:if (stringBinding)
+        RpcStringFree(&stringBinding);
+
+    if (hAfsHandle != NULL)
+	RpcBindingFree(&hAfsHandle);
+
+    return status;
+}
+
+RPC_STATUS
 receive_key(afs_uuid_t uuid, char sessionKey[8])
 {
     RPC_STATUS status;
@@ -244,6 +332,311 @@ receive_key(afs_uuid_t uuid, char sessionKey[8])
 
     return status;
 }
+
+RPC_STATUS
+receive_key_ex(afs_uuid_t uuid, afs_token_wrapper_t wrapped_token[1])
+{
+    RPC_STATUS status;
+    char *stringBinding = NULL;
+    ULONG authnLevel, authnSvc;
+    char serverName[256];
+    char *serverNamep = serverName;
+    char encrypt[32];
+    BOOL encryptionOff = FALSE;
+    char protseq[32];
+
+    /* Encryption on by default */
+    if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
+	if (!strcmpi(encrypt, "OFF"))
+	    encryptionOff = TRUE;
+
+    /* Protocol sequence is local by default */
+    if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
+	strcpy(protseq, "ncalrpc");
+
+    /* Server name */
+    getservername(&serverNamep, sizeof(serverName));
+
+    status = RpcStringBindingCompose("",	/* obj uuid */
+				     protseq, serverNamep, "",	/* endpoint */
+				     "",	/* protocol options */
+				     &stringBinding);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    status = RpcBindingFromStringBinding(stringBinding, &hAfsHandle);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    /*
+     * On Windows 95/98, we must resolve the binding before calling
+     * SetAuthInfo.  On Windows NT, we don't have to resolve yet,
+     * but it does no harm.
+     */
+    status = RpcEpResolveBinding(hAfsHandle, afsrpc_v1_0_c_ifspec);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    if (encryptionOff) {
+		authnLevel = RPC_C_AUTHN_LEVEL_NONE;
+		authnSvc = RPC_C_AUTHN_WINNT;
+    } else {
+		authnLevel = RPC_C_AUTHN_LEVEL_PKT_PRIVACY;
+		authnSvc = RPC_C_AUTHN_WINNT;
+    }
+
+    status =
+	RpcBindingSetAuthInfo(hAfsHandle, NULL, authnLevel, authnSvc, NULL,
+			      RPC_C_AUTHZ_NONE);
+    if (status != RPC_S_OK)
+	goto cleanup;
+
+    RpcTryExcept {
+        status = AFSRPC_GetToken2(uuid, wrapped_token);
+    }
+    RpcExcept(1) {
+        status = RpcExceptionCode();
+    }
+    RpcEndExcept cleanup:if (stringBinding)
+        RpcStringFree(&stringBinding);
+
+    if (hAfsHandle != NULL)
+	RpcBindingFree(&hAfsHandle);
+
+    return status;
+}
+
+/* new-style token interface */
+
+int
+afstoken_to_soliton(pioctl_set_token *a_token,
+    int type,
+    afstoken_soliton *at);
+    
+/* copy bits of an rxkad token into a ktc_token */
+int
+afstoken_to_token(pioctl_set_token *a_token,
+    struct ktc_token *ttoken,
+    int ttoksize,
+    int *flags,
+    struct ktc_principal *aclient);
+    
+#ifdef AFS_RXK5
+/* copy bits of an rxkad token into a k5 credential */
+int
+afstoken_to_v5cred(pioctl_set_token *a_token, krb5_creds *v5cred);
+#endif
+
+int
+ktc_SetTokenEx(pioctl_set_token *a_token)
+{
+#ifndef MAX_RXK5_TOKEN_LEN
+#define MAX_RXK5_TOKEN_LEN 4096
+#endif
+    afs_int32 code;
+    RPC_STATUS status;
+    struct ViceIoctl iob;
+    char tbuffer[TBUFFERSIZE];
+    char *tp;
+    XDR xdrs[1];
+    token_event_u nte[1];
+    HANDLE ktcMutex = NULL;
+    code = 0;
+
+    tp = tbuffer;
+       	
+    /* uuid */
+    status = UuidCreate((UUID *) &(nte->uuid));
+    memcpy(tp, &(nte->uuid), sizeof(afs_uuid_t));
+    tp += sizeof(afs_uuid_t);
+
+    /* compose token on XDR stream */
+    xdrmem_create(xdrs, nte->wrapped_token->token, MAX_RXK5_TOKEN_LEN,
+                  XDR_ENCODE);
+    if (!xdr_pioctl_set_token(xdrs, a_token)) {
+		code = KTC_INVAL;
+		goto out;
+    }
+    nte->wrapped_token->len = xdr_getpos(xdrs);
+
+    ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
+    if (ktcMutex == NULL) {
+		code = KTC_PIOCTLFAIL;
+		goto out;
+    }
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+            CloseHandle(ktcMutex);
+            code = KTC_PIOCTLFAIL;
+			goto out;
+        }
+    }
+
+    /* RPC to send session key */
+    status = send_key_ex(nte->uuid, nte->wrapped_token);
+    if (status != RPC_S_OK) {
+        if (status == 1)
+            strcpy(rpcErr, "RPC failure in AFS gateway (ktc_SetTokenEx)");
+        else
+            DceErrorInqText(status, rpcErr);
+        if (status == RPC_S_SERVER_UNAVAILABLE ||
+            status == EPT_S_NOT_REGISTERED) {
+            code = KTC_NOCMRPC;
+            goto release;
+        } else {
+            code = KTC_RPC;
+            goto release;
+        }
+    }
+
+    /* set up for pioctl */
+    iob.in = tbuffer;
+    iob.in_size = (long)(tp - tbuffer);
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
+
+    code = pioctl(0, VIOCSETTOK2 , &iob, 0);
+    if (code == -1 && errno == EINVAL) {
+	struct ktc_principal aserver[1], aclient[1];
+	struct ktc_token atoken[1];
+	afs_int32 flags;
+
+	memset(aserver, 0, sizeof *aserver);
+	memset(aclient, 0, sizeof *aclient);
+	memset(atoken, 0, sizeof *atoken);
+        code = afstoken_to_token(a_token, atoken, sizeof *atoken,
+                                 &flags, aclient);
+        if (code) {
+            code = KTC_INVAL;
+            goto out;
+        }
+	strcpy(aserver->name, "afs");
+	strcpy(aserver->cell, a_token->cell);
+        /* XXX we hold ktcMutex */
+        ReleaseMutex(ktcMutex);
+        CloseHandle(ktcMutex);
+        code = ktc_SetToken(aserver, atoken, aclient, flags);
+        goto out;
+    }
+
+    if (code)
+        code = KTC_PIOCTLFAIL;
+
+release:
+    if(ktcMutex) {
+        ReleaseMutex(ktcMutex);
+        CloseHandle(ktcMutex);
+    }
+
+ out:
+    return code;
+}
+
+#ifdef AFS_RXK5
+
+/*
+ *	return rxk5 enctypes from kernel.
+ *	return -1 on error (not supported, etc.)
+ *	otherwise, return count of enctypes found.
+ */
+
+int
+ktc_GetK5Enctypes(krb5_enctype *buf, int buflen)
+{
+    afs_int32 code;
+    int i;
+    char tbuffer[256], *tp, *ep;
+    struct ViceIoctl blob[1];
+    static char key[] = "rxk5.enctypes";
+
+    memset(blob, 0, sizeof blob);
+    blob->in = key;
+    blob->in_size = sizeof key;
+    blob->out = tbuffer;
+    blob->out_size = sizeof tbuffer - 1;
+	memset(tbuffer, 0, sizeof tbuffer);	/* XXX please valgrind */
+
+    code = pioctl(0, VIOCGETPROP, blob, 0);
+    if (code) return code;	/* "too old" */
+
+    tbuffer[sizeof tbuffer-1] = 0;
+    if (memcmp(tbuffer, key, sizeof key)) {
+	errno = EDOM;		/* "rxk5 not configured" */
+	return -1;
+    }
+    tp = tbuffer + sizeof key;
+    for (i = 0; i < buflen; ++i) {
+	while (*tp == ' ') ++tp;
+	if (!*tp) break;
+	buf[i] = strtol(tp, &ep, 0);
+	if (tp == ep) {
+	    errno = EDOM;	/* bad data return */
+	    return -1;
+	}
+	tp = ep;
+    }
+    return i;			/* success */
+}
+
+/* Set a K5 token (internal) */
+static int
+SetK5Token(krb5_context context, char *cell,
+	      krb5_creds *v5cred, char *username, char* smbname, afs_int32 flags)
+{
+    register afs_int32 code;
+    pioctl_set_token a_token[1];
+   
+    memset(a_token, 0, sizeof *a_token); 
+    a_token->flags = flags;
+    a_token->cell = cell;
+    a_token->username = username;
+    a_token->smbname = smbname;
+    code = add_afs_token_rxk5(
+	    context,
+	    v5cred,
+	    a_token);
+
+    if(!code)
+	code = ktc_SetTokenEx(a_token);
+#if 0
+    a_token->cell = 0;
+    xdrs->x_op = XDR_FREE;
+    xdr_pioctl_set_token(xdrs, a_token);
+#endif
+
+    return code;
+}
+
+/* Set a K5 token */
+
+afs_int32
+ktc_SetK5Token(krb5_context context,
+    char *cell,
+    krb5_creds *v5cred,
+    char *username,
+    char *smbname,
+    afs_int32 flags)
+{
+    int code;
+    LOCK_GLOBAL_MUTEX;
+    code = SetK5Token(context, cell, v5cred, username, smbname, flags);
+    UNLOCK_GLOBAL_MUTEX;
+    if (!code)
+	return 0;
+    if (code == -1)
+	code = errno;
+    else if (code == KTC_PIOCTLFAIL)
+	code = errno;
+    if (code == ESRCH)
+	return KTC_NOCELL;
+    if (code == EINVAL)
+	return KTC_NOPIOCTL;
+    if (code == EIO)
+	return KTC_NOCM;
+    return KTC_PIOCTLFAIL;
+}
+
+#endif /* AFS_RXK5 */
 
 int
 ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
@@ -408,6 +801,188 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
     }
 
     return 0;
+}
+
+/*
+ *  Get AFS token at index ix, using new kernel token interface. 
+ */
+ 
+int
+ktc_GetTokenEx(afs_int32 index, const char *cell,
+    pioctl_set_token *a_token)
+{
+    struct ViceIoctl iob;
+    char tbuffer[TBUFFERSIZE];
+    char tobuffer[TBUFFERSIZE];
+    afs_int32 code;
+    char *tp;
+    afstoken_soliton at[1];
+    XDR xdrs[1];
+
+    afs_uuid_t uuid;
+    afs_token_wrapper_t wrapped_token[1];
+    HANDLE ktcMutex = NULL;
+    RPC_STATUS status;
+
+    tp = tbuffer;
+
+    LOCK_GLOBAL_MUTEX;
+  
+    memset(a_token, 0, sizeof *a_token); 
+    memset(at, 0, sizeof *at); 
+
+    if (cell) {
+	int len;
+	len = strlen(cell) + 1;
+	tp = tbuffer;
+	memcpy(tp, (char*)&index, sizeof(afs_int32));
+	tp += sizeof(afs_int32);
+	memcpy(tp, cell, len);
+	tp += len;
+	iob.in = tbuffer;
+	iob.in_size = tp - tbuffer;
+    } else {
+	iob.in = (char *)&index;
+	iob.in_size = sizeof(afs_int32);
+    }
+    iob.out = tobuffer;
+    iob.out_size = sizeof(afs_uuid_t);
+
+#ifndef AFS_WIN95_ENV
+    ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
+    if (ktcMutex == NULL)
+	return KTC_PIOCTLFAIL;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+		if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+			CloseHandle(ktcMutex);
+			return KTC_PIOCTLFAIL;
+		}
+    }
+#endif /* AFS_WIN95_ENV */
+
+    code = pioctl(0, VIOCGETTOK2 , &iob, 0);
+
+    if (code == -1 && errno == EINVAL) {
+	/* new interface isn't in kernel?  fall back to old */
+	/* XXX but should be calling VIOCNEWGETTOK, and using msrpc */
+	char *stp, *cellp;		/* secret token ptr */
+	afs_int32 temp, primflag;
+	int tktLen;			/* server ticket length */
+	struct ClearToken ct;
+
+	iob.in = (char *)&index;
+	iob.in_size = sizeof(afs_int32);
+	for (;;) {
+	    code = pioctl(0, VIOCGETTOK, &iob, 0);
+	    if (code) goto Failed;
+	    /* token retrieved; parse buffer */
+	    tp = tbuffer;
+
+	    /* get ticket length */
+	    memcpy(&temp, tp, sizeof(afs_int32));
+	    tktLen = temp;
+	    tp += sizeof(afs_int32);
+
+	    /* remember where ticket is and skip over it */
+	    stp = tp;
+	    tp += tktLen;
+
+	    /* get size of clear token and verify */
+	    memcpy(&temp, tp, sizeof(afs_int32));
+	    if (temp != sizeof(struct ClearToken)) {
+		code = KTC_ERROR;
+		goto Done;
+	    }
+	    tp += sizeof(afs_int32);
+
+	    /* copy clear token */
+	    memcpy(&ct, tp, temp);
+	    tp += temp;
+
+	    /* copy primary flag */
+	    memcpy(&primflag, tp, sizeof(afs_int32));
+	    tp += sizeof(afs_int32);
+
+	    /* remember where cell name is */
+	    cellp = tp;
+	    if (!cell || !strcmp(cellp, cell))
+		break;
+	    if (++index >= 200) {
+		code = KTC_PIOCTLFAIL;
+		goto Done;
+	    }
+	}
+
+	/* set return values */
+	/* got token for cell; check that it will fit */
+	if (tktLen > (unsigned) MAXKTCTICKETLEN) {
+	    code = KTC_TOOBIG;
+	    goto Done;
+	}
+	code = ENOMEM;
+	memset(a_token, 0, sizeof *a_token);
+	if (!(a_token->cell = strdup(cellp)))
+	    goto Done;
+	at->at_type = AFSTOKEN_UNION_KAD;
+	at->afstoken_soliton_u.at_kad.rk_primary_flag = primflag;
+	if (!(at->afstoken_soliton_u.at_kad.rk_ticket.rk_ticket_val =
+              malloc(tktLen)))
+	    goto Done;
+	at->afstoken_soliton_u.at_kad.rk_ticket.rk_ticket_len = tktLen;
+	memcpy(at->afstoken_soliton_u.at_kad.rk_ticket.rk_ticket_val, stp,
+               tktLen);
+	at->afstoken_soliton_u.at_kad.rk_kvno = ct.AuthHandle;
+	at->afstoken_soliton_u.at_kad.rk_viceid = ct.ViceId;
+	memcpy(at->afstoken_soliton_u.at_kad.rk_key, ct.HandShakeKey, 8);
+	at->afstoken_soliton_u.at_kad.rk_begintime = ct.BeginTimestamp;
+	at->afstoken_soliton_u.at_kad.rk_endtime = ct.EndTimestamp;
+	code = add_afs_token_soliton(a_token, at);
+	goto Done;
+    }
+
+    if (code) {
+    Failed:
+	/* failed to retrieve specified token */
+	if (code < 0) switch(code = errno) {
+	case EDOM:
+	case ENOTCONN:
+	    code = KTC_NOENT;
+	    break;
+	case EIO:
+	    code = KTC_NOCM;
+	    break;
+	}
+    } else {
+        /* uuid (cf. cm_IoctlGetTokens2) */
+        memcpy(&uuid, iob.out, sizeof(uuid));
+        status = receive_key_ex(uuid, wrapped_token);
+
+        if (status != RPC_S_OK) {
+            if (status == 1)
+                strcpy(rpcErr, "RPC failure in AFS gateway (ktc_GetTokenEx)");
+            else
+                DceErrorInqText(status, rpcErr);
+            if (status == RPC_S_SERVER_UNAVAILABLE
+                || status == EPT_S_NOT_REGISTERED)
+                code = KTC_NOCMRPC;
+            else
+                code = KTC_RPC;
+            if(code)
+                goto Done;
+        }
+
+        /* brown and serve's ready */
+        code = parse_afs_token(wrapped_token->token, wrapped_token->len, a_token);
+    }
+ Done:
+#ifndef AFS_WIN95_ENV
+        ReleaseMutex(ktcMutex);
+        CloseHandle(ktcMutex);
+#endif
+    UNLOCK_GLOBAL_MUTEX;
+    xdrs->x_op = XDR_FREE;
+    xdr_afstoken_soliton(xdrs, at);
+    return code;
 }
 
 int

@@ -1458,6 +1458,14 @@ TYPEDEF_FUNC(
     );
 
 TYPEDEF_FUNC(
+    void,
+    KRB5_CALLCONV,
+    krb5_get_init_creds_opt_set_change_password_prompt,
+    (krb5_get_init_creds_opt *opt,
+     int prompt)
+    );
+
+TYPEDEF_FUNC(
     krb5_error_code,
     KRB5_CALLCONV,
     krb5_get_init_creds_password,
@@ -1746,4 +1754,64 @@ TYPEDEF_FUNC(
       struct addrlist *addrlist,
       int get_masters, int socktype, int family)
     );
+
+/* rxk5 */
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    krb5_free_keytab_entry_contents,
+    (krb5_context context, krb5_keytab_entry *entry)
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    krb5_c_is_keyed_cksum,
+    (krb5_cksumtype ctype)
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    krb5_c_is_coll_proof_cksum,
+    (krb5_cksumtype ctype)
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    krb5_c_valid_enctype,
+    (krb5_enctype ktype)
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    krb5_c_valid_cksumtype,
+    (krb5_cksumtype ctype)
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    krb5_server_decrypt_ticket_keyblock,
+    (krb5_context context, krb5_keyblock *key, krb5_ticket *ticket)
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    krb5_encrypt_tkt_part,
+    (krb5_context context, const krb5_keyblock * keyblock, 
+     krb5_ticket * ticket)
+    );
+
+TYPEDEF_FUNC(
+    krb5_error_code,
+    KRB5_CALLCONV,
+    encode_krb5_ticket,
+    (const krb5_ticket *rep, krb5_data **code)
+    );
+
 #endif /* __LOADFUNCS_KRB5_H__ */

@@ -94,7 +94,7 @@ import java.util.ArrayList;
  * @version 1.3, 10/12/2000 - Introduced error code capture from native methods.
  * @version 1.2, 05/30/2000
  */
-public class File extends java.io.File implements Comparable
+public class File extends java.io.File /* implements Comparable */
 {
   private String path;
   private String type;
@@ -816,52 +816,52 @@ public class File extends java.io.File implements Comparable
   }
 
   /////////////// custom override methods ////////////////////
-
-  /**
-   * Compares two File objects relative to their filenames and <B>does not</B>
-   * compare their respective absolute paths.  Alphabetic case is significant in 
-   * comparing filenames.
-   *
-   * @param   file  The File object to be compared to this file's filename
-   * 
-   * @return  Zero if the argument is equal to this file's filename, a
-   *		value less than zero if this file's filename is
-   *		lexicographically less than the argument, or a value greater
-   *		than zero if this file's filename is lexicographically
-   *		greater than the argument
-   *
-   * @since   JDK1.2
-   */
-  public int compareTo(File file) {
-    return this.getName().compareTo(file.getName());
-  }
-  /**
-   * Compares this file to another File object.  If the other object
-   * is an abstract pathname, then this function behaves like <code>{@link
-   * #compareTo(File)}</code>.  Otherwise, it throws a
-   * <code>ClassCastException</code>, since File objects can only be
-   * compared to File objects.
-   *
-   * @param   o  The <code>Object</code> to be compared to this abstract pathname
-   *
-   * @return  If the argument is an File object, returns zero
-   *          if the argument is equal to this file's filename, a value
-   *          less than zero if this file's filename is lexicographically
-   *          less than the argument, or a value greater than zero if this
-   *          file's filename is lexicographically greater than the
-   *          argument
-   *
-   * @throws  <code>ClassCastException</code> if the argument is not an
-   *		  File object
-   *
-   * @see     java.lang.Comparable
-   * @since   JDK1.2
-   */
-  public int compareTo(Object o) throws ClassCastException 
-  { 
-    File file = (File)o;
-    return compareTo(file);
-  } 
+//X
+//X  /**
+//X   * Compares two File objects relative to their filenames and <B>does not</B>
+//X   * compare their respective absolute paths.  Alphabetic case is significant in 
+//X   * comparing filenames.
+//X   *
+//X   * @param   file  The File object to be compared to this file's filename
+//X   * 
+//X   * @return  Zero if the argument is equal to this file's filename, a
+//X   *		value less than zero if this file's filename is
+//X   *		lexicographically less than the argument, or a value greater
+//X   *		than zero if this file's filename is lexicographically
+//X   *		greater than the argument
+//X   *
+//X   * @since   JDK1.2
+//X   */
+//X  public int compareTo(File file) {
+//X    return this.getName().compareTo(file.getName());
+//X  }
+//X  /**
+//X   * Compares this file to another File object.  If the other object
+//X   * is an abstract pathname, then this function behaves like <code>{@link
+//X   * #compareTo(File)}</code>.  Otherwise, it throws a
+//X   * <code>ClassCastException</code>, since File objects can only be
+//X   * compared to File objects.
+//X   *
+//X   * @param   o  The <code>Object</code> to be compared to this abstract pathname
+//X   *
+//X   * @return  If the argument is an File object, returns zero
+//X   *          if the argument is equal to this file's filename, a value
+//X   *          less than zero if this file's filename is lexicographically
+//X   *          less than the argument, or a value greater than zero if this
+//X   *          file's filename is lexicographically greater than the
+//X   *          argument
+//X   *
+//X   * @throws  <code>ClassCastException</code> if the argument is not an
+//X   *		  File object
+//X   *
+//X   * @see     java.lang.Comparable
+//X   * @since   JDK1.2
+//X   */
+//X  public int compareTo(Object o) throws ClassCastException 
+//X  { 
+//X    File file = (File)o;
+//X    return compareTo(file);
+//X  } 
 
   /////////////// public native methods ////////////////////
 

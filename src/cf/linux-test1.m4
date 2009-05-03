@@ -15,7 +15,7 @@ _ACEOF
 /* confdefs.h */
 _ACEOF
     cat confdefs.h >>conftest.dir/conftest.c &&
-    cat >>conftest.dir/conftest.c <<\_ACEOF &&
+    cat >>conftest.dir/conftest.c <<_ACEOF &&
 /* end confdefs.h */
 #include <linux/module.h>
 $1
@@ -65,10 +65,23 @@ AC_DEFUN([AC_TRY_KBUILD], [
 
 AC_DEFUN([LINUX_KERNEL_COMPILE_WORKS], [
   AC_MSG_CHECKING([for linux kernel module build works])
+  openafs_linux_patchlevel="`sed -n 's%PATCHLEVEL = %%p' $LINUX_KERNEL_PATH/Makefile`"
+  if test "$openafs_linux_patchlevel" -ge 6; then
+    openafs_lkcw_cmpop='<'; openafs_lkcw_testop='-lt'
+  else
+    openafs_lkcw_cmpop='>='; openafs_lkcw_testop='-ge'
+  fi
+  if test "`echo $AFS_SYSNAME | sed 's;.*linux-*;;'`" $openafs_lkcw_testop 26
+  then
+    openafs_lkcw_cmpop='lose; sysname and kernel path not consistent'
+  fi
   AC_TRY_KBUILD(
-[#include <linux/sched.h>
-#include <linux/fs.h>],
-    [],:,AC_MSG_RESULT(no)
+[#include <linux/version.h>],
+[/* sysname is $AFS_SYSNAME; kernel_path is $LINUX_KERNEL_PATH */
+#if LINUX_VERSION_CODE $openafs_lkcw_cmpop KERNEL_VERSION(2,6,0)
+lose
+#endif
+],:,AC_MSG_RESULT(no)
     AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...]))
   AC_MSG_RESULT(yes)])
 

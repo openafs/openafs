@@ -8,12 +8,17 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
+KRB5LIBS=@KRB5LIBS@
+
 BUTMOBJS    =file_tm.o
 BUTMLIBS    =libbutm.a
 BUTMINCLS   =${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
 CC      = ${MT_CC}
-CFLAGS  = ${COMMON_CFLAGS} -I${TOP_SRCDIR}/volser ${MT_CFLAGS} @XBSA_CFLAGS@ -I${BUCOORD} -I${VOLSER} -I../bucoord -I../volser
+CFLAGS  = ${COMMON_CFLAGS} ${KRB5CFLAGS} -I${TOP_SRCDIR}/volser \
+	${MT_CFLAGS} @XBSA_CFLAGS@ -I${BUCOORD} -I${VOLSER} \
+	-I../bucoord -I../volser
 
 LWP     = ${srcdir}/../lwp
 BUTM    = ${srcdir}/../butm
@@ -54,6 +59,7 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
             ${BUTMLIBS} \
 	    ${TOP_LIBDIR}/libafsauthent.a \
 	    ${TOP_LIBDIR}/libafsrpc.a \
+	    ${RXK5T} \
             ${TOP_LIBDIR}/libcmd.a \
 	    ${TOP_LIBDIR}/util.a \
 	    ${TOP_LIBDIR}/libusd.a \
@@ -66,7 +72,8 @@ BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
 all: butc
 
 butc: ${BUTCOBJS} ${BUTCLIBS}
-	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} ${MT_LIBS} ${XLIBS} -o butc
+	${CC} ${CFLAGS} ${BUTCOBJS} ${BUTCLIBS} \
+	${MT_LIBS} ${KRB5LIBS} $(LIBCOM_ERR) ${XLIBS} -o butc
 
 libbutm.a: ${BUTMOBJS} AFS_component_version_number.o
 	-$(RM) -f libbutm.a

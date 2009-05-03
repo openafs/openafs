@@ -34,6 +34,7 @@ RCSID
 #define UBIK_INTERNALS
 #include <ubik.h>
 #include <rx/xdr.h>
+#include <afs/com_err.h>
 #include <rx/rx.h>
 #include <afs/com_err.h>
 #include "ptint.h"
@@ -230,6 +231,7 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
 
     Initdb();
     initialize_PT_error_table();
+    initialize_rx_error_table();
 
     if (wflag) {
 	struct usr_list *u;

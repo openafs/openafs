@@ -172,6 +172,39 @@ OUT=$(OJT)\$(RELDIR)
 APPVER=5.02
 !ENDIF
 
+# RXK5 build adjustments.  Jeff's afskfw interface is extended
+# to provide all krb5 functions require by rxk5 and friends, and
+# to be linked as needed by any part of OpenAFS.
+
+!IF ("$(BUILD_RXK5)" == "TRUE")
+RXK5 = rxk5
+RXK5_CDEF = -DAFS_RXK5 -DUSING_MIT
+KRB5CFLAGS = -I$(AFSROOT)\src\WINNT\kfw\inc\krb5
+
+KFWINCDIR = ..\WINNT\kfw\inc
+KFWLIBDIR = ..\WINNT\kfw\lib\$(CPU)
+AFSKFWDIR = ..\WINNT\afsd
+
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+# What we actually link with.
+RXK5LIBS = \
+	$(DESTDIR)\lib\rxk5.lib \
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(MSSDKDIR)\lib\userenv.lib
+
+TRXK5LIBS = \
+	$(DESTDIR)\lib\trxk5.lib \
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(MSSDKDIR)\lib\userenv.lib
+
+!ELSE
+!ENDIF
+
+LIBCOM_ERR = $(DESTDIR)\lib\afs\afscom_err.lib
+PTHREADSLIB = $(DESTDIR)\lib\afspthread.lib
+
 !INCLUDE <WIN32.MAK>
 
 # Extend and/or supplement definitions in WIN32.MAK.
@@ -217,6 +250,7 @@ afscdefs =\
     	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
 	-DAFS_LARGEFILE_ENV \
+	$(RXK5_CDEF) \
 	-D_USE_DECLSPECS_FOR_SAL=0 \
 	-D_USE_ATTRIBUTES_FOR_SAL=0 \
 	-D_ATL_SECURE_NO_DEPRECATE \

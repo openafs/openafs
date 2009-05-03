@@ -109,6 +109,12 @@ extern afs_int32 afs_termState;
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
 
+#ifdef AFS_RXK5
+#ifdef AFS_NT40_ENV
+void rxk5_OnetimeInit();
+#endif
+#endif
+
 #ifndef KERNEL
 #ifdef AFS_PTHREAD_ENV
 #ifndef AFS_NT40_ENV
@@ -211,6 +217,15 @@ rxi_InitPthread(void)
     MUTEX_INIT(&rxkad_client_uid_mutex, "uid", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rxkad_random_mutex, "rxkad random", MUTEX_DEFAULT, 0);
     MUTEX_INIT(&rx_debug_mutex, "debug", MUTEX_DEFAULT, 0);
+
+#ifdef AFS_RXK5
+#ifdef AFS_NT40_ENV
+    /* Marcus would like to see an implementation of pthread mutex 
+       static initializers on Win32 to replace this.  We are using
+       such initializers on non-Win32. */
+    rxk5_OnetimeInit();
+#endif
+#endif
 
     assert(pthread_cond_init
 	   (&rx_event_handler_cond, (const pthread_condattr_t *)0) == 0);
@@ -3618,6 +3633,8 @@ rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acall)
 	MUTEX_EXIT(&conn->conn_data_lock);
 }
 
+#ifdef RXDEBUG
+#ifdef AFS_NT40_ENV
 static const char *
 rx_ack_reason(int reason)
 {
@@ -3644,6 +3661,8 @@ rx_ack_reason(int reason)
 	return "unknown!!";
     }
 }
+#endif
+#endif
 
 
 /* rxi_ComputePeerNetStats

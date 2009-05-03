@@ -9,24 +9,23 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
-LIBS=-lcmd -lcom_err -lafsutil
+LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
 
 INCDIRS=  -I${SRCDIR}/include -I${SRCDIR}/include/afs -I..
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS}
 
 all: test
 test tests: ctest dtest itest
 
 itest: itest.o 
-	cc ${CFLAGS} -o itest itest.o 
+	cc ${CFLAGS} -o itest itest.o ${LIBS} ${XLIBS}
 
 ctest: ctest.o
-	cc ${CFLAGS} -o ctest ctest.o 
+	cc ${CFLAGS} -o ctest ctest.o ${LIBS} ${XLIBS}
 
 dtest: dtest.o
-	cc ${CFLAGS} -o dtest dtest.o 
+	cc ${CFLAGS} -o dtest dtest.o ${LIBS} ${XLIBS}
 
 system: test
 

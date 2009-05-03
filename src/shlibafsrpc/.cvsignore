@@ -1,2 +1,6 @@
 Makefile
-libafsrpc.so.1.1
+libafsrpc.so.*
+libafsrpc.o.*
+linktest
+afsrpc.exp
+mapfile

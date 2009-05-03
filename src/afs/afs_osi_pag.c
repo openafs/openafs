@@ -429,7 +429,9 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 int
 afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
     int code;
+#endif
     int i = 0;
 
     AFS_STATCNT(afs_InitReq);
@@ -443,7 +445,7 @@ afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
       av->skipserver[i] = 0;
       i++;
     }
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV) && defined(CONFIG_GSSRPC)
 #if !defined(AFS_NONFSTRANS)
     if (osi_linux_nfs_initreq(av, acred, &code))
 	return code;

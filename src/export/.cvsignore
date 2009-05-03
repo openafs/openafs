@@ -3,3 +3,9 @@ cfgafs64
 cfgexport64
 export.ext.nonfs
 export64.ext.nonfs
+AFS_component_version_number.c
+cfgafs
+cfgexport
+export.exp
+export64.exp
+export.ext

@@ -13,6 +13,15 @@
 #include <afs/ptserver.h>
 #include <ubik.h>
 
+#ifdef AFS_RXK5
+#if defined(AFS_NT40_ENV) && defined(USING_MIT)
+#include <krb5.h>
+#include <rx/rxk5_ntfixprotos.h>
+#endif /* AFS_NT40_ENV && MIT */
+#include <rx/rxk5.h>
+#include <afs/rxk5_tkt.h>
+#endif /* AFS_RXK5 */
+
 #include <windows.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -28,6 +37,7 @@
 #include <WINNT\afsreg.h>
 
 #include "smb.h"
+#include "cm_properties.h"
 
 #include <rx/rxkad.h>
 #include "afsrpc.h"
@@ -43,9 +53,10 @@
 #include <crtdbg.h>
 #endif
 
-/* Copied from afs_tokens.h */
+/* Copied from pioctl_set_token.h */
 #define PIOCTL_LOGON	0x1
 #define MAX_PATH 260
+#define ENOTCONN                WSAENOTCONN
 
 const char utf8_prefix[] = UTF8_PREFIX;
 const int  utf8_prefix_size = sizeof(utf8_prefix) -  sizeof(char);
@@ -2137,6 +2148,12 @@ cm_IoctlDeletelink(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *
     return code;
 }
 
+#if defined(AFS_RXK5)
+#define MAX_SC_LEN 6
+#else
+#define MAX_SC_LEN 3
+#endif
+
 #ifdef QUERY_AFSID
 /* Utility function.  Not currently used.  
  * This function performs a PTS lookup which has traditionally
@@ -2150,7 +2167,7 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
     idlist lids;
     static struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc[MAX_SC_LEN];
     afs_int32 scIndex = 2;	/* authenticated - we have a token */
     struct ubik_client *pruclient = NULL;
     struct afsconf_dir *tdir;
@@ -2161,18 +2178,40 @@ cm_UsernameToId(char *uname, cm_ucell_t * ucellp, afs_uint32* uid)
     tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
     code = afsconf_GetCellInfo(tdir, ucellp->cellp->name, "afsprot", &info);
     afsconf_Close(tdir);
-
-    sc[0] = 0;
-    sc[1] = 0;
-    sc[2] = 0;
-
-    /* we have the token that was given to us in the settoken 
-     * call.   we just have to use it. 
-     */
-    scIndex = 2;	/* kerberos ticket */
-    sc[2] = rxkad_NewClientSecurityObject(rxkad_clear, &ucellp->sessionKey,
-					  ucellp->kvno, ucellp->ticketLen,
-					  ucellp->ticketp);
+    
+    /* decide which kind of cred we have from settoken, 
+     * and set rx_SecurityClass accordingly */
+     
+    memset(sc, 0, MAX_SC_LEN * sizeof(struct rx_securityClass*));
+    
+    if(ucellp->flags & CM_UCELLFLAG_RXKAD) {
+    	scIndex = 2;
+    	sc[2] = rxkad_NewClientSecurityObject(
+			rxkad_clear, 
+			&ucellp->sessionKey,
+			ucellp->kvno, 
+			ucellp->ticketLen,
+			ucellp->ticketp);
+	}
+#ifdef AFS_RXK5
+    else if (ucellp->flags & CM_UCELLFLAG_RXK5) {
+	scIndex = 5;
+	if(ucellp->rxk5creds) {
+		rxk5_creds *rxk5creds = (rxk5_creds*) tu->rxk5creds;
+		sc[scIndex] = rxk5_NewClientSecurityObject(
+				rxk5_clear,
+				ucellp->rxk5creds->k5creds, 
+				0);
+	} else {
+		/* yuk, won't happen */
+		return EINVAL;
+	}
+    }
+#endif		
+    else {
+    	/* unknown credential type */
+	return EINVAL;
+    }
 
     memset(serverconns, 0, sizeof(serverconns));	/* terminate list!!! */
     for (i = 0; i < info.numServers; i++)
@@ -2246,7 +2285,6 @@ cm_IoctlSetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     char sessionKey[8];
     char *smbname;
     int release_userp = 0;
-    char * wdir = NULL;
 
     saveDataPtr = ioctlp->inDatap;
 
@@ -2314,11 +2352,13 @@ cm_IoctlSetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
         osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
     }
 
+#ifndef AFSIFS
     if (flags & PIOCTL_LOGON) {
         userp = smb_FindCMUserByName(smbname, ioctlp->fidp->vcp->rname,
 				     SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
 	release_userp = 1;
     }
+#endif
 
     /* store the token */
     lock_ObtainMutex(&userp->mx);
@@ -2535,6 +2575,382 @@ cm_IoctlGetToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     return 0;
 }
 
+#define UNDEFVID 	(-1)
+
+afs_int32
+cm_IoctlSetTokens2(cm_ioctl_t *ioctlp, cm_user_t *userp, struct smb_fid *fidp)
+{
+    char *saveDataPtr;
+    char *tp;
+    cm_cell_t *cellp;
+    cm_ucell_t *ucellp = 0;
+    char *uname = NULL;
+#ifndef AFSIFS
+    char *smbname;
+#endif
+    int i;
+    int release_userp = 0;
+    int code;
+    pioctl_set_token a_token[1];
+    afstoken_soliton cu[1];
+#ifdef AFS_RXK5
+    rxk5_creds *rxk5creds;
+    krb5_context k5context;
+#endif
+    int authtype;
+    token_rxkad *kad_token;
+    token_rxk5 *k5_token;
+    XDR xdrs[1];  
+    token_event_u fte[1];
+	
+    osi_Log1(smb_logp, "cm_IoctlSetTokens2 userp %lx", userp);
+
+    memset(a_token, 0, sizeof *a_token);
+    memset(cu, 0, sizeof *cu);
+#ifdef AFS_RXK5
+    rxk5creds = 0;
+#endif
+    kad_token = 0;
+		
+    saveDataPtr = ioctlp->inDatap;
+	
+    cm_SkipIoctlPath(ioctlp);
+	
+    tp = ioctlp->inDatap;
+	
+    /* uuid */
+    memcpy(&(fte->uuid), tp, sizeof(afs_uuid_t));
+
+    code = CM_ERROR_INVAL;
+    fte->tag = CM_TOKEN_K5PLUS;
+    if (!cm_FindTokenEvent2(fte)) {
+		unsigned char *ustr = 0;
+		UuidToString((UUID *) &(fte->uuid), ustr);
+		osi_Log1(smb_logp, "cm_IoctlSetTokens2 cm_FindTokenEvent2 failed for uuid %s", ustr);
+		RpcStringFree(ustr);
+        goto out;
+	}
+
+    /* msrpc found us something */
+    xdrmem_create(xdrs, fte->wrapped_token->token, fte->wrapped_token->len, XDR_DECODE);
+    if (!xdr_pioctl_set_token(xdrs, a_token))
+		return EINVAL;	
+    authtype = -1;
+    code = EINVAL;
+    for (i = 0; i < a_token->tokens.tokens_len; ++i) {
+	if (authtype != -1) goto out;
+	xdrmem_create(xdrs,
+	    a_token->tokens.tokens_val[i].token_opaque_val,
+	    a_token->tokens.tokens_val[i].token_opaque_len,
+	    XDR_DECODE);
+	if (!xdr_afstoken_soliton(xdrs, cu))
+	    goto out;
+	authtype = cu->at_type;
+    }
+
+    switch(authtype) {
+ 		case AFSTOKEN_UNION_NOAUTH:
+			break;
+		case AFSTOKEN_UNION_KAD:
+			/* rxkad */
+		  kad_token = &(cu->afstoken_soliton_u.at_kad);
+		  if (kad_token->rk_viceid == UNDEFVID)
+		      goto out;
+		  if (kad_token->rk_ticket.rk_ticket_len > (unsigned) MAXKTCTICKETLEN)
+		      goto out;
+		  break;
+#ifdef AFS_RXK5
+		case AFSTOKEN_UNION_K5:
+			/* rxk5 */
+			k5context  = rxk5_get_context(0);
+			k5_token = &(cu->afstoken_soliton_u.at_rxk5);
+			code = afs_token_to_rxk5_creds(a_token, &rxk5creds);
+			if(code) {
+				osi_Log0(smb_logp,"cm_IoctlSetTokens2 failed converting afs_token to rxk5creds");
+			goto out;
+			}
+			break;
+#endif /* AFS_RXK5 */
+    default:
+		osi_Log1(smb_logp,"cm_IoctlSetTokens2 unknown credential type %d",
+			authtype);
+		goto out;
+	}
+	
+	if((a_token->cell) && strlen(a_token->cell) > 0) {
+	    /* normally, we'll be here */
+		cellp = cm_GetCell(a_token->cell, CM_FLAG_CREATE);
+	} else {
+		cellp = cm_data.rootCellp;
+        osi_Log0(smb_logp,"cm_IoctlSetTokens2 - no name specified");
+	}
+				
+	if (!cellp) {
+		code = CM_ERROR_NOSUCHCELL;
+		goto out;
+	}
+	
+	uname = a_token->username;
+	
+#ifndef AFSIFS	/* no SMB username, so we cannot logon based on this */
+    if (a_token->flags & PIOCTL_LOGON) {
+		/* SMB user name with which to associate tokens */
+		smbname = a_token->smbname;
+		osi_Log2(smb_logp,"cm_IoctlSetTokens2 for user [%s] smbname [%s]",
+			osi_LogSaveString(smb_logp,uname), osi_LogSaveString(smb_logp,smbname));
+		fprintf(stderr, "SMB name = %s\n", smbname);
+	} else {
+		osi_Log1(smb_logp,"cm_IoctlSetTokens2 for user [%s]",
+			osi_LogSaveString(smb_logp, uname));
+	}
+#endif
+
+    if (a_token->flags & PIOCTL_LOGON) {
+        userp = smb_FindCMUserByName(smbname, fidp->vcp->rname,
+				     SMB_FLAG_CREATE|SMB_FLAG_AFSLOGON);
+		release_userp = 1;
+    }
+
+    /* stash creds */
+    lock_ObtainMutex(&userp->mx);
+    ucellp = cm_GetUCell(userp, cellp);
+    osi_Log1(smb_logp,"cm_IoctlSetTokens2 ucellp %lx", ucellp);
+	
+	memset(ucellp->sessionKey.data, 0, 8);
+	if (ucellp->ticketp)
+		free(ucellp->ticketp);	/* Discard old token if any */
+	ucellp->ticketLen = 0;
+	ucellp->ticketp = NULL;
+	ucellp->expirationTime = 0;
+	ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+		
+#ifdef AFS_RXK5
+    if(ucellp->rxk5creds != NULL) {
+		rxk5_free_creds(k5context, (rxk5_creds*) ucellp->rxk5creds);
+		ucellp->rxk5creds = NULL;
+    }
+	ucellp->flags &= ~CM_UCELLFLAG_RXK5;
+#endif
+    
+    switch(cu->at_type) {
+    	case AFSTOKEN_UNION_KAD:
+			/* rxkad token */ 
+			if(kad_token->rk_kvno  == -1)
+	    		ucellp->kvno = 999;
+			else
+				ucellp->kvno = kad_token->rk_kvno;
+        /* sessionKey */
+        memcpy(&ucellp->sessionKey, kad_token->rk_key, sizeof(ucellp->sessionKey));
+		 	ucellp->expirationTime = kad_token->rk_endtime;
+			/* and the ticket */
+			ucellp->ticketLen = kad_token->rk_ticket.rk_ticket_len;
+			ucellp->ticketp = malloc(ucellp->ticketLen);
+			memcpy(ucellp->ticketp, kad_token->rk_ticket.rk_ticket_val, ucellp->ticketLen);
+			ucellp->flags |= CM_UCELLFLAG_RXKAD;
+			break;
+#ifdef AFS_RXK5
+    	case AFSTOKEN_UNION_K5:
+			/* rxk5 */
+			ucellp->rxk5creds = (rxk5_creds_opaque) rxk5creds;
+			ucellp->flags |= CM_UCELLFLAG_RXK5;
+			/* todo: improve */
+			ucellp->expirationTime = rxk5creds->k5creds->times.endtime;		
+			rxk5creds = 0;
+			break;
+#endif /* AFS_RXK5 */
+		case AFSTOKEN_UNION_NOAUTH:
+			/* unlog */
+			goto release;
+    }
+	    
+	ucellp->gen++;
+#ifdef QUERY_AFSID
+    ucellp->uid = ANONYMOUSID;
+#endif
+    if (uname) {
+        StringCbCopyA(ucellp->userName, MAXKTCNAMELEN, uname);
+#ifdef QUERY_AFSID
+	cm_UsernameToId(uname, ucellp, &ucellp->uid);
+#endif
+    }
+    
+ release:
+    lock_ReleaseMutex(&userp->mx);
+
+    if (a_token->flags & PIOCTL_LOGON) {
+        ioctlp->flags |= CM_IOCTLFLAG_LOGON;
+    }
+    cm_ResetACLCache(userp);
+
+    code = 0;
+    
+ out:
+    if (release_userp) {
+		cm_ReleaseUser(userp);
+		userp = 0;
+    } 
+    
+	xdrs->x_op = XDR_FREE;
+	xdr_pioctl_set_token(xdrs, a_token);
+	xdr_afstoken_soliton(xdrs, cu);
+  
+	return code;
+}
+
+afs_int32
+cm_IoctlGetTokens2(cm_ioctl_t *ioctlp, cm_user_t *userp)
+{		
+    char *tp, *cp;
+    int iterator, code;
+    cm_ucell_t *ucellp;
+    struct ClearToken ct;
+    pioctl_set_token a_token[1];
+#ifdef AFS_RXK5
+    krb5_context k5_context;
+#endif	
+    XDR xdrs[1];
+    token_event_u nte[1];
+	
+    osi_Log1(smb_logp,"cm_IoctlGetTokens2 ucellp %lx", userp);	
+
+    cm_SkipIoctlPath(ioctlp);
+
+    tp = ioctlp->inDatap;
+    cp = ioctlp->outDatap;
+
+    /* iterator */
+    memcpy(&iterator, tp, sizeof(iterator));
+    tp += sizeof(iterator);
+
+    lock_ObtainMutex(&userp->mx);
+
+    /* look for token */
+    for (;;iterator++) {
+        ucellp = cm_FindUCell(userp, iterator);
+        if (!ucellp) {
+            lock_ReleaseMutex(&userp->mx);
+            return CM_ERROR_NOMORETOKENS;
+        }
+        if (ucellp->flags & CM_UCELLFLAG_RXKAD)
+            break;
+        if (ucellp->flags & CM_UCELLFLAG_RXK5)
+            break;			
+    }
+
+    memset(a_token, 0, sizeof *a_token);
+    a_token->cell = ucellp->cellp->name;
+    a_token->username = ucellp->userName;
+    a_token->smbname = "";
+	
+#ifdef AFS_RXK5
+    if(ucellp->rxk5creds) {
+	k5_context = rxk5_get_context(0);
+	code = add_afs_token_rxk5(
+	    k5_context, 
+	    ((rxk5_creds*) ucellp->rxk5creds)->k5creds,
+	    a_token);
+	if(code) {
+	    osi_Log0(smb_logp,
+		"GetTokens2: trouble serializing rxk5creds (oops)\n");
+	    code = E2BIG;
+	    goto out;
+	}
+    } else {
+#else
+	/* rxkad */
+    if(1) {	
+#endif	
+	    ct.AuthHandle = ucellp->kvno;
+	    memcpy(ct.HandShakeKey,
+		&ucellp->sessionKey, sizeof(ct.HandShakeKey));
+	    ct.ViceId = 37;			/* XXX */
+	    ct.BeginTimestamp = 0;		/* XXX */
+	    ct.EndTimestamp = ucellp->expirationTime;
+    
+	    code = add_afs_token_rxkad_k(
+		&ct,
+		ucellp->ticketp, 
+		ucellp->ticketLen,
+		0 /* primary cell */,
+		a_token);
+	    if(code) {
+		osi_Log0(smb_logp,
+		    "GetTokens2: trouble serializing rxkad creds (oops)\n");
+		code = EINVAL;
+		goto out;
+	    }
+    }	/* } */
+			  
+    /* uuid */
+    UuidCreate((UUID *) &(nte->uuid));
+    memcpy(cp, &(nte->uuid), sizeof(afs_uuid_t));
+    cp += sizeof(afs_uuid_t);
+
+    /* send token if we have one */
+    if(a_token->tokens.tokens_len) {
+	int l;
+	xdrmem_create(xdrs, nte->wrapped_token->token,
+	    SMB_IOCTL_MAXDATA, XDR_ENCODE);
+	l = 0;
+	code = E2BIG;
+	if (!xdr_setpos(xdrs, 4))
+	    goto out;
+	if (!xdr_pioctl_set_token(xdrs, a_token))
+	    goto out;
+	l = xdr_getpos(xdrs);
+	if (!xdr_setpos(xdrs, 0))
+	    goto out;
+	if (!xdr_int(xdrs, &l))
+	    goto out;
+	nte->wrapped_token->len = l;
+	nte->tag = CM_TOKEN_K5PLUS;
+	code = 0;
+
+			/* afsrpc with privacy */
+	cm_RegisterNewTokenEvent2(nte);
+    }	 else code = ENOTCONN;
+
+    ioctlp->outDatap = cp;
+	
+out:
+    lock_ReleaseMutex(&userp->mx);		
+    a_token->username = 0;
+    a_token->smbname = 0;
+    a_token->cell = 0;
+    xdrs->x_op = XDR_FREE;
+    xdr_pioctl_set_token(xdrs, a_token);
+
+    return code;
+}
+
+afs_int32
+cm_IoctlSetProperties(cm_ioctl_t *ioctlp, cm_user_t *userp)
+{
+    /* todo: implement */
+    return 0;
+}
+
+afs_int32
+cm_IoctlGetProperties(struct cm_ioctl *ioctlp, cm_user_t *userp)
+{
+    /* todo: implement */
+    char *rsltStr;
+    afs_int32 rsltLen;
+    int code;
+
+    rsltStr = afs_GetProperties(ioctlp->inDatap, ioctlp->inCopied, &rsltLen);
+    if ((afs_uint32) rsltLen > SMB_IOCTL_MAXDATA) {
+	code = E2BIG;
+    }else {
+	memcpy(ioctlp->outDatap,  rsltStr, rsltLen);
+	ioctlp->outDatap += rsltLen; 
+	code = 0;
+    }
+    osi_Free(rsltStr, rsltLen);
+    
+    return code;    
+}
+
 /* 
  * VIOCDELTOK internals.
  * 
@@ -2563,6 +2979,15 @@ cm_IoctlDelToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
     }
 
     osi_Log1(smb_logp,"cm_IoctlDelToken ucellp %lx", ucellp);
+	
+#ifdef AFS_RXK5
+    if(ucellp->rxk5creds) {
+	  krb5_context  k5context = rxk5_get_context(0);
+	  rxk5_free_creds(k5context, (rxk5_creds*) ucellp->rxk5creds);
+	  ucellp->rxk5creds = NULL;
+	  ucellp->flags &= ~CM_UCELLFLAG_RXK5;
+    }
+#endif
 
     if (ucellp->ticketp) {
         free(ucellp->ticketp);
@@ -2597,7 +3022,15 @@ cm_IoctlDelAllToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
     for (ucellp = userp->cellInfop; ucellp; ucellp = ucellp->nextp) {
         osi_Log1(smb_logp,"cm_IoctlDelAllToken ucellp %lx", ucellp);
-
+		
+#ifdef AFS_RXK5
+	if(ucellp->rxk5creds) {
+	    krb5_context  k5context = rxk5_get_context(0);
+	    rxk5_free_creds(k5context, (rxk5_creds*) ucellp->rxk5creds);
+	    ucellp->rxk5creds = NULL;
+	    ucellp->flags &= ~CM_UCELLFLAG_RXK5;
+	}
+#endif		
 	if (ucellp->ticketp) {
 	    free(ucellp->ticketp);
 	    ucellp->ticketp = NULL;
@@ -2607,8 +3040,8 @@ cm_IoctlDelAllToken(struct cm_ioctl *ioctlp, struct cm_user *userp)
 	ucellp->kvno = 0;
 	ucellp->expirationTime = 0;
 	ucellp->userName[0] = '\0';
-        ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
-        ucellp->gen++;
+	ucellp->flags &= ~CM_UCELLFLAG_RXKAD;
+	ucellp->gen++;
     }
 
     lock_ReleaseMutex(&userp->mx);
@@ -3224,4 +3657,4 @@ cm_IoctlVolStatTest(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_req_t *re
     cm_PutVolume(volp);
 
     return code;
-}       
+}

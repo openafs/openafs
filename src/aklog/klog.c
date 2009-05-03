@@ -31,23 +31,19 @@
 #include <stdio.h>
 #include <pwd.h>
 #include <afs/com_err.h>
-#include <afs/auth.h>
-#include <afs/afsutil.h>
 #include <afs/cellconfig.h>
 #ifdef AFS_RXK5
 #include "rxk5_utilafs.h"
+#else
+#include <krb5.h>
 #endif
+#include <afs/auth.h>
+#include <afs/afsutil.h>
 #include <afs/ptclient.h>
 #include <afs/cmd.h>
-#include <krb5.h>
-
-#ifdef HAVE_KRB5_CREDS_KEYBLOCK
-#define USING_MIT 1
+#ifndef USING_HEIMDAL
+extern krb5_cc_ops krb5_mcc_ops;
 #endif
-#ifdef HAVE_KRB5_CREDS_SESSION
-#define USING_HEIMDAL 1
-#endif
-
 #include "assert.h"
 #include "skipwrap.h"
 
@@ -132,6 +128,9 @@ main(int argc, char *argv[])
 #define aK5 12
 #define aK4 13
 
+	/* in afs 3.0; -x disabled lookups in /etc/passwd.
+	 * that's always true now.
+	 */
     cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL|CMD_HIDDEN, 0);
     cmd_Seek(ts, aPRINCIPAL);
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_OPTIONAL, "user name");
@@ -309,28 +308,16 @@ klog_prompter(krb5_context context,
 {
     krb5_error_code code;
     int i, type;
-#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
-    krb5_prompt_type *types;
-#endif
     struct kp_arg *kparg = (struct kp_arg *) a;
     code = krb5_prompter_posix(context, a, name, banner, num_prompts, prompts);
     if (code) return code;
-#if !defined(USING_HEIMDAL) && defined(HAVE_KRB5_GET_PROMPT_TYPES)
-    if ((types = krb5_get_prompt_types(context)))
-#endif
     for (i = 0; i < num_prompts; ++i) {
-#if !defined(USING_HEIMDAL) 
-#if defined(HAVE_KRB5_GET_PROMPT_TYPES)
-	type = types[i];
-#elif defined(HAVE_KRB5_PROMPT_TYPE)	
+#ifndef USING_MIT
 	type = prompts[i].type;
 #else
 	/* AIX 5.3 krb5_get_prompt_types is missing. Um... */
 	type = ((i == 1)&&(num_prompts == 2)) ? 
 	  KRB5_PROMPT_TYPE_NEW_PASSWORD_AGAIN : KRB5_PROMPT_TYPE_PASSWORD;
-#endif
-#else
-	type = prompts[i].type;
 #endif
 #if 0
 	printf ("i%d t%d <%.*s>\n", i, type, prompts[i].reply->length,
@@ -352,22 +339,25 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 {
     krb5_principal princ = 0;
     char *cell, *pname, **hrealms, *service;
+    char *service_list[4];
     char service_temp[MAXKTCREALMLEN + 20];
     krb5_creds incred[1], mcred[1], *outcred = 0, *afscred;
     krb5_ccache cc = 0;
     krb5_get_init_creds_opt gic_opts[1];
-    char *tofree, *outname;
+    char *k5service = 0, *temp = 0, *outname;
     int code;
     char *what;
-    int i, dosetpag, evil, noprdb, id;
+    int i, j, dosetpag, evil, noprdb, id;
 #ifdef AFS_RXK5
     int authtype;
 #endif
+    krb5_enctype enclist[20];
+    int maxenc;
     krb5_data enc_part[1];
     time_t lifetime;		/* requested ticket lifetime */
     krb5_prompter_fct pf = NULL;
     char *pass = 0;
-    void *pa = 0;
+    char *pa = 0;
     struct kp_arg klog_arg[1];
 
     char passwd[BUFSIZ];
@@ -403,11 +393,13 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	KLOGEXIT(code);
     }
     initialize_U_error_table();
-    /*initialize_krb5_error_table();*/ 
+#ifndef sun
+    initialize_krb5_error_table();
+#endif
     initialize_RXK_error_table();
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
-    /* initialize_rx_error_table(); */
+    initialize_rx_error_table();
     if (!(tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	afs_com_err(rn, 0, "can't get afs configuration (afsconf_Open(%s))",
 	    rn, AFSDIR_CLIENT_ETC_DIRPATH);
@@ -450,12 +442,25 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    KLOGEXIT(code);
 	}
     }
-    else if ((code = krb5_get_host_realm(k5context, cellconfig->hostName[0], &hrealms))) {
-	afs_com_err(rn, code, "Can't get realm for host <%s> in cell <%s>\n",
-		cellconfig->hostName[0], cellconfig->name);
-	KLOGEXIT(code);
-    } else {
-	if (hrealms && *hrealms) {
+    else {
+	char *realm;
+	if ((code = krb5_get_host_realm(k5context,
+		cellconfig->hostName[0], &hrealms)))
+	    hrealms = 0;
+	if (hrealms && *hrealms && **hrealms)
+	    realm = *hrealms;
+	else {
+	    char *cp;
+	    int len;
+	    if ((cp = strchr(cellconfig->hostName[0], '.')))
+		++cp;
+	    else
+		cp = cellconfig->name;
+	    realm = malloc(len = strlen(cp)+1);
+	    if (realm)
+		ucstring(realm, cp, len);
+	}
+	if (realm) {
 	    code = krb5_set_default_realm(k5context,
 		    *hrealms);
 	    if (code) {
@@ -464,6 +469,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 		KLOGEXIT(code);
 	    }
 	}
+	if (realm && (!hrealms || *hrealms != realm)) free(realm);
 	if (hrealms) krb5_free_host_realm(k5context, hrealms);
     }
 
@@ -538,28 +544,50 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    pass = passwd;
 	} else {
 	    pf = klog_prompter;
-	    pa = (char *)klog_arg;
+	    pa = klog_arg;
 	}
     }
 
-    service = 0;
+    i = 0;
 #ifdef AFS_RXK5
     if (authtype & FORCE_RXK5) {
-	tofree = get_afs_krb5_svc_princ(cellconfig);
-	snprintf(service_temp, sizeof service_temp, "%s", tofree);
-    } else
+	maxenc = ktc_GetK5Enctypes(enclist,
+	    sizeof enclist/sizeof *enclist);
+if (maxenc < 0) {
+maxenc = 2;
+enclist[0] = 16; enclist[1] = 1;
+}
+	if (maxenc > 0) {
+	    k5service = get_afs_krb5_svc_princ(cellconfig);
+	    service_list[i++] = k5service;
+	}
+    }
+    if (authtype & FORCE_RXKAD) {
 #endif
-    snprintf (service_temp, sizeof service_temp, "afs/%s", cellconfig->name);
-    if (writeTicketFile)
-	service = 0;
-    else 
-	service = service_temp;
+	snprintf (service_temp, sizeof service_temp, "afs/%s", cellconfig->name);
+	service_list[i++] = service_temp;
+	service_list[i++] = "afs";
+#ifdef AFS_RXK5
+    }
+#endif
+    service_list[i] = 0;
+    if (!i) {
+	afs_com_err(rn, 0, "requested security mechanism is not available.");
+	KLOGEXIT(1);
+    }
 
     klog_arg->pp = &pass;
     klog_arg->pstore = passwd;
     /* XXX should allow k5 to prompt in most cases -- what about expired pw?*/
     krb5_get_init_creds_opt_init(gic_opts);
-    for (;;) {
+    outname = 0;
+    for (i = 0;; ++i) {
+	if (writeTicketFile)
+	    service = 0;
+	else if (!(service = service_list[i])) {
+	    break;
+	}
+	outname = service;
 	code = krb5_get_init_creds_password(k5context,
 	    incred,
 	    princ,
@@ -569,19 +597,16 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    0,	/* start_time */
 	    service,	/* in_tkt_service */
 	    gic_opts);
-	if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || service != service_temp) break;
-#ifdef AFS_RXK5
-	if (authtype & FORCE_RXK5) break;
-#endif
-	service = "afs";
+	if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) break;
+	if (writeTicketFile) break;
     }
     memset(passwd, 0, sizeof(passwd));
     if (code) {
 	char *r = 0;
 	if (krb5_get_default_realm(k5context, &r))
 	    r = 0;
-	if (service)
-	    afs_com_err(rn, code, "Unable to authenticate to use %s", service);
+	if (outname)
+	    afs_com_err(rn, code, "Unable to authenticate to use %s", outname);
 	else if (r)
 	    afs_com_err(rn, code, "Unable to authenticate in realm %s", r);
 	else
@@ -599,6 +624,11 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 		what = "getting default ccache";
 		code = krb5_cc_default(k5context, &cc);
 	    } else {
+#ifndef sun
+		what = "krb5_cc_register";
+		code = krb5_cc_register(k5context, &krb5_mcc_ops, FALSE);
+		if (code && code != KRB5_CC_TYPE_EXISTS) goto Failed;
+#endif
 		what = "krb5_cc_resolve";
 		code = krb5_cc_resolve(k5context, "MEMORY:core", &cc);
 		if (code) goto Failed;
@@ -627,42 +657,53 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    KLOGEXIT(code);
 	}
 
-	for (service = service_temp;;service = "afs") {
+	for (i = 0;; ++i) {
+	    if (!(service = service_list[i])) {
+		break;
+	    }
 	    memset(mcred, 0, sizeof *mcred);
 	    mcred->client = princ;
 	    code = krb5_parse_name(k5context, service, &mcred->server);
 	    if (code) {
-		afs_com_err(rn, code, "Unable to parse service <%s>\n", service);
+		afs_com_err(rn, code, "Unable to parse service <%s>", service);
 		KLOGEXIT(code);
 	    }
-	    if (tofree) { free(tofree); tofree = 0; }
-	    if (!(code = krb5_unparse_name(k5context, mcred->server, &outname)))
-		tofree = outname;
+	    if (temp) { free(temp); temp = 0; }
+	    if (!(code = krb5_unparse_name(k5context, mcred->server, &temp)))
+		outname = temp;
 	    else outname = service;
-	    code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
-	    krb5_free_principal(k5context, mcred->server);
-	    if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN || service != service_temp) break;
+	    code = KTC_ERROR;
 #ifdef AFS_RXK5
-	    if (authtype & FORCE_RXK5) break;
+	    if (service != k5service) {
 #endif
+		get_creds_enctype(mcred) = ENCTYPE_DES_CBC_CRC;
+		code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
+#ifdef AFS_RXK5
+	    } else for (j = 0; j < maxenc; ++j) {
+		get_creds_enctype(mcred) = enclist[j];
+		code = krb5_get_credentials(k5context, 0, cc, mcred, &outcred);
+		if (!code) break;
+	    }
+#endif
+	    krb5_free_principal(k5context, mcred->server);
+	    if (code != KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN) break;
 	}
 	afscred = outcred;
     }
     if (code) {
-	afs_com_err(rn, code, "Unable to get credentials to use %s", outname);
+	if (outname)
+	    afs_com_err(rn, code, "Unable to get credentials to use %s", outname);
+	else
+	    afs_com_err(rn, code, "Unable to get credentials");
 	KLOGEXIT(code);
     }
 
 #ifdef AFS_RXK5
-    if (authtype & FORCE_RXK5) {
-	struct ktc_principal aserver[1];
-	int viceid = 555;
-
-	memset(aserver, 0, sizeof *aserver);
-	strncpy(aserver->cell, cellconfig->name, MAXKTCREALMLEN-1);
-	code = ktc_SetK5Token(k5context, aserver, afscred, viceid, dosetpag);
+    if (service == k5service) {
+	code = ktc_SetK5Token(k5context, cellconfig->name,
+	    afscred, dosetpag);
 	if (code) {
-	    afs_com_err(rn, code, "Unable to store tokens for cell %s\n",
+	    afs_com_err(rn, code, "Unable to store tokens for cell %s",
 		cellconfig->name);
 	    KLOGEXIT(1);
 	}
@@ -713,7 +754,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	code = ktc_SetToken(aserver, atoken, aclient, dosetpag);
 	if (code) {
-	    afs_com_err(rn, code, "Unable to store tokens for cell %s\n",
+	    afs_com_err(rn, code, "Unable to store tokens for cell %s",
 		cellconfig->name);
 	    KLOGEXIT(1);
 	}
@@ -724,7 +765,8 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     if (outcred) krb5_free_creds(k5context, outcred);
     if (cc)
 	krb5_cc_close(k5context, cc);
-    if (tofree) free(tofree);
+    if (k5service) free(k5service);
+    if (temp) free(temp);
 
     return 0;
 }

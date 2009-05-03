@@ -41,16 +41,21 @@ RCSID
 #include <krb.h>
 #endif
 
-#include "auth.h"
 #include "cellconfig.h"
+#ifdef AFS_RXK5
+#include <rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#endif
+#include "auth.h"
 #include "keys.h"
 #include "afs/audit.h"
 
 #if !defined(UKERNEL)
 int
-afsconf_CheckAuth(register struct afsconf_dir *adir, 
-		  register struct rx_call *acall)
+afsconf_CheckAuth(void *rock,
+    struct rx_call *acall)
 {
+    register struct afsconf_dir *adir = rock;
     int rc;
     LOCK_GLOBAL_MUTEX;
     rc = ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);
@@ -347,6 +352,7 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
     register struct rx_connection *tconn;
     register afs_int32 code;
     int flag;
+    static char LocalAuth[] = "<LocalAuth>";
 
     LOCK_GLOBAL_MUTEX;
     if (!adir) {
@@ -401,6 +407,7 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 #else
 	if (exp < FT_ApproxTime()) {
 #endif
+/* } */
 	    UNLOCK_GLOBAL_MUTEX;
 	    return 0;		/* expired tix */
 	}
@@ -463,7 +470,7 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 	/* localauth special case */
 	if (strlen(tinst) == 0 && strlen(tcell) == 0
 	    && !strcmp(tname, AUTH_SUPERUSER)) {
-	    strcpy(uname, "<LocalAuth>");
+	    strcpy(uname, LocalAuth);
 	    flag = 1;
 
 	    /* cell of connection matches local cell or one of the realms */
@@ -502,7 +509,46 @@ afsconf_SuperUser(struct afsconf_dir *adir, struct rx_call *acall, char *namep)
 	    strcpy(namep, uname);
 	UNLOCK_GLOBAL_MUTEX;
 	return flag;
-    } else {			/* some other auth type */
+	} /* code==2 */
+#ifdef AFS_RXK5
+	else if(code == 5) {
+	    char *client, *server;
+	    int lvl, expires, kvno, enctype;
+	    char *avname = 0;
+
+	    flag = 0;	    
+	    if (code = rxk5_GetServerInfo2(acall->conn, &lvl, 
+					  &expires,
+					  &client, &server, &kvno, 
+					  &enctype)) {
+		goto done;
+	    } else {
+	      code = afs_rxk5_parse_name_k5(adir, client, &avname, 0);
+	      if(code)
+		goto done;
+	      
+	      if (!strcmp(client, server)) {
+		/* localauth */
+		free(avname);
+		avname = LocalAuth;
+		flag = 1;
+	      } else {
+		/* listed user */
+		if(FindUser(adir, avname)) {
+		  flag = 1;
+		}
+	      }
+	    } 
+	done:
+	    if (namep)
+		strcpy(namep, avname);
+	    if (avname && avname != LocalAuth)
+		free(avname);
+	    UNLOCK_GLOBAL_MUTEX;
+	    return flag;
+	}
+#endif 
+	else {			/* some other auth type */
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;		/* mysterious, just say no */
     }

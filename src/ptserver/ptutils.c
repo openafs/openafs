@@ -49,7 +49,6 @@ RCSID
 
 extern int restricted;
 extern struct ubik_dbase *dbase;
-extern struct afsconf_dir *prdir;
 extern int pr_noAuth;
 extern int IDCmp();
 

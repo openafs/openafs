@@ -10,7 +10,7 @@ ac_cv_solaris_fs_has_fs_rolled=yes,
 ac_cv_solaris_fs_has_fs_rolled=no)])
 AC_MSG_RESULT($ac_cv_solaris_fs_has_fs_rolled)
 if test "$ac_cv_solaris_fs_has_fs_rolled" = "yes"; then
-  AC_DEFINE(STRUCT_FS_HAS_FS_ROLLED, 1, [define if struct fs has fs_rolled])
+  AC_DEFINE([STRUCT_FS_HAS_FS_ROLLED], 1, [define if struct fs has fs_rolled])
 fi
 ])
 

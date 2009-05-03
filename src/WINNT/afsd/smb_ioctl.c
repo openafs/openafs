@@ -28,6 +28,17 @@
 #include "afs/afsrpc.h"
 #include "afs/auth.h"
 
+/* XXX I don't yet follow desired include graph */
+extern afs_int32 smb_IoctlSetTokens2(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 smb_IoctlGetTokens2(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 smb_IoctlSetProperties(smb_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 smb_IoctlGetProperties(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
+extern afs_int32 cm_IoctlSetTokens2(cm_ioctl_t *ioctlp, cm_user_t *userp, smb_fid_t *fidp);
+extern afs_int32 cm_IoctlGetTokens2(cm_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlSetProperties(cm_ioctl_t *ioctlp, cm_user_t *userp);
+extern afs_int32 cm_IoctlGetProperties(cm_ioctl_t *ioctlp, cm_user_t *userp);
+
 smb_ioctlProc_t *smb_ioctlProcsp[SMB_IOCTL_MAXPROCS];
 
 void 
@@ -87,6 +98,10 @@ smb_InitIoctl(void)
     smb_ioctlProcsp[VIOC_GETFILETYPE] = smb_IoctlGetFileType;
     smb_ioctlProcsp[VIOC_VOLSTAT_TEST] = smb_IoctlVolStatTest;
     smb_ioctlProcsp[VIOC_UNICODECTL] = smb_IoctlUnicodeControl;
+    smb_ioctlProcsp[VIOCSETTOK2] = smb_IoctlSetTokens2;
+    smb_ioctlProcsp[VIOCGETTOK2] = smb_IoctlGetTokens2;
+    smb_ioctlProcsp[VIOCSETPROP] = smb_IoctlSetProperties;
+    smb_ioctlProcsp[VIOCGETPROP] = smb_IoctlGetProperties;    
 }       
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -1824,4 +1839,28 @@ smb_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_SkipIoctlPath(&ioctlp->ioctl);
 
     return cm_IoctlVolStatTest(&ioctlp->ioctl, userp, &req);
+}
+
+afs_int32
+smb_IoctlSetTokens2(smb_ioctl_t *ioctlp, cm_user_t *userp)
+{
+    return cm_IoctlSetTokens2(&ioctlp->ioctl, userp, ioctlp->fidp);
+}
+
+afs_int32
+smb_IoctlGetTokens2(smb_ioctl_t *ioctlp, cm_user_t *userp)
+{		
+    return cm_IoctlGetTokens2(&ioctlp->ioctl, userp);
+}
+
+afs_int32
+smb_IoctlSetProperties(smb_ioctl_t *ioctlp, cm_user_t *userp)
+{
+    return cm_IoctlSetProperties(&ioctlp->ioctl, userp);
+}
+
+afs_int32
+smb_IoctlGetProperties(smb_ioctl_t *ioctlp, cm_user_t *userp)
+{
+    return cm_IoctlGetProperties(&ioctlp->ioctl, userp);
 }

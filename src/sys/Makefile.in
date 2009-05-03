@@ -66,14 +66,14 @@ ${LIBAFSSETPAG}: ${SHLIBOBJS} syscall.o
 	@set -x; case ${SYS_NAME} in \
 	*_linux*) \
 	    ${SHLIB_LINKER} -Wl,-h,libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} -Wl,--version-script=${srcdir}/mapfile \
+	        -o ${LIBAFSSETPAG} \
 	        ${SHLIBOBJS} syscall.o ;; \
 	rs_aix4*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS} syscall.o \
 	        -bE:afssetpag.exp;; \
 	sun*_5*) \
 	    ${SHLIB_LINKER} -h libafssetpag.so.${LIBAFSSETPAGMAJOR} \
-	        -o ${LIBAFSSETPAG} ${SHLIBOBJS} syscall.o;; \
+	        -o ${LIBAFSSETPAG} ${SHLIBOBJS} syscall.o -lc;; \
 	hp_ux11*) \
 	    ${SHLIB_LINKER} -o ${LIBAFSSETPAG} ${SHLIBOBJS};; \
 	*) \

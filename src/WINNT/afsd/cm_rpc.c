@@ -24,6 +24,8 @@
 
 #include <rx/rxkad.h>
 
+#include "cm_rpc.h"
+
 /*
  * The motivation for this whole module is that in transmitting tokens
  * between applications and the AFS service, we must not send session keys
@@ -35,28 +37,37 @@
 
 extern void afsi_log(char *pattern, ...);
 
-typedef struct tokenEvent {
-    afs_uuid_t uuid;
-    char sessionKey[8];
-    struct tokenEvent *next;
-} tokenEvent_t;
-
-tokenEvent_t *tokenEvents = NULL;
+token_event_u *tokenEvents = NULL;
 
 osi_mutex_t tokenEventLock;
 
 EVENT_HANDLE rpc_ShutdownEvent = NULL;
 
+
 /*
- * Add a new uuid and session key to the list.
+ * Add a new uuid and session key to the list.  Old Style.
  */
 void cm_RegisterNewTokenEvent(
 	afs_uuid_t uuid,
 	char sessionKey[8])
 {
-    tokenEvent_t *te = malloc(sizeof(tokenEvent_t));
-    te->uuid = uuid;
-    memcpy(te->sessionKey, sessionKey, sizeof(te->sessionKey));
+    token_event_u nte[1];
+
+    nte->tag = CM_TOKEN_KAD;
+    nte->uuid = uuid;
+    memcpy(nte->sessionKey, sessionKey, sizeof(nte->sessionKey));
+
+    cm_RegisterNewTokenEvent2(nte);
+}
+
+
+/*
+ * Add a new uuid and token to the list.  New style.
+ */
+void cm_RegisterNewTokenEvent2(token_event_u *nte)
+{
+    token_event_u *te = malloc(sizeof(token_event_u));
+    memcpy(te, nte, sizeof(token_event_u));
     lock_ObtainMutex(&tokenEventLock);
     te->next = tokenEvents;
     tokenEvents = te;
@@ -64,26 +75,48 @@ void cm_RegisterNewTokenEvent(
 }
 
 /*
- * Find a uuid on the list.  If it is there, copy the session key and
- * destroy the entry, since it is only used once.
+ * Find a uuid on the list.  Old style.
  *
  * Return TRUE if found, FALSE if not found
  */
 BOOL cm_FindTokenEvent(afs_uuid_t uuid, char sessionKey[8])
 {
+    BOOL status;
+    token_event_u te[1];
+
+    te->tag = CM_TOKEN_KAD;
+    te->uuid = uuid;
+
+    status = cm_FindTokenEvent2(te);
+
+    if(status)
+        memcpy(sessionKey, te->sessionKey, sizeof(sessionKey));
+
+    return status;
+}
+
+/*
+ * Find a uuid on the list.  New style.  If it is there, copy the token and
+ * destroy the entry, since it is only used once.
+ *
+ * Return TRUE if found, FALSE if not found
+ */
+BOOL cm_FindTokenEvent2(token_event_u fte[1])
+{
     RPC_STATUS status;
-    tokenEvent_t *te;
-    tokenEvent_t **ltep;
+    token_event_u *te;
+    token_event_u **ltep;
 
     lock_ObtainMutex(&tokenEventLock);
     te = tokenEvents;
     ltep = &tokenEvents;
     while (te) {
-        if (UuidEqual((UUID *)&uuid, (UUID *)&te->uuid, &status)) {
+        /* looking for a token with same uuid and same type tag */
+        if (UuidEqual((UUID *)&(fte->uuid), (UUID *)&te->uuid, &status) &&
+            (fte->tag == te->tag) ) {
             *ltep = te->next;
             lock_ReleaseMutex(&tokenEventLock);
-            memcpy(sessionKey, te->sessionKey,
-                    sizeof(te->sessionKey));
+            memcpy(fte, te, sizeof(token_event_u));
             free(te);
             return TRUE;
         }
@@ -102,7 +135,14 @@ long AFSRPC_SetToken(
 	afs_uuid_t uuid,
 	unsigned char __RPC_FAR sessionKey[8])
 {
-    cm_RegisterNewTokenEvent(uuid, sessionKey);
+    token_event_u te[1];
+
+    te->tag = CM_TOKEN_KAD;
+    te->uuid = uuid;
+    memcpy(te->sessionKey, sessionKey, sizeof(te->sessionKey));
+
+    cm_RegisterNewTokenEvent2(te);
+
     return 0;
 }
 
@@ -111,10 +151,54 @@ long AFSRPC_GetToken(
 	unsigned char __RPC_FAR sessionKey[8])
 {
     BOOL found;
+    token_event_u te[1];
 
-    found = cm_FindTokenEvent(uuid, sessionKey);
+    te->tag = CM_TOKEN_KAD;
+    te->uuid = uuid;
+    memcpy(te->sessionKey, sessionKey, sizeof(te->sessionKey));
+
+    found = cm_FindTokenEvent2(te);
     if (!found)
         return 1;
+
+    /* copy out sessionKey */
+    memcpy(sessionKey, te->sessionKey, sizeof(sessionKey));
+
+    return 0;
+}
+
+long AFSRPC_SetToken2(
+	afs_uuid_t uuid,
+	afs_token_wrapper_t __RPC_FAR wrapped_token[1])
+{
+    token_event_u te[1];
+
+    te->tag = CM_TOKEN_K5PLUS;
+    te->uuid = uuid;
+    memcpy(te->wrapped_token, wrapped_token, sizeof(te->wrapped_token));
+
+    cm_RegisterNewTokenEvent2(te);
+
+    return 0;
+}
+
+long AFSRPC_GetToken2(
+	afs_uuid_t uuid,
+	afs_token_wrapper_t __RPC_FAR wrapped_token[1])
+{
+    BOOL found;
+    token_event_u te[1];
+
+    te->tag = CM_TOKEN_K5PLUS;
+    te->uuid = uuid;
+    memcpy(te->wrapped_token, wrapped_token, sizeof(te->wrapped_token));
+
+    found = cm_FindTokenEvent2(te);
+    if (!found)
+        return 1;
+
+    /* copy out token (watch out for sizeof) */
+    memcpy(wrapped_token, te->wrapped_token, sizeof(te->wrapped_token));
 
     return 0;
 }

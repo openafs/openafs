@@ -180,7 +180,42 @@ OUT=$(OJT)\$(RELDIR)
 APPVER=5.0
 !ENDIF
 
+# RXK5 build adjustments.  Jeff's afskfw interface is extended
+# to provide all krb5 functions require by rxk5 and friends, and
+# to be linked as needed by any part of OpenAFS.
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+RXK5 = rxk5
+RXK5_CDEF = -DAFS_RXK5 -DUSING_MIT
+KRB5CFLAGS = -I$(AFSROOT)\src\WINNT\kfw\inc\krb5
+
+KFWINCDIR = ..\WINNT\kfw\inc
+KFWLIBDIR = ..\WINNT\kfw\lib\$(CPU)
+AFSKFWDIR = ..\WINNT\afsd
+
+kfwincflags = -I$(KFWINCDIR)\loadfuncs -I$(KFWINCDIR)\krb5 \
+	-I$(KFWINCDIR)\leash -I$(AFSKFWDIR) -I$(KFWINCDIR)
+
+# What we actually link with.
+RXK5LIBS = \
+	$(DESTDIR)\lib\rxk5.lib \
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(MSSDKDIR)\lib\userenv.lib
+
+TRXK5LIBS = \
+	$(DESTDIR)\lib\trxk5.lib \
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(MSSDKDIR)\lib\userenv.lib
+
+!ELSE
+!ENDIF
+
+LIBCOM_ERR = $(DESTDIR)\lib\afs\afscom_err.lib
+!IF (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" ))
+PTHREADSLIB = $(DESTDIR)\lib\win95\afspthread.lib
+!ELSE
+PTHREADSLIB = $(DESTDIR)\lib\afspthread.lib
+!ENDIF
 
 !INCLUDE <WIN32.MAK>
 
@@ -208,7 +243,6 @@ clean::
 # Common lang target.
 lang::
 
-
 #################### Compile optional build flags set ###########
 
 afscdefs =\
@@ -227,7 +261,8 @@ afscdefs =\
     	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
 	-DAFS_LARGEFILE_ENV \
-	 $(AFSDEV_AUXCDEFINES)
+	$(RXK5_CDEF) \
+	$(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
 #
@@ -281,7 +316,11 @@ cdebug = $(cdebug:-Z7=-Zi)  # avoid annoying override warning (D4025)
 !IF ("$(AFSVER_CL)"=="1200")
 afscdefs = $(afscdefs) -DDEBUG /GZ
 !ELSE 
+!IF  ("$(NO_RTCU)" == "TRUE")
+afscdefs = $(afscdefs) -DDEBUG /RTCs
+!ELSE
 afscdefs = $(afscdefs) -DDEBUG /RTCs /RTCu
+!ENDIF
 !ENDIF
 
 !IFDEF _CRTDBG_MAP_ALLOC
@@ -448,7 +487,8 @@ DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -q $@
 
 
 # EXE link macro for console applications
-EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
+
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
 
 # EXE link macro for GUI applications
 EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
@@ -461,7 +501,6 @@ DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $
 
 # DLL link macro for GUI applications
 DLLGUILINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
-EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
 DLLMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
 
 # DLL link macro for resource-only DLLs

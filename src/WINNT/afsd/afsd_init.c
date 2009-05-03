@@ -1318,6 +1318,9 @@ int afsd_InitCM(char **reasonP)
 
     /* Ensure the AFS Netbios Name is registered to allow loopback access */
     configureBackConnectionHostNames();
+    
+    /* Initialize Properties Table */
+    afs_InitProperties();
 
     /* init user daemon, and other packages */
     cm_InitUser();

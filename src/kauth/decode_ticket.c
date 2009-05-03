@@ -37,6 +37,7 @@ main(int argc, char *argv[])
     whoami = argv[0];
     initialize_RXK_error_table();
     initialize_KA_error_table();
+    initialize_rx_error_table();
 
     if (argc != 3) {
 	printf("Usage is %s key ticket\n", whoami);

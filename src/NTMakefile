@@ -37,8 +37,15 @@ NTMAKELANG = nmake /nologo  /f ntmakefile en_US
 NTMAKE_HEADERS = nmake /nologo  /f ntmakefile install_headers
 NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 
-#debug statement support jumping to last know error
-DOCD=$(SRC)\DOLASTCMP.BAT
+# Build rxk5 support if selected
+!IF ("$(BUILD_RXK5)" == "TRUE")
+RXK5 = rxk5
+TRXK5 = trxk5
+RXK5_HEADERS = rxk5_headers
+!ENDIF
+
+#debug statement support jumping to last known error
+DOCD=call $(SRC)\DOLASTCMP.BAT
 
 config:
      echo ***** $@
@@ -180,14 +187,98 @@ pthread: rxkad
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-procmgmt: pthread
+afskfw_headers: pthread
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\afskfw
+	$(CD) $(SRC)\WINNT\afskfw
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+cm_headers: afskfw_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\afsd
+	$(CD) $(SRC)\WINNT\afsd
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+ptserver_headers: cm_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\ptserver
+	$(CD) $(SRC)\ptserver
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+auth_headers: ptserver_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\auth
+	$(CD) $(SRC)\auth
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+rxk5_headers: auth_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\rxk5
+	$(CD) $(SRC)\rxk5
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+osi_headers: auth_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\client_osi
+	$(CD) $(SRC)\WINNT\client_osi
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..\..
+
+client_osi: osi_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+afskfw: client_osi $(RXK5_HEADERS) 
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\afskfw
+	$(CD) $(SRC)\WINNT\afskfw
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+rxk5: afskfw $(RXK5_HEADERS)
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
 	$(NTMAKE)
 	$(CD) ..\..
 
-fsint: procmgmt
+trxk5: rxk5
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+procmgmt: pthread $(TRXK5)
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+libacl_headers: procmgmt
+     echo ***** $@
+	$(DOCD) $(SRC)\libacl
+	$(CD) $(SRC)\libacl
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+vlserver_headers: libacl_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\vlserver
+	$(CD) $(SRC)\vlserver
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+fsint: vlserver_headers
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -201,42 +292,7 @@ audit: fsint
 	$(NTMAKE)
 	$(CD) ..\..
 
-osi_headers: audit
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\client_osi
-	$(CD) $(SRC)\WINNT\client_osi
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..\..
-
-libacl_headers: osi_headers
-     echo ***** $@
-	$(DOCD) $(SRC)\libacl
-	$(CD) $(SRC)\libacl
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..
-
-cm_headers: libacl_headers
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\afsd
-	$(CD) $(SRC)\WINNT\afsd
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..\..
-
-auth_headers: cm_headers
-     echo ***** $@
-	$(DOCD) $(SRC)\auth
-	$(CD) $(SRC)\auth
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..
-
-vlserver_headers: auth_headers
-     echo ***** $@
-	$(DOCD) $(SRC)\vlserver
-	$(CD) $(SRC)\vlserver
-	$(NTMAKE_HEADERS)
-	$(CD) ..\..
-
-afsdobjs: vlserver_headers
+afsdobjs: audit afskfw
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
@@ -431,14 +487,7 @@ license: talocale
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-client_osi: license
-     echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-afsd: client_osi
+afsd: client_osi license
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\$@
 	$(CD) $(SRC)\WINNT\$@
@@ -638,8 +687,8 @@ mkdir:
     -mkdir $(DESTDIR)
     -mkdir $(AFS_OBJDIR)\checked
     -mkdir $(AFS_OBJDIR)\free
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\ 
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\ 
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\
     -mkdir $(DESTDIR)\checked
 	-mkdir $(DESTDIR)\free
     -mkdir $(DESTDIR)\checked\bin

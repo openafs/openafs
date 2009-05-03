@@ -771,6 +771,7 @@ main(argc, argv)
     initialize_RXK_error_table();
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
+    initialize_rx_error_table();
 
     /* set defaults */
     strcpy(cell, "");

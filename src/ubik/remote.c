@@ -31,8 +31,8 @@ RCSID
 #define UBIK_INTERNALS
 #include "ubik.h"
 #include "ubik_int.h"
-int (*ubik_CheckRXSecurityProc) ();
-char *ubik_CheckRXSecurityRock;
+int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
+void *ubik_CheckRXSecurityRock;
 void printServerInfo();
 
 /*! \file

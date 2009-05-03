@@ -13,7 +13,7 @@
 
 struct error_table {
     char const *const *msgs;
-    afs_int32 base;
+    long base;
     int n_msgs;
 };
 struct et_list {

@@ -36,6 +36,11 @@ RCSID
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_globals.h>
+#ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
+#include "rxk5.h"
+#include "rxk5errors.h"
+#endif
 #include "bosint.h"
 #include "bnode.h"
 #include "bosprototypes.h"
@@ -56,7 +61,12 @@ extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
 
 struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
 static PROCESS bozo_pid;
-struct rx_securityClass *bozo_rxsc[3];
+#ifdef AFS_RXK5
+#define RXSC_LEN 6
+#else
+#define RXSC_LEN 3
+#endif
+struct rx_securityClass *bozo_rxsc[RXSC_LEN];
 const char *bozo_fileName;
 FILE *bozo_logFile;
 
@@ -1004,8 +1014,23 @@ main(int argc, char **argv, char **envp)
 
     bozo_rxsc[0] = rxnull_NewServerSecurityObject();
     bozo_rxsc[1] = (struct rx_securityClass *)0;
+#ifdef AFS_RXK5
+    if (have_afs_keyfile(tdir))
+#endif
     bozo_rxsc[2] =
 	rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
+
+#ifdef AFS_RXK5
+    /* rxk5 */
+    if(have_afs_rxk5_keytab(tdir->name)) {
+	bozo_rxsc[5] = rxk5_NewServerSecurityObject(rxk5_auth, 
+	    get_afs_rxk5_keytab(tdir->name), 
+	    rxk5_default_get_key, 
+	    0, 
+	    0);
+	/* rxk5 now owns the keytab filename memory */
+    }
+#endif
 
     /* Disable jumbograms */
     rx_SetNoJumbo();
@@ -1035,7 +1060,8 @@ main(int argc, char **argv, char **envp)
 			     /*service name */ "bozo",
 			     /* security classes */
 			     bozo_rxsc,
-			     /* numb sec classes */ 3, BOZO_ExecuteRequest);
+			     RXSC_LEN, 
+			     BOZO_ExecuteRequest);
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
     rx_SetStackSize(tservice, BOZO_LWP_STACKSIZE);	/* so gethostbyname works (in cell stuff) */
@@ -1046,9 +1072,16 @@ main(int argc, char **argv, char **envp)
 
     tservice =
 	rx_NewServiceHost(host, 0, RX_STATS_SERVICE_ID, "rpcstats", bozo_rxsc,
-			  3, RXSTATS_ExecuteRequest);
+			  RXSC_LEN, RXSTATS_ExecuteRequest);
     rx_SetMinProcs(tservice, 2);
     rx_SetMaxProcs(tservice, 4);
+
+    bozo_Log("Starting AFS Bosserver\n");
+    bozo_Log("Bosserver security classes:%s%s%s\n",
+	     bozo_rxsc[2] ? " rxkad" : "",
+	     (RXSC_LEN > 4) && bozo_rxsc[4] ? " rxgk" : "",
+	     (RXSC_LEN > 5) && bozo_rxsc[5] ? " rxk5" : "");
+
     rx_StartServer(1);		/* donate this process */
     return 0;
 }

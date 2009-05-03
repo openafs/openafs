@@ -91,6 +91,7 @@
                 <ComponentRef Id="cmf_instloop_EXE" />
                 <ComponentRef Id="cmf_afsshare_EXE" />
                 <ComponentRef Id="cmf_libosi_DLL" />
+                <ComponentRef Id="cmf_afskfw_funcs_DLL" />
                 <ComponentRef Id="cmf_libafsconf_DLL" />
                 <ComponentRef Id="cmf_klog_EXE" />
                 <ComponentRef Id="cmf_tokens_EXE" />
@@ -315,6 +316,7 @@
                 <ComponentRef Id="cmf_instloop_EXE" />
                 <ComponentRef Id="cmf_afsshare_EXE" />
                 <ComponentRef Id="cmf_libosi_DLL" />
+                <ComponentRef Id="cmf_afskfw_funcs_DLL" />
                 <ComponentRef Id="cmf_libafsconf_DLL" />
                 <ComponentRef Id="cmf_klog_EXE" />
                 <ComponentRef Id="cmf_tokens_EXE" />

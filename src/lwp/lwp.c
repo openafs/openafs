@@ -735,7 +735,7 @@ LWP_MwaitProcess(int wcount, void *evlist[])
 	if (ecount > lwp_cpptr->eventlistsize) {
 
 	    lwp_cpptr->eventlist =
-		(void **)realloc(lwp_cpptr->eventlist,
+		realloc(lwp_cpptr->eventlist,
 				 ecount * sizeof(void *));
 	    lwp_cpptr->eventlistsize = ecount;
 	}
@@ -861,7 +861,7 @@ Dump_One_Process(PROCESS pid)
 	printf("***LWP: Number of events outstanding: %d\n", pid->waitcnt);
 	printf("***LWP: Event id list:");
 	for (i = 0; i < pid->eventcnt; i++)
-	    printf(" 0x%x", pid->eventlist[i]);
+	    printf(" 0x%x", (int) pid->eventlist[i]);
 	putchar('\n');
     }
     if (pid->wakevent > 0)
@@ -1044,7 +1044,7 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 	    i++;
     temp->name[31] = '\0';
     temp->status = READY;
-    temp->eventlist = (void **)malloc(EVINITSIZE * sizeof(void *));
+    temp->eventlist = malloc(EVINITSIZE * sizeof(char *));
     temp->eventlistsize = EVINITSIZE;
     temp->eventcnt = 0;
     temp->wakevent = 0;
@@ -1072,12 +1072,12 @@ Initialize_PCB(PROCESS temp, int priority, char *stack, int stacksize,
 }
 
 static int
-Internal_Signal(register void *event)
+Internal_Signal(void *event)
 {
     int rc = LWP_ENOWAIT;
     register int i;
 
-    Debug(0, ("Entered Internal_Signal [event id 0x%x]", event));
+    Debug(0, ("Entered Internal_Signal [event id 0x%x]", (int) event));
     if (!lwp_init)
 	return LWP_EINIT;
     if (event == NULL)
@@ -1556,7 +1556,7 @@ LWP_WaitProcess(void *event)
 {				/* wait on a single event */
     struct event *ev;
     int seq;
-    debugf(("%s: wait process (%x)\n", lwp_process_string(), event));
+    debugf(("%s: wait process (%x)\n", lwp_process_string(), (int) event));
     if (event == NULL)
 	return LWP_EBADEVENT;
     ev = getevent(event);
@@ -1564,13 +1564,13 @@ LWP_WaitProcess(void *event)
     while (seq == ev->seq) {
 	assert(pthread_cond_wait(&ev->cond, &lwp_mutex) == 0);
     }
-    debugf(("%s: Woken up (%x)\n", lwp_process_string(), event));
+    debugf(("%s: Woken up (%x)\n", lwp_process_string(), (int) event));
     relevent(ev);
     return LWP_SUCCESS;
 }
 
 int
-LWP_MwaitProcess(int wcount, char *evlist[])
+LWP_MwaitProcess(int wcount, void *evlist[])
 {				/* wait on m of n events */
     lwp_unimplemented("LWP_MWaitProcess");
 }
@@ -1579,7 +1579,7 @@ int
 LWP_NoYieldSignal(void *event)
 {
     struct event *ev;
-    debugf(("%s: no yield signal (%x)\n", lwp_process_string(), event));
+    debugf(("%s: no yield signal (%x)\n", lwp_process_string(), (int) event));
     if (event == NULL)
 	return LWP_EBADEVENT;
     ev = getevent(event);
@@ -1595,7 +1595,7 @@ int
 LWP_SignalProcess(void *event)
 {
     struct event *ev;
-    debugf(("%s: signal process (%x)\n", lwp_process_string(), event));
+    debugf(("%s: signal process (%x)\n", lwp_process_string(), (int) event));
     if (event == NULL)
 	return LWP_EBADEVENT;
     ev = getevent(event);

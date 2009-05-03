@@ -37,6 +37,9 @@ RCSID
 #include <afs/nfs.h>
 #include <afs/vlserver.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include "rxk5_utilafs.h"
+#endif
 #include <afs/keys.h>
 #include <ubik.h>
 #include <afs/afsint.h>
@@ -50,6 +53,10 @@ RCSID
 
 struct ubik_client *cstruct;
 static rxkad_level vsu_rxkad_level = rxkad_clear;
+
+#ifdef AFS_RXK5
+static afs_int32 vsu_rxk5;
+#endif
 
 static void
 ovlentry_to_nvlentry(struct vldbentry *oentryp,
@@ -375,6 +382,9 @@ vsu_SetCrypt(int cryptflag)
 {
     if (cryptflag) {
 	vsu_rxkad_level = rxkad_crypt;
+#ifdef AFS_RXK5
+	/* nothing special needs to be done here, because rxkad_crypt == rxk5_crypt, etc */
+#endif
     } else {
 	vsu_rxkad_level = rxkad_auth;
     }

@@ -27,15 +27,23 @@ main(int argc, char **argv)
 {
     register FILE *infile;
     register FILE *outfile;
-    char *alist[5];
+    char **alist, **ap, *cp;
     register int code;
     char *sysname;
+    int i;
 
-    if (argc != 4) {
+    if (argc < 4) {
 	printf
-	    ("config: usage is 'config <from file> <to file> <system name>'\n");
+	    ("config: usage is 'config <from file> <to file> <system name> [<more tags, space separated>]'\n");
 	exit(1);
     }
+
+    alist = calloc(2*(argc+5), sizeof *alist);
+    if (!alist) {
+	perror("config: calloc failed");
+  	exit(1);
+    }
+
     infile = fopen(argv[1], "r");
     if (!infile) {
 	printf("config: input file %s not found.\n", argv[1]);
@@ -46,20 +54,21 @@ main(int argc, char **argv)
 	printf("config: output file %s not found.\n", argv[2]);
 	exit(1);
     }
-    memset (alist, 0, sizeof (alist));
-    alist[0] = argv[3];
-    alist[1] = "all";
 
-    /* This allows JUST arch or JUST OS/version,
-     * Linux 2.6 uses the in-kernel build system, so 
-     * just 'linux26' is enough. */
-    sysname = strdup (alist[0]);
-    alist[2] = strchr (sysname, '_');
-    if (alist[2]) {
-        alist[3] = sysname;
-        *alist[2] = 0;
-        alist[2]++;
-    }
+   ap = alist;
+   *ap++ = "all";
+   /* copy in extra keywords, this allows arbitrary variant sections, 
+      alongside sysname  */
+   for (i = 3; argv[i]; ++i) {
+	*ap++ = argv[i];
+	/* This allows JUST arch or JUST OS/version,
+	 * Linux 2.6 uses the in-kernel build system, so 
+	 * just 'linux26' is enough. */
+	if ((i == 3 /* sysname argument only */) && (cp = strchr(argv[i], '_')))
+	    *ap++ = (cp+1);
+   }
+   *ap = 0;
+
     code = mc_copy(infile, outfile, alist);
     if (code) {
 	printf("config: failed to correctly write makefile '%s', code %d\n",

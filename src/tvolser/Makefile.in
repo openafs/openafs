@@ -9,8 +9,12 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 HELPER_SPLINT=@HELPER_SPLINT@
 
+KRB5LIBS=@KRB5LIBS@
+
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG -DFSSYNC_BUILD_CLIENT
+CFLAGS=${COMMON_CFLAGS}  ${KRB5CFLAGS} \
+	-I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG \
+	-DFSSYNC_BUILD_CLIENT
 
 CCRULE=${CC} ${CFLAGS} -c $?
 
@@ -226,7 +230,8 @@ vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
 	${CC} ${LDFLAGS} -o vos vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a ${MT_LIBS} ${XLIBS}
 
 volserver: ${objects} ${LIBS}
-	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
+	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} \
+	${XLIBS} ${KRB5LIBS}
 
 ${DEST}/root.server/usr/afs/bin/volserver: volserver
 	${INSTALL} -ns $? $@

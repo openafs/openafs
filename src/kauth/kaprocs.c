@@ -46,6 +46,7 @@ RCSID
 #include "kalog.h"
 #include "kaport.h"
 #include "afs/audit.h"
+#include <afs/com_err.h>
 
 extern struct ubik_dbase *KA_dbase;
 struct kaheader cheader;

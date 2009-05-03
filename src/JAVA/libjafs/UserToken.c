@@ -24,6 +24,7 @@
 #include "Internal.h"
 #include "org_openafs_jafs_Token.h"
 
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <afs/vice.h>
@@ -55,11 +56,6 @@ extern int readCacheParms(char *afsMountPoint, char *afsConfDir,
  *   Release<type>ArrayElements
  * - For every malloc call the corresponding free.
  */
-
-int osi_audit(void)
-{
-   return 0;
-}
 
 /*JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_callDebugger
   (JNIEnv *env, jobject obj)

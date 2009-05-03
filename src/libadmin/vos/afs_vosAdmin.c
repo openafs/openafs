@@ -878,7 +878,7 @@ vos_ServerOpen(const void *cellHandle, const char *serverName,
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) malloc(sizeof(file_server_t));
     int server_address;
-    struct rx_securityClass *sc[3];
+    struct rx_securityClass *sc;
     int scIndex;
 
     if (f_server == NULL) {
@@ -905,11 +905,11 @@ vos_ServerOpen(const void *cellHandle, const char *serverName,
     }
 
     scIndex = c_handle->tokens->sc_index;
-    sc[scIndex] = c_handle->tokens->afs_sc[scIndex];
+    sc = c_handle->tokens->afs_sc;
     f_server->serv =
 	rx_GetCachedConnection(htonl(server_address),
 			       htons(AFSCONF_VOLUMEPORT), VOLSERVICE_ID,
-			       sc[scIndex], scIndex);
+			       sc, scIndex);
     if (f_server->serv != NULL) {
 	f_server->begin_magic = BEGIN_MAGIC;
 	f_server->end_magic = END_MAGIC;

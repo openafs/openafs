@@ -28,6 +28,15 @@ Creation date:
 #ifndef __CELLCONFIG_AFS_INCL_
 #define	__CELLCONFIG_AFS_INCL_	1
 
+#define FORCE_NOAUTH 1
+#define FORCE_SECURE 2
+#define FORCE_MODE 63
+#define FORCE_K5CC 64
+#define FORCE_KTC 128
+#define FORCE_RXKAD 256
+#define FORCE_RXK5 512
+#define FORCE_FAILAUTH 1024
+
 #ifndef IPPROTO_MAX
 	/* get sockaddr_in */
 #ifdef AFS_NT40_ENV
@@ -121,6 +130,7 @@ extern int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName,
 extern int afsconf_GetLocalCell(register struct afsconf_dir *adir,
 				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);
+extern int have_afs_keyfile(struct afsconf_dir *adir);
 extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
 extern int afsconf_GetKeys(struct afsconf_dir *adir,
 			   struct afsconf_keys *astr);
@@ -137,9 +147,23 @@ extern int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno);
 struct rx_securityClass;
 extern afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir,
 				    struct rx_securityClass **astr,
-				    afs_int32 * aindex);
+				    afs_int32 * aindex);             
+extern afs_int32
+afsconf_ClientAuthSecure(struct afsconf_dir *adir, struct rx_securityClass **astr,
+     afs_int32 *aindex);                    
+extern afs_int32 afsconf_ClientAuthEx(struct afsconf_dir *adir,
+				    struct rx_securityClass **astr,
+				    afs_int32 * aindex,
+				    afs_int32 flags);
+extern afs_int32 afsconf_ServerAuth(void *,
+				    struct rx_securityClass **,
+				    afs_int32);
 
+extern afs_int32 afsconf_SuperUser();
 
+struct rx_call;
+extern int afsconf_CheckAuth(void *,
+			    struct rx_call *);
 
 /* some well-known ports and their names; new additions to table in cellconfig.c, too */
 #define	AFSCONF_FILESERVICE		"afs"

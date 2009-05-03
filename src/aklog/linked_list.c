@@ -46,7 +46,7 @@ void ll_init(linked_list *list)
     }
 
     /* This sets everything to zero, which is what we want. */
-    bzero((char *)list, sizeof(linked_list));
+    memset(list, 0, sizeof(linked_list));
 }
 
 ll_node *ll_add_node(linked_list *list, ll_end which_end)
@@ -162,8 +162,7 @@ int ll_string(linked_list *list, ll_s_action action, char *string)
 	if (!ll_string(list, ll_s_check, string)) {
 	    if ((cur_node = ll_add_node(list, ll_tail))) {
 		char *new_string;
-		if ((new_string = (char *)calloc(strlen(string) + 1, 
-						sizeof(char)))) {
+		if ((new_string = strdup(string))) {
 		    strcpy(new_string, string);
 		    ll_add_data(cur_node, new_string);
 		}
@@ -181,4 +180,25 @@ int ll_string(linked_list *list, ll_s_action action, char *string)
     }
 
     return(status);
+}
+
+void ll_free_list(linked_list *list, void (*free_data)(char *))
+  /* 
+   * Modifies: 
+   *   list
+   * Effects:
+   *   Free all nodes in list and return list to "empty" state.
+   */
+{
+    ll_node *cur_node = NULL;
+
+    for (cur_node = list->first;
+	cur_node;
+	cur_node = cur_node->next) {
+
+	if (free_data)
+	    free_data(cur_node->data);
+	free(cur_node);
+    }
+    memset(list, 0, sizeof(linked_list));
 }

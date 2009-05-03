@@ -9,10 +9,14 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 INCDIRS= -I${DESTDIR}/include -I..
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
-LIBS= -llwp -ldes -lrxkad -lauth -lcmd -lubik -lprot -lsys -lrx -lcom_err -lkauth
+LIBS=${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libkauth.a
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LIBS} ${XCFLAGS} ${ARCHFLAGS}
 
 
 # the only tests _known_ to work are multiklog and the tcl scripts.
@@ -25,11 +29,11 @@ dest:
 clean:
 	$(RM) -f *.o core
 
-multiklog: multiklog.o
-	cc -o  multiklog ${CFLAGS} multiklog.o -lafsutil
+multiklog: multiklog.o ${utilib}
+	cc -o  multiklog ${CFLAGS} multiklog.o ${utilib}
 
 test_date: ../kautils.o test_date.o ${utilib}
-	cc -o test_date ${CFLAGS} test_date.o ../kautils.o -lafsutil
+	cc -o test_date ${CFLAGS} test_date.o ../kautils.o ${utilib}
 
 test_badtix: test_badtix.o
 	cc -o test_badtix ${CFLAGS} test_badtix.o

@@ -21,13 +21,17 @@
 #endif
 #define ENCRYPTIONBLOCKSIZE 8
 
-typedef afs_int32 fc_InitializationVector[ENCRYPTIONBLOCKSIZE / 4];
+typedef struct {
+    afs_uint32 d[ENCRYPTIONBLOCKSIZE / 4];
+} fc_InitializationVector;
 
 #ifdef MAXROUNDS
 #undef MAXROUNDS
 #endif
 #define MAXROUNDS 16
-typedef afs_int32 fc_KeySchedule[MAXROUNDS];
+typedef struct {
+    afs_uint32 d[MAXROUNDS];
+} fc_KeySchedule;
 
 #ifndef ENCRYPT
 #define ENCRYPT 1

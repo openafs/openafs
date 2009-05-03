@@ -2,7 +2,8 @@ dnl LINUX_BUILD_VNODE_FROM_INODE (configdir, outputdir, tmpldir)
 dnl		defaults: (src/config, src/afs/LINUX, src/afs/linux)
 
 AC_DEFUN([LINUX_BUILD_VNODE_FROM_INODE], [
-AC_MSG_CHECKING(whether to build osi_vfs.h)
+dnl AC_MSG_CHECKING(whether to build osi_vfs.h)
+AC_MSG_NOTICE(customizing osi_vfs.h)
 configdir=ifelse([$1], ,[src/config],$1)
 outputdir=ifelse([$2], ,[src/afs/LINUX],$2)
 tmpldir=ifelse([$3], ,[src/afs/LINUX],$3)

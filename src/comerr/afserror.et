@@ -1,0 +1,46 @@
+# these errors are defined in rx/rx.h
+error_table rx
+base -8
+ec RX_MSGSIZE, "packet too big; must fragment"
+ec RX_ADDRINUSE, "port address already in use"
+ec RX_USER_ABORT, "RPC (RX) abort"
+ec RX_PROTOCOL_ERROR, "RPC (RX) protocol error"
+ec RX_EOF, "RPC (RX) end of file"
+ec RX_CALL_TIMEOUT, "server not responding promptly"
+ec RX_INVALID_OPERATION, "invalid RPC (RX) operation"
+ec RX_CALL_DEAD, "server or network not responding"
+end
+
+# afs/rxgen_const.h
+error_table rgen
+base -457
+ec RXGEN_CC_XDRFREE, "RPC interface mismatch(-457) client free"
+ec RXGEN_SS_XDRFREE, "RPC interface mismatch(-456) server free"
+ec RXGEN_OPCODE, "RPC interface mismatch(-455) opcode"
+ec RXGEN_DECODE, "RPC interface mismatch(-454) decode"
+ec RXGEN_SS_UNMARSHAL, "RPC interface mismatch(-453) server un-marshal"
+ec RXGEN_SS_MARSHAL, "RPC interface mismatch(-452) server marshal"
+ec RXGEN_CC_UNMARSHAL, "RPC interface mismatch(-451) client un-marshal"
+ec RXGEN_CC_MARSHAL, "RPC interface mismatch(-450) client marshal"
+end
+
+# afs/errors.h
+error_table vice
+base 101
+#base -4294967195
+ec VSALVAGE, "volume needs to be salvaged"	# 101, in Pittsburghese
+ec VNOVNODE, "no such entry (vnode)"	# 102
+ec VNOVOL, "volume does not exist / did not salvage"	# 103
+ec VVOLEXISTS, "volume already exists"	# 104
+ec VNOSERVICE, "volume out of service"	# 105
+ec VOFFLINE, "volume offline (utility running)"	# 106
+ec VONLINE, "volume already online"	# 107
+ec VDISKFULL, "unknown volume error 108"	# 108
+ec VOVERQUOTA, "unknown volume error 109"	# 109
+ec VBUSY, "volume temporarily busy"	# 110
+ec VMOVED, "volume moved"		# 111
+end
+#error_table _vic
+#base -100
+#ec VRESTARTING, "XXX server is restarting"
+#end

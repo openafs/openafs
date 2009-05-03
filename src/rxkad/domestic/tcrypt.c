@@ -83,7 +83,7 @@ main(argc, argv)
      char *argv[];
 {
     struct ktc_encryptionKey key;
-    fc_KeySchedule schedule;
+    fc_KeySchedule schedule[1];
     afs_int32 e[2];
     afs_int32 d[2];
     afs_int32 c[2];

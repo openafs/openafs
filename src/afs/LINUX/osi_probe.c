@@ -1394,9 +1394,11 @@ static int check_access(unsigned long address, int mode)
 #endif
     if (pmd_none(*pmd))
 	return 0;
+#ifndef CONFIG_UML
     if (pmd_large(*pmd))
 	pte = (pte_t *)pmd;
     else
+#endif
 	pte = pte_offset_kernel(pmd, address);
     if (pte_none(*pte) || !pte_present(*pte))
 	return 0;

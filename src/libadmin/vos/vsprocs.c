@@ -49,9 +49,7 @@ static struct rx_connection *
 UV_Bind(afs_cell_handle_p cellHandle, afs_int32 aserver, afs_int32 port)
 {
     return rx_GetCachedConnection(htonl(aserver), htons(port), VOLSERVICE_ID,
-				  cellHandle->tokens->afs_sc[cellHandle->
-							     tokens->
-							     sc_index],
+				  cellHandle->tokens->afs_sc,
 				  cellHandle->tokens->sc_index);
 }
 

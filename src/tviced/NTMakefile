@@ -11,6 +11,20 @@ RELDIR=tviced
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(kfwincflags)
+
+RXK5LIBS=\
+	$(DESTDIR)\lib\afskfw_funcs.lib \
+	$(MSSDKDIR)\lib\userenv.lib \
+	$(DESTDIR)\lib\cm_config.obj
+
+K5OBJS=\
+	$(OUT)\rxk5_utilafs.obj \
+	$(OUT)\rxk5_tkt.obj
+!ENDIF
+
 SRC_DIR = ..\viced
 
 ############################################################################
@@ -28,6 +42,7 @@ DIR = ..\dir
 VOL = ..\vol
 FSINT = ..\fsint
 RX = ..\rx
+AUTH = ..\auth
 
 RXOBJS = $(OUT)\xdr_int64.obj \
          $(OUT)\xdr_int32.obj
@@ -54,7 +69,7 @@ VOLOBJS = $(OUT)\vnode.obj $(OUT)\volume.obj $(OUT)\vutil.obj $(OUT)\partition.o
 FSINTOBJS = $(OUT)\afsaux.obj $(OUT)\afscbint.cs.obj $(OUT)\afsint.ss.obj $(OUT)\afsint.xdr.obj
 
 EXEOBJS = $(VICEDOBJS) $(TVICEDRES) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) \
-	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS) $(RXOBJS) #$(TVICEDOBJS)
+	 $(UTILOBJS) $(DIROBJS) $(VOLOBJS) $(FSINTOBJS) $(RXOBJS) $(K5OBJS) #$(TVICEDOBJS)
 
 noversion: install
 
@@ -93,7 +108,11 @@ $(VOLOBJS): $(VOL)\$$(@B).C
 $(FSINTOBJS): $(FSINT)\$$(@B).C
 	$(C2OBJ) -I$(FSINT) $**
 
+$(K5OBJS): $(AUTH)\$$(@B).C
+	$(C2OBJ) -I$(AUTH) $**
+
 EXELIBS = \
+	$(RXK5LIBS) \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\afsprot.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
@@ -104,10 +123,12 @@ EXELIBS = \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afspthread.lib
+	$(DESTDIR)\lib\afspthread.lib \
+	$(DESTDIR)\lib\cm_dns.obj \
+        $(DESTDIR)\lib\cm_nls.obj
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib mpr.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
@@ -115,8 +136,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 install:  $(EXEFILE)
 
 mkdir:
-	
+
 clean::
 	$(DEL) $(TVICEDRES)
 
-	

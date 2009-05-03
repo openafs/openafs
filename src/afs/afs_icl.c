@@ -628,7 +628,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) p1);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 #endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
+#else /* WORDS_BIGENDIAN */
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
@@ -636,7 +636,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p1);
 #endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
+#endif /* WORDS_BIGENDIAN */
 	} else if (t1 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[1]);
@@ -668,7 +668,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) p2);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 #endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
+#else /* WORDS_BIGENDIAN */
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
@@ -676,7 +676,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p2);
 #endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
+#endif /* WORDS_BIGENDIAN */
 	} else if (t2 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[1]);
@@ -708,7 +708,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) p3);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 #endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
+#else /* WORDS_BIGENDIAN */
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
@@ -716,7 +716,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p3);
 #endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
+#endif /* WORDS_BIGENDIAN */
 	} else if (t3 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[1]);
@@ -748,7 +748,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) p4);
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 #endif /* AFS_64BIT_CLIENT */
-#else /* AFSLITTLE_ENDIAN */
+#else /* WORDS_BIGENDIAN */
 #ifdef AFS_64BIT_CLIENT
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);
@@ -756,7 +756,7 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) 0);
 	    ICL_APPENDINT32(logp, (afs_int32) p4);
 #endif /* AFS_64BIT_CLIENT */
-#endif /* AFSLITTLE_ENDIAN */
+#endif /* WORDS_BIGENDIAN */
 	} else if (t4 == ICL_TYPE_FID) {
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[0]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[1]);

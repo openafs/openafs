@@ -89,6 +89,7 @@
 #define xdr_int64 afs_xdr_int64
 #define xdr_uint64 afs_xdr_uint64
 #define xdr_pointer afs_xdr_pointer
+#define xdrmem_create afs_xdrmem_create
 #endif
 
 #ifdef	KERNEL

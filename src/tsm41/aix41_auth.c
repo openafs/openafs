@@ -29,6 +29,7 @@ RCSID
 #include <afs/kauth.h>
 #include <afs/kautils.h>
 
+#include "aix_ident_prototypes.h"
 #include "aix_auth_prototypes.h"
 
 int

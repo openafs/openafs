@@ -59,7 +59,7 @@ RCSID
 
 struct prheader cheader;
 int fd;
-char *pr_dbaseName;
+const char *pr_dbaseName;
 char *whoami = "db_verify";
 #define UBIK_HEADERSIZE 64
 
@@ -1435,6 +1435,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 
     initialize_PT_error_table();
     initialize_U_error_table();
+    initialize_rx_error_table();
 
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
     memset(&misc, 0, sizeof(misc));

@@ -640,10 +640,11 @@ struct afs_CMCallStats {
     afs_int32 C_SRXAFSCB_GetCacheConfig;	/* afs_callback.c */
     afs_int32 C_SRXAFSCB_GetCE64;	/* afs_callback.c */
     afs_int32 C_SRXAFSCB_GetCellByNum;	/* afs_callback.c */
-#if defined(AFS_CACHE_BYPASS)
-    afs_int32 C_BPrefetchNoCache;	/* afs_daemons.c */
-	afs_int32 C_afs_ReadNoCache;	/* osi_vnodeops.c */
-#endif	
+    afs_int32 C_BPrefetchNoCache;	/* afs_daemons.c AFS_CACHE_BYPASS */
+    afs_int32 C_afs_ReadNoCache;	/* osi_vnodeops.c AFS_CACHE_BYPASS */
+    afs_int32 C_PGetProperties;	/* afs_pioctl.c */
+    afs_int32 C_PGetTokens2;	/* afs_pioctl.c */
+    afs_int32 C_PSetTokens2;	/* afs_pioctl.c */    
 };
 
 struct afs_CMMeanStats {

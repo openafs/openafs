@@ -25,6 +25,11 @@ typedef struct afs_uuid {
 	unsigned char Data4[8];
 } afs_uuid_t;
 
+typedef struct afs_token_wrapper {
+	int len;
+	unsigned char token[16384];
+} afs_token_wrapper_t;
+
 long AFSRPC_SetToken(
 	[in]		afs_uuid_t	uuid,
 	[in]		unsigned char	sessionKey[8]
@@ -33,6 +38,16 @@ long AFSRPC_SetToken(
 long AFSRPC_GetToken(
 	[in]		afs_uuid_t	uuid,
 	[out]		unsigned char	sessionKey[8]
+);
+
+long AFSRPC_SetToken2(
+	[in]		afs_uuid_t	uuid,
+	[in]            afs_token_wrapper_t wrapped_token[1]
+);
+
+long AFSRPC_GetToken2(
+	[in]		afs_uuid_t	uuid,
+	[out]           afs_token_wrapper_t wrapped_token[1]
 );
 
 }

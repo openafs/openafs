@@ -65,8 +65,13 @@ RCSID
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
-#include <afs/auth.h>
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include "rx/rxk5errors.h"
+#include "afs/rxk5_utilafs.h"
+#include "rx/rxk5.h"
+#endif
+#include <afs/auth.h>
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
 #include <rx/rx.h>
@@ -348,16 +353,16 @@ ResetCheckDescriptors(void)
 }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
-threadNum(void)
+int
+threadNum()
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (int) pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
 /* proc called by rxkad module to get a key */
 static int
-get_key(char *arock, register afs_int32 akvno, char *akey)
+get_key(char *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
 {
     /* find the key */
     static struct afsconf_key tkey;
@@ -372,7 +377,7 @@ get_key(char *arock, register afs_int32 akvno, char *akey)
 	ViceLog(0, ("afsconf_GetKey failure: kvno %d code %d\n", akvno, code));
 	return code;
     }
-    memcpy(akey, tkey.key, sizeof(tkey.key));
+    memcpy(akey->data, tkey.key, sizeof(tkey.key));
     return 0;
 
 }				/*get_key */
@@ -434,9 +439,17 @@ setThreadId(char *s)
     MUTEX_EXIT(&rx_stats_mutex);
     ViceLog(0,
 	    ("Set thread id %d for '%s'\n",
-	     pthread_getspecific(rx_thread_id_key), s));
+	     (int) pthread_getspecific(rx_thread_id_key), s));
 #endif
 }
+
+#ifdef AFS_PTHREAD_ENV
+#define DUMMY_PTHREAD_T		void *
+#define DUMMY_PTHREAD_ARG	void *x
+#else
+#define DUMMY_PTHREAD_T		int
+#define DUMMY_PTHREAD_ARG	/**/
+#endif
 
 /* This LWP does things roughly every 5 minutes */
 static void *
@@ -1805,7 +1818,8 @@ SetupVL()
 	FS_HostAddr_cnt = (afs_uint32) code;
     } else
     {
-	FS_HostAddr_cnt = rx_getAllAddr(FS_HostAddrs, ADDRSPERSITE);
+	/* XXX fixme: resolve ip address type */
+	FS_HostAddr_cnt = rx_getAllAddr((afs_int32*)FS_HostAddrs, ADDRSPERSITE);
     }
 
     if (FS_HostAddr_cnt == 1 && rxBind == 1)
@@ -1856,7 +1870,13 @@ main(int argc, char *argv[])
 {
     afs_int32 code;
     char tbuffer[32];
-    struct rx_securityClass *sc[4];
+#ifdef AFS_RXK5
+#define RXSC_LEN 6
+    struct afsconf_dir *tdir;
+#else
+#define RXSC_LEN 4
+#endif
+    struct rx_securityClass *sc[RXSC_LEN];
     struct rx_service *tservice;
 #ifdef AFS_PTHREAD_ENV
     pthread_t serverPid;
@@ -2052,16 +2072,52 @@ main(int argc, char *argv[])
     }
     rx_GetIFInfo();
     rx_SetRxDeadTime(30);
+    memset(sc, 0, RXSC_LEN * sizeof *sc);
     sc[0] = rxnull_NewServerSecurityObject();
-    sc[1] = 0;			/* rxvab_NewServerSecurityObject(key1, 0) */
-    sc[2] = rxkad_NewServerSecurityObject(rxkad_clear, NULL, get_key, NULL);
-    sc[3] = rxkad_NewServerSecurityObject(rxkad_crypt, NULL, get_key, NULL);
-    tservice = rx_NewServiceHost(rx_bindhost,  /* port */ 0, /* service id */ 
-				 1,	/*service name */
-				 "AFS",
-				 /* security classes */ sc,
-				 /* numb sec classes */
-				 4, RXAFS_ExecuteRequest);
+    /* sc[1] = rxvab_NewServerSecurityObject(key1, 0); */
+#ifdef AFS_RXK5
+    if (have_afs_keyfile(confDir)) {
+#endif
+	sc[2] = rxkad_NewServerSecurityObject(rxkad_clear, NULL, get_key, NULL);
+
+	/* NOTE
+	 * This use of secIndex==3 is a myth.  No known fileserver has ever
+	 *  properly supported this.  See use of rxkad_GetServerInfo
+	 *  in viced/host.c h_FindClient_r .
+	 * For client side code, see use of rxkad_NewClientSecurityObject in
+	 *  unix: afs/afs_conn.c afs_ConnBySA
+	 *  winnt: WINNT/afsd/cm_conn.c cm_NewRXConnection
+	 *
+	 * Certain transarc clients (ca. 3.6) with broken "fs crypt" logic will
+	 *  try to use secIndex = 3.  They also make vl connections
+	 *  the same way -- but vlserver/vlserver.c doesn't set sc[2].
+	 * Presumably these clients flaked out out at the next vl lookup.
+	 *	mdw 20061021
+	 */
+	sc[3] = rxkad_NewServerSecurityObject(rxkad_crypt, NULL, get_key, NULL);
+#ifdef AFS_RXK5
+    }
+    /* rxk5 */
+    if(have_afs_rxk5_keytab(confDir->name)) {
+	sc[5] = rxk5_NewServerSecurityObject(rxk5_auth,
+		get_afs_rxk5_keytab(confDir->name), 
+		rxk5_default_get_key, 0, 0);
+	/* rxk5 now owns the keytab filename memory */
+    }
+#endif
+
+    ViceLog(0,
+	    ("File server security classes:%s%s%s\n",
+	     sc[2] ? " rxkad" : "",
+	     (RXSC_LEN > 4) && sc[4] ? " rxgk" : "",
+	     (RXSC_LEN > 5) && sc[5] ? " rxk5" : ""));
+
+    tservice = rx_NewServiceHost(rx_bindhost, /* port */ 0, 
+			      /* service id */ 1,	
+                              /*service name */ "AFS",
+			      /* security classes */ sc,
+			      /* numb sec classes */ RXSC_LEN, 
+			      RXAFS_ExecuteRequest);
     if (!tservice) {
 	ViceLog(0,
 		("Failed to initialize RX, probably two servers running.\n"));
@@ -2077,7 +2133,7 @@ main(int argc, char *argv[])
     rx_SetServerIdleDeadErr(tservice, VNOSERVICE);
 
     tservice =
-	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", sc, 4,
+	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", sc, RXSC_LEN,
 		      RXSTATS_ExecuteRequest);
     if (!tservice) {
 	ViceLog(0, ("Failed to initialize rpc stat service.\n"));
@@ -2272,7 +2328,7 @@ main(int argc, char *argv[])
 	sleep(1000);		/* long time */
     }
 #else /* AFS_PTHREAD_ENV */
-    assert(LWP_WaitProcess(&parentPid) == LWP_SUCCESS);
+    assert(LWP_WaitProcess((char*) &parentPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
     return 0;
 }

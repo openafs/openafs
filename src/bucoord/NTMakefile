@@ -10,6 +10,13 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+!ENDIF
+
 #########################################################################
 # install local include file
 INCFILES = bc.h
@@ -82,13 +89,14 @@ EXELIBS =\
         $(DESTDIR)\lib\afsrx.lib \
         $(DESTDIR)\lib\afslwp.lib \
         $(DESTDIR)\lib\afs\afscmd.lib \
-        $(DESTDIR)\lib\afs\afscom_err.lib \
         $(DESTDIR)\lib\afs\afsutil.lib \
         $(DESTDIR)\lib\afs\afsusd.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
+	$(RXK5LIBS) \
         $(DESTDIR)\lib\cm_dns.obj \
+	$(DESTDIR)\lib\afs\afscom_err.lib \
         $(DESTDIR)\lib\cm_nls.obj
 	
 

@@ -23,6 +23,7 @@
 #include "org_openafs_jafs_User.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <afs_ptsAdmin.h>
 #include <afs_kasAdmin.h>
 #include <kautils.h>
@@ -176,7 +177,7 @@ Java_org_openafs_jafs_User_create
 
   // create the kas entry
   if (!kas_PrincipalCreate( (void *) cellHandle, NULL, who, 
-			    password, &ast ) ) {
+			    password, &ast ) && ast != ADMCLIENTCELLKASINVALID ) {
     free(who);
     // release converted java strings
     if( userName != NULL ) {
@@ -268,7 +269,7 @@ Java_org_openafs_jafs_User_delete
 
   // delete the kas entry
   if( !kas_PrincipalDelete( (void *) cellHandle, NULL, who, &ast ) ) {
-      if( ast != KANOENT ) {
+      if( ast != KANOENT  && ast != ADMCLIENTCELLKASINVALID) {
 	  free(who);
 	  if( userName != NULL ) {
 	      (*env)->ReleaseStringUTFChars(env, juserName, userName);
@@ -427,7 +428,7 @@ void getUserInfoChar
   // get the kas entry
   if( !kas_PrincipalGet( cellHandle, NULL, who, &kasEntry, &ast ) ) {
     // no kas entry
-    if( ast == KANOENT ) { 
+    if( ast == KANOENT || ast == ADMCLIENTCELLKASINVALID ) { 
 	if( !pts ) {
 	    free( who );
 	    throwAFSException( env, ast );
@@ -603,7 +604,7 @@ Java_org_openafs_jafs_User_getUserInfo
       name = NULL;
   }
 
-  getUserInfoChar( env, cellHandle, name, user );
+  getUserInfoChar( env, (void *) cellHandle, name, user );
  
   // get class fields if need be
   if( userCls == 0 ) {
@@ -876,7 +877,7 @@ Java_org_openafs_jafs_User_rename
     // retrieve the old kas info
     if( !kas_PrincipalGet( (void *) cellHandle, NULL, whoOld, 
 			   &kasEntry, &ast ) ) {
-	if( ast != KANOENT ) {
+	if( ast != KANOENT  && ast != ADMCLIENTCELLKASINVALID ) {
 	    free( whoOld );
 	    free( whoNew );
 	    if( oldName != NULL ) {

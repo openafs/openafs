@@ -42,6 +42,7 @@ void ll_init(linked_list *list);
 ll_node *ll_add_node(linked_list *list, ll_end which_end);
 int ll_delete_node(linked_list *list, ll_node *node);
 int ll_string(linked_list *, ll_s_action, char *);
+void ll_free_list(linked_list *, void (*)(char *));
 
 #else /* __STDC__ */
 
@@ -49,6 +50,7 @@ void ll_init();
 ll_node *ll_add_node();
 int ll_delete_node();
 int ll_string();
+void ll_free_list();
 
 #endif /* __STDC__ */
 

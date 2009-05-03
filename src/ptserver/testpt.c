@@ -41,14 +41,56 @@ RCSID
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
+#include <ubik.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+#ifdef AFS_RXK5
+#ifdef USING_SHISHI
+#include <shishi.h>
+#endif
+#ifdef USING_K5SSL
+#include <k5ssl.h>
+#endif
+#if defined(USING_MIT) || defined(USING_HEIMDAL)
+#include <krb5.h>
+#if defined(AFS_NT40_ENV)
+#include <rx/rxk5_ntfixprotos.h>
+#endif
+#endif
+#endif
+#include "afs_token.h"
+#ifdef AFS_RXK5
+#include "rxk5_tkt.h"
+#endif
 
 static char *whoami = "testpr";
 static struct afsconf_dir *conf;	/* cell info, set by MyBeforeProc */
 static char conf_dir[100];
 static char lcell[MAXCELLCHARS];
+
+#ifdef AFS_RXK5
+#if defined(AFS_NT40_ENV) || defined(HAVE_KRB5_PRINC_SIZE) || defined(krb5_princ_size)
+
+#define get_princ_str(c, p, n) krb5_princ_component(c, p, n)->data
+#define get_princ_len(c, p, n) krb5_princ_component(c, p, n)->length
+#define num_comp(c, p) (krb5_princ_size(c, p))
+#define realm_data(c, p) krb5_princ_realm(c, p)->data
+#define realm_len(c, p) krb5_princ_realm(c, p)->length
+
+#elif defined(HAVE_KRB5_PRINCIPAL_GET_COMP_STRING)
+
+#define get_princ_str(c, p, n) krb5_principal_get_comp_string(c, p, n)
+#define get_princ_len(c, p, n) strlen(krb5_principal_get_comp_string(c, p, n))
+#define num_comp(c, p) ((p)->name.name_string.len)
+#define realm_data(c, p) krb5_realm_data(krb5_principal_get_realm(c, p))
+#define realm_len(c, p) krb5_realm_length(krb5_principal_get_realm(c, p))
+
+#else
+#error "Must have either krb5_princ_size or krb5_principal_get_comp_string"
+#endif
+#endif
 
 int
 ListUsedIds(struct cmd_syndesc *as, void *arock)
@@ -177,9 +219,36 @@ afs_int32 *groupOwners;		/* ids of owners of groups */
 /* statistics */
 int nUsers, nGroups, nAdds, nRems, nUDels, nGDels;
 
-int
-IdCmp(afs_int32 *a, afs_int32 *b)
+#ifdef AFS_RXK5
+static void
+k5_to_k4_name(krb5_context k5context,
+    krb5_principal k5princ,
+    struct ktc_principal *ktcprinc)
 {
+    int i;
+
+    switch(num_comp(k5context, k5princ)) {
+	default:
+	/* case 2: */
+	    i = get_princ_len(k5context, k5princ, 1);
+	    if (i > MAXKTCNAMELEN-1) i = MAXKTCNAMELEN-1;
+	    memcpy(ktcprinc->instance, get_princ_str(k5context, k5princ, 1), i);
+	    /* fall through */
+	case 1:
+	    i = get_princ_len(k5context, k5princ, 0);
+	    if (i > MAXKTCNAMELEN-1) i = MAXKTCNAMELEN-1;
+	    memcpy(ktcprinc->name, get_princ_str(k5context, k5princ, 0), i);
+	    /* fall through */
+	case 0:
+	    break;
+	}
+}
+#endif
+
+int
+IdCmp(const void *pa, const void *pb)
+{
+    const afs_int32 *a = pa, *b = pb;
     if (*a > *b) {
 	return 1;
     } else if (*a == *b) {
@@ -424,33 +493,58 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
     }
     /* get name of person running command */
     {
-	struct ktc_principal afs, user;
-	struct ktc_token token;
+	struct ktc_principal user;
+	struct pioctl_set_token afstoken[1];
+#ifdef AFS_RXK5
+	krb5_creds in_creds[1];
+#endif
+	struct ktc_token ttoken[1];
+	char cellname[MAXCELLCHARS];
 
-	strcpy(afs.name, "afs");
-	strcpy(afs.instance, "");
-	code = afsconf_GetLocalCell(conf, afs.cell, sizeof(afs.cell));
-	if (code)
+	memset(afstoken, 0, sizeof *afstoken);
+#ifdef AFS_RXK5
+	memset(in_creds, 0, sizeof *in_creds);
+#endif
+	code = afsconf_GetLocalCell(conf, cellname, sizeof(cellname));
+	if (code) {
+	    afs_com_err(whoami, code, "getting local cell");
 	    exit(2);
-	code = ktc_GetToken(&afs, &token, sizeof(token), &user);
+	}
+	code = ktc_GetTokenEx(0, cellname, afstoken);
 	if (code) {
 	    afs_com_err(whoami, code, "getting afs tokens");
 	    exit(3);
 	}
-	if (strlen(user.instance) > 0) {
-	    fprintf(stderr, "can't handle non-null instance %s.%s\n",
-		    user.name, user.cell);
-	    exit(4);
+	*user.name = 0;
+	if (!(code = afstoken_to_token(afstoken, ttoken, sizeof *ttoken, 0, 0))) {
+	    callerId = ttoken->kvno;	/* ??? */
+#ifdef AFS_RXK5
+	} else if (!(code = afstoken_to_v5cred(afstoken, in_creds))) {
+	    k5_to_k4_name(0, in_creds->client, &user);
+	} else {
+#endif
+	    char msg[48];
+	    afs_get_tokens_type_msg(afstoken, msg, sizeof msg);
+	    afs_com_err(whoami, 0, "no recognized tokens in %s", msg);
+	    exit(3);
 	}
-	if (strncmp(user.name, "AFS ID ", 7) == 0) {
-	    callerId = atoi(user.name + 7);
+	free_afs_token(afstoken);
+#ifdef AFS_RXK5
+	krb5_free_principal(0, in_creds->client);
+	krb5_free_principal(0, in_creds->server);
+#endif
+	if (!*user.name) {
 	    code = pr_SIdToName(callerId, callerName);
 	    if (code) {
 		afs_com_err(whoami, code, "call get name for id %d", callerId);
 		exit(6);
 	    }
 	} else {
-	    strcpy(callerName, user.name);
+	    if (*user.instance) {
+		sprintf(callerName, "%s.%s", user.name, user.instance);
+	    } else {
+		strcpy(callerName, user.name);
+	    }
 	    code = pr_SNameToId(callerName, &callerId);
 	    if ((code == 0) && (callerId == ANONYMOUSID))
 		code = PRNOENT;
@@ -852,7 +946,7 @@ TestPrServ(struct cmd_syndesc *as, void *arock)
     strcat(name, ":abcdefghijklmnopqrstuvwxyz");
     name[0] = 1;		/* bash the owner name */
     id = 0;
-    code = pr_CreateGroup(name, &id);
+    code = pr_CreateGroup(name, creator, &id);
     if (code != PRNOENT) {	/* owner doesn't exist */
 	afs_com_err(whoami, code, "succeeded creating %s", name);
 	exit(9);
@@ -1066,16 +1160,6 @@ add_std_args(register struct cmd_syndesc *ts)
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL, "Server config");
 }
 
-int
-osi_audit()
-{
-/* OK, this REALLY sucks bigtime, but I can't tell who is calling
- * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
- * anyway.  It's gonna give somebody fits to debug, I know, I know.
- */
-    return 0;
-}
-
 #include "AFS_component_version_number.c"
 
 int 
@@ -1091,6 +1175,7 @@ main(int argc, char *argv[])
     initialize_U_error_table();
     initialize_PT_error_table();
     initialize_RXK_error_table();
+    initialize_rx_error_table();
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */

@@ -13,6 +13,10 @@
 #include <osi.h>
 #include <rx/rxkad.h>
 
+#ifdef AFS_RXK5
+typedef void* rxk5_creds_opaque;
+#endif
+
 /* user structure
  * no free references outside of cm_allUsersp
  * there are held references from cm_conn_t.
@@ -23,6 +27,9 @@
 typedef struct cm_ucell {
     struct cm_ucell *nextp;		/* next cell in the list */
     struct cm_cell *cellp;		/* the cell this applies to */
+#ifdef AFS_RXK5
+    rxk5_creds_opaque rxk5creds; 	/* krb5 creds, if we have them */
+#endif    
     char *ticketp;			/* locked by mx */
     int ticketLen;			/* by mx */
     struct ktc_encryptionKey sessionKey;/* by mx */
@@ -40,7 +47,8 @@ typedef struct cm_ucell {
 #define CM_UCELLFLAG_HASTIX	1	/* has Kerberos tickets */
 #define CM_UCELLFLAG_RXKAD	2	/* an rxkad connection */
 #define CM_UCELLFLAG_BADTIX	4	/* tickets are bad or expired */
-#define CM_UCELLFLAG_RXGK       8       /* an rxgk connection */
+#define CM_UCELLFLAG_RXGK   8   /* an rxgk connection */
+#define CM_UCELLFLAG_RXK5	16	/* an rxk5 connection */
 
 typedef struct cm_user {
     unsigned long refCount;             /* ref count - cm_userLock */

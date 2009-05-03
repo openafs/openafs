@@ -10,6 +10,8 @@
 #ifndef __SMB_IOCONS_H_ENV_
 #define __SMB_IOCONS_H_ENV_ 1
 
+#include <afs/afs_token_protos.h>
+
 /* included in both AFSD and fs commands */
 
 typedef struct chservinfo {
@@ -27,14 +29,6 @@ struct gaginfo {
 
 #define GAGUSER		1
 #define GAGCONSOLE	2
-
-struct ClearToken {
-	int AuthHandle;
-	char HandShakeKey[8];
-	int ViceId;
-	int BeginTimestamp;
-	int EndTimestamp;
-};
 
 struct sbstruct {
 	int sb_thisfile;
@@ -98,12 +92,19 @@ struct sbstruct {
 
 #define VIOC_VOLSTAT_TEST               0x3F
 
+/* 64 = 0x40 = end (?) of coordinated space */
+
+#define VIOCGETTOK2			0x40 /* fetch tokens (K5, ...) */
+#define VIOCSETTOK2		        0x41 /* set tokens (K5, ...) */
+#define VIOCGETPROP			0x42 /* properties ifc */
+#define VIOCSETPROP			0x43
+
 /* magic file name for ioctl opens */
 #define CM_IOCTL_FILENAME	"\\_._AFS_IOCTL_._"	/* double backslashes for C compiler */
 #define CM_IOCTL_FILENAME_NOSLASH "_._AFS_IOCTL_._"
 
 /* max parms for ioctl, in either direction */
 #define CM_IOCTL_MAXDATA	        8192*2
-#define CM_IOCTL_MAXPROCS               64
+#define CM_IOCTL_MAXPROCS               80
 
 #endif /*  __SMB_IOCONS_H_ENV_ */

@@ -11,3 +11,4 @@ mkvers
 param.h.new
 Makefile.config
 stamp-h1
+Makefile.version.in

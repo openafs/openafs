@@ -11,6 +11,15 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
+!IF ("$(BUILD_RXK5)" == "TRUE")
+
+afscflags = -I.. $(afscflags) $(KRB5CFLAGS)
+afslflags = $(PTHREADSLIB) $(afslflags) 
+
+#RXK5LIBS = $(RXK5LIBS) \
+#	$(DESTDIR)\lib\cm_config.obj
+!ENDIF
+
 ############################################################################
 # build butc
 
@@ -42,6 +51,7 @@ EXELIBS =\
         $(DESTDIR)\lib\afsubik.lib \
         $(DESTDIR)\lib\afs\afsauth.lib \
         $(DESTDIR)\lib\afsrxkad.lib \
+	$(RXK5LIBS) \
         $(DESTDIR)\lib\afsdes.lib \
         $(DESTDIR)\lib\afsrx.lib \
         $(DESTDIR)\lib\afslwp.lib \
@@ -86,4 +96,4 @@ $(OUT)\butc_test.exe: $(OUT)\test.obj
         $(CODESIGN_USERLAND)
 
 mkdir:
-	
+

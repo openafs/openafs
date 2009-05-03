@@ -2061,7 +2061,7 @@ CheckVolumesCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static int
-PreCacheCmd(struct cmd_syndesc *as, char *arock)
+PreCacheCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;

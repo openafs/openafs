@@ -13,7 +13,7 @@ README file for libuafs and libjuafs, Version 1.2 06/04/2003.
 This Makefile generates two libraries, the standard libuafs.a and 
 libjuafs.a, a libuafs.a variant that is designed for use with Java
 enabled applications (as used with libjafsadm, see
-src/JAVA/libjafsadm/JAFSADM_README). The libuafs.a library facilitates
+src/JAVA/libjafs/JAFS_README). The libuafs.a library facilitates
 user authentication at a process level and enables access and 
 manipulation of the files and access control lists (ACLs).  By way of 
 the libuafs.a klog function (uafs_klog), the authenticated user's 

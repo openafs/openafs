@@ -10,8 +10,13 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+KRB5LIBS=@KRB5LIBS@
+
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../auth -I../kauth -I../ptserver -I../sys
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../auth \
+	-I../kauth -I../ptserver -I../sys
+K5CFLAGS = ${CFLAGS} ${KRB5CFLAGS}
+K5CCRULE = ${CC} ${K5CFLAGS} -c $?
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 AUDIT= ../audit
@@ -19,14 +24,18 @@ AUTH = ../auth
 KAUTH = ../kauth
 UBIK = ../ubik
 UTIL = ../util
+RXK5 = ../rxk5
 RXKAD = ../rxkad
+COMERR = ../comerr
 PTSERVER = ../ptserver
 SYS = ../sys
 
 AUDITOBJS = audit.o
 
 AUTHOBJS = \
+	afs_token.xdr.o \
 	cellconfig.o \
+	rxkad_tkt.o \
 	ktc.o \
 	userok.o \
 	writeconfig.o \
@@ -65,6 +74,12 @@ UTILOBJS = \
 RXKADOBJS = \
 	rxkad_errs.o
 
+@ENABLE_RXK5@RXK5OBJS = \
+@ENABLE_RXK5@	krb_util.o rxk5_utilafs.o rxk5_tkt.o \
+@ENABLE_RXK5@	rxk5errors.o
+
+COMERROBJS = afserror.o
+
 SYSOBJS = \
 	rmtsysc.o \
 	rmtsys.xdr.o \
@@ -89,6 +104,8 @@ LIBOBJS = \
 	${UBIKOBJS} \
 	${UTILOBJS} \
 	${RXKADOBJS} \
+	${RXK5OBJS} \
+	${COMERROBJS} \
 	${PTSERVEROBJS} \
 	${SYSOBJS}
 
@@ -96,8 +113,15 @@ all: ${TOP_LIBDIR}/libafsauthent.a
 
 install: ${DESTDIR}${libdir}/libafsauthent.a
 
-${DEST}/lib/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
+TEST_CFLAGS=@MT_CFLAGS@ $(COMMON_CFLAGS) $(INCLUDES) ${KRB5CFLAGS}
+TEST_LDFLAGS=@LDFLAGS@
+TEST_LIBS=${TOP_LIBDIR}/libafsrpc.a ${KRB5LIBS} @MT_LIBS@ @XLIBS@
+
+linktest: libafsauthent.a ${srcdir}/linktest.c
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) libafsauthent.a $(TEST_LIBS)
+
+${DEST}/lib/libafsauthent.a: libafsauthent.a linktest
+	${INSTALL} libafsauthent.a $@
 
 libafsauthent.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -105,27 +129,39 @@ libafsauthent.a: ${LIBOBJS}
 	$(RANLIB) $@
 
 audit.o: ${AUDIT}/audit.c
+	${K5CCRULE}
+
+afs_token.xdr.o: ${AUTH}/afs_token.xdr.c
 	${CCRULE}
 
 cellconfig.o: ${AUTH}/cellconfig.c
 	${CCRULE}
 
 ktc.o: ${AUTH}/ktc.c
-	${CCRULE}
+	${K5CCRULE}
 
 userok.o: ${AUTH}/userok.c
-	${CCRULE}
+	${K5CCRULE}
 
 writeconfig.o: ${AUTH}/writeconfig.c
 	${CCRULE}
 
 authcon.o: ${AUTH}/authcon.c
-	${CCRULE}
+	${K5CCRULE}
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
 
 acfg_errors.o: ${AUTH}/acfg_errors.c
+	${CCRULE}
+
+rxk5_utilafs.o: ${AUTH}/rxk5_utilafs.c
+	${K5CCRULE}
+
+rxk5_tkt.o: ${AUTH}/rxk5_tkt.c
+	${K5CCRULE}
+
+rxkad_tkt.o: ${AUTH}/rxkad_tkt.c
 	${CCRULE}
 
 kauth.xdr.o: ${KAUTH}/kauth.xdr.c
@@ -165,7 +201,7 @@ ubikclient.o: ${UBIK}/ubikclient.c
 	${CCRULE}
 
 uinit.o: ${UBIK}/uinit.c
-	${CCRULE}
+	${K5CCRULE}
 
 uerrors.o: ${UBIK}/uerrors.c
 	${CCRULE}
@@ -197,6 +233,15 @@ pthread_glock.o: ${UTIL}/pthread_glock.c
 rxkad_errs.o: ${RXKAD}/rxkad_errs.c
 	${CCRULE}
 
+rxk5errors.o: ${RXK5}/rxk5errors.c
+	${K5CCRULE}
+
+krb_util.o: ${TOP_SRCDIR}/aklog/krb_util.c
+	${K5CCRULE}
+
+afserror.o: ${COMERR}/afserror.c
+	${CCRULE}
+
 ptclient.o: ${PTSERVER}/ptclient.c
 	${CCRULE}
 
@@ -211,11 +256,11 @@ ptuser.o: ${PTSERVER}/ptuser.c
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux11*) \
-		set X `echo ${CCRULE} | sed s/-g//`; shift; \
+		set X `echo ${K5CCRULE} | sed s/-g//`; shift; \
 		"$$@" \
 		;; \
 	*) \
-		${CCRULE} \
+		${K5CCRULE} \
 		;; \
 	esac
 
@@ -253,13 +298,13 @@ setpag.o: ${SYS}/setpag.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o *.a libafsauthent*
+	$(RM) -f *.o *.a libafsauthent* linktest
 
-${DESTDIR}${libdir}/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
+${DESTDIR}${libdir}/libafsauthent.a: libafsauthent.a linktest
+	${INSTALL} libafsauthent.a $@
 
-${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a linktest
+	${INSTALL} libafsauthent.a $@
 
 dest: ${DEST}/lib/libafsauthent.a
 

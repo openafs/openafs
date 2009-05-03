@@ -1,8 +1,9 @@
-AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.5.57)
+AC_INIT(openafs,1.5.57)
+AC_CONFIG_SRCDIR(src/config/stds.h)
+AM_INIT_AUTOMAKE
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.5.57
-LINUX_PKGVER=1.5.57
+MACOS_VERSION="$VERSION"
+LINUX_PKGVER="$VERSION"
 #LINUX_PKGREL=0.pre0
 LINUX_PKGREL=1.1
 
@@ -15,7 +16,7 @@ AC_PATH_PROGS([PATH_CPP], [cpp], , [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
 OPENAFS_CONFIGURE_COMMON
 
-if test -d 'doc/man-pages' ; then
+if test -e 'doc/man-pages/Makefile.in' ; then
     MAN_MAKEFILE="doc/man-pages/Makefile doc/man-pages/install-man"
 else
     MAN_MAKEFILE=
@@ -60,6 +61,7 @@ src/fsint/Makefile \
 src/fsprobe/Makefile \
 src/gtx/Makefile \
 src/JAVA/libjafs/Makefile \
+src/k5ssl/Makefile \
 src/kauth/Makefile \
 src/kauth/test/Makefile \
 src/libacl/Makefile \
@@ -112,6 +114,7 @@ src/rx/simple.example/Makefile \
 src/rx/test/Makefile \
 src/rxdebug/Makefile \
 src/rxgen/Makefile \
+src/rxk5/Makefile \
 src/rxkad/Makefile \
 src/rxkad/test/Makefile \
 src/rxstat/Makefile \

@@ -80,6 +80,15 @@ struct tqHead {
     struct tqElem *next;
 };
 
+#ifdef AFS_RXK5
+#define RXK5_PARMS \
+cmd_AddParm(ts, "-k5", CMD_FLAG, CMD_OPTIONAL, "use k5cc and/or use rxk5");\
+cmd_AddParm(ts, "-k4", CMD_FLAG, CMD_OPTIONAL, "use rxkad security"); \
+cmd_AddParm(ts, "-ktc", CMD_FLAG, CMD_OPTIONAL, "use kernel token for security");
+#else
+#define RXK5_PARMS /**/
+#endif
+
 #define COMMONPARMS     cmd_Seek(ts, 12);\
 cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");\
 cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
@@ -87,6 +96,7 @@ cmd_AddParm(ts, "-localauth",CMD_FLAG,CMD_OPTIONAL,"use server tickets");\
 cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL, "verbose");\
 cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL, "encrypt commands");\
 cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses"); \
+RXK5_PARMS
 
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
@@ -5629,6 +5639,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     register char *tcell;
     register afs_int32 code;
     register afs_int32 sauth;
+    int force_flags;
 
     /* Initialize the ubik_client connection */
     rx_SetRxDeadTime(90);
@@ -5638,12 +5649,19 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
     tcell = NULL;
     if (as->parms[12].items)	/* if -cell specified */
 	tcell = as->parms[12].items->data;
-    if (as->parms[14].items)	/* -serverauth specified */
+    if (as->parms[14].items)	/* -localauth specified */
 	sauth = 1;
-    if (as->parms[16].items)	/* -crypt specified */
+    if (as->parms[16].items)	/* -encrypt specified */
 	vsu_SetCrypt(1);
+    force_flags = FORCE_NOAUTH & -(as->parms[13].items != 0);	/* -noauth */
+#ifdef AFS_RXK5
+    force_flags |= ((FORCE_RXK5|FORCE_K5CC)
+	& -(as->parms[18].items != 0));				/* -k5 */
+    force_flags |= (FORCE_RXKAD & -(as->parms[19].items != 0));	/* -k4 */
+    force_flags |= (FORCE_KTC & -(as->parms[20].items != 0));	/* -ktc */
+#endif
     if ((code =
-	 vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
+	 vsu_ClientInit(force_flags, confdir, tcell, sauth,
 			&cstruct, UV_SetSecurity))) {
 	fprintf(STDERR, "could not initialize VLDB library (code=%lu) \n",
 		(unsigned long)code);
@@ -5658,14 +5676,6 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	noresolve = 1;
     else
 	noresolve = 0;
-    return 0;
-}
-
-int
-osi_audit()
-{
-/* this sucks but it works for now.
-*/
     return 0;
 }
 
@@ -5693,7 +5703,18 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-
+    initialize_CMD_error_table();
+    initialize_KTC_error_table();
+    initialize_KA_error_table();
+    initialize_ACFG_error_table();
+    initialize_U_error_table();
+    initialize_VL_error_table();
+    initialize_VOLS_error_table();
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
+    initialize_rx_error_table();
+	
     confdir = AFSDIR_CLIENT_ETC_DIRPATH;
 
     cmd_SetBeforeProc(MyBeforeProc, NULL);

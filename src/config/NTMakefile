@@ -182,6 +182,12 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\rxkad))
 		$(MKDIR) $(OJT)\rxkad
 !	ENDIF
+!	IF (!EXIST($(OJT)\rxk5))
+		$(MKDIR) $(OJT)\rxk5
+!	ENDIF
+!	IF (!EXIST($(OJT)\trxk5))
+		$(MKDIR) $(OJT)\trxk5
+!	ENDIF
 !	IF (!EXIST($(OJT)\rxstat))
 		$(MKDIR) $(OJT)\rxstat
 !	ENDIF

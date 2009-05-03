@@ -24,6 +24,7 @@ NO_STRIP_KRB=-ns
 LWP_OPTMZ=-O
 PAM_DBG=-g
 PAM_OPTMZ=
+ENABLE_PIC_LIBS='#'
 
 dnl standard programs
 AC_PROG_RANLIB
@@ -48,6 +49,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
 		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
+		ENABLE_PIC_LIBS=''
 		;;
 
 	alpha_dux50)
@@ -59,6 +61,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
 		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
+		ENABLE_PIC_LIBS=''
 		;;
 
 	alpha_dux51)
@@ -71,6 +74,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lcurses"
 		XCFLAGS="-D_NO_PROTO -DOSF"
 		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
+		ENABLE_PIC_LIBS=''
 		;;
 
 	alpha_linux_22)
@@ -85,7 +89,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	alpha_linux_24)
@@ -101,7 +106,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	alpha_linux_26)
@@ -117,7 +123,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	arm_linux24)
@@ -133,7 +140,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	arm_linux26)
@@ -149,7 +157,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	hp_ux102)
@@ -252,6 +261,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-pipe"
 		YACC="byacc"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	amd64_fbsd_*)
@@ -277,6 +287,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-pipe"
 		YACC="yacc"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	*nbsd15|*nbsd16)
@@ -290,6 +301,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libcurses.so"
 		XCFLAGS="-pipe"
 		YACC="bison -y"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ia64_linux24|ia64_linux26)
@@ -303,7 +315,8 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE -G0"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	amd64_linux*)
@@ -318,7 +331,8 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ppc64_linux24)
@@ -332,7 +346,8 @@ case $AFS_SYSNAME in
 		SHLIB_CFLAGS="-fPIC"
 		TXLIBS="/usr/lib64/libncurses.so"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ppc64_linux26)
@@ -347,7 +362,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE -fPIC"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	i386_umlinux22)
@@ -365,7 +381,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	i386_linux*)
@@ -386,7 +403,8 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	i386_umlinux24)
@@ -408,7 +426,8 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	i386_umlinux26)
@@ -430,7 +449,8 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	*_obsd*)
@@ -447,6 +467,7 @@ case $AFS_SYSNAME in
 		TXLIBS="/usr/lib/libcurses.a"
 		XCFLAGS=
 		YACC="yacc"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	parisc_linux24)
@@ -461,7 +482,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ppc_darwin_12)
@@ -471,6 +493,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-traditional-cpp"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ppc_darwin_13)
@@ -481,6 +504,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ppc_darwin_14)
@@ -491,6 +515,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-no-cpp-precomp"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ppc_darwin_60)
@@ -502,6 +527,7 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	ppc_darwin_70)
@@ -517,6 +543,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	*_darwin_80)
@@ -533,6 +560,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		ENABLE_PIC_LIBS=''
 		RANLIB="ranlib -c"
 		;;
 
@@ -551,6 +579,7 @@ case $AFS_SYSNAME in
 		EXTRA_VLIBOBJS="fstab.o"
 		SHLIB_LINKER="${MT_CC} -dynamiclib"
 		SHLIB_SUFFIX="dylib"
+		ENABLE_PIC_LIBS=''
 		RANLIB="ranlib -c"
 		;;
 
@@ -566,7 +595,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	rs_aix42)
@@ -667,7 +697,8 @@ case $AFS_SYSNAME in
 		OPTMZ=-O
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	s390_linux24|s390_linux26)
@@ -686,7 +717,8 @@ case $AFS_SYSNAME in
 		TXLIBS="-lncurses"
 		XCFLAGS="-D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	s390x_linux24|s390x_linux26)
@@ -706,7 +738,8 @@ case $AFS_SYSNAME in
 		OPTMZ=-O
 		XCFLAGS="-D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sgi_62)
@@ -722,6 +755,7 @@ case $AFS_SYSNAME in
 		XLDFLAGS64="-64"
 		XLDFLAGS="-o32"
 		SHLIB_LINKER="${CC} -shared"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sgi_63)
@@ -737,6 +771,7 @@ case $AFS_SYSNAME in
 		XLDFLAGS64="-64"
 		XLDFLAGS="-o32"
 		SHLIB_LINKER="${CC} -shared"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sgi_64)
@@ -751,6 +786,7 @@ case $AFS_SYSNAME in
 		XLDFLAGS64="-64"
 		XLDFLAGS="-n32"
 		SHLIB_LINKER="${CC} -shared"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sgi_65)
@@ -769,6 +805,7 @@ case $AFS_SYSNAME in
 		XLDFLAGS64="-64 -mips3"
 		XLDFLAGS="-n32 -mips3"
 		SHLIB_LINKER="${CC} -shared"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sparc*_linux*)
@@ -785,7 +822,8 @@ case $AFS_SYSNAME in
 		XCFLAGS64="-D_LARGEFILE64_SOURCE -m64"
 		XLDFLAGS64="-m64"
 		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
+		SHLIB_LINKER="${MT_CC} -shared -Wl,--version-script=${srcdir}/mapfile"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4_413)
@@ -800,6 +838,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB}"
 		LD="ld"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4x_55)
@@ -818,6 +857,7 @@ case $AFS_SYSNAME in
 		LD="/usr/ccs/bin/ld"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4x_56)
@@ -839,6 +879,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4x_57)
@@ -861,6 +902,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4x_58)
@@ -883,6 +925,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4x_59)
@@ -905,6 +948,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4x_510)
@@ -927,6 +971,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sun4x_511)
@@ -949,6 +994,7 @@ case $AFS_SYSNAME in
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
 		LWP_OPTMZ="-g"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sunx86_57)
@@ -970,6 +1016,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sunx86_58)
@@ -991,6 +1038,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sunx86_59)
@@ -1012,6 +1060,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sunx86_510)
@@ -1033,6 +1082,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		ENABLE_PIC_LIBS=''
 		;;
 
 	sunx86_511)
@@ -1054,6 +1104,7 @@ case $AFS_SYSNAME in
 		XLIBKVM="-lkvm"
 		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
 		SHLIB_LINKER="${CC} -G -dy -Bsymbolic -z text"
+		ENABLE_PIC_LIBS=''
 		;;
 esac
 
@@ -1197,6 +1248,7 @@ AC_SUBST(XLIBELFA)
 AC_SUBST(XLIBKVM)
 AC_SUBST(XLIBS)
 AC_SUBST(YACC)
+AC_SUBST(ENABLE_PIC_LIBS)
 
 
 ])

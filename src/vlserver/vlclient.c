@@ -52,6 +52,9 @@ RCSID
 #include <ubik.h>
 #include "vlserver.h"
 #include "vlclient.h"
+#ifdef AFS_RXK5
+#include <rx/rxk5errors.h>
+#endif
 
 void fill_listattributes_entry();
 void display_listattributes_entry();
@@ -1028,6 +1031,10 @@ main(argc, argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
+
+#ifdef AFS_RXK5
+    initialize_RXK5_error_table();
+#endif
 
     strcpy(confdir, AFSDIR_CLIENT_ETC_DIRPATH);
     ts = cmd_CreateSyntax("initcmd", handleit, NULL, "initialize the program");

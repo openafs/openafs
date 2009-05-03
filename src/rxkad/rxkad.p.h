@@ -51,7 +51,7 @@
 #define RXKAD_TKT_TYPE_ADAPT_RESERVED_MAX	511
 
 struct ktc_encryptionKey {
-    char data[8];
+    unsigned char data[8];
 };
 
 struct ktc_principal {

@@ -1341,6 +1341,7 @@ pts_GroupMemberListNext(const void *iterationId, char *memberName,
     mutex_locked = 1;
 
     if (!IsValidPtsGroupMemberListIterator(iter, &tst)) {
+	tst = 666;
 	goto fail_pts_GroupMemberListNext;
     }
 
