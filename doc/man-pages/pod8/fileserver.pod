@@ -402,7 +402,7 @@ Deprecated; jumbograms are disabled by default.
 
 Force the fileserver to only bind to one IP address.
 
-=item B<-allow-dotted-principal>
+=item B<-allow-dotted-principals>
 
 By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid

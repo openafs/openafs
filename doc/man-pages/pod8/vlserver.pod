@@ -8,7 +8,7 @@ vlserver - Initializes the Volume Location Server
 <div class="synopsis">
 
 B<vlserver> S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>] [B<-jumbo>] [B<-rxbind>] S<<< [B<-d> <I<debug level>>] >>>
-    [B<-allow-dotted-principal>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
+    [B<-allow-dotted-principals>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
     [B<-help>]
 
 =for html
@@ -95,7 +95,7 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
-=item B<-allow-dotted-principal>
+=item B<-allow-dotted-principals>
 
 By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid

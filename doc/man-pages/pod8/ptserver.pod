@@ -11,7 +11,7 @@ B<ptserver> S<<< [B<-database> | B<-db> <I<db path>>] >>> S<<< [B<-p> <I<number 
     [B<-rebuildDB>] S<<< [B<-groupdepth> <I<# of nested groups>>] >>>
     S<<< [B<-default_access> <I<user access mask>> <I<group access mask>>] >>>
     [B<-restricted>] [B<-enable_peer_stats>]
-    [B<-enable_process_stats>] [B<-allow-dotted-principal>]
+    [B<-enable_process_stats>] [B<-allow-dotted-principals>]
     [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
     S<<< [B<-syslog>[=<I<FACILITY>>]] >>> S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     [B<-help>]
@@ -129,7 +129,7 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
-=item B<-allow-dotted-principal>
+=item B<-allow-dotted-principals>
 
 By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to
