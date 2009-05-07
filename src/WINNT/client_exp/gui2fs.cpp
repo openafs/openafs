@@ -36,6 +36,11 @@ extern "C" {
 #include <afs/auth.h>
 #include <WINNT\afsreg.h>
 #include <cm.h>
+#include <cm_nls.h>
+#include <osi.h>
+#include <cm_user.h>
+#include <cm_scache.h>
+#include <cm_ioctl.h>
 }
 
 #define STRSAFE_NO_DEPRECATE
@@ -1151,6 +1156,8 @@ CString ParseSymlink(const CString strFile, CString strSymlink)
 BOOL IsPathInAfs(const CString & strPath)
 {
     struct ViceIoctl blob;
+    cm_ioctlQueryOptions_t options;
+    cm_fid_t fid;
     int code;
 
     HOURGLASS hourglass;
@@ -1160,13 +1167,18 @@ BOOL IsPathInAfs(const CString & strPath)
     debugBuf.Format(_T("IsPathInAfs(%s)"), strPath);
     OutputDebugString(debugBuf);
 
-    blob.in_size = 0;
-    blob.out_size = MAXSIZE;
-    blob.out = space;
+    memset(&options, 0, sizeof(options));
+    options.size = sizeof(options);
+    options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+    options.literal = 1;
+    blob.in_size = options.size;    /* no variable length data */
+    blob.in = &options;
+    blob.out_size = sizeof(cm_fid_t);
+    blob.out = (char *) &fid;
 
-    code = pioctl_T(strPath, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_T(strPath, VIOCGETFID, &blob, 1);
 
-    debugBuf.Format(_T("VIOC_FILE_CELL_NAME=%d"), code);
+    debugBuf.Format(_T("VIOCGETFID=%d"), code);
     OutputDebugString(debugBuf);
 
     if (code) {
@@ -1624,7 +1636,7 @@ BOOL IsSymlink(const CString& strName)
 
     HOURGLASS hourglass;
 
-	    {
+    {
         CString str;
         str.Format(_T("IsSymlink(%s)"), strName);
         OutputDebugString(str);
