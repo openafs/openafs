@@ -245,13 +245,20 @@ static int
 InAFS(char *apath)
 {
     struct ViceIoctl blob;
+    cm_ioctlQueryOptions_t options;
+    cm_fid_t fid;
     afs_int32 code;
 
-    blob.in_size = 0;
-    blob.out_size = MAXSIZE;
-    blob.out = space;
+    memset(&options, 0, sizeof(options));
+    options.size = sizeof(options);
+    options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+    options.literal = 1;
+    blob.in_size = options.size;    /* no variable length data */
+    blob.in = &options;
+    blob.out_size = sizeof(cm_fid_t);
+    blob.out = (char *) &fid;
 
-    code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
+    code = pioctl_utf8(apath, VIOCGETFID, &blob, 1);
     if (code) {
 	if ((errno == EINVAL) || (errno == ENOENT)) 
             return 0;
