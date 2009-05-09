@@ -174,7 +174,7 @@ LIBJAFSADM_LIBS =\
 	${TOP_LIBDIR}/libafsauthent$(PIC_SUFFIX).a \
 	${TOP_LIBDIR}/libafsrpc$(PIC_SUFFIX).a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${KRB5LIBS} \
 	-lresolv \
 	-lpthread

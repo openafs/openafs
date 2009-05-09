@@ -83,6 +83,8 @@ KDEFS=-Wall -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 	-mno-align-long-strings -fno-common -ffreestanding \
 	-I${KBLD} -include opt_global.h -fno-strict-aliasing
+<rxk5>
+	-I${TOP_SRCDIR}/rxk5 ${K5SSL_INC} \
 <all>
 
 DBUG = -O2

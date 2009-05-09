@@ -1,3 +1,4 @@
+bg-fcrypt.c
 rxkad.h
 rxkad_prototypes.h
 rxkad_client.[ch]

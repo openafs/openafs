@@ -104,7 +104,7 @@ main(void)
 
     /*
      * Use key1 and key2 as iv */
-    fc_keysched((struct ktc_encryptionKey *)key1, sched);
+    fc_keysched(key1, sched);
     memcpy(iv, key2, sizeof(iv));
     fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
     if (memcmp(ciph1, ciph, sizeof(ciph1)) != 0) {
@@ -121,7 +121,7 @@ main(void)
     /*
      * Use key2 and key1 as iv
      */
-    fc_keysched((struct ktc_encryptionKey *)key2, sched);
+    fc_keysched(key2, sched);
     memcpy(iv, key1, sizeof(iv));
     fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
     if (memcmp(ciph2, ciph, sizeof(ciph2)) != 0) {
@@ -138,7 +138,7 @@ main(void)
     /*
      * Test Encrypt- and Decrypt-Packet, use key1 and key2 as iv
      */
-    fc_keysched((struct ktc_encryptionKey *)key1, sched);
+    fc_keysched(key1, sched);
     memcpy(iv, key2, sizeof(iv));
     strcpy(clear, the_quick);
     packet.wirevec[1].iov_base = clear;
@@ -162,11 +162,10 @@ main(void)
 #define INT_MILLION 1000000
 #define FLOAT_MILLION 1e6
 #define COUNT 1
-
-	fc_keysched((struct ktc_encryptionKey *)key1, sched);
+	fc_keysched(key1, sched);
 	gettimeofday(&start, 0);
 	for (i = 0; i < INT_MILLION*COUNT; i++)
-	    fc_keysched((struct ktc_encryptionKey *)key1, sched);
+	    fc_keysched(key1, sched);
 	gettimeofday(&stop, 0);
 	printf("fc_keysched    = %2.2f us\n",
 	       (stop.tv_sec - start.tv_sec +

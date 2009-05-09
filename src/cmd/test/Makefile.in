@@ -9,7 +9,7 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libafsutil.a
 
 INCDIRS=  -I${SRCDIR}/include -I${SRCDIR}/include/afs -I..
 

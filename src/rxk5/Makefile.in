@@ -53,7 +53,7 @@ AFSLIBS= ${TOP_LIBDIR}/librxkad.a \
         ${TOP_LIBDIR}/librx.a \
         ${TOP_LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libdes.a \
-        ${TOP_LIBDIR}/util.a
+        ${TOP_LIBDIR}/libafsutil.a
 
 LIBS=$(AFSLIBS) $(KRB5LIBS) $(DESLIB) $(LIBCOM_ERR) $(AFSUTIL) $(XLIBS)
 

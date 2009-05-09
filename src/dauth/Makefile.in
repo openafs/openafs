@@ -32,7 +32,7 @@ LIBS=${TOP_LIBDIR}/libkauth.a \
 		${TOP_LIBDIR}/librx.a \
 	        ${TOP_LIBDIR}/liblwp.a \
 	       	${TOP_LIBDIR}/libsys.a \
-		${TOP_LIBDIR}/util.a
+		${TOP_LIBDIR}/libafsutil.a
 
 CELL=		`pwd|awk -F/ '{print $$3}'`
 USNS=		cellname

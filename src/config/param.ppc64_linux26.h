@@ -49,6 +49,10 @@
 #endif
 #define AFS_GLOBAL_SUNLOCK
 
+#ifndef CONFIG_GSSRPC		/* linux 2.6 build supplies this */
+#define AFS_NONFSTRANS 1	/* afs src expects this */
+#endif
+
 #endif /* __KERNEL__  && !DUMP_KERNEL*/
 
 #include <afs/afs_sysnames.h>

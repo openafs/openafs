@@ -197,7 +197,7 @@ struct ubik_dbase {
 #endif
 };
 
-/* procedures for automatically authenticating ubik connections */
+/*! \name procedures for automatically authenticating ubik connections */
 extern int (*ubik_CRXSecurityProc) (void *, struct rx_securityClass **, afs_int32 *);
 extern void *ubik_CRXSecurityRock;
 extern int (*ubik_SRXSecurityProc) (void *,
@@ -205,6 +205,7 @@ extern int (*ubik_SRXSecurityProc) (void *,
 extern void *ubik_SRXSecurityRock;
 extern int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
 extern void *ubik_CheckRXSecurityRock;
+/*\}*/
 
 /****************INTERNALS BELOW ****************/
 

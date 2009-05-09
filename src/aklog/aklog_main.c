@@ -89,9 +89,9 @@ RCSID
 #include "aklog.h"
 #include "linked_list.h"
 
-static char AFSKEY[] = "afs";
+static char afskey[] = "afs";
 #ifdef AFS_RXK5
-static char AFSKEY_K5[] = "afs-k5";
+static char afskey_k5[] = "afs-k5";
 #endif
 
 #define AFSINST ""
@@ -154,7 +154,7 @@ extern int pioctl(char *, afs_int32, struct ViceIoctl *, afs_int32);
 
 extern char *afs_realm_of_cell(krb5_context, struct afsconf_cell *, int);
 static int isdir(char *, unsigned char *);
-static krb5_error_code get_credv5(krb5_context context, char *,
+static krb5_error_code get_credv5(krb5_context context, char *, char *,
 				  char *, krb5_creds **);
 static int get_user_realm(krb5_context, char *);
 
@@ -293,10 +293,6 @@ extern char *sys_errlist[];
 #define strerror(x) sys_errlist[x]
 #endif /* HAVE_STRERROR */
 
-#define DO524_NO 1
-#define DO524_YES 2
-#define DO524_LOCAL 3
-
 static char *progname = NULL;	/* Name of this program */
 static int dflag = FALSE;	/* Give debugging information */
 static int noauth = FALSE;	/* If true, don't try to get tokens */
@@ -306,7 +302,13 @@ static int noprdb = FALSE;	/* Skip resolving name to id? */
 static int linked = FALSE;      /* try for both AFS nodes */
 static int afssetpag = FALSE;   /* setpag for AFS */
 static int force = FALSE;	/* Bash identical tokens? */
-static int do524 = DO524_NO;	/* Should we do 524 instead of rxkad2b? */
+static enum {
+	DO524_NO,
+#ifndef HAVE_NO_KRB5_524
+	DO524_YES,
+#endif
+	DO524_LOCAL
+} do524 = DO524_NO;	/* Should we do 524 instead of rxkad2b? */
 #ifdef AFS_RXK5
 static int rxk5;		/* Use rxk5 enctype selection and settoken behavior */
 #else
@@ -412,6 +414,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
     struct ktc_principal aserver;
     struct ktc_principal aclient;
     struct ktc_token atoken, btoken;
+#ifdef AFS_RXK5
+    static char *service_list[3];
+    int i;
+#endif
 
     memset(realm_of_user, 0, sizeof(realm_of_user));
 
@@ -485,6 +491,25 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    afs_com_err(progname, status, " while getting realm");
 	    return(AKLOG_KERBEROS);
 	}
+	ll_free_list(&badrealms, (void(*)(char*))free);
+	ll_free_list(&princs_tried, NULL);
+
+	i = 0;
+#ifdef AFS_RXK5
+	if (rxk5 & FORCE_RXK5) {
+	    if (max_enc > 0) {
+		service_list[i++] = afskey_k5;
+	    }
+	}
+	if (rxk5 & FORCE_RXKAD) {
+	    service_list[i++] = afskey;
+	}
+	service_list[i++] = 0;
+	i = 0;
+#define AFSKEY	service_list[i]
+#else
+#define AFSKEY	afskey
+#endif
 
 	/* NB. this retry logic is almost certainly
 	 * doing way more than it needs.  It *should*
@@ -492,10 +517,11 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	 * krb5_get_credentials (which means this
 	 * retry logic belongs entirely inside get_credv5.)
 	 * -mdw 20081027
+	 * ... And I need an outer per-service principal
+	 * loop.  Guess what?
+	 * -mdw 20081028
 	 */
 	retry = 1;
-	ll_free_list(&badrealms, (void(*)(char*))free);
-	ll_free_list(&princs_tried, NULL);
 	
 	while(retry) {
 
@@ -535,7 +561,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		}
 		
 		realm_of_cell = realm_of_user;
-		status = get_credv5(context, cell_to_use, 
+		status = get_credv5(context, AFSKEY,
+				    cell_to_use, 
 				    realm_of_cell, &v5cred);
 	    
 		/* If that failed, try to determine the realm from the name of 
@@ -566,9 +593,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		 * different realm from the cell - use the cell name as the
 		 * instance */
 		if (AFS_TRY_FULL_PRINC || 
+#ifdef AFS_RXK5
+		    strlen(AFSKEY) > 3 ||
+#endif
 		    strcasecmp(cell_to_use, realm_of_cell)!=0) {
-		    status = get_credv5(context, cell_to_use, 
-				        realm_of_cell, &v5cred);
+		    status = get_credv5(context, AFSKEY,
+					cell_to_use, realm_of_cell, &v5cred);
 
 		    /* If we failed & we've got an empty realm, then try 
 		     * calling afs_realm_for_cell again. */
@@ -588,19 +618,23 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 			           " to realm %s.\n", realm_of_cell);
 			}
 		    }
-		    status = get_credv5(context, cell_to_use, 
-				        realm_of_cell, &v5cred);
+		    status = get_credv5(context, AFSKEY,
+					cell_to_use, realm_of_cell, &v5cred);
 	    	}
 	   
 		/* If the realm and cell name match, then try without an 
 		 * instance, but only if realm is non-empty */
 	        
 		if (TRYAGAIN(status) && 
+#ifdef AFS_RXK5
+		    strlen(AFSKEY) == 3 &&
+#endif
 		    strcasecmp(cell_to_use, realm_of_cell) == 0) {
-		    status = get_credv5(context, NULL, 
-				        realm_of_cell, &v5cred);
+		    status = get_credv5(context, AFSKEY,
+					NULL, realm_of_cell, &v5cred);
     		    if (!AFS_TRY_FULL_PRINC && TRYAGAIN(status)) {
-		        status = get_credv5(context, cell_to_use,
+		        status = get_credv5(context, AFSKEY,
+					    cell_to_use,
 				            realm_of_cell, &v5cred);
 		    }
 		}
@@ -614,6 +648,11 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		retry++;
 	    else
 		retry = 0;
+
+	    /* Evil: overload retry loop to try next principal */
+	    if (status && service_list[++i]) {
+		retry = 1 ;
+	    }
 	} 
 	
 	if (status != 0) {
@@ -675,7 +714,7 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	}
 #endif
 
-	strncpy(aserver.name, AFSKEY, MAXKTCNAMELEN - 1);
+	strncpy(aserver.name, afskey, MAXKTCNAMELEN - 1);
 	strncpy(aserver.instance, AFSINST, MAXKTCNAMELEN - 1);
 	strncpy(aserver.cell, cell_to_use, MAXKTCREALMLEN - 1);
 
@@ -1932,7 +1971,7 @@ out:
 }
 
 
-static krb5_error_code get_one_credv5(krb5_context context, char *name,
+static krb5_error_code get_credv5(krb5_context context, char *name,
 			char *inst, char *realm, krb5_creds **creds)
 {
     krb5_creds increds;
@@ -2060,29 +2099,6 @@ static krb5_error_code get_one_credv5(krb5_context context, char *name,
     increds.client = 0;
     krb5_free_cred_contents(context, &increds);
     return r;
-}
-
-
-static krb5_error_code get_credv5(krb5_context context, 
-			char *inst, char *realm, krb5_creds **creds)
-{
-    int tried_something = 0;
-    int r;
-#ifdef AFS_RXK5
-    if (rxk5 & FORCE_RXK5) {
-	tried_something = 1;
-	if (max_enc > 0 && inst && *inst) {
-	    r = get_one_credv5(context, AFSKEY_K5, inst, realm, creds);
-	    if (!r) return 0;
-	}
-    }
-#endif
-    if (rxk5 & FORCE_RXKAD) {
-	tried_something = 1;
-	r = get_one_credv5(context, AFSKEY, inst, realm, creds);
-	if (!r) return 0;
-    }
-    return AKLOG_TRYAGAIN;
 }
 
 

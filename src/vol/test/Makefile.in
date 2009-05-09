@@ -14,11 +14,11 @@ INSTALL = ${SRCDIR}/bin/install
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS} ${ARCHFLAGS}
 
 LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/vlib.a \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a ${XLIBS}
 
-NAMEI_LIBS=../vlib.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/liblwp.a
+NAMEI_LIBS=../vlib.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/liblwp.a
 
 CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS} -g
 
@@ -42,7 +42,7 @@ listVicepx.o:	listVicepx.c  utilities.c
 testpart:	testpart.c ../vlib.a
 		${CC} ${CFLAGS} ${LDFLAGS} -o $@ testpart.c \
 		${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/liblwp.a \
-		${TOP_LIBDIR}/util.a ${XLIBS}
+		${TOP_LIBDIR}/libafsutil.a ${XLIBS}
 		
 
 listVicepx:	listVicepx.o utilities.o 
@@ -68,7 +68,7 @@ nilist: nilist.o nsubr.o
 	${CC} ${CFLAGS} -o nilist nilist.o nsubr.o ${NAMEI_LIBS}
 
 nino: nino.o
-	${CC} ${CFLAGS} -o nino nino.o ${TOP_LIBDIR}/util.a
+	${CC} ${CFLAGS} -o nino nino.o ${TOP_LIBDIR}/libafsutil.a
 
 clean:
 	$(RM) -f *.o *.a 

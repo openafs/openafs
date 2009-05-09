@@ -21,10 +21,7 @@ RCSID
 #include <sys/types.h>
 #include <afs/cellconfig.h>
 #ifdef AFS_NT40_ENV
-#ifdef AFS_RXK5
-#include "rxk5_utilafs.h"
-#include "rxk5_tkt.h"
-#endif
+#include <afs/auth.h>
 #include <afs/afssyscalls.h>
 #include <winsock2.h>
 #include <afs/fs_utils.h>

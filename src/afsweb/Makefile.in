@@ -150,7 +150,7 @@ deslib=${TOP_LIBDIR}/libdes.a
 rxkadlib=${TOP_LIBDIR}/librxkad.a
 authlib=${TOP_LIBDIR}/libauth.a
 cmdlib=${TOP_LIBDIR}/libcmd.a
-utilib=${TOP_LIBDIR}/util.a
+utilib=${TOP_LIBDIR}/libafsutil.a
 auditlib=${TOP_LIBDIR}/libaudit.a
 kauthlib=${TOP_LIBDIR}/libkauth.a
 

@@ -27,14 +27,14 @@ AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	   ${TOP_LIBDIR}/util.a
+	   ${TOP_LIBDIR}/libafsutil.a
 
 KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.krb.a \
 	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	   ${TOP_LIBDIR}/util.a
+	   ${TOP_LIBDIR}/libafsutil.a
 
 SRCS=	login.c 
 OBJS=   login.o setenv.o getenv.o libutil.a

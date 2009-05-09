@@ -11,12 +11,16 @@ use File::Path;
 
 my $quiet = 0;
 my $showonly = 0;
+my @extras;
 
 while ( $_ = shift @ARGV )
 {
+	my $extra;
 	if (m/^-t/) { $treedir = testArg( shift @ARGV ); next; }
 	if (m/^-p/) { $projdir = testArg( shift @ARGV ); next; }
 	if (m/^-sn/) { $sysname = testArg( shift @ARGV ); next; }
+	if (m/^-extra/) { $extra = testArg( shift @ARGV );
+		push @extras, split(',', $extra); next; }
 
 	if (m/^-os/) { $ostype = testArg( shift @ARGV ); next; }
 	elsif (m/^-o/) { $objdir  = testArg( shift @ARGV ); next; }
@@ -69,7 +73,7 @@ finddepth(\&find_libafsdep, $projdir);
 system("$objdir/src/config/config", 
 	"$projdir/src/libafs/MakefileProto.$ostype.in", 
 	"$treedir/src/libafs/Makefile.in",
-	$sysname);
+	$sysname, @extras);
 
 #
 # Subs
@@ -117,7 +121,7 @@ sub process_libafsdep
 		$proj_src =~ s|//+|/|gio;
 		$obj_src =~ s|//+|/|gio;
 
-		if ( $file !~ /\*/ && $file !~ /\[/  ) # no globs in filename
+		if ( $file !~ /[\[*?]/)	# no globs in filename
 		{
 			my $fname = $file;
 			$fname =~ s|.*/||gio;
@@ -170,6 +174,7 @@ sub usage
 	print "\tlibafs_tree_dir = /path/to/libafs_tree - tree dir to create, defaults to top_obj_dir/libafs_tree\n";
 	print "\t-os = ostype value (i.e. LINUX)\n";
 	print "\t-sn = afs sysname (i.e. i386_linux24)\n";
+	print "\t-extras = stuff - extra settings for libafs config\n";
 	print "\t-q = quiet build\n";
 	print "\t-n = just show what will be done\n";
 	print "\t-h = show this message\n";

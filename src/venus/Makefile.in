@@ -29,7 +29,7 @@ FSLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
 	 ${TOP_LIBDIR}/libaudit.a \
-	 $(TOP_LIBDIR)/util.a
+	 $(TOP_LIBDIR)/libafsutil.a
 
 CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/libafsint.a \
@@ -40,7 +40,7 @@ CMLIBS=${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/librx.a \
 	 ${TOP_LIBDIR}/libsys.a \
 	 ${TOP_LIBDIR}/liblwp.a \
-	 $(TOP_LIBDIR)/util.a
+	 $(TOP_LIBDIR)/libafsutil.a
 
 LIBS = ${FSLIBS} 
 
@@ -113,15 +113,15 @@ fstrace.o: fstrace.c AFS_component_version_number.c
 fstrace: fstrace.o
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a ) \
-			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a /usr/lib/libi.a ;; \
+			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a /usr/lib/libi.a ;; \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
+			${CCXPG2} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ;; \
 		sun*_4* ) \
-			${CC} -L/usr/xpg2lib -L/usr/5lib ${CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a -lxpg ;; \
+			${CC} -L/usr/xpg2lib -L/usr/5lib ${CFLAGS} -g -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a -lxpg ;; \
 		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
-			${CC} -I${TOP_OBJDIR}/src/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
+			${CC} -I${TOP_OBJDIR}/src/config  -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ;; \
 		* ) \
-			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ;; \
+			${CC} ${CFLAGS} -o fstrace fstrace.o ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ;; \
 	esac
 
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
@@ -155,9 +155,9 @@ kdump: kdump.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_5? ) \
-		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
+		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/libafsutil.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
 	sun*_5? | sun*_5?? ) \
-		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
+		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/libafsutil.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	sgi_6? ) \
 		for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 		do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \
@@ -182,10 +182,10 @@ kdump: kdump.o
 	*linux* ) \
 		$(MAKE) kdump-linux-@LINUX_VERSION@ ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
-		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} -ll -lmld;; \
-	ncrx86_* ) ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a -lelf ${XLIBS} ;; \
+		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/libafsutil.a ${XLIBS} -ll -lmld;; \
+	ncrx86_* ) ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/libafsutil.a -lelf ${XLIBS} ;; \
 	*nbsd*) touch kdump ;; \
-	* )     ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a ${XLIBS} ;; \
+	* )     ${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/libafsutil.a ${XLIBS} ;; \
 	esac
 
 kdump64: 
@@ -259,7 +259,7 @@ kdump-linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_number.c
 
 kdump-linux-@LINUX_VERSION@: kdump-linux-@LINUX_VERSION@.o
 	${CC} ${KERN_DBG} ${KERN_OPTMZ} -o kdump-linux-${LINUX_VERSION} kdump-linux-${LINUX_VERSION}.o \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ${XLIBS}
 
 # *alpha_linux* - Builds kdump-X.Y.Z according to kernel version
 kdump-alpha_linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_number.c
@@ -273,7 +273,7 @@ kdump-alpha_linux-@LINUX_VERSION@.o: kdump.c ${INCLS} AFS_component_version_numb
 
 kdump-alpha_linux-@LINUX_VERSION@: kdump-alpha_linux-@LINUX_VERSION@.o
 	${CC} ${KERN_DBG} ${KERN_OPTMZ} -o kdump-alpha_linux-${LINUX_VERSION} kdump-alpha_linux-${LINUX_VERSION}.o \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ${XLIBS}
 
 #
 # kdump install targets

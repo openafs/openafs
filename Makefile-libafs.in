@@ -6,4 +6,6 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 all: 
-	cd src && cd libafs && $(MAKE)
+	cd src/libafs && $(MAKE)
+clean:
+	cd src/libafs && $(MAKE) clean

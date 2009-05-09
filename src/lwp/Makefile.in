@@ -133,8 +133,8 @@ exc_handling.o	: exc_handling.c
 #
 # tests
 #
-rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a
-	${CC} ${CFLAGS} -o rw rw.o liblwp.a $(TOP_LIBDIR)/util.a
+rw: rw.o liblwp.a $(TOP_LIBDIR)/libafsutil.a
+	${CC} ${CFLAGS} -o rw rw.o liblwp.a $(TOP_LIBDIR)/libafsutil.a
 
 rw.o: rw.c
 	${CC} ${CFLAGS} -c ${srcdir}/rw.c

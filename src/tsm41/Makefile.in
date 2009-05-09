@@ -27,7 +27,7 @@ AFSLIBS = \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libafsutil.a \
 		${TOP_LIBDIR}/libaudit.a
 
 KAFSLIBS = \
@@ -42,7 +42,7 @@ KAFSLIBS = \
 		${TOP_LIBDIR}/librx.a \
 		${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
-		${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libafsutil.a \
 		${TOP_LIBDIR}/libaudit.a
 
 AUTH_OBJS = \
@@ -76,7 +76,7 @@ install install.noversion:
 clean:
 	$(RM) -f *.o $(AUTHLIBS) $(AUTHFILES) so_locations
 
-afs_dynamic_auth: ${AUTH_OBJS} aix_ktc_krb.o ${AFSLIBS} ${AUTHFILES}
+afs_dynamic_auth: ${AUTH_OBJS} ${AFSLIBS} ${AUTHFILES}
 	$(LD) -o $@ ${AUTH_OBJS} $(AFSLIBS) ${AUTHFILES} ${KRB5LIBS} \
 	$(LIBCOM_ERR) ${XLIBS} ${LDFLAGS}
 

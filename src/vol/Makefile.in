@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 HELPER_SPLINT=@HELPER_SPLINT@
 
 
-LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
+LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a
 
@@ -193,7 +193,7 @@ gi: ${TOP_LIBDIR}/libsys.a
         esac
 
 namei_map: ${TOP_LIBDIR}/libsys.a namei_map.o
-	${CC} ${CFLAGS} -o namei_map namei_map.o ${TOP_LIBDIR}/util.a ${LIBS} ${XLIBS}
+	${CC} ${CFLAGS} -o namei_map namei_map.o ${TOP_LIBDIR}/libafsutil.a ${LIBS} ${XLIBS}
 
 volinfo: vol-info.o physio.o ihandle.o ${LIBS}
 	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \

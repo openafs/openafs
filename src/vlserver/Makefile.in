@@ -34,7 +34,7 @@ LIBS=\
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libsys.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/libafsutil.a
 
 OBJS=vldbint.xdr.o vldbint.cs.o vl_errors.o
 
@@ -129,7 +129,7 @@ ${DEST}/etc/vldb_convert: cnvldb
 	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
 	  echo "Don't install cnvldb for ${SYS_NAME}" ; \
 	else \
-	  ${INSTALL} $? $@ ; \
+	  ${INSTALL} -f $? $@ ; \
 	fi
 
 ${TOP_LIBDIR}/libvldb.a: libvldb.a
@@ -168,7 +168,7 @@ ${DESTDIR}${afssrvsbindir}/vldb_convert: cnvldb
 	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
 	  echo "Don't install cnvldb for ${SYS_NAME}" ; \
 	else \
-	  ${INSTALL} $? $@ ; \
+	  ${INSTALL} -f $? $@ ; \
 	fi
 
 ${DESTDIR}${libdir}/afs/libvldb.a: libvldb.a

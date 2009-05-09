@@ -13,7 +13,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 INCDIRS= -I${TOP_INCDIR} -I.. -I. -I${srcdir} -I${srcdir}/.. -I${TOP_OBJDIR}/src/config 
 LDIRS= -L.. -L${TOP_LIBDIR}
 LIBS= ${TOP_LIBDIR}/libcmd.a  ../librx.a ${TOP_LIBDIR}/liblwp.a \
-	 ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a ${XLIBS}
+	 ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libsys.a ${XLIBS}
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} -DRXDEBUG ${LDIRS} ${XCFLAGS} ${ARCHFLAGS}
 

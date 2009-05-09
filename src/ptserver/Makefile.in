@@ -46,7 +46,7 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/libafsutil.a
 
 all: ptserver pts pt_util db_verify ${TOP_LIBDIR}/libprot.a \
 	depinstall readgroup readpwd testpt
@@ -220,9 +220,8 @@ ${DEST}/etc/prdb_check: db_verify
 	if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
 	  echo "Don't install db_verify for ${SYS_NAME}" ; \
 	else \
-	  ${INSTALL} $? $@ ; \
+	  ${INSTALL} -f $? $@ ; \
 	fi
-	${INSTALL} -f $? $@
 
 ${DEST}/include/afs/prclient.h: ptclient.h
 	${INSTALL} $? $@
@@ -292,7 +291,7 @@ ${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
 	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
 	  echo "Don't install db_verify for ${SYS_NAME}" ; \
 	else \
-	  ${INSTALL} $? $@ ; \
+	  ${INSTALL} -f $? $@ ; \
 	fi
 
 ${DESTDIR}${libdir}/afs/libprot.a: libprot.a

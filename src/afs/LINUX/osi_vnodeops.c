@@ -66,14 +66,17 @@ extern struct afs_cacheOps afs_UfsCacheOps;
     do {					       \
 	if(afs_cacheType == &afs_UfsCacheOps)	       \
 	    lock_kernel();			       \
-    } while(0);
+    } while(0)
 
 
 #define maybe_unlock_kernel()			\
     do {					       \
 	if(afs_cacheType == &afs_UfsCacheOps)	       \
 	    unlock_kernel();			       \
-    } while(0);
+    } while(0)
+#else
+#define maybe_lock_kernel() lock_kernel()
+#define maybe_unlock_kernel() unlock_kernel()
 #endif /* AFS_CACHE_BYPASS */
 
 static ssize_t

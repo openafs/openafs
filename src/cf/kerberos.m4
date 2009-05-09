@@ -12,10 +12,10 @@ dnl AC_ARG_VAR(KRB5CONFIG_SCRIPT, [Location of krb5-config script])
 dnl AC_ARG_VAR(KRB5VENDOR, [Kerberos flavor--HEIMDAL or MIT])
 
 AC_ARG_WITH([krb5-conf],
-    [AC_HELP_STRING([--with-krb5-conf=@<:@krb5-config-location@:>@],
+    [AS_HELP_STRING([--with-krb5-conf=@<:@krb5-config-location@:>@],
         [Use a krb5-config script to configure Kerberos])])
 AC_ARG_WITH([krb5],
-    [AC_HELP_STRING([--with-krb5],
+    [AS_HELP_STRING([--with-krb5],
         [Support for Kerberos 5 (manual configuration)])])
 
 NEED_NFOLD='#'
@@ -121,7 +121,7 @@ ac_cv_heimdal_style_krb5_keyblock=no)
 AC_MSG_RESULT($ac_cv_heimdal_style_krb5_keyblock)
 if test "x$ac_cv_heimdal_style_krb5_keyblock" = xyes; then
 if test "x$kludge_need_parse_units_h" = xyes; then
-AC_DEFINE([HAVE_PARSE_UNITS_H], 1, [define if heimdal krb5.h needs parse_units.h])
+AC_DEFINE(HAVE_PARSE_UNITS_H, 1, [define if heimdal krb5.h needs parse_units.h])
 fi
 KRB5VENDOR="HEIMDAL";
 else
@@ -166,7 +166,7 @@ else
 	AC_MSG_RESULT([Can't determine Kerberos V implementation])
 fi
 if test "X$KRB5VENDOR" = XHEIMDAL; then
-	AC_DEFINE([COMPILED_WITH_HEIMDAL], 1, [define if linking against kth heimdal (please do not use this symbol for conditional compilation)])
+	AC_DEFINE(COMPILED_WITH_HEIMDAL, 1, [define if linking against kth heimdal (please do not use this symbol for conditional compilation)])
 	# TEMPORARY workaround to incompatibility of
 	# AFS and Heimdal errortables
 	if test "X$KRB5PREFIX" = X; then
@@ -182,18 +182,18 @@ fi
 if test "X$KRB5VENDOR" = XSHISHI; then
 dnl *** Unsupported; only rxk5 has the necessary logic.
 dnl *** Beware shishi licensing.
-	AC_DEFINE([COMPILED_WITH_SHISHI], 1, [define if linking against shishi kerberos 5 (please do not use this symbol for conditional compilation)])
+	AC_DEFINE(COMPILED_WITH_SHISHI, 1, [define if linking against shishi kerberos 5 (please do not use this symbol for conditional compilation)])
 	NEED_NFOLD=''
 	K5SUPPORT=' nfold.o'
 fi
 if test "X$KRB5VENDOR" = XMIT; then
-	AC_DEFINE([COMPILED_WITH_MIT], 1, [define if linking against MIT kerberos 5 (please do not use this symbol for conditional compilation)])
+	AC_DEFINE(COMPILED_WITH_MIT, 1, [define if linking against MIT kerberos 5 (please do not use this symbol for conditional compilation)])
 	K5SUPPORT=' danish.o nfold.o'
 	NEED_DANISH=''
 	NEED_NFOLD=''
 fi
 if test "X$KRB5VENDOR" = XK5SSL; then
-	AC_DEFINE([COMPILED_WITH_SSL], 1, [define if using k5ssl + openssl (please do not use this symbol for conditional compilation)])
+	AC_DEFINE(COMPILED_WITH_SSL, 1, [define if using k5ssl + openssl (please do not use this symbol for conditional compilation)])
 	K5SUPPORT=''
 	if test "X$KRB5CFLAGS" != X; then
 		AC_MSG_WARN([-with-ssl, but KRB5CFLAGS is set])
@@ -203,8 +203,8 @@ if test "X$KRB5VENDOR" = XK5SSL; then
 	fi
 	KRB5LIBS='${TOP_LIBDIR}/libk5ssl.a '"$SSLLIBS"' ${TOP_LIBDIR}/libcom_err.a'
 	AC_MSG_RESULT([Using internal K5SSL Kerberos V implementation])
-	AC_DEFINE([HAVE_KRB5_CREDS_KEYBLOCK], 1, [define if krb5_creds has keyblock])
-	AC_DEFINE([HAVE_KRB5_PRINC_SIZE], 1, [define if krb5_princ_size exists])
+	AC_DEFINE(HAVE_KRB5_CREDS_KEYBLOCK, 1, [define if krb5_creds has keyblock])
+	AC_DEFINE(HAVE_KRB5_PRINC_SIZE, 1, [define if krb5_princ_size exists])
 fi
 
 
@@ -220,7 +220,7 @@ if test "X$KRB5VENDOR" != X && test "X$KRB5VENDOR" != XK5SSL; then
 		[AC_CHECK_LIB([krb524], [krb524_convert_creds_kdc],
 		    [LIBS="-lkrb524 $LIBS"
 		     KRB5LIBS="-lkrb524 $LIBS"
-		     AC_DEFINE([HAVE_KRB524_CONVERT_CREDS_KDC], 1,
+		     AC_DEFINE(HAVE_KRB524_CONVERT_CREDS_KDC, 1,
 			 [Define to 1 if you have the `krb524_convert_creds_kdc' function.])])])])
 	AC_CHECK_HEADERS([kerberosIV/krb.h])
 
@@ -253,14 +253,14 @@ fi
 if test "X$KRB5VENDOR" = XK5SSL; then
 	AC_MSG_RESULT([Configuring built-in support for Kerberos 5])
 	ac_cv_krb5_creds_keyblock_exists=yes;
-	AC_DEFINE([HAVE_KRB5_PRINC_SIZE], 1, [define if krb5_princ_size exists])
+	AC_DEFINE(HAVE_KRB5_PRINC_SIZE, 1, [define if krb5_princ_size exists])
 fi
 
 if test "x$ac_cv_krb5_creds_keyblock_exists" = xyes; then
-	AC_DEFINE([HAVE_KRB5_CREDS_KEYBLOCK], 1, [define if krb5_creds has keyblock])
+	AC_DEFINE(HAVE_KRB5_CREDS_KEYBLOCK, 1, [define if krb5_creds has keyblock])
 fi
 if test "x$ac_cv_krb5_creds_session_exists" = xyes; then
-	AC_DEFINE([HAVE_KRB5_CREDS_SESSION], 1, [define if krb5_creds has session])
+	AC_DEFINE(HAVE_KRB5_CREDS_SESSION, 1, [define if krb5_creds has session])
 fi
 else AC_MSG_RESULT([Krb5 not configured. XXX])
 fi

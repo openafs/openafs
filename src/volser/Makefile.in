@@ -43,14 +43,14 @@ LIBS=\
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libusd.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/libafsutil.a
 
 VOLDUMP_LIBS = \
 	../vol/ihandle.o \
 	../vol/physio.o \
 	../vol/vlib.a \
 	${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libdir.a \
 	${TOP_LIBDIR}/liblwp.a  \
@@ -67,7 +67,7 @@ all: volserver vos restorevol voldump \
 
 restorevol: restorevol.c
 	${CC} ${CFLAGS} -o restorevol ${srcdir}/restorevol.c \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a ${XLIBS}
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a ${XLIBS}
 
 vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
 	${CC} ${LDFLAGS} -o vos vos.o $(VSOBJS) libvolser.a ${LIBS} \

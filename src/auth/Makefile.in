@@ -25,7 +25,7 @@ KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
 LIBS=libauth.a ${TOP_LIBDIR}/libsys.a \
       ${TOP_LIBDIR}/librxkad.a ${RXK5} ${TOP_LIBDIR}/libdes.a \
       ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
-      ${TOP_LIBDIR}/util.a
+      ${TOP_LIBDIR}/libafsutil.a
 INCLS=cellconfig.h auth.h keys.h afs_token.h afs_token_protos.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
@@ -130,7 +130,7 @@ t_unit:  t_unit.o libauth.a
 	$(CC) -o t_unit t_unit.o ${KRB5LIBS} libauth.a
 
 t_name: t_name.o libauth.a
-	$(CC) -o t_name t_name.o libauth.a ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/util.a ${KRB5LIBS}
+	$(CC) -o t_name t_name.o libauth.a ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libafsutil.a ${KRB5LIBS}
 
 t_cap: t_cap.o
 	$(CC) -o t_cap t_cap.o ${LIBS} $(LIBCOM_ERR)

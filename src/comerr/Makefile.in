@@ -14,7 +14,7 @@ et_lex.lex.c: et_lex.lex.l
 	$(LEX) -t $(srcdir)/et_lex.lex.l > et_lex.lex.c
 
 compile_et:	compile_et.o error_table.o
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o ${TOP_LIBDIR}/util.a @LEXLIB@
+	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o ${TOP_LIBDIR}/libafsutil.a @LEXLIB@
 afserror.c afserror.h: afserror.et compile_et
 	./compile_et -p ${srcdir} afserror
 

@@ -15,7 +15,7 @@ LIBS2=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/librxkad.a       ${TOP_LIBDIR}/libaudit.a \
 	${TOP_LIBDIR}/librx.a          ${TOP_LIBDIR}/liblwp.a \
 	${TOP_LIBDIR}/libdes.a         ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libsys.a
 
 LIBS=${TOP_LIBDIR}/libkauth.a ${LIBS1} ${TOP_LIBDIR}/libauth.a ${LIBS2}

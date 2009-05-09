@@ -35,7 +35,7 @@ includes = \
 	${TOP_INCDIR}/potpourri.h 
 
 all: ${includes} \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	sys
 
 depinstall: ${includes}
@@ -224,7 +224,7 @@ ${TOP_INCDIR}/potpourri.h: ${srcdir}/potpourri.h
 	${INSTALL} $? $@
 
 
-${TOP_LIBDIR}/util.a: util.a
+${TOP_LIBDIR}/libafsutil.a: util.a
 	${INSTALL} $? $@
 
 

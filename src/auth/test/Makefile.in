@@ -14,7 +14,7 @@ LIBS=\
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
-	${TOP_LIBDIR}/util.a
+	${TOP_LIBDIR}/libafsutil.a
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS} ${ARCHFLAGS}
 

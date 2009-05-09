@@ -1113,9 +1113,9 @@ AC_DEFUN([LINUX_HAVE_BDI_INIT], [
   AC_CACHE_VAL([ac_cv_linux_bdi_init], [
     AC_TRY_KBUILD(
 [#include <linux/backing-dev.h>],
-[bdi_init(NULL);],
-      ac_cv_linux_bdi_init=yes,
-      ac_cv_linux_bdi_init=no)])
+[extern int bdi_init; bdi_init = 5;],
+      ac_cv_linux_bdi_init=no,
+      ac_cv_linux_bdi_init=yes)])
   AC_MSG_RESULT($ac_cv_linux_bdi_init)
   if test "x$ac_cv_linux_bdi_init" = "xyes"; then
     AC_DEFINE([HAVE_BDI_INIT], 1, [define if your kernel has a bdi_init()])
@@ -1125,8 +1125,8 @@ AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
   AC_MSG_CHECKING([for linux write_begin() address space op])
   AC_CACHE_VAL([ac_cv_linux_write_begin], [
     AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[simple_write_begin(NULL, NULL, 0, 0, 0, NULL, NULL);],
+[#include <linux/pagemap.h>],
+[struct address_space_operations *a = 0;a->write_begin = 0;],
       ac_cv_linux_write_begin=yes,
       ac_cv_linux_write_begin=no)])
   AC_MSG_RESULT($ac_cv_linux_write_begin)

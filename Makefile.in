@@ -27,6 +27,7 @@ ENABLE_PTHREADED_UBIK=@ENABLE_PTHREADED_UBIK@
 ### old: @ENABLE_RXK5@RXK5=@RXK5@
 @ENABLE_RXK5@RXK5=rxk5
 @ENABLE_RXK5@MAYBE_RXK5_DEPINSTALL=rxk5_depinstall k5ssl_depinstall
+@ENABLE_RXK5@RXK5_EXTRAS=-extras rxk5
 
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
@@ -498,12 +499,13 @@ ${DEST}/bin/dedebug: dedebug
 libafs_setup: config export
 	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME} ${RXK5} ${NFSSRV}
 
-libafs: libafs_setup lwp_depinstall rx_depinstall tvlserver_depinstall \
+libafs: libafs_setup vlserver_depinstall \
 		rxkad_depinstall ${MAYBE_RXK5_DEPINSTALL} fsint_depinstall \
-		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
+		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall \
+		sys_depinstall
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: libafs_setup lwp_depinstall rx_depinstall tvlserver_depinstall \
+libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall \
 		rxkad_depinstall ${MAYBE_RXK5_DEPINSTALL} fsint_depinstall \
 		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall sys_depinstall
 	${TOP_SRCDIR}/config/make_libafs_tree.pl \
@@ -511,6 +513,7 @@ libafs_tree: libafs_setup lwp_depinstall rx_depinstall tvlserver_depinstall \
 		-os $(MKAFS_OSTYPE) \
 		-t @TOP_OBJDIR@/libafs_tree \
 		-o @TOP_OBJDIR@ \
+		$(RXK5_EXTRAS) \
 		-p @srcdir@
 
 #

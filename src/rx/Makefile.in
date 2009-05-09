@@ -43,7 +43,7 @@ BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
 
 LIBS=librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
-	       ${TOP_LIBDIR}/util.a
+	       ${TOP_LIBDIR}/libafsutil.a
 
 all: \
 	includes \

@@ -16,7 +16,7 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/libbutm.a \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${XLIBS}
 
 all: ${TOP_LIBDIR}/libbutm.a

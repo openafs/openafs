@@ -45,7 +45,7 @@ FSSDEBUG_OBJS = fssync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROB
 
 SSSDEBUG_OBJS = salvsync-debug.o physio.o common.o ${UTILOBJS} ${VLIBOBJS} ${DIROBJS} ${LWPOBJS}
 
-LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libcmd.a
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/libafsutil.a ${TOP_LIBDIR}/libcmd.a
 
 INSTALL_TARGS = ${DESTDIR}${afssrvlibexecdir}/salvageserver \
 		${DESTDIR}${afssrvsbindir}/fssync-debug \

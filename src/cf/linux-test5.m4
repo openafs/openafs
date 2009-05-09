@@ -1,4 +1,55 @@
-
+dnl AC_DEFUN([OPENAFS_GCC_SUPPORTS_MARCH], [
+dnl AC_MSG_CHECKING(if $CC accepts -march=pentium)
+dnl save_CFLAGS="$CFLAGS"
+dnl CFLAGS="-MARCH=pentium"
+dnl AC_CACHE_VAL(openafs_cv_gcc_supports_march,[
+dnl AC_TRY_COMPILE(
+dnl [],
+dnl [int x;],
+dnl openafs_cv_gcc_supports_march=yes,
+dnl openafs_cv_gcc_supports_march=no)])
+dnl AC_MSG_RESULT($openafs_cv_gcc_supports_march)
+dnl if test x$openafs_cv_gcc_supports_march = xyes; then
+dnl   P5PLUS_KOPTS="-march=pentium"
+dnl else
+dnl   P5PLUS_KOPTS="-m486 -malign-loops=2 -malign-jumps=2 -malign-functions=2"
+dnl fi
+dnl CFLAGS="$save_CFLAGS"
+dnl ])
+dnl 
+dnl AC_DEFUN([OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING], [
+dnl AC_MSG_CHECKING(if $CC needs -fno-strict-aliasing)
+dnl save_CFLAGS="$CFLAGS"
+dnl CFLAGS="-fno-strict-aliasing"
+dnl AC_CACHE_VAL(openafs_cv_gcc_needs_no_strict_aliasing,[
+dnl AC_TRY_COMPILE(
+dnl [],
+dnl [int x;],
+dnl openafs_cv_gcc_needs_no_strict_aliasing=yes,
+dnl openafs_cv_gcc_needs_no_strict_aliasing=no)])
+dnl AC_MSG_RESULT($openafs_cv_gcc_needs_no_strict_aliasing)
+dnl if test x$openafs_cv_gcc_needs_no_strict_aliasing = xyes; then
+dnl   LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fno-strict-aliasing"
+dnl fi
+dnl CFLAGS="$save_CFLAGS"
+dnl ])
+dnl AC_DEFUN([OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE], [
+dnl AC_MSG_CHECKING(if $CC needs -fno-strength-reduce)
+dnl save_CFLAGS="$CFLAGS"
+dnl CFLAGS="-fno-strength-reduce"
+dnl AC_CACHE_VAL(openafs_cv_gcc_needs_no_strength_reduce,[
+dnl AC_TRY_COMPILE(
+dnl [],
+dnl [int x;],
+dnl openafs_cv_gcc_needs_no_strength_reduce=yes,
+dnl openafs_cv_gcc_needs_no_strength_reduce=no)])
+dnl AC_MSG_RESULT($openafs_cv_gcc_needs_no_strength_reduce)
+dnl if test x$openafs_cv_gcc_needs_no_strength_reduce = xyes; then
+dnl   LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fno-strength-reduce"
+dnl fi
+dnl CFLAGS="$save_CFLAGS"
+dnl ])
+dnl 
 dnl AC_DEFUN([OPENAFS_GCC_SUPPORTS_NO_COMMON], [
 dnl AC_MSG_CHECKING(if $CC supports -fno-common)
 dnl save_CFLAGS="$CFLAGS"
@@ -11,7 +62,7 @@ dnl openafs_cv_gcc_supports_no_common=yes,
 dnl openafs_cv_gcc_supports_no_common=no)])
 dnl AC_MSG_RESULT($openafs_cv_gcc_supports_no_common)
 dnl if test x$openafs_cv_gcc_supports_no_common = xyes; then
-dnl   LINUX_KCFLAGS="$LINUX_KCFLAGS -fno-common"
+dnl   LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fno-common"
 dnl fi
 dnl CFLAGS="$save_CFLAGS"
 dnl ])
@@ -50,7 +101,7 @@ _ACEOF
     sh conftest.dir/conftest.sh $LINUX_KERNEL_PATH cc cflags 2>conftest.err >conftest.out
     then
       LINUX_KCC="`sed -n 's/^CC=//p' conftest.out`"
-      LINUX_KCFLAGS="`sed -n 's/^CFLAGS=//p' conftest.out`"
+      LINUX_GCC_KOPTS="`sed -n 's/^CFLAGS=//p' conftest.out`"
     else
       sed '/^ *+/d' conftest.err >&AS_MESSAGE_LOG_FD
       echo "$as_me: failed using conftestdir.dir/conftest.mk:" >&AS_MESSAGE_LOG_FD
@@ -59,9 +110,9 @@ _ACEOF
       sed 's/^/| /' conftest.dir/conftest.sh >&AS_MESSAGE_LOG_FD
       AC_MSG_FAILURE([Fix problem or use --disable-kernel-module...])
   fi; rm -fr conftest.err conftest.out conftest.dir
-  # for 2.6: empty LINUX_KCFLAGS or replace with fixed -Iarch/um/include
+  # for 2.6: empty LINUX_GCC_KOPTS or replace with fixed -Iarch/um/include
   if test -f $LINUX_KERNEL_PATH/scripts/Makefile.build; then
-    LINUX_KCFLAGS=`echo "$LINUX_KCFLAGS" | sed "s/  */ /g
+    LINUX_GCC_KOPTS=`echo "$LINUX_GCC_KOPTS" | sed "s/  */ /g
       s/"'$'"/ /
       : again
       h
@@ -88,10 +139,10 @@ openafs_cv_gcc_supports_pipe=yes,
 openafs_cv_gcc_supports_pipe=no)])
 AC_MSG_RESULT($openafs_cv_gcc_supports_pipe)
 if test x$openafs_cv_gcc_supports_pipe = xyes; then
-  LINUX_KCFLAGS="$LINUX_KCFLAGS -pipe"
+  LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -pipe"
 fi
 CFLAGS="$save_CFLAGS"
 ])
 AC_SUBST(LINUX_KCC)
-AC_SUBST(LINUX_KCFLAGS)
+AC_SUBST(LINUX_GCC_KOPTS)
 AC_SUBST(NFSSRV)

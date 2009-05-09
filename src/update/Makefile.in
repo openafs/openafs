@@ -21,7 +21,7 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
 
-LIBUTIL=${TOP_LIBDIR}/util.a \
+LIBUTIL=${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libsys.a
 
 LIBAUDIT=${TOP_LIBDIR}/libaudit.a

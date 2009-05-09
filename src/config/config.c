@@ -8,7 +8,6 @@
  */
 
 #include <sys/types.h>
-#include <sys/types.h>
 #include <sys/file.h>
 #include <sys/time.h>
 #include <stdio.h>
@@ -29,8 +28,8 @@ main(int argc, char **argv)
     register FILE *outfile;
     char **alist, **ap, *cp;
     register int code;
-    char *sysname;
     int i;
+    char *sysname;
 
     if (argc < 4) {
 	printf
@@ -57,12 +56,12 @@ main(int argc, char **argv)
 
    ap = alist;
    *ap++ = "all";
-   /* copy in extra keywords, this allows arbitrary variant sections, 
+   /* copy in extra keywords, this allows arbitrary variant sections,
       alongside sysname  */
    for (i = 3; argv[i]; ++i) {
 	*ap++ = argv[i];
 	/* This allows JUST arch or JUST OS/version,
-	 * Linux 2.6 uses the in-kernel build system, so 
+	 * Linux 2.6 uses the in-kernel build system, so
 	 * just 'linux26' is enough. */
 	if ((i == 3 /* sysname argument only */) && (cp = strchr(argv[i], '_')))
 	    *ap++ = (cp+1);

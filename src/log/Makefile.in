@@ -29,7 +29,7 @@ LIBRARIES= ${TOP_LIBDIR}/libauth.a \
 	        ${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libdes.a \
-	        ${TOP_LIBDIR}/util.a
+	        ${TOP_LIBDIR}/libafsutil.a
 KLIBRARIES= ${TOP_LIBDIR}/libauth.krb.a \
 		${TOP_LIBDIR}/librxkad.a \
 		${RXK5} \
@@ -38,7 +38,7 @@ KLIBRARIES= ${TOP_LIBDIR}/libauth.krb.a \
 	        ${TOP_LIBDIR}/liblwp.a \
 		${TOP_LIBDIR}/libcmd.a \
 		${TOP_LIBDIR}/libdes.a \
-	        ${TOP_LIBDIR}/util.a
+	        ${TOP_LIBDIR}/libafsutil.a
 
 LIBCOM_ERR=${TOP_LIBDIR}/libcom_err.a
 

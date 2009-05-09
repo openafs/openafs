@@ -9,11 +9,11 @@ dnl it when cross-compiling
 
 AC_DEFUN([OPENAFS_CHECK_BIGENDIAN], [
 AC_ARG_ENABLE([bigendian],
-    [AC_HELP_STRING([--enable-bigendian], [the target is big endian])],
+    [AS_HELP_STRING([--enable-bigendian], [the target is big endian])],
     [openafs_cv_c_bigendian_compile=no
 openafs_cv_c_bigendian=yes])
 AC_ARG_ENABLE([littleendian],
-    [AC_HELP_STRING([--enable-littleendian], [the target is little endian])],
+    [AS_HELP_STRING([--enable-littleendian], [the target is little endian])],
     [openafs_cv_c_bigendian_compile=no
 openafs_cv_c_bigendian=no])
 
@@ -48,9 +48,9 @@ AC_CACHE_CHECK(whether byte ordering is bigendian, openafs_cv_c_bigendian,[
   fi
 ])
 if test "$openafs_cv_c_bigendian" = "yes"; then
-  AC_DEFINE([AUTOCONF_FOUND_BIGENDIAN], 1, [define if target is big endian])dnl
+  AC_DEFINE(AUTOCONF_FOUND_BIGENDIAN, 1, [define if target is big endian])dnl
 fi
 if test "$openafs_cv_c_bigendian_compile" = "yes"; then
-  AC_DEFINE([ENDIANESS_IN_SYS_PARAM_H], 1, [define if sys/param.h defines the endiness])dnl
+  AC_DEFINE(ENDIANESS_IN_SYS_PARAM_H, 1, [define if sys/param.h defines the endiness])dnl
 fi
 ])

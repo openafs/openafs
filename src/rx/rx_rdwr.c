@@ -1119,7 +1119,7 @@ int
 rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 {
     struct rx_packet *cp = NULL;
-    struct rx_call *p, *np;
+    struct rx_packet *p, *np;
     int nextio;
     int requestCount;
     struct rx_queue tmpq;
@@ -1256,11 +1256,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     /* Move the packets from the temporary queue onto the transmit queue.
      * We may end up with more than call->twind packets on the queue. */
     
-#ifdef KDUMP_RX_LOCK
-    for (queue_Scan(&tmpq, p, np, rx_call_rx_lock))
-#else
-    for (queue_Scan(&tmpq, p, np, rx_call))
-#endif
+    for (queue_Scan(&tmpq, p, np, rx_packet))
     {
         p->flags |= RX_PKTFLAG_TQ;
     }

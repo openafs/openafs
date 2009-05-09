@@ -47,7 +47,7 @@ LIBS=${TOP_LIBDIR}/libbudb.a \
         ${TOP_LIBDIR}/libsys.a  \
 	${TOP_LIBDIR}/liblwp.a \
         ${TOP_LIBDIR}/libcmd.a \
-	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libafsutil.a \
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/libprocmgmt.a
 
@@ -85,7 +85,7 @@ tcstatus.o: tcstatus.c ${INCLS}
 
 read_tape: read_tape.c
 	${CC} ${CFLAGS} -o read_tape ${srcdir}/read_tape.c \
-		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libafsutil.a \
 		${TOP_LIBDIR}/libusd.a
 
 clean:
