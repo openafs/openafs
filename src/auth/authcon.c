@@ -87,24 +87,25 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 /* Return an appropriate set of security classes and indexes */
 	/* this is mainly for use by ubik servers */
 
+/* XXX 1.5.59 has "*aindex" not "maxindex".  Why? */
 afs_int32
-afsconf_ServerAuth(void *parm1,
-    struct rx_securityClass **sc,
-    afs_int32 maxindex)
+afsconf_ServerAuth(void *arock,
+		   struct rx_securityClass **astr, 
+		   afs_int32 maxindex)
 {
     int i, r;
-    struct afsconf_dir *adir = parm1;
+    struct afsconf_dir *adir = arock;
 
     LOCK_GLOBAL_MUTEX;
     r = 0;
     if (maxindex
-	    && (sc[0] = rxnull_NewServerSecurityObject())) {
+	    && (astr[0] = rxnull_NewServerSecurityObject())) {
 	if (!r) r = 1;
     }
 #ifdef AFS_RXK5
     if (maxindex > 5
 	    && have_afs_rxk5_keytab(adir->name)
-	    && (sc[5] = rxk5_NewServerSecurityObject(rxk5_auth,
+	    && (astr[5] = rxk5_NewServerSecurityObject(rxk5_auth,
 		get_afs_rxk5_keytab(adir->name),
 		rxk5_default_get_key, 0, 0))) {
 	if (r < 6) r = 6;
@@ -114,7 +115,7 @@ afsconf_ServerAuth(void *parm1,
 #ifdef AFS_RXK5
 	    && have_afs_keyfile(adir)
 #endif
-	    && (sc[2] = rxkad_NewServerSecurityObject(0, (char *) adir,
+	    && (astr[2] = rxkad_NewServerSecurityObject(0, (char *) adir,
 		afsconf_GetKey, NULL))) {
 	if (r < 3) r = 3;
     }
@@ -181,8 +182,8 @@ GenericAuth(struct afsconf_dir *adir,
     }
 
     /* next create random session key, using key for seed to good random */
-    des_init_random_number_generator(&key);
-    code = des_random_key(&session);
+    des_init_random_number_generator(key.data);
+    code = des_random_key(session.data);
     if (code) {
 	return QuickAuth(astr, aindex);
     }
@@ -218,9 +219,10 @@ out:
  * appropriate security class and index
  */
 afs_int32
-afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
+afsconf_ClientAuth(void *arock, struct rx_securityClass ** astr,
 		   afs_int32 * aindex)
 {
+    struct afsconf_dir * adir = (struct afsconf_dir *) arock;
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
@@ -234,7 +236,7 @@ afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
  * tells rxkad to encrypt the data, too.
  */
 afs_int32
-afsconf_ClientAuthSecure(struct afsconf_dir *adir, 
+afsconf_ClientAuthSecure(struct afsconf_dir *adir,
 			 struct rx_securityClass **astr, 
 			 afs_int32 *aindex)
 {
@@ -251,11 +253,10 @@ afsconf_ClientAuthSecure(struct afsconf_dir *adir,
  * tells rxkad to encrypt the data, too.
  */
 afs_int32
-afsconf_ClientAuthEx(adir, astr, aindex, flags)
-     struct afsconf_dir *adir;
-     struct rx_securityClass **astr;
-     afs_int32 *aindex;
-     afs_int32 flags;
+afsconf_ClientAuthEx(struct afsconf_dir *adir,
+     struct rx_securityClass **astr,
+     afs_int32 *aindex,
+     afs_int32 flags)
 {
     afs_int32 rc;
 

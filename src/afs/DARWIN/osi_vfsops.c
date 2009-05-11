@@ -261,7 +261,7 @@ afs_root(struct mount *mp, struct vnode **vpp)
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
     if (mdata == NULL && afs_globalVp
-	&& (afs_globalVp->states & CStatd)) {
+	&& (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
 #ifdef AFS_DARWIN80_ENV

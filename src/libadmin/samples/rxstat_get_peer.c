@@ -26,6 +26,9 @@ RCSID
 
 #include <string.h>
 
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_clientAdmin.h>
@@ -37,7 +40,6 @@ pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
-#include <rx/rxstat.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>
@@ -56,10 +58,8 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include <arpa/inet.h>		/* for inet_ntoa() */
 #endif
 
-extern int RXSTATS_RetrievePeerRPCStats();
-
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxstat_get_peer <cell> <host> <port>\n");
     exit(1);

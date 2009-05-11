@@ -286,8 +286,9 @@ HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 
     switch (acom & 0xff) {
     case 1:
-	avc->states |= CSafeStore;
+	avc->f.states |= CSafeStore;
 	avc->asynchrony = 0;
+	/* SXW - Should we force a MetaData flush for this flag setting */
 	break;
 
 	/* case 2 used to be abort store, but this is no longer provided,
@@ -299,7 +300,7 @@ HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 	    register struct cell *tcell;
 	    register afs_int32 i;
 
-	    tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
+	    tcell = afs_GetCell(avc->f.fid.Cell, READ_LOCK);
 	    if (tcell) {
 		i = strlen(tcell->cellName) + 1;	/* bytes to copy out */
 
@@ -1164,7 +1165,7 @@ DECL_PIOCTL(PGetFID)
     AFS_STATCNT(PGetFID);
     if (!avc)
 	return EINVAL;
-    memcpy(aout, (char *)&avc->fid, sizeof(struct VenusFid));
+    memcpy(aout, (char *)&avc->f.fid, sizeof(struct VenusFid));
     *aoutSize = sizeof(struct VenusFid);
     return 0;
 }
@@ -1203,29 +1204,31 @@ DECL_PIOCTL(PSetAcl)
 
     acl.AFSOpaque_val = ain;
     do {
-	tconn = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tconn = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tconn) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREACL);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_StoreACL(tconn->id, (struct AFSFid *)&avc->fid.Fid,
+		RXAFS_StoreACL(tconn->id, (struct AFSFid *)&avc->f.fid.Fid,
 			       &acl, &OutStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_STOREACL,
+	     (tconn, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STOREACL,
 	      SHARED_LOCK, NULL));
 
     /* now we've forgotten all of the access info */
     ObtainWriteLock(&afs_xcbhash, 455);
     avc->callback = 0;
     afs_DequeueCallback(avc);
-    avc->states &= ~(CStatd | CUnique);
+    avc->f.states &= ~(CStatd | CUnique);
     ReleaseWriteLock(&afs_xcbhash);
-    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 	osi_dnlc_purgedp(avc);
+
+    /* SXW - Should we flush metadata here? */
     return code;
 }
 
@@ -1325,10 +1328,10 @@ DECL_PIOCTL(PGetAcl)
     AFS_STATCNT(PGetAcl);
     if (!avc)
 	return EINVAL;
-    Fid.Volume = avc->fid.Fid.Volume;
-    Fid.Vnode = avc->fid.Fid.Vnode;
-    Fid.Unique = avc->fid.Fid.Unique;
-    if (avc->states & CForeign) {
+    Fid.Volume = avc->f.fid.Fid.Volume;
+    Fid.Vnode = avc->f.fid.Fid.Vnode;
+    Fid.Unique = avc->f.fid.Fid.Unique;
+    if (avc->f.states & CForeign) {
 	/*
 	 * For a dfs xlator acl we have a special hack so that the
 	 * xlator will distinguish which type of acl will return. So
@@ -1342,7 +1345,7 @@ DECL_PIOCTL(PGetAcl)
     }
     acl.AFSOpaque_val = aout;
     do {
-	tconn = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tconn = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tconn) {
 	    *aout = 0;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHACL);
@@ -1353,7 +1356,7 @@ DECL_PIOCTL(PGetAcl)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tconn, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_FETCHACL,
+	     (tconn, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_FETCHACL,
 	      SHARED_LOCK, NULL));
 
     if (code == 0) {
@@ -1410,7 +1413,7 @@ DECL_PIOCTL(PGetFileCell)
     AFS_STATCNT(PGetFileCell);
     if (!avc)
 	return EINVAL;
-    tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
+    tcell = afs_GetCell(avc->f.fid.Cell, READ_LOCK);
     if (!tcell)
 	return ESRCH;
     strcpy(aout, tcell->cellName);
@@ -1670,19 +1673,19 @@ DECL_PIOCTL(PGetVolumeStatus)
     OfflineMsg = offLineMsg;
     MOTD = motd;
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_GetVolumeStatus(tc->id, avc->fid.Fid.Volume, &volstat,
+		RXAFS_GetVolumeStatus(tc->id, avc->f.fid.Fid.Volume, &volstat,
 				      &Name, &OfflineMsg, &MOTD);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS,
+	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS,
 	      SHARED_LOCK, NULL));
 
     if (code)
@@ -1738,7 +1741,7 @@ DECL_PIOCTL(PSetVolumeStatus)
 	goto out;
     }
 
-    tvp = afs_GetVolume(&avc->fid, areq, READ_LOCK);
+    tvp = afs_GetVolume(&avc->f.fid, areq, READ_LOCK);
     if (tvp) {
 	if (tvp->states & (VRO | VBackup)) {
 	    afs_PutVolume(tvp, READ_LOCK);
@@ -1781,19 +1784,19 @@ DECL_PIOCTL(PSetVolumeStatus)
 	storeStat.Mask |= AFS_SETMAXQUOTA;
     }
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_SetVolumeStatus(tc->id, avc->fid.Fid.Volume, &storeStat,
+		RXAFS_SetVolumeStatus(tc->id, avc->f.fid.Fid.Volume, &storeStat,
 				      volName, offLineMsg, motd);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS,
+	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS,
 	      SHARED_LOCK, NULL));
 
     if (code)
@@ -1892,9 +1895,9 @@ DECL_PIOCTL(PNewStatMount)
     if (code) {
 	goto out;
     }
-    tfid.Cell = avc->fid.Cell;
-    tfid.Fid.Volume = avc->fid.Fid.Volume;
-    if (!tfid.Fid.Unique && (avc->states & CForeign)) {
+    tfid.Cell = avc->f.fid.Cell;
+    tfid.Fid.Volume = avc->f.fid.Fid.Volume;
+    if (!tfid.Fid.Unique && (avc->f.states & CForeign)) {
 	tvc = afs_LookupVCache(&tfid, areq, NULL, avc, bufp);
     } else {
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
@@ -1953,7 +1956,7 @@ DECL_PIOCTL(PGetTokens)
     register afs_int32 i;
     register struct unixuser *tu;
     register char *cp;
-    afs_int32 iterator;
+    afs_int32 iterator = 0;
     int newStyle;
 
     AFS_STATCNT(PGetTokens);
@@ -2363,7 +2366,7 @@ DECL_PIOCTL(PFindVolume)
     AFS_STATCNT(PFindVolume);
     if (!avc)
 	return EINVAL;
-    tvp = afs_GetVolume(&avc->fid, areq, READ_LOCK);
+    tvp = afs_GetVolume(&avc->f.fid, areq, READ_LOCK);
     if (tvp) {
 	cp = aout;
 	for (i = 0; i < MAXHOSTS; i++) {
@@ -2564,17 +2567,17 @@ DECL_PIOCTL(PRemoveCallBack)
     AFS_STATCNT(PRemoveCallBack);
     if (!avc)
 	return EINVAL;
-    if (avc->states & CRO)
+    if (avc->f.states & CRO)
 	return 0;		/* read-only-ness can't change */
     ObtainWriteLock(&avc->lock, 229);
     theFids.AFSCBFids_len = 1;
     theCBs.AFSCBs_len = 1;
-    theFids.AFSCBFids_val = (struct AFSFid *)&avc->fid.Fid;
+    theFids.AFSCBFids_val = (struct AFSFid *)&avc->f.fid.Fid;
     theCBs.AFSCBs_val = CallBacks_Array;
     CallBacks_Array[0].CallBackType = CB_DROPPED;
     if (avc->callback) {
 	do {
-	    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	    if (tc) {
 		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);
 		RX_AFS_GUNLOCK();
@@ -2584,15 +2587,15 @@ DECL_PIOCTL(PRemoveCallBack)
 	    }
 	    /* don't set code on failure since we wouldn't use it */
 	} while (afs_Analyze
-		 (tc, code, &avc->fid, areq,
+		 (tc, code, &avc->f.fid, areq,
 		  AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS, SHARED_LOCK, NULL));
 
 	ObtainWriteLock(&afs_xcbhash, 457);
 	afs_DequeueCallback(avc);
 	avc->callback = 0;
-	avc->states &= ~(CStatd | CUnique);
+	avc->f.states &= ~(CStatd | CUnique);
 	ReleaseWriteLock(&afs_xcbhash);
-	if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+	if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 	    osi_dnlc_purgedp(avc);
     }
     ReleaseWriteLock(&avc->lock);
@@ -2822,9 +2825,9 @@ DECL_PIOCTL(PRemoveMount)
 	afs_PutDCache(tdc);
 	goto out;
     }
-    tfid.Cell = avc->fid.Cell;
-    tfid.Fid.Volume = avc->fid.Fid.Volume;
-    if (!tfid.Fid.Unique && (avc->states & CForeign)) {
+    tfid.Cell = avc->f.fid.Cell;
+    tfid.Fid.Volume = avc->f.fid.Fid.Volume;
+    if (!tfid.Fid.Unique && (avc->f.states & CForeign)) {
 	tvc = afs_LookupVCache(&tfid, areq, NULL, avc, bufp);
     } else {
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
@@ -2859,19 +2862,19 @@ DECL_PIOCTL(PRemoveMount)
     ObtainWriteLock(&avc->lock, 231);
     osi_dnlc_remove(avc, bufp, tvc);
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_RemoveFile(tc->id, (struct AFSFid *)&avc->fid.Fid, bufp,
+		RXAFS_RemoveFile(tc->id, (struct AFSFid *)&avc->f.fid.Fid, bufp,
 				 &OutDirStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_REMOVEFILE,
+	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_REMOVEFILE,
 	      SHARED_LOCK, NULL));
 
     if (code) {
@@ -2894,7 +2897,7 @@ DECL_PIOCTL(PRemoveMount)
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);	/* drop ref count */
     }
-    avc->states &= ~CUnique;	/* For the dfs xlator */
+    avc->f.states &= ~CUnique;	/* For the dfs xlator */
     ReleaseWriteLock(&avc->lock);
     code = 0;
   out:
@@ -3017,8 +3020,8 @@ DECL_PIOCTL(PFlushVolumeData)
     if (!afs_resourceinit_flag)	/* afs daemons haven't started yet */
 	return EIO;		/* Inappropriate ioctl for device */
 
-    volume = avc->fid.Fid.Volume;	/* who to zap */
-    cell = avc->fid.Cell;
+    volume = avc->f.fid.Fid.Volume;	/* who to zap */
+    cell = avc->f.fid.Cell;
 
     /*
      * Clear stat'd flag from all vnodes from this volume; this will invalidate all
@@ -3026,20 +3029,20 @@ DECL_PIOCTL(PFlushVolumeData)
      */
  loop:
     ObtainReadLock(&afs_xvcache);
-    i = VCHashV(&avc->fid);
+    i = VCHashV(&avc->f.fid);
     for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
 	    uq = QPrev(tq);
 	    tvc = QTOVH(tq);
-	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
-		if (tvc->states & CVInit) {
+	    if (tvc->f.fid.Fid.Volume == volume && tvc->f.fid.Cell == cell) {
+		if (tvc->f.states & CVInit) {
 		    ReleaseReadLock(&afs_xvcache);
-		    afs_osi_Sleep(&tvc->states);
+		    afs_osi_Sleep(&tvc->f.states);
 		    goto loop;
 		}
 #ifdef AFS_DARWIN80_ENV
-		if (tvc->states & CDeadVnode) {
+		if (tvc->f.states & CDeadVnode) {
 		    ReleaseReadLock(&afs_xvcache);
-		    afs_osi_Sleep(&tvc->states);
+		    afs_osi_Sleep(&tvc->f.states);
 		    goto loop;
 		}
 #endif
@@ -3072,9 +3075,9 @@ DECL_PIOCTL(PFlushVolumeData)
 
 		ObtainWriteLock(&afs_xcbhash, 458);
 		afs_DequeueCallback(tvc);
-		tvc->states &= ~(CStatd | CDirty);
+		tvc->f.states &= ~(CStatd | CDirty);
 		ReleaseWriteLock(&afs_xcbhash);
-		if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
+		if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 		    osi_dnlc_purgedp(tvc);
 		afs_TryToSmush(tvc, *acred, 1);
 		ReleaseWriteLock(&tvc->lock);
@@ -3170,14 +3173,14 @@ DECL_PIOCTL(PGetVnodeXStatus)
 	return EACCES;
 
     memset(&stat, 0, sizeof(struct vcxstat));
-    stat.fid = avc->fid;
-    hset32(stat.DataVersion, hgetlo(avc->m.DataVersion));
+    stat.fid = avc->f.fid;
+    hset32(stat.DataVersion, hgetlo(avc->f.m.DataVersion));
     stat.lock = avc->lock;
-    stat.parentVnode = avc->parentVnode;
-    stat.parentUnique = avc->parentUnique;
+    stat.parentVnode = avc->f.parent.vnode;
+    stat.parentUnique = avc->f.parent.unique;
     hset(stat.flushDV, avc->flushDV);
     hset(stat.mapDV, avc->mapDV);
-    stat.truncPos = avc->truncPos;
+    stat.truncPos = avc->f.truncPos;
     {				/* just grab the first two - won't break anything... */
 	struct axscache *ac;
 
@@ -3188,12 +3191,12 @@ DECL_PIOCTL(PGetVnodeXStatus)
     }
     stat.callback = afs_data_pointer_to_int32(avc->callback);
     stat.cbExpires = avc->cbExpires;
-    stat.anyAccess = avc->anyAccess;
+    stat.anyAccess = avc->f.anyAccess;
     stat.opens = avc->opens;
     stat.execsOrWriters = avc->execsOrWriters;
     stat.flockCount = avc->flockCount;
     stat.mvstat = avc->mvstat;
-    stat.states = avc->states;
+    stat.states = avc->f.states;
     memcpy(aout, (char *)&stat, sizeof(struct vcxstat));
     *aoutSize = sizeof(struct vcxstat);
     return 0;
@@ -3221,7 +3224,7 @@ DECL_PIOCTL(PGetVnodeXStatus2)
     memset(&stat, 0, sizeof(struct vcxstat2));
 
     stat.cbExpires = avc->cbExpires;
-    stat.anyAccess = avc->anyAccess;
+    stat.anyAccess = avc->f.anyAccess;
     stat.mvstat = avc->mvstat;
     stat.callerAccess = afs_GetAccessBits(avc, ~0, areq);
 
@@ -4260,9 +4263,9 @@ DECL_PIOCTL(PFlushMount)
     if (code) {
 	goto out;
     }
-    tfid.Cell = avc->fid.Cell;
-    tfid.Fid.Volume = avc->fid.Fid.Volume;
-    if (!tfid.Fid.Unique && (avc->states & CForeign)) {
+    tfid.Cell = avc->f.fid.Cell;
+    tfid.Fid.Volume = avc->f.fid.Fid.Volume;
+    if (!tfid.Fid.Unique && (avc->f.states & CForeign)) {
 	tvc = afs_LookupVCache(&tfid, areq, NULL, avc, bufp);
     } else {
 	tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
@@ -4282,12 +4285,12 @@ DECL_PIOCTL(PFlushMount)
     ObtainWriteLock(&tvc->lock, 649);
     ObtainWriteLock(&afs_xcbhash, 650);
     afs_DequeueCallback(tvc);
-    tvc->states &= ~(CStatd | CDirty);	/* next reference will re-stat cache entry */
+    tvc->f.states &= ~(CStatd | CDirty); /* next reference will re-stat cache entry */
     ReleaseWriteLock(&afs_xcbhash);
     /* now find the disk cache entries */
     afs_TryToSmush(tvc, *acred, 1);
     osi_dnlc_purgedp(tvc);
-    if (tvc->linkData && !(tvc->states & CCore)) {
+    if (tvc->linkData && !(tvc->f.states & CCore)) {
 	afs_osi_Free(tvc->linkData, strlen(tvc->linkData) + 1);
 	tvc->linkData = NULL;
     }
@@ -4413,8 +4416,8 @@ DECL_PIOCTL(PPrefetchFromTape)
     if (ain && (ainSize == 3 * sizeof(afs_int32)))
 	Fid = (struct AFSFid *)ain;
     else
-	Fid = &avc->fid.Fid;
-    tfid.Cell = avc->fid.Cell;
+	Fid = &avc->f.fid.Fid;
+    tfid.Cell = avc->f.fid.Cell;
     tfid.Fid.Volume = Fid->Volume;
     tfid.Fid.Vnode = Fid->Vnode;
     tfid.Fid.Unique = Fid->Unique;
@@ -4422,20 +4425,20 @@ DECL_PIOCTL(PPrefetchFromTape)
     tvc = afs_GetVCache(&tfid, areq, NULL, NULL);
     if (!tvc) {
 	afs_Trace3(afs_iclSetp, CM_TRACE_PREFETCHCMD, ICL_TYPE_POINTER, tvc,
-		   ICL_TYPE_FID, &tfid, ICL_TYPE_FID, &avc->fid);
+		   ICL_TYPE_FID, &tfid, ICL_TYPE_FID, &avc->f.fid);
 	return ENOENT;
     }
     afs_Trace3(afs_iclSetp, CM_TRACE_PREFETCHCMD, ICL_TYPE_POINTER, tvc,
-	       ICL_TYPE_FID, &tfid, ICL_TYPE_FID, &tvc->fid);
+	       ICL_TYPE_FID, &tfid, ICL_TYPE_FID, &tvc->f.fid);
 
     do {
-	tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
 
 	    RX_AFS_GUNLOCK();
 	    tcall = rx_NewCall(tc->id);
 	    code =
-		StartRXAFS_FetchData(tcall, (struct AFSFid *)&tvc->fid.Fid, 0,
+		StartRXAFS_FetchData(tcall, (struct AFSFid *)&tvc->f.fid.Fid, 0,
 				     0);
 	    if (!code) {
 		bytes = rx_Read(tcall, (char *)aout, sizeof(afs_int32));
@@ -4447,7 +4450,7 @@ DECL_PIOCTL(PPrefetchFromTape)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &tvc->fid, areq, AFS_STATS_FS_RPCIDX_RESIDENCYRPCS,
+	     (tc, code, &tvc->f.fid, areq, AFS_STATS_FS_RPCIDX_RESIDENCYRPCS,
 	      SHARED_LOCK, NULL));
     /* This call is done only to have the callback things handled correctly */
     afs_FetchStatus(tvc, &tfid, areq, &OutStatus);
@@ -4478,9 +4481,9 @@ DECL_PIOCTL(PResidencyCmd)
 
     Fid = &Inputs->fid;
     if (!Fid->Volume)
-	Fid = &avc->fid.Fid;
+	Fid = &avc->f.fid.Fid;
 
-    tfid.Cell = avc->fid.Cell;
+    tfid.Cell = avc->f.fid.Cell;
     tfid.Fid.Volume = Fid->Volume;
     tfid.Fid.Vnode = Fid->Vnode;
     tfid.Fid.Unique = Fid->Unique;
@@ -4493,7 +4496,7 @@ DECL_PIOCTL(PResidencyCmd)
 
     if (Inputs->command) {
 	do {
-	    tc = afs_Conn(&tvc->fid, areq, SHARED_LOCK);
+	    tc = afs_Conn(&tvc->f.fid, areq, SHARED_LOCK);
 	    if (tc) {
 		RX_AFS_GUNLOCK();
 		code =
@@ -4503,7 +4506,7 @@ DECL_PIOCTL(PResidencyCmd)
 	    } else
 		code = -1;
 	} while (afs_Analyze
-		 (tc, code, &tvc->fid, areq,
+		 (tc, code, &tvc->f.fid, areq,
 		  AFS_STATS_FS_RPCIDX_RESIDENCYRPCS, SHARED_LOCK, NULL));
 	/* This call is done to have the callback things handled correctly */
 	afs_FetchStatus(tvc, &tfid, areq, &Outputs->status);
@@ -4736,6 +4739,7 @@ DECL_PIOCTL(PDiscon)
 		if (force) {
 		    afs_DisconDiscardAll(*acred);
 		}
+	        afs_ClearAllStatdFlag();
 		afs_is_disconnected = 0;
 		afs_is_discon_rw = 0;
 		printf("\nSync succeeded. You are back online.\n");

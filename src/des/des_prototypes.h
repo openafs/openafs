@@ -77,6 +77,6 @@ extern void des_set_random_generator_seed(des_cblock key);
 
 /* read_pssword.c */
 extern int des_read_password(des_cblock * k, char *prompt, int verify);
-
+extern int des_read_pw_string(char *, int, char *, int);
 
 #endif

@@ -135,7 +135,7 @@ VLDB_CreateEntry(struct nvldbentry *entryp)
 }
 
 int
-VLDB_GetEntryByID(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp)
+VLDB_GetEntryByID(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
     register int code;
@@ -186,7 +186,7 @@ VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
 }
 
 int 
-VLDB_ReplaceEntry(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
+VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
 {
     struct vldbentry oentry;
     register int code;

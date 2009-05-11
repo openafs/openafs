@@ -138,7 +138,7 @@ KFW_initialize(void)
             KFW_initialize_funcs();
 
             if ( KFW_is_available() ) {
-                char rootcell[MAXCELLCHARS+1];
+                char rootcell[CELL_MAXNAMELEN+1];
 #ifdef USE_MS2MIT
                 KFW_import_windows_lsa();
 #endif /* USE_MS2MIT */
@@ -1140,7 +1140,7 @@ KFW_AFS_get_cred( char * username,
         free(cellconfig.linkedCell);
 
     if ( code && reasonP ) {
-        *reasonP = (char *) afs_error_message(code);
+        *reasonP = afs_error_message(code);
     }
     return(code);
 }

@@ -9,10 +9,12 @@ RCSID
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include <lock.h>
 #define UBIK_INTERNALS
 #include <afs/stds.h>
+#include <afs/cellconfig.h>
 #include <ubik.h>
 #include <rx/xdr.h>
 #include "ptint.h"
@@ -80,7 +82,7 @@ ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
     return (0);
 }
 
-long
+int
 ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen,
              int atype)
 {
@@ -100,17 +102,22 @@ ubik_CacheUpdate(register struct ubik_trans *atrans)
     return (0);
 }
 
-int
-panic(char *a, char *b, char *c, char *d)
+void
+panic(char *format, ...)
 {
-    printf(a, b, c, d);
+    va_list ap;
+
+    va_start(ap, format);
+    vprintf(format, ap);
+    va_end(ap);
+    
     abort();
     printf("BACK FROM ABORT\n");	/* shouldn't come back from floating pt exception */
     exit(1);			/* never know, though */
 }
 
 int
-ubik_GetVersion(int dummy, struct ubik_version *ver)
+ubik_GetVersion(struct ubik_trans *dummy, struct ubik_version *ver)
 {
     memset(ver, 0, sizeof(struct ubik_version));
     return (0);
@@ -118,7 +125,7 @@ ubik_GetVersion(int dummy, struct ubik_version *ver)
 
 
 int
-ubik_Seek(struct ubik_trans *tt, long afd, long pos)
+ubik_Seek(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos)
 {
     if (lseek(dbase_fd, pos + HDRSIZE, 0) < 0) {
 	perror("ubik_Seek");
@@ -128,7 +135,7 @@ ubik_Seek(struct ubik_trans *tt, long afd, long pos)
 }
 
 int
-ubik_Write(struct ubik_trans *tt, char *buf, long len)
+ubik_Write(struct ubik_trans *tt, void *buf, afs_int32 len)
 {
     int status;
 
@@ -141,7 +148,7 @@ ubik_Write(struct ubik_trans *tt, char *buf, long len)
 }
 
 int
-ubik_Read(struct ubik_trans *tt, char *buf, long len)
+ubik_Read(struct ubik_trans *tt, void *buf, afs_int32 len)
 {
     int status;
 
@@ -151,7 +158,7 @@ ubik_Read(struct ubik_trans *tt, char *buf, long len)
 	return (1);
     }
     if (status < len)
-	memset(&buf[status], 0, len - status);
+	memset((char *)buf + status, 0, len - status);
     return (0);
 }
 

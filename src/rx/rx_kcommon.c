@@ -78,8 +78,8 @@ rxk_AddPort(u_short aport, char *arock)
 int
 rxk_DelPort(u_short aport)
 {
-    register int i;
-    register unsigned short *tsp;
+    int i;
+    unsigned short *tsp;
 
     for (i = 0, tsp = rxk_ports; i < MAXRXPORTS; i++, tsp++) {
 	if (*tsp == aport) {
@@ -414,7 +414,7 @@ rxi_StartListener(void)
 /* Called from rxi_FindPeer, when initializing a clear rx_peer structure,
   to get interesting information. */
 void
-rxi_InitPeerParams(register struct rx_peer *pp)
+rxi_InitPeerParams(struct rx_peer *pp)
 {
     u_short rxmtu;
     afs_int32 i, mtu;
@@ -537,7 +537,7 @@ static struct protosw parent_proto;	/* udp proto switch */
 void
 shutdown_rxkernel(void)
 {
-    register struct protosw *tpro, *last;
+    struct protosw *tpro, *last;
     last = inetdomain.dom_protoswNPROTOSW;
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++)
 	if (tpro->pr_protocol == IPPROTO_UDP) {
@@ -670,7 +670,7 @@ rxi_GetIFInfo(void)
     int i = 0;
     int different = 0;
 
-    register int rxmtu, maxmtu;
+    int rxmtu, maxmtu;
     afs_uint32 addrs[ADDRSPERSITE];
     int mtus[ADDRSPERSITE];
     afs_uint32 ifinaddr;
@@ -685,7 +685,7 @@ rxi_GetIFInfo(void)
     struct in_addr pin;
 #else
     struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
-    register struct ifnet *ifn;
+    struct ifnet *ifn;
 #endif
 
     memset(addrs, 0, sizeof(addrs));
@@ -886,7 +886,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
-    register afs_int32 code;
+    afs_int32 code;
 #ifdef AFS_DARWIN80_ENV
     socket_t newSocket;
 #else
@@ -1071,7 +1071,7 @@ rxk_NewSocket(short aport)
 
 /* free socket allocated by rxk_NewSocket */
 int
-rxk_FreeSocket(register struct socket *asocket)
+rxk_FreeSocket(struct socket *asocket)
 {
     AFS_STATCNT(osi_FreeSocket);
 #if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
@@ -1153,7 +1153,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
     struct sockaddr_in from;
     int nbytes;
     afs_int32 rlen;
-    register afs_int32 tlen;
+    afs_int32 tlen;
     afs_int32 savelen;		/* was using rlen but had aliasing problems */
     rx_computelen(p, tlen);
     rx_SetDataSize(p, tlen);	/* this is the size of the user data area */
@@ -1227,9 +1227,10 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
                 }
 	    }
 
+#ifdef RX_TRIMDATABUFS
 	    /* Free any empty packet buffers at the end of this packet */
 	    rxi_TrimDataBufs(p, 1);
-
+#endif
 	    return 0;
 	}
     } else

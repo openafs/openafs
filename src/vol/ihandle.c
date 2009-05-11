@@ -93,6 +93,7 @@ int fdInUseCount = 0;
 /* Hash table for inode handles */
 IHashBucket_t ihashTable[I_HANDLE_HASH_SIZE];
 
+void *ih_sync_thread(void *);
 
 #ifdef AFS_PTHREAD_ENV
 /* Initialize the global ihandle mutex */
@@ -151,7 +152,6 @@ ih_Initialize(void)
     fdCacheSize = MIN(fdMaxCacheSize, FD_DEFAULT_CACHESIZE);
 
     {
-	void *ih_sync_thread();
 #ifdef AFS_PTHREAD_ENV
 	pthread_t syncer;
 	pthread_attr_t tattr;
@@ -865,7 +865,8 @@ ih_condsync(IHandle_t * ihP)
 }
 
 void
-ih_sync_all() {
+ih_sync_all(void) {
+
     int ihash;
 
     IH_LOCK;
@@ -910,7 +911,7 @@ ih_sync_all() {
 }
 
 void *
-ih_sync_thread() {
+ih_sync_thread(void *dummy) {
     while(1) {
 
 #ifdef AFS_PTHREAD_ENV
@@ -924,6 +925,7 @@ ih_sync_thread() {
 #endif
         ih_sync_all();
     }
+    return NULL;
 }
 
 

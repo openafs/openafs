@@ -31,8 +31,7 @@ RCSID
 #include "acl.h"
 
 int
-acl_HtonACL(acl)
-     struct acl_accessList *acl;
+acl_HtonACL(struct acl_accessList *acl)
 {
     /* Converts the access list defined by acl to network order.  Returns 0 always. */
 
@@ -56,8 +55,7 @@ acl_HtonACL(acl)
 }
 
 int
-acl_NtohACL(acl)
-     struct acl_accessList *acl;
+acl_NtohACL(struct acl_accessList *acl)
 {
     /* Converts the access list defined by acl to network order. Returns 0 always. */
 

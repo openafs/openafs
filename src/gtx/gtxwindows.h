@@ -112,18 +112,24 @@ struct gwin_invparams {
  * Operations on gator windows.
  */
 struct gwinops {
-    int (*gw_box) ();		/* Draw a box around the given window */
-    int (*gw_clear) ();		/* Clear out a window */
-    int (*gw_destroy) ();	/* Destroy a window */
-    int (*gw_display) ();	/* [Re]display a window */
-    int (*gw_drawline) ();	/* Draw a line between two points */
-    int (*gw_drawrectangle) ();	/* Draw a rectangle at the given loc & dimensions */
-    int (*gw_drawchar) ();	/* Draw a char at the given location */
-    int (*gw_drawstring) ();	/* Draw a char string at the given location */
-    int (*gw_invert) ();	/* Invert region */
-    int (*gw_getchar) ();	/* Get a character from a window */
-    int (*gw_getdimensions) ();	/* Get dimensions of a window */
-    int (*gw_wait) ();		/* Wait for input */
+    int (*gw_box) (struct gwin *);      /* Draw a box around the given window */
+    int (*gw_clear) (struct gwin *);	/* Clear out a window */
+    int (*gw_destroy) (struct gwin *);	/* Destroy a window */
+    int (*gw_display) (struct gwin *);	/* [Re]display a window */
+    int (*gw_drawline) (struct gwin *, struct gwin_lineparams *);	
+    			/* Draw a line between two points */
+    int (*gw_drawrectangle) (struct gwin *, struct gwin_rectparams *);	
+    			/* Draw a rectangle at the given loc & dimensions */
+    int (*gw_drawchar) (struct gwin *, struct gwin_charparams *);	
+    			/* Draw a char at the given location */
+    int (*gw_drawstring) (struct gwin *, struct gwin_strparams *);	
+    			/* Draw a char string at the given location */
+    int (*gw_invert) (struct gwin *, struct gwin_invparams *);	
+    			/* Invert region */
+    int (*gw_getchar) (struct gwin *);	/* Get a character from a window */
+    int (*gw_getdimensions) (struct gwin *, struct gwin_sizeparams *);	
+    			/* Get dimensions of a window */
+    int (*gw_wait) (struct gwin *);     /* Wait for input */
 };
 
 /*
@@ -146,8 +152,9 @@ struct gwinops {
  * Base operations on the lower-level window system.
  */
 struct gwinbaseops {
-    struct gwin *(*gw_createwin) ();	/*Create a window */
-    int (*gw_cleanup) ();	/*Clean up before program exit */
+    struct gwin *(*gw_createwin) (void *);	
+    					/*Create a window */
+    int (*gw_cleanup) (struct gwin *);	/*Clean up before program exit */
 };
 
 /*
@@ -166,7 +173,7 @@ extern struct gwinbaseops gwinbops;
  */
 extern struct gwin gator_basegwin;
 
-extern int gw_init();
+extern int gw_init(struct gwin_initparams *);
     /*
      * Summary:
      *    Initialize the gator window package.
@@ -180,6 +187,6 @@ extern int gw_init();
      */
 
 /* initialize the whole gator toolkit package */
-extern struct gwin *gtx_Init();
+extern struct gwin *gtx_Init(int, int);
 
 #endif /* __gator_windows_h */

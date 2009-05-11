@@ -314,8 +314,6 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 void
 osi_StopListener(void)
 {
-    struct task_struct *listener;
-    extern int rxk_ListenerPid;
     extern struct task_struct *rxk_ListenerTask;
 
     while (rxk_ListenerTask) {

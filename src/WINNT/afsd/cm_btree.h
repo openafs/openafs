@@ -156,19 +156,27 @@ typedef struct cm_direnum_entry {
     clientchar_t *name;
     cm_fid_t 	 fid;
     normchar_t   shortName[13];
+    afs_uint32   flags;
 } cm_direnum_entry_t;
 
+#define CM_DIRENUM_FLAG_GOT_STATUS     1
+
 typedef struct cm_direnum {
+    cm_scache_t        *dscp;
+    cm_user_t          *userp;
+    afs_uint32          reqFlags;
     afs_uint32		count;
     afs_uint32  	next;
+    afs_uint32          fetchStatus;
     cm_direnum_entry_t 	entry[1];
 } cm_direnum_t;
 
-long cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked, clientchar_t *maskp, cm_direnum_t **enumpp);
+long cm_BPlusDirEnumerate(cm_scache_t *dscp, cm_user_t *userp, cm_req_t *reqp, 
+                          afs_uint32 locked, clientchar_t *maskp, afs_uint32 fetchStatus, cm_direnum_t **enumpp);
 long cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
 long cm_BPlusDirFreeEnumeration(cm_direnum_t *enump);
-long cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked);
-long cm_BPlusDirEnumBulkStat(cm_scache_t *dscp, cm_direnum_t *enump, cm_user_t *userp, cm_req_t *reqp);
+long cm_BPlusDirEnumTest(cm_scache_t * dscp, cm_user_t *userp, cm_req_t *reqp, afs_uint32 locked);
+long cm_BPlusDirEnumBulkStat(cm_direnum_t *enump);
 
 long cm_InitBPlusDir(void);
 

@@ -300,18 +300,18 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 	if (avc->flockCount == 0) {
 	    if (!AFS_IS_DISCONNECTED) {
 	        do {
-		    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+		    tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 		    if (tc) {
 		        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
 		        RX_AFS_GUNLOCK();
 		        code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
-					         &avc->fid.Fid, &tsync);
+					         &avc->f.fid.Fid, &tsync);
 		        RX_AFS_GLOCK();
 		        XSTATS_END_TIME;
 		    } else
 		    code = -1;
 	        } while (afs_Analyze
-		         (tc, code, &avc->fid, areq,
+		         (tc, code, &avc->f.fid, areq,
 		          AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK, NULL));
 	    } else {
 	  	/*printf("Network is dooooooowwwwwwwnnnnnnn\n");*/
@@ -358,7 +358,7 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		if (!code && avc->flockCount == 0) {
 		    if (!AFS_IS_DISCONNECTED) {
 		        do {
-			    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+			    tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 			    if (tc) {
 			        XSTATS_START_TIME
 				    (AFS_STATS_FS_RPCIDX_RELEASELOCK);
@@ -366,13 +366,13 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 			        code =
 				    RXAFS_ReleaseLock(tc->id,
 						      (struct AFSFid *)&avc->
-						      fid.Fid, &tsync);
+						      f.fid.Fid, &tsync);
 			        RX_AFS_GLOCK();
 			       XSTATS_END_TIME;
 			    } else
 			        code = -1;
 		        } while (afs_Analyze
-			         (tc, code, &avc->fid, areq,
+			         (tc, code, &avc->f.fid, areq,
 			          AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK,
 			          NULL));
 		    }
@@ -393,19 +393,19 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		    lockType = ((acom & LOCK_EX) ? LockWrite : LockRead);
 		    if (!AFS_IS_DISCONNECTED) {
 		        do {
-			    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+			    tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 			    if (tc) {
 			        XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
 			        RX_AFS_GUNLOCK();
 			        code = RXAFS_SetLock(tc->id, (struct AFSFid *)
-						     &avc->fid.Fid, lockType,
+						     &avc->f.fid.Fid, lockType,
 						     &tsync);
 			        RX_AFS_GLOCK();
 			        XSTATS_END_TIME;
 			    } else
 			        code = -1;
 		        } while (afs_Analyze
-			         (tc, code, &avc->fid, areq,
+			         (tc, code, &avc->f.fid, areq,
 			          AFS_STATS_FS_RPCIDX_SETLOCK, SHARED_LOCK,
 			          NULL));
 		    } else
@@ -570,7 +570,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 #endif
     /* Java VMs ask for l_len=(long)-1 regardless of OS/CPU; bottom 32 bits
      * sometimes get masked off by OS */
-    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7ffffffffffffffe))
+    if ((sizeof(af->l_len) == 8) && (af->l_len == 0x7ffffffffffffffeLL))
 	af->l_len = 0;
     /* next line makes byte range locks always succeed,
      * even when they should block */
@@ -843,19 +843,19 @@ GetFlockCount(struct vcache *avc, struct vrequest *areq)
         return 0;
         
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_FetchStatus(tc->id, (struct AFSFid *)&avc->fid.Fid,
+		RXAFS_FetchStatus(tc->id, (struct AFSFid *)&avc->f.fid.Fid,
 				  &OutStatus, &CallBack, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_FETCHSTATUS,
+	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_FETCHSTATUS,
 	      SHARED_LOCK, NULL));
 
     if (temp)

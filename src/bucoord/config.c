@@ -27,17 +27,16 @@ RCSID
 
 struct bc_config *bc_globalConfig;
 
-static
-TrimLine(abuffer, aport)
-     afs_int32 *aport;
-     register char *abuffer;
+#if 0
+static int
+TrimLine(char *abuffer, afs_int32 *aport)
 {
     register int tc;
     char garb[100];
 
     *aport = 0;
     sscanf(abuffer, "%s %u", garb, aport);
-    while (tc = *abuffer) {
+    while ((tc = *abuffer)) {
 	if (tc == ' ') {
 	    *abuffer = 0;
 	    return 0;
@@ -46,13 +45,10 @@ TrimLine(abuffer, aport)
     }
     return 0;
 }
+#endif
 
 FILE *
-bc_open(aconfig, aname, aext, amode)
-     register struct bc_config *aconfig;
-     char *amode;
-     char *aext;
-     char *aname;
+bc_open(struct bc_config *aconfig, char *aname, char *aext, char *amode)
 {
     register FILE *tf;
     char tpath[256];
@@ -66,8 +62,8 @@ bc_open(aconfig, aname, aext, amode)
     return tf;
 }
 
-bc_InitConfig(apath)
-     char *apath;
+int
+bc_InitConfig(char *apath)
 {
     register struct bc_config *tb;
 
@@ -91,11 +87,8 @@ bc_InitConfig(apath)
     return 0;
 }
 
-static
-HostAdd(alist, aname, aport)
-     struct bc_hostEntry **alist;
-     afs_int32 aport;
-     char *aname;
+static int
+HostAdd(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
 {
     register struct bc_hostEntry **tlast, *tentry;
     struct hostent *th;
@@ -131,11 +124,8 @@ HostAdd(alist, aname, aport)
     return 0;
 }
 
-static
-HostDelete(alist, aname, aport)
-     struct bc_hostEntry **alist;
-     afs_int32 aport;
-     char *aname;
+static int
+HostDelete(struct bc_hostEntry **alist, char *aname, afs_int32 aport)
 {
     register struct bc_hostEntry **tlast, *tentry;
 
@@ -154,10 +144,8 @@ HostDelete(alist, aname, aport)
     return 0;
 }
 
-bc_AddTapeHost(aconfig, aname, aport)
-     struct bc_config *aconfig;
-     afs_int32 aport;
-     char *aname;
+int
+bc_AddTapeHost(struct bc_config *aconfig, char *aname, afs_int32 aport)
 {
     register afs_int32 code;
 
@@ -166,10 +154,8 @@ bc_AddTapeHost(aconfig, aname, aport)
     return code;
 }
 
-bc_DeleteTapeHost(aconfig, aname, aport)
-     struct bc_config *aconfig;
-     afs_int32 aport;
-     char *aname;
+int
+bc_DeleteTapeHost(struct bc_config *aconfig, char *aname, afs_int32 aport)
 {
     register afs_int32 code;
 

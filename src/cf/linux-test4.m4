@@ -781,16 +781,39 @@ request_key(NULL, NULL, NULL);
 AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
   AC_MSG_CHECKING([if key_alloc() takes a struct task *])
   AC_CACHE_VAL([ac_cv_key_alloc_needs_struct_task], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
 #include <linux/key.h>
 ],
-[(void) key_alloc(NULL, NULL, 0, 0, NULL, 0, 0);],
+[struct task_struct *t=NULL;
+(void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);],
       ac_cv_key_alloc_needs_struct_task=yes,
-      ac_cv_key_alloc_needs_struct_task=no)])
+      ac_cv_key_alloc_needs_struct_task=no)
+    CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_key_alloc_needs_struct_task)
   if test "x$ac_cv_key_alloc_needs_struct_task" = "xyes"; then
     AC_DEFINE([KEY_ALLOC_NEEDS_STRUCT_TASK], 1, [define if key_alloc takes a struct task *])
+  fi])
+
+AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
+  AC_MSG_CHECKING([if key_alloc() takes credentials])
+  AC_CACHE_VAL([ac_cv_key_alloc_needs_cred], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
+    AC_TRY_KBUILD(
+[#include <linux/rwsem.h>
+#include <linux/key.h>
+],
+[struct cred *c = NULL;
+(void) key_alloc(NULL, NULL, 0, 0, c, 0, 0);],
+      ac_cv_key_alloc_needs_cred=yes,
+      ac_cv_key_alloc_needs_cred=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_key_alloc_needs_cred)
+  if test "x$ac_cv_key_alloc_needs_cred" = "xyes"; then
+    AC_DEFINE([KEY_ALLOC_NEEDS_CRED], 1, [define if key_alloc takes credentials])
   fi])
 
 AC_DEFUN([LINUX_DO_SYNC_READ], [
@@ -839,6 +862,22 @@ AC_DEFUN([LINUX_HAVE_I_SIZE_READ], [
   AC_MSG_RESULT($ac_cv_linux_i_size_read)
   if test "x$ac_cv_linux_i_size_read" = "xyes"; then
     AC_DEFINE([HAVE_LINUX_I_SIZE_READ], 1, [define if your kernel has i_size_read()])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_D_ALLOC_ANON], [
+  AC_MSG_CHECKING([for linux d_alloc_anon()])
+  AC_CACHE_VAL([ac_cv_linux_d_alloc_anon], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/dcache.h>],
+[d_alloc_anon(NULL);],
+      ac_cv_linux_d_alloc_anon=yes,
+      ac_cv_linux_d_alloc_anon=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_d_alloc_anon)
+  if test "x$ac_cv_linux_d_alloc_anon" = "xyes"; then
+    AC_DEFINE([HAVE_LINUX_D_ALLOC_ANON], 1, [define if your kernel has d_alloc_anon()])
   fi])
 
 AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
@@ -1161,4 +1200,18 @@ _u =_t.cred->uid ;],
   AC_MSG_RESULT($ac_cv_linux_struct_task_has_cred)
   if test "x$ac_cv_linux_struct_task_has_cred" = "xyes"; then
     AC_DEFINE([STRUCT_TASK_HAS_CRED], 1, [define if struct task has a cred pointer])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER], [
+  AC_MSG_CHECKING([if struct proc_dir_entry_has_owner])
+  AC_CACHE_VAL([ac_cv_linux_struct_proc_dir_entry_has_owner], [
+    AC_TRY_KBUILD(
+[#include <linux/proc_fs.h>],
+[struct proc_dir_entry _p;
+_p.owner= "";],
+      ac_cv_linux_struct_proc_dir_entry_has_owner=yes,
+      ac_cv_linux_struct_proc_dir_entry_has_owner=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_proc_dir_entry_has_owner)
+  if test "x$ac_cv_linux_struct_proc_dir_entry_has_owner" = "xyes"; then
+    AC_DEFINE([STRUCT_PROC_DIR_ENTRY_HAS_OWNER], 1, [define if struct proc_dir_entry has an owner member])
   fi])

@@ -72,6 +72,8 @@
  *	    regular expression encountered.
  */
 
+#include "regex.h"
+
 /*
  * constants for re's
  */
@@ -93,16 +95,15 @@
 static char expbuf[ESIZE], *braslist[NBRA], *braelist[NBRA];
 static char circf;
 
-static int advance();
-static int backref();
-static int cclass();
+static int advance(char *, char *);
+static int backref(int i, char *);
+static int cclass(char *, char, int);
 
 /*
  * compile the regular expression argument into a dfa
  */
 char *
-re_comp(sp)
-     register char *sp;
+re_comp(const char *sp)
 {
     register int c;
     register char *ep = expbuf;
@@ -221,9 +222,7 @@ re_comp(sp)
 }
 
 static int
-cclass(set, c, af)
-     register char *set, c;
-     int af;
+cclass(char *set, char c, int af)
 {
     register int n;
 
@@ -236,10 +235,8 @@ cclass(set, c, af)
     return (!af);
 }
 
-static
-backref(i, lp)
-     register int i;
-     register char *lp;
+static int
+backref(int i, char *lp)
 {
     register char *bp;
 
@@ -254,8 +251,7 @@ backref(i, lp)
  * try to match the next thing in the dfa
  */
 static int
-advance(lp, ep)
-     register char *lp, *ep;
+advance(char *lp, char *ep)
 {
     register char *curlp;
     int ct, i;
@@ -297,11 +293,11 @@ advance(lp, ep)
 	    return (0);
 
 	case CBRA:
-	    braslist[*ep++] = lp;
+	    braslist[(int) *ep++] = lp;
 	    continue;
 
 	case CKET:
-	    braelist[*ep++] = lp;
+	    braelist[(int) *ep++] = lp;
 	    continue;
 
 	case CBACK:
@@ -321,7 +317,7 @@ advance(lp, ep)
 	    while (backref(i, lp))
 		lp += ct;
 	    while (lp >= curlp) {
-		if (rv = advance(lp, ep))
+		if ((rv = advance(lp, ep)))
 		    return (rv);
 		lp -= ct;
 	    }
@@ -348,7 +344,7 @@ advance(lp, ep)
 	  star:
 	    do {
 		lp--;
-		if (rv = advance(lp, ep))
+		if ((rv = advance(lp, ep)))
 		    return (rv);
 	    } while (lp > curlp);
 	    return (0);
@@ -362,8 +358,7 @@ advance(lp, ep)
  * match the argument string against the compiled re
  */
 int
-re_exec(p1)
-     register char *p1;
+re_exec(const char *p1)
 {
     register char *p2 = expbuf;
     register int c;
@@ -383,7 +378,7 @@ re_exec(p1)
 	do {
 	    if (*p1 != c)
 		continue;
-	    if (rv = advance(p1, p2))
+	    if ((rv = advance(p1, p2)))
 		return (rv);
 	} while (*p1++);
 	return (0);
@@ -392,7 +387,7 @@ re_exec(p1)
      * regular algorithm
      */
     do
-	if (rv = advance(p1, p2))
+	if ((rv = advance(p1, p2)))
 	    return (rv);
     while (*p1++);
     return (0);

@@ -147,7 +147,7 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
         code = cm_Lock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp, NULL);
 
         if (code == 0) {
-            cm_Unlock(scp, sLockType, LOffset, LLength, key, userp, reqp);
+            cm_Unlock(scp, sLockType, LOffset, LLength, key, 0, userp, reqp);
         } else {
             /* In this case, we allow the file open to go through even
                though we can't enforce mandatory locking on the
@@ -302,7 +302,7 @@ extern long cm_CheckNTOpenDone(cm_scache_t *scp, cm_user_t *userp, cm_req_t *req
     lock_ObtainWrite(&scp->rw);
     if (*ldpp) {
 	cm_Unlock(scp, (*ldpp)->sLockType, (*ldpp)->LOffset, (*ldpp)->LLength, 
-		  (*ldpp)->key, userp, reqp);
+		  (*ldpp)->key, 0, userp, reqp);
 	free(*ldpp);
 	*ldpp = NULL;
     }
@@ -1188,7 +1188,7 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
                         code = cm_FreelanceAddSymlink(fnamep, fullname, &rock.fid);
                 }
             }
-            if (!found || code < 0) {   /* add mount point failed, so give up */
+            if (!found || code) {   /* add mount point failed, so give up */
                 if (flags & CM_FLAG_CHECKPATH)
                     code = CM_ERROR_NOSUCHPATH;
                 else
@@ -1932,17 +1932,13 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
                         fid_count = i+1;
                     } else {
                         /* add the new fid to the list */
-                        for ( i=0; i<fid_count; i++) {
-                            if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
-                                code = CM_ERROR_TOO_MANY_SYMLINKS;
-                                cm_ReleaseSCache(nscp);
-                                nscp = NULL;
-                                break;
-                            }
-                        }
-                        if (i == fid_count && fid_count < MAX_FID_COUNT) {
-                            fids[fid_count++] = nscp->fid;
-                        }
+                        if (fid_count == MAX_FID_COUNT) {
+                            code = CM_ERROR_TOO_MANY_SYMLINKS;
+                            cm_ReleaseSCache(nscp);
+                            nscp = NULL;
+                            break;
+                        }       
+                        fids[fid_count++] = nscp->fid;
                     }
                 }
 
@@ -3366,9 +3362,6 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     } else {
         code = 0;
     }
-    cm_ReleaseSCache(oldScp);
-    oldScp = NULL;
-
     if (code) 
         goto done;
 
@@ -3549,31 +3542,28 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                        userp, CM_MERGEFLAG_DIROP);
     lock_ReleaseWrite(&oldDscp->rw);
 
-    if (code == 0) {
-        if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
-
+    if (code == 0 && cm_CheckDirOpForSingleChange(&oldDirOp)) {
 #ifdef USE_BPLUS
-            diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
-            if (diropCode == CM_ERROR_INEXACT_MATCH)
-                diropCode = 0;
-            else if (diropCode == EINVAL)
+        diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
+        if (diropCode == CM_ERROR_INEXACT_MATCH)
+            diropCode = 0;
+        else if (diropCode == EINVAL)
 #endif
-                diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
+            diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
 
-            if (diropCode == 0) {
-                if (oneDir) {
-                    diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
-#ifdef USE_BPLUS
-                    cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
+        if (diropCode == 0) {
+            if (oneDir) {
+                diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
+#ifdef USE_BPLUS        
+                cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
 #endif
-                }
+            }
                 
-                if (diropCode == 0) { 
-                    diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
+            if (diropCode == 0) { 
+                diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
 #ifdef USE_BPLUS
-                    cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
-#endif
-                }
+                cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
+#endif  
             }
         }
     }
@@ -3592,6 +3582,17 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                             userp, CM_MERGEFLAG_DIROP);
         lock_ReleaseWrite(&newDscp->rw);
 
+#if 0 
+        /* 
+         * The following optimization does not work.  
+         * When the file server processed a RXAFS_Rename() request the 
+         * FID of the object being moved between directories is not 
+         * preserved.  The client does not know the new FID nor the 
+         * version number of the target.  Not only can we not create
+         * the directory entry in the new directory, but we can't 
+         * preserve the cached data for the file.  It must be re-read
+         * from the file server.  - jaltman, 2009/02/20
+         */
         if (code == 0) {
             /* we only make the local change if we successfully made
                the change in the old directory AND there was only one
@@ -3603,10 +3604,23 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
 #endif
             }
         }
+#endif /* 0 */
         cm_EndDirOp(&newDirOp);
     }
 
+    /* 
+     * After the rename the file server has invalidated the callbacks
+     * on the file that was moved nor do we have a directory reference 
+     * to it anymore.
+     */
+    lock_ObtainWrite(&oldScp->rw);
+    cm_DiscardSCache(oldScp);
+    lock_ReleaseWrite(&oldScp->rw);
+
   done:
+    if (oldScp)
+        cm_ReleaseSCache(oldScp);
+
     if (free_oldNamep)
         free(oldNamep);
 
@@ -4854,6 +4868,7 @@ long cm_Unlock(cm_scache_t *scp,
                unsigned char sLockType,
                LARGE_INTEGER LOffset, LARGE_INTEGER LLength,
                cm_key_t key, 
+               afs_uint32 flags,
                cm_user_t *userp, 
                cm_req_t *reqp)
 {
@@ -4862,12 +4877,19 @@ long cm_Unlock(cm_scache_t *scp,
     cm_file_lock_t *fileLock;
     osi_queue_t *q;
     int release_userp = FALSE;
+    int exact_match = !(flags & CM_UNLOCK_FLAG_MATCH_RANGE);
+    int lock_found  = 0;
+    LARGE_INTEGER RangeEnd;
 
     osi_Log4(afsd_logp, "cm_Unlock scp 0x%p type 0x%x offset %d length %d",
              scp, sLockType, (unsigned long)LOffset.QuadPart, (unsigned long)LLength.QuadPart);
-    osi_Log3(afsd_logp, "... key <0x%x,0x%x,0x%x>",
-             key.process_id, key.session_id, key.file_id);
+    osi_Log4(afsd_logp, "... key <0x%x,0x%x,0x%x> flags 0x%x",
+             key.process_id, key.session_id, key.file_id, flags);
 
+    if (!exact_match)
+        RangeEnd.QuadPart = LOffset.QuadPart + LLength.QuadPart;
+
+  try_again:
     lock_ObtainRead(&cm_scacheLock);
 
     for (q = scp->fileLocksH; q; q = osi_QNext(q)) {
@@ -4890,21 +4912,39 @@ long cm_Unlock(cm_scache_t *scp,
             osi_assertx(FALSE, "invalid fid value");
         }
 #endif
-        if (!IS_LOCK_DELETED(fileLock) &&
-            cm_KeyEquals(&fileLock->key, &key, 0) &&
-            fileLock->range.offset == LOffset.QuadPart &&
-            fileLock->range.length == LLength.QuadPart) {
-            break;
+        if (exact_match) {
+            if (!IS_LOCK_DELETED(fileLock) &&
+                 cm_KeyEquals(&fileLock->key, &key, 0) &&
+                 fileLock->range.offset == LOffset.QuadPart &&
+                 fileLock->range.length == LLength.QuadPart) {
+                lock_found = 1;
+                break;
+            }
+        } else {
+
+            if (!IS_LOCK_DELETED(fileLock) &&
+                 cm_KeyEquals(&fileLock->key, &key, 0) &&
+                 fileLock->range.offset >= LOffset.QuadPart &&
+                 fileLock->range.offset < RangeEnd.QuadPart &&
+                 (fileLock->range.offset + fileLock->range.length) <= RangeEnd.QuadPart) {
+                lock_found = 1;
+                break;
+            }
         }
     }
 
     if (!q) {
-        osi_Log0(afsd_logp, "cm_Unlock lock not found; failure");
-        
         lock_ReleaseRead(&cm_scacheLock);
 
-        /* The lock didn't exist anyway. *shrug* */
-        return CM_ERROR_RANGE_NOT_LOCKED;
+        if (lock_found && !exact_match) {
+            code = 0;
+            goto done;
+        } else {
+            osi_Log0(afsd_logp, "cm_Unlock lock not found; failure");
+        
+            /* The lock didn't exist anyway. *shrug* */
+            return CM_ERROR_RANGE_NOT_LOCKED;
+        }
     }
 
     /* discard lock record */
@@ -5029,8 +5069,13 @@ long cm_Unlock(cm_scache_t *scp,
         }
     }
 
-    if (release_userp)
+    if (release_userp) {
         cm_ReleaseUser(userp);
+        release_userp = FALSE;
+    }
+
+    if (!exact_match)
+        goto try_again;         /* might be more than one lock in the range */
 
  done:
 
@@ -5069,7 +5114,7 @@ void cm_LockMarkSCacheLost(cm_scache_t * scp)
     }
 
     scp->serverLock = -1;
-    scp->lockDataVersion = -1;
+    scp->lockDataVersion = CM_SCACHE_VERSION_BAD;
     lock_ReleaseWrite(&cm_scacheLock);
 }
 

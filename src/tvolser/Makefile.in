@@ -29,7 +29,7 @@ FSINT=../fsint
 VOLSER=../volser
 RX=../rx
 
-VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o
+VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o vol_split.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o vl_errors.o
 
@@ -72,6 +72,8 @@ COMPILE=${CC} ${CFLAGS} -c $?
 rx_pthread.o: ${RX}/rx_pthread.c
 	${COMPILE} -DDPF_FSLOG
 volmain.o: ${VOLSER}/volmain.c
+	${COMPILE}
+vol_split.o: ${VOLSER}/vol_split.c
 	${COMPILE}
 volprocs.o: ${VOLSER}/volprocs.c
 	${COMPILE}

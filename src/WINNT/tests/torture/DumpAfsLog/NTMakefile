@@ -1,0 +1,35 @@
+#                                                                                                                                
+# Copyright (c) 2009 Secure Endpoints Inc.
+#
+
+AFSDEV_AUXCDEFINES=-I..\include
+RELDIR=WINNT\tests\torture\dumpafslog
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+idirs:
+!       if !(exist($(OJT)\WINNT\tests))
+                md $(OJT)\WINNT\tests
+!       endif
+!       if !(exist($(OJT)\WINNT\tests\torture))
+                md $(OJT)\WINNT\tests\torture
+!       endif
+!       if !(exist($(OJT)\WINNT\tests\torture\dumpafslog))
+                md $(OJT)\WINNT\tests\torture\dumpafslog
+!       endif
+
+EXEDIR = $(DESTDIR)\bin
+
+OBJS = 	$(OUT)\DumpAfsLog.obj
+
+$(EXEDIR)\DumpAfsLog.exe: $(OBJS)
+        $(EXECONLINK) 
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(EXEPREP)
+        $(CODESIGN_USERLAND)
+
+install: idirs $(EXEDIR)\DumpAfsLog.exe
+
+clean::
+        
+

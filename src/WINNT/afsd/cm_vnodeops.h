@@ -204,9 +204,11 @@ extern long cm_UnlockByKey(cm_scache_t * scp,
                            cm_user_t * userp,
                            cm_req_t * reqp);
 
+#define CM_UNLOCK_FLAG_MATCH_RANGE      0x01
+
 extern long cm_Unlock(cm_scache_t *scp, unsigned char sLockType,
                       LARGE_INTEGER LOffset, LARGE_INTEGER LLength, cm_key_t key,
-                      cm_user_t *userp, cm_req_t *reqp);
+                      afs_uint32 flags, cm_user_t *userp, cm_req_t *reqp);
 
 extern long cm_LockCheckRead(cm_scache_t *scp, 
                              LARGE_INTEGER LOffset, 
@@ -235,7 +237,7 @@ extern cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs
 
 extern int cm_KeyEquals(cm_key_t * k1, cm_key_t * k2, int flags);
 
-#define MAX_SYMLINK_COUNT 16
+#define MAX_SYMLINK_COUNT 64
 
 /* make this big enough so that one buffer of dir pages won't overflow.  We'll
  * check anyway, but we want to minimize the chance that we have to leave stuff

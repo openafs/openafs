@@ -219,6 +219,7 @@ rxi_RoundUpPacket
 add_error_table
 remove_error_table
 AssertionFailed
+FT_GetTimeOfDay
 TM_GetTimeOfDay
 afs_add_to_error_table
 multi_Finalize

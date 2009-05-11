@@ -349,7 +349,7 @@ SkipSc:
 }
 
 int
-pr_End()
+pr_End(void)
 {
     int code = 0;
 

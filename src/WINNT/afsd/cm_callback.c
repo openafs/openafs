@@ -190,8 +190,7 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
              scp->fid.vnode == tfid.vnode &&
              scp->fid.unique == tfid.unique &&
              (cellp == NULL || scp->fid.cell == cellp->cellID) &&
-             scp->cbExpires > 0 && 
-             scp->cbServerp != NULL)
+             cm_HaveCallback(scp))
         {
             cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
@@ -1537,7 +1536,7 @@ int cm_HaveCallback(cm_scache_t *scp)
                 lock_ObtainWrite(&scp->rw);      // now get the lock back 
                 return 0;
             }
-            return 1;			// no change
+            return (cm_data.fakeDirVersion == scp->dataVersion);
         }
         return 0;
     }

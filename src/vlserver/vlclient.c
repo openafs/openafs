@@ -1084,12 +1084,12 @@ fill_entry(entry, argp, nargs)
     }
     for (i = 0; i < MAXTYPES; i++) {
 	++argp, --nargs;
-	sscanf(&(*argp)[0], "%d", &entry->volumeId[i]);
+	sscanf(&(*argp)[0], "%u", &entry->volumeId[i]);
     }
     ++argp, --nargs;
     sscanf(&(*argp)[0], "%d", &entry->flags);
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->cloneId);
+    sscanf(&(*argp)[0], "%u", &entry->cloneId);
 }
 
 void
@@ -1112,15 +1112,15 @@ fill_update_entry(entry, argp, nargs)
     if (entry->flags != -1)
 	entry->Mask |= VLUPDATE_FLAGS;
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->cloneId);
+    sscanf(&(*argp)[0], "%u", &entry->cloneId);
     if (entry->flags != -1)
 	entry->Mask |= VLUPDATE_CLONEID;
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->ReadOnlyId);
+    sscanf(&(*argp)[0], "%u", &entry->ReadOnlyId);
     if (entry->ReadOnlyId != -1)
 	entry->Mask |= VLUPDATE_READONLYID;
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->BackupId);
+    sscanf(&(*argp)[0], "%u", &entry->BackupId);
     if (entry->BackupId != -1)
 	entry->Mask |= VLUPDATE_BACKUPID;
     ++argp, --nargs;

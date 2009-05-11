@@ -42,6 +42,7 @@ RCSID
 #include <afs/cellconfig.h>
 #include "ptserver.h"
 #include "pterror.h"
+#include "ptprototypes.h"
 #include <stdlib.h>
 
 /* Foreign cells are represented by the group system:authuser@cell*/
@@ -50,9 +51,11 @@ RCSID
 extern int restricted;
 extern struct ubik_dbase *dbase;
 extern int pr_noAuth;
-extern int IDCmp();
 
-extern afs_int32 AddToEntry();
+static int inRange(struct prentry *cellEntry, afs_int32 aid);
+static afs_int32 allocNextId(struct ubik_trans *, struct prentry *);
+static int AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size);
+
 static char *whoami = "ptserver";
 
 int prp_user_default = PRP_USER_DEFAULT;
@@ -63,10 +66,8 @@ int prp_group_default = PRP_GROUP_DEFAULT;
 #include "map.h"
 
 afs_int32 depthsg = 5;		/* Maximum iterations used during IsAMemberOF */
-extern int IDCmp();
 afs_int32 GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist * alist,
 		     afs_int32 * sizeP, afs_int32 depth);
-afs_int32 allocNextId(struct ubik_trans *, struct prentry *);
 
 struct map *sg_flagged;
 struct map *sg_found;
@@ -1712,7 +1713,7 @@ int pr_noAuth;
 afs_int32 initd = 0;
 
 afs_int32
-Initdb()
+Initdb(void)
 {
     afs_int32 code;
     struct ubik_trans *tt;
@@ -2044,7 +2045,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	tentry.owner = oid;
 	/* The entry must be written through first so Remove and Add routines
 	 * can operate on disk data */
-	code = pr_WriteEntry(at, 0, loc, (char *)&tentry);
+	code = pr_WriteEntry(at, 0, loc, &tentry);
 	if (code)
 	    return PRDBFAIL;
 
@@ -2111,7 +2112,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 	if (code != PRSUCCESS)
 	    return code;
 	strncpy(tentry.name, name, PR_MAXNAMELEN);
-	code = pr_WriteEntry(at, 0, loc, (char *)&tentry);
+	code = pr_WriteEntry(at, 0, loc, &tentry);
 	if (code)
 	    return PRDBFAIL;
 	code = AddToNameHash(at, tentry.name, loc);
@@ -2123,7 +2124,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
 }
 
 
-afs_int32
+static afs_int32
 allocNextId(struct ubik_trans * at, struct prentry * cellEntry)
 {
     /* Id's for foreign cell entries are constructed as follows:
@@ -2154,7 +2155,7 @@ allocNextId(struct ubik_trans * at, struct prentry * cellEntry)
     return id;
 }
 
-int
+static int
 inRange(struct prentry *cellEntry, afs_int32 aid)
 {
     afs_uint32 id, cellid, groupid;
@@ -2185,7 +2186,7 @@ inRange(struct prentry *cellEntry, afs_int32 aid)
 
 }
 
-int
+static int
 AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size)
 {
     if (!(strchr(tentry->name, '@')))

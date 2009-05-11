@@ -543,6 +543,8 @@ extern void smb_ReleaseVCNoLock(smb_vc_t *vcp);
 
 extern void smb_CleanupDeadVC(smb_vc_t *vcp);
 
+extern void smb_MarkAllVCsDead(smb_vc_t *exclude_vcp);
+
 #ifdef DEBUG_SMB_REFCOUNT
 extern smb_tid_t *smb_FindTIDDbg(smb_vc_t *vcp, unsigned short tid, int flags, char *, long);
 #define smb_FindTID(a,b,c) smb_FindTIDDbg(a,b,c,__FILE__,__LINE__);

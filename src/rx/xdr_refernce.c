@@ -59,13 +59,13 @@ RCSID
  * proc is the routine to handle the referenced structure.
  */
 bool_t
-xdr_reference(register XDR *xdrs, 
+xdr_reference(XDR *xdrs, 
 	      caddr_t *pp, /* the pointer to work on */
 	      u_int size, /* size of the object pointed to */
 	      xdrproc_t proc)  /* xdr routine to handle the object */
 {
-    register caddr_t loc = *pp;
-    register bool_t stat;
+    caddr_t loc = *pp;
+    bool_t stat;
 
     if (loc == NULL)
 	switch (xdrs->x_op) {

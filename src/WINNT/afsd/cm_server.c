@@ -870,13 +870,14 @@ void cm_SetServerPrefs(cm_server_t * serverp)
 	    else serverp->ipRank = min(serverp->ipRank,CM_IPRANK_MED);
 	    /* same net */
 	}	
-	/* random between 0..15*/
-	serverp->ipRank += min(serverp->ipRank, rand() % 0x000f);
     } /* and of for loop */
+
+    /* random between 0..15*/
+    serverp->ipRank += (rand() % 0x000f);
     lock_ReleaseRead(&cm_syscfgLock);
 }
 
-cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp, afs_uint32 flags) {
+cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp, afsUUID *uuidp, afs_uint32 flags) {
     cm_server_t *tsp;
 
     osi_assertx(socketp->sin_family == AF_INET, "unexpected socket family");
@@ -886,6 +887,10 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         memset(tsp, 0, sizeof(*tsp));
         tsp->type = type;
         tsp->cellp = cellp;
+        if (uuidp && !afs_uuid_is_nil(uuidp)) {
+            tsp->uuid = *uuidp;
+            tsp->flags |= CM_SERVERFLAG_UUID;
+        }
         tsp->refCount = 1;
         lock_InitializeMutex(&tsp->mx, "cm_server_t mutex", LOCK_HIERARCHY_SERVER);
         tsp->addr = *socketp;
@@ -908,7 +913,7 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
         if ( !(flags & CM_FLAG_NOPROBE) ) {
-            tsp->flags = CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
+            tsp->flags |= CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
             cm_PingServer(tsp);	                /* Obtain Capabilities and check up/down state */
         }
     }
@@ -1294,3 +1299,62 @@ void cm_FreeServerList(cm_serverRef_t** list, afs_uint32 flags)
   
     lock_ReleaseWrite(&cm_serverLock);
 }
+
+/* dump all servers to a file. 
+ * cookie is used to identify this batch for easy parsing, 
+ * and it a string provided by a caller 
+ */
+int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
+{
+    int zilch;
+    cm_server_t *tsp;
+    char output[1024];
+    char uuidstr[128];
+    char hoststr[16];
+
+    if (lock)
+        lock_ObtainRead(&cm_serverLock);
+  
+    sprintf(output, "%s - dumping servers - cm_numFileServers=%d, cm_numVldbServers=%d\r\n", 
+            cookie, cm_numFileServers, cm_numVldbServers);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+  
+    for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp)
+    {
+        char * type;
+        char * down;
+
+        switch (tsp->type) {
+        case CM_SERVER_VLDB:
+            type = "vldb";
+            break;
+        case CM_SERVER_FILE:
+            type = "file";
+            break;
+        default:
+            type = "unknown";
+        }
+
+        afsUUID_to_string(&tsp->uuid, uuidstr, sizeof(uuidstr));
+        afs_inet_ntoa_r(tsp->addr.sin_addr.s_addr, hoststr);
+        down = ctime(&tsp->downTime);
+        down[strlen(down)-1] = '\0';
+
+        sprintf(output, "%s - tsp=0x%p cell=%s addr=%-15s uuid=%s type=%s caps=0x%x flags=0x%x waitCount=%u rank=%u downTime=\"%s\" refCount=%u\r\n",
+                 cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr, uuidstr, type, 
+                 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->ipRank, 
+                 (tsp->flags & CM_SERVERFLAG_DOWN) ?  down : "up",
+                 tsp->refCount);
+        WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+    }
+    sprintf(output, "%s - Done dumping servers.\r\n", cookie);
+    WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+  
+    if (lock)
+	lock_ReleaseRead(&cm_serverLock);
+
+    return (0);     
+}
+
+
+

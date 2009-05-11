@@ -61,9 +61,7 @@ AUTH_KRB_OBJS = \
 		aix_ktc_krb.o \
 
 AUTHLIBS= \
-		afs_dynamic_auth \
-		aklog_dynamic_auth \
-		afs_dynamic_kerbauth
+		afs_dynamic_auth afs_dynamic_kerbauth @MAKE_KRB5@ aklog_dynamic_auth
 
 IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp 
 LDFLAGS = -eafs_initialize ${IMPORTS} -lsys -lcsys -lc
@@ -125,7 +123,4 @@ ${DEST}/root.client/usr/vice/etc/aklog_dynamic_auth: aklog_dynamic_auth
 	${INSTALL} $? $@
 
 dest: \
-	${DEST}/root.client/usr/vice/etc/afs_dynamic_auth \
-	${DEST}/root.client/usr/vice/etc/aklog_dynamic_auth \
-	${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth
-
+	${DEST}/root.client/usr/vice/etc/afs_dynamic_auth ${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth @MAKE_KRB5@ ${DEST}/root.client/usr/vice/etc/aklog_dynamic_auth

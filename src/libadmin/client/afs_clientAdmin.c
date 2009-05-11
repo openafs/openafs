@@ -39,6 +39,7 @@ RCSID
 #include <string.h>
 #include <afs/kautils.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <rx/rx_null.h>
 #ifdef AFS_RXK5
 #include <rx/rxk5.h>

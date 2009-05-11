@@ -101,8 +101,8 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 	 * avc was "VN_HELD" and "crheld" when CCore was set in
 	 * afs_FakeClose
 	 */
-	if (avc->states & CCore) {
-	    avc->states &= ~CCore;
+	if (avc->f.states & CCore) {
+	    avc->f.states &= ~CCore;
 	    avc->opens--;
 	    avc->execsOrWriters--;
 	    AFS_RELE(AFSTOV(avc));

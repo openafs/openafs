@@ -73,6 +73,29 @@ VIsErrorState(VolState state)
 }
 
 /**
+ * tell caller whether V_attachState is an offline condition.
+ *
+ * @param state  volume state enumeration
+ *
+ * @return whether volume state is in offline state
+ *   @retval 0  state is not an offline state
+ *   @retval 1  state is an offline state
+ *
+ * @note DEMAND_ATTACH_FS only
+ */
+static_inline int
+VIsOfflineState(VolState state)
+{
+    switch (state) {
+    case VOL_STATE_UNATTACHED:
+    case VOL_STATE_ERROR:
+    case VOL_STATE_SALVAGING:
+	return 1;
+    }
+    return 0;
+}
+
+/**
  * tell caller whether V_attachState is valid.
  *
  * @param state  volume state enumeration

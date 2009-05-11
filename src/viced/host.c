@@ -121,7 +121,7 @@ static void h_TossStuff_r(register struct host *host);
 
 /* get a new block of CEs and chain it on CEFree */
 static void
-GetCEBlock()
+GetCEBlock(void)
 {
     register struct CEBlock *block;
     register int i;
@@ -146,7 +146,7 @@ GetCEBlock()
 
 /* get the next available CE */
 static struct client *
-GetCE()
+GetCE(void)
 {
     register struct client *entry;
 
@@ -193,7 +193,7 @@ static struct host *HTFree = 0;	/* first free file entry */
  */
 static struct h_AddrHashChain *hostAddrHashTable[h_HASHENTRIES];
 static struct h_UuidHashChain *hostUuidHashTable[h_HASHENTRIES];
-#define h_HashIndex(hostip) ((hostip) & (h_HASHENTRIES-1))
+#define h_HashIndex(hostip) (ntohl(hostip) & (h_HASHENTRIES-1))
 #define h_UuidHashIndex(uuidp) (((int)(afs_uuid_hash(uuidp))) & (h_HASHENTRIES-1))
 
 struct HTBlock {		/* block of HTSPERBLOCK file entries */
@@ -203,7 +203,7 @@ struct HTBlock {		/* block of HTSPERBLOCK file entries */
 
 /* get a new block of HTs and chain it on HTFree */
 static void
-GetHTBlock()
+GetHTBlock(void)
 {
     register struct HTBlock *block;
     register int i;
@@ -238,7 +238,7 @@ GetHTBlock()
 
 /* get the next available HT */
 static struct host *
-GetHT()
+GetHT(void)
 {
     register struct host *entry;
 
@@ -1035,7 +1035,7 @@ h_TossStuff_r(register struct host *host)
  * released, 1 if it should be held after enumeration.
  */
 void
-h_Enumerate(int (*proc) (), char *param)
+h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
 {
     register struct host *host, **list;
     register int *held;
@@ -1089,7 +1089,8 @@ h_Enumerate(int (*proc) (), char *param)
  * be held after enumeration.
  */
 void
-h_Enumerate_r(int (*proc) (), struct host *enumstart, char *param)
+h_Enumerate_r(int (*proc) (struct host *, int, void *), 
+	      struct host *enumstart, void *param)
 {
     register struct host *host, *next;
     int held = 0;
@@ -1944,7 +1945,7 @@ int  num_lrealms = -1;
 
 /* not reentrant */
 void
-h_InitHostPackage()
+h_InitHostPackage(void)
 {
     memset(&nulluuid, 0, sizeof(afsUUID));
     afsconf_GetLocalCell(confDir, localcellname, PR_MAXNAMELEN);
@@ -2472,7 +2473,7 @@ h_UserName(struct client *client)
 
 
 void
-h_PrintStats()
+h_PrintStats(void)
 {
     ViceLog(0,
 	    ("Total Client entries = %d, blocks = %d; Host entries = %d, blocks = %d\n",
@@ -2482,8 +2483,9 @@ h_PrintStats()
 
 
 static int
-h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
+h_PrintClient(register struct host *host, int held, void *rock)
 {
+    StreamHandle_t *file = (StreamHandle_t *)rock;
     register struct client *client;
     int i;
     char tmpStr[256];
@@ -2544,7 +2546,7 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
  * if known
  */
 void
-h_PrintClients()
+h_PrintClients(void)
 {
     time_t now;
     char tmpStr[256];
@@ -2571,8 +2573,10 @@ h_PrintClients()
 
 
 static int
-h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
+h_DumpHost(register struct host *host, int held, void *rock)
 {
+    StreamHandle_t *file = (StreamHandle_t *)rock;
+    
     int i;
     char tmpStr[256];
     char hoststr[16];
@@ -2620,7 +2624,7 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
 
 
 void
-h_DumpHosts()
+h_DumpHosts(void)
 {
     time_t now;
     StreamHandle_t *file = STREAM_OPEN(AFSDIR_SERVER_HOSTDUMP_FILEPATH, "w");
@@ -3389,7 +3393,7 @@ static struct AFSFid zerofid;
  * from other events.
  */
 static int
-CheckHost(register struct host *host, int held)
+CheckHost(register struct host *host, int held, void *rock)
 {
     register struct client *client;
     struct rx_connection *cb_conn = NULL;
@@ -3800,9 +3804,9 @@ printInterfaceAddr(struct host *host, int level)
     if (host->interface) {
 	/* check alternate addresses */
 	number = host->interface->numberOfInterfaces;
-        if (number == 0)
+        if (number == 0) {
             ViceLog(level, ("no-addresses "));
-        else {
+	} else {
             for (i = 0; i < number; i++)
                 ViceLog(level, ("%s:%d ", afs_inet_ntoa_r(host->interface->interface[i].addr, hoststr),
                                 ntohs(host->interface->interface[i].port)));

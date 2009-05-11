@@ -1055,7 +1055,7 @@ smb_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
         ioctlp->ioctl.flags |= CM_IOCTLFLAG_LOGON;
     }
 
-    cm_ResetACLCache(userp);
+    cm_ResetACLCache(cellp, userp);
 
   done:
     if (release_userp)

@@ -25,10 +25,12 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
+#include "ptprototypes.h"
 
 int verbose = 0;
-void skip();
+static void skip(char **);
 
 void
 report_error(afs_int32 code, char *name, char *gname)
@@ -199,7 +201,7 @@ main(int argc, char **argv)
     return 0;
 }
 
-void
+static void
 skip(char **s)
 {
     while (**s != ' ' && **s != '\t' && **s != '\0')

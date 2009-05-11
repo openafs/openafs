@@ -217,12 +217,16 @@ typedef struct cm_scache {
     osi_queue_t * waitQueueT;       /* locked by cm_scacheLock */
 } cm_scache_t;
 
+/* dataVersion */
+#define CM_SCACHE_VERSION_BAD           0xFFFFFFFFFFFFFFFF
+
 /* mask field - tell what has been modified */
 #define CM_SCACHEMASK_CLIENTMODTIME	1	/* client mod time */
 #define CM_SCACHEMASK_LENGTH		2	/* length */
 #define CM_SCACHEMASK_TRUNCPOS		4	/* truncation position */
 
 /* fileType values */
+#define CM_SCACHETYPE_UNKNOWN           0       /* unknown */
 #define CM_SCACHETYPE_FILE		1	/* a file */
 #define CM_SCACHETYPE_DIRECTORY		2	/* a dir */
 #define CM_SCACHETYPE_SYMLINK		3	/* a symbolic link */

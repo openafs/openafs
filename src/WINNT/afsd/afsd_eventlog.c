@@ -167,7 +167,7 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     CHAR 	lpStrings[MAXARGS][STRLEN];
     WORD 	wNumArgs = 0;
     WORD 	wNumStrings = 0;
-	DWORD   code;
+    DWORD       code;
 
     // Ensure that our event source is properly initialized.
     if (!AddEventSource())
@@ -209,6 +209,8 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     	break;
     case MSG_TIME_FLUSH_PER_VOLUME:
     case MSG_TIME_FLUSH_TOTAL:
+    case MSG_SMB_MAX_MPX_COUNT:
+    case MSG_SMB_MAX_BUFFER_SIZE:
 	wNumArgs = 2;
 	lpArgs[0] = va_arg(listArgs, LPTSTR);
 	lpArgs[1] = va_arg(listArgs, LPTSTR);
@@ -296,14 +298,14 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
 
     // Log the event.
     code = ReportEvent(hEventSource,		// handle of event source
-		 wEventType,		// event type
-		 0,			// event category
-		 dwEventID,		// event ID
-		 NULL,			// current user's SID
-		 wNumArgs,		// strings in lpszArgs
-		 0,			// no bytes of raw data
-		 wNumArgs ? lpArgs : NULL,		// array of error strings
-		 NULL);			// no raw data
+                       wEventType,		// event type
+                       0,			// event category
+                       dwEventID,		// event ID
+                       NULL,			// current user's SID
+                       wNumArgs,		// strings in lpszArgs
+                       0,			// no bytes of raw data
+                       wNumArgs ? lpArgs : NULL,// array of error strings
+                       NULL);			// no raw data
 
 
     DeregisterEventSource(hEventSource);

@@ -114,7 +114,7 @@ typedef struct SYNC_endpoint {
  * SYNC server state structure.
  */
 typedef struct SYNC_server_state {
-    int fd;                     /**< listening socket descriptor */
+    osi_socket fd;              /**< listening socket descriptor */
     SYNC_endpoint_t endpoint;   /**< server endpoint address */
     afs_uint32 proto_version;   /**< our protocol version */
     int bind_retry_limit;       /**< upper limit on times to retry socket bind() */
@@ -129,7 +129,7 @@ typedef struct SYNC_server_state {
  * SYNC client state structure.
  */
 typedef struct SYNC_client_state {
-    int fd;                     /**< client socket descriptor */
+    osi_socket fd;              /**< client socket descriptor */
     SYNC_endpoint_t endpoint;   /**< address of sync server */
     afs_uint32 proto_version;   /**< our protocol version */
     int retry_limit;            /**< max number of times for SYNC_ask to retry */
@@ -192,7 +192,7 @@ typedef struct SYNC_response {
 } SYNC_response;
 
 /* general prototypes */
-extern int SYNC_getSock(SYNC_endpoint_t * endpoint);
+extern osi_socket SYNC_getSock(SYNC_endpoint_t * endpoint);
 extern void SYNC_getAddr(SYNC_endpoint_t * endpoint, SYNC_sockaddr_t * addr);
 
 /* client-side prototypes */
@@ -203,8 +203,8 @@ extern afs_int32 SYNC_closeChannel(SYNC_client_state *);  /* do a graceful chann
 extern int SYNC_reconnect(SYNC_client_state *);           /* do a reconnect after a protocol error, or from a forked child */
 
 /* server-side prototypes */
-extern int SYNC_getCom(SYNC_server_state_t *, int fd, SYNC_command * com);
-extern int SYNC_putRes(SYNC_server_state_t *, int fd, SYNC_response * res);
+extern int SYNC_getCom(SYNC_server_state_t *, osi_socket fd, SYNC_command * com);
+extern int SYNC_putRes(SYNC_server_state_t *, osi_socket fd, SYNC_response * res);
 extern int SYNC_verifyProtocolString(char * buf, size_t len);
 extern void SYNC_cleanupSock(SYNC_server_state_t * state);
 extern int SYNC_bindSock(SYNC_server_state_t * state);

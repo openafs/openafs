@@ -9,6 +9,22 @@
 /*
  * HISTORY
  * $Log$
+ * Revision 1.2.2.2.6.1  2009/05/10 23:52:15  matt
+ * DELTA rxk5-1557-20090510
+ * AUTHOR mdw@umich.edu
+ * LICENSE IPL10
+ * FIXES n/a
+ *
+ * Update rxk5 branch to 1.5.59.
+ *
+ * Revision 1.2.2.3  2009/03/16 01:47:39  shadow
+ * DELTA DEVEL15-kauth-prototypes-20090315
+ * AUTHOR sxw@inf.ed.ac.uk
+ * LICENSE IPL10
+ * FIXES 124257
+ *
+ * prototype the kauth directory
+ *
  * Revision 1.2.2.2  2007/08/19 22:15:29  rra
  * DELTA DEVEL15-ka-forwarder-20060731
  * AUTHOR rra@stanford.edu
@@ -87,8 +103,7 @@ struct sockaddr_in *servers;
 
 
 void
-perrorexit(str)
-char *str;
+perrorexit(char *str)
 {
     perror(str);
     exit(1);
@@ -96,9 +111,7 @@ char *str;
 
 
 void
-setup_servers(argc, argv)
-int argc;
-char **argv;
+setup_servers(int argc, char **argv)
 {
     int i;
     u_int fwdaddr;
@@ -153,8 +166,7 @@ char **argv;
 
 
 int
-setup_socket(port)
-u_short port;
+setup_socket(u_short port)
 {
     int s, rv;
     struct sockaddr_in sin;
@@ -176,8 +188,7 @@ u_short port;
 
 
 int
-packet_is_reply(from)
-struct sockaddr_in *from;
+packet_is_reply(struct sockaddr_in *from)
 {
     int i;
 
@@ -196,9 +207,7 @@ struct sockaddr_in *from;
 
 
 int
-main(argc, argv)
-int argc;
-char **argv;
+main(int argc, char **argv)
 {
     int c, s, rv;
     u_short port;
@@ -240,7 +249,7 @@ char **argv;
     for (;;) {
 	char buf[BUFFER_SIZE], *bufp, *sendptr;
 	struct sockaddr_in from, reply, *to;
-	int fromlen, sendlen;
+	size_t fromlen, sendlen;
 
 	bufp = buf + 8;
 	fromlen = sizeof(from);

@@ -21,12 +21,8 @@ RCSID
 
 #include <string.h>
 #include <fsprobe.h>		/*Interface for fsprobe module */
-
-/*
-  * External routines that don't have explicit include file definitions.
-  */
-extern struct hostent *hostutil_GetHostByName();
-
+#include <afs/afsutil.h>
+    
 /*------------------------------------------------------------------------
  * FS_Handler
  *
@@ -51,7 +47,7 @@ extern struct hostent *hostutil_GetHostByName();
  *------------------------------------------------------------------------*/
 
 int
-FS_Handler()
+FS_Handler(void)
 {				/*FS_Handler */
 
     static char rn[] = "FS_Handler";	/*Routine name */
@@ -146,10 +142,8 @@ FS_Handler()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
-
+int
+main(int argc, char **argv)
 {				/*Main routine */
 
     static char rn[] = "fsprobe_test";	/*Routine name */
@@ -208,11 +202,11 @@ main(argc, argv)
     memcpy(&(FSSktArray[2].sin_addr.s_addr), he->h_addr, 4);
 
     printf("Sockets for the 3 AFS FileServers to be probed:\n");
-    printf("\t Host servername1: IP addr 0x%lx, port %d\n",
+    printf("\t Host servername1: IP addr 0x%x, port %d\n",
 	   FSSktArray[0].sin_addr.s_addr, FSSktArray[0].sin_port);
-    printf("\t Host servername2: IP addr 0x%lx, port %d\n",
+    printf("\t Host servername2: IP addr 0x%x, port %d\n",
 	   FSSktArray[1].sin_addr.s_addr, FSSktArray[1].sin_port);
-    printf("\t Host servername3: IP addr 0x%lx, port %d\n",
+    printf("\t Host servername3: IP addr 0x%x, port %d\n",
 	   FSSktArray[2].sin_addr.s_addr, FSSktArray[2].sin_port);
 
     /*

@@ -64,7 +64,7 @@ osi_UFSOpen(afs_int32 ainode)
     AFS_GUNLOCK();
     if (!afile) {
 	osi_Panic("osi_UFSOpen: Failed to allocate %d bytes for osi_file.\n",
-		  sizeof(struct osi_file));
+		  (int)sizeof(struct osi_file));
     }
     memset(afile, 0, sizeof(struct osi_file));
 #if defined(HAVE_IGET)

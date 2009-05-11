@@ -60,10 +60,7 @@ static char mn[] = "gator_lightobject";	/*Module name */
  *------------------------------------------------------------------------*/
 
 int
-gator_light_create(light_onp, params)
-     struct onode *light_onp;
-     struct onode_createparams *params;
-
+gator_light_create(struct onode *light_onp, struct onode_createparams *params)
 {				/*gator_light_create */
 
     static char rn[] = "gator_light_create";	/*Routine name */
@@ -90,7 +87,7 @@ gator_light_create(light_onp, params)
 	(struct gator_lightobj *)malloc(sizeof(struct gator_lightobj));
     if (light_data == (struct gator_lightobj *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %d bytes for light object private data region, errno is %d\n",
+		"[%s:%s] Can't allocate %lu bytes for light object private data region, errno is %d\n",
 		mn, rn, sizeof(struct gator_lightobj), errno);
 	return (errno);
     }
@@ -99,7 +96,7 @@ gator_light_create(light_onp, params)
 	(struct gwin_strparams *)malloc(sizeof(struct gwin_strparams));
     if (light_strparams == (struct gwin_strparams *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %d bytes for light object label in private data region, errno is %d\n",
+		"[%s:%s] Can't allocate %lu bytes for light object label in private data region, errno is %d\n",
 		mn, rn, sizeof(struct gwin_strparams), errno);
 	free(light_data);
 	return (errno);
@@ -149,9 +146,7 @@ gator_light_create(light_onp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_light_destroy(onp)
-     struct onode *onp;
-
+gator_light_destroy(struct onode *onp)
 {				/*gator_light_destroy */
 
     /*
@@ -185,9 +180,7 @@ gator_light_destroy(onp)
  *------------------------------------------------------------------------*/
 
 int
-gator_light_display(onp)
-     struct onode *onp;
-
+gator_light_display(struct onode *onp)
 {				/*gator_light_display */
 
     static char rn[] = "gator_light_display";	/*Routine name */
@@ -231,9 +224,7 @@ gator_light_display(onp)
  *------------------------------------------------------------------------*/
 
 int
-gator_light_release(onp)
-     struct onode *onp;
-
+gator_light_release(struct onode *onp)
 {				/*gator_light_release */
 
     /*
@@ -267,10 +258,7 @@ gator_light_release(onp)
  *------------------------------------------------------------------------*/
 
 int
-gator_light_set(onp, setting)
-     struct onode *onp;
-     int setting;
-
+gator_light_set(struct onode *onp, int setting)
 {				/*gator_light_set */
 
     static char rn[] = "gator_light_set";	/*Routine name */
@@ -284,7 +272,7 @@ gator_light_set(onp, setting)
     light_data = (struct gator_lightobj *)(onp->o_data);
     label_strparams = (struct gwin_strparams *)(light_data->llrock);
     if (objects_debug)
-	fprintf(stderr, "[%s:%s] Setting light object at 0x%x to %d (%s)", mn,
+	fprintf(stderr, "[%s:%s] Setting light object at %p to %d (%s)", mn,
 		rn, onp, setting, (setting ? "ON" : "OFF"));
     light_data->setting = setting;
     label_strparams->highlight = setting;

@@ -385,11 +385,13 @@ int cm_reInitLocalMountPoints() {
 
     osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
-
     lock_ObtainWrite(&cm_scacheLock);
     lock_ObtainMutex(&cm_Freelance_Lock);  /* always scache then freelance lock */
-    for (i=1; i<=cm_noLocalMountPoints; i++) {
-        cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, i, 1);
+    for (i=0; i<=cm_noLocalMountPoints; i++) {
+        if (i == 0)
+            cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, 1, 1);
+        else
+            cm_SetFid(&aFid, AFS_FAKE_ROOT_CELL_ID, AFS_FAKE_ROOT_VOL_ID, i*2, i);
         hash = CM_SCACHE_HASH(&aFid);
         for (scp=cm_data.scacheHashTablep[hash]; scp; scp=scp->nextp) {
             if (scp != cm_data.rootSCachep && cm_FidCmp(&scp->fid, &aFid) == 0) {
@@ -1064,12 +1066,33 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             fprintf(fp, "%s#%s:%s\n", filename, fullname, volume);
         fclose(fp);
     }
+
+    /* Do this while we are holding the lock */
+    cm_data.fakeDirVersion++;
+    cm_localMountPointChangeFlag = 1;
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
-    /* cm_reInitLocalMountPoints(); */
-    if (fidp)
-        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints, 1);
-    cm_noteLocalMountPointChange();
+    if (fidp) {
+        cm_req_t req;
+        afs_uint32 code;
+        cm_scache_t *scp;
+        clientchar_t *cpath;
+
+        cm_InitReq(&req);
+
+        cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);        
+        if (!cpath)
+            return CM_ERROR_NOSUCHPATH;
+        code = cm_NameI(cm_data.rootSCachep, cpath,
+                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
+                        cm_rootUserp, NULL, &req, &scp);
+        free(cpath);
+        if (code)
+            return code;
+        *fidp = scp->fid;
+        cm_ReleaseSCache(scp);
+    }
+    
     return 0;
 }
 
@@ -1171,13 +1194,14 @@ long cm_FreelanceRemoveMount(char *toremove)
             rename(hfile2, hfile);
         }
     }
-    
-    lock_ReleaseMutex(&cm_Freelance_Lock);
+
     if (found) {
-        cm_noteLocalMountPointChange();
-        return 0;
-    } else
-        return CM_ERROR_NOSUCHFILE;
+        /* Do this while we are holding the lock */
+        cm_data.fakeDirVersion++;
+        cm_localMountPointChangeFlag = 1;
+    }
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+    return (found ? 0 : CM_ERROR_NOSUCHFILE);
 }
 
 long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
@@ -1271,12 +1295,33 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
         }
         RegCloseKey(hkFreelanceSymlinks);
     } 
+
+    /* Do this while we are holding the lock */
+    cm_data.fakeDirVersion++;
+    cm_localMountPointChangeFlag = 1;
     lock_ReleaseMutex(&cm_Freelance_Lock);
 
-    /* cm_reInitLocalMountPoints(); */
-    if (fidp)
-        cm_SetFid(fidp, fidp->cell, fidp->volume, ++cm_noLocalMountPoints, 1);
-    cm_noteLocalMountPointChange();
+    if (fidp) {
+        cm_req_t req;
+        afs_uint32 code;
+        cm_scache_t *scp;
+        clientchar_t *cpath;
+
+        cm_InitReq(&req);
+
+        cpath = cm_FsStringToClientStringAlloc(filename, -1, NULL);        
+        if (!cpath)
+            return CM_ERROR_NOSUCHPATH;
+        code = cm_NameI(cm_data.rootSCachep, cpath,
+                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
+                        cm_rootUserp, NULL, &req, &scp);
+        free(cpath);
+        if (code)
+            return code;
+        *fidp = scp->fid;
+        cm_ReleaseSCache(scp);
+    }
+
     return 0;
 }
 
@@ -1333,12 +1378,13 @@ long cm_FreelanceRemoveSymlink(char *toremove)
         RegCloseKey(hkFreelanceSymlinks);
     }
     
-    lock_ReleaseMutex(&cm_Freelance_Lock);
     if (found) {
-        cm_noteLocalMountPointChange();
-        return 0;
-    } else
-        return CM_ERROR_NOSUCHFILE;
+        /* Do this while we are holding the lock */
+        cm_data.fakeDirVersion++;
+        cm_localMountPointChangeFlag = 1;
+    }
+    lock_ReleaseMutex(&cm_Freelance_Lock);
+    return (found ? 0 : CM_ERROR_NOSUCHFILE);
 }
 
 long

@@ -28,18 +28,14 @@ extern afs_int32    afs_ConflictPolicy;
 
 extern afs_uint32 afs_DisconVnode; /* XXX: not protected. */
 
-/* For afs_GenFakeFid. */
-extern struct vcache *afs_FindVCache(struct VenusFid *afid,
-					afs_int32 *retry,
-					afs_int32 flag);
-
 extern int afs_WriteVCacheDiscon(register struct vcache *avc,
 					register struct AFSStoreStatus *astatus,
 					struct vattr *attrs);
 extern int afs_ResyncDisconFiles(struct vrequest *areq,
 					struct AFS_UCRED *acred);
 extern void afs_RemoveAllConns(void);
-extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype);
+extern void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, 
+			   int lock);
 extern void afs_GenShadowFid(struct VenusFid *afid);
 extern void afs_GenDisconStatus(struct vcache *adp,
 					struct vcache *avc,
@@ -66,7 +62,7 @@ extern void afs_DisconDiscardAll(struct AFS_UCRED *);
 
 /* Call with avc lock held */
 static inline void afs_DisconAddDirty(struct vcache *avc, int operation, int lock) {
-    if (!avc->ddirty_flags) {
+    if (!avc->f.ddirty_flags) {
 	if (lock) 
 	    ObtainWriteLock(&afs_xvcache, 702);
 	ObtainWriteLock(&afs_disconDirtyLock, 703);
@@ -76,7 +72,7 @@ static inline void afs_DisconAddDirty(struct vcache *avc, int operation, int loc
 	if (lock)
 	    ReleaseWriteLock(&afs_xvcache);
     }
-    avc->ddirty_flags |= operation;
+    avc->f.ddirty_flags |= operation;
 } 
 
 /* Call with avc lock held */
@@ -84,9 +80,8 @@ static inline void afs_DisconRemoveDirty(struct vcache *avc) {
     ObtainWriteLock(&afs_disconDirtyLock, 704);
     QRemove(&avc->dirtyq);
     ReleaseWriteLock(&afs_disconDirtyLock);
-    avc->ddirty_flags = 0;
+    avc->f.ddirty_flags = 0;
     afs_PutVCache(avc);
 }
-
 #endif /* AFS_DISCON_ENV */
 #endif /* _DISCON_H */

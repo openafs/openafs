@@ -70,7 +70,7 @@ utst_int.cs.o: utst_int.cs.c utst_int.xdr.c
 utst_int.xdr.o: utst_int.xdr.c utst_int.h
 
 utst_int.cs.c: utst_int.xg
-	${RXGEN} -A -C -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -C -u -o $@ ${srcdir}/utst_int.xg
 
 utst_int.ss.c: utst_int.xg
 	${RXGEN} -A -S -o $@ ${srcdir}/utst_int.xg
@@ -79,7 +79,7 @@ utst_int.xdr.c: utst_int.xg
 	${RXGEN} -A -c -o $@ ${srcdir}/utst_int.xg
 
 utst_int.h: utst_int.xg
-	${RXGEN} -A -h -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -h -u -o $@ ${srcdir}/utst_int.xg
 
 utst_int.cs.c: utst_int.h
 utst_int.ss.c: utst_int.h

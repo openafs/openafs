@@ -71,8 +71,9 @@ int osi_echo_trail = (-1);
 
 FILE *auditout = NULL;
 
-int osi_audit_check();
+int osi_audit_check(void);
 
+#ifdef AFS_AIX32_ENV
 static void
 audmakebuf(char *audEvent, va_list vaList)
 {
@@ -83,7 +84,6 @@ audmakebuf(char *audEvent, va_list vaList)
     int vaInt;
     afs_int32 vaLong;
     char *vaStr;
-    va_list vaLst;
     struct AFSFid *vaFid;
 
     vaEntry = va_arg(vaList, int);
@@ -158,6 +158,7 @@ audmakebuf(char *audEvent, va_list vaList)
 	vaEntry = va_arg(vaList, int);
     }				/* end while */
 }
+#endif
 
 static void
 printbuf(FILE *out, int rec, char *audEvent, char *afsName, afs_int32 hostId, 
@@ -167,7 +168,6 @@ printbuf(FILE *out, int rec, char *audEvent, char *afsName, afs_int32 hostId,
     int vaInt;
     afs_int32 vaLong;
     char *vaStr;
-    va_list vaLst;
     struct AFSFid *vaFid;
     struct AFSCBFids *vaFids;
     int num = LogThreadNum();
@@ -560,7 +560,7 @@ osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...)
  * ************************************************************************** */
 
 int
-osi_audit_check()
+osi_audit_check(void)
 {
     FILE *fds;
     int onoff;

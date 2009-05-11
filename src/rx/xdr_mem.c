@@ -168,7 +168,7 @@ static struct xdr_ops xdrmem_ops = {
  * memory buffer.  
  */
 void
-xdrmem_create(register XDR * xdrs, caddr_t addr, u_int size, enum xdr_op op)
+xdrmem_create(XDR * xdrs, caddr_t addr, u_int size, enum xdr_op op)
 {
     xdrs->x_op = op;
     xdrs->x_ops = &xdrmem_ops;
@@ -214,7 +214,7 @@ xdrmem_putint64(register XDR * xdrs, long * lp)
 #endif
 
 static bool_t
-xdrmem_getint32(register XDR * xdrs, afs_int32 * lp)
+xdrmem_getint32(XDR * xdrs, afs_int32 * lp)
 {
     if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
@@ -226,7 +226,7 @@ xdrmem_getint32(register XDR * xdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrmem_putint32(register XDR * xdrs, afs_int32 * lp)
+xdrmem_putint32(XDR * xdrs, afs_int32 * lp)
 {
     if (xdrs->x_handy < sizeof(afs_int32))
 	return (FALSE);
@@ -238,7 +238,7 @@ xdrmem_putint32(register XDR * xdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrmem_getbytes(register XDR * xdrs, caddr_t addr, register u_int len)
+xdrmem_getbytes(XDR * xdrs, caddr_t addr, u_int len)
 {
     if (xdrs->x_handy < len)
 	return (FALSE);
@@ -250,7 +250,7 @@ xdrmem_getbytes(register XDR * xdrs, caddr_t addr, register u_int len)
 }
 
 static bool_t
-xdrmem_putbytes(register XDR * xdrs, caddr_t addr, register u_int len)
+xdrmem_putbytes(XDR * xdrs, caddr_t addr, u_int len)
 {
     if (xdrs->x_handy < len)
 	return (FALSE);
@@ -262,16 +262,16 @@ xdrmem_putbytes(register XDR * xdrs, caddr_t addr, register u_int len)
 }
 
 static u_int
-xdrmem_getpos(register XDR * xdrs)
+xdrmem_getpos(XDR * xdrs)
 {
     return ((char *)xdrs->x_private - (char *)xdrs->x_base);
 }
 
 static bool_t
-xdrmem_setpos(register XDR * xdrs, u_int pos)
+xdrmem_setpos(XDR * xdrs, u_int pos)
 {
-    register caddr_t newaddr = xdrs->x_base + pos;
-    register caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
+    caddr_t newaddr = xdrs->x_base + pos;
+    caddr_t lastaddr = xdrs->x_private + xdrs->x_handy;
 
     if (newaddr > lastaddr)
 	return (FALSE);
@@ -281,7 +281,7 @@ xdrmem_setpos(register XDR * xdrs, u_int pos)
 }
 
 static AFS_RPC_INLINE_T *
-xdrmem_inline(register XDR * xdrs, int len)
+xdrmem_inline(XDR * xdrs, int len)
 {
     AFS_RPC_INLINE_T * buf = 0;
 

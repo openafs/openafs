@@ -77,21 +77,6 @@ RCSID
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
 
-/* Forward declarations */
-static void * SALVSYNC_syncThread(void *);
-static void SALVSYNC_newconnection(int fd);
-static void SALVSYNC_com(int fd);
-static void SALVSYNC_Drop(int fd);
-static void AcceptOn(void);
-static void AcceptOff(void);
-static void InitHandler(void);
-static void CallHandler(fd_set * fdsetp);
-static int AddHandler(int afd, void (*aproc) (int));
-static int FindHandler(register int afd);
-static int FindHandler_r(register int afd);
-static int RemoveHandler(register int afd);
-static void GetHandler(fd_set * fdsetp, int *maxfdp);
-
 
 /*
  * This lock controls access to the handler array.
@@ -103,6 +88,21 @@ struct Lock SALVSYNC_handler_lock;
 /*
  * SALVSYNC is a feature specific to the demand attach fileserver
  */
+
+/* Forward declarations */
+static void * SALVSYNC_syncThread(void *);
+static void SALVSYNC_newconnection(osi_socket fd);
+static void SALVSYNC_com(osi_socket fd);
+static void SALVSYNC_Drop(osi_socket fd);
+static void AcceptOn(void);
+static void AcceptOff(void);
+static void InitHandler(void);
+static void CallHandler(fd_set * fdsetp);
+static int AddHandler(osi_socket afd, void (*aproc) (int));
+static int FindHandler(register osi_socket afd);
+static int FindHandler_r(register osi_socket afd);
+static int RemoveHandler(register osi_socket afd);
+static void GetHandler(fd_set * fdsetp, int *maxfdp);
 
 static int AllocNode(struct SalvageQueueNode ** node);
 
@@ -356,7 +356,7 @@ SALVSYNC_newconnection(int afd)
 /* this function processes commands from an salvsync file descriptor (fd) */
 static afs_int32 SALV_cnt = 0;
 static void
-SALVSYNC_com(int fd)
+SALVSYNC_com(osi_socket fd)
 {
     SYNC_command com;
     SYNC_response res;
@@ -727,7 +727,7 @@ SALVSYNC_com_Query(SALVSYNC_command * com, SALVSYNC_response * res)
 }
 
 static void
-SALVSYNC_Drop(int fd)
+SALVSYNC_Drop(osi_socket fd)
 {
     RemoveHandler(fd);
 #ifdef AFS_NT40_ENV
@@ -791,7 +791,7 @@ CallHandler(fd_set * fdsetp)
 }
 
 static int
-AddHandler(int afd, void (*aproc) (int))
+AddHandler(osi_socket afd, void (*aproc) (int))
 {
     register int i;
     ObtainWriteLock(&SALVSYNC_handler_lock);
@@ -809,7 +809,7 @@ AddHandler(int afd, void (*aproc) (int))
 }
 
 static int
-FindHandler(register int afd)
+FindHandler(register osi_socket afd)
 {
     register int i;
     ObtainReadLock(&SALVSYNC_handler_lock);
@@ -824,7 +824,7 @@ FindHandler(register int afd)
 }
 
 static int
-FindHandler_r(register int afd)
+FindHandler_r(register osi_socket afd)
 {
     register int i;
     for (i = 0; i < MAXHANDLERS; i++)
@@ -836,7 +836,7 @@ FindHandler_r(register int afd)
 }
 
 static int
-RemoveHandler(register int afd)
+RemoveHandler(register osi_socket afd)
 {
     ObtainWriteLock(&SALVSYNC_handler_lock);
     HandlerFD[FindHandler_r(afd)] = -1;

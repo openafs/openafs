@@ -213,7 +213,7 @@ main(argc, argv)
 	    rxMaxMTU = atoi(argv[++index]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %lu invalid; must be between %d-%d\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;

@@ -17,7 +17,9 @@ RCSID
 #include <signal.h>
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #include <errno.h>
 #endif
 #endif
@@ -33,10 +35,12 @@ RCSID
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
+#include "rx/rx.h"
+#include "sys_prototypes.h"
 
 #include "AFS_component_version_number.c"
 
-extern afs_int32 setpag();
+int ktc_newpag(void);
 
 int
 main(int argc, char *argv[])
@@ -143,8 +147,8 @@ ktc_newpag(void)
 	sprintf(fname, "%s%d", prefix, getuid());
 	sprintf(fname5, "%s%d", prefix5, getuid());
     } else {
-	sprintf(fname, "%sp%ld", prefix, pag);
-	sprintf(fname5, "%sp%ld", prefix5, pag);
+	sprintf(fname, "%sp%lud", prefix, (long unsigned int) pag);
+	sprintf(fname5, "%sp%lud", prefix5, (long unsigned int) pag);
     }
 /*    ktc_set_tkt_string(fname); */
 

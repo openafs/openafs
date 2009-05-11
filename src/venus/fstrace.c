@@ -18,6 +18,7 @@ RCSID
 
 #include <stdio.h>
 #include <sys/types.h>
+#include <unistd.h>
 #if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) 
 #include <time.h>
 /*#ifdef	AFS_AIX_ENV*/
@@ -34,6 +35,9 @@ RCSID
 #include <afs/afs_args.h>
 #include <afs/icl.h>
 #include <afs/afsutil.h>
+#include <rx/rx.h>
+#include <afs/vice.h>
+#include <afs/sys_prototypes.h>
 
 #if defined(AFS_OSF_ENV) || defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 /* For SGI 6.2, this is changed to 1 if it's a 32 bit kernel. */
@@ -68,6 +72,20 @@ set_kernel_sizeof_long(void)
 #endif /* AFS_SGI62_ENV */
 #endif /* AFS_SGI61_ENV */
 
+int afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
+		long parm4, long parm5, long parm6);
+void dce1_error_inq_text(afs_uint32 status_to_convert,
+		         char *error_text, int *status);
+int icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
+		           struct afs_icl_log *fatalLogp, afs_uint32 flags,
+		           struct afs_icl_set **outSetpp);
+int icl_LogHold(register struct afs_icl_log *logp);
+int icl_LogUse(register struct afs_icl_log *logp);
+int icl_LogReleNL(register struct afs_icl_log *logp);
+int icl_LogRele(register struct afs_icl_log *logp);
+int icl_ZeroLog(register struct afs_icl_log *logp);
+int icl_LogFreeUse(register struct afs_icl_log *logp);
+
 #define BUFFER_MULTIPLIER     1024
 
 /* make it big enough to snapshot everything at once, since
@@ -82,8 +100,7 @@ struct logInfo {
 
 char dumpFileName[256] = "";
 void
-RegisterIclDumpFileName(name)
-     char *name;
+RegisterIclDumpFileName(char *name)
 {
     (void)sprintf(dumpFileName, "icl.%.250s", name);
 }
@@ -99,10 +116,8 @@ char *name;
 /* given a type and an address, get the size of the thing
  * in words.
  */
-static
-icl_GetSize(type, addr)
-     afs_int32 type;
-     char *addr;
+static int
+icl_GetSize(afs_int32 type, char *addr)
 {
     int rsize;
     int tsize;
@@ -119,11 +134,7 @@ icl_GetSize(type, addr)
  */
 #if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 static int
-CheckTypes(bufferp, typesp, typeCount, outMsgBuffer)
-     char *bufferp;
-     int *typesp;
-     int typeCount;
-     char *outMsgBuffer;
+CheckTypes(char *bufferp, int *typesp, int typeCount, char *outMsgBuffer)
 {
     register char tc;
     int inPercent;
@@ -197,11 +208,8 @@ CheckTypes(bufferp, typesp, typeCount, outMsgBuffer)
     /* not reached */
 }
 #else /* AFS_SGI61_ENV */
-static
-CheckTypes(bufferp, typesp, typeCount)
-     char *bufferp;
-     int *typesp;
-     int typeCount;
+static int
+CheckTypes(char *bufferp, int *typesp, int typeCount)
 {
     register char tc;
     int inPercent;
@@ -254,10 +262,7 @@ CheckTypes(bufferp, typesp, typeCount)
 #define uint64_t long long
 #endif
 static void
-DisplayRecord(outFilep, alp, rsize)
-     FILE *outFilep;
-     register afs_int32 *alp;
-     afs_int32 rsize;
+DisplayRecord(FILE *outFilep, register afs_int32 *alp, afs_int32 rsize)
 {
     char msgBuffer[1024];
 #if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
@@ -279,7 +284,6 @@ DisplayRecord(outFilep, alp, rsize)
     int pftix;			/* index in printfTypes */
     int status;
     int printed;		/* did we print the string yet? */
-    afs_int32 *tlp;
     time_t tmv;
 
     /* decode parameters */
@@ -396,7 +400,7 @@ DisplayRecord(outFilep, alp, rsize)
 			fprintf(outFilep, "%s", printfStrings[pfpix++]);
 			break;
 		    case 2:	/* signed integer */
-			fprintf(outFilep, "%lld", printfParms[pfpix++]);
+			fprintf(outFilep, "%" AFS_INT64_FMT, printfParms[pfpix++]);
 			break;
 		    case 3:	/* unsigned integer */
 			fprintf(outFilep, "%llu", printfParms[pfpix++]);
@@ -470,7 +474,7 @@ DisplayRecord(outFilep, alp, rsize)
 		    tempParam = alp[pix];
 		    tempParam <<= 32;
 		    tempParam |= alp[pix + 1];
-		    fprintf(outFilep, "p%d:%lld ", i, tempParam);
+		    fprintf(outFilep, "p%d:%" AFS_INT64_FMT " ", i, tempParam);
 #else /* AFS_SGI61_ENV */
 		    fprintf(outFilep, "p%d:%d ", i, alp[pix]);
 #endif /* AFS_SGI61_ENV */
@@ -547,9 +551,7 @@ static CATD *catsopen[NL_MAXOPEN];
     (((num_holes) > 100) && ((num_holes) > (num_non_holes)))
 
 char *
-rmalloc(n)
-     int n;
-
+rmalloc(int n)
 	/*----  n: the number of bytes to be malloc'ed  ----*/
 {
     char *t;
@@ -563,9 +565,7 @@ rmalloc(n)
 #ifdef	notdef
 #endif
 nl_catd
-catopen1(cat, dummy)
-     char *cat;
-     int dummy;
+catopen1(char *cat, int dummy)
 	/*---- char *cat:  the name of the cat to be opened ----*/
 	/*---- int dummy:  dummy variable  ----*/
 
@@ -609,11 +609,8 @@ catopen1(cat, dummy)
 
 
 nl_catd
-_do1_open(catd)
-     nl_catd catd;
-
+_do1_open(nl_catd catd)
 	/*---- pointer to the partially set up cat descriptor ----*/
-
 {
     int make_sets();		/*---- routine to unpack the sets into 
 						fast acccess mode ----*/
@@ -747,10 +744,8 @@ _do1_open(catd)
 
 
 static void
-add_open_cat(catd)
-     nl_catd catd;
+add_open_cat(nl_catd catd)
 		/*---- catd to be added to the list of catalogs ----*/
-
 {
     int i = 0;		/*---- Misc counter(s) used for loops ----*/
     while (i < NL_MAXOPEN && catsopen[i]) {
@@ -787,8 +782,7 @@ add_open_cat(catd)
 
 
 static int
-make_sets(catd)
-     nl_catd catd;
+make_sets(nl_catd catd)
 {
     struct _catset *cset;
     char *base = catd->_mem;
@@ -888,8 +882,7 @@ make_sets(catd)
  */
 
 static FILE *
-open1catfile(file)
-     char *file;
+open1catfile(char *file)
 {
     extern char *getenv();
     char fl[PATH_MAX];		/*---- place to hold full path ----*/
@@ -1057,10 +1050,8 @@ open1catfile(file)
  */
 
 static nl_catd
-cat_already_open(cat)
-     char *cat;
+cat_already_open(char *cat)
 			/*---- name of the catalog to be opened ----*/
-
 {
     int i;			/*---- Misc counter(s) used for loops ----*/
 
@@ -1078,9 +1069,8 @@ cat_already_open(cat)
 
 
 int
-catclose1(catd)					/*---- the catd to be closed ----*/
-     nl_catd catd;	/*---- the catd to be closed ----*/
-
+catclose1(nl_catd catd)
+     /*---- the catd to be closed ----*/
 {
     int i;
 
@@ -1116,10 +1106,8 @@ catclose1(catd)					/*---- the catd to be closed ----*/
 }
 
 static void
-cat_hard_close(catd)
-     nl_catd catd;
+cat_hard_close(nl_catd catd)
 		/*---- the catd to be closed ----*/
-
 {
     int i;			/*---- Misc counter(s) used for loops ----*/
     int j;			/*----  Misc counter ----*/
@@ -1177,7 +1165,6 @@ cat_hard_close(catd)
 
 static char *
 _do1_read_msg(nl_catd catd, int setno, int msgno)
-
 	/*---- catd: the catd of the catalog to be read from ----*/
 	/*---- setno: the set number of the message ----*/
 	/*---- msgno: the msgno of the message ----*/
@@ -1473,11 +1460,9 @@ catgets1(nl_catd catd, int setno, int msgno, char *def)
 #define RPC_NLS_FORMAT "%s.cat"
 #endif
 
-dce1_error_inq_text(status_to_convert, error_text, status)
-     afs_uint32 status_to_convert;
-     unsigned char *error_text;
-     int *status;
-
+void
+dce1_error_inq_text(afs_uint32 status_to_convert, 
+		   char *error_text, int *status)
 {
     unsigned short facility_code;
     unsigned short component_code;
@@ -1639,10 +1624,8 @@ dce1_error_inq_text(status_to_convert, error_text, status)
 
 }
 
-
-icl_DumpKernel(outFilep, setname)
-     FILE *outFilep;
-     char *setname;
+int
+icl_DumpKernel(FILE *outFilep, char *setname)
 {
     afs_int32 bufferSize = 0;
     afs_int32 *bufferp;
@@ -1781,8 +1764,8 @@ icl_DumpKernel(outFilep, setname)
 }
 
 /* clear out log 'name' */
-icl_ClearLog(name)
-     char *name;
+int
+icl_ClearLog(char *name)
 {
     afs_int32 code;
 
@@ -1791,8 +1774,8 @@ icl_ClearLog(name)
 }
 
 /* clear out set 'name' */
-icl_ClearSet(name)
-     char *name;
+int
+icl_ClearSet(char *name)
 {
     afs_int32 code;
 
@@ -1801,7 +1784,8 @@ icl_ClearSet(name)
 }
 
 /* clear out all logs */
-icl_ClearAll()
+int
+icl_ClearAll(void)
 {
     afs_int32 code;
 
@@ -1811,8 +1795,7 @@ icl_ClearAll()
 
 /* list out all available sets to outFileP */
 int
-icl_ListSets(outFileP)
-     FILE *outFileP;
+icl_ListSets(FILE *outFileP)
 {
     int i;
     afs_int32 code = 0;
@@ -1836,9 +1819,7 @@ icl_ListSets(outFileP)
 
 /* list out all available logs to outFileP */
 int
-icl_ListLogs(outFileP, int32flg)
-     FILE *outFileP;
-     int int32flg;
+icl_ListLogs(FILE *outFileP, int int32flg)
 {
     int i;
     int allocated;
@@ -1871,10 +1852,7 @@ icl_ListLogs(outFileP, int32flg)
 
 /* list out all available logs to outFileP */
 int
-icl_ListLogsBySet(outFileP, setname, int32flg)
-     FILE *outFileP;
-     char *setname;
-     int int32flg;
+icl_ListLogsBySet(FILE *outFileP, char *setname, int int32flg)
 {
     int i;
     afs_int32 code = 0;
@@ -1912,9 +1890,7 @@ icl_ListLogsBySet(outFileP, setname, int32flg)
 
 /* activate/deactivate/free specified set */
 int
-icl_ChangeSetState(name, op)
-     char *name;
-     afs_int32 op;
+icl_ChangeSetState(char *name, afs_int32 op)
 {
     afs_int32 code;
 
@@ -1924,8 +1900,7 @@ icl_ChangeSetState(name, op)
 
 /* activate/deactivate/free all sets */
 int
-icl_ChangeAllSetState(op)
-     afs_int32 op;
+icl_ChangeAllSetState(afs_int32 op)
 {
     afs_int32 code;
 
@@ -1935,9 +1910,7 @@ icl_ChangeAllSetState(op)
 
 /* set size if log */
 int
-icl_ChangeLogSize(name, logSize)
-     char *name;
-     afs_int32 logSize;
+icl_ChangeLogSize(char *name, afs_int32 logSize)
 {
     afs_int32 code;
 
@@ -1949,10 +1922,7 @@ icl_ChangeLogSize(name, logSize)
 
 /* get logsize of specified log */
 int
-icl_GetLogsize(logname, logSizeP, allocatedP)
-     char *logname;
-     afs_int32 *logSizeP;
-     int *allocatedP;
+icl_GetLogsize(char *logname, afs_int32 *logSizeP, int *allocatedP)
 {
     afs_int32 code;
     code =
@@ -1963,9 +1933,7 @@ icl_GetLogsize(logname, logSizeP, allocatedP)
 
 /* get state of specified set */
 int
-icl_GetSetState(setname, stateP)
-     char *setname;
-     afs_int32 *stateP;
+icl_GetSetState(char *setname, afs_int32 *stateP)
 {
     afs_int32 code;
     code =
@@ -1974,10 +1942,8 @@ icl_GetSetState(setname, stateP)
     return code;
 }
 
-icl_TailKernel(outFilep, logname, waitTime)
-     FILE *outFilep;
-     char *logname;
-     afs_int32 waitTime;
+int
+icl_TailKernel(FILE *outFilep, char *logname, afs_int32 waitTime)
 {
     afs_int32 bufferSize = 0;
     afs_int32 newBufferSize;
@@ -1988,7 +1954,6 @@ icl_TailKernel(outFilep, logname, waitTime)
     afs_int32 ix;
     afs_int32 rlength;
     int allocated;
-    struct logInfo *lip;
 
     /* get information about the specified log */
     code =
@@ -2121,8 +2086,9 @@ icl_TailKernel(outFilep, logname, waitTime)
 }
 
 #if !defined(AFS_SGI_ENV)
-afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
-     long call, parm0, parm1, parm2, parm3, parm4, parm5, parm6;
+int
+afs_syscall(long call, long parm0, long parm1, long parm2, long parm3, 
+	    long parm4, long parm5, long parm6)
 {
     int code, rval;
 #ifdef AFS_LINUX20_ENV
@@ -2178,7 +2144,8 @@ afs_syscall(call, parm0, parm1, parm2, parm3, parm4, parm5, parm6)
 int icl_inited = 0;
 
 /* init function, called once, under icl_lock */
-icl_Init()
+int
+icl_Init(void)
 {
     icl_inited = 1;
 
@@ -2189,11 +2156,9 @@ icl_Init()
     return 0;
 }
 
-icl_CreateSet(name, baseLogp, fatalLogp, outSetpp)
-     char *name;
-     struct afs_icl_log *baseLogp;
-     struct afs_icl_log *fatalLogp;
-     struct afs_icl_set **outSetpp;
+int
+icl_CreateSet(char *name, struct afs_icl_log *baseLogp, 
+	      struct afs_icl_log *fatalLogp, struct afs_icl_set **outSetpp)
 {
     return icl_CreateSetWithFlags(name, baseLogp, fatalLogp, /*flags */ 0,
 				  outSetpp);
@@ -2205,12 +2170,10 @@ icl_CreateSet(name, baseLogp, fatalLogp, outSetpp)
  * addds references from the new icl_set.  When the set is destroyed,
  * those references will be released.
  */
-icl_CreateSetWithFlags(name, baseLogp, fatalLogp, flags, outSetpp)
-     char *name;
-     struct afs_icl_log *baseLogp;
-     struct afs_icl_log *fatalLogp;
-     afs_uint32 flags;
-     struct afs_icl_set **outSetpp;
+int
+icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp, 
+		       struct afs_icl_log *fatalLogp, afs_uint32 flags, 
+		       struct afs_icl_set **outSetpp)
 {
     register struct afs_icl_set *setp;
     register int i;
@@ -2275,10 +2238,8 @@ icl_CreateSetWithFlags(name, baseLogp, fatalLogp, flags, outSetpp)
 }
 
 /* function to change event enabling information for a particular set */
-icl_SetEnable(setp, eventID, setValue)
-     struct afs_icl_set *setp;
-     afs_int32 eventID;
-     int setValue;
+int
+icl_SetEnable(struct afs_icl_set *setp, afs_int32 eventID, int setValue)
 {
     char *tp;
 
@@ -2297,10 +2258,8 @@ icl_SetEnable(setp, eventID, setValue)
  * for tracing.  If *getValuep is set to 0, the event is disabled,
  * otherwise it is enabled.  All events start out enabled by default.
  */
-icl_GetEnable(setp, eventID, getValuep)
-     struct afs_icl_set *setp;
-     afs_int32 eventID;
-     int *getValuep;
+int
+icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID, int *getValuep)
 {
     if (!ICL_EVENTOK(setp, eventID)) {
 	return -1;
@@ -2313,16 +2272,16 @@ icl_GetEnable(setp, eventID, getValuep)
 }
 
 /* hold and release event sets */
-icl_SetHold(setp)
-     register struct afs_icl_set *setp;
+int
+icl_SetHold(register struct afs_icl_set *setp)
 {
     setp->refCount++;
     return 0;
 }
 
 /* free a set.  Called with icl_lock locked */
-icl_ZapSet(setp)
-     register struct afs_icl_set *setp;
+int
+icl_ZapSet(register struct afs_icl_set *setp)
 {
     register struct afs_icl_set **lpp, *tp;
     int i;
@@ -2335,7 +2294,7 @@ icl_ZapSet(setp)
 	    osi_Free(setp->name, 1 + strlen(setp->name));
 	    osi_Free(setp->eventFlags, ICL_EVENTBYTES(setp->nevents));
 	    for (i = 0; i < ICL_LOGSPERSET; i++) {
-		if (tlp = setp->logs[i])
+		if ((tlp = setp->logs[i]))
 		    icl_LogReleNL(tlp);
 	    }
 	    osi_Free(setp, sizeof(struct afs_icl_set));
@@ -2346,8 +2305,8 @@ icl_ZapSet(setp)
 }
 
 /* do the release, watching for deleted entries */
-icl_SetRele(setp)
-     register struct afs_icl_set *setp;
+int
+icl_SetRele(register struct afs_icl_set *setp)
 {
     if (--setp->refCount == 0 && (setp->states & ICL_SETF_DELETED)) {
 	icl_ZapSet(setp);	/* destroys setp's lock! */
@@ -2356,8 +2315,8 @@ icl_SetRele(setp)
 }
 
 /* free a set entry, dropping its reference count */
-icl_SetFree(setp)
-     register struct afs_icl_set *setp;
+int
+icl_SetFree(register struct afs_icl_set *setp)
 {
     setp->states |= ICL_SETF_DELETED;
     icl_SetRele(setp);
@@ -2366,8 +2325,7 @@ icl_SetFree(setp)
 
 /* find a set by name, returning it held */
 struct afs_icl_set *
-icl_FindSet(name)
-     char *name;
+icl_FindSet(char *name)
 {
     register struct afs_icl_set *tp;
 
@@ -2382,8 +2340,8 @@ icl_FindSet(name)
 }
 
 /* zero out all the logs in the set */
-icl_ZeroSet(setp)
-     struct afs_icl_set *setp;
+int
+icl_ZeroSet(struct afs_icl_set *setp)
 {
     register int i;
     int code = 0;
@@ -2403,9 +2361,9 @@ icl_ZeroSet(setp)
     return code;
 }
 
-icl_EnumerateSets(aproc, arock)
-     int (*aproc) ();
-     char *arock;
+int
+icl_EnumerateSets(int (*aproc) (char *, void *, struct afs_icl_set *), 
+		  void *arock)
 {
     register struct afs_icl_set *tp, *np;
     register afs_int32 code;
@@ -2423,13 +2381,11 @@ icl_EnumerateSets(aproc, arock)
     return code;
 }
 
-icl_AddLogToSet(setp, newlogp)
-     struct afs_icl_set *setp;
-     struct afs_icl_log *newlogp;
+int
+icl_AddLogToSet(struct afs_icl_set *setp, struct afs_icl_log *newlogp)
 {
     register int i;
     int code = -1;
-    struct afs_icl_log *logp;
 
     for (i = 0; i < ICL_LOGSPERSET; i++) {
 	if (!setp->logs[i]) {
@@ -2446,9 +2402,8 @@ icl_AddLogToSet(setp, newlogp)
     return code;
 }
 
-icl_SetSetStat(setp, op)
-     struct afs_icl_set *setp;
-     int op;
+int
+icl_SetSetStat(struct afs_icl_set *setp, int op)
 {
     int i;
     afs_int32 code;
@@ -2518,24 +2473,24 @@ icl_SetSetStat(setp, op)
 struct afs_icl_log *afs_icl_allLogs = 0;
 
 /* hold and release logs */
-icl_LogHold(logp)
-     register struct afs_icl_log *logp;
+int
+icl_LogHold(register struct afs_icl_log *logp)
 {
     logp->refCount++;
     return 0;
 }
 
 /* hold and release logs, called with lock already held */
-icl_LogHoldNL(logp)
-     register struct afs_icl_log *logp;
+int
+icl_LogHoldNL(register struct afs_icl_log *logp)
 {
     logp->refCount++;
     return 0;
 }
 
 /* keep track of how many sets believe the log itself is allocated */
-icl_LogUse(logp)
-     register struct afs_icl_log *logp;
+int
+icl_LogUse(register struct afs_icl_log *logp)
 {
     if (logp->setCount == 0) {
 	/* this is the first set actually using the log -- allocate it */
@@ -2551,8 +2506,8 @@ icl_LogUse(logp)
 }
 
 /* decrement the number of real users of the log, free if possible */
-icl_LogFreeUse(logp)
-     register struct afs_icl_log *logp;
+int
+icl_LogFreeUse(register struct afs_icl_log *logp)
 {
     if (--logp->setCount == 0) {
 	/* no more users -- free it (but keep log structure around) */
@@ -2565,9 +2520,8 @@ icl_LogFreeUse(logp)
 }
 
 /* set the size of the log to 'logSize' */
-icl_LogSetSize(logp, logSize)
-     register struct afs_icl_log *logp;
-     afs_int32 logSize;
+int
+icl_LogSetSize(register struct afs_icl_log *logp, afs_int32 logSize)
 {
     if (!logp->datap) {
 	/* nothing to worry about since it's not allocated */
@@ -2587,8 +2541,8 @@ icl_LogSetSize(logp, logSize)
 }
 
 /* free a log.  Called with icl_lock locked. */
-icl_ZapLog(logp)
-     register struct afs_icl_log *logp;
+int
+icl_ZapLog(register struct afs_icl_log *logp)
 {
     register struct afs_icl_log **lpp, *tp;
 
@@ -2606,8 +2560,8 @@ icl_ZapLog(logp)
 }
 
 /* do the release, watching for deleted entries */
-icl_LogRele(logp)
-     register struct afs_icl_log *logp;
+int
+icl_LogRele(register struct afs_icl_log *logp)
 {
     if (--logp->refCount == 0 && (logp->states & ICL_LOGF_DELETED)) {
 	icl_ZapLog(logp);	/* destroys logp's lock! */
@@ -2616,8 +2570,8 @@ icl_LogRele(logp)
 }
 
 /* do the release, watching for deleted entries, log already held */
-icl_LogReleNL(logp)
-     register struct afs_icl_log *logp;
+int
+icl_LogReleNL(register struct afs_icl_log *logp)
 {
     if (--logp->refCount == 0 && (logp->states & ICL_LOGF_DELETED)) {
 	icl_ZapLog(logp);	/* destroys logp's lock! */
@@ -2635,8 +2589,8 @@ icl_ZeroLog(register struct afs_icl_log *logp)
 }
 
 /* free a log entry, and drop its reference count */
-icl_LogFree(logp)
-     register struct afs_icl_log *logp;
+int
+icl_LogFree(register struct afs_icl_log *logp)
 {
     logp->states |= ICL_LOGF_DELETED;
     icl_LogRele(logp);
@@ -2646,8 +2600,8 @@ icl_LogFree(logp)
 
 int
 icl_EnumerateLogs(int (*aproc)
-		    (char *name, char *arock, struct afs_icl_log * tp),
-		  char *arock)
+		    (char *name, void *arock, struct afs_icl_log * tp),
+		  void *arock)
 {
     register struct afs_icl_log *tp;
     register afs_int32 code;
@@ -2666,7 +2620,7 @@ icl_EnumerateLogs(int (*aproc)
 
 
 afs_icl_bulkSetinfo_t *
-GetBulkSetInfo()
+GetBulkSetInfo(void)
 {
     unsigned int infoSize;
 
@@ -2687,7 +2641,7 @@ GetBulkSetInfo()
 }
 
 afs_icl_bulkLoginfo_t *
-GetBulkLogInfo()
+GetBulkLogInfo(void)
 {
     unsigned int infoSize;
 
@@ -2714,9 +2668,7 @@ DoDump(struct cmd_syndesc *as, void *arock)
     afs_int32 code = 0;
     afs_int32 tcode;
     afs_int32 waitTime = 10 /* seconds */ ;
-    int error = 0;
     char *logname;
-    char *filename;
     FILE *outfp = stdout;
     time_t startTime;
     struct cmd_item *itemp;
@@ -2780,7 +2732,7 @@ DoDump(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-SetUpDump()
+SetUpDump(void)
 {
     struct cmd_syndesc *dumpSyntax;
 
@@ -2854,7 +2806,7 @@ DoShowLog(register struct cmd_syndesc *as, void *arock)
 }
 
 static void
-SetUpShowLog()
+SetUpShowLog(void)
 {
     struct cmd_syndesc *showSyntax;
 
@@ -2910,7 +2862,7 @@ DoShowSet(register struct cmd_syndesc *as, void *arock)
 }
 
 static void
-SetUpShowSet()
+SetUpShowSet(void)
 {
     struct cmd_syndesc *showSyntax;
 
@@ -2967,7 +2919,7 @@ DoClear(register struct cmd_syndesc *as, void *arock)
 }
 
 static void
-SetUpClear()
+SetUpClear(void)
 {
     struct cmd_syndesc *clearSyntax;
 
@@ -3054,7 +3006,7 @@ DoSet(register struct cmd_syndesc *as, void *arock)
 }
 
 static void
-SetUpSet()
+SetUpSet(void)
 {
     struct cmd_syndesc *setSyntax;
 
@@ -3086,7 +3038,7 @@ DoResize(register struct cmd_syndesc *as, void *arock)
 	bufferSize = ICL_DEFAULT_LOGSIZE;
 
     /* set the size of the specified logs */
-    if (itemp = as->parms[0].items) {
+    if ((itemp = as->parms[0].items)) {
 	for (; itemp; itemp = itemp->next) {
 	    code = icl_ChangeLogSize(itemp->data, bufferSize);
 	    if (code) {
@@ -3111,7 +3063,7 @@ DoResize(register struct cmd_syndesc *as, void *arock)
 }
 
 static void
-SetUpResize()
+SetUpResize(void)
 {
     struct cmd_syndesc *setsizeSyntax;
 
@@ -3126,9 +3078,8 @@ SetUpResize()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     IN int argc;
-     IN char *argv[];
+int
+main(int argc, char *argv[])
 {
     setlocale(LC_ALL, "");
 #ifdef AFS_SGI62_ENV
@@ -3148,7 +3099,8 @@ main(argc, argv)
 #else
 #include "AFS_component_version_number.c"
 
-main()
+int
+main(int argc, char *argv[])
 {
     printf("fstrace is NOT supported for this OS\n");
 }

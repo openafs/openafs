@@ -144,11 +144,12 @@ RCSID
 #include <afs/auth.h>
 #include <afs/keys.h>
 #include "ptserver.h"
+#include "ptprototypes.h"
 #include "error_macros.h"
 #include "afs/audit.h"
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
-
+#include <rx/rxstat.h>
 
 /* make	all of these into a structure if you want */
 struct prheader cheader;
@@ -179,8 +180,7 @@ extern int prp_user_default;
 #include "AFS_component_version_number.c"
 
 int
-prp_access_mask(s)
-    char *s;
+prp_access_mask(char *s)
 {
     int r;
     if (*s >= '0' && *s <= '9') {
@@ -224,7 +224,6 @@ main(int argc, char **argv)
 #endif	
     struct rx_securityClass *sc[RXSC_LEN];
     extern int RXSTATS_ExecuteRequest();
-    extern int PR_ExecuteRequest();
     int lwps = 3;
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = htonl(INADDR_ANY);
@@ -355,7 +354,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++a]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		 (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %lu invalid; must be between %d-%d\n",
 			rxMaxMTU, RX_MIN_PACKET_SIZE,
 			RX_MAX_PACKET_DATA_SIZE);
 		PT_EXIT(1);
@@ -468,11 +467,11 @@ main(int argc, char **argv)
     } else {
 	/* initialize ubik */
 	ubik_CRXSecurityProc = afsconf_ClientAuth;
-	ubik_CRXSecurityRock = (char *)prdir;
+	ubik_CRXSecurityRock = prdir;
 	ubik_SRXSecurityProc = afsconf_ServerAuth;
-	ubik_SRXSecurityRock = (char *)prdir;
+	ubik_SRXSecurityRock = prdir;
 	ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-	ubik_CheckRXSecurityRock = (char *)prdir;
+	ubik_CheckRXSecurityRock = prdir;
     }
 
     /* The max needed is when deleting an entry.  A full CoEntry deletion

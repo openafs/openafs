@@ -31,8 +31,11 @@ RCSID
 #include <netinet/in.h>
 
 #include <string.h>
+#include <unistd.h>
 
 #include <afs/venus.h>
+#include <rx/rx.h>
+#include <afs/sys_prototypes.h>
 #include "uss_common.h"
 
 
@@ -70,12 +73,8 @@ static struct ViceIoctl *blobP = &blob;	/*Ptr to above */
  *------------------------------------------------------------------------*/
 
 static int
-InAFS(a_path)
-     register char *a_path;
-
+InAFS(register char *a_path)
 {				/*InAFS */
-
-    static char rn[] = "uss_fs:InAFS";
     register afs_int32 code;
 
     blob.in = NULL;
@@ -117,14 +116,8 @@ InAFS(a_path)
  *------------------------------------------------------------------------*/
 
 static char *
-ParentAndComponent(a_path, a_parentBuff, a_componentPP)
-     char *a_path;
-     char *a_parentBuff;
-     char **a_componentPP;
-
+ParentAndComponent(char *a_path, char *a_parentBuff, char **a_componentPP)
 {				/*ParentAndComponent */
-
-    static char rn[] = "uss_fs:Parent";
     char *rightSlashP;
 
     /*
@@ -175,15 +168,11 @@ ParentAndComponent(a_path, a_parentBuff, a_componentPP)
  *------------------------------------------------------------------------*/
 
 static int
-CarefulPioctl(a_path, a_opcode, a_blobP, a_sl)
-     char *a_path;
-     int a_opcode;
-     struct ViceIoctl *a_blobP;
-     int a_sl;
-
+CarefulPioctl(char *a_path, int a_opcode, struct ViceIoctl *a_blobP, int a_sl)
 {				/*CarefulPioctl */
-
+#ifdef USS_FS_DB
     static char rn[] = "uss_fs:CarefulPioctl";
+#endif
     register afs_int32 code;
 
     /*
@@ -226,14 +215,11 @@ CarefulPioctl(a_path, a_opcode, a_blobP, a_sl)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_GetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
-     char *a_dirPath;
-     char *a_aclBuff;
-     afs_int32 a_aclBuffBytes;
-
+uss_fs_GetACL(char *a_dirPath, char *a_aclBuff, afs_int32 a_aclBuffBytes)
 {				/*uss_fs_GetACL */
-
+#ifdef USS_FS_DB
     static char rn[] = "uss_fs_GetACL";	/*Routine name */
+#endif
     register afs_int32 code;	/*pioctl() result */
 
     blob.in = NULL;
@@ -269,14 +255,11 @@ uss_fs_GetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_SetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
-     char *a_dirPath;
-     char *a_aclBuff;
-     afs_int32 a_aclBuffBytes;
-
+uss_fs_SetACL(char *a_dirPath, char *a_aclBuff, afs_int32 a_aclBuffBytes)
 {				/*uss_fs_SetACL */
-
+#ifdef USS_FS_DB
     static char rn[] = "uss_fs_SetACL";	/*Routine name */
+#endif
     register afs_int32 code;	/*pioctl() result */
 
     blob.in = a_aclBuff;
@@ -313,14 +296,12 @@ uss_fs_SetACL(a_dirPath, a_aclBuff, a_aclBuffBytes)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_GetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
-     char *a_mountpoint;
-     char *a_volStatBuff;
-     afs_int32 a_volStatBuffBytes;
-
+uss_fs_GetVolStat(char *a_mountpoint, char *a_volStatBuff,
+		  afs_int32 a_volStatBuffBytes)
 {				/*uss_fs_GetVolStat */
-
+#ifdef USS_FS_DB
     static char rn[] = "uss_fs_GetVolStat";	/*Routine name */
+#endif
     register afs_int32 code;	/*pioctl() result */
 
     blob.in = NULL;
@@ -356,14 +337,12 @@ uss_fs_GetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_SetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
-     char *a_mountpoint;
-     char *a_volStatBuff;
-     afs_int32 a_volStatBuffBytes;
-
+uss_fs_SetVolStat(char *a_mountpoint, char *a_volStatBuff, 
+		  afs_int32 a_volStatBuffBytes)
 {				/*uss_fs_SetVolStat */
-
+#ifdef USS_FS_DB
     static char rn[] = "uss_fs_SetVolStat";	/*Routine name */
+#endif
     register afs_int32 code;	/*pioctl() result */
 
     blob.in = a_volStatBuff;
@@ -399,10 +378,11 @@ uss_fs_SetVolStat(a_mountpoint, a_volStatBuff, a_volStatBuffBytes)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_CkBackups()
+uss_fs_CkBackups(void)
 {				/*uss_fs_CkBackups */
-
+#ifdef USS_FS_DB
     static char rn[] = "uss_fs_CkBackups";	/*Routine name */
+#endif
     register afs_int32 code;	/*pioctl() result */
 
     blob.in = NULL;
@@ -440,12 +420,8 @@ uss_fs_CkBackups()
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
-     char *a_volname;
-     char *a_cellname;
-     afs_int32 a_rw;
-     char *a_mountpoint;
-
+uss_fs_MkMountPoint(char *a_volname, char *a_cellname, afs_int32 a_rw,
+     		    char *a_mountpoint)
 {				/*uss_fs_MkMountPoint */
     extern int local_Cell;
     static char rn[] = "uss_fs_MkMountPoint";	/*Routine name */
@@ -504,11 +480,8 @@ uss_fs_MkMountPoint(a_volname, a_cellname, a_rw, a_mountpoint)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_fs_RmMountPoint(a_mountpoint)
-     char *a_mountpoint;
-
+uss_fs_RmMountPoint(char *a_mountpoint)
 {				/*uss_fs_RmMountPoint */
-
     static char rn[] = "uss_fs_RmMountPoint";	/*Routine name */
     register afs_int32 code;	/*pioctl() result */
     char *parentDirP;		/*Ptr to parent */
@@ -581,10 +554,10 @@ struct tokenInfo {
  * permissions list,) destroy all tokens, and then re-register the good ones.
  * Ugly, but it works.
  */
-uss_fs_UnlogToken(celln)
-     char *celln;
+int
+uss_fs_UnlogToken(char *celln)
 {
-    unsigned count = 0, index, index2;
+    unsigned int count = 0, index, index2;
     afs_int32 code = 0, cnt = 0;
     struct ktc_principal serviceName;
     struct tokenInfo *tokenInfoP, *tp;
@@ -610,7 +583,7 @@ uss_fs_UnlogToken(celln)
 	    }
 	}
     }
-    if (code = ktc_ForgetAllTokens()) {
+    if ((code = ktc_ForgetAllTokens())) {
 	printf("uss_fs_UnlogToken: could not discard tickets, code %d\n",
 	       code);
 	exit(1);

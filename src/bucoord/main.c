@@ -15,6 +15,8 @@ RCSID
 
 #include <afs/stds.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -25,6 +27,7 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+
 #include <errno.h>
 #include <afs/cmd.h>
 #include <rx/rx.h>
@@ -49,37 +52,6 @@ RCSID
 int authflags, interact;
 char tcell[64];
 
-extern int bc_AddDumpCmd();
-extern int bc_AddHostCmd();
-extern int bc_AddVolEntryCmd();
-extern int bc_AddVolSetCmd();
-/* extern int bc_CheckDumpStatCmd(); */
-extern int bc_DeleteDumpCmd();
-extern int bc_DeleteHostCmd();
-extern int bc_DeleteVolEntryCmd();
-extern int bc_DeleteVolSetCmd();
-extern int bc_DiskRestoreCmd();
-extern int bc_VolsetRestoreCmd();
-extern int bc_DumpCmd();
-extern int bc_GetTapeStatusCmd();
-extern int bc_JobsCmd();
-extern int bc_KillCmd();
-extern int bc_LabelTapeCmd();
-extern int bc_ListDumpScheduleCmd();
-extern int bc_ListHostsCmd();
-extern int bc_ListVolSetCmd();
-extern int bc_QuitCmd();
-extern int bc_ReadLabelCmd();
-extern int bc_ScanDumpsCmd();
-extern int bc_SetExpCmd();
-extern int bc_VolRestoreCmd();
-extern int bc_dblookupCmd();
-extern int bc_dbVerifyCmd();
-extern int bc_deleteDumpCmd();
-extern int bc_dumpInfoCmd();
-extern int bc_restoreDbCmd();
-extern int bc_saveDbCmd();
-
 /*
  * Global configuration information for the Backup Coordinator.
  */
@@ -97,7 +69,7 @@ char *whoami = "backup";
  * in this module.
  */
 void
-InitErrTabs()
+InitErrTabs(void)
 {
     initialize_ACFG_error_table();
     initialize_KA_error_table();
@@ -122,8 +94,7 @@ InitErrTabs()
  * not dealt with by standard errno and com_err stuff.
  */
 void
-bc_HandleMisc(code)
-     afs_int32 code;
+bc_HandleMisc(afs_int32 code)
 {
     if (((code <= VMOVED) && (code >= VSALVAGE)) || (code < 0)) {
 	switch (code) {
@@ -172,13 +143,12 @@ bc_HandleMisc(code)
 }
 
 /* Return true if line is all whitespace */
-static
-LineIsBlank(aline)
-     register char *aline;
+static int
+LineIsBlank(char *aline)
 {
     register int tc;
 
-    while (tc = *aline++)
+    while ((tc = *aline++))
 	if ((tc != ' ') && (tc != '\t') && (tc != '\n'))
 	    return (0);
 
@@ -191,11 +161,10 @@ LineIsBlank(aline)
  */
 
 afs_int32
-bc_InitTextConfig()
+bc_InitTextConfig(void)
 {
     udbClientTextP ctPtr;
     int i;
-    afs_int32 code = 0;
 
     extern struct bc_config *bc_globalConfig;
 
@@ -233,7 +202,7 @@ bc_InitTextConfig()
  */
 
 static int
-backupInit()
+backupInit(void)
 {
     register afs_int32 code;
     static int initd = 0;	/* ever called? */
@@ -385,10 +354,9 @@ struct Lock dispatchLock;	/* lock on the Dispatch call */
 #define unlock_Dispatch()   ReleaseWriteLock(&dispatchLock)
 
 afs_int32
-doDispatch(targc, targv, dispatchCount)
-     char *targv[MAXV];
-     afs_int32 targc;
-     afs_int32 dispatchCount;	/* to prevent infinite recursion */
+doDispatch(afs_int32 targc,
+	   char *targv[MAXV], 
+	   afs_int32 dispatchCount) /* to prevent infinite recursion */
 {
     char *sargv[MAXV];
     afs_int32 sargc;
@@ -469,8 +437,7 @@ bc_interactCmd(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-add_std_args(ts)
-     register struct cmd_syndesc *ts;
+add_std_args(struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, 14);
     cmd_AddParm(ts, "-localauth", CMD_FLAG, CMD_OPTIONAL,
@@ -483,10 +450,8 @@ add_std_args(ts)
 #endif
 }
 
-
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {				/*main */
     char *targv[MAXV];		/*Ptr to parsed argv stuff */
     afs_int32 targc;		/*Num parsed arguments */

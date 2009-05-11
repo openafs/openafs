@@ -284,7 +284,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
                      (count >= buf_bufferSize ||
                        LargeIntegerGreaterThanOrEqualTo(LargeIntegerAdd(offset, ConvertLongToLargeInteger(count)), minLength))) {
                     if (count < buf_bufferSize
-                         && bufferp->dataVersion == -1)
+                         && bufferp->dataVersion == CM_BUF_VERSION_BAD)
                         memset(bufferp->datap, 0,
                                 buf_bufferSize);
                     bufferp->dataVersion = scp->dataVersion;

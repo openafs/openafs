@@ -49,14 +49,14 @@ ka_PrintUserID(char *prefix,	/* part to be output before userID */
 	if (isalnum(*c) || (ispunct(*c) && (*c != '.') && (*c != '@')))
 	    printf("%c", *c);
 	else
-	    printf("\\%0.3o", *c);
+	    printf("\\%.3o", *c);
     if (instance && strlen(instance)) {
 	printf(".");
 	for (c = (unsigned char *)instance; *c; c++)
 	    if (isalnum(*c) || (ispunct(*c) && (*c != '@')))
 		printf("%c", *c);
 	    else
-		printf("\\%0.3o", *c);
+		printf("\\%.3o", *c);
     }
     printf("%s", postfix);
 }
@@ -68,7 +68,7 @@ ka_PrintBytes(char bs[], int bl)
 
     for (i = 0; i < bl; i++) {
 	unsigned char c = bs[i];
-	printf("\\%0.3o", c);
+	printf("\\%.3o", c);
     }
 }
 

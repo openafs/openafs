@@ -45,18 +45,20 @@ RCSID
 #include "bnode.h"
 #include "bosprototypes.h"
 #include <rx/rxkad.h>
+#include <rx/rxstat.h>
+#include <rx/rxstat_prototypes.h>
 #include <afs/keys.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
+#include <afs/audit.h>
+#include <afs/cellconfig.h>
 #if defined(AFS_SGI_ENV)
 #include <afs/afs_args.h>
 #endif
 
 #define BOZO_LWP_STACKSIZE	16000
-extern int BOZO_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
 extern struct bnode_ops fsbnode_ops, dafsbnode_ops, ezbnode_ops, cronbnode_ops;
 
 struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
@@ -112,7 +114,7 @@ bozo_rxstat_userok(struct rx_call *call)
 
 /* restart bozo process */
 int
-bozo_ReBozo()
+bozo_ReBozo(void)
 {
 #ifdef AFS_NT40_ENV
     /* exit with restart code; SCM integrator process will restart bosserver */
@@ -197,7 +199,7 @@ MakeDir(const char *adir)
 
 /* create all the bozo dirs */
 static int
-CreateDirs()
+CreateDirs(void)
 {
     if ((!strncmp
 	 (AFSDIR_USR_DIRPATH, AFSDIR_CLIENT_ETC_DIRPATH,
@@ -249,9 +251,10 @@ StripLine(register char *abuffer)
 }
 
 /* write one bnode's worth of entry into the file */
-static
-bzwrite(register struct bnode *abnode, register struct bztemp *at)
+static int
+bzwrite(register struct bnode *abnode, void *arock)
 {
+    register struct bztemp *at = (struct bztemp *)arock;
     register int i;
     char tbuffer[BOZO_BSSIZE];
     register afs_int32 code;
@@ -504,7 +507,7 @@ WriteBozoFile(char *aname)
 }
 
 static int
-bdrestart(register struct bnode *abnode, char *arock)
+bdrestart(register struct bnode *abnode, void *arock)
 {
     register afs_int32 code;
 
@@ -565,7 +568,7 @@ BozoDaemon(void *unused)
 
 #ifdef AFS_AIX32_ENV
 static int
-tweak_config()
+tweak_config(void)
 {
     FILE *f;
     char c[80];
@@ -843,7 +846,7 @@ main(int argc, char **argv, char **envp)
 	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
 			rxMaxMTU, RX_MIN_PACKET_SIZE, 
 			RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
@@ -956,7 +959,7 @@ main(int argc, char **argv, char **envp)
     }
 
     code = LWP_CreateProcess(BozoDaemon, BOZO_LWP_STACKSIZE, /* priority */ 1,
-			     (void *) /*parm */ 0, "bozo-the-clown",
+			     /* param */ NULL , "bozo-the-clown",
 			     &bozo_pid);
 
     /* try to read the key from the config file */
@@ -995,7 +998,7 @@ main(int argc, char **argv, char **envp)
     }
 
     /* read init file, starting up programs */
-    if (code = ReadBozoFile(0)) {
+    if ((code = ReadBozoFile(0))) {
 	bozo_Log
 	    ("bosserver: Something is wrong (%d) with the bos configuration file %s; aborting\n",
 	     code, AFSDIR_SERVER_BOZCONF_FILEPATH);

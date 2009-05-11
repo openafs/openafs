@@ -28,6 +28,7 @@ RCSID
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/com_err.h>
+#include <afs/sys_prototypes.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -36,9 +37,7 @@ RCSID
 static char space[MAXSIZE];
 
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     afs_int32 code;
     struct ViceIoctl blob;

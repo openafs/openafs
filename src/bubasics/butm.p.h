@@ -24,24 +24,31 @@ struct blockMark {
 #define BUTM_HDRSIZE   ((5*sizeof(afs_int32)) + sizeof(int))	/* sizeof blockMark */
 #define	BUTM_BLKSIZE   (BUTM_BLOCKSIZE - BUTM_HDRSIZE)
 
+struct butm_tapeLabel;
+
 struct butm_tapeInfo {
     afs_int32 structVersion;
     struct {
-	afs_int32(*mount) ();
-	afs_int32(*dismount) ();
-	afs_int32(*create) ();
-	afs_int32(*readLabel) ();
-	afs_int32(*seek) ();
-	afs_int32(*seekEODump) ();
-	afs_int32(*readFileBegin) ();
-	afs_int32(*readFileData) ();
-	afs_int32(*readFileEnd) ();
-	afs_int32(*writeFileBegin) ();
-	afs_int32(*writeFileData) ();
-	afs_int32(*writeFileEnd) ();
-	afs_int32(*writeEOT) ();
-	afs_int32(*setSize) ();
-	afs_int32(*getSize) ();
+	afs_int32(*mount) (struct butm_tapeInfo *, char *);
+	afs_int32(*dismount) (struct butm_tapeInfo *);
+	afs_int32(*create) (struct butm_tapeInfo *, struct butm_tapeLabel *,
+			    afs_int32);
+	afs_int32(*readLabel) (struct butm_tapeInfo *, 
+			       struct butm_tapeLabel *,
+			       afs_int32);
+	afs_int32(*seek) (struct butm_tapeInfo *, afs_int32);
+	afs_int32(*seekEODump) (struct butm_tapeInfo *, afs_int32);
+	afs_int32(*readFileBegin) (struct butm_tapeInfo *);
+	afs_int32(*readFileData) (struct butm_tapeInfo *, char *, int len, 
+				  int *);
+	afs_int32(*readFileEnd) (struct butm_tapeInfo *);
+	afs_int32(*writeFileBegin) (struct butm_tapeInfo *);
+	afs_int32(*writeFileData) (struct butm_tapeInfo *, char *, afs_int32,
+				   afs_int32);
+	afs_int32(*writeFileEnd) (struct butm_tapeInfo *);
+	afs_int32(*writeEOT) (struct butm_tapeInfo *);
+	afs_int32(*setSize) (struct butm_tapeInfo *, afs_uint32);
+	afs_int32(*getSize) (struct butm_tapeInfo *, afs_uint32 *);
     } ops;
     char name[BU_MAXTAPELEN];
     afs_int32 position;		/* current position of tape */

@@ -182,9 +182,9 @@ osi_UfsOpen(afs_int32 ainode)
 #endif
     register struct osi_file *afile = NULL;
     afs_int32 code = 0;
-#ifdef AFS_CACHE_VNODE_PATH
     int dummy;
     char fname[1024];
+#ifdef AFS_CACHE_VNODE_PATH
     char namebuf[1024];
     struct pathname lookpn;
 #endif

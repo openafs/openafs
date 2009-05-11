@@ -493,7 +493,7 @@ doclink:
 version: $(DESTDIR)\bin\mkvers.exe NTMakefile.version 
 
 NTMakefile.version: NTMakefile.version-CML NTMakefile.version-NOCML
-	$(DEL) NTMakefile.version
+	-$(DEL) NTMakefile.version
 !	IF (EXIST(..\..\src\CML\state) || EXIST(..\..\..\src\CML\state))
 		$(COPY) NTMakefile.version-CML NTMakefile.version
 !	ELSE
@@ -535,12 +535,12 @@ install9x: install
 # This clean target must be named something different than the universal
 # 'clean' so that the version file can be removed last.
 clean_version:
-	$(DEL) NTMakefile.version
+	-$(DEL) NTMakefile.version
 
 clean::
-	$(DEL) $(DESTDIR)\LIB\*.DLL
-	$(DEL) $(DESTDIR)\bin\mkver.exe*
-	$(DEL) $(DESTDIR)\bin\touch.exe*
-	$(DEL) $(OUT)\util_cr.exe*
-	$(DEL) $(OUT)\mkver.exe*
-	$(DEL) $(OUT)\touch.exe*
+	-$(DEL) $(DESTDIR)\LIB\*.DLL
+	-$(DEL) $(DESTDIR)\bin\mkver.exe*
+	-$(DEL) $(DESTDIR)\bin\touch.exe*
+	-$(DEL) $(OUT)\util_cr.exe*
+	-$(DEL) $(OUT)\mkver.exe*
+	-$(DEL) $(OUT)\touch.exe*

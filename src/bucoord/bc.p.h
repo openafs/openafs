@@ -110,7 +110,7 @@ struct bc_dumpSchedule {
  * Private: represents a queued dump/restore item.
  */
 struct bc_dumpTask {
-    int (*callProc) ();
+    int (*callProc) (afs_int32);
     struct bc_config *config;
     struct bc_volumeDump *volumes;
     char *dumpName;		/*Dump name we're doing */

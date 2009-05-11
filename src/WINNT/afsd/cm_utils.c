@@ -270,6 +270,8 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_QUOTA;
     else if (error == VNOVNODE)
         error = CM_ERROR_BADFD;
+    else if (error == VNOSERVICE || error == VSALVAGE || error == VOFFLINE)
+        error = CM_ERROR_ALLOFFLINE;
     else if (error == EISDIR)
         return CM_ERROR_ISDIR;
     return error;

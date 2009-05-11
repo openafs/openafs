@@ -21,6 +21,7 @@ RCSID
 #include "gtxlightobj.h"
 #include "gtxkeymap.h"
 #include "gtxframe.h"
+#include "gtxinput.h"
 
 struct gtx_frame *frameA, *frameB;
 
@@ -28,10 +29,11 @@ struct onode *objectA, *objectB;
 struct onode *lightA, *lightB;
 
 static int
-ChangeMenuCmd(awin, arock)
-     afs_int32 arock;
-     register struct gwin *awin;
+ChangeMenuCmd(void *param1, void *param2)
 {
+    struct gwin * awin = (struct gwin *) param1;
+    afs_int32 arock = (afs_int32) param2;
+    
     register struct gtx_frame *tf;
     register afs_int32 code;
 
@@ -54,10 +56,11 @@ ChangeMenuCmd(awin, arock)
 }
 
 static int
-ChangeListCmd(awin, arock)
-     afs_int32 arock;
-     register struct gwin *awin;
+ChangeListCmd(void *param1, void *param2)
 {
+    struct gwin *awin = (struct gwin *) param1;
+    afs_int32 arock = (afs_int32) param2;
+    
     register struct gtx_frame *tf;
     register afs_int32 code;
 
@@ -80,18 +83,19 @@ ChangeListCmd(awin, arock)
 }
 
 static int
-NoCallCmd(awin)
-     struct gwin *awin;
+NoCallCmd(void *param, void *unused)
 {
+    struct gwin *awin = (struct gwin *)param;
+    
     gtxframe_DisplayString(awin->w_frame,
 			   "Function should be mapped on '$d', not 'd'");
     return 0;
 }
 
 static int
-ChangeCmd(awin)
-     struct gwin *awin;
+ChangeCmd(void *param, void *unused)
 {
+    struct gwin *awin = (struct gwin *) param;
     char tbuffer[100];
     register afs_int32 code;
 
@@ -106,33 +110,35 @@ ChangeCmd(awin)
 }
 
 static int
-StupidCmd(awin)
-     struct gwin *awin;
+StupidCmd(void *param, void *unused)
 {
+    struct gwin *awin = (struct gwin *)param;
+    
     gtxframe_DisplayString(awin->w_frame,
 			   "You're already showing that frame!");
     return 0;
 }
 
 static int
-SwitchToACmd(awin)
-     struct gwin *awin;
+SwitchToACmd(void *param, void *unused)
 {
+    struct gwin *awin = (struct gwin *)param;
     gtxframe_SetFrame(awin, frameA);
     return 0;
 }
 
 static int
-SwitchToBCmd(awin)
-     struct gwin *awin;
+SwitchToBCmd(void *param, void *unused)
 {
+    struct gwin *awin = (struct gwin *)param;
     gtxframe_SetFrame(awin, frameB);
     return 0;
 }
 
 #include "AFS_component_version_number.c"
 
-main()
+int
+main(int argc, char **argv)
 {
     struct gwin *win;
     struct gator_textobj_params textcrparams;

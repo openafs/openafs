@@ -394,7 +394,10 @@ long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
     return 0;
 }
 
-/* look up the root cell's name in the Registry */
+/* look up the root cell's name in the Registry 
+ * Input buffer must be at least CELL_MAXNAMELEN 
+ * in size.  (Defined in cm_cell.h)
+ */
 long cm_GetRootCellName(char *cellNamep)
 {
     DWORD code, dummyLen;
@@ -405,7 +408,7 @@ long cm_GetRootCellName(char *cellNamep)
     if (code != ERROR_SUCCESS)
         return -1;
 
-    dummyLen = 256;
+    dummyLen = CELL_MAXNAMELEN;
     code = RegQueryValueEx(parmKey, "Cell", NULL, NULL,
 				cellNamep, &dummyLen);
     RegCloseKey (parmKey);

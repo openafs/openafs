@@ -24,6 +24,7 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <unistd.h>
 #endif
 #include <sys/stat.h>
 #include <stdlib.h>		/* for realpath() */
@@ -52,10 +53,9 @@ RCSID
 
 #if !defined(UKERNEL)
 int
-afsconf_CheckAuth(void *rock,
-    struct rx_call *acall)
+afsconf_CheckAuth(void *arock, struct rx_call *acall)
 {
-    register struct afsconf_dir *adir = rock;
+    struct afsconf_dir *adir = arock;
     int rc;
     LOCK_GLOBAL_MUTEX;
     rc = ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);

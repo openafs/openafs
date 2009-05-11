@@ -270,7 +270,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 
     AFS_STATCNT(EvalMountPoint);
 #ifdef notdef
-    if (avc->mvid && (avc->states & CMValid))
+    if (avc->mvid && (avc->f.states & CMValid))
 	return 0;		/* done while racing */
 #endif
     *avolpp = NULL;
@@ -280,7 +280,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
 
     /* Determine which cell and volume the mointpoint goes to */
     code = EvalMountData(avc->linkData[0], avc->linkData + 1,
-                         avc->states, avc->fid.Cell, avolpp, areq, 0, 0,
+                         avc->f.states, avc->f.fid.Cell, avolpp, areq, 0, 0,
 			 &avnoid);
     if (code) return code;
 
@@ -294,7 +294,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     avc->mvid->Fid.Volume = (*avolpp)->volume;
     avc->mvid->Fid.Vnode = avnoid;
     avc->mvid->Fid.Unique = 1;
-    avc->states |= CMValid;
+    avc->f.states |= CMValid;
 
     /* Used to: if the mount point is stored within a backup volume,
      * then we should only update the parent pointer information if
@@ -303,7 +303,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
      *
      * Next two lines used to be under this if:
      *
-     * if (!(avc->states & CBackup) || tvp->dotdot.Fid.Volume == 0)
+     * if (!(avc->f.states & CBackup) || tvp->dotdot.Fid.Volume == 0)
      *
      * Now: update mount point back pointer on every call, so that we handle
      * multiple mount points better.  This way, when du tries to go back
@@ -311,9 +311,10 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
      * cd'ing via a new path to a volume will reset the ".." pointer
      * to the new path.
      */
-    (*avolpp)->mtpoint = avc->fid;	/* setup back pointer to mtpoint */
+    (*avolpp)->mtpoint = avc->f.fid;	/* setup back pointer to mtpoint */
+    
     if (advc)
-	(*avolpp)->dotdot = advc->fid;
+	(*avolpp)->dotdot = advc->f.fid;
 
     return 0;
 }
@@ -375,12 +376,12 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	if (code)
 	    goto done;
 	if (tvolp) {
-	    tvolp->dotdot = tvc->fid;
-	    tvolp->dotdot.Fid.Vnode = tvc->parentVnode;
-	    tvolp->dotdot.Fid.Unique = tvc->parentUnique;
+	    tvolp->dotdot = tvc->f.fid;
+	    tvolp->dotdot.Fid.Vnode = tvc->f.parent.vnode;
+	    tvolp->dotdot.Fid.Unique = tvc->f.parent.unique;
 	}
     }
-    if (tvc->mvid && (tvc->states & CMValid)) {
+    if (tvc->mvid && (tvc->f.states & CMValid)) {
 	if (!canblock) {
 	    afs_int32 retry;
 
@@ -402,7 +403,7 @@ afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
 	    goto done;
 	}
 #ifdef AFS_DARWIN80_ENV
-        root_vp->m.Type = VDIR;
+        root_vp->f.m.Type = VDIR;
         AFS_GUNLOCK();
         code = afs_darwin_finalizevnode(root_vp, NULL, NULL, 0);
         AFS_GLOCK();
@@ -514,7 +515,7 @@ afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
     if (!afs_nfsexporter)
 	strcpy(bufp, (*sysnamelist)[0]);
     else {
-	au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
+	au = afs_GetUser(areq->uid, adp->f.fid.Cell, 0);
 	if (au->exporter) {
 	    error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num, 0);
 	    if (error) {
@@ -590,7 +591,7 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	*sysnamelist = afs_sysnamelist;
 
 	if (afs_nfsexporter) {
-	    au = afs_GetUser(areq->uid, avc->fid.Cell, 0);
+	    au = afs_GetUser(areq->uid, avc->f.fid.Cell, 0);
 	    if (au->exporter) {
 		error =
 		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, &num, 0);
@@ -635,8 +636,6 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int nskip;			/* # of slots in the LRU queue to skip */
     struct vcache *lruvcp;	/* vcache ptr of our goal pos in LRU queue */
     struct dcache *dcp;		/* chunk containing the dir block */
-    char *statMemp;		/* status memory block */
-    char *cbfMemp;		/* callback and fid memory block */
     afs_size_t temp;		/* temp for holding chunk length, &c. */
     struct AFSFid *fidsp;	/* file IDs were collecting */
     struct AFSCallBack *cbsp;	/* call back pointers */
@@ -668,6 +667,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;
+    dotdot.Cell = 0;
+    dotdot.Fid.Unique = 0;
+    dotdot.Fid.Vnode = 0;
 #ifdef AFS_DARWIN80_ENV
     panic("bulkstatus doesn't work on AFS_DARWIN80_ENV. don't call it");
 #endif
@@ -694,13 +696,11 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * one for fids and callbacks, and one for stat info.  Well set
      * up our pointers to the memory from there, too.
      */
-    statMemp = osi_AllocLargeSpace(nentries * sizeof(AFSFetchStatus));
-    statsp = (struct AFSFetchStatus *)statMemp;
-    cbfMemp =
-	osi_AllocLargeSpace(nentries *
-			    (sizeof(AFSCallBack) + sizeof(AFSFid)));
-    fidsp = (AFSFid *) cbfMemp;
-    cbsp = (AFSCallBack *) (cbfMemp + nentries * sizeof(AFSFid));
+    statsp = (AFSFetchStatus *) 
+	    osi_Alloc(AFSCBMAX * sizeof(AFSFetchStatus));
+    fidsp = (AFSFid *) osi_AllocLargeSpace(nentries * sizeof(AFSFid));
+    cbsp = (AFSCallBack *) 
+	    osi_Alloc(AFSCBMAX * sizeof(AFSCallBack));
 
     /* next, we must iterate over the directory, starting from the specified
      * cookie offset (dirCookie), and counting out nentries file entries.
@@ -728,9 +728,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
      * 1. The cache data is being fetched by another process.
      * 2. The cache data is no longer valid
      */
-    while ((adp->states & CStatd)
+    while ((adp->f.states & CStatd)
 	   && (dcp->dflags & DFFetching)
-	   && hsame(adp->m.DataVersion, dcp->f.versionNo)) {
+	   && hsame(adp->f.m.DataVersion, dcp->f.versionNo)) {
 	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
 		   __FILE__, ICL_TYPE_INT32, __LINE__, ICL_TYPE_POINTER, dcp,
 		   ICL_TYPE_INT32, dcp->dflags);
@@ -740,8 +740,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	ObtainReadLock(&adp->lock);
 	ObtainReadLock(&dcp->lock);
     }
-    if (!(adp->states & CStatd)
-	|| !hsame(adp->m.DataVersion, dcp->f.versionNo)) {
+    if (!(adp->f.states & CStatd)
+	|| !hsame(adp->f.m.DataVersion, dcp->f.versionNo)) {
 	ReleaseReadLock(&dcp->lock);
 	ReleaseReadLock(&adp->lock);
 	afs_PutDCache(dcp);
@@ -791,8 +791,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	     * also make us skip "." and probably "..", unless it has
 	     * disappeared from the cache since we did our namei call.
 	     */
-	    tfid.Cell = adp->fid.Cell;
-	    tfid.Fid.Volume = adp->fid.Fid.Volume;
+	    tfid.Cell = adp->f.fid.Cell;
+	    tfid.Fid.Volume = adp->f.fid.Fid.Volume;
 	    tfid.Fid.Vnode = ntohl(dirEntryp->fid.vnode);
 	    tfid.Fid.Unique = ntohl(dirEntryp->fid.vunique);
 	    do {
@@ -828,7 +828,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    }
 
 #ifdef AFS_DARWIN80_ENV
-            if (tvcp->states & CVInit) {
+            if (tvcp->f.states & CVInit) {
                  /* XXX don't have status yet, so creating the vnode is
                     not yet useful. we would get CDeadVnode set, and the
                     upcoming PutVCache will cause the vcache to be flushed &
@@ -842,12 +842,12 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	     * if the new length will be ignored when afs_ProcessFS is
 	     * called with new stats. */
 #ifdef AFS_SGI_ENV
-	    if (!(tvcp->states & (CStatd | CBulkFetching))
+	    if (!(tvcp->f.states & (CStatd | CBulkFetching))
 		&& (tvcp->execsOrWriters <= 0)
 		&& !afs_DirtyPages(tvcp)
 		&& !AFS_VN_MAPPED((vnode_t *) tvcp))
 #else
-	    if (!(tvcp->states & (CStatd | CBulkFetching))
+	    if (!(tvcp->f.states & (CStatd | CBulkFetching))
 		&& (tvcp->execsOrWriters <= 0)
 		&& !afs_DirtyPages(tvcp))
 #endif
@@ -869,8 +869,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 		 */
 		memcpy((char *)(fidsp + fidIndex), (char *)&tfid.Fid,
 		       sizeof(*fidsp));
-		tvcp->states |= CBulkFetching;
-		tvcp->m.Length = statSeqNo;
+		tvcp->f.states |= CBulkFetching;
+		tvcp->f.m.Length = statSeqNo;
 		fidIndex++;
 	    }
 	    afs_PutVCache(tvcp);
@@ -910,7 +910,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* start the timer; callback expirations are relative to this */
 	startTime = osi_Time();
 
-	tcp = afs_Conn(&adp->fid, areqp, SHARED_LOCK);
+	tcp = afs_Conn(&adp->f.fid, areqp, SHARED_LOCK);
 	if (tcp) {
 	    hostp = tcp->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
@@ -939,7 +939,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tcp, code, &adp->fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
+	     (tcp, code, &adp->f.fid, areqp, AFS_STATS_FS_RPCIDX_BULKSTATUS,
 	      SHARED_LOCK, NULL));
 
     /* now, if we didnt get the info, bail out. */
@@ -948,7 +948,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
     /* we need vol flags to create the entries properly */
     dotdot.Fid.Volume = 0;
-    volp = afs_GetVolume(&adp->fid, areqp, READ_LOCK);
+    volp = afs_GetVolume(&adp->f.fid, areqp, READ_LOCK);
     if (volp) {
 	volStates = volp->states;
 	if (volp->dotdot.Fid.Volume != 0)
@@ -1010,8 +1010,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     for (i = 0; i < fidIndex; i++) {
 	if ((&statsp[i])->errorCode)
 	    continue;
-	afid.Cell = adp->fid.Cell;
-	afid.Fid.Volume = adp->fid.Fid.Volume;
+	afid.Cell = adp->f.fid.Cell;
+	afid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afid.Fid.Vnode = fidsp[i].Vnode;
 	afid.Fid.Unique = fidsp[i].Unique;
 	do {
@@ -1035,7 +1035,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * and we may not have the latest status information for this
 	 * file.  Leave the entry alone.
 	 */
-	if (!(tvcp->states & CBulkFetching) || (tvcp->m.Length != statSeqNo)) {
+	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 	    afs_PutVCache(tvcp);
@@ -1086,7 +1086,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* We need to check the flags again. We may have missed
 	 * something while we were waiting for a lock.
 	 */
-	if (!(tvcp->states & CBulkFetching) || (tvcp->m.Length != statSeqNo)) {
+	if (!(tvcp->f.states & CBulkFetching) || (tvcp->f.m.Length != statSeqNo)) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
@@ -1106,21 +1106,21 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * loaded, so we can tell if we use it before it gets
 	 * recycled.
 	 */
-	tvcp->states |= CBulkStat;
-	tvcp->states &= ~CBulkFetching;
+	tvcp->f.states |= CBulkStat;
+	tvcp->f.states &= ~CBulkFetching;
 	flagIndex++;
 	afs_bulkStatsDone++;
 
 	/* merge in vol info */
 	if (volStates & VRO)
-	    tvcp->states |= CRO;
+	    tvcp->f.states |= CRO;
 	if (volStates & VBackup)
-	    tvcp->states |= CBackup;
+	    tvcp->f.states |= CBackup;
 	if (volStates & VForeign)
-	    tvcp->states |= CForeign;
+	    tvcp->f.states |= CForeign;
 
 	/* merge in the callback info */
-	tvcp->states |= CTruth;
+	tvcp->f.states |= CTruth;
 
 	/* get ptr to the callback we are interested in */
 	tcbp = cbsp + i;
@@ -1128,19 +1128,19 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	if (tcbp->ExpirationTime != 0) {
 	    tvcp->cbExpires = tcbp->ExpirationTime + startTime;
 	    tvcp->callback = hostp;
-	    tvcp->states |= CStatd;
+	    tvcp->f.states |= CStatd;
 	    afs_QueueCallback(tvcp, CBHash(tcbp->ExpirationTime), volp);
-	} else if (tvcp->states & CRO) {
+	} else if (tvcp->f.states & CRO) {
 	    /* ordinary callback on a read-only volume -- AFS 3.2 style */
 	    tvcp->cbExpires = 3600 + startTime;
 	    tvcp->callback = hostp;
-	    tvcp->states |= CStatd;
+	    tvcp->f.states |= CStatd;
 	    afs_QueueCallback(tvcp, CBHash(3600), volp);
 	} else {
 	    tvcp->callback = 0;
-	    tvcp->states &= ~(CStatd | CUnique);
+	    tvcp->f.states &= ~(CStatd | CUnique);
 	    afs_DequeueCallback(tvcp);
-	    if ((tvcp->states & CForeign) || (vType(tvcp) == VDIR))
+	    if ((tvcp->f.states & CForeign) || (vType(tvcp) == VDIR))
 		osi_dnlc_purgedp(tvcp);	/* if it (could be) a directory */
 	}
 	ReleaseWriteLock(&afs_xcbhash);
@@ -1156,8 +1156,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
   done:
     /* Be sure to turn off the CBulkFetching flags */
     for (i = flagIndex; i < fidIndex; i++) {
-	afid.Cell = adp->fid.Cell;
-	afid.Fid.Volume = adp->fid.Fid.Volume;
+	afid.Cell = adp->f.fid.Cell;
+	afid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afid.Fid.Vnode = fidsp[i].Vnode;
 	afid.Fid.Unique = fidsp[i].Unique;
 	do {
@@ -1166,9 +1166,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    tvcp = afs_FindVCache(&afid, &retry, 0 /* !stats&!lru */ );
 	    ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
-	if (tvcp != NULL && (tvcp->states & CBulkFetching)
-	    && (tvcp->m.Length == statSeqNo)) {
-	    tvcp->states &= ~CBulkFetching;
+	if (tvcp != NULL && (tvcp->f.states & CBulkFetching)
+	    && (tvcp->f.m.Length == statSeqNo)) {
+	    tvcp->f.states &= ~CBulkFetching;
 	}
 	if (tvcp != NULL) {
 	    afs_PutVCache(tvcp);
@@ -1178,9 +1178,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	afs_PutVolume(volp, READ_LOCK);
 
     /* If we did the InlineBulk RPC pull out the return code */
-    if (inlinebulk) {
+    if (inlinebulk && code == 0) {
 	if ((&statsp[0])->errorCode) {
-	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp,
+	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->f.fid, areqp,
 			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL);
 	    code = (&statsp[0])->errorCode;
 	}
@@ -1188,8 +1188,9 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	code = 0;
     }
   done2:
-    osi_FreeLargeSpace(statMemp);
-    osi_FreeLargeSpace(cbfMemp);
+    osi_FreeLargeSpace((char *)fidsp);
+    osi_Free((char *)statsp, AFSCBMAX * sizeof(AFSFetchStatus));
+    osi_Free((char *)cbsp, AFSCBMAX * sizeof(AFSCallBack));
     return code;
 }
 
@@ -1278,7 +1279,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     *avcp = NULL;		/* Since some callers don't initialize it */
     bulkcode = 0;
 
-    if (!(adp->states & CStatd) && !afs_InReadDir(adp)) {
+    if (!(adp->f.states & CStatd) && !afs_InReadDir(adp)) {
 	if ((code = afs_VerifyVCache2(adp, &treq))) {
 	    goto done;
 	}
@@ -1485,17 +1486,17 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	 * use that.  This eliminates several possible deadlocks.  
 	 */
 	if (!afs_InReadDir(adp)) {
-	    while ((adp->states & CStatd)
+	    while ((adp->f.states & CStatd)
 		   && (tdc->dflags & DFFetching)
-		   && hsame(adp->m.DataVersion, tdc->f.versionNo)) {
+		   && hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&adp->lock);
 		afs_osi_Sleep(&tdc->validPos);
 		ObtainReadLock(&adp->lock);
 		ObtainReadLock(&tdc->lock);
 	    }
-	    if (!(adp->states & CStatd)
-		|| !hsame(adp->m.DataVersion, tdc->f.versionNo)) {
+	    if (!(adp->f.states & CStatd)
+		|| !hsame(adp->f.m.DataVersion, tdc->f.versionNo)) {
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&adp->lock);
 		afs_PutDCache(tdc);
@@ -1551,8 +1552,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	}
 
 	/* new fid has same cell and volume */
-	tfid.Cell = adp->fid.Cell;
-	tfid.Fid.Volume = adp->fid.Fid.Volume;
+	tfid.Cell = adp->f.fid.Cell;
+	tfid.Fid.Volume = adp->f.fid.Fid.Volume;
 	afs_Trace4(afs_iclSetp, CM_TRACE_LOOKUP, ICL_TYPE_POINTER, adp,
 		   ICL_TYPE_STRING, tname, ICL_TYPE_FID, &tfid,
 		   ICL_TYPE_INT32, code);
@@ -1568,7 +1569,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	 * dirCookie tells us where to start prefetching from.
 	 */
 	if (!AFS_IS_DISCONNECTED && 
-	    AFSDOBULK && adp->opens > 0 && !(adp->states & CForeign)
+	    AFSDOBULK && adp->opens > 0 && !(adp->f.states & CForeign)
 	    && !afs_IsDynroot(adp) && !afs_InReadDir(adp)) {
 	    afs_int32 retry;
 	    /* if the entry is not in the cache, or is in the cache,
@@ -1581,13 +1582,13 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		ReleaseReadLock(&afs_xvcache);
 	    } while (tvc && retry);
 
-	    if (!tvc || !(tvc->states & CStatd))
+	    if (!tvc || !(tvc->f.states & CStatd))
 		bulkcode = afs_DoBulkStat(adp, dirCookie, &treq);
 	    else
 		bulkcode = 0;
 
 	    /* if the vcache isn't usable, release it */
-	    if (tvc && !(tvc->states & CStatd)) {
+	    if (tvc && !(tvc->f.states & CStatd)) {
 #ifndef  AFS_FBSD80_ENV
 	      afs_PutVCache(tvc);
 #endif
@@ -1607,7 +1608,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	 */
 	if (!tvc) {
 	    afs_int32 cached = 0;
-	    if (!tfid.Fid.Unique && (adp->states & CForeign)) {
+	    if (!tfid.Fid.Unique && (adp->f.states & CForeign)) {
 		tvc = afs_LookupVCache(&tfid, &treq, &cached, adp, tname);
 	    }
 	    if (!tvc && !bulkcode) {	/* lookup failed or wasn't called */
@@ -1617,11 +1618,11 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
     }				/* sub-block just to reduce stack usage */
 
     if (tvc) {
-	if (adp->states & CForeign)
-	    tvc->states |= CForeign;
-	tvc->parentVnode = adp->fid.Fid.Vnode;
-	tvc->parentUnique = adp->fid.Fid.Unique;
-	tvc->states &= ~CBulkStat;
+	if (adp->f.states & CForeign)
+	    tvc->f.states |= CForeign;
+	tvc->f.parent.vnode = adp->f.fid.Fid.Vnode;
+	tvc->f.parent.unique = adp->f.fid.Fid.Unique;
+	tvc->f.states &= ~CBulkStat;
 
 	if (afs_fakestat_enable == 2 && tvc->mvstat == 1) {
 	    ObtainSharedLock(&tvc->lock, 680);
@@ -1637,7 +1638,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		force_eval = 1;
 	    ReleaseReadLock(&tvc->lock);
 	}
-	if (tvc->mvstat == 1 && (tvc->states & CMValid) && tvc->mvid != NULL)
+	if (tvc->mvstat == 1 && (tvc->f.states & CMValid) && tvc->mvid != NULL)
 	  force_eval = 1; /* This is now almost for free, get it correct */
 
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
@@ -1662,12 +1663,12 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		}
 
 		/* next, we want to continue using the target of the mt point */
-		if (tvc->mvid && (tvc->states & CMValid)) {
+		if (tvc->mvid && (tvc->f.states & CMValid)) {
 		    struct vcache *uvc;
 		    /* now lookup target, to set .. pointer */
 		    afs_Trace2(afs_iclSetp, CM_TRACE_LOOKUP1,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_FID,
-			       &tvc->fid);
+			       &tvc->f.fid);
 		    uvc = tvc;	/* remember for later */
 
 		    if (tvolp && (tvolp->states & VForeign)) {
@@ -1726,14 +1727,14 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	if (!AFS_IS_DISCONNECTED) {
 	    if (pass == 0) {
 	        struct volume *tv;
-	        tv = afs_GetVolume(&adp->fid, &treq, READ_LOCK);
+	        tv = afs_GetVolume(&adp->f.fid, &treq, READ_LOCK);
 	        if (tv) {
 		    if (tv->states & VRO) {
 		        pass = 1;	/* try this *once* */
 		        ObtainWriteLock(&afs_xcbhash, 495);
 		        afs_DequeueCallback(adp);
 		        /* re-stat to get later version */
-		        adp->states &= ~CStatd;
+		        adp->f.states &= ~CStatd;
 		        ReleaseWriteLock(&afs_xcbhash);
 		        osi_dnlc_purgedp(adp);
 		        afs_PutVolume(tv, READ_LOCK);
@@ -1757,7 +1758,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 #ifdef	AFS_OSF_ENV
 	/* Handle RENAME; only need to check rename "."  */
 	if (opflag == RENAME && wantparent && *ndp->ni_next == 0) {
-	    if (!FidCmp(&(tvc->fid), &(adp->fid))) {
+	    if (!FidCmp(&(tvc->f.fid), &(adp->f.fid))) {
 		afs_PutVCache(*avcp);
 		*avcp = NULL;
 		afs_PutFakeStat(&fakestate);

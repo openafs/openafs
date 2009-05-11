@@ -313,6 +313,17 @@ dnl Various compiler setup.
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
+AC_TYPE_SOCKLEN_T
+AC_CHECK_TYPES(sig_t, , ,
+  [#include <sys/types.h>
+   #include <signal.h> ])
+AH_BOTTOM(
+[#ifndef HAVE_SIG_T
+#ifndef SIG_T_DEFINED
+#define SIG_T_DEFINED
+typedef RETSIGTYPE (*sig_t) ();
+#endif
+#endif])
 COMPILER_HAS_FUNCTION_MACRO
 
 dnl Checks for programs.
@@ -828,6 +839,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_KMEM_CACHE_INIT
                  LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
                  LINUX_STRUCT_TASK_HAS_CRED
+		 LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER
 		 LINUX_HAVE_KMEM_CACHE_T
 		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
@@ -899,6 +911,7 @@ dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_REFRIGERATOR
 		 LINUX_LINUX_KEYRING_SUPPORT
 		 LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK
+		 LINUX_KEY_ALLOC_NEEDS_CRED
 		 LINUX_DO_SYNC_READ
 		 LINUX_GENERIC_FILE_AIO_READ
 		 LINUX_INIT_WORK_HAS_DATA
@@ -906,6 +919,10 @@ dnl XXX ask about LINUX_KERNEL_HAS_NFSSRV
 		 LINUX_SYSCTL_TABLE_CHECKING
 		 LINUX_HAVE_IGET
 		 LINUX_HAVE_I_SIZE_READ
+		 LINUX_HAVE_D_ALLOC_ANON
+		 if test "x$ac_cv_linux_d_alloc_anon" = "xno"; then
+		   AC_DEFINE([AFS_NONFSTRANS], 1, [define to disable the nfs translator])
+		 fi
 		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
 	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
@@ -1552,7 +1569,7 @@ AC_HEADER_DIRENT
 AC_CHECK_HEADERS(stdlib.h string.h unistd.h poll.h fcntl.h sys/time.h sys/file.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
-AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h)
+AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h sys/pag.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])

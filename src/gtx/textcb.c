@@ -48,9 +48,7 @@ static int gator_textcb_debug;	/*Is debugging output turned on? */
  *------------------------------------------------------------------------*/
 
 int
-gator_textcb_Init(a_debug)
-     int a_debug;
-
+gator_textcb_Init(int a_debug)
 {				/*gator_textcb_Init */
 
     static int initd;		/*Have we been called already? */
@@ -90,10 +88,7 @@ gator_textcb_Init(a_debug)
  *------------------------------------------------------------------------*/
 
 struct gator_textcb_hdr *
-gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEntry)
-     int a_maxEntriesStored;
-     int a_maxCharsPerEntry;
-
+gator_textcb_Create(int a_maxEntriesStored, int a_maxCharsPerEntry)
 {				/*gator_textcb_Create */
 
     static char rn[] = "gator_textcb_Create";	/*Routine name */
@@ -127,7 +122,7 @@ gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEntry)
 		rn, bytesToAllocate, errno);
 	return ((struct gator_textcb_hdr *)0);
     } else if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Text buffer allocated at 0x%x\n", rn, newBuff);
+	fprintf(stderr, "[%s] Text buffer allocated at %p\n", rn, newBuff);
     blankLine = (char *)malloc(a_maxCharsPerEntry + 1);
     if (blankLine == NULL) {
 	fprintf(stderr,
@@ -154,7 +149,7 @@ gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEntry)
 	free(blankLine);
 	return ((struct gator_textcb_hdr *)0);
     } else if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Text buffer entry array allocated at 0x%x\n",
+	fprintf(stderr, "[%s] Text buffer entry array allocated at %p\n",
 		rn, newEntries);
 
     /*
@@ -176,19 +171,19 @@ gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEntry)
 	return ((struct gator_textcb_hdr *)0);
     } else if (gator_textcb_debug)
 	fprintf(stderr,
-		"[%s] Text circular buffer header allocated at 0x%x\n", rn,
+		"[%s] Text circular buffer header allocated at %p\n", rn,
 		newHdr);
 
     /*
      * Now, just initialize all the pieces and plug them in.
      */
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Zeroing %d bytes in text buffer at 0x%x\n", rn,
+	fprintf(stderr, "[%s] Zeroing %d bytes in text buffer at %p\n", rn,
 		numBuffBytes, newBuff);
     memset(newBuff, 0, numBuffBytes);
 
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Initializing blank line buffer at 0x%x\n", rn,
+	fprintf(stderr, "[%s] Initializing blank line buffer at %p\n", rn,
 		blankLine);
     for (i = 0; i < a_maxCharsPerEntry; i++)
 	*(blankLine + i) = ' ';
@@ -202,7 +197,7 @@ gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEntry)
 	 curr_ent++, curr_ent_num++, curr_buff += (a_maxCharsPerEntry + 1)) {
 	if (gator_textcb_debug)
 	    fprintf(stderr,
-		    "[%s] Initializing buffer entry %d; its text buffer address is 0x%x\n",
+		    "[%s] Initializing buffer entry %d; its text buffer address is %p\n",
 		    rn, curr_ent_num, curr_buff);
 	curr_ent->ID = 0;
 	curr_ent->highlight = 0;
@@ -216,7 +211,7 @@ gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEntry)
     }				/*Init each buffer entry */
 
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Filling in circ buff header at 0x%x\n", rn,
+	fprintf(stderr, "[%s] Filling in circ buff header at %p\n", rn,
 		newHdr);
     Lock_Init(&(newHdr->cbLock));
     newHdr->maxEntriesStored = a_maxEntriesStored;
@@ -255,8 +250,7 @@ gator_textcb_Create(a_maxEntriesStored, a_maxCharsPerEntry)
  *------------------------------------------------------------------------*/
 
 static struct gator_textcb_entry *
-bumpEntry(a_cbhdr)
-     struct gator_textcb_hdr *a_cbhdr;
+bumpEntry(struct gator_textcb_hdr *a_cbhdr)
 
 {				/*bumpEntry */
 
@@ -270,7 +264,7 @@ bumpEntry(a_cbhdr)
      */
     if (gator_textcb_debug)
 	fprintf(stderr,
-		"[%s]: Bumping entry for circular buffer at 0x%x; current values: currEnt=%d (idx %d), oldestEnt=%d (idx %d), maxEntriesStored=%d\n",
+		"[%s]: Bumping entry for circular buffer at %p; current values: currEnt=%d (idx %d), oldestEnt=%d (idx %d), maxEntriesStored=%d\n",
 		rn, a_cbhdr, a_cbhdr->currEnt, a_cbhdr->currEntIdx,
 		a_cbhdr->oldestEnt, a_cbhdr->oldestEntIdx,
 		a_cbhdr->maxEntriesStored);
@@ -281,7 +275,7 @@ bumpEntry(a_cbhdr)
     curr_ent = a_cbhdr->entry + a_cbhdr->currEntIdx;
 
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Zeroing entry %d (idx %d) at 0x%x\n", rn,
+	fprintf(stderr, "[%s] Zeroing entry %d (idx %d) at %p\n", rn,
 		a_cbhdr->currEnt, a_cbhdr->currEntIdx, curr_ent);
 
     curr_ent->ID = a_cbhdr->currEnt;
@@ -350,13 +344,8 @@ bumpEntry(a_cbhdr)
  *------------------------------------------------------------------------*/
 
 int
-gator_textcb_Write(a_cbhdr, a_textToWrite, a_numChars, a_highlight, a_skip)
-     struct gator_textcb_hdr *a_cbhdr;
-     char *a_textToWrite;
-     int a_numChars;
-     int a_highlight;
-     int a_skip;
-
+gator_textcb_Write(struct gator_textcb_hdr *a_cbhdr, char *a_textToWrite,
+		   int a_numChars, int a_highlight, int a_skip)
 {				/*gator_textcb_Write */
 
     static char rn[] = "gator_textcb_Write";	/*Routine name */
@@ -387,7 +376,7 @@ gator_textcb_Write(a_cbhdr, a_textToWrite, a_numChars, a_highlight, a_skip)
 	effective_highlight = (effective_highlight ? 0 : 1);
     if (gator_textcb_debug)
 	fprintf(stderr,
-		"[%s]: Current entry: %d (at index %d, keeping %d max), effective highlight: %d, located at 0x%x\n",
+		"[%s]: Current entry: %d (at index %d, keeping %d max), effective highlight: %d, located at %p\n",
 		rn, a_cbhdr->currEnt, curr_ent_idx, a_cbhdr->maxEntriesStored,
 		effective_highlight, curr_ent);
 
@@ -412,7 +401,7 @@ gator_textcb_Write(a_cbhdr, a_textToWrite, a_numChars, a_highlight, a_skip)
 	    curr_ent_idx = a_cbhdr->currEntIdx;
 	    if (gator_textcb_debug)
 		fprintf(stderr,
-			"[%s] New CB entry info: currEnt=%d (idx %d), oldestEnt=%d (idx %d), curr entry ptr is 0x%x\n",
+			"[%s] New CB entry info: currEnt=%d (idx %d), oldestEnt=%d (idx %d), curr entry ptr is %p\n",
 			rn, a_cbhdr->currEnt, a_cbhdr->currEntIdx,
 			a_cbhdr->oldestEnt, a_cbhdr->oldestEntIdx, curr_ent);
 	}
@@ -429,7 +418,7 @@ gator_textcb_Write(a_cbhdr, a_textToWrite, a_numChars, a_highlight, a_skip)
 	dest = curr_ent->textp + curr_ent->charsUsed;
 	if (gator_textcb_debug)
 	    fprintf(stderr,
-		    "[%s]: Copying %d char(s) into current entry at 0x%x (entry buffer starts at 0x%x)\n",
+		    "[%s]: Copying %d char(s) into current entry at %p (entry buffer starts at %p)\n",
 		    rn, chars_to_copy, dest, curr_ent->textp);
 
 	/*
@@ -519,16 +508,14 @@ gator_textcb_Write(a_cbhdr, a_textToWrite, a_numChars, a_highlight, a_skip)
  *------------------------------------------------------------------------*/
 
 int
-gator_textcb_BlankLine(a_cbhdr, a_numBlanks)
-     struct gator_textcb_hdr *a_cbhdr;
-     int a_numBlanks;
-
+gator_textcb_BlankLine(struct gator_textcb_hdr *a_cbhdr, 
+		       int a_numBlanks)
 {				/*gator_textcb_BlankLine */
 
     static char rn[] = "gator_textcb_BlankLine";	/*Routine name */
 
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Putting out %d blank lines to the CB at 0x%x\n",
+	fprintf(stderr, "[%s] Putting out %d blank lines to the CB at %p\n",
 		rn, a_numBlanks, a_cbhdr);
 
     if (a_cbhdr == (struct gator_textcb_hdr *)0) {
@@ -579,15 +566,13 @@ gator_textcb_BlankLine(a_cbhdr, a_numBlanks)
  *------------------------------------------------------------------------*/
 
 int
-gator_textcb_Delete(a_cbhdr)
-     struct gator_textcb_hdr *a_cbhdr;
-
+gator_textcb_Delete(struct gator_textcb_hdr *a_cbhdr)
 {				/*gator_textcb_Delete */
 
     static char rn[] = "gator_textcb_Delete";	/*Routine name */
 
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s]: Deleting text circular buffer at 0x%x\n", rn,
+	fprintf(stderr, "[%s]: Deleting text circular buffer at %p\n", rn,
 		a_cbhdr);
     ObtainWriteLock(&(a_cbhdr->cbLock));
 
@@ -597,14 +582,14 @@ gator_textcb_Delete(a_cbhdr)
      */
     if (gator_textcb_debug)
 	fprintf(stderr,
-		"[%s]: Freeing text buffer proper at 0x%x (%d bytes)\n", rn,
+		"[%s]: Freeing text buffer proper at %p (%d bytes)\n", rn,
 		a_cbhdr->entry[0].textp,
 		(a_cbhdr->maxEntriesStored * a_cbhdr->maxCharsPerEntry));
     free(a_cbhdr->entry[0].textp);
     a_cbhdr->entry[0].textp = NULL;
 
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s]: Freeing text entry array at 0x%x (%d bytes)\n",
+	fprintf(stderr, "[%s]: Freeing text entry array at %p (%lu bytes)\n",
 		rn, a_cbhdr->entry,
 		(a_cbhdr->maxEntriesStored *
 		 sizeof(struct gator_textcb_entry)));
@@ -618,7 +603,7 @@ gator_textcb_Delete(a_cbhdr)
      */
     ReleaseWriteLock(&(a_cbhdr->cbLock));
     if (gator_textcb_debug)
-	fprintf(stderr, "[%s] Freeing cicular buffer header at 0x%x\n", rn,
+	fprintf(stderr, "[%s] Freeing cicular buffer header at %p\n", rn,
 		a_cbhdr);
     free(a_cbhdr);
     return (0);

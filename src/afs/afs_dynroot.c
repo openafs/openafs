@@ -168,19 +168,19 @@ afs_GetDynrootMountFid(struct VenusFid *fid)
 int
 afs_IsDynroot(struct vcache *avc)
 {
-    return afs_IsDynrootFid(&avc->fid);
+    return afs_IsDynrootFid(&avc->f.fid);
 }
 
 int
 afs_IsDynrootMount(struct vcache *avc)
 {
-    return afs_IsDynrootMountFid(&avc->fid);
+    return afs_IsDynrootMountFid(&avc->f.fid);
 }
 
 int
 afs_IsDynrootAny(struct vcache *avc)
 {
-    return afs_IsDynrootAnyFid(&avc->fid);
+    return afs_IsDynrootAnyFid(&avc->f.fid);
 }
 
 /*
@@ -295,7 +295,7 @@ afs_DynrootInvalidate(void)
 	ReleaseReadLock(&afs_xvcache);
     } while (retry);
     if (tvc) {
-	tvc->states &= ~(CStatd | CUnique);
+	tvc->f.states &= ~(CStatd | CUnique);
 	osi_dnlc_purgedp(tvc);
 	afs_PutVCache(tvc);
     }
@@ -598,7 +598,7 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 {
     char *bp, tbuf[CVBS];
 
-    if (_afs_IsDynrootFid(&avc->fid)) {
+    if (_afs_IsDynrootFid(&avc->f.fid)) {
 	if (!afs_dynrootEnable)
 	    return 0;
 	afs_GetDynroot(0, 0, status);
@@ -615,8 +615,8 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
     /*
      * Check if this is an entry under /afs, e.g. /afs/cellname.
      */
-    if (avc->fid.Cell == afs_dynrootCell
-	&& avc->fid.Fid.Volume == AFS_DYNROOT_VOLUME) {
+    if (avc->f.fid.Cell == afs_dynrootCell
+	&& avc->f.fid.Fid.Volume == AFS_DYNROOT_VOLUME) {
 
 	struct cell *c;
 	struct cell_alias *ca;
@@ -632,9 +632,9 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	status->ParentVnode = 1;
 	status->ParentUnique = 1;
 
-	if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) == VN_TYPE_SYMLINK) {
+	if (VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode) == VN_TYPE_SYMLINK) {
 	    struct afs_dynSymlink *ts;
-	    int index = VNUM_TO_VNID(avc->fid.Fid.Vnode);
+	    int index = VNUM_TO_VNID(avc->f.fid.Fid.Vnode);
 
 	    ObtainReadLock(&afs_dynSymlinkLock);
 	    ts = afs_dynSymlinkBase;
@@ -657,18 +657,18 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    return ts ? 1 : 0;
 	}
 
-	if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_CELL
-	    && VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_ALIAS
-	    && VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) != VN_TYPE_MOUNT) {
+	if (VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode) != VN_TYPE_CELL
+	    && VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode) != VN_TYPE_ALIAS
+	    && VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode) != VN_TYPE_MOUNT) {
 	    afs_warn("dynroot vnode inconsistency, unknown VNTYPE %d\n",
-		     VNUM_TO_VNTYPE(avc->fid.Fid.Vnode));
+		     VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode));
 	    return 0;
 	}
 
-	cellidx = VNUM_TO_CIDX(avc->fid.Fid.Vnode);
-	rw = VNUM_TO_RW(avc->fid.Fid.Vnode);
+	cellidx = VNUM_TO_CIDX(avc->f.fid.Fid.Vnode);
+	rw = VNUM_TO_RW(avc->f.fid.Fid.Vnode);
 
-	if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) == VN_TYPE_ALIAS) {
+	if (VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode) == VN_TYPE_ALIAS) {
 	    char *realName;
 
 	    ca = afs_GetCellAlias(cellidx);
@@ -699,7 +699,7 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	    status->UnixModeBits = 0755;
 	    afs_PutCellAlias(ca);
 
-	} else if (VNUM_TO_VNTYPE(avc->fid.Fid.Vnode) == VN_TYPE_MOUNT) {
+	} else if (VNUM_TO_VNTYPE(avc->f.fid.Fid.Vnode) == VN_TYPE_MOUNT) {
 	    c = afs_GetCellByIndex(cellidx, READ_LOCK);
 	    if (!c) {
 		afs_warn("dynroot vnode inconsistency, can't find cell %d\n",
@@ -711,7 +711,7 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 	     * linkData needs to contain "%cell:volumeid"
 	     */
 	    namelen = strlen(c->cellName);
-	    bp = afs_cv2string(&tbuf[CVBS], avc->fid.Fid.Unique);
+	    bp = afs_cv2string(&tbuf[CVBS], avc->f.fid.Fid.Unique);
 	    linklen = 2 + namelen + strlen(bp);
 	    avc->linkData = afs_osi_Alloc(linklen + 1);
 	    strcpy(avc->linkData, "%");

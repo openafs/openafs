@@ -24,6 +24,8 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 #include "ptclient.h"
+#include "ptuser.h"
+#include "ptprototypes.h"
 
 #include "AFS_component_version_number.c"
 

@@ -17,8 +17,7 @@ RCSID
 #include <stdio.h>
 
 void
-gen(stream)
-     FILE *stream;
+gen(FILE *stream)
 {
     /*
      * map a byte into its equivalent with odd parity, where odd

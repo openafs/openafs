@@ -25,6 +25,7 @@ RCSID
 #include <netinet/in.h>
 #endif
 #include <string.h>
+#include <math.h>
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
@@ -43,7 +44,8 @@ RCSID
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
-#include <ubik.h>
+#include "ptuser.h"
+#include "ptprototypes.h"
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 #ifdef AFS_RXK5
@@ -246,12 +248,11 @@ k5_to_k4_name(krb5_context k5context,
 #endif
 
 int
-IdCmp(const void *pa, const void *pb)
+IdCmp(const void *a, const void *b)
 {
-    const afs_int32 *a = pa, *b = pb;
-    if (*a > *b) {
+    if (*(afs_int32 *)a > *(afs_int32 *)b) {
 	return 1;
-    } else if (*a == *b) {
+    } else if (*(afs_int32 *)a == *(afs_int32 *)b) {
 	return 0;
     } else /* (*a < *b) */ {
 	return -1;
@@ -268,7 +269,6 @@ static int
 GetGroupLimit(int N, int x)
 {
     int y;
-    double sqrt();
 
     if ((x >= N) || (x < 0)) {
 	printf("GetGroupLimit: input value out of range %d (%d)\n", x, N);
@@ -340,7 +340,6 @@ CreateGroup(int g)
     afs_int32 code;
     char name[16];
     afs_int32 id = 0;
-    afs_int32 flags = PRGRP;
     afs_int32 owner = 0;
     char *ownerName = NULL;
     int ownerType;		/* type of ownership */
@@ -413,7 +412,7 @@ DeleteRandomId(afs_int32 *list)
     k = random();		/* random starting point */
     for (j = 0; j < number; j++) {	/* find an undeleted id */
 	m = (k + j) % number;
-	if (id = list[m]) {
+	if ((id = list[m])) {
 	    code = ubik_PR_Delete(pruclient, 0, id);
 	    if (code) {
 		afs_com_err(whoami, code, "Couldn't delete %di", id);
@@ -676,21 +675,23 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 	if (ui) {
 	    int i;
 	    int ng;		/* number groups */
-	    int (*proc) ();	/* membership listing procedure */
 	    int over;
+	    int (*proc)(struct ubik_client *, afs_int32, afs_int32, prlist *,
+	    		afs_int32 *);
 	    prlist alist;
 
 	    alist.prlist_len = 0;
 	    alist.prlist_val = 0;
-	    if (random() & 4)
-		proc = PR_ListElements;
-	    else
-		proc = PR_GetCPS;
-	    code = ubik_Call(proc, pruclient, 0, ui, &alist, &over);
+	    if (random() & 4) {
+	    	proc = ubik_PR_ListElements;
+	    } else {
+	    	proc = ubik_PR_GetCPS;
+	    }
+	    code = (*proc)(pruclient, 0, ui, &alist, &over);
 	    if (code) {
 		afs_com_err(whoami, code,
 			"getting membership list of (%di) using %s", ui,
-			((proc == PR_GetCPS) ? "GetCPR" : "ListElements"));
+			(proc == ubik_PR_ListElements?"ListElements":"GetCPS"));
 		exit(24);
 	    }
 	    if (over) {
@@ -701,7 +702,7 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 		if (population[u * number + i])
 		    glist[ng++] = groups[i];
 	    qsort(glist, ng, sizeof(afs_int32), IdCmp);
-	    if (ng != (alist.prlist_len - ((proc == PR_GetCPS) ? 3 : 0))) {
+	    if (ng != (alist.prlist_len - ((proc == ubik_PR_GetCPS) ? 3 : 0))) {
 		fprintf(stderr,
 			"Membership list for %di of unexpected length: was %d but expected %d\n",
 			ui, alist.prlist_len, ng);
@@ -718,7 +719,7 @@ TestManyMembers(struct cmd_syndesc *as, void *arock)
 		}
 	    if (code)
 		exit(21);
-	    if (proc == PR_GetCPS) {
+	    if (proc == ubik_PR_GetCPS) {
 		if ((alist.prlist_val[i /* =ng */ ] != AUTHUSERID) ||
 		    (alist.prlist_val[++i] != ANYUSERID)
 		    || (alist.prlist_val[++i] != ui)) {

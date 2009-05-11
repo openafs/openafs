@@ -1044,13 +1044,13 @@ void
 osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 {
     ObtainSharedLock(&avc->lock, 555);
-    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0)
+    if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)
 	|| ((avc->execsOrWriters > 0) && afs_DirtyPages(avc))) {
 	ReleaseSharedLock(&avc->lock);
 	return;
     }
     UpgradeSToWLock(&avc->lock, 565);
-    hset(avc->mapDV, avc->m.DataVersion);
+    hset(avc->mapDV, avc->f.m.DataVersion);
     ReleaseWriteLock(&avc->lock);
     return;
 }
@@ -1058,8 +1058,8 @@ osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 void
 osi_FlushText_really(register struct vcache *vp)
 {
-    if (hcmp(vp->m.DataVersion, vp->flushDV) > 0) {
-	hset(vp->flushDV, vp->m.DataVersion);
+    if (hcmp(vp->f.m.DataVersion, vp->flushDV) > 0) {
+	hset(vp->flushDV, vp->f.m.DataVersion);
     }
     return;
 }

@@ -1,5 +1,8 @@
 # Openafs Spec $Revision$
 
+# TEMPORARY fix for patch fuzz so we can build on Fedora 10
+%define _default_patch_fuzz 2
+
 %define afsvers @VERSION@
 %define pkgvers @LINUX_PKGVER@
 # for beta/rc releases make pkgrel 0.X.<tag>
@@ -266,15 +269,13 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: http://dl.central.org/dl/cellservdb/CellServDB.2008-04-23
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2008-11-07
 
 Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
 Source997: openafs-buildfedora.pl
 Source998: openafs-buildall.sh
 Source999: openafs-kmodtool
-
-Patch0:  openafs-1.4.0-kmodule26.patch
 
 %description
 The AFS distributed filesystem.  AFS is a distributed filesystem
@@ -694,9 +695,6 @@ This package provides a precompiled AFS kernel module for %{kernvers}.
 #%setup -q -n %{srcdir}
 %setup -q -b 1 -n %{srcdir}
 
-# Patch openafs to build a kernel module named "openafs" instead of "libafs"
-%patch0 -p1 -b .kmod26
-
 ##############################################################################
 #
 # building
@@ -865,6 +863,8 @@ CFLAGS="$RPM_OPT_FLAGS"; export CFLAGS
        --bindir=%{_bindir} \
        --sbindir=%{_sbindir} \
        --disable-strip-binaries \
+       --with-linux-kernel-packaging \
+       --enable-disconnected \
 %if %{build_modules}
        --with-linux-kernel-headers=${ksrc} \
 %endif
@@ -895,7 +895,9 @@ for kvariant in %{kvariants} ; do
 	--libdir=%{_libdir} \
 	--bindir=%{_bindir} \
 	--sbindir=%{_sbindir} \
+        --with-linux-kernel-packaging \
 	--with-linux-kernel-headers=${ksrc} \
+	--enable-disconnected \
 %if %{krb5support}
 	--with-krb5-conf=/usr/kerberos/bin/krb5-config \
 %endif
@@ -917,10 +919,10 @@ for kvariant in %{kvariants}
 do
   if [ -n "${kvariant}" ] ; then
     pushd _kmod_build_$kvariant;
-    make all MPS=SP
+    make all
     popd
   else
-    make dest_only_libafs MPS=SP
+    make dest_only_libafs
   fi
 done
 
@@ -1014,7 +1016,7 @@ tar cf - -C ${sysname}/dest bin include | tar xf - -C $RPM_BUILD_ROOT%{_prefix}
 tar cf - -C ${sysname}/dest/lib . | tar xf - -C $RPM_BUILD_ROOT%{_libdir}
 tar cf - -C ${sysname}/dest/etc . | tar xf - -C $RPM_BUILD_ROOT%{_sbindir}
 tar cf - -C ${sysname}/dest/root.server%{_prefix}/afs bin | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/afs
-tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
+tar cf - -C ${sysname}/dest/root.client%{_prefix}/vice/etc afsd C | tar xf - -C $RPM_BUILD_ROOT%{_prefix}/vice/etc
 
 # Link kpasswd to kapasswd
 ln -f $RPM_BUILD_ROOT%{_bindir}/kpasswd $RPM_BUILD_ROOT%{_bindir}/kapasswd
@@ -1049,7 +1051,7 @@ PACKAGE_VERSION="%{dkms_version}"
 
 # Items below here should not have to change with each driver version
 PACKAGE_NAME="%{name}"
-MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; ./configure --with-linux-kernel-headers=\${kernel_source_dir}; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/openafs.ko ."
+MAKE[0]="SMP=SP; eval \\\`grep CONFIG_SMP /boot/config-\${kernelver_array[0]}\\\`; [ -n \"\\\$CONFIG_SMP\" ] && SMP=MP; KMODNAME=openafs.ko; DSTKMOD=\\".\\"; [ \\"\\\`echo \\"\${kernelver_array[0]}\\" | sed -e 's/^\\([0-9]*\\.[0-9]*\\)\\..*/\\1/'\\\`\\" = \\"2.4\\" ] && KMODNAME=\\"libafs-*\\" && DSTKMOD=openafs.o; ./configure --enable-disconnected --with-linux-kernel-headers=\${kernel_source_dir}; make MPS=\\\$SMP; mv src/libafs/MODLOAD-*/\\\$KMODNAME \\\$DSTKMOD"
 CLEAN="make -C src/libafs clean"
 
 BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
@@ -1232,23 +1234,23 @@ do
   if [ -n "$kvariant" ] ; then
     if [ -d _kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP ] ; then
       srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}${kvariant}-SP
+      dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
     else
       srcdir=_kmod_build_$kvariant/src/libafs/MODLOAD-%{kverrel}.%{_target_cpu}.${kvariant}-SP
+      dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}.${kvariant}/extra/openafs
     fi
   else
-    srcdir=${sysname}/dest/root.client%{_prefix}/vice/etc/modload
-  fi
-
-  if [ -f ${srcdir}/libafs-%{kverrel}${kvariant}.ko ] ; then
-    srcmod=${srcdir}/libafs-%{kverrel}${kvariant}.ko
-    dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}${kvariant}/extra/openafs
-  else
-    srcmod=${srcdir}/libafs-%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}.ko
-    dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}${kvariant:+.$kvariant}/extra/openafs
+    if [ -d ${sysname}/dest/root.client/lib/modules/%{kverrel}/extra/openafs ] ; then
+      srcdir=${sysname}/dest/root.client/lib/modules/%{kverrel}/extra/openafs
+      dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}/extra/openafs
+    else
+      srcdir=${sysname}/dest/root.client/lib/modules/%{kverrel}.%{_target_cpu}/extra/openafs
+      dstdir=$RPM_BUILD_ROOT/lib/modules/%{kverrel}.%{_target_cpu}/extra/openafs
+    fi
   fi
 
   mkdir -p ${dstdir}
-  install -m 755 ${srcmod} ${dstdir}/openafs.ko
+  install -m 755 ${srcdir}/openafs.ko ${dstdir}/openafs.ko
 done
 %else
 # Install the kernel modules
@@ -1257,13 +1259,13 @@ do
     if [ ${variation} = up ]
     then
        kvar=%{kxmoddir}
-       modname=libafs-%{kernvers}${kmodend}
+       modname=openafs${kmodend}
     else
        kvar=%{kxmoddir}${variation}
-       modname=libafs-%{kernvers}${variation}${kmodend}
+       modname=openafs${kmodend}
     fi
 
-    srcdir=${sysname}/dest/root.client%{_prefix}/vice/etc/modload
+    srcdir=${sysname}/dest/root.client/lib/modules/%{kverrel}${kvariant}/extra/openafs
     dstdir=$RPM_BUILD_ROOT${kvar}/fs/openafs
 
     mkdir -p ${dstdir}
@@ -1432,12 +1434,14 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %dir %{_prefix}/vice
 %dir %{_prefix}/vice/cache
 %dir %{_prefix}/vice/etc
+%dir %{_prefix}/vice/etc/C
 %{_prefix}/vice/etc/CellServDB.dist
 %config %{_prefix}/vice/etc/ThisCell
 %config %{_prefix}/vice/etc/cacheinfo
 %{_bindir}/cmdebug
 %{_bindir}/up
 %{_prefix}/vice/etc/afsd
+%{_prefix}/vice/etc/C/afszcm.cat
 %{pamdir}/pam_afs.krb.so.1
 %{pamdir}/pam_afs.krb.so
 %{pamdir}/pam_afs.so.1
@@ -1449,6 +1453,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man5/cacheinfo.*
 %{_mandir}/man8/afsd.*
 %{_mandir}/man5/CellAlias.*
+%{_mandir}/man5/afszcm.cat.*
 
 %files server
 %defattr(-,root,root)
@@ -1460,12 +1465,14 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_prefix}/afs/bin/bos_util
 %{_prefix}/afs/bin/buserver
 %{_prefix}/afs/bin/fileserver
+%{_prefix}/afs/bin/fssync-debug
 # Should we support KAServer?
 %{_prefix}/afs/bin/kaserver
 %{_prefix}/afs/bin/ka-forwarder
 %{_prefix}/afs/bin/pt_util
 %{_prefix}/afs/bin/ptserver
 %{_prefix}/afs/bin/salvager
+%{_prefix}/afs/bin/state_analyzer
 %{_prefix}/afs/bin/upclient
 %{_prefix}/afs/bin/upserver
 %{_prefix}/afs/bin/vlserver
@@ -1510,6 +1517,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/ptserver.*
 %{_mandir}/man8/pt_util.*
 %{_mandir}/man8/salvager.*
+%{_mandir}/man8/salvageserver.*
 %{_mandir}/man8/upclient.*
 %{_mandir}/man8/upserver.*
 %{_mandir}/man8/vldb_check.*

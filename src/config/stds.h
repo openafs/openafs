@@ -231,7 +231,7 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
 
 #define SIGN 0x80000000
 #define hadd32(a,i) \
-    (((((a).low ^ (int)(i)) & SIGN) \
+    ((void)((((a).low ^ (int)(i)) & SIGN) \
       ? (((((a).low + (int)(i)) & SIGN) == 0) && (a).high++) \
       : (((a).low & (int)(i) & SIGN) && (a).high++)), \
      (a).low += (int)(i))
@@ -276,12 +276,43 @@ typedef struct afsUUID afsUUID;
 #define AFS_DEMAND_ATTACH_FS 1
 #endif
 
-#ifdef AFS_HPUX_ENV
+/* A macro that can be used when printf'ing 64 bit integers, as Unix and 
+ * windows use a different format string
+ */
+#ifdef AFS_NT40_ENV
+#define AFS_INT64_FMT "l64d"
+#define AFS_PTR_FMT   "p"
+#else
+#define AFS_INT64_FMT "lld"
+#define AFS_PTR_FMT   "x"
+#endif
+
+/* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
+ * printf statemements with %ld and %lu
+ */
+#ifdef AFS_NT40_ENV
+#define static_inline __inline static
+#define hdr_static_inline(x) __inline static x
+#elif defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV)
 #define static_inline static __inline
-#elif defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
+#define hdr_static_inline(x) static __inline x
+#elif defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)
 #define static_inline static
+#define hdr_static_inline(x) static x
+#elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
+#define static_inline static
+#define hdr_static_inline(x) x
 #else
 #define static_inline static inline
+#define hdr_static_inline(x) static inline x
+#endif
+
+#ifdef  AFS_64BIT_ENV
+hdr_static_inline(afs_int32) afs_cast_int32(afs_int32 d) { return (afs_int32) d; }
+hdr_static_inline(afs_uint32) afs_cast_uint32(afs_uint32 d) { return (afs_uint32) d; }
+#else
+hdr_static_inline(long) afs_cast_int32(afs_int32 d) { return (long) d; }
+hdr_static_inline(unsigned long) afs_cast_uint32(afs_uint32 d) { return (unsigned long) d; }
 #endif
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

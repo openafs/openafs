@@ -231,3 +231,6 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 /* include all of the vos listvol options */
 #define FULL_LISTVOL_SWITCH 1
+
+/* Windows does not provide socklen_t */
+typedef unsigned int socklen_t;

@@ -414,8 +414,10 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 {
     int code;
     DECLARE_COMPLETION(c);
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX26_ENV) 
+#if defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
+#endif
 #else
     struct tq_struct tq;
 #endif
@@ -792,7 +794,8 @@ afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long
 	    afs_CacheInit(cparms.cacheScaches, cparms.cacheFiles,
 			  cparms.cacheBlocks, cparms.cacheDcaches,
 			  cparms.cacheVolumes, cparms.chunkSize,
-			  cparms.memCacheFlag, cparms.inodes, cparms.users);
+			  cparms.memCacheFlag, cparms.inodes, cparms.users, 
+			  cparms.dynamic_vcaches);
 
     } else if (parm == AFSOP_CACHEINODE) {
 	ino_t ainode = parm2;

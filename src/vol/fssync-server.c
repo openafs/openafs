@@ -15,15 +15,6 @@
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
-#ifdef notdef
-
-/* All this is going away in early 1989 */
-int newVLDB;			/* Compatibility flag */
-
-#endif
-static int newVLDB = 1;
-
-
 #ifndef AFS_PTHREAD_ENV
 #define USUAL_PRIORITY (LWP_MAX_PRIORITY - 2)
 
@@ -104,7 +95,7 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-int (*V_BreakVolumeCallbacks) ();
+int (*V_BreakVolumeCallbacks) (VolumeId volume);
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
@@ -133,16 +124,16 @@ static SYNC_server_state_t fssync_server_state =
 
 /* Forward declarations */
 static void * FSYNC_sync(void *);
-static void FSYNC_newconnection();
-static void FSYNC_com();
-static void FSYNC_Drop();
-static void AcceptOn();
-static void AcceptOff();
-static void InitHandler();
-static int AddHandler();
-static int FindHandler();
-static int FindHandler_r();
-static int RemoveHandler();
+static void FSYNC_newconnection(osi_socket afd);
+static void FSYNC_com(osi_socket fd);
+static void FSYNC_Drop(osi_socket fd);
+static void AcceptOn(void);
+static void AcceptOff(void);
+static void InitHandler(void);
+static int AddHandler(osi_socket fd, void (*aproc)(osi_socket));
+static int FindHandler(osi_socket afd);
+static int FindHandler_r(osi_socket afd);
+static int RemoveHandler(osi_socket afd);
 #if defined(HAVE_POLL) && defined (AFS_PTHREAD_ENV)
 static void CallHandler(struct pollfd *fds, int nfds, int mask);
 static void GetHandler(struct pollfd *fds, int maxfds, int events, int *nfds);
@@ -152,9 +143,11 @@ static void GetHandler(fd_set * fdsetp, int *maxfdp);
 #endif
 extern int LogLevel;
 
-static afs_int32 FSYNC_com_VolOp(int fd, SYNC_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
+#ifdef AFS_DEMAND_ATTACH_FS
 static afs_int32 FSYNC_com_VolError(FSSYNC_VolOp_command * com, SYNC_response * res);
+#endif
 static afs_int32 FSYNC_com_VolOn(FSSYNC_VolOp_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VolOff(FSSYNC_VolOp_command * com, SYNC_response * res);
 static afs_int32 FSYNC_com_VolMove(FSSYNC_VolOp_command * com, SYNC_response * res);
@@ -166,16 +159,18 @@ static afs_int32 FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * com, SYNC_response
 static afs_int32 FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * com, SYNC_response * res);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-static afs_int32 FSYNC_com_VnQry(int fd, SYNC_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_VnQry(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
-static afs_int32 FSYNC_com_StatsOp(int fd, SYNC_command * com, SYNC_response * res);
+static afs_int32 FSYNC_com_StatsOp(osi_socket fd, SYNC_command * com, SYNC_response * res);
 
 static afs_int32 FSYNC_com_StatsOpGeneral(FSSYNC_StatsOp_command * scom, SYNC_response * res);
+
+#ifdef AFS_DEMAND_ATTACH_FS
 static afs_int32 FSYNC_com_StatsOpViceP(FSSYNC_StatsOp_command * scom, SYNC_response * res);
 static afs_int32 FSYNC_com_StatsOpHash(FSSYNC_StatsOp_command * scom, SYNC_response * res);
 static afs_int32 FSYNC_com_StatsOpHdr(FSSYNC_StatsOp_command * scom, SYNC_response * res);
 static afs_int32 FSYNC_com_StatsOpVLRU(FSSYNC_StatsOp_command * scom, SYNC_response * res);
-
+#endif
 
 static void FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info);
 
@@ -221,13 +216,8 @@ static fd_set FSYNC_readfds;
 static void *
 FSYNC_sync(void * args)
 {
-#ifdef USE_UNIX_SOCKETS
-    char tbuffer[AFSDIR_PATH_MAX];
-#endif /* USE_UNIX_SOCKETS */
-    int on = 1;
     extern int VInit;
     int code;
-    int numTries;
 #ifdef AFS_PTHREAD_ENV
     int tid;
 #endif
@@ -304,17 +294,19 @@ FSYNC_sync(void * args)
 	    CallHandler(&FSYNC_readfds);
 #endif
     }
+    return NULL; /* hush now, little gcc */
 }
 
 static void
-FSYNC_newconnection(int afd)
+FSYNC_newconnection(osi_socket afd)
 {
 #ifdef USE_UNIX_SOCKETS
     struct sockaddr_un other;
 #else  /* USE_UNIX_SOCKETS */
     struct sockaddr_in other;
 #endif
-    int junk, fd;
+    osi_socket fd;
+    socklen_t junk;
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
     if (fd == -1) {
@@ -329,7 +321,7 @@ FSYNC_newconnection(int afd)
 /* this function processes commands from an fssync file descriptor (fd) */
 afs_int32 FS_cnt = 0;
 static void
-FSYNC_com(int fd)
+FSYNC_com(osi_socket fd)
 {
     SYNC_command com;
     SYNC_response res;
@@ -415,7 +407,7 @@ FSYNC_com(int fd)
 }
 
 static afs_int32
-FSYNC_com_VolOp(int fd, SYNC_command * com, SYNC_response * res)
+FSYNC_com_VolOp(osi_socket fd, SYNC_command * com, SYNC_response * res)
 {
     int i;
     afs_int32 code = SYNC_OK;
@@ -585,7 +577,7 @@ FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     }
 #else /* !AFS_DEMAND_ATTACH_FS */
     tvolName[0] = '/';
-    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, vcom->vop->volume);
+    snprintf(&tvolName[1], sizeof(tvolName)-1, VFORMAT, afs_cast_uint32(vcom->vop->volume));
     tvolName[sizeof(tvolName)-1] = '\0';
 
     vp = VAttachVolumeByName_r(&error, vcom->vop->partName, tvolName,
@@ -631,10 +623,11 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     FSSYNC_VolOp_info info;
     afs_int32 code = SYNC_OK;
     int i;
-    Volume * vp, * nvp;
+    Volume * vp;
     Error error;
 #ifdef AFS_DEMAND_ATTACH_FS
     int reserved = 0;
+    Volume *nvp;
 #endif
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
@@ -741,6 +734,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    if (VIsErrorState(V_attachState(vp))) {
 		goto deny;
 	    }
+            if (vp->salvage.requested) {
+                goto deny;
+            }
 	    break;
 
 	default:
@@ -761,6 +757,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	     * will evaluate the vol op metadata to determine whether
 	     * attaching the volume would be safe */
 	    VRegisterVolOp_r(vp, &info);
+	    vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
 	    goto done;
 	default:
 	    break;
@@ -797,6 +794,9 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		    vcom->hdr->reason == V_DUMP ? "dump" : 
 		    "UNKNOWN");
 	    }
+#ifdef AFS_DEMAND_ATTACH_FS
+            vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOnline;
+#endif
 	    VPutVolume_r(vp);
 	} else {
 	    if (VVolOpSetVBusy_r(vp, &info)) {
@@ -812,7 +812,19 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		strlcpy(vcom->v->partName, vp->partition->name, sizeof(vcom->v->partName));
 	    }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+            VOfflineForVolOp_r(&error, vp, "A volume utility is running.");
+            if (error==0) {
+                assert(vp->nUsers==0);
+                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningOffline; 
+            }
+            else {
+		VDeregisterVolOp_r(vp);
+                code = SYNC_DENIED;
+            }
+#else
 	    VOffline_r(vp, "A volume utility is running.");
+#endif
 	    vp = NULL;
 	}
     }
@@ -1149,7 +1161,6 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     afs_int32 code = SYNC_FAILED;
     Error error;
     Volume * vp;
-    int hdr_ok = 0;
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
 	res->hdr.reason = SYNC_REASON_MALFORMED_PACKET;
@@ -1190,7 +1201,6 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	goto done;
     }
 
- load_done:
     memcpy(res->payload.buf, &V_disk(vp), sizeof(VolumeDiskData));
     res->hdr.response_len += sizeof(VolumeDiskData);
 #ifndef AFS_DEMAND_ATTACH_FS
@@ -1229,7 +1239,7 @@ FSYNC_com_VolOpQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 static afs_int32
-FSYNC_com_VnQry(int fd, SYNC_command * com, SYNC_response * res)
+FSYNC_com_VnQry(osi_socket fd, SYNC_command * com, SYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
     FSSYNC_VnQry_hdr * qry = com->payload.buf;
@@ -1281,7 +1291,7 @@ FSYNC_com_VnQry(int fd, SYNC_command * com, SYNC_response * res)
 }
 
 static afs_int32
-FSYNC_com_StatsOp(int fd, SYNC_command * com, SYNC_response * res)
+FSYNC_com_StatsOp(osi_socket fd, SYNC_command * com, SYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
     FSSYNC_StatsOp_command scom;
@@ -1430,6 +1440,7 @@ FSYNC_com_to_info(FSSYNC_VolOp_command * vcom, FSSYNC_VolOp_info * info)
 {
     memcpy(&info->com, vcom->hdr, sizeof(SYNC_command_hdr));
     memcpy(&info->vop, vcom->vop, sizeof(FSSYNC_VolOp_hdr));
+    info->vol_op_state = FSSYNC_VolOpPending;
 }
 
 /**
@@ -1460,7 +1471,7 @@ FSYNC_partMatch(FSSYNC_VolOp_command * vcom, Volume * vp, int match_anon)
 
 
 static void
-FSYNC_Drop(int fd)
+FSYNC_Drop(osi_socket fd)
 {
     struct offlineInfo *p;
     int i;
@@ -1475,7 +1486,7 @@ FSYNC_Drop(int fd)
 	    Volume *vp;
 
 	    tvolName[0] = '/';
-	    sprintf(&tvolName[1], VFORMAT, p[i].volumeID);
+	    sprintf(&tvolName[1], VFORMAT, afs_cast_uint32(p[i].volumeID));
 	    vp = VAttachVolumeByName_r(&error, p[i].partName, tvolName,
 				       V_VOLUPD);
 	    if (vp)
@@ -1496,7 +1507,7 @@ FSYNC_Drop(int fd)
 static int AcceptHandler = -1;	/* handler id for accept, if turned on */
 
 static void
-AcceptOn()
+AcceptOn(void)
 {
     if (AcceptHandler == -1) {
 	assert(AddHandler(fssync_server_state.fd, FSYNC_newconnection));
@@ -1505,7 +1516,7 @@ AcceptOn()
 }
 
 static void
-AcceptOff()
+AcceptOff(void)
 {
     if (AcceptHandler != -1) {
 	assert(RemoveHandler(fssync_server_state.fd));
@@ -1515,11 +1526,11 @@ AcceptOff()
 
 /* The multiple FD handling code. */
 
-static int HandlerFD[MAXHANDLERS];
-static int (*HandlerProc[MAXHANDLERS]) ();
+static osi_socket HandlerFD[MAXHANDLERS];
+static void (*HandlerProc[MAXHANDLERS]) (osi_socket);
 
 static void
-InitHandler()
+InitHandler(void)
 {
     register int i;
     ObtainWriteLock(&FSYNC_handler_lock);
@@ -1565,7 +1576,7 @@ CallHandler(fd_set * fdsetp)
 #endif
 
 static int
-AddHandler(int afd, int (*aproc) ())
+AddHandler(osi_socket afd, void (*aproc) (osi_socket))
 {
     register int i;
     ObtainWriteLock(&FSYNC_handler_lock);
@@ -1583,7 +1594,7 @@ AddHandler(int afd, int (*aproc) ())
 }
 
 static int
-FindHandler(register int afd)
+FindHandler(register osi_socket afd)
 {
     register int i;
     ObtainReadLock(&FSYNC_handler_lock);
@@ -1598,7 +1609,7 @@ FindHandler(register int afd)
 }
 
 static int
-FindHandler_r(register int afd)
+FindHandler_r(register osi_socket afd)
 {
     register int i;
     for (i = 0; i < MAXHANDLERS; i++)
@@ -1610,7 +1621,7 @@ FindHandler_r(register int afd)
 }
 
 static int
-RemoveHandler(register int afd)
+RemoveHandler(register osi_socket afd)
 {
     ObtainWriteLock(&FSYNC_handler_lock);
     HandlerFD[FindHandler_r(afd)] = -1;
@@ -1647,8 +1658,11 @@ GetHandler(fd_set * fdsetp, int *maxfdp)
     for (i = 0; i < MAXHANDLERS; i++)
 	if (HandlerFD[i] != -1) {
 	    FD_SET(HandlerFD[i], fdsetp);
-	    if (maxfd < HandlerFD[i])
+#ifndef AFS_NT40_ENV
+            /* On Windows the nfds parameter to select() is ignored */
+	    if (maxfd < HandlerFD[i] || maxfd == (int)-1)
 		maxfd = HandlerFD[i];
+#endif /* AFS_NT40_ENV */
 	}
     *maxfdp = maxfd;
     ReleaseReadLock(&FSYNC_handler_lock);	/* just in case */

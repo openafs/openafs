@@ -53,8 +53,9 @@ RCSID
  */
 afs_int32
 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
-	       struct ubik_client **uclientp, int (*secproc) (),
-	       char *funcName, afs_int32 gen_rxkad_level,
+	       struct ubik_client **uclientp, 
+	       int (*secproc) (struct rx_securityClass *, afs_int32),
+	       char *funcName, afs_int32 gen_rxkad_level, 
 	       afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 	       afs_uint32 server, afs_uint32 port, afs_int32 usrvid)
 {

@@ -127,7 +127,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
                 bufp->dirty_length = 0;
 		bufp->flags |= CM_BUF_ERROR;
 		bufp->error = VNOVNODE;
-		bufp->dataVersion = -1; /* bad */
+		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 		bufp->dirtyCounter++;
 		if (bufp->flags & CM_BUF_WAITING) {
 		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%x] bufp 0x%x", scp, bufp);
@@ -149,7 +149,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
                 bufp->dirty_length = 0;
 		bufp->flags |= CM_BUF_ERROR;
 		bufp->error = VNOVNODE;
-		bufp->dataVersion = -1; /* bad */
+		bufp->dataVersion = CM_BUF_VERSION_BAD; /* bad */
 		bufp->dirtyCounter++;
 		if (bufp->flags & CM_BUF_WAITING) {
 		    osi_Log2(afsd_logp, "CM RecycleSCache Waking [scp 0x%x] bufp 0x%x", scp, bufp);
@@ -178,8 +178,8 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
 		     | CM_SCACHEFLAG_OUTOFSPACE
 		     | CM_SCACHEFLAG_EACCESS);
     scp->serverModTime = 0;
-    scp->dataVersion = 0;
-    scp->bufDataVersionLow = 0;
+    scp->dataVersion = CM_SCACHE_VERSION_BAD;
+    scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
     scp->bulkStatProgress = hzero;
     scp->waitCount = 0;
     scp->waitQueueT = NULL;
@@ -215,7 +215,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->serverLock = (-1);
     scp->exclusiveLocks = 0;
     scp->sharedLocks = 0;
-    scp->lockDataVersion = -1;
+    scp->lockDataVersion = CM_SCACHE_VERSION_BAD;
 
     /* not locked, but there can be no references to this guy
      * while we hold the global refcount lock.
@@ -556,7 +556,7 @@ cm_ShutdownSCache(void)
         if (scp->dirBplus)
             freeBtree(scp->dirBplus);
         scp->dirBplus = NULL;
-        scp->dirDataVersion = -1;
+        scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
         lock_FinalizeRWLock(&scp->dirlock);
 #endif
         lock_FinalizeRWLock(&scp->rw);
@@ -606,7 +606,7 @@ void cm_InitSCache(int newFile, long maxSCaches)
                 scp->waitCount = 0;
 #ifdef USE_BPLUS
                 scp->dirBplus = NULL;
-                scp->dirDataVersion = -1;
+                scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
 #endif
                 scp->waitQueueT = NULL;
                 scp->flags &= ~CM_SCACHEFLAG_WAITING;
@@ -1530,8 +1530,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	scp->group = 0;
 	scp->unixModeBits = 0;
 	scp->anyAccess = 0;
-	scp->dataVersion = 0;
-        scp->bufDataVersionLow = 0;
+	scp->dataVersion = CM_SCACHE_VERSION_BAD;
+        scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
 
 	if (dscp) {
             scp->parentVnode = dscp->fid.vnode;
@@ -1549,7 +1549,9 @@ void cm_MergeStatus(cm_scache_t *dscp,
     dataVersion <<= 32;
     dataVersion |= statusp->DataVersion;
 
-    if (!(flags & CM_MERGEFLAG_FORCE) && dataVersion < scp->dataVersion) {
+    if (!(flags & CM_MERGEFLAG_FORCE) && 
+        dataVersion < scp->dataVersion &&
+        scp->dataVersion != CM_SCACHE_VERSION_BAD) {
         struct cm_cell *cellp;
 
         cellp = cm_FindCellByID(scp->fid.cell, 0);

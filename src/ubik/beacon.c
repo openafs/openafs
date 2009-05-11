@@ -14,6 +14,10 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <time.h>
@@ -24,9 +28,8 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
-#include <errno.h>
+
 #include <lock.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_multi.h>
@@ -43,16 +46,23 @@ RCSID
 /*! \name statics used to determine if we're the sync site */
 static afs_int32 syncSiteUntil = 0;	/*!< valid only if amSyncSite */
 int ubik_amSyncSite = 0;	/*!< flag telling if I'm sync site */
-static nServers;		/*!< total number of servers */
+static int nServers;		/*!< total number of servers */
 static char amIMagic = 0;	/*!< is this host the magic host */
 char amIClone = 0;		/*!< is this a clone which doesn't vote */
 static char ubik_singleServer = 0;
 /*\}*/
-int (*ubik_CRXSecurityProc) (void *, struct rx_securityClass **, afs_int32 *);
+int (*ubik_CRXSecurityProc) (void *rock, struct rx_securityClass **,
+			     afs_int32 *);
 void *ubik_CRXSecurityRock;
 afs_int32 ubikSecIndex;
 struct rx_securityClass *ubikSecClass;
-static verifyInterfaceAddress();
+static int ubeacon_InitServerListCommon(afs_int32 ame,
+					struct afsconf_cell *info,
+					char clones[],
+					afs_int32 aservers[]);
+static int verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
+				  afs_uint32 aservers[]);
+static int updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR]);
 
 
 /*! \file
@@ -80,8 +90,7 @@ static verifyInterfaceAddress();
 
 /*! \brief procedure called from debug rpc call to get this module's state for debugging */
 void
-ubeacon_Debug(aparm)
-     register struct ubik_debug *aparm;
+ubeacon_Debug(register struct ubik_debug *aparm)
 {
     /* fill in beacon's state fields in the ubik_debug structure */
     aparm->syncSiteUntil = syncSiteUntil;
@@ -104,7 +113,8 @@ ubeacon_Debug(aparm)
  * \return 1 if local site is the sync site
  * \return 0 if sync site is elsewhere
  */
-ubeacon_AmSyncSite()
+int
+ubeacon_AmSyncSite(void)
 {
     register afs_int32 now;
     register afs_int32 rcode;
@@ -136,10 +146,9 @@ ubeacon_AmSyncSite()
 /*!
  * \see ubeacon_InitServerListCommon()
  */
-ubeacon_InitServerListByInfo(ame, info, clones)
-     afs_int32 ame;
-     struct afsconf_cell *info;
-     char clones[];
+int
+ubeacon_InitServerListByInfo(afs_int32 ame, struct afsconf_cell *info, 
+			     char clones[])
 {
     afs_int32 code;
 
@@ -153,9 +162,7 @@ ubeacon_InitServerListByInfo(ame, info, clones)
  *
  * \see ubeacon_InitServerListCommon()
  */
-ubeacon_InitServerList(ame, aservers)
-     afs_int32 ame;
-     register afs_int32 aservers[];
+ubeacon_InitServerList(afs_int32 ame, register afs_int32 aservers[])
 {
     afs_int32 code;
 
@@ -171,8 +178,8 @@ ubeacon_InitServerList(ame, aservers)
  * \param ame "address of me"
  * \param aservers list of other servers
  *
- * called only at initialization to set up the list of servers to contact for votes.  Just creates
- * the server structure.  
+ * called only at initialization to set up the list of servers to 
+ * contact for votes.  Just creates the server structure.  
  *
  * The "magic" host is the one with the lowest internet address.  It is
  * magic because its vote counts epsilon more than the others.  This acts
@@ -182,18 +189,16 @@ ubeacon_InitServerList(ame, aservers)
  * site system, we'd be out of business.
  *
  * \note There are two connections in every server structure, one for
- * vote calls (which must always go through quickly) and one for database operations, which
- * are subject to waiting for locks.  If we used only one, the votes would sometimes get
- * held up behind database operations, and the sync site guarantees would timeout
- * even though the host would be up for communication.
+ * vote calls (which must always go through quickly) and one for database 
+ * operations, which are subject to waiting for locks.  If we used only 
+ * one, the votes would sometimes get held up behind database operations, 
+ * and the sync site guarantees would timeout even though the host would be 
+ * up for communication.
  *
  * \see ubeacon_InitServerList(), ubeacon_InitServerListByInfo()
  */
-ubeacon_InitServerListCommon(ame, info, clones, aservers)
-     afs_int32 ame;
-     struct afsconf_cell *info;
-     char clones[];
-     register afs_int32 aservers[];
+ubeacon_InitServerListCommon(afs_int32 ame, struct afsconf_cell *info, 
+			     char clones[], register afs_int32 aservers[])
 {
     register struct ubik_server *ts;
     afs_int32 me = -1;
@@ -511,11 +516,8 @@ ubeacon_Interact(void *dummy)
  * \return 0 on success, non-zero on failure
  */
 static
-verifyInterfaceAddress(ame, info, aservers)
-     afs_uint32 *ame;		/* one of my interface addr in net byte order */
-     struct afsconf_cell *info;
-     afs_uint32 aservers[];	/* list of all possible server addresses */
-{
+verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
+		       afs_uint32 aservers[]) {
     afs_uint32 myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
     afs_uint32 myAddr2[UBIK_MAX_INTERFACE_ADDR];
     int tcount, count, found, i, j, totalServers, start, end, usednetfiles =
@@ -658,8 +660,7 @@ verifyInterfaceAddress(ame, info, aservers)
  * \return 0 on success, non-zero on failure
  */
 int
-updateUbikNetworkAddress(ubik_host)
-     afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
+updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR])
 {
     int j, count, code = 0;
     UbikInterfaceAddr inAddr, outAddr;

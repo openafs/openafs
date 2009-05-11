@@ -69,6 +69,7 @@ static struct ltable {
 #ifdef AFS_DISCON_ENV
     { "afs_discon_lock", (char *)&afs_discon_lock},
     { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},
+    { "afs_discon_vc_dirty", (char *)&afs_xvcdirty},
 #endif
 };
 unsigned long lastCallBack_vnode;
@@ -135,10 +136,10 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
      * Copy out the located entry.
      */
     a_result->addr = afs_data_pointer_to_int32(tvc);
-    a_result->cell = tvc->fid.Cell;
-    a_result->netFid.Volume = tvc->fid.Fid.Volume;
-    a_result->netFid.Vnode = tvc->fid.Fid.Vnode;
-    a_result->netFid.Unique = tvc->fid.Fid.Unique;
+    a_result->cell = tvc->f.fid.Cell;
+    a_result->netFid.Volume = tvc->f.fid.Fid.Volume;
+    a_result->netFid.Vnode = tvc->f.fid.Fid.Vnode;
+    a_result->netFid.Unique = tvc->f.fid.Fid.Unique;
     a_result->lock.waitStates = tvc->lock.wait_states;
     a_result->lock.exclLocked = tvc->lock.excl_locked;
     a_result->lock.readersReading = tvc->lock.readers_reading;
@@ -154,14 +155,14 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.src_indicator = 0;
 #endif /* AFS_OSF20_ENV */
 #ifdef AFS_64BIT_CLIENT
-    a_result->Length = (afs_int32) tvc->m.Length & 0xffffffff;
+    a_result->Length = (afs_int32) tvc->f.m.Length & 0xffffffff;
 #else /* AFS_64BIT_CLIENT */
-    a_result->Length = tvc->m.Length;
+    a_result->Length = tvc->f.m.Length;
 #endif /* AFS_64BIT_CLIENT */
-    a_result->DataVersion = hgetlo(tvc->m.DataVersion);
+    a_result->DataVersion = hgetlo(tvc->f.m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
-    if (tvc->states & CVInit) {
+    if (tvc->f.states & CVInit) {
         a_result->refCount = 1;
     } else {
 #ifdef AFS_DARWIN80_ENV
@@ -173,7 +174,7 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;
-    a_result->states = tvc->states;
+    a_result->states = tvc->f.states;
     code = 0;
 
     /*
@@ -221,10 +222,10 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
      * Copy out the located entry.
      */
     a_result->addr = afs_data_pointer_to_int32(tvc);
-    a_result->cell = tvc->fid.Cell;
-    a_result->netFid.Volume = tvc->fid.Fid.Volume;
-    a_result->netFid.Vnode = tvc->fid.Fid.Vnode;
-    a_result->netFid.Unique = tvc->fid.Fid.Unique;
+    a_result->cell = tvc->f.fid.Cell;
+    a_result->netFid.Volume = tvc->f.fid.Fid.Volume;
+    a_result->netFid.Vnode = tvc->f.fid.Fid.Vnode;
+    a_result->netFid.Unique = tvc->f.fid.Fid.Unique;
     a_result->lock.waitStates = tvc->lock.wait_states;
     a_result->lock.exclLocked = tvc->lock.excl_locked;
     a_result->lock.readersReading = tvc->lock.readers_reading;
@@ -241,14 +242,14 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
 #endif /* AFS_OSF20_ENV */
 #if !defined(AFS_64BIT_ENV) 
     a_result->Length.high = 0;
-    a_result->Length.low = tvc->m.Length;
+    a_result->Length.low = tvc->f.m.Length;
 #else
-    a_result->Length = tvc->m.Length;
+    a_result->Length = tvc->f.m.Length;
 #endif
-    a_result->DataVersion = hgetlo(tvc->m.DataVersion);
+    a_result->DataVersion = hgetlo(tvc->f.m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
-    if (tvc->states & CVInit) {
+    if (tvc->f.states & CVInit) {
         a_result->refCount = 1;
     } else {
 #ifdef AFS_DARWIN80_ENV
@@ -260,7 +261,7 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;
-    a_result->states = tvc->states;
+    a_result->states = tvc->f.states;
     code = 0;
 
     /*
@@ -448,20 +449,20 @@ loop1:
 		for (tq = afs_vhashTV[i].prev; tq != &afs_vhashTV[i]; tq = uq) {
 		    uq = QPrev(tq);
 		    tvc = QTOVH(tq);      
-		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
+		    if (tvc->f.fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
 			if (!localFid.Cell)
-			    localFid.Cell = tvc->fid.Cell;
+			    localFid.Cell = tvc->f.fid.Cell;
 			tvc->dchint = NULL;	/* invalidate hints */
-			if (tvc->states & CVInit) {
+			if (tvc->f.states & CVInit) {
 			    ReleaseReadLock(&afs_xvcache);
-			    afs_osi_Sleep(&tvc->states);
+			    afs_osi_Sleep(&tvc->f.states);
 			    goto loop1;
 			}
 #ifdef AFS_DARWIN80_ENV
-			if (tvc->states & CDeadVnode) {
+			if (tvc->f.states & CDeadVnode) {
 			    ReleaseReadLock(&afs_xvcache);
-			    afs_osi_Sleep(&tvc->states);
+			    afs_osi_Sleep(&tvc->f.states);
 			    goto loop1;
 			}
 #endif
@@ -489,18 +490,18 @@ loop1:
 			ReleaseReadLock(&afs_xvcache);
 			ObtainWriteLock(&afs_xcbhash, 449);
 			afs_DequeueCallback(tvc);
-			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
+			tvc->f.states &= ~(CStatd | CUnique | CBulkFetching);
 			afs_allCBs++;
-			if (tvc->fid.Fid.Vnode & 1)
+			if (tvc->f.fid.Fid.Vnode & 1)
 			    afs_oddCBs++;
 			else
 			    afs_evenCBs++;
 			ReleaseWriteLock(&afs_xcbhash);
-			if ((tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
+			if ((tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 			    osi_dnlc_purgedp(tvc);
 			afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 				   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
-				   tvc->states, ICL_TYPE_INT32,
+				   tvc->f.states, ICL_TYPE_INT32,
 				   a_fid->Volume);
 #ifdef AFS_DARWIN80_ENV
 			vnode_put(AFSTOV(tvc));
@@ -508,9 +509,9 @@ loop1:
 			ObtainReadLock(&afs_xvcache);
 			uq = QPrev(tq);
 			AFS_FAST_RELE(tvc);
-		    } else if ((tvc->states & CMValid)
+		    } else if ((tvc->f.states & CMValid)
 			       && (tvc->mvid->Fid.Volume == a_fid->Volume)) {
-			tvc->states &= ~CMValid;
+			tvc->f.states &= ~CMValid;
 			if (!localFid.Cell)
 			    localFid.Cell = tvc->mvid->Cell;
 		    }
@@ -542,20 +543,20 @@ loop2:
 	    i = VCHash(&localFid);
 	    for (tvc = afs_vhashT[i]; tvc; tvc = uvc) {
 		uvc = tvc->hnext;
-		if (tvc->fid.Fid.Vnode == a_fid->Vnode
-		    && tvc->fid.Fid.Volume == a_fid->Volume
-		    && tvc->fid.Fid.Unique == a_fid->Unique) {
+		if (tvc->f.fid.Fid.Vnode == a_fid->Vnode
+		    && tvc->f.fid.Fid.Volume == a_fid->Volume
+		    && tvc->f.fid.Fid.Unique == a_fid->Unique) {
 		    tvc->callback = NULL;
 		    tvc->dchint = NULL;	/* invalidate hints */
-		    if (tvc->states & CVInit) {
+		    if (tvc->f.states & CVInit) {
 			ReleaseReadLock(&afs_xvcache);
-			afs_osi_Sleep(&tvc->states);
+			afs_osi_Sleep(&tvc->f.states);
 			goto loop2;
 		    }
 #ifdef AFS_DARWIN80_ENV
-		    if (tvc->states & CDeadVnode) {
+		    if (tvc->f.states & CDeadVnode) {
 			ReleaseReadLock(&afs_xvcache);
-			afs_osi_Sleep(&tvc->states);
+			afs_osi_Sleep(&tvc->f.states);
 			goto loop2;
 		    }
 #endif
@@ -583,13 +584,13 @@ loop2:
 		    ReleaseReadLock(&afs_xvcache);
 		    ObtainWriteLock(&afs_xcbhash, 450);
 		    afs_DequeueCallback(tvc);
-		    tvc->states &= ~(CStatd | CUnique | CBulkFetching);
+		    tvc->f.states &= ~(CStatd | CUnique | CBulkFetching);
 		    ReleaseWriteLock(&afs_xcbhash);
-		    if ((tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
+		    if ((tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR)))
 			osi_dnlc_purgedp(tvc);
 		    afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
 			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
-			       tvc->states, ICL_TYPE_LONG, 0);
+			       tvc->f.states, ICL_TYPE_LONG, 0);
 #ifdef CBDEBUG
 		    lastCallBack_vnode = afid->Vnode;
 		    lastCallBack_dv = tvc->mstat.DataVersion.low;
@@ -768,7 +769,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 			ObtainWriteLock(&afs_xcbhash, 451);
 			afs_DequeueCallback(tvc);
 			tvc->callback = NULL;
-			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
+			tvc->f.states &= ~(CStatd | CUnique | CBulkFetching);
 			ReleaseWriteLock(&afs_xcbhash);
 		    }
 		}

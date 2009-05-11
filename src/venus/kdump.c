@@ -17,6 +17,9 @@ RCSID
 #include <errno.h>
 #include <stdlib.h>		/* for malloc() */
 
+#include <afs/cmd.h>
+    
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 /* Here be hacks. */
 #ifdef AFS_LINUX24_ENV
 #define __KERNEL__
@@ -831,6 +834,7 @@ symsrch(s)
 
 #endif /*defined(AFS_SUN5_ENV) */
 
+#endif /*!defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV) */
 
 #ifndef AFS_KDUMP_LIB
 static int
@@ -838,6 +842,7 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code = 0;
 
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV) 
     if (as->parms[0].items) {	/* -kobj */
 	obj = as->parms[0].items->data;
     }
@@ -937,6 +942,7 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
     if (as->parms[31].items) {	/* -dhash */
 	DdvnextTbl = 1, DdcnextTbl = 1, Dall = 0;
     }
+#endif
 
     code = kdump();
     return code;
@@ -944,9 +950,8 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     register afs_int32 code;
@@ -1023,9 +1028,8 @@ main(argc, argv)
 
 #ifdef	AFS_AIX_ENV
 #ifndef AFS_KDUMP_LIB
-Knlist(sp, cnt, size)
-     struct afs_nlist *sp;
-     int cnt, size;
+int
+Knlist(struct afs_nlist *sp, int cnt, int size)
 {
     register int code;
 
@@ -1105,12 +1109,13 @@ findsym(char *sname, off_t * offset)
 
 #define CBHTSIZE 128
 
-kdump()
+int
+kdump(void)
 {
-    int cell, cnt, cnt1;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     printf("Kdump not supported\n");
 #else
+    int cell, cnt, cnt1;
 #ifndef AFS_KDUMP_LIB
 
     kmem = opencore(core);
@@ -1255,8 +1260,7 @@ int Sum_vcachemvids = 0, Sum_vcachelinkData = 0, Sum_vcacheacc =
 int Sum_cellaliases = 0, Sum_cellname_names = 0;
 
 int
-print_cells(pnt)
-     int pnt;
+print_cells(int pnt)
 {
     off_t symoff;
     struct cell *cells, cle, *clentry = &cle, *clep;
@@ -1347,8 +1351,7 @@ print_cellnames(int pnt)
 }
 
 int
-print_users(pnt)
-     int pnt;
+print_users(int pnt)
 {
     off_t symoff;
     struct unixuser *afs_users[NUSERS], ue, *uentry = &ue, *uep;
@@ -1374,8 +1377,7 @@ afs_int32 NserversFound = 0;
 #define SF_ALLOCATION_STEP 500
 
 int
-add_found_server(sep)
-     struct server *sep;
+add_found_server(struct server *sep)
 {
     static afs_int32 NserversAllocated = 0;
     static afs_int32 failed = 0;
@@ -1408,8 +1410,7 @@ add_found_server(sep)
 }
 
 int
-find_server(sep)
-     struct server *sep;
+find_server(struct server *sep)
 {
     int i;
 
@@ -1421,8 +1422,7 @@ find_server(sep)
 }
 
 int
-print_servers(pnt)
-     int pnt;
+print_servers(int pnt)
 {
     off_t symoff;
     struct server *afs_servers[NSERVERS], se, *sentry = &se, *sep;
@@ -1546,8 +1546,7 @@ print_servers(pnt)
 
 
 void
-print_Conns(pnt)
-     int pnt;
+print_Conns(int pnt)
 {
     off_t symoff;
     struct server *afs_servers[NSERVERS], se, *sentry = &se, *sep;
@@ -1569,8 +1568,7 @@ print_Conns(pnt)
 
 
 int
-print_volumes(pnt)
-     int pnt;
+print_volumes(int pnt)
 {
     off_t symoff;
     struct volume *afs_volumes[NVOLS], ve, *ventry = &ve, *vep;
@@ -1592,8 +1590,7 @@ print_volumes(pnt)
 }
 
 void
-print_cbHash(pnt)
-     int pnt;
+print_cbHash(int pnt)
 {
     off_t symoff;
     struct afs_q cbHashT[CBHTSIZE];
@@ -1613,8 +1610,7 @@ print_cbHash(pnt)
 }
 
 int
-print_vcaches(pnt)
-     int pnt;
+print_vcaches(int pnt)
 {
     off_t symoff;
     struct vcache *afs_vhashTable[VCSIZE], Ve, *Ventry = &Ve, *Vep;
@@ -1644,8 +1640,7 @@ print_vcaches(pnt)
 }
 
 int
-print_dcaches(pnt)
-     int pnt;
+print_dcaches(int pnt)
 {
     off_t symoff;
     long table, *ptr;
@@ -1684,8 +1679,7 @@ print_dcaches(pnt)
 
 
 void
-print_DindexTimes(pnt)
-     int pnt;
+print_DindexTimes(int pnt)
 {
     off_t symoff;
     long table;
@@ -1721,8 +1715,7 @@ print_DindexTimes(pnt)
 
 
 void
-print_DdvnextTbl(pnt)
-     int pnt;
+print_DdvnextTbl(int pnt)
 {
     off_t symoff;
     long table;
@@ -1751,8 +1744,7 @@ print_DdvnextTbl(pnt)
 
 
 void
-print_DdcnextTbl(pnt)
-     int pnt;
+print_DdcnextTbl(int pnt)
 {
     off_t symoff;
     long table;
@@ -1781,8 +1773,7 @@ print_DdcnextTbl(pnt)
 
 
 void
-print_DindexFlags(pnt)
-     int pnt;
+print_DindexFlags(int pnt)
 {
     off_t symoff;
     afs_int32 count;
@@ -1812,8 +1803,7 @@ print_DindexFlags(pnt)
 
 
 void
-print_buffers(pnt)
-     int pnt;
+print_buffers(int pnt)
 {
     off_t symoff;
     long table;
@@ -1853,8 +1843,7 @@ print_buffers(pnt)
 
 
 int
-print_nfss(pnt)
-     int pnt;
+print_nfss(int pnt)
 {
     off_t symoff;
     struct afs_exporter *exp_entry, ex, *exp = &ex, *exp1;
@@ -1960,8 +1949,7 @@ print_alloced_memlist(void)
 #endif
 
 void
-print_allocs(pnt)
-     int pnt;
+print_allocs(int pnt)
 {
     off_t symoff;
     long count, i, j, k, l, m, n, T = 0, tvs;
@@ -2397,7 +2385,8 @@ kread(int kmem, off_t loc, void *buf, KDUMP_SIZE_T len)
   * the macro RDSYMBOLS
   */
 
-rdsymbols()
+void
+rdsymbols(void)
 {
 
     FILE *fp;
@@ -2460,8 +2449,7 @@ rdsymbols()
 
 
 int
-opencore(core)
-     char *core;
+opencore(char *core)
 {
 #ifdef AFS_KDUMP_LIB
     return 0;
@@ -2497,9 +2485,8 @@ opencore(core)
 
 
 void
-print_exporter(kmem, exporter, ptr, pnt)
-     int kmem, pnt;
-     struct afs_exporter *exporter, *ptr;
+print_exporter(int kmem, struct afs_exporter *exporter, 
+	       struct afs_exporter *ptr, int pnt)
 {
     if (pnt) {
 	printf("\tstates=%x, type=%x, *data=%lx\n", exporter->exp_states,
@@ -2513,9 +2500,8 @@ print_exporter(kmem, exporter, ptr, pnt)
 
 
 void
-print_nfsclient(kmem, ep, ptr, pnt)
-     int kmem, pnt;
-     struct nfsclientpag *ep, *ptr;
+print_nfsclient(int kmem, struct nfsclientpag *ep, 
+		struct nfsclientpag *ptr, int pnt)
 {
     char sysname[100];
 	int count;
@@ -2535,9 +2521,8 @@ print_nfsclient(kmem, ep, ptr, pnt)
 
 
 #if	defined(AFS_SUN5_ENV)
-pmutex(sp, mp)
-     char *sp;
-     kmutex_t *mp;
+void
+pmutex(char *sp, kmutex_t *mp)
 {
 #ifdef	AFS_SUN54_ENV
 
@@ -2551,9 +2536,8 @@ pmutex(sp, mp)
 #endif
 
 void
-print_unixuser(kmem, uep, ptr, pnt)
-     int kmem, pnt;
-     struct unixuser *uep, *ptr;
+print_unixuser(int kmem, struct unixuser *uep, 
+	       struct unixuser *ptr, int pnt)
 {
     Sum_userstp += uep->stLen;
     if (pnt) {
@@ -2573,9 +2557,7 @@ print_unixuser(kmem, uep, ptr, pnt)
 }
 
 void
-print_cell(kmem, clep, ptr, pnt)
-     int kmem, pnt;
-     struct cell *clep, *ptr;
+print_cell(int kmem, struct cell *clep, struct cell *ptr, int pnt)
 {
     int i;
     char cellName[100];
@@ -2606,9 +2588,8 @@ print_cell(kmem, clep, ptr, pnt)
 
 
 void
-print_server(kmem, sep, ptr, conns, pnt)
-     int kmem, conns, pnt;
-     struct server *sep, *ptr;
+print_server(int kmem, struct server *sep, struct server *ptr, int conns, 
+	     int pnt)
 {
     struct srvAddr sa, *sap = &sa, *sap1;
     int j, mh = 0, cnt;
@@ -2674,10 +2655,8 @@ print_server(kmem, sep, ptr, conns, pnt)
 
 
 void
-print_conns(kmem, srv, conns, Con, pnt)
-     int kmem, Con, pnt;
-     struct srvAddr *srv;
-     struct afs_conn *conns;
+print_conns(int kmem, struct srvAddr *srv, struct afs_conn *conns, int Con, 
+	    int pnt)
 {
     struct afs_conn *cep, ce, *centry = &ce;
     int i = 1;
@@ -2699,9 +2678,7 @@ print_conns(kmem, srv, conns, Con, pnt)
 
 
 void
-print_conn(kmem, conns, ptr, pnt)
-     int kmem, pnt;
-     struct afs_conn *conns, *ptr;
+print_conn(int kmem, struct afs_conn *conns, struct afs_conn *ptr, int pnt)
 {
     if (!pnt)
 	return;
@@ -2713,9 +2690,7 @@ print_conn(kmem, conns, ptr, pnt)
 
 
 void
-print_volume(kmem, vep, ptr, pnt)
-     int kmem, pnt;
-     struct volume *vep, *ptr;
+print_volume(int kmem, struct volume *vep, struct volume *ptr, int pnt)
 {
     int i;
     afs_int32 *loc;
@@ -2770,9 +2745,7 @@ print_volume(kmem, vep, ptr, pnt)
 
 
 void
-print_venusfid(string, vid)
-     char *string;
-     struct VenusFid *vid;
+print_venusfid(char *string, struct VenusFid *vid)
 {
     printf("%s(c=%x, v=%d, n=%d, u=%d)", string, vid->Cell, vid->Fid.Volume,
 	   vid->Fid.Vnode, vid->Fid.Unique);
@@ -2780,9 +2753,7 @@ print_venusfid(string, vid)
 
 
 void
-print_vnode(kmem, vep, ptr, pnt)
-     int kmem, pnt;
-     struct vnode *vep, *ptr;
+print_vnode(int kmem, struct vnode *vep, struct vnode *ptr, int pnt)
 {
 #ifdef AFS_AIX_ENV
     struct gnode gnode;
@@ -2868,9 +2839,7 @@ print_vnode(kmem, vep, ptr, pnt)
 }
 
 void
-print_vcache(kmem, vep, ptr, pnt)
-     int kmem, pnt;
-     struct vcache *vep, *ptr;
+print_vcache(int kmem, struct vcache *vep, struct vcache *ptr, int pnt)
 {
     long *loc, j = 0;
     char *cloc;
@@ -3007,9 +2976,7 @@ print_vcache(kmem, vep, ptr, pnt)
 
 
 void
-print_dcache(kmem, dcp, dp, pnt)
-     int kmem, pnt;
-     struct dcache *dcp, *dp;
+print_dcache(int kmem, struct dcache *dcp, struct dcache *dp, int pnt)
 {
     if (!pnt)
 	return;
@@ -3027,7 +2994,7 @@ print_dcache(kmem, dcp, dp, pnt)
 #endif
 #ifdef AFS_SGI62_ENV
     printf
-	("\tf.chunk=%d, f.inode=%lld, f.chunkBytes=%d, f.states=%x",
+	("\tf.chunk=%d, f.inode=%" AFS_INT64_FMT ", f.chunkBytes=%d, f.states=%x",
 	 dcp->f.chunk, dcp->f.inode, dcp->f.chunkBytes, dcp->f.states);
 #else
     printf
@@ -3039,8 +3006,7 @@ print_dcache(kmem, dcp, dp, pnt)
 }
 
 void
-print_bkg(kmem)
-     int kmem;
+print_bkg(int kmem)
 {
     off_t symoff;
     struct brequest afs_brs[NBRS], ue, *uentry = &ue, *uep;
@@ -3073,8 +3039,7 @@ print_bkg(kmem)
 }
 
 void
-print_vlru(kmem)
-     int kmem;
+print_vlru(int kmem)
 {
     off_t symoff;
     struct vcache Ve, *Ventry = &Ve, *Vep, *tvc;
@@ -3112,8 +3077,7 @@ print_vlru(kmem)
 }
 
 void
-print_dlru(kmem)
-     int kmem;
+print_dlru(int kmem)
 {
     off_t symoff;
     struct dcache Ve, *Ventry = &Ve, *Vep, *tdc;
@@ -3151,8 +3115,7 @@ print_dlru(kmem)
 }
 
 int
-print_gcpags(pnt)
-     int pnt;
+print_gcpags(int pnt)
 {
     off_t symoff;
     afs_int32 afs_gcpags;
@@ -3196,8 +3159,7 @@ struct callo {
 #endif
 
 void
-print_callout(kmem)
-     int kmem;
+print_callout(int kmem)
 {
     off_t symoff;
 #ifndef	AFS_AIX_ENV
@@ -3227,8 +3189,7 @@ print_callout(kmem)
 }
 
 void
-print_dnlc(kmem)
-     int kmem;
+print_dnlc(int kmem)
 {
     struct nc *nameHash[256];
 
@@ -3236,8 +3197,7 @@ print_dnlc(kmem)
 
 
 void
-print_global_locks(kmem)
-     int kmem;
+print_global_locks(int kmem)
 {
     off_t symoff;
     afs_int32 count;
@@ -3275,8 +3235,7 @@ print_global_locks(kmem)
 
 
 void
-print_global_afs_resource(kmem)
-     int kmem;
+print_global_afs_resource(int kmem)
 {
     off_t symoff;
     char sysname[100];
@@ -3313,8 +3272,7 @@ print_global_afs_resource(kmem)
 
 
 void
-print_global_afs_cache(kmem)
-     int kmem;
+print_global_afs_cache(int kmem)
 {
     off_t symoff;
     char sysname[100];
@@ -3353,10 +3311,10 @@ print_global_afs_cache(kmem)
 #ifdef AFS_SGI62_ENV
     findsym("cacheInode", &symoff);
     kread(kmem, symoff, (char *)&inode, sizeof inode);
-    printf("\tcacheInode = 0x%llx (%lld)\n", inode, inode);
+    printf("\tcacheInode = 0x%llx (%" AFS_INT64_FMT ")\n", inode, inode);
     findsym("volumeInode", &symoff);
     kread(kmem, symoff, (char *)&inode, sizeof inode);
-    printf("\tvolumeInode = 0x%llx (%lld)\n", inode, inode);
+    printf("\tvolumeInode = 0x%llx (%" AFS_INT64_FMT ")\n", inode, inode);
 #else
     findsym("cacheInode", &symoff);
     kread(kmem, symoff, (char *)&count, sizeof count);
@@ -3410,8 +3368,7 @@ print_global_afs_cache(kmem)
 
 
 void
-print_rxstats(kmem)
-     int kmem;
+print_rxstats(int kmem)
 {
     off_t symoff;
     char sysname[100];
@@ -3474,8 +3431,7 @@ print_rxstats(kmem)
 
 
 void
-print_rx(kmem)
-     int kmem;
+print_rx(int kmem)
 {
     off_t symoff;
     char sysname[100], c;
@@ -3600,8 +3556,7 @@ print_rx(kmem)
 
 
 void
-print_services(kmem)
-     afs_int32 kmem;
+print_services(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_service *rx_services[RX_MAX_SERVICES], se, *sentry = &se, *sep;
@@ -3636,8 +3591,7 @@ print_services(kmem)
 
 #ifdef KDUMP_RX_LOCK
 void
-print_peertable_lock(kmem)
-     afs_int32 kmem;
+print_peertable_lock(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_peer_rx_lock *rx_peerTable[256], se, *sentry = &se, *sep;
@@ -3676,8 +3630,7 @@ print_peertable_lock(kmem)
 
 #endif /* KDUMP_RX_LOCK */
 void
-print_peertable(kmem)
-     afs_int32 kmem;
+print_peertable(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_peer *rx_peerTable[256], se, *sentry = &se, *sep;
@@ -3715,8 +3668,7 @@ print_peertable(kmem)
 
 #ifdef KDUMP_RX_LOCK
 void
-print_conntable_lock(kmem)
-     afs_int32 kmem;
+print_conntable_lock(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_connection_rx_lock *rx_connTable[256], se, *sentry = &se;
@@ -3771,8 +3723,7 @@ print_conntable_lock(kmem)
 #endif /* KDUMP_RX_LOCK */
 
 void
-print_conntable(kmem)
-     afs_int32 kmem;
+print_conntable(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_connection *rx_connTable[256], se, *sentry = &se, *sep;
@@ -3825,8 +3776,7 @@ print_conntable(kmem)
 
 #ifdef KDUMP_RX_LOCK
 void
-print_calltable_lock(kmem)
-     afs_int32 kmem;
+print_calltable_lock(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_connection_rx_lock *rx_connTable[256], se;
@@ -3908,8 +3858,7 @@ print_calltable_lock(kmem)
 #endif /* KDUMP_RX_LOCK */
 
 void
-print_calltable(kmem)
-     afs_int32 kmem;
+print_calltable(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_connection *rx_connTable[256], se, *sentry = &se, *sep;
@@ -3985,8 +3934,7 @@ print_calltable(kmem)
 }
 
 void
-print_eventtable(kmem)
-     afs_int32 kmem;
+print_eventtable(afs_int32 kmem)
 {
     off_t symoff;
     struct rx_queue epq;
@@ -4012,9 +3960,7 @@ print_eventtable(kmem)
  * provided.
  */
 void
-print_upDownStats(a_upDownP)
-     struct afs_stats_SrvUpDownInfo *a_upDownP;	/*Ptr to server up/down info */
-
+print_upDownStats(struct afs_stats_SrvUpDownInfo *a_upDownP)
 {				/*print_upDownStats */
 
     /*
@@ -4058,8 +4004,7 @@ print_upDownStats(a_upDownP)
 
 
 void
-print_cmperfstats(perfP)
-     struct afs_stats_CMPerf *perfP;
+print_cmperfstats(struct afs_stats_CMPerf *perfP)
 {
     struct afs_stats_SrvUpDownInfo *upDownP;	/*Ptr to server up/down info */
 
@@ -4127,8 +4072,7 @@ print_cmperfstats(perfP)
 
 
 void
-print_cmstats(cmp)
-     struct afs_CMStats *cmp;
+print_cmstats(struct afs_CMStats *cmp)
 {
     printf("\t%10d afs_init\n", cmp->callInfo.C_afs_init);
     printf("\t%10d gop_rdwr\n", cmp->callInfo.C_gop_rdwr);

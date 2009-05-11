@@ -25,6 +25,7 @@ RCSID
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdarg.h>
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 #else /* AFS_PTHREAD_ENV */
@@ -72,8 +73,7 @@ RCSID
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 
-private void StickOnLruChain_r(register Vnode * vnp,
-			       register struct VnodeClassInfo *vcp);
+void VNLog(afs_int32 aop, afs_int32 anparms, ... );
 
 extern int LogLevel;
 
@@ -109,17 +109,13 @@ extern int LogLevel;
 static afs_int32 theLog[THELOGSIZE];
 static afs_int32 vnLogPtr = 0;
 void
-VNLog(afs_int32 aop, afs_int32 anparms, afs_int32 av1, afs_int32 av2, 
-      afs_int32 av3, afs_int32 av4)
+VNLog(afs_int32 aop, afs_int32 anparms, ... )
 {
     register afs_int32 temp;
-    afs_int32 data[4];
+    va_list ap;
 
-    /* copy data to array */
-    data[0] = av1;
-    data[1] = av2;
-    data[2] = av3;
-    data[3] = av4;
+    va_start(ap, anparms);
+
     if (anparms > 4)
 	anparms = 4;		/* do bounds checking */
 
@@ -128,10 +124,11 @@ VNLog(afs_int32 aop, afs_int32 anparms, afs_int32 av1, afs_int32 av2,
     if (vnLogPtr >= THELOGSIZE)
 	vnLogPtr = 0;
     for (temp = 0; temp < anparms; temp++) {
-	theLog[vnLogPtr++] = data[temp];
+	theLog[vnLogPtr++] = va_arg(ap, afs_int32);
 	if (vnLogPtr >= THELOGSIZE)
 	    vnLogPtr = 0;
     }
+    va_end(ap);
 }
 
 /* VolumeHashOffset -- returns a new value to be stored in the
@@ -506,6 +503,14 @@ VGetFreeVnode_r(struct VnodeClassInfo * vcp)
 	VnChangeState_r(vnp, VN_STATE_RELEASING);
 	VOL_UNLOCK;
 #endif
+	/* release is, potentially, a highly latent operation due to a couple
+	 * factors:
+	 *   - ihandle package lock contention
+	 *   - closing file descriptor(s) associated with ih
+	 *
+	 * Hance, we perform outside of the volume package lock in order to 
+	 * reduce the probability of contention.
+	 */
 	IH_RELEASE(vnp->handle);
 #ifdef AFS_DEMAND_ATTACH_FS
 	VOL_LOCK;
@@ -584,7 +589,7 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 {
     register Vnode *vnp;
     VnodeId vnodeNumber;
-    int bitNumber, code;
+    int bitNumber;
     register struct VnodeClassInfo *vcp;
     VnodeClass class;
     Unique unique;
@@ -1106,10 +1111,8 @@ Vnode *
 VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 {				/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
     register Vnode *vnp;
-    int code;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
-    Volume * oldvp = NULL;
 
     *ec = 0;
 
@@ -1309,7 +1312,6 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
     int writeLocked;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
-    int code;
 
     *ec = 0;
     assert(Vn_refcount(vnp) != 0);
@@ -1445,7 +1447,6 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
     int writeLocked;
     VnodeClass class;
     struct VnodeClassInfo *vcp;
-    int code;
 #ifdef AFS_PTHREAD_ENV
     pthread_t thisProcess;
 #else /* AFS_PTHREAD_ENV */
@@ -1507,7 +1508,6 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 	} else {
 	    VnStore(ec, vp, vnp, vcp, class);
 	}
-    sane:
 	vcp->writes++;
 	vnp->changed_newTime = vnp->changed_oldTime = 0;
     }
@@ -1522,6 +1522,110 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
     return 0;
 }
 
+/** 
+ * initial size of ihandle pointer vector.
+ *
+ * @see VInvalidateVnodesByVolume_r
+ */
+#define IH_VEC_BASE_SIZE 256
+
+/**
+ * increment amount for growing ihandle pointer vector.
+ *
+ * @see VInvalidateVnodesByVolume_r
+ */
+#define IH_VEC_INCREMENT 256
+
+/**
+ * Compile list of ihandles to be released/reallyclosed at a later time.
+ *
+ * @param[in]   vp            volume object pointer
+ * @param[out]  vec_out       vector of ihandle pointers to be released/reallyclosed
+ * @param[out]  vec_len_out   number of valid elements in ihandle vector
+ *
+ * @pre - VOL_LOCK is held
+ *      - volume is in appropriate exclusive state (e.g. VOL_STATE_VNODE_CLOSE,
+ *        VOL_STATE_VNODE_RELEASE)
+ *
+ * @post - all vnodes on VVn list are invalidated
+ *       - ih_vec is populated with all valid ihandles
+ *
+ * @return operation status
+ *    @retval 0         success
+ *    @retval ENOMEM    out of memory
+ *
+ * @todo we should handle out of memory conditions more gracefully.
+ *
+ * @internal vnode package internal use only
+ */
+static int
+VInvalidateVnodesByVolume_r(Volume * vp,
+			    IHandle_t *** vec_out,
+			    size_t * vec_len_out)
+{
+    int ret = 0;
+    Vnode *vnp, *nvnp;
+    size_t i = 0, vec_len;
+    IHandle_t **ih_vec, **ih_vec_new;
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_UNLOCK;
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    vec_len = IH_VEC_BASE_SIZE;
+    ih_vec = malloc(sizeof(IHandle_t *) * vec_len);
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_LOCK;
+#endif
+    if (ih_vec == NULL)
+	return ENOMEM;
+
+    /* 
+     * Traverse the volume's vnode list.  Pull all the ihandles out into a 
+     * thread-private array for later asynchronous processing.
+     */
+ restart_traversal:
+    for (queue_Scan(&vp->vnode_list, vnp, nvnp, Vnode)) {
+	if (vnp->handle != NULL) {
+	    if (i == vec_len) {
+#ifdef AFS_DEMAND_ATTACH_FS
+		VOL_UNLOCK;
+#endif
+		vec_len += IH_VEC_INCREMENT;
+		ih_vec_new = realloc(ih_vec, sizeof(IHandle_t *) * vec_len);
+#ifdef AFS_DEMAND_ATTACH_FS
+		VOL_LOCK;
+#endif
+		if (ih_vec_new == NULL) {
+		    ret = ENOMEM;
+		    goto done;
+		}
+		ih_vec = ih_vec_new;
+#ifdef AFS_DEMAND_ATTACH_FS
+		/*
+		 * Theoretically, the volume's VVn list should not change 
+		 * because the volume is in an exclusive state.  For the
+		 * sake of safety, we will restart the traversal from the
+		 * the beginning (which is not expensive because we're
+		 * deleting the items from the list as we go).
+		 */
+		goto restart_traversal;
+#endif
+	    }
+	    ih_vec[i++] = vnp->handle;
+	    vnp->handle = NULL;
+	}
+	DeleteFromVVnList(vnp);
+	VInvalidateVnode_r(vnp);
+    }
+
+ done:
+    *vec_out = ih_vec;
+    *vec_len_out = i;
+
+    return ret;
+}
+
 /* VCloseVnodeFiles - called when a volume is going off line. All open
  * files for vnodes in that volume are closed. This might be excessive,
  * since we may only be taking one volume of a volume group offline.
@@ -1529,25 +1633,43 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 void
 VCloseVnodeFiles_r(Volume * vp)
 {
-    int i;
-    Vnode *vnp, *nvnp;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState vol_state_save;
+#endif
+    IHandle_t ** ih_vec;
+    size_t i, vec_len;
 
+#ifdef AFS_DEMAND_ATTACH_FS
     vol_state_save = VChangeState_r(vp, VOL_STATE_VNODE_CLOSE);
-    VOL_UNLOCK;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-    for (queue_Scan(&vp->vnode_list, vnp, nvnp, Vnode)) {
-	IH_REALLYCLOSE(vnp->handle);
-	DeleteFromVVnList(vnp);
+    /* XXX need better error handling here */
+    assert(VInvalidateVnodesByVolume_r(vp,
+				       &ih_vec,
+				       &vec_len) == 0);
+
+    /*
+     * DAFS:
+     * now we drop VOL_LOCK while we perform some potentially very
+     * expensive operations in the background
+     */
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_UNLOCK;
+#endif
+
+    for (i = 0; i < vec_len; i++) {
+	IH_REALLYCLOSE(ih_vec[i]);
+        IH_RELEASE(ih_vec[i]);
     }
+
+    free(ih_vec);
 
 #ifdef AFS_DEMAND_ATTACH_FS
     VOL_LOCK;
     VChangeState_r(vp, vol_state_save);
 #endif /* AFS_DEMAND_ATTACH_FS */
 }
+
 
 /**
  * shut down all vnode cache state for a given volume.
@@ -1566,24 +1688,45 @@ VCloseVnodeFiles_r(Volume * vp)
  *       during this exclusive operation.  This is due to the fact that we are
  *       generally called during the refcount 1->0 transition.
  *
+ * @todo we should handle failures in VInvalidateVnodesByVolume_r more 
+ *       gracefully.
+ *
+ * @see VInvalidateVnodesByVolume_r
+ *
  * @internal this routine is internal to the volume package
  */
 void
 VReleaseVnodeFiles_r(Volume * vp)
 {
-    int i;
-    Vnode *vnp, *nvnp;
 #ifdef AFS_DEMAND_ATTACH_FS
     VolState vol_state_save;
+#endif
+    IHandle_t ** ih_vec;
+    size_t i, vec_len;
 
+#ifdef AFS_DEMAND_ATTACH_FS
     vol_state_save = VChangeState_r(vp, VOL_STATE_VNODE_RELEASE);
-    VOL_UNLOCK;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-    for (queue_Scan(&vp->vnode_list, vnp, nvnp, Vnode)) {
-	IH_RELEASE(vnp->handle);
-	DeleteFromVVnList(vnp);
+    /* XXX need better error handling here */
+    assert(VInvalidateVnodesByVolume_r(vp,
+				       &ih_vec,
+				       &vec_len) == 0);
+
+    /*
+     * DAFS:
+     * now we drop VOL_LOCK while we perform some potentially very
+     * expensive operations in the background
+     */
+#ifdef AFS_DEMAND_ATTACH_FS
+    VOL_UNLOCK;
+#endif
+
+    for (i = 0; i < vec_len; i++) {
+	IH_RELEASE(ih_vec[i]);
     }
+
+    free(ih_vec);
 
 #ifdef AFS_DEMAND_ATTACH_FS
     VOL_LOCK;

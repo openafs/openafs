@@ -25,8 +25,10 @@ RCSID
 #include <afs/bubasics.h>
 #include <lock.h>
 #include <afs/tcdata.h>
+#include <afs/cmd.h>
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_prototypes.h"
 
 #define	SET_FLAG(set)				\
     lock_Status();				\
@@ -54,8 +56,7 @@ afs_int32 lastTaskCode;		/* Error code from task that last finished */
  *	get next item for status interrogation, if any.
  */
 static statusP
-nextItem(linkPtr)
-     statusP linkPtr;
+nextItem(statusP linkPtr)
 {
     dlqlinkP ptr;
 
@@ -108,7 +109,7 @@ void *
 cmdDispatch(void *unused)
 {
 #define	MAXV	100
-    char **targv[MAXV];		/*Ptr to parsed argv stuff */
+    char *targv[MAXV];		/*Ptr to parsed argv stuff */
     afs_int32 targc;		/*Num parsed arguments */
     afs_int32 code;
     char *internalCmdLine;
@@ -135,7 +136,7 @@ cmdDispatch(void *unused)
 void *
 statusWatcher(void *unused)
 {
-    struct rx_connection *tconn = (struct rc_connection *)0;
+    struct rx_connection *tconn = NULL;
     statusP curPollPtr = 0;
 
     struct tciStatusS statusPtr;
@@ -157,7 +158,7 @@ statusWatcher(void *unused)
     while (1) {			/*w */
 	if (tconn)
 	    rx_DestroyConnection(tconn);
-	tconn = (struct rc_connection *)0;
+	tconn = NULL;
 
 	lock_Status();
 	curPollPtr = nextItem(curPollPtr);
@@ -405,7 +406,7 @@ statusWatcher(void *unused)
  */
 
 afs_int32
-bc_jobNumber()
+bc_jobNumber(void)
 {
     afs_int32 retval = 0;
     dlqlinkP ptr;
@@ -427,11 +428,11 @@ bc_jobNumber()
  *    Return the task's flags when it's done. If the job
  *    had been cleaned up, then just return 0.
  */
-waitForTask(taskId)
-     afs_uint32 taskId;
+int
+waitForTask(afs_uint32 taskId)
 {
     statusP ptr;
-    afs_int32 done = 0, rcode, t;
+    afs_int32 done = 0, rcode = 0, t;
 
     t = (TASK_DONE | ABORT_DONE | TASK_ERROR);
     while (!done) {

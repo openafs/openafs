@@ -819,6 +819,61 @@ void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosTime)
     *unixTimep = dosTime + smb_localZero;
 }
 
+void smb_MarkAllVCsDead(smb_vc_t * exclude)
+{
+    smb_vc_t *vcp;
+    smb_vc_t **vcp_to_cleanup = NULL;
+    int n_to_cleanup = 0;
+    int i;
+
+    osi_Log1(smb_logp, "Marking all VCs as dead excluding %p", exclude);
+
+    lock_ObtainWrite(&smb_globalLock);	/* for dead_sessions[] */
+    lock_ObtainWrite(&smb_rctLock);
+    for (vcp = smb_allVCsp; vcp; vcp = vcp->nextp) {
+
+	if (vcp->magic != SMB_VC_MAGIC)
+	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
+                      __FILE__, __LINE__);
+
+        if (vcp == exclude)
+            continue;
+
+        lock_ObtainMutex(&vcp->mx);
+        if (!(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+            vcp->flags |= SMB_VCFLAG_ALREADYDEAD;
+            lock_ReleaseMutex(&vcp->mx);
+            dead_sessions[vcp->session] = TRUE;
+        } else {
+            lock_ReleaseMutex(&vcp->mx);
+        }
+        n_to_cleanup ++;
+    }
+
+    vcp_to_cleanup = malloc(sizeof(vcp_to_cleanup[0]) * n_to_cleanup);
+    i = 0;
+    for (vcp = smb_allVCsp; vcp; vcp = vcp->nextp) {
+        if (vcp == exclude)
+            continue;
+
+        vcp_to_cleanup[i++] = vcp;
+        smb_HoldVCNoLock(vcp);
+    }
+
+    osi_assert(i == n_to_cleanup);
+
+    lock_ReleaseWrite(&smb_rctLock);
+    lock_ReleaseWrite(&smb_globalLock);
+
+    for (i=0; i < n_to_cleanup; i++) {
+        smb_CleanupDeadVC(vcp_to_cleanup[i]);
+        smb_ReleaseVC(vcp_to_cleanup[i]);
+        vcp_to_cleanup[i] = 0;
+    }
+
+    free(vcp_to_cleanup);
+}
+
 #ifdef DEBUG_SMB_REFCOUNT
 smb_vc_t *smb_FindVCDbg(unsigned short lsn, int flags, int lana, char *file, long line)
 #else
@@ -834,11 +889,14 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 	    osi_panic("afsd: invalid smb_vc_t detected in smb_allVCsp", 
 		       __FILE__, __LINE__);
 
+        lock_ObtainMutex(&vcp->mx);
         if (lsn == vcp->lsn && lana == vcp->lana &&
 	    !(vcp->flags & SMB_VCFLAG_ALREADYDEAD)) {
+            lock_ReleaseMutex(&vcp->mx);
             smb_HoldVCNoLock(vcp);
             break;
         }
+        lock_ReleaseMutex(&vcp->mx);
     }
     if (!vcp && (flags & SMB_FLAG_CREATE)) {
         vcp = malloc(sizeof(*vcp));
@@ -929,7 +987,6 @@ static int smb_Is8Dot3StarMask(clientchar_t *maskp)
 
 static int smb_IsStarMask(clientchar_t *maskp)
 {
-    int i;
     clientchar_t tc;
         
     while (*maskp) {
@@ -1609,25 +1666,61 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
     return fidp;
 }
 
+
+/* Must not be called with scp->rw held because smb_ReleaseFID might be called */
 #ifdef DEBUG_SMB_REFCOUNT
 smb_fid_t *smb_FindFIDByScacheDbg(smb_vc_t *vcp, cm_scache_t * scp, char *file, long line)
 #else
 smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp)
 #endif
 {
-    smb_fid_t *fidp = NULL;
-    int newFid = 0;
+    smb_fid_t *fidp = NULL, *nextp = NULL;
         
     if (!scp)
         return NULL;
 
+    /* 
+     * If the fidp->scp changes out from under us then
+     * we must not grab a refCount.  It means the *fidp
+     * was processed by smb_CloseFID() and the *fidp is 
+     * no longer valid for use.
+     */
     lock_ObtainWrite(&smb_rctLock);
-    for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
+	for(fidp = vcp->fidsp, (fidp ? fidp->refCount++ : 0); fidp; fidp = nextp, nextp = NULL) {
+        nextp = (smb_fid_t *) osi_QNext(&fidp->q);
+        if (nextp)
+            nextp->refCount++;
+
         if (scp == fidp->scp) {
-            fidp->refCount++;
-            break;
+            lock_ReleaseWrite(&smb_rctLock);
+            lock_ObtainMutex(&fidp->mx);
+            lock_ObtainWrite(&smb_rctLock);
+            if (scp == fidp->scp) {
+                lock_ReleaseMutex(&fidp->mx);
+                break;
+            }
+            lock_ReleaseMutex(&fidp->mx);
+        }
+
+        if (fidp->refCount > 1) {
+            fidp->refCount--;
+        } else {
+            lock_ReleaseWrite(&smb_rctLock);
+            smb_ReleaseFID(fidp);
+            lock_ObtainWrite(&smb_rctLock);
         }
     }
+
+    if (nextp) {
+        if (nextp->refCount > 1) {
+            nextp->refCount--;
+        } else {
+            lock_ReleaseWrite(&smb_rctLock);
+            smb_ReleaseFID(nextp);
+            lock_ObtainWrite(&smb_rctLock);
+        }
+    }
+
 #ifdef DEBUG_SMB_REFCOUNT
     if (fidp) {
         afsi_log("%s:%d smb_FindFIDByScache fidp 0x%p ref %d", file, line, fidp, fidp->refCount);
@@ -1635,7 +1728,7 @@ smb_fid_t *smb_FindFIDByScache(smb_vc_t *vcp, cm_scache_t * scp)
       }
 #endif
     lock_ReleaseWrite(&smb_rctLock);
-    return fidp;
+    return (fidp);
 }
 
 #ifdef DEBUG_SMB_REFCOUNT
@@ -1653,8 +1746,8 @@ void smb_HoldFIDNoLock(smb_fid_t *fidp)
 }
 
 
-/* smb_ReleaseFID cannot be called while an cm_scache_t mutex lock is held */
-/* the sm_fid_t->mx and smb_rctLock must not be held */
+/* smb_ReleaseFID cannot be called while a cm_scache_t rwlock is held */
+/* the smb_fid_t->mx and smb_rctLock must not be held */
 #ifdef DEBUG_SMB_REFCOUNT
 void smb_ReleaseFIDDbg(smb_fid_t *fidp, char *file, long line)
 #else
@@ -3090,7 +3183,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 #endif /* COMMENT */
     }
     else if (code == CM_ERROR_BADSHARENAME) {
-        NTStatus = 0xC00000CCL;	/* Bad network name */
+        NTStatus = 0xC00000BEL;	/* Bad network path (server valid, share bad) */
     }
     else if (code == CM_ERROR_NOIPC) {
 #ifdef COMMENT
@@ -3161,7 +3254,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC000022DL; /* Retry */
     } 
     else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
-        NTStatus = 0xC00000BEL; /* Bad Network Path */
+        NTStatus = 0xC000003AL; /* Path not found */
     } 
     else if (code >= ERROR_TABLE_BASE_RXK && code < ERROR_TABLE_BASE_RXK + 256) {
 	NTStatus = 0xC0000322L; /* No Kerberos key */
@@ -3437,12 +3530,19 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
     if (!fidp)
         goto send1;
 
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+    lock_ObtainMutex(&fidp->mx);
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
         code = CM_ERROR_NOSUCHFILE;
         goto send1a;
     }
-
 
     pid = smbp->pid;
     {
@@ -3461,6 +3561,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         lock_ReleaseWrite(&fidp->scp->rw);
     }    
     if (code) {
+        lock_ReleaseMutex(&fidp->mx);
         goto send1a;
     }
 
@@ -3471,13 +3572,13 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         smb_RawBufs = *(char **)smb_RawBufs;
     }
     lock_ReleaseMutex(&smb_RawBufLock);
-    if (!rawBuf)
+    if (!rawBuf) {
+        lock_ReleaseMutex(&fidp->mx);
         goto send1a;
+    }
 
-    lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL)
     {
-	lock_ReleaseMutex(&fidp->mx);
         rc = smb_IoctlReadRaw(fidp, vcp, inp, outp);
         if (rawBuf) {
             /* Give back raw buffer */
@@ -4008,7 +4109,7 @@ void smb_WaitingLocksDaemon()
                 
                     if (wl->state == SMB_WAITINGLOCKSTATE_DONE)
                         cm_Unlock(scp, wlRequest->lockType, wl->LOffset, 
-                                  wl->LLength, wl->key, NULL, &req);
+                                  wl->LLength, wl->key, 0, NULL, &req);
 
                     osi_QRemove((osi_queue_t **) &wlRequest->locks, &wl->q);
 
@@ -4677,7 +4778,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                 if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
-                    return CM_ERROR_BADSHARENAME;
+                    return CM_ERROR_NOSUCHPATH;
             }
 #endif /* DFS_SUPPORT */
 
@@ -5112,7 +5213,7 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -5200,7 +5301,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -5333,7 +5434,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
                 if ( WANTS_DFS_PATHNAMES(inp) || pnc )
                     return CM_ERROR_PATH_NOT_COVERED;
                 else
-                    return CM_ERROR_BADSHARENAME;
+                    return CM_ERROR_NOSUCHPATH;
             } else
 #endif /* DFS_SUPPORT */
             if (dscp->fileType == CM_SCACHETYPE_MOUNTPOINT && !dscp->mountRootFid.volume)
@@ -5370,7 +5471,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -5530,7 +5631,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -5554,17 +5655,6 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
     osi_assertx(fidp, "null smb_fid_t");
 
-    /* save a pointer to the vnode */
-    fidp->scp = scp;
-    osi_Log2(smb_logp,"smb_ReceiveCoreOpen fidp 0x%p scp 0x%p", fidp, scp);
-    lock_ObtainWrite(&scp->rw);
-    scp->flags |= CM_SCACHEFLAG_SMB_FID;
-    lock_ReleaseWrite(&scp->rw);
-
-    /* and the user */
-    cm_HoldUser(userp);
-    fidp->userp = userp;
-
     lock_ObtainMutex(&fidp->mx);
     if ((share & 0xf) == 0)
         fidp->flags |= SMB_FID_OPENREAD_LISTDIR;
@@ -5572,9 +5662,17 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         fidp->flags |= SMB_FID_OPENWRITE;
     else 
         fidp->flags |= (SMB_FID_OPENREAD_LISTDIR | SMB_FID_OPENWRITE);
-    lock_ReleaseMutex(&fidp->mx);
 
-    lock_ObtainRead(&scp->rw);
+    /* save the  user */
+    cm_HoldUser(userp);
+    fidp->userp = userp;
+
+    /* and a pointer to the vnode */
+    fidp->scp = scp;
+    osi_Log2(smb_logp,"smb_ReceiveCoreOpen fidp 0x%p scp 0x%p", fidp, scp);
+    lock_ObtainWrite(&scp->rw);
+    scp->flags |= CM_SCACHEFLAG_SMB_FID;
+ 
     smb_SetSMBParm(outp, 0, fidp->fid);
     smb_SetSMBParm(outp, 1, smb_Attributes(scp));
     smb_DosUTimeFromUnixTime(&dosTime, scp->clientModTime);
@@ -5585,6 +5683,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* pass the open mode back; XXXX add access checks */
     smb_SetSMBParm(outp, 6, (share & 0xf));
     smb_SetSMBDataLength(outp, 0);
+	lock_ReleaseMutex(&fidp->mx);
     lock_ReleaseRead(&scp->rw);
         
     /* notify open */
@@ -5713,7 +5812,7 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -5905,7 +6004,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -5928,7 +6027,7 @@ smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -6115,7 +6214,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar_t
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -6137,7 +6236,7 @@ smb_Link(smb_vc_t *vcp, smb_packet_t *inp, clientchar_t * oldPathp, clientchar_t
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -6363,7 +6462,7 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -6456,40 +6555,39 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fid = smb_ChainFID(fid, inp);
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp)
-	return CM_ERROR_BADFD;
+        return CM_ERROR_BADFD;
     
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+    userp = smb_GetUserFromVCP(vcp, inp);
+
+    lock_ObtainMutex(&fidp->mx);
+    if (!fidp->scp || (fidp->flags & SMB_FID_IOCTL)) {
+        cm_ReleaseUser(userp);
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
+        cm_ReleaseUser(userp);
         smb_CloseFID(vcp, fidp, NULL, 0);
         smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHFILE;
     }
 
-    lock_ObtainMutex(&fidp->mx);
-    if (fidp->flags & SMB_FID_IOCTL) {
-	lock_ReleaseMutex(&fidp->mx);
-	smb_ReleaseFID(fidp);
-        return CM_ERROR_BADFD;
-    }
-    lock_ReleaseMutex(&fidp->mx);
-        
-    userp = smb_GetUserFromVCP(vcp, inp);
-
-    lock_ObtainMutex(&fidp->mx);
     if ((fidp->flags & SMB_FID_OPENWRITE) && smb_AsyncStore != 2) {
-	cm_scache_t * scp = fidp->scp;
-	cm_HoldSCache(scp);
-	lock_ReleaseMutex(&fidp->mx);
+        cm_scache_t * scp = fidp->scp;
+        cm_HoldSCache(scp);
+        lock_ReleaseMutex(&fidp->mx);
         code = cm_FSync(scp, userp, &req);
-	cm_ReleaseSCache(scp);
+        cm_ReleaseSCache(scp);
     } else {
+        lock_ReleaseMutex(&fidp->mx);
         code = 0;
-	lock_ReleaseMutex(&fidp->mx);
     }
-        
-    smb_ReleaseFID(fidp);
         
     cm_ReleaseUser(userp);
-        
+    smb_ReleaseFID(fidp);                
     return code;
 }
 
@@ -6586,26 +6684,25 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 
     lock_ObtainWrite(&smb_rctLock);
     if (fidp->deleteOk) {
-	osi_Log0(smb_logp, "  Fid already closed.");
-	lock_ReleaseWrite(&smb_rctLock);
-	return CM_ERROR_BADFD;
+        osi_Log0(smb_logp, "  Fid already closed.");
+        lock_ReleaseWrite(&smb_rctLock);    
+        return CM_ERROR_BADFD;
     }
     fidp->deleteOk = 1;
     lock_ReleaseWrite(&smb_rctLock);
 
     lock_ObtainMutex(&fidp->mx);
     if (fidp->NTopen_dscp) {
-	dscp = fidp->NTopen_dscp;
-	cm_HoldSCache(dscp);
+        dscp = fidp->NTopen_dscp;   
+        cm_HoldSCache(dscp);
     }
 
-    if (fidp->NTopen_pathp) {
-	pathp = cm_ClientStrDup(fidp->NTopen_pathp);
-    }
+    if (fidp->NTopen_pathp)
+        pathp = cm_ClientStrDup(fidp->NTopen_pathp);
 
     if (fidp->scp) {
-	scp = fidp->scp;
-	cm_HoldSCache(scp);
+        scp = fidp->scp;
+        cm_HoldSCache(scp);
     }
 
     /* Don't jump the gun on an async raw write */
@@ -6623,7 +6720,7 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
             scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
             /* This fixes defect 10958 */
             CompensateForSmbClientLastWriteTimeBugs(&dosTime);
-            smb_UnixTimeFromDosUTime(&fidp->scp->clientModTime, dosTime);
+            smb_UnixTimeFromDosUTime(&scp->clientModTime, dosTime);
         }
         if (smb_AsyncStore != 2) {
             lock_ReleaseMutex(&fidp->mx);
@@ -6640,10 +6737,10 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         cm_key_t key;
         long tcode;
 
-	lock_ReleaseMutex(&fidp->mx);
+        lock_ReleaseMutex(&fidp->mx);
 
-	/* CM_UNLOCK_BY_FID doesn't look at the process ID.  We pass
-           in zero. */
+        /* CM_UNLOCK_BY_FID doesn't look at the process ID.  We pass
+              * in zero. */
         key = cm_GenerateKey(vcp->vcID, 0, fidp->fid);
         lock_ObtainWrite(&scp->rw);
 
@@ -6744,16 +6841,16 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
     }
 
     if (scp) {
-	lock_ObtainWrite(&scp->rw);
+        lock_ObtainWrite(&scp->rw);
         if (nullcreator && scp->creator == userp)
             scp->creator = NULL;
-	scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
-	lock_ReleaseWrite(&scp->rw);
-	cm_ReleaseSCache(scp);
+        scp->flags &= ~CM_SCACHEFLAG_SMB_FID;
+        lock_ReleaseWrite(&scp->rw);
+        cm_ReleaseSCache(scp);
     }
 
     if (pathp)
-	free(pathp);
+        free(pathp);
 
     return code;
 }
@@ -6821,7 +6918,13 @@ long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char 
         code = CM_ERROR_BADFDOP;
         goto done2;
     }
-    
+
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        code = CM_ERROR_BADFD;
+        goto done2;
+    }
+	
     smb_InitReq(&req);
 
     bufferp = NULL;
@@ -7229,6 +7332,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_t* smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
+	cm_scache_t *scp;
     cm_attr_t truncAttr;	/* attribute struct used for truncating file */
     char *op;
     int inDataBlockCount;
@@ -7252,12 +7356,6 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADFD;
     }
         
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
-        smb_CloseFID(vcp, fidp, NULL, 0);
-        smb_ReleaseFID(fidp);
-        return CM_ERROR_NOSUCHFILE;
-    }
-
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -7266,6 +7364,22 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	osi_Log1(smb_logp, "smb_ReceiveCoreWrite ioctl code 0x%x", code);
 	return code;
     }
+
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
+    scp = fidp->scp;
+    cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -7282,9 +7396,9 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LLength.HighPart = 0;
         LLength.LowPart = count;
 
-        lock_ObtainWrite(&fidp->scp->rw);
-        code = cm_LockCheckWrite(fidp->scp, LOffset, LLength, key);
-        lock_ReleaseWrite(&fidp->scp->rw);
+        lock_ObtainWrite(&scp->rw);
+        code = cm_LockCheckWrite(scp, LOffset, LLength, key);
+        lock_ReleaseWrite(&scp->rw);
 
         if (code) {
 	    osi_Log1(smb_logp, "smb_ReceiveCoreWrite lock check failure 0x%x", code);
@@ -7356,6 +7470,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
   done:
     smb_ReleaseFID(fidp);
     cm_ReleaseUser(userp);
+	cm_ReleaseSCache(scp);
 
     return code;
 }
@@ -7373,12 +7488,21 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
     fd = smb_GetSMBParm(inp, 0);
     fidp = smb_FindFID(vcp, fd, 0);
 
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
-        smb_CloseFID(vcp, fidp, NULL, 0);
+    lock_ObtainMutex(&fidp->mx);
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
         return;
     }
 
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return;
+    }
+    lock_ReleaseMutex(&fidp->mx);
+	
     osi_Log3(smb_logp, "Completing Raw Write offset 0x%x:%08x count %x",
              rwcp->offset.HighPart, rwcp->offset.LowPart, rwcp->count);
 
@@ -7386,7 +7510,7 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 
     rawBuf = rwcp->buf;
     code = smb_WriteData(fidp, &rwcp->offset, rwcp->count, rawBuf, userp,
-						 &written);
+                         &written);
 
     if (rwcp->writeMode & 0x1) {	/* synchronous */
         smb_t *op;
@@ -7433,6 +7557,7 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     smb_t *smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
+	cm_scache_t *scp;
     char *op;
     unsigned short writeMode;
     char *rawBuf;
@@ -7481,15 +7606,26 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp) {
+    if (!fidp)
+        return CM_ERROR_BADFD;
+
+    lock_ObtainMutex(&fidp->mx);
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
         return CM_ERROR_BADFD;
     }
 
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
         smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHFILE;
     }
+
+    scp = fidp->scp;
+    cm_HoldSCache(scp);
+    lock_ReleaseMutex(&fidp->mx);
 
     {
         unsigned pid;
@@ -7505,11 +7641,12 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         LLength.HighPart = 0;
         LLength.LowPart = count;
 
-        lock_ObtainWrite(&fidp->scp->rw);
-        code = cm_LockCheckWrite(fidp->scp, LOffset, LLength, key);
-        lock_ReleaseWrite(&fidp->scp->rw);
+        lock_ObtainWrite(&scp->rw);
+        code = cm_LockCheckWrite(scp, LOffset, LLength, key);
+        lock_ReleaseWrite(&scp->rw);
 
         if (code) {
+            cm_ReleaseSCache(scp);
             smb_ReleaseFID(fidp);
             return code;
         }
@@ -7573,6 +7710,7 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
     smb_ReleaseFID(fidp);
     cm_ReleaseUser(userp);
+    cm_ReleaseSCache(scp);
 
     if (code) {
         smb_SetSMBParm(outp, 0, total_written);
@@ -7613,6 +7751,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_t *smbp = (smb_t*) inp;
     long code = 0;
     cm_user_t *userp;
+    cm_scache_t *scp;
     char *op;
         
     fd = smb_GetSMBParm(inp, 0);
@@ -7627,12 +7766,6 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp)
         return CM_ERROR_BADFD;
-        
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
-        smb_CloseFID(vcp, fidp, NULL, 0);
-        smb_ReleaseFID(fidp);
-        return CM_ERROR_NOSUCHFILE;
-    }
 
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
@@ -7641,6 +7774,22 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	smb_ReleaseFID(fidp);
 	return code;
     }
+
+    if (!fidp->scp) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
+        smb_CloseFID(vcp, fidp, NULL, 0);
+        smb_ReleaseFID(fidp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+
+    scp = fidp->scp;
+    cm_HoldSCache(scp);
     lock_ReleaseMutex(&fidp->mx);
 
     {
@@ -7655,11 +7804,12 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         LLength.HighPart = 0;
         LLength.LowPart = count;
         
-        lock_ObtainWrite(&fidp->scp->rw);
-        code = cm_LockCheckRead(fidp->scp, LOffset, LLength, key);
-        lock_ReleaseWrite(&fidp->scp->rw);
+        lock_ObtainWrite(&scp->rw);
+        code = cm_LockCheckRead(scp, LOffset, LLength, key);
+        lock_ReleaseWrite(&scp->rw);
     }
     if (code) {
+        cm_ReleaseSCache(scp);
         smb_ReleaseFID(fidp);
         return code;
     }
@@ -7697,6 +7847,7 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_ReleaseFID(fidp);
 	
     cm_ReleaseUser(userp);
+    cm_ReleaseSCache(scp);
     return code;
 }
 
@@ -7762,7 +7913,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -7903,7 +8054,7 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         if ( WANTS_DFS_PATHNAMES(inp) || pnc )
             return CM_ERROR_PATH_NOT_COVERED;
         else
-            return CM_ERROR_BADSHARENAME;
+            return CM_ERROR_NOSUCHPATH;
     }
 #endif /* DFS_SUPPORT */
 
@@ -8059,21 +8210,23 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp)
 	return CM_ERROR_BADFD;
-    
-    if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
+
+    lock_ObtainMutex(&fidp->mx);
+    if (!fidp->scp || (fidp->flags & SMB_FID_IOCTL)) {
+	lock_ReleaseMutex(&fidp->mx);
+	smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
+
+    if (fidp->scp->flags & CM_SCACHEFLAG_DELETED) {
+        lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
         smb_ReleaseFID(fidp);
         return CM_ERROR_NOSUCHFILE;
     }
 
-    lock_ObtainMutex(&fidp->mx);
-    if (fidp->flags & SMB_FID_IOCTL) {
-	lock_ReleaseMutex(&fidp->mx);
-	smb_ReleaseFID(fidp);
-        return CM_ERROR_BADFD;
-    }
     lock_ReleaseMutex(&fidp->mx);
-	
+
     userp = smb_GetUserFromVCP(vcp, inp);
 
     lock_ObtainMutex(&fidp->mx);
@@ -8205,25 +8358,30 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
         if (dp->procp) {
             /* we have a recognized operation */
             char * opName = myCrt_Dispatch(inp->inCom);
+            smb_t *smbp;
 
-            if (inp->inCom == 0x1d)
+            smbp = (smb_t *) inp;
+
+            osi_Log5(smb_logp,"Dispatch %s mid 0x%x vcp 0x%p lana %d lsn %d",
+                      opName, smbp->mid, vcp,vcp->lana,vcp->lsn);
+            if (inp->inCom == 0x1d) {
                 /* Raw Write */
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp, rwcp);
-            else {
-                osi_Log4(smb_logp,"Dispatch %s vcp 0x%p lana %d lsn %d",
-                         opName,vcp,vcp->lana,vcp->lsn);
+            } else {
                 code = (*(dp->procp)) (vcp, inp, outp);
-                osi_Log4(smb_logp,"Dispatch return  code 0x%x vcp 0x%p lana %d lsn %d",
-                         code,vcp,vcp->lana,vcp->lsn);
-#ifdef LOG_PACKET
-                if ( code == CM_ERROR_BADSMB ||
-                     code == CM_ERROR_BADOP )
-                    smb_LogPacket(inp);
-#endif /* LOG_PACKET */
             }   
+            osi_Log5(smb_logp,"Dispatch return code 0x%x mid 0x%x vcp 0x%p lana %d lsn %d",
+                      code, smbp->mid, vcp,vcp->lana,vcp->lsn);
 
             newTime = GetTickCount();
-            osi_Log2(smb_logp, "Dispatch %s duration %d ms", opName, newTime - oldTime);
+            osi_Log3(smb_logp, "Dispatch %s mid 0x%x duration %d ms", 
+                     opName, smbp->mid, newTime - oldTime);
+
+#ifdef LOG_PACKET
+            if ( code == CM_ERROR_BADSMB ||
+                 code == CM_ERROR_BADOP )
+                smb_LogPacket(inp);
+#endif /* LOG_PACKET */
 
             /* ReceiveV3Tran2A handles its own logging */
             if (inp->inCom != 0x32 && newTime - oldTime > 45000) {
@@ -8234,23 +8392,30 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 cm_fid_t afid = {0,0,0,0,0};
 
                 uidp = smb_FindUID(vcp, smbp->uid, 0);
-                smb_LookupTIDPath(vcp,((smb_t *)inp)->tid, &treepath);
+                smb_LookupTIDPath(vcp, smbp->tid, &treepath);
                 fidp = smb_FindFID(vcp, inp->fid, 0);
 
-                if (fidp && fidp->NTopen_pathp)
-                    pathname = fidp->NTopen_pathp;
-                else if (inp->stringsp->wdata)
-                    pathname = inp->stringsp->wdata;
+                if (fidp) {
+                    lock_ObtainMutex(&fidp->mx);
+                    if (fidp->NTopen_pathp)
+                        pathname = fidp->NTopen_pathp;
+                    if (fidp->scp)
+                        afid = fidp->scp->fid;
+                } else {
+                    if (inp->stringsp->wdata)
+                        pathname = inp->stringsp->wdata;
+                }
 
-                if (fidp && fidp->scp)
-                    afid = fidp->scp->fid;
-
-                afsi_log("Request %s duration %d ms user %S tid \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
-                          opName, newTime - oldTime,
-                          uidp ? uidp->unp->name : NULL,
+                afsi_log("Request %s duration %d ms user 0x%x \"%S\" pid 0x%x mid 0x%x tid 0x%x \"%S\" path? \"%S\" afid (%d.%d.%d.%d)", 
+                          opName, newTime - oldTime, 
+                          smbp->uid, uidp ? uidp->unp->name : NULL,
+                          smbp->pid, smbp->mid, smbp->tid,
                           treepath,
                           pathname, 
                           afid.cell, afid.volume, afid.vnode, afid.unique);
+
+                if (fidp)
+                    lock_ReleaseMutex(&fidp->mx);
 
                 if (uidp)
                     smb_ReleaseUID(uidp);
@@ -9918,13 +10083,12 @@ void smb_Init(osi_log_t *logp, int useV3, int nThreads, void *aMBfunc)
                                                     );
 
                 if (nts != STATUS_SUCCESS && ntsEx != STATUS_SUCCESS) {
-                    char message[AFSPATHMAX];
-                    sprintf(message,"MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
-                                       nts, ntsEx);
-                    OutputDebugString(message);
-                    afsi_log(message);
+                    osi_Log2(smb_logp, "MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x",
+                             nts, ntsEx);
+
+                    afsi_log("MsV1_0SetProcessOption failure: nts 0x%x ntsEx 0x%x", nts, ntsEx);
                 } else {
-                    OutputDebugString("MsV1_0SetProcessOption success");
+                    osi_Log0(smb_logp, "MsV1_0SetProcessOption success");
                     afsi_log("MsV1_0SetProcessOption success");
                 }
                 /* END - code from Larry */

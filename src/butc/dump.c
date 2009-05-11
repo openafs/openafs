@@ -358,6 +358,13 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 		}
 	    }
 
+#ifdef xbsa
+	    /* Set aside space for the trailing volume header when using large buffers. */
+	    if (XBSAMAXBUFFER < toread + sizeof(hostVolumeHeader)) {
+		toread = XBSAMAXBUFFER - sizeof(hostVolumeHeader);
+	    }
+#endif
+
 	    /* Read some volume data. */
 	    if (fragmentvolume) {
 		bytesread = 0;
@@ -1353,7 +1360,7 @@ Dumper(void *param)
 	sprintf(line,
 		"%-5d  %02d/%02d/%04d %02d:%02d:%02d  "
 		"%02d/%02d/%04d %02d:%02d:%02d  " "%02d:%02d:%02d  "
-		"%s %d of %d volumes dumped (%ld KB)\n", taskId,
+		"%s %d of %d volumes dumped (%lu KB)\n", taskId,
 		tmstart.tm_mon + 1, tmstart.tm_mday, tmstart.tm_year + 1900,
 		tmstart.tm_hour, tmstart.tm_min, tmstart.tm_sec,
 		tmend.tm_mon + 1, tmend.tm_mday, tmend.tm_year + 1900,

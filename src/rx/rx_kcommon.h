@@ -139,7 +139,10 @@ typedef unsigned short etap_event_t;
 #include "afs/longc_procs.h"
 #include "afs/afs_stats.h"
 #include "h/errno.h"
+#if !(defined(AFS_SUN5_ENV) && defined(KERNEL))
+/* if sys/systm.h includes varargs.h some versions of solaris have conflicts */
 #include "stdarg.h"
+#endif
 #ifdef KERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

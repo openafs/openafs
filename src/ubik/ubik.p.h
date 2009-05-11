@@ -10,6 +10,8 @@
 #ifndef UBIK_H
 #define UBIK_H
 
+#include <stdarg.h>
+
 /* these are now appended by the error table compiler */
 #if 0
 /* ubik error codes */
@@ -174,16 +176,16 @@ struct ubik_dbase {
     afs_int32 writeTidCounter;	/*!< last write trans tid counter */
     afs_int32 flags;		/*!< flags */
     /* physio procedures */
-    int (*read) (struct ubik_dbase * adbase, afs_int32 afile, char *abuffer,
+    int (*read) (struct ubik_dbase * adbase, afs_int32 afile, void *abuffer,
 		 afs_int32 apos, afs_int32 alength);
-    int (*write) (struct ubik_dbase * adbase, afs_int32 afile, char *abuffer,
+    int (*write) (struct ubik_dbase * adbase, afs_int32 afile, void *abuffer,
 		  afs_int32 apos, afs_int32 alength);
     int (*truncate) (struct ubik_dbase * adbase, afs_int32 afile,
 		     afs_int32 asize);
     int (*sync) (struct ubik_dbase * adbase, afs_int32 afile);
     int (*stat) (struct ubik_dbase * adbase, afs_int32 afid,
 		 struct ubik_stat * astat);
-    int (*open) (struct ubik_dbase * adbase, afs_int32 afid);
+    void (*open) (struct ubik_dbase * adbase, afs_int32 afid);
     int (*setlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/*!< set the version label */
     int (*getlabel) (struct ubik_dbase * adbase, afs_int32 afile, struct ubik_version * aversion);	/*!< retrieve the version label */
     int (*getnfiles) (struct ubik_dbase * adbase);	/*!< find out number of files */
@@ -192,16 +194,17 @@ struct ubik_dbase {
 #ifdef AFS_PTHREAD_ENV
     pthread_cond_t version_cond;    /*!< condition variable to manage changes to version */
     pthread_cond_t flags_cond;      /*!< condition variable to manage changes to flags */
-  pthread_mutex_t version_mutex;
-  pthread_mutex_t flags_mutex;
+    pthread_mutex_t version_mutex;
+    pthread_mutex_t flags_mutex;
 #endif
 };
 
 /*! \name procedures for automatically authenticating ubik connections */
-extern int (*ubik_CRXSecurityProc) (void *, struct rx_securityClass **, afs_int32 *);
+extern int (*ubik_CRXSecurityProc) (void *, struct rx_securityClass **,
+				    afs_int32 *);
 extern void *ubik_CRXSecurityRock;
-extern int (*ubik_SRXSecurityProc) (void *,
-    struct rx_securityClass **, afs_int32);
+extern int (*ubik_SRXSecurityProc) (void *, struct rx_securityClass **,
+				    afs_int32);
 extern void *ubik_SRXSecurityRock;
 extern int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
 extern void *ubik_CheckRXSecurityRock;
@@ -332,10 +335,10 @@ extern int uphys_close(register int afd);
 extern int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid,
 		      struct ubik_stat *astat);
 extern int uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
-		      register char *abuffer, afs_int32 apos,
+		      register void *abuffer, afs_int32 apos,
 		      afs_int32 alength);
 extern int uphys_write(register struct ubik_dbase *adbase, afs_int32 afile,
-		       register char *abuffer, afs_int32 apos,
+		       register void *abuffer, afs_int32 apos,
 		       afs_int32 alength);
 extern int uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile,
 			  afs_int32 asize);
@@ -360,25 +363,87 @@ extern void *urecovery_Interact(void *);
 extern int DoProbe(struct ubik_server *server);
 /*\}*/
 
+/*! \name ubik.c */
+extern afs_int32 ContactQuorum_NoArguments(afs_int32 (*proc)
+						       (struct rx_connection *, 
+							ubik_tid *),
+					   struct ubik_trans *atrans,
+					   int aflags);
+
+extern afs_int32 ContactQuorum_DISK_Lock(struct ubik_trans *atrans,
+					 int aflags,
+					 afs_int32 file, afs_int32 position, 
+					 afs_int32 length, afs_int32 type);
+
+extern afs_int32 ContactQuorum_DISK_Write(struct ubik_trans *atrans,
+					  int aflags, 
+					  afs_int32 file, afs_int32 position, 
+					  bulkdata *data);
+
+extern afs_int32 ContactQuorum_DISK_Truncate(struct ubik_trans *atrans,
+					     int aflags,
+					     afs_int32 file, afs_int32 length);
+
+extern afs_int32 ContactQuorum_DISK_WriteV(struct ubik_trans *atrans,
+					   int aflags,
+					   iovec_wrt * io_vector, 
+					   iovec_buf *io_buffer);
+
+extern afs_int32 ContactQuorum_DISK_SetVersion(struct ubik_trans *atrans, 
+					       int aflags,
+					       ubik_version *OldVersion,
+					       ubik_version *NewVersion);
+                                              
+extern void panic(char *format, ...); 
+
+extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr); 
+/*\}*/
+
+/*! \name beacon.c */
+struct afsconf_cell;
+extern void ubeacon_Debug(struct ubik_debug *aparm);
+extern int ubeacon_AmSyncSite(void);
+extern int ubeacon_InitServerListByInfo(afs_int32 ame, 
+					struct afsconf_cell *info, 
+					char clones[]);
+extern int ubeacon_InitServerList(afs_int32 ame, afs_int32 aservers[]);
 extern void *ubeacon_Interact(void *);
-extern int sdisk_Interact();
-extern int uvote_Interact();
-extern int DISK_Abort();
-extern int DISK_Begin();
-extern int DISK_ReleaseLocks();
-extern int DISK_Commit();
-extern int DISK_Lock();
-extern int DISK_Write();
-extern int DISK_WriteV();
-extern int DISK_Truncate();
-extern int DISK_SetVersion();
+/*\}*/
 
 /*! \name disk.c */
+extern void udisk_Debug(struct ubik_debug *aparm);
+extern int udisk_Invalidate(struct ubik_dbase *adbase, afs_int32 afid);
+extern int udisk_read(struct ubik_trans *atrans, afs_int32 afile, 
+		      void *abuffer, afs_int32 apos, afs_int32 alen);
+extern int udisk_truncate(struct ubik_trans *atrans, afs_int32 afile, 
+			  afs_int32 alength);
+extern int udisk_write(struct ubik_trans *atrans, afs_int32 afile, 
+		       void *abuffer, afs_int32 apos, afs_int32 alen);
+extern int udisk_begin(struct ubik_dbase *adbase, int atype, 
+		       struct ubik_trans **atrans);
+extern int udisk_commit(struct ubik_trans *atrans);
 extern int udisk_abort(struct ubik_trans *atrans);
+extern int udisk_end(struct ubik_trans *atrans);
 /*\}*/
 
 /*! \name lock.c */
+extern int  ulock_getLock(struct ubik_trans *atrans, int atype, int await);
 extern void ulock_relLock(struct ubik_trans *atrans);
+extern void ulock_Debug(struct ubik_debug *aparm);
+/*\}*/
+
+/*! \name vote.c */
+extern int uvote_ShouldIRun(void);
+extern afs_int32 uvote_GetSyncSite(void);
+extern int uvote_Init(void);
+extern void ubik_vprint(const char *format, va_list ap);
+extern void ubik_print(const char *format, ...);
+extern void ubik_dprint(const char *format, ...);
+/*\}*/
+
+/*! \name ubik_int.xg - rxgen really should prototype these for us ... */
+extern int VOTE_ExecuteRequest(register struct rx_call *);
+extern int DISK_ExecuteRequest(register struct rx_call *);
 /*\}*/
 
 #endif /* UBIK_INTERNALS */
@@ -389,36 +454,74 @@ extern afs_int32 ubik_nBuffers;
  * \name Public function prototypes
  */
 
+/*! \name ubik.c */
+struct afsconf_cell;
+extern int ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
+				 struct afsconf_cell *info, char clones[],
+				 char *pathName, struct ubik_dbase **dbase);
+extern int ubik_ServerInit(afs_int32 myHost, short myPort, 
+			   afs_int32 serverList[],
+			   char *pathName, struct ubik_dbase **dbase);
+extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
+			   afs_int32 transMode, struct ubik_trans **transPtr);
+extern int ubik_BeginTransReadAny(register struct ubik_dbase *dbase,
+				  afs_int32 transMode,
+				  struct ubik_trans **transPtr);
+extern int ubik_AbortTrans(register struct ubik_trans *transPtr);             
+
+extern int ubik_EndTrans(register struct ubik_trans *transPtr);
+extern int ubik_Read(register struct ubik_trans *transPtr, void *buffer,
+		     afs_int32 length);
+extern int ubik_Flush(struct ubik_trans *transPtr);
+extern int ubik_Write(register struct ubik_trans *transPtr, void *buffer,
+		      afs_int32 length);                        
+extern int ubik_Seek(register struct ubik_trans *transPtr, afs_int32 fileid,
+		     afs_int32 position);
+extern int ubik_Tell(register struct ubik_trans *transPtr, afs_int32 * fileid,
+		     afs_int32 * position);
+extern int ubik_Truncate(register struct ubik_trans *transPtr, 
+			 afs_int32 length);
+extern int ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, 
+			afs_int32 alen, int atype);
+extern int ubik_WaitVersion(register struct ubik_dbase *adatabase,
+			    register struct ubik_version *aversion);
+extern int ubik_GetVersion(register struct ubik_trans *atrans,
+			   register struct ubik_version *avers);
+extern int ubik_CacheUpdate(register struct ubik_trans *atrans);
+/*\}*/
+
+/*! \name ubikclient.c */
+
 extern int ubik_ParseClientList(int argc, char **argv, afs_int32 * aothers);
-
-extern unsigned int afs_random(void
-    );
-
+extern unsigned int afs_random(void);
 extern int ubik_ClientInit(register struct rx_connection **serverconns,
 			   struct ubik_client **aclient);
-
 extern afs_int32 ubik_ClientDestroy(struct ubik_client *aclient);
-
+extern struct rx_connection *ubik_RefreshConn(struct rx_connection *tc);
+#ifdef UBIK_LEGACY_CALLITER
 extern afs_int32 ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
 			       afs_int32 aflags, int *apos, long p1, long p2,
 			       long p3, long p4, long p5, long p6, long p7,
 			       long p8, long p9, long p10, long p11, long p12,
 			       long p13, long p14, long p15, long p16);
+#endif
 
-extern struct rx_connection *ubik_RefreshConn(struct rx_connection *tc);
 /*\}*/
 
-/* ubik.c */
-extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
-			   afs_int32 transMode, struct ubik_trans **transPtr);
-extern int ubik_EndTrans(register struct ubik_trans *transPtr);
+/* \name ubikcmd.c */
+extern int ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost, 
+				afs_int32 *aothers);
+/*\}*/
 
-/* uinit.c */
+/* \name uinit.c */
 
+struct rx_securityClass;
 extern afs_int32 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName,
 				 afs_int32 sauth, 
 				 struct ubik_client **uclientp,
-				 int (*secproc) (), char *funcName, 
+				 int (*secproc) (struct rx_securityClass *sc,
+					 	 afs_int32 scIndex), 
+				 char *funcName, 
 				 afs_int32 gen_rxkad_level, 
 				 afs_int32 maxservers, char *serviceid, 
 				 afs_int32 deadtime, afs_uint32 server, 

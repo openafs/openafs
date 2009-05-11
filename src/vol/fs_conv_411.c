@@ -77,6 +77,7 @@ RCSID
 #include <errno.h>
 
 #include <nfs.h>
+#include <ihandle.h>
 #include <partition.h>
 #include <afs/cmd.h>
 #include <stdlib.h>

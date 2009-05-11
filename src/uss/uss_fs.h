@@ -31,7 +31,8 @@ extern char *uss_fs_OutBuff;	/*Cache Manager output buff */
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_fs_GetACL();
+extern afs_int32 uss_fs_GetACL(char *a_dirPath, char *a_aclBuff, 
+       			       afs_int32 a_aclBuffBytes);
     /*
      * Summary:
      *    Given the pathname for a directory, return its ACL.
@@ -47,7 +48,8 @@ extern afs_int32 uss_fs_GetACL();
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_SetACL();
+extern afs_int32 uss_fs_SetACL(char *a_dirPath, char *a_aclBuff, 
+			       afs_int32 a_aclBuffBytes);
     /*
      * Summary:
      *    Set the ACL on the specified directory.
@@ -63,7 +65,8 @@ extern afs_int32 uss_fs_SetACL();
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_GetVolStat();
+extern afs_int32 uss_fs_GetVolStat(char *a_mountpoint, char *a_volStatBuff,
+				   afs_int32 a_volStatBuffBytes);
     /*
      * Summary:
      *    Given the pathname of an AFS mountpoint, find out what you
@@ -79,7 +82,8 @@ extern afs_int32 uss_fs_GetVolStat();
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_SetVolStat();
+extern afs_int32 uss_fs_SetVolStat(char *a_mountpoint, char *a_volStatBuff,
+		                   afs_int32 a_volStatBuffBytes);
     /*
      * Summary:
      *    Given the pathname of an AFS mountpoint, set the status info
@@ -95,7 +99,7 @@ extern afs_int32 uss_fs_SetVolStat();
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_CkBackups();
+extern afs_int32 uss_fs_CkBackups(void);
     /*
      * Summary:
      *    Make sure the CacheManager doesn't have any stale volume
@@ -109,7 +113,8 @@ extern afs_int32 uss_fs_CkBackups();
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_MkMountPoint();
+extern afs_int32 uss_fs_MkMountPoint(char *a_volname, char *a_cellname, 
+				     afs_int32 a_rw, char *a_mountpoint);
     /*
      * Summary: *NEW*
      *    Given the name of the volume, the cell it lives in,
@@ -128,7 +133,7 @@ extern afs_int32 uss_fs_MkMountPoint();
      *    -1 otherwise, with errno set to the error.
      */
 
-extern afs_int32 uss_fs_RmMountPoint();
+extern afs_int32 uss_fs_RmMountPoint(char *a_mountpoint);
     /*
      * Summary:
      *    Delete the given mountpoint.
@@ -140,5 +145,7 @@ extern afs_int32 uss_fs_RmMountPoint();
      *    0 if everything went well,
      *    -1 otherwise, with errno set to the error.
      */
+
+extern int uss_fs_UnlogToken(char *celln);
 
 #endif /* _USS_FS_H_ */

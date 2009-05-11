@@ -31,11 +31,18 @@ RCSID
 #include "uss_procs.h"		/*Main uss operations */
 #include "uss_kauth.h"		/*AuthServer routines */
 #include "uss_fs.h"		/*CacheManager ops */
+#include "uss_ptserver.h"
+#include "uss_vol.h"
+#include "uss_acl.h"
 #include <afs/cmd.h>		/*Command line parsing */
 #include <afs/cellconfig.h>	/*Cell config defs */
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */
+#include <afs/pterror.h>
+#include <afs/vlserver.h>
 #include <ubik.h>
 
+extern int yylex(void);
+extern int yyparse (void);
 /*
  * Label certain things which will be activated at a later time,
  * as well as certain semi-implemented features/switches which need
@@ -101,7 +108,7 @@ extern int doUnlog;
 int uss_BulkExpires = 0;
 int local_Cell = 1;
 
-static int DoAdd();
+static int DoAdd(void);
 
 /*-----------------------------------------------------------------------
  * static GetCommon
@@ -130,7 +137,7 @@ GetCommon(register struct cmd_syndesc *a_as, void *arock)
     int code;			/*Result of ka_LocalCell */
 
     if (strcmp(a_as->name, "help") == 0)
-	return;
+	return 0;
     if (a_as->parms[AUSS_TEMPLATE].items)
 	strcpy(Template, a_as->parms[AUSS_TEMPLATE].items->data);
     if (a_as->parms[AUSS_VERBOSE].items)
@@ -208,10 +215,11 @@ GetCommon(register struct cmd_syndesc *a_as, void *arock)
  *------------------------------------------------------------------------*/
 
 static int
-SaveRestoreInfo()
+SaveRestoreInfo(void)
 {				/*SaveRestoreInfo */
-
+#ifdef USS_DB
     static char rn[] = "uss:SaveRestoreInfo";	/*Routine name */
+#endif
     register afs_int32 code;	/*Return code */
     afs_int32 deletedUid;	/*Uid to be nuked */
 
@@ -266,7 +274,7 @@ SaveRestoreInfo()
  *------------------------------------------------------------------------*/
 
 static int
-DoDelete()
+DoDelete(void)
 {				/*DoDelete */
 
     int code;			/*Return code */
@@ -438,7 +446,8 @@ DelUser(struct cmd_syndesc *a_as, void *a_rock)
 
 }				/*DelUser */
 
-
+#if USS_FUTURE_FEATURES
+#if USS_DONT_HIDE_SOME_FEATURES
 /*-----------------------------------------------------------------------
  * static PurgeVolumes
  *
@@ -502,6 +511,8 @@ RestoreUser(struct cmd_syndesc *a_as, void *a_rock)
 
 }				/*RestoreUser */
 
+#endif
+#endif
 
 /*-----------------------------------------------------------------------
  * static DoBulkAddLine
@@ -527,14 +538,13 @@ RestoreUser(struct cmd_syndesc *a_as, void *a_rock)
  *------------------------------------------------------------------------*/
 
 static int
-DoBulkAddLine(a_buf, a_tp)
-     char *a_buf;
-     char *a_tp;
-
+DoBulkAddLine(char *a_buf,  char *a_tp)
 {				/*DoBulkAddLine */
 
     register int i;		/*Loop variable */
+#ifdef USS_DB
     static char rn[] = "DoBulkAddLine";	/*Routine name */
+#endif
     int overflow;		/*Overflow in field copy? */
 
 #ifdef USS_DB
@@ -748,10 +758,7 @@ DoBulkAddLine(a_buf, a_tp)
  *------------------------------------------------------------------------*/
 
 static int
-DoBulkDeleteLine(a_buf, a_tp)
-     char *a_buf;
-     char *a_tp;
-
+DoBulkDeleteLine(char *a_buf, char *a_tp)
 {				/*DoBulkDeleteLine */
 
     char volField[32];		/*Value of optional vol disposition field */
@@ -908,10 +915,7 @@ DoBulkDeleteLine(a_buf, a_tp)
  *------------------------------------------------------------------------*/
 
 static int
-DoBulkPurgeVolumeLine(a_buf, a_tp)
-     char *a_buf;
-     char *a_tp;
-
+DoBulkPurgeVolumeLine(char *a_buf, char *a_tp)
 {				/*DoBulkPurgeVolumeLine */
 
     register int i;		/*Loop variable */
@@ -1089,10 +1093,7 @@ DoBulkPurgeVolumeLine(a_buf, a_tp)
  *------------------------------------------------------------------------*/
 
 static int
-DoBulkRestoreLine(a_buf, a_tp)
-     char *a_buf;
-     char *a_tp;
-
+DoBulkRestoreLine(char *a_buf, char *a_tp)
 {				/*DoBulkRestoreLine */
 
     register int i;		/*Loop variable */
@@ -1266,10 +1267,7 @@ DoBulkRestoreLine(a_buf, a_tp)
  *------------------------------------------------------------------------*/
 
 static int
-DoBulkExecLine(a_buf, a_tp)
-     char *a_buf;
-     char *a_tp;
-
+DoBulkExecLine(char *a_buf, char *a_tp)
 {				/*DoBulkExecLine */
 
     register afs_int32 code;	/*Return code */
@@ -1639,7 +1637,7 @@ AddUser(register struct cmd_syndesc *a_as, void *a_rock)
  *------------------------------------------------------------------------*/
 
 static int
-DoAdd()
+DoAdd(void)
 {				/*DoAdd */
 
     int code;			/*Return code */
@@ -1730,7 +1728,7 @@ DoAdd()
  *------------------------------------------------------------------------*/
 
 static int
-DoRestore()
+DoRestore(void)
 {				/*DoRestore */
 
     return (0);
@@ -1760,7 +1758,7 @@ DoRestore()
  *------------------------------------------------------------------------*/
 
 void
-InitETTables()
+InitETTables(void)
 {				/*InitETTables */
 
 
@@ -1783,10 +1781,8 @@ InitETTables()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
-
+int
+main(int argc, char *argv[])
 {				/*Main routine */
 
     register struct cmd_syndesc *cs;	/*Command line syntax descriptor */

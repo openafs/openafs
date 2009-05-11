@@ -490,9 +490,7 @@ SRXAFSCB_InitCallBackState2(struct rx_call * rxcall,
 afs_int32
 SRXAFSCB_WhoAreYou(struct rx_call * rxcall, struct interfaceAddr * addr)
 {
-    int i;
     int code = 0;
-    int count;
 
 #if XSTAT_FS_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_WhoAreYou";	/*Routine name */
@@ -753,9 +751,7 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
 			     struct interfaceAddr * addr,
 			     Capabilities * capabilites)
 {
-    int i;
     int code = 0;
-    int count;
 
 #if XSTAT_FS_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_TellMeAboutYourself";	/*Routine name */

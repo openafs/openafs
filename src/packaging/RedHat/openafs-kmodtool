@@ -39,6 +39,10 @@ get_verrel ()
 {
   verrel=${1:-$(uname -r)}
   verrel=${verrel%%$knownvariants}
+  case "$verrel" in
+    *.fc9*)  verrel="`echo ${verrel} | sed -e 's/^\(.*.fc9[^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+    *.fc1?*) verrel="`echo ${verrel} | sed -e 's/^\(.*.fc1[0-9][^\.]*\)\.[^\.]\+.\?$/\1/'`" ;;
+  esac
 }
 
 print_verrel ()
@@ -72,6 +76,7 @@ get_rpmtemplate ()
     esac
     case "$verrel" in
         *.fc9*) kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
+        *.fc1?*)  kname="${verrel}.%{_target_cpu}${variant:+.${variant}}" ;;
         *)      kname="${verrel}${variant}"                             ;;
     esac
 

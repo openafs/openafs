@@ -25,6 +25,7 @@ RCSID
 #include "rx/rx.h"
 #include "afs/lock.h"
 #include "afs/rxgen_consts.h"
+#define UBIK_LEGACY_CALLITER 1
 #include "ubik.h"
 #include "afs/pthread_glock.h"
 #else /* defined(UKERNEL) */
@@ -38,6 +39,7 @@ RCSID
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
+#include <unistd.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #endif
@@ -343,7 +345,7 @@ pthread_mutex_t ubik_client_mutex;
 #define UNLOCK_UCLNT_CACHE assert(pthread_mutex_unlock(&ubik_client_mutex)==0)
 
 void
-ubik_client_init_mutex()
+ubik_client_init_mutex(void)
 {
     assert(pthread_mutex_init(&ubik_client_mutex, NULL) == 0);
 }
@@ -365,27 +367,10 @@ static int synccount = 0;
  * \todo In the future, we should also put in a protocol to find the sync site.
  */
 afs_int32
-ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
-	  p11, p12, p13, p14, p15, p16)
-     int (*aproc) ();
-     register struct ubik_client *aclient;
-     afs_int32 aflags;
-     long p1;
-     long p2;
-     long p3;
-     long p4;
-     long p5;
-     long p6;
-     long p7;
-     long p8;
-     long p9;
-     long p10;
-     long p11;
-     long p12;
-     long p13;
-     long p14;
-     long p15;
-     long p16;
+ubik_Call(int (*aproc) (), register struct ubik_client *aclient, 
+	  afs_int32 aflags, long p1, long p2, long p3, long p4, 
+	  long p5, long p6, long p7, long p8, long p9, long p10,
+	  long p11, long p12, long p13, long p14, long p15, long p16)
 {
     afs_int32 rcode, code, newHost, thisHost, i, count;
     int chaseCount, pass, needsync, inlist, j;
@@ -583,29 +568,10 @@ try_GetSyncSite(register struct ubik_client *aclient, afs_int32 apos)
  * been locked.
  */
 static afs_int32
-CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
-	 p10, p11, p12, p13, p14, p15, p16, needlock)
-     int (*aproc) ();
-     register struct ubik_client *aclient;
-     afs_int32 aflags;
-     int *apos;
-     long p1;
-     long p2;
-     long p3;
-     long p4;
-     long p5;
-     long p6;
-     long p7;
-     long p8;
-     long p9;
-     long p10;
-     long p11;
-     long p12;
-     long p13;
-     long p14;
-     long p15;
-     long p16;
-     int needlock;
+CallIter(int (*aproc) (), register struct ubik_client *aclient, 
+	 afs_int32 aflags, int *apos, long p1, long p2, long p3, long p4, 
+	 long p5, long p6, long p7, long p8, long p9, long p10, long p11, 
+	 long p12, long p13, long p14, long p15, long p16, int needlock)
 {
     register afs_int32 code;
     struct rx_connection *tc;
@@ -677,27 +643,10 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
  * \todo In the future, we should also put in a protocol to find the sync site.
  */
 afs_int32
-ubik_Call_New(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
-	      p11, p12, p13, p14, p15, p16)
-     int (*aproc) ();
-     register struct ubik_client *aclient;
-     afs_int32 aflags;
-     long p1;
-     long p2;
-     long p3;
-     long p4;
-     long p5;
-     long p6;
-     long p7;
-     long p8;
-     long p9;
-     long p10;
-     long p11;
-     long p12;
-     long p13;
-     long p14;
-     long p15;
-     long p16;
+ubik_Call_New(int (*aproc) (), register struct ubik_client *aclient, 
+	      afs_int32 aflags, long p1, long p2, long p3, long p4, long p5, 
+	      long p6, long p7, long p8, long p9, long p10, long p11, 
+	      long p12, long p13, long p14, long p15, long p16)
 {
     afs_int32 code, rcode;
     afs_int32 count;

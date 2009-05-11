@@ -284,7 +284,8 @@ extern struct dcache *afs_ObtainDCacheForWriting(struct vcache *avc,
 						 afs_size_t len, 
 						 struct vrequest *areq,
 						 int noLock);
-
+extern void afs_PopulateDCache(struct vcache *avc, afs_size_t apos, 
+			       struct vrequest *areq);
 
 /* afs_disconnected.c */
 
@@ -417,7 +418,7 @@ extern int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles,
 			 afs_int32 ablocks, afs_int32 aDentries,
 			 afs_int32 aVolumes, afs_int32 achunk,
 			 afs_int32 aflags, afs_int32 ninodes,
-			 afs_int32 nusers);
+			 afs_int32 nusers, afs_int32 dynamic_vcaches);
 extern void afs_ComputeCacheParms(void);
 extern int afs_InitCacheInfo(register char *afile);
 extern int afs_InitVolumeInfo(char *afile);
@@ -582,7 +583,7 @@ extern afs_uint32 afs_get_pag_from_groups(struct group_info *gi);
 #endif
 #endif
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
-extern afs_int32 PagInCred(const struct AFS_UCRED *cred);
+extern afs_int32 PagInCred(struct AFS_UCRED *cred);
 
 /* afs_osi_uio.c */
 extern int afsio_copy(struct uio *ainuio, struct uio *aoutuio,
@@ -939,11 +940,13 @@ extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
 
 /* afs_vcache.c */
+extern int afs_ShakeLooseVCaches(afs_int32 anumber);
 extern afs_int32 afs_maxvcount;
 extern afs_int32 afs_vcount;
 extern int afsvnumbers;
 extern afs_rwlock_t afs_xvreclaim;
 extern afs_rwlock_t afs_xvcache;
+extern afs_rwlock_t afs_xvcdirty;
 extern afs_lock_t afs_xvcb;
 extern struct afs_q VLRU;
 extern afs_int32 vcachegen;
@@ -952,6 +955,8 @@ extern struct afs_q afs_vhashTV[VCSIZE];
 extern afs_int32 afs_bulkStatsLost;
 extern int afs_norefpanic;
 extern struct vcache *ReclaimedVCList;
+extern ino_t vcacheMetaInode;
+extern struct osi_file *afs_vcacheMetaInodep;
 
 extern void afs_FlushReclaimedVcaches(void);
 void afs_vcacheInit(int astatSize);
@@ -1002,7 +1007,7 @@ extern afs_int32 afs_NFSFindVCache(struct vcache **avcp,
 extern void afs_vcacheInit(int astatSize);
 extern void shutdown_vcache(void);
 extern void afs_DisconGiveUpCallbacks(void);
-
+extern void afs_ClearAllStatdFlag(void);
 
 /* VNOPS/afs_vnop_access.c */
 extern afs_int32 afs_GetAccessBits(register struct vcache *avc,

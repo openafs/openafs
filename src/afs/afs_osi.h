@@ -100,7 +100,7 @@ struct afs_osi_WaitHandle {
 #define	osi_GetFileRock(x)	((x)->rock)
 
 #ifdef	AFS_TEXT_ENV
-#define osi_FlushText(vp) if (hcmp((vp)->m.DataVersion, (vp)->flushDV) > 0) \
+#define osi_FlushText(vp) if (hcmp((vp)->f.m.DataVersion, (vp)->flushDV) > 0) \
 			    osi_FlushText_really(vp)
 #else
 #define osi_FlushText(vp)
@@ -127,7 +127,7 @@ struct afs_osi_WaitHandle {
 #if defined(AFS_DARWIN80_ENV)
 #define vType(vc)               vnode_vtype(AFSTOV(vc))
 #define vSetVfsp(vc, vfsp)      
-#define vSetType(vc, type)      (vc)->m.Type = (type)
+#define vSetType(vc, type)      (vc)->f.m.Type = (type)
 extern int afs_vfs_typenum;
 #define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
 #define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)

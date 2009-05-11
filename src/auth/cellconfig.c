@@ -67,6 +67,9 @@ RCSID
 #include <cm_dns.h>
 #endif /* AFS_AFSDB_ENV */
 #endif
+#include <rx/rx.h>
+#include <rx/rxkad.h>
+
 static struct afsconf_servPair serviceTable[] = {
     {"afs", 7000,},
     {"afscb", 7001,},

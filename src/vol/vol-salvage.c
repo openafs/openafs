@@ -336,13 +336,13 @@ childJob_t myjob = { SALVAGER_MAGIC, NOT_CHILD, "" };
 void
 ObtainSalvageLock(void)
 {
-    int salvageLock;
+    FD_t salvageLock;
 
 #ifdef AFS_NT40_ENV
     salvageLock =
-	(int)CreateFile(AFSDIR_SERVER_SLVGLOCK_FILEPATH, 0, 0, NULL,
+	(FD_t)CreateFile(AFSDIR_SERVER_SLVGLOCK_FILEPATH, 0, 0, NULL,
 			OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (salvageLock == (int)INVALID_HANDLE_VALUE) {
+    if (salvageLock == INVALID_FD) {
 	fprintf(stderr,
 		"salvager:  There appears to be another salvager running!  Aborted.\n");
 	Exit(1);
@@ -790,7 +790,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
      * modified to actually do that so that the NT crt can be used there.
      */
     inodeFd =
-	_open_osfhandle((long)nt_open(inodeListPath, O_RDWR, 0), O_RDWR);
+	_open_osfhandle((intptr_t)nt_open(inodeListPath, O_RDWR, 0), O_RDWR);
     nt_unlink(inodeListPath);	/* NT's crt unlink won't if file is open. */
 #else
     inodeFd = afs_open(inodeListPath, O_RDONLY);
@@ -880,6 +880,7 @@ DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp)
     vsp->fileName = 0;
 }
 
+int
 CompareInodes(const void *_p1, const void *_p2)
 {
     register const struct ViceInodeInfo *p1 = _p1;
@@ -980,9 +981,9 @@ void
 CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
 		  register struct InodeSummary *summary)
 {
-    int volume = ip->u.vnode.volumeId;
-    int rwvolume = volume;
-    register n, nSpecial;
+    VolumeId volume = ip->u.vnode.volumeId;
+    VolumeId rwvolume = volume;
+    register int n, nSpecial;
     register Unique maxunique;
     n = nSpecial = 0;
     maxunique = 0;
@@ -1007,7 +1008,7 @@ CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
 }
 
 int
-OnlyOneVolume(struct ViceInodeInfo *inodeinfo, int singleVolumeNumber, void *rock)
+OnlyOneVolume(struct ViceInodeInfo *inodeinfo, afs_uint32 singleVolumeNumber, void *rock)
 {
     if (inodeinfo->u.vnode.vnodeNumber == INODESPECIAL)
 	return (inodeinfo->u.special.parentId == singleVolumeNumber);
@@ -1292,7 +1293,7 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 		    || (vsp->header.id == singleVolumeNumber
 			|| vsp->header.parent == singleVolumeNumber)) {
 		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
-				       VFORMAT, vsp->header.id);
+				       VFORMAT, afs_cast_uint32(vsp->header.id));
 		    if (singleVolumeNumber 
 			&& vsp->header.id != singleVolumeNumber)
 			AskOffline(vsp->header.id, fileSysPartition->name);
@@ -1743,7 +1744,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
     if (isp->volSummary == NULL) {
 	char path[64];
 	char headerName[64];
-	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, isp->volumeId);
+	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
 	(void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
@@ -1772,7 +1773,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    if (isp->volSummary->fileName) {
 		strcpy(headerName, isp->volSummary->fileName);
 	    } else {
-		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, isp->volumeId);
+		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
 		isp->volSummary->fileName = ToString(headerName);
 	    }
 	    (void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);
@@ -3299,7 +3300,7 @@ PrintInodeList(void)
     register struct ViceInodeInfo *ip;
     struct ViceInodeInfo *buf;
     struct afs_stat status;
-    register nInodes;
+    register int nInodes;
 
     assert(afs_fstat(inodeFd, &status) == 0);
     buf = (struct ViceInodeInfo *)malloc(status.st_size);
@@ -3364,8 +3365,7 @@ Fork(void)
 }
 
 void
-Exit(code)
-     int code;
+Exit(int code)
 {
     if (ShowLog)
 	showlog();

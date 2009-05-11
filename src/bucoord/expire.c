@@ -382,10 +382,8 @@ RelDatetoString(datePtr)
  */
 
 afs_int32
-bc_ParseExpiration(paramPtr, expType, expDate)
-     struct cmd_parmdesc *paramPtr;
-     afs_int32 *expType;
-     afs_int32 *expDate;
+bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType, 
+		   afs_int32 *expDate)
 {
     struct cmd_item *itemPtr, *tempPtr;
     struct ktime_date kt;

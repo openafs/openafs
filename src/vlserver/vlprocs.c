@@ -333,7 +333,7 @@ SVL_CreateEntryN(rxcall, newentry)
 afs_int32
 SVL_ChangeAddr(rxcall, ip1, ip2)
      struct rx_call *rxcall;
-     afs_int32 ip1, ip2;
+     afs_uint32 ip1, ip2;
 {
     struct ubik_trans *trans;
     afs_int32 errorcode;
@@ -347,7 +347,7 @@ SVL_ChangeAddr(rxcall, ip1, ip2)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    VLog(1, ("Change Addr %d -> %d %s\n", ip1, ip2, rxinfo(rxcall)));
+    VLog(1, ("Change Addr %u -> %u %s\n", ip1, ip2, rxinfo(rxcall)));
     if (errorcode = ChangeIPAddr(ip1, ip2, trans))
 	goto abort;
     else {
@@ -369,7 +369,7 @@ SVL_ChangeAddr(rxcall, ip1, ip2)
 afs_int32
 SVL_DeleteEntry(rxcall, volid, voltype)
      struct rx_call *rxcall;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype;
 {
     struct ubik_trans *trans;
@@ -386,7 +386,7 @@ SVL_DeleteEntry(rxcall, volid, voltype)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    VLog(1, ("Delete Volume %d %s\n", volid, rxinfo(rxcall)));
+    VLog(1, ("Delete Volume %u %s\n", volid, rxinfo(rxcall)));
     blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* volid not found */
 	if (!errorcode)
@@ -417,7 +417,7 @@ SVL_DeleteEntry(rxcall, volid, voltype)
 /* Get a vldb entry given its volume id; make sure it's not a deleted entry. */
 GetEntryByID(rxcall, volid, voltype, aentry, new, this_op)
      struct rx_call *rxcall;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype, new, this_op;
      char *aentry;		/* entry data copied here */
 {
@@ -430,7 +430,7 @@ GetEntryByID(rxcall, volid, voltype, aentry, new, this_op)
     if (errorcode = Init_VLdbase(&trans, LOCKREAD, this_op))
 	return errorcode;
 
-    VLog(5, ("GetVolumeByID %d (%d) %s\n", volid, new, rxinfo(rxcall)));
+    VLog(5, ("GetVolumeByID %u (%d) %s\n", volid, new, rxinfo(rxcall)));
     blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
@@ -457,7 +457,8 @@ GetEntryByID(rxcall, volid, voltype, aentry, new, this_op)
 afs_int32
 SVL_GetEntryByID(rxcall, volid, voltype, aentry)
      struct rx_call *rxcall;
-     afs_int32 volid, voltype;
+     afs_uint32 volid;
+     afs_int32 voltype;
      vldbentry *aentry;		/* entry data copied here */
 {
     COUNT_REQ(VLGETENTRYBYID);
@@ -467,7 +468,8 @@ SVL_GetEntryByID(rxcall, volid, voltype, aentry)
 afs_int32
 SVL_GetEntryByIDN(rxcall, volid, voltype, aentry)
      struct rx_call *rxcall;
-     afs_int32 volid, voltype;
+     afs_uint32 volid;
+     afs_int32 voltype;
      nvldbentry *aentry;	/* entry data copied here */
 {
     COUNT_REQ(VLGETENTRYBYIDN);
@@ -477,7 +479,8 @@ SVL_GetEntryByIDN(rxcall, volid, voltype, aentry)
 afs_int32
 SVL_GetEntryByIDU(rxcall, volid, voltype, aentry)
      struct rx_call *rxcall;
-     afs_int32 volid, voltype;
+     afs_uint32 volid;
+     afs_int32 voltype;
      uvldbentry *aentry;	/* entry data copied here */
 {
     COUNT_REQ(VLGETENTRYBYIDU);
@@ -579,10 +582,11 @@ SVL_GetEntryByNameU(rxcall, volname, aentry)
 afs_int32
 SVL_GetNewVolumeId(rxcall, Maxvolidbump, newvolumeid)
      struct rx_call *rxcall;
-     afs_int32 Maxvolidbump;
-     afs_int32 *newvolumeid;
+     afs_uint32 Maxvolidbump;
+     afs_uint32 *newvolumeid;
 {
-    register afs_int32 errorcode, maxvolumeid;
+    register afs_int32 errorcode;
+    afs_uint32 maxvolumeid;
     struct ubik_trans *trans;
 
     COUNT_REQ(VLGETNEWVOLUMEID);
@@ -597,7 +601,7 @@ SVL_GetNewVolumeId(rxcall, Maxvolidbump, newvolumeid)
 
     *newvolumeid = maxvolumeid = ntohl(cheader.vital_header.MaxVolumeId);
     maxvolumeid += Maxvolidbump;
-    VLog(1, ("GetNewVolid newmax=%d %s\n", maxvolumeid, rxinfo(rxcall)));
+    VLog(1, ("GetNewVolid newmax=%u %s\n", maxvolumeid, rxinfo(rxcall)));
     cheader.vital_header.MaxVolumeId = htonl(maxvolumeid);
     if (write_vital_vlheader(trans)) {
 	ABORT(VL_IO);
@@ -622,7 +626,7 @@ SVL_GetNewVolumeId(rxcall, Maxvolidbump, newvolumeid)
 afs_int32
 SVL_ReplaceEntry(rxcall, volid, voltype, newentry, releasetype)
      struct rx_call *rxcall;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype;
      struct vldbentry *newentry;
      afs_int32 releasetype;
@@ -651,7 +655,7 @@ SVL_ReplaceEntry(rxcall, volid, voltype, newentry, releasetype)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    VLog(1, ("OReplace Volume %d %s\n", volid, rxinfo(rxcall)));
+    VLog(1, ("OReplace Volume %u %s\n", volid, rxinfo(rxcall)));
     /* find vlentry we're changing */
     blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
@@ -726,7 +730,7 @@ SVL_ReplaceEntry(rxcall, volid, voltype, newentry, releasetype)
 afs_int32
 SVL_ReplaceEntryN(rxcall, volid, voltype, newentry, releasetype)
      struct rx_call *rxcall;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype;
      struct nvldbentry *newentry;
      afs_int32 releasetype;
@@ -755,7 +759,7 @@ SVL_ReplaceEntryN(rxcall, volid, voltype, newentry, releasetype)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    VLog(1, ("Replace Volume %d %s\n", volid, rxinfo(rxcall)));
+    VLog(1, ("Replace Volume %u %s\n", volid, rxinfo(rxcall)));
     /* find vlentry we're changing */
     blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
@@ -833,7 +837,7 @@ SVL_ReplaceEntryN(rxcall, volid, voltype, newentry, releasetype)
 afs_int32
 SVL_UpdateEntry(rxcall, volid, voltype, updateentry, releasetype)
      struct rx_call *rxcall;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype;
      afs_int32 releasetype;
      struct VldbUpdateEntry *updateentry;	/* Update entry copied here */
@@ -852,7 +856,7 @@ SVL_UpdateEntry(rxcall, volid, voltype, updateentry, releasetype)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    VLog(1, ("Update Volume %d %s\n", volid, rxinfo(rxcall)));
+    VLog(1, ("Update Volume %u %s\n", volid, rxinfo(rxcall)));
     blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
     if (blockindex == 0) {	/* entry not found */
 	if (!errorcode)
@@ -935,7 +939,7 @@ SVL_UpdateEntryByName(rxcall, volname, updateentry, releasetype)
 afs_int32
 SVL_SetLock(rxcall, volid, voltype, voloper)
      struct rx_call *rxcall;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype;
      afs_int32 voloper;
 {
@@ -953,7 +957,7 @@ SVL_SetLock(rxcall, volid, voltype, voloper)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    VLog(1, ("SetLock Volume %d %s\n", volid, rxinfo(rxcall)));
+    VLog(1, ("SetLock Volume %u %s\n", volid, rxinfo(rxcall)));
     blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
     if (blockindex == NULLO) {
 	if (!errorcode)
@@ -1004,7 +1008,7 @@ SVL_SetLock(rxcall, volid, voltype, voloper)
 afs_int32
 SVL_ReleaseLock(rxcall, volid, voltype, releasetype)
      struct rx_call *rxcall;
-     afs_int32 volid;
+     afs_uint32 volid;
      afs_int32 voltype;
      afs_int32 releasetype;
 {
@@ -1022,7 +1026,7 @@ SVL_ReleaseLock(rxcall, volid, voltype, releasetype)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    VLog(1, ("ReleaseLock Volume %d %s\n", volid, rxinfo(rxcall)));
+    VLog(1, ("ReleaseLock Volume %u %s\n", volid, rxinfo(rxcall)));
     blockindex = FindByID(trans, volid, voltype, &tentry, &errorcode);
     if (blockindex == NULLO) {
 	if (!errorcode)

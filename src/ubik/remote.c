@@ -14,6 +14,9 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <fcntl.h>
@@ -21,7 +24,7 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
-#include <string.h>
+
 #include <lock.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -31,9 +34,11 @@ RCSID
 #define UBIK_INTERNALS
 #include "ubik.h"
 #include "ubik_int.h"
+
 int (*ubik_CheckRXSecurityProc) (void *, struct rx_call *);
 void *ubik_CheckRXSecurityRock;
-void printServerInfo();
+
+static void printServerInfo(void);
 
 /*! \file
  * routines for handling requests remotely-submitted by the sync site.  These are
@@ -43,9 +48,8 @@ void printServerInfo();
 
 struct ubik_trans *ubik_currentTrans = 0;
 
-
-ubik_CheckAuth(acall)
-     register struct rx_call *acall;
+int
+ubik_CheckAuth(register struct rx_call *acall)
 {
     register afs_int32 code;
     if (ubik_CheckRXSecurityProc) {
@@ -60,9 +64,7 @@ ubik_CheckAuth(acall)
  * sync site is executing a write transaction.
  */
 afs_int32
-SDISK_Begin(rxcall, atid)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
+SDISK_Begin(register struct rx_call *rxcall, struct ubik_tid *atid)
 {
     register afs_int32 code;
 
@@ -94,9 +96,7 @@ SDISK_Begin(rxcall, atid)
 
 
 afs_int32
-SDISK_Commit(rxcall, atid)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
+SDISK_Commit(register struct rx_call *rxcall, struct ubik_tid *atid)
 {
     register afs_int32 code;
     register struct ubik_dbase *dbase;
@@ -133,9 +133,7 @@ SDISK_Commit(rxcall, atid)
 }
 
 afs_int32
-SDISK_ReleaseLocks(rxcall, atid)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
+SDISK_ReleaseLocks(register struct rx_call *rxcall, struct ubik_tid *atid)
 {
     register struct ubik_dbase *dbase;
     register afs_int32 code;
@@ -174,9 +172,7 @@ SDISK_ReleaseLocks(rxcall, atid)
 }
 
 afs_int32
-SDISK_Abort(rxcall, atid)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
+SDISK_Abort(register struct rx_call *rxcall, struct ubik_tid *atid)
 {
     register afs_int32 code;
     register struct ubik_dbase *dbase;
@@ -215,12 +211,11 @@ SDISK_Abort(rxcall, atid)
     return code;
 }
 
+/* apos and alen are not used */
 afs_int32
-SDISK_Lock(rxcall, atid, afile, apos, alen, atype)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
-     afs_int32 afile, apos, alen, atype;	/* apos and alen are not used */
-{
+SDISK_Lock(register struct rx_call *rxcall, struct ubik_tid *atid, 
+	   afs_int32 afile, afs_int32 apos, afs_int32 alen, afs_int32 atype)
+{	
     register afs_int32 code;
     register struct ubik_dbase *dbase;
     struct ubik_trans *ubik_thisTrans;
@@ -266,11 +261,8 @@ SDISK_Lock(rxcall, atid, afile, apos, alen, atype)
  * \brief Write a vector of data
  */
 afs_int32
-SDISK_WriteV(rxcall, atid, io_vector, io_buffer)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
-     iovec_wrt *io_vector;
-     iovec_buf *io_buffer;
+SDISK_WriteV(register struct rx_call *rxcall, struct ubik_tid *atid, 
+	     iovec_wrt *io_vector, iovec_buf *io_buffer)
 {
     afs_int32 code, i, offset;
     struct ubik_dbase *dbase;
@@ -318,11 +310,8 @@ SDISK_WriteV(rxcall, atid, io_vector, io_buffer)
 }
 
 afs_int32
-SDISK_Write(rxcall, atid, afile, apos, adata)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
-     afs_int32 afile, apos;
-     register bulkdata *adata;
+SDISK_Write(register struct rx_call *rxcall, struct ubik_tid *atid, 
+	    afs_int32 afile, afs_int32 apos, register bulkdata *adata)
 {
     register afs_int32 code;
     register struct ubik_dbase *dbase;
@@ -353,11 +342,8 @@ SDISK_Write(rxcall, atid, afile, apos, adata)
 }
 
 afs_int32
-SDISK_Truncate(rxcall, atid, afile, alen)
-     register struct rx_call *rxcall;
-     struct ubik_tid *atid;
-     afs_int32 afile;
-     afs_int32 alen;
+SDISK_Truncate(register struct rx_call *rxcall, struct ubik_tid *atid, 
+	       afs_int32 afile, afs_int32 alen)
 {
     register afs_int32 code;
     register struct ubik_dbase *dbase;
@@ -386,9 +372,8 @@ SDISK_Truncate(rxcall, atid, afile, alen)
 }
 
 afs_int32
-SDISK_GetVersion(rxcall, aversion)
-     register struct rx_call *rxcall;
-     register struct ubik_version *aversion;
+SDISK_GetVersion(register struct rx_call *rxcall, 
+		 register struct ubik_version *aversion)
 {
     register afs_int32 code;
 
@@ -424,10 +409,8 @@ SDISK_GetVersion(rxcall, aversion)
 }
 
 afs_int32
-SDISK_GetFile(rxcall, file, version)
-     register struct rx_call *rxcall;
-     register afs_int32 file;
-     struct ubik_version *version;
+SDISK_GetFile(register struct rx_call *rxcall, register afs_int32 file, 
+	      struct ubik_version *version)
 {
     register afs_int32 code;
     register struct ubik_dbase *dbase;
@@ -485,11 +468,8 @@ SDISK_GetFile(rxcall, file, version)
 }
 
 afs_int32
-SDISK_SendFile(rxcall, file, length, avers)
-     register struct rx_call *rxcall;
-     afs_int32 file;
-     afs_int32 length;
-     struct ubik_version *avers;
+SDISK_SendFile(register struct rx_call *rxcall, afs_int32 file, 
+	       afs_int32 length, struct ubik_version *avers)
 {
     register afs_int32 code;
     struct ubik_dbase *dbase = NULL;
@@ -553,7 +533,7 @@ SDISK_SendFile(rxcall, file, length, avers)
     (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
 #ifndef OLD_URECOVERY
     flen = length;
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
     if (fd < 0) {
 	code = errno;
@@ -608,13 +588,13 @@ SDISK_SendFile(rxcall, file, length, avers)
 #ifdef OLD_URECOVERY
     (*ubik_dbase->sync) (dbase, file);
 #else
-    afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB0", ubik_dbase->pathName);
+    afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #ifdef AFS_NT40_ENV
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     code = unlink(pbuffer);
     if (!code)
 	code = rename(tbuffer, pbuffer);
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #endif
     if (!code) 
 	code = rename(pbuffer, tbuffer);
@@ -625,7 +605,7 @@ SDISK_SendFile(rxcall, file, length, avers)
 #ifndef OLD_URECOVERY
     }
 #ifdef AFS_NT40_ENV
-    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
     unlink(pbuffer);
 #endif
 #endif
@@ -658,8 +638,7 @@ SDISK_SendFile(rxcall, file, length, avers)
 
 
 afs_int32
-SDISK_Probe(rxcall)
-     register struct rx_call *rxcall;
+SDISK_Probe(register struct rx_call *rxcall)
 {
     return 0;
 }
@@ -671,9 +650,9 @@ SDISK_Probe(rxcall)
  * \return zero on success, else 1.
  */
 afs_int32
-SDISK_UpdateInterfaceAddr(rxcall, inAddr, outAddr)
-     register struct rx_call *rxcall;
-     UbikInterfaceAddr *inAddr, *outAddr;
+SDISK_UpdateInterfaceAddr(register struct rx_call *rxcall, 
+			  UbikInterfaceAddr *inAddr, 
+			  UbikInterfaceAddr *outAddr)
 {
     struct ubik_server *ts, *tmp;
     afs_uint32 remoteAddr;	/* in net byte order */
@@ -735,8 +714,8 @@ SDISK_UpdateInterfaceAddr(rxcall, inAddr, outAddr)
     return 0;
 }
 
-void
-printServerInfo()
+static void
+printServerInfo(void)
 {
     struct ubik_server *ts;
     int i, j = 1;
@@ -751,11 +730,9 @@ printServerInfo()
 }
 
 afs_int32
-SDISK_SetVersion(rxcall, atid, oldversionp, newversionp)
-     struct rx_call *rxcall;
-     struct ubik_tid *atid;
-     struct ubik_version *oldversionp;
-     struct ubik_version *newversionp;
+SDISK_SetVersion(struct rx_call *rxcall, struct ubik_tid *atid, 
+		 struct ubik_version *oldversionp, 
+		 struct ubik_version *newversionp)
 {
     afs_int32 code = 0;
     struct ubik_dbase *dbase;

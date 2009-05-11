@@ -24,6 +24,10 @@ RCSID
 #include <pthread.h>
 #endif
 #include <string.h>
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>

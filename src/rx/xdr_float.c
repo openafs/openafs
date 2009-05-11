@@ -54,7 +54,7 @@ RCSID
  */
 
 bool_t
-xdr_float(register XDR * xdrs, register float *fp)
+xdr_float(XDR * xdrs, float *fp)
 {
 #ifdef AFS_NT40_ENV
     return (FALSE);
@@ -75,7 +75,7 @@ xdr_float(register XDR * xdrs, register float *fp)
 }
 
 bool_t
-xdr_double(register XDR * xdrs, double *dp)
+xdr_double(XDR * xdrs, double *dp)
 {
 #ifdef AFS_NT40_ENV
     return (FALSE);

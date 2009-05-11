@@ -18,6 +18,9 @@ RCSID
     ("$Header$");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
+#include <linux/seq_file.h>
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/nfsclient.h"
@@ -34,10 +37,6 @@ RCSID
 #include <linux/sched.h>
 #include <linux/kernel.h>
 
-#ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
-#include <linux/seq_file.h>
-#endif
-
 struct proc_dir_entry *openafs_procfs;
 
 #ifdef HAVE_KERNEL_LINUX_SEQ_FILE_H
@@ -46,6 +45,7 @@ static void *c_start(struct seq_file *m, loff_t *pos)
 	struct afs_q *cq, *tq;
 	loff_t n = 0;
 
+	AFS_GLOCK();
 	ObtainReadLock(&afs_xcell);
 	for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 		tq = QNext(cq);
@@ -54,8 +54,9 @@ static void *c_start(struct seq_file *m, loff_t *pos)
 			break;
 	}
 	if (cq == &CellLRU)
-		return NULL;
+		cq = NULL;
 
+	AFS_GUNLOCK();
 	return cq;
 }
 
@@ -63,18 +64,22 @@ static void *c_next(struct seq_file *m, void *p, loff_t *pos)
 {
 	struct afs_q *cq = p, *tq;
 
+	AFS_GLOCK();
 	(*pos)++;
 	tq = QNext(cq);
 
 	if (tq == &CellLRU)
 		return NULL;
 
+	AFS_GUNLOCK();
 	return tq;
 }
 
 static void c_stop(struct seq_file *m, void *p)
 {
+        AFS_GLOCK();
 	ReleaseReadLock(&afs_xcell);
+	AFS_GUNLOCK();
 }
 
 static int c_show(struct seq_file *m, void *p)
@@ -331,7 +336,9 @@ osi_proc_init(void)
     entry = create_proc_entry("unixusers", 0, openafs_procfs);
     if (entry) {
 	entry->proc_fops = &afs_unixuser_fops;
+#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
 	entry->owner = THIS_MODULE;
+#endif
     }
     entry = create_proc_entry(PROC_CELLSERVDB_NAME, 0, openafs_procfs);
     if (entry)
@@ -339,7 +346,9 @@ osi_proc_init(void)
 #else
     entry = create_proc_info_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_info);
 #endif
+#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
     entry->owner = THIS_MODULE;
+#endif
 }
 
 void

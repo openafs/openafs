@@ -25,17 +25,20 @@ RCSID
 #include <afs/bubasics.h>
 #include "budb_errs.h"
 #include "database.h"
+#include "budb_prototypes.h"
 #include "error_macros.h"
 #include "afs/audit.h"
 
 #define	DBH_POS(ptr)		( (char *) (ptr) - (char *) &db.h )
 
-afs_int32 FreeAllLocks(), FreeLock(), GetInstanceId(), GetLock();
+afs_int32 FreeAllLocks(struct rx_call *, afs_uint32);
+afs_int32 FreeLock(struct rx_call *, afs_uint32);
+afs_int32 GetInstanceId(struct rx_call *, afs_uint32 *);
+afs_int32 GetLock(struct rx_call *, afs_uint32, afs_int32, afs_int32, 
+		  afs_uint32 *);
 
 afs_int32
-SBUDB_FreeAllLocks(call, instanceId)
-     struct rx_call *call;
-     afs_uint32 instanceId;
+SBUDB_FreeAllLocks(struct rx_call *call, afs_uint32 instanceId)
 {
     afs_int32 code;
 
@@ -45,9 +48,7 @@ SBUDB_FreeAllLocks(call, instanceId)
 }
 
 afs_int32
-FreeAllLocks(call, instanceId)
-     struct rx_call *call;
-     afs_uint32 instanceId;
+FreeAllLocks(struct rx_call *call, afs_uint32 instanceId)
 {
     db_lockP startPtr, endPtr;
     struct ubik_trans *ut;
@@ -81,9 +82,7 @@ FreeAllLocks(call, instanceId)
 }
 
 afs_int32
-SBUDB_FreeLock(call, lockHandle)
-     struct rx_call *call;
-     afs_uint32 lockHandle;
+SBUDB_FreeLock(struct rx_call *call, afs_uint32 lockHandle)
 {
     afs_int32 code;
 
@@ -93,9 +92,7 @@ SBUDB_FreeLock(call, lockHandle)
 }
 
 afs_int32
-FreeLock(call, lockHandle)
-     struct rx_call *call;
-     afs_uint32 lockHandle;
+FreeLock(struct rx_call *call, afs_uint32 lockHandle)
 {
     db_lockP lockPtr = 0;
     struct ubik_trans *ut;
@@ -128,9 +125,7 @@ FreeLock(call, lockHandle)
 }
 
 afs_int32
-SBUDB_GetInstanceId(call, instanceId)
-     struct rx_call *call;
-     afs_uint32 *instanceId;
+SBUDB_GetInstanceId(struct rx_call *call, afs_uint32 *instanceId)
 {
     afs_int32 code;
 
@@ -140,9 +135,7 @@ SBUDB_GetInstanceId(call, instanceId)
 }
 
 afs_int32
-GetInstanceId(call, instanceId)
-     struct rx_call *call;
-     afs_uint32 *instanceId;
+GetInstanceId(struct rx_call *call, afs_uint32 *instanceId)
 {
     struct ubik_trans *ut;
     afs_int32 code;
@@ -169,12 +162,8 @@ GetInstanceId(call, instanceId)
 
 
 afs_int32
-SBUDB_GetLock(call, instanceId, lockName, expiration, lockHandle)
-     struct rx_call *call;
-     afs_uint32 instanceId;
-     afs_int32 lockName;
-     afs_int32 expiration;
-     afs_uint32 *lockHandle;
+SBUDB_GetLock(struct rx_call *call, afs_uint32 instanceId, afs_int32 lockName,
+	      afs_int32 expiration, afs_uint32 *lockHandle)
 {
     afs_int32 code;
 
@@ -184,12 +173,8 @@ SBUDB_GetLock(call, instanceId, lockName, expiration, lockHandle)
 }
 
 afs_int32
-GetLock(call, instanceId, lockName, expiration, lockHandle)
-     struct rx_call *call;
-     afs_uint32 instanceId;
-     afs_int32 lockName;
-     afs_int32 expiration;
-     afs_uint32 *lockHandle;
+GetLock(struct rx_call *call, afs_uint32 instanceId, afs_int32 lockName,
+	afs_int32 expiration, afs_uint32 *lockHandle)
 {
     struct timeval tv;
     db_lockP lockPtr;
@@ -245,10 +230,8 @@ GetLock(call, instanceId, lockName, expiration, lockHandle)
  *	0 - if invalid handle
  *	1 - if handle is valid
  */
-
-checkLockHandle(ut, lockHandle)
-     struct ubik_trans *ut;
-     afs_uint32 lockHandle;
+int
+checkLockHandle(struct ubik_trans *ut, afs_uint32 lockHandle)
 {
     return (((lockHandle > 0) && (lockHandle <= TB_NUM)) ? 1 : 0);
 }

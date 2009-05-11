@@ -354,15 +354,15 @@ ResetCheckDescriptors(void)
 
 #if defined(AFS_PTHREAD_ENV)
 int
-threadNum()
+threadNum(void)
 {
-    return (int) pthread_getspecific(rx_thread_id_key);
+    return (int)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
 /* proc called by rxkad module to get a key */
 static int
-get_key(char *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
+get_key(void *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
 {
     /* find the key */
     static struct afsconf_key tkey;
@@ -372,7 +372,7 @@ get_key(char *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
 	ViceLog(0, ("conf dir not open\n"));
 	return 1;
     }
-    code = afsconf_GetKey(confDir, akvno, tkey.key);
+    code = afsconf_GetKey(confDir, akvno, (struct ktc_encryptionKey *)tkey.key);
     if (code) {
 	ViceLog(0, ("afsconf_GetKey failure: kvno %d code %d\n", akvno, code));
 	return code;
@@ -711,6 +711,8 @@ ClearXStatValues()
 
 }				/*ClearXStatValues */
 
+int CopyOnWrite_calls = 0, CopyOnWrite_off0 = 0, CopyOnWrite_size0 = 0;
+afs_fsize_t CopyOnWrite_maxsize = 0;
 
 static void
 PrintCounters()
@@ -721,7 +723,7 @@ PrintCounters()
     int processSize = 0;
     char tbuffer[32];
 
-    TM_GetTimeOfDay(&tpl, 0);
+    FT_GetTimeOfDay(&tpl, 0);
     Statistics = 1;
     ViceLog(0,
 	    ("Vice was last started at %s\n",
@@ -754,6 +756,9 @@ PrintCounters()
     ViceLog(0,
 	    ("There are %d workstations, %d are active (req in < 15 mins), %d marked \"down\"\n",
 	     workstations, activeworkstations, delworkstations));
+    ViceLog(0, ("CopyOnWrite: calls %d off0 %d size0 %d maxsize 0x%llx\n",
+		CopyOnWrite_calls, CopyOnWrite_off0, CopyOnWrite_size0, CopyOnWrite_maxsize));
+
     Statistics = 0;
 
 }				/*PrintCounters */
@@ -1306,7 +1311,7 @@ ParseArgs(int argc, char *argv[])
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
-	    }
+		}
 	} else if (!strcmp(argv[i], "-realm")) {
 	    extern char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
 	    extern int  num_lrealms;
@@ -2273,7 +2278,7 @@ main(int argc, char *argv[])
 	    (void *)&fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
-    TM_GetTimeOfDay(&tp, 0);
+    FT_GetTimeOfDay(&tp, 0);
 
 #ifndef AFS_QUIETFS_ENV
     if (console != NULL) { 

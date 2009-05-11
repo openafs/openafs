@@ -1613,7 +1613,7 @@ cm_BPlusDirLookupOriginalName(cm_dirOp_t * op, clientchar_t *centry,
          */
         slot = getSlot(op->scp->dirBplus, leafNode);
         if (slot <= BTERROR) {
-            op->scp->dirDataVersion = 0;
+            op->scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
             rc = (slot == BTERROR ? EINVAL : ENOENT);
             goto done;
         }
@@ -2170,8 +2170,9 @@ cm_BPlusEnumAlloc(afs_uint32 entries)
 }
 
 long 
-cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked, 
-                     clientchar_t * maskp, cm_direnum_t **enumpp)
+cm_BPlusDirEnumerate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp, 
+                     afs_uint32 locked, clientchar_t * maskp, 
+                     afs_uint32 fetchStatus, cm_direnum_t **enumpp)
 {
     afs_uint32 count = 0, slot, numentries;
     Nptr leafNode = NONODE, nextLeafNode;
@@ -2185,6 +2186,13 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
     /* Read lock the bplus tree so the data can't change */
     if (!locked)
 	lock_ObtainRead(&scp->dirlock);
+
+    /* 
+     * Hold a reference to the directory so that it wont' be
+     * recycled while the enumeration is active. 
+     */
+    cm_HoldSCache(scp);
+    cm_HoldUser(userp);
 
     if (scp->dirBplus == NULL) {
 	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate No BPlus Tree");
@@ -2285,6 +2293,11 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 	nextLeafNode = getnextnode(leafNode);
     }   
 
+    enump->dscp = scp;
+    enump->userp = userp;
+    enump->reqFlags = reqp->flags;
+    enump->fetchStatus = fetchStatus;
+
   done:
     if (!locked)
 	lock_ReleaseRead(&scp->dirlock);
@@ -2292,7 +2305,11 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
     /* if we failed, cleanup any mess */
     if (rc != 0) {
 	osi_Log0(afsd_logp, "cm_BPlusDirEnumerate rc != 0");
-	if (enump) {
+       
+        /* release the directory because we failed to generate an enumeration object */
+        cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        if (enump) {
 	    for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
 		free(enump->entry[count].name);
 	    }
@@ -2307,11 +2324,17 @@ cm_BPlusDirEnumerate(cm_scache_t *scp, afs_uint32 locked,
 }
 
 long 
-cm_BPlusDirEnumBulkStat(cm_scache_t *dscp, cm_direnum_t *enump, cm_user_t *userp, cm_req_t *reqp)
+cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
 {
+    cm_scache_t *dscp = enump->dscp;
+    cm_user_t   *userp = enump->userp;
     cm_bulkStat_t *bsp;
     afs_uint32 count;
-    afs_uint32 code;
+    afs_uint32 code = 0;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+    req.flags = enump->reqFlags;
 
     if ( dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID )
         return 0;
@@ -2333,6 +2356,7 @@ cm_BPlusDirEnumBulkStat(cm_scache_t *dscp, cm_direnum_t *enump, cm_user_t *userp
                      */
                     lock_ReleaseWrite(&tscp->rw);
                     cm_ReleaseSCache(tscp);
+                    enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
                     continue;
                 }
                 lock_ReleaseWrite(&tscp->rw);
@@ -2344,21 +2368,82 @@ cm_BPlusDirEnumBulkStat(cm_scache_t *dscp, cm_direnum_t *enump, cm_user_t *userp
         bsp->fids[i].Volume = enump->entry[count].fid.volume;
         bsp->fids[i].Vnode = enump->entry[count].fid.vnode;
         bsp->fids[i].Unique = enump->entry[count].fid.unique;
+        enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
 
         if (bsp->counter == AFSCBMAX) {
-            code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+            code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
             memset(bsp, 0, sizeof(cm_bulkStat_t));
         }
     }
 
     if (bsp->counter > 0)
-        code = cm_TryBulkStatRPC(dscp, bsp, userp, reqp);
+        code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
 
     free(bsp);
-    return 0;
+    return code;
 }
 
-long 
+static long 
+cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
+{
+    cm_scache_t *dscp = enump->dscp;
+    cm_user_t   *userp = enump->userp;
+    cm_bulkStat_t *bsp;
+    afs_uint32 count;
+    afs_uint32 code = 0;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+    req.flags = enump->reqFlags;
+
+    if ( dscp->fid.cell == AFS_FAKE_ROOT_CELL_ID )
+        return 0;
+
+    bsp = malloc(sizeof(cm_bulkStat_t));
+    memset(bsp, 0, sizeof(cm_bulkStat_t));
+
+    for ( count = enump->next; count < enump->count; count++ ) {
+        cm_scache_t   *tscp = cm_FindSCache(&enump->entry[count].fid);
+        int i;
+
+        if (tscp) {
+            if (lock_TryWrite(&tscp->rw)) {
+                /* we have an entry that we can look at */
+                if (!(tscp->flags & CM_SCACHEFLAG_EACCESS) && cm_HaveCallback(tscp)) {
+                    /* we have a callback on it.  Don't bother
+                     * fetching this stat entry, since we're happy
+                     * with the info we have.
+                     */
+                    lock_ReleaseWrite(&tscp->rw);
+                    cm_ReleaseSCache(tscp);
+                    enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+                    continue;
+                }
+                lock_ReleaseWrite(&tscp->rw);
+            }	/* got lock */
+            cm_ReleaseSCache(tscp);
+        }	/* found entry */
+
+        i = bsp->counter++;
+        bsp->fids[i].Volume = enump->entry[count].fid.volume;
+        bsp->fids[i].Vnode = enump->entry[count].fid.vnode;
+        bsp->fids[i].Unique = enump->entry[count].fid.unique;
+        enump->entry[count].flags |= CM_DIRENUM_FLAG_GOT_STATUS;
+
+        if (bsp->counter == AFSCBMAX) {
+            code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+            break;
+        }
+    }
+
+    if (bsp->counter > 0 && bsp->counter < AFSCBMAX)
+        code = cm_TryBulkStatRPC(dscp, bsp, userp, &req);
+
+    free(bsp);
+    return code;
+}
+
+long
 cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 {	
     if (enump == NULL || entrypp == NULL || enump->next >= enump->count) {
@@ -2367,6 +2452,10 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
 	osi_Log0(afsd_logp, "cm_BPlusDirNextEnumEntry invalid input");
 	return CM_ERROR_INVAL;
     }
+
+    if (enump->fetchStatus && 
+        !(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS))
+        cm_BPlusDirEnumBulkStatNext(enump);
 
     *entrypp = &enump->entry[enump->next++];
     if ( enump->next == enump->count ) {
@@ -2387,6 +2476,10 @@ cm_BPlusDirFreeEnumeration(cm_direnum_t *enump)
     osi_Log0(afsd_logp, "cm_BPlusDirFreeEnumeration");
 
     if (enump) {
+        /* Release the directory object */
+        cm_ReleaseSCache(enump->dscp);
+        cm_ReleaseUser(enump->userp);
+
 	for ( count = 0; count < enump->count && enump->entry[count].name; count++ ) {
 	    free(enump->entry[count].name);
 	}
@@ -2396,15 +2489,16 @@ cm_BPlusDirFreeEnumeration(cm_direnum_t *enump)
 }
 
 long
-cm_BPlusDirEnumTest(cm_scache_t * dscp, afs_uint32 locked)
+cm_BPlusDirEnumTest(cm_scache_t * dscp, cm_user_t *userp, cm_req_t *reqp, afs_uint32 locked)
 {
     cm_direnum_t * 	 enump = NULL;
     cm_direnum_entry_t * entryp;
     long 	   	 code;
 
+
     osi_Log0(afsd_logp, "cm_BPlusDirEnumTest start");
 
-    for (code = cm_BPlusDirEnumerate(dscp, locked, NULL, &enump); code == 0; ) {
+    for (code = cm_BPlusDirEnumerate(dscp, userp, reqp, locked, NULL, 1, &enump); code == 0; ) {
 	code = cm_BPlusDirNextEnumEntry(enump, &entryp);
 	if (code == 0 || code == CM_ERROR_STOPNOW) {
 	    char buffer[1024];

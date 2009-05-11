@@ -35,17 +35,12 @@ RCSID
 
 #include <afs/bubasics.h>
 #include "bc.h"
-
-static char db_dsvs = 0;	/*Assume debugging output turned off */
-static char mn[] = "dsvs";	/*Module name */
-
+#include "bucoord_prototypes.h"
+    
 struct ubik_client *cstructp;	/*Ptr to Ubik client structure */
 
-extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cf,
-					     char *name);
-
-static FreeVolumeEntryList();
-static FreeVolumeEntry();
+static int FreeVolumeEntryList(struct bc_volumeEntry *aentry);
+static int FreeVolumeEntry(struct bc_volumeEntry *aentry);
 
 /* Code to maintain dump schedule and volume set abstractions.
  * A volume set looks like this:
@@ -56,9 +51,7 @@ static FreeVolumeEntry();
 
 /* get partition id from a name */
 afs_int32
-bc_GetPartitionID(aname, aval)
-     afs_int32 *aval;
-     char *aname;
+bc_GetPartitionID(char *aname, afs_int32 *aval)
 {
 
     /*bc_GetPartitionID */
@@ -132,9 +125,7 @@ bc_GetPartitionID(aname, aval)
  */
 
 int
-bc_ParseHost(aname, asockaddr)
-     char *aname;
-     struct sockaddr_in *asockaddr;
+bc_ParseHost(char *aname, struct sockaddr_in *asockaddr)
 
 {				/*bc_ParseHost */
 
@@ -306,10 +297,9 @@ bc_DeleteVolumeItem(struct bc_config *aconfig, char *avolName,
     return -2;			/* not found */
 }
 
-bc_AddVolumeItem(aconfig, avolName, ahost, apart, avol)
-     struct bc_config *aconfig;
-     char *avolName;
-     char *ahost, *apart, *avol;
+int
+bc_AddVolumeItem(struct bc_config *aconfig, char *avolName, char *ahost, 
+		 char *apart, char *avol)
 {
     struct bc_volumeSet *tset;
     register struct bc_volumeEntry **tlast, *tentry;
@@ -373,11 +363,9 @@ bc_FindVolumeSet(struct bc_config *aconfig, char *aname)
  *	expType - absolute or relative
  */
 
-bc_CreateDumpSchedule(aconfig, adumpName, expDate, expType)
-     struct bc_config *aconfig;
-     char *adumpName;
-     afs_int32 expDate;
-     afs_int32 expType;
+int 
+bc_CreateDumpSchedule(struct bc_config *aconfig, char *adumpName, 
+		      afs_int32 expDate, afs_int32 expType)
 {
     register struct bc_dumpSchedule *tdump;
     struct bc_dumpSchedule *parent, *node;
@@ -416,10 +404,9 @@ bc_CreateDumpSchedule(aconfig, adumpName, expDate, expType)
  * list of dumps.  Note that this leaves the sibling pointers damaged (pointing
  * to strange places), so we must call bc_ProcessDumpSchedule when we're done.
  */
-
-bc_DeleteDumpScheduleAddr(aconfig, adumpAddr)
-     struct bc_config *aconfig;
-     struct bc_dumpSchedule *adumpAddr;
+int
+bc_DeleteDumpScheduleAddr(struct bc_config *aconfig, 
+                          struct bc_dumpSchedule *adumpAddr)
 {
     register struct bc_dumpSchedule **tlast, *tdump;
     register struct bc_dumpSchedule *tnext;
@@ -455,9 +442,7 @@ bc_DeleteDumpScheduleAddr(aconfig, adumpAddr)
  */
 
 struct bc_dumpSchedule *
-bc_FindDumpSchedule(aconfig, aname)
-     char *aname;
-     struct bc_config *aconfig;
+bc_FindDumpSchedule(struct bc_config *aconfig, char *aname)
 {
     register struct bc_dumpSchedule *tds;
     for (tds = aconfig->dsched; tds; tds = tds->next) {
@@ -471,9 +456,8 @@ bc_FindDumpSchedule(aconfig, aname)
  *	Delete dump node adumpName from the dump schedule
  */
 
-bc_DeleteDumpSchedule(aconfig, adumpName)
-     struct bc_config *aconfig;
-     char *adumpName;
+int
+bc_DeleteDumpSchedule(struct bc_config *aconfig, char *adumpName)
 {
     register struct bc_dumpSchedule *tdump;
 
@@ -503,8 +487,8 @@ bc_DeleteDumpSchedule(aconfig, adumpName)
  * of dump schedule nodes. It probably will never matter
  */
 
-bc_ProcessDumpSchedule(aconfig)
-     register struct bc_config *aconfig;
+int
+bc_ProcessDumpSchedule(struct bc_config *aconfig)
 {
     register struct bc_dumpSchedule *tds;
     struct bc_dumpSchedule *parentptr, *nodeptr;
@@ -555,11 +539,9 @@ bc_ProcessDumpSchedule(aconfig)
  */
 
 int
-FindDump(aconfig, nodeString, parentptr, nodeptr)
-     struct bc_config *aconfig;
-     char *nodeString;
-     struct bc_dumpSchedule **parentptr;
-     struct bc_dumpSchedule **nodeptr;
+FindDump(struct bc_config *aconfig, char *nodeString, 
+	 struct bc_dumpSchedule **parentptr, 
+	 struct bc_dumpSchedule **nodeptr)
 {
     struct bc_dumpSchedule *dsptr;
     char *separator;

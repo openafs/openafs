@@ -91,24 +91,69 @@ RCSID
 
 extern int restricted;
 extern struct ubik_dbase *dbase;
-extern afs_int32 Initdb();
 extern int pr_noAuth;
 extern afs_int32 initd;
 extern char *pr_realmName;
-afs_int32 iNewEntry(), newEntry(), whereIsIt(), dumpEntry(), addToGroup(),
-nameToID(), Delete(), removeFromGroup();
-afs_int32 getCPS(), getCPS2(), getHostCPS(), listMax(), setMax(), listEntry();
-afs_int32 listEntries(), changeEntry(), setFieldsEntry(), put_prentries();
-afs_int32 listElements(), listOwned(), isAMemberOf(), idToName();
-
-#if defined(SUPERGROUPS)
-afs_int32 listSuperGroups();
-#endif
-
-extern int IDCmp();
-
 extern int prp_group_default;
 extern int prp_user_default;
+
+static afs_int32 iNewEntry(struct rx_call *call, char aname[], afs_int32 aid, 
+			   afs_int32 oid, afs_int32 *cid);
+static afs_int32 newEntry(struct rx_call *call, char aname[], afs_int32 flag, 
+			  afs_int32 oid, afs_int32 *aid, afs_int32 *cid);       
+static afs_int32 whereIsIt(struct rx_call *call, afs_int32 aid, afs_int32 *apos,
+			   afs_int32 *cid);
+static afs_int32 dumpEntry(struct rx_call *call, afs_int32 apos, 
+			   struct prdebugentry *aentry, afs_int32 *cid);
+static afs_int32 addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid, 
+			    afs_int32 *cid);
+static afs_int32 nameToID(struct rx_call *call, namelist *aname, idlist *aid);
+static afs_int32 idToName(struct rx_call *call, idlist *aid, namelist *aname);
+static afs_int32 Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid);
+static afs_int32 UpdateEntry(struct rx_call *call, afs_int32 aid, char *name, 
+			     struct PrUpdateEntry *uentry, afs_int32 *cid);
+static afs_int32 removeFromGroup(struct rx_call *call, afs_int32 aid, 
+				 afs_int32 gid, afs_int32 *cid);
+static afs_int32 getCPS(struct rx_call *call, afs_int32 aid, prlist *alist, 
+			afs_int32 *over, afs_int32 *cid);
+static afs_int32 getCPS2(struct rx_call *call, afs_int32 aid, afs_int32 ahost,
+			 prlist *alist, afs_int32 *over, afs_int32 *cid);
+static afs_int32 getHostCPS(struct rx_call *call, afs_int32 ahost, 
+			    prlist *alist, afs_int32 *over);
+static afs_int32 listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid);
+static afs_int32 setMax(struct rx_call *call, afs_int32 aid, afs_int32 gflag, 
+			afs_int32 *cid);
+static afs_int32 listEntry(struct rx_call *call, afs_int32 aid, 
+			   struct prcheckentry *aentry, afs_int32 *cid);
+static afs_int32 listEntries(struct rx_call *call, afs_int32 flag, 
+			     afs_int32 startindex, prentries *bulkentries, 
+			     afs_int32 *nextstartindex, afs_int32 *cid);
+static afs_int32 put_prentries(struct prentry *tentry, prentries *bulkentries);
+static afs_int32 changeEntry(struct rx_call *call, afs_int32 aid, char *name, 
+			     afs_int32 oid, afs_int32 newid, afs_int32 *cid);
+static afs_int32 setFieldsEntry(struct rx_call *call, afs_int32 id, 
+				afs_int32 mask, afs_int32 flags, 
+				afs_int32 ngroups, afs_int32 nusers, 
+				afs_int32 spare1, afs_int32 spare2, 
+				afs_int32 *cid);
+static afs_int32 listElements(struct rx_call *call, afs_int32 aid,
+			      prlist *alist, afs_int32 *over, afs_int32 *cid);
+#if defined(SUPERGROUPS)
+static afs_int32 listSuperGroups(struct rx_call *call, afs_int32 aid, 
+				 prlist *alist, afs_int32 *over, 
+				 afs_int32 *cid);
+#endif
+static afs_int32 listOwned(struct rx_call *call, afs_int32 aid, prlist *alist,
+			   afs_int32 *lastP, afs_int32 *cid);
+static afs_int32 isAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid,
+			     afs_int32 *flag, afs_int32 *cid);
+#if IP_WILDCARDS
+static afs_int32 addWildCards(struct ubik_trans *tt, prlist *alist, 
+			      afs_int32 host);
+#endif
+static afs_int32 WhoIsThisWithName(struct rx_call *acall, 
+				   struct ubik_trans *at, afs_int32 *aid, 
+				   char *aname);
 
 /* When abort, reset initd so that the header is read in on next call.
  * Abort the transaction and return the code.
@@ -116,12 +161,8 @@ extern int prp_user_default;
 #define ABORT_WITH(tt,code) return(initd=0,ubik_AbortTrans(tt),code)
 
 static int
-CreateOK(ut, cid, oid, flag, admin)
-     struct ubik_trans *ut;
-     afs_int32 cid;		/* id of caller */
-     afs_int32 oid;		/* id of owner */
-     afs_int32 flag;		/* indicates type of entry */
-     int admin;			/* sysadmin membership */
+CreateOK(struct ubik_trans *ut, afs_int32 cid, afs_int32 oid, afs_int32 flag, 
+	 int admin)
 {
     if (restricted && !admin) 
 	return 0;
@@ -147,10 +188,7 @@ CreateOK(ut, cid, oid, flag, admin)
 }
 
 afs_int32
-WhoIsThis(acall, at, aid)
-     struct rx_call *acall;
-     struct ubik_trans *at;
-     afs_int32 *aid;
+WhoIsThis(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid)
 {
     int foreign = 0;
     /* aid is set to the identity of the caller, if known, else ANONYMOUSID */
@@ -184,7 +222,7 @@ WhoIsThis(acall, at, aid)
 	    foreign = afs_is_foreign_ticket_name(name,inst,tcell,pr_realmName);
 
 	strncpy(vname, name, sizeof(vname));
-	if (ilen = strlen(inst)) {
+	if ((ilen = strlen(inst))) {
 	    if (strlen(vname) + 1 + ilen >= sizeof(vname))
 		goto done;
 	    strcat(vname, ".");
@@ -249,11 +287,7 @@ WhoIsThis(acall, at, aid)
 }
 
 afs_int32
-SPR_INewEntry(call, aname, aid, oid)
-     struct rx_call *call;
-     char aname[PR_MAXNAMELEN];
-     afs_int32 aid;
-     afs_int32 oid;
+SPR_INewEntry(struct rx_call *call, char aname[], afs_int32 aid, afs_int32 oid)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -265,13 +299,9 @@ SPR_INewEntry(call, aname, aid, oid)
     return code;
 }
 
-afs_int32
-iNewEntry(call, aname, aid, oid, cid)
-     struct rx_call *call;
-     char aname[PR_MAXNAMELEN];
-     afs_int32 aid;
-     afs_int32 oid;
-     afs_int32 * cid;
+static afs_int32
+iNewEntry(struct rx_call *call, char aname[], afs_int32 aid, afs_int32 oid, 
+	  afs_int32 *cid)
 {
     /* used primarily for conversion - not intended to be used as usual means
      * of entering people into the database. */
@@ -328,12 +358,8 @@ iNewEntry(call, aname, aid, oid, cid)
 
 
 afs_int32
-SPR_NewEntry(call, aname, flag, oid, aid)
-     struct rx_call *call;
-     char aname[PR_MAXNAMELEN];
-     afs_int32 flag;
-     afs_int32 oid;
-     afs_int32 *aid;
+SPR_NewEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid, 
+	     afs_int32 *aid)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -345,19 +371,13 @@ SPR_NewEntry(call, aname, flag, oid, aid)
     return code;
 }
 
-afs_int32
-newEntry(call, aname, flag, oid, aid, cid)
-     struct rx_call *call;
-     char aname[PR_MAXNAMELEN];
-     afs_int32 flag;
-     afs_int32 oid;
-     afs_int32 *aid;
-     afs_int32 *cid;
+static afs_int32
+newEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid, 
+	 afs_int32 *aid, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
     int admin;
-    extern afs_int32 WhoIsThisWithName();
     char cname[PR_MAXNAMELEN];
     stolower(aname);
     code = Initdb();
@@ -402,10 +422,7 @@ newEntry(call, aname, flag, oid, aid, cid)
 
 
 afs_int32
-SPR_WhereIsIt(call, aid, apos)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 *apos;
+SPR_WhereIsIt(struct rx_call *call, afs_int32 aid, afs_int32 *apos)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -417,12 +434,8 @@ SPR_WhereIsIt(call, aid, apos)
     return code;
 }
 
-afs_int32
-whereIsIt(call, aid, apos, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 *apos;
-     afs_int32 *cid;
+static afs_int32
+whereIsIt(struct rx_call *call, afs_int32 aid, afs_int32 *apos, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -457,10 +470,8 @@ whereIsIt(call, aid, apos, cid)
 
 
 afs_int32
-SPR_DumpEntry(call, apos, aentry)
-     struct rx_call *call;
-     afs_int32 apos;
-     struct prdebugentry *aentry;
+SPR_DumpEntry(struct rx_call *call, afs_int32 apos, 
+	      struct prdebugentry *aentry)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -471,12 +482,9 @@ SPR_DumpEntry(call, apos, aentry)
     return code;
 }
 
-afs_int32
-dumpEntry(call, apos, aentry, cid)
-     struct rx_call *call;
-     afs_int32 apos;
-     struct prdebugentry *aentry;
-     afs_int32 *cid;
+static afs_int32
+dumpEntry(struct rx_call *call, afs_int32 apos, struct prdebugentry *aentry, 
+	  afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -520,10 +528,7 @@ dumpEntry(call, apos, aentry, cid)
 }
 
 afs_int32
-SPR_AddToGroup(call, aid, gid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 gid;
+SPR_AddToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -535,12 +540,8 @@ SPR_AddToGroup(call, aid, gid)
     return code;
 }
 
-afs_int32
-addToGroup(call, aid, gid, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 gid;
-     afs_int32 *cid;
+static afs_int32
+addToGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -615,10 +616,7 @@ addToGroup(call, aid, gid, cid)
 }
 
 afs_int32
-SPR_NameToID(call, aname, aid)
-     struct rx_call *call;
-     namelist *aname;
-     idlist *aid;
+SPR_NameToID(struct rx_call *call, namelist *aname, idlist *aid)
 {
     afs_int32 code;
 
@@ -628,11 +626,8 @@ SPR_NameToID(call, aname, aid)
     return code;
 }
 
-afs_int32
-nameToID(call, aname, aid)
-     struct rx_call *call;
-     namelist *aname;
-     idlist *aid;
+static afs_int32
+nameToID(struct rx_call *call, namelist *aname, idlist *aid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -714,10 +709,7 @@ nameToID(call, aname, aid)
  * The array of ids and names is unlimited.
  */
 afs_int32
-SPR_IDToName(call, aid, aname)
-     struct rx_call *call;
-     idlist *aid;
-     namelist *aname;
+SPR_IDToName(struct rx_call *call, idlist *aid, namelist *aname)
 {
     afs_int32 code;
 
@@ -727,11 +719,8 @@ SPR_IDToName(call, aid, aname)
     return code;
 }
 
-afs_int32
-idToName(call, aid, aname)
-     struct rx_call *call;
-     idlist *aid;
-     namelist *aname;
+static afs_int32
+idToName(struct rx_call *call, idlist *aid, namelist *aname)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -791,9 +780,7 @@ idToName(call, aid, aname)
 }
 
 afs_int32
-SPR_Delete(call, aid)
-     struct rx_call *call;
-     afs_int32 aid;
+SPR_Delete(struct rx_call *call, afs_int32 aid)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -804,11 +791,8 @@ SPR_Delete(call, aid)
     return code;
 }
 
-afs_int32
-Delete(call, aid, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 *cid;
+static afs_int32
+Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1043,11 +1027,8 @@ Delete(call, aid, cid)
 }
 
 afs_int32
-SPR_UpdateEntry(call, aid, name, uentry)
-     struct rx_call *call;
-     afs_int32 aid;
-     char *name;
-     struct PrUpdateEntry *uentry;
+SPR_UpdateEntry(struct rx_call *call, afs_int32 aid, char *name, 
+	        struct PrUpdateEntry *uentry)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1059,12 +1040,8 @@ SPR_UpdateEntry(call, aid, name, uentry)
 }
 
 afs_int32
-UpdateEntry(call, aid, name, uentry, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     char *name;
-     struct PrUpdateEntry *uentry;
-     afs_int32 *cid;
+UpdateEntry(struct rx_call *call, afs_int32 aid, char *name, 
+	    struct PrUpdateEntry *uentry, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1141,10 +1118,7 @@ UpdateEntry(call, aid, name, uentry, cid)
 }
 
 afs_int32
-SPR_RemoveFromGroup(call, aid, gid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 gid;
+SPR_RemoveFromGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1156,12 +1130,9 @@ SPR_RemoveFromGroup(call, aid, gid)
     return code;
 }
 
-afs_int32
-removeFromGroup(call, aid, gid, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 gid;
-     afs_int32 *cid;
+static afs_int32
+removeFromGroup(struct rx_call *call, afs_int32 aid, afs_int32 gid, 
+		afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1230,11 +1201,7 @@ removeFromGroup(call, aid, gid, cid)
 
 
 afs_int32
-SPR_GetCPS(call, aid, alist, over)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *over;
+SPR_GetCPS(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *over)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1245,13 +1212,9 @@ SPR_GetCPS(call, aid, alist, over)
     return code;
 }
 
-afs_int32
-getCPS(call, aid, alist, over, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *over;
-     afs_int32 *cid;
+static afs_int32
+getCPS(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *over, 
+       afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1297,9 +1260,7 @@ getCPS(call, aid, alist, over, cid)
 
 #ifdef IP_WILDCARDS
 int
-inCPS(CPS, id)
-     prlist CPS;
-     afs_int32 id;
+inCPS(prlist CPS, afs_int32 id)
 {
     int i;
 
@@ -1313,12 +1274,8 @@ inCPS(CPS, id)
 
 
 afs_int32
-SPR_GetCPS2(call, aid, ahost, alist, over)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 ahost;
-     prlist *alist;
-     afs_int32 *over;
+SPR_GetCPS2(struct rx_call *call, afs_int32 aid, afs_int32 ahost, 
+	    prlist *alist, afs_int32 *over)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1330,14 +1287,9 @@ SPR_GetCPS2(call, aid, ahost, alist, over)
     return code;
 }
 
-afs_int32
-getCPS2(call, aid, ahost, alist, over, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 ahost;
-     prlist *alist;
-     afs_int32 *over;
-     afs_int32 *cid;
+static afs_int32
+getCPS2(struct rx_call *call, afs_int32 aid, afs_int32 ahost, prlist *alist, 
+	afs_int32 *over, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1347,9 +1299,6 @@ getCPS2(call, aid, ahost, alist, over, cid)
     afs_int32 hostid;
     int host_list = 0;
     struct in_addr iaddr;
-#if IP_WILDCARDS
-    extern afs_int32 addWildCards();
-#endif /* IP_WILDCARDS */
 
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
@@ -1411,11 +1360,8 @@ getCPS2(call, aid, ahost, alist, over, cid)
 
 
 afs_int32
-SPR_GetHostCPS(call, ahost, alist, over)
-     struct rx_call *call;
-     afs_int32 ahost;
-     prlist *alist;
-     afs_int32 *over;
+SPR_GetHostCPS(struct rx_call *call, afs_int32 ahost, prlist *alist, 
+	       afs_int32 *over)
 {
     afs_int32 code;
 
@@ -1426,20 +1372,14 @@ SPR_GetHostCPS(call, ahost, alist, over)
 }
 
 afs_int32
-getHostCPS(call, ahost, alist, over)
-     struct rx_call *call;
-     afs_int32 ahost;
-     prlist *alist;
-     afs_int32 *over;
+getHostCPS(struct rx_call *call, afs_int32 ahost, prlist *alist, 
+	   afs_int32 *over)
 {
     register afs_int32 code, temp;
     struct ubik_trans *tt;
     struct prentry host_tentry;
     afs_int32 hostid;
     struct in_addr iaddr;
-#if IP_WILDCARDS
-    extern afs_int32 addWildCards();
-#endif /* IP_WILDCARDS */
 
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
@@ -1485,10 +1425,7 @@ getHostCPS(call, ahost, alist, over)
 
 
 afs_int32
-SPR_ListMax(call, uid, gid)
-     struct rx_call *call;
-     afs_int32 *uid;
-     afs_int32 *gid;
+SPR_ListMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid)
 {
     afs_int32 code;
 
@@ -1499,10 +1436,7 @@ SPR_ListMax(call, uid, gid)
 }
 
 afs_int32
-listMax(call, uid, gid)
-     struct rx_call *call;
-     afs_int32 *uid;
-     afs_int32 *gid;
+listMax(struct rx_call *call, afs_int32 *uid, afs_int32 *gid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1531,10 +1465,7 @@ listMax(call, uid, gid)
 }
 
 afs_int32
-SPR_SetMax(call, aid, gflag)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 gflag;
+SPR_SetMax(struct rx_call *call, afs_int32 aid, afs_int32 gflag)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1546,12 +1477,8 @@ SPR_SetMax(call, aid, gflag)
     return code;
 }
 
-afs_int32
-setMax(call, aid, gflag, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     afs_int32 gflag;
-     afs_int32 *cid;
+static afs_int32
+setMax(struct rx_call *call, afs_int32 aid, afs_int32 gflag, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1588,10 +1515,7 @@ setMax(call, aid, gflag, cid)
 }
 
 afs_int32
-SPR_ListEntry(call, aid, aentry)
-     struct rx_call *call;
-     afs_int32 aid;
-     struct prcheckentry *aentry;
+SPR_ListEntry(struct rx_call *call, afs_int32 aid, struct prcheckentry *aentry)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1602,12 +1526,9 @@ SPR_ListEntry(call, aid, aentry)
     return code;
 }
 
-afs_int32
-listEntry(call, aid, aentry, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     struct prcheckentry *aentry;
-     afs_int32 *cid;
+static afs_int32
+listEntry(struct rx_call *call, afs_int32 aid, struct prcheckentry *aentry, 
+	  afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1661,12 +1582,8 @@ listEntry(call, aid, aentry, cid)
 }
 
 afs_int32
-SPR_ListEntries(call, flag, startindex, bulkentries, nextstartindex)
-     struct rx_call *call;
-     afs_int32 flag;
-     afs_int32 startindex;
-     prentries *bulkentries;
-     afs_int32 *nextstartindex;
+SPR_ListEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex, 
+		prentries *bulkentries, afs_int32 *nextstartindex)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1677,14 +1594,9 @@ SPR_ListEntries(call, flag, startindex, bulkentries, nextstartindex)
     return code;
 }
 
-afs_int32
-listEntries(call, flag, startindex, bulkentries, nextstartindex, cid)
-     struct rx_call *call;
-     afs_int32 flag;
-     afs_int32 startindex;
-     prentries *bulkentries;
-     afs_int32 *nextstartindex;
-     afs_int32 *cid;
+static afs_int32
+listEntries(struct rx_call *call, afs_int32 flag, afs_int32 startindex, 
+	    prentries *bulkentries, afs_int32 *nextstartindex, afs_int32 *cid)
 {
     afs_int32 code;
     struct ubik_trans *tt;
@@ -1764,10 +1676,8 @@ listEntries(call, flag, startindex, bulkentries, nextstartindex, cid)
 }
 
 #define PR_MAXENTRIES 500
-afs_int32
-put_prentries(tentry, bulkentries)
-     struct prentry *tentry;
-     prentries *bulkentries;
+static afs_int32
+put_prentries(struct prentry *tentry, prentries *bulkentries)
 {
     struct prlistentries *entry;
 
@@ -1808,12 +1718,8 @@ put_prentries(tentry, bulkentries)
 }
 
 afs_int32
-SPR_ChangeEntry(call, aid, name, oid, newid)
-     struct rx_call *call;
-     afs_int32 aid;
-     char *name;
-     afs_int32 oid;
-     afs_int32 newid;
+SPR_ChangeEntry(struct rx_call *call, afs_int32 aid, char *name, afs_int32 oid, 
+		afs_int32 newid)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1825,14 +1731,9 @@ SPR_ChangeEntry(call, aid, name, oid, newid)
     return code;
 }
 
-afs_int32
-changeEntry(call, aid, name, oid, newid, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     char *name;
-     afs_int32 oid;
-     afs_int32 newid;
-     afs_int32 *cid;
+static afs_int32
+changeEntry(struct rx_call *call, afs_int32 aid, char *name, afs_int32 oid, 
+	    afs_int32 newid, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1876,12 +1777,11 @@ changeEntry(call, aid, name, oid, newid, cid)
 }
 
 afs_int32
-SPR_SetFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2)
-     struct rx_call *call;
-     afs_int32 id;
-     afs_int32 mask;		/* specify which fields to update */
-     afs_int32 flags, ngroups, nusers;
-     afs_int32 spare1, spare2;
+SPR_SetFieldsEntry(struct rx_call *call, 
+		   afs_int32 id, 
+		   afs_int32 mask, /* specify which fields to update */ 
+		   afs_int32 flags, afs_int32 ngroups, afs_int32 nusers, 
+		   afs_int32 spare1, afs_int32 spare2)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1894,14 +1794,12 @@ SPR_SetFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2)
     return code;
 }
 
-afs_int32
-setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2, cid)
-     struct rx_call *call;
-     afs_int32 id;
-     afs_int32 mask;		/* specify which fields to update */
-     afs_int32 flags, ngroups, nusers;
-     afs_int32 spare1, spare2;
-     afs_int32 *cid;
+static afs_int32
+setFieldsEntry(struct rx_call *call, 
+	       afs_int32 id, 
+	       afs_int32 mask, /* specify which fields to update */ 
+	       afs_int32 flags, afs_int32 ngroups, afs_int32 nusers, 
+	       afs_int32 spare1, afs_int32 spare2, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -1981,11 +1879,8 @@ setFieldsEntry(call, id, mask, flags, ngroups, nusers, spare1, spare2, cid)
 }
 
 afs_int32
-SPR_ListElements(call, aid, alist, over)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *over;
+SPR_ListElements(struct rx_call *call, afs_int32 aid, prlist *alist, 
+		 afs_int32 *over)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -1996,13 +1891,9 @@ SPR_ListElements(call, aid, alist, over)
     return code;
 }
 
-afs_int32
-listElements(call, aid, alist, over, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *over;
-     afs_int32 *cid;
+static afs_int32
+listElements(struct rx_call *call, afs_int32 aid, prlist *alist, 
+	     afs_int32 *over, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -2049,11 +1940,8 @@ listElements(call, aid, alist, over, cid)
 
 
 afs_int32
-SPR_ListSuperGroups(call, aid, alist, over)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *over;
+SPR_ListSuperGroups(struct rx_call *call, afs_int32 aid, prlist *alist, 
+		    afs_int32 *over)
 {
 #if defined(SUPERGROUPS)
     afs_int32 code;
@@ -2069,13 +1957,9 @@ SPR_ListSuperGroups(call, aid, alist, over)
 }
 
 #if defined(SUPERGROUPS)
-afs_int32
-listSuperGroups(call, aid, alist, over, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *over;
-     afs_int32 *cid;
+static afs_int32
+listSuperGroups(struct rx_call *call, afs_int32 aid, prlist *alist, 
+		afs_int32 *over, afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -2130,11 +2014,8 @@ listSuperGroups(call, aid, alist, over, cid)
  * maximum value is enforced in GetOwnedChain().
  */
 afs_int32
-SPR_ListOwned(call, aid, alist, lastP)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *lastP;
+SPR_ListOwned(struct rx_call *call, afs_int32 aid, prlist *alist, 
+	      afs_int32 *lastP)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -2146,12 +2027,8 @@ SPR_ListOwned(call, aid, alist, lastP)
 }
 
 afs_int32
-listOwned(call, aid, alist, lastP, cid)
-     struct rx_call *call;
-     afs_int32 aid;
-     prlist *alist;
-     afs_int32 *lastP;
-     afs_int32 *cid;
+listOwned(struct rx_call *call, afs_int32 aid, prlist *alist, afs_int32 *lastP, 
+	  afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -2222,11 +2099,8 @@ listOwned(call, aid, alist, lastP, cid)
 }
 
 afs_int32
-SPR_IsAMemberOf(call, uid, gid, flag)
-     struct rx_call *call;
-     afs_int32 uid;
-     afs_int32 gid;
-     afs_int32 *flag;
+SPR_IsAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid, 
+		afs_int32 *flag)
 {
     afs_int32 code;
     afs_int32 cid = ANONYMOUSID;
@@ -2238,13 +2112,9 @@ SPR_IsAMemberOf(call, uid, gid, flag)
     return code;
 }
 
-afs_int32
-isAMemberOf(call, uid, gid, flag, cid)
-     struct rx_call *call;
-     afs_int32 uid;
-     afs_int32 gid;
-     afs_int32 *flag;
-     afs_int32 *cid;
+static afs_int32
+isAMemberOf(struct rx_call *call, afs_int32 uid, afs_int32 gid, afs_int32 *flag,
+	    afs_int32 *cid)
 {
     register afs_int32 code;
     struct ubik_trans *tt;
@@ -2296,11 +2166,8 @@ isAMemberOf(call, uid, gid, flag, cid)
 }
 
 #if IP_WILDCARDS
-afs_int32
-addWildCards(tt, alist, host)
-     struct ubik_trans *tt;
-     prlist *alist;
-     afs_int32 host;
+static afs_int32
+addWildCards(struct ubik_trans *tt, prlist *alist, afs_int32 host)
 {
     afs_int32 temp;
     struct prentry tentry;
@@ -2348,12 +2215,9 @@ addWildCards(tt, alist, host)
 }
 #endif /* IP_WILDCARDS */
 
-afs_int32
-WhoIsThisWithName(acall, at, aid, aname)
-     struct rx_call *acall;
-     struct ubik_trans *at;
-     afs_int32 *aid;
-     char *aname;
+static afs_int32
+WhoIsThisWithName(struct rx_call *acall, struct ubik_trans *at, afs_int32 *aid, 
+		  char *aname)
 {
     /* aid is set to the identity of the caller, if known, else ANONYMOUSID */
     /* returns -1 and sets aid to ANONYMOUSID on any failure */

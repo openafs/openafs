@@ -59,6 +59,9 @@ afs_rwlock_t afs_discon_lock;
 extern afs_rwlock_t afs_disconDirtyLock;
 #endif
 
+/* This is the kernel side of the dynamic vcache setting */
+int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
+
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
  * then cache file and volume file initialization routines.  Next, the
@@ -95,7 +98,7 @@ static int afs_cacheinit_flag = 0;
 int
 afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	      afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk,
-	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers)
+	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers, afs_int32 dynamic_vcaches)
 {
     register afs_int32 i;
     register struct volume *tv;
@@ -111,6 +114,13 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 #else
     afs_stats_cmperf.sysName_ID = SYS_NAME_ID_UNDEFINED;
 #endif /* SYS_NAME_ID */
+
+#ifdef AFS_MAXVCOUNT_ENV
+	afsd_dynamic_vcaches = dynamic_vcaches;
+    printf("%s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
+#else
+	afsd_dynamic_vcaches = 0;
+#endif
 
     printf("Starting AFS cache scan...");
     if (afs_cacheinit_flag)
@@ -261,7 +271,7 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
 int
 afs_InitCellInfo(char *afile)
 {
-    ino_t inode;
+    ino_t inode = 0;
     int code;
 #if defined(LINUX_USE_FH)
     struct fid fh;

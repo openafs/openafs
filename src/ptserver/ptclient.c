@@ -52,9 +52,7 @@ static char *lineProgress;
 #define WHITESPACE " \t\n"
 
 int
-GetToken(format, l)
-     char *format;
-     afs_int32 *l;
+GetToken(char *format, afs_int32 *l)
 {
     int c;
 

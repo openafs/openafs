@@ -57,7 +57,7 @@ main(argc, argv)
 	perror("stat");
 	exit(1);
     }
-    printf("ino=%lld\n", ino);
+    printf("ino=%" AFS_INT64_FMT "\n", ino);
     printf("About to iopen(dev=(%d,%d), inode=%s, mode=%d\n",
 	   major(status.st_dev), minor(status.st_dev), PrintInode(NULL, ino),
 	   O_RDONLY);

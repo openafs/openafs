@@ -191,7 +191,7 @@ int rxkad_stats_agg(rxkad_stats_t * rxkad_stats) {
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
-			    fc_KeySchedule * aschedule,
+			    const fc_KeySchedule * aschedule,
 			    fc_InitializationVector * aivec);
 static afs_int32 FreeObject(struct rx_securityClass *aobj);
 
@@ -272,7 +272,7 @@ rxkad_SetLevel(struct rx_connection *conn, rxkad_level level)
  * the packet header.
  */
 static afs_int32
-ComputeSum(struct rx_packet *apacket, fc_KeySchedule * aschedule,
+ComputeSum(struct rx_packet *apacket, const fc_KeySchedule * aschedule,
 	   fc_InitializationVector * aivec)
 {
     afs_uint32 word[2];
@@ -417,7 +417,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 {
     struct rx_connection *tconn;
     rxkad_level level;
-    fc_KeySchedule *schedule;
+    const fc_KeySchedule *schedule;
     fc_InitializationVector *ivec;
     int len;
     int nlen = 0;
@@ -441,7 +441,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	    INC_RXKAD_STATS(checkPackets[rxkad_StatIndex(rxkad_server, level)]);
 	    sconn->stats.packetsReceived++;
 	    sconn->stats.bytesReceived += len;
-	    schedule = (fc_KeySchedule *) sconn->keysched;
+	    schedule = sconn->keysched;
 	    ivec = (fc_InitializationVector *) sconn->ivec;
 	} else {
 	    INC_RXKAD_STATS(expired);
@@ -463,7 +463,7 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	cconn->stats.packetsReceived++;
 	cconn->stats.bytesReceived += len;
 	preSeq = cconn->preSeq;
-	schedule = (fc_KeySchedule *) tcp->keysched;
+	schedule = tcp->keysched;
 	ivec = (fc_InitializationVector *) tcp->ivec;
     }
 

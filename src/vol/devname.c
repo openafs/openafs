@@ -86,6 +86,7 @@ RCSID
 #ifndef ITIMER_REAL
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
+#include "ihandle.h"
 #include "partition.h"
 
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
@@ -96,7 +97,6 @@ vol_DevName(dev_t adev, char *wpath)
 {
     static char pbuffer[128];
     char pbuf[128], *ptr;
-    int code, i;
 #ifdef	AFS_SUN5_ENV
     struct mnttab mnt;
     FILE *mntfile;
@@ -242,7 +242,6 @@ afs_rawname(char *devfile)
 {
     static char rawname[100];
     struct stat statbuf;
-    char *p;
     int code, i;
 
     i = strlen(devfile);

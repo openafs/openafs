@@ -258,7 +258,7 @@ re_exec(register char *p1)
 	do {
 	    if (*p1 != c)
 		continue;
-	    if (rv = advance(p1, p2))
+	    if ((rv = advance(p1, p2)))
 		return (rv);
 	} while (*p1++);
 	return (0);
@@ -267,7 +267,7 @@ re_exec(register char *p1)
      * regular algorithm
      */
     do
-	if (rv = advance(p1, p2))
+	if ((rv = advance(p1, p2)))
 	    return (rv);
     while (*p1++);
     return (0);
@@ -343,7 +343,7 @@ advance(register char *lp, register char *ep)
 	    while (backref(i, lp))
 		lp += ct;
 	    while (lp >= curlp) {
-		if (rv = advance(lp, ep))
+		if ((rv = advance(lp, ep)))
 		    return (rv);
 		lp -= ct;
 	    }
@@ -370,7 +370,7 @@ advance(register char *lp, register char *ep)
 	  star:
 	    do {
 		lp--;
-		if (rv = advance(lp, ep))
+		if ((rv = advance(lp, ep)))
 		    return (rv);
 	    } while (lp > curlp);
 	    return (0);

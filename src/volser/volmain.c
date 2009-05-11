@@ -84,12 +84,12 @@ int GlobalVolType;
 int VolumeChanged;		/* XXXX */
 static char busyFlags[MAXHELPERS];
 struct volser_trans *QI_GlobalWriteTrans = 0;
-extern int AFSVolExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
+extern int AFSVolExecuteRequest(struct rx_call*);
+extern int RXSTATS_ExecuteRequest(struct rx_call*);
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
-int debuglevel = 0; 
+int debuglevel = 0;
 #define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
@@ -106,10 +106,10 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 		       }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (int)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -317,8 +317,8 @@ main(int argc, char **argv)
 	    rxkadDisableDotCheck = 1;
 	} else if (strcmp(argv[code], "-d") == 0) {
 	    if ((code + 1) >= argc) {
-		fprintf(stderr, "missing argument for -d\n"); 
-		return -1; 
+		fprintf(stderr, "missing argument for -d\n");
+		return -1;
 	    }
 	    debuglevel = atoi(argv[++code]);
 	    LogLevel = debuglevel;
@@ -346,7 +346,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %lu invalid; must be between %d-%d\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE,
 		       RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
@@ -486,7 +486,7 @@ main(int argc, char **argv)
 	assert(pthread_attr_init(&tattr) == 0);
 	assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
-	assert(pthread_create(&tid, &tattr, (void *)BKGLoop, NULL) == 0);
+	assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);

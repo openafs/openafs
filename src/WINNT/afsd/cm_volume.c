@@ -163,7 +163,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 		     cm_volume_t *volp)
 {
     cm_conn_t *connp;
-    int i, j, k;
+    int i;
+    afs_uint32 j, k;
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     struct sockaddr_in tsockAddr;
@@ -321,6 +322,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
         afs_int32 bkID;
         afs_int32 serverNumber[NMAXNSERVERS];
         afs_int32 serverFlags[NMAXNSERVERS];
+        afsUUID   serverUUID[NMAXNSERVERS];
         afs_int32 rwServers_alldown = 1;
         afs_int32 roServers_alldown = 1;
         afs_int32 bkServers_alldown = 1;
@@ -330,6 +332,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 	if (freelance)
 	    rwServers_alldown = 0;
 #endif
+
+        memset(serverUUID, 0, sizeof(serverUUID));
 
         switch ( method ) {
         case 0:
@@ -406,9 +410,10 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     for (k = 0; k < nentries && j < NMAXNSERVERS; j++, k++) {
                         serverFlags[j] = uvldbEntry.serverFlags[i];
                         serverNumber[j] = addrp[k];
+                        serverUUID[j] = uuid;
                     }
 
-                    free(addrs.bulkaddrs_val);  /* This is wrong */
+                    xdr_free(addrs.bulkaddrs_val, addrs.bulkaddrs_len * sizeof(*addrs.bulkaddrs_val));
 
                     if (nentries == 0)
                         code = CM_ERROR_INVAL;
@@ -491,19 +496,48 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tempAddr = htonl(serverNumber[i]);
             tsockAddr.sin_addr.s_addr = tempAddr;
             tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
+            if (tsp && (method == 2) && (tsp->flags & CM_SERVERFLAG_UUID)) {
+                /* 
+                 * Check to see if the uuid of the server we know at this address
+                 * matches the uuid of the server we are being told about by the
+                 * vlserver.  If not, ...?
+                 */
+                if (!afs_uuid_equal(&serverUUID[i], &tsp->uuid)) {
+                    char uuid1[128], uuid2[128];
+                    char hoststr[16];
+
+                    afsUUID_to_string(&serverUUID[i], uuid1, sizeof(uuid1));
+                    afsUUID_to_string(&tsp->uuid, uuid2, sizeof(uuid2));
+                    afs_inet_ntoa_r(serverNumber[i], hoststr);
+
+                    osi_Log3(afsd_logp, "cm_UpdateVolumeLocation UUIDs do not match! %s != %s (%s)",
+                              osi_LogSaveString(afsd_logp, uuid1),
+                              osi_LogSaveString(afsd_logp, uuid2),
+                              osi_LogSaveString(afsd_logp, hoststr));
+                }
+            }
             if (!tsp) {
                 /* cm_NewServer will probe the server which in turn will
                  * update the state on the volume group object */
                 lock_ReleaseWrite(&volp->rw);
-                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, 0);
+                tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, &serverUUID[i], 0);
                 lock_ObtainWrite(&volp->rw);
             }
-            /* if this server was created by fs setserverprefs */
-            if ( !tsp->cellp ) 
-                tsp->cellp = cellp;
-
             osi_assertx(tsp != NULL, "null cm_server_t");
                         
+            /*
+             * if this server was created by fs setserverprefs
+             * then it won't have either a cell assignment or 
+             * a server uuid.
+             */
+            if ( !tsp->cellp ) 
+                tsp->cellp = cellp;
+            if ( (method == 2) && !(tsp->flags & CM_SERVERFLAG_UUID) && 
+                 !afs_uuid_is_nil(&serverUUID[i])) {
+                tsp->uuid = serverUUID[i];
+                tsp->flags |= CM_SERVERFLAG_UUID;
+            }
+
             /* and add it to the list(s). */
             /*
              * Each call to cm_NewServerRef() increments the
@@ -1283,6 +1317,7 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     int someBusy = 0, someOffline = 0, allOffline = 1, allBusy = 1, allDown = 1;
+    char addr[16];
 
     if (!volp || !statep) {
 #ifdef DEBUG
@@ -1293,28 +1328,49 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
 
     lock_ObtainWrite(&cm_serverLock);
     for (tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
-        if (tsrp->status == srv_deleted)
-            continue;
         tsp = tsrp->server;
+        sprintf(addr, "%d.%d.%d.%d", 
+                 ((tsp->addr.sin_addr.s_addr & 0xff)),
+                 ((tsp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                 ((tsp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                 ((tsp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+
+        if (tsrp->status == srv_deleted) {
+            osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s deleted", 
+                     statep->ID, osi_LogSaveString(afsd_logp,addr));
+            continue;
+        }
         if (tsp) {
             cm_GetServerNoLock(tsp);
             if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
                 allDown = 0;
                 if (tsrp->status == srv_busy) {
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s busy", 
+                              statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allOffline = 0;
                     someBusy = 1;
                 } else if (tsrp->status == srv_offline) {
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s offline", 
+                              statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allBusy = 0;
                     someOffline = 1;
                 } else {
+                    osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s online", 
+                              statep->ID, osi_LogSaveString(afsd_logp,addr));
                     allOffline = 0;
                     allBusy = 0;
                 }
+            } else {
+                osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s online", 
+                          statep->ID, osi_LogSaveString(afsd_logp,addr));
             }
             cm_PutServerNoLock(tsp);
         }
     }   
     lock_ReleaseWrite(&cm_serverLock);
+
+    osi_Log5(afsd_logp, "cm_UpdateVolumeStatusInt allDown %d allBusy %d someBusy %d someOffline %d allOffline %d", 
+             allDown, allBusy, someBusy, someOffline, allOffline);
 
     if (allDown)
 	newStatus = vl_alldown;

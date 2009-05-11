@@ -34,6 +34,7 @@ RCSID
 #include "ptclient.h"
 #include "ptuser.h"
 #include "pterror.h"
+#include "ptprototypes.h"
 #include <afs/afsutil.h>
 #ifdef AFS_RXK5	
 #include <afs/rxk5_utilafs.h>
@@ -60,7 +61,9 @@ struct authstate {
     char cell[MAXCELLCHARS];
 };
 
-int
+static int CleanUp(struct cmd_syndesc *as, void *arock);
+
+static int
 pts_Interactive(struct cmd_syndesc *as, void *arock)
 {
     source = stdin;
@@ -68,14 +71,14 @@ pts_Interactive(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 pts_Quit(struct cmd_syndesc *as, void *arock)
 {
     finished = 1;
     return 0;
 }
 
-int
+static int
 pts_Source(struct cmd_syndesc *as, void *arock)
 {
     FILE *fd;
@@ -103,7 +106,7 @@ pts_Source(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 pts_Sleep(struct cmd_syndesc *as, void *arock)
 {
     int delay;
@@ -120,8 +123,8 @@ pts_Sleep(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
-popsource()
+static int
+popsource(void)
 {
     register struct sourcestack *sp;
     if (!(sp = shead))
@@ -134,7 +137,7 @@ popsource()
     return 1;
 }
 
-int
+static int
 GetGlobals(struct cmd_syndesc *as, void *arock)
 {
     int authtype;
@@ -219,7 +222,7 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-int
+static int
 CleanUp(struct cmd_syndesc *as, void *arock)
 {
     if (as && !strcmp(as->name, "help"))
@@ -232,7 +235,7 @@ CleanUp(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 CreateGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -292,7 +295,7 @@ CreateGroup(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 CreateUser(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -338,8 +341,8 @@ CreateUser(struct cmd_syndesc *as, void *arock)
 
 
 #ifdef notdef
-int
-GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames)
+static int
+GetNameOrId(struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames)
 {
     register afs_int32 code = 0;
     int n = 0;
@@ -429,8 +432,9 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 #endif
 
 
-int
-GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelist *lnames)
+static int
+GetNameOrId(struct cmd_syndesc *as, struct idlist *lids,
+	    struct namelist *lnames)
 {
     register afs_int32 code = 0;
     int n = 0, nd = 0, nm = 0, id, x;
@@ -517,7 +521,7 @@ GetNameOrId(register struct cmd_syndesc *as, struct idlist *lids, struct namelis
 }
 
 
-int
+static int
 AddToGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -538,7 +542,7 @@ AddToGroup(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 RemoveFromGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -559,7 +563,7 @@ RemoveFromGroup(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 ListMembership(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -604,7 +608,7 @@ ListMembership(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 Delete(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -643,7 +647,7 @@ char *flags_upcase = "SOMA ";	/* legal all access values */
 char *flags_dncase = "s mar";	/* legal member acces values */
 int flags_shift[5] = { 2, 1, 2, 2, 1 };	/* bits for each */
 
-int
+static int
 CheckEntry(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -742,7 +746,7 @@ CheckEntry(struct cmd_syndesc *as, void *arock)
     return (rcode);
 }
 
-int
+static int
 ListEntries(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
@@ -779,7 +783,7 @@ ListEntries(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-int
+static int
 ChownGroup(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -795,7 +799,7 @@ ChownGroup(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-int
+static int
 ChangeName(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -811,7 +815,7 @@ ChangeName(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-int
+static int
 ListMax(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -832,8 +836,8 @@ ListMax(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-int
-SetMax(struct cmd_syndesc *as, void *arock)
+static int
+SetMaxCommand(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
     afs_int32 maxid;
@@ -872,7 +876,7 @@ SetMax(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-int
+static int
 SetFields(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -893,7 +897,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
 	int new;
 
 	if (strpbrk(access, "76543210") != 0) {	/* all octal digits */
-	    sscanf(access, "%lo", &flags);
+	    sscanf(access, "%lo", (long unsigned int *) &flags);
 	} else {		/* interpret flag bit names */
 	    if (strlen(access) != 5) {
 	      form_error:
@@ -967,7 +971,7 @@ SetFields(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-int
+static int
 ListOwned(struct cmd_syndesc *as, void *arock)
 {
     register afs_int32 code;
@@ -1018,7 +1022,7 @@ ListOwned(struct cmd_syndesc *as, void *arock)
 }
 
 static void
-add_std_args(register struct cmd_syndesc *ts)
+add_std_args(struct cmd_syndesc *ts)
 {
     char test_help[AFSDIR_PATH_MAX];
 
@@ -1151,7 +1155,7 @@ main(int argc, char **argv)
     ts = cmd_CreateSyntax("listmax", ListMax, NULL, "list max id");
     add_std_args(ts);
 
-    ts = cmd_CreateSyntax("setmax", SetMax, NULL, "set max id");
+    ts = cmd_CreateSyntax("setmax", SetMaxCommand, NULL, "set max id");
     cmd_AddParm(ts, "-group", CMD_SINGLE, CMD_OPTIONAL, "group max");
     cmd_AddParm(ts, "-user", CMD_SINGLE, CMD_OPTIONAL, "user max");
     add_std_args(ts);
@@ -1199,7 +1203,7 @@ main(int argc, char **argv)
 
     finished = 1;
     source = NULL;
-    if (code = cmd_Dispatch(argc, argv)) {
+    if ((code = cmd_Dispatch(argc, argv))) {
 	CleanUp(NULL, NULL);
 	exit(1);
     }
