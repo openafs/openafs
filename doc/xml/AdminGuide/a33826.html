@@ -1,0 +1,1598 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Using AFS Commands</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Managing the NFS/AFS Translator"
+HREF="a33047.html"><LINK
+REL="NEXT"
+TITLE="The afsmonitor Program Statistics"
+HREF="a34149.html"></HEAD
+><BODY
+CLASS="appendix"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="a33047.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="a34149.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="appendix"
+><H1
+><A
+NAME="HDRCOMMANDS"
+></A
+>Appendix B. Using AFS Commands</H1
+><P
+>This section describes the components of AFS commands and how to make entering commands more efficient by using shortened
+  forms. It has the following sections: <TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+><A
+HREF="a33826.html#HDRWQ613"
+>AFS Command Syntax</A
+></TD
+></TR
+><TR
+><TD
+><A
+HREF="a33826.html#HDRWQ614"
+>Rules for Entering AFS Commands</A
+></TD
+></TR
+><TR
+><TD
+><A
+HREF="a33826.html#HDRWQ615"
+>Rules for Using Abbreviations and Aliases</A
+></TD
+></TR
+><TR
+><TD
+><A
+HREF="a33826.html#HDRWQ616"
+>Displaying Online Help for AFS Commands</A
+></TD
+></TR
+></TBODY
+></TABLE
+></P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ613"
+>AFS Command Syntax</A
+></H1
+><P
+>AFS commands that belong to suites have the following structure:</P
+><PRE
+CLASS="programlisting"
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>command_suite operation_code</B
+></SPAN
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-switch</B
+></SPAN
+> <VAR
+CLASS="replaceable"
+>&#60;value&#62;</VAR
+>[+]  [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-flag</B
+></SPAN
+>]
+</PRE
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_691"
+>Command Names</A
+></H2
+><P
+>Together, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>command_suite</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>operation_code</B
+></SPAN
+> make up
+      the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>command name</I
+></SPAN
+>.</P
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>command_suite</B
+></SPAN
+> specifies the group of related commands to which the command belongs,
+      and indicates which command interpreter and server process perform the command. AFS has several command suites, including
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>scout</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos</B
+></SPAN
+>. Some of these suites have an interactive mode in which
+      the issuer omits the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>command_suite</B
+></SPAN
+> portion of the command name.</P
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>operation_code</B
+></SPAN
+> tells the command interpreter and server process which action to
+      perform. Most command suites include several operation codes. The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+>
+      describes each operation code in detail, and the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Guide</I
+></SPAN
+> describes how to use them
+      in the context of performing administrative tasks.</P
+><P
+>Several AFS commands do not belong to a suite and so their names do not have a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>command_suite</B
+></SPAN
+> portion. Their structure is otherwise similar to the commands in the suites.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_692"
+>Options</A
+></H2
+><P
+>The term <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>option</I
+></SPAN
+> refers to both arguments and flags, which are described in the following
+      sections.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_693"
+>Arguments</A
+></H2
+><P
+>One or more arguments can follow the command name. Arguments specify the entities on which to act while performing the
+      command (for example, which server machine, server process, or file). To minimize the potential for error, provide a command's
+      arguments in the order prescribed in its syntax definition.</P
+><P
+>Each argument has two parts, which appear in the indicated order: <UL
+><LI
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>switch</I
+></SPAN
+> specifies the argument's type and is preceded by a hyphen ( <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+> ). For instance, the switch <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> usually indicates that the
+            argument names a server machine. Switches can often be omitted, subject to the rules outlined in <A
+HREF="a33826.html#HDRNOSWITCH"
+>Conditions for Omitting Switches</A
+>.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>value</I
+></SPAN
+> names a particular entity of the type specified by the preceding switch. For
+            example, the proper value for a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> switch is a server machine name like <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs3.abc.com</B
+></SPAN
+>. Unlike switches (which have a required form), values vary depending on what the
+            issuer wants to accomplish. Values appear surrounded by angle brackets (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60; &#62;</B
+></SPAN
+>) in
+            command descriptions and the online help to show that they are user-supplied variable information.</P
+></LI
+></UL
+></P
+><P
+>Some arguments accept multiple values, as indicated by trailing plus sign ( <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>+</B
+></SPAN
+> ) in the
+      command descriptions and online help. How many of a command's arguments take multiple values, and their ordering with respect
+      to other arguments, determine when it is acceptable to omit switches. See <A
+HREF="a33826.html#HDRNOSWITCH"
+>Conditions for Omitting
+      Switches</A
+>.</P
+><P
+>Some commands have optional as well as required arguments; the command descriptions and online help show optional
+      arguments in square brackets ([ ]).</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_694"
+>Flags</A
+></H2
+><P
+>Some commands have one or more flags, which specify the manner in which the command interpreter and server process
+      perform the command, or what kind of output it produces. Flags are preceded by hyphens like switches, but they take no values.
+      Although the command descriptions and online help generally list a command's flags after its arguments, there is no prescribed
+      order for flags. They can appear anywhere on the command line following the operation code, except in between the parts of an
+      argument. Flags are always optional.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRCOMMAND-EX"
+>An Example Command</A
+></H2
+><P
+>The following example illustrates the different parts of a command that belongs to an AFS command suite.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos getdate -server fs1.abc.com -file ptserver kaserver</B
+></SPAN
+>
+</PRE
+><P
+>where <UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos</B
+></SPAN
+> is the command suite. The BOS Server executes most of the commands in this
+            suite.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getdate</B
+></SPAN
+> is the operation code. It tells the BOS Server on the specified server
+            machine (in this case <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs1.abc.com</B
+></SPAN
+>) to report the modification dates of binary files in
+            the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/bin</B
+></SPAN
+> directory.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server fs1.abc.com</B
+></SPAN
+> is one argument, with <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> as the switch and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs1.abc.com</B
+></SPAN
+> as the value. This
+            argument specifies the server machine on which BOS Server is to collect and report binary dates.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file ptserver kaserver</B
+></SPAN
+> is an argument that takes multiple values. The switch is
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+> and the values are <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ptserver</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kaserver</B
+></SPAN
+>. This argument tells the BOS Server to report the modification dates on the files
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/bin/kaserver</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/bin/ptserver</B
+></SPAN
+>.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ614"
+>Rules for Entering AFS Commands</A
+></H2
+><P
+>Enter each AFS command on a single line (press <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60;Return&#62;</B
+></SPAN
+> only at the end of the
+      command). Some commands in this document appear broken across multiple lines, but that is for legibility only.</P
+><P
+>Use a space to separate each element on a command line from its neighbors. Spaces rather than commas also separate
+      multiple values of an argument.</P
+><P
+>In many cases, the issuer of a command can reduce the amount of typing necessary by using one or both of the following
+      methods: <UL
+><LI
+><P
+>Omitting switches</P
+></LI
+><LI
+><P
+>Using accepted abbreviations for operation codes, switches (if they are included at all), and some types of
+            values</P
+></LI
+></UL
+></P
+><P
+>The following sections explain the conditions for omitting or shortening parts of the command line. It is always
+      acceptable to type a command in full, with all of its switches and no abbreviations.</P
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="HDRNOSWITCH"
+>Conditions for Omitting Switches</A
+></H3
+><P
+>It is always acceptable to type the switch part of an argument, but in many cases it is not necessary. Specifically,
+        switches can be omitted if the following conditions are met. <UL
+><LI
+><P
+>All of the command's required arguments appear in the order prescribed by the syntax statement</P
+></LI
+><LI
+><P
+>No switch is provided for any argument</P
+></LI
+><LI
+><P
+>There is only one value for each argument (but note the important exception discussed in the following
+              paragraph)</P
+></LI
+></UL
+></P
+><P
+>Omitting switches is possible only because there is a prescribed order for each command's arguments. When the issuer
+        does not include switches, the command interpreter relies instead on the order of arguments; it assumes that the first
+        element after the operation code is the command's first argument, the next element is the command's second argument, and so
+        on. The important exception is when a command's final required argument accepts multiple values. In this case, the command
+        interpreter assumes that the issuer has correctly provided one value for each argument up through the final one, so any
+        additional values at the end belong to the final argument.</P
+><P
+>The following list describes the rules for omitting switches from the opposite perspective: an argument's switch must
+        be provided when any of the following conditions apply. <UL
+><LI
+><P
+>The command's arguments do not appear in the prescribed order</P
+></LI
+><LI
+><P
+>An optional argument is omitted but a subsequent optional argument is provided</P
+></LI
+><LI
+><P
+>A switch is provided for a preceding argument</P
+></LI
+><LI
+><P
+>More than one value is supplied for a preceding argument (which must take multiple values, of course); without a
+              switch on the current argument, the command interpreter assumes that the current argument is another value for the
+              preceding argument</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="Header_698"
+>An Example of Omitting Switches</A
+></H3
+><P
+>Consider again the example command from <A
+HREF="a33826.html#HDRCOMMAND-EX"
+>An Example Command</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos getdate -server fs1.abc.com -file ptserver kaserver</B
+></SPAN
+>
+</PRE
+><P
+>This command has two required arguments: the server machine name (identified by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-server</B
+></SPAN
+> switch) and binary file name (identified by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+>
+        switch). The second argument accepts multiple values. By complying with all three conditions, the issuer can omit the
+        switches:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos getdate fs1.abc.com ptserver kaserver</B
+></SPAN
+>
+</PRE
+><P
+>Because there are no switches, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos</B
+></SPAN
+> command interpreter relies on the order of
+        arguments. It assumes that the first element following the operation code, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs1.abc.com</B
+></SPAN
+>, is
+        the server machine name, and that the next argument, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ptserver</B
+></SPAN
+>, is a binary file name. Then,
+        because the command's second (and last) argument accepts multiple values, the command interpreter correctly interprets
+        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kaserver</B
+></SPAN
+> as an additional value for it.</P
+><P
+>On the other hand, the following is not acceptable because it violates the first two conditions in <A
+HREF="a33826.html#HDRNOSWITCH"
+>Conditions for Omitting Switches</A
+>: even though there is only one value per argument, the
+        arguments do not appear in the prescribed order, and a switch is provided for one argument but not the other.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos getdate ptserver -server fs1.abc.com</B
+></SPAN
+>
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ615"
+>Rules for Using Abbreviations and Aliases</A
+></H2
+><P
+>This section explains how to abbreviate operation codes, option names, server machine names, partition names, and cell
+      names. It is not possible to abbreviate other types of values.</P
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="Header_700"
+>Abbreviating Operation Codes</A
+></H3
+><P
+>It is acceptable to abbreviate an operation code to the shortest form that still distinguishes it from the other
+        operation codes in its suite.</P
+><P
+>For example, it is acceptable to shorten <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos install</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos
+        i</B
+></SPAN
+> because there are no other operation codes in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos</B
+></SPAN
+> command suite that begin
+        with the letter <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>i</B
+></SPAN
+>. In contrast, there are several <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos</B
+></SPAN
+>
+        operation codes that start with the letter <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>s</B
+></SPAN
+>, so the abbreviations must be longer to remain
+        unambiguous: <TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos sa</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos salvage</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos seta</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos setauth</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos setc</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos setcellname</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos setr</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos setrestart</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos sh</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos shutdown</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos start</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos start</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos startu</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos startup</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos stat</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos status</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos sto</B
+></SPAN
+> for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos stop</B
+></SPAN
+></TD
+></TR
+></TBODY
+></TABLE
+></P
+><P
+>In addition to abbreviations, some operation codes have an <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>alias</I
+></SPAN
+>, a short form that is not
+        derived by abbreviating the operation code to its shortest unambiguous form. For example, the alias for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sa</B
+></SPAN
+>, whereas the shortest unambiguous
+        abbreviation is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs seta</B
+></SPAN
+>.</P
+><P
+>There are two usual reasons an operation code has an alias: <UL
+><LI
+><P
+>Because the command is frequently issued, it is convenient to have a form shorter than the one derived by
+              abbreviating. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command is an example.</P
+></LI
+><LI
+><P
+>Because the command's name has changed, but users of previous versions of AFS know the former name. For example,
+              <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listhosts</B
+></SPAN
+> has the alias <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos getcell</B
+></SPAN
+>, its former
+              name. It is acceptable to abbreviate aliases to their shortest unambiguous form (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos getcell</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos getc</B
+></SPAN
+>).</P
+></LI
+></UL
+></P
+><P
+>Even if an operation code has an alias, it is still acceptable to use the shortest unambiguous form. Thus, the
+        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command has three acceptable forms: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+>
+        (the full form), <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs seta</B
+></SPAN
+> (the shortest abbreviation), and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+        sa</B
+></SPAN
+> (the alias).</P
+></DIV
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="Header_701"
+>Abbreviating Switches and Flags</A
+></H3
+><P
+>It is acceptable to shorten a switch or flag to the shortest form that distinguishes it from the other switches and
+        flags for its operation code. It is often possible to omit switches entirely, subject to the conditions listed in <A
+HREF="a33826.html#HDRNOSWITCH"
+>Conditions for Omitting Switches</A
+>.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="HDRFMSABBREV"
+>Abbreviating Server Machine Names</A
+></H3
+><P
+>AFS server machines must have fully-qualified Internet-style host names (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs1.abc.com</B
+></SPAN
+>), but it is not always necessary to type the full name on the command line. AFS commands
+        accept unambiguous shortened forms, but depend on the cell's name service (such as the Domain Name Service) or a local host
+        table to resolve a shortened name to the fully-qualified equivalent when the command is issued.</P
+><P
+>Most commands also accept the dotted decimal form of the machine's IP address as an identifier.</P
+></DIV
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="HDRPARTABBREV"
+>Abbreviating Partition Names</A
+></H3
+><P
+>Partitions that house AFS volumes must have names of the form <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicep</B
+></SPAN
+><VAR
+CLASS="replaceable"
+>x</VAR
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicep</B
+></SPAN
+><VAR
+CLASS="replaceable"
+>xx</VAR
+>, where the variable final portion is one or two lowercase
+        letters. By convention, the first server partition created on a file server machine is called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepa</B
+></SPAN
+>, the second <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepb</B
+></SPAN
+>, and so on. The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick
+        Beginnings</I
+></SPAN
+> explains how to configure and name a file server machine's partitions in preparation for storing AFS
+        volumes on them.</P
+><P
+>When issuing AFS commands, you can abbreviate a partition name using any of the following forms:</P
+><PRE
+CLASS="programlisting"
+>&#13;<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepa</B
+></SPAN
+>     =     <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vicepa</B
+></SPAN
+>      =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+>      =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+>
+<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepb</B
+></SPAN
+>     =     <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vicepb</B
+></SPAN
+>      =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>b</B
+></SPAN
+>      =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1</B
+></SPAN
+>
+</PRE
+><P
+>After <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepz</B
+></SPAN
+> (for which the index is 25) comes</P
+><PRE
+CLASS="programlisting"
+>&#13;<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepaa</B
+></SPAN
+>    =     <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vicepaa</B
+></SPAN
+>     =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>aa</B
+></SPAN
+>     =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>26</B
+></SPAN
+>
+<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepab</B
+></SPAN
+>    =     <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vicepab</B
+></SPAN
+>     =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ab</B
+></SPAN
+>     =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>27</B
+></SPAN
+>
+</PRE
+><P
+>and so on through</P
+><PRE
+CLASS="programlisting"
+>&#13;<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/vicepiv</B
+></SPAN
+>    =     <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vicepiv</B
+></SPAN
+>     =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>iv</B
+></SPAN
+>     =      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>255</B
+></SPAN
+>
+</PRE
+></DIV
+><DIV
+CLASS="sect3"
+><H3
+CLASS="sect3"
+><A
+NAME="HDRCELLABBREV"
+>Abbreviating Cell Names</A
+></H3
+><P
+>A cell's full name usually matches its Internet domain name (such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>stateu.edu</B
+></SPAN
+> for
+        the State University or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>abc.com</B
+></SPAN
+> for ABC Corporation). Some AFS commands accept unambiguous
+        shortened forms, usually with respect to the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB file</B
+></SPAN
+> but
+        sometimes depending on the ability of the local name service to resolve the corresponding domain name.</P
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ616"
+>Displaying Online Help for AFS Commands</A
+></H2
+><P
+>To display online help for AFS commands that belong to suites, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>help</B
+></SPAN
+> and
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>apropos</B
+></SPAN
+> operation codes. A <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-help</B
+></SPAN
+> flag is also available on
+      every almost every AFS command.</P
+><P
+>The online help entry for a command consists of two or three lines: <UL
+><LI
+><P
+>The first line names the command and briefly describes what it does</P
+></LI
+><LI
+><P
+>If the command has aliases, they appear on the next line</P
+></LI
+><LI
+><P
+>The final line, which begins with the string <SAMP
+CLASS="computeroutput"
+>Usage:</SAMP
+>, lists the command's options
+            in the prescribed order; online help entries use the same typographical symbols (brackets and so on) as this
+            documentation.</P
+></LI
+></UL
+></P
+><P
+>If no operation code is specified, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>help</B
+></SPAN
+> operation code displays the first line
+      (short description) for every operation code in the suite:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <VAR
+CLASS="replaceable"
+>command_suite</VAR
+> <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>help</B
+></SPAN
+>
+</PRE
+><P
+>If the issuer specifies one or more operation codes, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>help</B
+></SPAN
+> operation code displays
+      each command's complete online entry (short description, alias if any, and syntax):</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <VAR
+CLASS="replaceable"
+>command_suite</VAR
+> <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>help</B
+></SPAN
+> <VAR
+CLASS="replaceable"
+>operation_code</VAR
+>+
+</PRE
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-help</B
+></SPAN
+> flag displays a command's syntax but not the short description or
+      alias:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <VAR
+CLASS="replaceable"
+>command_name</VAR
+> <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-help</B
+></SPAN
+>
+</PRE
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>apropos</B
+></SPAN
+> operation code displays the short description of any command in a suite
+      whose operation code or short description includes the specified keyword:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <VAR
+CLASS="replaceable"
+>command_suite</VAR
+> <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>apropos</B
+></SPAN
+> <VAR
+CLASS="replaceable"
+>"&#60;help string&#62;"</VAR
+>
+</PRE
+><P
+>The following example command displays the complete online help entry for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+>
+      command:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs help setacl</B
+></SPAN
+>
+   fs setacl: set access control list
+   aliases: sa
+   Usage: fs setacl -dir &#60;<VAR
+CLASS="replaceable"
+>directory</VAR
+>&#62;+ -acl &#60;<VAR
+CLASS="replaceable"
+>access list entries</VAR
+>&#62;+
+   [-clear] [-negative] [-id] [-if] [-help]
+</PRE
+><P
+>To see only the syntax statement, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-help</B
+></SPAN
+> flag:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -help</B
+></SPAN
+>
+   Usage: fs setacl -dir &#60;<VAR
+CLASS="replaceable"
+>directory</VAR
+>&#62;+ -acl &#60;<VAR
+CLASS="replaceable"
+>access list entries</VAR
+>&#62;+
+   [-clear] [-negative] [-id] [-if] [-help]
+</PRE
+><P
+>In the following example, a user wants to display the quota for her home volume. She knows that the relevant command
+      belongs to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> suite, but cannot remember the operation code. She uses <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>quota</B
+></SPAN
+> as the keyword:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs apropos quota</B
+></SPAN
+>
+   listquota: list volume quota
+   quota: show volume quota usage
+   setquota: set volume quota
+</PRE
+><P
+>The following illustrates the error message that results if no command name or short description contains the
+      keyword:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs apropos "list quota"</B
+></SPAN
+>
+   Sorry, no commands found
+</PRE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="a33047.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="a34149.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Managing the NFS/AFS Translator</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>The afsmonitor Program Statistics</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

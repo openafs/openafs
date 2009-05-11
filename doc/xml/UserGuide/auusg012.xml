@@ -1,0 +1,735 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<glossary id="HDRWQ90">
+  <title>Glossary</title>
+
+  <glossdiv>
+    <title>A</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">a (administer) Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>The ACL permission that allows the possessor to change the entries on the ACL .</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">a Privacy Flag</emphasis></glossterm>
+
+      <glossdef>
+        <para>The fourth privacy flag on a group, which enables the possessor to add members to it.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Access Control List (ACL)</emphasis></glossterm>
+
+      <glossdef>
+        <para>A list associated with an AFS directory that specifies what actions a user or group can perform on the directory and
+        the files in it. There are seven access permissions: <emphasis role="bold">a</emphasis> (<emphasis
+        role="bold">administer</emphasis>), <emphasis role="bold">d</emphasis> (<emphasis role="bold">delete</emphasis>), <emphasis
+        role="bold">i</emphasis> (<emphasis role="bold">insert</emphasis>), <emphasis role="bold">k</emphasis> (<emphasis
+        role="bold">lock</emphasis>), <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>), <emphasis
+        role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>), and <emphasis role="bold">w</emphasis> (<emphasis
+        role="bold">write</emphasis>).</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">ACL Entry</emphasis></glossterm>
+
+      <glossdef>
+        <para>An entry on an ACL that pairs a user or group with specific access permissions.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Alias</emphasis></glossterm>
+
+      <glossdef>
+        <para>An alternative name for an AFS command.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">all ACL Shorthand</emphasis></glossterm>
+
+      <glossdef>
+        <para>A shorthand notation used with the <emphasis role="bold">fs setacl</emphasis> command to represent all seven
+        permissions.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Anonymous</emphasis></glossterm>
+
+      <glossdef>
+        <para>The identity assigned to a user who does not have a valid token for the local cell.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Argument</emphasis></glossterm>
+
+      <glossdef>
+        <para>The portion of a command that names an entity to be affected by the command. Arguments consist of two parts: a
+        <emphasis>switch</emphasis> and one or more <emphasis>instances</emphasis>. Some AFS commands take one or more
+        arguments.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Authenticate</emphasis></glossterm>
+
+      <glossdef>
+        <para>To become recognized as a valid AFS user by providing the correct password. Authenticate by logging onto a machine
+        that uses an AFS-modified login utility or by issuing the <emphasis role="bold">klog</emphasis> command. Only authenticated
+        users can perform most AFS actions.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>B</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Byte, kilobyte</emphasis></glossterm>
+
+      <glossdef>
+        <para>A unit of measure used to measure usage of space in a volume or on a partition. A kilobyte block is equal to 1024
+        bytes.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>C</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Cache Manager</emphasis></glossterm>
+
+      <glossdef>
+        <para>A set of modifications to the operating system on a client machine which enables users on the machine to access files
+        stored in AFS. The Cache Manager requests files from the File Server and stores (<emphasis>caches</emphasis>) a copy of each
+        file on the client machine's local disk. Application programs then use the cached copy, which eliminates repeated network
+        requests to file server machines.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Cached File</emphasis></glossterm>
+
+      <glossdef>
+        <para>A copy of a file that the Cache Manager stores on a workstation's local disk.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Callback</emphasis></glossterm>
+
+      <glossdef>
+        <para>A promise from the File Server to contact the Cache Manager if the centrally stored copy of the file changes while the
+        Cache Manager has a cached copy. If the file is altered, the File Server <emphasis>breaks</emphasis> the callback. The next
+        time an application program asks for data from the file, the Cache Manager notices the broken callback and retrieves an
+        updated copy of the file from the File Server. Callbacks ensure the user is working with the most recent copy of a
+        file.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Cell</emphasis></glossterm>
+
+      <glossdef>
+        <para>An independently administered site running AFS, consisting of a collection of file server machines and client machines
+        defined to belong to the cell. A machine can belong to only one cell at a time.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Client Machines</emphasis></glossterm>
+
+      <glossdef>
+        <para>Computers that perform computations for users. Users normally work on a client machine, accessing files stored on a
+        file server machine.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Client/Server Computing</emphasis></glossterm>
+
+      <glossdef>
+        <para>A computing system in which two types of computers (client machines and server machines) perform different specialized
+        functions.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Command</emphasis></glossterm>
+
+      <glossdef>
+        <para>A string of characters indicating an action for an AFS server to perform. For a description of AFS command syntax, see
+        <link linkend="HDRWQ86">Appendix B, AFS Command Syntax and Online Help</link>.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Command Suite</emphasis></glossterm>
+
+      <glossdef>
+        <para>A group of AFS commands with related functions. The command suite name is the first word in many AFS commands.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Complete Pathname</emphasis></glossterm>
+
+      <glossdef>
+        <para>A full specification of a file's location in AFS, starting at the root of the filespace (by convention mounted at the
+        <emphasis role="bold">/afs</emphasis> directory) and specifying all the directories the Cache Manager must pass through to
+        access the file. The names of the directories are separated by slashes.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>D</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">d (delete) Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>The ACL permission that enables the possessor to remove elements from a directory.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Directory</emphasis></glossterm>
+
+      <glossdef>
+        <para>A logical structure containing a collection of files and other directories.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Distributed File System</emphasis></glossterm>
+
+      <glossdef>
+        <para>A file system that joins the file systems of individual machines. Files are stored on different machines in the
+        network but are accessible from all machines.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>F</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">File</emphasis></glossterm>
+
+      <glossdef>
+        <para>A collection of information stored and retrieved as a unit.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">File Server Machine</emphasis></glossterm>
+
+      <glossdef>
+        <para>A type of machine that stores files and transfers them to client machines on request.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Flag</emphasis></glossterm>
+
+      <glossdef>
+        <para>Part of a command that determines how the command executes, or the type of output it produces.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Foreign Cell</emphasis></glossterm>
+
+      <glossdef>
+        <para>A cell other than the cell to which the client machine belongs. If the client machine is appropriately configured,
+        users can access the AFS filespace in foreign cells as well as the local cell, and can authenticate in foreign cells in
+        which they have AFS accounts.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>G</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Group</emphasis></glossterm>
+
+      <glossdef>
+        <para>A defined list of users, which can be placed on a directory's ACL to extend a set of permissions to all of its members
+        at once.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Group-owned Group</emphasis></glossterm>
+
+      <glossdef>
+        <para>A group owned by another group. All members of the owning group can administer the owned group; the members of the
+        owned group do not have administer permissions themselves.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>H</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Hierarchical File Structure</emphasis></glossterm>
+
+      <glossdef>
+        <para>A method of storing data in directories that are organized in a tree structure.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Home Directory</emphasis></glossterm>
+
+      <glossdef>
+        <para>A directory owned by a user and dedicated to storage of the user's personal files.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>I</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">i (insert) Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>The ACL permission that enables the possessor to add files or subdirectories to a directory.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Instance</emphasis></glossterm>
+
+      <glossdef>
+        <para>The part of a command string that defines the entity to affect.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>K</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">k (lock) Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>See the k (lock) Permission entry. The ACL permission that enables programs to place advisory locks on a file.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Kilobyte</emphasis></glossterm>
+
+      <glossdef>
+        <para>A unit of measure used to measure usage of space in a volume or on a partition. A kilobyte is equal to 1024 bytes. The
+        term <emphasis>kilobyte block</emphasis> is sometimes used when referring to disk space.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>L</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">l (lookup) Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>The ACL permission that enables the possessor to list the contents of a directory and display its ACL.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Local Cell</emphasis></glossterm>
+
+      <glossdef>
+        <para>The cell to which the user's account and client machine belong.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">lock Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>See the <emphasis role="bold">k (lock) Permission</emphasis> entry.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Login</emphasis></glossterm>
+
+      <glossdef>
+        <para>The process of establishing a connection to a client machine's local file system as a specific user.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Logout</emphasis></glossterm>
+
+      <glossdef>
+        <para>The process of ending a connection to the local file system.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>M</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">m Privacy Flag</emphasis></glossterm>
+
+      <glossdef>
+        <para>The third privacy flag on a group, which enables the possessor to list the members of a group or the groups to which a
+        user belongs.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Mode Bits</emphasis></glossterm>
+
+      <glossdef>
+        <para>A set of permissions that the UNIX file system associates with a file or directory to control access to it. They
+        appear in the first field of the output from the <emphasis role="bold">ls -l</emphasis> command.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Mount Point</emphasis></glossterm>
+
+      <glossdef>
+        <para>A special type of directory that associates a location in the AFS file space with a volume. It acts like a standard
+        UNIX directory in that users can change directory to it and list its contents with the UNIX <emphasis
+        role="bold">cd</emphasis> and <emphasis role="bold">ls</emphasis> commands.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Mutual Authentication</emphasis></glossterm>
+
+      <glossdef>
+        <para>A procedure through which two parties prove their identities to one another. AFS server and client processes normally
+        mutually authenticate as they establish a connection.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>N</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">NFS/AFS Translator</emphasis></glossterm>
+
+      <glossdef>
+        <para>A program that enables users on NFS client machines to access files in the AFS filespace.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">none ACL Shorthand</emphasis></glossterm>
+
+      <glossdef>
+        <para>A shorthand notation used with the <emphasis role="bold">fs setacl</emphasis> command to delete an entry from an
+        ACL.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>O</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">o Privacy Flag</emphasis></glossterm>
+
+      <glossdef>
+        <para>The second privacy flag on a group, which enables the possessor to list groups owned by the user or group.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Operation Code</emphasis></glossterm>
+
+      <glossdef>
+        <para>The second word in an AFS command that belongs to a suite. It indicates the command's function.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Owner of a Group</emphasis></glossterm>
+
+      <glossdef>
+        <para>The person or group who can administer a group.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>P</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Parent Directory</emphasis></glossterm>
+
+      <glossdef>
+        <para>The directory in which a directory or file resides.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Partition</emphasis></glossterm>
+
+      <glossdef>
+        <para>A logical section of a disk in a computer.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Password</emphasis></glossterm>
+
+      <glossdef>
+        <para>A unique, user-defined string of characters validating the user's system identity. The user must correctly enter the
+        password in order to be authenticated.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>A certain type of access granted on an ACL. Anyone who possesses the permission can perform the action.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>Q</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Quota</emphasis></glossterm>
+
+      <glossdef>
+        <para>The size limit of a volume, assigned by the system administrator and measured in kilobyte blocks.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>R</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">r (read) Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>The ACL permission that enables the possessor to examine the contents of a file.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">r Privacy Flag</emphasis></glossterm>
+
+      <glossdef>
+        <para>The fifth privacy flag on a group, which enables the possessor to remove members from it.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">read ACL Shorthand</emphasis></glossterm>
+
+      <glossdef>
+        <para>A shorthand notation used with the <emphasis role="bold">fs setacl</emphasis> command to represent the <emphasis
+        role="bold">r</emphasis> and <emphasis role="bold">l</emphasis> permissions.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Relative Pathname</emphasis></glossterm>
+
+      <glossdef>
+        <para>A pathname that does not begin at the root of the AFS or local filespace and so represents a file or directory's
+        location with respect to the current working directory.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Remote Commands</emphasis></glossterm>
+
+      <glossdef>
+        <para>Commands used to run programs on a remote machine without establishing a persistent connection to it.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>S</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">s Privacy Flag</emphasis></glossterm>
+
+      <glossdef>
+        <para>The first privacy flag on a group, which enables the possessor to list general information about it.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Self-owned Group</emphasis></glossterm>
+
+      <glossdef>
+        <para>A group that owns itself, enabling all of its members to administer it.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Server</emphasis></glossterm>
+
+      <glossdef>
+        <para>A program or machine that provides a specialized service to its clients, such as storing and transferring files or
+        performing authentication.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Subdirectory</emphasis></glossterm>
+
+      <glossdef>
+        <para>A directory that resides in another directory in the file system hierarchy.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Switch</emphasis></glossterm>
+
+      <glossdef>
+        <para>The part of a command string defining the type of an argument. It is preceded by a hyphen.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Syntax Statement</emphasis></glossterm>
+
+      <glossdef>
+        <para>A specification of the options available on a command and their ordering.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">System Administrator</emphasis></glossterm>
+
+      <glossdef>
+        <para>A user who is authorized to administer an AFS cell.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">System Groups</emphasis></glossterm>
+
+      <glossdef>
+        <para>Groups that AFS defines automatically to represent users who share certain characteristics. See the following three
+        entries.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">System:administrators group</emphasis></glossterm>
+
+      <glossdef>
+        <para>A system group that includes users authorized to administer AFS.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">System:anyuser group</emphasis></glossterm>
+
+      <glossdef>
+        <para>A system group that includes everyone who can gain access the cell's AFS filespace. It includes unauthenticated users,
+        who are assigned the identity <emphasis role="bold">anonymous</emphasis>.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">System:authuser group</emphasis></glossterm>
+
+      <glossdef>
+        <para>A system group that includes all users who currently have valid AFS tokens for the local cell.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>T</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Token</emphasis></glossterm>
+
+      <glossdef>
+        <para>A collection of data that the AFS server processes accept as evidence that the possessor has successfully proved his
+        or her identity to the cell's AFS authentication service. AFS assigns the identity <emphasis
+        role="bold">anonymous</emphasis> to users who do not have a token.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>U</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">UNIX Mode Bits</emphasis></glossterm>
+
+      <glossdef>
+        <para>See the <emphasis role="bold">Mode Bits</emphasis> entry.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Username</emphasis></glossterm>
+
+      <glossdef>
+        <para>A character string entered at login that uniquely identifies a person in the local cell.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>V</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">Volume</emphasis></glossterm>
+
+      <glossdef>
+        <para>A structure that AFS uses to group a set of files and directories into a single unit for administrative purposes. The
+        contents of a volume reside on a single disk partition and must be mounted in the AFS filespace to be accessible.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv>
+    <title>W</title>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">w (write) Permission</emphasis></glossterm>
+
+      <glossdef>
+        <para>The ACL permission that enables the possessor to modify the contents of a file.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm><emphasis role="bold">write ACL Shorthand</emphasis></glossterm>
+
+      <glossdef>
+        <para>A shorthand notation used with the <emphasis role="bold">fs setacl</emphasis> command to represent all permissions
+        except the <emphasis role="bold">a</emphasis> permission.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+</glossary>

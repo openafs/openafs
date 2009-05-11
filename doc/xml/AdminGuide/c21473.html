@@ -1,0 +1,7090 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Administering Client Machines and the Cache Manager</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Managing Client Machines"
+HREF="p21471.html"><LINK
+REL="PREVIOUS"
+TITLE="Managing Client Machines"
+HREF="p21471.html"><LINK
+REL="NEXT"
+TITLE="Configuring Client Machines with the package Program"
+HREF="c23832.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="p21471.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c23832.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="HDRWQ387"
+></A
+>Chapter 10. Administering Client Machines and the Cache Manager</H1
+><P
+>This chapter describes how to administer an AFS client machine, which is any machine from which users can access the AFS
+  filespace and communicate with AFS server processes. (A client machine can simultaneously function as an AFS server machine if
+  appropriately configured.) An AFS client machine has the following characteristics: <UL
+><LI
+><P
+>The kernel includes the set of modifications, commonly referred to as the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Cache Manager</I
+></SPAN
+>, that
+        enable access to AFS files and directories. You can configure many of the Cache Manager's features to suit your users'
+        needs. See <A
+HREF="c21473.html#HDRWQ390"
+>Overview of Cache Manager Customization</A
+>.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc</B
+></SPAN
+> directory on the local disk stores several configuration files. See
+        <A
+HREF="c21473.html#HDRWQ392"
+>Configuration Files in the /usr/vice/etc Directory</A
+>.</P
+></LI
+><LI
+><P
+>A cache stores temporary copies of data fetched from AFS file server machines, either in machine memory or on a
+        devoted local disk partition. See <A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache Type, Size, and Location</A
+> and <A
+HREF="c21473.html#HDRWQ402"
+>Setting Other Cache Parameters with the afsd program</A
+>.</P
+></LI
+></UL
+></P
+><P
+>To learn how to install the client functionality on a machine, see the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick Beginnings</I
+></SPAN
+>.</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ388"
+>Summary of Instructions</A
+></H1
+><P
+>This chapter explains how to perform the following tasks by using the indicated commands:</P
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN21494"
+></A
+><TABLE
+BORDER="0"
+FRAME="void"
+CLASS="CALSTABLE"
+><COL
+WIDTH="67*"><COL
+WIDTH="33*"><TBODY
+><TR
+><TD
+>Display cache size set at reboot</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat /usr/vice/etc/cacheinfo</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display current cache size and usage</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcacheparms</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change disk cache size without rebooting</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Initialize Cache Manager</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display contents of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat /usr/vice/etc/CellServDB</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display list of database server machines from kernel memory</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listcells</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change list of database server machines in kernel memory</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs newcell</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Check cell's status regarding setuid</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcellstatus</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set cell's status regarding setuid</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcell</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set server probe interval</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers -interval</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display machine's cell membership</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat /usr/vice/etc/ThisCell</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change machine's cell membership</TD
+><TD
+>Edit <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/ThisCell</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Flush cached file/directory</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flush</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Flush everything cached from a volume</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flushvolume</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Update volume-to-mount-point mappings</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkvolumes</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display Cache Manager's server preference ranks</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set Cache Manager's server preference ranks</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setserverprefs</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display client machine addresses to register</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getclientaddrs</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set client machine addresses to register</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Control the display of warning and status messages</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs messages</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display and change machine's system type</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sysname</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Enable asynchronous writes</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ390"
+>Overview of Cache Manager Customization</A
+></H1
+><P
+>An AFS client machine's kernel includes a set of modifications, commonly referred to as the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Cache
+    Manager</I
+></SPAN
+>, that enable access to AFS files and directories and communications with AFS server processes. It is common
+    to speak of the Cache Manager as a process or program, and in regular usage it appears to function like one. When configuring
+    it, though, it is helpful to keep in mind that this usage is not strictly accurate.</P
+><P
+>The Cache Manager mainly fetches files on behalf of application programs running on the machine. When an application
+    requests an AFS file, the Cache Manager contacts the Volume Location (VL) Server to obtain a list of the file server machines
+    that house the volume containing the file. The Cache Manager then translates the application program's system call requests into
+    remote procedure calls (RPCs) to the File Server running on the appropriate machine. When the File Server delivers the file, the
+    Cache Manager stores it in a local <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>cache</I
+></SPAN
+> before delivering it to the application program.</P
+><P
+>The File Server delivers a data structure called a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>callback</I
+></SPAN
+> along with the file. (To be precise, it
+    delivers a callback for each file fetched from a read/write volume, and a single callback for all data fetched from a read-only
+    volume.) A valid callback indicates that the Cache Manager's cached copy of a file matches the central copy maintained by the
+    File Server. If an application on another AFS client machine changes the central copy, the File Server breaks the callback, and
+    the Cache Manager must retrieve the new version when an application program on its machine next requests data from the file. As
+    long as the callback is unbroken, however, the Cache Manager can continue to provide the cached version of the file to
+    applications on its machine, which eliminates unnecessary network traffic.</P
+><P
+>The indicated sections of this chapter explain how to configure and customize the following Cache Manager features. All
+    but the first (choosing disk or memory cache) are optional, because AFS sets suitable defaults for them. <UL
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>disk or memory cache</I
+></SPAN
+>. The AFS Cache Manager can use machine memory for caching instead of space
+          on the local disk. Deciding which to use is the most basic configuration decision you must make. See <A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache Type, Size, and Location</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>cache size</I
+></SPAN
+>. Cache size probably has the most direct influence on client machine performance. It
+          determines how often the Cache Manager must contact the File Server across the network or discard cached data to make room
+          for newly requested files, both of which affect how quickly the Cache Manager delivers files to users. See <A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache Type, Size, and Location</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>cache location</I
+></SPAN
+>. For a disk cache, you can alter the conventional cache directory location
+          (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/cache</B
+></SPAN
+>) to take advantage of greater space availability on other disks on the
+          machine. A larger cache can result in faster file delivery. See <A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache Type, Size,
+          and Location</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>chunk size and number</I
+></SPAN
+>. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program, which initializes the
+          Cache Manager, allows you to control the size and number of chunks into which a cache is divided, plus related parameters.
+          Setting these parameters is optional, because there are reasonable defaults, but it provides precise control. The AFS
+          distribution includes configuration scripts that set Cache Manager parameters to values that are reasonable for different
+          configurations and usage patterns. See <A
+HREF="c21473.html#HDRWQ402"
+>Setting Other Cache Parameters with the afsd
+          program</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>knowledge of database server machines</I
+></SPAN
+>. Enable access to a cell's AFS filespace and other
+          services by listing the cell's database server machines in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+>
+          file on the local disk. See <A
+HREF="c21473.html#HDRWQ406"
+>Maintaining Knowledge of Database Server Machines</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>setuid privilege</I
+></SPAN
+>. You can control whether the Cache Manager allows programs from a cell to
+          execute with setuid permission. See <A
+HREF="c21473.html#HDRWQ409"
+>Determining if a Client Can Run Setuid
+          Programs</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>cell membership</I
+></SPAN
+>. Each client belongs to a one cell defined by the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/ThisCell</B
+></SPAN
+> file. Cell membership determines the default cell in which the machine's
+          users are authenticated and in which AFS commands run. See <A
+HREF="c21473.html#HDRWQ411"
+>Setting a Client Machine's Cell
+          Membership</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>cached file version</I
+></SPAN
+>. AFS's system of callbacks normally guarantees that the Cache Manager has
+          the most current versions of files and directories possible. Nevertheless, you can force the Cache Manager to fetch the
+          most current version of a file from the File Server if you suspect that the cache contains an outdated version. See <A
+HREF="c21473.html#HDRWQ412"
+>Forcing the Update of Cached Data</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>File Server and Volume Location Server preferences</I
+></SPAN
+>. The Cache Manager sets numerical preference
+          ranks for the interfaces on file server machines and Volume Server (VL) machines. The ranks determine which interface the
+          Cache Manager first attempts to use when fetching data from a volume or from the Volume Location Database (VLDB). The
+          Cache Manager sets default ranks as it initializes, basing them on its network proximity to each interface, but you can
+          modify the preference ranks if you wish. See <A
+HREF="c21473.html#HDRWQ414"
+>Maintaining Server Preference Ranks</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>interfaces registered with the File Server</I
+></SPAN
+>. If the Cache Manager is multihomed (has multiple
+          interface addresses), you can control which of them it registers for File Servers to use when they initiate RPCs to the
+          client machine. See <A
+HREF="c21473.html#HDRWQ415"
+>Managing Multihomed Client Machines</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>display of information messages</I
+></SPAN
+>. By default, the Cache Manager sends basic error and
+          informational messages to the client machine's console and to command shells. You can disable the messaging. See <A
+HREF="c21473.html#HDRWQ416"
+>Controlling the Display of Warning and Informational Messages</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>system type</I
+></SPAN
+>. The Cache Manager records the local machine's AFS system type in kernel memory,
+          and substitutes the value for the @sys variable in pathnames. See <A
+HREF="c21473.html#HDRWQ417"
+>Displaying and Setting the
+          System Type Name</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>delayed writes</I
+></SPAN
+>. By default, the Cache Manager writes all data to the File Server immediately
+          and synchronously when an application program closes a file. You can enable asynchronous writes, either for an individual
+          file, or all files that the Cache Manager handles, and set how much data remains to be written when the Cache Manager
+          returns control to the closing application. See <A
+HREF="c21473.html#HDRWQ418"
+>Enabling Asynchronous Writes</A
+>.</P
+></LI
+></UL
+></P
+><P
+>You must make all configuration changes on the client machine itself (at the console or over a direct connection such as a
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>telnet</B
+></SPAN
+> connection). You cannot configure the Cache Manager remotely. You must be logged in as
+    the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> to issue some commands, whereas others require no privilege. All files
+    mentioned in this chapter must actually reside on the local disk of each AFS client machine (they cannot, for example, be
+    symbolic links to files in AFS).</P
+><P
+>AFS's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> program can simplify other aspects of client machine configuration,
+    including those normally set in the machine's AFS initialization file. See <A
+HREF="c23832.html"
+>Configuring Client Machines
+    with the package Program</A
+>.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ391"
+>Configuration and Cache-Related Files on the Local Disk</A
+></H1
+><P
+>This section briefly describes the client configuration files that must reside in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc</B
+></SPAN
+> directory on every client machine. If the machine uses a disk cache, there must be a
+    partition devoted to cache files; by convention, it is mounted at the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/cache</B
+></SPAN
+>
+    directory.</P
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Note for Windows users:</B
+></SPAN
+> Some files described in this document possibly do not exist on
+    machines that run a Windows operating system. Also, Windows uses a backslash (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>\</B
+></SPAN
+>) rather than a
+    forward slash (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/</B
+></SPAN
+>) to separate the elements in a pathname.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ392"
+>Configuration Files in the /usr/vice/etc Directory</A
+></H2
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc</B
+></SPAN
+> directory on a client machine's local disk must contain certain
+      configuration files for the Cache Manager to function properly. They control the most basic aspects of Cache Manager
+      configuration.</P
+><P
+>If it is important that the client machines in your cell perform uniformly, it is most efficient to update these files
+      from a central source. The following descriptions include pointers to sections that discuss how best to maintain the files.
+      <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+></DT
+><DD
+><P
+>The binary file for the program that initializes the Cache Manager. It must run each time the machine reboots in
+              order for the machine to remain an AFS client machine. The program also initializes several daemons that improve Cache
+              Manager functioning, such as the process that handles callbacks.  </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+></DT
+><DD
+><P
+>A one-line file that sets the cache's most basic configuration parameters: the local directory at which the
+              Cache Manager mounts the AFS filespace, the local disk directory to use as the cache, and how many kilobytes to
+              allocate to the cache.</P
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick Beginnings</I
+></SPAN
+> explains how to create this file as you install a client
+              machine. To change the cache size on a machine that uses a memory cache, edit the file and reboot the machine. On a
+              machine that uses a disk cache, you can change the cache size without rebooting by issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize</B
+></SPAN
+> command. For instructions, see <A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache
+              Type, Size, and Location</A
+>.  </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+></DT
+><DD
+><P
+>This ASCII file names the database server machines in the local cell and in any foreign cell to which you want
+              to enable access from this machine. (Database server machines are the machines in a cell that run the Authentication,
+              Backup, Protection, and VL Server processes; see <A
+HREF="c3025.html#HDRWQ92"
+>Database Server Machines</A
+>.)</P
+><P
+>The Cache Manager must be able to reach a cell's database server machines to fetch files from its filespace.
+              Incorrect or missing information in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file can slow or completely block
+              access. It is important to update the file whenever a cell's database server machines change.</P
+><P
+>As the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program initializes the Cache Manager, it loads the contents of the
+              file into kernel memory. The Cache Manager does not read the file between reboots, so to incorporate changes to the
+              file into kernel memory, you must reboot the machine. Alternatively, you can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+              newcell</B
+></SPAN
+> command to insert the changes directly into kernel memory without changing the file. It can also be
+              convenient to upgrade the file from a central source. For instructions, see <A
+HREF="c21473.html#HDRWQ406"
+>Maintaining
+              Knowledge of Database Server Machines</A
+>.</P
+><P
+>(The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file on client machines is not the same as the one kept in the
+              <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc</B
+></SPAN
+> directory on server machines, which lists only the local cell's database
+              server machines. For instructions on maintaining the server <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file, see
+              <A
+HREF="c3025.html#HDRWQ118"
+>Maintaining the Server CellServDB File</A
+>).  </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetInfo</B
+></SPAN
+></DT
+><DD
+><P
+>This optional ASCII file lists one or more of the network interface addresses on the client machine. If it
+              exists when the Cache Manager initializes, the Cache Manager uses it as the basis for the list of interfaces that it
+              registers with File Servers. See <A
+HREF="c21473.html#HDRWQ415"
+>Managing Multihomed Client Machines</A
+>.  </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetRestrict</B
+></SPAN
+></DT
+><DD
+><P
+>This optional ASCII file lists one or more network interface addresses. If it exists when the Cache Manager
+              initializes, the Cache Manager removes the specified addresses from the list of interfaces that it registers with File
+              Servers. See <A
+HREF="c21473.html#HDRWQ415"
+>Managing Multihomed Client Machines</A
+>.  </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ThisCell</B
+></SPAN
+></DT
+><DD
+><P
+>This ASCII file contains a single line that specifies the complete domain-style name of the cell to which the
+              machine belongs. Examples are <SAMP
+CLASS="computeroutput"
+>abc.com</SAMP
+> and
+              <SAMP
+CLASS="computeroutput"
+>stateu.edu</SAMP
+>. This value defines the default cell in which the machine's users become
+              authenticated, and in which the command interpreters (for example, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos</B
+></SPAN
+> command)
+              contact server processes.</P
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick Beginnings</I
+></SPAN
+> explains how to create this file as you install the AFS client
+              functionality. To learn about changing a client machine's cell membership, see <A
+HREF="c21473.html#HDRWQ411"
+>Setting a
+              Client Machine's Cell Membership</A
+>.</P
+></DD
+></DL
+></DIV
+></P
+><P
+>In addition to these files, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc</B
+></SPAN
+> directory also sometimes contains the
+      following types of files and subdirectories: <UL
+><LI
+><P
+>The AFS initialization script, called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afs.rc</B
+></SPAN
+> on many system types. In the
+            conventional configuration specified by the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick Beginnings</I
+></SPAN
+>, it is a symbolic link to the
+            actual script kept in the same directory as other initialization files used by the operating system.  </P
+></LI
+><LI
+><P
+>A subdirectory that houses AFS kernel library files used by a dynamic kernel loading program.  </P
+></LI
+><LI
+><P
+>A subdirectory called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>C</B
+></SPAN
+>, which houses the Cache Manager catalog file called
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afszcm.cat</B
+></SPAN
+>. The fstrace program uses the catalog file to translate operation codes into
+            character strings, which makes the message in the trace log more readable. See <A
+HREF="c18360.html#HDRWQ342"
+>About the
+            fstrace Command Suite</A
+>.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ393"
+>Cache-Related Files</A
+></H2
+><P
+>A client machine that uses a disk cache must have a local disk directory devoted to the cache. The conventional mount
+      point is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/cache</B
+></SPAN
+>, but you can use another partition that has more available
+      space.</P
+><P
+>Do not delete or directly modify any of the files in the cache directory. Doing so can cause a kernel panic, from which
+      the only way to recover is to reboot the machine. By default, only the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>
+      can read the files directly, by virtue of owning them.</P
+><P
+>A client machine that uses a memory cache keeps all of the information stored in these files in machine memory instead.
+      <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CacheItems</B
+></SPAN
+></DT
+><DD
+><P
+>A binary-format file in which the Cache Manager tracks the contents of cache chunks (the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+> files in the directory, described just following), including the file ID number (fID) and the
+              data version number.  </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>VolumeItems</B
+></SPAN
+></DT
+><DD
+><P
+>A binary-format file in which the Cache Manager records the mapping between mount points and the volumes from
+              which it has fetched data. The Cache Manager uses the information when responding to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pwd</B
+></SPAN
+> command, among others.   </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Vn</B
+></SPAN
+></DT
+><DD
+><P
+>A cache chunk file, which expands to a maximum size (by default, 64 KB) to house data fetched from AFS files.
+              The number of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files in the cache depends on the cache size among other factors.
+              The n is the index assigned to each file; they are numbered sequentially, but the Cache Manager does not necessarily
+              use them in order or contiguously. If an AFS file is larger than the maximum size for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files, the Cache Manager divides it across multiple <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n
+              files.</P
+></DD
+></DL
+></DIV
+></P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ394"
+>Determining the Cache Type, Size, and Location</A
+></H1
+><P
+>This section explains how to configure a memory or disk cache, how to display and set the size of either type of cache,
+    and how to set the location of the cache directory for a disk cache.  </P
+><P
+>The Cache Manager uses a disk cache by default, and it is the preferred type of caching. To configure a memory cache,
+    include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-memcache</B
+></SPAN
+> flag on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command, which is
+    normally invoked in the machine's AFS initialization file. If configured to use a memory cache, the Cache Manager does no disk
+    caching, even if the machine has a disk.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_438"
+>Choosing the Cache Size</A
+></H2
+><P
+>Cache size influences the performance of a client machine more directly than perhaps any other cache parameter. The
+      larger the cache, the faster the Cache Manager is likely to deliver files to users. A small cache can impair performance
+      because it increases the frequency at which the Cache Manager must discard cached data to make room for newly requested data.
+      When an application asks for data that has been discarded, the Cache Manager must request it from the File Server, and
+      fetching data across the network is almost always slower than fetching it from the local disk. The Cache Manager never
+      discards data from a file that has been modified locally but not yet stored back to the File Server. If the cache is very
+      small, the Cache Manager possible cannot find any data to discard. For more information about the algorithm it uses when
+      discarding cached data, see <A
+HREF="c21473.html#HDRWQ401"
+>How the Cache Manager Chooses Data to Discard</A
+>).</P
+><P
+>The amount of disk or memory you devote to caching depends on several factors. The amount of space available in memory
+      or on the partition housing the disk cache directory imposes an absolute limit. In addition, you cannot allocate more than 95%
+      of the space available on the cache directory's partition to a disk cache. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program
+      exits without starting the Cache Manager and prints an appropriate message to the standard output stream if you violate this
+      restriction. For a memory cache, you must leave enough memory for other processes and applications to run. If you try to
+      allocate more memory than is actually available, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program exits without initializing
+      the Cache Manager and produces the following message on the standard output stream:</P
+><PRE
+CLASS="programlisting"
+>&#13;   afsd: memCache allocation failure at number KB
+</PRE
+><P
+>where number is how many kilobytes were allocated just before the failure.</P
+><P
+>Within these hard limits, the factors that determine appropriate cache size include the number of users working on the
+      machine, the size of the files with which they usually work, and (for a memory cache) the number of processes that usually run
+      on the machine. The higher the demand from these factors, the larger the cache needs to be to maintain good
+      performance.</P
+><P
+>Disk caches smaller than 10 MB do not generally perform well. Machines serving multiple users usually perform better
+      with a cache of at least 60 to 70 MB. The point at which enlarging the cache further does not really improve performance
+      depends on the factors mentioned previously, and is difficult to predict.</P
+><P
+>Memory caches smaller than 1 MB are nonfunctional, and the performance of caches smaller than 5 MB is usually
+      unsatisfactory. Suitable upper limits are similar to those for disk caches but are probably determined more by the demands on
+      memory from other sources on the machine (number of users and processes). Machines running only a few processes possibly can
+      use a smaller memory cache.</P
+><P
+>AFS imposes an absolute limit on cache size in some versions. See the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Release Notes</I
+></SPAN
+> for the
+      version you are using.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ395"
+>Displaying and Setting the Cache Size and Location</A
+></H2
+><P
+>The Cache Manager determines how big to make the cache by reading the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/cacheinfo</B
+></SPAN
+> file as it initializes. As directed in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick
+      Beginnings</I
+></SPAN
+>, you must create the file before running the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program. The file
+      also defines the directory on which to mount AFS (by convention, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+>), and the local disk
+      directory to use for a cache directory.</P
+><P
+>To change any of the values in the file, log in as the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>. You must
+      reboot the machine to have the new value take effect. For instructions, see <A
+HREF="c21473.html#HDRWQ398"
+>To edit the cacheinfo
+      file</A
+>.</P
+><P
+>To change the cache size at reboot without editing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file, include the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command; see the command's
+      reference page in the IBM AFS Administration Reference.</P
+><P
+>For a disk cache, you can also use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize</B
+></SPAN
+> command to reset the cache size
+      without rebooting. The value you set persists until the next reboot, at which time the cache size returns to the value
+      specified in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file or by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> argument
+      to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command. For instructions, see <A
+HREF="c21473.html#HDRWQ399"
+>To change the disk cache
+      size without rebooting</A
+>.</P
+><P
+>To display the current cache size and the amount of space the Cache Manager is using at the moment, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcacheparms</B
+></SPAN
+> command as detailed in <A
+HREF="c21473.html#HDRWQ397"
+>To display the current cache
+      size</A
+>.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ396"
+>To display the cache size set at reboot</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Use a text editor or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat</B
+></SPAN
+> command to display the contents of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/cacheinfo</B
+></SPAN
+> file. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat /usr/vice/etc/cacheinfo</B
+></SPAN
+>
+</PRE
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ397"
+>To display the current cache size</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcacheparms</B
+></SPAN
+> command on the client machine. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcacheparms</B
+></SPAN
+>
+</PRE
+></P
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getca</B
+></SPAN
+> is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getcacheparms</B
+></SPAN
+>.</P
+><P
+>The output shows the number of kilobyte blocks the Cache Manager is using as a cache at the moment the command is
+          issued, and the current size of the cache. For example:</P
+><PRE
+CLASS="programlisting"
+>&#13;   AFS using 13709 of the cache's available 15000 1K byte blocks.
+</PRE
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ398"
+>To edit the cacheinfo file</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Use a text editor to edit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/cacheinfo</B
+></SPAN
+> file, which has three fields,
+          separated by colons: <UL
+><LI
+><P
+>The first field names the local directory on which to mount the AFS filespace. The conventional location is
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>The second field defines the local disk directory to use for the disk cache. The conventional location is the
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/cache</B
+></SPAN
+> directory, but you can specify an alternate directory if another
+                partition has more space available. There must always be a value in this field, but the Cache Manager ignores it if
+                the machine uses a memory cache.</P
+></LI
+><LI
+><P
+>The third field defines cache size as a number of kilobyte (1024-byte) blocks.</P
+></LI
+></UL
+></P
+><P
+>The following example mounts the AFS filespace at the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+> directory, names
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/cache</B
+></SPAN
+> as the cache directory, and sets cache size to 50,000 KB:</P
+><PRE
+CLASS="programlisting"
+>&#13;            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs:/usr/vice/cache:50000</B
+></SPAN
+>
+          </PRE
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ399"
+>To change the disk cache size without rebooting</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ400"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize</B
+></SPAN
+> command to set a new disk cache
+          size.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>This command does not work for a memory cache.</P
+></BLOCKQUOTE
+></DIV
+><PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>size in 1K byte blocks (0 =</VAR
+>&#62; reset)&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setca</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setcachesize</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>size in 1K byte blocks (0 =&#62; reset)</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the number of kilobyte blocks to be used for the cache. Specify a positive integer (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1024</B
+></SPAN
+> equals 1 MB), or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) to reset the cache size to
+                  the value specified in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_444"
+>To reset the disk cache size to the default without rebooting</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize</B
+></SPAN
+> command to reset the size of the local disk cache (the
+          command does not work for a memory cache). Choose one of the two following options: <UL
+><LI
+><P
+>To reset the cache size to the value specified in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file,
+                specify the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero) <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize 0</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>To reset the cache size to the value set at the last reboot of the machine, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-reset</B
+></SPAN
+> flag. Unless the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> argument was used on the
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command, this is also the value in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcachesize -reset</B
+></SPAN
+>
+</PRE
+></P
+></LI
+></UL
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setca</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setcachesize</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+></DT
+><DD
+><P
+>Resets the disk cache size to the value in the third field of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/cacheinfo</B
+></SPAN
+> file.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-reset</B
+></SPAN
+></DT
+><DD
+><P
+>Resets the cache size to the value set at the last reboot.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ401"
+>How the Cache Manager Chooses Data to Discard</A
+></H2
+><P
+>When the cache is full and application programs request more data from AFS, the Cache Manager must flush out cache
+      chunks to make room for the data. The Cache Manager considers two factors: <OL
+TYPE="1"
+><LI
+><P
+>How recently an application last accessed the data.</P
+></LI
+><LI
+><P
+>Whether the chunk is <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>dirty</I
+></SPAN
+>. A dirty chunk contains changes to a file that have not yet been
+            saved back to the permanent copy stored on a file server machine.</P
+></LI
+></OL
+></P
+><P
+>The Cache Manager first checks the least-recently used chunk. If it is not dirty, the Cache Manager discards the data in
+      that chunk. If the chunk is dirty, the Cache Manager moves on to check the next least recently used chunk. It continues in
+      this manner until it has created a sufficient number of empty chunks.</P
+><P
+>Chunks that contain data fetched from a read-only volume are by definition never dirty, so the Cache Manager can always
+      discard them. Normally, the Cache Manager can also find chunks of data fetched from read/write volumes that are not dirty, but
+      a small cache makes it difficult to find enough eligible data. If the Cache Manager cannot find any data to discard, it must
+      return I/O errors to application programs that request more data from AFS. Application programs usually have a means for
+      notifying the user of such errors, but not for revealing their cause.</P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ402"
+>Setting Other Cache Parameters with the afsd program</A
+></H1
+><P
+>There are only three cache configuration parameters you must set: the mount directory for AFS, the location of the disk
+    cache directory, and the cache size. They correspond to the three fields in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/cacheinfo</B
+></SPAN
+> file, as discussed in <A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache Type, Size,
+    and Location</A
+>. However, if you want to experiment with fine-tuning cache performance, you can use the arguments on the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command to control several other parameters. This section discusses a few of these
+    parameters that have the most direct effect on cache performance. To learn more about the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+>
+    command's arguments, see its reference page in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+>.</P
+><P
+>In addition, the AFS initialization script included in the AFS distribution for each system type includes several
+    variables that set several <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> arguments in a way that is suitable for client machines of
+    different sizes and usage patterns. For instructions on using the script most effectively, see the section on configuring the
+    Cache Manager in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick Beginnings</I
+></SPAN
+>.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ403"
+>Setting Cache Configuration Parameters</A
+></H2
+><P
+>The cache configuration parameters with the most direct effect on cache performance include the following: <UL
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>total cache size</I
+></SPAN
+>. This is the amount of disk space or machine memory available for caching,
+            as discussed in detail in <A
+HREF="c21473.html#HDRWQ394"
+>Determining the Cache Type, Size, and Location</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>number of cache chunks</I
+></SPAN
+>. For a disk cache, each chunk is a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n
+            file in the local cache directory (see <A
+HREF="c21473.html#HDRWQ393"
+>Cache-Related Files</A
+>). For a memory cache, each
+            chunk is a set of contiguous blocks allocated in machine memory.</P
+><P
+>This parameter does not have as much of an effect on cache performance as total size. However, adjusting it can
+            influence how often the Cache Manager must discard cached data to make room for new data. Suppose, for example, that you
+            set the disk cache size to 50 MB and the number of chunks (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files) to 1,000. If each
+            of the ten users on the machine caches 100 AFS files that average 20 KB in size, then all 1,000 chunks are full (a chunk
+            can contain data from only one AFS file) but the cache holds only about 20 MB of data. When a user requests more data
+            from the File Server, the Cache Manager must discard cached data to reclaim some chunks, even though the cache is filled
+            to less than 50% of its capacity. In such a situation, increasing the number of chunks enables the Cache Manager to
+            discard data less often.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>chunk size</I
+></SPAN
+>. This parameter determines the maximum amount of data that can fit in a chunk. If
+            a cached element is smaller than the chunk size, the remaining space in the chunk is not used (a chunk can hold no more
+            than one element). If an element cannot fit in a single chunk, it is split across as many chunks as needed. This
+            parameter also determines how much data the Cache Manager requests at a time from the File Server (how much data per
+            <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>fetch RPC</I
+></SPAN
+>, because AFS uses partial file transfer).</P
+><P
+>The main reason to change chunk size is because of its relation to the amount of data fetched per RPC. If your
+            network links are very fast, it can improve performance to increase chunk size; if the network is especially slow, it
+            can make sense to decrease chunk size.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>number of dcache entries in memory</I
+></SPAN
+>. The Cache Manager maintains one dcache entry for each
+            cache chunk, recording a small amount of information, such as the file ID (fID) and version number of the AFS file
+            corresponding to the chunk.</P
+><P
+>For a disk cache, dcache entries reside in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/cache/CacheItems</B
+></SPAN
+> file; a
+            small number are duplicated in machine memory to speed access.</P
+><P
+>For a memory cache, the number of dcache entries equals the number of cache chunks. For a discussion of the
+            implications of this correspondence, see <A
+HREF="c21473.html#HDRWQ405"
+>Controlling Memory Cache Configuration</A
+>.</P
+></LI
+></UL
+></P
+><P
+>For a description of how the Cache Manager determines defaults for number of chunks, chunk size, and number of dcache
+      entries in a disk cache, see <A
+HREF="c21473.html#HDRWQ404"
+>Configuring a Disk Cache</A
+>; for a memory cache, see <A
+HREF="c21473.html#HDRWQ405"
+>Controlling Memory Cache Configuration</A
+>. The instructions also explain how to use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command's arguments to override the defaults.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ404"
+>Configuring a Disk Cache</A
+></H2
+><P
+>The default number of cache chunks (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files) in a disk cache is calculated by the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command to be the greatest of the following: <UL
+><LI
+><P
+>100</P
+></LI
+><LI
+><P
+>1.5 times the result of dividing cache size by chunk size (cachesize/chunksize * 1.5)</P
+></LI
+><LI
+><P
+>The result of dividing cachesize by 10 MB (cachesize/10240)</P
+></LI
+></UL
+></P
+><P
+>You can override this value by specifying a positive integer with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+> argument.
+      Consider increasing this value if more than 75% of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files are already used soon after
+      the Cache Manager finishes initializing. Consider decreasing it if only a small percentage of the chunks are used at that
+      point. In any case, never specify a value less than 100, because a smaller value can cause performance problems.</P
+><P
+>The following example sets the number of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files to 2,000:</P
+><PRE
+CLASS="programlisting"
+>&#13;        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/afsd -files 2000</B
+></SPAN
+>
+      </PRE
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>It is conventional to place the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command in a machine's AFS initialization file,
+        rather than entering it in a command shell. Furthermore, the values specified in this section are examples only, and are not
+        necessarily suitable for a specific machine.</P
+></BLOCKQUOTE
+></DIV
+><P
+>The default chunk size for a disk cache is 64 KB. In general, the only reason to change it is to adjust to exceptionally
+      slow or fast networks; see <A
+HREF="c21473.html#HDRWQ403"
+>Setting Cache Configuration Parameters</A
+>. You can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-chunksize</B
+></SPAN
+> argument to override the default. Chunk size must be a power of 2, so provide an integer
+      between 0 (zero) and 30 to be used as an exponent of 2. For example, a value of 10 sets chunk size to 1 KB (210 = 1024); a
+      value of 16 equals the default for disk caches (216 = 64 KB). Specifying a value of 0 (zero) or greater than 30 returns chunk
+      size to the default. Values less than 10 (1 KB) are not recommended. The following example sets chunk size to 16 KB
+      (214):</P
+><PRE
+CLASS="programlisting"
+>&#13;        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/afsd -chunksize 14</B
+></SPAN
+>
+      </PRE
+><P
+>For a disk cache, the default number of dcache entries duplicated in memory is one-half the number of chunks specified
+      with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+> argument, to a maximum of 2,000 entries. You can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dcache</B
+></SPAN
+> argument to change the default, even exceeding 2,000 if you wish. Duplicating more than half
+      the dcache entries in memory is not usually necessary, but sometimes improves performance slightly, because access to memory
+      is faster than access to disk. The following example sets the number to 750:</P
+><PRE
+CLASS="programlisting"
+>&#13;        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/afsd -dcache 750</B
+></SPAN
+>
+      </PRE
+><P
+>When configuring a disk cache, you can combine the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command's arguments in any way.
+      The main reason for this flexibility is that the setting you specify for disk cache size (in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file or with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> argument) is an absolute maximum
+      limit. You cannot override it by specifying higher values for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-chunksize</B
+></SPAN
+> arguments, alone or in combination. A related reason is that the Cache Manager does not have
+      to reserve a set amount of memory on disk. <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files (the chunks in a disk cache) are
+      initially zero-length, but can expand up to the specified chunk size and shrink again, as needed. If you set the number of
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files to such a large value that expanding all of them to the full allowable size exceeds
+      the total cache size, they simply never grow to full size.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ405"
+>Controlling Memory Cache Configuration</A
+></H2
+><P
+>Configuring a memory cache differs from configuring a disk cache in that not all combinations of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command's arguments are allowed. This limitation results from the greater interaction between the
+      configuration parameters in a memory cache than a disk cache. If all combinations are allowed, it is possible to set the
+      parameters in an inconsistent way. A list of the acceptable and unacceptable combinations follows a discussion of default
+      values.</P
+><P
+>The default chunk size for a memory cache is 8 KB. In general, the only reason to change it is to adjust to
+      exceptionally slow or fast networks; see <A
+HREF="c21473.html#HDRWQ403"
+>Setting Cache Configuration Parameters</A
+>.</P
+><P
+>There is no predefined default for number of chunks in a memory cache. The Cache Manager instead calculates the correct
+      number by dividing the total cache size by the chunk size. Recall that for a memory cache, all dcache entries must be in
+      memory. This implies that the number of chunks equals the number of dcache entries in memory, and that there is no default for
+      number of dcache entries (like the number of chunks, it is calculated by dividing the total size by the chunk size).</P
+><P
+>The following are acceptable combinations of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> command's arguments when
+      configuring a memory cache: <UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> alone, which overrides the cache size specified in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/cacheinfo</B
+></SPAN
+> file. The Cache Manager divides the value of this argument by the default
+            chunk size of eight KB to calculate the number of chunks and dcache entries. The following example sets cache size to
+            five MB (5,120 KB) and the number of chunks to 640 (5,120 divided by 8): <PRE
+CLASS="programlisting"
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/afsd -memcache -blocks 5120</B
+></SPAN
+></PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-chunksize</B
+></SPAN
+> alone, to override the default of eight KB. The chunk size must be a
+            power of two, so provide an integer between 0 (zero) and 30 to be used as an exponent of two. For example, a value of
+            ten sets chunk size to 1 KB (210 = 1024); a value of 13 equals the default for memory caches (213 = 8 KB). Specifying a
+            value of 0 (zero) or greater than 30 returns the chunk size to the default. Values less than ten (equivalent to 1 KB)
+            are not recommended. The following example sets the chunk size to four KB (212). Assuming a total cache size of four MB
+            (4,096 KB), the resulting number of chunks is 1024. <PRE
+CLASS="programlisting"
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/afsd -memcache -chunksize 12</B
+></SPAN
+></PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-chunksize</B
+></SPAN
+> together override the
+            defaults for cache size and chunk size. The Cache Manager divides the first by the second to calculate the number of
+            chunks and dcache entries. For example, the following example sets the cache size to six MB (6,144 KB) and chunksize to
+            four KB (212), resulting in 1,536 chunks: <PRE
+CLASS="programlisting"
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/afsd -memcache -blocks 6144 -chunksize 12</B
+></SPAN
+></PRE
+></P
+></LI
+></UL
+></P
+><P
+>The following arguments or combinations explicitly set the number of chunks and dcache entries. It is best not to use
+      them, because they set the cache size indirectly, forcing you to perform a hand calculation to determine the size of the
+      cache. Instead, set the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-chunksize</B
+></SPAN
+> arguments
+      alone or in combination; in those cases, the Cache Manager determines the number of chunks and dcache entries itself. Because
+      the following combinations are not recommended, no examples are included. <UL
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dcache</B
+></SPAN
+> argument alone explicitly sets the number of chunks and dcache
+            entries. The Cache Manager multiples this value times the default chunk size of 8 KB to derive the total cache size
+            (overriding the value in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file).</P
+></LI
+><LI
+><P
+>The combination of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dcache</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-chunksize</B
+></SPAN
+> sets
+            the chunk number and size. The Cache Manager sets the specified values and multiplies them together to obtain total
+            cache size (overriding the value in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cacheinfo</B
+></SPAN
+> file).</P
+></LI
+></UL
+></P
+><P
+>Do not use the following arguments for a memory cache: <UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+> alone. This argument controls the number of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>V</B
+></SPAN
+>n files for a disk cache, but is ignored for a memory cache.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-blocks</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dcache</B
+></SPAN
+>. An error message results,
+            because it is possible to provide values such that dividing the first (total size) by the second (number of chunks)
+            results in a chunk size that is not a power of two.</P
+></LI
+></UL
+></P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ406"
+>Maintaining Knowledge of Database Server Machines</A
+></H1
+><P
+>For the users of an AFS client machine to access a cell's AFS filespace and other services, the Cache Manager and other
+    client-side agents must have an accurate list of the cell's database server machines. The affected functions include the
+    following: <UL
+><LI
+><P
+>Accessing files. The Cache Manager contacts the Volume Location (VL) Server to learn which file server machine
+          houses the volume containing a requested file or directory. If the Cache Manager cannot contact a cell's VL Servers, it
+          cannot fetch files.</P
+></LI
+><LI
+><P
+>Authenticating. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> program and AFS-modified login utilities contact the
+          Authentication Server to obtain tokens, which the AFS server processes accept as proof that the user is
+          authenticated.</P
+></LI
+><LI
+><P
+>Creating protection groups. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> command interpreter contacts the Protection
+          Server when users create protection groups or request information from the Protection Database.</P
+></LI
+><LI
+><P
+>Editing access control lists (ACLs). The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> command interpreter contacts the File
+          Server that maintains the read/write volume containing a file or directory; the location information comes from the VL
+          Server.</P
+></LI
+></UL
+></P
+><P
+>To enable a machine's users to access a cell, you must list the names and IP addresses of its database server machines in
+    the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file on the machine's local disk. In addition to the machine's
+    home cell, you can list any foreign cells that you want to enable users to access. (To enable access to a cell's filespace, you
+    must also mount its <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root.cell</B
+></SPAN
+> volume in the local AFS filespace; the conventional location is
+    just under the AFS root directory, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+>. For instructions, see the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick
+    Beginnings</I
+></SPAN
+>.)</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_451"
+>How Clients Use the List of Database Server Machines</A
+></H2
+><P
+>As the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program runs and initializes the Cache Manager, it reads the contents of
+      the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file into kernel memory. The Cache Manager does not consult the file again
+      until the machine next reboots. In contrast, the command interpreters for the AFS command suites (such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+>) read the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file
+      each time they need to contact a database server process.</P
+><P
+>When a cell's list of database server machines changes, you must change both the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file and the list in kernel memory to preserve consistent client performance; some commands
+      probably fail if the two lists of machines disagree. One possible method for updating both the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file and kernel memory is to edit the file and reboot the machine. To avoid needing to
+      reboot, you can instead perform both of the following steps: <OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs newcell</B
+></SPAN
+> command to alter the list in kernel memory directly, making
+            the changes available to the Cache Manager.</P
+></LI
+><LI
+><P
+>Edit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file to make the changes available to command interpreters.
+            For a description of the file's format, see <A
+HREF="c21473.html#HDRWQ407"
+>The Format of the CellServDB file</A
+>.</P
+></LI
+></OL
+></P
+><P
+>The consequences of missing or incorrect information in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file or kernel
+      memory are as follows: <UL
+><LI
+><P
+>If there is no entry for a cell, the machine's users cannot access the cell.</P
+></LI
+><LI
+><P
+>If a cell's entry does not include a database server machine, then the Cache Manager and command interpreters
+            never attempt to contact the machine. The omission does not prevent access to the cell--as long as the information about
+            the other database server machines is correct and the server processes, machines, and network are functioning
+            correctly--but it can put an undue burden on the machines that are listed. If all of the listed machines become
+            inaccessible to clients, then the cell becomes inaccessible even if the omitted database server machine is functioning
+            correctly.</P
+></LI
+><LI
+><P
+>If a machine's name or address is incorrect, or the machine is not actually running the database server processes,
+            then requests from clients time out. Users can experience lengthy delays because they have to wait the full timeout
+            period before the Cache Manager or command interpreter contacts another database server machine.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ407"
+>The Format of the CellServDB file</A
+></H2
+><P
+>When editing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file, you must use the correct format for
+      cell and machine entries. Each cell has a separate entry. The first line has the following format:</P
+><PRE
+CLASS="programlisting"
+>&#13;   &#62;cell_name      #organization
+</PRE
+><P
+>where cell_name is the cell's complete Internet domain name (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>abc.com</B
+></SPAN
+>) and
+      organization is an optional field that follows any number of spaces and the number sign (<SAMP
+CLASS="computeroutput"
+>#</SAMP
+>)
+      and can name the organization to which the cell corresponds (for example, the ABC Corporation). After the first line comes a
+      separate line for each database server machine. Each line has the following format:</P
+><PRE
+CLASS="programlisting"
+>&#13;   IP_address   #machine_name
+</PRE
+><P
+>where IP_address is the machine's IP address in dotted decimal format (for example, 192.12.105.3). Following any number
+      of spaces and the number sign (<SAMP
+CLASS="computeroutput"
+>#</SAMP
+>) is machine_name, the machine's fully-qualified hostname
+      (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>db1.abc.com</B
+></SPAN
+>). In this case, the number sign does not indicate a comment:
+      machine_name is a required field.</P
+><P
+>The order in which the cells appear is not important, but it is convenient to put the client machine's home cell first.
+      Do not include any blank lines in the file, not even after the last entry.</P
+><P
+>The following example shows entries for two cells, each of which has three database server machines:</P
+><PRE
+CLASS="programlisting"
+>&#13;   &#62;abc.com       #ABC Corporation (home cell)
+   192.12.105.3      #db1.abc.com
+   192.12.105.4      #db2.abc.com
+   192.12.105.55     #db3.abc.com
+   &#62;stateu.edu    #State University cell
+   138.255.68.93     #serverA.stateu.edu
+   138.255.68.72     #serverB.stateu.edu
+   138.255.33.154    #serverC.stateu.edu
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ408"
+>Maintaining the Client CellServDB File</A
+></H2
+><P
+>Because a correct entry in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file is vital for consistent client
+      performance, you must also update the file on each client machine whenever a cell's list of database server machines changes
+      (for instance, when you follow the instructions in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick Beginnings</I
+></SPAN
+> to add or remove a
+      database server machine). To facilitate the client updates, you can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> program,
+      which copies files from a central source in AFS to the local disk of client machines. It is conventional to invoke the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> program in a client machine's AFS initialization file so that it runs as the machine
+      reboots, but you can also issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> command at any time. For instructions, see <A
+HREF="c23832.html#HDRWQ448"
+>Running the package program</A
+>.</P
+><P
+>If you use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> program, the conventional location for your cell's central
+      source <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/</B
+></SPAN
+>cell_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/common/etc/CellServDB</B
+></SPAN
+>, where cell_name is your cell name. </P
+><P
+>Creating a symbolic or hard link from <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> to a central source file
+      in AFS is not a viable option. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program reads the file into kernel memory before the
+      Cache Manager is completely initialized and able to access AFS.</P
+><P
+>Because every client machine has its own copy of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file, you can in theory
+      make the set of accessible cells differ on various machines. In most cases, however, it is best to maintain consistency
+      between the files on all client machines in the cell: differences between machines are particularly confusing if users
+      commonly use a variety of machines rather than just one.</P
+><P
+>The AFS Product Support group maintains a central <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file that includes all
+      cells that have agreed to make their database server machines access to other AFS cells. It is advisable to check this file
+      periodically for updated information. See <A
+HREF="c667.html#HDRWQ38"
+>Making Your Cell Visible to Others</A
+>. </P
+><P
+>An entry in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> is one of the two requirements for accessing a cell.
+      The other is that the cell's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root.cell</B
+></SPAN
+> volume is mounted in the local filespace, by
+      convention as a subdirectory of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+> directory. For instructions, see <A
+HREF="c8420.html#HDRWQ213"
+>To create a cellular mount point</A
+>.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file on a client machine is not the same as the
+        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/CellServDB</B
+></SPAN
+> file on the local disk of a file server machine. The server version
+        lists only the database server machines in the server machine's home cell, because server processes never need to contact
+        foreign cells. It is important to update both types of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file on all machines in
+        the cell whenever there is a change to your cell's database server machines. For more information about maintaining the
+        server version of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file, see <A
+HREF="c3025.html#HDRWQ118"
+>Maintaining the Server
+        CellServDB File</A
+>.</P
+></BLOCKQUOTE
+></DIV
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_454"
+>To display the /usr/vice/etc/CellServDB file</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Use a text editor or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat</B
+></SPAN
+> command to display the contents of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file. By default, the mode bits on the file permit anyone to read it.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat /usr/vice/etc/CellServDB</B
+></SPAN
+>
+</PRE
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_455"
+>To display the list of database server machines in kernel memory</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listcells</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listcells [&#38;]</B
+></SPAN
+> 
+</PRE
+></P
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listc</B
+></SPAN
+> is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listcells</B
+></SPAN
+>.</P
+><P
+>To have your shell prompt return immediately, include the ampersand (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#38;</B
+></SPAN
+>), which
+          makes the command run in the background. It can take a while to generate the complete output because the kernel stores
+          database server machines' IP addresses only, and the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> command interpreter has the
+          cell's name resolution service (such as the Domain Name Service or a local host table) translate them into hostnames. You
+          can halt the command at any time by issuing an interrupt signal such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Ctrl-c</B
+></SPAN
+>.</P
+><P
+>The output includes a single line for each cell, in the following format:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Cell cell_name on hosts list_of_hostnames.
+</PRE
+><P
+>The name service sometimes returns hostnames in uppercase letters, and if it cannot resolve a name at all, it
+          returns its IP address. The following example illustrates all three possibilities:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listcells</B
+></SPAN
+>
+      .
+      .
+   Cell abc.com on hosts db1.abc.com db2.abc.com db3.abc.com
+   Cell stateu.edu on hosts SERVERA.STATEU.EDU SERVERB.STATEU.EDU 
+                            SERVERC.STATEU.EDU
+   Cell ghi.org on hosts 191.255.64.111 191.255.64.112
+      .
+      .
+</PRE
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_456"
+>To change the list of a cell's database server machines in kernel memory</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>If you a use a central copy of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file as a source for client machines,
+          verify that its directory's ACL grants you the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>l</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>lookup</B
+></SPAN
+>), <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>r</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>read</B
+></SPAN
+>), and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>w</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>write</B
+></SPAN
+>) permissions. The conventional directory is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/</B
+></SPAN
+>cell_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/common/etc</B
+></SPAN
+>. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command, which is fully described in <A
+HREF="c31274.html#HDRWQ572"
+>Displaying ACLs</A
+>.
+          <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;]
+</PRE
+>  </P
+></LI
+><LI
+><P
+><A
+NAME="LINEWCELL"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs newcell</B
+></SPAN
+> command to add or change a cell's
+          entry in kernel memory. Repeat the command for each cell.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>You cannot use this command to remove a cell's entry completely from kernel memory. In the rare cases when you
+            urgently need to prevent access to a specific cell, you must edit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file
+            and reboot the machine.</P
+></BLOCKQUOTE
+></DIV
+><PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs newcell</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>cell name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>primary servers</VAR
+>&#62;+ \
+                [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-linkedcell</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>linked cell name</VAR
+>&#62;]
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>n</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>newcell</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cell name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the complete Internet domain name of the cell for which to record a new list of database server
+                  machines.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>primary servers</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the fully-qualified hostname or IP address in dotted-decimal format for each database server
+                  machine in the cell. The list you provide completely replaces the existing list.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-linkedcell</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the complete Internet domain name of the AFS cell to link to a DCE cell for the purposes of DFS
+                  fileset location. You can use this argument if the machine's AFS users access DFS via the AFS/DFS Migration
+                  Toolkit Protocol Translator. For instructions, see the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS/DFS Migration Toolkit Administration
+                  Guide and Reference</I
+></SPAN
+>.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+>Add or edit the cell's entry in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file, using one
+          of the following three methods. In each case, be sure to obey the formatting requirements described in <A
+HREF="c21473.html#HDRWQ407"
+>The Format of the CellServDB file</A
+>. <UL
+><LI
+><P
+>If you maintain a central source version of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file and use the
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> program, first use a text editor to alter the central copy of the file.
+                Then issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> command to transfer the contents of the file to the local
+                machine. For complete instructions, see <A
+HREF="c23832.html#HDRWQ448"
+>Running the package program</A
+>.
+                <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/package -v -c</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of package file</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>If you maintain a central source <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file but do not use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> program, first use a text editor to alter the central copy of the file. Then use a
+                copying command such as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cp</B
+></SPAN
+> command to copy it to the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file.</P
+></LI
+><LI
+><P
+>If you do not use a central source <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>CellServDB</B
+></SPAN
+> file, edit the local machine's
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file directly.</P
+></LI
+></UL
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ409"
+>Determining if a Client Can Run Setuid Programs</A
+></H1
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>setuid program</I
+></SPAN
+> is one whose binary file has the UNIX setuid mode bit turned on. While a setuid
+    program runs, the user who initialized it assumes the local identity (UNIX UID) of the binary file's owner, and so is granted
+    the permissions in the local file system that pertain to the owner. Most commonly, the issuer's assumed identity (often referred
+    to as <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>effective UID</I
+></SPAN
+>) is the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>.</P
+><P
+>AFS does not recognize effective UID: if a setuid program accesses AFS files and directories, it uses the current AFS
+    identity of the user who initialized the program, not of the program's owner. Nevertheless, it can be useful to store setuid
+    programs in AFS for use on more than one client machine. AFS enables a client machine's administrator to determine whether the
+    local Cache Manager allows setuid programs to run or not.</P
+><P
+>By default, the Cache Manager allows programs from its home cell to run with setuid permission, but denies setuid
+    permission to programs from foreign cells. A program belongs to the same cell as the file server machine that houses the volume
+    in which the file resides, as specified in the file server machine's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/ThisCell</B
+></SPAN
+>
+    file. The Cache Manager determines its own home cell by reading the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/ThisCell</B
+></SPAN
+> file
+    at initialization.</P
+><P
+>To change a cell's setuid status with respect to the local machine, become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> and issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcell</B
+></SPAN
+> command. To determine a cell's current
+    setuid status, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcellstatus</B
+></SPAN
+> command.</P
+><P
+>When you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcell</B
+></SPAN
+> command, you directly alter a cell's setuid status as
+    recorded in kernel memory, so rebooting the machine is not necessary. However, nondefault settings do not persist across reboots
+    of the machine unless you add the appropriate <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcell</B
+></SPAN
+> command to the machine's AFS
+    initialization file.</P
+><P
+>Only members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can turn on the setuid mode bit on an AFS
+    file or directory. When the setuid mode bit is turned on, the UNIX <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -l</B
+></SPAN
+> command displays the
+    third user mode bit as an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>s</B
+></SPAN
+> instead of an <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>x</B
+></SPAN
+>, but for an AFS
+    file or directory, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>s</B
+></SPAN
+> appears only if setuid permission is enabled for the cell in which the
+    file resides.  </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_458"
+>To determine a cell's setuid status</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcellstatus</B
+></SPAN
+> command to check the setuid status of each desired cell.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getcellstatus</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>cell name</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getce</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getcellstatus</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cell name</B
+></SPAN
+></DT
+><DD
+><P
+>Names each cell for which to report setuid status. Provide the complete Internet domain name or a shortened
+                  form that distinguishes it from the other cells listed in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+><P
+>The output reports the setuid status of each cell: <UL
+><LI
+><P
+>the string <SAMP
+CLASS="computeroutput"
+>no setuid allowed</SAMP
+> indicates that the Cache Manager does not allow
+            programs from the cell to run with <SAMP
+CLASS="computeroutput"
+>setuid permission</SAMP
+></P
+></LI
+><LI
+><P
+>setuid allowed indicates that the Cache Manager allows programs from the cell to run with setuid permission</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_459"
+>To change a cell's setuid status</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcell</B
+></SPAN
+> command to change the setuid status of the cell.
+          <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setcell</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>cell name</VAR
+>&#62;+ [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-suid</B
+></SPAN
+>] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-nosuid</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setce</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setcell</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cell name</B
+></SPAN
+></DT
+><DD
+><P
+>Names each cell for which to change setuid status as specified by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-suid</B
+></SPAN
+>
+                  or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-nosuid</B
+></SPAN
+> flag. Provide each cell's complete Internet domain name or a shortened
+                  form that distinguishes it from the other cells listed in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-suid</B
+></SPAN
+></DT
+><DD
+><P
+>Enables programs from each specified cell to execute with setuid permission. Provide this flag or the
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-nosuid</B
+></SPAN
+> flag, or omit both to disable setuid permission for each cell.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-nosuid</B
+></SPAN
+></DT
+><DD
+><P
+>Prevents programs from each specified cell from executing with setuid permission. Provide this flag or the
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-suid</B
+></SPAN
+> flag, or omit both to disable setuid permission for each cell.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ410"
+>Setting the File Server Probe Interval</A
+></H1
+><P
+>The Cache Manager periodically sends a probe to server machines to verify that they are still accessible. Specifically, it
+    probes the database server machines in its cell and those file servers that house data it has cached.</P
+><P
+>If a server process does not respond to a probe, the client machine assumes that it is inaccessible. By default, the
+    interval between probes is three minutes, so it can take up to three minutes for a client to recognize that a server process is
+    once again accessible after it was inaccessible.</P
+><P
+>To adjust the probe interval, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-interval</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers</B
+></SPAN
+> command while logged in as the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>. The
+    new interval setting persists until you again issue the command or reboot the machine, at which time the setting returns to the
+    default. To preserve a nondefault setting across reboots, include the appropriate <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+    checkservers</B
+></SPAN
+> command in the machine's AFS initialization file.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_461"
+>To set a client's file server probe interval</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers</B
+></SPAN
+> command with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-interval</B
+></SPAN
+> argument.   <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers -interval</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>seconds between probes</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>checks</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>checkservers</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-interval</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the number of seconds between probes. Provide an integer value greater than zero.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ411"
+>Setting a Client Machine's Cell Membership</A
+></H1
+><P
+>Each client machine belongs to a particular cell, as named in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/ThisCell</B
+></SPAN
+>
+    on its local disk. The machine's cell membership determines three defaults important to users of the machine: <UL
+><LI
+><P
+>The cell for which users of the machine obtain tokens (authenticate) when they use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>login</B
+></SPAN
+> program or issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command. There are two effects:
+          <UL
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> program and AFS-modified login utilities contact an Authentication
+                Server in the cell named in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ThisCell</B
+></SPAN
+> file.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> program and AFS-modified login utilities combine the contents of the
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ThisCell</B
+></SPAN
+> file with the password that the user provides, generating an encryption
+                key from the combination. The user's entry in the Authentication Database includes an encryption key also generated
+                from the combination of password and cell name. If the cell name in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ThisCell</B
+></SPAN
+>
+                file is incorrect, users cannot authenticate even if they provide the correct password.</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+>The cell the Cache Manager considers its local, or home, cell. The Cache Manager allows programs from its local cell
+          to run with setuid permission, but not programs from foreign cells, as discussed further in <A
+HREF="c21473.html#HDRWQ409"
+>Determining if a Client Can Run Setuid Programs</A
+>.</P
+></LI
+><LI
+><P
+>The default database server machines that are contacted by the AFS command interpreters running on this
+          machine.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_463"
+>To display a client machine's cell membership</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Use a text editor or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat</B
+></SPAN
+> command to display the contents of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/ThisCell</B
+></SPAN
+> file. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cat /usr/vice/etc/ThisCell</B
+></SPAN
+>
+</PRE
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_464"
+>To set a client machine's cell membership</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Using a text editor, replace the cell name in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/ThisCell</B
+></SPAN
+>
+          file.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional.)</B
+></SPAN
+> Reboot the machine to enable the Cache Manager to use the new cell name
+          immediately; the appropriate command depends on the machine's system type. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+>
+          program, AFS-modified login utilities, and the AFS command interpreters use the new cell name the next time they are
+          invoked; no reboot is necessary. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sync</B
+></SPAN
+>
+   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>shutdown</B
+></SPAN
+>
+</PRE
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ412"
+>Forcing the Update of Cached Data</A
+></H1
+><P
+>AFS's callback mechanism normally guarantees that the Cache Manager provides the most current version of a file or
+    directory to the application programs running on its machine. However, you can force the Cache Manager to discard (flush) cached
+    data so that the next time an application program requests it, the Cache Manager fetches the latest version available at the
+    File Server.</P
+><P
+>You can control how many file system elements to flush at a time: <UL
+><LI
+><P
+>To flush only specific files or directories, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flush</B
+></SPAN
+> command. This command
+          forces the Cache Manager to discard the data and status information it has cached from the specified files or directories.
+          It does not discard information from an application program's buffer or information that has been altered locally (changes
+          made in the cache but not yet saved permanently to the File Server). However, the next time an application requests the
+          element's data or status information, the Cache Manager has to contact the File Server to get it.</P
+></LI
+><LI
+><P
+>To flush everything cached from a certain volume, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flushvolume</B
+></SPAN
+> command.
+          This command works like the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flush</B
+></SPAN
+> command, but differs in two ways: <UL
+><LI
+><P
+>The Cache Manager discards data for all elements in the cache that come from the same volume as the specified
+                files or directories.</P
+></LI
+><LI
+><P
+>The Cache Manager discards only data, not status information. This difference has little practical effect, but
+                can lead to different output from the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls</B
+></SPAN
+> command when the two different commands
+                are used to flush the same element.</P
+></LI
+></UL
+></P
+></LI
+></UL
+></P
+><P
+>In addition to callbacks, the Cache Manager has a mechanism for tracking other kinds of possible changes, such as changes
+    in a volume's location. If a volume moves and the Cache Manager has not accessed any data in it for a long time, the Cache
+    Manager's volume location record can be wrong. To resynchronize it, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkvolumes</B
+></SPAN
+>
+    command. When you issue the command, the Cache Manager creates a new table of mappings between volume names, ID numbers, and
+    locations. This forces the Cache Manager to reference newly relocated and renamed volumes before it can provide data from
+    them.</P
+><P
+>It is also possible for information about mount points to become corrupted in the cache. Symptoms of a corrupted mount
+    point included garbled output from the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs lsmount</B
+></SPAN
+> command, and failed attempts to change
+    directory to or list the contents of a mount point. Use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flushmount</B
+></SPAN
+> command to discard a
+    corrupted mount point. The Cache Manager must refetch the mount point the next time it crosses it in a pathname. (The Cache
+    Manager periodically refreshes cached mount points, but the only other way to discard them immediately is to reinitialize the
+    Cache Manager by rebooting the machine.  </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_466"
+>To flush certain files or directories</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flush</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flush</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;+]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>flush</B
+></SPAN
+></DT
+><DD
+><P
+>Must be typed in full.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>dir/file path</B
+></SPAN
+></DT
+><DD
+><P
+>Names each file or directory structure to flush from the cache. Omit this argument to flush the current
+                  working directory. Flushing a directory structure does not flush any files or subdirectories cached from
+                  it.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_467"
+>To flush all data from a volume</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flushvolume</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;  % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flushvolume</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;+]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>flushv</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>flushvolume</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>dir/file path</B
+></SPAN
+></DT
+><DD
+><P
+>Names a file or directory from each volume to flush from the cache. The Cache Manager flushes everything in
+                  the cache that it has fetched from the same volume. Omit this argument to flush all cached data fetched from the
+                  volume that contains the current working directory.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_468"
+>To force the Cache Manager to notice other volume changes</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkvolumes</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkvolumes</B
+></SPAN
+>
+</PRE
+></P
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>checkv</B
+></SPAN
+> is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>checkvolumes</B
+></SPAN
+>.</P
+></LI
+></OL
+><P
+>The following command confirms that the command completed successfully:</P
+><PRE
+CLASS="programlisting"
+>&#13;   All volumeID/name mappings checked.
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ413"
+>To flush one or more mount points</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flushmount</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs flush</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;+]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>flushm</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>flushmount</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>dir/file path</B
+></SPAN
+></DT
+><DD
+><P
+>Names each mount point to flush from the cache. Omit this argument to flush the current working directory.
+                  Files or subdirectories cached from the associated volume are unaffected.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ414"
+>Maintaining Server Preference Ranks</A
+></H1
+><P
+>As mentioned in the introduction to this chapter, AFS uses client-side data caching and callbacks to reduce the amount of
+    network traffic in your cell. The Cache Manager also tries to make its use of the network as efficient as possible by assigning
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>preference ranks</I
+></SPAN
+> to server machines based on their network proximity to the local machine. The ranks bias
+    the Cache Manager to fetch information from the server machines that are on its own subnetwork or network rather than on other
+    networks, if possible. Reducing the network distance that data travels between client and server machine tends to reduce network
+    traffic and speed the Cache Manager's delivery of data to applications.</P
+><P
+>The Cache Manager stores two separate sets of preference ranks in kernel memory. The first set of ranks applies to
+    machines that run the Volume Location (VL) Server process, hereafter referred to as <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>VL Server machines</I
+></SPAN
+>. The
+    second set of ranks applies to machines that run the File Server process, hereafter referred to as <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>file server
+    machines</I
+></SPAN
+>. This section explains how the Cache Manager sets default ranks, how to use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+    setserverprefs</B
+></SPAN
+> command to change the defaults or set new ranks, and how to use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+    getserverprefs</B
+></SPAN
+> command to display the current set of ranks.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_471"
+>How the Cache Manager Sets Default Ranks</A
+></H2
+><P
+>As the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsd</B
+></SPAN
+> program initializes the Cache Manager, it assigns a preference rank of
+      10,000 to each of the VL Server machines listed in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file.
+      It then randomizes the ranks by adding an integer randomly chosen from the range 0 (zero) to 126. It avoids assigning the same
+      rank to machines in one cell, but it is possible for machines from different cells to have the same rank. This does not
+      present a problem in use, because the Cache Manager compares the ranks of only one cell's database server machines at a time.
+      Although AFS supports the use of multihomed database server machines, the Cache Manager only uses the single address listed
+      for each database server machine in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file. Only Ubik can
+      take advantage of a multihomed database server machine's multiple interfaces.</P
+><P
+>The Cache Manager assigns preference ranks to a file server machine when it obtains the server's VLDB record from the VL
+      Server, the first time that it accesses a volume that resides on the machine. If the machine is multihomed, the Cache Manager
+      assigns a distinct rank to each of its interfaces (up to the number of interfaces that the VLDB can store for each machine,
+      which is specified in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Release Notes</I
+></SPAN
+>). The Cache Manager compares the interface's IP address
+      to the local machine's address and applies the following algorithm: <UL
+><LI
+><P
+>If the local machine is a file server machine, the base rank for each of its interfaces is 5,000.</P
+></LI
+><LI
+><P
+>If the file server machine interface is on the same subnetwork as the local machine, its base rank is
+            20,000.</P
+></LI
+><LI
+><P
+>If the file server machine interface is on the same network as the local machine, or is at the distant end of a
+            point-to-point link with the local machine, its base rank is 30,000.</P
+></LI
+><LI
+><P
+>If the file server machine interface is on a different network than the local machine, or the Cache Manager cannot
+            obtain network information about it, its base rank is 40,000.</P
+></LI
+></UL
+></P
+><P
+>If the client machine has only one interface, the Cache Manager compares it to the server interface's IP address and
+      sets a rank according to the algorithm. If the client machine is multihomed, the Cache Manager compares each of the local
+      interface addresses to the server interface, and assigns to the server interface the lowest rank that results from comparing
+      it to all of the client interfaces.</P
+><P
+>After assigning a base rank to a file server machine interface, the Cache Manager adds to it a number randomly chosen
+      from the range 0 (zero) to 15. As an example, a file server machine interface in the same subnetwork as the local machine
+      receives a base rank of 20,000, but the Cache Manager records the actual rank as an integer between 20,000 and 20,015. This
+      process reduces the number of interfaces that have exactly the same rank. As with VL Server machine ranks, it is possible for
+      file server machine interfaces from foreign cells to have the same rank as interfaces in the local cell, but this does not
+      present a problem. Only the relative ranks of the interfaces that house a specific volume are relevant, and AFS supports
+      storage of a volume in only one cell at a time.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_472"
+>How the Cache Manager Uses Preference Ranks</A
+></H2
+><P
+>Each preference rank pairs an interface's IP address with an integer that can range from 1 to 65,534. A lower rank
+      (lower number) indicates a stronger preference. Once set, a rank persists until the machine reboots, or until you use the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setserverprefs</B
+></SPAN
+> command to change it.</P
+><P
+>The Cache Manager uses VL Server machine ranks when it needs to fetch volume location information from a cell. It
+      compares the ranks for the cell's VL Server machines and attempts to contact the VL Server process on the machine with the
+      best (lowest integer) rank. If it cannot reach that VL Server, it tries to contact the VL Server with the next best rank, and
+      so on. If all of a cell's VL Server machines are inaccessible, the Cache Manager cannot fetch data from the cell.</P
+><P
+>Similarly, when the Cache Manager needs to fetch data from a volume, it compares the ranks for the interfaces of
+      machines that house the volume, and attempts to contact the interface that has the best rank. If it cannot reach the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fileserver</B
+></SPAN
+> process via that interface, it tries to contact the interface with the next best integer
+      rank, and so on. If it cannot reach any of the interfaces for machines that house the volume, it cannot fetch data from the
+      volume.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_473"
+>Displaying and Setting Preference Ranks</A
+></H2
+><P
+>To display the file server machine ranks that the Cache Manager is using, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+      getserverprefs</B
+></SPAN
+> command. Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+> flag to display VL Server machine
+      ranks instead. By default, the output appears on the standard output stream (stdout), but you can write it to a file instead
+      by including the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+> argument.</P
+><P
+>The Cache Manager stores IP addresses rather than hostnames in its kernel list of ranks, but by default the output
+      identifies interfaces by hostname after calling a translation routine that refers to either the cell's name service (such as
+      the Domain Name Server) or the local host table. If an IP address appears in this case, it is because the translation attempt
+      failed. To bypass the translation step and display IP addresses rather than hostnames, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-numeric</B
+></SPAN
+> flag. This can significantly speed up the output.</P
+><P
+>You can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setserverprefs</B
+></SPAN
+> command to reset an existing preference rank, or to
+      set the initial rank of a file server machine interface or VL Server machine for which the Cache Manager has no rank. The
+      ranks you set persist until the machine reboots or until you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setserverprefs</B
+></SPAN
+>
+      command again. To make a rank persist across a reboot, place the appropriate <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+      setserverprefs</B
+></SPAN
+> command in the machine's AFS initialization file.</P
+><P
+>As with default ranks, the Cache Manager adds a randomly chosen integer to each rank range that you assign. For file
+      server machine interfaces, the randomizing number is from the range 0 (zero) to 15; for VL Server machines, it is from the
+      range 0 (zero) to 126. For example, if you assign a rank of 15,000 to a file server machine interface, the Cache Manager
+      stores an integer between 15,000 to 15,015.</P
+><P
+>To assign VL Server machine ranks, list them after the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlserver</B
+></SPAN
+> argument to the
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setserverprefs</B
+></SPAN
+> command.</P
+><P
+>To assign file server machine ranks, use or more of the three possible methods: <OL
+TYPE="1"
+><LI
+><P
+>List them after the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-servers</B
+></SPAN
+> argument on the command line.</P
+></LI
+><LI
+><P
+>Record them in a file and name it with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+> argument. You can easily
+            generate a file with the proper format by including the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+> command.</P
+></LI
+><LI
+><P
+>Provide them via the standard input stream, by including the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-stdin</B
+></SPAN
+> flag. This
+            enables you to feed in values directly from a command or script that generates preferences using an algorithm
+            appropriate for your cell. It must generate them in the proper format, with one or more spaces between each pair and
+            between the two parts of the pair. The AFS distribution does not include such a script, so you must write one if you
+            want to use this method.</P
+></LI
+></OL
+></P
+><P
+>You can combine any of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-servers</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+>, and
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-stdin</B
+></SPAN
+> options on the same command line if you wish. If more than one of them specifies a
+      rank for the same interface, the one assigned with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-servers</B
+></SPAN
+> argument takes precedence.
+      You can also provide the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+> argument on the same command line to set VL Server
+      machine ranks at the same time as file server machine ranks.</P
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> command interpreter does not verify hostnames or IP addresses, and so willingly
+      stores ranks for hostnames and addresses that don't actually exist. The Cache Manager never uses such ranks unless the same
+      VLDB record for a server machine records the same incorrect information.  </P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_474"
+>To display server preference ranks</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+> command to display the Cache Manager's preference ranks
+          for file server machines or VL Server machines. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>output to named file</VAR
+>&#62;] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-numeric</B
+></SPAN
+>] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>gp</B
+></SPAN
+></DT
+><DD
+><P
+>Is an acceptable alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getserverprefs</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>gets</B
+></SPAN
+> is the shortest acceptable abbreviation).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the pathname of the file to which to write the list of ranks. Omit this argument to display the
+                  list on the standard output stream (stdout).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-numeric</B
+></SPAN
+></DT
+><DD
+><P
+>Displays the IP address, rather than the hostname, of each ranked machine interface. Omit this flag to have
+                  the addresses translated into hostnames, which takes longer.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+></DT
+><DD
+><P
+>Displays ranks for VL Server machines rather than file server machines.</P
+></DD
+></DL
+></DIV
+></P
+><P
+>The following example displays file server machine ranks. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-numeric</B
+></SPAN
+> flag is not
+          used, so the appearance of an IP address indicates that is not currently possible to translate it to a hostname.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs gp</B
+></SPAN
+>
+   fs5.abc.com         20000
+   fs1.abc.com         30014
+   server1.stateu.edu  40011
+   fs3.abc.com         20001
+   fs4.abc.com         30001
+   192.12.106.120      40002
+   192.12.106.119      40001
+      .   .   .   .   .     . .
+</PRE
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_475"
+>To set server preference ranks</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setserverprefs</B
+></SPAN
+> command to set the Cache Manager's preference ranks for
+          one or more file server machines or VL Server machines. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setserverprefs</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-servers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>fileserver names and ranks</VAR
+>&#62;+]  \
+                       [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>VL server names and ranks</VAR
+>&#62;+]  \
+                       [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>input from named file</VAR
+>&#62;] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-stdin</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sp</B
+></SPAN
+></DT
+><DD
+><P
+>Is an acceptable alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setserverprefs</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sets</B
+></SPAN
+> is the shortest acceptable abbreviation).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-servers</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies one or more pairs of file server machine interface and rank. Identify each interface by its
+                  fully-qualified hostname or IP address in dotted decimal format. Acceptable ranks are the integers from <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>65534</B
+></SPAN
+>. Separate the parts of a pair, and the pairs
+                  from one another, with one or more spaces.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies one or more pairs of VL Server machine and rank. Identify each machine by its fully-qualified
+                  hostname or IP address in dotted decimal format. Acceptable ranks are the integers from <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>65534</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-file</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the pathname of a file that contains one more pairs of file server machine interface and rank.
+                  Place each pair on its own line in the file. Use the same format for interfaces and ranks as with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-servers</B
+></SPAN
+> argument.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-stdin</B
+></SPAN
+></DT
+><DD
+><P
+>Indicates that pairs of file server machine interface and rank are being provided via the standard input
+                  stream (stdin). The program or script that generates the pairs must format them in the same manner as for the
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-servers</B
+></SPAN
+> argument.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ415"
+>Managing Multihomed Client Machines</A
+></H1
+><P
+>The File Server can choose the interface to which to send a message when it initiates communication with the Cache Manager
+    on a multihomed client machine (one with more than one network interface and IP address). If that interface is inaccessible, it
+    automatically switches to an alternate. This improves AFS performance, because it means that the outage of an interface does not
+    interrupt communication between File Server and Cache Manager.</P
+><P
+>The File Server can choose the client interface when it sends two types of messages: <UL
+><LI
+><P
+>A message to break the callback that the Cache Manager holds on a cached file</P
+></LI
+><LI
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>ping</I
+></SPAN
+> message to check that the Cache Manager is still accessible and responding; the File
+          Server sends such a message every few minutes</P
+></LI
+></UL
+></P
+><P
+>(The File Server does not choose which client interface to respond to when filling a Cache Manager's request for AFS data.
+    In that case, it always responds to the client interface via which the Cache Manager sent the request.)</P
+><P
+>The Cache Manager compiles the list of eligible interfaces on its client machine automatically as it initializes, and
+    records them in kernel memory. When the Cache Manager first establishes a connection with the File Server, it sends along the
+    list of interface addresses. The File Server records the addresses, and uses the one at the top of the list when it needs to
+    break a callback or send a ping to the Cache Manager. If that interface is inaccessible, the File Server simultaneously sends a
+    message to all of the other interfaces in the list. Whichever interface replies first is the one to which the File Server sends
+    future messages.</P
+><P
+>You can control which addresses the Cache Manager registers with File Servers by listing them in two files in the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc</B
+></SPAN
+> directory on the client machine's local disk: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetInfo</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetRestrict</B
+></SPAN
+>. If the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetInfo</B
+></SPAN
+>
+    file exists when the Cache Manager initializes, the Cache Manager uses its contents as the basis for the list of interfaces.
+    Otherwise, the Cache Manager uses the list of interfaces configured with the operating system. It then removes from the list any
+    addresses that appear in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/NetRestrict</B
+></SPAN
+> file, if it exists. The Cache Manager
+    records the resulting list in kernel memory.</P
+><P
+>You can also use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> command to change the list of addresses stored in
+    the Cache Manager's kernel memory, without rebooting the client machine. The list of addresses you provide on the command line
+    completely replaces the current list in kernel memory. The changes you make persist only until the client machine reboots,
+    however. To preserve the revised list across reboots, list the interfaces in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetInfo</B
+></SPAN
+> file
+    (and if appropriate, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetRestrict</B
+></SPAN
+> file) in the local <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc</B
+></SPAN
+> directory. (You can also place the appropriate <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+    setclientaddrs</B
+></SPAN
+> command in the machine's AFS initialization script, but that is less efficient: by the time the Cache
+    Manager reads the command in the script, it has already compiled a list of interfaces.)</P
+><P
+>To display the list of addresses that the Cache Manager is currently registering with File Servers, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getclientaddrs</B
+></SPAN
+> command.</P
+><P
+>Keep the following in mind when you change the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetInfo</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetRestrict</B
+></SPAN
+> file, or issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getclientaddrs</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> commands: <UL
+><LI
+><P
+>When you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> command, the revised list of addresses does
+          not propagate automatically to File Servers with which the Cache Manager has already established a connection. They
+          continue to use the list that the Cache Manager registered with them when it first established a connection. To force
+          previously contacted File Servers to use the revised list, you must either reboot each file server machine, or reboot the
+          client machine after changing its <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetInfo</B
+></SPAN
+> file, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>NetRestrict</B
+></SPAN
+> file, or both.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> command interpreter verifies that each of the addresses you specify on the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> command line is actually configured with the client machine's operating
+          system. If it is not, the command fails with an error message that marks the address as a <SAMP
+CLASS="computeroutput"
+>Nonexistent
+          interface</SAMP
+>.</P
+></LI
+><LI
+><P
+>As previously noted, the File Server does not use the registered list of addresses when it responds to the Cache
+          Manager's request for data (as opposed to initiating communication itself). It always attempts to send its reply to the
+          interface from which the Cache Manager sent the request. If the reply attempt fails, the File Server selects an alternate
+          route for resending the reply according to its server machine's network routing configuration, not the list of addresses
+          registered by the Cache Manager.</P
+></LI
+><LI
+><P
+>The Cache Manager does not use the list of interfaces when choosing the interface via which to establish a
+          connection to a File Server.</P
+></LI
+><LI
+><P
+>The list of addresses that the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getclientaddrs</B
+></SPAN
+> command displays is not
+          necessarily the one that a specific File Server is using, if an administrator has issued the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+          setclientaddrs</B
+></SPAN
+> command since the Cache Manager first contacted that File Server. It determines only which
+          addresses the Cache Manager registers when connecting to File Servers in future.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_477"
+>To create or edit the client NetInfo file</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Using a text editor, open the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/NetInfo</B
+></SPAN
+> file. Place one IP address in
+          dotted decimal format (for example, <SAMP
+CLASS="computeroutput"
+>192.12.107.33</SAMP
+>) on each line. On the first line, put
+          the address that you want each File Server to use initially. The order of the remaining machines does not matter, because
+          if an RPC to the first interface fails, the File Server simultaneously sends RPCs to all of the other interfaces in the
+          list. Whichever interface replies first is the one to which the File Server then sends pings and RPCs to break
+          callbacks.</P
+></LI
+><LI
+><P
+>If you want the Cache Manager to start using the revised list immediately, either reboot the machine, or use the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> command to create the same list of addresses in kernel memory
+          directly.</P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_478"
+>To create or edit the client NetRestrict file</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Using a text editor, open the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/NetRestrict</B
+></SPAN
+> file. Place one IP address
+          in dotted decimal format on each line. The order of the addresses is not significant. Use the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>255</B
+></SPAN
+> as a wildcard that represents all possible addresses in that field. For example, the entry
+          <SAMP
+CLASS="computeroutput"
+>192.12.105.255</SAMP
+> indicates that the Cache Manager does not register any of the addresses in
+          the 192.12.105 subnet.</P
+></LI
+><LI
+><P
+>If you want the Cache Manager to start using the revised list immediately, either reboot the machine, or use the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> command to set a list of addresses that does not included the
+          prohibited ones.</P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_479"
+>To display the list of addresses from kernel memory</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getclientaddrs</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getclientaddrs</B
+></SPAN
+> 
+</PRE
+></P
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>gc</B
+></SPAN
+> is an acceptable alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getclientaddrs</B
+></SPAN
+>
+          (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>getcl</B
+></SPAN
+> is the shortest acceptable abbreviation).</P
+></LI
+></OL
+><P
+>The output lists each IP address on its own line, in dotted decimal format.  </P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_480"
+>To set the list of addresses in kernel memory</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> command to replace the list of addresses currently in
+          kernel memory with a new list. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setclientaddrs</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-address</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>client network interfaces</VAR
+>&#62;+]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sc</B
+></SPAN
+></DT
+><DD
+><P
+>Is an acceptable alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setclientaddrs</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setcl</B
+></SPAN
+> is the shortest acceptable abbreviation).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-address</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies one or more IP addresses in dotted decimal format (hostnames are not acceptable). Separate each
+                  address with one or more spaces.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ416"
+>Controlling the Display of Warning and Informational Messages</A
+></H1
+><P
+>By default, the Cache Manager generates two types of warning and informational messages: <UL
+><LI
+><P
+>It sends <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>user messages</I
+></SPAN
+>, which provide user-level status and warning information, to user
+          screens.</P
+></LI
+><LI
+><P
+>It sends <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>console messages</I
+></SPAN
+>, which provide system-level status and warning information, to the
+          client machine's designated console.</P
+></LI
+></UL
+></P
+><P
+>You can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs messages</B
+></SPAN
+> command to control whether the Cache Manager displays either
+    type of message, both types, or neither. It is best not to disable messages completely, because they provide useful
+    information.</P
+><P
+>If you want to monitor Cache Manager status and performance more actively, you can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>afsmonitor</B
+></SPAN
+> program to collect an extensive set of statistics (it also gathers File Server statistics). If
+    you experience performance problems, you can use <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fstrace</B
+></SPAN
+> suite of commands to gather a
+    low-level trace of Cache Manager operations, which the AFS Support and Development groups can analyze to help solve your
+    problem. To learn about both utilities, see <A
+HREF="c18360.html"
+>Monitoring and Auditing AFS Performance</A
+>.  </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_482"
+>To control the display of warning and status messages</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs messages</B
+></SPAN
+> command, using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-show</B
+></SPAN
+>
+          argument to specify the type of messages to be displayed. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs messages -show</B
+></SPAN
+> &#60;<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user</B
+></SPAN
+>|<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>console</B
+></SPAN
+>|<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>all</B
+></SPAN
+>|<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>none</B
+></SPAN
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>me</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>messages</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-show</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the types of messages to display. Choose one of the following values: <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user</B
+></SPAN
+></DT
+><DD
+><P
+>Sends user messages to user screens.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>console</B
+></SPAN
+></DT
+><DD
+><P
+>Sends console messages to the console.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>all</B
+></SPAN
+></DT
+><DD
+><P
+>Sends user messages to user screens and console messages to the console (the default if the
+                          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-show</B
+></SPAN
+> argument is omitted).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>none</B
+></SPAN
+></DT
+><DD
+><P
+>Disables messages completely.</P
+></DD
+></DL
+></DIV
+></P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ417"
+>Displaying and Setting the System Type Name</A
+></H1
+><P
+>The Cache Manager stores the system type name of the local client machine in kernel memory. It reads in the default value
+    from a hardcoded definition in the AFS client software.</P
+><P
+>The Cache Manager uses the system name as a substitute for the @sys variable in AFS pathnames. The variable is useful when
+    creating a symbolic link from the local disk to an AFS directory that houses binaries for the client machine's system type.
+    Because the @sys variable automatically steers the Cache Manager to the appropriate directory, you can create the same symbolic
+    link on client machines of different system types. (You can even automate the creation operation by using the package utility
+    described in <A
+HREF="c23832.html"
+>Configuring Client Machines with the package Program</A
+>.) The link also remains valid
+    when you upgrade the machine to a new system type.</P
+><P
+>Configuration is simplest if you use the system type names that AFS assigns. For a list, see the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Release
+    Notes</I
+></SPAN
+>.</P
+><P
+>To display the system name stored in kernel memory, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sys</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sysname</B
+></SPAN
+> command. To change the name, add the latter command's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-newsys</B
+></SPAN
+>
+    argument.    </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_484"
+>To display the system type name</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sysname</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sys</B
+></SPAN
+> command.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sysname</B
+></SPAN
+> 
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sys</B
+></SPAN
+>
+</PRE
+></P
+></LI
+></OL
+><P
+>The output of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sysname</B
+></SPAN
+> command has the following format:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Current sysname is 'system_name'
+</PRE
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sys</B
+></SPAN
+> command displays the system_name string with no other text.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_485"
+>To change the system type name</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sysname</B
+></SPAN
+> command, using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-newsys</B
+></SPAN
+>
+          argument to specify the new name. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs sysname</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>new sysname</VAR
+>&#62;
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sys</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sysname</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>new sysname</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the new system type name.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ418"
+>Enabling Asynchronous Writes</A
+></H1
+><P
+>By default, the Cache Manager writes all data to the File Server immediately and synchronously when an application program
+    closes a file. That is, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>close</B
+></SPAN
+> system call does not return until the Cache Manager has
+    actually written all of the cached data from the file back to the File Server. You can enable the Cache Manager to write files
+    asynchronously by specifying the number of kilobytes of a file that can remain to be written to the File Server when the Cache
+    Manager returns control to the application.</P
+><P
+>Enabling asynchronous writes can be helpful to users who commonly work with very large files, because it usually means
+    that the application appears to perform faster. However, it introduces some complications. It is best not to enable asynchronous
+    writes unless the machine's users are sophisticated enough to understand the potential problems and how to avoid them. The
+    complications include the following: <UL
+><LI
+><P
+>In most cases, the Cache Manager returns control to applications earlier than it does by default, but it is not
+          guaranteed to do so. Users cannot always expect faster performance.</P
+></LI
+><LI
+><P
+>If an asynchronous write fails, there is no way to notify the application, because the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>close</B
+></SPAN
+> system call has already returned with a code indicating success.</P
+></LI
+><LI
+><P
+>Asynchronous writing increases the possibility that the user fails to notice when a write operation makes a volume
+          exceed its quota. As always, the portion of the file that exceeds the quota is lost, as indicated by a message like the
+          following: <PRE
+CLASS="programlisting"
+>&#13;   No space left on device
+</PRE
+></P
+><P
+>To avoid losing data because of insufficient quota, before closing a file users must verify that the volume housing
+          the file has enough free space to accommodate it.</P
+></LI
+></UL
+></P
+><P
+>When you enable asynchronous writes by issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+> command, you set the
+    number of kilobytes of a file that can still remain to be written to the File Server when the Cache Manager returns control to
+    the application program. You can apply the setting either to all files manipulated by applications running on the machine, or
+    only to certain files: <UL
+><LI
+><P
+>The setting that applies to all files is called the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>default store asynchrony</I
+></SPAN
+> for the machine,
+          and persists until the machine reboots. If, for example, you set the default store asynchrony to 10 KB, it means that when
+          an application closes a file, the Cache Manager can return control to the application as soon as no more than 10 KB of a
+          file that the application has closed remain to be written to the File Server.</P
+></LI
+><LI
+><P
+>The setting for an individual file overrides the default store asynchrony and persists as long as there is an entry
+          for the file in the internal table that the Cache Manager uses to track information about files. In general, such an entry
+          persists at least until an application closes the file or exits completely, but the Cache Manager is free to recycle the
+          entry if the file is inactive and it needs to free up slots in the table. To be sure the entry exists in the table, issue
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+> command shortly before closing the file.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_487"
+>To set the default store asynchrony</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the machine, if you are not already, by issuing
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+> command with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-allfiles</B
+></SPAN
+> argument. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind -allfiles</B
+></SPAN
+>  &#60;<VAR
+CLASS="replaceable"
+>new default (KB)</VAR
+>&#62; [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>st</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>storebehind</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-allfiles</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the number of kilobytes of data that can remain to be written to the File Server when the Cache Manager
+                  returns control to the application that closed a file.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+></DT
+><DD
+><P
+>Produces a message that confirms the new setting.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_488"
+>To set the store asynchrony for one or more files</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you have the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>w</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>write</B
+></SPAN
+>) permission on
+          the access control list (ACL) of each file for which you are setting the store asynchrony, by issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command, which is described fully in <A
+HREF="c31274.html#HDRWQ572"
+>Displaying ACLs</A
+>.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> dir/file path
+</PRE
+></P
+><P
+>Alternatively, become the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> on the client machine, if you are
+          not already, by issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su root</B
+></SPAN
+>
+   Password: &#60;<VAR
+CLASS="replaceable"
+>root_password</VAR
+>&#62;
+</PRE
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+> command with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-kbytes</B
+></SPAN
+>
+          and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+> arguments. <PRE
+CLASS="programlisting"
+>&#13;   # <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind -kbytes</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>asynchrony for specified names</VAR
+>&#62; \
+                    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>specific pathnames</VAR
+>&#62;+  \
+                    [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>st</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>storebehind</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-kbytes</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the number of kilobytes of data that can remain to be written to the File Server when the Cache Manager
+                  returns control to the application that closed a file named by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+>
+                  argument.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies each file for which to set a store asynchrony that overrides the default. Partial pathnames are
+                  interpreted relative to the current working directory.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+></DT
+><DD
+><P
+>Produces a message that confirms that new setting.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_489"
+>To display the default store asynchrony</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+> command with no arguments, or with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+> flag only. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+>  [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>st</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>storebehind</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-verbose</B
+></SPAN
+></DT
+><DD
+><P
+>Produces output that reports the default store asynchrony.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_490"
+>To display the store asynchrony for one or more files</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+> command with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+>
+          argument only. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs storebehind</B
+></SPAN
+> <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>specific pathnames</VAR
+>&#62;+ 
+</PRE
+></P
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>st</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>storebehind</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-files</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies each file for which to display the store asynchrony. Partial pathnames are interpreted relative to
+                  the current working directory.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+><P
+>The output lists each file separately. If a value has previously been set for the specified files, the output reports
+      the following:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Will store up to y kbytes of file asynchronously.
+   Default store asynchrony is x kbytes.
+</PRE
+><P
+>If the default store asynchrony applies to a file (because you have not set a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-kbytes</B
+></SPAN
+>
+      value for it), the output reports the following:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Will store file according to default.
+   Default store asynchrony is x kbytes.
+</PRE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="p21471.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c23832.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Managing Client Machines</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="p21471.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Configuring Client Machines with the package Program</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

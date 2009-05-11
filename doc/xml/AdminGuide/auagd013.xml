@@ -1,0 +1,3380 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ323">
+  <title>Monitoring and Auditing AFS Performance</title>
+
+  <indexterm>
+    <primary>scout program</primary>
+  </indexterm>
+
+  <indexterm>
+    <primary>monitoring</primary>
+
+    <secondary>file server processes with scout</secondary>
+  </indexterm>
+
+  <indexterm>
+    <primary>monitoring</primary>
+
+    <secondary>file server processes with afsmonitor</secondary>
+  </indexterm>
+
+  <indexterm>
+    <primary>monitoring</primary>
+
+    <secondary>Cache Manager processes with afsmonitor</secondary>
+  </indexterm>
+
+  <indexterm>
+    <primary>monitoring</primary>
+
+    <secondary>Cache Manager performance</secondary>
+  </indexterm>
+
+  <indexterm>
+    <primary>Cache Manager</primary>
+
+    <secondary>monitoring performance</secondary>
+  </indexterm>
+
+  <indexterm>
+    <primary>client machine</primary>
+
+    <secondary>monitoring performance</secondary>
+  </indexterm>
+
+  <indexterm>
+    <primary>file system</primary>
+
+    <secondary>monitoring activity</secondary>
+  </indexterm>
+
+  <para>AFS comes with three main monitoring tools: <itemizedlist>
+      <listitem>
+        <para>The <emphasis role="bold">scout</emphasis> program, which monitors and gathers statistics on File Server
+        performance.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <emphasis role="bold">fstrace</emphasis> command suite, which traces Cache Manager operations in detail.</para>
+      </listitem>
+
+      <listitem>
+        <para>The <emphasis role="bold">afsmonitor</emphasis> program, which monitors and gathers statistics on both the File Server
+        and the Cache Manager.</para>
+      </listitem>
+    </itemizedlist></para>
+
+  <para>AFS also provides a tool for auditing AFS events on file server machines running AIX.</para>
+
+  <sect1 id="HDRWQ324">
+    <title>Summary of Instructions</title>
+
+    <para>This chapter explains how to perform the following tasks by using the indicated commands:</para>
+
+    <informaltable frame="none">
+      <tgroup cols="2">
+        <colspec colwidth="70*" />
+
+        <colspec colwidth="30*" />
+
+        <tbody>
+          <row>
+            <entry>Initialize the <emphasis role="bold">scout</emphasis> program</entry>
+
+            <entry><emphasis role="bold">scout</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display information about a trace log</entry>
+
+            <entry><emphasis role="bold">fstrace lslog</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display information about an event set</entry>
+
+            <entry><emphasis role="bold">fstrace lsset</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Change the size of a trace log</entry>
+
+            <entry><emphasis role="bold">fstrace setlog</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Set the state of an event set</entry>
+
+            <entry><emphasis role="bold">fstrace setset</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Dump contents of a trace log</entry>
+
+            <entry><emphasis role="bold">fstrace dump</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Clear a trace log</entry>
+
+            <entry><emphasis role="bold">fstrace clear</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Initialize the <emphasis role="bold">afsmonitor</emphasis> program</entry>
+
+            <entry><emphasis role="bold">afsmonitor</emphasis></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+
+  <sect1 id="HDRWQ326">
+    <title>Using the scout Program</title>
+
+    <indexterm>
+      <primary>scout program</primary>
+
+      <secondary>features summarized</secondary>
+    </indexterm>
+
+    <para>The <emphasis role="bold">scout</emphasis> program monitors the status of the File Server process running on file server
+    machines. It periodically collects statistics from a specified set of File Server processes, displays them in a graphical
+    format, and alerts you if any of the statistics exceed a configurable threshold.</para>
+
+    <para>More specifically, the <emphasis role="bold">scout</emphasis> program includes the following features. <itemizedlist>
+        <listitem>
+          <para>You can monitor, from a single location, the File Server process on any number of server machines from the local and
+          foreign cells. The number is limited only by the size of the display window, which must be large enough to display the
+          statistics.</para>
+        </listitem>
+
+        <listitem>
+          <para>You can set a threshold for many of the statistics. When the value of a statistic exceeds the threshold, the
+          <emphasis role="bold">scout</emphasis> program highlights it (displays it in reverse video) to draw your attention to it.
+          If the value goes back under the threshold, the highlighting is deactivated. You control the thresholds, so highlighting
+          reflects what you consider to be a noteworthy situation. See <link linkend="HDRWQ332">Highlighting Significant
+          Statistics</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">scout</emphasis> program alerts you to File Server process, machine, and network outages
+          by highlighting the name of each machine that does not respond to its probe, enabling you to respond more quickly.</para>
+        </listitem>
+
+        <listitem>
+          <para>You can set how often the <emphasis role="bold">scout</emphasis> program collects statistics from the File Server
+          processes.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="HDRWQ327">
+      <title>System Requirements</title>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>requirements</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>requirements</primary>
+
+        <secondary>scout program</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>curses graphics utility</primary>
+
+        <secondary>scout program requirements</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>setting terminal type</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>terminal type for scout</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>terminal type</primary>
+
+        <secondary>setting for scout program</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>dumb terminal</primary>
+
+        <secondary>use in scout program</secondary>
+      </indexterm>
+
+      <para>The <emphasis role="bold">scout</emphasis> program runs on any AFS client machine that has access to the <emphasis
+      role="bold">curses</emphasis> graphics package, which most UNIX distributions include as a standard utility. It can run on
+      both dumb terminals and under windowing systems that emulate terminals, but the output looks best on machines that support
+      reverse video and cursor addressing. For best results, set the TERM environment variable to the correct terminal type, or one
+      with characteristics similar to the actual ones. For machines running AIX, the recommended TERM setting is <emphasis
+      role="bold">vt100</emphasis>, assuming the terminal is similar to that. For other operating systems, the wider range of
+      acceptable values includes <emphasis role="bold">xterm</emphasis>, <emphasis role="bold">xterms</emphasis>, <emphasis
+      role="bold">vt100</emphasis>, <emphasis role="bold">vt200</emphasis>, and <emphasis role="bold">wyse85</emphasis>.</para>
+
+      <indexterm>
+        <primary>privilege</primary>
+
+        <secondary>required for scout program</secondary>
+      </indexterm>
+
+      <para>No privilege is required to run the <emphasis role="bold">scout</emphasis> program, so any user who can access the
+      directory where its binary resides (the <emphasis role="bold">/usr/afsws/bin</emphasis> directory in the conventional
+      configuration) can use it. The program's probes for collecting statistics do not impose a significant burden on the File
+      Server process, but you can restrict its use by placing the binary file in a directory with a more restrictive access control
+      list (ACL).</para>
+
+      <para>Multiple instances of the <emphasis role="bold">scout</emphasis> program can run on a single client machine, each over
+      its own dedicated connection (in its own window). It must run in the foreground, so the window in which it runs does not
+      accept further input except for an interrupt signal.</para>
+
+      <para>You can also run the <emphasis role="bold">scout</emphasis> program on several machines and view its output on a single
+      machine, by opening telnet connections to the other machines from the central one and initializing the program in each remote
+      window. In this case, you can include the <emphasis role="bold">-host</emphasis> flag to the <emphasis
+      role="bold">scout</emphasis> command to make the name of each remote machine appear in the <emphasis>banner line</emphasis> at
+      the top of the window displaying its output. See <link linkend="HDRWQ330">The Banner Line</link>.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ328">
+      <title>Using the -basename argument to Specify a Domain Name</title>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>basename</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>basenames in scout program</primary>
+      </indexterm>
+
+      <para>As previously mentioned, the <emphasis role="bold">scout</emphasis> program can monitor the File Server process on any
+      number of file server machines. If all of the machines belong to the same cell, then their hostnames probably all have the
+      same domain name suffix, such as <emphasis role="bold">abc.com</emphasis> in the ABC Corporation cell. In this case, you can
+      use the <emphasis role="bold">-basename</emphasis> argument to the <emphasis role="bold">scout</emphasis> command, which has
+      several advantages: <itemizedlist>
+          <listitem>
+            <para>You can omit the domain name suffix as you enter each file server machine's name on the command line. The
+            <emphasis role="bold">scout</emphasis> program automatically appends the domain name to each machine's name, resulting
+            in a fully-qualified hostname. You can omit the domain name suffix even when you don't include the <emphasis
+            role="bold">-basename</emphasis> argument, but in that case correct resolution of the name depends on the state of your
+            cell's naming service at the time of connection.</para>
+          </listitem>
+
+          <listitem>
+            <para>The machine names are more likely to fit in the appropriate column of the display without having to be truncated
+            (for more on truncating names in the display column, see <link linkend="HDRWQ331">The Statistics Display
+            Region</link>).</para>
+          </listitem>
+
+          <listitem>
+            <para>The domain name appears in the banner line at the top of the display window to indicate the name of the cell you
+            are monitoring.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ329">
+      <title>The Layout of the scout Display</title>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>display layout</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>display layout in scout program window</primary>
+      </indexterm>
+
+      <para>The <emphasis role="bold">scout</emphasis> program can display statistics either in a dedicated window or on a plain
+      screen if a windowing environment is not available. For best results, use a window or screen that can print in reverse video
+      and do cursor addressing.</para>
+
+      <para>The <emphasis role="bold">scout</emphasis> program screen has three main regions: the <emphasis>banner line</emphasis>,
+      the <emphasis>statistics display region</emphasis> and the <emphasis>probe/message</emphasis> line. This section describes
+      their contents, and graphic examples appear in <link linkend="HDRWQ336">Example Commands and Displays</link>.</para>
+
+      <sect3 id="HDRWQ330">
+        <title>The Banner Line</title>
+
+        <indexterm>
+          <primary>scout program</primary>
+
+          <secondary>banner line</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>banner line on the scout program screen</primary>
+        </indexterm>
+
+        <para>By default, the string <computeroutput>scout</computeroutput> appears in the banner line at the top of the window or
+        screen, to indicate that the <emphasis role="bold">scout</emphasis> program is running. You can display two additional types
+        of information by include the appropriate option on the command line: <itemizedlist>
+            <listitem>
+              <para>Include the <emphasis role="bold">-host</emphasis> flag to display the local machine's name in the banner line.
+              This is particularly useful when you are running the <emphasis role="bold">scout</emphasis> program on several
+              machines but displaying the results on a single machine.</para>
+
+              <para>For example, the following banner line appears when you run the <emphasis role="bold">scout</emphasis> program
+              on the machine <emphasis role="bold">client1.abc.com</emphasis> and use the<emphasis role="bold">-host</emphasis>
+              flag:</para>
+
+              <programlisting>
+   [client1.abc.com] scout
+</programlisting>
+            </listitem>
+
+            <listitem>
+              <para>Include the <emphasis role="bold">-basename</emphasis> argument to display the specified cell domain name in the
+              banner line. For further discussion, see <link linkend="HDRWQ328">Using the -basename argument to Specify a Domain
+              Name</link>.</para>
+
+              <para>For example, if you specify a value of <emphasis role="bold">abc.com</emphasis> for the <emphasis
+              role="bold">-basename</emphasis> argument, the banner line reads:</para>
+
+              <programlisting>
+   scout for abc.com
+</programlisting>
+            </listitem>
+          </itemizedlist></para>
+      </sect3>
+
+      <sect3 id="HDRWQ331">
+        <title>The Statistics Display Region</title>
+
+        <indexterm>
+          <primary>scout program</primary>
+
+          <secondary>statistics displayed</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>statistics display by scout program</primary>
+        </indexterm>
+
+        <para>The statistics display region occupies most of the window and is divided into six columns. The following list
+        describes them as they appear from left to right in the window. <variablelist>
+            <varlistentry>
+              <term><computeroutput>Conn</computeroutput></term>
+
+              <listitem>
+                <indexterm>
+                  <primary>Conn statistic from scout program</primary>
+                </indexterm>
+
+                <para>Displays the number of RPC connections open between the File Server process and client machines. This number
+                normally equals or exceeds the number in the fourth <computeroutput>Ws</computeroutput> column. It can exceed the
+                number in that column because each user on the machine can have more than one connection open at once, and one
+                client machine can handle several users.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><computeroutput>Fetch</computeroutput></term>
+
+              <listitem>
+                <indexterm>
+                  <primary>Fetch statistic from scout program</primary>
+                </indexterm>
+
+                <para>Displays the number of fetch-type RPCs (fetch data, fetch access list, and fetch status) that the File Server
+                process has received from client machines since it started. It resets to zero when the File Server process
+                restarts.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><computeroutput>Store</computeroutput></term>
+
+              <listitem>
+                <indexterm>
+                  <primary>Store statistic from scout program</primary>
+                </indexterm>
+
+                <para>Displays the number of store-type RPCs (store data, store access list, and store status) that the File Server
+                process has received from client machines since it started. It resets to zero when the File Server process
+                restarts.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><computeroutput>Ws</computeroutput></term>
+
+              <listitem>
+                <indexterm>
+                  <primary>active</primary>
+
+                  <secondary>clients statistic from scout program</secondary>
+                </indexterm>
+
+                <indexterm>
+                  <primary>client machines statistic from scout program</primary>
+                </indexterm>
+
+                <indexterm>
+                  <primary>Ws statistic from scout program</primary>
+                </indexterm>
+
+                <para>Displays the number of client machines (workstations) that have communicated with the File Server process
+                within the last 15 minutes (such machines are termed <emphasis>active</emphasis>). This number is likely to be
+                smaller than the number in the <computeroutput>Conn</computeroutput>) column because a single client machine can
+                have several connections open to one File Server process.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">[Unlabeled column]</emphasis></term>
+
+              <listitem>
+                <para>Displays the name of the file server machine on which the File Server process is running. It is 12 characters
+                wide. Longer names are truncated and an asterisk (<computeroutput>*</computeroutput>) appears as the last character
+                in the name. If all machines have the same domain name suffix, you can use the <emphasis
+                role="bold">-basename</emphasis> argument to decrease the need for truncation; see <link linkend="HDRWQ328">Using
+                the -basename argument to Specify a Domain Name</link>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><computeroutput>Disk attn</computeroutput></term>
+
+              <listitem>
+                <indexterm>
+                  <primary>disk partition</primary>
+
+                  <secondary>monitoring usage of</secondary>
+                </indexterm>
+
+                <indexterm>
+                  <primary>monitoring</primary>
+
+                  <secondary>disk usage with scout program</secondary>
+                </indexterm>
+
+                <indexterm>
+                  <primary>scout program</primary>
+
+                  <secondary>monitoring disk usage</secondary>
+                </indexterm>
+
+                <indexterm>
+                  <primary>Disk attn statistic from scout program</primary>
+                </indexterm>
+
+                <para>Displays the number of kilobyte blocks available on up to 26 of the file server machine's AFS server
+                (<emphasis role="bold">/vicep</emphasis>) partitions. The display for each partition has the following format:
+                <programlisting>
+   partition_letter:free_blocks
+</programlisting></para>
+
+                <para>For example, <computeroutput>a:8949</computeroutput> indicates that partition <emphasis
+                role="bold">/vicepa</emphasis> has 8,949 KB free. If the window is not wide enough for all partition entries to
+                appear on a single line, the <emphasis role="bold">scout</emphasis> program automatically stacks the partition
+                entries into subcolumns within the sixth column.</para>
+
+                <para>The label on the <computeroutput>Disk attn</computeroutput> column indicates the threshold value at which
+                entries in the column become highlighted. By default, the <emphasis role="bold">scout</emphasis> program highlights
+                a partition that is over 95% full, in which case the label is as follows:</para>
+
+                <programlisting>
+   Disk attn: &gt; 95% used
+</programlisting>
+
+                <para>For more on this threshold and its effect on highlighting, see <link linkend="HDRWQ332">Highlighting
+                Significant Statistics</link>.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist></para>
+
+        <para>For all columns except the fifth (file server machine name), you can use the <emphasis
+        role="bold">-attention</emphasis> argument to set a threshold value above which the <emphasis role="bold">scout</emphasis>
+        program highlights the statistic. By default, only values in the fifth and sixth columns ever become highlighted. For
+        instructions on using the <emphasis role="bold">-attention</emphasis> argument, see <link linkend="HDRWQ332">Highlighting
+        Significant Statistics</link>.</para>
+      </sect3>
+
+      <sect3 id="Header_368">
+        <title>The Probe Reporting Line</title>
+
+        <indexterm>
+          <primary>scout program</primary>
+
+          <secondary>probe reporting line</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>message line in scout program display</primary>
+        </indexterm>
+
+        <para>The bottom line of the display indicates how many times the <emphasis role="bold">scout</emphasis> program has probed
+        the File Server processes for statistics. The statistics gathered in the latest probe appear in the statistics display
+        region. By default, the <emphasis role="bold">scout</emphasis> program probes the File Servers every 60 seconds, but you can
+        use the <emphasis role="bold">-frequency</emphasis> argument to specify a different probe frequency.</para>
+      </sect3>
+    </sect2>
+
+    <sect2 id="HDRWQ332">
+      <title>Highlighting Significant Statistics</title>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>highlighting in</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>highlighting statistics in scout display</primary>
+
+        <secondary>use of reverse video</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>reverse video</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>reverse video</primary>
+
+        <secondary>use in scout program display</secondary>
+      </indexterm>
+
+      <para>To draw your attention to a statistic that currently exceed a threshold value, the <emphasis
+      role="bold">scout</emphasis> program displays it in reverse video (highlights it). You can set the threshold value for most
+      statistics, and so determine which values are worthy of special attention and which are normal.</para>
+
+      <sect3 id="HDRWQ333">
+        <title>Highlighting Server Outages</title>
+
+        <indexterm>
+          <primary>outages</primary>
+
+          <secondary>monitoring with scout program</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>scout program</primary>
+
+          <secondary>outages, monitoring</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>monitoring</primary>
+
+          <secondary>outages with scout program</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>File Server</primary>
+
+          <secondary>monitoring with scout program</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>file server machine</primary>
+
+          <secondary>monitoring outages of</secondary>
+        </indexterm>
+
+        <para>The only column in which you cannot control highlighting is the fifth, which identifies the file server machine for
+        which statistics are displayed in the other columns. The <emphasis role="bold">scout</emphasis> program uses highlighting in
+        this column to indicate that the File Server process on a machine fails to respond to its probe, and automatically blanks
+        out the other columns. Failure to respond to the probe can indicate a File Server process, file server machine, or network
+        outage, so the highlighting draws your attention to a situation that is probably interrupting service to users.</para>
+
+        <para>When the File Server process once again responds to the probes, its name appears normally and statistics reappear in
+        the other columns. If all machine names become highlighted at once, a possible network outage has disrupted the connection
+        between the file server machines and the client machine running the <emphasis role="bold">scout</emphasis> program.</para>
+      </sect3>
+
+      <sect3 id="Header_371">
+        <title>Highlighting for Extreme Statistic Values</title>
+
+        <para>To set the threshold value for one or more of the five statistics-displaying columns, use the <emphasis
+        role="bold">-attention</emphasis> argument. The threshold value applies to all File Server processes you are monitoring (you
+        cannot set different thresholds for different machines). For details, see the syntax description in <link
+        linkend="HDRWQ335">To start the scout program</link>.</para>
+
+        <para>It is not possible to change the threshold values for a running <emphasis role="bold">scout</emphasis> program. Stop
+        the current program and start a new one. Also, the <emphasis role="bold">scout</emphasis> program does not retain threshold
+        values across restarts, so you must specify all thresholds every time you start the program.</para>
+      </sect3>
+    </sect2>
+
+    <sect2 id="HDRWQ334">
+      <title>Resizing the scout Display</title>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>display, resizing</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>window</primary>
+
+        <secondary>resizing scout display</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>resizing</primary>
+
+        <secondary>scout display</secondary>
+      </indexterm>
+
+      <para>Do not resize the display window while the <emphasis role="bold">scout</emphasis> program is running. Increasing the
+      size does no harm, but the <emphasis role="bold">scout</emphasis> program does not necessarily adjust to the new dimensions.
+      Decreasing the display's width can disturb column alignment, making the display harder to read. With any type of resizing, the
+      <emphasis role="bold">scout</emphasis> program does not adjust the display in any way until it displays the results of the
+      next probe.</para>
+
+      <para>To resize the display effectively, stop the <emphasis role="bold">scout</emphasis> program, resize the window and then
+      restart the program. Even in this case, the <emphasis role="bold">scout</emphasis> program's response depends on the accuracy
+      of the information it receives from the display environment. Testing during development has shown that the display environment
+      does not reliably provide information about window resizing. If you use the X windowing system, issuing the following sequence
+      of commands before starting the <emphasis role="bold">scout</emphasis> program (or placing them in the shell initialization
+      file) sometimes makes it adjust properly to resizing.</para>
+
+      <programlisting>
+   % <emphasis role="bold">set noglob</emphasis>
+   % <emphasis role="bold">eval '/usr/bin/X11/resize'</emphasis> 
+   % <emphasis role="bold">unset noglob</emphasis>
+</programlisting>
+
+      <indexterm>
+        <primary>starting</primary>
+
+        <secondary>scout program</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>starting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>initializing</primary>
+
+        <secondary>scout program</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>command syntax</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>scout</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ335">
+      <title>To start the scout program</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Open a dedicated command shell. If necessary, adjust it to the appropriate size.</para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">scout</emphasis> command to start the program. <programlisting>
+   % <emphasis role="bold">scout</emphasis>  [<emphasis role="bold">initcmd</emphasis>]  <emphasis role="bold">-server</emphasis> &lt;<replaceable>FileServer name(s) to monitor</replaceable>&gt;+  \
+            [<emphasis role="bold">-basename</emphasis> &lt;<replaceable>base server name</replaceable>&gt;]  \
+            [<emphasis role="bold">-frequency</emphasis> &lt;<replaceable>poll frequency, in seconds</replaceable>&gt;] [<emphasis
+                role="bold">-host</emphasis>]  \
+            [<emphasis role="bold">-attention</emphasis> &lt;<replaceable>specify attention (highlighting) level</replaceable>&gt;+]  \
+            [<emphasis role="bold">-debug</emphasis> &lt;<replaceable>turn debugging output on to the named file</replaceable>&gt;]
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">initcmd</emphasis></term>
+
+                <listitem>
+                  <para>Is an optional string that accommodates the command's use of the AFS command parser. It can be omitted and
+                  ignored.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-server</emphasis></term>
+
+                <listitem>
+                  <para>Identifies each File Server process to monitor, by naming the file server machine it is running on. Provide
+                  fully-qualified hostnames unless the <emphasis role="bold">-basename</emphasis> argument is used. In that case,
+                  specify only the initial part of each machine name, omitting the domain name suffix common to all the machine
+                  names.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-basename</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the domain name suffix common to all of the file server machines named by the <emphasis
+                  role="bold">-server</emphasis> argument. For discussion of this argument's effects, see <link
+                  linkend="HDRWQ328">Using the -basename argument to Specify a Domain Name</link>.</para>
+
+                  <para>Do not include the period that separates the domain suffix from the initial part of the machine name, but do
+                  include any periods that occur within the suffix itself. (For example, in the ABC Corporation cell, the proper
+                  value is <emphasis role="bold">abc.com</emphasis>, not <emphasis role="bold">.abc.com</emphasis>.)</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-frequency</emphasis></term>
+
+                <listitem>
+                  <para>Sets the frequency, in seconds, of the <emphasis role="bold">scout</emphasis> program's probes to File
+                  Server processes. Specify an integer greater than 0 (zero). The default is 60 seconds.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-host</emphasis></term>
+
+                <listitem>
+                  <para>Displays the name of the machine that is running the <emphasis role="bold">scout</emphasis> program in the
+                  display window's banner line. By default, no machine name is displayed.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-attention</emphasis></term>
+
+                <listitem>
+                  <para>Defines the threshold value at which to highlight one or more statistics. You can provide the pairs of
+                  statistic and threshold in any order, separating each pair and the parts of each pair with one or more spaces. The
+                  following list defines the syntax for each statistic.<variablelist>
+                      <indexterm>
+                        <primary>scout program</primary>
+
+                        <secondary>attention levels, setting</secondary>
+                      </indexterm>
+
+                      <indexterm>
+                        <primary>highlighting statistics in scout display</primary>
+
+                        <secondary>setting thresholds</secondary>
+                      </indexterm>
+
+                      <indexterm>
+                        <primary>thresholds for statistics in scout display</primary>
+
+                        <secondary>setting</secondary>
+                      </indexterm>
+
+                      <varlistentry>
+                        <term><emphasis role="bold">conn connections</emphasis></term>
+
+                        <listitem>
+                          <para>Highlights the value in the <computeroutput>Conn</computeroutput> (first) column when the number of
+                          connections that the File Server has open to client machines exceeds the connections value. The
+                          highlighting deactivates when the value goes back below the threshold. There is no default
+                          threshold.</para>
+                        </listitem>
+                      </varlistentry>
+
+                      <varlistentry>
+                        <term><emphasis role="bold">fetch fetch_RPCs</emphasis></term>
+
+                        <listitem>
+                          <para>Highlights the value in the <computeroutput>Fetch</computeroutput> (second) column when the number
+                          of fetch RPCs that clients have made to the File Server process exceeds the fetch_RPCs value. The
+                          highlighting deactivates only when the File Server process restarts, at which time the value returns to
+                          zero. There is no default threshold.</para>
+                        </listitem>
+                      </varlistentry>
+
+                      <varlistentry>
+                        <term><emphasis role="bold">store store_RPCs</emphasis></term>
+
+                        <listitem>
+                          <para>Highlights the value in the <computeroutput>Store</computeroutput> (third) column when the number of
+                          store RPCs that clients have made to the File Server process exceeds the store_RPCs value. The
+                          highlighting deactivates only when the File Server process restarts, at which time the value returns to
+                          zero. There is no default threshold.</para>
+                        </listitem>
+                      </varlistentry>
+
+                      <varlistentry>
+                        <term><emphasis role="bold">ws active_clients</emphasis></term>
+
+                        <listitem>
+                          <para>Highlights the value in the <computeroutput>Ws</computeroutput> (fourth) column when the number of
+                          active client machines (those that have contacted the File Server in the last 15 minutes) exceeds the
+                          active_clients value. The highlighting deactivates when the value goes back below the threshold. There is
+                          no default threshold.</para>
+                        </listitem>
+                      </varlistentry>
+
+                      <varlistentry>
+                        <term><emphasis role="bold">disk percent_full % or disk min_blocks</emphasis></term>
+
+                        <listitem>
+                          <para>Highlights the value for a partition in the <computeroutput>Disk attn</computeroutput> (sixth)
+                          column when either the amount of disk space used exceeds the percentage indicated by thepercent_full
+                          value, or the number of free KB blocks is less than the min_blocks value. The highlighting deactivates
+                          when the value goes back below the percent_full threshold or above the min_blocks threshold.</para>
+
+                          <para>The value you specify appears in the header of the sixth column following the string
+                          <computeroutput>Disk attn</computeroutput>. The default threshold is 95% full.</para>
+
+                          <para>Acceptable values for percent_full are the integers from the range <emphasis
+                          role="bold">0</emphasis> (zero) to <emphasis role="bold">99</emphasis>, and you must include the percent
+                          sign to distinguish this statistic from a min_blocks value..</para>
+                        </listitem>
+                      </varlistentry>
+                    </variablelist></para>
+
+                  <para>The following example sets the threshold for the <computeroutput>Conn</computeroutput> column to 100, for
+                  the <computeroutput>Ws</computeroutput> column to 50, and for the <computeroutput>Disk attn</computeroutput>
+                  column to 75%. There is no threshold for the <computeroutput>Fetch</computeroutput> and
+                  <computeroutput>Store</computeroutput> columns.</para>
+
+                  <para><emphasis role="bold">-attention conn 100 ws 50 disk 75%</emphasis></para>
+
+                  <para>The following example has the same affect as the previous one except that it sets the threshold for the Disk
+                  attn column to 5000 free KB blocks:</para>
+
+                  <para><emphasis role="bold">-attention disk 5000 ws 50 conn 100</emphasis></para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-debug</emphasis></term>
+
+                <listitem>
+                  <para>Enables debugging output and directs it into the specified file. Partial pathnames are interpreted relative
+                  to the current working directory. By default, no debugging output is produced.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="Header_374">
+      <title>To stop the scout program</title>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>stopping</secondary>
+      </indexterm>
+
+      <orderedlist>
+        <listitem>
+          <para>Enter <emphasis role="bold">Ctrl-c</emphasis> in the display window. This is the proper interrupt signal even if the
+          general interrupt signal in your environment is different.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="HDRWQ336">
+      <title>Example Commands and Displays</title>
+
+      <indexterm>
+        <primary>scout program</primary>
+
+        <secondary>examples (command and display)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>scout program display</secondary>
+      </indexterm>
+
+      <para>This section presents examples of the <emphasis role="bold">scout</emphasis> program, combining different arguments and
+      illustrating the screen displays that result.</para>
+
+      <para>In the first example, an administrator in the ABC Corporation issues the <emphasis role="bold">scout</emphasis> command
+      without providing any optional arguments or flags. She includes the <emphasis role="bold">-server</emphasis> argument because
+      she is providing multiple machine names. She chooses to specify on the initial part of each machine's name even though she has
+      not used the <emphasis role="bold">-basename</emphasis> argument, relying on the cell's name service to obtain the
+      fully-qualified name that the <emphasis role="bold">scout</emphasis> program requires for establishing a connection.</para>
+
+      <programlisting>
+   % <emphasis role="bold">scout -server fs1 fs2</emphasis> 
+</programlisting>
+
+      <para><link linkend="FIGWQ337">Figure 2</link> depicts the resulting display. Notice first that the machine names in the fifth
+      (unlabeled) column appear in the format the administrator used on the command line. Now consider the second line in the
+      display region, where the machine name <computeroutput>fs2</computeroutput> appears in the fifth column. The
+      <computeroutput>Conn</computeroutput> and <computeroutput>Ws</computeroutput> columns together show that machine <emphasis
+      role="bold">fs2</emphasis> has 144 RPC connections open to 44 client machines, demonstrating that multiple connections per
+      client machine are possible. The <computeroutput>Fetch</computeroutput> column shows that client machines have made 2,734,278
+      fetch RPCs to machine <emphasis role="bold">fs2</emphasis> since the File Server process last started and the
+      <computeroutput>Store</computeroutput> column shows that they have made 34,066 store RPCs.</para>
+
+      <para>Six partition entries appear in the <computeroutput>Disk attn</computeroutput> column, marked
+      <computeroutput>a</computeroutput> through <computeroutput>f</computeroutput> (for <emphasis role="bold">/vicepa</emphasis>
+      through <emphasis role="bold">/vicepf</emphasis>). They appear on three lines in two subcolumns because of the width of the
+      window; if the window is wider, there are more subcolumns. Four of the partition entries (<computeroutput>a</computeroutput>,
+      <computeroutput>c</computeroutput>, <computeroutput>d</computeroutput>, and <computeroutput>e</computeroutput>) appear in
+      reverse video to indicate that they are more than 95% full (the threshold value that appears in the <computeroutput>Disk
+      attn</computeroutput> header).</para>
+
+      <figure id="FIGWQ337" label="2">
+        <title>First example scout display</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="scout1.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"> </emphasis></para>
+
+      <para>In the second example, the administrator uses more of the <emphasis role="bold">scout</emphasis> program's optional
+      arguments. <itemizedlist>
+          <listitem>
+            <para>She provides the machine names in the same form as in Example 1, but this time she also uses the <emphasis
+            role="bold">-basename</emphasis> argument to specify their domain name suffix, <emphasis role="bold">abc.com</emphasis>.
+            This implies that the <emphasis role="bold">scout</emphasis> program does not need the name service to expand the names
+            to fully-qualified hostnames, but the name service still converts the hostnames to IP addresses.</para>
+          </listitem>
+
+          <listitem>
+            <para>She uses the <emphasis role="bold">-host</emphasis> flag to display in the banner line the name of the client
+            machine where the <emphasis role="bold">scout</emphasis> program is running.</para>
+          </listitem>
+
+          <listitem>
+            <para>She uses the <emphasis role="bold">-frequency</emphasis> argument to changes the probing frequency from its
+            default of once per minute to once every five seconds.</para>
+          </listitem>
+
+          <listitem>
+            <para>She uses the <emphasis role="bold">-attention</emphasis> argument to changes the highlighting threshold for
+            partitions to a 5000 KB minimum rather than the default of 95% full.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <programlisting>
+   % <emphasis role="bold">scout -server fs1 fs2 -basename abc.com -host -frequency 5 -attention disk 5000</emphasis> 
+</programlisting>
+
+      <para>The use of optional arguments results in several differences between <link linkend="FIGWQ338">Figure 3</link> and <link
+      linkend="FIGWQ337">Figure 2</link>. First, because the <emphasis role="bold">-host</emphasis> flag is included, the banner
+      line displays the name of the machine running the <emphasis role="bold">scout</emphasis> process as
+      <computeroutput>[client52]</computeroutput> along with the basename <computeroutput>abc.com</computeroutput> specified with
+      the <emphasis role="bold">-basename</emphasis> argument.</para>
+
+      <para>Another difference is that two rather than four of machine <emphasis role="bold">fs2</emphasis>'s partitions appear in
+      reverse video, even though their values are almost the same as in <link linkend="FIGWQ337">Figure 2</link>. This is because
+      the administrator changed the highlight threshold to a 5000 block minimum, as also reflected in the <computeroutput>Disk
+      attn</computeroutput> column's header. And while machine <emphasis role="bold">fs2</emphasis>'s partitions <emphasis
+      role="bold">/vicepa</emphasis> and <emphasis role="bold">/vicepd</emphasis> are still 95% full, they have more than 5000 free
+      blocks left; partitions <emphasis role="bold">/vicepc</emphasis> and <emphasis role="bold">/vicepe</emphasis> are highlighted
+      because they have fewer than 5000 blocks free.</para>
+
+      <para>Note also the result of changing the probe frequency, reflected in the probe reporting line at the bottom left corner of
+      the display. Both this example and the previous one represent a time lapse of one minute after the administrator issues the
+      <emphasis role="bold">scout</emphasis> command. In this example, however, the <emphasis role="bold">scout</emphasis> program
+      has probed the File Server processes 12 times as opposed to once</para>
+
+      <figure id="FIGWQ338" label="3">
+        <title>Second example scout display</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="scout2.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"> </emphasis></para>
+
+      <para>In <link linkend="FIGWQ339">Figure 4</link>, an administrator in the State University cell monitors three of that cell's
+      file server machines. He uses the <emphasis role="bold">-basename</emphasis> argument to specify the <emphasis
+      role="bold">stateu.edu</emphasis> domain name.</para>
+
+      <programlisting>
+   % <emphasis role="bold">scout -server server2 server3 server4 -basename stateu.edu</emphasis> 
+</programlisting>
+
+      <figure id="FIGWQ339" label="4">
+        <title>Third example scout display</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="scout3.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"> </emphasis></para>
+
+      <para><link linkend="FIGWQ340">Figure 5</link> illustrates three of the <emphasis role="bold">scout</emphasis> program's
+      features. First, you can monitor file server machines from different cells in a single display: <emphasis
+      role="bold">fs1.abc.com</emphasis>, <emphasis role="bold">server3.stateu.edu</emphasis>, and <emphasis
+      role="bold">sv7.def.com</emphasis>. Because the machines belong to different cells, it is not possible to provide the
+      <emphasis role="bold">-basename</emphasis> argument.</para>
+
+      <para>Second, it illustrates how the display must truncate machine names that do not fit in the fifth column, using an
+      asterisk at the end of the name to show that it is shortened.</para>
+
+      <para>Third, it illustrates what happens when the <emphasis role="bold">scout</emphasis> process cannot reach a File Server
+      process, in this case the one on the machine <emphasis role="bold">sv7.def.com</emphasis>: it highlights the machine name and
+      blanks out the values in the other columns.</para>
+
+      <figure id="FIGWQ340" label="5">
+        <title>Fourth example scout display</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="scout4.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ341">
+    <title>Using the fstrace Command Suite</title>
+
+    <para>This section describes the <emphasis role="bold">fstrace</emphasis> commands that system administrators employ to trace
+    Cache Manager activity for debugging purposes. It assumes the reader is familiar with the Cache Manager concepts described in
+    <link linkend="HDRWQ387">Administering Client Machines and the Cache Manager</link>.</para>
+
+    <para>The <emphasis role="bold">fstrace</emphasis> command suite monitors the internal activity of the Cache Manager and enables
+    you to record, or trace, its operations in detail. The operations, which are termed <emphasis>events</emphasis>, comprise the
+    <emphasis role="bold">cm</emphasis> <emphasis>event set</emphasis>. Examples of <emphasis role="bold">cm</emphasis> events are
+    fetching files and looking up information for a listing of files and subdirectories using the UNIX <emphasis
+    role="bold">ls</emphasis> command.</para>
+
+    <para>Following are the <emphasis role="bold">fstrace</emphasis> commands and their respective functions: <itemizedlist>
+        <listitem>
+          <para>The <emphasis role="bold">fstrace apropos</emphasis> command provides a short description of commands.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">fstrace clear</emphasis> command clears the trace log.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">fstrace dump</emphasis> command dumps the contents of the trace log.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">fstrace help</emphasis> command provides a description and syntax for commands.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">fstrace lslog</emphasis> command lists information about the trace log.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">fstrace lsset</emphasis> command lists information about the event set.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">fstrace setlog</emphasis> command changes the size of the trace log.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">fstrace setset</emphasis> command sets the state of the event set.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="HDRWQ342">
+      <title>About the fstrace Command Suite</title>
+
+      <para>The <emphasis role="bold">fstrace</emphasis> command suite replaces and greatly expands the functionality formerly
+      provided by the <emphasis role="bold">fs debug</emphasis> command. Its intended use is to aid in diagnosis of specific Cache
+      Manager problems, such as client machine hangs, cache consistency problems, clock synchronization errors, and failures to
+      access a volume or AFS file. Therefore, it is best not to keep <emphasis role="bold">fstrace</emphasis> logging enabled at all
+      times, unlike the logging for AFS server processes.</para>
+
+      <para>Most of the messages in the trace log correspond to low-level Cache Manager operations. It is likely that only personnel
+      familiar with the AFS source code can interpret them. If you have an AFS source license, you can attempt to interpret the
+      trace yourself, or work with the AFS Product Support group to resolve the underlying problems. If you do not have an AFS
+      source license, it is probably more efficient to contact the AFS Product Support group immediately in case of problems. They
+      can instruct you to activate <emphasis role="bold">fstrace</emphasis> tracing if appropriate.</para>
+
+      <para>The log can grow in size very quickly; this can use valuable disk space if you are writing to a file in the local file
+      space. Additionally, if the size of the log becomes too large, it can become difficult to parse the results for pertinent
+      information.</para>
+
+      <indexterm>
+        <primary>cmfx trace log (fstrace)</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>trace log from (fstrace)</primary>
+
+        <secondary>cmfx</secondary>
+      </indexterm>
+
+      <para>When AFS tracing is enabled, each time a <emphasis role="bold">cm</emphasis> event occurs, a message is written to the
+      trace log, <emphasis role="bold">cmfx</emphasis>. To diagnose a problem, read the output of the trace log and analyze the
+      operations executed by the Cache Manager. The default size of the trace log is 60 KB, but you can increase or decrease
+      it.</para>
+
+      <indexterm>
+        <primary>cm event set (fstrace)</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>event set (fstrace)</primary>
+
+        <secondary>cm</secondary>
+      </indexterm>
+
+      <para>To use the <emphasis role="bold">fstrace</emphasis> command suite, you must first enable tracing and reserve, or
+      allocate, space for the trace log with the <emphasis role="bold">fstrace setset</emphasis> command. With this command, you can
+      set the <emphasis role="bold">cm</emphasis> event set to one of three states to enable or disable tracing for the event set
+      and to allocate or deallocate space for the trace log in the kernel: <variablelist>
+          <indexterm>
+            <primary>active</primary>
+
+            <secondary>state of fstrace event set</secondary>
+          </indexterm>
+
+          <indexterm>
+            <primary>inactive (state of fstrace event set)</primary>
+          </indexterm>
+
+          <indexterm>
+            <primary>dormant (state of fstrace event set)</primary>
+          </indexterm>
+
+          <varlistentry>
+            <term><computeroutput>active</computeroutput></term>
+
+            <listitem>
+              <para>Enables tracing for the event set and allocates space for the trace log.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>inactive</computeroutput></term>
+
+            <listitem>
+              <para>Temporarily disables tracing for the event set; however, the event set continues to allocate space occupied by
+              the log to which it sends data.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>dormant</computeroutput></term>
+
+            <listitem>
+              <para>Disables tracing for the event set; furthermore, the event set releases the space occupied by the log to which
+              it sends data. When the <emphasis role="bold">cm</emphasis> event set that sends data to the <emphasis
+              role="bold">cmfx</emphasis> trace log is in this state, the space allocated for that log is freed or
+              deallocated.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <indexterm>
+        <primary>persistent fstrace event set or trace log</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>trace log (fstrace)</primary>
+
+        <secondary>persistence</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>event set (fstrace)</primary>
+
+        <secondary>persistence</secondary>
+      </indexterm>
+
+      <para>Both event sets and trace logs can be designated as <emphasis>persistent</emphasis>, which prevents accidental resetting
+      of an event set's state or clearing of a trace log. The designation is made as the kernel is compiled and cannot be
+      changed.</para>
+
+      <para>If an event set such as <emphasis role="bold">cm</emphasis> is persistent, you can change its state only by including
+      the <emphasis role="bold">-set</emphasis> argument to the <emphasis role="bold">fstrace setset</emphasis> command. (That is,
+      you cannot change its state along with the state of all other event sets by issuing the <emphasis role="bold">fstrace
+      setset</emphasis> command with no arguments.) Similarly, if a trace log such as <emphasis role="bold">cmfx</emphasis> is
+      persistent, you can clear it only by including either the <emphasis role="bold">-set</emphasis> or <emphasis
+      role="bold">-log</emphasis> argument to the <emphasis role="bold">fstrace clear</emphasis> command (you cannot clear it along
+      with all other trace logs by issuing the <emphasis role="bold">fstrace clear</emphasis> command with no arguments.)</para>
+
+      <para>When a problem occurs, set the <emphasis role="bold">cm</emphasis> event set to active using the <emphasis
+      role="bold">fstrace setset</emphasis> command. When tracing is enabled on a busy AFS client, the volume of events being
+      recorded is significant; therefore, when you are diagnosing problems, restrict AFS activity as much as possible to minimize
+      the amount of extraneous tracing in the log. Because tracing can have a negative impact on system performance, leave <emphasis
+      role="bold">cm</emphasis> tracing in the dormant state when you are not diagnosing problems.</para>
+
+      <para>If a problem is reproducible, clear the <emphasis role="bold">cmfx</emphasis> trace log with the <emphasis
+      role="bold">fstrace clear</emphasis> command and reproduce the problem. If the problem is not easily reproduced, keep the
+      state of the event set active until the problem recurs.</para>
+
+      <para>To view the contents of the trace log and analyze the <emphasis role="bold">cm</emphasis> events, use the <emphasis
+      role="bold">fstrace dump</emphasis> command to copy the content lines of the trace log to standard output (stdout) or to a
+      file.</para>
+
+      <note>
+        <para>If a particular command or process is causing problems, determine its process id (PID). Search the output of the
+        <emphasis role="bold">fstrace dump</emphasis> command for the PID to find only those lines associated with the
+        problem.</para>
+      </note>
+    </sect2>
+
+    <sect2 id="HDRWQ343">
+      <title>Requirements for Using the fstrace Command Suite</title>
+
+      <indexterm>
+        <primary>privilege</primary>
+
+        <secondary>required for fstrace commands</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>privilege requirements</secondary>
+      </indexterm>
+
+      <para>Except for the <emphasis role="bold">fstrace help</emphasis> and <emphasis role="bold">fstrace apropos</emphasis>
+      commands, which require no privilege, issuing the <emphasis role="bold">fstrace</emphasis> commands requires that the issuer
+      be logged in as the local superuser <emphasis role="bold">root</emphasis> on the local client machine. Before issuing an
+      <emphasis role="bold">fstrace</emphasis> command, verify that you have the necessary privilege.</para>
+
+      <para>The Cache Manager catalog must be in place so that logging can occur. The <emphasis role="bold">fstrace</emphasis>
+      command suite uses the standard UNIX catalog utilities. The default location is <emphasis
+      role="bold">/usr/vice/etc/C/afszcm.cat</emphasis>. It can be placed in another directory by placing the file elsewhere and
+      using the proper NLSPATH and LANG environment variables.</para>
+    </sect2>
+
+    <sect2 id="Header_379">
+      <title>Using fstrace Commands Effectively</title>
+
+      <para>To use <emphasis role="bold">fstrace</emphasis> commands most effectively, configure them as indicated: <itemizedlist>
+          <listitem>
+            <para>Store the <emphasis role="bold">fstrace</emphasis> binary in a local disk directory.</para>
+          </listitem>
+
+          <listitem>
+            <para>When you dump the <emphasis role="bold">fstrace</emphasis> log to a file, direct it to one on the local
+            disk.</para>
+          </listitem>
+
+          <listitem>
+            <para>The trace can grow large in just a few minutes. Before attempting to dump the log to a local file, verify that you
+            have enough room. Be particularly careful if you are using disk quotas on partitions in the local file system.</para>
+          </listitem>
+
+          <listitem>
+            <para>Attempt to limit Cache Manager activity on the AFS client machine other than the problem operation. This reduces
+            the amount of extraneous data in the trace.</para>
+          </listitem>
+
+          <listitem>
+            <para>Activate the <emphasis role="bold">fstrace</emphasis> log for the shortest possibly period of time. If possible
+            activate the trace immediately before performing the problem operation, deactivate it as soon as the operation
+            completes, and dump the trace log to a file immediately.</para>
+          </listitem>
+
+          <listitem>
+            <para>If possible, obtain UNIX process ID (PID) of the command or program that initiates the problematic operation. This
+            enables the person analyzing the trace log to search it for messages associated with the PID.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ344">
+      <title>Activating the Trace Log</title>
+
+      <para>To start Cache Manager tracing on an AFS client machine, you must first configure <itemizedlist>
+          <listitem>
+            <para>The <emphasis role="bold">cmfx</emphasis> kernel trace log using the <emphasis role="bold">fstrace
+            setlog</emphasis> command</para>
+          </listitem>
+
+          <listitem>
+            <para>The <emphasis role="bold">cm</emphasis> event set using the <emphasis role="bold">fstrace setset</emphasis>
+            command</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>The <emphasis role="bold">fstrace setlog</emphasis> command sets the size of the <emphasis role="bold">cmfx</emphasis>
+      kernel trace log in kilobytes. The trace log occupies 60 kilobytes of kernel by default. If the trace log already exists, it
+      is cleared when this command is issued and a new log of the given size is created. Otherwise, a new log of the desired size is
+      created.</para>
+
+      <para>The <emphasis role="bold">fstrace setset</emphasis> command sets the state of the <emphasis role="bold">cm</emphasis>
+      kernel event set. The state of the <emphasis role="bold">cm</emphasis> event set determines whether information on the events
+      in that event set is logged.</para>
+
+      <para>After establishing kernel tracing on the AFS client machine, you can check the state of the event set and the size of
+      the kernel buffer allocated for the trace log. To display information about the state of the <emphasis
+      role="bold">cm</emphasis> event set, issue the <emphasis role="bold">fstrace lsset</emphasis> command. To display information
+      about the <emphasis role="bold">cmfx</emphasis> trace log, use the <emphasis role="bold">fstrace lslog</emphasis> command. See
+      the instructions in <link linkend="HDRWQ346">Displaying the State of a Trace Log or Event Set</link>.</para>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>setlog</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fstrace setlog</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>trace log (fstrace)</primary>
+
+        <secondary>configuring</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>configuring</primary>
+
+        <secondary>trace log (fstrace)</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_381">
+      <title>To configure the trace log</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fstrace setlog</emphasis> command to set the size of the <emphasis
+          role="bold">cmfx</emphasis> kernel trace log. <programlisting>
+   # <emphasis role="bold">fstrace setlog</emphasis>  [<emphasis role="bold">-log</emphasis> &lt;<replaceable>log_name</replaceable>&gt;+]  <emphasis
+                role="bold">-buffersize</emphasis> &lt;<replaceable>1-kilobyte_units</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example sets the size of the <emphasis role="bold">cmfx</emphasis> trace log to 80 KB.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace setlog cmfx 80</emphasis> 
+</programlisting>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>setset</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fstrace setset</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>event set (fstrace)</primary>
+
+        <secondary>setting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>event set (fstrace)</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ345">
+      <title>To set the event set</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fstrace setset</emphasis> command to set the state of event sets. <programlisting>
+   % <emphasis role="bold">fstrace setset</emphasis> [<emphasis role="bold">-set</emphasis> &lt;<replaceable>set_name</replaceable>&gt;+] [<emphasis
+                role="bold">-active</emphasis>] [<emphasis role="bold">-inactive</emphasis>]  \
+                    [<emphasis role="bold">-dormant</emphasis>] 
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example activates the <emphasis role="bold">cm</emphasis> event set.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace setset cm -active</emphasis>
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ346">
+      <title>Displaying the State of a Trace Log or Event Set</title>
+
+      <para>An event set must be in the <emphasis>active state</emphasis> to be included in the trace log. To display an event set's
+      state, use the <emphasis role="bold">fstrace lsset</emphasis> command. To set its state, issue the <emphasis
+      role="bold">fstrace setset</emphasis> command as described in <link linkend="HDRWQ345">To set the event set</link>.</para>
+
+      <para>To display size and allocation information for the trace log, issue the <emphasis role="bold">fstrace
+      lslog</emphasis>command with the <emphasis role="bold">-long</emphasis> argument.</para>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>lsset</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fstrace lsset</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>event set (fstrace)</primary>
+
+        <secondary>displaying state</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>state of event set (fstrace)</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_384">
+      <title>To display the state of an event set</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fstrace lsset</emphasis> command to display the available event set and its state.
+          <programlisting>
+   # <emphasis role="bold">fstrace lsset</emphasis>  [<emphasis role="bold">-set</emphasis> &lt;<replaceable>set_name</replaceable>&gt;+]
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example displays the event set and its state on the local machine.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace lsset cm</emphasis>
+   Available sets:
+   cm active
+</programlisting>
+
+      <para>The output from this command lists the event set and its states. The three event states for the <emphasis
+      role="bold">cm</emphasis> event set are: <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">active</emphasis></term>
+
+            <listitem>
+              <para>Tracing is enabled.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">inactive</emphasis></term>
+
+            <listitem>
+              <para>Tracing is disabled, but space is still allocated for the corresponding trace log (<emphasis
+              role="bold">cmfx</emphasis>).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">dormant</emphasis></term>
+
+            <listitem>
+              <para>Tracing is disabled, and space is no longer allocated for the corresponding trace log (<emphasis
+              role="bold">cmfx</emphasis>).Disables tracing for the event set.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>lslog</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fstrace lslog</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>trace log (fstrace)</primary>
+
+        <secondary>displaying state</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>state of trace log (fstrace)</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_385">
+      <title>To display the log size</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fstrace lslog</emphasis> command to display information about the kernel trace log.
+          <programlisting>
+   # <emphasis role="bold">fstrace lslog</emphasis>  [<emphasis role="bold">-set</emphasis> &lt;<replaceable>set_name</replaceable>&gt;+]  [<emphasis
+                role="bold">-log</emphasis> &lt;<replaceable>log_name</replaceable>&gt;]  [<emphasis role="bold">-long</emphasis>] 
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example uses the <emphasis role="bold">-long</emphasis> flag to display additional information about the
+      <emphasis role="bold">cmfx</emphasis> trace log.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace lslog cmfx -long</emphasis>
+   Available logs:
+   cmfx : 60 kbytes (allocated)
+</programlisting>
+
+      <para>The output from this command lists information on the trace log. When issued without the <emphasis
+      role="bold">-long</emphasis> flag, the <emphasis role="bold">fstrace lslog</emphasis> command lists only the name of the log.
+      When issued with the <emphasis role="bold">-long</emphasis> flag, the <emphasis role="bold">fstrace lslog</emphasis> command
+      lists the log, the size of the log in kilobytes, and the allocation state of the log.</para>
+
+      <para>There are two allocation states for the kernel trace log: <variablelist>
+          <varlistentry>
+            <term><computeroutput>allocated</computeroutput></term>
+
+            <listitem>
+              <para>Space is reserved for the log in the kernel. This indicates that the event set that writes to this log is either
+              <emphasis>active</emphasis> (tracing is enabled for the event set) or <emphasis>inactive</emphasis> (tracing is
+              temporarily disabled for the event set); however, the event set continues to reserve space occupied by the log to
+              which it sends data.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>unallocated</computeroutput></term>
+
+            <listitem>
+              <para>Space is not reserved for the log in the kernel. This indicates that the event set that writes to this log is
+              <emphasis>dormant</emphasis> (tracing is disabled for the event set); furthermore, the event set releases the space
+              occupied by the log to which it sends data.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ347">
+      <title>Dumping and Clearing the Trace Log</title>
+
+      <para>After the Cache Manager operation you want to trace is complete, use the <emphasis role="bold">fstrace dump</emphasis>
+      command to dump the trace log to the standard output stream or to the file named by the <emphasis role="bold">-file</emphasis>
+      argument. Or, to dump the trace log continuously, use the <emphasis role="bold">-follow</emphasis> argument (combine it with
+      the <emphasis role="bold">-file</emphasis> argument if desired). To halt continuous dumping, press an interrupt signal such as
+      &lt;<emphasis role="bold">Ctrl-c</emphasis>&gt;.</para>
+
+      <para>To clear a trace log when you no longer need the data in it, issue the <emphasis role="bold">fstrace clear</emphasis>
+      command. (The <emphasis role="bold">fstrace setlog</emphasis> command also clears an existing trace log automatically when you
+      use it to change the log's size.)</para>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>dump</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fstrace dump</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>trace log (fstrace)</primary>
+
+        <secondary>dumping</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>contents of trace log (fstrace)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>dumping</primary>
+
+        <secondary>trace log contents (fstrace)</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_387">
+      <title>To dump the contents of a trace log</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fstrace dump</emphasis> command to dump trace logs. <programlisting>
+   # <emphasis role="bold">fstrace dump</emphasis> [<emphasis role="bold">-set</emphasis> &lt;<replaceable>set_name</replaceable>&gt;+]  [<emphasis
+                role="bold">-follow</emphasis> &lt;<replaceable>log_name</replaceable>&gt;]  \
+                  [<emphasis role="bold">-file</emphasis> &lt;<replaceable>output_filename</replaceable>&gt;]  \
+                  [<emphasis role="bold">-sleep</emphasis> &lt;<replaceable>seconds_between_reads</replaceable>&gt;]
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+
+      <para>At the beginning of the output of each dump is a header specifying the date and time at which the dump began. The number
+      of logs being dumped is also displayed if the <emphasis role="bold">-follow</emphasis> argument is not specified. The header
+      appears as follows:</para>
+
+      <programlisting>
+   AFS Trace Dump --
+   Date: date time
+   Found n logs.
+</programlisting>
+
+      <para>where <emphasis>date</emphasis> is the starting date of the trace log dump, <emphasis>time</emphasis> is the starting
+      time of the trace log dump, and <emphasis>n</emphasis> specifies the number of logs found by the <emphasis role="bold">fstrace
+      dump</emphasis> command.</para>
+
+      <para>The following is an example of trace log dump header:</para>
+
+      <programlisting>
+   AFS Trace Dump --
+   Date: Fri Apr 16 10:44:38 1999
+   Found 1 logs.
+</programlisting>
+
+      <para>The contents of the log follow the header and are comprised of messages written to the log from an active event set. The
+      messages written to the log contain the following three components: <itemizedlist>
+          <listitem>
+            <para>The timestamp associated with the message (number of seconds from an arbitrary start point)</para>
+          </listitem>
+
+          <listitem>
+            <para>The process ID or thread ID associated with the message</para>
+          </listitem>
+
+          <listitem>
+            <para>The message itself</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>A trace log message is formatted as follows:</para>
+
+      <programlisting>
+   time timestamp, pid pid:event message
+</programlisting>
+
+      <para>where <emphasis>timestamp</emphasis> is the number of seconds from an arbitrary start point, <emphasis>pid</emphasis> is
+      the process ID number of the Cache Manager event, and <emphasis>event message</emphasis> is the Cache Manager event which
+      corresponds with a function in the AFS source code.</para>
+
+      <para>The following is an example of a dumped trace log message:</para>
+
+      <programlisting>
+   time 749.641274, pid 3002:Returning code 2 from 19
+</programlisting>
+
+      <para>For the messages in the trace log to be most readable, the Cache Manager catalog file needs to be installed on the local
+      disk of the client machine; the conventional location is <emphasis role="bold">/usr/vice/etc/C/afszcm.cat</emphasis>. Log
+      messages that begin with the string <computeroutput>raw op</computeroutput>, like the following, indicate that the catalog is
+      not installed.</para>
+
+      <programlisting>
+   raw op 232c, time 511.916288, pid 0
+   p0:Fri Apr 16 10:36:31 1999
+</programlisting>
+
+      <para>Every 1024 seconds, a current time message is written to each log. This message has the following format:</para>
+
+      <programlisting>
+   time timestamp, pid pid: Current time: unix_time
+</programlisting>
+
+      <para>where timestamp is the number of seconds from an arbitrary start point, pid is the process ID number, and unix_time is
+      the standard time format since January 1, 1970.</para>
+
+      <para>The current time message can be used to determine the actual time associated with each log message. Determine the actual
+      time as follows: <orderedlist>
+          <listitem>
+            <para>Locate the log message whose actual time you want to determine.</para>
+          </listitem>
+
+          <listitem>
+            <para>Search backward through the dump record until you come to a current time message.</para>
+          </listitem>
+
+          <listitem>
+            <para>If the current time message's <emphasis>timestamp</emphasis> is smaller than the log message's
+            <emphasis>timestamp</emphasis>, subtract the former from the latter. If the current time message's
+            <emphasis>timestamp</emphasis> is larger than the log message's <emphasis>timestamp</emphasis>, add 1024 to the latter
+            and subtract the former from the result.</para>
+          </listitem>
+
+          <listitem>
+            <para>Add the resulting number to the current time message's <emphasis>unix_time</emphasis> to determine the log
+            message's actual time.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <para>Because log data is stored in a finite, circular buffer, some of the data can be overwritten before being read. If this
+      happens, the following message appears at the appropriate place in the dump:</para>
+
+      <programlisting>
+   Log wrapped; data missing.
+</programlisting>
+
+      <note>
+        <para>If this message appears in the middle of a dump, which can happen under a heavy work load, it indicates that not all
+        of the log data is being written to the log or some data is being overwritten. Increasing the size of the log with the
+        <emphasis role="bold">fstrace setlog</emphasis> command can alleviate this problem.</para>
+      </note>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>clear</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fstrace clear</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>trace log (fstrace)</primary>
+
+        <secondary>clearing contents</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>clearing</primary>
+
+        <secondary>contents of trace log (fstrace)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>removing</primary>
+
+        <secondary>trace log contents (fstrace)</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_388">
+      <title>To clear the contents of a trace log</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">fstrace clear</emphasis> command to clear logs by log name or by event set.
+          <programlisting>
+   # <emphasis role="bold">fstrace clear</emphasis>  [<emphasis role="bold">-set</emphasis> &lt;<replaceable>set_name</replaceable>&gt;+]  [<emphasis
+                role="bold">-log</emphasis> &lt;<replaceable>log_name</replaceable>&gt;+]
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example clears the <emphasis role="bold">cmfx</emphasis> log used by the <emphasis
+      role="bold">cm</emphasis> event set on the local machine.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace clear cm</emphasis>
+</programlisting>
+
+      <para>The following example also clears the <emphasis role="bold">cmfx</emphasis> log on the local machine.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace clear cmfx</emphasis>
+</programlisting>
+
+      <indexterm>
+        <primary>fstrace commands</primary>
+
+        <secondary>example of use</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ348">
+      <title>Examples of fstrace Commands</title>
+
+      <para>This section contains an extensive example of the use of the <emphasis role="bold">fstrace</emphasis> command suite,
+      which is useful for gathering a detailed trace of Cache Manager activity when you are working with AFS Product Support to
+      diagnose a problem. The Product Support representative can guide you in choosing appropriate parameter settings for the
+      trace.</para>
+
+      <para>Before starting the kernel trace log, try to isolate the Cache Manager on the AFS client machine that is experiencing
+      the problem accessing the file. If necessary, instruct users to move to another machine so as to minimize the Cache Manager
+      activity on this machine. To minimize the amount of unrelated AFS activity recorded in the trace log, place both the <emphasis
+      role="bold">fstrace</emphasis> binary and the dump file must reside on the local disk, not in AFS. You must be logged in as
+      the local superuser <emphasis role="bold">root</emphasis> to issue <emphasis role="bold">fstrace</emphasis> commands.</para>
+
+      <para>Before starting a kernel trace, issue the <emphasis role="bold">fstrace lsset</emphasis> command to check the state of
+      the <emphasis role="bold">cm</emphasis> event set.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace lsset cm</emphasis>
+</programlisting>
+
+      <para>If tracing has not been enabled previously or if tracing has been turned off on the client machine, the following output
+      is displayed:</para>
+
+      <programlisting>
+   Available sets:
+   cm inactive
+</programlisting>
+
+      <para>If tracing has been turned off and kernel memory is not allocated for the trace log on the client machine, the following
+      output is displayed:</para>
+
+      <programlisting>
+   Available sets:
+   cm inactive (dormant)
+</programlisting>
+
+      <para>If the current state of the <emphasis role="bold">cm</emphasis> event set is <computeroutput>inactive</computeroutput>
+      or <computeroutput>inactive (dormant)</computeroutput>, turn on kernel tracing by issuing the <emphasis role="bold">fstrace
+      setset</emphasis> command with the <emphasis role="bold">-active</emphasis> flag.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace setset cm -active</emphasis>
+</programlisting>
+
+      <para>If tracing is enabled currently on the client machine, the following output is displayed:</para>
+
+      <programlisting>
+   Available sets:
+   cm active
+</programlisting>
+
+      <para>If tracing is enabled currently, you do not need to use the <emphasis role="bold">fstrace setset</emphasis> command. Do
+      issue the <emphasis role="bold">fstrace clear</emphasis> command to clear the contents of any existing trace log, removing
+      prior traces that are not related to the current problem.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace clear cm</emphasis>
+</programlisting>
+
+      <para>After checking on the state of the event set, issue the <emphasis role="bold">fstrace lslog</emphasis> command with the
+      <emphasis role="bold">-long</emphasis> flag to check the current state and size of the kernel trace log .</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace lslog cmfx -long</emphasis>
+</programlisting>
+
+      <para>If tracing has not been enabled previously or the <emphasis role="bold">cm</emphasis> event set was set to
+      <computeroutput>active</computeroutput> or <computeroutput>inactive</computeroutput> previously, output similar to the
+      following is displayed:</para>
+
+      <programlisting>
+   Available logs:
+   cmfx : 60 kbytes (allocated)
+</programlisting>
+
+      <para>The <emphasis role="bold">fstrace</emphasis> tracing utility allocates 60 kilobytes of memory to the trace log by
+      default. You can increase or decrease the amount of memory allocated to the kernel trace log by setting it with the <emphasis
+      role="bold">fstrace setlog</emphasis> command. The number specified with the <emphasis role="bold">-buffersize</emphasis>
+      argument represents the number of kilobytes allocated to the kernel trace log. If you increase the size of the kernel trace
+      log to 100 kilobytes, issue the following command.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace setlog cmfx</emphasis> 100
+</programlisting>
+
+      <para>After ensuring that the kernel trace log is configured for your needs, you can set up a file into which you can dump the
+      kernel trace log. For example, create a dump file with the name <emphasis role="bold">cmfx.dump.file.1</emphasis> using the
+      following <emphasis role="bold">fstrace dump</emphasis> command. Issue the command as a continuous process by adding the
+      <emphasis role="bold">-follow</emphasis> and <emphasis role="bold">-sleep</emphasis> arguments. Setting the <emphasis
+      role="bold">-sleep</emphasis> argument to <emphasis>10</emphasis> dumps output from the kernel trace log to the file every 10
+      seconds.</para>
+
+      <programlisting>
+   # <emphasis role="bold">fstrace dump -follow</emphasis> cmfx <emphasis role="bold">-file</emphasis> cmfx.dump.file.1 <emphasis
+          role="bold">-sleep</emphasis> 10
+   AFS Trace Dump -
+      Date: Fri Apr 16 10:54:57 1999
+   Found 1 logs.
+   time 32.965783, pid 0: Fri Apr 16 10:45:52 1999
+   time 32.965783, pid 33657: Close 0x5c39ed8 flags 0x20 
+   time 32.965897, pid 33657: Gn_close vp 0x5c39ed8 flags 0x20 (returns
+   0x0) 
+   time 35.159854, pid 10891: Breaking callback for 5bd95e4 states 1024
+   (volume 0)
+   time 35.407081, pid 10891: Breaking callback for 5c0fadc states 1024
+   (volume 0)
+       .                         .
+       .                         .
+       .                         .
+   time 71.440456, pid 33658: Lookup adp 0x5bbdcf0 name g3oCKs fid (756
+   4fb7e:588d240.2ff978a8.6) 
+   time 71.440569, pid 33658: Returning code 2 from 19 
+   time 71.440619, pid 33658: Gn_lookup vp 0x5bbdcf0 name g3oCKs (returns
+   0x2) 
+   time 71.464989, pid 38267: Gn_open vp 0x5bbd000 flags 0x0 (returns 0x
+   0) 
+   AFS Trace Dump - Completed
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ349">
+    <title>Using the afsmonitor Program</title>
+
+    <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>features summarized</secondary>
+    </indexterm>
+
+    <para>The <emphasis role="bold">afsmonitor</emphasis> program enables you to monitor the status and performance of specified
+    File Server and Cache Manager processes by gathering statistical information. Among its other uses, the <emphasis
+    role="bold">afsmonitor</emphasis> program can be used to fine-tune Cache Manager configuration and load balance File
+    Servers.</para>
+
+    <para>The <emphasis role="bold">afsmonitor</emphasis> program enables you to perform the following tasks. <itemizedlist>
+        <listitem>
+          <para>Monitor any number of File Server and Cache Manager processes on any number of machines (in both local and foreign
+          cells) from a single location.</para>
+        </listitem>
+
+        <listitem>
+          <para>Set threshold values for any monitored statistic. When the value of a statistic exceeds the threshold, the <emphasis
+          role="bold">afsmonitor</emphasis> program highlights it to draw your attention. You can set threshold levels that apply to
+          every machine or only some.</para>
+        </listitem>
+
+        <listitem>
+          <para>Invoke programs or scripts automatically when a statistic exceeds its threshold.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="HDRWQ350">
+      <title>Requirements for running the afsmonitor program</title>
+
+      <indexterm>
+        <primary>afsmonitor program</primary>
+
+        <secondary>requirements for running</secondary>
+      </indexterm>
+
+      <para>The following software must be accessible to a machine where the <emphasis role="bold">afsmonitor</emphasis> program is
+      running: <itemizedlist>
+          <listitem>
+            <para>The AFS <emphasis role="bold">xstat</emphasis> libraries, which the <emphasis role="bold">afsmonitor</emphasis>
+            program uses to gather data</para>
+          </listitem>
+
+          <listitem>
+            <para>The <emphasis role="bold">curses</emphasis> graphics package, which most UNIX distributions provide as a standard
+            utility</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <indexterm>
+        <primary>curses graphics utility</primary>
+
+        <secondary>afsmonitor program</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>xstat as requirement for running afsmonitor</primary>
+      </indexterm>
+
+      <para>The <emphasis role="bold">afsmonitor</emphasis> screens format successfully both on so-called dumb terminals and in
+      windowing systems that emulate terminals. For the output to looks its best, the display environment needs to support reverse
+      video and cursor addressing. Set the TERM environment variable to the correct terminal type, or to a value that has
+      characteristics similar to the actual terminal type. The display window or terminal must be at least 80 columns wide and 12
+      lines long.</para>
+
+      <indexterm>
+        <primary>afsmonitor program</primary>
+
+        <secondary>setting terminal type</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>terminal type</primary>
+
+        <secondary>setting for afsmonitor</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>dumb terminal</primary>
+
+        <secondary>use with afsmonitor</secondary>
+      </indexterm>
+
+      <para>The <emphasis role="bold">afsmonitor</emphasis> program must run in the foreground, and in its own separate, dedicated
+      window or terminal. The window or terminal is unavailable for any other activity as long as the <emphasis
+      role="bold">afsmonitor</emphasis> program is running. Any number of instances of the <emphasis
+      role="bold">afsmonitor</emphasis> program can run on a single machine, as long as each instance runs in its own dedicated
+      window or terminal. Note that it can take up to three minutes to start an additional instance.</para>
+
+      <indexterm>
+        <primary>privilege</primary>
+
+        <secondary>required for afsmonitor program</secondary>
+      </indexterm>
+
+      <para>No privilege is required to run the <emphasis role="bold">afsmonitor</emphasis> program. By convention, it is installed
+      in the <emphasis role="bold">/usr/afsws/bin</emphasis> directory, and anyone who can access the directory can monitor File
+      Servers and Cache Managers. The probes through which the <emphasis role="bold">afsmonitor</emphasis> program collects
+      statistics do not constitute a significant burden on the File Server or Cache Manager unless hundreds of people are running
+      the program. If you wish to restrict its use, place the binary file in a directory available only to authorized users.</para>
+    </sect2>
+
+    <sect2 id="Header_392">
+      <title>The afsmonitor Output Screens</title>
+
+      <indexterm>
+        <primary>afsmonitor program</primary>
+
+        <secondary>screen layout</secondary>
+      </indexterm>
+
+      <para>The <emphasis role="bold">afsmonitor</emphasis> program displays its data on three screens: <itemizedlist>
+          <listitem>
+            <para><computeroutput>System Overview</computeroutput>: This screen appears automatically when the <emphasis
+            role="bold">afsmonitor</emphasis> program initializes. It summarizes separately for File Servers and Cache Managers the
+            number of machines being monitored and how many of them have <emphasis>alerts</emphasis> (statistics that have exceeded
+            their thresholds). It then lists the hostname and number of alerts for each machine being monitored, indicating if
+            appropriate that a process failed to respond to the last probe.</para>
+          </listitem>
+
+          <listitem>
+            <para><computeroutput>File Server</computeroutput>: This screen displays File Server statistics for each file server
+            machine being monitored. It highlights statistics that have exceeded their thresholds, and identifies machines that
+            failed to respond to the last probe.</para>
+          </listitem>
+
+          <listitem>
+            <para><computeroutput>Cache Managers</computeroutput>: This screen displays Cache Manager statistics for each client
+            machine being monitored. It highlights statistics that have exceeded their thresholds, and identifies machines that
+            failed to respond to the last probe.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Fields at the corners of every screen display the following information: <itemizedlist>
+          <listitem>
+            <para>In the top left corner, the program name and version number.</para>
+          </listitem>
+
+          <listitem>
+            <para>In the top right corner, the screen name, current and total page numbers, and current and total column numbers.
+            The page number (for example, <computeroutput>p. 1 of 3</computeroutput>) indicates the index of the current page and
+            the total number of (vertical) pages over which data is displayed. The column number (for example, <computeroutput>c. 1
+            of 235</computeroutput>) indicates the index of the current leftmost column and the total number of columns in which
+            data appears. (The symbol <computeroutput>&gt;&gt;&gt;</computeroutput> indicates that there is additional data to the
+            right; the symbol <computeroutput>&lt;&lt;&lt;</computeroutput> indicates that there is additional data to the
+            left.)</para>
+          </listitem>
+
+          <listitem>
+            <para>In the bottom left corner, a list of the available commands. Enter the first letter in the command name to run
+            that command. Only the currently possible options appear; for example, if there is only one page of data, the
+            <computeroutput>next</computeroutput> and <computeroutput>prev</computeroutput> commands, which scroll the screen up and
+            down respectively, do not appear. For descriptions of the commands, see the following section about navigating the
+            display screens.</para>
+          </listitem>
+
+          <listitem>
+            <para>In the bottom right corner, the <computeroutput>probes</computeroutput> field reports how many times the program
+            has probed File Servers (<computeroutput>fs</computeroutput>), Cache Managers (<computeroutput>cm</computeroutput>), or
+            both. The counts for File Servers and Cache Managers can differ. The <computeroutput>freq</computeroutput> field reports
+            how often the program sends probes.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para><emphasis role="bold">Navigating the afsmonitor Display Screens</emphasis></para>
+
+      <para>As noted, the lower left hand corner of every display screen displays the names of the commands currently available for
+      moving to alternate screens, which can either be a different type or display more statistics or machines of the current type.
+      To execute a command, press the lowercase version of the first letter in its name. Some commands also have an uppercase
+      version that has a somewhat different effect, as indicated in the following list. <variablelist>
+          <varlistentry>
+            <term><computeroutput>cm</computeroutput></term>
+
+            <listitem>
+              <para>Switches to the <computeroutput>Cache Managers</computeroutput> screen. Available only on the
+              <computeroutput>System Overview</computeroutput> and <computeroutput>File Servers</computeroutput> screens.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>fs</computeroutput></term>
+
+            <listitem>
+              <para>Switches to the <computeroutput>File Servers</computeroutput> screen. Available only on the
+              <computeroutput>System Overview</computeroutput> and the <computeroutput>Cache Managers</computeroutput>
+              screens.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>left</computeroutput></term>
+
+            <listitem>
+              <para>Scrolls horizontally to the left, to access the data columns situated to the left of the current set. Available
+              when the <computeroutput>&lt;&lt;&lt;</computeroutput> symbol appears at the top left of the screen. Press uppercase
+              <emphasis role="bold">L</emphasis> to scroll horizontally all the way to the left (to display the first set of data
+              columns).</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>next</computeroutput></term>
+
+            <listitem>
+              <para>Scrolls down vertically to the next page of machine names. Available when there are two or more pages of
+              machines and the final page is not currently displayed. Press uppercase <emphasis role="bold">N</emphasis> to scroll
+              to the final page.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>oview</computeroutput></term>
+
+            <listitem>
+              <para>Switches to the <computeroutput>System Overview</computeroutput> screen. Available only on the
+              <computeroutput>Cache Managers</computeroutput> and <computeroutput>File Servers</computeroutput> screens.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>prev</computeroutput></term>
+
+            <listitem>
+              <para>Scrolls up vertically to the previous page of machine names. Available when there are two or more pages of
+              machines and the first page is not currently displayed. Press uppercase <emphasis role="bold">N</emphasis> to scroll
+              to the first page.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><computeroutput>right</computeroutput></term>
+
+            <listitem>
+              <para>Scrolls horizontally to the right, to access the data columns situated to the right of the current set. This
+              command is available when the <computeroutput>&gt;&gt;&gt;</computeroutput> symbol appears at the upper right of the
+              screen. Press uppercase <emphasis role="bold">R</emphasis> to scroll horizontally all the way to the right (to display
+              the final set of data columns).</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+    </sect2>
+
+    <sect2 id="Header_393">
+      <title>The System Overview Screen</title>
+
+      <para>The <computeroutput>System Overview</computeroutput> screen appears automatically as the <emphasis
+      role="bold">afsmonitor</emphasis> program initializes. This screen displays the status of as many File Server and Cache
+      Manager processes as can fit in the current window; scroll down to access additional information.</para>
+
+      <para>The information on this screen is split into File Server information on the left and Cache Manager information on the
+      right. The header for each grouping reports two pieces of information: <itemizedlist>
+          <listitem>
+            <para>The number of machines on which the program is monitoring the indicated process</para>
+          </listitem>
+
+          <listitem>
+            <para>The number of alerts and the number of machines affected by them (an <emphasis>alert</emphasis> means that a
+            statistic has exceeded its threshold or a process failed to respond to the last probe)</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>A list of the machines being monitored follows. If there are any alerts on a machine, the number of them appears in
+      square brackets to the left of the hostname. If a process failed to respond to the last probe, the letters
+      <computeroutput>PF</computeroutput> (probe failure) appear in square brackets to the left of the hostname.</para>
+
+      <para>The following graphic is an example <computeroutput>System Overview</computeroutput> screen. The <emphasis
+      role="bold">afsmonitor</emphasis> program is monitoring six File Servers and seven Cache Managers. The File Server process on
+      host <emphasis role="bold">fs1.abc.com</emphasis> and the Cache Manager on host <emphasis role="bold">cli33.abc.com</emphasis>
+      are each marked <computeroutput>[ 1]</computeroutput> to indicate that one threshold value is exceeded. The
+      <computeroutput>[PF]</computeroutput> marker on host <emphasis role="bold">fs6.abc.com</emphasis> indicates that its File
+      Server process did not respond to the last probe.</para>
+
+      <figure id="Figure_6" label="6">
+        <title>The afsmonitor System Overview Screen</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="overview.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"> </emphasis></para>
+    </sect2>
+
+    <sect2 id="Header_394">
+      <title>The File Servers Screen</title>
+
+      <para>The <computeroutput>File Servers</computeroutput> screen displays the values collected at the most recent probe for File
+      Server statistics.</para>
+
+      <para>A summary line at the top of the screen (just below the standard program version and screen title blocks) specifies the
+      number of monitored File Servers, the number of alerts, and the number of machines affected by the alerts.</para>
+
+      <para>The first column always displays the hostnames of the machines running the monitored File Servers.</para>
+
+      <para>To the right of the hostname column appear as many columns of statistics as can fit within the current width of the
+      display screen or window; each column requires space for 10 characters. The name of the statistic appears at the top of each
+      column. If the File Server on a machine did not respond to the most recent probe, a pair of dashes
+      (<computeroutput>--</computeroutput>) appears in each column. If a value exceeds its configured threshold, it is highlighted
+      in reverse video. If a value is too large to fit into the allotted column width, it overflows into the next row in the same
+      column.</para>
+
+      <para>For a list of the available File Server statistics, see <link linkend="HDRWQ617">Appendix C, The afsmonitor Program
+      Statistics</link>.</para>
+
+      <para>The following graphic depicts the <computeroutput>File Servers</computeroutput> screen that follows the System Overview
+      Screen example previously discussed; however, one additional server probe has been completed. In this example, the File Server
+      process on <emphasis role="bold">fs1</emphasis> has exceeded the configured threshold for the number of performance calls
+      received (the <emphasis role="bold">numPerfCalls</emphasis> statistic), and that field appears in reverse video. Host
+      <emphasis role="bold">fs6</emphasis> did not respond to Probe 10, so dashes appear in all fields.</para>
+
+      <figure id="Figure_7" label="7">
+        <title>The afsmonitor File Servers Screen</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="fserver1.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"> </emphasis></para>
+
+      <para>Both the File Servers and Cache Managers screen (discussed in the following section) can display hundreds of columns of
+      data and are therefore designed to scroll left and right. In the preceding graphic, the screen displays the leftmost screen
+      and the screen title block shows that column 1 of 235 is displayed. The appearance of the
+      <computeroutput>&gt;&gt;&gt;</computeroutput> symbol in the upper right hand corner of the screen and the <emphasis
+      role="bold">right</emphasis> command in the command block indicate that additional data is available by scrolling right. (For
+      information on the available statistics, see <link linkend="HDRWQ617">Appendix C, The afsmonitor Program
+      Statistics</link>.)</para>
+
+      <para>If the <emphasis role="bold">right</emphasis> command is executed, the screen looks something like the following
+      example. Note that the horizontal scroll symbols now point both to the left (<computeroutput>&lt;&lt;&lt;</computeroutput>)
+      and to the right (<computeroutput>&gt;&gt;&gt;</computeroutput>) and both the <emphasis role="bold">left</emphasis> and
+      <emphasis role="bold">right</emphasis> commands appear, indicating that additional data is available by scrolling both left
+      and right.</para>
+
+      <figure id="Figure_8" label="8">
+        <title>The afsmonitor File Servers Screen Shifted One Page to the Right</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="fserver2.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"> </emphasis></para>
+    </sect2>
+
+    <sect2 id="Header_395">
+      <title>The Cache Managers Screen</title>
+
+      <para>The <computeroutput>Cache Managers</computeroutput> screen displays the values collected at the most recent probe for
+      Cache Manager statistics.</para>
+
+      <para>A summary line at the top of the screen (just below the standard program version and screen title blocks) specifies the
+      number of monitored Cache Managers, the number of alerts, and the number of machines affected by the alerts.</para>
+
+      <para>The first column always displays the hostnames of the machines running the monitored Cache Managers.</para>
+
+      <para>To the right of the hostname column appear as many columns of statistics as can fit within the current width of the
+      display screen or window; each column requires space for 10 characters. The name of the statistic appears at the top of each
+      column. If the Cache Manager on a machine did not respond to the most recent probe, a pair of dashes
+      (<computeroutput>--</computeroutput>) appears in each column. If a value exceeds its configured threshold, it is highlighted
+      in reverse video. If a value is too large to fit into the allotted column width, it overflows into the next row in the same
+      column.</para>
+
+      <para>For a list of the available Cache Manager statistics, see <link linkend="HDRWQ617">Appendix C, The afsmonitor Program
+      Statistics</link>.</para>
+
+      <para>The following graphic depicts a Cache Managers screen that follows the System Overview Screen previously discussed. In
+      the example, the Cache Manager process on host <emphasis role="bold">cli33</emphasis> has exceeded the configured threshold
+      for the number of cells it can contact (the <emphasis role="bold">numCellsContacted</emphasis> statistic), so that field
+      appears in reverse video.</para>
+
+      <figure id="Figure_9" label="9">
+        <title>The afsmonitor Cache Managers Screen</title>
+
+        <mediaobject>
+          <imageobject>
+            <imagedata fileref="cachmgr.png" scale="50" />
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+      <para><emphasis role="bold"> </emphasis></para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ351">
+    <title>Configuring the afsmonitor Program</title>
+
+    <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>creating configuration files for</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>configuring</primary>
+
+      <secondary>afsmonitor program</secondary>
+    </indexterm>
+
+    <para>To customize the <emphasis role="bold">afsmonitor</emphasis> program, create an ASCII-format configuration file and use
+    the <emphasis role="bold">-config</emphasis> argument to name it. You can specify the following in the configuration file:
+    <itemizedlist>
+        <listitem>
+          <para>The File Servers, Cache Managers, or both to monitor.</para>
+        </listitem>
+
+        <listitem>
+          <para>The statistics to display. By default, the display includes 271 statistics for File Servers and 570 statistics for
+          Cache Managers. For information on the available statistics, see <link linkend="HDRWQ617">Appendix C, The afsmonitor
+          Program Statistics</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>The threshold values to set for statistics and a script or program to execute if a threshold is exceeded. By
+          default, no threshold values are defined and no scripts or programs are executed.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>The following list describes the instructions that can appear in the configuration file: <variablelist>
+        <varlistentry>
+          <term><computeroutput>cm</computeroutput> <replaceable>hostname</replaceable></term>
+
+          <listitem>
+            <para>Names a client machine for which to display Cache Manager statistics. The order of <emphasis
+            role="bold">cm</emphasis> lines in the file determines the order in which client machines appear from top to bottom on
+            the <computeroutput>System Overview</computeroutput> and <computeroutput>Cache Managers</computeroutput> output
+            screens.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><computeroutput>fs</computeroutput> <replaceable>hostname</replaceable></term>
+
+          <listitem>
+            <para>Names a file server machine for which to display File Server statistics. The order of <emphasis
+            role="bold">fs</emphasis> lines in the file determines the order in which file server machines appear from top to bottom
+            on the <computeroutput>System Overview</computeroutput> and <computeroutput>File Servers</computeroutput> output
+            screens.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><computeroutput>thresh fs | cm <replaceable>field_name</replaceable> <replaceable>thresh_val</replaceable>
+          [<replaceable>cmd_to_run</replaceable>] [<replaceable>arg1</replaceable>] . . .
+          [<replaceable>argn</replaceable>]</computeroutput></term>
+
+          <listitem>
+            <para>Assigns the threshold value thresh_val to the statistic field_name, for either a File Server statistic (<emphasis
+            role="bold">fs</emphasis>) or a Cache Manager statistic (<emphasis role="bold">cm</emphasis>). The optional
+            cmd_to_execute field names a binary or script to execute each time the value of the statistic changes from being below
+            thresh_val to being at or above thresh_val. A change between two values that both exceed thresh_val does not retrigger
+            the binary or script. The optional arg1 through argn fields are additional values that the <emphasis
+            role="bold">afsmonitor</emphasis> program passes as arguments to the cmd_to_execute command. If any of them include one
+            or more spaces, enclose the entire field in double quotes.</para>
+
+            <para>The parameters <emphasis role="bold">fs</emphasis>, <emphasis role="bold">cm</emphasis>, field_name,
+            threshold_val, and arg1 through argn correspond to the values with the same name on the <emphasis
+            role="bold">thresh</emphasis> line. The host_name parameter identifies the file server or client machine where the
+            statistic has crossed the threshold, and the actual_val parameter is the actual value of field_name that equals or
+            exceeds the threshold value.</para>
+
+            <para>Use the <emphasis role="bold">thresh</emphasis> line to set either a global threshold, which applies to all file
+            server machines listed on <emphasis role="bold">fs</emphasis> lines or client machines listed on <emphasis
+            role="bold">cm</emphasis> lines in the configuration file, or a machine-specific threshold, which applies to only one
+            file server or client machine. <itemizedlist>
+                <listitem>
+                  <para>To set a global threshold, place the <emphasis role="bold">thresh</emphasis> line before any of the
+                  <emphasis role="bold">fs</emphasis> or <emphasis role="bold">cm</emphasis> lines in the file.</para>
+                </listitem>
+
+                <listitem>
+                  <para>To set a machine-specific threshold, place the <emphasis role="bold">thresh</emphasis> line below the
+                  corresponding <emphasis role="bold">fs</emphasis> or <emphasis role="bold">cm</emphasis> line, and above any other
+                  <emphasis role="bold">fs</emphasis> or <emphasis role="bold">cm</emphasis> lines. A machine-specific threshold
+                  value always overrides the corresponding global threshold, if set. Do not place a <emphasis role="bold">thresh
+                  fs</emphasis> line directly after a <emphasis role="bold">cm</emphasis> line or a <emphasis role="bold">thresh
+                  cm</emphasis> line directly after a <emphasis role="bold">fs</emphasis> line.</para>
+                </listitem>
+              </itemizedlist></para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><computeroutput>show fs | cm <replaceable>field/group/section</replaceable></computeroutput></term>
+
+          <listitem>
+            <para>Specifies which individual statistic, group of statistics, or section of statistics to display on the
+            <computeroutput>File Servers</computeroutput> screen (<emphasis role="bold">fs</emphasis>) or <computeroutput>Cache
+            Managers</computeroutput> screen (<emphasis role="bold">cm</emphasis>) and the order in which to display them. The
+            appendix of <emphasis role="bold">afsmonitor</emphasis> statistics in the <emphasis>IBM AFS Administration
+            Guide</emphasis> specifies the group and section to which each statistic belongs. Include as many <emphasis
+            role="bold">show</emphasis> lines as necessary to customize the screen display as desired, and place them anywhere in
+            the file. The top-to-bottom order of the <emphasis role="bold">show</emphasis> lines in the configuration file
+            determines the left-to-right order in which the statistics appear on the corresponding screen.</para>
+
+            <para>If there are no <emphasis role="bold">show</emphasis> lines in the configuration file, then the screens display
+            all statistics for both Cache Managers and File Servers. Similarly, if there are no <emphasis role="bold">show
+            fs</emphasis> lines, the <computeroutput>File Servers</computeroutput> screen displays all file server statistics, and
+            if there are no <emphasis role="bold">show cm</emphasis> lines, the <computeroutput>Cache Managers</computeroutput>
+            screen displays all client statistics.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"># comments</emphasis></term>
+
+          <listitem>
+            <para>Precedes a line of text that the <emphasis role="bold">afsmonitor</emphasis> program ignores because of the
+            initial number (<emphasis role="bold">#</emphasis>) sign, which must appear in the very first column of the line.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist></para>
+
+    <para>For a list of the values that can appear in the field/group/section field of a <emphasis role="bold">show</emphasis>
+    instruction, see <link linkend="HDRWQ617">Appendix C, The afsmonitor Program Statistics</link>.)</para>
+
+    <para>The following example illustrates a possible configuration file:</para>
+
+    <programlisting>
+   thresh cm dlocalAccesses  1000000
+   thresh cm dremoteAccesses  500000 handleDRemote
+   thresh fs rx_maxRtt_Usec     1000
+   cm client5
+   cm client33
+   cm client14
+   thresh cm dlocalAccesses  2000000
+   thresh cm vcacheMisses      10000
+   cm client2
+   fs fs3
+   fs fs9
+   fs fs5
+   fs fs10
+   show cm numCellsContacted
+   show cm dlocalAccesses
+   show cm dremoteAccesses
+   show cm vcacheMisses
+   show cm Auth_Stats_group
+</programlisting>
+
+    <para>Since the first three <emphasis role="bold">thresh</emphasis> instructions appear before any <emphasis
+    role="bold">fs</emphasis> or <emphasis role="bold">cm</emphasis> instructions, they set global threshold values: <itemizedlist>
+        <listitem>
+          <para>All Cache Manager process in this file use <emphasis role="bold">1000000</emphasis> as the threshold for the
+          <emphasis role="bold">dlocalAccesses</emphasis> statistic (except for the machine <emphasis role="bold">client2</emphasis>
+          which uses an overriding value of <emphasis role="bold">2000000</emphasis>.)</para>
+        </listitem>
+
+        <listitem>
+          <para>All Cache Manager processes in this file use <emphasis role="bold">500000</emphasis> as the threshold value for the
+          <emphasis role="bold">dremoteAccesses</emphasis> statistic; if that value is exceeded, the script <emphasis
+          role="bold">handleDRemote</emphasis> is invoked.</para>
+        </listitem>
+
+        <listitem>
+          <para>All File Server processes in this file use <emphasis role="bold">1000</emphasis> as the threshold value for the
+          <emphasis role="bold">rx_maxRtt_Usec</emphasis> statistic.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>The four <emphasis role="bold">cm</emphasis> instructions monitor the Cache Manager on the machines <emphasis
+    role="bold">client5</emphasis>, <emphasis role="bold">client33</emphasis>, <emphasis role="bold">client14</emphasis>, and
+    <emphasis role="bold">client2</emphasis>. The first three use all of the global threshold values.</para>
+
+    <para>The Cache Manager on <emphasis role="bold">client2</emphasis> uses the global threshold value for the <emphasis
+    role="bold">dremoteAccesses</emphasis> statistic, but a different one for the <emphasis role="bold">dlocalAccesses</emphasis>
+    statistic. Furthermore, <emphasis role="bold">client22</emphasis> is the only Cache Manager that uses the threshold set for the
+    <emphasis role="bold">vcacheMisses</emphasis> statistic.</para>
+
+    <para>The <emphasis role="bold">fs</emphasis> instructions monitor the File Server on the machines <emphasis
+    role="bold">fs3</emphasis>, <emphasis role="bold">fs9</emphasis>, <emphasis role="bold">fs5</emphasis>, and <emphasis
+    role="bold">fs10</emphasis>. They all use the global threshold for the<emphasis role="bold">rx_maxRtt_Usec</emphasis>
+    statistic.</para>
+
+    <para>Because there are no <emphasis role="bold">show fs</emphasis> instructions, the File Servers screen displays all File
+    Server statistics. The Cache Managers screen displays only the statistics named in <emphasis role="bold">show cm</emphasis>
+    instructions, ordering them from left to right. The <emphasis role="bold">Auth_Stats_group</emphasis> includes several
+    statistics, all of which are displayed (<emphasis role="bold">curr_PAGs</emphasis>, <emphasis
+    role="bold">curr_Records</emphasis>, <emphasis role="bold">curr_AuthRecords</emphasis>, <emphasis
+    role="bold">curr_UnauthRecords</emphasis>, <emphasis role="bold">curr_MaxRecordsInPAG</emphasis>, <emphasis
+    role="bold">curr_LongestChain</emphasis>, <emphasis role="bold">PAGCreations</emphasis>, <emphasis
+    role="bold">TicketUpdates</emphasis>, <emphasis role="bold">HWM_PAGS</emphasis>, <emphasis role="bold">HWM_Records</emphasis>,
+    <emphasis role="bold">HWM_MaxRecordsInPAG</emphasis>, and <emphasis role="bold">HWM_LongestChain</emphasis>).</para>
+  </sect1>
+
+  <sect1 id="HDRWQ352">
+    <title>Writing afsmonitor Statistics to a File</title>
+
+    <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>creating an output file</secondary>
+    </indexterm>
+
+    <para>All of the statistical information collected and displayed by the <emphasis role="bold">afsmonitor</emphasis> program can
+    be preserved by writing it to an output file. You can create an output file by using the <emphasis
+    role="bold">-output</emphasis> argument when you startup the <emphasis role="bold">afsmonitor</emphasis> process. You can use
+    the output file to track process performance over long periods of time and to apply post-processing techniques to further
+    analyze system trends.</para>
+
+    <para>The <emphasis role="bold">afsmonitor</emphasis> program output file is a simple ASCII file that records the information
+    reported by the File Server and Cache Manager screens. The output file has the following format:</para>
+
+    <programlisting>
+   time   host_name <emphasis role="bold">CM</emphasis>|<emphasis role="bold">FS</emphasis>   list_of_measured_values
+</programlisting>
+
+    <para>and specifies the <emphasis>time</emphasis> at which the <emphasis>list_of_measured_values</emphasis> were gathered from
+    the Cache Manager (<emphasis role="bold">CM</emphasis>) or File Server (<emphasis role="bold">FS</emphasis>) process housed on
+    host_name. On those occasion where probes fail, the value <computeroutput>-1</computeroutput> is reported instead of the
+    <emphasis>list_of_measured_values</emphasis>.</para>
+
+    <para>This file format provides several advantages: <itemizedlist>
+        <listitem>
+          <para>It can be viewed using a standard editor. If you intend to view this file frequently, use the <emphasis
+          role="bold">-detailed</emphasis> flag with the <emphasis role="bold">-output</emphasis> argument. It formats the output
+          file in a way that is easier to read.</para>
+        </listitem>
+
+        <listitem>
+          <para>It can be passed through filters to extract desired information using the standard set of UNIX tools.</para>
+        </listitem>
+
+        <listitem>
+          <para>It is suitable for long term storage of the <emphasis role="bold">afsmonitor</emphasis> program output.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>command syntax</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>afsmonitor</secondary>
+    </indexterm>
+  </sect1>
+
+  <sect1 id="Header_398">
+    <title>To start the afsmonitor Program</title>
+
+    <orderedlist>
+      <listitem>
+        <para>Open a separate command shell window or use a dedicated terminal for each instance of the <emphasis
+        role="bold">afsmonitor</emphasis> program. This window or terminal must be devoted to the exclusive use of the <emphasis
+        role="bold">afsmonitor</emphasis> process because the command cannot be run in the background.</para>
+      </listitem>
+
+      <listitem>
+        <para>Initialize the <emphasis role="bold">afsmonitor</emphasis> program. The message <computeroutput>afsmonitor Collecting
+        Statistics...</computeroutput>, followed by the appearance of the <computeroutput>System Overview</computeroutput> screen,
+        confirms a successful start. <programlisting>
+   % <emphasis role="bold">afsmonitor</emphasis> [<emphasis role="bold">initcmd</emphasis>]  [<emphasis role="bold">-config</emphasis> &lt;<replaceable>configuration file</replaceable>&gt;]  \
+                [<emphasis role="bold">-frequency</emphasis> &lt;<replaceable>poll frequency, in seconds</replaceable>&gt;]  \
+                [<emphasis role="bold">-output</emphasis> &lt;<replaceable>storage file name</replaceable>&gt;] [<emphasis
+              role="bold">-detailed</emphasis>]  \
+                [<emphasis role="bold">-debug</emphasis> &lt;<replaceable>turn debugging output on to the named file</replaceable>&gt;] \
+                [<emphasis role="bold">-fshosts</emphasis> &lt;<replaceable>list of file servers to monitor</replaceable>&gt;+]  \
+                [<emphasis role="bold">-cmhosts</emphasis> &lt;<replaceable>list of cache managers to monitor</replaceable>&gt;+]
+   afsmonitor Collecting Statistics...
+</programlisting></para>
+
+        <para>where <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">initcmd</emphasis></term>
+
+              <listitem>
+                <para>Is an optional string that accommodates the command's use of the AFS command parser. It can be omitted and
+                ignored.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-config</emphasis></term>
+
+              <listitem>
+                <para>Specifies the pathname of an <emphasis role="bold">afsmonitor</emphasis> configuration file, which lists the
+                machines and statistics to monitor. Partial pathnames are interpreted relative to the current working directory.
+                Provide either this argument or one or both of the <emphasis role="bold">-fshosts</emphasis> and <emphasis
+                role="bold">-cmhosts</emphasis> arguments. You must use a configuration file to set thresholds or customize the
+                screen display. For instructions on creating the configuration file, see <link linkend="HDRWQ351">Configuring the
+                afsmonitor Program</link>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-frequency</emphasis></term>
+
+              <listitem>
+                <para>Specifies how often to probe the File Server and Cache Manager processes, as a number of seconds. Acceptable
+                values range from <emphasis role="bold">1</emphasis> and <emphasis role="bold">86400</emphasis>; the default value
+                is <emphasis role="bold">60</emphasis>. This frequency applies to both File Server and Cache Manager probes;
+                however, File Server and Cache Manager probes are initiated and processed independent of each other. The actual
+                interval between probes to a host is the probe frequency plus the time needed by all hosts to respond to the
+                probe.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-output</emphasis></term>
+
+              <listitem>
+                <para>Specifies the name of an output file to which to write all of the statistical data. By default, no output file
+                is created. For information on this file, see <link linkend="HDRWQ352">Writing afsmonitor Statistics to a
+                File</link>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-detailed</emphasis></term>
+
+              <listitem>
+                <para>Formats the output file named by the <emphasis role="bold">-output</emphasis> argument to be more easily
+                readable. The <emphasis role="bold">-output</emphasis> argument must be provided along with this flag.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-fshosts</emphasis></term>
+
+              <listitem>
+                <para>Identifies each File Server process to monitor by specifying the host it is running on. You can identify a
+                host using either its complete Internet-style host name or an abbreviation acceptable to the cell's naming service.
+                Combine this argument with the <emphasis role="bold">-cmhosts</emphasis> if you wish, but not the <emphasis
+                role="bold">-config</emphasis> argument.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-cmhosts</emphasis></term>
+
+              <listitem>
+                <para>Identifies each Cache Manager process to monitor by specifying the host it is running on. You can identify a
+                host using either its complete Internet-style host name or an abbreviation acceptable to the cell's naming service.
+                Combine this argument with the <emphasis role="bold">-fshosts</emphasis> if you wish, but not the <emphasis
+                role="bold">-config</emphasis> argument.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist></para>
+      </listitem>
+    </orderedlist>
+  </sect1>
+
+  <sect1 id="Header_399">
+    <title>To stop the afsmonitor program</title>
+
+    <indexterm>
+      <primary>afsmonitor program</primary>
+
+      <secondary>stopping</secondary>
+    </indexterm>
+
+    <para>To exit an <emphasis role="bold">afsmonitor</emphasis> program session, Enter the &lt;<emphasis
+    role="bold">Ctrl-c</emphasis>&gt; interrupt signal or an uppercase <emphasis role="bold">Q</emphasis>.</para>
+  </sect1>
+
+  <sect1 id="HDRWQ353">
+    <title>The xstat Data Collection Facility</title>
+
+    <indexterm>
+      <primary>xstat data collection facility</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>xstat data collection facility</primary>
+
+      <secondary>libxstat_fs.a library</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>xstat data collection facility</primary>
+
+      <secondary>libxstat_cm.a library</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>data collection</primary>
+
+      <secondary>with xstat data collection facility</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>collecting</primary>
+
+      <secondary>data with xstat data collection facility</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>File Server</primary>
+
+      <secondary>collecting data with xstat data collection facility</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Cache Manager</primary>
+
+      <secondary>collecting data with xstat data collection facility</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>File Server</primary>
+
+      <secondary>xstat data collection facility libraries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Cache Manager</primary>
+
+      <secondary>xstat data collection facility libraries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>libxstat_fs.a library</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>libxstat_cm.a library</primary>
+    </indexterm>
+
+    <para>The <emphasis role="bold">afsmonitor</emphasis> program uses the <emphasis role="bold">xstat</emphasis> data collection
+    facility to gather and calculate the data that it (the <emphasis role="bold">afsmonitor</emphasis> program) then uses to perform
+    its function. You can also use the <emphasis role="bold">xstat</emphasis> facility to create your own data display programs. If
+    you do, keep the following in mind. The File Server considers any program calling its RPC routines to be a Cache Manager;
+    therefore, any program calling the File Server interface directly must export the Cache Manager's callback interface. The
+    calling program must be capable of emulating the necessary callback state, and it must respond to periodic keep-alive messages
+    from the File Server. In addition, a calling program must be able to gather the collected data.</para>
+
+    <para>The <emphasis role="bold">xstat</emphasis> facility consists of two C language libraries available to user-level
+    applications: <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">/usr/afsws/lib/afs/libxstat_fs.a</emphasis> exports calls that gather information from one or
+          more running File Server processes.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">/usr/afsws/lib/afs/libxstat_cm.a</emphasis> exports calls that collect information from one or
+          more running Cache Managers.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>The libraries allow the caller to register <itemizedlist>
+        <listitem>
+          <para>A set of File Servers or Cache Managers to be examined.</para>
+        </listitem>
+
+        <listitem>
+          <para>The frequency with which the File Servers or Cache Managers are to be probed for data.</para>
+        </listitem>
+
+        <listitem>
+          <para>A user-specified routine to be called each time data is collected.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>The libraries handle all of the lightweight processes, callback interactions, and timing issues associated with the data
+    collection. The user needs only to process the data as it arrives.</para>
+
+    <sect2 id="Header_401">
+      <title>The libxstat Libraries</title>
+
+      <indexterm>
+        <primary>libxstat_fs.a library</primary>
+
+        <secondary>routines</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_cm.a library</primary>
+
+        <secondary>routines</secondary>
+      </indexterm>
+
+      <para>The <emphasis role="bold">libxstat_fs.a</emphasis> and <emphasis role="bold">libxstat_cm.a</emphasis> libraries handle
+      the callback requirements and other complications associated with the collection of data from File Servers and Cache Managers.
+      The user provides only the means of accumulating the desired data. Each <emphasis role="bold">xstat</emphasis> library
+      implements three routines: <itemizedlist>
+          <listitem>
+            <para>Initialization (<emphasis role="bold">xstat_fs_Init</emphasis> and <emphasis role="bold">xstat_cm_Init</emphasis>)
+            arranges the periodic collection and handling of data.</para>
+          </listitem>
+
+          <listitem>
+            <para>Immediate probe (<emphasis role="bold">xstat_fs_ForceProbeNow</emphasis> and <emphasis
+            role="bold">xstat_cm_ForceProbeNow</emphasis>) forces the immediate collection of data, after which collection returns
+            to its normal probe schedule.</para>
+          </listitem>
+
+          <listitem>
+            <para>Cleanup (<emphasis role="bold">xstat_fs_Cleanup</emphasis> and <emphasis role="bold">xstat_cm_Cleanup</emphasis>)
+            terminates all connections and removes all traces of the data collection from memory.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <indexterm>
+        <primary>File Server</primary>
+
+        <secondary>xstat data collections</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Cache Manager</primary>
+
+        <secondary>xstat data collections</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>xstat data collection facility</primary>
+
+        <secondary>data collections</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_fs.a library</primary>
+
+        <secondary>data collections</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_cm.a library</primary>
+
+        <secondary>data collections</secondary>
+      </indexterm>
+
+      <para>The File Server and Cache Manager each define data collections that clients can fetch. A data collection is simply a
+      related set of numbers that can be collected as a unit. For example, the File Server and Cache Manager each define profiling
+      and performance data collections. The profiling collections maintain counts of the number of times internal functions are
+      called within servers, allowing bottleneck analysis to be performed. The performance collections record, among other things,
+      internal disk I/O statistics for a File Server and cache effectiveness figures for a Cache Manager, allowing for performance
+      analysis.</para>
+
+      <indexterm>
+        <primary>xstat data collection facility</primary>
+
+        <secondary>obtaining more information</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_fs.a library</primary>
+
+        <secondary>obtaining more information</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_cm.a library</primary>
+
+        <secondary>obtaining more information</secondary>
+      </indexterm>
+
+      <para>For a copy of the detailed specification which provides much additional usage information about the <emphasis
+      role="bold">xstat</emphasis> facility, its libraries, and the routines in the libraries, contact AFS Product Support.</para>
+    </sect2>
+
+    <sect2 id="Header_402">
+      <title>Example xstat Commands</title>
+
+      <indexterm>
+        <primary>xstat data collection facility</primary>
+
+        <secondary>example commands</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_fs.a library</primary>
+
+        <secondary>example command using</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_cm.a library</primary>
+
+        <secondary>example command using</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>File Server</primary>
+
+        <secondary>xstat example commands</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Cache Manager</primary>
+
+        <secondary>xstat example commands</secondary>
+      </indexterm>
+
+      <para>AFS comes with two low-level, example commands: <emphasis role="bold">xstat_fs_test</emphasis> and <emphasis
+      role="bold">xstat_cm_test</emphasis>. The commands allow you to experiment with the <emphasis role="bold">xstat</emphasis>
+      facility. They gather information and display the available data collections for a File Server or Cache Manager. They are
+      intended merely to provide examples of the types of data that can be collected via <emphasis role="bold">xstat</emphasis>;
+      they are not intended for use in the actual collection of data.</para>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>xstat_fs_test</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>libxstat_fs.a library</primary>
+
+        <secondary>xstat_fs_test example command</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>File Server</primary>
+
+        <secondary>xstat_fs_test example command</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>xstat data collection facility</primary>
+
+        <secondary>xstat_fs_test example command</secondary>
+      </indexterm>
+
+      <sect3 id="Header_403">
+        <title>To use the example xstat_fs_test command</title>
+
+        <orderedlist>
+          <listitem>
+            <para>Issue the example <emphasis role="bold">xstat_fs_test</emphasis> command to test the routines in the <emphasis
+            role="bold">libxstat_fs.a</emphasis> library and display the data collections associated with the File Server process.
+            The command executes in the foreground. <programlisting>
+   % <emphasis role="bold">xstat_fs_test</emphasis> [<emphasis role="bold">initcmd</emphasis>]  \
+                   <emphasis role="bold">-fsname</emphasis> &lt;<replaceable>File Server name(s) to monitor</replaceable>&gt;+  \
+                   <emphasis role="bold">-collID</emphasis> &lt;<replaceable>Collection(s) to fetch</replaceable>&gt;+  [<emphasis
+                  role="bold">-onceonly</emphasis>]  \
+                   [<emphasis role="bold">-frequency</emphasis> &lt;<replaceable>poll frequency, in seconds</replaceable>&gt;]  \
+                   [<emphasis role="bold">-period</emphasis> &lt;<replaceable>data collection time, in minutes</replaceable>&gt;] [<emphasis
+                  role="bold">-debug</emphasis>] 
+</programlisting></para>
+
+            <para>where <variablelist>
+                <varlistentry>
+                  <term><emphasis role="bold">xstat_fs_test</emphasis></term>
+
+                  <listitem>
+                    <para>Must be typed in full.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">initcmd</emphasis></term>
+
+                  <listitem>
+                    <para>Is an optional string that accommodates the command's use of the AFS command parser. It can be omitted and
+                    ignored.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-fsname</emphasis></term>
+
+                  <listitem>
+                    <para>Is the Internet host name of each file server machine on which to monitor the File Server process.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-collID</emphasis></term>
+
+                  <listitem>
+                    <para>Specifies each data collection to return. The indicated data collection defines the type and amount of
+                    data the command is to gather about the File Server. Data is returned in the form of a predefined data structure
+                    (refer to the specification documents referenced previously for more information about the data
+                    structures).</para>
+
+                    <para>There are two acceptable values: <itemizedlist>
+                        <listitem>
+                          <para><emphasis role="bold">1</emphasis> reports various internal performance statistics related to the
+                          File Server (for example, vnode cache entries and <emphasis role="bold">Rx</emphasis> protocol
+                          activity).</para>
+                        </listitem>
+
+                        <listitem>
+                          <para><emphasis role="bold">2</emphasis> reports all of the internal performance statistics provided by
+                          the <emphasis role="bold">1</emphasis> setting, plus some additional, detailed performance figures about
+                          the File Server (for example, minimum, maximum, and cumulative statistics regarding File Server RPCs, how
+                          long they take to complete, and how many succeed).</para>
+                        </listitem>
+                      </itemizedlist></para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-onceonly</emphasis></term>
+
+                  <listitem>
+                    <para>Directs the command to gather statistics just one time. Omit this option to have the command continue to
+                    probe the File Server for statistics every 30 seconds. If you omit this option, you can use the &lt;<emphasis
+                    role="bold">Ctrl-c</emphasis>&gt; interrupt signal to halt the command at any time.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-frequency</emphasis></term>
+
+                  <listitem>
+                    <para>Sets the frequency in seconds at which the program initiates probes to the File Server. If you omit this
+                    argument, the default is 30 seconds.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-period</emphasis></term>
+
+                  <listitem>
+                    <para>Sets how long the utility runs before exiting, as a number of minutes. If you omit this argument, the
+                    default is 10 minutes.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-debug</emphasis></term>
+
+                  <listitem>
+                    <para>Displays additional information as the command runs.</para>
+                  </listitem>
+                </varlistentry>
+              </variablelist></para>
+          </listitem>
+        </orderedlist>
+
+        <indexterm>
+          <primary>commands</primary>
+
+          <secondary>xstat_cm_test</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>libxstat_cm.a library</primary>
+
+          <secondary>xstat_cm_test example command</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>Cache Manager</primary>
+
+          <secondary>xstat_cm_test example command</secondary>
+        </indexterm>
+
+        <indexterm>
+          <primary>xstat data collection facility</primary>
+
+          <secondary>xstat_cm_test example command</secondary>
+        </indexterm>
+      </sect3>
+
+      <sect3 id="Header_404">
+        <title>To use the example xstat_cm_test command</title>
+
+        <orderedlist>
+          <listitem>
+            <para>Issue the example <emphasis role="bold">xstat_cm_test</emphasis> command to test the routines in the <emphasis
+            role="bold">libxstat_cm.a</emphasis> library and display the data collections associated with the Cache Manager. The
+            command executes in the foreground. <programlisting>
+   % <emphasis role="bold">xstat_cm_test</emphasis> [<emphasis role="bold">initcmd</emphasis>]  \
+                   <emphasis role="bold">-cmname</emphasis> &lt;<replaceable>Cache Manager name(s) to monitor</replaceable>&gt;+  \
+                   <emphasis role="bold">-collID</emphasis> &lt;<replaceable>Collection(s) to fetch</replaceable>&gt;+ \
+                   [<emphasis role="bold">-onceonly</emphasis>] [<emphasis role="bold">-frequency</emphasis> &lt;<replaceable>poll frequency, in seconds</replaceable>&gt;]  \
+                   [<emphasis role="bold">-period</emphasis> &lt;<replaceable>data collection time, in minutes</replaceable>&gt;] [<emphasis
+                  role="bold">-debug</emphasis>] 
+</programlisting></para>
+
+            <para>where <variablelist>
+                <varlistentry>
+                  <term><emphasis role="bold">xstat_cm_test</emphasis></term>
+
+                  <listitem>
+                    <para>Must be typed in full.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">initcmd</emphasis></term>
+
+                  <listitem>
+                    <para>Is an optional string that accommodates the command's use of the AFS command parser. It can be omitted and
+                    ignored.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-cmname</emphasis></term>
+
+                  <listitem>
+                    <para>Is the host name of each client machine on which to monitor the Cache Manager.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-collID</emphasis></term>
+
+                  <listitem>
+                    <para>Specifies each data collection to return. The indicated data collection defines the type and amount of
+                    data the command is to gather about the Cache Manager. Data is returned in the form of a predefined data
+                    structure (refer to the specification documents referenced previously for more information about the data
+                    structures).</para>
+
+                    <para>There are two acceptable values: <itemizedlist>
+                        <listitem>
+                          <para><emphasis role="bold">0</emphasis> provides profiling information about the numbers of times
+                          different internal Cache Manager routines were called since the Cache manager was started.</para>
+                        </listitem>
+
+                        <listitem>
+                          <para><emphasis role="bold">1</emphasis> reports various internal performance statistics related to the
+                          Cache manager (for example, statistics about how effectively the cache is being used and the quantity of
+                          intracell and intercell data access).</para>
+                        </listitem>
+
+                        <listitem>
+                          <para><emphasis role="bold">2</emphasis> reports all of the internal performance statistics provided by
+                          the <emphasis role="bold">1</emphasis> setting, plus some additional, detailed performance figures about
+                          the Cache Manager (for example, statistics about the number of RPCs sent by the Cache Manager and how long
+                          they take to complete; and statistics regarding things such as authentication, access, and PAG information
+                          associated with data access).</para>
+                        </listitem>
+                      </itemizedlist></para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-onceonly</emphasis></term>
+
+                  <listitem>
+                    <para>Directs the command to gather statistics just one time. Omit this option to have the command continue to
+                    probe the Cache Manager for statistics every 30 seconds. If you omit this option, you can use the &lt;<emphasis
+                    role="bold">Ctrl-c</emphasis>&gt; interrupt signal to halt the command at any time.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-frequency</emphasis></term>
+
+                  <listitem>
+                    <para>Sets the frequency in seconds at which the program initiates probes to the Cache Manager. If you omit this
+                    argument, the default is 30 seconds.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-period</emphasis></term>
+
+                  <listitem>
+                    <para>Sets how long the utility runs before exiting, as a number of minutes. If you omit this argument, the
+                    default is 10 minutes.</para>
+                  </listitem>
+                </varlistentry>
+
+                <varlistentry>
+                  <term><emphasis role="bold">-debug</emphasis></term>
+
+                  <listitem>
+                    <para>Displays additional information as the command runs.</para>
+                  </listitem>
+                </varlistentry>
+              </variablelist></para>
+          </listitem>
+        </orderedlist>
+      </sect3>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ354">
+    <title>Auditing AFS Events on AIX File Servers</title>
+
+    <indexterm>
+      <primary>AFS</primary>
+
+      <secondary>auditing events on AIX server machines</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AIX</primary>
+
+      <secondary>auditing AFS events</secondary>
+
+      <tertiary>about</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>auditing AFS events on AIX server machines</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>events</primary>
+
+      <secondary>auditing AFS on AIX server machines</secondary>
+    </indexterm>
+
+    <para>You can audit AFS events on AIX File Servers using an AFS mechanism that transfers audit information from AFS to the AIX
+    auditing system. The following general classes of AFS events can be audited. For a complete list of specific AFS audit events,
+    see <link linkend="HDRWQ620">Appendix D, AIX Audit Events</link>. <itemizedlist>
+        <listitem>
+          <para>Authentication and Identification Events</para>
+        </listitem>
+
+        <listitem>
+          <para>Security Events</para>
+        </listitem>
+
+        <listitem>
+          <para>Privilege Required Events</para>
+        </listitem>
+
+        <listitem>
+          <para>Object Creation and Deletion Events</para>
+        </listitem>
+
+        <listitem>
+          <para>Attribute Modification Events</para>
+        </listitem>
+
+        <listitem>
+          <para>Process Control Events</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <note>
+      <para>This section assumes familiarity with the AIX auditing system. For more information, see the <emphasis>AIX System
+      Management Guide</emphasis> for the version of AIX you are using.</para>
+    </note>
+
+    <sect2 id="Header_406">
+      <title>Configuring AFS Auditing on AIX File Servers</title>
+
+      <para>The directory <emphasis role="bold">/usr/afs/local/audit</emphasis> contains three files that contain the information
+      needed to configure AIX File Servers to audit AFS events: <itemizedlist>
+          <listitem>
+            <para>The <emphasis role="bold">events.sample</emphasis> file contains information on auditable AFS events. The contents
+            of this file are integrated into the corresponding AIX events file (<emphasis
+            role="bold">/etc/security/audit/events</emphasis>).</para>
+          </listitem>
+
+          <listitem>
+            <para>The <emphasis role="bold">config.sample</emphasis> file defines the six classes of AFS audit events and the events
+            that make up each class. It also defines the classes of AFS audit events to audit for the File Server, which runs as the
+            local superuser <emphasis role="bold">root</emphasis>. The contents of this file must be integrated into the
+            corresponding AIX config file (<emphasis role="bold">/etc/security/audit/config</emphasis>).</para>
+          </listitem>
+
+          <listitem>
+            <para>The <emphasis role="bold">objects.sample</emphasis> file contains a list of information about audited files. You
+            must only audit files in the local file space. The contents of this file must be integrated into the corresponding AIX
+            objects file (<emphasis role="bold">/etc/security/audit/objects</emphasis>).</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>Once you have properly configured these files to include the AFS-relevant information, use the AIX auditing system to
+      start up and shut down the auditing.</para>
+    </sect2>
+
+    <sect2 id="Header_407">
+      <title>To enable AFS auditing</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Create the following string in the file <emphasis role="bold">/usr/afs/local/Audit</emphasis> on each File Server on
+          which you plan to audit AFS events: <programlisting><emphasis role="bold">AFS_AUDIT_AllEvents</emphasis></programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos restart</emphasis> command (with the <emphasis role="bold">-all</emphasis> flag)
+          to stop and restart all server processes on each File Server. For instructions on using this command, see <link
+          linkend="HDRWQ170">Stopping and Immediately Restarting Processes</link>.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="Header_408">
+      <title>To disable AFS auditing</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Remove the contents of the file <emphasis role="bold">/usr/afs/local/Audit</emphasis> on each File Server for which
+          you are no longer interested in auditing AFS events.</para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos restart</emphasis> command (with the <emphasis role="bold">-all</emphasis> flag)
+          to stop and restart all server processes on each File Server. For instructions on using this command, see <link
+          linkend="HDRWQ170">Stopping and Immediately Restarting Processes</link>.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+</chapter>

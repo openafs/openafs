@@ -1,0 +1,426 @@
+IDX1000 <indexterm><primary>files</primary><secondary>denying access</secondary></indexterm>
+IDX1001 <indexterm><primary>fs commands</primary><secondary>setacl</secondary><tertiary>with -negative flag</tertiary></indexterm>
+IDX1002 <indexterm><primary>commands</primary><secondary>fs setacl</secondary></indexterm>
+IDX1003 <indexterm><primary>examples</primary><secondary>creating entry on negative permissions section of ACL</secondary></indexterm>
+IDX1004 <indexterm><primary>ACL</primary><secondary>replacing all entries</secondary></indexterm>
+IDX1005 <indexterm><primary>ACL</primary><secondary>clearing</secondary></indexterm>
+IDX1006 <indexterm><primary>replacing</primary><secondary>all entries on ACL</secondary></indexterm>
+IDX1007 <indexterm><primary>erasing all ACL entries</primary></indexterm>
+IDX1008 <indexterm><primary>clearing all ACL entries</primary></indexterm>
+IDX1009 <indexterm><primary>removing</primary><secondary>all ACL entries</secondary></indexterm>
+IDX1010 <indexterm><primary>directories</primary><secondary>replacing ACL</secondary></indexterm>
+IDX1011 <indexterm><primary>fs commands</primary><secondary>setacl</secondary><tertiary>completely replacing ACL</tertiary></indexterm>
+IDX1012 <indexterm><primary>examples</primary><secondary>replacing an ACL</secondary></indexterm>
+IDX1013 <indexterm><primary>ACL</primary><secondary>copying between directories</secondary></indexterm>
+IDX1014 <indexterm><primary>creating</primary><secondary>ACL as copy of another</secondary></indexterm>
+IDX1015 <indexterm><primary>copying</primary><secondary>ACL between directories</secondary></indexterm>
+IDX1016 <indexterm><primary>directories</primary><secondary>copying ACLs between</secondary></indexterm>
+IDX1017 <indexterm><primary>commands</primary><secondary>fs copyacl</secondary></indexterm>
+IDX1018 <indexterm><primary>fs commands</primary><secondary>copyacl</secondary></indexterm>
+IDX1019 <indexterm><primary>examples</primary><secondary>copying ACL between directories</secondary></indexterm>
+IDX1020 <indexterm><primary>UNIX, differences with AFS</primary><secondary>mode bits, interpretation</secondary></indexterm>
+IDX1021 <indexterm><primary>mode bits (UNIX)</primary><secondary>interpretation in AFS</secondary></indexterm>
+IDX1022 <indexterm><primary>commands</primary><secondary>chmod</secondary></indexterm>
+IDX1023 <indexterm><primary>chmod command</primary></indexterm>
+IDX1024 <indexterm><primary>examples</primary><secondary>using chmod</secondary></indexterm>
+IDX1025 <indexterm><primary>machines</primary><secondary>as members of groups</secondary></indexterm>
+IDX1026 <indexterm><primary>groups</primary><secondary>machines as members</secondary></indexterm>
+IDX1027 <indexterm><primary>private use of group</primary></indexterm>
+IDX1028 <indexterm><primary>groups</primary><secondary>private use</secondary></indexterm>
+IDX1029 <indexterm><primary>shared use of group</primary></indexterm>
+IDX1030 <indexterm><primary>groups</primary><secondary>shared use</secondary></indexterm>
+IDX1031 <indexterm><primary>group use of group</primary></indexterm>
+IDX1032 <indexterm><primary>self-owned group</primary></indexterm>
+IDX1033 <indexterm><primary>groups</primary><secondary>group use</secondary></indexterm>
+IDX1034 <indexterm><primary>groups</primary><secondary>group-owned groups</secondary></indexterm>
+IDX1035 <indexterm><primary>groups</primary><secondary>self-owned groups</secondary></indexterm>
+IDX1036 <indexterm><primary>groups</primary><secondary>naming conventions</secondary></indexterm>
+IDX1037 <indexterm><primary>group-creation quota</primary><secondary>defined</secondary></indexterm>
+IDX1038 <indexterm><primary>groups</primary><secondary>creation quota</secondary></indexterm>
+IDX1039 <indexterm><primary>displaying</primary><secondary>group information</secondary></indexterm>
+IDX1040 <indexterm><primary>groups</primary><secondary>displaying information</secondary></indexterm>
+IDX1041 <indexterm><primary>users</primary><secondary>displaying group information</secondary></indexterm>
+IDX1042 <indexterm><primary>commands</primary><secondary>pts membership</secondary></indexterm>
+IDX1043 <indexterm><primary>pts commands</primary><secondary>membership</secondary></indexterm>
+IDX1044 <indexterm><primary>examples</primary><secondary>displaying members of a group</secondary></indexterm>
+IDX1045 <indexterm><primary>displaying</primary><secondary>groups owned by a group</secondary></indexterm>
+IDX1046 <indexterm><primary>commands</primary><secondary>pts listowned</secondary></indexterm>
+IDX1047 <indexterm><primary>users</primary><secondary>listing groups owned</secondary></indexterm>
+IDX1048 <indexterm><primary>groups</primary><secondary>listing groups owned</secondary></indexterm>
+IDX1049 <indexterm><primary>pts commands</primary><secondary>listowned</secondary></indexterm>
+IDX1050 <indexterm><primary>examples</primary><secondary>displaying groups a group owns</secondary></indexterm>
+IDX1051 <indexterm><primary>examples</primary><secondary>displaying groups a user owns</secondary></indexterm>
+IDX1052 <indexterm><primary>commands</primary><secondary>pts examine</secondary></indexterm>
+IDX1053 <indexterm><primary>pts commands</primary><secondary>examine</secondary></indexterm>
+IDX1054 <indexterm><primary>displaying</primary><secondary>group owner</secondary></indexterm>
+IDX1055 <indexterm><primary>displaying</primary><secondary>group creator</secondary></indexterm>
+IDX1056 <indexterm><primary>displaying</primary><secondary>group-creation quota</secondary></indexterm>
+IDX1057 <indexterm><primary>groups</primary><secondary>owner, displaying</secondary></indexterm>
+IDX1058 <indexterm><primary>groups</primary><secondary>creator, displaying</secondary></indexterm>
+IDX1059 <indexterm><primary>users</primary><secondary>displaying number of group memberships</secondary></indexterm>
+IDX1060 <indexterm><primary>group-creation quota</primary><secondary>displaying</secondary></indexterm>
+IDX1061 <indexterm><primary>AFS</primary><secondary>UIDs and GIDs</secondary></indexterm>
+IDX1062 <indexterm><primary>GID, AFS</primary></indexterm>
+IDX1063 <indexterm><primary>UID, AFS</primary></indexterm>
+IDX1064 <indexterm><primary>examples</primary><secondary>displaying information about group</secondary></indexterm>
+IDX1065 <indexterm><primary>examples</primary><secondary>displaying group information about a user</secondary></indexterm>
+IDX1066 <indexterm><primary>adding</primary><secondary>users to groups</secondary></indexterm>
+IDX1067 <indexterm><primary>creating</primary><secondary>groups</secondary></indexterm>
+IDX1068 <indexterm><primary>groups</primary><secondary>creating</secondary></indexterm>
+IDX1069 <indexterm><primary>groups</primary><secondary>adding members</secondary></indexterm>
+IDX1070 <indexterm><primary>groups</primary><secondary>owner as administrator</secondary></indexterm>
+IDX1071 <indexterm><primary>commands</primary><secondary>pts creategroup</secondary></indexterm>
+IDX1072 <indexterm><primary>pts commands</primary><secondary>creategroup</secondary></indexterm>
+IDX1073 <indexterm><primary>groups</primary><secondary>rules for assigning ownership</secondary></indexterm>
+IDX1074 <indexterm><primary>rules for assigning group names</primary></indexterm>
+IDX1075 <indexterm><primary>examples</primary><secondary>creating a group</secondary></indexterm>
+IDX1076 <indexterm><primary>groups</primary><secondary>adding members</secondary></indexterm>
+IDX1077 <indexterm><primary>commands</primary><secondary>pts adduser</secondary></indexterm>
+IDX1078 <indexterm><primary>pts commands</primary><secondary>adduser</secondary></indexterm>
+IDX1079 <indexterm><primary>users</primary><secondary>adding as group members</secondary></indexterm>
+IDX1080 <indexterm><primary>examples</primary><secondary>adding members to a group</secondary></indexterm>
+IDX1081 <indexterm><primary>groups</primary><secondary>removing members</secondary></indexterm>
+IDX1082 <indexterm><primary>groups</primary><secondary>deleting</secondary></indexterm>
+IDX1083 <indexterm><primary>removing</primary><secondary>users from groups</secondary></indexterm>
+IDX1084 <indexterm><primary>deleting groups</primary></indexterm>
+IDX1085 <indexterm><primary>removing</primary><secondary>users from groups</secondary></indexterm>
+IDX1086 <indexterm><primary>users</primary><secondary>removing from groups</secondary></indexterm>
+IDX1087 <indexterm><primary>removing</primary><secondary>obsolete ACL entries</secondary></indexterm>
+IDX1088 <indexterm><primary>ACL</primary><secondary>removing obsolete entries</secondary></indexterm>
+IDX1089 <indexterm><primary>commands</primary><secondary>pts removeuser</secondary></indexterm>
+IDX1090 <indexterm><primary>pts commands</primary><secondary>removeuser</secondary></indexterm>
+IDX1091 <indexterm><primary>examples</primary><secondary>removing group members</secondary></indexterm>
+IDX1092 <indexterm><primary>commands</primary><secondary>pts delete</secondary></indexterm>
+IDX1093 <indexterm><primary>pts commands</primary><secondary>delete</secondary></indexterm>
+IDX1094 <indexterm><primary>examples</primary><secondary>deleting a group</secondary></indexterm>
+IDX1095 <indexterm><primary>commands</primary><secondary>fs cleanacl</secondary></indexterm>
+IDX1096 <indexterm><primary>fs commands</primary><secondary>cleanacl</secondary></indexterm>
+IDX1097 <indexterm><primary>examples</primary><secondary>removing deleted groups from ACLs</secondary></indexterm>
+IDX1098 <indexterm><primary>groups</primary><secondary>changing name</secondary></indexterm>
+IDX1099 <indexterm><primary>changing</primary><secondary>group owner</secondary></indexterm>
+IDX1100 <indexterm><primary>changing</primary><secondary>group name</secondary></indexterm>
+IDX1101 <indexterm><primary>groups</primary><secondary>changing owner</secondary></indexterm>
+IDX1102 <indexterm><primary>commands</primary><secondary>pts chown</secondary></indexterm>
+IDX1103 <indexterm><primary>pts commands</primary><secondary>chown</secondary></indexterm>
+IDX1104 <indexterm><primary>examples</primary><secondary>changing group owner</secondary></indexterm>
+IDX1105 <indexterm><primary>examples</primary><secondary>creating a self-owned group</secondary></indexterm>
+IDX1106 <indexterm><primary>commands</primary><secondary>pts rename</secondary></indexterm>
+IDX1107 <indexterm><primary>pts commands</primary><secondary>rename</secondary></indexterm>
+IDX1108 <indexterm><primary>examples</primary><secondary>changing group name</secondary></indexterm>
+IDX1109 <indexterm><primary>protection</primary><secondary>group-related information</secondary></indexterm>
+IDX1110 <indexterm><primary>groups</primary><secondary>privacy flags</secondary></indexterm>
+IDX1111 <indexterm><primary>privacy flags on groups</primary></indexterm>
+IDX1112 <indexterm><primary>s privacy flag on groups</primary></indexterm>
+IDX1113 <indexterm><primary>o privacy flag on groups</primary></indexterm>
+IDX1114 <indexterm><primary>m privacy flag on groups</primary></indexterm>
+IDX1115 <indexterm><primary>a privacy flag on groups</primary></indexterm>
+IDX1116 <indexterm><primary>r privacy flag on groups</primary></indexterm>
+IDX1117 <indexterm><primary>commands</primary><secondary>pts setfields</secondary></indexterm>
+IDX1118 <indexterm><primary>pts commands</primary><secondary>setfields</secondary></indexterm>
+IDX1119 <indexterm><primary>examples</primary><secondary>setting group's privacy flags</secondary></indexterm>
+IDX1120 <indexterm><primary>troubleshooting</primary><secondary>inability to access, copy or save file</secondary></indexterm>
+IDX1121 <indexterm><primary>files</primary><secondary>inability to access, copy or save</secondary></indexterm>
+IDX1122 <indexterm><primary>saving files</primary><secondary>inability to</secondary></indexterm>
+IDX1123 <indexterm><primary>copying</primary><secondary>files, inability to</secondary></indexterm>
+IDX1124 <indexterm><primary>directories</primary><secondary>inability to access</secondary></indexterm>
+IDX1125 <indexterm><primary>access to AFS filespace</primary><secondary>failures, troubleshooting</secondary></indexterm>
+IDX1126 <indexterm><primary>troubleshooting</primary><secondary>accidental removal from ACL</secondary></indexterm>
+IDX1127 <indexterm><primary>ACL</primary><secondary>accidentally removed yourself</secondary></indexterm>
+IDX1128 <indexterm><primary>troubleshooting</primary><secondary>error messages</secondary></indexterm>
+IDX1129 <indexterm><primary>error messages, troubleshooting</primary></indexterm>
+IDX1130 <indexterm><primary>lost contact with fileserver (error message)</primary></indexterm>
+IDX1131 <indexterm><primary>connection timed out (error message)</primary></indexterm>
+IDX1132 <indexterm><primary>you don't have the required access rights (error message)</primary></indexterm>
+IDX1133 <indexterm><primary>afs: failed to store file (error message)</primary></indexterm>
+IDX1134 <indexterm><primary>failed to store file (error message)</primary></indexterm>
+IDX1135 <indexterm><primary>NFS</primary><secondary>accessing AFS from client</secondary></indexterm>
+IDX1136 <indexterm><primary>NFS/AFS Translator</primary></indexterm>
+IDX1137 <indexterm><primary>AFS</primary><secondary>accessing from NFS client machine</secondary></indexterm>
+IDX1138 <indexterm><primary>access to AFS filespace</primary><secondary>from NFS client machines</secondary></indexterm>
+IDX1139 <indexterm><primary>NFS</primary><secondary>issuing AFS commands on NFS client machine</secondary></indexterm>
+IDX1140 <indexterm><primary>commands</primary><secondary>AFS, issuing on NFS client machine</secondary></indexterm>
+IDX1141 <indexterm><primary>authentication</primary><secondary>to AFS on NFS client machines</secondary></indexterm>
+IDX1142 <indexterm><primary>knfs command</primary></indexterm>
+IDX1143 <indexterm><primary>commands</primary><secondary>knfs</secondary></indexterm>
+IDX1144 <indexterm><primary>syntax of AFS commands described</primary></indexterm>
+IDX1145 <indexterm><primary>commands</primary><secondary>syntax for AFS</secondary></indexterm>
+IDX1146 <indexterm><primary>commands</primary><secondary>suite organization for AFS</secondary></indexterm>
+IDX1147 <indexterm><primary>suite, defined for AFS command</primary></indexterm>
+IDX1148 <indexterm><primary>operation codes in AFS commands</primary><secondary>defined</secondary></indexterm>
+IDX1149 <indexterm><primary>arguments to AFS commands</primary></indexterm>
+IDX1150 <indexterm><primary>switches on AFS commands</primary><secondary>defined</secondary></indexterm>
+IDX1151 <indexterm><primary>instances to AFS commands</primary></indexterm>
+IDX1152 <indexterm><primary>flags on AFS commands</primary></indexterm>
+IDX1153 <indexterm><primary>operation codes in AFS commands</primary><secondary>abbreviating</secondary></indexterm>
+IDX1154 <indexterm><primary>switches on AFS commands</primary><secondary>omitting</secondary></indexterm>
+IDX1155 <indexterm><primary>switches on AFS commands</primary><secondary>abbreviating</secondary></indexterm>
+IDX1156 <indexterm><primary>directories</primary><secondary>shorthand notation for referencing</secondary></indexterm>
+IDX1157 <indexterm><primary>fs commands</primary><secondary>introduction</secondary></indexterm>
+IDX1158 <indexterm><primary>fs commands</primary><secondary>help flag</secondary></indexterm>
+IDX1159 <indexterm><primary>fs commands</primary><secondary>getting help</secondary></indexterm>
+IDX1160 <indexterm><primary>fs commands</primary><secondary>privileges required</secondary></indexterm>
+IDX1161 <indexterm><primary>pts commands</primary><secondary>privilege required</secondary></indexterm>
+IDX1162 <indexterm><primary>Protection Database</primary></indexterm>
+IDX1163 <indexterm><primary>pts commands</primary><secondary>cell argument</secondary></indexterm>
+IDX1164 <indexterm><primary>pts commands</primary><secondary>force flag</secondary></indexterm>
+IDX1165 <indexterm><primary>pts commands</primary><secondary>help flag</secondary></indexterm>
+IDX1166 <indexterm><primary>pts commands</primary><secondary>getting help</secondary></indexterm>
+IDX1167 <indexterm><primary>help</primary><secondary>online for AFS commands</secondary></indexterm>
+IDX1168 <indexterm><primary>online help</primary></indexterm>
+IDX1169 <indexterm><primary>apropos operation code</primary></indexterm>
+IDX1170 <indexterm><primary>help</primary><secondary>operation code in AFS command suites</secondary></indexterm>
+IDX1171 <indexterm><primary>help</primary><secondary>examples</secondary></indexterm>
+IDX1172 <indexterm><primary>keyword for apropos command</primary></indexterm>
+IDX747 <indexterm><primary>AFS</primary><secondary>sharing information</secondary></indexterm>
+IDX748 <indexterm><primary>AFS</primary><secondary>transparent access</secondary></indexterm>
+IDX749 <indexterm><primary>client/server computing</primary></indexterm>
+IDX750 <indexterm><primary>client machine</primary></indexterm>
+IDX751 <indexterm><primary>server machines defined</primary></indexterm>
+IDX752 <indexterm><primary>machines</primary><secondary>server</secondary></indexterm>
+IDX753 <indexterm><primary>machines</primary><secondary>client</secondary></indexterm>
+IDX754 <indexterm><primary>communication</primary><secondary>between clients and servers</secondary></indexterm>
+IDX755 <indexterm><primary>distributed file system</primary></indexterm>
+IDX756 <indexterm><primary>local machine</primary></indexterm>
+IDX757 <indexterm><primary>AFS</primary><secondary>filespace as extension of local filespace</secondary></indexterm>
+IDX758 <indexterm><primary>afs (/afs) directory</primary><secondary>as root of AFS filespace</secondary></indexterm>
+IDX759 <indexterm><primary>root of AFS filespace</primary></indexterm>
+IDX760 <indexterm><primary>cells</primary><secondary>defined</secondary></indexterm>
+IDX761 <indexterm><primary>site defined</primary></indexterm>
+IDX762 <indexterm><primary>communication</primary><secondary>among cells and sites</secondary></indexterm>
+IDX763 <indexterm><primary>local cell, defined</primary></indexterm>
+IDX764 <indexterm><primary>foreign cells</primary><secondary>defined</secondary></indexterm>
+IDX765 <indexterm><primary>cells</primary><secondary>local vs. foreign</secondary></indexterm>
+IDX766 <indexterm><primary>volumes</primary><secondary>defined</secondary></indexterm>
+IDX767 <indexterm><primary>disk partition</primary><secondary>use in AFS</secondary></indexterm>
+IDX768 <indexterm><primary>mount points defined</primary></indexterm>
+IDX769 <indexterm><primary>volumes</primary><secondary>accessing via mount points</secondary></indexterm>
+IDX770 <indexterm><primary>examples</primary><secondary>volume/mount point interaction</secondary></indexterm>
+IDX771 <indexterm><primary>volumes</primary><secondary>volume/mount point interaction</secondary></indexterm>
+IDX772 <indexterm><primary>caching files</primary></indexterm>
+IDX773 <indexterm><primary>Cache Manager</primary><secondary>described</secondary></indexterm>
+IDX774 <indexterm><primary>client machine</primary></indexterm>
+IDX775 <indexterm><primary>files</primary><secondary>caching</secondary></indexterm>
+IDX776 <indexterm><primary>files</primary><secondary>updating</secondary></indexterm>
+IDX777 <indexterm><primary>callbacks</primary></indexterm>
+IDX778 <indexterm><primary>files</primary><secondary>denying access</secondary></indexterm>
+IDX779 <indexterm><primary>files</primary><secondary>sharing</secondary></indexterm>
+IDX780 <indexterm><primary>AFS</primary><secondary>security</secondary></indexterm>
+IDX781 <indexterm><primary>security in AFS</primary></indexterm>
+IDX782 <indexterm><primary>mutual authentication</primary></indexterm>
+IDX783 <indexterm><primary>authentication</primary><secondary>mutual</secondary></indexterm>
+IDX784 <indexterm><primary>password</primary></indexterm>
+IDX785 <indexterm><primary>tokens</primary><secondary>as proof of authentication</secondary></indexterm>
+IDX786 <indexterm><primary>authentication</primary><secondary>defined</secondary></indexterm>
+IDX787 <indexterm><primary>tokens</primary><secondary>use in mutual authentication</secondary></indexterm>
+IDX788 <indexterm><primary>ACL</primary><secondary>described</secondary></indexterm>
+IDX789 <indexterm><primary>UNIX, differences with AFS</primary><secondary>file transfer</secondary></indexterm>
+IDX790 <indexterm><primary>UNIX, differences with AFS</primary><secondary>sharing files</secondary></indexterm>
+IDX791 <indexterm><primary>files</primary><secondary>sharing</secondary></indexterm>
+IDX792 <indexterm><primary>UNIX, differences with AFS</primary><secondary>login</secondary></indexterm>
+IDX793 <indexterm><primary>UNIX, differences with AFS</primary><secondary>passwords</secondary></indexterm>
+IDX794 <indexterm><primary>local password file (/etc/passwd)</primary></indexterm>
+IDX795 <indexterm><primary>passwd</primary><secondary>file</secondary></indexterm>
+IDX796 <indexterm><primary>ACL</primary><secondary>compared to UNIX mode bits</secondary></indexterm>
+IDX797 <indexterm><primary>UNIX, differences with AFS</primary><secondary>file access/protection</secondary></indexterm>
+IDX798 <indexterm><primary>UNIX, differences with AFS</primary><secondary>commands</secondary></indexterm>
+IDX799 <indexterm><primary>remote commands</primary></indexterm>
+IDX800 <indexterm><primary>commands</primary><secondary>ftp</secondary></indexterm>
+IDX801 <indexterm><primary>ftp command</primary></indexterm>
+IDX802 <indexterm><primary>commands</primary><secondary>rcp</secondary></indexterm>
+IDX803 <indexterm><primary>rcp command</primary></indexterm>
+IDX804 <indexterm><primary>commands</primary><secondary>rsh</secondary></indexterm>
+IDX805 <indexterm><primary>rsh command</primary></indexterm>
+IDX806 <indexterm><primary>chmod command</primary></indexterm>
+IDX807 <indexterm><primary>commands</primary><secondary>chmod</secondary></indexterm>
+IDX808 <indexterm><primary>chown command</primary></indexterm>
+IDX809 <indexterm><primary>commands</primary><secondary>chown</secondary></indexterm>
+IDX810 <indexterm><primary>chgrp command</primary></indexterm>
+IDX811 <indexterm><primary>commands</primary><secondary>chgrp</secondary></indexterm>
+IDX812 <indexterm><primary>groups command</primary></indexterm>
+IDX813 <indexterm><primary>commands</primary><secondary>groups</secondary></indexterm>
+IDX814 <indexterm><primary>inetd command</primary></indexterm>
+IDX815 <indexterm><primary>commands</primary><secondary>inetd</secondary></indexterm>
+IDX816 <indexterm><primary>login utility</primary></indexterm>
+IDX817 <indexterm><primary>ln command</primary></indexterm>
+IDX818 <indexterm><primary>commands</primary><secondary>ln</secondary></indexterm>
+IDX819 <indexterm><primary>logging in</primary></indexterm>
+IDX820 <indexterm><primary>login utility</primary></indexterm>
+IDX821 <indexterm><primary>commands</primary><secondary>login</secondary></indexterm>
+IDX822 <indexterm><primary>authentication</primary><secondary>tokens as proof</secondary></indexterm>
+IDX823 <indexterm><primary>tokens</primary><secondary>as proof of authentication</secondary></indexterm>
+IDX824 <indexterm><primary>Cache Manager</primary><secondary>tokens, use of</secondary></indexterm>
+IDX825 <indexterm><primary>PAG</primary></indexterm>
+IDX826 <indexterm><primary>process authentication group (PAG)</primary></indexterm>
+IDX827 <indexterm><primary>setpag argument to klog command</primary></indexterm>
+IDX828 <indexterm><primary>authentication</primary><secondary>in a foreign cell</secondary></indexterm>
+IDX829 <indexterm><primary>authentication</primary><secondary>as another user</secondary></indexterm>
+IDX830 <indexterm><primary>tokens</primary><secondary>lifetime</secondary></indexterm>
+IDX831 <indexterm><primary>lifetime of tokens</primary></indexterm>
+IDX832 <indexterm><primary>commands</primary><secondary>dlog</secondary></indexterm>
+IDX833 <indexterm><primary>commands</primary><secondary>dpass</secondary></indexterm>
+IDX834 <indexterm><primary>dlog command</primary></indexterm>
+IDX835 <indexterm><primary>dpass command</primary></indexterm>
+IDX836 <indexterm><primary>authentication</primary><secondary>with DCE for DFS access</secondary></indexterm>
+IDX837 <indexterm><primary>klog command</primary></indexterm>
+IDX838 <indexterm><primary>commands</primary><secondary>klog</secondary></indexterm>
+IDX839 <indexterm><primary>tokens</primary><secondary>getting</secondary></indexterm>
+IDX840 <indexterm><primary>checking</primary><secondary>tokens</secondary></indexterm>
+IDX841 <indexterm><primary>commands</primary><secondary>tokens</secondary></indexterm>
+IDX842 <indexterm><primary>tokens</primary><secondary>command</secondary></indexterm>
+IDX843 <indexterm><primary>tokens</primary><secondary>displaying</secondary></indexterm>
+IDX844 <indexterm><primary>displaying</primary><secondary>tokens</secondary></indexterm>
+IDX845 <indexterm><primary>examples</primary><secondary>authenticating</secondary></indexterm>
+IDX846 <indexterm><primary>examples</primary><secondary>authenticating as another user</secondary></indexterm>
+IDX847 <indexterm><primary>examples</primary><secondary>authenticating in a foreign cell</secondary></indexterm>
+IDX848 <indexterm><primary>authentication</primary><secondary>limits on consecutive failed attempts</secondary></indexterm>
+IDX849 <indexterm><primary>kas commands</primary><secondary>examine</secondary></indexterm>
+IDX850 <indexterm><primary>commands</primary><secondary>kas examine</secondary></indexterm>
+IDX851 <indexterm><primary>limits on authentication attempts</primary></indexterm>
+IDX852 <indexterm><primary>users</primary><secondary>account lockout time</secondary></indexterm>
+IDX853 <indexterm><primary>tokens</primary><secondary>destroying</secondary></indexterm>
+IDX854 <indexterm><primary>unauthenticating</primary></indexterm>
+IDX855 <indexterm><primary>exiting an AFS session</primary></indexterm>
+IDX856 <indexterm><primary>logging out</primary></indexterm>
+IDX857 <indexterm><primary>quitting an AFS session</primary></indexterm>
+IDX858 <indexterm><primary>commands</primary><secondary>unlog</secondary></indexterm>
+IDX859 <indexterm><primary>unlog command</primary></indexterm>
+IDX860 <indexterm><primary>examples</primary><secondary>unauthenticating from selected cells</secondary></indexterm>
+IDX861 <indexterm><primary>files</primary><secondary>accessing AFS</secondary></indexterm>
+IDX862 <indexterm><primary>directories</primary><secondary>accessing AFS</secondary></indexterm>
+IDX863 <indexterm><primary>pathnames</primary></indexterm>
+IDX864 <indexterm><primary>AFS</primary><secondary>accessing filespace</secondary></indexterm>
+IDX865 <indexterm><primary>access to AFS filespace</primary><secondary>format of pathnames</secondary></indexterm>
+IDX866 <indexterm><primary>afs (/afs) directory</primary><secondary>as root of AFS filespace</secondary></indexterm>
+IDX867 <indexterm><primary>format of AFS pathnames</primary></indexterm>
+IDX868 <indexterm><primary>foreign cells</primary><secondary>accessing</secondary></indexterm>
+IDX869 <indexterm><primary>system:anyuser group</primary><secondary>controlling access by foreign users</secondary></indexterm>
+IDX870 <indexterm><primary>kas commands</primary><secondary>examine</secondary></indexterm>
+IDX871 <indexterm><primary>commands</primary><secondary>kas examine</secondary></indexterm>
+IDX872 <indexterm><primary>password</primary><secondary>expiration date, displaying</secondary></indexterm>
+IDX873 <indexterm><primary>password</primary><secondary>reuse policy, displaying</secondary></indexterm>
+IDX874 <indexterm><primary>displaying</primary><secondary>password expiration date</secondary></indexterm>
+IDX875 <indexterm><primary>displaying</primary><secondary>password reuse policy</secondary></indexterm>
+IDX876 <indexterm><primary>password</primary><secondary>changing AFS</secondary></indexterm>
+IDX877 <indexterm><primary>changing</primary><secondary>AFS password</secondary></indexterm>
+IDX878 <indexterm><primary>commands</primary><secondary>kpasswd</secondary></indexterm>
+IDX879 <indexterm><primary>kpasswd command</primary></indexterm>
+IDX880 <indexterm><primary>commands</primary><secondary>passwd</secondary></indexterm>
+IDX881 <indexterm><primary>passwd</primary><secondary>command</secondary></indexterm>
+IDX882 <indexterm><primary>password</primary><secondary>changing UNIX</secondary></indexterm>
+IDX883 <indexterm><primary>changing</primary><secondary>UNIX password</secondary></indexterm>
+IDX884 <indexterm><primary>volume quota</primary></indexterm>
+IDX885 <indexterm><primary>disk partition</primary><secondary>consequences when full</secondary></indexterm>
+IDX886 <indexterm><primary>fs commands</primary><secondary>quota</secondary></indexterm>
+IDX887 <indexterm><primary>volume quota</primary><secondary>displaying percentage used</secondary></indexterm>
+IDX888 <indexterm><primary>commands</primary><secondary>fs quota</secondary></indexterm>
+IDX889 <indexterm><primary>displaying</primary><secondary>percentage of volume quota used</secondary></indexterm>
+IDX890 <indexterm><primary>examples</primary><secondary>displaying volume quota percentage used</secondary></indexterm>
+IDX891 <indexterm><primary>fs commands</primary><secondary>listquota</secondary></indexterm>
+IDX892 <indexterm><primary>volume quota</primary><secondary>displaying with other information</secondary></indexterm>
+IDX893 <indexterm><primary>commands</primary><secondary>fs listquota</secondary></indexterm>
+IDX894 <indexterm><primary>displaying</primary><secondary>volume quota with other information</secondary></indexterm>
+IDX895 <indexterm><primary>displaying</primary><secondary>disk partition percentage space used</secondary></indexterm>
+IDX896 <indexterm><primary>disk partition</primary><secondary>displaying percentage of space used</secondary></indexterm>
+IDX897 <indexterm><primary>examples</primary><secondary>displaying volume quota and other information</secondary></indexterm>
+IDX898 <indexterm><primary>fs commands</primary><secondary>examine</secondary></indexterm>
+IDX899 <indexterm><primary>commands</primary><secondary>fs examine</secondary></indexterm>
+IDX900 <indexterm><primary>volume quota</primary><secondary>displaying with other information</secondary></indexterm>
+IDX901 <indexterm><primary>displaying</primary><secondary>volume quota with other information</secondary></indexterm>
+IDX902 <indexterm><primary>displaying</primary><secondary>disk partition space available and total size</secondary></indexterm>
+IDX903 <indexterm><primary>disk partition</primary><secondary>displaying space available and total size</secondary></indexterm>
+IDX904 <indexterm><primary>examples</primary><secondary>displaying volume information</secondary></indexterm>
+IDX905 <indexterm><primary>files</primary><secondary>displaying location</secondary></indexterm>
+IDX906 <indexterm><primary>directories</primary><secondary>displaying location</secondary></indexterm>
+IDX907 <indexterm><primary>fs commands</primary><secondary>whereis</secondary></indexterm>
+IDX908 <indexterm><primary>commands</primary><secondary>fs whereis</secondary></indexterm>
+IDX909 <indexterm><primary>displaying</primary><secondary>directory/file location</secondary></indexterm>
+IDX910 <indexterm><primary>displaying</primary><secondary>file or directory location</secondary></indexterm>
+IDX911 <indexterm><primary>examples</primary><secondary>locating multiple files</secondary></indexterm>
+IDX912 <indexterm><primary>file server machines</primary><secondary>checking status</secondary></indexterm>
+IDX913 <indexterm><primary>status of file server machines</primary></indexterm>
+IDX914 <indexterm><primary>saving files</primary><secondary>on inaccessible file server machines</secondary></indexterm>
+IDX915 <indexterm><primary>fs commands</primary><secondary>checkservers</secondary></indexterm>
+IDX916 <indexterm><primary>commands</primary><secondary>fs checkservers</secondary></indexterm>
+IDX917 <indexterm><primary>examples</primary><secondary>checking status of file servers</secondary></indexterm>
+IDX918 <indexterm><primary>foreign cells</primary><secondary>enabling access</secondary></indexterm>
+IDX919 <indexterm><primary>commands</primary><secondary>fs listcells</secondary></indexterm>
+IDX920 <indexterm><primary>fs commands</primary><secondary>listcells</secondary></indexterm>
+IDX921 <indexterm><primary>commands</primary><secondary>fs getserverprefs</secondary></indexterm>
+IDX922 <indexterm><primary>fs commands</primary><secondary>getserverprefs</secondary></indexterm>
+IDX923 <indexterm><primary>Cache Manager</primary><secondary>displaying file server preferences</secondary></indexterm>
+IDX924 <indexterm><primary>protection</primary><secondary>for files and directories</secondary></indexterm>
+IDX925 <indexterm><primary>access to AFS filespace</primary><secondary>granting and denying to users</secondary></indexterm>
+IDX926 <indexterm><primary>directories</primary><secondary>setting access control list</secondary></indexterm>
+IDX927 <indexterm><primary>ACL</primary><secondary>described</secondary></indexterm>
+IDX928 <indexterm><primary>access control list</primary><see>ACL</see></indexterm>
+IDX929 <indexterm><primary>subdirectories, accessing</primary></indexterm>
+IDX930 <indexterm><primary>access to AFS filespace</primary><secondary>controlling at directory level</secondary></indexterm>
+IDX931 <indexterm><primary>access permissions on ACL</primary><seealso>permissions on ACL</seealso><seealso>ACL</seealso></indexterm>
+IDX932 <indexterm><primary>permissions on ACL</primary><secondary>defined</secondary></indexterm>
+IDX933 <indexterm><primary>ACL</primary><secondary>permissions defined</secondary></indexterm>
+IDX934 <indexterm><primary>lookup ACL permission</primary></indexterm>
+IDX935 <indexterm><primary>l ACL permission</primary></indexterm>
+IDX936 <indexterm><primary>insert ACL permission</primary></indexterm>
+IDX937 <indexterm><primary>i ACL permission</primary></indexterm>
+IDX938 <indexterm><primary>delete ACL permission</primary></indexterm>
+IDX939 <indexterm><primary>d ACL permission</primary></indexterm>
+IDX940 <indexterm><primary>administer ACL permission</primary></indexterm>
+IDX941 <indexterm><primary>a ACL permission</primary></indexterm>
+IDX942 <indexterm><primary>read ACL permission</primary></indexterm>
+IDX943 <indexterm><primary>r ACL permission</primary></indexterm>
+IDX944 <indexterm><primary>write ACL permission</primary></indexterm>
+IDX945 <indexterm><primary>w ACL permission</primary></indexterm>
+IDX946 <indexterm><primary>k ACL permission</primary></indexterm>
+IDX947 <indexterm><primary>lock ACL permission</primary></indexterm>
+IDX948 <indexterm><primary>auxiliary ACL permissions</primary></indexterm>
+IDX949 <indexterm><primary>ACL</primary><secondary>auxiliary permissions</secondary></indexterm>
+IDX950 <indexterm><primary>ACL</primary><secondary>shorthand notation for grouping sets of permissions</secondary></indexterm>
+IDX951 <indexterm><primary>shorthand notation for ACL permissions</primary></indexterm>
+IDX952 <indexterm><primary>permissions on ACL</primary><secondary>shorthand for</secondary></indexterm>
+IDX953 <indexterm><primary>all shorthand for ACL permissions</primary></indexterm>
+IDX954 <indexterm><primary>none shorthand for ACL permissions</primary></indexterm>
+IDX955 <indexterm><primary>read shorthand for ACL permissions</primary></indexterm>
+IDX956 <indexterm><primary>write shorthand for ACL permissions</primary></indexterm>
+IDX957 <indexterm><primary>ACL</primary><secondary>normal vs. negative permissions</secondary></indexterm>
+IDX958 <indexterm><primary>ACL</primary><secondary>normal permissions</secondary></indexterm>
+IDX959 <indexterm><primary>ACL</primary><secondary>negative permissions</secondary></indexterm>
+IDX960 <indexterm><primary>permissions on ACL</primary><secondary>normal vs. negative</secondary></indexterm>
+IDX961 <indexterm><primary>normal ACL permissions</primary><secondary>defined</secondary></indexterm>
+IDX962 <indexterm><primary>normal ACL permissions</primary><secondary>setting</secondary></indexterm>
+IDX963 <indexterm><primary>negative ACL permissions</primary><secondary>defined</secondary></indexterm>
+IDX964 <indexterm><primary>negative ACL permissions</primary><secondary>setting</secondary></indexterm>
+IDX965 <indexterm><primary>system groups</primary><secondary>using on ACLs</secondary></indexterm>
+IDX966 <indexterm><primary>system:anyuser group</primary><secondary>using on ACLs</secondary></indexterm>
+IDX967 <indexterm><primary>system:authuser group</primary></indexterm>
+IDX968 <indexterm><primary>system:administrators group</primary></indexterm>
+IDX969 <indexterm><primary>ACL</primary><secondary>foreign users on</secondary></indexterm>
+IDX970 <indexterm><primary>subdirectories, accessing</primary></indexterm>
+IDX971 <indexterm><primary>access to AFS filespace</primary><secondary>controlling for subdirectories</secondary></indexterm>
+IDX972 <indexterm><primary>access to AFS filespace</primary><secondary>enabling for service processes</secondary></indexterm>
+IDX973 <indexterm><primary>access to AFS filespace</primary><secondary>enabling for users from foreign cells</secondary></indexterm>
+IDX974 <indexterm><primary>ACL</primary><secondary>displaying</secondary></indexterm>
+IDX975 <indexterm><primary>displaying</primary><secondary>ACL entries</secondary></indexterm>
+IDX976 <indexterm><primary>permissions on ACL</primary><secondary>displaying</secondary></indexterm>
+IDX977 <indexterm><primary>fs commands</primary><secondary>listacl</secondary></indexterm>
+IDX978 <indexterm><primary>commands</primary><secondary>fs listacl</secondary></indexterm>
+IDX979 <indexterm><primary>examples</primary><secondary>displaying ACL for single directory</secondary></indexterm>
+IDX980 <indexterm><primary>examples</primary><secondary>displaying ACLs for multiple directories</secondary></indexterm>
+IDX981 <indexterm><primary>changing</primary><secondary>ACLs</secondary></indexterm>
+IDX982 <indexterm><primary>setting permissions on ACL</primary></indexterm>
+IDX983 <indexterm><primary>ACL</primary><secondary>setting</secondary></indexterm>
+IDX984 <indexterm><primary>permissions on ACL</primary><secondary>setting</secondary></indexterm>
+IDX985 <indexterm><primary>creating</primary><secondary>ACL entry in normal permissions section</secondary></indexterm>
+IDX986 <indexterm><primary>ACL</primary><secondary>creating normal entry</secondary></indexterm>
+IDX987 <indexterm><primary>adding</primary><secondary>ACL entry to normal permissions section</secondary></indexterm>
+IDX988 <indexterm><primary>granting access to AFS filespace</primary></indexterm>
+IDX989 <indexterm><primary>access to AFS filespace</primary><secondary>ACL entries control</secondary></indexterm>
+IDX990 <indexterm><primary>directories</primary><secondary>granting access</secondary></indexterm>
+IDX991 <indexterm><primary>files</primary><secondary>granting access</secondary></indexterm>
+IDX992 <indexterm><primary>commands</primary><secondary>fs setacl</secondary></indexterm>
+IDX993 <indexterm><primary>fs commands</primary><secondary>setacl</secondary></indexterm>
+IDX994 <indexterm><primary>examples</primary><secondary>adding a user to an ACL</secondary></indexterm>
+IDX995 <indexterm><primary>creating</primary><secondary>ACL entry in negative permissions section</secondary></indexterm>
+IDX996 <indexterm><primary>ACL</primary><secondary>creating negative entry</secondary></indexterm>
+IDX997 <indexterm><primary>adding</primary><secondary>ACL entry to negative permissions section</secondary></indexterm>
+IDX998 <indexterm><primary>denying access with negative ACL entry</primary></indexterm>
+IDX999 <indexterm><primary>directories</primary><secondary>denying access</secondary></indexterm>

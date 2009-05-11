@@ -1,0 +1,455 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>About This Guide</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS User Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="AFS User Guide"
+HREF="book1.html"><LINK
+REL="NEXT"
+TITLE="An Introduction to AFS"
+HREF="c113.html"></HEAD
+><BODY
+CLASS="preface"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS User Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="book1.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c113.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="preface"
+><H1
+><A
+NAME="HDRWQ1"
+></A
+>About This Guide</H1
+><P
+>This section describes the purpose, organization, and conventions of this document.</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRPREFAUDPUR"
+>Audience and Purpose</A
+></H1
+><P
+>This guide describes concepts and procedures for accessing information stored in the AFS filespace. It is intended for AFS
+    users who are familiar with UNIX but not necessarily AFS.</P
+><P
+>The first chapter describes basic AFS concepts and guidelines for using it, and summarizes some of the differences between
+    the UNIX file system and AFS. The remaining chapters explain how to perform basic AFS functions, including logging in, changing
+    a password, listing information, protecting files, creating groups, and troubleshooting. Concepts important to a specific task
+    or group of related tasks are presented in context, just prior to the procedures. Many examples are provided.</P
+><P
+>Instructions generally include only the commands and command options necessary for a specific task. For a complete list of
+    AFS commands and description of all options available on every command, see the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration
+    Reference</I
+></SPAN
+>.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRPREFORGAN"
+>Document Organization</A
+></H1
+><P
+>This document is divided into the following chapters.</P
+><P
+><A
+HREF="c113.html"
+>An Introduction to AFS</A
+> introduces the basic concepts and functions of AFS. To use AFS
+    successfully, it is important to be familiar with the terms and concepts described in this chapter.</P
+><P
+><A
+HREF="c569.html"
+>Using AFS</A
+> describes how to use AFS's basic features: how to log in and authenticate, unlog,
+    log out, access AFS files and directories in AFS, and change your password.</P
+><P
+><A
+HREF="c1095.html"
+>Displaying Information about AFS</A
+> describes how to display information about AFS volume
+    quota and location, file server machine status, and the foreign cells you can access.</P
+><P
+><A
+HREF="c1444.html"
+>Protecting Your Directories and Files</A
+> describes how to protect your data using AFS access
+    control lists (ACLs).</P
+><P
+><A
+HREF="c2454.html"
+>Using Groups</A
+> describes how to create and manage groups.</P
+><P
+><A
+HREF="c3402.html"
+>Troubleshooting</A
+> outlines step-by-step diagnostic and corrective steps for specific
+    problems.</P
+><P
+><A
+HREF="a3632.html"
+>Appendix A, Using the NFS/AFS Translator</A
+> describes how to use the NFS/AFS Translator to
+    access the AFS filespace from an NFS client machine.</P
+><P
+><A
+HREF="a3812.html"
+>Appendix B, AFS Command Syntax and Online Help</A
+> describes AFS command syntax and how to
+    obtain online information about commands.</P
+><P
+><A
+HREF="g4153.html"
+>Appendix C, Glossary</A
+> defines terms used in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS User
+    Guide</I
+></SPAN
+>.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRUSERFRONTHOWTO"
+>How To Use This Document</A
+></H1
+><P
+>Before you begin using AFS, read <A
+HREF="c113.html"
+>An Introduction to AFS</A
+>. Next, follow the procedures
+    outlined in <A
+HREF="c569.html"
+>Using AFS</A
+> to get started using AFS as an authenticated user. It describes how to
+    access files in the AFS filespace and how to end an AFS session. Consult the other chapters as you need to perform the tasks
+    they describe.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRPREFRELATE"
+>Related Documents</A
+></H1
+><P
+>The AFS Documentation Kit also includes the following documents:
+
+    <UL
+><LI
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+> details the syntax of each AFS command and is intended for
+        the experienced AFS administrator, programmer, or user. For each AFS command, the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration
+        Reference</I
+></SPAN
+> lists the command syntax, aliases and abbreviations, description, arguments, warnings, output,
+        examples, and related topics. Commands are organized alphabetically.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Guide</I
+></SPAN
+> describes concepts and procedures necessary for administering an
+        AFS cell, as well as more extensive coverage of the topics in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS User Guide</I
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Quick Beginnings</I
+></SPAN
+> provides instructions for installing AFS server and client
+        machines.</P
+></LI
+></UL
+>
+</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRTYPO_CONV"
+>Typographical Conventions</A
+></H1
+><P
+>This document uses the following typographical conventions:
+
+    <UL
+><LI
+><P
+>Command and option names appear in <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bold type</B
+></SPAN
+> in syntax definitions, examples, and
+        running text. Names of directories, files, machines, partitions, volumes, and users also appear in <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bold type</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>Variable information appears in <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>italic type</I
+></SPAN
+>. This includes user-supplied information on command
+        lines and the parts of prompts that differ depending on who issues the command. New terms also appear in <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>italic
+        type</I
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>Examples of screen output and file contents appear in <SAMP
+CLASS="computeroutput"
+>monospace type</SAMP
+>.</P
+></LI
+></UL
+>
+</P
+><P
+>In addition, the following symbols appear in command syntax definitions, both in the documentation and in AFS online help
+    statements. When issuing a command, do not type these symbols.
+
+    <UL
+><LI
+><P
+>Square brackets <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[ ]</B
+></SPAN
+> surround optional items.</P
+></LI
+><LI
+><P
+>Angle brackets <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#60; &#62;</B
+></SPAN
+> surround user-supplied values in AFS commands.</P
+></LI
+><LI
+><P
+>A superscripted plus sign <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>+</B
+></SPAN
+> follows an argument that accepts more than one
+        value.</P
+></LI
+><LI
+><P
+>The percent sign <SAMP
+CLASS="computeroutput"
+>%</SAMP
+> represents the regular command shell prompt. Some operating
+        systems possibly use a different character for this prompt.</P
+></LI
+><LI
+><P
+>The number sign <SAMP
+CLASS="computeroutput"
+>#</SAMP
+> represents the command shell prompt for the local superuser
+        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>. Some operating systems possibly use a different character for this prompt.</P
+></LI
+><LI
+><P
+>The pipe symbol <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>|</B
+></SPAN
+> in a command syntax statement separates mutually exclusive values
+        for an argument.</P
+></LI
+></UL
+>
+</P
+><P
+>For additional information on AFS commands, including a description of command string components, acceptable abbreviations
+    and aliases, and how to get online help for commands, see <A
+HREF="a3812.html"
+>Appendix B, AFS Command Syntax and Online
+    Help</A
+>.</P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c113.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>AFS User Guide</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>An Introduction to AFS</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1118 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Displaying Information about AFS</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS User Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Using AFS"
+HREF="c569.html"><LINK
+REL="NEXT"
+TITLE="Protecting Your Directories and Files"
+HREF="c1444.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS User Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c569.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c1444.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="HDRWQ38"
+></A
+>Chapter 3. Displaying Information about AFS</H1
+><P
+>This chapter explains how to display information that can help you use AFS more effectively. It includes the following
+  sections.
+
+  <TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+><A
+HREF="c1095.html#HDRWQ39"
+>Displaying Volume Quota</A
+></TD
+></TR
+><TR
+><TD
+><A
+HREF="c1095.html#HDRWQ40"
+>Locating Files and Directories</A
+>.</TD
+></TR
+><TR
+><TD
+><A
+HREF="c1095.html#HDRWQ41"
+>Checking the Status of Server Machines</A
+></TD
+></TR
+><TR
+><TD
+><A
+HREF="c1095.html#HDRWQ42"
+>Determining Access to Foreign Cells</A
+></TD
+></TR
+><TR
+><TD
+><A
+HREF="c1095.html#HDRWQ43"
+>Displaying Server Preference Ranks</A
+></TD
+></TR
+></TBODY
+></TABLE
+>
+</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ39"
+>Displaying Volume Quota</A
+></H1
+><P
+>By convention, the files in your home directory are stored together in a single volume. (For information about volumes,
+    see <A
+HREF="c113.html#HDRWQ6"
+>Volumes and Mount Points</A
+>.) To allocate your cell's available disk space as fairly as possible,
+    your system administrators impose a size limit, or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>quota</I
+></SPAN
+>, on each volume. You cannot store more data in a
+    volume than its quota allows. If a volume is close to its quota, you sometimes cannot save changes you have made to files stored
+    in the volume.</P
+><P
+>The amount of space available on the partition that houses the volume also limits how large the volume can grow. If the
+    disk partition is full, you can become unable to save changes to a file even though the volume is not close to its quota.
+     </P
+><P
+>Check the quota on your home volume periodically to make sure you have adequate space. Also, if you encounter problems
+    saving a file, check the quota of the volume in which the file is stored. Use the following commands to display volume
+    quota.
+
+    <UL
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs quota</B
+></SPAN
+> command lists the percentage of the volume quota used.</P
+></LI
+><LI
+><P
+>Both the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listquota</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs examine</B
+></SPAN
+> commands list
+        the volume name, its maximum size (quota), and its current size. They also report the following additional
+        information.
+
+        <UL
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listquota</B
+></SPAN
+> command lists the percentage used of both the volume and the
+            partition.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs examine</B
+></SPAN
+> command lists the partition's size, the amount of space currently
+            used, and any messages associated with the volume.</P
+></LI
+></UL
+>
+</P
+></LI
+></UL
+>
+</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_63"
+>To Display Percentage of Quota Used</A
+></H2
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs quota</B
+></SPAN
+> command to display the percentage of the quota currently used for
+      the volume that contains a specified directory or file.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs quota</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;<SUP
+>+</SUP
+>]
+</PRE
+><P
+>where <VAR
+CLASS="replaceable"
+>dir/file path</VAR
+> specifies the pathname of a file or directory in each volume for which to
+      display quota information. If you do not provide a pathname, the output reports quota information for the volume that contains
+      the current working directory.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_64"
+>Example: Displaying Percentage of Quota Used</A
+></H2
+><P
+> The following example displays the percentage of quota used for the volumes that contain two user
+      home directories in the ABC Corporation cell.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cd /afs/abc.com/usr</B
+></SPAN
+>
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs quota terry pat</B
+></SPAN
+>
+   34% of quota used.
+   85% of quota used.
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_65"
+>To Display Quota and Other Information about a Volume</A
+></H2
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listquota</B
+></SPAN
+> command to display the following information:
+
+      <UL
+><LI
+><P
+>The name of the volume that houses each specified file or directory</P
+></LI
+><LI
+><P
+>The quota, expressed as a number of kilobytes (<SAMP
+CLASS="computeroutput"
+>1024</SAMP
+> indicates one megabyte)</P
+></LI
+><LI
+><P
+>The current size of the volume (the number of kilobytes of currently used)</P
+></LI
+><LI
+><P
+>The percentage of the quota used</P
+></LI
+><LI
+><P
+>The percentage of space used on the disk partition housing the volume</P
+></LI
+></UL
+>
+</P
+><P
+>The command's syntax is as follows.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listquota</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;<SUP
+>+</SUP
+>]
+</PRE
+><P
+>where <VAR
+CLASS="replaceable"
+>dir/file path</VAR
+> specifies the pathname of a file or directory in each volume for which to
+      display quota information. If you do not provide a pathname, the output reports quota information for the volume that contains
+      the current working directory.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_66"
+>Example: Display Quota and Other Information about a Volume</A
+></H2
+><P
+>The following example displays quota information about the volume that houses the home directory of user <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listquota ~terry</B
+></SPAN
+>
+   Volume Name     Quota    Used    % Used   Partition 
+   user.terry      10000    3400       34%         86% 
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_67"
+>To Display Quota and Other Information about a Volume and Partition</A
+></H2
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs examine</B
+></SPAN
+> command to display the following information about a volume and
+      the partition it resides on:
+
+      <UL
+><LI
+><P
+>The volume's ID number (abbreviated in the output as <SAMP
+CLASS="computeroutput"
+>vid</SAMP
+>)</P
+></LI
+><LI
+><P
+>The volume name</P
+></LI
+><LI
+><P
+>The volume's quota and current size, in kilobytes</P
+></LI
+><LI
+><P
+>The number of kilobyte blocks available on the disk partition housing the volume and the total size of that
+          partition</P
+></LI
+><LI
+><P
+>An <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>off-line message</I
+></SPAN
+> associated with the volume, if any, as set by a system administrator</P
+></LI
+></UL
+>
+</P
+><P
+>The command's syntax is as follows.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs examine</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;<SUP
+>+</SUP
+>]
+</PRE
+><P
+>where <VAR
+CLASS="replaceable"
+>dir/file path</VAR
+> specifies the pathname of a file or directory in each volume for which to
+      display quota information. If you do not provide a pathname, the output reports quota information for the volume that contains
+      the current working directory.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_68"
+>Example: Displaying Quota and Other Information about a Volume and Partition</A
+></H2
+><P
+>The following example displays quota and other information about the volume that houses the current working
+      directory.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs examine</B
+></SPAN
+>
+   Volume status for vid = 536871122 named user.terry
+   Current disk quota is 10000
+   Current blocks used are 5745
+   The partition has 1593 blocks available out of 99162
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ40"
+>Locating Files and Directories</A
+></H1
+><P
+>Normally, you do not need to know which file server machine stores the volume containing a file or directory. Given the
+    pathname to a file, the Cache Manager on your client machine automatically accesses the appropriate server machine.</P
+><P
+>If you become unable to access a file, however, it can be useful to know which file server machine houses it. You can then
+    check whether the File Server process or machine is functioning correctly, as described in <A
+HREF="c1095.html#HDRWQ41"
+>Checking the
+    Status of Server Machines</A
+>. Or, if your system administrators schedule downtime for a machine, you can learn whether the
+    outage is likely to prevent you from accessing certain files.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_70"
+>To Display a File or Directory's Location</A
+></H2
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs whereis</B
+></SPAN
+> command to display the file server machine on which a file or
+      directory is stored.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs whereis</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;<SUP
+>+</SUP
+>]
+</PRE
+><P
+>where <VAR
+CLASS="replaceable"
+>dir/file path</VAR
+> specifies the pathname of each file or directory for which you want
+      location information. If you do not provide a pathname, the output reports the machine housing the volume that contains the
+      current working directory.</P
+><P
+>If the output mentions more than one machine, there is a copy of the volume at each site (the volume is
+      <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>replicated</I
+></SPAN
+>). Your system administrators can choose to replicate volumes that contain information many
+      people need to use, both for load balancing reasons and to make the information available even if there is an outage on one
+      machine that houses the volume.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_71"
+>Example: Displaying Directory Location</A
+></H2
+><P
+>The following example displays the names of the server machines that house the home volumes for users <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat</B
+></SPAN
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cd /afs/abc.com/usr</B
+></SPAN
+>
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs whereis terry pat</B
+></SPAN
+>
+   File /afs/abc.com/usr/terry is on host fs2.abc.com
+   File /afs/abc.com/usr/pat is on host fs3.abc.com
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ41"
+>Checking the Status of Server Machines</A
+></H1
+><P
+>Sometimes one or more server machines in your cell become inaccessible due to hardware problems, software problems, or
+    routine maintenance. During the outage, you cannot access files stored on those machines or save any changes you have made to
+    files that are stored on those machines. (Your Cache Manager possibly has copies of the files stored locally, which you can
+    still work with.)</P
+><P
+>To check the status of server machines, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers</B
+></SPAN
+> command. If a server
+    machine has more than one network interface address (is <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>multihomed</I
+></SPAN
+>), the Cache Manager sends the
+    status-checking message to all of the machine's interfaces. If at least one of the server's interfaces replies, the command's
+    output reports the machine as accessible. If there is no reply from any of the interfaces, the output reports the machine as
+    inaccessible but displays only one of the interfaces (usually the one with the best preference rank; see <A
+HREF="c1095.html#HDRWQ43"
+>Displaying Server Preference Ranks</A
+>).</P
+><P
+>To check the status of different groups of server machines, combine the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers</B
+></SPAN
+>
+    command's options as indicated:
+
+    <UL
+><LI
+><P
+>To check file server machines in the local cell only, do not include any options</P
+></LI
+><LI
+><P
+>To check file server machines in a particular foreign cell only, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-cell</B
+></SPAN
+>
+        argument</P
+></LI
+><LI
+><P
+>To check every file server machine that your Cache Manager has contacted in any cell, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-all</B
+></SPAN
+> flag</P
+></LI
+></UL
+>
+</P
+><P
+>It can take several minutes for the command shell prompt to return, because the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+>
+    command interpreter waits a timeout period before concluding that an unresponsive machine is really inaccessible. To have the
+    command shell prompt return immediately, add the ampersand (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#38;</B
+></SPAN
+>), which runs the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers</B
+></SPAN
+> command in the background.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_73"
+>To Check File Server Machine Status</A
+></H2
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers</B
+></SPAN
+> command to check the status of file server machines.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-cell</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>cell to check</VAR
+>&#62;] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-all</B
+></SPAN
+>]  [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#38;</B
+></SPAN
+>]
+</PRE
+><P
+>where
+
+      <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-cell</B
+></SPAN
+></DT
+><DD
+><P
+>Names each cell for which to check server machine status. Do not combine this argument and the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-all</B
+></SPAN
+> flag.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-all</B
+></SPAN
+></DT
+><DD
+><P
+>Checks the status of all server machines. Do not combine this flag and the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-cell</B
+></SPAN
+>
+            argument.</P
+></DD
+></DL
+></DIV
+>
+</P
+><P
+>The following message indicates that all server machines replied to the Cache Manager's status-checking message:</P
+><PRE
+CLASS="programlisting"
+>&#13;   All servers are running.
+</PRE
+><P
+>Otherwise, a message like the following lists the inaccessible machines:</P
+><PRE
+CLASS="programlisting"
+>&#13;   These servers unavailable due to network or server problems: <VAR
+CLASS="replaceable"
+>list of machines</VAR
+>.
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_74"
+>Example: Checking Server Machine Status</A
+></H2
+><P
+>The following example checks the status of every file server machine the Cache Manager has contacted in any cell. Two
+      machines are not responding.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs checkservers -all &#38;</B
+></SPAN
+>
+   These servers unavailable due to network or server problems: 
+      fs1.abc.com server7.stateu.edu.
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ42"
+>Determining Access to Foreign Cells</A
+></H1
+><P
+>The Cache Manager maintains a list of foreign cells that it knows how to reach. A cell must appear in the list for you to
+    access its AFS filespace. (In addition, the ACL on each directory in the pathname to the file must grant you the necessary
+    permissions, and your system administrator must mount the cell in the local AFS filespace--by convention, just under the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+> directory.)</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_76"
+>To Display Foreign Cells</A
+></H2
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listcells</B
+></SPAN
+> command to display the cells you can access from this client
+      machine. It can take several minutes for the command shell prompt to return. The Cache Manager stores the machines as IP
+      addresses, but has the addresses translated to names before displaying them. To have the command shell prompt return
+      immediately, use the ampersand (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>&#38;</B
+></SPAN
+>) to run the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+      listcells</B
+></SPAN
+> command in the background as in the following example.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listcells &#38;</B
+></SPAN
+>
+   Cell abc.com  on hosts 
+        db1.abc.com
+        db2.abc.com
+        db3.abc.com
+   Cell test.abc.com on hosts 
+        test4.abc.com.
+   Cell stateu.edu on hosts 
+        sv5.stateu.edu.
+        sv2.stateu.edu.
+        sv11.stateu.edu.
+   Cell def.com on hosts 
+        serverA.def.com 
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ43"
+>Displaying Server Preference Ranks</A
+></H1
+><P
+>The Cache Manager stores a list of preference ranks for file server machines. When it needs to access a file or directory,
+    the Cache Manager compares the ranks of the file server machines that house the relevant volume. It first tries to access the
+    volume on the machine with the best rank. (If a file server machine is multihomed--has more than one network interface--the
+    Cache Manager actually assigns a separate rank to each interface.)</P
+><P
+>The Cache Manager assigns a default rank to a file server machine interface by comparing its own IP address to the
+    interface's IP address. It assigns a better rank to interfaces that are on its own subnetwork or network than to interfaces on
+    other networks. Therefore, the ranks bias the Cache Manager to fetch files from file server machines that are close in terms of
+    network distance, which tends to reduce network traffic and help the Cache Manager deliver data to applications more
+    quickly.</P
+><P
+>The Cache Manager stores each rank as a pairing of a file server machine interface's IP address and an integer rank from
+    the range <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>65,534</B
+></SPAN
+>. A lower number is a better rank. To
+    display the server preference ranks on the local client machine, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+>
+    command.</P
+><P
+>The Cache Manager stores a separate but similar set of ranks for Volume Location (VL) Servers, which tell the Cache
+    Manager the location of volumes that house files and directories. To display those ranks, add the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+> flag to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+> command.</P
+><P
+>If the default ranks do not seem to result in the best performance, your system administrator can change them. Ask your
+    system administrator about the ranks if appropriate.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_78"
+>To Display Server Preference Ranks</A
+></H2
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+> command to display the file server machine preference ranks
+      used by the Cache Manager on the local machine. To display VL Server ranks, add the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+> flag. By default, the Cache Manager has the IP address of each interface translated into a
+      hostname before displaying it. To bypass the translation and display IP addresses, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-numeric</B
+></SPAN
+> flag. This can significantly speed up the command's output.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-numeric</B
+></SPAN
+>] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-vlservers</B
+></SPAN
+>]
+</PRE
+><P
+>The following example displays the file server machine preference ranks for a client machine in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>abc.com</B
+></SPAN
+> cell. The ranks of the file server machines in that cell are lower than the ranks of the file
+      server machines from the foreign cell, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>def.com</B
+></SPAN
+>. Because the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-numeric</B
+></SPAN
+> flag is not used, the output displays hostnames. The appearance of an IP address for two
+      machines indicates that translating them was not possible.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs getserverprefs</B
+></SPAN
+>
+   fs2.abc.com           20007
+   fs3.abc.com           30002
+   fs1.abc.com           20011
+   fs4.abc.com           30010
+   server1.def.com       40002
+   192.12.105.34         40000
+   server6.def.com       40012
+   192.12.105.37         40005
+</PRE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c569.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c1444.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Using AFS</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Protecting Your Directories and Files</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

@@ -1,0 +1,1317 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>AFS Command Syntax and Online Help</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS User Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Using the NFS/AFS Translator"
+HREF="a3632.html"><LINK
+REL="NEXT"
+TITLE="Glossary"
+HREF="g4153.html"></HEAD
+><BODY
+CLASS="appendix"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS User Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="a3632.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="g4153.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="appendix"
+><H1
+><A
+NAME="HDRWQ86"
+></A
+>Appendix B. AFS Command Syntax and Online Help</H1
+><P
+>The AFS commands available to you are used to authenticate, list AFS information, protect directories, create
+    and manage groups, and create and manage ACLs. There are three general types of commands available to all AFS
+    users: file server commands, protection server commands, and miscellaneous commands. This chapter discusses the
+    syntax of these AFS commands, the rules that must be followed when issuing them, and ways of accessing help
+    relevant to them.</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ87"
+>AFS Command Syntax</A
+></H1
+><P
+>&#13;
+ Most AFS commands use the following syntax:</P
+><PRE
+CLASS="programlisting"
+>&#13;   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>command_suite operation_code -switch</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>value</VAR
+>&#62;<SUP
+>[+]</SUP
+>  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-flag</B
+></SPAN
+>
+</PRE
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>command suite</I
+></SPAN
+> indicates the general type of command and the server process that
+    performs the command. Regular AFS users have access to two main command suites and a miscellaneous set of commands:
+    
+
+ 
+
+</P
+><UL
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> command suite is used to issue file server commands that
+      interact with the File Server process.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> command suite is used to issue protection-related
+      commands.</P
+></LI
+><LI
+><P
+>The miscellaneous commands are not associated with any command suite.</P
+></LI
+></UL
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>operation code</I
+></SPAN
+> indicates the action that the command performs. Miscellaneous
+    commands have operation codes only. 
+
+</P
+><P
+>A command can have multiple <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>options</I
+></SPAN
+>, which can be <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>arguments</I
+></SPAN
+> or
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>flags</I
+></SPAN
+>:</P
+><UL
+><LI
+><P
+>Arguments are used to supply additional information for use by the command.
+      
+
+ They consist of a paired <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>switch</I
+></SPAN
+> and <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>instance</I
+></SPAN
+>.
+      
+
+ 
+
+ A switch defines the type of argument and is always preceded
+      by a hyphen; arguments can take multiple instances if a plus sign (+) appears after the instance. An instance
+      represents some variable piece of information that is used by the command. Arguments can be optional or
+      required.</P
+></LI
+><LI
+><P
+>Flags are used to direct a command to perform in a specific way (for example, to generate a
+      specific type of output). 
+
+ Flags are always preceded by a hyphen and are always
+      optional.</P
+></LI
+></UL
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_169"
+>Command Syntax Example</A
+></H2
+><P
+>In the following AFS command</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -dir $HOME -acl pat all terry none -negative</B
+></SPAN
+>
+</PRE
+><UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> is the command suite.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setacl</B
+></SPAN
+> is the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>operation code</I
+></SPAN
+>, which directs
+      the File Server process to set an access control list.</P
+></LI
+><LI
+><P
+>&#13;        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dir $HOME</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-acl pat all terry none</B
+></SPAN
+> are
+        <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>arguments</I
+></SPAN
+>. 
+        </P
+><UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dir</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-acl</B
+></SPAN
+> are switches;
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-dir</B
+></SPAN
+> indicates the name of the directory on which to set the ACL, and
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-acl</B
+></SPAN
+> defines the entries to set on it.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>$HOME</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat all terry
+          none</B
+></SPAN
+> are <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>instances</I
+></SPAN
+> of the arguments. <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>$HOME</B
+></SPAN
+>
+          defines a specific directory for the directory argument. The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-acl</B
+></SPAN
+> argument
+          has two instances specifying two ACL entries: <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat all</B
+></SPAN
+> and
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry none</B
+></SPAN
+>.</P
+></LI
+></UL
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-negative</B
+></SPAN
+> is a flag; it directs the command to put the access
+      list entries on the negative rather than the normal permissions list.</P
+></LI
+></UL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ88"
+>Rules for Using AFS Commands</A
+></H1
+><P
+>This section describes the rules to follow when using AFS commands.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_171"
+>Spaces and Lines</A
+></H2
+><P
+>Separate each command element (command suite, operation code, switches, instances, and flags) with a space.
+    Multiple instances of an argument are also separated by a space.</P
+><P
+>Type all AFS commands on one line, followed by a carriage return. Some commands in this document appear on
+    more than one line, but that is for legibility only.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_172"
+>Abbreviations and Aliases for Operation Codes</A
+></H2
+><P
+>You can type operation codes in one of three ways:</P
+><UL
+><LI
+><P
+>You can type the operation code in full.</P
+></LI
+><LI
+><P
+>You can abbreviate the operation code to the shortest form that distinguishes it from the other
+      operation codes in its command suite.</P
+></LI
+><LI
+><P
+>You can use the alias for the operation code, if one exists.</P
+></LI
+></UL
+><P
+>For example, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command can be issued as follows:</P
+><UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> (full command)</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs lista</B
+></SPAN
+> (abbreviation)</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs la</B
+></SPAN
+> (alias)</P
+></LI
+></UL
+><P
+>The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+> provides information on the full and abbreviated
+    command syntax as well as any aliases for all of the commands discussed in this guide.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_173"
+>Omitting Argument Switches</A
+></H2
+><P
+>You can omit an argument's switch if the command takes only one argument, or if the following conditions are
+    met.</P
+><UL
+><LI
+><P
+>All of the command's required arguments appear in the order prescribed by the syntax
+      statement.</P
+></LI
+><LI
+><P
+>No switches are used on any arguments, even if they are in the correct order.</P
+></LI
+><LI
+><P
+>There is only one value for each argument. The important exception to this condition is if the
+      final required argument accepts multiple values; in this case, it is acceptable to provide multiple values
+      without providing the switch.</P
+></LI
+></UL
+><P
+>For example, the following two commands are equivalent:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -dir /afs/abc.com/usr/terry/private -acl pat rl</B
+></SPAN
+>
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl /afs/abc.com/usr/terry/private pat rl</B
+></SPAN
+>
+</PRE
+><P
+>However, the following is not an acceptable short form because the arguments are not in the prescribed
+    order:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -acl pat rl /afs/abc.com/usr/terry/private</B
+></SPAN
+>
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_174"
+>Shortening Switches and Flags</A
+></H2
+><P
+>&#13;
+ If you are required to use a switch, or if you decide to use a flag, you can often
+    shorten the name of that switch or flag provided that the shortened form still distinguishes it from the command's
+    other flags and switches.</P
+><P
+>For example, when you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command, you can abbreviate all of
+    the switches and flags of the command to their initial letter because they all begin with a different letter.
+    However, when you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>knfs</B
+></SPAN
+> command, the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-host</B
+></SPAN
+> argument and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-help</B
+></SPAN
+> flag both begin with the
+    letter <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>h</B
+></SPAN
+>, so the shortest unambiguous abbreviations are
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-ho</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-he</B
+></SPAN
+> respectively.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_175"
+>Shortening Directory References</A
+></H2
+><P
+>&#13;
+ Most AFS command arguments that require directory or pathnames instances accept one
+    or more of the following short forms:</P
+><UL
+><LI
+><P
+>A single period (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>) indicates the current working
+      directory.</P
+></LI
+><LI
+><P
+>Two periods (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>..</B
+></SPAN
+>) indicate the parent directory of the current
+      working directory.</P
+></LI
+><LI
+><P
+>The $HOME environment variable indicates the issuer's home directory.</P
+></LI
+></UL
+><P
+>For example, if the user <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+> wants to grant
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>r</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>read</B
+></SPAN
+>) and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>l</B
+></SPAN
+>
+    (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>lookup</B
+></SPAN
+>) permissions on his home directory to his manager
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+> can issue the following
+    command.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -dir $HOME -acl pat rl</B
+></SPAN
+>
+</PRE
+><P
+>If the current working directory is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+>'s home directory, he can issue the
+    following command.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -dir  .  -acl pat rl</B
+></SPAN
+> 
+</PRE
+><P
+>Both of the previous examples are acceptable short forms for the following command:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -dir /afs/abc.com/usr/terry -acl pat rl</B
+></SPAN
+>
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="Header_176"
+>Commonly Used fs and pts Commands</A
+></H1
+><P
+>This section provides additional information on the commonly used AFS <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> and
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> commands. For more detailed information, see the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS
+    Administration Reference</I
+></SPAN
+>.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_177"
+>About the fs Commands</A
+></H2
+><P
+>Some <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> commands extend UNIX file system semantics by invoking file-related
+    functions that UNIX does not provide (setting access control lists, for example). Other
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> commands help you control the performance of the Cache Manager running on your
+    local client machine. 
+
+ 
+
+</P
+><P
+>All <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> commands accept the optional <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-help</B
+></SPAN
+>
+    flag. It has the same function as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs help</B
+></SPAN
+> command: it prints a command's
+    online help message on the screen. Do not provide other options at the same time as this flag. It overrides them,
+    and the only effect of issuing the command is to display the help message. 
+
+</P
+><P
+>The privilege required for issuing <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> commands varies. The necessary
+    privileges for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> commands described in this guide include the
+    following:</P
+><UL
+><LI
+><P
+>Having certain permissions on a directory's access control list. For example, creating and
+      removing mount points requires <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>),
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>i</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>insert</B
+></SPAN
+>), and
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>d</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+>) permissions for the directory in
+      which the mount point resides.</P
+></LI
+><LI
+><P
+>Belonging to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group (see
+      <A
+HREF="c1444.html#HDRWQ50"
+>Using the System Groups on ACLs</A
+>).</P
+></LI
+><LI
+><P
+>No privilege. Many <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> commands simply list information and so do
+      not require any special privilege.</P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_178"
+>About the pts Commands</A
+></H2
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> command suite is the interface through which you can create
+    protection groups and add members to them. System administrators who belong to a special system group called
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can manipulate any group, and also create the user and
+    machine entries that can belong to groups. Users who do not belong to the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can always list the information associated with the
+    group entries they own, as well as their own user entries. Depending on the setting of an entry's privacy flags,
+    regular users can sometimes access and manipulate group entries in certain ways.</P
+><P
+>All <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> commands accept optional arguments and flags. They are listed in the
+    command descriptions in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+> and are described here in
+    detail:</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[-cell &#60;<VAR
+CLASS="replaceable"
+>cell name</VAR
+>&#62;]</B
+></SPAN
+></DT
+><DD
+><P
+>&#13;        This argument indicates that the command runs in the indicated cell. The issuer can abbreviate the
+        <VAR
+CLASS="replaceable"
+>cell name</VAR
+> value to the shortest form that distinguishes it from the other cells
+        listed in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/CellServDB</B
+></SPAN
+> file on the client machine on which the
+        command is issued. By default, commands are executed in the local cell as defined 
+        </P
+><UL
+><LI
+><P
+>First, by the value of the environment variable AFSCELL. (This variable is normally not
+          defined by default. If you are working in another, nonlocal cell for an extended period of time, you can set
+          the variable to the name of that cell.)</P
+></LI
+><LI
+><P
+>Second, in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/vice/etc/ThisCell</B
+></SPAN
+> file on the client
+          machine on which the command is issued.</P
+></LI
+></UL
+></DD
+></DL
+></DIV
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[-force]</B
+></SPAN
+></DT
+><DD
+><P
+>This flag directs the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> command interpreter to continue
+      executing the command, if possible, even if it encounters problems during the command's execution.
+      
+
+ The command interpreter performs as much of the requested operation as possible, rather
+      than halting if it encounters a problem. The command interpreter reports any errors it encounters during the
+      command's execution. This flag is especially useful if you provide many instances for an argument; if one of the
+      instances is invalid, the command reports the error and proceeds with the remaining
+      arguments.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>[-help] 
+
+
+      
+
+</B
+></SPAN
+></DT
+><DD
+><P
+>This flag has the same function as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts help</B
+></SPAN
+> command: it
+      prints the command's online help message on the screen. Do not provide other options at the same time as this
+      flag. It overrides them, and the only effect of issuing the command is to display the help
+      message.</P
+></DD
+></DL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ89"
+>Getting Help in AFS</A
+></H1
+><P
+>AFS online help consists of basic syntax messages. The AFS distribution also includes help in HTML format
+    which your system administrator can make available to you.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_180"
+>Displaying Command Syntax and Aliases</A
+></H2
+><P
+>To display a brief description of a command, its syntax statement, and alias if any, use the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>help</B
+></SPAN
+> operation code. For example, to display the online help entry for the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command, enter the following command:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs help listacl</B
+></SPAN
+>
+   fs listacl: list access control list 
+   aliases: la
+   Usage: fs listacl  [-path &#60;dir/file path&#62;+]  [-id] [-if] [-help]
+</PRE
+><P
+>To display the syntax statement only, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-help</B
+></SPAN
+> flag, which is available
+    on most AFS commands. For example, to display the syntax statement for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+    setacl</B
+></SPAN
+> command, enter the following command:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl -help</B
+></SPAN
+>
+   Usage: fs setacl -dir &#60;directory&#62;+ -acl &#60;access list entries&#62;+ [-clear] [-negative] 
+   [-id] [-if] [-help]
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_181"
+>Displaying Operation Code Descriptions</A
+></H2
+><P
+>To display a short description of all of a command suite's operation codes, issue the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>help</B
+></SPAN
+> operation code without any other arguments. For example, the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs help</B
+></SPAN
+> command displays a short description of every operation code in the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> command suite. 
+
+</P
+><P
+>To display a list of the commands in a command suite that concern a certain type of object, provide a
+    relevant keyword argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>apropos</B
+></SPAN
+> operation code. For example, if you want
+    to set an ACL but cannot remember which <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> command to use, issue the following
+    command:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs apropos set</B
+></SPAN
+>
+   setacl: set access control list
+   setcachesize: set cache size
+   setcell: set cell status
+   setclientaddrs: set client network interface addresses
+   setquota: set volume quota
+   setserverprefs: set file server ranks
+   setvol: set volume status
+   sysname: get/set sysname (i.e. @sys) value
+</PRE
+><P
+>The following message indicates that there are no commands whose names or descriptions include the keyword
+    string you have provided:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Sorry, no commands found
+</PRE
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>If the keyword you provide has spaces in it, enclose it in double quotes (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>"
+        "</B
+></SPAN
+>).</P
+></BLOCKQUOTE
+></DIV
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="a3632.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="g4153.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Using the NFS/AFS Translator</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Glossary</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

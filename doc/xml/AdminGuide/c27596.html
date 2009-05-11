@@ -1,0 +1,5718 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Administering User Accounts</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Managing Users and Groups"
+HREF="p24911.html"><LINK
+REL="PREVIOUS"
+TITLE="Creating and Deleting User Accounts with the uss Command Suite"
+HREF="c24913.html"><LINK
+REL="NEXT"
+TITLE="Administering the Protection Database"
+HREF="c29323.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c24913.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c29323.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="HDRWQ491"
+></A
+>Chapter 13. Administering User Accounts</H1
+><P
+></P
+><P
+>This chapter explains how to create and maintain user accounts in your cell.</P
+><P
+>The preferred method for creating user accounts is the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss</B
+></SPAN
+> program, which enables you to
+  create multiple accounts with a single command. See <A
+HREF="c24913.html"
+>Creating and Deleting User Accounts with the uss
+  Command Suite</A
+>. If you prefer to create each account component individually, follow the instructions in <A
+HREF="c27596.html#HDRWQ502"
+>Creating AFS User Accounts</A
+>.</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ492"
+>Summary of Instructions</A
+></H1
+><P
+>This chapter explains how to perform the following tasks by using the indicated commands:</P
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN27610"
+></A
+><TABLE
+BORDER="0"
+FRAME="void"
+CLASS="CALSTABLE"
+><COL
+WIDTH="57*"><COL
+WIDTH="43*"><TBODY
+><TR
+><TD
+>Create Protection Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Create Authentication Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas create</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Create volume</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos create</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Mount volume</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs mkmount</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Create entry on ACL</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Examine Protection Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change directory ownership</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/chown</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Limit failed authentication attempts</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> with <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Unlock Authentication Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas unlock</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set password lifetime</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> with <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pwexpires</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Prohibit password reuse</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> with <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-reuse</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change AFS password</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setpassword</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>List groups owned by user</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Rename Protection Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Delete Authentication Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas delete</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Rename volume</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos rename</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Remove mount point</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs rmmount</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Delete Protection Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>List volume location</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos listvldb</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Remove volume</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos remove</B
+></SPAN
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ494"
+>The Components of an AFS User Account</A
+></H1
+><P
+>The differences between AFS and the UNIX file system imply that a complete AFS user account is not the same as a UNIX user
+    account. The following list describes the components of an AFS account. The same information appears in a corresponding section
+    of <A
+HREF="c24913.html"
+>Creating and Deleting User Accounts with the uss Command Suite</A
+>, but is repeated here for your
+    convenience. <UL
+><LI
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Protection Database entry</I
+></SPAN
+> defines the username (the name provided when authenticating with
+          AFS), and maps it to an AFS user ID (AFS UID), a number that the AFS servers use internally when referencing users. The
+          Protection Database also tracks the groups to which the user belongs. For details, see <A
+HREF="c29323.html"
+>Administering the Protection Database</A
+>.</P
+></LI
+><LI
+><P
+>An <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Authentication Database entry</I
+></SPAN
+> records the user's AFS password in a scrambled form suitable
+          for use as an encryption key.</P
+></LI
+><LI
+><P
+>A home <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>volume</I
+></SPAN
+> stores all the files in the user's home directory together on a single partition
+          of a file server machine. The volume has an associated quota that limits its size. For a complete discussion of volumes,
+          see <A
+HREF="c8420.html"
+>Managing Volumes</A
+>.</P
+></LI
+><LI
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>mount point</I
+></SPAN
+> makes the contents of the user's volume visible and accessible in the AFS
+          filespace, and acts as the user's home directory. For more details about mount points, see <A
+HREF="c8420.html#HDRWQ183"
+>About
+          Mounting Volumes</A
+>.</P
+></LI
+><LI
+><P
+>Full access permissions on the home directory's <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>access control list (ACL)</I
+></SPAN
+> and ownership of the
+          directory (as displayed by the UNIX <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -ld</B
+></SPAN
+> command) enable the user to manage his or her
+          files. For details on AFS file protection, see <A
+HREF="c31274.html"
+>Managing Access Control Lists</A
+>.</P
+></LI
+><LI
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>local password file entry</I
+></SPAN
+> (in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/passwd</B
+></SPAN
+> file or
+          equivalent) of each AFS client machine enables the user to log in and access AFS files through the Cache Manager. A
+          subsequent section in this chapter further discusses local password file entries.</P
+></LI
+><LI
+><P
+>Other optional <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>configuration files</I
+></SPAN
+> make the account more convenient to use. Such files help the
+          user log in and log out more easily, receive electronic mail, print, and so on.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ495"
+>Creating Local Password File Entries</A
+></H1
+><P
+>To obtain authenticated access to a cell's AFS filespace, a user must not only have a valid AFS token, but also an entry
+    in the local password file (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/passwd</B
+></SPAN
+> or equivalent) of the machine whose Cache Manager is
+    representing the user. This section discusses why it is important for the user's AFS UID to match to the UNIX UID listed in the
+    local password file, and describes the appropriate value to put in the file's password field.</P
+><P
+>One reason to use <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss</B
+></SPAN
+> commands is that they enable you to generate local password file
+    entries automatically as part of account creation. See <A
+HREF="c24913.html#HDRWQ458"
+>Creating a Common Source Password
+    File</A
+>.</P
+><P
+>Information similar to the information in this section appears in a corresponding section of <A
+HREF="c24913.html"
+>Creating and Deleting User Accounts with the uss Command Suite</A
+>, but is repeated here for your
+    convenience</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ496"
+>Assigning AFS and UNIX UIDs that Match</A
+></H2
+><P
+>A user account is easiest to administer and use if the AFS user ID number (AFS UID) and UNIX UID match. All instructions
+      in the AFS documentation assume that they do.</P
+><P
+>The most basic reason to make AFS and UNIX UIDs the same is so that the owner name reported by the UNIX <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -l</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -ld</B
+></SPAN
+> commands makes sense for AFS files and directories.
+      Following standard UNIX practice, the File Server records a number rather than a username in an AFS file or directory's owner
+      field: the owner's AFS UID. When you issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -l</B
+></SPAN
+> command, it translates the UID to a
+      username according to the mapping in the local password file, not the AFS Protection Database. If the AFS and UNIX UIDs do not
+      match, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -l</B
+></SPAN
+> command reports an unexpected (and incorrect) owner. The output can even
+      vary on different client machines if their local password files map the same UNIX UID to different names.</P
+><P
+>Follow the recommendations in the indicated sections to make AFS and UNIX UIDs match when creating accounts for various
+      types of users: <UL
+><LI
+><P
+>If creating an AFS account for a user who already has a UNIX UID, see <A
+HREF="c27596.html#HDRWQ499"
+>Making UNIX and AFS
+            UIDs Match</A
+>.</P
+></LI
+><LI
+><P
+>If some users in your cell have existing UNIX accounts but the user for whom you are creating an AFS account does
+            not, then it is best to allow the Protection Server to allocate an AFS UID automatically. To avoid overlap of AFS UIDs
+            with existing UNIX UIDs, set the Protection Database's <SAMP
+CLASS="computeroutput"
+>max user id</SAMP
+> counter higher than
+            the largest UNIX UID, using the instructions in <A
+HREF="c29323.html#HDRWQ560"
+>Displaying and Setting the AFS UID and GID
+            Counters</A
+>.</P
+></LI
+><LI
+><P
+>If none of your users have existing UNIX accounts, allow the Protection Server to allocate AFS UIDs automatically,
+            starting either at its default or at the value you have set for the <SAMP
+CLASS="computeroutput"
+>max user id</SAMP
+>
+            counter.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ497"
+>Specifying Passwords in the Local Password File</A
+></H2
+><P
+>Authenticating with AFS is easiest for your users if you install and configure an AFS-modified login utility, which logs
+      a user into the local file system and obtains an AFS token in one step. In this case, the local password file no longer
+      controls a user's ability to login in most circumstances, because the AFS-modified login utility does not consult the local
+      password file if the user provides the correct AFS password. You can nonetheless use a password file entry's password field
+      (usually, the second field) in the following ways to control login and authentication: <UL
+><LI
+><P
+>To prevent both local login and AFS authentication, place an asterisk ( * ) in the field. This is useful mainly in
+            emergencies, when you want to prevent a certain user from logging into the machine.</P
+></LI
+><LI
+><P
+>To prevent login to the local file system if the user does not provide the correct AFS password, place a character
+            string of any length other than the standard thirteen characters in the field. This is appropriate if you want to allow
+            only people with local AFS accounts to log into to your machines. A single <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>X</B
+></SPAN
+> or other
+            character is the most easily recognizable way to do this.</P
+></LI
+><LI
+><P
+>To enable a user to log into the local file system even after providing an incorrect AFS password, record a
+            standard UNIX encrypted password in the field by issuing the standard UNIX password-setting command (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>passwd</B
+></SPAN
+> or equivalent).</P
+></LI
+></UL
+></P
+><P
+>If you do not use an AFS-modified login utility, you must place a standard UNIX password in the local password file of
+      every client machine the user will use. The user logs into the local file system only, and then must issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command to authenticate with AFS. It is simplest if the passwords in the local password file and
+      the Authentication Database are the same, but this is not required.  </P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ498"
+>Converting Existing UNIX Accounts</A
+></H1
+><P
+>This section discusses the three main issues you need to consider if your cell has existing UNIX accounts that you wish to
+    convert to AFS accounts.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ499"
+>Making UNIX and AFS UIDs Match</A
+></H2
+><P
+>As previously mentioned, AFS users must have an entry in the local password file on every client machine from which they
+      access the AFS filespace as an authenticated user. Both administration and use are much simpler if the UNIX UID and AFS UID
+      match. When converting existing UNIX accounts, you have two alternatives: <UL
+><LI
+><P
+>Make the AFS UIDs match the existing UNIX UIDs. In this case, you need to assign the AFS UID yourself by including
+            the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> command as you
+            create the AFS account.</P
+><P
+>Because you are retaining the user's UNIX UID, you do not need to alter the UID in the local password file entry.
+            However, if you are using an AFS-modified login utility, you possibly need to change the password field in the entry.
+            For a discussion of how the value in the password field affects login with an AFS-modified login utility, see <A
+HREF="c27596.html#HDRWQ497"
+>Specifying Passwords in the Local Password File</A
+>.</P
+><P
+>If now or in the future you need to create AFS accounts for users who do not have an existing UNIX UID, then you
+            must guarantee that new AFS UIDs do not conflict with any existing UNIX UIDs. The simplest way is to set the
+            <SAMP
+CLASS="computeroutput"
+>max user id</SAMP
+> counter in the Protection Database to a value higher than the largest
+            existing UNIX UID. See <A
+HREF="c29323.html#HDRWQ560"
+>Displaying and Setting the AFS UID and GID Counters</A
+>.</P
+></LI
+><LI
+><P
+>Change the existing UNIX UIDs to match the new AFS UIDs that the Protection Server assigns automatically.</P
+><P
+>Allow the Protection Server to allocate the AFS UIDs automatically as you create AFS accounts. You must then alter
+            the user's entry in the local password file on every client machine to include the new UID.</P
+><P
+>There is one drawback to changing the UNIX UID: any files and directories that the user owned in the local file
+            system before becoming an AFS user still have the former UID in their owner field. If you want the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -l</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ls -ld</B
+></SPAN
+> commands to display the correct owner, you must
+            use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+> command to change the value to the user's new UID, whether you are
+            leaving the file in the local file system or moving it to AFS. See <A
+HREF="c27596.html#HDRWQ501"
+>Moving Local Files into
+            AFS</A
+>.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ500"
+>Setting the Password Field Appropriately</A
+></H2
+><P
+>Existing UNIX accounts already have an entry in the local password file, probably with a (scrambled) password in the
+      password field. You possibly need to change the value in the field, depending on the type of login utility you use:
+      <UL
+><LI
+><P
+>If the login utility is not modified for use with AFS, the actual password must appear (in scrambled form) in the
+            local password file entry.</P
+></LI
+><LI
+><P
+>If the login utility is modified for use with AFS, choose one of the values discussed in <A
+HREF="c27596.html#HDRWQ497"
+>Specifying Passwords in the Local Password File</A
+>.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ501"
+>Moving Local Files into AFS</A
+></H2
+><P
+>New AFS users with existing UNIX accounts probably already own files and directories stored in a machine's local file
+      system, and it usually makes sense to transfer them into the new home volume. The easiest method is to move them onto the
+      local disk of an AFS client machine, and then use the UNIX <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>mv</B
+></SPAN
+> command to transfer them into
+      the user's new AFS home directory.</P
+><P
+>As you move files and directories into AFS, keep in mind that the meaning of their mode bits changes. AFS ignores the
+      second and third sets of mode bits (group and other), and does not use the first set (the owner bits) directly, but only in
+      conjunction with entries on the ACL (for details, see <A
+HREF="c31274.html#HDRWQ580"
+>How AFS Interprets the UNIX Mode Bits</A
+>).
+      Be sure that the ACL protects the file or directory at least as securely as the mode bits.</P
+><P
+>If you have chosen to change a user's UNIX UID to match a new AFS UID, you must change the ownership of UNIX files and
+      directories as well. Only members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+> command on files and directories once they reside in AFS.</P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ502"
+>Creating AFS User Accounts</A
+></H1
+><P
+>There are two methods for creating user accounts. The preferred method--using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss</B
+></SPAN
+>
+    commands--enables you to create multiple accounts with a single command. It uses a template to define standard values for the
+    account components that are the same for each user (such as quota), but provide differing values for more variable components
+    (such as username). See <A
+HREF="c24913.html"
+>Creating and Deleting User Accounts with the uss Command Suite</A
+>.</P
+><P
+>The second method involves issuing a separate command to create each component of the account. It is best suited to
+    creation of one account at a time, since some of the commands can create only one instance of the relevant component. To review
+    the function of each component, see <A
+HREF="c27596.html#HDRWQ494"
+>The Components of an AFS User Account</A
+>.</P
+><P
+>Use the following instructions to create any of the three types of user account, which differ in their levels of
+    functionality. For a description of the types, see <A
+HREF="c667.html#HDRWQ57"
+>Configuring AFS User Accounts</A
+>. <UL
+><LI
+><P
+>To create an authentication-only account, perform Step <A
+HREF="c27596.html#LIWQ504"
+>1</A
+> through Step <A
+HREF="c27596.html#LIWQ507"
+>4</A
+> and also Step <A
+HREF="c27596.html#LIWQ514"
+>14</A
+>. This type of account consists only of entries
+          in the Authentication Database and Protection Database.</P
+></LI
+><LI
+><P
+>To create a basic account, perform Step <A
+HREF="c27596.html#LIWQ504"
+>1</A
+> through Step <A
+HREF="c27596.html#LIWQ510"
+>8</A
+> and Step <A
+HREF="c27596.html#LIWQ512"
+>11</A
+> through Step <A
+HREF="c27596.html#LIWQ514"
+>14</A
+>. In
+          addition to Authentication Database and Protection Database entries, this type of account includes a volume mounted at the
+          home directory with owner and ACL set appropriately.</P
+></LI
+><LI
+><P
+>To create a full account, perform all steps in the following instructions. This type of account includes
+          configuration files for basic functions such as logging in, printing, and mail delivery, making it more convenient and
+          useful. For a discussion of some useful types of configuration files, see <A
+HREF="c667.html#HDRWQ60"
+>Creating Standard Files
+          in New AFS Accounts</A
+>.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ503"
+>To create one user account with individual commands</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+><A
+NAME="LIWQ504"
+></A
+>Decide on the value to assign to each of the following account components. If you are
+          creating an authentication-only account, you need to pick only a username, AFS UID, and initial password. <UL
+><LI
+><P
+>The username. By convention, the names of many components of the user account incorporate this name. For a
+                discussion of restrictions and suggested naming schemes, see <A
+HREF="c667.html#HDRWQ58"
+>Choosing Usernames and Naming
+                Other Account Components</A
+>.</P
+></LI
+><LI
+><P
+>The AFS UID, if you want to assign a specific one. It is generally best to have the Protection Server allocate
+                one instead, except when you are creating an AFS account for a user who already has an existing UNIX account. In
+                that case, migrating the user's files into AFS is simplest if you set the AFS UID to match the existing UNIX UID.
+                See <A
+HREF="c27596.html#HDRWQ498"
+>Converting Existing UNIX Accounts</A
+>.</P
+></LI
+><LI
+><P
+>The initial password. Advise the user to change this at the first login, using the password changing
+                instructions in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS User Guide</I
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>The name of the user's home volume. The conventional name is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user.</B
+></SPAN
+>username
+                (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user.smith</B
+></SPAN
+>).</P
+></LI
+><LI
+><P
+>The volume's site (disk partition on a file server machine). Some cells designate certain machines or
+                partitions for user volumes only, or it possibly makes sense to place the volume on the emptiest partition that
+                meets your other criteria. To display the size and available space on a partition, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos
+                partinfo</B
+></SPAN
+> command, which is fully described in <A
+HREF="c8420.html#HDRWQ185"
+>Creating Read/write
+                Volumes</A
+>.</P
+></LI
+><LI
+><P
+>The name of the user's home directory (the mount point for the home volume). The conventional location is a
+                directory (or one of a set of directories) directly under the cell directory, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/</B
+></SPAN
+>cellname<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr</B
+></SPAN
+>. For suggestions on how to avoid the
+                slowed directory lookup that can result from having large numbers of user home directories in a single <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>usr</B
+></SPAN
+> directory, see <A
+HREF="c24913.html#HDRWQ472"
+>Evenly Distributing User Home Directories with
+                the G Instruction</A
+>.</P
+></LI
+><LI
+><P
+>The volume's space quota. Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-maxquota</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos create</B
+></SPAN
+> command, or accept the default quota of 5000 KB.</P
+></LI
+><LI
+><P
+>The ACL on the home directory. By default, the ACL on every new volume grants all seven permissions to the
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. After volume creation, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command to remove the entry if desired, and to grant all seven permissions to the
+                user.</P
+></LI
+></UL
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ505"
+></A
+>Authenticate as an AFS identity with all of the following privileges. In the conventional
+          configuration, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+> user account has them, or you possibly have a personal
+          administrative account. (To increase cell security, it is best to create special privileged accounts for use only while
+          performing administrative procedures; for further discussion, see <A
+HREF="c32432.html#HDRWQ584"
+>An Overview of Administrative
+          Privilege</A
+>.) If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command to authenticate. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> admin_user
+   Password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+</PRE
+></P
+><P
+>The following list specifies the necessary privileges and indicates how to check that you have them.</P
+><UL
+><LI
+><P
+>Membership in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+              <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To
+              display the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Inclusion in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+> file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the
+              users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>The <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on your Authentication Database entry. However, the
+              Authentication Server performs its own authentication, so in Step <A
+HREF="c27596.html#LIWQ507"
+>4</A
+> you specify an
+              administrative identity on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+> command line itself.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>i</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>insert</B
+></SPAN
+>) and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>) permissions on the ACL of the directory where
+              you are mounting the user's volume. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command, which
+              is fully described in <A
+HREF="c31274.html#HDRWQ572"
+>Displaying ACLs</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;]
+</PRE
+></P
+><P
+>Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group always implicitly have the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>) and by default also the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>l</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>lookup</B
+></SPAN
+>) permission on every ACL and can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command to grant other rights as necessary.</P
+></LI
+><LI
+><P
+>Knowledge of the password for the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+>.</P
+></LI
+></UL
+></LI
+><LI
+><P
+><A
+NAME="LIWQ506"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> command to create an entry in the
+          Protection Database. For a discussion of setting AFS UIDs, see <A
+HREF="c27596.html#HDRWQ496"
+>Assigning AFS and UNIX UIDs that
+          Match</A
+>. If you are converting an existing UNIX account into an AFS account, also see <A
+HREF="c27596.html#HDRWQ498"
+>Converting Existing UNIX Accounts</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user name</VAR
+>&#62; [&#60;<VAR
+CLASS="replaceable"
+>user id</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cu</B
+></SPAN
+></DT
+><DD
+><P
+>Is an acceptable alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>createuser</B
+></SPAN
+> (and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>createu</B
+></SPAN
+> is the shortest acceptable abbreviation).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the user's username (the character string typed at login). It is best to limit the name to eight or
+                fewer lowercase letters, because many application programs impose that limit. The AFS servers themselves accept
+                names of up to 63 lowercase letters. Also avoid the following characters: colon (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>:</B
+></SPAN
+>), semicolon (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>;</B
+></SPAN
+>), comma (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>,</B
+></SPAN
+>), at sign (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>@</B
+></SPAN
+>), space, newline, and the period (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.</B
+></SPAN
+>), which is conventionally used only in special administrative names.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user id</B
+></SPAN
+></DT
+><DD
+><P
+>Is optional and appropriate only if the user already has a UNIX UID that the AFS UID must match. If you do not
+                provide this argument, the Protection Server assigns one automatically based on the counter described in <A
+HREF="c29323.html#HDRWQ560"
+>Displaying and Setting the AFS UID and GID Counters</A
+>. If the ID you specify is less than
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1</B
+></SPAN
+> (one) or is already in use, an error results.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><A
+NAME="LIWQ507"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas create</B
+></SPAN
+> command to create an entry in the
+          Authentication Database. To avoid having the user's temporary initial password echo visibly on the screen, omit the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-initial_password</B
+></SPAN
+> argument; instead enter the password at the prompts that appear when
+          you omit the argument, as shown in the following syntax specification.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas create</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62; \
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+>  &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62;  
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+   initial_password: &#60;<VAR
+CLASS="replaceable"
+>initial_password</VAR
+>&#62;
+   Verifying, please re-enter initial_password: &#60;<VAR
+CLASS="replaceable"
+>initial_password</VAR
+>&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cr</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>create</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the same username as in Step <A
+HREF="c27596.html#LIWQ506"
+>3</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+></DT
+><DD
+><P
+>Names an administrative account that has the <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its
+                  Authentication Database entry, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+>. The password prompt echoes it as
+                  admin_user. Enter the appropriate password as admin_password.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>initial_password</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the initial password as a string of eight characters or less, to comply with the length
+                  restriction that some applications impose. Possible choices for an initial password include the username, a string
+                  of digits from a personal identification number such as the Social Security number, or a standard string such as
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>changeme</B
+></SPAN
+>. Instruct the user to change the string to a truly secret password as
+                  soon as possible by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpasswd</B
+></SPAN
+> command as described in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM
+                  AFS User Guide</I
+></SPAN
+>.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ508"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos create</B
+></SPAN
+> command to create the user's volume.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos create</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>partition name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>volume name</VAR
+>&#62;  \
+                [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-maxquota</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>initial quota (KB)</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cr</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>create</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>machine name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the file server machine on which to place the new volume.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>partition name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the partition on which to place the new volume.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the new volume. The name can include up to 22 characters. By convention, user volume names have the form
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user.</B
+></SPAN
+>username, where username is the name assigned in Step <A
+HREF="c27596.html#LIWQ506"
+>3</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-maxquota</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the volume's quota, as a number of kilobyte blocks. If you omit this argument, the default is 5000
+                KB.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><A
+NAME="LIWQ509"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs mkmount</B
+></SPAN
+> command to mount the volume in the
+          filespace and create the user's home directory. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs mkmount</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>directory</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>volume name</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>mk</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>mkmount</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>directory</B
+></SPAN
+></DT
+><DD
+><P
+>Names the mount point to create. A directory of the same name must not already exist. Partial pathnames are
+                interpreted relative to the current working directory. By convention, user home directories are mounted in a
+                directory called something like <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/.</B
+></SPAN
+>cellname<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr</B
+></SPAN
+>, and the home directory name matches the username assigned in Step <A
+HREF="c27596.html#LIWQ506"
+>3</A
+>.</P
+><P
+>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to create
+                the new mount point in a read-only volume. By convention, you indicate the read/write path by placing a period
+                before the cell name at the pathname's second level (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/.abc.com</B
+></SPAN
+>).
+                For further discussion of the concept of read/write and read-only paths through the filespace, see <A
+HREF="c8420.html#HDRWQ209"
+>The Rules of Mount Point Traversal</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume name</B
+></SPAN
+></DT
+><DD
+><P
+>Is the name of the volume created in Step <A
+HREF="c27596.html#LIWQ508"
+>5</A
+>.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setvol</B
+></SPAN
+> command with the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-offlinemsg</B
+></SPAN
+> argument to record auxiliary information about the volume in its volume
+          header. For example, you can record who owns the volume or where you have mounted it in the filespace. To display the
+          information, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs examine</B
+></SPAN
+> command. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setvol</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-offlinemsg</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>offline message</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sv</B
+></SPAN
+></DT
+><DD
+><P
+>Is an acceptable alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setvol</B
+></SPAN
+> (and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setv</B
+></SPAN
+>
+                the shortest acceptable abbreviation).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>dir/file path</B
+></SPAN
+></DT
+><DD
+><P
+>Names the mount point of the volume with which to associate the message. Partial pathnames are interpreted
+                relative to the current working directory.</P
+><P
+>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to change a
+                read-only volume. By convention, you indicate the read/write path by placing a period before the cell name at the
+                pathname's second level (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/.abc.com</B
+></SPAN
+>). For further discussion of the
+                concept of read/write and read-only paths through the filespace, see <A
+HREF="c8420.html#HDRWQ209"
+>The Rules of Mount
+                Point Traversal</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-offlinemsg</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies up to 128 characters of auxiliary information to record in the volume header.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><A
+NAME="LIWQ510"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command to set the ACL on the new home
+          directory. At the least, create an entry that grants all permissions to the user, as shown.</P
+><P
+>You can also use the command to edit or remove the entry that the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos create</B
+></SPAN
+>
+          command automatically places on the ACL for a new volume's root directory, which grants all permissions to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. Keep in mind that even if you remove the entry, the members of the
+          group by default have implicit <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>) and by
+          default <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>l</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>lookup</B
+></SPAN
+>) permissions on every ACL, and can
+          grant themselves other permissions as required.</P
+><P
+>For detailed instructions for the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command, see <A
+HREF="c31274.html#HDRWQ573"
+>Setting ACL Entries</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>directory</VAR
+>&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-acl</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user name</VAR
+>&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>all</B
+></SPAN
+> \
+               [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> desired_permissions]
+</PRE
+></LI
+><LI
+><P
+><A
+NAME="LIWQ511"
+></A
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> Create configuration files and subdirectories in
+          the new home directory. Possibilities include <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.login</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.logout</B
+></SPAN
+> files, a shell-initialization file such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.cshrc</B
+></SPAN
+>, files
+          to help with printing and mail delivery, and so on.</P
+><P
+>If you are converting an existing UNIX account into an AFS account, you possibly wish to move some files and
+          directories into the user's new AFS home directory. See <A
+HREF="c27596.html#HDRWQ498"
+>Converting Existing UNIX
+          Accounts</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> In the new <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>.login</B
+></SPAN
+> or shell
+          initialization file, define the user's $PATH environment variable to include the directories where AFS binaries are kept
+          (for example, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afsws/bin</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afsws/etc</B
+></SPAN
+>
+          directories).</P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ512"
+></A
+>In Step <A
+HREF="c27596.html#LIWQ513"
+>12</A
+> and Step <A
+HREF="c27596.html#LIWQ514"
+>14</A
+>, you
+          must know the user's AFS UID. If you had the Protection Server assign it in Step <A
+HREF="c27596.html#LIWQ506"
+>3</A
+>, you
+          probably do not know it. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command to display it.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>e</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>examine</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user or group name or id</B
+></SPAN
+></DT
+><DD
+><P
+>Is the username that you assigned in Step <A
+HREF="c27596.html#LIWQ506"
+>3</A
+>.</P
+></DD
+></DL
+></DIV
+><P
+>The first line of the output displays the username and AFS UID. For further discussion and an example of the output,
+          see <A
+HREF="c29323.html#HDRWQ536"
+>Displaying Information from the Protection Database</A
+>.</P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ513"
+></A
+>Designate the user as the owner of the home directory and any files and subdirectories
+          created or moved in Step <A
+HREF="c27596.html#LIWQ511"
+>9</A
+>. Specify the owner by the AFS UID you learned in Step <A
+HREF="c27596.html#LIWQ512"
+>11</A
+> rather than by username. This is necessary for new accounts because the user does not yet have
+          an entry in your local machine's password file (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/passwd</B
+></SPAN
+> or equivalent). If you are
+          converting an existing UNIX account, an entry possibly already exists, but the UID is possibly incorrect. In that case,
+          specifying a username means that the corresponding (possibly incorrect) UID is recorded as the owner.</P
+><P
+>Some operating systems allow only the local superuser <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root</B
+></SPAN
+> to issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+> command. If necessary, issuing the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>su</B
+></SPAN
+> command before the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+> command.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+> new_owner_ID  directory
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>new_owner_ID</B
+></SPAN
+></DT
+><DD
+><P
+>Is the user's AFS UID, which you learned in Step <A
+HREF="c27596.html#LIWQ512"
+>11</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>directory</B
+></SPAN
+></DT
+><DD
+><P
+>Names the home directory you created in Step <A
+HREF="c27596.html#LIWQ509"
+>6</A
+>, plus each subdirectory or
+                  file you created in Step <A
+HREF="c27596.html#LIWQ511"
+>9</A
+>.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+>If the new user home directory resides in a replicated volume, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+>
+          command to release the volume, as described in <A
+HREF="c8420.html#HDRWQ194"
+>To replicate a read/write volume (create a
+          read-only volume)</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume name or ID</VAR
+>&#62;
+</PRE
+></P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
+            replicated volume (and is easier to overlook in that case). Suppose, for example, that the ABC Corporation puts the
+            mount points for user volumes in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/abc.com/usr</B
+></SPAN
+> directory. Because that is a
+            regular directory rather than a mount point, it resides in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root.cell</B
+></SPAN
+> volume mounted
+            at the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/abc.com</B
+></SPAN
+> directory. That volume is replicated, so after changing it by
+            creating a new mount point the administrator must issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+> command.</P
+></BLOCKQUOTE
+></DIV
+></LI
+><LI
+><P
+><A
+NAME="LIWQ514"
+></A
+>Create or modify an entry for the new user in the local password file (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/passwd</B
+></SPAN
+> or equivalent) of each machine the user can log onto. Remember to make the UNIX UID the
+          same as the AFS UID you learned in Step <A
+HREF="c27596.html#LIWQ512"
+>11</A
+>, and to fill the password field appropriately
+          (for instructions, see <A
+HREF="c27596.html#HDRWQ497"
+>Specifying Passwords in the Local Password File</A
+>).</P
+><P
+>If you use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>package</B
+></SPAN
+> utility to distribute a common version of the password file
+          to all client machines, then you need to make the change only in the common version. See <A
+HREF="c23832.html"
+>Configuring Client Machines with the package Program</A
+>.</P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ515"
+>Improving Password and Authentication Security</A
+></H1
+><P
+>AFS provides several optional features than can help to protect your cell's filespace against unauthorized access. The
+    following list summarizes them, and instructions follow. <UL
+><LI
+><P
+>Limit the number of consecutive failed login attempts.</P
+><P
+>One of the most common ways for an unauthorized user to access your filespace is to guess an authorized user's
+          password. This method of attack is most dangerous if the attacker can use many login processes in parallel or use the RPC
+          interfaces directly.</P
+><P
+>To protect against this type of attack, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command to limit the number of times that a user can consecutively fail to enter the
+          correct password when using either an AFS-modified login utility or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command.
+          When the limit is exceeded, the Authentication Server locks the user's Authentication Database entry (disallows
+          authentication attempts) for a period of time that you define with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+> argument
+          to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command. If desired, system administrators can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas unlock</B
+></SPAN
+> command to unlock the entry before the complete lockout time passes.</P
+><P
+>In certain circumstances, the mechanism used to enforce the number of failed authentication attempts can cause a
+          lockout even though the number of failed attempts is less than the limit set by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+> argument. Client-side authentication programs such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> and an AFS-modified login utility normally choose an Authentication Server at random for each
+          authentication attempt, and in case of a failure are likely to choose a different Authentication Server for the next
+          attempt. The Authentication Servers running on the various database server machines do not communicate with each other
+          about how many times a user has failed to provide the correct password to them. Instead, each Authentication Server
+          maintains its own separate copy of the auxiliary database file <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kaserverauxdb</B
+></SPAN
+> (located in
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/local</B
+></SPAN
+> directory by default), which records the number of consecutive
+          authentication failures for each user account and the time of the most recent failure. This implementation means that on
+          average each Authentication Server knows about only a fraction of the total number of failed attempts. The only way to
+          avoid allowing more than the number of attempts set by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+> argument is to have
+          each Authentication Server allow only some fraction of the total. More specifically, if the limit on failed attempts is
+          <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>f</I
+></SPAN
+>, and the number of Authentication Servers is <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>S</I
+></SPAN
+>, then each Authentication
+          Server can only permit a number of attempts equal to <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>f</I
+></SPAN
+> divided by <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>S</I
+></SPAN
+> (the Ubik
+          synchronization site for the Authentication Server tracks any remainder, <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>f mod S</I
+></SPAN
+>).</P
+><P
+>Normally, this implementation does not reduce the number of allowed attempts to less than the configured limit
+          (<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>f</I
+></SPAN
+>). If one Authentication Server refuses an attempt, the client contacts another instance of the
+          server, continuing until either it successfully authenticates or has contacted all of the servers. However, if one or more
+          of the Authentication Server processes is unavailable, the limit is effectively reduced by a percentage equal to the
+          quantity <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>U</I
+></SPAN
+> divided by <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>S</I
+></SPAN
+>, where <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>U</I
+></SPAN
+> is the number of
+          unavailable servers and <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>S</I
+></SPAN
+> is the number normally available.</P
+><P
+>To avoid the undesirable consequences of setting a limit on failed authentication attempts, note the following
+          recommendations: <UL
+><LI
+><P
+>Do not set the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+> argument (the limit on failed authentication
+                attempts) too low. A limit of nine failed attempts is recommended for regular user accounts, to allow three failed
+                attempts per Authentication Server in a cell with three database server machines.</P
+></LI
+><LI
+><P
+>Set fairly short lockout times when including the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+> argument.
+                Although guessing passwords is a common method of attack, it is not a very sophisticated one. Setting a lockout time
+                can help discourage attackers, but excessively long times are likely to be more of a burden to authorized users than
+                to potential attackers. A lockout time of 25 minutes is recommended for regular user accounts.</P
+></LI
+><LI
+><P
+>Do not assign an infinite lockout time on an account (by setting the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+> argument to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> [zero]) unless there is a highly
+                compelling reason. Such accounts almost inevitably become locked at some point, because each Authentication Server
+                never resets the account's failure counter in its copy of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kaauxdb</B
+></SPAN
+> file (in
+                contrast, when the lockout time is not infinite, the counter resets after the specified amount of time has passed
+                since the last failed attempt to that Authentication Server). Furthermore, the only way to unlock an account with an
+                infinite lockout time is for an administrator to issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas unlock</B
+></SPAN
+> command. It
+                is especially dangerous to set an infinite lockout time on an administrative account; if all administrative accounts
+                become locked, the only way to unlock them is to shut down all instances of the Authentication Server and remove the
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kaauxdb</B
+></SPAN
+> file on each.</P
+></LI
+></UL
+></P
+><P
+>In summary, the recommended limit on authentication attempts is nine and lockout time 25 minutes.</P
+></LI
+><LI
+><P
+>Limit password lifetime.</P
+><P
+>The longer a password is in use, the more time an attacker has to try to learn it. To protect against this type of
+          attack, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pwexpires</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+>
+          command to limit how many days a user's password is valid. The user becomes unable to authenticate with AFS after the
+          password expires, but has up to 30 days to use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpasswd</B
+></SPAN
+> command to set a new password.
+          After the 30 days pass, only an administrator who has the <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on the
+          Authentication Database entry can change the password.</P
+><P
+>If you set a password lifetime, many AFS-modified login utilities (but not the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+>
+          command) set the PASSWORD_EXPIRES environment variable to the number of days remaining until the password expires. A
+          setting of zero means that the password expires today. If desired, you can customize your users' login scripts to display
+          the number of days remaining before expiration and even prompt for a password change when a small number of days remain
+          before expiration.</P
+></LI
+><LI
+><P
+>Prohibit reuse of passwords.</P
+><P
+>Forcing users to select new passwords periodically is not effective if they simply set the new password to the
+          current value. To prevent a user from setting a new password to a string similar to any of the last 20 passwords, use the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-reuse</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command.</P
+><P
+>If you prohibit password reuse and the user specifies an excessively similar password, the Authentication Server
+          generates the following message to reject it:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Password was not changed because it seems like a reused password
+</PRE
+><P
+>A persistent user can try to bypass this restriction by changing the password 20 times in quick succession (or
+          running a script to do so). If you believe this is likely to be a problem, you can include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-minhours</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kaserver</B
+></SPAN
+> initialization command (for
+          details, see the command's reference page in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+>. If the user
+          attempts to change passwords too frequently, the following message appears.</P
+><PRE
+CLASS="programlisting"
+>&#13;   Password was not changed because you changed it too recently; see 
+   your systems administrator
+</PRE
+></LI
+><LI
+><P
+>Check the quality of new passwords.</P
+><P
+>You can impose a minimum quality standard on passwords by writing a script or program called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+>. If the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+> file exists, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpasswd</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setpassword</B
+></SPAN
+> command interpreters invoke it to
+          check a new password. If the password does not comply with the quality standard, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+> program returns an appropriate code and the command interpreter rejects the
+          password.</P
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+> file must be executable, must reside in the same AFS directory as the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpasswd</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+> binaries, and its directory's ACL must
+          grant the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>w</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>write</B
+></SPAN
+>) permission only to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group.</P
+><P
+>If you choose to write a <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+> program, consider imposing standards such as the
+          following. <UL
+><LI
+><P
+>A minimum length</P
+></LI
+><LI
+><P
+>Words found in the dictionary are prohibited</P
+></LI
+><LI
+><P
+>Numbers, punctuation, or both must appear along with letters</P
+></LI
+></UL
+></P
+><P
+>The AFS distribution includes an example <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+> program. See the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+> reference page in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS Administration Reference</I
+></SPAN
+>.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_585"
+>To limit the number of consecutive failed authentication attempts</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+>
+          and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+> arguments.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62;  \
+                   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62;  \
+                   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>maximum successive failed login tries ([0..254])</VAR
+>&#62;  \
+                   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>failure penalty [hh:mm or minutes]</VAR
+>&#62;
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Names the Authentication Database entry to edit.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+></DT
+><DD
+><P
+>Names an administrative account that has the <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its
+                  Authentication Database entry, such as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+> account. The password prompt
+                  echoes it as admin_user. Enter the appropriate password as admin_password.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the maximum consecutive number of times that a user can fail to provide the correct password
+                  during authentication (via the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command or an AFS-modified login utility)
+                  before the Authentication Server refuses further attempts for the amount of time specified by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+> argument. The range of valid values is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero)
+                  through <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>254</B
+></SPAN
+>. If you omit this argument or specify <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+>, the Authentication Server allows an unlimited number of failures.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-locktime</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies how long the Authentication Server refuses authentication attempts after the user exceeds the
+                  failure limit specified by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-attempts</B
+></SPAN
+> argument.</P
+><P
+>Specify a time in either hours and minutes (hh:mm) or minutes only (mm), from the range <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>01</B
+></SPAN
+> (one minute) through <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>36:00</B
+></SPAN
+> (36 hours). The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+> command interpreter automatically reduces any larger value to 36:00 and also rounds up
+                  each nonzero value to the next-higher multiple of 8.5 minutes.</P
+><P
+>It is best not to provide a value of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero), especially on administrative
+                  accounts, because it sets an infinite lockout time. An administrator must always issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas unlock</B
+></SPAN
+> command to unlock such an account.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_586"
+>To unlock a locked user account</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+> command to enter interactive mode.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas -admin</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62;  
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+   ka&#62;
+</PRE
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> names an administrative account that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+>. The password prompt echoes it as admin_user. Enter the appropriate password as
+          admin_password.</P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(kas) examine</B
+></SPAN
+> command to verify that the user's account is in fact
+          locked, as indicated by the message shown: <PRE
+CLASS="programlisting"
+>&#13;   ka&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>examine</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62;
+   User is locked until time
+</PRE
+>  </P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(kas) unlock</B
+></SPAN
+> command to unlock the account. <PRE
+CLASS="programlisting"
+>&#13;   ka&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>unlock</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>authentication ID</VAR
+>&#62; 
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>u</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>unlock</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>authentication ID</B
+></SPAN
+></DT
+><DD
+><P
+>Names the Authentication Database entry to unlock.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_587"
+>To set password lifetime</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pwexpires</B
+></SPAN
+> argument.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62;  \
+                   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pwexpires</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>number days password is valid  [0..254])</VAR
+>&#62;  \
+                   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62; 
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the Authentication Database entry on which to impose a password expiration.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-pwexpires</B
+></SPAN
+></DT
+><DD
+><P
+>Sets the number of days after the user's password was last changed that it remains valid. Provide an integer
+                  from the range <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>1</B
+></SPAN
+> through <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>254</B
+></SPAN
+> to specify the
+                  number of days until expiration.</P
+><P
+>When the password becomes invalid (expires), the user is unable to authenticate, but has 30 more days in
+                  which to issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpasswd</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setpassword</B
+></SPAN
+>
+                  command to change the password (after that, only an administrator can change it). Note that the clock starts at
+                  the time the password was last changed, not when the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command is
+                  issued. To avoid retroactive expiration, have the user change the password just before issuing the command.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+></DT
+><DD
+><P
+>Names an administrative account that has the <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its
+                  Authentication Database entry, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+>. The password prompt echoes it as
+                  admin_user. Enter the appropriate password as admin_password.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_588"
+>To prohibit reuse of passwords</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-reuse</B
+></SPAN
+>
+          argument.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-reuse</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+> permit password reuse (yes/no)</VAR
+>&#62;  \
+                   <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62; 
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Names the Authentication Database entry for which to set the password reuse policy.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-reuse</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies whether the Authentication Server allows reuse of passwords similar to any of the user's last 20
+                  passwords. Specify the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>no</B
+></SPAN
+> to prohibit reuse, or the value <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>yes</B
+></SPAN
+> to reinstate the default of allowing password reuse.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+></DT
+><DD
+><P
+>Names an administrative account that has the <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its
+                  Authentication Database entry, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+>. The password prompt echoes it as
+                  admin_user. Enter the appropriate password as admin_password.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ516"
+>Changing AFS Passwords</A
+></H1
+><P
+>After setting an initial password during account creation, you normally do not need to change user passwords, since they
+    can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpasswd</B
+></SPAN
+> command themselves by following the instructions in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS
+    User Guide</I
+></SPAN
+>. In the rare event that a user forgets the password or otherwise cannot log in, you can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setpassword</B
+></SPAN
+> command to set a new password.</P
+><P
+>If entries in the local password file (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/etc/passwd</B
+></SPAN
+> or equivalent) have actual scrambled
+    passwords in their password field, remember to change the password there also. For further discussion, see <A
+HREF="c27596.html#HDRWQ497"
+>Specifying Passwords in the Local Password File</A
+>.  </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_590"
+>To change an AFS password</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setpassword</B
+></SPAN
+> command to change the password. To avoid having the new
+          password echo visibly on the screen, omit the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-new_password</B
+></SPAN
+> argument; instead enter the
+          password at the prompts that appear when you omit the argument, as shown.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setpassword</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62;  \
+                     <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62; 
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+   new_password: &#60;<VAR
+CLASS="replaceable"
+>new_password</VAR
+>&#62;
+   Verifying, please re-enter new_password: &#60;<VAR
+CLASS="replaceable"
+>new_password</VAR
+>&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>sp</B
+></SPAN
+></DT
+><DD
+><P
+>Is an acceptable alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setpassword</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setp</B
+></SPAN
+> is the shortest acceptable abbreviation).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Names the Authentication Database entry for which to set the password.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+></DT
+><DD
+><P
+>Names an administrative account that has the <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its
+                  Authentication Database entry, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+>. The password prompt echoes it as
+                  admin_user. Enter the appropriate password as admin_password.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>new_password</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the user's new password. It is subject to the restrictions imposed by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpwvalid</B
+></SPAN
+> program, if you use it.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ517"
+>Displaying and Setting the Quota on User Volumes</A
+></H1
+><P
+>User volumes are like all other volumes with respect to quota. Each new AFS volume has a default quota of 5000 KB, unless
+    you use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-maxquota</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos create</B
+></SPAN
+> command to
+    set a different quota. You can also use either of the following commands to change quota at any time: <UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setquota</B
+></SPAN
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setvol</B
+></SPAN
+></P
+></LI
+></UL
+></P
+><P
+>You can use any of the three following commands to display a volume's quota: <UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs quota</B
+></SPAN
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listquota</B
+></SPAN
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs examine</B
+></SPAN
+></P
+></LI
+></UL
+></P
+><P
+>For instructions, see <A
+HREF="c8420.html#HDRWQ234"
+>Setting and Displaying Volume Quota and Current Size</A
+>.     </P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ518"
+>Changing Usernames</A
+></H1
+><P
+>By convention, many components of a user account incorporate the username, including the Protection and Authentication
+    Database entries, the volume name and the home directory name. When changing a username, it is best to maintain consistency by
+    changing the names of all components, so the procedure for changing a username has almost as many steps as the procedure for
+    creating a new user account.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_593"
+>To change a username</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Authenticate as an AFS identity with all of the following privileges. In the conventional configuration, the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+> user account has them, or you possibly have a personal administrative account. (To
+          increase cell security, it is best to create special privileged accounts for use only while performing administrative
+          procedures; for further discussion, see <A
+HREF="c32432.html#HDRWQ584"
+>An Overview of Administrative Privilege</A
+>.) If
+          necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command to authenticate. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> admin_user
+   Password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+</PRE
+></P
+><P
+>The following list specifies the necessary privileges and indicates how to check that you have them.</P
+><UL
+><LI
+><P
+>Membership in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+              <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To
+              display the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Inclusion in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+> file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the
+              users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>The <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on the Authentication Database entry. However, the
+              Authentication Server performs its own authentication, so the following instructions direct you to specify an
+              administrative identity on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+> command line itself.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>), <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>d</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+>), and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>i</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>insert</B
+></SPAN
+>) permissions on the ACL of the directory where you are removing the current mount point
+              and creating a new one. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command, which is fully
+              described in <A
+HREF="c31274.html#HDRWQ572"
+>Displaying ACLs</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;]
+</PRE
+></P
+><P
+>Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group always implicitly have the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>) and by default also the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>l</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>lookup</B
+></SPAN
+>) permission on every ACL and can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command to grant other rights as necessary.</P
+></LI
+></UL
+></LI
+><LI
+><P
+><A
+NAME="LIWQ519"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> command to display the names of the
+          groups the user owns. After you change the username in the Protection Database in Step <A
+HREF="c27596.html#LIWQ520"
+>3</A
+>,
+          you must issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change each group's owner prefix to match the
+          new name, because the Protection Server does not automatically make this change. For a complete description of the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> command, see <A
+HREF="c29323.html#HDRWQ536"
+>Displaying Information from the
+          Protection Database</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ520"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change the user's name in
+          the Protection Database. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>old name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>new name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change the group names you noted in Step <A
+HREF="c27596.html#LIWQ519"
+>2</A
+>, so that their owner prefix (the part of the group name before the colon) accurately reflects
+          the owner's new name.</P
+><P
+>Repeat the command for each group. Step <A
+HREF="c27596.html#LIWQ520"
+>3</A
+> details its syntax.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>old name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>new name</VAR
+>&#62;
+</PRE
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+> command to enter interactive mode.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas -admin</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62;  
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+   ka&#62;
+</PRE
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> names an administrative account that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+>. The password prompt echoes it as admin_user. Enter the appropriate password as
+          admin_password.  </P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(kas) delete</B
+></SPAN
+> command to delete the user's existing Authentication
+          Database entry. <PRE
+CLASS="programlisting"
+>&#13;   ka&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>del</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+>, or you can use the alias
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>rm</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Names the Authentication Database entry to delete.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(kas) create</B
+></SPAN
+> command to create an Authentication Database entry for the
+          new username. To avoid having the user's password echo visibly on the screen, do not include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-initial_password</B
+></SPAN
+> argument; instead enter the password at the prompts that appear in that case, as
+          shown in the following syntax specification. <PRE
+CLASS="programlisting"
+>&#13;   ka&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>create</B
+></SPAN
+>  &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62;
+   initial_password: &#60;<VAR
+CLASS="replaceable"
+>password</VAR
+>&#62;
+   Verifying, please re-enter initial_password: &#60;<VAR
+CLASS="replaceable"
+>password</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cr</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>create</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the new username.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>password</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the password for the new user account. If the user is willing to tell you his or her current
+                password, you can retain it. Otherwise, provide a string of eight characters or less to comply with the length
+                restriction that some applications impose. Possible choices for an initial password include the username, a string
+                of digits from a personal identification number such as the Social Security number, or a standard string such as
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>changeme</B
+></SPAN
+>. Instruct the user to change the string to a truly secret password as soon
+                as possible by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kpasswd</B
+></SPAN
+> command as instructed in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>IBM AFS
+                User Guide</I
+></SPAN
+>.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>quit</B
+></SPAN
+> command to leave interactive mode. <PRE
+CLASS="programlisting"
+>&#13;   ka&#62; <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>quit</B
+></SPAN
+>
+</PRE
+>     </P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ521"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos rename</B
+></SPAN
+> command to change the name of the
+          user's volume. For complete syntax, see <A
+HREF="c8420.html#HDRWQ246"
+>To rename a volume</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos rename</B
+></SPAN
+>  &#60;<VAR
+CLASS="replaceable"
+>old volume name</VAR
+>&#62;  &#60;<VAR
+CLASS="replaceable"
+>new volume name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ522"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs rmmount</B
+></SPAN
+> command to remove the existing mount
+          point. For the directory argument, specify the read/write path to the mount point, to avoid the failure that results when
+          you attempt to delete a mount point from a read-only volume. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs rmmount</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>directory</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ523"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs mkmount</B
+></SPAN
+> command to create a mount point for the
+          volume's new name. Specify the read/write path to the mount point for the directory argument, as in the previous step. For
+          complete syntax, see Step <A
+HREF="c27596.html#LIWQ509"
+>6</A
+> in <A
+HREF="c27596.html#HDRWQ503"
+>To create one user account with
+          individual commands</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs mkmount</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>directory</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>volume name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>If the changes you made in Step <A
+HREF="c27596.html#LIWQ522"
+>10</A
+> and Step <A
+HREF="c27596.html#LIWQ523"
+>11</A
+> are to
+          a mount point that resides in a replicated volume, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+> command to release
+          the volume, as described in <A
+HREF="c8420.html#HDRWQ194"
+>To replicate a read/write volume (create a read-only volume)</A
+>.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume name or ID</VAR
+>&#62;
+</PRE
+></P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
+            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
+            points for user volumes in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/abc.com/usr</B
+></SPAN
+> directory. Because that is a regular
+            directory rather than a mount point, it resides in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root.cell</B
+></SPAN
+> volume mounted at the
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/abc.com</B
+></SPAN
+> directory. That volume is replicated, so after changing it the
+            administrator must issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+> command.</P
+></BLOCKQUOTE
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ524"
+>Removing a User Account</A
+></H1
+><P
+>Before removing an account, it is best to make a backup copy of the user's home volume on a permanent storage medium such
+    as tape. If you need to remove several accounts, it is probably more efficient to use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss
+    delete</B
+></SPAN
+> command instead; see <A
+HREF="c24913.html#HDRWQ486"
+>Deleting Individual Accounts with the uss delete
+    Command</A
+>.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_595"
+>To remove a user account</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Authenticate as an AFS identity with all of the following privileges. In the conventional configuration, the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+> user account has them, or you possibly have a personal administrative account. (To
+          increase cell security, it is best to create special privileged accounts for use only while performing administrative
+          procedures; for further discussion, see <A
+HREF="c32432.html#HDRWQ584"
+>An Overview of Administrative Privilege</A
+>.) If
+          necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command to authenticate. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> admin_user
+   Password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+</PRE
+></P
+><P
+>The following list specifies the necessary privileges and indicates how to check that you have them.</P
+><UL
+><LI
+><P
+>Membership in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+              <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To
+              display the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Inclusion in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/etc/UserList</B
+></SPAN
+> file. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ593"
+>To display the
+              users in the UserList file</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bos listusers</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>The <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on the Authentication Database entry. However, the
+              Authentication Server performs its own authentication, so the following instructions direct you to specify an
+              administrative identity on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas</B
+></SPAN
+> command line itself.</P
+></LI
+><LI
+><P
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>d</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+>) permission on the ACL of the
+              directory where you are removing the user volume's mount point. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+              listacl</B
+></SPAN
+> command, which is fully described in <A
+HREF="c31274.html#HDRWQ572"
+>Displaying ACLs</A
+>.
+              <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> [&#60;<VAR
+CLASS="replaceable"
+>dir/file path</VAR
+>&#62;]
+</PRE
+></P
+><P
+>Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group always implicitly have the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>) and by default also the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>l</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>lookup</B
+></SPAN
+>) permission on every ACL and can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs setacl</B
+></SPAN
+> command to grant other rights as necessary.</P
+></LI
+></UL
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> If it is possible you need to restore the user's account someday, note
+          the username and AFS UID, possibly in a file designated for that purpose. You can later restore the account with its
+          original AFS UID.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> Copy the contents of the user's volume to tape. You can use the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos dump</B
+></SPAN
+> command as described in <A
+HREF="c8420.html#HDRWQ240"
+>Dumping and Restoring
+          Volumes</A
+> or the AFS Backup System as described in <A
+HREF="c15383.html#HDRWQ296"
+>Backing Up Data</A
+>.</P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ525"
+></A
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> If you intend to remove groups that the user owns
+          from the Protection Database after removing the user's entry, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+>
+          command to display them. For complete instructions, see <A
+HREF="c29323.html#HDRWQ536"
+>Displaying Information from the
+          Protection Database</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ526"
+></A
+>(<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional)</B
+></SPAN
+> Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          delete</B
+></SPAN
+> command to remove the groups the user owns. However, if it is likely that other users have placed the
+          groups on the ACLs of directories they own, it is best not to remove them. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>del</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user or group name or id</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the name or AFS UID of each group displayed in the output from Step <A
+HREF="c27596.html#LIWQ525"
+>4</A
+>.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas delete</B
+></SPAN
+> command to remove the user's Authentication Database
+          entry.</P
+><P
+>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+> argument to name an identity that has the
+          <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command as described in <A
+HREF="c32432.html#HDRWQ590"
+>To check if the
+          ADMIN flag is set</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas delete</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>name of user</VAR
+>&#62;  \
+                <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+>  &#60;<VAR
+CLASS="replaceable"
+>admin principal to use for authentication</VAR
+>&#62;  
+   Administrator's (admin_user) password: &#60;<VAR
+CLASS="replaceable"
+>admin_password</VAR
+>&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>d</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>name of user</B
+></SPAN
+></DT
+><DD
+><P
+>Names the Authentication Database entry to delete.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-admin</B
+></SPAN
+></DT
+><DD
+><P
+>Names an administrative account that has the <SAMP
+CLASS="computeroutput"
+>ADMIN</SAMP
+> flag on its
+                  Authentication Database entry, such as <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>admin</B
+></SPAN
+>. The password prompt echoes it as
+                  admin_user. Enter the appropriate password as admin_password.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ527"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos listvldb</B
+></SPAN
+> command to display the site of the
+          user's home volume in preparation for removing it. By convention, user volumes are named <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user</B
+></SPAN
+>.username. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos listvldb</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume name or ID</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listvl</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listvldb</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume name or ID</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the volume's name or volume ID number.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><A
+NAME="LIWQ528"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos remove</B
+></SPAN
+> command to remove the user's volume. It
+          automatically removes the backup version of the volume, if it exists. It is not conventional to replicate user volumes, so
+          the command usually also completely removes the volume's entry from the Volume Location Database (VLDB). If there are
+          ReadOnly replicas of the volume, you must repeat the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos remove</B
+></SPAN
+> command to remove each
+          one individually. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos remove</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>machine name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>partition name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>volume name or ID</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>remo</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>remove</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>machine name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the file server machine that houses the volume, as specified in the output from Step <A
+HREF="c27596.html#LIWQ527"
+>7</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>partition name</B
+></SPAN
+></DT
+><DD
+><P
+>Names the partition that houses the volume, as specified in the output from Step <A
+HREF="c27596.html#LIWQ527"
+>7</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>volume name or ID</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the volume's name or ID number.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><A
+NAME="LIWQ529"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs rmmount</B
+></SPAN
+> command to remove the volume's mount
+          point.</P
+><P
+>If you mounted the user's backup volume as a subdirectory of the home directory, then this command is sufficient to
+          unmount the backup version as well. If you mounted the backup version at an unrelated location in the filespace, repeat
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs rmmount</B
+></SPAN
+> command for it.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs rmmount</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>directory</VAR
+>&#62;
+</PRE
+><P
+>where <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>rmm</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>rmmount</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>directory</B
+></SPAN
+></DT
+><DD
+><P
+>Names the mount point for the volume's previous name (the former home directory). Partial pathnames are
+                  interpreted relative to the current working directory.</P
+><P
+>Specify the read/write path to the mount point, to avoid the failure that results when you attempt to delete
+                  a mount point from a read-only volume. By convention, you indicate the read/write path by placing a period before
+                  the cell name at the pathname's second level (for example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/.abc.com</B
+></SPAN
+>). For
+                  further discussion of the concept of read/write and read-only paths through the filespace, see <A
+HREF="c8420.html#HDRWQ208"
+>Mounting Volumes</A
+>.</P
+></DD
+></DL
+></DIV
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ530"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+> command to remove the user's Protection
+          Database entry. A complete description of this command appears in Step <A
+HREF="c27596.html#LIWQ526"
+>5</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>If the deleted user home directory resided in a replicated volume, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos
+          release</B
+></SPAN
+> command to release the volume, as described in <A
+HREF="c8420.html#HDRWQ194"
+>To replicate a read/write
+          volume (create a read-only volume)</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>volume name or ID</VAR
+>&#62;
+</PRE
+></P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>This step can be necessary even if the home directory's parent directory is not itself a mount point for a
+            replicated volume (and is easier to overlook in that case). For example, the ABC Corporation template puts the mount
+            points for user volumes in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/abc.com/usr</B
+></SPAN
+> directory. Because that is a regular
+            directory rather than a mount point, it resides in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>root.cell</B
+></SPAN
+> volume mounted at the
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/abc.com</B
+></SPAN
+> directory. That volume is replicated, so after changing it by deleting a
+            mount point the administrator must issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>vos release</B
+></SPAN
+> command.</P
+></BLOCKQUOTE
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c24913.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c29323.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Creating and Deleting User Accounts with the uss Command Suite</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="p24911.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Administering the Protection Database</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
