@@ -189,12 +189,6 @@ AC_ARG_ENABLE([pthreaded-ubik],
          disabled)])],
     ,
     [enable_pthreaded_ubik="no"])
-AC_ARG_ENABLE([linux-fh],
-    [AS_HELP_STRING([--enable-linux-fh],
-        [enable opening cache files by file hande instead of inode numbers
-         with linux (defaults to disabled)])],
-    ,
-    [enable_linux_fh="no"])
 
 dnl Kernel module build options.
 AC_ARG_WITH([dux-kernel-headers],
@@ -927,6 +921,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_SYSCTL_TABLE_CHECKING
 		 LINUX_HAVE_IGET
+		 if test "x$ac_cv_linux_have_iget" = "xno"; then
+		   AC_DEFINE([LINUX_USE_FH], 1, [define to use linux file handles for cache files])
+		 fi
 		 LINUX_HAVE_I_SIZE_READ
 		 LINUX_HAVE_D_ALLOC_ANON
 		 if test "x$ac_cv_linux_d_alloc_anon" = "xno"; then
@@ -1193,9 +1190,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_have_kmem_cache_t" = "xyes" ; then
 		  AC_DEFINE(KMEM_CACHE_TAKES_DTOR, 1, [define if kmem_cache_create takes a destructor argument])
-		 fi
-		 if test "$enable_linux_fh" = "yes"; then
-		  AC_DEFINE(LINUX_USE_FH, 1, [define if you want to open cache files by file handle instead of inode numbers])
 		 fi
 		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" -o "x$ac_cv_linux_func_i_put_link_takes_cookie" = "xyes"; then
 		  AC_DEFINE(USABLE_KERNEL_PAGE_SYMLINK_CACHE, 1, [define if your kernel has a usable symlink cache API])

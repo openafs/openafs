@@ -1029,10 +1029,13 @@ typedef afs_int32 afs_ufs_dcache_id_t;
  */
 typedef ino64_t afs_ufs_dcache_id_t;
 #elif defined(LINUX_USE_FH)
-typedef struct {
+#define MAX_FH_LEN 10
+typedef union {
      struct fid fh;
-     int fh_type;
+     __u32 raw[MAX_FH_LEN];
 } afs_ufs_dcache_id_t;
+extern int cache_fh_type;
+extern int cache_fh_len;
 #elif defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX24_ENV)
 typedef long afs_ufs_dcache_id_t;
 #elif defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)
