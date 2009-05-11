@@ -163,7 +163,7 @@ Severity=Warning
 Facility=System
 SymbolicName=MSG_RX_HARD_DEAD_TIME_EXCEEDED
 Language=English
-Hard Dead Time exceeded when communicating with server %1
+Hard or Idle Dead Time exceeded when communicating with server %1
 .
 
 MessageId=
