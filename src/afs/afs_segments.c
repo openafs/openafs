@@ -417,7 +417,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 				       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32,
 				       tdc->f.chunk, ICL_TYPE_INT32,
 				       tdc->index, ICL_TYPE_INT32,
-				       tdc->f.inode);
+				       afs_inode2trace(&tdc->f.inode));
 			    shouldwake = 0;
 			    if (nomore) {
 				if (avc->asynchrony == -1) {
@@ -430,11 +430,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 				    shouldwake = &nomore;
 				}
 			    }
-#if defined(LINUX_USE_FH)
-			    tfile = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
-#else
-			    tfile = afs_CFileOpen(tdc->f.inode);
-#endif
+			    tfile = afs_CFileOpen(&tdc->f.inode);
 #ifndef AFS_NOSTATS
 			    xferP =
 				&(afs_stats_cmfullperf.rpc.
@@ -954,11 +950,7 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq) {
 	if (offset + toAdd > AFS_CHUNKTOSIZE(tdc->f.chunk)) {
 	    toAdd = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;
 	}
-#if defined(LINUX_USE_FH)
-        tfile = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
-#else
-        tfile = afs_CFileOpen(tdc->f.inode);
-#endif
+        tfile = afs_CFileOpen(&tdc->f.inode);
 	while(tdc->validPos < avc->f.m.Length + toAdd) {
 	     afs_size_t towrite;
 
@@ -1109,11 +1101,7 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	ObtainSharedLock(&tdc->lock, 672);
 	if (newSize < tdc->f.chunkBytes) {
 	    UpgradeSToWLock(&tdc->lock, 673);
-#if defined(LINUX_USE_FH)
-	    tfile = afs_CFileOpen(&tdc->f.fh, tdc->f.fh_type);
-#else
-	    tfile = afs_CFileOpen(tdc->f.inode);
-#endif
+	    tfile = afs_CFileOpen(&tdc->f.inode);
 	    afs_CFileTruncate(tfile, newSize);
 	    afs_CFileClose(tfile);
 	    afs_AdjustSize(tdc, newSize);

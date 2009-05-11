@@ -231,12 +231,12 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #endif
 	AFS_UIO_SETOFFSET(tuiop, offset);
 
-	code = afs_MemWriteUIO(tdc->f.inode, tuiop);
+	code = afs_MemWriteUIO(&tdc->f.inode, tuiop);
 	if (code) {
 	    void *mep;		/* XXX in prototype world is struct memCacheEntry * */
 	    error = code;
 	    ZapDCE(tdc);	/* bad data */
-	    mep = afs_MemCacheOpen(tdc->f.inode);
+	    mep = afs_MemCacheOpen(&tdc->f.inode);
 	    afs_MemCacheTruncate(mep, 0);
 	    afs_MemCacheClose(mep);
 	    afs_stats_cmperf.cacheCurrDirtyChunks--;
@@ -425,11 +425,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    error = EIO;
 	    break;
 	}
-#if defined(LINUX_USE_FH)
-	tfile = (struct osi_file *)osi_UFSOpen_fh(&tdc->f.fh, tdc->f.fh_type);
-#else
-	tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
-#endif
+	tfile = (struct osi_file *)osi_UFSOpen(&tdc->f.inode);
 	len = totalLength;	/* write this amount by default */
 	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */

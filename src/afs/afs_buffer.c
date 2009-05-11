@@ -131,7 +131,7 @@ DInit(int abuffers)
 	/* Fill in each buffer with an empty indication. */
 	tb = &Buffers[i];
 	tb->fid = NULLIDX;
-	tb->inode = 0;
+	afs_reset_inode(&tb->inode);
 	tb->accesstime = 0;
 	tb->lockers = 0;
 #if defined(AFS_USEBUFFERS)
@@ -227,23 +227,19 @@ DRead(register struct dcache *adc, register int page)
     tb->lockers++;
     if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
 	tb->fid = NULLIDX;
-	tb->inode = 0;
+	afs_reset_inode(&tb->inode);
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
 	return NULL;
     }
-#if defined(LINUX_USE_FH)
-    tfile = afs_CFileOpen(&adc->f.fh, adc->f.fh_type);
-#else
-    tfile = afs_CFileOpen(adc->f.inode);
-#endif
+    tfile = afs_CFileOpen(&adc->f.inode);
     code =
 	afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE, tb->data,
 		      AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
     if (code < AFS_BUFFER_PAGESIZE) {
 	tb->fid = NULLIDX;
-	tb->inode = 0;
+	afs_reset_inode(&tb->inode);
 	tb->lockers--;
 	MReleaseWriteLock(&tb->lock);
 	return NULL;
@@ -348,11 +344,7 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 
     if (lp->dirty) {
 	/* see DFlush for rationale for not getting and locking the dcache */
-#if defined(LINUX_USE_FH)
-        tfile = afs_CFileOpen(&lp->fh, lp->fh_type);
-#else
-        tfile = afs_CFileOpen(lp->inode);
-#endif
+        tfile = afs_CFileOpen(&lp->inode);
 	afs_CFileWrite(tfile, lp->page * AFS_BUFFER_PAGESIZE, lp->data,
 		       AFS_BUFFER_PAGESIZE);
 	lp->dirty = 0;
@@ -362,12 +354,7 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 
     /* Now fill in the header. */
     lp->fid = adc->index;
-#if defined(LINUX_USE_FH)
-    memcpy(&lp->fh, &adc->f.fh, sizeof(struct fid));
-    lp->fh_type = adc->f.fh_type;
-#else
-    lp->inode = adc->f.inode;
-#endif
+    afs_copy_inode(&lp->inode, &adc->f.inode);
     lp->page = apage;
     lp->accesstime = timecounter++;
     FixupBucket(lp);		/* move to the right hash bucket */
@@ -469,7 +456,7 @@ DZap(struct dcache *adc)
 	    if (tb->fid == adc->index) {
 		MObtainWriteLock(&tb->lock, 262);
 		tb->fid = NULLIDX;
-		tb->inode = 0;
+		afs_reset_inode(&tb->inode);
 		tb->dirty = 0;
 		MReleaseWriteLock(&tb->lock);
 	    }
@@ -480,11 +467,7 @@ static void
 DFlushBuffer(struct buffer *ab) {
     struct osi_file *tfile;
     
-#if defined(LINUX_USE_FH)
-    tfile = afs_CFileOpen(&ab->fh, ab->fh_type);
-#else
-    tfile = afs_CFileOpen(ab->inode);
-#endif
+    tfile = afs_CFileOpen(&ab->inode);
     afs_CFileWrite(tfile, ab->page * AFS_BUFFER_PAGESIZE,
 		   ab->data, AFS_BUFFER_PAGESIZE);
     ab->dirty = 0;	/* Clear the dirty flag */

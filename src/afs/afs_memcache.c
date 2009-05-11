@@ -89,21 +89,16 @@ afs_MemCacheClose(struct osi_file *file)
     return 0;
 }
 
-#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
 void *
-afs_MemCacheOpen(ino_t blkno)
-#else
-void *
-afs_MemCacheOpen(afs_int32 blkno)
-#endif
+afs_MemCacheOpen(afs_dcache_id_t *ainode)
 {
     struct memCacheEntry *mep;
 
-    if (blkno < 0 || blkno > memMaxBlkNumber) {
+    if (ainode->mem < 0 || ainode->mem > memMaxBlkNumber) {
 	osi_Panic("afs_MemCacheOpen: invalid block #");
     }
-    mep = (memCache + blkno);
-    afs_Trace3(afs_iclSetp, CM_TRACE_MEMOPEN, ICL_TYPE_INT32, blkno,
+    mep = (memCache + ainode->mem);
+    afs_Trace3(afs_iclSetp, CM_TRACE_MEMOPEN, ICL_TYPE_INT32, ainode->mem,
 	       ICL_TYPE_POINTER, mep, ICL_TYPE_POINTER, mep ? mep->data : 0);
     return (void *)mep;
 }
@@ -176,10 +171,10 @@ afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
 }
 
 int
-afs_MemReadUIO(ino_t blkno, struct uio *uioP)
+afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 {
     register struct memCacheEntry *mceP =
-	(struct memCacheEntry *)afs_MemCacheOpen(blkno);
+	(struct memCacheEntry *)afs_MemCacheOpen(ainode);
     int length = mceP->size - AFS_UIO_OFFSET(uioP);
     afs_int32 code;
 
@@ -280,10 +275,10 @@ afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 }
 
 int
-afs_MemWriteUIO(ino_t blkno, struct uio *uioP)
+afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 {
     register struct memCacheEntry *mceP =
-	(struct memCacheEntry *)afs_MemCacheOpen(blkno);
+	(struct memCacheEntry *)afs_MemCacheOpen(ainode);
     afs_int32 code;
 
     AFS_STATCNT(afs_MemWriteUIO);

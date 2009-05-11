@@ -26,7 +26,7 @@ extern struct mount *afs_cacheVfsp;
 
 
 void *
-osi_UFSOpen(afs_int32 ainode)
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     static struct vnode *tags_vnode = NULL;
     struct inode *ip;
@@ -44,7 +44,7 @@ osi_UFSOpen(afs_int32 ainode)
     switch (afs_cacheVfsp->m_stat.f_type) {
     case MOUNT_UFS:
 	code =
-	    igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode,
+	    igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode->ufs,
 		      &ip, &dummy);
 	if (code) {
 	    osi_FreeSmallSpace(afile);
@@ -55,7 +55,7 @@ osi_UFSOpen(afs_int32 ainode)
 	afile->size = VTOI(afile->vnode)->i_size;
 	afile->offset = 0;
 	afile->proc = NULL;
-	afile->inum = ainode;	/* for hint validity checking */
+	afile->inum = ainode->ufs;	/* for hint validity checking */
 	break;
     case MOUNT_MSFS:{
 	    char path[1024];
@@ -80,7 +80,7 @@ osi_UFSOpen(afs_int32 ainode)
 		    osi_Panic("failed to lookup %s (%d)", path, code);
 		tags_vnode = ndp->ni_vp;
 	    }
-	    sprintf(path, "%d", ainode);
+	    sprintf(path, "%d", ainode->ufs);
 	    ndp->ni_dirp = path;
 	    ndp->ni_cdir = tags_vnode;
 	    if ((code = namei(ndp)))
@@ -96,7 +96,7 @@ osi_UFSOpen(afs_int32 ainode)
 	    afile->size = attr.va_size;
 	    afile->offset = 0;
 	    afile->proc = NULL;
-	    afile->inum = ainode;	/* for hint validity checking */
+	    afile->inum = ainode->ufs;	/* for hint validity checking */
 	    break;
 	}
     default:

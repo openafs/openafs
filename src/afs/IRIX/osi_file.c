@@ -30,12 +30,12 @@ extern struct vfs *afs_cacheVfsp;
  */
 #ifdef AFS_SGI_EFS_IOPS_ENV
 vnode_t *
-afs_EFSIGetVnode(ino_t ainode)
+afs_EFSIGetVnode(afs_dcache_id_t *ainode)
 {
     struct inode *ip;
     int error;
 
-    if ((error = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode, &ip))) {
+    if ((error = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode->ufs, &ip))) {
 	osi_Panic("afs_EFSIGetVnode: igetinode failed, error=%d", error);
     }
     /* We don't care about atimes on the cache files, so disable them.  I'm not
@@ -49,14 +49,14 @@ afs_EFSIGetVnode(ino_t ainode)
 #endif /* AFS_SGI_EFS_IOPS_ENV */
 
 vnode_t *
-afs_XFSIGetVnode(ino_t ainode)
+afs_XFSIGetVnode(afs_dcache_id_t *ainode)
 {
     struct xfs_inode *ip;
     int error;
     vnode_t *vp;
 
     if ((error =
-	 xfs_igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode, &ip))) {
+	 xfs_igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode->ufs, &ip))) {
 	osi_Panic("afs_XFSIGetVnode: xfs_igetinode failed, error=%d", error);
     }
     vp = XFS_ITOV(ip);
@@ -65,7 +65,7 @@ afs_XFSIGetVnode(ino_t ainode)
 
 /* Force to 64 bits, even for EFS filesystems. */
 void *
-osi_UFSOpen(ino_t ainode)
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct inode *ip;
     register struct osi_file *afile = NULL;
@@ -84,12 +84,12 @@ osi_UFSOpen(ino_t ainode)
     }
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-    afile->vnode = AFS_SGI_IGETVNODE(ainode);
+    afile->vnode = AFS_SGI_IGETVNODE(ainode->ufs);
     AFS_GLOCK();
     afile->size = VnodeToSize(afile->vnode);
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 
