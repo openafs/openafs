@@ -23,8 +23,10 @@ RCSID
 #if defined(AFS_LINUX26_ENV)
 #include "h/namei.h"
 #endif
-#if !defined(HAVE_IGET)
+#if defined(LINUX_USE_FH)
 #include "h/exportfs.h"
+int cache_fh_type = -1;
+int cache_fh_len = -1;
 #endif
 
 afs_lock_t afs_xosi;		/* lock is for tvattr */
@@ -43,9 +45,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     struct inode *tip = NULL;
     struct dentry *dp = NULL;
     struct file *filp = NULL;
-#if !defined(HAVE_IGET) || defined(LINUX_USE_FH)
-    struct fid fid;
-#endif
+
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
 	osi_Panic("UFSOpen called for non-UFS cache\n");
@@ -63,20 +63,14 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 		  (int)sizeof(struct osi_file));
     }
     memset(afile, 0, sizeof(struct osi_file));
-#if defined(HAVE_IGET)
+#if !defined(LINUX_USE_FH)
     tip = iget(afs_cacheSBp, ainode->ufs);
     if (!tip)
 	osi_Panic("Can't get inode %d\n", ainode->ufs);
 
     dp = d_alloc_anon(tip);
 #else
-# if defined(LINUX_USE_FH)
-    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh, sizeof(struct fid), ainode->ufs.fh_type);
-# else
-    fid.i32.ino = ainode->ufs;
-    fid.i32.gen = 0;
-    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &fid, sizeof(fid), FILEID_INO32_GEN);
-# endif
+    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh, cache_fh_len, cache_fh_type);
     if (!dp) 
            osi_Panic("Can't get dentry\n");          
     tip = dp->d_inode;
@@ -99,11 +93,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
-#if defined(LINUX_USE_FH)
     afile->inum = tip->i_ino;	/* for hint validity checking */
-#else
-    afile->inum = ainode->ufs;	/* for hint validity checking */
-#endif
     return (void *)afile;
 }
 #else
@@ -160,15 +150,41 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 #endif
 
 #if defined(LINUX_USE_FH)
+/*
+ * Given a dentry, return the file handle as encoded by the filesystem.
+ * We can't assume anything about the length (words, not bytes).
+ * The cache has to live on a single filesystem with uniform file 
+ * handles, otherwise we panic.
+ */
 void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
-    int max_len = sizeof(struct fid);
+    int max_len;
+    int type;
 
+    if (cache_fh_len > 0)
+	max_len = cache_fh_len;
+    else
+	max_len = MAX_FH_LEN;
     if (dp->d_sb->s_export_op->encode_fh) {
-	ainode->fh_type = dp->d_sb->s_export_op->encode_fh(dp, (__u32 *)&ainode->fh, &max_len, 0);
+        type = dp->d_sb->s_export_op->encode_fh(dp, &ainode->raw[0], &max_len, 0);
+        if (type == 255) {
+           osi_Panic("File handle encoding failed\n");
+        }
+        if (cache_fh_type < 0)
+            cache_fh_type = type;
+        if (cache_fh_len < 0) {
+            cache_fh_len = max_len;
+        }
+        if (type != cache_fh_type || max_len != cache_fh_len) {
+           osi_Panic("Inconsistent file handles within cache\n");
+        }
     } else {
-	ainode->fh_type = FILEID_INO32_GEN;
- 	ainode->fh.i32.ino = dp->d_inode->i_ino;
-	ainode->fh.i32.gen = dp->d_inode->i_generation;
+         /* If fs doesn't provide an encode_fh method, assume the default INO32 type */
+	if (cache_fh_type < 0)
+	    cache_fh_type = FILEID_INO32_GEN;
+	if (cache_fh_len < 0)
+	    cache_fh_len = sizeof(struct fid)/4;
+        ainode->fh.i32.ino = dp->d_inode->i_ino;
+        ainode->fh.i32.gen = dp->d_inode->i_generation;
     }
 }
 #else
