@@ -88,22 +88,24 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
     cm_AFSFidFromFid(&tfid, &scp->fid);
 
+    /* Serialize StoreData RPC's; for rationale see cm_scache.c */
+    (void) cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA_EXCL);
+
     code = cm_SetupStoreBIOD(scp, offsetp, length, &biod, userp, reqp);
     if (code) {
         osi_Log1(afsd_logp, "cm_SetupStoreBIOD code %x", code);
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
         lock_ReleaseWrite(&scp->rw);
         return code;
     }
 
     if (biod.length == 0) {
         osi_Log0(afsd_logp, "cm_SetupStoreBIOD length 0");
+        cm_ReleaseBIOD(&biod, 1, 0, 1);	/* should be a NOOP */
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
         lock_ReleaseWrite(&scp->rw);
-        cm_ReleaseBIOD(&biod, 1, 0);	/* should be a NOOP */
         return 0;
     }
-
-    /* Serialize StoreData RPC's; for rationale see cm_scache.c */
-    (void) cm_SyncOp(scp, NULL, userp, reqp, 0, CM_SCACHESYNC_STOREDATA_EXCL);
 
     /* prepare the output status for the store */
     scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
@@ -261,6 +263,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     /* now, clean up our state */
     lock_ObtainWrite(&scp->rw);
 
+    cm_ReleaseBIOD(&biod, 1, code, 1);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STOREDATA_EXCL);
 
     if (code == 0) {
@@ -302,7 +305,6 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             scp->flags |= CM_SCACHEFLAG_OVERQUOTA;
     }
     lock_ReleaseWrite(&scp->rw);
-    cm_ReleaseBIOD(&biod, 1, code);
 
     return code;
 }
@@ -1254,7 +1256,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 /* release a bulk I/O structure that was setup by cm_SetupFetchBIOD or by
  * cm_SetupStoreBIOD
  */
-void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed)
+void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed, int scp_locked)
 {
     cm_scache_t *scp;		/* do not release; not held in biop */
     cm_buf_t *bufp;
@@ -1285,6 +1287,8 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed)
 	    osi_QDFree(qdp);
 
 	    /* now, mark I/O as done, unlock the buffer and release it */
+            if (scp_locked)
+                lock_ReleaseWrite(&scp->rw);
 	    lock_ObtainMutex(&bufp->mx);
 	    lock_ObtainWrite(&scp->rw);
 	    cm_SyncOpDone(scp, bufp, flags);
@@ -1303,15 +1307,18 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed)
                 }
 	    }
 
-	    lock_ReleaseWrite(&scp->rw);
+            if (!scp_locked)
+                lock_ReleaseWrite(&scp->rw);
 	    lock_ReleaseMutex(&bufp->mx);
 	    buf_Release(bufp);
 	    bufp = NULL;
 	}
     } else {
-	lock_ObtainWrite(&scp->rw);
+	if (!scp_locked)
+            lock_ObtainWrite(&scp->rw);
 	cm_SyncOpDone(scp, NULL, flags);
-	lock_ReleaseWrite(&scp->rw);
+        if (!scp_locked)
+            lock_ReleaseWrite(&scp->rw);
     }
 
     /* clean things out */
@@ -1394,18 +1401,14 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 memset(bufp->datap, 0, cm_data.buf_blockSize);
             bufp->dataVersion = scp->dataVersion;
         }
-        lock_ReleaseWrite(&scp->rw);
-        cm_ReleaseBIOD(&biod, 0, 0);
-        lock_ObtainWrite(&scp->rw);
+        cm_ReleaseBIOD(&biod, 0, 0, 1);
         return 0;
     } else if ((bufp->dataVersion == CM_BUF_VERSION_BAD || bufp->dataVersion < scp->bufDataVersionLow)
                 && (scp->mask & CM_SCACHEMASK_TRUNCPOS) &&
                 LargeIntegerGreaterThanOrEqualTo(bufp->offset, scp->truncPos)) {
         memset(bufp->datap, 0, cm_data.buf_blockSize);
         bufp->dataVersion = scp->dataVersion;
-        lock_ReleaseWrite(&scp->rw);
-        cm_ReleaseBIOD(&biod, 0, 0);
-        lock_ObtainWrite(&scp->rw);
+        cm_ReleaseBIOD(&biod, 0, 0, 1);
         return 0;
     }
 
@@ -1711,9 +1714,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     }
 
     /* release scatter/gather I/O structure (buffers, locks) */
-    lock_ReleaseWrite(&scp->rw);
-    cm_ReleaseBIOD(&biod, 0, code);
-    lock_ObtainWrite(&scp->rw);
+    cm_ReleaseBIOD(&biod, 0, code, 1);
 
     if (code == 0) 
         cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
