@@ -133,7 +133,7 @@ VnodeToDev(vnode_t avp)
 }
 
 void *
-osi_UFSOpen(afs_int32 ainode)
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct vnode *vp;
     struct vattr va;
@@ -158,8 +158,8 @@ osi_UFSOpen(afs_int32 ainode)
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 #ifdef AFS_CACHE_VNODE_PATH
-    if (ainode < 0) {
-	switch (ainode) {
+    if (ainode->ufs < 0) {
+	switch (ainode->ufs) {
 	case AFS_CACHE_CELLS_INODE:
 	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CellItems");
 	    break;
@@ -173,19 +173,19 @@ osi_UFSOpen(afs_int32 ainode)
 	    osi_Panic("Invalid negative inode");
 	}
     } else {
-	dummy = ainode / afs_numfilesperdir;
-	snprintf(fname, 1024, "%s/D%d/V%d", afs_cachebasedir, dummy, ainode);
+	dummy = ainode->ufs / afs_numfilesperdir;
+	snprintf(fname, 1024, "%s/D%d/V%d", afs_cachebasedir, dummy, ainode->ufs);
     }
 
     code = vnode_open(fname, O_RDWR, 0, 0, &vp, afs_osi_ctxtp);
 #else
 #ifndef AFS_DARWIN80_ENV
     if (afs_CacheFSType == AFS_APPL_HFS_CACHE)
-	code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, &ainode, &vp, &va, &dummy);	/* XXX hfs is broken */
+	code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, &ainode->ufs, &vp, &va, &dummy);	/* XXX hfs is broken */
     else if (afs_CacheFSType == AFS_APPL_UFS_CACHE)
 #endif
 	code =
-	    igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode,
+	    igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode->ufs,
 		      &vp, &va, &dummy);
 #ifndef AFS_DARWIN80_ENV
     else
@@ -200,7 +200,7 @@ osi_UFSOpen(afs_int32 ainode)
     afile->vnode = vp;
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
 #ifndef AFS_CACHE_VNODE_PATH
     afile->size = va.va_size;
 #else

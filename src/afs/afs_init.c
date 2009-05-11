@@ -225,23 +225,23 @@ afs_ComputeCacheParms(void)
 
 
 /*
- * LookupInodeByPath
+ * afs_LookupInodeByPath
  *
  * Look up inode given a file name.
  * Optionally return the vnode too.
  * If the vnode is not returned, we rele it.
  */
-static int
-LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
+int
+afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode, struct vnode **fvpp)
 {
     afs_int32 code;
 
-#ifdef AFS_LINUX22_ENV
+#if defined(AFS_LINUX22_ENV)
     struct dentry *dp;
     code = gop_lookupname(filename, AFS_UIOSYS, 0, &dp);
     if (code)
 	return code;
-    *inode = dp->d_inode->i_ino;
+    osi_get_fh(dp, inode);
     dput(dp);
 #else
     struct vnode *filevp;
@@ -254,7 +254,7 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
     else {
 	AFS_RELE(filevp);
     }
-#endif /* AFS_LINUX22_ENV */
+#endif
 
     return 0;
 }
@@ -262,25 +262,15 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
 int
 afs_InitCellInfo(char *afile)
 {
-    ino_t inode = 0;
-    int code;
-#if defined(LINUX_USE_FH)
-    struct fid fh;
-    int fh_type;
-    int max_len = sizeof(struct fid);
-    struct dentry *dp;
-#endif
-
+    afs_dcache_id_t inode;
+    int code = 0;
+    
 #ifdef AFS_CACHE_VNODE_PATH
-    return afs_cellname_init(AFS_CACHE_CELLS_INODE, code);
-#elif defined(LINUX_USE_FH)
-    code = gop_lookupname(afile, AFS_UIOSYS, 0, &dp);
-    fh_type = osi_get_fh(dp, &fh, &max_len);
-    return afs_cellname_init(&fh, fh_type, code);
+    inode.ufs = AFS_CACHE_CELLS_INODE;
 #else
-    code = LookupInodeByPath(afile, &inode, NULL);
-    return afs_cellname_init(inode, code);
+    code = afs_LookupInodeByPath(afile, &inode.ufs, NULL);
 #endif
+    return afs_cellname_init(&inode, code);
 }
 
 /*
@@ -302,12 +292,8 @@ afs_InitCellInfo(char *afile)
 int
 afs_InitVolumeInfo(char *afile)
 {
-    int code;
+    int code = 0;
     struct osi_file *tfile;
-#if defined(LINUX_USE_FH)
-    int max_len = sizeof(struct fid);
-    struct dentry *dp;
-#endif
 
     AFS_STATCNT(afs_InitVolumeInfo);
 #if defined(AFS_XBSD_ENV)
@@ -324,22 +310,15 @@ afs_InitVolumeInfo(char *afile)
      * are things which try to get the volumeInode, and since we keep
      * it in the cache...
      */
-    code = LookupInodeByPath(afile, &volumeInode, &volumeVnode);
+    code = afs_LookupInodeByPath(afile, &volumeInode.ufs, &volumeVnode);
 #elif defined(AFS_CACHE_VNODE_PATH)
-    volumeInode = AFS_CACHE_VOLUME_INODE;
-#elif defined(LINUX_USE_FH)
-    code = gop_lookupname(afile, AFS_UIOSYS, 0, &dp);
-    volumeinfo_fh_type = osi_get_fh(dp, &volumeinfo_fh, &max_len);
+    volumeInode.ufs = AFS_CACHE_VOLUME_INODE;
 #else
-    code = LookupInodeByPath(afile, &volumeInode, NULL);
+    code = afs_LookupInodeByPath(afile, &volumeInode.ufs, NULL);
 #endif
     if (code)
 	return code;
-#if defined(LINUX_USE_FH)
-    tfile = osi_UFSOpen_fh(&volumeinfo_fh, volumeinfo_fh_type);
-#else
-    tfile = afs_CFileOpen(volumeInode);
-#endif
+    tfile = afs_CFileOpen(&volumeInode);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;
@@ -450,10 +429,10 @@ afs_InitCacheInfo(register char *afile)
 #endif
     }
 #if defined(AFS_LINUX20_ENV)
-    cacheInode = filevp->i_ino;
+    cacheInode.ufs = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
 #elif defined(AFS_XBSD_ENV)
-    cacheInode = VTOI(filevp)->i_number;
+    cacheInode.ufs = VTOI(filevp)->i_number;
     cacheDev.mp = filevp->v_mount;
     cacheDev.held_vnode = filevp;
     vref(filevp);		/* Make sure mount point stays busy. XXX */
@@ -468,19 +447,15 @@ afs_InitCacheInfo(register char *afile)
 #ifndef AFS_DARWIN80_ENV
     afs_cacheVfsp = filevp->v_vfsp;
 #endif
-    cacheInode = afs_vnodeToInumber(filevp);
+    cacheInode.ufs = afs_vnodeToInumber(filevp);
 #else
-    cacheInode = AFS_CACHE_ITEMS_INODE;
+    cacheInode.ufs = AFS_CACHE_ITEMS_INODE;
 #endif
     cacheDev.dev = afs_vnodeToDev(filevp);
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
-#if defined(LINUX_USE_FH)
-    tfile = osi_UFSOpen_fh(&cacheitems_fh, cacheitems_fh_type);
-#else
-    tfile = osi_UFSOpen(cacheInode);
-#endif
+    tfile = osi_UFSOpen(&cacheInode);
     afs_osi_Stat(tfile, &tstat);
     cacheInfoModTime = tstat.mtime;
     code = afs_osi_Read(tfile, -1, &theader, sizeof(theader));
@@ -705,9 +680,8 @@ shutdown_cache(void)
 	    cacheDev.held_vnode = NULL;
 	}
 #endif
-#if !defined(LINUX_USE_FH)
-	cacheInode = volumeInode = (ino_t) 0;
-#endif
+	afs_reset_inode(&cacheInode);
+	afs_reset_inode(&volumeInode);
 	cacheInfoModTime = 0;
 
 	afs_fsfragsize = 1023;

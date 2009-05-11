@@ -52,15 +52,7 @@
  */
 
 struct afs_cacheOps {
-#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
-    void *(*open) (ino_t ainode);
-#else
-#if defined(LINUX_USE_FH)
-    void *(*open) (struct fid *fh, int fh_type);
-#else
-    void *(*open) (afs_int32 ainode);
-#endif
-#endif
+    void *(*open) (afs_dcache_id_t *ainode);
     int (*truncate) (struct osi_file * fp, afs_int32 len);
     int (*fread) (struct osi_file * fp, int offset, void *buf, afs_int32 len);
     int (*fwrite) (struct osi_file * fp, afs_int32 offset, void *buf,
@@ -88,11 +80,7 @@ struct afs_cacheOps {
 };
 
 /* Ideally we should have used consistent naming - like COP_OPEN, COP_TRUNCATE, etc. */
-#if defined(LINUX_USE_FH)
-#define	afs_CFileOpen(fh, fh_type)	      (void *)(*(afs_cacheType->open))(fh, fh_type)
-#else
 #define	afs_CFileOpen(inode)	      (void *)(*(afs_cacheType->open))(inode)
-#endif
 #define	afs_CFileTruncate(handle, size)	(*(afs_cacheType->truncate))((handle), size)
 #define	afs_CFileRead(file, offset, data, size) (*(afs_cacheType->fread))(file, offset, data, size)
 #define	afs_CFileWrite(file, offset, data, size) (*(afs_cacheType->fwrite))(file, offset, data, size)
@@ -105,5 +93,22 @@ struct afs_cacheOps {
           (*(afs_cacheType->FetchProc))(call, file, (afs_size_t)base, adc, avc, (afs_size_t *)toxfer, (afs_size_t *)xfered, length)
 #define	afs_CacheStoreProc(call, file, bytes, avc, wake, toxfer, xfered) \
           (*(afs_cacheType->StoreProc))(call, file, bytes, avc, wake, toxfer, xfered)
+
+/* These memcpys should get optimised to simple assignments when afs_dcache_id_t 
+ * is simple */
+static inline void afs_copy_inode(afs_dcache_id_t *dst, afs_dcache_id_t *src) {
+    memcpy(dst, src, sizeof(afs_dcache_id_t));
+}
+
+static inline void afs_reset_inode(afs_dcache_id_t *i) {
+    memset(i, 0, sizeof(afs_dcache_id_t));
+}
+
+/* We need to have something we can output as the 'inode' for fstrace calls. 
+ * This is a hack */
+static inline int afs_inode2trace(afs_dcache_id_t *i) {
+    return i->mem;
+}
+
 
 #endif /* AFS_CHUNKOPS */

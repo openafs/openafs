@@ -36,13 +36,9 @@ extern struct super_block *afs_cacheSBp;
 
 #if defined(AFS_LINUX26_ENV) 
 void *
-#if defined(LINUX_USE_FH)
-osi_UFSOpen_fh(struct fid *fh, int fh_type)
-#else
-osi_UFSOpen(afs_int32 ainode)
-#endif
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
-    register struct osi_file *afile = NULL;
+    struct osi_file *afile = NULL;
     extern int cacheDiskType;
     struct inode *tip = NULL;
     struct dentry *dp = NULL;
@@ -68,19 +64,19 @@ osi_UFSOpen(afs_int32 ainode)
     }
     memset(afile, 0, sizeof(struct osi_file));
 #if defined(HAVE_IGET)
-    tip = iget(afs_cacheSBp, (u_long) ainode);
+    tip = iget(afs_cacheSBp, ainode->ufs);
     if (!tip)
-	osi_Panic("Can't get inode %d\n", ainode);
+	osi_Panic("Can't get inode %d\n", ainode->ufs);
 
     dp = d_alloc_anon(tip);
 #else
-#if defined(LINUX_USE_FH)
-    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, fh, sizeof(struct fid), fh_type);
-#else
-    fid.i32.ino = ainode;
+# if defined(LINUX_USE_FH)
+    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh, sizeof(struct fid), ainode->ufs.fh_type);
+# else
+    fid.i32.ino = ainode->ufs;
     fid.i32.gen = 0;
     dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &fid, sizeof(fid), FILEID_INO32_GEN);
-#endif
+# endif
     if (!dp) 
            osi_Panic("Can't get dentry\n");          
     tip = dp->d_inode;
@@ -96,7 +92,7 @@ osi_UFSOpen(afs_int32 ainode)
 #if defined(LINUX_USE_FH)
 	osi_Panic("Can't open file\n");
 #else
-	osi_Panic("Can't open inode %d\n", ainode);
+	osi_Panic("Can't open inode %d\n", ainode->ufs);
 #endif
     afile->filp = filp;
     afile->size = i_size_read(FILE_INODE(filp));
@@ -106,13 +102,13 @@ osi_UFSOpen(afs_int32 ainode)
 #if defined(LINUX_USE_FH)
     afile->inum = tip->i_ino;	/* for hint validity checking */
 #else
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
 #endif
     return (void *)afile;
 }
 #else
 void *
-osi_UFSOpen(afs_int32 ainode)
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     register struct osi_file *afile = NULL;
     extern int cacheDiskType;
@@ -138,9 +134,9 @@ osi_UFSOpen(afs_int32 ainode)
     memset(afile, 0, sizeof(struct osi_file));
     filp = &afile->file;
     filp->f_dentry = &afile->dentry;
-    tip = iget(afs_cacheSBp, (u_long) ainode);
+    tip = iget(afs_cacheSBp, ainode->ufs);
     if (!tip)
-	osi_Panic("Can't get inode %d\n", ainode);
+	osi_Panic("Can't get inode %d\n", ainode->ufs);
     FILE_INODE(filp) = tip;
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
     filp->f_flags = O_RDWR;
@@ -153,30 +149,31 @@ osi_UFSOpen(afs_int32 ainode)
     if (filp->f_op && filp->f_op->open)
 	code = filp->f_op->open(tip, filp);
     if (code)
-	osi_Panic("Can't open inode %d\n", ainode);
+	osi_Panic("Can't open inode %d\n", ainode->ufs);
     afile->size = i_size_read(tip);
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 #endif
 
 #if defined(LINUX_USE_FH)
-int
-osi_get_fh(struct dentry *dp, struct fid *fh, int *max_len) {
-    int fh_type;
+void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
+    int max_len = sizeof(struct fid);
 
     if (dp->d_sb->s_export_op->encode_fh) {
-           fh_type = dp->d_sb->s_export_op->encode_fh(dp, (__u32 *)fh, max_len, 0);
+	ainode->fh_type = dp->d_sb->s_export_op->encode_fh(dp, (__u32 *)&ainode->fh, &max_len, 0);
     } else {
-           fh_type = FILEID_INO32_GEN;
-           fh->i32.ino = dp->d_inode->i_ino;
-           fh->i32.gen = dp->d_inode->i_generation;
+	ainode->fh_type = FILEID_INO32_GEN;
+ 	ainode->fh.i32.ino = dp->d_inode->i_ino;
+	ainode->fh.i32.gen = dp->d_inode->i_generation;
     }
-    dput(dp);
-    return(fh_type);
+}
+#else
+void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode) {
+    *ainode = dp->d_inode->i_ino;
 }
 #endif
 
@@ -409,13 +406,8 @@ int
 osi_InitCacheInfo(char *aname)
 {
     int code;
-#if defined(LINUX_USE_FH)
-    int max_len = sizeof(struct fid);
-#else
-    extern ino_t cacheInode;
-#endif
+    extern afs_dcache_id_t cacheInode;
     struct dentry *dp;
-    extern ino_t cacheInode;
     extern struct osi_dev cacheDev;
     extern afs_int32 afs_fsfragsize;
     extern struct super_block *afs_cacheSBp;
@@ -424,17 +416,7 @@ osi_InitCacheInfo(char *aname)
     if (code)
 	return ENOENT;
 
-#if defined(LINUX_USE_FH)
-    if (dp->d_sb->s_export_op->encode_fh) {
-	cacheitems_fh_type = dp->d_sb->s_export_op->encode_fh(dp, (__u32 *)&cacheitems_fh, &max_len, 0);
-    } else {
-        cacheitems_fh_type = FILEID_INO32_GEN;
-	cacheitems_fh.i32.ino = dp->d_inode->i_ino;
-        cacheitems_fh.i32.gen = dp->d_inode->i_generation;
-    }
-#else
-    cacheInode = dp->d_inode->i_ino;
-#endif
+    osi_get_fh(dp, &cacheInode.ufs);
     cacheDev.dev = dp->d_inode->i_sb->s_dev;
     afs_fsfragsize = dp->d_inode->i_sb->s_blocksize - 1;
     afs_cacheSBp = dp->d_inode->i_sb;

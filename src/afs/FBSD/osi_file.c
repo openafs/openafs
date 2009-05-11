@@ -26,7 +26,7 @@ extern struct mount *afs_cacheVfsp;
 
 
 void *
-osi_UFSOpen(afs_int32 ainode)
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct osi_file *afile;
     struct vnode *vp;
@@ -39,9 +39,9 @@ osi_UFSOpen(afs_int32 ainode)
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 #if defined(AFS_FBSD50_ENV)
-    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode, LK_EXCLUSIVE, &vp);
+    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode->ufs, LK_EXCLUSIVE, &vp);
 #else
-    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode, &vp);
+    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode->ufs, &vp);
 #endif
     AFS_GLOCK();
     if (code == 0 && vp->v_type == VNON)
@@ -61,7 +61,7 @@ osi_UFSOpen(afs_int32 ainode)
     afile->size = VTOI(vp)->i_size;
     afile->offset = 0;
     afile->proc = NULL;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 

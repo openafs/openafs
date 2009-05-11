@@ -1021,34 +1021,39 @@ struct afs_fheader {
     afs_int32 otherCSize;
 };
 
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_CACHE_VNODE_PATH) || defined(UKERNEL)
+typedef afs_int32 afs_ufs_dcache_id_t;
+#elif defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile
  * the size correctly.
  */
-#define afs_inode_t ino64_t
+typedef ino64_t afs_ufs_dcache_id_t;
+#elif defined(LINUX_USE_FH)
+typedef struct {
+     struct fid fh;
+     int fh_type;
+} afs_ufs_dcache_id_t;
+#elif defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX24_ENV)
+typedef long afs_ufs_dcache_id_t;
+#elif defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)
+typedef ino_t afs_ufs_dcache_id_t;
 #else
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX24_ENV)
-#define afs_inode_t long
-#else
-#if defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)
-#define afs_inode_t ino_t
-#else
-#define afs_inode_t afs_int32
-#endif
-#endif
+typedef afs_int32 afs_ufs_dcache_id_t;
 #endif
 
+typedef afs_int32 afs_mem_dcache_id_t;
+
+typedef union {
+    afs_ufs_dcache_id_t ufs;
+    afs_mem_dcache_id_t mem;
+} afs_dcache_id_t;
 
 #ifdef KERNEL
 /* it does not compile outside kernel */
 struct buffer {
   afs_int32 fid;              /* is adc->index, the cache file number */
-  afs_inode_t inode;          /* is adc->f.inode, the inode number of the cac\
+  afs_dcache_id_t inode;          /* is adc->f.inode, the inode number of the cac\
 				 he file */
-#if defined(LINUX_USE_FH)
-  struct fid fh;		/* Opaque file handle */
-  int fh_type;			/* Opaque file handle type */
-#endif
   afs_int32 page;
   afs_int32 accesstime;
   struct buffer *hashNext;
@@ -1068,13 +1073,9 @@ struct fcache {
     afs_int32 modTime;		/* last time this entry was modified */
     afs_hyper_t versionNo;	/* Associated data version number */
     afs_int32 chunk;		/* Relative chunk number */
-    afs_inode_t inode;		/* Unix inode for this chunk */
+    afs_dcache_id_t inode;		/* Unix inode for this chunk */
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
-#if defined(LINUX_USE_FH)
-    struct fid fh;		/* File handle */
-    int fh_type;		/* File handle type */
-#endif
 };
 #endif
 

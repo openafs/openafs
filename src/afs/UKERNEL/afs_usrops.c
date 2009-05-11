@@ -702,7 +702,7 @@ lookupname(char *fnamep, int segflg, int followlink,
  * open a file given its i-node number
  */
 void *
-osi_UFSOpen(afs_int32 ino)
+osi_UFSOpen(afs_dcache_id_t *ino)
 {
     int rc;
     struct osi_file *fp;
@@ -710,7 +710,7 @@ osi_UFSOpen(afs_int32 ino)
 
     AFS_ASSERT_GLOCK();
 
-    if (ino > n_osi_files) {
+    if (ino->ufs > n_osi_files) {
 	u.u_error = ENOENT;
 	return NULL;
     }
@@ -718,7 +718,7 @@ osi_UFSOpen(afs_int32 ino)
     AFS_GUNLOCK();
     fp = (struct osi_file *)afs_osi_Alloc(sizeof(struct osi_file));
     usr_assert(fp != NULL);
-    fp->fd = open(osi_file_table[ino - 1].name, O_RDWR | O_CREAT, 0);
+    fp->fd = open(osi_file_table[ino->ufs - 1].name, O_RDWR | O_CREAT, 0);
     if (fp->fd < 0) {
 	u.u_error = errno;
 	afs_osi_Free((char *)fp, sizeof(struct osi_file));
@@ -734,7 +734,7 @@ osi_UFSOpen(afs_int32 ino)
     }
     fp->size = st.st_size;
     fp->offset = 0;
-    fp->inum = ino;
+    fp->inum = ino->ufs;
     fp->vnode = (struct usr_vnode *)fp;
 
     AFS_GLOCK();

@@ -130,11 +130,7 @@ extern struct afs_q CellLRU;
 
 extern void afs_CellInit(void);
 extern void shutdown_cell(void);
-#if defined(LINUX_USE_FH)
-extern int afs_cellname_init(struct fid *fh, int fh_type, int lookupcode);
-#else
-extern int afs_cellname_init(ino_t inode, int lookupcode);
-#endif
+extern int afs_cellname_init(afs_dcache_id_t *inode, int lookupcode);
 extern int afs_cellname_write(void);
 extern afs_int32 afs_NewCell(char *acellName, afs_int32 * acellHosts,
 			     int aflags, char *linkedcname, u_short fsport,
@@ -237,12 +233,7 @@ extern int cacheDiskType;
 extern afs_uint32 afs_tpct1, afs_tpct2, splitdcache;
 extern unsigned char *afs_indexFlags;
 extern struct afs_cacheOps *afs_cacheType;
-#if defined(LINUX_USE_FH)
-extern struct fid cacheitems_fh;
-extern int cacheitems_fh_type;
-#else
-extern ino_t cacheInode;
-#endif
+extern afs_dcache_id_t cacheInode;
 extern struct osi_file *afs_cacheInodep;
 extern void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
 			   int aflags);
@@ -428,6 +419,8 @@ extern int afs_ResourceInit(int preallocs);
 extern void shutdown_cache(void);
 extern void shutdown_vnodeops(void);
 extern void shutdown_AFS(void);
+extern int afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode,
+				 struct vnode **fvpp);
 
 /* afs_lock.c */
 extern void Lock_Init(register struct afs_lock *lock);
@@ -475,21 +468,17 @@ extern void shutdown_mariner(void);
 /* afs_memcache.c */
 extern int afs_InitMemCache(int blkCount, int blkSize, int flags);
 extern int afs_MemCacheClose(struct osi_file *file);
-#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
-extern void *afs_MemCacheOpen(ino_t blkno);
-#else
-extern void *afs_MemCacheOpen(afs_int32 blkno);
-#endif
+extern void *afs_MemCacheOpen(afs_dcache_id_t *ainode);
 extern int afs_MemReadBlk(register struct osi_file *fP, int offset,
 			  void *dest, int size);
 extern int afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
 			   struct iovec *iov, int nio, int size);
-extern int afs_MemReadUIO(ino_t blkno, struct uio *uioP);
+extern int afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP);
 extern int afs_MemWriteBlk(register struct osi_file *fP, int offset,
 			   void *src, int size);
 extern int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 			    struct iovec *iov, int nio, int size);
-extern int afs_MemWriteUIO(ino_t blkno, struct uio *uioP);
+extern int afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP);
 extern int afs_MemCacheTruncate(register struct osi_file *fP,
 				int size);
 extern int afs_MemCacheStoreProc(register struct rx_call *acall,
@@ -666,15 +655,9 @@ extern int afs_syscall_iincdec(int, int, int, int);
 
 /* ARCH/osi_file.c */
 extern int afs_osicred_initialized;
-#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
-extern void *osi_UFSOpen(ino_t ainode);
-#else
-#if defined(LINUX_USE_FH)
-extern void *osi_UFSOpen_fh(struct fid *fh, int fh_type);
-extern int osi_get_fh(struct dentry *dp, struct fid *fh, int *max_len);
-#else
-extern void *osi_UFSOpen(afs_int32 ainode);
-#endif
+extern void *osi_UFSOpen(afs_dcache_id_t *ainode);
+#if defined(AFS_LINUX22_ENV)
+extern void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode);
 #endif
 extern int afs_osi_Stat(register struct osi_file *afile,
 			register struct osi_stat *astat);
@@ -1276,12 +1259,7 @@ extern afs_int32 afs_FVIndex;
 extern afs_int32 afs_volCounter;
 extern afs_rwlock_t afs_xvolume;
 extern struct volume *afs_volumes[NVOLS];
-#if defined(LINUX_USE_FH)
-extern struct fid volumeinfo_fh;
-extern int volumeinfo_fh_type;
-#else
-extern ino_t volumeInode;
-#endif
+extern afs_dcache_id_t volumeInode;
 extern struct volume *afs_FindVolume(struct VenusFid *afid,
 				     afs_int32 locktype);
 extern struct volume *afs_freeVolList;
