@@ -104,6 +104,12 @@ crset(cred_t * cr)
 #if defined(STRUCT_TASK_HAS_CRED)
     struct cred *new_creds;
 
+    /* If our current task doesn't have identical real and effective
+     * credentials, commit_cred won't let us change them, so we just
+     * bail here.
+     */
+    if (current->cred != current->real_cred)
+        return;
     new_creds = prepare_creds();
     new_creds->fsuid = cr->cr_uid;
     new_creds->uid = cr->cr_ruid;
