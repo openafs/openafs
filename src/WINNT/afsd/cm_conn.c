@@ -107,7 +107,7 @@ void cm_InitConn(void)
 	    HardDeadtimeout = (unsigned short) RDRtimeout;
             afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
         }
-	if (ConnDeadtimeout == 0) {
+	if (IdleDeadtimeout == 0) {
 	    IdleDeadtimeout = (unsigned short) RDRtimeout;
             afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
         }
@@ -604,7 +604,8 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     /* RX codes */
     else if (errorCode == RX_CALL_TIMEOUT) {
-        /* server took longer than hardDeadTime 
+        /* RPC took longer than hardDeadTime or the server
+         * reported idle for longer than idleDeadTime
          * don't mark server as down but don't retry
          * this is to prevent the SMB session from timing out
          * In addition, we log an event to the event log 
@@ -620,11 +621,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
             LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
 	  
-            osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime exceeded addr[%s]",
+            osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime or idleDeadTime exceeded addr[%s]",
                      osi_LogSaveString(afsd_logp,addr));
             reqp->tokenIdleErrorServp = serverp;
             reqp->idleError++;
-            retry = 1;
         }
     }
     else if (errorCode >= -64 && errorCode < 0) {
