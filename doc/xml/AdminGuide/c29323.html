@@ -1,0 +1,5238 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Administering the Protection Database</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="UP"
+TITLE="Managing Users and Groups"
+HREF="p24911.html"><LINK
+REL="PREVIOUS"
+TITLE="Administering User Accounts"
+HREF="c27596.html"><LINK
+REL="NEXT"
+TITLE="Managing Access Control Lists"
+HREF="c31274.html"></HEAD
+><BODY
+CLASS="chapter"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c27596.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="c31274.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="chapter"
+><H1
+><A
+NAME="HDRWQ531"
+></A
+>Chapter 14. Administering the Protection Database</H1
+><P
+>This chapter explains how to create and maintain user, machine, and group entries in the Protection Database.</P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ532"
+>Summary of Instructions</A
+></H1
+><P
+>This chapter explains how to perform the following tasks by using the indicated commands:</P
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN29329"
+></A
+><TABLE
+BORDER="0"
+FRAME="void"
+CLASS="CALSTABLE"
+><COL
+WIDTH="70*"><COL
+WIDTH="30*"><TBODY
+><TR
+><TD
+>Display Protection Database entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Map user, machine or group name to AFS ID</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display entry's owner or creator</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display number of users or machines belonging to group</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display number of groups user or machine belongs to</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display group-creation quota</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display entry's privacy flags</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display members of group, or groups that user or machine belongs to</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display groups that user or group owns</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display all entries in Protection Database</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listentries</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Create machine entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Create group entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Add users and machines to groups</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Remove users and machines from groups</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts removeuser</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Delete machine or group entry</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change a group's owner</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts chown</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Change an entry's name</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set group creation quota</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set entry's privacy flags</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Display AFS ID counters</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listmax</B
+></SPAN
+></TD
+></TR
+><TR
+><TD
+>Set AFS ID counters</TD
+><TD
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setmax</B
+></SPAN
+></TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ534"
+>About the Protection Database</A
+></H1
+><P
+>The Protection Database stores information about AFS users, client machines, and groups which the File Server process uses
+    to determine whether clients are authorized to access AFS data.</P
+><P
+>To obtain authenticated access to an AFS cell, a user must have an entry in the cell's Protection Database. The first time
+    that a user requests access to the data stored on a file server machine, the File Server on that machine contacts the Protection
+    Server to request the user's <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>current protection subgroup</I
+></SPAN
+> (<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>CPS</I
+></SPAN
+>), which lists all the
+    groups to which the user belongs. The File Server scans the access control list (ACL) of the directory that houses the data,
+    looking for groups on the CPS. It grants access in accordance with the permissions that the ACL extends to those groups or to
+    the user individually. (The File Server stores the CPS and uses it as long as the user has the same tokens. When a user's group
+    membership changes, he or she must reauthenticate for the File Server to recognize the change.)</P
+><P
+>Only administrators who belong to the cell's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can create user
+    entries (the group is itself defined in the Protection Database, as discussed in <A
+HREF="c29323.html#HDRWQ535"
+>The System
+    Groups</A
+>). Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can also create machine entries,
+    which can then be used to control access based on the machine from which the access request originates. After creating a machine
+    entry, add it to a Protection Database group and place the group on ACLs (a machine cannot appear on ACLs directly). A machine
+    entry can represent a single machine or multiple machines with consecutive IP addresses as specified by a wildcard notation. For
+    instructions, see <A
+HREF="c29323.html#HDRWQ542"
+>Creating User and Machine Entries</A
+>. Because all replicas of a volume share the
+    same ACL (the one on the volume's root directory mount point), machine entries enable you to replicate the volume that houses a
+    program's binary file while still complying with a machine-based license agreement as required by the program's manufacturer.
+    See <A
+HREF="c29323.html#HDRWQ542"
+>Creating User and Machine Entries</A
+>.</P
+><P
+>A group entry is a list of user entries, machine entries, or both (groups cannot belong to other groups). Putting a group
+    on an ACL is a convenient way to extend or deny access to a set of users without listing them on the ACL individually.
+    Similarly, adding users to a group automatically grants them access to all files and directories for which the associated ACL
+    lists that group. Both administrators and regular users can create groups.      </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ535"
+>The System Groups</A
+></H2
+><P
+>In addition to the groups that users and administrators can create, AFS defines the following three system groups. The
+      Protection Server creates them automatically when it builds the first version of a cell's Protection Database, and always
+      assigns them the same AFS GIDs. <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+></DT
+><DD
+><P
+>Represents all users able to access the cell's filespace from the local and foreign cells, authenticated or not.
+              Its AFS GID is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-101</B
+></SPAN
+>. The group has no stable membership listed in the Protection
+              Database. Accordingly, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command displays <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> in its <SAMP
+CLASS="computeroutput"
+>membership</SAMP
+> field, and the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+              membership</B
+></SPAN
+> command does not list any members for it.</P
+><P
+>Placing this group on an ACL is a convenient way to extend access to all users. The File Server automatically
+              places this group on the CPS of any user who requests access to data stored on a file server machine. (Every
+              unauthenticated user is assigned the identity <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>anonymous</B
+></SPAN
+> and this group is the only
+              entry on the CPS for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>anonymous</B
+></SPAN
+>.)</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:authuser</B
+></SPAN
+></DT
+><DD
+><P
+>Represents all users who are able to access the cell's filespace from the local and foreign cells and who have
+              successfully obtained an AFS token in the local cell (are authenticated). Its AFS GID is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-102</B
+></SPAN
+>. Like the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> group, it has no stable
+              membership listed in the Protection Database. Accordingly, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command
+              displays <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> in its <SAMP
+CLASS="computeroutput"
+>membership</SAMP
+> field, and the
+              <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command does not list any members for it.</P
+><P
+>Placing this group on an ACL is therefore a convenient way to extend access to all authenticated users. The File
+              Server automatically places this group on the CPS of any authenticated user who requests access to data stored on a
+              file server machine.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+></DT
+><DD
+><P
+>Represents the small number of cell administrators authorized to issue privileged <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> commands and the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs</B
+></SPAN
+> commands that set quota. The ACL on
+              the root directory of every newly created volume grants all permissions to the group. Even if you remove that entry,
+              the group implicitly retains the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>administer</B
+></SPAN
+>), and
+              by default also the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>l</B
+></SPAN
+> (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>lookup</B
+></SPAN
+>), permission on every
+              ACL. Its AFS GID is <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-204</B
+></SPAN
+>. For instructions on administering this group, see <A
+HREF="c32432.html#HDRWQ586"
+>Administering the system:administrators Group</A
+>.</P
+></DD
+></DL
+></DIV
+></P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ536"
+>Displaying Information from the Protection Database</A
+></H1
+><P
+>This section describes the commands you can use to display Protection Database entries and associated information. In
+    addition to name and AFS ID, the Protection Database stores the following information about each user, machine, or group entry.
+    <UL
+><LI
+><P
+>The entry's owner, which is the user or group of users who can administer the entry</P
+></LI
+><LI
+><P
+>The entry's creator, which serves mostly as an audit trail</P
+></LI
+><LI
+><P
+>A membership count, which indicates how many groups a user or machine belongs to, or how many members belong to a
+          group</P
+></LI
+><LI
+><P
+>A set of privacy flags, which control which users can administer or display information about the entry</P
+></LI
+><LI
+><P
+>A group-creation quota, which defines how many groups a user can create</P
+></LI
+><LI
+><P
+>A list of the groups to which a user or machine belongs, or of the users and machines that belong to a group</P
+></LI
+><LI
+><P
+>A list of the groups that a user or group owns</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ537"
+>To display a Protection Database entry</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group, which enables you to
+          display an entry regardless of the setting of its first (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>s</B
+></SPAN
+>) privacy flag. By default, any
+          user can display a Protection Database entry. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+>
+          command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the system:administrators
+          group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command to display one or more Protection Database entries.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>e</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>examine</B
+></SPAN
+> (and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>check</B
+></SPAN
+> is an alias).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user or group name or id</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the name or AFS ID of each entry to display. Precede any AFS GID with a hyphen (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+>) because it is a negative integer.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+><P
+>The output includes the following fields. Examples follow. <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>Name</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the entry's name. <UL
+><LI
+><P
+>For a user, this is the name used when authenticating with AFS and the name that appears on ACL
+                    entries.</P
+></LI
+><LI
+><P
+>For a machine, this is the IP address of a single machine, or a wildcard notation that represents a group
+                    of machines with consecutive IP addresses, as described in <A
+HREF="c29323.html#HDRWQ542"
+>Creating User and Machine
+                    Entries</A
+>.</P
+></LI
+><LI
+><P
+>For a group, this is the name that appears on ACL entries and in the list of groups output by the
+                    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command. The names of <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>regular</I
+></SPAN
+> groups have
+                    two parts, separated by a colon (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>:</B
+></SPAN
+>). The part before the colon indicates the
+                    group's owner, and the part after is the unique name. A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>prefix-less</I
+></SPAN
+> group's name does not
+                    have the owner prefix; only members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can
+                    create prefix-less groups. For further discussion of group names, see <A
+HREF="c29323.html#HDRWQ544"
+>Creating
+                    Groups</A
+>.</P
+></LI
+></UL
+></P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>id</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the entry's unique AFS identification number. For user and machine entries, the AFS user ID (AFS UID)
+              is a positive integer; for groups, the AFS group ID (AFS GID) is a negative integer. AFS UIDs and GIDs have the same
+              function as their counterparts in the UNIX file system, but are used by the AFS servers and the Cache Manager
+              only.</P
+><P
+>Normally, the Protection Server assigns an AFS UID or GID automatically when you create Protection Database
+              entries. Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can specify an ID if desired. For
+              further discussion, see <A
+HREF="c29323.html#HDRWQ542"
+>Creating User and Machine Entries</A
+> and <A
+HREF="c29323.html#HDRWQ544"
+>Creating Groups</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>owner</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Names the user or group who owns the entry and therefore can administer it (for more information about a group
+              owning another group, see <A
+HREF="c29323.html#HDRWQ545"
+>Using Groups Effectively</A
+>). Other users possibly have
+              administrative privileges, too, depending on the setting of the entry's privacy flags. For instructions on changing
+              the owner, see <A
+HREF="c29323.html#HDRWQ554"
+>Changing a Group's Owner</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>creator</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Names the user who created the entry, and serves as an audit trail. If the entry is deleted from the Protection
+              Database, the creator's group creation quota increases by one, even if the creator no longer owns the entry; see <A
+HREF="c29323.html#HDRWQ558"
+>Setting Group-Creation Quota</A
+>.</P
+><P
+>The value <SAMP
+CLASS="computeroutput"
+>anonymous</SAMP
+> in this field generally indicates that the entry was
+              created when the Protection Server was running in no-authentication mode, probably during initial configuration of the
+              cell's first file server machine. For a description of no-authentication mode, see <A
+HREF="c3025.html#HDRWQ123"
+>Managing
+              Authentication and Authorization Requirements</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>membership</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the number of groups to which the user or machine belongs, or the number of users or machines that
+              belong to the group.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>flags</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies who can display or change information in a Protection Database entry. The five flags, each
+              representing a different capability, always appear in the same order. <UL
+><LI
+><P
+>For user entries, the default value is <SAMP
+CLASS="computeroutput"
+>S----</SAMP
+>, which indicates that anyone
+                    can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command on the entry, but only the user and members
+                    of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can perform any other action.</P
+></LI
+><LI
+><P
+>For machine entries, the default value is <SAMP
+CLASS="computeroutput"
+>S----</SAMP
+>, which indicates that
+                    anyone can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command on the entry, but only members of the
+                    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can perform any other action.</P
+></LI
+><LI
+><P
+>For group entries, the default value is <SAMP
+CLASS="computeroutput"
+>S-M--</SAMP
+>, which indicates that
+                    anyone can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+                    membership</B
+></SPAN
+> commands on the entry, but only the group's owner and members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can perform any other action.</P
+></LI
+></UL
+></P
+><P
+>For a complete description of possible values for the flags, see <A
+HREF="c29323.html#HDRWQ559"
+>Setting the Privacy
+              Flags on Database Entries</A
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>group quota</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies how many more groups a user can create in the Protection Database. The value for a newly created user
+              entry is 20, but members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+> command at any time to change the value; see <A
+HREF="c29323.html#HDRWQ558"
+>Setting
+              Group-Creation Quota</A
+>.</P
+><P
+>Group creation quota has no meaning for a machine or group entry: the Protection Server recognizes the issuer of
+              the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+> command only as an authenticated user or as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>anonymous</B
+></SPAN
+> user, never as a machine or group. The default value for group entries is 0 (zero),
+              and there is no reason to change it.</P
+></DD
+></DL
+></DIV
+></P
+><P
+>The following examples show the output for a user called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat</B
+></SPAN
+>, a machine with IP address
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.108.133</B
+></SPAN
+> and a group called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:friends</B
+></SPAN
+>:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine pat</B
+></SPAN
+>
+   Name: pat, id: 1020, owner: system:administrators, creator: admin,
+     membership: 12, flags: S----, group quota: 15.
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts ex 192.12.108.133</B
+></SPAN
+>
+   Name: 192.12.108.133, id: 5151, owner: system:administrators, creator: admin,
+     membership: 1, flags: S----, group quota: 20.
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine terry:friends</B
+></SPAN
+>
+   Name: terry:friends, id: -567, owner: terry, creator: terry,
+     membership: 12, flags: SOm--, group quota: 0.
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ538"
+>To display group membership</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group, which enables you to
+          display an entry's group membership information regardless of the setting of its third (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+>) privacy flag. By default the owner and the user can display group membership for a user entry,
+          the owner for a machine entry, and anyone for a group entry. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the
+          system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+><A
+NAME="LIWQ539"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command to display the list of
+          groups to which a user or machine belongs, or the list of users and machines that belong to a group. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>membership</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user or group name or id</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the name or AFS UID of each user or machine for which to list the groups it belongs to, or the name
+                or AFS GID of each group for which to list the members.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+><P
+>For user and machine entries, the output begins with the following string, and then each group appears on its own
+      line:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Groups user_or_machine (id: AFS_UID) is a member of:
+</PRE
+><P
+>For group entries, the output begins with the following string, and then each member appears on its own line:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Members of group (id: AFS_GID) are:
+</PRE
+><P
+>For the system groups <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:authuser</B
+></SPAN
+>, the output includes the initial header string only, because these groups do not have a
+      stable membership listed in their Protection Database entry. See <A
+HREF="c29323.html#HDRWQ535"
+>The System Groups</A
+>.</P
+><P
+>The following examples show the output for a user called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+> and a group called
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:friends</B
+></SPAN
+>:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts mem terry</B
+></SPAN
+>
+   Groups terry (id: 5347) is a member of:
+     pat:friends
+     sales
+     acctg:general
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts mem terry:friends</B
+></SPAN
+>
+   Members of terry:friends (id: -567) are:
+     pat
+     smith
+     johnson
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ540"
+>To list the groups that a user or group owns</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group, which enables you to
+          display an entry's group ownership information regardless of the setting of its second (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>o</B
+></SPAN
+>) privacy flag. By default the owner can list the groups owned by group, and a user the groups he
+          or she owns. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in
+          <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> command to list the groups owned by each user or group.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listo</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listowned</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user or group name or id</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the name or AFS UID of each user, or the name or AFS GID or each group, for which to list the groups
+                owned.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+><P
+>The output begins with the following string, and then each group appears on its own line:</P
+><PRE
+CLASS="programlisting"
+>&#13;   Groups owned by user_or_group (id: AFS_ID) are:
+</PRE
+><P
+>The following examples show the output for a user called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+> and a group called
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:friends</B
+></SPAN
+>:</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listo terry</B
+></SPAN
+> 
+   Groups owned by terry (id: 5347) are:  
+     terry:friends   
+     terry:co-workers
+   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listo terry:friends</B
+></SPAN
+>
+   Groups owned by terry:friends (id: -567) are:
+     terry:pals
+     terry:buddies
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ541"
+>To display all Protection Database entries</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display
+          the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listentries</B
+></SPAN
+> command to display all Protection Database entries.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listentries</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-users</B
+></SPAN
+>] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-groups</B
+></SPAN
+>]
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>liste</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listentries</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-users</B
+></SPAN
+></DT
+><DD
+><P
+>Displays user and machine entries. The same output results if you omit both this flag and the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-groups</B
+></SPAN
+> flag.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-groups</B
+></SPAN
+></DT
+><DD
+><P
+>Displays group entries.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+><P
+>The output is a table that includes the following columns. Examples follow. <DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>Name</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the entry's name.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>ID</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the entry's AFS identification number. For user and machine entries, the AFS user ID (AFS UID) is a
+              positive integer; for groups, the AFS group ID (AFS GID) is a negative integer.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>Owner</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the AFS ID of the user or group who owns the entry and therefore can administer it.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><SAMP
+CLASS="computeroutput"
+>Creator</SAMP
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the AFS UID of the user who created the entry.</P
+></DD
+></DL
+></DIV
+></P
+><P
+>The following example is from the ABC Corporation cell. The issuer provides no options, so the output includes user and
+      machine entries.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listentries</B
+></SPAN
+>
+   Name                          ID  Owner Creator
+   anonymous                  32766   -204    -204 
+   admin                          1   -204   32766 
+   pat                         1000   -204       1 
+   terry                       1001   -204       1 
+   smith                       1003   -204       1 
+   jones                       1004   -204       1 
+   192.12.105.33               2000   -204       1 
+   192.12.105.46               2001   -204       1 
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ542"
+>Creating User and Machine Entries</A
+></H1
+><P
+>An entry in the Protection Database is one of the two required components of every AFS user account, along with an entry
+    in the Authentication Database. It is best to create a Protection Database user entry only in the context of creating a complete
+    user account, by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss add</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss bulk</B
+></SPAN
+> command as
+    described in <A
+HREF="c24913.html"
+>Creating and Deleting User Accounts with the uss Command Suite</A
+>, or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> command as described in <A
+HREF="c27596.html#HDRWQ502"
+>Creating AFS User Accounts</A
+>.</P
+><P
+>You can also use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> command to create Protection Database machine
+    entries, which can then be used to control access based on the machine from which the access request originates. After creating
+    a machine entry, add it to a Protection Database group and place the group on ACLs ( a machine cannot appear on ACLs directly).
+    Because all replicas of a volume share the same ACL (the one on the volume's root directory mount point), you can replicate the
+    volume that houses a program's binary file while still complying with a machine-based license agreement as required by the
+    program's manufacturer. If you do not place any other entries on the ACL, then only users working on the designated machines can
+    access the file.</P
+><P
+>Keep in mind that creating an ACL entry for a group with machine entries in it extends access to both authenticated and
+    unauthenticated users working on the machine. However, you can deny access to unauthenticated users by omitting an entry for the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> group from the ACLs of the parent directories in the file's pathname.
+    Conversely, if you want to enable unauthenticated users on the machine to access a file, then the ACL on every directory leading
+    to it must include an entry for either the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> group or a group to which the machine
+    entry belongs. For more information on the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> group, see <A
+HREF="c29323.html#HDRWQ535"
+>The System Groups</A
+>.</P
+><P
+>Because a machine entry can include unauthenticated users, it is best not to add both machine entries and user entries to
+    the same group. In general, it is easier to use and administer nonmixed groups. A machine entry can represent a single machine,
+    or multiple machines with consecutive IP addresses (that is, all machines on a network or subnet) specified by a wildcard
+    notation. See the instructions in <A
+HREF="c29323.html#HDRWQ543"
+>To create machine entries in the Protection Database</A
+>.</P
+><P
+>By default, the Protection Server assigns the next available AFS UID to a new user or machine entry. It is best to allow
+    this, especially for machine entries. For user entries, it makes sense to assign an AFS UID only if the user already has a UNIX
+    UID that the AFS UID needs to match (see <A
+HREF="c27596.html#HDRWQ496"
+>Assigning AFS and UNIX UIDs that Match</A
+>). When
+    automatically allocating an AFS UID, the Protection Server increments the <SAMP
+CLASS="computeroutput"
+>max user id</SAMP
+> counter
+    by one and assigns the result to the new entry. Use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listmax</B
+></SPAN
+> command to display the
+    counter, as described in <A
+HREF="c29323.html#HDRWQ560"
+>Displaying and Setting the AFS UID and GID Counters</A
+>. </P
+><P
+>Do not reuse the AFS UIDs of users who have left your cell permanently or machine entries you have removed, even though
+    doing so seems to avoid the apparent waste of IDs. When you remove a user or machine entry from the Protection Database, the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command displays the AFS UID associated with the former entry, rather than the name.
+    If you then assign the AFS UID to a new user or machine, the new user or machine automatically inherits permissions that were
+    granted to the previous possessor of the ID. To remove obsolete AFS UIDs from ACLs, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs
+    cleanacl</B
+></SPAN
+> command described in <A
+HREF="c31274.html#HDRWQ579"
+>Removing Obsolete AFS IDs from ACLs</A
+>.</P
+><P
+>In addition to the name and AFS UID, the Protection Server records the following values in the indicated fields of a new
+    user or machine's entry. For more information and instructions on displaying an entry, see <A
+HREF="c29323.html#HDRWQ537"
+>To display a
+    Protection Database entry</A
+>. <UL
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>owner</SAMP
+> field to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group, indicating that the group's members administer the entry.</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>creator</SAMP
+> field to the username of the user who issued the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> command (or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss add</B
+></SPAN
+> or <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss bulk</B
+></SPAN
+> command).</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>membership</SAMP
+> field to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero), because
+          the new entry does not yet belong to any groups.</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>flags</SAMP
+> field to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>S----</B
+></SPAN
+>; for explanation,
+          see <A
+HREF="c29323.html#HDRWQ559"
+>Setting the Privacy Flags on Database Entries</A
+>.</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>group quota</SAMP
+> field to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>20</B
+></SPAN
+>, meaning that
+          the new user can create 20 groups. This field has no meaning for machine entries. For further discussion, see <A
+HREF="c29323.html#HDRWQ558"
+>Setting Group-Creation Quota</A
+>.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ543"
+>To create machine entries in the Protection Database</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display
+          the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> command to create one or more machine entries.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser -name</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user name</VAR
+>&#62;+ 
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cu</B
+></SPAN
+></DT
+><DD
+><P
+>Is an alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>createuser</B
+></SPAN
+> (and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>createu</B
+></SPAN
+> is
+                the shortest acceptable abbreviation).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies an IP address in dotted-decimal notation for each machine entry. An entry can represent a single
+                machine or a set of several machines with consecutive IP addresses, using the wildcard notation described in the
+                following list. The letters <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>W</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>X</B
+></SPAN
+>, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Y</B
+></SPAN
+>, and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Z</B
+></SPAN
+> each represent an actual number value in the field:
+                <UL
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>W.X.Y.Z</B
+></SPAN
+> represents a single machine, for example <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.108.240</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>W.X.Y.0</B
+></SPAN
+> matches all machines whose IP addresses start with the first
+                      three numbers. For example, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.108.0</B
+></SPAN
+> matches both <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.108.119</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.108.120</B
+></SPAN
+>, but does not match
+                      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.105.144</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>W.X.0.0</B
+></SPAN
+> matches all machines whose IP addresses start with the first
+                      two numbers. For example, the address <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.0.0</B
+></SPAN
+> matches both <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.106.23</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.108.120</B
+></SPAN
+>, but does not match
+                      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.5.30.95</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>W.0.0.0</B
+></SPAN
+> matches all machines whose IP addresses start with the first
+                      number in the specified address. For example, the address <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.0.0.0</B
+></SPAN
+> matches
+                      both <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.5.30.95</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12.108.120</B
+></SPAN
+>, but
+                      does not match <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>138.255.63.52</B
+></SPAN
+>.</P
+></LI
+></UL
+></P
+><P
+>Do not define a machine entry with the name <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0.0.0.0</B
+></SPAN
+> to match every machine.
+                The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> group is equivalent.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+><P
+>The following example creates a machine entry that includes all of the machines in the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>192.12</B
+></SPAN
+> network.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts cu 192.12.0.0</B
+></SPAN
+>
+</PRE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ544"
+>Creating Groups</A
+></H1
+><P
+>Before you can add members to a group, you must create the group entry itself. The instructions in this section explain
+    how to create both regular and prefix-less groups: <UL
+><LI
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>regular group</I
+></SPAN
+>'s name is preceded by a prefix that indicates who owns the group, in the
+          following format:</P
+><P
+>owner_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>:</B
+></SPAN
+>group_name</P
+><P
+>Any user can create a regular group. Group names must always be typed in full, so a short group_name that indicates
+          the group's purpose or its members' common interest is practical. Groups with names like <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:1</B
+></SPAN
+> and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:2</B
+></SPAN
+> are less useful because their purpose is
+          unclear. For more details on the required format for regular group names, see the instructions in <A
+HREF="c29323.html#HDRWQ546"
+>To create groups</A
+>.</P
+></LI
+><LI
+><P
+>A <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>prefix-less group</I
+></SPAN
+>, as its name suggests, has only one field in its name, equivalent to a
+          regular group's group_name field.</P
+><P
+>Only members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can create prefix-less groups. For
+          a discussion of their purpose, see <A
+HREF="c29323.html#HDRWQ548"
+>Using Prefix-Less Groups</A
+>.</P
+></LI
+></UL
+></P
+><P
+>By default, the Protection Server assigns the next available AFS GID to a new group entry, and it is best to allow this.
+    When automatically allocating an AFS GID (which is a negative integer), the Protection Server decrements the <SAMP
+CLASS="computeroutput"
+>max
+    group id</SAMP
+> counter by one and assigns the result to the new group. Use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+    listmax</B
+></SPAN
+> command to display the counter, as described in <A
+HREF="c29323.html#HDRWQ560"
+>Displaying and Setting the AFS UID
+    and GID Counters</A
+>.</P
+><P
+>In addition to the name and AFS GID, the Protection Server records the following values in the indicated fields of a new
+    group's entry. See <A
+HREF="c29323.html#HDRWQ537"
+>To display a Protection Database entry</A
+>. <UL
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>owner</SAMP
+> field to the issuer of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          creategroup</B
+></SPAN
+> command, or to the user or group specified by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-owner</B
+></SPAN
+>
+          argument.</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>creator</SAMP
+> field to the username of the user who issued the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+> command.</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>membership</SAMP
+> field to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+> (zero), because
+          the group currently has no members.</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>flags</SAMP
+> field to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>S-M--</B
+></SPAN
+>; for explanation,
+          see <A
+HREF="c29323.html#HDRWQ559"
+>Setting the Privacy Flags on Database Entries</A
+>.</P
+></LI
+><LI
+><P
+>It sets the <SAMP
+CLASS="computeroutput"
+>group quota</SAMP
+> field to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>0</B
+></SPAN
+>, because this
+          field has no meaning for group entries.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ545"
+>Using Groups Effectively</A
+></H2
+><P
+>The main reason to create groups is to place them on ACLs, which enables you to control access for multiple users
+      without having to list them individually on the ACL. There are three basic ways to use groups, each suited to a different
+      purpose: <UL
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Private use</I
+></SPAN
+>: you create a group and place it on the ACL of directories you own, without
+            necessarily informing the group's members that they belong to it. Members notice only that they can or cannot access the
+            directory in a certain way. You retain sole administrative control over the group, since you are the owner.</P
+><P
+>The existence of the group and the identity of its members is not necessarily secret. Other users can use the
+            <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs listacl</B
+></SPAN
+> command and see the group's name on a directory's ACL, or use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command to list the groups they themselves belong to. You can set the group's
+            third privacy flag to limit who can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command to list the group's
+            membership, but a member of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group always can; see <A
+HREF="c29323.html#HDRWQ559"
+>Setting the Privacy Flags on Database Entries</A
+>.</P
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Shared use</I
+></SPAN
+>: you inform the group's members that they belong to the group, but you still
+            remain the sole administrator. For example, the manager of a work group can create a group of all the members in the
+            work group, and encourage them to use it on the ACLs of directories that house information they want to share with other
+            members of the group.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>If you place a group owned by someone else on your ACLs, the group's owner can change the group's membership
+              without informing you. Someone new can gain or lose access in a way you did not intend and without your
+              knowledge.</P
+></BLOCKQUOTE
+></DIV
+></LI
+><LI
+><P
+><SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>Group use</I
+></SPAN
+>: you create a group and then use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts chown</B
+></SPAN
+>
+            command to assign ownership to a group, either another group or the group itself (the latter type is a self-owned
+            group). You inform the members of the owning group that they all can administer the owned group.</P
+><P
+>The main advantage of designating a group as an owner is that it spreads responsibility for administering a group
+            among several people. A single person does not have to perform all administrative tasks, and if the original creator
+            leaves the group, ownership does not have to be transferred.</P
+><P
+>However, everyone in the owner group can make changes that affect others negatively, such as adding or removing
+            people from the group inappropriately or changing the group's ownership to themselves exclusively. These problems can be
+            particularly sensitive in a <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>self-owned</I
+></SPAN
+> group. Using an owner group works best if all the members
+            know and trust each other; it is probably wise to keep the number of people in an owner group small.</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ546"
+>To create groups</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>If creating a prefix-less group, verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the
+          system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+> command to create each group. All of the groups have the
+          same owner. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup  -name</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62;+ [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-owner</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>owner of the group</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cg</B
+></SPAN
+></DT
+><DD
+><P
+>Is an alias for <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>creategroup</B
+></SPAN
+> (and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>createg</B
+></SPAN
+> is
+                the shortest acceptable abbreviation).   </P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-name</B
+></SPAN
+></DT
+><DD
+><P
+>Names each group to create. The name can include up to 63 lowercase letters or numbers, but it is best not to
+                include punctuation characters, especially those that have a special meaning to the shell.</P
+><P
+>A prefix-less group name cannot include the colon (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>:</B
+></SPAN
+>), because it is used to
+                separate the two parts of a regular group name:</P
+><P
+>owner_name<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>:</B
+></SPAN
+>group_name</P
+><P
+>The Protection Server requires that the owner_name prefix of a regular group name accurately indicate the
+                group's owner. By default, you are recorded as the owner, and the owner_name must be your AFS username. You can
+                include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-owner</B
+></SPAN
+> argument to designate another AFS user, a regular group, or a
+                prefix-less group as the owner, providing the required value in the owner_name field: <UL
+><LI
+><P
+>If the owner is a user, it must be the AFS username.</P
+></LI
+><LI
+><P
+>If the owner is another regular group, it must match the owning group's owner_name field. For example,
+                      if the owner is the group <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:associates</B
+></SPAN
+>, the owner field must be <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry</B
+></SPAN
+>.</P
+></LI
+><LI
+><P
+>If the owner is a prefix-less group, it must be the owning group's name.</P
+></LI
+></UL
+></P
+><P
+>(For a discussion of why it is useful for a group to own another group, see <A
+HREF="c29323.html#HDRWQ545"
+>Using
+                Groups Effectively</A
+>.)</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-owner</B
+></SPAN
+></DT
+><DD
+><P
+>Is optional and designates an owner other than the issuer of the command. Specify either an AFS username or
+                the name of a regular or prefix-less group that already has at least one member. Do not include this argument if you
+                want to make the group self-owned as described in <A
+HREF="c29323.html#HDRWQ545"
+>Using Groups Effectively</A
+>. For
+                instructions, see <A
+HREF="c29323.html#HDRWQ547"
+>To create a self-owned group</A
+>.</P
+><P
+>Do not designate a machine as a group's owner. Because a machine cannot authenticate, there is no way for a
+                machine to administer the group.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ547"
+>To create a self-owned group</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+> command to create a group. Do not include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-owner</B
+></SPAN
+> argument, because you must own a group to reassign ownership. For complete instructions, see
+          <A
+HREF="c29323.html#HDRWQ546"
+>To create groups</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+>  &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62;
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser</B
+></SPAN
+> command to add one or more members to the group (a group must
+          already have at least one member before owning another group). For complete instructions, see <A
+HREF="c29323.html#HDRWQ549"
+>Adding and Removing Group Members</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser -user</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user name</VAR
+>&#62;+ <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62;+
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts chown</B
+></SPAN
+> command to assign group ownership to the group itself. For
+          complete instructions, see <A
+HREF="c29323.html#HDRWQ555"
+>To change a group's owner</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts chown</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>new owner</VAR
+>&#62;
+</PRE
+></P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ548"
+>Using Prefix-Less Groups</A
+></H2
+><P
+>Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can create prefix-less groups, which are
+      particularly suitable for <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>group use</I
+></SPAN
+>, which is described in <A
+HREF="c29323.html#HDRWQ545"
+>Using Groups
+      Effectively</A
+>.</P
+><P
+>Suppose, for example, that the manager of the ABC Corporation's Accounting Department, user <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>smith</B
+></SPAN
+>, creates a group that includes all of the corporation's accountants and places the group on the
+      ACLs of directories that house departmental records. Using a prefix-less group rather than a regular group is appropriate for
+      the following reasons: <UL
+><LI
+><P
+>The fact that <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>smith</B
+></SPAN
+> created and owns the group is irrelevant, and a regular group
+            must be called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>smith:acctg</B
+></SPAN
+>. A prefix-less name like <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>acctg</B
+></SPAN
+> is more appropriate.</P
+></LI
+><LI
+><P
+>If another user (say <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>jones</B
+></SPAN
+>) ever replaces <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>smith</B
+></SPAN
+>
+            as manager of the Accounting Department, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>jones</B
+></SPAN
+> needs to become the new owner of the
+            group. If the group is a regular one, its owner_name prefix automatically changes to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>jones</B
+></SPAN
+>, but the change in the owner_name prefix does not propagate to any regular groups owned by
+            the group. Someone must use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change each one's owner_name
+            prefix from <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>smith</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>jones</B
+></SPAN
+>.</P
+></LI
+></UL
+></P
+><P
+>A possible solution is to create an authentication account for a fictional user called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>acctg</B
+></SPAN
+> and make it the owner of regular groups which have <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>acctg</B
+></SPAN
+> as
+      their owner_name prefix. However, if the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>acctg</B
+></SPAN
+> account is also used for other purposes, then
+      the number of people who need to know user <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>acctg</B
+></SPAN
+>'s password is possibly larger than the
+      number of people who need to administer the groups it owns.</P
+><P
+>A prefix-less group called <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>acctg</B
+></SPAN
+> solves the problem of inappropriate owner names. The
+      groups that it owns have <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>acctg</B
+></SPAN
+> as their owner_name prefix, which more accurately reflects
+      their purpose than having the manager's name there. Prefix-less groups are also more accountable than dummy authentication
+      accounts. Belonging to the group enables individuals to exercise the permissions granted to the group on ACLs, but users
+      continue to perform tasks under their own names rather than under the dummy username. Even if the group owns itself, only a
+      finite number of people can administer the group entry.</P
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ549"
+>Adding and Removing Group Members</A
+></H1
+><P
+>Users and machines can be members of groups; groups cannot belong to other groups. Newly created groups have no members at
+    all. To add them, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser</B
+></SPAN
+> command; to remove them, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts removeuser</B
+></SPAN
+> command.       </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ550"
+>To add users and machines to groups</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group, which enables you to add
+          members to a group regardless of the setting of its fourth (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+>) privacy flag. By default
+          the group's owner also has the necessary privilege. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the
+          system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser</B
+></SPAN
+> command to add one or more members to one or more groups.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser -user</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user name</VAR
+>&#62;+ <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ad</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>adduser</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-user</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies each username or machine IP address to add as a member of each group named by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+> argument. A group cannot belong to another group.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>group name</B
+></SPAN
+></DT
+><DD
+><P
+>Names each group to which to add the new members.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ551"
+>To remove users and machines from groups</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group, which enables you to
+          remove members from a group regardless of the setting of its fifth (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>r</B
+></SPAN
+>) privacy flag. By
+          default the group's owner also has the necessary privilege. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the
+          system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts removeuser</B
+></SPAN
+> command to remove one or more members from one or more
+          groups. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts removeuser -user</B
+></SPAN
+>  &#60;<VAR
+CLASS="replaceable"
+>user name</VAR
+>&#62;+  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>rem</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>removeuser</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-user</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies each user or machine IP address to remove from each group named by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+> argument.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+></DT
+><DD
+><P
+>Names each group from which to remove members.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ552"
+>Deleting Protection Database Entries</A
+></H1
+><P
+>It is best to delete a Protection Database user entry only if you are removing the complete user account. Use either the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>uss delete</B
+></SPAN
+> command as described in <A
+HREF="c24913.html#HDRWQ486"
+>Deleting Individual Accounts with
+    the uss delete Command</A
+>, or the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+> command as described in <A
+HREF="c27596.html#HDRWQ524"
+>Removing a User Account</A
+>.</P
+><P
+>To remove machine and group entries, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+> command as described in this
+    section. The operation has the following results: <UL
+><LI
+><P
+>When you delete a machine entry, its name (IP address wildcard) is removed from groups.</P
+></LI
+><LI
+><P
+>When you delete a group entry, its AFS GID appears on ACLs instead of the name. The <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>group-creation
+          quota</I
+></SPAN
+> of the user who created the group increases by one, even if the user no longer owns the group.</P
+><P
+>To remove obsolete AFS IDs from ACLs, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>fs cleanacl</B
+></SPAN
+> command as described in
+          <A
+HREF="c31274.html#HDRWQ579"
+>Removing Obsolete AFS IDs from ACLs</A
+>.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ553"
+>To delete Protection Database entries</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group or own the group you are
+          deleting. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in
+          <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+> command to delete one or more entries from the Protection
+          Database. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts delete</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;+
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>del</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>delete</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user or group name or id</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the IP address or AFS UID of each machine or the name or AFS GID or each group to remove.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ554"
+>Changing a Group's Owner</A
+></H1
+><P
+>For user and machine entries, the Protection Server automatically assigns ownership to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group at creation time, and this cannot be changed. For group entries, you can
+    change ownership. This transfers administrative responsibility for it to another user or group (for information on group
+    ownership of other groups, see <A
+HREF="c29323.html#HDRWQ545"
+>Using Groups Effectively</A
+>).</P
+><P
+>When you create a regular group, its owner_name prefix must accurately reflect its owner, as described in <A
+HREF="c29323.html#HDRWQ546"
+>To create groups</A
+>: <UL
+><LI
+><P
+>If the owner is a user, owner_name is the username.</P
+></LI
+><LI
+><P
+>If the owner is a regular group, owner_name is the owning group's owner_name prefix.</P
+></LI
+><LI
+><P
+>If the owner is a prefix-less group, owner_name is the owner group's name.</P
+></LI
+></UL
+></P
+><P
+>When you change a regular group's owner, the Protection Server automatically changes its owner_name prefix appropriately.
+    For example, if the user <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat</B
+></SPAN
+> becomes the new owner of the group <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:friends</B
+></SPAN
+>, its name automatically changes to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat:friends</B
+></SPAN
+>, both in
+    the Protection Database and on ACLs.</P
+><P
+>However, the Protection Server does not automatically change the owner_name prefix of any regular groups that the group
+    owns. To continue with the previous example, suppose that the group <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:friends</B
+></SPAN
+> owns the
+    group <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:pals</B
+></SPAN
+>. When <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat</B
+></SPAN
+> becomes the new owner of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:friends</B
+></SPAN
+>, the name <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:pals</B
+></SPAN
+> does not change. To change the
+    owner_name prefix of a regular group that is owned by another group (in the example, to change the group's name to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat:pals</B
+></SPAN
+>), use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command as described in <A
+HREF="c29323.html#HDRWQ556"
+>Changing a Protection Database Entry's Name</A
+>.   </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ555"
+>To change a group's owner</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group or own the group for
+          which you are changing the owner. If necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which
+          is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display the members of the system:administrators group</A
+>.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> If you are changing the group's owner to another group (or to itself)
+          and want to retain administrative privilege on the owned group, verify that you belong to the new owner group. If
+          necessary, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c29323.html#HDRWQ538"
+>To display group membership</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;
+</PRE
+></P
+><P
+>Use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser</B
+></SPAN
+> command to add yourself if necessary, as fully described in
+          <A
+HREF="c29323.html#HDRWQ550"
+>To add users and machines to groups</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62;
+</PRE
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts chown</B
+></SPAN
+> command to change the group's owner. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts chown</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>group name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>new owner</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>cho</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>chown</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>group name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the current name of the group.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>new owner</B
+></SPAN
+></DT
+><DD
+><P
+>Names the user or group to become the group's owner.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>(Optional)</B
+></SPAN
+> Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> command to
+          display any groups that the group owns. As discussed in the introduction to this section, the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          chown</B
+></SPAN
+> command does not automatically change the owner_name prefix of any regular groups that a group owns.
+          <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;
+</PRE
+></P
+><P
+>If you want to change their names to match the new owning group, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+>
+          command on each one, as described in <A
+HREF="c29323.html#HDRWQ557"
+>To change the name of a machine or group
+          entry</A
+>.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>old name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>new name</VAR
+>&#62;
+</PRE
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ556"
+>Changing a Protection Database Entry's Name</A
+></H1
+><P
+>To change the name of a Protection Database entry, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command. It is best
+    to change a user entry's name only when renaming the entire user account, since so many components of the account
+    (Authentication Database entry, volume name, home directory mount point, and so on) share the name. For instructions, see <A
+HREF="c27596.html#HDRWQ518"
+>Changing Usernames</A
+>. A machine entry's name maps to the actual IP address of one or more machine, so
+    changing the entry's name is appropriate only if the IP addresses have changed.</P
+><P
+>It is likely, then, that most often you need to change group names. The following types of name changes are possible:
+    <UL
+><LI
+><P
+>Changing a regular group's name to another regular group name. The most common reason for this type of change is
+          that you have used the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts chown</B
+></SPAN
+> command to change the owner of the group. That operation
+          does not change the owner_name prefix of a regular group owned by the group whose name has been changed. Therefore, you
+          must use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change it appropriately. For example, when user
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat</B
+></SPAN
+> becomes the owner of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:friends</B
+></SPAN
+> group, its
+          name changes automatically to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat:friends</B
+></SPAN
+>, but the name of a group it owns, <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:pals</B
+></SPAN
+>, does not change. Use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to rename
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:pals</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pat:pals</B
+></SPAN
+>. The Protection Server does not
+          accept changes to the owner_name prefix that do not reflect the true ownership (changing <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>terry:pals</B
+></SPAN
+> to <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>smith:pals</B
+></SPAN
+> is not possible).</P
+><P
+>You can also use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change the group_name portion of a
+          regular group name, with or without changing the owner_name prefix.</P
+><P
+>Both the group's owner and the members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can
+          change its name to another regular group name.</P
+></LI
+><LI
+><P
+>Changing a regular group's name to a prefix-less name. If you change a group's name in this way, you must also use
+          the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change the name of any regular group that the group owns. Only
+          members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can make this type of name change.</P
+></LI
+><LI
+><P
+>Changing a prefix-less name to another prefix-less name. As with other name changes, the owner_name prefix of any
+          regular groups that the prefix-less group owns does not change automatically. You must issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+          rename</B
+></SPAN
+> command on them to maintain consistency.</P
+><P
+>Both the group's owner and the members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can
+          change its name to another prefix-less name.</P
+></LI
+><LI
+><P
+>Changing a prefix-less name to a regular name. The owner_name prefix on the new name must accurately reflect the
+          group's ownership. As with other name changes, the owner_name prefix of any regular groups that the prefix-less group owns
+          does not change automatically. You must issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command on them to maintain
+          consistency.</P
+><P
+>Only members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can make this type of name
+          change.</P
+></LI
+></UL
+></P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ557"
+>To change the name of a machine or group entry</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display
+          the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> command to change the entry's name. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts rename</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>old name</VAR
+>&#62; &#60;<VAR
+CLASS="replaceable"
+>new name</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>ren</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>rename</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>old name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the entry's current name.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>new name</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the new name. If the new name is for a regular group, the owner_name prefix must correctly indicate
+                the owner.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ558"
+>Setting Group-Creation Quota</A
+></H1
+><P
+>To prevent abuse of system resources, the Protection Server imposes a group-creation quota that limits how many more
+    groups a user can create. When a new user entry is created, the quota is set to 20, but members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+> command to
+    increase or decrease it at any time.</P
+><P
+>It is pointless to change group-creation quota for machine or group entries. It is not possible to authenticate as a group
+    or machine and then create groups.</P
+><P
+>To display the group-creation quota, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command to display a user
+    entry's <SAMP
+CLASS="computeroutput"
+>group quota field</SAMP
+>, as described in <A
+HREF="c29323.html#HDRWQ537"
+>To display a Protection
+    Database entry</A
+>.  </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_622"
+>To set group-creation quota</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display
+          the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+> command to specify how many more groups each of one or more
+          users can create. <PRE
+CLASS="programlisting"
+>&#13;  % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields -nameorid</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;+  \
+                  <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-groupquota</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>set limit on group creation</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setf</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setfields</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-nameorid</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the name or AFS UID of each user for which to set group-creation quota.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-groupquota</B
+></SPAN
+></DT
+><DD
+><P
+>Defines how many groups each user can create in addition to existing groups (in other words, groups that
+                already exist do not count against the quota). The value you specify overwrites the current value, rather than
+                incrementing it.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ559"
+>Setting the Privacy Flags on Database Entries</A
+></H1
+><P
+>Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can always display and administer Protection
+    Database entries in any way, and regular users can display and administer their own entries and any group entries they own. The
+    <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>privacy flags</I
+></SPAN
+> on a Protection Database entry determine who else can display certain information from the
+    entry, and who can add and remove members in a group.</P
+><P
+>To display the flags, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command as described in <A
+HREF="c29323.html#HDRWQ537"
+>To display a Protection Database entry</A
+>. The flags appear in the output's
+    <SAMP
+CLASS="computeroutput"
+>flags</SAMP
+> field. To set the flags, include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-access</B
+></SPAN
+> argument to
+    the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+> command.</P
+><P
+>The five flags always appear, and always must be set, in the following order:</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>s</B
+></SPAN
+></DT
+><DD
+><P
+>Controls who can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts examine</B
+></SPAN
+> command to display the entry.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>o</B
+></SPAN
+></DT
+><DD
+><P
+>Controls who can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listowned</B
+></SPAN
+> command to display the groups that a user
+          or group owns.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+></DT
+><DD
+><P
+>Controls who can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command to display the groups a user or
+          machine belongs to, or which users or machines belong to a group.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+></DT
+><DD
+><P
+>Controls who can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts adduser</B
+></SPAN
+> command to add a user or machine to a group.
+          It is meaningful only for groups, but a value must always be set for it even on user and machine entries.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>r</B
+></SPAN
+></DT
+><DD
+><P
+>Controls who can issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts removeuser</B
+></SPAN
+> command to remove a user or machine from
+          a group. It is meaningful only for groups, but a value must always be set for it even on user and machine entries.</P
+></DD
+></DL
+></DIV
+><P
+>Each flag can take three possible types of values to enable a different set of users to issue the corresponding command:
+    <UL
+><LI
+><P
+>A hyphen (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+>) designates the members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group and the entry's owner. For user entries, it designates the user in
+          addition.</P
+></LI
+><LI
+><P
+>The lowercase version of the letter applies meaningfully to groups only, and designates members of the group in
+          addition to the individuals designated by the hyphen.</P
+></LI
+><LI
+><P
+>The uppercase version of the letter designates everyone.</P
+></LI
+></UL
+></P
+><P
+>For example, the flags <SAMP
+CLASS="computeroutput"
+>SOmar</SAMP
+> on a group entry indicate that anyone can examine the
+    group's entry and display the groups that it owns, and that only the group's members can display, add, or remove its
+    members.</P
+><P
+>The default privacy flags for user and machine entries are <SAMP
+CLASS="computeroutput"
+>S----</SAMP
+>, meaning that anyone can
+    display the entry. The ability to perform any other functions is restricted to members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group and the entry's owner (as well as the user for a user entry).</P
+><P
+>The default privacy flags for group entries are <SAMP
+CLASS="computeroutput"
+>S-M--</SAMP
+>, meaning that all users can display
+    the entry and the members of the group, but only the entry owner and members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can perform other functions.  </P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_624"
+>To set a Protection Database entry's privacy flags</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display
+          the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+> command to set the privacy flags. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setfields</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user or group name or id</VAR
+>&#62;+ <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-access</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>set privacy flags</VAR
+>&#62;
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setf</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setfields</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>user or group name or id</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the name or AFS UID of each user, the IP address or AFS UID of each machine, or the name or AFS GID
+                of each group for which to set the privacy flags.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-access</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the set of privacy flags to associate with each entry. Provide a value for each of the five flags,
+                observing the following constraints: <UL
+><LI
+><P
+>Provide a value for all five flags, even though the fourth and fifth flags are not meaningful for user
+                      and machine entries.</P
+></LI
+><LI
+><P
+>For self-owned groups, the hyphen is equivalent to a lowercase letter, because all the members of a
+                      self-owned group own it.</P
+></LI
+><LI
+><P
+>Set the first flag to lowercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>s</B
+></SPAN
+> or uppercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>S</B
+></SPAN
+> only. For user and machine entries, the Protection Server interprets the lowercase
+                      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>s</B
+></SPAN
+> as equivalent to the hyphen.</P
+></LI
+><LI
+><P
+>Set the second flag to the hyphen (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+>) or uppercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>O</B
+></SPAN
+> only. For groups, the Protection Server interprets the hyphen as equivalent to
+                      lowercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>o</B
+></SPAN
+> (that is, members of a group can always list the groups that it
+                      owns).</P
+></LI
+><LI
+><P
+>Set the third flag to the hyphen (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+>), lowercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+>, or uppercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>M</B
+></SPAN
+>. For user and machine entries, the
+                      lowercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>m</B
+></SPAN
+> does not have a meaningful interpretation, because they have no
+                      members.</P
+></LI
+><LI
+><P
+>Set the fourth flag to the hyphen (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+>), lowercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>a</B
+></SPAN
+>, or uppercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>A</B
+></SPAN
+>. Although this flag does not have a
+                      meaningful interpretation for user and machine entries (because they have no members), it must be set,
+                      preferably to the hyphen.</P
+></LI
+><LI
+><P
+>Set the fifth flag to the hyphen (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+>) or lowercase <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>r</B
+></SPAN
+> only. Although this flag does not have a meaningful interpretation for user and
+                      machine entries (because they have no members), it must be set, preferably to the hyphen.</P
+></LI
+></UL
+></P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ560"
+>Displaying and Setting the AFS UID and GID Counters</A
+></H1
+><P
+>When you use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts createuser</B
+></SPAN
+> command to create a user or machine entry in the
+    Protection Database, the Protection Server by default automatically allocates an AFS user ID (AFS UID) for it; similarly, it
+    allocates an AFS group ID (AFS GID) for each group entry you create with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+>
+    command. It tracks the next available AFS UID (which is a positive integer) and AFS GID (which is a negative integer) with the
+    <SAMP
+CLASS="computeroutput"
+>max user id</SAMP
+> and <SAMP
+CLASS="computeroutput"
+>max group id</SAMP
+> counters, respectively.</P
+><P
+>Members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group can include the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> argument to either <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts</B
+></SPAN
+> creation command to assign a specific ID to a
+    new user, machine, or group. It often makes sense to assign AFS UIDs explicitly when creating AFS accounts for users with
+    existing UNIX accounts, as discussed in <A
+HREF="c24913.html#HDRWQ456"
+>Assigning AFS and UNIX UIDs that Match</A
+>. It is also
+    useful if you want to establish ranges of IDs that correspond to departmental affiliations (for example, assigning AFS UIDs from
+    300 to 399 to members of one department, AFS UIDs from 400 to 499 to another department, and so on).</P
+><P
+>To display the current value of the counters, use the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listmax</B
+></SPAN
+> command. When you next
+    create a user or machine entry and do not specify its AFS UID, the Protection Server increments the <SAMP
+CLASS="computeroutput"
+>max user
+    id</SAMP
+> counter by one and assigns that number to the new entry. When you create a new group and do not specify its
+    AFS GID, the Protection Server decrements the <SAMP
+CLASS="computeroutput"
+>max group id</SAMP
+> counter by one (makes it more
+    negative), and assigns that number to the new group.</P
+><P
+>You can change the value of either counter, or both, in one of two ways:</P
+><UL
+><LI
+><P
+>Directly, using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setmax</B
+></SPAN
+> command.</P
+></LI
+><LI
+><P
+>Indirectly, by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> argument to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts
+        createuser</B
+></SPAN
+> command to assign an AFS UID that is larger than the <SAMP
+CLASS="computeroutput"
+>max user id</SAMP
+>
+        counter, or by using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts creategroup</B
+></SPAN
+>
+        command to assign an AFS GID that is less (more negative) than the max group id counter. In either case, the Protection
+        Server changes the counter to the value of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> argument. The Protection Server does not
+        use the IDs between the previous value of the counter and the new one when allocating IDs automatically, unless you use the
+        <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setmax</B
+></SPAN
+> command to move the counter back to its old value.</P
+><P
+>If the value you specify with the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-id</B
+></SPAN
+> argument is less than the <SAMP
+CLASS="computeroutput"
+>max
+        user id</SAMP
+> counter or greater (less negative) than the <SAMP
+CLASS="computeroutput"
+>max group id</SAMP
+> counter,
+        then the counter does not change.</P
+></LI
+></UL
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ561"
+>To display the AFS ID counters</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listmax</B
+></SPAN
+> command to display the counters. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listmax</B
+></SPAN
+>
+</PRE
+></P
+><P
+>where <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listm</B
+></SPAN
+> is an acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>listmax</B
+></SPAN
+>.</P
+></LI
+></OL
+><P
+>The following example illustrates the output's format. In this case, the next automatically assigned AFS UID is 5439 and
+      AFS GID is -469.</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts listmax</B
+></SPAN
+>
+   Max user id is 5438 and max group id is -468.
+</PRE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_627"
+>To set the AFS ID counters</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Verify that you belong to the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:administrators</B
+></SPAN
+> group. If necessary, issue the
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership</B
+></SPAN
+> command, which is fully described in <A
+HREF="c32432.html#HDRWQ587"
+>To display
+          the members of the system:administrators group</A
+>. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts membership system:administrators</B
+></SPAN
+>
+</PRE
+></P
+></LI
+><LI
+><P
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setmax</B
+></SPAN
+> command to set the <SAMP
+CLASS="computeroutput"
+>max user
+          id</SAMP
+> counter, the <SAMP
+CLASS="computeroutput"
+>max group id</SAMP
+> counter, or both. <PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>pts setmax</B
+></SPAN
+> [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>group max</VAR
+>&#62;] [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-user</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>user max</VAR
+>&#62;]
+</PRE
+></P
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setm</B
+></SPAN
+></DT
+><DD
+><P
+>Is the shortest acceptable abbreviation of <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>setmax</B
+></SPAN
+>.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-group</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies an integer one greater (less negative) than the AFS GID that the Protection Server is to assign to
+                the next group entry. Because the value is a negative integer, precede it with a hyphen (<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-</B
+></SPAN
+>).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-user</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies an integer one less than the AFS UID that the Protection Server is to assign to the next user or
+                machine entry.</P
+></DD
+></DL
+></DIV
+></LI
+></OL
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c27596.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="c31274.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Administering User Accounts</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="p24911.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Managing Access Control Lists</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

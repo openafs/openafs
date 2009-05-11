@@ -1,0 +1,934 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ581">
+  <title>Managing Administrative Privilege</title>
+
+  <para>This chapter explains how to enable system administrators and operators to perform privileged AFS operations.</para>
+
+  <sect1 id="HDRWQ582">
+    <title>Summary of Instructions</title>
+
+    <para>This chapter explains how to perform the following tasks by using the indicated commands:</para>
+
+    <informaltable frame="none">
+      <tgroup cols="2">
+        <colspec colwidth="70*" />
+
+        <colspec colwidth="30*" />
+
+        <tbody>
+          <row>
+            <entry>Display members of <emphasis role="bold">system:administrators</emphasis> group</entry>
+
+            <entry><emphasis role="bold">pts membership</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Add user to <emphasis role="bold">system:administrators</emphasis> group</entry>
+
+            <entry><emphasis role="bold">pts adduser</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Remove user from <emphasis role="bold">system:administrators</emphasis> group</entry>
+
+            <entry><emphasis role="bold">pts removeuser</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display <computeroutput>ADMIN</computeroutput> flag in Authentication Database entry</entry>
+
+            <entry><emphasis role="bold">kas examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Set or remove <computeroutput>ADMIN</computeroutput> flag on Authentication Database entry</entry>
+
+            <entry><emphasis role="bold">kas setfields</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display users in <emphasis role="bold">UserList</emphasis> file</entry>
+
+            <entry><emphasis role="bold">bos listusers</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Add user to <emphasis role="bold">UserList</emphasis> file</entry>
+
+            <entry><emphasis role="bold">bos adduser</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Remove user from <emphasis role="bold">UserList</emphasis> file</entry>
+
+            <entry><emphasis role="bold">bos removeuser</emphasis></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+
+  <sect1 id="HDRWQ584">
+    <title>An Overview of Administrative Privilege</title>
+
+    <indexterm>
+      <primary>administrative privilege</primary>
+
+      <secondary>three types</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privilege</primary>
+
+      <secondary></secondary>
+
+      <see>administrative privilege</see>
+    </indexterm>
+
+    <para>A fully privileged AFS system administrator has the following characteristics: <itemizedlist>
+        <listitem>
+          <para>Membership in the cell's <emphasis role="bold">system:administrators</emphasis> group. See <link
+          linkend="HDRWQ586">Administering the system:administrators Group</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <computeroutput>ADMIN</computeroutput> flag on his or her entry in the cell's Authentication Database. See <link
+          linkend="HDRWQ589">Granting Privilege for kas Commands: the ADMIN Flag</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Inclusion in the file <emphasis role="bold">/usr/afs/etc/UserList</emphasis> on the local disk of each AFS server
+          machine in the cell. See <link linkend="HDRWQ592">Administering the UserList File</link>.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>This section describes the three privileges and explains why more than one privilege is necessary.</para>
+
+    <note>
+      <para>Never grant any administrative privilege to the user <emphasis role="bold">anonymous</emphasis>, even when a server
+      outage makes it impossible to mutually authenticate. If you grant such privilege, then any user who can access a machine in
+      your cell can issue privileged commands. The alternative solution is to put the affected server machine into no-authentication
+      mode and use the <emphasis role="bold">-noauth</emphasis> flag available on many commands to prevent mutual authentication
+      attempts. For further discussion, see <link linkend="HDRWQ123">Managing Authentication and Authorization
+      Requirements</link>.</para>
+    </note>
+
+    <sect2 id="HDRWQ585">
+      <title>The Reason for Separate Privileges</title>
+
+      <para>Often, a cell's administrators require full administrative privileges to perform their jobs effectively. However,
+      separating the three types of privilege makes it possible to grant only the minimum set of privileges that a given
+      administrator needs to complete his or her work.</para>
+
+      <para>The <emphasis role="bold">system:administrators</emphasis> group privilege is perhaps the most basic, and most
+      frequently used during normal operation (when all the servers are running normally). When the Protection Database is
+      unavailable due to machine or server outage, it is not possible to issue commands that require this type of privilege.</para>
+
+      <para>The <computeroutput>ADMIN</computeroutput> flag privilege is separate because of the extreme sensitivity of the
+      information in the Authentication Database, especially the server encryption key in the <emphasis role="bold">afs</emphasis>
+      entry. When the Authentication Database is unavailable due to machine or server outage, it is not possible to issue commands
+      that require this type of privilege.</para>
+
+      <para>The ability to issue privileged <emphasis role="bold">bos</emphasis> and <emphasis role="bold">vos</emphasis> command is
+      recorded in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file on the local disk of each AFS server machine
+      rather than in a database, so that in case of serious server or network problems administrators can still log onto server
+      machines and use those commands while solving the problem.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ586">
+    <title>Administering the system:administrators Group</title>
+
+    <indexterm>
+      <primary>pts commands</primary>
+
+      <secondary>granting privilege for</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>fs commands</primary>
+
+      <secondary>granting privilege for</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privilege</primary>
+
+      <secondary>granting for pts commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privilege</primary>
+
+      <secondary>granting for fs commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>granting</primary>
+
+      <secondary>privilege for fs commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>granting</primary>
+
+      <secondary>privilege for pts commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>system:administrators group</primary>
+
+      <secondary>privileges resulting</secondary>
+    </indexterm>
+
+    <para>The first type of AFS administrative privilege is membership . Members of the <emphasis
+    role="bold">system:administrators</emphasis> group in the Protection Database have the following privileges: <itemizedlist>
+        <listitem>
+          <para>Permission to issue all <emphasis role="bold">pts</emphasis> commands, which are used to administer the Protection
+          Database. See <link linkend="HDRWQ531">Administering the Protection Database</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Permission to issue the <emphasis role="bold">fs setvol</emphasis> and <emphasis role="bold">fs setquota</emphasis>
+          commands, which set the space quota on volumes as described in <link linkend="HDRWQ234">Setting and Displaying Volume
+          Quota and Current Size</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Implicit <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) and by default <emphasis
+          role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) permissions on the access control list (ACL) on every
+          directory in the cell's AFS filespace. Members of the group can use the <emphasis role="bold">fs setacl</emphasis> command
+          to grant themselves any other permissions they require, as described in <link linkend="HDRWQ573">Setting ACL
+          Entries</link>.</para>
+
+          <para>You can change the ACL permissions that the File Server on a given file server machine implicitly grants to the
+          members of the <emphasis role="bold">system:administrators</emphasis> group for the data in volumes that it houses. When
+          you issue the <emphasis role="bold">bos create</emphasis> command to create and start the <emphasis
+          role="bold">fs</emphasis> process on the machine, include the <emphasis role="bold">-implicit</emphasis> argument to the
+          <emphasis role="bold">fileserver</emphasis> initialization command. For syntax details, see the <emphasis
+          role="bold">fileserver</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis>. You can
+          grant additional permissions, or remove the <emphasis role="bold">l</emphasis> permission. However, the File Server always
+          implicitly grants the <emphasis role="bold">a</emphasis> permission to members of the group, even if you set the value of
+          the <emphasis role="bold">-implicit</emphasis> argument to <emphasis role="bold">none</emphasis>.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>system:administrators group</primary>
+
+      <secondary>members</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>system:administrators group members</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>pts commands</primary>
+
+      <secondary>membership</secondary>
+
+      <tertiary>displaying system:administrators group</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>pts membership</secondary>
+
+      <tertiary>displaying system:administrators group</tertiary>
+    </indexterm>
+
+    <sect2 id="HDRWQ587">
+      <title>To display the members of the system:administrators group</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts membership</emphasis> command to display the <emphasis
+          role="bold">system:administrators</emphasis> group's list of members. Any user can issue this command as long as the first
+          privacy flag on the <emphasis role="bold">system:administrators</emphasis> group's Protection Database entry is not
+          changed from the default value of uppercase <computeroutput>S</computeroutput>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+
+          <para>where <emphasis role="bold">m</emphasis> is the shortest acceptable abbreviation of <emphasis
+          role="bold">membership</emphasis>.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="Header_657">
+      <title>To add users to the system:administrators group</title>
+
+      <indexterm>
+        <primary>system:administrators group</primary>
+
+        <secondary>members</secondary>
+
+        <tertiary>adding</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>adding</primary>
+
+        <secondary>system:administrators group members</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>adduser</secondary>
+
+        <tertiary>for system:administrators group</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts adduser</secondary>
+
+        <tertiary>for system:administrators group</tertiary>
+      </indexterm>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts adduser</emphasis> group to add one or more users. <programlisting>
+   % <emphasis role="bold">pts adduser -user</emphasis> &lt;<replaceable>user name</replaceable>&gt;+ <emphasis role="bold">-group system:administrators</emphasis>
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">ad</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">adduser</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-user</emphasis></term>
+
+                <listitem>
+                  <para>Names each user to add to the <emphasis role="bold">system:administrators</emphasis> group.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="HDRWQ588">
+      <title>To remove users from the system:administrators group</title>
+
+      <indexterm>
+        <primary>system:administrators group</primary>
+
+        <secondary>members</secondary>
+
+        <tertiary>removing</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>removing</primary>
+
+        <secondary>system:administrators group members</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>removeuser</secondary>
+
+        <tertiary>for system:administrators group</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts removeuser</secondary>
+
+        <tertiary>for system:administrators group</tertiary>
+      </indexterm>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts removeuser</emphasis> command to remove one or more users. <programlisting>
+   % <emphasis role="bold">pts removeuser -user</emphasis> &lt;<replaceable>user name</replaceable>&gt;+ <emphasis role="bold">-group system:administrators</emphasis>
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">rem</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">removeuser</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-user</emphasis></term>
+
+                <listitem>
+                  <para>Names each user to remove from the <emphasis role="bold">system:administrators</emphasis> group.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ589">
+    <title>Granting Privilege for kas Commands: the ADMIN Flag</title>
+
+    <indexterm>
+      <primary>ADMIN flag in Authentication Database entry</primary>
+
+      <secondary>privileges resulting</secondary>
+    </indexterm>
+
+    <para>Administrators who have the <computeroutput>ADMIN</computeroutput> flag on their Authentication Database entry can issue
+    all <emphasis role="bold">kas</emphasis> commands, which enable them to administer the Authentication Database. <indexterm>
+        <primary>kas commands</primary>
+
+        <secondary>granting privilege for</secondary>
+      </indexterm> <indexterm>
+        <primary>privilege</primary>
+
+        <secondary>granting for kas commands</secondary>
+      </indexterm> <indexterm>
+        <primary>granting</primary>
+
+        <secondary>privilege for kas commands</secondary>
+      </indexterm></para>
+
+    <sect2 id="HDRWQ590">
+      <title>To check if the ADMIN flag is set</title>
+
+      <indexterm>
+        <primary>ADMIN flag in Authentication Database entry</primary>
+
+        <secondary>displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>ADMIN flag in Authentication Database entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>kas commands</primary>
+
+        <secondary>examine</secondary>
+
+        <tertiary>to display ADMIN flag</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>kas examine</secondary>
+
+        <tertiary>to display ADMIN flag</tertiary>
+      </indexterm>
+
+      <orderedlist>
+        <listitem>
+          <para><anchor id="LIWQ591" />Issue the <emphasis role="bold">kas examine</emphasis> command to display an entry from the
+          Authentication Database.</para>
+
+          <para>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UFS) identity, which possibly does not correspond to an AFS-privileged administrator. Include
+          the <emphasis role="bold">-admin_username</emphasis> argument (here abbreviated to <emphasis
+          role="bold">-admin</emphasis>) to name a user identity that has the <computeroutput>ADMIN</computeroutput> flag on its
+          Authentication Database entry.</para>
+
+          <programlisting>
+   % <emphasis role="bold">kas examine</emphasis> &lt;<replaceable>name of user</replaceable>&gt;   \
+                 <emphasis role="bold">-admin</emphasis>  &lt;<replaceable>admin principal to use for authentication</replaceable>&gt;
+   Administrator's (admin_user) password: &lt;<replaceable>admin_password</replaceable>&gt;
+</programlisting>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">e</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">examine</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">name of user</emphasis></term>
+
+                <listitem>
+                  <para>Names the entry to display.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-admin</emphasis></term>
+
+                <listitem>
+                  <para>Names an administrative account with the <computeroutput>ADMIN</computeroutput> flag on its Authentication
+                  Database entry, such as the <emphasis role="bold">admin</emphasis> account. The password prompt echoes it as
+                  admin_user. Enter the appropriate password as admin_password.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+
+      <para>If the <computeroutput>ADMIN</computeroutput> flag is turned on, it appears on the first line, as in this
+      example:</para>
+
+      <programlisting>
+   % <emphasis role="bold">kas e terry -admin admin</emphasis>
+   Administrator's (admin) password: &lt;<replaceable>admin_password</replaceable>&gt;
+   User data for terry (ADMIN)
+     key version is 0, etc...
+</programlisting>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>kas setfields</secondary>
+
+        <tertiary>setting ADMIN flag</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>kas commands</primary>
+
+        <secondary>setfields</secondary>
+
+        <tertiary>setting ADMIN flag</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>ADMIN flag in Authentication Database entry</primary>
+
+        <secondary>setting or removing</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>adding</primary>
+
+        <secondary>ADMIN flag to Authentication Database entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>ADMIN flag in Authentication Database entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>removing</primary>
+
+        <secondary>ADMIN flag from Authentication Database entry</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_661">
+      <title>To set or remove the ADMIN flag</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Issue the <emphasis role="bold">kas setfields</emphasis> command to turn on the
+          <computeroutput>ADMIN</computeroutput> flag in an Authentication Database entry.</para>
+
+          <para>The Authentication Server performs its own authentication rather than accepting your existing AFS token. By default,
+          it authenticates your local (UNIX) identity, which possibly does not correspond to an AFS-privileged administrator.
+          Include the <emphasis role="bold">-admin</emphasis> argument to name an identity that has the
+          <computeroutput>ADMIN</computeroutput> flag on its Authentication Database entry. To verify that an entry has the flag,
+          issue the <emphasis role="bold">kas examine</emphasis> command as described in <link linkend="HDRWQ590">To check if the
+          ADMIN flag is set</link>.</para>
+
+          <para>The following command appears on two lines only for legibility.</para>
+
+          <programlisting>
+    % <emphasis role="bold">kas setfields</emphasis> &lt;<replaceable>name of user</replaceable>&gt;  {<emphasis role="bold">ADMIN</emphasis> |  <emphasis
+              role="bold">NOADMIN</emphasis>} \  
+                   <emphasis role="bold">-admin</emphasis> &lt;<replaceable>admin principal to use for authentication</replaceable>&gt;  
+    Administrator's (admin_user) password: &lt;<replaceable>admin_password</replaceable>&gt;
+</programlisting>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">sf</emphasis></term>
+
+                <listitem>
+                  <para>Is an alias for <emphasis role="bold">setfields</emphasis> (and <emphasis role="bold">setf</emphasis> is the
+                  shortest acceptable abbreviation).</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">name of user</emphasis></term>
+
+                <listitem>
+                  <para>Names the entry for which to set or remove the <computeroutput>ADMIN</computeroutput> flag.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">ADMIN | NOADMIN</emphasis></term>
+
+                <listitem>
+                  <para>Sets or removes the <computeroutput>ADMIN</computeroutput> flag, respectively.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-admin</emphasis></term>
+
+                <listitem>
+                  <para>Names an administrative account with the <computeroutput>ADMIN</computeroutput> flag on its Authentication
+                  Database entry, such as the <emphasis role="bold">admin</emphasis> account. The password prompt echoes it as
+                  admin_user. Enter the appropriate password as admin_password.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ592">
+    <title>Administering the UserList File</title>
+
+    <indexterm>
+      <primary>UserList file</primary>
+
+      <secondary>privileges resulting</secondary>
+    </indexterm>
+
+    <para>Inclusion in the file <emphasis role="bold">/usr/afs/etc/UserList</emphasis> on the local disk of each AFS server machine
+    enables an administrator to issue commands from the indicated suites. <itemizedlist>
+        <listitem>
+          <para>The <emphasis role="bold">bos</emphasis> commands enable the administrator to manage server processes and the server
+          configuration files that define the cell's database server machines, server encryption keys, and privileged users. See
+          <link linkend="HDRWQ80">Administering Server Machines</link> and <link linkend="HDRWQ142">Monitoring and Controlling
+          Server Processes</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">vos</emphasis> commands enable the administrator to manage volumes and the Volume Location
+          Database (VLDB). See <link linkend="HDRWQ174">Managing Volumes</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">backup</emphasis> commands enable the administrator to use the AFS Backup System to copy
+          data to permanent storage. See <link linkend="HDRWQ248">Configuring the AFS Backup System</link> and <link
+          linkend="HDRWQ283">Backing Up and Restoring AFS Data</link>.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>granting</primary>
+
+      <secondary>privilege for kas commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>bos commands</primary>
+
+      <secondary>granting privilege for</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>vos commands</primary>
+
+      <secondary>granting privilege for</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>backup commands</primary>
+
+      <secondary>granting privilege for</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privilege</primary>
+
+      <secondary>granting for bos commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privilege</primary>
+
+      <secondary>granting for vos commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privilege</primary>
+
+      <secondary>granting for backup commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>granting</primary>
+
+      <secondary>privilege for bos commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>granting</primary>
+
+      <secondary>privilege for vos commands</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>granting</primary>
+
+      <secondary>privilege for backup commands</secondary>
+    </indexterm>
+
+    <para>Although each AFS server machine maintains a separate copy of the file on its local disk, it is conventional to keep all
+    copies the same. It can be confusing for an administrator to have the privilege on some machines but not others. <indexterm>
+        <primary>system control machine</primary>
+
+        <secondary>as distributor of UserList file</secondary>
+      </indexterm></para>
+
+    <para>If your cell runs the United States edition of AFS and uses the Update Server to distribute the contents of the system
+    control machine's <emphasis role="bold">/usr/afs/etc</emphasis> directory, then edit only the copy of the <emphasis
+    role="bold">UserList</emphasis> file stored on the system control machine. If you have forgotten which machine is the system
+    control machine, see <link linkend="HDRWQ90">The Four Roles for File Server Machines</link>.</para>
+
+    <para>If your cell runs the international edition of AFS, or does not use a system control machine, then you must edit the
+    <emphasis role="bold">UserList</emphasis> file on each server machine individually.</para>
+
+    <para>To avoid making formatting errors that can result in performance problems, never edit the <emphasis
+    role="bold">UserList</emphasis> file directly. Instead, use the <emphasis role="bold">bos adduser</emphasis> or <emphasis
+    role="bold">bos removeuser</emphasis> commands as described in this section. <indexterm>
+        <primary>UserList file</primary>
+
+        <secondary>displaying</secondary>
+      </indexterm> <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>UserList file</secondary>
+      </indexterm> <indexterm>
+        <primary>bos commands</primary>
+
+        <secondary>listusers</secondary>
+      </indexterm> <indexterm>
+        <primary>commands</primary>
+
+        <secondary>bos listusers</secondary>
+      </indexterm></para>
+
+    <sect2 id="HDRWQ593">
+      <title>To display the users in the UserList file</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos listusers</emphasis> command to display the contents of the <emphasis
+          role="bold">/usr/afs/etc/UserList</emphasis> file. <programlisting>
+   % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">listu</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">listusers</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names an AFS server machine. In the normal case, any machine is acceptable because the file is the same on
+                  all of them.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="HDRWQ594">
+      <title>To add users to the UserList file</title>
+
+      <indexterm>
+        <primary>UserList file</primary>
+
+        <secondary>adding users</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>adding</primary>
+
+        <secondary>UserList file users</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>bos commands</primary>
+
+        <secondary>adduser</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>bos adduser</secondary>
+      </indexterm>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify you are listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. If not, you must have a
+          qualified administrator add you before you can add entries to it yourself. If necessary, issue the <emphasis
+          role="bold">bos listusers</emphasis> command, which is fully described in <link linkend="HDRWQ593">To display the users in
+          the UserList file</link>. <programlisting>
+   % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos adduser</emphasis> command to add one or more users to the <emphasis
+          role="bold">UserList</emphasis> file. <programlisting>
+   % <emphasis role="bold">bos adduser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>user names</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">addu</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">adduser</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names the system control machine if you use the Update Server to distribute the contents of the <emphasis
+                  role="bold">/usr/afs/etc</emphasis> directory (possible only in cells running the United States edition of AFS).
+                  By default, it can take up to five minutes for the Update Server to distribute the changes, so newly added users
+                  must wait that long before attempting to issue privileged commands.</para>
+
+                  <para>If you are running the international edition of AFS, or do not use the Update Server, repeat the command,
+                  substituting the name of each AFS server machine for machine name in turn.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">user names</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the username of each administrator to add to the <emphasis role="bold">UserList</emphasis>
+                  file.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="Header_665">
+      <title>To remove users from the UserList file</title>
+
+      <indexterm>
+        <primary>UserList file</primary>
+
+        <secondary>removing users</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>removing</primary>
+
+        <secondary>UserList file users</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>bos commands</primary>
+
+        <secondary>removeuser</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>bos removeuser</secondary>
+      </indexterm>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify you are listed in the <emphasis role="bold">/usr/afs/etc/UserList</emphasis> file. If not, you must have a
+          qualified administrator add you before you can remove entries from it yourself. If necessary, issue the <emphasis
+          role="bold">bos listusers</emphasis> command, which is fully described in <link linkend="HDRWQ593">To display the users in
+          the UserList file</link>. <programlisting>
+   % <emphasis role="bold">bos listusers</emphasis> &lt;<replaceable>machine name</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">bos removeuser</emphasis> command to remove one or more users from the <emphasis
+          role="bold">UserList</emphasis> file. <programlisting>
+   % <emphasis role="bold">bos removeuser</emphasis> &lt;<replaceable>machine name</replaceable>&gt; &lt;<replaceable>user names</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">removeu</emphasis></term>
+
+                <listitem>
+                  <para>Is the shortest acceptable abbreviation of <emphasis role="bold">removeuser</emphasis>.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">machine name</emphasis></term>
+
+                <listitem>
+                  <para>Names the system control machine if you use the Update Server to distribute the contents of the <emphasis
+                  role="bold">/usr/afs/etc</emphasis> directory (possible only in cells running the United States edition of AFS).
+                  By default, it can take up to five minutes for the Update Server to distribute the change, so newly removed users
+                  can continue to issue privileged commands during that time.</para>
+
+                  <para>If you are running the international edition of AFS, or do not use the Update Server, repeat the command,
+                  substituting the name of each AFS server machine for machine name in turn.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">user names</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the username of each administrator to add to the <emphasis role="bold">UserList</emphasis>
+                  file.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+</chapter>

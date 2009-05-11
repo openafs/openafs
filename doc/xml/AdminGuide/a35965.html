@@ -1,0 +1,2338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>AIX Audit Events</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS Administration Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="The afsmonitor Program Statistics"
+HREF="a34149.html"><LINK
+REL="NEXT"
+TITLE="Index"
+HREF="i37012.html"></HEAD
+><BODY
+CLASS="appendix"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS Administration Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="a34149.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="i37012.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="appendix"
+><H1
+><A
+NAME="HDRWQ620"
+></A
+>Appendix D. AIX Audit Events</H1
+><P
+>This Appendix provides a complete listing of the AFS events that can be audited on AIX file server machines. See Chapter
+  <A
+HREF="c18360.html"
+>Monitoring and Auditing AFS Performance</A
+> for instructions on auditing AFS events on AIX file server
+  machines. <A
+NAME="IDX8189"
+></A
+></P
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ621"
+>Introduction</A
+></H1
+><P
+>Below is a list of the AFS events contained in the file <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs/usr/local/audit/events.sample</B
+></SPAN
+>. Each entry contains information on the event class, the name of the
+    event, the parameters associated with the event, and a description of the event.</P
+><P
+>Most events have an associated error code that shows the outcome of the event (since each event is recorded after it
+    occurs), an AFSName (the authentication identify of the requesting process), and a host ID (from which the request originated).
+    Many events follow the RPC server entry calls defined in the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>AFS Programmer's Reference Manual</I
+></SPAN
+>.</P
+><P
+>Events are classed by functionality (this is AIX specific). Some events possibly fall into one of more of the following
+    classes which are defined by the file <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/usr/afs/local/config.sample</B
+></SPAN
+>: <UL
+><LI
+><P
+>A (afsauthent): Authentication and Identification Events</P
+></LI
+><LI
+><P
+>S (afssecurity): Security Events</P
+></LI
+><LI
+><P
+>P (afsprivilege): Privilege Required Events</P
+></LI
+><LI
+><P
+>O (afsobjects): Object Creation and Deletion Events</P
+></LI
+><LI
+><P
+>M (afsattributes): Attribute modification</P
+></LI
+><LI
+><P
+>C (afsprocess): Process Control Events</P
+></LI
+></UL
+></P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ622"
+>Audit-Specific Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN35993"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_Audit_WR</TD
+><TD
+>None</TD
+><TD
+>&#60;string&#62;</TD
+><TD
+>The file "/usr/afs/Audit" has been written to (AIX specific event).</TD
+></TR
+><TR
+><TD
+>AFS_Aud_On</TD
+><TD
+>S</TD
+><TD
+>ECode</TD
+><TD
+>Auditing is on for this server process (recorded on startup of a server).</TD
+></TR
+><TR
+><TD
+>AFS_Aud_Off</TD
+><TD
+>S</TD
+><TD
+>ECode</TD
+><TD
+>Auditing is off for this server process (recorded on startup of a server).</TD
+></TR
+><TR
+><TD
+>AFS_Aud_Unauth</TD
+><TD
+>S</TD
+><TD
+>ECode Event</TD
+><TD
+>Event triggered by an unauthorized user.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>The following audit-specific events indicate an error has occurred while recording the event. Most events have an
+      AFSName associated with them and a host ID. If this information cannot be gathered out of the Rx structure, one of these
+      events is raised.</P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36028"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_Aud_NoCall</TD
+><TD
+>S</TD
+><TD
+>ECode Event</TD
+><TD
+>No rx call structure with this event. Cannot get security, AFS ID, or origin of call.</TD
+></TR
+><TR
+><TD
+>AFS_Aud_NoConn</TD
+><TD
+>S</TD
+><TD
+>ECode Event</TD
+><TD
+>No connection info associated with rx call. Cannot get security, AFS ID, or origin of call.</TD
+></TR
+><TR
+><TD
+>AFS_Aud_UnknSec</TD
+><TD
+>S</TD
+><TD
+>ECode Event</TD
+><TD
+>Security of call is unknown (must be authorized or unauthorized caller).</TD
+></TR
+><TR
+><TD
+>AFS_Aud_NoAFSId</TD
+><TD
+>S</TD
+><TD
+>ECode Event</TD
+><TD
+>No AFS ID/name associated with a secure event.</TD
+></TR
+><TR
+><TD
+>AFS_Aud_NoHost</TD
+><TD
+>S</TD
+><TD
+>ECode Event</TD
+><TD
+>No information about origin (machine) of caller.</TD
+></TR
+><TR
+><TD
+>AFS_Aud_EINVAL</TD
+><TD
+>None</TD
+><TD
+>Event</TD
+><TD
+>Error in audit event parameter (can't record the event parameter).</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ627"
+>Volume Server Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36073"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_VS_Start</TD
+><TD
+>P C</TD
+><TD
+>ECode</TD
+><TD
+>The volume server has started.</TD
+></TR
+><TR
+><TD
+>AFS_VS_Finish</TD
+><TD
+>C</TD
+><TD
+>ECode</TD
+><TD
+>The volume server has finished. Finish events are rare since the server process is normally aborted.</TD
+></TR
+><TR
+><TD
+>AFS_VS_Exit</TD
+><TD
+>C</TD
+><TD
+>ECode</TD
+><TD
+>The volume server has exited. Exit events are rare since the server process is normally aborted.</TD
+></TR
+><TR
+><TD
+>AFS_VS_TransCr</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Trans VolID</TD
+><TD
+>AFSVolTransCreate - Create transaction for a [volume, partition]</TD
+></TR
+><TR
+><TD
+>AFS_VS_EndTrn</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolEndTrans - End a transaction.</TD
+></TR
+><TR
+><TD
+>AFS_VS_CrVol</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID Trans VolID VolName Type ParentID</TD
+><TD
+>AFSVolCreateVolume - Create a volume (volumeId volumeName)</TD
+></TR
+><TR
+><TD
+>AFS_VS_DelVol</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolDeleteVolume - Delete a volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_NukVol</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID VolID</TD
+><TD
+>AFSVolNukeVolume - Obliterate a volume completely (volume ID).</TD
+></TR
+><TR
+><TD
+>AFS_VS_Dump</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolDump - Dump the contents of a volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_SigRst</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID VolName</TD
+><TD
+>AFSVolSignalRestore - Show intention to call AFSVolRestore.</TD
+></TR
+><TR
+><TD
+>AFS_VS_Restore</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolRestore - Recreate a volume from a dump.</TD
+></TR
+><TR
+><TD
+>AFS_VS_Forward</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID FromTrans Host DestTrans</TD
+><TD
+>AFSVolForward - Dump a volume, then restore to a given server and volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_Clone</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID Trans Purge NewName NewType NewVolID</TD
+><TD
+>AFSVolClone - Clone (and optionally purge) a volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_ReClone</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID Trans CloneVolID</TD
+><TD
+>AFSVolReClone - Reclone a volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_SetForw</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID Trans NewHost</TD
+><TD
+>AFSVolSetForwarding - Set forwarding information for a moved volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_GetFlgs</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolGetFlags - Get volume flags for a transaction.</TD
+></TR
+><TR
+><TD
+>AFS_VS_SetFlgs</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID Trans Flags</TD
+><TD
+>AFSVolSetFlags - Set volume flags for a transaction.</TD
+></TR
+><TR
+><TD
+>AFS_VS_GetName</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolGetName - Get the volume name associated with a transaction.</TD
+></TR
+><TR
+><TD
+>AFS_VS_GetStat</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolGetStatus - Get status of a transaction/volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_SetIdTy</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID Trans VolName Type ParentId CloneID BackupID</TD
+><TD
+>AFSVolSetIdsTypes - Set header information for a volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_SetDate</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID Trans Date</TD
+><TD
+>AFSVolSetDate - Set creation date in a volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_ListPar</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>AFSVolListPartitions - Return a list of AFS partitions on a server.</TD
+></TR
+><TR
+><TD
+>AFS_VS_ParInf</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID PartName</TD
+><TD
+>AFSVolPartitionInfo - Get partition information.</TD
+></TR
+><TR
+><TD
+>AFS_VS_ListVol</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>AFSVolListVolumes - Return a list of volumes on a server.</TD
+></TR
+><TR
+><TD
+>AFS_VS_XLstVol</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>AFSVolXListVolumes - Return a (detailed) list of volumes on a server.</TD
+></TR
+><TR
+><TD
+>AFS_VS_Lst1Vol</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID VolID</TD
+><TD
+>AFSVolListOneVolume - Return header information for a single volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_XLst1Vl</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID VolID</TD
+><TD
+>AFSVolXListOneVolume - Return (detailed) header information for a single volume.</TD
+></TR
+><TR
+><TD
+>AFS_VS_GetNVol</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID VolID</TD
+><TD
+>AFSVolGetNthVolume - Get volume header given its index.</TD
+></TR
+><TR
+><TD
+>AFS_VS_Monitor</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>AFSVolMonitor - Collect server transaction state.</TD
+></TR
+><TR
+><TD
+>AFS_VS_SetInfo</TD
+><TD
+>P O M</TD
+><TD
+>ECode AFSName HostID Trans</TD
+><TD
+>AFSVolSetInfo - Set volume status.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ630"
+>Backup Server Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36238"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_BUDB_Start</TD
+><TD
+>P</TD
+><TD
+>ECode</TD
+><TD
+>The backup server has started.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_Finish</TD
+><TD
+>None</TD
+><TD
+>ECode</TD
+><TD
+>The backup server has finished. Finish events are rare since the server process is normally aborted.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_Exit</TD
+><TD
+>None</TD
+><TD
+>ECode</TD
+><TD
+>The backup server has exited. Exit events are rare since the server process is normally aborted.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_CrDmp</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_CreateDump - Create a new dump.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_AppDmp</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_makeDumpAppended - Make the dump an appended dump.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_DelDmp</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_DeleteDump - Delete a dump.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FinDmp</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_FinishDump- Notify buserver that dump is finished.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_UseTpe</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_UseTape - Create/add a tape entry to a dump.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_DelTpe</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_DeleteTape - Remove a tape from the database.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FinTpe</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_FinishTape - Writing to a tape is completed.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_AddVol</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID volId</TD
+><TD
+>BUDB_AddVolume - Add a volume to a particular dump and tape.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_GetTxV</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Type</TD
+><TD
+>BUDB_GetTextVersion - Get the version number for hosts/volume-sets/dump-hierarchy.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_GetTxt</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID Type</TD
+><TD
+>BUDB_GetText - Get the information about hosts/volume-sets/dump-hierarchy.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_SavTxt</TD
+><TD
+>M</TD
+><TD
+>ECode AFSName HostID Type</TD
+><TD
+>BUDB_SaveText - Overwrite the information about hosts/volume-sets/dump-hierarchy.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_GetLck</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_GetLock - Take a lock for reading/writing text information.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FrALck</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_FreeLock - Free a lock.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FreLck</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_FreeAllLocks - Free all locks.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_GetIId</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_GetInstanceId - Get lock instance id.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_DmpDB</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_DumpDB - Start dumping the database.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_RstDBH</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_RestoreDbHeader - Restore the database header.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_DBVfy</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_DbVerify - Verify the database.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FndDmp</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID volName</TD
+><TD
+>BUDB_FindDump - Find the dump a volume belongs to.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_GetDmp</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_GetDumps - Get a list of dumps in the database.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FnLTpe</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID dumpId</TD
+><TD
+>BUDB_FindLastTape - Find last tape, and last volume on tape of a dump.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_GetTpe</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_GetTapes - Find a list of tapes based on name or dump ID.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_GetVol</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_GetVolumes - Find a list of volumes based on dump or tape name.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_DelVDP</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID dumpSetName</TD
+><TD
+>BUDB_DeleteVDP - Delete dumps with given name and dump path.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FndCln</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID volName</TD
+><TD
+>BUDB_FindClone - Find clone time of volume.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_FndLaD</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID volName</TD
+><TD
+>BUDB_FindLatestDump - Find the latest dump a volume belongs to.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_TGetVr</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BUDB_T_GetVersion - Test Get version.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_TDmpHa</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID file</TD
+><TD
+>BUDB_T_DumpHashTable - Test dump of hash table.</TD
+></TR
+><TR
+><TD
+>AFS_BUDB_TDmpDB</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID file</TD
+><TD
+>BUDB_T_DumpDatabase - Test dump of database.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ633"
+>Protection Server Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36413"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_PTS_Start</TD
+><TD
+>P</TD
+><TD
+>ECode</TD
+><TD
+>The protection server has started.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_Finish</TD
+><TD
+>C</TD
+><TD
+>ECode</TD
+><TD
+>The protection server has finished. Finish events are rare since the server process is normally aborted.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_Exit</TD
+><TD
+>C</TD
+><TD
+>ECode</TD
+><TD
+>The protection server has exited. Exit events are rare since the server process is normally aborted.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_NmToId</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>PR_NameToID - Perform one or more name-to-ID translations.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_IdToNm</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId</TD
+><TD
+>PR_IDToName - Perform one or more ID-to-name translations.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_NewEnt</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId Name OwnerId</TD
+><TD
+>PR_NewEntry - Create a PDB (Protection DataBase) entry for the given name.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_INewEnt</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId Name OwnerId</TD
+><TD
+>PR_INewEntry - Create a PDB entry for the given name and ID.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_LstEnt</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId</TD
+><TD
+>PR_ListEntry - Get the contents of a PDB entry based on its ID.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_DmpEnt</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Position</TD
+><TD
+>PR_DumpEntry - Get the contents of a PDB entry based on its offset.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_ChgEnt</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId NewName NewOwnerId NewId</TD
+><TD
+>PR_ChangeEntry - Change an existing PDB entry's ID, name, owner, or a combination.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_SetFEnt</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId</TD
+><TD
+>PR_SetFieldsEntry - Change miscellaneous fields in an existing PDB entry.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_Del</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId</TD
+><TD
+>PR_Delete - Delete an existing PDB entry.</TD
+></TR
+><TR
+><TD
+>FS_PTS_WheIsIt</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId Position</TD
+><TD
+>PR_WhereIsIt - Get the PDB byte offset of the entry for a given ID.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_AdToGrp</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId UserId</TD
+><TD
+>PR_AddToGroup - Add a user to a group.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_RmFmGrp</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId UserId</TD
+><TD
+>PR_RemoveFromGroup - Remove a user from a chosen group.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_LstMax</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>PR_ListMax - Get the largest allocated user and group ID.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_SetMax</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId flag</TD
+><TD
+>PR_SetMax - Set the largest allocated user and group ID.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_LstEle</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId</TD
+><TD
+>PR_ListElements - List all IDs associated with a user or group.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_GetCPS</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId</TD
+><TD
+>PR_GetCPS - Get the CPS (Current Protection Subdomain) for the given ID.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_GetCPS2</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId Host</TD
+><TD
+>PR_GetCPS2 - Get the CPS for the given id and host.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_GetHCPS</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID Host</TD
+><TD
+>PR_GetHostCPS - Get the CPS for the given host.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_LstOwn</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID GroupId</TD
+><TD
+>PR_ListOwned - Get all IDs owned by the given ID.</TD
+></TR
+><TR
+><TD
+>AFS_PTS_IsMemOf</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID UserId GroupId</TD
+><TD
+>PR_IsAMemberOf - Is a given user ID a member of a specified group?</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ636"
+>Authentication Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36543"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_KAA_ChPswd</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAA_ChangePassword - Change password.</TD
+></TR
+><TR
+><TD
+>AFS_KAA_Auth</TD
+><TD
+>A S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAA_Authenticate - Authenticate to the cell.</TD
+></TR
+><TR
+><TD
+>AFS_KAA_AuthO</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAA_Authenticate_old - Old style authentication.</TD
+></TR
+><TR
+><TD
+>AFS_KAT_GetTkt</TD
+><TD
+>A S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAT_GetTicket - An attempt was made to get an AFS ticket for some principal listed in the Authentication
+            Database.</TD
+></TR
+><TR
+><TD
+>AFS_KAT_GetTktO</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAT_GetTicket_old - An attempt was made to get an AFS ticket for some principal listed in the Authentication
+            Database.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_CrUser</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAM_CreateUser - Create a user.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_DelUser</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAM_DeleteUser - Delete a user.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_SetPswd</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAM_SetPassword - Set the password for a user.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_GetPswd</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name</TD
+><TD
+>KAM_GetPassword - Get the password of a user.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_GetEnt</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAM_GetEntry - The RPC made by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas examine</B
+></SPAN
+> command to get one entry from the
+            Authentication Database (by index entry).</TD
+></TR
+><TR
+><TD
+>AFS_KAM_LstEnt</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID index</TD
+><TD
+>KAM_ListEntry - The RPC made to list one or more entries in the Authentication Database.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_Dbg</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>KAM_Debug - The RPC that produces a debugging trace for the Authentication Server.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_SetFld</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID name instance flags date lifetime maxAssoc</TD
+><TD
+>KAM_SetFields - The RPC used by the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas setfields</B
+></SPAN
+> command to manipulate the
+            Authentication Database.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_GetStat</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>KAM_GetStatus - An RPC used to get statistics on the Authentication Server.</TD
+></TR
+><TR
+><TD
+>AFS_KAM_GRnKey</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>KAM_GetRandomKey - An RPC used to generate a random encryption key.</TD
+></TR
+><TR
+><TD
+>AFS_UnlockUser</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAM_Unlock - The RPC used to initiate the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>kas unlock</B
+></SPAN
+> command.</TD
+></TR
+><TR
+><TD
+>AFS_LockStatus</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID name instance</TD
+><TD
+>KAM_LockStatus - The RPC used to determine whether a user's Authentication Database entry is locked.</TD
+></TR
+><TR
+><TD
+>AFS_UseOfPriv</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID name instance cell</TD
+><TD
+>An authorized command was issued and allowed because the user had privilege.</TD
+></TR
+><TR
+><TD
+>AFS_UnAth</TD
+><TD
+>S</TD
+><TD
+>ECode AFSName HostID name instance cell</TD
+><TD
+>An authorized command was issued and allowed because the system was running in noauth mode.</TD
+></TR
+><TR
+><TD
+>AFS_UDPAuth</TD
+><TD
+>A S</TD
+><TD
+>ECode name instance</TD
+><TD
+>An authentication attempt was made with a Kerberos client.</TD
+></TR
+><TR
+><TD
+>AFS_UDPGetTckt</TD
+><TD
+>A S</TD
+><TD
+>ECode name instance cell name instance</TD
+><TD
+>An attempt was made to get a Kerberos ticket.</TD
+></TR
+><TR
+><TD
+>AFS_RunNoAuth</TD
+><TD
+>S</TD
+><TD
+>ECode</TD
+><TD
+>Check was made and some random server is running noauth.</TD
+></TR
+><TR
+><TD
+>AFS_NoAuthDsbl</TD
+><TD
+>S P</TD
+><TD
+>ECode</TD
+><TD
+>Server is set to run in authenticated mode.</TD
+></TR
+><TR
+><TD
+>AFS_NoAuthEnbl</TD
+><TD
+>S P</TD
+><TD
+>ECode</TD
+><TD
+>Server is set to run in unauthenticated mode.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ639"
+>File Server and Cache Manager Interface Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36681"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_SRX_FchACL</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>RXAFS_FetchACL - Fetch the ACL associated with the given AFS file identifier.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_FchStat</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>RXAFS_FetchStatus - Fetch the status information for a file system object.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_StACL</TD
+><TD
+>M</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>RXAFS_StoreACL - Associate an ACL with the names directory.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_StStat</TD
+><TD
+>M</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>RXAFS_StoreStatus - Store status information for the specified file.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_RmFile</TD
+><TD
+>O</TD
+><TD
+>ECode AFSName HostID (FID) name</TD
+><TD
+>RXAFS_RemoveFile - Delete the given file.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_CrFile</TD
+><TD
+>O</TD
+><TD
+>ECode AFSName HostID (FID) name</TD
+><TD
+>RXAFS_CreateFile - Create the given file.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_RNmFile</TD
+><TD
+>O M</TD
+><TD
+>ECode AFSName HostID (oldFID) oldName (newFID) newName</TD
+><TD
+>RXAFS_Rename - Rename the specified file in the given directory.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_SymLink</TD
+><TD
+>O</TD
+><TD
+>ECode AFSName HostID (FID) name</TD
+><TD
+>RXAFS_Symlink - Create a symbolic link.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_Link</TD
+><TD
+>O</TD
+><TD
+>ECode AFSName HostID (FID) name (FID)</TD
+><TD
+>RXAFS_Link - Create a hard link.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_MakeDir</TD
+><TD
+>O</TD
+><TD
+>ECode AFSName HostID (FID) name</TD
+><TD
+>RXAFS_MakeDir - Create a directory.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_RmDir</TD
+><TD
+>O</TD
+><TD
+>ECode AFSName HostID (FID) name</TD
+><TD
+>RXAFS_RemoveDir - Remove a directory.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_SetLock</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID (FID) type</TD
+><TD
+>RXAFS_SetLock - Set an advisory lock on the given file identifier.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_ExtLock</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>RXAFS_ExtendLock - Extend an advisory lock on a file.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_RelLock</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>RXAFS_ReleaseLock - Release the advisory lock on a file.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_FchData</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>StartRXAFS_FetchData - Begin a request to fetch file data.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_StData</TD
+><TD
+>O</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>StartRXAFS_StoreData - Begin a request to store file data.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_BFchSta</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID (FID)</TD
+><TD
+>RXAFS_BulkStatus - Fetch status information regarding a set of file system objects.</TD
+></TR
+><TR
+><TD
+>AFS_SRX_SetVolS</TD
+><TD
+>M</TD
+><TD
+>ECode AFSName HostID volId volName</TD
+><TD
+>RXAFS_SetVolumeStatus - Set the basic status information for the named volume.</TD
+></TR
+><TR
+><TD
+>AFS_Priv</TD
+><TD
+>P</TD
+><TD
+>ECode viceId callRoutine</TD
+><TD
+>Checking Permission Rights of user - user has permissions.</TD
+></TR
+><TR
+><TD
+>AFS_PrivSet</TD
+><TD
+>P</TD
+><TD
+>ECode viceId callRoutine</TD
+><TD
+>Set the privileges of a user.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ642"
+>BOS Server Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36796"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_BOS_CreBnod</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_CreateBnode - Create a process instance.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_DelBnod</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID instance</TD
+><TD
+>BOZO_DeleteBnode - Delete a process instance.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_SetReSt</TD
+><TD
+>P M C</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_Restart - Restart a given process instance.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_GetLog</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>StartBOZO_GetLog - Pass the IN params when fetching a BOS Server log file.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_SetStat</TD
+><TD
+>P M C</TD
+><TD
+>ECode AFSName HostID instance</TD
+><TD
+>BOZO_SetStatus - Set process instance status and goal.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_SetTSta</TD
+><TD
+>P M C</TD
+><TD
+>ECode AFSName HostID instance</TD
+><TD
+>BOZO_SetTStatus - Temporarily set process instance status and goal.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_StartAl</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_StartupAll - Start all existing process instances.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_ShtdAll</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_ShutdownAll - Shut down all process instances.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_ReStAll</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_RestartAll - Shut down, then restart all process instances.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_ReBos</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_ReBozo - Shut down, then restart all process instances and the BOS Server itself.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_ReBosIn</TD
+><TD
+>P C</TD
+><TD
+>ECode</TD
+><TD
+>BOZO_ReBozo - Same as AFS_BOS_ReBos but done internally (server restarts).</TD
+></TR
+><TR
+><TD
+>AFS_BOS_ReStart</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID instance</TD
+><TD
+>BOZO_Restart - Restart a given process instance.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_WaitAll</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_WaitAll - Wait until all process instances have reached their goals.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_AddSUsr</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_AddSUser - Add a user to the UserList.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_DelSUsr</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_DeleteSUser - Delete a user from the UserList.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_LstSUsr</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_ListSUsers - Get the name of the user in the given position in the UserList file.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_LstKey</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_ListKeys - List information about the key at a given index in the key file.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_LstKeyU</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_ListKeys - Same as AFS_BOS_LstKey, but unauthorized.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_AddKey</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_AddKey - Add a key to the key file.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_DelKey</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_DeleteKey - Delete the entry for an AFS key.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_SetNoAu</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID flag</TD
+><TD
+>BOZO_SetNoAuthFlag - Enable or disable authenticated call requirements.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_SetCell</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID name</TD
+><TD
+>BOZO_SetCellName - Set the name of the cell to which the BOS Server belongs.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_AddHst</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID name</TD
+><TD
+>BOZO_AddCellHost - Add an entry to the list of database server hosts.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_DelHst</TD
+><TD
+>S P</TD
+><TD
+>ECode AFSName HostID name</TD
+><TD
+>BOZO_DeleteCellHost - Delete an entry from the list of database server hosts.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_Inst</TD
+><TD
+>P O M</TD
+><TD
+>ECode AFSName HostID name</TD
+><TD
+><P
+>StartBOZO_Install - Pass the IN parameters when installing a server binary.</P
+> <P
+>EndBOZO_Install -
+            Get the OUT parameters when installing a server binary.</P
+></TD
+></TR
+><TR
+><TD
+>AFS_BOS_UnInst</TD
+><TD
+>P O M</TD
+><TD
+>ECode AFSName HostID name</TD
+><TD
+>BOZO_UnInstall - Roll back from a server binary installation.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_PrnLog</TD
+><TD
+>P O</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>BOZO_Prune - Throw away old versions of server binaries and core file.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_Exec</TD
+><TD
+>P C</TD
+><TD
+>ECode AFSName HostID cmd</TD
+><TD
+>BOZO_Exec - Execute a shell command at the server.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_DoExec</TD
+><TD
+>P C</TD
+><TD
+>ECode exec</TD
+><TD
+>The <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>bosserver</B
+></SPAN
+> process was restarted.</TD
+></TR
+><TR
+><TD
+>AFS_BOS_StpProc</TD
+><TD
+>P C</TD
+><TD
+>ECode cmd</TD
+><TD
+>An RPC to stop any process controlled by the BOS Server.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ645"
+>Volume Location Server Events</A
+></H1
+><DIV
+CLASS="informaltable"
+><A
+NAME="AEN36964"
+></A
+><TABLE
+BORDER="1"
+CLASS="CALSTABLE"
+><COL
+WIDTH="28*"><COL
+WIDTH="10*"><COL
+WIDTH="25*"><COL
+WIDTH="38*"><THEAD
+><TR
+><TH
+>Event</TH
+><TH
+>Class</TH
+><TH
+>Parameters</TH
+><TH
+>Description</TH
+></TR
+></THEAD
+><TBODY
+><TR
+><TD
+>AFS_VL_CreEnt</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID name</TD
+><TD
+>VL_CreateEntry - Create a VLDB entry.</TD
+></TR
+><TR
+><TD
+>AFS_VL_DelEnt</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID volID</TD
+><TD
+>VL_DeleteEntry - Delete a VLDB entry.</TD
+></TR
+><TR
+><TD
+>AFS_VL_GetNVlID</TD
+><TD
+>None</TD
+><TD
+>ECode AFSName HostID</TD
+><TD
+>VL_GetNewVolumeId - Generate a new volume ID.</TD
+></TR
+><TR
+><TD
+>AFS_VL_RepEnt</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID volID</TD
+><TD
+>VL_ReplaceEntry - Replace entire contents of VLDB entry.</TD
+></TR
+><TR
+><TD
+>AFS_VL_UpdEnt</TD
+><TD
+>P M</TD
+><TD
+>ECode AFSName HostID volID</TD
+><TD
+>VL_UpdateEntry - Update contents of VLDB entry.</TD
+></TR
+><TR
+><TD
+>AFS_VL_SetLck</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID volID</TD
+><TD
+>VL_SetLock - Lock VLDB entry.</TD
+></TR
+><TR
+><TD
+>AFS_VL_RelLck</TD
+><TD
+>P</TD
+><TD
+>ECode AFSName HostID volID</TD
+><TD
+>VL_ReleaseLock - Unlock VLDB entry.</TD
+></TR
+></TBODY
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="a34149.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="i37012.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>The afsmonitor Program Statistics</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Index</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

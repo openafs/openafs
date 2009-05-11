@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ2">
+  <title>An Introduction to AFS</title>
+
+  <para>This chapter introduces basic AFS concepts and terms. It assumes that you are already familiar with standard UNIX commands,
+  file protection, and pathname conventions.</para>
+
+  <sect1 id="HDRWQ3">
+    <title>AFS Concepts</title>
+
+    <para>AFS makes it easy for people to work together on the same files, no matter where the files are located. AFS users do not
+    have to know which machine is storing a file, and administrators can move files from machine to machine without interrupting
+    user access. Users always identify a file by the same pathname and AFS finds the correct file automatically, just as happens in
+    the local file system on a single machine. While AFS makes file sharing easy, it does not compromise the security of the shared
+    files. It provides a sophisticated protection scheme. <indexterm><primary>AFS</primary><secondary>sharing information</secondary></indexterm> <indexterm><primary>AFS</primary><secondary>transparent access</secondary></indexterm></para>
+
+    <sect2 id="Header_9">
+      <title>Client/Server Computing</title>
+
+      <para>AFS uses a <emphasis>client/server computing</emphasis> model. In client/server computing, there are two types of
+      machines. <emphasis>Server machines</emphasis> store data and perform services for client machines. <emphasis>Client
+      machines</emphasis> perform computations for users and access data and services provided by server machines. Some machines act
+      as both clients and servers. In most cases, you work on a client machine, accessing files stored on a file server machine.
+      <indexterm><primary>client/server computing</primary></indexterm> <indexterm><primary>client machine</primary></indexterm> <indexterm><primary>server machines defined</primary></indexterm> <indexterm><primary>machines</primary><secondary>server</secondary></indexterm> <indexterm><primary>machines</primary><secondary>client</secondary></indexterm> <indexterm><primary>communication</primary><secondary>between clients and servers</secondary></indexterm></para>
+    </sect2>
+
+    <sect2 id="Header_10">
+      <title>Distributed File Systems</title>
+
+      <para>AFS is a <emphasis>distributed file system</emphasis> which joins together the file systems of multiple file server
+      machines, making it as easy to access files stored on a remote file server machine as files stored on the local disk. A
+      distributed file system has two main advantages over a conventional centralized file system: <indexterm><primary>distributed file system</primary></indexterm>
+
+      <itemizedlist>
+        <listitem>
+          <para>Increased availability: A copy of a popular file, such as the binary for an application program, can be stored on
+          many file server machines. An outage on a single machine or even multiple machines does not necessarily make the file
+          unavailable. Instead, user requests for the program are routed to accessible machines. With a centralized file system, the
+          loss of the central file storage machine effectively shuts down the entire system.</para>
+        </listitem>
+
+        <listitem>
+          <para>Increased efficiency: In a distributed file system, the work load is distributed over many smaller file server
+          machines that tend to be more fully utilized than the larger (and usually more expensive) file storage machine of a
+          centralized file system.</para>
+        </listitem>
+      </itemizedlist>
+</para>
+
+      <para>AFS hides its distributed nature, so working with AFS files looks and feels like working with files stored on your local
+      machine, except that you can access many more files. And because AFS relies on the power of users' client machines for
+      computation, increasing the number of AFS users does not slow AFS performance appreciably, making it a very efficient
+      computing environment.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ4">
+      <title>AFS Filespace and Local Filespace</title>
+
+      <indexterm><primary>local machine</primary></indexterm>
+
+      <para>AFS acts as an extension of your machine's local UNIX file system. Your system administrator creates a directory on the
+      local disk of each AFS client machine to act as a gateway to AFS. By convention, this directory is called <emphasis
+      role="bold">/afs</emphasis>, and it functions as the root of the <emphasis>AFS filespace</emphasis>. <indexterm><primary>AFS</primary><secondary>filespace as extension of local filespace</secondary></indexterm>
+      <indexterm><primary>afs (/afs) directory</primary><secondary>as root of AFS filespace</secondary></indexterm> <indexterm><primary>root of AFS filespace</primary></indexterm></para>
+
+      <para>Just like the UNIX file system, AFS uses a hierarchical file structure (a tree). Under the <emphasis
+      role="bold">/afs</emphasis> root directory are subdirectories created by your system administrator, including your home
+      directory. Other directories that are at the same level of the local file system as <emphasis role="bold">/afs</emphasis>,
+      such as <emphasis role="bold">/usr</emphasis>, <emphasis role="bold">/etc</emphasis>, or <emphasis
+      role="bold">/bin</emphasis>, can either be located on your local disk or be links to AFS directories. Files relevant only to
+      the local machine are usually stored on the local machine. All other files can be stored in AFS, enabling many users to share
+      them and freeing the local machine's disk space for other uses.</para>
+
+      <note>
+        <para>You can use AFS commands only on files in the AFS filespace or the local directories that are links to the AFS
+        filespace.</para>
+      </note>
+    </sect2>
+
+    <sect2 id="HDRWQ5">
+      <title>Cells and Sites</title>
+
+      <para>The <emphasis>cell</emphasis> is the administrative domain in AFS. Each cell's administrators determine how client
+      machines are configured and how much storage space is available to each user. The organization corresponding to a cell can be
+      a company, a university department, or any defined group of users. From a hardware perspective, a cell is a grouping of client
+      machines and server machines defined to belong to the same cell. <indexterm><primary>cells</primary><secondary>defined</secondary></indexterm> An AFS <emphasis>site</emphasis> is a
+      grouping of one or more related cells. For example, the cells at the ABC Corporation form a single site. <indexterm><primary>site defined</primary></indexterm></para>
+
+      <para>By convention, the subdirectories of the <emphasis role="bold">/afs</emphasis> directory are cellular filespaces, each
+      of which contains subdirectories and files that belong to a single cell. For example, directories and files relevant to the
+      ABC Corporation cell are stored in the subdirectory <emphasis role="bold">/afs/abc.com</emphasis>.</para>
+
+      <para>While each cell organizes and maintains its own filespace, it can also connect with the filespace of other AFS cells.
+      The result is a huge filespace that enables file sharing within and across cells. <indexterm><primary>communication</primary><secondary>among cells and sites</secondary></indexterm></para>
+
+      <para>The cell to which your client machine belongs is called your <emphasis>local cell</emphasis>. All other cells in the AFS
+      filespace are termed <emphasis>foreign cells</emphasis>. <indexterm><primary>local cell, defined</primary></indexterm> <indexterm><primary>foreign cells</primary><secondary>defined</secondary></indexterm> <indexterm><primary>cells</primary><secondary>local vs. foreign</secondary></indexterm></para>
+    </sect2>
+
+    <sect2 id="HDRWQ6">
+      <title>Volumes and Mount Points</title>
+
+      <para>The storage disks in a computer are divided into sections called <emphasis>partitions</emphasis>. AFS further divides
+      partitions into units called <emphasis>volumes</emphasis>, each of which houses a subtree of related files and directories.
+      The volume provides a convenient container for storing related files and directories. Your system administrators can move
+      volumes from one file server machine to another without your noticing, because AFS automatically tracks a volume's location.
+      <indexterm><primary>volumes</primary><secondary>defined</secondary></indexterm> <indexterm><primary>disk partition</primary><secondary>use in AFS</secondary></indexterm></para>
+
+      <para>You access the contents of a volume by accessing its <emphasis>mount point</emphasis> in the AFS filespace. A mount
+      point is a special file system element that looks and acts like a regular UNIX directory, but tells AFS the volume's name.
+      When you change to a different directory (by using the <emphasis role="bold">cd</emphasis> command, for example) you sometimes
+      <emphasis>cross</emphasis> a mount point and start accessing the contents of a different volume than before. You normally do
+      not notice the crossing, however, because AFS automatically interprets mount points and retrieves the contents of the new
+      directory from the appropriate volume. You do not need to track which volume, partition, or file server machine is housing a
+      directory's contents. If you are interested, though, you can learn a volume's location; for instructions, see <link
+      linkend="HDRWQ40">Locating Files and Directories</link>. <indexterm><primary>mount points defined</primary></indexterm> <indexterm><primary>volumes</primary><secondary>accessing via mount points</secondary></indexterm></para>
+
+      <para>If your system administrator has followed the conventional practice, your home directory corresponds to one volume,
+      which keeps its contents together on one partition of a file server machine. User volumes are typically named <emphasis
+      role="bold">user.</emphasis><replaceable>username</replaceable>. For example, the volume for a user named <emphasis
+      role="bold">smith</emphasis> in the cell <emphasis role="bold">abc.com</emphasis> is called <emphasis
+      role="bold">user.smith</emphasis> and is mounted at the directory <emphasis role="bold">/afs/abc.com/usr/smith</emphasis>.
+      <indexterm><primary>examples</primary><secondary>volume/mount point interaction</secondary></indexterm></para>
+
+      <para>Because AFS volumes are stored on different file server machines, when a machine becomes unavailable only the volumes on
+      that machine are inaccessible. Volumes stored on other machines are still accessible. However, if a volume's mount point
+      resides in a volume that is stored on an unavailable machine, the former volume is also inaccessible. For that reason, volumes
+      containing frequently used directories (for example, <emphasis role="bold">/afs</emphasis> and <emphasis
+      role="bold">/afs/</emphasis><replaceable>cellname</replaceable>) are often copied and distributed to many file server
+      machines.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ7">
+      <title>Volume Quotas</title>
+
+      <indexterm><primary>volumes</primary><secondary>volume/mount point interaction</secondary></indexterm>
+
+      <para>Each volume has a size limit, or <emphasis>quota</emphasis>, assigned by the system administrator. A volume's quota
+      determines the maximum amount of disk space the volume can consume. If you attempt to exceed a volume's quota, you receive an
+      error message. For instructions on checking volume quota, see <link linkend="HDRWQ39">Displaying Volume Quota</link>.</para>
+
+      <para>Volumes have completely independent quotas. For example, say that the current working directory is <emphasis
+      role="bold">/afs/abc.com/usr/smith</emphasis>, which is the mount point for the <emphasis role="bold">user.smith</emphasis>
+      volume with 1000 free blocks. You try to copy a 500 block file from the current working directory to the <emphasis
+      role="bold">/afs/abc.com/usr/pat</emphasis> directory, the mount point for the volume <emphasis
+      role="bold">user.pat</emphasis>. However, you get an error message saying there is not enough space. You check the volume
+      quota for <emphasis role="bold">user.pat</emphasis>, and find that the volume only has 50 free blocks.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ8">
+    <title>Using Files in AFS</title>
+
+    <sect2 id="HDRWQ9">
+      <title>The Cache Manager</title>
+
+      <para>You can access the AFS filespace only when working on an AFS client machine. The <emphasis>Cache Manager</emphasis> on
+      that machine is your agent in accessing information stored in the AFS filespace. When you access a file, the Cache Manager on
+      your client machine requests the file from the appropriate file server machine and stores (<emphasis>caches</emphasis>) a copy
+      of it on your client machine's local disk. Application programs on your client machine use the local, cached copy of the file.
+      This improves performance because it is much faster to use a local file than to send requests for file data across the network
+      to the file server machine. <indexterm><primary>caching files</primary></indexterm> <indexterm><primary>Cache Manager</primary><secondary>described</secondary></indexterm> <indexterm><primary>client machine</primary></indexterm> <indexterm><primary>files</primary><secondary>caching</secondary></indexterm></para>
+
+      <para>Because application programs use the cached copy of a file, any changes you make are not necessarily stored permanently
+      to the central version stored on the file server machine until the file closes. At that point, the Cache Manager writes your
+      changes back to the file server machine, where they replace the corresponding parts of the existing file. Some application
+      programs close a file in this way each time you issue their <emphasis role="bold">save</emphasis> command (and then
+      immediately reopen the file so that you can continue working). With other programs, issuing the <emphasis
+      role="bold">save</emphasis> command writes the changes only to the local cached copy. If you use the latter type of text
+      editor, you need to close the file periodically to make sure your changes are stored permanently.</para>
+
+      <para>If a file server machine becomes inaccessible, you can continue working with the local, cached copy of a file fetched
+      from that machine, but you cannot save your changes permanently until the server machine is again accessible.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ10">
+      <title>Updating Copies of Cached Files</title>
+
+      <indexterm><primary>files</primary><secondary>updating</secondary></indexterm>
+
+      <indexterm><primary>callbacks</primary></indexterm>
+
+      <para>When the central version of a file changes on the file server machine, the AFS <emphasis>File Server</emphasis> process
+      running on that machine advises all other Cache Managers with copies of that file that their version is no longer valid. AFS
+      has a special mechanism for performing these notifications efficiently. When the File Server sends the Cache Manager a copy of
+      a modifiable file, it also sends a <emphasis>callback</emphasis>. A callback functions as a promise from the File Server to
+      contact the Cache Manager if the centrally stored copy of the file is changed while it is being used. If that happens, the
+      File Server <emphasis>breaks</emphasis> the callback. If you run a program that requests data from the changed file, the Cache
+      Manager notices the broken callback and gets an updated copy of the file from the File Server. Callbacks ensure that you are
+      working with the most recent copy of a file.</para>
+
+      <note>
+        <para>The callback mechanism does not guarantee that you immediately see the changes someone else makes to a file you are
+        using. Your Cache Manager does not notice the broken callback until your application program asks it for more data from the
+        file.</para>
+      </note>
+    </sect2>
+
+    <sect2 id="Header_18">
+      <title>Multiple Users Modifying Files</title>
+
+      <indexterm><primary>files</primary><secondary>denying access</secondary></indexterm>
+
+      <indexterm><primary>files</primary><secondary>sharing</secondary></indexterm>
+
+      <para>Like a standard UNIX file system, AFS preserves only the changes to a file that are saved last, regardless of who made
+      the changes. When collaborating with someone on the same files, you must coordinate your work to avoid overwriting each
+      other's changes. You can use AFS access control lists (ACLs) to limit the ability of other users to access or change your
+      files, and so prevent them from accidentally overwriting your files. See <link linkend="HDRWQ44">Protecting Your Directories
+      and Files</link>.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ11">
+    <title>AFS Security</title>
+
+    <indexterm><primary>AFS</primary><secondary>security</secondary></indexterm>
+
+    <indexterm><primary>security in AFS</primary></indexterm>
+
+    <para>AFS makes it easy for many users to access the same files, but also uses several mechanisms to ensure that only authorized
+    users access the AFS filespace. The mechanisms include the following:
+
+    <itemizedlist>
+      <listitem>
+        <para>Passwords and mutual authentication ensure that only authorized users access AFS filespace</para>
+      </listitem>
+
+      <listitem>
+        <para>Access control lists enable users to restrict or permit access to their own directories</para>
+      </listitem>
+    </itemizedlist>
+</para>
+
+    <sect2 id="HDRWQ12">
+      <title>Passwords and Mutual Authentication</title>
+
+      <indexterm><primary>mutual authentication</primary></indexterm>
+
+      <indexterm><primary>authentication</primary><secondary>mutual</secondary></indexterm>
+
+      <indexterm><primary>password</primary></indexterm>
+
+      <para>AFS uses two related mechanisms to ensure that only authorized users access the filespace: passwords and mutual
+      authentication. Both mechanisms require that a user prove his or her identity.</para>
+
+      <para>When you first identify yourself to AFS, you must provide the password associated with your username, to prove that you
+      are who you say you are. When you provide the correct password, you become <emphasis>authenticated</emphasis> and your Cache
+      Manager receives a <emphasis>token</emphasis>. A token is a package of information that is scrambled by an AFS authentication
+      program using your AFS password as a key. Your Cache Manager can unscramble the token because it knows your password and AFS's
+      method of scrambling. <indexterm><primary>tokens</primary><secondary>as proof of authentication</secondary></indexterm> <indexterm><primary>authentication</primary><secondary>defined</secondary></indexterm></para>
+
+      <para>The token acts as proof to AFS server programs that you are authenticated as a valid AFS user. It serves as the basis
+      for the second means through which AFS creates security, called <emphasis>mutual authentication</emphasis>. Under mutual
+      authentication, both parties communicating across the network prove their identities to one another. AFS requires mutual
+      authentication whenever a server and client (most often, a Cache Manager) communicate with each other.</para>
+
+      <para>The mutual authentication protocol that AFS uses is designed to make it very difficult for people to authenticate
+      fraudulently. When your Cache Manager contacts a File Server on your behalf, it sends the token you obtained when you
+      authenticated. The token is encrypted with a key that only an AFS File Server can know. If the File Server can decrypt your
+      token, it can communicate with your Cache Manager. In turn, the Cache Manager accepts the File Server as genuine because the
+      File Server can decrypt and use the information in the token. <indexterm><primary>tokens</primary><secondary>use in mutual authentication</secondary></indexterm></para>
+    </sect2>
+
+    <sect2 id="Header_21">
+      <title>Access Control Lists</title>
+
+      <indexterm><primary>ACL</primary><secondary>described</secondary></indexterm>
+
+      <para>AFS uses <emphasis>access control lists</emphasis> (<emphasis>ACLs</emphasis>) to determine who can access the
+      information in the AFS filespace. Each AFS directory has an ACL to specify what actions different users can perform on that
+      directory and its files. An ACL can contain up to about 20 entries for users, groups, or both; each entry lists a user or
+      group and the permissions it possesses.</para>
+
+      <para>The owner of a directory and system administrators can always administer an ACL. Users automatically own their home
+      directories and subdirectories. Other non-owner users can define a directory's ACL only if specifically granted that
+      permission on the ACL. For more information on ACLs, see <link linkend="HDRWQ44">Protecting Your Directories and Files</link>
+      .</para>
+
+      <para>A group is composed of one or more users and client machines. If a user belongs to a group that appears on an ACL, the
+      user gets all of the permissions granted to that group, just as if the user were listed directly on the ACL. Similarly, if a
+      user is logged into a client machine that belongs to a group, the user has all of the permissions granted to that group. For
+      instructions on defining and using groups, see <link linkend="HDRWQ60">Using Groups</link>.</para>
+
+      <para>All users who can access your cell's filespace, authenticated or not, are automatically assigned to a group called
+      <emphasis role="bold">system:anyuser</emphasis>. For a discussion of placing the <emphasis
+      role="bold">system:anyuser</emphasis> group on ACLs, see <link linkend="HDRWQ51">Extending Access to Users from Foreign
+      Cells</link>.</para>
+
+      <note>
+        <para>You can use the UNIX mode bits to control access on specific files within an AFS directory; however, the effect of
+        these mode bits is different under AFS than in the standard UNIX file system. See <link linkend="HDRWQ16">File and Directory
+        Protection</link>.</para>
+      </note>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ13">
+    <title>Differences Between UNIX and AFS</title>
+
+    <para>AFS is designed to be similar to the UNIX file system. For instance, many of the basic UNIX file manipulation commands
+    (<emphasis role="bold">cp</emphasis> for copy, <emphasis role="bold">rm</emphasis> for remove, and so on) are the same in AFS as
+    they are as in UNIX. All of your application programs work as they did before. The following sections describe some of the
+    differences between a standard UNIX file system and AFS.</para>
+
+    <sect2 id="HDRWQ14">
+      <title>File Sharing</title>
+
+      <indexterm><primary>UNIX, differences with AFS</primary><secondary>file transfer</secondary></indexterm>
+
+      <indexterm><primary>UNIX, differences with AFS</primary><secondary>sharing files</secondary></indexterm>
+
+      <indexterm><primary>files</primary><secondary>sharing</secondary></indexterm>
+
+      <para>AFS enables users to share remote files as easily as local files. To access a file on a remote machine in AFS, you
+      simply specify the file's pathname. In contrast, to access a file in a remote machine's UNIX file system, you must log into
+      the remote machine or create a mount point on the local machine that points to a directory in the remote machine's UNIX file
+      system.</para>
+
+      <para>AFS users can see and share all the files under the <emphasis role="bold">/afs</emphasis> root directory, given the
+      appropriate privileges. An AFS user who has the necessary privileges can access a file in any AFS cell, simply by specifying
+      the file's pathname. File sharing in AFS is not restricted by geographical distances or operating system differences.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ15">
+      <title>Login and Authentication</title>
+
+      <indexterm><primary>UNIX, differences with AFS</primary><secondary>login</secondary></indexterm>
+
+      <para>To become an authenticated AFS user, you need to provide a password to AFS.
+
+      <itemizedlist>
+        <listitem>
+          <para>On machines that use an AFS-modified login utility, logging in is a one-step process; your initial login
+          automatically authenticates you with AFS.</para>
+        </listitem>
+
+        <listitem>
+          <para>On machines that do not use an AFS-modified login utility, you must perform two steps.
+
+          <orderedlist>
+            <listitem>
+              <para>Log in to your local machine.</para>
+            </listitem>
+
+            <listitem>
+              <para>Issue the <emphasis role="bold">klog</emphasis> command with the <emphasis role="bold">-setpag</emphasis>
+              argument to authenticate with AFS and get your token.</para>
+            </listitem>
+          </orderedlist>
+</para>
+        </listitem>
+      </itemizedlist>
+</para>
+
+      <para>Your system administrator can tell you whether your machine uses an AFS-modified login utility or not. Then see the
+      login instructions in <link linkend="HDRWQ21">Logging in and Authenticating with AFS</link>.</para>
+
+      <para>AFS authentication passwords are stored in special AFS database, rather than in the local password file (<emphasis
+      role="bold">/etc/passwd</emphasis> or equivalent). If your machine uses an AFS-modified login utility, you can change your
+      password with a single command. If your machine does not use an AFS-modified login utility, you must issue separate commands
+      to change your AFS and local passwords. See <link linkend="HDRWQ36">Changing Your Password</link>. <indexterm><primary>UNIX, differences with AFS</primary><secondary>passwords</secondary></indexterm>
+      <indexterm><primary>local password file (/etc/passwd)</primary></indexterm> <indexterm><primary>passwd</primary><secondary>file</secondary></indexterm></para>
+    </sect2>
+
+    <sect2 id="HDRWQ16">
+      <title>File and Directory Protection</title>
+
+      <indexterm><primary>ACL</primary><secondary>compared to UNIX mode bits</secondary></indexterm>
+
+      <indexterm><primary>UNIX, differences with AFS</primary><secondary>file access/protection</secondary></indexterm>
+
+      <para>AFS does not rely on the mode bit protections of a standard UNIX system (though its protection system does interact with
+      these mode bits). Instead, AFS uses an access control list (ACL) to control access to each directory and its contents. The
+      following list summarizes the differences between the two methods:
+
+      <itemizedlist>
+        <listitem>
+          <para>UNIX mode bits specify three types of access permissions: <emphasis role="bold">r</emphasis> (<emphasis
+          role="bold">read</emphasis>), <emphasis role="bold">w</emphasis> (<emphasis role="bold">write</emphasis>), and <emphasis
+          role="bold">x</emphasis> (<emphasis role="bold">execute</emphasis>). An AFS ACL uses seven types of permissions: <emphasis
+          role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>), <emphasis role="bold">l</emphasis> (<emphasis
+          role="bold">lookup</emphasis>), <emphasis role="bold">i</emphasis> (<emphasis role="bold">insert</emphasis>), <emphasis
+          role="bold">d</emphasis> (<emphasis role="bold">delete</emphasis>), <emphasis role="bold">w</emphasis> (<emphasis
+          role="bold">write</emphasis>), <emphasis role="bold">k</emphasis> (<emphasis role="bold">lock</emphasis>), and <emphasis
+          role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>). For more information, see <link
+          linkend="HDRWQ46">The AFS ACL Permissions</link> and <link linkend="HDRWQ59">How AFS Uses the UNIX Mode
+          Bits</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>The three sets of mode bits on each UNIX file or directory enable you to grant permissions to three users or groups
+          of users: the file or directory's owner, the group that owns the file or directory, and all other users. An ACL can
+          accommodate up to about 20 entries, each of which extends certain permissions to a user or group. Unlike standard UNIX, a
+          user can belong to an unlimited number of groups, and groups can be defined by both users and system administrators. See
+          <link linkend="HDRWQ60">Using Groups</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>UNIX mode bits are set individually on each file and directory. An ACL applies to all of the files in a directory.
+          While at first glance the AFS method possibly seems less precise, in actuality (given a proper directory structure) there
+          are no major disadvantages to directory-level protections and they are easier to establish and maintain.</para>
+        </listitem>
+      </itemizedlist>
+</para>
+    </sect2>
+
+    <sect2 id="HDRWQ17">
+      <title>Machine Outages</title>
+
+      <para>The kinds of failures you experience when a standard UNIX file system goes down are different than when one or more
+      individual AFS file server machines become unavailable. When a standard UNIX file system is inaccessible, the system simply
+      locks up and you can lose changes to any files with which you were working.</para>
+
+      <para>When an AFS file server machine becomes inaccessible, you cannot access the files on that machine. If a copy of the file
+      is available from another file server machine, however, you do not necessarily even notice the server outage. This is because
+      AFS gives your cell's system administrators the ability to store copies of popular programs on multiple file servers. The
+      Cache Manager chooses between the copies automatically; when one copy becomes unavailable, the Cache Manager simply chooses
+      another.</para>
+
+      <para>If there are no other copies of a file that is stored on an inaccessible server machine, you can usually continue to use
+      the copy stored in your client machine's local AFS cache. However, you cannot save changes to files stored on an inaccessible
+      file server machine until it is accessible again.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ18">
+      <title>Remote Commands</title>
+
+      <para><indexterm><primary>UNIX, differences with AFS</primary><secondary>commands</secondary></indexterm> <indexterm><primary>remote commands</primary></indexterm> <indexterm><primary>commands</primary><secondary>ftp</secondary></indexterm> <indexterm><primary>ftp command</primary></indexterm> <indexterm><primary>commands</primary><secondary>rcp</secondary></indexterm>
+      <indexterm><primary>rcp command</primary></indexterm> <indexterm><primary>commands</primary><secondary>rsh</secondary></indexterm> <indexterm><primary>rsh command</primary></indexterm> The UNIX <emphasis>remote commands</emphasis> enable you
+      to run programs on a remote machine without establishing a connection to it by using a program such as <emphasis
+      role="bold">telnet</emphasis>. Many of the remote commands (such as <emphasis role="bold">ftp</emphasis>, <emphasis
+      role="bold">rcp</emphasis>, and <emphasis role="bold">rsh</emphasis>) remain available in AFS, depending on how your
+      administrators have configured them. If the remote machine has a Cache Manager, your token is used there also and you are
+      authenticated while the remote command runs. If the remote machine does not run a Cache Manager, you receive the following
+      message:</para>
+
+      <programlisting>
+   Warning: unable to authenticate.
+</programlisting>
+
+      <para>In this case, you are logged into the remote machine's UNIX file system, but you are not authenticated to AFS. You can
+      access the local files on the remote machine and the AFS directories that grant access to the <emphasis
+      role="bold">system:anyuser</emphasis> group, but you cannot access protected AFS directories.</para>
+    </sect2>
+
+    <sect2 id="Header_28">
+      <title>Differences in the Semantics of Standard UNIX Commands</title>
+
+      <para>This section summarizes differences in the functionality of some commonly issued UNIX commands.
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">chmod <indexterm><primary>chmod command</primary></indexterm> <indexterm><primary>commands</primary><secondary>chmod</secondary></indexterm> </emphasis></term>
+
+          <listitem>
+            <para>Only members of the <emphasis role="bold">system:administrators</emphasis> group can use this command to turn on
+            the setuid, setgid or sticky mode bits on AFS files. (For more information about this group, see <link
+            linkend="HDRWQ50">Using the System Groups on ACLs</link>.)</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">chown <indexterm><primary>chown command</primary></indexterm> <indexterm><primary>commands</primary><secondary>chown</secondary></indexterm> </emphasis></term>
+
+          <listitem>
+            <para>Only members of the <emphasis role="bold">system:administrators</emphasis> group can issue this command on AFS
+            files.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">chgrp <indexterm><primary>chgrp command</primary></indexterm> <indexterm><primary>commands</primary><secondary>chgrp</secondary></indexterm> </emphasis></term>
+
+          <listitem>
+            <para>Only members of the <emphasis role="bold">system:administrators</emphasis> group can issue this command on AFS
+            files and directories.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">groups <indexterm><primary>groups command</primary></indexterm> <indexterm><primary>commands</primary><secondary>groups</secondary></indexterm> </emphasis></term>
+
+          <listitem>
+            <para>If the user's AFS tokens are identified by a process authentication group (PAG), the output of this command
+            includes two large numbers. For a description of PAGs, see <link linkend="HDRWQ24">Authenticating with
+            AFS</link>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">inetd <indexterm><primary>inetd command</primary></indexterm> <indexterm><primary>commands</primary><secondary>inetd</secondary></indexterm> </emphasis></term>
+
+          <listitem>
+            <para>The AFS version of this daemon authenticates remote issuers of the AFS-modified <emphasis
+            role="bold">rcp</emphasis> and <emphasis role="bold">rsh</emphasis> commands with AFS.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">login utilities <indexterm><primary>login utility</primary></indexterm> </emphasis></term>
+
+          <listitem>
+            <para>AFS-modified login utilities both log you into the local UNIX file system and authenticate you with AFS.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">ln <indexterm><primary>ln command</primary></indexterm> <indexterm><primary>commands</primary><secondary>ln</secondary></indexterm> </emphasis></term>
+
+          <listitem>
+            <para>You cannot use this command to create a hard link between files that reside in different AFS directories. You must
+            add the <emphasis role="bold">-s</emphasis> option to create a symbolic link instead.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ19">
+    <title>Using AFS with NFS</title>
+
+    <para>Some cells use the Networking File System (NFS) in addition to AFS. If you work on an NFS client machine, your system
+    administrator can configure it to access the AFS filespace through a program called the <emphasis>NFS/AFS
+    Translator</emphasis><superscript>TM</superscript>. See <link linkend="HDRWQ80">Appendix A, Using the NFS/AFS
+    Translator</link>.</para>
+  </sect1>
+</chapter>

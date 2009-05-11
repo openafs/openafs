@@ -1,0 +1,785 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML
+><HEAD
+><TITLE
+>Using the NFS/AFS Translator</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.7"><LINK
+REL="HOME"
+TITLE="AFS User Guide"
+HREF="book1.html"><LINK
+REL="PREVIOUS"
+TITLE="Troubleshooting"
+HREF="c3402.html"><LINK
+REL="NEXT"
+TITLE="AFS Command Syntax and Online Help"
+HREF="a3812.html"></HEAD
+><BODY
+CLASS="appendix"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>AFS User Guide: Version 3.6</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="c3402.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+></TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="a3812.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="appendix"
+><H1
+><A
+NAME="HDRWQ80"
+></A
+>Appendix A. Using the NFS/AFS Translator</H1
+><P
+>&#13;
+ 
+
+ 
+
+ 
+
+ Some
+    cells use the Network File System (NFS) in addition to AFS. If you work on an NFS client machine, your system
+    administrator can configure it to access the AFS filespace through a program called the <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>NFS/AFS
+    Translator</I
+></SPAN
+><SUP
+>TM</SUP
+>. If you have an AFS account, you can access AFS as an
+    authenticated user while working on your NFS client machine. Otherwise, you access AFS as the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>anonymous</B
+></SPAN
+> user.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>Acceptable NFS/AFS Translator performance requires that NFS is functioning correctly.</P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ81"
+>Requirements for Using the NFS/AFS Translator</A
+></H1
+><P
+>&#13;
+ 
+
+ For you to use the NFS/AFS Translator, your system
+    administrator must configure the following types of machines as indicated:</P
+><UL
+><LI
+><P
+>An <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>NFS/AFS translator machine</I
+></SPAN
+> is an AFS client machine that also acts as an
+      NFS server machine. Its Cache Manager acts as the surrogate Cache Manager for your NFS client machine. Ask your
+      system administrator which translator machines you can use.</P
+></LI
+><LI
+><P
+>Your NFS client machine must have an NFS mount to a translator machine. Most often, your system
+      administrator mounts the translator machine's <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+> directory and names the mount
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+> as well. This enables you to access the entire AFS filespace using standard
+      AFS pathnames. It is also possible to create mounts directly to subdirectories of
+      <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+>, and to give NFS mounts different names on the NFS client
+      machine.</P
+></LI
+></UL
+><P
+>Your access to AFS is much more extensive if you have an AFS user account. If you do not, the AFS servers
+    recognize you as the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>anonymous</B
+></SPAN
+> user and only grant you the access available to
+    members of the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> group.</P
+><P
+>If your NFS client machine uses an operating system that AFS supports, your system administrator can
+    configure it to enable you to issue many AFS commands on the machine. Ask him or her about the configuration and
+    which commands you can issue.</P
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="Header_160"
+>Accessing AFS via the Translator</A
+></H1
+><P
+>If you do not have an AFS account or choose not to access AFS as an authenticated user, then all you do to
+    access AFS is provide the pathname of the relevant file. Its ACL must grant the necessary permissions to the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>system:anyuser</B
+></SPAN
+> group.</P
+><P
+>If you have an AFS account and want to access AFS as an authenticated user, the best method depends on
+    whether your NFS machine is a supported type. If it is, use the instructions in <A
+HREF="a3632.html#HDRWQ82"
+>To
+    Authenticate on a Supported Operating System</A
+>. If it is not a supported type, use the instructions in
+    <A
+HREF="a3632.html#HDRWQ83"
+>To Authenticate on an Unsupported Operating System</A
+>.</P
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ82"
+>To Authenticate on a Supported Operating System</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Log into the NFS client machine using your NFS username.</P
+></LI
+><LI
+><P
+>&#13;        Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command. For complete instructions, see
+        <A
+HREF="c569.html#HDRWQ29"
+>To Authenticate with AFS</A
+>. 
+<PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog -setpag</B
+></SPAN
+>
+</PRE
+>
+      </P
+></LI
+></OL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ83"
+>To Authenticate on an Unsupported Operating System</A
+></H2
+><OL
+TYPE="1"
+><LI
+><P
+>Log onto the NFS client machine using your NFS username.</P
+></LI
+><LI
+><P
+><A
+NAME="LINFS-TELNET"
+></A
+>Establish a connection to the NFS/AFS translator machine you are
+      using (for example, using the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>telnet</B
+></SPAN
+> utility) and log onto it using your AFS
+      username (which is normally the same as your NFS username).</P
+></LI
+><LI
+><P
+>&#13;        If the NFS/AFS translator machine uses an AFS-modified login utility, then you obtained AFS tokens in Step
+        <A
+HREF="a3632.html#LINFS-TELNET"
+>2</A
+>. To check, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tokens</B
+></SPAN
+> command,
+        which is described fully in <A
+HREF="c569.html#HDRWQ30"
+>To Display Your Tokens</A
+>. 
+<PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>tokens</B
+></SPAN
+>
+</PRE
+>
+        If you do not have tokens, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command, which is described fully in
+        <A
+HREF="c569.html#HDRWQ29"
+>To Authenticate with AFS</A
+>. 
+<PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog -setpag</B
+></SPAN
+>
+</PRE
+>
+      </P
+></LI
+><LI
+><P
+>&#13;        <A
+NAME="LINFS-KNFS"
+></A
+>Issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>knfs</B
+></SPAN
+> command to associate your AFS tokens
+        with your UNIX UID on the NFS client machine where you are working. This enables the Cache Manager on the
+        translator machine to use the tokens properly when you access AFS from the NFS client machine. 
+        </P
+><P
+>If your NFS client machine is a system type for which AFS defines a system name, it can make sense
+        to add the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-sysname</B
+></SPAN
+> argument. This argument helps the Cache Manager access
+        binaries specific to your NFS client machine, if your system administrator has used the
+        <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>@sys</I
+></SPAN
+> variable in pathnames. Ask your system administrator if this argument is useful for
+        you. 
+
+ 
+
+</P
+><PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>knfs</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>host name</VAR
+>&#62; [&#60;<VAR
+CLASS="replaceable"
+>user ID (decimal)</VAR
+>&#62;]  \
+          [<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-sysname</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>host's '@sys' value</VAR
+>&#62;]
+</PRE
+><P
+>where</P
+><DIV
+CLASS="variablelist"
+><DL
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><VAR
+CLASS="replaceable"
+>host name</VAR
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies the fully-qualified hostname of your NFS client machine (such as
+          <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>nfs52.abc.com</B
+></SPAN
+>).</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+><VAR
+CLASS="replaceable"
+>user ID</VAR
+></B
+></SPAN
+></DT
+><DD
+><P
+>Specifies your UNIX UID or equivalent (not your username) on the NFS client machine. If your
+          system administrator has followed the conventional practice, then your UNIX and AFS UIDs are the same. If you
+          do not know your local UID on the NFS machine, ask your system administrator for assistance. Your system
+          administrator can also explain the issues you need to be aware of if your two UIDs do not match, or if you
+          omit this argument.</P
+></DD
+><DT
+><SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-sysname</B
+></SPAN
+></DT
+><DD
+><P
+>Specifies your NFS client machine's system type name.</P
+></DD
+></DL
+></DIV
+></LI
+><LI
+><P
+><A
+NAME="LINFS-LOGOUT"
+></A
+>(<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Optional</B
+></SPAN
+>) Log out from the
+      translator machine, but do not unauthenticate.</P
+></LI
+><LI
+><P
+>Work on the NFS client machine, accessing AFS as necessary.</P
+></LI
+><LI
+><P
+>&#13;        When you are finished accessing AFS, issue the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>knfs</B
+></SPAN
+> command on the translator
+        machine again. Provide the same <VAR
+CLASS="replaceable"
+>host name</VAR
+> and <VAR
+CLASS="replaceable"
+>user ID</VAR
+>
+        arguments as in Step <A
+HREF="a3632.html#LINFS-KNFS"
+>4</A
+>, and add the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-unlog</B
+></SPAN
+>
+        flag to destroy your tokens. If you logged out from the translator machine in Step
+        <A
+HREF="a3632.html#LINFS-LOGOUT"
+>5</A
+>, then you must first reestablish a connection to the translator machine
+        as in Step <A
+HREF="a3632.html#LINFS-TELNET"
+>2</A
+>. 
+<PRE
+CLASS="programlisting"
+>&#13;   % <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>knfs</B
+></SPAN
+> &#60;<VAR
+CLASS="replaceable"
+>host name</VAR
+>&#62; [&#60;<VAR
+CLASS="replaceable"
+>user ID (decimal)</VAR
+>&#62;] <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-unlog</B
+></SPAN
+>
+</PRE
+>
+      </P
+></LI
+></OL
+></DIV
+></DIV
+><DIV
+CLASS="sect1"
+><H1
+CLASS="sect1"
+><A
+NAME="HDRWQ84"
+>Troubleshooting the NFS/AFS Translator</A
+></H1
+><P
+>Acceptable performance by the NFS/AFS translator depends for the most part on NFS. Sometimes, problems that
+    appear to be AFS file server outages, broken connections, or inaccessible files are actually caused by NFS
+    outages.</P
+><P
+>This section describes some common problems and their possible causes. If other problems arise, contact your
+    system administrator, who can ask the AFS Product Support group for assistance if necessary.</P
+><DIV
+CLASS="note"
+><BLOCKQUOTE
+CLASS="note"
+><P
+><B
+>Note: </B
+>To avoid degrading AFS performance, the Cache Manager on the translator machine does not immediately
+        send changes made on NFS client machines to the File Server. Instead, it checks every 60 seconds for such
+        changes and sends them then. It can take longer for changes made on an NFS client machine to be saved than for
+        changes made on an AFS client machine. The save operation must complete before the changes are visible on NFS
+        client machines that are using a different translator machine or on AFS client machines.</P
+></BLOCKQUOTE
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="HDRWQ85"
+>Your NFS Client Machine is Frozen</A
+></H2
+><P
+>If your system administrator has used the recommended options when creating an NFS mount to an NFS/AFS
+    translator machine, then the mount is both <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>hard</I
+></SPAN
+> and <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>interruptible</I
+></SPAN
+>:</P
+><UL
+><LI
+><P
+>A hard mount means that the NFS client retries its requests if it does not receive a response
+      within the expected time frame. This is useful because requests have to pass through both the NFS and AFS client
+      software, which can sometimes take longer than the NFS client expects. However, it means that if the NFS/AFS
+      translator machine actually becomes inaccessible, your NFS client machine can become inoperative
+      (<SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>freeze</I
+></SPAN
+> or <SPAN
+CLASS="emphasis"
+><I
+CLASS="emphasis"
+>hang</I
+></SPAN
+>).</P
+></LI
+><LI
+><P
+>If the NFS mount is interruptible, then in the case of an NFS/AFS translator machine outage you
+      can press &#60;<SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>Ctrl-c</B
+></SPAN
+>&#62; or another interrupt signal to halt the NFS client's
+      repeated attempts to access AFS. You can then continue to work locally, or can NFS-mount another translator
+      machine. If the NFS mount is not interruptible, you must actually remove the mount to the inaccessible translator
+      machine.</P
+></LI
+></UL
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_165"
+>NFS/AFS Translator Reboots</A
+></H2
+><P
+>If you have authenticated to AFS and your translator machine reboots, you must issue the
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>klog</B
+></SPAN
+> command (and <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>knfs</B
+></SPAN
+> command, if appropriate)
+    to reauthenticate. If you used the <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>knfs</B
+></SPAN
+> command's
+    <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>-sysname</B
+></SPAN
+> argument to define your NFS client machine's system name, use it
+    again.</P
+></DIV
+><DIV
+CLASS="sect2"
+><H2
+CLASS="sect2"
+><A
+NAME="Header_166"
+>System Error Messages</A
+></H2
+><P
+>This section explains possible meanings for NFS error messages you receive while accessing AFS
+    filespace.</P
+><P
+><SAMP
+CLASS="computeroutput"
+>stale NFS client</SAMP
+></P
+><P
+><SAMP
+CLASS="computeroutput"
+>Getpwd: can't read</SAMP
+></P
+><P
+>Both messages possibly means that your translator machine was rebooted and cannot determine the pathname to
+    the current working directory. To reestablish the path, change directory and specify the complete pathname starting
+    with <SPAN
+CLASS="bold"
+><B
+CLASS="emphasis"
+>/afs</B
+></SPAN
+>.</P
+><P
+><SAMP
+CLASS="computeroutput"
+>NFS server <VAR
+CLASS="replaceable"
+>translator_machine</VAR
+> is not responding still
+    trying</SAMP
+>.</P
+><P
+>The NFS client is not getting a response from the NFS/AFS translator machine. If the NFS mount to the
+    translator machine is a hard mount, your NFS client continues retrying the request until it gets a response (see
+    <A
+HREF="a3632.html#HDRWQ85"
+>Your NFS Client Machine is Frozen</A
+>). If the NFS mount to the translator machine is a
+    soft mount, the NFS client stops retrying after a certain number of attempts (three by default).</P
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="c3402.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="book1.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="a3812.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Troubleshooting</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+>&nbsp;</TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>AFS Command Syntax and Online Help</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

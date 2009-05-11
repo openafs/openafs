@@ -1,0 +1,1885 @@
+<index>
+
+<!-- This file was produced by collateindex.pl.         -->
+<!-- Remove this comment if you edit this file by hand! -->
+<!-- ULINK is abused here.
+
+      The URL attribute holds the URL that points from the index entry
+      back to the appropriate place in the output produced by the HTML
+      stylesheet. (It's much easier to calculate this URL in the first
+      pass.)
+
+      The Role attribute holds the ID (either real or manufactured) of
+      the corresponding INDEXTERM.  This is used by the print backends
+      to produce page numbers.
+
+      The entries below are sorted and collated into the correct order.
+      Duplicates may be removed in the HTML backend, but in the print
+      backends, it is impossible to suppress duplicate pages or coalesce
+      sequences of pages into a range.
+-->
+
+<indexdiv><title>A</title>
+
+<indexentry>
+  <primaryie>a ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1571">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>a privacy flag on groups,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3255">Protecting Group-Related Information</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>access control list
+  </primaryie>
+    <seeie>ACL</seeie>
+</indexentry>
+
+<indexentry>
+  <primaryie>access permissions on ACL,
+    <ulink url="c1444.html#HDRWQ46" role="AEN1495">The AFS ACL Permissions</ulink>
+  </primaryie>
+  <seealsoie>ACL</seealsoie>
+</indexentry>
+
+<indexentry>
+  <primaryie>access to AFS filespace
+  </primaryie>
+  <secondaryie>ACL entries control,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1981">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>controlling at directory level,
+    <ulink url="c1444.html#Header_81" role="AEN1489">Directory Level Access Control</ulink>
+  </secondaryie>
+  <secondaryie>controlling for subdirectories,
+    <ulink url="c1444.html#Header_90" role="AEN1775">Enabling Access to Subdirectories</ulink>
+  </secondaryie>
+  <secondaryie>enabling for service processes,
+    <ulink url="c1444.html#Header_91" role="AEN1795">Extending Access to Service Processes</ulink>
+  </secondaryie>
+  <secondaryie>enabling for users from foreign cells,
+    <ulink url="c1444.html#HDRWQ51" role="AEN1806">Extending Access to Users from Foreign Cells</ulink>
+  </secondaryie>
+  <secondaryie>failures, troubleshooting,
+    <ulink url="c3402.html#HDRWQ77" role="AEN3423">Problem: Cannot Access, Copy, or Save File</ulink>
+  </secondaryie>
+  <secondaryie>format of pathnames,
+    <ulink url="c569.html#Header_54" role="AEN948">AFS Pathnames</ulink>
+  </secondaryie>
+  <secondaryie>from NFS client machines,
+    <ulink url="a3632.html" role="AEN3643">Using the NFS/AFS Translator</ulink>
+  </secondaryie>
+  <secondaryie>granting and denying to users,
+    <ulink url="c1444.html#HDRWQ45" role="AEN1452">Access Control Lists</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>ACL
+  </primaryie>
+  <secondaryie>accidentally removed yourself,
+    <ulink url="c3402.html#HDRWQ78" role="AEN3544">Problem: Accidentally Removed Your Entry from an ACL</ulink>
+  </secondaryie>
+  <secondaryie>auxiliary permissions,
+    <ulink url="c1444.html#Header_85" role="AEN1610">The Eight Auxiliary Permissions</ulink>
+  </secondaryie>
+  <secondaryie>clearing,
+    <ulink url="c1444.html#HDRWQ57" role="AEN2213">Completely Replacing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>compared to UNIX mode bits,
+    <ulink url="c113.html#HDRWQ16" role="AEN411">File and Directory Protection</ulink>
+  </secondaryie>
+  <secondaryie>copying between directories,
+    <ulink url="c1444.html#HDRWQ58" role="AEN2303">Copying ACLs Between Directories</ulink>
+  </secondaryie>
+  <secondaryie>creating negative entry,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2107">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>creating normal entry,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1973">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>described,
+    <ulink url="c113.html#Header_21" role="AEN342">Access Control Lists</ulink>,
+    <ulink url="c1444.html#HDRWQ45" role="AEN1458">Access Control Lists</ulink>
+  </secondaryie>
+  <secondaryie>displaying,
+    <ulink url="c1444.html#HDRWQ52" role="AEN1812">Displaying an ACL</ulink>
+  </secondaryie>
+  <secondaryie>foreign users on,
+    <ulink url="c1444.html#HDRWQ50" role="AEN1759">Using the System Groups on ACLs</ulink>
+  </secondaryie>
+  <secondaryie>negative permissions,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1682">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+  <secondaryie>normal permissions,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1679">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+  <secondaryie>normal vs. negative permissions,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1676">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+  <secondaryie>permissions defined,
+    <ulink url="c1444.html#HDRWQ46" role="AEN1502">The AFS ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>removing obsolete entries,
+    <ulink url="c2454.html#HDRWQ71" role="AEN2954">Removing Users from a Group and Deleting a Group</ulink>
+  </secondaryie>
+  <secondaryie>replacing all entries,
+    <ulink url="c1444.html#HDRWQ57" role="AEN2210">Completely Replacing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>setting,
+    <ulink url="c1444.html#HDRWQ54" role="AEN1943">Changing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>shorthand notation for grouping sets of permissions,
+    <ulink url="c1444.html#Header_86" role="AEN1627">Shorthand Notation for Sets of Permissions</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>adding
+  </primaryie>
+  <secondaryie>ACL entry to negative permissions section,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2110">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>ACL entry to normal permissions section,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1976">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>users to groups,
+    <ulink url="c2454.html#HDRWQ68" role="AEN2778">Creating Groups and Adding Members</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>administer ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1569">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>AFS
+  </primaryie>
+  <secondaryie>accessing filespace,
+    <ulink url="c569.html#Header_54" role="AEN945">AFS Pathnames</ulink>
+  </secondaryie>
+  <secondaryie>accessing from NFS client machine,
+    <ulink url="a3632.html" role="AEN3640">Using the NFS/AFS Translator</ulink>
+  </secondaryie>
+  <secondaryie>filespace as extension of local filespace,
+    <ulink url="c113.html#HDRWQ4" role="AEN165">AFS Filespace and Local Filespace</ulink>
+  </secondaryie>
+  <secondaryie>security,
+    <ulink url="c113.html#HDRWQ11" role="AEN304">AFS Security</ulink>
+  </secondaryie>
+  <secondaryie>sharing information,
+    <ulink url="c113.html#HDRWQ3" role="AEN119">AFS Concepts</ulink>
+  </secondaryie>
+  <secondaryie>transparent access,
+    <ulink url="c113.html#HDRWQ3" role="AEN122">AFS Concepts</ulink>
+  </secondaryie>
+  <secondaryie>UIDs and GIDs,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2713">To Display A Group Entry</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>afs (/afs) directory
+  </primaryie>
+  <secondaryie>as root of AFS filespace,
+    <ulink url="c113.html#HDRWQ4" role="AEN168">AFS Filespace and Local Filespace</ulink>,
+    <ulink url="c569.html#Header_54" role="AEN951">AFS Pathnames</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>afs: failed to store file (error message),
+    <ulink url="c3402.html#Header_156" role="AEN3624">Error Message: "fs: You don't have the required access rights on 'file'"</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>all shorthand for ACL permissions,
+    <ulink url="c1444.html#Header_86" role="AEN1644">Shorthand Notation for Sets of Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>apropos operation code,
+    <ulink url="a3812.html#Header_180" role="AEN4117">Displaying Command Syntax and Aliases</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>arguments to AFS commands,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3856">AFS Command Syntax</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>authentication
+  </primaryie>
+  <secondaryie>as another user,
+    <ulink url="c569.html#Header_39" role="AEN675">Obtaining Tokens as Another User</ulink>
+  </secondaryie>
+  <secondaryie>defined,
+    <ulink url="c113.html#HDRWQ12" role="AEN331">Passwords and Mutual Authentication</ulink>
+  </secondaryie>
+  <secondaryie>in a foreign cell,
+    <ulink url="c569.html#HDRWQ26" role="AEN658">Obtaining Tokens For Foreign Cells</ulink>
+  </secondaryie>
+  <secondaryie>limits on consecutive failed attempts,
+    <ulink url="c569.html#HDRWQ31" role="AEN824">Limits on Failed Authentication Attempts</ulink>
+  </secondaryie>
+  <secondaryie>mutual,
+    <ulink url="c113.html#HDRWQ12" role="AEN319">Passwords and Mutual Authentication</ulink>
+  </secondaryie>
+  <secondaryie>to AFS on NFS client machines,
+    <ulink url="a3632.html#Header_160" role="AEN3675">Accessing AFS via the Translator</ulink>
+  </secondaryie>
+  <secondaryie>tokens as proof,
+    <ulink url="c569.html#HDRWQ24" role="AEN622">Authenticating with AFS</ulink>
+  </secondaryie>
+  <secondaryie>with DCE for DFS access,
+    <ulink url="c569.html#Header_41" role="AEN708">Authenticating for DFS Access</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>auxiliary ACL permissions,
+    <ulink url="c1444.html#Header_85" role="AEN1608">The Eight Auxiliary Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>C</title>
+
+<indexentry>
+  <primaryie>Cache Manager
+  </primaryie>
+  <secondaryie>described,
+    <ulink url="c113.html#HDRWQ9" role="AEN267">The Cache Manager</ulink>
+  </secondaryie>
+  <secondaryie>displaying file server preferences,
+    <ulink url="c1095.html#HDRWQ43" role="AEN1415">Displaying Server Preference Ranks</ulink>
+  </secondaryie>
+  <secondaryie>tokens, use of,
+    <ulink url="c569.html#HDRWQ24" role="AEN628">Authenticating with AFS</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>caching files,
+    <ulink url="c113.html#HDRWQ9" role="AEN265">The Cache Manager</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>callbacks,
+    <ulink url="c113.html#HDRWQ10" role="AEN284">Updating Copies of Cached Files</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>cells
+  </primaryie>
+  <secondaryie>defined,
+    <ulink url="c113.html#HDRWQ5" role="AEN185">Cells and Sites</ulink>
+  </secondaryie>
+  <secondaryie>local vs. foreign,
+    <ulink url="c113.html#HDRWQ5" role="AEN206">Cells and Sites</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>changing
+  </primaryie>
+  <secondaryie>ACLs,
+    <ulink url="c1444.html#HDRWQ54" role="AEN1938">Changing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>AFS password,
+    <ulink url="c569.html#Header_59" role="AEN1056">To Change Your AFS Password</ulink>
+  </secondaryie>
+  <secondaryie>group name,
+    <ulink url="c2454.html#HDRWQ72" role="AEN3084">Changing a Group's Owner or Name</ulink>
+  </secondaryie>
+  <secondaryie>group owner,
+    <ulink url="c2454.html#HDRWQ72" role="AEN3081">Changing a Group's Owner or Name</ulink>
+  </secondaryie>
+  <secondaryie>UNIX password,
+    <ulink url="c569.html#Header_60" role="AEN1083">To Change Your UNIX Password</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>checking
+  </primaryie>
+  <secondaryie>tokens,
+    <ulink url="c569.html#HDRWQ30" role="AEN756">To Display Your Tokens</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>chgrp command,
+    <ulink url="c113.html#Header_28" role="AEN514">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>chmod command,
+    <ulink url="c113.html#Header_28" role="AEN491">Differences in the Semantics of Standard UNIX Commands</ulink>,
+    <ulink url="c1444.html#HDRWQ59" role="AEN2438">How AFS Uses the UNIX Mode Bits</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>chown command,
+    <ulink url="c113.html#Header_28" role="AEN503">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>clearing all ACL entries,
+    <ulink url="c1444.html#HDRWQ57" role="AEN2221">Completely Replacing an ACL</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>client machine,
+    <ulink url="c113.html#Header_9" role="AEN133">Client/Server Computing</ulink>,
+    <ulink url="c113.html#HDRWQ9" role="AEN270">The Cache Manager</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>client/server computing,
+    <ulink url="c113.html#Header_9" role="AEN131">Client/Server Computing</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>commands
+  </primaryie>
+  <secondaryie>AFS, issuing on NFS client machine,
+    <ulink url="a3632.html#HDRWQ81" role="AEN3657">Requirements for Using the NFS/AFS Translator</ulink>
+  </secondaryie>
+  <secondaryie>chgrp,
+    <ulink url="c113.html#Header_28" role="AEN516">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </secondaryie>
+  <secondaryie>chmod,
+    <ulink url="c113.html#Header_28" role="AEN493">Differences in the Semantics of Standard UNIX Commands</ulink>,
+    <ulink url="c1444.html#HDRWQ59" role="AEN2435">How AFS Uses the UNIX Mode Bits</ulink>
+  </secondaryie>
+  <secondaryie>chown,
+    <ulink url="c113.html#Header_28" role="AEN505">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </secondaryie>
+  <secondaryie>dlog,
+    <ulink url="c569.html#Header_41" role="AEN698">Authenticating for DFS Access</ulink>
+  </secondaryie>
+  <secondaryie>dpass,
+    <ulink url="c569.html#Header_41" role="AEN701">Authenticating for DFS Access</ulink>
+  </secondaryie>
+  <secondaryie>fs checkservers,
+    <ulink url="c1095.html#Header_73" role="AEN1348">To Check File Server Machine Status</ulink>
+  </secondaryie>
+  <secondaryie>fs cleanacl,
+    <ulink url="c2454.html#Header_137" role="AEN3049">To Remove Obsolete ACL Entries</ulink>
+  </secondaryie>
+  <secondaryie>fs copyacl,
+    <ulink url="c1444.html#Header_108" role="AEN2341">To Copy an ACL Between Directories</ulink>
+  </secondaryie>
+  <secondaryie>fs examine,
+    <ulink url="c1095.html#Header_67" role="AEN1222">To Display Quota and Other Information about a Volume and Partition</ulink>
+  </secondaryie>
+  <secondaryie>fs getserverprefs,
+    <ulink url="c1095.html#HDRWQ43" role="AEN1409">Displaying Server Preference Ranks</ulink>
+  </secondaryie>
+  <secondaryie>fs listacl,
+    <ulink url="c1444.html#HDRWQ53" role="AEN1841">To display an ACL</ulink>
+  </secondaryie>
+  <secondaryie>fs listcells,
+    <ulink url="c1095.html#Header_76" role="AEN1395">To Display Foreign Cells</ulink>
+  </secondaryie>
+  <secondaryie>fs listquota,
+    <ulink url="c1095.html#Header_65" role="AEN1175">To Display Quota and Other Information about a Volume</ulink>
+  </secondaryie>
+  <secondaryie>fs quota,
+    <ulink url="c1095.html#Header_63" role="AEN1144">To Display Percentage of Quota Used</ulink>
+  </secondaryie>
+  <secondaryie>fs setacl,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1993">To Add, Remove, or Edit Normal ACL Permissions</ulink>,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2129">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>fs whereis,
+    <ulink url="c1095.html#Header_70" role="AEN1283">To Display a File or Directory's Location</ulink>
+  </secondaryie>
+  <secondaryie>ftp,
+    <ulink url="c113.html#HDRWQ18" role="AEN461">Remote Commands</ulink>
+  </secondaryie>
+  <secondaryie>groups,
+    <ulink url="c113.html#Header_28" role="AEN527">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </secondaryie>
+  <secondaryie>inetd,
+    <ulink url="c113.html#Header_28" role="AEN538">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </secondaryie>
+  <secondaryie>kas examine,
+    <ulink url="c569.html#HDRWQ32" role="AEN839">To Display Your Failed Authentication Limit and Lockout Time</ulink>,
+    <ulink url="c569.html#HDRWQ37" role="AEN1026">To Display Password Expiration Date and Reuse Policy</ulink>
+  </secondaryie>
+  <secondaryie>klog,
+    <ulink url="c569.html#HDRWQ29" role="AEN725">To Authenticate with AFS</ulink>
+  </secondaryie>
+  <secondaryie>knfs,
+    <ulink url="a3632.html#HDRWQ83" role="AEN3723">To Authenticate on an Unsupported Operating System</ulink>
+  </secondaryie>
+  <secondaryie>kpasswd,
+    <ulink url="c569.html#Header_59" role="AEN1059">To Change Your AFS Password</ulink>
+  </secondaryie>
+  <secondaryie>ln,
+    <ulink url="c113.html#Header_28" role="AEN557">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </secondaryie>
+  <secondaryie>login,
+    <ulink url="c569.html#HDRWQ22" role="AEN581">Logging In</ulink>
+  </secondaryie>
+  <secondaryie>passwd,
+    <ulink url="c569.html#Header_60" role="AEN1074">To Change Your UNIX Password</ulink>
+  </secondaryie>
+  <secondaryie>pts adduser,
+    <ulink url="c2454.html#HDRWQ70" role="AEN2881">To Add Members to a Group</ulink>
+  </secondaryie>
+  <secondaryie>pts chown,
+    <ulink url="c2454.html#HDRWQ73" role="AEN3109">To Change a Group's Owner</ulink>
+  </secondaryie>
+  <secondaryie>pts creategroup,
+    <ulink url="c2454.html#HDRWQ69" role="AEN2803">To Create a Group</ulink>
+  </secondaryie>
+  <secondaryie>pts delete,
+    <ulink url="c2454.html#Header_135" role="AEN3020">To Delete a Group</ulink>
+  </secondaryie>
+  <secondaryie>pts examine,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2658">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>pts listowned,
+    <ulink url="c2454.html#HDRWQ66" role="AEN2617">To Display the Groups a User or Group Owns</ulink>
+  </secondaryie>
+  <secondaryie>pts membership,
+    <ulink url="c2454.html#HDRWQ65" role="AEN2581">To Display Group Membership</ulink>
+  </secondaryie>
+  <secondaryie>pts removeuser,
+    <ulink url="c2454.html#Header_133" role="AEN2975">To Remove Members from a Group</ulink>
+  </secondaryie>
+  <secondaryie>pts rename,
+    <ulink url="c2454.html#Header_144" role="AEN3178">To Change a Group's Name</ulink>
+  </secondaryie>
+  <secondaryie>pts setfields,
+    <ulink url="c2454.html#HDRWQ75" role="AEN3317">To Set a Group's Privacy Flags</ulink>
+  </secondaryie>
+  <secondaryie>rcp,
+    <ulink url="c113.html#HDRWQ18" role="AEN466">Remote Commands</ulink>
+  </secondaryie>
+  <secondaryie>rsh,
+    <ulink url="c113.html#HDRWQ18" role="AEN471">Remote Commands</ulink>
+  </secondaryie>
+  <secondaryie>suite organization for AFS,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3830">AFS Command Syntax</ulink>
+  </secondaryie>
+  <secondaryie>syntax for AFS,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3820">AFS Command Syntax</ulink>
+  </secondaryie>
+  <secondaryie>tokens,
+    <ulink url="c569.html#HDRWQ30" role="AEN759">To Display Your Tokens</ulink>
+  </secondaryie>
+  <secondaryie>unlog,
+    <ulink url="c569.html#Header_50" role="AEN884">To Discard Tokens</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>communication
+  </primaryie>
+  <secondaryie>among cells and sites,
+    <ulink url="c113.html#HDRWQ5" role="AEN195">Cells and Sites</ulink>
+  </secondaryie>
+  <secondaryie>between clients and servers,
+    <ulink url="c113.html#Header_9" role="AEN143">Client/Server Computing</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>connection timed out (error message),
+    <ulink url="c3402.html#HDRWQ79" role="AEN3609">Error Message: "afs: Lost contact with fileserver"</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>copying
+  </primaryie>
+  <secondaryie>ACL between directories,
+    <ulink url="c1444.html#HDRWQ58" role="AEN2309">Copying ACLs Between Directories</ulink>
+  </secondaryie>
+  <secondaryie>files, inability to,
+    <ulink url="c3402.html#HDRWQ77" role="AEN3417">Problem: Cannot Access, Copy, or Save File</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>creating
+  </primaryie>
+  <secondaryie>ACL as copy of another,
+    <ulink url="c1444.html#HDRWQ58" role="AEN2306">Copying ACLs Between Directories</ulink>
+  </secondaryie>
+  <secondaryie>ACL entry in negative permissions section,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2104">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>ACL entry in normal permissions section,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1970">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>groups,
+    <ulink url="c2454.html#HDRWQ68" role="AEN2781">Creating Groups and Adding Members</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>D</title>
+
+<indexentry>
+  <primaryie>d ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1561">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>delete ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1559">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>deleting groups,
+    <ulink url="c2454.html#HDRWQ71" role="AEN2943">Removing Users from a Group and Deleting a Group</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>denying access with negative ACL entry,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2113">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>directories
+  </primaryie>
+  <secondaryie>accessing AFS,
+    <ulink url="c569.html#HDRWQ34" role="AEN933">Accessing the AFS Filespace</ulink>
+  </secondaryie>
+  <secondaryie>copying ACLs between,
+    <ulink url="c1444.html#HDRWQ58" role="AEN2312">Copying ACLs Between Directories</ulink>
+  </secondaryie>
+  <secondaryie>denying access,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2115">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>displaying location,
+    <ulink url="c1095.html#HDRWQ40" role="AEN1272">Locating Files and Directories</ulink>
+  </secondaryie>
+  <secondaryie>granting access,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1984">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>inability to access,
+    <ulink url="c3402.html#HDRWQ77" role="AEN3420">Problem: Cannot Access, Copy, or Save File</ulink>
+  </secondaryie>
+  <secondaryie>replacing ACL,
+    <ulink url="c1444.html#HDRWQ57" role="AEN2226">Completely Replacing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>setting access control list,
+    <ulink url="c1444.html#HDRWQ45" role="AEN1455">Access Control Lists</ulink>
+  </secondaryie>
+  <secondaryie>shorthand notation for referencing,
+    <ulink url="a3812.html#Header_175" role="AEN3977">Shortening Directory References</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>disk partition
+  </primaryie>
+  <secondaryie>consequences when full,
+    <ulink url="c1095.html#HDRWQ39" role="AEN1117">Displaying Volume Quota</ulink>
+  </secondaryie>
+  <secondaryie>displaying percentage of space used,
+    <ulink url="c1095.html#Header_65" role="AEN1184">To Display Quota and Other Information about a Volume</ulink>
+  </secondaryie>
+  <secondaryie>displaying space available and total size,
+    <ulink url="c1095.html#Header_67" role="AEN1234">To Display Quota and Other Information about a Volume and Partition</ulink>
+  </secondaryie>
+  <secondaryie>use in AFS,
+    <ulink url="c113.html#HDRWQ6" role="AEN217">Volumes and Mount Points</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>displaying
+  </primaryie>
+  <secondaryie>ACL entries,
+    <ulink url="c1444.html#HDRWQ52" role="AEN1815">Displaying an ACL</ulink>
+  </secondaryie>
+  <secondaryie>directory/file location,
+    <ulink url="c1095.html#Header_70" role="AEN1286">To Display a File or Directory's Location</ulink>
+  </secondaryie>
+  <secondaryie>disk partition percentage space used,
+    <ulink url="c1095.html#Header_65" role="AEN1181">To Display Quota and Other Information about a Volume</ulink>
+  </secondaryie>
+  <secondaryie>disk partition space available and total size,
+    <ulink url="c1095.html#Header_67" role="AEN1231">To Display Quota and Other Information about a Volume and Partition</ulink>
+  </secondaryie>
+  <secondaryie>file or directory location,
+    <ulink url="c1095.html#Header_70" role="AEN1289">To Display a File or Directory's Location</ulink>
+  </secondaryie>
+  <secondaryie>group creator,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2667">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>group information,
+    <ulink url="c2454.html#HDRWQ64" role="AEN2553">Displaying Group Information</ulink>
+  </secondaryie>
+  <secondaryie>group owner,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2664">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>group-creation quota,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2670">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>groups owned by a group,
+    <ulink url="c2454.html#HDRWQ66" role="AEN2614">To Display the Groups a User or Group Owns</ulink>
+  </secondaryie>
+  <secondaryie>password expiration date,
+    <ulink url="c569.html#HDRWQ37" role="AEN1035">To Display Password Expiration Date and Reuse Policy</ulink>
+  </secondaryie>
+  <secondaryie>password reuse policy,
+    <ulink url="c569.html#HDRWQ37" role="AEN1038">To Display Password Expiration Date and Reuse Policy</ulink>
+  </secondaryie>
+  <secondaryie>percentage of volume quota used,
+    <ulink url="c1095.html#Header_63" role="AEN1147">To Display Percentage of Quota Used</ulink>
+  </secondaryie>
+  <secondaryie>tokens,
+    <ulink url="c569.html#HDRWQ30" role="AEN768">To Display Your Tokens</ulink>
+  </secondaryie>
+  <secondaryie>volume quota with other information,
+    <ulink url="c1095.html#Header_65" role="AEN1178">To Display Quota and Other Information about a Volume</ulink>,
+    <ulink url="c1095.html#Header_67" role="AEN1228">To Display Quota and Other Information about a Volume and Partition</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>distributed file system,
+    <ulink url="c113.html#Header_10" role="AEN150">Distributed File Systems</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>dlog command,
+    <ulink url="c569.html#Header_41" role="AEN704">Authenticating for DFS Access</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>dpass command,
+    <ulink url="c569.html#Header_41" role="AEN706">Authenticating for DFS Access</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>E</title>
+
+<indexentry>
+  <primaryie>erasing all ACL entries,
+    <ulink url="c1444.html#HDRWQ57" role="AEN2219">Completely Replacing an ACL</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>error messages, troubleshooting,
+    <ulink url="c3402.html#HDRWQ79" role="AEN3591">Error Message: "afs: Lost contact with fileserver"</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>examples
+  </primaryie>
+  <secondaryie>adding a user to an ACL,
+    <ulink url="c1444.html#Header_99" role="AEN2077">Example: Adding a Single ACL Entry</ulink>
+  </secondaryie>
+  <secondaryie>adding members to a group,
+    <ulink url="c2454.html#Header_131" role="AEN2920">Example: Adding Members to a Group</ulink>
+  </secondaryie>
+  <secondaryie>authenticating,
+    <ulink url="c569.html#Header_44" role="AEN783">Example: Authenticating in the Local Cell</ulink>
+  </secondaryie>
+  <secondaryie>authenticating as another user,
+    <ulink url="c569.html#Header_45" role="AEN798">Example: Authenticating as a Another User</ulink>
+  </secondaryie>
+  <secondaryie>authenticating in a foreign cell,
+    <ulink url="c569.html#Header_46" role="AEN811">Example: Authenticating in a Foreign Cell</ulink>
+  </secondaryie>
+  <secondaryie>changing group name,
+    <ulink url="c2454.html#Header_145" role="AEN3208">Example: Changing a Group's group_name Suffix</ulink>
+  </secondaryie>
+  <secondaryie>changing group owner,
+    <ulink url="c2454.html#Header_141" role="AEN3137">Example: Changing a Group's Owner to Another User</ulink>
+  </secondaryie>
+  <secondaryie>checking status of file servers,
+    <ulink url="c1095.html#Header_74" role="AEN1380">Example: Checking Server Machine Status</ulink>
+  </secondaryie>
+  <secondaryie>copying ACL between directories,
+    <ulink url="c1444.html#Header_109" role="AEN2381">Example: Copying an ACL from One Directory to Another</ulink>
+  </secondaryie>
+  <secondaryie>creating a group,
+    <ulink url="c2454.html#Header_129" role="AEN2868">Example: Creating a Group</ulink>
+  </secondaryie>
+  <secondaryie>creating a self-owned group,
+    <ulink url="c2454.html#Header_142" role="AEN3151">Example: Changing a Group's Owner to Itself</ulink>
+  </secondaryie>
+  <secondaryie>creating entry on negative permissions section of ACL,
+    <ulink url="c1444.html#Header_102" role="AEN2171">Example: Setting an Entry in the Negative Permissions Section</ulink>
+  </secondaryie>
+  <secondaryie>deleting a group,
+    <ulink url="c2454.html#Header_136" role="AEN3040">Example: Deleting a Group</ulink>
+  </secondaryie>
+  <secondaryie>displaying ACL for single directory,
+    <ulink url="c1444.html#Header_95" role="AEN1898">Example: Displaying the ACL on One Directory</ulink>
+  </secondaryie>
+  <secondaryie>displaying ACLs for multiple directories,
+    <ulink url="c1444.html#Header_96" role="AEN1926">Example: Displaying the ACLs on Multiple Directories</ulink>
+  </secondaryie>
+  <secondaryie>displaying group information about a user,
+    <ulink url="c2454.html#Header_126" role="AEN2765">Example: Listing Group Information about a User</ulink>
+  </secondaryie>
+  <secondaryie>displaying groups a group owns,
+    <ulink url="c2454.html#Header_122" role="AEN2640">Example: Displaying the Groups a Group Owns</ulink>
+  </secondaryie>
+  <secondaryie>displaying groups a user owns,
+    <ulink url="c2454.html#Header_123" role="AEN2649">Example: Displaying the Groups a User Owns</ulink>
+  </secondaryie>
+  <secondaryie>displaying information about group,
+    <ulink url="c2454.html#Header_125" role="AEN2755">Example: Listing Information about a Group</ulink>
+  </secondaryie>
+  <secondaryie>displaying members of a group,
+    <ulink url="c2454.html#Header_119" role="AEN2598">Example: Displaying the Members of a Group</ulink>
+  </secondaryie>
+  <secondaryie>displaying volume information,
+    <ulink url="c1095.html#Header_68" role="AEN1261">Example: Displaying Quota and Other Information about a Volume and Partition</ulink>
+  </secondaryie>
+  <secondaryie>displaying volume quota and other information,
+    <ulink url="c1095.html#Header_66" role="AEN1210">Example: Display Quota and Other Information about a Volume</ulink>
+  </secondaryie>
+  <secondaryie>displaying volume quota percentage used,
+    <ulink url="c1095.html#Header_64" role="AEN1161">Example: Displaying Percentage of Quota Used</ulink>
+  </secondaryie>
+  <secondaryie>locating multiple files,
+    <ulink url="c1095.html#Header_71" role="AEN1304">Example: Displaying Directory Location</ulink>
+  </secondaryie>
+  <secondaryie>removing deleted groups from ACLs,
+    <ulink url="c2454.html#Header_137" role="AEN3064">To Remove Obsolete ACL Entries</ulink>
+  </secondaryie>
+  <secondaryie>removing group members,
+    <ulink url="c2454.html#Header_134" role="AEN3009">Example: Removing Group Members</ulink>
+  </secondaryie>
+  <secondaryie>replacing an ACL,
+    <ulink url="c1444.html#Header_106" role="AEN2291">Example: Replacing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>setting group's privacy flags,
+    <ulink url="c2454.html#Header_150" role="AEN3374">Example: Setting a Group's Privacy Flags</ulink>
+  </secondaryie>
+  <secondaryie>unauthenticating from selected cells,
+    <ulink url="c569.html#Header_51" role="AEN905">Example: Unauthenticating from a Specific Cell</ulink>
+  </secondaryie>
+  <secondaryie>using chmod,
+    <ulink url="c1444.html#Header_111" role="AEN2443">Example: Disabling Write Access for a File</ulink>
+  </secondaryie>
+  <secondaryie>volume/mount point interaction,
+    <ulink url="c113.html#HDRWQ6" role="AEN237">Volumes and Mount Points</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>exiting an AFS session,
+    <ulink url="c569.html#HDRWQ33" role="AEN865">Exiting an AFS Session</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>F</title>
+
+<indexentry>
+  <primaryie>failed to store file (error message),
+    <ulink url="c3402.html#Header_156" role="AEN3626">Error Message: "fs: You don't have the required access rights on 'file'"</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>file server machines
+  </primaryie>
+  <secondaryie>checking status,
+    <ulink url="c1095.html#HDRWQ41" role="AEN1315">Checking the Status of Server Machines</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>files
+  </primaryie>
+  <secondaryie>accessing AFS,
+    <ulink url="c569.html#HDRWQ34" role="AEN930">Accessing the AFS Filespace</ulink>
+  </secondaryie>
+  <secondaryie>caching,
+    <ulink url="c113.html#HDRWQ9" role="AEN272">The Cache Manager</ulink>
+  </secondaryie>
+  <secondaryie>denying access,
+    <ulink url="c113.html#Header_18" role="AEN294">Multiple Users Modifying Files</ulink>,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2118">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>displaying location,
+    <ulink url="c1095.html#HDRWQ40" role="AEN1269">Locating Files and Directories</ulink>
+  </secondaryie>
+  <secondaryie>granting access,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1987">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>inability to access, copy or save,
+    <ulink url="c3402.html#HDRWQ77" role="AEN3411">Problem: Cannot Access, Copy, or Save File</ulink>
+  </secondaryie>
+  <secondaryie>sharing,
+    <ulink url="c113.html#Header_18" role="AEN297">Multiple Users Modifying Files</ulink>,
+    <ulink url="c113.html#HDRWQ14" role="AEN372">File Sharing</ulink>
+  </secondaryie>
+  <secondaryie>updating,
+    <ulink url="c113.html#HDRWQ10" role="AEN281">Updating Copies of Cached Files</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>flags on AFS commands,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3867">AFS Command Syntax</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>foreign cells
+  </primaryie>
+  <secondaryie>accessing,
+    <ulink url="c569.html#HDRWQ35" role="AEN978">Accessing Foreign Cells</ulink>
+  </secondaryie>
+  <secondaryie>defined,
+    <ulink url="c113.html#HDRWQ5" role="AEN203">Cells and Sites</ulink>
+  </secondaryie>
+  <secondaryie>enabling access,
+    <ulink url="c1095.html#HDRWQ42" role="AEN1388">Determining Access to Foreign Cells</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>format of AFS pathnames,
+    <ulink url="c569.html#Header_54" role="AEN954">AFS Pathnames</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>fs commands
+  </primaryie>
+  <secondaryie>checkservers,
+    <ulink url="c1095.html#Header_73" role="AEN1345">To Check File Server Machine Status</ulink>
+  </secondaryie>
+  <secondaryie>cleanacl,
+    <ulink url="c2454.html#Header_137" role="AEN3052">To Remove Obsolete ACL Entries</ulink>
+  </secondaryie>
+  <secondaryie>copyacl,
+    <ulink url="c1444.html#Header_108" role="AEN2344">To Copy an ACL Between Directories</ulink>
+  </secondaryie>
+  <secondaryie>examine,
+    <ulink url="c1095.html#Header_67" role="AEN1219">To Display Quota and Other Information about a Volume and Partition</ulink>
+  </secondaryie>
+  <secondaryie>getserverprefs,
+    <ulink url="c1095.html#HDRWQ43" role="AEN1412">Displaying Server Preference Ranks</ulink>
+  </secondaryie>
+  <secondaryie>getting help,
+    <ulink url="a3812.html#Header_177" role="AEN4023">About the fs Commands</ulink>
+  </secondaryie>
+  <secondaryie>help flag,
+    <ulink url="a3812.html#Header_177" role="AEN4020">About the fs Commands</ulink>
+  </secondaryie>
+  <secondaryie>introduction,
+    <ulink url="a3812.html#Header_177" role="AEN4014">About the fs Commands</ulink>
+  </secondaryie>
+  <secondaryie>listacl,
+    <ulink url="c1444.html#HDRWQ53" role="AEN1838">To display an ACL</ulink>
+  </secondaryie>
+  <secondaryie>listcells,
+    <ulink url="c1095.html#Header_76" role="AEN1398">To Display Foreign Cells</ulink>
+  </secondaryie>
+  <secondaryie>listquota,
+    <ulink url="c1095.html#Header_65" role="AEN1169">To Display Quota and Other Information about a Volume</ulink>
+  </secondaryie>
+  <secondaryie>privileges required,
+    <ulink url="a3812.html#Header_177" role="AEN4030">About the fs Commands</ulink>
+  </secondaryie>
+  <secondaryie>quota,
+    <ulink url="c1095.html#Header_63" role="AEN1138">To Display Percentage of Quota Used</ulink>
+  </secondaryie>
+  <secondaryie>setacl,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1996">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </secondaryie>
+  <tertiaryie>completely replacing ACL,
+    <ulink url="c1444.html#Header_105" role="AEN2242">To Replace an ACL Completely</ulink>
+  </tertiaryie>
+  <tertiaryie>with -negative flag,
+    <ulink url="c1444.html#HDRWQ56" role="AEN2125">To Add, Remove, or Edit Negative ACL Permissions</ulink>
+  </tertiaryie>
+  <secondaryie>whereis,
+    <ulink url="c1095.html#Header_70" role="AEN1280">To Display a File or Directory's Location</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>ftp command,
+    <ulink url="c113.html#HDRWQ18" role="AEN464">Remote Commands</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>G</title>
+
+<indexentry>
+  <primaryie>GID, AFS,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2716">To Display A Group Entry</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>granting access to AFS filespace,
+    <ulink url="c1444.html#HDRWQ55" role="AEN1979">To Add, Remove, or Edit Normal ACL Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>group use of group,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2503">Suggestions for Using Groups Effectively</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>group-creation quota
+  </primaryie>
+  <secondaryie>defined,
+    <ulink url="c2454.html#Header_116" role="AEN2541">Group-creation Quota</ulink>
+  </secondaryie>
+  <secondaryie>displaying,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2682">To Display A Group Entry</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>groups
+  </primaryie>
+  <secondaryie>adding members,
+    <ulink url="c2454.html#HDRWQ68" role="AEN2787">Creating Groups and Adding Members</ulink>,
+    <ulink url="c2454.html#HDRWQ70" role="AEN2878">To Add Members to a Group</ulink>
+  </secondaryie>
+  <secondaryie>changing name,
+    <ulink url="c2454.html#HDRWQ72" role="AEN3078">Changing a Group's Owner or Name</ulink>
+  </secondaryie>
+  <secondaryie>changing owner,
+    <ulink url="c2454.html#HDRWQ72" role="AEN3087">Changing a Group's Owner or Name</ulink>
+  </secondaryie>
+  <secondaryie>creating,
+    <ulink url="c2454.html#HDRWQ68" role="AEN2784">Creating Groups and Adding Members</ulink>
+  </secondaryie>
+  <secondaryie>creation quota,
+    <ulink url="c2454.html#Header_116" role="AEN2544">Group-creation Quota</ulink>
+  </secondaryie>
+  <secondaryie>creator, displaying,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2676">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>deleting,
+    <ulink url="c2454.html#HDRWQ71" role="AEN2937">Removing Users from a Group and Deleting a Group</ulink>
+  </secondaryie>
+  <secondaryie>displaying information,
+    <ulink url="c2454.html#HDRWQ64" role="AEN2556">Displaying Group Information</ulink>
+  </secondaryie>
+  <secondaryie>group use,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2507">Suggestions for Using Groups Effectively</ulink>
+  </secondaryie>
+  <secondaryie>group-owned groups,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2510">Suggestions for Using Groups Effectively</ulink>
+  </secondaryie>
+  <secondaryie>listing groups owned,
+    <ulink url="c2454.html#HDRWQ66" role="AEN2623">To Display the Groups a User or Group Owns</ulink>
+  </secondaryie>
+  <secondaryie>machines as members,
+    <ulink url="c2454.html#HDRWQ61" role="AEN2465">About Groups</ulink>
+  </secondaryie>
+  <secondaryie>naming conventions,
+    <ulink url="c2454.html#HDRWQ63" role="AEN2520">Group Names</ulink>
+  </secondaryie>
+  <secondaryie>owner as administrator,
+    <ulink url="c2454.html#HDRWQ68" role="AEN2790">Creating Groups and Adding Members</ulink>
+  </secondaryie>
+  <secondaryie>owner, displaying,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2673">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>privacy flags,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3244">Protecting Group-Related Information</ulink>
+  </secondaryie>
+  <secondaryie>private use,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2479">Suggestions for Using Groups Effectively</ulink>
+  </secondaryie>
+  <secondaryie>removing members,
+    <ulink url="c2454.html#HDRWQ71" role="AEN2934">Removing Users from a Group and Deleting a Group</ulink>
+  </secondaryie>
+  <secondaryie>rules for assigning ownership,
+    <ulink url="c2454.html#HDRWQ69" role="AEN2839">To Create a Group</ulink>
+  </secondaryie>
+  <secondaryie>self-owned groups,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2513">Suggestions for Using Groups Effectively</ulink>
+  </secondaryie>
+  <secondaryie>shared use,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2491">Suggestions for Using Groups Effectively</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>groups command,
+    <ulink url="c113.html#Header_28" role="AEN525">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>H</title>
+
+<indexentry>
+  <primaryie>help
+  </primaryie>
+  <secondaryie>examples,
+    <ulink url="a3812.html#Header_180" role="AEN4122">Displaying Command Syntax and Aliases</ulink>
+  </secondaryie>
+  <secondaryie>online for AFS commands,
+    <ulink url="a3812.html#HDRWQ89" role="AEN4109">Getting Help in AFS</ulink>
+  </secondaryie>
+  <secondaryie>operation code in AFS command suites,
+    <ulink url="a3812.html#Header_180" role="AEN4119">Displaying Command Syntax and Aliases</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>I</title>
+
+<indexentry>
+  <primaryie>i ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1551">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>inetd command,
+    <ulink url="c113.html#Header_28" role="AEN536">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>insert ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1549">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>instances to AFS commands,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3863">AFS Command Syntax</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>K</title>
+
+<indexentry>
+  <primaryie>k ACL permission,
+    <ulink url="c1444.html#HDRWQ48" role="AEN1602">The Three File Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>kas commands
+  </primaryie>
+  <secondaryie>examine,
+    <ulink url="c569.html#HDRWQ32" role="AEN836">To Display Your Failed Authentication Limit and Lockout Time</ulink>,
+    <ulink url="c569.html#HDRWQ37" role="AEN1023">To Display Password Expiration Date and Reuse Policy</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>keyword for apropos command,
+    <ulink url="a3812.html#Header_181" role="AEN4141">Displaying Operation Code Descriptions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>klog command,
+    <ulink url="c569.html#HDRWQ29" role="AEN723">To Authenticate with AFS</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>knfs command,
+    <ulink url="a3632.html#HDRWQ83" role="AEN3721">To Authenticate on an Unsupported Operating System</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>kpasswd command,
+    <ulink url="c569.html#Header_59" role="AEN1062">To Change Your AFS Password</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>L</title>
+
+<indexentry>
+  <primaryie>l ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1519">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>lifetime of tokens,
+    <ulink url="c569.html#HDRWQ28" role="AEN686">Token Lifetime</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>limits on authentication attempts,
+    <ulink url="c569.html#HDRWQ32" role="AEN842">To Display Your Failed Authentication Limit and Lockout Time</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>ln command,
+    <ulink url="c113.html#Header_28" role="AEN555">Differences in the Semantics of Standard UNIX Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>local cell, defined,
+    <ulink url="c113.html#HDRWQ5" role="AEN201">Cells and Sites</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>local machine,
+    <ulink url="c113.html#HDRWQ4" role="AEN160">AFS Filespace and Local Filespace</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>local password file (/etc/passwd),
+    <ulink url="c113.html#HDRWQ15" role="AEN404">Login and Authentication</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>lock ACL permission,
+    <ulink url="c1444.html#HDRWQ48" role="AEN1604">The Three File Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>logging in,
+    <ulink url="c569.html#HDRWQ22" role="AEN577">Logging In</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>logging out,
+    <ulink url="c569.html#HDRWQ33" role="AEN867">Exiting an AFS Session</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>login utility,
+    <ulink url="c113.html#Header_28" role="AEN548">Differences in the Semantics of Standard UNIX Commands</ulink>,
+    <ulink url="c569.html#HDRWQ22" role="AEN579">Logging In</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>lookup ACL permission,
+    <ulink url="c1444.html#HDRWQ47" role="AEN1517">The Four Directory Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>lost contact with fileserver (error message),
+    <ulink url="c3402.html#HDRWQ79" role="AEN3593">Error Message: "afs: Lost contact with fileserver"</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>M</title>
+
+<indexentry>
+  <primaryie>m privacy flag on groups,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3253">Protecting Group-Related Information</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>machines
+  </primaryie>
+  <secondaryie>as members of groups,
+    <ulink url="c2454.html#HDRWQ61" role="AEN2462">About Groups</ulink>
+  </secondaryie>
+  <secondaryie>client,
+    <ulink url="c113.html#Header_9" role="AEN140">Client/Server Computing</ulink>
+  </secondaryie>
+  <secondaryie>server,
+    <ulink url="c113.html#Header_9" role="AEN137">Client/Server Computing</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>mode bits (UNIX)
+  </primaryie>
+  <secondaryie>interpretation in AFS,
+    <ulink url="c1444.html#HDRWQ59" role="AEN2396">How AFS Uses the UNIX Mode Bits</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>mount points defined,
+    <ulink url="c113.html#HDRWQ6" role="AEN225">Volumes and Mount Points</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>mutual authentication,
+    <ulink url="c113.html#HDRWQ12" role="AEN317">Passwords and Mutual Authentication</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>N</title>
+
+<indexentry>
+  <primaryie>negative ACL permissions
+  </primaryie>
+  <secondaryie>defined,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1694">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+  <secondaryie>setting,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1705">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>NFS
+  </primaryie>
+  <secondaryie>accessing AFS from client,
+    <ulink url="a3632.html" role="AEN3635">Using the NFS/AFS Translator</ulink>
+  </secondaryie>
+  <secondaryie>issuing AFS commands on NFS client machine,
+    <ulink url="a3632.html#HDRWQ81" role="AEN3654">Requirements for Using the NFS/AFS Translator</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>NFS/AFS Translator,
+    <ulink url="a3632.html" role="AEN3638">Using the NFS/AFS Translator</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>none shorthand for ACL permissions,
+    <ulink url="c1444.html#Header_86" role="AEN1651">Shorthand Notation for Sets of Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>normal ACL permissions
+  </primaryie>
+  <secondaryie>defined,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1688">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+  <secondaryie>setting,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1691">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>O</title>
+
+<indexentry>
+  <primaryie>o privacy flag on groups,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3251">Protecting Group-Related Information</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>online help,
+    <ulink url="a3812.html#HDRWQ89" role="AEN4112">Getting Help in AFS</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>operation codes in AFS commands
+  </primaryie>
+  <secondaryie>abbreviating,
+    <ulink url="a3812.html#Header_172" role="AEN3915">Abbreviations and Aliases for Operation Codes</ulink>
+  </secondaryie>
+  <secondaryie>defined,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3846">AFS Command Syntax</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>P</title>
+
+<indexentry>
+  <primaryie>PAG,
+    <ulink url="c569.html#HDRWQ25" role="AEN639">Protecting Your Tokens with a PAG</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>passwd
+  </primaryie>
+  <secondaryie>command,
+    <ulink url="c569.html#Header_60" role="AEN1077">To Change Your UNIX Password</ulink>
+  </secondaryie>
+  <secondaryie>file,
+    <ulink url="c113.html#HDRWQ15" role="AEN406">Login and Authentication</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>password,
+    <ulink url="c113.html#HDRWQ12" role="AEN322">Passwords and Mutual Authentication</ulink>
+  </primaryie>
+  <secondaryie>changing AFS,
+    <ulink url="c569.html#Header_59" role="AEN1053">To Change Your AFS Password</ulink>
+  </secondaryie>
+  <secondaryie>changing UNIX,
+    <ulink url="c569.html#Header_60" role="AEN1080">To Change Your UNIX Password</ulink>
+  </secondaryie>
+  <secondaryie>expiration date, displaying,
+    <ulink url="c569.html#HDRWQ37" role="AEN1029">To Display Password Expiration Date and Reuse Policy</ulink>
+  </secondaryie>
+  <secondaryie>reuse policy, displaying,
+    <ulink url="c569.html#HDRWQ37" role="AEN1032">To Display Password Expiration Date and Reuse Policy</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>pathnames,
+    <ulink url="c569.html#Header_54" role="AEN940">AFS Pathnames</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>permissions on ACL
+  </primaryie>
+  <secondaryie>defined,
+    <ulink url="c1444.html#HDRWQ46" role="AEN1499">The AFS ACL Permissions</ulink>
+  </secondaryie>
+  <secondaryie>displaying,
+    <ulink url="c1444.html#HDRWQ52" role="AEN1818">Displaying an ACL</ulink>
+  </secondaryie>
+  <secondaryie>normal vs. negative,
+    <ulink url="c1444.html#HDRWQ49" role="AEN1685">About Normal and Negative Permissions</ulink>
+  </secondaryie>
+  <secondaryie>setting,
+    <ulink url="c1444.html#HDRWQ54" role="AEN1946">Changing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>shorthand for,
+    <ulink url="c1444.html#Header_86" role="AEN1632">Shorthand Notation for Sets of Permissions</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>privacy flags on groups,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3247">Protecting Group-Related Information</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>private use of group,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2477">Suggestions for Using Groups Effectively</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>process authentication group (PAG),
+    <ulink url="c569.html#HDRWQ25" role="AEN641">Protecting Your Tokens with a PAG</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>protection
+  </primaryie>
+  <secondaryie>for files and directories,
+    <ulink url="c1444.html#HDRWQ45" role="AEN1449">Access Control Lists</ulink>
+  </secondaryie>
+  <secondaryie>group-related information,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3241">Protecting Group-Related Information</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>Protection Database,
+    <ulink url="a3812.html#Header_178" role="AEN4057">About the pts Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>pts commands
+  </primaryie>
+  <secondaryie>adduser,
+    <ulink url="c2454.html#HDRWQ70" role="AEN2884">To Add Members to a Group</ulink>
+  </secondaryie>
+  <secondaryie>cell argument,
+    <ulink url="a3812.html#Header_178" role="AEN4067">About the pts Commands</ulink>
+  </secondaryie>
+  <secondaryie>chown,
+    <ulink url="c2454.html#HDRWQ73" role="AEN3112">To Change a Group's Owner</ulink>
+  </secondaryie>
+  <secondaryie>creategroup,
+    <ulink url="c2454.html#HDRWQ69" role="AEN2806">To Create a Group</ulink>
+  </secondaryie>
+  <secondaryie>delete,
+    <ulink url="c2454.html#Header_135" role="AEN3023">To Delete a Group</ulink>
+  </secondaryie>
+  <secondaryie>examine,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2661">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>force flag,
+    <ulink url="a3812.html#Header_178" role="AEN4091">About the pts Commands</ulink>
+  </secondaryie>
+  <secondaryie>getting help,
+    <ulink url="a3812.html#Header_178" role="AEN4101">About the pts Commands</ulink>
+  </secondaryie>
+  <secondaryie>help flag,
+    <ulink url="a3812.html#Header_178" role="AEN4098">About the pts Commands</ulink>
+  </secondaryie>
+  <secondaryie>listowned,
+    <ulink url="c2454.html#HDRWQ66" role="AEN2626">To Display the Groups a User or Group Owns</ulink>
+  </secondaryie>
+  <secondaryie>membership,
+    <ulink url="c2454.html#HDRWQ65" role="AEN2584">To Display Group Membership</ulink>
+  </secondaryie>
+  <secondaryie>privilege required,
+    <ulink url="a3812.html#Header_178" role="AEN4054">About the pts Commands</ulink>
+  </secondaryie>
+  <secondaryie>removeuser,
+    <ulink url="c2454.html#Header_133" role="AEN2978">To Remove Members from a Group</ulink>
+  </secondaryie>
+  <secondaryie>rename,
+    <ulink url="c2454.html#Header_144" role="AEN3181">To Change a Group's Name</ulink>
+  </secondaryie>
+  <secondaryie>setfields,
+    <ulink url="c2454.html#HDRWQ75" role="AEN3320">To Set a Group's Privacy Flags</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>Q</title>
+
+<indexentry>
+  <primaryie>quitting an AFS session,
+    <ulink url="c569.html#HDRWQ33" role="AEN869">Exiting an AFS Session</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>R</title>
+
+<indexentry>
+  <primaryie>r ACL permission,
+    <ulink url="c1444.html#HDRWQ48" role="AEN1585">The Three File Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>r privacy flag on groups,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3257">Protecting Group-Related Information</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>rcp command,
+    <ulink url="c113.html#HDRWQ18" role="AEN469">Remote Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>read ACL permission,
+    <ulink url="c1444.html#HDRWQ48" role="AEN1583">The Three File Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>read shorthand for ACL permissions,
+    <ulink url="c1444.html#Header_86" role="AEN1662">Shorthand Notation for Sets of Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>remote commands,
+    <ulink url="c113.html#HDRWQ18" role="AEN459">Remote Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>removing
+  </primaryie>
+  <secondaryie>all ACL entries,
+    <ulink url="c1444.html#HDRWQ57" role="AEN2223">Completely Replacing an ACL</ulink>
+  </secondaryie>
+  <secondaryie>obsolete ACL entries,
+    <ulink url="c2454.html#HDRWQ71" role="AEN2951">Removing Users from a Group and Deleting a Group</ulink>
+  </secondaryie>
+  <secondaryie>users from groups,
+    <ulink url="c2454.html#HDRWQ71" role="AEN2940">Removing Users from a Group and Deleting a Group</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>replacing
+  </primaryie>
+  <secondaryie>all entries on ACL,
+    <ulink url="c1444.html#HDRWQ57" role="AEN2216">Completely Replacing an ACL</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>root of AFS filespace,
+    <ulink url="c113.html#HDRWQ4" role="AEN171">AFS Filespace and Local Filespace</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>rsh command,
+    <ulink url="c113.html#HDRWQ18" role="AEN474">Remote Commands</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>rules for assigning group names,
+    <ulink url="c2454.html#HDRWQ69" role="AEN2842">To Create a Group</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>S</title>
+
+<indexentry>
+  <primaryie>s privacy flag on groups,
+    <ulink url="c2454.html#HDRWQ74" role="AEN3249">Protecting Group-Related Information</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>saving files
+  </primaryie>
+  <secondaryie>inability to,
+    <ulink url="c3402.html#HDRWQ77" role="AEN3414">Problem: Cannot Access, Copy, or Save File</ulink>
+  </secondaryie>
+  <secondaryie>on inaccessible file server machines,
+    <ulink url="c1095.html#HDRWQ41" role="AEN1320">Checking the Status of Server Machines</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>security in AFS,
+    <ulink url="c113.html#HDRWQ11" role="AEN307">AFS Security</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>self-owned group,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2505">Suggestions for Using Groups Effectively</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>server machines defined,
+    <ulink url="c113.html#Header_9" role="AEN135">Client/Server Computing</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>setpag argument to klog command,
+    <ulink url="c569.html#HDRWQ25" role="AEN643">Protecting Your Tokens with a PAG</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>setting permissions on ACL,
+    <ulink url="c1444.html#HDRWQ54" role="AEN1941">Changing an ACL</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>shared use of group,
+    <ulink url="c2454.html#HDRWQ62" role="AEN2489">Suggestions for Using Groups Effectively</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>shorthand notation for ACL permissions,
+    <ulink url="c1444.html#Header_86" role="AEN1630">Shorthand Notation for Sets of Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>site defined,
+    <ulink url="c113.html#HDRWQ5" role="AEN189">Cells and Sites</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>status of file server machines,
+    <ulink url="c1095.html#HDRWQ41" role="AEN1318">Checking the Status of Server Machines</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>subdirectories, accessing,
+    <ulink url="c1444.html#Header_81" role="AEN1487">Directory Level Access Control</ulink>,
+    <ulink url="c1444.html#Header_90" role="AEN1773">Enabling Access to Subdirectories</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>suite, defined for AFS command,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3833">AFS Command Syntax</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>switches on AFS commands
+  </primaryie>
+  <secondaryie>abbreviating,
+    <ulink url="a3812.html#Header_174" role="AEN3963">Shortening Switches and Flags</ulink>
+  </secondaryie>
+  <secondaryie>defined,
+    <ulink url="a3812.html#HDRWQ87" role="AEN3860">AFS Command Syntax</ulink>
+  </secondaryie>
+  <secondaryie>omitting,
+    <ulink url="a3812.html#Header_173" role="AEN3942">Omitting Argument Switches</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>syntax of AFS commands described,
+    <ulink url="a3812.html" role="AEN3814">AFS Command Syntax and Online Help</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>system groups
+  </primaryie>
+  <secondaryie>using on ACLs,
+    <ulink url="c1444.html#HDRWQ50" role="AEN1740">Using the System Groups on ACLs</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>system:administrators group,
+    <ulink url="c1444.html#HDRWQ50" role="AEN1748">Using the System Groups on ACLs</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>system:anyuser group
+  </primaryie>
+  <secondaryie>controlling access by foreign users,
+    <ulink url="c569.html#HDRWQ35" role="AEN981">Accessing Foreign Cells</ulink>
+  </secondaryie>
+  <secondaryie>using on ACLs,
+    <ulink url="c1444.html#HDRWQ50" role="AEN1743">Using the System Groups on ACLs</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>system:authuser group,
+    <ulink url="c1444.html#HDRWQ50" role="AEN1746">Using the System Groups on ACLs</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>T</title>
+
+<indexentry>
+  <primaryie>tokens
+  </primaryie>
+  <secondaryie>as proof of authentication,
+    <ulink url="c113.html#HDRWQ12" role="AEN328">Passwords and Mutual Authentication</ulink>,
+    <ulink url="c569.html#HDRWQ24" role="AEN625">Authenticating with AFS</ulink>
+  </secondaryie>
+  <secondaryie>command,
+    <ulink url="c569.html#HDRWQ30" role="AEN762">To Display Your Tokens</ulink>
+  </secondaryie>
+  <secondaryie>destroying,
+    <ulink url="c569.html#HDRWQ33" role="AEN860">Exiting an AFS Session</ulink>
+  </secondaryie>
+  <secondaryie>displaying,
+    <ulink url="c569.html#HDRWQ30" role="AEN765">To Display Your Tokens</ulink>
+  </secondaryie>
+  <secondaryie>getting,
+    <ulink url="c569.html#HDRWQ29" role="AEN728">To Authenticate with AFS</ulink>
+  </secondaryie>
+  <secondaryie>lifetime,
+    <ulink url="c569.html#HDRWQ28" role="AEN683">Token Lifetime</ulink>
+  </secondaryie>
+  <secondaryie>use in mutual authentication,
+    <ulink url="c113.html#HDRWQ12" role="AEN337">Passwords and Mutual Authentication</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>troubleshooting
+  </primaryie>
+  <secondaryie>accidental removal from ACL,
+    <ulink url="c3402.html#HDRWQ78" role="AEN3541">Problem: Accidentally Removed Your Entry from an ACL</ulink>
+  </secondaryie>
+  <secondaryie>error messages,
+    <ulink url="c3402.html#HDRWQ79" role="AEN3588">Error Message: "afs: Lost contact with fileserver"</ulink>
+  </secondaryie>
+  <secondaryie>inability to access, copy or save file,
+    <ulink url="c3402.html#HDRWQ77" role="AEN3408">Problem: Cannot Access, Copy, or Save File</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>U</title>
+
+<indexentry>
+  <primaryie>UID, AFS,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2718">To Display A Group Entry</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>unauthenticating,
+    <ulink url="c569.html#HDRWQ33" role="AEN863">Exiting an AFS Session</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>UNIX, differences with AFS
+  </primaryie>
+  <secondaryie>commands,
+    <ulink url="c113.html#HDRWQ18" role="AEN456">Remote Commands</ulink>
+  </secondaryie>
+  <secondaryie>file access/protection,
+    <ulink url="c113.html#HDRWQ16" role="AEN414">File and Directory Protection</ulink>
+  </secondaryie>
+  <secondaryie>file transfer,
+    <ulink url="c113.html#HDRWQ14" role="AEN366">File Sharing</ulink>
+  </secondaryie>
+  <secondaryie>login,
+    <ulink url="c113.html#HDRWQ15" role="AEN380">Login and Authentication</ulink>
+  </secondaryie>
+  <secondaryie>mode bits, interpretation,
+    <ulink url="c1444.html#HDRWQ59" role="AEN2393">How AFS Uses the UNIX Mode Bits</ulink>
+  </secondaryie>
+  <secondaryie>passwords,
+    <ulink url="c113.html#HDRWQ15" role="AEN401">Login and Authentication</ulink>
+  </secondaryie>
+  <secondaryie>sharing files,
+    <ulink url="c113.html#HDRWQ14" role="AEN369">File Sharing</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>unlog command,
+    <ulink url="c569.html#Header_50" role="AEN887">To Discard Tokens</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>users
+  </primaryie>
+  <secondaryie>account lockout time,
+    <ulink url="c569.html#HDRWQ32" role="AEN844">To Display Your Failed Authentication Limit and Lockout Time</ulink>
+  </secondaryie>
+  <secondaryie>adding as group members,
+    <ulink url="c2454.html#HDRWQ70" role="AEN2887">To Add Members to a Group</ulink>
+  </secondaryie>
+  <secondaryie>displaying group information,
+    <ulink url="c2454.html#HDRWQ64" role="AEN2559">Displaying Group Information</ulink>
+  </secondaryie>
+  <secondaryie>displaying number of group memberships,
+    <ulink url="c2454.html#HDRWQ67" role="AEN2679">To Display A Group Entry</ulink>
+  </secondaryie>
+  <secondaryie>listing groups owned,
+    <ulink url="c2454.html#HDRWQ66" role="AEN2620">To Display the Groups a User or Group Owns</ulink>
+  </secondaryie>
+  <secondaryie>removing from groups,
+    <ulink url="c2454.html#HDRWQ71" role="AEN2948">Removing Users from a Group and Deleting a Group</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>V</title>
+
+<indexentry>
+  <primaryie>volume quota,
+    <ulink url="c1095.html#HDRWQ39" role="AEN1115">Displaying Volume Quota</ulink>
+  </primaryie>
+  <secondaryie>displaying percentage used,
+    <ulink url="c1095.html#Header_63" role="AEN1141">To Display Percentage of Quota Used</ulink>
+  </secondaryie>
+  <secondaryie>displaying with other information,
+    <ulink url="c1095.html#Header_65" role="AEN1172">To Display Quota and Other Information about a Volume</ulink>,
+    <ulink url="c1095.html#Header_67" role="AEN1225">To Display Quota and Other Information about a Volume and Partition</ulink>
+  </secondaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>volumes
+  </primaryie>
+  <secondaryie>accessing via mount points,
+    <ulink url="c113.html#HDRWQ6" role="AEN227">Volumes and Mount Points</ulink>
+  </secondaryie>
+  <secondaryie>defined,
+    <ulink url="c113.html#HDRWQ6" role="AEN214">Volumes and Mount Points</ulink>
+  </secondaryie>
+  <secondaryie>volume/mount point interaction,
+    <ulink url="c113.html#HDRWQ7" role="AEN246">Volume Quotas</ulink>
+  </secondaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>W</title>
+
+<indexentry>
+  <primaryie>w ACL permission,
+    <ulink url="c1444.html#HDRWQ48" role="AEN1595">The Three File Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>write ACL permission,
+    <ulink url="c1444.html#HDRWQ48" role="AEN1593">The Three File Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+<indexentry>
+  <primaryie>write shorthand for ACL permissions,
+    <ulink url="c1444.html#Header_86" role="AEN1672">Shorthand Notation for Sets of Permissions</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+<indexdiv><title>Y</title>
+
+<indexentry>
+  <primaryie>you don't have the required access rights (error message),
+    <ulink url="c3402.html#Header_155" role="AEN3617">Error Message: "command: Connection timed out"</ulink>
+  </primaryie>
+</indexentry>
+
+</indexdiv>
+</index>

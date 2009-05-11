@@ -1,0 +1,1876 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ419">
+  <title>Configuring Client Machines with the package Program</title>
+
+  <para>The <emphasis role="bold">package</emphasis> program automates many aspects of the client configuration process. With the
+  <emphasis role="bold">package</emphasis> program, you can easily configure the local disk of numerous clients by defining global
+  configuration files. <indexterm>
+      <primary>configuring</primary>
+
+      <secondary>local disk of client with package</secondary>
+    </indexterm> <indexterm>
+      <primary>client</primary>
+
+      <secondary>configuring local disk with package</secondary>
+    </indexterm> <indexterm>
+      <primary>disk</primary>
+
+      <secondary>local</secondary>
+
+      <see>local disk</see>
+    </indexterm> <indexterm>
+      <primary>local disk</primary>
+
+      <secondary>configuring on client, using package</secondary>
+    </indexterm></para>
+
+  <sect1 id="HDRWQ420">
+    <title>Summary of Instructions</title>
+
+    <para>This chapter explains how to perform the following tasks by using the indicated commands or instructions in a prototype
+    file:</para>
+
+    <informaltable frame="none">
+      <tgroup cols="2">
+        <colspec colwidth="37*" />
+
+        <colspec colwidth="63*" />
+
+        <tbody>
+          <row>
+            <entry>Configure a client machine's local disk</entry>
+
+            <entry><emphasis role="bold">package</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Define directory</entry>
+
+            <entry><emphasis role="bold">D</emphasis> [update_code] directory owner group mode_bits</entry>
+          </row>
+
+          <row>
+            <entry>Define file</entry>
+
+            <entry><emphasis role="bold">F</emphasis> [update_code] file source_file [owner group mode_bits]</entry>
+          </row>
+
+          <row>
+            <entry>Define symbolic link</entry>
+
+            <entry><emphasis role="bold">L</emphasis> [update_code] link actual_file [owner group mode_bits]</entry>
+          </row>
+
+          <row>
+            <entry>Define block special device</entry>
+
+            <entry><emphasis role="bold">B</emphasis> device_name major_device_number minor_device_number owner group
+            mode_bits</entry>
+          </row>
+
+          <row>
+            <entry>Define character special device</entry>
+
+            <entry><emphasis role="bold">C</emphasis> device_name major_device_number minor_device_number owner group
+            mode_bits</entry>
+          </row>
+
+          <row>
+            <entry>Define socket</entry>
+
+            <entry><emphasis role="bold">S</emphasis> socket_name [owner group mode_bits]</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+  </sect1>
+
+  <sect1 id="HDRWQ422">
+    <title>Using the package Program</title>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>prototype file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>prototype files in package</primary>
+
+      <secondary>about</secondary>
+    </indexterm>
+
+    <para>The <emphasis role="bold">package</emphasis> program uses system-independent <emphasis>prototype files</emphasis> to
+    define a standard disk configuration; a prototype file indicates which files reside on the local client disk, which files are
+    links into AFS, etc. The prototype files are then compiled into <emphasis>configuration files</emphasis> for each different
+    system type.</para>
+
+    <para>Not all client machines have the same configuration. If desired, you can create different prototype files for different
+    client functions (print server, regular client, etc.).</para>
+
+    <para>The <emphasis role="bold">package</emphasis> program compares the contents of a local client disk with the configuration
+    file. If there are any differences, the <emphasis role="bold">package</emphasis> program makes the necessary updates to the
+    local disk by copying the files from AFS onto the disk. The <emphasis role="bold">package</emphasis> program can also be
+    configured to delete files that are not part of the system configuration or automatically reboot the client when certain files
+    (such as the <emphasis role="bold">dkload</emphasis> file) have been updated.</para>
+
+    <para>The <emphasis role="bold">package</emphasis> program does require that you take some time to prepare the prototype files,
+    but it provides the following benefits: <itemizedlist>
+        <listitem>
+          <para>You no longer need to configure each machine individually; the prototype configuration file applies to all
+          machines.</para>
+        </listitem>
+
+        <listitem>
+          <para>You can change the configuration of machines simply by changing the prototype file and rebooting the clients.</para>
+        </listitem>
+
+        <listitem>
+          <para>Disk organization is uniform across a set of machines.</para>
+        </listitem>
+
+        <listitem>
+          <para>The configuration files serve as a record of files on the disk and symbolic links into AFS.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="Header_494">
+      <title>Using Package on File Server Machines</title>
+
+      <para>While the <emphasis role="bold">package</emphasis> program was designed for use on client machines, it can also be used
+      to configure a file server machine's disk. However, if any of the files referred to in a configuration file reside in volumes
+      on the file server, the <emphasis role="bold">package</emphasis> program cannot access the volumes during reboot (and until
+      the File Server process and Volume Server process start up again).</para>
+
+      <para>Since the <emphasis role="bold">package</emphasis> program aborts when it cannot access a file, you need to eliminate
+      references to files in AFS that reside in volumes on the file server machine. Because of these constraints, the remainder of
+      this chapter assumes the <emphasis role="bold">package</emphasis> program is being used for client configurations.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ423">
+    <title>Package Overview</title>
+
+    <para>There are three main steps to follow before running the <emphasis role="bold">package</emphasis> program: <orderedlist>
+        <listitem>
+          <para>Preparing function-specific <emphasis>prototype files</emphasis> (and any included <emphasis>library
+          files</emphasis>).</para>
+        </listitem>
+
+        <listitem>
+          <para>Modifying the <emphasis role="bold">package</emphasis> <emphasis role="bold">Makefile</emphasis> and compiling
+          prototype files into system-specific <emphasis>configuration files</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Modifying client machines to run the appropriate <emphasis role="bold">package</emphasis> configuration file
+          automatically.</para>
+        </listitem>
+      </orderedlist></para>
+
+    <para>The following sections summarize these steps.</para>
+
+    <sect2 id="Header_496">
+      <title>Preparing Prototype Files</title>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>preparing prototype files</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>prototype files in package</primary>
+
+        <secondary>preparing</secondary>
+      </indexterm>
+
+      <para>Begin by listing the different functions or roles client machines perform and the local disk configurations that support
+      those functions. Example roles include a standard client that provides AFS access, a print server that drives a printer, and a
+      backup machine on which you issue commands from the <emphasis role="bold">backup</emphasis> suite. Create a different
+      <emphasis>prototype file</emphasis> for each role.</para>
+
+      <para>A prototype file defines the disk configuration that supports a specific role. Usually, prototype files are
+      function-specific, but system independent; system-specific values can be defined using variables and library files. Then, when
+      you modify a variable or library file, the change gets propagated to all appropriate clients when the <emphasis
+      role="bold">package</emphasis> program is invoked.</para>
+
+      <para>Methods for building flexible prototype files that are easy to maintain are presented in <link
+      linkend="HDRWQ427">Example Prototype and Library Files</link>.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ424">
+      <title>Compiling Prototype Files</title>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>compiling prototype files</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>configuration files</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>configuration files</primary>
+
+        <secondary>package program</secondary>
+      </indexterm>
+
+      <para>Prototype files are usually system-independent, but can include <computeroutput>ifdef</computeroutput> statements to
+      satisfy the needs of different system types. The prototype files are compiled to generate operating-system specific versions.
+      During compilation, the <emphasis role="bold">package</emphasis> program selects the definitions suitable for each system type
+      and replaces any variables with actual values. These compiled, machine-specific files are called <emphasis>configuration
+      files</emphasis>.</para>
+
+      <para>Prototype files are compiled using a standard-type <emphasis role="bold">Makefile</emphasis> file, as described in <link
+      linkend="HDRWQ438">The Package Makefile File</link>.</para>
+    </sect2>
+
+    <sect2 id="Header_498">
+      <title>Preparing Clients</title>
+
+      <para>Once system-specific configuration files exist, the <emphasis role="bold">package</emphasis> program is ready to run on
+      the clients. You must first make the <emphasis role="bold">package</emphasis> binary available and specify the correct
+      configuration file.</para>
+
+      <para>Modify the clients as described below: <orderedlist>
+          <listitem>
+            <para>Create a <emphasis role="bold">.package</emphasis> file in the root ( <emphasis role="bold">/</emphasis> )
+            directory of each client's local disk that defines the default configuration file.</para>
+          </listitem>
+
+          <listitem>
+            <para>Make the <emphasis role="bold">package</emphasis> binary (<emphasis role="bold">/etc/package</emphasis>) available
+            on the local disk.</para>
+          </listitem>
+
+          <listitem>
+            <para>Modify the machine's initialization file (<emphasis role="bold">/etc/rc</emphasis> or equivalent) to include a
+            call to the <emphasis role="bold">package</emphasis> program.</para>
+          </listitem>
+        </orderedlist></para>
+
+      <para>These steps are discussed more completely in <link linkend="HDRWQ447">Modifying Client Machines</link>.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ425">
+    <title>The package Directory Structure</title>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>directory structure</secondary>
+    </indexterm>
+
+    <para>This section assumes that the <emphasis role="bold">package</emphasis>-related files have been installed in three
+    subdirectories of the <emphasis role="bold">/afs/</emphasis>cellname/<emphasis role="bold">wsadmin</emphasis> directory:
+    <emphasis role="bold">src</emphasis>, <emphasis role="bold">lib</emphasis> and <emphasis role="bold">etc</emphasis>, as
+    recommended in the <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+
+    <para>These directories contain several sample prototype, library, and configuration files, which can help to clarify how the
+    <emphasis role="bold">package</emphasis> program works. However, they are not necessarily suitable for use in your cell; you
+    must modify them for your needs.</para>
+
+    <sect2 id="HDRWQ426">
+      <title>The src directory</title>
+
+      <para>The <emphasis role="bold">src</emphasis> directory contains some sample prototype files (used to build the configuration
+      files), the <emphasis role="bold">Makefile</emphasis> file used to build them, and the resulting compiled configuration
+      files.</para>
+
+      <para>Prototype files have names of the form function.<emphasis role="bold">proto</emphasis>. For example, a <emphasis
+      role="bold">minimal.proto</emphasis> file defines the minimum set of library files need to run AFS and a<emphasis
+      role="bold">staff.dkload.proto</emphasis> file defines a client configuration that uses the a dynamic kernel loading program.
+      Prototype files can also contain definitions for system administrative files, such as a <emphasis
+      role="bold">hosts.equiv</emphasis> file.</para>
+
+      <para>The <emphasis role="bold">Makefile</emphasis> file is used to compile the system-independent prototype files into
+      system-specific configuration files. To learn how to modify this file for use in your cell, see <link linkend="HDRWQ438">The
+      Package Makefile File</link>.</para>
+
+      <para>Configuration files are the compiled version of the prototype files and are named function<emphasis
+      role="bold">.</emphasis>sysname. Configuration files also appear in the <emphasis role="bold">etc</emphasis> subdirectory,
+      which the <emphasis role="bold">package</emphasis> program accesses when configuring disks.</para>
+    </sect2>
+
+    <sect2 id="Header_501">
+      <title>The lib directory</title>
+
+      <para>The <emphasis role="bold">lib</emphasis> directory contains many of the example library files referred to in prototype
+      files. For example, the <emphasis role="bold">base.generic</emphasis> file is a system-independent file which includes a
+      definition of the cell name, system options, and variables; these are used to set the owner, group, and mode_bits fields in
+      the file and the symbolic link definitions.</para>
+    </sect2>
+
+    <sect2 id="Header_502">
+      <title>The etc directory</title>
+
+      <para>The <emphasis role="bold">etc</emphasis> directory contains the system-specific configuration files built from the
+      prototype files in the <emphasis role="bold">src</emphasis> subdirectory. The <emphasis role="bold">package</emphasis> program
+      uses the configuration files in the <emphasis role="bold">etc</emphasis> directory to configure disks.</para>
+
+      <para>Some of the example files include <emphasis role="bold">minimal</emphasis> and <emphasis role="bold">staff</emphasis>
+      prototype files compiled for different system types.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ427">
+    <title>Example Prototype and Library Files</title>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>example prototype files</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>prototype files in package</primary>
+
+      <secondary>examples</secondary>
+    </indexterm>
+
+    <para>A prototype file is a template that defines the configuration of a client's local disk. Prototype files are usually
+    function-specific (for example, a backup machine, print server, etc.) but system-independent. Prototype files support the use of
+    <computeroutput>ifdef</computeroutput> statements and variables, so you can include system-specific definitions. The actual
+    system-specific configuration file is generated when the prototype file is compiled.</para>
+
+    <para>The components defined in a prototype file can include the directories, files, symbolic links, block special devices,
+    character special devices and sockets that need to reside on a client's local disk in order for it to perform a specific role,
+    such as a print server or backup machine. Thus, we recommend that you construct a unique prototype file for each different
+    client function.</para>
+
+    <para>To make the <emphasis role="bold">package</emphasis> program more effective and easy to maintain, create prototype files
+    that are modular and generic, instead of specific, by using library files and variables: <indexterm>
+        <primary>library files in package</primary>
+      </indexterm> <indexterm>
+        <primary>package</primary>
+
+        <secondary>library files</secondary>
+      </indexterm> <itemizedlist>
+        <listitem>
+          <para>By creating general-purpose library files, you can include the same library file in many prototype files. Thus, you
+          can make global configuration changes by modifying a single library file; you do not need to modify each prototype
+          file.</para>
+        </listitem>
+
+        <listitem>
+          <para>Variables enable you to change definitions simply by changing the variable's value.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="HDRWQ428">
+      <title>An Example Prototype File</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>prototype files for package</secondary>
+      </indexterm>
+
+      <para>The following is part of an example prototype file that contains the minimum definitions necessary to run AFS. A similar
+      file called <emphasis role="bold">minimal.proto</emphasis> can reside in your <emphasis role="bold">src</emphasis>
+      subdirectory. As recommended, this prototype file references library files and does not include actual definitions.</para>
+
+      <programlisting>
+            .
+            .
+   # Package prototype for a minimal configuration.
+   # Base components
+   %include ${wsadmin}/lib/base.generic
+   # Machine-specific components
+   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+   %ifdef alpha_dux40
+   %include ${wsadmin}/lib/alpha_dux40.readonly
+   %include ${wsadmin}/lib/alpha_dux40.AFS
+   %endif alpha_dux40
+   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+            .
+            .
+</programlisting>
+
+      <para>In the previous example, the first uncommented line includes the <emphasis role="bold">/lib/base.generic</emphasis>
+      library file. This library file can contain definitions appropriate for many prototype files; the <emphasis
+      role="bold">base.generic</emphasis> library file can also be included in other prototype files, like a <emphasis
+      role="bold">staff.proto</emphasis> or <emphasis role="bold">backup.proto</emphasis> file. An example library file appears in
+      the following section.</para>
+
+      <para>Note that system-specific definitions are permitted through the use of <computeroutput>ifdef</computeroutput> statements
+      and variables (for example, <computeroutput>${wsadmin}</computeroutput> is used to specify pathnames). Thus, the same
+      prototype file can be used to configure a machine running AIX 4.2 or Solaris 2.6, even though they require different files,
+      directories, symbolic links and devices.</para>
+
+      <para>In the next uncommented lines of this example, the administrator has constructed different library files for different
+      system types. Each of these is compiled into unique configuration files. For instance, the following lines in this prototype
+      file tell the <emphasis role="bold">package</emphasis> program to use the library files <emphasis
+      role="bold">lib/rs_aix42.readonly</emphasis> and <emphasis role="bold">lib/rs_aix42.AFS</emphasis> for the configuration file
+      when the value rs_aix42 has been declared. (The system-type definition is declared in the <emphasis
+      role="bold">Makefile</emphasis>; see <link linkend="HDRWQ438">The Package Makefile File</link>.)</para>
+
+      <programlisting>
+   %ifdef rs_aix42
+   %include ${wsadmin}/lib/rs_aix42.readonly
+   %include ${wsadmin}/lib/rs_aix42.AFS
+   %endif rs_aix42
+</programlisting>
+
+      <para>Similarly, the following lines tell the <emphasis role="bold">package</emphasis> program to use the library files
+      <emphasis role="bold">lib/sun4x_56.readonly</emphasis> and <emphasis role="bold">lib/sun4x_56.AFS</emphasis> when the value
+      sun4x_56 has been declared.</para>
+
+      <programlisting>
+   %ifdef sun4x_56
+   %include ${wsadmin}/lib/sun4x_56.readonly
+   %include ${wsadmin}/lib/sun4x_56.AFS
+   %endif sun4x_56
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_505">
+      <title>Example Library File</title>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>example library files</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>library files in package</primary>
+
+        <secondary>examples</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>preparing prototype files</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>library files for package</secondary>
+      </indexterm>
+
+      <para>The following is part of an example library file for basic configuration definitions. A similar file, called <emphasis
+      role="bold">base.generic</emphasis>, can reside in your <emphasis role="bold">lib</emphasis> subdirectory. Note that
+      configurations are defined using standard <computeroutput>ifdef</computeroutput> statements.</para>
+
+      <programlisting>
+            .
+            .
+   #
+   # Base package definitions.
+   #
+   %ifndef      cell
+   %define      cell    abc.com
+   %endif       cell
+   %ifndef      sys
+   %include /etc/package.sys
+   %endif       sys
+   %define      ${name}         ${name}
+   %define      ${cpu}          ${cpu}
+   %define      ${sys}          ${sys}
+   %define      ${dept}         ${dept}
+   %define      ${hostname}     ${hostname}
+   %ifdef       rs_aix42
+   %    define  AIX
+   %    define  rootlinks
+   %ifndef      noafsd 
+   %    define  afsd
+   %endif       noafsd
+   %endif       rs_aix42
+            .
+            .
+   #
+   # Some definitions to handle common combinations of owner, group,
+   # and protection fields.
+   #
+   %define      rzmode          root wheel 600
+   %define      usermode        root wheel 666
+   %define      systemmode      root wheel 644
+   %define      diskmode        root wheel 644
+   %define      ptymode         root wheel 666
+   %define      ttymode         root wheel 666
+            .
+            .
+   %define aix_rootbin     root bin
+   %define aix_rootprintq  root printq
+   %define aix_rootstaff   root staff
+   %define aix_rootsys     root system
+   %define aix_binbin      bin bin
+   %define aix_binmail     bin mail
+   %define aix_binsys      bin system
+   %define aix_addsys      adduser system
+   %define aix_romode      444
+   %define aix_loginmode   544
+   %define aix_usermode    666
+   %define aix_systemmode  644
+   %define aix_textmode    644
+   %define aix_rwmode1     660
+   %define aix_allrugw     664
+</programlisting>
+
+      <para>The following example library file uses <emphasis role="bold">package</emphasis>-specific syntax to define files,
+      directories, sockets, etc. Each line, called a <emphasis>configuration file instruction</emphasis>, defines a specific
+      component of disk configuration. The proper syntax for these instructions is briefly described in <link
+      linkend="HDRWQ429">Package Configuration File Instruction Syntax</link>; see the reference page for the <emphasis
+      role="bold">package</emphasis> configuration file in the <emphasis>IBM AFS Administration Reference</emphasis> for detailed
+      descriptions.</para>
+
+      <para>In this example, the library file contains instructions specific to the configuration of an <emphasis
+      role="bold">rs_aix42</emphasis> machine. You can have similar library files in your <emphasis role="bold">lib</emphasis>
+      subdirectory.</para>
+
+      <programlisting>
+            .
+            .
+   #
+   # Generic configuration for an AFS rs_aix42 machine.
+   #
+   D    /                                       ${treemode}
+   D    /afs
+   FAQ  /unix          ${machine}/unix.std      ${binmode}
+   LA   /unix.std       /unix
+   D    /bin                                    ${treemode}
+   F    /bin/as         ${machine}              ${binmode}
+   F    /bin/ld         ${machine}              ${binmode}
+   F    /bin/nm         ${machine}              ${binmode}
+   FO   /bin/login      ${afstest}              ${suidmode}
+            .
+            .
+   FAQ  /usr/vice/etc/ThisCell  ${common}/etc/ThisCell ${textmode}
+   FQ   /usr/vice/etc/afsd      ${afstest}/root.client ${binmode}
+   FA   /usr/vice/etc/bos       ${afstest}/bin/bos     ${binmode}
+   FA   /usr/vice/etc/fs        ${afstest}/bin/fs      ${binmode}
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ429">
+    <title>Package Configuration File Instruction Syntax</title>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>configuration file instructions</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>configuration file</primary>
+
+      <secondary>instructions for package program</secondary>
+    </indexterm>
+
+    <para>Within a library file, configuration file instructions are used to define the specific disk configuration. Each
+    instruction can be used to define a file, directory, socket, or device on the client machine. The syntax for each valid
+    instruction type is described briefly here; detailed descriptions of the fields appear in the <emphasis>IBM AFS Command
+    Reference Manual</emphasis>. <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">D</emphasis> defines a directory</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">F</emphasis> defines a file</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">L</emphasis> defines a link</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">B</emphasis> defines a block special device</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">C</emphasis> defines a character special device</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">S</emphasis> defines a socket</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <note>
+      <para>Each configuration instruction must appear on a single, unbroken line. Instructions sometimes appear here on multiple
+      lines only for legibility.</para>
+
+      <para>The configuration file must be completely correct. If there are any syntax errors or incorrect values, the <emphasis
+      role="bold">package</emphasis> command interpreter exits without executing any instruction.</para>
+    </note>
+
+    <sect2 id="HDRWQ430">
+      <title>Local Files versus Symbolic Links</title>
+
+      <para>You can take advantage of the AFS by keeping the number of files on the local client disk to a minimum; instead, create
+      symbolic links that point into AFS. This can improve machine performance by allowing more space for caching and
+      swapping.</para>
+
+      <para>Some files, however, must reside on the local disk, as described below. Create these files in the prototype or library
+      files using the <emphasis role="bold">F</emphasis> (file) instruction, not the <emphasis role="bold">L</emphasis> (symbolic
+      link) instruction.</para>
+
+      <para>The following types of files must reside on the local disk of all AFS clients: <itemizedlist>
+          <listitem>
+            <para>Boot sequence files executed before the <emphasis role="bold">afsd</emphasis> program runs.</para>
+
+            <para>Until <emphasis role="bold">afsd</emphasis> runs and initializes the Cache Manager, AFS is inaccessible from the
+            client. Any files that are executed before the <emphasis role="bold">afsd</emphasis> program runs must reside on the
+            local client disk.</para>
+
+            <para>For example, on a machine that uses a disk cache, the <emphasis role="bold">/usr/vice/cache</emphasis> directory
+            must exist when you bring up the Cache Manager, so that there is a location to create cache files. The binary files
+            <emphasis role="bold">/etc/mount</emphasis> and <emphasis role="bold">/etc/umount</emphasis> must be available on the
+            local disk as the machine boots in order to mount the <emphasis role="bold">/usr/vice/cache</emphasis> directory.</para>
+
+            <para>In addition, certain UNIX files, such as initialization files (<emphasis role="bold">/etc/rc</emphasis> or
+            equivalent) and file system mapping files (<emphasis role="bold">/etc/fstab</emphasis> or equivalent), must reside on
+            the local disk.</para>
+          </listitem>
+
+          <listitem>
+            <para>Diagnostic and recovery files</para>
+
+            <para>Certain commands can be used to diagnose and recover from problems caused by a file server outage. It is best to
+            keep copies of the binaries for these commands on the local disk. For example, store the <emphasis
+            role="bold">bos</emphasis> and <emphasis role="bold">fs</emphasis> binaries in the <emphasis
+            role="bold">/usr/vice/etc</emphasis> directory on the local disk, as well as in the <emphasis
+            role="bold">/usr/afsws</emphasis> directory (which in the conventional configuration is a symbolic link into AFS). Then,
+            set PATH variables so that the <emphasis role="bold">/usr/afsws</emphasis> directory appears before the <emphasis
+            role="bold">/usr/vice/etc</emphasis> directory. Thus, even if users cannot access AFS (for example, due to a file server
+            outage) they can still access copies of the <emphasis role="bold">bos</emphasis> and <emphasis role="bold">fs</emphasis>
+            binaries in the <emphasis role="bold">/usr/vice/etc</emphasis> directory on the local disk.</para>
+          </listitem>
+
+          <listitem>
+            <para>Files in the <emphasis role="bold">/usr/vice</emphasis> directory</para>
+
+            <para>The contents of the <emphasis role="bold">/usr/vice</emphasis> directory, including the cache files in the
+            <emphasis role="bold">cache</emphasis> subdirectory and the configuration files in the <emphasis
+            role="bold">etc</emphasis> subdirectory, must reside on the local disk. For a description of the files in the directory,
+            see <link linkend="HDRWQ391">Configuration and Cache-Related Files on the Local Disk</link>.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <indexterm>
+        <primary>D instruction</primary>
+
+        <secondary>package configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>D instruction in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>defining directory in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>directory</primary>
+
+        <secondary>creating with package</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ431">
+      <title>Defining a Directory</title>
+
+      <para>The <emphasis role="bold">D</emphasis> instruction defines a directory to be created on the local disk. If a symbolic
+      link, file, or other element on the local disk has the same name, it is replaced with a directory. If the directory already
+      exists, its owner, group, and mode bits are changed if necessary to conform with the instruction.</para>
+
+      <para>Use the following instruction to define a directory:</para>
+
+      <programlisting><emphasis role="bold">D</emphasis>[update_code]   directory   owner   group   mode_bits
+</programlisting>
+
+      <para>The following example defines the <emphasis role="bold">/usr</emphasis> directory:</para>
+
+      <programlisting>
+   D /usr root wheel 755
+</programlisting>
+
+      <indexterm>
+        <primary>F instruction</primary>
+
+        <secondary>package configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>F instruction in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>defining file in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>file</primary>
+
+        <secondary>creating with package</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ432">
+      <title>Defining a File</title>
+
+      <para>The <emphasis role="bold">F</emphasis> instruction defines a file to be created on the local disk. The source file can
+      reside in either AFS or the local disk.</para>
+
+      <para>If a file of this name already exists, then it is updated with (overwritten by) the source file, unless the <emphasis
+      role="bold">I</emphasis> update code is specified. If a symbolic link or directory of this name exists, the <emphasis
+      role="bold">package</emphasis> program replaces it with the source file.</para>
+
+      <note>
+        <para>Some files must reside on the local disk; they cannot be symbolic links. See <link linkend="HDRWQ430">Local Files
+        versus Symbolic Links</link>.</para>
+      </note>
+
+      <para>Use the following instruction to define a file:</para>
+
+      <programlisting><emphasis role="bold">F</emphasis>[update_code]   file   source_file  [owner   group   mode_bits]
+</programlisting>
+
+      <para>An example which creates/updates the file <emphasis role="bold">/bin/grep</emphasis> on the local disk, using <emphasis
+      role="bold">/afs/abc.com/rs_aix42/bin/grep</emphasis> as the source:</para>
+
+      <programlisting>
+   F /bin/grep /afs/abc.com/rs_aix42 root wheel 755
+</programlisting>
+
+      <para>In the following example, two update codes are used, and the <emphasis>owner</emphasis>, <emphasis>group</emphasis> and
+      <emphasis>mode_bits</emphasis> slots are left empty, so that the disk file adopts the source file's values for those
+      slots.</para>
+
+      <programlisting>
+   FAQ /usr/vice/etc/ThisCell /afs/abc.com/common/etc/ThisCell
+</programlisting>
+
+      <indexterm>
+        <primary>L instruction</primary>
+
+        <secondary>package configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>L instruction in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>defining symbolic link in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>symbolic link</primary>
+
+        <secondary>creating with package</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ433">
+      <title>Defining a Symbolic Link</title>
+
+      <para>The <emphasis role="bold">L</emphasis> instruction defines a symbolic link to be created on the local disk. The symbolic
+      link can point to the AFS file system or the local disk. If the identical symbolic link already exists, the <emphasis
+      role="bold">package</emphasis> program does nothing. However, if an element of the same name exists on the disk as a file or
+      directory, the <emphasis role="bold">package</emphasis> program replaces the element with a symbolic link.</para>
+
+      <note>
+        <para>Some files must reside on the local disk; they cannot be symbolic links. See <link linkend="HDRWQ430">Local Files
+        versus Symbolic Links</link>.</para>
+      </note>
+
+      <para>Use the following instruction to define a symbolic link:</para>
+
+      <programlisting><emphasis role="bold">L</emphasis>[update_code]  link actual_file  [owner   group   mode_bits]
+</programlisting>
+
+      <note>
+        <para>Do not create a symbolic link to a file whose name begins with the number sign (<emphasis role="bold">#</emphasis>) or
+        percent sign (<emphasis role="bold">%</emphasis>). The Cache Manager interprets such a link as a mount point to a regular or
+        Read/Write volume, respectively.</para>
+      </note>
+
+      <para>The following example creates a symbolic link from the <emphasis role="bold">/etc/ftpd</emphasis> directory on the local
+      disk to the <emphasis role="bold">/afs/abc.com/hp_ux110/etc/ftpd</emphasis> file in AFS. Since the <emphasis>owner</emphasis>,
+      <emphasis>group</emphasis> and <emphasis>mode_bits</emphasis> fields are empty, the symbolic link adopts values for those
+      fields from the actual file:</para>
+
+      <programlisting>
+   L /etc/ftpd /afs/abc.com/hp_ux110 
+</programlisting>
+
+      <para>This example uses the <emphasis role="bold">A</emphasis> update code:</para>
+
+      <programlisting>
+   LA /etc/printcap /afs/abc.com/common/etc/printcap.remote 
+               root wheel 644
+</programlisting>
+
+      <indexterm>
+        <primary>B instruction</primary>
+
+        <secondary>package configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>B instruction in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>defining block special device in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>block special device</primary>
+
+        <secondary>creating with package</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ434">
+      <title>Defining a Block Special Device</title>
+
+      <para>The <emphasis role="bold">B</emphasis> instruction defines a block special device, which is a device that handles data
+      in units of multibyte blocks, such as a disk. If a device of the same name already exists, the <emphasis
+      role="bold">package</emphasis> program replaces it with the specified block device.</para>
+
+      <para>Use the following instruction to define a block special device (it appears on two lines here only for
+      legibility):</para>
+
+      <programlisting><emphasis role="bold">B</emphasis> device_name   major_device_number   minor_device_number  \
+      owner   group   mode_bits
+</programlisting>
+
+      <para>The following example defines a disk called <emphasis role="bold">/dev/hd0a</emphasis> to have major and minor device
+      numbers <emphasis role="bold">1</emphasis> and <emphasis role="bold">0</emphasis>:</para>
+
+      <programlisting>
+   B /dev/hd0a 1 0 root wheel 644
+</programlisting>
+
+      <indexterm>
+        <primary>C instruction</primary>
+
+        <secondary>package configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>C instruction in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>defining character special device in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>character special device</primary>
+
+        <secondary>creating with package</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ435">
+      <title>Defining a Character Special Device</title>
+
+      <para>The <emphasis role="bold">C</emphasis> instruction defines a character special device, which is device that handles data
+      in units of a single character at a time, such as a terminal or tty. If a device of the same name already exists, the
+      <emphasis role="bold">package</emphasis> program replaces it with the specified character device.</para>
+
+      <para>Use the following instruction to define a character special device (it appears here on two lines only for
+      legibility):</para>
+
+      <programlisting><emphasis role="bold">C</emphasis> device_name   major_device_number   minor_device_number  \
+      owner   group   mode_bits
+</programlisting>
+
+      <para>The following example defines the tty called <emphasis role="bold">/dev/ttyp5</emphasis> with major and minor device
+      numbers <emphasis role="bold">6</emphasis> and <emphasis role="bold">5</emphasis>:</para>
+
+      <programlisting>
+   C /dev/ttyp5 6 5 root wheel 666
+</programlisting>
+
+      <indexterm>
+        <primary>S instruction</primary>
+
+        <secondary>package configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>S instruction in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package</primary>
+
+        <secondary>defining socket in configuration file</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>socket</primary>
+
+        <secondary>creating with package</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ436">
+      <title>Defining a Socket</title>
+
+      <para>The <emphasis role="bold">S</emphasis> instruction defines a socket, which is communications device for UDP and TCP/IP
+      connections. If a socket of the same name already exists, the <emphasis role="bold">package</emphasis> program replaces
+      it.</para>
+
+      <para>Use the following instruction to define a socket:</para>
+
+      <programlisting><emphasis role="bold">S</emphasis>   socket_name   [owner   group   mode_bits]
+</programlisting>
+
+      <para>The following example defines a socket called <emphasis role="bold">/dev/printer</emphasis>:</para>
+
+      <programlisting>
+   S /dev/printer root wheel 777
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ437">
+    <title>Constructing Prototype and Library Files</title>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>constructing prototype and library files</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>prototype files in package</primary>
+
+      <secondary>constructing</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>library files in package</primary>
+
+      <secondary>constructing</secondary>
+    </indexterm>
+
+    <para>This section describes the general steps required to create <emphasis role="bold">package</emphasis> prototype and library
+    files. Refer to the previous sections for guidelines, and the files in your <emphasis role="bold">wsadmin</emphasis> directory
+    for examples. The construction of prototype and library files is different for each cell.</para>
+
+    <sect2 id="Header_515">
+      <title>To construct a prototype file and its component library files</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Determine where the three <emphasis role="bold">package</emphasis>-related subdirectories (<emphasis
+          role="bold">src</emphasis>, <emphasis role="bold">lib</emphasis> and <emphasis role="bold">etc</emphasis>) reside in your
+          cell's file tree; the following instructions assume they were loaded into the <emphasis
+          role="bold">/afs/</emphasis>cellname<emphasis role="bold">/wsadmin</emphasis> directory, as described in the IBM AFS Quick
+          Beginnings.</para>
+        </listitem>
+
+        <listitem>
+          <para>Decide how many different functions you want client machines in your cell to perform. We recommend that you
+          construct a separate prototype file for each function. Common functions include: <itemizedlist>
+              <listitem>
+                <para>Standard workstation: provides users with access to files in AFS</para>
+              </listitem>
+
+              <listitem>
+                <para>Printer server: drives a printer; can be combined with "staff" functionality</para>
+              </listitem>
+
+              <listitem>
+                <para>Backup machine: performs backups of AFS volumes to tape by running the AFS Backup System software</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>Determine the minimum functionality needed for all clients (such as AFS setup) and place these generic definitions
+          in one or more library files.</para>
+        </listitem>
+
+        <listitem>
+          <para>For each type of client (printer server, backup machine, and so on), place all system-independent definitions in one
+          file, and all operating-system dependent definitions in another file.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ438">
+    <title>The Package Makefile File</title>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>Makefile</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Makefile for package</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>files</primary>
+
+      <secondary>package Makefile</secondary>
+    </indexterm>
+
+    <para>Once you have created the appropriate prototype and library files, you must compile the prototype for each system type.
+    The result is a system-specific configuration file.</para>
+
+    <para>The <emphasis role="bold">Makefile</emphasis> file defines the prototype and library files used and the order of
+    compilation. We recommend that you create your <emphasis role="bold">Makefile</emphasis> file by modifying the example provided
+    with the AFS distribution, as described in this section. In the conventional configuration, it is located at <emphasis
+    role="bold">/afs/</emphasis>cellname<emphasis role="bold">/wsadmin/src/Makefile</emphasis>.</para>
+
+    <sect2 id="Header_517">
+      <title>Overview</title>
+
+      <para>The following list summarizes the sections in the <emphasis role="bold">package</emphasis> <emphasis
+      role="bold">Makefile</emphasis> file, identifying each by the header name that begins the section. More detailed descriptions
+      follow. <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">CONFIG=</emphasis></term>
+
+            <listitem>
+              <para>Lists all of the configuration files to be created and defines which prototype files are compiled for which
+              system types. See <link linkend="HDRWQ439">The CONFIG Section</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">BASE_LIBS=</emphasis></term>
+
+            <listitem>
+              <para>Lists the pathnames of all operating-system- and function independent library files included in any prototype
+              files. See <link linkend="HDRWQ440">The BASE_LIBS Section</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">MACHINE_LIBS=</emphasis></term>
+
+            <listitem>
+              <para>Lists the pathnames of all operating-system-specific library files included in any prototype files. See <link
+              linkend="HDRWQ441">The MACHINE_LIBS Section</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">LIBS=</emphasis></term>
+
+            <listitem>
+              <para>A one-line instruction that defines LIBS as the combination of BASE_LIBS and MACHINE_LIBS. See <link
+              linkend="HDRWQ442">The LIBS Section</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">.SUFFIXES</emphasis></term>
+
+            <listitem>
+              <para>Defines all of the suffixes that can appear on a prototype or configuration file. See <link
+              linkend="HDRWQ443">The .SUFFIXES Section</link>.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>Finally, the <emphasis role="bold">Makefile</emphasis> file contains a set of instructions that the <emphasis
+      role="bold">package</emphasis> program follows to generate configuration files. It is not generally necessary to alter this
+      section. See <link linkend="HDRWQ444">The Makefile Instructions Section</link>.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ439">
+      <title>The CONFIG Section</title>
+
+      <para>As mentioned, a configuration file is a prototype file that has been compiled for a specific operating system type. The
+      CONFIG section of the <emphasis role="bold">Makefile</emphasis> file defines the prototype files to compile for each system
+      type. The resulting compiled file is a system-specific configuration file.</para>
+
+      <para>Study the following example taken from the sample <emphasis role="bold">Makefile</emphasis> file. Configuration files
+      are defined by specifying the prototype-system combination as prototype_file<emphasis role="bold">.</emphasis>sysname. Note
+      that it is not necessary to generate a configuration file for each prototype-system type combination.</para>
+
+      <programlisting>
+   #Makefile...
+   #    (C) Copyright IBM Corporation 1999
+   #    Licensed Materials - Property of IBM
+   #    All Rights Reserved.
+   #
+   CONFIG = \
+            staff.rs_aix42 \
+            staff.alpha_dux40 \
+            staff.xdm.alpha_dux40 \
+            staff.sun4x_56 \
+            staff.hp_ux110 \
+            minimal.rs_aix42 \
+            minimal.alpha_dux40 \
+            minimal.hp_ux110 \
+            minimal.sun4x_56
+</programlisting>
+
+      <para>An entry in the CONFIG section has the following format: <itemizedlist>
+          <listitem>
+            <para>The first part of the entry defines the prototype file and is the same as the prototype file name (without the
+            <emphasis role="bold">.proto</emphasis> extension). The second part of the entry indicates the system type for which the
+            prototype file is to be compiled. A complete list of these suffixes is in the .SUFFIXES section of the <emphasis
+            role="bold">Makefile</emphasis> file, as described in <link linkend="HDRWQ443">The .SUFFIXES Section</link>. This
+            prototype_file<emphasis role="bold">.</emphasis>sysname definition becomes the name of the compiled configuration
+            file.</para>
+
+            <para>For example, <emphasis role="bold">staff.rs_aix42</emphasis> indicates that the <emphasis
+            role="bold">staff.proto</emphasis> file is compiled for machines running AIX 4.2. The resulting compiled configuration
+            file is called <emphasis role="bold">staff.rs_aix42</emphasis>.</para>
+          </listitem>
+
+          <listitem>
+            <para>Each configuration file must appear on a separate line.</para>
+          </listitem>
+
+          <listitem>
+            <para>A backslash must follow the CONFIG= header and every name but the last one. A backslash must also appear on blank
+            lines.</para>
+          </listitem>
+        </itemizedlist></para>
+    </sect2>
+
+    <sect2 id="HDRWQ440">
+      <title>The BASE_LIBS Section</title>
+
+      <para>This section defines the complete pathname of all system- and function-independent library files included in any
+      prototype file. (System-specific library files are defined in the MACHINE_LIBS section). The pathnames can include the
+      ${wsadmin} variable, whose value is supplied on the <emphasis role="bold">make</emphasis> command line.</para>
+
+      <para>You must include all of the library files referred to in your prototype files; files included but not used are
+      ignored.</para>
+
+      <para>Study the following example. Note that the all entries (except the last one) must be followed by a backslash.</para>
+
+      <programlisting>
+   BASE_LIBS = \
+           ${wsadmin}/src/admin \
+           ${wsadmin}/lib/devel \
+           ${wsadmin}/lib/base.generic
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ441">
+      <title>The MACHINE_LIBS Section</title>
+
+      <para>This section lists the complete pathname of all operating-system-specific library files included in prototype files.
+      (System- and function-independent library files are defined in the BASE_LIBS section.)</para>
+
+      <para>Study the following example. Note that in this example, library files were grouped by operating-system type. Again, all
+      lines (except the last one) must be followed by a backslash, the ${wsadmin} variable is allowed, and files included but not
+      used are ignored.</para>
+
+      <programlisting>
+   MACHINE_LIBS = \
+           ${wsadmin}/lib/rs_aix42.generic \
+           ${wsadmin}/lib/rs_aix42.generic.dev \
+           ${wsadmin}/lib/rs_aix42.readonly \
+           ${wsadmin}/lib/rs_aix42.readwrite \
+           ${wsadmin}/lib/rt_aix42.generic.printer \
+    \
+    .
+    .
+           ${wsadmin}/lib/alpha_dux40.AFS \
+           ${wsadmin}/lib/hp_ux110.AFS \
+           ${wsadmin}/lib/sun4x_56.AFS \
+           ${wsadmin}/lib/rs_aix42.AFS
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ442">
+      <title>The LIBS Section</title>
+
+      <para>This section contains only one instruction, which indicates that LIBS is defined as the combination of MACHINE_LIBS and
+      BASE_LIBS. Insert a blank line after the line to separate this section from the next.</para>
+
+      <programlisting>
+   LIBS = ${MACHINE_LIBS} ${BASE_LIBS}
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ443">
+      <title>The .SUFFIXES Section</title>
+
+      <para>This section lists the valid machine-type suffixes. This list includes system types currently supported for AFS. Unused
+      suffixes are ignored.</para>
+
+      <programlisting>
+   .SUFFIXES: .rs_aix42 \
+              .alpha_dux40 \
+              .proto \
+              .sun4x_56 \
+              .i386_linux22 \
+              .hp_ux110
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ444">
+      <title>The Makefile Instructions Section</title>
+
+      <para>The remainder of the <emphasis role="bold">Makefile</emphasis> file controls how the <emphasis
+      role="bold">package</emphasis> program generates configuration files.</para>
+
+      <para>Study the following instructions; it is assumed that you are familiar with programming and <emphasis
+      role="bold">Makefile</emphasis> concepts.</para>
+
+      <programlisting>
+   #The following appear on a single line each in the actual file
+   .proto.rs_aix42: ;  mpp -Dwsadmin=${wsadmin} -Dsys=rs_aix42  
+                           -Dname=$* $*.proto &gt; $@
+   .proto.alpha_dux40: ; mpp -Dwsadmin=${wsadmin} -Dsys=alpha_dux40 
+                           -Dname=$* $*.proto &gt; $@
+   .proto.sun4x_56:  ; mpp -Dwsadmin=${wsadmin} -Dsys=sun4x_56 
+                           -Dname=$* $*.proto &gt; $@
+   .proto.hp_ux110:  ; mpp -Dwsadmin=${wsadmin} -Dsys=hp_ux110  
+                           -Dname=$* $*.proto &gt; $@
+   all: ${CONFIG}
+   ${CONFIG}: ${LIBS}
+   system: install
+   install: ${CONFIG}
+           cp ${CONFIG} ${wsadmin}/etc
+   clean:
+           rm -f ${CONFIG} *.BAK *.CKP
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ445">
+    <title>Modifying the Makefile</title>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>modifying the Makefile</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Makefile for package</primary>
+
+      <secondary>modifying</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>modifying</primary>
+
+      <secondary>package Makefile</secondary>
+    </indexterm>
+
+    <para>Modify the <emphasis role="bold">package</emphasis> <emphasis role="bold">Makefile</emphasis> files when you <itemizedlist>
+        <listitem>
+          <para>Add a new prototype file (function<emphasis role="bold">.proto</emphasis>).</para>
+        </listitem>
+
+        <listitem>
+          <para>Add a new system type.</para>
+        </listitem>
+
+        <listitem>
+          <para>Add new library files.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>The following sections provide brief examples of how to modify the <emphasis role="bold">Makefile</emphasis> file for
+    these reasons.</para>
+
+    <sect2 id="Header_525">
+      <title>Adding a New Prototype File</title>
+
+      <para>When you create a new prototype file, add the file name and each system type for which it is to be built into the CONFIG
+      section of the <emphasis role="bold">Makefile</emphasis> file.</para>
+
+      <para>For example, to add a function<emphasis role="bold">.proto</emphasis> file for <emphasis
+      role="bold">alpha_dux40</emphasis> and <emphasis role="bold">hp_ux110</emphasis>, add the following entries to the CONFIG
+      section:</para>
+
+      <programlisting>
+   CONFIG = \
+   ...
+           function.alpha_dux40 \
+           function.hp_ux110 \
+   ...
+</programlisting>
+
+      <para>If you have added new library files for this prototype function, add those to the MACHINE_LIBS section.</para>
+    </sect2>
+
+    <sect2 id="Header_526">
+      <title>Adding a New System Type</title>
+
+      <para>For each prototype file that you want to build for the new system type, add an entry to the CONFIG section. Also add any
+      new libraries to the MACHINE_LIBS section, and the new system type to the .SUFFIXES section.</para>
+
+      <para>The following example shows the modifications appropriate when building the <emphasis role="bold">staff</emphasis> and
+      <emphasis role="bold">minimal</emphasis> prototype files for this new system type.</para>
+
+      <programlisting>
+   CONFIG = \
+   ...
+           staff.sysname \
+           minimal.sysname \
+   ...
+</programlisting>
+
+      <para>If you have created corresponding library files for this new machine type, add them to the MACHINE_LIBS section.</para>
+
+      <programlisting>
+   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/sysname.generic \
+           ${wsadmin}/lib/sysname.generic.dev \
+           ${wsadmin}/lib/sysname.readonly \
+           ${wsadmin}/lib/sysname.readwrite \
+   ...
+</programlisting>
+
+      <para>Add the new system type to the SUFFIXES section.</para>
+
+      <programlisting>
+   .SUFFIXES: ...\
+            .sysname \
+   ...
+</programlisting>
+
+      <para>Add a line to build the configuration files for this system in the section with the rest of the commands to build
+      configuration files:</para>
+
+      <programlisting>
+   .proto.sysname: ; mpp -Dwsadmin=${wsadmin} \
+   -Dsys=sysname  -Dname=$* $*.proto &gt; $
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_527">
+      <title>Adding New Library Files</title>
+
+      <para>If you added a new library file for each system type, sysname<emphasis
+      role="bold">.</emphasis><emphasis>library_file</emphasis>, add these files to the MACHINE_LIBS section of the <emphasis
+      role="bold">Makefile</emphasis>.</para>
+
+      <programlisting>
+   MACHINE_LIBS = \
+   ...
+           ${wsadmin}/lib/rs_aix42.library_file \
+   ...
+           ${wsadmin}/lib/alpha_dux40.library_file \
+   ...
+           ${wsadmin}/lib/sun4x_56.library_file \
+   ...
+</programlisting>
+
+      <para>If you added a new library file that is common to all system types, library_file, add this only to the BASE_LIBS
+      section:</para>
+
+      <programlisting>
+   BASE_LIBS = \
+   ...
+           ${wsadmin}/lib/library_file \
+   ...
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ446">
+    <title>Compiling Prototype Files</title>
+
+    <indexterm>
+      <primary>compiling</primary>
+
+      <secondary>package prototype file</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>compiling prototype files</secondary>
+    </indexterm>
+
+    <para>The <emphasis role="bold">package</emphasis> program generates configuration files and installs them in the <emphasis
+    role="bold">etc</emphasis> and <emphasis role="bold">src</emphasis> subdirectories of the directory designated as <emphasis
+    role="bold">wsadmin=</emphasis> on the <emphasis role="bold">make</emphasis> command line. Recompile whenever you modify a
+    prototype or library file.</para>
+
+    <sect2 id="Header_529">
+      <title>To compile prototype files</title>
+
+      <note>
+        <para>These instructions assume that you store your <emphasis role="bold">package</emphasis>-related files in the <emphasis
+        role="bold">/afs/</emphasis>cellname<emphasis role="bold">/wsadmin</emphasis> directory. If you use a different directory,
+        substitute its name for <emphasis role="bold">/afs/</emphasis>cellname<emphasis role="bold">/wsadmin</emphasis>.</para>
+      </note>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you have all privileges in the <emphasis role="bold">/afs/</emphasis>cellname<emphasis
+          role="bold">/wsadmin</emphasis> directory and in its <emphasis role="bold">src</emphasis>, <emphasis
+          role="bold">lib</emphasis> and <emphasis role="bold">etc</emphasis> subdirectories. If necessary, issue the <emphasis
+          role="bold">fs</emphasis> <emphasis role="bold">listacl</emphasis> command. <programlisting>
+   % <emphasis role="bold">fs listacl</emphasis> [dir/file path]
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Change to the <emphasis role="bold">/afs/</emphasis>cellname<emphasis role="bold">/wsadmin/src</emphasis>
+          subdirectory. <programlisting>
+   % <emphasis role="bold">cd /afs/</emphasis>cellname<emphasis role="bold">/wsadmin/src</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Create a backup copy of the <emphasis role="bold">Makefile</emphasis> file included in the AFS distribution.
+          <programlisting>
+   % <emphasis role="bold">cp  Makefile Makefile.example</emphasis> 
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Modify the CONFIG, BASE_LIBS and MACHINE_LIBS sections of the <emphasis role="bold">Makefile</emphasis> file, as
+          described in <link linkend="HDRWQ439">The CONFIG Section</link>, <link linkend="HDRWQ440">The BASE_LIBS Section</link>,
+          and <link linkend="HDRWQ441">The MACHINE_LIBS Section</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>Compile the prototype files using the <emphasis role="bold">make</emphasis> command.</para>
+
+          <para>Use the <emphasis role="bold">wsadmin=</emphasis> argument to specify the <emphasis role="bold">package</emphasis>
+          directory. This becomes the value of the ${wsadmin} variable in the prototype and the library files.</para>
+
+          <para>The <emphasis role="bold">package</emphasis> program generates configuration files and installs them in the
+          <emphasis role="bold">etc</emphasis> and <emphasis role="bold">src</emphasis> subdirectories of the directory designated
+          as <emphasis role="bold">wsadmin=</emphasis>.</para>
+
+          <programlisting>
+   % <emphasis role="bold">make system wsadmin=/afs/</emphasis>cellname<emphasis role="bold">/wsadmin</emphasis>
+</programlisting>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ447">
+    <title>Modifying Client Machines</title>
+
+    <indexterm>
+      <primary>package directory</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>client</primary>
+
+      <secondary>modifying to run package</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>package</primary>
+
+      <secondary>modifying clients to run</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>modifying</primary>
+
+      <secondary>clients to run package</secondary>
+    </indexterm>
+
+    <para>To prepare a client to run the <emphasis role="bold">package</emphasis> program automatically, perform the following
+    steps. The instructions are generic because they do not refer to system-specific configuration files. If desired, you can invoke
+    the <emphasis role="bold">package</emphasis> program with specific arguments, as described in the <emphasis>IBM AFS
+    Administration Reference</emphasis>. <orderedlist>
+        <listitem>
+          <para>Specify the configuration file to use.</para>
+
+          <para>The <emphasis role="bold">.package</emphasis> file in the client machine's root ( <emphasis
+          role="bold">/</emphasis>) directory is redirected as an argument to the <emphasis role="bold">package</emphasis> command;
+          the <emphasis role="bold">.package</emphasis> file specifies which configuration file the <emphasis
+          role="bold">package</emphasis> program uses.</para>
+        </listitem>
+
+        <listitem>
+          <para>Make the <emphasis role="bold">package</emphasis> binary available to the client, either by copying it to the local
+          disk, or by creating a symbolic link to AFS. <itemizedlist>
+              <listitem>
+                <para>A symbolic link saves local disk space. However, when the file server machine that houses it is down, the
+                <emphasis role="bold">package</emphasis> binary is inaccessible.</para>
+              </listitem>
+
+              <listitem>
+                <para>Keeping the <emphasis role="bold">package</emphasis> binary on the local disk enables you to run the <emphasis
+                role="bold">package</emphasis> program even if file server is down. However, a file server machine outage usually
+                makes it difficult to run the <emphasis role="bold">package</emphasis> program because most configuration file
+                instructions refer to files in AFS. A local copy of the <emphasis role="bold">package</emphasis> binary can be
+                useful if the files referred to in instructions are in replicated volumes.</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>Modify the client machine's initialization file to invoke the <emphasis role="bold">package</emphasis> program at
+          reboot. The client machine reboots a second time if the <emphasis role="bold">package</emphasis> program updates any files
+          marked with the <emphasis role="bold">Q</emphasis> update code.</para>
+        </listitem>
+      </orderedlist></para>
+
+    <sect2 id="Header_531">
+      <title>To prepare a client machine to run the package program</title>
+
+      <para>Repeat these instructions on every client that runs the <emphasis role="bold">package</emphasis> program.</para>
+
+      <para>These instructions assume that the <emphasis role="bold">package</emphasis> configuration files (created when the
+      prototype files were compiled) reside in the <emphasis role="bold">/afs/</emphasis>cellname<emphasis
+      role="bold">/wsadmin/etc</emphasis> directory. <orderedlist>
+          <listitem>
+            <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by
+            issuing the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+          </listitem>
+
+          <listitem>
+            <para>Create the <emphasis role="bold">.package</emphasis> file in the root ( <emphasis role="bold">/</emphasis>)
+            directory and specify the name of the prototype file to use. Do not include the system-type suffix (such as <emphasis
+            role="bold">.rs_aix42</emphasis>); the <emphasis role="bold">package</emphasis> program automatically determines the
+            correct machine type. <programlisting>
+   # <emphasis role="bold">echo "/afs/</emphasis>cellname<emphasis role="bold">/wsadmin/etc/</emphasis>config_file<emphasis
+                  role="bold">" &gt;&gt; /.package</emphasis>
+</programlisting></para>
+
+            <para>For example, to configure a machine for a member of staff machine (assuming the proper prototype file had been
+            defined and compiled for the system type), the appropriate command is:</para>
+
+            <programlisting>
+   # <emphasis role="bold">echo "/afs/</emphasis>cellname<emphasis role="bold">/wsadmin/etc/staff" &gt;&gt; /.package</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Make the <emphasis role="bold">package</emphasis> binary available on the local disk as <emphasis
+            role="bold">/etc/package</emphasis>. Issue one of the following commands, depending on whether you want to create a file
+            or create a symbolic link.</para>
+
+            <para>To store the <emphasis role="bold">package</emphasis> binary locally, enter the following command:</para>
+
+            <programlisting>
+   # <emphasis role="bold">cp /afs/</emphasis>cellname<emphasis role="bold">/</emphasis>sysname<emphasis role="bold">/usr/afsws/etc/package   /etc/package</emphasis>
+</programlisting>
+
+            <para>To create a symbolic link, enter the following command:</para>
+
+            <programlisting>
+   # <emphasis role="bold">ln -s /afs/</emphasis>cellname<emphasis role="bold">/</emphasis>sysname<emphasis role="bold">/usr/afsws/etc/package   /etc/package</emphasis>
+</programlisting>
+          </listitem>
+
+          <listitem>
+            <para>Add the following lines to the appropriate initialization file, after the <emphasis role="bold">afsd</emphasis>
+            command is invoked. If this is a file server machine, the <emphasis role="bold">bosserver</emphasis> command must follow
+            the <emphasis role="bold">package</emphasis> command.</para>
+
+            <para>Using the <emphasis role="bold">-v</emphasis> and <emphasis role="bold">-c</emphasis> options is recommended. The
+            <emphasis role="bold">-v</emphasis> flag produces a detailed trace, and the <emphasis role="bold">-c</emphasis> option
+            appends the system type to the base name of the configuration file. See the <emphasis>IBM AFS Administration
+            Reference</emphasis> for a description of other options.</para>
+
+            <note>
+              <para>Replace the <emphasis role="bold">shutdown</emphasis> command with a similar command if it is not appropriate
+              for rebooting your machine.</para>
+            </note>
+
+            <programlisting>
+   if [ -f /etc/package ]; then
+           if [ -f /.package ]: then
+                   /etc/package -v -c `cat /.package` &gt;/dev/console
+           else
+                   /etc/package -v &gt;/dev/console
+   fi
+   case $? in
+   0)
+           echo "Package completed successfully" &gt;/dev/console 2&gt;&amp;1
+           date &gt;/dev/console 2&gt;&amp;1
+           ;;
+   4)
+           echo "Rebooting to restart system" &gt;/dev/console 2&gt;&amp;1
+           echo &gt;/fastboot
+           shutdown
+           ;;
+   *)
+           echo "Update failed, continuing anyway" &gt;/dev/console 2&gt;&amp;1
+           ;;
+   esac
+   fi
+</programlisting>
+          </listitem>
+        </orderedlist></para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ448">
+    <title>Running the package program</title>
+
+    <para>After you have created and compiled prototype files and modified client machines, you are ready to run the <emphasis
+    role="bold">package</emphasis> program. It is probably most convenient to run the <emphasis role="bold">package</emphasis>
+    program automatically at reboot by invoking it in the machine's AFS initialization file, but you can also issue the command at
+    the command shell prompt.</para>
+
+    <para>The configuration file must be completely correct. If there are any syntax errors or incorrect values, the program exits
+    without executing any instruction. To check the configuration file, issue the <emphasis role="bold">package</emphasis> command
+    with the <emphasis role="bold">-noaction</emphasis> and <emphasis role="bold">-debug</emphasis> flags at the command shell
+    prompt. They display a list of potential problems without actually executing instructions.</para>
+
+    <para>The <emphasis role="bold">package</emphasis> program follows these general rules. Complete explanations are in <link
+    linkend="HDRWQ429">Package Configuration File Instruction Syntax</link>. <itemizedlist>
+        <listitem>
+          <para>The <emphasis role="bold">package</emphasis> program does not delete any files from the disk unless the <emphasis
+          role="bold">R</emphasis> update code was specified in the prototype file. If the <emphasis role="bold">R</emphasis> update
+          code is associated with the parent directory, the <emphasis role="bold">package</emphasis> program removes anything from
+          the local disk directory that is not specified in the configuration file.</para>
+        </listitem>
+
+        <listitem>
+          <para>Local files are updated only if they are out of date. For each <emphasis role="bold">F</emphasis> instruction in the
+          configuration file, the <emphasis role="bold">package</emphasis> program compares the time of the local file with the
+          indicated source file. If the source file is newer than the local, the file is updated.</para>
+        </listitem>
+
+        <listitem>
+          <para>When the initialization file is modified as recommended in <link linkend="HDRWQ447">Modifying Client
+          Machines</link>, the <emphasis role="bold">package</emphasis> program reboots the workstation automatically if any files
+          marked with the <emphasis role="bold">Q</emphasis> update code are updated, and if the <emphasis
+          role="bold">package</emphasis> program has been invoked from the initialization file. When a file marked with the
+          <emphasis role="bold">Q</emphasis> update code is changed, the <emphasis role="bold">package</emphasis> program exits with
+          status code 4, causing a reboot (as directed in the initialization file). Files that require a reboot before changes are
+          recognized (such as the operating system kernel and <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> files) must
+          be marked with a <emphasis role="bold">Q</emphasis> update code in the configuration file.</para>
+        </listitem>
+
+        <listitem>
+          <para>The <emphasis role="bold">package</emphasis> program copies the configuration file it has just used to <emphasis
+          role="bold">/etc/package.</emphasis>sysname, where sysname reflects this machine's system type. The <emphasis
+          role="bold">package</emphasis> command interpreter consults this file if you do not provide a configuration file name. To
+          be sure that it configures the local disk as you wish, review its contents.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <sect2 id="Header_533">
+      <title>To invoke the package program by rebooting</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Recommended)</emphasis> Verify the following: <itemizedlist>
+              <listitem>
+                <para>The <emphasis role="bold">/.package</emphasis> file identifies the desired configuration file</para>
+              </listitem>
+
+              <listitem>
+                <para>The <emphasis role="bold">package</emphasis> binary is available as <emphasis
+                role="bold">/etc/package</emphasis></para>
+              </listitem>
+
+              <listitem>
+                <para>The initialization file is properly modified to invoke the <emphasis role="bold">package</emphasis> program
+                automatically</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>Reboot the machine, using the appropriate command. <programlisting>
+   # <emphasis role="bold">shutdown</emphasis>
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>package</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>package command</primary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_534">
+      <title>To invoke the package program directly (without rebooting)</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Become the local superuser <emphasis role="bold">root</emphasis> on the machine, if you are not already, by issuing
+          the <emphasis role="bold">su</emphasis> command. <programlisting>
+   % <emphasis role="bold">su root</emphasis>
+   Password: &lt;<replaceable>root_password</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Verify the following: <itemizedlist>
+              <listitem>
+                <para>The <emphasis role="bold">/.package</emphasis> file identifies the desired configuration file</para>
+              </listitem>
+
+              <listitem>
+                <para>The <emphasis role="bold">package</emphasis> binary is available as <emphasis
+                role="bold">/etc/package</emphasis></para>
+              </listitem>
+
+              <listitem>
+                <para>The initialization file is properly modified to invoke the <emphasis role="bold">package</emphasis> program
+                automatically</para>
+              </listitem>
+            </itemizedlist></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">package</emphasis> command. <programlisting>
+   # <emphasis role="bold">package</emphasis>  [<emphasis role="bold">initcmd</emphasis>]  [<emphasis role="bold">-config</emphasis> &lt;<replaceable>base name of configuration file</replaceable>&gt;]  \
+    [<emphasis role="bold">-fullconfig</emphasis> &lt;<replaceable>full name of configuration file, or stdin for standard input</replaceable>&gt;]  \
+    [<emphasis role="bold">-overwrite</emphasis>]  [<emphasis role="bold">-noaction</emphasis>]  [<emphasis role="bold">-verbose</emphasis>]  [<emphasis
+                role="bold">-silent</emphasis>] [<emphasis role="bold">-rebootfiles</emphasis>] 
+</programlisting></para>
+
+          <para>where <variablelist>
+              <varlistentry>
+                <term><emphasis role="bold">-config</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the full pathname of the configuration file to use, ending in the file's base name, which omits
+                  the suffix that indicates the machine type. The <emphasis role="bold">package</emphasis> program knows how to
+                  determine a machine's type, and automatically selects the appropriate version of the base file name. An example of
+                  the proper value for this argument is <emphasis role="bold">staff</emphasis> rather than <emphasis
+                  role="bold">staff.rs_aix42</emphasis>. You can also have the <emphasis role="bold">package</emphasis> program
+                  refer to <emphasis role="bold">/.package</emphasis> to learn the configuration file name by providing the
+                  following value:</para>
+
+                  <para><emphasis role="bold">`cat /.package`</emphasis></para>
+
+                  <para>Use either this argument or the <emphasis role="bold">-fullconfig</emphasis> argument.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-fullconfig</emphasis></term>
+
+                <listitem>
+                  <para>Specifies the full name of the configuration file to use, complete with the machine-type extension. Examples
+                  are <emphasis role="bold">staff.rs_aix42</emphasis> and <emphasis role="bold">minimal.hp_ux110</emphasis>
+                  files.</para>
+
+                  <para>Another possibility is the string <emphasis role="bold">stdin</emphasis>, which indicates that the issuer is
+                  providing configuration information via the standard input stream, either as a piped file or by typing the
+                  configuration file at the keyboard. Press &lt;<emphasis role="bold">Ctrl-d</emphasis>&gt; to conclude the
+                  input.</para>
+
+                  <para>Use either this argument or the <emphasis role="bold">-config</emphasis> argument.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-overwrite</emphasis></term>
+
+                <listitem>
+                  <para>Overwrite elements on the local disk with the source version indicated in the configuration file, even if
+                  the first (owner) <emphasis role="bold">w</emphasis> (<emphasis role="bold">write</emphasis>) mode bit is turned
+                  off on the local disk copy of the file. Files protected by the <emphasis role="bold">I</emphasis> update code are
+                  not overwritten; see the definition for the <emphasis role="bold">F</emphasis> instruction.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-noaction</emphasis></term>
+
+                <listitem>
+                  <para>Displays on the standard output stream a trace of potential problems in running the command, rather than
+                  actually running it. If the <emphasis role="bold">-verbose</emphasis> flag is added, the trace also notes the
+                  actions the <emphasis role="bold">package</emphasis> program attempts.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-silent</emphasis></term>
+
+                <listitem>
+                  <para>Explicitly invokes the default level of tracing, which includes only a list of problems encountered while
+                  executing the command.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-verbose</emphasis></term>
+
+                <listitem>
+                  <para>Produces a detailed trace of the program's actions on the standard output stream. The trace records on the
+                  transfer and ownership/mode bit setting of each element in the configuration file.</para>
+                </listitem>
+              </varlistentry>
+
+              <varlistentry>
+                <term><emphasis role="bold">-rebootfiles</emphasis></term>
+
+                <listitem>
+                  <para>Prevents the overwrite of any element marked with the <emphasis role="bold">Q</emphasis> update-mode code in
+                  the configuration file. This effectively prevents the machine from rebooting automatically again when the
+                  <emphasis role="bold">package</emphasis> program is invoked from an initialization file.</para>
+                </listitem>
+              </varlistentry>
+            </variablelist></para>
+        </listitem>
+
+        <listitem>
+          <para>If you think files marked with the <emphasis role="bold">Q</emphasis> update code were updated, reboot the machine.
+          This reboot does not occur automatically.</para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+</chapter>
