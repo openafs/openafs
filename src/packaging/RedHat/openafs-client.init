@@ -37,6 +37,7 @@ start() {
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] && touch /var/lock/subsys/openafs-client
+	[ $RETVAL -eq 0 ] && [ "$AFS_POST_INIT" ] && $AFS_POST_INIT
 	return $RETVAL
 }
 
