@@ -201,6 +201,8 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
 	if (code) {
 	    afs_com_err(whoami, code, "(getting token)");
+	    if (secLevel > 1)
+		return code;
 	    scIndex = 0;
 	} else {
 	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
@@ -213,7 +215,8 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 		scIndex = 2;
 	    }
 	    sc[2] =
-		rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
+		rxkad_NewClientSecurityObject((secLevel > 1) ? rxkad_crypt :
+					      rxkad_clear, &ttoken.sessionKey,
 					      ttoken.kvno, ttoken.ticketLen,
 					      ttoken.ticket);
 	}
