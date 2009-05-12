@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, International Business Machines Corporation and others.
+ * Copyrigh 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
  *
  * This software has been released under the terms of the IBM Public

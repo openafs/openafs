@@ -42,7 +42,11 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
 
     if (haveGlock)
 	AFS_GUNLOCK();
-    code = soreceive(asocket, (addr ? &nam : NULL), &u, NULL, NULL, NULL);
+    code = soreceive(asocket, (addr ? &nam : NULL), &u, NULL, NULL, NULL
+#if defined(AFS_OBSD45_ENV)
+		     , 0
+#endif
+		     );
     if (haveGlock)
 	AFS_GLOCK();
 
