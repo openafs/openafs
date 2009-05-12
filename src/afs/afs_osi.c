@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, International Business Machines Corporation and others.
+ * Copyrigh 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
  *
  * This software has been released under the terms of the IBM Public
@@ -485,6 +485,8 @@ afs_osi_Free(void *x, size_t asize)
     osi_linux_free(x);
 #elif defined(AFS_FBSD_ENV)
     osi_fbsd_free(x);
+#elif defined(AFS_OBSD44_ENV)
+    osi_obsd_Free(x, asize);
 #else
     AFS_KFREE((struct osimem *)x, asize);
 #endif
