@@ -176,6 +176,10 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
 	changed = 1;
 	sec = 1;
     }
+    if (as->parms[22].items) { /* -encrypt */
+	changed = 1;
+	sec = 3;
+    }
     if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
 	changed = 1;
 	confdir = AFSDIR_SERVER_ETC_DIRPATH;
@@ -1022,6 +1026,8 @@ add_std_args(register struct cmd_syndesc *ts)
 		"use local authentication");
     cmd_AddParm(ts, "-auth", CMD_FLAG, CMD_OPTIONAL,
 		"use user's authentication (default)");
+    cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
+		"encrypt commands");
 }
 
 /*

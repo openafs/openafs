@@ -129,6 +129,12 @@ privileged users to issue commands that change the Protection Database,
 and refuses to perform such an action even if the B<-noauth> flag is
 provided.
 
+=item B<-encrypt>
+
+Establishes an authenticated, encrypted connection to the Protection Server.
+It is useful when it is desired to obscure network traffic related to the
+transactions being done.
+
 =item B<-localauth>
 
 Constructs a server ticket using the server encryption key with the
