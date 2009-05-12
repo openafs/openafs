@@ -6507,23 +6507,23 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 	    rx_AtomicPeek_NL(s->packetRequests));
 
     if (version >= RX_DEBUGI_VERSION_W_NEWPACKETTYPES) {
-	fprintf(file, "alloc-failures(rcv %d/%d,send %d/%d,ack %d)\n",
+	fprintf(file, "alloc-failures(rcv %u/%u,send %u/%u,ack %u)\n",
 		rx_AtomicPeek_NL(s->receivePktAllocFailures),
 		rx_AtomicPeek_NL(s->receiveCbufPktAllocFailures),
 		rx_AtomicPeek_NL(s->sendPktAllocFailures),
 		rx_AtomicPeek_NL(s->sendCbufPktAllocFailures),
 		rx_AtomicPeek_NL(s->specialPktAllocFailures));
     } else {
-	fprintf(file, "alloc-failures(rcv %d,send %d,ack %d)\n",
+	fprintf(file, "alloc-failures(rcv %u,send %u,ack %u)\n",
 		rx_AtomicPeek_NL(s->receivePktAllocFailures),
 		rx_AtomicPeek_NL(s->sendPktAllocFailures),
 		rx_AtomicPeek_NL(s->specialPktAllocFailures));
     }
 
     fprintf(file,
-	    "   greedy %d, " "bogusReads %d (last from host %x), "
-	    "noPackets %d, " "noBuffers %d, " "selects %d, "
-	    "sendSelects %d\n", 
+	    "   greedy %u, " "bogusReads %u (last from host %x), "
+	    "noPackets %u, " "noBuffers %u, " "selects %u, "
+	    "sendSelects %u\n", 
 	    rx_AtomicPeek_NL(s->socketGreedy), 
 	    rx_AtomicPeek_NL(s->bogusPacketOnRead),
 	    rx_AtomicPeek_NL(s->bogusHost), 
@@ -6534,13 +6534,13 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 
     fprintf(file, "   packets read: ");
     for (i = 0; i < RX_N_PACKET_TYPES; i++) {
-      fprintf(file, "%s %d ", rx_packetTypes[i], rx_AtomicPeek_NL(s->packetsRead[i]));
+      fprintf(file, "%s %u ", rx_packetTypes[i], rx_AtomicPeek_NL(s->packetsRead[i]));
     }
     fprintf(file, "\n");
 
     fprintf(file,
-	    "   other read counters: data %d, " "ack %d, " "dup %d "
-	    "spurious %d " "dally %d\n", rx_AtomicPeek_NL(s->dataPacketsRead),
+	    "   other read counters: data %u, " "ack %u, " "dup %u "
+	    "spurious %u " "dally %u\n", rx_AtomicPeek_NL(s->dataPacketsRead),
 	    rx_AtomicPeek_NL(s->ackPacketsRead), 
 	    rx_AtomicPeek_NL(s->dupPacketsRead), 
 	    rx_AtomicPeek_NL(s->spuriousPacketsRead),
@@ -6548,13 +6548,13 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 
     fprintf(file, "   packets sent: ");
     for (i = 0; i < RX_N_PACKET_TYPES; i++) {
-      fprintf(file, "%s %d ", rx_packetTypes[i], rx_AtomicPeek_NL(s->packetsSent[i]));
+      fprintf(file, "%s %u ", rx_packetTypes[i], rx_AtomicPeek_NL(s->packetsSent[i]));
     }
     fprintf(file, "\n");
 
     fprintf(file,
-	    "   other send counters: ack %d, " "data %d (not resends), "
-	    "resends %d, " "pushed %d, " "acked&ignored %d\n",
+	    "   other send counters: ack %u, " "data %u (not resends), "
+	    "resends %u, " "pushed %u, " "acked&ignored %u\n",
 	    rx_AtomicPeek_NL(s->ackPacketsSent), 
 	    rx_AtomicPeek_NL(s->dataPacketsSent), 
 	    rx_AtomicPeek_NL(s->dataPacketsReSent),
@@ -6562,7 +6562,7 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 	    rx_AtomicPeek_NL(s->ignoreAckedPacket));
 
     fprintf(file,
-	    "   \t(these should be small) sendFailed %d, " "fatalErrors %d\n",
+	    "   \t(these should be small) sendFailed %u, " "fatalErrors %u\n",
 	    rx_AtomicPeek_NL(s->netSendFailures), rx_AtomicPeek_NL(s->fatalErrors));
 
     if (rx_AtomicPeek_NL(s->nRttSamples)) {
