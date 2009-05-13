@@ -1913,7 +1913,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	return(0); 
 #endif
     }
-    vcp->states |= CPageWrite;
+    vcp->f.states |= CPageWrite;
     ReleaseWriteLock(&vcp->lock);
 
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
@@ -1932,7 +1932,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     }
     code = code ? -code : count - tuio.uio_resid;
 
-    vcp->states &= ~CPageWrite;
+    vcp->f.states &= ~CPageWrite;
     ReleaseWriteLock(&vcp->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
