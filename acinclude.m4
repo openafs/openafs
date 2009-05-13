@@ -1558,8 +1558,21 @@ AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h sys/pag.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
+
+AC_CHECK_TYPES([fsblkcnt_t],,,[
+#include <sys/types.h>
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+])
 
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
 	HAVE_PAM="yes"
