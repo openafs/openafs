@@ -206,7 +206,7 @@
           you issue the <emphasis role="bold">bos create</emphasis> command to create and start the <emphasis
           role="bold">fs</emphasis> process on the machine, include the <emphasis role="bold">-implicit</emphasis> argument to the
           <emphasis role="bold">fileserver</emphasis> initialization command. For syntax details, see the <emphasis
-          role="bold">fileserver</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis>. You can
+          role="bold">fileserver</emphasis> reference page in the <emphasis>OpenAFS Administration Reference</emphasis>. You can
           grant additional permissions, or remove the <emphasis role="bold">l</emphasis> permission. However, the File Server always
           implicitly grants the <emphasis role="bold">a</emphasis> permission to members of the group, even if you set the value of
           the <emphasis role="bold">-implicit</emphasis> argument to <emphasis role="bold">none</emphasis>.</para>

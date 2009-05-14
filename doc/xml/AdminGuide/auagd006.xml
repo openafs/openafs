@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="HDRWQ5">
-  <title>An Overview of AFS Administration</title>
+  <title>An Overview of OpenAFS Administration</title>
 
   <para>This chapter provides a broad overview of the concepts and organization of AFS. It is strongly recommended that anyone
   involved in administering an AFS cell read this chapter before beginning to issue commands.</para>
@@ -1123,7 +1123,7 @@
 
       <para>Keeping clocks synchronized is particularly important to the correct operation of AFS's distributed database technology,
       which coordinates the copies of the Authentication, Backup, Protection, and Volume Location Databases; see <link
-      linkend="HDRWQ52">Replicating the AFS Administrative Databases</link>. Client machines also refer to these clocks for the
+      linkend="HDRWQ52">Replicating the OpenAFS Administrative Databases</link>. Client machines also refer to these clocks for the
       correct time; therefore, it is less confusing if all file server machines have the same time. For more technical detail about
       the NTPD, see <link linkend="HDRWQ151">The runntp Process</link>.</para>
     </sect2>

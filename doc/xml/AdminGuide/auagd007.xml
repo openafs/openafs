@@ -4,7 +4,7 @@
 
   <para>This chapter discusses many of the issues to consider when configuring and administering a cell, and directs you to detailed
   related information available elsewhere in this guide. It is assumed you are already familiar with the material in <link
-  linkend="HDRWQ5">An Overview of AFS Administration</link>.</para>
+  linkend="HDRWQ5">An Overview of OpenAFS Administration</link>.</para>
 
   <para>It is best to read this chapter before installing your cell's first file server machine or performing any other
   administrative task.</para>
@@ -118,7 +118,7 @@
 
             <para>AFS provides a modified login utility for each system type that accomplishes both local login and AFS
             authentication in one step, based on a single password. If you choose not to use the AFS-modified login utility, your
-            users must login and authenticate in separate steps, as detailed in the <emphasis>IBM AFS User Guide</emphasis>.</para>
+            users must login and authenticate in separate steps, as detailed in the <emphasis>OpenAFS User Guide</emphasis>.</para>
           </listitem>
 
           <listitem>
@@ -342,7 +342,7 @@
               UNIX Remote Services in the AFS Environment</link>.</para>
 
               <para>The AFS distribution for some system types possibly does not include a modified <emphasis
-              role="bold">rlogind</emphasis> program. See the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+              role="bold">rlogind</emphasis> program. See the <emphasis>OpenAFS Release Notes</emphasis>.</para>
 
               <indexterm>
                 <primary>rsh command</primary>
@@ -411,7 +411,7 @@
       role="bold">lost+found</emphasis> directory on the partition.</para>
 
       <para>Instead, use the version of the <emphasis role="bold">fsck</emphasis> program that is included in the AFS distribution.
-      The <emphasis>IBM AFS Quick Beginnings</emphasis> explains how to replace the vendor-supplied <emphasis
+      The <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to replace the vendor-supplied <emphasis
       role="bold">fsck</emphasis> program with the AFS version as you install each server machine.</para>
 
       <para>The AFS version functions like the standard <emphasis role="bold">fsck</emphasis> program on data stored on both UFS and
@@ -675,11 +675,11 @@
 
       <para>For file server machines, the two files that record the cell name are the <emphasis
       role="bold">/usr/afs/etc/ThisCell</emphasis> and <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis> files. As described
-      more explicitly in the <emphasis>IBM AFS Quick Beginnings</emphasis>, you set the cell name in both by issuing the <emphasis
+      more explicitly in the <emphasis>OpenAFS Quick Beginnings</emphasis>, you set the cell name in both by issuing the <emphasis
       role="bold">bos setcellname</emphasis> command on the first file server machine you install in your cell. It is not usually
       necessary to issue the command again. If you run the United States edition of AFS and use the Update Server, it distributes
       its copy of the <emphasis role="bold">ThisCell</emphasis> and <emphasis role="bold">CellServDB</emphasis> files to additional
-      server machines that you install. If you use the international edition of AFS, the <emphasis>IBM AFS Quick
+      server machines that you install. If you use the international edition of AFS, the <emphasis>OpenAFS Quick
       Beginnings</emphasis> explains how to copy the files manually.</para>
 
       <para>For client machines, the two files that record the cell name are the <emphasis
@@ -688,7 +688,7 @@
       See <link linkend="HDRWQ406">Maintaining Knowledge of Database Server Machines</link> for details.</para>
 
       <para>Change the cell name in these files only when you want to transfer the machine to a different cell (it can only belong
-      to one cell at a time). If the machine is a file server, follow the complete set of instructions in the <emphasis>IBM AFS
+      to one cell at a time). If the machine is a file server, follow the complete set of instructions in the <emphasis>OpenAFS
       Quick Beginnings</emphasis> for configuring a new cell. If the machine is a client, all you need to do is change the files
       appropriately and reboot the machine. The next section explains further the negative consequences of changing the name of an
       existing cell.</para>
@@ -1231,7 +1231,7 @@
               <para>A separate directory for storing the server and client binaries for each system type you use in the cell.
               Configuration is simplest if you use the system type names assigned in the AFS distribution, particularly if you wish
               to use the <emphasis role="bold">@sys</emphasis> variable in pathnames (see <link linkend="HDRWQ56">Using the @sys
-              Variable in Pathnames</link>). The <emphasis>IBM AFS Release Notes</emphasis> lists the conventional name for each
+              Variable in Pathnames</link>). The <emphasis>OpenAFS Release Notes</emphasis> lists the conventional name for each
               supported system type.</para>
 
               <para>Within each such directory, create directories named <emphasis role="bold">bin</emphasis>, <emphasis
@@ -1819,8 +1819,8 @@
         </listitem>
       </itemizedlist></para>
 
-    <para>The <emphasis>IBM AFS Quick Beginnings</emphasis> explains how to configure your cell's first file server machine to
-    assume all four roles. The <emphasis>IBM AFS Quick Beginnings</emphasis> chapter on installing additional server machines also
+    <para>The <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to configure your cell's first file server machine to
+    assume all four roles. The <emphasis>OpenAFS Quick Beginnings</emphasis> chapter on installing additional server machines also
     explains how to configure them to perform one or more roles.</para>
 
     <indexterm>
@@ -1844,7 +1844,7 @@
     </indexterm>
 
     <sect2 id="HDRWQ52">
-      <title>Replicating the AFS Administrative Databases</title>
+      <title>Replicating the OpenAFS Administrative Databases</title>
 
       <para>The AFS administrative databases are housed on database server machines and store information that is crucial for
       correct cell functioning. Both server processes and Cache Managers access the information frequently: <itemizedlist>
@@ -1882,7 +1882,7 @@
       <para>Unlike replicated volumes, however, replicated databases do change frequently. Consistent system performance demands
       that all copies of the database always be identical, so it is not acceptable to record changes in only some of them. To
       synchronize the copies of a database, the database server processes use AFS's distributed database technology, Ubik. See <link
-      linkend="HDRWQ102">Replicating the AFS Administrative Databases</link>.</para>
+      linkend="HDRWQ102">Replicating the OpenAFS Administrative Databases</link>.</para>
 
       <para>If your cell has only one file server machine, it must also serve as a database server machine. If you cell has two file
       server machines, it is not always advantageous to run both as database server machines. If a server, process, or network
@@ -1915,7 +1915,7 @@
       first <emphasis role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) mode bit turned on (for example, the
       <emphasis role="bold">/usr/afs/etc/KeyFile</emphasis> file, which lists the AFS server encryption keys). Each time the BOS
       Server starts, it checks that the mode bits on certain files and directories match the expected values. For a list, see the
-      <emphasis>IBM AFS Quick Beginnings</emphasis> section about protecting sensitive AFS directories, or the discussion of the
+      <emphasis>OpenAFS Quick Beginnings</emphasis> section about protecting sensitive AFS directories, or the discussion of the
       output from the <emphasis role="bold">bos status</emphasis> command in <link linkend="HDRWQ159">To display the status of
       server processes and their BosConfig entries</link>.</para>
 
@@ -1935,7 +1935,7 @@
       directory, and so on through the <emphasis role="bold">/vicepz</emphasis> directory. The names then continue with <emphasis
       role="bold">/vicepaa</emphasis> through <emphasis role="bold">/vicepaz</emphasis>, <emphasis role="bold">/vicepba</emphasis>
       through <emphasis role="bold">/vicepbz</emphasis>, and so on, up to the maximum supported number of server partitions, which
-      is specified in the IBM AFS Release Notes.</para>
+      is specified in the OpenAFS Release Notes.</para>
 
       <para>Each <emphasis role="bold">/vicep</emphasis>x directory must correspond to an entire partition or logical volume, and
       must be a subdirectory of the root directory (/). It is not acceptable to configure part of (for example) the <emphasis
@@ -2168,7 +2168,7 @@
       Solaris 7 converts it to <emphasis role="bold">/afs/abc.com/sun4x_57</emphasis>.</para>
 
       <para>If you want to use the @sys variable, it is simplest to use the conventional AFS system type names as specified in the
-      IBM AFS Release Notes. The Cache Manager records the local machine's system type name in kernel memory during initialization.
+      OpenAFS Release Notes. The Cache Manager records the local machine's system type name in kernel memory during initialization.
       If you do not use the conventional names, you must use the <emphasis role="bold">fs sysname</emphasis> command to change the
       value in kernel memory from its default just after Cache Manager initialization, on every client machine of the relevant
       system type. The <emphasis role="bold">fs sysname</emphasis> command also displays the current value; see <link
@@ -2819,7 +2819,7 @@
     <note>
       <para>The AFS-modified libraries do not necessarily support all features available in an operating system's proprietary login
       utility. In some cases, it is not possible to support a utility at all. For more information about the supported utilities in
-      each AFS version, see the IBM AFS Release Notes.</para>
+      each AFS version, see the OpenAFS Release Notes.</para>
     </note>
 
     <indexterm>
@@ -3027,7 +3027,7 @@
       <para>Systems that use a Pluggable Authentication Module (PAM) for login and AFS authentication do not necessarily consult the
       local password file at all, in which case they do not use the password field to control authentication and login attempts.
       Instead, instructions in the PAM configuration file (on many system types, <emphasis role="bold">/etc/pam.conf</emphasis>)
-      fill the same function. See the instructions in the IBM AFS Quick Beginnings for installing AFS-modified login
+      fill the same function. See the instructions in the OpenAFS Quick Beginnings for installing AFS-modified login
       utilities.</para>
 
       <indexterm>
@@ -3041,7 +3041,7 @@
       <title>Using Two-Step Login and Authentication</title>
 
       <para>In cells that do not use an AFS-modified login utility, users must issue separate commands to login and authenticate, as
-      detailed in the IBM AFS User Guide: <orderedlist>
+      detailed in the OpenAFS User Guide: <orderedlist>
           <listitem>
             <para>They use the standard <emphasis role="bold">login</emphasis> program to login to the local file system, providing
             the password listed in the local password file (the <emphasis role="bold">/etc/passwd</emphasis> file or
@@ -3165,12 +3165,12 @@
       logged in to the local file system. To authenticate as a different identity, use the <emphasis
       role="bold">-principal</emphasis> argument. To obtain a token for a foreign cell, use the <emphasis
       role="bold">-cell</emphasis> argument (it can be combined with the <emphasis role="bold">-principal</emphasis> argument). See
-      the IBM AFS User Guide and the entry for the <emphasis role="bold">klog</emphasis> command in the IBM AFS Administration
+      the OpenAFS User Guide and the entry for the <emphasis role="bold">klog</emphasis> command in the OpenAFS Administration
       Reference.</para>
 
       <para>To discard either all tokens or the token for a particular cell, issue the <emphasis role="bold">unlog</emphasis>
-      command. The command affects only the tokens associated with the current command shell. See the IBM AFS User Guideand the
-      entry for the <emphasis role="bold">unlog</emphasis> command in the IBM AFS Administration Reference.</para>
+      command. The command affects only the tokens associated with the current command shell. See the OpenAFS User Guideand the
+      entry for the <emphasis role="bold">unlog</emphasis> command in the OpenAFS Administration Reference.</para>
 
       <para>To display the tokens associated with the current command shell, issue the <emphasis role="bold">tokens</emphasis>
       command. The following examples illustrate its output in various situations.</para>
@@ -3253,8 +3253,8 @@
       <note>
         <para>An AFS-modified login utility always grants a token with a lifetime calculated from the previously described three
         values. When issuing the <emphasis role="bold">klog</emphasis> command, a user can request a lifetime shorter than the
-        default by using the <emphasis role="bold">-lifetime</emphasis> argument. For further information, see the IBM AFS User
-        Guide and the <emphasis role="bold">klog</emphasis> reference page in the IBM AFS Administration Reference.</para>
+        default by using the <emphasis role="bold">-lifetime</emphasis> argument. For further information, see the OpenAFS User
+        Guide and the <emphasis role="bold">klog</emphasis> reference page in the OpenAFS Administration Reference.</para>
       </note>
     </sect2>
 
@@ -3413,7 +3413,7 @@
       setpassword</emphasis> commands pass the proposed password to a program or script called <emphasis
       role="bold">kpwvalid</emphasis>, if it exists. The <emphasis role="bold">kpwvalid</emphasis> performs quality checks and
       returns a code to indicate whether the password is acceptable. You can create your own program or modified the sample program
-      included in the AFS distribution. See the <emphasis role="bold">kpwvalid</emphasis> reference page in the IBM AFS
+      included in the AFS distribution. See the <emphasis role="bold">kpwvalid</emphasis> reference page in the OpenAFS
       Administration Reference.</para>
 
       <para>There are several types of quality checks that can improve password quality. <itemizedlist>
@@ -3478,7 +3478,7 @@
 
       <para>Use either the Kerberos version or the standard command throughout the cell; do not mix the two versions. AFS Product
       Support can provide instructions on installing the Kerberos version of these four commands. For information on the differences
-      between the two versions of these commands, see the IBM AFS Administration Reference.</para>
+      between the two versions of these commands, see the OpenAFS Administration Reference.</para>
     </sect2>
   </sect1>
 
@@ -3949,7 +3949,7 @@
       a user accidentally removes or changes data, the user can restore it from the backup volume, rather than having to ask you to
       restore it.</para>
 
-      <para>The IBM AFS User Guide does not mention backup volumes, so regular users do not know about them if you decide not to use
+      <para>The OpenAFS User Guide does not mention backup volumes, so regular users do not know about them if you decide not to use
       them. This implies that if you <emphasis role="bold">do</emphasis> make backup versions of user volumes, you need to tell your
       users about how the backup works and where you have mounted it.</para>
 
@@ -4087,7 +4087,7 @@
 
     <para>The conventional installation location for the modified remote commands are the <emphasis
     role="bold">/usr/afsws/bin</emphasis> and <emphasis role="bold">/usr/afsws/etc</emphasis> directories. To learn more about
-    commands' functionality, see their reference pages in the IBM AFS Administration Reference.</para>
+    commands' functionality, see their reference pages in the OpenAFS Administration Reference.</para>
   </sect1>
 
   <sect1 id="HDRWQ79">

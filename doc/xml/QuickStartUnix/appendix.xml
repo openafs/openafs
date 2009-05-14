@@ -1456,7 +1456,7 @@ localusertwo:&lt;thelocalusertwo'skey&gt;:11500:0:99999:7:::
             are installing your first file server;
             <link linkend="HDRWQ108">Starting Server Programs</link> if you
             are installing an additional file server machine; or
-            <link linkend="HDRWQ145"></link> if you are installing a client.
+            <link linkend="HDRWQ145">Loading and Creating Client Files</link> if you are installing a client.
             </para>
           </listitem>
         </orderedlist>

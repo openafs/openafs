@@ -16,7 +16,7 @@
     or group of related tasks are presented in context, just prior to the procedures. Many examples are provided.</para>
 
     <para>Instructions generally include only the commands and command options necessary for a specific task. For a complete list of
-    AFS commands and description of all options available on every command, see the <emphasis>IBM AFS Administration
+    AFS commands and description of all options available on every command, see the <emphasis>OpenAFS Administration
     Reference</emphasis>.</para>
   </sect1>
 
@@ -25,13 +25,13 @@
 
     <para>This document is divided into the following chapters.</para>
 
-    <para><link linkend="HDRWQ2">An Introduction to AFS</link> introduces the basic concepts and functions of AFS. To use AFS
+    <para><link linkend="HDRWQ2">An Introduction to OpenAFS</link> introduces the basic concepts and functions of AFS. To use AFS
     successfully, it is important to be familiar with the terms and concepts described in this chapter.</para>
 
-    <para><link linkend="HDRWQ20">Using AFS</link> describes how to use AFS's basic features: how to log in and authenticate, unlog,
+    <para><link linkend="HDRWQ20">Using OpenAFS</link> describes how to use AFS's basic features: how to log in and authenticate, unlog,
     log out, access AFS files and directories in AFS, and change your password.</para>
 
-    <para><link linkend="HDRWQ38">Displaying Information about AFS</link> describes how to display information about AFS volume
+    <para><link linkend="HDRWQ38">Displaying Information about OpenAFS</link> describes how to display information about AFS volume
     quota and location, file server machine status, and the foreign cells you can access.</para>
 
     <para><link linkend="HDRWQ44">Protecting Your Directories and Files</link> describes how to protect your data using AFS access
@@ -45,18 +45,18 @@
     <para><link linkend="HDRWQ80">Appendix A, Using the NFS/AFS Translator</link> describes how to use the NFS/AFS Translator to
     access the AFS filespace from an NFS client machine.</para>
 
-    <para><link linkend="HDRWQ86">Appendix B, AFS Command Syntax and Online Help</link> describes AFS command syntax and how to
+    <para><link linkend="HDRWQ86">Appendix B, OpenAFS Command Syntax and Online Help</link> describes AFS command syntax and how to
     obtain online information about commands.</para>
 
-    <para><link linkend="HDRWQ90">Appendix C, Glossary</link> defines terms used in the <emphasis>IBM AFS User
+    <para><link linkend="HDRWQ90">Appendix C, Glossary</link> defines terms used in the <emphasis>OpenAFS User
     Guide</emphasis>.</para>
   </sect1>
 
   <sect1 id="HDRUSERFRONTHOWTO">
     <title>How To Use This Document</title>
 
-    <para>Before you begin using AFS, read <link linkend="HDRWQ2">An Introduction to AFS</link>. Next, follow the procedures
-    outlined in <link linkend="HDRWQ20">Using AFS</link> to get started using AFS as an authenticated user. It describes how to
+    <para>Before you begin using OpenAFS, read <link linkend="HDRWQ2">An Introduction to OpenAFS</link>. Next, follow the procedures
+    outlined in <link linkend="HDRWQ20">Using OpenAFS</link> to get started using OpenAFS as an authenticated user. It describes how to
     access files in the AFS filespace and how to end an AFS session. Consult the other chapters as you need to perform the tasks
     they describe.</para>
   </sect1>
@@ -68,19 +68,19 @@
 
     <itemizedlist>
       <listitem>
-        <para>The <emphasis>IBM AFS Administration Reference</emphasis> details the syntax of each AFS command and is intended for
-        the experienced AFS administrator, programmer, or user. For each AFS command, the <emphasis>IBM AFS Administration
+        <para>The <emphasis>OpenAFS Administration Reference</emphasis> details the syntax of each AFS command and is intended for
+        the experienced AFS administrator, programmer, or user. For each AFS command, the <emphasis>OpenAFS Administration
         Reference</emphasis> lists the command syntax, aliases and abbreviations, description, arguments, warnings, output,
         examples, and related topics. Commands are organized alphabetically.</para>
       </listitem>
 
       <listitem>
-        <para>The <emphasis>IBM AFS Administration Guide</emphasis> describes concepts and procedures necessary for administering an
-        AFS cell, as well as more extensive coverage of the topics in the <emphasis>IBM AFS User Guide</emphasis>.</para>
+        <para>The <emphasis>OpenAFS Administration Guide</emphasis> describes concepts and procedures necessary for administering an
+        AFS cell, as well as more extensive coverage of the topics in the <emphasis>OpenAFS User Guide</emphasis>.</para>
       </listitem>
 
       <listitem>
-        <para>The <emphasis>IBM AFS Quick Beginnings</emphasis> provides instructions for installing AFS server and client
+        <para>The <emphasis>OpenAFS Quick Beginnings</emphasis> provides instructions for installing AFS server and client
         machines.</para>
       </listitem>
     </itemizedlist>
@@ -146,7 +146,7 @@
 </para>
 
     <para>For additional information on AFS commands, including a description of command string components, acceptable abbreviations
-    and aliases, and how to get online help for commands, see <link linkend="HDRWQ86">Appendix B, AFS Command Syntax and Online
+    and aliases, and how to get online help for commands, see <link linkend="HDRWQ86">Appendix B, OpenAFS Command Syntax and Online
     Help</link>.</para>
   </sect1>
 </preface>

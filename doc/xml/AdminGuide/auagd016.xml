@@ -270,7 +270,7 @@
     <para>This section assumes that the <emphasis role="bold">package</emphasis>-related files have been installed in three
     subdirectories of the <emphasis role="bold">/afs/</emphasis>cellname/<emphasis role="bold">wsadmin</emphasis> directory:
     <emphasis role="bold">src</emphasis>, <emphasis role="bold">lib</emphasis> and <emphasis role="bold">etc</emphasis>, as
-    recommended in the <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+    recommended in the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
     <para>These directories contain several sample prototype, library, and configuration files, which can help to clarify how the
     <emphasis role="bold">package</emphasis> program works. However, they are not necessarily suitable for use in your cell; you
@@ -526,7 +526,7 @@
       directories, sockets, etc. Each line, called a <emphasis>configuration file instruction</emphasis>, defines a specific
       component of disk configuration. The proper syntax for these instructions is briefly described in <link
       linkend="HDRWQ429">Package Configuration File Instruction Syntax</link>; see the reference page for the <emphasis
-      role="bold">package</emphasis> configuration file in the <emphasis>IBM AFS Administration Reference</emphasis> for detailed
+      role="bold">package</emphasis> configuration file in the <emphasis>OpenAFS Administration Reference</emphasis> for detailed
       descriptions.</para>
 
       <para>In this example, the library file contains instructions specific to the configuration of an <emphasis
@@ -575,7 +575,7 @@
 
     <para>Within a library file, configuration file instructions are used to define the specific disk configuration. Each
     instruction can be used to define a file, directory, socket, or device on the client machine. The syntax for each valid
-    instruction type is described briefly here; detailed descriptions of the fields appear in the <emphasis>IBM AFS Command
+    instruction type is described briefly here; detailed descriptions of the fields appear in the <emphasis>OpenAFS Command
     Reference Manual</emphasis>. <itemizedlist>
         <listitem>
           <para><emphasis role="bold">D</emphasis> defines a directory</para>
@@ -1001,7 +1001,7 @@
           <para>Determine where the three <emphasis role="bold">package</emphasis>-related subdirectories (<emphasis
           role="bold">src</emphasis>, <emphasis role="bold">lib</emphasis> and <emphasis role="bold">etc</emphasis>) reside in your
           cell's file tree; the following instructions assume they were loaded into the <emphasis
-          role="bold">/afs/</emphasis>cellname<emphasis role="bold">/wsadmin</emphasis> directory, as described in the IBM AFS Quick
+          role="bold">/afs/</emphasis>cellname<emphasis role="bold">/wsadmin</emphasis> directory, as described in the OpenAFS Quick
           Beginnings.</para>
         </listitem>
 
@@ -1516,7 +1516,7 @@
 
     <para>To prepare a client to run the <emphasis role="bold">package</emphasis> program automatically, perform the following
     steps. The instructions are generic because they do not refer to system-specific configuration files. If desired, you can invoke
-    the <emphasis role="bold">package</emphasis> program with specific arguments, as described in the <emphasis>IBM AFS
+    the <emphasis role="bold">package</emphasis> program with specific arguments, as described in the <emphasis>OpenAFS
     Administration Reference</emphasis>. <orderedlist>
         <listitem>
           <para>Specify the configuration file to use.</para>
@@ -1610,7 +1610,7 @@
 
             <para>Using the <emphasis role="bold">-v</emphasis> and <emphasis role="bold">-c</emphasis> options is recommended. The
             <emphasis role="bold">-v</emphasis> flag produces a detailed trace, and the <emphasis role="bold">-c</emphasis> option
-            appends the system type to the base name of the configuration file. See the <emphasis>IBM AFS Administration
+            appends the system type to the base name of the configuration file. See the <emphasis>OpenAFS Administration
             Reference</emphasis> for a description of other options.</para>
 
             <note>

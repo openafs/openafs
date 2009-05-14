@@ -678,7 +678,7 @@
     role="bold">fs listacl</emphasis> command is configured to access a DCE cell's DFS filespace via the AFS/DFS Migration Toolkit,
     you can use the command to display the ACL on DFS files and directories. To display a DFS directory's Initial Container and
     Initial Object ACL instead of the regular one, include the <emphasis role="bold">fs listacl</emphasis> command's <emphasis
-    role="bold">-id</emphasis> or <emphasis role="bold">-if</emphasis> flag. For instructions, see the <emphasis>IBM AFS/DFS
+    role="bold">-id</emphasis> or <emphasis role="bold">-if</emphasis> flag. For instructions, see the <emphasis>OpenAFS/DFS
     Migration Toolkit Administration Guide and Reference</emphasis>. The <emphasis role="bold">fs</emphasis> command interpreter
     ignores the <emphasis role="bold">-id</emphasis> and <emphasis role="bold">-if</emphasis> flags if you include them when
     displaying an AFS ACL. <indexterm>
@@ -891,7 +891,7 @@
     role="bold">fs setacl</emphasis> command is configured to access a DCE cell's DFS filespace via the AFS/DFS Migration Toolkit,
     you can use the command to set the ACL on DFS files and directories. To set a DFS directory's Initial Container and Initial
     Object ACL instead of the regular one, include the <emphasis role="bold">fs setacl</emphasis> command's <emphasis
-    role="bold">-id</emphasis> or <emphasis role="bold">-if</emphasis> flag. For instructions, see the <emphasis>IBM AFS/DFS
+    role="bold">-id</emphasis> or <emphasis role="bold">-if</emphasis> flag. For instructions, see the <emphasis>OpenAFS/DFS
     Migration Toolkit Administration Guide and Reference</emphasis>. The <emphasis role="bold">fs</emphasis> command interpreter
     ignores the <emphasis role="bold">-id</emphasis> and <emphasis role="bold">-if</emphasis> flags if you include them when setting
     an AFS ACL. <indexterm>
@@ -1356,7 +1356,7 @@
     users to access a DCE cell's DFS filespace via the AFS/DFS Migration Toolkit, then you can use the <emphasis role="bold">fs
     copyacl</emphasis> command to copy ACLs between DFS files and directories also. The command includes <emphasis
     role="bold">-id</emphasis> and <emphasis role="bold">-if</emphasis> flags for altering a DFS directory's Initial Container and
-    Initial Object ACLs as well as its regular ACL; see the <emphasis>IBM AFS/DFS Migration Toolkit Administration Guide and
+    Initial Object ACLs as well as its regular ACL; see the <emphasis>OpenAFS/DFS Migration Toolkit Administration Guide and
     Reference</emphasis>. You cannot copy ACLs between AFS and DFS directories, because they use different ACL formats. The
     <emphasis role="bold">fs</emphasis> command interpreter ignores the <emphasis role="bold">-id</emphasis> and <emphasis
     role="bold">-if</emphasis> flags if you include them when copying AFS ACLs. <indexterm>

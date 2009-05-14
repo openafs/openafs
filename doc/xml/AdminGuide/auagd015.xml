@@ -23,7 +23,7 @@
       </listitem>
     </itemizedlist></para>
 
-  <para>To learn how to install the client functionality on a machine, see the <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+  <para>To learn how to install the client functionality on a machine, see the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
   <sect1 id="HDRWQ388">
     <title>Summary of Instructions</title>
@@ -417,7 +417,7 @@
               Cache Manager mounts the AFS filespace, the local disk directory to use as the cache, and how many kilobytes to
               allocate to the cache.</para>
 
-              <para>The <emphasis>IBM AFS Quick Beginnings</emphasis> explains how to create this file as you install a client
+              <para>The <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to create this file as you install a client
               machine. To change the cache size on a machine that uses a memory cache, edit the file and reboot the machine. On a
               machine that uses a disk cache, you can change the cache size without rebooting by issuing the <emphasis
               role="bold">fs setcachesize</emphasis> command. For instructions, see <link linkend="HDRWQ394">Determining the Cache
@@ -507,7 +507,7 @@
               authenticated, and in which the command interpreters (for example, the <emphasis role="bold">bos</emphasis> command)
               contact server processes.</para>
 
-              <para>The <emphasis>IBM AFS Quick Beginnings</emphasis> explains how to create this file as you install the AFS client
+              <para>The <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to create this file as you install the AFS client
               functionality. To learn about changing a client machine's cell membership, see <link linkend="HDRWQ411">Setting a
               Client Machine's Cell Membership</link>.</para>
             </listitem>
@@ -538,7 +538,7 @@
 
           <listitem>
             <para>The AFS initialization script, called <emphasis role="bold">afs.rc</emphasis> on many system types. In the
-            conventional configuration specified by the <emphasis>IBM AFS Quick Beginnings</emphasis>, it is a symbolic link to the
+            conventional configuration specified by the <emphasis>OpenAFS Quick Beginnings</emphasis>, it is a symbolic link to the
             actual script kept in the same directory as other initialization files used by the operating system. <indexterm>
                 <primary>dynamic kernel loader programs</primary>
 
@@ -737,7 +737,7 @@
       memory from other sources on the machine (number of users and processes). Machines running only a few processes possibly can
       use a smaller memory cache.</para>
 
-      <para>AFS imposes an absolute limit on cache size in some versions. See the <emphasis>IBM AFS Release Notes</emphasis> for the
+      <para>AFS imposes an absolute limit on cache size in some versions. See the <emphasis>OpenAFS Release Notes</emphasis> for the
       version you are using.</para>
     </sect2>
 
@@ -899,7 +899,7 @@
       </indexterm>
 
       <para>The Cache Manager determines how big to make the cache by reading the <emphasis
-      role="bold">/usr/vice/etc/cacheinfo</emphasis> file as it initializes. As directed in the <emphasis>IBM AFS Quick
+      role="bold">/usr/vice/etc/cacheinfo</emphasis> file as it initializes. As directed in the <emphasis>OpenAFS Quick
       Beginnings</emphasis>, you must create the file before running the <emphasis role="bold">afsd</emphasis> program. The file
       also defines the directory on which to mount AFS (by convention, <emphasis role="bold">/afs</emphasis>), and the local disk
       directory to use for a cache directory.</para>
@@ -910,7 +910,7 @@
 
       <para>To change the cache size at reboot without editing the <emphasis role="bold">cacheinfo</emphasis> file, include the
       <emphasis role="bold">-blocks</emphasis> argument to the <emphasis role="bold">afsd</emphasis> command; see the command's
-      reference page in the IBM AFS Administration Reference.</para>
+      reference page in the OpenAFS Administration Reference.</para>
 
       <para>For a disk cache, you can also use the <emphasis role="bold">fs setcachesize</emphasis> command to reset the cache size
       without rebooting. The value you set persists until the next reboot, at which time the cache size returns to the value
@@ -1307,12 +1307,12 @@
     and Location</link>. However, if you want to experiment with fine-tuning cache performance, you can use the arguments on the
     <emphasis role="bold">afsd</emphasis> command to control several other parameters. This section discusses a few of these
     parameters that have the most direct effect on cache performance. To learn more about the <emphasis role="bold">afsd</emphasis>
-    command's arguments, see its reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+    command's arguments, see its reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
 
     <para>In addition, the AFS initialization script included in the AFS distribution for each system type includes several
     variables that set several <emphasis role="bold">afsd</emphasis> arguments in a way that is suitable for client machines of
     different sizes and usage patterns. For instructions on using the script most effectively, see the section on configuring the
-    Cache Manager in the <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+    Cache Manager in the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
     <sect2 id="HDRWQ403">
       <title>Setting Cache Configuration Parameters</title>
@@ -1601,7 +1601,7 @@
     the <emphasis role="bold">/usr/vice/etc/CellServDB</emphasis> file on the machine's local disk. In addition to the machine's
     home cell, you can list any foreign cells that you want to enable users to access. (To enable access to a cell's filespace, you
     must also mount its <emphasis role="bold">root.cell</emphasis> volume in the local AFS filespace; the conventional location is
-    just under the AFS root directory, <emphasis role="bold">/afs</emphasis>. For instructions, see the <emphasis>IBM AFS Quick
+    just under the AFS root directory, <emphasis role="bold">/afs</emphasis>. For instructions, see the <emphasis>OpenAFS Quick
     Beginnings</emphasis>.)</para>
 
     <sect2 id="Header_451">
@@ -1720,7 +1720,7 @@
 
       <para>Because a correct entry in the <emphasis role="bold">CellServDB</emphasis> file is vital for consistent client
       performance, you must also update the file on each client machine whenever a cell's list of database server machines changes
-      (for instance, when you follow the instructions in the <emphasis>IBM AFS Quick Beginnings</emphasis> to add or remove a
+      (for instance, when you follow the instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> to add or remove a
       database server machine). To facilitate the client updates, you can use the <emphasis role="bold">package</emphasis> program,
       which copies files from a central source in AFS to the local disk of client machines. It is conventional to invoke the
       <emphasis role="bold">package</emphasis> program in a client machine's AFS initialization file so that it runs as the machine
@@ -2020,7 +2020,7 @@
                 <listitem>
                   <para>Specifies the complete Internet domain name of the AFS cell to link to a DCE cell for the purposes of DFS
                   fileset location. You can use this argument if the machine's AFS users access DFS via the AFS/DFS Migration
-                  Toolkit Protocol Translator. For instructions, see the <emphasis>IBM AFS/DFS Migration Toolkit Administration
+                  Toolkit Protocol Translator. For instructions, see the <emphasis>OpenAFS/DFS Migration Toolkit Administration
                   Guide and Reference</emphasis>.</para>
                 </listitem>
               </varlistentry>
@@ -2760,7 +2760,7 @@
       <para>The Cache Manager assigns preference ranks to a file server machine when it obtains the server's VLDB record from the VL
       Server, the first time that it accesses a volume that resides on the machine. If the machine is multihomed, the Cache Manager
       assigns a distinct rank to each of its interfaces (up to the number of interfaces that the VLDB can store for each machine,
-      which is specified in the <emphasis>IBM AFS Release Notes</emphasis>). The Cache Manager compares the interface's IP address
+      which is specified in the <emphasis>OpenAFS Release Notes</emphasis>). The Cache Manager compares the interface's IP address
       to the local machine's address and applies the following algorithm: <itemizedlist>
           <listitem>
             <para>If the local machine is a file server machine, the base rank for each of its interfaces is 5,000.</para>
@@ -3492,7 +3492,7 @@
     described in <link linkend="HDRWQ419">Configuring Client Machines with the package Program</link>.) The link also remains valid
     when you upgrade the machine to a new system type.</para>
 
-    <para>Configuration is simplest if you use the system type names that AFS assigns. For a list, see the <emphasis>IBM AFS Release
+    <para>Configuration is simplest if you use the system type names that AFS assigns. For a list, see the <emphasis>OpenAFS Release
     Notes</emphasis>.</para>
 
     <para>To display the system name stored in kernel memory, use the <emphasis role="bold">sys</emphasis> or <emphasis

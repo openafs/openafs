@@ -617,7 +617,7 @@
       <para>The <emphasis>Backup Database</emphasis> is a replicated administrative database maintained by the Backup Server process
       on the cell's database server machines. Like the other AFS database server processes, the <emphasis>Backup Server</emphasis>
       uses the Ubik utility to keep the various copies of the database synchronized (for a discussion of Ubik, see <link
-      linkend="HDRWQ52">Replicating the AFS Administrative Databases</link>).</para>
+      linkend="HDRWQ52">Replicating the OpenAFS Administrative Databases</link>).</para>
 
       <para>The Backup Database records the following information: <itemizedlist>
           <listitem>
@@ -3317,7 +3317,7 @@ volume_set_name<emphasis role="bold">.</emphasis>dump_level_name<emphasis role="
       id</computeroutput> respectively). The <computeroutput>cell</computeroutput> field reports the cell in which the dump
       operation was performed, and the <computeroutput>useCount</computeroutput> field reports the number of times the tape has been
       relabeled, either with the <emphasis role="bold">backup labeltape</emphasis> command or during a dump operation. For further
-      details, see the command's reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+      details, see the command's reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
 
       <para>If the tape has no label, or if the drive is empty, the following message appears at the command shell:</para>
 
@@ -3913,7 +3913,7 @@ volume_set_name<emphasis role="bold">.</emphasis>dump_level_name<emphasis role="
 
           <listitem>
             <para>The Backup System cannot determine if the dump set includes any more tapes while running the <emphasis
-            role="bold">backup scantape</emphasis> command (the command's reference page in the <emphasis>IBM AFS Administration
+            role="bold">backup scantape</emphasis> command (the command's reference page in the <emphasis>OpenAFS Administration
             Reference</emphasis> discusses possible reasons for this problem). When you assign the value <emphasis
             role="bold">NO</emphasis>, the Tape Coordinator proceeds as though there are more tapes and invokes the <emphasis
             role="bold">MOUNT</emphasis> script named in the device configuration file, or prompts the operator to insert the next
