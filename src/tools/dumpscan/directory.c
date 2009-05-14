@@ -127,9 +127,6 @@ afs_uint32 parse_directory(XFILE *X, dump_parser *p, afs_vnode *v,
       de.uniq  = ntohl(page.entry[i].vunique);
       if (p->print_flags & DSPRINT_DIR)
         printf("  %10d %10d  %s\n", de.vnode, de.uniq, de.name);
-      if (p->cb_dirent) {
-        r = (p->cb_dirent)(v, &de, X, p->refcon);
-      }
       if (p->cb_dirent && (r = (p->cb_dirent)(v, &de, X, p->refcon)))
         return r;
       i += ((l + 16) >> 5);
