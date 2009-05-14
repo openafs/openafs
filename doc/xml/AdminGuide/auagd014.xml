@@ -209,7 +209,7 @@
               </orderedlist></para>
 
             <para>For instructions on creating the initial <emphasis role="bold">afs</emphasis> entry and <emphasis
-            role="bold">KeyFile</emphasis> files as you install your cell's first server machine, see the IBM AFS Quick
+            role="bold">KeyFile</emphasis> files as you install your cell's first server machine, see the OpenAFS Quick
             Beginnings.</para>
           </listitem>
 
@@ -260,7 +260,7 @@
                 <listitem>
                   <para>You must run the <emphasis role="bold">upserver</emphasis> process on the system control machine and an
                   <emphasis role="bold">upclientetc</emphasis> process on all other server machines that references the system
-                  control machine. The IBM AFS Quick Beginnings explains how to install both processes. For instructions on
+                  control machine. The OpenAFS Quick Beginnings explains how to install both processes. For instructions on
                   verifying that the Update Server processes are running, see <link linkend="HDRWQ158">Displaying Process Status and
                   Information from the BosConfig File</link>.</para>
 
@@ -534,7 +534,7 @@
       between this date and the date reported by the <emphasis role="bold">bos listkeys</emphasis> command, because the latter date
       changes for any type of change to the <emphasis role="bold">KeyFile</emphasis> file, not just a key addition. For a
       description of the other lines in the output from the <emphasis role="bold">kas examine</emphasis> command, see its reference
-      page in the IBM AFS Administration Reference.</para>
+      page in the OpenAFS Administration Reference.</para>
 
       <programlisting>
    % <emphasis role="bold">kas examine afs  -admin admin</emphasis>

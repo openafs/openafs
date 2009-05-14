@@ -22,15 +22,12 @@
 <!ENTITY appendixB SYSTEM "auagd023.xml">
 <!ENTITY appendixC SYSTEM "auagd024.xml">
 <!ENTITY appendixD SYSTEM "auagd025.xml">
-<!ENTITY index SYSTEM "auagd026.xml">
 ]>
-<book label="Version 3.6" fpi="Document Number GC09-4563-00">
+<book label="Version M.m">
   <bookinfo>
-    <title>AFS Administration Guide</title>
+    <title>OpenAFS Administration Guide</title>
 
-    <subtitle>Version 3.6</subtitle>
-
-    <pubsnumber>Document Number GC09-4563-00</pubsnumber>
+    <subtitle>Version M.m</subtitle>
 
     <copyright>
       <year>2000</year>
@@ -40,22 +37,33 @@
 
     <revhistory>
       <revision>
+        <revnumber>M.m</revnumber>
+
+        <date>May 2008</date>
+
+        <revremark>First OpenAFS Edition</revremark>
+
+      </revision>
+
+      <revision>
         <revnumber>3.6</revnumber>
 
         <date>April 2000</date>
 
-        <revremark>First Edition</revremark>
+        <revremark>First IBM Edition, Document Number GC09-4563-00</revremark>
+
+        <pubsnumber>Document Number GC09-4563-00</pubsnumber>
       </revision>
     </revhistory>
 
     <abstract>
       <para>This edition applies to: <simplelist>
-          <member>IBM AFS for AIX, Version 3.6</member>
-          <member>IBM AFS for Digital Unix, Version 3.6</member>
-          <member>IBM AFS for HP-UX, Version 3.6</member>
-          <member>IBM AFS for Linux, Version 3.6</member>
-          <member>IBM AFS for SGI IRIX, Version 3.6</member>
-          <member>IBM AFS for Solaris, Version 3.6</member>
+          <member>OpenAFS for AIX, Version M.m</member>
+          <member>OpenAFS for Digital Unix, Version M.m</member>
+          <member>OpenAFS for HP-UX, Version M.m</member>
+          <member>OpenAFS for Linux, Version M.m</member>
+          <member>OpenAFS for SGI IRIX, Version M.m</member>
+          <member>OpenAFS for Solaris, Version M.m</member>
         </simplelist></para>
 
       <para>and to all subsequent releases and modifications until otherwise
@@ -107,5 +115,5 @@
   &appendixB;
   &appendixC;
   &appendixD;
-  &index;
+  <index>Name Index</index>
 </book>

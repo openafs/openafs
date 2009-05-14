@@ -162,7 +162,7 @@
 
         <listitem>
           <para>The Backup Server (<emphasis role="bold">buserver</emphasis>) process must be running on database server machines,
-          because most backup operations require accessing or changing information in the Backup Database. The <emphasis>IBM AFS
+          because most backup operations require accessing or changing information in the Backup Database. The <emphasis>OpenAFS
           Quick Beginnings</emphasis> explains how to configure the Backup Server.</para>
         </listitem>
       </itemizedlist></para>
@@ -2983,7 +2983,7 @@
       <para>For each dump on the tape, the output in the Tape Coordinator window displays the dump label followed by an entry for
       each volume. There is no output in the command window. The dump label has the same fields as the tape label displayed by the
       <emphasis role="bold">backup readlabel</emphasis> command, as described in <link linkend="HDRWQ272">Writing and Reading Tape
-      Labels</link>. Or see the <emphasis>IBM AFS Administration Reference</emphasis> for a detailed description of the fields in
+      Labels</link>. Or see the <emphasis>OpenAFS Administration Reference</emphasis> for a detailed description of the fields in
       the output.</para>
 
       <para>The following example shows the dump label and first volume entry on the tape in the device that has port offset
@@ -4228,7 +4228,7 @@
 
                 <listitem>
                   <para>Reports the existence of orphan blocks and other information about the database, as described on the
-                  <emphasis role="bold">backup dbverify</emphasis> reference page in the <emphasis>IBM AFS Administration
+                  <emphasis role="bold">backup dbverify</emphasis> reference page in the <emphasis>OpenAFS Administration
                   Reference</emphasis>.</para>
                 </listitem>
               </varlistentry>
@@ -4477,7 +4477,7 @@
       role="bold">-to</emphasis> argument is equivalent in effect and is simpler because it does not require starting a Tape
       Coordinator process as the <emphasis role="bold">backup savedb</emphasis> command does. For further information on the
       <emphasis role="bold">-archive</emphasis> argument to the <emphasis role="bold">backup savedb</emphasis> command, see the
-      command's reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+      command's reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
 
       <para>If you later need to access deleted dump records, and the corresponding tapes still exist, you can use the <emphasis
       role="bold">-dbadd</emphasis> argument to the <emphasis role="bold">backup scantape</emphasis> command to scan their contents

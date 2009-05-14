@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="HDRWQ2">
-  <title>An Introduction to AFS</title>
+  <title>An Introduction to OpenAFS</title>
 
   <para>This chapter introduces basic AFS concepts and terms. It assumes that you are already familiar with standard UNIX commands,
   file protection, and pathname conventions.</para>
@@ -519,7 +519,7 @@
   </sect1>
 
   <sect1 id="HDRWQ19">
-    <title>Using AFS with NFS</title>
+    <title>Using OpenAFS with NFS</title>
 
     <para>Some cells use the Networking File System (NFS) in addition to AFS. If you work on an NFS client machine, your system
     administrator can configure it to access the AFS filespace through a program called the <emphasis>NFS/AFS

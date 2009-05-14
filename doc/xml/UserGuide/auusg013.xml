@@ -213,7 +213,7 @@
 
 <indexentry>
   <primaryie>arguments to AFS commands,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3856">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3856">OpenAFS Command Syntax</ulink>
   </primaryie>
 </indexentry>
 
@@ -482,10 +482,10 @@
     <ulink url="c113.html#HDRWQ18" role="AEN471">Remote Commands</ulink>
   </secondaryie>
   <secondaryie>suite organization for AFS,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3830">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3830">OpenAFS Command Syntax</ulink>
   </secondaryie>
   <secondaryie>syntax for AFS,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3820">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3820">OpenAFS Command Syntax</ulink>
   </secondaryie>
   <secondaryie>tokens,
     <ulink url="c569.html#HDRWQ30" role="AEN759">To Display Your Tokens</ulink>
@@ -854,7 +854,7 @@
 
 <indexentry>
   <primaryie>flags on AFS commands,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3867">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3867">OpenAFS Command Syntax</ulink>
   </primaryie>
 </indexentry>
 
@@ -1087,7 +1087,7 @@
 
 <indexentry>
   <primaryie>instances to AFS commands,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3863">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3863">OpenAFS Command Syntax</ulink>
   </primaryie>
 </indexentry>
 
@@ -1328,7 +1328,7 @@
     <ulink url="a3812.html#Header_172" role="AEN3915">Abbreviations and Aliases for Operation Codes</ulink>
   </secondaryie>
   <secondaryie>defined,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3846">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3846">OpenAFS Command Syntax</ulink>
   </secondaryie>
 </indexentry>
 
@@ -1652,7 +1652,7 @@
 
 <indexentry>
   <primaryie>suite, defined for AFS command,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3833">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3833">OpenAFS Command Syntax</ulink>
   </primaryie>
 </indexentry>
 
@@ -1663,7 +1663,7 @@
     <ulink url="a3812.html#Header_174" role="AEN3963">Shortening Switches and Flags</ulink>
   </secondaryie>
   <secondaryie>defined,
-    <ulink url="a3812.html#HDRWQ87" role="AEN3860">AFS Command Syntax</ulink>
+    <ulink url="a3812.html#HDRWQ87" role="AEN3860">OpenAFS Command Syntax</ulink>
   </secondaryie>
   <secondaryie>omitting,
     <ulink url="a3812.html#Header_173" role="AEN3942">Omitting Argument Switches</ulink>
@@ -1672,7 +1672,7 @@
 
 <indexentry>
   <primaryie>syntax of AFS commands described,
-    <ulink url="a3812.html" role="AEN3814">AFS Command Syntax and Online Help</ulink>
+    <ulink url="a3812.html" role="AEN3814">OpenAFS Command Syntax and Online Help</ulink>
   </primaryie>
 </indexentry>
 

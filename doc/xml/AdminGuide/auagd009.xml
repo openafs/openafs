@@ -134,7 +134,7 @@
           <para>The output from the <emphasis role="bold">bos status</emphasis> command refers to a process by the name assigned
           when the <emphasis role="bold">bos create</emphasis> command creates its entry in the <emphasis
           role="bold">/usr/afs/local/BosConfig</emphasis> file. The name can differ from machine to machine, but it is easiest to
-          maintain the cell if you assign the same name on all machines. The <emphasis>IBM AFS Quick Beginnings</emphasis> and the
+          maintain the cell if you assign the same name on all machines. The <emphasis>OpenAFS Quick Beginnings</emphasis> and the
           reference page for the <emphasis role="bold">bos create</emphasis> command list the conventional names. Examples are
           <emphasis role="bold">bosserver</emphasis>, <emphasis role="bold">kaserver</emphasis>, and <emphasis
           role="bold">vlserver</emphasis>.</para>
@@ -606,7 +606,7 @@
       </indexterm>
 
       <para>As a system administrator, you do not contact the NTPD directly once you have installed it according to the instructions
-      in the <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+      in the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
     </sect2>
 
     <sect2 id="HDRWQ152">
@@ -767,7 +767,7 @@
       <para>A process's entry in the <emphasis role="bold">BosConfig</emphasis> file includes the following information:
       <itemizedlist>
           <listitem>
-            <para>The process's name. The recommended conventional names are defined in both the <emphasis>IBM AFS Quick
+            <para>The process's name. The recommended conventional names are defined in both the <emphasis>OpenAFS Quick
             Beginnings</emphasis> and <link linkend="HDRWQ161">Creating and Removing Processes</link>. The name of a simple process
             usually matches the name of its binary file (for example, <emphasis role="bold">ptserver</emphasis> for the Protection
             Server).</para>
@@ -1007,7 +1007,7 @@
       </indexterm>
 
       <para>When you start or stop a database server process (Authentication Server, Backup Server, Protection Server, or Volume
-      Location Server) for more than a short time, you must follow the instructions in the <emphasis>IBM AFS Quick
+      Location Server) for more than a short time, you must follow the instructions in the <emphasis>OpenAFS Quick
       Beginnings</emphasis> for installing or removing a database server machine. Here is a summary of the tasks you must perform to
       preserve correct AFS functioning. <itemizedlist>
           <listitem>
@@ -1298,7 +1298,7 @@
 </programlisting>
 
       <para>The expected protections for the directories and files in the <emphasis role="bold">/usr/afs</emphasis> directory are as
-      follows. A question mark indicates that the BOS Server does not check the mode bit. See the <emphasis>IBM AFS Quick
+      follows. A question mark indicates that the BOS Server does not check the mode bit. See the <emphasis>OpenAFS Quick
       Beginnings</emphasis> for more information about setting the protections on these files and directories.</para>
 
       <informaltable frame="none">
@@ -1444,7 +1444,7 @@
 
     <note>
       <para>If you are starting or stopping a database server process in the manner described in this section, follow the complete
-      instructions in the <emphasis>IBM AFS Quick Beginnings</emphasis> for creating or removing a database server machine. If you
+      instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> for creating or removing a database server machine. If you
       run one database server process on a given machine, you must run them all; for more information, see <link
       linkend="HDRWQ156">About Starting and Stopping the Database Server Processes</link>. Similarly, if you are stopping the
       <emphasis role="bold">upserver</emphasis> process on the system control machine or a binary distribution machine, you must
@@ -1703,7 +1703,7 @@
                 <listitem>
                   <para>Specifies the pathname of a program that the BOS Server runs when the process terminates. For more
                   information on notifier programs, see the <emphasis role="bold">bos create</emphasis> command reference page in
-                  the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+                  the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
                 </listitem>
               </varlistentry>
             </variablelist></para>
@@ -1884,7 +1884,7 @@
 
     <note>
       <para>If you are starting or stopping a database server process in the manner described in this section, follow the complete
-      instructions in the <emphasis>IBM AFS Quick Beginnings</emphasis> for creating or removing a database server machine. If you
+      instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> for creating or removing a database server machine. If you
       run one database server process on a given machine, you must run them all; for more information, see <link
       linkend="HDRWQ156">About Starting and Stopping the Database Server Processes</link>. Similarly, if you are stopping the
       <emphasis role="bold">upserver</emphasis> process on the system control machine or a binary distribution machine, you must

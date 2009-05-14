@@ -77,7 +77,7 @@
         functions:
           <itemizedlist>
             <listitem>
-              <para>It acts as the <emphasis>system control
+              <para>It may act as the <emphasis>system control
               machine</emphasis>, distributing certain
               configuration files to the other server machines in the
               cell</para>

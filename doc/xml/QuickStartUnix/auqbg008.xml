@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <appendix id="HDRWQ163">
-  <title>Appendix A. Building AFS from Source Code</title>
+  <title>Appendix A. Building OpenAFS from Source Code</title>
 
-  <para>This chapter describes how to build AFS from source code. <indexterm>
+  <para>This chapter describes how to build OpenAFS from source code. <indexterm>
       <primary>storing</primary>
 
-      <secondary>AFS source in volume</secondary>
+      <secondary>OpenAFS source in volume</secondary>
     </indexterm> <indexterm>
       <primary>creating</primary>
 
       <secondary>volume</secondary>
 
-      <tertiary>for AFS source</tertiary>
+      <tertiary>for OpenAFS source</tertiary>
     </indexterm> <indexterm>
       <primary>volume</primary>
 
-      <secondary>for AFS source</secondary>
+      <secondary>for OpenAFS source</secondary>
     </indexterm> <indexterm>
       <primary>source (AFS)</primary>
 
@@ -23,13 +23,15 @@
     </indexterm> <indexterm>
       <primary>files</primary>
 
-      <secondary>AFS source</secondary>
+      <secondary>OpenAFS source</secondary>
     </indexterm></para>
 
   <sect1 id="HDRWQ164">
     <title>Loading the Source Files</title>
 
-    <para>Working on an AFS client machine, perform these steps to load the AFS source tree from the AFS Source Distribution.
+    <para>Working on an AFS client machine, login to AFS as a
+    administrative user, then perform these steps to load the OpenAFS
+    source tree from the OpenAFS Source Distribution.
     <orderedlist>
         <indexterm>
           <primary>commands</primary>
@@ -66,7 +68,7 @@
         </indexterm>
 
         <listitem>
-          <para>Create and mount a volume for housing the AFS source tree. These instructions name the volume <emphasis
+          <para>Create and mount a volume for housing the OpenAFS source tree. These instructions name the volume <emphasis
           role="bold">src.afs</emphasis> and mount it at the <emphasis
           role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs/src</emphasis> directory.</para>
 
@@ -88,22 +90,34 @@
         </listitem>
 
         <listitem>
-          <para>On the local <emphasis role="bold">/cdrom</emphasis> directory, mount the CD-ROM that contains the AFS source files.
-          For instructions on mounting CD-ROMs (either locally or remotely via NFS), consult the operating system documentation.
+          <para>Download the latest stable OpenAFS source distribution
+          (openafs-src.<replaceable>X.Y.Z</replaceable>.tar.gz)
+          from <ulink url="http://www.openafs.org/release/latest.html">openafs.org</ulink>
+          to the local <emphasis role="bold">/tmp</emphasis> directory.
           <indexterm>
-              <primary>copying</primary>
+              <primary>downloading</primary>
 
-              <secondary>source files from CD-ROM</secondary>
-            </indexterm> <indexterm>
-              <primary>CD-ROM</primary>
-
-              <secondary>copying source files from</secondary>
-            </indexterm></para>
+              <secondary>source files from openafs.org</secondary>
+            </indexterm>
+            </para>
         </listitem>
 
         <listitem>
-          <para>Copy the source files from the CD-ROM into the newly created volume. <programlisting>
-   # <emphasis role="bold">cd /cdrom/src</emphasis>
+          <para>In the local <emphasis role="bold">/tmp</emphasis> directory, unpack the source archive. <programlisting>
+   # <emphasis role="bold">cd /tmp</emphasis>
+   # <emphasis role="bold">gzip -dc openafs-src-<replaceable>X.Y.Z</replaceable>.tar.gz | tar xvf -</emphasis>
+</programlisting>
+          <indexterm>
+              <primary>unpacking</primary>
+
+              <secondary>source files from the archive</secondary>
+            </indexterm>
+            </para>
+        </listitem>
+
+        <listitem>
+          <para>Copy the source files from the unpacked archive into the newly created volume. <programlisting>
+   # <emphasis role="bold">cd /tmp/openafs-<replaceable>X.Y.Z</replaceable></emphasis>
    # <emphasis role="bold">cp -rp  *  /afs/.</emphasis><replaceable>cellname</replaceable>/<emphasis role="bold">afs/src</emphasis>
 </programlisting></para>
         </listitem>
@@ -127,10 +141,9 @@
   </sect1>
 
   <sect1 id="HDRWQ165">
-    <title>Compiling AFS Binaries Using the washtool Program</title>
+    <title>Compiling OpenAFS Binaries Using Configure and Make</title>
 
-    <para>The AFS distribution includes the <emphasis role="bold">washtool</emphasis> program for managing a hierarchy of software
-    development projects. The program builds project trees for program editing, compilation, and installation. <orderedlist>
+    <para>The OpenAFS distribution uses the <emphasis role="bold">autoconf</emphasis> program and Makefiles for compiling the OpenAFS software.<orderedlist>
         <listitem>
           <para>Create a subdirectory under the <emphasis role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis
           role="bold">/afs</emphasis> directory for each system type for which you will build AFS binaries. Creating and mounting a
@@ -205,40 +218,23 @@
 </programlisting> <indexterm>
               <primary>commands</primary>
 
-              <secondary>washtool</secondary>
-            </indexterm> <indexterm>
-              <primary>washtool command</primary>
+              <secondary></secondary>
             </indexterm></para>
         </listitem>
-
+<!--
+    % cd /afs/.rampaginggeek.com/src/afs/@sys
+    % ../src/configure
+    make
+    make dest
+    -->
+        
         <listitem>
-          <para>For each system type you plan to build, copy the binary for the <emphasis role="bold">washtool</emphasis> program to
-          the directory specified in the AFS <emphasis role="bold">Makefile</emphasis>, which is <emphasis
-          role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
-          role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>. If you prefer to
-          store the program in a different directory, you can use the WASHTOOL variable on the <emphasis role="bold">make</emphasis>
-          command line as described in Step <link linkend="LIWQ166">6</link>.</para>
-
-          <para>If there is a volume that houses the AFS binaries for each system type (as recommended), the conventional location
-          for the <emphasis role="bold">washtool</emphasis> binary is the <emphasis
-          role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
-          role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/usr/afsws/bin</emphasis> directory. Use
-          the following instruction to copy it.</para>
-
+          <para>For each system type you plan to build, run the following commands on a machine of that system type:</para>
           <programlisting>
-   # <emphasis role="bold">cd  /afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable><emphasis
-              role="bold">/usr/afsws/bin</emphasis>
-   # <emphasis role="bold">cp  washtool</emphasis>  <emphasis role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis
-              role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>   
-</programlisting>
-
-          <para>Otherwise, mount the (binary) AFS CD-ROM for this system type on the local <emphasis role="bold">/cdrom</emphasis>
-          directory, and copy the <emphasis role="bold">washtool</emphasis> binary directly from it.</para>
-
-          <programlisting>
-   # <emphasis role="bold">cd  /cdrom/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/bin</emphasis>
-   # <emphasis role="bold">cp  washtool</emphasis>  <emphasis role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis
-              role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>
+   # <emphasis role="bold">cd  /afs/</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/</emphasis><replaceable>sysname</replaceable>
+   # <emphasis role="bold">../src/configure</emphasis>
+   # <emphasis role="bold">make</emphasis>
+   # <emphasis role="bold">make dest</emphasis>
 </programlisting>
 
           <indexterm>
@@ -248,46 +244,26 @@
           </indexterm>
 
           <indexterm>
+            <primary>configure command</primary>
+          </indexterm>
+
+          <indexterm>
             <primary>make command</primary>
           </indexterm>
 
           <indexterm>
-            <primary>variables</primary>
+            <primary>commands</primary>
 
-            <secondary>WASHTOOL</secondary>
+            <secondary>configure</secondary>
           </indexterm>
 
-          <indexterm>
-            <primary>variables</primary>
-
-            <secondary>SYS_NAME for washtool command</secondary>
-          </indexterm>
-
-          <indexterm>
-            <primary>SYS_NAME variable for washtool command</primary>
-          </indexterm>
-
-          <indexterm>
-            <primary>WASHTOOL variable</primary>
-          </indexterm>
         </listitem>
 
         <listitem>
           <para><anchor id="LIWQ166" />Working in the <emphasis
           role="bold">/afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis> directory on a
           machine of the system type for which you are building AFS, issue the <emphasis role="bold">make install</emphasis>
-          command. Set the SYS_NAME variable to the appropriate system type name.</para>
-
-          <para>If the <emphasis role="bold">washtool</emphasis> binary is not in the conventional directory (<emphasis
-          role="bold">/afs/</emphasis><replaceable>cellname</replaceable><emphasis
-          role="bold">/afs/</emphasis><replaceable>sysname</replaceable><emphasis role="bold">/dest/bin</emphasis>), set the
-          WASHTOOL variable to the alternate full pathname of the binary.</para>
-
-          <programlisting>
-   # <emphasis role="bold">cd /afs/.</emphasis><replaceable>cellname</replaceable><emphasis role="bold">/afs</emphasis>
-   # <emphasis role="bold">make SYS_NAME=</emphasis><replaceable>sysname</replaceable> [<emphasis role="bold">WASHTOOL=</emphasis><replaceable>alternate_washtool_directory</replaceable>] <emphasis
-              role="bold">install</emphasis>
-</programlisting>
+          command.</para>
         </listitem>
       </orderedlist></para>
   </sect1>

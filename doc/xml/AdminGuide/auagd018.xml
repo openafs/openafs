@@ -551,7 +551,7 @@
 
               <listitem>
                 <para>The initial password. Advise the user to change this at the first login, using the password changing
-                instructions in the <emphasis>IBM AFS User Guide</emphasis>.</para>
+                instructions in the <emphasis>OpenAFS User Guide</emphasis>.</para>
               </listitem>
 
               <listitem>
@@ -1231,7 +1231,7 @@
           <para>A persistent user can try to bypass this restriction by changing the password 20 times in quick succession (or
           running a script to do so). If you believe this is likely to be a problem, you can include the <emphasis
           role="bold">-minhours</emphasis> argument to the <emphasis role="bold">kaserver</emphasis> initialization command (for
-          details, see the command's reference page in the <emphasis>IBM AFS Administration Reference</emphasis>. If the user
+          details, see the command's reference page in the <emphasis>OpenAFS Administration Reference</emphasis>. If the user
           attempts to change passwords too frequently, the following message appears.</para>
 
           <programlisting>
@@ -1271,7 +1271,7 @@
             </itemizedlist></para>
 
           <para>The AFS distribution includes an example <emphasis role="bold">kpwvalid</emphasis> program. See the <emphasis
-          role="bold">kpwvalid</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+          role="bold">kpwvalid</emphasis> reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
         </listitem>
       </itemizedlist></para>
 
@@ -1618,7 +1618,7 @@
     <title>Changing AFS Passwords</title>
 
     <para>After setting an initial password during account creation, you normally do not need to change user passwords, since they
-    can use the <emphasis role="bold">kpasswd</emphasis> command themselves by following the instructions in the <emphasis>IBM AFS
+    can use the <emphasis role="bold">kpasswd</emphasis> command themselves by following the instructions in the <emphasis>OpenAFS
     User Guide</emphasis>. In the rare event that a user forgets the password or otherwise cannot log in, you can use the <emphasis
     role="bold">kas setpassword</emphasis> command to set a new password.</para>
 
@@ -1978,7 +1978,7 @@
                 restriction that some applications impose. Possible choices for an initial password include the username, a string
                 of digits from a personal identification number such as the Social Security number, or a standard string such as
                 <emphasis role="bold">changeme</emphasis>. Instruct the user to change the string to a truly secret password as soon
-                as possible by using the <emphasis role="bold">kpasswd</emphasis> command as instructed in the <emphasis>IBM AFS
+                as possible by using the <emphasis role="bold">kpasswd</emphasis> command as instructed in the <emphasis>OpenAFS
                 User Guide</emphasis>.</para>
               </listitem>
             </varlistentry>

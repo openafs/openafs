@@ -36,8 +36,8 @@
       the issuer omits the <emphasis role="bold">command_suite</emphasis> portion of the command name.</para>
 
       <para>The <emphasis role="bold">operation_code</emphasis> tells the command interpreter and server process which action to
-      perform. Most command suites include several operation codes. The <emphasis>IBM AFS Administration Reference</emphasis>
-      describes each operation code in detail, and the <emphasis>IBM AFS Administration Guide</emphasis> describes how to use them
+      perform. Most command suites include several operation codes. The <emphasis>OpenAFS Administration Reference</emphasis>
+      describes each operation code in detail, and the <emphasis>OpenAFS Administration Guide</emphasis> describes how to use them
       in the context of performing administrative tasks.</para>
 
       <para>Several AFS commands do not belong to a suite and so their names do not have a <emphasis
@@ -324,7 +324,7 @@
         role="bold">/vicep</emphasis><replaceable>x</replaceable> or <emphasis
         role="bold">/vicep</emphasis><replaceable>xx</replaceable>, where the variable final portion is one or two lowercase
         letters. By convention, the first server partition created on a file server machine is called <emphasis
-        role="bold">/vicepa</emphasis>, the second <emphasis role="bold">/vicepb</emphasis>, and so on. The <emphasis>IBM AFS Quick
+        role="bold">/vicepa</emphasis>, the second <emphasis role="bold">/vicepb</emphasis>, and so on. The <emphasis>OpenAFS Quick
         Beginnings</emphasis> explains how to configure and name a file server machine's partitions in preparation for storing AFS
         volumes on them.</para>
 

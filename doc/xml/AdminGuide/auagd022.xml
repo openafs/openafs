@@ -314,7 +314,7 @@
     <para>To act as an NFS/AFS translator machine, a machine must configured as follows: <itemizedlist>
         <listitem>
           <para>It must be an AFS client. Many system types supported as AFS clients can be translator machines. To learn about
-          possible restrictions in a specific release of AFS, see the <emphasis>IBM AFS Release Notes</emphasis>.</para>
+          possible restrictions in a specific release of AFS, see the <emphasis>OpenAFS Release Notes</emphasis>.</para>
         </listitem>
 
         <listitem>
@@ -339,12 +339,12 @@
       using NFS (the latter AFS kernel extensions file generally has the string <emphasis role="bold">nonfs</emphasis> in its name).
       A translator machine must use the NFS-enabled version of the AFS extensions file. On some system types, you select the
       appropriate file by moving it to a certain location, whereas on other system types you set a variable that results in
-      automatic selection of the correct file. See the instructions in the <emphasis>IBM AFS Quick Beginnings</emphasis> for
+      automatic selection of the correct file. See the instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> for
       incorporating AFS into the kernel on each system type.</para>
 
       <para>On many system types, NFS is included in the kernel by default, so it is not necessary to load NFS kernel extensions
       explicitly. On system types where you must load NFS extensions, then in general you must load them before loading the AFS
-      kernel extensions. The <emphasis>IBM AFS Quick Beginnings</emphasis> describes how to incorporate the AFS initialization
+      kernel extensions. The <emphasis>OpenAFS Quick Beginnings</emphasis> describes how to incorporate the AFS initialization
       script into a machine's startup sequence so that it is ordered correctly with respect to the script that handles NFS.</para>
 
       <para>In addition, the AFS extensions must be loaded into the kernel before the <emphasis role="bold">afsd</emphasis> command
@@ -361,7 +361,7 @@
       daemon), which executes AFS-specific system calls on behalf of NFS clients. For a discussion of the implications of NFS users
       issuing AFS commands, see <link linkend="HDRWQ600">Setting the AFSSERVER and AFSCONF Environment Variables</link>.</para>
 
-      <para>The instructions in the IBM AFS Quick Beginnings for configuring the Cache Manager explain how to add options such as
+      <para>The instructions in the OpenAFS Quick Beginnings for configuring the Cache Manager explain how to add options such as
       the <emphasis role="bold">-rmtsys</emphasis> flag to the <emphasis role="bold">afsd</emphasis> command in the AFS
       initialization script. On many system types, it is simplest to list the flag on the line in the script that defines the
       OPTIONS variable. The <emphasis>remote executor daemon</emphasis> does not consume many resources, so it is simplest to add it
@@ -539,13 +539,13 @@
             <para><anchor id="LIWQ605" />Modify the <emphasis role="bold">afsd</emphasis> command in the AFS initialization file to
             include the <emphasis role="bold">-rmtsys</emphasis> flag.</para>
 
-            <para>For system types other than IRIX, the instructions in the <emphasis>IBM AFS Quick Beginnings</emphasis> for
+            <para>For system types other than IRIX, the instructions in the <emphasis>OpenAFS Quick Beginnings</emphasis> for
             configuring the Cache Manager explain how to add the <emphasis role="bold">-rmtsys</emphasis> flag, for example by
             adding it to the line in the script that defines the value for the OPTIONS variable.</para>
 
             <para>On IRIX systems, the AFS initialization script automatically adds the <emphasis role="bold">-rmtsys</emphasis>
             flag if you have activated the <emphasis role="bold">afsxnfs</emphasis> configuration variable as instructed in the
-            <emphasis>IBM AFS Quick Beginnings</emphasis> instructions for incorporating AFS extensions into the kernel. If the
+            <emphasis>OpenAFS Quick Beginnings</emphasis> instructions for incorporating AFS extensions into the kernel. If the
             variable is not already activated, issue the following command.</para>
 
             <programlisting>
@@ -558,7 +558,7 @@
             serve, it can be beneficial to add other arguments to the <emphasis role="bold">afsd</emphasis> command in the machine's
             initialization file, such as the <emphasis role="bold">-daemons</emphasis> argument to set the number of background
             daemons. See <link linkend="HDRWQ387">Administering Client Machines and the Cache Manager</link> and the <emphasis
-            role="bold">afsd</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+            role="bold">afsd</emphasis> reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
           </listitem>
 
           <listitem>
@@ -707,7 +707,7 @@
       </itemizedlist></para>
 
     <para>To enable users to issue AFS commands, the NFS client machine must also be a supported system type (one for which AFS
-    binaries are available) and able to access the AFS command binaries. The <emphasis>IBM AFS Release Notes</emphasis> list the
+    binaries are available) and able to access the AFS command binaries. The <emphasis>OpenAFS Release Notes</emphasis> list the
     supported system types in each release.</para>
 
     <para>In addition, the AFSSERVER and AFSCONF environment variables must be set appropriately, as discussed in <link

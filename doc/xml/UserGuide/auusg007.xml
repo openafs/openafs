@@ -912,7 +912,7 @@
 
               <para>If you specify only one directory (or file) name, you can omit the <emphasis role="bold">-dir</emphasis> and
               <emphasis role="bold">-acl</emphasis> switches. For more on omitting switches, see <link linkend="HDRWQ86">Appendix B,
-              AFS Command Syntax and Online Help</link>.</para>
+              OpenAFS Command Syntax and Online Help</link>.</para>
             </listitem>
           </varlistentry>
 
@@ -1487,7 +1487,7 @@
     <para>Although AFS protects data primarily with ACLs rather than mode bits, it does not ignore the mode bits entirely. An
     explanation of how mode bits work in the UNIX file system is outside the scope of this document, and the following discussion
     assumes you understand them; if necessary, see your UNIX documentation. Also, the following discussion does not cover the
-    setuid, setgid or sticky bits. If you need to understand how those bits work on AFS files, see the <emphasis>IBM AFS
+    setuid, setgid or sticky bits. If you need to understand how those bits work on AFS files, see the <emphasis>OpenAFS
     Administration Guide</emphasis> or ask your system administrator.</para>
 
     <para>AFS uses the UNIX mode bits in the following way:</para>

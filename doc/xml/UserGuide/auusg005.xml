@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <chapter id="HDRWQ20">
-  <title>Using AFS</title>
+  <title>Using OpenAFS</title>
 
   <para>This chapter explains how to perform four basic AFS tasks: logging in and authenticating with AFS, ending an AFS session,
   accessing the AFS filespace, and changing your password.</para>
@@ -170,7 +170,7 @@
 
         <para>Your cell's administrators set the default lifetime of your token. The AFS authentication service never grants a token
         lifetime longer than the default, but you can request a token with a shorter lifetime. See the <emphasis
-        role="bold">klog</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis> to learn how to use
+        role="bold">klog</emphasis> reference page in the <emphasis>OpenAFS Administration Reference</emphasis> to learn how to use
         its <emphasis role="bold">-lifetime</emphasis> argument for this purpose.</para>
       </sect3>
 

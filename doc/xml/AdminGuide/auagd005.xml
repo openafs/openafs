@@ -11,7 +11,7 @@
     with UNIX(R) administration, but no previous knowledge of AFS.</para>
 
     <para>This document describes AFS commands in the context of specific tasks. Thus, it does not describe all commands in detail.
-    Refer to the IBM AFS Administration Reference for detailed command descriptions.</para>
+    Refer to the OpenAFS Administration Reference for detailed command descriptions.</para>
   </sect1>
 
   <sect1 id="HDRWQ2">
@@ -81,7 +81,7 @@
       </listitem>
 
       <listitem>
-        <para>If necessary, refer to the IBM AFS Administration Reference for more detailed information about the commands.</para>
+        <para>If necessary, refer to the OpenAFS Administration Reference for more detailed information about the commands.</para>
       </listitem>
     </orderedlist>
 </para>
@@ -94,22 +94,22 @@
 
     <variablelist>
       <varlistentry>
-        <term>IBM AFS Administration Reference</term>
+        <term>OpenAFS Administration Reference</term>
 
         <listitem>
           <para>This reference manual details the syntax and effect of each AFS command. It is intended for the experienced AFS
-          administrator, programmer, or user. The IBM AFS Administration Reference lists AFS files and commands in alphabetical
+          administrator, programmer, or user. The OpenAFS Administration Reference lists AFS files and commands in alphabetical
           order. The reference page for each command specifies its syntax, including the acceptable aliases and abbreviations. It
           then describes the command's function, arguments, and output if any. Examples and a list of related commands are provided,
           as are warnings where appropriate.</para>
 
-          <para>This manual complements the IBM AFS Administration Guide: it does not include procedural information, but describes
-          commands in more detail than the IBM AFS Administration Guide.</para>
+          <para>This manual complements the OpenAFS Administration Guide: it does not include procedural information, but describes
+          commands in more detail than the OpenAFS Administration Guide.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>IBM AFS Quick Beginnings</term>
+        <term>OpenAFS Quick Beginnings</term>
 
         <listitem>
           <para>This guide provides instructions for installing AFS server and client machines. It is assumed that the installer is
@@ -121,7 +121,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>IBM AFS Release Notes</term>
+        <term>OpenAFS Release Notes</term>
 
         <listitem>
           <para>This document provides information specific to each release of AFS, such as a list of new features and commands, a
@@ -130,7 +130,7 @@
       </varlistentry>
 
       <varlistentry>
-        <term>IBM AFS User Guide</term>
+        <term>OpenAFS User Guide</term>
 
         <listitem>
           <para>This guide presents the basic concepts and procedures necessary for using AFS effectively. It assumes that the

@@ -1703,7 +1703,7 @@
     <ulink url="c3025.html#HDRWQ118" role="AEN5325">Maintaining the Server CellServDB File</ulink>
   </secondaryie>
   <secondaryie>importance to Ubik operation,
-    <ulink url="c3025.html#HDRWQ102" role="AEN4453">Replicating the AFS Administrative Databases</ulink>
+    <ulink url="c3025.html#HDRWQ102" role="AEN4453">Replicating the OpenAFS Administrative Databases</ulink>
   </secondaryie>
   <secondaryie>maintaining,
     <ulink url="c3025.html#Header_138" role="AEN5295">To display an AFS binary's build level</ulink>
@@ -3344,7 +3344,7 @@
     <ulink url="c6449.html#HDRWQ156" role="AEN7037">About Starting and Stopping the Database Server Processes</ulink>
   </secondaryie>
   <secondaryie>need to run all on every database server machine,
-    <ulink url="c3025.html#HDRWQ102" role="AEN4450">Replicating the AFS Administrative Databases</ulink>
+    <ulink url="c3025.html#HDRWQ102" role="AEN4450">Replicating the OpenAFS Administrative Databases</ulink>
   </secondaryie>
   <secondaryie>restarting after adding entry to server CellServDB file,
     <ulink url="c3025.html#HDRWQ120" role="AEN5452">To display a cell's database server machines</ulink>
@@ -5745,7 +5745,7 @@
     <ulink url="c667.html#HDRWQ54" role="AEN1884">Configuring Client Machines</ulink>
   </secondaryie>
   <secondaryie>protecting on file server machine,
-    <ulink url="c667.html#HDRWQ52" role="AEN1801">Replicating the AFS Administrative Databases</ulink>
+    <ulink url="c667.html#HDRWQ52" role="AEN1801">Replicating the OpenAFS Administrative Databases</ulink>
   </secondaryie>
 </indexentry>
 
@@ -8143,7 +8143,7 @@
     <ulink url="c3025.html#HDRWQ109" role="AEN4796">To restore an administrative database</ulink>
   </secondaryie>
   <secondaryie>protecting directories on local disk,
-    <ulink url="c667.html#HDRWQ52" role="AEN1798">Replicating the AFS Administrative Databases</ulink>
+    <ulink url="c667.html#HDRWQ52" role="AEN1798">Replicating the OpenAFS Administrative Databases</ulink>
   </secondaryie>
   <secondaryie>rebooting,
     <ulink url="c3025.html#Header_160" role="AEN6362">To change a server machine's IP addresses</ulink>
@@ -9180,7 +9180,7 @@
     <ulink url="c3025.html#HDRWQ101" role="AEN4413">Administering Database Server Machines</ulink>
   </secondaryie>
   <secondaryie>requirements summarized,
-    <ulink url="c3025.html#HDRWQ102" role="AEN4447">Replicating the AFS Administrative Databases</ulink>
+    <ulink url="c3025.html#HDRWQ102" role="AEN4447">Replicating the OpenAFS Administrative Databases</ulink>
   </secondaryie>
   <secondaryie>server and client portions,
     <ulink url="c3025.html#HDRWQ103" role="AEN4499">Configuring the Cell for Proper Ubik Operation</ulink>
