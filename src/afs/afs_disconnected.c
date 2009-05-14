@@ -699,7 +699,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	    return ENOMEM;
 	}
 	ObtainReadLock(&tdc->lock);
-	tfile = afs_CFileOpen(tdc->f.inode);
+	tfile = afs_CFileOpen(&tdc->f.inode);
 	code = afs_CFileRead(tfile, 0, ttargetName, tlen);
 	ttargetName[tlen-1] = '\0';
 	afs_CFileClose(tfile);
