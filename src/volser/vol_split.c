@@ -361,7 +361,7 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 		FdHandle_t *infdP = 0;
 		FdHandle_t *outfdP = 0;
 		char *tbuf = malloc(2048);
-#if defined(NEARINODE_HINT)
+#if defined(NEARINODE_HINT) && !defined(AFS_NAMEI_ENV)
 		Inode nearInode;
 		V_pref(vol,nearInode)
 #endif
@@ -396,7 +396,7 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
 	        if (ino) {
 		    IHandle_t *h, *newh;
 		    Inode nearInode;
-#if defined(NEARINODE_HINT)
+#if defined(NEARINODE_HINT) && !defined(AFS_NAMEI_ENV)
 		    V_pref(vol,nearInode)
 #endif
 	            IH_INIT(h, vol->device, V_parentId(vol), ino);
@@ -564,7 +564,7 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     vnode.parent = vN;
 
     newvN = (offset >> (VnodeClassInfo[class].logSize - 1)) - 1 + class;
-#if defined(NEARINODE_HINT)
+#if defined(NEARINODE_HINT) && !defined(AFS_NAMEI_ENV)
     V_pref(vol,nearInode)
 #endif
     newino = IH_CREATE(V_linkHandle(vol), V_device(vol),
