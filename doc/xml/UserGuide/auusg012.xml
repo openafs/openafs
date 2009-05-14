@@ -168,7 +168,7 @@
 
       <glossdef>
         <para>A string of characters indicating an action for an AFS server to perform. For a description of AFS command syntax, see
-        <link linkend="HDRWQ86">Appendix B, AFS Command Syntax and Online Help</link>.</para>
+        <link linkend="HDRWQ86">Appendix B, OpenAFS Command Syntax and Online Help</link>.</para>
       </glossdef>
     </glossentry>
 

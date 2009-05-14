@@ -2477,7 +2477,7 @@
             <para>Specifies which individual statistic, group of statistics, or section of statistics to display on the
             <computeroutput>File Servers</computeroutput> screen (<emphasis role="bold">fs</emphasis>) or <computeroutput>Cache
             Managers</computeroutput> screen (<emphasis role="bold">cm</emphasis>) and the order in which to display them. The
-            appendix of <emphasis role="bold">afsmonitor</emphasis> statistics in the <emphasis>IBM AFS Administration
+            appendix of <emphasis role="bold">afsmonitor</emphasis> statistics in the <emphasis>OpenAFS Administration
             Guide</emphasis> specifies the group and section to which each statistic belongs. Include as many <emphasis
             role="bold">show</emphasis> lines as necessary to customize the screen display as desired, and place them anywhere in
             the file. The top-to-bottom order of the <emphasis role="bold">show</emphasis> lines in the configuration file

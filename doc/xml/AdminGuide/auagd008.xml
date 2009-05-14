@@ -57,7 +57,7 @@
       </listitem>
     </itemizedlist></para>
 
-  <para>To learn how to install and configure a new server machine, see the <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+  <para>To learn how to install and configure a new server machine, see the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
   <para>To learn how to administer the server processes themselves, see <link linkend="HDRWQ142">Monitoring and Controlling Server
   Processes</link>.</para>
@@ -1090,7 +1090,7 @@
               <para>An ASCII file that consists of a single line defining the complete Internet domain-style name of the cell (such
               as <computeroutput>abc.com</computeroutput>). You create this file with the <emphasis role="bold">bos
               setcellname</emphasis> command during the installation of your cell's first file server machine, as instructed in the
-              <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+              <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
               <para>Note that changing this file is only one step in changing your cell's name. For discussion, see <link
               linkend="HDRWQ34">Choosing a Cell Name</link>.</para>
@@ -1174,7 +1174,7 @@
               restarts processes for maintenance purposes.</para>
 
               <para>As you create server processes during a file server machine's installation, their entries are defined in this
-              file automatically. The <emphasis>IBM AFS Quick Beginnings</emphasis> outlines the <emphasis
+              file automatically. The <emphasis>OpenAFS Quick Beginnings</emphasis> outlines the <emphasis
               role="bold">bos</emphasis> commands to use. For a more complete description of the file, and instructions for
               controlling process status by editing the file with commands from the <emphasis role="bold">bos</emphasis> suite, see
               <link linkend="HDRWQ142">Monitoring and Controlling Server Processes</link>.</para>
@@ -1396,7 +1396,7 @@
       <para>If a cell runs more than one database server machine, each database server process keeps its own copy of its database on
       its machine's hard disk. However, it is important that all the copies of a given database are the same. To synchronize them,
       the database server processes call on AFS's distributed database technology, Ubik, as described in <link
-      linkend="HDRWQ102">Replicating the AFS Administrative Databases</link>.</para>
+      linkend="HDRWQ102">Replicating the OpenAFS Administrative Databases</link>.</para>
 
       <para>The files listed here appear in this directory only on database server machines. On non-database server machines, this
       directory is empty. <variablelist>
@@ -1785,7 +1785,7 @@
       name. The directory name is of the form <emphasis role="bold">/vicep</emphasis>index, where each index is one or two lowercase
       letters. By convention, the first AFS partition on a machine is mounted at <emphasis role="bold">/vicepa</emphasis>, the
       second at <emphasis role="bold">/vicepb</emphasis>, and so on. If there are more than 26 partitions, continue with <emphasis
-      role="bold">/vicepaa</emphasis>, <emphasis role="bold">/vicepab</emphasis> and so on. The <emphasis>IBM AFS Release
+      role="bold">/vicepaa</emphasis>, <emphasis role="bold">/vicepab</emphasis> and so on. The <emphasis>OpenAFS Release
       Notes</emphasis> specifies the number of supported partitions per server machine.</para>
 
       <para>Do not store non-AFS files on AFS partitions. The File Server and Volume Server expect to have available all of the
@@ -1883,7 +1883,7 @@
       </itemizedlist></para>
 
     <para>If a cell has a single server machine, it assumes the simple file server and database server roles. The instructions in
-    the <emphasis>IBM AFS Quick Beginnings</emphasis> also have you configure it as the system control machine and binary
+    the <emphasis>OpenAFS Quick Beginnings</emphasis> also have you configure it as the system control machine and binary
     distribution machine for its system type, but it does not actually perform those functions until you install another server
     machine.</para>
 
@@ -1994,7 +1994,7 @@
       <para>Unlike replicated volumes, however, replicated databases do change frequently. Consistent system performance demands
       that all copies of the database always be identical, so it is not possible to record changes in only some of them. To
       synchronize the copies of a database, the database server processes use AFS's distributed database technology, Ubik. See <link
-      linkend="HDRWQ102">Replicating the AFS Administrative Databases</link>.</para>
+      linkend="HDRWQ102">Replicating the OpenAFS Administrative Databases</link>.</para>
 
       <para>It is critical that the AFS server processes on every server machine in a cell know which machines are the database
       server machines. The database server processes in particular must maintain constant contact with their peers in order to
@@ -2114,7 +2114,7 @@
       <para>For a list of the configuration files stored in the <emphasis role="bold">/usr/afs/etc</emphasis> directory, see <link
       linkend="HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</link>.</para>
 
-      <para>The <emphasis>IBM AFS Quick Beginnings</emphasis> configures a cell's first server machine as the system control
+      <para>The <emphasis>OpenAFS Quick Beginnings</emphasis> configures a cell's first server machine as the system control
       machine. If you wish, you can reassign the role to a different machine that you install later, but you must then change the
       client portion of the Update Server (<emphasis role="bold">upclientetc</emphasis>) process running on all other server
       machines to refer to the new system control machine.</para>
@@ -2370,7 +2370,7 @@
    Command 1 is '/usr/afs/bin/upserver'
 </programlisting>
 
-        <para>If you are using the default configuration recommended in the <emphasis>IBM AFS Quick Beginnings</emphasis>, the
+        <para>If you are using the default configuration recommended in the <emphasis>OpenAFS Quick Beginnings</emphasis>, the
         system control machine is also the binary distribution machine for its system type, and a single <emphasis
         role="bold">upserver</emphasis> process distributes both kinds of updates. In that case, the output includes the following
         messages:</para>
@@ -2422,7 +2422,7 @@
   <sect1 id="HDRWQ101">
     <title>Administering Database Server Machines</title>
 
-    <para>This section explains how to administer database server machines. For installation instructions, see the <emphasis>IBM AFS
+    <para>This section explains how to administer database server machines. For installation instructions, see the <emphasis>OpenAFS
     Quick Beginnings</emphasis>.</para>
 
     <indexterm>
@@ -2494,10 +2494,10 @@
     </indexterm>
 
     <sect2 id="HDRWQ102">
-      <title>Replicating the AFS Administrative Databases</title>
+      <title>Replicating the OpenAFS Administrative Databases</title>
 
       <para>There are several benefits to replicating the AFS administrative databases (the Authentication, Backup, Protection, and
-      Volume Location Databases), as discussed in <link linkend="HDRWQ52">Replicating the AFS Administrative Databases</link>. For
+      Volume Location Databases), as discussed in <link linkend="HDRWQ52">Replicating the OpenAFS Administrative Databases</link>. For
       correct cell functioning, the copies of each database must be identical at all times. To keep the databases synchronized, AFS
       uses library of utilities called <emphasis>Ubik</emphasis>. Each database server process runs an associated lightweight Ubik
       process, and client-side programs call Ubik's client-side subroutines when they submit requests to read and change the
@@ -2572,7 +2572,7 @@
 
               <para>If you run the United States version of AFS and use the Update Server, it is simplest to maintain the <emphasis
               role="bold">/usr/afs/etc/CellServDB</emphasis> file on the system control machine, which distributes its copy to all
-              other server machines. The <emphasis>IBM AFS Quick Beginnings</emphasis> explains how to configure the Update Server.
+              other server machines. The <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to configure the Update Server.
               If you run the international version of AFS, you must update the file on each machine individually.</para>
 
               <para>The only reason to alter the file is when configuring or decommissioning a database server machine. Use the
@@ -2580,7 +2580,7 @@
               <link linkend="HDRWQ118">Maintaining the Server CellServDB File</link>. The instructions in <link
               linkend="HDRWQ142">Monitoring and Controlling Server Processes</link> for stopping and starting processes remind you
               to alter the <emphasis role="bold">CellServDB</emphasis> file when appropriate, as do the instructions in the
-              <emphasis>IBM AFS Quick Beginnings</emphasis> for installing or decommissioning a database server machine.</para>
+              <emphasis>OpenAFS Quick Beginnings</emphasis> for installing or decommissioning a database server machine.</para>
 
               <para>(Client processes and the server processes that do not maintain databases also rely on correct information in
               the <emphasis role="bold">CellServDB</emphasis> file for proper operation, but their use of the information does not
@@ -2597,7 +2597,7 @@
             <listitem>
               <para>Keep the clocks synchronized on all machines in the cell, especially the database server machines.</para>
 
-              <para>In the conventional configuration specified in the <emphasis>IBM AFS Quick Beginnings</emphasis>, you run the
+              <para>In the conventional configuration specified in the <emphasis>OpenAFS Quick Beginnings</emphasis>, you run the
               <emphasis role="bold">runntp</emphasis> process to supervise the local Network Time Protocol Daemon (NTPD) on every
               AFS server machine. The NTPD on the system control machine synchronizes its clock with a reliable source outside the
               cell and broadcasts the time to the NTPDs on the other server machines. You can choose to run a different time
@@ -2857,7 +2857,7 @@
             restrictions. The most basic is that it halts if it finds that an existing dump record in the database has the same dump
             ID number as a dump on the tape it is scanning. If you want to continue with the scanning operation, you must locate and
             remove the existing record from the database. For further discussion, see the <emphasis role="bold">backup
-            scantape</emphasis> command's reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+            scantape</emphasis> command's reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
           </listitem>
         </itemizedlist></para>
 
@@ -3174,7 +3174,7 @@
     server machine of each system type as the <emphasis>binary distribution machine</emphasis> by running the server portion of the
     Update Server (<emphasis role="bold">upserver</emphasis> process) on it. All other server machines of that system type run the
     client portion of the Update Server (<emphasis role="bold">upclientbin</emphasis> process) to retrieve updated software from the
-    binary distribution machine. The <emphasis>IBM AFS Quick Beginnings</emphasis> explains how to install the appropriate
+    binary distribution machine. The <emphasis>OpenAFS Quick Beginnings</emphasis> explains how to install the appropriate
     processes. For more on binary distribution machines, see <link linkend="HDRWQ93">Binary Distribution Machines</link>.</para>
 
     <para>When you use the Update Server, you install new binaries on binary distribution machines only. If you install binaries
@@ -3273,7 +3273,7 @@
       <para>It is best to store AFS binaries in the <emphasis role="bold">/usr/afs/bin</emphasis> directory, because that is the
       only directory the BOS Server automatically checks for new binaries. You can, however, use the <emphasis role="bold">bos
       install</emphasis> command's <emphasis role="bold">-dir</emphasis> argument to install non-AFS binaries into other directories
-      on a server machine's local disk. See the command's reference page in the <emphasis>IBM AFS Administration
+      on a server machine's local disk. See the command's reference page in the <emphasis>OpenAFS Administration
       Reference</emphasis> for further information.</para>
 
       <indexterm>
@@ -3602,7 +3602,7 @@
       from its binary distribution machine before restarting a server process to use the new binaries.</para>
 
       <para>To check dates on binaries in a directory other than <emphasis role="bold">/usr/afs/bin</emphasis>, add the <emphasis
-      role="bold">-dir</emphasis> argument. See the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+      role="bold">-dir</emphasis> argument. See the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
 
       <indexterm>
         <primary>bos commands</primary>
@@ -3878,10 +3878,10 @@
    @(#)Base configuration afsversion  build_level
 </programlisting>
 
-          <para>For example, the following string indicates the binary is from AFS 3.6 build 3.0:</para>
+          <para>For example, the following string indicates the binary is from AFS M.m build 3.0:</para>
 
           <programlisting>
-   @(#)Base configuration afs3.6 3.0
+   @(#)Base configuration afsM.m 3.0
 </programlisting>
         </listitem>
       </orderedlist>
@@ -3929,7 +3929,7 @@
           constant contact with their peers in order to keep their copies of the replicated administrative databases
           synchronized.</para>
 
-          <para>As detailed in <link linkend="HDRWQ102">Replicating the AFS Administrative Databases</link>, the database server
+          <para>As detailed in <link linkend="HDRWQ102">Replicating the OpenAFS Administrative Databases</link>, the database server
           processes use the Ubik utility to synchronize the information in the databases they maintain. The Ubik coordinator at the
           synchronization site for each database maintains the single read/write copy of the database and distributes changes to the
           secondary sites as necessary. It must maintain contact with a majority of the secondary sites to remain the coordinator,
@@ -4012,7 +4012,7 @@
 
       <para>To avoid the negative consequences of incorrect information in the <emphasis
       role="bold">/usr/afs/etc/CellServDB</emphasis> file, you must update it on all of your cell's server machines every time you
-      add or remove a database server machine. The <emphasis>IBM AFS Quick Beginnings</emphasis> provides complete instructions for
+      add or remove a database server machine. The <emphasis>OpenAFS Quick Beginnings</emphasis> provides complete instructions for
       installing or removing a database server machine and for updating the <emphasis role="bold">CellServDB</emphasis> file in that
       context. This section explains how to distribute the file to your server machines and how to make other cells aware of the
       changes if you participate in the AFS global name space.</para>
@@ -4022,7 +4022,7 @@
       edition of AFS, instead change the file on each server machine individually. For further discussion of the system control
       machine and why international cells must not use it for files in the <emphasis role="bold">/usr/afs/etc</emphasis> directory,
       see <link linkend="HDRWQ94">The System Control Machine</link>. For instructions on configuring the Update Server when using
-      the United States version of AFS, see the <emphasis>IBM AFS Quick Beginnings</emphasis>.</para>
+      the United States version of AFS, see the <emphasis>OpenAFS Quick Beginnings</emphasis>.</para>
 
       <para>To avoid formatting errors that can cause errors, always use the <emphasis role="bold">bos addhost</emphasis> and
       <emphasis role="bold">bos removehost</emphasis> commands, rather than editing the file directly. You must also restart the
@@ -4772,7 +4772,7 @@
 
       <para>Provide the <emphasis role="bold">-noauth</emphasis> flag which is available on many of the commands in the suites. To
       verify that a command accepts the flag, issue the <emphasis role="bold">help</emphasis> command in its suite, or consult the
-      command's reference page in the <emphasis>IBM AFS Administration Reference</emphasis> (the reference page also specifies the
+      command's reference page in the <emphasis>OpenAFS Administration Reference</emphasis> (the reference page also specifies the
       shortest acceptable abbreviation for the flag on each command). The suites' <emphasis role="bold">apropos</emphasis> and
       <emphasis role="bold">help</emphasis> commands do not themselves accept the flag.</para>
 
@@ -4801,7 +4801,7 @@
 
     <para>AFS makes it very easy to add storage space to your cell, just by adding disks to existing file server machines. This
     section explains how to install or remove a disk used to store AFS volumes. (Another way to add storage space is to install
-    additional server machines, as instructed in the <emphasis>IBM AFS Quick Beginnings</emphasis>.)</para>
+    additional server machines, as instructed in the <emphasis>OpenAFS Quick Beginnings</emphasis>.)</para>
 
     <para>Both adding and removing a disk cause at least a brief file system outage, because you must restart the <emphasis
     role="bold">fs</emphasis> process to have it recognize the new set of server partitions. Some operating systems require that you
@@ -4830,7 +4830,7 @@
     <para>These instructions assume that the machine's AFS initialization file includes the following command to restart the BOS
     Server after each reboot. The BOS Server starts the other AFS server processes listed in the local <emphasis
     role="bold">/usr/afs/local/BosConfig</emphasis> file. For information on the <emphasis role="bold">bosserver</emphasis>
-    command's optional arguments, see its reference page in the <emphasis>IBM AFS Administration Reference</emphasis>.</para>
+    command's optional arguments, see its reference page in the <emphasis>OpenAFS Administration Reference</emphasis>.</para>
 
     <programlisting>
    /usr/afs/bin/bosserver &amp;
@@ -5258,7 +5258,7 @@
     files also determine which interfaces the Ubik database synchronization library uses when communicating with the database server
     processes running on other database server machines.</para>
 
-    <para>There is a maximum number of IP addresses in each server entry, as documented in the <emphasis>IBM AFS Release
+    <para>There is a maximum number of IP addresses in each server entry, as documented in the <emphasis>OpenAFS Release
     Notes</emphasis>. If a multihomed file server machine has more interfaces than the maximum, AFS simply ignores the excess ones.
     It is probably appropriate for such machines to use the <emphasis role="bold">NetInfo</emphasis> and <emphasis
     role="bold">NetRestrict</emphasis> files to control which interfaces are registered.</para>
@@ -5285,7 +5285,7 @@
 
     <para>Except in this type of rare error case, the only appropriate use of the <emphasis role="bold">vos changeaddr</emphasis>
     command is to remove a VLDB server entry completely when you remove a file server machine from service. The VLDB can accommodate
-    a maximum number of server entries, as specified in the <emphasis>IBM AFS Release Notes</emphasis>. Removing obsolete entries
+    a maximum number of server entries, as specified in the <emphasis>OpenAFS Release Notes</emphasis>. Removing obsolete entries
     makes it possible to allocate server entries for new file server machines as required. See the instructions that follow.</para>
 
     <para>Do not use the <emphasis role="bold">vos changeaddr</emphasis> command to change the list of interfaces registered in a

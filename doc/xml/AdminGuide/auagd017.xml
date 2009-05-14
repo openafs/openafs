@@ -3027,7 +3027,7 @@
                   you do not provide this argument. There is no corresponding variable in the template file.</para>
 
                   <para>Instruct users to change their passwords to a truly secret string as soon as they authenticate with AFS for
-                  the first time. The <emphasis>IBM AFS User Guide</emphasis> explains how to use the <emphasis
+                  the first time. The <emphasis>OpenAFS User Guide</emphasis> explains how to use the <emphasis
                   role="bold">kpasswd</emphasis> command to change an AFS password.</para>
                 </listitem>
               </varlistentry>
@@ -3599,7 +3599,7 @@
 </programlisting>
 
       <para>For a complete description of the acceptable values in each field, see the <emphasis role="bold">uss Bulk Input
-      File</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis>, or the description of the
+      File</emphasis> reference page in the <emphasis>OpenAFS Administration Reference</emphasis>, or the description of the
       corresponding arguments to the <emphasis role="bold">uss add</emphasis> command, in <link linkend="HDRWQ483">To create an AFS
       account with the uss add command</link>. Following are some basic notes: <itemizedlist>
           <listitem>
@@ -3651,7 +3651,7 @@
 </programlisting>
 
       <para>For a complete description of the acceptable values in each field, see the <emphasis role="bold">uss Bulk Input
-      File</emphasis> reference page in the <emphasis>IBM AFS Administration Reference</emphasis> or the description of the
+      File</emphasis> reference page in the <emphasis>OpenAFS Administration Reference</emphasis> or the description of the
       corresponding arguments to the <emphasis role="bold">uss delete</emphasis> command, in <link linkend="HDRWQ487">To delete an
       AFS account</link>. Following are some basic notes: <itemizedlist>
           <listitem>

@@ -1977,7 +1977,7 @@
       often only need to add configuration to the session group:</para>
 
       <example>
-        <title>PAM session example</title>
+        <title>Linux PAM session example</title>
         <literallayout>session  required  pam_afs_session.so</literallayout>
       </example>
 
@@ -1991,7 +1991,7 @@
       <literal>sufficient</literal>.</para>
 
       <example>
-        <title>PAM auth example</title>
+        <title>Linux PAM auth example</title>
 <literallayout>auth  [success=ok default=1]  pam_krb5.so
 auth  [default=done]          pam_afs_session.so
 auth  required                pam_unix.so try_first_pass</literallayout>
@@ -2461,8 +2461,8 @@ auth  required                pam_unix.so try_first_pass</literallayout>
       <filename>pam.conf</filename>:</para>
 
       <example>
-        <title>PAM session example</title>
-<literallayout>login session required pam_afs_session.so</literallayout>
+        <title>Solaris PAM session example</title>
+        <literallayout>login session required pam_afs_session.so</literallayout>
       </example>
 
       <para>This example enables PAM authentication only for console login.
