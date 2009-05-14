@@ -96,17 +96,17 @@ struct afs_cacheOps {
 
 /* These memcpys should get optimised to simple assignments when afs_dcache_id_t 
  * is simple */
-static inline void afs_copy_inode(afs_dcache_id_t *dst, afs_dcache_id_t *src) {
+static_inline void afs_copy_inode(afs_dcache_id_t *dst, afs_dcache_id_t *src) {
     memcpy(dst, src, sizeof(afs_dcache_id_t));
 }
 
-static inline void afs_reset_inode(afs_dcache_id_t *i) {
+static_inline void afs_reset_inode(afs_dcache_id_t *i) {
     memset(i, 0, sizeof(afs_dcache_id_t));
 }
 
 /* We need to have something we can output as the 'inode' for fstrace calls. 
  * This is a hack */
-static inline int afs_inode2trace(afs_dcache_id_t *i) {
+static_inline int afs_inode2trace(afs_dcache_id_t *i) {
     return i->mem;
 }
 
