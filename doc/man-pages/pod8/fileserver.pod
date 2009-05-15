@@ -139,7 +139,7 @@ The default values are:
 
   Parameter (Argument)               Small (-S)     Medium   Large (-L)
   ---------------------------------------------------------------------
-  Number of LWPs (-p)                        6           9           12
+  Number of LWPs (-p)                        6           9          128
   Number of cached dir blocks (-b)          70          90          120
   Number of cached large vnodes (-l)       200         400          600
   Number of cached small vnodes (-s)       200         400          600
