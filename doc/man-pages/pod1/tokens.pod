@@ -1,6 +1,6 @@
 =head1 NAME
 
-tokens - Displays the issuer's tokens
+tokens, tokens.krb - Displays the issuer's tokens
 
 =head1 SYNOPSIS
 
@@ -11,15 +11,22 @@ B<tokens> [B<-help>]
 
 B<tokens> [B<-h>]
 
+B<tokens.krb> [B<-help>]
+
+B<tokens.krb> [B<-h>]
+
 =for html
 </div>
 
 =head1 DESCRIPTION
 
-The tokens command displays all tokens (tickets) cached on the local
+The B<tokens> command displays all tokens (tickets) cached on the local
 machine for the issuer. AFS server processes require that their clients
 present a token as evidence that they have authenticated in the server's
 local cell.
+
+The (mostly obsolete) B<tokens.krb> command is the same as B<tokens>
+except that it also displays the user's Kerberos v4 ticket cache.
 
 =head1 OPTIONS
 
@@ -37,7 +44,7 @@ ignored.
 The output lists one token for each cell in which the user is
 authenticated. The output indicates the
 
-=over 4
+=over 2
 
 =item *
 
