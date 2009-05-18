@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs_rxstatpeer - Enables Rx packet logging in the OpenAFS kernel module
+fs_rxstatpeer - Manage per-peer Rx statistics collection
 
 =head1 SYNOPSIS
 
@@ -57,6 +57,7 @@ The issuer must be logged in as the local superuser root.
 =head1 SEE ALSO
 
 L<fs(1)>,
+L<fs_rxstatproc(1)>,
 L<rxdebug(1)>
 
 =head1 COPYRIGHT
