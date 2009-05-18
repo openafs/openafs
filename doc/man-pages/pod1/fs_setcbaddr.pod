@@ -1,0 +1,49 @@
+=head1 NAME
+
+fs_setcbaddr - Configure IP address used for AFS callbacks
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs setcbaddr> S<<< [B<-host> <I<address>>] >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<fs setcbaddr> changes the IP address used by the client for callbacks.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-host> <I<address>>]
+
+The new callback address.
+
+=back
+
+=head1 OUTPUT
+
+This command produces no output other than error messages.
+
+=head1 EXAMPLES
+
+   % fs setcbaddr 10.2.4.23
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be the local superuser.
+
+=head1 SEE ALSO
+
+L<fs(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2008. This documentation is covered by the BSD License as
+written in the doc/LICENSE file. This man page was written by Mike
+Robinson (L<mike@endpoint.com>) for OpenAFS.

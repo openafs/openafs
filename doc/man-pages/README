@@ -234,10 +234,6 @@ Known Problems
        compile_et.afs
        copyauth
        fs monitor
-       fs rxstatpeer
-       fs rxstatproc
-       fs setcbaddr
-       fs trace
        klog.krb
        krb.conf
        pagsh.krb
