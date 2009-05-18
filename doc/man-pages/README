@@ -232,7 +232,6 @@ Known Problems
    * The following installed commands have no man pages:
 
        klog.krb
-       krb.conf
        pagsh.krb
        tokens.krb
 
@@ -259,8 +258,6 @@ Known Problems
 
    * The salvager actually creates a bunch of SalvageLog files and then
      combines them, but the SalvageLog man page doesn't reflect this.
-
-   * The CellServDB documentation hasn't been updated for -dynroot.
 
    * In the suite introduction pages (pts, vos, etc.), each of the
      subcommands in the initial list should be a link to the relevant
