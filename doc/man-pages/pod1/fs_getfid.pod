@@ -1,0 +1,82 @@
+=head1 NAME
+
+fs_getfid - Display the fid for a given path in AFS
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs getfid> S<<< [B<-path>] I<path> >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The fs getfid command displays the FID for a given path in AFS.  The FID
+is the internal identifier used by AFS encoding the volume name and the
+file within a volume.
+
+=head1 CAUTIONS
+
+This command is not available on Windows prior to version 1.5.60.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-path> I<path>
+
+The path of the file (or directory).
+
+=item B<-literal>
+
+Windows only: for a symlink or mount point, evaluates the specified object
+rather than the object it refers to.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 OUTPUT
+
+The output contains the name of the file or directory, the FID, and the
+volume containing the FID.  The Windows version also outputs the object
+type instead of using "File" to describe all objects.
+
+=head1 EXAMPLES
+
+On Unix:
+
+   % fs getfid .
+   File . (536870918.1.1) contained in volume 536870918
+
+   % fs getfid /afs/example.com/foo 
+   File /afs/example.com/foo (536870918.20404.20997) contained in volume 536870918
+
+On Windows:
+
+   % fs.exe getfid \\afs\example.edu\user\b\o\bob \
+       \\afs\example.org\usr\bob\linktests\broken
+   Directory \\afs\example.edu\user\b\o\bob (537235559.1.1) contained in cell example.edu
+   fs: File '\\afs\example.org\usr\bob\linktests\broken' doesn't exist
+
+   % fs.exe getfid \\afs\example.edu\user\b\o\bob \
+       \\afs\example.org\usr\bob\linktests\broken -literal
+   Mountpoint \\afs\example.edu\user\b\o\bob (536873032.1162.16997) contained in cell example.edu
+   Symlink \\afs\example.org\usr\bob\linktests\broken (536874416.27618.488969) contained in cell example.org
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be have read access in the directory containing the path
+to be resolved.
+
+=head1 COPYRIGHT
+
+This document was written by Steven Jenkins, and is released under the IBM
+Public License Version 1.0.  Jeffrey Altman made several suggestions and
+additions.

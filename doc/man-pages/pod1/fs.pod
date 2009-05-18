@@ -45,6 +45,7 @@ Commands to administer server machines, volumes or partitions that house a
 given file or directory:
 L<B<fs diskfree>|fs_diskfree(1)>,
 L<B<fs examine>|fs_examine(1)>,
+L<B<fs getfid>|fs_getfid(1)>,
 L<B<fs listquota>|fs_listquota(1)>,
 L<B<fs quota>|fs_quota(1)>,
 L<B<fs setquota>|fs_setquota(1)>,
@@ -56,6 +57,7 @@ and L<B<fs whichcell>|fs_whichcell(1)>.
 
 Commands to administer the local client cache and related information:
 L<B<fs checkvolumes>|fs_checkvolumes(1)>,
+L<B<fs cscpolicy>|fs_cscpolicy(1)>,
 L<B<fs flush>|fs_flush(1)>,
 L<B<fs flushall>|fs_flushall(1)>,
 L<B<fs flushvolume>|fs_flushvolume(1)>,
@@ -75,6 +77,7 @@ and L<B<fs rmmount>|fs_rmmount(1)>.
 
 Commands to control monitoring and tracing:
 L<B<fs debug>|fs_debug(1)>,
+L<B<fs memdump>|fs_memdump(1)>,
 and L<B<fs messages>|fs_messages(1)>.
 
 =item *

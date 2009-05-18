@@ -233,9 +233,6 @@ Known Problems
 
        compile_et.afs
        copyauth
-       fs cscpolicy
-       fs getfid
-       fs memdump
        fs monitor
        fs rxstatpeer
        fs rxstatproc
