@@ -234,7 +234,6 @@ Known Problems
        klog.krb
        krb.conf
        pagsh.krb
-       rmtsysd
        tokens.krb
        vsys
 

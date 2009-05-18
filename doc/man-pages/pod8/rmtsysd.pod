@@ -1,0 +1,41 @@
+=head1 NAME
+
+rmtsysd - Daemon to execute AFS-specific system calls for remote hosts
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<rmtsysd>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<rmtsysd> is a daemon to execute AFS-specific system calls on behalf of
+NFS client machines.  This daemon only needs to be started if the machine
+is an NFS/AFS translator server for users of NFS client machines who
+execute AFS commands.
+
+=head1 CAUTIONS
+
+The protocol used by this daemon is not considered secure, so this should
+not be used in an environment where security is important.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<afsd(8)>
+
+=head1 COPYRIGHT
+
+Copyright 2009 Steven Jenkins <steven@endpoint.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Steven Jenkins for
+OpenAFS.
