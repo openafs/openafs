@@ -15,10 +15,10 @@ servers and lists only the database servers in the local cell.
 Along with AFSDB entries in DNS, the client version of the CellServDB file
 lists the database server machines in the local cell and any foreign cell
 that is to be accessible from the local client machine. Database server
-machines run the Authentication Server (optional), Backup Server,
-Protection Server, and Volume Location (VL) Server (the B<kaserver>,
-B<buserver>, B<ptserver>, and B<vlserver>) processes, which maintain the
-cell's administrative AFS databases.
+machines run the Authentication Server (optional), Backup Server
+(optional), Protection Server, and Volume Location (VL) Server (the
+B<kaserver>, B<buserver>, B<ptserver>, and B<vlserver>) processes, which
+maintain the cell's administrative AFS databases.
 
 The Cache Manager and other processes running on a client machine use the
 list of a cell's database server machines when performing several common
@@ -33,16 +33,25 @@ the location of the volume containing a requested file or directory.
 
 =item *
 
-Authenticating users. Client-side authentication programs (such as an
-AFS-modified login utility or the B<klog> command interpreter) contact the
-Authentication Server to obtain a server ticket, which the AFS server
-processes accept as proof that the user is authenticated.
+Creating, viewing, and manipulating protection groups. The B<pts> command
+interpreter contacts the Protection Server when users create protection
+groups or request information from the Protection Database.
 
 =item *
 
-Creating protection groups. The B<pts> command interpreter contacts the
-Protection Server when users create protection groups or request
-information from the Protection Database.
+Populating the contents of the fake F<root.afs> volume mounted at F</afs>
+(or the alternative mount point specified in F<cacheinfo>) when B<afsd> is
+run in C<-dynroot> mode.  The default contents of this directory will
+match the cells listed in the client F<CellServDB> file.
+
+=item *
+
+Authenticating users. Client-side authentication programs (such as an
+AFS-modified login utility or the B<klog> command interpreter) contact the
+Authentication Server to obtain a server ticket, which the AFS server
+processes accept as proof that the user is authenticated. This only
+applies to AFS cells using the deprecated Authentication Server instead of
+Kerberos v5 and B<aklog>.
 
 =back
 
@@ -53,6 +62,14 @@ accessing the cell correctly, update the file whenever a database server
 machine is added to or removed from a cell. To update the kernel-resident
 list of database server machines without rebooting, use the B<fs newcell>
 command.
+
+If the client attempts to access an AFS cell not listed in F<CellServDB>
+and B<afsd> was started with the B<-afsdb> option, the Cache Manager will
+attempt an AFSDB DNS record lookup and dynamically add the database server
+locations for that cell based on the result of the DNS query.  If the
+B<-afsdb> option was not used, all AFS cells that will be accessed by a
+client machine must either be listed in F<CellServDB> or added with the
+B<fs newcell> command.
 
 The F<CellServDB> file is in ASCII format and must reside in the
 F</usr/vice/etc> directory on each AFS client machine. Use a text editor
@@ -69,15 +86,15 @@ server machines.
 
 The server version of the F<CellServDB> file lists the local cell's
 database server machines. These machines run the Authentication Server
-(optional), Backup Server, Protection Server, and Volume Location (VL)
-Server (the B<kaserver>, B<buserver>, B<ptserver>, and B<vlserver>)
-processes, which maintain the cell's administrative AFS databases. The
-initial version of the file is created with the B<bos setcellname> command
-during the installation of the cell's server machine, which is
-automatically recorded as the cell's first database server machine. When
-adding or removing database server machines, be sure to update this file
-appropriately. It must reside in the F</usr/afs/etc> directory on each AFS
-server machine.
+(optional), Backup Server (optional), Protection Server, and Volume
+Location (VL) Server (the B<kaserver>, B<buserver>, B<ptserver>, and
+B<vlserver>) processes, which maintain the cell's administrative AFS
+databases. The initial version of the file is created with the B<bos
+setcellname> command during the installation of the cell's server machine,
+which is automatically recorded as the cell's first database server
+machine. When adding or removing database server machines, be sure to
+update this file appropriately. It must reside in the F</usr/afs/etc>
+directory on each AFS server machine.
 
 The database server processes consult the F<CellServDB> file to learn
 about their peers, with which they must maintain constant connections in
