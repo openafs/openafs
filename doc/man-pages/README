@@ -229,18 +229,7 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * The following installed commands have no man pages:
-
-       klog.krb
-       pagsh.krb
-       tokens.krb
-
    * Add -noresolve to the documentation of all the vos commands.
-
-   * klog.krb, pagsh.krb, and tokens.krb need to be listed as alternative
-     names in the NAME line of the non-.krb man pages, links should be
-     installed on man page installation, and the behavior of pagsh.krb
-     should be documented in the pagsh man page.
 
    * Some of the documentation in fs getserverprefs needs minor updates to
      reflect what happens in the dynroot case.

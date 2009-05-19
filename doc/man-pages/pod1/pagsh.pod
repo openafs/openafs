@@ -1,6 +1,6 @@
 =head1 NAME
 
-pagsh - Creates a new PAG
+pagsh, pagsh.krb - Creates a new PAG
 
 =head1 SYNOPSIS
 
@@ -8,6 +8,8 @@ pagsh - Creates a new PAG
 <div class="synopsis">
 
 B<pagsh>
+
+B<pagsh.krb>
 
 =for html
 </div>
@@ -24,9 +26,9 @@ track each user.
 
 Any tokens acquired subsequently (presumably for other cells) become
 associated with the PAG, rather than with the user's UNIX UID.  This
-method for distinguishing users has two advantages.
+method for distinguishing users has two advantages:
 
-=over 4
+=over 2
 
 =item *
 
@@ -48,6 +50,13 @@ C<root> can assume a UNIX UID and use any tokens associated with that
 UID. Use of a PAG as an identifier eliminates that possibility.
 
 =back
+
+The (mostly obsolete) B<pagsh.krb> command is the same as B<pagsh> except
+that it also sets the KRBTKFILE environment variable, which controls the
+default Kerberos v4 ticket cache, to F</tmp/tktpI<X>> where I<X> is the
+number of the user's PAG.  This is only useful for AFS cells still using
+Kerberos v4 outside of AFS and has no effect for cells using Kerberos v5
+and B<aklog> or B<klog.krb5>.
 
 =head1 CAUTIONS
 
@@ -98,6 +107,7 @@ None
 
 =head1 SEE ALSO
 
+L<aklog(1)>,
 L<fs_exportafs(1)>,
 L<klog(1)>,
 L<tokens(1)>
