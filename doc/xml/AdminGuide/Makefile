@@ -1,25 +1,37 @@
-BOOK = auagd000.xml
-IDX = auagd026.xml
-SRCS = $(BOOK) auagd005.xml auagd006.xml auagd007.xml auagd008.xml auagd009.xml \
-	auagd010.xml auagd011.xml auagd012.xml auagd013.xml auagd014.xml auagd015.xml \
-	auagd016.xml auagd017.xml auagd018.xml auagd019.xml auagd020.xml auagd021.xml \
-	auagd022.xml auagd023.xml auagd024.xml auagd025.xml
-FLAGS = -e no-idref
+# Makefile to build the AFS Admin Guide for Unix.
+#
+# This makefile assumes that various utilities are available on the system.
+# On Debian lenny, installing the packages:
+#
+#     dblatex
+#     docbook-xsl
+#     libxml2-utils
+#     xsltproc
+#
+# gave me all the utilities needed.
+#
+# HTML_XSL is possibly specific to Debian and may need to be modified on other
+# systems.
+
+BOOK     = auagd000.xml
+SRCS     = $(BOOK) auagd005.xml auagd006.xml auagd007.xml auagd008.xml \
+	   auagd009.xml auagd010.xml auagd011.xml auagd012.xml auagd013.xml \
+	   auagd014.xml auagd015.xml auagd016.xml auagd017.xml auagd018.xml \
+	   auagd019.xml auagd020.xml auagd021.xml auagd022.xml auagd023.xml \
+	   auagd024.xml auagd025.xml
+HTML_XSL = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
 
 all: pdf html
 
 html: $(SRCS)
-	docbook2html $(FLAGS) -d mystyle.dsl#html $(BOOK)
+	xsltproc --param navig.graphics 1 \
+	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
 
 pdf: $(SRCS)
-	docbook2pdf $(FLAGS) -d mystyle.dsl#print $(BOOK)
-
-index:
-	@echo "Building index..."
-	@/usr/bin/collateindex.pl -N -o $(IDX)
-	@jw -d mystyle.dsl#html -V html-index -o tmpindex $(BOOK)
-	@/usr/bin/collateindex.pl -g -o $(IDX) tmpindex/HTML.index
-	@rm -rf tmpindex
+	dblatex $(BOOK)
 
 check:
 	xmllint --noout --valid $(BOOK)
+
+clean:
+	rm -f *.html *.pdf

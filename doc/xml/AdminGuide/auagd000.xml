@@ -42,7 +42,6 @@
         <date>May 2008</date>
 
         <revremark>First OpenAFS Edition</revremark>
-
       </revision>
 
       <revision>
@@ -51,8 +50,6 @@
         <date>April 2000</date>
 
         <revremark>First IBM Edition, Document Number GC09-4563-00</revremark>
-
-        <pubsnumber>Document Number GC09-4563-00</pubsnumber>
       </revision>
     </revhistory>
 
@@ -115,5 +112,5 @@
   &appendixB;
   &appendixC;
   &appendixD;
-  <index>Name Index</index>
+  <index></index>
 </book>
