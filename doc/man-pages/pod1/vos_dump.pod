@@ -187,6 +187,7 @@ to insert and write in the directory that houses the file.
 
 =head1 SEE ALSO
 
+L<restorevol(8)>,
 L<vos(1)>,
 L<vos_examine(1)>,
 L<vos_listvldb(1)>,
