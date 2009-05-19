@@ -47,7 +47,7 @@ up to this time.
 
 Creates a dump file containing the trace information.
 
-=over
+=back
 
 =head1 OUTPUT
 
