@@ -401,6 +401,8 @@
                             <File Id="file_CmdRef_1_afsmonitor_html" Name="afsmonit.htm" LongName="afsmonitor.html" DiskId="1" />
                             <File Id="file_CmdRef_1_aklog_html" Name="aklog.htm" LongName="aklog.html" DiskId="1" />
                             <File Id="file_CmdRef_1_cmdebug_html" Name="cmdebug.htm" LongName="cmdebug.html" DiskId="1" />
+                            <File Id="file_CmdRef_1_compile_et_html" Name="compile_.htm" LongName="compile_et.html" DiskId="1" />
+                            <File Id="file_CmdRef_1_copyauth_html" Name="copyauth.htm" LongName="copyauth.html" DiskId="1" />
                             <File Id="file_CmdRef_1_dlog_html" Name="dlog.htm" LongName="dlog.html" DiskId="1" />
                             <File Id="file_CmdRef_1_dpass_html"  Name="dpass.htm"  LongName="dpass.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_html"  Name="fs.htm"  LongName="fs.html"  DiskId="1"  />
@@ -409,6 +411,7 @@
                             <File Id="file_CmdRef_1_fs_checkvolumes_html"  Name="fs_chvol.htm"  LongName="fs_checkvolumes.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_cleanacl_html"  Name="fs_clean.htm"  LongName="fs_cleanacl.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_copyacl_html"  Name="fs_copya.htm"  LongName="fs_copyacl.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_cscpolicy_html"  Name="fs_cscpo.htm"  LongName="fs_cscpolicy.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_diskfree_html"  Name="fs_diskf.htm"  LongName="fs_diskfree.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_examine_html"  Name="fs_exami.htm"  LongName="fs_examine.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_exportafs_html"  Name="fs_expor.htm"  LongName="fs_exportafs.html"  DiskId="1"  />
@@ -421,6 +424,7 @@
                             <File Id="file_CmdRef_1_fs_getcellstatus_html"  Name="fs_getce.htm"  LongName="fs_getcellstatus.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_getclientaddrs_html"  Name="fs_getcl.htm"  LongName="fs_getclientaddrs.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_getcrypt_html"  Name="fs_getcr.htm"  LongName="fs_getcrypt.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_getfid_html"  Name="fs_getfi.htm"  LongName="fs_getfid.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_getserverprefs_html"  Name="fs_getse.htm"  LongName="fs_getserverprefs.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_help_html"  Name="fs_help.htm"  LongName="fs_help.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_listacl_html"  Name="fs_lista.htm"  LongName="fs_listacl.html"  DiskId="1"  />
@@ -428,16 +432,20 @@
                             <File Id="file_CmdRef_1_fs_listcells_html"  Name="fs_listc.htm"  LongName="fs_listcells.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_listquota_html"  Name="fs_listq.htm"  LongName="fs_listquota.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_lsmount_html"  Name="fs_lsmou.htm"  LongName="fs_lsmount.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_memdump_html"  Name="fs_memdu.htm"  LongName="fs_memdump.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_messages_html"  Name="fs_messa.htm"  LongName="fs_messages.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_minidump_html"  Name="fs_minid.htm"  LongName="fs_minidump.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_mkmount_html"  Name="fs_mkmou.htm"  LongName="fs_mkmount.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_monitor_html"  Name="fs_monit.htm"  LongName="fs_monitor.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_newalias_html"  Name="fs_newal.htm"  LongName="fs_newalias.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_newcell_html"  Name="fs_newce.htm"  LongName="fs_newcell.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_quota_html"  Name="fs_quota.htm"  LongName="fs_quota.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_rmmount_html"  Name="fs_rmmou.htm"  LongName="fs_rmmount.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_rxstatpeer_html"  Name="fs_rxsta.htm"  LongName="fs_rxstatpeer.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_rxstatproc_html"  Name="fs_rxstc.htm"  LongName="fs_rxstatproc.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_setacl_html"  Name="fs_setac.htm"  LongName="fs_setacl.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_setcachesize_html"  Name="fs_setca.htm"  LongName="fs_setcachesize.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_setcbaddr_html"  Name="fs_setcb.htm"  LongName="fs_setcbaddr.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_setcell_html"  Name="fs_setce.htm"  LongName="fs_setcell.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_setclientaddrs_html"  Name="fs_setcl.htm"  LongName="fs_setclientaddrs.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_setcrypt_html"  Name="fs_setcr.htm"  LongName="fs_setcrypt.html"  DiskId="1"  />
@@ -446,6 +454,7 @@
                             <File Id="file_CmdRef_1_fs_setvol_html"  Name="fs_setvo.htm"  LongName="fs_setvol.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_storebehind_html"  Name="fs_store.htm"  LongName="fs_storebehind.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_sysname_html"  Name="fs_sysna.htm"  LongName="fs_sysname.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_trace_html"  Name="fs_trace.htm"  LongName="fs_trace.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_uuid_html"  Name="fs_uuid.htm"  LongName="fs_uuid.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_whereis_html"  Name="fs_where.htm"  LongName="fs_whereis.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_whichcell_html"  Name="fs_which.htm"  LongName="fs_whichcell.html"  DiskId="1"  />
@@ -686,6 +695,8 @@
                             <File Id="file_CmdRef_8_ptserver_html"  Name="ptserver.htm"  LongName="ptserver.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_pt_util_html"  Name="pt_util.htm"  LongName="pt_util.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_read_tape_html"  Name="read_tap.htm"  LongName="read_tape.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_restorevol_html"  Name="restorev.htm"  LongName="restorevol.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_rmtsysd_html"  Name="rmtsysd.htm"  LongName="rmtsysd.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_salvager_html"  Name="salvager.htm"  LongName="salvager.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_salvageserver_html"  Name="salvages.htm"  LongName="salvageserver.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_upclient_html"  Name="upclient.htm"  LongName="upclient.html"  DiskId="1"  />
@@ -702,6 +713,7 @@
                             <File Id="file_CmdRef_8_voldump_html"  Name="voldump.htm"  LongName="voldump.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_volinfo_html"  Name="volinfo.htm"  LongName="volinfo.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_volserver_html"  Name="volserve.htm"  LongName="volserver.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_8_vsys_html"  Name="vsys.htm"  LongName="vsys.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_xfs_size_check_html"  Name="xfs_size.htm"  LongName="xfs_size_check.html"  DiskId="1"  />
                             </Component>
                         </Directory> <!-- CmdRef_8 -->
