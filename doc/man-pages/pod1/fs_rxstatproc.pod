@@ -36,7 +36,7 @@ Enable the collection of process RPC statistics
 
 Resets all trace counters to zero.
 
-=over
+=back
 
 =head1 OUTPUT
 
