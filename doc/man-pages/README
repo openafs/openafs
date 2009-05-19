@@ -235,7 +235,6 @@ Known Problems
        krb.conf
        pagsh.krb
        tokens.krb
-       vsys
 
    * Add -noresolve to the documentation of all the vos commands.
 

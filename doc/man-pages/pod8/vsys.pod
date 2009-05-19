@@ -1,0 +1,51 @@
+=head1 NAME
+
+vsys - Make AFS system calls from the command line
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<vsys> <I<call number>> <I<parms>>+
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<vsys> is a development tool to make AFS system calls from the command
+line.  <I<call number>> is the AFS system call to be invoked.  <I<parms>>+
+are the values to pass to the system call.  Knowledge of the AFS system
+call layer is required to know valid call numbers and parameters.
+
+=head1 CAUTIONS
+
+B<vsys> is intended for debugging AFS at a low level and is therefore
+intended for AFS developers.  System Administrators and AFS users should
+use the higher-level interfaces provided by L<fs(1)>, L<aklog(1)>,
+L<klog(1)>, and L<pagsh(1)> instead.
+
+B<vsys> provides a way to pass arbitrary data into the AFS system call
+mechanism.  Caution should be taken when using or providing this binary on
+a system, as incorrect use as a privileged user could cause a system to
+panic, hang, or perform an unsafe operation.
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<afsd(8)>,
+L<aklog(1)>,
+L<fs(1)>,
+L<klog(1)>,
+L<pagsh(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2009 Steven Jenkins <steven@endpoint.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Steven Jenkins for OpenAFS.
