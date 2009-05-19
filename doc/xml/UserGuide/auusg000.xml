@@ -39,8 +39,6 @@
 
         <date>April 2000</date>
 
-        <pubsnumber>Document Number GC09-4561-00</pubsnumber>
-
         <revremark>First IBM Edition, Document Number GC09-4561-00</revremark>
        </revision>
     </revhistory>
@@ -72,5 +70,5 @@
   &appendixA;
   &appendixB;
   &glossary;
-  <index>Name Index</index>
+  <index></index>
 </book>
