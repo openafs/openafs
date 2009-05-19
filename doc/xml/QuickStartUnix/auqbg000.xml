@@ -50,7 +50,7 @@
   &chapter4;
   &appendixA;
   &appendixB;
-  <index>Name Index</index>
+  <index></index>
 </book>
 <!-- Keep this comment at the end of the file
 Local variables:

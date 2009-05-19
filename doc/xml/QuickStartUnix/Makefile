@@ -5,31 +5,30 @@
 #
 #     docbook-utils
 #     docbook-dsssl
+#     docbook-xsl
 #     libxml2-utils
+#     xsltproc
+#     dblatex
 #
 # gave me all the utilities needed.  You may need to install fewer packages as
 # several depend on the others.
+#
+# HTML_XSL is possibly specific to Debian and may need to be modified on other
+# systems.
 
-BOOK = auqbg000.xml
-IDX = auqbg009.xml
-SRCS = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
-	auqbg007.xml auqbg008.xml appendix.xml
-FLAGS = -e no-idref
+BOOK     = auqbg000.xml
+SRCS     = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
+	   auqbg007.xml auqbg008.xml appendix.xml
+HTML_XSL = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
 
 all: pdf html
 
-html: $(SRCS) $(IDX)
-	docbook2html $(FLAGS) -d mystyle.dsl\#html $(BOOK)
+html: $(SRCS)
+	xsltproc --param navig.graphics 1 \
+	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
 
-pdf: $(SRCS) $(IDX)
-	docbook2pdf $(FLAGS) -d mystyle.dsl\#print $(BOOK)
-
-$(IDX): $(SRCS)
-	@echo "Building index..."
-	/usr/bin/collateindex.pl -N -o $(IDX)
-	jw -d mystyle.dsl\#html -V html-index -o tmpindex $(BOOK)
-	/usr/bin/collateindex.pl -g -o $(IDX) tmpindex/HTML.index
-	rm -rf tmpindex
+pdf: $(SRCS)
+	dblatex $(BOOK)
 
 check:
 	xmllint --noout --valid $(BOOK)
