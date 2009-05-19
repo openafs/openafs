@@ -1,6 +1,6 @@
 =head1 NAME
 
-klog - Authenticates with the Authentication Server
+klog, klog.krb - Authenticates with the Authentication Server
 
 =head1 SYNOPSIS
 
@@ -18,6 +18,13 @@ B<klog> [B<-x>] S<<< [B<-pr> <I<user name>>] >>> S<<< [B<-pa> <I<user's password
     S<<< [B<-c> <I<cell name>>] >>>  S<<< [B<-s> <I<explicit list of servers>>+] >>>
     [B<-pi>] [B<-si>] S<<< [B<-l> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
     [B<-se>] [B<-t>] [B<-h>]
+
+B<klog.krb> [B<-x>] S<<< [B<-principal> <I<user name>>] >>>
+    [-password <I<user's password>>] S<<< [B<-cell> <I<cell name>>] >>>
+    S<<< [B<-servers> <I<explicit list of servers>>+] >>>
+    [B<-pipe>] [B<-silent>]
+    S<<< [B<-lifetime> <I<ticket lifetime in hh[:mm[:ss]]>>] >>>
+    [B<-setpag>] [B<-tmp>] [B<-help>]
 
 =for html
 </div>
@@ -54,7 +61,7 @@ Authentication Server should normally use the combination of B<kinit> and
 B<aklog> instead of B<klog>.
 
 Sites using Kerberos v4 authentication (perhaps with the AFS
-Authentication Server) must use the Kerberos version of this command,
+Authentication Server) should use the Kerberos version of this command,
 B<klog.krb>, on all client machines. It automatically places the issuer's
 Kerberos tickets in the file named by the KRBTKFILE environment variable,
 which the B<pagsh.krb> command defines automatically as F</tmp/tktpI<X>>
