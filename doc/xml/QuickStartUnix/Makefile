@@ -1,20 +1,17 @@
 # Makefile to build the AFS QuickStart guide for Unix.
 #
 # This makefile assumes that various utilities are available on the system.
-# On Debian etch, installing the packages:
+# On Debian lenny, installing the packages:
 #
-#     docbook-utils
-#     docbook-dsssl
+#     dblatex
 #     docbook-xsl
 #     libxml2-utils
 #     xsltproc
-#     dblatex
 #
-# gave me all the utilities needed.  You may need to install fewer packages as
-# several depend on the others.
+# gave me all the utilities needed.
 #
-# HTML_XSL is possibly specific to Debian and may need to be modified on other
-# systems.
+# HTML_XSL is specific to Debian and will need to be modified on other
+# systems until we have a better mechanism for finding the correct path.
 
 BOOK     = auqbg000.xml
 SRCS     = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
@@ -34,4 +31,4 @@ check:
 	xmllint --noout --valid $(BOOK)
 
 clean:
-	rm -f *.html *.pdf $(IDX)
+	rm -f *.html *.pdf
