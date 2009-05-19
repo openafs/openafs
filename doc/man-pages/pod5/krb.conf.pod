@@ -4,7 +4,7 @@ krb.conf - Configures the kerberos realm to AFS cell mapping
 
 =head1 DESCRIPTION
 
-/usr/vice/etc/krb.conf is an optional file that resides on an OpenAFS
+/usr/afs/etc/krb.conf is an optional file that resides on an OpenAFS
 server and is used to specify which Kerberos5 realms are trusted to
 authenticate to the local AFS cell. The format of the file is one realm
 per line. If the Kerberos5 realm matches the AFS cell name
