@@ -1,0 +1,153 @@
+=head1 NAME
+
+restorevol - Restore a volume from vos dump to the local file system
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<restorevol> S<<< [B<-file> <I<dump file>>] >>> S<<< [B<-dir> <I<restore dir>> ] >>>
+    S<<< [B<-extension> <I<name extension>>] >>>
+    S<<< [B<-mountpoint> <I<mount point root>>] >>>
+    S<<< [B<-umask> <I<mode mask>>] >>> [B<-verbose>] [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+B<restorevol> takes an AFS volume in the format produced by B<vos dump>
+and restores it to the local file system.  Normally, the contents of a
+volume are maintained by the AFS File Server in an opaque format and
+copying a volume's raw data does not make it easily accessible.  This
+utility will produce a directory tree that is equivalent to that seen via
+an AFS client, but without preserving the AFS-specific Access Control
+Lists (ACLs).  It's primary use is to recover data from a volume dump or
+backup and make it available via a filesystem other than AFS.
+
+The dump output will read from standard input, or from a file if B<-file>
+is specified.
+
+The restore process is as follows:
+
+=over 4
+
+=item 1. 
+
+The dump file will be restored within the current directory or that
+specified with B<-dir>.
+
+=item 2. 
+
+Within this directory, a subdir is created.  It's name is the RW volume
+name that was dumped.  An extension can be appended to this directory name
+with B<-extension>.
+
+=item 3. 
+
+All mountpoints will appear as symbolic links to the volume name.  The
+path name to the volume will be either that in B<-mountpoint>, or B<-dir>.
+Symbolic links remain untouched.
+
+=item 4. 
+
+You can change your umask during the restore with B<-umask>.  Otherwise,
+B<restorevol> uses your current umask.  Mode bits for directories are 0777
+(then AND'ed with the umask).  Mode bits for files are the owner mode bits
+duplicated accross group and user (then AND'ed with the umask).
+
+=item 5. 
+
+For restores of full dumps, if a directory says it has a file and the file
+is not found, then a symbolic link F<< AFSFile-<#> >> will appear in that
+restored tree.  Restores of incremental dumps remove all these files at
+the end (expensive because it is a tree search).
+
+=item 6. 
+
+If a file or directory was found in the dump but found not to be connected
+to the hierarchical tree, then the file or directory will be connected at
+the root of the tree as F<< __ORPHANEDIR__.<#> >> or F<<
+__ORPHANFILE__.<#> >>.
+
+=item 7. 
+
+ACLs are not restored.
+
+=back
+
+=head1 CAUTIONS
+
+Normally, use L<vos_restore(1)> instead of this command.  B<restorevol> is
+a tool of last resort to try to extract data from the data structures
+stored in a volume dumpfile and is not as regularly tested or used as the
+normal L<vos_restore(1)> implementation.  Using B<restorevol> bypasses
+checks done by the L<fileserver(8)> and L<salvager(8)>.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-file> <I<dump file>>
+
+Specifies the output file for the dump.  If this option is not given, the
+volume will be dumped to standard output.
+
+=item B<-dir> <I<restore dir>>
+
+Names the directory in which to create the restored filesystem.  The
+current directory is used by default.  Note that any mountpoints inside
+the volume will point to the same directory unless the B<-mountpoint>
+option is also specified.
+
+=item B<-extension> <I<name extension>>
+
+By default, the name of the directory created matches the RW volume name
+of the volume in the dump file.  If this option is used, the directory
+name will be the RW volume name I<name extension> as the suffix.
+
+=item B<-mountpoint> <I<mount point root>>
+
+By default, mountpoints inside the volume being restored point to the
+value given by I<-dir>.  This option allows mountpoints to be resolved
+relative to another path.  A common use for this would be to specify a
+path under F</afs> as the mount point root so that mountpoints inside the
+restored volume would be resolved via AFS.
+
+The I<mount point root> must exist, and the process running the command
+have read access to that directory, or the command will fail.
+
+=back
+
+=head1 EXAMPLES
+
+The following command restores the contents of the dumpfile in
+F<sample.dump> to the directory F</tmp/sample.2009-05-17>, but having all
+mountpoints inside the volume point to AFS (note that this requires
+knowledge of where F<sample> is mounted in AFS):
+
+   % restorevol -file sample.dump -dir /tmp -extension .2009-05-17 \
+       -mountpoint /afs/example.org/sample
+   Restoring volume dump of 'sample' to directory '/tmp/sample.2009-05-17'
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have read access to the dump file and write access to the
+directory into which the dump is restored.  If the B<-mountpoint> flag is
+given, the issuer must also have read access to that directory.
+
+=head1 SEE ALSO
+
+L<salvager(8)>,
+L<voldump(8)>,
+L<vos_dump(1)>,
+L<vos_restore(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2009 Steven Jenkins <steven@endpoint.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Steven Jenkins for
+OpenAFS.
