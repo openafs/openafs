@@ -50,8 +50,7 @@ XMLSRCS = \
         auusg009.xml \
         auusg010.xml \
         auusg011.xml \
-        auusg012.xml \
-        auusg013.xml \
+        auusg012.xml 
 
 index.html: $(XMLSRCS)
         @echo Building OpenAFS User Guide in HTML format

@@ -61,8 +61,7 @@ XMLSRCS = \
         auagd022.xml \
         auagd023.xml \
         auagd024.xml \
-        auagd025.xml \
-        auagd026.xml 
+        auagd025.xml
 
 index.html: $(XMLSRCS)
         @echo Building OpenAFS Administrator Guide in HTML format
