@@ -35,6 +35,11 @@ WIXOBJ = $(OUT)\openafs-$(LANG).wixobj
 !IF ("$(CPU)" == "i386")
 BINWIXOBJ  = $(OUT)\openafs-32bit-tools-$(LANG).wixobj
 !ENDIF
+!IFNDEF NOCYGWIN
+WIXCYGOPT=-dCygwinArchives
+!ELSE
+WIXCYGOPT=
+!ENDIF
 
 LANGUAGES=en_US de_DE es_ES ja_JP ko_KR pt_BR zh_CN zh_TW
 
@@ -83,7 +88,7 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		-dIDNMRedistDir=$(MSIDNNLS)\\REDIST 	\
 		-v0 \
 		-w0 \
-        $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
+		$(WIXCYGOPT) $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
 
 !IF ("$(CPU)" == "i386")
 $(BINWIXOBJ): oafwbins.wxs $(WIXINCLUDES)
@@ -98,7 +103,7 @@ $(BINWIXOBJ): oafwbins.wxs $(WIXINCLUDES)
 		-dCellDbFile=CellServDB \
 		-v0 \
 		-w0 \
-        $(AFSDEV_AUXWIXDEFINES)	oafwbins.wxs
+        $(WIXCYGOPT) $(AFSDEV_AUXWIXDEFINES)	oafwbins.wxs
 
 $(BINMSIFILE): $(BINWIXOBJ)
 	light -nologo -out $(BINMSIFILE) \

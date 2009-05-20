@@ -247,6 +247,10 @@
 				<ComponentRef Id="cmp_SDK_Include_Winnt" />
 				<ComponentRef Id="cmp_SDK_Lib" />
 				<ComponentRef Id="cmp_SDK_Lib_Afs" />
+                <?ifdef CygwinArchives ?>
+                <ComponentRef Id="cmp_SDK_Lib_Cygwin" />
+                <ComponentRef Id="cmp_SDK_Lib_Afs_Cygwin" />
+                <?endif?>
 
 			<?ifdef DebugSyms?>
 				<Feature Id="feaSDKDebug" AllowAdvertise="no" Description="$(loc.StrAFSSDKDebugLongDesc)" Display="expand"

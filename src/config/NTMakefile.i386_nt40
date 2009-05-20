@@ -455,3 +455,13 @@ AFSDEV_AUXMIDLFLAGS=$(AFSDEV_AUXMIDLFLAGS) /Oi
 LEX = flex -l
 YACC = bison
 
+######### Create Cygwin .a files
+# This macro should be invoked as a build step for a DLL target.
+!IFNDEF NOCYGWIN
+MAKECYGLIB=\
+	for %%C in (as.exe) do \
+	if exist %%~$$PATH:C \
+	dlltool --dllname $(@B).dll --output-lib $(@R).a --temp-prefix $(OUT) -S %%~$$PATH:C
+!ELSE
+MAKECYGLIB=echo Skipping Cygwin archive
+!ENDIF

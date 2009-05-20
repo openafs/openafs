@@ -147,6 +147,7 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+	$(MAKECYGLIB) --input-def afsadminutil.def
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
 

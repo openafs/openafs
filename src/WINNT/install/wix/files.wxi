@@ -1699,6 +1699,13 @@
                             <File Id="filecm_config_OBJ" Name="CM_CON~1.obj" LongName="cm_config.obj" DiskId="1" src="$(var.LibDir)cm_config.obj" /> 
                             <File Id="filecm_dns_OBJ" Name="cm_dns.obj" LongName="cm_dns.obj" DiskId="1" src="$(var.LibDir)cm_dns.obj" /> 
                         </Component>
+                        <?ifdef CygwinArchives?>
+                        <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib_Cygwin" Guid="$(var.cmp_SDK_Lib_Cygwin_guid)">
+                          <File Id="fileafsauthent_A" Name="afsauth.a" LongName="afsauthent.a" DiskId="1" src="$(var.LibDir)afsauthent.a" />
+                          <File Id="fileafspthread_A" Name="afspthrd.a" LongName="afspthread.a" DiskId="1" src="$(var.LibDir)afspthread.a" />
+                          <File Id="fileafsrpc_A" Name="afsrpc.a" LongName="afsrpc.a" DiskId="1" src="$(var.LibDir)afsrpc.a" />
+                        </Component>
+                        <?endif?>
                         <Directory Id="dirLibAfs" Name="afs">
                             <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib_Afs" Guid="$(var.cmp_SDK_Lib_Afs_guid)">
                                 <File Id="fileafsacl_LIB" Name="afsacl.lib" LongName="afsacl.lib" DiskId="1" src="$(var.LibDir)afs\afsacl.lib" /> 
@@ -1739,6 +1746,18 @@
                                 <File Id="fileTaAfsAppLib_LIB" Name="TAAFSA~2.lib" LongName="TaAfsAppLib.lib" DiskId="1" src="$(var.LibDir)afs\TaAfsAppLib.lib" /> 
                                 <File Id="filetalocale_LIB" Name="talocale.lib" LongName="talocale.lib" DiskId="1" src="$(var.LibDir)afs\talocale.lib" /> 
                             </Component>
+                            <?ifdef CygwinArchives?>
+                            <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib_Afs_Cygwin" Guid="$(var.cmp_SDK_Lib_Afs_Cygwin_guid)">
+                                <File Id="fileafsadminutil_A" Name="afsadmut.a" LongName="afsadminutil.a" DiskId="1" src="$(var.ServerDir)afsadminutil.a" /> 
+                                <File Id="fileafsbosadmin_A" Name="afsbosad.a" LongName="afsbosadmin.a" DiskId="1" src="$(var.ServerDir)afsbosadmin.a" /> 
+                                <File Id="fileafscfgadmin_A" Name="afscfgad.a" LongName="afscfgadmin.a" DiskId="1" src="$(var.ServerDir)afscfgadmin.a" /> 
+                                <File Id="fileafsclientadmin_A" Name="afscliad.a" LongName="afsclientadmin.a" DiskId="1" src="$(var.ServerDir)afsclientadmin.a" /> 
+                                <File Id="fileafskasadmin_A" Name="afskasad.a" LongName="afskasadmin.a" DiskId="1" src="$(var.ServerDir)afskasadmin.a" /> 
+                                <File Id="fileafsprocmgmt_A" Name="afsprcmg.a" LongName="afsprocmgmt.a" DiskId="1" src="$(var.ServerDir)afsprocmgmt.a" /> 
+                                <File Id="fileafsptsadmin_A" Name="afsptsad.a" LongName="afsptsadmin.a" DiskId="1" src="$(var.ServerDir)afsptsadmin.a" /> 
+                                <File Id="fileafsvosadmin_A" Name="afsvosad.a" LongName="afsvosadmin.a" DiskId="1" src="$(var.ServerDir)afsvosadmin.a" /> 
+                            </Component>
+                            <?endif?>
                         </Directory>
                     </Directory>
             </Directory> <!-- SDK -->

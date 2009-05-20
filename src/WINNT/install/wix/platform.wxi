@@ -79,6 +79,8 @@
 	<?define cmp_ClientProgramDebug_guid="FC0AD966-9323-4AAA-96D1-FFEF44460E59"?>
 	<?define cmp_SDK_Lib_guid="A7CC24B1-E6A9-4254-B468-F4C47BC9ECFC"?>
 	<?define cmp_SDK_Lib_Afs_guid="C0DA2C3B-B2B8-4AD4-9B00-42FB45C5B352"?>
+	<?define cmp_SDK_Lib_Cygwin_guid="6F09E575-6482-4D90-A6CD-408321539679"?>
+	<?define cmp_SDK_Lib_Afs_Cygwin_guid="19AB6F3B-AE92-40D8-8C68-3F39A1AB68C0"?>
 	<?define cmf_vlserver_EXE_guid="88A9024C-D5B2-4AF1-8241-E0B046E25FE3"?>
 	<?define cmf_volinfo_EXE_guid="55C8984F-D58A-44FD-9566-3C033612B2DB"?>
 	<?define cmf_volserver_EXE_guid="98049267-9D3C-4BBC-B5E5-E3A0BCE0B8AF"?>
@@ -183,6 +185,8 @@
 	<?define cmp_ClientProgramDebug_guid="A6A394F6-45D0-45A9-A7DD-C0997070EC14"?>
 	<?define cmp_SDK_Lib_guid="71BC1B4E-4C4C-4FF8-8DDA-C6AB2BE22142"?>
 	<?define cmp_SDK_Lib_Afs_guid="CD671A64-D491-4363-A7AD-645482B481BE"?>
+	<?define cmp_SDK_Lib_Cygwin_guid="EA2FC9C5-2001-41F7-9220-A5C63B2C523D"?>
+	<?define cmp_SDK_Lib_Afs_Cygwin_guid="F342A346-E149-47A2-9206-5B51EED7E689"?>
 	<?define cmf_vlserver_EXE_guid="F6A43B78-EE17-4483-AA81-4B6C6957977D"?>
 	<?define cmf_volinfo_EXE_guid="CED56F48-1049-403F-912B-3C186867B563"?>
 	<?define cmf_volserver_EXE_guid="36A386A0-6DA9-40A7-A12D-6A521559933D"?>
