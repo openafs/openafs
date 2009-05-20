@@ -108,8 +108,8 @@ EXPORTS
         PR_UpdateEntry					@106
         PR_ListEntries					@107
         PR_ListSuperGroups				@108
-	ka_AuthSpecificServersConn			@109
-	ka_KeyCheckSum					@110
+;	ka_AuthSpecificServersConn			@109   /* duplicate */
+;	ka_KeyCheckSum					@110   /* duplicate */
 	rx_Finalize					@111
 	rx_InitHost					@112
 	VOTE_GetSyncSite				@113

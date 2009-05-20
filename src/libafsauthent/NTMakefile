@@ -149,6 +149,7 @@ $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+	$(MAKECYGLIB) --input-def afsauthent.def
 
 # Definitions for generating versioninfo resources
 $(OUT)\afsauthent.res: AFS_component_version_number.h
