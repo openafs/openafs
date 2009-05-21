@@ -313,86 +313,32 @@
   <?endif?>
 
   <?ifndef BinsOnly?>
-         <?if $(var.Language) = "en_US"?>
-            <Component Id="efl_Readme_TXT_en_US" Guid="959DC63A-6C67-4B51-9F7D-2CDEE91F0099">
-                <File Id="fileREADME_TXT_en_US" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\en_US\README.txt"/>
-            </Component>
-         <?endif?>
-                        
-         <?if $(var.Language) = "zh_TW"?>
-            <Component Id="efl_Readme_TXT_zh_TW" Guid="BF25CD95-7BCD-4B0C-9999-B246199236F6">
-                <File Id="fileREADME_TXT_zh_TW" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\zh_TW\README.txt"/>
-            </Component>
-         <?endif?>
-                        
-         <?if $(var.Language) = "de_DE"?>
-            <Component Id="efl_Readme_TXT_de_DE" Guid="5F1433F0-C57D-46C8-857B-4265B95CEF24">
-                <File Id="fileREADME_TXT_de_DE" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\de_DE\README.txt"/>
-            </Component>
-         <?endif?>
-                        
-         <?if $(var.Language) = "es_ES"?>
-            <Component Id="efl_Readme_TXT_es_ES" Guid="8B0C573E-B33E-4EC5-8B3B-C08347FFAB79">
-                <File Id="fileREADME_TXT_es_ES" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\es_ES\README.txt"/>
-            </Component>
-         <?endif?>
-                        
-         <?if $(var.Language) = "ja_JP"?>
-            <Component Id="efl_Readme_TXT_ja_JP" Guid="5A15925E-00EB-4B00-A5BE-7461EE7D6C95">
-                <File Id="fileREADME_TXT_ja_JP" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\ja_JP\README.txt"/>
-            </Component>
-         <?endif?>
-                        
-         <?if $(var.Language) = "ko_KR"?>
-            <Component Id="efl_Readme_TXT_ko_KR" Guid="715D4A97-6356-41E8-8660-76D74DC88495">
-                <File Id="fileREADME_TXT_ko_KR" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\ko_KR\README.txt"/>
-            </Component>
-         <?endif?>
-     
-         <?if $(var.Language) = "pt_BR"?>
-            <Component Id="efl_Readme_TXT_pt_BR" Guid="03682CAA-66D4-472F-86DE-C508F33AE50C">
-                <File Id="fileREADME_TXT_pt_BR" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\pt_BR\README.txt"/>
-            </Component>
-         <?endif?>
-                        
-         <?if $(var.Language) = "zh_CN"?>
-            <Component Id="efl_Readme_TXT_zh_CN" Guid="6D1DD8B0-0D61-4BC4-976B-F72E087F83D4">
-                <File Id="fileREADME_TXT_zh_CN" Name="README.txt" LongName="README.txt" DiskId="1" src="$(var.SrcDir)\WINNT\doc\install\Documentation\zh_CN\README.txt"/>
-            </Component>
-         <?endif?>
-  <?endif?>
-
-  <?ifndef BinsOnly?>
             <Directory Id="dirDocumentation" Name="Docum" LongName="Documentation" SourceName="Docs">
-				<!-- The following directory and everything below it is language dependent. -->
+		    <!-- The following directory and everything below it is language dependent. -->
+                    <?if $(var.Language) = "en_US"?>
+                        <Component Id="cmp_Sys_Admin_Guide_en_US" Guid="$(var.DocChmSysAdminGuid)">
+                        <File Id="file_admin_guide_CHM_$(var.Language)" Name="AdminGd.chm" LongName="AdminGuide.chm" KeyPath="yes" DiskId="1" src="$(var.DocDir)\xml\AdminGuide\htmlhelp.chm">
+                	          <Shortcut Id="scDocAdmin_en_US" Directory="dirShortCutDocs" Name="AdminGd.lnk" LongName="Administrator Guide.lnk" Description="$(loc.StrDocAdminGdLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                        </File>
+                        </Component>
+                        <Component Id="cmp_User_Guide_en_US" Guid="$(var.DocChmUserGuid)">
+                        <File Id="file_user_guide_CHM_$(var.Language)" Name="UserGd.chm" LongName="UserGuide.chm" KeyPath="yes" DiskId="1"  src="$(var.DocDir)\xml\UserGuide\htmlhelp.chm">
+                	          <Shortcut Id="scDocUser_en_US" Directory="dirShortCutDocs" Name="UserGd.lnk" LongName="User Guide.lnk" Description="$(loc.StrDocUserGdLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                        </File>
+                        </Component>
+                        <Component Id="cmp_Release_Notes_en_US" Guid="$(var.DocChmRelNotesGuid)">
+                        <File Id="file_relnotes_CHM_$(var.Language)" Name="RelNotes.chm" LongName="ReleaseNotes.chm" KeyPath="yes" DiskId="1"  src="$(var.DocDir)\xml\ReleaseNotesWindows\htmlhelp.chm">
+                	          <Shortcut Id="scDocRelNotes_en_US" Directory="dirShortCutDocs" Name="RelNotes.lnk" LongName="Release Notes.lnk" Description="$(loc.StrDocRelNotesLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                        </File>
+                        </Component>
+                    <?endif?>                        
                     <Directory Id="dirHtml_$(var.Language)" Name="Html" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\">
-                        <Component Id="cmf_index2_HTM_$(var.Language)" Guid="$(var.DocHtmlIndexGuid)">
-                            <File Id="fileindex2_HTM_$(var.Language)" Name="index.htm" LongName="index.htm" KeyPath="yes" DiskId="1">
-								<Shortcut Id="scDoc_$(var.Language)" Directory="dirShortCut" Name="Doc$(var.Language).lnk" LongName="Documentation ($(var.Language)).lnk" Description="$(loc.StrDocLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
-                            </File>
-                        </Component>
-                        <Component Id="efl_DocHtml_$(var.Language)" Guid="$(var.DocHtmlGuid)">
-                            <File Id="filebanner_GIF_$(var.Language)" Name="banner.gif" LongName="banner.gif" DiskId="1" />
-                            <File Id="filebooks_GIF_$(var.Language)" Name="books.gif" LongName="books.gif" DiskId="1" />
-                            <File Id="filebot_GIF_$(var.Language)" Name="bot.gif" LongName="bot.gif" DiskId="1" />
-                            <File Id="fileindex_GIF_$(var.Language)" Name="index.gif" LongName="index.gif" DiskId="1" />
-                            <File Id="filenext_GIF_$(var.Language)" Name="next.gif" LongName="next.gif" DiskId="1" />
-                            <File Id="fileprev_GIF_$(var.Language)" Name="prev.gif" LongName="prev.gif" DiskId="1" />
-                            <File Id="filetoc_GIF_$(var.Language)" Name="toc.gif" LongName="toc.gif" DiskId="1" />
-                            <File Id="filetop_GIF_$(var.Language)" Name="top.gif" LongName="top.gif" DiskId="1" />
-                            <File Id="file$(var.Language)_RTF" Name="$(var.Language).rtf" LongName="$(var.Language).rtf" KeyPath="yes" DiskId="1" src="$(var.SrcDir)\WINNT\license\lang\$(var.Language).rtf"/>
-                        </Component>
-                        <Directory Id="dirindex_files_$(var.Language)" Name="index" LongName="index_files" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\index_files\">
-                            <Component Id="cmp_index_files_$(var.Language)" Guid="$(var.DocHtmlIndexFilesGuid)">
-                                <File Id="filefilelist_XML_$(var.Language)" Name="filelist.xml" LongName="filelist.xml" DiskId="1" />
-                                <File Id="fileimage001_JPG_$(var.Language)" Name="image001.jpg" LongName="image001.jpg" DiskId="1" />
-                                <File Id="fileimage002_JPG_$(var.Language)" Name="image002.jpg" LongName="image002.jpg" DiskId="1" />
-                            </Component>
-                        </Directory>
                     <?if $(var.Language) = "en_US"?>
                         <Directory Id="dirCmdRef_en_US" Name="CmdRef" src="$(var.DocDir)\man-pages\html\">
                             <Component Id="cmp_Cmd_Ref_en_US" Guid="$(var.DocHtmlCmdRefGuid)">
-                                <File Id="file_CmdRef_Index_HTM_en_US" Name="index.htm" LongName="index.html" KeyPath="yes" DiskId="1" />
+                                <File Id="file_CmdRef_Index_HTM_en_US" Name="index.htm" LongName="index.html" KeyPath="yes" DiskId="1">
+			          <Shortcut Id="scDocRefMan_$(var.Language)" Directory="dirShortCutDocs" Name="RefMan.lnk" LongName="Reference Manual.lnk" Description="$(loc.StrDocRefManLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                                </File>
                                 <File Id="file_CmdRef_Style_CSS_en_US" Name="style.css" LongName="style.css" DiskId="1" />
                             </Component>
                         <Directory Id="dirCmdRef1_en_US" Name="1" src="$(var.DocDir)\man-pages\html\1\">
@@ -717,7 +663,9 @@
                     <?else?>
                         <Directory Id="dirCmdRef_$(var.Language)" Name="CmdRef" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\CmdRef\">
                             <Component Id="cmp_Cmd_Ref_$(var.Language)" Guid="$(var.DocHtmlCmdRefGuid)">
-                                <File Id="fileauarf000_HTM_$(var.Language)" Name="auarf000.htm" LongName="auarf000.htm" KeyPath="yes" DiskId="1" />
+                                <File Id="fileauarf000_HTM_$(var.Language)" Name="auarf000.htm" LongName="auarf000.htm" KeyPath="yes" DiskId="1">
+       			          <Shortcut Id="scDocRefMan_$(var.Language)" Directory="dirShortCutDocs" Name="RefMan.lnk" LongName="Reference Manual.lnk" Description="$(loc.StrDocRefManLnkDesc)" Icon="ico_Help" IconIndex="0" Show="normal" WorkingDirectory="dirCommon" />
+                                </File>
                                 <File Id="fileauarf002_HTM_$(var.Language)" Name="auarf002.htm" LongName="auarf002.htm" DiskId="1" />
                                 <File Id="fileauarf003_HTM_$(var.Language)" Name="auarf003.htm" LongName="auarf003.htm" DiskId="1" />
                                 <File Id="fileauarf004_HTM_$(var.Language)" Name="auarf004.htm" LongName="auarf004.htm" DiskId="1" />
@@ -1011,7 +959,6 @@
                                 <File Id="fileawqbg004_HTM_$(var.Language)" Name="awqbg004.htm" LongName="awqbg004.htm" DiskId="1" />
                             </Component>
                         </Directory> <!-- InstallGd -->
-                    <?endif?>
                         <Directory Id="dirSysAdminGd_$(var.Language)" Name="SysAd" LongName="SysAdminGd" SourceName="SysAdm" LongSource="SysAdminGd" src="$(var.SrcDir)\WINNT\doc\install\Documentation\$(var.Language)\html\SysAdminGd\">
                             <Component Id="cmp_Sys_Admin_Guide_$(var.Language)" Guid="$(var.DocHtmlSysAdminGuid)">
                                 <File Id="fileauagd000_HTM_$(var.Language)" Name="auagd.htm" LongName="auagd000.htm" KeyPath="yes" DiskId="1" />
@@ -1079,6 +1026,7 @@
                                 </Component>
                             </Directory>
                         </Directory> <!-- Release Notes -->
+                    <?endif?>
                     </Directory> <!-- Html -->
             </Directory> <!-- Documentation -->
   <?endif?>
@@ -1771,7 +1719,9 @@
   <?ifndef BinsOnly ?>
     <!-- References -->
     <Directory Id="ProgramMenuFolder" Name=".">
-        <Directory Id="dirShortCut" Name="OpenAFS"/>
+        <Directory Id="dirShortCut" Name="OpenAFS">
+            <Directory Id="dirShortCutDocs" Name="Docs" LongName="Documentation" />
+        </Directory>
     </Directory>
     <Directory Id="StartupFolder" Name="." />
     <Directory Id="WindowsVolume" Name="." />

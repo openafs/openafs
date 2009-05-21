@@ -10,10 +10,6 @@
            <ComponentRef Id="efl_uninstall_EXE" />
 
            <ComponentRef Id="cmp_Release_Notes_en_US" />
-           <ComponentRef Id="cmf_index2_HTM_en_US" />
-           <ComponentRef Id="cmp_index_files_en_US" />
-           <ComponentRef Id="cmp_logo_files_en_US" />
-           <ComponentRef Id="cmp_relnotes_files_en_US" />
   <?endif?>
 
   <?ifndef BinsOnly ?>
@@ -66,7 +62,6 @@
 
 		<ComponentRef Id="cmp_CommonDir" />
 
-                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
                 <ComponentRef Id="efl_CellServDB" />
                 <ComponentRef Id="cpf_CellServDB" />
                 <ComponentRef Id="cmf_afs_cpa_CPL" />
@@ -147,8 +142,6 @@
                 <ComponentRef Id="cmf_afs_nt_HLP_$(var.Language)" />
                 <ComponentRef Id="cmp_Lang_$(var.Language)" />
             
-                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
-
                 <ComponentRef Id="cmf_vlserver_EXE" />
                 <ComponentRef Id="cmf_volinfo_EXE" />
                 <ComponentRef Id="cmf_volserver_EXE" />
@@ -229,8 +222,6 @@
 				</Feature>
             <?endif?>
             
-                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />
-                
                 <!-- Runtime -->
                 <?include runtime.wxi?>
             </Feature>
@@ -239,7 +230,6 @@
 
 				<ComponentRef Id="rcm_SDK" />
 
-                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />                
 				<ComponentRef Id="cmp_SDK_Sample" />
 				<ComponentRef Id="cmp_SDK_Include" />
 				<ComponentRef Id="cmp_SDK_Include_afs" />
@@ -266,14 +256,12 @@
                 Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSDocDesc)">
 
         	<ComponentRef Id="rcm_Documentation" />
-                
-                <ComponentRef Id="efl_Readme_TXT_$(var.Language)" />                
-                <ComponentRef Id="efl_DocHtml_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_1_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_5_en_US" />
                 <ComponentRef Id="cmp_Cmd_Ref_8_en_US" />
                 <ComponentRef Id="cmp_Sys_Admin_Guide_en_US" />
+                <ComponentRef Id="cmp_User_Guide_en_US" />
 
                 <ComponentRef Id="cmf_afs_nt_HLP_en_US" />
                 <ComponentRef Id="cmp_Lang_en_US" />
