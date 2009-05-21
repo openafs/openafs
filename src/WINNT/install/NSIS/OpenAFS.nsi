@@ -1031,8 +1031,9 @@ DoEnglish:
    File "..\..\..\..\doc\man-pages\html\5\*"
    SetOutPath "$INSTDIR\Documentation\html\CmdRef\8"
    File "..\..\..\..\doc\man-pages\html\8\*"
-   SetOutPath "$INSTDIR\Documentation\html\SysAdminGd"
-   File "..\..\doc\install\Documentation\en_US\html\SysAdminGd\*"
+   SetOutPath "$INSTDIR\Documentation\"
+   File /oname=AdminGuide.chm "..\..\..\..\doc\xml\AdminGuide\htmlhelp.chm"
+   File /oname=UserGuide.chm "..\..\..\..\doc\xml\AdminGuide\htmlhelp.chm"
    goto DoneLanguage
    
 DoGerman:
@@ -1685,10 +1686,6 @@ StartRemove:
   Delete "$INSTDIR\Documentation\html\CmdRef\5\*"
   Delete "$INSTDIR\Documentation\html\CmdRef\8\*"
   Delete "$INSTDIR\Documentation\html\CmdRef\*"
-  Delete "$INSTDIR\Documentation\html\ReleaseNotes\logo_files\*"
-  Delete "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files\*"
-  Delete "$INSTDIR\Documentation\html\ReleaseNotes\*"
-  Delete "$INSTDIR\Documentation\html\SysAdminGd\*"
 
    Delete /REBOOTOK "$INSTDIR\Common\afs_config.exe"
    Delete /REBOOTOK "$INSTDIR\Common\afs_shl_ext.dll"
@@ -1887,8 +1884,6 @@ StartRemove:
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.pdb"
 
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
-  RMDir /r "$INSTDIR\Documentation\html\ReleaseNotes"
-  RMDir /r "$INSTDIR\Documentation\html\SysAdminGd"
   RMDIr /r "$INSTDIR\Documentation\html"
   
   RMDir "$INSTDIR\Documentation"
@@ -2032,6 +2027,7 @@ StartRemove:
   Delete "$SMPROGRAMS\OpenAFS\Control Center\Account Manager.lnk"
   Delete "$SMPROGRAMS\OpenAFS\Control Center\Server Manager.lnk"
   RMDIR "$SMPROGRAMS\OpenAFS\Control Center"
+  RMDir /r "$SMPROGRAMS\OpenAFS\Documentation"
   RMDir /r "$SMPROGRAMS\OpenAFS\Client"
   RMDir /r "$SMPROGRAMS\OpenAFS"
   Delete "$SMSTARTUP\AFS Credentials.lnk"
@@ -2882,6 +2878,10 @@ Function AFSLangFiles
 !ENDIF
 !ENDIF
 
+   ; Cleanup old documentation as the file names may have changed
+   DELETE "$SMPROGRAMS\OpenAFS\Documentation.lnk"
+   RMDIR /R "$INSTDIR\Documentation"
+
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman
    StrCmp $LANGUAGE ${LANG_SPANISH} DoSpanish
@@ -2894,17 +2894,10 @@ Function AFSLangFiles
 DoEnglish:
 
    SetOutPath "$INSTDIR\Documentation"
-   File "..\..\doc\install\Documentation\en_US\README.TXT"
-   SetOutPath "$INSTDIR\Documentation\html"
-   File "..\..\doc\install\Documentation\en_US\html\*"
-   SetOutPath "$INSTDIR\Documentation\html\index_files"
-   File "..\..\doc\install\Documentation\en_US\html\index_files\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes"
-   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\logo_files"
-   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\logo_files\*"
-   SetOutPath "$INSTDIR\Documentation\html\ReleaseNotes\relnotes_files"
-   File "..\..\doc\install\Documentation\en_US\html\ReleaseNotes\relnotes_files\*"
+   File /oname=ReleaseNotes.chm "..\..\..\..\doc\xml\ReleaseNotesWindows\htmlhelp.chm"
+
+   CreateDirectory "$SMPROGRAMS\OpenAFS\Documentation"
+   CreateShortCut "$SMPROGRAMS\OpenAFS\Documentation\Release Notes.lnk" "$INSTDIR\Documentation\ReleaseNotes.chm"
 
    SetOutPath "$INSTDIR\Client\Program"
    !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afscreds_1033.dll"    "$INSTDIR\Client\Program\afscreds_1033.dll" "$INSTDIR"
@@ -3380,10 +3373,12 @@ DoTradChinese:
    
 done:
 
-  ; Write start menu shortcut
-  SetOutPath "$SMPROGRAMS\OpenAFS"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Documentation.lnk" "$INSTDIR\Documentation\html\index.htm"
-  
+   ; Write start menu shortcut
+   SetOutPath "$SMPROGRAMS\OpenAFS"
+   CreateDirectory "$SMPROGRAMS\OpenAFS\Documentation"
+   CreateShortCut "$SMPROGRAMS\OpenAFS\Documentation\Reference Manual.lnk" "$INSTDIR\Documentation\html\CmdRef\index.html"
+   CreateShortCut "$SMPROGRAMS\OpenAFS\Documentation\Administrator Guide.lnk" "$INSTDIR\Documentation\AdminGuide.chm"
+   CreateShortCut "$SMPROGRAMS\OpenAFS\Documentation\User Guide.lnk" "$INSTDIR\Documentation\UserGuide.chm"
 
 FunctionEnd
 
