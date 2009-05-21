@@ -27,3 +27,6 @@ $(VERSFILE).h:
 
 $(VERSFILE).txt:
 	$(DESTDIR)\bin\mkvers -o $(VERSFILE).txt -t
+
+$(VERSFILE).xml:
+	$(DESTDIR)\bin\mkvers -o $(VERSFILE).xml -x
