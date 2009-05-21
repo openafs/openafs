@@ -12,7 +12,7 @@ AFSDEV_AUXCDEFINES = -DAFS_AFSDB_ENV
 
 !IF ("$(BUILD_RXK5)" == "TRUE")
 
-afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags)
+afscflags = $(KRB5CFLAGS) -I.. $(afscflags) $(kfwincflags) -I..\WINNT\afsd
 
 RXK5_INCFILES=\
 	$(INCFILEDIR)\rxk5_tkt.h \
@@ -24,6 +24,10 @@ K5OBJS=\
 	$(OUT)\rxk5_utilafs.obj \
 	$(OUT)\rxk5_tkt.obj \
 	$(OUT)\krb_util.obj
+
+!ELSE
+
+afscflags = -I.. $(afscflags) -I..\WINNT\afsd
 
 !ENDIF
 

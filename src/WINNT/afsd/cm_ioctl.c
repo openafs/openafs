@@ -2780,7 +2780,7 @@ cm_IoctlSetTokens2(cm_ioctl_t *ioctlp, cm_user_t *userp, struct smb_fid *fidp)
     if (a_token->flags & PIOCTL_LOGON) {
         ioctlp->flags |= CM_IOCTLFLAG_LOGON;
     }
-    cm_ResetACLCache(userp);
+    cm_ResetACLCache(cellp, userp);
 
     code = 0;
     

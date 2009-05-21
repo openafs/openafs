@@ -18,7 +18,7 @@ RELDIR=libafsauthent
 
 AFS_TOKEN_RXK5_DEFINE = -DAFS_RXK5
 
-afscflags = $(afscflags) $(kfwincflags)
+afscflags = $(afscflags) $(kfwincflags) -I..\WINNT\afsd
 
 RXK5OBJS=\
 	$(OUT)\rxk5_utilafs.obj \
@@ -29,6 +29,10 @@ RXK5OBJS=\
 RXK5LIBS=\
 	$(DESTDIR)\lib\afs\afscom_err.lib \
 	$(DESTDIR)\lib\afskfw_funcs.lib
+
+!ELSE
+
+afscflags = -I.. $(afscflags) -I..\WINNT\afsd
 
 !ENDIF
 

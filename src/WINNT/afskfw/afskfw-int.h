@@ -108,17 +108,6 @@ typedef BOOL (WINAPI *FP_CloseServiceHandle)(SC_HANDLE);
 #define KRB5_DEFAULT_LIFE            60*60*10 /* 10 hours */
 #define LSA_CCNAME                   "MSLSA:"
 
-#ifndef KTC_ERROR
-#define KTC_ERROR      11862784L
-#define KTC_TOOBIG     11862785L
-#define KTC_INVAL      11862786L
-#define KTC_NOENT      11862787L
-#define KTC_PIOCTLFAIL 11862788L
-#define KTC_NOPIOCTL   11862789L
-#define KTC_NOCELL     11862790L
-#define KTC_NOCM       11862791L
-#endif
-
 /* User Query data structures and functions */
 
 struct textField {

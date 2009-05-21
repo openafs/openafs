@@ -5,7 +5,10 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL"  -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash -DSMB_UNICODE
+# rxk5 is added only to pick up rxk5_ntfixprotos.h, which is actually
+# about krb5 and not specific to rxk5 (will move)
+
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL"  -I..\kfw\inc\loadfuncs -I..\kfw\inc\krb5 -I..\kfw\inc\leash -I..\..\rxk5 -DSMB_UNICODE
 
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version

@@ -72,7 +72,7 @@ EXPORTS
 	afskfw_krb5_os_localaddr
 	afskfw_krb5_parse_name
 	afskfw_krb5_c_make_checksum
-	afskfw_krb524_init_ets
+;	afskfw_krb524_init_ets
 	afskfw_krb5_cc_default
 	afskfw_krb5_get_host_realm
 	afskfw_krb5_copy_data
@@ -83,7 +83,7 @@ EXPORTS
 ;	afskfw_krb_get_tf_realm
 	afskfw_krb5_cc_get_type
 	afskfw_krb5_c_verify_checksum
-	afskfw_krb524_convert_creds_kdc
+;	afskfw_krb524_convert_creds_kdc
 	afskfw_Leash_get_default_renew_min
 	afskfw_krb5_kt_start_seq_get
 	afskfw_krb5_cc_get_name

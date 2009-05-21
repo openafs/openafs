@@ -31,7 +31,7 @@ RCSID
 #include "afsincludes.h"
 #include "afs/stds.h"
 #include "afs/pthread_glock.h"
-#include "des/des.h"
+#include <des/des.h>
 #include "des/des_prototypes.h"
 #include "rx/rxkad.h"
 #include "rx/rx.h"

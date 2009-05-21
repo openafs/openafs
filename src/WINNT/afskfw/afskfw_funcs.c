@@ -385,11 +385,13 @@ FUNC_INFO k4_fi[] = {
 };
 #endif
 
+#if 0 /* XXXX */
 FUNC_INFO k524_fi[] = {
     MAKE_FUNC_INFO(krb524_init_ets),
     MAKE_FUNC_INFO(krb524_convert_creds_kdc),
     END_FUNC_INFO
 };
+#endif
 
 FUNC_INFO profile_fi[] = {
         MAKE_FUNC_INFO(profile_init),
@@ -1424,6 +1426,7 @@ afskfw_encode_krb5_ticket
 
 }
 
+#if 0 /* XXXX */
 void afskfw_krb524_init_ets
 	(krb5_context context)
 {
@@ -1439,6 +1442,8 @@ afskfw_krb524_convert_creds_kdc
 	return pkrb524_convert_creds_kdc
 	(context, v5creds, v4creds);
 }
+
+#endif
 
 #if 0
 int 
