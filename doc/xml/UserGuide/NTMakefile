@@ -25,6 +25,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+VERSFILE = version
 !INCLUDE ..\..\..\src\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\..\src\config\NTMakefile.version
 
@@ -50,7 +51,8 @@ XMLSRCS = \
         auusg009.xml \
         auusg010.xml \
         auusg011.xml \
-        auusg012.xml 
+        auusg012.xml \
+        $(VERSFILE).xml
 
 index.html: $(XMLSRCS)
         @echo Building OpenAFS User Guide in HTML format
@@ -69,3 +71,4 @@ install: htmlhelp.chm index.html
 clean::
         $(DEL) *.html
         $(DEL) htmlhelp.chm
+        $(DEL) $(VERSFILE).xml
