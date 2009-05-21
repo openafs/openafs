@@ -1709,6 +1709,8 @@
                           <File Id="fileafsauthent_A" Name="afsauth.a" LongName="afsauthent.a" DiskId="1" src="$(var.LibDir)afsauthent.a" />
                           <File Id="fileafspthread_A" Name="afspthrd.a" LongName="afspthread.a" DiskId="1" src="$(var.LibDir)afspthread.a" />
                           <File Id="fileafsrpc_A" Name="afsrpc.a" LongName="afsrpc.a" DiskId="1" src="$(var.LibDir)afsrpc.a" />
+                          <File Id="filelibafsconf_A" Name="libafscf.a" LongName="libafsconf.a" DiskId="1" src="$(var.ClientDir)libafsconf.a" />
+                          <File Id="filelibosi_A" Name="libosi.a" LongName="libosi.a" DiskId="1" src="$(var.ClientDir)libosi.a" /> 
                         </Component>
                         <?endif?>
                         <Directory Id="dirLibAfs" Name="afs">
