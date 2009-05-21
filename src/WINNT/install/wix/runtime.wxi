@@ -7,6 +7,13 @@
 		<MergeRef Id="MSVCRT8PFC"/>
 		<MergeRef Id="MSVCRT8MFL"/>
 		<MergeRef Id="MSVCRT8PFL"/>
+    <?elseif $(env.AFSVER_CL) = "1500" ?>
+		<MergeRef Id="MSVCRT9MEM"/>
+		<MergeRef Id="MSVCRT9POL"/>
+		<MergeRef Id="MSVCRT9MFC"/>
+		<MergeRef Id="MSVCRT9PFC"/>
+		<MergeRef Id="MSVCRT9MFL"/>
+		<MergeRef Id="MSVCRT9PFL"/>
     <?endif?>
 <?ifndef Debug?>
     <?if $(env.AFSVER_CL) = "1310" ?>
