@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
 	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
 <!ENTITY preface SYSTEM "auqbg003.xml">
 <!ENTITY chapter1 SYSTEM "auqbg004.xml">
 <!ENTITY chapter2 SYSTEM "auqbg005.xml">
@@ -14,8 +15,6 @@
   <bookinfo>
     <title>OpenAFS Quick Start Guide for UNIX</title>
 
-    <subtitle>Version 1.4.10</subtitle>
-
     <copyright>
       <year>2000-2009</year>
       <holder>IBM Corporation and other contributors. All Rights Reserved</holder>
@@ -27,10 +26,7 @@
     </legalnotice>
 
     <revhistory>
-      <revision>
-        <revnumber>1.4.10</revnumber>
-        <date>May 2009</date>
-      </revision>
+        &version;
     </revhistory>
 
     <abstract>

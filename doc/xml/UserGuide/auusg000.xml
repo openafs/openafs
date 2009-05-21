@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
 	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
 <!ENTITY preface SYSTEM "auusg003.xml">
 <!ENTITY chapter1 SYSTEM "auusg004.xml">
 <!ENTITY chapter2 SYSTEM "auusg005.xml">
@@ -17,8 +18,6 @@
   <bookinfo>
     <title>OpenAFS User Guide</title>
 
-    <subtitle>Version M.n</subtitle>
-
     <copyright>
       <year>2000</year>
 
@@ -26,13 +25,7 @@
     </copyright>
 
     <revhistory>
-      <revision>
-        <revnumber>M.n</revnumber>
-
-        <date>May 2008</date>
-
-        <revremark>First OpenAFS Edition</revremark>
-      </revision>
+      &version;
 
       <revision>
         <revnumber>3.6</revnumber>
