@@ -70,6 +70,10 @@
     <?define DocHtmlRelnotesFilesGuid="D39E1662-F475-4D33-A6B5-CBC7B77891D0"?>
     <?define DocHtmlLogoFilesGuid="24E7F4AF-5D41-4D7B-B9DF-FA5787BAC787"?>
     <?define DocHtmlIndexFilesGuid="EEEA73B6-36CD-4471-BF5C-9317B90CA3CC"?>
+
+    <?define DocChmSysAdminGuid="9D78A7CB-AD7A-4464-AAF6-0046512033E8"?>
+    <?define DocChmUserGuid="B2603B9D-DD21-4B3D-B6DB-0F8E7AC58D85"?>
+    <?define DocChmRelNotesGuid="9206FE77-95FA-41D6-A014-B5903E9B1FC2"?>
 <?endif?>
 	<!-- other language specific strings are defined in the strings.wxl file -->	
 
