@@ -102,10 +102,14 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
     code = buf_FlushCleanPages(scp, userp, reqp);
         
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
+        lock_ObtainWrite(&scp->dirlock);
     lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
-        cm_ResetSCacheDirectory(scp);
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+        cm_ResetSCacheDirectory(scp, 1);
+        lock_ReleaseWrite(&scp->dirlock);
+    }
     lock_ReleaseWrite(&scp->rw);
 
     osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
