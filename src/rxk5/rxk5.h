@@ -82,7 +82,7 @@ struct rxk5_stats {
 #endif
 #endif
 #if defined(USING_MIT) || defined(USING_HEIMDAL) || defined(USING_K5SSL)
-#ifdef KRB5_TC_MATCH_KTYPE
+#if 1 /* KRB5_TC_MATCH_KTYPE */
 #define RXK5_K5_CONTEXT krb5_context
 #define RXK5_K5_PRINCIPAL krb5_principal
 #define RXK5_K5_CREDS krb5_creds *

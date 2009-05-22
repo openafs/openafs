@@ -40,11 +40,12 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
-#ifdef AFS_RXK5
-#include "rxk5.h"
-#include "rxk5errors.h"
-#endif
 #include <afs/cellconfig.h>
+#ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
+#include <rx/rxk5errors.h>
+#endif
 #include <afs/keys.h>
 #include <afs/auth.h>
 #include <lock.h>

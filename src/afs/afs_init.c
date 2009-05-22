@@ -17,10 +17,15 @@
 #include "afs/param.h"
 
 #ifdef AFS_RXK5
-#include <rx/rxk5.h>
 #ifdef USING_K5SSL
 #include <k5ssl.h>
+#else
+#ifdef USING_HEIMDAL
+#undef u
 #endif
+#include <krb5.h>
+#endif
+#include <rx/rxk5.h>
 #include <afs_capabilities.h>
 void rxk5_OnetimeInit();
 #endif

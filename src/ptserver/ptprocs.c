@@ -64,9 +64,9 @@ RCSID
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
 #include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
-#include <afs/rxk5_utilafs.h>
 #include <errno.h>
 #endif
 #include <afs/auth.h>

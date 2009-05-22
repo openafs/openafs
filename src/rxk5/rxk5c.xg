@@ -28,6 +28,19 @@
  * such damages.
  */
 
+%#include "rxk5c.h"
+
+%#ifdef AFS_RXK5
+%#ifdef USING_K5SSL
+%#include <k5ssl.h>
+%#else
+%#ifdef USING_HEIMDAL
+%#undef u
+%#endif
+%#include <krb5.h>
+%#endif
+%#endif
+
 %#include <rx/rxk5.h>
 
 %#ifndef TRUE

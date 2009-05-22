@@ -61,8 +61,8 @@ RCSID
 #include "../tviced/serialize_state.h"
 #endif /* AFS_DEMAND_ATTACH_FS */
 #ifdef AFS_RXK5
-#include <rx/rxk5.h>
 #include <afs/rxk5_utilafs.h>
+#include <rx/rxk5.h>
 #endif
 
 #ifdef AFS_PTHREAD_ENV

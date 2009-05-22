@@ -494,8 +494,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	ll_free_list(&badrealms, (void(*)(char*))free);
 	ll_free_list(&princs_tried, NULL);
 
-	i = 0;
 #ifdef AFS_RXK5
+	i = 0;
 	if (rxk5 & FORCE_RXK5) {
 	    if (max_enc > 0) {
 		service_list[i++] = afskey_k5;
@@ -648,11 +648,12 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		retry++;
 	    else
 		retry = 0;
-
+#ifdef AFS_RXK5
 	    /* Evil: overload retry loop to try next principal */
 	    if (status && service_list[++i]) {
 		retry = 1 ;
 	    }
+#endif
 	} 
 	
 	if (status != 0) {

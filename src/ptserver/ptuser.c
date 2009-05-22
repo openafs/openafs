@@ -52,8 +52,8 @@ RCSID
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #ifdef AFS_RXK5
+#include <afs/rxk5_utilafs.h>
 #include <rx/rxk5.h>
-#include <rxk5_utilafs.h>
 #include <rx/rxk5errors.h>
 #endif
 #include "afs_token.h"

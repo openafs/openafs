@@ -763,8 +763,12 @@ default_afs_rxk5_forge(krb5_context context,
     char *to_free = 0;
     int allowed_enctypes[] = {
 	/* XXX needs work... */
+#ifdef ENCTYPE_AES256_CTS_HMAC_SHA1_96
 	ENCTYPE_AES256_CTS_HMAC_SHA1_96,
+#endif
+#ifdef ENCTYPE_AES128_CTS_HMAC_SHA1_96
 	ENCTYPE_AES128_CTS_HMAC_SHA1_96,
+#endif
 	ENCTYPE_DES3_CBC_SHA1,
 #ifdef USING_MIT
 #define ENCTYPE_ARCFOUR_HMAC_MD5 ENCTYPE_ARCFOUR_HMAC
@@ -800,4 +804,3 @@ out:
     if (to_free) free(to_free);
     return code;
 }
-

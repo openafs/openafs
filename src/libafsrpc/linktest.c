@@ -40,8 +40,9 @@
 #include <afs/afsint.h>
 #include <rx/rxstat.h>
 #include <des/des.h>
+#include <afs/cellconfig.h>
 #ifdef AFS_RXK5
-
+#include <afs/rxk5_utilafs.h>
 #include <rx/rxk5.h>
 #include <rx/rxk5errors.h>
 

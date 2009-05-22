@@ -42,6 +42,14 @@ RCSID
 #include <rx/rxstat.h>
 #include <rx/rx_null.h>
 #ifdef AFS_RXK5
+#ifdef USING_K5SSL
+#include <k5ssl.h>
+#else
+#ifdef USING_HEIMDAL
+#undef u
+#endif
+#include <krb5.h>
+#endif
 #include <rx/rxk5.h>
 #ifdef USING_HEIMDAL
 #define EncryptionKey Heimdal_EncryptionKey_NotNeededHere
