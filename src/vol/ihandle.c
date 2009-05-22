@@ -803,10 +803,32 @@ ih_reallyclose(IHandle_t * ihP)
 	return 0;
 
     IH_LOCK;
+    ihP->ih_refcnt++;   /* must not disappear over unlock */
+    if (ihP->ih_synced) {
+	FdHandle_t *fdP;
+	IH_UNLOCK;
+	
+	fdP = IH_OPEN(ihP);
+	if (fdP) { 
+	    OS_SYNC(fdP->fd_fd);
+	    FDH_CLOSE(fdP);
+	}
+	
+	IH_LOCK;
+    }
+
     assert(ihP->ih_refcnt > 0);
+    ihP->ih_synced = 0;
+
     ih_fdclose(ihP);
 
-    IH_UNLOCK;
+    if (ihP->ih_refcnt > 1) {
+	ihP->ih_refcnt--;
+	IH_UNLOCK;
+    } else {
+	IH_UNLOCK;
+	ih_release(ihP);
+    }
     return 0;
 }
 
@@ -884,8 +906,10 @@ ih_sync_all() {
 		IH_UNLOCK;
 
 		fdP = IH_OPEN(ihP);
-		if (fdP) OS_SYNC(fdP->fd_fd);
-		FDH_CLOSE(fdP);
+		if (fdP) { 
+		    OS_SYNC(fdP->fd_fd);
+		    FDH_CLOSE(fdP);
+		}
 
 	  	IH_LOCK;
 	    }
