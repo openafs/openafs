@@ -39,13 +39,7 @@ KAUTH_LIBOBJS =\
 	$(OUT)\kaerrors.obj \
 	$(OUT)\user_nt.obj \
 	$(OUT)\krb_tf.obj \
-	$(OUT)\cm_config.obj \
 	$(OUT)\AFS_component_version_number.obj
-
-WINNTAFSD = ..\WINNT\afsd\
-
-$(OUT)\cm_config.obj: $(WINNTAFSD)\cm_config.c
-	$(C2OBJ) $**
 
 $(KAUTH_LIBFILE): $(KAUTH_LIBOBJS) 
 	$(LIBARCH)  
@@ -67,7 +61,6 @@ KAUTH_KRB_LIBOBJS =\
 	$(OUT)\kaerrors.obj \
 	$(OUT)\user.krb.obj \
 	$(OUT)\krb_tf.obj \
-	$(OUT)\cm_config.obj \
 	$(OUT)\AFS_component_version_number.obj
 
 $(KAUTH_KRB_LIBFILE): $(KAUTH_KRB_LIBOBJS) 
@@ -98,8 +91,7 @@ AFSLIBS =  \
 	$(DESTDIR)\lib\afsubik.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afsrxkad.lib \
-	$(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj
+	$(DESTDIR)\lib\libafsconf.lib
 	
 TOKENLIB = $(DESTDIR)\lib\afs\afspioctl.lib
 

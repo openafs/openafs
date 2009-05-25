@@ -137,7 +137,8 @@ $(OUT)\cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
 FSOBJS=$(OUT)\fs.obj \
-       $(OUT)\fs_utils.obj
+       $(OUT)\fs_utils.obj \
+       $(OUT)\cm_nls.obj
 
 CMDBGOBJS=$(OUT)\cmdebug.obj
 
@@ -181,7 +182,7 @@ MIDL_FLAGS=/app_config \
 ############################################################################
 # libafsconf.dll
 
-CONF_DLLFILE = $(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll
+CONF_DLLFILE = $(DESTDIR)\lib\libafsconf.dll
 
 CONF_DLLLIBS = \
     $(DESTDIR)\lib\afs\afsutil.lib \
@@ -193,8 +194,7 @@ $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
 	$(MAKECYGLIB) --input-def libafsconf.def
-	$(COPY) $*.lib $(ILIBDIR)
-	$(DEL) $*.lib $*.exp
+	$(DEL) $*.exp
 
 ############################################################################
 # lanahelper.lib
@@ -265,10 +265,7 @@ $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 ############################################################################
 # Install target; primary makefile target
 
-install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(OUT)\cm_nls.obj $(LANAHELPERLIB) $(OUT)\afsicf.obj
-     $(COPY) $(OUT)\cm_dns.obj $(DESTDIR)\lib
-     $(COPY) $(OUT)\cm_nls.obj $(DESTDIR)\lib
-     $(COPY) $(OUT)\cm_config.obj $(DESTDIR)\lib
+install_objs: $(CONF_DLLFILE) $(LANAHELPERLIB) $(OUT)\afsicf.obj
      $(COPY) $(OUT)\afsicf.obj $(DESTDIR)\lib
 
 install_headers: $(IDLFILES) $(INCFILES)
@@ -316,8 +313,7 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\libafsconf.lib \
-        $(DESTDIR)\lib\cm_nls.obj
+	$(DESTDIR)\lib\libafsconf.lib
 
 EXELIBS2 = \
         $(DESTDIR)\lib\afsrpc.lib \
