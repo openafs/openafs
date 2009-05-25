@@ -82,7 +82,6 @@ SYSOBJS = \
 	$(OUT)\pioctl_nt.obj
 
 WINNTAFSDOBJS =\
-	$(OUT)\cm_config.obj \
 	$(OUT)\afsrpc_c.obj
 
 DLLOBJS =\
@@ -95,8 +94,6 @@ DLLOBJS =\
 	$(SYSOBJS) \
 	$(WINNTAFSDOBJS) \
 	$(AUDITBJS) \
-	$(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj \
 	$(OUT)\afsauthent.res
 
 $(RXOBJS): $(RX)\$$(@B).c
@@ -142,7 +139,8 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
         $(DESTDIR)\lib\afs\afsprocmgmt.lib \
         $(DESTDIR)\lib\afslwp.lib \
-        $(DESTDIR)\lib\lanahelper.lib
+        $(DESTDIR)\lib\lanahelper.lib \
+	$(DESTDIR)\lib\libafsconf.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
 	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib shell32.lib

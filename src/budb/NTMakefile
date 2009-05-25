@@ -77,9 +77,7 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
-	$(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj
-
+	$(DESTDIR)\lib\libafsconf.lib
 
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib iphlpapi.lib shell32.lib

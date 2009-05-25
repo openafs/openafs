@@ -48,6 +48,9 @@
                 <Component Win64="$(var.Win64)" Id="cmf_afsrpc_DLL" Guid="$(var.cmf_afsrpc_DLL_guid)">
                     <File Id="fileafsrpc_DLL" Name="afsrpc.dll" LongName="afsrpc.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.dll"/>
                 </Component>
+                <Component Win64="$(var.Win64)" Id="cmf_libafsconf_DLL" Guid="$(var.cmf_libafsconf_DLL_guid)">
+                    <File Id="filelibafsconf_DLL" Name="libafscf.dll" LongName="libafsconf.dll" KeyPath="yes" DiskId="1"  src="$(var.LibDir)\libafsconf.dll"/>
+                </Component>
                 <Component Win64="$(var.Win64)" Id="cmf_afsauthent2_DLL" Guid="$(var.cmf_afsauthent2_DLL_guid)">
                     <File Id="fileafsauthent2_DLL" Name="afsauth.dll" LongName="afsauthent.dll" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsauthent.dll"/>
                 </Component>
@@ -77,6 +80,7 @@
               <?endif?>
                 <Component Win64="$(var.Win64)" Id="cmp_CommonCommonDebug" Guid="$(var.cmp_CommonCommonDebug_guid)">
                     <File Id="fileafsrpc_PDB" Name="afsrpc.pdb" LongName="afsrpc.pdb" KeyPath="yes" DiskId="1" src="$(var.LibDir)\afsrpc.pdb"/>
+                    <File Id="filelibafsconf_PDB" Name="libafscf.pdb" LongName="libafsconf.pdb" DiskId="1" src="$(var.LibDir)\libafsconf.pdb"/>
                     <File Id="fileafsauthent_PDB" Name="afsauth.pdb" LongName="afsauthent.pdb" DiskId="1" src="$(var.LibDir)\afsauthent.pdb"/>
                     <File Id="fileafspthread_PDB" Name="afspthrd.pdb" LongName="afspthread.pdb" DiskId="1" src="$(var.LibDir)\afspthread.pdb"/>
                     <File Id="fileTaAfsAppLib_PDB" Name="TaAfsApL.pdb" LongName="TaAfsAppLib.pdb" DiskId="1" src="$(var.ServerDir)\TaAfsAppLib.pdb"/>
@@ -1062,9 +1066,6 @@
                     <Component Win64="$(var.Win64)" Id="cmf_libosi_DLL" Guid="$(var.cmf_libosi_DLL_guid)">
                         <File Id="filelibosi_DLL" Name="libosi.dll" LongName="libosi.dll" KeyPath="yes" DiskId="1" />
                     </Component>
-                    <Component Win64="$(var.Win64)" Id="cmf_libafsconf_DLL" Guid="$(var.cmf_libafsconf_DLL_guid)">
-                        <File Id="filelibafsconf_DLL" Name="libafscf.dll" LongName="libafsconf.dll" KeyPath="yes" DiskId="1" />
-                    </Component>
                     <Component Win64="$(var.Win64)" Id="cmf_klog_EXE" Guid="$(var.cmf_klog_EXE_guid)">
                         <File Id="fileklog_EXE" Name="klog.exe" LongName="klog.exe" KeyPath="yes" DiskId="1" />
                     </Component>
@@ -1242,7 +1243,6 @@
                      <Component Win64="$(var.Win64)" Id="cmp_ClientProgramDebug" Guid="$(var.cmp_ClientProgramDebug_guid)">
                         <File Id="fileafsshare_PDB" Name="afsshare.pdb" LongName="afsshare.pdb" DiskId="1" />
                         <File Id="filelibosi_PDB" Name="libosi.pdb" LongName="libosi.pdb" DiskId="1" />
-                        <File Id="filelibafsconf_PDB" Name="libafscf.pdb" LongName="libafsconf.pdb" DiskId="1" />
                         <File Id="fileklog_PDB" Name="klog.pdb" LongName="klog.pdb" DiskId="1" />
                         <File Id="filetokens_PDB" Name="tokens.pdb" LongName="tokens.pdb" DiskId="1" />
                         <File Id="fileunlog_PDB" Name="unlog.pdb" LongName="unlog.pdb" DiskId="1" />
@@ -1653,15 +1653,13 @@
                             <File Id="filelanahelper_LIB" Name="LANAHE~1.lib" LongName="lanahelper.lib" DiskId="1" src="$(var.LibDir)lanahelper.lib" /> 
                             <File Id="filelibafsconf_LIB" Name="LIBAFS~1.lib" LongName="libafsconf.lib" DiskId="1" src="$(var.LibDir)libafsconf.lib" /> 
                             <File Id="filelibosi_LIB" Name="libosi.lib" LongName="libosi.lib" DiskId="1" src="$(var.LibDir)libosi.lib" /> 
-                            <File Id="filecm_config_OBJ" Name="CM_CON~1.obj" LongName="cm_config.obj" DiskId="1" src="$(var.LibDir)cm_config.obj" /> 
-                            <File Id="filecm_dns_OBJ" Name="cm_dns.obj" LongName="cm_dns.obj" DiskId="1" src="$(var.LibDir)cm_dns.obj" /> 
                         </Component>
                         <?ifdef CygwinArchives?>
                         <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib_Cygwin" Guid="$(var.cmp_SDK_Lib_Cygwin_guid)">
                           <File Id="fileafsauthent_A" Name="afsauth.a" LongName="afsauthent.a" DiskId="1" src="$(var.LibDir)afsauthent.a" />
                           <File Id="fileafspthread_A" Name="afspthrd.a" LongName="afspthread.a" DiskId="1" src="$(var.LibDir)afspthread.a" />
                           <File Id="fileafsrpc_A" Name="afsrpc.a" LongName="afsrpc.a" DiskId="1" src="$(var.LibDir)afsrpc.a" />
-                          <File Id="filelibafsconf_A" Name="libafscf.a" LongName="libafsconf.a" DiskId="1" src="$(var.ClientDir)libafsconf.a" />
+                          <File Id="filelibafsconf_A" Name="libafscf.a" LongName="libafsconf.a" DiskId="1" src="$(var.LibDir)libafsconf.a" />
                           <File Id="filelibosi_A" Name="libosi.a" LongName="libosi.a" DiskId="1" src="$(var.ClientDir)libosi.a" /> 
                         </Component>
                         <?endif?>
