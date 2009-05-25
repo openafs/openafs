@@ -76,6 +76,7 @@
 #include <rx/rxkad.h>
 
 #include <WINNT\afsreg.h>
+#include "cm.h"
 
 /*
  * TIMING _____________________________________________________________________
@@ -375,7 +376,7 @@ FUNC_INFO lsa_fi[] = {
 
 /* Static Prototypes */
 char *afs_realm_of_cell(krb5_context, struct afsconf_cell *);
-static long get_cellconfig_callback(void *, struct sockaddr_in *, char *);
+static long get_cellconfig_callback(void *, struct sockaddr_in *, char *, unsigned short);
 int KFW_AFS_get_cellconfig(char *, struct afsconf_cell *, char *);
 static krb5_error_code KRB5_CALLCONV KRB5_prompter( krb5_context context,
            void *data, const char *name, const char *banner, int num_prompts,
@@ -3390,7 +3391,7 @@ afs_realm_of_cell(krb5_context ctx, struct afsconf_cell *cellconfig)
 /**************************************/
 /* KFW_AFS_get_cellconfig():          */
 /**************************************/
-int 
+int
 KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell)
 {
     int	rc;
@@ -3409,8 +3410,9 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
     if (strlen(cell) == 0)
         strcpy(cell, local_cell);
 
-    /* WIN32: cm_SearchCellFile(cell, pcallback, pdata) */
-    rc = cm_SearchCellFileEx(cell, newcell, linkedcell, get_cellconfig_callback, (void*)cellconfig);
+    rc = cm_SearchCellRegistry(1, cell, newcell, linkedcell, get_cellconfig_callback, (void*)cellconfig);
+    if (rc && rc != CM_ERROR_FORCE_DNS_LOOKUP)
+        rc = cm_SearchCellFileEx(cell, newcell, linkedcell, get_cellconfig_callback, (void*)cellconfig);
 #ifdef AFS_AFSDB_ENV
     if (rc != 0) {
         int ttl;
@@ -3430,7 +3432,7 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
 /* get_cellconfig_callback():         */
 /**************************************/
 static long 
-get_cellconfig_callback(void *cellconfig, struct sockaddr_in *addrp, char *namep)
+get_cellconfig_callback(void *cellconfig, struct sockaddr_in *addrp, char *namep, unsigned short ipRank)
 {
     struct afsconf_cell *cc = (struct afsconf_cell *)cellconfig;
 

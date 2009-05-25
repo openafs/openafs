@@ -1408,7 +1408,9 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
         rock.cellp = cp;
         rock.flags = 0;
-        code = cm_SearchCellFileEx(cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
+        code = cm_SearchCellRegistry(1, cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
+        if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
+            code = cm_SearchCellFileEx(cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
 #ifdef AFS_AFSDB_ENV
         if (code) {
             if (cm_dnsEnabled) {

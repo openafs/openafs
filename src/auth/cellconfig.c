@@ -62,6 +62,8 @@ RCSID
 #include "keys.h"
 #ifdef AFS_NT40_ENV
 #ifdef AFS_AFSDB_ENV
+#include <cm.h>
+#include <cm_config.h>
 /* cm_dns.h depends on cellconfig.h */
 #include <cm_nls.h>
 #include <cm_dns.h>
@@ -526,6 +528,69 @@ GetCellNT(struct afsconf_dir *adir)
 	return GetCellUnix(adir);
     }
 }
+
+/* The following procedures and structs are used on Windows only
+ * to enumerate the Cell information distributed within the 
+ * Windows registry.  (See src/WINNT/afsd/cm_config.c)
+ */
+typedef struct _cm_enumCellRegistry {
+    afs_uint32 client;  /* non-zero if client query */
+    struct afsconf_dir *adir;
+} cm_enumCellRegistry_t;
+
+static long
+cm_serverConfigProc(void *rockp, struct sockaddr_in *addrp, 
+                    char *hostNamep, unsigned short rank)
+{
+    struct afsconf_cell *cellInfop = (struct afsconf_cell *)rockp;
+
+    if (cellInfop->numServers == MAXHOSTSPERCELL)
+        return 0;
+
+    cellInfop->hostAddr[cellInfop->numServers] = *addrp;
+    strncpy(cellInfop->hostName[cellInfop->numServers], hostNamep, MAXHOSTCHARS);
+    cellInfop->hostName[cellInfop->numServers][MAXHOSTCHARS-1] = '\0';
+    cellInfop->numServers++;
+
+    return 0;
+}
+
+static long
+cm_enumCellRegistryProc(void *rockp, char * cellNamep)
+{
+    long code;
+    cm_enumCellRegistry_t *enump = (cm_enumCellRegistry_t *)rockp;
+    char linkedName[256] = "";
+    int timeout = 0;
+    struct afsconf_entry *newEntry;
+
+
+    newEntry = malloc(sizeof(struct afsconf_entry));
+    if (newEntry == NULL)
+        return ENOMEM;
+    newEntry->cellInfo.numServers = 0;
+
+    code = cm_SearchCellRegistry(enump->client, cellNamep, NULL, linkedName, cm_serverConfigProc, &newEntry->cellInfo);
+    if (code == CM_ERROR_FORCE_DNS_LOOKUP)
+        code = cm_SearchCellByDNS(cellNamep, NULL, &timeout, cm_serverConfigProc, &newEntry->cellInfo);
+
+    if (code == 0) {
+        strncpy(newEntry->cellInfo.name, cellNamep, MAXCELLCHARS);
+        newEntry->cellInfo.name[MAXCELLCHARS-1];
+        if (linkedName[0])
+            newEntry->cellInfo.linkedCell = strdup(linkedName);
+        else
+            newEntry->cellInfo.linkedCell = NULL;
+        newEntry->cellInfo.timeout = timeout;
+        newEntry->cellInfo.flags = 0;
+
+        newEntry->next = enump->adir->entries;
+	enump->adir->entries = newEntry;
+    } else {
+        free(newEntry);
+    }
+    return code;
+}       
 #endif /* AFS_NT40_ENV */
 
 
@@ -541,10 +606,14 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     afs_int32 i;
     char tbuffer[256], tbuf1[256];
     struct stat tstat;
+#ifdef AFS_NT40_ENV
+    cm_enumCellRegistry_t enumCellRegistry = {0, 0};
+#endif /* AFS_NT40_ENV */
 
     /* figure out the local cell name */
 #ifdef AFS_NT40_ENV
     i = GetCellNT(adir);
+    enumCellRegistry.adir = adir;
 #else
     i = GetCellUnix(adir);
 #endif
@@ -565,6 +634,9 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     if (IsClientConfigDirectory(adir->name)) {
 	/* NT client config dir */
 	char *p;
+
+        enumCellRegistry.client = 1;
+
 	if (!afssw_GetClientCellServDBDir(&p)) {
 	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
 		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
@@ -600,6 +672,19 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     if (!tf) {
 	return -1;
     }
+
+    /* The CellServDB file is now open.  
+     * The following code parses the contents of the 
+     * file and creates a list with the first cell entry
+     * in the CellServDB file at the end of the list.
+     * 
+     * No checking is performed for duplicates.
+     * The side effects of this process are that duplicate
+     * entries appended to the end of the CellServDB file
+     * take precedence and are found in a shorter period 
+     * of time.
+     */
+
     while (1) {
 	tp = fgets(tbuffer, sizeof(tbuffer), tf);
 	if (!tp)
@@ -674,6 +759,18 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	curEntry->next = adir->entries;
 	adir->entries = curEntry;
     }
+
+#ifdef AFS_NT40_ENV
+     /* 
+      * Windows maintains a CellServDB list in the Registry
+      * that supercedes the contents of the CellServDB file.
+      * Prepending these entries to the head of the list 
+      * is sufficient to enforce the precedence.
+      */
+     cm_EnumerateCellRegistry( enumCellRegistry.client,
+                               cm_enumCellRegistryProc,
+                               &enumCellRegistry);
+#endif /* AFS_NT40_ENV */
 
     /* Read in the alias list */
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLALIAS_FILE, NULL);
@@ -994,13 +1091,14 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     struct afsconf_entry DNSce;
     afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
+    unsigned short ipRanks[AFSMAXCELLHOSTS];
     int numServers;
     int rc;
     int ttl;
 
     DNSce.cellInfo.numServers = 0;
     DNSce.next = NULL;
-    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, &numServers,
+    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, ipRanks, &numServers,
 		      &ttl);
     /* ignore the ttl here since this code is only called by transitory programs
      * like klog, etc. */

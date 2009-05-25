@@ -72,7 +72,8 @@ extern void cm_AddCellToNameHashTable(cm_cell_t * cellp);
 
 extern void cm_AddCellToIDHashTable(cm_cell_t * cellp);
 
-extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep);
+extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep, 
+                           unsigned short ipRank);
 
 extern cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags);
 
