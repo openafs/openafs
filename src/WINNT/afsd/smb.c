@@ -2095,7 +2095,9 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         }
         /* Get the full name for this cell */
         cellname = cm_ClientStringToFsStringAlloc(p, -1, NULL);
-        code = cm_SearchCellFile(cellname, ftemp, 0, 0);
+        code = cm_SearchCellRegistry(1, cellname, ftemp, 0, 0, 0);
+        if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
+            code = cm_SearchCellFile(cellname, ftemp, 0, 0);
 #ifdef AFS_AFSDB_ENV
         if (code && cm_dnsEnabled) {
             int ttl;

@@ -28,7 +28,7 @@ osi_rwlock_t cm_cellLock;
  *
  * At the present time the return value is ignored by the caller.
  */
-long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
+long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, unsigned short ipRank)
 {
     cm_server_t *tsp;
     cm_serverRef_t *tsrp;
@@ -53,6 +53,8 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep)
     }       
     else
         tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, NULL, probe ? 0 : CM_FLAG_NOPROBE);
+
+    tsp->ipRank = ipRank;
 
     /* Insert the vlserver into a sorted list, sorted by server rank */
     tsrp = cm_NewServerRef(tsp, 0);
@@ -99,7 +101,9 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 
         rock.cellp = cp;
         rock.flags = flags;
-        code = cm_SearchCellFileEx(cp->name, NULL, cp->linkedName, cm_AddCellProc, &rock);
+        code = cm_SearchCellRegistry(1, cp->name, NULL, cp->linkedName, cm_AddCellProc, &rock);
+        if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
+            code = cm_SearchCellFileEx(cp->name, NULL, cp->linkedName, cm_AddCellProc, &rock);
         if (code == 0) {
             lock_ObtainMutex(&cp->mx);
 	    cp->timeout = time(0) + 7200;
@@ -271,7 +275,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
 
         rock.cellp = cp;
         rock.flags = flags;
-        code = cm_SearchCellFileEx(namep, fullname, linkedName, cm_AddCellProc, &rock);
+        code = cm_SearchCellRegistry(1, namep, fullname, linkedName, cm_AddCellProc, &rock);
+        if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
+            code = cm_SearchCellFileEx(namep, fullname, linkedName, cm_AddCellProc, &rock);
         if (code) {
             osi_Log4(afsd_logp,"in cm_GetCell_gen cm_SearchCellFileEx(%s) returns code= %d fullname= %s linkedName= %s", 
                       osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname),
