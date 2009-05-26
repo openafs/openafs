@@ -7,8 +7,10 @@ openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
       when the real and effective credentials of a process differ to avoid
       running afoul of checks in newer Linux kernels that cause oops.
       (Closes: #528785)
-    - STABLE14-linux-mmap-antirecursion-fix-20090512: improvements in
-      flag setting and locking around recursive mmap protection.
+    - STABLE14-linux-mmap-antirecursion-fix-20090512 and
+      STABLE14-linux-mmap-antirecursion-avoid-spurious-eio-20090526:
+      improvements in flag setting and locking around recursive mmap
+      protection.
     - STABLE14-memcache-write-on-laststore-20090512: write back dirty
       pages on last store with memcache to avoid losing changes.
     - STABLE14-background-fsync-consistency-issues-20090522: file
