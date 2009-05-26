@@ -11,6 +11,8 @@ openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
       flag setting and locking around recursive mmap protection.
     - STABLE14-memcache-write-on-laststore-20090512: write back dirty
       pages on last store with memcache to avoid losing changes.
+    - STABLE14-background-fsync-consistency-issues-20090522: file
+      descriptor handling fixes for the file server.
   * Provide an openafs-modules-dkms package that uses DKMS to dynamically
     build kernel modules for the local kernel and document this option in
     README.modules.  This is an alternative to installing
