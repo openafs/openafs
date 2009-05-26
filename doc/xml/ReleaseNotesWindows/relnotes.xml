@@ -289,7 +289,8 @@
     </section>
     <section>
       <title id='Locating_VLDB_via_DNS'>3.5. Locating AFS Volume Database Servers via DNS </title>
-      <para>The OpenAFS for Windows client will use DNS AFSDB records to discover the location of AFS Volume Database servers when entries for the cell are not present in the client's CellServDB file (\%PROGRAMFILES%\OpenAFS\Client\CellServDB).</para>
+      <para>The OpenAFS for Windows client will use DNS AFSDB records to discover the location of AFS Volume Database servers when entries for the cell are not present in the client's CellServDB file (\%PROGRAMFILES%\OpenAFS\Client\CellServDB).
+      Also see <link linkend="Registry_VLDB_Configuration">Registry Configuration for AFS Volume Database Servers</link>.</para>
     </section>
     <section>
       <title id='Integrated_Logon'>3.6. Obtaining AFS Tokens as a Integrated Part of Windows Logon</title>
@@ -904,6 +905,18 @@
       <para>aklog and Network Identity Manager will automatically obtain tokens for the linked cell when tokens for the other cell is specified.
       </para>
     </section>
+    <section> 
+    <title id="Registry_VLDB_Configuration">3.49 Registry Configuration for AFS Volume Database Servers</title>
+    <para>Beginning with the 1.5.60 release, the <link linkend="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB">[HKLM\SOFTWARE\OpenAFS\Client\CellServDB]</link>
+    registry key can be used to distribute Volume Database Server location information either as a supplement to the <emphasis>CellServDB file</emphasis> or
+    as a substitute for it.  The precedence order for lookups is: Registry, File, and then DNS.</para>
+    </section>
+    <section> 
+    <title id="HTMLHelp_Documentation">3.50 Documentation Converted to Windows HTML Help</title>
+    <para>Starting with the 1.5.60 release, this document, the OpenAFS Administrator Guide and the OpenAFS User Guide are provided in HTML Help format instead 
+    of raw HTML pages.</para>
+    </section>
+
   </chapter>
   <chapter id='chap_4'>
     <title id='How_to_Debug_Problems'>How to Debug Problems with OpenAFS for Windows</title>
@@ -3328,6 +3341,131 @@ Default: &lt;none&gt;</para>
           </tgroup>
         </informaltable>
       </section>
+
+      <section>
+        <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB]</title>
+        <para>The <emphasis>CellServDB</emphasis> key is an alternative to the <emphasis>CellServDB</emphasis> file that can be used either to supplement
+              or override its contents.   This registry entry is meant to provide organizations that centrally manage their client configurations using
+              <emphasis>Active Directory Group Policy</emphasis> a means of updating records for individual cells or servers without pushing out a new file.
+       </para>
+       <para>At the present time the <emphasis>CellServDB</emphasis> key contains no values; only subkeys.  Each subkey is the name of a <emphasis>Cell</emphasis>.  For example, <emphasis>grand.central.org</emphasis>.
+       </para>
+       <para>Support for registry <emphasis>CellServDB</emphasis> configuration was added in 1.5.60.</para>
+       </section>
+
+      <section>
+        <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;cellname&gt;]</title>
+        <para>The actual name of the <emphasis>&lt;cellname&gt;</emphasis> key is the full name of the cell whose configuration is being specified.  The <emphasis>&lt;cellname&gt;</emphasis> key contains both values and subkeys.  Each subkey represents a single host name or IP address.  When a host is to be known by more than one name or IP address, a separate subkey should be created for each.
+        Unlike the &lt;cellname&gt; key name, the &lt;server&gt; key names do not have to be actual host names.</para>
+        <informaltable frame='all'>
+          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
+            <colspec colwidth='447pt' colname='c1' />
+            <tbody>
+              <row>
+                <entry>
+                  <para>
+                    <emphasis>Value: "Description"</emphasis>
+                  </para>
+                  <para>Type: REG_SZ
+                  </para>
+                  <para>Default: &lt;none&gt;</para>
+                  <para>This value is used to store a description of the Cell appropriate for display in end user facing tools.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>
+                    <emphasis>Value: "ForceDNS"</emphasis>
+                  </para>
+                  <para>Type: REG_DWORD</para>
+                  <para>Range: 0 or 1</para>
+                  <para>Default: 0 if &lt;server&gt; subkeys exist; 1 otherwise</para>
+                  <para>When set to 1 all server configuration provided in the registry or the <emphasis>CellServDB file</emphasis> is ignored and DNS AFSDB lookups are used instead.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>
+                    <emphasis>Value: "LinkedCell"</emphasis>
+                  </para>
+                  <para>Type: REG_SZ
+                  </para>
+                  <para>Default: &lt;none&gt;</para>
+                  <para>This value names an alternative cell to which this cell should be linked.  When two cells are linked by the OpenAFS client, volume lookups that fail in the specified cell will be searched for in the linked cell
+                  and when tokens are requested for one of the cells they will be obtained for both.
+                  This functionality can be used for example to develop a test cell that is equivalent to a production cell with the exception that it substitutes test versions of volumes
+                  for the production versions.  Another use is to assist in the transition from one cell name to another.</para>
+                  <para>See also: <link linkend="Linked_Cells">Linked Cells</link>.</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </section>
+
+      <section>
+        <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_Server'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;cellname&gt;\&lt;server&gt;]</title>
+        <para>The actual name of the <emphasis>&lt;server&gt;</emphasis> key may be a fully qualified domain name of the server whose configuration is being specified.  
+        If a domain name is specified as the key name, all values become optional.
+        </para>
+        <informaltable frame='all'>
+          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
+            <colspec colwidth='447pt' colname='c1' />
+            <tbody>
+              <row>
+                <entry>
+                  <para>
+                    <emphasis>Value: "HostName"</emphasis>
+                  </para>
+                  <para>Type: REG_SZ
+                  </para>
+                  <para>Default: &lt;none&gt;</para>
+                  <para>This value is used to specify a fully qualified domain name appropriate that matches either a DNS A or DNS CNAME record.  If provided, this value supercedes
+                  the name of the &lt;server&gt; key.  It is recommended that the value of this field be terminated with a period in order to avoid the use of domain substitution
+                  during the gethostbyname() evaluation.
+                  </para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>
+                    <emphasis>Value: "IPv4Address"</emphasis>
+                  </para>
+                  <para>Type: REG_SZ</para>
+                  <para>Default: &lt;none&gt;</para>
+                  <para>If the DNS host name lookup fails this value will be used as the IPv4 address for the server.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>
+                    <emphasis>Value: "Rank"</emphasis>
+                  </para>
+                  <para>Type: REG_DWORD
+                  </para>
+                  <para>Range: 0..65535</para>
+                  <para>Default: 0</para>
+                  <para>This value specifies the default server preference.  A value of 0 indicates that no preference has been specified.  When non-zero values
+                  are specified lower values indicate a stronger preference than higher values.</para>
+                </entry>
+              </row>
+              <row>
+                <entry>
+                  <para>
+                    <emphasis>Value: "Comment"</emphasis>
+                  </para>
+                  <para>Type: REG_SZ</para>
+                  <para>Default: &lt;none&gt;</para>
+                  <para>A text string that can be displayed to end users to describe the server.</para>
+                </entry>
+              </row>
+            </tbody>
+          </tgroup>
+        </informaltable>
+      </section>
+
+
+
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance]</title>
         <informaltable frame='all'>
@@ -4081,6 +4219,8 @@ Default: &lt;none&gt;</para>
         </informaltable>
       </section>
     </section>
+
+
     <section>
       <title id='OpenAFS_Service_Environment_Variables'>A.4 OpenAFS Client Service Environment Variables</title>
       <informaltable frame='all'>
