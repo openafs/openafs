@@ -1,3 +1,86 @@
+Since 1.5.59
+ * A fix to the pioctl library to support drive substitution 
+   to UNC paths.  (SUBST <d:> <\\afs\cell\path>).
+
+ * On April 9th Microsoft released a Hot Fix for Windows Server 2003 SP2 
+   that corrects a deadlock in the smb redirector and also adds new 
+   functionality that permits the AFS SMB server to be given a longer 
+   timeout than is normally the case.  New functionality has been added 
+   to configure these additional LanmanWorkstation\Parameter values.
+   (This functionality has been backported to XP SP3 and is scheduled
+   to be released on June 5th.)
+   
+ * The BackConnectionHostNames registry value configuration was broken 
+   when dynamic re-establishment of Netbios Name registrations was added.
+   Restore it.
+
+ * Hidden vos commands are revealed.
+
+ * If the "DisableLoopbackCheck" registry value is set, do not unset 
+   it during the same service session.
+
+ * Reorganize code that prevents multiple Store operations to the same 
+   File.
+
+ * Modify IsPathInAfs test in Explorer Shell Extension and fs.exe to 
+   permit broken symlinks to be treated as being in AFS.
+
+ * Fix vos commands that output 64-bit integer values.
+
+ * Cygwin Import Libraries are provided in the SDK for all OpenAFS DLLs.
+   Permits building cygwin applications against OpenAFS libraries. 
+
+ * OpenAFS Release Notes, Administrator Guide and User Guide now installed 
+   as Windows HTML Help (.CHM) files.  
+
+ * NSIS installer does a much better job of cleaning up files left 
+   over from previous installs.
+
+ * Fix RT#124787, a race condition between "fs flush <dir>", "fs flushvolume", 
+   or "fs flushall" and on-going directory operations that can result in 
+   afsd_service.exe crashing.
+
+ * Add support for DNS SRV records in place of AFSDB records.  
+   _afs3-vlserver._udp.<cellname>.Â  Priority field is used.  
+   Weight is currently ignored.
+
+ * Add a method of specifying Client CellServDB information within the 
+   registry that can be used to either override the CellServDB file or 
+   force the use of DNS lookups for a given cell.
+
+   The registry schema is as follows:
+
+     HKLM\SOFTWARE\OpenAFS\{Client,Server}\CellServDB\[cellname]\
+       "LinkedCell" REG_SZ "[cellname]"
+       "Description" REG_SZ "[comment]"
+       "ForceDNS" DWORD {0,1}
+
+     HKLM\SOFTWARE\OpenAFS\{Client,Server}\CellServDB\[cellname]\[servername]\
+       "HostName" REG_SZ "[hostname]"  Default: [servername]
+       "IPv4Address" REG_SZ "[address]"  Used only if gethostbyname() fails.
+       "IPv6Address" REG_SZ "[address]" <future>
+       "Comment" REG_SZ "[comment]"
+       "Rank" DWORD "0..65535"  Default: 0
+       "Clone" DWORD "{0,1}" <future: server only>
+       "vlserver" DWORD "7003" <future>
+       "ptserver" DWORD ... <future>
+
+   ForceDNS is implied non-zero if there are no [servername]
+   keys under the [cellname] key. Otherwise, ForceDNS is zero.
+   If [servername] keys are specified and none of them evaluate
+   to a valid server configuration, the return code is success.
+   This prevents failover to the CellServDB file or DNS.
+   
+   Only one of "HostName" or "IPv4Address" is required.  "HostName"
+   is optional if [servername] is the host name.
+
+ * Extend registry based CellServDB functionality to 
+   afsconf_GetCellInfo() interface used by aklog and many 
+   other command line utilities.
+
+ * libafsconf.dll moved from OpenAFS\Client\Program to OpenAFS\Common
+   as it is now used by both client and server components.
+
 Since 1.5.58
  * PriorityClass of afsd_service.exe process raised to 
    "High" to match the priority of the system services 
