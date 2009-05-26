@@ -1,3 +1,19 @@
+openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
+
+  * Provide an openafs-modules-dkms package that uses DKMS to dynamically
+    build kernel modules for the local kernel and document this option in
+    README.modules.  This is an alternative to installing
+    openafs-modules-source and building kernel modules for each new kernel
+    with module-assistant or make-kpkg.  (Closes: #168852, #525131)
+    (LP: #52786, #364426, #369875)
+  * Have openafs-client recommend at least the current source version of
+    openafs-modules-source or openafs-modules-dkms instead of any old
+    version.  While the API probably hasn't changed, it's best practice to
+    keep a relatively close match between the userspace andn the kernel
+    module version.  (LP: #369875)
+
+ -- Russ Allbery <rra@debian.org>  Tue, 26 May 2009 11:57:22 -0700
+
 openafs (1.4.10+dfsg1-1) unstable; urgency=high
 
   * New upstream release.
