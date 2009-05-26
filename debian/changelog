@@ -1,5 +1,10 @@
 openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
 
+  * Apply upstream CVS deltas:
+    - STABLE14-linux26-defer-cred-changing-20090511: defer changing groups
+      when the real and effective credentials of a process differ to avoid
+      running afoul of checks in newer Linux kernels that cause oops.
+      (Closes: #528785)
   * Provide an openafs-modules-dkms package that uses DKMS to dynamically
     build kernel modules for the local kernel and document this option in
     README.modules.  This is an alternative to installing
