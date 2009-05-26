@@ -5,6 +5,8 @@ openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
       when the real and effective credentials of a process differ to avoid
       running afoul of checks in newer Linux kernels that cause oops.
       (Closes: #528785)
+    - STABLE14-linux-mmap-antirecursion-fix-20090512: improvements in
+      flag setting and locking around recursive mmap protection.
   * Provide an openafs-modules-dkms package that uses DKMS to dynamically
     build kernel modules for the local kernel and document this option in
     README.modules.  This is an alternative to installing
