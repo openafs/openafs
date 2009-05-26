@@ -340,7 +340,7 @@ PODS = \
         pod8\vsys.pod                  \
         pod8\xfs_size_check.pod
 
-index.html: $(PODS)
+html\index.html: $(PODS)
         @echo Building man pages in HTML format
         perl generate-html
 
