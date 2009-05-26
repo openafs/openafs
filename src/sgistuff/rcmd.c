@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sgistuff/rcmd.c,v 1.1.2.2 2005/08/16 18:00:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/sgistuff/rcmd.c,v 1.1.2.3 2009/04/27 19:17:42 shadow Exp $");
 
 #ifdef aiws /*AIX*/
 #include <sys/types.h>
@@ -55,8 +55,8 @@ RCSID
 #endif /* defined(AFS_HPUX_ENV) */
 #ifdef	TCP_DEBUG
 #include <sys/syslog.h>
-#	define	DPRINTF(args)	dprintf args
-dprintf(args)
+#	define	DPRINTF(args)	afs_dprintf args
+afs_dprintf(args)
      char *args;
 {
     char **argv;

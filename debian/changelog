@@ -1,6 +1,8 @@
 openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
 
   * Apply upstream CVS deltas:
+    - STABLE14-dprintf-rename-20090427: rename AFS's dprintf to avoid
+      conflicts with one in the kernel.
     - STABLE14-linux26-defer-cred-changing-20090511: defer changing groups
       when the real and effective credentials of a process differ to avoid
       running afoul of checks in newer Linux kernels that cause oops.
