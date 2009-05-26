@@ -50,10 +50,10 @@ IGNORE += -Xpam_afs
 # These will be useful in 1.5, but aren't useful yet.
 IGNORE += -Xknfs -Xrmtsysd
 
-# These variable is used only by get-orig-source, which will normally only be
-# run by maintainers.
-VERSION   = 1.4.10
-DEBVERS   = 1.4.10+dfsg1
+# These variables are used by get-orig-source and to construct dkms.conf.
+DEBVERS  := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
+		| cut -d- -f1)
+VERSION  := $(shell echo '$(DEBVERS)' | sed -e 's/[+-].*//' -e 's/~//g')
 UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
 
 # Download the upstream source, merge in the doc tarball, and do the
