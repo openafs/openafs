@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook V4.3//EN"
-	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+	"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd" [
+<!ENTITY version SYSTEM "version.xml">
+]>
+
 <book>
   <bookinfo>
     <title>OpenAFS for Windows Release Notes</title>
-    <subtitle>Version 1.5.60</subtitle>
     <copyright>
       <year>2003-2009</year>
       <holder>Secure Endpoints Inc.</holder>
@@ -12,6 +14,9 @@
     <legalnotice>
       <para>This documentation is covered by the MIT License.</para>
     </legalnotice>
+    <revhistory>
+        &version;
+    </revhistory>
     <abstract>
       <para>This document provides a series of usage notes regarding the OpenAFS for Windows
       client, supported platforms, contribution information, debugging techniques, and 
@@ -21,10 +26,7 @@
   </bookinfo>
   <preface>
     <title id='Preface'>Preface</title>
-    <para>
-      <emphasis role='bold'>OpenAFS for Windows 1.5.60 (with Unicode Support)</emphasis>
-      <emphasis role='bold'>Release Notes</emphasis>
-    </para>
+
     <para>The Andrew File System (AFS) is a location-independent file system that uses a local cache to increase its performance.  An AFS client accesses files anonymously or via a Kerberos authentication.  The global AFS is partitioned into cells.  The AFS cell is a collection of AFS volumes that are administered by a common entity.   AFS cells can be administered by a department even when the Kerberos realm used for local authentication is managed by a much larger organization.  AFS clients and servers take advantage of Kerberos cross realm authentication to enable authenticated access by entities located outside the local realm.  Authorization is enforced by the use of directory level access control lists which can consist of individual or group identities.  </para>
     <para>The AFS volume is a tree of files and sub-directories.  AFS volumes are created by administrators and are joined to an AFS cell via the use of a mount point.   Once a volume is created, users can create files and directories as well as mount points and symlinks within the volume without regard for the physical location of the volume.  Administrators can move the volume to another server as necessary without the need to notify users.   In fact, the volume move can occur while files in the volume are in use.  </para>
     <para>AFS volumes can be replicated to read-only copies.   When accessing files from a read-only replica, clients will read all of the data from a single replica.   If that replica becomes unavailable, the clients will failover to any replica that is reachable.  Users of the data are unaware of where the replicas are stored or which one is being accessed.   The contents of the replicas can be updated at any time by
@@ -1140,7 +1142,7 @@
     </para>
   </chapter>
   <chapter id='chap_6'>
-    <title id='Contributing_to_OpenAFS'>6. How to Contribute to the Development of OpenAFS for Windows</title>
+    <title id='Contributing_to_OpenAFS'>How to Contribute to the Development of OpenAFS for Windows</title>
     <para>Contributions to the development of OpenAFS for Windows are continuously needed.  Contributions may take many forms including cash donations, support contracts, donated developer time, and even donated tech writer time.</para>
     <section>
       <title id='USENIX_OpenAFS_Fund'>6.1. The USENIX OpenAFS Fund </title>
