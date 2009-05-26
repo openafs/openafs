@@ -29,6 +29,12 @@ AFS_OBJDIR=$(AFSROOT)\obj\$(SYS_NAME)
 DESTDIR=$(AFSROOT)\dest\$(SYS_NAME)
 !ENDIF
 
+!IFNDEF NOCYGWIN
+WIXCYGOPT=-dCygwinArchives
+!ELSE
+WIXCYGOPT=
+!ENDIF
+
 CD = cd
 MKDIR = mkdir
 
@@ -37,7 +43,7 @@ NTMAKELANG = nmake /nologo  /f ntmakefile en_US
 NTMAKE_HEADERS = nmake /nologo  /f ntmakefile install_headers
 NTMAKE_OBJS = nmake /nologo /f ntmakefile install_objs
 
-#debug statement support jumping to last know error
+#debug statement support jumping to last known error
 DOCD=$(SRC)\DOLASTCMP.BAT
 
 config:
@@ -660,10 +666,24 @@ man-pages:
    $(NTMAKE)
    $(CD) ..\..
 
-NSIS.i386: loopback man-pages
+documentation:
+   @echo ***** $@
+   $(DOCD) $(DOC)\xml\ReleaseNotesWindows
+   $(CD) $(DOC)\xml\ReleaseNotesWindows
+   $(NTMAKE)
+   $(DOCD) ..\UserGuide
+   $(CD) ..\UserGuide
+   $(NTMAKE)
+   $(DOCD) ..\AdminGuide
+   $(CD) ..\AdminGuide
+   $(NTMAKE)
+   $(DOCD) ..\..\..
+   $(CD) ..\..\..
+
+NSIS.i386: loopback man-pages documentation
    @echo ***** Making NSIS Installer
-   $(DOCD) $(SRC)\WINNT\install\NSIS
-   $(CD) $(SRC)\WINNT\install\NSIS
+   $(DOCD) $(SRC)\WINNT\install\$@
+   $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
@@ -672,17 +692,17 @@ NSIS.AMD64:
 
 NSIS: NSIS.$(CPU)
 
-wix: loopback man-pages
+wix: loopback man-pages documentation
    @echo ***** Making Wix MSI Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-media: install man-pages NSIS wix
+media: install NSIS wix
 
-install-nsis: install man-pages NSIS
+install-nsis: install NSIS
 
-install-wix: install man-pages wix
+install-wix: install wix
 
 
