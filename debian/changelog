@@ -1,4 +1,4 @@
-openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
+openafs (1.4.10+dfsg1-2) unstable; urgency=low
 
   * Apply upstream CVS deltas:
     - STABLE14-dprintf-rename-20090427: rename AFS's dprintf to avoid
@@ -33,7 +33,7 @@ openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
     (LP: #364426)
   * Build-depend on cpio (used for generating openafs-modules-source).
 
- -- Russ Allbery <rra@debian.org>  Tue, 26 May 2009 11:57:22 -0700
+ -- Russ Allbery <rra@debian.org>  Tue, 26 May 2009 21:18:54 -0700
 
 openafs (1.4.10+dfsg1-1) unstable; urgency=high
 
