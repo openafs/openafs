@@ -12,12 +12,18 @@
  */
 
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#include <sys/file.h>
+#else
+#include <fcntl.h>
+#include <io.h>
+#define L_SET SEEK_SET
+#endif
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/file.h>
 
 #include <afsconfig.h>
 #include <afs/param.h>
@@ -30,7 +36,9 @@ RCSID
 #include <afs/afsutil.h>
 #include <errno.h>
 #include <lock.h>
+#ifndef _WIN32
 #include <netinet/in.h>
+#endif
 #define UBIK_INTERNALS
 #include <ubik.h>
 #include <rx/xdr.h>

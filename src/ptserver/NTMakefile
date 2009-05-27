@@ -86,6 +86,7 @@ $(PTSERVER): $(PTSERVER_EXEOBJS) $(RXKADOBJS) $(PTSERVER_EXELIBS)
 
 PTS = $(DESTDIR)\bin\pts.exe
 PTCLIENT = $(DESTDIR)\bin\ptclient.exe
+PT_UTIL  = $(DESTDIR)\bin\pt_util.exe
 
 PTS_EXEOBJS =\
 	$(OUT)\pts.obj \
@@ -95,6 +96,14 @@ PTCLIENT_EXEOBJS =\
 	$(OUT)\ptclient.obj \
         $(OUT)\display.obj \
 	$(OUT)\ptclient.res
+
+PT_UTIL_EXEOBJS = \
+        $(OUT)\pt_util.obj \
+        $(OUT)\ptutils.obj \
+        $(OUT)\ubik.obj \
+        $(OUT)\utils.obj \
+        $(OUT)\map.obj \
+        $(OUT)\pts.res
 
 PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -119,6 +128,12 @@ $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS)
         $(CODESIGN_USERLAND)
 
 $(PTCLIENT): $(PTCLIENT_EXEOBJS) $(PTS_EXELIBS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
+
+$(PT_UTIL): $(PT_UTIL_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -163,7 +178,7 @@ pterror.h pterror.c: pterror.et
 ############################################################################
 # install pts, ptserver and afsprot.lib
 
-install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(PTCLIENT) $(OUT)\readgroup.exe \
+install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(PTCLIENT) $(PT_UTIL) $(OUT)\readgroup.exe \
 	$(OUT)\readpwd.exe  $(OUT)\testpt.exe $(OUT)\db_verify.exe  \
 	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
 	$(DESTDIR)\root.server\usr\afs\bin\ptclient.exe \
@@ -183,6 +198,9 @@ $(DESTDIR)\root.server\usr\afs\bin\pts.exe: $(PTS)
 
 $(DESTDIR)\root.server\usr\afs\bin\ptclient.exe: $(PTCLIENT)
 	$(COPY) $(PTCLIENT) $(DESTDIR)\root.server\usr\afs\bin\ptclient.exe
+
+$(DESTDIR)\root.server\usr\afs\bin\pt_util.exe: $(PT_UTIL)
+	$(COPY) $(PT_UTIL) $(DESTDIR)\root.server\usr\afs\bin\pt_util.exe
 
 $(INCFILEDIR)\afs\prserver.h: $(INCFILEDIR)\afs\ptserver.h
 	$(COPY)	$(INCFILEDIR)\afs\ptserver.h $(INCFILEDIR)\afs\prserver.h
@@ -204,7 +222,7 @@ clean::
 	$(DEL) ptint.cs.c ptint.ss.c ptint.xdr.c ptint.h
 	$(DEL) $(OUT)\readgroup.exe $(OUT)\readpwd.exe $(OUT)\db_verify.exe $(OUT)\testpt.exe 
 	$(DEL) pterror.h pterror.c
-	$(DEL) $(PTS) $(PTCLIENT)
+	$(DEL) $(PTS) $(PTCLIENT) $(PT_UTIL)
 
 ############################################################################
 # tests?
