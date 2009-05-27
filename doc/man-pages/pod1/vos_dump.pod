@@ -9,12 +9,14 @@ vos_dump - Converts a volume into ASCII format and writes it to a file
 
 B<vos dump> S<<< B<-id> <I<volume name or ID>> >>> S<<< [B<-time> <I<dump from time>>] >>>
     S<<< [B<-file> <I<dump file>>] >>> S<<< [B<-server> <I<server>>] >>>
-    S<<< [B<-partition> <I<partition>>] >>> S<<< [B<-cell> <I<cell name>>] >>>
-    [B<-noauth>] [B<-localauth>] [B<-verbose>] [B<-help>]
+    S<<< [B<-partition> <I<partition>>] >>> [B<-clone>] [B<-omitdirs>]
+    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+    [B<-verbose>] [B<-help>]
 
 B<vos du> S<<< B<-i> <I<volume name or ID>> >>> S<<< [B<-t> <I<dump from time>>] >>>
     S<<< [B<-f> <I<dump file>>] >>> S<<< [B<-s> <I<server>>] >>> S<<< [B<-p> <I<partition>>] >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+    [B<-cl>] [B<-o>] S<<< [B<-ce> <I<cell name>>] >>> [B<-n>] [B<-l>]
+    [B<-v>] [B<-h>]
 
 =for html
 </div>
@@ -129,6 +131,23 @@ the B<-partition> argument along with this one.
 
 Specifies the partition on which the volume resides. Provide the
 B<-server> argument along with this one.
+
+=item B<-clone>
+
+Normally, B<vos dump> locks the volume and dumps it, which blocks writes
+to the volume while the dump is in progress.  If this flag is given, B<vos
+dump> will instead clone the volume first (similar to what B<vos move>
+would do) and then dumps the clone.  This can significantly decrease the
+amount of time the volume is kept locked for dumps of large volumes.
+
+=item B<-omitdirs>
+
+By default, B<vos dump> includes all directory objects in an incremental
+dump whether they've been changed or not.  If this option is given,
+unchanged directories will be omitted.  This will reduce the size of the
+dump and not cause problems if the incremental is restored, as expected,
+on top of a volume containing the correct directory structure (such as one
+created by restoring previous full and incremental dumps).
 
 =item B<-cell> <I<cell name>
 
