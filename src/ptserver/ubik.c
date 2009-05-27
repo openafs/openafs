@@ -7,12 +7,13 @@ RCSID
     ("$Header$");
 
 #include <sys/types.h>
-#ifndef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
+#include <io.h>
+#else
 #include <netinet/in.h>
 #endif
 #include <string.h>
 #include <stdarg.h>
-#include <io.h>
 
 #include <lock.h>
 #define UBIK_INTERNALS
