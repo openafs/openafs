@@ -5,7 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-VERSFILE=AFS_component_version_number
+PACKAGE=@PACKAGE@
+VERSION=@VERSION@
 
 $(VERSFILE).o: $(VERSFILE).c
 

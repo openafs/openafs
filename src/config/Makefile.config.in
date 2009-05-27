@@ -135,3 +135,6 @@ LDFLAGS=${XLDFLAGS} ${ARCHFLAGS}
 
 .c.o:
 	$(CCOBJ) $(CFLAGS) -c $<
+
+# Default component version file, will be overridden later if necessary
+VERSFILE=@VERSFILE@

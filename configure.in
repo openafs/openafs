@@ -20,10 +20,28 @@ if test -d 'doc/man-pages' ; then
 else
     MAN_MAKEFILE=
 fi
+if test -f 'doc/xml/AdminGuide/Makefile.in' ; then
+   ADMINGUIDE_MAKEFILE="doc/xml/AdminGuide/Makefile"
+else
+   ADMINGUIDE_MAKEFILE=
+fi
+if test -f 'doc/xml/QuickStartUnix/Makefile.in' ; then
+   QSUNIX_MAKEFILE="doc/xml/QuickStartUnix/Makefile"
+else
+   QSUNIX_MAKEFILE=
+fi
+if test -f 'doc/xml/UserGuide/Makefile.in' ; then
+   USERGUIDE_MAKEFILE="doc/xml/UserGuide/Makefile"
+else
+   USERGUIDE_MAKEFILE=
+fi
 
 AC_OUTPUT(             \
 Makefile               \
 ${MAN_MAKEFILE} \
+${ADMINGUIDE_MAKEFILE} \
+${QSUNIX_MAKEFILE} \
+${USERGUIDE_MAKEFILE} \
 src/afs/Makefile \
 src/afsd/Makefile \
 src/afsmonitor/Makefile \
@@ -46,6 +64,7 @@ src/comerr/Makefile \
 src/comerr/test/Makefile \
 src/config/Makefile \
 src/config/Makefile.config \
+src/config/Makefile.version-CML \
 src/config/Makefile.version-NOCML \
 src/dauth/Makefile \
 src/des/Makefile \

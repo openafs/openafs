@@ -23,7 +23,7 @@ all: config mkvers \
 
 Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
 	$(RM) -f Makefile.version
-	if	[ -r SRC/../CML/state ] ; \
+	if	[ -r @TOP_SRCDIR@/CML/state ] ; \
 	then	$(CP) ${srcdir}/Makefile.version-CML Makefile.version ; \
 	else	$(CP) Makefile.version-NOCML Makefile.version ; \
 	fi
@@ -32,7 +32,7 @@ Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
 # AFS component version string file generation targets
 #
 AFS_component_version_number.c: Makefile.version
-	$(MAKE) -f Makefile.version AFS_component_version_number.c
+	$(MAKE) -f Makefile.component AFS_component_version_number.c
 
 #
 # App build/install targets

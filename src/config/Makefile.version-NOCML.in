@@ -7,7 +7,6 @@
 
 PACKAGE=@PACKAGE@
 VERSION=@VERSION@
-VERSFILE=AFS_component_version_number
 
 $(VERSFILE).o: $(VERSFILE).c
 
