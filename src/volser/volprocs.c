@@ -583,7 +583,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
     ttc = NewTrans(newId, tt->partition);
     if (!ttc) {			/* someone is messing with the clone already */
 	TRELE(tt);
-	return VBUSY;
+	return VOLSERVOLBUSY;
     }
     strcpy(tt->lastProcName, "Clone");
     tt->rxCallPtr = acid;
@@ -755,7 +755,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     ttc = NewTrans(cloneId, tt->partition);
     if (!ttc) {			/* someone is messing with the clone already */
 	TRELE(tt);
-	return VBUSY;
+	return VOLSERVOLBUSY;
     }
     strcpy(tt->lastProcName, "ReClone");
     tt->rxCallPtr = acid;
@@ -2069,7 +2069,7 @@ GetVolInfo(afs_uint32 partId,
     ttc = NewTrans(volumeId, partId);
     if (!ttc) {
 	code = -3;
-	VOLINT_INFO_STORE(handle, status, VBUSY);
+	VOLINT_INFO_STORE(handle, status, VOLSERVOLBUSY);
 	VOLINT_INFO_STORE(handle, volid, volumeId);
 	goto drop;
     }
@@ -2868,7 +2868,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 #endif
             ttc = NewTrans(volumeId, partId);
             if (!ttc) {
-		return VBUSY;
+		return VOLSERVOLBUSY;
             }
 #ifdef AFS_NAMEI_ENV
 	    ret = namei_ConvertROtoRWvolume(pname, volumeId);
