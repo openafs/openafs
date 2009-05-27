@@ -156,6 +156,8 @@
                 <ComponentRef Id="cmf_butc_EXE" />
                 <ComponentRef Id="cmf_kaserver_EXE" />
                 <ComponentRef Id="cmf_ptserver_EXE" />
+                <ComponentRef Id="cmf_ptclient_EXE" />
+                <ComponentRef Id="cmf_pt_util_EXE" />
                 <ComponentRef Id="cmf_salvager_EXE" />
                 <ComponentRef Id="cmf_upclient_EXE" />
                 <ComponentRef Id="cmf_upserver_EXE" />

@@ -558,7 +558,7 @@ Section "!AFS Client" secClient
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afsd_service.exe" "$INSTDIR\Client\Program\afsd_service.exe" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
-  File "${AFS_SERVER_BUILDDIR}\pts.exe"
+  File "${AFS_DESTDIR}\bin\pts.exe"
   File "${AFS_SERVER_BUILDDIR}\bos.exe"
   File "${AFS_SERVER_BUILDDIR}\kas.exe"
   File "${AFS_SERVER_BUILDDIR}\vos.exe"
@@ -870,6 +870,8 @@ skipCheck:
   File "${AFS_SERVER_BUILDDIR}\vlserver.exe"
   File "${AFS_SERVER_BUILDDIR}\volinfo.exe"
   File "${AFS_SERVER_BUILDDIR}\volserver.exe"
+  File "${AFS_DESTDIR}\bin\ptclient.exe"
+  File "${AFS_DESTDIR}\bin\pt_util.exe"
  
  ;AFS Server common files
  SetOutPath "$INSTDIR\Common"
@@ -1209,6 +1211,8 @@ DoServer:
   File "${AFS_ETC_BUILDDIR}\fms.pdb"
   File "${AFS_SERVER_BUILDDIR}\kaserver.pdb"
   File "${AFS_SERVER_BUILDDIR}\ptserver.pdb"
+  File "${AFS_DESTDIR}\bin\ptclient.pdb"
+  File "${AFS_DESTDIR}\bin\pt_util.pdb"
   File "${AFS_SERVER_BUILDDIR}\salvager.pdb"
   File "${AFS_SERVER_BUILDDIR}\upclient.pdb"
   File "${AFS_SERVER_BUILDDIR}\upserver.pdb"
