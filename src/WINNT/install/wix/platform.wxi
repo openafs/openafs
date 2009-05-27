@@ -95,6 +95,8 @@
 	<?define cmf_butc_EXE_guid="2E03B583-AAEE-4674-AA53-98D6596C6668"?>
 	<?define cmf_kaserver_EXE_guid="29D8D9DC-5C12-48E4-ACEF-797380EFE794"?>
 	<?define cmf_ptserver_EXE_guid="78199FF4-33AF-4A7E-9316-4E90522EA93F"?>
+	<?define cmf_ptclient_EXE_guid="B5C877B4-65DD-46DE-B20A-2713EB444333"?>
+	<?define cmf_pt_util_EXE_guid="62A501E3-79AC-4351-BF48-AA0E506D6997"?>
 	<?define cmf_salvager_EXE_guid="01C16D4F-ABCD-476D-B678-BCF87F1F1599"?>
 	<?define cmf_upclient_EXE_guid="DE392019-13E0-45FD-BA82-E4C0148AC654"?>
 	<?define cmf_upserver_EXE_guid="4201E9FE-56BC-4852-992A-18E5D75C3B39"?>
@@ -201,6 +203,8 @@
 	<?define cmf_butc_EXE_guid="96DAC5A8-FD16-4FF5-8BD5-92F25880E557"?>
 	<?define cmf_kaserver_EXE_guid="73117045-0BB8-4F57-8A75-909F35C2D723"?>
 	<?define cmf_ptserver_EXE_guid="CDBDE41D-24DF-44E5-97D2-EFA71CDBEECB"?>
+	<?define cmf_ptclient_EXE_guid="71F7F7A4-67FC-4169-8BB6-82E5753AB69A"?>
+	<?define cmf_pt_util_EXE_guid="CEB2A768-5EC9-4056-88D4-2D341A95073E"?>
 	<?define cmf_salvager_EXE_guid="E3F3ACE5-B556-4FEF-9DA2-78B194AA6639"?>
 	<?define cmf_upclient_EXE_guid="321BB9BF-5FF0-4363-9927-41C60BD526E9"?>
 	<?define cmf_upserver_EXE_guid="3CBD2EF5-43BC-4CA2-B367-87E82DED1406"?>

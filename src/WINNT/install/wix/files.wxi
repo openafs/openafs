@@ -1328,6 +1328,12 @@
                             <Component Win64="$(var.Win64)" Id="cmf_ptserver_EXE" Guid="$(var.cmf_ptserver_EXE_guid)">
                                 <File Id="fileptserver_EXE" Name="ptser.exe" LongName="ptserver.exe" KeyPath="yes" DiskId="1" />
                             </Component>
+                             <Component Win64="$(var.Win64)" Id="cmf_ptclient_EXE" Guid="$(var.cmf_ptclient_EXE_guid)">
+                                <File Id="fileptclient_EXE" Name="ptclient.exe" LongName="ptclient.exe" KeyPath="yes" DiskId="1" src="$(var.BinDir)\ptclient.exe" />
+                            </Component>
+                             <Component Win64="$(var.Win64)" Id="cmf_pt_util_EXE" Guid="$(var.cmf_pt_util_EXE_guid)">
+                                <File Id="filept_util_EXE" Name="pt_util.exe" LongName="pt_util.exe" KeyPath="yes" DiskId="1" src="$(var.BinDir)\pt_util.exe" />
+                            </Component>
                             <Component Win64="$(var.Win64)" Id="cmf_salvager_EXE" Guid="$(var.cmf_salvager_EXE_guid)">
                                 <File Id="filesalvager_EXE" Name="salva.exe" LongName="salvager.exe" KeyPath="yes" DiskId="1" />
                             </Component>
