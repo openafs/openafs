@@ -485,8 +485,13 @@ DoLockWarning(void)
 
     /* otherwise, it is time to nag the user */
     lastWarnTime = now;
+#ifdef AFS_LINUX26_ENV
+    afs_warn
+	("afs: byte-range locks only enforced for processes on this machine.\n");
+#else
     afs_warn
 	("afs: byte-range lock/unlock ignored; make sure no one else is running this program.\n");
+#endif
 }
 
 
