@@ -31,6 +31,7 @@ openafs (1.4.10+dfsg1-2) UNRELEASED; urgency=low
   * Dynamically determine the Debian and upstream versions for dkms.conf
     and get-orig-source from debian/changelog.  Thanks, Anders Kaseorg.
     (LP: #364426)
+  * Build-depend on cpio (used for generating openafs-modules-source).
 
  -- Russ Allbery <rra@debian.org>  Tue, 26 May 2009 11:57:22 -0700
 
