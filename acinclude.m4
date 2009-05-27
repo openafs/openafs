@@ -300,6 +300,17 @@ AC_ARG_ENABLE([optimize-pam],
     ,
     [enable_optimize_pam="yes"])
 
+AC_ARG_WITH([xslt-processor],
+	AS_HELP_STRING([--with-xslt-processor=ARG],
+	[which XSLT processor to use (possible choices are: libxslt, saxon, xalan-j, xsltproc)]),
+       	XSLTPROC="$withval",
+       	XSLTPROC="libxslt")
+
+AC_ARG_WITH([html-xsl], 
+        AS_HELP_STRING([--with-html-xsl],
+	[build HTML documentation using Norman Walsh's DocBook XSL stylesheets (default is no; specify a path to chunk.xsl or docbook.xsl)]),
+	HTML_XSL="$withval",
+	HTML_XSL=no)
 
 enable_login="no"
 
@@ -1648,6 +1659,9 @@ if test "x$enable_pthreaded_ubik" = "xyes"; then
 ENABLE_PTHREADED_UBIK=yes
 fi
 
+VERSFILE=AFS_component_version_number
+AC_SUBST(VERSFILE)
+
 AC_SUBST(AFS_SYSNAME)
 AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
@@ -1667,6 +1681,8 @@ AC_SUBST(TOP_LIBDIR)
 AC_SUBST(DEST)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
+AC_SUBST(HTML_XSL)
+AC_SUBST(XSLTPROC)
 
 OPENAFS_OSCONF
 OPENAFS_KRB5CONF

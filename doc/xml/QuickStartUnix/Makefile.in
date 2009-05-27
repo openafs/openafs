@@ -13,15 +13,20 @@
 # HTML_XSL is specific to Debian and will need to be modified on other
 # systems until we have a better mechanism for finding the correct path.
 
+all: pdf html
+
+include @TOP_OBJDIR@/src/config/Makefile.config
+VERSFILE=version
+include @TOP_OBJDIR@/src/config/Makefile.version
+
 BOOK     = auqbg000.xml
 SRCS     = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
 	   auqbg007.xml auqbg008.xml appendix.xml
-HTML_XSL = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
+HTML_XSL = @HTML_XSL@
+XSLTPROC = @XSLTPROC@
 
-all: pdf html
-
-html: $(SRCS)
-	xsltproc --param navig.graphics 1 \
+html: $(SRCS) $(VERSFILE).xml
+	$(XSLTPROC) --param navig.graphics 1 \
 	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
 
 pdf: $(SRCS)

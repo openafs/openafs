@@ -13,18 +13,21 @@
 # HTML_XSL is possibly specific to Debian and may need to be modified on other
 # systems.
 
-BOOK     = auagd000.xml
-SRCS     = $(BOOK) auagd005.xml auagd006.xml auagd007.xml auagd008.xml \
-	   auagd009.xml auagd010.xml auagd011.xml auagd012.xml auagd013.xml \
-	   auagd014.xml auagd015.xml auagd016.xml auagd017.xml auagd018.xml \
-	   auagd019.xml auagd020.xml auagd021.xml auagd022.xml auagd023.xml \
-	   auagd024.xml auagd025.xml
-HTML_XSL = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
-
 all: pdf html
 
-html: $(SRCS)
-	xsltproc --param navig.graphics 1 \
+include @TOP_OBJDIR@/src/config/Makefile.config
+VERSFILE=version
+include @TOP_OBJDIR@/src/config/Makefile.version
+
+BOOK     = auusg000.xml
+SRCS     = $(BOOK) auusg003.xml auusg004.xml auusg005.xml auusg006.xml \
+	   auusg007.xml auusg008.xml auusg009.xml auusg010.xml auusg011.xml \
+	   auusg012.xml
+HTML_XSL = @HTML_XSL@
+XSLTPROC = @XSLTPROC@
+
+html: $(SRCS) $(VERSFILE).xml
+	$(XSLTPROC) --param navig.graphics 1 \
 	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
 
 pdf: $(SRCS)
