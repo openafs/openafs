@@ -504,13 +504,19 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     struct vcache *vcp = VTOAFS(FILE_INODE(fp));
     cred_t *credp = crref();
     struct AFS_FLOCK flock;
+#if defined(POSIX_TEST_LOCK_CONFLICT_ARG)
+    struct file_lock conflict;
+#elif defined(POSIX_TEST_LOCK_RETURNS_CONFLICT)
+    struct file_lock *conflict;
+#endif
+    
     /* Convert to a lock format afs_lockctl understands. */
     memset((char *)&flock, 0, sizeof(flock));
     flock.l_type = flp->fl_type;
     flock.l_pid = flp->fl_pid;
     flock.l_whence = 0;
     flock.l_start = flp->fl_start;
-    flock.l_len = flp->fl_end - flp->fl_start;
+    flock.l_len = flp->fl_end - flp->fl_start + 1;
 
     /* Safe because there are no large files, yet */
 #if defined(F_GETLK64) && (F_GETLK != F_GETLK64)
@@ -529,12 +535,12 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 #ifdef AFS_LINUX24_ENV
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
 	(cmd == F_SETLK || cmd == F_SETLKW)) {
-#ifdef POSIX_LOCK_FILE_WAIT_ARG
+# ifdef POSIX_LOCK_FILE_WAIT_ARG
         code = posix_lock_file(fp, flp, 0);
-#else
+# else
         flp->fl_flags &=~ FL_SLEEP;
         code = posix_lock_file(fp, flp);
-#endif
+# endif
        if (code && flp->fl_type != F_UNLCK) {
            struct AFS_FLOCK flock2;
            flock2 = flock;
@@ -544,12 +550,40 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
            AFS_GUNLOCK();
        }
     }
+    /* If lockctl says there are no conflicting locks, then also check with the
+     * kernel, as lockctl knows nothing about byte range locks
+     */
+    if (code == 0 && cmd == F_GETLK && flock.l_type == F_UNLCK) {
+# if defined(POSIX_TEST_LOCK_CONFLICT_ARG)
+        if (posix_test_lock(fp, flp, &conflict)) {
+            locks_copy_lock(flp, &conflict);
+            flp->fl_type = F_UNLCK;
+            crfree(credp);
+            return 0;
+        }
+# elif defined(POSIX_TEST_LOCK_RETURNS_CONFLICT)
+	if ((conflict = posix_test_lock(fp, flp))) {
+	    locks_copy_lock(flp, conflict);
+	    flp->fl_type = F_UNLCK;
+	    crfee(credp);
+	    return 0;
+	}
+# else
+        posix_test_lock(fp, flp);
+        /* If we found a lock in the kernel's structure, return it */
+        if (flp->fl_type != F_UNLCK) {
+            crfree(credp);
+            return 0;
+        }
+    }
+# endif
+    
 #endif
     /* Convert flock back to Linux's file_lock */
     flp->fl_type = flock.l_type;
     flp->fl_pid = flock.l_pid;
     flp->fl_start = flock.l_start;
-    flp->fl_end = flock.l_start + flock.l_len;
+    flp->fl_end = flock.l_start + flock.l_len - 1;
 
     crfree(credp);
     return -code;

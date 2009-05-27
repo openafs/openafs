@@ -486,7 +486,6 @@ AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
       ac_cv_linux_kernel_posix_lock_file_wait_arg=no)])
   AC_MSG_RESULT($ac_cv_linux_kernel_posix_lock_file_wait_arg)])
 
-
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
   AC_MSG_CHECKING([for 5th argument in sock_create found in some SELinux kernels])
   AC_CACHE_VAL([ac_cv_linux_kernel_sock_create_v], [
@@ -1215,3 +1214,34 @@ _p.owner= "";],
   if test "x$ac_cv_linux_struct_proc_dir_entry_has_owner" = "xyes"; then
     AC_DEFINE([STRUCT_PROC_DIR_ENTRY_HAS_OWNER], 1, [define if struct proc_dir_entry has an owner member])
   fi])
+
+AC_DEFUN([LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT], [
+  AC_MSG_CHECKING([if posix_test_lock returns a struct file_lock])
+  AC_CACHE_VAL([ac_cv_linux_posix_test_lock_returns_conflict], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_lock *lock;
+ struct file * file;
+lock = posix_test_lock(file, lock);],
+      ac_cv_linux_posix_test_lock_returns_conflict=yes,
+      ac_cv_linux_posix_test_lock_returns_conflict=no)])
+  AC_MSG_RESULT($ac_cv_linux_posix_test_lock_returns_conflict)
+  if test "x$ac_cv_linux_posix_test_lock_returns_conflict" = "xyes"; then
+    AC_DEFINE([POSIX_TEST_LOCK_RETURNS_CONFLICT], 1, [define if posix_test_lock returns the conflicting lock])
+  fi])
+
+AC_DEFUN([LINUX_POSIX_TEST_LOCK_CONFLICT_ARG], [
+  AC_MSG_CHECKING([if posix_test_lock takes a conflict argument])
+  AC_CACHE_VAL([ac_cv_linux_posix_test_lock_conflict_arg], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[ struct file_lock *lock;
+  struct file *file;
+  posix_test_lock(file, lock, lock);],
+      ac_cv_linux_posix_test_lock_conflict_arg=yes,
+      ac_cv_lonuc_posix_test_lock_conflict_arg=no)])
+  AC_MSG_RESULT($ac_cv_linux_posix_test_lock_conflict_arg)
+  if test "x$ac_cv_linux_posix_test_lock_conflict_arg" = "xyes"; then
+    AC_DEFINE([POSIX_TEST_LOCK_CONFLICT_ARG], 1, [define if posix_test_lock takes a conflict argument])
+  fi])
+
