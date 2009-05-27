@@ -22,4 +22,7 @@ $(VERSFILE).h:
 $(VERSFILE).txt:
 	$(TOP_SRCDIR)/config/mkvers -o $(VERSFILE).txt -t
 
+$(VERSFILE).xml:
+	$(TOP_SRCDIR)/config/mkvers -o $(VERSFILE).xml -x
+
 noversion: install
