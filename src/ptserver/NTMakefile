@@ -103,7 +103,7 @@ PT_UTIL_EXEOBJS = \
         $(OUT)\ubik.obj \
         $(OUT)\utils.obj \
         $(OUT)\map.obj \
-        $(OUT)\pts.res
+        $(OUT)\pt_util.res
 
 PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -149,6 +149,8 @@ $(OUT)\pts.res: AFS_component_version_number.h
 
 $(OUT)\ptclient.res: AFS_component_version_number.h
 
+$(OUT)\pt_util.res: AFS_component_version_number.h
+
 ############################################################################
 # rxgen on pting.xg
 
@@ -182,6 +184,7 @@ install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(
 	$(OUT)\readpwd.exe  $(OUT)\testpt.exe $(OUT)\db_verify.exe  \
 	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
 	$(DESTDIR)\root.server\usr\afs\bin\ptclient.exe \
+	$(DESTDIR)\root.server\usr\afs\bin\pt_util.exe \
 	$(INCFILEDIR)\afs\prserver.h $(INCFILEDIR)\afs\print.h \
 	$(INCFILEDIR)\afs\prerror.h $(INCFILEDIR)\afs\prclient.h
 
