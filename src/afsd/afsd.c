@@ -31,6 +31,7 @@
   *	-confdir    The configuration directory .
   *	-nosettime  Don't keep checking the time to avoid drift (default).
   *     -settime    Keep checking the time to avoid drift.
+  *	-rxmaxmtu   Set the max mtu to help with VPN issues.
   *	-verbose     Be chatty.
   *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
   *                          the size of the vcache/stat cache pool, 
@@ -319,6 +320,7 @@ int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
 int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
+int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 
 #ifdef AFS_SGI62_ENV
 #define AFSD_INO_T ino64_t
@@ -1761,6 +1763,12 @@ mainproc(struct cmd_syndesc *as, void *arock)
     printf("afsd: %s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
+    /* set -rxmaxmtu */
+    if (as->parms[35].items) {
+        /* -rxmaxmtu */
+        rxmaxmtu = atoi(as->parms[35].items->data);
+    }
+
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
@@ -2173,6 +2181,14 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	       fullpn_CellInfoFile);
     call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
 
+    if (rxmaxmtu) {
+    if (afsd_verbose)
+        printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
+    code = call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
+    if (code)
+        printf("%s: Error seting rxmaxmtu\n", rn);
+    }
+
     if (enable_dynroot) {
 	if (afsd_verbose)
 	    printf("%s: Enabling dynroot support in kernel.\n", rn);
@@ -2472,6 +2488,7 @@ main(int argc, char **argv)
                "set the time");
     cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL, "set rx_extraPackets to this value");
     cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, "disable stat/vcache cache growing as needed");
+    cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
     return (cmd_Dispatch(argc, argv));
 }
 

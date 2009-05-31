@@ -1163,6 +1163,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_SET_RXPCK) {
 	rx_extraPackets = parm2;
 	afscall_set_rxpck_received = 1;
+    } else if (parm == AFSOP_SET_RXMAXMTU) {
+    rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
     } else
 	code = EINVAL;
 
