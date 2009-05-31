@@ -59,6 +59,8 @@ ENABLE_DYNROOT=on
 #      -logfile   Place where to put the logfile (default in <cache>/etc/AFSLog.
 #      -waitclose make close calls always synchronous (slows em down, tho)
 #      -files_per_subdir [n]   number of files per cache subdir. (def=2048)
+#      -rxmaxmtu  Max mtu. Useful when using VPN when packets might fragment.
+#                 a value of 1244 should work.
 #      -shutdown  Shutdown afs daemons
 # ---------------------------------------------------------------------------
 XXLARGE="-fakestat -stat 4000 -dcache 4000 -daemons 6 -volumes 256"

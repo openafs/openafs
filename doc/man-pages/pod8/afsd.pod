@@ -25,7 +25,8 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      [B<-nosettime>]
      S<<< [B<-prealloc> <I<number of 'small' preallocated blocks>>] >>>
      [B<-rmtsys>] S<<< [B<-rootvol> <I<name of AFS root volume>>] >>>
-     [B<-rxbind>] S<<< [B<-rxpck> value for rx_extraPackets ] >>>
+     [B<-rxbind>] S<<< [B<-rxmaxmtu> value for maximum MTU ] >>> 
+     S<<< [B<-rxpck> value for rx_extraPackets ] >>>
      [B<-settime>] [B<-shutdown>]
      S<<< [B<-splitcache> <I<RW/RO ratio>>] >>>
      S<<< [B<-stat> <I<number of stat entries>>] >>> [B<-verbose>]
@@ -627,6 +628,13 @@ B<-dynroot> is given.
 =item B<-rxbind>
 
 Bind the Rx socket (one interface only).
+
+=item B<-rxmaxmtu> <I<value for maximum MTU>>
+
+Set a limit for the largest maximum transfer unit (network packet size) that
+the AFS client on this machine will be willing to transmit. This switch can
+be used where an artificial limit on the network precludes packets as large
+as the discoverable MTU from being transmitted successfully.
 
 =item B<-rxpck> <I<value for rx_extraPackets>>
 
