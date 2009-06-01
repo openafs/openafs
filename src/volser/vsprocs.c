@@ -2361,7 +2361,7 @@ cpincr:
 		      &cookie);
     EGOTO1(mfail, code,
 	   "Failed to do the%s dump from old site to new site\n",
-	   afromvol);
+	   (flags & RV_NOCLONE) ? "" : " incremental");
     VDONE;
 
     VPRINT1("Setting volume flags on destination volume %u ...", newVol);
