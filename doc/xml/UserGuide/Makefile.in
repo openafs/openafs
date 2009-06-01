@@ -30,7 +30,7 @@ html: $(SRCS) $(VERSFILE).xml
 	$(XSLTPROC) --param navig.graphics 1 \
 	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
 
-pdf: $(SRCS)
+pdf: $(SRCS) $(VERSFILE).xml
 	dblatex $(BOOK)
 
 check:
