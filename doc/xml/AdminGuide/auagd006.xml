@@ -686,9 +686,9 @@
     are running correctly as much of the time as possible, since a server is useful only if it is available. The BOS Server relieves
     system administrators of much of the responsibility for overseeing system operations.</para>
 
-    <para>The <emphasis>Authentication Server</emphasis> helps ensure that communications on the network are secure. It verifies
+    <para>The third-party <emphasis>Kerberos Server</emphasis> replaces the old <emphasis>Authentication Server</emphasis> and helps ensure that communications on the network are secure. It verifies
     user identities at login and provides the facilities through which participants in transactions prove their identities to one
-    another (mutually authenticate). It maintains the Authentication Database.</para>
+    another (mutually authenticate).</para>
 
     <para>The Protection Server helps users control who has access to their files and directories. Users can grant access to several
     other users at once by putting them all in a group entry in the Protection Database maintained by the Protection Server.</para>
@@ -715,8 +715,7 @@
     <para>The <emphasis>Network Time Protocol Daemon (NTPD)</emphasis> is not an AFS server process per se, but plays a vital role
     nonetheless. It synchronizes the internal clock on a file server machine with those on other machines. Synchronized clocks are
     particularly important for correct functioning of the AFS distributed database technology (known as Ubik); see <link
-    linkend="HDRWQ103">Configuring the Cell for Proper Ubik Operation</link>. The NTPD is controlled by the <emphasis
-    role="bold">runntp</emphasis> process.</para>
+    linkend="HDRWQ103">Configuring the Cell for Proper Ubik Operation</link>. The NTPD is usually provided with the operating system.</para>
 
     <para>The <emphasis>Cache Manager</emphasis> is the one component in this list that resides on AFS client rather than file
     server machines. It not a process per se, but rather a part of the kernel on AFS client machines that communicates with AFS
@@ -823,18 +822,38 @@
     </sect2>
 
     <sect2 id="HDRWQ20">
-      <title>The Authentication Server</title>
+      <title>The Kerberos Server</title>
 
+      <indexterm>
+        <primary>Kerberos Server</primary>
+
+        <secondary>description</secondary>
+      </indexterm>
       <indexterm>
         <primary>Authentication Server</primary>
 
         <secondary>description</secondary>
+        <seealso>Kerberos Server</seealso>
+      </indexterm>
+      <indexterm>
+        <primary>Active Directory</primary>
+        <secondary>Kerberos Server</secondary>
+      </indexterm>
+      <indexterm>
+        <primary>MIT Kerberos</primary>
+        <secondary>Kerberos Server</secondary>
+      </indexterm>
+      <indexterm>
+        <primary>Heimdal</primary>
+        <secondary>Kerberos Server</secondary>
       </indexterm>
 
-      <para>The <emphasis>Authentication Server</emphasis> performs two main functions related to network security: <itemizedlist>
+
+      
+      <para>The <emphasis>Kerberos Server</emphasis> performs two main functions related to network security: <itemizedlist>
           <listitem>
             <para>Verifying the identity of users as they log into the system by requiring that they provide a password. The
-            Authentication Server grants the user a token as proof to AFS server processes that the user has authenticated. For more
+            Kerberos Server grants the user a ticket, which is converted into a token to prove to AFS server processes that the user has authenticated. For more
             on tokens, see <link linkend="HDRWQ76">Complex Mutual Authentication</link>.</para>
           </listitem>
 
@@ -844,15 +863,27 @@
           </listitem>
         </itemizedlist></para>
 
-      <para>In fulfilling these duties, the Authentication Server utilizes algorithms and other procedures known as
-      <emphasis>Kerberos</emphasis> (which is why many commands used to contact the Authentication Server begin with the letter
+      <para>The Kerberos Server is a required service which is provided by
+      a third-party Kerberos server that supports version 5 of the
+      Kerberos protocol. Kerberos server software is included with some
+      operating systems or may be acquired separately. MIT Kerberos,
+      Heimdal, and Microsoft Active Directory are known to work with
+      OpenAFS as a Kerberos Server.  (Most Kerberos commands begin with
+      the letter
       <emphasis role="bold">k</emphasis>). This technology was originally developed by the Massachusetts Institute of Technology's
       Project Athena.</para>
 
-      <para>The Authentication Server also maintains the <emphasis>Authentication Database</emphasis>, in which it stores user
+      <para>The Kerberos Server also maintains the <emphasis>Authentication Database</emphasis>, in which it stores user
       passwords converted into encryption key form as well as the AFS server encryption key. To learn more about the procedures AFS
       uses to verify user identity and during mutual authentication, see <link linkend="HDRWQ75">A More Detailed Look at Mutual
       Authentication</link>.</para>
+
+      <note><para>The <emphasis>Authentication Server</emphasis> known as
+      kaserver which uses Kerberos 4 is obsolete and has been replaced by
+      the Kerberos Server. All references to the <emphasis>Kerberos
+      Server</emphasis> in this guide refer to a Kerberos 5
+      server.</para></note>
+      
 
       <indexterm>
         <primary>AFS</primary>
@@ -1022,7 +1053,7 @@
         <secondary>description</secondary>
       </indexterm>
 
-      <para>The <emphasis>Update Server</emphasis> helps guarantee that all file server machines are running the same version of a
+      <para>The <emphasis>Update Server</emphasis> is an optional process that helps guarantee that all file server machines are running the same version of a
       server process. System performance can be inconsistent if some machines are running one version of the BOS Server (for
       example) and other machines were running another version.</para>
 
@@ -1047,11 +1078,11 @@
         <secondary>client portion</secondary>
       </indexterm>
 
-      <para>In cells that run the United States edition of AFS, the Update Server also distributes configuration files that all file
+      <para>The Update Server also distributes configuration files that all file
       server machines need to store on their local disks (for a description of the contents and purpose of these files, see <link
       linkend="HDRWQ85">Common Configuration Files in the /usr/afs/etc Directory</link>). As with server process software, the need
-      for consistent system performance demands that all the machines have the same version of these files. With the United States
-      edition, the system administrator needs to make changes to these files on one machine only, the cell's <emphasis>system
+      for consistent system performance demands that all the machines have the same version of these files.
+      The system administrator needs to make changes to these files on one machine only, the cell's <emphasis>system
       control machine</emphasis>, which runs a server portion of the Update Server. All other machines in the cell run a client
       portion that accesses the correct versions of these configuration files from the system control machine. Cells running the
       international edition of AFS do not use a system control machine to distribute configuration files. For more information, see
@@ -1081,7 +1112,7 @@
       by which the sets are to be dumped. They also install the system's tape drives and define the drives' <emphasis>Tape
       Coordinators</emphasis>, which are the processes that control the tape drives.</para>
 
-      <para>Once the Backup System is configured, user and system data can be dumped from volumes to tape. In the event that data is
+      <para>Once the Backup System is configured, user and system data can be dumped from volumes to tape or disk. In the event that data is
       ever lost from the system (for example, if a system or disk failure causes data to be lost), administrators can restore the
       data from tape. If tapes are periodically archived, or saved, data can also be restored to its state at a specific time.
       Additionally, because Backup System data is difficult to reproduce, the Backup Database itself can be backed up to tape and
@@ -1117,15 +1148,27 @@
       </indexterm>
 
       <para>The <emphasis>Network Time Protocol Daemon (NTPD)</emphasis> is not an AFS server process per se, but plays an important
-      role. It helps guarantee that all of the file server machines agree on the time. The NTPD on one file server machine acts as a
-      synchronization site, generally learning the correct time from a source outside the cell. The NTPDs on the other file server
-      machines refer to the synchronization site to set the internal clocks on their machines.</para>
+      role. It helps guarantee that all of the file server machines and client machines agree on the time. The NTPD on all file server machines learns the correct time from a parent NTPD source, which may be located inside or outside the cell.</para>
 
       <para>Keeping clocks synchronized is particularly important to the correct operation of AFS's distributed database technology,
-      which coordinates the copies of the Authentication, Backup, Protection, and Volume Location Databases; see <link
-      linkend="HDRWQ52">Replicating the OpenAFS Administrative Databases</link>. Client machines also refer to these clocks for the
+      which coordinates the copies of the Backup, Protection, and Volume Location Databases; see <link
+      linkend="HDRWQ52">Replicating the OpenAFS Administrative Databases</link>. Client machines may also refer to these clocks for the
       correct time; therefore, it is less confusing if all file server machines have the same time. For more technical detail about
-      the NTPD, see <link linkend="HDRWQ151">The runntp Process</link>.</para>
+      the NTPD, see <ulink url="http://www.ntp.org/">The NTP web site</ulink> or the documentation for your operating system.</para>
+
+      <important><title>Clock Skew Impact</title>
+      <para>Client machines that are authenticating to an OpenAFS cell
+      with valid credentials may still fail when the clocks of the client
+      machine, Kerberos server, and the fileserver machines are not in
+      sync.</para></important>
+
+      <note><title>Legacy runntp</title>
+      <para>It is no longer recommended to run the legacy NTPD process
+      called <emphasis>runntp</emphasis> that is part of the OpenAFS
+      suite. Running the NTPD software that comes with your operating
+      system or from <ulink url="http://www.ntp.org/">www.ntp.org</ulink>
+      is preferred.</para></note>
+
     </sect2>
 
     <sect2 id="HDRWQ28">
