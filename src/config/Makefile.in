@@ -32,7 +32,7 @@ Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
 # AFS component version string file generation targets
 #
 AFS_component_version_number.c: Makefile.version
-	$(MAKE) -f Makefile.component AFS_component_version_number.c
+	$(MAKE) -f Makefile.version AFS_component_version_number.c
 
 #
 # App build/install targets

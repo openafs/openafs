@@ -1461,9 +1461,6 @@ if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs
 fi
 
-VERSFILE=AFS_component_version_number
-AC_SUBST(VERSFILE)
-
 AC_SUBST(AFS_SYSNAME)
 AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)

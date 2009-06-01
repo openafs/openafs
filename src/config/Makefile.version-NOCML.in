@@ -8,14 +8,17 @@
 PACKAGE=@PACKAGE@
 VERSION=@VERSION@
 
-$(VERSFILE).o: $(VERSFILE).c
+AFS_component_version_number.o: AFS_component_version_number.c
 
-$(VERSFILE).c: @TOP_OBJDIR@/src/config/Makefile.version
-	echo 'char cml_version_number[]="@(#) OpenAFS ${VERSION} built ' `date +"%Y-%m-%d"` '";' >$(VERSFILE).c
-	echo 'char* AFSVersion = "${PACKAGE} ${VERSION}"; ' >>$(VERSFILE).c
+AFS_component_version_number.c: @TOP_OBJDIR@/src/config/Makefile.version
+	echo 'char cml_version_number[]="@(#) OpenAFS ${VERSION} built ' `date +"%Y-%m-%d"` '";' >AFS_component_version_number.c
+	echo 'char* AFSVersion = "${PACKAGE} ${VERSION}"; ' >>AFS_component_version_number.c
 
-$(VERSFILE).xml:
-	echo '<?xml version="1.0" encoding="UTF-8"?>' >$(VERSFILE).xml
-	echo '<revision>' >>$(VERSFILE).xml
-	echo '<revnumber>${VERSION}</revnumber>' >>$(VERSFILE).xml
-	echo '</revision>' >>$(VERSFILE).xml
+version.xml:
+	echo '<?xml version="1.0" encoding="UTF-8"?>' >version.xml
+	echo '<revision>' >>version.xml
+	echo '<revnumber>${VERSION}</revnumber>' >>version.xml
+	echo '</revision>' >>version.xml
+
+version.txt:
+	echo "Base configuration unknown" > version.txt
