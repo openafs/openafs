@@ -1659,9 +1659,6 @@ if test "x$enable_pthreaded_ubik" = "xyes"; then
 ENABLE_PTHREADED_UBIK=yes
 fi
 
-VERSFILE=AFS_component_version_number
-AC_SUBST(VERSFILE)
-
 AC_SUBST(AFS_SYSNAME)
 AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)

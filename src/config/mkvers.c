@@ -300,7 +300,7 @@ PrintStamps(void)
 	    } else if (cfgFormat == CF_TEXT) {
 		fprintf(fpVers, "Base configuration %s\n",
 			stateDeltas[i].name);
-	    } else if (cfgFormat == CF_TEXT) {
+	    } else if (cfgFormat == CF_XML) {
                 fprintf(fpVers, 
                         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                         "<revision>\n"
