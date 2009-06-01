@@ -8,22 +8,23 @@
 PACKAGE=@PACKAGE@
 VERSION=@VERSION@
 
-$(VERSFILE).o: $(VERSFILE).c
+AFS_component_version_number.o: AFS_component_version_number.c $(TOP_SRCDIR)/config/mkvers
+version.xml version.txt: $(TOP_SRCDIR)/config/mkvers
 
 # mkvers checks timestamps
 
-$(VERSFILE).c:
-	$(TOP_SRCDIR)/config/mkvers -o $(VERSFILE).c
+AFS_component_version_number.c:
+	$(TOP_SRCDIR)/config/mkvers -o AFS_component_version_number.c
 # only done for RX in NT
 #	-c $(CML_PREFIX)
 
-$(VERSFILE).h:
-	$(TOP_SRCDIR)/config/mkvers -o $(VERSFILE).h -v
+AFS_component_version_number.h:
+	$(TOP_SRCDIR)/config/mkvers -o AFS_component_version_number.h -v
 
-$(VERSFILE).txt:
-	$(TOP_SRCDIR)/config/mkvers -o $(VERSFILE).txt -t
+version.txt:
+	$(TOP_SRCDIR)/config/mkvers -o version.txt -t
 
-$(VERSFILE).xml:
-	$(TOP_SRCDIR)/config/mkvers -o $(VERSFILE).xml -x
+version.xml:
+	$(TOP_SRCDIR)/config/mkvers -o version.xml -x
 
 noversion: install
