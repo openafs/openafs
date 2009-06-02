@@ -575,8 +575,8 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
             crfree(credp);
             return 0;
         }
-    }
 # endif
+    }
     
 #endif
     /* Convert flock back to Linux's file_lock */
