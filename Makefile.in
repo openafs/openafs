@@ -644,14 +644,14 @@ jafs: libjafs
 jafsadm: libjafsadm
 
 finale: project cmd comerr afsd butc tbutc tbudb @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
-	ptserver tptserver scout bu_utils ubik tubik uss bozo vfsck volser tvolser tsalvaged \
+	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
 	platform
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd butc tbutc tbudb libuafs audit kauth log package \
-	ptserver tptserver scout bu_utils ubik tubik uss bozo vfsck volser tvolser tsalvaged \
+	ptserver tptserver scout bu_utils ubik tubik uss bozo @VFSCK@ volser tvolser tsalvaged \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin login man-pages \
 	platform
