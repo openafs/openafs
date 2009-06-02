@@ -52,7 +52,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #endif
-#if defined(EXPORTED_INIT_MM)
+#if defined(ENABLE_LINUX_SYSCALL_PROBING) && defined(EXPORTED_INIT_MM)
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #ifdef AFS_LINUX26_ENV
