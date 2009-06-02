@@ -26,8 +26,8 @@ dest:
 	    ../install-man $$M $(DEST)/man/man8/$$M ; \
 	done
 	set -e; for M in ${LINKEDPAGES}; do \
-	    NEWPAGE=$(DEST)/man/man1/$$M.krb.1 ; \
-	    test -h ${NEWPAGE} || ln -s $$M.1 ${NEWPAGE} ; \
+	    test -h $(DEST)/man/man1/$$M.krb.1 \
+		|| ln -s $$M.1 $(DEST)/man/man1/$$M.krb.1 ; \
 	done
 
 
@@ -45,6 +45,6 @@ install: $(MAN1) $(MAN8)
 	    ../install-man $$M $(DESTDIR)$(mandir)/man8/$$M ; \
 	done
 	set -e; for M in ${LINKEDPAGES}; do \
-	    NEWPAGE=$(DESTDIR)$(mandir)/man1/$$M.krb.1 ; \
-	    test -h ${NEWPAGE} || ln -s $$M.1 ${NEWPAGE} ; \
+	    test -h $(DESTDIR)$(mandir)/man1/$$M.krb.1 \
+		|| ln -s $$M.1 $(DESTDIR)$(mandir)/man1/$$M.krb.1 ; \
 	done
