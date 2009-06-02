@@ -175,6 +175,9 @@ AC_ARG_ENABLE(optimize-lwp,
 AC_ARG_ENABLE(warnings,
 [  --enable-warnings			enable compilation warnings when building with gcc (defaults to disabled)],, enable_warnings="no"
 )
+AC_ARG_ENABLE(linux-syscall-probing,
+[--disable-linux-syscall-probing        disabling Linux syscall probing (defaults to enabled)],, enable_probing="yes"
+)
 
 enable_login="no"
 
@@ -1374,6 +1377,10 @@ else
 	HAVE_PAM="no"
 fi
 AC_SUBST(HAVE_PAM)
+
+if test "$enable_probing" = yes; then
+        AC_DEFINE(ENABLE_LINUX_SYSCALL_PROBING, 1, [define to enable syscall table probes])
+fi
 
 if test "$enable_login" = yes; then
 	BUILD_LOGIN="yes"
