@@ -1471,20 +1471,26 @@ fi
 
 if test "$enable_namei_fileserver" = "yes"; then
 	AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+	VFSCK=""
 else
 	if test "$enable_namei_fileserver" = "default"; then
 		case $host in
 			*-solaris2.10*)
 				AC_MSG_WARN(Some Solaris 10 versions are not safe with the inode fileserver. Forcing namei. Override with --disable-namei-fileserver)
 				AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+				VFSCK=""
 				;;
 			*-solaris2.11*)
 				AC_MSG_WARN(Solaris 11 versions are not safe with the inode fileserver. Forcing namei. Override with --disable-namei-fileserver)
 				AC_DEFINE(AFS_NAMEI_ENV, 1, [define if you want to want namei fileserver])
+				VFSCK=""
 				;;
 			*)
+				VFSCK="vfsck"
 				;;
 		esac
+        else
+		VFSCK="vfsck"
 	fi
 fi
 
@@ -1659,6 +1665,7 @@ if test "x$enable_pthreaded_ubik" = "xyes"; then
 ENABLE_PTHREADED_UBIK=yes
 fi
 
+AC_SUBST(VFSCK)
 AC_SUBST(AFS_SYSNAME)
 AC_SUBST(AFS_PARAM_COMMON)
 AC_SUBST(ENABLE_KERNEL_MODULE)
