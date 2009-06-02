@@ -304,6 +304,13 @@ AC_ARG_ENABLE([optimize-pam],
          enabled)])],
     ,
     [enable_optimize_pam="yes"])
+AC_ARG_ENABLE([linux-syscall-probing],
+    [AS_HELP_STRING([--disable-linux-syscall-probing],
+	[disabling Linux syscall probing (defaults to enabled)])],
+    ,
+    [AC_DEFINE(ENABLE_LINUX_SYSCALL_PROBING, 1, 
+	[define to enable syscall table probes])])
+    
 
 AC_ARG_WITH([xslt-processor],
 	AS_HELP_STRING([--with-xslt-processor=ARG],
