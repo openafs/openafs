@@ -279,16 +279,16 @@ main(int argc, char **argv)
 	int alen;
 	lcstring(arg, argv[a], sizeof(arg));
 	alen = strlen(arg);
-	if ((strncmp(arg, "-database", alen) == 0)
-	    || (strncmp(arg, "-db", alen) == 0)) {
-	    pr_dbaseName = argv[++a];	/* specify a database */
-	} else if (strcmp(argv[a], "-d") == 0) {
+	if (strcmp(argv[a], "-d") == 0) {
 	    if ((a + 1) >= argc) {
 		fprintf(stderr, "missing argument for -d\n"); 
 		return -1; 
 	    }
 	    debuglevel = atoi(argv[++a]);
 	    LogLevel = debuglevel;
+	} else if ((strncmp(arg, "-database", alen) == 0)
+	    || (strncmp(arg, "-db", alen) == 0)) {
+	    pr_dbaseName = argv[++a];	/* specify a database */
 	} else if (strncmp(arg, "-p", alen) == 0) {
 	    lwps = atoi(argv[++a]);
 	    if (lwps > 16) {	/* maximum of 16 */
