@@ -587,7 +587,6 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
     crfree(credp);
     return -code;
-
 }
 
 #ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
