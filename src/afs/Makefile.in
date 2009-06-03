@@ -12,13 +12,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 all: depinstall
 
-depinstall: ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h \
-	${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h afszcm.cat AFS_component_version_number.c ${TOP_INCDIR}/afs/unified_afs.h ${TOP_INCDIR}/afs/sysctl.h
-	case ${SYS_NAME} in \
-		pmax_ul43 | pmax_ul43a) \
-			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
-	esac
-
 afs_trace.h afs_trace.msf: afs_trace.et
 	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
 
@@ -43,11 +36,16 @@ afszcm.cat: afs_trace.msf
 			gencat afszcm.cat afs_trace.msf ;; \
 	esac
 
+depinstall: afszcm.cat AFS_component_version_number.c \
+	${TOP_INCDIR}/afs/afs.h \
+	${TOP_INCDIR}/afs/osi_inode.h \
+	${TOP_INCDIR}/afs/afs_stats.h \
+	${TOP_INCDIR}/afs/exporter.h \
+	${TOP_INCDIR}/afs/nfsclient.h \
+	${TOP_INCDIR}/afs/unified_afs.h \
+	${TOP_INCDIR}/afs/sysctl.h
+
 install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h ${DESTDIR}${includedir}/afs/unified_afs.h ${DESTDIR}${includedir}/afs/sysctl.h
-	case ${SYS_NAME} in \
-		pmax_ul43 | pmax_ul43a) \
-			${INSTALL} longc_procs.h ${DESTDIR}${includedir}/afs ;; \
-	esac
 	case ${SYS_NAME} in \
 		*linux* ) \
 			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs || true ;;\
@@ -133,10 +131,6 @@ ${TOP_INCDIR}/afs/nfsclient.h: nfsclient.h
 
 dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h ${DEST}/include/afs/unified_afs.h ${DEST}/include/afs/sysctl.h
 	case ${SYS_NAME} in \
-		pmax_ul43 | pmax_ul43a) \
-			${INSTALL} longc_procs.h ${DEST}/include/afs ;; \
-	esac
-	case ${SYS_NAME} in \
 		i386_fbsd* ) \
 			echo skipping afszcm.cat install for ${SYS_NAME} ;; \
 		* ) \
@@ -148,4 +142,3 @@ dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/includ
 		* ) \
 			echo No vfs headers to install for ${SYS_NAME};; \
 	esac
-
