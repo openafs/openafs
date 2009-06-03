@@ -350,7 +350,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     krb5_creds incred[1], mcred[1], *outcred = 0, *afscred;
     krb5_ccache cc = 0;
     krb5_get_init_creds_opt gic_opts[1];
-    char *tofree, *outname;
+    char *tofree = NULL, *outname;
     int code;
     char *what;
     int i, dosetpag, evil, noprdb, id;
