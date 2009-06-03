@@ -37,6 +37,29 @@
 #define USING_HEIMDAL 1
 #endif
 
+static int
+char2hex(char c)
+{
+  if (c >= '0' && c <= '9')
+    return (c - 48);
+  if ((c >= 'a') && (c <= 'f'))
+    return (c - 'a' + 10);
+
+  if ((c >= 'A') && (c <= 'F'))
+    return (c - 'A' + 10);
+
+  return -1;
+}
+
+static int
+hex2char(char c)
+{
+  if (c <= 9)
+    return (c + 48);
+
+  return (c - 10 + 'a');
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -48,6 +71,8 @@ main(int argc, char *argv[])
 	fprintf(stderr, "%s: usage is '%s <opcode> options, e.g.\n",
 		argv[0], argv[0]);
 	fprintf(stderr, "\t%s add <kvno> <keyfile> <princ>\n", argv[0]);
+	fprintf(stderr, "\tOR\n\t%s add <kvno> <key>\n", argv[0]);
+	fprintf(stderr, "\t\tEx: %s add 0 \"80b6a7cd7a9dadb6\"\n", argv[0]);
 	fprintf(stderr, "\t%s delete <kvno>\n", argv[0]);
 	fprintf(stderr, "\t%s list\n", argv[0]);
 	exit(1);
@@ -66,55 +91,79 @@ main(int argc, char *argv[])
 	krb5_principal principal;
 	krb5_keyblock *key;
 	krb5_error_code retval;
-	int kvno;
+	int kvno, keymode = 0;
 
 	if (argc != 5) {
-	    fprintf(stderr, "%s add: usage is '%s add <kvno> <keyfile> "
-		    "<princ>\n", argv[0], argv[0]);
-	    exit(1);
+	    if (argc == 4) 
+		keymode = 1;
+	    else {
+		fprintf(stderr, "%s add: usage is '%s add <kvno> <keyfile> "
+			"<princ>\n", argv[0], argv[0]);
+		fprintf(stderr, "\tOR\n\t%s add <kvno> <key>\n", argv[0]);
+		fprintf(stderr, "\t\tEx: %s add 0 \"80b6a7cd7a9dadb6\"\n", argv[0]);
+		exit(1);
+	    }
 	}
-
-	krb5_init_context(&context);
 
 	kvno = atoi(argv[2]);
-	retval = krb5_parse_name(context, argv[4], &principal);
-	if (retval != 0) {
+	if (keymode) {
+	    char tkey[8];
+	    int i;
+	    char *cp;
+	    if (strlen(argv[3]) != 16) {
+		printf("key %s is not in right format\n", argv[3]);
+		printf(" <key> should be an 8byte hex representation \n");
+		printf("  Ex: setkey add 0 \"80b6a7cd7a9dadb6\"\n");
+		exit(1);
+	    }
+	    memset(tkey, 0, sizeof(tkey));
+	    for (i = 7, cp = argv[3] + 15; i >= 0; i--, cp -= 2)
+		tkey[i] = char2hex(*cp) + char2hex(*(cp - 1)) * 16;
+	    code = afsconf_AddKey(tdir, kvno, tkey, 1);
+	} else {
+	    krb5_init_context(&context);
+
+	    retval = krb5_parse_name(context, argv[4], &principal);
+	    if (retval != 0) {
 		afs_com_err(argv[0], retval, "while parsing AFS principal");
 		exit(1);
-	}
-	retval = krb5_kt_read_service_key(context, argv[3], principal, kvno,
-					  ENCTYPE_DES_CBC_CRC, &key);
-	if (retval != 0) {
+	    }
+	    retval = krb5_kt_read_service_key(context, argv[3], principal, kvno,
+					      ENCTYPE_DES_CBC_CRC, &key);
+	    if (retval != 0) {
 		afs_com_err(argv[0], retval, "while extracting AFS service key");
 		exit(1);
-	}
-
+	    }
+	    
 #ifdef USING_HEIMDAL
-#define deref_key_length(key) \
-	  key->keyvalue.length
-
-#define deref_key_contents(key) \
-	key->keyvalue.data
+#define deref_key_length(key)			\
+	    key->keyvalue.length
+	    
+#define deref_key_contents(key)			\
+	    key->keyvalue.data
 #else
-#define deref_key_length(key) \
-	  key->length
-
-#define deref_key_contents(key) \
-	key->contents
+#define deref_key_length(key)			\
+	    key->length
+	    
+#define deref_key_contents(key)			\
+	    key->contents
 #endif
-	if (deref_key_length(key) != 8) {
+	    if (deref_key_length(key) != 8) {
 		fprintf(stderr, "Key length should be 8, but is really %d!\n",
 			deref_key_length(key));
 		exit(1);
+	    }
+	    code = afsconf_AddKey(tdir, kvno, (char *) deref_key_contents(key), 1);
 	}
 
-	code = afsconf_AddKey(tdir, kvno, (char *) deref_key_contents(key), 1);
 	if (code) {
 	    fprintf(stderr, "%s: failed to set key, code %ld.\n", argv[0], code);
 	    exit(1);
 	}
-	krb5_free_principal(context, principal);
-	krb5_free_keyblock(context, key);
+	if (keymode == 0) {
+	    krb5_free_principal(context, principal);
+	    krb5_free_keyblock(context, key);
+	}
     }
     else if (strcmp(argv[1], "delete")==0) {
 	long kvno;

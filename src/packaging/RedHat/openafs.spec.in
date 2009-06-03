@@ -1149,7 +1149,6 @@ grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
 %{_bindir}/unlog
 %{_sbindir}/backup
 %{_sbindir}/butc
-%{_sbindir}/copyauth
 %{_sbindir}/fms
 %{_sbindir}/fstrace
 %{_sbindir}/kas

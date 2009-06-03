@@ -93,35 +93,6 @@ flipPrimary(char *tokenBuf)
     return 0;
 }
 
-/* get the current AFS pag for the calling process */
-static afs_int32
-curpag()
-{
-    gid_t groups[30];
-    afs_uint32 g0, g1;
-    afs_uint32 h, l, ret;
-
-    if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
-	return 0;
-
-    g0 = groups[0] & 0xffff;
-    g1 = groups[1] & 0xffff;
-    g0 -= 0x3f00;
-    g1 -= 0x3f00;
-    if (g0 < 0xc000 && g1 < 0xc000) {
-	l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
-	h = (g0 >> 14);
-	h = (g1 >> 14) + h + h + h;
-	ret = ((h << 28) | l);
-	/* Additional testing */
-	if (((ret >> 24) & 0xff) == 'A')
-	    return ret;
-	else
-	    return -1;
-    }
-    return -1;
-}
-
 /* Returns the AFS pag number, if any, otherwise return -1 */
 afs_int32
 getPAG()
@@ -131,7 +102,7 @@ getPAG()
     assert(sizeof(afs_uint32) == 4);
     assert(sizeof(afs_int32) == 4);
 
-    pag = curpag();
+    pag = ktc_curpag();
     if (pag == 0 || pag == -1)
 	return -1;
 

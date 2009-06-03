@@ -183,5 +183,6 @@ struct cm_initparams {
 #define VIOC_GETALIAS		_CVICEIOCTL(2)	/* get alias info */
 #define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
 #define VIOC_NEWUUID		_CVICEIOCTL(9)	/* new uuid */
+#define VIOC_GETPAG             _CVICEIOCTL(13) /* get pag value */
 
 #endif /* AFS_VENUS_H */
