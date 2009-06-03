@@ -583,8 +583,7 @@ afs_xioctl(void)
 #ifdef AFS_LINUX22_ENV
 		    return -code;
 #else
-		    setuerror(code);
-		    return;
+		    return (setuerror(code), code);
 #endif
 #endif
 #endif
@@ -2400,7 +2399,7 @@ DECL_PIOCTL(PGetPAG)
 {
     afs_int32 pag;
 
-    if (aoutSize < sizeof(afs_int32)) {
+    if (*aoutSize < sizeof(afs_int32)) {
 	return E2BIG;
     }
 
