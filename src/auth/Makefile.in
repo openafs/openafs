@@ -13,7 +13,7 @@ OBJS= cellconfig.o ktc.o userok.o writeconfig.o authcon.o \
 KOBJS= cellconfig.o ktc.krb.o userok.o writeconfig.o authcon.o \
     acfg_errors.o ktc_errors.o
 
-LIBS=libauth.a ${TOP_LIBDIR}/libsys.a \
+LIBS=libauth.a \
       ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
       ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
       ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
@@ -25,9 +25,7 @@ UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
 all: \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libauth.krb.a \
-	depinstall \
-	copyauth \
-	setkey
+	depinstall
 
 depinstall: \
 	${TOP_INCDIR}/afs/keys.h \
@@ -84,8 +82,7 @@ install: \
 	${DESTDIR}${includedir}/afs/keys.h \
 	${DESTDIR}${includedir}/afs/cellconfig.h \
 	${DESTDIR}${includedir}/afs/auth.h \
-	${DESTDIR}${includedir}/afs/ktc.h \
-	${DESTDIR}${sbindir}/copyauth 
+	${DESTDIR}${includedir}/afs/ktc.h
 
 #
 # Misc. targets
@@ -166,5 +163,4 @@ dest: \
 	${DEST}/include/afs/keys.h \
 	${DEST}/include/afs/cellconfig.h \
 	${DEST}/include/afs/auth.h \
-	${DEST}/include/afs/ktc.h \
-	${DEST}/etc/copyauth 
+	${DEST}/include/afs/ktc.h

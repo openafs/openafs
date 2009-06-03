@@ -184,7 +184,8 @@ struct cm_initparams {
 #define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
 #define VIOC_DISCON		_CVICEIOCTL(5)	/* set/get discon mode */
 #define VIOC_NEWUUID            _CVICEIOCTL(9)  /* new uuid */
-#define VIOCPRECACHE            _CVICEIOCTL(12)  /* precache size */
+#define VIOCPRECACHE            _CVICEIOCTL(12) /* precache size */
+#define VIOC_GETPAG             _CVICEIOCTL(13) /* get pag value */
 
 /* OpenAFS-specific 'O' pioctl's */
 #define VIOC_NFS_NUKE_CREDS	_OVICEIOCTL(1)	/* nuke creds for all PAG's */

@@ -119,6 +119,7 @@ DECL_PIOCTL(PDiscon);
 DECL_PIOCTL(PNFSNukeCreds);
 DECL_PIOCTL(PNewUuid);
 DECL_PIOCTL(PPrecache); 
+DECL_PIOCTL(PGetPAG);
 #if defined(AFS_CACHE_BYPASS)
 DECL_PIOCTL(PSetCachingThreshold);
 DECL_PIOCTL(PSetCachingBlkSize);
@@ -237,6 +238,7 @@ static pioctlFunction CpioctlSw[] = {
     PBogus,                     /* 0 */
     PBogus,                     /* 0 */
     PPrecache,                  /* 12 */
+    PGetPAG,                    /* 13 */
 };
 
 static int (*(OpioctlSw[])) () = {
@@ -2380,6 +2382,33 @@ DECL_PIOCTL(PViceAccess)
 	return 0;
     else
 	return EACCES;
+}
+
+/*!
+ * VIOC_GETPAG (13) - Get PAG value
+ *
+ * \ingroup pioctl
+ *
+ * \param[in] ain	not in use
+ * \param[out] aout	PAG value or NOPAG
+ *
+ * \retval E2BIG	Error not enough space to copy out value
+ *
+ * \post get PAG value for the caller's cred
+ */
+DECL_PIOCTL(PGetPAG)
+{
+    afs_int32 pag;
+
+    if (aoutSize < sizeof(afs_int32)) {
+	return E2BIG;
+    }
+
+    pag = PagInCred(*acred);
+
+    memcpy(aout, (char *)&pag, sizeof(afs_int32));
+    *aoutSize = sizeof(afs_int32);
+    return 0;
 }
 
 DECL_PIOCTL(PPrecache)

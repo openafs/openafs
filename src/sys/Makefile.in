@@ -166,7 +166,7 @@ pagsh:	libsys.a AFS_component_version_number.o
 
 pagsh.krb: libsys.a
 	${CC} ${CFLAGS} -c ${srcdir}/pagsh.c -DAFS_KERBEROS_ENV 
-	${CC} ${CFLAGS} -o pagsh.krb pagsh.o ${LIBS}
+	${CC} ${CFLAGS} -o pagsh.krb pagsh.o ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a ${LIBS}
 
 #
 # Test programs.
