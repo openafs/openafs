@@ -249,7 +249,7 @@ SPR_INewEntry(struct rx_call *call, char aname[], afs_int32 aid, afs_int32 oid)
     code = iNewEntry(call, aname, aid, oid, &cid);
     osi_auditU(call, PTS_INewEntEvent, code, AUD_ID, aid, AUD_STR, aname,
 	       AUD_ID, oid, AUD_END);
-    ViceLog(25, ("PTS_INewEntry: code %d cid %d aid %d aname %s oid %d\n", code, cid, aid, aname, oid));
+    ViceLog(5, ("PTS_INewEntry: code %d cid %d aid %d aname %s oid %d\n", code, cid, aid, aname, oid));
     return code;
 }
 
@@ -321,7 +321,7 @@ SPR_NewEntry(struct rx_call *call, char aname[], afs_int32 flag, afs_int32 oid,
     code = newEntry(call, aname, flag, oid, aid, &cid);
     osi_auditU(call, PTS_NewEntEvent, code, AUD_ID, *aid, AUD_STR, aname,
 	       AUD_ID, oid, AUD_END);
-    ViceLog(25, ("PTS_NewEntry: code %d cid %d aid %d aname %s oid %d\n", code, cid, *aid, aname, oid));
+    ViceLog(5, ("PTS_NewEntry: code %d cid %d aid %d aname %s oid %d\n", code, cid, *aid, aname, oid));
     return code;
 }
 
@@ -741,7 +741,7 @@ SPR_Delete(struct rx_call *call, afs_int32 aid)
 
     code = Delete(call, aid, &cid);
     osi_auditU(call, PTS_DelEvent, code, AUD_ID, aid, AUD_END);
-    ViceLog(25, ("PTS_Delete: code %d cid %d aid %d\n", code, cid, aid));
+    ViceLog(5, ("PTS_Delete: code %d cid %d aid %d\n", code, cid, aid));
     return code;
 }
 
