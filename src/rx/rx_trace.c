@@ -31,7 +31,6 @@ main(int argc, char **argv)
 #include <sys/file.h>
 #include <unistd.h>
 #endif
-#include "rx_internal.h"
 #include "rx.h"
 #include "rx_globals.h"
 #include "rx_trace.h"

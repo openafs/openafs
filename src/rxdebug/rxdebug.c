@@ -417,8 +417,6 @@ MainCommand(struct cmd_syndesc *as, void *arock)
                     printf(" busy");
                 if (tconn.flags & RX_CONN_ATTACHWAIT)
                     printf(" attachWait");
-                if (tconn.flags & RX_CLONED_CONNECTION)
-                    printf(" clone");
 		printf(", ");
 	    }
 	    printf("security index %d, ", tconn.securityIndex);

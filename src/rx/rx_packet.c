@@ -18,77 +18,75 @@ RCSID
     ("$Header$");
 
 #ifdef KERNEL
-# if defined(UKERNEL)
-#  include "afs/sysincludes.h"
-#  include "afsincludes.h"
-#  include "rx/rx_kcommon.h"
-#  include "rx/rx_clock.h"
-#  include "rx/rx_queue.h"
-#  include "rx/rx_packet.h"
-# else /* defined(UKERNEL) */
-#  ifdef RX_KERNEL_TRACE
-#   include "../rx/rx_kcommon.h"
-#  endif
-#  include "h/types.h"
-#  ifndef AFS_LINUX20_ENV
-#   include "h/systm.h"
-#  endif
-#  if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV)
-#   include "afs/sysincludes.h"
-#  endif
-#  if defined(AFS_OBSD_ENV)
-#   include "h/proc.h"
-#  endif
-#  include "h/socket.h"
-#  if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
-#   if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
-#    include "sys/mount.h"		/* it gets pulled in by something later anyway */
-#   endif
-#   include "h/mbuf.h"
-#  endif
-#  include "netinet/in.h"
-#  include "afs/afs_osi.h"
-#  include "rx_kmutex.h"
-#  include "rx/rx_clock.h"
-#  include "rx/rx_queue.h"
-#  ifdef	AFS_SUN5_ENV
-#   include <sys/sysmacros.h>
-#  endif
-#  include "rx/rx_packet.h"
-# endif /* defined(UKERNEL) */
-# include "rx/rx_internal.h"
-# include "rx/rx_globals.h"
+#if defined(UKERNEL)
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "rx/rx_kcommon.h"
+#include "rx/rx_clock.h"
+#include "rx/rx_queue.h"
+#include "rx/rx_packet.h"
+#else /* defined(UKERNEL) */
+#ifdef RX_KERNEL_TRACE
+#include "../rx/rx_kcommon.h"
+#endif
+#include "h/types.h"
+#ifndef AFS_LINUX20_ENV
+#include "h/systm.h"
+#endif
+#if defined(AFS_SGI_ENV) || defined(AFS_HPUX110_ENV)
+#include "afs/sysincludes.h"
+#endif
+#if defined(AFS_OBSD_ENV)
+#include "h/proc.h"
+#endif
+#include "h/socket.h"
+#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV) && !defined(AFS_HPUX110_ENV)
+#if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
+#include "sys/mount.h"		/* it gets pulled in by something later anyway */
+#endif
+#include "h/mbuf.h"
+#endif
+#include "netinet/in.h"
+#include "afs/afs_osi.h"
+#include "rx_kmutex.h"
+#include "rx/rx_clock.h"
+#include "rx/rx_queue.h"
+#ifdef	AFS_SUN5_ENV
+#include <sys/sysmacros.h>
+#endif
+#include "rx/rx_packet.h"
+#endif /* defined(UKERNEL) */
+#include "rx/rx_globals.h"
 #else /* KERNEL */
-# include "sys/types.h"
-# include <sys/stat.h>
-# include <errno.h>
-# if defined(AFS_NT40_ENV) 
-#  include <winsock2.h>
-#  ifndef EWOULDBLOCK
-#   define EWOULDBLOCK WSAEWOULDBLOCK
-#  endif
-#  include "rx_user.h"
-#  include "rx_xmit_nt.h"
-#  include <stdlib.h>
-# else
-#  include <sys/socket.h>
-#  include <netinet/in.h>
-# endif
-# include "rx_clock.h"
-# include "rx_internal.h"
-# include "rx.h"
-# include "rx_queue.h"
-# ifdef	AFS_SUN5_ENV
-#  include <sys/sysmacros.h>
-# endif
-# include "rx_packet.h"
-# include "rx_globals.h"
-# include <lwp.h>
-# include <assert.h>
-# include <string.h>
-# ifdef HAVE_UNISTD_H
-#  include <unistd.h>
-# endif
+#include "sys/types.h"
+#include <sys/stat.h>
+#include <errno.h>
+#if defined(AFS_NT40_ENV)
+#include <winsock2.h>
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
+#include "rx_user.h"
+#include "rx_xmit_nt.h"
+#include <stdlib.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif
+#include "rx_clock.h"
+#include "rx.h"
+#include "rx_queue.h"
+#ifdef	AFS_SUN5_ENV
+#include <sys/sysmacros.h>
+#endif
+#include "rx_packet.h"
+#include "rx_globals.h"
+#include <lwp.h>
+#include <assert.h>
+#include <string.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #endif /* KERNEL */
 
 #ifdef RX_LOCKS_DB
@@ -316,19 +314,19 @@ AllocPacketBufs(int class, int num_pkts, struct rx_queue * q)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_AtomicIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_AtomicIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_AtomicIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_AtomicIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_AtomicIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
                 break;
             }
 	}
@@ -1127,19 +1125,19 @@ rxi_AllocPacketNoLock(int class)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_AtomicIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_AtomicIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_AtomicIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_AtomicIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_AtomicIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
                 break;
             }
 	}
@@ -1148,7 +1146,7 @@ rxi_AllocPacketNoLock(int class)
 #endif /* KERNEL */
 
     if (rx_stats_active)
-        rx_AtomicIncrement(rx_stats.packetRequests, rx_stats_mutex);
+        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
     if (queue_IsEmpty(&rx_ts_info->_FPQ)) {
 
 #ifdef KERNEL
@@ -1187,19 +1185,19 @@ rxi_AllocPacketNoLock(int class)
         if (rx_stats_active) {
             switch (class) {
             case RX_PACKET_CLASS_RECEIVE:
-                rx_AtomicIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.receivePktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SEND:
-                rx_AtomicIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.sendPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SPECIAL:
-                rx_AtomicIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.specialPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_RECV_CBUF:
-                rx_AtomicIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.receiveCbufPktAllocFailures, rx_stats_mutex);
                 break;
             case RX_PACKET_CLASS_SEND_CBUF:
-                rx_AtomicIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.sendCbufPktAllocFailures, rx_stats_mutex);
                 break;
             }
         }
@@ -1208,7 +1206,7 @@ rxi_AllocPacketNoLock(int class)
 #endif /* KERNEL */
 
     if (rx_stats_active)
-        rx_AtomicIncrement(rx_stats.packetRequests, rx_stats_mutex);
+        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
 
 #ifdef KERNEL
     if (queue_IsEmpty(&rx_freePacketQueue))
@@ -1245,7 +1243,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
     RX_TS_INFO_GET(rx_ts_info);
 
     if (rx_stats_active)
-        rx_AtomicIncrement(rx_stats.packetRequests, rx_stats_mutex);
+        rx_MutexIncrement(rx_stats.packetRequests, rx_stats_mutex);
     if (pull_global && queue_IsEmpty(&rx_ts_info->_FPQ)) {
         MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -1466,12 +1464,12 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	if (nbytes < 0 && errno == EWOULDBLOCK) {
             if (rx_stats_active)
-		rx_AtomicIncrement(rx_stats.noPacketOnRead, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.noPacketOnRead, rx_stats_mutex);
 	} else if (nbytes <= 0) {
             if (rx_stats_active) {
                 MUTEX_ENTER(&rx_stats_mutex);
-                rx_AtomicIncrement_NL(rx_stats.bogusPacketOnRead);
-                rx_AtomicSwap(&rx_stats.bogusHost, from.sin_addr.s_addr, rx_stats_mutex);
+                rx_stats.bogusPacketOnRead++;
+                rx_stats.bogusHost = from.sin_addr.s_addr;
                 MUTEX_EXIT(&rx_stats_mutex);
             }
 	    dpf(("B: bogus packet from [%x,%d] nb=%d", ntohl(from.sin_addr.s_addr),
@@ -1506,7 +1504,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
 	    struct rx_peer *peer;
             if (rx_stats_active)
-                rx_AtomicIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
 	    /*
 	     * Try to look up this peer structure.  If it doesn't exist,
 	     * don't create a new one - 
@@ -1523,7 +1521,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	     * it may have no refCount, meaning we could race with
 	     * ReapConnections
 	     */
-	    if (peer && (rx_AtomicPeek_NL(peer->refCount) > 0)) {
+	    if (peer && (peer->refCount > 0)) {
 		MUTEX_ENTER(&peer->peer_lock);
 		hadd32(peer->bytesReceived, p->length);
 		MUTEX_EXIT(&peer->peer_lock);
@@ -1987,7 +1985,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 			tpeer.port = tp->port;
 			tpeer.ifMTU = htons(tp->ifMTU);
 			tpeer.idleWhen = htonl(tp->idleWhen);
-			tpeer.refCount = htons(rx_AtomicPeek_NL(tp->refCount));
+			tpeer.refCount = htons(tp->refCount);
 			tpeer.burstSize = tp->burstSize;
 			tpeer.burst = tp->burst;
 			tpeer.burstWait.sec = htonl(tp->burstWait.sec);
@@ -2276,7 +2274,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 			 p->length + RX_HEADER_SIZE, istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
-                rx_AtomicIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
 	    p->retryTime = p->timeSent;	/* resend it very soon */
 	    clock_Addmsec(&(p->retryTime),
 			  10 + (((afs_uint32) p->backoff) << 8));
@@ -2317,7 +2315,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
     dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
     if (rx_stats_active)
-        rx_AtomicIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
     MUTEX_ENTER(&peer->peer_lock);
     hadd32(peer->bytesSent, p->length);
     MUTEX_EXIT(&peer->peer_lock);
@@ -2463,7 +2461,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 			 istack)) != 0) {
 	    /* send failed, so let's hurry up the resend, eh? */
             if (rx_stats_active)
-                rx_AtomicIncrement(rx_stats.netSendFailures, rx_stats_mutex);
+                rx_MutexIncrement(rx_stats.netSendFailures, rx_stats_mutex);
 	    for (i = 0; i < len; i++) {
 		p = list[i];
 		p->retryTime = p->timeSent;	/* resend it very soon */
@@ -2501,7 +2499,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
 #endif
     if (rx_stats_active)
-        rx_AtomicIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
+        rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
     MUTEX_ENTER(&peer->peer_lock);
     hadd32(peer->bytesSent, p->length);
     MUTEX_EXIT(&peer->peer_lock);

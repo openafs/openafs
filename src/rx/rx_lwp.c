@@ -44,7 +44,6 @@ RCSID
 # include <sys/ioctl.h>
 # include <sys/time.h>
 #endif
-# include "rx_internal.h"
 # include "rx.h"
 # include "rx_globals.h"
 # include <lwp.h>
@@ -212,7 +211,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 	    tv.tv_usec = cv.usec;
 	    tvp = &tv;
 	}
-	rx_AtomicIncrement(rx_stats.selects, rx_stats_mutex);
+	rx_stats.selects++;
 
 	*rfds = rx_selectMask;
 
@@ -435,7 +434,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     fd_set *sfds = (fd_set *) 0;
     while (sendmsg(socket, msg_p, flags) == -1) {
 	int err;
-	rx_AtomicIncrement(rx_stats.sendSelects, rx_stats_mutex);
+	rx_stats.sendSelects++;
 
 	if (!sfds) {
 	    if (!(sfds = IOMGR_AllocFDSet())) {

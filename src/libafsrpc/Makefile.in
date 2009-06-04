@@ -185,7 +185,7 @@ rx_trace.o: ${RX}/rx_trace.c
 rx_multi.o: ${RX}/rx_multi.c
 	${CCRULE} ${RX}/rx_multi.c
 
-${RXOBJS}: ${RX}/rx.h ${RX}/rx_user.h ${RX}/rx_globals.h ${RX}/rx_clock.h ${RX}/rx_queue.h ${RX}/rx_event.h ${RX}/rx_internal.h
+${RXOBJS}: ${RX}/rx.h ${RX}/rx_user.h ${RX}/rx_globals.h ${RX}/rx_clock.h ${RX}/rx_queue.h ${RX}/rx_event.h
 
 rxkad_client.o: ${RXKAD}/rxkad_client.c
 	${CCRULE} ${RXKAD}/rxkad_client.c

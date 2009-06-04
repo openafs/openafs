@@ -32,7 +32,6 @@ RCSID
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "rx/rx_internal.h"
 #include "rx/rx.h"
 #include "rx/rx_clock.h"
 #endif /* !UKERNEL */
@@ -44,7 +43,6 @@ RCSID
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
-#include "rx_internal.h"
 #include "rx.h"
 #include "rx_clock.h"
 #endif

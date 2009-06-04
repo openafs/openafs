@@ -23,10 +23,8 @@ RCSID
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */
-#include "rx/rx_internal.h"
 #include "rx/rx.h"
 #else /* KERNEL */
-#include "rx_internal.h"
 #include "rx.h"
 #endif /* KERNEL */
 

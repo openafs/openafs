@@ -48,7 +48,6 @@ RCSID
 #ifndef AFS_NT40_ENV
 # include <sys/time.h>
 #endif
-# include "rx_internal.h"
 # include "rx.h"
 # include "rx_globals.h"
 
@@ -199,8 +198,10 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	if (!greedy)
 	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
-	if (rx_stats_active) {
-	    rx_AtomicSwap(&rx_stats.socketGreedy, greedy, rx_stats_mutex);
+        if (rx_stats_active) {
+            MUTEX_ENTER(&rx_stats_mutex);
+            rx_stats.socketGreedy = greedy;
+            MUTEX_EXIT(&rx_stats_mutex);
         }
     }
 
@@ -700,6 +701,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
     struct sockaddr_in addr;
 #endif
 
+
+
     LOCK_IF_INIT;
     if (!Inited) {
 	UNLOCK_IF_INIT;
@@ -716,14 +719,14 @@ rxi_InitPeerParams(struct rx_peer *pp)
     /* try to second-guess IP, and identify which link is most likely to
      * be used for traffic to/from this host. */
     ppaddr = ntohl(pp->host);
-    
+
     pp->ifMTU = 0;
     pp->timeout.sec = 2;
-    pp->rateFlag = 2;         /* start timing after two full packets */
+    pp->rateFlag = 2;		/* start timing after two full packets */
     /* I don't initialize these, because I presume they are bzero'd... 
      * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
      * pp->timeout.usec */
-    
+
     LOCK_IF;
     for (ix = 0; ix < rxi_numNetAddrs; ++ix) {
 	if ((rxi_NetAddrs[ix] & myNetMasks[ix]) == (ppaddr & myNetMasks[ix])) {
@@ -739,7 +742,7 @@ rxi_InitPeerParams(struct rx_peer *pp)
 	}
     }
     UNLOCK_IF;
-    if (!pp->ifMTU) {         /* not local */
+    if (!pp->ifMTU) {		/* not local */
 	pp->timeout.sec = 3;
 	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }

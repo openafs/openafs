@@ -102,11 +102,9 @@ EXT int rx_UdpBufSize GLOBALSINIT(64 * 1024);
 #ifdef AFS_NT40_ENV
 int   rx_GetMinUdpBufSize(void);
 void  rx_SetUdpBufSize(int x);
-void rx_SetMaxClonesPerConn(int x);
 #else
 #define rx_GetMinUdpBufSize()   (64*1024)
 #define rx_SetUdpBufSize(x)     (((x)>rx_GetMinUdpBufSize()) ? (rx_UdpBufSize = (x)):0)
-#define rx_SetMaxClonesPerConn(x)  (rx_max_clones_per_connection = x)
 #endif
 /*
  * Variables to control RX overload management. When the number of calls
@@ -195,7 +193,7 @@ typedef struct rx_ts_info_t {
     } _FPQ;
     struct rx_packet * local_special_packet;
 } rx_ts_info_t;
-struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-specific data struct */
+EXT struct rx_ts_info_t * rx_ts_info_init(void);   /* init function for thread-specific data struct */
 #define RX_TS_INFO_GET(ts_info_p) \
     do { \
         ts_info_p = (struct rx_ts_info_t*)pthread_getspecific(rx_ts_info_key); \
@@ -253,9 +251,9 @@ EXT afs_kmutex_t rx_freePktQ_lock;
 EXT int rx_TSFPQGlobSize GLOBALSINIT(3); /* number of packets to transfer between global and local queues in one op */
 EXT int rx_TSFPQLocalMax GLOBALSINIT(15); /* max number of packets on local FPQ before returning a glob to the global pool */
 EXT int rx_TSFPQMaxProcs GLOBALSINIT(0); /* max number of threads expected */
-void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
-void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
-void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
+EXT void rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local); /* more flexible packet alloc function */
+EXT void rxi_AdjustLocalPacketsTSFPQ(int num_keep_local, int allow_overcommit); /* adjust thread-local queue length, for places where we know how many packets we will need a priori */
+EXT void rxi_FlushLocalPacketsTSFPQ(void); /* flush all thread-local packets to global queue */
 #define RX_TS_FPQ_FLUSH_GLOBAL 1
 #define RX_TS_FPQ_PULL_GLOBAL 1
 #define RX_TS_FPQ_ALLOW_OVERCOMMIT 1
@@ -627,13 +625,6 @@ EXT2 int rx_enable_stats GLOBALSINIT(0);
  * the request path.
  */
 EXT int rx_enable_hot_thread GLOBALSINIT(0);
-
-/*
- * Set rx_max_clones_per_connection to a value > 0 to enable connection clone 
- * workaround to RX_MAXCALLS limit.
- */
-#define RX_HARD_MAX_CLONES 10
-EXT int rx_max_clones_per_connection GLOBALSINIT(2);
 
 EXT int RX_IPUDP_SIZE GLOBALSINIT(_RX_IPUDP_SIZE);
 #endif /* AFS_RX_GLOBALS_H */

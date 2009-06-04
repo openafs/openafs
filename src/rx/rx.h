@@ -111,24 +111,16 @@ int ntoh_syserr_conv(int error);
 #define rx_GetLocalStatus(call, status) ((call)->localStatus)
 #define	rx_GetRemoteStatus(call)	((call)->remoteStatus)
 #define	rx_Error(call)			((call)->error)
+#define	rx_ConnError(conn)		((conn)->error)
 #define	rx_IsServerConn(conn)		((conn)->type == RX_SERVER_CONNECTION)
 #define	rx_IsClientConn(conn)		((conn)->type == RX_CLIENT_CONNECTION)
 /* Don't use these; use the IsServerConn style */
 #define	rx_ServerConn(conn)		((conn)->type == RX_SERVER_CONNECTION)
 #define	rx_ClientConn(conn)		((conn)->type == RX_CLIENT_CONNECTION)
 #define rx_IsUsingPktCksum(conn)	((conn)->flags & RX_CONN_USING_PACKET_CKSUM)
-#define rx_IsClonedConn(conn)           ((conn)->flags & RX_CLONED_CONNECTION)
 #define rx_ServiceIdOf(conn)		((conn)->serviceId)
 #define	rx_SecurityClassOf(conn)	((conn)->securityIndex)
 #define rx_SecurityObjectOf(conn)	((conn)->securityObject)
-#define rx_ConnError(conn)		(rx_IsClonedConn((conn)) ? (conn)->parent->error : (conn)->error)
-#define rx_SetConnError(conn, err)      (rx_IsClonedConn((conn)) ? ((conn)->parent->error = err): ((conn)->error = err))
-#define rx_ConnHardDeadTime(conn)	(rx_IsClonedConn((conn)) ? (conn)->parent->hardDeadTime : (conn)->hardDeadTime)
-#define rx_ConnIdleDeadTime(conn)	(rx_IsClonedConn((conn)) ? (conn)->parent->idleDeadTime : (conn)->idleDeadTime)
-#define rx_ConnIdleDeadErr(conn)	(rx_IsClonedConn((conn)) ? (conn)->parent->idleDeadErr : (conn)->idleDeadErr)
-#define rx_ConnSecondsUntilDead(conn)	(rx_IsClonedConn((conn)) ? (conn)->parent->secondsUntilDead : (conn)->secondsUntilDead)
-#define rx_ConnSecondsUntilPing(conn)	(rx_IsClonedConn((conn)) ? (conn)->parent->secondsUntilPing : (conn)->secondsUntilPing)
-
 
 /*******************
  * Macros callable by the user to further define attributes of a
@@ -176,30 +168,9 @@ int ntoh_syserr_conv(int error);
 #define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
 
 /* Set connection hard and idle timeouts for a connection */
-#define rx_SetConnHardDeadTime(conn, seconds)\
-    {\
-    if (rx_IsClonedConn(conn))						\
-	(conn)->parent->hardDeadTime = (seconds);			\
-    else 								\
-	(conn)->hardDeadTime = (seconds);				\
-    }
-
-#define rx_SetConnIdleDeadTime(conn, seconds)\
-    {\
-    if (rx_IsClonedConn(conn))						\
-	(conn)->parent->idleDeadTime = (seconds);			\
-    else 								\
-	(conn)->idleDeadTime = (seconds);				\
-    }
-
-#define rx_SetServerConnIdleDeadErr(conn, err)\
-    {\
-    if (rx_IsClonedConn(conn))						\
-	(conn)->parent->idleDeadErr = (err);				\
-    else 								\
-	(conn)->idleDeadErr = (err);					\
-    }
-
+#define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
+#define rx_SetConnIdleDeadTime(conn, seconds) ((conn)->idleDeadTime = (seconds))
+#define rx_SetServerConnIdleDeadErr(conn,err) ((conn)->idleDeadErr = (err))
 
 /* Set the overload threshold and the overload error */
 #define rx_SetBusyThreshold(threshold, code) (rx_BusyThreshold=(threshold),rx_BusyError=(code))
@@ -241,22 +212,6 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_EnableHotThread()		(rx_enable_hot_thread = 1)
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
-/* Macros to set max connection clones (each allows RX_MAXCALLS 
- * outstanding calls */
-
-#define rx_SetMaxCalls(v) \
-do {\
-	rx_SetCloneMax(v/4); \
-} while(0);
-
-#define rx_SetCloneMax(v) \
-do {\
-	if(v < RX_HARD_MAX_CLONES) \
-		rx_max_clones_per_connection = v; \
-} while(0);
-
-typedef afs_int32 rx_atomic_t;
-
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
 
 /* A connection is an authenticated communication path, allowing 
@@ -267,7 +222,7 @@ struct rx_connection_rx_lock {
     struct rx_peer_rx_lock *peer;
 #else
 struct rx_connection {
-    struct rx_connection *next;	/* on hash chain _or_ free list */
+    struct rx_connection *next;	/*  on hash chain _or_ free list */
     struct rx_peer *peer;
 #endif
 #ifdef	RX_ENABLE_LOCKS
@@ -298,7 +253,7 @@ struct rx_connection {
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
-    rx_atomic_t refCount;	/* Reference count */
+    afs_uint32 refCount;		/* Reference count */
     u_char flags;		/* Defined below */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
@@ -319,9 +274,6 @@ struct rx_connection {
     afs_int32 idleDeadErr;
     int nSpecific;		/* number entries in specific data */
     void **specific;		/* pointer to connection specific data */
-    struct rx_connection *parent; /* primary connection, if this is a clone */
-    struct rx_connection *next_clone; /* next in list of clones */
-    afs_uint32 nclones; /* count of clone connections (if not a clone) */
 };
 
 
@@ -419,8 +371,7 @@ struct rx_peer {
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    rx_atomic_t refCount;		/* Reference count */
-
+    afs_uint32 refCount;		/* Reference count for this structure */
 
     /* Congestion control parameters */
     u_char burstSize;		/* Reinitialization size for the burst parameter */
@@ -478,7 +429,6 @@ struct rx_peer {
 #define RX_CONN_RESET		   16	/* connection is reset, remove */
 #define RX_CONN_BUSY               32	/* connection is busy; don't delete */
 #define RX_CONN_ATTACHWAIT	   64	/* attach waiting for peer->lastReach */
-#define RX_CLONED_CONNECTION	  128   /* connection is a clone */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0
@@ -864,47 +814,47 @@ struct rx_securityClass {
  * must equal sizeof(afs_int32). */
 
 struct rx_statistics {		/* General rx statistics */
-    rx_atomic_t packetRequests;		/* Number of packet allocation requests */
-    rx_atomic_t receivePktAllocFailures;
-    rx_atomic_t sendPktAllocFailures;
-    rx_atomic_t specialPktAllocFailures;
-    rx_atomic_t socketGreedy;		/* Whether SO_GREEDY succeeded */
-    rx_atomic_t bogusPacketOnRead;	/* Number of inappropriately short packets received */
-    rx_atomic_t bogusHost;		/* Host address from bogus packets */
-    rx_atomic_t noPacketOnRead;		/* Number of read packets attempted when there was actually no packet to read off the wire */
-    rx_atomic_t noPacketBuffersOnRead;	/* Number of dropped data packets due to lack of packet buffers */
-    rx_atomic_t selects;		/* Number of selects waiting for packet or timeout */
-    rx_atomic_t sendSelects;		/* Number of selects forced when sending packet */
-    rx_atomic_t packetsRead[RX_N_PACKET_TYPES];	/* Total number of packets read, per type */
-    rx_atomic_t dataPacketsRead;	/* Number of unique data packets read off the wire */
-    rx_atomic_t ackPacketsRead;		/* Number of ack packets read */
-    rx_atomic_t dupPacketsRead;		/* Number of duplicate data packets read */
-    rx_atomic_t spuriousPacketsRead;	/* Number of inappropriate data packets */
-    rx_atomic_t packetsSent[RX_N_PACKET_TYPES];	/* Number of rxi_Sends: packets sent over the wire, per type */
-    rx_atomic_t ackPacketsSent;		/* Number of acks sent */
-    rx_atomic_t pingPacketsSent;	/* Total number of ping packets sent */
-    rx_atomic_t abortPacketsSent;	/* Total number of aborts */
-    rx_atomic_t busyPacketsSent;	/* Total number of busies sent received */
-    rx_atomic_t dataPacketsSent;	/* Number of unique data packets sent */
-    rx_atomic_t dataPacketsReSent;	/* Number of retransmissions */
-    rx_atomic_t dataPacketsPushed;	/* Number of retransmissions pushed early by a NACK */
-    rx_atomic_t ignoreAckedPacket;	/* Number of packets with acked flag, on rxi_Start */
+    int packetRequests;		/* Number of packet allocation requests */
+    int receivePktAllocFailures;
+    int sendPktAllocFailures;
+    int specialPktAllocFailures;
+    int socketGreedy;		/* Whether SO_GREEDY succeeded */
+    int bogusPacketOnRead;	/* Number of inappropriately short packets received */
+    int bogusHost;		/* Host address from bogus packets */
+    int noPacketOnRead;		/* Number of read packets attempted when there was actually no packet to read off the wire */
+    int noPacketBuffersOnRead;	/* Number of dropped data packets due to lack of packet buffers */
+    int selects;		/* Number of selects waiting for packet or timeout */
+    int sendSelects;		/* Number of selects forced when sending packet */
+    int packetsRead[RX_N_PACKET_TYPES];	/* Total number of packets read, per type */
+    int dataPacketsRead;	/* Number of unique data packets read off the wire */
+    int ackPacketsRead;		/* Number of ack packets read */
+    int dupPacketsRead;		/* Number of duplicate data packets read */
+    int spuriousPacketsRead;	/* Number of inappropriate data packets */
+    int packetsSent[RX_N_PACKET_TYPES];	/* Number of rxi_Sends: packets sent over the wire, per type */
+    int ackPacketsSent;		/* Number of acks sent */
+    int pingPacketsSent;	/* Total number of ping packets sent */
+    int abortPacketsSent;	/* Total number of aborts */
+    int busyPacketsSent;	/* Total number of busies sent received */
+    int dataPacketsSent;	/* Number of unique data packets sent */
+    int dataPacketsReSent;	/* Number of retransmissions */
+    int dataPacketsPushed;	/* Number of retransmissions pushed early by a NACK */
+    int ignoreAckedPacket;	/* Number of packets with acked flag, on rxi_Start */
     struct clock totalRtt;	/* Total round trip time measured (use to compute average) */
     struct clock minRtt;	/* Minimum round trip time measured */
     struct clock maxRtt;	/* Maximum round trip time measured */
-    rx_atomic_t nRttSamples;		/* Total number of round trip samples */
-    rx_atomic_t nServerConns;		/* Total number of server connections */
-    rx_atomic_t nClientConns;		/* Total number of client connections */
-    rx_atomic_t nPeerStructs;		/* Total number of peer structures */
-    rx_atomic_t nCallStructs;		/* Total number of call structures allocated */
-    rx_atomic_t nFreeCallStructs;	/* Total number of previously allocated free call structures */
-    rx_atomic_t netSendFailures;
-    rx_atomic_t fatalErrors;
-    rx_atomic_t ignorePacketDally;	/* packets dropped because call is in dally state */
-    rx_atomic_t receiveCbufPktAllocFailures;
-    rx_atomic_t sendCbufPktAllocFailures;
-    rx_atomic_t nBusies;
-    rx_atomic_t spares[4];
+    int nRttSamples;		/* Total number of round trip samples */
+    int nServerConns;		/* Total number of server connections */
+    int nClientConns;		/* Total number of client connections */
+    int nPeerStructs;		/* Total number of peer structures */
+    int nCallStructs;		/* Total number of call structures allocated */
+    int nFreeCallStructs;	/* Total number of previously allocated free call structures */
+    int netSendFailures;
+    afs_int32 fatalErrors;
+    int ignorePacketDally;	/* packets dropped because call is in dally state */
+    int receiveCbufPktAllocFailures;
+    int sendCbufPktAllocFailures;
+    int nBusies;
+    int spares[4];
 };
 
 /* structures for debug input and output packets */
@@ -956,46 +906,44 @@ struct rx_debugStats {
 };
 
 struct rx_debugConn_vL {
-    afs_uint32 host;
-    afs_uint32 cid;
-    struct rx_debugConn_vL *parent;	/* primary connection, if this is a clone */
-    afs_uint32 serial;
-    afs_uint32 callNumber[RX_MAXCALLS];
-    afs_uint32 error;
-    u_short port;
-    u_char flags;
-    u_char type;
-    u_char securityIndex;
-    u_char callState[RX_MAXCALLS];
-    u_char callMode[RX_MAXCALLS];
-    u_char callFlags[RX_MAXCALLS];
-    u_char callOther[RX_MAXCALLS];
+    afs_int32 host;
+    afs_int32 cid;
+    afs_int32 serial;
+    afs_int32 callNumber[RX_MAXCALLS];
+    afs_int32 error;
+    short port;
+    char flags;
+    char type;
+    char securityIndex;
+    char callState[RX_MAXCALLS];
+    char callMode[RX_MAXCALLS];
+    char callFlags[RX_MAXCALLS];
+    char callOther[RX_MAXCALLS];
     /* old style getconn stops here */
     struct rx_securityObjectStats secStats;
-    afs_uint32 sparel[10];
+    afs_int32 sparel[10];
 };
 
 struct rx_debugConn {
-    afs_uint32 host;
-    afs_uint32 cid;
-    struct rx_debugConn *parent;	/* primary connection, if this is a clone */
-    afs_uint32 serial;
-    afs_uint32 callNumber[RX_MAXCALLS];
-    afs_uint32 error;
-    u_short port;
-    u_char flags;
-    u_char type;
-    u_char securityIndex;
-    u_char sparec[3];		/* force correct alignment */
-    u_char callState[RX_MAXCALLS];
-    u_char callMode[RX_MAXCALLS];
-    u_char callFlags[RX_MAXCALLS];
-    u_char callOther[RX_MAXCALLS];
+    afs_int32 host;
+    afs_int32 cid;
+    afs_int32 serial;
+    afs_int32 callNumber[RX_MAXCALLS];
+    afs_int32 error;
+    short port;
+    char flags;
+    char type;
+    char securityIndex;
+    char sparec[3];		/* force correct alignment */
+    char callState[RX_MAXCALLS];
+    char callMode[RX_MAXCALLS];
+    char callFlags[RX_MAXCALLS];
+    char callOther[RX_MAXCALLS];
     /* old style getconn stops here */
     struct rx_securityObjectStats secStats;
-    afs_uint32 epoch;
-    afs_uint32 natMTU;
-    afs_uint32 sparel[9];
+    afs_int32 epoch;
+    afs_int32 natMTU;
+    afs_int32 sparel[9];
 };
 
 struct rx_debugPeer {
@@ -1137,7 +1085,59 @@ typedef struct rx_interface_stat {
 
 #ifdef AFS_NT40_ENV
 extern int rx_DumpCalls(FILE *outputFile, char *cookie);
-#endif /* AFS_NT40_ENV */
+
+#define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
+#define rx_MutexAdd(object, addend, mutex) InterlockedAdd(&object, addend)
+#define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
+#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        InterlockedIncrement(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        InterlockedDecrement(&object2); \
+        MUTEX_EXIT(&mutex); \
+    } while (0)
+#else
+#define rx_MutexIncrement(object, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object++; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexAdd(object, addend, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object += addend; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        object2++; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexAdd1Decrement2(object1, addend, object2, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object1 += addend; \
+        object2--; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#define rx_MutexDecrement(object, mutex) \
+    do { \
+        MUTEX_ENTER(&mutex); \
+        object--; \
+        MUTEX_EXIT(&mutex); \
+    } while(0)
+#endif 
+
 #endif /* _RX_   End of rx.h */
 
 #ifdef	KERNEL

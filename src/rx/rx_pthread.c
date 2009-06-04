@@ -35,7 +35,6 @@ RCSID
 # include <sys/time.h>
 #endif
 #include <sys/stat.h>
-#include "rx_internal.h"
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <assert.h>

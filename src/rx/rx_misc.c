@@ -27,7 +27,6 @@ RCSID
 #include <afs/errors.h>
 #include "xdr.h"
 #ifdef AFS_PTHREAD_ENV
-#include "rx_internal.h"
 #include "rx.h"
 #endif /* AFS_PTHREAD_ENV */
 #include <stdlib.h>

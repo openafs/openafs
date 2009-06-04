@@ -1197,8 +1197,8 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    if (nbytes <= 0) {
                 if (rx_stats_active) {
                     MUTEX_ENTER(&rx_stats_mutex);
-                    rx_AtomicIncrement_NL(rx_stats.bogusPacketOnRead);
-                    rx_AtomicSwap_NL(&rx_stats.bogusHost, from.sin_addr.s_addr);
+                    rx_stats.bogusPacketOnRead++;
+                    rx_stats.bogusHost = from.sin_addr.s_addr;
                     MUTEX_EXIT(&rx_stats_mutex);
                 }
 		dpf(("B: bogus packet from [%x,%d] nb=%d",
@@ -1212,8 +1212,11 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    *host = from.sin_addr.s_addr;
 	    *port = from.sin_port;
 	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
-                if (rx_stats_active) 
-                    rx_AtomicIncrement(rx_stats.packetsRead[p->header.type - 1], rx_stats_mutex);
+                if (rx_stats_active) {
+                    MUTEX_ENTER(&rx_stats_mutex);
+                    rx_stats.packetsRead[p->header.type - 1]++;
+                    MUTEX_EXIT(&rx_stats_mutex);
+                }
 	    }
 
 #ifdef RX_TRIMDATABUFS

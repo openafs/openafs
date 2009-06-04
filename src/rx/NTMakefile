@@ -55,10 +55,7 @@ INCFILES  = \
 	$(INCFILEDIR)\rx_prototypes.h \
 	$(INCFILEDIR)\xdr.h
 
-LOCAL_HEADERS = \
-	rx_internal.h
-
-$(LIBOBJS): $(INCFILES) $(LOCAL_HEADERS)
+$(LIBOBJS): $(INCFILES)
 
 $(MULTIOBJS):  rx_multi.h 
 
