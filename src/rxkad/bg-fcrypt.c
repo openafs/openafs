@@ -56,8 +56,6 @@ RCSID
 #include <asm/byteorder.h>
 #endif
 
-#include "afs/longc_procs.h"
-
 #else /* KERNEL */
 
 #include <afs/stds.h>
