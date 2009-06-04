@@ -1628,11 +1628,13 @@ ktc_curpag(void)
 
     code = PIOCTL(0, VIOC_GETPAG, &iob, 0);
     if (code < 0) {
-#if defined(AFS_AIX51_ENV)
+#if defined(AFS_AIX52_ENV)
 	code = getpagvalue("afs");
 	if (code < 0 && errno == EINVAL)
 	    code = 0;
 	return code;
+#elif defined(AFS_AIX51_ENV)
+	return -1;
 #else
 	gid_t groups[NGROUPS_MAX];
 	afs_uint32 g0, g1;
