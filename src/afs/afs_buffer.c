@@ -43,7 +43,6 @@ RCSID
 #include "afs/dir.h"
 
 #include "afs/afs_stats.h"
-#include "afs/longc_procs.h"
 #include "afs/afs.h"
 
 #ifndef	BUF_TIME_MAX

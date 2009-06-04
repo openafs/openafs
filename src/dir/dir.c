@@ -70,7 +70,6 @@ extern void *DNew(register afs_int32 *fid, register int page);
 
 #include "afs/dir.h"
 
-#include "afs/longc_procs.h"
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
 #endif

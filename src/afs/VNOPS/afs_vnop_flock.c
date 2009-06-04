@@ -987,11 +987,7 @@ afs_xflock(void)
     return code;
 #else /* AFS_OSF_ENV */
     if (!flockDone)
-#ifdef DYNEL
-	(*afs_longcall_procs.LC_flock) ();
-#else
 	flock();
-#endif
     AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestate);
     return;
