@@ -68,7 +68,7 @@ syscall.o: ${SYS}/syscall.s
 		;; \
 	esac
 
-libkopenafs.a: ${LIBOBJS}
+libkopenafs.a: ${LIBOBJS} syscall.o
 	${RM} -f $@
 	@set -e; set -x; case "$(SYS_NAME)" in \
 	sgi_* | rs_aix* | hp_ux10*) \
@@ -78,7 +78,7 @@ libkopenafs.a: ${LIBOBJS}
 	esac
 	${RANLIB} $@
 
-${LIBKOPENAFS}: ${LIBOBJS}
+${LIBKOPENAFS}: ${LIBOBJS} syscall.o
 	@set -e; set -x; case ${SYS_NAME} in \
 	sgi_* | rs_aix* | hp_ux10*) \
 		../config/shlib-build -d $(srcdir) -l libkopenafs \
