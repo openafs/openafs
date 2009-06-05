@@ -8,7 +8,8 @@ There are two versions of the F<CellServDB> file, both of which have the
 same format.  One version is used by an AFS client and lists all of the
 database server machines in the local cell and any foreign cell that is to
 be accessible from the local client machine.  The other version is used on
-servers and lists only the database servers in the local cell.
+servers and need list only the database servers in the local cell; in some
+configurations it can be a link to the same file the client uses.
 
 =head2 Client CellServDB
 
@@ -94,7 +95,11 @@ setcellname> command during the installation of the cell's server machine,
 which is automatically recorded as the cell's first database server
 machine. When adding or removing database server machines, be sure to
 update this file appropriately. It must reside in the F</usr/afs/etc>
-directory on each AFS server machine.
+directory on each AFS server machine. The database server processes,
+in addition to the usual configuration allowing each to be elected
+synchronization site and coordinate updates, can be set up as readonly
+database clone servers. Such servers can never be elected as the
+synchronization site.
 
 The database server processes consult the F<CellServDB> file to learn
 about their peers, with which they must maintain constant connections in
@@ -129,7 +134,9 @@ F</usr/afs/etc> directory, it is customary to edit only the copy of the
 file stored on the system control machine. Otherwise, edit the file on
 each server machine individually. For instructions on adding and removing
 database server machine, see the I<OpenAFS Quick Start> chapter on
-installing additional server machines.
+installing additional server machines. Updates to the server F<CellServDB>
+will trigger reloading the cell server configurations automatically in the
+AFS server processes.
 
 =head2 CellServDB Format
 
@@ -141,9 +148,11 @@ Both F<CellServDB> files have the same format:
 
 The first line begins at the left margin with the greater-than character
 (C<< > >>), followed immediately by the cell's name without an intervening
-space. Optionally, a comment can follow any number of spaces and a number
-sign (C<#>), perhaps to identify the organization associated with the
-cell.
+space. Optionally, a comment can follow any number of spaces and a octothorpe
+(C<#>), perhaps to identify the organization associated with the
+cell. A variant of this allows the defintion of a linked cell: after the 
+leading (C<< > >>) and cell name, a space and a second cell name may be
+listed before the optional spaces, octothorpe and comment.
 
 =item *
 
@@ -154,7 +163,8 @@ server machines, with the indicated information in order:
 
 =item *
 
-The database server machine's IP address in dotted-decimal format.
+The database server machine's IP address in dotted-decimal format, optionally
+enclosed in square braces (C<< [ >>)(C<< ] >>) to define a non-voting clone.
 
 =item *
 
@@ -162,7 +172,7 @@ One or more spaces.
 
 =item *
 
-A number sign (#), followed by the machine's fully qualified hostname
+An octothorpe (#), followed by the machine's fully qualified hostname
 without an intervening space. This number sign does not indicate that the
 hostname is a comment. It is a required field.
 
@@ -190,8 +200,8 @@ F<CellServDB> file and illustrates the required format.
    >abc.com        # ABC Corporation
    192.12.105.2	        #db1.abc.com
    192.12.105.3	        #db2.abc.com
-   192.12.107.3	        #db3.abc.com
-   >test.abc.com   # ABC Corporation Test Cell
+   [192.12.107.3]       #db3.abc.com
+   >test.abc.com abc.com   # ABC Corporation Test Cell
    192.12.108.57        #testdb1.abc.com
    192.12.108.55        #testdb2.abc.com
 
