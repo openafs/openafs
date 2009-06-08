@@ -35,7 +35,6 @@ PODS = \
         pod1\compile_et.pod            \
         pod1\copyauth.pod              \
         pod1\dlog.pod                  \
-        pod1\dpass.pod                 \
         pod1\fs.pod                    \
         pod1\fs_apropos.pod            \
         pod1\fs_checkservers.pod       \
@@ -95,7 +94,6 @@ PODS = \
         pod1\knfs.pod                  \
         pod1\kpasswd.pod               \
         pod1\livesys.pod               \
-        pod1\package_test.pod          \
         pod1\pagsh.pod                 \
         pod1\pts.pod                   \
         pod1\pts_adduser.pod           \
@@ -197,7 +195,6 @@ PODS = \
         pod5\NetInfo.pod               \
         pod5\NetRestrict.pod           \
         pod5\NoAuth.pod                \
-        pod5\package.pod               \
         pod5\prdb.DB0.pod              \
         pod5\SALVAGE.fs.pod            \
         pod5\salvage.lock.pod          \
@@ -314,7 +311,6 @@ PODS = \
         pod8\kas_unlock.pod            \
         pod8\kdb.pod                   \
         pod8\kpwvalid.pod              \
-        pod8\package.pod               \
         pod8\prdb_check.pod            \
         pod8\ptserver.pod              \
         pod8\pt_util.pod               \
