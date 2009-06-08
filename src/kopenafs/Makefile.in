@@ -23,6 +23,7 @@ CC		= ${MT_CC}
 INCLUDES	= -I. -I${srcdir} -I../sys
 CFLAGS		= ${COMMON_CFLAGS} ${INCLUDES} ${MT_CFLAGS} ${SHLIB_CFLAGS}
 
+SFLAGS		= -I${TOP_INCDIR}
 SYS		= ${srcdir}/../sys
 SYSOBJS		= glue.o pioctl.o setpag.o
 LIBOBJS		= kopenafs.o ${SYSOBJS} AFS_component_version_number.o
