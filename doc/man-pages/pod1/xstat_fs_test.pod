@@ -48,7 +48,7 @@ Specifies each data collection to return, which defines the type and
 amount of data the command interpreter gathers about the File Server.
 Data is returned in a predefined data structure.
 
-There are three acceptable values:
+There are four acceptable values:
 
 =over 4
 
@@ -69,6 +69,13 @@ Reports all of the internal performance statistics provided by the C<1>
 setting, plus some additional, detailed performance figures about the File
 Server (for example, minimum, maximum, and cumulative statistics regarding
 File Server RPCs, how long they take to complete, and how many succeed).
+
+=item 3
+
+Reports File Server callback processing statistics since the File Server
+started, including the number of call of callbacks added (AddCallBack), the
+number of callbacks broken (BreakCallBacks), and the number of callback
+space reclaims (GetSomeSpaces).
 
 =back
 
