@@ -120,34 +120,42 @@ $(OUT)\main.obj: main.c
 $(OUT)\make_keyperm.exe: $(OUT)\make_keyperm.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\make_p_table.exe: $(OUT)\make_p_table.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\make_s_table.exe: $(OUT)\make_s_table.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\make_odd.exe: $(OUT)\make_odd.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\make_p.exe: $(OUT)\make_p.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\make_s.exe: $(OUT)\make_s.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\make_fp.exe: $(OUT)\make_fp.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 $(OUT)\make_ip.exe: $(OUT)\make_ip.obj $(OUT)\misc.obj $(OUT)\main.obj
 	$(EXECONLINK)
  	$(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
 
 GENOBJS = $(OUT)\make_keyperm.obj \
     $(OUT)\make_p_table.obj \
