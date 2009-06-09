@@ -1672,12 +1672,12 @@ int afs_WriteVCacheDiscon(register struct vcache *avc,
 
 	if (astatus->Mask & AFS_SETOWNER) {
 		printf("Not allowed yet. \n");
-		//avc->f.m.Owner = astatus->Owner;
+		/*avc->f.m.Owner = astatus->Owner;*/
 	}
 
 	if (astatus->Mask & AFS_SETGROUP) {
 		printf("Not allowed yet. \n");
-		//avc->f.m.Group =  astatus->Group;
+		/*avc->f.m.Group =  astatus->Group;*/
 	}
 
 	if (astatus->Mask & AFS_SETMODE) {

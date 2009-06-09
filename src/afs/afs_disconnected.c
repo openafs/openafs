@@ -1108,7 +1108,7 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
     int ucode;
     afs_int32 start = 0;
     XSTATS_DECLS;
-    //AFS_STATCNT(afs_ResyncDisconFiles);
+    /*AFS_STATCNT(afs_ResyncDisconFiles);*/
 
     ObtainWriteLock(&afs_disconDirtyLock, 707);
 
