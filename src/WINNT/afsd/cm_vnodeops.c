@@ -936,7 +936,21 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         /* normal mt pt */
         volNamep = cm_FsStrDup(mpNamep + 1);
 
-        cellp = cm_FindCellByID(scp->fid.cell, 0);
+#ifdef AFS_FREELANCE_CLIENT
+        /* 
+         * Mount points in the Freelance cell should default
+         * to the workstation cell.
+         */
+        if (cm_freelanceEnabled &&
+             scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+        {       
+            fschar_t rootCellName[256]="";
+            cm_GetRootCellName(rootCellName);
+            cellp = cm_GetCell(rootCellName, 0);
+        } else 
+#endif /* AFS_FREELANCE_CLIENT */        
+            cellp = cm_FindCellByID(scp->fid.cell, 0);
     }
 
     if (!cellp) {
