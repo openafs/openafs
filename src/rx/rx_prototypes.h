@@ -363,7 +363,7 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 #define osi_Assert(expr) \
     do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
 #else
-#if defined(KERNEL) && defined(AFS_AIX_ENV)
+#if defined(KERNEL) && (defined(AFS_AIX_ENV) && !defined(AFS_AIX61_ENV))
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
 #else
 extern void osi_Panic(char *fmt, ...);
