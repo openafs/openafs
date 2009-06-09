@@ -102,7 +102,7 @@ aix_auth.o:
 		${CC} ${CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
 	rs_aix5*) \
 		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
-	rs_aix6*) 
+	rs_aix6*) \
 		${CC} ${CFLAGS} -c ${srcdir}/aix5_auth.c -o $@ ;; \
 	*) \
 		echo "not building aix lam binary for ${SYS_NAME}" ;; \
