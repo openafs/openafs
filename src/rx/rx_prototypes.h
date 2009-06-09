@@ -366,7 +366,11 @@ extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
 #if defined(KERNEL) && (defined(AFS_AIX_ENV) && !defined(AFS_AIX61_ENV))
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
 #else
+#ifdef AFS_AIX61_ENV
+/* No prototype. Deliberate, since there's no vprintf et al */
+#else
 extern void osi_Panic(char *fmt, ...);
+#endif
 #endif
 #endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
