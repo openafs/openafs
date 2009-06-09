@@ -52,6 +52,7 @@ dest: libaudit.a audit.h
 	case ${SYS_NAME} in \
 	rs_aix*) \
 	   ${INSTALL} -d ${DEST}/root.server/usr/afs/local ; \
+	   ${INSTALL} -d ${DEST}/root.server/usr/afs/local/audit ; \
 	   ${INSTALL_DATA} ${srcdir}/Audit              ${DEST}/root.server/usr/afs/local/Audit ;  \
 	   ${INSTALL_DATA} ${srcdir}/objects.aix.sample ${DEST}/root.server/usr/afs/local/audit/objects.sample ;  \
 	   ${INSTALL_DATA} ${srcdir}/events.aix.sample  ${DEST}/root.server/usr/afs/local/audit/events.sample  ;  \
