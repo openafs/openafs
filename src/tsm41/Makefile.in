@@ -93,7 +93,7 @@ aix_ktc_null.o: ${srcdir}/aix_ktc.c
 	${CCRULE}
 
 aix_auth.o:
-	case ${SYS_NAME} in \
+	@set -e; set -x; case "$(SYS_NAME)" in \
 	rs_aix4*) \
 		${CC} ${CFLAGS} -c ${srcdir}/aix41_auth.c -o $@ ;; \
 	rs_aix5*) \
