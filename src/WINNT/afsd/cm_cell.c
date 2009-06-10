@@ -457,32 +457,32 @@ long
 cm_ValidateCell(void)
 {
     cm_cell_t * cellp;
-    afs_uint32 count;
+    afs_uint32 count1, count2;
 
-    for (cellp = cm_data.allCellsp, count = 0; cellp; cellp=cellp->allNextp, count++) {
+    for (cellp = cm_data.allCellsp, count1 = 0; cellp; cellp=cellp->allNextp, count1++) {
         if ( cellp->magic != CM_CELL_MAGIC ) {
             afsi_log("cm_ValidateCell failure: cellp->magic != CM_CELL_MAGIC");
             fprintf(stderr, "cm_ValidateCell failure: cellp->magic != CM_CELL_MAGIC\n");
             return -1;
         }
-        if ( count != 0 && cellp == cm_data.allCellsp ||
-             count > cm_data.maxCells ) {
+        if ( count1 != 0 && cellp == cm_data.allCellsp ||
+             count1 > cm_data.maxCells ) {
             afsi_log("cm_ValidateCell failure: cm_data.allCellsp infinite loop");
             fprintf(stderr, "cm_ValidateCell failure: cm_data.allCellsp infinite loop\n");
             return -2;
         }
     }
 
-    for (cellp = cm_data.freeCellsp; cellp; cellp=cellp->freeNextp, count++) {
-        if ( count != 0 && cellp == cm_data.freeCellsp ||
-             count > cm_data.maxCells ) {
+    for (cellp = cm_data.freeCellsp, count2 = 0; cellp; cellp=cellp->freeNextp, count2++) {
+        if ( count2 != 0 && cellp == cm_data.freeCellsp ||
+             count2 > cm_data.maxCells ) {
             afsi_log("cm_ValidateCell failure: cm_data.freeCellsp infinite loop");
             fprintf(stderr, "cm_ValidateCell failure: cm_data.freeCellsp infinite loop\n");
             return -3;
         }
     }
 
-    if ( count != cm_data.currentCells ) {
+    if ( (count1 + count2) != cm_data.currentCells ) {
         afsi_log("cm_ValidateCell failure: count != cm_data.currentCells");
         fprintf(stderr, "cm_ValidateCell failure: count != cm_data.currentCells\n");
         return -4;
