@@ -3583,6 +3583,7 @@ VCheckDetach(register Volume * vp)
 	if ((programType != fileServer) &&
 	    (V_inUse(vp) == programType) &&
 	    ((V_checkoutMode(vp) == V_VOLUPD) ||
+	     (V_checkoutMode(vp) == V_SECRETLY) ||
 	     ((V_checkoutMode(vp) == V_CLONE) &&
 	      (VolumeWriteable(vp))))) {
 	    V_inUse(vp) = 0;
@@ -3616,6 +3617,7 @@ VCheckDetach(register Volume * vp)
 	if ((programType != fileServer) &&
 	    (V_inUse(vp) == programType) &&
 	    ((V_checkoutMode(vp) == V_VOLUPD) ||
+	     (V_checkoutMode(vp) == V_SECRETLY) ||
 	     ((V_checkoutMode(vp) == V_CLONE) &&
 	      (VolumeWriteable(vp))))) {
 	    V_inUse(vp) = 0;
