@@ -1270,7 +1270,7 @@ DoSalvage(aconn, aparm1, aparm2, aoutName, showlog, parallel, atmpDir,
 	    printf("bos: command line too big\n");
 	    return (E2BIG);
 	}
-	strcat(tbuffer, " -f ");
+	strcat(tbuffer, " -force ");
 	strcat(tbuffer, partName);
     }
 
