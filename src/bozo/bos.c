@@ -1286,7 +1286,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	    printf("bos: command line too big\n");
 	    return (E2BIG);
 	}
-	strcat(tbuffer, " -f ");
+	strcat(tbuffer, " -force ");
 	strcat(tbuffer, partName);
     }
 
