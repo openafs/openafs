@@ -1075,7 +1075,7 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tserverModifyTime  = %u\n", v.disk.serverModifyTime);
 	printf("\t\tgroup             = %d\n", v.disk.group);
 	printf("\t\tvn_ino_hi         = %d\n", v.disk.vn_ino_hi);
-	printf("\t\treserved6         = %u\n", v.disk.reserved6);
+	printf("\t\tvn_length_hi      = %u\n", v.disk.vn_length_hi);
 	printf("\t}\n");
 
 	printf("}\n");
