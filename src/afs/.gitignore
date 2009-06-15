@@ -1,0 +1,9 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/afs_trace.h
+/afs_trace.msf
+/afszcm.cat
+/unified_afs.c
+/unified_afs.h

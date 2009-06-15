@@ -1,0 +1,10 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/acfg_errors.c
+/auth.h
+/cellconfig.h
+/copyauth
+/ktc_errors.c
+/setkey
