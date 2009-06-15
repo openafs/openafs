@@ -1,0 +1,25 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/cm_client_config
+/cm_list_cells
+/cm_local_cell
+/cm_server_prefs
+/rxdebug_basic_stats
+/rxdebug_conns
+/rxdebug_peers
+/rxdebug_rx_stats
+/rxdebug_supported_stats
+/rxdebug_version
+/rxstat_clear_peer
+/rxstat_clear_process
+/rxstat_disable_peer
+/rxstat_disable_process
+/rxstat_enable_peer
+/rxstat_enable_process
+/rxstat_get_peer
+/rxstat_get_process
+/rxstat_get_version
+/rxstat_query_peer
+/rxstat_query_process

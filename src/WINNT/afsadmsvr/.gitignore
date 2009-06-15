@@ -1,0 +1,9 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/iTaAfsAdmSvr.h
+/iTaAfsAdmSvrTypes.h
+/iTaAfsAdmSvr_c.c
+/iTaAfsAdmSvr_s.c
+

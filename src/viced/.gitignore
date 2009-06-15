@@ -1,0 +1,8 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/cbd
+/check_sysid
+/fileserver
+/fsprobe

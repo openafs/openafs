@@ -1,0 +1,14 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/db_verify
+/pt_util
+/pterror.c
+/pterror.h
+/ptint.h
+/pts
+/ptserver
+/readgroup
+/readpwd
+/testpt
