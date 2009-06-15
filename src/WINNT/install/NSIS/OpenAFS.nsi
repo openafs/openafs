@@ -1026,17 +1026,23 @@ Section /o "Supplemental Documentation" secDocs
    
    
 DoEnglish:
-   SetOutPath "$INSTDIR\Documentation\html\CmdRef"
-   File "..\..\..\..\doc\man-pages\html\*"
-   SetOutPath "$INSTDIR\Documentation\html\CmdRef\1"
-   File "..\..\..\..\doc\man-pages\html\1\*"
-   SetOutPath "$INSTDIR\Documentation\html\CmdRef\5"
-   File "..\..\..\..\doc\man-pages\html\5\*"
-   SetOutPath "$INSTDIR\Documentation\html\CmdRef\8"
-   File "..\..\..\..\doc\man-pages\html\8\*"
+   CreateDirectory "$INSTDIR\Documentation"
    SetOutPath "$INSTDIR\Documentation\"
    File /oname=AdminGuide.chm "..\..\..\..\doc\xml\AdminGuide\htmlhelp.chm"
    File /oname=UserGuide.chm "..\..\..\..\doc\xml\AdminGuide\htmlhelp.chm"
+   CreateDirectory "$INSTDIR\Documentation\html"
+   CreateDirectory "$INSTDIR\Documentation\html\CmdRef"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef"
+   File "..\..\..\..\doc\man-pages\html\*"
+   CreateDirectory "$INSTDIR\Documentation\html\CmdRef\1"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef\1"
+   File "..\..\..\..\doc\man-pages\html\1\*"
+   CreateDirectory "$INSTDIR\Documentation\html\CmdRef\5"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef\5"
+   File "..\..\..\..\doc\man-pages\html\5\*"
+   CreateDirectory "$INSTDIR\Documentation\html\CmdRef\8"
+   SetOutPath "$INSTDIR\Documentation\html\CmdRef\8"
+   File "..\..\..\..\doc\man-pages\html\8\*"
    goto DoneLanguage
    
 DoGerman:
@@ -2901,6 +2907,7 @@ Function AFSLangFiles
    
 DoEnglish:
 
+   CreateDirectory "$INSTDIR\Documentation"
    SetOutPath "$INSTDIR\Documentation"
    File /oname=ReleaseNotes.chm "..\..\..\..\doc\xml\ReleaseNotesWindows\htmlhelp.chm"
 
