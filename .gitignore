@@ -1,0 +1,67 @@
+#
+# This is the root .gitignore for OpenAFS.
+#
+# Please don't add files that are generated in specific subdirectories
+# here. This file should only contain rules for the entire tree, 
+# and entries specific to the top level directory.
+#
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+# General rules
+
+.*
+*.orig
+*.rej
+*.o
+*.a
+*.so
+*.sl
+*.so.*
+*.xdr.c
+*.cs.c
+*.ss.c
+*~
+lex.yy.c
+y.tab.c
+y.tab.h
+Makefile
+RX_component_version_number.c
+AFS_component_version_number.c
+AFS_component_version_number.h
+
+!.gitignore
+!.cvsignore
+!.splintrc
+
+# Top level files
+/aclocal.m4
+/config.log
+/config.cache
+/config.status
+/configure
+/configure-libafs
+/include
+/lib
+/autom4te.cache
+/ID
+/TAGS
+/NTLang.bat
+/NTMakefile
+/golast.bat
+
+# Destination build directories
+/amd64_linux26
+/hp_ux102
+/hp_ux110
+/i386_linux22
+/i386_linux24
+/i386_linux26
+/i386_umlinux22
+/i386_umlinux24
+/parisc_linux24
+/sgi_65
+/sun4x_56
+/sun4x_57
+
