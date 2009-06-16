@@ -114,7 +114,7 @@ urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
 {
     register afs_int32 rcode;
 
-    ubik_dprint("allbetter checking\n");
+    ubik_dprint_25("allbetter checking\n");
     rcode = 0;
 
 
@@ -137,7 +137,7 @@ urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
 	rcode = 1;
     }
 
-    ubik_dprint("allbetter: returning %d\n", rcode);
+    ubik_dprint_25("allbetter: returning %d\n", rcode);
     return rcode;
 }
 
