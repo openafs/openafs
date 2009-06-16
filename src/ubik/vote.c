@@ -558,6 +558,16 @@ SVOTE_GetSyncSite(register struct rx_call * rxcall,
 }
 
 void
+ubik_dprint_25(const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    vViceLog(25, (format, ap));
+    va_end(ap);
+}
+
+void
 ubik_dprint(const char *format, ...)
 {
     va_list ap;
