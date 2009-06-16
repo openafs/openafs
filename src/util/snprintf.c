@@ -347,6 +347,26 @@ afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
 	    len = strlen(x);
 	    break;
 
+	case 'p':		/* unsigned decimal integer */
+	    UVAL = va_arg(ap, void *);
+
+	    xbuf[0] = '0';
+	    xbuf[1] = 'x';
+
+	    if (!haveprec) {
+		if (zfill && !ljust)
+		    precision = width;
+		else
+		    precision = 1;
+	    }
+	    if (precision > MAXPREC)
+		precision = MAXPREC;
+
+	    mkint(xbuf + 2, UVAL, 16, 0, precision);
+	    x = xbuf + ((altform && UVAL) ? 0 : 2);
+	    len = strlen(x);
+	    break;
+
 	case 'x':
 	case 'X':		/* unsigned hexadecimal integer */
 	    if (lflag > 1)
