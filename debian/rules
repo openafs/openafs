@@ -141,7 +141,7 @@ install-stamp: build-stamp
 	done
 	mkdir $(DOCS)/html/arch-overview
 	cp doc/arch/arch-overview.h $(DOCS)/html/arch-overview
-	cd $(DOCS/html/arch-overview && doxygen *.h && rm *.h && mv html/* . \
+	cd $(DOCS)/html/arch-overview && doxygen *.h && rm *.h && mv html/* . \
 	    && rm -r latex html
 	set -e; for h in `ls doc/protocol` ; do \
 	    mkdir $(DOCS)/html/`basename $$h` ; \
