@@ -126,6 +126,7 @@ install-stamp: build-stamp
 	mkdir -p $(CURDIR)/debian/tmp
 	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
 	rm -f debian/tmp/usr/bin/klog.krb
+	rm -f debian/tmp/usr/share/man/man1/klog.krb.1
 	chmod +x debian/afs-rootvol debian/afs-newcell
 	dh_installdirs
 	dh_install --fail-missing $(IGNORE)
@@ -136,18 +137,19 @@ install-stamp: build-stamp
 	cp doc/xml/*.gif doc/xml/*.html $(DOCS)/html/
 	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
 	    mkdir $(DOCS)/html/$$d ; \
-	    cp doc/xml/$$d/*.html doc/xml/$$d/*.png $(DOCS)/html/$$d/ ; \
+	    cp doc/xml/$$d/*.html $(DOCS)/html/$$d/ ; \
 	    cp doc/xml/$$d/*.pdf $(DOCS)/ ; \
 	done
+	cp doc/xml/AdminGuide/*.png $(DOCS)/html/AdminGuide/
 	mkdir $(DOCS)/html/arch-overview
 	cp doc/arch/arch-overview.h $(DOCS)/html/arch-overview
 	cd $(DOCS)/html/arch-overview && doxygen *.h && rm *.h && mv html/* . \
 	    && rm -r latex html
-	set -e; for h in `ls doc/protocol` ; do \
-	    mkdir $(DOCS)/html/`basename $$h` ; \
-	    cp doc/protocol/$$h $(DOCS)/html/`basename $$h` ; \
-	    cd $(DOCS)/html/`basename $$h` && doxygen *.h && rm *.h \
-		&& mv html/* . && rm -r latex html ; \
+	set -e; for h in doc/protocol/*.h ; do \
+	    mkdir $(DOCS)/html/`basename $$h .h` ; \
+	    cp $$h $(DOCS)/html/`basename $$h .h` ; \
+	    cd $(DOCS)/html/`basename $$h .h` && doxygen *.h && rm *.h \
+		&& mv html/* . && rm -r latex html && cd $(CURDIR) ; \
 	done
 
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
