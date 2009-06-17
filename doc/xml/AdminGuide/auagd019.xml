@@ -1,0 +1,3136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ531">
+  <title>Administering the Protection Database</title>
+
+  <para>This chapter explains how to create and maintain user, machine, and group entries in the Protection Database.</para>
+
+  <sect1 id="HDRWQ532">
+    <title>Summary of Instructions</title>
+
+    <para>This chapter explains how to perform the following tasks by using the indicated commands:</para>
+
+    <informaltable frame="none">
+      <tgroup cols="2">
+        <colspec colwidth="70*" />
+
+        <colspec colwidth="30*" />
+
+        <tbody>
+          <row>
+            <entry>Display Protection Database entry</entry>
+
+            <entry><emphasis role="bold">pts examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Map user, machine or group name to AFS ID</entry>
+
+            <entry><emphasis role="bold">pts examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display entry's owner or creator</entry>
+
+            <entry><emphasis role="bold">pts examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display number of users or machines belonging to group</entry>
+
+            <entry><emphasis role="bold">pts examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display number of groups user or machine belongs to</entry>
+
+            <entry><emphasis role="bold">pts examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display group-creation quota</entry>
+
+            <entry><emphasis role="bold">pts examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display entry's privacy flags</entry>
+
+            <entry><emphasis role="bold">pts examine</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display members of group, or groups that user or machine belongs to</entry>
+
+            <entry><emphasis role="bold">pts membership</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display groups that user or group owns</entry>
+
+            <entry><emphasis role="bold">pts listowned</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display all entries in Protection Database</entry>
+
+            <entry><emphasis role="bold">pts listentries</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Create machine entry</entry>
+
+            <entry><emphasis role="bold">pts createuser</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Create group entry</entry>
+
+            <entry><emphasis role="bold">pts creategroup</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Add users and machines to groups</entry>
+
+            <entry><emphasis role="bold">pts adduser</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Remove users and machines from groups</entry>
+
+            <entry><emphasis role="bold">pts removeuser</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Delete machine or group entry</entry>
+
+            <entry><emphasis role="bold">pts delete</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Change a group's owner</entry>
+
+            <entry><emphasis role="bold">pts chown</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Change an entry's name</entry>
+
+            <entry><emphasis role="bold">pts rename</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Set group creation quota</entry>
+
+            <entry><emphasis role="bold">pts setfields</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Set entry's privacy flags</entry>
+
+            <entry><emphasis role="bold">pts setfields</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Display AFS ID counters</entry>
+
+            <entry><emphasis role="bold">pts listmax</emphasis></entry>
+          </row>
+
+          <row>
+            <entry>Set AFS ID counters</entry>
+
+            <entry><emphasis role="bold">pts setmax</emphasis></entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </informaltable>
+
+    <indexterm>
+      <primary>current protection subgroup</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>CPS</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Server</primary>
+
+      <secondary>building CPS</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>File Server</primary>
+
+      <secondary>CPS requested from Protection Server</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>user entry, described</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>user</primary>
+
+      <secondary>Protection Database entry, described</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>machine</primary>
+
+      <secondary>Protection Database entry, described</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>machine entry, described</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>Protection Database entry, described</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>group entry</secondary>
+    </indexterm>
+  </sect1>
+
+  <sect1 id="HDRWQ534">
+    <title>About the Protection Database</title>
+
+    <para>The Protection Database stores information about AFS users, client machines, and groups which the File Server process uses
+    to determine whether clients are authorized to access AFS data.</para>
+
+    <para>To obtain authenticated access to an AFS cell, a user must have an entry in the cell's Protection Database. The first time
+    that a user requests access to the data stored on a file server machine, the File Server on that machine contacts the Protection
+    Server to request the user's <emphasis>current protection subgroup</emphasis> (<emphasis>CPS</emphasis>), which lists all the
+    groups to which the user belongs. The File Server scans the access control list (ACL) of the directory that houses the data,
+    looking for groups on the CPS. It grants access in accordance with the permissions that the ACL extends to those groups or to
+    the user individually. (The File Server stores the CPS and uses it as long as the user has the same tokens. When a user's group
+    membership changes, he or she must reauthenticate for the File Server to recognize the change.)</para>
+
+    <para>Only administrators who belong to the cell's <emphasis role="bold">system:administrators</emphasis> group can create user
+    entries (the group is itself defined in the Protection Database, as discussed in <link linkend="HDRWQ535">The System
+    Groups</link>). Members of the <emphasis role="bold">system:administrators</emphasis> group can also create machine entries,
+    which can then be used to control access based on the machine from which the access request originates. After creating a machine
+    entry, add it to a Protection Database group and place the group on ACLs (a machine cannot appear on ACLs directly). A machine
+    entry can represent a single machine or multiple machines with consecutive IP addresses as specified by a wildcard notation. For
+    instructions, see <link linkend="HDRWQ542">Creating User and Machine Entries</link>. Because all replicas of a volume share the
+    same ACL (the one on the volume's root directory mount point), machine entries enable you to replicate the volume that houses a
+    program's binary file while still complying with a machine-based license agreement as required by the program's manufacturer.
+    See <link linkend="HDRWQ542">Creating User and Machine Entries</link>.</para>
+
+    <para>A group entry is a list of user entries, machine entries, or both (groups cannot belong to other groups). Putting a group
+    on an ACL is a convenient way to extend or deny access to a set of users without listing them on the ACL individually.
+    Similarly, adding users to a group automatically grants them access to all files and directories for which the associated ACL
+    lists that group. Both administrators and regular users can create groups. <indexterm>
+        <primary>system groups</primary>
+
+        <secondary>defined</secondary>
+      </indexterm> <indexterm>
+        <primary>group</primary>
+
+        <secondary>system</secondary>
+      </indexterm> <indexterm>
+        <primary>membership</primary>
+
+        <secondary>system groups</secondary>
+      </indexterm> <indexterm>
+        <primary>system:anyuser group</primary>
+      </indexterm> <indexterm>
+        <primary>system:authuser group</primary>
+      </indexterm> <indexterm>
+        <primary>system:administrators group</primary>
+      </indexterm></para>
+
+    <sect2 id="HDRWQ535">
+      <title>The System Groups</title>
+
+      <para>In addition to the groups that users and administrators can create, AFS defines the following three system groups. The
+      Protection Server creates them automatically when it builds the first version of a cell's Protection Database, and always
+      assigns them the same AFS GIDs. <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold">system:anyuser</emphasis></term>
+
+            <listitem>
+              <para>Represents all users able to access the cell's filespace from the local and foreign cells, authenticated or not.
+              Its AFS GID is <emphasis role="bold">-101</emphasis>. The group has no stable membership listed in the Protection
+              Database. Accordingly, the <emphasis role="bold">pts examine</emphasis> command displays <emphasis
+              role="bold">0</emphasis> in its <computeroutput>membership</computeroutput> field, and the <emphasis role="bold">pts
+              membership</emphasis> command does not list any members for it.</para>
+
+              <para>Placing this group on an ACL is a convenient way to extend access to all users. The File Server automatically
+              places this group on the CPS of any user who requests access to data stored on a file server machine. (Every
+              unauthenticated user is assigned the identity <emphasis role="bold">anonymous</emphasis> and this group is the only
+              entry on the CPS for <emphasis role="bold">anonymous</emphasis>.)</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">system:authuser</emphasis></term>
+
+            <listitem>
+              <para>Represents all users who are able to access the cell's filespace from the local and foreign cells and who have
+              successfully obtained an AFS token in the local cell (are authenticated). Its AFS GID is <emphasis
+              role="bold">-102</emphasis>. Like the <emphasis role="bold">system:anyuser</emphasis> group, it has no stable
+              membership listed in the Protection Database. Accordingly, the <emphasis role="bold">pts examine</emphasis> command
+              displays <emphasis role="bold">0</emphasis> in its <computeroutput>membership</computeroutput> field, and the
+              <emphasis role="bold">pts membership</emphasis> command does not list any members for it.</para>
+
+              <para>Placing this group on an ACL is therefore a convenient way to extend access to all authenticated users. The File
+              Server automatically places this group on the CPS of any authenticated user who requests access to data stored on a
+              file server machine.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold">system:administrators</emphasis></term>
+
+            <listitem>
+              <para>Represents the small number of cell administrators authorized to issue privileged <emphasis
+              role="bold">pts</emphasis> commands and the <emphasis role="bold">fs</emphasis> commands that set quota. The ACL on
+              the root directory of every newly created volume grants all permissions to the group. Even if you remove that entry,
+              the group implicitly retains the <emphasis role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>), and
+              by default also the <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>), permission on every
+              ACL. Its AFS GID is <emphasis role="bold">-204</emphasis>. For instructions on administering this group, see <link
+              linkend="HDRWQ586">Administering the system:administrators Group</link>.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ536">
+    <title>Displaying Information from the Protection Database</title>
+
+    <para>This section describes the commands you can use to display Protection Database entries and associated information. In
+    addition to name and AFS ID, the Protection Database stores the following information about each user, machine, or group entry.
+    <itemizedlist>
+        <listitem>
+          <para>The entry's owner, which is the user or group of users who can administer the entry</para>
+        </listitem>
+
+        <listitem>
+          <para>The entry's creator, which serves mostly as an audit trail</para>
+        </listitem>
+
+        <listitem>
+          <para>A membership count, which indicates how many groups a user or machine belongs to, or how many members belong to a
+          group</para>
+        </listitem>
+
+        <listitem>
+          <para>A set of privacy flags, which control which users can administer or display information about the entry</para>
+        </listitem>
+
+        <listitem>
+          <para>A group-creation quota, which defines how many groups a user can create</para>
+        </listitem>
+
+        <listitem>
+          <para>A list of the groups to which a user or machine belongs, or of the users and machines that belong to a group</para>
+        </listitem>
+
+        <listitem>
+          <para>A list of the groups that a user or group owns</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>Protection Database entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>owner of Protection Database entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>creator of Protection Database entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>privacy flags on Protection Database entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>membership count in Protection Database entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>group-creation quota in Protection Database entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>membership count</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>group entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>machine entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>user entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>owner of entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>creator of entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>privacy flags</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>group creation quota</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>mapping</primary>
+
+      <secondary>AFS ID to group, machine, or username</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>mapping</primary>
+
+      <secondary>username to AFS UID</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>mapping</primary>
+
+      <secondary>machine name to AFS UID</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>mapping</primary>
+
+      <secondary>group name to AFS GID</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS UID</primary>
+
+      <secondary>displaying</secondary>
+
+      <tertiary>for one user or machine</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>AFS GID</primary>
+
+      <secondary>displaying</secondary>
+
+      <tertiary>for one group</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>owner</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creator</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>members</primary>
+
+      <secondary>group, displaying</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privacy flags on Protection Database entry</primary>
+
+      <secondary>displaying</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>owner</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>creation quota</secondary>
+
+      <see>quota</see>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>privacy flags on Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>machine</primary>
+
+      <secondary>group memberships</secondary>
+
+      <tertiary>displaying number</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>machine</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>machine</primary>
+
+      <secondary>privacy flags on Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>quota</primary>
+
+      <secondary>group-creation</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>user</primary>
+
+      <secondary>group-creation quota</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>user</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>user</primary>
+
+      <secondary>privacy flags on Protection Database entry</secondary>
+
+      <tertiary>displaying</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>user</primary>
+
+      <secondary>group memberships</secondary>
+
+      <tertiary>displaying number</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>pts commands</primary>
+
+      <secondary>examine</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>pts examine</secondary>
+    </indexterm>
+
+    <sect2 id="HDRWQ537">
+      <title>To display a Protection Database entry</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group, which enables you to
+          display an entry regardless of the setting of its first (<emphasis role="bold">s</emphasis>) privacy flag. By default, any
+          user can display a Protection Database entry. If necessary, issue the <emphasis role="bold">pts membership</emphasis>
+          command, which is fully described in <link linkend="HDRWQ587">To display the members of the system:administrators
+          group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts examine</emphasis> command to display one or more Protection Database entries.
+          <programlisting>
+   % <emphasis role="bold">pts examine</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">e</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">examine</emphasis> (and <emphasis
+                role="bold">check</emphasis> is an alias).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">user or group name or id</emphasis></term>
+
+              <listitem>
+                <para>Specifies the name or AFS ID of each entry to display. Precede any AFS GID with a hyphen (<emphasis
+                role="bold">-</emphasis>) because it is a negative integer.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>The output includes the following fields. Examples follow. <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>Name</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies the entry's name. <itemizedlist>
+                  <listitem>
+                    <para>For a user, this is the name used when authenticating with AFS and the name that appears on ACL
+                    entries.</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>For a machine, this is the IP address of a single machine, or a wildcard notation that represents a group
+                    of machines with consecutive IP addresses, as described in <link linkend="HDRWQ542">Creating User and Machine
+                    Entries</link>.</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>For a group, this is the name that appears on ACL entries and in the list of groups output by the
+                    <emphasis role="bold">pts membership</emphasis> command. The names of <emphasis>regular</emphasis> groups have
+                    two parts, separated by a colon (<emphasis role="bold">:</emphasis>). The part before the colon indicates the
+                    group's owner, and the part after is the unique name. A <emphasis>prefix-less</emphasis> group's name does not
+                    have the owner prefix; only members of the <emphasis role="bold">system:administrators</emphasis> group can
+                    create prefix-less groups. For further discussion of group names, see <link linkend="HDRWQ544">Creating
+                    Groups</link>.</para>
+                  </listitem>
+                </itemizedlist></para>
+
+              <indexterm>
+                <primary>AFS UID</primary>
+
+                <secondary>definition</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>AFS GID</primary>
+
+                <secondary>definition</secondary>
+              </indexterm>
+
+              <indexterm>
+                <primary>UNIX UID</primary>
+
+                <secondary>difference from AFS UID</secondary>
+              </indexterm>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>id</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies the entry's unique AFS identification number. For user and machine entries, the AFS user ID (AFS UID)
+              is a positive integer; for groups, the AFS group ID (AFS GID) is a negative integer. AFS UIDs and GIDs have the same
+              function as their counterparts in the UNIX file system, but are used by the AFS servers and the Cache Manager
+              only.</para>
+
+              <para>Normally, the Protection Server assigns an AFS UID or GID automatically when you create Protection Database
+              entries. Members of the <emphasis role="bold">system:administrators</emphasis> group can specify an ID if desired. For
+              further discussion, see <link linkend="HDRWQ542">Creating User and Machine Entries</link> and <link
+              linkend="HDRWQ544">Creating Groups</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>owner</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Names the user or group who owns the entry and therefore can administer it (for more information about a group
+              owning another group, see <link linkend="HDRWQ545">Using Groups Effectively</link>). Other users possibly have
+              administrative privileges, too, depending on the setting of the entry's privacy flags. For instructions on changing
+              the owner, see <link linkend="HDRWQ554">Changing a Group's Owner</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>creator</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Names the user who created the entry, and serves as an audit trail. If the entry is deleted from the Protection
+              Database, the creator's group creation quota increases by one, even if the creator no longer owns the entry; see <link
+              linkend="HDRWQ558">Setting Group-Creation Quota</link>.</para>
+
+              <para>The value <computeroutput>anonymous</computeroutput> in this field generally indicates that the entry was
+              created when the Protection Server was running in no-authentication mode, probably during initial configuration of the
+              cell's first file server machine. For a description of no-authentication mode, see <link linkend="HDRWQ123">Managing
+              Authentication and Authorization Requirements</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>membership</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies the number of groups to which the user or machine belongs, or the number of users or machines that
+              belong to the group.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>flags</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies who can display or change information in a Protection Database entry. The five flags, each
+              representing a different capability, always appear in the same order. <itemizedlist>
+                  <listitem>
+                    <para>For user entries, the default value is <computeroutput>S----</computeroutput>, which indicates that anyone
+                    can issue the <emphasis role="bold">pts examine</emphasis> command on the entry, but only the user and members
+                    of the <emphasis role="bold">system:administrators</emphasis> group can perform any other action.</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>For machine entries, the default value is <computeroutput>S----</computeroutput>, which indicates that
+                    anyone can issue the <emphasis role="bold">pts examine</emphasis> command on the entry, but only members of the
+                    <emphasis role="bold">system:administrators</emphasis> group can perform any other action.</para>
+                  </listitem>
+
+                  <listitem>
+                    <para>For group entries, the default value is <computeroutput>S-M--</computeroutput>, which indicates that
+                    anyone can issue the <emphasis role="bold">pts examine</emphasis> and <emphasis role="bold">pts
+                    membership</emphasis> commands on the entry, but only the group's owner and members of the <emphasis
+                    role="bold">system:administrators</emphasis> group can perform any other action.</para>
+                  </listitem>
+                </itemizedlist></para>
+
+              <para>For a complete description of possible values for the flags, see <link linkend="HDRWQ559">Setting the Privacy
+              Flags on Database Entries</link>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>group quota</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies how many more groups a user can create in the Protection Database. The value for a newly created user
+              entry is 20, but members of the <emphasis role="bold">system:administrators</emphasis> group can issue the <emphasis
+              role="bold">pts setfields</emphasis> command at any time to change the value; see <link linkend="HDRWQ558">Setting
+              Group-Creation Quota</link>.</para>
+
+              <para>Group creation quota has no meaning for a machine or group entry: the Protection Server recognizes the issuer of
+              the <emphasis role="bold">pts creategroup</emphasis> command only as an authenticated user or as the <emphasis
+              role="bold">anonymous</emphasis> user, never as a machine or group. The default value for group entries is 0 (zero),
+              and there is no reason to change it.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>The following examples show the output for a user called <emphasis role="bold">pat</emphasis>, a machine with IP address
+      <emphasis role="bold">192.12.108.133</emphasis> and a group called <emphasis role="bold">terry:friends</emphasis>:</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts examine pat</emphasis>
+   Name: pat, id: 1020, owner: system:administrators, creator: admin,
+     membership: 12, flags: S----, group quota: 15.
+   % <emphasis role="bold">pts ex 192.12.108.133</emphasis>
+   Name: 192.12.108.133, id: 5151, owner: system:administrators, creator: admin,
+     membership: 1, flags: S----, group quota: 20.
+   % <emphasis role="bold">pts examine terry:friends</emphasis>
+   Name: terry:friends, id: -567, owner: terry, creator: terry,
+     membership: 12, flags: SOm--, group quota: 0.
+</programlisting>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>groups to which user or machine belongs</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>members of group</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>members, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>membership of machine or user, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>user</primary>
+
+        <secondary>group memberships, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>machine</primary>
+
+        <secondary>group memberships, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>members</primary>
+
+        <secondary>group, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>membership</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts membership</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ538">
+      <title>To display group membership</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group, which enables you to
+          display an entry's group membership information regardless of the setting of its third (<emphasis
+          role="bold">m</emphasis>) privacy flag. By default the owner and the user can display group membership for a user entry,
+          the owner for a machine entry, and anyone for a group entry. If necessary, issue the <emphasis role="bold">pts
+          membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display the members of the
+          system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><anchor id="LIWQ539" />Issue the <emphasis role="bold">pts membership</emphasis> command to display the list of
+          groups to which a user or machine belongs, or the list of users and machines that belong to a group. <programlisting>
+   % <emphasis role="bold">pts membership</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">m</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">membership</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">user or group name or id</emphasis></term>
+
+              <listitem>
+                <para>Specifies the name or AFS UID of each user or machine for which to list the groups it belongs to, or the name
+                or AFS GID of each group for which to list the members.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>For user and machine entries, the output begins with the following string, and then each group appears on its own
+      line:</para>
+
+      <programlisting>
+   Groups user_or_machine (id: AFS_UID) is a member of:
+</programlisting>
+
+      <para>For group entries, the output begins with the following string, and then each member appears on its own line:</para>
+
+      <programlisting>
+   Members of group (id: AFS_GID) are:
+</programlisting>
+
+      <para>For the system groups <emphasis role="bold">system:anyuser</emphasis> and <emphasis
+      role="bold">system:authuser</emphasis>, the output includes the initial header string only, because these groups do not have a
+      stable membership listed in their Protection Database entry. See <link linkend="HDRWQ535">The System Groups</link>.</para>
+
+      <para>The following examples show the output for a user called <emphasis role="bold">terry</emphasis> and a group called
+      <emphasis role="bold">terry:friends</emphasis>:</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts mem terry</emphasis>
+   Groups terry (id: 5347) is a member of:
+     pat:friends
+     sales
+     acctg:general
+   % <emphasis role="bold">pts mem terry:friends</emphasis>
+   Members of terry:friends (id: -567) are:
+     pat
+     smith
+     johnson
+</programlisting>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>groups owned, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>groups owned by a user or group</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>orphaned, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>orphaned group</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>user</primary>
+
+        <secondary>groups owned, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>owned by user or group, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>listowned</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts listowned</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ540">
+      <title>To list the groups that a user or group owns</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group, which enables you to
+          display an entry's group ownership information regardless of the setting of its second (<emphasis
+          role="bold">o</emphasis>) privacy flag. By default the owner can list the groups owned by group, and a user the groups he
+          or she owns. If necessary, issue the <emphasis role="bold">pts membership</emphasis> command, which is fully described in
+          <link linkend="HDRWQ587">To display the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts listowned</emphasis> command to list the groups owned by each user or group.
+          <programlisting>
+   % <emphasis role="bold">pts listowned</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">listo</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">listowned</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">user or group name or id</emphasis></term>
+
+              <listitem>
+                <para>Specifies the name or AFS UID of each user, or the name or AFS GID or each group, for which to list the groups
+                owned.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>The output begins with the following string, and then each group appears on its own line:</para>
+
+      <programlisting>
+   Groups owned by user_or_group (id: AFS_ID) are:
+</programlisting>
+
+      <para>The following examples show the output for a user called <emphasis role="bold">terry</emphasis> and a group called
+      <emphasis role="bold">terry:friends</emphasis>:</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts listo terry</emphasis> 
+   Groups owned by terry (id: 5347) are:  
+     terry:friends   
+     terry:co-workers
+   % <emphasis role="bold">pts listo terry:friends</emphasis>
+   Groups owned by terry:friends (id: -567) are:
+     terry:pals
+     terry:buddies
+</programlisting>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>Protection Database entries (all)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>owner of Protection Database entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>creator of Protection Database entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>group entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>machine entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>user entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>owner of entry</secondary>
+
+        <tertiary>displaying for all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>creator of entry</secondary>
+
+        <tertiary>displaying for all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS UID</primary>
+
+        <secondary>displaying</secondary>
+
+        <tertiary>for all users and machines in Protection Database</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS GID</primary>
+
+        <secondary>displaying</secondary>
+
+        <tertiary>for all groups in Protection Database</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>owner</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>creator</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>owner</secondary>
+
+        <tertiary>displaying for all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>machine</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>user</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>displaying all</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>listentries</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts listentries</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ541">
+      <title>To display all Protection Database entries</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts listentries</emphasis> command to display all Protection Database entries.
+          <programlisting>
+   % <emphasis role="bold">pts listentries</emphasis> [<emphasis role="bold">-users</emphasis>] [<emphasis role="bold">-groups</emphasis>]
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">liste</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">listentries</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-users</emphasis></term>
+
+              <listitem>
+                <para>Displays user and machine entries. The same output results if you omit both this flag and the <emphasis
+                role="bold">-groups</emphasis> flag.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-groups</emphasis></term>
+
+              <listitem>
+                <para>Displays group entries.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>The output is a table that includes the following columns. Examples follow. <variablelist>
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>Name</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies the entry's name.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>ID</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies the entry's AFS identification number. For user and machine entries, the AFS user ID (AFS UID) is a
+              positive integer; for groups, the AFS group ID (AFS GID) is a negative integer.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>Owner</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies the AFS ID of the user or group who owns the entry and therefore can administer it.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><emphasis role="bold"><computeroutput>Creator</computeroutput></emphasis></term>
+
+            <listitem>
+              <para>Specifies the AFS UID of the user who created the entry.</para>
+            </listitem>
+          </varlistentry>
+        </variablelist></para>
+
+      <para>The following example is from the ABC Corporation cell. The issuer provides no options, so the output includes user and
+      machine entries.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts listentries</emphasis>
+   Name                          ID  Owner Creator
+   anonymous                  32766   -204    -204 
+   admin                          1   -204   32766 
+   pat                         1000   -204       1 
+   terry                       1001   -204       1 
+   smith                       1003   -204       1 
+   jones                       1004   -204       1 
+   192.12.105.33               2000   -204       1 
+   192.12.105.46               2001   -204       1 
+</programlisting>
+
+      <indexterm>
+        <primary>creating</primary>
+
+        <secondary>Protection Database machine entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>machine entry, creating</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>assigning</primary>
+
+        <secondary>AFS UID to machine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>machine</primary>
+
+        <secondary>Protection Database entry, creating</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>machine</primary>
+
+        <secondary>AFS UID, assigning</secondary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ542">
+    <title>Creating User and Machine Entries</title>
+
+    <para>An entry in the Protection Database is one of the two required components of every AFS user account, along with an entry
+    in the Authentication Database. It is best to create a Protection Database user entry only in the context of creating a complete
+    user account, by using the <emphasis role="bold">uss add</emphasis> or <emphasis role="bold">uss bulk</emphasis> command as
+    described in <link linkend="HDRWQ449">Creating and Deleting User Accounts with the uss Command Suite</link>, or the <emphasis
+    role="bold">pts createuser</emphasis> command as described in <link linkend="HDRWQ502">Creating AFS User Accounts</link>.</para>
+
+    <para>You can also use the <emphasis role="bold">pts createuser</emphasis> command to create Protection Database machine
+    entries, which can then be used to control access based on the machine from which the access request originates. After creating
+    a machine entry, add it to a Protection Database group and place the group on ACLs ( a machine cannot appear on ACLs directly).
+    Because all replicas of a volume share the same ACL (the one on the volume's root directory mount point), you can replicate the
+    volume that houses a program's binary file while still complying with a machine-based license agreement as required by the
+    program's manufacturer. If you do not place any other entries on the ACL, then only users working on the designated machines can
+    access the file.</para>
+
+    <para>Keep in mind that creating an ACL entry for a group with machine entries in it extends access to both authenticated and
+    unauthenticated users working on the machine. However, you can deny access to unauthenticated users by omitting an entry for the
+    <emphasis role="bold">system:anyuser</emphasis> group from the ACLs of the parent directories in the file's pathname.
+    Conversely, if you want to enable unauthenticated users on the machine to access a file, then the ACL on every directory leading
+    to it must include an entry for either the <emphasis role="bold">system:anyuser</emphasis> group or a group to which the machine
+    entry belongs. For more information on the <emphasis role="bold">system:anyuser</emphasis> group, see <link
+    linkend="HDRWQ535">The System Groups</link>.</para>
+
+    <para>Because a machine entry can include unauthenticated users, it is best not to add both machine entries and user entries to
+    the same group. In general, it is easier to use and administer nonmixed groups. A machine entry can represent a single machine,
+    or multiple machines with consecutive IP addresses (that is, all machines on a network or subnet) specified by a wildcard
+    notation. See the instructions in <link linkend="HDRWQ543">To create machine entries in the Protection Database</link>.</para>
+
+    <para>By default, the Protection Server assigns the next available AFS UID to a new user or machine entry. It is best to allow
+    this, especially for machine entries. For user entries, it makes sense to assign an AFS UID only if the user already has a UNIX
+    UID that the AFS UID needs to match (see <link linkend="HDRWQ496">Assigning AFS and UNIX UIDs that Match</link>). When
+    automatically allocating an AFS UID, the Protection Server increments the <computeroutput>max user id</computeroutput> counter
+    by one and assigns the result to the new entry. Use the <emphasis role="bold">pts listmax</emphasis> command to display the
+    counter, as described in <link linkend="HDRWQ560">Displaying and Setting the AFS UID and GID Counters</link>. <indexterm>
+        <primary>AFS UID</primary>
+
+        <secondary>reusing, about</secondary>
+      </indexterm></para>
+
+    <para>Do not reuse the AFS UIDs of users who have left your cell permanently or machine entries you have removed, even though
+    doing so seems to avoid the apparent waste of IDs. When you remove a user or machine entry from the Protection Database, the
+    <emphasis role="bold">fs listacl</emphasis> command displays the AFS UID associated with the former entry, rather than the name.
+    If you then assign the AFS UID to a new user or machine, the new user or machine automatically inherits permissions that were
+    granted to the previous possessor of the ID. To remove obsolete AFS UIDs from ACLs, use the <emphasis role="bold">fs
+    cleanacl</emphasis> command described in <link linkend="HDRWQ579">Removing Obsolete AFS IDs from ACLs</link>.</para>
+
+    <para>In addition to the name and AFS UID, the Protection Server records the following values in the indicated fields of a new
+    user or machine's entry. For more information and instructions on displaying an entry, see <link linkend="HDRWQ537">To display a
+    Protection Database entry</link>. <itemizedlist>
+        <listitem>
+          <para>It sets the <computeroutput>owner</computeroutput> field to the <emphasis
+          role="bold">system:administrators</emphasis> group, indicating that the group's members administer the entry.</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>creator</computeroutput> field to the username of the user who issued the <emphasis
+          role="bold">pts createuser</emphasis> command (or the <emphasis role="bold">uss add</emphasis> or <emphasis
+          role="bold">uss bulk</emphasis> command).</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>membership</computeroutput> field to <emphasis role="bold">0</emphasis> (zero), because
+          the new entry does not yet belong to any groups.</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>flags</computeroutput> field to <emphasis role="bold">S----</emphasis>; for explanation,
+          see <link linkend="HDRWQ559">Setting the Privacy Flags on Database Entries</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>group quota</computeroutput> field to <emphasis role="bold">20</emphasis>, meaning that
+          the new user can create 20 groups. This field has no meaning for machine entries. For further discussion, see <link
+          linkend="HDRWQ558">Setting Group-Creation Quota</link>.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>pts commands</primary>
+
+      <secondary>createuser</secondary>
+
+      <tertiary>machine entry</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>pts createuser</secondary>
+
+      <tertiary>machine entry</tertiary>
+    </indexterm>
+
+    <sect2 id="HDRWQ543">
+      <title>To create machine entries in the Protection Database</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts createuser</emphasis> command to create one or more machine entries.
+          <programlisting>
+   % <emphasis role="bold">pts createuser -name</emphasis> &lt;<replaceable>user name</replaceable>&gt;+ 
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">cu</emphasis></term>
+
+              <listitem>
+                <para>Is an alias for <emphasis role="bold">createuser</emphasis> (and <emphasis role="bold">createu</emphasis> is
+                the shortest acceptable abbreviation).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-name</emphasis></term>
+
+              <listitem>
+                <para>Specifies an IP address in dotted-decimal notation for each machine entry. An entry can represent a single
+                machine or a set of several machines with consecutive IP addresses, using the wildcard notation described in the
+                following list. The letters <emphasis role="bold">W</emphasis>, <emphasis role="bold">X</emphasis>, <emphasis
+                role="bold">Y</emphasis>, and <emphasis role="bold">Z</emphasis> each represent an actual number value in the field:
+                <itemizedlist>
+                    <listitem>
+                      <para><emphasis role="bold">W.X.Y.Z</emphasis> represents a single machine, for example <emphasis
+                      role="bold">192.12.108.240</emphasis>.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para><emphasis role="bold">W.X.Y.0</emphasis> matches all machines whose IP addresses start with the first
+                      three numbers. For example, <emphasis role="bold">192.12.108.0</emphasis> matches both <emphasis
+                      role="bold">192.12.108.119</emphasis> and <emphasis role="bold">192.12.108.120</emphasis>, but does not match
+                      <emphasis role="bold">192.12.105.144</emphasis>.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para><emphasis role="bold">W.X.0.0</emphasis> matches all machines whose IP addresses start with the first
+                      two numbers. For example, the address <emphasis role="bold">192.12.0.0</emphasis> matches both <emphasis
+                      role="bold">192.12.106.23</emphasis> and <emphasis role="bold">192.12.108.120</emphasis>, but does not match
+                      <emphasis role="bold">192.5.30.95</emphasis>.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para><emphasis role="bold">W.0.0.0</emphasis> matches all machines whose IP addresses start with the first
+                      number in the specified address. For example, the address <emphasis role="bold">192.0.0.0</emphasis> matches
+                      both <emphasis role="bold">192.5.30.95</emphasis> and <emphasis role="bold">192.12.108.120</emphasis>, but
+                      does not match <emphasis role="bold">138.255.63.52</emphasis>.</para>
+                    </listitem>
+                  </itemizedlist></para>
+
+                <para>Do not define a machine entry with the name <emphasis role="bold">0.0.0.0</emphasis> to match every machine.
+                The <emphasis role="bold">system:anyuser</emphasis> group is equivalent.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example creates a machine entry that includes all of the machines in the <emphasis
+      role="bold">192.12</emphasis> network.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts cu 192.12.0.0</emphasis>
+</programlisting>
+
+      <indexterm>
+        <primary>creating</primary>
+
+        <secondary>Protection Database group entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>group entry, creating</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>assigning</primary>
+
+        <secondary>AFS GID to group</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>Protection Database entry, creating</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>AFS GID, assigning</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>name, assigning</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>regular and prefix-less, defined</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>regular group</primary>
+
+        <secondary></secondary>
+
+        <see>group</see>
+      </indexterm>
+
+      <indexterm>
+        <primary>prefix-less group</primary>
+
+        <secondary></secondary>
+
+        <see>group</see>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ544">
+    <title>Creating Groups</title>
+
+    <para>Before you can add members to a group, you must create the group entry itself. The instructions in this section explain
+    how to create both regular and prefix-less groups: <itemizedlist>
+        <listitem>
+          <para>A <emphasis>regular group</emphasis>'s name is preceded by a prefix that indicates who owns the group, in the
+          following format:</para>
+
+          <para>owner_name<emphasis role="bold">:</emphasis>group_name</para>
+
+          <para>Any user can create a regular group. Group names must always be typed in full, so a short group_name that indicates
+          the group's purpose or its members' common interest is practical. Groups with names like <emphasis
+          role="bold">terry:1</emphasis> and <emphasis role="bold">terry:2</emphasis> are less useful because their purpose is
+          unclear. For more details on the required format for regular group names, see the instructions in <link
+          linkend="HDRWQ546">To create groups</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>A <emphasis>prefix-less group</emphasis>, as its name suggests, has only one field in its name, equivalent to a
+          regular group's group_name field.</para>
+
+          <para>Only members of the <emphasis role="bold">system:administrators</emphasis> group can create prefix-less groups. For
+          a discussion of their purpose, see <link linkend="HDRWQ548">Using Prefix-Less Groups</link>.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>By default, the Protection Server assigns the next available AFS GID to a new group entry, and it is best to allow this.
+    When automatically allocating an AFS GID (which is a negative integer), the Protection Server decrements the <computeroutput>max
+    group id</computeroutput> counter by one and assigns the result to the new group. Use the <emphasis role="bold">pts
+    listmax</emphasis> command to display the counter, as described in <link linkend="HDRWQ560">Displaying and Setting the AFS UID
+    and GID Counters</link>.</para>
+
+    <para>In addition to the name and AFS GID, the Protection Server records the following values in the indicated fields of a new
+    group's entry. See <link linkend="HDRWQ537">To display a Protection Database entry</link>. <itemizedlist>
+        <listitem>
+          <para>It sets the <computeroutput>owner</computeroutput> field to the issuer of the <emphasis role="bold">pts
+          creategroup</emphasis> command, or to the user or group specified by the <emphasis role="bold">-owner</emphasis>
+          argument.</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>creator</computeroutput> field to the username of the user who issued the <emphasis
+          role="bold">pts creategroup</emphasis> command.</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>membership</computeroutput> field to <emphasis role="bold">0</emphasis> (zero), because
+          the group currently has no members.</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>flags</computeroutput> field to <emphasis role="bold">S-M--</emphasis>; for explanation,
+          see <link linkend="HDRWQ559">Setting the Privacy Flags on Database Entries</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para>It sets the <computeroutput>group quota</computeroutput> field to <emphasis role="bold">0</emphasis>, because this
+          field has no meaning for group entries.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>using effectively</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>private use of group</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>private use</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>shared use of group</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>shared use</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group use of group</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>group use</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>self-owned group</primary>
+    </indexterm>
+
+    <sect2 id="HDRWQ545">
+      <title>Using Groups Effectively</title>
+
+      <para>The main reason to create groups is to place them on ACLs, which enables you to control access for multiple users
+      without having to list them individually on the ACL. There are three basic ways to use groups, each suited to a different
+      purpose: <itemizedlist>
+          <listitem>
+            <para><emphasis>Private use</emphasis>: you create a group and place it on the ACL of directories you own, without
+            necessarily informing the group's members that they belong to it. Members notice only that they can or cannot access the
+            directory in a certain way. You retain sole administrative control over the group, since you are the owner.</para>
+
+            <para>The existence of the group and the identity of its members is not necessarily secret. Other users can use the
+            <emphasis role="bold">fs listacl</emphasis> command and see the group's name on a directory's ACL, or use the <emphasis
+            role="bold">pts membership</emphasis> command to list the groups they themselves belong to. You can set the group's
+            third privacy flag to limit who can use the <emphasis role="bold">pts membership</emphasis> command to list the group's
+            membership, but a member of the <emphasis role="bold">system:administrators</emphasis> group always can; see <link
+            linkend="HDRWQ559">Setting the Privacy Flags on Database Entries</link>.</para>
+          </listitem>
+
+          <listitem>
+            <para><emphasis>Shared use</emphasis>: you inform the group's members that they belong to the group, but you still
+            remain the sole administrator. For example, the manager of a work group can create a group of all the members in the
+            work group, and encourage them to use it on the ACLs of directories that house information they want to share with other
+            members of the group.</para>
+
+            <note>
+              <para>If you place a group owned by someone else on your ACLs, the group's owner can change the group's membership
+              without informing you. Someone new can gain or lose access in a way you did not intend and without your
+              knowledge.</para>
+            </note>
+          </listitem>
+
+          <listitem>
+            <para><emphasis>Group use</emphasis>: you create a group and then use the <emphasis role="bold">pts chown</emphasis>
+            command to assign ownership to a group, either another group or the group itself (the latter type is a self-owned
+            group). You inform the members of the owning group that they all can administer the owned group.</para>
+
+            <para>The main advantage of designating a group as an owner is that it spreads responsibility for administering a group
+            among several people. A single person does not have to perform all administrative tasks, and if the original creator
+            leaves the group, ownership does not have to be transferred.</para>
+
+            <para>However, everyone in the owner group can make changes that affect others negatively, such as adding or removing
+            people from the group inappropriately or changing the group's ownership to themselves exclusively. These problems can be
+            particularly sensitive in a <emphasis>self-owned</emphasis> group. Using an owner group works best if all the members
+            know and trust each other; it is probably wise to keep the number of people in an owner group small.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>creategroup</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts creategroup</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ546">
+      <title>To create groups</title>
+
+      <orderedlist>
+        <listitem>
+          <para>If creating a prefix-less group, verify that you belong to the <emphasis
+          role="bold">system:administrators</emphasis> group. If necessary, issue the <emphasis role="bold">pts
+          membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display the members of the
+          system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts creategroup</emphasis> command to create each group. All of the groups have the
+          same owner. <programlisting>
+   % <emphasis role="bold">pts creategroup  -name</emphasis> &lt;<replaceable>group name</replaceable>&gt;+ [<emphasis role="bold">-owner</emphasis> &lt;<replaceable>owner of the group</replaceable>&gt;]
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">cg</emphasis></term>
+
+              <listitem>
+                <para>Is an alias for <emphasis role="bold">creategroup</emphasis> (and <emphasis role="bold">createg</emphasis> is
+                the shortest acceptable abbreviation). <indexterm>
+                    <primary>owner</primary>
+
+                    <secondary>Protection Database entry</secondary>
+
+                    <tertiary>rules for assigning</tertiary>
+                  </indexterm> <indexterm>
+                    <primary>rules</primary>
+
+                    <secondary>group names, assigning</secondary>
+                  </indexterm> <indexterm>
+                    <primary>group</primary>
+
+                    <secondary>rules for naming</secondary>
+                  </indexterm></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-name</emphasis></term>
+
+              <listitem>
+                <para>Names each group to create. The name can include up to 63 lowercase letters or numbers, but it is best not to
+                include punctuation characters, especially those that have a special meaning to the shell.</para>
+
+                <para>A prefix-less group name cannot include the colon (<emphasis role="bold">:</emphasis>), because it is used to
+                separate the two parts of a regular group name:</para>
+
+                <para>owner_name<emphasis role="bold">:</emphasis>group_name</para>
+
+                <para>The Protection Server requires that the owner_name prefix of a regular group name accurately indicate the
+                group's owner. By default, you are recorded as the owner, and the owner_name must be your AFS username. You can
+                include the <emphasis role="bold">-owner</emphasis> argument to designate another AFS user, a regular group, or a
+                prefix-less group as the owner, providing the required value in the owner_name field: <itemizedlist>
+                    <listitem>
+                      <para>If the owner is a user, it must be the AFS username.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>If the owner is another regular group, it must match the owning group's owner_name field. For example,
+                      if the owner is the group <emphasis role="bold">terry:associates</emphasis>, the owner field must be <emphasis
+                      role="bold">terry</emphasis>.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>If the owner is a prefix-less group, it must be the owning group's name.</para>
+                    </listitem>
+                  </itemizedlist></para>
+
+                <para>(For a discussion of why it is useful for a group to own another group, see <link linkend="HDRWQ545">Using
+                Groups Effectively</link>.)</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-owner</emphasis></term>
+
+              <listitem>
+                <para>Is optional and designates an owner other than the issuer of the command. Specify either an AFS username or
+                the name of a regular or prefix-less group that already has at least one member. Do not include this argument if you
+                want to make the group self-owned as described in <link linkend="HDRWQ545">Using Groups Effectively</link>. For
+                instructions, see <link linkend="HDRWQ547">To create a self-owned group</link>.</para>
+
+                <para>Do not designate a machine as a group's owner. Because a machine cannot authenticate, there is no way for a
+                machine to administer the group.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>self-owned, creating</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>creating</primary>
+
+        <secondary>group, self-owned</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>changing</primary>
+
+        <secondary>group ownership to self-owned</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ547">
+      <title>To create a self-owned group</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts creategroup</emphasis> command to create a group. Do not include the <emphasis
+          role="bold">-owner</emphasis> argument, because you must own a group to reassign ownership. For complete instructions, see
+          <link linkend="HDRWQ546">To create groups</link>. <programlisting>
+   % <emphasis role="bold">pts creategroup</emphasis>  &lt;<replaceable>group name</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts adduser</emphasis> command to add one or more members to the group (a group must
+          already have at least one member before owning another group). For complete instructions, see <link
+          linkend="HDRWQ549">Adding and Removing Group Members</link>. <programlisting>
+   % <emphasis role="bold">pts adduser -user</emphasis> &lt;<replaceable>user name</replaceable>&gt;+ <emphasis role="bold">-group</emphasis> &lt;<replaceable>group name</replaceable>&gt;+
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts chown</emphasis> command to assign group ownership to the group itself. For
+          complete instructions, see <link linkend="HDRWQ555">To change a group's owner</link>. <programlisting>
+   % <emphasis role="bold">pts chown</emphasis> &lt;<replaceable>group name</replaceable>&gt; &lt;<replaceable>new owner</replaceable>&gt;
+</programlisting></para>
+        </listitem>
+      </orderedlist>
+    </sect2>
+
+    <sect2 id="HDRWQ548">
+      <title>Using Prefix-Less Groups</title>
+
+      <para>Members of the <emphasis role="bold">system:administrators</emphasis> group can create prefix-less groups, which are
+      particularly suitable for <emphasis>group use</emphasis>, which is described in <link linkend="HDRWQ545">Using Groups
+      Effectively</link>.</para>
+
+      <para>Suppose, for example, that the manager of the ABC Corporation's Accounting Department, user <emphasis
+      role="bold">smith</emphasis>, creates a group that includes all of the corporation's accountants and places the group on the
+      ACLs of directories that house departmental records. Using a prefix-less group rather than a regular group is appropriate for
+      the following reasons: <itemizedlist>
+          <listitem>
+            <para>The fact that <emphasis role="bold">smith</emphasis> created and owns the group is irrelevant, and a regular group
+            must be called <emphasis role="bold">smith:acctg</emphasis>. A prefix-less name like <emphasis
+            role="bold">acctg</emphasis> is more appropriate.</para>
+          </listitem>
+
+          <listitem>
+            <para>If another user (say <emphasis role="bold">jones</emphasis>) ever replaces <emphasis role="bold">smith</emphasis>
+            as manager of the Accounting Department, <emphasis role="bold">jones</emphasis> needs to become the new owner of the
+            group. If the group is a regular one, its owner_name prefix automatically changes to <emphasis
+            role="bold">jones</emphasis>, but the change in the owner_name prefix does not propagate to any regular groups owned by
+            the group. Someone must use the <emphasis role="bold">pts rename</emphasis> command to change each one's owner_name
+            prefix from <emphasis role="bold">smith</emphasis> to <emphasis role="bold">jones</emphasis>.</para>
+          </listitem>
+        </itemizedlist></para>
+
+      <para>A possible solution is to create an authentication account for a fictional user called <emphasis
+      role="bold">acctg</emphasis> and make it the owner of regular groups which have <emphasis role="bold">acctg</emphasis> as
+      their owner_name prefix. However, if the <emphasis role="bold">acctg</emphasis> account is also used for other purposes, then
+      the number of people who need to know user <emphasis role="bold">acctg</emphasis>'s password is possibly larger than the
+      number of people who need to administer the groups it owns.</para>
+
+      <para>A prefix-less group called <emphasis role="bold">acctg</emphasis> solves the problem of inappropriate owner names. The
+      groups that it owns have <emphasis role="bold">acctg</emphasis> as their owner_name prefix, which more accurately reflects
+      their purpose than having the manager's name there. Prefix-less groups are also more accountable than dummy authentication
+      accounts. Belonging to the group enables individuals to exercise the permissions granted to the group on ACLs, but users
+      continue to perform tasks under their own names rather than under the dummy username. Even if the group owns itself, only a
+      finite number of people can administer the group entry.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ549">
+    <title>Adding and Removing Group Members</title>
+
+    <para>Users and machines can be members of groups; groups cannot belong to other groups. Newly created groups have no members at
+    all. To add them, use the <emphasis role="bold">pts adduser</emphasis> command; to remove them, use the <emphasis
+    role="bold">pts removeuser</emphasis> command. <indexterm>
+        <primary>adding</primary>
+
+        <secondary>members to groups</secondary>
+      </indexterm> <indexterm>
+        <primary>group</primary>
+
+        <secondary>members, adding</secondary>
+      </indexterm> <indexterm>
+        <primary>members</primary>
+
+        <secondary>group, adding</secondary>
+      </indexterm> <indexterm>
+        <primary>user</primary>
+
+        <secondary>adding to group</secondary>
+      </indexterm> <indexterm>
+        <primary>machine</primary>
+
+        <secondary>adding to group</secondary>
+      </indexterm> <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>adduser</secondary>
+      </indexterm> <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts adduser</secondary>
+      </indexterm></para>
+
+    <sect2 id="HDRWQ550">
+      <title>To add users and machines to groups</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group, which enables you to add
+          members to a group regardless of the setting of its fourth (<emphasis role="bold">a</emphasis>) privacy flag. By default
+          the group's owner also has the necessary privilege. If necessary, issue the <emphasis role="bold">pts
+          membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display the members of the
+          system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts adduser</emphasis> command to add one or more members to one or more groups.
+          <programlisting>
+   % <emphasis role="bold">pts adduser -user</emphasis> &lt;<replaceable>user name</replaceable>&gt;+ <emphasis role="bold">-group</emphasis> &lt;<replaceable>group name</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">ad</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">adduser</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-user</emphasis></term>
+
+              <listitem>
+                <para>Specifies each username or machine IP address to add as a member of each group named by the <emphasis
+                role="bold">-group</emphasis> argument. A group cannot belong to another group.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">group name</emphasis></term>
+
+              <listitem>
+                <para>Names each group to which to add the new members.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>removing</primary>
+
+        <secondary>group members</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>members, removing</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>members</primary>
+
+        <secondary>group, removing</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>user</primary>
+
+        <secondary>removing from group</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>machine</primary>
+
+        <secondary>removing from group</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>removeuser</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts removeuser</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="HDRWQ551">
+      <title>To remove users and machines from groups</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group, which enables you to
+          remove members from a group regardless of the setting of its fifth (<emphasis role="bold">r</emphasis>) privacy flag. By
+          default the group's owner also has the necessary privilege. If necessary, issue the <emphasis role="bold">pts
+          membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display the members of the
+          system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts removeuser</emphasis> command to remove one or more members from one or more
+          groups. <programlisting>
+   % <emphasis role="bold">pts removeuser -user</emphasis>  &lt;<replaceable>user name</replaceable>&gt;+  <emphasis role="bold">-group</emphasis> &lt;<replaceable>group name</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">rem</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">removeuser</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-user</emphasis></term>
+
+              <listitem>
+                <para>Specifies each user or machine IP address to remove from each group named by the <emphasis
+                role="bold">-group</emphasis> argument.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-group</emphasis></term>
+
+              <listitem>
+                <para>Names each group from which to remove members.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ552">
+    <title>Deleting Protection Database Entries</title>
+
+    <para>It is best to delete a Protection Database user entry only if you are removing the complete user account. Use either the
+    <emphasis role="bold">uss delete</emphasis> command as described in <link linkend="HDRWQ486">Deleting Individual Accounts with
+    the uss delete Command</link>, or the <emphasis role="bold">pts delete</emphasis> command as described in <link
+    linkend="HDRWQ524">Removing a User Account</link>.</para>
+
+    <para>To remove machine and group entries, use the <emphasis role="bold">pts delete</emphasis> command as described in this
+    section. The operation has the following results: <itemizedlist>
+        <listitem>
+          <para>When you delete a machine entry, its name (IP address wildcard) is removed from groups.</para>
+        </listitem>
+
+        <listitem>
+          <para>When you delete a group entry, its AFS GID appears on ACLs instead of the name. The <emphasis>group-creation
+          quota</emphasis> of the user who created the group increases by one, even if the user no longer owns the group.</para>
+
+          <para>To remove obsolete AFS IDs from ACLs, use the <emphasis role="bold">fs cleanacl</emphasis> command as described in
+          <link linkend="HDRWQ579">Removing Obsolete AFS IDs from ACLs</link>.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>removing</primary>
+
+      <secondary>Protection Database entry</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>Protection Database</primary>
+
+      <secondary>entry, deleting</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>group</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>deleting</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>user</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>deleting</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>machine</primary>
+
+      <secondary>Protection Database entry</secondary>
+
+      <tertiary>deleting</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>pts commands</primary>
+
+      <secondary>delete</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>pts delete</secondary>
+    </indexterm>
+
+    <sect2 id="HDRWQ553">
+      <title>To delete Protection Database entries</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group or own the group you are
+          deleting. If necessary, issue the <emphasis role="bold">pts membership</emphasis> command, which is fully described in
+          <link linkend="HDRWQ587">To display the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts delete</emphasis> command to delete one or more entries from the Protection
+          Database. <programlisting>
+   % <emphasis role="bold">pts delete</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">del</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">delete</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">user or group name or id</emphasis></term>
+
+              <listitem>
+                <para>Specifies the IP address or AFS UID of each machine or the name or AFS GID or each group to remove.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>changing</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>owner</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>owner</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>changing</tertiary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ554">
+    <title>Changing a Group's Owner</title>
+
+    <para>For user and machine entries, the Protection Server automatically assigns ownership to the <emphasis
+    role="bold">system:administrators</emphasis> group at creation time, and this cannot be changed. For group entries, you can
+    change ownership. This transfers administrative responsibility for it to another user or group (for information on group
+    ownership of other groups, see <link linkend="HDRWQ545">Using Groups Effectively</link>).</para>
+
+    <para>When you create a regular group, its owner_name prefix must accurately reflect its owner, as described in <link
+    linkend="HDRWQ546">To create groups</link>: <itemizedlist>
+        <listitem>
+          <para>If the owner is a user, owner_name is the username.</para>
+        </listitem>
+
+        <listitem>
+          <para>If the owner is a regular group, owner_name is the owning group's owner_name prefix.</para>
+        </listitem>
+
+        <listitem>
+          <para>If the owner is a prefix-less group, owner_name is the owner group's name.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>When you change a regular group's owner, the Protection Server automatically changes its owner_name prefix appropriately.
+    For example, if the user <emphasis role="bold">pat</emphasis> becomes the new owner of the group <emphasis
+    role="bold">terry:friends</emphasis>, its name automatically changes to <emphasis role="bold">pat:friends</emphasis>, both in
+    the Protection Database and on ACLs.</para>
+
+    <para>However, the Protection Server does not automatically change the owner_name prefix of any regular groups that the group
+    owns. To continue with the previous example, suppose that the group <emphasis role="bold">terry:friends</emphasis> owns the
+    group <emphasis role="bold">terry:pals</emphasis>. When <emphasis role="bold">pat</emphasis> becomes the new owner of <emphasis
+    role="bold">terry:friends</emphasis>, the name <emphasis role="bold">terry:pals</emphasis> does not change. To change the
+    owner_name prefix of a regular group that is owned by another group (in the example, to change the group's name to <emphasis
+    role="bold">pat:pals</emphasis>), use the <emphasis role="bold">pts rename</emphasis> command as described in <link
+    linkend="HDRWQ556">Changing a Protection Database Entry's Name</link>. <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>owner of entry</secondary>
+
+        <tertiary>changing</tertiary>
+      </indexterm> <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts chown</secondary>
+      </indexterm> <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>chown</secondary>
+      </indexterm></para>
+
+    <sect2 id="HDRWQ555">
+      <title>To change a group's owner</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group or own the group for
+          which you are changing the owner. If necessary, issue the <emphasis role="bold">pts membership</emphasis> command, which
+          is fully described in <link linkend="HDRWQ587">To display the members of the system:administrators group</link>.
+          <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> If you are changing the group's owner to another group (or to itself)
+          and want to retain administrative privilege on the owned group, verify that you belong to the new owner group. If
+          necessary, issue the <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link
+          linkend="HDRWQ538">To display group membership</link>. <programlisting>
+   % <emphasis role="bold">pts membership</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;
+</programlisting></para>
+
+          <para>Use the <emphasis role="bold">pts adduser</emphasis> command to add yourself if necessary, as fully described in
+          <link linkend="HDRWQ550">To add users and machines to groups</link>.</para>
+
+          <programlisting>
+   % <emphasis role="bold">pts adduser</emphasis> &lt;<replaceable>user name</replaceable>&gt; &lt;<replaceable>group name</replaceable>&gt;
+</programlisting>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts chown</emphasis> command to change the group's owner. <programlisting>
+   % <emphasis role="bold">pts chown</emphasis> &lt;<replaceable>group name</replaceable>&gt; &lt;<replaceable>new owner</replaceable>&gt;
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">cho</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">chown</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">group name</emphasis></term>
+
+              <listitem>
+                <para>Specifies the current name of the group.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">new owner</emphasis></term>
+
+              <listitem>
+                <para>Names the user or group to become the group's owner.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">(Optional)</emphasis> Issue the <emphasis role="bold">pts listowned</emphasis> command to
+          display any groups that the group owns. As discussed in the introduction to this section, the <emphasis role="bold">pts
+          chown</emphasis> command does not automatically change the owner_name prefix of any regular groups that a group owns.
+          <programlisting>
+   % <emphasis role="bold">pts listowned</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;
+</programlisting></para>
+
+          <para>If you want to change their names to match the new owning group, use the <emphasis role="bold">pts rename</emphasis>
+          command on each one, as described in <link linkend="HDRWQ557">To change the name of a machine or group
+          entry</link>.</para>
+
+          <programlisting>
+   % <emphasis role="bold">pts rename</emphasis> &lt;<replaceable>old name</replaceable>&gt; &lt;<replaceable>new name</replaceable>&gt;
+</programlisting>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>changing</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>name</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>name</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>changing</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>entry name</secondary>
+
+        <tertiary>changing</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>name, changing</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>machine</primary>
+
+        <secondary>Protection Database entry</secondary>
+
+        <tertiary>name, changing</tertiary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ556">
+    <title>Changing a Protection Database Entry's Name</title>
+
+    <para>To change the name of a Protection Database entry, use the <emphasis role="bold">pts rename</emphasis> command. It is best
+    to change a user entry's name only when renaming the entire user account, since so many components of the account
+    (Authentication Database entry, volume name, home directory mount point, and so on) share the name. For instructions, see <link
+    linkend="HDRWQ518">Changing Usernames</link>. A machine entry's name maps to the actual IP address of one or more machine, so
+    changing the entry's name is appropriate only if the IP addresses have changed.</para>
+
+    <para>It is likely, then, that most often you need to change group names. The following types of name changes are possible:
+    <itemizedlist>
+        <listitem>
+          <para>Changing a regular group's name to another regular group name. The most common reason for this type of change is
+          that you have used the <emphasis role="bold">pts chown</emphasis> command to change the owner of the group. That operation
+          does not change the owner_name prefix of a regular group owned by the group whose name has been changed. Therefore, you
+          must use the <emphasis role="bold">pts rename</emphasis> command to change it appropriately. For example, when user
+          <emphasis role="bold">pat</emphasis> becomes the owner of the <emphasis role="bold">terry:friends</emphasis> group, its
+          name changes automatically to <emphasis role="bold">pat:friends</emphasis>, but the name of a group it owns, <emphasis
+          role="bold">terry:pals</emphasis>, does not change. Use the <emphasis role="bold">pts rename</emphasis> command to rename
+          <emphasis role="bold">terry:pals</emphasis> to <emphasis role="bold">pat:pals</emphasis>. The Protection Server does not
+          accept changes to the owner_name prefix that do not reflect the true ownership (changing <emphasis
+          role="bold">terry:pals</emphasis> to <emphasis role="bold">smith:pals</emphasis> is not possible).</para>
+
+          <para>You can also use the <emphasis role="bold">pts rename</emphasis> command to change the group_name portion of a
+          regular group name, with or without changing the owner_name prefix.</para>
+
+          <para>Both the group's owner and the members of the <emphasis role="bold">system:administrators</emphasis> group can
+          change its name to another regular group name.</para>
+        </listitem>
+
+        <listitem>
+          <para>Changing a regular group's name to a prefix-less name. If you change a group's name in this way, you must also use
+          the <emphasis role="bold">pts rename</emphasis> command to change the name of any regular group that the group owns. Only
+          members of the <emphasis role="bold">system:administrators</emphasis> group can make this type of name change.</para>
+        </listitem>
+
+        <listitem>
+          <para>Changing a prefix-less name to another prefix-less name. As with other name changes, the owner_name prefix of any
+          regular groups that the prefix-less group owns does not change automatically. You must issue the <emphasis role="bold">pts
+          rename</emphasis> command on them to maintain consistency.</para>
+
+          <para>Both the group's owner and the members of the <emphasis role="bold">system:administrators</emphasis> group can
+          change its name to another prefix-less name.</para>
+        </listitem>
+
+        <listitem>
+          <para>Changing a prefix-less name to a regular name. The owner_name prefix on the new name must accurately reflect the
+          group's ownership. As with other name changes, the owner_name prefix of any regular groups that the prefix-less group owns
+          does not change automatically. You must issue the <emphasis role="bold">pts rename</emphasis> command on them to maintain
+          consistency.</para>
+
+          <para>Only members of the <emphasis role="bold">system:administrators</emphasis> group can make this type of name
+          change.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>pts rename</secondary>
+
+      <tertiary>machine or group name</tertiary>
+    </indexterm>
+
+    <indexterm>
+      <primary>pts commands</primary>
+
+      <secondary>rename</secondary>
+
+      <tertiary>machine or group name</tertiary>
+    </indexterm>
+
+    <sect2 id="HDRWQ557">
+      <title>To change the name of a machine or group entry</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts rename</emphasis> command to change the entry's name. <programlisting>
+   % <emphasis role="bold">pts rename</emphasis> &lt;<replaceable>old name</replaceable>&gt; &lt;<replaceable>new name</replaceable>&gt;
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">ren</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">rename</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">old name</emphasis></term>
+
+              <listitem>
+                <para>Specifies the entry's current name.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">new name</emphasis></term>
+
+              <listitem>
+                <para>Specifies the new name. If the new name is for a regular group, the owner_name prefix must correctly indicate
+                the owner.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>group-creation quota in Protection Database entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>quota</primary>
+
+        <secondary>group-creation</secondary>
+
+        <tertiary>setting</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>group creation quota</secondary>
+
+        <tertiary>setting</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>user</primary>
+
+        <secondary>group-creation quota</secondary>
+
+        <tertiary>setting</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>changing</primary>
+
+        <secondary>group-creation quota</secondary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ558">
+    <title>Setting Group-Creation Quota</title>
+
+    <para>To prevent abuse of system resources, the Protection Server imposes a group-creation quota that limits how many more
+    groups a user can create. When a new user entry is created, the quota is set to 20, but members of the <emphasis
+    role="bold">system:administrators</emphasis> group can use the <emphasis role="bold">pts setfields</emphasis> command to
+    increase or decrease it at any time.</para>
+
+    <para>It is pointless to change group-creation quota for machine or group entries. It is not possible to authenticate as a group
+    or machine and then create groups.</para>
+
+    <para>To display the group-creation quota, use the <emphasis role="bold">pts examine</emphasis> command to display a user
+    entry's <computeroutput>group quota field</computeroutput>, as described in <link linkend="HDRWQ537">To display a Protection
+    Database entry</link>. <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>setfields</secondary>
+
+        <tertiary>setting group creation quota</tertiary>
+      </indexterm> <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts setfields</secondary>
+
+        <tertiary>setting group creation quota</tertiary>
+      </indexterm></para>
+
+    <sect2 id="Header_622">
+      <title>To set group-creation quota</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts setfields</emphasis> command to specify how many more groups each of one or more
+          users can create. <programlisting>
+  % <emphasis role="bold">pts setfields -nameorid</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+  \
+                  <emphasis role="bold">-groupquota</emphasis> &lt;<replaceable>set limit on group creation</replaceable>&gt;
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">setf</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">setfields</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-nameorid</emphasis></term>
+
+              <listitem>
+                <para>Specifies the name or AFS UID of each user for which to set group-creation quota.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-groupquota</emphasis></term>
+
+              <listitem>
+                <para>Defines how many groups each user can create in addition to existing groups (in other words, groups that
+                already exist do not count against the quota). The value you specify overwrites the current value, rather than
+                incrementing it.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>group</primary>
+
+        <secondary>privacy flags on Protection Database entry</secondary>
+
+        <tertiary>setting</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>user</primary>
+
+        <secondary>privacy flags on Protection Database entry</secondary>
+
+        <tertiary>setting</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>machine</primary>
+
+        <secondary>privacy flags on Protection Database entry</secondary>
+
+        <tertiary>setting</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>privacy flags on Protection Database entry</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>privacy flags on Protection Database entry</primary>
+
+        <secondary>setting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>privacy flags</secondary>
+
+        <tertiary>setting</tertiary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ559">
+    <title>Setting the Privacy Flags on Database Entries</title>
+
+    <para>Members of the <emphasis role="bold">system:administrators</emphasis> group can always display and administer Protection
+    Database entries in any way, and regular users can display and administer their own entries and any group entries they own. The
+    <emphasis>privacy flags</emphasis> on a Protection Database entry determine who else can display certain information from the
+    entry, and who can add and remove members in a group.</para>
+
+    <para>To display the flags, use the <emphasis role="bold">pts examine</emphasis> command as described in <link
+    linkend="HDRWQ537">To display a Protection Database entry</link>. The flags appear in the output's
+    <computeroutput>flags</computeroutput> field. To set the flags, include the <emphasis role="bold">-access</emphasis> argument to
+    the <emphasis role="bold">pts setfields</emphasis> command.</para>
+
+    <para>The five flags always appear, and always must be set, in the following order:</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><emphasis role="bold">s</emphasis></term>
+
+        <listitem>
+          <para>Controls who can issue the <emphasis role="bold">pts examine</emphasis> command to display the entry.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis role="bold">o</emphasis></term>
+
+        <listitem>
+          <para>Controls who can issue the <emphasis role="bold">pts listowned</emphasis> command to display the groups that a user
+          or group owns.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis role="bold">m</emphasis></term>
+
+        <listitem>
+          <para>Controls who can issue the <emphasis role="bold">pts membership</emphasis> command to display the groups a user or
+          machine belongs to, or which users or machines belong to a group.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis role="bold">a</emphasis></term>
+
+        <listitem>
+          <para>Controls who can issue the <emphasis role="bold">pts adduser</emphasis> command to add a user or machine to a group.
+          It is meaningful only for groups, but a value must always be set for it even on user and machine entries.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><emphasis role="bold">r</emphasis></term>
+
+        <listitem>
+          <para>Controls who can issue the <emphasis role="bold">pts removeuser</emphasis> command to remove a user or machine from
+          a group. It is meaningful only for groups, but a value must always be set for it even on user and machine entries.</para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <para>Each flag can take three possible types of values to enable a different set of users to issue the corresponding command:
+    <itemizedlist>
+        <listitem>
+          <para>A hyphen (<emphasis role="bold">-</emphasis>) designates the members of the <emphasis
+          role="bold">system:administrators</emphasis> group and the entry's owner. For user entries, it designates the user in
+          addition.</para>
+        </listitem>
+
+        <listitem>
+          <para>The lowercase version of the letter applies meaningfully to groups only, and designates members of the group in
+          addition to the individuals designated by the hyphen.</para>
+        </listitem>
+
+        <listitem>
+          <para>The uppercase version of the letter designates everyone.</para>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>For example, the flags <computeroutput>SOmar</computeroutput> on a group entry indicate that anyone can examine the
+    group's entry and display the groups that it owns, and that only the group's members can display, add, or remove its
+    members.</para>
+
+    <para>The default privacy flags for user and machine entries are <computeroutput>S----</computeroutput>, meaning that anyone can
+    display the entry. The ability to perform any other functions is restricted to members of the <emphasis
+    role="bold">system:administrators</emphasis> group and the entry's owner (as well as the user for a user entry).</para>
+
+    <para>The default privacy flags for group entries are <computeroutput>S-M--</computeroutput>, meaning that all users can display
+    the entry and the members of the group, but only the entry owner and members of the <emphasis
+    role="bold">system:administrators</emphasis> group can perform other functions. <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>setfields</secondary>
+
+        <tertiary>setting privacy flags</tertiary>
+      </indexterm> <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts setfields</secondary>
+
+        <tertiary>setting privacy flags</tertiary>
+      </indexterm></para>
+
+    <sect2 id="Header_624">
+      <title>To set a Protection Database entry's privacy flags</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts setfields</emphasis> command to set the privacy flags. <programlisting>
+   % <emphasis role="bold">pts setfields</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;+ <emphasis
+                role="bold">-access</emphasis> &lt;<replaceable>set privacy flags</replaceable>&gt;
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">setf</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">setfields</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">user or group name or id</emphasis></term>
+
+              <listitem>
+                <para>Specifies the name or AFS UID of each user, the IP address or AFS UID of each machine, or the name or AFS GID
+                of each group for which to set the privacy flags.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-access</emphasis></term>
+
+              <listitem>
+                <para>Specifies the set of privacy flags to associate with each entry. Provide a value for each of the five flags,
+                observing the following constraints: <itemizedlist>
+                    <listitem>
+                      <para>Provide a value for all five flags, even though the fourth and fifth flags are not meaningful for user
+                      and machine entries.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>For self-owned groups, the hyphen is equivalent to a lowercase letter, because all the members of a
+                      self-owned group own it.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>Set the first flag to lowercase <emphasis role="bold">s</emphasis> or uppercase <emphasis
+                      role="bold">S</emphasis> only. For user and machine entries, the Protection Server interprets the lowercase
+                      <emphasis role="bold">s</emphasis> as equivalent to the hyphen.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>Set the second flag to the hyphen (<emphasis role="bold">-</emphasis>) or uppercase <emphasis
+                      role="bold">O</emphasis> only. For groups, the Protection Server interprets the hyphen as equivalent to
+                      lowercase <emphasis role="bold">o</emphasis> (that is, members of a group can always list the groups that it
+                      owns).</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>Set the third flag to the hyphen (<emphasis role="bold">-</emphasis>), lowercase <emphasis
+                      role="bold">m</emphasis>, or uppercase <emphasis role="bold">M</emphasis>. For user and machine entries, the
+                      lowercase <emphasis role="bold">m</emphasis> does not have a meaningful interpretation, because they have no
+                      members.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>Set the fourth flag to the hyphen (<emphasis role="bold">-</emphasis>), lowercase <emphasis
+                      role="bold">a</emphasis>, or uppercase <emphasis role="bold">A</emphasis>. Although this flag does not have a
+                      meaningful interpretation for user and machine entries (because they have no members), it must be set,
+                      preferably to the hyphen.</para>
+                    </listitem>
+
+                    <listitem>
+                      <para>Set the fifth flag to the hyphen (<emphasis role="bold">-</emphasis>) or lowercase <emphasis
+                      role="bold">r</emphasis> only. Although this flag does not have a meaningful interpretation for user and
+                      machine entries (because they have no members), it must be set, preferably to the hyphen.</para>
+                    </listitem>
+                  </itemizedlist></para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+
+      <indexterm>
+        <primary>counter</primary>
+
+        <secondary>Protection Database (max user id, max group id)</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>max user id and max group id counters, displaying and setting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS UID</primary>
+
+        <secondary>counter for automatic allocation, displaying and setting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS GID</primary>
+
+        <secondary>counter for automatic allocation, displaying and setting</secondary>
+      </indexterm>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ560">
+    <title>Displaying and Setting the AFS UID and GID Counters</title>
+
+    <para>When you use the <emphasis role="bold">pts createuser</emphasis> command to create a user or machine entry in the
+    Protection Database, the Protection Server by default automatically allocates an AFS user ID (AFS UID) for it; similarly, it
+    allocates an AFS group ID (AFS GID) for each group entry you create with the <emphasis role="bold">pts creategroup</emphasis>
+    command. It tracks the next available AFS UID (which is a positive integer) and AFS GID (which is a negative integer) with the
+    <computeroutput>max user id</computeroutput> and <computeroutput>max group id</computeroutput> counters, respectively.</para>
+
+    <para>Members of the <emphasis role="bold">system:administrators</emphasis> group can include the <emphasis
+    role="bold">-id</emphasis> argument to either <emphasis role="bold">pts</emphasis> creation command to assign a specific ID to a
+    new user, machine, or group. It often makes sense to assign AFS UIDs explicitly when creating AFS accounts for users with
+    existing UNIX accounts, as discussed in <link linkend="HDRWQ456">Assigning AFS and UNIX UIDs that Match</link>. It is also
+    useful if you want to establish ranges of IDs that correspond to departmental affiliations (for example, assigning AFS UIDs from
+    300 to 399 to members of one department, AFS UIDs from 400 to 499 to another department, and so on).</para>
+
+    <para>To display the current value of the counters, use the <emphasis role="bold">pts listmax</emphasis> command. When you next
+    create a user or machine entry and do not specify its AFS UID, the Protection Server increments the <computeroutput>max user
+    id</computeroutput> counter by one and assigns that number to the new entry. When you create a new group and do not specify its
+    AFS GID, the Protection Server decrements the <computeroutput>max group id</computeroutput> counter by one (makes it more
+    negative), and assigns that number to the new group.</para>
+
+    <para>You can change the value of either counter, or both, in one of two ways:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Directly, using the <emphasis role="bold">pts setmax</emphasis> command.</para>
+      </listitem>
+
+      <listitem>
+        <para>Indirectly, by using the <emphasis role="bold">-id</emphasis> argument to the <emphasis role="bold">pts
+        createuser</emphasis> command to assign an AFS UID that is larger than the <computeroutput>max user id</computeroutput>
+        counter, or by using the <emphasis role="bold">-id</emphasis> to the <emphasis role="bold">pts creategroup</emphasis>
+        command to assign an AFS GID that is less (more negative) than the max group id counter. In either case, the Protection
+        Server changes the counter to the value of the <emphasis role="bold">-id</emphasis> argument. The Protection Server does not
+        use the IDs between the previous value of the counter and the new one when allocating IDs automatically, unless you use the
+        <emphasis role="bold">pts setmax</emphasis> command to move the counter back to its old value.</para>
+
+        <para>If the value you specify with the <emphasis role="bold">-id</emphasis> argument is less than the <computeroutput>max
+        user id</computeroutput> counter or greater (less negative) than the <computeroutput>max group id</computeroutput> counter,
+        then the counter does not change.</para>
+      </listitem>
+    </itemizedlist>
+
+    <indexterm>
+      <primary>pts commands</primary>
+
+      <secondary>listmax</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>commands</primary>
+
+      <secondary>pts listmax</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>max user id counter (Protection Database)</primary>
+
+      <secondary>displaying</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>max group id counter (Protection Database)</primary>
+
+      <secondary>displaying</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>counters for AFS UID and AFS GID</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>AFS user id and max group id counters</secondary>
+    </indexterm>
+
+    <sect2 id="HDRWQ561">
+      <title>To display the AFS ID counters</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts listmax</emphasis> command to display the counters. <programlisting>
+   % <emphasis role="bold">pts listmax</emphasis>
+</programlisting></para>
+
+          <para>where <emphasis role="bold">listm</emphasis> is an acceptable abbreviation of <emphasis
+          role="bold">listmax</emphasis>.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>The following example illustrates the output's format. In this case, the next automatically assigned AFS UID is 5439 and
+      AFS GID is -469.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts listmax</emphasis>
+   Max user id is 5438 and max group id is -468.
+</programlisting>
+
+      <indexterm>
+        <primary>max user id counter (Protection Database)</primary>
+
+        <secondary>setting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>max group id counter (Protection Database)</primary>
+
+        <secondary>setting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>counters for AFS UID and AFS GID</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>AFS user id and max group id counters</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>ID counters, setting</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>AFS UID and AFS GID counters</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>Protection Database</primary>
+
+        <secondary>setting</secondary>
+
+        <tertiary>counters for AFS UIDs</tertiary>
+      </indexterm>
+
+      <indexterm>
+        <primary>AFS UID</primary>
+
+        <secondary>setting counters for automatic allocation</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>setting</primary>
+
+        <secondary>AFS UID counters</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>setmax</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts setmax</secondary>
+      </indexterm>
+    </sect2>
+
+    <sect2 id="Header_627">
+      <title>To set the AFS ID counters</title>
+
+      <orderedlist>
+        <listitem>
+          <para>Verify that you belong to the <emphasis role="bold">system:administrators</emphasis> group. If necessary, issue the
+          <emphasis role="bold">pts membership</emphasis> command, which is fully described in <link linkend="HDRWQ587">To display
+          the members of the system:administrators group</link>. <programlisting>
+   % <emphasis role="bold">pts membership system:administrators</emphasis>
+</programlisting></para>
+        </listitem>
+
+        <listitem>
+          <para>Issue the <emphasis role="bold">pts setmax</emphasis> command to set the <computeroutput>max user
+          id</computeroutput> counter, the <computeroutput>max group id</computeroutput> counter, or both. <programlisting>
+   % <emphasis role="bold">pts setmax</emphasis> [<emphasis role="bold">-group</emphasis> &lt;<replaceable>group max</replaceable>&gt;] [<emphasis
+                role="bold">-user</emphasis> &lt;<replaceable>user max</replaceable>&gt;]
+</programlisting></para>
+
+          <para>where</para>
+
+          <variablelist>
+            <varlistentry>
+              <term><emphasis role="bold">setm</emphasis></term>
+
+              <listitem>
+                <para>Is the shortest acceptable abbreviation of <emphasis role="bold">setmax</emphasis>.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-group</emphasis></term>
+
+              <listitem>
+                <para>Specifies an integer one greater (less negative) than the AFS GID that the Protection Server is to assign to
+                the next group entry. Because the value is a negative integer, precede it with a hyphen (<emphasis
+                role="bold">-</emphasis>).</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><emphasis role="bold">-user</emphasis></term>
+
+              <listitem>
+                <para>Specifies an integer one less than the AFS UID that the Protection Server is to assign to the next user or
+                machine entry.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+        </listitem>
+      </orderedlist>
+    </sect2>
+  </sect1>
+</chapter>

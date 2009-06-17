@@ -1,0 +1,54 @@
+=head1 NAME
+
+fs_monitor - Enable client logging to a remote monitoring station
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs monitor> S<<< [B<-server> <I<hostname/IP address or 'off'>>] >>> [B<-help>]
+
+B<fs mariner> S<<< [B<-server> <I<hostname/IP address or 'off'>>] >>> [B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs monitor> command (aka B<mariner>) sets the cache monitor host
+address (or turns it off).
+
+=head1 CAUTIONS
+
+This command is hidden since the necessary remote monitoring component,
+B<venusmon>, is not part of OpenAFS.  This system is not currently
+distributed or supported.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-server> <I<hostname/IP address or 'off'>>
+
+Name (or address) of the B<venusmon> host that monitoring information
+should be sent to.  Setting the server to I<off> turns off monitoring.
+
+=item B<-help>
+
+Prints the online help for this command.  All other valid options are
+ignored.
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be super-user on the local machine.
+
+=head1 COPYRIGHT
+
+Copyright 2009 Steven Jenkins <steven@endpoint.com>
+
+This documentation is covered by the BSD License as written in the
+doc/LICENSE file. This man page was written by Steven Jenkins for
+OpenAFS.

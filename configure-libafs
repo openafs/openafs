@@ -734,6 +734,8 @@ DEST
 WITH_OBSOLETE
 DARWIN_INFOFILE
 IRIX_BUILD_IP35
+HTML_XSL
+XSLTPROC
 AS
 AR
 MV
@@ -1408,6 +1410,7 @@ Optional Features:
   --enable-debug-lwp			enable compilation of the LWP code with debugging information (defaults to disabled)
   --disable-optimize-lwp		disable optimization for compilation of the LWP code (defaults to enabled)
   --enable-warnings			enable compilation warnings when building with gcc (defaults to disabled)
+--disable-linux-syscall-probing        disabling Linux syscall probing (defaults to enabled)
   --enable-bigendian	the target is big endian
   --enable-littleendian	the target is little endian
 
@@ -1426,6 +1429,12 @@ Optional Packages:
 
   --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)
 
+  --with-xslt-processor=ARG
+                          which XSLT processor to use (possible choices are:
+                          libxslt, saxon, xalan-j, xsltproc)
+  --with-html-xsl         build HTML documentation using Norman Walsh's
+                          DocBook XSL stylesheets (default is no; specify a
+                          path to chunk.xsl or docbook.xsl)
 --with-krb5-conf=krb5-config-location    Use a krb5-config script to configure Kerberos
 --with-krb5 Support for Kerberos 5 (manual configuration)
 
@@ -2182,7 +2191,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs-libafs
- VERSION=1.4.10
+ VERSION=1.4.11pre1
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2330,10 +2339,10 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers src/config/afsconfig.h"
 
-MACOS_VERSION=1.4.10
-LINUX_PKGVER=1.4.10
-#LINUX_PKGREL=0.pre2
-LINUX_PKGREL=1.1
+MACOS_VERSION=1.4.11fc1
+LINUX_PKGVER=1.4.11
+#LINUX_PKGREL=1.1
+LINUX_PKGREL=0.pre1
 
 
 
@@ -4860,6 +4869,14 @@ else
 
 fi
 
+# Check whether --enable-linux-syscall-probing was given.
+if test "${enable_linux_syscall_probing+set}" = set; then
+  enableval=$enable_linux_syscall_probing;
+else
+  enable_probing="yes"
+
+fi
+
 
 enable_login="no"
 
@@ -6148,6 +6165,11 @@ echo "${ECHO_T}nbsd" >&6; }
 		{ echo "$as_me:$LINENO: result: i386_obsd" >&5
 echo "${ECHO_T}i386_obsd" >&6; }
 		;;
+	*-dragonfly*)
+		MKAFS_OSTYPE=DFBSD
+		{ echo "$as_me:$LINENO: result: i386_dfbsd" >&5
+echo "${ECHO_T}i386_dfbsd" >&6; }
+		;;
         *)
                 { echo "$as_me:$LINENO: result: $system" >&5
 echo "${ECHO_T}$system" >&6; }
@@ -6177,6 +6199,12 @@ echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6; }
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
+			;;
+		i386-*-dragonfly2.2*)
+			AFS_SYSNAME="i386_dfbsd_23"
+			;;
+		i386-*-dragonfly2.3*)
+			AFS_SYSNAME="i386_dfbsd_23"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -18606,6 +18634,23 @@ fi
 esac
 
 
+# Check whether --with-xslt-processor was given.
+if test "${with_xslt_processor+set}" = set; then
+  withval=$with_xslt_processor; XSLTPROC="$withval"
+else
+  XSLTPROC="libxslt"
+fi
+
+
+
+# Check whether --with-html-xsl was given.
+if test "${with_html_xsl+set}" = set; then
+  withval=$with_html_xsl; HTML_XSL="$withval"
+else
+  HTML_XSL=no
+fi
+
+
 if test "${ac_cv_sockaddr_len+set}" = set; then
   echo $ECHO_N "(cached) $ECHO_C" >&6
 else
@@ -20005,6 +20050,9 @@ if test $ac_cv_lib_pthread_pthread_attr_destroy = yes; then
   PTHREAD_LIBS="-lpthread"
 fi
 
+fi
+if test "x$MKAFS_OSTYPE" = xDFBSD; then
+        PTHREAD_LIBS="-pthread"
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
         { echo "$as_me:$LINENO: WARNING: *** Unable to locate working posix thread library ***" >&5
@@ -21600,7 +21648,10 @@ done
 
 
 
-for ac_header in security/pam_modules.h siad.h usersec.h ucontext.h regex.h
+
+
+
+for ac_header in security/pam_modules.h siad.h usersec.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h
 do
 as_ac_Header=`echo "ac_cv_header_$ac_header" | $as_tr_sh`
 if { as_var=$as_ac_Header; eval "test \"\${$as_var+set}\" = set"; }; then
@@ -21764,12 +21815,112 @@ fi
 done
 
 
+{ echo "$as_me:$LINENO: checking for fsblkcnt_t" >&5
+echo $ECHO_N "checking for fsblkcnt_t... $ECHO_C" >&6; }
+if test "${ac_cv_type_fsblkcnt_t+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+#include <sys/types.h>
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+
+
+typedef fsblkcnt_t ac__type_new_;
+int
+main ()
+{
+if ((ac__type_new_ *) 0)
+  return 0;
+if (sizeof (ac__type_new_))
+  return 0;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (ac_try="$ac_compile"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_compile") 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag" || test ! -s conftest.err'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
+  (eval "$ac_try") 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_type_fsblkcnt_t=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_cv_type_fsblkcnt_t=no
+fi
+
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+{ echo "$as_me:$LINENO: result: $ac_cv_type_fsblkcnt_t" >&5
+echo "${ECHO_T}$ac_cv_type_fsblkcnt_t" >&6; }
+if test $ac_cv_type_fsblkcnt_t = yes; then
+
+cat >>confdefs.h <<_ACEOF
+#define HAVE_FSBLKCNT_T 1
+_ACEOF
+
+
+fi
+
+
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
 	HAVE_PAM="yes"
 else
 	HAVE_PAM="no"
 fi
 
+
+if test "$enable_probing" = yes; then
+
+cat >>confdefs.h <<\_ACEOF
+#define ENABLE_LINUX_SYSCALL_PROBING 1
+_ACEOF
+
+fi
 
 if test "$enable_login" = yes; then
 	BUILD_LOGIN="yes"
@@ -23389,6 +23540,8 @@ fi
 
 
 
+
+
 XCFLAGS='${DBG} ${OPTMZ}'
 SHLIB_SUFFIX="so"
 CC="cc"
@@ -24056,6 +24209,19 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O2 -pipe"
+		YACC="byacc"
+		;;
+
+	i386_dfbsd_*)
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-pthread"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
+		TXLIBS="-lncurses"
+		XCFLAGS="-pipe"
 		YACC="byacc"
 		;;
 
@@ -27029,6 +27195,8 @@ DEST!$DEST$ac_delim
 WITH_OBSOLETE!$WITH_OBSOLETE$ac_delim
 DARWIN_INFOFILE!$DARWIN_INFOFILE$ac_delim
 IRIX_BUILD_IP35!$IRIX_BUILD_IP35$ac_delim
+HTML_XSL!$HTML_XSL$ac_delim
+XSLTPROC!$XSLTPROC$ac_delim
 AS!$AS$ac_delim
 AR!$AR$ac_delim
 MV!$MV$ac_delim
@@ -27085,8 +27253,6 @@ BUILD_KRB5!$BUILD_KRB5$ac_delim
 MAKE_KRB5!$MAKE_KRB5$ac_delim
 KRB5CFLAGS!$KRB5CFLAGS$ac_delim
 KRB5LIBS!$KRB5LIBS$ac_delim
-HELPER_SPLINT!$HELPER_SPLINT$ac_delim
-HELPER_SPLINTCFG!$HELPER_SPLINTCFG$ac_delim
 _ACEOF
 
   if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 97; then
@@ -27128,11 +27294,13 @@ _ACEOF
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   cat >conf$$subs.sed <<_ACEOF
+HELPER_SPLINT!$HELPER_SPLINT$ac_delim
+HELPER_SPLINTCFG!$HELPER_SPLINTCFG$ac_delim
 LIBOBJS!$LIBOBJS$ac_delim
 LTLIBOBJS!$LTLIBOBJS$ac_delim
 _ACEOF
 
-  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 2; then
+  if test `sed -n "s/.*$ac_delim\$/X/p" conf$$subs.sed | grep -c X` = 4; then
     break
   elif $ac_last_try; then
     { { echo "$as_me:$LINENO: error: could not make $CONFIG_STATUS" >&5

@@ -21,6 +21,7 @@
 
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <errno.h>
 
 #include "Internal.h"
 #include "org_openafs_jafs_ACL.h"
@@ -54,7 +55,12 @@ static char space[MAXSIZE];
 
 #define ACL_LEN      1024
 
-extern int errno;
+#ifndef ERROR_H
+#define ERROR_H
+#endif
+
+extern int error_intr;
+extern int error_nomem;
 
 /**
  * Returns a formatted string representing the ACL for the specified path.

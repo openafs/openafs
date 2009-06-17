@@ -13,7 +13,7 @@
 #include <afs/stds.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/ubik_db_if.c,v 1.10.2.5 2009/03/27 13:46:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/ubik_db_if.c,v 1.10.2.6 2009/04/27 19:17:41 shadow Exp $");
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -601,7 +601,7 @@ bcdb_SaveTextFile(ctPtr)
 
     fileSize = (afs_int32) filesize(ctPtr->textStream);
 
-    dprintf(("filesize is %d\n", fileSize));
+    afs_dprintf(("filesize is %d\n", fileSize));
 
     rewind(ctPtr->textStream);
 
@@ -1390,7 +1390,7 @@ bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
 	ERROR(errno);
 #endif
 
-    dprintf(("file is %s\n", tmpFileName));
+    afs_dprintf(("file is %s\n", tmpFileName));
 
   normal_exit:
     return code;

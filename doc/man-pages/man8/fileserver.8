@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH fileserver 8 "OpenAFS" "11/Nov/2008" "AFS Command Reference"
+.TH fileserver 8 "OpenAFS" "15/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -203,7 +203,7 @@ fileserver \- Initializes the File Server component of the fs process
     <<\ [\fB\-busyat\fR\ <\fI<\ redirect\ clients\ when\ queue\ \fR\ n\ >>] >>>
     [\fB\-nobusy\fR] <<\ [\fB\-rxpck\fR\ <\fInumber\ of\ rx\ extra\ packets\fR] >>>
     [\fB\-rxdbg\fR] [\fB\-rxdbge\fR] <<\ [\fB\-rxmaxmtu\fR\ <\fIbytes\fR] >>>
-    [\fB\-allow-dotted-principal\fR] [\fB\-jumbo\fR] [\fB\-nojumbo\fR]
+    [\fB\-allow-dotted-principals\fR] [\fB\-jumbo\fR] [\fB\-nojumbo\fR]
     <<\ [\fB\-rxbind\fR\ <\fIaddress\ to\ bind\ the\ Rx\ socket\ to\fR] >>>
     <<\ [\fB\-vattachpar\fR\ <\fInumber\ of\ volume\ attach\ threads\fR] >>>
     <<\ [\fB\-m\fR\ <\fImin\ percentage\ spare\ in\ partition\fR] >>>
@@ -272,7 +272,7 @@ The default values are:
 .Vb 9
 \&  Parameter (Argument)               Small (-S)     Medium   Large (-L)
 \&  ---------------------------------------------------------------------
-\&  Number of LWPs (-p)                        6           9           12
+\&  Number of LWPs (-p)                        6           9          128
 \&  Number of cached dir blocks (-b)          70          90          120
 \&  Number of cached large vnodes (-l)       200         400          600
 \&  Number of cached small vnodes (-s)       200         400          600
@@ -461,7 +461,7 @@ Writes a trace of the File Server's operations on Rx packets to the file
 .Ip "\fI\-rxdbge\fR" 4
 Writes a trace of the File Server's operations on Rx events (such as
 retransmissions) to the file \fI/usr/afs/logs/rx_dbg\fR.
-.Ip "\fB\-allow-dotted-principal\fR" 4
+.Ip "\fB\-allow-dotted-principals\fR" 4
 By default, the \s-1RXKAD\s0 security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid
 the confusion where principals user/admin and user.admin are both mapped to the
@@ -804,7 +804,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Item "\fI\-rxdbge\fR"
 
-.IX Item "\fB\-allow-dotted-principal\fR"
+.IX Item "\fB\-allow-dotted-principals\fR"
 
 .IX Item "\fI\-m\fR <\fImin percentage spare in partition\fR>"
 

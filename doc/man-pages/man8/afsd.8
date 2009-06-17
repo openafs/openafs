@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH afsd 8 "OpenAFS" "19/Mar/2009" "AFS Command Reference"
+.TH afsd 8 "OpenAFS" "30/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -208,7 +208,8 @@ afsd \- Initializes the Cache Manager and starts related daemons
      [\fB\-nosettime\fR]
      <<\ [\fB\-prealloc\fR\ <\fInumber\ of\ \*(L'small\*(R'\ preallocated\ blocks\fR] >>>
      [\fB\-rmtsys\fR] <<\ [\fB\-rootvol\fR\ <\fIname\ of\ AFS\ root\ volume\fR] >>>
-     [\fB\-rxbind\fR] <<\ [\fB\-rxpck\fR\ value\ for\ rx_extraPackets\ ]\ >>
+     [\fB\-rxbind\fR] <<\ [\fB\-rxmaxmtu\fR\ value\ for\ maximum\ MTU\ ]\ >> 
+     <<\ [\fB\-rxpck\fR\ value\ for\ rx_extraPackets\ ]\ >>
      [\fB\-settime\fR] [\fB\-shutdown\fR]
      <<\ [\fB\-splitcache\fR\ <\fIRW/RO\ ratio\fR] >>>
      <<\ [\fB\-stat\fR\ <\fInumber\ of\ stat\ entries\fR] >>> [\fB\-verbose\fR]
@@ -656,6 +657,11 @@ overrides the default of the \f(CWroot.afs\fR volume. This option is ignored if
 \fB\-dynroot\fR is given.
 .Ip "\fB\-rxbind\fR" 4
 Bind the Rx socket (one interface only).
+.Ip "\fB\-rxmaxmtu\fR <\fIvalue for maximum \s-1MTU\s0\fR>" 4
+Set a limit for the largest maximum transfer unit (network packet size) that
+the \s-1AFS\s0 client on this machine will be willing to transmit. This switch can
+be used where an artificial limit on the network precludes packets as large
+as the discoverable \s-1MTU\s0 from being transmitted successfully.
 .Ip "\fB\-rxpck\fR <\fIvalue for rx_extraPackets\fR>" 4
 Set rx_extraPackets to this value. This sets the number of extra Rx
 packet structures that are available to handle Rx connections. This
@@ -865,6 +871,8 @@ Russ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-rootvol\fR <\fIname of \s-1AFS\s0 root volume\fR>"
 
 .IX Item "\fB\-rxbind\fR"
+
+.IX Item "\fB\-rxmaxmtu\fR <\fIvalue for maximum \s-1MTU\s0\fR>"
 
 .IX Item "\fB\-rxpck\fR <\fIvalue for rx_extraPackets\fR>"
 

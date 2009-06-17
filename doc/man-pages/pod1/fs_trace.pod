@@ -1,0 +1,86 @@
+=head1 NAME
+
+fs_trace - Enable or disable AFS Cache Manager tracing 
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs trace> S<<< [B<-on>|B<-off>] >>> [B<-reset>] [B<-dump>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+This command enables or disables AFS Cache Manager tracing, resets the
+trace log, or dumps the log.  When you dump the log, two files are created
+in the Windows Temporary directory:  F<afs-buffer.log> and F<afsd.log>.
+Any existing files with those names will be replaced.
+
+=head1 CAUTIONS
+
+This command is only available on Windows.
+
+=head1 OPTIONS
+
+Any combination of the following options may be specified, except that
+both B<-on> and B<-off> cannot be specified at the same time.
+
+=over 4
+
+=item B<-on>
+
+Turn tracing on.
+
+=item B<-off>
+
+Turn tracing off.
+
+=item B<-reset>
+
+Resets the tracing information, discarding any trace-information collected
+up to this time.
+
+=item B<-dump>
+
+Creates a dump file containing the trace information.
+
+=back
+
+=head1 OUTPUT
+
+If successful, the output of this command (for any option) will be:
+
+   AFS tracing enabled
+
+If unsuccessful:
+
+   AFS tracing disabled
+
+=head1 EXAMPLES
+
+The following command starts tracing:
+
+   % fs trace -on
+
+The following dumps the current contents and resets the trace log, then
+turns tracing off:
+
+   % fs trace -dump -reset -off
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be have AFS Client Administrator access to issue this
+command.
+
+=head1 SEE ALSO
+
+L<fs(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2008. This documentation is covered by the BSD License as
+written in the doc/LICENSE file. This man page was written by Mike
+Robinson (L<mike@endpoint.com>) for OpenAFS.

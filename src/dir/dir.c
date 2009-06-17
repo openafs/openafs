@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/dir/dir.c,v 1.21.2.7 2007/10/30 15:23:52 shadow Exp $");
+    ("$Header: /cvs/openafs/src/dir/dir.c,v 1.21.2.8 2009/06/03 20:36:35 shadow Exp $");
 
 #ifdef KERNEL
 #if !defined(UKERNEL)
@@ -70,7 +70,6 @@ extern void *DNew();
 
 #include "afs/dir.h"
 
-#include "afs/longc_procs.h"
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
 #endif

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH VOS_DUMP 1 "OpenAFS" "11/Nov/2007" "AFS Command Reference"
+.TH VOS_DUMP 1 "OpenAFS" "26/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -192,12 +192,14 @@ vos_dump \- Converts a volume into ASCII format and writes it to a file
 .SH "SYNOPSIS"
 \fBvos dump\fR <<\ \fB\-id\fR\ <\fIvolume\ name\ or\ ID\fR >>> <<\ [\fB\-time\fR\ <\fIdump\ from\ time\fR] >>>
     <<\ [\fB\-file\fR\ <\fIdump\ file\fR] >>> <<\ [\fB\-server\fR\ <\fIserver\fR] >>>
-    <<\ [\fB\-partition\fR\ <\fIpartition\fR] >>> <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
-    [\fB\-noauth\fR] [\fB\-localauth\fR] [\fB\-verbose\fR] [\fB\-help\fR]
+    <<\ [\fB\-partition\fR\ <\fIpartition\fR] >>> [\fB\-clone\fR] [\fB\-omitdirs\fR]
+    <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>> [\fB\-noauth\fR] [\fB\-localauth\fR]
+    [\fB\-verbose\fR] [\fB\-help\fR]
 .PP
 \fBvos du\fR <<\ \fB\-i\fR\ <\fIvolume\ name\ or\ ID\fR >>> <<\ [\fB\-t\fR\ <\fIdump\ from\ time\fR] >>>
     <<\ [\fB\-f\fR\ <\fIdump\ file\fR] >>> <<\ [\fB\-s\fR\ <\fIserver\fR] >>> <<\ [\fB\-p\fR\ <\fIpartition\fR] >>>
-    <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR] [\fB\-v\fR] [\fB\-h\fR]
+    [\fB\-cl\fR] [\fB\-o\fR] <<\ [\fB\-ce\fR\ <\fIcell\ name\fR] >>> [\fB\-n\fR] [\fB\-l\fR]
+    [\fB\-v\fR] [\fB\-h\fR]
 .SH "DESCRIPTION"
 The \fBvos dump\fR command converts the contents of the indicated volume,
 which can be read/write, read-only or backup, into ASCII format. The
@@ -282,6 +284,19 @@ the \fB\-partition\fR argument along with this one.
 .Ip "\fB\-partition\fR <\fIpartition name\fR>" 4
 Specifies the partition on which the volume resides. Provide the
 \fB\-server\fR argument along with this one.
+.Ip "\fB\-clone\fR" 4
+Normally, \fBvos dump\fR locks the volume and dumps it, which blocks writes
+to the volume while the dump is in progress.  If this flag is given, \fBvos
+dump\fR will instead clone the volume first (similar to what \fBvos move\fR
+would do) and then dumps the clone.  This can significantly decrease the
+amount of time the volume is kept locked for dumps of large volumes.
+.Ip "\fB\-omitdirs\fR" 4
+By default, \fBvos dump\fR includes all directory objects in an incremental
+dump whether they've been changed or not.  If this option is given,
+unchanged directories will be omitted.  This will reduce the size of the
+dump and not cause problems if the incremental is restored, as expected,
+on top of a volume containing the correct directory structure (such as one
+created by restoring previous full and incremental dumps).
 .Ip "\fB\-cell\fR <\fIcell name\fR" 4
 Names the cell in which to run the command. Do not combine this argument
 with the \fB\-localauth\fR flag. For more details, see the \fIvos(1)\fR manpage.
@@ -325,6 +340,7 @@ logged on to a server machine as the local superuser \f(CWroot\fR.
 If the \fB\-file\fR argument is included, the issuer must also have permission
 to insert and write in the directory that houses the file.
 .SH "SEE ALSO"
+the \fIrestorevol(8)\fR manpage,
 the \fIvos(1)\fR manpage,
 the \fIvos_examine(1)\fR manpage,
 the \fIvos_listvldb(1)\fR manpage,
@@ -365,6 +381,10 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-server\fR <\fIserver name\fR>"
 
 .IX Item "\fB\-partition\fR <\fIpartition name\fR>"
+
+.IX Item "\fB\-clone\fR"
+
+.IX Item "\fB\-omitdirs\fR"
 
 .IX Item "\fB\-cell\fR <\fIcell name\fR"
 

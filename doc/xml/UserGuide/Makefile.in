@@ -1,0 +1,40 @@
+# Makefile to build the AFS Admin Guide for Unix.
+#
+# This makefile assumes that various utilities are available on the system.
+# On Debian lenny, installing the packages:
+#
+#     dblatex
+#     docbook-xsl
+#     libxml2-utils
+#     xsltproc
+#
+# gave me all the utilities needed.
+#
+# HTML_XSL is possibly specific to Debian and may need to be modified on other
+# systems.
+
+all: pdf html
+
+include @TOP_OBJDIR@/src/config/Makefile.config
+VERSFILE=version
+include @TOP_OBJDIR@/src/config/Makefile.version
+
+BOOK     = auusg000.xml
+SRCS     = $(BOOK) auusg003.xml auusg004.xml auusg005.xml auusg006.xml \
+	   auusg007.xml auusg008.xml auusg009.xml auusg010.xml auusg011.xml \
+	   auusg012.xml
+HTML_XSL = @HTML_XSL@
+XSLTPROC = @XSLTPROC@
+
+html: $(SRCS) $(VERSFILE).xml
+	$(XSLTPROC) --param navig.graphics 1 \
+	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
+
+pdf: $(SRCS) $(VERSFILE).xml
+	dblatex $(BOOK)
+
+check:
+	xmllint --noout --valid $(BOOK)
+
+clean:
+	rm -f *.html *.pdf

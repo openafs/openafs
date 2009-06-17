@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.8.2.3 2006/07/31 17:07:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.8.2.4 2009/04/27 18:33:04 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -27,6 +27,7 @@ RCSID
 #include "afs/rxgen_consts.h"
 #include "ubik.h"
 #include "afs/pthread_glock.h"
+#include <netdb.h>
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>

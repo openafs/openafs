@@ -1,4 +1,4 @@
-# Openafs Spec $Revision: 1.1.2.29 $
+# Openafs Spec $Revision: 1.1.2.30 $
 
 # TEMPORARY fix for patch fuzz so we can build on Fedora 10
 %define _default_patch_fuzz 2
@@ -1149,7 +1149,6 @@ grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
 %{_bindir}/unlog
 %{_sbindir}/backup
 %{_sbindir}/butc
-%{_sbindir}/copyauth
 %{_sbindir}/fms
 %{_sbindir}/fstrace
 %{_sbindir}/kas

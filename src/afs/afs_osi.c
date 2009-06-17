@@ -1,5 +1,5 @@
 /*
- * Copyright 2000, International Business Machines Corporation and others.
+ * Copyrigh 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
  *
  * This software has been released under the terms of the IBM Public
@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.20 2009/03/27 15:55:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.21 2009/05/12 13:03:47 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -485,6 +485,8 @@ afs_osi_Free(void *x, size_t asize)
     osi_linux_free(x);
 #elif defined(AFS_FBSD_ENV)
     osi_fbsd_free(x);
+#elif defined(AFS_OBSD44_ENV)
+    osi_obsd_Free(x, asize);
 #else
     AFS_KFREE((struct osimem *)x, asize);
 #endif

@@ -1,0 +1,30 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+PACKAGE=@PACKAGE@
+VERSION=@VERSION@
+
+AFS_component_version_number.o: AFS_component_version_number.c $(TOP_SRCDIR)/config/mkvers
+version.xml version.txt: $(TOP_SRCDIR)/config/mkvers
+
+# mkvers checks timestamps
+
+AFS_component_version_number.c:
+	$(TOP_SRCDIR)/config/mkvers -o AFS_component_version_number.c
+# only done for RX in NT
+#	-c $(CML_PREFIX)
+
+AFS_component_version_number.h:
+	$(TOP_SRCDIR)/config/mkvers -o AFS_component_version_number.h -v
+
+version.txt:
+	$(TOP_SRCDIR)/config/mkvers -o version.txt -t
+
+version.xml:
+	$(TOP_SRCDIR)/config/mkvers -o version.xml -x
+
+noversion: install

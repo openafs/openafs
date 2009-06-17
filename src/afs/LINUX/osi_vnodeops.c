@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.77 2009/03/19 04:54:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.82 2009/06/03 05:41:59 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -503,7 +503,6 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
     crfree(credp);
     return -code;
-
 }
 
 #ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
@@ -1567,9 +1566,9 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
 
-    ObtainReadLock(&vcp->lock);
+    ObtainWriteLock(&vcp->lock, 532);
     if (vcp->states & CPageWrite) {
-	ReleaseReadLock(&vcp->lock);
+	ReleaseWriteLock(&vcp->lock);
 	AFS_GUNLOCK();
 	unlock_kernel();
 	crfree(credp);
@@ -1585,7 +1584,8 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	return(0); 
 #endif
     }
-    ReleaseReadLock(&vcp->lock);
+    vcp->states |= CPageWrite;
+    ReleaseWriteLock(&vcp->lock);
 
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
 
@@ -1594,15 +1594,17 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     i_size_write(ip, vcp->m.Length);
     ip->i_blocks = ((vcp->m.Length + 1023) >> 10) << 1;
 
+    ObtainWriteLock(&vcp->lock, 533);
     if (!code) {
 	struct vrequest treq;
 
-	ObtainWriteLock(&vcp->lock, 533);
 	if (!afs_InitReq(&treq, credp))
 	    code = afs_DoPartialWrite(vcp, &treq);
-	ReleaseWriteLock(&vcp->lock);
     }
     code = code ? -code : count - tuio.uio_resid;
+
+    vcp->states &= ~CPageWrite;
+    ReleaseWriteLock(&vcp->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
@@ -1658,7 +1660,12 @@ afs_linux_writepage(struct page *pp)
   do_it:
     status = afs_linux_writepage_sync(inode, pp, 0, offset);
     SetPageUptodate(pp);
-    UnlockPage(pp);
+#if defined(WRITEPAGE_ACTIVATE)
+    if ( status != WRITEPAGE_ACTIVATE )
+#else
+    if ( status != AOP_WRITEPAGE_ACTIVATE )
+#endif
+	UnlockPage(pp);
     if (status == offset)
 	return 0;
     else

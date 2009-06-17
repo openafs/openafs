@@ -20,7 +20,7 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-busyat> <I<< redirect clients when queue > n >>>] >>>
     [B<-nobusy>] S<<< [B<-rxpck> <I<number of rx extra packets>>] >>>
     [B<-rxdbg>] [B<-rxdbge>] S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
-    [B<-allow-dotted-principal>] [B<-jumbo>] [B<-nojumbo>]
+    [B<-allow-dotted-principals>] [B<-jumbo>] [B<-nojumbo>]
     S<<< [B<-rxbind> <I<address to bind the Rx socket to>>] >>>
     S<<< [B<-vattachpar> <I<number of volume attach threads>>] >>>
     S<<< [B<-m> <I<min percentage spare in partition>>] >>>
@@ -111,7 +111,7 @@ The default values are:
 
   Parameter (Argument)               Small (-S)     Medium   Large (-L)
   ---------------------------------------------------------------------
-  Number of LWPs (-p)                        6           9           12
+  Number of LWPs (-p)                        6           9          128
   Number of cached dir blocks (-b)          70          90          120
   Number of cached large vnodes (-l)       200         400          600
   Number of cached small vnodes (-s)       200         400          600
@@ -349,7 +349,7 @@ F</usr/afs/logs/rx_dbg>.
 Writes a trace of the File Server's operations on Rx events (such as
 retransmissions) to the file F</usr/afs/logs/rx_dbg>.
 
-=item B<-allow-dotted-principal>
+=item B<-allow-dotted-principals>
 
 By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid

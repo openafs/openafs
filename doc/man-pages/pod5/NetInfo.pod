@@ -80,8 +80,23 @@ The F<NetInfo> file is in ASCII format. One of the machine's IP addresses
 appears on each line, in dotted decimal format. The order of the addresses
 is not significant.
 
+Optionally, the File Server can be forced to use an IP address that does
+not belong to one of the server interfaces. To do this, add a line to the
+F<NetInfo> file with the IP address prefixed with "f" and a space. This is
+useful when the File Server is on the interal side of a NAT firewall.
+
 To display the File Server interface addresses registered in the VLDB, use
 the B<vos listaddrs> command.
+
+=head1 EXAMPLES
+
+If the File Server is on the internal side of a NAT firewall, where it
+serves internal clients using the IP address 192.168.1.123 and external
+clients using the IP address 10.1.1.321, then the F<NetInfo> file should
+contain the following:
+
+   192.168.1.123
+   f 10.1.1.321
 
 =head1 SEE ALSO
 

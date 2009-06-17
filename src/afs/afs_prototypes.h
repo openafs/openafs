@@ -610,9 +610,11 @@ extern void shutdown_osifile(void);
 
 
 /* ARCH/osi_groups.c */
-#ifdef AFS_XBSD_ENV
+#if defined AFS_XBSD_ENV
+#if !defined(AFS_DFBSD_ENV) || !defined(UKERNEL)
 extern int setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
+#endif
 #endif
 
 

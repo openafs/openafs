@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH asetkey 8 "OpenAFS" "3/Apr/2006" "AFS Command Reference"
+.TH asetkey 8 "OpenAFS" "3/Jun/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -192,6 +192,8 @@ asetkey \- Add a key from a keytab to an AFS KeyFile
 .SH "SYNOPSIS"
 \fBasetkey\fR add <\fIkvno\fR> <\fIkeyfile\fR> <\fIprincipal\fR>
 .PP
+\fBasetkey\fR add <\fIkvno\fR> <\fIkey\fR>
+.PP
 \fBasetkey\fR delete <\fIkvno\fR>
 .PP
 \fBasetkey\fR list
@@ -199,7 +201,8 @@ asetkey \- Add a key from a keytab to an AFS KeyFile
 The \fBasetkey\fR command is used to add a key to an AFS KeyFile from a
 Kerberos keytab.  It is similar to \fBbos addkey\fR except that it must be
 run locally on the system where the KeyFile is located and it takes the
-new key from a Kerberos 5 keytab rather than prompting for the password.
+new key from the command line or a Kerberos 5 keytab rather than prompting
+for the password.
 .PP
 \fBasetkey delete\fR can be used to delete a key (similar to \fBbos
 removekeys\fR), and \fBasetkey list\fR will list the keys in a KeyFile (similar
@@ -216,7 +219,8 @@ that key to the KeyFile with \fBasetkey add\fR.  The \fIkvno\fR chosen should
 match the kvno in the Kerberos KDC (checked with \fBkvno\fR or the
 \f(CWgetprinc\fR function of \fBkadmin\fR).  \fIprincipal\fR should be the name of
 the AFS principal in the keytab, which must be either \f(CWafs\fR or
-\f(CWafs/\fIcell name\fR\fR.
+\f(CWafs/\fIcell name\fR\fR. \fBasetkey\fR can also be used to install a key
+from a hex string.
 .PP
 In cells that use the Update Server to distribute the contents of the
 \fI/usr/afs/etc\fR directory, it is conventional to run \fBasetkey add\fR only
@@ -256,6 +260,14 @@ then import the key into the KeyFile.  Note the kvno in the output from
 .Ve
 You may want to use \f(CWafs/\fIcell name\fR\fR instead of \f(CWafs\fR, particularly if
 you may have multiple AFS cells for a single Kerberos realm.
+.PP
+In the event you have been distributed a key by a Kerberos administrator
+in the form of a hex string, you may use asetkey to install that.
+.PP
+.Vb 1
+\&    % asetkey add 3 80b6a7cd7a9dadb6
+.Ve
+\fIkey\fR should be an 8 byte hex representation.
 .SH "PRIVILEGE REQUIRED"
 The issuer must be able to read (for \fBasetkey list\fR) and write (for
 \fBasetkey add\fR and \fBasetkey delete\fR) the KeyFile, normally

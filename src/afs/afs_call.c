@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.33 2009/03/20 02:32:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.34 2009/05/30 17:56:39 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -1163,6 +1163,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_SET_RXPCK) {
 	rx_extraPackets = parm2;
 	afscall_set_rxpck_received = 1;
+    } else if (parm == AFSOP_SET_RXMAXMTU) {
+    rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
     } else
 	code = EINVAL;
 

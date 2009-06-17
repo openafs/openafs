@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.21 2009/03/27 15:55:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.22 2009/05/30 17:56:42 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -389,7 +389,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     if (i == -1) {
 	pp->timeout.sec = 3;
 	/* pp->timeout.usec = 0; */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
@@ -405,7 +405,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     } else {			/* couldn't find the interface, so assume the worst */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 #else /* AFS_USERSPACE_IP_ADDR */
 #ifdef AFS_DARWIN80_ENV
@@ -441,7 +441,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     } else {			/* couldn't find the interface, so assume the worst */
 	pp->timeout.sec = 3;
 	/* pp->timeout.usec = 0; */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #else /* AFS_SUN5_ENV */
@@ -450,7 +450,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     if (mtu <= 0) {
 	pp->timeout.sec = 3;
 	/* pp->timeout.usec = 0; */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
@@ -466,7 +466,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     } else {			/* couldn't find the interface, so assume the worst */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE,rx_MyMaxSendSize);
     }
 #endif /* AFS_SUN5_ENV */
 #else /* ADAPT_MTU */

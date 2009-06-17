@@ -15,11 +15,12 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/hostparse.c,v 1.13.2.1 2007/10/30 15:24:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/hostparse.c,v 1.13.2.2 2009/04/27 18:33:05 shadow Exp $");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
 #include "afs/afsutil.h"
+#include <netdb.h>
 #else /* UKERNEL */
 #include <stdio.h>
 #include <sys/types.h>
