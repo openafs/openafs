@@ -139,6 +139,16 @@ install-stamp: build-stamp
 	    cp doc/xml/$$d/*.html doc/xml/$$d/*.png $(DOCS)/html/$$d/ ; \
 	    cp doc/xml/$$d/*.pdf $(DOCS)/ ; \
 	done
+	mkdir $(DOCS)/html/arch-overview
+	cp doc/arch/arch-overview.h $(DOCS)/html/arch-overview
+	cd $(DOCS/html/arch-overview && doxygen *.h && rm *.h && mv html/* . \
+	    && rm -r latex html
+	set -e; for h in `ls doc/protocol` ; do \
+	    mkdir $(DOCS)/html/`basename $$h` ; \
+	    cp doc/protocol/$$h $(DOCS)/html/`basename $$h` ; \
+	    cd $(DOCS)/html/`basename $$h` && doxygen *.h && rm *.h \
+		&& mv html/* . && rm -r latex html ; \
+	done
 
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	cd libafs_tree && find . -print | \
