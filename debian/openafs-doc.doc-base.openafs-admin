@@ -7,5 +7,8 @@ Abstract: Describes concepts and procedures for an AFS cell administrator.
 Section: File Management
 
 Format: HTML
-Index: /usr/share/doc/openafs-doc/html/AdminGuide/auagd000.htm
+Index: /usr/share/doc/openafs-doc/html/AdminGuide/index.html
 Files: /usr/share/doc/openafs-doc/html/AdminGuide/*
+
+Format: PDF
+Files: /usr/share/doc/openafs-doc/auagd000.pdf.gz
