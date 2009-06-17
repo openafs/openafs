@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS 1 "OpenAFS" "25/Dec/2007" "AFS Command Reference"
+.TH FS 1 "OpenAFS" "18/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -205,6 +205,7 @@ machines:
 \fBfs getserverprefs\fR,
 \fBfs listcells\fR,
 \fBfs newcell\fR,
+\fBfs setcbaddr\fR,
 \fBfs setcell\fR,
 \fBfs setcrypt\fR,
 \fBfs setserverprefs\fR,
@@ -223,6 +224,7 @@ Commands to administer server machines, volumes or partitions that house a
 given file or directory:
 \fBfs diskfree\fR,
 \fBfs examine\fR,
+\fBfs getfid\fR,
 \fBfs listquota\fR,
 \fBfs quota\fR,
 \fBfs setquota\fR,
@@ -232,6 +234,7 @@ and \fBfs whichcell\fR.
 .Ip "\(bu" 4
 Commands to administer the local client cache and related information:
 \fBfs checkvolumes\fR,
+\fBfs cscpolicy\fR,
 \fBfs flush\fR,
 \fBfs flushall\fR,
 \fBfs flushvolume\fR,
@@ -247,7 +250,13 @@ and \fBfs rmmount\fR.
 .Ip "\(bu" 4
 Commands to control monitoring and tracing:
 \fBfs debug\fR,
-and \fBfs messages\fR.
+\fBfs memdump\fR,
+\fBfs messages\fR,
+\fBfs minidump\fR,
+\fBfs monitor\fR,
+\fBfs rxstatpeer\fR,
+\fBfs rxstatproc\fR,
+and \fBfs trace\fR.
 .Ip "\(bu" 4
 A command to administer the Cache Manager's interaction with other
 file systems:
@@ -316,6 +325,7 @@ the \fIfs_checkservers(1)\fR manpage,
 the \fIfs_checkvolumes(1)\fR manpage,
 the \fIfs_cleanacl(1)\fR manpage,
 the \fIfs_copyacl(1)\fR manpage,
+the \fIfs_cscpolicy(1)\fR manpage,
 the \fIfs_diskfree(1)\fR manpage,
 the \fIfs_examine(1)\fR manpage,
 the \fIfs_exportafs(1)\fR manpage,
@@ -328,6 +338,7 @@ the \fIfs_getcalleraccess(1)\fR manpage,
 the \fIfs_getcellstatus(1)\fR manpage,
 the \fIfs_getclientaddrs(1)\fR manpage,
 the \fIfs_getcrypt(1)\fR manpage,
+the \fIfs_getfid(1)\fR manpage,
 the \fIfs_getserverprefs(1)\fR manpage,
 the \fIfs_help(1)\fR manpage,
 the \fIfs_listacl(1)\fR manpage,
@@ -335,14 +346,20 @@ the \fIfs_listaliases(1)\fR manpage,
 the \fIfs_listcells(1)\fR manpage,
 the \fIfs_listquota(1)\fR manpage,
 the \fIfs_lsmount(1)\fR manpage,
+the \fIfs_memdump(1)\fR manpage,
 the \fIfs_messages(1)\fR manpage,
+the \fIfs_minidump(1)\fR manpage,
 the \fIfs_mkmount(1)\fR manpage,
+the \fIfs_monitor(1)\fR manpage,
 the \fIfs_newalias(1)\fR manpage,
 the \fIfs_newcell(1)\fR manpage,
 the \fIfs_quota(1)\fR manpage,
 the \fIfs_rmmount(1)\fR manpage,
+the \fIfs_rxstatpeer(1)\fR manpage,
+the \fIfs_rxstatproc(1)\fR manpage,
 the \fIfs_setacl(1)\fR manpage,
 the \fIfs_setcachesize(1)\fR manpage,
+the \fIfs_setcbattr(1)\fR manpage,
 the \fIfs_setcell(1)\fR manpage,
 the \fIfs_setclientaddrs(1)\fR manpage,
 the \fIfs_setcrypt(1)\fR manpage,
@@ -351,6 +368,7 @@ the \fIfs_setserverprefs(1)\fR manpage,
 the \fIfs_setvol(1)\fR manpage,
 the \fIfs_storebehind(1)\fR manpage,
 the \fIfs_sysname(1)\fR manpage,
+the \fIfs_trace(1)\fR manpage,
 the \fIfs_whereis(1)\fR manpage,
 the \fIfs_whichcell(1)\fR manpage,
 the \fIfs_wscell(1)\fR manpage

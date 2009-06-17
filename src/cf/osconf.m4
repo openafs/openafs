@@ -245,6 +245,19 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
+	i386_dfbsd_*)
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-pthread"
+		PAM_OPTMZ=-O2
+		PAM_CFLAGS="-pipe -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		SHLIB_LINKER="${MT_CC} -shared"
+		TXLIBS="-lncurses"
+		XCFLAGS="-pipe"
+		YACC="byacc"
+		;;
+
 	amd64_fbsd_*)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'

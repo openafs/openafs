@@ -175,6 +175,9 @@ AC_ARG_ENABLE(optimize-lwp,
 AC_ARG_ENABLE(warnings,
 [  --enable-warnings			enable compilation warnings when building with gcc (defaults to disabled)],, enable_warnings="no"
 )
+AC_ARG_ENABLE(linux-syscall-probing,
+[--disable-linux-syscall-probing        disabling Linux syscall probing (defaults to enabled)],, enable_probing="yes"
+)
 
 enable_login="no"
 
@@ -345,6 +348,10 @@ case $system in
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(i386_obsd)
 		;;
+	*-dragonfly*)
+		MKAFS_OSTYPE=DFBSD
+		AC_MSG_RESULT(i386_dfbsd)
+		;;
         *)
                 AC_MSG_RESULT($system)
                 ;;
@@ -372,6 +379,12 @@ else
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="amd64_fbsd_${vM}${vm}"
+			;;
+		i386-*-dragonfly2.2*)
+			AFS_SYSNAME="i386_dfbsd_23"
+			;;
+		i386-*-dragonfly2.3*)
+			AFS_SYSNAME="i386_dfbsd_23"
 			;;
 		i?86-*-netbsd*1.5*)
 			AFS_PARAM_COMMON=param.nbsd15.h
@@ -1089,6 +1102,17 @@ fi
 ;;
 esac
 
+AC_ARG_WITH([xslt-processor],
+	AS_HELP_STRING([--with-xslt-processor=ARG],
+	[which XSLT processor to use (possible choices are: libxslt, saxon, xalan-j, xsltproc)]),
+       	XSLTPROC="$withval",
+       	XSLTPROC="libxslt")
+
+AC_ARG_WITH([html-xsl], 
+        AS_HELP_STRING([--with-html-xsl],
+	[build HTML documentation using Norman Walsh's DocBook XSL stylesheets (default is no; specify a path to chunk.xsl or docbook.xsl)]),
+	HTML_XSL="$withval",
+	HTML_XSL=no)
 
 AC_CACHE_VAL(ac_cv_sockaddr_len,
 [
@@ -1195,6 +1219,9 @@ if test "x$PTHREAD_LIBS" = xerror; then
         # pthread_attr_init is a macro under HPUX 11.0 and 11.11
         AC_CHECK_LIB(pthread, pthread_attr_destroy,
                 PTHREAD_LIBS="-lpthread")
+fi
+if test "x$MKAFS_OSTYPE" = xDFBSD; then
+        PTHREAD_LIBS="-pthread"
 fi
 if test "x$PTHREAD_LIBS" = xerror; then
         AC_MSG_WARN(*** Unable to locate working posix thread library ***)
@@ -1329,7 +1356,20 @@ AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h sys/pag.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
+
+AC_CHECK_TYPES([fsblkcnt_t],,,[
+#include <sys/types.h>
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+])
 
 if test "$ac_cv_header_security_pam_modules_h" = yes -a "$enable_pam" = yes; then
 	HAVE_PAM="yes"
@@ -1337,6 +1377,10 @@ else
 	HAVE_PAM="no"
 fi
 AC_SUBST(HAVE_PAM)
+
+if test "$enable_probing" = yes; then
+        AC_DEFINE(ENABLE_LINUX_SYSCALL_PROBING, 1, [define to enable syscall table probes])
+fi
 
 if test "$enable_login" = yes; then
 	BUILD_LOGIN="yes"
@@ -1442,6 +1486,8 @@ AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(DARWIN_INFOFILE)
 AC_SUBST(IRIX_BUILD_IP35)
+AC_SUBST(HTML_XSL)
+AC_SUBST(XSLTPROC)
 
 OPENAFS_OSCONF
 OPENAFS_KRB5CONF

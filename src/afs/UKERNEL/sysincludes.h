@@ -140,6 +140,20 @@
 #endif
 #endif /* AFS_USR_DARWIN_ENV || AFS_USR_FBSD_ENV */
 
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+
+#ifndef HAVE_FSBLKCNT_T
+typedef unsigned int fsblkcnt_t;
+#endif
+
 #ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #include <resolv.h>
@@ -1038,7 +1052,7 @@ struct usr_vattr {
     struct timeval va_ctime;
     dev_t va_rdev;
     unsigned long va_blocksize;
-    blkcnt_t va_blocks;
+    fsblkcnt_t va_blocks;
     unsigned long va_vcode;
 };
 

@@ -249,6 +249,7 @@
 #define SYS_NAME_ID_i386_obsd42         2611
 #define SYS_NAME_ID_i386_obsd43         2612
 #define SYS_NAME_ID_i386_obsd44         2613
+#define SYS_NAME_ID_i386_obsd45         2614
 
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701
@@ -278,6 +279,9 @@
 #define SYS_NAME_ID_arm_linux22         3801
 #define SYS_NAME_ID_arm_linux24         3802
 #define SYS_NAME_ID_arm_linux26         3803
+
+#define SYS_NAME_ID_i386_dfbsd_22        3900
+#define SYS_NAME_ID_i386_dfbsd_23        3901
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

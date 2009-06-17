@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bos.c,v 1.20.2.4 2007/10/31 04:13:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bos.c,v 1.20.2.5 2009/06/11 14:19:35 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdlib.h>
@@ -1270,7 +1270,7 @@ DoSalvage(aconn, aparm1, aparm2, aoutName, showlog, parallel, atmpDir,
 	    printf("bos: command line too big\n");
 	    return (E2BIG);
 	}
-	strcat(tbuffer, " -f ");
+	strcat(tbuffer, " -force ");
 	strcat(tbuffer, partName);
     }
 

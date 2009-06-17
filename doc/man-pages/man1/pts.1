@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PTS 1 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH PTS 1 "OpenAFS" "12/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -276,6 +276,10 @@ circumstances). In normal circumstances, the Protection Server allows only
 privileged users to issue commands that change the Protection Database,
 and refuses to perform such an action even if the \fB\-noauth\fR flag is
 provided.
+.Ip "\fB\-encrypt\fR" 4
+Establishes an authenticated, encrypted connection to the Protection Server.
+It is useful when it is desired to obscure network traffic related to the
+transactions being done.
 .Ip "\fB\-localauth\fR" 4
 Constructs a server ticket using the server encryption key with the
 highest key version number in the local \fI/usr/afs/etc/KeyFile\fR file. The
@@ -368,6 +372,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\fB\-help\fR"
 
 .IX Item "\fB\-noauth\fR"
+
+.IX Item "\fB\-encrypt\fR"
 
 .IX Item "\fB\-localauth\fR"
 

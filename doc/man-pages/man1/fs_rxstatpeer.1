@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH FS_RXSTATPEER 1 "OpenAFS" "25/Dec/2007" "AFS Command Reference"
+.TH FS_RXSTATPEER 1 "OpenAFS" "17/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,7 +188,7 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-fs_rxstatpeer \- Enables Rx packet logging in the OpenAFS kernel module
+fs_rxstatpeer \- Manage per-peer Rx statistics collection
 .SH "SYNOPSIS"
 \fBfs rxstatpeer\fR [\fB\-clear\fR] [\fB\-disable\fR] [\fB\-enable\fR] [\fB\-help\fR]
 .SH "DESCRIPTION"
@@ -216,6 +216,7 @@ Enable Rx Stats for peers:
 The issuer must be logged in as the local superuser root.
 .SH "SEE ALSO"
 the \fIfs(1)\fR manpage,
+the \fIfs_rxstatproc(1)\fR manpage,
 the \fIrxdebug(1)\fR manpage
 .SH "COPYRIGHT"
 Copyright 2007 Jason Edgecombe <jason@rampaginggeek.com>
@@ -226,7 +227,7 @@ OpenAFS.
 
 .rn }` ''
 .IX Title "FS_RXSTATPEER 1"
-.IX Name "fs_rxstatpeer - Enables Rx packet logging in the OpenAFS kernel module"
+.IX Name "fs_rxstatpeer - Manage per-peer Rx statistics collection"
 
 .IX Header "NAME"
 

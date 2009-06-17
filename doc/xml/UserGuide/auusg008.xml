@@ -1,0 +1,1516 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter id="HDRWQ60">
+  <title>Using Groups</title>
+
+  <para>This chapter explains how to create groups and discusses different ways to use them.</para>
+
+  <sect1 id="HDRWQ61">
+    <title>About Groups</title>
+
+    <para>An AFS <emphasis>group</emphasis> is a list of specific users that you can place on access control lists (ACLs). Groups
+    make it much easier to maintain ACLs. Instead of creating an ACL entry for every user individually, you create one entry for a
+    group to which the users belong. Similarly, you can grant a user access to many directories at once by adding the user to a
+    group that appears on the relevant ACLs.</para>
+
+    <para>AFS client machines can also belong to a group. Anyone logged into the machine inherits the permissions granted to the
+    group on an ACL, even if they are not authenticated with AFS. In general, groups of machines are useful only to system
+    administrators, for specialized purposes like complying with licensing agreements your cell has with software vendors. Talk with
+    your system administrator before putting a client machine in a group or using a machine group on an ACL. <indexterm>
+        <primary>machines</primary>
+
+        <secondary>as members of groups</secondary>
+      </indexterm> <indexterm>
+        <primary>groups</primary>
+
+        <secondary>machines as members</secondary>
+      </indexterm></para>
+
+    <para>To learn about AFS file protection and how to add groups to ACLs, see <link linkend="HDRWQ44">Protecting Your Directories
+    and Files</link>.</para>
+
+    <sect2 id="HDRWQ62">
+      <title>Suggestions for Using Groups Effectively</title>
+
+      <para>There are three typical ways to use groups, each suited to a particular purpose: private use, shared use, and group use.
+      The following are only suggestions. You are free to use groups in any way you choose.</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis>Private use</emphasis>: you create a group and place it on the ACL of directories you own, without
+          necessarily informing the group's members that they belong to it. Members notice only that they can or cannot access the
+          directory in a certain way. You retain sole administrative control over the group, since you are the owner. <indexterm>
+              <primary>private use of group</primary>
+            </indexterm> <indexterm>
+              <primary>groups</primary>
+
+              <secondary>private use</secondary>
+            </indexterm></para>
+
+          <para>The existence of the group and the identity of its members is not necessarily secret. Other users can see the
+          group's name on an ACL when they use the <emphasis role="bold">fs listacl</emphasis> command, and can use the <emphasis
+          role="bold">pts membership</emphasis> command to display + the groups to which they themselves belong. You can, however,
+          limit who can display the members of the group, as described in <link linkend="HDRWQ74">Protecting Group-Related
+          Information</link>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis>Shared use</emphasis>: you inform the group's members that they belong to the group, but you are the
+          group's sole owner and administrator. For example, the manager of a work group can create a group of all the members in
+          the work group, and encourage them to use it on the ACLs of directories that house information they want to share with
+          other members of the group. <indexterm>
+              <primary>shared use of group</primary>
+            </indexterm> <indexterm>
+              <primary>groups</primary>
+
+              <secondary>shared use</secondary>
+            </indexterm> <note>
+              <para>If you place a group owned by someone else on your ACLs, the group's owner can change the group's membership
+              without informing you. Someone new can gain or lose access in a way you did not intend and without your
+              knowledge.</para>
+            </note></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis>Group use</emphasis>: you create a group and then use the <emphasis role="bold">pts chown</emphasis>
+          command to assign ownership to a group--either another group or the group itself (the latter type is a
+          <emphasis>self-owned</emphasis> group). You inform the members of the owning group that they all can administer the owned
+          group. For instructions for the <emphasis role="bold">pts chown</emphasis> command, see <link linkend="HDRWQ73">To Change
+          a Group's Owner</link>. <indexterm>
+              <primary>group use of group</primary>
+            </indexterm> <indexterm>
+              <primary>self-owned group</primary>
+            </indexterm> <indexterm>
+              <primary>groups</primary>
+
+              <secondary>group use</secondary>
+            </indexterm> <indexterm>
+              <primary>groups</primary>
+
+              <secondary>group-owned groups</secondary>
+            </indexterm> <indexterm>
+              <primary>groups</primary>
+
+              <secondary>self-owned groups</secondary>
+            </indexterm></para>
+
+          <para>The main advantage of designating a group as an owner is that several people share responsibility for administering
+          the group. A single person does not have to perform all administrative tasks, and if the group's original owner leaves the
+          cell, there are still other people who can administer it.</para>
+
+          <para>However, everyone in the owner group can make changes that affect others negatively: adding or removing people from
+          the group inappropriately or changing the group's ownership to themselves exclusively. These problems can be particularly
+          sensitive in a self-owned group. Using an owner group works best if all the members know and trust each other; it is
+          probably wise to keep the number of people in an owner group small.</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+
+    <sect2 id="HDRWQ63">
+      <title>Group Names</title>
+
+      <indexterm>
+        <primary>groups</primary>
+
+        <secondary>naming conventions</secondary>
+      </indexterm>
+
+      <para>The groups you create must have names with two parts, in the following format:</para>
+
+      <para><replaceable>owner_name</replaceable><emphasis role="bold">:</emphasis><replaceable>group_name</replaceable></para>
+
+      <para>The <replaceable>owner_name</replaceable> prefix indicates which user or group owns the group (naming rules appear in
+      <link linkend="HDRWQ69">To Create a Group</link>). The <replaceable>group_name</replaceable> part indicates the group's
+      purpose or its members' common interest. Group names must always be typed in full, so a short
+      <replaceable>group_name</replaceable> is most practical. However, names like <emphasis role="bold">terry:1</emphasis> and
+      <emphasis role="bold">terry:2</emphasis> that do not indicate the group's purpose are less useful than names like <emphasis
+      role="bold">terry:project</emphasis>.</para>
+
+      <para>Groups that do not have the <replaceable>owner_name</replaceable> prefix possibly appear on some ACLs; they are created
+      by system administrators only. All of the groups you create must have an <replaceable>owner_name</replaceable> prefix.</para>
+    </sect2>
+
+    <sect2 id="Header_116">
+      <title>Group-creation Quota</title>
+
+      <indexterm>
+        <primary>group-creation quota</primary>
+
+        <secondary>defined</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>groups</primary>
+
+        <secondary>creation quota</secondary>
+      </indexterm>
+
+      <para>By default, you can create 20 groups, but your system administrators can change your <emphasis>group-creation
+      quota</emphasis> if appropriate. When you create a group, your group quota decrements by one. When a group that you created is
+      deleted, your quota increments by one, even if you are no longer the owner. You cannot increase your quota by transferring
+      ownership of a group to someone else, because you are always recorded as the creator.</para>
+
+      <para>If you exhaust your group-creation quota and need to create more groups, ask your system administrator. For instructions
+      for displaying your group-creation quota, see <link linkend="HDRWQ67">To Display A Group Entry</link>.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ64">
+    <title>Displaying Group Information</title>
+
+    <indexterm>
+      <primary>displaying</primary>
+
+      <secondary>group information</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>displaying information</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>users</primary>
+
+      <secondary>displaying group information</secondary>
+    </indexterm>
+
+    <para>You can use the following commands to display information about groups and the users who belong to them:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To display the members of a group, or the groups to which a user belongs, use the <emphasis role="bold">pts
+        membership</emphasis> command.</para>
+      </listitem>
+
+      <listitem>
+        <para>To display the groups that a user or group owns, use the <emphasis role="bold">pts listowned</emphasis>
+        command.</para>
+      </listitem>
+
+      <listitem>
+        <para>To display general information about a user or group, including its name, AFS ID, creator, and owner, use the
+        <emphasis role="bold">pts examine</emphasis> command.</para>
+      </listitem>
+    </itemizedlist>
+
+    <note>
+      <para>The <emphasis role="bold">system:anyuser</emphasis> and <emphasis role="bold">system:authuser</emphasis> system groups
+      do not appear in a user's list of group memberships, and the <emphasis role="bold">pts membership</emphasis> command does not
+      display their members. For more information on the system groups, see <link linkend="HDRWQ50">Using the System Groups on
+      ACLs</link>.</para>
+    </note>
+
+    <sect2 id="HDRWQ65">
+      <title>To Display Group Membership</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts membership</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>membership</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts membership</emphasis> command to display the members of a group, or the groups to
+      which a user belongs.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts membership</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;<superscript>+</superscript>
+</programlisting>
+
+      <para>where <replaceable>user or group name or id</replaceable> specifies the name or AFS UID of each user for which to
+      display group membership, or the name or AFS GID of each group for which to display the members. If identifying a group by its
+      AFS GID, precede the GID with a hyphen (<emphasis role="bold">-</emphasis>) to indicate that it is a negative number.</para>
+    </sect2>
+
+    <sect2 id="Header_119">
+      <title>Example: Displaying the Members of a Group</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>displaying members of a group</secondary>
+      </indexterm>
+
+      <para>The following example displays the members of the group <emphasis role="bold">terry:team</emphasis>.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts membership terry:team</emphasis>
+   Members of terry:team (id: -286) are:
+     terry
+     smith 
+     pat
+     johnson
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_120">
+      <title>Example: Displaying the Groups to Which a User Belongs</title>
+
+      <para>The following example displays the groups to which users <emphasis role="bold">terry</emphasis> and <emphasis
+      role="bold">pat</emphasis> belong.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts membership terry pat</emphasis>
+   Groups terry (id: 1022) is a member of:
+     smith:friends
+     pat:accounting
+     terry:team
+   Groups pat (id: 1845) is a member of:
+     pat:accounting
+     sam:managers
+     terry:team
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ66">
+      <title>To Display the Groups a User or Group Owns</title>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>groups owned by a group</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts listowned</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>users</primary>
+
+        <secondary>listing groups owned</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>groups</primary>
+
+        <secondary>listing groups owned</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>listowned</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts listowned</emphasis> command to display the groups that a user or group owns.</para>
+
+      <programlisting>
+   %  <emphasis role="bold">pts listowned</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;<superscript>+</superscript>
+</programlisting>
+
+      <para>where <replaceable>user or group name or id</replaceable> specifies the name or AFS UID of each user, or the name or AFS
+      GID of each group, for which to display group ownership. If identifying a group by its AFS GID, precede the GID with a hyphen
+      (<emphasis role="bold">-</emphasis>) to indicate that it is a negative number.</para>
+    </sect2>
+
+    <sect2 id="Header_122">
+      <title>Example: Displaying the Groups a Group Owns</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>displaying groups a group owns</secondary>
+      </indexterm>
+
+      <para>The following example displays the groups that the group <emphasis role="bold">terry:team</emphasis> owns.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts listowned -286</emphasis>
+   Groups owned by terry:team (id: -286) are:
+     terry:project
+     terry:planners
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_123">
+      <title>Example: Displaying the Groups a User Owns</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>displaying groups a user owns</secondary>
+      </indexterm>
+
+      <para>The following example displays the groups that user <emphasis role="bold">pat</emphasis> owns.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts listowned pat</emphasis>
+   Groups owned by pat (id: 1845) are:
+      pat:accounting
+      pat:plans
+   
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ67">
+      <title>To Display A Group Entry</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts examine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>examine</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>group owner</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>group creator</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>displaying</primary>
+
+        <secondary>group-creation quota</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>groups</primary>
+
+        <secondary>owner, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>groups</primary>
+
+        <secondary>creator, displaying</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>users</primary>
+
+        <secondary>displaying number of group memberships</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>group-creation quota</primary>
+
+        <secondary>displaying</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts examine</emphasis> command to display general information about a user or group,
+      including its name, AFS ID, creator, and owner.</para>
+
+      <programlisting>
+   %  <emphasis role="bold">pts examine</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;<superscript>+</superscript>
+</programlisting>
+
+      <para>where <replaceable>user or group name or id</replaceable> specifies the name or AFS UID of each user, or the name or AFS
+      GID of each group, for which to display group-related information. If identifying a group by its AFS GID, precede the GID with
+      a hyphen (<emphasis role="bold">-</emphasis>) to indicate that it is a negative number.</para>
+
+      <para>The output includes information in the following fields:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold"><computeroutput>Name</computeroutput></emphasis></term>
+
+          <listitem>
+            <para>For users, this is the character string typed when logging in. For machines, the name is the IP address; a zero in
+            address field acts as a wildcard, matching any value. For most groups, this is a name of the form
+            <replaceable>owner_name</replaceable><emphasis role="bold">:</emphasis><replaceable>group_name</replaceable>. Some
+            groups created by your system administrator do not have the <replaceable>owner_name</replaceable> prefix. See <link
+            linkend="HDRWQ63">Group Names</link>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><computeroutput>id</computeroutput></emphasis></term>
+
+          <listitem>
+            <para>This is a unique identification number that the AFS server processes use internally. It is similar in function to
+            a UNIX UID, but operates in AFS rather than the UNIX file system. Users and machines have positive integer AFS user IDs
+            (UIDs), and groups have negative integer AFS group IDs (GIDs). <indexterm>
+                <primary>AFS</primary>
+
+                <secondary>UIDs and GIDs</secondary>
+              </indexterm> <indexterm>
+                <primary>GID, AFS</primary>
+              </indexterm> <indexterm>
+                <primary>UID, AFS</primary>
+              </indexterm></para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><computeroutput>owner</computeroutput></emphasis></term>
+
+          <listitem>
+            <para>This is the user or group that owns the entry and so can administer it.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><computeroutput>creator</computeroutput></emphasis></term>
+
+          <listitem>
+            <para>The name of the user who issued the <emphasis role="bold">pts createuser</emphasis> and <emphasis role="bold">pts
+            creategroup</emphasis> command to create the entry. This field is useful mainly as an audit trail and cannot be
+            changed.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><computeroutput>membership</computeroutput></emphasis></term>
+
+          <listitem>
+            <para>For users and machines, this indicates how many groups the user or machine belongs to. For groups, it indicates
+            how many members belong to the group. This number cannot be set explicitly.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><computeroutput>flags</computeroutput></emphasis></term>
+
+          <listitem>
+            <para>This field indicates who is allowed to list certain information about the entry or change it in certain ways. See
+            <link linkend="HDRWQ74">Protecting Group-Related Information</link>.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><computeroutput>group quota</computeroutput></emphasis></term>
+
+          <listitem>
+            <para>This field indicates how many more groups a user is allowed to create. It is set to 20 when a user entry is
+            created. The creation quota for machines or groups is meaningless because it not possible to authenticate as a machine
+            or group.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+
+    <sect2 id="Header_125">
+      <title>Example: Listing Information about a Group</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>displaying information about group</secondary>
+      </indexterm>
+
+      <para>The following example displays information about the group <emphasis role="bold">pat:accounting</emphasis>, which
+      includes members of the department that <emphasis role="bold">pat</emphasis> manages. Notice that the group is self-owned,
+      which means that all of its members can administer it.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts examine pat:accounting</emphasis>
+   Name: pat:accounting, id: -673, owner: pat:accounting, creator: pat,
+     membership: 15, flags: S-M--, group quota: 0
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_126">
+      <title>Example: Listing Group Information about a User</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>displaying group information about a user</secondary>
+      </indexterm>
+
+      <para>The following example displays group-related information about user <emphasis role="bold">pat</emphasis>. The two most
+      interesting fields are <computeroutput>membership</computeroutput>, which shows that <emphasis role="bold">pat</emphasis>
+      belongs to 12 groups, and <computeroutput>group quota</computeroutput>, which shows that <emphasis role="bold">pat</emphasis>
+      can create another 17 groups.</para>
+
+      <programlisting>
+  % <emphasis role="bold">pts examine pat</emphasis>
+   Name: pat, id: 1045, owner: system:administrators, creator: admin, 
+     membership: 12, flags: S-M--, group quota: 17
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ68">
+    <title>Creating Groups and Adding Members</title>
+
+    <indexterm>
+      <primary>adding</primary>
+
+      <secondary>users to groups</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>creating</primary>
+
+      <secondary>groups</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>creating</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>adding members</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>owner as administrator</secondary>
+    </indexterm>
+
+    <para>Use the <emphasis role="bold">pts creategroup</emphasis> command to create a group and the <emphasis role="bold">pts
+    adduser</emphasis> command to add members to it. Users and machines can belong to groups, but other groups cannot.</para>
+
+    <para>When you create a group, you normally become its owner automatically. This means you alone can administer it: add and
+    remove members, change the group's name, transfer ownership of the group, or delete the group entirely. If you wish, you can
+    designate another owner when you create the group, by including the <emphasis role="bold">-owner</emphasis> argument to the
+    <emphasis role="bold">pts creategroup</emphasis> command. If you assign ownership to another group, the owning group must
+    already exist and have at least one member. You can also change a group's ownership after creating it by using the <emphasis
+    role="bold">pts chown</emphasis> command as described in <link linkend="HDRWQ72">Changing a Group's Owner or Name</link>.</para>
+
+    <sect2 id="HDRWQ69">
+      <title>To Create a Group</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts creategroup</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>creategroup</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts creategroup</emphasis> command to create a group. Your group-creation quota
+      decrements by one for each group.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts creategroup -name</emphasis> &lt;<replaceable>group name</replaceable>&gt;+ [<emphasis role="bold">-owner</emphasis> &lt;<replaceable>owner of the group</replaceable>&gt;]
+</programlisting>
+
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">cg</emphasis></term>
+
+          <listitem>
+            <para>Is an alias for <emphasis role="bold">creategroup</emphasis> (and <emphasis role="bold">createg</emphasis> is the
+            shortest acceptable abbreviation).</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">-name</emphasis></term>
+
+          <listitem>
+            <para>Names each group to create. The name must have the following format:</para>
+
+            <para><replaceable>owner_name</replaceable><emphasis
+            role="bold">:</emphasis><replaceable>group_name</replaceable></para>
+
+            <para>The <replaceable>owner_name</replaceable> prefix must accurately indicate the group's owner. By default, you are
+            recorded as the owner, and the <replaceable>owner_name</replaceable> must be your AFS username. You can include the
+            <emphasis role="bold">-owner</emphasis> argument to designate another AFS user or group as the owner, as long as you
+            provide the required value in the <replaceable>owner_name</replaceable> field: <indexterm>
+                <primary>groups</primary>
+
+                <secondary>rules for assigning ownership</secondary>
+              </indexterm> <indexterm>
+                <primary>rules for assigning group names</primary>
+              </indexterm></para>
+
+            <itemizedlist>
+              <listitem>
+                <para>If the owner is a user, it must be the AFS username.</para>
+              </listitem>
+
+              <listitem>
+                <para>If the owner is another regular group, it must match the owning group's <replaceable>owner_name</replaceable>
+                field. For example, if the owner is the group <emphasis role="bold">terry:associates</emphasis>, the owner field
+                must be <emphasis role="bold">terry</emphasis>.</para>
+              </listitem>
+
+              <listitem>
+                <para>If the owner is a group without an <replaceable>owner_name</replaceable> prefix, it must be the owning group's
+                name.</para>
+              </listitem>
+            </itemizedlist>
+
+            <para>The name can include up to 63 characters including the colon. Use numbers and lowercase letters, but no spaces or
+            punctuation characters other than the colon.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">-owner</emphasis></term>
+
+          <listitem>
+            <para>Is optional and assigns ownership to a user other than yourself, or to a group. If you specify a group, it must
+            already exist and have at least one member. (This means that to make a group self-owned, you must issue the <emphasis
+            role="bold">pts chown</emphasis> command after using this command to create the group, and the <emphasis role="bold">pts
+            adduser</emphasis> command to add a member. See <link linkend="HDRWQ72">Changing a Group's Owner or Name</link>.)</para>
+
+            <para>Do not name a machine as the owner. Because no one can authenticate as a machine, there is no way to administer a
+            group owned by a machine.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+
+    <sect2 id="Header_129">
+      <title>Example: Creating a Group</title>
+
+      <para><indexterm>
+          <primary>examples</primary>
+
+          <secondary>creating a group</secondary>
+        </indexterm></para>
+
+      <para>In the following example user <emphasis role="bold">terry</emphasis> creates a group to include all the other users in
+      his work team, and then examines the new group entry.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts creategroup terry:team</emphasis>
+   group terry:team has id -286
+   % <emphasis role="bold">pts examine terry:team</emphasis>
+   Name: terry:team, id: -286, owner: terry, creator: terry, 
+     membership: 0, flags: S----, group quota: 0.
+</programlisting>
+    </sect2>
+
+    <sect2 id="HDRWQ70">
+      <title>To Add Members to a Group</title>
+
+      <indexterm>
+        <primary>groups</primary>
+
+        <secondary>adding members</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts adduser</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>adduser</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>users</primary>
+
+        <secondary>adding as group members</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts adduser</emphasis> command to add one or more users to one or more groups. You can
+      always add members to a group you own (either directly or because you belong to the owning group). If you belong to a group,
+      you can add members if its fourth privacy flag is the lowercase letter <emphasis role="bold">a</emphasis>; see <link
+      linkend="HDRWQ74">Protecting Group-Related Information</link>.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts adduser -user</emphasis> &lt;<replaceable>user name</replaceable>&gt;<superscript>+</superscript> <emphasis
+          role="bold">-group</emphasis> &lt;<replaceable>group name</replaceable>&gt;<superscript>+</superscript>
+</programlisting>
+
+      <para>You must add yourself to groups that you own, if that is appropriate. You do not belong automatically just because you
+      own the group.</para>
+
+      <note>
+        <para>If you already have a token when you are added to a group, you must issue the <emphasis role="bold">klog</emphasis>
+        command to reauthenticate before you can exercise the permissions granted to the group on ACLs.</para>
+      </note>
+
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">-user</emphasis></term>
+
+          <listitem>
+            <para>Specifies the username of each user to add to the groups named by the <emphasis role="bold">-group</emphasis>
+            argument. Groups cannot belong to other groups.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">-group</emphasis></term>
+
+          <listitem>
+            <para>Names each group to which to add users.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+
+    <sect2 id="Header_131">
+      <title>Example: Adding Members to a Group</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>adding members to a group</secondary>
+      </indexterm>
+
+      <para>In this example, user <emphasis role="bold">terry</emphasis> adds himself, <emphasis role="bold">pat</emphasis>,
+      <emphasis role="bold">indira</emphasis>, and <emphasis role="bold">smith</emphasis> to the group he just created, <emphasis
+      role="bold">terry:team</emphasis>, and then verifies the new list of members.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts adduser -user terry pat indira smith -group terry:team</emphasis>
+   % <emphasis role="bold">pts members terry:team</emphasis>
+   Members of terry:team (id: -286) are:
+     terry
+     pat
+     indira
+     smith
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ71">
+    <title>Removing Users from a Group and Deleting a Group</title>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>removing members</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>deleting</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>removing</primary>
+
+      <secondary>users from groups</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>deleting groups</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>removing</primary>
+
+      <secondary>users from groups</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>users</primary>
+
+      <secondary>removing from groups</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>removing</primary>
+
+      <secondary>obsolete ACL entries</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>ACL</primary>
+
+      <secondary>removing obsolete entries</secondary>
+    </indexterm>
+
+    <para>You can use the following commands to remove groups and their members:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>To remove a user from a group, use the <emphasis role="bold">pts removeuser</emphasis> command</para>
+      </listitem>
+
+      <listitem>
+        <para>To delete a group entirely, use the <emphasis role="bold">pts delete</emphasis> command</para>
+      </listitem>
+
+      <listitem>
+        <para>To remove deleted groups from ACLs, use the <emphasis role="bold">fs cleanacl</emphasis> command</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>When a group that you created is deleted, your group-creation quota increments by one, even if you no longer own the
+    group.</para>
+
+    <para>When a group or user is deleted, its AFS ID appears on ACLs in place of its AFS name. You can use the <emphasis
+    role="bold">fs cleanacl</emphasis> command to remove these obsolete entries from ACLs on which you have the <emphasis
+    role="bold">a</emphasis> (<emphasis role="bold">administer</emphasis>) permission.</para>
+
+    <sect2 id="Header_133">
+      <title>To Remove Members from a Group</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts removeuser</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>removeuser</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts removeuser</emphasis> command to remove one or more members from one or more groups.
+      You can always remove members from a group that you own (either directly or because you belong to the owning group). If you
+      belong to a group, you can remove members if its fifth privacy flag is the lowercase letter <emphasis
+      role="bold">r</emphasis>; see <link linkend="HDRWQ74">Protecting Group-Related Information</link>. (To display a group's
+      owner, use the <emphasis role="bold">pts examine</emphasis> command as described in <link linkend="HDRWQ67">To Display A Group
+      Entry</link>.)</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts removeuser -user</emphasis>  &lt;<replaceable>user name</replaceable>&gt;<superscript>+</superscript>  <emphasis
+          role="bold">-group</emphasis> &lt;<replaceable>group name</replaceable>&gt;<superscript>+</superscript>
+</programlisting>
+
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">-user</emphasis></term>
+
+          <listitem>
+            <para>Specifies the username of each user to remove from the groups named by the <emphasis role="bold">-group</emphasis>
+            argument.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">-group</emphasis></term>
+
+          <listitem>
+            <para>Names each group from which to remove users.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+
+    <sect2 id="Header_134">
+      <title>Example: Removing Group Members</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>removing group members</secondary>
+      </indexterm>
+
+      <para>The following example removes user <emphasis role="bold">pat</emphasis> from both the <emphasis
+      role="bold">terry:team</emphasis> and <emphasis role="bold">terry:friends</emphasis> groups.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts removeuser  pat -group terry:team terry:friends</emphasis>
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_135">
+      <title>To Delete a Group</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts delete</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>delete</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts delete</emphasis> command to delete a group. You can always delete a group that you
+      own (either directly or because you belong to the owning group). To display a group's owner, use the <emphasis role="bold">pts
+      examine</emphasis> command as described in <link linkend="HDRWQ67">To Display A Group Entry</link>.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts delete</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;<superscript>+</superscript>
+</programlisting>
+
+      <para>where <replaceable>user or group name or id</replaceable> specifies the name or AFS UID of each user, or the name or AFS
+      GID of each group, to delete. If identifying a group by its AFS GID, precede the GID with a hyphen (<emphasis
+      role="bold">-</emphasis>) to indicate that it is a negative number.</para>
+    </sect2>
+
+    <sect2 id="Header_136">
+      <title>Example: Deleting a Group</title>
+
+      <para><indexterm>
+          <primary>examples</primary>
+
+          <secondary>deleting a group</secondary>
+        </indexterm></para>
+
+      <para>In the following example, the group <emphasis role="bold">terry:team</emphasis> is deleted.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts delete terry:team</emphasis>
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_137">
+      <title>To Remove Obsolete ACL Entries</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>fs cleanacl</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>fs commands</primary>
+
+        <secondary>cleanacl</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">fs cleanacl</emphasis> command to remove obsolete entries from ACLs after the
+      corresponding user or group has been deleted.</para>
+
+      <programlisting>
+   % <emphasis role="bold">fs cleanacl</emphasis> [&lt;<replaceable>dir/file path</replaceable>&gt;<superscript>+</superscript>]
+</programlisting>
+
+      <para>where <replaceable>dir/file path</replaceable> name each directory for which to clean the ACL. If you omit this
+      argument, the current working directory's ACL is cleaned.</para>
+
+      <para><indexterm>
+          <primary>examples</primary>
+
+          <secondary>removing deleted groups from ACLs</secondary>
+        </indexterm></para>
+    </sect2>
+
+    <sect2 id="Header_138">
+      <title>Example: Removing an Obsolete ACL Entry</title>
+
+      <para>After the group <emphasis role="bold">terry:team</emphasis> is deleted, its AFS GID (-286) appears on ACLs instead of
+      its name. In this example, user <emphasis role="bold">terry</emphasis> cleans it from the ACL on the plans directory in his
+      home directory.</para>
+
+      <programlisting>
+   % <emphasis role="bold">fs listacl plans</emphasis>
+   Access list for plans is
+   Normal rights:
+     terry rlidwka
+     -268 rlidwk
+     sam rliw
+   % <emphasis role="bold">fs cleanacl plans</emphasis>
+   % <emphasis role="bold">fs listacl plans</emphasis>
+   Access list for plans is
+   Normal rights:
+     terry rlidwka
+     sam rliw
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ72">
+    <title>Changing a Group's Owner or Name</title>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>changing name</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>changing</primary>
+
+      <secondary>group owner</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>changing</primary>
+
+      <secondary>group name</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>changing owner</secondary>
+    </indexterm>
+
+    <para>To change a group's owner, use the <emphasis role="bold">pts chown</emphasis> command. To change its name, use the
+    <emphasis role="bold">pts rename</emphasis> command.</para>
+
+    <para>You can change the owner or name of a group that you own (either directly or because you belong to the owning group). You
+    can assign group ownership to another user, another group, or the group itself. If you are not already a member of the group and
+    need to be, use the <emphasis role="bold">pts adduser</emphasis> command before transferring ownership, following the
+    instructions in <link linkend="HDRWQ70">To Add Members to a Group</link>.</para>
+
+    <para>The <emphasis role="bold">pts chown</emphasis> command automatically changes a group's
+    <replaceable>owner_name</replaceable> prefix to indicate the new owner. If the new owner is a group, only its
+    <replaceable>owner_name</replaceable> prefix is used, not its entire name. However, the change in
+    <replaceable>owner_name</replaceable> prefix command does not propagate to any groups owned by the group whose owner is
+    changing. If you want their <replaceable>owner_name</replaceable> prefixes to indicate the correct owner, you must use the
+    <emphasis role="bold">pts rename</emphasis> command.</para>
+
+    <para>Otherwise, you normally use the <emphasis role="bold">pts rename</emphasis> command to change only the
+    <replaceable>group_name</replaceable> part of a group name (the part that follows the colon). You can change the
+    <replaceable>owner_name</replaceable> prefix only to reflect the actual owner.</para>
+
+    <sect2 id="HDRWQ73">
+      <title>To Change a Group's Owner</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts chown</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>chown</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts chown</emphasis> command to change a group's name.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts chown</emphasis>  &lt;<replaceable>group name</replaceable>&gt; &lt;<replaceable>new owner</replaceable>&gt;
+</programlisting>
+
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold"><replaceable>group name</replaceable></emphasis></term>
+
+          <listitem>
+            <para>Specifies the current name of the group to which to assign a new owner.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><replaceable>new owner</replaceable></emphasis></term>
+
+          <listitem>
+            <para>Names the user or group that is to own the group.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+
+    <sect2 id="Header_141">
+      <title>Example: Changing a Group's Owner to Another User</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>changing group owner</secondary>
+      </indexterm>
+
+      <para>In the following example, user <emphasis role="bold">pat</emphasis> transfers ownership of the group <emphasis
+      role="bold">pat:staff</emphasis> to user <emphasis role="bold">terry</emphasis>. Its name changes automatically to <emphasis
+      role="bold">terry:staff</emphasis>, as confirmed by the <emphasis role="bold">pts examine</emphasis> command.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts chown pat:staff terry</emphasis>
+   % <emphasis role="bold">pts examine terry:staff</emphasis> 
+   Name: terry:staff, id: -534, owner: terry, creator: pat, 
+     membership: 15, flags: SOm--, group quota: 0.
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_142">
+      <title>Example: Changing a Group's Owner to Itself</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>creating a self-owned group</secondary>
+      </indexterm>
+
+      <para>In the following example, user <emphasis role="bold">terry</emphasis> makes the <emphasis
+      role="bold">terry:team</emphasis> group a self-owned group. Its name does not change because its
+      <replaceable>owner_name</replaceable> prefix is already <emphasis role="bold">terry</emphasis>.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts chown terry:team terry:team</emphasis>
+   % <emphasis role="bold">pts examine terry:team</emphasis>
+   Name: terry:team, id: -286, owner: terry:team, creator: terry, 
+     membership: 6, flags: SOm--, group quota: 0.
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_143">
+      <title>Example: Changing a Group's Owner to a Group</title>
+
+      <para>In this example, user <emphasis role="bold">sam</emphasis> transfers ownership of the group <emphasis
+      role="bold">sam:project</emphasis> to the group <emphasis role="bold">smith:cpa</emphasis>. Its name changes automatically to
+      <emphasis role="bold">smith:project</emphasis>, because <emphasis role="bold">smith</emphasis> is the
+      <replaceable>owner_name</replaceable> prefix of the group that now owns it. The <emphasis role="bold">pts examine</emphasis>
+      command displays the group's status before and after the change.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts examine sam:project</emphasis>
+   Name: sam:project, id: -522, owner: sam, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+   % <emphasis role="bold">pts chown sam:project smith:cpa</emphasis>
+   % <emphasis role="bold">pts examine smith:project</emphasis>
+   Name: smith:project, id: -522, owner: smith:cpa, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_144">
+      <title>To Change a Group's Name</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts rename</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>rename</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts rename</emphasis> command to change a group's name.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts rename</emphasis>  &lt;<replaceable>old name</replaceable>&gt; &lt;<replaceable>new name</replaceable>&gt;
+</programlisting>
+
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold"><replaceable>old name</replaceable></emphasis></term>
+
+          <listitem>
+            <para>Specifies the group's current name.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold"><replaceable>new name</replaceable></emphasis></term>
+
+          <listitem>
+            <para>Specifies the complete new name to assign to the group. The <replaceable>owner_name</replaceable> prefix must
+            correctly indicate the group's owner.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+
+    <sect2 id="Header_145">
+      <title>Example: Changing a Group's <replaceable>group_name</replaceable> Suffix</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>changing group name</secondary>
+      </indexterm>
+
+      <para>The following example changes the name of the <emphasis role="bold">smith:project</emphasis> group to <emphasis
+      role="bold">smith:fiscal-closing</emphasis>. The group's <replaceable>owner_name</replaceable> prefix remains <emphasis
+      role="bold">smith</emphasis> because its owner is not changing.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts examine smith:project</emphasis>
+   Name: smith:project, id: -522, owner: smith:cpa, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+   % <emphasis role="bold">pts rename smith:project smith:fiscal-closing</emphasis>
+   % <emphasis role="bold">pts examine smith:fiscal-closing</emphasis>
+   Name: smith:fiscal-closing, id: -522, owner: smith:cpa, creator: sam, 
+     membership: 33, flags: SOm--, group quota: 0.
+</programlisting>
+    </sect2>
+
+    <sect2 id="Header_146">
+      <title>Example: Changing a Group's <replaceable>owner_name</replaceable> Prefix</title>
+
+      <para>In a previous example, user <emphasis role="bold">pat</emphasis> transferred ownership of the group <emphasis
+      role="bold">pat:staff</emphasis> to user <emphasis role="bold">terry</emphasis>. Its name changed automatically to <emphasis
+      role="bold">terry:staff</emphasis>. However, a group that <emphasis role="bold">terry:staff</emphasis> owns is still called
+      <emphasis role="bold">pat:plans</emphasis>, because the change to a group's <replaceable>owner_name</replaceable> that results
+      from the <emphasis role="bold">pts chown</emphasis> command does not propagate to any groups it owns. In this example, a
+      member of <emphasis role="bold">terry:staff</emphasis> uses the <emphasis role="bold">pts rename</emphasis> command to change
+      the name to <emphasis role="bold">terry:plans</emphasis> to reflect its actual ownership.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts examine pat:plans</emphasis> 
+   Name: pat:plans, id: -535, owner: terry:staff, creator: pat, 
+     membership: 8, flags: SOm--, group quota: 0.
+   % <emphasis role="bold">pts rename pat:plans terry:plans</emphasis>
+   % <emphasis role="bold">pts examine terry:plans</emphasis> 
+   Name: terry:plans, id: -535, owner: terry:staff, creator: pat, 
+     membership: 8, flags: SOm--, group quota: 0.
+</programlisting>
+    </sect2>
+  </sect1>
+
+  <sect1 id="HDRWQ74">
+    <title>Protecting Group-Related Information</title>
+
+    <indexterm>
+      <primary>protection</primary>
+
+      <secondary>group-related information</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>groups</primary>
+
+      <secondary>privacy flags</secondary>
+    </indexterm>
+
+    <indexterm>
+      <primary>privacy flags on groups</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>s privacy flag on groups</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>o privacy flag on groups</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>m privacy flag on groups</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>a privacy flag on groups</primary>
+    </indexterm>
+
+    <indexterm>
+      <primary>r privacy flag on groups</primary>
+    </indexterm>
+
+    <para>A group's <emphasis>privacy flags</emphasis> control who can administer it in various ways. The privacy flags appear in
+    the <computeroutput>flags</computeroutput> field of the output from the <emphasis role="bold">pts examine</emphasis> command
+    command; see <link linkend="HDRWQ67">To Display A Group Entry</link>. To set the privacy flags for a group you own, use the
+    <emphasis role="bold">pts setfields</emphasis> command as instructed in <link linkend="HDRWQ75">To Set a Group's Privacy
+    Flags</link>.</para>
+
+    <sect2 id="HDRPRIVACY-FLAGS">
+      <title>Interpreting the Privacy Flags</title>
+
+      <para>The five privacy flags always appear, and always must be set, in the following order:</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">s</emphasis></term>
+
+          <listitem>
+            <para>Controls who can issue the <emphasis role="bold">pts examine</emphasis> command to display the entry.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">o</emphasis></term>
+
+          <listitem>
+            <para>Controls who can issue the <emphasis role="bold">pts listowned</emphasis> command to list the groups that a user
+            or group owns.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">m</emphasis></term>
+
+          <listitem>
+            <para>Controls who can issue the <emphasis role="bold">pts membership</emphasis> command to list the groups a user or
+            machine belongs to, or which users or machines belong to a group.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">a</emphasis></term>
+
+          <listitem>
+            <para>Controls who can issue the <emphasis role="bold">pts adduser</emphasis> command to add a user or machine to a
+            group.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">r</emphasis></term>
+
+          <listitem>
+            <para>Controls who can issue the <emphasis role="bold">pts removeuser</emphasis> command to remove a user or machine
+            from a group.</para>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+
+      <para>Each flag can take three possible types of values to enable a different set of users to issue the corresponding
+      command:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para>A hyphen (<emphasis role="bold">-</emphasis>) means that the group's owner can issue the command, along with the
+          administrators who belong to the <emphasis role="bold">system:administrators</emphasis> group.</para>
+        </listitem>
+
+        <listitem>
+          <para>The lowercase version of the letter means that members of the group can issue the command, along with the users
+          indicated by the hyphen.</para>
+        </listitem>
+
+        <listitem>
+          <para>The uppercase version of the letter means that anyone can issue the command.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>For example, the flags <computeroutput>SOmar</computeroutput> on a group entry indicate that anyone can examine the
+      group's entry and list the groups that it owns, and that only the group's members can list, add, or remove its members.</para>
+
+      <para>The default privacy flags for groups are <computeroutput>S-M--</computeroutput>, meaning that anyone can display the
+      entry and list the members of the group, but only the group's owner and members of the <emphasis
+      role="bold">system:administrators</emphasis> group can perform other functions.</para>
+    </sect2>
+
+    <sect2 id="HDRWQ75">
+      <title>To Set a Group's Privacy Flags</title>
+
+      <indexterm>
+        <primary>commands</primary>
+
+        <secondary>pts setfields</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>pts commands</primary>
+
+        <secondary>setfields</secondary>
+      </indexterm>
+
+      <para>Issue the <emphasis role="bold">pts setfields</emphasis> command to set the privacy flags on one or more groups.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts setfields -nameorid</emphasis> &lt;<replaceable>user or group name or id</replaceable>&gt;<superscript>+</superscript>
+                   <emphasis role="bold">-access</emphasis> &lt;<replaceable>set privacy flags</replaceable>&gt;
+</programlisting>
+
+      <para>where</para>
+
+      <variablelist>
+        <varlistentry>
+          <term><emphasis role="bold">-nameorid</emphasis></term>
+
+          <listitem>
+            <para>Specifies the name or AFS GID of each group for which to set the privacy flags. If identifying a group by its AFS
+            GID, precede the GID with a hyphen (<emphasis role="bold">-</emphasis>) to indicate that it is a negative number.</para>
+          </listitem>
+        </varlistentry>
+
+        <varlistentry>
+          <term><emphasis role="bold">-access</emphasis></term>
+
+          <listitem>
+            <para>Specifies the privacy flags to set for each group. Observe the following rules:</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>Provide a value for all five flags in the order <emphasis role="bold">somar</emphasis>.</para>
+              </listitem>
+
+              <listitem>
+                <para>Set the first flag to lowercase <emphasis role="bold">s</emphasis> or uppercase <emphasis
+                role="bold">S</emphasis> only.</para>
+              </listitem>
+
+              <listitem>
+                <para>Set the second flag to the hyphen (<emphasis role="bold">-</emphasis>) or uppercase <emphasis
+                role="bold">O</emphasis> only. For groups, AFS interprets the hyphen as equivalent to lowercase <emphasis
+                role="bold">o</emphasis> (that is, members of a group can always list the groups that it owns).</para>
+              </listitem>
+
+              <listitem>
+                <para>Set the third flag to the hyphen (<emphasis role="bold">-</emphasis>), lowercase <emphasis
+                role="bold">m</emphasis>, or uppercase <emphasis role="bold">M</emphasis>.</para>
+              </listitem>
+
+              <listitem>
+                <para>Set the fourth flag to the hyphen (<emphasis role="bold">-</emphasis>), lowercase <emphasis
+                role="bold">a</emphasis>, or uppercase <emphasis role="bold">A</emphasis>. The uppercase <emphasis
+                role="bold">A</emphasis> is not a secure choice, because it permits anyone to add members to the group.</para>
+              </listitem>
+
+              <listitem>
+                <para>Set the fifth flag to the hyphen (<emphasis role="bold">-</emphasis>) or lowercase <emphasis
+                role="bold">r</emphasis> only.</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </varlistentry>
+      </variablelist>
+    </sect2>
+
+    <sect2 id="Header_150">
+      <title>Example: Setting a Group's Privacy Flags</title>
+
+      <indexterm>
+        <primary>examples</primary>
+
+        <secondary>setting group's privacy flags</secondary>
+      </indexterm>
+
+      <para>The following example sets the privacy flags on the <emphasis role="bold">terry:team</emphasis> group to set the
+      indicated pattern of administrative privilege.</para>
+
+      <programlisting>
+   % <emphasis role="bold">pts setfields terry:team -access SOm--</emphasis>
+  
+</programlisting>
+
+      <itemizedlist>
+        <listitem>
+          <para>Everyone can issue the <emphasis role="bold">pts examine</emphasis> command to display general information about it
+          (uppercase <emphasis role="bold">S</emphasis>).</para>
+        </listitem>
+
+        <listitem>
+          <para>Everyone can issue the <emphasis role="bold">pts listowned</emphasis> command to display the groups it owns
+          (uppercase <emphasis role="bold">O</emphasis>).</para>
+        </listitem>
+
+        <listitem>
+          <para>The members of the group can issue the <emphasis role="bold">pts membership</emphasis> command to display the
+          group's members (lowercase <emphasis role="bold">m</emphasis>).</para>
+        </listitem>
+
+        <listitem>
+          <para>Only the group's owner, user <emphasis role="bold">terry</emphasis>, can issue the <emphasis role="bold">pts
+          adduser</emphasis> command to add members (the hyphen).</para>
+        </listitem>
+
+        <listitem>
+          <para>Only the group's owner, user <emphasis role="bold">terry</emphasis>, can issue the <emphasis role="bold">pts
+          removeuser</emphasis> command to remove members (the hyphen).</para>
+        </listitem>
+      </itemizedlist>
+    </sect2>
+  </sect1>
+</chapter>

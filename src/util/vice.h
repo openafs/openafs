@@ -19,7 +19,7 @@
  *	    	between user processes and Venus.
  */
 #include <afs/param.h>
-#ifdef AFS_SUN_ENV
+#if defined(AFS_SUN_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_USR_DFBSD_ENV)
 #include <sys/ioccom.h>
 #endif
 

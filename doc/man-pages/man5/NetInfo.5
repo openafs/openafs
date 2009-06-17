@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH NetInfo 5 "OpenAFS" "19/Jun/2007" "AFS File Reference"
+.TH NetInfo 5 "OpenAFS" "27/Apr/2009" "AFS File Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -254,8 +254,23 @@ The \fINetInfo\fR file is in \s-1ASCII\s0 format. One of the machine's \s-1IP\s0
 appears on each line, in dotted decimal format. The order of the addresses
 is not significant.
 .PP
+Optionally, the File Server can be forced to use an \s-1IP\s0 address that does
+not belong to one of the server interfaces. To do this, add a line to the
+\fINetInfo\fR file with the \s-1IP\s0 address prefixed with \*(L"f\*(R" and a space. This is
+useful when the File Server is on the interal side of a \s-1NAT\s0 firewall.
+.PP
 To display the File Server interface addresses registered in the \s-1VLDB\s0, use
 the \fBvos listaddrs\fR command.
+.SH "EXAMPLES"
+If the File Server is on the internal side of a NAT firewall, where it
+serves internal clients using the IP address 192.168.1.123 and external
+clients using the IP address 10.1.1.321, then the \fINetInfo\fR file should
+contain the following:
+.PP
+.Vb 2
+\&   192.168.1.123
+\&   f 10.1.1.321
+.Ve
 .SH "SEE ALSO"
 the \fINetRestrict(5)\fR manpage,
 the \fIsysid(5)\fR manpage,
@@ -286,6 +301,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "\(bu"
 
 .IX Item "\(bu"
+
+.IX Header "EXAMPLES"
 
 .IX Header "SEE ALSO"
 

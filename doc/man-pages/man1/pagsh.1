@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH PAGSH 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH PAGSH 1 "OpenAFS" "18/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,9 +188,11 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-pagsh \- Creates a new PAG
+pagsh, pagsh.krb \- Creates a new PAG
 .SH "SYNOPSIS"
 \fBpagsh\fR
+.PP
+\fBpagsh.krb\fR
 .SH "DESCRIPTION"
 The \fBpagsh\fR command creates a new command shell (owned by the issuer of
 the command) and associates a new \fIprocess authentication group\fR (PAG)
@@ -202,8 +204,8 @@ track each user.
 .PP
 Any tokens acquired subsequently (presumably for other cells) become
 associated with the PAG, rather than with the user's UNIX UID.  This
-method for distinguishing users has two advantages.
-.Ip "\(bu" 4
+method for distinguishing users has two advantages:
+.Ip "\(bu" 2
 It means that processes spawned by the user inherit the \s-1PAG\s0 and so share
 the token; thus they gain access to \s-1AFS\s0 as the authenticated user.  In
 many environments, for example, printer and other daemons run under
@@ -211,13 +213,20 @@ identities (such as the local superuser \f(CWroot\fR) that the \s-1AFS\s0 server
 processes recognize only as \f(CWanonymous\fR. Unless PAGs are used, such
 daemons cannot access files in directories whose access control lists
 (ACLs) do not extend permissions to the system:anyuser group.
-.Ip "\(bu" 4
+.Ip "\(bu" 2
 It closes a potential security loophole: \s-1UNIX\s0 allows anyone already logged
 in as the local superuser \f(CWroot\fR on a machine to assume any other
 identity by issuing the \s-1UNIX\s0 \fBsu\fR command. If the credential structure is
 identified by a \s-1UNIX\s0 \s-1UID\s0 rather than a \s-1PAG\s0, then the local superuser
 \f(CWroot\fR can assume a \s-1UNIX\s0 \s-1UID\s0 and use any tokens associated with that
 \s-1UID\s0. Use of a \s-1PAG\s0 as an identifier eliminates that possibility.
+.PP
+The (mostly obsolete) \fBpagsh.krb\fR command is the same as \fBpagsh\fR except
+that it also sets the \s-1KRBTKFILE\s0 environment variable, which controls the
+default Kerberos v4 ticket cache, to \fI/tmp/tktp\fIX\fR\fR where \fIX\fR is the
+number of the user's \s-1PAG\s0.  This is only useful for \s-1AFS\s0 cells still using
+Kerberos v4 outside of \s-1AFS\s0 and has no effect for cells using Kerberos v5
+and \fBaklog\fR or \fBklog.krb5\fR.
 .SH "CAUTIONS"
 Each PAG created uses two of the memory slots that the kernel uses to
 record the UNIX groups associated with a user. If none of these slots are
@@ -264,6 +273,7 @@ default Bourne shell:
 .SH "PRIVILEGE REQUIRED"
 None
 .SH "SEE ALSO"
+the \fIaklog(1)\fR manpage,
 the \fIfs_exportafs(1)\fR manpage,
 the \fIklog(1)\fR manpage,
 the \fItokens(1)\fR manpage
@@ -276,7 +286,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "PAGSH 1"
-.IX Name "pagsh - Creates a new PAG"
+.IX Name "pagsh, pagsh.krb - Creates a new PAG"
 
 .IX Header "NAME"
 

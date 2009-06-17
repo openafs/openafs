@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.55 2009/03/07 14:11:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.56 2009/05/12 17:12:41 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -6153,49 +6153,49 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 	    s->packetRequests);
 
     if (version >= RX_DEBUGI_VERSION_W_NEWPACKETTYPES) {
-	fprintf(file, "alloc-failures(rcv %d/%d,send %d/%d,ack %d)\n",
+	fprintf(file, "alloc-failures(rcv %u/%u,send %u/%u,ack %u)\n",
 		s->receivePktAllocFailures, s->receiveCbufPktAllocFailures,
 		s->sendPktAllocFailures, s->sendCbufPktAllocFailures,
 		s->specialPktAllocFailures);
     } else {
-	fprintf(file, "alloc-failures(rcv %d,send %d,ack %d)\n",
+	fprintf(file, "alloc-failures(rcv %u,send %u,ack %u)\n",
 		s->receivePktAllocFailures, s->sendPktAllocFailures,
 		s->specialPktAllocFailures);
     }
 
     fprintf(file,
-	    "   greedy %d, " "bogusReads %d (last from host %x), "
-	    "noPackets %d, " "noBuffers %d, " "selects %d, "
-	    "sendSelects %d\n", s->socketGreedy, s->bogusPacketOnRead,
+	    "   greedy %u, " "bogusReads %u (last from host %x), "
+	    "noPackets %u, " "noBuffers %u, " "selects %u, "
+	    "sendSelects %u\n", s->socketGreedy, s->bogusPacketOnRead,
 	    s->bogusHost, s->noPacketOnRead, s->noPacketBuffersOnRead,
 	    s->selects, s->sendSelects);
 
     fprintf(file, "   packets read: ");
     for (i = 0; i < RX_N_PACKET_TYPES; i++) {
-	fprintf(file, "%s %d ", rx_packetTypes[i], s->packetsRead[i]);
+	fprintf(file, "%s %u ", rx_packetTypes[i], s->packetsRead[i]);
     }
     fprintf(file, "\n");
 
     fprintf(file,
-	    "   other read counters: data %d, " "ack %d, " "dup %d "
-	    "spurious %d " "dally %d\n", s->dataPacketsRead,
+	    "   other read counters: data %u, " "ack %u, " "dup %u "
+	    "spurious %u " "dally %u\n", s->dataPacketsRead,
 	    s->ackPacketsRead, s->dupPacketsRead, s->spuriousPacketsRead,
 	    s->ignorePacketDally);
 
     fprintf(file, "   packets sent: ");
     for (i = 0; i < RX_N_PACKET_TYPES; i++) {
-	fprintf(file, "%s %d ", rx_packetTypes[i], s->packetsSent[i]);
+	fprintf(file, "%s %u ", rx_packetTypes[i], s->packetsSent[i]);
     }
     fprintf(file, "\n");
 
     fprintf(file,
-	    "   other send counters: ack %d, " "data %d (not resends), "
-	    "resends %d, " "pushed %d, " "acked&ignored %d\n",
+	    "   other send counters: ack %u, " "data %u (not resends), "
+	    "resends %u, " "pushed %u, " "acked&ignored %u\n",
 	    s->ackPacketsSent, s->dataPacketsSent, s->dataPacketsReSent,
 	    s->dataPacketsPushed, s->ignoreAckedPacket);
 
     fprintf(file,
-	    "   \t(these should be small) sendFailed %d, " "fatalErrors %d\n",
+	    "   \t(these should be small) sendFailed %u, " "fatalErrors %u\n",
 	    s->netSendFailures, (int)s->fatalErrors);
 
     if (s->nRttSamples) {

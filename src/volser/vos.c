@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.29 2009/03/23 18:19:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.30 2009/04/27 20:18:23 jaltman Exp $");
 
 #include <sys/types.h>
 #include <string.h>
@@ -5840,7 +5840,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0,
 		"partition name for new site");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
-    cmd_AddParm(ts, "-valid", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE, "publish as an up-to-date site in VLDB");
+    cmd_AddParm(ts, "-valid", CMD_FLAG, CMD_OPTIONAL, "publish as an up-to-date site in VLDB");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("remsite", RemoveSite, NULL,
@@ -5905,7 +5905,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-clearuse", CMD_FLAG, CMD_OPTIONAL, "clear dayUse");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("offline", volOffline, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("offline", volOffline, NULL, "force the volume status to offline");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "server name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
@@ -5913,7 +5913,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-busy", CMD_FLAG, CMD_OPTIONAL, "busy volume");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("online", volOnline, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("online", volOnline, NULL, "force the volume status to online");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "server name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
@@ -5971,7 +5971,7 @@ main(argc, argv)
 		"prefix of the volume whose VLDB entry is to be deleted");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
-    cmd_AddParm(ts, "-noexecute", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
+    cmd_AddParm(ts, "-noexecute", CMD_FLAG, CMD_OPTIONAL,
 		"no execute");
     COMMONPARMS;
 

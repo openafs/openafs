@@ -3,6 +3,7 @@ Makefile
 Makefile.*_*[0123456789]
 Makefile.*_*[0123456789].in
 Makefile.version
+Makefile.version-CML
 Makefile.version-NOCML
 afsconfig.h
 afsconfig.h.in

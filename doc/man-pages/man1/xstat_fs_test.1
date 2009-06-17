@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH XSTAT_FS_TEST 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH XSTAT_FS_TEST 1 "OpenAFS" "8/Jun/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -217,7 +217,7 @@ Specifies each data collection to return, which defines the type and
 amount of data the command interpreter gathers about the File Server.
 Data is returned in a predefined data structure.
 .Sp
-There are three acceptable values:
+There are four acceptable values:
 .Ip "0" 8
 Provides profiling information about the numbers of times different
 internal File Server routines were called since the File Server
@@ -230,6 +230,11 @@ Reports all of the internal performance statistics provided by the \f(CW1\fR
 setting, plus some additional, detailed performance figures about the File
 Server (for example, minimum, maximum, and cumulative statistics regarding
 File Server RPCs, how long they take to complete, and how many succeed).
+.Ip "3" 8
+Reports File Server callback processing statistics since the File Server
+started, including the number of call of callbacks added (AddCallBack), the
+number of callbacks broken (BreakCallBacks), and the number of callback
+space reclaims (GetSomeSpaces).
 .Ip "\fB\-onceonly\fR" 4
 Gathers statistics just one time. Omit this flag to have the command
 continue to probe the Cache Manager for statistics at the frequency
@@ -278,6 +283,8 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 .IX Item "1"
 
 .IX Item "2"
+
+.IX Item "3"
 
 .IX Item "\fB\-onceonly\fR"
 

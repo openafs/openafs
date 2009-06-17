@@ -20,12 +20,11 @@
  */
 
 #include "Internal.h"
+#include <errno.h>
 
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
-
-extern int errno;
 
 #ifndef LIBJUAFS
 // user class and fields //

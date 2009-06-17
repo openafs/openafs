@@ -9,6 +9,8 @@ asetkey - Add a key from a keytab to an AFS KeyFile
 
 B<asetkey> add <I<kvno>> <I<keyfile>> <I<principal>>
 
+B<asetkey> add <I<kvno>> <I<key>>
+
 B<asetkey> delete <I<kvno>>
 
 B<asetkey> list
@@ -21,7 +23,8 @@ B<asetkey> list
 The B<asetkey> command is used to add a key to an AFS KeyFile from a
 Kerberos keytab.  It is similar to B<bos addkey> except that it must be
 run locally on the system where the KeyFile is located and it takes the
-new key from a Kerberos 5 keytab rather than prompting for the password.
+new key from the command line or a Kerberos 5 keytab rather than prompting
+for the password.
 
 B<asetkey delete> can be used to delete a key (similar to B<bos
 removekeys>), and B<asetkey list> will list the keys in a KeyFile (similar
@@ -38,7 +41,8 @@ that key to the KeyFile with B<asetkey add>.  The I<kvno> chosen should
 match the kvno in the Kerberos KDC (checked with B<kvno> or the
 C<getprinc> function of B<kadmin>).  I<principal> should be the name of
 the AFS principal in the keytab, which must be either C<afs> or
-C<afs/I<cell name>>.
+C<afs/I<cell name>>. B<asetkey> can also be used to install a key
+from a hex string.
 
 In cells that use the Update Server to distribute the contents of the
 F</usr/afs/etc> directory, it is conventional to run B<asetkey add> only
@@ -81,6 +85,13 @@ C<ktadd>.
 
 You may want to use C<afs/I<cell name>> instead of C<afs>, particularly if
 you may have multiple AFS cells for a single Kerberos realm.
+
+In the event you have been distributed a key by a Kerberos administrator
+in the form of a hex string, you may use asetkey to install that.
+
+    % asetkey add 3 80b6a7cd7a9dadb6
+
+I<key> should be an 8 byte hex representation.
 
 =head1 PRIVILEGE REQUIRED
 

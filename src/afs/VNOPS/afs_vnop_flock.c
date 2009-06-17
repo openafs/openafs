@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.10 2007/03/10 16:08:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.11 2009/06/03 18:26:02 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -954,11 +954,7 @@ afs_xflock(void)
     return code;
 #else /* AFS_OSF_ENV */
     if (!flockDone)
-#ifdef DYNEL
-	(*afs_longcall_procs.LC_flock) ();
-#else
 	flock();
-#endif
     afs_PutFakeStat(&fakestate);
     return;
 #endif

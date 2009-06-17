@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.19 2007/11/02 18:26:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.21 2009/06/02 03:33:09 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -20,6 +20,7 @@ RCSID
 #include "afsincludes.h"
 #include "des/des.h"
 #include "rx/rxkad.h"
+#include <netdb.h>
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -230,7 +231,7 @@ afsconf_FindService(register const char *aname)
 #if     defined(AFS_OSF_ENV) 
     ts = getservbyname(aname, "");
 #else
-    ts = getservbyname(aname, NULL);
+    ts = (struct servent *) getservbyname(aname, NULL);
 #endif
     if (ts) {
 	/* we found it in /etc/services, so we use this value */
@@ -635,31 +636,41 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 		return -1;
 	    }
 	    i = curEntry->cellInfo.numServers;
-	    if (cell && !strcmp(cell, curEntry->cellInfo.name))
-		code =
-		    ParseHostLine(tbuffer, &curEntry->cellInfo.hostAddr[i],
-				  curEntry->cellInfo.hostName[i], &clones[i]);
-	    else
-		code =
-		    ParseHostLine(tbuffer, &curEntry->cellInfo.hostAddr[i],
-				  curEntry->cellInfo.hostName[i], 0);
-	    if (code) {
-		if (code == AFSCONF_SYNTAX) {
-		    for (bp = tbuffer; *bp != '\n'; bp++) {	/* Take out the <cr> from the buffer */
-			if (!*bp)
-			    break;
+	    if (i < MAXHOSTSPERCELL) {
+		if (cell && !strcmp(cell, curEntry->cellInfo.name))
+		    code =
+			ParseHostLine(tbuffer, 
+				      &curEntry->cellInfo.hostAddr[i],
+				      curEntry->cellInfo.hostName[i], 
+				      &clones[i]);
+		else
+		    code =
+			ParseHostLine(tbuffer, 
+				      &curEntry->cellInfo.hostAddr[i],
+				      curEntry->cellInfo.hostName[i], 0);
+
+		if (code) {
+		    if (code == AFSCONF_SYNTAX) {
+			for (bp = tbuffer; *bp != '\n'; bp++) {	/* Take out the <cr> from the buffer */
+			    if (!*bp)
+				break;
+			}
+			*bp = '\0';
+			fprintf(stderr,
+				"Can't properly parse host line \"%s\" in configuration file %s\n",
+				tbuffer, tbuf1);
 		    }
-		    *bp = '\0';
-		    fprintf(stderr,
-			    "Can't properly parse host line \"%s\" in configuration file %s\n",
-			    tbuffer, tbuf1);
+		    free(curEntry);
+		    fclose(tf);
+		    afsconf_CloseInternal(adir);
+		    return -1;
 		}
-		free(curEntry);
-		fclose(tf);
-		afsconf_CloseInternal(adir);
-		return -1;
+		curEntry->cellInfo.numServers = ++i;
+	    } else {
+		fprintf(stderr,
+			"Too many hosts for cell %s in configuration file %s\n", 
+			curEntry->cellInfo.name, tbuf1);
 	    }
-	    curEntry->cellInfo.numServers = ++i;
 	}
     }
     fclose(tf);			/* close the file now */

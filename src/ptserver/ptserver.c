@@ -113,7 +113,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.14 2008/12/22 19:23:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21.2.15 2009/06/03 22:12:02 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -279,16 +279,16 @@ main(int argc, char **argv)
 	int alen;
 	lcstring(arg, argv[a], sizeof(arg));
 	alen = strlen(arg);
-	if ((strncmp(arg, "-database", alen) == 0)
-	    || (strncmp(arg, "-db", alen) == 0)) {
-	    pr_dbaseName = argv[++a];	/* specify a database */
-	} else if (strcmp(argv[a], "-d") == 0) {
+	if (strcmp(argv[a], "-d") == 0) {
 	    if ((a + 1) >= argc) {
 		fprintf(stderr, "missing argument for -d\n"); 
 		return -1; 
 	    }
 	    debuglevel = atoi(argv[++a]);
 	    LogLevel = debuglevel;
+	} else if ((strncmp(arg, "-database", alen) == 0)
+	    || (strncmp(arg, "-db", alen) == 0)) {
+	    pr_dbaseName = argv[++a];	/* specify a database */
 	} else if (strncmp(arg, "-p", alen) == 0) {
 	    lwps = atoi(argv[++a]);
 	    if (lwps > 16) {	/* maximum of 16 */

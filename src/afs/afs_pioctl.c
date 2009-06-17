@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.34 2009/01/19 18:09:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.36 2009/06/03 15:14:38 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -91,6 +91,7 @@ DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PFsCmd);
 DECL_PIOCTL(PCallBackAddr);
 DECL_PIOCTL(PNewUuid);
+DECL_PIOCTL(PGetPAG);
 /*
  * A macro that says whether we're going to need HandleClientContext().
  * This is currently used only by the nfs translator.
@@ -198,6 +199,10 @@ static int (*(CpioctlSw[])) () = {
     PBogus,			/* 0 */
     PBogus,			/* 0 */
     PNewUuid,                   /* 9 -- generate new uuid */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PBogus,			/* 0 */
+    PGetPAG,                    /* 13 -- get PAG value */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -646,8 +651,7 @@ afs_xioctl(void)
 #ifdef AFS_LINUX22_ENV
 		    return -code;
 #else
-		    setuerror(code);
-		    return;
+		    return (setuerror(code), code);
 #endif
 #endif
 #endif
@@ -3865,6 +3869,33 @@ DECL_PIOCTL(PNewUuid)
     return 0;
 }
 
+/*!
+ * VIOC_GETPAG (13) - Get PAG value
+ *
+ * \ingroup pioctl
+ *
+ * \param[in] ain	not in use
+ * \param[out] aout	PAG value or NOPAG
+ *
+ * \retval E2BIG	Error not enough space to copy out value
+ *
+ * \post get PAG value for the caller's cred
+ */
+DECL_PIOCTL(PGetPAG)
+{
+    afs_int32 pag;
+
+    if (*aoutSize < sizeof(afs_int32)) {
+	return E2BIG;
+    }
+
+    pag = PagInCred(*acred);
+
+    memcpy(aout, (char *)&pag, sizeof(afs_int32));
+    *aoutSize = sizeof(afs_int32);
+    return 0;
+}
+
 DECL_PIOCTL(PCallBackAddr)
 {
 #ifndef UKERNEL
@@ -3962,3 +3993,4 @@ DECL_PIOCTL(PCallBackAddr)
 #endif /* UKERNEL */
     return 0;
 }
+

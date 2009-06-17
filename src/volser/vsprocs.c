@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33.2.22 2008/10/27 23:54:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33.2.23 2009/05/31 23:15:21 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -2316,7 +2316,7 @@ cpincr:
 		      &cookie);
     EGOTO1(mfail, code,
 	   "Failed to do the%s dump from old site to new site\n",
-	   afromvol);
+	   (flags & RV_NOCLONE) ? "" : " incremental");
     VDONE;
 
     VPRINT1("Setting volume flags on destination volume %u ...", newVol);

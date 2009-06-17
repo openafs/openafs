@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.7 2008/03/18 15:59:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.8 2009/05/12 19:40:57 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -175,6 +175,10 @@ GetGlobals(struct cmd_syndesc *as, void *arock)
     if (as->parms[21].items) { /* -auth */
 	changed = 1;
 	sec = 1;
+    }
+    if (as->parms[22].items) { /* -encrypt */
+	changed = 1;
+	sec = 3;
     }
     if (as->parms[18].items || as->parms[20].items) {	/* -test, -localauth */
 	changed = 1;
@@ -1022,6 +1026,8 @@ add_std_args(register struct cmd_syndesc *ts)
 		"use local authentication");
     cmd_AddParm(ts, "-auth", CMD_FLAG, CMD_OPTIONAL,
 		"use user's authentication (default)");
+    cmd_AddParm(ts, "-encrypt", CMD_FLAG, CMD_OPTIONAL,
+		"encrypt commands");
 }
 
 /*

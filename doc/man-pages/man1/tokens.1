@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH TOKENS 1 "OpenAFS" "1/Mar/2006" "AFS Command Reference"
+.TH TOKENS 1 "OpenAFS" "18/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,16 +188,23 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-tokens \- Displays the issuer's tokens
+tokens, tokens.krb \- Displays the issuer's tokens
 .SH "SYNOPSIS"
 \fBtokens\fR [\fB\-help\fR]
 .PP
 \fBtokens\fR [\fB\-h\fR]
+.PP
+\fBtokens.krb\fR [\fB\-help\fR]
+.PP
+\fBtokens.krb\fR [\fB\-h\fR]
 .SH "DESCRIPTION"
-The tokens command displays all tokens (tickets) cached on the local
+The \fBtokens\fR command displays all tokens (tickets) cached on the local
 machine for the issuer. AFS server processes require that their clients
 present a token as evidence that they have authenticated in the server's
 local cell.
+.PP
+The (mostly obsolete) \fBtokens.krb\fR command is the same as \fBtokens\fR
+except that it also displays the user's Kerberos v4 ticket cache.
 .SH "OPTIONS"
 .Ip "\fB\-help\fR" 4
 Prints the online help for this command. All other valid options are
@@ -205,12 +212,12 @@ ignored.
 .SH "OUTPUT"
 The output lists one token for each cell in which the user is
 authenticated. The output indicates the
-.Ip "\(bu" 4
+.Ip "\(bu" 2
 User's \s-1AFS\s0 \s-1UID\s0, if it is available for display.
-.Ip "\(bu" 4
+.Ip "\(bu" 2
 Server for which the token is valid (normally, afs).  This includes a cell
 specification.
-.Ip "\(bu" 4
+.Ip "\(bu" 2
 Day and time the token expires.
 .PP
 The output of the Kerberos version of this command, \fBtokens.krb\fR, also
@@ -284,7 +291,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "TOKENS 1"
-.IX Name "tokens - Displays the issuer's tokens"
+.IX Name "tokens, tokens.krb - Displays the issuer's tokens"
 
 .IX Header "NAME"
 

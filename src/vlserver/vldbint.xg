@@ -16,7 +16,6 @@ statindex 15
 
 %#ifdef KERNEL
 %#define	afs_xdr_array(a,b,c,d,e,f)	afs_xdr_arrayN(a,b,c,d,e,f)
-%#include "../afs/longc_procs.h"
 %#endif
 
 /* Current limitations on parameters that affect other packages (i.e. volume) */

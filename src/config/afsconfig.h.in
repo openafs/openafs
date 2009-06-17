@@ -43,6 +43,9 @@
 /* define if your kernel has do_sync_read() */
 #undef DO_SYNC_READ
 
+/* define to enable syscall table probes */
+#undef ENABLE_LINUX_SYSCALL_PROBING
+
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
 
@@ -145,6 +148,9 @@
 
 /* Define to 1 if you have the `flock' function. */
 #undef HAVE_FLOCK
+
+/* Define to 1 if the system has the type `fsblkcnt_t'. */
+#undef HAVE_FSBLKCNT_T
 
 /* define if compiler has __FUNCTION__ */
 #undef HAVE_FUNCTION_MACRO
@@ -341,6 +347,9 @@
 /* define if you have a struct buf */
 #undef HAVE_STRUCT_BUF
 
+/* Define to 1 if you have the <sys/bitypes.h> header file. */
+#undef HAVE_SYS_BITYPES_H
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_DIR_H
@@ -375,6 +384,12 @@
 
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
+
+/* Define to 1 if you have the <sys/statfs.h> header file. */
+#undef HAVE_SYS_STATFS_H
+
+/* Define to 1 if you have the <sys/statvfs.h> header file. */
+#undef HAVE_SYS_STATVFS_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H

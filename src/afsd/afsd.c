@@ -31,6 +31,7 @@
   *	-confdir    The configuration directory .
   *	-nosettime  Don't keep checking the time to avoid drift (default).
   *     -settime    Keep checking the time to avoid drift.
+  *	-rxmaxmtu   Set the max mtu to help with VPN issues.
   *	-verbose     Be chatty.
   *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
   *                          the size of the vcache/stat cache pool, 
@@ -61,7 +62,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.26 2009/03/20 02:32:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.28 2009/05/30 17:56:41 shadow Exp $");
 
 #define VFS 1
 
@@ -319,6 +320,7 @@ int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
 int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
+int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 
 #ifdef AFS_SGI62_ENV
 #define AFSD_INO_T ino64_t
@@ -988,6 +990,8 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 #ifdef AFS_SGI62_ENV
 	    printf("\tinode=%lld, reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
+#elif defined(AFS_DFBSD_ENV)
+	    printf("\tinode=%d, name='%s'\n", currp->d_ino, currp->d_name);
 #else
 	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
@@ -1759,6 +1763,12 @@ mainproc(struct cmd_syndesc *as, void *arock)
     printf("afsd: %s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
+    /* set -rxmaxmtu */
+    if (as->parms[35].items) {
+        /* -rxmaxmtu */
+        rxmaxmtu = atoi(as->parms[35].items->data);
+    }
+
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
@@ -2171,6 +2181,14 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	       fullpn_CellInfoFile);
     call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
 
+    if (rxmaxmtu) {
+    if (afsd_verbose)
+        printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
+    code = call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
+    if (code)
+        printf("%s: Error seting rxmaxmtu\n", rn);
+    }
+
     if (enable_dynroot) {
 	if (afsd_verbose)
 	    printf("%s: Enabling dynroot support in kernel.\n", rn);
@@ -2470,6 +2488,7 @@ main(int argc, char **argv)
                "set the time");
     cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL, "set rx_extraPackets to this value");
     cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, "disable stat/vcache cache growing as needed");
+    cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
     return (cmd_Dispatch(argc, argv));
 }
 

@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH KLOG 1 "OpenAFS" "27/Jul/2007" "AFS Command Reference"
+.TH KLOG 1 "OpenAFS" "18/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -188,7 +188,7 @@
 .\}
 .rm #[ #] #H #V #F C
 .SH "NAME"
-klog \- Authenticates with the Authentication Server
+klog, klog.krb \- Authenticates with the Authentication Server
 .SH "SYNOPSIS"
 \fBklog\fR [\fB\-x\fR] <<\ [\fB\-principal\fR\ <\fIuser\ name\fR] >>>
     [\-password <\fIuser's password\fR>] <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
@@ -201,6 +201,13 @@ klog \- Authenticates with the Authentication Server
     <<\ [\fB\-c\fR\ <\fIcell\ name\fR] >>>  <<\ [\fB\-s\fR\ <\fIexplicit\ list\ of\ servers\fR+] >>>
     [\fB\-pi\fR] [\fB\-si\fR] <<\ [\fB\-l\fR\ <\fIticket\ lifetime\ in\ hh[:mm[:ss]]\fR] >>>
     [\fB\-se\fR] [\fB\-t\fR] [\fB\-h\fR]
+.PP
+\fBklog.krb\fR [\fB\-x\fR] <<\ [\fB\-principal\fR\ <\fIuser\ name\fR] >>>
+    [\-password <\fIuser's password\fR>] <<\ [\fB\-cell\fR\ <\fIcell\ name\fR] >>>
+    <<\ [\fB\-servers\fR\ <\fIexplicit\ list\ of\ servers\fR+] >>>
+    [\fB\-pipe\fR] [\fB\-silent\fR]
+    <<\ [\fB\-lifetime\fR\ <\fIticket\ lifetime\ in\ hh[:mm[:ss]]\fR] >>>
+    [\fB\-setpag\fR] [\fB\-tmp\fR] [\fB\-help\fR]
 .SH "DESCRIPTION"
 The \fBklog\fR command obtains an AFS token from the Authentication
 Server. The Cache Manager on the local machine stores the token in a
@@ -232,7 +239,7 @@ Authentication Server should normally use the combination of \fBkinit\fR and
 \fBaklog\fR instead of \fBklog\fR.
 .PP
 Sites using Kerberos v4 authentication (perhaps with the AFS
-Authentication Server) must use the Kerberos version of this command,
+Authentication Server) should use the Kerberos version of this command,
 \fBklog.krb\fR, on all client machines. It automatically places the issuer's
 Kerberos tickets in the file named by the KRBTKFILE environment variable,
 which the \fBpagsh.krb\fR command defines automatically as \fI/tmp/tktp\fIX\fR\fR
@@ -480,7 +487,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .rn }` ''
 .IX Title "KLOG 1"
-.IX Name "klog - Authenticates with the Authentication Server"
+.IX Name "klog, klog.krb - Authenticates with the Authentication Server"
 
 .IX Header "NAME"
 

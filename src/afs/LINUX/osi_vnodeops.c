@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.77 2009/03/19 04:54:50 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.82 2009/06/03 05:41:59 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -503,7 +503,6 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
     crfree(credp);
     return -code;
-
 }
 
 #ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK

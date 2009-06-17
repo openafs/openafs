@@ -93,7 +93,7 @@
 .nr % 0
 .rr F
 .\}
-.TH bosserver 8 "OpenAFS" "4/Feb/2008" "AFS Command Reference"
+.TH bosserver 8 "OpenAFS" "5/May/2009" "AFS Command Reference"
 .UC
 .if n .hy 0
 .if n .na
@@ -191,7 +191,7 @@
 bosserver \- Initializes the BOS Server
 .SH "SYNOPSIS"
 \fBbosserver\fR [\fB\-noauth\fR] [\fB\-log\fR] [\fB\-enable_peer_stats\fR]
-    [\fB\-enable_process_stats\fR] [\fB\-allow-dotted-principal\fR] [\fB\-help\fR]
+    [\fB\-enable_process_stats\fR] [\fB\-allow-dotted-principals\fR] [\fB\-help\fR]
 .SH "DESCRIPTION"
 The bosserver command initializes the Basic OverSeer (BOS) Server
 (\fBbosserver\fR process). In the conventional configuration, the binary file
@@ -263,7 +263,7 @@ storage. A separate record is kept for each type of \s-1RPC\s0 (FetchFile,
 GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring \s-1API\s0.
-.Ip "\fB\-allow-dotted-principal\fR" 4
+.Ip "\fB\-allow-dotted-principals\fR" 4
 By default, the \s-1RXKAD\s0 security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid
 the confusion where principals user/admin and user.admin are both mapped to the
@@ -332,7 +332,7 @@ Allbery, based on work by Alf Wachsmann and Elizabeth Cassell.
 
 .IX Item "\fB\-enable_process_stats\fR"
 
-.IX Item "\fB\-allow-dotted-principal\fR"
+.IX Item "\fB\-allow-dotted-principals\fR"
 
 .IX Item "\fB\-help\fR"
 
