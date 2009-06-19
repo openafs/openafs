@@ -21,7 +21,7 @@ typedef struct cm_cell {
     struct cm_cell *allNextp;	        /* locked by cm_cellLock */
     struct cm_cell *nameNextp;	        /* locked by cm_cellLock */
     struct cm_cell *idNextp;	        /* locked by cm_cellLock */
-    struct cm_cell *freeNextp;
+    struct cm_cell *freeNextp;          /* locked by cm_cellLock */
     char name[CELL_MAXNAMELEN];         /* cell name; never changes */
     cm_serverRef_t *vlServersp;         /* locked by cm_serverLock */
     osi_mutex_t mx;			/* mutex locking fields (flags) */
@@ -70,7 +70,11 @@ extern int cm_DumpCells(FILE *, char *, int);
 
 extern void cm_AddCellToNameHashTable(cm_cell_t * cellp);
 
+extern void cm_RemoveCellFromNameHashTable(cm_cell_t *cellp);
+
 extern void cm_AddCellToIDHashTable(cm_cell_t * cellp);
+
+extern void cm_RemoveCellFromIDHashTable(cm_cell_t *cellp);
 
 extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep, 
                            unsigned short ipRank);

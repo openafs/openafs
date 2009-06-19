@@ -69,7 +69,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, uns
 
 /* if it's from DNS, see if it has expired 
  * and check to make sure we have a valid set of volume servers
- * this function must be called with a Write Lock on cm_cellLock
+ * this function must not be called with a lock on cm_cellLock
  */
 cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 {
@@ -149,6 +149,8 @@ cm_cell_t *cm_GetCell(char *namep, afs_uint32 flags)
 
 void cm_FreeCell(cm_cell_t *cellp)
 {
+    lock_AssertWrite(&cm_cellLock);
+
     if (cellp->vlServersp)
         cm_FreeServerList(&cellp->vlServersp, CM_FREESERVERLIST_DELETE);
     cellp->name[0] = '\0';    
@@ -238,7 +240,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         }   
 
         if (cp) {
+            lock_ReleaseWrite(&cm_cellLock);
             lock_ObtainMutex(&cp->mx);
+            lock_ObtainWrite(&cm_cellLock);
             cm_AddCellToNameHashTable(cp);
             cm_AddCellToIDHashTable(cp);           
             lock_ReleaseMutex(&cp->mx);
@@ -291,6 +295,12 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
                 if ( code ) {
                     osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
                              osi_LogSaveString(afsd_logp,namep), code, osi_LogSaveString(afsd_logp,fullname));
+                    lock_ObtainMutex(&cp->mx);
+                    lock_ObtainWrite(&cm_cellLock);
+                    hasWriteLock = 1;
+                    cm_RemoveCellFromIDHashTable(cp);
+                    cm_RemoveCellFromNameHashTable(cp);
+                    lock_ReleaseMutex(&cp->mx);
                     cm_FreeCell(cp);
                     cp = NULL;
                     goto done;
@@ -305,6 +315,12 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
             else 
 #endif
             {
+                lock_ObtainMutex(&cp->mx);
+                lock_ObtainWrite(&cm_cellLock);
+                hasWriteLock = 1;
+                cm_RemoveCellFromIDHashTable(cp);
+                cm_RemoveCellFromNameHashTable(cp);
+                lock_ReleaseMutex(&cp->mx);
                 cm_FreeCell(cp);
                 cp = NULL;
                 goto done;
@@ -320,6 +336,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
          * we should use it instead of completing the allocation
          * of a new cm_cell_t 
          */
+        lock_ObtainRead(&cm_cellLock);
         hash = CM_CELL_NAME_HASH(fullname);
         for (cp2 = cm_data.cellNameHashTablep[hash]; cp2; cp2=cp2->nameNextp) {
             if (cm_stricmp_utf8(fullname, cp2->name) == 0) {
@@ -328,20 +345,28 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         }   
 
         if (cp2) {
-            if (hasMutex) {
-                lock_ReleaseMutex(&cp->mx);
-                hasMutex = 0;
+            if (!hasMutex) {
+                lock_ObtainMutex(&cp->mx);
+                hasMutex = 1;
             }
+            lock_ConvertRToW(&cm_cellLock);
+            hasWriteLock = 1;
+            cm_RemoveCellFromIDHashTable(cp);
+            cm_RemoveCellFromNameHashTable(cp);
+            lock_ReleaseMutex(&cp->mx);
+            hasMutex = 0;
             cm_FreeCell(cp);
             cp = cp2;
             goto done;
         }
+        lock_ReleaseRead(&cm_cellLock);
 
         /* randomise among those vlservers having the same rank*/ 
         cm_RandomizeServer(&cp->vlServersp);
 
         if (!hasMutex)
             lock_ObtainMutex(&cp->mx);
+
         /* copy in name */
         strncpy(cp->name, fullname, CELL_MAXNAMELEN);
         cp->name[CELL_MAXNAMELEN-1] = '\0';
@@ -349,8 +374,10 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
         strncpy(cp->linkedName, linkedName, CELL_MAXNAMELEN);
         cp->linkedName[CELL_MAXNAMELEN-1] = '\0';
 
+        lock_ObtainWrite(&cm_cellLock);
+        hasWriteLock = 1;
         cm_AddCellToNameHashTable(cp);
-        cm_AddCellToIDHashTable(cp);           
+        cm_AddCellToIDHashTable(cp);   
         lock_ReleaseMutex(&cp->mx);
         hasMutex = 0;
 
@@ -504,6 +531,9 @@ void cm_InitCell(int newFile, long maxCells)
 
             lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
 
+            lock_ObtainMutex(&cellp->mx);
+            lock_ObtainWrite(&cm_cellLock);
+
             /* copy in name */
             strncpy(cellp->name, "Freelance.Local.Cell", CELL_MAXNAMELEN); /*safe*/
             cellp->name[CELL_MAXNAMELEN-1] = '\0';
@@ -516,17 +546,19 @@ void cm_InitCell(int newFile, long maxCells)
             cellp->vlServersp = NULL;
             cellp->flags = CM_CELLFLAG_FREELANCE;
 
-            lock_ObtainMutex(&cellp->mx);
             cm_AddCellToNameHashTable(cellp);
-            cm_AddCellToIDHashTable(cellp);           
+            cm_AddCellToIDHashTable(cellp);
+            lock_ReleaseWrite(&cm_cellLock);
             lock_ReleaseMutex(&cellp->mx);
 #endif  
         } else {
+            lock_ObtainRead(&cm_cellLock);
             for (cellp = cm_data.allCellsp; cellp; cellp=cellp->allNextp) {
                 lock_InitializeMutex(&cellp->mx, "cm_cell_t mutex", LOCK_HIERARCHY_CELL);
                 cellp->vlServersp = NULL;
                 cellp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
             }
+            lock_ReleaseRead(&cm_cellLock);
         }
 
         osi_EndOnce(&once);
@@ -583,6 +615,9 @@ void cm_AddCellToNameHashTable(cm_cell_t *cellp)
 {
     int i;
     
+    lock_AssertWrite(&cm_cellLock);
+    lock_AssertMutex(&cellp->mx);
+
     if (cellp->flags & CM_CELLFLAG_IN_NAMEHASH)
         return;
 
@@ -600,6 +635,9 @@ void cm_RemoveCellFromNameHashTable(cm_cell_t *cellp)
     cm_cell_t *tcellp;
     int i;
 	
+    lock_AssertWrite(&cm_cellLock);
+    lock_AssertMutex(&cellp->mx);
+
     if (cellp->flags & CM_CELLFLAG_IN_NAMEHASH) {
 	/* hash it out first */
 	i = CM_CELL_NAME_HASH(cellp->name);
@@ -621,6 +659,9 @@ void cm_AddCellToIDHashTable(cm_cell_t *cellp)
 {
     int i;
     
+    lock_AssertWrite(&cm_cellLock);
+    lock_AssertMutex(&cellp->mx);
+
     if (cellp->flags & CM_CELLFLAG_IN_IDHASH)
         return;
 
@@ -638,6 +679,9 @@ void cm_RemoveCellFromIDHashTable(cm_cell_t *cellp)
     cm_cell_t *tcellp;
     int i;
 	
+    lock_AssertWrite(&cm_cellLock);
+    lock_AssertMutex(&cellp->mx);
+
     if (cellp->flags & CM_CELLFLAG_IN_IDHASH) {
 	/* hash it out first */
 	i = CM_CELL_ID_HASH(cellp->cellID);
