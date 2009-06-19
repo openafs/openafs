@@ -54,7 +54,8 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *hostnamep, uns
     else
         tsp = cm_NewServer(addrp, CM_SERVER_VLDB, cellp, NULL, probe ? 0 : CM_FLAG_NOPROBE);
 
-    tsp->ipRank = ipRank;
+    if (ipRank)
+        tsp->ipRank = ipRank;
 
     /* Insert the vlserver into a sorted list, sorted by server rank */
     tsrp = cm_NewServerRef(tsp, 0);
@@ -138,6 +139,10 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
     } else {
         lock_ReleaseMutex(&cp->mx);
     }
+
+    if (code == 0)
+        cm_RandomizeServer(&cp->vlServersp);
+
     return code ? NULL : cp;
 }
 
