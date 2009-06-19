@@ -374,4 +374,12 @@ Language=English
 MaxBufferSize for client is too small (Client=%1, Server=%2).
 .
 
+MessageId=
+Severity=Warning
+Facility=System
+SymbolicName=MSG_DIRTY_BUFFER_AT_SHUTDOWN
+Language=English
+A dirty buffer was not written to the file server (Cell=%1, Volume=%2, Vnode=%3, Unique=%4, Offset=%5, Length=%6).
+.
+
 ;#endif /* __AFSD_EVENTMESSAGES_H_ 1 */
