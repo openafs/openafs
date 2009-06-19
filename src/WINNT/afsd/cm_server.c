@@ -941,6 +941,26 @@ cm_FindServerByIP(afs_uint32 ipaddr, int type)
     return tsp;
 }
 
+cm_server_t *
+cm_FindServerByUuid(afsUUID *serverUuid, int type)
+{
+    cm_server_t *tsp;
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+        if (tsp->type == type && !afs_uuid_equal(&tsp->uuid, serverUuid))
+            break;
+    }
+
+    /* bump ref count if we found the server */
+    if (tsp) 
+        cm_GetServerNoLock(tsp);
+
+    lock_ReleaseRead(&cm_serverLock);
+
+    return tsp;
+}
+
 /* find a server based on its properties */
 cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
 {
