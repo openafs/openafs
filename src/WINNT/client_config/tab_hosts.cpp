@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/cm.h>
 #include <afs/cm_config.h>
 }
 
@@ -180,17 +181,20 @@ BOOL HostsTab_OnApply (HWND hDlg)
          return FALSE;
          }
 
-      if (!CSDB_FindCell (&g.Configuration.CellServDB, szCell))
+      char cellname[256], i;
+
+      /* we pray for all ascii cellnames */
+      for ( i=0 ; szCell[i] && i < (sizeof(cellname)-1) ; i++ )
+          cellname[i] = szCell[i];
+      cellname[i] = '\0';
+
+      ULONG code = cm_SearchCellRegistry(1, cellname, NULL, NULL, NULL, NULL);
+      if (code && 
+          code != CM_ERROR_FORCE_DNS_LOOKUP &&
+          !CSDB_FindCell (&g.Configuration.CellServDB, szCell))
          {
 #ifdef AFS_AFSDB_ENV
              int ttl;
-             char cellname[128], i;
-
-             /* we pray for all ascii cellnames */
-             for ( i=0 ; szCell[i] && i < (sizeof(cellname)-1) ; i++ )
-                 cellname[i] = szCell[i];
-             cellname[i] = '\0';
-
              if (cm_SearchCellByDNS(cellname, NULL, &ttl, NULL, NULL))
 #endif
              {
