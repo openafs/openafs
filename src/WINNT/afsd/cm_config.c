@@ -453,8 +453,6 @@ long cm_SearchCellRegistry(afs_uint32 client,
         }
 
         if ( !bFound ) {
-            if (newCellNamep)
-                newCellNamep[0] = '\0';
             RegCloseKey(hkCellServDB);
             return CM_ERROR_NOSUCHCELL;
         }
