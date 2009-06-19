@@ -292,7 +292,9 @@ void buf_IncrSyncer(long parm)
 	    i = SleepEx(5000, 1);
 	    if (i != 0) 
                 continue;
-	}
+	} else {
+            Sleep(50);
+        }
 
         wasDirty = buf_Sync(1);
     } /* whole daemon's while loop */
@@ -759,7 +761,14 @@ afs_uint32 buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdir
 	 */
 	if (reqp->flags & CM_REQ_NORETRY)
 	    break;
-    };
+
+        /* Ditto if the hardDeadTimeout or idleTimeout was reached */
+        if (code == CM_ERROR_TIMEDOUT || code == CM_ERROR_ALLDOWN ||
+            code == CM_ERROR_ALLBUSY || code == CM_ERROR_ALLOFFLINE ||
+            code == CM_ERROR_CLOCKSKEW) {
+            break;
+        }
+    }
 
     /* if someone was waiting for the I/O that just completed or failed,
      * wake them up.
@@ -1272,7 +1281,7 @@ long buf_CountFreeList(void)
 }
 
 /* clean a buffer synchronously */
-long buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdirty)
+afs_uint32 buf_CleanAsync(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdirty)
 {
     long code;
     osi_assertx(bp->magic == CM_BUF_MAGIC, "invalid cm_buf_t magic");
@@ -1769,6 +1778,15 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                     bp->error = code;
                     bp->dataVersion = CM_BUF_VERSION_BAD;
                     bp->dirtyCounter++;
+                    break;
+                case CM_ERROR_TIMEDOUT:
+                case CM_ERROR_ALLDOWN:
+                case CM_ERROR_ALLBUSY:
+                case CM_ERROR_ALLOFFLINE:
+                case CM_ERROR_CLOCKSKEW:
+                    /* do not mark the buffer in error state but do
+                     * not attempt to complete the rest either.
+                     */
                     break;
                 default:
                     code = buf_CleanAsyncLocked(bp, reqp, &wasDirty);
