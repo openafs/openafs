@@ -91,8 +91,8 @@ static struct afsconf_servPair serviceTable[] = {
 /* Prototypes */
 static afs_int32 afsconf_FindService(register const char *aname);
 static int TrimLine(char *abuffer, int abufsize);
-#ifdef AFS_NT40_ENV
 static int IsClientConfigDirectory(const char *path);
+#ifdef AFS_NT40_ENV
 static int GetCellNT(struct afsconf_dir *adir);
 #endif
 static int afsconf_Check(register struct afsconf_dir *adir);
@@ -271,20 +271,25 @@ TrimLine(char *abuffer, int abufsize)
     return 0;
 }
 
-#ifdef AFS_NT40_ENV
 /*
  * IsClientConfigDirectory() -- determine if path matches well-known
  *     client configuration directory.
  */
+#ifdef AFS_NT40_ENV
+#define IS_SEP(x) ((x) == '\\' || (x) == '/')
+#else /* AFS_NT40_ENV */
+#define IS_SEP(x) ((x) == '/')
+#endif /* AFS_NT40_ENV */
 static int
 IsClientConfigDirectory(const char *path)
 {
     const char *cdir = AFSDIR_CLIENT_ETC_DIRPATH;
-    int i;
+    int i, cc, pc;
 
     for (i = 0; cdir[i] != '\0' && path[i] != '\0'; i++) {
-	int cc = tolower(cdir[i]);
-	int pc = tolower(path[i]);
+#ifdef AFS_NT40_ENV
+	cc = tolower(cdir[i]);
+	pc = tolower(path[i]);
 
 	if (cc == '\\') {
 	    cc = '/';
@@ -292,25 +297,28 @@ IsClientConfigDirectory(const char *path)
 	if (pc == '\\') {
 	    pc = '/';
 	}
-	if (cc != pc) {
+#else /* AFS_NT40_ENV */
+	cc = cdir[i];
+	pc = path[i];
+#endif /* AFS_NT40_ENV */
+        if (cc != pc) {
 	    return 0;
 	}
     }
 
     /* hit end of one or both; allow mismatch in existence of trailing slash */
     if (cdir[i] != '\0') {
-	if ((cdir[i] != '\\' && cdir[i] != '/') || (cdir[i + 1] != '\0')) {
+	if (!IS_SEP(cdir[i]) || (cdir[i + 1] != '\0')) {
 	    return 0;
 	}
     }
     if (path[i] != '\0') {
-	if ((path[i] != '\\' && path[i] != '/') || (path[i + 1] != '\0')) {
+	if (!IS_SEP(path[i]) || (path[i + 1] != '\0')) {
 	    return 0;
 	}
     }
     return 1;
 }
-#endif /* AFS_NT40_ENV */
 
 
 static int
@@ -1216,6 +1224,64 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	    }
 	}
 	acellInfo->timeout = 0;
+
+        /* 
+         * Until we figure out how to separate out ubik server
+         * queries from other server queries, only perform gethostbyname()
+         * lookup on the specified hostnames for the client CellServDB files.
+         */
+        if (IsClientConfigDirectory(adir->name) && 
+            !(acellInfo->flags & AFSCONF_CELL_FLAG_DNS_QUERIED)) {
+            int j;
+            short numServers=0;		                        /*Num active servers for the cell */
+            struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers */
+            char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers */
+
+            memset(&hostAddr, 0, sizeof(hostAddr));
+            memset(&hostName, 0, sizeof(hostName));
+
+            for ( j=0; j<acellInfo->numServers && numServers < MAXHOSTSPERCELL; j++ ) {
+                struct hostent *he = gethostbyname(acellInfo->hostName[j]);
+                int foundAddr = 0;
+
+                if (he && he->h_addrtype == AF_INET) {
+                    int i;
+                    /* obtain all the valid address from the list */
+                    for (i=0 ; he->h_addr_list[i] && numServers < MAXHOSTSPERCELL; i++) {
+                        /* check to see if this is a new address; if so insert it into the list */
+                        int k, dup;
+                        for (k=0, dup=0; !dup && k < numServers; k++) {
+                            if (hostAddr[k].sin_addr.s_addr == *(u_long *)he->h_addr_list[i])
+                                dup = 1;
+                        }
+                        if (dup)
+                            continue;
+
+                        hostAddr[numServers].sin_family = AF_INET;
+                        hostAddr[numServers].sin_port = acellInfo->hostAddr[0].sin_port;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+                        hostAddr[numServers].sin_len = sizeof(struct sockaddr_in);
+#endif
+                        memcpy(&hostAddr[numServers].sin_addr.s_addr, he->h_addr_list[i], sizeof(long));
+                        strcpy(hostName[numServers], acellInfo->hostName[j]);
+                        foundAddr = 1;
+                        numServers++;
+                    }
+                }
+                if (!foundAddr) {
+                    hostAddr[numServers] = acellInfo->hostAddr[j];
+                    strcpy(hostName[numServers], acellInfo->hostName[j]);
+                    numServers++;
+                }
+            }
+
+            for (i=0; i<numServers; i++) {
+                acellInfo->hostAddr[i] = hostAddr[i];
+                strcpy(acellInfo->hostName[i], hostName[i]);
+            }
+            acellInfo->numServers = numServers;
+            acellInfo->flags |= AFSCONF_CELL_FLAG_DNS_QUERIED;
+        }
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
     } else {
