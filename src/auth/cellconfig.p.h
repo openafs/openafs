@@ -69,6 +69,8 @@ struct afsconf_cell {
     int timeout;		/* Data timeout, if non-zero */
 };
 
+#define AFSCONF_CELL_FLAG_DNS_QUERIED   1
+
 struct afsconf_cellalias {
     char aliasName[MAXCELLCHARS];
     char realName[MAXCELLCHARS];
