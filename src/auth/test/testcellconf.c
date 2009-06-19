@@ -67,6 +67,12 @@ main(argc, argv)
     register long code;
     char *dirName;
 
+#ifdef AFS_NT40_ENV
+    WSADATA WSAjunk;
+    /* Start up sockets */
+    WSAStartup(0x0101, &WSAjunk);
+#endif /* AFS_NT40_ENV */
+
     if (argc < 2) {
 	printf
 	    ("usage: testcellconfig <conf-dir-name> [<cell-to-display>]*\n");
