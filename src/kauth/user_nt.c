@@ -22,6 +22,7 @@ RCSID
 #include <stdio.h>		/* sprintf */
 #include <malloc.h>
 #include <afs/kautils.h>
+#include <afs/cm.h>
 #include <afs/cm_config.h>
 #include <afs/krb.h>
 #include <afs/krb_prot.h>
@@ -107,7 +108,9 @@ ka_UserAuthenticateGeneral2(afs_int32 flags, char *name, char *instance,
     if (lifetime == 0)
 	lifetime = MAXKTCTICKETLIFETIME;
 
-    code = cm_SearchCellFile(realm, fullRealm, ka_AddHostProc, NULL);
+    code = cm_SearchCellRegistry(1, realm, fullRealm, NULL, ka_AddHostProc, NULL);
+    if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
+        code = cm_SearchCellFile(realm, fullRealm, ka_AddHostProc, NULL);
 
 #ifdef AFS_AFSDB_ENV
     if (code) {
