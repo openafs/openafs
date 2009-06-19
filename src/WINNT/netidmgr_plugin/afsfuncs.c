@@ -29,11 +29,11 @@
 #pragma warning (push)
 #pragma warning (disable: 4005)
 
-#include<winsock2.h>
 #include<afscred.h>
-#include<afs/cm.h>
 #include<dynimport.h>
 #include<krb5common.h>
+#include<winsock2.h>
+#include<afs/cm.h>
 
 #pragma warning (pop)
 
@@ -1417,7 +1417,7 @@ afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
                                 (void*) cellconfig);
 
     if (linkedCell[0])
-        cellconfig->linkedCell = strdup(linkedCell);
+        cellconfig->linkedCell = _strdup(linkedCell);
 
     return rc;
 }
