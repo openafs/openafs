@@ -29,11 +29,17 @@
 #pragma warning (push)
 #pragma warning (disable: 4005)
 
+#include<winsock2.h>
 #include<afscred.h>
+#include<afs/cm.h>
 #include<dynimport.h>
 #include<krb5common.h>
 
 #pragma warning (pop)
+
+static char *afs_realm_of_cell(afs_conf_cell *, BOOL);
+static long afs_get_cellconfig_callback(void *, struct sockaddr_in *, char *, unsigned short ipRank);
+static int afs_get_cellconfig(char *, afs_conf_cell *, char *);
 
 BOOL
 afs_is_running(void) {
@@ -1382,7 +1388,8 @@ static int
 afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
 {
     int	rc;
-    int ttl;
+    int ttl = 0;
+    char linkedCell[MAXCELLCHARS]="";
 
     local_cell[0] = (char)0;
     memset(cellconfig, 0, sizeof(*cellconfig));
@@ -1397,15 +1404,20 @@ afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
     if (strlen(cell) == 0)
         StringCbCopyA(cell, (MAXCELLCHARS+1) * sizeof(char), local_cell);
 
-    /* WIN32: cm_SearchCellFile(cell, newcell, pcallback, pdata) */
     StringCbCopyA(cellconfig->name, (MAXCELLCHARS+1) * sizeof(char), cell);
 
-    rc = cm_SearchCellFile(cell, NULL, afs_get_cellconfig_callback, 
-                           (void*)cellconfig);
+    rc = cm_SearchCellRegistry(1, cell, NULL, linkedCell, 
+                               afs_get_cellconfig_callback, (void*) cellconfig);
+    if (rc && rc != CM_ERROR_FORCE_DNS_LOOKUP)
+        rc = cm_SearchCellFileEx(cell, NULL, linkedCell, afs_get_cellconfig_callback, 
+                                 (void*)cellconfig);
     if(rc)
         rc = cm_SearchCellByDNS(cell, NULL, &ttl, 
                                 afs_get_cellconfig_callback, 
                                 (void*) cellconfig);
+
+    if (linkedCell[0])
+        cellconfig->linkedCell = strdup(linkedCell);
 
     return rc;
 }
@@ -1416,7 +1428,8 @@ afs_get_cellconfig(char *cell, afs_conf_cell *cellconfig, char *local_cell)
 static long 
 afs_get_cellconfig_callback(void *cellconfig, 
                             struct sockaddr_in *addrp, 
-                            char *namep)
+                            char *namep,
+                            unsigned short ipRank)
 {
     afs_conf_cell *cc = (afs_conf_cell *)cellconfig;
 
