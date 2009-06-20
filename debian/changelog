@@ -3,7 +3,7 @@ openafs (1.4.11~pre1+dfsg1-1) unstable; urgency=low
   * New upstream release candidate.
     - New getpag pioctl to discover a PAG from userspace portably.
     - Allow disabling of syscall probing in the kernel module.
-    - New -maxmtu override switch in afsd to accomodate some VPNs.
+    - New -maxmtu override switch in afsd to accommodate some VPNs.
     - pts client encryption support.
     - Further fixes to address/UUID tracking in the file server.
     - New DocBook-based manuals replacing the old HTML manuals.
