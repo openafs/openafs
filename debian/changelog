@@ -9,6 +9,7 @@ openafs (1.4.11~pre1+dfsg1-1) unstable; urgency=low
     - New DocBook-based manuals replacing the old HTML manuals.
     - New Doxygen-based protocol reference replacing the old PDF files.
     - Man pages for remaining AFS subcommands.
+  * Update standards version to 3.8.2 (no changes required).
 
  -- Russ Allbery <rra@debian.org>  Wed, 17 Jun 2009 13:32:31 -0700
 
