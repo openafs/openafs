@@ -281,9 +281,14 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     code = inode_change_ok(inode, &newattrs);
     if (!code)
 #ifdef INODE_SETATTR_NOT_VOID
-	code = inode_setattr(inode, &newattrs);
+#if defined(AFS_LINUX26_ENV)
+	if (inode->i_op && inode->i_op->setattr)
+	    code = inode->i_op->setattr(afile->filp->f_dentry, &newattrs);
+	else
+#endif
+	    code = inode_setattr(inode, &newattrs);
 #else
-	inode_setattr(inode, &newattrs);
+        inode_setattr(inode, &newattrs);
 #endif
     unlock_kernel();
     if (!code)
