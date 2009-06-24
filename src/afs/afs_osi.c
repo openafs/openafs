@@ -843,7 +843,7 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 void
 afs_osi_TraverseProcTable()
 {
-#if !defined(LINUX_KEYRING_SUPPORT)
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
     struct task_struct *p;
 
 #if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
@@ -1110,6 +1110,7 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return rv;
 }
 #elif defined(AFS_LINUX22_ENV)
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
 const struct AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
@@ -1142,6 +1143,7 @@ afs_osi_proc2cred(AFS_PROC * pr)
 
     return rv;
 }
+#endif
 #else
 const struct AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)

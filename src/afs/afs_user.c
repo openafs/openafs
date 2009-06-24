@@ -552,7 +552,7 @@ afs_SetPrimary(register struct unixuser *au, register int aflag)
 }				/*afs_SetPrimary */
 
 
-#if AFS_GCPAGS
+#if defined(AFS_GCPAGS)
 
 /*
  * Called by osi_TraverseProcTable (from afs_GCPAGs) for each 
@@ -581,6 +581,7 @@ static size_t afs_GCPAGs_cred_count = 0;
 /*
  * LOCKS: afs_GCPAGs_perproc_func requires write lock on afs_xuser
  */
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
 void
 afs_GCPAGs_perproc_func(AFS_PROC * pproc)
 {
@@ -629,6 +630,7 @@ afs_GCPAGs_perproc_func(AFS_PROC * pproc)
 	}
     }
 }
+#endif
 
 /*
  * Go through the process table, find all unused PAGs 
