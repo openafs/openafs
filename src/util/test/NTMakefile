@@ -14,14 +14,20 @@ LIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib
 
 $(OUT)\dirpath_test.exe: $(OUT)\dirpath_test.obj $(LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
 
-test tests: $(OUT)\dirpath_test.exe
+$(OUT)\snprintf_test.exe: $(OUT)\snprintf_test.obj $(LIBS)
+	$(EXECONLINK) shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+        $(CODESIGN_USERLAND)
+
+test tests: $(OUT)\dirpath_test.exe  $(OUT)\snprintf_test.exe
 
 clean::
-	$(DEL) $(OUT)\dirpath_test.exe
+	$(DEL) $(OUT)\dirpath_test.*
+        $(DEL) $(OUT)\snprintf_test.*
 
 mkdir:
 	

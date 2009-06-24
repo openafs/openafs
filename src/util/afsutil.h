@@ -56,17 +56,28 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
     /*@requires maxSet(p) >= (avail-1)@ */
     /*@modifies p@ */ ;
 
-     extern /*@printflike@ */ int
-       afs_snprintf( /*@out@ */ char *p, size_t avail,
+extern /*@printflike@ */ int
+afs_snprintf( /*@out@ */ char *p, size_t avail,
 		    const char *fmt, ...)
     /*@requires maxSet(p) >= (avail-1)@ */
     /*@modifies p@ */ ;
 
+extern int
+afs_vasnprintf (char **ret, size_t max_sz, const char *format, va_list args);
+
+extern int
+afs_vasprintf (char **ret, const char *format, va_list args);
+
+extern int
+afs_asprintf (char **ret, const char *format, ...);
+
+extern int
+afs_asnprintf (char **ret, size_t max_sz, const char *format, ...);
 
 /* special version of ctime that clobbers a *different static variable, so
  * that ViceLog can call ctime and not cause buffer confusion.
  */
-     extern char *vctime(const time_t * atime);
+extern char *vctime(const time_t * atime);
 
 /* Need a thead safe ctime for pthread builds. Use std ctime for LWP */
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
