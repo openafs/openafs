@@ -622,7 +622,7 @@ extern "C" {
 	const struct htaccess_result *next;
     };
 
-    typedef struct conn_rec conn_rec;
+    typedef struct afs_conn_rec conn_rec;
     typedef struct server_rec server_rec;
     typedef struct request_rec request_rec;
     typedef struct listen_rec listen_rec;
@@ -784,7 +784,7 @@ extern "C" {
 /* Things which are per connection
  */
 
-    struct conn_rec {
+    struct afs_conn_rec {
 
 	ap_pool *pool;
 	server_rec *server;

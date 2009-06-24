@@ -41,7 +41,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 {
     struct vrequest treq;
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct VenusFid newFid;
     register struct dcache *tdc;
     afs_size_t offset, len;
@@ -176,7 +176,7 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     register struct dcache *tdc;
     register struct vcache *tvc = NULL;
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     afs_size_t offset, len;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;

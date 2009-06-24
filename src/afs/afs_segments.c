@@ -40,7 +40,7 @@ afs_uint32 afs_stampValue = 0;
 int
 afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 {
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
@@ -305,7 +305,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    int nomore;
 	    unsigned int first = 0;
 	    int *shouldwake;
-	    struct conn *tc;
+	    struct afs_conn *tc;
 	    struct osi_file *tfile;
 	    struct rx_call *tcall;
 	    XSTATS_DECLS;

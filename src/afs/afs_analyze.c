@@ -323,7 +323,7 @@ static int
 VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 {
     struct vrequest treq;
-    struct conn *tconn;
+    struct afs_conn *tconn;
     int i, type = 0;
     union {
 	struct vldbentry tve;
@@ -537,7 +537,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
  *	if this is a temporary or permanent error.
  *------------------------------------------------------------------------*/
 int
-afs_Analyze(register struct conn *aconn, afs_int32 acode,
+afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    struct VenusFid *afid, register struct vrequest *areq, int op,
 	    afs_int32 locktype, struct cell *cellp)
 {

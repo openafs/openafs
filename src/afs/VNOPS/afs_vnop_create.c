@@ -45,7 +45,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct VenusFid newFid;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;

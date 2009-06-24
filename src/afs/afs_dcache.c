@@ -1514,7 +1514,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     struct tlocal1 *tsmall = 0;
     register struct dcache *tdc;
     register struct osi_file *file;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     int downDCount = 0;
     struct server *newCallback = NULL;
     char setNewCallback;

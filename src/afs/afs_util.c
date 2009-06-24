@@ -302,7 +302,7 @@ afs_CheckLocks(void)
     {
 	struct srvAddr *sa;
 	struct server *ts;
-	struct conn *tc;
+	struct afs_conn *tc;
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)

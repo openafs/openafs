@@ -105,7 +105,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	  struct vrequest *treqp)
 {
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS;

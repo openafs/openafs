@@ -36,7 +36,7 @@ int
 afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	  char *aname2, struct AFS_UCRED *acred, struct vrequest *areq)
 {
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code;
     afs_int32 returnCode;
     int oneDir, doLocally;
