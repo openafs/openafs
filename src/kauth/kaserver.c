@@ -161,6 +161,7 @@ main(int argc, char *argv[])
     afs_int32 i;
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = ntohl(INADDR_ANY);
+    char *auditFileName = NULL;
 
     struct rx_service *tservice;
     struct rx_securityClass *sca[1];
@@ -192,9 +193,9 @@ main(int argc, char *argv[])
     if (argc == 0) {
       usage:
 	printf("Usage: kaserver [-noAuth] [-fastKeys] [-database <dbpath>] "
-	       "[-auditlog <log path>] [-rxbind] "
-	       "[-localfiles <lclpath>] [-minhours <n>] [-servers <serverlist>] "
-	       "[-crossrealm]"
+	       "[-auditlog <log path>] [-audit-interface <file|sysvmq>] "
+	       "[-rxbind] [-localfiles <lclpath>] [-minhours <n>] "
+	       "[-servers <serverlist>] [-crossrealm] "
 	       /*" [-enable_peer_stats] [-enable_process_stats] " */
 	       "[-help]\n");
 	exit(1);
@@ -238,9 +239,16 @@ main(int argc, char *argv[])
 		lclpath = dbpath;
 	}
 	else if (strncmp(arg, "-auditlog", arglen) == 0) {
-	    char *fileName = argv[++a];
+	    auditFileName = argv[++a];
+
+	} else if (strncmp(arg, "-audit-interface", arglen) == 0) {
+	    char *interface = argv[++a];
+
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		exit(1);
+	    }
 	    
-	    osi_audit_file(fileName);
 	} else if (strcmp(arg, "-localfiles") == 0)
 	    lclpath = argv[++a];
 	else if (strcmp(arg, "-servers") == 0)
@@ -282,6 +290,11 @@ main(int argc, char *argv[])
 	    goto usage;
 	}
     }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
+    }
+
     if ((code = ka_CellConfig(cellservdb)))
 	goto abort;
     cell = ka_LocalCell();

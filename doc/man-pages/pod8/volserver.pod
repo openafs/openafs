@@ -8,6 +8,7 @@ volserver - Initializes the Volume Server component of the fs process
 <div class="synopsis">
 
 B<volserver> [B<-log>] S<<< [B<-p> <I<number of processes>>] >>>
+    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
     S<<< [B<-udpsize> <I<size of socket buffer in bytes>>] >>>
     S<<< [B<-d> <I<debug level>>] >>>
     [B<-nojumbo>] [B<-jumbo>] 
@@ -65,6 +66,15 @@ B<-f> flag.
 
 Sets the number of server lightweight processes (LWPs) to run.  Provide an
 integer between C<4> and C<16>. The default is C<9>.
+
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
 
 =item B<-udpsize> <I<size of socket buffer>>
 

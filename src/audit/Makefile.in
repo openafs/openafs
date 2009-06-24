@@ -29,13 +29,19 @@ ${TOP_LIBDIR}/libaudit.a: libaudit.a
 ${TOP_INCDIR}/afs/audit.h: audit.h
 	${INSTALL_DATA} $? $@
 
-libaudit.a: audit.o AFS_component_version_number.o
+libaudit.a: audit.o audit-file.o audit-sysvmq.o AFS_component_version_number.o
 	$(RM) -f libaudit.a
-	ar r libaudit.a audit.o AFS_component_version_number.o
+	ar r libaudit.a audit.o audit-file.o audit-sysvmq.o AFS_component_version_number.o
 	$(RANLIB) libaudit.a
 
-audit.o: audit.c audit.h 
+audit.o: audit.c audit.h audit-api.h
 	${CC} ${CFLAGS} -c ${srcdir}/audit.c
+
+audit-file.o: audit-file.c audit.h audit-api.h
+	${CC} ${CFLAGS} -c ${srcdir}/audit-file.c
+
+audit-sysvmq.o: audit-sysvmq.c audit.h audit-api.h
+	${CC} ${CFLAGS} -c ${srcdir}/audit-sysvmq.c
 
 # XXX-INST: where to install the AIX audit files?
 install: audit.h libaudit.a

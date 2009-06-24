@@ -141,6 +141,7 @@ main(int argc, char **argv)
     int noAuth = 0, index, i;
     char commandLine[150];
     char clones[MAXHOSTSPERCELL];
+    char *auditFileName = NULL;
     afs_uint32 host = ntohl(INADDR_ANY);
 
 #ifdef	AFS_AIX32_ENV
@@ -208,10 +209,17 @@ main(int argc, char **argv)
 	    extern char rxi_tracename[80];
 	    strcpy(rxi_tracename, argv[++index]);
 
-       } else if (strcmp(argv[index], "-auditlog") == 0) {
-           char *fileName = argv[++index];
+	} else if (strcmp(argv[index], "-auditlog") == 0) {
+	    auditFileName = argv[++index];
 
-           osi_audit_file(fileName);
+	} else if (strcmp(argv[index], "-audit-interface") == 0) {
+	    char *interface = argv[++index];
+
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		return -1;
+	    }
+
 	} else if (strcmp(argv[index], "-enable_peer_stats") == 0) {
 	    rx_enablePeerRPCStats();
 	} else if (strcmp(argv[index], "-enable_process_stats") == 0) {
@@ -243,6 +251,10 @@ main(int argc, char **argv)
 	    fflush(stdout);
 	    exit(0);
 	}
+    }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
     }
 
     /* Initialize dirpaths */

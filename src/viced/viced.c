@@ -731,6 +731,7 @@ PrintCounters(void)
 	    ("With %d directory buffers; %d reads resulted in %d read I/Os\n",
 	     dirbuff, dircall, dirio));
     rx_PrintStats(stderr);
+    audit_PrintStats(stderr);
     h_PrintStats();
     PrintCallBackStats();
 #ifdef AFS_NT40_ENV
@@ -878,6 +879,7 @@ FlagMsg(void)
 
     fputs("Usage: fileserver ", stdout);
     fputs("[-auditlog <log path>] ", stdout);
+    fputs("[-audit-interface <file|sysvmq> (default is file)] ", stdout);
     fputs("[-d <debug level>] ", stdout);
     fputs("[-p <number of processes>] ", stdout);
     fputs("[-spare <number of spare blocks>] ", stdout);
@@ -1043,6 +1045,7 @@ ParseArgs(int argc, char *argv[])
     int Sawbusy = 0;
     int i;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
+    char *auditFileName = NULL;
 
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-d")) {
@@ -1350,9 +1353,15 @@ ParseArgs(int argc, char *argv[])
 	    rx_enableProcessRPCStats();
 	}
 	else if (strcmp(argv[i], "-auditlog") == 0) {
-	    char *fileName = argv[++i];
+	    auditFileName = argv[++i];
+	}
+	else if (strcmp(argv[i], "-audit-interface") == 0) {
+	    char *interface = argv[++i];
 
-            osi_audit_file(fileName);
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		return -1;
+	    }
 	}
 #ifndef AFS_NT40_ENV
 	else if (strcmp(argv[i], "-syslog") == 0) {
@@ -1412,6 +1421,8 @@ ParseArgs(int argc, char *argv[])
     }
     if (!Sawbusy)
 	busy_threshold = 3 * rxpackets / 2;
+    if (auditFileName)
+	osi_audit_file(auditFileName);
 
     return (0);
 

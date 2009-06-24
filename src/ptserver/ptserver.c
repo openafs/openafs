@@ -225,6 +225,8 @@ main(int argc, char **argv)
     int a;
     char arg[100];
 
+    char *auditFileName = NULL;
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -329,10 +331,14 @@ main(int argc, char **argv)
 	}
 #endif
 	else if (strncmp(arg, "-auditlog", alen) == 0) {
-	    char *fileName = argv[++a];
+	    auditFileName = argv[++a];
 
-            osi_audit_file(fileName);
-            osi_audit(PTS_StartEvent, 0, AUD_END);
+	} else if (strncmp(arg, "-audit-interface", alen) == 0) {
+	    char *interface = argv[++a];
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		PT_EXIT(1);
+	    }
 	}
 	else if (!strncmp(arg, "-rxmaxmtu", alen)) {
 	    if ((a + 1) >= argc) {
@@ -355,6 +361,7 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
 		   "[-syslog[=FACILITY]] [-d <debug level>] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
@@ -365,7 +372,9 @@ main(int argc, char **argv)
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
+		   "[-auditlog <log path>] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
+		   "[-d <debug level>] "
 		   "[-p <number of processes>] [-rebuild] [-rxbind] "
 		   "[-allow-dotted-principals] "
 		   "[-default_access default_user_access default_group_access] "
@@ -375,7 +384,9 @@ main(int argc, char **argv)
 #else
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] [-d <debug level>] "
+		   "[-auditlog <log path>] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
+		   "[-d <debug level>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -401,6 +412,11 @@ main(int argc, char **argv)
 	    fprintf(stderr, "Unrecognized arg: '%s' ignored!\n", arg);
 	}
 #endif
+    }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
+	osi_audit(PTS_StartEvent, 0, AUD_END);
     }
 
 #ifndef AFS_NT40_ENV

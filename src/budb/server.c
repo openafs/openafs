@@ -175,6 +175,8 @@ initializeArgHandler(void)
     cmd_AddParm(cptr, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"bind the Rx socket (primary interface only)");
 
+    cmd_AddParm(cptr, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
+		"audit interface (file or sysvmq)");
 }
 
 int
@@ -226,11 +228,7 @@ argHandler(struct cmd_syndesc *as, void *arock)
     else
 	ubik_nBuffers = 0;
 
-    if (as->parms[7].items != 0) {
-	char *fileName = as->parms[7].items->data;
-
-        osi_audit_file(fileName);
-    }
+    /* param 7 (-auditlog) handled below */
 
     /* user provided the number of threads    */
     if (as->parms[8].items != 0) {
@@ -250,6 +248,25 @@ argHandler(struct cmd_syndesc *as, void *arock)
     /* user provided rxbind option    */
     if (as->parms[9].items != 0) {
 	rxBind = 1;
+    }
+
+    /* -audit-interface */
+    if (as->parms[10].items != 0) {
+	char *interface = as->parms[10].items->data;
+
+	if (osi_audit_interface(interface)) {
+	    printf("Invalid audit interface '%s'\n", interface);
+	    BUDB_EXIT(-1);
+	}
+    }
+
+    /* -auditlog */
+    /* needs to be after -audit-interface, so we osi_audit_interface
+     * before we osi_audit_file */
+    if (as->parms[7].items != 0) {
+	char *fileName = as->parms[7].items->data;
+
+        osi_audit_file(fileName);
     }
 
     return 0;

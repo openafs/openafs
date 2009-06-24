@@ -27,7 +27,7 @@ RXKAD = ../rxkad
 PTSERVER = ../ptserver
 SYS = ../sys
 
-AUDITOBJS = audit.o
+AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
 
 AUTHOBJS = \
 	cellconfig.o \
@@ -110,6 +110,12 @@ libafsauthent.a: ${LIBOBJS}
 	$(RANLIB) $@
 
 audit.o: ${AUDIT}/audit.c
+	${CCRULE}
+
+audit-file.o: ${AUDIT}/audit-file.c
+	${CCRULE}
+
+audit-sysvmq.o: ${AUDIT}/audit-sysvmq.c
 	${CCRULE}
 
 cellconfig.o: ${AUTH}/cellconfig.c

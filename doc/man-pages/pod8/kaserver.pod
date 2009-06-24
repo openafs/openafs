@@ -8,6 +8,7 @@ kaserver - Initializes the Authentication Server
 <div class="synopsis">
 
 B<kaserver> [B<-noAuth>] [B<-fastKeys>] [B<-database> <I<dbpath>>]
+    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
     S<<< [B<-localfiles> <I<lclpath>>] >>> S<<< [B<-minhours> <I<n>>] >>>
     S<<< [B<-servers> <I<serverlist>>] >>> [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-help>]
@@ -90,6 +91,15 @@ files is F</usr/afs/db/kaserver>.
 Provide the B<-localfiles> argument along with this one; otherwise, the
 B<-localfiles> argument is also set to the value of this argument, which
 is probably inappropriate.
+
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
 
 =item B<-localfiles> <I<lclpath>>
 

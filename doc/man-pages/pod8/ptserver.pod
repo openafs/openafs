@@ -13,6 +13,7 @@ B<ptserver> S<<< [B<-database> | B<-db> <I<db path>>] >>> S<<< [B<-p> <I<number 
     [B<-restricted>] [B<-enable_peer_stats>]
     [B<-enable_process_stats>] [B<-allow-dotted-principals>]
     [B<-rxbind>] S<<< [B<-auditlog> <I<file path>>] >>>
+    S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-syslog>[=<I<FACILITY>>]] >>> S<<< [B<-rxmaxmtu> <I<bytes>>] >>>
     [B<-help>]
 
@@ -150,9 +151,14 @@ log file.  B<-syslog>=I<FACILITY> can be used to specify to which facility
 the log message should be sent.  Logging message sent to syslog are tagged
 with the string "ptserver".
 
-=item B<-auditlog> <I<file path>>
+=item B<-auditlog> <I<log path>>
 
-Specifies the full pathname for the B<AuditLog> file.
+Turns on audit logging, and sets the path for the audit log.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
 
 =item B<-rxmaxmtu> <I<bytes>>
 

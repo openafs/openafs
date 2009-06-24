@@ -8,6 +8,7 @@ fileserver - Initializes the File Server component of the fs process
 <div class="synopsis">
 
 B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
+    S<<< [B<-audit-interface> (file | sysvmq)] >>>
     S<<< [B<-d> <I<debug level>>] >>>
     S<<< [B<-p> <I<number of processes>>] >>>
     S<<< [B<-spare> <I<number of spare blocks>>] >>>
@@ -256,6 +257,17 @@ length.
 =item B<-auditlog> <I<log path>>
 
 Set and enable auditing.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. The C<file> interface writes audit
+messages to the file passed to B<-auditlog>. The C<sysvmq> interface
+writes audit messages to a SYSV message (see L<msgget(2)> and
+L<msgrcv(2)>). The message queue the C<sysvmq> interface writes to has the
+key C<ftok(path, 1)>, where C<path> is the path specified in the
+B<-auditlog> option.
+
+Defaults to C<file>.
 
 =item B<-d> <I<debug level>>
 

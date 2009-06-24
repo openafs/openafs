@@ -9,6 +9,7 @@ vlserver - Initializes the Volume Location Server
 
 B<vlserver> S<<< [B<-p> <I<number of threads>>] >>> [B<-nojumbo>] [B<-jumbo>] [B<-rxbind>] S<<< [B<-d> <I<debug level>>] >>>
     [B<-allow-dotted-principals>] [B<-enable_peer_stats>] [B<-enable_process_stats>] 
+	 S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
     [B<-help>]
 
 =for html
@@ -103,6 +104,15 @@ the confusion where principals user/admin and user.admin are both mapped to the
 user.admin PTS entry. Sites whose Kerberos realms don't have these collisions 
 between principal names may disable this check by starting the server
 with this option.
+
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
 
 =item B<-rxbind>
 

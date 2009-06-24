@@ -245,6 +245,7 @@ main(int argc, char **argv)
     int rxMaxMTU = -1;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
     afs_uint32 host = ntohl(INADDR_ANY);
+    char *auditFileName = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -308,10 +309,15 @@ main(int argc, char **argv)
 		lwps = MAXLWP;
 	    }
 	} else if (strcmp(argv[code], "-auditlog") == 0) {
-	    char *fileName = argv[++code];
+	    auditFileName = argv[++code];
 
-            osi_audit_file(fileName);
-            osi_audit(VS_StartEvent, 0, AUD_END);
+	} else if (strcmp(argv[code], "-audit-interface") == 0) {
+	    char *interface = argv[++code];
+
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		return -1;
+	    }
 	} else if (strcmp(argv[code], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
 	} else if (strcmp(argv[code], "-jumbo") == 0) {
@@ -383,6 +389,11 @@ main(int argc, char **argv)
 #endif
 	    VS_EXIT(1);
 	}
+    }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
+	osi_audit(VS_StartEvent, 0, AUD_END);
     }
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {

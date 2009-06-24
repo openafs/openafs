@@ -726,6 +726,7 @@ main(int argc, char **argv, char **envp)
     char namebuf[AFSDIR_PATH_MAX];
     int rxMaxMTU = -1;
     afs_uint32 host = htonl(INADDR_ANY);
+    char *auditFileName = NULL;
 #ifndef AFS_NT40_ENV
     int nofork = 0;
     struct stat sb;
@@ -841,9 +842,15 @@ main(int argc, char **argv, char **envp)
 	    }
 	}
 	else if (strcmp(argv[code], "-auditlog") == 0) {
-	    char *fileName = argv[++code];
+	    auditFileName = argv[++code];
 
-            osi_audit_file(fileName);
+	} else if (strcmp(argv[code], "-audit-interface") == 0) {
+	    char *interface = argv[++code];
+
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		exit(1);
+	    }
 	}
 	else {
 
@@ -852,6 +859,7 @@ main(int argc, char **argv, char **envp)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
+		   "[-audit-interafce <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -859,6 +867,7 @@ main(int argc, char **argv, char **envp)
 #else
 	    printf("Usage: bosserver [-noauth] [-log] "
 		   "[-auditlog <log path>] "
+		   "[-audit-interafce <file|sysvmq> (default is file)] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals]"
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
@@ -867,6 +876,9 @@ main(int argc, char **argv, char **envp)
 
 	    exit(0);
 	}
+    }
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
     }
 
 #ifndef AFS_NT40_ENV
