@@ -683,6 +683,7 @@ afs_xioctl(void)
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     return (code);
 #endif
+return 0;
 }
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_HPUX102_ENV */
