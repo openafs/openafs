@@ -552,7 +552,7 @@ afs_SetPrimary(register struct unixuser *au, register int aflag)
 }				/*afs_SetPrimary */
 
 
-#if defined(AFS_GCPAGS)
+#if AFS_GCPAGS
 
 /*
  * Called by osi_TraverseProcTable (from afs_GCPAGs) for each 
