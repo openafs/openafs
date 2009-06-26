@@ -1733,6 +1733,12 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
             cm_volume_t * volp = cm_GetVolumeByFID(&scp->fid);
             if (volp) {
                 volp->cbExpiresRO = scp->cbExpires;
+                if (volp->cbServerpRO != scp->cbServerp) {
+                    if (volp->cbServerpRO)
+                        cm_PutServer(volp->cbServerpRO);
+                    cm_GetServer(scp->cbServerp);
+                    volp->cbServerpRO = scp->cbServerp;
+                }
                 cm_PutVolume(volp);
             }
         }
@@ -1931,6 +1937,12 @@ void cm_CheckCBExpiration(void)
                         scp->cbExpires > 0) 
                     {
                         scp->cbExpires = volp->cbExpiresRO;
+                        if (volp->cbServerpRO != scp->cbServerp) {
+                            if (scp->cbServerp)
+		                cm_PutServer(scp->cbServerp);
+			    cm_GetServer(volp->cbServerpRO);
+			    scp->cbServerp = volp->cbServerpRO;
+                        }
                     }        
                     cm_PutVolume(volp);
                 }

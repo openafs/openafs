@@ -72,6 +72,7 @@ cm_ShutdownVolume(void)
                 cm_VolumeStatusNotification(volp, volp->vol[volType].ID, volp->vol[volType].state, vl_alldown);
         }
         volp->cbExpiresRO = 0;
+        volp->cbServerpRO = NULL;
         lock_FinalizeRWLock(&volp->rw);
     }
 
@@ -110,6 +111,7 @@ void cm_InitVolume(int newFile, long maxVols)
                         cm_VolumeStatusNotification(volp, volp->vol[volType].ID, vl_unknown, volp->vol[volType].state);
                 }
                 volp->cbExpiresRO = 0;
+                volp->cbServerpRO = NULL;
             }
         }
         osi_EndOnce(&once);
@@ -927,6 +929,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
             volp->vol[volType].flags = 0;
         }
         volp->cbExpiresRO = 0;
+        volp->cbServerpRO = NULL;
         cm_AddVolumeToNameHashTable(volp);
         lock_ReleaseWrite(&cm_volumeLock);
     }
