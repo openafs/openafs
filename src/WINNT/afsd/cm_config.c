@@ -281,21 +281,39 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                 valuep[strlen(valuep) - 1] = '\0';
 
 	    if (inRightCell) {
+                char hostname[256];
+                int  i, isClone = 0;
+
+                isClone = (lineBuffer[0] == '[');
+
+                /* copy just the first word and ignore trailing white space */
+                for ( i=0; valuep[i] && !isspace(valuep[i]) && i<sizeof(hostname); i++)
+                    hostname[i] = valuep[i];
+                valuep[i] = '\0';
+
 		/* add the server to the VLDB list */
                 WSASetLastError(0);
-                thp = gethostbyname(valuep);
+                thp = gethostbyname(hostname);
 #ifdef CELLSERV_DEBUG
 		osi_Log3(afsd_logp,"cm_searchfile inRightCell thp[%p], valuep[%s], WSAGetLastError[%d]",
-			 thp, osi_LogSaveString(afsd_logp,valuep), WSAGetLastError());
+			 thp, osi_LogSaveString(afsd_logp,hostname), WSAGetLastError());
 #endif
 		if (thp) {
-		    memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
-                            sizeof(long));
-                    vlSockAddr.sin_family = AF_INET;
-                    /* sin_port supplied by connection code */
-		    if (procp)
-			(*procp)(rockp, &vlSockAddr, valuep, 0);
-                    foundCell = 1;
+                    int foundAddr = 0;
+                    for (i=0 ; thp->h_addr_list[i]; i++) {
+                        if (thp->h_addrtype != AF_INET)
+                            continue;
+                        memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr_list[i],
+                               sizeof(long));
+                        vlSockAddr.sin_family = AF_INET;
+                        /* sin_port supplied by connection code */
+                        if (procp)
+                            (*procp)(rockp, &vlSockAddr, hostname, 0);
+                        foundAddr = 1;
+                    }
+                    /* if we didn't find a valid address, force the use of the specified one */
+                    if (!foundAddr)
+                        thp = NULL;
 		}
                 if (!thp) {
                     afs_uint32 ip_addr;
@@ -305,8 +323,12 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
 		     * available we will read the IP address
 		     * stored in the CellServDB file
                      */
-                    code = sscanf(lineBuffer, " %u.%u.%u.%u",
-                                   &c1, &c2, &c3, &c4);
+                    if (isClone)
+                        code = sscanf(lineBuffer, "[%u.%u.%u.%u]",
+                                      &c1, &c2, &c3, &c4);
+                    else
+                        code = sscanf(lineBuffer, " %u.%u.%u.%u",
+                                      &c1, &c2, &c3, &c4);
                     if (code == 4 && c1<256 && c2<256 && c3<256 && c4<256) {
                         tp = (unsigned char *) &ip_addr;
                         *tp++ = c1;
@@ -318,10 +340,10 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                         vlSockAddr.sin_family = AF_INET;
                         /* sin_port supplied by connection code */
                         if (procp)
-                            (*procp)(rockp, &vlSockAddr, valuep, 0);
-                        foundCell = 1;
+                            (*procp)(rockp, &vlSockAddr, hostname, 0);
                     }
                 }
+                foundCell = 1;
             }
         }	/* a vldb line */
     }		/* while loop processing all lines */
