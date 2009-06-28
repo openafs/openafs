@@ -162,10 +162,6 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
     cm_scache_t *scp;
     long hash;
         
-    /* don't bother setting cell, since we won't be checking it (to aid
-     * in working with multi-homed servers: we don't know the cell if we
-     * don't recognize the IP address).
-     */
     tfid.cell = cellp ? cellp->cellID : 0;
     tfid.volume = fidp->Volume;
     tfid.vnode = fidp->Vnode;
@@ -1053,7 +1049,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
                 discarded = 0;
                 if (scp->cbExpires > 0 && scp->cbServerp != NULL) {
                     /* we have a callback, now decide if we should clear it */
-                    if (scp->cbServerp == tsp) {
+                    if (cm_ServerEqual(scp->cbServerp, tsp)) {
                         osi_Log4(afsd_logp, "InitCallbackState3 Discarding SCache scp 0x%p vol %u vn %u uniq %u", 
                                   scp, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
                         cm_DiscardSCache(scp);
@@ -1656,7 +1652,7 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
     /* record the callback; we'll clear it below if we really lose it */
     if (cbrp) {
 	if (scp) {
-            if (scp->cbServerp != cbrp->serverp) {
+            if (!cm_ServerEqual(scp->cbServerp, cbrp->serverp)) {
                 serverp = scp->cbServerp;
                 if (!freeFlag)
                     cm_GetServer(cbrp->serverp);
@@ -1903,7 +1899,7 @@ long cm_CBServersUp(cm_scache_t *scp, time_t * downTime)
     for (found = 0,tsrp = statep->serversp; tsrp; tsrp=tsrp->next) {
         if (tsrp->status == srv_deleted)
             continue;
-        if (tsrp->server == scp->cbServerp)
+        if (cm_ServerEqual(tsrp->server, scp->cbServerp))
             found = 1;
         if (tsrp->server->downTime > *downTime)
             *downTime = tsrp->server->downTime;
