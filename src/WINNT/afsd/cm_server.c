@@ -1376,5 +1376,30 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
     return (0);     
 }
 
+/* 
+ * Determine if two servers are in fact the same.
+ *
+ * Returns 1 if they match, 0 if they do not 
+ */
+int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2)
+{
+    RPC_STATUS status;
 
+    if (srv1 == NULL || srv2 == NULL)
+        return 0;
+
+    if (srv1 == srv2)
+        return 1;
+
+    if (srv1->flags & CM_SERVERFLAG_UUID) {
+        if (!(srv2->flags & CM_SERVERFLAG_UUID))
+            return 0;
+
+        /* Both support UUID */
+        if (UuidEqual((UUID *)&srv1->uuid, (UUID *)&srv2->uuid, &status))
+            return 1;
+    } 
+    
+    return 0;
+}
 
