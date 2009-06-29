@@ -509,7 +509,7 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
 // dos drive letter to which the source is mapped.
 //
 static BOOL
-DriveSubstitution(char *drivestr, char *subststr)
+DriveSubstitution(char *drivestr, char *subststr, size_t substlen)
 {
     char device[MAX_PATH];
 
@@ -525,7 +525,7 @@ DriveSubstitution(char *drivestr, char *subststr)
             device[0] = device[4];
             device[1] = ':';
             device[2] = '\0';
-            if ( DriveSubstitution(device, subststr) )
+            if ( DriveSubstitution(device, subststr, substlen) )
             {
                 return TRUE;
             } else {
@@ -534,6 +534,20 @@ DriveSubstitution(char *drivestr, char *subststr)
                 subststr[2] = '\0';
                 return TRUE;
             }
+        } else 
+        if ( device[0] == '\\' &&
+             device[1] == '?' &&
+             device[2] == '?' &&
+             device[3] == '\\' &&
+             device[4] == 'U' &&
+             device[5] == 'N' &&
+             device[6] == 'C' &&
+             device[7] == '\\')
+        {
+             subststr[0] = '\\';
+             strncpy(&subststr[1], &device[7], substlen-1);
+             subststr[substlen-1] = '\0';
+             return TRUE;
         }
     }
 
@@ -553,15 +567,23 @@ DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
     LPNETRESOURCE lpnrLocal;    // pointer to enumerated structures
     DWORD i;
     BOOL  bIsAFS = FALSE;
-    char  subststr[3];
+    char  subststr[MAX_PATH];
 
     //
     // Handle drive letter substitution created with "SUBST <drive> <path>".
     // If a substitution has occurred, use the target drive letter instead
     // of the source.
     //
-    if ( DriveSubstitution(drivestr, subststr) )
+    if ( DriveSubstitution(drivestr, subststr, MAX_PATH) )
     {
+        if (subststr[0] == '\\' &&
+            subststr[1] == '\\') 
+        {
+            if (_strnicmp( &subststr[2], NetbiosName, strlen(NetbiosName)) == 0)
+                return TRUE;
+            else
+                return FALSE;
+        }
         drivestr = subststr;
     }
 
