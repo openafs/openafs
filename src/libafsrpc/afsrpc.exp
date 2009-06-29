@@ -165,3 +165,4 @@ RXAFS_Lookup
 RXAFS_FlushCPS
 RXAFS_DFSSymlink
 RXAFSCB_function_names
+RXAFS_FsCmd
