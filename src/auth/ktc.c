@@ -1621,7 +1621,7 @@ ktc_curpag(void)
     afs_int32 pag;
 
     /* now setup for the pioctl */
-    iob.in = -1;
+    iob.in = NULL;
     iob.in_size = 0;
     iob.out = &pag;
     iob.out_size = sizeof(afs_int32);
