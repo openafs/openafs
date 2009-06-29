@@ -45,7 +45,7 @@ int cm_bkgWaitingForCount;	/* true if someone's waiting for cm_bkgQueueCount to 
 cm_bkgRequest_t *cm_bkgListp;		/* first elt in the list of requests */
 cm_bkgRequest_t *cm_bkgListEndp;	/* last elt in the list of requests */
 
-static int daemon_ShutdownFlag = 0;
+int daemon_ShutdownFlag = 0;
 static int cm_nDaemons = 0;
 static time_t lastIPAddrChange = 0;
 

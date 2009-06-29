@@ -1297,9 +1297,10 @@ void cm_CheckOfflineVolumes(void)
 {
     cm_volume_t *volp;
     afs_int32 refCount;
+    extern int daemon_ShutdownFlag;
 
     lock_ObtainRead(&cm_volumeLock);
-    for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
+    for (volp = cm_data.allVolumesp; volp && !daemon_ShutdownFlag; volp=volp->allNextp) {
         if (volp->flags & CM_VOLUMEFLAG_IN_HASH) {
             InterlockedIncrement(&volp->refCount);
             lock_ReleaseRead(&cm_volumeLock);
