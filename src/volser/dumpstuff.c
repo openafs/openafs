@@ -383,6 +383,10 @@ ReadVolumeHeader(register struct iod *iodp, VolumeDiskData * vol)
 	    if (!ReadInt32(iodp, (afs_uint32 *) & vol->dayUse))
 		return VOLSERREAD_DUMPERROR;
 	    break;
+	case 'V':
+	    if (!ReadInt32(iodp, &trash/*volUpdateCounter*/))
+		return VOLSERREAD_DUMPERROR;
+	    break;
 	}
     }
     iod_ungetc(iodp, tag);
