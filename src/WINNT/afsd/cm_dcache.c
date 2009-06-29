@@ -52,7 +52,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
      * released by our caller.  Thus, we don't have to worry about holding
      * bufp->scp.
      */
-    long code;
+    long code, code1;
     cm_scache_t *scp = vscp;
     afs_int32 nbytes;
     long temp;
@@ -240,15 +240,17 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             }
         }
 
-        code = rx_EndCall(rxcallp, code);
+        code1 = rx_EndCall(rxcallp, code);
 
 #ifdef AFS_LARGEFILES
-        if (code == RXGEN_OPCODE && SERVERHAS64BIT(connp)) {
+        if ((code == RXGEN_OPCODE || code1 == RXGEN_OPCODE) && SERVERHAS64BIT(connp)) {
             SET_SERVERHASNO64BIT(connp);
             goto retry;
         }
 #endif
-                
+        /* Prefer StoreData error over rx_EndCall error */
+        if (code == 0 && code1 != 0)
+            code = code1;
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
 
     code = cm_MapRPCError(code, reqp);
@@ -318,7 +320,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     AFSStoreStatus inStatus;
     AFSVolSync volSync;
     AFSFid tfid;
-    long code;
+    long code, code1;
     osi_hyper_t truncPos;
     cm_conn_t *connp;
     struct rx_call *rxcallp;
@@ -385,15 +387,17 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
             else
                 code = EndRXAFS_StoreData(rxcallp, &outStatus, &volSync);
         }
-        code = rx_EndCall(rxcallp, code);
+        code1 = rx_EndCall(rxcallp, code);
 
 #ifdef AFS_LARGEFILES
-        if (code == RXGEN_OPCODE && SERVERHAS64BIT(connp)) {
+        if ((code == RXGEN_OPCODE || code1 == RXGEN_OPCODE) && SERVERHAS64BIT(connp)) {
             SET_SERVERHASNO64BIT(connp);
             goto retry;
         }
 #endif
-
+        /* prefer StoreData error over rx_EndCall error */
+        if (code == 0 && code1 != 0)
+            code = code1;
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
@@ -1325,7 +1329,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed)
 long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp,
                   cm_req_t *reqp)
 {
-    long code;
+    long code, code1;
     afs_int32 nbytes;			/* bytes in transfer */
     afs_int32 nbytes_hi = 0;            /* high-order 32 bits of bytes in transfer */
     afs_int64 length_found = 0;
@@ -1512,7 +1516,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 } else {
                     nbytes_hi = 0;
 		    code = rxcallp->error;
-                    rx_EndCall(rxcallp, code);
+                    code1 = rx_EndCall(rxcallp, code);
                     rxcallp = NULL;
                 }
             }
@@ -1674,11 +1678,14 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         }
 
         if (rxcallp)
-            code = rx_EndCall(rxcallp, code);
+            code1 = rx_EndCall(rxcallp, code);
 
-        if (code == RXKADUNKNOWNKEY)
+        if (code1 == RXKADUNKNOWNKEY)
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
 
+        /* Prefer the error value from FetchData over rx_EndCall */
+        if (code == 0 && code1 != 0)
+            code = code1;
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
