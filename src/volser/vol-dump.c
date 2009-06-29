@@ -519,8 +519,6 @@ DumpVolumeHeader(int dumpfd, register Volume * vp)
 	code = DumpInt32(dumpfd, 'D', V_dayUseDate(vp));
     if (!code)
 	code = DumpInt32(dumpfd, 'Z', V_dayUse(vp));
-    if (!code)
-	code = DumpInt32(dumpfd, 'V', V_volUpCounter(vp));
     return code;
 }
 

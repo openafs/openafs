@@ -345,8 +345,9 @@ ReadVolumeHeader(count)
 	case 'Z':
 	    vh.dayUse = ntohl(readvalue(4));
 	    break;
+
 	case 'V':
-            vh.volUpdateCounter = ntohl(readvalue(4));
+	    readvalue(4); /*volUpCounter*/
 	    break;
 
 	default:

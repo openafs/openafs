@@ -385,7 +385,7 @@ ReadVolumeHeader(register struct iod *iodp, VolumeDiskData * vol)
 		return VOLSERREAD_DUMPERROR;
 	    break;
 	case 'V':
-	    if (!ReadInt32(iodp, (afs_uint32 *) & vol->volUpdateCounter))
+	    if (!ReadInt32(iodp, (afs_uint32 *) &trash/*volUpdateCounter*/))
 		return VOLSERREAD_DUMPERROR;
 	    break;
 	}
@@ -727,8 +727,6 @@ DumpVolumeHeader(register struct iod *iodp, register Volume * vp)
 	code = DumpInt32(iodp, 'D', V_dayUseDate(vp));
     if (!code)
 	code = DumpInt32(iodp, 'Z', V_dayUse(vp));
-    if (!code)
-	code = DumpInt32(iodp, 'V', V_volUpCounter(vp));
     return code;
 }
 
@@ -1512,9 +1510,6 @@ SizeDumpVolumeHeader(register struct iod *iodp, register Volume * vp,
     FillInt64(addvar,0, 5);
     AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
 /*     if (!code) code = DumpInt32(iodp, 'Z', V_dayUse(vp)); */
-    FillInt64(addvar,0, 5);
-    AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
-/*     if (!code) code = DumpInt32(iodp, 'V', V_volUpCounter(vp)); */
     FillInt64(addvar,0, 5);
     AddUInt64(v_size->dump_size, addvar, &v_size->dump_size);
     return code;
