@@ -1629,7 +1629,9 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
         cm_ReleaseSCache(scp);
         if (code == 0) {
 	    lock_ObtainWrite(&scp->rw);
-            scp->flags |= CM_SCACHEFLAG_DELETED;
+            if (--scp->linkCount == 0)
+                scp->flags |= CM_SCACHEFLAG_DELETED;
+            cm_DiscardSCache(scp);
 	    lock_ReleaseWrite(&scp->rw);
         }
     }
@@ -3035,6 +3037,13 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
         }
     }
     cm_EndDirOp(&dirop);
+
+    /* Update the linked object status */
+    if (code == 0) {
+        lock_ObtainWrite(&sscp->rw);
+        cm_MergeStatus(NULL, sscp, &newLinkStatus, &volSync, userp, 0);
+        lock_ReleaseWrite(&sscp->rw);
+    }
 
     free(fnamep);
 
