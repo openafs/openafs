@@ -583,4 +583,10 @@ xdr_wrapstring(XDR * xdrs, char **cpp)
     return (FALSE);
 }
 #endif
+
+void 
+xdr_free(void *x, afs_int32 size)
+{
+    osi_free(x, size);
+}
 #endif /* NeXT */
