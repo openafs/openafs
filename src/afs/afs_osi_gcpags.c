@@ -547,6 +547,5 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return rv;
 }
 #endif
-#endif
 
 #endif /* AFS_GCPAGS */
