@@ -50,7 +50,7 @@ typedef struct cm_volume {
 #define CM_VOLUMEFLAG_IN_HASH      2
 #define CM_VOLUMEFLAG_IN_LRU_QUEUE 4
 #define CM_VOLUMEFLAG_UPDATING_VL  8
-
+#define CM_VOLUMEFLAG_DFS_VOLUME  16
 
 typedef struct cm_volumeRef {
     struct cm_volumeRef * next;
