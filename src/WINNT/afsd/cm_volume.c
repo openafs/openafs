@@ -452,6 +452,12 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             cm_AddVolumeToNameHashTable(volp);
         }
 
+        if (flags & VLF_DFSFILESET) {
+            volp->flags |= CM_VOLUMEFLAG_DFS_VOLUME;
+            osi_Log1(afsd_logp, "cm_UpdateVolume Volume Group '%s' is a DFS File Set.  Correct behavior is not implemented.",
+                     osi_LogSaveString(afsd_logp, volp->namep));
+        }
+
         if (flags & VLF_RWEXISTS) {
             if (volp->vol[RWVOL].ID != rwID) {
                 if (volp->vol[RWVOL].flags & CM_VOLUMEFLAG_IN_HASH)
