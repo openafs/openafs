@@ -20,6 +20,7 @@ RCSID
 #include "afsincludes.h"
 #include "des/des.h"
 #include "rx/rxkad.h"
+#include <netdb.h>
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -61,11 +62,16 @@ RCSID
 #include "keys.h"
 #ifdef AFS_NT40_ENV
 #ifdef AFS_AFSDB_ENV
+#include <cm.h>
+#include <cm_config.h>
 /* cm_dns.h depends on cellconfig.h */
 #include <cm_nls.h>
 #include <cm_dns.h>
 #endif /* AFS_AFSDB_ENV */
 #endif
+#include <rx/rx.h>
+#include <rx/rxkad.h>
+
 static struct afsconf_servPair serviceTable[] = {
     {"afs", 7000,},
     {"afscb", 7001,},
@@ -85,8 +91,8 @@ static struct afsconf_servPair serviceTable[] = {
 /* Prototypes */
 static afs_int32 afsconf_FindService(register const char *aname);
 static int TrimLine(char *abuffer, int abufsize);
-#ifdef AFS_NT40_ENV
 static int IsClientConfigDirectory(const char *path);
+#ifdef AFS_NT40_ENV
 static int GetCellNT(struct afsconf_dir *adir);
 #endif
 static int afsconf_Check(register struct afsconf_dir *adir);
@@ -231,7 +237,7 @@ afsconf_FindService(register const char *aname)
 #if     defined(AFS_OSF_ENV) 
     ts = getservbyname(aname, "");
 #else
-    ts = getservbyname(aname, NULL);
+    ts = (struct servent *) getservbyname(aname, NULL);
 #endif
     if (ts) {
 	/* we found it in /etc/services, so we use this value */
@@ -265,20 +271,25 @@ TrimLine(char *abuffer, int abufsize)
     return 0;
 }
 
-#ifdef AFS_NT40_ENV
 /*
  * IsClientConfigDirectory() -- determine if path matches well-known
  *     client configuration directory.
  */
+#ifdef AFS_NT40_ENV
+#define IS_SEP(x) ((x) == '\\' || (x) == '/')
+#else /* AFS_NT40_ENV */
+#define IS_SEP(x) ((x) == '/')
+#endif /* AFS_NT40_ENV */
 static int
 IsClientConfigDirectory(const char *path)
 {
     const char *cdir = AFSDIR_CLIENT_ETC_DIRPATH;
-    int i;
+    int i, cc, pc;
 
     for (i = 0; cdir[i] != '\0' && path[i] != '\0'; i++) {
-	int cc = tolower(cdir[i]);
-	int pc = tolower(path[i]);
+#ifdef AFS_NT40_ENV
+	cc = tolower(cdir[i]);
+	pc = tolower(path[i]);
 
 	if (cc == '\\') {
 	    cc = '/';
@@ -286,25 +297,28 @@ IsClientConfigDirectory(const char *path)
 	if (pc == '\\') {
 	    pc = '/';
 	}
-	if (cc != pc) {
+#else /* AFS_NT40_ENV */
+	cc = cdir[i];
+	pc = path[i];
+#endif /* AFS_NT40_ENV */
+        if (cc != pc) {
 	    return 0;
 	}
     }
 
     /* hit end of one or both; allow mismatch in existence of trailing slash */
     if (cdir[i] != '\0') {
-	if ((cdir[i] != '\\' && cdir[i] != '/') || (cdir[i + 1] != '\0')) {
+	if (!IS_SEP(cdir[i]) || (cdir[i + 1] != '\0')) {
 	    return 0;
 	}
     }
     if (path[i] != '\0') {
-	if ((path[i] != '\\' && path[i] != '/') || (path[i + 1] != '\0')) {
+	if (!IS_SEP(path[i]) || (path[i + 1] != '\0')) {
 	    return 0;
 	}
     }
     return 1;
 }
-#endif /* AFS_NT40_ENV */
 
 
 static int
@@ -520,6 +534,69 @@ GetCellNT(struct afsconf_dir *adir)
 	return GetCellUnix(adir);
     }
 }
+
+/* The following procedures and structs are used on Windows only
+ * to enumerate the Cell information distributed within the 
+ * Windows registry.  (See src/WINNT/afsd/cm_config.c)
+ */
+typedef struct _cm_enumCellRegistry {
+    afs_uint32 client;  /* non-zero if client query */
+    struct afsconf_dir *adir;
+} cm_enumCellRegistry_t;
+
+static long
+cm_serverConfigProc(void *rockp, struct sockaddr_in *addrp, 
+                    char *hostNamep, unsigned short rank)
+{
+    struct afsconf_cell *cellInfop = (struct afsconf_cell *)rockp;
+
+    if (cellInfop->numServers == MAXHOSTSPERCELL)
+        return 0;
+
+    cellInfop->hostAddr[cellInfop->numServers] = *addrp;
+    strncpy(cellInfop->hostName[cellInfop->numServers], hostNamep, MAXHOSTCHARS);
+    cellInfop->hostName[cellInfop->numServers][MAXHOSTCHARS-1] = '\0';
+    cellInfop->numServers++;
+
+    return 0;
+}
+
+static long
+cm_enumCellRegistryProc(void *rockp, char * cellNamep)
+{
+    long code;
+    cm_enumCellRegistry_t *enump = (cm_enumCellRegistry_t *)rockp;
+    char linkedName[256] = "";
+    int timeout = 0;
+    struct afsconf_entry *newEntry;
+
+
+    newEntry = malloc(sizeof(struct afsconf_entry));
+    if (newEntry == NULL)
+        return ENOMEM;
+    newEntry->cellInfo.numServers = 0;
+
+    code = cm_SearchCellRegistry(enump->client, cellNamep, NULL, linkedName, cm_serverConfigProc, &newEntry->cellInfo);
+    if (code == CM_ERROR_FORCE_DNS_LOOKUP)
+        code = cm_SearchCellByDNS(cellNamep, NULL, &timeout, cm_serverConfigProc, &newEntry->cellInfo);
+
+    if (code == 0) {
+        strncpy(newEntry->cellInfo.name, cellNamep, MAXCELLCHARS);
+        newEntry->cellInfo.name[MAXCELLCHARS-1];
+        if (linkedName[0])
+            newEntry->cellInfo.linkedCell = strdup(linkedName);
+        else
+            newEntry->cellInfo.linkedCell = NULL;
+        newEntry->cellInfo.timeout = timeout;
+        newEntry->cellInfo.flags = 0;
+
+        newEntry->next = enump->adir->entries;
+	enump->adir->entries = newEntry;
+    } else {
+        free(newEntry);
+    }
+    return code;
+}       
 #endif /* AFS_NT40_ENV */
 
 
@@ -535,10 +612,14 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     afs_int32 i;
     char tbuffer[256], tbuf1[256];
     struct stat tstat;
+#ifdef AFS_NT40_ENV
+    cm_enumCellRegistry_t enumCellRegistry = {0, 0};
+#endif /* AFS_NT40_ENV */
 
     /* figure out the local cell name */
 #ifdef AFS_NT40_ENV
     i = GetCellNT(adir);
+    enumCellRegistry.adir = adir;
 #else
     i = GetCellUnix(adir);
 #endif
@@ -559,6 +640,9 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     if (IsClientConfigDirectory(adir->name)) {
 	/* NT client config dir */
 	char *p;
+
+        enumCellRegistry.client = 1;
+
 	if (!afssw_GetClientCellServDBDir(&p)) {
 	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
 		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
@@ -594,6 +678,19 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
     if (!tf) {
 	return -1;
     }
+
+    /* The CellServDB file is now open.  
+     * The following code parses the contents of the 
+     * file and creates a list with the first cell entry
+     * in the CellServDB file at the end of the list.
+     * 
+     * No checking is performed for duplicates.
+     * The side effects of this process are that duplicate
+     * entries appended to the end of the CellServDB file
+     * take precedence and are found in a shorter period 
+     * of time.
+     */
+
     while (1) {
 	tp = fgets(tbuffer, sizeof(tbuffer), tf);
 	if (!tp)
@@ -631,31 +728,41 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 		return -1;
 	    }
 	    i = curEntry->cellInfo.numServers;
-	    if (cell && !strcmp(cell, curEntry->cellInfo.name))
-		code =
-		    ParseHostLine(tbuffer, &curEntry->cellInfo.hostAddr[i],
-				  curEntry->cellInfo.hostName[i], &clones[i]);
-	    else
-		code =
-		    ParseHostLine(tbuffer, &curEntry->cellInfo.hostAddr[i],
-				  curEntry->cellInfo.hostName[i], 0);
-	    if (code) {
-		if (code == AFSCONF_SYNTAX) {
-		    for (bp = tbuffer; *bp != '\n'; bp++) {	/* Take out the <cr> from the buffer */
-			if (!*bp)
-			    break;
+	    if (i < MAXHOSTSPERCELL) {
+		if (cell && !strcmp(cell, curEntry->cellInfo.name))
+		    code =
+			ParseHostLine(tbuffer, 
+				      &curEntry->cellInfo.hostAddr[i],
+				      curEntry->cellInfo.hostName[i], 
+				      &clones[i]);
+		else
+		    code =
+			ParseHostLine(tbuffer, 
+				      &curEntry->cellInfo.hostAddr[i],
+				      curEntry->cellInfo.hostName[i], 0);
+
+		if (code) {
+		    if (code == AFSCONF_SYNTAX) {
+			for (bp = tbuffer; *bp != '\n'; bp++) {	/* Take out the <cr> from the buffer */
+			    if (!*bp)
+				break;
+			}
+			*bp = '\0';
+			fprintf(stderr,
+				"Can't properly parse host line \"%s\" in configuration file %s\n",
+				tbuffer, tbuf1);
 		    }
-		    *bp = '\0';
-		    fprintf(stderr,
-			    "Can't properly parse host line \"%s\" in configuration file %s\n",
-			    tbuffer, tbuf1);
+		    free(curEntry);
+		    fclose(tf);
+		    afsconf_CloseInternal(adir);
+		    return -1;
 		}
-		free(curEntry);
-		fclose(tf);
-		afsconf_CloseInternal(adir);
-		return -1;
+		curEntry->cellInfo.numServers = ++i;
+	    } else {
+		fprintf(stderr,
+			"Too many hosts for cell %s in configuration file %s\n", 
+			curEntry->cellInfo.name, tbuf1);
 	    }
-	    curEntry->cellInfo.numServers = ++i;
 	}
     }
     fclose(tf);			/* close the file now */
@@ -665,6 +772,18 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
 	curEntry->next = adir->entries;
 	adir->entries = curEntry;
     }
+
+#ifdef AFS_NT40_ENV
+     /* 
+      * Windows maintains a CellServDB list in the Registry
+      * that supercedes the contents of the CellServDB file.
+      * Prepending these entries to the head of the list 
+      * is sufficient to enforce the precedence.
+      */
+     cm_EnumerateCellRegistry( enumCellRegistry.client,
+                               cm_enumCellRegistryProc,
+                               &enumCellRegistry);
+#endif /* AFS_NT40_ENV */
 
     /* Read in the alias list */
     strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLALIAS_FILE, NULL);
@@ -985,13 +1104,14 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     struct afsconf_entry DNSce;
     afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
+    unsigned short ipRanks[AFSMAXCELLHOSTS];
     int numServers;
     int rc;
     int ttl;
 
     DNSce.cellInfo.numServers = 0;
     DNSce.next = NULL;
-    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, &numServers,
+    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, ipRanks, &numServers,
 		      &ttl);
     /* ignore the ttl here since this code is only called by transitory programs
      * like klog, etc. */
@@ -1104,6 +1224,64 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	    }
 	}
 	acellInfo->timeout = 0;
+
+        /* 
+         * Until we figure out how to separate out ubik server
+         * queries from other server queries, only perform gethostbyname()
+         * lookup on the specified hostnames for the client CellServDB files.
+         */
+        if (IsClientConfigDirectory(adir->name) && 
+            !(acellInfo->flags & AFSCONF_CELL_FLAG_DNS_QUERIED)) {
+            int j;
+            short numServers=0;		                        /*Num active servers for the cell */
+            struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers */
+            char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers */
+
+            memset(&hostAddr, 0, sizeof(hostAddr));
+            memset(&hostName, 0, sizeof(hostName));
+
+            for ( j=0; j<acellInfo->numServers && numServers < MAXHOSTSPERCELL; j++ ) {
+                struct hostent *he = gethostbyname(acellInfo->hostName[j]);
+                int foundAddr = 0;
+
+                if (he && he->h_addrtype == AF_INET) {
+                    int i;
+                    /* obtain all the valid address from the list */
+                    for (i=0 ; he->h_addr_list[i] && numServers < MAXHOSTSPERCELL; i++) {
+                        /* check to see if this is a new address; if so insert it into the list */
+                        int k, dup;
+                        for (k=0, dup=0; !dup && k < numServers; k++) {
+                            if (hostAddr[k].sin_addr.s_addr == *(u_long *)he->h_addr_list[i])
+                                dup = 1;
+                        }
+                        if (dup)
+                            continue;
+
+                        hostAddr[numServers].sin_family = AF_INET;
+                        hostAddr[numServers].sin_port = acellInfo->hostAddr[0].sin_port;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+                        hostAddr[numServers].sin_len = sizeof(struct sockaddr_in);
+#endif
+                        memcpy(&hostAddr[numServers].sin_addr.s_addr, he->h_addr_list[i], sizeof(long));
+                        strcpy(hostName[numServers], acellInfo->hostName[j]);
+                        foundAddr = 1;
+                        numServers++;
+                    }
+                }
+                if (!foundAddr) {
+                    hostAddr[numServers] = acellInfo->hostAddr[j];
+                    strcpy(hostName[numServers], acellInfo->hostName[j]);
+                    numServers++;
+                }
+            }
+
+            for (i=0; i<numServers; i++) {
+                acellInfo->hostAddr[i] = hostAddr[i];
+                strcpy(acellInfo->hostName[i], hostName[i]);
+            }
+            acellInfo->numServers = numServers;
+            acellInfo->flags |= AFSCONF_CELL_FLAG_DNS_QUERIED;
+        }
 	UNLOCK_GLOBAL_MUTEX;
 	return 0;
     } else {
@@ -1323,7 +1501,7 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno,
 
 /* get a particular key */
 int
-afsconf_GetKey(void *rock, afs_int32 avno, struct ktc_encryptionKey *akey)
+afsconf_GetKey(void *rock, int avno, struct ktc_encryptionKey *akey)
 {
     struct afsconf_dir *adir = (struct afsconf_dir *) rock;
     register int i, maxa;
