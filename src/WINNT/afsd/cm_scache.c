@@ -76,17 +76,36 @@ void cm_RemoveSCacheFromHashTable(cm_scache_t *scp)
 }
 
 /* called with cm_scacheLock and scp write-locked */
-void cm_ResetSCacheDirectory(cm_scache_t *scp)
+void cm_ResetSCacheDirectory(cm_scache_t *scp, afs_int32 dirlock)
 {
 #ifdef USE_BPLUS
     /* destroy directory Bplus Tree */
     if (scp->dirBplus) {
         LARGE_INTEGER start, end;
+
+        if (!dirlock && !lock_TryWrite(&scp->dirlock)) {
+            /* 
+             * We are not holding the dirlock and obtaining it
+             * requires that we drop the scp->rw.  As a result
+             * we will leave the dirBplus tree intact but 
+             * invalidate the version number so that whatever
+             * operation is currently active can safely complete
+             * but the contents will be ignored on the next 
+             * directory operation.
+             */
+            scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
+            return;
+        }
+
         QueryPerformanceCounter(&start);
         bplus_free_tree++;
         freeBtree(scp->dirBplus);
         scp->dirBplus = NULL;
+        scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
         QueryPerformanceCounter(&end);
+        
+        if (!dirlock) 
+            lock_ReleaseWrite(&scp->dirlock);
 
         bplus_free_time += (end.QuadPart - start.QuadPart);
     }
@@ -222,7 +241,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
      */
     cm_FreeAllACLEnts(scp);
 
-    cm_ResetSCacheDirectory(scp);
+    cm_ResetSCacheDirectory(scp, 0);
     return 0;
 }
 

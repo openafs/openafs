@@ -16,7 +16,7 @@
 #define CM_CONFIGDEFAULT_CELLS          1024
 #define CM_CONFIGDEFAULT_STATS		10000
 #define CM_CONFIGDEFAULT_CHUNKSIZE	18      /* 256KB */
-#define CM_CONFIGDEFAULT_DAEMONS	8
+#define CM_CONFIGDEFAULT_DAEMONS	4
 #define CM_CONFIGDEFAULT_SVTHREADS	25
 #define CM_CONFIGDEFAULT_TRACEBUFSIZE	10000
 
@@ -26,7 +26,9 @@
 
 typedef FILE cm_configFile_t;
 
-typedef long (cm_configProc_t)(void *rockp, struct sockaddr_in *addrp, char *namep);
+typedef long (cm_configProc_t)(void *rockp, struct sockaddr_in *addrp, char *namep, unsigned short);
+
+typedef long (cm_enumCellRegistryProc_t)(void *rockp, char *cellNamep);
 
 extern long cm_GetRootCellName(char *namep);
 
@@ -36,6 +38,15 @@ extern long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
 extern long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                                 char *linkedNamep,
                                 cm_configProc_t *procp, void *rockp);
+
+extern long cm_SearchCellRegistry(afs_uint32 client, 
+                                  char *cellNamep, char *newCellNamep,
+                                  char *linkedNamep,
+                                  cm_configProc_t *procp, void *rockp);
+
+extern long cm_EnumerateCellRegistry(afs_uint32 client, 
+                                     cm_enumCellRegistryProc_t *procp, 
+                                     void *rockp);
 
 extern long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
                                cm_configProc_t *procp, void *rockp);

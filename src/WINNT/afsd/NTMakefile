@@ -206,8 +206,7 @@ $(CONF_DLLFILE): $(CONFOBJS) $(OUT)\libafsconf.res $(CONF_DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
-	$(COPY) $*.lib $(ILIBDIR)
-	$(DEL) $*.lib $*.exp
+	$(DEL) $*.exp
 
 ############################################################################
 # lanahelper.lib
@@ -386,7 +385,7 @@ AFSD_SDKLIBS =\
         secur32.lib \
         ole32.lib \
         oleaut32.lib \
-        iphlpapi.lib shell32.lib
+        iphlpapi.lib shell32.lib shlwapi.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \

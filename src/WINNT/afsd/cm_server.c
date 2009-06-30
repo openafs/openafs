@@ -117,7 +117,7 @@ cm_PingServer(cm_server_t *tsp)
 	/* we currently handle 32-bits of capabilities */
 	if (caps.Capabilities_len > 0) {
 	    tsp->capabilities = caps.Capabilities_val[0];
-	    free(caps.Capabilities_val);
+	    xdr_free(caps.Capabilities_val, caps.Capabilities_len);
 	    caps.Capabilities_len = 0;
 	    caps.Capabilities_val = 0;
 	} else {
@@ -380,7 +380,7 @@ static void cm_CheckServersMulti(afs_uint32 flags, cm_cell_t *cellp)
                 /* we currently handle 32-bits of capabilities */
                 if (caps[i].Capabilities_len > 0) {
                     tsp->capabilities = caps[i].Capabilities_val[0];
-                    free(caps[i].Capabilities_val);
+                    xdr_free(caps[i].Capabilities_val, caps[i].Capabilities_len);
                     caps[i].Capabilities_len = 0;
                     caps[i].Capabilities_val = 0;
                 } else {
@@ -941,6 +941,26 @@ cm_FindServerByIP(afs_uint32 ipaddr, int type)
     return tsp;
 }
 
+cm_server_t *
+cm_FindServerByUuid(afsUUID *serverUuid, int type)
+{
+    cm_server_t *tsp;
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+        if (tsp->type == type && !afs_uuid_equal(&tsp->uuid, serverUuid))
+            break;
+    }
+
+    /* bump ref count if we found the server */
+    if (tsp) 
+        cm_GetServerNoLock(tsp);
+
+    lock_ReleaseRead(&cm_serverLock);
+
+    return tsp;
+}
+
 /* find a server based on its properties */
 cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
 {
@@ -1356,5 +1376,29 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
     return (0);     
 }
 
+/* 
+ * Determine if two servers are in fact the same.
+ *
+ * Returns 1 if they match, 0 if they do not 
+ */
+int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2)
+{
+    RPC_STATUS status;
 
+    if (srv1 == NULL || srv2 == NULL)
+        return 0;
 
+    if (srv1 == srv2)
+        return 1;
+
+    if (srv1->flags & CM_SERVERFLAG_UUID) {
+        if (!(srv2->flags & CM_SERVERFLAG_UUID))
+            return 0;
+
+        /* Both support UUID */
+        if (UuidEqual((UUID *)&srv1->uuid, (UUID *)&srv2->uuid, &status))
+            return 1;
+    } 
+    
+    return 0;
+}

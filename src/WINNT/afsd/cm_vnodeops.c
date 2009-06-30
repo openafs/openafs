@@ -120,10 +120,8 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
                       CM_SCACHESYNC_GETSTATUS
                      | CM_SCACHESYNC_NEEDCALLBACK
                      | CM_SCACHESYNC_LOCK);
-    if (code)
-        goto _done;
-
-    if (((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
+    if (code == 0 && 
+        ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
         scp->fileType == CM_SCACHETYPE_FILE) {
 
         cm_key_t key;
@@ -170,6 +168,8 @@ long cm_CheckOpen(cm_scache_t *scp, int openMode, int trunc, cm_user_t *userp,
 		}
 	    }
         }
+    } else if (code != 0) {
+        goto _done;
     }
 
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_LOCK);
@@ -224,11 +224,9 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
     if (code == CM_ERROR_READONLY)
         code = CM_ERROR_NOACCESS;
 
-    if (code)
-        goto _done;
-
-    if (((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
-        scp->fileType == CM_SCACHETYPE_FILE) {
+    if (code == 0 &&
+         ((rights & PRSFS_WRITE) || (rights & PRSFS_READ)) &&
+         scp->fileType == CM_SCACHETYPE_FILE) {
         cm_key_t key;
         unsigned int sLockType;
         LARGE_INTEGER LOffset, LLength;
@@ -284,6 +282,8 @@ long cm_CheckNTOpen(cm_scache_t *scp, unsigned int desiredAccess,
 		}
 	    }
         }
+    } else if (code != 0) {
+        goto _done;
     }
 
  _done:
@@ -725,7 +725,11 @@ long cm_LookupSearchProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 
     sp = (cm_lookupSearch_t *) rockp;
 
-    cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName));
+    if (cm_FsStringToNormString(dep->name, -1, matchName, lengthof(matchName)) == 0) {
+        /* Can't normalize FS string. */
+        return 0;
+    }
+
     if (sp->caseFold)
         match = cm_NormStrCmpI(matchName, sp->nsearchNamep);
     else
@@ -929,6 +933,20 @@ long cm_FollowMountPoint(cm_scache_t *scp, cm_scache_t *dscp, cm_user_t *userp,
         /* normal mt pt */
         volNamep = cm_FsStrDup(mpNamep + 1);
 
+#ifdef AFS_FREELANCE_CLIENT
+        /* 
+         * Mount points in the Freelance cell should default
+         * to the workstation cell.
+         */
+        if (cm_freelanceEnabled &&
+             scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID )
+        {       
+            fschar_t rootCellName[256]="";
+            cm_GetRootCellName(rootCellName);
+            cellp = cm_GetCell(rootCellName, 0);
+        } else 
+#endif /* AFS_FREELANCE_CLIENT */        
         cellp = cm_FindCellByID(scp->fid.cell, 0);
     }
 
@@ -1048,7 +1066,15 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
     }
 
     nnamep = cm_ClientStringToNormStringAlloc(cnamep, -1, NULL);
+    if (!nnamep) {
+        code = CM_ERROR_NOSUCHFILE;
+        goto done;
+    }
     fnamep = cm_ClientStringToFsStringAlloc(cnamep, -1, NULL);
+    if (!fnamep) {
+        code = CM_ERROR_NOSUCHFILE;
+        goto done;
+    }
 
     if (flags & CM_FLAG_NOMOUNTCHASE) {
         /* In this case, we should go and call cm_Dir* functions
@@ -1243,7 +1269,8 @@ long cm_LookupInternal(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_u
             if (nnamep) 
                 free(nnamep);
             nnamep = cm_ClientStringToNormStringAlloc(cnamep, -1, NULL);
-            cm_dnlcEnter(dscp, nnamep, tscp);
+            if (nnamep)
+                cm_dnlcEnter(dscp, nnamep, tscp);
         }
         lock_ReleaseRead(&dscp->rw);
     }
@@ -1802,10 +1829,16 @@ long cm_AssembleLink(cm_scache_t *linkScp, fschar_t *pathSuffixp,
     }
     if (code == 0) {
         clientchar_t * cpath = cm_FsStringToClientStringAlloc(tsp->data, -1, NULL);
-        cm_ClientStrCpy(tsp->wdata, lengthof(tsp->wdata), cpath);
-        free(cpath);
-        *newSpaceBufferp = tsp;
-    } else {
+        if (cpath != NULL) {
+            cm_ClientStrCpy(tsp->wdata, lengthof(tsp->wdata), cpath);
+            free(cpath);
+            *newSpaceBufferp = tsp;
+        } else {
+            code = CM_ERROR_NOSUCHPATH;
+        }
+    }
+
+    if (code != 0) {
         cm_FreeSpace(tsp);
 
         if (code == CM_ERROR_PATH_NOT_COVERED && reqp->tidPathp && reqp->relPathp) {
@@ -1933,17 +1966,13 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
                         fid_count = i+1;
                     } else {
                         /* add the new fid to the list */
-                        for ( i=0; i<fid_count; i++) {
-                            if ( !cm_FidCmp(&nscp->fid, &fids[i]) ) {
-                                code = CM_ERROR_TOO_MANY_SYMLINKS;
-                                cm_ReleaseSCache(nscp);
-                                nscp = NULL;
-                                break;
-                            }
+                        if (fid_count == MAX_FID_COUNT) {
+                            code = CM_ERROR_TOO_MANY_SYMLINKS;
+                            cm_ReleaseSCache(nscp);
+                            nscp = NULL;
+                            break;
                         }
-                        if (i == fid_count && fid_count < MAX_FID_COUNT) {
-                            fids[fid_count++] = nscp->fid;
-                        }
+                        fids[fid_count++] = nscp->fid;
                     }
                 }
 
@@ -3030,7 +3059,7 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     /* Update the linked object status */
     if (code == 0) {
         lock_ObtainWrite(&sscp->rw);
-        cm_MergeStatus(NULL, sscp, &newLinkStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, sscp, &newLinkStatus, &volSync, userp, reqp, 0);
         lock_ReleaseWrite(&sscp->rw);
     }
 
@@ -3344,11 +3373,43 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     cm_dirOp_t newDirOp;
     fschar_t * newNamep = NULL;
     int free_oldNamep = FALSE;
+    cm_scache_t *oldScp = NULL, *newScp = NULL;
 
     if (cOldNamep == NULL || cNewNamep == NULL ||
         cm_ClientStrLen(cOldNamep) == 0 ||
         cm_ClientStrLen(cNewNamep) == 0)
         return CM_ERROR_INVAL;
+
+    /* 
+     * Before we permit the operation, make sure that we do not already have
+     * an object in the destination directory that has a case-insensitive match
+     * for this name UNLESS the matching object is the object we are renaming.
+     */
+    code = cm_Lookup(oldDscp, cOldNamep, 0, userp, reqp, &oldScp);
+    if (code) {
+        osi_Log2(afsd_logp, "cm_Rename oldDscp 0x%p cOldName %S old name lookup failed", 
+                 oldDscp, osi_LogSaveStringW(afsd_logp, cOldNamep));
+        goto done;
+    }
+
+    code = cm_Lookup(newDscp, cNewNamep, CM_FLAG_CASEFOLD, userp, reqp, &newScp);
+    if (code == 0) {
+        /* found a matching object with the new name */
+        if (cm_FidCmp(&oldScp->fid, &newScp->fid)) {
+            /* and they don't match so return an error */
+            osi_Log2(afsd_logp, "cm_Rename newDscp 0x%p cNewName %S new name already exists", 
+                      newDscp, osi_LogSaveStringW(afsd_logp, cNewNamep));
+            code = CM_ERROR_EXISTS;
+        }
+        cm_ReleaseSCache(newScp);
+        newScp = NULL;
+    } else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
+        code = CM_ERROR_EXISTS;
+    } else {
+        code = 0;
+    }
+    if (code) 
+        goto done;
 
     if (oldNamep == NULL) {
         code = -1;
@@ -3527,31 +3588,28 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                        userp, reqp, CM_MERGEFLAG_DIROP);
     lock_ReleaseWrite(&oldDscp->rw);
 
-    if (code == 0) {
-        if (cm_CheckDirOpForSingleChange(&oldDirOp)) {
-
+    if (code == 0 && cm_CheckDirOpForSingleChange(&oldDirOp)) {
 #ifdef USE_BPLUS
-            diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
-            if (diropCode == CM_ERROR_INEXACT_MATCH)
-                diropCode = 0;
-            else if (diropCode == EINVAL)
+        diropCode = cm_BPlusDirLookup(&oldDirOp, cOldNamep, &fileFid);
+        if (diropCode == CM_ERROR_INEXACT_MATCH)
+            diropCode = 0;
+        else if (diropCode == EINVAL)
 #endif
-                diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
+            diropCode = cm_DirLookup(&oldDirOp, oldNamep, &fileFid);
 
-            if (diropCode == 0) {
-                if (oneDir) {
-                    diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
-#ifdef USE_BPLUS
-                    cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
+        if (diropCode == 0) {
+            if (oneDir) {
+                diropCode = cm_DirCreateEntry(&oldDirOp, newNamep, &fileFid);
+#ifdef USE_BPLUS        
+                cm_BPlusDirCreateEntry(&oldDirOp, cNewNamep, &fileFid);
 #endif
-                }
+            }
                 
-                if (diropCode == 0) { 
-                    diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
+            if (diropCode == 0) { 
+                diropCode = cm_DirDeleteEntry(&oldDirOp, oldNamep);
 #ifdef USE_BPLUS
-                    cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
+                cm_BPlusDirDeleteEntry(&oldDirOp, cOldNamep);
 #endif
-                }
             }
         }
     }
@@ -3570,6 +3628,17 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
                             userp, reqp, CM_MERGEFLAG_DIROP);
         lock_ReleaseWrite(&newDscp->rw);
 
+#if 0 
+        /* 
+         * The following optimization does not work.  
+         * When the file server processed a RXAFS_Rename() request the 
+         * FID of the object being moved between directories is not 
+         * preserved.  The client does not know the new FID nor the 
+         * version number of the target.  Not only can we not create
+         * the directory entry in the new directory, but we can't 
+         * preserve the cached data for the file.  It must be re-read
+         * from the file server.  - jaltman, 2009/02/20
+         */
         if (code == 0) {
             /* we only make the local change if we successfully made
                the change in the old directory AND there was only one
@@ -3581,10 +3650,23 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
 #endif
             }
         }
+#endif /* 0 */
         cm_EndDirOp(&newDirOp);
     }
 
+    /* 
+     * After the rename the file server has invalidated the callbacks
+     * on the file that was moved nor do we have a directory reference 
+     * to it anymore.
+     */
+    lock_ObtainWrite(&oldScp->rw);
+    cm_DiscardSCache(oldScp);
+    lock_ReleaseWrite(&oldScp->rw);
+
   done:
+    if (oldScp)
+        cm_ReleaseSCache(oldScp);
+
     if (free_oldNamep)
         free(oldNamep);
 

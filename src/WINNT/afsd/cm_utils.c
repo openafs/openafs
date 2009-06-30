@@ -12,6 +12,7 @@
 
 #include <errno.h>
 #include <windows.h>
+#include <shlwapi.h>
 #include <winsock2.h>
 #ifndef EWOULDBLOCK
 #define EWOULDBLOCK             WSAEWOULDBLOCK
@@ -401,6 +402,9 @@ int cm_Is8Dot3(clientchar_t *namep)
     clientchar_t tc;
     int charCount = 0;
         
+    if (namep == NULL || !namep[0])
+        return 0;
+
     /*
      * can't have a leading dot;
      * special case for . and ..
@@ -597,10 +601,7 @@ void cm_Gen8Dot3VolNameW(afs_uint32 cell, afs_uint32 volume,
 {
     clientchar_t number[12];
     int i, nsize = 0;
-    clientchar_t *lastDot;
     int validExtension = 0;
-    clientchar_t tc, *temp;
-    const clientchar_t *name;
 
     /* Unparse the file's cell and volume numbers */
     do {
@@ -789,3 +790,36 @@ int cm_MatchMask(clientchar_t *namep, clientchar_t *maskp, int flags)
     return retval;
 }
 
+BOOL
+cm_TargetPerceivedAsDirectory(const fschar_t *target)
+{
+    char        * ext;
+
+    ext = PathFindExtension(target);
+    if (!ext[0])
+        return TRUE;
+
+    return FALSE;
+}
+
+HANDLE 
+cm_LoadAfsdHookLib(void)
+{
+    char dllname[260];
+    char *p;
+    HANDLE hLib;
+
+    if (!GetModuleFileName(NULL, dllname, sizeof(dllname)))
+        return NULL;
+
+    p = strrchr(dllname, '\\');
+    if (p) {
+        p++;
+        strcpy(p, AFSD_HOOK_DLL);
+        hLib = LoadLibrary(dllname);
+    } else {
+        hLib = LoadLibrary(AFSD_HOOK_DLL);
+    }
+
+    return hLib;
+}

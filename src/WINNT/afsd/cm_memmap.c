@@ -424,10 +424,10 @@ cm_ValidateMappedMemory(char * cachePath)
     fprintf(stderr,"  blockSize      = %u\n", config_data_p->blockSize);
     fprintf(stderr,"  bufferSize     = %I64u\n", config_data_p->bufferSize);
     fprintf(stderr,"  cacheType      = %u\n", config_data_p->cacheType);
-    fprintf(stderr,"  volumeHashTableSize = %u", config_data_p->volumeHashTableSize);
+    fprintf(stderr,"  volumeHashTableSize = %u\n", config_data_p->volumeHashTableSize);
     fprintf(stderr,"  currentVolumes = %u\n", config_data_p->currentVolumes);
     fprintf(stderr,"  maxVolumes     = %u\n", config_data_p->maxVolumes);
-    fprintf(stderr,"  cellHashTableSize = %u", config_data_p->cellHashTableSize);
+    fprintf(stderr,"  cellHashTableSize = %u\n", config_data_p->cellHashTableSize);
     fprintf(stderr,"  currentCells   = %u\n", config_data_p->currentCells);
     fprintf(stderr,"  maxCells       = %u\n", config_data_p->maxCells);
     fprintf(stderr,"  scacheHashTableSize  = %u\n", config_data_p->scacheHashTableSize);

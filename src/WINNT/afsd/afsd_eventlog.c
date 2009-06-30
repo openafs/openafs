@@ -209,6 +209,8 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
     	break;
     case MSG_TIME_FLUSH_PER_VOLUME:
     case MSG_TIME_FLUSH_TOTAL:
+    case MSG_SMB_MAX_MPX_COUNT:
+    case MSG_SMB_MAX_BUFFER_SIZE:
 	wNumArgs = 2;
 	lpArgs[0] = va_arg(listArgs, LPTSTR);
 	lpArgs[1] = va_arg(listArgs, LPTSTR);
@@ -286,6 +288,19 @@ LogEvent(WORD wEventType, DWORD dwEventID, ...)
 	StringCbPrintf(lpStrings[1],STRLEN,"%d",va_arg(listArgs,int));
 	lpArgs[1] = lpStrings[1];
 	lpArgs[2] = va_arg(listArgs,LPTSTR);
+    	break;
+    case MSG_DIRTY_BUFFER_AT_SHUTDOWN:
+	wNumArgs = 6;
+	lpArgs[0] = va_arg(listArgs, LPTSTR);
+        lpArgs[1] = va_arg(listArgs, LPTSTR);
+	StringCbPrintf(lpStrings[2],STRLEN,"%u",va_arg(listArgs,int));
+	StringCbPrintf(lpStrings[3],STRLEN,"%u",va_arg(listArgs,int));
+	StringCbPrintf(lpStrings[4],STRLEN,"%I64u",va_arg(listArgs,afs_int64));
+	StringCbPrintf(lpStrings[5],STRLEN,"%I64u",va_arg(listArgs,afs_int64));
+	lpArgs[2] = lpStrings[2];
+	lpArgs[3] = lpStrings[3];
+	lpArgs[4] = lpStrings[4];
+	lpArgs[5] = lpStrings[5];
     	break;
     }
     va_end(listArgs);

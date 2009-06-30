@@ -42,6 +42,7 @@ typedef struct cm_volume {
     osi_rwlock_t rw;
     afs_uint32 flags;			/* by rw */
     afs_int32 refCount;		        /* by Interlocked operations */
+    cm_server_t *cbServerpRO;           /* latest RO callback server; by cm_scacheLock */
     time_t cbExpiresRO;                 /* latest RO expiration time; by cm_scacheLock */
 } cm_volume_t;
 

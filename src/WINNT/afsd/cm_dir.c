@@ -600,6 +600,8 @@ cm_DirLookup(cm_dirOp_t * op, char *entry, cm_fid_t * cfid)
     LARGE_INTEGER       start;
     LARGE_INTEGER       end;
 
+    lock_AssertNone(&op->scp->rw);
+
     QueryPerformanceCounter(&start);
 
     osi_Log2(afsd_logp, "cm_DirLookup for op 0x%p, entry[%s]",
@@ -1293,7 +1295,6 @@ cm_DirOpAddBuffer(cm_dirOp_t * op, cm_buf_t * bufferp)
                               CM_SCACHESYNC_NEEDCALLBACK |
                               (op->lockType == CM_DIRLOCK_WRITE ? CM_SCACHESYNC_WRITE : CM_SCACHESYNC_READ) |
                               CM_SCACHESYNC_BUFLOCKED);
-
             code = CM_ERROR_NOTINCACHE;
         }
 

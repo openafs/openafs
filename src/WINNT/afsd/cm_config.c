@@ -281,34 +281,56 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                 valuep[strlen(valuep) - 1] = '\0';
 
 	    if (inRightCell) {
+                char hostname[256];
+                int  i, isClone = 0;
+
+                isClone = (lineBuffer[0] == '[');
+
+                /* copy just the first word and ignore trailing white space */
+                for ( i=0; valuep[i] && !isspace(valuep[i]) && i<sizeof(hostname); i++)
+                    hostname[i] = valuep[i];
+                valuep[i] = '\0';
+
 		/* add the server to the VLDB list */
                 WSASetLastError(0);
-                thp = gethostbyname(valuep);
+                thp = gethostbyname(hostname);
 #ifdef CELLSERV_DEBUG
 		osi_Log3(afsd_logp,"cm_searchfile inRightCell thp[%p], valuep[%s], WSAGetLastError[%d]",
-			 thp, osi_LogSaveString(afsd_logp,valuep), WSAGetLastError());
+			 thp, osi_LogSaveString(afsd_logp,hostname), WSAGetLastError());
 #endif
 		if (thp) {
-		    memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr,
-                            sizeof(long));
-                    vlSockAddr.sin_family = AF_INET;
-                    /* sin_port supplied by connection code */
-		    if (procp)
-			(*procp)(rockp, &vlSockAddr, valuep);
-                    foundCell = 1;
+                    int foundAddr = 0;
+                    for (i=0 ; thp->h_addr_list[i]; i++) {
+                        if (thp->h_addrtype != AF_INET)
+                            continue;
+                        memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr_list[i],
+                               sizeof(long));
+                        vlSockAddr.sin_family = AF_INET;
+                        /* sin_port supplied by connection code */
+                        if (procp)
+                            (*procp)(rockp, &vlSockAddr, hostname, 0);
+                        foundAddr = 1;
+                    }
+                    /* if we didn't find a valid address, force the use of the specified one */
+                    if (!foundAddr)
+                        thp = NULL;
 		}
                 if (!thp) {
                     afs_uint32 ip_addr;
-		    int c1, c2, c3, c4;
+		    unsigned int c1, c2, c3, c4;
                     
                     /* Since there is no gethostbyname() data 
 		     * available we will read the IP address
 		     * stored in the CellServDB file
                      */
-                    code = sscanf(lineBuffer, " %d.%d.%d.%d",
-                                   &c1, &c2, &c3, &c4);
-                    if (code == 4) {
-                        tp = (char *) &ip_addr;
+                    if (isClone)
+                        code = sscanf(lineBuffer, "[%u.%u.%u.%u]",
+                                      &c1, &c2, &c3, &c4);
+                    else
+                        code = sscanf(lineBuffer, " %u.%u.%u.%u",
+                                      &c1, &c2, &c3, &c4);
+                    if (code == 4 && c1<256 && c2<256 && c3<256 && c4<256) {
+                        tp = (unsigned char *) &ip_addr;
                         *tp++ = c1;
                         *tp++ = c2;
                         *tp++ = c3;
@@ -318,10 +340,10 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                         vlSockAddr.sin_family = AF_INET;
                         /* sin_port supplied by connection code */
                         if (procp)
-                            (*procp)(rockp, &vlSockAddr, valuep);
-                        foundCell = 1;
+                            (*procp)(rockp, &vlSockAddr, hostname, 0);
                     }
                 }
+                foundCell = 1;
             }
         }	/* a vldb line */
     }		/* while loop processing all lines */
@@ -330,14 +352,337 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
     return (foundCell) ? 0 : -11;
 }
 
+/*
+ * The CellServDB registry schema is as follows:
+ *
+ * HKLM\SOFTWARE\OpenAFS\Client\CellServDB\[cellname]\
+ *   "LinkedCell"    REG_SZ "[cellname]" 
+ *   "Description"   REG_SZ "[comment]"
+ *   "ForceDNS"      DWORD  {0,1}
+ *
+ * HKLM\SOFTWARE\OpenAFS\Client\CellServDB\[cellname]\[servername]\
+ *   "HostName"      REG_SZ "[hostname]" 
+ *   "IPv4Address"   REG_SZ "[address]" 
+ *   "IPv6Address"   REG_SZ "[address]"   <future>
+ *   "Comment"       REG_SZ "[comment]"
+ *   "Rank"          DWORD  "0..65535"
+ *   "Clone"         DWORD  "{0,1}"
+ *   "vlserver"      DWORD  "7003"        <future>
+ *   "ptserver"      DWORD  ...           <future>
+ *
+ * ForceDNS is implied non-zero if there are no [servername]
+ * keys under the [cellname] key.  Otherwise, ForceDNS is zero.
+ * If [servername] keys are specified and none of them evaluate
+ * to a valid server configuration, the return code is success.
+ * This prevents failover to the CellServDB file or DNS.
+ */
+long cm_SearchCellRegistry(afs_uint32 client, 
+                           char *cellNamep, char *newCellNamep,
+                           char *linkedNamep,
+                           cm_configProc_t *procp, void *rockp)
+{
+    HKEY hkCellServDB = 0, hkCellName = 0, hkServerName = 0;
+    DWORD dwType, dwSize;
+    DWORD dwCells, dwServers, dwForceDNS;
+    DWORD dwIndex, dwRank;
+    unsigned short ipRank;
+    LONG code;
+    FILETIME ftLastWriteTime;
+    char szCellName[CELL_MAXNAMELEN];
+    char szServerName[MAXHOSTCHARS];
+    char szHostName[MAXHOSTCHARS];
+    char szAddr[64];
+    struct hostent *thp;
+    struct sockaddr_in vlSockAddr;
+    char * s;
+
+    if ( IsWindowsModule(cellNamep) )
+	return -1;
+
+    /* No Server CellServDB list (yet) */
+    if ( !client )
+        return CM_ERROR_NOSUCHCELL;
+
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\CellServDB",
+                      0,
+                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      &hkCellServDB) != ERROR_SUCCESS)
+        return CM_ERROR_NOSUCHCELL;
+
+    if (RegOpenKeyEx( hkCellServDB, 
+                      cellNamep,
+                      0,
+                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      &hkCellName) != ERROR_SUCCESS) {
+        BOOL bFound = 0;
+
+        /* We did not find an exact match.  Much search for partial matches. */
+
+        code = RegQueryInfoKey( hkCellServDB,
+                                NULL,  /* lpClass */
+                                NULL,  /* lpcClass */
+                                NULL,  /* lpReserved */
+                                &dwCells,  /* lpcSubKeys */
+                                NULL,  /* lpcMaxSubKeyLen */
+                                NULL,  /* lpcMaxClassLen */
+                                NULL,  /* lpcValues */
+                                NULL,  /* lpcMaxValueNameLen */
+                                NULL,  /* lpcMaxValueLen */
+                                NULL,  /* lpcbSecurityDescriptor */
+                                &ftLastWriteTime /* lpftLastWriteTime */
+                                );
+        if (code != ERROR_SUCCESS)
+            dwCells = 0;
+
+        /* 
+         * We search the entire list to ensure that there is only
+         * one prefix match.  If there is more than one, we return none.
+         */
+        for ( dwIndex = 0; dwIndex < dwCells; dwIndex++ ) {
+            dwSize = CELL_MAXNAMELEN;
+            code = RegEnumKeyEx( hkCellServDB, dwIndex, szCellName, &dwSize, NULL, 
+                                 NULL, NULL, &ftLastWriteTime);
+            if (code != ERROR_SUCCESS)
+                continue;
+            szCellName[CELL_MAXNAMELEN-1] = '\0';
+            strlwr(szCellName);
+
+            /* if not a prefix match, try the next key */
+            if (strncmp(cellNamep, szCellName, strlen(cellNamep)))
+                continue;
+
+            /* If we have a prefix match and we already found another
+             * match, return neither */
+            if (hkCellName) {
+                bFound = 0;
+                RegCloseKey( hkCellName);
+                break;
+            }
+
+            if (RegOpenKeyEx( hkCellServDB, 
+                              szCellName,
+                              0,
+                              KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                              &hkCellName) != ERROR_SUCCESS)
+                continue;
+
+            if (newCellNamep) {
+                strncpy(newCellNamep, szCellName, CELL_MAXNAMELEN);
+                newCellNamep[CELL_MAXNAMELEN-1] = '\0';
+            }
+            bFound = 1;
+        }
+
+        if ( !bFound ) {
+            RegCloseKey(hkCellServDB);
+            return CM_ERROR_NOSUCHCELL;
+        }
+    } else if (newCellNamep) {
+        strncpy(newCellNamep, cellNamep, CELL_MAXNAMELEN);
+        newCellNamep[CELL_MAXNAMELEN-1] = '\0';
+        strlwr(newCellNamep);
+    }
+
+    if (linkedNamep) {
+        dwSize = CELL_MAXNAMELEN;
+        code = RegQueryValueEx(hkCellName, "LinkedCell", NULL, &dwType,
+                                (BYTE *) linkedNamep, &dwSize);
+        if (code == ERROR_SUCCESS && dwType == REG_SZ) {
+            linkedNamep[CELL_MAXNAMELEN-1] = '\0';
+            strlwr(linkedNamep);
+        } else {
+            linkedNamep[0] = '\0';
+        }
+    }
+
+    /* Check to see if DNS lookups are required */
+    dwSize = sizeof(DWORD);
+    code = RegQueryValueEx(hkCellName, "ForceDNS", NULL, &dwType,
+                            (BYTE *) &dwForceDNS, &dwSize);
+    if (code == ERROR_SUCCESS && dwType == REG_DWORD) {
+        if (dwForceDNS)
+            goto done;
+    } else {
+        dwForceDNS = 0;
+    }
+
+    /* 
+     * Using the defined server list.  Enumerate and populate
+     * the server list for the cell.
+     */
+    code = RegQueryInfoKey( hkCellName,
+                            NULL,  /* lpClass */
+                            NULL,  /* lpcClass */
+                            NULL,  /* lpReserved */
+                            &dwServers,  /* lpcSubKeys */
+                            NULL,  /* lpcMaxSubKeyLen */
+                            NULL,  /* lpcMaxClassLen */
+                            NULL,  /* lpcValues */
+                            NULL,  /* lpcMaxValueNameLen */
+                            NULL,  /* lpcMaxValueLen */
+                            NULL,  /* lpcbSecurityDescriptor */
+                            &ftLastWriteTime /* lpftLastWriteTime */
+                            );
+    if (code != ERROR_SUCCESS)
+        dwServers = 0;
+
+    for ( dwIndex = 0; dwIndex < dwServers; dwIndex++ ) {
+        dwSize = MAXHOSTCHARS;
+        code = RegEnumKeyEx( hkCellName, dwIndex, szServerName, &dwSize, NULL, 
+                             NULL, NULL, &ftLastWriteTime);
+        if (code != ERROR_SUCCESS)
+            continue;
+
+        szServerName[MAXHOSTCHARS-1] = '\0';
+        if (RegOpenKeyEx( hkCellName, 
+                          szServerName,
+                          0,
+                          KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                          &hkServerName) != ERROR_SUCCESS)
+            continue;
+
+        /* We have a handle to a valid server key.  Now we need 
+         * to add the server to the cell */
+        
+        /* First, see if there is an alternate hostname specified */
+        dwSize = MAXHOSTCHARS;
+        code = RegQueryValueEx(hkServerName, "HostName", NULL, &dwType,
+                                (BYTE *) szHostName, &dwSize);
+        if (code == ERROR_SUCCESS && dwType == REG_SZ) {
+            szHostName[MAXHOSTCHARS-1] = '\0';
+            strlwr(szHostName);
+            s = szHostName;
+        } else {
+            s = szServerName;
+        }
+
+        dwSize = sizeof(DWORD);
+        code = RegQueryValueEx(hkServerName, "Rank", NULL, &dwType,
+                                (BYTE *) &dwRank, &dwSize);
+        if (code == ERROR_SUCCESS && dwType == REG_DWORD) {
+            ipRank = (unsigned short)(dwRank <= 65535 ? dwRank : 65535);
+        } else {
+            ipRank = 0;
+        }
+
+        dwSize = sizeof(szAddr);
+        code = RegQueryValueEx(hkServerName, "IPv4Address", NULL, &dwType,
+                                (BYTE *) szAddr, &dwSize);
+        if (code == ERROR_SUCCESS && dwType == REG_SZ) {
+            szAddr[63] = '\0';
+        } else {
+            szAddr[0] = '\0';
+        }
+
+        WSASetLastError(0);
+        thp = gethostbyname(s);
+        if (thp) {
+            memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr, sizeof(long));
+            vlSockAddr.sin_family = AF_INET;
+            /* sin_port supplied by connection code */
+            if (procp)
+                (*procp)(rockp, &vlSockAddr, s, ipRank);
+        } else if (szAddr[0]) {
+            afs_uint32 ip_addr;
+            unsigned int c1, c2, c3, c4;
+
+            /* Since there is no gethostbyname() data 
+             * available we will read the IP address
+             * stored in the CellServDB file
+             */
+            code = sscanf(szAddr, " %u.%u.%u.%u",
+                           &c1, &c2, &c3, &c4);
+            if (code == 4 && c1<256 && c2<256 && c3<256 && c4<256) {
+                unsigned char * tp = (unsigned char *) &ip_addr;
+                *tp++ = c1;
+                *tp++ = c2;
+                *tp++ = c3;
+                *tp++ = c4;
+                memcpy(&vlSockAddr.sin_addr.s_addr, &ip_addr,
+                        sizeof(long));
+                vlSockAddr.sin_family = AF_INET;
+                /* sin_port supplied by connection code */
+                if (procp)
+                    (*procp)(rockp, &vlSockAddr, s, ipRank);
+            }
+        }
+
+        RegCloseKey( hkServerName);
+    }
+
+  done:
+    RegCloseKey(hkCellName);
+    RegCloseKey(hkCellServDB);
+
+    return ((dwForceDNS || dwServers == 0) ? CM_ERROR_FORCE_DNS_LOOKUP : 0);
+}
+
+long cm_EnumerateCellRegistry(afs_uint32 client, cm_enumCellRegistryProc_t *procp, void *rockp)
+{
+    HKEY hkCellServDB = 0;
+    DWORD dwType, dwSize;
+    DWORD dwCells;
+    DWORD dwIndex;
+    LONG code;
+    FILETIME ftLastWriteTime;
+    char szCellName[CELL_MAXNAMELEN];
+
+    /* No server CellServDB in the registry. */
+    if (!client || procp == NULL)
+        return 0;
+
+    if (RegOpenKeyEx( HKEY_LOCAL_MACHINE,
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\CellServDB",
+                      0,
+                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      &hkCellServDB) != ERROR_SUCCESS)
+        return 0;
+
+    code = RegQueryInfoKey( hkCellServDB,
+                            NULL,  /* lpClass */
+                            NULL,  /* lpcClass */
+                            NULL,  /* lpReserved */
+                            &dwCells,  /* lpcSubKeys */
+                            NULL,  /* lpcMaxSubKeyLen */
+                            NULL,  /* lpcMaxClassLen */
+                            NULL,  /* lpcValues */
+                            NULL,  /* lpcMaxValueNameLen */
+                            NULL,  /* lpcMaxValueLen */
+                            NULL,  /* lpcbSecurityDescriptor */
+                            &ftLastWriteTime /* lpftLastWriteTime */
+                            );
+    if (code != ERROR_SUCCESS)
+        dwCells = 0;
+
+    /* 
+     * Enumerate each Cell and 
+     */
+    for ( dwIndex = 0; dwIndex < dwCells; dwIndex++ ) {
+        dwSize = CELL_MAXNAMELEN;
+        code = RegEnumKeyEx( hkCellServDB, dwIndex, szCellName, &dwSize, NULL, 
+                             NULL, NULL, &ftLastWriteTime);
+        if (code != ERROR_SUCCESS)
+            continue;
+        szCellName[CELL_MAXNAMELEN-1] = '\0';
+        strlwr(szCellName);
+
+        (*procp)(rockp, szCellName);
+    }
+
+    RegCloseKey(hkCellServDB);
+    return 0;
+}
+
 /* newCellNamep is required to be CELL_MAXNAMELEN in size */
 long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
-               cm_configProc_t *procp, void *rockp)
+                        cm_configProc_t *procp, void *rockp)
 {
 #ifdef AFS_AFSDB_ENV
     int rc;
     int  cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
+    unsigned short ipRanks[AFSMAXCELLHOSTS];
     int numServers;
     int i;
     struct sockaddr_in vlSockAddr;
@@ -346,20 +691,20 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 #endif
     if ( IsWindowsModule(cellNamep) )
 	return -1;
-    rc = getAFSServer(cellNamep, cellHostAddrs, cellHostNames, &numServers, ttl);
+    rc = getAFSServer(cellNamep, cellHostAddrs, cellHostNames, ipRanks, &numServers, ttl);
     if (rc == 0 && numServers > 0) {     /* found the cell */
         for (i = 0; i < numServers; i++) {
             memcpy(&vlSockAddr.sin_addr.s_addr, &cellHostAddrs[i],
                    sizeof(long));
-           vlSockAddr.sin_family = AF_INET;
-           /* sin_port supplied by connection code */
-           if (procp)
-          (*procp)(rockp, &vlSockAddr, cellHostNames[i]);
-            if (newCellNamep) {
-                strncpy(newCellNamep,cellNamep,CELL_MAXNAMELEN);
-                newCellNamep[CELL_MAXNAMELEN-1] = '\0';
-                strlwr(newCellNamep);
-            }
+            vlSockAddr.sin_family = AF_INET;
+            /* sin_port supplied by connection code */
+            if (procp)
+                (*procp)(rockp, &vlSockAddr, cellHostNames[i], ipRanks[i]);
+        }
+        if (newCellNamep) {
+            strncpy(newCellNamep,cellNamep,CELL_MAXNAMELEN);
+            newCellNamep[CELL_MAXNAMELEN-1] = '\0';
+            strlwr(newCellNamep);
         }
         return 0;   /* found cell */
     }
@@ -394,7 +739,10 @@ long cm_GetCellServDB(char *cellNamep, afs_uint32 len)
     return 0;
 }
 
-/* look up the root cell's name in the Registry */
+/* look up the root cell's name in the Registry 
+ * Input buffer must be at least CELL_MAXNAMELEN 
+ * in size.  (Defined in cm_cell.h)
+ */
 long cm_GetRootCellName(char *cellNamep)
 {
     DWORD code, dummyLen;
@@ -405,7 +753,7 @@ long cm_GetRootCellName(char *cellNamep)
     if (code != ERROR_SUCCESS)
         return -1;
 
-    dummyLen = 256;
+    dummyLen = CELL_MAXNAMELEN;
     code = RegQueryValueEx(parmKey, "Cell", NULL, NULL,
 				cellNamep, &dummyLen);
     RegCloseKey (parmKey);

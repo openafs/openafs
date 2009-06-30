@@ -9,6 +9,7 @@
 
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/com_err.h>
 
 #include <windows.h>
 #include <stdlib.h>

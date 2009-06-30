@@ -163,7 +163,8 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
 		     cm_volume_t *volp)
 {
     cm_conn_t *connp;
-    int i, j, k;
+    int i;
+    afs_uint32 j, k;
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     struct sockaddr_in tsockAddr;
@@ -412,7 +413,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                         serverUUID[j] = uuid;
                     }
 
-                    free(addrs.bulkaddrs_val);  /* This is wrong */
+                    xdr_free(addrs.bulkaddrs_val, addrs.bulkaddrs_len);
 
                     if (nentries == 0)
                         code = CM_ERROR_INVAL;
@@ -1293,9 +1294,10 @@ void cm_CheckOfflineVolumes(void)
 {
     cm_volume_t *volp;
     afs_int32 refCount;
+    extern int daemon_ShutdownFlag;
 
     lock_ObtainRead(&cm_volumeLock);
-    for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
+    for (volp = cm_data.allVolumesp; volp && !daemon_ShutdownFlag; volp=volp->allNextp) {
         if (volp->flags & CM_VOLUMEFLAG_IN_HASH) {
             InterlockedIncrement(&volp->refCount);
             lock_ReleaseRead(&cm_volumeLock);

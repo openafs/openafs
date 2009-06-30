@@ -118,10 +118,14 @@ cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     else
         code = buf_FlushCleanPages(scp, userp, reqp);
         
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
+        lock_ObtainWrite(&scp->dirlock);
     lock_ObtainWrite(&scp->rw);
     cm_DiscardSCache(scp);
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY)
-        cm_ResetSCacheDirectory(scp);
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+        cm_ResetSCacheDirectory(scp, 1);
+        lock_ReleaseWrite(&scp->dirlock);
+    }
     lock_ReleaseWrite(&scp->rw);
 
     osi_Log2(afsd_logp,"cm_FlushFile scp 0x%x returns error: [%x]",scp, code);
@@ -473,9 +477,13 @@ cm_IoctlGetFileCellName(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scach
             clientchar_t * cellname;
 
             cellname = cm_FsStringToClientStringAlloc(cellp->name, -1, NULL); 
-            cm_UnparseIoctlString(ioctlp, NULL, cellname, -1);
-            free(cellname);
-            code = 0;
+            if (cellname == NULL) {
+                code = CM_ERROR_NOSUCHCELL;
+            } else {
+                cm_UnparseIoctlString(ioctlp, NULL, cellname, -1);
+                free(cellname);
+                code = 0;
+            }
         } else
             code = CM_ERROR_NOSUCHCELL;
     }
@@ -1379,8 +1387,12 @@ cm_IoctlGetCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
         ioctlp->outDatap = basep + max * sizeof(afs_int32);
 
         cellnamep = cm_FsStringToClientStringAlloc(tcellp->name, -1, NULL);
-        cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
-        free(cellnamep);
+        if (cellnamep) {
+            cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
+            free(cellnamep);
+        } else {
+            tcellp = NULL;
+        }
     }
 
     if (tcellp) 
@@ -1421,7 +1433,9 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
 
         rock.cellp = cp;
         rock.flags = 0;
-        code = cm_SearchCellFileEx(cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
+        code = cm_SearchCellRegistry(1, cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
+        if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
+            code = cm_SearchCellFileEx(cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
 #ifdef AFS_AFSDB_ENV
         if (code) {
             if (cm_dnsEnabled) {
@@ -1477,8 +1491,12 @@ cm_IoctlGetWsCell(cm_ioctl_t *ioctlp, cm_user_t *userp)
     } else if (cm_data.rootCellp) {
         clientchar_t * cellnamep = cm_FsStringToClientStringAlloc(cm_data.rootCellp->name, -1, NULL);
         /* return the default cellname to the caller */
-        cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
-        free(cellnamep);
+        if (cellnamep) {
+            cm_UnparseIoctlString(ioctlp, NULL, cellnamep, -1);
+            free(cellnamep);
+        } else {
+            code = CM_ERROR_NOSUCHCELL;
+        }
     } else {
         /* if we don't know our default cell, return failure */
         code = CM_ERROR_NOSUCHCELL;
@@ -3055,6 +3073,8 @@ cm_IoctlMemoryDump(struct cm_ioctl *ioctlp, struct cm_user *userp)
     cm_DumpBufHashTable(hLogFile, cookie, 1);
     cm_DumpServers(hLogFile, cookie, 1);
     smb_DumpVCP(hLogFile, cookie, 1);
+    rx_DumpCalls(hLogFile, cookie);
+    rx_DumpPackets(hLogFile, cookie);
 
     CloseHandle(hLogFile);                          
   

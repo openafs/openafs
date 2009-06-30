@@ -237,7 +237,7 @@ extern cm_key_t cm_GenerateKey(afs_uint16 session_id, afs_offs_t process_id, afs
 
 extern int cm_KeyEquals(cm_key_t * k1, cm_key_t * k2, int flags);
 
-#define MAX_SYMLINK_COUNT 16
+#define MAX_SYMLINK_COUNT 64
 
 /* make this big enough so that one buffer of dir pages won't overflow.  We'll
  * check anyway, but we want to minimize the chance that we have to leave stuff

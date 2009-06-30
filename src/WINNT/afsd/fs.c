@@ -9,6 +9,7 @@
 
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/com_err.h>
 
 #include <windows.h>
 #include <stdlib.h>
@@ -3785,6 +3786,64 @@ SmbUnicodeCmd(struct cmd_syndesc * asp, void * arock)
 }
 
 static int
+GetFidCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    int error = 0;
+    int literal = 0;
+    cm_ioctlQueryOptions_t options;
+
+    if (as->parms[1].items)
+        literal = 1;
+
+    SetDotDefault(&as->parms[0].items);
+    for(ti=as->parms[0].items; ti; ti=ti->next) {
+        cm_fid_t fid;
+        afs_uint32 filetype;
+	afs_uint32 owner[2];
+	char cell[CELL_MAXNAMELEN];
+
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&options, 0, sizeof(options));
+        filetype = 0;
+        options.size = sizeof(options);
+        options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        options.literal = literal;
+	blob.in_size = options.size;    /* no variable length data */
+        blob.in = &options;
+
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+            options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            options.fid = fid;
+        } else {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        blob.out_size = sizeof(filetype);
+        blob.out = &filetype;
+
+        code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
+
+        blob.out_size = CELL_MAXNAMELEN;
+        blob.out = cell;
+
+        code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+        printf("%s %s (%u.%u.%u) contained in cell %s\n",
+                filetypestr(filetype),
+                ti->data, fid.volume, fid.vnode, fid.unique,
+                code ? "unknown-cell" : cell);
+    }
+    return error;
+}
+
+static int
 UuidCmd(struct cmd_syndesc *asp, void *arock)
 {
     long code;
@@ -5007,6 +5066,10 @@ int wmain(int argc, wchar_t **wargv)
     ts = cmd_CreateSyntax("smbunicode", SmbUnicodeCmd, NULL, "enable or disable Unicode on new SMB connections");
     cmd_AddParm(ts, "-on", CMD_FLAG, CMD_OPTIONAL, "enable Unicode on new connections");
     cmd_AddParm(ts, "-off", CMD_FLAG, CMD_OPTIONAL, "disable Unicode on new connections");
+
+    ts = cmd_CreateSyntax("getfid", GetFidCmd, NULL, "get file id for object(s) in afs");
+    cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
     code = cmd_Dispatch(argc, argv);
 

@@ -73,7 +73,7 @@ extern long cm_VolStatus_Notify_DFS_Mapping(cm_scache_t *scp,
 
 extern long cm_VolStatus_Invalidate_DFS_Mapping(cm_scache_t *scp);
 
-extern void cm_VolStatus_DeliverNotifications(void);
+extern void cm_VolStatus_DeliverNotifications(void * dummy);
 
 #define DLL_VOLSTATUS_FUNCS_VERSION 2
 typedef struct dll_VolStatus_Funcs {

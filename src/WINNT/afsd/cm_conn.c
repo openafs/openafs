@@ -108,7 +108,7 @@ void cm_InitConn(void)
                 HardDeadtimeout = (unsigned short) RDRtimeout;
                 afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
             }
-            if (ConnDeadtimeout == 0) {
+            if (IdleDeadtimeout == 0) {
                 IdleDeadtimeout = (unsigned short) RDRtimeout;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
@@ -121,7 +121,7 @@ void cm_InitConn(void)
                 HardDeadtimeout = CM_CONN_IFS_HARDDEADTIME;
                 afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
             }
-            if (ConnDeadtimeout == 0) {
+            if (IdleDeadtimeout == 0) {
                 IdleDeadtimeout = CM_CONN_IFS_IDLEDEADTIME;
                 afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
             }
@@ -634,33 +634,61 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 
     /* RX codes */
     else if (errorCode == RX_CALL_TIMEOUT) {
-        /* server took longer than hardDeadTime 
+        /* RPC took longer than hardDeadTime or the server
+         * reported idle for longer than idleDeadTime
          * don't mark server as down but don't retry
          * this is to prevent the SMB session from timing out
          * In addition, we log an event to the event log 
          */
 
         if (serverp) {
-        /* Log server being offline for this volume */
-        sprintf(addr, "%d.%d.%d.%d", 
-                 ((serverp->addr.sin_addr.s_addr & 0xff)),
-                 ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                 ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                 ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+            sprintf(addr, "%d.%d.%d.%d", 
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
 
-	LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
-	  
-        osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime exceeded addr[%s]",
-		 osi_LogSaveString(afsd_logp,addr));
-        reqp->tokenIdleErrorServp = serverp;
-        reqp->idleError++;
-        retry = 1;
-    }
+            LogEvent(EVENTLOG_WARNING_TYPE, MSG_RX_HARD_DEAD_TIME_EXCEEDED, addr);
+            osi_Log1(afsd_logp, "cm_Analyze: hardDeadTime or idleDeadtime exceeded addr[%s]",
+                     osi_LogSaveString(afsd_logp,addr));
+            reqp->tokenIdleErrorServp = serverp;
+            reqp->idleError++;
+
+            if (timeLeft > 2) {
+                if (!fidp) { /* vldb */
+                    retry = 1;
+                } else { /* file */
+                    cm_volume_t *volp = cm_GetVolumeByFID(fidp);
+                    if (volp) {
+                        if (fidp->volume == cm_GetROVolumeID(volp))
+                            retry = 1;
+                        cm_PutVolume(volp);
+                    }
+                }
+            }
+        }
     }
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */
+        sprintf(addr, "%d.%d.%d.%d", 
+                ((serverp->addr.sin_addr.s_addr & 0xff)),
+                ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24)); 
+
+        if (errorCode == RX_CALL_DEAD)
+            osi_Log2(afsd_logp, "cm_Analyze: Rx Call Dead addr[%s] forcedNew[%s]",
+                     osi_LogSaveString(afsd_logp,addr), 
+                     (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
+        else
+            osi_Log3(afsd_logp, "cm_Analyze: Rx Misc Error[%d] addr[%s] forcedNew[%s]",
+                     errorCode,
+                     osi_LogSaveString(afsd_logp,addr), 
+                     (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
+
         lock_ObtainMutex(&serverp->mx);
-	if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
+	if (errorCode != RX_CALL_DEAD || 
+            (reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
             if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
                 serverp->flags |= CM_SERVERFLAG_DOWN;
                 serverp->downTime = time(NULL);
@@ -695,18 +723,18 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
         retry = 1;
         }
     } else if (errorCode >= ERROR_TABLE_BASE_U && errorCode < ERROR_TABLE_BASE_U + 256) {
-      /*
-       * We received a ubik error.  its possible that the server we are
-       * communicating with has a corrupted database or is partitioned
-       * from the rest of the servers and another server might be able
-       * to answer our query.  Therefore, we will retry the request
-       * and force the use of another server.
-       */
-      if (serverp) {
-	reqp->tokenIdleErrorServp = serverp;
-	reqp->tokenError = errorCode;
-	retry = 1;
-      }
+        /*
+         * We received a ubik error.  its possible that the server we are
+         * communicating with has a corrupted database or is partitioned
+         * from the rest of the servers and another server might be able
+         * to answer our query.  Therefore, we will retry the request
+         * and force the use of another server.
+         */
+        if (serverp) {
+            reqp->tokenIdleErrorServp = serverp;
+            reqp->tokenError = errorCode;
+            retry = 1;
+        }
     } else if (errorCode == VICECONNBAD || errorCode == VICETOKENDEAD) {
 	cm_ForceNewConnections(serverp);
         if ( timeLeft > 2 )
@@ -848,10 +876,10 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
 
     /* If not allowed to retry, don't */
-    if (retry && ((!forcing_new && (reqp->flags & CM_REQ_NORETRY)) || dead_session)) {
-        osi_Log0(afsd_logp, "cm_Analyze: retry disabled");
+    if (!forcing_new && (reqp->flags & CM_REQ_NORETRY))
+	retry = 0;
+    else if (retry && dead_session)
         retry = 0;
-    }
 
   out:
     /* drop this on the way out */

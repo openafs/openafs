@@ -243,13 +243,23 @@ buf_Sync(int quitOnShutdown)
             /* start cleaning the buffer; don't touch log pages since
             * the log code counts on knowing exactly who is writing
             * a log page at any given instant.
+            *
+            * only attempt to write the buffer if the volume might
+            * be online.
             */
             afs_uint32 dirty;
+            cm_volume_t *volp;
 
-            cm_InitReq(&req);
-            req.flags |= CM_REQ_NORETRY;
-            buf_CleanAsyncLocked(bp, &req, &dirty);
-            wasDirty |= dirty;
+            volp = cm_GetVolumeByFID(&bp->fid);
+            switch (cm_GetVolumeStatus(volp, bp->fid.volume)) {
+            case vl_online:
+            case vl_unknown:
+                cm_InitReq(&req);
+                req.flags |= CM_REQ_NORETRY;
+                buf_CleanAsyncLocked(bp, &req, &dirty);
+                wasDirty |= dirty;
+            }
+            cm_PutVolume(volp);
         }
 
         /* the buffer may or may not have been dirty
@@ -275,6 +285,34 @@ buf_Sync(int quitOnShutdown)
             buf_ReleaseLocked(bp, TRUE);
             lock_ConvertWToR(&buf_globalLock);
         } else {
+            if (buf_ShutdownFlag) {
+                cm_cell_t *cellp;
+                cm_volume_t *volp;
+                char volstr[VL_MAXNAMELEN+12]="";
+                char *ext = "";
+
+                volp = cm_GetVolumeByFID(&bp->fid);
+                if (volp) {
+                    cellp = volp->cellp;
+                    if (bp->fid.volume == volp->vol[RWVOL].ID)
+                        ext = "";
+                    else if (bp->fid.volume == volp->vol[ROVOL].ID)
+                        ext = ".readonly";
+                    else if (bp->fid.volume == volp->vol[BACKVOL].ID)
+                        ext = ".backup";
+                    else
+                        ext = ".nomatch";
+                    snprintf(volstr, sizeof(volstr), "%s%s", volp->namep, ext);
+                } else {
+                    cellp = cm_FindCellByID(bp->fid.cell, CM_FLAG_NOPROBE);
+                    snprintf(volstr, sizeof(volstr), "%u", bp->fid.volume);
+                }
+
+                LogEvent(EVENTLOG_INFORMATION_TYPE, MSG_DIRTY_BUFFER_AT_SHUTDOWN, 
+                         cellp->name, volstr, bp->fid.vnode, bp->fid.unique, 
+                         bp->offset.QuadPart+bp->dirty_offset, bp->dirty_length);
+            }
+
             /* advance the pointer so we don't loop forever */
             lock_ObtainRead(&buf_globalLock);
             bpp = &bp->dirtyp;
@@ -299,7 +337,9 @@ void buf_IncrSyncer(long parm)
 	    i = SleepEx(5000, 1);
 	    if (i != 0) 
                 continue;
-	}
+	} else {
+            Sleep(50);
+        }
 
         wasDirty = buf_Sync(1);
     } /* whole daemon's while loop */
@@ -787,7 +827,14 @@ afs_uint32 buf_CleanAsyncLocked(cm_buf_t *bp, cm_req_t *reqp, afs_uint32 *pisdir
 	 */
 	if (reqp->flags & CM_REQ_NORETRY)
 	    break;
-    };
+
+        /* Ditto if the hardDeadTimeout or idleTimeout was reached */
+        if (code == CM_ERROR_TIMEDOUT || code == CM_ERROR_ALLDOWN ||
+            code == CM_ERROR_ALLBUSY || code == CM_ERROR_ALLOFFLINE ||
+            code == CM_ERROR_CLOCKSKEW) {
+            break;
+        }
+    }
 
     /* if someone was waiting for the I/O that just completed or failed,
      * wake them up.
@@ -1865,6 +1912,15 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
                     bp->error = code;
                     bp->dataVersion = CM_BUF_VERSION_BAD;
                     bp->dirtyCounter++;
+                    break;
+                case CM_ERROR_TIMEDOUT:
+                case CM_ERROR_ALLDOWN:
+                case CM_ERROR_ALLBUSY:
+                case CM_ERROR_ALLOFFLINE:
+                case CM_ERROR_CLOCKSKEW:
+                    /* do not mark the buffer in error state but do
+                     * not attempt to complete the rest either.
+                     */
                     break;
                 default:
                     code = buf_CleanAsyncLocked(bp, reqp, &wasDirty);

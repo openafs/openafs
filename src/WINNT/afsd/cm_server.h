@@ -128,11 +128,15 @@ extern void cm_SetServerNoInlineBulk(cm_server_t * serverp, int no);
 
 extern cm_server_t * cm_FindServerByIP(afs_uint32 addr, int type);
 
+extern cm_server_t * cm_FindServerByUuid(afsUUID* uuid, int type);
+
 extern void cm_SetLanAdapterChangeDetected(void);
 
 extern void cm_RemoveVolumeFromServer(cm_server_t * serverp, afs_uint32 volID);
 
 extern int cm_DumpServers(FILE *outputFile, char *cookie, int lock);
+
+extern int cm_ServerEqual(cm_server_t *srv1, cm_server_t *srv2);
 
 /* Protected by cm_syscfgLock (rw) */
 extern int cm_noIPAddr;         /* number of client network interfaces */
