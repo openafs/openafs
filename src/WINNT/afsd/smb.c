@@ -1335,12 +1335,12 @@ void smb_ReleaseTID(smb_tid_t *tidp, afs_uint32 locked)
             free(tidp);
         }
     }
+    if (vcp)
+        smb_ReleaseVCNoLock(vcp);
     if (!locked)
         lock_ReleaseWrite(&smb_rctLock);
     if (userp)
         cm_ReleaseUser(userp);
-    if (vcp)
-        smb_ReleaseVCNoLock(vcp);
 }	        
 
 smb_user_t *smb_FindUID(smb_vc_t *vcp, unsigned short uid, int flags)
