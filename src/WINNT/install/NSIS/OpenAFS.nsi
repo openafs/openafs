@@ -566,8 +566,17 @@ Section "!AFS Client" secClient
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.exe"
 
+
+  ; Remove the binaries from the old location if present
+  Delete /REBOOTOK "$INSTDIR\Client\Program\libafsconf.dll"
+  Delete "$INSTDIR\Client\Program\libafsconf.pdb"
+  Delete /REBOOTOK "$SYSDIR\afslogon.dll"
+  Delete "$SYSDIR\afscpcc.exe"
+  Delete "$SYSDIR\afslogon.pdb"
+  Delete "$SYSDIR\afscpcc.pdb"
+
   File "${AFS_RDR_BUILDDIR}\AFSRedirInstall.inf"
-  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.dll" "$INSTDIR\Client\Program\AFSRDFSProvider.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.dll" "$SYSDIR\AFSRDFSProvider.dll" "$INSTDIR"
   !insertmacro ReplaceDLL "${AFS_RDR_BUILDDIR}\AFSRedir.sys" "$INSTDIR\Client\Program\AFSRedir.sys" "$INSTDIR"    
    
    Call AFSLangFiles
@@ -784,7 +793,7 @@ IFSDone:
   Push "AFSRedirector"
   Call AddProvider
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector" "" ""
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\AFSRDFSProvider.dll"
+  WriteRegExpandStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "ProviderPath" "%SystemRoot%\System32\AFSRDFSProvider.dll"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Name" "OpenAFS Network"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "DeviceName" "\Device\AFSRedirector"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\AFSRedirector\NetworkProvider" "Class" 1
@@ -1171,13 +1180,13 @@ Section /o "Debug symbols" secDebug
   File "${AFS_CLIENT_BUILDDIR}\afscred.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afscpcc.pdb"
-  File "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.pdb"
   File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
 
   SetOutPath "$SYSDIR\Drivers"
   File "${AFS_RDR_BUILDDIR}\AFSRedir.pdb"
 
   SetOutPath "$SYSDIR"
+  File "${AFS_RDR_BUILDDIR}\AFSRDFSProvider.pdb"
   
 DoServer:
    SectionGetFlags ${secServer} $R0
@@ -1854,7 +1863,7 @@ StartRemove:
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.exe"
 
   Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedir.sys"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\AFSRDFSProvider.dll" 
+  Delete /REBOOTOK "$SYSDIR\AFSRDFSProvider.dll" 
   Delete "$INSTDIR\Client\Program\AFSRedirInstall.inf"
 
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
@@ -1863,7 +1872,7 @@ StartRemove:
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscpcc.pdb"
 
   Delete /REBOOTOK "$SYSDIR\Drivers\AFSRedir.pdb"
-  Delete /REBOOTOK "$INSTDIR\Client\Program\AFSRDFSProvider.pdb" 
+  Delete /REBOOTOK "$SYSDIR\AFSRDFSProvider.pdb" 
 
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"

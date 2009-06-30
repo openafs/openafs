@@ -1403,8 +1403,6 @@
                             <File Id="filelanahelper_LIB" Name="LANAHLPR.lib" LongName="lanahelper.lib" DiskId="1" src="$(var.LibDir)lanahelper.lib" /> 
                             <File Id="filelibafsconf_LIB" Name="LIBAFCNF.lib" LongName="libafsconf.lib" DiskId="1" src="$(var.LibDir)libafsconf.lib" /> 
                             <File Id="filelibosi_LIB" Name="libosi.lib" LongName="libosi.lib" DiskId="1" src="$(var.LibDir)libosi.lib" /> 
-                            <File Id="filecm_config_OBJ" Name="CMCONFIG.obj" LongName="cm_config.obj" DiskId="1" src="$(var.LibDir)cm_config.obj" /> 
-                            <File Id="filecm_dns_OBJ" Name="cm_dns.obj" LongName="cm_dns.obj" DiskId="1" src="$(var.LibDir)cm_dns.obj" /> 
                         </Component>
                         <Directory Id="dirLibAfs" Name="afs">
                             <Component Win64="$(var.Win64)" Id="cmp_SDK_Lib_Afs" Guid="$(var.cmp_SDK_Lib_Afs_guid)">
