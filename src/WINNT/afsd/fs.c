@@ -1653,6 +1653,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         blob.out = (char *) &owner;
 	if (0 == pioctl_utf8(ti->data, VIOCGETOWNER, &blob, 1)) {
 	    char oname[PR_MAXNAMELEN] = "(unknown)";
+	    char gname[PR_MAXNAMELEN] = "(unknown)";
             char confDir[257];
 
 	    /* Go to the PRDB and see if this all number username is valid */
@@ -1660,7 +1661,8 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
             pr_Initialize(1, confDir, cell);
 	    pr_SIdToName(owner[0], oname);
-	    printf("Owner %s (%u) Group %u\n", oname, owner[0], owner[1]);
+	    pr_SIdToName(owner[1], gname);
+	    printf("Owner %s (%u) Group %s (%u)\n", oname, owner[0], gname, owner[1]);
         }
 
 	blob.out = space;
@@ -3802,7 +3804,6 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
     for(ti=as->parms[0].items; ti; ti=ti->next) {
         cm_fid_t fid;
         afs_uint32 filetype;
-	afs_uint32 owner[2];
 	char cell[CELL_MAXNAMELEN];
 
         /* once per file */
@@ -4711,6 +4712,188 @@ TestVolStatCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+static int 
+ChOwnCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    int error = 0;
+    int literal = 0;
+    struct { 
+        cm_ioctlQueryOptions_t options;
+        afs_uint32 owner;
+    } inData;
+    afs_uint32 ownerId;
+    char * ownerStr;
+    char confDir[257];
+
+    cm_GetConfigDir(confDir, sizeof(confDir));
+
+    if (as->parms[2].items)
+        literal = 1;
+
+    ownerStr = as->parms[0].items->data;
+    ownerId = atoi(ownerStr);
+
+    SetDotDefault(&as->parms[1].items);
+    for(ti=as->parms[1].items; ti; ti=ti->next) {
+        cm_fid_t fid;
+        afs_uint32 filetype;
+	char cell[CELL_MAXNAMELEN];
+
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&inData, 0, sizeof(inData));
+        filetype = 0;
+        inData.options.size = sizeof(inData.options);
+        inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        inData.options.literal = literal;
+	blob.in_size = inData.options.size;    /* no variable length data */
+        blob.in = &inData;
+
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+            inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            inData.options.fid = fid;
+        } else {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        /* 
+         * if the owner was specified as a numeric value,
+         * then we can just use it.  Otherwise, we need 
+         * to know the cell of the path to determine which
+         * ptserver to contact in order to convert the name
+         * to a numeric value.
+         */
+        if (ownerId == 0) {
+            blob.out_size = CELL_MAXNAMELEN;
+            blob.out = cell;
+
+            code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+            /* 
+             * We now know the cell for the target and we need to
+             * convert the ownerStr to the Id for this user 
+             */
+            pr_Initialize(1, confDir, cell);
+            code = pr_SNameToId(ownerStr, &inData.owner);
+            pr_End();
+
+            if (code || inData.owner == ANONYMOUSID ) {
+                Die(ECHILD, ti->data);
+                error = 1;
+                continue;
+            }
+        } else {
+            inData.owner = ownerId;
+        }
+
+        blob.in_size = sizeof(inData);
+	blob.out = NULL;
+	blob.out_size = 0;
+	code = pioctl_utf8(ti->data, VIOC_SETOWNER, &blob, 1);
+	if (code) {
+            Die(errno, ti->data);
+        }
+    }
+    return error;
+}
+
+static int 
+ChGrpCmd(struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    int error = 0;
+    int literal = 0;
+    struct { 
+        cm_ioctlQueryOptions_t options;
+        afs_uint32 group;
+    } inData;
+    afs_uint32 groupId;
+    char * groupStr;
+    char confDir[257];
+
+    cm_GetConfigDir(confDir, sizeof(confDir));
+
+    if (as->parms[2].items)
+        literal = 1;
+
+    groupStr = as->parms[0].items->data;
+    groupId = atoi(groupStr);
+
+    SetDotDefault(&as->parms[1].items);
+    for(ti=as->parms[1].items; ti; ti=ti->next) {
+        cm_fid_t fid;
+        afs_uint32 filetype;
+	char cell[CELL_MAXNAMELEN];
+
+        /* once per file */
+        memset(&fid, 0, sizeof(fid));
+        memset(&inData, 0, sizeof(inData));
+        filetype = 0;
+        inData.options.size = sizeof(inData.options);
+        inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
+        inData.options.literal = literal;
+	blob.in_size = inData.options.size;    /* no variable length data */
+        blob.in = &inData;
+
+        blob.out_size = sizeof(cm_fid_t);
+        blob.out = (char *) &fid;
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+            inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
+            inData.options.fid = fid;
+        } else {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
+
+        /* 
+         * if the group was specified as a numeric value,
+         * then we can just use it.  Otherwise, we need 
+         * to know the cell of the path to determine which
+         * ptserver to contact in order to convert the name
+         * to a numeric value.
+         */
+        if (groupId == 0) {
+            blob.out_size = CELL_MAXNAMELEN;
+            blob.out = cell;
+
+            code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+            /* 
+             * We now know the cell for the target and we need to
+             * convert the groupStr to the Id for this user 
+             */
+            pr_Initialize(1, confDir, cell);
+            code = pr_SNameToId(groupStr, &inData.group);
+            pr_End();
+
+            if (code || inData.group == ANONYMOUSID ) {
+                Die(ECHILD, ti->data);
+                error = 1;
+                continue;
+            }
+        } else {
+            inData.group = groupId;
+        }
+
+        blob.in_size = sizeof(inData);
+	blob.out = NULL;
+	blob.out_size = 0;
+	code = pioctl_utf8(ti->data, VIOC_SETGROUP, &blob, 1);
+	if (code) {
+            Die(errno, ti->data);
+        }
+    }
+    return error;
+}
+
 #ifndef WIN32
 #include "AFS_component_version_number.c"
 #endif
@@ -5071,6 +5254,16 @@ int wmain(int argc, wchar_t **wargv)
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
     cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
 
+    ts = cmd_CreateSyntax("chown", ChOwnCmd, NULL, "set owner for object(s) in afs");
+    cmd_AddParm(ts, "-owner", CMD_SINGLE, 0, "user name or id");
+    cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
+
+    ts = cmd_CreateSyntax("chgrp", ChGrpCmd, NULL, "set owner for object(s) in afs");
+    cmd_AddParm(ts, "-group", CMD_SINGLE, 0, "user/group name or id");
+    cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
+    cmd_AddParm(ts, "-literal", CMD_FLAG, CMD_OPTIONAL, "literal evaluation of mountpoints and symlinks");
+
     code = cmd_Dispatch(argc, argv);
 
     if (rxInitDone) 
@@ -5140,6 +5333,12 @@ Die(int code, char *filename)
             fprintf(stderr,"%s: All servers are down on which '%s' resides\n", pn, filename);
 	else 
             fprintf(stderr,"%s: All servers are down\n", pn);
+    } 
+    else if (code == ECHILD) {  /* hack */
+	if (filename) 
+            fprintf(stderr,"%s: Invalid owner specified for '%s'\n", pn, filename);
+	else 
+            fprintf(stderr,"%s: Invalid owner specified\n", pn);
     } 
     else {
 	if (filename) 
