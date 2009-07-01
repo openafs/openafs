@@ -177,6 +177,10 @@ extern afs_int32 cm_IoctlGetFid(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_
 
 extern afs_int32 cm_IoctlGetOwner(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
+extern afs_int32 cm_IoctlSetOwner(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
+
+extern afs_int32 cm_IoctlSetGroup(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
+
 extern afs_int32 cm_IoctlWhereIs(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);
 
 extern afs_int32 cm_IoctlStatMountPoint(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t *reqp);

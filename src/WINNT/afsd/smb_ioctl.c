@@ -87,6 +87,8 @@ smb_InitIoctl(void)
     smb_ioctlProcsp[VIOC_GETFILETYPE] = smb_IoctlGetFileType;
     smb_ioctlProcsp[VIOC_VOLSTAT_TEST] = smb_IoctlVolStatTest;
     smb_ioctlProcsp[VIOC_UNICODECTL] = smb_IoctlUnicodeControl;
+    smb_ioctlProcsp[VIOC_SETOWNER] = smb_IoctlSetOwner;
+    smb_ioctlProcsp[VIOC_SETGROUP] = smb_IoctlSetGroup;
 }       
 
 /* called to make a fid structure into an IOCTL fid structure */
@@ -1102,6 +1104,7 @@ smb_IoctlGetACL(smb_ioctl_t *ioctlp, cm_user_t *userp)
     } else {
         code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
     }
+
     if (code) 
         return code;
 
@@ -1825,3 +1828,94 @@ smb_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     return cm_IoctlVolStatTest(&ioctlp->ioctl, userp, &req);
 }
+
+/* 
+ * VIOC_SETOWNER
+ * 
+ * This pioctl requires the use of the cm_ioctlQueryOptions_t structure.
+ *
+ */
+afs_int32 
+smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    afs_int32 code;
+    cm_scache_t *scp;
+    cm_req_t req;
+    cm_ioctlQueryOptions_t *optionsp;
+    afs_uint32 flags = 0;
+
+    smb_InitReq(&req);
+
+    optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
+    if (optionsp) {
+        if (CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
+            flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
+
+        if (CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+            cm_fid_t fid;
+            cm_SkipIoctlPath(&ioctlp->ioctl);
+            cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+                       optionsp->fid.vnode, optionsp->fid.unique);
+            code = cm_GetSCache(&fid, &scp, userp, &req);
+        } else {
+            code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        }
+        if (code) 
+            return code;
+
+        cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);
+    }
+
+    code = cm_IoctlSetOwner(&ioctlp->ioctl, userp, scp, &req);
+
+    cm_ReleaseSCache(scp);
+
+    return code;
+}
+
+/* 
+ * VIOC_GETOWNER
+ * 
+ * This pioctl requires the use of the cm_ioctlQueryOptions_t structure.
+ *
+ */
+afs_int32 
+smb_IoctlSetGroup(struct smb_ioctl *ioctlp, struct cm_user *userp)
+{
+    afs_int32 code;
+    cm_scache_t *scp;
+    cm_req_t req;
+    cm_ioctlQueryOptions_t *optionsp;
+    afs_uint32 flags = 0;
+
+    smb_InitReq(&req);
+
+    optionsp = cm_IoctlGetQueryOptions(&ioctlp->ioctl, userp);
+    if (optionsp) {
+        if (CM_IOCTL_QOPTS_HAVE_LITERAL(optionsp))
+            flags |= (optionsp->literal ? CM_PARSE_FLAG_LITERAL : 0);
+
+        if (CM_IOCTL_QOPTS_HAVE_FID(optionsp)) {
+            cm_fid_t fid;
+            cm_SkipIoctlPath(&ioctlp->ioctl);
+            cm_SetFid(&fid, optionsp->fid.cell, optionsp->fid.volume,
+                       optionsp->fid.vnode, optionsp->fid.unique);
+            code = cm_GetSCache(&fid, &scp, userp, &req);
+        } else {
+            code = smb_ParseIoctlPath(ioctlp, userp, &req, &scp, flags);
+        }
+        if (code) 
+            return code;
+
+        cm_IoctlSkipQueryOptions(&ioctlp->ioctl, userp);
+    }
+
+    code = cm_IoctlSetGroup(&ioctlp->ioctl, userp, scp, &req);
+
+    cm_ReleaseSCache(scp);
+
+    return code;
+}
+
+
+
