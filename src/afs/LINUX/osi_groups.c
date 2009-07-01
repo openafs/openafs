@@ -637,6 +637,7 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 
 void osi_keyring_init(void)
 {
+#if !defined(EXPORTED_KEY_TYPE_KEYRING)
     struct task_struct *p;
 
     /* If we can't lock the tasklist, either with its explicit lock,
@@ -660,10 +661,7 @@ void osi_keyring_init(void)
 #if defined(EXPORTED_FIND_TASK_BY_PID)
 	p = find_task_by_pid(1);
 #else
-	p = pid_task(1, PIDTYPE_PID);
-/*
 	p = find_task_by_vpid(1);
-*/
 #endif
 	if (p && task_user(p)->session_keyring)
 	    __key_type_keyring = task_user(p)->session_keyring->type;
@@ -678,6 +676,7 @@ void osi_keyring_init(void)
 	    rcu_read_unlock();
 # endif
     }
+#endif
 #endif
 
     register_key_type(&key_type_afs_pag);
