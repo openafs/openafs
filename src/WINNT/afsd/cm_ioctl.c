@@ -883,6 +883,84 @@ cm_IoctlGetOwner(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *sc
 
 
 /* 
+ * VIOC_SETOWNER internals.
+ * 
+ * Assumes that pioctl path has been parsed or skipped
+ * and that cm_ioctlQueryOptions_t have been parsed and skipped.
+ * 
+ * scp is held but not locked.
+ *
+ */
+afs_int32 
+cm_IoctlSetOwner(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
+{
+    afs_int32 code = 0;
+    char *cp;
+
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == 0)
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+
+    if (code == 0) {
+        afs_uint32 owner;
+        cm_attr_t attr;
+
+        memset(&attr, 0, sizeof(attr));
+
+        cp = ioctlp->inDatap;
+        memcpy((char *)&owner, cp, sizeof(afs_uint32));
+
+        attr.mask = CM_ATTRMASK_OWNER;
+        attr.owner = owner;
+
+        code = cm_SetAttr(scp, &attr, userp, reqp);
+    }
+    return code;
+}
+
+
+/* 
+ * VIOC_SETGROUP internals.
+ * 
+ * Assumes that pioctl path has been parsed or skipped
+ * and that cm_ioctlQueryOptions_t have been parsed and skipped.
+ * 
+ */
+afs_int32 
+cm_IoctlSetGroup(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp, cm_req_t *reqp)
+{
+    afs_int32 code = 0;
+    char *cp;
+
+    lock_ObtainWrite(&scp->rw);
+    code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                      CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    if (code == 0)
+        cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    lock_ReleaseWrite(&scp->rw);
+
+    if (code == 0) {
+        afs_uint32 group;
+        cm_attr_t attr;
+
+        memset(&attr, 0, sizeof(attr));
+
+        cp = ioctlp->inDatap;
+        memcpy((char *)&group, cp, sizeof(afs_uint32));
+
+        attr.mask = CM_ATTRMASK_GROUP;
+        attr.group = group;
+
+        code = cm_SetAttr(scp, &attr, userp, reqp);
+    }
+    return code;
+}
+
+
+/* 
  * VIOCWHEREIS internals.
  * 
  * Assumes that pioctl path has been parsed or skipped.
@@ -1732,9 +1810,9 @@ cm_IoctlGetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
             continue;    /* catch up to where we left off */
         }
 
-        if ( vlonly && (tsp->type == CM_SERVER_FILE) )
+        if ( vlonly && (tsp->type != CM_SERVER_VLDB) )
             continue;   /* ignore fileserver for -vlserver option*/
-        if ( !vlonly && (tsp->type == CM_SERVER_VLDB) )
+        if ( !vlonly && (tsp->type != CM_SERVER_FILE) )
             continue;   /* ignore vlservers */
 
         srvout->host = tsp->addr.sin_addr;

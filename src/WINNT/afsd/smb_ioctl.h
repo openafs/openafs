@@ -200,4 +200,8 @@ extern afs_int32 smb_IoctlVolStatTest(struct smb_ioctl *ioctlp, struct cm_user *
 
 extern afs_int32 smb_IoctlUnicodeControl(struct smb_ioctl *ioctlp, struct cm_user * userp);
 
+extern afs_int32 smb_IoctlSetOwner(struct smb_ioctl *ioctlp, struct cm_user *userp);
+
+extern afs_int32 smb_IoctlSetGroup(struct smb_ioctl *ioctlp, struct cm_user *userp);
+
 #endif /*  __SMB_IOCTL_H_ENV__ */

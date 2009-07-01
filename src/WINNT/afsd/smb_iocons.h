@@ -95,6 +95,8 @@ struct sbstruct {
 #define VIOC_PATH_AVAILABILITY          0x31
 #define VIOC_GETFILETYPE                0x32
 #define VIOC_UNICODECTL                 0x33
+#define VIOC_SETOWNER                   0x34
+#define VIOC_SETGROUP                   0x35
 
 #define VIOC_VOLSTAT_TEST               0x3F
 
