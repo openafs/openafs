@@ -39,6 +39,8 @@ PODS = \
         pod1\fs_apropos.pod            \
         pod1\fs_checkservers.pod       \
         pod1\fs_checkvolumes.pod       \
+        pod1\fs_chgrp.pod              \
+        pod1\fs_chown.pod              \
         pod1\fs_cleanacl.pod           \
         pod1\fs_copyacl.pod            \
         pod1\fs_cscpolicy.pod          \

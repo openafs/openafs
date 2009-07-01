@@ -1,6 +1,6 @@
 =head1 NAME
 
-symlink_list - Show the file to which a symlink points
+symlink_list - Show the file to which a symlink points [Windows only]
 
 =head1 SYNOPSIS
 

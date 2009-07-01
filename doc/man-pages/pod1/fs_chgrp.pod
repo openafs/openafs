@@ -1,0 +1,87 @@
+=head1 NAME
+
+fs_chgrp - Changes the group for an object stored within AFS [Windows only]
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs chown> S<<< B<-group> <I<user/group>> >>> S<<< B<-path> <I<dir/file path>>+ >>> 
+    [B<-literal>][B<-help>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<fs chgrp> command assigns the specified B<group> to each object 
+specified with the B<-path>.
+
+If the B<-literal> argument is specified, the targets of symlinks and mountpoints 
+are not resolved.  This permits the group of the symlink or 
+mountpoint to be assigned.
+
+The B<group> can be specified by name or by number.  If specified by 
+name, the name will be resolved to the numeric value by querying the
+protection server in the cell for each specified B<-path> object.
+
+To display the current group, use the B<fs examine> command.
+
+=head1 CAUTIONS
+
+Explicit or implicit administrator access rights are required to be able to 
+change the group of an object stored in AFS.
+
+This command is available in versions of OpenAFS for Windows 1.5.61 and higher.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-group> <I<user/group>>
+
+A valid name or number of a user or group identifier in the Protection Service
+database.  
+
+=item B<-path> <I<dir/file path>>+
+
+Names each AFS directory or file, on which the group will be set.
+Partial pathnames are interpreted relative to the current working
+directory.
+
+Specify the read/write path to each directory to avoid the
+failure that results from attempting to change a read-only volume. By
+convention, the read/write path is indicated by placing a period before
+the cell name at the pathname's second level (for example,
+F</afs/.abc.com>). For further discussion of the concept of read/write and
+read-only paths through the filespace, see the B<fs mkmount> reference
+page.
+
+=item B<-literal>
+
+When specified, the targets of symlinks and mountpoints are not resolved.  
+This permits the ownership of the symlink or mountpoint to be assigned.
+
+=item B<-help>
+
+Prints the online help for this command. All other valid options are
+ignored.
+
+=back
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must have the C<a> (administer) permission on the directory's
+ACL, a member of the system:administrators group, be the UID owner of the 
+object, or, as a special case, must be the UID owner of the top-level directory 
+of the volume containing the object.
+
+=head1 SEE ALSO
+
+L<fs_examine(1)>,
+L<fs_chown(1)>
+
+=head1 COPYRIGHT
+
+This document was written by Jeffrey Altman and is released under the BSD license.
