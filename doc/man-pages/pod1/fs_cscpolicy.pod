@@ -1,6 +1,6 @@
 =head1 NAME
 
-fs_cscpolicy - Change client side caching policy for AFS shares
+fs_cscpolicy - Change client side caching policy for AFS shares [Windows only]
 
 =head1 SYNOPSIS
 

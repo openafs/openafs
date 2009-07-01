@@ -1,6 +1,6 @@
 =head1 NAME
 
-symlink_remove - Remove a symbolic link.
+symlink_remove - Remove a symbolic link [Windows only]
 
 =head1 SYNOPSIS
 
