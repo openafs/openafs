@@ -289,7 +289,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                 /* copy just the first word and ignore trailing white space */
                 for ( i=0; valuep[i] && !isspace(valuep[i]) && i<sizeof(hostname); i++)
                     hostname[i] = valuep[i];
-                valuep[i] = '\0';
+                hostname[i] = '\0';
 
 		/* add the server to the VLDB list */
                 WSASetLastError(0);
