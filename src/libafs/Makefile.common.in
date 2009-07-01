@@ -95,6 +95,7 @@ AFSAOBJS = \
 	afs_mariner.o \
 	afs_md5.o \
 	afs_memcache.o	\
+	afs_fetchstore.o	\
 	afs_osi.o		\
 	afs_osidnlc.o	\
 	afs_osi_alloc.o	\
@@ -354,6 +355,8 @@ afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 afs_pag_call.o: $(TOP_SRC_AFS)/afs_pag_call.c
 	$(CRULE_NOOPT)
 afs_pag_cred.o: $(TOP_SRC_AFS)/afs_pag_cred.c
+	$(CRULE_NOOPT)
+afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE_NOOPT)
 afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE_NOOPT)
