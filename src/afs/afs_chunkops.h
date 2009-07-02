@@ -89,9 +89,6 @@ struct afs_cacheOps {
 #define	afs_GetVolSlot()		(*(afs_cacheType->GetVolSlot))()
 #define	afs_HandleLink(avc, areq)	(*(afs_cacheType->HandleLink))(avc, areq)
 
-#define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered, length) \
-          (*(afs_cacheType->FetchProc))(call, file, (afs_size_t)base, adc, avc, (afs_size_t *)toxfer, (afs_size_t *)xfered, length)
-
 /* These memcpys should get optimised to simple assignments when afs_dcache_id_t 
  * is simple */
 static_inline void afs_copy_inode(afs_dcache_id_t *dst, afs_dcache_id_t *src) {

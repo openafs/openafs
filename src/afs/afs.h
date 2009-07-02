@@ -1357,6 +1357,14 @@ struct storeOps {
     int (*destroy)(void **rock, afs_int32 error);
 };
 
+struct fetchOps {
+    int (*more)(void *rock, afs_uint32 *length, afs_uint32 *moredata);
+    int (*read)(void *rock, afs_uint32 tlen, afs_uint32 *bytesread);
+    int (*write)(void *rock, struct osi_file *fp, afs_uint32 offset,
+        afs_uint32 tlen, afs_uint32 *byteswritten);
+    int (*destroy)(void **rock, afs_int32 error);
+};
+
 /* fakestat support: opaque storage for afs_EvalFakeStat to remember
  * what vcache should be released.
  */
