@@ -69,17 +69,22 @@ rxfs_storeMemPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
 
 afs_int32
 rxfs_storeUfsRead(void *r, struct osi_file *tfile, afs_uint32 offset,
-		  afs_uint32 tlen, afs_uint32 *got)
+		  afs_uint32 tlen, afs_uint32 *bytesread)
 {
+    afs_int32 code;
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
 
-    *got = afs_osi_Read(tfile, -1, v->tbuffer, tlen);
-    if ((*got < 0)
-#if defined(KERNEL_HAVE_UERROR)
-		|| (*got != tlen && getuerror())
-#endif
-		)
+    *bytesread = 0;
+    code = afs_osi_Read(tfile, -1, v->tbuffer, tlen);
+    if (code < 0)
 	return EIO;
+    *bytesread = code;
+    if (code == tlen)
+        return 0;
+#if defined(KERNEL_HAVE_UERROR)
+    if (getuerror())
+	return EIO;
+#endif
     return 0;
 }
 
@@ -457,7 +462,7 @@ afs_MemCacheFetchProc(register struct rx_call *acall,
 					    RX_MAXIOVECS);
     if (!tiov) {
 	osi_Panic
-	    ("afs_MemCacheFetchProc: osi_AllocSmallSpace for iovecs returned NULL\n");
+	    ("afs_MemCacheFetchProc: osi_AllocSmallSpace returned NULL\n");
     }
     adc->validPos = abase;
     do {
