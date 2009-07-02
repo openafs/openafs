@@ -91,8 +91,6 @@ struct afs_cacheOps {
 
 #define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered, length) \
           (*(afs_cacheType->FetchProc))(call, file, (afs_size_t)base, adc, avc, (afs_size_t *)toxfer, (afs_size_t *)xfered, length)
-#define	afs_CacheStoreProc(call, file, bytes, avc, wake, toxfer, xfered) \
-          (*(afs_cacheType->StoreProc))(call, file, bytes, avc, wake, toxfer, xfered)
 
 /* These memcpys should get optimised to simple assignments when afs_dcache_id_t 
  * is simple */

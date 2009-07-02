@@ -491,7 +491,7 @@ extern int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 extern int afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP);
 extern int afs_MemCacheTruncate(register struct osi_file *fP,
 				int size);
-extern int afs_MemCacheStoreProc(register struct rx_call *acall,
+extern int afs_CacheStoreProc(register struct rx_call *acall,
 				 register struct osi_file *fP,
 				 register afs_int32 alen, struct vcache *avc,
 				 int *shouldWake, afs_size_t * abytesToXferP,

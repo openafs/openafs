@@ -25,97 +25,203 @@
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs_prototypes.h"
 
-/*
- * afs_UFSCacheStoreProc
- *
- * Description:
- *	Called upon store.
- *
- * Parameters:
- *	acall : Ptr to the Rx call structure involved.
- *	afile : Ptr to the related file descriptor.
- *	alen  : Size of the file in bytes.
- *	avc   : Ptr to the vcache entry.
- *      shouldWake : is it "safe" to return early from close() ?
- *	abytesToXferP  : Set to the number of bytes to xfer.
- *			 NOTE: This parameter is only used if AFS_NOSTATS
- *				is not defined.
- *	abytesXferredP : Set to the number of bytes actually xferred.
- *			 NOTE: This parameter is only used if AFS_NOSTATS
- *				is not defined.
- *
- * Environment:
- *	Nothing interesting.
- */
-int
-afs_UFSCacheStoreProc(register struct rx_call *acall, struct osi_file *afile,
-		      register afs_int32 alen, struct vcache *avc,
-		      int *shouldWake, afs_size_t * abytesToXferP,
-		      afs_size_t * abytesXferredP)
+extern int cacheDiskType;
+
+/* rock and operations for RX_FILESERVER */
+
+struct rxfs_storeVariables {
+    struct rx_call *call;
+    char *tbuffer;
+    struct iovec *tiov;
+    afs_uint32 tnio;
+    afs_int32 hasNo64bit;
+    struct AFSStoreStatus InStatus;
+};
+
+afs_int32
+rxfs_storeUfsPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
 {
-    afs_int32 code, got;
-    register char *tbuffer;
-    register int tlen;
-
-    AFS_STATCNT(UFS_CacheStoreProc);
-
-#ifndef AFS_NOSTATS
-    /*
-     * In this case, alen is *always* the amount of data we'll be trying
-     * to ship here.
-     */
-    (*abytesToXferP) = alen;
-    (*abytesXferredP) = 0;
-#endif /* AFS_NOSTATS */
-
-    afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
-    tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-    while (alen > 0) {
-	tlen = (alen > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : alen);
-	got = afs_osi_Read(afile, -1, tbuffer, tlen);
-	if ((got < 0)
-#if defined(KERNEL_HAVE_UERROR)
-	    || (got != tlen && getuerror())
-#endif
-	    ) {
-	    osi_FreeLargeSpace(tbuffer);
-	    return EIO;
-	}
-	afs_Trace2(afs_iclSetp, CM_TRACE_STOREPROC2, ICL_TYPE_OFFSET,
-		   ICL_HANDLE_OFFSET(*tbuffer), ICL_TYPE_INT32, got);
-	RX_AFS_GUNLOCK();
-	code = rx_Write(acall, tbuffer, got);	/* writing 0 bytes will
-						 * push a short packet.  Is that really what we want, just because the
-						 * data didn't come back from the disk yet?  Let's try it and see. */
-	RX_AFS_GLOCK();
-#ifndef AFS_NOSTATS
-	(*abytesXferredP) += code;
-#endif /* AFS_NOSTATS */
-	if (code != got) {
-	    code = rx_Error(acall);
-	    osi_FreeLargeSpace(tbuffer);
-	    return code ? code : -33;
-	}
-	alen -= got;
-	/*
-	 * If file has been locked on server, we can allow the store
-	 * to continue.
-	 */
-	if (shouldWake && *shouldWake && (rx_GetRemoteStatus(acall) & 1)) {
-	    *shouldWake = 0;	/* only do this once */
-	    afs_wakeup(avc);
-	}
-    }
-    afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
-    osi_FreeLargeSpace(tbuffer);
+    *tlen = (size > AFS_LRALLOCSIZ ?  AFS_LRALLOCSIZ : size);
     return 0;
+}
 
-}				/* afs_UFSCacheStoreProc */
+afs_int32
+rxfs_storeMemPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
+{
+    afs_int32 code;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *) r;
 
+    *tlen = (size > AFS_LRALLOCSIZ ?  AFS_LRALLOCSIZ : size);
+    RX_AFS_GUNLOCK();
+    code = rx_WritevAlloc(v->call, v->tiov, &v->tnio, RX_MAXIOVECS, *tlen);
+    RX_AFS_GLOCK();
+    if (code <= 0) {
+	code = rx_Error(v->call);
+	if ( !code )
+	    code = -33;
+    }
+    else {
+	*tlen = code;
+	code = 0;
+    }
+    return code;
+}
+
+afs_int32
+rxfs_storeUfsRead(void *r, struct osi_file *tfile, afs_uint32 offset,
+		  afs_uint32 tlen, afs_uint32 *got)
+{
+    afs_int32 code;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
+
+    *got = afs_osi_Read(tfile, -1, v->tbuffer, tlen);
+    if ((*got < 0)
+#if defined(KERNEL_HAVE_UERROR)
+		|| (*got != tlen && getuerror())
+#endif
+		)
+	return EIO;
+    return 0;
+}
+
+afs_int32
+rxfs_storeMemRead(void *r, struct osi_file *tfile, afs_uint32 offset,
+		  afs_uint32 tlen, afs_uint32 *bytesread)
+{
+    afs_int32 code;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
+    struct memCacheEntry *mceP = (struct memCacheEntry *)tfile;
+
+    *bytesread = 0;
+    code = afs_MemReadvBlk(mceP, offset, v->tiov, v->tnio, tlen);
+    if (code != tlen)
+	return -33;
+    *bytesread = code;
+    return 0;
+}
+
+afs_int32
+rxfs_storeMemWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
+{
+    afs_int32 code;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
+
+    RX_AFS_GUNLOCK();
+    code = rx_Writev(v->call, v->tiov, v->tnio, l);
+    RX_AFS_GLOCK();
+    if (code != l) {
+	code = rx_Error(v->call);
+        return (code ? code : -33);
+    }
+    *byteswritten = code;
+    return 0;
+}
+
+afs_int32
+rxfs_storeUfsWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
+{
+    afs_int32 code;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
+
+    RX_AFS_GUNLOCK();
+    code = rx_Write(v->call, v->tbuffer, l);
+	/* writing 0 bytes will
+	 * push a short packet.  Is that really what we want, just because the
+	 * data didn't come back from the disk yet?  Let's try it and see. */
+    RX_AFS_GLOCK();
+    if (code != l) {
+	code = rx_Error(v->call);
+        return (code ? code : -33);
+    }
+    *byteswritten = code;
+    return 0;
+}
+
+afs_int32
+rxfs_storeStatus(void *rock)
+{
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)rock;
+
+    if (rx_GetRemoteStatus(v->call) & 1)
+	return 0;
+    return 1;
+}
+
+afs_int32
+rxfs_storeDestroy(void **r, afs_int32 error)
+{
+    afs_int32 code = error;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)*r;
+
+    *r = NULL;
+    if (v->tbuffer)
+	osi_FreeLargeSpace(v->tbuffer);
+    if (v->tiov)
+	osi_FreeSmallSpace(v->tiov);
+    osi_FreeSmallSpace(v);
+    return code;
+}
+
+static
+struct storeOps rxfs_storeUfsOps = {
+    rxfs_storeUfsPrepare,
+    rxfs_storeUfsRead,
+    rxfs_storeUfsWrite,
+    rxfs_storeStatus,
+    rxfs_storeDestroy
+};
+
+static
+struct storeOps rxfs_storeMemOps = {
+    rxfs_storeMemPrepare,
+    rxfs_storeMemRead,
+    rxfs_storeMemWrite,
+    rxfs_storeStatus,
+    rxfs_storeDestroy
+};
+
+afs_int32
+rxfs_storeInit(struct vcache *avc, struct storeOps **ops, void **rock)
+{
+    struct rxfs_storeVariables *v;
+
+    v = (struct rxfs_storeVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_storeVariables));
+    if (!v)
+        osi_Panic("rxfs_storeInit: osi_AllocSmallSpace returned NULL\n");
+    memset(v, 0, sizeof(struct rxfs_storeVariables));
+
+    v->InStatus.ClientModTime = avc->f.m.Date;
+    v->InStatus.Mask = AFS_SETMODTIME;
+
+    if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
+	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	if (!v->tbuffer)
+	    osi_Panic
+              ("rxfs_storeInit: osi_AllocLargeSpace for iovecs returned NULL\n");
+	*ops = (struct storeOps *) &rxfs_storeUfsOps;
+    } else {
+	v->tiov = osi_AllocSmallSpace(sizeof(struct iovec) * RX_MAXIOVECS);
+	if (!v->tiov)
+	    osi_Panic
+              ("rxfs_storeInit: osi_AllocSmallSpace for iovecs returned NULL\n");
+	*ops = (struct storeOps *) &rxfs_storeMemOps;
+#ifdef notdef
+	/* do this at a higher level now -- it's a parameter */
+	/* for now, only do 'continue from close' code if file fits in one
+	 * chunk.  Could clearly do better: if only one modified chunk
+	 * then can still do this.  can do this on *last* modified chunk */
+	tlen = avc->f.m.Length - 1;	/* byte position of last byte we'll store */
+	if (shouldWake) {
+	    if (AFS_CHUNK(tlen) != 0)
+		*shouldWake = 0;
+	    else
+		*shouldWake = 1;
+	}
+#endif /* notdef */
+    }
+    *rock = (void *)v;
+    return 0;
+}
 
 /*
  * afs_UFSCacheFetchProc
@@ -236,22 +342,44 @@ afs_UFSCacheFetchProc(register struct rx_call *acall, struct osi_file *afile,
 
 }				/* afs_UFSCacheFetchProc */
 
+/*!
+ *	Called upon store.
+ *
+ * \param acall Ptr to the Rx call structure involved.
+ * \param fP Ptr to the related file descriptor.
+ * \param alen Size of the file in bytes.
+ * \param avc Ptr to the vcache entry.
+ * \param shouldWake is it "safe" to return early from close() ?
+ * \param abytesToXferP Set to the number of bytes to xfer.
+ *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
+ * \param abytesXferredP Set to the number of bytes actually xferred.
+ *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
+ *
+ * \note Environment: Nothing interesting.
+ */
 int
-afs_MemCacheStoreProc(register struct rx_call *acall,
+afs_CacheStoreProc(register struct rx_call *acall,
 		      register struct osi_file *fP,
 		      register afs_int32 alen, struct vcache *avc,
 		      int *shouldWake, afs_size_t * abytesToXferP,
 		      afs_size_t * abytesXferredP)
 {
-    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
-
-    register afs_int32 code;
-    register int tlen;
+    afs_int32 code;
+    afs_uint32 tlen;
     int offset = 0;
-    struct iovec *tiov;		/* no data copying with iovec */
-    int tnio;			/* temp for iovec size */
+    struct storeOps *ops;
+    void * rock = NULL;
 
-    AFS_STATCNT(afs_MemCacheStoreProc);
+    afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
+	       ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+    code =  rxfs_storeInit(avc, &ops, &rock);
+    if ( code ) {
+	osi_Panic("afs_CacheStoreProc: rxfs_storeInit failed");
+    }
+    ((struct rxfs_storeVariables *)rock)->call = acall;
+
+    AFS_STATCNT(CacheStoreProc);
 #ifndef AFS_NOSTATS
     /*
      * In this case, alen is *always* the amount of data we'll be trying
@@ -261,68 +389,40 @@ afs_MemCacheStoreProc(register struct rx_call *acall,
     *(abytesXferredP) = 0;
 #endif /* AFS_NOSTATS */
 
-    /*
-     * We need to alloc the iovecs on the heap so that they are "pinned" rather than
-     * declare them on the stack - defect 11272
-     */
-    tiov =
-	(struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec) *
-					    RX_MAXIOVECS);
-    if (!tiov) {
-	osi_Panic
-	    ("afs_MemCacheStoreProc: osi_AllocSmallSpace for iovecs returned NULL\n");
-    }
-#ifdef notdef
-    /* do this at a higher level now -- it's a parameter */
-    /* for now, only do 'continue from close' code if file fits in one
-     * chunk.  Could clearly do better: if only one modified chunk
-     * then can still do this.  can do this on *last* modified chunk */
-    tlen = avc->f.m.Length - 1;	/* byte position of last byte we'll store */
-    if (shouldWake) {
-	if (AFS_CHUNK(tlen) != 0)
-	    *shouldWake = 0;
-	else
-	    *shouldWake = 1;
-    }
-#endif /* notdef */
+    while ( alen > 0 ) {
+	afs_int32 bytesread, byteswritten;
+	code = (*ops->prepare)(rock, alen, &tlen);
+	if ( code )
+	    break;
 
-    while (alen > 0) {
-	tlen = (alen > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : alen);
-	RX_AFS_GUNLOCK();
-	code = rx_WritevAlloc(acall, tiov, &tnio, RX_MAXIOVECS, tlen);
-	RX_AFS_GLOCK();
-	if (code <= 0) {
-	    code = rx_Error(acall);
-	    osi_FreeSmallSpace(tiov);
-	    return code ? code : -33;
-	}
-	tlen = code;
-	code = afs_MemReadvBlk(mceP, offset, tiov, tnio, tlen);
-	if (code != tlen) {
-	    osi_FreeSmallSpace(tiov);
-	    return -33;
-	}
-	RX_AFS_GUNLOCK();
-	code = rx_Writev(acall, tiov, tnio, tlen);
-	RX_AFS_GLOCK();
+	code = (*ops->read)(rock, fP, offset, tlen, &bytesread);
+	if (code)
+	    break;
+
+	tlen = bytesread;
+	code = (*ops->write)(rock, tlen, &byteswritten);
+	if (code)
+	    break;
 #ifndef AFS_NOSTATS
-	(*abytesXferredP) += code;
+	(*abytesXferredP) += byteswritten;
 #endif /* AFS_NOSTATS */
-	if (code != tlen) {
-	    code = rx_Error(acall);
-	    osi_FreeSmallSpace(tiov);
-	    return code ? code : -33;
-	}
+
 	offset += tlen;
 	alen -= tlen;
-	/* if file has been locked on server, can allow store to continue */
-	if (shouldWake && *shouldWake && (rx_GetRemoteStatus(acall) & 1)) {
+	/*
+	 * if file has been locked on server, can allow
+	 * store to continue
+	 */
+	if (shouldWake && *shouldWake && ((*ops->status)(rock) == 0)) {
 	    *shouldWake = 0;	/* only do this once */
 	    afs_wakeup(avc);
 	}
     }
-    osi_FreeSmallSpace(tiov);
-    return 0;
+    afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
+	       ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+    code = (*ops->destroy)(&rock, code);
+    return code;
 }
 
 int

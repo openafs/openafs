@@ -1348,6 +1348,15 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 struct buf;
 #endif
 
+struct storeOps {
+    int (*prepare)(void *rock, afs_uint32 size, afs_uint32 *bytestoxfer);
+    int (*read)(void *rock, struct osi_file *tfile, afs_uint32 offset,
+        afs_uint32 tlen, afs_uint32 *bytesread);
+    int (*write)(void *rock, afs_uint32 tlen, afs_uint32 *byteswritten);
+    int (*status)(void *rock);
+    int (*destroy)(void **rock, afs_int32 error);
+};
+
 /* fakestat support: opaque storage for afs_EvalFakeStat to remember
  * what vcache should be released.
  */
