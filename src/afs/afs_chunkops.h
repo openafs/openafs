@@ -63,16 +63,6 @@ struct afs_cacheOps {
 		  int noLock);
     int (*vwrite) (register struct vcache * avc, struct uio * auio, int aio,
 		   struct AFS_UCRED * acred, int noLock);
-    int (*FetchProc) (register struct rx_call * acall,
-		      struct osi_file * afile, afs_size_t abase,
-		      struct dcache * adc, struct vcache * avc,
-		      afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
-		      afs_int32 lengthFound);
-    int (*StoreProc) (register struct rx_call * acall,
-		      struct osi_file * afile, register afs_int32 alen,
-		      struct vcache * avc, int *shouldWake,
-		      afs_size_t * abytesToXferP,
-		      afs_size_t * abytesXferredP);
     struct dcache *(*GetDSlot) (register afs_int32 aslot,
 				register struct dcache * tmpdc);
     struct volume *(*GetVolSlot) (void);
