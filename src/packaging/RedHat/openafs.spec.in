@@ -1448,10 +1448,13 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{pamdir}/pam_afs.so
 %{initdir}/openafs-client
 %{_mandir}/man1/cmdebug.*
+%{_mandir}/man1/copyauth.*
 %{_mandir}/man1/up.*
 %{_mandir}/man5/afs*
 %{_mandir}/man5/cacheinfo.*
 %{_mandir}/man8/afsd.*
+%{_mandir}/man8/rmtsysd.*
+%{_mandir}/man8/vsys.*
 %{_mandir}/man5/CellAlias.*
 %{_mandir}/man5/afszcm.cat.*
 
@@ -1514,6 +1517,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/prdb_check.*
 %{_mandir}/man8/ptserver.*
 %{_mandir}/man8/pt_util.*
+%{_mandir}/man8/restorevol.*
 %{_mandir}/man8/salvager.*
 %{_mandir}/man8/upclient.*
 %{_mandir}/man8/upserver.*
@@ -1565,6 +1569,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/librxstat.a
 %{_libdir}/libubik.a
 %{_mandir}/man1/rxgen.*
+%{_mandir}/man1/compile_et.*
 
 %if %{build_dkmspkg}
 %files -n dkms-%{name}
