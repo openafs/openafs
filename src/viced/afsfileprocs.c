@@ -340,8 +340,10 @@ CallPreamble(register struct rx_call *acall, int activecall,
 
 	/* Is it still necessary to drop this? We hit the net, we should... */
 	H_UNLOCK;
-	if (uclient) 
+	if (uclient) {
 	    hpr_End(uclient);
+	    uclient = NULL;
+	}
 	code = hpr_Initialize(&uclient);
 
 	if (!code)
