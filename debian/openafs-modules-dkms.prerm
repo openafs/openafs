@@ -8,6 +8,9 @@ package=openafs-modules-dkms
 version=`dpkg-query -W -f='${Version}' "$package" \
     | sed -e 's/[+-].*//' -e 's/\.dfsg.*//' -e 's/~//g'`
 
-dkms remove -m openafs -v "$version" --all
+# In some cases, broken packages have caused this to fail.  If the sysadmin
+# manually deletes the directory, that will also fail.  In neither case
+# should we abort the postrm, so ignore failure.
+dkms remove -m openafs -v "$version" --all || true
 
 #DEBHELPER#

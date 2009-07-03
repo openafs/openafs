@@ -1,5 +1,9 @@
 openafs (1.4.11~pre1+dfsg1-2) UNRELEASED; urgency=low
 
+  * Ignore failures to remove an existing DKMS tree in the prerm of the
+    openafs-modules-dkms package.  In the possible cases where the tree
+    may not be present to be removed, failing package removal doesn't
+    make sense.  (Further addresses LP #368471.)
   * Translation updates:
     - Russian, thanks Yuri Kozlov.  (Closes: #534807)
 
