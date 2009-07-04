@@ -1295,15 +1295,21 @@ cm_CheckOfflineVolume(cm_volume_t *volp, afs_uint32 volID)
 }
 
 
-/* called from the Daemon thread */
+/* 
+ * called from the Daemon thread.
+ * when checking the offline status, check those of the most recently used volumes first.
+ */
 void cm_CheckOfflineVolumes(void)
 {
     cm_volume_t *volp;
     afs_int32 refCount;
     extern int daemon_ShutdownFlag;
+    extern int powerStateSuspended;
 
     lock_ObtainRead(&cm_volumeLock);
-    for (volp = cm_data.allVolumesp; volp && !daemon_ShutdownFlag; volp=volp->allNextp) {
+    for (volp = cm_data.volumeLRULastp; 
+         volp && !daemon_ShutdownFlag && !powerStateSuspended; 
+         volp=(cm_volume_t *) osi_QPrev(&volp->q)) {
         if (volp->flags & CM_VOLUMEFLAG_IN_HASH) {
             InterlockedIncrement(&volp->refCount);
             lock_ReleaseRead(&cm_volumeLock);
