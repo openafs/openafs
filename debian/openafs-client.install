@@ -42,12 +42,10 @@ debian/tmp/usr/share/man/man1/fs_checkservers.1       usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_checkvolumes.1       usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_cleanacl.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_copyacl.1            usr/share/man/man1
-debian/tmp/usr/share/man/man1/fs_cscpolicy.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_diskfree.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_examine.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_exportafs.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_flush.1              usr/share/man/man1
-debian/tmp/usr/share/man/man1/fs_flushall.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_flushmount.1         usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_flushvolume.1        usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_getcalleraccess.1    usr/share/man/man1
@@ -63,10 +61,8 @@ debian/tmp/usr/share/man/man1/fs_listaliases.1        usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_listcells.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_listquota.1          usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_lsmount.1            usr/share/man/man1
-debian/tmp/usr/share/man/man1/fs_memdump.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_messages.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_mkmount.1            usr/share/man/man1
-debian/tmp/usr/share/man/man1/fs_minidump.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_monitor.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_newalias.1           usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_newcell.1            usr/share/man/man1
@@ -85,7 +81,6 @@ debian/tmp/usr/share/man/man1/fs_setserverprefs.1     usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_setvol.1             usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_storebehind.1        usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_sysname.1            usr/share/man/man1
-debian/tmp/usr/share/man/man1/fs_trace.1              usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_uuid.1               usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_whereis.1            usr/share/man/man1
 debian/tmp/usr/share/man/man1/fs_whichcell.1          usr/share/man/man1
