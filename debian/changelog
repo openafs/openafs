@@ -8,6 +8,9 @@ openafs (1.4.11~pre3+dfsg-1) UNRELEASED; urgency=low
     openafs-modules-dkms package.  In the possible cases where the tree
     may not be present to be removed, failing package removal doesn't
     make sense.  (Further addresses LP #368471.)
+  * Bring src/config/linux-version closer to upstream since upstream now
+    handles unversioned source directories.  There is one remaining change
+    required to search for UTS_RELEASE in the correct header path.
   * Translation updates:
     - Russian, thanks Yuri Kozlov.  (Closes: #534807)
 
