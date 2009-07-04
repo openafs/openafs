@@ -45,6 +45,7 @@ int cm_bkgWaitingForCount;	/* true if someone's waiting for cm_bkgQueueCount to 
 cm_bkgRequest_t *cm_bkgListp;		/* first elt in the list of requests */
 cm_bkgRequest_t *cm_bkgListEndp;	/* last elt in the list of requests */
 
+extern int powerStateSuspended;
 int daemon_ShutdownFlag = 0;
 static int cm_nDaemons = 0;
 static time_t lastIPAddrChange = 0;
@@ -98,6 +99,10 @@ void cm_BkgDaemon(void * parm)
 
     lock_ObtainWrite(&cm_daemonLock);
     while (daemon_ShutdownFlag == 0) {
+        if (powerStateSuspended) {
+            Sleep(1000);
+            continue;
+        }
         if (!cm_bkgListEndp) {
             osi_SleepW((LONG_PTR)&cm_bkgListp, &cm_daemonLock);
             lock_ObtainWrite(&cm_daemonLock);
@@ -406,6 +411,10 @@ void cm_Daemon(long parm)
         lastPerformanceCheck = now - cm_daemonPerformanceTuningInterval/2 * (rand() % cm_daemonPerformanceTuningInterval);
 
     while (daemon_ShutdownFlag == 0) {
+        if (powerStateSuspended) {
+            Sleep(1000);
+            continue;
+        }
 	/* check to see if the listener threads halted due to network 
 	 * disconnect or other issues.  If so, attempt to restart them.
 	 */
@@ -449,11 +458,12 @@ void cm_Daemon(long parm)
 
         /* check down servers */
         if ((bAddrChangeCheck || now > lastDownServerCheck + cm_daemonCheckDownInterval) &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastDownServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckDownServers");
             cm_CheckServers(CM_FLAG_CHECKDOWNSERVERS, NULL);
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
@@ -463,11 +473,12 @@ void cm_Daemon(long parm)
 
         /* check up servers */
         if ((bAddrChangeCheck || now > lastUpServerCheck + cm_daemonCheckUpInterval) &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastUpServerCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon CheckUpServers");
             cm_CheckServers(CM_FLAG_CHECKUPSERVERS, NULL);
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
@@ -478,56 +489,62 @@ void cm_Daemon(long parm)
         }
 
         if (now > lastVolCheck + cm_daemonCheckVolInterval &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastVolCheck = now;
             cm_RefreshVolumes();
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
 
         if (cm_daemonCheckVolCBInterval && 
             now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastVolCBRenewalCheck = now;
             cm_VolumeRenewROCallbacks();
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
             now = osi_Time();
         }
 
         if ((bAddrChangeCheck || now > lastBusyVolCheck + cm_daemonCheckOfflineVolInterval) &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastVolCheck = now;
             cm_CheckOfflineVolumes();
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
 
         if (now > lastCBExpirationCheck + cm_daemonCheckCBInterval &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastCBExpirationCheck = now;
             cm_CheckCBExpiration();
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
 
         if (now > lastLockCheck + cm_daemonCheckLockInterval &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastLockCheck = now;
             cm_CheckLocks();
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
 
         if (now > lastTokenCacheCheck + cm_daemonTokenCheckInterval &&
-            daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastTokenCacheCheck = now;
             cm_CheckTokenCache(now);
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
@@ -551,16 +568,17 @@ void cm_Daemon(long parm)
             }
         }
 
-        if (daemon_ShutdownFlag == 1) {
+        if (daemon_ShutdownFlag == 1 || powerStateSuspended) {
             break;
         }
 
         if (cm_daemonPerformanceTuningInterval &&
             now > lastPerformanceCheck + cm_daemonPerformanceTuningInterval &&
-             daemon_ShutdownFlag == 0) {
+            daemon_ShutdownFlag == 0 &&
+            powerStateSuspended == 0) {
             lastPerformanceCheck = now;
             cm_PerformanceTuningCheck();
-            if (daemon_ShutdownFlag == 1)
+            if (daemon_ShutdownFlag == 1 || powerStateSuspended)
                 break;
 	    now = osi_Time();
         }
