@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_conn.c,v 1.13.2.5 2008/10/20 16:41:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_conn.c,v 1.13.2.6 2009/06/24 21:30:14 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -52,13 +52,13 @@ afs_int32 cryptall = 0;		/* encrypt all communications */
 
 
 unsigned int VNOSERVERS = 0;
-struct conn *
+struct afs_conn *
 afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
 	 afs_int32 locktype)
 {
     u_short fsport = AFS_FSPORT;
     struct volume *tv;
-    struct conn *tconn = NULL;
+    struct afs_conn *tconn = NULL;
     struct srvAddr *lowp = NULL;
     struct unixuser *tu;
     int notbusy;
@@ -132,12 +132,12 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
 }				/*afs_Conn */
 
 
-struct conn *
+struct afs_conn *
 afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	     struct unixuser *tu, int force_if_down, afs_int32 create,
 	     afs_int32 locktype)
 {
-    struct conn *tc = 0;
+    struct afs_conn *tc = 0;
     struct rx_securityClass *csec;	/*Security class object */
     int isec;			/*Security index */
     int service;
@@ -167,8 +167,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 * gets set, marking the time of its ``birth''.
 	 */
 	UpgradeSToWLock(&afs_xconn, 37);
-	tc = (struct conn *)afs_osi_Alloc(sizeof(struct conn));
-	memset((char *)tc, 0, sizeof(struct conn));
+	tc = (struct afs_conn *)afs_osi_Alloc(sizeof(struct afs_conn));
+	memset((char *)tc, 0, sizeof(struct afs_conn));
 
 	tc->user = tu;
 	tc->port = aport;
@@ -260,12 +260,12 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
  * Having force... true and UTokensBad true simultaneously means that the tokens
  * went bad and we're supposed to create a new, unauthenticated, connection.
  */
-struct conn *
+struct afs_conn *
 afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 	       struct vrequest *areq, int aforce, afs_int32 locktype)
 {
     struct unixuser *tu;
-    struct conn *tc = 0;
+    struct afs_conn *tc = 0;
     struct srvAddr *sa = 0;
 
     AFS_STATCNT(afs_ConnByHost);
@@ -301,13 +301,13 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 }				/*afs_ConnByHost */
 
 
-struct conn *
+struct afs_conn *
 afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
 		 afs_int32 acell, register struct vrequest *areq,
 		 afs_int32 locktype)
 {
     register afs_int32 i;
-    register struct conn *tconn;
+    register struct afs_conn *tconn;
     register struct server *ts;
 
     /* try to find any connection from the set */
@@ -326,7 +326,7 @@ afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
 
 
 void
-afs_PutConn(register struct conn *ac, afs_int32 locktype)
+afs_PutConn(register struct afs_conn *ac, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
@@ -340,7 +340,7 @@ connections in this case
 void
 ForceNewConnections(struct srvAddr *sap)
 {
-    struct conn *tc = 0;
+    struct afs_conn *tc = 0;
 
     if (!sap)
 	return;			/* defensive check */

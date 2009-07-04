@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.24 2008/08/26 14:02:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.25 2009/06/24 21:30:14 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -1514,7 +1514,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     struct tlocal1 *tsmall = 0;
     register struct dcache *tdc;
     register struct osi_file *file;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     int downDCount = 0;
     struct server *newCallback = NULL;
     char setNewCallback;

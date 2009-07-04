@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.82 2009/06/03 05:41:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.83 2009/07/03 13:18:32 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -58,6 +58,22 @@ extern struct vcache *afs_globalVp;
 extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
 
 
+
+/* This function converts a positive error code from AFS into a negative
+ * code suitable for passing into the Linux VFS layer. It checks that the
+ * error code is within the permissable bounds for the ERR_PTR mechanism.
+ *
+ * _All_ error codes which come from the AFS layer should be passed through
+ * this function before being returned to the kernel.
+ */
+
+static inline int afs_convert_code(int code) {
+    if ((code >= 0) && (code <= MAX_ERRNO))
+	return -code;
+    else
+	return -EIO;
+}
+
 static ssize_t
 afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 {
@@ -77,7 +93,7 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 	code = afs_VerifyVCache(vcp, &treq);
 
     if (code)
-	code = -code;
+	code = afs_convert_code(code);
     else {
 	    osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
 	    AFS_GUNLOCK();
@@ -127,7 +143,7 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     afs_FakeOpen(vcp);
     ReleaseWriteLock(&vcp->lock);
     if (code)
-	code = -code;
+	code = afs_convert_code(code);
     else {
 	    AFS_GUNLOCK();
 #ifdef DO_SYNC_READ
@@ -182,19 +198,25 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 
     code = afs_InitReq(&treq, credp);
     crfree(credp);
-    if (code)
+    if (code) {
+	code = afs_convert_code(code);
 	goto out1;
+    }
 
     afs_InitFakeStat(&fakestat);
     code = afs_EvalFakeStat(&avc, &fakestat, &treq);
-    if (code)
+    if (code) {
+	code = afs_convert_code(code);
 	goto out;
+    }
 
     /* update the cache entry */
   tagain:
     code = afs_VerifyVCache(avc, &treq);
-    if (code)
+    if (code) {
+	code = afs_convert_code(code);
 	goto out;
+    }
 
     /* get a reference to the entire directory */
     tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
@@ -375,7 +397,7 @@ out:
     return code;
 
 out_err:
-    code = -code;
+    code = afs_convert_code(code);
     goto out;
 }
 
@@ -397,7 +419,7 @@ afs_linux_open(struct inode *ip, struct file *fp)
 #endif
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 static int
@@ -418,7 +440,7 @@ afs_linux_release(struct inode *ip, struct file *fp)
 #endif
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 static int
@@ -442,7 +464,7 @@ afs_linux_fsync(struct file *fp, struct dentry *dp)
     unlock_kernel();
 #endif
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 
 }
 
@@ -502,7 +524,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     flp->fl_end = flock.l_start + flock.l_len;
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 #ifdef STRUCT_FILE_OPERATIONS_HAS_FLOCK
@@ -552,7 +574,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     flp->fl_pid = flock.l_pid;
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 #endif
 
@@ -600,7 +622,7 @@ out:
     AFS_GUNLOCK();
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 #if !defined(AFS_LINUX24_ENV)
@@ -757,7 +779,7 @@ afs_linux_revalidate(struct dentry *dp)
 #endif
     crfree(credp);
 
-    return -code;
+    return afs_convert_code(code);
 }
 
 #if defined(AFS_LINUX26_ENV)
@@ -1008,7 +1030,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
     unlock_kernel();
 #endif
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 /* afs_linux_lookup */
@@ -1090,14 +1112,12 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
     if (code == ENOENT)
 	return ERR_PTR(0);
-    else if ((code >= 0) && (code <= MAX_ERRNO))
-	return ERR_PTR(-code);
-    else 
-	return ERR_PTR(-EIO);
+    else
+	return ERR_PTR(afs_convert_code(code));
 #else
     if (code == ENOENT)
 	code = 0;
-    return -code;
+    return afs_convert_code(code);
 #endif
 }
 
@@ -1119,7 +1139,7 @@ afs_linux_link(struct dentry *olddp, struct inode *dip, struct dentry *newdp)
 
     AFS_GUNLOCK();
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 static int
@@ -1199,7 +1219,7 @@ out:
     unlock_kernel();
 #endif
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 
@@ -1221,7 +1241,7 @@ afs_linux_symlink(struct inode *dip, struct dentry *dp, const char *target)
     code = afs_symlink(VTOAFS(dip), name, &vattr, target, credp);
     AFS_GUNLOCK();
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 static int
@@ -1258,7 +1278,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     unlock_kernel();
 #endif
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 static int
@@ -1287,7 +1307,7 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     }
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 
@@ -1336,7 +1356,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 #endif
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 
@@ -1359,7 +1379,7 @@ afs_linux_ireadlink(struct inode *ip, char *target, int maxlen, uio_seg_t seg)
     if (!code)
 	return maxlen - tuio.uio_resid;
     else
-	return -code;
+	return afs_convert_code(code);
 }
 
 #if !defined(USABLE_KERNEL_PAGE_SYMLINK_CACHE)
@@ -1538,7 +1558,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     }
 
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 
@@ -1601,7 +1621,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	if (!afs_InitReq(&treq, credp))
 	    code = afs_DoPartialWrite(vcp, &treq);
     }
-    code = code ? -code : count - tuio.uio_resid;
+    code = code ? afs_convert_code(code) : count - tuio.uio_resid;
 
     vcp->states &= ~CPageWrite;
     ReleaseWriteLock(&vcp->lock);
@@ -1714,7 +1734,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 	ReleaseWriteLock(&vcp->lock);
     }
 
-    code = code ? -code : count - tuio.uio_resid;
+    code = code ? afs_convert_code(code) : count - tuio.uio_resid;
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, code);
@@ -1752,7 +1772,7 @@ afs_linux_permission(struct inode *ip, int mode)
 
     AFS_GUNLOCK();
     crfree(credp);
-    return -code;
+    return afs_convert_code(code);
 }
 
 #if defined(AFS_LINUX24_ENV) && !(LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,28) && defined(HAVE_WRITE_BEGIN))

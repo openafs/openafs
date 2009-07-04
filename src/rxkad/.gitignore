@@ -1,0 +1,11 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/crypt_conn.c
+/fcrypt.c
+/fcrypt.h
+/rxkad.h
+/rxkad_errs.c
+/sboxes.h
+/fc_test

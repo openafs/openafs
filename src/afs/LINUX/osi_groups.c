@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.20 2009/03/23 15:17:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.25.2.22 2009/07/01 20:57:15 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -228,7 +228,7 @@ extern struct key_type key_type_keyring __attribute__((weak));
 static struct key_type *__key_type_keyring = &key_type_keyring;
 
 static int
-install_session_keyring(struct task_struct *task, struct key *keyring)
+install_session_keyring(struct key *keyring)
 {
     struct key *old;
     char desc[20];
@@ -242,21 +242,21 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
 
 	/* create an empty session keyring */
 	not_in_quota = KEY_ALLOC_IN_QUOTA;
-	sprintf(desc, "_ses.%u", task->tgid);
+	sprintf(desc, "_ses.%u", current->tgid);
 
 #if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
 	keyring = key_alloc(__key_type_keyring, desc,
-			    task_uid(task), task_gid(task), task,
+			    current_uid(), current_gid(), current,
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #elif defined(KEY_ALLOC_NEEDS_CRED)
 	keyring = key_alloc(__key_type_keyring, desc,
-			    task_uid(task), task_gid(task), current_cred(),
+			    current_uid(), current_gid(), current_cred(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #else
 	keyring = key_alloc(__key_type_keyring, desc,
-			    task_uid(task), task_gid(task),
+			    current_uid(), current_gid(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #endif
@@ -273,11 +273,11 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
     }
 
     /* install the keyring */
-    spin_lock_irq(&task->sighand->siglock);
-    old = task_session_keyring(task);
+    spin_lock_irq(&current->sighand->siglock);
+    old = task_session_keyring(current);
     smp_wmb();
-    task_session_keyring(task) = keyring;
-    spin_unlock_irq(&task->sighand->siglock);
+    task_session_keyring(current) = keyring;
+    spin_unlock_irq(&current->sighand->siglock);
 
     if (old)
 	    key_put(old);
@@ -340,7 +340,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 #ifdef LINUX_KEYRING_SUPPORT
     if (code == 0) {
 
-	(void) install_session_keyring(current, NULL);
+	(void) install_session_keyring(NULL);
 
 	if (current_session_keyring()) {
 	    struct key *key;
@@ -635,6 +635,7 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 
 void osi_keyring_init(void)
 {
+#if !defined(EXPORTED_KEY_TYPE_KEYRING)
     struct task_struct *p;
 
     /* If we can't lock the tasklist, either with its explicit lock,
@@ -673,6 +674,7 @@ void osi_keyring_init(void)
 	    rcu_read_unlock();
 # endif
     }
+#endif
 #endif
 
     register_key_type(&key_type_afs_pag);

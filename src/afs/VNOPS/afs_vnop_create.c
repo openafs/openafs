@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.11 2008/12/29 21:26:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.12 2009/06/24 21:30:19 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -45,7 +45,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct VenusFid newFid;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;

@@ -1,0 +1,20 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/Kkauth.h
+/ka-forwarder
+/kaerrors.c
+/kas
+/kaserver
+/kauth.h
+/kautils.h
+/kdb
+/klog
+/klog.krb
+/klogin
+/klogin.krb
+/knfs
+/kpasswd
+/kpwvalid
+/rebuild

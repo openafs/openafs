@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.11 2009/06/03 18:26:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.12 2009/06/24 21:30:19 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -225,7 +225,7 @@ int
 HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 	    pid_t clid, int onlymine)
 {
-    struct conn *tc;
+    struct afs_conn *tc;
     struct SimpleLocks *slp, *tlp, **slpp;
     afs_int32 code;
     struct AFSVolSync tsync;
@@ -809,7 +809,7 @@ HandleGetLock(register struct vcache *avc, register struct AFS_FLOCK *af,
 static int
 GetFlockCount(struct vcache *avc, struct vrequest *areq)
 {
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code;
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;

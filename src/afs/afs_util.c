@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_util.c,v 1.17.2.3 2006/03/09 06:41:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_util.c,v 1.17.2.4 2009/06/24 21:30:14 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -302,7 +302,7 @@ afs_CheckLocks(void)
     {
 	struct srvAddr *sa;
 	struct server *ts;
-	struct conn *tc;
+	struct afs_conn *tc;
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)
