@@ -1,4 +1,4 @@
-openafs (1.4.11~pre3+dfsg-1) UNRELEASED; urgency=low
+openafs (1.4.11~pre3+dfsg-1) unstable; urgency=low
 
   * New upstream release candidate.
     - Further fixes for rcu_read_lock dependencies in some kernels.
@@ -17,7 +17,7 @@ openafs (1.4.11~pre3+dfsg-1) UNRELEASED; urgency=low
   * Translation updates:
     - Russian, thanks Yuri Kozlov.  (Closes: #534807)
 
- -- Russ Allbery <rra@debian.org>  Sat, 27 Jun 2009 10:23:03 -0700
+ -- Russ Allbery <rra@debian.org>  Sat, 04 Jul 2009 15:20:06 -0700
 
 openafs (1.4.11~pre1+dfsg1-1) unstable; urgency=low
 
