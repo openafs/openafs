@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.53 2009/03/25 13:07:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.54 2009/07/03 13:04:17 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -336,8 +336,10 @@ CallPreamble(register struct rx_call *acall, int activecall,
 
 	/* Is it still necessary to drop this? We hit the net, we should... */
 	H_UNLOCK;
-	if (uclient) 
+	if (uclient) {
 	    hpr_End(uclient);
+	    uclient = NULL;
+	}
 	code = hpr_Initialize(&uclient);
 
 	if (!code)

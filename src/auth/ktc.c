@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.13 2009/06/04 20:51:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.14 2009/06/29 20:24:49 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -1621,7 +1621,7 @@ ktc_curpag(void)
     afs_int32 pag;
 
     /* now setup for the pioctl */
-    iob.in = -1;
+    iob.in = NULL;
     iob.in_size = 0;
     iob.out = &pag;
     iob.out_size = sizeof(afs_int32);

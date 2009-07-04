@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.19.2.7 2008/06/09 03:30:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.19.2.8 2009/06/24 21:30:19 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -52,7 +52,7 @@ int afs_symlink
     afs_uint32 now = 0;
     struct vrequest treq;
     afs_int32 code;
-    struct conn *tc;
+    struct afs_conn *tc;
     struct VenusFid newFid;
     struct dcache *tdc;
     afs_size_t offset, len;

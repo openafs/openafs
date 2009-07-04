@@ -320,9 +320,9 @@ struct unixuser {
     struct afs_exporter *exporter;	/* more info about the exporter for the remote user */
 };
 
-struct conn {
+struct afs_conn {
     /* Per-connection block. */
-    struct conn *next;		/* Next dude same server. */
+    struct afs_conn *next;		/* Next dude same server. */
     struct unixuser *user;	/* user validated with respect to. */
     struct rx_connection *id;	/* RPC connid. */
     struct srvAddr *srvr;	/* server associated with this conn */
@@ -354,7 +354,7 @@ struct srvAddr {
     struct srvAddr *next_bkt;	/* next item in hash bucket */
     struct srvAddr *next_sa;	/* another interface on same host */
     struct server *server;	/* back to parent */
-    struct conn *conns;		/* All user connections to this server */
+    struct afs_conn *conns;		/* All user connections to this server */
     afs_int32 sa_ip;		/* Host addr in network byte order */
     u_short sa_iprank;		/* indiv ip address priority */
     u_short sa_portal;		/* port addr in network byte order */

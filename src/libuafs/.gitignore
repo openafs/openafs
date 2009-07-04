@@ -1,0 +1,27 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/Makefile.common
+/MakefileProto.*
+!/MakefileProto.*.in
+/UAFS
+/JUAFS
+/afs
+/afsint
+/config
+/des
+/h
+/inet
+/linktest
+/net
+/netinet
+/nfs
+/nsapi
+/rpc
+/rx
+/sys
+/ufs
+/export.exp
+/export.h
+/export64.exp

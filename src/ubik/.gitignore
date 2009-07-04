@@ -1,0 +1,12 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/Kubik_int.h
+/ubik.h
+/ubik_int.h
+/udebug
+/uerrors.c
+/utst_client
+/utst_int.h
+/utst_server

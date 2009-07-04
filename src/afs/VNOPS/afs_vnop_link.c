@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.15.2.5 2007/12/08 18:00:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.15.2.6 2009/06/24 21:30:19 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -45,7 +45,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     struct vrequest treq;
     register struct dcache *tdc;
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     afs_size_t offset, len;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSVolSync tsync;

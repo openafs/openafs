@@ -67,6 +67,9 @@
 /* define if your linux kernel exports kallsyms */
 #undef EXPORTED_KALLSYMS_SYMBOL
 
+/* define if key_type_keyring is exported */
+#undef EXPORTED_KEY_TYPE_KEYRING
+
 /* define if proc_root_fs is exported */
 #undef EXPORTED_PROC_ROOT_FS
 
@@ -626,6 +629,9 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 /* define if time_t is defined */
 #undef SIZEOF_TIME_T
+
+/* define if solookup takes a sockparams** */
+#undef SOLOOKUP_TAKES_SOCKPARAMS
 
 /* define if your statfs takes a dentry argument */
 #undef STATFS_TAKES_DENTRY

@@ -1,0 +1,22 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/afs_AdminBosErrors.c
+/afs_AdminBosErrors.h
+/afs_AdminCfgErrors.c
+/afs_AdminCfgErrors.h
+/afs_AdminClientErrors.c
+/afs_AdminClientErrors.h
+/afs_AdminCommonErrors.c
+/afs_AdminCommonErrors.h
+/afs_AdminKasErrors.c
+/afs_AdminKasErrors.h
+/afs_AdminMiscErrors.c
+/afs_AdminMiscErrors.h
+/afs_AdminPtsErrors.c
+/afs_AdminPtsErrors.h
+/afs_AdminUtilErrors.c
+/afs_AdminUtilErrors.h
+/afs_AdminVosErrors.c
+/afs_AdminVosErrors.h

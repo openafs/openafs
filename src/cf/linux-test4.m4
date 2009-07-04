@@ -1152,3 +1152,23 @@ _p.owner= "";],
   if test "x$ac_cv_linux_struct_proc_dir_entry_has_owner" = "xyes"; then
     AC_DEFINE([STRUCT_PROC_DIR_ENTRY_HAS_OWNER], 1, [define if struct proc_dir_entry has an owner member])
   fi])
+
+AC_DEFUN([LINUX_EXPORTS_KEY_TYPE_KEYRING], [
+  AC_MSG_CHECKING([for exported key_type_keyring])
+  AC_CACHE_VAL([ac_cv_linux_exports_key_type_keyring], [
+    AC_TRY_KBUILD(
+[
+#ifdef KEY_TYPE_H_EXISTS
+#include <linux/key-type.h>
+#endif
+#include <linux/key.h>],
+[
+printk("%s", key_type_keyring.name);
+],
+      ac_cv_linux_exports_key_type_keyring=yes,
+      ac_cv_linux_exports_key_type_keyring=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_key_type_keyring)
+  if test "x$ac_cv_linux_exports_key_type_keyring" = "xyes"; then
+    AC_DEFINE([EXPORTED_KEY_TYPE_KEYRING], 1, [define if key_type_keyring is exported])
+  fi]) 
+

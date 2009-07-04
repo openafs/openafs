@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.9 2008/10/03 20:40:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.10 2009/06/24 21:30:20 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -2005,10 +2005,10 @@ print_allocs(pnt)
     T += j;
     printf("%20s:\t%8d bytes\t[%d servers/%d bytes each]\n", "Server package",
 	   j, i, sizeof(struct server));
-    j = (Nconns * sizeof(struct conn));
+    j = (Nconns * sizeof(struct afs_conn));
     T += j;
     printf("%20s:\t%8d bytes\t[%d conns/%d bytes each]\n",
-	   "Connection package", j, Nconns, sizeof(struct conn));
+	   "Connection package", j, Nconns, sizeof(struct afs_conn));
 
     i = (AFS_NCBRS * sizeof(struct afs_cbr)) * (j =
 						afs_cmperfstats.
@@ -2669,12 +2669,12 @@ void
 print_conns(kmem, srv, conns, Con, pnt)
      int kmem, Con, pnt;
      struct srvAddr *srv;
-     struct conn *conns;
+     struct afs_conn *conns;
 {
-    struct conn *cep, ce, *centry = &ce;
+    struct afs_conn *cep, ce, *centry = &ce;
     int i = 1;
 
-    cep = (struct conn *)conns;
+    cep = (struct afs_conn *)conns;
     if (pnt && Con != 2) {
 	if (cep)
 	    printf("\tRPC connections for server %lx:\n", srv);
@@ -2693,7 +2693,7 @@ print_conns(kmem, srv, conns, Con, pnt)
 void
 print_conn(kmem, conns, ptr, pnt)
      int kmem, pnt;
-     struct conn *conns, *ptr;
+     struct afs_conn *conns, *ptr;
 {
     if (!pnt)
 	return;

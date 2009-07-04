@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.55 2009/03/31 12:41:47 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.56 2009/06/24 21:30:14 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -396,7 +396,7 @@ afs_FlushVCBs(afs_int32 lockit)
     struct server *tsp;
     int i;
     struct vrequest treq;
-    struct conn *tc;
+    struct afs_conn *tc;
     int safety1, safety2, safety3;
     XSTATS_DECLS;
     if ((code = afs_InitReq(&treq, afs_osi_credp)))
@@ -1226,7 +1226,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 {
     register struct vcache *tvc;
     register int i;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code;
     register struct AFS_UCRED *cred = NULL;
     struct vrequest treq, ureq;
@@ -1553,7 +1553,7 @@ afs_WriteVCache(register struct vcache *avc,
 		struct vrequest *areq)
 {
     afs_int32 code;
-    struct conn *tc;
+    struct afs_conn *tc;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
@@ -1712,7 +1712,7 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
 {
     afs_int32 code;
     afs_uint32 start;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct AFSFetchStatus OutDirStatus;
     XSTATS_DECLS;
     if (!name)
@@ -2412,7 +2412,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 {
     int code;
     afs_uint32 start = 0;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     struct volume *volp;
@@ -2509,7 +2509,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
 void
 afs_StuffVcache(register struct VenusFid *afid,
 		struct AFSFetchStatus *OutStatus,
-		struct AFSCallBack *CallBack, register struct conn *tc,
+		struct AFSCallBack *CallBack, register struct afs_conn *tc,
 		struct vrequest *areq)
 {
     register afs_int32 code, i, newvcache = 0;

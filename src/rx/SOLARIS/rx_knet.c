@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19.2.5 2008/07/07 17:15:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_knet.c,v 1.19.2.6 2009/06/24 21:38:42 shadow Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
@@ -50,10 +50,17 @@ RCSID
 /*
  * Function pointers for kernel socket routines
  */
+#ifdef SOLOOKUP_TAKES_SOCKPARAMS
+struct sonode *(*sockfs_socreate)
+  (struct sockparams *, int, int, int, int, int *) = NULL;
+int (*sockfs_solookup)
+  (int, int, int, struct sockparams **) = NULL;
+#else
 struct sonode *(*sockfs_socreate)
   (vnode_t *, int, int, int, int, struct sonode *, int *) = NULL;
 struct vnode *(*sockfs_solookup)
   (int, int, int, char *, int *) = NULL;
+#endif /* SOLOOKUP_TAKES_SOCKPARAMS */
 int (*sockfs_sobind)
   (struct sonode *, struct sockaddr *, int, int, int) = NULL;
 int (*sockfs_sorecvmsg)
@@ -327,12 +334,19 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct sockaddr_in addr;
     int error;
     int len;
+#ifdef SOLOOKUP_TAKES_SOCKPARAMS
+    struct sockparams *sp;
+#endif
 
     AFS_STATCNT(osi_NewSocket);
 
     if (sockfs_solookup == NULL) {
 	sockfs_solookup =
+#ifdef SOLOOKUP_TAKES_SOCKPARAMS
+	    (int (*)())modlookup("sockfs", "solookup");
+#else
 	    (struct vnode * (*)())modlookup("sockfs", "solookup");
+#endif
 	if (sockfs_solookup == NULL) {
 	    return NULL;
 	}
@@ -381,6 +395,14 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     }
 #endif
 
+#ifdef SOLOOKUP_TAKES_SOCKPARAMS
+    error = sockfs_solookup(AF_INET, SOCK_DGRAM, 0, &sp);
+    if (error != 0) {
+	return NULL;
+    }
+
+    so = sockfs_socreate(sp, AF_INET, SOCK_DGRAM, 0, SOV_STREAM, &error);
+#else
     accessvp = sockfs_solookup(AF_INET, SOCK_DGRAM, 0, "/dev/udp", &error);
     if (accessvp == NULL) {
 	return NULL;
@@ -388,6 +410,8 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 
     so = sockfs_socreate(accessvp, AF_INET, SOCK_DGRAM, 0, SOV_STREAM, NULL,
 			 &error);
+#endif /* SOLOOKUP_TAKES_SOCKPARAMS */
+
     if (so == NULL) {
 	return NULL;
     }
@@ -423,7 +447,7 @@ rxk_NewSocket(short aport)
 }
 
 int
-osi_FreeSocket(register osi_socket *asocket)
+osi_FreeSocket(register osi_socket asocket)
 {
     extern int rxk_ListenerPid;
     struct sonode *so = (struct sonode *)asocket;
