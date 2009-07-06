@@ -32,6 +32,11 @@ extern int UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname,
 			    afs_int32 aquota, afs_int32 aspare1,
 			    afs_int32 aspare2, afs_int32 aspare3,
 			    afs_int32 aspare4, afs_int32 * anewid);
+extern int UV_CreateVolume3(afs_int32 aserver, afs_int32 apart, char *aname,
+			    afs_int32 aquota, afs_int32 aspare1,
+			    afs_int32 aspare2, afs_int32 aspare3,
+			    afs_int32 aspare4, afs_uint32 * anewid,
+			    afs_uint32 * aroid, afs_uint32 * abkid);
 extern int UV_AddVLDBEntry(afs_int32 aserver, afs_int32 apart, char *aname,
 			   afs_int32 aid);
 extern int UV_DeleteVolume(afs_int32 aserver, afs_int32 apart,
@@ -59,6 +64,8 @@ extern int UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_int32 tov
                             afs_int32(*WriteData) (), char *rock);
 extern int UV_LockRelease(afs_int32 volid);
 extern int UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid, afs_int32 valid);
+extern int UV_AddSite2(afs_int32 server, afs_int32 part, afs_uint32 volid,
+		       afs_uint32 rovolid, afs_int32 valid);
 extern int UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid);
 extern int UV_ChangeLocation(afs_int32 server, afs_int32 part,
 			     afs_int32 volid);

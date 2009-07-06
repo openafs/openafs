@@ -1870,10 +1870,14 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum;
     char part[10];
-    afs_int32 volid, code;
+    afs_uint32 volid = 0, rovolid = 0, bkvolid = 0;
+    afs_uint32 *arovolid;
+    afs_int32 code;
     struct nvldbentry entry;
     afs_int32 vcode;
     afs_int32 quota;
+
+    arovolid = &rovolid;
 
     quota = 5000;
     tserver = GetServer(as->parms[0].items->data);
@@ -1936,9 +1940,41 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
 	}
     }
 
+    if (as->parms[4].items) {
+	if (!IsNumeric(as->parms[4].items->data)) {
+	    fprintf(STDERR, "vos: Given volume ID %s should be numeric.\n",
+		    as->parms[4].items->data);
+	    return EINVAL;
+	}
+
+	code = util_GetInt32(as->parms[4].items->data, &volid);
+	if (code) {
+	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
+	    return code;
+	}
+    }
+
+    if (as->parms[5].items) {
+	if (!IsNumeric(as->parms[5].items->data)) {
+	    fprintf(STDERR, "vos: Given RO volume ID %s should be numeric.\n",
+		    as->parms[5].items->data);
+	    return EINVAL;
+	}
+
+	code = util_GetInt32(as->parms[5].items->data, &rovolid);
+	if (code) {
+	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
+	    return code;
+	}
+
+	if (rovolid == 0) {
+	    arovolid = NULL;
+	}
+    }
+
     code =
-	UV_CreateVolume2(tserver, pnum, as->parms[2].items->data, quota, 0,
-			 0, 0, 0, &volid);
+	UV_CreateVolume3(tserver, pnum, as->parms[2].items->data, quota, 0,
+			 0, 0, 0, &volid, arovolid, &bkvolid);
     if (code) {
 	PrintDiagnostics("create", code);
 	return code;
@@ -3211,7 +3247,7 @@ LockReleaseCmd(register struct cmd_syndesc *as, void *arock)
 static int
 AddSite(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aserver, apart, code, err, valid = 0;
+    afs_int32 avolid, aserver, apart, code, err, arovolid, valid = 0;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
     vsu_ExtractName(avolname, as->parms[2].items->data);;
@@ -3223,6 +3259,16 @@ AddSite(register struct cmd_syndesc *as, void *arock)
 	    fprintf(STDERR, "vos: can't find volume '%s'\n",
 		    as->parms[2].items->data);
 	exit(1);
+    }
+    arovolid = 0;
+    if (as->parms[3].items) {
+	vsu_ExtractName(avolname, as->parms[3].items->data);
+	arovolid = vsu_GetVolumeID(avolname, cstruct, &err);
+	if (!arovolid) {
+	    fprintf(STDERR, "vos: invalid ro volume id '%s'\n",
+		    as->parms[3].items->data);
+	    exit(1);
+	}
     }
     aserver = GetServer(as->parms[0].items->data);
     if (aserver == 0) {
@@ -3245,10 +3291,10 @@ AddSite(register struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	exit(1);
     }
-    if (as->parms[3].items) {
+    if (as->parms[4].items) {
 	valid = 1;
     }
-    code = UV_AddSite(aserver, apart, avolid, valid);
+    code = UV_AddSite2(aserver, apart, avolid, arovolid, valid);
     if (code) {
 	PrintDiagnostics("addsite", code);
 	exit(1);
@@ -5692,6 +5738,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "volume name");
     cmd_AddParm(ts, "-maxquota", CMD_SINGLE, CMD_OPTIONAL,
 		"initial quota (KB)");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "volume ID");
+    cmd_AddParm(ts, "-roid", CMD_SINGLE, CMD_OPTIONAL, "readonly volume ID");
 #ifdef notdef
     cmd_AddParm(ts, "-minquota", CMD_SINGLE, CMD_OPTIONAL, "");
 #endif
@@ -5836,6 +5884,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0,
 		"partition name for new site");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    cmd_AddParm(ts, "-roid", CMD_SINGLE, CMD_OPTIONAL, "volume name or ID for RO");
     cmd_AddParm(ts, "-valid", CMD_FLAG, CMD_OPTIONAL, "publish as an up-to-date site in VLDB");
     COMMONPARMS;
 

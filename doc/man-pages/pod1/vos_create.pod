@@ -9,11 +9,13 @@ vos_create - Creates a read/write volume and associated VLDB entry
 
 B<vos create> S<<< B<-server> <I<machine name>> >>> S<<< B<-partition> <I<partition name>> >>>
     S<<< B<-name> <I<volume name>> >>> S<<< [B<-maxquota> <I<initial quota (KB)>>] >>>
+    S<<< [B<-id> <I<volume ID>>] >>> S<<< [B<-roid> <I<readonly volume ID>>] >>>
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>] [B<-verbose>]
     [B<-help>]
 
 B<vos cr> S<<< B<-s> <I<machine name>> >>> S<<< B<-p> <I<partition name>> >>>
     S<<< B<-na> <I<volume name>> >>> S<<< [B<-m> <I<initial quota (KB)>>] >>>
+    S<<< [B<-i> <I<volume ID>>] >>> S<<< [B<-r> <I<readonly volume ID>>] >>>
     S<<< [B<-c> <I<cell name>>] >>> [B<-no>] [B<-l>] [B<-v>] [B<-h>]
 
 =for html
@@ -106,6 +108,32 @@ of kilobyte blocks (a value of C<1024> is one megabyte). The value C<0>
 (zero) grants an unlimited quota, but the size of the disk partition that
 houses the volume places an absolute limit on its size.  If this argument
 is omitted, the default value is C<5000>.
+
+=item B<-id> <I<volume ID>>
+
+Specifies the volume ID for the read/write volume. If this options is not
+specified, or the given volume ID is 0, a volume ID will be allocated for
+the volume automatically. The volume IDs allocated should be fine for
+almost all cases, so you should almost never need to specify this option.
+
+=item B<-roid> <I<readonly volume ID>>
+
+Specifies the volume ID for the readonly volume corresponding to the
+read/write volume that is being created. The readonly volume will not be
+created; this merely specifies what volume ID the readonly volume will use
+when it is created. If a volume ID of 0 is specified here, no readonly
+volume ID will be assigned to the created volume immediately. A readonly
+volume ID can still be assigned later when B<vos addsite> is run; if a
+volume does not have a readonly volume ID associated with it by the time
+B<vos release> is run, a volume ID will be allocated for it.
+
+If this option is not specified, the default readonly volume ID is one
+number higher than the read-write volume ID, whether or not that ID was
+manually specified.
+
+As with the B<-id> option, the default allocated volume IDs should be
+sufficient for almost all cases, so you should almost never need to
+specify this option.
 
 =item B<-cell> <I<cell name>>
 
