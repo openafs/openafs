@@ -7,6 +7,7 @@
 /Makefile.config
 /Makefile.version
 /Makefile.version-NOCML
+/Makefile.version-CML
 /afsconfig.h
 /afsconfig.h.in
 /config
