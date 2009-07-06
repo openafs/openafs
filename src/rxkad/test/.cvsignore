@@ -1,7 +1,0 @@
-Makefile
-stress.h
-stress.xdr.c
-stress.cs.c
-stress.ss.c
-stress_errs.h
-stress_errs.c

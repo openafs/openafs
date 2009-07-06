@@ -1,6 +1,0 @@
-AFS_component_version_number.c
-Makefile
-libkopenafs.a*
-libkopenafs.so*
-test-setpag
-test-unlog
