@@ -90,12 +90,61 @@ foreach (@objects) {
   symlink($deps{$_}, "$KDIR/$src") or die "$KDIR/$src: $!\n";
 }
 
-foreach $src (qw(h sys netinet)) {
-  if (-e "$KDIR/$src" || -l "$KDIR/$src") {
-    unlink("$KDIR/$src") or die "$KDIR/$src: $!\n";
+%remap = ('h' => 'linux', 'netinet' => 'linux', 'sys' => 'linux');
+if (-f "$vars{LINUX_KERNEL_PATH}/include/linux/types.h") {
+  foreach $src (keys %remap) {
+    if (-e "$KDIR/$src" || -l "$KDIR/$src") {
+      unlink("$KDIR/$src") or die "$KDIR/$src: $!\n";
+    }
+    symlink("$vars{LINUX_KERNEL_PATH}/include/linux", "$KDIR/$src")
+      or die "$KDIR/$src: $!\n";
   }
-  symlink("$vars{LINUX_KERNEL_PATH}/include/linux", "$KDIR/$src")
-    or die "$KDIR/$src: $!\n";
+} else {
+  foreach $src (keys %remap) {
+    system ('rm', '-rf', "$KDIR/$src"); # too crude?
+    mkdir("$KDIR/$src", 0777) or die "$KDIR/$src: $!\n";
+  }
+  %seen = ();
+  @q = <$KDIR/*.[Sc]>;
+  @include_dirs = map { /^\// ? $_ : "$KDIR/$_" }
+    split /[\s\\]*-I/, $vars{COMMON_INCLUDE};
+  push @include_dirs, "$vars{TOP_SRCDIR}/../include/rx", "$vars{TOP_SRCDIR}/rx";
+  while (@q) {
+    $src = shift @q;
+    $content = new IO::File($src, O_RDONLY) or die "$src: $!\n";
+  LINE:
+    while (<$content>) {
+      chomp;
+      if (/^\s*#\s*include\s*[<"](?:\.\.\/)?([^\/>"]*)(.*?)[>"]/) {
+	$inc = "$1$2";
+	if (exists $seen{$inc}) {
+	  next;
+	} elsif (exists $remap{$1}  &&  $2 !~ /.\//) {
+	  $H = new IO::File("$KDIR/$inc", O_WRONLY|O_CREAT|O_TRUNC, 0666)
+	    or die "$KDIR/$inc: $!\n";
+	  print $H "#include <linux$2>\n";
+	  $H->close() or die "$KDIR/$inc: $!\n";
+	} else {
+	  for $dir (@include_dirs) {
+	    if (-f "$dir/$inc") {
+	      push @q, "$dir/$inc";
+	      $seen{$inc} = 1;
+	      next LINE;
+	    }
+	  }
+	  if ($1 =~ /^(arpa|asm|.*fs|i?net|kern|ksys|linux|mach|rpc|scsi|vm)$/
+	      ||  !length($2)) {
+	    # Safe to ignore silently.
+	  } else {
+	    warn "Ignoring $_ ($inc not found)\n";
+	  }
+	}
+	$seen{$inc} = 1;
+      } elsif (/^\s*#\s*include/) {
+	warn "Ignoring $_ (unrecognized syntax)\n";
+      }
+    }
+  }
 }
 
 $cflags = "$vars{CFLAGS} $vars{COMMON_INCLUDE}";
