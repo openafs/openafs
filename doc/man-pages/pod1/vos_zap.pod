@@ -44,7 +44,7 @@ B<vos remove> command instead.
 
 This command is useful in situations where it is important to delete the
 volume, but for some reason the VLDB is unreachable -- for example,
-because s the Volume Location Server is unavailable. The issuer can remove
+because the Volume Location Server is unavailable. The issuer can remove
 the VLDB entry later with the B<vos remove> or B<vos delentry> command, or
 it is removed automatically when the B<vos syncserv> and B<vos syncvldb>
 commands run.
