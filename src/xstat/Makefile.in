@@ -58,7 +58,7 @@ xstat_fs.o: xstat_fs.c ${FSINCLS}
 
 xstat_fs_callback.o: xstat_fs_callback.c ${FSINCLS}
 
-xstat_fs_test.: xstat_fs_test.c ${FSINCLS}
+xstat_fs_test.o: xstat_fs_test.c ${FSINCLS} AFS_component_version_number.c
 
 xstat_fs_test: xstat_fs_test.o libxstat_fs.a ${LIBS}
 	${CC} ${CFLAGS} -o xstat_fs_test xstat_fs_test.o libxstat_fs.a ${LIBS} ${XLIBS}
@@ -75,7 +75,7 @@ libxstat_cm.a: xstat_cm.o AFS_component_version_number.o
 
 xstat_cm.o: xstat_cm.c ${CMINCLS}
 
-xstat_cm_test.o: xstat_cm_test.c ${CMINCLS}
+xstat_cm_test.o: xstat_cm_test.c ${CMINCLS} AFS_component_version_number.c
 
 xstat_cm_test: xstat_cm_test.o libxstat_cm.a ${LIBS}
 	${CC} ${CFLAGS} -o xstat_cm_test xstat_cm_test.o libxstat_cm.a ${LIBS} ${XLIBS}

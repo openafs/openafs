@@ -49,7 +49,7 @@ update.h: update.xg
 	${RXGEN} -A -u -h -o $@ ${srcdir}/update.xg
 
 update.cs.c: update.h
-upcate.ss.c: update.h
+update.ss.c: update.h
 update.er.c: update.h
 
 #

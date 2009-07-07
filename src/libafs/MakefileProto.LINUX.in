@@ -168,7 +168,9 @@ setup:
 
 # Compile SP and MP clients as requested
 
-${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+${INSTDIRS}:
+
+${COMPDIRS} ${DESTDIRS}: setup
 	$(RM) -f h 
 	$(RM) -f sys
 	$(RM) -f netinet 

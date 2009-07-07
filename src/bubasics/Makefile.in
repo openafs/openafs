@@ -12,7 +12,7 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/butc.h ${TOP_INCDIR}/afs/bubasics.h ${TOP_INCDIR}/afs/tcdata.h ${TOP_INCDIR}/afs/butm.h ${TOP_INCDIR}/afs/butx.h
+all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/butc.h ${TOP_INCDIR}/afs/bubasics.h ${TOP_INCDIR}/afs/butx.h
 
 OBJS=butc.ss.o butc.cs.o butc.xdr.o bumon.ss.o bumon.cs.o bumon.xdr.o butc_errs.o butm_errs.o butx_errs.o
 
@@ -73,6 +73,10 @@ bumon.h: bumon.xg
 bumon.xdr.c: bumon.h
 bumon.ss.c: bumon.h
 bumon.cs.c: bumon.h
+
+butc_errs.c: ${TOP_INCDIR}/afs/tcdata.h
+
+butm_errs.c: ${TOP_INCDIR}/afs/butm.h
 
 butm_errs.c butm.h: butm_errs.et butm.p.h
 	$(RM) -f butm.h butm_errs.c

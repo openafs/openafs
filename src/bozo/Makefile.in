@@ -43,7 +43,7 @@ LIBS=${TOP_LIBDIR}/librx.a \
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
 
-all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a ${TOP_INCDIR}/afs/bnode.h bos_util
+all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a bos_util
 
 ${TOP_INCDIR}/afs/bosint.h: bosint.h
 	${INSTALL_DATA} $? $@
@@ -93,7 +93,7 @@ bos.o: bos.c ${INCLS} AFS_component_version_number.o
 bos: bos.o $(LIBS) libbos.a
 	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS)  ${XLIBS}
 
-bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o
+bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o ${TOP_INCDIR}/afs/bnode.h
 
 bos_util: bos_util.o $(LIBS) 
 	${CC} ${CFLAGS} -o bos_util bos_util.o $(LIBS)  ${XLIBS}

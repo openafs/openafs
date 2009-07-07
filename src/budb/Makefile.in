@@ -49,7 +49,7 @@ COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o \
 	procs.o server.o budb_errs.o
 
-all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h ${TOP_INCDIR}/afs/budb_prototypes.h budb_server
+all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_prototypes.h budb_server
 
 ${TOP_LIBDIR}/libbudb.a: libbudb.a
 	${INSTALL_DATA} $? $@
@@ -86,10 +86,10 @@ db_text.o:  db_text.c budb_errs.h ${INCLS}
 db_hash.o: db_hash.c budb_errs.h ${INCLS}
 ol_verify.o:	ol_verify.c budb_errs.h ${INCLS}
 procs.o: procs.c budb_errs.h globals.h ${INCLS}
-struct_ops.o: budb_errs.h
+struct_ops.o: budb_errs.h ${TOP_INCDIR}/afs/budb_client.h
 server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 
-budb_server: $(SERVER_OBJS) ${LIBS}
+budb_server: $(SERVER_OBJS) ${LIBS} ${TOP_INCDIR}/afs/budb_client.h
 	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
 
 budb.cs.c: budb.rg
