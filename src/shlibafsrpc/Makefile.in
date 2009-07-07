@@ -138,24 +138,34 @@ LIBOBJS = \
 
 LIBAFSRPC = libafsrpc.${SHLIB_SUFFIX}.${LIBAFSRPCMAJOR}.${LIBAFSRPCMINOR}
 
-all: ${TOP_LIBDIR}/${LIBAFSRPC}
+all: ${TOP_LIBDIR}/${LIBAFSRPC} ${TOP_LIBDIR}/libafsrpc_pic.a
 
 ${TOP_LIBDIR}/${LIBAFSRPC}: ${LIBAFSRPC}
 	../config/shlib-install -d ${TOP_LIBDIR} \
 		-l libafsrpc -M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR}
 
-install: ${LIBAFSRPC}
+${TOP_LIBDIR}/libafsrpc_pic.a: libafsrpc_pic.a
+	${INSTALL_DATA} libafsrpc_pic.a $@
+
+install: ${LIBAFSRPC} libafsrpc_pic.a
 	../config/shlib-install -d ${DESTDIR}${libdir} \
 		-l libafsrpc -M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR}
+	${INSTALL_DATA} libafsrpc_pic.a ${DESTDIR}${libdir}/libafsrpc_pic.a
 
-dest: ${LIBAFSRPC}
+dest: ${LIBAFSRPC} libafsrpc_pic.a
 	../config/shlib-install -d ${DEST}/lib \
 		-l libafsrpc -M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR}
+	${INSTALL_DATA} libafsrpc_pic.a ${DEST}/lib/libafsrpc_pic.a
 
 ${LIBAFSRPC}: ${LIBOBJS}
 	../config/shlib-build -d $(srcdir) -l libafsrpc \
 		-M ${LIBAFSRPCMAJOR} -m ${LIBAFSRPCMINOR} -- \
 		${LIBOBJS} ${MT_LIBS}
+
+libafsrpc_pic.a: ${LIBOBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
 
 rx_event.o: ${RX}/rx_event.c
 	${CCRULE}
@@ -411,4 +421,4 @@ afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o libafsrpc.a* libafsrpc.sl* libafsrpc.so*
+	$(RM) -f *.o libafsrpc.a* libafsrpc.sl* libafsrpc.so* libafsrpc_pic.a libafsrpc.dylib.*

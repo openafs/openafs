@@ -104,27 +104,39 @@ LIBOBJS = \
 
 LIBAFSAUTHENT = libafsauthent.${SHLIB_SUFFIX}.${LIBAFSAUTHENTMAJOR}.${LIBAFSAUTHENTMINOR}
 
-all: ${TOP_LIBDIR}/${LIBAFSAUTHENT}
+all: ${TOP_LIBDIR}/${LIBAFSAUTHENT} ${TOP_LIBDIR}/libafsauthent_pic.a
 
 ${TOP_LIBDIR}/${LIBAFSAUTHENT}: ${LIBAFSAUTHENT}
 	../config/shlib-install -d ${TOP_LIBDIR} \
 		-l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR}
 
-install: ${LIBAFSAUTHENT}
+${TOP_LIBDIR}/libafsauthent_pic.a: libafsauthent_pic.a
+	${INSTALL_DATA} libafsauthent_pic.a $@
+
+install: ${LIBAFSAUTHENT} libafsauthent_pic.a
 	../config/shlib-install -d ${DESTDIR}${libdir} \
 		-l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR}
+	${INSTALL_DATA} libafsauthent_pic.a \
+		${DESTDIR}${libdir}/libafsauthent_pic.a
 
-dest: ${LIBAFSAUTHENT}
+dest: ${LIBAFSAUTHENT} libafsauthent_pic.a
 	../config/shlib-install -d ${DEST}/lib \
 		-l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR}
+	${INSTALL_DATA} libafsauthent_pic.a \
+		${DEST}/lib/libafsauthent_pic.a
 
 ${LIBAFSAUTHENT}: ${LIBOBJS}
 	../config/shlib-build -d $(srcdir) -l libafsauthent \
 		-M ${LIBAFSAUTHENTMAJOR} -m ${LIBAFSAUTHENTMINOR} -- \
 		-L${TOP_LIBDIR} -lafsrpc ${LIBOBJS} ${MT_LIBS}
+
+libafsauthent_pic.a: ${LIBOBJS}
+	$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	$(RANLIB) $@
 
 audit.o: ${AUDIT}/audit.c
 	${CCRULE}
@@ -278,4 +290,4 @@ pioctl.o: ${SYS}/pioctl.c
 	${CCRULE}
 
 clean:
-	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so*
+	$(RM) -f *.o *.a libafsauthent.a* libafsauthent.sl* libafsauthent.so* libafsauthent_pic.a libafsauthent.dylib.*

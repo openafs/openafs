@@ -1541,6 +1541,8 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %defattr(-,root,root)
 %{_libdir}/libafsauthent.a
 %{_libdir}/libafsrpc.a
+%{_libdir}/libafsauthent_pic.a
+%{_libdir}/libafsrpc_pic.a
 %if %{build_authlibs}
 %{_libdir}/libafsauthent.so
 %{_libdir}/libafsrpc.so
