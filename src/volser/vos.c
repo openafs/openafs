@@ -532,13 +532,12 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 #endif
 	    if (!pntr->updateDate)
 		fprintf(STDOUT, "    Last Update Never\n");
-	    else {
+	    else
 		fprintf(STDOUT, "    Last Update %s",
 			vos_ctime( & pntr->updateDate));
-		fprintf(STDOUT,
-			"    %d accesses in the past day (i.e., vnode references)\n",
-			pntr->dayUse);
-	    }
+	    fprintf(STDOUT,
+		    "    %d accesses in the past day (i.e., vnode references)\n",
+		    pntr->dayUse);
 	} else if (pntr->status == VBUSY) {
 	    *totalBusy += 1;
 	    qPut(&busyHead, pntr->volid);
@@ -689,13 +688,12 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 #endif
 	    if (!a_xInfoP->updateDate)
 		fprintf(STDOUT, "    Last Update Never\n");
-	    else {
+	    else
 		fprintf(STDOUT, "    Last Update %s",
 			vos_ctime( & a_xInfoP->updateDate));
-		fprintf(STDOUT,
-			"    %d accesses in the past day (i.e., vnode references)\n",
-			a_xInfoP->dayUse);
-	    }
+	    fprintf(STDOUT,
+		    "    %d accesses in the past day (i.e., vnode references)\n",
+		    a_xInfoP->dayUse);
 
 	    /*
 	     * Print all the read/write and authorship stats.
