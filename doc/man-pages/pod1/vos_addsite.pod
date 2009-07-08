@@ -89,7 +89,7 @@ with the B<-localauth> flag. For more details, see L<vos(1)>.
 Assigns the unprivileged identity anonymous to the issuer. Do not combine
 this flag with the B<-localauth> flag. For more details, see L<vos(1)>.
 
-=item -localauth
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
 F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it
