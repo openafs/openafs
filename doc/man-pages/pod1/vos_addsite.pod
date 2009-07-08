@@ -9,14 +9,14 @@ vos_addsite - Adds a read-only site definition to a volume's VLDB entry
 
 B<vos addsite> S<<< B<-server> <I<machine name for new site>> >>>
     S<<< B<-partition> <I<partition name for new site>> >>>
-    S<<< B<-id> <I<volume name or ID>> >>> S<<< B<-valid> <I<old volume id>> >>>
+    S<<< B<-id> <I<volume name or ID>> >>> [B<-valid>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-help>]
 
 B<vos ad> S<<< B<-s> <I<machine name for new site>> >>>
     S<<< B<-p> <I<partition name for new site>> >>>
-    S<<< B<-i> <I<volume name or ID>> >>> S<<< B<-valid> <I<old volume id>> >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+    S<<< B<-i> <I<volume name or ID>> >>> [B<-va>]
+    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-ve>] [B<-h>]
 
 =for html
 </div>
@@ -69,14 +69,15 @@ L<vos(1)>.
 Specifies either the complete name or volume ID number of the read/write
 source volume.
 
-=item B<-valid> <I<volume ID>>
+=item B<-valid>
 
-Specifies the volume ID number of the existing release-equivalent
-volume that is not already marked as a replica. This is useful when an
-existing read-only volume is dumped and restored with the B<-readonly>
-flag at the new site. This option is available in OpenAFS clients
-1.4.7 or later and 1.5.31 and later. This option can be used with
-OpenAFS server versions later than 1.4.1 or 1.5.0.
+Marks the site as up-to-date in the VLDB. You should only do this if the
+new site already has a current readonly replica of the volume, but for
+some reason it is not in the VLDB as a replica site. This is useful when
+an existing read-only volume is dumped and restored with the B<-readonly>
+flag at the new site. This option is available in OpenAFS clients 1.4.7 or
+later and 1.5.31 and later. This option can be used with OpenAFS server
+versions later than 1.4.1 or 1.5.0.
 
 =item B<-cell> <I<cell name>>
 
