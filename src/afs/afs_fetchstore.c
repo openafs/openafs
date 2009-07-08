@@ -27,6 +27,57 @@
 
 extern int cacheDiskType;
 
+
+#ifndef AFS_NOSTATS
+void
+FillStoreStats(int code, int idx, osi_timeval_t *xferStartTime,
+		  afs_size_t bytesToXfer, afs_size_t bytesXferred)
+{
+    struct afs_stats_xferData *xferP;
+    osi_timeval_t xferStopTime;
+    XSTATS_DECLS;
+
+    xferP = &(afs_stats_cmfullperf.rpc.fsXferTimes[idx]);
+    osi_GetuTime(&xferStopTime);
+    (xferP->numXfers)++;
+    if (!code) {
+	(xferP->numSuccesses)++;
+	afs_stats_XferSumBytes[idx] += bytesXferred;
+	(xferP->sumBytes) += (afs_stats_XferSumBytes[idx] >> 10);
+	afs_stats_XferSumBytes[idx] &= 0x3FF;
+	if (bytesXferred < xferP->minBytes)
+	    xferP->minBytes = bytesXferred;
+	if (bytesXferred > xferP->maxBytes)
+	    xferP->maxBytes = bytesXferred;
+
+	/*
+	 * Tally the size of the object.  Note: we tally the actual size,
+	 * NOT the number of bytes that made it out over the wire.
+	 */
+	if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0) (xferP->count[0])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET1) (xferP->count[1])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET2) (xferP->count[2])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET3) (xferP->count[3])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET4) (xferP->count[4])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET5) (xferP->count[5])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET6) (xferP->count[6])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET7) (xferP->count[7])++;
+	else
+	    (xferP->count[8])++;
+
+	afs_stats_GetDiff(elapsedTime, (*xferStartTime), xferStopTime);
+	afs_stats_AddTo((xferP->sumTime), elapsedTime);
+	afs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
+	if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
+	    afs_stats_TimeAssign((xferP->minTime), elapsedTime);
+	}
+	if (afs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
+	    afs_stats_TimeAssign((xferP->maxTime), elapsedTime);
+	}
+    }
+}
+#endif /* AFS_NOSTATS */
+
 /* rock and operations for RX_FILESERVER */
 
 struct rxfs_storeVariables {
@@ -142,6 +193,34 @@ rxfs_storeUfsWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
 }
 
 afs_int32
+rxfs_storePadd(void *rock, afs_uint32 sbytes)
+{
+    afs_int32 code = 0;
+    int bsent, tlen;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)rock;
+    char *tbuffer = v->tbuffer;
+
+    if ( !tbuffer )
+	tbuffer = v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+
+    while (sbytes > 0) {
+	tlen = (sbytes > AFS_LRALLOCSIZ
+			    ? AFS_LRALLOCSIZ : sbytes);
+	memset(tbuffer, 0, tlen);
+	RX_AFS_GUNLOCK();
+	bsent = rx_Write(v->call, tbuffer, tlen);
+	RX_AFS_GLOCK();
+
+	if (bsent != tlen) {
+	    code = -33;	/* XXX */
+	    break;
+	}
+	sbytes -= tlen;
+    }
+    return code;
+}
+
+afs_int32
 rxfs_storeStatus(void *rock)
 {
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)rock;
@@ -196,6 +275,7 @@ struct storeOps rxfs_storeUfsOps = {
     rxfs_storeUfsRead,
     rxfs_storeUfsWrite,
     rxfs_storeStatus,
+    rxfs_storePadd,
     rxfs_storeClose,
     rxfs_storeDestroy
 };
@@ -206,6 +286,7 @@ struct storeOps rxfs_storeMemOps = {
     rxfs_storeMemRead,
     rxfs_storeMemWrite,
     rxfs_storeStatus,
+    rxfs_storePadd,
     rxfs_storeClose,
     rxfs_storeDestroy
 };
@@ -318,9 +399,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
     afs_int32 code = 0;
 
 #ifndef AFS_NOSTATS
-    struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
-    osi_timeval_t xferStartTime,	/*FS xfer start time */
-      xferStopTime;			/*FS xfer stop time */
+    osi_timeval_t xferStartTime;	/*FS xfer start time */
     afs_size_t bytesToXfer = 10000;	/* # bytes to xfer */
     afs_size_t bytesXferred = 10000;	/* # bytes actually xferred */
 #endif /* AFS_NOSTATS */
@@ -367,9 +446,6 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	bytesToXfer = alen;
 	bytesXferred = 0;
 
-	xferP = &(afs_stats_cmfullperf.rpc.
-			fsXferTimes[AFS_STATS_FS_XFERIDX_STOREDATA]);
-	osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
 	while ( alen > 0 ) {
@@ -407,51 +483,8 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
 
 #ifndef AFS_NOSTATS
-	osi_GetuTime(&xferStopTime);
-	(xferP->numXfers)++;
-	if (!code) {
-	    (xferP->numSuccesses)++;
-	    afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_STOREDATA] +=
-		bytesXferred;
-	    (xferP->sumBytes) +=
-		(afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_STOREDATA] >> 10);
-	    afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_STOREDATA] &= 0x3FF;
-	    if (bytesXferred < xferP->minBytes)
-		xferP->minBytes = bytesXferred;
-	    if (bytesXferred > xferP->maxBytes)
-		xferP->maxBytes = bytesXferred;
-
-	    /*
-	     * Tally the size of the object.  Note: we tally the actual size,
-	     * NOT the number of bytes that made it out over the wire.
-	     */
-	    if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0)
-		(xferP->count[0])++;
-	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET1)
-		(xferP->count[1])++;
-	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET2)
-		(xferP->count[2])++;
-	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET3)
-		(xferP->count[3])++;
-	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET4)
-		(xferP->count[4])++;
-	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET5)
-		(xferP->count[5])++;
-	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET6)
-		(xferP->count[6])++;
-	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET7)
-		(xferP->count[7])++;
-	    else
-		(xferP->count[8])++;
-
-	    afs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
-	    afs_stats_AddTo((xferP->sumTime), elapsedTime);
-	    afs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
-	    if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime)))
-		afs_stats_TimeAssign((xferP->minTime), elapsedTime);
-	    if (afs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime)))
-		afs_stats_TimeAssign((xferP->maxTime), elapsedTime);
-	}
+	FillStoreStats(code, AFS_STATS_FS_XFERIDX_STOREDATA,
+		    &xferStartTime, bytesToXfer, bytesXferred);
 #endif /* AFS_NOSTATS */
 
 	afs_CFileClose(fP);
@@ -989,9 +1022,7 @@ afs_CacheFetchProc(register struct afs_conn *tc,
 
     XSTATS_DECLS;
 #ifndef AFS_NOSTATS
-    struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
-    osi_timeval_t xferStartTime,	/*FS xfer start time */
-		    xferStopTime;	/*FS xfer stop time */
+    osi_timeval_t xferStartTime;	/*FS xfer start time */
     afs_size_t bytesToXfer = 0, bytesXferred = 0;
 #endif
 
@@ -1002,8 +1033,6 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     code = rxfs_fetchInit(tc, avc, abase, size, &length, adc, fP, &ops, &rock);
 
 #ifndef AFS_NOSTATS
-    xferP =
-	&(afs_stats_cmfullperf.rpc.fsXferTimes[AFS_STATS_FS_XFERIDX_FETCHDATA]);
     osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
@@ -1073,52 +1102,8 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     (*ops->destroy)(&rock, code);
 
 #ifndef AFS_NOSTATS
-    osi_GetuTime(&xferStopTime);
-    (xferP->numXfers)++;
-    if (!code) {
-	(xferP->numSuccesses)++;
-	afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_FETCHDATA] += bytesXferred;
-	(xferP->sumBytes) +=
-		(afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_FETCHDATA] >> 10);
-	afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_FETCHDATA] &= 0x3FF;
-	if (bytesXferred < xferP->minBytes)
-	    xferP->minBytes = bytesXferred;
-	if (bytesXferred > xferP->maxBytes)
-	    xferP->maxBytes = bytesXferred;
-
-	/*
-	 * Tally the size of the object.  Note: we tally the actual size,
-	 * NOT the number of bytes that made it out over the wire.
-	 */
-	if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0)
-	    (xferP->count[0])++;
-	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET1)
-	    (xferP->count[1])++;
-	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET2)
-	    (xferP->count[2])++;
-	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET3)
-	    (xferP->count[3])++;
-	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET4)
-	    (xferP->count[4])++;
-	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET5)
-	    (xferP->count[5])++;
-	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET6)
-	    (xferP->count[6])++;
-	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET7)
-	    (xferP->count[7])++;
-	else
-	    (xferP->count[8])++;
-
-	afs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
-	afs_stats_AddTo((xferP->sumTime), elapsedTime);
-	afs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
-	if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
-	    afs_stats_TimeAssign((xferP->minTime), elapsedTime);
-	}
-	if (afs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
-	    afs_stats_TimeAssign((xferP->maxTime), elapsedTime);
-	}
-    }
+    FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA,&xferStartTime,
+			bytesToXfer, bytesXferred);
 #endif
     XSTATS_END_TIME;
     return code;

@@ -1360,6 +1360,7 @@ struct storeOps {
         afs_uint32 tlen, afs_uint32 *bytesread);
     int (*write)(void *rock, afs_uint32 tlen, afs_uint32 *byteswritten);
     int (*status)(void *rock);
+    int (*padd)(void *rock, afs_uint32 tlen);
     int (*close)(void *rock, struct AFSFetchStatus *OutStatus,
         afs_int32 *doProcessFS);
     int (*destroy)(void **rock, afs_int32 error);
