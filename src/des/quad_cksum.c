@@ -67,8 +67,6 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
-RCSID
-    ("$Header$");
 
 #include <mit-cpyright.h>
 

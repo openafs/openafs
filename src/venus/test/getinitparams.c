@@ -10,8 +10,6 @@
 /* Get CM initialization parameters. */
 #include <afsconfig.h>
 
-RCSID
-    ("$Header$");
 
 #include <afs/param.h>
 #include <stdio.h>

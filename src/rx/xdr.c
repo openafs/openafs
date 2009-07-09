@@ -35,8 +35,6 @@
 #include <string.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 /*
  * xdr.c, Generic XDR routines implementation.

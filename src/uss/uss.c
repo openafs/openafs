@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

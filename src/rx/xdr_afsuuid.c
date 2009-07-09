@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #if defined(KERNEL) && !defined(UKERNEL)
 #ifdef AFS_LINUX20_ENV

@@ -2,8 +2,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
-
 /*
  *
  * Copyright 1986, 1987 by the MIT Student Information Processing Board

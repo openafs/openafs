@@ -40,8 +40,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"

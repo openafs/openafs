@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static void
   kill_one(const char *filename);
 

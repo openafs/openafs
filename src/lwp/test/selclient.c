@@ -53,8 +53,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 
 #include "lwp.h"

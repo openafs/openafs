@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifndef RXDEBUG
 char rxi_tracename[80] = "\0Tracing not compiled in";

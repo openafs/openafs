@@ -14,8 +14,6 @@
 #endif
 #include <afsconfig.h>
 
-RCSID
-    ("$Header$");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"

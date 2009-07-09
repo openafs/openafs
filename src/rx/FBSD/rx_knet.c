@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #ifdef AFS_FBSD40_ENV
 #include <sys/malloc.h>

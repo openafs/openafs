@@ -5,10 +5,8 @@ dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
-AH_VERBATIM([RCSID],
-[#define RCSID(msg) \
-static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
-#undef HAVE_CONNECT
+AH_VERBATIM([OPENAFS_HEADER],
+[#undef HAVE_CONNECT
 #undef HAVE_GETHOSTBYNAME
 #undef HAVE_RES_SEARCH
 #undef HAVE_SOCKET

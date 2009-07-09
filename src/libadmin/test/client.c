@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "client.h"
 #include <afs/cellconfig.h>

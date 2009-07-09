@@ -19,8 +19,6 @@
 #include <afs/param.h>
 #define MAXINT     (~(1<<((sizeof(int)*8)-1)))
 
-RCSID
-    ("$Header$");
 
 #include <errno.h>
 #include <stdio.h>

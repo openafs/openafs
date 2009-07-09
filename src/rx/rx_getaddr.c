@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifndef KERNEL
 #ifndef AFS_NT40_ENV

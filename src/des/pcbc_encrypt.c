@@ -30,8 +30,6 @@
 #include <des.h>
 #include "des_prototypes.h"
 
-RCSID
-    ("$Header$");
 
 #include "des_internal.h"
 

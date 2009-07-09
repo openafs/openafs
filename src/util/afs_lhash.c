@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "afs_atomlist.h"
 #include "afs_lhash.h"

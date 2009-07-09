@@ -20,7 +20,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
 
 #define LWP_KERNEL
 #include "lwp.h"

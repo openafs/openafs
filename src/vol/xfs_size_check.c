@@ -11,7 +11,6 @@
  * attribute for AFS inode parameters. Check all the mounted /vicep partitions.
 #include <afsconfig.h>
 
-RCSID("$Header$");
 
  */
 #include <afs/param.h>

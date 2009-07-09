@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include <linux/fs.h>

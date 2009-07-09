@@ -25,8 +25,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifdef AFS_PTHREAD_ENV
 #include <afs/assert.h>

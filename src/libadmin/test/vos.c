@@ -20,8 +20,6 @@
 #include <afs/afsutil.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #include "vos.h"
 

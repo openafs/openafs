@@ -8,8 +8,6 @@
 #include <afs/param.h>
 #include <afs/afsutil.h>
 
-RCSID
-    ("$Header$");
 
 #include "error_table.h"
 #include "mit-sipb-cr.h"

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <windows.h>
 #include <afs/errmap_nt.h>

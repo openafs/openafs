@@ -192,9 +192,6 @@
 #undef PACKAGE
 #undef VERSION
 
-#define RCSID(msg) \
-static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
-
 #undef HAVE_CONNECT
 //#undef HAVE_GETHOSTBYNAME
 #undef HAVE_RES_SEARCH

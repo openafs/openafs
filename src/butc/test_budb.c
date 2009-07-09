@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <afs/budb_client.h>
 #include <afs/budb.h>

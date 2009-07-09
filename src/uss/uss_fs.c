@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "uss_fs.h"		/*Interface to this module */
 #include <sys/types.h>

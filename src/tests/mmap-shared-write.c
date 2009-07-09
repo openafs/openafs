@@ -50,10 +50,6 @@
 #define MAP_FAILED ((void *)-1)
 #endif
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static int
 doit(const char *filename)
 {

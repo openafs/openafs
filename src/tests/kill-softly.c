@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 struct entry {
     char *name;
     int status;

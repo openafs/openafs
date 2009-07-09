@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "uss_ptserver.h"	/*Module interface */
 #include <afs/ptclient.h>	/*Protection Server client interface */

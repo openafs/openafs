@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "uss_acl.h"
 #include "uss_common.h"

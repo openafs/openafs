@@ -40,8 +40,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */

@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifndef AFS_DARWIN_ENV
 #include <sys/types.h>

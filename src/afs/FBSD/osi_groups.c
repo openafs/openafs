@@ -21,8 +21,6 @@
 #include <sys/sysproto.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

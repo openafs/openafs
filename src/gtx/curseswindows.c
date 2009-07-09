@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)

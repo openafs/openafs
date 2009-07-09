@@ -52,7 +52,6 @@
 
 #include <err.h>
 
-RCSID("$Id$");
 
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)-1)

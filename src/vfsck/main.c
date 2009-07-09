@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #define VICE			/* allow us to put our changes in at will */
 #include <stdio.h>

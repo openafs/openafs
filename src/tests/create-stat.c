@@ -54,10 +54,6 @@ struct VenusFid {
     struct AFSFid Fid;
 };
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static void
 usage(int ret)
 {

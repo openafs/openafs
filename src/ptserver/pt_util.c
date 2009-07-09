@@ -29,8 +29,6 @@
 #include <afs/param.h>
 #include <afs/com_err.h>
 
-RCSID
-    ("$Header$");
 
 #include <afs/cmd.h>		/*Command line parsing */
 #include <afs/afsutil.h>

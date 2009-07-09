@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #include <linux/module.h> /* early to avoid printf->printk mapping */

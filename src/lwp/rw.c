@@ -17,8 +17,6 @@ Created: 11/1/83, J. Rosenberg
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <malloc.h>

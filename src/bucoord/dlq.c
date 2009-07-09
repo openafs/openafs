@@ -13,8 +13,6 @@
 #include <stdlib.h>
 #endif
 
-RCSID
-    ("$Header$");
 #include "bc.h"
 #include <afs/bubasics.h>
 /* protos */

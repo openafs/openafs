@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
-RCSID
-    ("$Header$");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

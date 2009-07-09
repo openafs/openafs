@@ -84,8 +84,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */

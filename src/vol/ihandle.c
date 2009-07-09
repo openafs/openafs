@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <stdio.h>
 #include <sys/types.h>

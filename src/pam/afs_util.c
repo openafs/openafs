@@ -26,8 +26,6 @@
 #endif
 #endif
 
-RCSID
-    ("$Header$");
 
 #include "afs_util.h"
 

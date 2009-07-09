@@ -11,8 +11,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 /*
  *                      (3) Define a structure, idused, instead of an

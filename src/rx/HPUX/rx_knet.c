@@ -5,8 +5,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #include "h/types.h"
 #include "h/param.h"

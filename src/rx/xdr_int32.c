@@ -34,8 +34,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #ifndef	NeXT
 

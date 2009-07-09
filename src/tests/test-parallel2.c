@@ -46,10 +46,6 @@
 
 #include <fcntl.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 #define WORKER_TIMES 1000
 #define NUM_WORKER 100
 

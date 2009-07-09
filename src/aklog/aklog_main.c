@@ -35,8 +35,6 @@
  */
 
 #include <afsconfig.h>
-RCSID
-    ("$Header$");
 
 #include <stdio.h>
 #include <string.h>

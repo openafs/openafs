@@ -18,8 +18,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #ifdef KERNEL
 #include "afs/stds.h"

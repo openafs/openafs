@@ -47,10 +47,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static int
 verify_inodes(const char *dirname)
 {

@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "uss_common.h"		/*Interface definitions */
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */

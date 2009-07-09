@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "xstat_cm.h"		/*Interface for xstat_cm module */
 #include <cmd.h>		/*Command line interpreter */

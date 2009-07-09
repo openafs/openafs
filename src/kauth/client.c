@@ -14,8 +14,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #if defined(UKERNEL)
 #ifdef HAVE_UNISTD_H

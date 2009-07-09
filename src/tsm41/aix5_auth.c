@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #if defined(AFS_AIX51_ENV)
 #include <sys/types.h>

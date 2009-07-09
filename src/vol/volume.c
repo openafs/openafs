@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>

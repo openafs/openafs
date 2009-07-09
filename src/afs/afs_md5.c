@@ -37,7 +37,6 @@
 #include "afsincludes.h"
 
 
-RCSID("$Id$");
 
 #include "afs_md5.h"
 

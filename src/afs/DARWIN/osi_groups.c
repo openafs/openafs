@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 /* We should be doing something better anyway */
 #ifdef AFS_DARWIN80_ENV

@@ -16,8 +16,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #define UBIK_LEGACY_CALLITER 1
 

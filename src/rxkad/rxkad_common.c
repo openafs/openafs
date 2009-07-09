@@ -22,8 +22,6 @@
 
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
-RCSID
-    ("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL

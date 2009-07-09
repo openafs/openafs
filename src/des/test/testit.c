@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 
 #define MIN_ARGC	0	/* min # args, not incl flags */

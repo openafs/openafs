@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "apache_afs_cache.h"
 

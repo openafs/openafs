@@ -18,8 +18,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"

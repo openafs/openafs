@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO

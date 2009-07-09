@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "gtxX11win.h"		/*Interface definition */
 #include <stdio.h>		/*Standard I/O package */

@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static int
 creat_dir(const char *name)
 {

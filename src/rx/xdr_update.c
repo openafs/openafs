@@ -9,8 +9,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifndef	NeXT
 #include "xdr.h"

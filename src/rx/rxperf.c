@@ -39,10 +39,6 @@ nn * We are using getopt since we want it to be possible to link to
  * transarc libs.
  */
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/time.h>

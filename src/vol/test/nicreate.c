@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>

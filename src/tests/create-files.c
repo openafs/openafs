@@ -51,10 +51,6 @@
 #undef min
 #define min(a,b) ((a) < (b) ? (a) : (b))
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static int
 creat_files(int count, long startsize)
 {

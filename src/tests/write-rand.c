@@ -46,10 +46,6 @@
 #include <sys/stat.h>
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static char *
 write_random_file(int fd, size_t sz)
 {

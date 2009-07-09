@@ -36,8 +36,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <limits.h>
 #include <stdio.h>

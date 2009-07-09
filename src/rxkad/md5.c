@@ -62,7 +62,6 @@
 #include "rxkad.h"
 #endif /* defined(UKERNEL) */
 
-RCSID("$Id$");
 
 
 

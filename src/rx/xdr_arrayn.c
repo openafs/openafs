@@ -29,8 +29,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #if defined(AFS_OBSD44_ENV) && defined(KERNEL) && !defined(UKERNEL)
 /* XXX osi_alloc, please find and fix */

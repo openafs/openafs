@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static void do_dir(const char *);
 static void repeat_dir(const char *);
 

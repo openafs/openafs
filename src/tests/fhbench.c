@@ -54,7 +54,6 @@
 #include <atypes.h>
 #include <kafs.h>
 
-RCSID("$Id$");
 
 struct fhb_handle {
     char data[512];

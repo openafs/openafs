@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <afs/stds.h>
-RCSID
-    ("$Header$");
 
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>
