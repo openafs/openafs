@@ -23,6 +23,7 @@
 #include <rx/xdr.h>
 #include <ubik.h>
 #include "vlserver.h"
+#include "vlserver_internal.h"
 
 extern struct vlheader cheader;
 struct vlheader xheader;
@@ -32,14 +33,13 @@ struct extentaddr extentaddr;
 extern struct extentaddr *ex_addr[];
 int vldbversion = 0;
 
-static int index_OK();
+static int index_OK(struct ubik_trans *trans, afs_int32 blockindex);
 
 #define ERROR_EXIT(code) {error=(code); goto error_exit;}
 
 /* Hashing algorithm based on the volume id; HASHSIZE must be prime */
 afs_int32
-IDHash(volumeid)
-     afs_int32 volumeid;
+IDHash(afs_int32 volumeid)
 {
     return ((abs(volumeid)) % HASHSIZE);
 }
@@ -47,8 +47,7 @@ IDHash(volumeid)
 
 /* Hashing algorithm based on the volume name; name's size is implicit (64 chars) and if changed it should be reflected here. */
 afs_int32
-NameHash(volumename)
-     register char *volumename;
+NameHash(register char *volumename)
 {
     register unsigned int hash;
     register int i;
@@ -62,15 +61,12 @@ NameHash(volumename)
 
 /* package up seek and write into one procedure for ease of use */
 afs_int32
-vlwrite(trans, offset, buffer, length)
-     struct ubik_trans *trans;
-     afs_int32 offset;
-     char *buffer;
-     afs_int32 length;
+vlwrite(struct ubik_trans *trans, afs_int32 offset, void *buffer,
+	afs_int32 length)
 {
     afs_int32 errorcode;
 
-    if (errorcode = ubik_Seek(trans, 0, offset))
+    if ((errorcode = ubik_Seek(trans, 0, offset)))
 	return errorcode;
     return (ubik_Write(trans, buffer, length));
 }
@@ -78,15 +74,12 @@ vlwrite(trans, offset, buffer, length)
 
 /* Package up seek and read into one procedure for ease of use */
 afs_int32
-vlread(trans, offset, buffer, length)
-     struct ubik_trans *trans;
-     afs_int32 offset;
-     char *buffer;
-     afs_int32 length;
+vlread(struct ubik_trans *trans, afs_int32 offset, char *buffer,
+       afs_int32 length)
 {
     afs_int32 errorcode;
 
-    if (errorcode = ubik_Seek(trans, 0, offset))
+    if ((errorcode = ubik_Seek(trans, 0, offset)))
 	return errorcode;
     return (ubik_Read(trans, buffer, length));
 }
@@ -94,11 +87,8 @@ vlread(trans, offset, buffer, length)
 
 /* take entry and convert to network order and write to disk */
 afs_int32
-vlentrywrite(trans, offset, buffer, length)
-     struct ubik_trans *trans;
-     afs_int32 offset;
-     char *buffer;
-     afs_int32 length;
+vlentrywrite(struct ubik_trans *trans, afs_int32 offset, void *buffer,
+	     afs_int32 length)
 {
     struct vlentry oentry;
     struct nvlentry nentry, *nep;
@@ -146,11 +136,8 @@ vlentrywrite(trans, offset, buffer, length)
 
 /* read entry and convert to host order and write to disk */
 afs_int32
-vlentryread(trans, offset, buffer, length)
-     struct ubik_trans *trans;
-     afs_int32 offset;
-     char *buffer;
-     afs_int32 length;
+vlentryread(struct ubik_trans *trans, afs_int32 offset, char *buffer,
+	    afs_int32 length)
 {
     struct vlentry *oep, tentry;
     struct nvlentry *nep, *nbufp;
@@ -201,8 +188,7 @@ vlentryread(trans, offset, buffer, length)
 
 /* Convenient write of small critical vldb header info to the database. */
 int
-write_vital_vlheader(trans)
-     register struct ubik_trans *trans;
+write_vital_vlheader(register struct ubik_trans *trans)
 {
     if (vlwrite
 	(trans, 0, (char *)&cheader.vital_header, sizeof(vital_vlheader)))
@@ -222,8 +208,7 @@ int extent_mod = 0;
  * (extent_mod tells us the on-disk copy is bad).
  */
 afs_int32
-readExtents(trans)
-     struct ubik_trans *trans;
+readExtents(struct ubik_trans *trans)
 {
     afs_uint32 extentAddr;
     afs_int32 error = 0, code;
@@ -306,9 +291,7 @@ readExtents(trans)
 /* Check that the database has been initialized.  Be careful to fail in a safe
    manner, to avoid bogusly reinitializing the db.  */
 afs_int32
-CheckInit(trans, builddb)
-     struct ubik_trans *trans;
-     int builddb;
+CheckInit(struct ubik_trans *trans, int builddb)
 {
     afs_int32 error = 0, i, code, ubcode = 0;
 
@@ -379,9 +362,7 @@ CheckInit(trans, builddb)
 
 
 afs_int32
-GetExtentBlock(trans, base)
-     register struct ubik_trans *trans;
-     register afs_int32 base;
+GetExtentBlock(register struct ubik_trans *trans, register afs_int32 base)
 {
     afs_int32 blockindex, code, error = 0;
 
@@ -439,11 +420,9 @@ GetExtentBlock(trans, base)
 
 
 afs_int32
-FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
-     register struct ubik_trans *trans;
-     afsUUID *uuidp;
-     afs_int32 createit, hostslot, *basep;
-     struct extentaddr **expp;
+FindExtentBlock(register struct ubik_trans *trans, afsUUID *uuidp,
+		afs_int32 createit, afs_int32 hostslot,
+		struct extentaddr **expp, afs_int32 *basep)
 {
     afsUUID tuuid;
     struct extentaddr *exp;
@@ -545,9 +524,7 @@ FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
 /* Allocate a free block of storage for entry, returning address of a new
    zeroed entry (or zero if something is wrong).  */
 afs_int32
-AllocBlock(trans, tentry)
-     register struct ubik_trans *trans;
-     struct nvlentry *tentry;
+AllocBlock(register struct ubik_trans *trans, struct nvlentry *tentry)
 {
     register afs_int32 blockindex;
 
@@ -572,9 +549,7 @@ AllocBlock(trans, tentry)
 
 /* Free a block given its index.  It must already have been unthreaded. Returns zero for success or an error code on failure. */
 int
-FreeBlock(trans, blockindex)
-     struct ubik_trans *trans;
-     afs_int32 blockindex;
+FreeBlock(struct ubik_trans *trans, afs_int32 blockindex)
 {
     struct nvlentry tentry;
 
@@ -594,14 +569,14 @@ FreeBlock(trans, blockindex)
 }
 
 
-/* Look for a block by volid and voltype (if not known use -1 which searches all 3 volid hash lists. Note that the linked lists are read in first from the database header.  If found read the block's contents into the area pointed to by tentry and return the block's index.  If not found return 0. */
+/* Look for a block by volid and voltype (if not known use -1 which searches
+ * all 3 volid hash lists. Note that the linked lists are read in first from
+ * the database header.  If found read the block's contents into the area
+ * pointed to by tentry and return the block's index.  If not found return 0.
+ */
 afs_int32
-FindByID(trans, volid, voltype, tentry, error)
-     struct ubik_trans *trans;
-     afs_uint32 volid;
-     afs_int32 voltype;
-     struct nvlentry *tentry;
-     afs_int32 *error;
+FindByID(struct ubik_trans *trans, afs_uint32 volid, afs_int32 voltype,
+	 struct nvlentry *tentry, afs_int32 *error)
 {
     register afs_int32 typeindex, hashindex, blockindex;
 
@@ -638,19 +613,21 @@ FindByID(trans, volid, voltype, tentry, error)
 }
 
 
-/* Look for a block by volume name. If found read the block's contents into the area pointed to by tentry and return the block's index.  If not found return 0. */
+/* Look for a block by volume name. If found read the block's contents into
+ * the area pointed to by tentry and return the block's index.  If not
+ * found return 0.
+ */
 afs_int32
-FindByName(trans, volname, tentry, error)
-     struct ubik_trans *trans;
-     char *volname;
-     struct nvlentry *tentry;
-     afs_int32 *error;
+FindByName(struct ubik_trans *trans, char *volname, struct nvlentry *tentry,
+	   afs_int32 *error)
 {
     register afs_int32 hashindex;
     register afs_int32 blockindex;
     char tname[VL_MAXNAMELEN];
 
-    /* remove .backup or .readonly extensions for stupid backwards compatibility */
+    /* remove .backup or .readonly extensions for stupid backwards
+     * compatibility
+     */
     hashindex = strlen(volname);	/* really string length */
     if (hashindex >= 8 && strcmp(volname + hashindex - 7, ".backup") == 0) {
 	/* this is a backup volume */
@@ -679,10 +656,7 @@ FindByName(trans, volname, tentry, error)
 }
 
 int
-HashNDump(trans, hashindex)
-     struct ubik_trans *trans;
-     int hashindex;
-
+HashNDump(struct ubik_trans *trans, int hashindex)
 {
     register int i = 0;
     register int blockindex;
@@ -702,10 +676,7 @@ HashNDump(trans, hashindex)
 
 
 int
-HashIdDump(trans, hashindex)
-     struct ubik_trans *trans;
-     int hashindex;
-
+HashIdDump(struct ubik_trans *trans, int hashindex)
 {
     register int i = 0;
     register int blockindex;
@@ -724,28 +695,31 @@ HashIdDump(trans, hashindex)
 }
 
 
-/* Add a block to the hash table given a pointer to the block and its index. The block is threaded onto both hash tables and written to disk.  The routine returns zero if there were no errors. */
+/* Add a block to the hash table given a pointer to the block and its index.
+ * The block is threaded onto both hash tables and written to disk.  The
+ * routine returns zero if there were no errors.
+ */
 int
-ThreadVLentry(trans, blockindex, tentry)
-     struct ubik_trans *trans;
-     afs_int32 blockindex;
-     struct nvlentry *tentry;
+ThreadVLentry(struct ubik_trans *trans, afs_int32 blockindex,
+	      struct nvlentry *tentry)
 {
     int errorcode;
 
     if (!index_OK(trans, blockindex))
 	return VL_BADINDEX;
     /* Insert into volid's hash linked list */
-    if (errorcode = HashVolid(trans, RWVOL, blockindex, tentry))
+    if ((errorcode = HashVolid(trans, RWVOL, blockindex, tentry)))
 	return errorcode;
 
-    /* For rw entries we also enter the RO and BACK volume ids (if they exist) in the hash tables; note all there volids (RW, RO, BACK) should not be hashed yet! */
+    /* For rw entries we also enter the RO and BACK volume ids (if they
+     * exist) in the hash tables; note all there volids (RW, RO, BACK)
+     * should not be hashed yet! */
     if (tentry->volumeId[ROVOL]) {
-	if (errorcode = HashVolid(trans, ROVOL, blockindex, tentry))
+	if ((errorcode = HashVolid(trans, ROVOL, blockindex, tentry)))
 	    return errorcode;
     }
     if (tentry->volumeId[BACKVOL]) {
-	if (errorcode = HashVolid(trans, BACKVOL, blockindex, tentry))
+	if ((errorcode = HashVolid(trans, BACKVOL, blockindex, tentry)))
 	    return errorcode;
     }
 
@@ -763,28 +737,27 @@ ThreadVLentry(trans, blockindex, tentry)
 }
 
 
-/* Remove a block from both the hash tables.  If success return 0, else return an error code. */
+/* Remove a block from both the hash tables.  If success return 0, else
+ * return an error code. */
 int
-UnthreadVLentry(trans, blockindex, aentry)
-     struct ubik_trans *trans;
-     afs_int32 blockindex;
-     struct nvlentry *aentry;
+UnthreadVLentry(struct ubik_trans *trans, afs_int32 blockindex,
+		struct nvlentry *aentry)
 {
     register afs_int32 errorcode, typeindex;
 
     if (!index_OK(trans, blockindex))
 	return VL_BADINDEX;
-    if (errorcode = UnhashVolid(trans, RWVOL, blockindex, aentry))
+    if ((errorcode = UnhashVolid(trans, RWVOL, blockindex, aentry)))
 	return errorcode;
 
     /* Take the RO/RW entries of their respective hash linked lists. */
     for (typeindex = ROVOL; typeindex <= BACKVOL; typeindex++) {
-	if (errorcode = UnhashVolid(trans, typeindex, blockindex, aentry))
+	if ((errorcode = UnhashVolid(trans, typeindex, blockindex, aentry)))
 	    return errorcode;
     }
 
     /* Take it out of the Volname hash list */
-    if (errorcode = UnhashVolname(trans, blockindex, aentry))
+    if ((errorcode = UnhashVolname(trans, blockindex, aentry)))
 	return errorcode;
 
     /* Update cheader entry */
@@ -795,14 +768,11 @@ UnthreadVLentry(trans, blockindex, aentry)
 
 /* cheader must have be read before this routine is called. */
 int
-HashVolid(trans, voltype, blockindex, tentry)
-     struct ubik_trans *trans;
-     afs_int32 voltype;
-     afs_int32 blockindex;
-     struct nvlentry *tentry;
+HashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
+          struct nvlentry *tentry)
 {
     afs_int32 hashindex, errorcode;
-    struct vlentry ventry;
+    struct nvlentry ventry;
 
     if (FindByID
 	(trans, tentry->volumeId[voltype], voltype, &ventry, &errorcode))
@@ -823,11 +793,8 @@ HashVolid(trans, voltype, blockindex, tentry)
 
 /* cheader must have be read before this routine is called. */
 int
-UnhashVolid(trans, voltype, blockindex, aentry)
-     struct ubik_trans *trans;
-     afs_int32 voltype;
-     afs_int32 blockindex;
-     struct nvlentry *aentry;
+UnhashVolid(struct ubik_trans *trans, afs_int32 voltype, afs_int32 blockindex,
+	    struct nvlentry *aentry)
 {
     int hashindex, nextblockindex, prevblockindex;
     struct nvlentry tentry;
@@ -874,10 +841,8 @@ UnhashVolid(trans, voltype, blockindex, aentry)
 
 
 int
-HashVolname(trans, blockindex, aentry)
-     struct ubik_trans *trans;
-     afs_int32 blockindex;
-     struct nvlentry *aentry;
+HashVolname(struct ubik_trans *trans, afs_int32 blockindex,
+	    struct nvlentry *aentry)
 {
     register afs_int32 hashindex;
     register afs_int32 code;
@@ -896,10 +861,8 @@ HashVolname(trans, blockindex, aentry)
 
 
 int
-UnhashVolname(trans, blockindex, aentry)
-     struct ubik_trans *trans;
-     afs_int32 blockindex;
-     struct nvlentry *aentry;
+UnhashVolname(struct ubik_trans *trans, afs_int32 blockindex,
+	      struct nvlentry *aentry)
 {
     register afs_int32 hashindex, nextblockindex, prevblockindex;
     struct nvlentry tentry;
@@ -936,14 +899,14 @@ UnhashVolname(trans, blockindex, aentry)
 }
 
 
-/* Returns the vldb entry tentry at offset index; remaining is the number of entries left; the routine also returns the index of the next sequential entry in the vldb */
+/* Returns the vldb entry tentry at offset index; remaining is the number of
+ * entries left; the routine also returns the index of the next sequential
+ * entry in the vldb
+ */
 
 afs_int32
-NextEntry(trans, blockindex, tentry, remaining)
-     struct ubik_trans *trans;
-     afs_int32 blockindex;
-     struct nvlentry *tentry;
-     afs_int32 *remaining;
+NextEntry(struct ubik_trans *trans, afs_int32 blockindex,
+	  struct nvlentry *tentry, afs_int32 *remaining)
 {
     register afs_int32 lastblockindex;
 
@@ -983,11 +946,11 @@ NextEntry(trans, blockindex, tentry, remaining)
 }
 
 
-/* Routine to verify that index is a legal offset to a vldb entry in the table */
+/* Routine to verify that index is a legal offset to a vldb entry in the
+ * table
+ */
 static int
-index_OK(trans, blockindex)
-     struct ubik_trans *trans;
-     afs_int32 blockindex;
+index_OK(struct ubik_trans *trans, afs_int32 blockindex)
 {
     if ((blockindex < sizeof(cheader))
 	|| (blockindex >= ntohl(cheader.vital_header.eofPtr)))

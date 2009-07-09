@@ -51,16 +51,16 @@
 #include "vlserver.h"
 #include "vlclient.h"
 
-void fill_listattributes_entry();
-void display_listattributes_entry();
-void display_entry();
-void display_entryN();
-void display_update_entry();
-void dump_stats();
-void GetArgs();
-void print_usage();
-void fill_entry();
-void fill_update_entry();
+void fill_listattributes_entry(struct VldbListByAttributes *, char **, int);
+void display_listattributes_entry(struct VldbListByAttributes *,int);
+void display_entry(struct vldbentry *, int);
+void display_entryN(struct nvldbentry *, int);
+void display_update_entry(struct VldbUpdateEntry *, int);
+void dump_stats(vldstats *, vital_vlheader *);
+void GetArgs(char *, char **, int *);
+void print_usage(void);
+void fill_entry(struct vldbentry *, char **, int);
+void fill_update_entry(struct VldbUpdateEntry *, char **, int);
 
 #define	VL_NUMBER_OPCODESX	34
 static char *opcode_names[VL_NUMBER_OPCODESX] = {
@@ -120,8 +120,7 @@ char confdir[AFSDIR_PATH_MAX];
 char *(args[50]);
 
 struct Vlent *
-GetVolume(vol, entry)
-     struct vldbentry *entry;
+GetVolume(int vol, struct vldbentry *entry)
 {
     register int i;
     register struct Vlent *vl;
@@ -189,18 +188,18 @@ handleit(struct cmd_syndesc *as, void *arock)
     register afs_int32 code, server = 0, sawserver = 0;
     afs_int32 id, voltype;
     struct vldbentry entry;
-    char *cmd = 0, *cellp = 0;
+    char *cellp = 0;
     struct VldbUpdateEntry updateentry;
     struct VldbListByAttributes listbyattributes;
     int noAuth = 1;		/* Default is authenticated connections */
 
-    if (ti = as->parms[0].items)	/* -cellpath <dir> */
+    if ((ti = as->parms[0].items))	/* -cellpath <dir> */
 	strcpy(confdir, ti->data);
     if (as->parms[1].items)	/* -server */
 	strcpy(confdir, AFSDIR_SERVER_ETC_DIRPATH);
     if (as->parms[2].items)	/* -noauth */
 	noAuth = 0;
-    if (ti = as->parms[3].items) {	/* -host */
+    if ((ti = as->parms[3].items)) {	/* -host */
 	server = GetServer(ti->data);
 	if (server == 0) {
 	    printf("server '%s' not found in host table\n", ti->data);
@@ -213,10 +212,10 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    ("Must also specify the -cell' option along with -host for authenticated conns\n");
 	exit(1);
     }
-    if (ti = as->parms[4].items) {	/* -cell */
+    if ((ti = as->parms[4].items)) {	/* -cell */
 	cellp = ti->data;
     }
-    if (code = vl_Initialize(noAuth, confdir, server, cellp)) {
+    if ((code = vl_Initialize(noAuth, confdir, server, cellp))) {
 	printf("Couldn't initialize vldb library (code=%d).\n", code);
 	exit(1);
     }
@@ -322,21 +321,21 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    if (!next_index)
 			break;
 		    num++;
-		    if (vl1 = GetVolume(entry.volumeId[0], &entry)) {
+		    if ((vl1 = GetVolume(entry.volumeId[0], &entry))) {
 			num1++;
 			printf
 			    ("Duplicate entry is found for RW vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
 			     entry.volumeId[0], vl1->rwid, vl1->roid,
 			     vl1->baid, vl1->name);
 		    }
-		    if (vl1 = GetVolume(entry.volumeId[1], &entry)) {
+		    if ((vl1 = GetVolume(entry.volumeId[1], &entry))) {
 			num1++;
 			printf
 			    ("Duplicate entry is found for RO vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
 			     entry.volumeId[1], vl1->rwid, vl1->roid,
 			     vl1->baid, vl1->name);
 		    }
-		    if (vl1 = GetVolume(entry.volumeId[2], &entry)) {
+		    if ((vl1 = GetVolume(entry.volumeId[2], &entry))) {
 			num1++;
 			printf
 			    ("Duplicate entry is found for BA vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
@@ -616,8 +615,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 		       (netries == 1 ? "y" : "ies"));
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
-		    display_entry(&vllist->VldbEntry, 0);
-		    free((char *)vllist);
+		    display_entry((struct vldbentry *) &vllist->VldbEntry, 0);
+		    free(vllist);
 		}
 	    } else if (!strcmp(oper, "lnn")) {
 		int netries;
@@ -962,7 +961,6 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    continue;
 		}
 	    } else if (!strcmp(oper, "ca")) {
-		extern struct hostent *hostutil_GetHostByName();
 		struct hostent *h1, *h2;
 		afs_uint32 a1, a2;
 
@@ -1020,9 +1018,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
@@ -1047,10 +1044,7 @@ main(argc, argv)
 
 
 void
-fill_entry(entry, argp, nargs)
-     struct vldbentry *entry;
-     char **argp;
-     int nargs;
+fill_entry(struct vldbentry *entry, char **argp, int nargs)
 {
     char *name;
     int i;
@@ -1084,10 +1078,7 @@ fill_entry(entry, argp, nargs)
 }
 
 void
-fill_update_entry(entry, argp, nargs)
-     struct VldbUpdateEntry *entry;
-     char **argp;
-     int nargs;
+fill_update_entry(struct VldbUpdateEntry *entry, char **argp, int nargs)
 {
     int i, Mask;
     char *name;
@@ -1152,10 +1143,8 @@ fill_update_entry(entry, argp, nargs)
 }
 
 void
-fill_listattributes_entry(entry, argp, nargs)
-     struct VldbListByAttributes *entry;
-     char **argp;
-     int nargs;
+fill_listattributes_entry(struct VldbListByAttributes *entry, char **argp,
+			  int nargs)
 {
     entry->Mask = 0;
 
@@ -1189,9 +1178,7 @@ fill_listattributes_entry(entry, argp, nargs)
 }
 
 void
-display_listattributes_entry(entry, error)
-     struct VldbListByAttributes *entry;
-     int error;
+display_listattributes_entry(struct VldbListByAttributes *entry, int error)
 {
     if (error)
 	return;
@@ -1212,9 +1199,7 @@ display_listattributes_entry(entry, error)
 #define	volumetype_string(type) (type == RWVOL? "read/write":type == ROVOL? "readonly":type == BACKVOL? "backup":"unknown")
 
 void
-display_entry(entry, error)
-     struct vldbentry *entry;
-     int error;
+display_entry(struct vldbentry *entry, int error)
 {
     int i;
 
@@ -1233,9 +1218,7 @@ display_entry(entry, error)
 }
 
 void
-display_entryN(entry, error)
-     struct nvldbentry *entry;
-     int error;
+display_entryN(struct nvldbentry *entry, int error)
 {
     int i, et, ei;
 
@@ -1261,9 +1244,7 @@ display_entryN(entry, error)
 }
 
 void
-display_update_entry(entry, error)
-     struct VldbUpdateEntry *entry;
-     int error;
+display_update_entry(struct VldbUpdateEntry *entry, int error)
 {
     int i;
 
@@ -1277,19 +1258,19 @@ display_update_entry(entry, error)
     if (entry->Mask & VLUPDATE_CLONEID)
 	printf("\tNew CloneId: %X\n", entry->cloneId);
     if (entry->Mask & VLUPDATE_READONLYID)
-	printf("\tNew RO id: %D\n", entry->ReadOnlyId);
+	printf("\tNew RO id: %d\n", entry->ReadOnlyId);
     if (entry->Mask & VLUPDATE_BACKUPID)
-	printf("\tNew BACKUP id: %D\n", entry->BackupId);
+	printf("\tNew BACKUP id: %d\n", entry->BackupId);
     if (entry->Mask & VLUPDATE_REPSITES) {
 	printf("\tRepsites info:\n");
 	printf("\tFlag\tTServer\tTPart\tNServer\tNPart\tNFlag\n");
 	for (i = 0; i < entry->nModifiedRepsites; i++) {
-	    printf("\t%4x\t%7U\t%5d", entry->RepsitesMask[i],
+	    printf("\t%4x\t%7u\t%5d", entry->RepsitesMask[i],
 		   entry->RepsitesTargetServer[i],
 		   entry->RepsitesTargetPart[i]);
 	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD)
 		|| (entry->RepsitesMask[i] & VLUPDATE_REPS_MODSERV))
-		printf("\t%7U", entry->RepsitesNewServer[i]);
+		printf("\t%7u", entry->RepsitesNewServer[i]);
 	    else
 		printf("\t-------");
 	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD)
@@ -1307,9 +1288,7 @@ display_update_entry(entry, error)
 }
 
 void
-dump_stats(stats, vital_header)
-     vldstats *stats;
-     vital_vlheader *vital_header;
+dump_stats(vldstats *stats, vital_vlheader *vital_header)
 {
     int i;
     char strg[30];
@@ -1333,10 +1312,7 @@ dump_stats(stats, vital_header)
 }
 
 void
-GetArgs(line, args, nargs)
-     register char *line;
-     register char **args;
-     register int *nargs;
+GetArgs(char *line, char **args, int *nargs)
 {
     *nargs = 0;
     while (*line) {
@@ -1354,7 +1330,7 @@ GetArgs(line, args, nargs)
 }
 
 void
-print_usage()
+print_usage(void)
 {
     printf("Valid Commands:\n");
 

@@ -123,7 +123,7 @@ writeUbikHeader()
 
 #define HDRSIZE 64
 int
-readUbikHeader()
+readUbikHeader(void)
 {
     int offset, r;
     struct ubik_hdr uheader;
@@ -166,7 +166,7 @@ readUbikHeader()
 }
 
 int
-vldbio(int position, char *buffer, int size, int rdwr)
+vldbio(int position, void *buffer, int size, int rdwr)
 {
     int offset, r, p;
 
@@ -625,7 +625,7 @@ void
 SetHashEnd(long addr, int type, long new)
 {
     struct nvlentry vlentry;
-    afs_int32 i, rindex, type2, next = -1;
+    afs_int32 type2, next = -1;
 
     for (; addr; addr = next) {
 	readentry(addr, &vlentry, &type2);
@@ -1083,10 +1083,10 @@ int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
     char *dbfile;
-    afs_int32 maxentries, type, tmp;
+    afs_int32 maxentries, type;
     struct vlheader header;
     struct nvlentry vlentry, vlentry2;
-    int i, j, help = 0;
+    int i, j;
 
     error_level = 0;  /*  start clean with no error status */
     dbfile = as->parms[0].items->data;	/* -database */

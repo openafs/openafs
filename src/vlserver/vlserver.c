@@ -38,14 +38,17 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
+#include <rx/rxstat.h>
+#include <rx/rxstat_prototypes.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/auth.h>
+#include <afs/audit.h>
 #include <lock.h>
 #include <ubik.h>
 #include <afs/afsutil.h>
 #include "vlserver.h"
-
+#include "vlserver_internal.h"
 
 #define MAXLWP 16
 const char *vl_dbaseName;
@@ -55,8 +58,6 @@ int lwps = 9;
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
 afs_uint32 HostAddress[MAXSERVERID + 1];
-extern int afsconf_CheckAuth();
-extern int afsconf_ServerAuth();
 
 static void *CheckSignal(void*);
 int LogLevel = 0;
@@ -71,7 +72,7 @@ int debuglevel = 0;
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 static void
-CheckSignal_Signal()
+CheckSignal_Signal(int unused)
 {
 #if defined(AFS_PTHREAD_ENV)
     CheckSignal(0);
@@ -86,8 +87,8 @@ CheckSignal(void *unused)
     register int i, errorcode;
     struct ubik_trans *trans;
 
-    if (errorcode =
-	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE))
+    if ((errorcode =
+	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
 	return (void *)errorcode;
     VLog(0, ("Dump name hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
@@ -103,7 +104,7 @@ CheckSignal(void *unused)
 
 /* Initialize the stats for the opcodes */
 void
-initialize_dstats()
+initialize_dstats(void)
 {
     int i;
 
@@ -116,8 +117,7 @@ initialize_dstats()
 
 /* check whether caller is authorized to manage RX statistics */
 int
-vldb_rxstat_userok(call)
-     struct rx_call *call;
+vldb_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(vldb_confdir, call, NULL);
 }
@@ -126,23 +126,19 @@ vldb_rxstat_userok(call)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     afs_int32 myHost;
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
-    extern int VL_ExecuteRequest();
-    extern int RXSTATS_ExecuteRequest();
     struct afsconf_dir *tdir;
     struct ktc_encryptionKey tkey;
     struct afsconf_cell info;
     struct hostent *th;
     char hostname[VL_MAXNAMELEN];
     int noAuth = 0, index, i;
-    extern int rx_extraPackets;
     char commandLine[150];
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = ntohl(INADDR_ANY);
