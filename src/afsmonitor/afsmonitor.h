@@ -83,3 +83,16 @@ what he wants displayed. */
 
 /* Set this  enable detailed debugging with the -debug switch */
 #define DETAILED_DEBUG 0
+
+/* afsmon-output.c */
+  
+extern int afsmon_fsOutput(char *, int);
+extern int afsmon_cmOutput(char *, int);
+
+/* afsmon-win.c */
+ 
+extern int ovw_refresh(int, int);
+extern int fs_refresh(int, int);
+extern int cm_refresh(int, int);
+extern int gtx_initialize(void);
+

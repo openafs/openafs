@@ -28,6 +28,7 @@ RCSID
 
 #include <gtxwindows.h>		/*Generic window package */
 #include <gtxobjects.h>		/*Object definitions */
+#include <gtxkeymap.h>
 #if 0
 #include <gtxtextcb.h>		/*Text object circular buffer interface */
 #include <gtxtextobj.h>		/*Text object interface */
@@ -325,16 +326,9 @@ struct onode **cmLabels_o[3];
  *------------------------------------------------------------------------*/
 
 static struct onode *
-initLightObject(a_name, a_x, a_y, a_width, a_win)
-     char *a_name;
-     int a_x;
-     int a_y;
-     int a_width;
-     struct gwin *a_win;
-
+initLightObject(char *a_name, int a_x, int a_y, int a_width,
+		struct gwin *a_win)
 {				/*initLightObject */
-
-    static char rn[] = "initLightObject";	/*Routine name */
     struct onode *newlightp;	/*Ptr to new light onode */
     struct gator_light_crparams light_crparams;	/*Light creation params */
     char *truncname;		/*Truncated name, if needed */
@@ -427,13 +421,8 @@ initLightObject(a_name, a_x, a_y, a_width, a_win)
  *------------------------------------------------------------------------*/
 
 int
-justify_light(a_srcbuff, a_dstbuff, a_dstwidth, a_justification, a_rightTrunc)
-     char *a_srcbuff;
-     char *a_dstbuff;
-     int a_dstwidth;
-     int a_justification;
-     int a_rightTrunc;
-
+justify_light(char *a_srcbuff, char *a_dstbuff, int a_dstwidth, 
+	      int a_justification, int a_rightTrunc)
 {				/*justify_light */
 
     static char rn[] = "justify_light";	/*Routine name */
@@ -555,7 +544,7 @@ justify_light(a_srcbuff, a_dstbuff, a_dstwidth, a_justification, a_rightTrunc)
  *----------------------------------------------------------------------*/
 
 int
-afsmonExit_gtx()
+afsmonExit_gtx(void *d1, void *d2)
 {
     static char rn[] = "afsmonExit_gtx";
 
@@ -585,9 +574,8 @@ afsmonExit_gtx()
  *----------------------------------------------------------------------*/
 
 int
-ovw_refresh(a_pageNum, a_updateType)
-     int a_pageNum;		/* page to refresh overview display */
-     int a_updateType;		/* OVW_UPDATE_FS = update fs column only,
+ovw_refresh(int a_pageNum,	/* page to refresh overview display */
+	    int a_updateType)	/* OVW_UPDATE_FS = update fs column only,
 				 * OVW_UPDATE_CM = update cm column only,
 				 * OVW_UPDATE_BOTH = update fs & cm columns. Note that 
 				 * we do not want to update a column until the 
@@ -602,8 +590,6 @@ ovw_refresh(a_pageNum, a_updateType)
     struct cm_Display_Data *cmDataP;	/* ptr to CM display data array */
     int fsIdx;			/* for counting # of CM hosts */
     int cmIdx;			/* for counting # of CM hosts */
-    int next_page = 0;		/* is there a next ovw page ? */
-    int prev_page = 0;		/* is there a previous ovw page */
     char cmdLine[80];		/* buffer for command line */
     char printBuf[256];		/* buffer to print to screen */
     int i;
@@ -713,9 +699,6 @@ ovw_refresh(a_pageNum, a_updateType)
 
     strcat(cmdLine, "]? ");
 
-
-
-
     /* display the command line */
     tmp_lightobj = (struct gator_lightobj *)ovw_cmd_o->o_data;
     sprintf(printBuf, "%s", cmdLine);
@@ -731,8 +714,6 @@ ovw_refresh(a_pageNum, a_updateType)
     justify_light(printBuf, tmp_lightobj->label, OVW_PROBENUM_O_WIDTH,
 		  RIGHT_JUSTIFY, 1);
     gator_light_set(ovw_probeNum_o, 1);
-
-
 
     /* update the file server names column if we are asked to */
 
@@ -902,7 +883,7 @@ ovw_refresh(a_pageNum, a_updateType)
  *		Switch from the overview screen to the FS screen
  *----------------------------------------------------------------------*/
 int
-Switch_ovw_2_fs()
+Switch_ovw_2_fs(void *d1, void *d2)
 {
     static char rn[] = "Switch_ovw_2_fs";
 
@@ -924,7 +905,7 @@ Switch_ovw_2_fs()
  *		Switch from the overview screen to the CM screen
  *----------------------------------------------------------------------*/
 int
-Switch_ovw_2_cm()
+Switch_ovw_2_cm(void *d1, void *d2)
 {
     static char rn[] = "Switch_ovw_2_cm";
 
@@ -946,7 +927,7 @@ Switch_ovw_2_cm()
  *		Switch to the next page in overview screen
  *----------------------------------------------------------------------*/
 int
-Switch_ovw_next()
+Switch_ovw_next(void *d1, void *d2)
 {
     static char rn[] = "Switch_ovw_next";
 
@@ -970,7 +951,7 @@ Switch_ovw_next()
  *		Switch to the last page in the overview screen
  *----------------------------------------------------------------------*/
 int
-Switch_ovw_last()
+Switch_ovw_last(void *d1, void *d2)
 {
     static char rn[] = "Switch_ovw_last";
 
@@ -994,7 +975,7 @@ Switch_ovw_last()
  *		Switch to the previous page in the overview screen
  *----------------------------------------------------------------------*/
 int
-Switch_ovw_prev()
+Switch_ovw_prev(void *d1, void *d2)
 {
     static char rn[] = "Switch_ovw_prev";
 
@@ -1017,7 +998,7 @@ Switch_ovw_prev()
  *		Switch to the first page in the overview screen
  *----------------------------------------------------------------------*/
 int
-Switch_ovw_first()
+Switch_ovw_first(void *d1, void *d2)
 {
     static char rn[] = "Switch_ovw_first";
 
@@ -1050,7 +1031,7 @@ Switch_ovw_first()
  *----------------------------------------------------------------------*/
 
 int
-create_ovwFrame_objects()
+create_ovwFrame_objects(void)
 {				/* create_ovwFrame_objects */
 
     static char rn[] = "create_ovwFrame_objects";
@@ -1298,23 +1279,21 @@ create_ovwFrame_objects()
  *----------------------------------------------------------------------*/
 
 int
-resolve_CmdLine(a_buffer, a_currFrame, a_currPage, a_numPages, a_numCols,
-		a_curr_LCol, a_cols_perPage, a_Data_Available)
-     char *a_buffer;		/* buffer to copy command line */
-     int a_currFrame;		/* current frame ovw, fs or cm? */
-     int a_currPage;		/* current page number */
-     int a_numPages;		/* number of pages of data */
-     int a_numCols;		/* number of columns of data to display */
-     int a_curr_LCol;		/* current number of leftmost column */
-     int a_cols_perPage;	/* number of columns per page */
-
+resolve_CmdLine(char *a_buffer,	    /* buffer to copy command line */
+		int a_currFrame,    /* current frame ovw, fs or cm? */
+		int a_currPage,	    /* current page number */
+		int a_numPages,	    /* number of pages of data */
+		int a_numCols,	    /* number of columns of data to display */
+		int a_curr_LCol,    /* current number of leftmost column */
+		int a_cols_perPage, /* number of columns per page */
+		int a_Data_Available)
 {				/* resolve_CmdLine */
     static char rn[] = "resolve_CmdLine";
     int pageType;
 
     if (afsmon_debug) {
 	fprintf(debugFD,
-		"[ %s ] Called, a_buffer= %d, a_currFrame= %d, a_currPage= %d, a_numPages= %d, a_numCols= %d, a_curr_LCol= %d, a_cols_perPage= %d\n",
+		"[ %s ] Called, a_buffer= %p, a_currFrame= %d, a_currPage= %d, a_numPages= %d, a_numCols= %d, a_curr_LCol= %d, a_cols_perPage= %d\n",
 		rn, a_buffer, a_currFrame, a_currPage, a_numPages, a_numCols,
 		a_curr_LCol, a_cols_perPage);
 	fflush(debugFD);
@@ -1390,16 +1369,12 @@ resolve_CmdLine(a_buffer, a_currFrame, a_currPage, a_numPages, a_numCols,
  *	0 always
  *----------------------------------------------------------------------*/
 int
-display_Server_datum(a_srcBuf, a_firstObj_o, a_secondObj_o, a_probeOK, a_just,
-		     a_highlight)
-
-     char *a_srcBuf;		/* source buffer */
-     struct onode *a_firstObj_o;	/* first object */
-     struct onode *a_secondObj_o;	/* second object */
-     int a_probeOK;		/* probe OK ? */
-     int a_just;		/* justification */
-     int a_highlight;		/* highlight object  ? */
-
+display_Server_datum(char *a_srcBuf,		  /* source buffer */
+		     struct onode *a_firstObj_o,  /* first object */
+		     struct onode *a_secondObj_o, /* second object */
+		     int a_probeOK,		  /* probe OK ? */
+		     int a_just,		  /* justification */
+		     int a_highlight)		  /* highlight object  ? */
 {				/* display_Server_datum */
 
     static char rn[] = "display_Server_datum";
@@ -1412,7 +1387,7 @@ display_Server_datum(a_srcBuf, a_firstObj_o, a_secondObj_o, a_probeOK, a_just,
     if (afsmon_debug) {
 	if (a_highlight)
 	    fprintf(debugFD,
-		    "[ %s ] Called, a_srcBuf= %s, a_firstObj_o= %d, a_secondObj_o= %d, a_probeOK= %d, a_just= %d, a_highlight= %d\n",
+		    "[ %s ] Called, a_srcBuf= %s, a_firstObj_o= %p, a_secondObj_o= %p, a_probeOK= %d, a_just= %d, a_highlight= %d\n",
 		    rn, a_srcBuf, a_firstObj_o, a_secondObj_o, a_probeOK,
 		    a_just, a_highlight);
 	fflush(debugFD);
@@ -1500,14 +1475,11 @@ display_Server_datum(a_srcBuf, a_firstObj_o, a_secondObj_o, a_probeOK, a_just,
  *----------------------------------------------------------------------*/
 
 int
-display_Server_label(a_srcBuf, a_firstObj_o, a_secondObj_o, a_thirdObj_o)
-     char *a_srcBuf;
-     struct onode *a_firstObj_o;	/* first object */
-     struct onode *a_secondObj_o;	/* second object */
-     struct onode *a_thirdObj_o;	/* third object */
-
+display_Server_label(char *a_srcBuf,
+		     struct onode *a_firstObj_o,	/* first object */
+		     struct onode *a_secondObj_o,	/* second object */
+		     struct onode *a_thirdObj_o)	/* third object */
 {				/* display_Server_label */
-
     static char rn[] = "display_Server_label";
     char part[3][20];		/* buffer for three parts of label */
     char *strPtr;
@@ -1580,7 +1552,7 @@ display_Server_label(a_srcBuf, a_firstObj_o, a_secondObj_o, a_thirdObj_o)
 	    }
 	}
     }
-
+    return 0;
 }				/* display_Server_label */
 
 
@@ -1605,10 +1577,8 @@ display_Server_label(a_srcBuf, a_firstObj_o, a_secondObj_o, a_thirdObj_o)
 
 
 int
-fs_refresh(a_pageNum, a_LcolNum)
-     int a_pageNum;		/* page to display */
-     int a_LcolNum;		/* starting (leftmost) column number */
-
+fs_refresh(int a_pageNum,	/* page to display */
+	   int a_LcolNum)	/* starting (leftmost) column number */
 {				/* fs_refresh */
 
     static char rn[] = "fs_refresh";	/* routine name */
@@ -1694,7 +1664,7 @@ fs_refresh(a_pageNum, a_LcolNum)
 
     fs_pageType = resolve_CmdLine(cmdLine, 1 /* fs frame */ , a_pageNum,
 				  fs_numPages, fs_numCols, a_LcolNum,
-				  fs_cols_perPage);
+				  fs_cols_perPage, 0);
 
     /* display the command line */
     tmp_lightobj = (struct gator_lightobj *)fs_cmd_o->o_data;
@@ -1924,7 +1894,7 @@ fs_refresh(a_pageNum, a_LcolNum)
  *	Switch from the File Server screen to the Overview Screen
  *----------------------------------------------------------------------*/
 int
-Switch_fs_2_ovw()
+Switch_fs_2_ovw(void *d1, void *d2)
 {
     /* bind the overview frame to the window */
     gtxframe_SetFrame(afsmon_win, ovwFrame);
@@ -1938,7 +1908,7 @@ Switch_fs_2_ovw()
  *	Switch from the File Server screen to the Cache Managers screen. 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_2_cm()
+Switch_fs_2_cm(void *d1, void *d2)
 {
     if (fs_pageType & CMD_CM) {
 	/* bind the overview Cache Managers to the window */
@@ -1954,10 +1924,8 @@ Switch_fs_2_cm()
  *	Switch to next page of file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_next()
+Switch_fs_next(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_next";
-
     if (fs_pageType & CMD_NEXT) {
 	/* we have a next page, refresh with next page number */
 	fs_refresh(fs_currPage + 1, fs_curr_LCol);
@@ -1973,11 +1941,8 @@ Switch_fs_next()
  *	Switch to last page of file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_last()
+Switch_fs_last(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_last";
-
-
     if (fs_pageType & CMD_NEXT) {
 	/* we have a next page, refresh with the last page number */
 	fs_refresh(fs_numPages, fs_curr_LCol);
@@ -1993,10 +1958,8 @@ Switch_fs_last()
  *	Switch to previous page of file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_prev()
+Switch_fs_prev(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_prev";
-
     if (fs_pageType & CMD_PREV) {
 	/* we have a previous page, refresh with the rpevious page number */
 	fs_refresh(fs_currPage - 1, fs_curr_LCol);
@@ -2011,10 +1974,8 @@ Switch_fs_prev()
  *	Switch to first page of file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_first()
+Switch_fs_first(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_first";
-
     if (fs_pageType & CMD_PREV) {
 	/* we have a previous page, got to first page */
 	fs_refresh(1, fs_curr_LCol);
@@ -2029,10 +1990,8 @@ Switch_fs_first()
  *	Scroll left on the file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_left()
+Switch_fs_left(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_left";
-
     if (fs_pageType & CMD_LEFT) {
 	/* we have columns on left, refresh with new column number */
 	fs_refresh(fs_currPage, fs_curr_LCol - fs_cols_perPage);
@@ -2048,10 +2007,8 @@ Switch_fs_left()
  *	Scroll to first column on  the file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_leftmost()
+Switch_fs_leftmost(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_leftmost";
-
     if (fs_pageType & CMD_LEFT) {
 	/* we have columns on left, go to the first */
 	fs_refresh(fs_currPage, 0);
@@ -2066,10 +2023,8 @@ Switch_fs_leftmost()
  *	Scroll right on the file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_right()
+Switch_fs_right(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_right";
-
     if (fs_pageType & CMD_RIGHT) {
 	/* we have columns on right, refresh with new column number */
 	fs_refresh(fs_currPage, fs_curr_LCol + fs_cols_perPage);
@@ -2084,11 +2039,9 @@ Switch_fs_right()
  *	Scroll to last column on the file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_fs_rightmost()
+Switch_fs_rightmost(void *d1, void *d2)
 {
-    static char rn[] = "Switch_fs_rightmost";
     int curr_LCol;
-
 
     if (fs_pageType & CMD_RIGHT) {
 	/* we have columns on right, go to the last column */
@@ -2121,7 +2074,7 @@ Switch_fs_rightmost()
  *----------------------------------------------------------------------*/
 
 int
-create_FSframe_objects()
+create_FSframe_objects(void)
 {				/* create_FSframe_objects */
     static char rn[] = "create_FSframe_objects";
     struct ServerInfo_line *fs_lines_Ptr;
@@ -2407,10 +2360,8 @@ create_FSframe_objects()
  *----------------------------------------------------------------------*/
 
 int
-cm_refresh(a_pageNum, a_LcolNum)
-     int a_pageNum;		/* page to display */
-     int a_LcolNum;		/* starting (leftmost) column number */
-
+cm_refresh(int a_pageNum,		/* page to display */
+	   int a_LcolNum)		/* starting (leftmost) column number */
 {				/* cm_refresh */
 
     static char rn[] = "cm_refresh";	/* routine name */
@@ -2496,7 +2447,7 @@ cm_refresh(a_pageNum, a_LcolNum)
 
     cm_pageType = resolve_CmdLine(cmdLine, 2 /* cm frame */ , a_pageNum,
 				  cm_numPages, cm_numCols, a_LcolNum,
-				  cm_cols_perPage);
+				  cm_cols_perPage, 0);
 
     /* display the command line */
     tmp_lightobj = (struct gator_lightobj *)cm_cmd_o->o_data;
@@ -2725,7 +2676,7 @@ cm_refresh(a_pageNum, a_LcolNum)
  *	Switch from the Cache Manager screen to the Overview Screen
  *----------------------------------------------------------------------*/
 int
-Switch_cm_2_ovw()
+Switch_cm_2_ovw(void *d1, void *d2)
 {
     /* bind the overview frame to the window */
     gtxframe_SetFrame(afsmon_win, ovwFrame);
@@ -2739,7 +2690,7 @@ Switch_cm_2_ovw()
  *	Switch from the Cache Manager screen to the File Servers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_2_fs()
+Switch_cm_2_fs(void *d1, void *d2)
 {
     if (cm_pageType & CMD_FS) {
 	/* bind the file servers frame to the window */
@@ -2755,10 +2706,8 @@ Switch_cm_2_fs()
  *	Switch to next page of cache managers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_next()
+Switch_cm_next(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_next";
-
     if (cm_pageType & CMD_NEXT) {
 	/* we have a next page, refresh with next page number */
 	cm_refresh(cm_currPage + 1, cm_curr_LCol);
@@ -2774,11 +2723,8 @@ Switch_cm_next()
  *	Switch to last page of file server screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_last()
+Switch_cm_last(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_last";
-
-
     if (cm_pageType & CMD_NEXT) {
 	/* we have a next page, refresh with last page number */
 	cm_refresh(cm_numPages, cm_curr_LCol);
@@ -2794,10 +2740,8 @@ Switch_cm_last()
  *	Switch to previous page of cache managers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_prev()
+Switch_cm_prev(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_prev";
-
     if (cm_pageType & CMD_PREV) {
 	/* we have a previous page, refresh to previous page */
 	cm_refresh(cm_currPage - 1, cm_curr_LCol);
@@ -2812,10 +2756,8 @@ Switch_cm_prev()
  *	Switch to first page of cache managers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_first()
+Switch_cm_first(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_first";
-
     if (cm_pageType & CMD_PREV) {
 	/* we have a previous page, refresh to first page */
 	cm_refresh(1, cm_curr_LCol);
@@ -2830,10 +2772,8 @@ Switch_cm_first()
  *	Scroll left on the cache managers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_left()
+Switch_cm_left(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_left";
-
     if (cm_pageType & CMD_LEFT) {
 	/* we have columns on left, refresh with new column number */
 	cm_refresh(cm_currPage, cm_curr_LCol - cm_cols_perPage);
@@ -2849,10 +2789,8 @@ Switch_cm_left()
  *	Scroll to first column on  the cache managers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_leftmost()
+Switch_cm_leftmost(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_leftmost";
-
     if (cm_pageType & CMD_LEFT) {
 	/* we have columns on left, go to the first column */
 	cm_refresh(cm_currPage, 0);
@@ -2867,10 +2805,8 @@ Switch_cm_leftmost()
  *	Scroll right on the cache managers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_right()
+Switch_cm_right(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_right";
-
     if (cm_pageType & CMD_RIGHT) {
 	/* we have columns on right, refresh with new column number */
 	cm_refresh(cm_currPage, cm_curr_LCol + cm_cols_perPage);
@@ -2885,11 +2821,9 @@ Switch_cm_right()
  *	Scroll to last column on the cache managers screen 
  *----------------------------------------------------------------------*/
 int
-Switch_cm_rightmost()
+Switch_cm_rightmost(void *d1, void *d2)
 {
-    static char rn[] = "Switch_cm_rightmost";
     int curr_LCol;
-
 
     if (cm_pageType & CMD_RIGHT) {
 	/* we have columns on right, go to the last column */
@@ -2921,7 +2855,7 @@ Switch_cm_rightmost()
  *----------------------------------------------------------------------*/
 
 int
-create_CMframe_objects()
+create_CMframe_objects(void)
 {				/* create_CMframe_objects */
     static char rn[] = "create_CMframe_objects";
     struct ServerInfo_line *cm_lines_Ptr;
@@ -3157,11 +3091,6 @@ create_CMframe_objects()
 
     }
 
-
-
-
-
-
     /* initialize the column & page counters */
 
     cm_currPage = 1;
@@ -3205,7 +3134,7 @@ create_CMframe_objects()
  *	for the overview, File Servers & Cache Managers screens.
  *----------------------------------------------------------------------*/
 int
-gtx_initialize()
+gtx_initialize(void)
 {				/* gtx_initialize */
     static char rn[] = "gtx_initialize";	/* routine name */
     int code;

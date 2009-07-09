@@ -41,15 +41,12 @@ RCSID
 #include <gtxdumbwin.h>		/*Dumb terminal window package */
 #include <gtxX11win.h>		/*X11 window package */
 #include <gtxframe.h>		/*Frame package */
-
-
+#include <gtxinput.h>
 
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>
 
-
 #include "afsmonitor.h"
-
 
 /* command line parameter indices */
 
@@ -126,7 +123,7 @@ static struct afsmon_hostEntry *last_hostEntry;
 /* names of the last host processed in the config file */
 static char last_fsHost[HOST_NAME_LEN];
 static char last_cmHost[HOST_NAME_LEN];
-static lastHostType = 0;	/* 0 = no host entries processed
+static int lastHostType = 0;	/* 0 = no host entries processed
 				 * 1 = last host was file server
 				 * 2 = last host was cache manager. */
 
@@ -203,16 +200,7 @@ struct cm_Display_Data *curr_cmData = (struct cm_Display_Data *)0;
 	/* for previous probe cycle */
 struct cm_Display_Data *prev_cmData = (struct cm_Display_Data *)0;
 
-
 /* EXTERN DEFINITIONS */
-
-extern struct hostent *hostutil_GetHostByName();
-
-
-
-/* routines from afsmon-output.c */
-extern int afsmon_fsOutput();
-extern int afsmon_cmOutput();
 
 /* file server and cache manager variable names (from afsmon_labels.h) */
 extern char *fs_varNames[];
@@ -236,8 +224,8 @@ int numHosts_oncm_alerts;
 
 /* flag to indicate that atleast one probe cycle has completed and 
 data is available for updating the display */
-extern fs_Data_Available;
-extern cm_Data_Available;
+extern int fs_Data_Available;
+extern int cm_Data_Available;
 
 extern int gtx_initialized;	/* gtx initialized ? */
 
@@ -308,8 +296,7 @@ strcasestr(s1, s2)
 #endif
 
 struct hostent *
-GetHostByName(name)
-     char *name;
+GetHostByName(char *name)
 {
     struct hostent *he;
 #ifdef AFS_SUN5_ENV
@@ -347,8 +334,7 @@ GetHostByName(name)
  *----------------------------------------------------------------------*/
 
 int
-afsmon_Exit(a_exitVal)
-     int a_exitVal;		/* exit code */
+afsmon_Exit(int a_exitVal)	/* exit code */
 {				/* afsmon_Exit */
     static char rn[] = "afsmon_Exit";
     struct afsmon_fs_Results_list *tmp_fslist;
@@ -558,10 +544,8 @@ afsmon_Exit(a_exitVal)
  *----------------------------------------------------------------------*/
 
 int
-insert_FS(a_hostName)
-     char *a_hostName;		/* name of cache manager to be inserted in list */
+insert_FS(char *a_hostName)		/* name of cache manager to be inserted in list */
 {				/* insert_FS() */
-    static char rn[] = "insert_FS";	/* routine name */
     static struct afsmon_hostEntry *curr_item;
     static struct afsmon_hostEntry *prev_item;
 
@@ -603,7 +587,7 @@ insert_FS(a_hostName)
  *	Nothing.
  *----------------------------------------------------------------------*/
 void
-print_FS()
+print_FS(void)
 {				/* print_FS() */
     static char rn[] = "print_FS";
     struct afsmon_hostEntry *tempFS;
@@ -647,10 +631,8 @@ print_FS()
  *----------------------------------------------------------------------*/
 
 int
-insert_CM(a_hostName)
-     char *a_hostName;		/* name of cache manager to be inserted in list */
+insert_CM(char *a_hostName)		/* name of cache manager to be inserted in list */
 {				/* insert_CM */
-    static char rn[] = "insert_CM";	/* routine name */
     static struct afsmon_hostEntry *curr_item;
     static struct afsmon_hostEntry *prev_item;
 
@@ -693,7 +675,7 @@ insert_CM(a_hostName)
  *	Nothing.
  *----------------------------------------------------------------------*/
 int
-print_CM()
+print_CM(void)
 {				/* print_CM() */
     static char rn[] = "print_CM";
     struct afsmon_hostEntry *tempCM;
@@ -745,8 +727,7 @@ print_CM()
  *----------------------------------------------------------------------*/
 
 int
-parse_hostEntry(a_line)
-     char *a_line;
+parse_hostEntry(char *a_line)
 {				/* parse_hostEntry */
 
     static char rn[] = "parse_hostEntry";	/* routine name */
@@ -823,8 +804,7 @@ parse_hostEntry(a_line)
  *----------------------------------------------------------------------*/
 
 int
-parse_threshEntry(a_line)
-     char *a_line;
+parse_threshEntry(char *a_line)
 {				/* parse_threshEntry */
     static char rn[] = "parse_threshEntry";	/* routine name */
     char opcode[CFG_STR_LEN];	/* specifies type of config entry */
@@ -928,12 +908,10 @@ parse_threshEntry(a_line)
  *----------------------------------------------------------------------*/
 
 int
-store_threshold(a_type, a_varName, a_value, a_handler)
-     int a_type;		/* 1 = fs , 2 = cm */
-     char *a_varName;		/* threshold name */
-     char *a_value;		/* threshold value */
-     char *a_handler;		/* threshold overflow handler */
-
+store_threshold(int a_type,		/* 1 = fs , 2 = cm */
+		char *a_varName,	/* threshold name */
+		char *a_value,		/* threshold value */
+		char *a_handler)	/* threshold overflow handler */
 {				/* store_thresholds */
 
     static char rn[] = "store_thresholds";	/* routine name */
@@ -1107,8 +1085,7 @@ store_threshold(a_type, a_varName, a_value, a_handler)
  *----------------------------------------------------------------------*/
 
 int
-parse_showEntry(a_line)
-     char *a_line;
+parse_showEntry(char *a_line)
 {				/* parse_showEntry */
     static char rn[] = "parse_showEntry";
     char opcode[CFG_STR_LEN];	/* specifies type of config entry */
@@ -1357,12 +1334,6 @@ parse_showEntry(a_line)
 		idx++;
 		numGroups--;
 	    }			/* for each group in section */
-
-
-
-
-
-
 	} else {		/* it is a variable name */
 
 	    for (i = 0; i < NUM_CM_STAT_ENTRIES; i++) {
@@ -1390,8 +1361,6 @@ parse_showEntry(a_line)
     }
     /* it is an cm entry */
     return (0);
-
-
 }				/* parse_showEntry */
 
 
@@ -1415,8 +1384,7 @@ parse_showEntry(a_line)
  *----------------------------------------------------------------------*/
 
 int
-process_config_file(a_config_filename)
-     char *a_config_filename;
+process_config_file(char *a_config_filename)
 {				/* process_config_file() */
     static char rn[] = "process_config_file";	/* routine name */
     FILE *configFD;		/* config file descriptor */
@@ -1668,7 +1636,7 @@ process_config_file(a_config_filename)
  *----------------------------------------------------------------------*/
 
 void
-Print_FS_CB()
+Print_FS_CB(void)
 {				/* Print_FS_CB() */
 
     struct afsmon_fs_Results_list *fslist;
@@ -1726,9 +1694,7 @@ Print_FS_CB()
  *	Failure: Exits afsmonitor.
  *----------------------------------------------------------------------*/
 int
-save_FS_results_inCB(a_newProbeCycle)
-     int a_newProbeCycle;	/* start of a new probe cycle ? */
-
+save_FS_results_inCB(int a_newProbeCycle)	/* start of a new probe cycle ? */
 {				/* save_FS_results_inCB() */
     static char rn[] = "save_FS_results_inCB";	/* routine name */
     struct afsmon_fs_Results_list *tmp_fslist_item;	/* temp fs list item */
@@ -1829,9 +1795,8 @@ save_FS_results_inCB(a_newProbeCycle)
  *----------------------------------------------------------------------*/
 
 int
-fs_Results_ltoa(a_fsData, a_fsResults)
-     struct fs_Display_Data *a_fsData;	/* target buffer */
-     struct xstat_fs_ProbeResults *a_fsResults;	/* ptr to xstat fs Results */
+fs_Results_ltoa(struct fs_Display_Data *a_fsData,	/* target buffer */
+		struct xstat_fs_ProbeResults *a_fsResults)	/* ptr to xstat fs Results */
 {				/* fs_Results_ltoa */
 
     static char rn[] = "fs_Results_ltoa";	/* routine name */
@@ -1842,7 +1807,7 @@ fs_Results_ltoa(a_fsData, a_fsResults)
     afs_int32 *tmpbuf;
 
     if (afsmon_debug) {
-	fprintf(debugFD, "[ %s ] Called, a_fsData= %d, a_fsResults= %d\n", rn,
+	fprintf(debugFD, "[ %s ] Called, a_fsData= %p, a_fsResults= %p\n", rn,
 		a_fsData, a_fsResults);
 	fflush(debugFD);
     }
@@ -1960,15 +1925,12 @@ fs_Results_ltoa(a_fsData, a_fsResults)
  *----------------------------------------------------------------------*/
 
 int
-execute_thresh_handler(a_handler, a_hostName, a_hostType, a_threshName,
-		       a_threshValue, a_actValue)
-     char *a_handler;		/* ptr to handler function + args */
-     char *a_hostName;		/* host name for which threshold crossed */
-     int a_hostType;		/* fs or cm ? */
-     char *a_threshName;	/* threshold variable name */
-     char *a_threshValue;	/* threshold value */
-     char *a_actValue;		/* actual value */
-
+execute_thresh_handler(char *a_handler,		/* ptr to handler function + args */
+		       char *a_hostName,	/* host name for which threshold crossed */
+		       int a_hostType,		/* fs or cm ? */
+		       char *a_threshName,	/* threshold variable name */
+		       char *a_threshValue,	/* threshold value */
+		       char *a_actValue)	/* actual value */
 {				/* execute_thresh_handler */
 
     static char rn[] = "execute_thresh_handler";
@@ -2067,10 +2029,8 @@ execute_thresh_handler(a_handler, a_hostName, a_hostType, a_threshName,
  *----------------------------------------------------------------------*/
 
 int
-check_fs_thresholds(a_hostEntry, a_Data)
-     struct afsmon_hostEntry *a_hostEntry;	/* ptr to hostEntry */
-     struct fs_Display_Data *a_Data;	/* ptr to fs data to be displayed */
-
+check_fs_thresholds(struct afsmon_hostEntry *a_hostEntry, /* ptr to hostEntry */
+		    struct fs_Display_Data *a_Data)	  /* ptr to fs data to be displayed */
 {				/* check_fs_thresholds */
 
     static char rn[] = "check_fs_thresholds";
@@ -2082,7 +2042,7 @@ check_fs_thresholds(a_hostEntry, a_Data)
     int count;			/* number of thresholds exceeded */
 
     if (afsmon_debug) {
-	fprintf(debugFD, "[ %s ] Called, a_hostEntry= %d, a_Data= %d\n", rn,
+	fprintf(debugFD, "[ %s ] Called, a_hostEntry= %p, a_Data= %p\n", rn,
 		a_hostEntry, a_Data);
 	fflush(debugFD);
     }
@@ -2162,8 +2122,7 @@ check_fs_thresholds(a_hostEntry, a_Data)
  *----------------------------------------------------------------------*/
 
 int
-save_FS_data_forDisplay(a_fsResults)
-     struct xstat_fs_ProbeResults *a_fsResults;
+save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
 {				/* save_FS_data_forDisplay */
 
     static char rn[] = "save_FS_data_forDisplay";	/* routine name */
@@ -2181,11 +2140,9 @@ save_FS_data_forDisplay(a_fsResults)
 
 
     if (afsmon_debug) {
-	fprintf(debugFD, "[ %s ] Called, a_fsResults= %d\n", rn, a_fsResults);
+	fprintf(debugFD, "[ %s ] Called, a_fsResults= %p\n", rn, a_fsResults);
 	fflush(debugFD);
     }
-
-
 
     /* store results in the display array */
 
@@ -2251,9 +2208,6 @@ save_FS_data_forDisplay(a_fsResults)
 	    fprintf(stderr, "[ %s ] Error in checking thresholds\n", rn);
 	    afsmon_Exit(75);
 	}
-
-
-
 
 	/* print the info we just saved */
 
@@ -2359,7 +2313,7 @@ save_FS_data_forDisplay(a_fsResults)
  *----------------------------------------------------------------------*/
 
 int
-afsmon_FS_Handler()
+afsmon_FS_Handler(void)
 {				/* afsmon_FS_Handler() */
     static char rn[] = "afsmon_FS_Handler";	/* routine name */
     int newProbeCycle;		/* start of new probe cycle ? */
@@ -2429,7 +2383,7 @@ afsmon_FS_Handler()
  *----------------------------------------------------------------------*/
 
 void
-Print_CM_CB()
+Print_CM_CB(void)
 {				/* Print_CM_CB() */
 
     struct afsmon_cm_Results_list *cmlist;
@@ -2489,9 +2443,7 @@ Print_CM_CB()
  *----------------------------------------------------------------------*/
 
 int
-save_CM_results_inCB(a_newProbeCycle)
-     int a_newProbeCycle;	/* start of new probe cycle ? */
-
+save_CM_results_inCB(int a_newProbeCycle)	/* start of new probe cycle ? */
 {				/* save_CM_results_inCB() */
     static char rn[] = "save_CM_results_inCB";	/* routine name */
     struct afsmon_cm_Results_list *tmp_cmlist_item;	/* temp cm list item */
@@ -2598,9 +2550,8 @@ save_CM_results_inCB(a_newProbeCycle)
  *----------------------------------------------------------------------*/
 
 int
-cm_Results_ltoa(a_cmData, a_cmResults)
-     struct cm_Display_Data *a_cmData;	/* target buffer */
-     struct xstat_cm_ProbeResults *a_cmResults;	/* ptr to xstat cm Results */
+cm_Results_ltoa(struct cm_Display_Data *a_cmData,	/* target buffer */
+		struct xstat_cm_ProbeResults *a_cmResults)	/* ptr to xstat cm Results */
 {				/* cm_Results_ltoa */
 
     static char rn[] = "cm_Results_ltoa";	/* routine name */
@@ -2612,7 +2563,7 @@ cm_Results_ltoa(a_cmData, a_cmResults)
     afs_int32 numLongs;
 
     if (afsmon_debug) {
-	fprintf(debugFD, "[ %s ] Called, a_cmData= %d, a_cmResults= %d\n", rn,
+	fprintf(debugFD, "[ %s ] Called, a_cmData= %p, a_cmResults= %p\n", rn,
 		a_cmData, a_cmResults);
 	fflush(debugFD);
     }
@@ -2847,10 +2798,8 @@ cm_Results_ltoa(a_cmData, a_cmResults)
  *----------------------------------------------------------------------*/
 
 int
-check_cm_thresholds(a_hostEntry, a_Data)
-     struct afsmon_hostEntry *a_hostEntry;	/* ptr to hostEntry */
-     struct cm_Display_Data *a_Data;	/* ptr to cm data to be displayed */
-
+check_cm_thresholds(struct afsmon_hostEntry *a_hostEntry,	/* ptr to hostEntry */
+		    struct cm_Display_Data *a_Data)		/* ptr to cm data to be displayed */
 {				/* check_cm_thresholds */
 
     static char rn[] = "check_cm_thresholds";
@@ -2862,7 +2811,7 @@ check_cm_thresholds(a_hostEntry, a_Data)
     int count;			/* number of thresholds exceeded */
 
     if (afsmon_debug) {
-	fprintf(debugFD, "[ %s ] Called, a_hostEntry= %d, a_Data= %d\n", rn,
+	fprintf(debugFD, "[ %s ] Called, a_hostEntry= %p, a_Data= %p\n", rn,
 		a_hostEntry, a_Data);
 	fflush(debugFD);
     }
@@ -2944,8 +2893,7 @@ check_cm_thresholds(a_hostEntry, a_Data)
  *----------------------------------------------------------------------*/
 
 int
-save_CM_data_forDisplay(a_cmResults)
-     struct xstat_cm_ProbeResults *a_cmResults;
+save_CM_data_forDisplay(struct xstat_cm_ProbeResults *a_cmResults)
 {				/* save_CM_data_forDisplay */
 
     static char rn[] = "save_CM_data_forDisplay";	/* routine name */
@@ -2962,7 +2910,7 @@ save_CM_data_forDisplay(a_cmResults)
     int i;
 
     if (afsmon_debug) {
-	fprintf(debugFD, "[ %s ] Called, a_cmResults= %d\n", rn, a_cmResults);
+	fprintf(debugFD, "[ %s ] Called, a_cmResults= %p\n", rn, a_cmResults);
 	fflush(debugFD);
     }
 
@@ -3032,7 +2980,6 @@ save_CM_data_forDisplay(a_cmResults)
 	    fprintf(stderr, "[ %s ] Error in checking thresholds\n", rn);
 	    afsmon_Exit(105);
 	}
-
 
 	/* print the info we just saved */
 	if (afsmon_debug) {
@@ -3177,7 +3124,7 @@ save_CM_data_forDisplay(a_cmResults)
  *----------------------------------------------------------------------*/
 
 int
-afsmon_CM_Handler()
+afsmon_CM_Handler(void)
 {				/* afsmon_CM_Handler() */
     static char rn[] = "afsmon_CM_Handler";	/* routine name */
     int code;			/* return status */
@@ -3246,7 +3193,7 @@ afsmon_CM_Handler()
  *----------------------------------------------------------------------*/
 
 int
-init_fs_buffers()
+init_fs_buffers(void)
 {				/* init_fs_buffers() */
     static char rn[] = "init_fs_buffers";	/* routine name */
     struct afsmon_fs_Results_list *new_fslist_item;	/* ptr for new struct */
@@ -3364,7 +3311,7 @@ init_fs_buffers()
  *----------------------------------------------------------------------*/
 
 int
-init_cm_buffers()
+init_cm_buffers(void)
 {				/* init_cm_buffers() */
     static char rn[] = "init_cm_buffers";	/* routine name */
     struct afsmon_cm_Results_list *new_cmlist_item;	/* ptr for new struct */
@@ -3487,7 +3434,7 @@ init_cm_buffers()
  *------------------------------------------------------------------------*/
 
 int
-init_print_buffers()
+init_print_buffers(void)
 {				/* init_print_buffers */
 
     static char rn[] = "init_print_buffers";	/* routine name */
@@ -3546,8 +3493,6 @@ init_print_buffers()
 
     }
 
-
-
     /* if file servers to monitor */
     /* allocate numCM blocks of the CM print structure */
     /* we need two instances of this structure for the same reasons as above */
@@ -3598,11 +3543,8 @@ init_print_buffers()
  *----------------------------------------------------------------------*/
 
 void
-quit_signal(sig)
-     int sig;
+quit_signal(int sig)
 {				/* quit_signal */
-    static char *rn = "quit_signal";	/* routine name */
-
     fprintf(stderr, "Received signal %d \n", sig);
     afsmon_Exit(120);
 }				/* quit_signal */
@@ -3626,7 +3568,7 @@ quit_signal(sig)
  *----------------------------------------------------------------------*/
 
 int
-afsmon_execute()
+afsmon_execute(void)
 {				/* afsmon_execute() */
     static char rn[] = "afsmon_execute";	/* routine name */
     static char fullhostname[128];	/* full host name */
@@ -3828,7 +3770,7 @@ afsmon_execute()
     }
 
     /* start the gtx input server */
-    code = gtx_InputServer(afsmon_win);
+    code = (int) gtx_InputServer(afsmon_win);
     if (code) {
 	fprintf(stderr, "[ %s ] Failed to start input server \n", rn);
 	afsmon_Exit(140);
@@ -3888,7 +3830,7 @@ afsmonInit(struct cmd_syndesc *as, void *arock)
     int i;
 
     if (afsmon_debug) {
-	fprintf(debugFD, "[ %s ] Called, as= %d\n", rn, as);
+	fprintf(debugFD, "[ %s ] Called, as= %p\n", rn, as);
 	fflush(debugFD);
     }
 
@@ -4153,12 +4095,8 @@ afsmonInit(struct cmd_syndesc *as, void *arock)
 #include "AFS_component_version_number.c"
 
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {				/* main() */
-
-    static char rn[] = "main";	/* routine name */
     afs_int32 code;		/*Return code */
     struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
 

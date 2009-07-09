@@ -27,14 +27,13 @@ RCSID
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>
 
+#include "afsmonitor.h"
 
 
 /* Extern Variables */
 extern int afsmon_debug;	/* debugging on ? */
 extern FILE *debugFD;		/* debug file FD */
 extern char errMsg[256];	/* error message buffer */
-
-extern int afsmon_Exit();	/* exit routine */
 
 static FILE *fs_outFD;		/* fs output file descriptor */
 static FILE *cm_outFD;		/* cm output file descriptor */
@@ -111,9 +110,7 @@ static char *xferOpNames[] = {
  *------------------------------------------------------------------------*/
 
 void
-Print_fs_OverallPerfInfo(a_ovP)
-     struct afs_PerfStats *a_ovP;
-
+Print_fs_OverallPerfInfo(struct afs_PerfStats *a_ovP)
 {				/*Print_fs_OverallPerfInfo */
 
     fprintf(fs_outFD, "\t%10d numPerfCalls\n\n", a_ovP->numPerfCalls);
@@ -254,10 +251,7 @@ Print_fs_OverallPerfInfo(a_ovP)
  *------------------------------------------------------------------------*/
 
 void
-Print_fs_OpTiming(a_opIdx, a_opTimeP)
-     int a_opIdx;
-     struct fs_stats_opTimingData *a_opTimeP;
-
+Print_fs_OpTiming(int a_opIdx, struct fs_stats_opTimingData *a_opTimeP)
 {				/*Print_fs_OpTiming */
 
     fprintf(fs_outFD,
@@ -291,10 +285,7 @@ Print_fs_OpTiming(a_opIdx, a_opTimeP)
  *------------------------------------------------------------------------*/
 
 void
-Print_fs_XferTiming(a_opIdx, a_xferP)
-     int a_opIdx;
-     struct fs_stats_xferData *a_xferP;
-
+Print_fs_XferTiming(int a_opIdx, struct fs_stats_xferData *a_xferP)
 {				/*Print_fs_XferTiming */
 
     fprintf(fs_outFD,
@@ -334,9 +325,7 @@ Print_fs_XferTiming(a_opIdx, a_xferP)
  *------------------------------------------------------------------------*/
 
 void
-Print_fs_DetailedPerfInfo(a_detP)
-     struct fs_stats_DetailedStats *a_detP;
-
+Print_fs_DetailedPerfInfo(struct fs_stats_DetailedStats *a_detP)
 {				/*Print_fs_DetailedPerfInfo */
 
     int currIdx;		/*Loop variable */
@@ -373,11 +362,8 @@ Print_fs_DetailedPerfInfo(a_detP)
  *------------------------------------------------------------------------*/
 
 void
-Print_fs_FullPerfInfo(a_fs_Results)
-     struct xstat_fs_ProbeResults *a_fs_Results;	/* ptr to fs results */
+Print_fs_FullPerfInfo(struct xstat_fs_ProbeResults *a_fs_Results)
 {				/*Print_fs_FullPerfInfo */
-
-    static char rn[] = "Print_fs_FullPerfInfo";	/*Routine name */
     static afs_int32 fullPerfLongs = (sizeof(struct fs_stats_FullPerfStats) >> 2);	/*Correct # longs to rcv */
     afs_int32 numLongs;		/*# longwords received */
     struct fs_stats_FullPerfStats *fullPerfP;	/*Ptr to full perf stats */
@@ -432,9 +418,8 @@ Print_fs_FullPerfInfo(a_fs_Results)
  *	As advertised.
  *------------------------------------------------------------------------*/
 int
-afsmon_fsOutput(a_outfile, a_detOutput)
-     char *a_outfile;		/* ptr to output file name */
-     int a_detOutput;		/* detailed output ? */
+afsmon_fsOutput(char *a_outfile,	/* ptr to output file name */
+		int a_detOutput)	/* detailed output ? */
 {
 
     static char rn[] = "afsmon_fsOutput";	/* routine name */
@@ -525,9 +510,7 @@ afsmon_fsOutput(a_outfile, a_detOutput)
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_UpDownStats(a_upDownP)
-     struct afs_stats_SrvUpDownInfo *a_upDownP;	/*Ptr to server up/down info */
-
+Print_cm_UpDownStats(struct afs_stats_SrvUpDownInfo *a_upDownP)	/*Ptr to server up/down info */
 {				/*Print_cm_UpDownStats */
 
     /*
@@ -606,9 +589,7 @@ Print_cm_UpDownStats(a_upDownP)
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_OverallPerfInfo(a_ovP)
-     struct afs_stats_CMPerf *a_ovP;
-
+Print_cm_OverallPerfInfo(struct afs_stats_CMPerf *a_ovP)
 {				/*Print_cm_OverallPerfInfo */
 
     fprintf(cm_outFD, "\t%10d numPerfCalls\n", a_ovP->numPerfCalls);
@@ -697,10 +678,8 @@ Print_cm_OverallPerfInfo(a_ovP)
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_PerfInfo()
+Print_cm_PerfInfo(void)
 {				/*Print_cm_PerfInfo */
-
-    static char rn[] = "Print_cm_PerfInfo";	/*Routine name */
     static afs_int32 perfLongs = (sizeof(struct afs_stats_CMPerf) >> 2);	/*Correct # longs to rcv */
     afs_int32 numLongs;		/*# longwords received */
     struct afs_stats_CMPerf *perfP;	/*Ptr to performance stats */
@@ -754,11 +733,8 @@ Print_cm_PerfInfo()
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_OpTiming(a_opIdx, a_opNames, a_opTimeP)
-     int a_opIdx;
-     char *a_opNames[];
-     struct afs_stats_opTimingData *a_opTimeP;
-
+Print_cm_OpTiming(int a_opIdx, char *a_opNames[],
+		  struct afs_stats_opTimingData *a_opTimeP)
 {				/*Print_cm_OpTiming */
 
     fprintf(cm_outFD,
@@ -792,11 +768,8 @@ Print_cm_OpTiming(a_opIdx, a_opNames, a_opTimeP)
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_XferTiming(a_opIdx, a_opNames, a_xferP)
-     int a_opIdx;
-     char *a_opNames[];
-     struct afs_stats_xferData *a_xferP;
-
+Print_cm_XferTiming(int a_opIdx, char *a_opNames[], 
+		    struct afs_stats_xferData *a_xferP)
 {				/*Print_cm_XferTiming */
 
     fprintf(cm_outFD,
@@ -838,11 +811,8 @@ Print_cm_XferTiming(a_opIdx, a_opNames, a_xferP)
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_ErrInfo(a_opIdx, a_opNames, a_opErrP)
-     int a_opIdx;
-     char *a_opNames[];
-     struct afs_stats_RPCErrors *a_opErrP;
-
+Print_cm_ErrInfo(int a_opIdx, char *a_opNames[],
+		 struct afs_stats_RPCErrors *a_opErrP)
 {				/*Print_cm_ErrInfo */
 
     fprintf(cm_outFD,
@@ -874,9 +844,7 @@ Print_cm_ErrInfo(a_opIdx, a_opNames, a_opErrP)
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_RPCPerfInfo(a_rpcP)
-     struct afs_stats_RPCOpInfo *a_rpcP;
-
+Print_cm_RPCPerfInfo(struct afs_stats_RPCOpInfo *a_rpcP)
 {				/*Print_cm_RPCPerfInfo */
 
     int currIdx;		/*Loop variable */
@@ -924,10 +892,9 @@ Print_cm_RPCPerfInfo(a_rpcP)
  *------------------------------------------------------------------------*/
 
 void
-Print_cm_FullPerfInfo()
+Print_cm_FullPerfInfo(void)
 {				/*Print_cm_FullPerfInfo */
 
-    static char rn[] = "Print_cm_FullPerfInfo";	/* routine name */
     struct afs_stats_AuthentInfo *authentP;	/*Ptr to authentication stats */
     struct afs_stats_AccessInfo *accessinfP;	/*Ptr to access stats */
     static afs_int32 fullPerfLongs = (sizeof(struct afs_stats_CMFullPerf) >> 2);	/*Correct #longs */
@@ -1017,9 +984,8 @@ Print_cm_FullPerfInfo()
  *	As advertised.
  *------------------------------------------------------------------------*/
 int
-afsmon_cmOutput(a_outfile, a_detOutput)
-     char *a_outfile;		/* ptr to output file name */
-     int a_detOutput;		/* detailed output ? */
+afsmon_cmOutput(char *a_outfile,		/* ptr to output file name */
+		int a_detOutput)		/* detailed output ? */
 {
 
     static char rn[] = "afsmon_cmOutput";	/* routine name */
