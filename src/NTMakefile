@@ -74,7 +74,14 @@ lwp_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-util: procmgmt_headers afsreg_headers lwp_headers
+rx_headers:
+     @echo ***** $@
+	$(DOCD) $(SRC)\rx
+	$(CD) $(SRC)\rx
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+util: procmgmt_headers afsreg_headers lwp_headers rx_headers
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

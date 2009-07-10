@@ -67,9 +67,11 @@ $(LIBFILE): $(LIBOBJS)
 # Not yet
 #rxdumptrace.exe: rx_trace.c
 
-install: $(LIBFILE) $(INCFILES)
+install_headers:  $(INCFILES)
 
-install9x: $(LIBFILE) $(INCFILES)
+install: install_headers $(LIBFILE)
+
+install9x: install_headers $(LIBFILE)
 
 clean::
 	$(DEL) $(LIBFILE) $(INCFILES)
