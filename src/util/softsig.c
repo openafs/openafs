@@ -68,7 +68,9 @@ softsig_thread(void *arg)
 
     while (1) {
 	void (*h) (int);
+#if !defined(AFS_DARwiN60_ENV) && !defined(AFS_NBSD_ENV)
 	int sigw;
+#endif
 
 	h = NULL;
 
@@ -101,6 +103,7 @@ softsig_thread(void *arg)
 	} else if (h)
 	    h(i);
     }
+    return NULL;
 }
 
 static void
@@ -110,7 +113,7 @@ softsig_usr1(int signo)
 }
 
 void
-softsig_init()
+softsig_init(void)
 {
     int rc;
     AFS_SIGSET_DECL;
@@ -146,7 +149,7 @@ print_foo(int signo)
 }
 
 int
-main()
+main(int argc, char **argv)
 {
     softsig_init();
     softsig_signal(SIGINT, print_foo);

@@ -232,7 +232,7 @@ util_GetInt32(register char *as, afs_int32 * aval)
     negative = 0;
 
     /* skip over leading spaces */
-    for (; tc = *as; as++) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (tc != ' ' && tc != '\t')
 	    break;
     }
@@ -255,7 +255,7 @@ util_GetInt32(register char *as, afs_int32 * aval)
 	base = 10;
 
     /* compute the # itself */
-    for (; tc = *as; as++) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
 	total *= base;
@@ -279,7 +279,7 @@ util_GetUInt32(register char *as, afs_uint32 * aval)
     total = 0;			/* initialize things */
 
     /* skip over leading spaces */
-    for (; tc = *as; as++) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (tc != ' ' && tc != '\t')
 	    break;
     }
@@ -296,7 +296,7 @@ util_GetUInt32(register char *as, afs_uint32 * aval)
 	base = 10;
 
     /* compute the # itself */
-    for (;tc = *as; as++) {
+    for (tc = *as; tc !='\0'; as++, tc = *as) {
 	if (!ismeta(tc, base))
 	    return -1;
 	total *= base;

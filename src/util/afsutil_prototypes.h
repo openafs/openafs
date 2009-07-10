@@ -32,6 +32,8 @@ extern int base64_to_int(char *s);
 extern char *lcstring(char *d, char *s, int n);
 extern char *ucstring(char *d, char *s, int n);
 extern char *strcompose(char *buf, size_t len, ...);
+extern void stolower(char *s);
+extern void stoupper(char *s);
 
 /* daemon.c */
 #ifndef HAVE_DAEMON

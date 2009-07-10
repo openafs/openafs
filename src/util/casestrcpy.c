@@ -59,7 +59,7 @@ ucstring(char *d, char *s, int n)
     return original_d;
 }
 
-int
+void
 stolower(char *s)
 {
   while (*s) {
@@ -67,10 +67,10 @@ stolower(char *s)
             *s = tolower(*s);
         s++;
     }
-    return 0;
+    return;
 }
 
-int
+void
 stoupper(char *s)
 {
   while (*s) {
@@ -78,7 +78,7 @@ stoupper(char *s)
             *s = toupper(*s);
         s++;
     }
-    return 0;
+    return;
 }
 
 /* strcompose - concatenate strings passed to it.

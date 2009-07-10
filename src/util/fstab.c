@@ -71,6 +71,7 @@
 #include <sys/param.h>
 #include <sys/ucred.h>
 #include <sys/mount.h>
+#include <unistd.h>
 
 #define	STDERR_FILENO	2
 

@@ -40,6 +40,8 @@
 #include <errno.h>
 #endif
 
+#include <rx/rx.h>
+
 #include "assert.h"
 #include "afsutil.h"
 #include "dirpath.h"
