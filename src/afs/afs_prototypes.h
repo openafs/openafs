@@ -924,22 +924,21 @@ extern void print_internet_address(char *preamble, struct srvAddr *sa,
 				   char *postamble, int flag);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
-#if 0				/* problems - need to change to varargs, right now is incorrect usage
-				 * throughout code */
-extern void afs_warn(char *a, long b, long c, long d, long e, long f, long g,
-		     long h, long i, long j);
-extern void afs_warnuser(char *a, long b, long c, long d, long e, long f,
-			 long g, long h, long i, long j);
-#else
-extern void afs_warn();
-extern void afs_warnuser();
-#endif
 extern void afs_CheckLocks(void);
 extern int afs_badop(void);
 extern int afs_noop(void);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
 
+/* afs_warn.c */
 
+#ifdef AFS_AIX_ENV
+/* AIX doesn't have usable va_args support in its kernel */
+extern void afs_warn();
+extern void afs_warnuser();
+#else
+extern void afs_warn(char *fmt, ...);
+extern void afs_warnuser(char *fmt, ...);
+#endif
 
 /* afs_vcache.c */
 extern int afs_ShakeLooseVCaches(afs_int32 anumber);

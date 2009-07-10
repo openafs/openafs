@@ -22,6 +22,7 @@
 #if !defined(UKERNEL)
 #if !defined(AFS_LINUX20_ENV)
 #include <net/if.h>
+#include "stdarg.h"
 #endif
 #include <netinet/in.h>
 
@@ -49,25 +50,27 @@
 #include <sys/fp_io.h>
 #endif
 
+#if defined(AFS_LINUX26_ENV)
+# define afs_vprintf(fmt, ap) vprintk(fmt, ap)
+#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV))
+static_inline void afs_vprintf(const char *fmt, va_list ap) {
+	char buf[256];
 
-
-/* * * * * * *
- * this code badly needs to be cleaned up...  too many ugly ifdefs.
- * XXX
- */
-#if 0
-void
-afs_warn(char *a, long b, long c, long d, long e, long f, long g, long h,
-	 long i, long j)
+	vsnprintf(buf, sizeof(buf), fmt, ap);
+	printf(buf);
+}
 #else
-void
-afs_warn(a, b, c, d, e, f, g, h, i, j)
-     char *a;
-#if defined( AFS_USE_VOID_PTR)
-     void *b, *c, *d, *e, *f, *g, *h, *i, *j;
-#else
-     long b, c, d, e, f, g, h, i, j;
+# define afs_vprintf(fmt, ap) vprintf(fmt, ap)
 #endif
+
+#ifdef AFS_AIX_ENV
+void
+afs_warn(fmt, a, b, c, d, e, f, g, h, i)
+    char *fmt;
+    void *a, *b, *c, *d, *e, *f, *g, *h, *i;
+#else
+void
+afs_warn(char *fmt, ...)
 #endif
 {
     AFS_STATCNT(afs_warn);
@@ -84,26 +87,29 @@ afs_warn(a, b, c, d, e, f, g, h, i, j)
 	    ssize_t len;
 	    ssize_t count;
 
-	    sprintf(buf, a, b, c, d, e, f, g, h, i, j);
+	    sprintf(buf, fmt, a, b, c, d, e, f, g, h, i);
 	    len = strlen(buf);
 	    fp_write(fd, buf, len, 0, UIO_SYSSPACE, &count);
 	    fp_close(fd);
 	}
 #else
-	printf(a, b, c, d, e, f, g, h, i, j);
+	va_list ap;
+
+	va_start(ap, fmt);
+	afs_vprintf(fmt, ap);
+	va_end(ap);
 #endif
     }
 }
 
-#if 0
+#ifdef AFS_AIX_ENV
 void
-afs_warnuser(char *a, long b, long c, long d, long e, long f, long g, long h,
-	     long i, long j)
+afs_warnuser(fmt, a, b, c, d, e, f, g, h, i)
+    char *fmt;
+    void *a, *b, *c, *d, *e, *f, *g, *h, *i;
 #else
 void
-afs_warnuser(a, b, c, d, e, f, g, h, i, j)
-     char *a;
-     long b, c, d, e, f, g, h, i, j;
+afs_warnuser(char *fmt, ...)
 #endif
 {
     AFS_STATCNT(afs_warnuser);
@@ -114,7 +120,15 @@ afs_warnuser(a, b, c, d, e, f, g, h, i, j)
 	    AFS_GUNLOCK();
 #endif /* AFS_GLOBAL_SUNLOCK */
 
-	uprintf(a, b, c, d, e, f, g, h, i, j);
+#if defined(AFS_AIX_ENV)
+	uprintf(fmt, a, b, c, d, e, f, g, h, i);
+#else
+	va_list ap;
+
+	va_start(ap, fmt);
+	afs_vprintf(fmt, ap);
+	va_end(ap);
+#endif
 
 #ifdef AFS_GLOBAL_SUNLOCK
 	if (haveGlock)
