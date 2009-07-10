@@ -27,6 +27,7 @@
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
+#include "budb_internal.h"
 #include "budb_prototypes.h"
 
 /* ----------------------------------

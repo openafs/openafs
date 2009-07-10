@@ -23,7 +23,7 @@
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
-#include "budb_prototypes.h"
+#include "budb_internal.h"
 #include "afs/audit.h"
 #include <string.h>
 

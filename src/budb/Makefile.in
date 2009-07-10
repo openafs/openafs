@@ -49,7 +49,7 @@ COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o \
 	procs.o server.o budb_errs.o
 
-all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server
+all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h ${TOP_INCDIR}/afs/budb_prototypes.h budb_server
 
 ${TOP_LIBDIR}/libbudb.a: libbudb.a
 	${INSTALL_DATA} $? $@
@@ -61,6 +61,9 @@ ${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/budb_client.h: budb_client.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb_prototypes.h: budb_prototypes.h
 	${INSTALL_DATA} $? $@
 
 #

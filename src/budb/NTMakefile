@@ -17,7 +17,8 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 INCFILES =\
 	$(INCFILEDIR)\budb.h \
 	$(INCFILEDIR)\budb_errs.h \
-	$(INCFILEDIR)\budb_client.h
+	$(INCFILEDIR)\budb_client.h \
+	$(INCFILEDIR)\budb_prototypes.h
 	
 
 

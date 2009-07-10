@@ -38,7 +38,7 @@
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
-#include "budb_prototypes.h"
+#include "budb_internal.h"
 #include "error_macros.h"
 #include "globals.h"
 #include "afs/audit.h"
