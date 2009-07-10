@@ -51,6 +51,8 @@
 #include <ctype.h>
 #include "error_macros.h"
 #include <afs/budb_errs.h>
+#include <afs/budb_client.h>
+#include <afs/bucoord_prototypes.h>
 #include "afs/butx.h"
 #define XBSA_TCMAIN
 #include "butc_xbsa.h"
@@ -64,7 +66,7 @@
 #define CFG_PREFIX "CFG"
 
 struct ubik_client *cstruct;
-extern void TC_ExecuteRequest();
+extern void TC_ExecuteRequest(struct rx_call *);
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
 char logFile[256];
@@ -110,7 +112,8 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
-osi_audit()
+int
+osi_audit(void)
 {
     return 0;
 }
@@ -122,7 +125,7 @@ SafeATOL(register char *anum)
     register int tc;
 
     total = 0;
-    while (tc = *anum) {
+    while ((tc = *anum)) {
 	if (tc < '0' || tc > '9')
 	    return -1;
 	total *= 10;
@@ -248,7 +251,8 @@ atocl(char *numstring, char crunit, afs_int32 *number)
 }
 
 /* replace last two ocurrences of / by _ */
-static
+#if 0
+static int
 stringReplace(char *name)
 {
     char *pos;
@@ -262,8 +266,9 @@ stringReplace(char *name)
     strcat(name, buffer);
     return 0;
 }
+#endif
 
-static
+static int
 stringNowReplace(char *logFile, char *deviceName)
 {
     char *pos = 0;
@@ -281,7 +286,7 @@ stringNowReplace(char *logFile, char *deviceName)
 	deviceName += devPrefLen;
 	mvFlag++;
     }
-    while (pos = strchr(deviceName, devPrefix[0]))	/* look for / or \ */
+    while ((pos = strchr(deviceName, devPrefix[0])))	/* look for / or \ */
 	*pos = '_';
     strcat(logFile, deviceName);
     /* now put back deviceName to the way it was */

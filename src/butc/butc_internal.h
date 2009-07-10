@@ -19,6 +19,7 @@ extern afs_int32 finishTape(struct budb_tapeEntry *, afs_int32);
 extern afs_int32 flushSavedEntries(afs_int32);
 extern void waitDbWatcher(void);
 extern afs_int32 finishDump(struct budb_dumpEntry *);
+extern afs_int32 threadEntryDir(void *, afs_int32, afs_int32);
 
 /* list.c */
 extern afs_int32 allocTaskId(void);
@@ -31,6 +32,13 @@ extern afs_int32 PromptForTape(int, char *, afs_uint32, afs_uint32, int);
 extern void GetNewLabel(struct butm_tapeInfo *, char *, char *,
 			struct butm_tapeLabel *);
 extern void FFlushInput(void);
+extern afs_int32 ReadVolHeader(afs_int32, struct butm_tapeInfo *,
+			       struct volumeHeader *);
+extern int FindVolTrailer(char *, afs_int32, afs_int32 *,
+			  struct volumeHeader *);
+extern int FindVolTrailer2(char *, afs_int32, afs_int32 *, char *, afs_int32,
+			   afs_int32 *, struct volumeHeader *);
+
 
 /* recoverDb.c */
 extern afs_int32 Ask(char *);

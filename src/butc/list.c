@@ -32,7 +32,7 @@ static afs_int32 maxTaskID;	/* the largest task Id allotted so far, this is neve
  *	allocate a dump (task) id
  */
 afs_int32
-allocTaskId()
+allocTaskId(void)
 {
     return (maxTaskID++);
 }

@@ -36,6 +36,9 @@
 #include <afs/volser.h>
 #include <afs/volint.h>
 #include <afs/cellconfig.h>
+#include <afs/bucoord_prototypes.h>
+
+#include "butc_internal.h"
 
 #include "error_macros.h"
 
@@ -45,10 +48,10 @@ dlqlinkT entries_to_flush;
 int dbWatcherinprogress;
 
 afs_int32
-threadEntryDir(char *anEntry, afs_int32 size, afs_int32 type)
+threadEntryDir(void *anEntry, afs_int32 size, afs_int32 type)
 {
     dlqlinkP entryPtr;
-    char *entry = NULL;
+    void *entry = NULL;
     int tried;
 
     for (tried = 0; tried < 5; tried++) {
@@ -88,10 +91,10 @@ threadEntryDir(char *anEntry, afs_int32 size, afs_int32 type)
  */
 
 afs_int32
-threadEntry(char *anEntry, afs_int32 size, afs_int32 type)
+threadEntry(void *anEntry, afs_int32 size, afs_int32 type)
 {
     dlqlinkP entryPtr;
-    char *entry = NULL;
+    void *entry = NULL;
     int tried;
 
     for (tried = 0; tried < 5; tried++) {
@@ -156,7 +159,9 @@ finishDump(struct budb_dumpEntry *aDumpEntryPtr)
  *     Creates a tape entry and puts it onto the savedEntries list.
  */
 afs_int32
-useTape(struct budb_tapeEntry *aTapeEntryPtr, afs_int32 dumpID, char *tapename, afs_int32 tapeSeq, afs_int32 useCount, Date written, Date expiration, afs_int32 tapepos)
+useTape(struct budb_tapeEntry *aTapeEntryPtr, afs_int32 dumpID,
+	char *tapename, afs_int32 tapeSeq, afs_int32 useCount,
+	Date written, Date expiration, afs_int32 tapepos)
 {
     afs_int32 code = 0;
 
@@ -199,7 +204,10 @@ finishTape(struct budb_tapeEntry *aTapeEntryPtr, afs_int32 useKBytes)
  *     Creates a volume entry and puts it onto the savedEntries list.
  */
 afs_int32
-addVolume(struct budb_volumeEntry *aVolEntryPtr, afs_int32 dumpID, char *tapename, char *volname, afs_int32 volid, Date cloneDate, afs_int32 startPos, afs_int32 volBytes, int fragment, afs_int32 flags)
+addVolume(struct budb_volumeEntry *aVolEntryPtr, afs_int32 dumpID,
+	  char *tapename, char *volname, afs_int32 volid,
+	  Date cloneDate, afs_int32 startPos, afs_int32 volBytes,
+	  int fragment, afs_int32 flags)
 {
     afs_int32 code = 0;
     int allo = 0;
@@ -231,6 +239,13 @@ addVolume(struct budb_volumeEntry *aVolEntryPtr, afs_int32 dumpID, char *tapenam
     if (code && allo)
 	free(aVolEntryPtr);
     return (code);
+}
+
+static_inline int
+freeEntry(void *e)
+{
+    free(e);
+    return 0;
 }
 
 /*
@@ -270,7 +285,7 @@ flushSavedEntries(afs_int32 status)
      * Add dump, tape, and volume entries to the list for the dbWatcher to 
      * flush. Volume entries are not added if the volume failed to dump.
      */
-    while (entryPtr = dlqUnlinkf(&savedEntries)) {
+    while ((entryPtr = dlqUnlinkf(&savedEntries))) {
 	if ((entryPtr->dlq_type == DLQ_VOLENTRY) && (status != DUMP_SUCCESS)) {
 	    volPtr = (struct budb_volumeEntry *)entryPtr->dlq_structPtr;
 	    if (volPtr)
@@ -284,12 +299,12 @@ flushSavedEntries(afs_int32 status)
 
   error_exit:
     /* Free anything that remains on dlq */
-    dlqTraverseQueue(&savedEntries, free, free);
+    dlqTraverseQueue(&savedEntries, freeEntry, freeEntry);
     return (code);
 }
 
 void
-waitDbWatcher()
+waitDbWatcher(void)
 {
     int message = 0;
 
@@ -333,7 +348,7 @@ dbWatcher(void *unused)
     while (1) {
 	/*while */
 	/* Add tape and volume enties to the backup database */
-	while (entryPtr = dlqUnlinkf(&entries_to_flush)) {
+	while ((entryPtr = dlqUnlinkf(&entries_to_flush))) {
 	    dbWatcherinprogress = 1;
 
 	    if (!entryPtr->dlq_structPtr) {
@@ -391,7 +406,7 @@ dbWatcher(void *unused)
 		    tapePtr =
 			(struct budb_tapeEntry *)entryPtr->dlq_structPtr;
 		    if (addedDump) {
-			code = bcdb_FinishTape(tapePtr, &new);
+			code = bcdb_FinishTape(tapePtr);
 			if (code) {
 			    ErrorLog(0, 0, code, 0,
 				     "Warning: Can't finish tape %s of DumpID %u in backup database\n",

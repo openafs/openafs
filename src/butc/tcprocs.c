@@ -636,10 +636,10 @@ STC_TCInfo(struct rx_call *acid, struct tc_tcInfo *tciptr)
 afs_int32
 STC_DeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
 {
-    struct deleteDumpIf *ptr = 0;
-    statusP statusPtr = 0;
     afs_int32 code = TC_BADTASK;	/* If not compiled -Dxbsa then fail */
 #ifdef xbsa
+    struct deleteDumpIf *ptr = 0;
+    statusP statusPtr = 0;
 #ifdef AFS_PTHREAD_ENV
     pthread_t pid;
     pthread_attr_t tattr;
