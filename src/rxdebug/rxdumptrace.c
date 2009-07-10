@@ -43,8 +43,7 @@ struct rx_trace {
 #endif
 
 int
-main(argc, argv)
-     char **argv;
+main(int argc, char **argv)
 {
     struct rx_trace ip;
     int err = 0;

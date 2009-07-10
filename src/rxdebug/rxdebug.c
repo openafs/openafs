@@ -32,6 +32,7 @@
 #endif
 #include <string.h>
 #include <sys/stat.h>
+#include <afs/afsutil.h>
 #include <afs/stds.h>
 #include <afs/cmd.h>
 
@@ -46,17 +47,14 @@
 
 #define	TIMEOUT	    20
 
-extern struct hostent *hostutil_GetHostByName();
-
 static short
-PortNumber(aport)
-     register char *aport;
+PortNumber(char *aport)
 {
     register int tc;
     register short total;
 
     total = 0;
-    while (tc = *aport++) {
+    while ((tc = *aport++)) {
 	if (tc < '0' || tc > '9')
 	    return -1;		/* bad port number */
 	total *= 10;
@@ -66,8 +64,7 @@ PortNumber(aport)
 }
 
 static short
-PortName(aname)
-     register char *aname;
+PortName(char *aname)
 {
     register struct servent *ts;
     ts = getservbyname(aname, NULL);
@@ -593,9 +590,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 #include "AFS_component_version_number.c"
 #endif
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
 
