@@ -14,6 +14,8 @@
 #undef	IN
 #include <stdio.h>
 #include <errno.h>
+#include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>		/* for mtio.h */
 #include <afs/cmd.h>
 #include <afs/procmgmt.h>
@@ -34,6 +36,8 @@ afs_int32 eotEnabled = 1;
 int fileMark(usd_handle_t hTape);
 int fileMarkSize(char *tapeDevice);
 static int tt_fileMarkSize(struct cmd_syndesc *as, void *arock);
+afs_int32 rewindTape(usd_handle_t hTape);
+int dataBlock(usd_handle_t, afs_int32);
 
 #define ERROR(evalue)                                           \
         {                                                       \
@@ -49,15 +53,14 @@ static int tt_fileMarkSize(struct cmd_syndesc *as, void *arock);
 
 void quitFms(int);
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct sigaction intaction, oldaction;
     struct cmd_syndesc *cptr;
 
     memset((char *)&intaction, 0, sizeof(intaction));
-    intaction.sa_handler = (int (*)())quitFms;
+    intaction.sa_handler = quitFms;
 
     sigaction(SIGINT, &intaction, &oldaction);
 
@@ -83,8 +86,8 @@ tt_fileMarkSize(struct cmd_syndesc *as, void *arock)
 }
 
 
-fileMarkSize(tapeDevice)
-     char *tapeDevice;
+int
+fileMarkSize(char *tapeDevice)
 {
     afs_uint32 nFileMarks, nBlocks, nbfTape;
     double tpSize, fmSize;
@@ -94,8 +97,6 @@ fileMarkSize(tapeDevice)
     int count = 0;
     afs_uint32 countr;
     afs_int32 code = 0;
-
-    afs_int32 rewindTape();
 
     code =
 	usd_Open(tapeDevice, (USD_OPEN_RDWR | USD_OPEN_WLOCK), 0777, &hTape);
@@ -249,14 +250,15 @@ fileMark(usd_handle_t hTape)
  * entry:
  * 	blocksize - size of block in bytes
  */
-
+int
 dataBlock(usd_handle_t hTape, afs_int32 reqSize)
 {
     static char *dB_buffer = 0;
     static afs_int32 dB_buffersize = 0;
     static int dB_count = 0;
     int *ptr;
-    afs_int32 code = 0, xferd;
+    afs_int32 code = 0;
+    afs_uint32 xferd;
 
     /* dbBuffersize is only valid when dB_buffer is non-zero */
 
