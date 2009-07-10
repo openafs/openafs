@@ -2859,7 +2859,7 @@ main(int argc, char **argv)
 	struct FileEntry *fe;
 
 	for (hash = 0; hash < FEHASH_SIZE; hash++) {
-	    for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+	    for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
 		if (!vol || (fe->volid == vol)) {
 		    register struct CallBack *cbnext;
 		    for (cb = itocb(fe->firstcb); cb; cb = cbnext) {

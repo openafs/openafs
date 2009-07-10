@@ -187,8 +187,6 @@ struct afs_FSStats {
 
 struct afs_FSStats afs_fsstats;
 
-void ResetDebug(), SetDebug(), Terminate();
-
 int LogLevel = 0;
 int supported = 1;
 int Console = 0;
@@ -301,8 +299,9 @@ CallPreamble(register struct rx_call *acall, int activecall,
     int retry_flag = 1;
     int code = 0;
     char hoststr[16], hoststr2[16];
+#ifdef AFS_PTHREAD_ENV
     struct ubik_client *uclient;
-
+#endif
     *ahostp = NULL;
 
     if (!tconn) {
@@ -461,8 +460,8 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 static afs_int32
 CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 {
-    int fileCode = 0;
-    afs_int32 local_errorCode, errorCode = -1;
+    Error fileCode = 0;
+    Error local_errorCode, errorCode = -1;
     static struct timeval restartedat = { 0, 0 };
 
     if (fid->Volume == 0 || fid->Vnode == 0)	/* not: || fid->Unique == 0) */
@@ -610,7 +609,7 @@ SetAccessList(Vnode ** targetptr, Volume ** volume,
 	assert(Fid != 0);
 	while (1) {
 	    VnodeId parentvnode;
-	    int errorCode = 0;
+	    Error errorCode = 0;
 
 	    parentvnode = (*targetptr)->disk.parent;
 	    VPutVnode(&errorCode, *targetptr);
@@ -747,7 +746,7 @@ GetVolumePackage(struct rx_connection *tcon, AFSFid * Fid, Volume ** volptr,
 {
     struct acl_accessList *aCL;	/* Internal access List */
     int aCLSize;		/* size of the access list */
-    int errorCode = 0;		/* return code to caller */
+    Error errorCode = 0;		/* return code to caller */
 
     if ((errorCode = CheckVnode(Fid, volptr, targetptr, locktype)))
 	return (errorCode);
@@ -799,7 +798,7 @@ static void
 PutVolumePackage(Vnode * parentwhentargetnotdir, Vnode * targetptr,
 		 Vnode * parentptr, Volume * volptr, struct client **client)
 {
-    int fileCode = 0;		/* Error code returned by the volume package */
+    Error fileCode = 0;		/* Error code returned by the volume package */
 
     if (parentwhentargetnotdir) {
 	VPutVnode(&fileCode, parentwhentargetnotdir);
@@ -861,7 +860,7 @@ Check_PermissionRights(Vnode * targetptr, struct client *client,
 		       afs_int32 rights, int CallingRoutine,
 		       AFSStoreStatus * InStatus)
 {
-    int errorCode = 0;
+    Error errorCode = 0;
 #define OWNSp(client, target) ((client)->ViceId == (target)->disk.owner)
 #define CHOWN(i,t) (((i)->Mask & AFS_SETOWNER) &&((i)->Owner != (t)->disk.owner))
 #define CHGRP(i,t) (((i)->Mask & AFS_SETGROUP) &&((i)->Group != (t)->disk.group))
@@ -1187,7 +1186,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 	 *  error code indicates that the disk is full, we roll-back to
 	 *  the initial state.
 	 */
-	if ((rdlen != length) || (wrlen != length))
+	if ((rdlen != length) || (wrlen != length)) {
 	    if ((wrlen < 0) && (errno == ENOSPC)) {	/* disk full */
 		ViceLog(0,
 			("CopyOnWrite failed: Partition %s containing volume %u is full\n",
@@ -1224,6 +1223,7 @@ CopyOnWrite(Vnode * targetptr, Volume * volptr, afs_fsize_t off, afs_fsize_t len
 		VTakeOffline(volptr);
 		return EIO;
 	    }
+	}
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
 #endif /* !AFS_PTHREAD_ENV */
@@ -1294,7 +1294,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 	     DirHandle * dir, AFSFid * fileFid, char *Name, int ChkForDir)
 {
     DirHandle childdir;		/* Handle for dir package I/O */
-    int errorCode = 0;
+    Error errorCode = 0;
     int code;
 
     /* watch for invalid names */
@@ -1424,7 +1424,7 @@ Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
 {
     afs_fsize_t newlength;	/* Holds new directory length */
     afs_fsize_t parentLength;
-    int errorCode;
+    Error errorCode;
 #if FS_STATS_DETAILED
     Date currDate;		/*Current date */
     int writeIdx;		/*Write index to bump */
@@ -1662,8 +1662,8 @@ static afs_int32
 AdjustDiskUsage(Volume * volptr, afs_sfsize_t length,
 		afs_sfsize_t checkLength)
 {
-    int rc;
-    int nc;
+    Error rc;
+    Error nc;
 
     VAdjustDiskUsage(&rc, volptr, length, checkLength);
     if (rc) {
@@ -1696,8 +1696,8 @@ Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
 	       Vnode ** targetptr, char *Name, struct AFSFid *OutFid,
 	       int FileType, afs_sfsize_t BlocksPreallocatedForVnode)
 {
-    int errorCode = 0;		/* Error code returned back */
-    int temp;
+    Error errorCode = 0;		/* Error code returned back */
+    Error temp;
     Inode inode = 0;
     Inode nearInode;		/* hint for inode allocation in solaris */
 
@@ -1991,8 +1991,6 @@ SRXAFS_FsCmd(struct rx_call * acall, struct AFSFid * Fid,
 		    struct FsCmdOutputs * Outputs)
 {
     afs_int32 code = 0;
-    struct AFSCallBack callback;
-    struct AFSVolSync sync;
 
     switch (Inputs->command) {
     default:
@@ -2107,8 +2105,8 @@ common_FetchData64(struct rx_call *acall, struct AFSFid *Fid,
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if vptr is a file */
     Vnode tparentwhentargetnotdir;	/* parent vnode for GetStatus */
-    int errorCode = 0;		/* return code to caller */
-    int fileCode = 0;		/* return code from vol package */
+    Error errorCode = 0;		/* return code to caller */
+    Error fileCode = 0;		/* return code from vol package */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     struct rx_connection *tcon;	/* the connection we're part of */
@@ -2372,7 +2370,7 @@ SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
 {
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int errorCode = 0;		/* return error code to caller */
+    Error errorCode = 0;		/* return error code to caller */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -2493,7 +2491,7 @@ SAFSS_FetchStatus(struct rx_call *acall, struct AFSFid *Fid,
 {
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int errorCode = 0;		/* return code to caller */
+    Error errorCode = 0;		/* return code to caller */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -2568,7 +2566,7 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     afs_int32 nfiles;
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int errorCode = 0;		/* return code to caller */
+    Error errorCode = 0;		/* return code to caller */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -2717,7 +2715,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
     afs_int32 nfiles;
     Vnode *targetptr = 0;	/* pointer to vnode to fetch */
     Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int errorCode = 0;		/* return code to caller */
+    Error errorCode = 0;		/* return code to caller */
     Volume *volptr = 0;		/* pointer to the volume */
     struct client *client = 0;	/* pointer to the client data */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -2946,8 +2944,8 @@ common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
     Vnode *targetptr = 0;	/* pointer to input fid */
     Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
     Vnode tparentwhentargetnotdir;	/* parent vnode for GetStatus */
-    int errorCode = 0;		/* return code for caller */
-    int fileCode = 0;		/* return code from vol package */
+    Error errorCode = 0;		/* return code for caller */
+    Error fileCode = 0;		/* return code from vol package */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -3212,7 +3210,7 @@ SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
 {
     Vnode *targetptr = 0;	/* pointer to input fid */
     Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
-    int errorCode = 0;		/* return code for caller */
+    Error errorCode = 0;		/* return code for caller */
     struct AFSStoreStatus InStatus;	/* Input status for fid */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
@@ -3333,7 +3331,7 @@ SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
 {
     Vnode *targetptr = 0;	/* pointer to input fid */
     Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
-    int errorCode = 0;		/* return code for caller */
+    Error errorCode = 0;		/* return code for caller */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -3481,7 +3479,7 @@ SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* file to be deleted */
     Volume *volptr = 0;		/* pointer to the volume header */
     AFSFid fileFid;		/* area for Fid from the directory */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     DirHandle dir;		/* Handle for dir package I/O */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -3646,7 +3644,7 @@ SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* vnode of the new file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     Volume *volptr = 0;		/* pointer to the volume header */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     DirHandle dir;		/* Handle for dir package I/O */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -3818,8 +3816,8 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     Vnode *newfileptr = 0;	/* vnode of the file to delete */
     Vnode *testvptr = 0;	/* used in directory tree walk */
     Vnode *parent = 0;		/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
-    int fileCode = 0;		/* used when writing Vnodes */
+    Error errorCode = 0;		/* error code */
+    Error fileCode = 0;		/* used when writing Vnodes */
     VnodeId testnode;		/* used in directory tree walk */
     AFSFid fileFid;		/* Fid of file to move */
     AFSFid newFileFid;		/* Fid of new file */
@@ -4307,7 +4305,7 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *parentptr = 0;	/* vnode of input Directory */
     Vnode *targetptr = 0;	/* vnode of the new link */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     int len, code = 0;
     DirHandle dir;		/* Handle for dir package I/O */
     Volume *volptr = 0;		/* pointer to the volume header */
@@ -4437,18 +4435,15 @@ SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
 
 afs_int32
-SRXAFS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
-	       OutFidStatus, OutDirStatus, Sync)
-     struct AFSVolSync *Sync;
-     struct rx_call *acall;	/* Rx call */
-     struct AFSFid *DirFid;	/* Parent dir's fid */
-     char *Name;		/* File name to create */
-     char *LinkContents;	/* Contents of the new created file */
-     struct AFSStoreStatus *InStatus;	/* Input status for the new symbolic link */
-     struct AFSFid *OutFid;	/* Fid for newly created symbolic link */
-     struct AFSFetchStatus *OutFidStatus;	/* Output status for new symbolic link */
-     struct AFSFetchStatus *OutDirStatus;	/* Output status for parent dir */
-
+SRXAFS_Symlink(struct rx_call *acall,	/* Rx call */
+	       struct AFSFid *DirFid,	/* Parent dir's fid */
+	       char *Name,		/* File name to create */
+	       char *LinkContents,	/* Contents of the new created file */
+	       struct AFSStoreStatus *InStatus,	/* Input status for the new symbolic link */
+	       struct AFSFid *OutFid,	/* Fid for newly created symbolic link */
+	       struct AFSFetchStatus *OutFidStatus,	/* Output status for new symbolic link */
+	       struct AFSFetchStatus *OutDirStatus,	/* Output status for parent dir */
+	       struct AFSVolSync *Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
@@ -4522,7 +4517,7 @@ SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* vnode of the new file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     Volume *volptr = 0;		/* pointer to the volume header */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     DirHandle dir;		/* Handle for dir package I/O */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -4725,7 +4720,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *targetptr = 0;	/* vnode of the new file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     Volume *volptr = 0;		/* pointer to the volume header */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     struct acl_accessList *newACL;	/* Access list */
     int newACLSize;		/* Size of access list */
     DirHandle dir;		/* Handle for dir package I/O */
@@ -4922,7 +4917,7 @@ SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
     Vnode *targetptr = 0;	/* file to be deleted */
     AFSFid fileFid;		/* area for Fid from the directory */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     DirHandle dir;		/* Handle for dir package I/O */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
@@ -5081,7 +5076,7 @@ SAFSS_SetLock(struct rx_call *acall, struct AFSFid *Fid, ViceLockType type,
 {
     Vnode *targetptr = 0;	/* vnode of input file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -5212,7 +5207,7 @@ SAFSS_ExtendLock(struct rx_call *acall, struct AFSFid *Fid,
 {
     Vnode *targetptr = 0;	/* vnode of input file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -5339,7 +5334,7 @@ SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
 {
     Vnode *targetptr = 0;	/* vnode of input file */
     Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -6263,7 +6258,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     afs_int32 code;
     struct rx_connection *tcon;
     struct host *thost;
-    afs_int32 *dataBuffP;
+    afs_uint32 *dataBuffP;
     afs_int32 dataBytes;
 
     FS_LOCK;
@@ -6276,7 +6271,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 	goto Bad_GetCaps;
 
     dataBytes = 1 * sizeof(afs_int32);
-    dataBuffP = (afs_int32 *) malloc(dataBytes);
+    dataBuffP = (afs_uint32 *) malloc(dataBytes);
     dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
 #if defined(AFS_64BIT_ENV) && defined(AFS_LARGEFILE_ENV)
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
@@ -6302,7 +6297,7 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     int i;
     afs_int32 nids, naddrs;
     afs_int32 *vd, *addr;
-    int errorCode = 0;		/* return code to caller */
+    Error errorCode = 0;		/* return code to caller */
     struct client *client = 0;
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
@@ -6542,7 +6537,7 @@ SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 {
     Vnode *targetptr = 0;	/* vnode of the new file */
     Vnode *parentwhentargetnotdir = 0;	/* vnode of parent */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client entry */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -6647,7 +6642,7 @@ SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
 {
     Vnode *targetptr = 0;	/* vnode of the new file */
     Vnode *parentwhentargetnotdir = 0;	/* vnode of parent */
-    int errorCode = 0;		/* error code */
+    Error errorCode = 0;		/* error code */
     Volume *volptr = 0;		/* pointer to the volume header */
     struct client *client = 0;	/* pointer to client entry */
     afs_int32 rights, anyrights;	/* rights for this and any user */
@@ -6747,8 +6742,8 @@ SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
     char *temp;
     struct rx_connection *tcon;
     struct host *thost;
+    Error errorCode = 0;
 #endif
-    int errorCode = 0;
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
     struct timeval opStartTime;	/* Start time for RPC op */
@@ -6973,7 +6968,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     )
 {
     struct timeval StartTime, StopTime;	/* used to calculate file  transfer rates */
-    int errorCode = 0;		/* Returned error code to caller */
+    Error errorCode = 0;		/* Returned error code to caller */
     IHandle_t *ihP;
     FdHandle_t *fdP;
 #ifdef AFS_NT40_ENV
@@ -7199,7 +7194,7 @@ StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
 {
     afs_sfsize_t bytesTransfered;	/* number of bytes actually transfered */
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
-    int errorCode = 0;		/* Returned error code to caller */
+    Error errorCode = 0;		/* Returned error code to caller */
 #ifdef AFS_NT40_ENV
     register char *tbuffer;	/* data copying buffer */
 #else /* AFS_NT40_ENV */
@@ -7644,7 +7639,7 @@ SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
     struct rx_connection *conn;
 #endif
     
-    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &tcallhost))
+    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon, &tcallhost)))
 	    goto Bad_CallBackRxConnAddr1;
     
 #ifndef __EXPERIMENTAL_CALLBACK_CONN_MOVING

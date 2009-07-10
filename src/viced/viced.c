@@ -76,6 +76,7 @@
 #include <afs/ptuser.h>
 #include <afs/audit.h>
 #include <afs/partition.h>
+#include <afs/dir.h>
 #ifndef AFS_NT40_ENV
 #include <afs/netutils.h>
 #endif
@@ -90,6 +91,7 @@
 #include "sys/lock.h"
 #endif
 #include <rx/rx_globals.h>
+#include <rx/rxstat_prototypes.h>
 
 #ifdef O_LARGEFILE
 #define afs_stat	stat64
@@ -103,20 +105,20 @@
 #define afs_fopen	fopen
 #endif /* !O_LARGEFILE */
 
-extern int BreakVolumeCallBacks(), InitCallBack();
-extern int BreakVolumeCallBacks(), InitCallBack(), BreakLaterCallBacks();
-extern int BreakVolumeCallBacksLater();
-extern int LogLevel, etext;
-extern afs_int32 BlocksSpare, PctSpare;
+extern int etext;
 
 void *ShutDown(void *);
-static void ClearXStatValues(), NewParms(), PrintCounters();
-static void ResetCheckDescriptors(void), ResetCheckSignal(void);
+static void ClearXStatValues(void);
+static void NewParms(int);
+static void PrintCounters(void);
+static void ResetCheckDescriptors(void);
+static void ResetCheckSignal(void);
 static void *CheckSignal(void *);
-extern int GetKeysFromToken();
-extern int RXAFS_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
-afs_int32 Do_VLRegisterRPC();
+
+extern int RXAFS_ExecuteRequest(struct rx_call *);
+extern int RXSTATS_ExecuteRequest(struct rx_call *);
+
+static afs_int32 Do_VLRegisterRPC(void);
 
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
@@ -215,7 +217,7 @@ afs_uint32 FS_HostAddrs[ADDRSPERSITE], FS_HostAddr_cnt = 0, FS_registered = 0;
 /* All addresses in FS_HostAddrs are in NBO */
 afsUUID FS_HostUUID;
 
-static void FlagMsg();
+static void FlagMsg(void);
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /*
@@ -272,37 +274,37 @@ CheckDescriptors(void *unused)
 
 #ifdef AFS_PTHREAD_ENV
 void
-CheckSignal_Signal(x)
+CheckSignal_Signal(int x)
 {
     CheckSignal(NULL);
 }
 
 void
-ShutDown_Signal(x)
+ShutDown_Signal(int x)
 {
     ShutDown(NULL);
 }
 
 void
-CheckDescriptors_Signal(x)
+CheckDescriptors_Signal(int x)
 {
     CheckDescriptors(NULL);
 }
 #else /* AFS_PTHREAD_ENV */
 void
-CheckSignal_Signal(x)
+CheckSignal_Signal(int x)
 {
     IOMGR_SoftSig(CheckSignal, 0);
 }
 
 void
-ShutDown_Signal(x)
+ShutDown_Signal(int x)
 {
     IOMGR_SoftSig(ShutDown, 0);
 }
 
 void
-CheckDescriptors_Signal(x)
+CheckDescriptors_Signal(int x)
 {
     IOMGR_SoftSig(CheckDescriptors, 0);
 }
@@ -376,7 +378,6 @@ get_key(void *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
     }
     memcpy(akey, tkey.key, sizeof(tkey.key));
     return 0;
-
 }				/*get_key */
 
 #ifndef AFS_NT40_ENV
@@ -384,10 +385,10 @@ int
 viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
-    void (*old) ();
+    void (*old) (int);
 
 #ifndef AFS_LINUX20_ENV
-    old = (void (*)())signal(SIGSYS, SIG_IGN);
+    old = (void (*)(int))signal(SIGSYS, SIG_IGN);
 #endif
     rcode = syscall(AFS_SYSCALL, 28 /* AFSCALL_CALL */ , a3, a4, a5);
 #ifndef AFS_LINUX20_ENV
@@ -406,7 +407,7 @@ viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 char adminName[MAXADMINNAME];
 
 static void
-CheckAdminName()
+CheckAdminName(void)
 {
     int fd = 0;
     struct afs_stat status;
@@ -653,7 +654,7 @@ FsyncCheckLWP(void *unused)
  *------------------------------------------------------------------------*/
 
 static void
-ClearXStatValues()
+ClearXStatValues(void)
 {				/*ClearXStatValues */
 
     struct fs_stats_opTimingData *opTimeP;	/*Ptr to timing struct */
@@ -704,7 +705,7 @@ int CopyOnWrite_calls = 0, CopyOnWrite_off0 = 0, CopyOnWrite_size0 = 0;
 afs_fsize_t CopyOnWrite_maxsize = 0;
 
 static void
-PrintCounters()
+PrintCounters(void)
 {
     int dirbuff, dircall, dirio;
     struct timeval tpl;
@@ -871,7 +872,7 @@ ShutDown(void *unused)
 
 
 static void
-FlagMsg()
+FlagMsg(void)
 {
     /* default supports help flag */
 
@@ -1497,7 +1498,7 @@ Die(char *msg)
 
 
 afs_int32
-InitPR()
+InitPR(void)
 {
     int code;
 
@@ -1595,7 +1596,7 @@ vl_Initialize(const char *confDir)
 #define SYSIDVERSION	1
 
 afs_int32
-ReadSysIdFile()
+ReadSysIdFile(void)
 {
     afs_int32 fd, nentries, i;
     struct versionStamp vsn;
@@ -1677,7 +1678,7 @@ ReadSysIdFile()
 }
 
 afs_int32
-WriteSysIdFile()
+WriteSysIdFile(void)
 {
     afs_int32 fd, i;
     struct versionStamp vsn;
@@ -1745,12 +1746,11 @@ WriteSysIdFile()
  * and so we need to convert each of them into HBO which is what the extra 
  * array called FS_HostAddrs_HBO is used here.
  */
-afs_int32
-Do_VLRegisterRPC()
+static afs_int32
+Do_VLRegisterRPC(void)
 {
     register int code;
     bulkaddrs addrs;
-    extern int VL_RegisterAddrs();
     afs_uint32 FS_HostAddrs_HBO[ADDRSPERSITE];
     int i = 0;
 
@@ -1784,11 +1784,9 @@ Do_VLRegisterRPC()
 }
 
 afs_int32
-SetupVL()
+SetupVL(void)
 {
     afs_int32 code;
-    extern int rxi_numNetAddrs;
-    extern afs_uint32 rxi_NetAddrs[];
 
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
@@ -1819,7 +1817,7 @@ SetupVL()
 }
 
 afs_int32
-InitVL()
+InitVL(void)
 {
     afs_int32 code;
 

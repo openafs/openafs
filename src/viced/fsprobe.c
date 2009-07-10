@@ -25,20 +25,6 @@ struct ubik_client *cstruct;
 struct rx_connection *serverconns[MAXSERVERS];
 char *(args[50]);
 
-extern int AFS_FetchData(), AFS_StoreData(), AFS_StoreACL();
-extern int RXAFS_GetTime(), AFS_GetStatistics(), AFS_FetchStatus(),
-AFS_FetchACL();
-extern int AFS_StoreStatus(), AFS_RemoveFile(), AFS_CreateFile();
-extern int AFS_Rename(), AFS_Symlink(), AFS_HardLink(), AFS_MakeDir(),
-AFS_RemoveDir();
-extern int AFS_Readdir(), AFS_MakeMountPoint(), AFS_ReleaseTokens(),
-AFS_GetToken();
-extern int AFS_BulkStatus(), AFS_Lookup();
-extern int AFS_BulkStatus(), AFS_BulkLookup(), AFS_RenewAllTokens();
-extern int AFS_BulkFetchVV(), AFS_BulkKeepAlive();
-extern int AFS_Spare1(), AFS_Spare2(), AFS_Spare3(), AFS_Spare4(),
-AFS_Spare5(), AFS_Spare6();
-
 afs_int32
 pxclient_Initialize(int auth, afs_int32 serverAddr)
 {
@@ -92,7 +78,6 @@ main(int argc, char **argv)
     char **av = argv;
     struct sockaddr_in host;
     register afs_int32 code;
-    extern struct hostent *gethostbyname();
     struct hostent *hp;
     char *hostname;
     char hnamebuf[200];
@@ -132,7 +117,7 @@ main(int argc, char **argv)
     code = ubik_Call(RXAFS_GetTime, cstruct, 0, &tv.tv_sec, &tv.tv_usec);
     if (!code)
 	printf("AFS_GetTime on %s sec=%ld, usec=%ld\n", av[0], tv.tv_sec,
-	       tv.tv_usec);
+	       (long int)tv.tv_usec);
     else
 	printf("return code is %d\n", code);
 

@@ -85,6 +85,7 @@ int rxcon_client_key;
 static struct rx_securityClass *sc = NULL;
 
 static void h_SetupCallbackConn_r(struct host * host);
+static int h_threadquota(int);
 
 #define CESPERBLOCK 73
 struct CEBlock {		/* block of CESPERBLOCK file entries */
@@ -1496,7 +1497,7 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 
     return 0;
 }
-int 
+static int
 h_threadquota(int waiting) 
 {
     if (lwps > 64) {
@@ -3485,6 +3486,7 @@ static struct AFSFid zerofid;
  * Since it can serialize them, and pile up, it should be a separate LWP
  * from other events.
  */
+#if 0
 static int
 CheckHost(register struct host *host, int held, void *rock)
 {
@@ -3589,9 +3591,10 @@ CheckHost(register struct host *host, int held, void *rock)
     return held;
 
 }				/*CheckHost */
+#endif
 
 int
-CheckHost_r(register struct host *host, int held, char *dummy)
+CheckHost_r(register struct host *host, int held, void *dummy)
 {
     register struct client *client;
     struct rx_connection *cb_conn = NULL;
