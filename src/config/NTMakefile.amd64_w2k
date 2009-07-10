@@ -177,18 +177,36 @@ APPVER=5.02
 # Extend and/or supplement definitions in WIN32.MAK.
 
 # Command macros.
+!IF !DEFINED(COPY)
 COPY = -copy
+!ENDIF
+!IF !DEFINED(DEL)
 DEL = -del
-MKDIR = -mkdir
+!ENDIF
+!IF !DEFINED(MKDIR)
+MKDIR = -md
+!ENDIF
+!IF !DEFINED(REN)
 REN = ren
+!ENDIF
+!IF !DEFINED(ECHO)
 ECHO = echo
+!ENDIF
+!IF !DEFINED(CD)
 CD = cd
+!ENDIF
+!IF !DEFINED(MC)
 MC = mc -vcsU
+!ENDIF
+!IF !DEFINED(MAKECMD)
 MAKECMD = nmake.exe
+!ENDIF
+!IF !DEFINED(MIDL)
+MIDL  = midl
+!ENDIF
 
 COMPILE_ET = $(DESTDIR)\bin\compile_et
 RXGEN = $(DESTDIR)\bin\rxgen
-MIDL  = midl
 
 # Common clean target.
 clean::
