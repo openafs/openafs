@@ -20,6 +20,7 @@
 #include "afsd.h"
 
 int cm_deleteReadOnly = 0;
+int cm_accessPerFileCheck = 0;
 
 /* called with scp write-locked, check to see if we have the ACL info we need
  * and can get it w/o blocking for any locks.
@@ -40,7 +41,7 @@ int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *userp, afs_uint32
     int release = 0;    /* Used to avoid a call to cm_HoldSCache in the directory case */
 
     didLock = 0;
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY) {
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY || cm_accessPerFileCheck) {
         aclScp = scp;   /* not held, not released */
     } else {
         cm_SetFid(&tfid, scp->fid.cell, scp->fid.volume, scp->parentVnode, scp->parentUnique);
@@ -155,7 +156,7 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
     /* first, start by finding out whether we have a directory or something
      * else, so we can find what object's ACL we need.
      */
-    if (scp->fileType == CM_SCACHETYPE_DIRECTORY ) {
+    if (scp->fileType == CM_SCACHETYPE_DIRECTORY || cm_accessPerFileCheck) {
 	code = cm_SyncOp(scp, NULL, userp, reqp, 0,
 			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS | CM_SCACHESYNC_FORCECB);
 	if (!code) 
@@ -179,8 +180,8 @@ long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *userp,
 	if (!code)
 	    cm_SyncOpDone(aclScp, NULL, 
 			  CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-    else 
-        osi_Log3(afsd_logp, "GetAccessRights parent syncop failure scp %x user %x code %x", aclScp, userp, code);
+        else 
+            osi_Log3(afsd_logp, "GetAccessRights parent syncop failure scp %x user %x code %x", aclScp, userp, code);
 	lock_ReleaseWrite(&aclScp->rw);
         cm_ReleaseSCache(aclScp);
         lock_ObtainWrite(&scp->rw);

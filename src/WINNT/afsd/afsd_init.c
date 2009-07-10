@@ -1145,6 +1145,14 @@ int afsd_InitCM(char **reasonP)
     } 
     afsi_log("CM FollowBackupPath is %u", cm_followBackupPath);
 
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "PerFileAccessCheck", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_accessPerFileCheck = (int) dwValue;
+    } 
+    afsi_log("CM PerFileAccessCheck is %d", cm_accessPerFileCheck);
+
     RegCloseKey (parmKey);
 
     cacheBlocks = ((afs_uint64)cacheSize * 1024) / blockSize;

@@ -18,4 +18,5 @@ extern int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *up,
 extern long cm_GetAccessRights(struct cm_scache *scp, struct cm_user *up,
 	struct cm_req *reqp);
 
+extern int cm_accessPerFileCheck;
 #endif /*  _CM_ACCESS_H_ENV__ */
