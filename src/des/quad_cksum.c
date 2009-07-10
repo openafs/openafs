@@ -147,7 +147,8 @@ des_quad_cksum(unsigned char *in, afs_uint32 * out, afs_int32 length,
 	    z = ((x * x) + (x2 * x2)) % 0x7fffffff;
 	    z2 = (x * (x2 + 83653421)) % 0x7fffffff;	/* modulo */
 	    if (des_debug & 8)
-		printf("%ld %ld\n", z, z2);
+		printf("%ld %ld\n", afs_printable_int32_ld(z),
+		       afs_printable_int32_ld(z2));
 	}
 
 	if (out != NULL) {

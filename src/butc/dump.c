@@ -1371,7 +1371,7 @@ Dumper(void *param)
 		tmend.tm_hour, tmend.tm_min, tmend.tm_sec, hrs, min, sec,
 		nodePtr->volumeSetName, dumpedvolumes,
 		dumpedvolumes + failedvolumes,
-		dparams.tapeInfoPtr->kBytes + 1);
+		afs_printable_uint32_lu(dparams.tapeInfoPtr->kBytes + 1));
 
 	fwrite(line, strlen(line), 1, centralLogIO);
 	fflush(centralLogIO);

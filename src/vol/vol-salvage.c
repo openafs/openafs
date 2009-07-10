@@ -1291,7 +1291,7 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 		    || (vsp->header.id == singleVolumeNumber
 			|| vsp->header.parent == singleVolumeNumber)) {
 		    (void)afs_snprintf(nameShouldBe, sizeof nameShouldBe,
-				       VFORMAT, afs_cast_uint32(vsp->header.id));
+				       VFORMAT, afs_printable_uint32_lu(vsp->header.id));
 		    if (singleVolumeNumber 
 			&& vsp->header.id != singleVolumeNumber)
 			AskOffline(vsp->header.id, fileSysPartition->name);
@@ -1742,7 +1742,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
     if (isp->volSummary == NULL) {
 	char path[64];
 	char headerName[64];
-	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
+	(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
 	(void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);
 	if (check) {
 	    Log("No header file for volume %u\n", isp->volumeId);
@@ -1771,7 +1771,7 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
 	    if (isp->volSummary->fileName) {
 		strcpy(headerName, isp->volSummary->fileName);
 	    } else {
-		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_cast_uint32(isp->volumeId));
+		(void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(isp->volumeId));
 		isp->volSummary->fileName = ToString(headerName);
 	    }
 	    (void)afs_snprintf(path, sizeof path, "%s/%s", fileSysPath, headerName);

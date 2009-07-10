@@ -18,6 +18,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#ifndef AFS_NT40_ENV
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif
 
 #include <pthread.h>
 

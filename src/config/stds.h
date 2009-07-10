@@ -309,12 +309,8 @@ typedef struct afsUUID afsUUID;
 #define hdr_static_inline(x) static inline x
 #endif
 
-#ifdef  AFS_64BIT_ENV
-hdr_static_inline(afs_int32) afs_cast_int32(afs_int32 d) { return (afs_int32) d; }
-hdr_static_inline(afs_uint32) afs_cast_uint32(afs_uint32 d) { return (afs_uint32) d; }
-#else
-hdr_static_inline(long) afs_cast_int32(afs_int32 d) { return (long) d; }
-hdr_static_inline(unsigned long) afs_cast_uint32(afs_uint32 d) { return (unsigned long) d; }
-#endif
+hdr_static_inline(long) afs_printable_int32_ld(afs_int32 d) { return (long) d; }
+
+hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return (unsigned long) d; }
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

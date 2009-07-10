@@ -411,11 +411,11 @@ parse_flags(char *name, char *inst, char *str, afs_int32 * flags)
     str = lcstring(bitspec, str, sizeof(bitspec));
     if (isdigit(*str)) {
 	if (strncmp(str, "0x", 2) == 0)	/* 0x => hex */
-	    sscanf(str, "0x%lx", &f);
+	    sscanf(str, "0x%lx", (long unsigned int *) &f);
 	else if (*str == '0')	/* assume octal */
-	    sscanf(str, "%lo", &f);
+	    sscanf(str, "%lo", (long unsigned int *) &f);
 	else			/* just assume hex */
-	    sscanf(str, "%lx", &f);
+	    sscanf(str, "%lx", (long unsigned int *) &f);
     } else {
 	if (*str == '=') {
 	    str++;
@@ -1078,7 +1078,7 @@ GetRandomKey(struct cmd_syndesc *as, void *arock)
 	ka_PrintBytes((char *)&key, sizeof(key));
 	printf(" (");
 	for (i = 0; i < sizeof(key); i++) {
-	    printf("%0.2x", ((char *)&key)[i] & 0xff);
+	    printf("%.2x", ((char *)&key)[i] & 0xff);
 	    if (i == 3)
 		printf(" ");
 	    else if (i != 7)
@@ -1114,7 +1114,7 @@ Statistics(struct cmd_syndesc *as, void *arock)
 	   (double)dynamics.hashTableUtilization / 100.0);
     ka_timestr(dynamics.start_time, bob, KA_TIMESTR_LEN);
     printf("From host %lx started at %s:\n", 
-	   afs_cast_uint32(dynamics.host), bob);
+	   afs_printable_uint32_lu(dynamics.host), bob);
 
 #define print_stat(name) if (dynamics.name.requests) printf ("  of %d requests for %s, %d were aborted.\n", dynamics.name.requests, # name, dynamics.name.aborts)
     print_stat(Authenticate);
@@ -1205,7 +1205,7 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
     }
     ka_timestr(info.startTime, bob, KA_TIMESTR_LEN);
     printf("From host %lx started %sat %s:\n", 
-	   afs_cast_uint32(info.host),
+	   afs_printable_uint32_lu(info.host),
 	   (info.noAuth ? "w/o authorization " : ""), bob);
     ka_timestr(info.lastTrans, bob, KA_TIMESTR_LEN);
     printf("Last trans was %s at %s\n", info.lastOperation, bob);
@@ -1220,8 +1220,8 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
 	   info.updatesRemaining);
     if (info.cheader_lock || info.keycache_lock)
 	printf("locks: cheader %08lx, keycache %08lx\n", 
-		afs_cast_uint32(info.cheader_lock),
-	        afs_cast_uint32(info.keycache_lock));
+		afs_printable_uint32_lu(info.cheader_lock),
+	        afs_printable_uint32_lu(info.keycache_lock));
     printf("Last authentication for %s, last admin user was %s\n",
 	   info.lastAuth, info.lastAdmin);
     printf("Last TGS op was a %s ticket was for %s\n", info.lastTGSServer,

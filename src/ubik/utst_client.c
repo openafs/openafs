@@ -115,32 +115,36 @@ main(int argc, char **argv)
 		temp = 0;
 		code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 		if (code != 0) {
-		    printf("SAMPLE_Get #1 failed with code %ld\n", code);
+		    printf("SAMPLE_Get #1 failed with code %ld\n",
+			   afs_printable_int32_ld(code));
 		} else {
-		    printf("SAMPLE_Get #1 succeeded, got value %d\n", temp);
+		    printf("SAMPLE_Get #1 succeeded, got value %ld\n",
+			   afs_printable_int32_ld(temp));
 		}
 
 		temp = 0;
 		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0) {
 		    printf("SAMPLE_Inc #1 failed with code %ld\n", 
-			   afs_cast_int32(code));
+			   afs_printable_int32_ld(code));
 		} else {
 		    printf("SAMPLE_Inc #1 succeeded, incremented integer\n");
 		}
 		temp = 0;
 		code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 		if (code != 0) {
-		    printf("SAMPLE_Get #2 failed with code %ld\n", code);
+		    printf("SAMPLE_Get #2 failed with code %ld\n",
+			   afs_printable_int32_ld(code));
 		} else {
-		    printf("SAMPLE_Get #2 succeeded, got value %d\n", temp);
+		    printf("SAMPLE_Get #2 succeeded, got value %ld\n",
+			   afs_printable_int32_ld(temp));
 		}
 
 		temp = 0;
 		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0)
 		    printf("SAMPLE_Inc #2 failed with code %ld\n", 
-			   afs_cast_int32(code));
+			   afs_printable_int32_ld(code));
 		else
 		    printf("SAMPLE_Inc #2 succeeded, incremented integer\n");
 

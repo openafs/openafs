@@ -940,7 +940,7 @@ bc_JobsCmd(struct cmd_syndesc *as, void *arock)
 	    if (statusPtr->dbDumpId)
 		printf(": DumpID %u", statusPtr->dbDumpId);
 	    if (statusPtr->nKBytes)
-		printf(", %ld Kbytes", afs_cast_int32(statusPtr->nKBytes));
+		printf(", %ld Kbytes", afs_printable_int32_ld(statusPtr->nKBytes));
 	    if (strlen(statusPtr->volumeName) != 0)
 		printf(", volume %s", statusPtr->volumeName);
 

@@ -1686,8 +1686,8 @@ ktc_newpag(void)
 	sprintf(fname, "%s%d", prefix, getuid());
 	sprintf(fname5, "%s%d", prefix5, getuid());
     } else {
-	sprintf(fname, "%sp%lu", prefix, afs_cast_uint32(pag));
-	sprintf(fname5, "%sp%lud", prefix5, (long unsigned int) pag);
+	sprintf(fname, "%sp%lu", prefix, afs_printable_uint32_lu(pag));
+	sprintf(fname5, "%sp%lud", prefix5, afs_printable_uint32_lu(pag));
     }
     ktc_set_tkt_string(fname);
 

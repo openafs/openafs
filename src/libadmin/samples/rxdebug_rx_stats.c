@@ -102,7 +102,7 @@ main(int argc, char *argv[])
     }
 
     printf("\n");
-    printf("RX stats: host %s (port %d)\n", srvrName, srvrPort);
+    printf("RX stats: host %s (port %ld)\n", srvrName, srvrPort);
     printf("\n");
     printf("    packetRequests:              %d\n", stats.packetRequests);
     printf("    receivePktAllocFailures:     %d\n",

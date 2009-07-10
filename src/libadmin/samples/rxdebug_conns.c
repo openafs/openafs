@@ -106,11 +106,11 @@ main(int argc, char *argv[])
 
     printf("\n");
     if (allconns) {
-	printf("Listing all connections for server %s (port %d)\n", srvrName,
+	printf("Listing all connections for server %s (port %ld)\n", srvrName,
 	       srvrPort);
     } else {
 	printf
-	    ("Listing only interesting connections for server %s (port %d)\n",
+	    ("Listing only interesting connections for server %s (port %ld)\n",
 	     srvrName, srvrPort);
     }
 

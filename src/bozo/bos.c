@@ -1355,14 +1355,14 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	if (mrafsParm->OptDontAskFS)
 	    strcat(tbuffer, " -DontAskFS");
 	if (mrafsParm->OptLogLevel) {
-	    sprintf(pbuffer, " -LogLevel %ld", afs_cast_int32(mrafsParm->OptLogLevel));
+	    sprintf(pbuffer, " -LogLevel %ld", afs_printable_int32_ld(mrafsParm->OptLogLevel));
 	    strcat(tbuffer, pbuffer);
 	}
 	if (mrafsParm->OptRxDebug)
 	    strcat(tbuffer, " -rxdebug");
 	if (mrafsParm->OptResidencies) {
 	    sprintf(pbuffer, " -Residencies %lu", 
-		    afs_cast_uint32(mrafsParm->OptResidencies));
+		    afs_printable_uint32_lu(mrafsParm->OptResidencies));
 	    strcat(tbuffer, pbuffer);
 	}
     }

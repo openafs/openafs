@@ -36,7 +36,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxdebug_supported_stats <host> <port>\n");
     exit(1);

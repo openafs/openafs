@@ -109,7 +109,7 @@ main(int argc, char *argv[])
     }
 
     printf("\n");
-    printf("Client %s (port %d) is in cell %s\n", srvrName, srvrPort,
+    printf("Client %s (port %ld) is in cell %s\n", srvrName, srvrPort,
 	   cellName);
     printf("\n");
 

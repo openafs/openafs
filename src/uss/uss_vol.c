@@ -1085,7 +1085,7 @@ uss_vol_GetVolInfoFromMountPoint(char *a_mountpoint)
 	return (-1);
     }
     if (vldbEntry.nServers != 1) {
-	printf("s: Volume '%s' (ID %d) exists on multiple servers!!\n",
+	printf("%s: Volume '%s' (ID %d) exists on multiple servers!!\n",
 	       uss_whoami, uss_Volume, volID);
 	return (-1);
     }

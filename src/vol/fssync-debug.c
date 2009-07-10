@@ -896,7 +896,7 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\treason         = %d (%s)\n", 
 	       vop.com.reason, reason_code_to_string(vop.com.reason));
 	printf("\t\tcommand_len    = %u\n", vop.com.command_len);
-	printf("\t\tflags          = 0x%lux\n", afs_cast_uint32(vop.com.flags));
+	printf("\t\tflags          = 0x%lux\n", afs_printable_uint32_lu(vop.com.flags));
 	printf("\t}\n");
 
 	printf("\tvop = {\n");

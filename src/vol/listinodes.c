@@ -1454,7 +1454,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 
     memset(&specinos, 0, sizeof(specinos));
 	   
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(volumeId));
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
     fd = open(oldpath, O_RDONLY);
     if (fd < 0) {
@@ -1557,7 +1557,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     }
 #endif
 
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(h.id));
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(h.id));
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
     fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
     if (fd < 0) {

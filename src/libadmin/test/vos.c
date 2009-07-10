@@ -138,11 +138,13 @@ GetAddressFromString(const char *addr_str)
     return ntohl(addr);
 }
 
+#if 0
 static void
 PrintMessage(vos_messageType_t type, char *message)
 {
     printf("%s\n", message);
 }
+#endif
 
 int
 DoVosBackupVolumeCreate(struct cmd_syndesc *as, void *arock)
@@ -1539,7 +1541,6 @@ int
 DoVosPartitionNameToId(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { PARTITION } DoVosPartitionNameToId_parm_t;
-    afs_status_t st = 0;
     unsigned int partition_id = 0;
 
     if (as->parms[PARTITION].items) {
@@ -1673,7 +1674,7 @@ Print_vos_volintInfo(afs_uint32 server, afs_uint32 partition, volintInfo* pinfo,
     
     
     printf("%sname\t\t%s\n",prefix, pinfo->name);
-    printf("%sid\t\t%lu\n",prefix, pinfo->volid);
+    printf("%sid\t\t%lu\n",prefix, afs_printable_uint32_lu(pinfo->volid));
     printf("%sserv\t\t%s\t%s\n",prefix, address,hostname);
     printf("%spart\t\t%u\n", prefix,partition);
     
@@ -1688,9 +1689,12 @@ Print_vos_volintInfo(afs_uint32 server, afs_uint32 partition, volintInfo* pinfo,
 	printf("%sstatus\t\tUNATTACHABLE\n",prefix);
 	return;
     }
-    printf("%sbackupID\t%lu\n",prefix, pinfo->backupID);
-    printf("%sparentID\t%lu\n",prefix, pinfo->parentID);
-    printf("%scloneID\t%lu\n",prefix, pinfo->cloneID);
+    printf("%sbackupID\t%lu\n",prefix,
+	   afs_printable_uint32_lu(pinfo->backupID));
+    printf("%sparentID\t%lu\n",prefix,
+	   afs_printable_uint32_lu(pinfo->parentID));
+    printf("%scloneID\t%lu\n",prefix,
+	   afs_printable_uint32_lu(pinfo->cloneID));
     printf("%sinUse\t\t%s\n",prefix, pinfo->inUse ? "Y" : "N");
     printf("%sneedsSalvaged\t%s\n",prefix, pinfo->needsSalvaged ? "Y" : "N");
     /* 0xD3 is from afs/volume.h since I had trouble including the file */
@@ -1709,21 +1713,30 @@ Print_vos_volintInfo(afs_uint32 server, afs_uint32 partition, volintInfo* pinfo,
 	printf("%stype\t\t?\n",prefix);
 	break;
     }
-    printf("%screationDate\t%-9lu\n", prefix,pinfo->creationDate);
-    printf("%saccessDate\t%-9lu\n", prefix,pinfo->accessDate);
-    printf("%supdateDate\t%-9lu\n", prefix,pinfo->updateDate);
-    printf("%sbackupDate\t%-9lu\n", prefix,pinfo->backupDate);
-    printf("%scopyDate\t%-9lu\n", prefix,pinfo->copyDate);
+    printf("%screationDate\t%-9lu\n", prefix,
+	   afs_printable_uint32_lu(pinfo->creationDate));
+    printf("%saccessDate\t%-9lu\n", prefix,
+	   afs_printable_uint32_lu(pinfo->accessDate));
+    printf("%supdateDate\t%-9lu\n", prefix,
+	   afs_printable_uint32_lu(pinfo->updateDate));
+    printf("%sbackupDate\t%-9lu\n", prefix,
+	   afs_printable_uint32_lu(pinfo->backupDate));
+    printf("%scopyDate\t%-9lu\n", prefix,
+	   afs_printable_uint32_lu(pinfo->copyDate));
 	    
     printf("%sflags\t\t%#lx\t(Optional)\n",prefix, pinfo->flags);
     printf("%sdiskused\t%u\n",prefix, pinfo->size);
     printf("%smaxquota\t%u\n",prefix, pinfo->maxquota);
-    printf("%sminquota\t%lu\t(Optional)\n",prefix, pinfo->spare0);
+    printf("%sminquota\t%lu\t(Optional)\n",prefix,
+	   afs_printable_uint32_lu(pinfo->spare0));
     printf("%sfilecount\t%u\n",prefix, pinfo->filecount);
     printf("%sdayUse\t\t%u\n",prefix, pinfo->dayUse);
-    printf("%sweekUse\t%lu\t(Optional)\n",prefix, pinfo->spare1);
-    printf("%svolUpdateCounter\t\t%lu\t(Optional)\n",prefix, pinfo->spare2);
-    printf("%sspare3\t\t%lu\t(Optional)\n",prefix, pinfo->spare3);
+    printf("%sweekUse\t%lu\t(Optional)\n",prefix,
+	   afs_printable_uint32_lu(pinfo->spare1));
+    printf("%svolUpdateCounter\t\t%lu\t(Optional)\n",prefix,
+           afs_printable_uint32_lu(pinfo->spare2));
+    printf("%sspare3\t\t%lu\t(Optional)\n",prefix,
+	   afs_printable_uint32_lu(pinfo->spare3));
 }
 
 int

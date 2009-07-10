@@ -225,8 +225,11 @@ _rxevent_Post(struct clock *when, struct clock *now,
     if (rx_Log_event) {
 	struct clock now1;
 	clock_GetTime(&now1);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %lp, %lp, %lp, %d)\n",
-		(int)now1.sec, (int)now1.usec, (int)when->sec, (int)when->usec,
+	fprintf(rx_Log_event, "%ld.%ld: rxevent_Post(%ld.%ld, %lp, %lp, %lp, %d)\n",
+		afs_printable_int32_ld(now1.sec),
+		afs_printable_int32_ld(now1.usec),
+		afs_printable_int32_ld(when->sec),
+		afs_printable_int32_ld(when->usec),
 		func, arg,
 		arg1, arg2);
     }
