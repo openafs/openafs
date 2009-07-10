@@ -122,7 +122,7 @@ volint.cs.o: volint.cs.c ${INTINCLS}
 volint.ss.o: volint.ss.c ${INTINCLS}
 volint.xdr.o: volint.xdr.c ${INTINCLS}
 vsutils.o: vsutils.c ${VINCLS} ${RINCLS} ${INTINCLS}
-volmain.o: volmain.c ${VINCLS} ${RINCLS} AFS_component_version_number.c
+volmain.o: volmain.c ${VINCLS} ${RINCLS} ${INTINCLS} AFS_component_version_number.c
 volprocs.o: volprocs.c ${VINCLS} ${RINCLS} ${INTINCLS}
 dumpstuff.o: dumpstuff.c ${VINCLS} ${RINCLS} ${INTINCLS}
 voldump.o: voldump.c ${VINCLS} ${RINCLS}

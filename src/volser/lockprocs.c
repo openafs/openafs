@@ -80,7 +80,6 @@ SetAValue(struct nvldbentry *entry, afs_int32 oserver, afs_int32 opart,
           afs_int32 nserver, afs_int32 npart, afs_int32 type)
 {
     int e;
-    afs_int32 error = 0;
 
     e = FindIndex(entry, oserver, opart, type);
     if (e == -1)

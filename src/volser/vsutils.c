@@ -13,6 +13,7 @@
 
 #include <afs/stds.h>
 #include <string.h>
+#include <ctype.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <winsock2.h>
@@ -384,7 +385,8 @@ vsu_SetCrypt(int cryptflag)
 */
 afs_int32
 vsu_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
-               struct ubik_client **uclientp, int (*secproc)())
+               struct ubik_client **uclientp,
+	       int (*secproc)(struct rx_securityClass *, afs_int32))
 {
     return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, 
 			   secproc, "vsu_ClientInit", vsu_rxkad_level,

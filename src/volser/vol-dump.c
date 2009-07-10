@@ -48,6 +48,7 @@
 #include "viceinode.h"
 #include <afs/afssyscalls.h>
 #include "acl.h"
+#include <afs/dir.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -104,7 +105,6 @@ char name[VMAXPATHLEN];
 int
 ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 {
-    int bad = 0;
     int code;
 
     code = IH_IREAD(ih, 0, to, size);
@@ -249,10 +249,9 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtim
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
-    struct afs_stat status, stat;
+    struct afs_stat status;
     register int fd;
     Volume *vp;
-    IHandle_t *ih;
     char headerName[1024];
 
     afs_int32 n;
@@ -557,7 +556,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
-    afs_sfsize_t size, tmpsize;
+    afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
     struct statfs tstatfs;
@@ -590,7 +589,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 
     if (verbose)
 	fprintf(stderr, "  howBig = %u, howMany = %u, fdh size = %u\n",
-		howBig, howMany, size);
+		(unsigned int) howBig, (unsigned int) howMany,
+		(unsigned int) size);
 
 #ifdef AFS_LARGEFILE_ENV
     {

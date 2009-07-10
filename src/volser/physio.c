@@ -33,6 +33,7 @@
 #include <afs/dir.h>
 #include <afs/ihandle.h>
 #include "vol.h"
+#include "physio.h"
 
 /* returns 0 on success, errno on failure */
 int
@@ -106,7 +107,7 @@ void
 SetSalvageDirHandle(DirHandle * dir, afs_int32 volume, afs_int32 device,
                     Inode inode)
 {
-    private SalvageCacheCheck = 1;
+    private int SalvageCacheCheck = 1;
     memset(dir, 0, sizeof(DirHandle));
 
     dir->dirh_volume = volume;

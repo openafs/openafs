@@ -57,6 +57,10 @@
 #include <errno.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
+#include <lwp.h>
+#include "volser.h"
+#include "volint.h"
+#include "volser_prototypes.h"
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 /*@printflike@*/ extern void Abort(const char *format, ...);
@@ -65,11 +69,6 @@
 #define N_SECURITY_OBJECTS 3
 
 extern struct Lock localLock;
-extern struct volser_trans *TransList();
-#ifndef AFS_PTHREAD_ENV
-extern int (*vol_PollProc) ();
-extern int IOMGR_Poll();
-#endif
 char *GlobalNameHack = NULL;
 int hackIsIn = 0;
 afs_int32 GlobalVolCloneId, GlobalVolParentId;
@@ -128,7 +127,7 @@ MyAfterProc(struct rx_call *acall, afs_int32 code)
  * if we're idle and there are no active transactions 
  */
 static void
-TryUnlock()
+TryUnlock(void)
 {
     /* if there are no running calls, and there are no active transactions, then
      * it should be safe to release any partition locks we've accumulated */
@@ -206,7 +205,7 @@ int
 volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
-    void (*old) ();
+    void (*old) (int);
 
 #ifndef AFS_LINUX20_ENV
     old = signal(SIGSYS, SIG_IGN);
@@ -324,7 +323,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %lu invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		exit(1);

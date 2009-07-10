@@ -60,9 +60,9 @@
 #include <afs/vnode.h>
 #include <afs/volume.h>
 
+#include "volint.h"
 #include "volser.h"
-
-/*@printflike@*/ extern void Log(const char *format, ...);
+#include "volser_prototypes.h"
 
 static struct volser_trans *allTrans = 0;
 static afs_int32 transCounter = 1;
@@ -126,7 +126,7 @@ afs_int32
 DeleteTrans(register struct volser_trans *atrans, afs_int32 lock)
 {
     register struct volser_trans *tt, **lt;
-    afs_int32 error;
+    Error error;
 
     if (lock) VTRANS_LOCK;
     if (atrans->refCount > 1) {
@@ -186,7 +186,7 @@ TRELE(register struct volser_trans *at)
 #define	OLDTRANSWARN	    300	/* seconds */
 static int GCDeletes = 0;
 afs_int32
-GCTrans()
+GCTrans(void)
 {
     register struct volser_trans *tt, *nt;
     afs_int32 now;
@@ -217,7 +217,7 @@ GCTrans()
 
 /*return the head of the transaction list */
 struct volser_trans *
-TransList()
+TransList(void)
 {
     return (allTrans);
 }

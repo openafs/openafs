@@ -43,6 +43,12 @@
 #include <rx/rxkad.h>
 #include <afs/kautils.h>
 #include <afs/cmd.h>
+#include <afs/ihandle.h>
+#ifdef AFS_NT40_ENV
+#include <afs/ntops.h>
+#endif
+#include <afs/vnode.h>
+#include <afs/volume.h>
 #include <errno.h>
 #define ERRCODE_RANGE 8		/* from error_table.h */
 #define	CLOCKSKEW   2		/* not really skew, but resolution */
@@ -3916,7 +3922,8 @@ dump_sig_handler(int x)
  */
 int
 UV_DumpVolume(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
-	      afs_int32 fromdate, afs_int32(*DumpFunction) (), char *rock,
+	      afs_int32 fromdate,
+	      afs_int32(*DumpFunction) (struct rx_call *, void *), void *rock,
 	      afs_int32 flags)
 {
     struct rx_connection *fromconn = (struct rx_connection *)0;
@@ -4005,13 +4012,14 @@ UV_DumpVolume(afs_uint32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 int
 UV_DumpClonedVolume(afs_uint32 afromvol, afs_int32 afromserver,
 		    afs_int32 afrompart, afs_int32 fromdate,
-		    afs_int32(*DumpFunction) (), char *rock, afs_int32 flags)
+		    afs_int32(*DumpFunction) (struct rx_call *, void *),
+		    void *rock, afs_int32 flags)
 {
     struct rx_connection *fromconn = (struct rx_connection *)0;
     struct rx_call *fromcall = (struct rx_call *)0;
     afs_int32 fromtid = 0, rxError = 0, rcode = 0;
     afs_int32 clonetid = 0;
-    afs_int32 code = 0, vcode = 0, error = 0;
+    afs_int32 code = 0, error = 0;
     afs_uint32 clonevol = 0;
     char vname[64];
     time_t tmv = fromdate;
@@ -4148,7 +4156,8 @@ UV_DumpClonedVolume(afs_uint32 afromvol, afs_int32 afromserver,
 int
 UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_uint32 tovolid,
 		  afs_int32 toparentid, char tovolname[], int flags,
-		  afs_int32(*WriteData) (), char *rock)
+		  afs_int32(*WriteData) (struct rx_call *, void *),
+		  void *rock)
 {
     struct rx_connection *toconn, *tempconn;
     struct rx_call *tocall;
@@ -4629,8 +4638,9 @@ UV_RestoreVolume2(afs_int32 toserver, afs_int32 topart, afs_uint32 tovolid,
 
 int
 UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_uint32 tovolid,
-		 char tovolname[], int flags, afs_int32(*WriteData) (),
-		 char *rock)
+		 char tovolname[], int flags,
+		 afs_int32(*WriteData) (struct rx_call *, void *),
+		 void *rock)
 {
     return UV_RestoreVolume2(toserver, topart, tovolid, 0, tovolname, flags,
 			     WriteData, rock);

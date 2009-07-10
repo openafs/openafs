@@ -46,8 +46,11 @@
 #include <afs/daemon_com.h>
 #include <afs/fssync.h>
 #include <afs/acl.h>
+#include <afs/com_err.h>
+#include <afs/vol_prototypes.h>
 #include "volser.h"
 #include "volint.h"
+#include "dumpstuff.h"
 
 #ifndef AFS_NT40_ENV
 #ifdef O_LARGEFILE
@@ -62,26 +65,6 @@
 /*@printflike@*/ extern void Log(const char *format, ...);
 
 extern int DoLogging;
-
-/* This iod stuff is a silly little package to emulate the old qi_in stuff, which
-   emulated the stdio stuff.  There is a big assumption here, that the
-   rx_Read will never be called directly, by a routine like readFile, when
-   there is an old character that was pushed back with iod_ungetc.  This
-   is really bletchy, and is here for compatibility only.  Eventually,
-   we should define a volume format that doesn't require
-   the pushing back of characters (i.e. characters should not double both
-   as an end marker and a begin marker) */
-struct iod {
-    struct rx_call *call;	/* call to which to write, might be an array */
-    int device;			/* dump device ID for volume */
-    int parentId;		/* dump parent ID for volume */
-    struct DiskPartition64 *dumpPartition;	/* Dump partition. */
-    struct rx_call **calls;	/* array of pointers to calls */
-    int ncalls;			/* how many calls/codes in array */
-    int *codes;			/* one return code for each call */
-    char haveOldChar;		/* state for pushing back a character */
-    char oldChar;
-};
 
 
 /* Forward Declarations */
@@ -202,7 +185,7 @@ iod_getc(register struct iod *iodp)
 static int
 ReadShort(register struct iod *iodp, register unsigned short *sp)
 {
-    register b1, b0;
+    register int b1, b0;
     b1 = iod_getc(iodp);
     if (b1 == EOF)
 	return 0;
@@ -237,7 +220,6 @@ static void
 ReadString(register struct iod *iodp, register char *to, register int maxa)
 {
     register int c;
-    int first = 1;
 
     *to = '\0';
     if (maxa == 0)
@@ -264,7 +246,7 @@ ReadByteString(register struct iod *iodp, register byte * to,
 static int
 ReadVolumeHeader(register struct iod *iodp, VolumeDiskData * vol)
 {
-    register tag;
+    register int tag;
     afs_uint32 trash;
     memset(vol, 0, sizeof(*vol));
     while ((tag = iod_getc(iodp)) > D_MAX && tag != EOF) {
@@ -486,7 +468,7 @@ DumpBool(register struct iod *iodp, char tag, unsigned int value)
 static int
 DumpString(register struct iod *iodp, char tag, register char *s)
 {
-    register n;
+    register int n;
     int code = 0;
     code = iod_Write(iodp, &tag, 1);
     if (code != 1)
@@ -930,7 +912,7 @@ int
 ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 	     int del)
 {
-    int i, nVnodes, offset, code, index = 0;
+    int i, nVnodes, offset, code;
     afs_int32 *Buf;
     int cnt = 0;
     int size;
@@ -1130,7 +1112,7 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 {
     afs_int32 vnodeNumber;
     char buf[SIZEOF_LARGEDISKVNODE];
-    register tag;
+    register int tag;
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
     struct VnodeDiskObject oldvnode;
     int idx;
@@ -1378,7 +1360,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 static int
 ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp)
 {
-    register tag;
+    register int tag;
     afs_uint32 beginMagic;
     if (iod_getc(iodp) != D_DUMPHEADER || !ReadInt32(iodp, &beginMagic)
 	|| !ReadInt32(iodp, (afs_uint32 *) & hp->version)
@@ -1547,7 +1529,7 @@ SizeDumpDumpHeader(register struct iod *iodp, register Volume * vp,
 		   afs_int32 fromtime, register struct volintSize *v_size)
 {
     int code = 0;
-    int UseLatestReadOnlyClone = 1;
+/*    int UseLatestReadOnlyClone = 1; */
 /*    afs_int32 dumpTimes[2]; */
     afs_uint64 addvar;
 /*    iodp->device = vp->device; */

@@ -48,6 +48,10 @@
 #include "partition.h"
 #include "viceinode.h"
 #include "vol.h"
+#include "volint.h"
+#include "volser.h"
+#include "physio.h"
+#include "volser_prototypes.h"
 #ifdef AFS_RXOSD_SUPPORT
 #include "rxosd.h"
 #include "vol_osd.h"
@@ -158,8 +162,9 @@ ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class,
 	}
     }
     if (m->verbose) {
-	sprintf(m->line, "Volume %u has %u %s vnodes in volume %uu\n", 
-			V_parentId(vol), *length, class? "small":"large");
+	sprintf(m->line, "Volume %u has %u %s vnodes in volume %u\n",
+			V_parentId(vol), *length, class? "small":"large",
+			V_id(vol));
 	rx_Write(m->call, m->line, strlen(m->line));
     }
     
@@ -317,7 +322,6 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)&buf;
     FdHandle_t *fdP = 0;
     FdHandle_t *newfdP = 0;
-    StreamHandle_t *newstream = 0;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct VnodeExtract *e;
     afs_uint64 size;
@@ -358,9 +362,6 @@ afs_int32 copyVnodes(struct Msg *m, Volume *vol, Volume *newvol,
                  */ 
 		IHandle_t *newh = 0;
 		IHandle_t *h = 0;
-		FdHandle_t *infdP = 0;
-		FdHandle_t *outfdP = 0;
-		char *tbuf = malloc(2048);
 #if defined(NEARINODE_HINT) && !defined(AFS_NAMEI_ENV)
 		Inode nearInode;
 		V_pref(vol,nearInode)
@@ -525,13 +526,15 @@ createMountpoint(Volume *vol, Volume *newvol, struct VnodeDiskObject *parent,
     afs_uint64 offset, size;
     afs_int32 class = vSmall;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
+#if defined(NEARINODE_HINT) && !defined(AFS_NAMEI_ENV)
     Inode nearInode = 0;
+#endif
     AFSFid fid;
     struct timeval now;
     afs_uint32 newvN;
     char symlink[32];
 
-    TM_GetTimeOfDay(&now, 0);
+    FT_GetTimeOfDay(&now, 0);
     fdP = IH_OPEN(vol->vnodeIndex[vSmall].handle);
     if (!fdP) {
 	Log("split volume: error opening small vnode index of %u\n", V_id(vol));
@@ -709,7 +712,7 @@ afs_int32
 split_volume(struct rx_call *call, Volume *vol, Volume *newvol, 
 	     afs_uint32 where, afs_int32 verbose)
 {
-    afs_int32 code = 0;
+    Error code = 0;
     struct VnodeExtract *dirList = 0;
     struct VnodeExtract *fileList = 0;
     afs_uint64 blocks = 0;
