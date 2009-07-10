@@ -33,8 +33,12 @@
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
+#include "kkids.h"
+
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif
@@ -75,9 +79,6 @@ int CommandProc(struct cmd_syndesc *, void *);
 
 static int zero_argc;
 static char **zero_argv;
-extern int init_child(char *myname);
-extern int give_to_child(char *pw);
-extern int terminate_child(char *pw);
 
 #ifdef AFS_NT40_ENV
 struct passwd {
@@ -164,6 +165,7 @@ read_pass(char *passwd, int len, char *prompt, int verify)
     return code;
 }
 
+#if 0
 static int
 password_ok(char *newpw, int *insist)
 {
@@ -176,6 +178,7 @@ password_ok(char *newpw, int *insist)
     }
     return 1;			/* lie about it */
 }
+#endif
 
 static char rn[] = "kpasswd";	/* Routine name */
 static int Pipe = 0;		/* reading from a pipe */
@@ -546,7 +549,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	conn = 0;
     }
     rx_Finalize();
-    terminate_child(NULL);
+    terminate_child();
     exit(code);
 
   no_change:			/* yuck, yuck, yuck */
@@ -557,6 +560,6 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     memset(npasswd, 0, sizeof(npasswd));
     printf("Password for '%s' in cell '%s' unchanged.\n\n", pw->pw_name,
 	   cell);
-    terminate_child(NULL);
+    terminate_child();
     exit(code ? code : 1);
 }

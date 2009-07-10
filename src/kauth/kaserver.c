@@ -40,12 +40,14 @@
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+#include <afs/audit.h>
 #include <ubik.h>
 #include <sys/stat.h>
 #include "kauth.h"
 #include "kautils.h"
 #include "kaserver.h"
-
+#include "kadatabase.h"
+#include "kaprocs.h"
 
 struct kadstats dynamic_statistics;
 struct ubik_dbase *KA_dbase;
@@ -72,8 +74,7 @@ static int debugOutput;
 
 /* check whether caller is authorized to manage RX statistics */
 int
-KA_rxstat_userok(call)
-     struct rx_call *call;
+KA_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(KA_conf, call, NULL);
 }
@@ -92,7 +93,7 @@ es_Report(char *fmt, ...)
 }
 
 static void
-initialize_dstats()
+initialize_dstats(void)
 {
     memset(&dynamic_statistics, 0, sizeof(dynamic_statistics));
     dynamic_statistics.start_time = time(0);
@@ -100,10 +101,8 @@ initialize_dstats()
 }
 
 static int
-convert_cell_to_ubik(cellinfo, myHost, serverList)
-     struct afsconf_cell *cellinfo;
-     afs_int32 *myHost;
-     afs_int32 *serverList;
+convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_int32 *myHost,
+		     afs_int32 *serverList)
 {
     int i;
     char hostname[64];
@@ -128,10 +127,7 @@ convert_cell_to_ubik(cellinfo, myHost, serverList)
 }
 
 static afs_int32
-kvno_admin_key(rock, kvno, key)
-     char *rock;
-     afs_int32 kvno;
-     struct ktc_encryptionKey *key;
+kvno_admin_key(void *rock, afs_int32 kvno, struct ktc_encryptionKey *key)
 {
     return ka_LookupKvno(0, KA_ADMIN_NAME, KA_ADMIN_INST, kvno, key);
 
@@ -147,9 +143,8 @@ kvno_admin_key(rock, kvno, key)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     afs_int32 code;
     char *whoami = argv[0];
@@ -171,15 +166,11 @@ main(argc, argv)
     struct rx_securityClass *sca[1];
     struct rx_securityClass *scm[3];
 
-    extern int afsconf_ClientAuthSecure();
-    extern int afsconf_ServerAuth();
-    extern int afsconf_CheckAuth();
-
     extern int rx_stackSize;
-    extern int KAA_ExecuteRequest();
-    extern int KAT_ExecuteRequest();
-    extern int KAM_ExecuteRequest();
-    extern int RXSTATS_ExecuteRequest();
+    extern int KAA_ExecuteRequest(struct rx_call *);
+    extern int KAT_ExecuteRequest(struct rx_call *);
+    extern int KAM_ExecuteRequest(struct rx_call *);
+    extern int RXSTATS_ExecuteRequest(struct rx_call *);
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -291,7 +282,7 @@ main(argc, argv)
 	    goto usage;
 	}
     }
-    if (code = ka_CellConfig(cellservdb))
+    if ((code = ka_CellConfig(cellservdb)))
 	goto abort;
     cell = ka_LocalCell();
     KA_conf = afsconf_Open(cellservdb);
@@ -323,7 +314,7 @@ main(argc, argv)
 	afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
 				    &cellinfo, &clones);
     if (servers) {
-	if (code = ubik_ParseServerList(argc, argv, &myHost, serverList)) {
+	if ((code = ubik_ParseServerList(argc, argv, &myHost, serverList))) {
 	    afs_com_err(whoami, code, "Couldn't parse server list");
 	    exit(1);
 	}
@@ -455,7 +446,7 @@ main(argc, argv)
     if (init_kaprocs(lclpath, initFlags))
 	return -1;
 
-    if (code = init_krb_udp()) {
+    if ((code = init_krb_udp())) {
 	ViceLog(0,
 		("Failed to initialize UDP interface; code = %d.\n", code));
 	ViceLog(0, ("Running without UDP access.\n"));

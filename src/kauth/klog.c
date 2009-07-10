@@ -215,7 +215,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    afs_com_err(rn, code, "Can't get local cell name!");
 	KLOGEXIT(code);
     }
-    if (code = ka_CellToRealm(lcell, lrealm, 0))
+    if ((code = ka_CellToRealm(lcell, lrealm, 0)))
 	goto nocell;
 
     strcpy(instance, "");
@@ -342,7 +342,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (!foundExplicitCell)
 	strcpy(realm, lcell);
-    if (code = ka_CellToRealm(realm, realm, &local)) {
+    if ((code = ka_CellToRealm(realm, realm, &local))) {
 	if (!Silent)
 	    afs_com_err(rn, code, "Can't convert cell to realm");
 	KLOGEXIT(code);

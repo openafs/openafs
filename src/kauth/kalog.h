@@ -52,3 +52,6 @@ typedef struct {
 #else
 #define KALOG(a,b,c,d,e,f,g) ka_log(a,b,c,d,e,f,g)
 #endif
+
+extern void kalog_log(char *, char *, char *, char *, char *, int, int);
+extern void kalog_Init(void);

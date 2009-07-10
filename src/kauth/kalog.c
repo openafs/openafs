@@ -40,7 +40,8 @@ extern afs_int32 verbose_track;
 
 DBM *kalog_db;
 
-kalog_Init()
+void
+kalog_Init(void)
 {
     OpenLog(AFSDIR_SERVER_KALOGDB_FILEPATH);	/* set up logging */
     SetupLogSignals();
@@ -52,9 +53,9 @@ kalog_Init()
 }
 
 /* log a ticket usage */
-kalog_log(principal, instance, sprincipal, sinstance, realm, hostaddr, type)
-     char *principal, *instance, *sprincipal, *sinstance, *realm;
-     int hostaddr, type;
+void
+kalog_log(char *principal, char *instance, char *sprincipal,
+	  char *sinstance, char *realm, int hostaddr, int type)
 {
     char keybuf[512];		/* not random! 63 . 63 , 63 . 63 max key */
     datum key, data;

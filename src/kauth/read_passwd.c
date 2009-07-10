@@ -24,8 +24,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #else
-char *strcpy();
-int strcmp();
+#include <string.h>
 #endif
 #if defined(AFS_AIX_ENV)
 #include <signal.h>
@@ -53,10 +52,7 @@ int read_pw_string();
 
 /*** Routines ****************************************************** */
 int
-des_read_password(k, prompt, verify)
-     C_Block *k;
-     char *prompt;
-     int verify;
+des_read_password(C_Block *k, char *prompt, int verify)
 {
     int ok;
     char key_string[BUFSIZ];
@@ -84,9 +80,7 @@ des_read_password(k, prompt, verify)
    */
 
 static int
-good_gets(s, max)
-     char *s;
-     int max;
+good_gets(char *s, int max)
 {
     int l;			/* length of string read */
     if (!fgets(s, max, stdin)) {
@@ -112,11 +106,7 @@ good_gets(s, max)
 #endif
 
 int
-read_pw_string(s, max, prompt, verify)
-     char *s;
-     int max;
-     char *prompt;
-     int verify;
+read_pw_string(char *s, int max, char *prompt, int verify)
 {
     int ok = 0;
     int len;			/* password length */
@@ -240,10 +230,10 @@ read_pw_string(s, max, prompt, verify)
  * this can be static since we should never have more than
  * one set saved....
  */
-static int (*old_sigfunc[NSIG]) ();
+static int (*old_sigfunc[NSIG]) (int);
 
 static
-push_signals()
+push_signals(void)
 {
     register i;
     for (i = 0; i < NSIG; i++)
@@ -251,7 +241,7 @@ push_signals()
 }
 
 static
-pop_signals()
+pop_signals(void)
 {
     register i;
     for (i = 0; i < NSIG; i++)
@@ -259,9 +249,7 @@ pop_signals()
 }
 
 static void
-sig_restore(sig, code, scp)
-     int sig, code;
-     struct sigcontext *scp;
+sig_restore(int sig, int code, struct sigcontext *scp)
 {
     longjmp(env, 1);
 }
@@ -269,7 +257,7 @@ sig_restore(sig, code, scp)
 
 #if	defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
 static int
-catch()
+catch(void)
 {
     ++intrupt;
 }

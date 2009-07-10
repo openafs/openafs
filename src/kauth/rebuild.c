@@ -27,6 +27,8 @@
 #include <time.h>
 #include <ubik.h>
 #include <afs/cmd.h>
+#include <des.h>
+#include <des_prototypes.h>
 
 #include <afs/com_err.h>
 

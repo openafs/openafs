@@ -21,6 +21,7 @@
 #include "AFS_component_version_number.c"
 
   /* returns 0 if the password is long enough, otherwise non-zero  */
+int
 main(int argc, char *argv[])
 {
     char oldpassword[512];

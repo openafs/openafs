@@ -24,6 +24,7 @@
 #include <winsock2.h>
 #include <afs/fs_utils.h>
 #else
+#include <unistd.h>
 #include <netinet/in.h>
 #include <afs/venus.h>
 #endif
@@ -33,6 +34,8 @@
 #include <afs/prs_fs.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "kkids.h"
 
 #define MAXNAME 100
 #define MAXSIZE 2048
@@ -300,7 +303,6 @@ is_secure(char *dir)
     struct ViceIoctl blob;
     struct AclEntry *te;
     char space[2046];
-    int secure = 1;
     afs_int32 code;
     struct Acl *ta;
 
@@ -465,7 +467,7 @@ give_to_child(char *pw)
 /* quickly and painlessly
  */
 int
-terminate_child(char *pw)
+terminate_child(void)
 {
     int rc;
     rc = 0;

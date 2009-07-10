@@ -38,10 +38,13 @@
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
+#include <des.h>
+#include <des_prototypes.h>
 
 #include "kauth.h"
 #include "kautils.h"
 #include "kaport.h"
+#include "kkids.h"
 
 #define CMD_PARSER_AMBIG_FIX 1	/* allow ambiguous aliases */
 
@@ -56,7 +59,7 @@ static char myName[510];	/* almost like whoami save with path and without : */
 static int finished;
 static int zero_argc;
 static char **zero_argv;
-afs_uint32 ka_islocked();
+afs_uint32 ka_islocked(char *, char *, afs_uint32 *);
 
 afs_int32
 DefaultCell(void)
@@ -749,7 +752,7 @@ StringToKey(struct cmd_syndesc *as, void *arock)
 	}
 	ucstring(realm, realm, sizeof(realm));
     } else {
-	if (code = DefaultCell())
+	if ((code = DefaultCell()))
 	    return code;
 	ucstring(realm, cell, sizeof(realm));
     }
@@ -962,7 +965,7 @@ ListTicket(struct ktc_principal *server, int verbose)
     return 0;
 }
 
-static
+static int
 GetTicket(struct cmd_syndesc *as, void *arock)
 {
     int code;
@@ -984,7 +987,7 @@ GetTicket(struct cmd_syndesc *as, void *arock)
 	return KABADCMD;
     }
     if (server.cell[0] == 0) {
-	if (code = DefaultCell())
+	if ((code = DefaultCell()))
 	    return code;
 	strcpy(server.cell, cell);
     } else {
@@ -1008,7 +1011,7 @@ GetTicket(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-static
+static int
 GetPassword(struct cmd_syndesc *as, void *arock)
 {
     int code;
@@ -1285,7 +1288,6 @@ NoAuth(struct cmd_syndesc *as, void *arock)
 static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
-    extern struct passwd *getpwuid();
     struct ktc_encryptionKey key;
     struct ktc_principal auth_server, auth_token, client;
     char realm[MAXKTCREALMLEN];
@@ -1540,7 +1542,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 
 /* These are some helpful command that deal with the cache managers tokens. */
 
-static
+static int
 ForgetTicket(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -1594,7 +1596,7 @@ ForgetTicket(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-static
+static int
 ListTickets(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
@@ -1614,7 +1616,7 @@ ListTickets(struct cmd_syndesc *as, void *arock)
 	    return code;
 	}
 	if (server.cell[0] == 0) {
-	    if (code = DefaultCell())
+	    if ((code = DefaultCell()))
 		return code;
 	    strcpy(server.cell, cell);
 	} else {
@@ -1816,7 +1818,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 
     strcpy(whoami, "kas");
 
-    if (code = cmd_Dispatch(cmd_argc, cmd_argv)) {
+    if ((code = cmd_Dispatch(cmd_argc, cmd_argv))) {
 	return code;
     }
 

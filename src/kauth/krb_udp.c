@@ -38,6 +38,8 @@
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/auth.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include <ubik.h>
 
 #include "kauth.h"
@@ -47,6 +49,7 @@
 #include "kaport.h"
 #include "afs/audit.h"
 #include "kalog.h"
+#include "kadatabase.h"
 
 /* my kerberos error codes */
 #define KERB_ERR_BAD_MSG_TYPE  99
@@ -118,18 +121,10 @@ FiveMinuteCheckLWP(void *unused)
 
 
 static afs_int32
-create_cipher(cipher, cipherLen, sessionKey, sname, sinst, start, end, kvno,
-	      ticket, ticketLen, key)
-     char *cipher;
-     int *cipherLen;
-     struct ktc_encryptionKey *sessionKey;
-     char *sname;
-     char *sinst;
-     Date start, end;
-     afs_int32 kvno;
-     char *ticket;
-     int ticketLen;
-     struct ktc_encryptionKey *key;
+create_cipher(char *cipher, int *cipherLen,
+	      struct ktc_encryptionKey *sessionKey, char *sname,
+	      char *sinst, Date start, Date end, afs_int32 kvno,
+	      char *ticket, int ticketLen, struct ktc_encryptionKey *key)
 {
     char *answer;
     int slen;
@@ -168,7 +163,7 @@ create_cipher(cipher, cipherLen, sessionKey, sname, sinst, start, end, kvno,
 	printf("\n");
     }
 
-    if (code = des_key_sched(key, schedule))
+    if ((code = des_key_sched(key, schedule)))
 	printf("In KAAuthenticate: key_sched returned %d\n", code);
     des_pcbc_encrypt(cipher, cipher, len, schedule, key, ENCRYPT);
     *cipherLen = round_up_to_ebs(len);
@@ -182,14 +177,8 @@ create_cipher(cipher, cipherLen, sessionKey, sname, sinst, start, end, kvno,
 }
 
 static afs_int32
-create_reply(ans, name, inst, startTime, endTime, kvno, cipher, cipherLen)
-     struct packet *ans;
-     char *name;
-     char *inst;
-     Date startTime, endTime;
-     afs_int32 kvno;
-     char *cipher;
-     int cipherLen;
+create_reply(struct packet *ans, char *name, char *inst, Date startTime,
+	     Date endTime, afs_int32 kvno, char *cipher, int cipherLen)
 {
     char *answer = ans->data;
     int slen;
@@ -223,14 +212,9 @@ create_reply(ans, name, inst, startTime, endTime, kvno, cipher, cipherLen)
 }
 
 static afs_int32
-check_auth(pkt, auth, authLen, key, name, inst, cell)
-     struct packet *pkt;
-     char *auth;
-     int authLen;
-     struct ktc_encryptionKey *key;
-     char *name;
-     char *inst;
-     char *cell;
+check_auth(struct packet *pkt, char *auth, int authLen,
+	   struct ktc_encryptionKey *key, char *name, char *inst,
+	   char *cell)
 {
     char *packet;
     des_key_schedule schedule;
@@ -260,15 +244,9 @@ check_auth(pkt, auth, authLen, key, name, inst, cell)
 }
 
 afs_int32
-UDP_Authenticate(ksoc, client, name, inst, startTime, endTime, sname, sinst)
-     int ksoc;
-     struct sockaddr_in *client;
-     char *name;
-     char *inst;
-     Date startTime;
-     Date endTime;
-     char *sname;
-     char *sinst;
+UDP_Authenticate(int ksoc, struct sockaddr_in *client, char *name,
+		 char *inst, Date startTime, Date endTime, char *sname,
+		 char *sinst)
 {
     struct ubik_trans *tt;
     afs_int32 to;		/* offset of block */
@@ -290,7 +268,7 @@ UDP_Authenticate(ksoc, client, name, inst, startTime, endTime, sname, sinst)
     COUNT_REQ(UAuthenticate);
     if (!name_instance_legal(name, inst))
 	return KERB_ERR_NAME_EXP;	/* KABADNAME */
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	return code;
 
     code = FindBlock(tt, name, inst, &to, &tentry);
@@ -414,15 +392,9 @@ UDP_Authenticate(ksoc, client, name, inst, startTime, endTime, sname, sinst)
 }
 
 afs_int32
-UDP_GetTicket(ksoc, pkt, kvno, authDomain, ticket, ticketLen, auth, authLen)
-     int ksoc;
-     struct packet *pkt;
-     afs_int32 kvno;
-     char *authDomain;
-     char *ticket;
-     int ticketLen;
-     char *auth;
-     int authLen;
+UDP_GetTicket(int ksoc, struct packet *pkt, afs_int32 kvno,
+	      char *authDomain, char *ticket, int ticketLen, char *auth,
+	      int authLen)
 {
     afs_int32 code;
     struct ktc_encryptionKey tgskey;
@@ -460,7 +432,7 @@ UDP_GetTicket(ksoc, pkt, kvno, authDomain, ticket, ticketLen, auth, authLen)
 
     COUNT_REQ(UGetTicket);
 
-    if (code = InitAuthServ(&tt, LOCKREAD, this_op))
+    if ((code = InitAuthServ(&tt, LOCKREAD, this_op)))
 	goto fail;
     code =
 	ka_LookupKvno(tt, KA_TGS_NAME,
@@ -621,11 +593,7 @@ UDP_GetTicket(ksoc, pkt, kvno, authDomain, ticket, ticketLen, auth, authLen)
 }
 
 static int
-err_packet(ksoc, pkt, code, reason)
-     int ksoc;
-     struct packet *pkt;
-     afs_int32 code;
-     char *reason;
+err_packet(int ksoc, struct packet *pkt, afs_int32 code, char *reason)
 {
     struct packet ans;
     char *answer = ans.data;
@@ -678,9 +646,7 @@ err_packet(ksoc, pkt, code, reason)
 }
 
 int
-process_udp_auth(ksoc, pkt)
-     int ksoc;
-     struct packet *pkt;
+process_udp_auth(int ksoc, struct packet *pkt)
 {
     char *packet = pkt->rest;
     char name[MAXKTCNAMELEN];
@@ -747,9 +713,7 @@ process_udp_auth(ksoc, pkt)
 }
 
 int
-process_udp_appl(ksoc, pkt)
-     int ksoc;
-     struct packet *pkt;
+process_udp_appl(int ksoc, struct packet *pkt)
 {
     char *packet = pkt->rest;
     afs_int32 kvno;
@@ -792,9 +756,7 @@ process_udp_appl(ksoc, pkt)
 }
 
 void
-process_udp_request(ksoc, pkt)
-     int ksoc;
-     struct packet *pkt;
+process_udp_request(int ksoc, struct packet *pkt)
 {
     char *packet = pkt->data;
     unsigned char version, auth_msg_type;
@@ -915,10 +877,11 @@ SocketListener(void *unused)
 
 #include "AFS_component_version_number.c"
 
-main()
+int
+main(int, char **)
 #else
 afs_int32
-init_krb_udp()
+init_krb_udp(void)
 #endif
 {
     struct sockaddr_in taddr;

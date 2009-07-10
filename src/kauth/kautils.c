@@ -27,6 +27,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <des.h>
+#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
 

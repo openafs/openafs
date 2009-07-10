@@ -47,34 +47,15 @@
 #include "kauth_internal.h"
 #include "afs/audit.h"
 
+#include "kadatabase.h"
+#include "kaprocs.h"
+
 extern struct ubik_dbase *KA_dbase;
 struct kaheader cheader;
 Date cheaderReadTime;		/* time cheader last read in */
 extern struct afsconf_dir *KA_conf;	/* for getting cell info */
 
-afs_int32 kamCreateUser(struct rx_call *call, char *aname, char *ainstance, 
-		        EncryptionKey ainitpw);
-afs_int32 ChangePassWord(struct rx_call *call, char *aname, char *ainstance, 
-		         ka_CBS *arequest, ka_BBS *oanswer);
-afs_int32 kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
-	                 afs_int32 akvno, EncryptionKey apassword);
-afs_int32 kamSetFields(struct rx_call *call, char *aname, char *ainstance,
-		       afs_int32 aflags, Date aexpiration, 
-		       afs_int32 alifetime, afs_int32 amaxAssociates,
-		       afs_uint32 misc_auth_bytes, afs_int32 spare2);
-afs_int32 kamDeleteUser(struct rx_call *call, char *aname, char *ainstance);
-afs_int32 kamGetEntry(struct rx_call *call, char *aname, char *ainstance,
-		      afs_int32 aversion, kaentryinfo *aentry);
-afs_int32 kamListEntry(struct rx_call *call, afs_int32 previous_index,
-		       afs_int32 *index, afs_int32 *count, kaident *name);
-afs_int32 kamGetStats(struct rx_call *call, afs_int32 version, 
-		      afs_int32 *admin_accounts, kasstats *statics,
-		      kadstats *dynamics);
-afs_int32 kamGetPassword(struct rx_call *call, char *name, 
-		         EncryptionKey *password);
-afs_int32 kamGetRandomKey(struct rx_call *call, EncryptionKey *key);
-afs_int32 kamDebug(struct rx_call *call, afs_int32 version,
-		   int checkDB, struct ka_debugInfo *info);
+
 
 char lrealm[MAXKTCREALMLEN];
 
@@ -95,15 +76,13 @@ static afs_int32 autoCPWInterval;
 static afs_int32 autoCPWUpdates;
 
 static afs_int32 set_password(struct ubik_trans *tt, char *name, 
-			      char *instance, EncryptionKey *password, 
+			      char *instance,
+			      struct ktc_encryptionKey *password,
 			      afs_int32 kvno, afs_int32 caller);
-
-extern afs_int32 InitAuthServ(struct ubik_trans **tt, int lock,
-			      int *this_op);
 static afs_int32 impose_reuse_limits(EncryptionKey *password, 
 				     struct kaentry *tentry);
 static int create_user(struct ubik_trans *tt, char *name, char *instance,
-		       EncryptionKey *key, afs_int32 caller, 
+		       struct ktc_encryptionKey *key, afs_int32 caller,
 		       afs_int32 flags);
 
 /* This routine is called whenever an RPC interface needs the time.  It uses
@@ -260,7 +239,7 @@ initialize_database(struct ubik_trans *tt)
    parameter passes some information about the command line arguments. */
 
 afs_int32
-init_kaprocs(char *lclpath, int initFlags)
+init_kaprocs(const char *lclpath, int initFlags)
 {
     int code;
     struct ubik_trans *tt;
@@ -571,7 +550,8 @@ special_name(char *name, char *instance)
 
 static int
 create_user(struct ubik_trans *tt, char *name, char *instance,
-	    EncryptionKey *key, afs_int32 caller, afs_int32 flags)
+	    struct ktc_encryptionKey *key, afs_int32 caller,
+	    afs_int32 flags)
 {
     register int code;
     afs_int32 to;
@@ -822,7 +802,7 @@ impose_reuse_limits(EncryptionKey *password, struct kaentry *tentry)
 
 static afs_int32
 set_password(struct ubik_trans *tt, char *name, char *instance, 
-	     EncryptionKey *password, afs_int32 kvno, afs_int32 caller)
+	     struct ktc_encryptionKey *password, afs_int32 kvno, afs_int32 caller)
 {
     afs_int32 code;
     afs_int32 to;		/* offset of block */
@@ -880,7 +860,7 @@ set_password(struct ubik_trans *tt, char *name, char *instance,
 
     tentry.change_password_time = htonl(now);
 
-    if (code = kawrite(tt, to, &tentry, sizeof(tentry)))
+    if ((code = kawrite(tt, to, (char *) &tentry, sizeof(tentry))))
 	return (KAIO);
     return (0);
 }
@@ -1470,7 +1450,7 @@ kamSetFields(struct rx_call *call,
 
     tentry.modification_time = htonl(now);
     tentry.modification_id = htonl(caller);
-    code = kawrite(tt, tentry_offset, &tentry, sizeof(tentry));
+    code = kawrite(tt, tentry_offset, (char *) &tentry, sizeof(tentry));
     if (code)
 	goto abort;
 
