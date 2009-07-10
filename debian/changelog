@@ -1,3 +1,9 @@
+openafs (1.4.11+dfsg-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 10 Jul 2009 13:57:55 -0700
+
 openafs (1.4.11~pre3+dfsg-1) unstable; urgency=low
 
   * New upstream release candidate.
