@@ -13,6 +13,8 @@ statindex 13
 
 %#include <rx/rx.h>
 %#include <rx/rx_null.h>
+%#include "global.h"
+%#include "update_internal.h"
 
 %#define	UPDATE_SERVICEPORT			htonl(0) /* user server's port */
 %#define	UPDATE_SERVICEID			4

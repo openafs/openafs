@@ -52,6 +52,7 @@
 #endif
 #include "update.h"
 #include "global.h"
+#include "update_internal.h"
 
 char *whoami;
 static int verbose;
@@ -62,6 +63,10 @@ static int GetFileFromUpServer(struct rx_connection *conn, char *filename,
 			       afs_int32 atime, afs_int32 mtime);
 static int RenameNewFiles(struct filestr *modFiles);
 static int PathsAreEquivalent(char *path1, char *path2);
+int FetchFile(struct rx_call *, char *, char *, int);
+int IsCompatible(char *, afs_int32, afs_int32);
+int NotOnHost(char *, struct filestr *);
+int update_ReceiveFile(int, struct rx_call *, struct stat *);
 
 afs_int32
 GetServer(char *aname)
@@ -80,7 +85,7 @@ GetServer(char *aname)
 
 
 int
-osi_audit()
+osi_audit(void)
 {
 /* this sucks but it works for now.
 */
