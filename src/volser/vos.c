@@ -4542,6 +4542,9 @@ BackSys(register struct cmd_syndesc *as, void *arock)
     int same = 0;
     struct cmd_item *ti;
     int match = 0;
+#ifndef HAVE_POSIX_REGEX
+    char *ccode;
+#endif
 
     memset(&attributes, 0, sizeof(struct VldbListByAttributes));
     attributes.Mask = 0;
