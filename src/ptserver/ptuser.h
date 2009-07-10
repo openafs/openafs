@@ -12,10 +12,6 @@
 
 #include "afs/ptint.h"
 
-/* display.c */
-extern int pr_PrintEntry(FILE *f, int hostOrder, afs_int32 ea, 
- 			 struct prentry *e, int indent);
- 
 /* ptuser.c */
 extern afs_int32 pr_Initialize(afs_int32 secLevel, const char *confDir, 
  			       char *cell);

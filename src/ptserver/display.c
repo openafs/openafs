@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include "ptserver.h"
 
+#include "display.h"
 
 #ifdef PR_REMEMBER_TIMES
 

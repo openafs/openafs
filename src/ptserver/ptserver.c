@@ -210,7 +210,7 @@ main(int argc, char **argv)
     char hostname[64];
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
-    extern int RXSTATS_ExecuteRequest();
+    extern int RXSTATS_ExecuteRequest(struct rx_call *);
 #if 0
     struct ktc_encryptionKey tkey;
 #endif

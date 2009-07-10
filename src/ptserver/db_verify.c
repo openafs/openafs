@@ -55,10 +55,11 @@
 #include "pterror.h"
 #include "ptserver.h"
 #include "ptuser.h"
+#include "display.h"
 
 struct prheader cheader;
 int fd;
-char *pr_dbaseName;
+const char *pr_dbaseName;
 char *whoami = "db_verify";
 #define UBIK_HEADERSIZE 64
 

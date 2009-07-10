@@ -148,7 +148,7 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
     struct prentry uentry, gentry;
     struct ubik_hdr *uh;
     char *dfile = 0;
-    char *pbase = AFSDIR_SERVER_PRDB_FILEPATH;
+    const char *pbase = AFSDIR_SERVER_PRDB_FILEPATH;
     char *pfile = NULL;
     char pbuffer[1028];
     struct cmd_parmdesc *tparm;
