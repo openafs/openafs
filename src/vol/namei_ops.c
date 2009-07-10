@@ -193,22 +193,30 @@ static int GetFreeTag(IHandle_t * ih, int vno);
 static void
 namei_HandleToInodeDir(namei_t * name, IHandle_t * ih)
 {
-    char *tmp = name->n_base;
+    size_t offset;
 
     memset(name, '\0', sizeof(*name));
 
-    (void)volutil_PartitionName_r(ih->ih_dev, tmp, NAMEI_LCOMP_LEN);
-    tmp += VICE_PREFIX_SIZE;
-    tmp += ih->ih_dev > 25 ? 2 : 1;
-    *tmp = '/';
-    tmp++;
-    (void)strcpy(tmp, INODEDIR);
-    (void)strcpy(name->n_path, name->n_base);
+    /*
+     * Add the /vicepXX string to the start of name->n_base and then calculate
+     * offset as the number of bytes we know we added.
+     *
+     * FIXME: This embeds knowledge of the vice partition naming scheme and
+     * mapping from device numbers.  There needs to be an API that tells us
+     * this offset.
+     */
+    volutil_PartitionName_r(ih->ih_dev, name->n_base, sizeof(name->n_base));
+    offset = VICE_PREFIX_SIZE + (ih->ih_dev > 25 ? 2 : 1);
+    name->n_base[offset] = '/';
+    offset++;
+    strlcpy(name->n_base + offset, INODEDIR, sizeof(name->n_base) - offset);
+    strlcpy(name->n_path, name->n_base, sizeof(name->n_path));
 }
 
-#define addtoname(N, C) \
-do { \
-	 strcat((N)->n_path, "/"); strcat((N)->n_path, C); \
+#define addtoname(N, C)                                 \
+do {                                                    \
+    strlcat((N)->n_path, "/", sizeof((N)->n_path));     \
+    strlcat((N)->n_path, (C), sizeof((N)->n_path));     \
 } while(0)
 
 
@@ -219,10 +227,10 @@ namei_HandleToVolDir(namei_t * name, IHandle_t * ih)
 
     namei_HandleToInodeDir(name, ih);
     (void)int32_to_flipbase64(tmp, (int64_t) (ih->ih_vid & 0xff));
-    (void)strcpy(name->n_voldir1, tmp);
+    strlcpy(name->n_voldir1, tmp, sizeof(name->n_voldir1));
     addtoname(name, name->n_voldir1);
     (void)int32_to_flipbase64(tmp, (int64_t) ih->ih_vid);
-    (void)strcpy(name->n_voldir2, tmp);
+    strlcpy(name->n_voldir2, tmp, sizeof(name->n_voldir2));
     addtoname(name, name->n_voldir2);
 }
 
@@ -240,19 +248,19 @@ namei_HandleToName(namei_t * name, IHandle_t * ih)
     namei_HandleToVolDir(name, ih);
 
     if (vno == NAMEI_VNODESPECIAL) {
-	(void)strcpy(name->n_dir1, NAMEI_SPECDIR);
+	strlcpy(name->n_dir1, NAMEI_SPECDIR, sizeof(name->n_dir1));
 	addtoname(name, name->n_dir1);
 	name->n_dir2[0] = '\0';
     } else {
 	(void)int32_to_flipbase64(str, VNO_DIR1(vno));
-	(void)strcpy(name->n_dir1, str);
+	strlcpy(name->n_dir1, str, sizeof(name->n_dir1));
 	addtoname(name, name->n_dir1);
 	(void)int32_to_flipbase64(str, VNO_DIR2(vno));
-	(void)strcpy(name->n_dir2, str);
+	strlcpy(name->n_dir2, str, sizeof(name->n_dir2));
 	addtoname(name, name->n_dir2);
     }
     (void)int64_to_flipbase64(str, (int64_t) ih->ih_ino);
-    (void)strcpy(name->n_inode, str);
+    strlcpy(name->n_inode, str, sizeof(name->n_inode));
     addtoname(name, name->n_inode);
 }
 
@@ -312,7 +320,7 @@ namei_CreateDataDirectories(namei_t * name, int *created)
 
     *created = 0;
 
-    (void)strcpy(tmp, name->n_base);
+    strlcpy(tmp, name->n_base, sizeof(tmp));
     create_dir();
 
     create_nextdir(name->n_voldir1);
@@ -421,7 +429,7 @@ namei_RemoveDataDirectories(namei_t * name)
     char pbuf[MAXPATHLEN], *path = pbuf;
     int prefixlen = strlen(name->n_base), err = 0;
 
-    strcpy(path, name->n_path);
+    strlcpy(path, name->n_path, sizeof(pbuf));
 
     /* move past the prefix */
     path = path + prefixlen + 1;	/* skip over the trailing / */
@@ -830,8 +838,7 @@ namei_copy_on_write(IHandle_t *h)
 	fdP = IH_OPEN(h);
 	if (!fdP)
 	    return EIO;
-	strcpy(path, name.n_path);
-	strcat(path, "-tmp");
+	afs_snprintf(path, sizeof(path), "%s-tmp", name.n_path);
 	fd = afs_open(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
 	if (fd < 0) {
 	    FDH_CLOSE(fdP);
@@ -1323,9 +1330,8 @@ namei_ListAFSFiles(char *dev,
 	while ((dp1 = readdir(dirp1))) {
 	    if (*dp1->d_name == '.')
 		continue;
-	    (void)strcpy(path2, name.n_path);
-	    (void)strcat(path2, "/");
-	    (void)strcat(path2, dp1->d_name);
+	    afs_snprintf(path2, sizeof(path2), "%s/%s", name.n_path,
+			 dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
 		while ((dp2 = readdir(dirp2))) {
@@ -1379,7 +1385,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 #endif
 
     namei_HandleToVolDir(&name, &myIH);
-    (void)strcpy(path1, name.n_path);
+    strlcpy(path1, name.n_path, sizeof(path1));
 
     /* Do the directory containing the special files first to pick up link
      * counts.
@@ -1421,7 +1427,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 
     /* Now run through all the other subdirs */
     namei_HandleToVolDir(&name, &myIH);
-    (void)strcpy(path1, name.n_path);
+    strlcpy(path1, name.n_path, sizeof(path1));
 
     dirp1 = opendir(path1);
     if (dirp1) {
@@ -1432,9 +1438,7 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 		continue;
 
 	    /* Now we've got a next level subdir. */
-	    (void)strcpy(path2, path1);
-	    (void)strcat(path2, "/");
-	    (void)strcat(path2, dp1->d_name);
+	    afs_snprintf(path2, sizeof(path2), "%s/%s", path1, dp1->d_name);
 	    dirp2 = opendir(path2);
 	    if (dirp2) {
 		while ((dp2 = readdir(dirp2))) {
@@ -1442,9 +1446,8 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 			continue;
 
 		    /* Now we've got to the actual data */
-		    (void)strcpy(path3, path2);
-		    (void)strcat(path3, "/");
-		    (void)strcat(path3, dp2->d_name);
+		    afs_snprintf(path3, sizeof(path3), "%s/%s", path2,
+				 dp2->d_name);
 		    dirp3 = opendir(path3);
 		    if (dirp3) {
 			while ((dp3 = readdir(dirp3))) {
@@ -1523,9 +1526,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
     int parm, tag;
     lb64_string_t check;
 
-    (void)strcpy(fpath, dpath);
-    (void)strcat(fpath, "/");
-    (void)strcat(fpath, name);
+    afs_snprintf(fpath, sizeof(fpath), "%s/%s", dpath, name);
 
     if (afs_stat(fpath, &status) < 0) {
 	return -1;
@@ -1664,7 +1665,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     IH_INIT(ih, partP->device, h.parent, ino);
 
     namei_HandleToName(&n, ih);
-    strcpy(dir_name, n.n_path);
+    strlcpy(dir_name, n.n_path, sizeof(dir_name));
     p = strrchr(dir_name, '/');
     *p = 0;
     dirp = opendir(dir_name);
@@ -1701,13 +1702,13 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 	    return VVOLEXISTS;
 	}
 	if (info.u.param[2] == VI_VOLINFO) {	/* volume info file */
-	    strcpy(infoName, dp->d_name);
+	    strlcpy(infoName, dp->d_name, sizeof(infoName));
 	    infoSeen = 1;
 	} else if (info.u.param[2] == VI_SMALLINDEX) {	/* small vnodes file */
-	    strcpy(smallName, dp->d_name);
+	    strlcpy(smallName, dp->d_name, sizeof(smallName));
 	    smallSeen = 1;
 	} else if (info.u.param[2] == VI_LARGEINDEX) {	/* large vnodes file */
-	    strcpy(largeName, dp->d_name);
+	    strlcpy(largeName, dp->d_name, sizeof(largeName));
 	    largeSeen = 1;
 	} else {
 	    closedir(dirp);
