@@ -158,7 +158,10 @@ struct bnode_ops dafsbnode_ops = {
  * dropping type information
  */
 
-static_inline struct bnode * fsbnode2bnode(struct fsbnode *abnode) {
+#ifndef AFS_HPUX_ENV
+static_inline 
+#endif
+struct bnode * fsbnode2bnode(struct fsbnode *abnode) {
     return (struct bnode *) abnode;
 }
 
