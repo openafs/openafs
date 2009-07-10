@@ -96,7 +96,7 @@ void *ih_sync_thread(void *);
 #ifdef AFS_PTHREAD_ENV
 /* Initialize the global ihandle mutex */
 void
-ih_glock_init()
+ih_glock_init(void)
 {
     assert(pthread_mutex_init(&ih_glock_mutex, NULL) == 0);
 }

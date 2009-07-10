@@ -603,10 +603,7 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 #ifdef AFS_PTHREAD_ENV
 static void *
 VInitVolumePackageThread(void * args) {
-    int errors = 0;		/* Number of errors while finding vice partitions. */
 
-    DIR *dirp;
-    struct dirent *dp;
     struct DiskPartition64 *diskP;
     struct vinitvolumepackage_thread_t * params;
     struct diskpartition_queue_t * dpq;
@@ -3696,7 +3693,6 @@ VCheckOffline(register Volume * vp)
 static int
 VCheckOffline(register Volume * vp)
 {
-    Volume * rvp = NULL;
     int ret = 0;
 
     if (vp->goingOffline && !vp->nUsers) {

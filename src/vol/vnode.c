@@ -1582,7 +1582,9 @@ VInvalidateVnodesByVolume_r(Volume * vp,
      * Traverse the volume's vnode list.  Pull all the ihandles out into a 
      * thread-private array for later asynchronous processing.
      */
- restart_traversal:
+#ifdef AFS_DEMAND_ATTACH_FS
+restart_traversal:
+#endif
     for (queue_Scan(&vp->vnode_list, vnp, nvnp, Vnode)) {
 	if (vnp->handle != NULL) {
 	    if (i == vec_len) {
