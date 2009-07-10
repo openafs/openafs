@@ -48,12 +48,13 @@ struct fileMark {		/* also in file_tm.c */
     afs_uint32 nBytes;
 };
 
+/* Forward declarations */
+int writeData(char *data, afs_int32 size);
+
 /* Read a tape block of size 16K */
 afs_int32
-readblock(buffer)
-     char *buffer;
+readblock(char *buffer)
 {
-    static rerror = 0;
     u_int nread, total = 0;
     int rc, fmcount = 0;
 
@@ -81,8 +82,7 @@ readblock(buffer)
 }
 
 void
-printLabel(tapeLabelPtr)
-     struct tapeLabel *tapeLabelPtr;
+printLabel(struct tapeLabel *tapeLabelPtr)
 {
     tapeLabelPtr->label.dumpid = ntohl(tapeLabelPtr->label.dumpid);
     tapeLabelPtr->label.creationTime =
@@ -130,11 +130,9 @@ printLabel(tapeLabelPtr)
 }
 
 void
-printHeader(headerPtr, isvolheader)
-     struct volumeHeader *headerPtr;
-     afs_int32 *isvolheader;
+printHeader(struct volumeHeader *headerPtr, afs_int32 *isvolheader)
 {
-    static volcount = 0;
+    static int volcount = 0;
 
     *isvolheader = 0;
     headerPtr->volumeID = ntohl(headerPtr->volumeID);
@@ -186,15 +184,13 @@ printHeader(headerPtr, isvolheader)
 }
 
 int
-openOutFile(headerPtr)
-     struct volumeHeader *headerPtr;
+openOutFile(struct volumeHeader *headerPtr)
 {
     afs_int32 len;
     int ch;
     int rc;
     int oflag;
     int skip, first;
-    char rest[100];
     afs_hyper_t size;
 
     /* If we were asked to skip this volume, then skip it */
@@ -235,12 +231,11 @@ openOutFile(headerPtr)
 	    first = 0;
 	} while (ch != '\n');
 	if (skip) {
-	    printf("Will not restore volume %s\n", headerPtr->volumeName,
-		   headerPtr->volumeID);
+	    printf("Will not restore volume %s\n", headerPtr->volumeName);
 	    return 0;
 	}
     } else {
-	printf("Retreive volume %s (%u) to file %s\n", headerPtr->volumeName,
+	printf("Retrieve volume %s (%u) to file %s\n", headerPtr->volumeName,
 	       headerPtr->volumeID, filename);
     }
 
@@ -280,7 +275,6 @@ int
 writeLastBlocks(char *lastblock, char *lastblock2)
 {
     int rc;
-    struct volumeHeader vh;
     char trailer[12];
     struct blockMark *bmark, *bmark2;
     char *data;
@@ -352,7 +346,7 @@ writeLastBlocks(char *lastblock, char *lastblock2)
 }
 
 int
-closeOutFile()
+closeOutFile(void)
 {
     if (!ofdIsOpen)
 	return 0;
@@ -366,9 +360,7 @@ closeOutFile()
 }
 
 int
-writeData(data, size)
-     char *data;
-     afs_int32 size;
+writeData(char *data, afs_int32 size)
 {
     int rc;
     u_int nwritten;
@@ -542,12 +534,10 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
-    struct cmd_item *ti;
 
     setlinebuf(stdout);
 

@@ -31,12 +31,14 @@
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>	/* PA */
 #include <afs/budb_client.h>
+#include <afs/bucoord_prototypes.h>
 #include <afs/volser.h>
 #include <afs/com_err.h>
 #include "error_macros.h"
 #include <afs/afsutil.h>
 #include <errno.h>
 #include "butc_xbsa.h"
+#include "butc_internal.h"
 
 /* GLOBAL CONFIGURATION PARAMETERS */
 extern int queryoperator;
@@ -122,7 +124,14 @@ struct timeval tp;
 struct timezone tzp;
 
 /* forward declaration */
-afs_int32 readVolumeHeader( /*char *buffer,afs_int32 bufloc,(struct volumeHeader *)vhptr */ );
+afs_int32 readVolumeHeader(char *, afs_int32, struct volumeHeader *);
+int FindVolTrailer(char *, afs_int32, afs_int32 *, struct volumeHeader *);
+int FindVolTrailer2(char *, afs_int32, afs_int32 *, char *, afs_int32,
+		    afs_int32 *, struct volumeHeader *);
+int SkipVolume(struct tc_restoreDesc *, afs_int32, afs_int32, afs_int32,
+	       afs_int32);
+
+
 
 /* The on-disk volume header or trailer can differ in size from platform to platform */
 static struct TapeBlock tapeBlock;
@@ -262,8 +271,7 @@ ELog(task, str, a, b, c, d, e, f, g, h, i, j)
 
 /* first proc called by anybody who intends to use the device */
 void
-EnterDeviceQueue(devLatch)
-     struct deviceSyncNode *devLatch;
+EnterDeviceQueue(struct deviceSyncNode *devLatch)
 {
     ObtainWriteLock(&(devLatch->lock));
     devLatch->flags = TC_DEVICEINUSE;
@@ -271,8 +279,7 @@ EnterDeviceQueue(devLatch)
 
 /* last proc called by anybody finishing using the device */
 void
-LeaveDeviceQueue(devLatch)
-     struct deviceSyncNode *devLatch;
+LeaveDeviceQueue(struct deviceSyncNode *devLatch)
 {
     devLatch->flags = 0;
     ReleaseWriteLock(&(devLatch->lock));
@@ -395,15 +402,16 @@ GetResponseKey(int seconds, char *key)
 #endif
     return rc;
 }
-#endif /* AFS_PTHREAD_ENV
-        * 
-        * /* FFlushInput
-        * *     flush all input
-        * * notes:
-        * *     only external clients are in recoverDb.c. Was static. PA
-        */
+#endif /* AFS_PTHREAD_ENV */
+
+/*
+ * FFlushInput
+ *     flush all input
+ * notes:
+ *     only external clients are in recoverDb.c. Was static. PA
+ */
 void
-FFlushInput()
+FFlushInput(void)
 {
     int w;
 
@@ -429,15 +437,9 @@ FFlushInput()
 }
 
 int
-callOutRoutine(taskId, tapePath, flag, name, dbDumpId, tapecount)
-     afs_int32 taskId;
-     char *tapePath;
-     int flag;
-     char *name;
-     afs_uint32 dbDumpId;
-     int tapecount;
+callOutRoutine(afs_int32 taskId, char *tapePath, int flag, char *name,
+	       afs_uint32 dbDumpId, int tapecount)
 {
-    afs_int32 code = 0;
     int pid;
 
     char StapePath[256];
@@ -546,9 +548,7 @@ callOutRoutine(taskId, tapePath, flag, name, dbDumpId, tapecount)
  *     (unless a tape is not mounted in the first place).
  */
 void
-unmountTape(taskId, tapeInfoPtr)
-     afs_int32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
+unmountTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr)
 {
     afs_int32 code;
     int cpid, status, rcpid;
@@ -602,9 +602,7 @@ unmountTape(taskId, tapeInfoPtr)
  */
 
 void static
-PrintPrompt(flag, name, dumpid)
-     int flag;
-     char *name;
+PrintPrompt(int flag, char *name, int dumpid)
 {
     char tapename[BU_MAXTAPELEN + 32];
     char *dn;
@@ -678,12 +676,8 @@ PrintPrompt(flag, name, dumpid)
  *	only external clients are in recoverDb.c. Was static PA
  */
 afs_int32
-PromptForTape(flag, name, dbDumpId, taskId, tapecount)
-     int flag;
-     char *name;
-     afs_uint32 dbDumpId;	/* Specific dump ID - If non-zero */
-     afs_uint32 taskId;
-     int tapecount;
+PromptForTape(int flag, char *name, afs_uint32 dbDumpId, afs_uint32 taskId,
+	      int tapecount)
 {
     register afs_int32 code = 0;
     afs_int32 wcode;
@@ -861,8 +855,8 @@ PromptForTape(flag, name, dbDumpId, taskId, tapecount)
  */
 
 afs_int32
-VolHeaderToHost(hostVolHeader, tapeVolHeader)
-     struct volumeHeader *hostVolHeader, *tapeVolHeader;
+VolHeaderToHost(struct volumeHeader *hostVolHeader,
+		struct volumeHeader *tapeVolHeader)
 {
     switch (ntohl(tapeVolHeader->versionflags)) {
     case TAPE_VERSION_0:
@@ -903,10 +897,9 @@ VolHeaderToHost(hostVolHeader, tapeVolHeader)
 }
 
 afs_int32
-ReadVolHeader(taskId, tapeInfoPtr, volHeaderPtr)
-     afs_int32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct volumeHeader *volHeaderPtr;
+ReadVolHeader(afs_int32 taskId,
+	      struct butm_tapeInfo *tapeInfoPtr,
+	      struct volumeHeader *volHeaderPtr)
 {
     afs_int32 code = 0;
     afs_int32 nbytes;
@@ -940,12 +933,8 @@ ReadVolHeader(taskId, tapeInfoPtr, volHeaderPtr)
 }
 
 afs_int32 static
-GetVolumeHead(taskId, tapeInfoPtr, position, volName, volId)
-     afs_int32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     afs_int32 position;
-     char *volName;
-     afs_int32 volId;
+GetVolumeHead(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr,
+	      afs_int32 position, char *volName, afs_int32 volId)
 {
     afs_int32 code = 0;
     struct volumeHeader tapeVolHeader;
@@ -1014,12 +1003,8 @@ GetVolumeHead(taskId, tapeInfoPtr, position, volName, volId)
 }
 
 afs_int32
-GetRestoreTape(taskId, tapeInfoPtr, tname, tapeID, prompt)
-     afs_int32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     char *tname;
-     afs_int32 tapeID;
-     int prompt;
+GetRestoreTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr,
+	       char *tname, afs_int32 tapeID, int prompt)
 {
     struct butm_tapeLabel tapeLabel;
     afs_int32 code = 0, rc;
@@ -1084,9 +1069,7 @@ GetRestoreTape(taskId, tapeInfoPtr, tname, tapeID, prompt)
 }
 
 afs_int32
-xbsaRestoreVolumeData(call, rparamsPtr)
-     register struct rx_call *call;
-     struct restoreParams *rparamsPtr;
+xbsaRestoreVolumeData(struct rx_call *call, struct restoreParams *rparamsPtr)
 {
     afs_int32 code = 0;
 #ifdef xbsa
@@ -1237,9 +1220,7 @@ xbsaRestoreVolumeData(call, rparamsPtr)
  */
 
 afs_int32
-restoreVolumeData(call, rparamsPtr)
-     register struct rx_call *call;
-     struct restoreParams *rparamsPtr;
+restoreVolumeData(struct rx_call *call, struct restoreParams *rparamsPtr)
 {
     afs_int32 curChunk;
     afs_uint32 totalWritten = 0;
@@ -1426,10 +1407,9 @@ restoreVolumeData(call, rparamsPtr)
 /* SkipTape
  *    Find all the volumes on a specific tape and mark them to skip.
  */
-SkipTape(Restore, size, index, tapename, tapeid, taskid)
-     struct tc_restoreDesc *Restore;
-     afs_int32 size, index, tapeid, taskid;
-     char *tapename;
+int
+SkipTape(struct tc_restoreDesc *Restore, afs_int32 size, afs_int32 index,
+	 char *tapename, afs_int32 tapeid, afs_int32 taskid)
 {
     afs_int32 i, tid;
 
@@ -1449,9 +1429,9 @@ SkipTape(Restore, size, index, tapename, tapeid, taskid)
 /* SkipVolume
  *    Find all the entries for a volume and mark them to skip.
  */
-SkipVolume(Restore, size, index, volid, taskid)
-     struct tc_restoreDesc *Restore;
-     afs_int32 size, index, volid, taskid;
+int
+SkipVolume(struct tc_restoreDesc *Restore, afs_int32 size, afs_int32 index,
+	   afs_int32 volid, afs_int32 taskid)
 {
     afs_int32 i;
     int report = 1;
@@ -1472,10 +1452,9 @@ SkipVolume(Restore, size, index, volid, taskid)
     return 0;
 }
 
-xbsaRestoreVolume(taskId, restoreInfo, rparamsPtr)
-     afs_uint32 taskId;
-     struct tc_restoreDesc *restoreInfo;
-     struct restoreParams *rparamsPtr;
+int
+xbsaRestoreVolume(afs_uint32 taskId, struct tc_restoreDesc *restoreInfo,
+		  struct restoreParams *rparamsPtr)
 {
     afs_int32 code = 0;
 #ifdef xbsa
@@ -1664,10 +1643,9 @@ xbsaRestoreVolume(taskId, restoreInfo, rparamsPtr)
     return (code);
 }
 
-restoreVolume(taskId, restoreInfo, rparamsPtr)
-     afs_uint32 taskId;
-     struct tc_restoreDesc *restoreInfo;
-     struct restoreParams *rparamsPtr;
+int
+restoreVolume(afs_uint32 taskId, struct tc_restoreDesc *restoreInfo,
+	      struct restoreParams *rparamsPtr)
 {
     afs_int32 code = 0, rc;
     afs_int32 newServer, newPart, newVolId;
@@ -1924,10 +1902,8 @@ Restorer(void *param) {
 /* this is just scaffolding, creates new tape label with name <tapeName> */
 
 void
-GetNewLabel(tapeInfoPtr, pName, AFSName, tapeLabel)
-     struct butm_tapeInfo *tapeInfoPtr;
-     char *pName, *AFSName;
-     struct butm_tapeLabel *tapeLabel;
+GetNewLabel(struct butm_tapeInfo *tapeInfoPtr, char *pName, char *AFSName,
+	    struct butm_tapeLabel *tapeLabel)
 {
     struct timeval tp;
     struct timezone tzp;
@@ -1959,13 +1935,11 @@ GetNewLabel(tapeInfoPtr, pName, AFSName, tapeLabel)
     strcpy(tapeLabel->creator.cell, globalCellName);
 }
 
-/* extracts trailer out of buffer, nbytes is set to total data in buffer - trailer size */
+/* extracts trailer out of buffer, nbytes is set to total data in
+ * buffer - trailer size */
 afs_int32
-ExtractTrailer(buffer, size, nbytes, volTrailerPtr)
-     char *buffer;
-     afs_int32 *nbytes;
-     afs_int32 size;
-     struct volumeHeader *volTrailerPtr;
+ExtractTrailer(char *buffer, afs_int32 size, afs_int32 *nbytes,
+	       struct volumeHeader *volTrailerPtr)
 {
     afs_int32 code = 0;
     afs_int32 startPos;
@@ -1993,11 +1967,8 @@ ExtractTrailer(buffer, size, nbytes, volTrailerPtr)
 }
 
 int
-FindVolTrailer(buffer, size, dSize, volTrailerPtr)
-     char *buffer;
-     afs_int32 size;
-     struct volumeHeader *volTrailerPtr;
-     afs_int32 *dSize;		/* dataSize */
+FindVolTrailer(char *buffer, afs_int32 size, afs_int32 *dSize,
+	       struct volumeHeader *volTrailerPtr)
 {
     afs_int32 offset, s;
     int found;
@@ -2017,15 +1988,9 @@ FindVolTrailer(buffer, size, dSize, volTrailerPtr)
 }
 
 int
-FindVolTrailer2(buffera, sizea, dataSizea, bufferb, sizeb, dataSizeb,
-		volTrailerPtr)
-     char *buffera;
-     afs_int32 sizea;
-     afs_int32 *dataSizea;
-     char *bufferb;
-     afs_int32 sizeb;
-     afs_int32 *dataSizeb;
-     struct volumeHeader *volTrailerPtr;
+FindVolTrailer2(char *buffera, afs_int32 sizea, afs_int32 *dataSizea,
+		char *bufferb, afs_int32 sizeb, afs_int32 *dataSizeb,
+		struct volumeHeader *volTrailerPtr)
 {
     afs_int32 offset, s;
     afs_int32 headB, tailB;
@@ -2070,11 +2035,9 @@ FindVolTrailer2(buffera, sizea, dataSizea, bufferb, sizeb, dataSizeb,
     return found;
 }
 
-/* Returns true or false depending on whether the tape is expired or not */
 
 Date
-ExpirationDate(dumpid)
-     afs_int32 dumpid;
+ExpirationDate(afs_int32 dumpid)
 {
     afs_int32 code;
     Date expiration = 0;
@@ -2084,9 +2047,10 @@ ExpirationDate(dumpid)
 
     if (dumpid) {
 	/*
-	 * Get the expiration date from DB if its there. The expiration of any tape
-	 * will be the most future expiration of any dump in the set. Can't use
-	 * bcdb_FindTape because dumpid here pertains to the initial dump id.
+	 * Get the expiration date from DB if its there. The expiration of
+	 * any tape will be the most future expiration of any dump in the
+	 * set. Can't use bcdb_FindTape because dumpid here pertains to the
+	 * initial dump id.
 	 */
 	code = bcdb_FindLastTape(dumpid, &dumpEntry, &tapeEntry, &volEntry);
 	if (!code)
@@ -2095,9 +2059,10 @@ ExpirationDate(dumpid)
     return (expiration);
 }
 
+/* Returns true or false depending on whether the tape is expired or not */
+
 int
-tapeExpired(tapeLabelPtr)
-     struct butm_tapeLabel *tapeLabelPtr;
+tapeExpired(struct butm_tapeLabel *tapeLabelPtr)
 {
     Date expiration;
     struct timeval tp;
@@ -2119,10 +2084,10 @@ tapeExpired(tapeLabelPtr)
  *	and the dump path.
  */
 
-updateTapeLabel(labelIfPtr, tapeInfoPtr, newLabelPtr)
-     struct labelTapeIf *labelIfPtr;
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct butm_tapeLabel *newLabelPtr;
+int
+updateTapeLabel(struct labelTapeIf *labelIfPtr,
+		struct butm_tapeInfo *tapeInfoPtr,
+		struct butm_tapeLabel *newLabelPtr)
 {
     struct butm_tapeLabel oldLabel;
     afs_int32 i, code = 0;
@@ -2288,8 +2253,7 @@ Labeller(void *param)
  */
 
 void
-PrintTapeLabel(labelptr)
-     struct butm_tapeLabel *labelptr;
+PrintTapeLabel(struct butm_tapeLabel *labelptr)
 {
     char tapeName[BU_MAXTAPELEN + 32];
     time_t t;
@@ -2323,8 +2287,8 @@ PrintTapeLabel(labelptr)
  *	back only selected fields.
  */
 
-ReadLabel(label)
-     struct tc_tapeLabel *label;
+int
+ReadLabel(struct tc_tapeLabel *label)
 {
     struct butm_tapeLabel newTapeLabel;
     struct butm_tapeInfo tapeInfo;
@@ -2413,14 +2377,9 @@ ReadLabel(label)
    into consideration, different word alignment rules.
 */
 afs_int32
-readVolumeHeader(buffer, bufloc, header)
-     /*in */
-     char *buffer;		/* buffer to read header from */
-				/*in */ afs_int32 bufloc;
-				/* header's location in buffer */
-						/*out */ struct volumeHeader *header;
-						/* header structure */
-
+readVolumeHeader(char *buffer,		/* in - buffer to read header from */
+		 afs_int32 bufloc,      /* in - header's location in buffer */
+		 struct volumeHeader *header) /* out -header structure */
 {
     struct volumeHeader vhptr, *tempvhptr;
     afs_int32 firstSplice = (afs_int32) ((char*)& vhptr.pad - (char*) & vhptr);

@@ -37,14 +37,16 @@
 #include <afs/keys.h>
 #include <ubik.h>
 #include <afs/tcdata.h>
+#include <afs/budb_client.h>
+#include <afs/bucoord_prototypes.h>
 #include "error_macros.h"
 #include "butc_xbsa.h"
 #include "butc_prototypes.h"
-    
-static CopyDumpDesc();
-static CopyRestoreDesc();
-static CopyTapeSetDesc();
+#include "butc_internal.h"
 
+static int CopyDumpDesc(struct tc_dumpDesc *, tc_dumpArray *);
+static int CopyRestoreDesc(struct tc_restoreDesc *, tc_restoreArray *);
+static int CopyTapeSetDesc(struct tc_tapeSet *, struct tc_tapeSet *);
 
 int
 callPermitted(struct rx_call *call)
@@ -146,9 +148,6 @@ STC_LabelTape(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
     statusP statusPtr = NULL;
     afs_int32 code;
 
-    extern statusP createStatusNode();
-    extern afs_int32 allocTaskId();
-
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* LabelTape does not apply if XBSA */
@@ -224,8 +223,6 @@ STC_PerformDump(struct rx_call *rxCallId, struct tc_dumpInterface *tcdiPtr, tc_d
     PROCESS pid;
 #endif
     afs_int32 code = 0;
-
-    extern statusP createStatusNode();
 
     if (callPermitted(rxCallId) == 0)
 	return (TC_NOTPERMITTED);
@@ -323,8 +320,6 @@ STC_PerformRestore(struct rx_call *acid, char *dumpSetName, tc_restoreArray *are
     PROCESS pid;
 #endif
 
-    extern statusP createStatusNode();
-
     if (callPermitted(acid) == 0)
 	return (TC_NOTPERMITTED);
 
@@ -390,8 +385,6 @@ STC_ReadLabel(struct rx_call *acid, struct tc_tapeLabel *label, afs_uint32 *task
 {
     afs_int32 code;
 
-    extern int ReadLabel();
-
 #ifdef xbsa
     if (CONF_XBSA)
 	return (TC_BADTASK);	/* ReadLabel does not apply if XBSA */
@@ -420,9 +413,6 @@ STC_RestoreDb(struct rx_call *rxCall, afs_uint32 *taskId)
 #endif
     statusP statusPtr;
     afs_int32 code = 0;
-
-    extern statusP createStatusNode();
-    extern afs_int32 allocTaskId();
 
 #ifdef xbsa
     if (CONF_XBSA)
@@ -490,9 +480,6 @@ STC_SaveDb(struct rx_call *rxCall, Date archiveTime, afs_uint32 *taskId)
     statusP statusPtr = NULL;
     afs_int32 code = 0;
     struct saveDbIf *ptr;
-
-    extern statusP createStatusNode();
-    extern afs_int32 allocTaskId();
 
 #ifdef xbsa
     if (CONF_XBSA)
@@ -572,9 +559,6 @@ STC_ScanDumps(struct rx_call *acid, afs_int32 addDbFlag, afs_uint32 *taskId)
     struct scanTapeIf *ptr;
     statusP statusPtr = NULL;
     afs_int32 code = 0;
-
-    extern afs_int32 allocTaskId();
-    extern statusP createStatusNode();
 
 #ifdef xbsa
     if (CONF_XBSA)
@@ -664,8 +648,6 @@ STC_DeleteDump(struct rx_call *acid, afs_uint32 dumpID, afs_uint32 *taskId)
     PROCESS pid;
 #endif
 #endif
-    extern statusP createStatusNode();
-    extern afs_int32 allocTaskId();
 
     *taskId = 0;
     if (!CONF_XBSA)

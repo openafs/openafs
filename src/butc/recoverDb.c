@@ -31,6 +31,7 @@
 #include <afs/bubasics.h>
 #include <afs/budb.h>
 #include "error_macros.h"
+#include "butc_internal.h"
 
 #define BELLCHAR 7		/* ascii for bell */
 
