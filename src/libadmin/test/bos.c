@@ -14,6 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <ctype.h>
 
 #include "bos.h"
 
@@ -61,7 +62,7 @@ static char *day[] = {
     "sat"
 };
 
-static
+static int
 LocalFreeTokens(struct token *alist)
 {
     register struct token *nlist;
@@ -73,7 +74,7 @@ LocalFreeTokens(struct token *alist)
     return 0;
 }
 
-static
+static int
 space(int x)
 {
     if (x == 0 || x == ' ' || x == '\t' || x == '\n')
@@ -82,7 +83,7 @@ space(int x)
 	return 0;
 }
 
-static
+static int
 LocalParseLine(char *aline, struct token **alist)
 {
     char tbuffer[256];
@@ -138,14 +139,17 @@ static struct ptemp {
     char *key;
     afs_int32 value;
 } ptkeys[] = {
-"sun", 0x10000, "mon", 0x10001, "tue", 0x10002, "wed", 0x10003, "thu",
-	0x10004, "fri", 0x10005, "sat", 0x10006, "sunday", 0x10000,
-	"monday", 0x10001, "tuesday", 0x10002, "wednesday", 0x10003,
-	"thursday", 0x10004, "thur", 0x10004, "friday", 0x10005,
-	"saturday", 0x10006, "am", 0x20000, "pm", 0x20001, "a.m.",
-	0x20000, "p.m.", 0x20001, 0, 0,};
+	{"sun", 0x10000}, {"mon", 0x10001}, {"tue", 0x10002},
+	{"wed", 0x10003}, {"thu", 0x10004}, {"fri", 0x10005},
+	{"sat", 0x10006},
+	{"sunday", 0x10000}, {"monday", 0x10001},
+	{"tuesday", 0x10002}, {"wednesday", 0x10003},
+	{"thursday", 0x10004}, {"thur", 0x10004},
+	{"friday", 0x10005}, {"saturday", 0x10006},
+	{"am", 0x20000}, {"pm", 0x20001},
+	{"a.m.", 0x20000}, {"p.m.", 0x20001}, {0, 0}};
 
-static
+static int
 ParseTime(bos_RestartTime_p ak, char *astr)
 {
     int field;
@@ -321,7 +325,7 @@ DoBosProcessCreate(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_ProcessCreate
-	(bos_server, process, process_type, binary, cron_time, notifier,
+	(bos_server, (char *)process, process_type, (char *)binary, (char *)cron_time, (char *)notifier,
 	 &st)) {
 	ERR_ST_EXT("bos_ProcessCreate", st);
     }
@@ -373,7 +377,7 @@ DoBosFSProcessCreate(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_FSProcessCreate
-	(bos_server, process, fileserver, volserver, salvager, notifier,
+	(bos_server, (char *)process, (char *)fileserver, (char *)volserver, (char *)salvager, (char *)notifier,
 	 &st)) {
 	ERR_ST_EXT("bos_FSProcessCreate", st);
     }
@@ -402,7 +406,7 @@ DoBosProcessDelete(struct cmd_syndesc *as, void *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessDelete(bos_server, process, &st)) {
+    if (!bos_ProcessDelete(bos_server, (char *)process, &st)) {
 	ERR_ST_EXT("bos_ProcessDelete", st);
     }
 
@@ -454,7 +458,7 @@ DoBosProcessExecutionStateGet(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_ProcessExecutionStateGet
-	(bos_server, process, &state, aux_status, &st)) {
+	(bos_server, (char *)process, &state, aux_status, &st)) {
 	ERR_ST_EXT("bos_ProcessExecutionStateGet", st);
     }
 
@@ -562,7 +566,7 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_ProcessExecutionStateSetTemporary
-	(bos_server, process, state, &st)) {
+	(bos_server, (char *)process, state, &st)) {
 	ERR_ST_EXT("bos_ProcessExecutionStateSetTemporary", st);
     }
 
@@ -681,7 +685,7 @@ DoBosProcessInfoGet(struct cmd_syndesc *as, void *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessInfoGet(bos_server, process, &type, &info, &st)) {
+    if (!bos_ProcessInfoGet(bos_server, (char *)process, &type, &info, &st)) {
 	ERR_ST_EXT("bos_ProcessInfoGet", st);
     }
 

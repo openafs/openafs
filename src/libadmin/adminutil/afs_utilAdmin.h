@@ -47,6 +47,7 @@ extern int ADMINAPI util_AdminServerAddressGetFromName(const char *serverName,
 extern int ADMINAPI CellHandleIsValid(const void *cellHandle,
 				      afs_status_p st);
 
+struct rpcStats;
 extern int ADMINAPI util_RPCStatsGetBegin(struct rx_connection *conn,
 					  int (*rpc) (struct rx_connection *,
 						      afs_uint32, afs_uint32 *,

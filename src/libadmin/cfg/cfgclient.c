@@ -682,7 +682,10 @@ static int
 CacheManagerStart(unsigned timeout, afs_status_p st)
 {
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
+#endif
+    afs_status_t tst = 0;
 
 #ifdef AFS_NT40_ENV
     /* Windows - cache manager is a service */
@@ -719,7 +722,10 @@ static int
 CacheManagerStop(unsigned timeout, afs_status_p st)
 {
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
+#endif
+    afs_status_t tst = 0;
 
 #ifdef AFS_NT40_ENV
     /* Windows - cache manager is a service */

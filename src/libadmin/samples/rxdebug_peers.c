@@ -36,7 +36,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxdebug_peers <host> <port>\n");
     exit(1);
@@ -70,7 +70,6 @@ main(int argc, char *argv[])
     void *iterator;
     struct rx_debugPeer peer;
     afs_uint32 supportedValues;
-    int i;
 
     ParseArgs(argc, argv, &srvrName, &srvrPort);
 

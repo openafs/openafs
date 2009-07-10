@@ -64,7 +64,6 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     int no_auth = 0;
-    int auth = 0;
     char auth_cell[MAXCELLCHARS];
     char exec_cell[MAXCELLCHARS];
 
@@ -181,7 +180,6 @@ main(int argc, char *argv[])
 {
     int code;
     afs_status_t st;
-    char *whoami = argv[0];
 
     /* perform client initialization */
 

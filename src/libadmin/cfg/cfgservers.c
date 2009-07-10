@@ -1793,13 +1793,13 @@ SimpleProcessStart(void *bosHandle, const char *instance,
 	}
 
 	if (!bos_ProcessCreate
-	    (bosHandle, instance, BOS_PROCESS_SIMPLE, cmd, NULL, NULL, &tst2)
+	    (bosHandle, (char *)instance, BOS_PROCESS_SIMPLE, cmd, NULL, NULL, &tst2)
 	    && tst2 != BZEXISTS) {
 	    /* failed to create instance (and not because existed) */
 	    tst = tst2;
 	} else
 	    if (!bos_ProcessExecutionStateSet
-		(bosHandle, instance, BOS_PROCESS_RUNNING, &tst2)) {
+		(bosHandle, (char *)instance, BOS_PROCESS_RUNNING, &tst2)) {
 	    /* failed to set instance state to running */
 	    tst = tst2;
 	}
@@ -1835,7 +1835,7 @@ FsProcessStart(void *bosHandle, const char *instance,
     afs_status_t tst2, tst = 0;
 
     if (!bos_FSProcessCreate
-	(bosHandle, instance, fileserverExe, volserverExe, salvagerExe, NULL,
+	(bosHandle, (char *)instance, (char *)fileserverExe, (char *)volserverExe, (char *)salvagerExe, NULL,
 	 &tst2) && tst2 != BZEXISTS) {
 	/* failed to create instance (and not because existed) */
 	tst = tst2;
@@ -1880,7 +1880,7 @@ BosProcessDelete(void *bosHandle, const char *instance, afs_status_p st)
 	/* failed to wait for process to stop */
 	tst = tst2;
 
-    } else if (!bos_ProcessDelete(bosHandle, instance, &tst2)) {
+    } else if (!bos_ProcessDelete(bosHandle, (char *)instance, &tst2)) {
 	/* failed to delete instance (or does not exist) */
 	if (tst2 != BZNOENT) {
 	    tst = tst2;
@@ -2106,7 +2106,6 @@ UbikVoteStatusFetch(int serverAddr, unsigned short serverPort,
     } else {
 	int rpcCode;
 	struct ubik_debug udebugInfo;
-	extern int VOTE_Debug(), VOTE_DebugOld();
 
 	if ((rpcCode = VOTE_Debug(serverConn, &udebugInfo)) == 0) {
 	    /* talking to a 3.5 or later server */

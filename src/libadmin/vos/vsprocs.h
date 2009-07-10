@@ -33,7 +33,7 @@
 #include <afs/volser.h>
 #include <afs/volint.h>
 #include "../../volser/lockdata.h"
-#include "../../vlserver/vlclient.h"
+#include <afs/vldbint.h>
 #include <afs/com_err.h>
 #include <rx/rxkad.h>
 #include <afs/kautils.h>
@@ -43,10 +43,6 @@
 #include "../adminutil/afs_AdminInternal.h"
 
 #define	CLOCKSKEW   2		/* not really skew, but resolution */
-
-extern int ubik_Call();
-extern int ubik_Call_New();
-
 
 extern int UV_NukeVolume(afs_cell_handle_p cellHandle,
 			 struct rx_connection *server, unsigned int partition,

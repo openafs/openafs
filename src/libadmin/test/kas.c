@@ -49,7 +49,6 @@ DoKasPrincipalCreate(struct cmd_syndesc *as, void *arock)
 	PASSWORD
     } DoKasPrincipalCreate_parm_t;
     afs_status_t st = 0;
-    const char *instance = NULL;
     kas_identity_t user;
     const char *password;
 
@@ -75,7 +74,6 @@ DoKasPrincipalDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalGet_parm_t;
     afs_status_t st = 0;
-    const char *instance = NULL;
     kas_identity_t user;
 
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
@@ -162,7 +160,6 @@ DoKasPrincipalGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalGet_parm_t;
     afs_status_t st = 0;
-    const char *instance = NULL;
     kas_identity_t user;
     kas_principalEntry_t principal;
 
@@ -287,7 +284,6 @@ DoKasPrincipalUnlock(struct cmd_syndesc *as, void *arock)
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalUnlock_parm_t;
     afs_status_t st = 0;
     kas_identity_t user;
-    unsigned int lock_end_time = 0;
 
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 

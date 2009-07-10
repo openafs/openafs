@@ -34,7 +34,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 extern int RXSTATS_EnableProcessRPCStats();
 
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxstat_enable_process <cell> <host> <port>\n");
     exit(1);

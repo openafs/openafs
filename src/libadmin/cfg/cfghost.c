@@ -995,8 +995,11 @@ cfg_HostPartitionTableAddEntry(void *hostHandle,	/* host config handle */
 			       afs_status_p st)
 {				/* completion status */
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+    afs_status_t tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
     cfg_host_p cfg_host = (cfg_host_p) hostHandle;
+#endif
 
 #ifdef AFS_NT40_ENV
     /* validate parameters */
@@ -1066,8 +1069,11 @@ cfg_HostPartitionTableRemoveEntry(void *hostHandle,	/* host config handle */
 				  afs_status_p st)
 {				/* completion status */
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+    afs_status_t tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
     cfg_host_p cfg_host = (cfg_host_p) hostHandle;
+#endif
 
 #ifdef AFS_NT40_ENV
     /* validate parameters */

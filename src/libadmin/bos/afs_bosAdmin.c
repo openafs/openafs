@@ -322,9 +322,9 @@ bos_ServerClose(const void *serverHandle, afs_status_p st)
 static char *processTypes[] = { "simple", "fs", "cron", 0 };
 
 int ADMINAPI
-bos_ProcessCreate(const void *serverHandle, const char *processName,
-		  bos_ProcessType_t processType, const char *process,
-		  const char *cronTime, const char *notifier, afs_status_p st)
+bos_ProcessCreate(const void *serverHandle, char *processName,
+		  bos_ProcessType_t processType, char *process,
+		  char *cronTime, char *notifier, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -402,9 +402,9 @@ bos_ProcessCreate(const void *serverHandle, const char *processName,
  */
 
 int ADMINAPI
-bos_FSProcessCreate(const void *serverHandle, const char *processName,
-		    const char *fileserverPath, const char *volserverPath,
-		    const char *salvagerPath, const char *notifier,
+bos_FSProcessCreate(const void *serverHandle, char *processName,
+		    char *fileserverPath, char *volserverPath,
+		    char *salvagerPath, char *notifier,
 		    afs_status_p st)
 {
     int rc = 0;
@@ -471,7 +471,7 @@ bos_FSProcessCreate(const void *serverHandle, const char *processName,
  */
 
 int ADMINAPI
-bos_ProcessDelete(const void *serverHandle, const char *processName,
+bos_ProcessDelete(const void *serverHandle, char *processName,
 		  afs_status_p st)
 {
     int rc = 0;
@@ -527,7 +527,7 @@ bos_ProcessDelete(const void *serverHandle, const char *processName,
 
 int ADMINAPI
 bos_ProcessExecutionStateGet(const void *serverHandle,
-			     const char *processName,
+			     char *processName,
 			     bos_ProcessExecutionState_p processStatusP,
 			     char *auxiliaryProcessStatus, afs_status_p st)
 {
@@ -599,7 +599,7 @@ bos_ProcessExecutionStateGet(const void *serverHandle,
 static int
 SetExecutionState(const void *serverHandle, const char *processName,
 		  const bos_ProcessExecutionState_t processStatus,
-		  int (*func) (struct rx_connection *, const char *,
+		  int (*func) (struct rx_connection *, char *,
 			       afs_int32), afs_status_p st)
 {
     int rc = 0;
@@ -624,7 +624,7 @@ SetExecutionState(const void *serverHandle, const char *processName,
 
     state = (afs_int32) processStatus;
 
-    tst = func(b_handle->server, processName, state);
+    tst = func(b_handle->server, (char *)processName, state);
 
     if (tst == 0) {
 	rc = 1;
@@ -661,7 +661,7 @@ SetExecutionState(const void *serverHandle, const char *processName,
 int ADMINAPI
 bos_ProcessExecutionStateSet(const void *serverHandle,
 			     const char *processName,
-			     bos_ProcessExecutionState_t processStatus,
+			     const bos_ProcessExecutionState_t processStatus,
 			     afs_status_p st)
 {
     return SetExecutionState(serverHandle, processName, processStatus,
@@ -691,7 +691,7 @@ bos_ProcessExecutionStateSet(const void *serverHandle,
 
 int ADMINAPI
 bos_ProcessExecutionStateSetTemporary(const void *serverHandle,
-				      const char *processName,
+				      char *processName,
 				      bos_ProcessExecutionState_t
 				      processStatus, afs_status_p st)
 {
@@ -939,7 +939,7 @@ bos_ProcessNameGetDone(const void *iterationId, afs_status_p st)
  */
 
 int ADMINAPI
-bos_ProcessInfoGet(const void *serverHandle, const char *processName,
+bos_ProcessInfoGet(const void *serverHandle, char *processName,
 		   bos_ProcessType_p processTypeP,
 		   bos_ProcessInfo_p processInfoP, afs_status_p st)
 {
@@ -1291,7 +1291,8 @@ bos_ProcessNotifierGet(const void *serverHandle, const char *processName,
 	goto fail_bos_ProcessNotifierGet;
     }
 
-    tst = BOZO_GetInstanceParm(b_handle->server, processName, 999, &notifier);
+    tst = BOZO_GetInstanceParm(b_handle->server, (char *)processName,
+			       999, &notifier);
 
     if (tst == 0) {
 	rc = 1;
@@ -1341,7 +1342,7 @@ bos_ProcessRestart(const void *serverHandle, const char *processName,
 	goto fail_bos_ProcessRestart;
     }
 
-    tst = BOZO_Restart(b_handle->server, processName);
+    tst = BOZO_Restart(b_handle->server, (char *)processName);
 
     if (tst == 0) {
 	rc = 1;
@@ -1621,7 +1622,7 @@ bos_AdminCreate(const void *serverHandle, const char *adminName,
 	goto fail_bos_AdminCreate;
     }
 
-    tst = BOZO_AddSUser(b_handle->server, adminName);
+    tst = BOZO_AddSUser(b_handle->server, (char *)adminName);
 
     if (tst == 0) {
 	rc = 1;
@@ -1671,7 +1672,7 @@ bos_AdminDelete(const void *serverHandle, const char *adminName,
 	goto fail_bos_AdminDelete;
     }
 
-    tst = BOZO_DeleteSUser(b_handle->server, adminName);
+    tst = BOZO_DeleteSUser(b_handle->server, (char *)adminName);
 
     if (tst == 0) {
 	rc = 1;
@@ -2252,7 +2253,7 @@ bos_CellSet(const void *serverHandle, const char *cellName, afs_status_p st)
 	goto fail_bos_CellSet;
     }
 
-    tst = BOZO_SetCellName(b_handle->server, cellName);
+    tst = BOZO_SetCellName(b_handle->server, (char *)cellName);
 
     if (tst == 0) {
 	rc = 1;
@@ -2349,7 +2350,7 @@ bos_HostCreate(const void *serverHandle, const char *hostName,
 	goto fail_bos_HostCreate;
     }
 
-    tst = BOZO_AddCellHost(b_handle->server, hostName);
+    tst = BOZO_AddCellHost(b_handle->server, (char *)hostName);
 
     if (tst == 0) {
 	rc = 1;
@@ -2398,7 +2399,7 @@ bos_HostDelete(const void *serverHandle, const char *hostName,
 	goto fail_bos_HostDelete;
     }
 
-    tst = BOZO_DeleteCellHost(b_handle->server, hostName);
+    tst = BOZO_DeleteCellHost(b_handle->server, (char *)hostName);
 
     if (tst == 0) {
 	rc = 1;
@@ -2699,7 +2700,7 @@ bos_ExecutableCreate(const void *serverHandle, const char *sourceFile,
     tcall = rx_NewCall(b_handle->server);
 
     tst =
-	StartBOZO_Install(tcall, destFile, estat.st_size,
+	StartBOZO_Install(tcall, (char *)destFile, estat.st_size,
 			  (afs_int32) estat.st_mode, estat.st_mtime);
 
     if (tst) {
@@ -2786,7 +2787,7 @@ bos_ExecutableRevert(const void *serverHandle, const char *execFile,
 	goto fail_bos_ExecutableRevert;
     }
 
-    tst = BOZO_UnInstall(b_handle->server, execFile);
+    tst = BOZO_UnInstall(b_handle->server, (char *)execFile);
 
     if (tst == 0) {
 	rc = 1;
@@ -2855,7 +2856,7 @@ bos_ExecutableTimestampGet(const void *serverHandle, const char *execFile,
     }
 
     tst =
-	BOZO_GetDates(b_handle->server, execFile, newTime, bakTime, oldTime);
+	BOZO_GetDates(b_handle->server, (char *)execFile, newTime, bakTime, oldTime);
 
     if (tst == 0) {
 	rc = 1;
