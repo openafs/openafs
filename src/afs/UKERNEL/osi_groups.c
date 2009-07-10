@@ -21,7 +21,7 @@
 
 
 int
-afs_xsetgroups()
+afs_xsetgroups(void)
 {
     usr_assert(0);
     return 0;
@@ -49,8 +49,6 @@ static int
 afs_setgroups(struct AFS_UCRED **cred, int ngroups, gid_t * gidset,
 	      int change_parent)
 {
-    int ngrps;
-    int i;
     gid_t *gp;
 
     AFS_STATCNT(afs_setgroups);

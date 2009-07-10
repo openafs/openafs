@@ -239,7 +239,7 @@ static pioctlFunction CpioctlSw[] = {
     PGetPAG,                    /* 13 */
 };
 
-static int (*(OpioctlSw[])) () = {
+static pioctlFunction OpioctlSw[]  = {
     PBogus,			/* 0 */
     PNFSNukeCreds,		/* 1 -- nuke all creds for NFS client */
 #if defined(AFS_CACHE_BYPASS)
@@ -680,6 +680,8 @@ afs_xioctl(void)
 #endif /* AFS_SUN5_ENV */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     return (code);
+#else
+    return 0;
 #endif
 }
 #endif /* AFS_SGI_ENV */
@@ -789,7 +791,9 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #ifdef AFS_NEED_CLIENTCONTEXT
     struct AFS_UCRED *tmpcred = NULL;
 #endif
+#if defined(AFS_NEED_CLIENTCONTEXT) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     struct AFS_UCRED *foreigncreds = NULL;
+#endif
     register afs_int32 code = 0;
     struct vnode *vp = NULL;
 #ifdef	AFS_AIX41_ENV
@@ -4751,7 +4755,7 @@ DECL_PIOCTL(PDiscon)
 
 DECL_PIOCTL(PNFSNukeCreds)
 {
-    afs_uint32 addr, code;
+    afs_uint32 addr;
     register afs_int32 i;
     register struct unixuser *tu;
 

@@ -42,7 +42,9 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     register struct afs_conn *tc;
     struct VenusFid newFid;
     register struct dcache *tdc;
+#ifdef AFS_DISCON_ENV
     struct dcache *new_dc;
+#endif
     afs_size_t offset, len;
     register struct vcache *tvc;
     struct AFSStoreStatus InStatus;
@@ -475,7 +477,6 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 
   done:
     AFS_DISCON_UNLOCK();
-  done3:
     afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 27);
   done2:

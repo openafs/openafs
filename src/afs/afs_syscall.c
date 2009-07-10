@@ -488,6 +488,7 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
     /* eparm is also used by AFSCALL_CALL in afsd.c */
 #else
 #if defined(UKERNEL)
+int
 Afs_syscall()
 {
     register struct a {

@@ -357,7 +357,7 @@ afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights,
     struct vrequest treq;
     OSI_VC_CONVERT(avc);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	return code;
 
     code = afs_VerifyVCache(avc, &treq);

@@ -77,8 +77,8 @@ afs_icl_InitLogs(void)
 }
 
 
-struct afs_icl_log *afs_icl_FindLog();
-struct afs_icl_set *afs_icl_FindSet();
+struct afs_icl_log *afs_icl_FindLog(char *);
+struct afs_icl_set *afs_icl_FindSet(char *);
 
 
 int

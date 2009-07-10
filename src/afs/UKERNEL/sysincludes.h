@@ -16,19 +16,21 @@
 #endif
 #include  <stdlib.h>
 #include  <string.h>
-#include  <unistd.h>
-#include  <dirent.h>
 #include  <limits.h>
 #include  <assert.h>
 #include  <stdarg.h>
+
 #if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) /* must be included after KERNEL undef'd */
-#include <setjmp.h>
+#include  <unistd.h>
+#include  <ctype.h>
+#include  <sys/types.h>
+#include  <dirent.h>
+#include  <setjmp.h>
 #endif
 
 #ifdef AFS_USR_SUN5_ENV
 #include  <signal.h>
 #include  <sys/param.h>
-#include  <sys/types.h>
 #include  <sys/socket.h>
 #include  <net/if.h>
 #include  <sys/sockio.h>
@@ -43,7 +45,6 @@
 
 #ifdef AFS_USR_AIX_ENV
 #include  <sys/param.h>
-#include  <sys/types.h>
 #include  <sys/socket.h>
 #include  <net/if.h>
 #include  <fcntl.h>
@@ -56,7 +57,6 @@
 
 #ifdef AFS_USR_SGI_ENV
 #include  <sys/param.h>
-#include  <sys/types.h>
 #include  <sys/socket.h>
 #include  <net/if.h>
 #include  <sys/sockio.h>
@@ -70,7 +70,6 @@
 
 #ifdef AFS_USR_HPUX_ENV
 #include  <sys/param.h>
-#include  <sys/types.h>
 #include  <sys/socket.h>
 #include  <net/if.h>
 #include  <sys/file.h>
@@ -87,7 +86,6 @@
 #define AFS_USR_UNDEF_KERNEL_ENV 1
 #endif
 #include  <sys/param.h>
-#include  <sys/types.h>
 #include  <sys/socket.h>
 #include  <net/if.h>
 #include  <sys/file.h>
@@ -135,6 +133,9 @@
 #include  <netinet/in.h>
 #include  <netdb.h>
 #include  <arpa/inet.h>
+#include  <dirent.h>
+#include  <ctype.h>
+#include  <unistd.h>
 #ifndef O_SYNC
 #define O_SYNC O_FSYNC
 #endif
@@ -1010,7 +1011,7 @@ do { \
     AFS_ASSERT_GLOCK(); \
     usr_assert((vp)->v_count > 0); \
     if (--((vp)->v_count) == 0) \
-	afs_inactive(vp, u.u_cred); \
+	afs_inactive(VTOAFS(vp), u.u_cred); \
 } while(0)
 
 struct usr_statfs {
@@ -1225,8 +1226,8 @@ struct vcache;
 
 
 struct usr_vnodeops {
-    int (*vn_open) (char *path, int flags, int mode);
-    int (*vn_close) (int fd);
+    int (*vn_open) (struct vcache **, afs_int32, struct AFS_UCRED *);
+    int (*vn_close) (struct vcache *, afs_int32, struct AFS_UCRED *);
     int (*vn_rdwr) (struct usr_vnode *avc, struct usr_uio *uio, 
 		    int rw, int io, struct usr_ucred *cred);
     int (*vn_ioctl) (void);
@@ -1277,7 +1278,7 @@ extern struct usr_mount *getmp(unsigned long);
 typedef long usr_whymountroot_t;
 
 struct usr_vfsops {
-    int (*vfs_mount) (struct vfs *, char *, caddr_t);
+    int (*vfs_mount) (struct vfs *, char *, struct vfs *);
     int (*vfs_unmount) (struct vfs *);
     int (*vfs_root) (struct vfs *, struct vnode **);
     int (*vfs_statfs) (struct vfs *, struct statfs *);

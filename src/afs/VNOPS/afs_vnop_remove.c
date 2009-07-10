@@ -434,7 +434,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 	if (!code) {
 	    struct VenusFid *oldmvid = NULL;
 	    if (tvc->mvid) 
-		oldmvid = (char *)tvc->mvid;
+		oldmvid = tvc->mvid;
 	    tvc->mvid = (struct VenusFid *)unlname;
 	    if (oldmvid)
 		osi_FreeSmallSpace(oldmvid);

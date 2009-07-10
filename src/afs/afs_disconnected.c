@@ -50,7 +50,6 @@ enum {
 
 afs_int32 afs_ConflictPolicy = SERVER_WINS;
 
-static void afs_DisconResetVCache(struct vcache *, struct AFS_UCRED *);
 static void afs_DisconDiscardAllShadows(int, struct AFS_UCRED *);
 void afs_DbgListDirEntries(struct VenusFid *afid);
 
@@ -659,7 +658,7 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     struct afs_conn *tc;
     afs_int32 hash, new_hash, index;
     afs_size_t tlen;
-    int code, op;
+    int code, op = 0;
     XSTATS_DECLS;
 
     tname = afs_osi_Alloc(AFSNAMEMAX);
@@ -1104,7 +1103,6 @@ int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
     struct AFSCallBack callback;
     struct AFSVolSync tsync;
     int code = 0;
-    int ucode;
     afs_int32 start = 0;
     XSTATS_DECLS;
     /*AFS_STATCNT(afs_ResyncDisconFiles);*/
@@ -1356,7 +1354,7 @@ afs_DisconDiscardAll(struct AFS_UCRED *acred) {
  *
  * \note Call with afs_DDirtyVCListLock read locked.
  */
-void afs_DbgDisconFiles()
+void afs_DbgDisconFiles(void)
 {
     struct vcache *tvc;
     struct afs_q *q;

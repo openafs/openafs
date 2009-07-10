@@ -58,7 +58,9 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     do {
 	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
+#ifdef AFS_64BIT_CLIENT
 	  retry:
+#endif
 	    RX_AFS_GUNLOCK();
 	    tcall = rx_NewCall(tc->id);
 	    RX_AFS_GLOCK();
@@ -361,7 +363,9 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			stored = 0;
 			tc = afs_Conn(&avc->f.fid, areq, 0);
 			if (tc) {
+#ifdef AFS_64BIT_CLIENT
 			  restart:
+#endif
 			    RX_AFS_GUNLOCK();
 			    tcall = rx_NewCall(tc->id);
 #ifdef AFS_64BIT_CLIENT

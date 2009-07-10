@@ -23,7 +23,7 @@ unsigned short usr_rx_port = 0;
 struct usr_ifnet *usr_ifnet = NULL;
 struct usr_in_ifaddr *usr_in_ifaddr = NULL;
 
-void rxk_InitializeSocket();
+void rxk_InitializeSocket(void);
 
 void
 afs_rxevent_daemon(void)
@@ -196,7 +196,7 @@ rxk_NewSocket(short aport)
 void
 rxk_InitializeSocket(void)
 {
-    int rc, sock, i;
+    int rc, sock;
 #ifdef AFS_USR_AIX_ENV
     unsigned long len, optval, optval0, optlen;
 #else /* AFS_USR_AIX_ENV */
@@ -283,7 +283,6 @@ osi_NetSend(osi_socket sockp, struct sockaddr_in *addr, struct iovec *iov,
 {
     int rc;
     int i;
-    unsigned long tmp;
     struct usr_socket *usockp = (struct usr_socket *)sockp;
     struct msghdr msg;
     struct iovec tmpiov[64];

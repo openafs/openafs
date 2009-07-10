@@ -15,16 +15,10 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-
-
 #ifdef	UKERNEL
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>
-#include <ctype.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <dirent.h>
 
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs_usrops.h"
@@ -32,6 +26,7 @@
 #include "afs/auth.h"
 #include "afs/cellconfig.h"
 #include "afs/vice.h"
+#include "afs/kauth.h"
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
 #include "rx/rx_globals.h"
@@ -103,8 +98,6 @@ int missing_VolInfoFile = 1;	/* Is the VOLINFOFILE missing? */
 int missing_CellInfoFile = 1;
 struct afs_cacheParams cparams;	/* params passed to cache manager */
 struct afsconf_dir *afs_cdir;	/* config dir */
-
-static int HandleMTab();
 
 int afs_bufferpages = 100;
 int usr_udpcksum = 0;
@@ -787,7 +780,6 @@ int
 afs_osi_Read(struct osi_file *fp, int offset, void *buf, afs_int32 len)
 {
     int rc, ret;
-    int code;
     struct stat st;
 
     AFS_ASSERT_GLOCK();
@@ -826,7 +818,6 @@ int
 afs_osi_Write(struct osi_file *fp, afs_int32 offset, void *buf, afs_int32 len)
 {
     int rc, ret;
-    int code;
     struct stat st;
 
     AFS_ASSERT_GLOCK();
@@ -916,13 +907,6 @@ afs_osi_VOP_RDWR(struct usr_vnode *vnodeP, struct usr_uio *uioP, int rw,
     uioP->uio_iov[0].iov_len -= rc;
     return 0;
 }
-
-/*
- * Use malloc/free routines with check patterns before and after each block
- */
-
-static char *afs_check_string1 = "UAFS";
-static char *afs_check_string2 = "AFS_OSI_";
 
 void *
 afs_osi_Alloc(size_t size)
@@ -1037,7 +1021,7 @@ osi_Active(struct vcache *avc)
 }
 
 int
-afs_osi_MapStrategy(int (*aproc) (), struct usr_buf *bp)
+afs_osi_MapStrategy(int (*aproc) (struct usr_buf *), struct usr_buf *bp)
 {
     afs_int32 returnCode;
     returnCode = (*aproc) (bp);
@@ -1084,8 +1068,6 @@ void
 osi_Init(void)
 {
     int i;
-    int rc;
-    usr_thread_t tid;
 
     /*
      * Allocate the table used to implement psuedo-inodes.
@@ -1481,8 +1463,6 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	  int nDaemonsParam, int cacheFlagsParam, char *logFile)
 {
     int st;
-    struct usr_proc *procp;
-    struct usr_ucred *ucredp;
     int i;
     int rc;
     int currVFile;		/* Current AFS cache file number */
@@ -1490,8 +1470,6 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     int cacheIteration;		/* cache verification loop counter */
     int vFilesFound;		/* Num data cache files found in sweep */
     FILE *logfd;
-    afs_int32 vfs1_type = -1;
-    struct afs_ioctl iob;
     char tbuffer[1024];
     char *p;
     char lastchar;
@@ -1669,8 +1647,9 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     }
     memset(pathname_for_V, 0, (cacheFiles * sizeof(char *)));
     if (afsd_debug)
-	printf("%s: %d pathname_for_V entries at 0x%x, %d bytes\n", rn,
-	       cacheFiles, pathname_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
+	printf("%s: %d pathname_for_V entries at %" AFS_PTR_FMT
+	       ", %lud bytes\n", rn, cacheFiles, pathname_for_V,
+	       afs_printable_uint32_lu(cacheFiles * sizeof(AFSD_INO_T)));
 
     /*
      * Set up all the pathnames we'll need for later.
@@ -2016,6 +1995,7 @@ syscallThread(void *argp)
     return 0;
 }
 
+int
 fork_syscall(syscall, afscall, param1, param2, param3, param4)
      long syscall, afscall, param1, param2, param3, param4;
 {
@@ -2037,6 +2017,7 @@ fork_syscall(syscall, afscall, param1, param2, param3, param4)
     return 0;
 }
 
+int
 call_syscall(syscall, afscall, param1, param2, param3, param4)
      long syscall, afscall, param1, param2, param3, param4;
 {
@@ -2220,6 +2201,7 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
     struct usr_vnode *vp;
     struct usr_vnode *nextVp;
     struct usr_vnode *linkVp;
+    struct vcache *nextVc;
     char *tmpPath;
     char *pathP;
     char *nextPathP = NULL;
@@ -2289,17 +2271,20 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 	     * lookup the next component in the path, we can release the
 	     * subdirectory since we hold the global lock
 	     */
+	    nextVc = NULL;
 	    nextVp = NULL;
 #ifdef AFS_WEB_ENHANCEMENTS
 	    if ((nextPathP != NULL && *nextPathP != '\0') || !no_eval_mtpt)
-		code = afs_lookup(vp, pathP, &nextVp, u.u_cred, 0);
+		code = afs_lookup(VTOAFS(vp), pathP, &nextVc, u.u_cred, 0);
 	    else
 		code =
-		    afs_lookup(vp, pathP, &nextVp, u.u_cred,
+		    afs_lookup(VTOAFS(vp), pathP, &nextVc, u.u_cred,
 			       AFS_LOOKUP_NOEVAL);
 #else
-	    code = afs_lookup(vp, pathP, &nextVp, u.u_cred, 0);
+	    code = afs_lookup(VTOAFS(vp), pathP, &nextVc, u.u_cred, 0);
 #endif /* AFS_WEB_ENHANCEMENTS */
+	    if (nextVc)
+		nextVp=AFSTOV(nextVc);
 	    if (code != 0) {
 		VN_RELE(vp);
 		afs_osi_Free(tmpPath, strlen(path) + 1);
@@ -2389,7 +2374,7 @@ uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentVp,
     /*
      * Read the link data
      */
-    code = afs_readlink(vp, &uio, u.u_cred);
+    code = afs_readlink(VTOAFS(vp), &uio, u.u_cred);
     if (code) {
 	afs_osi_Free(pathP, MAX_OSI_PATH + 1);
 	return code;
@@ -2552,7 +2537,7 @@ uafs_mkdir_r(char *path, int mode)
     int code;
     char *nameP;
     struct vnode *parentP;
-    struct vnode *dirP;
+    struct vcache *dirP;
     struct usr_vattr attrs;
 
     if (uafs_IsRoot(path)) {
@@ -2593,13 +2578,13 @@ uafs_mkdir_r(char *path, int mode)
     attrs.va_uid = u.u_cred->cr_uid;
     attrs.va_gid = u.u_cred->cr_gid;
     dirP = NULL;
-    code = afs_mkdir(parentP, nameP, &attrs, &dirP, u.u_cred);
+    code = afs_mkdir(VTOAFS(parentP), nameP, &attrs, &dirP, u.u_cred);
     VN_RELE(parentP);
     if (code != 0) {
 	errno = code;
 	return -1;
     }
-    VN_RELE(dirP);
+    VN_RELE(AFSTOV(dirP));
     return 0;
 }
 
@@ -3339,7 +3324,7 @@ uafs_fsync_r(int fd)
 	return -1;
     }
 
-    code = afs_fsync(fileP, u.u_cred);
+    code = afs_fsync(VTOAFS(fileP), u.u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3374,7 +3359,7 @@ uafs_close_r(int fd)
     }
     afs_FileTable[fd] = NULL;
 
-    code = afs_close(fileP, afs_FileFlags[fd], u.u_cred);
+    code = afs_close(VTOAFS(fileP), afs_FileFlags[fd], u.u_cred);
     VN_RELE(fileP);
     if (code != 0) {
 	errno = code;
@@ -3449,7 +3434,7 @@ uafs_link_r(char *existing, char *new)
     /*
      * Create the link
      */
-    code = afs_link(existP, dirP, nameP, u.u_cred);
+    code = afs_link(VTOAFS(existP), VTOAFS(dirP), nameP, u.u_cred);
     VN_RELE(existP);
     VN_RELE(dirP);
     if (code != 0) {
@@ -3518,7 +3503,7 @@ uafs_symlink_r(char *target, char *source)
     attrs.va_mode = 0777;
     attrs.va_uid = u.u_cred->cr_uid;
     attrs.va_gid = u.u_cred->cr_gid;
-    code = afs_symlink(dirP, nameP, &attrs, target, u.u_cred);
+    code = afs_symlink(VTOAFS(dirP), nameP, &attrs, target, u.u_cred);
     VN_RELE(dirP);
     if (code != 0) {
 	errno = code;
@@ -3575,7 +3560,7 @@ uafs_readlink_r(char *path, char *buf, int len)
     /*
      * Read the the link
      */
-    code = afs_readlink(vp, &uio, u.u_cred);
+    code = afs_readlink(VTOAFS(vp), &uio, u.u_cred);
     VN_RELE(vp);
     if (code) {
 	errno = code;
@@ -3606,8 +3591,6 @@ int
 uafs_unlink_r(char *path)
 {
     int code;
-    int openFlags;
-    struct usr_vnode *fileP;
     struct usr_vnode *dirP;
     char *nameP;
 
@@ -3643,7 +3626,7 @@ uafs_unlink_r(char *path)
     /*
      * Remove the file
      */
-    code = afs_remove(dirP, nameP, u.u_cred);
+    code = afs_remove(VTOAFS(dirP), nameP, u.u_cred);
     VN_RELE(dirP);
     if (code != 0) {
 	errno = code;
@@ -3720,7 +3703,7 @@ uafs_rename_r(char *old, char *new)
     /*
      * Rename the file
      */
-    code = afs_rename(odirP, onameP, ndirP, nnameP, u.u_cred);
+    code = afs_rename(VTOAFS(odirP), onameP, VTOAFS(ndirP), nnameP, u.u_cred);
     VN_RELE(odirP);
     VN_RELE(ndirP);
     if (code != 0) {
@@ -3749,8 +3732,6 @@ int
 uafs_rmdir_r(char *path)
 {
     int code;
-    int openFlags;
-    struct usr_vnode *fileP;
     struct usr_vnode *dirP;
     char *nameP;
 
@@ -3786,7 +3767,7 @@ uafs_rmdir_r(char *path)
     /*
      * Remove the directory
      */
-    code = afs_rmdir(dirP, nameP, u.u_cred);
+    code = afs_rmdir(VTOAFS(dirP), nameP, u.u_cred);
     VN_RELE(dirP);
     if (code != 0) {
 	errno = code;
@@ -3934,7 +3915,7 @@ uafs_getdents_r(int fd, struct min_direct *buf, int len)
     /*
      * read the next chunk from the directory
      */
-    code = afs_readdir(vp, &uio, u.u_cred);
+    code = afs_readdir(VTOAFS(vp), &uio, u.u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3960,7 +3941,6 @@ uafs_readdir(usr_DIR * dirp)
 struct usr_dirent *
 uafs_readdir_r(usr_DIR * dirp)
 {
-    int rc;
     int code;
     int len;
     struct usr_uio uio;
@@ -3999,7 +3979,7 @@ uafs_readdir_r(usr_DIR * dirp)
 	/*
 	 * read the next chunk from the directory
 	 */
-	code = afs_readdir(vp, &uio, u.u_cred);
+	code = afs_readdir(VTOAFS(vp), &uio, u.u_cred);
 	if (code != 0) {
 	    errno = code;
 	    return NULL;
@@ -4274,8 +4254,6 @@ int
 uafs_statmountpoint(char *path)
 {
     int retval;
-    int code;
-    char buf[256];
 
     AFS_GLOCK();
     retval = uafs_statmountpoint_r(path);
@@ -4289,7 +4267,6 @@ uafs_statmountpoint_r(char *path)
     int code;
     struct vnode *vp;
     struct vcache *avc;
-    struct vrequest treq;
     int r;
 
     code = uafs_LookupName(path, afs_CurrentDir, &vp, 0, 1);
@@ -4312,7 +4289,7 @@ uafs_statmountpoint_r(char *path)
 int
 uafs_getRights(char *path)
 {
-    int code, rc;
+    int code;
     struct vnode *vp;
     int afs_rights;
 
@@ -4328,7 +4305,7 @@ uafs_getRights(char *path)
 	PRSFS_READ | PRSFS_WRITE | PRSFS_INSERT | PRSFS_LOOKUP | PRSFS_DELETE
 	| PRSFS_LOCK | PRSFS_ADMINISTER;
 
-    afs_rights = afs_getRights(vp, afs_rights, u.u_cred);
+    afs_rights = afs_getRights(VTOAFS(vp), afs_rights, u.u_cred);
 
     AFS_GUNLOCK();
     return afs_rights;

@@ -674,11 +674,16 @@ extern void shutdown_osifile(void);
 
 
 /* ARCH/osi_groups.c */
-#if defined AFS_XBSD_ENV
-#if !defined(AFS_DFBSD_ENV) || !defined(UKERNEL)
+#if defined(UKERNEL)
+extern int usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue,
+		      afs_uint32 * newpag, int change_parent);
+#else
+# if defined AFS_XBSD_ENV
+#  if !defined(AFS_DFBSD_ENV)
 extern int setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
-#endif
+#  endif
+# endif
 #endif
 
 
@@ -732,6 +737,12 @@ extern struct vcache *afs_globalVp;
 #ifdef AFS_LINUX20_ENV
 extern void vcache2inode(struct vcache *avc);
 extern void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp);
+#endif
+
+#ifdef UKERNEL
+extern int afs_mount(struct vfs *path, char *data, struct vfs *afsp);
+extern int afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp);
+extern int afs_unmount(struct vfs *afsp);
 #endif
 
 /* afs_pag_call.c */
@@ -858,10 +869,15 @@ extern void uafs_Shutdown(void);
 extern void osi_ReleaseVM(struct vcache *avc, int len,
 			  struct usr_ucred *credp);
 extern int osi_GetTime(struct timeval *tv);
+extern int iodone(struct usr_buf *bp);
+extern int usr_ioctl(void);
+extern int lookupname(char *fnamep, int segflg, int followlink,
+		      struct usr_vnode **compvpp);
+extern int usr_uiomove(char *kbuf, int n, int rw, struct usr_uio *uio);
+extern int afs_osi_VOP_RDWR(struct usr_vnode *vnodeP, struct usr_uio *uioP,
+		            int rw, int flags, struct usr_ucred *credP);
+
 #endif
-
-
-
 
 /* afs_user.c */
 extern afs_rwlock_t afs_xuser;

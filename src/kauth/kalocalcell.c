@@ -54,12 +54,13 @@ static char cell_name[MAXCELLCHARS];
 int
 ka_CellConfig(const char *dir)
 {
-    int code;
 #ifdef UKERNEL
     conf = afs_cdir;
     strcpy(cell_name, afs_LclCellName);
     return 0;
 #else /* UKERNEL */
+    int code;
+
     LOCK_GLOBAL_MUTEX;
     if (conf)
 	afsconf_Close(conf);
@@ -77,7 +78,9 @@ ka_CellConfig(const char *dir)
 char *
 ka_LocalCell(void)
 {
+#ifndef UKERNEL
     int code = 0;
+#endif
 
     LOCK_GLOBAL_MUTEX;
     if (conf) {

@@ -85,8 +85,10 @@ extern int afsd_dynamic_vcaches;
 
 /* Disk backed vcache definitions 
  * Both protected by xvcache */
+#ifdef AFS_DISCON_ENV
 static int afs_nextVcacheSlot = 0;
 static struct afs_slotlist *afs_freeSlotList = NULL;
+#endif
 
 /* Forward declarations */
 static afs_int32 afs_QueueVCB(struct vcache *avc);
@@ -3279,11 +3281,12 @@ void
 shutdown_vcache(void)
 {
     int i;
-    struct afs_cbr *tsp, *nsp;
+    struct afs_cbr *tsp;
     /*
-     * XXX We may potentially miss some of the vcaches because if when there're no
-     * free vcache entries and all the vcache entries are active ones then we allocate
-     * an additional one - admittedly we almost never had that occur.
+     * XXX We may potentially miss some of the vcaches because if when
+     * there are no free vcache entries and all the vcache entries are active
+     * ones then we allocate an additional one - admittedly we almost never
+     * had that occur.
      */
 
     {
@@ -3375,7 +3378,7 @@ shutdown_vcache(void)
 	QInit(&afs_vhashTV[i]);
 }
 
-void afs_DisconGiveUpCallbacks() {
+void afs_DisconGiveUpCallbacks(void) {
     int i;
     struct vcache *tvc;
     int nq=0;
@@ -3407,7 +3410,7 @@ void afs_DisconGiveUpCallbacks() {
  * disconnected mode to tidy up during reconnection
  *
  */
-void afs_ClearAllStatdFlag() {
+void afs_ClearAllStatdFlag(void) {
     int i;
     struct vcache *tvc;
    

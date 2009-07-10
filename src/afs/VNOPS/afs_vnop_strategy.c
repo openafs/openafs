@@ -35,7 +35,6 @@ int afs_ustrategy(register struct buf *abp)
 {
     register afs_int32 code;
     struct uio tuio;
-    struct uio *tuiop = &tuio;
     struct iovec tiovec[1];
     register struct vcache *tvc = VTOAFS(abp->b_vp);
     register afs_int32 len = abp->b_bcount;

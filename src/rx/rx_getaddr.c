@@ -429,11 +429,14 @@ int
 rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
                      afs_uint32 mtuBuffer[], int maxSize)
 {
-    int s;
-    int i, len, count = 0;
+    int i, count = 0;
+#if defined(AFS_USERSPACE_IP_ADDR)
+    int s, len;
     struct ifconf ifc;
     struct ifreq ifs[NIFS], *ifr;
     struct sockaddr_in *a;
+#endif
+
 #if     defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX_ENV)
     char *cp, *cplim;		/* used only for AIX 41 */
 #endif

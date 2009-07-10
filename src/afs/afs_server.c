@@ -487,7 +487,7 @@ afs_CountServers(void)
 
 
 void
-ForceAllNewConnections()
+ForceAllNewConnections(void)
 {
     int srvAddrCount;
     struct srvAddr **addrs;
@@ -1850,7 +1850,7 @@ void afs_ActivateServer(struct srvAddr *sap) {
     }
 }
 
-void afs_RemoveAllConns()
+void afs_RemoveAllConns(void)
 {
     int i;
     struct server *ts, *nts;
@@ -1887,7 +1887,7 @@ void afs_RemoveAllConns()
     
 }
 
-void afs_MarkAllServersUp()
+void afs_MarkAllServersUp(void)
 {
     int i;
     struct server *ts;
@@ -1906,7 +1906,7 @@ void afs_MarkAllServersUp()
     ReleaseWriteLock(&afs_xserver);
 }
 
-void shutdown_server()
+void shutdown_server(void)
 {
     int i;
 

@@ -2433,7 +2433,10 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 
 		tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 		if (tc) {
-		    afs_int32 length_hi, length, bytes;
+#ifdef AFS_64BIT_CLIENT
+		    afs_int32 length_hi;
+#endif
+		    afs_int32 length, bytes;
 #ifndef AFS_NOSTATS
 		    numFetchLoops++;
 		    if (fromReplica)
@@ -3707,7 +3710,6 @@ int afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
     struct osi_file *tfile_src, *tfile_dst;
     struct VenusFid shadow_fid;
     char *data;
-    int lock_held = 0;
 
     /* Is this a dir? */
     if (vType(avc) != VDIR)

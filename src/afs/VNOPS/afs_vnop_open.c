@@ -169,7 +169,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     if ((afs_preCache != 0) && (writing == 0) && (vType(tvc) != VDIR) && 
 	(!afs_BBusy())) {
 	register struct dcache *tdc;
-	afs_size_t offset, len, totallen = 0;
+	afs_size_t offset, len;
 
 	tdc = afs_GetDCache(tvc, 0, &treq, &offset, &len, 1);
 

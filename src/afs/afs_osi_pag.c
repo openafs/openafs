@@ -376,7 +376,7 @@ afs_setpag_val(int pagval)
 
 #ifndef AFS_LINUX26_ONEGROUP_ENV
 int
-afs_getpag_val()
+afs_getpag_val(void)
 {
     int pagvalue;
     struct AFS_UCRED *credp = u.u_cred;
@@ -427,7 +427,9 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 int
 afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
+#ifdef AFS_LINUX26_ENV
     int code;
+#endif
     int i = 0;
 
     AFS_STATCNT(afs_InitReq);
@@ -610,7 +612,9 @@ PagInCred(struct AFS_UCRED *cred)
 #else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
 #endif
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
 out:
+#endif
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
     if (pag == NOPAG && cred->cr_rgid != NFSXLATOR_CRED) {
 	struct key *key;

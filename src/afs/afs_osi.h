@@ -279,7 +279,7 @@ typedef struct timeval osi_timeval_t;
  * and kernel space. Call these to avoid taking page faults while
  * holding the global lock.
  */
-#ifdef CAST_USER_ADDR_T
+#if defined(CAST_USER_ADDR_T) && !defined(UKERNEL)
 #define __U(X) CAST_USER_ADDR_T((X))
 #else
 #define __U(X) (X)

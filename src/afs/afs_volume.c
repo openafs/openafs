@@ -1056,7 +1056,8 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		&& ts->addr) {
 		/* uuid, uniquifier, and portal are the same */
 	    } else {
-		afs_uint32 *addrp, nentries, code, unique;
+		afs_uint32 *addrp, code;
+		afs_int32 nentries, unique;
 		bulkaddrs addrs;
 		ListAddrByAttributes attrs;
 		afsUUID uuid;

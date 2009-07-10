@@ -17,7 +17,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -27,10 +26,7 @@
 #include "afs/afs_osidnlc.h"
 #include "afs/afs_dynroot.h"
 
-
-extern struct DirEntry *afs_dir_GetBlob();
 extern struct vcache *afs_globalVp;
-
 
 afs_int32 afs_bkvolpref = 0;
 afs_int32 afs_bulkStatsDone;
@@ -661,7 +657,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     afs_int32 retry;		/* handle low-level SGI MP race conditions */
     long volStates;		/* flags from vol structure */
     struct volume *volp = 0;	/* volume ptr */
-    struct VenusFid dotdot = {0, 0, 0};
+    struct VenusFid dotdot = {0, {0, 0, 0}};
     int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;
@@ -1769,11 +1765,11 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	    afs_AddMarinerName(aname, tvc);
 
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
-	if (!(flags & AFS_LOOKUP_NOEVAL))
+	if (!(flags & AFS_LOOKUP_NOEVAL)) {
 	    /* Here we don't enter the name into the DNLC because we want the
-	     * evaluated mount dir to be there (the vcache for the mounted volume)
-	     * rather than the vc of the mount point itself.  we can still find the
-	     * mount point's vc in the vcache by its fid. */
+	     * evaluated mount dir to be there (the vcache for the mounted
+	     * volume) rather than the vc of the mount point itself.  We can
+	     * still find the mount point's vc in the vcache by its fid. */
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 	    if (!hit && force_eval) {
 		osi_dnlc_enter(adp, aname, tvc, &versionNo);
@@ -1787,6 +1783,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		return 0;	/* can't have been any errors if hit and !code */
 #endif
 	    }
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+	}
+#endif
     }
     if (bulkcode)
 	code = bulkcode;

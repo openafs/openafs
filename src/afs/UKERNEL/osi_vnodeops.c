@@ -33,12 +33,13 @@ afs_vrdwr(struct usr_vnode *avc, struct usr_uio *uio, int rw, int io,
 int
 afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
 {
-    struct vnode *vp = AFSTOV(avc);
     if (afs_shuttingdown)
-	return;
+	return 0;
 
     usr_assert(avc->vrefCount == 0);
     afs_InactiveVCache(avc, acred);
+
+    return 0;
 }
 
 struct usr_vnodeops Afs_vnodeops = {

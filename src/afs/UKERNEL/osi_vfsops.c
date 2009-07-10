@@ -15,12 +15,9 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics stuff */
 
+int afs_statfs(register struct vfs *afsp, struct statfs *abp);
+int afs_sync(struct vfs *afsp);
 
-int afs_mount();
-int afs_unmount();
-int afs_root();
-int afs_statfs();
-int afs_sync();
 
 struct vfsops Afs_vfsops = {
     afs_mount,
@@ -38,10 +35,8 @@ int afs_rootCellIndex = 0;
 #include "sys/syscall.h"
 #endif
 
-afs_mount(afsp, path, data)
-     char *path;
-     caddr_t data;
-     struct vfs *afsp;
+int
+afs_mount(struct vfs *path, char *data, struct vfs *afsp)
 {
     AFS_STATCNT(afs_mount);
 
@@ -57,8 +52,8 @@ afs_mount(afsp, path, data)
     return 0;
 }
 
-afs_unmount(afsp)
-     struct vfs *afsp;
+int
+afs_unmount(struct vfs *afsp)
 {
     AFS_STATCNT(afs_unmount);
     afs_globalVFS = 0;
@@ -66,9 +61,8 @@ afs_unmount(afsp)
     return 0;
 }
 
-afs_root(OSI_VFS_ARG(afsp), avpp)
-    OSI_VFS_DECL(afsp);
-     struct vnode **avpp;
+int
+afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp)
 {
     register afs_int32 code = 0;
     struct vrequest treq;
@@ -107,16 +101,15 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
     return code;
 }
 
-afs_sync(afsp)
-     struct vfs *afsp;
+int
+afs_sync(struct vfs *afsp)
 {
     AFS_STATCNT(afs_sync);
     return 0;
 }
 
-afs_statfs(afsp, abp)
-     register struct vfs *afsp;
-     struct statfs *abp;
+int
+afs_statfs(register struct vfs *afsp, struct statfs *abp)
 {
     AFS_STATCNT(afs_statfs);
     abp->f_type = 0;
@@ -126,13 +119,15 @@ afs_statfs(afsp, abp)
     return 0;
 }
 
-afs_mountroot()
+int
+afs_mountroot(void)
 {
     AFS_STATCNT(afs_mountroot);
     return (EINVAL);
 }
 
-afs_swapvp()
+int
+afs_swapvp(void)
 {
     AFS_STATCNT(afs_swapvp);
     return (EINVAL);
