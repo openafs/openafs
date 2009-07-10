@@ -160,6 +160,7 @@ ubeacon_InitServerListByInfo(afs_int32 ame, struct afsconf_cell *info,
  *
  * \see ubeacon_InitServerListCommon()
  */
+int
 ubeacon_InitServerList(afs_int32 ame, register afs_int32 aservers[])
 {
     afs_int32 code;
@@ -195,6 +196,7 @@ ubeacon_InitServerList(afs_int32 ame, register afs_int32 aservers[])
  *
  * \see ubeacon_InitServerList(), ubeacon_InitServerListByInfo()
  */
+int
 ubeacon_InitServerListCommon(afs_int32 ame, struct afsconf_cell *info, 
 			     char clones[], register afs_int32 aservers[])
 {
@@ -513,7 +515,7 @@ ubeacon_Interact(void *dummy)
  *
  * \return 0 on success, non-zero on failure
  */
-static
+static int
 verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 		       afs_uint32 aservers[]) {
     afs_uint32 myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
