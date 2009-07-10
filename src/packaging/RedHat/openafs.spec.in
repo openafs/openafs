@@ -1,4 +1,4 @@
-# Openafs Spec $Revision: 1.1.2.31 $
+# Openafs Spec $Revision: 1.1.2.32 $
 
 # TEMPORARY fix for patch fuzz so we can build on Fedora 10
 %define _default_patch_fuzz 2
@@ -269,7 +269,7 @@ Source1: http://www.openafs.org/dl/openafs/%{afsvers}/openafs-%{afsvers}-doc.tar
 Source10: http://www.openafs.org/dl/openafs/%{afsvers}/RELNOTES-%{afsvers}
 Source11: http://www.openafs.org/dl/openafs/%{afsvers}/ChangeLog
 
-Source20: http://dl.central.org/dl/cellservdb/CellServDB.2008-11-07
+Source20: http://dl.central.org/dl/cellservdb/CellServDB.2009-06-29
 
 Source30: openafs-kernel-version.sh
 Source996: openafs-kvers-is.sh
