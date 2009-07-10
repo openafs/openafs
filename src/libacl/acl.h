@@ -48,17 +48,19 @@ Used in VICE. This is how acccess lists are stored on secondary storage.
 #define ACL_MAXENTRIES	20
 
 /*
-External access lists are just char *'s, with the following format:  Begins with a decimal integer in format "%d\n%d\n"
-specifying the number of positive entries and negative entries that follow.  This is followed by the list
-of entries.  Each entry consists of a
-username or groupname followed by a decimal number representing the rights mask for that name.  Each
-entry in the list looks as if it had been produced by printf() using a format list of "%s\t%d\n".
+ * External access lists are just char *'s, with the following format:
+ *
+ * Begins with a decimal integer in format "%d\n%d\n" specifying the
+ * number of positive entries and negative entries that follow.  This is
+ * followed by the list of entries.  Each entry consists of a username or
+ * groupname followed by a decimal number representing the rights mask for
+ * that name.  Each entry in the list looks as if it had been produced by
+ * printf() using a format list of "%s\t%d\n".
+ *
+ * Note that the number of entries must be less than or equal to ACL_MAXENTRIES
+ */
 
-Note that the number of entries must be less than or equal to ACL_MAXENTRIES
-*/
-
-/* This is temporary hack to get around changing the volume package
-for now */
+/* This is temporary hack to get around changing the volume package for now */
 
 typedef struct acl_accessList AL_AccessList;
 
@@ -73,5 +75,8 @@ extern int acl_Initialize(char *version);
 extern int acl_CheckRights(struct acl_accessList *acl, prlist *groups, int *rights);
 extern int acl_IsAMember(afs_int32 aid, prlist *cps);
 #endif
+
+extern int acl_HtonACL(struct acl_accessList *);
+extern int acl_NtohACL(struct acl_accessList *);
 
 #endif

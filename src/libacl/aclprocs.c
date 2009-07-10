@@ -180,7 +180,7 @@ acl_Externalize(struct acl_accessList *acl, char **elist)
 
     register int i;
     register int j;
-    register code;
+    register int code;
     register char *nextc;
     idlist lids;
     namelist lnames;
