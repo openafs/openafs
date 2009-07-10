@@ -2192,7 +2192,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs
- VERSION=1.4.11pre3
+ VERSION=1.4.11
 
 
 cat >>confdefs.h <<_ACEOF
@@ -2340,10 +2340,10 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 ac_config_headers="$ac_config_headers src/config/afsconfig.h"
 
-MACOS_VERSION=1.4.11fc3
+MACOS_VERSION=1.4.11
 LINUX_PKGVER=1.4.11
-#LINUX_PKGREL=1.1
-LINUX_PKGREL=0.pre3
+#LINUX_PKGREL=0.pre3
+LINUX_PKGREL=1.1
 
 
 
