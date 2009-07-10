@@ -23,9 +23,12 @@ LIBS=${TOP_LIBDIR}/libbubasics.a \
 	${TOP_LIBDIR}/util.a \
 	${XLIBS}
 
-all: ${TOP_LIBDIR}/libbutm.a
+all: ${TOP_LIBDIR}/libbutm.a ${TOP_INCDIR}/afs/butm_prototypes.h
 
 ${TOP_LIBDIR}/libbutm.a: libbutm.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/butm_prototypes.h: butm_prototypes.h
 	${INSTALL_DATA} $? $@
 
 libbutm.a: file_tm.o AFS_component_version_number.o

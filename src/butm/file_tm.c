@@ -29,6 +29,7 @@
 #include <afs/butm.h>
 #include <afs/usd.h>
 #include "error_macros.h"
+#include "butm_prototypes.h"
 
 #ifdef O_LARGEFILE
 typedef off64_t osi_lloff_t;
