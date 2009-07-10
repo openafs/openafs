@@ -193,29 +193,25 @@ rxfs_storeUfsWrite(void *r, afs_uint32 l, afs_uint32 *byteswritten)
 }
 
 afs_int32
-rxfs_storePadd(void *rock, afs_uint32 sbytes)
+rxfs_storePadd(void *rock, afs_uint32 size)
 {
     afs_int32 code = 0;
     int bsent, tlen;
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)rock;
-    char *tbuffer = v->tbuffer;
 
-    if ( !tbuffer )
-	tbuffer = v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    if ( !v->tbuffer )
+	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+    memset(v->tbuffer, 0, AFS_LRALLOCSIZ);
 
-    while (sbytes > 0) {
-	tlen = (sbytes > AFS_LRALLOCSIZ
-			    ? AFS_LRALLOCSIZ : sbytes);
-	memset(tbuffer, 0, tlen);
+    while (size > 0) {
+	tlen = (size > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : size);
 	RX_AFS_GUNLOCK();
-	bsent = rx_Write(v->call, tbuffer, tlen);
+	code = rx_Write(v->call, v->tbuffer, tlen);
 	RX_AFS_GLOCK();
 
-	if (bsent != tlen) {
-	    code = -33;	/* XXX */
-	    break;
-	}
-	sbytes -= tlen;
+	if (code != tlen)
+	    return -33;	/* XXX */
+	size -= tlen;
     }
     return code;
 }
