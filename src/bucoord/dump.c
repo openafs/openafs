@@ -37,6 +37,7 @@
 
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
 struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
@@ -245,7 +246,7 @@ bc_StartDmpRst(struct bc_config *aconfig, char *adname, char *avname,
 {
     register int i;
     register afs_int32 code;
-    char *junk;
+    void *junk;
 
     for (i = 0; i < BC_MAXSIMDUMPS; i++)
 	if (!(bc_dumpTasks[i].flags & BC_DI_INUSE))

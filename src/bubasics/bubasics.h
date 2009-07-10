@@ -137,7 +137,7 @@ struct dlqlink {
     struct dlqlink *dlq_next;
     struct dlqlink *dlq_prev;
     afs_int32 dlq_type;
-    char *dlq_structPtr;	/* enclosing structure */
+    void *dlq_structPtr;	/* enclosing structure */
 };
 
 typedef struct dlqlink dlqlinkT;

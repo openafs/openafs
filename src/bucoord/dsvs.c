@@ -33,7 +33,7 @@
 
 #include <afs/bubasics.h>
 #include "bc.h"
-#include "bucoord_prototypes.h"
+#include "bucoord_internal.h"
     
 struct ubik_client *cstructp;	/*Ptr to Ubik client structure */
 

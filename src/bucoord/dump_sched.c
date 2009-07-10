@@ -33,7 +33,7 @@
 #include <afs/bubasics.h>
 #include "bc.h"
 #include "error_macros.h"
-#include "bucoord_prototypes.h"
+#include "bucoord_internal.h"
 
 /* code to manage dump schedules 
  * specific to the ubik database implementation

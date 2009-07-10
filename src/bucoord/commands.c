@@ -45,6 +45,7 @@
 #include <afs/vsutils_prototypes.h>
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 #include "regex.h"
 

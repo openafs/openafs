@@ -22,9 +22,12 @@ LIBS=${TOP_LIBDIR}/libbudb.a ${TOP_LIBDIR}/libbubasics.a \
         ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
         ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
 
-all: ${TOP_LIBDIR}/libbxdb.a backup
+all: ${TOP_LIBDIR}/libbxdb.a ${TOP_INCDIR}/afs/bucoord_prototypes.h backup
 
 ${TOP_LIBDIR}/libbxdb.a: libbxdb.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/bucoord_prototypes.h: bucoord_prototypes.h
 	${INSTALL_DATA} $? $@
 
 libbxdb.a: dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o

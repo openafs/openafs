@@ -27,7 +27,7 @@
 #include <afs/bubasics.h>
 #include "bc.h"
 #include "error_macros.h"
-#include "bucoord_prototypes.h"
+#include "bucoord_internal.h"
     
 /* code to manage volumesets
  * specific to the ubik database implementation

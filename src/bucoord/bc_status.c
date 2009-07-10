@@ -26,6 +26,7 @@
 #include <afs/cmd.h>
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
 #define	SET_FLAG(set)				\
@@ -40,7 +41,6 @@
 
 extern struct bc_config *bc_globalConfig;
 extern afs_int32 bc_GetConn(struct bc_config *aconfig, afs_int32 aport, struct rx_connection **tconn);
-extern statusP findStatus(afs_uint32 taskId);
 
 /* globals for backup coordinator status management */
 

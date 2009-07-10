@@ -25,6 +25,7 @@
 #include <afs/bubasics.h>
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
 extern dlqlinkT statusHead;	/* chain of status blocks */

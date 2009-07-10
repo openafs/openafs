@@ -44,9 +44,13 @@
 #include <afs/com_err.h>
 #include <lock.h>
 #include <afs/budb.h>
+#include <afs/kautils.h>
+#include <afs/vlserver.h>
+#include <afs/butm.h>
+#include <afs/butx.h>
 
 #include "bc.h"			/*Backup Coordinator structs and defs */
-#include "bucoord_prototypes.h"
+#include "bucoord_internal.h"
 
 int localauth, interact;
 char tcell[64];

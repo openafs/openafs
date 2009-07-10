@@ -35,6 +35,7 @@
 
 #include "bc.h"
 #include "error_macros.h"
+#include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
 extern char *whoami;
@@ -619,6 +620,7 @@ bcdb_SaveTextFile(udbClientTextP ctPtr)
     return (code);
 }
 
+int
 bcdb_FindLastTape(afs_int32 dumpID, struct budb_dumpEntry *dumpEntry,
 		  struct budb_tapeEntry *tapeEntry,
 		  struct budb_volumeEntry *volEntry)
@@ -627,6 +629,7 @@ bcdb_FindLastTape(afs_int32 dumpID, struct budb_dumpEntry *dumpEntry,
 	     tapeEntry, volEntry));
 }
 
+int
 bcdb_MakeDumpAppended(afs_int32 appendedDumpID, afs_int32 initialDumpID,
 		      afs_int32 startTapeSeq)
 {

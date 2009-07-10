@@ -34,6 +34,7 @@
 #include <afs/budb.h>
 #include <afs/vlserver.h>
 #include "error_macros.h"
+#include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
 
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
