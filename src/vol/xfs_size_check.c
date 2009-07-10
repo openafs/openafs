@@ -21,6 +21,7 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <mntent.h>
+#include "ihandle.h"
 #include "partition.h"
 #include <afs/xfsattrs.h>
 
