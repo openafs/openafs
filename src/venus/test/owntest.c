@@ -21,11 +21,8 @@
 #include <sys/time.h>
 #include <errno.h>
 
-extern int errno;
-
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct timeval tv[2];
     struct stat tstat;

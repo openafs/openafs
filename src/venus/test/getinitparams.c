@@ -13,11 +13,13 @@
 
 #include <afs/param.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
 #include <fcntl.h>
+#include <unistd.h>
 #ifdef AFS_AIX41_ENV
 #include <signal.h>
 #endif
@@ -37,7 +39,6 @@ GetInitParamsCmd(struct cmd_syndesc *as, void *arock)
     struct cm_initparams cm_initParams;
     struct ViceIoctl blob;
     int code;
-    int len;
     char *file = 0;
     int fd = 0;
 
@@ -90,10 +91,8 @@ GetInitParamsCmd(struct cmd_syndesc *as, void *arock)
     exit(0);
 }
 
-
-main(ac, av)
-     int ac;
-     char **av;
+int
+main(int ac, char **av)
 {
     int code;
     struct cmd_syndesc *ts;

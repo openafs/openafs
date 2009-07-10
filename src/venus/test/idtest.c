@@ -10,9 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-
-main(argc, argv)
+int
+main(int argc, char **argv)
 {
     int uid;
 
