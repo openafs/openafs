@@ -55,6 +55,8 @@
 #include "viceinode.h"
 
 #include "volinodes.h"
+#include "vol_prototypes.h"
+
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
 #endif
@@ -71,12 +73,6 @@
 #endif /* !O_LARGEFILE */
 
 /*@printflike@*/ extern void Log(const char *format, ...);
-
-void AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext);
-void AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext);
-void ClearVolumeStats(register VolumeDiskData * vol);
-void ClearVolumeStats_r(register VolumeDiskData * vol);
-
 
 #define nFILES	(sizeof (stuff)/sizeof(struct stuff))
 

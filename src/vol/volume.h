@@ -783,6 +783,7 @@ extern int VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes,
 			      afs_uint32 nSmallVnodes, int connect, afs_uint32 volcache);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
+extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
 extern void VTakeOffline_r(register Volume * vp);
 extern void VTakeOffline(register Volume * vp);
 extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
@@ -817,6 +818,8 @@ extern void VCancelReservation_r(Volume * vp);
 #endif /* AFS_DEMAND_ATTACH_FS */
 extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
+
+extern void VPurgeVolume(Error * ec, Volume * vp);
 
 
 /* Naive formula relating number of file size to number of 1K blocks in file */

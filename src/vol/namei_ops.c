@@ -98,7 +98,6 @@ emul_flock(int fd, int cmd)
 #define flock(f,c)      emul_flock(f,c)
 #endif
 
-extern char *volutil_PartitionName_r(int volid, char *buf, int buflen);
 int Testing=0;
 
 
@@ -831,8 +830,8 @@ namei_copy_on_write(IHandle_t *h)
 	fdP = IH_OPEN(h);
 	if (!fdP)
 	    return EIO;
-	strcpy(&path, name.n_path);
-	strcat(&path, "-tmp");
+	strcpy(path, name.n_path);
+	strcat(path, "-tmp");
 	fd = afs_open(path, O_CREAT | O_EXCL | O_TRUNC | O_RDWR, 0);
 	if (fd < 0) {
 	    FDH_CLOSE(fdP);

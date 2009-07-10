@@ -51,6 +51,7 @@
 #include "volume.h"
 #include "partition.h"
 #include "viceinode.h"
+#include "vol_prototypes.h"
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
