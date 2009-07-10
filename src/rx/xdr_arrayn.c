@@ -59,6 +59,7 @@
 #endif
 #else
 #include <stdio.h>
+#include <string.h>
 #endif
 #include "xdr.h"
 

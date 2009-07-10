@@ -95,11 +95,11 @@ rxi_InitializeThreadSupport(void)
 static void *
 server_entry(void *argp)
 {
-    void (*server_proc) () = (void (*)())argp;
-    server_proc();
+    void (*server_proc) (void *) = (void (*)(void *))argp;
+    server_proc(NULL);
     dpf(("rx_pthread.c: server_entry: Server proc returned unexpectedly\n"));
     exit(1);
-    return (void *)0;
+    return NULL;
 }
 
 /*
@@ -190,6 +190,7 @@ event_handler(void *argp)
 #endif
 	rx_pthread_event_rescheduled = 0;
     }
+    return NULL;
 }
 
 
@@ -270,6 +271,7 @@ rx_ListenerProc(void *argp)
 	/* assert(sock != OSI_NULLSOCKET); */
     }
     /* not reached */
+    return NULL;
 }
 
 /* This is the server process request loop. The server process loop
@@ -317,6 +319,7 @@ rx_ServerProc(void * dummy)
 	/* assert(newcall != NULL); */
     }
     /* not reached */
+    return NULL;
 }
 
 /*
@@ -441,7 +444,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
     return 0;
 }
 
-struct rx_ts_info_t * rx_ts_info_init() {
+struct rx_ts_info_t * rx_ts_info_init(void) {
     struct rx_ts_info_t * rx_ts_info;
     rx_ts_info = (rx_ts_info_t *) malloc(sizeof(rx_ts_info_t));
     assert(rx_ts_info != NULL && pthread_setspecific(rx_ts_info_key, rx_ts_info) == 0);
