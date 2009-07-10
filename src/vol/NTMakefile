@@ -28,9 +28,8 @@ INCFILES =\
 	$(INCFILEDIR)\afs\volume.h \
         $(INCFILEDIR)\afs\volume_inline.h \
 	$(INCFILEDIR)\afs\voldefs.h \
-	$(INCFILEDIR)\afs\daemon_com.h
-
-
+	$(INCFILEDIR)\afs\daemon_com.h \
+        $(INCFILEDIR)\afs\vol_prototypes.h
 
 ############################################################################
 # Build afsvol.lib
