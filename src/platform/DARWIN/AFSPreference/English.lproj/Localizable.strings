@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AfsButtonShutdown</key>
+	<string>Shutdown</string>
+	<key>AfsButtonStartup</key>
+	<string>Startup</string>
+	<key>AfsOff</key>
+	<string>Afs is off</string>
+	<key>AfsOn</key>
+	<string>Afs is on</string>
+	<key>ConfFileNotExits</key>
+	<string>Configuration files not found</string>
+	<key>ConfigurationSaved</key>
+	<string>Configuration file has been saved</string>
+	<key>DevelopInfo</key>
+	<string>Developed by Claudio Bisegni</string>
+	<key>NewCellComment</key>
+	<string>Cell comment</string>
+	<key>NewCellName</key>
+	<string>Cell name</string>
+	<key>PathDontContainAfsInstallation</key>
+	<string>Installation path doesn't contain an afs installation</string>
+	<key>PathNotEmpty</key>
+	<string>Path can't be empty</string>
+	<key>ThisCellFOError</key>
+	<string>ThisCell file open error</string>
+	<key>UserNotAuth</key>
+	<string>User not autenticated</string>
+	<key>MenuLogin</key>
+	<string>Get token</string>
+	<key>MenuUnlog</key>
+	<string>Release token</string>
+	<key>SavedCacheConfiguration</key>
+	<string>Cache Configuration File Saved</string>
+	<key>BadAfsRootMountPoint</key>
+	<string>Error in afs volume mount point</string>
+	<key>KerberosAuthError</key>
+	<string>Error in Kerberos Authetincation</string>
+	<key>BadAfsPath</key>
+	<string>Bad AFS mount point</string>
+	<key>DoYouWantCreateTheDirectory</key>
+	<string>Do you want create the directory </string>
+	<key>DirectoryCreated</key>
+	<string>Directory and launchd configuration file created</string>
+	<key>ErrorCreatingDirectory</key>
+	<string>Error creating directory</string>	
+</dict>
+</plist>
