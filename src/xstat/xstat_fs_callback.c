@@ -35,6 +35,7 @@
 #include <string.h>
 
 #include <afs/afscbint.h>	/*Callback interface defs */
+#include <afs/afsutil.h>
 
 int afs_cb_inited = 0;
 struct interfaceAddr afs_cb_interface;
@@ -45,7 +46,7 @@ struct interfaceAddr afs_cb_interface;
  * Initialize the callback interface structure
  */
 static int
-init_afs_cb()
+init_afs_cb(void)
 {
     int count;
 
@@ -63,12 +64,9 @@ init_afs_cb()
     return 0;
 }
 
-/*
- * Routines we need that don't have explicit include file definitions.
- */
-extern char *hostutil_GetNameByINet();	/*Host parsing utility */
-
+#if XSTAT_FS_CALLBACK_VERBOSE
 static char mn[] = "xstat_fs_callback";	/*Module name */
+#endif
 
 /*------------------------------------------------------------------------
  * SRXAFSCB_CallBack
@@ -488,8 +486,6 @@ SRXAFSCB_InitCallBackState2(struct rx_call * rxcall,
 afs_int32
 SRXAFSCB_WhoAreYou(struct rx_call * rxcall, struct interfaceAddr * addr)
 {
-    int code = 0;
-
 #if XSTAT_FS_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_WhoAreYou";	/*Routine name */
     char hostName[256];		/*Host name buffer */
@@ -749,8 +745,6 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
 			     struct interfaceAddr * addr,
 			     Capabilities * capabilites)
 {
-    int code = 0;
-
 #if XSTAT_FS_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_TellMeAboutYourself";	/*Routine name */
     char hostName[256];		/*Host name buffer */
@@ -777,14 +771,9 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
     return (0);
 }
 
-int SRXAFSCB_GetDE(a_call, a_index, addr, inode, flags, time, fileName)
-     struct rx_call *a_call;
-     afs_int32 a_index;
-     afs_int32 addr;
-     afs_int32 inode;
-     afs_int32 flags;
-     afs_int32 time;
-     char ** fileName;
+int SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 addr,
+		   afs_int32 inode, afs_int32 flags, afs_int32 time,
+		   char **fileName)
 {
     return RXGEN_OPCODE;
 }

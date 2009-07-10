@@ -95,7 +95,8 @@ extern char terminationEvent;	/*One-shot termination event */
 /*
  * ------------------------ Exported functions ------------------------
  */
-extern int xstat_fs_Init();
+extern int xstat_fs_Init(int, struct sockaddr_in *, int, int (*)(void),
+			 int, int, afs_int32 *);
     /*
      * Summary:
      *    Initialize the xstat_fs module: set up Rx connections to the
@@ -107,7 +108,7 @@ extern int xstat_fs_Init();
      *    int a_numServers                  : Num. servers to connect.
      *    struct sockaddr_in *a_socketArray : Array of server sockets.
      *    int a_ProbeFreqInSecs             : Probe frequency in seconds.
-     *    int (*a_ProbeHandler)()           : Ptr to probe handler fcn.
+     *    int (*a_ProbeHandler)(void)       : Ptr to probe handler fcn.
      *    int a_flags                       : Various flags.
      *    int a_numCollections              : Number of collections desired.
      *    afs_int32 *a_collIDP              : Ptr to collection IDs.
@@ -117,7 +118,7 @@ extern int xstat_fs_Init();
      *    Error value otherwise.
      */
 
-extern int xstat_fs_ForceProbeNow();
+extern int xstat_fs_ForceProbeNow(void);
     /*
      * Summary:
      *    Force an immediate probe to the connected File Servers.
@@ -130,7 +131,7 @@ extern int xstat_fs_ForceProbeNow();
      *    Error value otherwise.
      */
 
-extern int xstat_fs_Cleanup();
+extern int xstat_fs_Cleanup(int);
     /*
      * Summary:
      *    Clean up our memory and connection state.

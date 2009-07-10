@@ -27,11 +27,6 @@
 #define LWP_STACK_SIZE	(16 * 1024)
 
 /*
- * Routines we need that don't have explicit include file definitions.
- */
-extern char *hostutil_GetNameByINet();	/*Host parsing utility */
-
-/*
  * Exported variables.
  */
 int xstat_cm_numServers;	/*Num connected servers */
@@ -50,7 +45,7 @@ static int xstat_cm_ProbeFreqInSecs;	/*Probe freq. in seconds */
 static int xstat_cm_initflag = 0;	/*Was init routine called? */
 static int xstat_cm_debug = 0;	/*Debugging output enabled? */
 static int xstat_cm_oneShot = 0;	/*One-shot operation? */
-static int (*xstat_cm_Handler) ();	/*Probe handler routine */
+static int (*xstat_cm_Handler) (void);	/*Probe handler routine */
 static PROCESS probeLWP_ID;	/*Probe LWP process ID */
 static int xstat_cm_numCollections;	/*Number of desired collections */
 static afs_int32 *xstat_cm_collIDP;	/*Ptr to collection IDs desired */
@@ -78,7 +73,7 @@ static afs_int32 *xstat_cm_collIDP;	/*Ptr to collection IDs desired */
  *------------------------------------------------------------------------*/
 
 static int
-xstat_cm_CleanupInit()
+xstat_cm_CleanupInit(void)
 {
     xstat_cm_ConnInfo = (struct xstat_cm_ConnectionInfo *)0;
     xstat_cm_Results.probeNum = 0;
@@ -625,7 +620,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
  *------------------------------------------------------------------------*/
 
 int
-xstat_cm_ForceProbeNow()
+xstat_cm_ForceProbeNow(void)
 {
     static char rn[] = "xstat_cm_ForceProbeNow";	/*Routine name */
 

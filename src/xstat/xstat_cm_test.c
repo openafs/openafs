@@ -21,11 +21,7 @@
 #include <cmd.h>		/*Command line interpreter */
 #include <time.h>
 #include <string.h>
-
-/*
- * External routines that don't have explicit include file definitions.
- */
-extern struct hostent *hostutil_GetHostByName();
+#include <afs/afsutil.h>
 
 /*
  * Command line parameter indices.
@@ -116,10 +112,9 @@ static char *xferOpNames[] = {
  *------------------------------------------------------------------------*/
 
 void
-PrintCallInfo()
+PrintCallInfo(void)
 {				/*PrintCallInfo */
 
-    static char rn[] = "PrintCallInfo";	/*Routine name */
     register int i;		/*Loop variable */
     int numInt32s;		/*# int32words returned */
     afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
@@ -151,9 +146,8 @@ PrintCallInfo()
 /* Print detailed functional call statistics */
 
 void
-print_cmCallStats()
+print_cmCallStats(void)
 {
-    static char rn[] = "print_cmCallStats";	/*Routine name */
     char *printableTime;	/*Ptr to printable time string */
     struct afs_CMStats *cmp;
     time_t probeTime = xstat_cm_Results.probeTime;
@@ -634,9 +628,7 @@ print_cmCallStats()
  *------------------------------------------------------------------------*/
 
 void
-PrintUpDownStats(a_upDownP)
-     struct afs_stats_SrvUpDownInfo *a_upDownP;	/*Ptr to server up/down info */
-
+PrintUpDownStats(struct afs_stats_SrvUpDownInfo *a_upDownP)
 {				/*PrintUpDownStats */
 
     /*
@@ -700,9 +692,7 @@ PrintUpDownStats(a_upDownP)
  *------------------------------------------------------------------------*/
 
 void
-PrintOverallPerfInfo(a_ovP)
-     struct afs_stats_CMPerf *a_ovP;
-
+PrintOverallPerfInfo(struct afs_stats_CMPerf *a_ovP)
 {				/*PrintOverallPerfInfo */
 
     printf("\t%10d numPerfCalls\n", a_ovP->numPerfCalls);
@@ -791,10 +781,9 @@ PrintOverallPerfInfo(a_ovP)
  *------------------------------------------------------------------------*/
 
 void
-PrintPerfInfo()
+PrintPerfInfo(void)
 {				/*PrintPerfInfo */
 
-    static char rn[] = "PrintPerfInfo";	/*Routine name */
     static afs_int32 perfInt32s = (sizeof(struct afs_stats_CMPerf) >> 2);	/*Correct # int32s to rcv */
     afs_int32 numInt32s;	/*# int32words received */
     struct afs_stats_CMPerf *perfP;	/*Ptr to performance stats */
@@ -846,11 +835,8 @@ PrintPerfInfo()
  *------------------------------------------------------------------------*/
 
 void
-PrintOpTiming(a_opIdx, a_opNames, a_opTimeP)
-     int a_opIdx;
-     char *a_opNames[];
-     struct afs_stats_opTimingData *a_opTimeP;
-
+PrintOpTiming(int a_opIdx, char *a_opNames[],
+	      struct afs_stats_opTimingData *a_opTimeP)
 {				/*PrintOpTiming */
 
     printf
@@ -886,11 +872,8 @@ PrintOpTiming(a_opIdx, a_opNames, a_opTimeP)
  *------------------------------------------------------------------------*/
 
 void
-PrintXferTiming(a_opIdx, a_opNames, a_xferP)
-     int a_opIdx;
-     char *a_opNames[];
-     struct afs_stats_xferData *a_xferP;
-
+PrintXferTiming(int a_opIdx, char *a_opNames[],
+		struct afs_stats_xferData *a_xferP)
 {				/*PrintXferTiming */
 
     printf
@@ -934,11 +917,8 @@ PrintXferTiming(a_opIdx, a_opNames, a_xferP)
  *------------------------------------------------------------------------*/
 
 void
-PrintErrInfo(a_opIdx, a_opNames, a_opErrP)
-     int a_opIdx;
-     char *a_opNames[];
-     struct afs_stats_RPCErrors *a_opErrP;
-
+PrintErrInfo(int a_opIdx, char *a_opNames[],
+	     struct afs_stats_RPCErrors *a_opErrP)
 {				/*PrintErrInfo */
 
     printf
@@ -970,9 +950,7 @@ PrintErrInfo(a_opIdx, a_opNames, a_opErrP)
  *------------------------------------------------------------------------*/
 
 void
-PrintRPCPerfInfo(a_rpcP)
-     struct afs_stats_RPCOpInfo *a_rpcP;
-
+PrintRPCPerfInfo(struct afs_stats_RPCOpInfo *a_rpcP)
 {				/*PrintRPCPerfInfo */
 
     int currIdx;		/*Loop variable */
@@ -1020,12 +998,11 @@ PrintRPCPerfInfo(a_rpcP)
  *------------------------------------------------------------------------*/
 
 void
-PrintFullPerfInfo()
+PrintFullPerfInfo(void)
 {				/*PrintFullPerfInfo */
 
     struct afs_stats_AuthentInfo *authentP;	/*Ptr to authentication stats */
     struct afs_stats_AccessInfo *accessinfP;	/*Ptr to access stats */
-    struct afs_stats_AuthorInfo *authorP;	/*Ptr to authorship stats */
     static afs_int32 fullPerfInt32s = (sizeof(struct afs_stats_CMFullPerf) >> 2);	/*Correct #int32s */
     afs_int32 numInt32s;	/*# int32s actually received */
     struct afs_stats_CMFullPerf *fullP;	/*Ptr to full perf info */
@@ -1112,7 +1089,7 @@ PrintFullPerfInfo()
  *------------------------------------------------------------------------*/
 
 int
-CM_Handler()
+CM_Handler(void)
 {				/*CM_Handler */
 
     static char rn[] = "CM_Handler";	/*Routine name */
@@ -1180,9 +1157,7 @@ CM_Handler()
  *------------------------------------------------------------------------*/
 
 static int
-CountListItems(a_firstItem)
-     struct cmd_item *a_firstItem;
-
+CountListItems(struct cmd_item *a_firstItem)
 {				/*CountListItems */
 
     int list_len;		/*List length */
@@ -1425,11 +1400,8 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
 
 
 #include "AFS_component_version_number.c"
-
-main(argc, argv)
-     int argc;
-     char **argv;
-
+int
+main(int argc, char **argv)
 {				/*Main routine */
 
     static char rn[] = "xstat_cm_test";	/*Routine name */
