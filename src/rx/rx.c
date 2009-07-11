@@ -2838,7 +2838,7 @@ rxi_ReceivePacket(struct rx_packet *np, osi_socket socket,
 	    *call->callNumber = np->header.callNumber;
 #ifdef RXDEBUG
 	    if (np->header.callNumber == 0) 
-		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec / 1000, np->length));
+		dpf(("RecPacket call 0 %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%06d len %d", np->header.serial, rx_packetTypes[np->header.type - 1], ntohl(conn->peer->host), ntohs(conn->peer->port), np->header.serial, np->header.epoch, np->header.cid, np->header.callNumber, np->header.seq, np->header.flags, (unsigned long)np, np->retryTime.sec, np->retryTime.usec, np->length));
 #endif
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -6022,7 +6022,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
 
-    dpf(("rxi_ComputeRoundTripTime(rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%0.3d sec)\n", MSEC(rttp), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
+    dpf(("rxi_ComputeRoundTripTime(rtt=%d ms, srtt=%d ms, rtt_dev=%d ms, timeout=%d.%06d sec)\n", MSEC(rttp), peer->rtt >> 3, peer->rtt_dev >> 2, (peer->timeout.sec), (peer->timeout.usec)));
 }
 
 
@@ -6260,7 +6260,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
 	return;
     }
 
-    dpf(("CONG peer %lx/%u: sample (%s) size %ld, %ld ms (to %lu.%06lu, rtt %u, ps %u)", ntohl(peer->host), ntohs(peer->port), (ackReason == RX_ACK_REQUESTED ? "dataack" : "pingack"), xferSize, xferMs, peer->timeout.sec, peer->timeout.usec, peer->smRtt, peer->ifMTU));
+    dpf(("CONG peer %lx/%u: sample (%s) size %ld, %ld ms (to %d.%06d, rtt %u, ps %u)", ntohl(peer->host), ntohs(peer->port), (ackReason == RX_ACK_REQUESTED ? "dataack" : "pingack"), xferSize, xferMs, peer->timeout.sec, peer->timeout.usec, peer->smRtt, peer->ifMTU));
 
     /* Track only packets that are big enough. */
     if ((p->length + RX_HEADER_SIZE + call->conn->securityMaxTrailerSize) <
@@ -6306,7 +6306,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
      * one packet exchange */
     if (clock_Gt(&newTO, &peer->timeout)) {
 
-	dpf(("CONG peer %lx/%u: timeout %lu.%06lu ==> %lu.%06lu (rtt %u, ps %u)", ntohl(peer->host), ntohs(peer->port), peer->timeout.sec, peer->timeout.usec, newTO.sec, newTO.usec, peer->smRtt, peer->packetSize));
+	dpf(("CONG peer %lx/%u: timeout %d.%06d ==> %ld.%06d (rtt %u, ps %u)", ntohl(peer->host), ntohs(peer->port), peer->timeout.sec, peer->timeout.usec, newTO.sec, newTO.usec, peer->smRtt, peer->packetSize));
 
 	peer->timeout = newTO;
     }
@@ -6340,7 +6340,7 @@ rxi_ComputeRate(struct rx_peer *peer, struct rx_call *call,
 	/* calculate estimate for transmission interval in milliseconds */
 	minTime = rx_Window * peer->smRtt;
 	if (minTime < 1000) {
-	    dpf(("CONG peer %lx/%u: cut TO %lu.%06lu by 0.5 (rtt %u, ps %u)",
+	    dpf(("CONG peer %lx/%u: cut TO %d.%06d by 0.5 (rtt %u, ps %u)",
 		 ntohl(peer->host), ntohs(peer->port), peer->timeout.sec,
 		 peer->timeout.usec, peer->smRtt, peer->packetSize));
 
@@ -6435,8 +6435,8 @@ rxi_DebugPrint(char *format, ...)
     va_start(ap, format);
 
     clock_GetTime(&now);
-    fprintf(rx_Log, " %u.%.3u:", (unsigned int)now.sec,
-	    (unsigned int)now.usec / 1000);
+    fprintf(rx_Log, " %d.%06d:", (unsigned int)now.sec,
+	    (unsigned int)now.usec);
     vfprintf(rx_Log, format, ap);
     putc('\n', rx_Log);
     va_end(ap);
@@ -6548,7 +6548,7 @@ rx_PrintStats(FILE * file)
 void
 rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
 {
-    fprintf(file, "Peer %x.%d.  " "Burst size %d, " "burst wait %u.%d.\n",
+    fprintf(file, "Peer %x.%d.  " "Burst size %d, " "burst wait %d.%06d.\n",
 	    ntohl(peer->host), (int)peer->port, (int)peer->burstSize,
 	    (int)peer->burstWait.sec, (int)peer->burstWait.usec);
 
