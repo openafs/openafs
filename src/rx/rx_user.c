@@ -28,6 +28,7 @@
 # include <sys/time.h>
 # include <net/if.h>
 # include <sys/ioctl.h>
+# include <unistd.h>
 #endif
 # include <fcntl.h>
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 

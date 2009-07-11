@@ -22,6 +22,7 @@
 #include <sys/time.h>
 #include <sys/file.h>
 #include <netinet/in.h>
+#include <unistd.h>
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>

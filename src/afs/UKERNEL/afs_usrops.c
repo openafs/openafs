@@ -21,6 +21,11 @@
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>
+#include <ctype.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <dirent.h>
+
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs_usrops.h"
 #include "afs/afs_stats.h"

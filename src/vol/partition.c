@@ -31,6 +31,7 @@
 #else
 #include <sys/param.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
 #include <sys/statvfs.h>

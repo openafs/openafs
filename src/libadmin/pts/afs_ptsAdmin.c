@@ -12,6 +12,7 @@
 
 
 #include <stdio.h>
+#include <ctype.h>
 #include <afs/stds.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>

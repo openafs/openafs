@@ -19,6 +19,7 @@
 #include "des/des.h"
 #include "rx/rxkad.h"
 #include <netdb.h>
+#include <ctype.h>
 #else /* UKERNEL */
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -32,6 +33,7 @@
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/time.h>
+#include <ctype.h>
 #ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #ifdef HAVE_ARPA_NAMESER_COMPAT_H

@@ -27,6 +27,10 @@
 #else
 #include <strings.h>
 #endif
+#ifndef AFS_NT40_ENV
+#include <unistd.h>
+#endif
+
 #include <afs/afsutil.h>
     
 #include <afs/assert.h>

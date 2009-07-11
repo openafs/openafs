@@ -27,6 +27,7 @@
 #include "afs/venus.h"
 #include "afs/pthread_glock.h"
 #include "afs/dirpath.h"
+#include <ctype.h>
 
 #if !defined(min)
 #define min(a,b) ((a)<(b)?(a):(b))

@@ -25,6 +25,7 @@
 #include <sys/param.h>
 #include <sys/file.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 #include <string.h>
 #include <sys/stat.h>

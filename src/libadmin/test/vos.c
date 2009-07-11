@@ -18,6 +18,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <afs/afsutil.h>
+#include <unistd.h>
 #endif
 
 

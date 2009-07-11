@@ -10,6 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#include <stdlib.h>
 
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>

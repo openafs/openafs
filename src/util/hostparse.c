@@ -19,6 +19,7 @@
 #include "afs/sysincludes.h"
 #include "afs/afsutil.h"
 #include <netdb.h>
+#include <ctype.h>
 #else /* UKERNEL */
 #include <stdio.h>
 #include <sys/types.h>

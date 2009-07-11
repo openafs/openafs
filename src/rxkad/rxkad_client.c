@@ -50,6 +50,7 @@
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#include <unistd.h>
 #endif
 #include <rx/rx.h>
 #include <rx/xdr.h>

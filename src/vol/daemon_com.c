@@ -33,6 +33,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 #include <errno.h>
 #include <assert.h>

@@ -31,6 +31,7 @@
 # include <net/if.h>
 # include <sys/ioctl.h>
 # include <sys/time.h>
+# include <unistd.h>
 #endif
 #include <sys/stat.h>
 #include <rx/rx.h>

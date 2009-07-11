@@ -95,6 +95,7 @@
 #else
 #include <sys/time.h>
 #include <sys/file.h>
+#include <unistd.h>
 #endif
 #include <afs/assert.h>
 
