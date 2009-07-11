@@ -5052,7 +5052,7 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
     if (resending)
 	peer->reSends += len;
     if (rx_stats_active)
-        rx_MutexIncrement(rx_stats.dataPacketsSent, rx_stats_mutex);
+        rx_MutexAdd(rx_stats.dataPacketsSent, len, rx_stats_mutex);
     MUTEX_EXIT(&peer->peer_lock);
 
     if (list[len - 1]->header.flags & RX_LAST_PACKET) {
@@ -5098,14 +5098,6 @@ rxi_SendList(struct rx_call *call, struct rx_packet **list, int len,
 		requestAck = 1;
 	    }
 	}
-
-	MUTEX_ENTER(&peer->peer_lock);
-	peer->nSent++;
-	if (resending)
-	    peer->reSends++;
-        if (rx_stats_active)
-            rx_MutexIncrement(rx_stats.dataPacketsSent, rx_stats_mutex);
-	MUTEX_EXIT(&peer->peer_lock);
 
 	/* Tag this packet as not being the last in this group,
 	 * for the receiver's benefit */
