@@ -19,7 +19,7 @@ INCLS=${TOP_INCDIR}/ubik.h \
              ${TOP_INCDIR}/rx/xdr.h \
              ${TOP_INCDIR}/afs/keys.h \
              ${TOP_INCDIR}/afs/cellconfig.h \
-	vlserver.h vlclient.h vldbint.h
+	vlserver.h vldbint.h
 
 LIBS=\
 	${TOP_LIBDIR}/libubik.a \

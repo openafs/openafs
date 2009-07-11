@@ -49,7 +49,6 @@
 #include <lock.h>
 #include <ubik.h>
 #include "vlserver.h"
-#include "vlclient.h"
 
 void fill_listattributes_entry(struct VldbListByAttributes *, char **, int);
 void display_listattributes_entry(struct VldbListByAttributes *,int);
