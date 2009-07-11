@@ -170,7 +170,9 @@ setup:
 
 ${INSTDIRS}:
 
-${COMPDIRS} ${DESTDIRS}: setup
+${DESTDIRS}:
+
+${COMPDIRS}: setup
 	$(RM) -f h 
 	$(RM) -f sys
 	$(RM) -f netinet 
