@@ -39,7 +39,9 @@ SYSOBJS =\
 UTILOBJS =\
 	assert.o \
 	casestrcpy.o \
-	base64.o
+	base64.o \
+	strlcat.o \
+	strlcpy.o
 
 COMERROBJS =\
 	error_msg.o \
@@ -350,6 +352,12 @@ assert.o: ${UTIL}/assert.c
 
 base64.o: ${UTIL}/base64.c
 	${CCRULE} ${UTIL}/base64.c
+
+strlcat.o: ${UTIL}/strlcat.c
+	${CCRULE} ${UTIL}/strlcat.c
+
+strlcpy.o: ${UTIL}/strlcpy.c
+	${CCRULE} ${UTIL}/strlcpy.c
 
 fasttime.o: ${LWP}/fasttime.c
 	${CCRULE} ${LWP}/fasttime.c
