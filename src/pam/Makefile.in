@@ -21,10 +21,10 @@ AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
 	  ${TOP_LIBDIR}/util.a
 
 LDFLAGS = ${SHLIB_LDFLAGS}
-   LIBS = ${TOP_LIBDIR}/libkauth.a ${LIBSA} ${TOP_LIBDIR}/libauth.a \
-	  ${AFSLIBS} ${PAM_LIBS} @LIB_AFSDB@
-  KLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${LIBSA} ${TOP_LIBDIR}/libauth.krb.a \
-	  ${AFSLIBS} ${PAM_LIBS} @LIB_AFSDB@
+   LIBS = ${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a \
+	  ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
+  KLIBS = ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
+	  ${TOP_LIBDIR}/libafsrpc_pic.a ${PAM_LIBS} @LIB_AFSDB@ ${MT_LIBS}
  SHOBJS = afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
@@ -51,12 +51,20 @@ afs_util.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
 
-pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
-	-../config/shlib-build -d $(srcdir) -f pam_afs.so.1 -l pam_afs -- \
+ktc_krb.o: ${srcdir}/../auth/ktc.c ${srcdir}/../auth/cellconfig.h \
+		${srcdir}/../auth/auth.h ${srcdir}/../auth/keys.h \
+		${TOP_INCDIR}/afs/vice.h
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c -o $@
+
+pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o \
+		${TOP_LIBDIR}/libafsauthent_pic.a ${TOP_LIBDIR}/libafsrpc_pic.a
+	../config/shlib-build -d $(srcdir) -f pam_afs.so.1 -l pam_afs -- \
 		afs_setcred.o afs_auth.o afs_util.o ${SHOBJS} ${LIBS}
 
-pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o
-	-../config/shlib-build -d $(srcdir) -f pam_afs.krb.so.1 -l pam_afs -- \
+pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
+		ktc_krb.o ${TOP_LIBDIR}/libafsauthent_pic.a \
+		${TOP_LIBDIR}/libafsrpc_pic.a
+	../config/shlib-build -d $(srcdir) -f pam_afs.krb.so.1 -l pam_afs -- \
 		afs_setcred_krb.o afs_auth_krb.o afs_util_krb.o \
 		${SHOBJS} ${KLIBS}
 
@@ -77,13 +85,13 @@ test_pam: test_pam.o
 
 install: pam_afs.so.1 pam_afs.krb.so.1
 	${INSTALL} -d ${DESTDIR}${libdir}
-	-${INSTALL_DATA} pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.so.1
-	-${INSTALL_DATA} pam_afs.krb.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
+	${INSTALL_DATA} pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.so.1
+	${INSTALL_DATA} pam_afs.krb.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
 
 dest: pam_afs.so.1 pam_afs.krb.so.1
 	${INSTALL} -d ${DEST}/lib
-	-${INSTALL_DATA} pam_afs.so.1 ${DEST}/lib/pam_afs.so.1
-	-${INSTALL_DATA} pam_afs.krb.so.1 ${DEST}/lib/pam_afs.krb.so.1
+	${INSTALL_DATA} pam_afs.so.1 ${DEST}/lib/pam_afs.so.1
+	${INSTALL_DATA} pam_afs.krb.so.1 ${DEST}/lib/pam_afs.krb.so.1
 
 afs_pam_msg.o: afs_pam_msg.c afs_pam_msg.h afs_message.h
 afs_message.o: afs_message.c afs_message.h

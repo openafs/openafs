@@ -334,7 +334,7 @@ vfsck:	vol
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
 	esac
 
-pam: cmd comerr kauth rxkad
+pam: auth shlibafsauthent shlibafsrpc
 	+set -x; \
 	if test "@HAVE_PAM@" = "yes"; then \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ; \

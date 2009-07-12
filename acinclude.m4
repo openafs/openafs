@@ -778,7 +778,7 @@ else
 			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
-			enable_pam="no"
+			enable_pam="yes"
 			;;
 		*)
 			AC_MSG_ERROR(An AFS sysname is required)
