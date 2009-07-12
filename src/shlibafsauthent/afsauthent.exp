@@ -47,6 +47,7 @@ ktc_GetToken
 ktc_ListTokens
 ktc_OldPioctl
 ktc_SetToken
+ktc_curpag
 ubik_Call
 ubik_Call_New
 ubik_CallIter

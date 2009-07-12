@@ -1,7 +1,7 @@
 # API version. When something changes, increment as appropriate. 
 # Ignore at your own risk.
 LIBAFSAUTHENTMAJOR=1
-LIBAFSAUTHENTMINOR=0
+LIBAFSAUTHENTMINOR=1
 
 # Copyright 2000, International Business Machines Corporation and others.
 # All Rights Reserved.
