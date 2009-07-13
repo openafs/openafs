@@ -108,7 +108,7 @@ rxfs_storeMemPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
     RX_AFS_GLOCK();
     if (code <= 0) {
 	code = rx_Error(v->call);
-	if ( !code )
+	if (!code)
 	    code = -33;
     }
     else {
@@ -196,14 +196,14 @@ afs_int32
 rxfs_storePadd(void *rock, afs_uint32 size)
 {
     afs_int32 code = 0;
-    int bsent, tlen;
+    afs_uint32 tlen;
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)rock;
 
-    if ( !v->tbuffer )
+    if (!v->tbuffer)
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     memset(v->tbuffer, 0, AFS_LRALLOCSIZ);
 
-    while (size > 0) {
+    while (size) {
 	tlen = (size > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : size);
 	RX_AFS_GUNLOCK();
 	code = rx_Write(v->call, v->tbuffer, tlen);
@@ -257,12 +257,11 @@ rxfs_storeDestroy(void **r, afs_int32 error)
 
     *r = NULL;
     if (v->call) {
-	afs_int32 code2;
 	RX_AFS_GUNLOCK();
-	code2 = rx_EndCall(v->call, code);
+	code = rx_EndCall(v->call, error);
 	RX_AFS_GLOCK();
-	if (code2)
-	    code = code2;
+	if (!code && error)
+	    code = error;
     }
     if (v->tbuffer)
 	osi_FreeLargeSpace(v->tbuffer);
@@ -1097,7 +1096,7 @@ afs_CacheFetchProc(register struct afs_conn *tc,
 #ifndef AFS_NOSTATS
 	bytesToXfer += length;
 #endif /* AFS_NOSTATS */
-	while (length > 0) {
+	while (length) {
 #ifdef RX_KERNEL_TRACE
 	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		       "before rx_Read");
@@ -1137,7 +1136,7 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     (*ops->destroy)(&rock, code);
 
 #ifndef AFS_NOSTATS
-    FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA,&xferStartTime,
+    FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA, &xferStartTime,
 			bytesToXfer, bytesXferred);
 #endif
     XSTATS_END_TIME;
