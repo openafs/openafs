@@ -952,7 +952,11 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 	    if (bytes == sizeof(afs_int32))
 		length = ntohl(length);
 	    else {
+		RX_AFS_GUNLOCK();
 		code = rx_Error(v->call);
+                code1 = rx_EndCall(v->call, code);
+		v->call = NULL;
+		RX_AFS_GLOCK();
 	    }
 	}
 	FillInt64(length64, length_hi, length);
@@ -975,6 +979,8 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
                 *alength = ntohl(length);
 	    } else {
 		code = rx_Error(v->call);
+                code1 = rx_EndCall(v->call, code);
+		v->call = NULL;
 	    }
 	}
 #endif /* AFS_64BIT_CLIENT */
