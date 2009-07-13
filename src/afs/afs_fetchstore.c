@@ -821,6 +821,13 @@ rxfs_fetchDestroy(void **r, afs_int32 error)
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)*r;
 
     *r = NULL;
+    if (v->call) {
+        RX_AFS_GUNLOCK();
+	code = rx_EndCall(v->call, error);
+        RX_AFS_GLOCK();
+	if (error)
+	    code = error;
+    }
     if (v->tbuffer)
 	osi_FreeLargeSpace(v->tbuffer);
     if (v->iov)
