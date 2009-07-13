@@ -1200,7 +1200,7 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
                               Capabilities * capabilities)
 {
     int i;
-    afs_int32 *dataBuffP;
+    afs_uint32 *dataBuffP;
     afs_int32 dataBytes;
     long code;
     struct rx_connection *connp;
@@ -1245,10 +1245,10 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     }
     lock_ReleaseRead(&cm_syscfgLock);
 
-    dataBytes = 1 * sizeof(afs_int32);
-    dataBuffP = (afs_int32 *) osi_Alloc(dataBytes);
+    dataBytes = 1 * sizeof(afs_uint32);
+    dataBuffP = (afs_uint32 *) osi_Alloc(dataBytes);
     dataBuffP[0] = CLIENT_CAPABILITY_ERRORTRANS;
-    capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
+    capabilities->Capabilities_len = dataBytes / sizeof(afs_uint32);
     capabilities->Capabilities_val = dataBuffP;
 
     return 0;
