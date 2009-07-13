@@ -233,8 +233,15 @@ rxfs_storeClose(void *r, struct AFSFetchStatus *OutStatus, int *doProcessFS)
     struct AFSVolSync tsync;
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
 
+    if (!v->call)
+	return -1;
     RX_AFS_GUNLOCK();
-    code = EndRXAFS_StoreData(v->call, OutStatus, &tsync);
+#ifdef AFS_64BIT_CLIENT
+    if (!v->hasNo64bit)
+	code = EndRXAFS_StoreData64(v->call, OutStatus, &tsync);
+    else
+#endif
+	code = EndRXAFS_StoreData(v->call, OutStatus, &tsync);
     RX_AFS_GLOCK();
     if (!code)
 	*doProcessFS = 1;	/* Flag to run afs_ProcessFS() later on */
@@ -780,7 +787,7 @@ rxfs_fetchUfsWrite(void *r, struct osi_file *fP,
 
 afs_int32
 rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
-					struct afs_FetchOutput *tsmall)
+					struct afs_FetchOutput *o)
 {
     afs_int32 code, code1 = 0;
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
@@ -789,14 +796,15 @@ rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
 	return -1;
 
     RX_AFS_GUNLOCK();
-    code = EndRXAFS_FetchData(v->call, &tsmall->OutStatus,
-			      &tsmall->CallBack,
-			      &tsmall->tsync);
-    RX_AFS_GLOCK();
-
-    RX_AFS_GUNLOCK();
-    if (v->call)
-	code1 = rx_EndCall(v->call, code);
+#ifdef AFS_64BIT_CLIENT
+    if (!v->hasNo64bit)
+        code = EndRXAFS_FetchData64(v->call, &o->OutStatus, &o->CallBack,
+				&o->tsync);
+    else
+#endif
+        code = EndRXAFS_FetchData(v->call, &o->OutStatus, &o->CallBack,
+				&o->tsync);
+    code1 = rx_EndCall(v->call, code);
     RX_AFS_GLOCK();
     if (!code && code1)
 	code = code1;
