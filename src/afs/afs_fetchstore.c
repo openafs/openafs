@@ -1065,6 +1065,12 @@ afs_CacheFetchProc(register struct afs_conn *tc,
 
     XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHDATA);
 
+    /*
+     * Locks held:
+     * avc->lock(R) if setLocks && !slowPass
+     * avc->lock(W) if !setLocks || slowPass
+     * adc->lock(W)
+     */
     code = rxfs_fetchInit(
 		tc, avc, base, size, &length, &moredata, adc, fP, &ops, &rock);
 
