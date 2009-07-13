@@ -295,8 +295,8 @@ struct storeOps rxfs_storeMemOps = {
 };
 
 afs_int32
-rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
-		afs_size_t bytes, afs_size_t base,
+rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t base,
+		afs_size_t bytes, afs_size_t length,
 		int sync, struct storeOps **ops, void **rock)
 {
     afs_int32 code;
@@ -319,20 +319,21 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
     if (v->call) {
 #ifdef AFS_64BIT_CLIENT
 	if (!afs_serverHasNo64Bit(tc))
-	    code = StartRXAFS_StoreData64(v->call,(struct AFSFid*)&avc->f.fid.Fid,
-				       &v->InStatus, base, bytes, tlen);
+	    code = StartRXAFS_StoreData64(
+	    			v->call, (struct AFSFid*)&avc->f.fid.Fid,
+				&v->InStatus, base, bytes, length);
 	else
-	    if (tlen > 0xFFFFFFFF)
+	    if (length > 0xFFFFFFFF)
 		code = EFBIG;
 	    else {
-		afs_int32 t1 = base, t2 = bytes, t3 = tlen;
+		afs_int32 t1 = base, t2 = bytes, t3 = length;
 		code = StartRXAFS_StoreData(v->call,
 					(struct AFSFid *) &avc->f.fid.Fid,
 					 &v->InStatus, t1, t2, t3);
 	    }
 #else /* AFS_64BIT_CLIENT */
 	code = StartRXAFS_StoreData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
-				    &v->InStatus, base, bytes, tlen);
+				    &v->InStatus, base, bytes, length);
 #endif /* AFS_64BIT_CLIENT */
     } else
 	code = -1;
@@ -358,9 +359,9 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
 	/* for now, only do 'continue from close' code if file fits in one
 	 * chunk.  Could clearly do better: if only one modified chunk
 	 * then can still do this.  can do this on *last* modified chunk */
-	tlen = avc->f.m.Length - 1; /* byte position of last byte we'll store */
+	length = avc->f.m.Length - 1; /* byte position of last byte we'll store */
 	if (shouldWake) {
-	    if (AFS_CHUNK(tlen) != 0)
+	    if (AFS_CHUNK(length) != 0)
 		*shouldWake = 0;
 	    else
 		*shouldWake = 1;
@@ -410,10 +411,10 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 
     for (i = 0; i < nchunks && !code; i++) {
 	int stored = 0;
-	struct osi_file *fP;
+	struct osi_file *tfile;
 	int offset = 0;
 	struct dcache *tdc = dclist[i];
-	afs_int32 alen = tdc->f.chunkBytes;
+	afs_int32 size = tdc->f.chunkBytes;
 	if (!tdc) {
 	    afs_warn("afs: missing dcache!\n");
 	    storeallmissing++;
@@ -431,11 +432,11 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	    else if ((afs_uint32) avc->asynchrony >= (bytes - stored))
 		shouldwake = &nomore;
 	}
-	fP = afs_CFileOpen(&tdc->f.inode);
+	tfile = afs_CFileOpen(&tdc->f.inode);
 
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
 		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, size);
 
 	AFS_STATCNT(CacheStoreProc);
 
@@ -443,23 +444,23 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	avc->f.truncPos = AFS_NOTRUNC;
 #ifndef AFS_NOSTATS
 	/*
-	 * In this case, alen is *always* the amount of data we'll be trying
+	 * In this case, size is *always* the amount of data we'll be trying
 	 * to ship here.
 	 */
-	bytesToXfer = alen;
+	bytesToXfer = size;
 	bytesXferred = 0;
 
 	osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
-	while ( alen > 0 ) {
+	while ( size > 0 ) {
 	    afs_uint32 tlen;
 	    afs_int32 bytesread, byteswritten;
-	    code = (*ops->prepare)(rock, alen, &tlen);
+	    code = (*ops->prepare)(rock, size, &tlen);
 	    if ( code )
 		break;
 
-	    code = (*ops->read)(rock, fP, offset, tlen, &bytesread);
+	    code = (*ops->read)(rock, tfile, offset, tlen, &bytesread);
 	    if (code)
 		break;
 
@@ -472,7 +473,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 #endif /* AFS_NOSTATS */
 
 	    offset += tlen;
-	    alen -= tlen;
+	    size -= tlen;
 	    /*
 	     * if file has been locked on server, can allow
 	     * store to continue
@@ -484,14 +485,14 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	}
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
 		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, size);
 
 #ifndef AFS_NOSTATS
 	FillStoreStats(code, AFS_STATS_FS_XFERIDX_STOREDATA,
 		    &xferStartTime, bytesToXfer, bytesXferred);
 #endif /* AFS_NOSTATS */
 
-	afs_CFileClose(fP);
+	afs_CFileClose(tfile);
 	if ((tdc->f.chunkBytes < afs_OtherCSize)
 		&& (i < (nchunks - 1)) && code == 0) {
 	    int bsent, tlen, sbytes = afs_OtherCSize - tdc->f.chunkBytes;
@@ -565,7 +566,6 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
     struct AFSFetchStatus OutStatus;
     int doProcessFS = 0;
     afs_size_t base, bytes, length;
-    afs_uint32 nchunks;
     int nomore;
     unsigned int first = 0;
     struct afs_conn *tc;
@@ -584,6 +584,7 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 	    }
 	}
 	if (bytes && (j == high || !dcList[j + 1])) {
+	    afs_uint32 nchunks;
 	    struct dcache **dclist = &dcList[first];
 	    /* base = AFS_CHUNKTOBASE(dcList[first]->f.chunk); */
 	    base = AFS_CHUNKTOBASE(first + minj);
@@ -610,14 +611,13 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 		       ICL_HANDLE_OFFSET(base), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(bytes), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(length));
+	    tc = afs_Conn(&avc->f.fid, areq, 0);
 
 	    do {
-		tc = afs_Conn(&avc->f.fid, areq, 0);
-
 #ifdef AFS_64BIT_CLIENT
 	      restart:
 #endif
-		code = rxfs_storeInit(avc, tc, length, bytes, base,
+		code = rxfs_storeInit(avc, tc, base, bytes, length,
 					sync, &ops, &rock);
 		if ( code )
 		    goto nocall;
