@@ -351,7 +351,7 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
 	/* for now, only do 'continue from close' code if file fits in one
 	 * chunk.  Could clearly do better: if only one modified chunk
 	 * then can still do this.  can do this on *last* modified chunk */
-	tlen = avc->f.m.Length - 1;	/* byte position of last byte we'll store */
+	tlen = avc->f.m.Length - 1; /* byte position of last byte we'll store */
 	if (shouldWake) {
 	    if (AFS_CHUNK(tlen) != 0)
 		*shouldWake = 0;
@@ -876,11 +876,8 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
-    int code, code1;
+    int code = 0, code1;
     afs_uint32 length_hi = 0, length, bytes;
-#ifdef AFS_64BIT_CLIENT
-    afs_size_t length64;     /* as returned from server */
-#endif /* AFS_64BIT_CLIENT */
 
     v = (struct rxfs_fetchVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_fetchVariables));
     if (!v)
@@ -890,77 +887,84 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
     RX_AFS_GUNLOCK();
     v->call = rx_NewCall(tc->id);
     RX_AFS_GLOCK();
-
+    if (v->call) {
 #ifdef AFS_64BIT_CLIENT
-    if (!afs_serverHasNo64Bit(tc)) {
-	afs_uint64 llbytes = size;
-	RX_AFS_GUNLOCK();
-	code = StartRXAFS_FetchData64(v->call, (struct AFSFid *)&avc->f.fid.Fid,
-                                           base, llbytes);
-	if (code != 0) {
-	    RX_AFS_GLOCK();
-	    afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
-                           ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
-	} else {
-	    bytes = rx_Read(v->call, (char *)&length_hi, sizeof(afs_int32));
-	    RX_AFS_GLOCK();
-	    if (bytes == sizeof(afs_int32)) {
-		length_hi = ntohl(length_hi);
-	    } else {
-		code = rx_Error(v->call);
-		RX_AFS_GUNLOCK();
-		code1 = rx_EndCall(v->call, code);
+	afs_size_t length64;     /* as returned from server */
+	if (!afs_serverHasNo64Bit(tc)) {
+	    afs_uint64 llbytes = size;
+	    RX_AFS_GUNLOCK();
+	    code = StartRXAFS_FetchData64(v->call, (struct AFSFid *) &avc->f.fid.Fid,
+					       base, llbytes);
+	    if (code != 0) {
 		RX_AFS_GLOCK();
-		v->call = NULL;
+		afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
+			       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
+	    } else {
+		bytes = rx_Read(v->call, (char *)&length_hi, sizeof(afs_int32));
+		RX_AFS_GLOCK();
+		if (bytes == sizeof(afs_int32)) {
+		    length_hi = ntohl(length_hi);
+		} else {
+		    code = rx_Error(v->call);
+		    RX_AFS_GUNLOCK();
+		    code1 = rx_EndCall(v->call, code);
+		    RX_AFS_GLOCK();
+		    v->call = NULL;
+		}
 	    }
 	}
-    }
-    if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
-	if (base > 0x7FFFFFFF) {
-	    code = EFBIG;
-	} else {
-	    afs_int32 pos;
-	    pos = base;
+	if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
+	    if (base > 0x7FFFFFFF) {
+		code = EFBIG;
+	    } else {
+                afs_uint32 pos;
+		pos = base;
+		RX_AFS_GUNLOCK();
+		if (!v->call)
+		    v->call = rx_NewCall(tc->id);
+		code =
+		    StartRXAFS_FetchData(
+		    		v->call, (struct AFSFid*)&avc->f.fid.Fid,
+				pos, size);
+		RX_AFS_GLOCK();
+	    }
+	    afs_serverSetNo64Bit(tc);
+	}
+	if (!code) {
 	    RX_AFS_GUNLOCK();
-	    if (!v->call)
-		v->call = rx_NewCall(tc->id);
-	    code =
-		StartRXAFS_FetchData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
-					pos, size);
+	    bytes = rx_Read(v->call, (char *)&length, sizeof(afs_int32));
 	    RX_AFS_GLOCK();
+	    if (bytes == sizeof(afs_int32))
+		length = ntohl(length);
+	    else {
+		code = rx_Error(v->call);
+	    }
 	}
-	afs_serverSetNo64Bit(tc);
-    }
-    if (!code) {
-	RX_AFS_GUNLOCK();
-	bytes = rx_Read(v->call, (char *)&length, sizeof(afs_int32));
-	RX_AFS_GLOCK();
-	if (bytes == sizeof(afs_int32))
-	    length = ntohl(length);
-	else {
-	    code = rx_Error(v->call);
-	}
-    }
-    FillInt64(length64, length_hi, length);
-    afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64LENG,
-	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
-	       ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(length64));
+	FillInt64(length64, length_hi, length);
+	afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64LENG,
+		   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
+		   ICL_TYPE_OFFSET,
+		   ICL_HANDLE_OFFSET(length64));
+	*alength = length64;
 #else /* AFS_64BIT_CLIENT */
-    RX_AFS_GUNLOCK();
-    code = StartRXAFS_FetchData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
-				 base, size);
-    RX_AFS_GLOCK();
-    if (code == 0) {
 	RX_AFS_GUNLOCK();
-	bytes = rx_Read(v->call, (char *)&length, sizeof(afs_int32));
+	code = StartRXAFS_FetchData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
+				     base, size);
 	RX_AFS_GLOCK();
-	if (bytes == sizeof(afs_int32))
-	    length = ntohl(length);
-	else
-	    code = rx_Error(v->call);
-    }
+	if (code == 0) {
+	    RX_AFS_GUNLOCK();
+	    bytes =
+		rx_Read(v->call, (char *)&length, sizeof(afs_int32));
+	    RX_AFS_GLOCK();
+	    if (bytes == sizeof(afs_int32)) {
+                *alength = ntohl(length);
+	    } else {
+		code = rx_Error(v->call);
+	    }
+	}
 #endif /* AFS_64BIT_CLIENT */
+    } else
+	code = -1;
     if (code) {
 	osi_FreeSmallSpace(v);
         return code;
@@ -1003,7 +1007,6 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 	*ops = (struct fetchOps *) &rxfs_fetchMemOps;
     }
     *rock = (void *)v;
-    *alength = length;
     return 0;
 }
 
