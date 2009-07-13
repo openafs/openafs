@@ -877,10 +877,9 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 {
     struct rxfs_fetchVariables *v;
     int code, code1;
-    afs_int32 length_hi, length, bytes;
+    afs_uint32 length_hi = 0, length, bytes;
 #ifdef AFS_64BIT_CLIENT
-    afs_size_t tsize;
-    afs_size_t lengthFound;     /* as returned from server */
+    afs_size_t length64;     /* as returned from server */
 #endif /* AFS_64BIT_CLIENT */
 
     v = (struct rxfs_fetchVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_fetchVariables));
@@ -893,12 +892,11 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
     RX_AFS_GLOCK();
 
 #ifdef AFS_64BIT_CLIENT
-    length_hi = code = 0;
     if (!afs_serverHasNo64Bit(tc)) {
-	tsize = size;
+	afs_uint64 llbytes = size;
 	RX_AFS_GUNLOCK();
 	code = StartRXAFS_FetchData64(v->call, (struct AFSFid *)&avc->f.fid.Fid,
-					base, tsize);
+                                           base, llbytes);
 	if (code != 0) {
 	    RX_AFS_GLOCK();
 	    afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
@@ -909,7 +907,6 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 	    if (bytes == sizeof(afs_int32)) {
 		length_hi = ntohl(length_hi);
 	    } else {
-		length_hi = 0;
 		code = rx_Error(v->call);
 		RX_AFS_GUNLOCK();
 		code1 = rx_EndCall(v->call, code);
@@ -944,11 +941,11 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 	    code = rx_Error(v->call);
 	}
     }
-    FillInt64(lengthFound, length_hi, length);
+    FillInt64(length64, length_hi, length);
     afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64LENG,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
 	       ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(lengthFound));
+	       ICL_HANDLE_OFFSET(length64));
 #else /* AFS_64BIT_CLIENT */
     RX_AFS_GUNLOCK();
     code = StartRXAFS_FetchData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
@@ -1017,7 +1014,7 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
  *
  * \param tc Ptr to the Rx connection structure.
  * \param fP File descriptor for the cache file.
- * \param abase Base offset to fetch.
+ * \param base Base offset to fetch.
  * \param adc Ptr to the dcache entry for the file, write-locked.
  * \param avc Ptr to the vcache entry for the file.
  * \param size Amount of data that should be fetched.
@@ -1027,7 +1024,7 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
  */
 int
 afs_CacheFetchProc(register struct afs_conn *tc,
-		    register struct osi_file *fP, afs_size_t abase,
+		    register struct osi_file *fP, afs_size_t base,
 		    struct dcache *adc, struct vcache *avc,
 		    afs_int32 size,
 		    struct afs_FetchOutput *tsmall)
@@ -1051,13 +1048,15 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHDATA);
 
     code = rxfs_fetchInit(
-		tc, avc, abase, size, &length, &moredata, adc, fP, &ops, &rock);
+		tc, avc, base, size, &length, &moredata, adc, fP, &ops, &rock);
 
 #ifndef AFS_NOSTATS
     osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
-    adc->validPos = abase;
+    if (adc) {
+	adc->validPos = base;
+    }
 
     if ( !code ) do {
 	if ((avc->f.states & CForeign) && moredata && !length) {
@@ -1092,9 +1091,9 @@ afs_CacheFetchProc(register struct afs_conn *tc,
 	    if ( code )
 		break;
 	    offset += bytesread;
-	    abase += bytesread;
+	    base += bytesread;
 	    length -= bytesread;
-	    adc->validPos = abase;
+	    adc->validPos = base;
 	    if (afs_osi_Wakeup(&adc->validPos) == 0)
 		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE, ICL_TYPE_STRING,
 			   __FILE__, ICL_TYPE_INT32, __LINE__,
