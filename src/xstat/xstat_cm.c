@@ -257,12 +257,12 @@ xstat_cm_LWP(void *unused)
 
 		    if (xstat_cm_debug) {
 			printf
-			    ("%s: Calling RXAFSCB_GetXStats, conn=0x%" AFS_PTR_FMT ", clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=0x%" AFS_PTR_FMT ", timeP=0x%" AFS_PTR_FMT ", dataP=0x%" AFS_PTR_FMT "\n",
+			    ("%s: Calling RXAFSCB_GetXStats, conn=%" AFS_PTR_FMT ", clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=%" AFS_PTR_FMT ", timeP=%" AFS_PTR_FMT ", dataP=%" AFS_PTR_FMT "\n",
 			     rn, curr_conn->rxconn, clientVersionNumber,
 			     *currCollIDP, &srvVersionNumber,
 			     &(xstat_cm_Results.probeTime),
 			     &(xstat_cm_Results.data));
-			printf("%s: [bufflen=%d, buffer at 0x%" AFS_PTR_FMT "]\n", rn,
+			printf("%s: [bufflen=%d, buffer at %" AFS_PTR_FMT "]\n", rn,
 			       xstat_cm_Results.data.AFSCB_CollData_len,
 			       xstat_cm_Results.data.AFSCB_CollData_val);
 		    }
@@ -314,7 +314,7 @@ xstat_cm_LWP(void *unused)
 	     * that we've finished our collection round.
 	     */
 	    if (xstat_cm_debug)
-		printf("[%s] Signalling main process at 0x%" AFS_PTR_FMT "\n", rn,
+		printf("[%s] Signalling main process at %" AFS_PTR_FMT "\n", rn,
 		       &terminationEvent);
 	    oneShotCode = LWP_SignalProcess(&terminationEvent);
 	    if (oneShotCode)
@@ -559,7 +559,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	    conn_err = 1;
 	}
 	if (xstat_cm_debug)
-	    printf("[%s] New connection at 0x%" AFS_PTR_FMT "\n", rn, curr_conn->rxconn);
+	    printf("[%s] New connection at %" AFS_PTR_FMT "\n", rn, curr_conn->rxconn);
 
 	/*
 	 * Bump the current xstat_cm connection to set up.
@@ -586,7 +586,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	return (code);
     }
     if (xstat_cm_debug)
-	printf("[%s] Probe LWP process structure located at 0x%" AFS_PTR_FMT "\n", rn,
+	printf("[%s] Probe LWP process structure located at %" AFS_PTR_FMT "\n", rn,
 	       probeLWP_ID);
 
     /*

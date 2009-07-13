@@ -134,7 +134,7 @@ PrintCallInfo(void)
 	 xstat_cm_Results.probeNum, printableTime);
 
     if (debugging_on)
-	printf("\n[%d entries returned at 0x%x]\n\n", numInt32s, currInt32);
+	printf("\n[%d entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
 
     for (i = 0; i < numInt32s; i++)
 	printf("%d ", *currInt32++);
@@ -1349,8 +1349,8 @@ RunTheTest(struct cmd_syndesc *a_s, void *arock)
 	 * One-shot operation; just wait for the collection to be done.
 	 */
 	if (debugging_on)
-	    printf("[%s] Calling LWP_WaitProcess() on event 0x%x\n", rn,
-		   &terminationEvent);
+	    printf("[%s] Calling LWP_WaitProcess() on event %" AFS_PTR_FMT
+		   "\n", rn, &terminationEvent);
 	waitCode = LWP_WaitProcess(&terminationEvent);
 	if (debugging_on)
 	    printf("[%s] Returned from LWP_WaitProcess()\n", rn);

@@ -464,9 +464,9 @@ rxi_syscall(a3, a4, a5)
      void *a5;
 {
     afs_uint32 rcode;
-    void (*old) ();
+    void (*old) (int);
 
-    old = (void (*)())signal(SIGSYS, SIG_IGN);
+    old = signal(SIGSYS, SIG_IGN);
 
 #if defined(AFS_SGI_ENV)
     rcode = afs_syscall(a3, a4, a5);

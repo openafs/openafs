@@ -287,7 +287,7 @@ typedef struct afsUUID afsUUID;
 #define AFS_SIZET_FMT "Iu"
 #else
 #define AFS_INT64_FMT "lld"
-#define AFS_PTR_FMT   "x"
+#define AFS_PTR_FMT   "p"
 #define AFS_SIZET_FMT "u"
 #endif
 

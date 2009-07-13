@@ -225,7 +225,9 @@ _rxevent_Post(struct clock *when, struct clock *now,
     if (rx_Log_event) {
 	struct clock now1;
 	clock_GetTime(&now1);
-	fprintf(rx_Log_event, "%ld.%ld: rxevent_Post(%ld.%ld, %lp, %lp, %lp, %d)\n",
+	fprintf(rx_Log_event, "%ld.%ld: rxevent_Post(%ld.%ld, "
+			      "%"AFS_PTR_FMT", %"AFS_PTR_FMT", "
+			      "%"AFS_PTR_FMT", %d)\n",
 		afs_printable_int32_ld(now1.sec),
 		afs_printable_int32_ld(now1.usec),
 		afs_printable_int32_ld(when->sec),
@@ -401,7 +403,8 @@ rxevent_Cancel_1(struct rxevent *ev, struct rx_call *call,
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %lp, %lp)\n",
+	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %"
+		AFS_PTR_FMT ", %p" AFS_PTR_FMT ")\n",
 		(int)now.sec, (int)now.usec, (int)ev->eventTime.sec,
 		(int)ev->eventTime.usec, ev->func.newfunc,
 		ev->arg);
