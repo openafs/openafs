@@ -1632,7 +1632,7 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
 {
     int i;
     int code = 0;
-    afs_int32 *dataBuffP;
+    afs_uint32 *dataBuffP;
     afs_int32 dataBytes;
 
     RX_AFS_GLOCK();
@@ -1654,10 +1654,10 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
 
     RX_AFS_GUNLOCK();
 
-    dataBytes = 1 * sizeof(afs_int32);
-    dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
+    dataBytes = 1 * sizeof(afs_uint32);
+    dataBuffP = (afs_uint32 *) afs_osi_Alloc(dataBytes);
     dataBuffP[0] = CLIENT_CAPABILITY_ERRORTRANS;
-    capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
+    capabilities->Capabilities_len = dataBytes / sizeof(afs_uint32);
     capabilities->Capabilities_val = dataBuffP;
 
     return code;
