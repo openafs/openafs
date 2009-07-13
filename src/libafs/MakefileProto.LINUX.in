@@ -168,9 +168,30 @@ setup:
 
 # Compile SP and MP clients as requested
 
-${INSTDIRS}:
-
-${DESTDIRS}:
+${INSTDIRS} ${DESTDIRS}: ${COMPDIRS}
+	if [ "${LINUX_KERNEL_PACKAGING}" ] ; then \
+	    TARGPREFIX="pack_"; \
+	fi ; \
+	for m in ${MPS} ; do \
+		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
+		echo Building in directory: $${KDIR} ; \
+		if [ "$$m" = "MP" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libafs.mp" ; \
+		elif [ "$$m" = "EP" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libafs.ep" ; \
+		elif [ "$$m" = "BM" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libafs.bm" ; \
+		else  \
+			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
+			TARG=libafs ; \
+		fi ; \
+		cd $${KDIR} ; \
+		$(MAKE) -f Makefile.afs SMP_DEF="$${SMP_DEF}" $@_$${TARGPREFIX}$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} KDIR=$${KDIR} || exit $$?; \
+		cd ../ ; \
+	done
 
 ${COMPDIRS}: setup
 	$(RM) -f h 
