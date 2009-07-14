@@ -94,28 +94,51 @@ static inline int afs_convert_code(int code) {
 	return -EIO;
 }
 
+/* Linux doesn't require a credp for many functions, and crref is an expensive
+ * operation. This helper function avoids obtaining it for VerifyVCache calls
+ */
+
+static inline int afs_linux_VerifyVCache(struct vcache *avc, cred_t **retcred) {
+    cred_t *credp = NULL;
+    struct vrequest treq;
+    int code;
+
+    if (avc->f.states & CStatd) {
+        if (retcred)
+            *retcred = NULL;
+	return 0;
+    }
+
+    credp = crref();
+
+    code = afs_InitReq(&treq, credp);
+    if (code == 0)
+        code = afs_VerifyVCache2(avc, &treq);
+
+    if (retcred != NULL)
+        *retcred = credp;
+    else
+        crfree(credp);
+
+    return afs_convert_code(code);
+}
+
 static ssize_t
 afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 {
-    ssize_t code;
+    ssize_t code = 0;
     struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
-    cred_t *credp = crref();
-    struct vrequest treq;
 #if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     afs_size_t isize, offindex;
 #endif
+
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, count, ICL_TYPE_INT32,
 	       99999);
-    /* get a validated vcache entry */
-    code = afs_InitReq(&treq, credp);
-    if (!code)
-	code = afs_VerifyVCache(vcp, &treq);
+    code = afs_linux_VerifyVCache(vcp, NULL);
 
-    if (code)
-	code = afs_convert_code(code);
-    else {
+    if (code == 0) {
 #if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
         offindex = *offp >> PAGE_CACHE_SHIFT;
@@ -124,7 +147,9 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
             goto done;
         }
 #endif
-	osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
+	/* Linux's FlushPages implementation doesn't ever use credp,
+	 * so we optimise by not using it */
+	osi_FlushPages(vcp, NULL);	/* ensure stale pages are gone */
 	AFS_GUNLOCK();
 #ifdef DO_SYNC_READ
 	code = do_sync_read(fp, buf, count, offp);
@@ -141,7 +166,6 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 done:
 #endif
     AFS_GUNLOCK();
-    crfree(credp);
     return code;
 }
 
@@ -155,8 +179,7 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 {
     ssize_t code = 0;
     struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
-    struct vrequest treq;
-    cred_t *credp = crref();
+    cred_t *credp;
 
     AFS_GLOCK();
 
@@ -164,18 +187,12 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 	       ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, count, ICL_TYPE_INT32,
 	       (fp->f_flags & O_APPEND) ? 99998 : 99999);
 
-
-    /* get a validated vcache entry */
-    code = (ssize_t) afs_InitReq(&treq, credp);
-    if (!code)
-	code = (ssize_t) afs_VerifyVCache(vcp, &treq);
+    code = afs_linux_VerifyVCache(vcp, &credp);
 
     ObtainWriteLock(&vcp->lock, 529);
     afs_FakeOpen(vcp);
     ReleaseWriteLock(&vcp->lock);
-    if (code)
-	code = afs_convert_code(code);
-    else {
+    if (code == 0) {
 	    AFS_GUNLOCK();
 #ifdef DO_SYNC_READ
 	    code = do_sync_write(fp, buf, count, offp);
@@ -186,6 +203,10 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     }
 
     ObtainWriteLock(&vcp->lock, 530);
+
+    if (vcp->execsOrWriters == 1 && !credp)
+      credp = crref();
+
     afs_FakeClose(vcp, credp);
     ReleaseWriteLock(&vcp->lock);
 
@@ -193,8 +214,9 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 	       ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, count, ICL_TYPE_INT32,
 	       code);
 
+    if (credp)
+      crfree(credp);
     AFS_GUNLOCK();
-    crfree(credp);
     return code;
 }
 
@@ -226,27 +248,21 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     AFS_GLOCK();
     AFS_STATCNT(afs_readdir);
 
-    code = afs_InitReq(&treq, credp);
+    code = afs_convert_code(afs_InitReq(&treq, credp));
     crfree(credp);
-    if (code) {
-	code = afs_convert_code(code);
+    if (code)
 	goto out1;
-    }
 
     afs_InitFakeStat(&fakestat);
-    code = afs_EvalFakeStat(&avc, &fakestat, &treq);
-    if (code) {
-	code = afs_convert_code(code);
+    code = afs_convert_code(afs_EvalFakeStat(&avc, &fakestat, &treq));
+    if (code)
 	goto out;
-    }
 
     /* update the cache entry */
   tagain:
-    code = afs_VerifyVCache(avc, &treq);
-    if (code) {
-	code = afs_convert_code(code);
+    code = afs_convert_code(afs_VerifyVCache2(avc, &treq));
+    if (code)
 	goto out;
-    }
 
     /* get a reference to the entire directory */
     tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
@@ -408,8 +424,6 @@ static int
 afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
 {
     struct vcache *vcp = VTOAFS(FILE_INODE(fp));
-    cred_t *credp = crref();
-    struct vrequest treq;
     int code;
 
     AFS_GLOCK();
@@ -425,30 +439,19 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
 #endif
 
     /* get a validated vcache entry */
-    code = afs_InitReq(&treq, credp);
-    if (code)
-	goto out_err;
+    code = afs_linux_VerifyVCache(vcp, NULL);
 
-    code = afs_VerifyVCache(vcp, &treq);
-    if (code)
-	goto out_err;
-
-    osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
-
+    /* Linux's Flushpage implementation doesn't use credp, so optimise
+     * our code to not need to crref() it */
+    osi_FlushPages(vcp, NULL); /* ensure stale pages are gone */
     AFS_GUNLOCK();
     code = generic_file_mmap(fp, vmap);
     AFS_GLOCK();
     if (!code)
 	vcp->f.states |= CMAPPED;
 
-out:
     AFS_GUNLOCK();
-    crfree(credp);
     return code;
-
-out_err:
-    code = afs_convert_code(code);
-    goto out;
 }
 
 static int
@@ -859,6 +862,9 @@ afs_linux_revalidate(struct dentry *dp)
     cred_t *credp;
     int code;
 
+    if (afs_shuttingdown)
+	return EIO;
+
 #ifdef AFS_LINUX24_ENV
     maybe_lock_kernel();
 #endif
@@ -879,8 +885,18 @@ afs_linux_revalidate(struct dentry *dp)
     }
 #endif
 
-    credp = crref();
-    code = afs_getattr(vcp, &vattr, credp);
+    /* This avoids the crref when we don't have to do it. Watch for
+     * changes in afs_getattr that don't get replicated here!
+     */
+    if (vcp->f.states & CStatd &&
+        (!afs_fakestat_enable || vcp->mvstat != 1) &&
+	!afs_nfsexporter) {
+	code = afs_CopyOutAttrs(vcp, &vattr);
+    } else {
+        credp = crref();
+	code = afs_getattr(vcp, &vattr, credp);
+	crfree(credp);
+    }
     if (!code)
         afs_fill_inode(AFSTOV(vcp), &vattr);
 
@@ -888,7 +904,6 @@ afs_linux_revalidate(struct dentry *dp)
 #ifdef AFS_LINUX24_ENV
     maybe_unlock_kernel();
 #endif
-    crfree(credp);
 
     return afs_convert_code(code);
 }
@@ -1755,6 +1770,132 @@ out:
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 #endif /* defined(AFS_CACHE_BYPASS */
 
+static int inline
+afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
+{
+    afs_offs_t offset = ((loff_t) pp->index) << PAGE_CACHE_SHIFT;
+    struct inode *ip = FILE_INODE(fp);
+    struct vcache *avc = VTOAFS(ip);
+    struct dcache *tdc;
+    struct file *cacheFp;
+    char *address;
+    int dcLocked;
+    ssize_t size;
+    mm_segment_t old_fs;
+
+    /* Not a UFS cache, don't do anything */
+    if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
+	return 0;
+
+    /* Can't do anything if the vcache isn't statd , or if the read
+     * crosses a chunk boundary.
+     */
+    if (!(avc->f.states & CStatd) ||
+        AFS_CHUNK(offset) != AFS_CHUNK(offset + PAGE_SIZE)) {
+	return 0;
+    }
+
+    ObtainWriteLock(&avc->lock, 911);
+
+    /* XXX - See if hinting actually makes things faster !!! */
+
+    /* See if we have a suitable entry already cached */
+    tdc = avc->dchint;
+
+    if (tdc) {
+        /* We need to lock xdcache, then dcache, to handle situations where
+         * the hint is on the free list. However, we can't safely do this
+         * according to the locking hierarchy. So, use a non blocking lock.
+         */
+	ObtainReadLock(&afs_xdcache);
+	dcLocked = ( 0 == NBObtainReadLock(&tdc->lock));
+
+	if (dcLocked && (tdc->index != NULLIDX)
+	    && !FidCmp(&tdc->f.fid, &avc->f.fid)
+	    && tdc->f.chunk == AFS_CHUNK(offset)
+	    && !(afs_indexFlags[tdc->index] & (IFFree | IFDiscarded))) {
+	    /* Bonus - the hint was correct */
+	    afs_RefDCache(tdc);
+	} else {
+	    /* Only destroy the hint if its actually invalid, not if there's
+	     * just been a locking failure */
+	    if (dcLocked) {
+		ReleaseReadLock(&tdc->lock);
+		avc->dchint = NULL;
+	    }
+
+	    tdc = NULL;
+	    dcLocked = 0;
+	}
+        ReleaseReadLock(&afs_xdcache);
+    }
+
+    /* No hint, or hint is no longer valid - see if we can get something
+     * directly from the dcache
+     */
+    if (!tdc)
+	tdc = afs_FindDCache(avc, offset);
+
+    if (!tdc) {
+	ReleaseWriteLock(&avc->lock);
+	return 0;
+    }
+
+    if (!dcLocked)
+	ObtainReadLock(&tdc->lock);
+
+    /* Is the dcache we've been given currently up to date */
+    if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) ||
+	(tdc->dflags & DFFetching)) {
+	ReleaseWriteLock(&avc->lock);
+	ReleaseReadLock(&tdc->lock);
+	afs_PutDCache(tdc);
+	return 0;
+    }
+
+    /* Update our hint for future abuse */
+    avc->dchint = tdc;
+
+    /* Okay, so we've now got a cache file that is up to date */
+
+    offset -= AFS_CHUNKTOBASE(tdc->f.chunk);
+
+    /* XXX - I suspect we should be locking the inodes before we use them! */
+    AFS_GUNLOCK();
+    cacheFp = afs_linux_raw_open(&tdc->f.inode, NULL);
+    if (cacheFp->f_op->llseek)
+	cacheFp->f_op->llseek(cacheFp, offset, 0);
+    else
+	cacheFp->f_pos = offset;
+
+    address = kmap(pp);
+    ClearPageError(pp);
+    old_fs = get_fs();
+    set_fs(get_ds());
+    size = cacheFp->f_op->read(cacheFp, address, PAGE_SIZE, &cacheFp->f_pos);
+    set_fs(old_fs);
+
+    if (size >= 0) {
+      if (size != PAGE_SIZE)
+        memset((void *)(address + size), 0, PAGE_SIZE - size);
+      size = 0;
+      flush_dcache_page(pp);
+      SetPageUptodate(pp);
+    }
+
+    kunmap(pp);
+    UnlockPage(pp);
+
+    filp_close(cacheFp, NULL);
+    AFS_GLOCK();
+
+    ReleaseReadLock(&tdc->lock);
+    ReleaseWriteLock(&avc->lock);
+    afs_PutDCache(tdc);
+
+    *codep = size;
+    return 1;
+}
 
 /* afs_linux_readpage
  * all reads come through here. A strategy-like read call.
@@ -1763,7 +1904,6 @@ static int
 afs_linux_readpage(struct file *fp, struct page *pp)
 {
     afs_int32 code;
-    cred_t *credp = crref();
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     char *address;
     afs_offs_t offset = ((loff_t) pp->index) << PAGE_CACHE_SHIFT;
@@ -1783,7 +1923,18 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     struct inode *ip = FILE_INODE(fp);
     afs_int32 cnt = page_count(pp);
     struct vcache *avc = VTOAFS(ip);
+    cred_t *credp;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+    AFS_GLOCK();
+    if (afs_linux_readpage_fastpath(fp, pp, &code)) {
+	AFS_GUNLOCK();
+	return code;
+    }
+    AFS_GUNLOCK();
+#endif
+
+    credp = crref();
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     address = kmap(pp);
     ClearPageError(pp);

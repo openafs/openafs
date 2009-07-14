@@ -35,15 +35,50 @@ extern struct vfsmount *afs_cacheMnt;
 extern struct super_block *afs_cacheSBp;
 
 #if defined(AFS_LINUX26_ENV) 
+struct file *
+afs_linux_raw_open(afs_dcache_id_t *ainode, ino_t *hint)
+{
+    struct inode *tip = NULL;
+    struct dentry *dp = NULL;
+    struct file* filp;
+
+#if !defined(LINUX_USE_FH)
+    tip = iget(afs_cacheSBp, ainode->ufs);
+    if (!tip)
+	osi_Panic("Can't get inode %d\n", (int) ainode->ufs);
+
+    dp = d_alloc_anon(tip);
+#else
+    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh,
+						 cache_fh_len, cache_fh_type);
+    if (!dp)
+           osi_Panic("Can't get dentry\n");
+    tip = dp->d_inode;
+#endif
+    tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
+
+#if defined(STRUCT_TASK_HAS_CRED)
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
+#else
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
+#endif
+    if (IS_ERR(filp))
+#if defined(LINUX_USE_FH)
+	osi_Panic("Can't open file\n");
+#else
+	osi_Panic("Can't open inode %d\n", (int) ainode->ufs);
+#endif
+    if (hint)
+	*hint = tip->i_ino;
+    return filp;
+}
+
 void *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct osi_file *afile = NULL;
     extern int cacheDiskType;
-    struct inode *tip = NULL;
-    struct dentry *dp = NULL;
     struct file *filp = NULL;
-
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
 	osi_Panic("UFSOpen called for non-UFS cache\n");
@@ -61,37 +96,12 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 		  (int)sizeof(struct osi_file));
     }
     memset(afile, 0, sizeof(struct osi_file));
-#if !defined(LINUX_USE_FH)
-    tip = iget(afs_cacheSBp, ainode->ufs);
-    if (!tip)
-	osi_Panic("Can't get inode %d\n", ainode->ufs);
 
-    dp = d_alloc_anon(tip);
-#else
-    dp = afs_cacheSBp->s_export_op->fh_to_dentry(afs_cacheSBp, &ainode->ufs.fh, cache_fh_len, cache_fh_type);
-    if (!dp) 
-           osi_Panic("Can't get dentry\n");          
-    tip = dp->d_inode;
-#endif
-    tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
-
-#if defined(STRUCT_TASK_HAS_CRED)
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
-#else
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
-#endif
-    if (IS_ERR(filp))
-#if defined(LINUX_USE_FH)
-	osi_Panic("Can't open file\n");
-#else
-	osi_Panic("Can't open inode %d\n", ainode->ufs);
-#endif
-    afile->filp = filp;
-    afile->size = i_size_read(FILE_INODE(filp));
+    afile->filp = afs_linux_raw_open(ainode, &afile->inum);
+    afile->size = i_size_read(FILE_INODE(afile->filp));
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = tip->i_ino;	/* for hint validity checking */
     return (void *)afile;
 }
 #else

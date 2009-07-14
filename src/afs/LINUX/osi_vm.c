@@ -122,6 +122,11 @@ osi_VM_StoreAllSegments(struct vcache *avc)
  *
  * Locking:  No lock is held, not even the global lock.
  */
+
+/* Note that for speed some of our Linux vnodeops do not initialise credp
+ * before calling osi_FlushPages(). If credp is ever required on Linux,
+ * then these callers should be updated.
+ */
 void
 osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
 {

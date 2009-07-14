@@ -211,6 +211,9 @@ extern int afs_trclock;
         (lock)->pid_last_reader = MyPidxx; \
    ENDMAC
 
+#define NBObtainReadLock(lock) \
+	(((lock)->excl_locked & WRITE_LOCK) ? EWOULDBLOCK :  (((lock)->readers_reading++), ((lock)->pid_last_reader = MyPidxx), 0))
+
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \
 	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, WRITE_LOCK);\
@@ -313,6 +316,9 @@ extern int afs_trclock;
 	else \
 	    Afs_Lock_Obtain(lock, READ_LOCK); \
    ENDMAC
+
+#define NBObtainReadLock(lock) \
+	(((lock)->excl_locked & WRITE_LOCK) ? EWOULDBLOCK : (((lock)->readers_reading++), 0))
 
 #define ObtainWriteLock(lock, src)\
   BEGINMAC  \
