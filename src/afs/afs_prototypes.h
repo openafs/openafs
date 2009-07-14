@@ -495,9 +495,10 @@ extern int afs_CacheStoreProc(register struct rx_call *acall,
 				struct dcache **dclist,
 				struct vcache *avc,
 				afs_size_t bytes,
-				afs_uint32 nchunks, int *nomoreP,
-				afs_size_t * abytesToXferP,
-				afs_size_t * abytesXferredP);
+				afs_hyper_t *anewDV,
+				int *doProcessFS,
+				struct AFSFetchStatus *OutStatus,
+				afs_uint32 nchunks, int *nomoreP);
 extern int afs_CacheFetchProc(register struct afs_conn *tc,
 				register struct osi_file *fP,
 				afs_size_t abase, struct dcache *adc,

@@ -152,6 +152,22 @@ rxfs_storeStatus(void *rock)
 }
 
 afs_int32
+rxfs_storeClose(void *r, struct AFSFetchStatus *OutStatus, int *doProcessFS)
+{
+    afs_int32 code;
+    struct AFSVolSync tsync;
+    struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
+
+    RX_AFS_GUNLOCK();
+    code = EndRXAFS_StoreData(v->call, OutStatus, &tsync);
+    RX_AFS_GLOCK();
+    if (!code)
+	*doProcessFS = 1;	/* Flag to run afs_ProcessFS() later on */
+
+    return code;
+}
+
+afs_int32
 rxfs_storeDestroy(void **r, afs_int32 error)
 {
     afs_int32 code = error;
@@ -172,6 +188,7 @@ struct storeOps rxfs_storeUfsOps = {
     rxfs_storeUfsRead,
     rxfs_storeUfsWrite,
     rxfs_storeStatus,
+    rxfs_storeClose,
     rxfs_storeDestroy
 };
 
@@ -181,6 +198,7 @@ struct storeOps rxfs_storeMemOps = {
     rxfs_storeMemRead,
     rxfs_storeMemWrite,
     rxfs_storeStatus,
+    rxfs_storeClose,
     rxfs_storeDestroy
 };
 
@@ -235,12 +253,11 @@ extern unsigned int storeallmissing;
  * \param dclist pointer to the list of dcaches
  * \param avc Ptr to the vcache entry.
  * \param bytes per chunk
+ * \param anewDV Ptr to the dataversion after store
+ * \param doProcessFS Ptr to the processFS flag
+ * \param OutStatus Ptr to the OutStatus structure
  * \param nchunks number of chunks to store
  * \param nomoreP pointer to the "nomore" flag
- * \param abytesToXferP Set to the number of bytes to xfer.
- *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
- * \param abytesXferredP Set to the number of bytes actually xferred.
- *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
  *
  * \note Environment: Nothing interesting.
  */
@@ -249,10 +266,11 @@ afs_CacheStoreProc(register struct rx_call *acall,
 			struct dcache **dclist,
 			struct vcache *avc,
 			afs_size_t bytes,
+			afs_hyper_t *anewDV,
+			int *doProcessFS,
+			struct AFSFetchStatus *OutStatus,
 			afs_uint32 nchunks,
-			int *nomoreP,
-			afs_size_t * abytesToXferP,
-			afs_size_t * abytesXferredP)
+			int *nomoreP)
 {
     afs_int32 code = 0;
     afs_uint32 tlen;
@@ -265,6 +283,14 @@ afs_CacheStoreProc(register struct rx_call *acall,
     int stored = 0;
     unsigned int i;
     afs_int32 alen;
+#ifndef AFS_NOSTATS
+    struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
+    osi_timeval_t xferStartTime,	/*FS xfer start time */
+      xferStopTime;		/*FS xfer stop time */
+    afs_size_t bytesToXfer = 10000;	/* # bytes to xfer */
+    afs_size_t bytesXferred = 10000;	/* # bytes actually xferred */
+#endif /* AFS_NOSTATS */
+    XSTATS_DECLS;
 
     code =  rxfs_storeInit(avc, &ops, &rock);
     if ( code ) {
@@ -281,22 +307,17 @@ afs_CacheStoreProc(register struct rx_call *acall,
 	    storeallmissing++;
 	    continue;	/* panic? */
 	}
-	afs_Trace4(afs_iclSetp, CM_TRACE_STOREALL2,
-		   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32,
-		   tdc->f.chunk, ICL_TYPE_INT32,
-		   tdc->index, ICL_TYPE_INT32,
-		   afs_inode2trace(&tdc->f.inode));
+	afs_Trace4(afs_iclSetp, CM_TRACE_STOREALL2, ICL_TYPE_POINTER, avc,
+		    ICL_TYPE_INT32, tdc->f.chunk, ICL_TYPE_INT32, tdc->index,
+		    ICL_TYPE_INT32, afs_inode2trace(&tdc->f.inode));
 	shouldwake = 0;
 	if (nomore) {
 	    if (avc->asynchrony == -1) {
-		if (afs_defaultAsynchrony >
-		    (bytes - stored)) {
+		if (afs_defaultAsynchrony > (bytes - stored))
 		    shouldwake = &nomore;
-		}
-	    } else if ((afs_uint32) avc->asynchrony >=
-		       (bytes - stored)) {
-		shouldwake = &nomore;
 	    }
+	    else if ((afs_uint32) avc->asynchrony >= (bytes - stored))
+		shouldwake = &nomore;
 	}
 	fP = afs_CFileOpen(&tdc->f.inode);
 
@@ -305,16 +326,23 @@ afs_CacheStoreProc(register struct rx_call *acall,
 		  ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
 
 	AFS_STATCNT(CacheStoreProc);
+
+	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
+	avc->f.truncPos = AFS_NOTRUNC;
 #ifndef AFS_NOSTATS
 	/*
 	 * In this case, alen is *always* the amount of data we'll be trying
 	 * to ship here.
 	 */
-	*(abytesToXferP) = alen;
-	*(abytesXferredP) = 0;
+	bytesToXfer = alen;
+	bytesXferred = 0;
+
+	xferP = &(afs_stats_cmfullperf.rpc.
+			fsXferTimes[AFS_STATS_FS_XFERIDX_STOREDATA]);
+	osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
-	while ( alen > 0 ) {
+    while ( alen > 0 ) {
 	    afs_int32 bytesread, byteswritten;
 	    code = (*ops->prepare)(rock, alen, &tlen);
 	    if ( code )
@@ -329,7 +357,7 @@ afs_CacheStoreProc(register struct rx_call *acall,
 	    if (code)
 		break;
 #ifndef AFS_NOSTATS
-	    (*abytesXferredP) += byteswritten;
+	    bytesXferred += byteswritten;
 #endif /* AFS_NOSTATS */
 
 	    offset += tlen;
@@ -347,6 +375,56 @@ afs_CacheStoreProc(register struct rx_call *acall,
 		  ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
 		  ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
 
+#ifndef AFS_NOSTATS
+	osi_GetuTime(&xferStopTime);
+	(xferP->numXfers)++;
+	if (!code) {
+	    (xferP->numSuccesses)++;
+	    afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_STOREDATA] +=
+		bytesXferred;
+	    (xferP->sumBytes) +=
+		(afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_STOREDATA] >> 10);
+	    afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_STOREDATA] &= 0x3FF;
+	    if (bytesXferred < xferP->minBytes)
+		xferP->minBytes = bytesXferred;
+	    if (bytesXferred > xferP->maxBytes)
+		xferP->maxBytes = bytesXferred;
+
+	    /*
+	     * Tally the size of the object.  Note: we tally the actual size,
+	     * NOT the number of bytes that made it out over the wire.
+	     */
+	    if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0)
+		(xferP->count[0])++;
+	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET1)
+		(xferP->count[1])++;
+	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET2)
+		(xferP->count[2])++;
+	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET3)
+		(xferP->count[3])++;
+	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET4)
+		(xferP->count[4])++;
+	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET5)
+		(xferP->count[5])++;
+	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET6)
+		(xferP->count[6])++;
+	    else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET7)
+		(xferP->count[7])++;
+	    else
+		(xferP->count[8])++;
+
+	    afs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
+	    afs_stats_AddTo((xferP->sumTime), elapsedTime);
+	    afs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
+	    if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
+		afs_stats_TimeAssign((xferP->minTime), elapsedTime);
+	    }
+	    if (afs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
+		afs_stats_TimeAssign((xferP->maxTime), elapsedTime);
+	    }
+	}
+#endif /* AFS_NOSTATS */
+
 	afs_CFileClose(fP);
 	if ((tdc->f.chunkBytes < afs_OtherCSize)
 	    && (i < (nchunks - 1)) && code == 0) {
@@ -356,13 +434,11 @@ afs_CacheStoreProc(register struct rx_call *acall,
 		osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 
 	    while (sbytes > 0) {
-		tlen =
-		    (sbytes >
-		     AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ :
-		     sbytes);
+		tlen = (sbytes > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : sbytes);
 		memset(tbuffer, 0, tlen);
 		RX_AFS_GUNLOCK();
-		bsent = rx_Write(acall, tbuffer, tlen);
+		bsent = rx_Write(((struct rxfs_storeVariables*)rock)->call,
+					tbuffer, tlen);
 		RX_AFS_GLOCK();
 
 		if (bsent != tlen) {
@@ -381,6 +457,13 @@ afs_CacheStoreProc(register struct rx_call *acall,
 	 * the event of a failure. It only really matters
 	 * if user can't read from a 'locked' dcache or
 	 * one which has the writing bit turned on. */
+    }
+    if (!code) {
+	code = (*ops->close)(rock, OutStatus, doProcessFS);
+	if (*doProcessFS) {
+	    hadd32(*anewDV, 1);
+	}
+	XSTATS_END_TIME;
     }
     code = (*ops->destroy)(&rock, code);
 

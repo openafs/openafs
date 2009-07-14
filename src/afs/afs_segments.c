@@ -172,14 +172,6 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     afs_size_t tlen;
     afs_size_t maxStoredLength;	/* highest offset we've written to server. */
     int safety;
-#ifndef AFS_NOSTATS
-    struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
-    osi_timeval_t xferStartTime,	/*FS xfer start time */
-      xferStopTime;		/*FS xfer stop time */
-    afs_size_t bytesToXfer;	/* # bytes to xfer */
-    afs_size_t bytesXferred;	/* # bytes actually xferred */
-#endif /* AFS_NOSTATS */
-
 
     AFS_STATCNT(afs_StoreAllSegments);
 
@@ -298,9 +290,6 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	/* "moredata" just says "there are more dirty chunks yet to come".
 	 */
 	if (j) {
-#ifdef AFS_NOSTATS
-	    static afs_uint32 lp1 = 10000, lp2 = 10000;
-#endif
 	    struct AFSStoreStatus InStatus;
 	    struct AFSFetchStatus OutStatus;
 	    int doProcessFS = 0;
@@ -401,110 +390,11 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			    code = -1;
 			    tcall = NULL;
 			}
-			if (!code) {
-			    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
-			    avc->f.truncPos = AFS_NOTRUNC;
-			}
-			if ( !code ) {
-#ifndef AFS_NOSTATS
-			    xferP =
-				&(afs_stats_cmfullperf.rpc.
-				  fsXferTimes
-				  [AFS_STATS_FS_XFERIDX_STOREDATA]);
-			    osi_GetuTime(&xferStartTime);
-
-			    code =
-				afs_CacheStoreProc(tcall, dclist,
-						   avc,
-						   bytes,
-						   nchunks, &nomore,
-						   &bytesToXfer,
-						   &bytesXferred);
-
-			    osi_GetuTime(&xferStopTime);
-			    (xferP->numXfers)++;
-			    if (!code) {
-				(xferP->numSuccesses)++;
-				afs_stats_XferSumBytes
-				    [AFS_STATS_FS_XFERIDX_STOREDATA] +=
-				    bytesXferred;
-				(xferP->sumBytes) +=
-				    (afs_stats_XferSumBytes
-				     [AFS_STATS_FS_XFERIDX_STOREDATA] >> 10);
-				afs_stats_XferSumBytes
-				    [AFS_STATS_FS_XFERIDX_STOREDATA] &= 0x3FF;
-				if (bytesXferred < xferP->minBytes)
-				    xferP->minBytes = bytesXferred;
-				if (bytesXferred > xferP->maxBytes)
-				    xferP->maxBytes = bytesXferred;
-
-				/*
-				 * Tally the size of the object.  Note: we tally the actual size,
-				 * NOT the number of bytes that made it out over the wire.
-				 */
-				if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0)
-				    (xferP->count[0])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET1)
-				    (xferP->count[1])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET2)
-				    (xferP->count[2])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET3)
-				    (xferP->count[3])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET4)
-				    (xferP->count[4])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET5)
-				    (xferP->count[5])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET6)
-				    (xferP->count[6])++;
-				else if (bytesToXfer <=
-					 AFS_STATS_MAXBYTES_BUCKET7)
-				    (xferP->count[7])++;
-				else
-				    (xferP->count[8])++;
-
-				afs_stats_GetDiff(elapsedTime, xferStartTime,
-						  xferStopTime);
-				afs_stats_AddTo((xferP->sumTime),
-						elapsedTime);
-				afs_stats_SquareAddTo((xferP->sqrTime),
-						      elapsedTime);
-				if (afs_stats_TimeLessThan
-				    (elapsedTime, (xferP->minTime))) {
-				    afs_stats_TimeAssign((xferP->minTime),
-							 elapsedTime);
-				}
-				if (afs_stats_TimeGreaterThan
-				    (elapsedTime, (xferP->maxTime))) {
-				    afs_stats_TimeAssign((xferP->maxTime),
-							 elapsedTime);
-				}
-			    }
-#else
-			    code =
-				afs_CacheStoreProc(tcall, dclist,
-						   avc,
-						   bytes,
-						   nchunks, &nomore,
-						   &lp1, &lp2);
-#endif /* AFS_NOSTATS */
-			}
-			if (!code) {
-			    struct AFSVolSync tsync;
-			    RX_AFS_GUNLOCK();
-			    code =
-				EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
-			    RX_AFS_GLOCK();
-			    hadd32(newDV, 1);
-			    XSTATS_END_TIME;
-			    if (!code)
-				doProcessFS = 1;	/* Flag to run afs_ProcessFS() later on */
-			}
+			if ( !code )
+			    code = afs_CacheStoreProc(tcall, dclist,
+						   avc, bytes,
+						   &newDV, &doProcessFS, &OutStatus,
+						   nchunks, &nomore);
 			if (tcall) {
 			    afs_int32 code2;
 			    RX_AFS_GUNLOCK();
