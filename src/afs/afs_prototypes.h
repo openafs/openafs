@@ -497,13 +497,11 @@ extern int afs_CacheStoreProc(register struct rx_call *acall,
 				 int *shouldWake, afs_size_t * abytesToXferP,
 				 afs_size_t * abytesXferredP);
 extern int afs_CacheFetchProc(register struct afs_conn *tc,
-				 register struct osi_file *fP,
-				 afs_size_t abase, struct dcache *adc,
-				 struct vcache *avc,
-				 afs_size_t * abytesToXferP,
-				 afs_size_t * abytesXferredP,
-				 afs_int32 size,
-				 struct afs_FetchOutput *tsmall);
+				register struct osi_file *fP,
+				afs_size_t abase, struct dcache *adc,
+				struct vcache *avc,
+				afs_int32 size,
+				struct afs_FetchOutput *tsmall);
 extern void shutdown_memcache(void);
 
 

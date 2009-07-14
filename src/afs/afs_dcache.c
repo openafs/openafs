@@ -1626,13 +1626,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     int doReallyAdjustSize = 0;
     int overWriteWholeChunk = 0;
 
-    XSTATS_DECLS;
 #ifndef AFS_NOSTATS
-    struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
-    osi_timeval_t xferStartTime,	/*FS xfer start time */
-      xferStopTime;		/*FS xfer stop time */
-    afs_size_t bytesToXfer;	/* # bytes to xfer */
-    afs_size_t bytesXferred;	/* # bytes actually xferred */
     struct afs_stats_AccessInfo *accP;	/*Ptr to access record in stats */
     int fromReplica;		/*Are we reading from a replica? */
     int numFetchLoops;		/*# times around the fetch/analyze loop */
@@ -2210,90 +2204,8 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			setNewCallback = 1;
 		    }
 		    i = osi_Time();
-		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHDATA);
-		    {
-#ifndef AFS_NOSTATS
-			xferP =
-			    &(afs_stats_cmfullperf.rpc.
-			      fsXferTimes[AFS_STATS_FS_XFERIDX_FETCHDATA]);
-			osi_GetuTime(&xferStartTime);
-
-			code =
-			    afs_CacheFetchProc(tc, file,
-					       (afs_size_t) Position, tdc,
-					       avc, &bytesToXfer,
-					       &bytesXferred, size, tsmall);
-
-			osi_GetuTime(&xferStopTime);
-			(xferP->numXfers)++;
-			if (!code) {
-			    (xferP->numSuccesses)++;
-			    afs_stats_XferSumBytes
-				[AFS_STATS_FS_XFERIDX_FETCHDATA] +=
-				bytesXferred;
-			    (xferP->sumBytes) +=
-				(afs_stats_XferSumBytes
-				 [AFS_STATS_FS_XFERIDX_FETCHDATA] >> 10);
-			    afs_stats_XferSumBytes
-				[AFS_STATS_FS_XFERIDX_FETCHDATA] &= 0x3FF;
-			    if (bytesXferred < xferP->minBytes)
-				xferP->minBytes = bytesXferred;
-			    if (bytesXferred > xferP->maxBytes)
-				xferP->maxBytes = bytesXferred;
-
-			    /*
-			     * Tally the size of the object.  Note: we tally the actual size,
-			     * NOT the number of bytes that made it out over the wire.
-			     */
-			    if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0)
-				(xferP->count[0])++;
-			    else if (bytesToXfer <=
-				     AFS_STATS_MAXBYTES_BUCKET1)
-				(xferP->count[1])++;
-			    else if (bytesToXfer <=
-				     AFS_STATS_MAXBYTES_BUCKET2)
-				(xferP->count[2])++;
-			    else if (bytesToXfer <=
-				     AFS_STATS_MAXBYTES_BUCKET3)
-				(xferP->count[3])++;
-			    else if (bytesToXfer <=
-				     AFS_STATS_MAXBYTES_BUCKET4)
-				(xferP->count[4])++;
-			    else if (bytesToXfer <=
-				     AFS_STATS_MAXBYTES_BUCKET5)
-				(xferP->count[5])++;
-			    else if (bytesToXfer <=
-				     AFS_STATS_MAXBYTES_BUCKET6)
-				(xferP->count[6])++;
-			    else if (bytesToXfer <=
-				     AFS_STATS_MAXBYTES_BUCKET7)
-				(xferP->count[7])++;
-			    else
-				(xferP->count[8])++;
-
-			    afs_stats_GetDiff(elapsedTime, xferStartTime,
-					      xferStopTime);
-			    afs_stats_AddTo((xferP->sumTime), elapsedTime);
-			    afs_stats_SquareAddTo((xferP->sqrTime),
-						  elapsedTime);
-			    if (afs_stats_TimeLessThan
-				(elapsedTime, (xferP->minTime))) {
-				afs_stats_TimeAssign((xferP->minTime),
-						     elapsedTime);
-			    }
-			    if (afs_stats_TimeGreaterThan
-				(elapsedTime, (xferP->maxTime))) {
-				afs_stats_TimeAssign((xferP->maxTime),
-						     elapsedTime);
-			    }
-			}
-#else
-			code =
-			    afs_CacheFetchProc(tc, file, Position, tdc,
-					       avc, 0, 0, size, tsmall);
-#endif /* AFS_NOSTATS */
-		    }
-		    XSTATS_END_TIME;
+		    code = afs_CacheFetchProc(tc, file, Position, tdc,
+					       avc, size, tsmall);
 		} else
 		   code = -1;
 

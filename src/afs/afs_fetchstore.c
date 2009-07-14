@@ -608,10 +608,6 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
  * \param abase Base offset to fetch.
  * \param adc Ptr to the dcache entry for the file, write-locked.
  * \param avc Ptr to the vcache entry for the file.
- * \param abytesToXferP Set to the number of bytes to xfer.
- *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
- * \param abytesXferredP Set to the number of bytes actually xferred.
- *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
  * \param size Amount of data that should be fetched.
  * \param tsmall Ptr to the afs_FetchOutput structure.
  *
@@ -621,7 +617,6 @@ int
 afs_CacheFetchProc(register struct afs_conn *tc,
 		    register struct osi_file *fP, afs_size_t abase,
 		    struct dcache *adc, struct vcache *avc,
-		    afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
 		    afs_int32 size,
 		    struct afs_FetchOutput *tsmall)
 {
@@ -633,16 +628,28 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     int moredata = 0;
     register int offset = 0;
 
+    XSTATS_DECLS;
+#ifndef AFS_NOSTATS
+    struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
+    osi_timeval_t xferStartTime,	/*FS xfer start time */
+		    xferStopTime;	/*FS xfer stop time */
+    afs_size_t bytesToXfer = 0, bytesXferred = 0;
+#endif
+
     AFS_STATCNT(CacheFetchProc);
 
+    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHDATA);
+
+    code = rxfs_fetchInit(tc, avc, abase, size, &length, adc, fP, &ops, &rock);
+
 #ifndef AFS_NOSTATS
-    (*abytesToXferP) = 0;
-    (*abytesXferredP) = 0;
+    xferP =
+	&(afs_stats_cmfullperf.rpc.fsXferTimes[AFS_STATS_FS_XFERIDX_FETCHDATA]);
+    osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
     adc->validPos = abase;
 
-    code = rxfs_fetchInit(tc, avc, abase, size, &length, adc, fP, &ops, &rock);
     if ( !code ) do {
 	if (moredata) {
 	    code = (*ops->more)(rock, &length, &moredata);
@@ -665,7 +672,7 @@ afs_CacheFetchProc(register struct afs_conn *tc,
 	    moredata = 0;
 	}
 #ifndef AFS_NOSTATS
-	(*abytesToXferP) += length;
+	bytesToXfer += length;
 #endif /* AFS_NOSTATS */
 	while (length > 0) {
 #ifdef RX_KERNEL_TRACE
@@ -678,7 +685,7 @@ afs_CacheFetchProc(register struct afs_conn *tc,
 		       "after rx_Read");
 #endif
 #ifndef AFS_NOSTATS
-	    (*abytesXferredP) += bytesread;
+	    bytesXferred += bytesread;
 #endif /* AFS_NOSTATS */
 	    if ( code ) {
 		afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64READ,
@@ -705,6 +712,56 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     if (!code)
 	code = (*ops->close)(rock, avc, adc, tsmall);
     (*ops->destroy)(&rock, code);
+
+#ifndef AFS_NOSTATS
+    osi_GetuTime(&xferStopTime);
+    (xferP->numXfers)++;
+    if (!code) {
+	(xferP->numSuccesses)++;
+	afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_FETCHDATA] += bytesXferred;
+	(xferP->sumBytes) +=
+		(afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_FETCHDATA] >> 10);
+	afs_stats_XferSumBytes[AFS_STATS_FS_XFERIDX_FETCHDATA] &= 0x3FF;
+	if (bytesXferred < xferP->minBytes)
+	    xferP->minBytes = bytesXferred;
+	if (bytesXferred > xferP->maxBytes)
+	    xferP->maxBytes = bytesXferred;
+
+	/*
+	 * Tally the size of the object.  Note: we tally the actual size,
+	 * NOT the number of bytes that made it out over the wire.
+	 */
+	if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET0)
+	    (xferP->count[0])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET1)
+	    (xferP->count[1])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET2)
+	    (xferP->count[2])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET3)
+	    (xferP->count[3])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET4)
+	    (xferP->count[4])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET5)
+	    (xferP->count[5])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET6)
+	    (xferP->count[6])++;
+	else if (bytesToXfer <= AFS_STATS_MAXBYTES_BUCKET7)
+	    (xferP->count[7])++;
+	else
+	    (xferP->count[8])++;
+
+	afs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
+	afs_stats_AddTo((xferP->sumTime), elapsedTime);
+	afs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
+	if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
+	    afs_stats_TimeAssign((xferP->minTime), elapsedTime);
+	}
+	if (afs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
+	    afs_stats_TimeAssign((xferP->maxTime), elapsedTime);
+	}
+    }
+#endif
+    XSTATS_END_TIME;
     return code;
 }
 
