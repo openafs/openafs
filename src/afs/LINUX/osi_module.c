@@ -36,6 +36,8 @@
 #include <linux/kernel.h>
 #endif
 
+#include "osi_pagecopy.h"
+
 extern struct file_system_type afs_fs_type;
 
 #if !defined(AFS_LINUX24_ENV)
@@ -118,6 +120,8 @@ init_module(void)
 #if defined(AFS_CACHE_BYPASS)
     afs_warn("Cache bypass patched libafs module init.\n");
 #endif
+    afs_init_pagecopy();
+
     return 0;
 }
 
@@ -132,6 +136,9 @@ cleanup_module(void)
 #if defined(AFS_CACHE_BYPASS)
     afs_warn("Cache bypass patched libafs module cleaning up.\n");
 #endif
+
+    afs_shutdown_pagecopy();
+
 #ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_shutdown();
 #endif
@@ -153,6 +160,7 @@ cleanup_module(void)
     osi_ioctl_clean();
     osi_proc_clean();
 #endif
+
     return;
 }
 

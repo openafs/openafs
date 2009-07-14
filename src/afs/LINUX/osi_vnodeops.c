@@ -42,6 +42,8 @@
 #include "afs/afs_bypasscache.h"
 #endif
 
+#include "osi_pagecopy.h"
+
 #ifdef pgoff2loff
 #define pageoff(pp) pgoff2loff((pp)->index)
 #else
@@ -1755,7 +1757,8 @@ out:
 
 static int
 afs_linux_read_cache(struct file *cachefp, struct page *page,
-		     int chunk, struct pagevec *lrupv) {
+		     int chunk, struct pagevec *lrupv,
+		     struct afs_pagecopy_task *task) {
     loff_t offset = page_offset(page);
     struct page *newpage, *cachepage;
     struct address_space *cachemapping;
@@ -1804,25 +1807,34 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
     if (!PageUptodate(cachepage)) {
 	ClearPageError(cachepage);
         code = cachemapping->a_ops->readpage(NULL, cachepage);
-	if (!code) {
+	if (!code && !task) {
 	    wait_on_page_locked(cachepage);
-	    if (!PageUptodate(cachepage))
-		code = -EIO;
 	}
     } else {
         unlock_page(cachepage);
     }
 
     if (!code) {
-        copy_highpage(page, cachepage);
-	flush_dcache_page(page);
-	SetPageUptodate(page);
+	if (PageUptodate(cachepage)) {
+	    copy_highpage(page, cachepage);
+	    flush_dcache_page(page);
+	    SetPageUptodate(page);
+	    UnlockPage(page);
+        } else if (task) {
+	    afs_pagecopy_queue_page(task, cachepage, page);
+	} else {
+	    code = -EIO;
+	}
     }
-    UnlockPage(page);
+
+    if (code) {
+        UnlockPage(page);
+    }
 
 out:
     if (cachepage)
 	page_cache_release(cachepage);
+
     return code;
 }
 
@@ -1918,7 +1930,7 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     cacheFp = afs_linux_raw_open(&tdc->f.inode, NULL);
     pagevec_init(&lrupv, 0);
 
-    code = afs_linux_read_cache(cacheFp, pp, tdc->f.chunk, &lrupv);
+    code = afs_linux_read_cache(cacheFp, pp, tdc->f.chunk, &lrupv, NULL);
 
     if (pagevec_count(&lrupv))
        __pagevec_lru_add_file(&lrupv);
@@ -2119,6 +2131,7 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     unsigned int page_idx;
     loff_t offset;
     struct pagevec lrupv;
+    struct afs_pagecopy_task *task;
 
 #if defined(AFS_CACHE_BYPASS)
     bypasscache = afs_linux_can_bypass(ip);
@@ -2139,6 +2152,8 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 
     ObtainWriteLock(&avc->lock, 912);
     AFS_GUNLOCK();
+
+    task = afs_pagecopy_init_task();
 
     tdc = NULL;
     pagevec_init(&lrupv, 0);
@@ -2179,7 +2194,7 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 	    if (!pagevec_add(&lrupv, page))
 		__pagevec_lru_add_file(&lrupv);
 
-	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupv);
+	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupv, task);
 	}
 	page_cache_release(page);
     }
@@ -2188,6 +2203,8 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
 
     if (tdc)
 	filp_close(cacheFp, NULL);
+
+    afs_pagecopy_put_task(task);
 
     AFS_GLOCK();
     if (tdc) {
