@@ -104,7 +104,7 @@ struct file_system_type afs_fs_type = {
 
 #if defined(AFS_LINUX26_ENV)
 struct backing_dev_info afs_backing_dev_info = {
-    .ra_pages		= 0, /* disable readahead, afs does prefetch */
+    .ra_pages		= 32,
 };
 
 int

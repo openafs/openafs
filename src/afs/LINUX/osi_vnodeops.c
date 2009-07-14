@@ -48,6 +48,10 @@
 #define pageoff(pp) pp->offset
 #endif
 
+#ifndef __pagevec_lru_add_file
+#define __pagevec_lru_add_file __pagevec_lru_add
+#endif
+
 #ifndef MAX_ERRNO
 #define MAX_ERRNO 1000L
 #endif
@@ -1635,16 +1639,9 @@ afs_linux_can_bypass(struct inode *ip) {
      return 0;
 }
 
-/* The kernel calls readpages before trying readpage, with a list of 
- * pages.  The readahead algorithm expands num_pages when it thinks
- * the application will benefit.  Unlike readpage, the pages are not
- * necessarily allocated.  If we do not a) allocate required pages and 
- * b) remove them from page_list, linux will re-enter at afs_linux_readpage
- * for each required page (and the page will be pre-allocated) */	
-
 static int
-afs_linux_readpages(struct file *fp, struct address_space *mapping,
-		    struct list_head *page_list, unsigned num_pages)
+afs_linux_cache_bypass_read(struct file *fp, struct address_space *mapping,
+			    struct list_head *page_list, unsigned num_pages)
 {
     afs_int32 page_ix;
     uio_t *auio;
@@ -1663,20 +1660,6 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     afs_int32 page_count = 0;
     afs_int32 isize;
 	
-    credp = crref();
-    bypasscache = afs_linux_can_bypass(ip);
-	
-    /* In the new incarnation of selective caching, a file's caching policy 
-     *  can change, eg because file size exceeds threshold, etc. */
-    trydo_cache_transition(avc, credp, bypasscache);	
-	 
-    if(!bypasscache) {
-	while(!list_empty(page_list)) {
-	    pp = list_entry(page_list->prev, struct page, lru);
-	    list_del(&pp->lru);
-	}
-	goto out;
-    }
     /* background thread must free: iovecp, auio, ancr */
     iovecp = osi_Alloc(num_pages * sizeof(struct iovec));
 
@@ -1750,7 +1733,9 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
      * are in the LRU cache, then schedule the read */
     if(page_count) {
         pagevec_lru_add(&lrupv);
+	credp = crref();
         code = afs_ReadNoCache(avc, ancr, credp);
+	crfree(credp);
     } else {
         /* If there is nothing for the background thread to handle,
          * it won't be freeing the things that we never gave it */
@@ -1761,14 +1746,85 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     /* we do not flush, release, or unmap pages--that will be 
      * done for us by the background thread as each page comes in
      * from the fileserver */
-    crfree(credp);
-	
 out:	
     return afs_convert_code(code);
 }
 
 #endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0) */
 #endif /* defined(AFS_CACHE_BYPASS */
+
+static int
+afs_linux_read_cache(struct file *cachefp, struct page *page,
+		     int chunk, struct pagevec *lrupv) {
+    loff_t offset = page_offset(page);
+    struct page *newpage, *cachepage;
+    struct address_space *cachemapping;
+    int pageindex;
+    int code = 0;
+
+    cachemapping = cachefp->f_dentry->d_inode->i_mapping;
+    newpage = NULL;
+    cachepage = NULL;
+
+    /* From our offset, we now need to work out which page in the disk
+     * file it corresponds to. This will be fun ... */
+    pageindex = (offset - AFS_CHUNKTOBASE(chunk)) >> PAGE_CACHE_SHIFT;
+
+    while (cachepage == NULL) {
+        cachepage = find_get_page(cachemapping, pageindex);
+	if (!cachepage) {
+	    if (!newpage)
+		newpage = page_cache_alloc_cold(cachemapping);
+	    if (!newpage) {
+		code = -ENOMEM;
+		goto out;
+	    }
+
+	    code = add_to_page_cache(newpage, cachemapping,
+				     pageindex, GFP_KERNEL);
+	    if (code == 0) {
+	        cachepage = newpage;
+	        newpage = NULL;
+
+	        page_cache_get(cachepage);
+                if (!pagevec_add(lrupv, cachepage))
+                    __pagevec_lru_add_file(lrupv);
+
+	    } else {
+		page_cache_release(newpage);
+		newpage = NULL;
+		if (code != -EEXIST)
+		    goto out;
+	    }
+        } else {
+	    lock_page(cachepage);
+	}
+    }
+
+    if (!PageUptodate(cachepage)) {
+	ClearPageError(cachepage);
+        code = cachemapping->a_ops->readpage(NULL, cachepage);
+	if (!code) {
+	    wait_on_page_locked(cachepage);
+	    if (!PageUptodate(cachepage))
+		code = -EIO;
+	}
+    } else {
+        unlock_page(cachepage);
+    }
+
+    if (!code) {
+        copy_highpage(page, cachepage);
+	flush_dcache_page(page);
+	SetPageUptodate(page);
+    }
+    UnlockPage(page);
+
+out:
+    if (cachepage)
+	page_cache_release(cachepage);
+    return code;
+}
 
 static int inline
 afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
@@ -1777,12 +1833,10 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     struct inode *ip = FILE_INODE(fp);
     struct vcache *avc = VTOAFS(ip);
     struct dcache *tdc;
-    struct file *cacheFp;
-    struct page *newpage, *backpage;
-    struct address_space *bmapping;
-    int pageindex;
+    struct file *cacheFp = NULL;
     int code;
     int dcLocked = 0;
+    struct pagevec lrupv;
 
     /* Not a UFS cache, don't do anything */
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
@@ -1862,62 +1916,12 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     /* XXX - I suspect we should be locking the inodes before we use them! */
     AFS_GUNLOCK();
     cacheFp = afs_linux_raw_open(&tdc->f.inode, NULL);
+    pagevec_init(&lrupv, 0);
 
-    bmapping = cacheFp->f_dentry->d_inode->i_mapping;
-    newpage = NULL;
-    backpage = NULL;
+    code = afs_linux_read_cache(cacheFp, pp, tdc->f.chunk, &lrupv);
 
-    /* From our offset, we now need to work out which page in the disk
-     * file it corresponds to. This will be fun ... */
-    pageindex = (offset - AFS_CHUNKTOBASE(tdc->f.chunk)) >> PAGE_CACHE_SHIFT;
-
-    while (backpage == NULL) {
-        backpage = find_get_page(bmapping, pageindex);
-	if (!backpage) {
-	    if (!newpage)
-		newpage = page_cache_alloc_cold(bmapping);
-	    if (!newpage)
-		goto out;
-
-	    code = add_to_page_cache(newpage, bmapping, pageindex, GFP_KERNEL);
-	    if (code == 0) {
-	        backpage = newpage;
-	        newpage = NULL;
-
-	        page_cache_get(backpage);
-	    } else {
-		page_cache_release(newpage);
-		newpage = NULL;
-		if (code != -EEXIST)
-		    goto out;
-	    }
-        } else {
-	    lock_page(backpage);
-	}
-    }
-
-    if (!PageUptodate(backpage)) {
-	ClearPageError(backpage);
-        code = bmapping->a_ops->readpage(NULL, backpage);
-	if (!code) {
-	    wait_on_page_locked(backpage);
-	    if (!PageUptodate(backpage))
-		code = -EIO;
-	}
-    } else {
-        unlock_page(backpage);
-    }
-
-    if (!code) {
-        copy_highpage(pp, backpage);
-	flush_dcache_page(pp);
-	SetPageUptodate(pp);
-    }
-    UnlockPage(pp);
-
-out:
-    if (backpage)
-	page_cache_release(backpage);
+    if (pagevec_count(&lrupv))
+       __pagevec_lru_add_file(&lrupv);
 
     filp_close(cacheFp, NULL);
     AFS_GLOCK();
@@ -2098,6 +2102,103 @@ done:
     return afs_convert_code(code);
 }
 
+/* Readpages reads a number of pages for a particular file. We use
+ * this to optimise the reading, by limiting the number of times upon which
+ * we have to lookup, lock and open vcaches and dcaches
+ */
+
+static int
+afs_linux_readpages(struct file *fp, struct address_space *mapping,
+		    struct list_head *page_list, unsigned int num_pages)
+{
+    struct inode *inode = mapping->host;
+    struct vcache *avc = VTOAFS(inode);
+    struct dcache *tdc;
+    struct file *cacheFp = NULL;
+    int code;
+    unsigned int page_idx;
+    loff_t offset;
+    struct pagevec lrupv;
+
+#if defined(AFS_CACHE_BYPASS)
+    bypasscache = afs_linux_can_bypass(ip);
+
+    /* In the new incarnation of selective caching, a file's caching policy
+     * can change, eg because file size exceeds threshold, etc. */
+    trydo_cache_transition(avc, credp, bypasscache);
+
+    if (bypasscache)
+	return afs_linux_cache_bypass_read(ip, mapping, page_list, num_pages);
+#endif
+
+    AFS_GLOCK();
+    if ((code = afs_linux_VerifyVCache(avc, NULL))) {
+	AFS_GUNLOCK();
+	return code;
+    }
+
+    ObtainWriteLock(&avc->lock, 912);
+    AFS_GUNLOCK();
+
+    tdc = NULL;
+    pagevec_init(&lrupv, 0);
+    for (page_idx = 0; page_idx < num_pages; page_idx++) {
+	struct page *page = list_entry(page_list->prev, struct page, lru);
+	list_del(&page->lru);
+	offset = page_offset(page);
+
+	if (tdc && tdc->f.chunk != AFS_CHUNK(offset)) {
+	    AFS_GLOCK();
+	    ReleaseReadLock(&tdc->lock);
+	    afs_PutDCache(tdc);
+	    AFS_GUNLOCK();
+	    tdc = NULL;
+	    if (cacheFp)
+		filp_close(cacheFp, NULL);
+	}
+
+	if (!tdc) {
+	    AFS_GLOCK();
+	    if ((tdc = afs_FindDCache(avc, offset))) {
+		ObtainReadLock(&tdc->lock);
+		if (!hsame(avc->f.m.DataVersion, tdc->f.versionNo) ||
+		    (tdc->dflags & DFFetching)) {
+		    ReleaseReadLock(&tdc->lock);
+		    afs_PutDCache(tdc);
+		    tdc = NULL;
+		}
+	    }
+	    AFS_GUNLOCK();
+	    if (tdc)
+		cacheFp = afs_linux_raw_open(&tdc->f.inode, NULL);
+	}
+
+	if (tdc && !add_to_page_cache(page, mapping, page->index,
+				      GFP_KERNEL)) {
+	    page_cache_get(page);
+	    if (!pagevec_add(&lrupv, page))
+		__pagevec_lru_add_file(&lrupv);
+
+	    afs_linux_read_cache(cacheFp, page, tdc->f.chunk, &lrupv);
+	}
+	page_cache_release(page);
+    }
+    if (pagevec_count(&lrupv))
+       __pagevec_lru_add_file(&lrupv);
+
+    if (tdc)
+	filp_close(cacheFp, NULL);
+
+    AFS_GLOCK();
+    if (tdc) {
+	ReleaseReadLock(&tdc->lock);
+        afs_PutDCache(tdc);
+    }
+
+    ReleaseWriteLock(&avc->lock);
+    AFS_GUNLOCK();
+    return 0;
+}
 
 #if defined(AFS_LINUX24_ENV)
 static int
@@ -2400,9 +2501,7 @@ static struct inode_operations afs_file_iops = {
 #if defined(AFS_LINUX24_ENV)
 static struct address_space_operations afs_file_aops = {
   .readpage =		afs_linux_readpage,
-#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-  .readpages =		afs_linux_readpages,
-#endif  
+  .readpages = 		afs_linux_readpages,
   .writepage =		afs_linux_writepage,
 #if defined (HAVE_WRITE_BEGIN)
   .write_begin =        afs_linux_write_begin,
