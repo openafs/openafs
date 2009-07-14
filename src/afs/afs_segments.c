@@ -298,8 +298,6 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    int nomore;
 	    unsigned int first = 0;
 	    struct afs_conn *tc;
-	    struct rx_call *tcall;
-	    XSTATS_DECLS;
 	    for (bytes = 0, j = 0; !code && j <= high; j++) {
 		if (dcList[j]) {
 		    ObtainSharedLock(&(dcList[j]->lock), 629);
@@ -348,61 +346,13 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 		    do {
 			tc = afs_Conn(&avc->f.fid, areq, 0);
-			if (tc) {
 #ifdef AFS_64BIT_CLIENT
-			  restart:
+		      restart:
 #endif
-			    RX_AFS_GUNLOCK();
-			    tcall = rx_NewCall(tc->id);
-#ifdef AFS_64BIT_CLIENT
-			    if (!afs_serverHasNo64Bit(tc)) {
-				code =
-				    StartRXAFS_StoreData64(tcall,
-							   (struct AFSFid *)
-							   &avc->f.fid.Fid,
-							   &InStatus, base,
-							   bytes, tlen);
-			    } else {
-				if (tlen > 0xFFFFFFFF) {
-				    code = EFBIG;
-				} else {
-				    afs_int32 t1, t2, t3;
-				    t1 = base;
-				    t2 = bytes;
-				    t3 = tlen;
-				    code =
-					StartRXAFS_StoreData(tcall,
-							     (struct AFSFid *)
-							     &avc->f.fid.Fid,
-							     &InStatus, t1,
-							     t2, t3);
-				}
-			    }
-#else /* AFS_64BIT_CLIENT */
-			    code =
-				StartRXAFS_StoreData(tcall,
-						     (struct AFSFid *)&avc->
-						     f.fid.Fid, &InStatus, base,
-						     bytes, tlen);
-#endif /* AFS_64BIT_CLIENT */
-			    RX_AFS_GLOCK();
-			} else {
-			    code = -1;
-			    tcall = NULL;
-			}
-			if ( !code )
-			    code = afs_CacheStoreProc(tcall, dclist,
-						   avc, bytes,
-						   &newDV, &doProcessFS, &OutStatus,
-						   nchunks, &nomore);
-			if (tcall) {
-			    afs_int32 code2;
-			    RX_AFS_GUNLOCK();
-			    code2 = rx_EndCall(tcall, code);
-			    RX_AFS_GLOCK();
-			    if (code2)
-				code = code2;
-			}
+			code = afs_CacheStoreProc(tc, dclist,
+					   avc, bytes, base, tlen,
+					   &newDV, &doProcessFS, &OutStatus,
+					   nchunks, &nomore);
 #ifdef AFS_64BIT_CLIENT
 			if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
 			    afs_serverSetNo64Bit(tc);

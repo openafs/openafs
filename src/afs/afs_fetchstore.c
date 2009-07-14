@@ -174,6 +174,14 @@ rxfs_storeDestroy(void **r, afs_int32 error)
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)*r;
 
     *r = NULL;
+    if (v->call) {
+	afs_int32 code2;
+	RX_AFS_GUNLOCK();
+	code2 = rx_EndCall(v->call, code);
+	RX_AFS_GLOCK();
+	if (code2)
+	    code = code2;
+    }
     if (v->tbuffer)
 	osi_FreeLargeSpace(v->tbuffer);
     if (v->tiov)
@@ -203,9 +211,16 @@ struct storeOps rxfs_storeMemOps = {
 };
 
 afs_int32
-rxfs_storeInit(struct vcache *avc, struct storeOps **ops, void **rock)
+rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
+		afs_size_t bytes, afs_size_t base,
+		struct storeOps **ops, void **rock)
 {
+    afs_int32 code;
     struct rxfs_storeVariables *v;
+    struct rx_call *tcall;
+
+    if ( !tc )
+	return -1;
 
     v = (struct rxfs_storeVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_storeVariables));
     if (!v)
@@ -214,6 +229,31 @@ rxfs_storeInit(struct vcache *avc, struct storeOps **ops, void **rock)
 
     v->InStatus.ClientModTime = avc->f.m.Date;
     v->InStatus.Mask = AFS_SETMODTIME;
+
+    RX_AFS_GUNLOCK();
+    tcall = rx_NewCall(tc->id);
+#ifdef AFS_64BIT_CLIENT
+    if (!afs_serverHasNo64Bit(tc))
+	code = StartRXAFS_StoreData64(tcall, (struct AFSFid *) &avc->f.fid.Fid,
+				   &v->InStatus, base, bytes, tlen);
+    else {
+	if (tlen > 0xFFFFFFFF) {
+	    code = EFBIG;
+	}
+	else {
+	    afs_int32 t1, t2, t3;
+	    t1 = base;
+	    t2 = bytes;
+	    t3 = tlen;
+	    code = StartRXAFS_StoreData(tcall, (struct AFSFid *)&avc->f.fid.Fid,
+				     &v->InStatus, t1, t2, t3);
+	}
+    }
+#else /* AFS_64BIT_CLIENT */
+    code = StartRXAFS_StoreData(tcall, (struct AFSFid *)&avc->f.fid.Fid,
+				&v->InStatus, base, bytes, tlen);
+#endif /* AFS_64BIT_CLIENT */
+    RX_AFS_GLOCK();
 
     if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
@@ -241,6 +281,8 @@ rxfs_storeInit(struct vcache *avc, struct storeOps **ops, void **rock)
 	}
 #endif /* notdef */
     }
+
+    v->call = tcall;
     *rock = (void *)v;
     return 0;
 }
@@ -249,10 +291,12 @@ extern unsigned int storeallmissing;
 /*!
  *	Called upon store.
  *
- * \param acall Ptr to the Rx call structure involved.
+ * \param tc Ptr to the Rx connection structure involved.
  * \param dclist pointer to the list of dcaches
  * \param avc Ptr to the vcache entry.
  * \param bytes per chunk
+ * \param base where to start the store
+ * \param length number of bytes to store
  * \param anewDV Ptr to the dataversion after store
  * \param doProcessFS Ptr to the processFS flag
  * \param OutStatus Ptr to the OutStatus structure
@@ -262,10 +306,12 @@ extern unsigned int storeallmissing;
  * \note Environment: Nothing interesting.
  */
 int
-afs_CacheStoreProc(register struct rx_call *acall,
+afs_CacheStoreProc(register struct afs_conn *tc,
 			struct dcache **dclist,
 			struct vcache *avc,
 			afs_size_t bytes,
+			afs_size_t base,
+			afs_size_t length,
 			afs_hyper_t *anewDV,
 			int *doProcessFS,
 			struct AFSFetchStatus *OutStatus,
@@ -292,11 +338,10 @@ afs_CacheStoreProc(register struct rx_call *acall,
 #endif /* AFS_NOSTATS */
     XSTATS_DECLS;
 
-    code =  rxfs_storeInit(avc, &ops, &rock);
+    code =  rxfs_storeInit(avc, tc, length, bytes, base, &ops, &rock);
     if ( code ) {
-	osi_Panic("afs_CacheStoreProc: rxfs_storeInit failed");
+	osi_Panic("afs_CacheStoreProc: rxfs_storeInit failed with %d", code);
     }
-    ((struct rxfs_storeVariables *)rock)->call = acall;
 
     for (i = 0; i < nchunks && !code; i++) {
 	int offset = 0;
