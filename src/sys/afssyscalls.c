@@ -350,7 +350,13 @@ lpioctl(char *path, int cmd, char *cmarg, int follow)
     if (rval)
 	errcode = rval;
 #else
+    /* As kauth/user.c says, handle smoothly the case where no AFS system call
+     * exists (yet). */
+    void (*old)() = signal(SIGSYS, SIG_IGN);
+
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+
+    signal(SIGSYS, old);
 #endif
 
     return (errcode);
