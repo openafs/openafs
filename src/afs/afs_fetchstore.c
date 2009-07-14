@@ -319,20 +319,14 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 			int *nomoreP)
 {
     afs_int32 code = 0;
-    afs_uint32 tlen;
     struct storeOps *ops;
     void * rock = NULL;
-    struct osi_file *fP;
-    int *shouldwake;
     int nomore = *nomoreP;
-    struct dcache *tdc;
-    int stored = 0;
     unsigned int i;
-    afs_int32 alen;
 #ifndef AFS_NOSTATS
     struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
     osi_timeval_t xferStartTime,	/*FS xfer start time */
-      xferStopTime;		/*FS xfer stop time */
+      xferStopTime;			/*FS xfer stop time */
     afs_size_t bytesToXfer = 10000;	/* # bytes to xfer */
     afs_size_t bytesXferred = 10000;	/* # bytes actually xferred */
 #endif /* AFS_NOSTATS */
@@ -344,9 +338,12 @@ afs_CacheStoreProc(register struct afs_conn *tc,
     }
 
     for (i = 0; i < nchunks && !code; i++) {
+	int stored = 0;
+	struct osi_file *fP;
 	int offset = 0;
-	tdc = dclist[i];
-	alen = tdc->f.chunkBytes;
+	struct dcache *tdc = dclist[i];
+	afs_int32 alen = tdc->f.chunkBytes;
+	int *shouldwake;
 	if (!tdc) {
 	    afs_warn("afs: missing dcache!\n");
 	    storeallmissing++;
@@ -387,7 +384,8 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 	osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
-    while ( alen > 0 ) {
+	while ( alen > 0 ) {
+	    afs_uint32 tlen;
 	    afs_int32 bytesread, byteswritten;
 	    code = (*ops->prepare)(rock, alen, &tlen);
 	    if ( code )
