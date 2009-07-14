@@ -48,6 +48,44 @@ $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH) 
 
 ############################################################################
+# build mtafsubik.lib
+
+MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsubik.lib
+
+MT_LIBOBJS =\
+	$(OUT)\disk.obj \
+	$(OUT)\remote.obj \
+	$(OUT)\beacon.obj \
+	$(OUT)\recovery.obj \
+	$(OUT)\ubik.obj \
+	$(OUT)\uinit.obj \
+	$(OUT)\vote.obj \
+	$(OUT)\lock.obj \
+	$(OUT)\phys.obj \
+	$(OUT)\ubik_int_mt.cs.obj \
+	$(OUT)\ubik_int_mt.ss.obj \
+	$(OUT)\ubik_int_mt.xdr.obj \
+	$(OUT)\ubikcmd.obj \
+	$(OUT)\ubikclient.obj \
+	$(OUT)\uerrors_mt.obj	\
+	$(OUT)\AFS_component_version_number.obj
+
+$(OUT)\uerrors_mt.obj:uerrors.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubik_int_mt.cs.obj:ubik_int.cs.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubik_int_mt.ss.obj:ubik_int.ss.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ubik_int_mt.xdr.obj:ubik_int.xdr.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(MT_LIBFILE): $(MT_LIBOBJS)  
+	$(LIBARCH) 
+
+############################################################################
 # Definitions for building a EXE.
 
 RS_UDBG_EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\udebug.exe
@@ -112,7 +150,7 @@ uerrors.c ubik.h: uerrors.et ubik.p.h
 
 install9X: $(INCFILES) $(LIBFILE)
 
-install: $(INCFILES) $(LIBFILE)  $(CL_UDBG_EXEFILE)
+install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(CL_UDBG_EXEFILE)
 
 
 clean::

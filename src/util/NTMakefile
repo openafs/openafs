@@ -27,7 +27,8 @@ INCFILES =\
 	$(INCFILEDIR)\ktime.h \
 	$(INCFILEDIR)\fileutil.h \
 	$(INCFILEDIR)\afsutil_prototypes.h \
-	$(INCFILEDIR)\secutil_nt.h
+	$(INCFILEDIR)\secutil_nt.h \
+        $(INCFILEDIR)\softsig.h
 
 $(DESTDIR)\include\afs\dirent.h: dirent_nt.h
 	$(COPY) $** $@
@@ -36,6 +37,8 @@ $(DESTDIR)\include\afs\dirpath.h: dirpath_nt.h
 	$(COPY) $** $@
 
 LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
+
+MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsutil.lib
 
 LIBOBJS = \
 	$(OUT)\assert.obj \
@@ -62,13 +65,49 @@ LIBOBJS = \
 	$(OUT)\fileutil.obj \
 	$(OUT)\secutil_nt.obj
 
+MT_LIBOBJS = \
+	$(OUT)\assert.obj \
+	$(OUT)\base32.obj \
+	$(OUT)\casestrcpy.obj \
+	$(OUT)\get_krbrlm.obj \
+	$(OUT)\hostparse.obj \
+	$(OUT)\isathing.obj \
+	$(OUT)\kreltime.obj \
+	$(OUT)\ktime.obj \
+        $(OUT)\netutils.obj \
+	$(OUT)\regex.obj \
+	$(OUT)\readdir_nt.obj \
+	$(OUT)\serverLog_mt.obj \
+    	$(OUT)\snprintf.obj \
+    	$(OUT)\strlcat.obj \
+	$(OUT)\uuid.obj \
+	$(OUT)\volparse.obj \
+	$(OUT)\winsock_nt.obj \
+	$(OUT)\errmap_nt.obj \
+	$(OUT)\dirpath_mt.obj \
+	$(OUT)\strnlen.obj \
+	$(OUT)\strlcpy.obj \
+	$(OUT)\fileutil.obj \
+	$(OUT)\secutil_nt.obj
+
 $(LIBOBJS): $$(@B).c
     $(C2OBJ) $**
+
+$(OUT)\dirpath_mt.obj:dirpath.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\serverLog_mt.obj:serverLog.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
-install: $(INCFILES) $(LIBOBJS) $(LIBFILE)
+$(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
+
+install_headers: $(INCFILES) 
+
+install: install_headers $(LIBOBJS) $(LIBFILE) $(MT_LIBFILE)
 
 install9x: install
 

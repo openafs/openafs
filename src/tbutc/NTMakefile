@@ -29,23 +29,13 @@ FSINT   =..\fsint
 BUTM    =..\butm
 BUTC    =..\butc
 BUCOORD = ..\bucoord
-VOLSER  = ..\volser
+VOLSER  = ..\tvolser
 
 BUCOORDOBJS = $(OUT)\ubik_db_if.obj \
     $(OUT)\$(BUCOORD)\volstub.obj \
     $(OUT)\$(BUCOORD)\dlq.obj \
 	$(OUT)\$(BUCOORD)\status.obj \
     $(OUT)\$(BUCOORD)\bucoord_errs.obj
-
-VOLSERLIBOBJ = $(OUT)\$(VOLSER)\volint.cs.obj  \
-               $(OUT)\vsprocs.obj \
-               $(OUT)\$(VOLSER)\vsutils.obj \
-               $(OUT)\$(VOLSER)\lockprocs.obj  \
-               $(OUT)\$(VOLSER)\volint.xdr.obj \
-               $(OUT)\$(VOLSER)\volerr.obj  \
-               $(OUT)\$(VOLSER)\volint.ss.obj  \
-               $(OUT)\AFS_component_version_number.obj 
-VOLSERLIBS  = $(OUT)\afstvolser.lib
 
 LWPOBJS     = $(OUT)\lock.obj
 
@@ -72,14 +62,14 @@ BUTCRES = $(OUT)\butc.res
 BUTCINCLUDE= -I. -I$(DESTDIR)\include -I$(XBSADIR)
 BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afs\afsbubasics.lib \
-	     $(VOLSERLIBS) \
+	     $(DESTDIR)\lib\afs\afstvolser.lib \
              $(BUTMLIBS) \
-	     $(DESTDIR)\lib\afs\afsvldb.lib \
+	     $(DESTDIR)\lib\afs\mtafsvldb.lib \
 	     $(DESTDIR)\lib\afs\afskauth.lib \
 	     $(DESTDIR)\lib\afs\afsauth.lib \
 	     $(DESTDIR)\lib\afsrpc.lib \
              $(DESTDIR)\lib\afsrxkad.lib \
-	     $(DESTDIR)\lib\afsubik.lib \
+	     $(DESTDIR)\lib\afs\mtafsubik.lib \
              $(DESTDIR)\lib\afs\afsutil.lib \
              $(DESTDIR)\lib\afs\afsusd.lib \
 	     $(DESTDIR)\lib\afs\afspioctl.lib \
@@ -146,16 +136,6 @@ $(OUT)\butc_xbsa.obj: $(BUTC)/butc_xbsa.c
 
 $(OUT)\ubik_db_if.obj: $(BUCOORD)/ubik_db_if.c
 	$(C2OBJ) -I$(BUCOORD) $**
-
-#----------------------------------------------- VOLSER
-# Build the afstvolser.lib library here. The file compiled
-# for is is vsprocs.c. The rest are from the VOLSER dir.
-
-$(OUT)\afstvolser.lib: $(VOLSERLIBOBJ)
-	$(LIBARCH)
-
-$(OUT)\vsprocs.obj: $(VOLSER)/vsprocs.c
-	$(C2OBJ) $**
 
 #----------------------------------------------- LWP
 

@@ -81,7 +81,21 @@ rx_headers:
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-util: procmgmt_headers afsreg_headers lwp_headers rx_headers
+util_headers:
+     @echo ***** $@
+	$(DOCD) $(SRC)\util
+	$(CD) $(SRC)\util
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+pthread: util_headers
+     @echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+util: procmgmt_headers afsreg_headers lwp_headers rx_headers pthread
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -186,14 +200,7 @@ rxkad: rxstat
 	$(NTMAKE)
 	$(CD) ..\..
 
-pthread: rxkad
-     @echo ***** $@
-	$(DOCD) $(SRC)\WINNT\$@
-	$(CD) $(SRC)\WINNT\$@
-	$(NTMAKE)
-	$(CD) ..\..\..
-
-procmgmt: pthread
+procmgmt: rxkad
      @echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -423,7 +430,14 @@ tviced: libafsauthent
 	$(NTMAKE)
 	$(CD) ..\..
 
-tbutc:  tviced
+tvolser: tviced
+     @echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+tbutc:  tvolser
      @echo ***** $@
      $(DOCD) $(SRC)\$@
      $(CD) $(SRC)\$@

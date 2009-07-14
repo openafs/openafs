@@ -140,51 +140,6 @@ static int getmeta(int ac) {
     return 0;
 }
 
-afs_int32 util_GetInt32 (char *as, afs_int32 *aval)
-{
-    register long total;
-    register int tc;
-    int base;
-    int negative;
-
-    total = 0;	/* initialize things */
-    negative = 0;
-
-    /* skip over leading spaces */
-    while (tc = *as) {
-	if (tc != ' ' && tc != '\t') break;
-    }
-
-    /* compute sign */
-    if (*as == '-') {
-	negative = 1;
-	as++;	/* skip over character */
-    }
-
-    /* compute the base */
-    if (*as == '0') {
-	as++;
-	if (*as == 'x' || *as == 'X') {
-	    base = 16;
-	    as++;
-	}
-	else base = 8;
-    }
-    else base = 10;
-
-    /* compute the # itself */
-    while(tc = *as) {
-	if (!ismeta(base, tc)) return -1;
-	total *= base;
-	total += getmeta(tc);
-	as++;
-    }
-
-    if (negative) *aval = -total;
-    else *aval = total;
-    return 0;
-}
-
 char *cm_mount_root="afs"; 
 char *cm_slash_mount_root="/afs";
 char *cm_back_slash_mount_root="\\afs";

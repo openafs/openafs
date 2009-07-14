@@ -380,7 +380,7 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib \
+	$(DESTDIR)\lib\afs\mtafsutil.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
@@ -453,10 +453,9 @@ KPASSWD_OBJS =\
 KPASSWD_LIBS =\
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-        $(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afs\afscmd.lib \
 	$(DESTDIR)\lib\afsdes.lib \
-	$(DESTDIR)\lib\afs\afsutil.lib
+	$(DESTDIR)\lib\afs\mtafsutil.lib
 
 $(OUT)\kpasswd.obj: $(KAUTH)/kpasswd.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**

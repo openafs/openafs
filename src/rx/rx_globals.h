@@ -25,14 +25,12 @@
 #define RX_STATS_INTERLOCKED 1
 #if defined(AFS_PTHREAD_ENV)
 #define EXT __declspec(dllimport) extern
-#else
+#else /* AFS_PTHREAD_ENV */
 #define	EXT extern
-#endif
-#define EXT2 __declspec(dllimport) extern
-#else
-#define EXT2 extern
+#endif /* AFS_PTHREAD_ENV */
+#else /* AFS_NT40_ENV */
 #define EXT extern
-#endif
+#endif /* AFS_NT40_ENV */
 #endif /* !GLOBALSINIT */
 
 /* Basic socket for client requests; other sockets (for receiving server requests) are in the service structures */
@@ -617,7 +615,7 @@ EXT afs_kmutex_t rx_pthread_mutex;	/* used to protect pthread counters */
 EXT afs_kmutex_t rx_packets_mutex;	/* used to protect packet counters */
 #endif
 
-EXT2 int rx_enable_stats GLOBALSINIT(0);
+EXT int rx_enable_stats GLOBALSINIT(0);
 
 /*
  * Set this flag to enable the listener thread to trade places with an idle
