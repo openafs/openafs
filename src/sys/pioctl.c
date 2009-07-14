@@ -16,6 +16,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <signal.h>
 
 #include <afs/afs_args.h>
 #if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
@@ -48,10 +49,10 @@ int
 lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
     int errcode, rval;
-#if defined(AFS_FBSD_ENV)
+#ifndef AFS_LINUX20_ENV
     /* As kauth/user.c says, handle smoothly the case where no AFS system call
-     *  exists (yet).  Why don't more platforms have trouble here?  Matt */
-    sig_t old = (int (*)())signal(SIGSYS, SIG_IGN);
+     * exists (yet). */
+    sig_t old = signal(SIGSYS, SIG_IGN);
 #endif
 
 #if defined(AFS_LINUX20_ENV)
@@ -68,6 +69,10 @@ lpioctl(char *path, int cmd, char *cmarg, int follow)
 	errcode = rval;
 #else
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);
+#endif
+
+#ifndef AFS_LINUX20_ENV
+    signal(SIGSYS, old);
 #endif
 
     return (errcode);
