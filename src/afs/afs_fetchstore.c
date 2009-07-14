@@ -472,7 +472,7 @@ struct fetchOps rxfs_fetchMemOps = {
 };
 
 afs_int32
-rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t Position,
+rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 		afs_uint32 size, afs_uint32 *out_length, struct dcache *adc,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
@@ -498,9 +498,8 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t Posit
     if (!afs_serverHasNo64Bit(tc)) {
 	tsize = size;
 	RX_AFS_GUNLOCK();
-	code =
-	    StartRXAFS_FetchData64(v->call, (struct AFSFid *)&avc->f.fid.Fid,
-					Position, tsize);
+	code = StartRXAFS_FetchData64(v->call, (struct AFSFid *)&avc->f.fid.Fid,
+					base, tsize);
 	if (code != 0) {
 	    RX_AFS_GLOCK();
 	    afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
@@ -521,11 +520,11 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t Posit
 	}
     }
     if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
-	if (Position > 0x7FFFFFFF) {
+	if (base > 0x7FFFFFFF) {
 	    code = EFBIG;
 	} else {
 	    afs_int32 pos;
-	    pos = Position;
+	    pos = base;
 	    RX_AFS_GUNLOCK();
 	    if (!v->call)
 		v->call = rx_NewCall(tc->id);
@@ -537,15 +536,13 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t Posit
 	}
 	afs_serverSetNo64Bit(tc);
     }
-    if (code == 0) {
+    if (!code) {
 	RX_AFS_GUNLOCK();
-	bytes =
-	    rx_Read(v->call, (char *)&length,
-		    sizeof(afs_int32));
+	bytes = rx_Read(v->call, (char *)&length, sizeof(afs_int32));
 	RX_AFS_GLOCK();
-	if (bytes == sizeof(afs_int32)) {
+	if (bytes == sizeof(afs_int32))
 	    length = ntohl(length);
-	} else {
+	else {
 	    code = rx_Error(v->call);
 	}
     }
@@ -556,22 +553,17 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t Posit
 	       ICL_HANDLE_OFFSET(lengthFound));
 #else /* AFS_64BIT_CLIENT */
     RX_AFS_GUNLOCK();
-    code =
-	StartRXAFS_FetchData(v->call,
-			     (struct AFSFid *)&avc->f.fid.Fid,
-			     Position, size);
+    code = StartRXAFS_FetchData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
+				 base, size);
     RX_AFS_GLOCK();
     if (code == 0) {
 	RX_AFS_GUNLOCK();
-	bytes =
-	    rx_Read(v->call, (char *)&length,
-		    sizeof(afs_int32));
+	bytes = rx_Read(v->call, (char *)&length, sizeof(afs_int32));
 	RX_AFS_GLOCK();
-	if (bytes == sizeof(afs_int32)) {
+	if (bytes == sizeof(afs_int32))
 	    length = ntohl(length);
-	} else {
+	else
 	    code = rx_Error(v->call);
-	}
     }
 #endif /* AFS_64BIT_CLIENT */
     if (code) {
@@ -590,13 +582,12 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t Posit
     else {
 	afs_Trace4(afs_iclSetp, CM_TRACE_MEMFETCH, ICL_TYPE_POINTER, avc,
 		   ICL_TYPE_POINTER, fP, ICL_TYPE_OFFSET,
-		   ICL_HANDLE_OFFSET(Position), ICL_TYPE_INT32, length);
+		   ICL_HANDLE_OFFSET(base), ICL_TYPE_INT32, length);
 	/*
 	 * We need to alloc the iovecs on the heap so that they are "pinned"
 	 * rather than declare them on the stack - defect 11272
 	 */
-	v->iov =
-	    (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec) *
+	v->iov = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec) *
 						RX_MAXIOVECS);
 	if (!v->iov)
 	    osi_Panic("afs_CacheFetchProc: osi_AllocSmallSpace for iovecs returned NULL\n");
