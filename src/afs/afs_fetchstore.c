@@ -213,11 +213,10 @@ struct storeOps rxfs_storeMemOps = {
 afs_int32
 rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
 		afs_size_t bytes, afs_size_t base,
-		struct storeOps **ops, void **rock)
+		int sync, struct storeOps **ops, void **rock)
 {
     afs_int32 code;
     struct rxfs_storeVariables *v;
-    struct rx_call *tcall;
 
     if ( !tc )
 	return -1;
@@ -229,43 +228,46 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
 
     v->InStatus.ClientModTime = avc->f.m.Date;
     v->InStatus.Mask = AFS_SETMODTIME;
-
+    if (sync & AFS_SYNC)
+        v->InStatus.Mask |= AFS_FSYNC;
     RX_AFS_GUNLOCK();
-    tcall = rx_NewCall(tc->id);
+    v->call = rx_NewCall(tc->id);
+    if (v->call) {
 #ifdef AFS_64BIT_CLIENT
-    if (!afs_serverHasNo64Bit(tc))
-	code = StartRXAFS_StoreData64(tcall, (struct AFSFid *) &avc->f.fid.Fid,
-				   &v->InStatus, base, bytes, tlen);
-    else {
-	if (tlen > 0xFFFFFFFF) {
-	    code = EFBIG;
-	}
-	else {
-	    afs_int32 t1, t2, t3;
-	    t1 = base;
-	    t2 = bytes;
-	    t3 = tlen;
-	    code = StartRXAFS_StoreData(tcall, (struct AFSFid *)&avc->f.fid.Fid,
-				     &v->InStatus, t1, t2, t3);
-	}
-    }
+	if (!afs_serverHasNo64Bit(tc))
+	    code = StartRXAFS_StoreData64(v->call,(struct AFSFid*)&avc->f.fid.Fid,
+				       &v->InStatus, base, bytes, tlen);
+	else
+	    if (tlen > 0xFFFFFFFF)
+		code = EFBIG;
+	    else {
+		afs_int32 t1 = base, t2 = bytes, t3 = tlen;
+		code = StartRXAFS_StoreData(v->call,
+					(struct AFSFid *) &avc->f.fid.Fid,
+					 &v->InStatus, t1, t2, t3);
+	    }
 #else /* AFS_64BIT_CLIENT */
-    code = StartRXAFS_StoreData(tcall, (struct AFSFid *)&avc->f.fid.Fid,
-				&v->InStatus, base, bytes, tlen);
+	code = StartRXAFS_StoreData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
+				    &v->InStatus, base, bytes, tlen);
 #endif /* AFS_64BIT_CLIENT */
+    } else
+	code = -1;
     RX_AFS_GLOCK();
-
+    if (code) {
+	osi_FreeSmallSpace(v);
+        return code;
+    }
     if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	if (!v->tbuffer)
 	    osi_Panic
-              ("rxfs_storeInit: osi_AllocLargeSpace for iovecs returned NULL\n");
+            ("rxfs_storeInit: osi_AllocLargeSpace for iovecs returned NULL\n");
 	*ops = (struct storeOps *) &rxfs_storeUfsOps;
     } else {
 	v->tiov = osi_AllocSmallSpace(sizeof(struct iovec) * RX_MAXIOVECS);
 	if (!v->tiov)
 	    osi_Panic
-              ("rxfs_storeInit: osi_AllocSmallSpace for iovecs returned NULL\n");
+            ("rxfs_storeInit: osi_AllocSmallSpace for iovecs returned NULL\n");
 	*ops = (struct storeOps *) &rxfs_storeMemOps;
 #ifdef notdef
 	/* do this at a higher level now -- it's a parameter */
@@ -282,7 +284,6 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
 #endif /* notdef */
     }
 
-    v->call = tcall;
     *rock = (void *)v;
     return 0;
 }
@@ -570,11 +571,6 @@ afs_CacheStoreVCache(struct dcache **dcList,
 
 	    nchunks = 1 + j - first;
 	    nomore = !(moredata || (j != high));
-	    InStatus.ClientModTime = avc->f.m.Date;
-	    InStatus.Mask = AFS_SETMODTIME;
-	    if (sync & AFS_SYNC) {
-		InStatus.Mask |= AFS_FSYNC;
-	    }
 	    length = lmin(avc->f.m.Length, avc->f.truncPos);
 	    afs_Trace4(afs_iclSetp, CM_TRACE_STOREDATA64,
 		       ICL_TYPE_FID, &avc->f.fid.Fid, ICL_TYPE_OFFSET,
@@ -588,7 +584,8 @@ afs_CacheStoreVCache(struct dcache **dcList,
 #ifdef AFS_64BIT_CLIENT
 	      restart:
 #endif
-		code = rxfs_storeInit(avc,tc,length,bytes,base,&ops,&rock);
+		code = rxfs_storeInit(avc, tc, length, bytes, base,
+					sync, &ops, &rock);
 		if ( code ) {
 		    osi_Panic(
 		    "afs_CacheStoreProc: rxfs_storeInit failed with %d", code);
