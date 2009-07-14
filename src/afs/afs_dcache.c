@@ -1580,12 +1580,6 @@ struct dcache *afs_AllocDCache(struct vcache *avc,
  *	The vcache entry pointed to by avc is unlocked upon entry.
  */
 
-struct tlocal1 {
-    struct AFSVolSync tsync;
-    struct AFSFetchStatus OutStatus;
-    struct AFSCallBack CallBack;
-};
-
 /*
  * Update the vnode-to-dcache hint if we can get the vnode lock
  * right away.  Assumes dcache entry is at least read-locked.
@@ -1607,7 +1601,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	      register struct vrequest *areq, afs_size_t * aoffset,
 	      afs_size_t * alen, int aflags)
 {
-    register afs_int32 i, code, code1 = 0, shortcut;
+    register afs_int32 i, code, shortcut;
 #if	defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
     register afs_int32 adjustsize = 0;
 #endif
@@ -1616,14 +1610,9 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     afs_int32 us;
     afs_int32 chunk;
     afs_size_t maxGoodLength;	/* amount of good data at server */
-    struct rx_call *tcall;
     afs_size_t Position = 0;
-#ifdef AFS_64BIT_CLIENT
-    afs_size_t tsize;
-    afs_size_t lengthFound;	/* as returned from server */
-#endif /* AFS_64BIT_CLIENT */
     afs_int32 size, tlen;	/* size of segment to transfer */
-    struct tlocal1 *tsmall = 0;
+    struct afs_FetchOutput *tsmall = 0;
     register struct dcache *tdc;
     register struct osi_file *file;
     register struct afs_conn *tc;
@@ -2124,7 +2113,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			   tdc->dflags);
 	}
 	tsmall =
-	    (struct tlocal1 *)osi_AllocLargeSpace(sizeof(struct tlocal1));
+	    (struct afs_FetchOutput *)osi_AllocLargeSpace(sizeof(struct afs_FetchOutput));
 	setVcacheStatus = 0;
 #ifndef AFS_NOSTATS
 	/*
@@ -2208,10 +2197,6 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 
 		tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 		if (tc) {
-#ifdef AFS_64BIT_CLIENT
-		    afs_int32 length_hi;
-#endif
-		    afs_int32 length, bytes;
 #ifndef AFS_NOSTATS
 		    numFetchLoops++;
 		    if (fromReplica)
@@ -2225,98 +2210,8 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			setNewCallback = 1;
 		    }
 		    i = osi_Time();
-		    RX_AFS_GUNLOCK();
-		    tcall = rx_NewCall(tc->id);
-		    RX_AFS_GLOCK();
-
 		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHDATA);
-#ifdef AFS_64BIT_CLIENT
-		    length_hi = code = 0;
-		    if (!afs_serverHasNo64Bit(tc)) {
-			tsize = size;
-			RX_AFS_GUNLOCK();
-			code =
-			    StartRXAFS_FetchData64(tcall,
-						   (struct AFSFid *)&avc->f.fid.
-						   Fid, Position, tsize);
-			if (code != 0) {
-			    RX_AFS_GLOCK();
-			    afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
-				       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32,
-				       code);
-			} else {
-			    bytes =
-				rx_Read(tcall, (char *)&length_hi,
-					sizeof(afs_int32));
-			    RX_AFS_GLOCK();
-			    if (bytes == sizeof(afs_int32)) {
-				length_hi = ntohl(length_hi);
-			    } else {
-				length_hi = 0;
-				code = rx_Error(tcall);
-				RX_AFS_GUNLOCK();
-				code1 = rx_EndCall(tcall, code);
-				RX_AFS_GLOCK();
-				tcall = (struct rx_call *)0;
-			    }
-			}
-		    }
-		    if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
-			if (Position > 0x7FFFFFFF) {
-			    code = EFBIG;
-			} else {
-			    afs_int32 pos;
-			    pos = Position;
-			    RX_AFS_GUNLOCK();
-			    if (!tcall)
-				tcall = rx_NewCall(tc->id);
-			    code =
-				StartRXAFS_FetchData(tcall, (struct AFSFid *)
-						     &avc->f.fid.Fid, pos,
-						     size);
-			    RX_AFS_GLOCK();
-			}
-			afs_serverSetNo64Bit(tc);
-		    }
-		    if (code == 0) {
-			RX_AFS_GUNLOCK();
-			bytes =
-			    rx_Read(tcall, (char *)&length,
-				    sizeof(afs_int32));
-			RX_AFS_GLOCK();
-			if (bytes == sizeof(afs_int32)) {
-			    length = ntohl(length);
-			} else {
-			    code = rx_Error(tcall);
-			}
-		    }
-		    FillInt64(lengthFound, length_hi, length);
-		    afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64LENG,
-			       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
-			       ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(lengthFound));
-#else /* AFS_64BIT_CLIENT */
-		    RX_AFS_GUNLOCK();
-		    code =
-			StartRXAFS_FetchData(tcall,
-					     (struct AFSFid *)&avc->f.fid.Fid,
-					     Position, size);
-		    RX_AFS_GLOCK();
-		    if (code == 0) {
-			RX_AFS_GUNLOCK();
-			bytes =
-			    rx_Read(tcall, (char *)&length,
-				    sizeof(afs_int32));
-			RX_AFS_GLOCK();
-			if (bytes == sizeof(afs_int32)) {
-			    length = ntohl(length);
-			} else {
-			    code = rx_Error(tcall);
-			}
-		    }
-#endif /* AFS_64BIT_CLIENT */
-		    if (code == 0) {
-
+		    {
 #ifndef AFS_NOSTATS
 			xferP =
 			    &(afs_stats_cmfullperf.rpc.
@@ -2324,10 +2219,10 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			osi_GetuTime(&xferStartTime);
 
 			code =
-			    afs_CacheFetchProc(tcall, file,
+			    afs_CacheFetchProc(tc, file,
 					       (afs_size_t) Position, tdc,
 					       avc, &bytesToXfer,
-					       &bytesXferred, length);
+					       &bytesXferred, size, tsmall);
 
 			osi_GetuTime(&xferStopTime);
 			(xferP->numXfers)++;
@@ -2394,28 +2289,13 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			}
 #else
 			code =
-			    afs_CacheFetchProc(tcall, file, Position, tdc,
-					       avc, 0, 0, length);
+			    afs_CacheFetchProc(tc, file, Position, tdc,
+					       avc, 0, 0, size, tsmall);
 #endif /* AFS_NOSTATS */
 		    }
-		    if (code == 0) {
-			RX_AFS_GUNLOCK();
-			code =
-			    EndRXAFS_FetchData(tcall, &tsmall->OutStatus,
-					       &tsmall->CallBack,
-					       &tsmall->tsync);
-			RX_AFS_GLOCK();
-		    }
 		    XSTATS_END_TIME;
-		    RX_AFS_GUNLOCK();
-		    if (tcall)
-			code1 = rx_EndCall(tcall, code);
-		    RX_AFS_GLOCK();
-		} else {
-		    code = -1;
-		}
-		if (!code && code1)
-		    code = code1;
+		} else
+		   code = -1;
 
 		if (code == 0) {
 		    /* callback could have been broken (or expired) in a race here, 

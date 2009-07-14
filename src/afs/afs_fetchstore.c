@@ -391,6 +391,35 @@ rxfs_fetchUfsWrite(void *r, struct osi_file *fP,
     return 0;
 }
 
+
+afs_int32
+rxfs_fetchClose(void *r, struct vcache *avc, struct dcache * adc,
+					struct afs_FetchOutput *tsmall)
+{
+    afs_int32 code, code1 = 0;
+    struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
+
+    if (!v->call)
+	return -1;
+
+    RX_AFS_GUNLOCK();
+    code = EndRXAFS_FetchData(v->call, &tsmall->OutStatus,
+			      &tsmall->CallBack,
+			      &tsmall->tsync);
+    RX_AFS_GLOCK();
+
+    RX_AFS_GUNLOCK();
+    if (v->call)
+	code1 = rx_EndCall(v->call, code);
+    RX_AFS_GLOCK();
+    if (!code && code1)
+	code = code1;
+
+    v->call = NULL;
+
+    return code;
+}
+
 afs_int32
 rxfs_fetchDestroy(void **r, afs_int32 error)
 {
@@ -429,6 +458,7 @@ struct fetchOps rxfs_fetchUfsOps = {
     rxfs_fetchMore,
     rxfs_fetchUfsRead,
     rxfs_fetchUfsWrite,
+    rxfs_fetchClose,
     rxfs_fetchDestroy
 };
 
@@ -437,22 +467,117 @@ struct fetchOps rxfs_fetchMemOps = {
     rxfs_fetchMore,
     rxfs_fetchMemRead,
     rxfs_fetchMemWrite,
+    rxfs_fetchClose,
     rxfs_fetchDestroy
 };
 
 afs_int32
-rxfs_fetchInit(register struct rx_call *acall, struct vcache *avc,
-		afs_offs_t abase, afs_uint32 *length,  struct dcache *adc,
+rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t Position,
+		afs_uint32 size, afs_uint32 *out_length, struct dcache *adc,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
+    int code, code1;
+    afs_int32 length_hi, length, bytes;
+#ifdef AFS_64BIT_CLIENT
+    afs_size_t tsize;
+    afs_size_t lengthFound;     /* as returned from server */
+#endif /* AFS_64BIT_CLIENT */
 
     v = (struct rxfs_fetchVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_fetchVariables));
     if (!v)
         osi_Panic("rxfs_fetchInit: osi_AllocSmallSpace returned NULL\n");
     memset(v, 0, sizeof(struct rxfs_fetchVariables));
 
-    v->call = acall;
+    RX_AFS_GUNLOCK();
+    v->call = rx_NewCall(tc->id);
+    RX_AFS_GLOCK();
+
+#ifdef AFS_64BIT_CLIENT
+    length_hi = code = 0;
+    if (!afs_serverHasNo64Bit(tc)) {
+	tsize = size;
+	RX_AFS_GUNLOCK();
+	code =
+	    StartRXAFS_FetchData64(v->call, (struct AFSFid *)&avc->f.fid.Fid,
+					Position, tsize);
+	if (code != 0) {
+	    RX_AFS_GLOCK();
+	    afs_Trace2(afs_iclSetp, CM_TRACE_FETCH64CODE,
+                           ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
+	} else {
+	    bytes = rx_Read(v->call, (char *)&length_hi, sizeof(afs_int32));
+	    RX_AFS_GLOCK();
+	    if (bytes == sizeof(afs_int32)) {
+		length_hi = ntohl(length_hi);
+	    } else {
+		length_hi = 0;
+		code = rx_Error(v->call);
+		RX_AFS_GUNLOCK();
+		code1 = rx_EndCall(v->call, code);
+		RX_AFS_GLOCK();
+		v->call = NULL;
+	    }
+	}
+    }
+    if (code == RXGEN_OPCODE || afs_serverHasNo64Bit(tc)) {
+	if (Position > 0x7FFFFFFF) {
+	    code = EFBIG;
+	} else {
+	    afs_int32 pos;
+	    pos = Position;
+	    RX_AFS_GUNLOCK();
+	    if (!v->call)
+		v->call = rx_NewCall(tc->id);
+	    code =
+		StartRXAFS_FetchData(v->call, (struct AFSFid *)
+				     &avc->f.fid.Fid, pos,
+				     size);
+	    RX_AFS_GLOCK();
+	}
+	afs_serverSetNo64Bit(tc);
+    }
+    if (code == 0) {
+	RX_AFS_GUNLOCK();
+	bytes =
+	    rx_Read(v->call, (char *)&length,
+		    sizeof(afs_int32));
+	RX_AFS_GLOCK();
+	if (bytes == sizeof(afs_int32)) {
+	    length = ntohl(length);
+	} else {
+	    code = rx_Error(v->call);
+	}
+    }
+    FillInt64(lengthFound, length_hi, length);
+    afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64LENG,
+	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
+	       ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(lengthFound));
+#else /* AFS_64BIT_CLIENT */
+    RX_AFS_GUNLOCK();
+    code =
+	StartRXAFS_FetchData(v->call,
+			     (struct AFSFid *)&avc->f.fid.Fid,
+			     Position, size);
+    RX_AFS_GLOCK();
+    if (code == 0) {
+	RX_AFS_GUNLOCK();
+	bytes =
+	    rx_Read(v->call, (char *)&length,
+		    sizeof(afs_int32));
+	RX_AFS_GLOCK();
+	if (bytes == sizeof(afs_int32)) {
+	    length = ntohl(length);
+	} else {
+	    code = rx_Error(v->call);
+	}
+    }
+#endif /* AFS_64BIT_CLIENT */
+    if (code) {
+	osi_FreeSmallSpace(v);
+        return code;
+    }
 
     if ( cacheDiskType == AFS_FCACHE_TYPE_UFS ) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
@@ -465,7 +590,7 @@ rxfs_fetchInit(register struct rx_call *acall, struct vcache *avc,
     else {
 	afs_Trace4(afs_iclSetp, CM_TRACE_MEMFETCH, ICL_TYPE_POINTER, avc,
 		   ICL_TYPE_POINTER, fP, ICL_TYPE_OFFSET,
-		   ICL_HANDLE_OFFSET(abase), ICL_TYPE_INT32, *length);
+		   ICL_HANDLE_OFFSET(Position), ICL_TYPE_INT32, length);
 	/*
 	 * We need to alloc the iovecs on the heap so that they are "pinned"
 	 * rather than declare them on the stack - defect 11272
@@ -478,6 +603,7 @@ rxfs_fetchInit(register struct rx_call *acall, struct vcache *avc,
 	*ops = (struct fetchOps *) &rxfs_fetchMemOps;
     }
     *rock = (void *)v;
+    *out_length = length;
     return 0;
 }
 
@@ -486,7 +612,7 @@ rxfs_fetchInit(register struct rx_call *acall, struct vcache *avc,
  * Routine called on fetch; also tells people waiting for data
  *	that more has arrived.
  *
- * \param acall Ptr to the Rx call structure.
+ * \param tc Ptr to the Rx connection structure.
  * \param fP File descriptor for the cache file.
  * \param abase Base offset to fetch.
  * \param adc Ptr to the dcache entry for the file, write-locked.
@@ -495,15 +621,18 @@ rxfs_fetchInit(register struct rx_call *acall, struct vcache *avc,
  *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
  * \param abytesXferredP Set to the number of bytes actually xferred.
  *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
+ * \param size Amount of data that should be fetched.
+ * \param tsmall Ptr to the afs_FetchOutput structure.
  *
  * \note Environment: Nothing interesting.
  */
 int
-afs_CacheFetchProc(register struct rx_call *acall,
-		      register struct osi_file *fP, afs_size_t abase,
-		      struct dcache *adc, struct vcache *avc,
-		      afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
-		      afs_int32 lengthFound)
+afs_CacheFetchProc(register struct afs_conn *tc,
+		    register struct osi_file *fP, afs_size_t abase,
+		    struct dcache *adc, struct vcache *avc,
+		    afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
+		    afs_int32 size,
+		    struct afs_FetchOutput *tsmall)
 {
     register afs_int32 code;
     afs_uint32 length;
@@ -515,10 +644,6 @@ afs_CacheFetchProc(register struct rx_call *acall,
 
     AFS_STATCNT(CacheFetchProc);
 
-    length = lengthFound;
-
-    if ( cacheDiskType != AFS_FCACHE_TYPE_UFS ) {
-    }
 #ifndef AFS_NOSTATS
     (*abytesToXferP) = 0;
     (*abytesXferredP) = 0;
@@ -526,8 +651,7 @@ afs_CacheFetchProc(register struct rx_call *acall,
 
     adc->validPos = abase;
 
-    code = rxfs_fetchInit(acall, avc, abase, &length, adc, fP,
-		(struct fetchOps **)&ops, (char**)&rock);
+    code = rxfs_fetchInit(tc, avc, abase, size, &length, adc, fP, &ops, &rock);
     if ( !code ) do {
 	if (moredata) {
 	    code = (*ops->more)(rock, &length, &moredata);
@@ -587,6 +711,8 @@ afs_CacheFetchProc(register struct rx_call *acall,
 	}
 	code = 0;
     } while (moredata);
+    if (!code)
+	code = (*ops->close)(rock, avc, adc, tsmall);
     (*ops->destroy)(&rock, code);
     return code;
 }

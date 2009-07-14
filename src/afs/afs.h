@@ -1139,6 +1139,12 @@ struct memCacheEntry {
   char *data;                 /* bytes */
 };
 
+struct afs_FetchOutput {
+    struct AFSVolSync tsync;
+    struct AFSFetchStatus OutStatus;
+    struct AFSCallBack CallBack;
+};
+
 /* macro to mark a dcache entry as bad */
 #define ZapDCE(x) \
     do { \
@@ -1362,6 +1368,8 @@ struct fetchOps {
     int (*read)(void *rock, afs_uint32 tlen, afs_uint32 *bytesread);
     int (*write)(void *rock, struct osi_file *fp, afs_uint32 offset,
         afs_uint32 tlen, afs_uint32 *byteswritten);
+    int (*close)(void *rock, struct vcache *avc, struct dcache *adc,
+        struct afs_FetchOutput *Outputs);
     int (*destroy)(void **rock, afs_int32 error);
 };
 
