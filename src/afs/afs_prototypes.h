@@ -491,16 +491,15 @@ extern int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 extern int afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP);
 extern int afs_MemCacheTruncate(register struct osi_file *fP,
 				int size);
-extern int afs_CacheStoreProc(register struct afs_conn *tc,
-				struct dcache **dclist,
+extern int afs_CacheStoreVCache(struct dcache **dcList,
 				struct vcache *avc,
-				afs_size_t length,
-				afs_size_t bytes,
-				afs_size_t base,
+				struct vrequest *areq,
+				int sync,
+				unsigned int minj,
+				unsigned int high,
+				unsigned int moredata,
 				afs_hyper_t *anewDV,
-				int *doProcessFS,
-				struct AFSFetchStatus *OutStatus,
-				afs_uint32 nchunks, int *nomoreP);
+                                 afs_size_t *amaxStoredLength);
 extern int afs_CacheFetchProc(register struct afs_conn *tc,
 				register struct osi_file *fP,
 				afs_size_t abase, struct dcache *adc,

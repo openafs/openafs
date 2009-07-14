@@ -287,42 +287,35 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t tlen,
     return 0;
 }
 
-extern unsigned int storeallmissing;
+unsigned int storeallmissing = 0;
 /*!
- *	Called upon store.
+ *	Called for each chunk upon store.
  *
- * \param tc Ptr to the Rx connection structure involved.
+ * \param avc Ptr to the vcache entry of the file being stored.
  * \param dclist pointer to the list of dcaches
- * \param avc Ptr to the vcache entry.
- * \param bytes per chunk
- * \param base where to start the store
- * \param length number of bytes to store
+ * \param bytes total number of bytes for the current operation
  * \param anewDV Ptr to the dataversion after store
- * \param doProcessFS Ptr to the processFS flag
- * \param OutStatus Ptr to the OutStatus structure
- * \param nchunks number of chunks to store
- * \param nomoreP pointer to the "nomore" flag
- *
- * \note Environment: Nothing interesting.
+ * \param doProcessFS pointer to the "do process FetchStatus" flag
+ * \param OutStatus pointer to the FetchStatus as returned by the fileserver
+ * \param nchunks number of dcaches to consider
+ * \param nomore copy of the "no more data" flag
+ * \param ops pointer to the block of storeOps to be used for this operation
+ * \param rock pointer to the opaque protocol-specific data of this operation
  */
-int
-afs_CacheStoreProc(register struct afs_conn *tc,
-			struct dcache **dclist,
-			struct vcache *avc,
+afs_int32
+afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 			afs_size_t bytes,
-			afs_size_t base,
-			afs_size_t length,
 			afs_hyper_t *anewDV,
 			int *doProcessFS,
 			struct AFSFetchStatus *OutStatus,
 			afs_uint32 nchunks,
-			int *nomoreP)
+			int nomore,
+			struct storeOps *ops, void *rock)
 {
-    afs_int32 code = 0;
-    struct storeOps *ops;
-    void * rock = NULL;
-    int nomore = *nomoreP;
+    int *shouldwake = NULL;
     unsigned int i;
+    afs_int32 code = 0;
+
 #ifndef AFS_NOSTATS
     struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
     osi_timeval_t xferStartTime,	/*FS xfer start time */
@@ -332,18 +325,12 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 #endif /* AFS_NOSTATS */
     XSTATS_DECLS;
 
-    code =  rxfs_storeInit(avc, tc, length, bytes, base, &ops, &rock);
-    if ( code ) {
-	osi_Panic("afs_CacheStoreProc: rxfs_storeInit failed with %d", code);
-    }
-
     for (i = 0; i < nchunks && !code; i++) {
 	int stored = 0;
 	struct osi_file *fP;
 	int offset = 0;
 	struct dcache *tdc = dclist[i];
 	afs_int32 alen = tdc->f.chunkBytes;
-	int *shouldwake;
 	if (!tdc) {
 	    afs_warn("afs: missing dcache!\n");
 	    storeallmissing++;
@@ -364,8 +351,8 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 	fP = afs_CFileOpen(&tdc->f.inode);
 
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
-		  ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-		  ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
+		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
 
 	AFS_STATCNT(CacheStoreProc);
 
@@ -415,8 +402,8 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 	    }
 	}
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
-		  ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-		  ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
+		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
 
 #ifndef AFS_NOSTATS
 	osi_GetuTime(&xferStopTime);
@@ -459,29 +446,25 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 	    afs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
 	    afs_stats_AddTo((xferP->sumTime), elapsedTime);
 	    afs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
-	    if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
+	    if (afs_stats_TimeLessThan(elapsedTime, (xferP->minTime)))
 		afs_stats_TimeAssign((xferP->minTime), elapsedTime);
-	    }
-	    if (afs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
+	    if (afs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime)))
 		afs_stats_TimeAssign((xferP->maxTime), elapsedTime);
-	    }
 	}
 #endif /* AFS_NOSTATS */
 
 	afs_CFileClose(fP);
 	if ((tdc->f.chunkBytes < afs_OtherCSize)
-	    && (i < (nchunks - 1)) && code == 0) {
-	    int bsent, tlen, sbytes =
-		afs_OtherCSize - tdc->f.chunkBytes;
-	    char *tbuffer =
-		osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+		&& (i < (nchunks - 1)) && code == 0) {
+	    int bsent, tlen, sbytes = afs_OtherCSize - tdc->f.chunkBytes;
+	    char *tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 
 	    while (sbytes > 0) {
 		tlen = (sbytes > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : sbytes);
 		memset(tbuffer, 0, tlen);
 		RX_AFS_GUNLOCK();
-		bsent = rx_Write(((struct rxfs_storeVariables*)rock)->call,
-					tbuffer, tlen);
+		bsent = rx_Write(
+			((struct rxfs_storeVariables*)rock)->call, tbuffer, tlen);
 		RX_AFS_GLOCK();
 
 		if (bsent != tlen) {
@@ -493,7 +476,6 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 	    osi_FreeLargeSpace(tbuffer);
 	}
 	stored += tdc->f.chunkBytes;
-
 	/* ideally, I'd like to unlock the dcache and turn
 	 * off the writing bit here, but that would
 	 * require being able to retry StoreAllSegments in
@@ -501,6 +483,7 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 	 * if user can't read from a 'locked' dcache or
 	 * one which has the writing bit turned on. */
     }
+
     if (!code) {
 	code = (*ops->close)(rock, OutStatus, doProcessFS);
 	if (*doProcessFS) {
@@ -509,8 +492,184 @@ afs_CacheStoreProc(register struct afs_conn *tc,
 	XSTATS_END_TIME;
     }
     code = (*ops->destroy)(&rock, code);
+    return code;
+}
 
-    *nomoreP = nomore;
+#define lmin(a,b) (((a) < (b)) ? (a) : (b))
+/*!
+ *	Called upon store.
+ *
+ * \param dclist pointer to the list of dcaches
+ * \param avc Ptr to the vcache entry.
+ * \param areq Ptr to the request structure
+ * \param sync sync flag
+ * \param minj the chunk offset for this call
+ * \param high index of last dcache to store
+ * \param moredata the moredata flag
+ * \param anewDV Ptr to the dataversion after store
+ * \param amaxStoredLength Ptr to the amount of that is actually stored
+ *
+ * \note Environment: Nothing interesting.
+ */
+int
+afs_CacheStoreVCache(struct dcache **dcList,
+			struct vcache *avc,
+			struct vrequest *areq,
+			int sync,
+			unsigned int minj,
+			unsigned int high,
+			unsigned int moredata,
+			afs_hyper_t *anewDV,
+			afs_size_t *amaxStoredLength)
+{
+    afs_int32 code = 0;
+    struct storeOps *ops;
+    void * rock = NULL;
+    unsigned int i, j;
+
+    struct AFSStoreStatus InStatus;
+    struct AFSFetchStatus OutStatus;
+    int doProcessFS = 0;
+    afs_size_t base, bytes, length;
+    afs_uint32 nchunks;
+    int nomore;
+    unsigned int first = 0;
+    struct afs_conn *tc;
+
+    for (bytes = 0, j = 0; !code && j <= high; j++) {
+	if (dcList[j]) {
+	    ObtainSharedLock(&(dcList[j]->lock), 629);
+	    if (!bytes)
+		first = j;
+	    bytes += dcList[j]->f.chunkBytes;
+	    if ((dcList[j]->f.chunkBytes < afs_OtherCSize)
+			&& (dcList[j]->f.chunk - minj < high)
+			&& dcList[j + 1]) {
+		int sbytes = afs_OtherCSize - dcList[j]->f.chunkBytes;
+		bytes += sbytes;
+	    }
+	}
+	if (bytes && (j == high || !dcList[j + 1])) {
+	    struct dcache **dclist = &dcList[first];
+	    /* base = AFS_CHUNKTOBASE(dcList[first]->f.chunk); */
+	    base = AFS_CHUNKTOBASE(first + minj);
+	    /*
+	     *
+	     * take a list of dcache structs and send them all off to the server
+	     * the list must be in order, and the chunks contiguous.
+	     * Note - there is no locking done by this code currently.  For
+	     * safety's sake, xdcache could be locked over the entire call.
+	     * However, that pretty well ties up all the threads.  Meantime, all
+	     * the chunks _MUST_ have their refcounts bumped.
+	     * The writes done before a store back will clear setuid-ness
+	     * in cache file.
+	     * We can permit CacheStoreProc to wake up the user process IFF we
+	     * are doing the last RPC for this close, ie, storing back the last
+	     * set of contiguous chunks of a file.
+	     */
+
+	    nchunks = 1 + j - first;
+	    nomore = !(moredata || (j != high));
+	    InStatus.ClientModTime = avc->f.m.Date;
+	    InStatus.Mask = AFS_SETMODTIME;
+	    if (sync & AFS_SYNC) {
+		InStatus.Mask |= AFS_FSYNC;
+	    }
+	    length = lmin(avc->f.m.Length, avc->f.truncPos);
+	    afs_Trace4(afs_iclSetp, CM_TRACE_STOREDATA64,
+		       ICL_TYPE_FID, &avc->f.fid.Fid, ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(base), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(bytes), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(length));
+
+	    do {
+		tc = afs_Conn(&avc->f.fid, areq, 0);
+
+#ifdef AFS_64BIT_CLIENT
+	      restart:
+#endif
+		code = rxfs_storeInit(avc,tc,length,bytes,base,&ops,&rock);
+		if ( code ) {
+		    osi_Panic(
+		    "afs_CacheStoreProc: rxfs_storeInit failed with %d", code);
+		}
+
+		code = afs_CacheStoreDCaches(avc, dclist, bytes, anewDV,
+			&doProcessFS, &OutStatus, nchunks, nomore, ops, rock);
+
+#ifdef AFS_64BIT_CLIENT
+		if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
+		    afs_serverSetNo64Bit(tc);
+		    goto restart;
+		}
+#endif /* AFS_64BIT_CLIENT */
+	    } while (afs_Analyze
+		     (tc, code, &avc->f.fid, areq,
+		      AFS_STATS_FS_RPCIDX_STOREDATA, SHARED_LOCK,
+		      NULL));
+
+	    /* put back all remaining locked dcache entries */
+	    for (i = 0; i < nchunks; i++) {
+		struct dcache *tdc = dclist[i];
+		if (!code) {
+		    if (afs_indexFlags[tdc->index] & IFDataMod) {
+			/*
+			 * LOCKXXX -- should hold afs_xdcache(W) when
+			 * modifying afs_indexFlags.
+			 */
+			afs_indexFlags[tdc->index] &= ~IFDataMod;
+			afs_stats_cmperf.cacheCurrDirtyChunks--;
+			afs_indexFlags[tdc->index] &= ~IFDirtyPages;
+			if (sync & AFS_VMSYNC_INVAL) {
+			    /* since we have invalidated all the pages of this
+			     ** vnode by calling osi_VM_TryToSmush, we can
+			     ** safely mark this dcache entry as not having
+			     ** any pages. This vnode now becomes eligible for
+			     ** reclamation by getDownD.
+			     */
+			    afs_indexFlags[tdc->index] &= ~IFAnyPages;
+			}
+		    }
+		}
+		UpgradeSToWLock(&tdc->lock, 628);
+		tdc->f.states &= ~DWriting;	/* correct? */
+		tdc->dflags |= DFEntryMod;
+		ReleaseWriteLock(&tdc->lock);
+		afs_PutDCache(tdc);
+		/* Mark the entry as released */
+		dclist[i] = NULL;
+	    }
+
+	    if (doProcessFS) {
+		/* Now copy out return params */
+		UpgradeSToWLock(&avc->lock, 28);	/* keep out others for a while */
+		afs_ProcessFS(avc, &OutStatus, areq);
+		/* Keep last (max) size of file on server to see if
+		 * we need to call afs_StoreMini to extend the file.
+		 */
+		if (!moredata)
+		    *amaxStoredLength = OutStatus.Length;
+		ConvertWToSLock(&avc->lock);
+		doProcessFS = 0;
+	    }
+
+	    if (code) {
+		for (j++; j <= high; j++) {
+		    if (dcList[j]) {
+			ReleaseSharedLock(&(dcList[j]->lock));
+			afs_PutDCache(dcList[j]);
+			/* Releasing entry */
+			dcList[j] = NULL;
+		    }
+		}
+	    }
+
+	    afs_Trace2(afs_iclSetp, CM_TRACE_STOREALLDCDONE,
+		       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
+	    bytes = 0;
+	}
+    }
+
     return code;
 }
 
@@ -967,4 +1126,3 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     XSTATS_END_TIME;
     return code;
 }
-

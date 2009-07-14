@@ -134,8 +134,6 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 
 }				/*afs_StoreMini */
 
-unsigned int storeallmissing = 0;
-#define lmin(a,b) (((a) < (b)) ? (a) : (b))
 /*
  * afs_StoreAllSegments
  *
@@ -167,7 +165,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     register afs_int32 origCBs, foreign = 0;
     int hash;
     afs_hyper_t newDV, oldDV;	/* DV when we start, and finish, respectively */
-    struct dcache **dcList, **dclist;
+    struct dcache **dcList;
     unsigned int i, j, minj, moredata, high, off;
     afs_size_t tlen;
     afs_size_t maxStoredLength;	/* highest offset we've written to server. */
@@ -290,142 +288,10 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	/* "moredata" just says "there are more dirty chunks yet to come".
 	 */
 	if (j) {
-	    struct AFSStoreStatus InStatus;
-	    struct AFSFetchStatus OutStatus;
-	    int doProcessFS = 0;
-	    afs_size_t base, bytes;
-	    afs_uint32 nchunks;
-	    int nomore;
-	    unsigned int first = 0;
-	    struct afs_conn *tc;
-	    for (bytes = 0, j = 0; !code && j <= high; j++) {
-		if (dcList[j]) {
-		    ObtainSharedLock(&(dcList[j]->lock), 629);
-		    if (!bytes)
-			first = j;
-		    bytes += dcList[j]->f.chunkBytes;
-		    if ((dcList[j]->f.chunkBytes < afs_OtherCSize)
-			&& (dcList[j]->f.chunk - minj < high)
-			&& dcList[j + 1]) {
-			int sbytes = afs_OtherCSize - dcList[j]->f.chunkBytes;
-			bytes += sbytes;
-		    }
-		}
-		if (bytes && (j == high || !dcList[j + 1])) {
-		    /* base = AFS_CHUNKTOBASE(dcList[first]->f.chunk); */
-		    base = AFS_CHUNKTOBASE(first + minj);
-		    /*
-		     * 
-		     * take a list of dcache structs and send them all off to the server
-		     * the list must be in order, and the chunks contiguous.
-		     * Note - there is no locking done by this code currently.  For
-		     * safety's sake, xdcache could be locked over the entire call.
-		     * However, that pretty well ties up all the threads.  Meantime, all
-		     * the chunks _MUST_ have their refcounts bumped.
-		     * The writes done before a store back will clear setuid-ness
-		     * in cache file.
-		     * We can permit CacheStoreProc to wake up the user process IFF we 
-		     * are doing the last RPC for this close, ie, storing back the last 
-		     * set of contiguous chunks of a file.
-		     */
-
-		    dclist = &dcList[first];
-		    nchunks = 1 + j - first;
-		    nomore = !(moredata || (j != high));
-		    InStatus.ClientModTime = avc->f.m.Date;
-		    InStatus.Mask = AFS_SETMODTIME;
-		    if (sync & AFS_SYNC) {
-			InStatus.Mask |= AFS_FSYNC;
-		    }
-		    tlen = lmin(avc->f.m.Length, avc->f.truncPos);
-		    afs_Trace4(afs_iclSetp, CM_TRACE_STOREDATA64,
-			       ICL_TYPE_FID, &avc->f.fid.Fid, ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(base), ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(bytes), ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(tlen));
-
-		    do {
-			tc = afs_Conn(&avc->f.fid, areq, 0);
-#ifdef AFS_64BIT_CLIENT
-		      restart:
-#endif
-			code = afs_CacheStoreProc(tc, dclist,
-					   avc, bytes, base, tlen,
-					   &newDV, &doProcessFS, &OutStatus,
-					   nchunks, &nomore);
-#ifdef AFS_64BIT_CLIENT
-			if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
-			    afs_serverSetNo64Bit(tc);
-			    goto restart;
-			}
-#endif /* AFS_64BIT_CLIENT */
-		    } while (afs_Analyze
-			     (tc, code, &avc->f.fid, areq,
-			      AFS_STATS_FS_RPCIDX_STOREDATA, SHARED_LOCK,
-			      NULL));
-
-		    /* put back all remaining locked dcache entries */
-		    for (i = 0; i < nchunks; i++) {
-			tdc = dclist[i];
-			if (!code) {
-			    if (afs_indexFlags[tdc->index] & IFDataMod) {
-				/*
-				 * LOCKXXX -- should hold afs_xdcache(W) when
-				 * modifying afs_indexFlags.
-				 */
-				afs_indexFlags[tdc->index] &= ~IFDataMod;
-				afs_stats_cmperf.cacheCurrDirtyChunks--;
-				afs_indexFlags[tdc->index] &= ~IFDirtyPages;
-				if (sync & AFS_VMSYNC_INVAL) {
-				    /* since we have invalidated all the pages of this
-				     ** vnode by calling osi_VM_TryToSmush, we can
-				     ** safely mark this dcache entry as not having
-				     ** any pages. This vnode now becomes eligible for
-				     ** reclamation by getDownD.
-				     */
-				    afs_indexFlags[tdc->index] &= ~IFAnyPages;
-				}
-			    }
-			}
-			UpgradeSToWLock(&tdc->lock, 628);
-			tdc->f.states &= ~DWriting;	/* correct? */
-			tdc->dflags |= DFEntryMod;
-			ReleaseWriteLock(&tdc->lock);
-			afs_PutDCache(tdc);
-			/* Mark the entry as released */
-			dclist[i] = NULL;
-		    }
-
-		    if (doProcessFS) {
-			/* Now copy out return params */
-			UpgradeSToWLock(&avc->lock, 28);	/* keep out others for a while */
-			afs_ProcessFS(avc, &OutStatus, areq);
-			/* Keep last (max) size of file on server to see if
-			 * we need to call afs_StoreMini to extend the file.
-			 */
-			if (!moredata)
-			    maxStoredLength = OutStatus.Length;
-			ConvertWToSLock(&avc->lock);
-			doProcessFS = 0;
-		    }
-
-		    if (code) {
-			for (j++; j <= high; j++) {
-			    if (dcList[j]) {
-				ReleaseSharedLock(&(dcList[j]->lock));
-				afs_PutDCache(dcList[j]);
-				/* Releasing entry */
-				dcList[j] = NULL;
-			    }
-			}
-		    }
-
-		    afs_Trace2(afs_iclSetp, CM_TRACE_STOREALLDCDONE,
-			       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code);
-		    bytes = 0;
-		}
-	    }
-
+	    code =
+		afs_CacheStoreVCache(dcList, avc, areq, sync,
+				   minj, high, moredata,
+				   &newDV, &maxStoredLength);
 	    /* Release any zero-length dcache entries in our interval
 	     * that we locked but didn't store back above.
 	     */
