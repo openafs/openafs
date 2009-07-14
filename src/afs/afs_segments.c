@@ -165,7 +165,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     register afs_int32 code = 0;
     register afs_int32 index;
     register afs_int32 origCBs, foreign = 0;
-    int hash, stored;
+    int hash;
     afs_hyper_t newDV, oldDV;	/* DV when we start, and finish, respectively */
     struct dcache **dcList, **dclist;
     unsigned int i, j, minj, moredata, high, off;
@@ -308,9 +308,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    afs_uint32 nchunks;
 	    int nomore;
 	    unsigned int first = 0;
-	    int *shouldwake;
 	    struct afs_conn *tc;
-	    struct osi_file *tfile;
 	    struct rx_call *tcall;
 	    XSTATS_DECLS;
 	    for (bytes = 0, j = 0; !code && j <= high; j++) {
@@ -360,7 +358,6 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			       ICL_HANDLE_OFFSET(tlen));
 
 		    do {
-			stored = 0;
 			tc = afs_Conn(&avc->f.fid, areq, 0);
 			if (tc) {
 #ifdef AFS_64BIT_CLIENT
@@ -408,31 +405,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
 			    avc->f.truncPos = AFS_NOTRUNC;
 			}
-			for (i = 0; i < nchunks && !code; i++) {
-			    tdc = dclist[i];
-			    if (!tdc) {
-				afs_warn("afs: missing dcache!\n");
-				storeallmissing++;
-				continue;	/* panic? */
-			    }
-			    afs_Trace4(afs_iclSetp, CM_TRACE_STOREALL2,
-				       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32,
-				       tdc->f.chunk, ICL_TYPE_INT32,
-				       tdc->index, ICL_TYPE_INT32,
-				       afs_inode2trace(&tdc->f.inode));
-			    shouldwake = 0;
-			    if (nomore) {
-				if (avc->asynchrony == -1) {
-				    if (afs_defaultAsynchrony >
-					(bytes - stored)) {
-					shouldwake = &nomore;
-				    }
-				} else if ((afs_uint32) avc->asynchrony >=
-					   (bytes - stored)) {
-				    shouldwake = &nomore;
-				}
-			    }
-			    tfile = afs_CFileOpen(&tdc->f.inode);
+			if ( !code ) {
 #ifndef AFS_NOSTATS
 			    xferP =
 				&(afs_stats_cmfullperf.rpc.
@@ -441,9 +414,11 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			    osi_GetuTime(&xferStartTime);
 
 			    code =
-				afs_CacheStoreProc(tcall, tfile,
-						   tdc->f.chunkBytes, avc,
-						   shouldwake, &bytesToXfer,
+				afs_CacheStoreProc(tcall, dclist,
+						   avc,
+						   bytes,
+						   nchunks, &nomore,
+						   &bytesToXfer,
 						   &bytesXferred);
 
 			    osi_GetuTime(&xferStopTime);
@@ -512,44 +487,12 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			    }
 #else
 			    code =
-				afs_CacheStoreProc(tcall, tfile,
-						   tdc->f.chunkBytes, avc,
-						   shouldwake, &lp1, &lp2);
+				afs_CacheStoreProc(tcall, dclist,
+						   avc,
+						   bytes,
+						   nchunks, &nomore,
+						   &lp1, &lp2);
 #endif /* AFS_NOSTATS */
-			    afs_CFileClose(tfile);
-			    if ((tdc->f.chunkBytes < afs_OtherCSize)
-				&& (i < (nchunks - 1)) && code == 0) {
-				int bsent, tlen, sbytes =
-				    afs_OtherCSize - tdc->f.chunkBytes;
-				char *tbuffer =
-				    osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-
-				while (sbytes > 0) {
-				    tlen =
-					(sbytes >
-					 AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ :
-					 sbytes);
-				    memset(tbuffer, 0, tlen);
-				    RX_AFS_GUNLOCK();
-				    bsent = rx_Write(tcall, tbuffer, tlen);
-				    RX_AFS_GLOCK();
-
-				    if (bsent != tlen) {
-					code = -33;	/* XXX */
-					break;
-				    }
-				    sbytes -= tlen;
-				}
-				osi_FreeLargeSpace(tbuffer);
-			    }
-			    stored += tdc->f.chunkBytes;
-
-			    /* ideally, I'd like to unlock the dcache and turn
-			     * off the writing bit here, but that would
-			     * require being able to retry StoreAllSegments in
-			     * the event of a failure. It only really matters
-			     * if user can't read from a 'locked' dcache or
-			     * one which has the writing bit turned on. */
 			}
 			if (!code) {
 			    struct AFSVolSync tsync;

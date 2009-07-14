@@ -227,15 +227,16 @@ rxfs_storeInit(struct vcache *avc, struct storeOps **ops, void **rock)
     return 0;
 }
 
-
+extern unsigned int storeallmissing;
 /*!
  *	Called upon store.
  *
  * \param acall Ptr to the Rx call structure involved.
- * \param fP Ptr to the related file descriptor.
- * \param alen Size of the file in bytes.
+ * \param dclist pointer to the list of dcaches
  * \param avc Ptr to the vcache entry.
- * \param shouldWake is it "safe" to return early from close() ?
+ * \param bytes per chunk
+ * \param nchunks number of chunks to store
+ * \param nomoreP pointer to the "nomore" flag
  * \param abytesToXferP Set to the number of bytes to xfer.
  *	NOTE: This parameter is only used if AFS_NOSTATS is not defined.
  * \param abytesXferredP Set to the number of bytes actually xferred.
@@ -245,69 +246,145 @@ rxfs_storeInit(struct vcache *avc, struct storeOps **ops, void **rock)
  */
 int
 afs_CacheStoreProc(register struct rx_call *acall,
-		      register struct osi_file *fP,
-		      register afs_int32 alen, struct vcache *avc,
-		      int *shouldWake, afs_size_t * abytesToXferP,
-		      afs_size_t * abytesXferredP)
+			struct dcache **dclist,
+			struct vcache *avc,
+			afs_size_t bytes,
+			afs_uint32 nchunks,
+			int *nomoreP,
+			afs_size_t * abytesToXferP,
+			afs_size_t * abytesXferredP)
 {
-    afs_int32 code;
+    afs_int32 code = 0;
     afs_uint32 tlen;
-    int offset = 0;
     struct storeOps *ops;
     void * rock = NULL;
+    struct osi_file *fP;
+    int *shouldwake;
+    int nomore = *nomoreP;
+    struct dcache *tdc;
+    int stored = 0;
+    unsigned int i;
+    afs_int32 alen;
 
-    afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
     code =  rxfs_storeInit(avc, &ops, &rock);
     if ( code ) {
 	osi_Panic("afs_CacheStoreProc: rxfs_storeInit failed");
     }
     ((struct rxfs_storeVariables *)rock)->call = acall;
 
-    AFS_STATCNT(CacheStoreProc);
-#ifndef AFS_NOSTATS
-    /*
-     * In this case, alen is *always* the amount of data we'll be trying
-     * to ship here.
-     */
-    *(abytesToXferP) = alen;
-    *(abytesXferredP) = 0;
-#endif /* AFS_NOSTATS */
-
-    while ( alen > 0 ) {
-	afs_int32 bytesread, byteswritten;
-	code = (*ops->prepare)(rock, alen, &tlen);
-	if ( code )
-	    break;
-
-	code = (*ops->read)(rock, fP, offset, tlen, &bytesread);
-	if (code)
-	    break;
-
-	tlen = bytesread;
-	code = (*ops->write)(rock, tlen, &byteswritten);
-	if (code)
-	    break;
-#ifndef AFS_NOSTATS
-	(*abytesXferredP) += byteswritten;
-#endif /* AFS_NOSTATS */
-
-	offset += tlen;
-	alen -= tlen;
-	/*
-	 * if file has been locked on server, can allow
-	 * store to continue
-	 */
-	if (shouldWake && *shouldWake && ((*ops->status)(rock) == 0)) {
-	    *shouldWake = 0;	/* only do this once */
-	    afs_wakeup(avc);
+    for (i = 0; i < nchunks && !code; i++) {
+	int offset = 0;
+	tdc = dclist[i];
+	alen = tdc->f.chunkBytes;
+	if (!tdc) {
+	    afs_warn("afs: missing dcache!\n");
+	    storeallmissing++;
+	    continue;	/* panic? */
 	}
+	afs_Trace4(afs_iclSetp, CM_TRACE_STOREALL2,
+		   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32,
+		   tdc->f.chunk, ICL_TYPE_INT32,
+		   tdc->index, ICL_TYPE_INT32,
+		   afs_inode2trace(&tdc->f.inode));
+	shouldwake = 0;
+	if (nomore) {
+	    if (avc->asynchrony == -1) {
+		if (afs_defaultAsynchrony >
+		    (bytes - stored)) {
+		    shouldwake = &nomore;
+		}
+	    } else if ((afs_uint32) avc->asynchrony >=
+		       (bytes - stored)) {
+		shouldwake = &nomore;
+	    }
+	}
+	fP = afs_CFileOpen(&tdc->f.inode);
+
+	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
+		  ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
+		  ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+
+	AFS_STATCNT(CacheStoreProc);
+#ifndef AFS_NOSTATS
+	/*
+	 * In this case, alen is *always* the amount of data we'll be trying
+	 * to ship here.
+	 */
+	*(abytesToXferP) = alen;
+	*(abytesXferredP) = 0;
+#endif /* AFS_NOSTATS */
+
+	while ( alen > 0 ) {
+	    afs_int32 bytesread, byteswritten;
+	    code = (*ops->prepare)(rock, alen, &tlen);
+	    if ( code )
+		break;
+
+	    code = (*ops->read)(rock, fP, offset, tlen, &bytesread);
+	    if (code)
+		break;
+
+	    tlen = bytesread;
+	    code = (*ops->write)(rock, tlen, &byteswritten);
+	    if (code)
+		break;
+#ifndef AFS_NOSTATS
+	    (*abytesXferredP) += byteswritten;
+#endif /* AFS_NOSTATS */
+
+	    offset += tlen;
+	    alen -= tlen;
+	    /*
+	     * if file has been locked on server, can allow
+	     * store to continue
+	     */
+	    if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
+		*shouldwake = 0;	/* only do this once */
+		afs_wakeup(avc);
+	    }
+	}
+	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
+		  ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
+		  ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
+
+	afs_CFileClose(fP);
+	if ((tdc->f.chunkBytes < afs_OtherCSize)
+	    && (i < (nchunks - 1)) && code == 0) {
+	    int bsent, tlen, sbytes =
+		afs_OtherCSize - tdc->f.chunkBytes;
+	    char *tbuffer =
+		osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+
+	    while (sbytes > 0) {
+		tlen =
+		    (sbytes >
+		     AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ :
+		     sbytes);
+		memset(tbuffer, 0, tlen);
+		RX_AFS_GUNLOCK();
+		bsent = rx_Write(acall, tbuffer, tlen);
+		RX_AFS_GLOCK();
+
+		if (bsent != tlen) {
+		    code = -33;	/* XXX */
+		    break;
+		}
+		sbytes -= tlen;
+	    }
+	    osi_FreeLargeSpace(tbuffer);
+	}
+	stored += tdc->f.chunkBytes;
+
+	/* ideally, I'd like to unlock the dcache and turn
+	 * off the writing bit here, but that would
+	 * require being able to retry StoreAllSegments in
+	 * the event of a failure. It only really matters
+	 * if user can't read from a 'locked' dcache or
+	 * one which has the writing bit turned on. */
     }
-    afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, alen);
     code = (*ops->destroy)(&rock, code);
+
+    *nomoreP = nomore;
     return code;
 }
 

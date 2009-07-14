@@ -492,10 +492,12 @@ extern int afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP);
 extern int afs_MemCacheTruncate(register struct osi_file *fP,
 				int size);
 extern int afs_CacheStoreProc(register struct rx_call *acall,
-				 register struct osi_file *fP,
-				 register afs_int32 alen, struct vcache *avc,
-				 int *shouldWake, afs_size_t * abytesToXferP,
-				 afs_size_t * abytesXferredP);
+				struct dcache **dclist,
+				struct vcache *avc,
+				afs_size_t bytes,
+				afs_uint32 nchunks, int *nomoreP,
+				afs_size_t * abytesToXferP,
+				afs_size_t * abytesXferredP);
 extern int afs_CacheFetchProc(register struct afs_conn *tc,
 				register struct osi_file *fP,
 				afs_size_t abase, struct dcache *adc,
