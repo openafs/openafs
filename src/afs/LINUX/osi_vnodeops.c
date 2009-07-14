@@ -1773,15 +1773,16 @@ out:
 static int inline
 afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 {
-    afs_offs_t offset = ((loff_t) pp->index) << PAGE_CACHE_SHIFT;
+    loff_t offset = page_offset(pp);
     struct inode *ip = FILE_INODE(fp);
     struct vcache *avc = VTOAFS(ip);
     struct dcache *tdc;
     struct file *cacheFp;
-    char *address;
-    int dcLocked;
-    ssize_t size;
-    mm_segment_t old_fs;
+    struct page *newpage, *backpage;
+    struct address_space *bmapping;
+    int pageindex;
+    int code;
+    int dcLocked = 0;
 
     /* Not a UFS cache, don't do anything */
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
@@ -1858,33 +1859,65 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 
     /* Okay, so we've now got a cache file that is up to date */
 
-    offset -= AFS_CHUNKTOBASE(tdc->f.chunk);
-
     /* XXX - I suspect we should be locking the inodes before we use them! */
     AFS_GUNLOCK();
     cacheFp = afs_linux_raw_open(&tdc->f.inode, NULL);
-    if (cacheFp->f_op->llseek)
-	cacheFp->f_op->llseek(cacheFp, offset, 0);
-    else
-	cacheFp->f_pos = offset;
 
-    address = kmap(pp);
-    ClearPageError(pp);
-    old_fs = get_fs();
-    set_fs(get_ds());
-    size = cacheFp->f_op->read(cacheFp, address, PAGE_SIZE, &cacheFp->f_pos);
-    set_fs(old_fs);
+    bmapping = cacheFp->f_dentry->d_inode->i_mapping;
+    newpage = NULL;
+    backpage = NULL;
 
-    if (size >= 0) {
-      if (size != PAGE_SIZE)
-        memset((void *)(address + size), 0, PAGE_SIZE - size);
-      size = 0;
-      flush_dcache_page(pp);
-      SetPageUptodate(pp);
+    /* From our offset, we now need to work out which page in the disk
+     * file it corresponds to. This will be fun ... */
+    pageindex = (offset - AFS_CHUNKTOBASE(tdc->f.chunk)) >> PAGE_CACHE_SHIFT;
+
+    while (backpage == NULL) {
+        backpage = find_get_page(bmapping, pageindex);
+	if (!backpage) {
+	    if (!newpage)
+		newpage = page_cache_alloc_cold(bmapping);
+	    if (!newpage)
+		goto out;
+
+	    code = add_to_page_cache(newpage, bmapping, pageindex, GFP_KERNEL);
+	    if (code == 0) {
+	        backpage = newpage;
+	        newpage = NULL;
+
+	        page_cache_get(backpage);
+	    } else {
+		page_cache_release(newpage);
+		newpage = NULL;
+		if (code != -EEXIST)
+		    goto out;
+	    }
+        } else {
+	    lock_page(backpage);
+	}
     }
 
-    kunmap(pp);
+    if (!PageUptodate(backpage)) {
+	ClearPageError(backpage);
+        code = bmapping->a_ops->readpage(NULL, backpage);
+	if (!code) {
+	    wait_on_page_locked(backpage);
+	    if (!PageUptodate(backpage))
+		code = -EIO;
+	}
+    } else {
+        unlock_page(backpage);
+    }
+
+    if (!code) {
+        copy_highpage(pp, backpage);
+	flush_dcache_page(pp);
+	SetPageUptodate(pp);
+    }
     UnlockPage(pp);
+
+out:
+    if (backpage)
+	page_cache_release(backpage);
 
     filp_close(cacheFp, NULL);
     AFS_GLOCK();
@@ -1893,7 +1926,7 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
     ReleaseWriteLock(&avc->lock);
     afs_PutDCache(tdc);
 
-    *codep = size;
+    *codep = code;
     return 1;
 }
 
