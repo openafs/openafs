@@ -1576,9 +1576,12 @@ void cm_MergeStatus(cm_scache_t *dscp,
         cellp = cm_FindCellByID(scp->fid.cell, 0);
         if (scp->cbServerp) {
             struct cm_volume *volp = NULL;
+            cm_req_t req;
+
+            cm_InitReq(&req);
 
             cm_FindVolumeByID(cellp, scp->fid.volume, userp,
-                              (cm_req_t *) NULL, CM_GETVOL_FLAG_CREATE, &volp);
+                              &req, CM_GETVOL_FLAG_CREATE, &volp);
             osi_Log2(afsd_logp, "old data from server %x volume %s",
                       scp->cbServerp->addr.sin_addr.s_addr,
                       volp ? volp->namep : "(unknown)");
