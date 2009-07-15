@@ -53,9 +53,11 @@ process.o	: process.s process.i386.s process.c
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
 	*_darwin* ) \
-		ppc=`echo "${ARCHFLAGS}" | grep -q -w ppc && echo yes` ; \
-		i386=`echo "${ARCHFLAGS}" | grep -q -w i386 && echo yes` ; \
-		if [ -z "$${ppc}" -a -z "$${i386}" ] ; then \
+		$(RM) -f process.o ; \
+		ppc=`echo "${ARCHFLAGS}" | grep -q -w ppc && echo process.ppc.o` ; \
+		i386=`echo "${ARCHFLAGS}" | grep -q -w i386 && echo process.i386.o` ; \
+		amd64=`echo "${ARCHFLAGS}" | grep -q -w x86_64 && echo process.amd64.o` ; \
+		if [ -z "$${ppc}" -a -z "$${i386}" -a -z "$${amd64}" ] ; then \
 			if [ `arch` = ppc ] ; then \
 				ppc=yes ; \
 			else \
@@ -63,19 +65,25 @@ process.o	: process.s process.i386.s process.c
 			fi ; \
 		fi ; \
 		if [ -n "$${ppc}" ] ; then \
-			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.s -o process.ppc.o ; \
-			if [ -z "$${i386}" ] ; then \
-				${MV} process.ppc.o process.o ; \
+			$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -arch ppc -I${TOP_INCDIR} ${srcdir}/process.s -o "$${ppc}" ; \
+			if [ -z "$${i386}" -a -z "$${amd64}" ] ; then \
+				${MV} "$${ppc}" process.o ; \
 			fi ; \
 		fi ; \
 		if [ -n "$${i386}" ] ; then \
-			$(CC) -x assembler-with-cpp -c -arch i386 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s -o process.i386.o ; \
-			if [ -z "$${ppc}" ] ; then \
-				${MV} process.i386.o process.o ; \
+			$(CC) -x assembler-with-cpp -c -arch i386 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.i386.s -o "$${i386}" ; \
+			if [ -z "$${ppc}" -a -z "$${amd64}" ] ; then \
+				${MV} "$${i386}" process.o ; \
 			fi ; \
 		fi ; \
-		if [ -n "$${ppc}" -a -n "$${i386}" ] ; then \
-			lipo -create process.ppc.o process.i386.o -output process.o ;\
+		if [ -n "$${amd64}" ] ; then \
+			$(CC) -x assembler-with-cpp -c -arch x86_64 -I${TOP_INCDIR} -I${srcdir} ${srcdir}/process.amd64.s -o "$${amd64}" ; \
+			if [ -z "$${ppc}" -a -z "$${i386}" ] ; then \
+				${MV} "$${amd64}" process.o ; \
+			fi ; \
+		fi ; \
+		if [ ! -f process.o ] ; then \
+			lipo -create $${amd64} $${i386} $${ppc} -output process.o ;\
 		fi ;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \

@@ -162,12 +162,13 @@ void set_staticaddrs(void);
 #include <sys/ioctl.h>
 #endif
 #include <mach/mach.h>
+#ifndef AFS_DARWIN100_ENV
 /* Symbols from the DiskArbitration framework */
 kern_return_t DiskArbStart(mach_port_t *);
 kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 							 char *);
 #define DISK_ARB_NETWORK_DISK_FLAG 8
-
+#endif
 #include <mach/mach_port.h>
 #include <mach/mach_interface.h>
 #include <mach/mach_init.h>
@@ -2564,6 +2565,7 @@ HandleMTab()
 #endif /* AFS_SUN5_ENV */
 #endif /* unreasonable systems */
 #ifdef AFS_DARWIN_ENV
+#ifndef AFS_DARWIN100_ENV
     mach_port_t diskarb_port;
     kern_return_t status;
 
@@ -2576,6 +2578,7 @@ HandleMTab()
     }
 
     return status;
+#endif
 #endif /* AFS_DARWIN_ENV */
     return 0;
 }

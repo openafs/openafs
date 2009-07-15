@@ -14,6 +14,7 @@
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define AFS_GRMUTEX_DECLSPEC __declspec(dllexport)
 #endif
+#ifdef AFS_PTHREAD_ENV
 #include <afs/pthread_glock.h>
 #include <string.h>
 
@@ -83,3 +84,4 @@ pthread_recursive_mutex_unlock(pthread_recursive_mutex_t * mut)
     }
     return rc;
 }
+#endif

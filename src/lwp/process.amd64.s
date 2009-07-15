@@ -83,7 +83,7 @@ ENTRY(savecontext)
 	movq	%rsi, area1(%rbp)	/* i multiples of 24, so 32 it is) */
 	movq	%rdx, newsp(%rbp)	/* and copy them there. */
 
-	movq	PRE_Block@GOTPCREL(%rip), %rax
+	movq	_C_LABEL(PRE_Block)@GOTPCREL(%rip), %rax
 	movl	$1,(%rax)		/* Do not allow any interrupts */
 
 	pushq	%rsp			/* Push all registers onto the stack */
@@ -149,7 +149,7 @@ ENTRY(returnto)
 	popq	%rax
 	popq	%rsp			/* See savecontext */
 
-	movq    PRE_Block@GOTPCREL(%rip), %rax
+	movq    _C_LABEL(PRE_Block)@GOTPCREL(%rip), %rax
 	movl    $0,(%rax)	
 	addq	$32, %rsp		/* We did rsp-32 above, correct that */
 	popq    %rbp

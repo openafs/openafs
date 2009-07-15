@@ -550,6 +550,9 @@ else
 		i386-apple-darwin9.*)
 			AFS_SYSNAME="x86_darwin_90"
 			;;
+		i?86-apple-darwin10.*)
+			AFS_SYSNAME="x86_darwin_100"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			enable_login="yes"
