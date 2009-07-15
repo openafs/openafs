@@ -541,14 +541,11 @@ DisplayRecord(FILE *outFilep, register afs_int32 *alp, afs_int32 rsize)
 #define NO_MESSAGE                  "THIS IS NOT A MESSAGE"
 
 /*
- * The system-dependant location for the catalog files is defined in sysconf.h
- * RPC_DEFAULT_NLSPATH should be defined in sysconf.h. Otherwise we use
- * /usr/afs/etc/C/%s.cat 
+ * We use NLS message catalog functions to convert numbers to human-readable
+ * strings.  The message catalog will be in AFSDIR_DATA_DIR, which is
+ * ${datadir}/openafs with normal paths and /usr/vice/etc (for historical
+ * compatibility) for Transarc paths.
  */
-
-#ifndef RPC_NLS_FORMAT
-#define RPC_NLS_FORMAT "%s.cat"
-#endif
 
 void
 dce1_error_inq_text(afs_uint32 status_to_convert, 
@@ -557,13 +554,12 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
     unsigned short facility_code;
     unsigned short component_code;
     unsigned short status_code;
-    unsigned short i, failed = 0;
+    unsigned short i;
     nl_catd catd;
     char component_name[4];
     char *facility_name;
     char filename_prefix[7];
-    char nls_filename[11];
-    char alt_filename[80];
+    char nls_filename[80];
     char *message;
 #if defined(AFS_64BITPOINTER_ENV)
     long J;
@@ -624,11 +620,16 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
 	component_name[i] += (component_name[i] <= 26) ? 'a' : ('0' - 27);
     }
     sprintf(filename_prefix, "%3s%3s", facility_name, component_name);
-    sprintf(nls_filename, RPC_NLS_FORMAT, filename_prefix);
 
     /*
-     * Open the message file
+     * We do not use the normal NLS message catalog search path since our use
+     * message catalogs isn't a typical use.  It wouldn't make sense to
+     * install this special message catalog in with internationalization
+     * catalogs.
      */
+    afs_snprintf(nls_filename, sizeof(nls_filename), "%s/C/%s.cat",
+		 AFSDIR_CLIENT_DATA_DIRPATH, filename_prefix);
+
 #if defined(AFS_OSF20_ENV)
     catd = (nl_catd) catopen(nls_filename, 0);
 #else
@@ -640,33 +641,9 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
     catd = (nl_catd) J;
 #endif
     if (catd == (nl_catd) - 1) {
-	/*
-	 * If we did not succeed in opening message file using NLSPATH,
-	 * try to open the message file in a well-known default area
-	 */
-      tryagain:
-#ifndef RPC_DEFAULT_NLSPATH
-	sprintf(alt_filename, "%s/C/%s.cat", AFSDIR_CLIENT_ETC_DIRPATH,
-		filename_prefix);
-#else
-	sprintf(alt_filename, RPC_DEFAULT_NLSPATH, filename_prefix);
-#endif
-
-#if defined(AFS_OSF20_ENV)
-	catd = (nl_catd) catopen(alt_filename, 0);
-#else
-#if defined(AFS_64BITPOINTER_ENV)
-        J = (long)catopen(alt_filename, 0);
-#else
-	J = (int)catopen(alt_filename, 0);
-#endif
-	catd = (nl_catd) J;
-#endif
-	if (catd == (nl_catd) - 1) {
-	    sprintf((char *)error_text, "status %08x (%s / %s)",
-		    status_to_convert, facility_name, component_name);
-	    return;
-	}
+	sprintf((char *)error_text, "status %08x (%s / %s)",
+		status_to_convert, facility_name, component_name);
+	return;
     }
     /*
      * try to get the specified message from the file
@@ -682,11 +659,6 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
 	    *status = 0;
 	}
     } else {
-	if (!failed) {
-	    failed = 1;
-	    catclose(catd);
-	    goto tryagain;
-	}
 	sprintf((char *)error_text, "status %08x (%s / %s)",
 		status_to_convert, facility_name, component_name);
     }
