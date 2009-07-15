@@ -436,7 +436,7 @@ gator_text_Write(struct onode *onp, char *strToWrite, int numChars,
 		"[%s:%s] Writing %d chars to text object at %p (highlight=%d, skip=%d: '",
 		mn, rn, numChars, onp, highlight, skip);
 	for (i = 0; i < numChars; i++)
-	    fprintf(stderr, "%c", strToWrite + i);
+	    fprintf(stderr, "%c", strToWrite[i]);
 	fprintf(stderr, "\n");
     }
 
