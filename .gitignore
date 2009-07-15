@@ -31,6 +31,8 @@ Makefile
 RX_component_version_number.c
 AFS_component_version_number.c
 AFS_component_version_number.h
+vc*.pdb
+rs_state.ini
 
 !.gitignore
 !.cvsignore
