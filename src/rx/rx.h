@@ -1087,7 +1087,7 @@ typedef struct rx_interface_stat {
 extern int rx_DumpCalls(FILE *outputFile, char *cookie);
 
 #define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
-#define rx_MutexAdd(object, addend, mutex) InterlockedAdd(&object, addend)
+#define rx_MutexAdd(object, addend, mutex) InterlockedExchangeAdd(&object, addend)
 #define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
 #define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
     do { \
