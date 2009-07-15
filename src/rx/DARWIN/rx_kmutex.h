@@ -55,7 +55,9 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
 				osi_Assert((lck)->owner == current_thread()); \
 				(lck)->owner = (thread_t)0; \
-				OSAtomicDecrement32Barrier((lck)->waiters); \
+				lck_mtx_lock((lck)->meta);  \
+                                (lck)->waiters--; \
+                                lck_mtx_unlock((lck)->meta); \
                                 msleep(cv, (lck)->lock, PDROP|PVFS, "afs_CV_WAIT", NULL); \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck); \
@@ -69,7 +71,9 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
 				osi_Assert((lck)->owner == current_thread()); \
 				(lck)->owner = (thread_t)0; \
-				OSAtomicDecrement32Barrier((lck)->waiters); \
+				lck_mtx_lock((lck)->meta); \
+                                (lck)->waiters--; \
+                                lck_mtx_unlock((lck)->meta); \
                                 msleep(cv, (lck)->lock, PDROP|PVFS, "afs_CV_TIMEDWAIT", &ts); \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck);       \
@@ -123,88 +127,14 @@ extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 
 #ifdef AFS_DARWIN80_ENV
 typedef struct {
+    lck_mtx_t *meta;
     int waiters; /* also includes anyone holding the lock */
     lck_mtx_t *lock;
     thread_t owner;
 } afs_kmutex_t;
 typedef int afs_kcondvar_t;
 
-typedef struct {
-    int readers;
-    lck_mtx_t *lock;
-    thread_t owner;
-} afs_krwlock_t;
-
 extern lck_grp_t * openafs_lck_grp;
-extern lck_grp_t * openafs_rw_grp;
-
-#define RWLOCK_UPLOCK(a) \
-    do { \
-	osi_Assert((a)->owner != current_thread());	\
-	lck_rw_lock_shared_to_exclusive((a)->lock); \
-	osi_Assert((a)->owner == (thread_t)0); \
-	(a)->owner = current_thread(); \
-	OSAtomicDecrement32Barrier((a)->readers);		\
-    } while(0)
-
-#define RWLOCK_INIT(a,b,c,d) \
-    do {						      \
-        lck_attr_t *openafs_lck_attr = lck_attr_alloc_init();		\
-        (a)->lock = lck_rw_alloc_init(openafs_rw_grp, openafs_lck_attr); \
-        lck_attr_free(openafs_lck_attr);				\
-	(a)->readers = 0;						\
-	(a)->owner = (thread_t)0;					\
-    } while(0)
-#define RWLOCK_DESTROY(a) \
-    do {					   \
-        lck_rw_destroy((a)->lock, openafs_rw_grp); \
-	(a)->owner = (thread_t)-1;		   \
-    } while(0)
-#define RWLOCK_RDLOCK(a)				\
-    do {						\
-        OSAtomicIncrement32Barrier((a)->readers);	\
-	lck_rw_lock_shared((a)->lock);			\
-    } while(0)
-#define RWLOCK_WRLOCK(a) \
-    do {						\
-	osi_Assert((a)->owner != current_thread());	\
-	lck_rw_lock_exclusive((a)->lock);		\
-	osi_Assert((a)->owner == (thread_t)0);		\
-	(a)->owner = current_thread();			\
-    } while(0)
-
-/* acquire main lock before releasing meta lock, so we don't race */
-#define RWLOCK_TRYRDLOCK(a) ({ \
-	    int _ret;							\
-	    _ret = lck_rw_try_lock((a)->lock, LCK_RW_TYPE_SHARED);	\
-	    if (_ret) {							\
-		OSAtomicIncrement32Barrier((a)->readers);		\
-	    }								\
-	    _ret;							\
-	})
-
-/* acquire main lock before releasing meta lock, so we don't race */
-#define RWLOCK_TRYWRLOCK(a) ({ \
-	    int _ret;				\
-	    osi_Assert((a)->owner != current_thread());			\
-	    _ret = lck_rw_try_lock((a)->lock, LCK_RW_TYPE_EXCLUSIVE);		\
-	    if (_ret) {					\
-		osi_Assert((a)->owner == (thread_t)0);	\
-		(a)->owner = current_thread();			\
-	    }							\
-	    _ret;						\
-	})
-
-#define RWLOCK_UNLOCK(a) \
-    do {					    \
-	if ((a)->owner == current_thread()) {	    \
-	    (a)->owner = (thread_t)0;			\
-	    lck_rw_unlock_exclusive((a)->lock);		\
-	} else {					\
-	    lck_rw_unlock_shared((a)->lock);		\
-	    OSAtomicDecrement32Barrier((a)->readers);	\
-	}						\
-    } while(0)
 
 #define MUTEX_SETUP() rx_kmutex_setup()
 #define MUTEX_FINISH() rx_kmutex_finish()
@@ -217,6 +147,7 @@ extern lck_grp_t * openafs_rw_grp;
 #define MUTEX_INIT(a,b,c,d) \
     do {								\
         lck_attr_t *openafs_lck_attr = lck_attr_alloc_init();		\
+	(a)->meta = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
         (a)->lock = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
         lck_attr_free(openafs_lck_attr);				\
 	(a)->waiters = 0;						\
@@ -224,35 +155,46 @@ extern lck_grp_t * openafs_rw_grp;
     } while(0)
 #define MUTEX_DESTROY(a) \
     do { \
-        lck_mtx_destroy((a)->lock, openafs_lck_grp);	\
-	(a)->owner = (thread_t)-1;			\
+        lck_mtx_destroy((a)->lock, openafs_lck_grp); \
+	lck_mtx_destroy((a)->meta, openafs_lck_grp); \
+	(a)->owner = (thread_t)-1; \
     } while(0)
-#define MUTEX_ENTER(a)				\
-    do {						\
-	OSAtomicIncrement32Barrier((a)->waiters);	\
-	lck_mtx_lock((a)->lock);			\
-	osi_Assert((a)->owner == (thread_t)0);		\
-	(a)->owner = current_thread();			\
+#define MUTEX_ENTER(a) \
+    do { \
+	lck_mtx_lock((a)->meta); \
+        (a)->waiters++; \
+        lck_mtx_unlock((a)->meta); \
+	lck_mtx_lock((a)->lock); \
+	osi_Assert((a)->owner == (thread_t)0); \
+	(a)->owner = current_thread(); \
     } while(0)
 
 /* acquire main lock before releasing meta lock, so we don't race */
 #define MUTEX_TRYENTER(a) ({			\
 	    int _ret;				\
-	    _ret = lck_mtx_try_lock((a)->lock);	\
-	    if (_ret) {					\
-		OSAtomicIncrement32Barrier((a)->waiters);	\
-		osi_Assert((a)->owner == (thread_t)0);		\
-		(a)->owner = current_thread();			\
-	    }							\
-	    _ret;						\
+	    lck_mtx_lock((a)->meta); \
+	    if ((a)->waiters) { \
+		lck_mtx_unlock((a)->meta); \
+		_ret = 0; \
+	    } else { \
+		(a)->waiters++; \
+		lck_mtx_lock((a)->lock); \
+		lck_mtx_unlock((a)->meta); \
+		osi_Assert((a)->owner == (thread_t)0); \
+		(a)->owner = current_thread(); \
+		_ret = 1; \
+	    } \
+	    _ret; \
 	})
 
-#define MUTEX_EXIT(a)				\
-    do {					    \
+#define MUTEX_EXIT(a) \
+    do { \
 	osi_Assert((a)->owner == current_thread()); \
-	(a)->owner = (thread_t)0;		    \
-	lck_mtx_unlock((a)->lock);		    \
-	OSAtomicDecrement32Barrier((a)->waiters);   \
+	(a)->owner = (thread_t)0; \
+	lck_mtx_unlock((a)->lock); \
+	lck_mtx_lock((a)->meta); \
+        (a)->waiters--; \
+        lck_mtx_unlock((a)->meta); \
     } while(0)
 
 #undef MUTEX_ISMINE

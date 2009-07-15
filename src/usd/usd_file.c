@@ -26,7 +26,9 @@
 #if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
 #include <sys/ioctl.h>
 #endif
+#ifndef AFS_DARWIN100_ENV
 #include <sys/mtio.h>
+#endif
 #endif /* AFS_AIX_ENV */
 
 #include <string.h>
@@ -209,6 +211,9 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 
     case USD_IOCTL_TAPEOPERATION:
 	{
+#ifdef AFS_DARWIN100_ENV
+	    code = EOPNOTSUPP;
+#else
 	    usd_tapeop_t *tapeOpp = (usd_tapeop_t *) arg;
 #if defined(AFS_AIX_ENV)
 	    struct stop os_tapeop;
@@ -255,7 +260,7 @@ usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 
 	    code = ioctl(fd, MTIOCTOP, &os_tapeop);
 #endif /* AFS_AIX_ENV */
-
+#endif
 	    if (code == -1) {
 		code = errno;
 	    } else {

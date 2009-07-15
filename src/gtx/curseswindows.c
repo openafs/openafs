@@ -772,7 +772,7 @@ gator_cursesgwin_getdimensions(struct gwin *gwp, struct gwin_sizeparams *aparms)
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN60_ENV)
     aparms->maxx = cwp->wp->maxx;
     aparms->maxy = cwp->wp->maxy;
-#elif defined(AFS_NBSD_ENV)
+#elif defined(AFS_NBSD_ENV) || defined(AFS_DARWIN100_ENV)
     aparms->maxx = getmaxx(cwp->wp);
     aparms->maxy = getmaxy(cwp->wp);
 #else
