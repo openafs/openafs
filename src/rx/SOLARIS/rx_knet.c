@@ -605,8 +605,8 @@ void
 osi_NetIfPoller()
 {
     cred_t *cr;
-    ldi_ident_t li;
-    ldi_handle_t lh;
+    ldi_ident_t li = NULL;
+    ldi_handle_t lh = NULL;
     struct lifnum lifn;
     struct lifconf lifc;
     struct lifreq lifr;
@@ -614,7 +614,7 @@ osi_NetIfPoller()
     struct sockaddr_in *sin4_local;
     struct sockaddr_in *sin4_dst;
     major_t udpmajor;
-    caddr_t lifcbuf;
+    caddr_t lifcbuf = NULL;
     int i, count, error, rv;
     int ifcount;
     int metric;
@@ -637,15 +637,18 @@ osi_NetIfPoller()
     udpmajor = ddi_name_to_major(UDP_MOD_NAME);
 
     error = ldi_ident_from_major(udpmajor, &li);
-    if (error)
-        cmn_err(CE_PANIC, "osi_NetIfPoller: ldi_ident_from_major failed: %d",
+    if (error) {
+        cmn_err(CE_WARN, "osi_NetIfPoller: ldi_ident_from_major failed: %d",
             error);
+        goto cleanup;
+    }
 
     error = ldi_open_by_name(UDP_DEV_NAME, FREAD, cr, &lh, li);
-    if (error)
-        cmn_err(CE_PANIC,
+    if (error) {
+        cmn_err(CE_WARN,
             "osi_NetIfPoller: ldi_open_by_name failed: %d", error);
-
+        goto cleanup;
+    }
 
     /* First, how many interfaces do we have? */
     (void) bzero((void *)&lifn, sizeof(struct lifnum));
@@ -653,10 +656,11 @@ osi_NetIfPoller()
 
     error = ldi_ioctl(lh, SIOCGLIFNUM, (intptr_t)&lifn,
         FKIOCTL, cr, &rv);
-    if (error)
-     cmn_err(CE_PANIC,
-         "osi_NetIfPoller: ldi_ioctl: SIOCGLIFNUM failed: %d", error);
-
+    if (error) {
+        cmn_err(CE_WARN,
+                "osi_NetIfPoller: ldi_ioctl: SIOCGLIFNUM failed: %d", error);
+        goto cleanup;
+    }
     ifcount = lifn.lifn_count;
 
     /* Set up some stuff for storing the results of SIOCGLIFCONF */
@@ -672,10 +676,11 @@ osi_NetIfPoller()
     /* Get info on each of our available interfaces. */
     error = ldi_ioctl(lh, SIOCGLIFCONF, (intptr_t)&lifc,
         FKIOCTL, cr, &rv);
-    if (error)
-        cmn_err(CE_PANIC,
-            "osi_NetIfPoller: ldi_ioctl: SIOCGLIFCONF failed: %d", error);
-
+    if (error) {
+        cmn_err(CE_WARN,
+                "osi_NetIfPoller: ldi_ioctl: SIOCGLIFCONF failed: %d", error);
+        goto cleanup;
+    }
     lifrp = lifc.lifc_req;
 
     count = 0;
@@ -695,10 +700,12 @@ osi_NetIfPoller()
         /* Get this interface's Flags */
         error = ldi_ioctl(lh, SIOCGLIFFLAGS, (intptr_t)&lifr,
             FKIOCTL, cr, &rv);
-        if (error)
-            cmn_err(CE_PANIC,
-                "osi_NetIfPoller: ldi_ioctl: SIOCGLIFFLAGS failed: %d",
+        if (error) {
+            cmn_err(CE_WARN,
+                    "osi_NetIfPoller: ldi_ioctl: SIOCGLIFFLAGS failed: %d",
                     error);
+            goto cleanup;
+        }
 
         /* Ignore plumbed but down interfaces. */
         if ((lifr.lifr_flags & IFF_UP) == 0)
@@ -749,11 +756,14 @@ osi_NetIfPoller()
 
     } /* Bottom of loop: for each interface ... */
 
-    kmem_free(lifcbuf, ifcount * sizeof(struct lifreq));
-
+  cleanup:
     /* End of thread. Time to clean up */
-    (void) ldi_close(lh, FREAD, cr);
-    (void) ldi_ident_release(li);
+    if (lifcbuf)
+        kmem_free(lifcbuf, ifcount * sizeof(struct lifreq));
+    if (lh)
+        (void) ldi_close(lh, FREAD, cr);
+    if (li)
+        (void) ldi_ident_release(li);
 
     /* Schedule this to run again after afs_if_poll_interval seconds */
     (void) timeout((void(*) (void *)) osi_StartNetIfPoller, NULL,
