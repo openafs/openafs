@@ -122,7 +122,7 @@
           </listitem>
 
           <listitem>
-            <para>Passwords are stored in two separate places: the Authentication Database for AFS and each machine's local password
+            <para>Passwords may be stored in two separate places: the Kerberos Server and, optionally, each machine's local password
             file (<emphasis role="bold">/etc/passwd</emphasis> or equivalent) for the UNIX file system. A user's passwords in the
             two places can differ if desired, though the resulting behavior depends on whether and how the cell is using an
             AFS-modified login utility.</para>
@@ -203,28 +203,6 @@
               and directories.</para>
 
               <indexterm>
-                <primary>ftpd command</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>ftpd (AFS compared to UNIX)</secondary>
-              </indexterm>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold">The ftpd daemon</emphasis></term>
-
-            <listitem>
-              <para>The AFS-modified version of this daemon attempts to authenticate remote issuers of the <emphasis
-              role="bold">ftp</emphasis> command with the local AFS authentication service. See <link linkend="HDRWQ78">Using UNIX
-              Remote Services in the AFS Environment</link>.</para>
-
-              <indexterm>
                 <primary>groups command</primary>
 
                 <secondary>AFS compared to UNIX</secondary>
@@ -243,11 +221,11 @@
 
             <listitem>
               <para>If the user's AFS tokens are associated with a process authentication group (PAG), the output of this command
-              sometimes includes two large numbers. To learn about PAGs, see <link linkend="HDRWQ64">Identifying AFS Tokens by
+              can include one or two large numbers. To learn about PAGs, see <link linkend="HDRWQ64">Identifying AFS Tokens by
               PAG</link>.</para>
 
               <indexterm>
-                <primary>inetd command</primary>
+                <primary>login utility</primary>
 
                 <secondary>AFS compared to UNIX</secondary>
               </indexterm>
@@ -255,18 +233,9 @@
               <indexterm>
                 <primary>commands</primary>
 
-                <secondary>inetd (AFS compared to UNIX)</secondary>
+                <secondary>login (AFS compared to UNIX)</secondary>
               </indexterm>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold">The inetd daemon</emphasis></term>
-
-            <listitem>
-              <para>The AFS-modified version of this daemon authenticates remote issuers of the AFS-modified <emphasis
-              role="bold">rcp</emphasis> and <emphasis role="bold">rsh</emphasis> commands with the local AFS authentication
-              service. See <link linkend="HDRWQ78">Using UNIX Remote Services in the AFS Environment</link>.</para>
+              
             </listitem>
           </varlistentry>
 
@@ -299,7 +268,7 @@
               linkend="HDRWQ32">Creating Hard Links</link>.</para>
 
               <indexterm>
-                <primary>rcp command</primary>
+                <primary>sshd command</primary>
 
                 <secondary>AFS compared to UNIX</secondary>
               </indexterm>
@@ -307,20 +276,19 @@
               <indexterm>
                 <primary>commands</primary>
 
-                <secondary>rcp (AFS compared to UNIX)</secondary>
+                <secondary>sshd (AFS compared to UNIX)</secondary>
               </indexterm>
             </listitem>
           </varlistentry>
 
           <varlistentry>
-            <term><emphasis role="bold">The rcp command</emphasis></term>
+            <term><emphasis role="bold">The sshd daemon</emphasis></term>
 
             <listitem>
-              <para>The AFS-modified version of this command enables the issuer to access files on the remote machine as an
-              authenticated AFS user. See <link linkend="HDRWQ78">Using UNIX Remote Services in the AFS Environment</link>.</para>
+              <para>The <ulink url="http://www.openssh.org/">OpenSSH project</ulink> provides an sshd daemon that uses the GSSAPI protocol to pass Kerberos tickets between machines.</para>
 
               <indexterm>
-                <primary>rlogind command</primary>
+                <primary>ssh command</primary>
 
                 <secondary>AFS compared to UNIX</secondary>
               </indexterm>
@@ -328,42 +296,8 @@
               <indexterm>
                 <primary>commands</primary>
 
-                <secondary>rlogind (AFS compared to UNIX)</secondary>
+                <secondary>ssh (AFS compared to UNIX)</secondary>
               </indexterm>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold">The rlogind daemon</emphasis></term>
-
-            <listitem>
-              <para>The AFS-modified version of this daemon authenticates remote issuers of the <emphasis
-              role="bold">rlogin</emphasis> command with the local AFS authentication service. See <link linkend="HDRWQ78">Using
-              UNIX Remote Services in the AFS Environment</link>.</para>
-
-              <para>The AFS distribution for some system types possibly does not include a modified <emphasis
-              role="bold">rlogind</emphasis> program. See the <emphasis>OpenAFS Release Notes</emphasis>.</para>
-
-              <indexterm>
-                <primary>rsh command</primary>
-
-                <secondary>AFS compared to UNIX</secondary>
-              </indexterm>
-
-              <indexterm>
-                <primary>commands</primary>
-
-                <secondary>rsh (AFS compared to UNIX)</secondary>
-              </indexterm>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><emphasis role="bold">The remsh or rsh command</emphasis></term>
-
-            <listitem>
-              <para>The AFS-modified version of this command enables the issuer to execute commands on the remote machine as an
-              authenticated AFS user. See <link linkend="HDRWQ78">Using UNIX Remote Services in the AFS Environment</link>.</para>
             </listitem>
           </varlistentry>
         </variablelist></para>
@@ -372,6 +306,14 @@
         <primary>fsck command</primary>
 
         <secondary>AFS compared to UNIX</secondary>
+      </indexterm>
+
+      <indexterm>
+        <primary>inode-based fileserver</primary>
+      </indexterm>
+
+      <indexterm>
+        <primary>namei-based fileserver</primary>
       </indexterm>
 
       <indexterm>
@@ -404,9 +346,23 @@
     </sect2>
 
     <sect2 id="Header_38">
-      <title>The AFS version of the fsck Command</title>
+      <title>The AFS version of the fsck Command and inode-based fileservers</title>
 
-      <para>Never run the standard UNIX <emphasis role="bold">fsck</emphasis> command on an AFS file server machine. It does not
+      <sidebar>
+        <para>The fileserver uses either of two formats for storing data
+        on disk. The inode format uses a combination of regular files and
+        extra fields stored in the inode data structures that are normally
+        reserved for use by the operating system. The namei interface uses
+        normal file storage and does not use special structures. The
+        choice of storage formats is chosen at compile time and the two
+        formats are incompatible. The storage format must be consistent
+        for the fileserver binaries and all vice partitions on a given
+        fileserver machine.</para>
+      </sidebar>
+      
+      <important><para>This section on fsck advice only applies to the inode-based fileserver binaries. On servers using namei-based binaries, the vendor-supplied fsck is required.</para></important>
+
+      <para>If you are using AFS fileserver binaries compiled with the inode-based format, never run the standard UNIX <emphasis role="bold">fsck</emphasis> command on an AFS file server machine. It does not
       understand how the File Server organizes volume data on disk, and so moves all AFS data into the <emphasis
       role="bold">lost+found</emphasis> directory on the partition.</para>
 
@@ -425,9 +381,11 @@
       <para>where <emphasis>version</emphasis> is the AFS version. For correct results, it must match the AFS version of the server
       binaries in use on the machine.</para>
 
-      <para>If you ever accidentally run the standard version of the program, contact AFS Product Support immediately. It is
-      sometimes possible to recover volume data from the <emphasis role="bold">lost+found</emphasis> directory.</para>
+      <para>If you ever accidentally run the standard version of the program, contact your AFS support provider or refer to the <ulink url="http://www.openafs.org/support.html">OpenAFS support web page</ulink> for support options. It is
+      sometimes possible to recover volume data from the <emphasis role="bold">lost+found</emphasis> directory. If the data is not recoverabled, then restoring from backup is recommended.</para>
 
+      <warning><para>Running the fsck binary supplied by the operating system vendor on an fileserver using inode-based binaries will result in data corruption!</para></warning>
+      
       <indexterm>
         <primary>hard link</primary>
 
@@ -514,7 +472,7 @@
 
       <para>Any file can be marked with the setuid bit, but only members of the <emphasis
       role="bold">system:administrators</emphasis> group can issue the <emphasis role="bold">chown</emphasis> system call or the
-      <emphasis role="bold">/etc/chown</emphasis> command.</para>
+      <emphasis role="bold">chown</emphasis> command.</para>
 
       <para>The <emphasis role="bold">fs setcell</emphasis> command determines whether setuid programs that originate in a foreign
       cell can run on a given client machine. See <link linkend="HDRWQ409">Determining if a Client Can Run Setuid
@@ -566,7 +524,7 @@
     Internet site, then it is simplest to choose your Internet domain name as the cellname.</para>
 
     <para>If you are not an Internet site, it is best to choose a unique Internet-style name, particularly if you plan to connect to
-    the Internet in the future. AFS Product Support is available for help in selecting an appropriate name. There are a few
+    the Internet in the future. There are a few
     constraints on AFS cell names: <itemizedlist>
         <listitem>
           <para>It can contain as many as 64 characters, but shorter names are better because the cell name frequently is part of
@@ -627,17 +585,16 @@
     <indexterm>
       <primary>Internet</primary>
 
-      <secondary>Network Information Center</secondary>
+      <secondary>Domain Registrar</secondary>
     </indexterm>
 
     <indexterm>
-      <primary>Network Information Center (for Internet)</primary>
+      <primary>Domain Registrar</primary>
     </indexterm>
 
-    <para>Other suffixes are available if none of these are appropriate. You can learn about suffixes by calling the Defense Data
-    Network [Internet] Network Information Center in the United States at (800) 235-3155. The NIC can also provide you with the
-    forms necessary for registering your cell name as an Internet domain name. Registering your name prevents another Internet site
-    from adopting the name later.</para>
+    <para>Other suffixes are available if none of these are
+    appropriate. Contact a domain registrar to purchase a domain name for
+    your cell.</para>
 
     <indexterm>
       <primary>setting</primary>
@@ -677,9 +634,9 @@
       role="bold">/usr/afs/etc/ThisCell</emphasis> and <emphasis role="bold">/usr/afs/etc/CellServDB</emphasis> files. As described
       more explicitly in the <emphasis>OpenAFS Quick Beginnings</emphasis>, you set the cell name in both by issuing the <emphasis
       role="bold">bos setcellname</emphasis> command on the first file server machine you install in your cell. It is not usually
-      necessary to issue the command again. If you run the United States edition of AFS and use the Update Server, it distributes
+      necessary to issue the command again. If you use the Update Server, it distributes
       its copy of the <emphasis role="bold">ThisCell</emphasis> and <emphasis role="bold">CellServDB</emphasis> files to additional
-      server machines that you install. If you use the international edition of AFS, the <emphasis>OpenAFS Quick
+      server machines that you install. If you do not use the Update Server, the <emphasis>OpenAFS Quick
       Beginnings</emphasis> explains how to copy the files manually.</para>
 
       <para>For client machines, the two files that record the cell name are the <emphasis
@@ -732,15 +689,9 @@
       role="bold">ThisCell</emphasis> file on the local disk and then contact the database server machines listed in the <emphasis
       role="bold">CellServDB</emphasis> file for the indicated cell (the <emphasis role="bold">bos</emphasis> commands work
       differently because the issuer always has to name of the machine on which to run the command).</para>
-
-      <para>The <emphasis role="bold">ThisCell</emphasis> file also determines the cell for which a user receives an AFS token when
-      he or she logs in to a machine. The cell name also plays a role in security. As it converts a user password into an encryption
-      key for storage in the Authentication Database, the Authentication Server combines the password with the cell name found in
-      the <emphasis role="bold">ThisCell</emphasis> file. AFS-modified login utilities use the same algorithm to convert the user's
-      password into an encryption key before contacting the Authentication Server to obtain a token for the user. (For a description
-      of how AFS's security system uses encryption keys, see <link linkend="HDRWQ75">A More Detailed Look at Mutual
-      Authentication</link>.)</para>
-
+      <para>The <emphasis role="bold">ThisCell</emphasis> file also determines the cell for which a
+user receives an AFS token when
+      he or she logs in to a machine.</para> 
       <para>This method of converting passwords into encryption keys means that the same password results in different keys in
       different cells. Even if a user uses the same password in multiple cells, obtaining a user's token from one cell does not
       enable unauthorized access to the user's account in another cell.</para>
@@ -2782,7 +2733,7 @@
         </listitem>
 
         <listitem>
-          <para>Passwords are stored in two separate places: in the Authentication Database for AFS and in the each machine's local
+          <para>Passwords are stored in two separate places: in the Kerberos Database for AFS and in the each machine's local
           password file (the <emphasis role="bold">/etc/passwd</emphasis> file or equivalent) for the local file system.</para>
         </listitem>
       </itemizedlist></para>
@@ -3972,122 +3923,7 @@
       detailed information about the AFS Backup System, see <link linkend="HDRWQ248">Configuring the AFS Backup System</link> and
       <link linkend="HDRWQ283">Backing Up and Restoring AFS Data</link>.</para>
 
-      <indexterm>
-        <primary>remote services</primary>
-
-        <secondary>modifications for AFS</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>commands</primary>
-
-        <secondary>ftp (AFS compared to UNIX)</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>ftpd command</primary>
-
-        <secondary>AFS compared to UNIX</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>commands</primary>
-
-        <secondary>ftpd (AFS compared to UNIX)</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>inetd command</primary>
-
-        <secondary>AFS compared to UNIX</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>commands</primary>
-
-        <secondary>inetd (AFS compared to UNIX)</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>rcp command</primary>
-
-        <secondary>AFS compared to UNIX</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>commands</primary>
-
-        <secondary>rcp (AFS compared to UNIX)</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>rlogind command</primary>
-
-        <secondary>AFS compared to UNIX</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>commands</primary>
-
-        <secondary>rlogind (AFS compared to UNIX)</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>rsh command</primary>
-
-        <secondary>AFS compared to UNIX</secondary>
-      </indexterm>
-
-      <indexterm>
-        <primary>commands</primary>
-
-        <secondary>rsh (AFS compared to UNIX)</secondary>
-      </indexterm>
     </sect2>
-  </sect1>
-
-  <sect1 id="HDRWQ78">
-    <title>Using UNIX Remote Services in the AFS Environment</title>
-
-    <para>The AFS distribution includes modified versions of several standard UNIX commands, daemons and programs that provide
-    remote services, including the following: <itemizedlist>
-        <listitem>
-          <para>The <emphasis role="bold">ftpd</emphasis> program</para>
-        </listitem>
-
-        <listitem>
-          <para>The <emphasis role="bold">inetd</emphasis> daemon</para>
-        </listitem>
-
-        <listitem>
-          <para>The <emphasis role="bold">rcp</emphasis> program</para>
-        </listitem>
-
-        <listitem>
-          <para>The <emphasis role="bold">rlogind</emphasis> daemon</para>
-        </listitem>
-
-        <listitem>
-          <para>The <emphasis role="bold">rsh</emphasis> command</para>
-        </listitem>
-      </itemizedlist></para>
-
-    <para>These modifications enable the commands to handle AFS authentication information (tokens). This enables issuers to be
-    recognized on the remote machine as an authenticated AFS user.</para>
-
-    <para>Replacing the standard versions of these programs in your file tree with the AFS-modified versions is optional. It is
-    likely that AFS's transparent access reduces the need for some of the programs anyway, especially those involved in transferring
-    files from machine to machine, like the <emphasis role="bold">ftpd</emphasis> and <emphasis role="bold">rcp</emphasis>
-    programs.</para>
-
-    <para>If you decide to use the AFS versions of these commands, be aware that several of them are interdependent. For example,
-    the passing of AFS authentication information works correctly with the <emphasis role="bold">rcp</emphasis> command only if you
-    are using the AFS version of both the <emphasis role="bold">rcp</emphasis> and <emphasis role="bold">inetd</emphasis>
-    commands.</para>
-
-    <para>The conventional installation location for the modified remote commands are the <emphasis
-    role="bold">/usr/afsws/bin</emphasis> and <emphasis role="bold">/usr/afsws/etc</emphasis> directories. To learn more about
-    commands' functionality, see their reference pages in the OpenAFS Administration Reference.</para>
   </sect1>
 
   <sect1 id="HDRWQ79">
