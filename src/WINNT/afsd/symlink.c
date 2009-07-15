@@ -47,9 +47,9 @@ void Die();
 
 #if 0
 foldcmp (a, b)
-    register char *a;
-    register char *b; {
-    register char t, u;
+    char *a;
+    char *b; {
+    char t, u;
     while (1) {
         t = *a++;
         u = *b++;
@@ -62,10 +62,10 @@ foldcmp (a, b)
 #endif
 
 /* this function returns TRUE (1) if the file is in AFS, otherwise false (0) */
-static int InAFS(register char *apath)
+static int InAFS(char *apath)
 {
     struct ViceIoctl blob;
-    register afs_int32 code;
+    afs_int32 code;
 
     blob.in_size = 0;
     blob.out_size = MAXSIZE;
@@ -258,7 +258,7 @@ static BOOL IsAdmin (void)
 /* return a static pointer to a buffer */
 static char *Parent(apath)
 char *apath; {
-    register char *tp;
+    char *tp;
     strcpy(tspace, apath);
     tp = strrchr(tspace, '\\');
     if (tp) {
@@ -272,16 +272,16 @@ char *apath; {
 }
 
 
-static ListLinkCmd(register struct cmd_syndesc *as, void *arock)
+static ListLinkCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct ViceIoctl blob;
     int error;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     char orig_name[1024];		/*Original name, may be modified*/
     char true_name[1024];		/*``True'' dirname (e.g., symlink target)*/
     char parent_dir[1024];		/*Parent directory of true name*/
-    register char *last_component;	/*Last component of true name*/
+    char *last_component;	/*Last component of true name*/
 #ifndef WIN32
     struct stat statbuff;		/*Buffer for status info*/
 #endif /* not WIN32 */
@@ -423,9 +423,9 @@ static ListLinkCmd(register struct cmd_syndesc *as, void *arock)
     return error;
 }
 
-static MakeLinkCmd(register struct cmd_syndesc *as, void *arock)
+static MakeLinkCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct ViceIoctl blob;
     char * parent;
     char path[1024] = "";
@@ -489,14 +489,14 @@ static MakeLinkCmd(register struct cmd_syndesc *as, void *arock)
  *	    symlink (or ``.'' if none is provided)
  *      tp: Set to point to the actual name of the symlink to nuke.
  */
-static RemoveLinkCmd(register struct cmd_syndesc *as, void *arock)
+static RemoveLinkCmd(struct cmd_syndesc *as, void *arock)
 {
-    register afs_int32 code=0;
+    afs_int32 code=0;
     struct ViceIoctl blob;
-    register struct cmd_item *ti;
+    struct cmd_item *ti;
     char tbuffer[1024];
     char lsbuffer[1024];
-    register char *tp;
+    char *tp;
     
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
@@ -609,8 +609,8 @@ static int debug = 0;
 
 int wmain(int argc, wchar_t **wargv)
 {
-    register afs_int32 code;
-    register struct cmd_syndesc *ts;
+    afs_int32 code;
+    struct cmd_syndesc *ts;
     char ** argv;
     
 #ifdef	AFS_AIX32_ENV

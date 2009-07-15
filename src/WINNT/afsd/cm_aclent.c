@@ -145,7 +145,7 @@ static cm_aclent_t *GetFreeACLEnt(cm_scache_t * scp)
  */
 long cm_AddACLCache(cm_scache_t *scp, cm_user_t *userp, afs_uint32 rights)
 {
-    register struct cm_aclent *aclp;
+    struct cm_aclent *aclp;
 
     lock_ObtainWrite(&cm_aclLock);
     for (aclp = scp->randomACLp; aclp; aclp = aclp->nextp) {

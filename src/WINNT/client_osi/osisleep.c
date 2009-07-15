@@ -420,7 +420,7 @@ void osi_TSignalForMLs(osi_turnstile_t *turnp, int stillHaveReaders, CRITICAL_SE
  */
 void osi_SleepSpin(LONG_PTR sleepValue, CRITICAL_SECTION *releasep)
 {
-    register LONG_PTR idx;
+    LONG_PTR idx;
     int code;
     osi_sleepInfo_t *sp;
     CRITICAL_SECTION *csp;
@@ -473,9 +473,9 @@ void osi_SleepSpin(LONG_PTR sleepValue, CRITICAL_SECTION *releasep)
 /* utility function to wakeup someone sleeping in SleepSched */
 void osi_WakeupSpin(LONG_PTR sleepValue)
 {
-    register LONG_PTR idx;
-    register CRITICAL_SECTION *csp;
-    register osi_sleepInfo_t *tsp;
+    LONG_PTR idx;
+    CRITICAL_SECTION *csp;
+    osi_sleepInfo_t *tsp;
 
     idx = osi_SLEEPHASH(sleepValue);
     csp = &osi_critSec[idx];

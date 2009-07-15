@@ -38,11 +38,11 @@ void osi_LongToUID(long inval, UUID *outuidp)
 /* compare two UIDs in the dictionary ordering */
 int osi_UIDCmp(UUID *uid1p, UUID *uid2p)
 {
-	register int i;
-        unsigned int v1;
-        unsigned int v2;
-        unsigned char *t1p;
-        unsigned char *t2p;
+	int i;
+        int v1;
+        int v2;
+        char *t1p;
+        char *t2p;
 	
 	if (uid1p->Data1 < uid2p->Data1) return -1;
         else if (uid1p->Data1 > uid2p->Data1) return 1;

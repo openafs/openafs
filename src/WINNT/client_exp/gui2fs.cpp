@@ -212,7 +212,7 @@ CStringArray& StripPath(CStringArray& files)
 
 void Flush(const CStringArray& files)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     int error = 0;
 
@@ -237,7 +237,7 @@ void Flush(const CStringArray& files)
 
 void FlushVolume(const CStringArray& files)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     int error = 0;
 
@@ -259,7 +259,7 @@ void FlushVolume(const CStringArray& files)
 
 void WhichCell(CStringArray& files)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     int error;
     CString str;
@@ -297,7 +297,7 @@ void WhichCell(CStringArray& files)
 
 void WSCellCmd()
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     
     HOURGLASS hourglass;
@@ -318,7 +318,7 @@ void WSCellCmd()
 
 BOOL CheckVolumes()
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     
     blob.in_size = 0;
@@ -336,7 +336,7 @@ BOOL CheckVolumes()
 
 void SetCacheSizeCmd(LONG nNewCacheSize)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     
     HOURGLASS hourglass;
@@ -354,7 +354,7 @@ void SetCacheSizeCmd(LONG nNewCacheSize)
 
 void WhereIs(CStringArray& files)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     CStringArray servers;
     CStringArray resultFiles;
@@ -501,9 +501,9 @@ struct Acl {
     struct AclEntry *minuslist;
 };
 
-int foldcmp (register char *a, register char *b)
+int foldcmp (char *a, char *b)
 {
-    register char t, u;
+    char t, u;
     while (1) {
         t = *a++;
         u = *b++;
@@ -516,7 +516,7 @@ int foldcmp (register char *a, register char *b)
 
 extern "C" void ZapList(struct AclEntry *alist)
 {
-    register struct AclEntry *tp, *np;
+    struct AclEntry *tp, *np;
 
     for (tp = alist; tp; tp = np) {
         np = tp->next;
@@ -553,7 +553,7 @@ extern "C" int PruneList (struct AclEntry **ae, int dfs)
     return ctr;
 }
 
-char *SkipLine (register char *astr)
+char *SkipLine (char *astr)
 {
     while (*astr != '\n') 
         astr++;
@@ -564,9 +564,9 @@ char *SkipLine (register char *astr)
 }
 
 /* tell if a name is 23 or -45 (digits or minus digits), which are bad names we must prune */
-static int BadName(register char *aname)
+static int BadName(char *aname)
 {
-    register int tc;
+    int tc;
 
     /* all must be '-' or digit to be bad */
     while (tc = *aname++) {
@@ -577,7 +577,7 @@ static int BadName(register char *aname)
     return 1;
 }
 
-CString GetRightsString(register LONG arights, int dfs)
+CString GetRightsString(LONG arights, int dfs)
 {
     CString str;
 
@@ -633,7 +633,7 @@ char *AclToString(struct Acl *acl)
 
 struct Acl *EmptyAcl(const CString& strCellName)
 {
-    register struct Acl *tp;
+    struct Acl *tp;
     CStringUtf8 ustrCell(strCellName);
     
     tp = (struct Acl *)malloc(sizeof (struct Acl));
@@ -647,7 +647,7 @@ struct Acl *EmptyAcl(const CString& strCellName)
 
 struct Acl *EmptyAcl(char *astr)
 {
-    register struct Acl *tp;
+    struct Acl *tp;
     int junk;
 
     tp = (struct Acl *)malloc(sizeof (struct Acl));
@@ -753,7 +753,7 @@ ParseAcl (char *astr)
    any changes to the list, and 0 otherwise */
 extern "C" int CleanAcl(struct Acl *aa)
 {
-    register struct AclEntry *te, **le, *ne;
+    struct AclEntry *te, **le, *ne;
     int changes;
 
     HOURGLASS hourglass;
@@ -798,8 +798,8 @@ extern "C" int CleanAcl(struct Acl *aa)
 
 void CleanACL(CStringArray& names)
 {
-    register LONG code;
-    register struct Acl *ta;
+    LONG code;
+    struct Acl *ta;
     struct ViceIoctl blob;
     int changes;
 
@@ -854,8 +854,8 @@ void CleanACL(CStringArray& names)
 // Derived from fs.c's ListAclCmd
 BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& strNegative)
 {
-    register LONG code;
-    register struct Acl *ta;
+    LONG code;
+    struct Acl *ta;
     struct ViceIoctl blob;
     struct AclEntry *te;
     int idf = 0; //getidf(as, parm_listacl_id);
@@ -904,7 +904,7 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
     return TRUE;
 }
 
-struct AclEntry *FindList(register struct AclEntry *pCurEntry, const char *entryName)
+struct AclEntry *FindList(struct AclEntry *pCurEntry, const char *entryName)
 {
     while (pCurEntry) {
         if (!foldcmp(pCurEntry->name, PCCHAR(entryName)))
@@ -965,7 +965,7 @@ enum rtype {add, destroy, deny};
 
 static LONG Convert(const CString& strRights, int dfs, enum rtype *rtypep)
 {
-    register int i, len;
+    int i, len;
     LONG mode;
 
     *rtypep = add;	/* add rights, by default */
@@ -1006,7 +1006,7 @@ static LONG Convert(const CString& strRights, int dfs, enum rtype *rtypep)
 
 BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArray& normal, const CStringArray& negative)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     struct Acl *pAcl;
     LONG rights;
@@ -1050,7 +1050,7 @@ BOOL SaveACL(const CString& strCellName, const CString& strDir, const CStringArr
 
 BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringArray& negative, BOOL bClear)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     struct Acl *pToAcl;
     int idf = 0; // getidf(as, parm_copyacl_id);
@@ -1443,7 +1443,7 @@ GetCell(const CString & path)
 
 BOOL ListMount(CStringArray& files)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     int error;
 
@@ -1666,7 +1666,7 @@ BOOL IsSymlink(const CString& strName)
 
 BOOL IsMountPoint(const CString& path)
 {
-    register LONG code = 0;
+    LONG code = 0;
     struct ViceIoctl blob;
     char lsbuffer[1024];
 
@@ -1714,7 +1714,7 @@ BOOL IsMountPoint(const CString& path)
  */
 BOOL RemoveMount(CStringArray& files)
 {
-    register LONG code = 0;
+    LONG code = 0;
     struct ViceIoctl blob;
     BOOL error = FALSE;
     CStringArray results;
@@ -1769,7 +1769,7 @@ BOOL RemoveMount(CStringArray& files)
 
 BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     struct VolumeStatus *status;
     char *name;
@@ -1818,7 +1818,7 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
 	
 BOOL SetVolInfo(CVolInfo& volInfo)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     struct VolumeStatus *status;
     char *input;
@@ -1872,9 +1872,9 @@ void GetCellName(const CString& cellNamep, struct afsconf_cell *infop)
 
 BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bFast)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
-    register LONG j;
+    LONG j;
     LONG temp = 0;
     struct afsconf_cell info;
     struct chservinfo checkserv;
@@ -2142,7 +2142,7 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
 
 BOOL ListSymlink(CStringArray& files)
 {
-    register LONG code;
+    LONG code;
     struct ViceIoctl blob;
     int error;
     CStringArray symlinks;

@@ -48,7 +48,7 @@ static HANDLE			gThreadHandle = NULL;
 afs_int32
 afsd_ServicePerformFlushVolumeCmd(char *data)
 {
-    register afs_int32 code;
+    afs_int32 code;
     struct ViceIoctl blob;
 
     afsi_log("Flushing Volume \"%s\"",data);
