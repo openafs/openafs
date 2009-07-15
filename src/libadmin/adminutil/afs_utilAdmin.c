@@ -27,7 +27,7 @@
 #include <afs/pterror.h>
 #include <afs/bnode.h>
 #include <afs/volser.h>
-#include <afs/afsint.h>
+#include <afs/afscbint.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #ifdef AFS_NT40_ENV
@@ -1998,18 +1998,28 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     afs_status_t tst = 0;
     cm_list_cell_get_p t = (cm_list_cell_get_p) rpc_specific;
     char *name;
+    serverList sl;
+    unsigned int n;
 
     /*
      * Get the next entry in the CellServDB.
      */
     name = t->cell[slot].cellname;
+    sl.serverList_len = 0;
+    sl.serverList_val = NULL;
+    memset(t->cell[slot].serverAddr, 0, sizeof(afs_int32)*UTIL_MAX_CELL_HOSTS);
     tst =
-	RXAFSCB_GetCellServDB(t->conn, t->index, &name,
-			      t->cell[slot].serverAddr);
+	RXAFSCB_GetCellServDB(t->conn, t->index, &name, &sl);
     if (tst) {
 	goto fail_ListCellsRPC;
     }
     strcpy(t->cell[slot].cellname, name);
+    if (sl.serverList_val) {
+        for (n=0; n<sl.serverList_len && n<UTIL_MAX_CELL_HOSTS; n++) {
+            t->cell[slot].serverAddr[n] = sl.serverList_val[n];
+        }
+        xdr_free(sl.serverList_val, sl.serverList_len);
+    }
 
     /*
      * See if we've processed all the entries
