@@ -154,11 +154,15 @@ printHeader(struct volumeHeader *headerPtr, afs_int32 *isvolheader)
 	if (verbose)
 	    fprintf(stderr, "Volume header\n");
 	fprintf(stderr,
-		"VOLUME %3d %s (%u) - %s dump from %.24s till %.24s\n",
+		"VOLUME %3d %s (%u) - %s dump from %.24s",
 		++volcount, headerPtr->volumeName, headerPtr->volumeID,
 		(headerPtr->level ? "Incr" : "Full"),
-		((headerPtr->from) ? (char *)ctime(&headerPtr->from) : "0"),
-		ctime(&(headerPtr->cloneDate)));
+		((headerPtr->from) ? (char *)ctime(&headerPtr->from) : "0"));
+        /* do not include two ctime() calls in the same fprintf call as
+         * the same string buffer will be returned by each call. */
+        fprintf(stderr, 
+                " till %.24s\n",
+                ctime(&(headerPtr->cloneDate)));
 	if (printheaders) {
 	    fprintf(stderr, "   Volume Name    = %s\n",
 		    headerPtr->volumeName);
