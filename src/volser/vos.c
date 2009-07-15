@@ -5217,7 +5217,7 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_val = 0;
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
-		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, &m_uuid,
+		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, m_uuid,
 				      (afs_int32 *)&vlcb, &m_nentries, &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
