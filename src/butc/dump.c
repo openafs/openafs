@@ -1279,7 +1279,7 @@ Dumper(void *param)
     if (!CONF_XBSA) {
 	code = butm_WriteEOT(&tapeInfo);
 	if (code)
-	    TapeLog(taskId, code, tapeInfo.error,
+	    TapeLog(0, taskId, code, tapeInfo.error,
 		    "Warning: Can't write end-of-dump on tape\n");
     }
 
