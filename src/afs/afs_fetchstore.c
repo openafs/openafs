@@ -542,15 +542,11 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
  * \note Environment: Nothing interesting.
  */
 int
-afs_CacheStoreVCache(struct dcache **dcList,
-			struct vcache *avc,
-			struct vrequest *areq,
-			int sync,
-			unsigned int minj,
-			unsigned int high,
+afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
+			struct vrequest *areq, int sync,
+			unsigned int minj, unsigned int high,
 			unsigned int moredata,
-			afs_hyper_t *anewDV,
-			afs_size_t *amaxStoredLength)
+			afs_hyper_t *anewDV, afs_size_t *amaxStoredLength)
 {
     afs_int32 code = 0;
     struct storeOps *ops;
@@ -861,7 +857,7 @@ struct fetchOps rxfs_fetchMemOps = {
 
 afs_int32
 rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
-		afs_uint32 size, afs_uint32 *out_length, struct dcache *adc,
+		afs_uint32 size, afs_uint32 *alength, struct dcache *adc,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
@@ -917,9 +913,8 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 	    if (!v->call)
 		v->call = rx_NewCall(tc->id);
 	    code =
-		StartRXAFS_FetchData(v->call, (struct AFSFid *)
-				     &avc->f.fid.Fid, pos,
-				     size);
+		StartRXAFS_FetchData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
+					pos, size);
 	    RX_AFS_GLOCK();
 	}
 	afs_serverSetNo64Bit(tc);
@@ -959,7 +954,7 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
         return code;
     }
 
-    if ( cacheDiskType == AFS_FCACHE_TYPE_UFS ) {
+    if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	if (!v->tbuffer)
 	    osi_Panic("rxfs_fetchInit: osi_AllocLargeSpace for iovecs returned NULL\n");
@@ -975,14 +970,13 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 	 * We need to alloc the iovecs on the heap so that they are "pinned"
 	 * rather than declare them on the stack - defect 11272
 	 */
-	v->iov = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec) *
-						RX_MAXIOVECS);
+	v->iov = osi_AllocSmallSpace(sizeof(struct iovec) * RX_MAXIOVECS);
 	if (!v->iov)
-	    osi_Panic("afs_CacheFetchProc: osi_AllocSmallSpace for iovecs returned NULL\n");
+	    osi_Panic("rxfs_fetchInit: osi_AllocSmallSpace for iovecs returned NULL\n");
 	*ops = (struct fetchOps *) &rxfs_fetchMemOps;
     }
     *rock = (void *)v;
-    *out_length = length;
+    *alength = length;
     return 0;
 }
 
