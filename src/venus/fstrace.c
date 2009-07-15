@@ -561,11 +561,6 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
     char filename_prefix[7];
     char nls_filename[80];
     char *message;
-#if defined(AFS_64BITPOINTER_ENV)
-    long J;
-#else
-    int J;
-#endif
     static char *facility_names[] = {
 	"xxx",
 	"afs"
@@ -630,17 +625,8 @@ dce1_error_inq_text(afs_uint32 status_to_convert,
     afs_snprintf(nls_filename, sizeof(nls_filename), "%s/C/%s.cat",
 		 AFSDIR_CLIENT_DATA_DIRPATH, filename_prefix);
 
-#if defined(AFS_OSF20_ENV)
-    catd = (nl_catd) catopen(nls_filename, 0);
-#else
-#if defined(AFS_64BITPOINTER_ENV)
-    J = (long)catopen(nls_filename, 0);
-#else
-    J = (int)catopen(nls_filename, 0);
-#endif
-    catd = (nl_catd) J;
-#endif
-    if (catd == (nl_catd) - 1) {
+    catd = catopen(nls_filename, 0);
+    if (catd == (nl_catd) -1) {
 	sprintf((char *)error_text, "status %08x (%s / %s)",
 		status_to_convert, facility_name, component_name);
 	return;
