@@ -239,6 +239,11 @@ initDirPathArray(void)
 	AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_CLIENT_ETC_DIR);
 #endif /* AFS_NT40_ENV */
 
+#ifndef AFS_NT40_ENV
+    pathp = dirPathArray[AFSDIR_CLIENT_DATA_DIRPATH_ID];
+    AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_DATA_DIR);
+#endif
+
     /* server file paths */
     pathp = dirPathArray[AFSDIR_SERVER_THISCELL_FILEPATH_ID];
     AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR,

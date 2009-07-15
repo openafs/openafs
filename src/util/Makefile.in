@@ -117,6 +117,7 @@ dirpath.h: ${srcdir}/dirpath.hin Makefile
 		-e 's"@afslocaldir"${afslocaldir}"' \
 		-e 's"@afsbackupdir"${afsbackupdir}"' \
 		-e 's"@afsbosconfigdir"${afsbosconfigdir}"' \
+		-e 's"@afsdatadir"${afsdatadir}"' \
 		${srcdir}/dirpath.hin >dirpath.h.tmp && \
 		if cmp dirpath.h.tmp dirpath.h >/dev/null ; then : ; else \
 		mv dirpath.h.tmp dirpath.h ; fi)

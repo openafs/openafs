@@ -1642,6 +1642,7 @@ if test "x$enable_transarc_paths" = "xyes"  ; then
     afslocaldir=${afslocaldir=/usr/afs/local}
     afsbackupdir=${afsbackupdir=/usr/afs/backup}
     afsbosconfigdir=${afsbosconfigdir=/usr/afs/local}
+    afsdatadir=${afsdatadir=/usr/vice/etc}
 else 
     afsconfdir=${afsconfdir='${sysconfdir}/openafs/server'}
     viceetcdir=${viceetcdir='${sysconfdir}/openafs'}
@@ -1654,6 +1655,7 @@ else
     afslocaldir=${afslocaldir='${localstatedir}/openafs'}
     afsbackupdir=${afsbackupdir='${localstatedir}/openafs/backup'}
     afsbosconfigdir=${afsbosconfigdir='${sysconfdir}/openafs'}
+    afsdatadir=${afsdatadir='${datadir}/openafs'}
 fi
 AC_SUBST(afsconfdir)
 AC_SUBST(viceetcdir)
@@ -1666,6 +1668,7 @@ AC_SUBST(afslogsdir)
 AC_SUBST(afslocaldir)
 AC_SUBST(afsbackupdir)
 AC_SUBST(afsbosconfigdir)
+AC_SUBST(afsdatadir)
 
 if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs
