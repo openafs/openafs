@@ -470,19 +470,13 @@ DumpFunction(struct rx_call *call, void *rock)
     return (error);
 }
 
-static char *
-vos_ctime(afs_int32 *timep)
-{
-    time_t foo = *timep;
-    return ctime(&foo);
-}
-
 static void
 DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
 	      int *totalOK, int *totalNotOK, int *totalBusy, int fast,
 	      int longlist, int disp)
 {
     char pname[10];
+    time_t t;
 
     if (fast) {
 	fprintf(STDOUT, "%-10lu\n", (unsigned long)pntr->volid);
@@ -515,25 +509,32 @@ DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
 		    (unsigned long)pntr->cloneID,
 		    (unsigned long)pntr->backupID);
 	    fprintf(STDOUT, "    MaxQuota %10d K \n", pntr->maxquota);
+	    t = pntr->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
-		    vos_ctime(& pntr->creationDate));
+		    ctime(&t));
 #ifdef FULL_LISTVOL_SWITCH
+	    t = pntr->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
-		    vos_ctime( & pntr->copyDate));
-	    if (!pntr->backupDate)
+		    ctime(&t));
+
+	    t = pntr->backupDate;
+	    if (!t)
 		fprintf(STDOUT, "    Backup      Never\n");
 	    else
 		fprintf(STDOUT, "    Backup      %s",
-			vos_ctime( & pntr->backupDate));
-	    if (pntr->accessDate)
+			ctime(&t));
+
+	    t = pntr->accessDate;
+	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
-			vos_ctime( & pntr->accessDate));
+			ctime(&t));
 #endif
-	    if (!pntr->updateDate)
+	    t = pntr->updateDate;
+	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
 	    else
 		fprintf(STDOUT, "    Last Update %s",
-			vos_ctime( & pntr->updateDate));
+			ctime(&t));
 	    fprintf(STDOUT,
 		    "    %d accesses in the past day (i.e., vnode references)\n",
 		    pntr->dayUse);
@@ -620,7 +621,7 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 	       int *a_totalOKP, int *a_totalNotOKP, int *a_totalBusyP,
 	       int a_fast, int a_int32, int a_showProblems)
 {				/*XDisplayFormat */
-
+    time_t t;
     char pname[10];
 
     if (a_fast) {
@@ -662,25 +663,33 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 		    (unsigned long)a_xInfoP->cloneID,
 		    (unsigned long)a_xInfoP->backupID);
 	    fprintf(STDOUT, "    MaxQuota %10d K \n", a_xInfoP->maxquota);
+
+	    t = a_xInfoP->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
-		    vos_ctime( & a_xInfoP->creationDate));
+		    ctime(&t));
 #ifdef FULL_LISTVOL_SWITCH
+	    t = a_xInfoP->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
-		    vos_ctime( & a_xInfoP->copyDate));
-	    if (!a_xInfoP->backupDate)
+		    ctime(&t));
+
+	    t = a_xInfoP->backupDate;
+	    if (!t)
 		fprintf(STDOUT, "    Backup      Never\n");
 	    else
 		fprintf(STDOUT, "    Backup      %s",
-			vos_ctime( & a_xInfoP->backupDate));
-	    if (a_xInfoP->accessDate)
+			ctime(&t));
+
+	    t = a_xInfoP->accessDate;
+	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
-			vos_ctime( & a_xInfoP->accessDate));
+			ctime(&t));
 #endif
-	    if (!a_xInfoP->updateDate)
+	    t = a_xInfoP->updateDate;
+	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
 	    else
 		fprintf(STDOUT, "    Last Update %s",
-			vos_ctime( & a_xInfoP->updateDate));
+			ctime(&t));
 	    fprintf(STDOUT,
 		    "    %d accesses in the past day (i.e., vnode references)\n",
 		    a_xInfoP->dayUse);
@@ -846,6 +855,7 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 		int *a_totalOKP, int *a_totalNotOKP, int *a_totalBusyP,
 		int a_fast, int a_int32, int a_showProblems)
 {				/*XDisplayFormat */
+    time_t t;
     if (a_fast) {
 	/*
 	 * Short & sweet.
@@ -904,21 +914,30 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 			fprintf(STDOUT, "type\t\t?\n");
 			break;
 		}
+		t = a_xInfoP->creationDate;
 		fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
 			afs_printable_uint32_lu(a_xInfoP->creationDate),
-			vos_ctime(&a_xInfoP->creationDate));
+			ctime(&t));
+
+		t = a_xInfoP->accessDate;
 		fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
 			afs_printable_uint32_lu(a_xInfoP->accessDate),
-			vos_ctime(&a_xInfoP->accessDate));
+			ctime(&t));
+
+		t = a_xInfoP->updateDate;
 		fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
 			afs_printable_uint32_lu(a_xInfoP->updateDate),
-			vos_ctime(&a_xInfoP->updateDate));
+			ctime(&t));
+
+		t = a_xInfoP->backupDate;
 		fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
 			afs_printable_uint32_lu(a_xInfoP->backupDate),
-			vos_ctime(&a_xInfoP->backupDate));
+			ctime(&t));
+
+		t = a_xInfoP->copyDate;
 		fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
 			afs_printable_uint32_lu(a_xInfoP->copyDate),
-			vos_ctime(&a_xInfoP->copyDate));
+			ctime(&t));
 		
 		fprintf(STDOUT, "diskused\t%u\n", a_xInfoP->size);
 		fprintf(STDOUT, "maxquota\t%u\n", a_xInfoP->maxquota);
@@ -1008,6 +1027,7 @@ DisplayFormat2(long server, long partition, volintInfo *pntr)
 {
     static long server_cache = -1, partition_cache = -1;
     static char hostname[256], address[32], pname[16];
+    time_t t;
 
     if (server != server_cache) {
 	struct in_addr s;
@@ -1064,21 +1084,31 @@ DisplayFormat2(long server, long partition, volintInfo *pntr)
 	fprintf(STDOUT, "type\t\t?\n");
 	break;
     }
+    t = pntr->creationDate;
     fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
 	    afs_printable_uint32_lu(pntr->creationDate),
-	    vos_ctime(&pntr->creationDate));
+	    ctime(&t));
+
+    t = pntr->accessDate;
     fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
 	    afs_printable_uint32_lu(pntr->accessDate),
-	    vos_ctime(&pntr->accessDate));
+	    ctime(&t));
+
+    t = pntr->updateDate;
     fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
 	    afs_printable_uint32_lu(pntr->updateDate),
-	    vos_ctime(&pntr->updateDate));
+	    ctime(&t));
+
+    t = pntr->backupDate;
     fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
 	    afs_printable_uint32_lu(pntr->backupDate),
-	    vos_ctime(&pntr->backupDate));
+	    ctime(&t));
+
+    t = pntr->copyDate;
     fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
 	    afs_printable_uint32_lu(pntr->copyDate),
-	    vos_ctime(&pntr->copyDate));
+	    ctime(&t));
+
     fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", 
 	    afs_printable_uint32_lu(pntr->flags));
     fprintf(STDOUT, "diskused\t%u\n", pntr->size);
@@ -3912,6 +3942,7 @@ VolserStatus(register struct cmd_syndesc *as, void *arock)
     afs_int32 count;
     int i;
     char pname[10];
+    time_t t;
 
     server = GetServer(as->parms[0].items->data);
     if (!server) {
@@ -3934,8 +3965,9 @@ VolserStatus(register struct cmd_syndesc *as, void *arock)
     for (i = 0; i < count; i++) {
 	/*print out the relevant info */
 	fprintf(STDOUT, "--------------------------------------\n");
+	t = pntr->time;
 	fprintf(STDOUT, "transaction: %lu  created: %s",
-		(unsigned long)pntr->tid, vos_ctime( & pntr->time));
+		(unsigned long)pntr->tid, ctime(&t));
 	if (pntr->returnCode) {
 	    fprintf(STDOUT, "returnCode: %lu\n",
 		    (unsigned long)pntr->returnCode);

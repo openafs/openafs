@@ -19,6 +19,7 @@ main(argc, argv)
 {
     struct ktime ttime;
     long ntime, code;
+    time_t t;
 
     if (argc <= 1) {
 	printf("ktest: usage is 'ktest <periodic date to evaluate>'\n");
@@ -32,6 +33,7 @@ main(argc, argv)
     }
 
     ntime = ktime_next(&ttime, 0);
-    printf("time is %d, %s", ntime, ctime(&ntime));
+    t = ntime;
+    printf("time is %d, %s", ntime, ctime(&t));
     exit(0);
 }

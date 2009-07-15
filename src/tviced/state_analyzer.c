@@ -784,8 +784,8 @@ print_cb_help(void)
 /* time */
 #define DPFT(T, name, var) \
     do { \
-        char * last; \
-        printf(T "%s = \"%s\"\n", name, strtok_r(ctime(&(var)), "\r\n", &last)); \
+        time_t t = var; \
+        printf(T "%s = \"%.24s\"\n", name, ctime(&t)); \
     } while(0)
 #define DPFT1(name, var) DPFT(DPFTB1, name, var)
 #define DPFT2(name, var) DPFT(DPFTB2, name, var)

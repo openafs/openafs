@@ -2847,8 +2847,8 @@ main(int argc, char **argv)
     }
     now = ReadDump(*argv, timebits);
     if (stats || noptions == 0) {
-	time_t uxtfirst = UXtime(tfirst);
-	printf("The time of the dump was %u %s", (unsigned int) now, ctime(&now));
+	time_t uxtfirst = UXtime(tfirst), tnow = now;
+	printf("The time of the dump was %u %s", (unsigned int) now, ctime(&tnow));
 	printf("The last time cleanup ran was %u %s", (unsigned int) uxtfirst,
 	       ctime(&uxtfirst));
 	PrintCallBackStats();

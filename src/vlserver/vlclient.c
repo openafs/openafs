@@ -1293,7 +1293,7 @@ dump_stats(vldstats *stats, vital_vlheader *vital_header)
     char strg[30];
     time_t start_time = stats->start_time;
 
-    strncpy(strg, ctime(&start_time), sizeof(strg));
+    afs_ctime(&start_time, strg, sizeof(strg));
     strg[strlen(strg) - 1] = 0;
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");

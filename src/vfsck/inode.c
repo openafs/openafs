@@ -449,6 +449,7 @@ pinode(ino)
     register char *p;
     struct passwd *pw;
     char *ctime();
+    time_t t;
 
     printf(" I=%u ", ino);
     if (ino < ROOTINO || ino > maxino)
@@ -494,7 +495,8 @@ pinode(ino)
 #else
     printf("SIZE=%ld ", dp->di_size);
 #endif
-    p = ctime(&dp->di_mtime);
+    t = dp->di_mtime;
+    p = ctime(&t);
     printf("MTIME=%12.12s %4.4s ", p + 4, p + 20);
 }
 

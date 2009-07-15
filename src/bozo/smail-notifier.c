@@ -41,11 +41,10 @@ main(argc, argv)
     char buf[BUFSIZ], *bufp, *bufp1, *typep, *cmd, *bp;
     register afs_int32 code, c, fd, id, pflags = -1, len, core = 0, lastE = 0;
     char comLine[60], coreName[40], name[40], lastErrorName[50];
-    afs_int32 pid = -1, lastExit = -1, lastSignal = -1, rsTime = -1, rsCount =
-	-1;
-    afs_int32 procStartTime = -1, procStarts = -1;
-    afs_int32 lastAnyExit = -1, lastErrorExit = -1, errorCode =
-	-1, errorSignal = -1, goal = -1;
+    afs_int32 pid = -1, lastExit = -1, lastSignal = -1, rsCount = -1;
+    afs_int32 procStarts = -1;
+    afs_int32 errorCode = -1, errorSignal = -1, goal = -1;
+    time_t procStartTime = -1, rsTime = -1, lastAnyExit = -1, lastErrorExit = -1;
     char *timeStamp;
 
     typep = (char *)malloc(50);

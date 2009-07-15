@@ -18,6 +18,7 @@ main(argc, argv)
      char **argv;
 {
     long code, temp;
+    time_t t;
 
     if (argc <= 1) {
 	printf("dtest: usage is 'dtest <time to interpret>'\n");
@@ -25,11 +26,12 @@ main(argc, argv)
     }
 
     code = ktime_DateToLong(argv[1], &temp);
+    t = temp;
     if (code) {
 	printf("date parse failed with code %d.\n", code);
     } else {
 	printf("returned %d, which, run through ctime, yields %s", temp,
-	       ctime(&temp));
+	       ctime(&t));
     }
     exit(0);
 }

@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 
+#include <afs/afsutil.h>
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

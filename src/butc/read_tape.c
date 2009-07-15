@@ -96,18 +96,23 @@ printLabel(struct tapeLabel *tapeLabelPtr)
 
     fprintf(stderr, "\nDUMP       %u\n", tapeLabelPtr->label.dumpid);
     if (printlabels) {
+	time_t t;
+
 	fprintf(stderr, "   AFS Tape  Name   : %s\n",
 		tapeLabelPtr->label.AFSName);
 	fprintf(stderr, "   Permanent Name   : %s\n",
 		tapeLabelPtr->label.pName);
 	fprintf(stderr, "   Dump Id          : %u\n",
 		tapeLabelPtr->label.dumpid);
+	t = tapeLabelPtr->label.dumpid;
 	fprintf(stderr, "   Dump Id Time     : %.24s\n",
-		ctime(&(tapeLabelPtr->label.dumpid)));
+		ctime(&t));
+	t = tapeLabelPtr->label.creationTime;
 	fprintf(stderr, "   Date Created     : %.24s\n",
-		ctime(&(tapeLabelPtr->label.creationTime)));
+		ctime(&t));
+	t = tapeLabelPtr->label.expirationDate;
 	fprintf(stderr, "   Date Expires     : %.24s\n",
-		ctime(&(tapeLabelPtr->label.expirationDate)));
+		ctime(&t));
 	fprintf(stderr, "   Version Number   : %d\n",
 		tapeLabelPtr->label.structVersion);
 	fprintf(stderr, "   Tape Use Count   : %d\n",
@@ -150,33 +155,37 @@ printHeader(struct volumeHeader *headerPtr, afs_int32 *isvolheader)
     headerPtr->cloneDate = ntohl(headerPtr->cloneDate);
 
     if (headerPtr->magic == TC_VOLBEGINMAGIC) {
+	time_t t;
+
 	*isvolheader = 1;
 	if (verbose)
 	    fprintf(stderr, "Volume header\n");
+	t = headerPtr->from;
 	fprintf(stderr,
 		"VOLUME %3d %s (%u) - %s dump from %.24s",
 		++volcount, headerPtr->volumeName, headerPtr->volumeID,
 		(headerPtr->level ? "Incr" : "Full"),
-		((headerPtr->from) ? (char *)ctime(&headerPtr->from) : "0"));
+		(t ? (char *)ctime(&t) : "0"));
         /* do not include two ctime() calls in the same fprintf call as
          * the same string buffer will be returned by each call. */
-        fprintf(stderr, 
-                " till %.24s\n",
-                ctime(&(headerPtr->cloneDate)));
+	t = headerPtr->cloneDate;
+        fprintf(stderr, " till %.24s\n", ctime(&t));
 	if (printheaders) {
 	    fprintf(stderr, "   Volume Name    = %s\n",
 		    headerPtr->volumeName);
 	    fprintf(stderr, "   Volume ID      = %u\n", headerPtr->volumeID);
+	    t = headerPtr->cloneDate;
 	    fprintf(stderr, "   Clone Date     = %.24s\n",
-		    ctime(&headerPtr->cloneDate));
+		    ctime(&t));
 	    fprintf(stderr, "   Vol Fragment   = %d\n", headerPtr->frag);
 	    fprintf(stderr, "   Vol Continued  = 0x%x\n", headerPtr->contd);
 	    fprintf(stderr, "   DumpSet Name   = %s\n",
 		    headerPtr->dumpSetName);
 	    fprintf(stderr, "   Dump ID        = %u\n", headerPtr->dumpID);
 	    fprintf(stderr, "   Dump Level     = %d\n", headerPtr->level);
+	    t = headerPtr->from;
 	    fprintf(stderr, "   Dump Since     = %.24s\n",
-		    ctime(&headerPtr->from));
+		    ctime(&t));
 	    fprintf(stderr, "   parent Dump ID = %u\n", headerPtr->parentID);
 	}
     } else if (headerPtr->magic == TC_VOLENDMAGIC) {
