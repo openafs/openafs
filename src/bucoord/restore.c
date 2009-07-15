@@ -56,7 +56,7 @@ struct dumpinfo {
 };
 
 struct volinfo {
-    struct voli *next;
+    struct volinfo *next;
     char *volname;
     afs_int32 server;
     afs_int32 partition;
