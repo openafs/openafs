@@ -13,6 +13,7 @@
 
 #include <afs/procmgmt.h>
 #include <roken.h>
+#include <ctype.h>
 
 #ifdef IGNORE_SOME_GCC_WARNINGS
 # ifdef __clang__
@@ -27,10 +28,12 @@
 #endif
 
 #ifdef AFS_NT40_ENV
+#define PATH_DELIM '\\'
 #include <direct.h>
 #include <WINNT/afsevent.h>
 #endif /* AFS_NT40_ENV */
 
+#define PATH_DELIM '/'
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #include <rx/rx_globals.h>
@@ -146,6 +149,81 @@ bozo_ReBozo(void)
 #endif /* AFS_NT40_ENV */
 }
 
+/*!
+ * Make directory with parents.
+ *
+ * \param[in] adir      directory path to create
+ * \param[in] areqPerm  permissions to set on the last component of adir
+ * \return              0 on success
+ */
+static int
+MakeDirParents(const char *adir, int areqPerm)
+{
+    struct stat stats;
+    int error = 0;
+    char *tdir;
+    char *p;
+    int parent_perm = 0777;	/* use umask for parent perms */
+    size_t len;
+
+    tdir = strdup(adir);
+    if (!tdir) {
+	return ENOMEM;
+    }
+
+    /* strip trailing slashes */
+    len = strlen(tdir);
+    if (!len) {
+	return 0;
+    }
+    p = tdir + len - 1;
+    while (p != tdir && *p == PATH_DELIM) {
+	*p-- = '\0';
+    }
+
+    p = tdir;
+#ifdef AFS_NT40_ENV
+    /* skip drive letter */
+    if (isalpha(p[0]) && p[1] == ':') {
+        p += 2;
+    }
+#endif
+    /* skip leading slashes */
+    while (*p == PATH_DELIM) {
+	p++;
+    }
+
+    /* create parent directories with default perms */
+    p = strchr(p, PATH_DELIM);
+    while (p) {
+	*p = '\0';
+	if (stat(tdir, &stats) != 0 || !S_ISDIR(stats.st_mode)) {
+	    if (mkdir(tdir, parent_perm) != 0) {
+		error = errno;
+		goto done;
+	    }
+	}
+	*p++ = PATH_DELIM;
+
+	/* skip back to back slashes */
+	while (*p == PATH_DELIM) {
+	    p++;
+	}
+	p = strchr(p, PATH_DELIM);
+    }
+
+    /* set required perms on the last path component */
+    if (stat(tdir, &stats) != 0 || !S_ISDIR(stats.st_mode)) {
+	if (mkdir(tdir, areqPerm) != 0) {
+	    error = errno;
+	}
+    }
+
+  done:
+    free(tdir);
+    return error;
+}
+
 /* make sure a dir exists */
 static int
 MakeDir(const char *adir)
@@ -158,12 +236,7 @@ MakeDir(const char *adir)
 	reqPerm = GetRequiredDirPerm(adir);
 	if (reqPerm == -1)
 	    reqPerm = 0777;
-#ifdef AFS_NT40_ENV
-	/* underlying filesystem may not support directory protection */
-	code = mkdir(adir);
-#else
-	code = mkdir(adir, reqPerm);
-#endif
+	code = MakeDirParents(adir, reqPerm);
 	return code;
     }
     return 0;
