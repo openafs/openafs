@@ -882,17 +882,7 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 		fprintf(STDOUT, "id\t\t%lu\n", afs_printable_uint32_lu(a_xInfoP->volid));
 		fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
 		fprintf(STDOUT, "part\t\t%s\n", pname);
-		switch (a_xInfoP->status) {
-		case VOK:
-			fprintf(STDOUT, "status\t\tOK\n");
-			break;
-		case VBUSY:
-			fprintf(STDOUT, "status\t\tBUSY\n");
-			return;
-		default:
-			fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
-			return;
-		}
+                fprintf(STDOUT, "status\t\tOK\n");
 		fprintf(STDOUT, "backupID\t%lu\n", 
 			afs_printable_uint32_lu(a_xInfoP->backupID));
 		fprintf(STDOUT, "parentID\t%lu\n", 
@@ -1031,7 +1021,10 @@ DisplayFormat2(long server, long partition, volintInfo *pntr)
 	MapPartIdIntoName(partition, pname);
 	partition_cache = partition;
     }
-    fprintf(STDOUT, "name\t\t%s\n", pntr->name);
+
+    if (pntr->status == VOK)
+        fprintf(STDOUT, "name\t\t%s\n", pntr->name);
+
     fprintf(STDOUT, "id\t\t%lu\n", 
 	    afs_printable_uint32_lu(pntr->volid));
     fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
