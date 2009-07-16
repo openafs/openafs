@@ -2742,8 +2742,6 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 		 */
 		osi_Assert(!setLocks || slowPass);
 	    }
-	    tdc->f.states &= ~(DRO|DBackup|DRW);
-	    afs_DCMoveBucket(tdc, 0, 0);
 	    tdc = NULL;
 	    goto done;
 	}
