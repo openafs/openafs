@@ -482,6 +482,17 @@ extern void afs_MarinerLog(register char *astring,
 			   register struct vcache *avc);
 extern void shutdown_mariner(void);
 
+/* afs_fetchstore.c */
+extern int afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
+				struct vrequest *areq,
+				int sync, unsigned int minj,
+				unsigned int high, unsigned int moredata,
+				afs_hyper_t *anewDV,
+                                 afs_size_t *amaxStoredLength);
+extern int afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP,
+				afs_size_t abase, struct dcache *adc,
+				struct vcache *avc, afs_int32 size,
+				struct afs_FetchOutput *tsmall);
 
 /* afs_memcache.c */
 extern int afs_InitMemCache(int blkCount, int blkSize, int flags);
@@ -499,21 +510,6 @@ extern int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 extern int afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP);
 extern int afs_MemCacheTruncate(register struct osi_file *fP,
 				int size);
-extern int afs_CacheStoreVCache(struct dcache **dcList,
-				struct vcache *avc,
-				struct vrequest *areq,
-				int sync,
-				unsigned int minj,
-				unsigned int high,
-				unsigned int moredata,
-				afs_hyper_t *anewDV,
-                                 afs_size_t *amaxStoredLength);
-extern int afs_CacheFetchProc(register struct afs_conn *tc,
-				register struct osi_file *fP,
-				afs_size_t abase, struct dcache *adc,
-				struct vcache *avc,
-				afs_int32 size,
-				struct afs_FetchOutput *tsmall);
 extern void shutdown_memcache(void);
 
 

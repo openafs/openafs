@@ -561,7 +561,6 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
     void * rock = NULL;
     unsigned int i, j;
 
-    struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutStatus;
     int doProcessFS = 0;
     afs_size_t base, bytes, length;
@@ -839,8 +838,7 @@ afs_int32
 rxfs_fetchMore(void *r, afs_uint32 *length, afs_uint32 *moredata)
 {
     afs_int32 code;
-    register struct rxfs_fetchVariables *v
-	    = (struct rxfs_fetchVariables *)r;
+    struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
 
     /*
      * The fetch protocol is extended for the AFS/DFS translator
@@ -884,7 +882,7 @@ struct fetchOps rxfs_fetchMemOps = {
 };
 
 afs_int32
-rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
+rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 		afs_uint32 size, afs_uint32 *alength, afs_uint32 *moredata,
 		struct dcache *adc,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
@@ -1046,19 +1044,17 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
  * \note Environment: Nothing interesting.
  */
 int
-afs_CacheFetchProc(register struct afs_conn *tc,
-		    register struct osi_file *fP, afs_size_t base,
-		    struct dcache *adc, struct vcache *avc,
-		    afs_int32 size,
+afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
+		    struct dcache *adc, struct vcache *avc, afs_int32 size,
 		    struct afs_FetchOutput *tsmall)
 {
-    register afs_int32 code;
+    afs_int32 code;
     afs_uint32 length;
     afs_uint32 bytesread, byteswritten;
     struct fetchOps *ops = NULL;
     void *rock = NULL;
     int moredata = 0;
-    register int offset = 0;
+    int offset = 0;
 
     XSTATS_DECLS;
 #ifndef AFS_NOSTATS
