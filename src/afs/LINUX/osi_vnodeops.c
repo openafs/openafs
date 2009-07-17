@@ -2040,10 +2040,12 @@ afs_linux_writepage(struct page *pp)
   do_it:
     status = afs_linux_writepage_sync(inode, pp, 0, offset);
     SetPageUptodate(pp);
+#if defined(AFS_LINUX26_ENV)
 #if defined(WRITEPAGE_ACTIVATE)
     if ( status != WRITEPAGE_ACTIVATE )
 #else
     if ( status != AOP_WRITEPAGE_ACTIVATE )
+#endif
 #endif
 	UnlockPage(pp);
     if (status == offset)
