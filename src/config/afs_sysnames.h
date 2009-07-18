@@ -287,6 +287,8 @@
 #define SYS_NAME_ID_i386_dfbsd_22        3900
 #define SYS_NAME_ID_i386_dfbsd_23        3901
 
+#define SYS_NAME_ID_amd64_obsd45        4014
+
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)
