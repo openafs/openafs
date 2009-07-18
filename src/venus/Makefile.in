@@ -157,6 +157,8 @@ kdump: kdump.o
 				;; \
 			esac || exit $$? ; \
 		done ;; \
+	*linux26* | *linux_26* ) \
+		touch kdump ;; \
 	*alpha_linux* ) \
 		$(MAKE) kdump-alpha_linux-@LINUX_VERSION@ ;; \
 	*linux* ) \
@@ -180,6 +182,8 @@ kdump64:
 kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
+		*linux26* | *linux_26* ) \
+			touch kdump.o ;; \
 		alpha_linux* ) \
 			$(MAKE) kdump-alpha_linux-${LINUX_VERSION}.o ;; \
 		*linux* ) \
@@ -281,6 +285,8 @@ install: kdump-build fs livesys up fstrace cmdebug
 	sun*_5[789] | sun*_510 ) \
 		${INSTALL_SCRIPT} kdump.sh.solaris7 ${DESTDIR}${sbindir}/kdump32; \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump;; \
+	*linux26* | *linux_26* ) \
+		;; \
 	*linux* ) \
 		${INSTALL_SCRIPT} kdump.sh.linux ${DESTDIR}${sbindir}/kdump; \
 		${INSTALL_PROGRAM} kdump-build ${DESTDIR}${sbindir}/kdump ;; \
@@ -317,6 +323,8 @@ dest: kdump-build fs livesys up fstrace cmdebug
 	sun*_5[789] | sun*_510 ) \
 		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.solaris7 ${DEST}/etc/kdump; \
 		${INSTALL_PROGRAM} ${srcdir}/kdump ${DEST}/etc/kdump32;; \
+	*linux26* | *linux_26* ) \
+		;; \
 	*alpha_linux* ) \
 		${INSTALL_SCRIPT} ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump; \
 		${INSTALL_PROGRAM} kdump-alpha_linux-${LINUX_VERSION} ${DEST}/etc/kdump-${LINUX_VERSION} ;; \
