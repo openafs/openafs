@@ -6,10 +6,7 @@ dnl parameters must be done like $[]1 instead of $1
 
 AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
 AH_VERBATIM([OPENAFS_HEADER],
-[#undef HAVE_CONNECT
-#undef HAVE_GETHOSTBYNAME
-#undef HAVE_RES_SEARCH
-#undef HAVE_SOCKET
+[#undef HAVE_RES_SEARCH
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
 #if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
 # if ENDIANESS_IN_SYS_PARAM_H
@@ -1302,34 +1299,9 @@ fi
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
 else
-  AC_CHECK_FUNCS(socket)
-
-  if test "$ac_cv_func_socket" = no; then
-    for lib in socket inet; do
-        if test "$HAVE_SOCKET" != 1; then
-                AC_CHECK_LIB(${lib}, socket,LIBS="$LIBS -l$lib";HAVE_SOCKET=1;AC_DEFINE(HAVE_SOCKET, 1, [define if you have socket]))
-        fi
-    done
-  fi
-  
-  AC_CHECK_FUNCS(connect)       
-
-  if test "$ac_cv_func_connect" = no; then
-    for lib in nsl; do
-        if test "$HAVE_CONNECT" != 1; then
-                AC_CHECK_LIB(${lib}, connect,LIBS="$LIBS -l$lib";HAVE_CONNECT=1;AC_DEFINE(HAVE_CONNECT, 1, [define if you have connect]))
-        fi
-    done
-  fi
-
-  AC_CHECK_FUNCS(gethostbyname)
-  if test "$ac_cv_func_gethostbyname" = no; then
-        for lib in dns nsl resolv; do
-          if test "$HAVE_GETHOSTBYNAME" != 1; then
-            AC_CHECK_LIB(${lib}, gethostbyname, LIBS="$LIBS -l$lib";HAVE_GETHOSTBYNAME=1;AC_DEFINE(HAVE_GETHOSTBYNAME, 1, [define if you have gethostbyname]))
-          fi
-        done    
-  fi    
+  AC_SEARCH_LIBS([socket], [socket inet])
+  AC_SEARCH_LIBS([connect], [nsl])
+  AC_SEARCH_LIBS([gethostbyname], [dns nsl resolv])
 
   dnl darwin wants it, aix hates it
   AC_MSG_CHECKING(for the useability of arpa/nameser_compat.h)
@@ -1620,7 +1592,6 @@ AC_SUBST(BUILD_LOGIN)
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec flock)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
-AC_FUNC_SETVBUF_REVERSED
 AC_CHECK_FUNCS(regcomp regexec regerror)
 AC_MSG_CHECKING([for POSIX regex library])
 if test "$ac_cv_header_regex_h" = "yes" && \

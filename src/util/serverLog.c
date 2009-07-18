@@ -309,11 +309,7 @@ OpenLog(const char *fileName)
     (void)freopen(fileName, "a", stdout);
     (void)freopen(fileName, "a", stderr);
 #ifdef HAVE_SETVBUF
-#ifdef SETVBUF_REVERSED
-    setvbuf(stderr, _IONBF, NULL, 0);
-#else
     setvbuf(stderr, NULL, _IONBF, 0);
-#endif
 #else
     setbuf(stderr, NULL);
 #endif
