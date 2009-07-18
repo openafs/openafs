@@ -348,7 +348,11 @@ case $system in
 		MKAFS_OSTYPE=NBSD
 		AC_MSG_RESULT(nbsd)
 		;;
-	*-openbsd*)
+	x86_64-*-openbsd*)
+		MKAFS_OSTYPE=OBSD
+		AC_MSG_RESULT(amd64_obsd)
+		;;
+	i386-openbsd*)
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(i386_obsd)
 		;;
@@ -371,6 +375,12 @@ else
 			vM=${v%.*}
 			vm=${v#*.}
 			AFS_SYSNAME="i386_obsd${vM}${vm}"
+			;;
+		x86_64-*-openbsd?.?)
+			v=${host#*openbsd}
+			vM=${v%.*}
+			vm=${v#*.}
+			AFS_SYSNAME="amd64_obsd${vM}${vm}"
 			;;
 		i?86-*-freebsd?.*)
 			v=${host#*freebsd}
