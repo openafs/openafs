@@ -361,7 +361,7 @@ int
 SPAGCB_GetSysName(struct rx_call *a_call, afs_int32 a_uid,
 		  SysNameList *a_sysnames)
 {
-    int i;
+    int i = 0;
 
     RX_AFS_GLOCK();
 

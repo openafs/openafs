@@ -151,7 +151,7 @@ des_read_pw_string(char *s, int maxa, char *prompt, int verify)
     struct termio ttyb;
     FILE *fi;
     char savel, flags;
-    void (*sig) ();
+    void (*sig) (int);
 #endif
 #endif
 #ifdef AFS_NT40_ENV

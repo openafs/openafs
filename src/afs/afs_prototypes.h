@@ -320,6 +320,17 @@ extern struct afs_exporter *root_exported;
 extern struct afs_exporter *exporter_find(int type);
 extern void shutdown_exporter(void);
 
+/* afs_fetchstore.c */
+extern int afs_UFSCacheFetchProc(struct rx_call *, struct osi_file *,
+                                 afs_size_t, struct dcache *,
+                                 struct vcache *, afs_size_t *,
+                                 afs_size_t *, afs_int32);
+
+extern int afs_UFSCacheStoreProc(struct rx_call *, struct osi_file *,
+                                 afs_int32, struct vcache *,
+                                 int *, afs_size_t *,
+                                 afs_size_t *);
+
 /* afs_icl.c */
 extern struct afs_icl_set *afs_icl_allSets;
 extern int afs_icl_InitLogs(void);

@@ -43,7 +43,8 @@ pthread_recursive_mutex_lock(pthread_recursive_mutex_t * mut)
 {
     int rc = 0;
 
-    (glock_init || pthread_once(&glock_init_once, glock_init_func));
+    if (!glock_init)
+	pthread_once(&glock_init_once, glock_init_func);
 
     if (mut->locked) {
 	if (pthread_equal(mut->owner, pthread_self())) {
@@ -66,7 +67,8 @@ pthread_recursive_mutex_unlock(pthread_recursive_mutex_t * mut)
 {
     int rc = 0;
 
-    (glock_init || pthread_once(&glock_init_once, glock_init_func));
+    if (!glock_init)
+	pthread_once(&glock_init_once, glock_init_func);
 
     if ((mut->locked) && (pthread_equal(mut->owner, pthread_self()))) {
 	mut->times_inside--;

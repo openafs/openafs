@@ -133,7 +133,7 @@ void afspag_Init(afs_int32 nfs_server_addr)
 #ifdef RXK_LISTENER_ENV
     afs_start_thread(rxk_Listener,       "Rx Listener");
 #endif
-    afs_start_thread(rx_ServerProc,      "Rx Server Thread");
+    afs_start_thread((void *)(void *)rx_ServerProc,      "Rx Server Thread");
     afs_start_thread(afs_rxevent_daemon, "Rx Event Daemon");
     afs_start_thread(afs_Daemon,         "AFS PAG Daemon");
 

@@ -427,7 +427,7 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 int
 afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
-#ifdef AFS_LINUX26_ENV
+#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     int code;
 #endif
     int i = 0;

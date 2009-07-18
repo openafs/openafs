@@ -16,15 +16,16 @@
 
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#if defined(AFS_LINUX26_ENV)
+#include "h/dcache.h"
+#include "h/namei.h"
+#include "h/kthread.h"
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
 #if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
-#endif
-#if defined(AFS_LINUX26_ENV)
-#include "h/namei.h"
-#include "h/kthread.h"
 #endif
 
 int afs_osicred_initialized = 0;

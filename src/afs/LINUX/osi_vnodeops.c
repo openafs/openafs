@@ -101,7 +101,9 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
     cred_t *credp = crref();
     struct vrequest treq;
+#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
     afs_size_t isize, offindex;
+#endif
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, count, ICL_TYPE_INT32,
@@ -114,15 +116,13 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     if (code)
 	code = afs_convert_code(code);
     else {
-#if defined(AFS_CACHE_BYPASS)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
         offindex = *offp >> PAGE_CACHE_SHIFT;
         if(offindex > isize) {
             code=0;
             goto done;
         }
-#endif
 #endif
 	osi_FlushPages(vcp, credp);	/* ensure stale pages are gone */
 	AFS_GUNLOCK();
@@ -137,7 +137,9 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, count, ICL_TYPE_INT32,
 	       code);
+#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 done:
+#endif
     AFS_GUNLOCK();
     crfree(credp);
     return code;
@@ -831,7 +833,7 @@ check_bad_parent(struct dentry *dp)
 	credp = crref();
 
 	/* force a lookup, so vcp->mvid is fixed up */
-	afs_lookup(pvc, dp->d_name.name, &avc, credp);
+	afs_lookup(pvc, (char *)dp->d_name.name, &avc, credp);
 	if (!avc || vcp != avc) {	/* bad, very bad.. */
 	    afs_Trace4(afs_iclSetp, CM_TRACE_TMP_1S3L, ICL_TYPE_STRING,
 		       "check_bad_parent: bad pointer returned from afs_lookup origvc newvc dentry",
@@ -991,7 +993,7 @@ afs_linux_dentry_revalidate(struct dentry *dp)
 	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time || !(vcp->f.states & CStatd)) {
 
 	    credp = crref();
-	    afs_lookup(pvcp, dp->d_name.name, &tvc, credp);
+	    afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
 	    if (!tvc || tvc != vcp)
 		goto bad_dentry;
 
@@ -1171,7 +1173,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     maybe_lock_kernel();
 #endif
     AFS_GLOCK();
-    code = afs_lookup(VTOAFS(dip), comp, &vcp, credp);
+    code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
     
     if (vcp) {
 	struct vattr vattr;
@@ -1264,7 +1266,7 @@ afs_linux_link(struct dentry *olddp, struct inode *dip, struct dentry *newdp)
     d_drop(newdp);
 
     AFS_GLOCK();
-    code = afs_link(VTOAFS(oldip), VTOAFS(dip), name, credp);
+    code = afs_link(VTOAFS(oldip), VTOAFS(dip), (char *)name, credp);
 
     AFS_GUNLOCK();
     crfree(credp);
@@ -1305,7 +1307,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
 	} while (__dp->d_inode != NULL);
 
 	AFS_GLOCK();
-	code = afs_rename(VTOAFS(dip), dp->d_name.name, VTOAFS(dip), __dp->d_name.name, credp);
+	code = afs_rename(VTOAFS(dip), (char *)dp->d_name.name, VTOAFS(dip), (char *)__dp->d_name.name, credp);
 	if (!code) {
             tvc->mvid = (void *) __name;
             crhold(credp);
@@ -1338,7 +1340,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     }
 
     AFS_GLOCK();
-    code = afs_remove(VTOAFS(dip), name, credp);
+    code = afs_remove(VTOAFS(dip), (char *)name, credp);
     AFS_GUNLOCK();
     if (!code)
 	d_drop(dp);
@@ -1366,7 +1368,7 @@ afs_linux_symlink(struct inode *dip, struct dentry *dp, const char *target)
 
     VATTR_NULL(&vattr);
     AFS_GLOCK();
-    code = afs_symlink(VTOAFS(dip), name, &vattr, target, credp);
+    code = afs_symlink(VTOAFS(dip), (char *)name, &vattr, (char *)target, credp);
     AFS_GUNLOCK();
     crfree(credp);
     return afs_convert_code(code);
@@ -1388,7 +1390,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     vattr.va_mask = ATTR_MODE;
     vattr.va_mode = mode;
     AFS_GLOCK();
-    code = afs_mkdir(VTOAFS(dip), name, &vattr, &tvcp, credp);
+    code = afs_mkdir(VTOAFS(dip), (char *)name, &vattr, &tvcp, credp);
 
     if (tvcp) {
 	struct inode *ip = AFSTOV(tvcp);
@@ -1419,7 +1421,7 @@ afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     /* locking kernel conflicts with glock? */
 
     AFS_GLOCK();
-    code = afs_rmdir(VTOAFS(dip), name, credp);
+    code = afs_rmdir(VTOAFS(dip), (char *)name, credp);
     AFS_GUNLOCK();
 
     /* Linux likes to see ENOTEMPTY returned from an rmdir() syscall
@@ -1470,7 +1472,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 #endif
 
     AFS_GLOCK();
-    code = afs_rename(VTOAFS(oldip), oldname, VTOAFS(newip), newname, credp);
+    code = afs_rename(VTOAFS(oldip), (char *)oldname, VTOAFS(newip), (char *)newname, credp);
     AFS_GUNLOCK();
 
     if (!code)
@@ -1771,8 +1773,10 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 #if defined(AFS_CACHE_BYPASS)
 	 afs_int32 bypasscache = 0; /* bypass for this read */
 	 struct nocache_read_request *ancr;
-#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 	 afs_int32 isize;	
+#endif
+#endif
 	 uio_t *auio;
 	 struct iovec *iovecp;
 	 struct inode *ip = FILE_INODE(fp);
@@ -1916,7 +1920,9 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 		  AFS_GUNLOCK();
 	 }
 
+#if defined(AFS_CACHE_BYPASS)
 done:
+#endif
 	 crfree(credp);
 	 return afs_convert_code(code);
 }
@@ -2175,7 +2181,6 @@ afs_linux_write_end(struct file *file, struct address_space *mapping,
                                 struct page *page, void *fsdata)
 {
     int code;
-    pgoff_t index = pos >> PAGE_CACHE_SHIFT;
     unsigned from = pos & (PAGE_CACHE_SIZE - 1);
 
     code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,

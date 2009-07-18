@@ -16,6 +16,7 @@
 #include "error_table.h"
 #include "mit-sipb-cr.h"
 #include <afs/errors.h>
+#include <afs/afsutil.h>
 #include <string.h>
 #include "com_err.h"
 

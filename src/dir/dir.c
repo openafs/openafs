@@ -51,6 +51,7 @@
 
 /* afs_buffer.c */
 /* These are needed because afs_prototypes.h is not included here */
+struct dcache;
 extern void *DRead(struct dcache *adc, int page);
 extern void *DNew(struct dcache *adc, int page);
 

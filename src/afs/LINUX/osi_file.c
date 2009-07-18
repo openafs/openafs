@@ -277,7 +277,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     /* avoid notify_change() since it wants to update dentry->d_parent */
     lock_kernel();
     code = inode_change_ok(inode, &newattrs);
-    if (!code)
+    if (!code) {
 #ifdef INODE_SETATTR_NOT_VOID
 #if defined(AFS_LINUX26_ENV)
 	if (inode->i_op && inode->i_op->setattr)
@@ -288,6 +288,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 #else
         inode_setattr(inode, &newattrs);
 #endif
+    }
     unlock_kernel();
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);

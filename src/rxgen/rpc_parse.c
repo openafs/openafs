@@ -1467,6 +1467,7 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 		    switch (defp1->pc.rel) {
 		    case REL_ARRAY:
 		    case REL_POINTER:
+		    default:
 			break;
 		    }
 		}

@@ -114,6 +114,9 @@ afs_warnuser(char *fmt, ...)
 {
     AFS_STATCNT(afs_warnuser);
     if (afs_showflags & GAGUSER) {
+#if !defined(AFS_AIX_ENV)
+	va_list ap;
+#endif
 #ifdef AFS_GLOBAL_SUNLOCK
 	int haveGlock = ISAFS_GLOCK();
 	if (haveGlock)
@@ -123,7 +126,6 @@ afs_warnuser(char *fmt, ...)
 #if defined(AFS_AIX_ENV)
 	uprintf(fmt, a, b, c, d, e, f, g, h, i);
 #else
-	va_list ap;
 
 	va_start(ap, fmt);
 	afs_vprintf(fmt, ap);

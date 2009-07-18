@@ -630,7 +630,7 @@ int
 afs_ShakeLooseVCaches(afs_int32 anumber)
 {
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
-    afs_int32 i, j;
+    afs_int32 i;
     struct vcache *tvc;
     struct afs_q *tq, *uq;
     int code, fv_slept;
@@ -649,8 +649,6 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 #endif
 	afs_vcount >= afs_maxvcount
 	) {
-	int i;
-
 	i = 0;
 	for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
 	    tvc = QTOV(tq);
@@ -858,8 +856,10 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #ifdef	AFS_AIX_ENV
     struct gnode *gnodepnt;
 #endif
+#if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
     struct afs_q *tq, *uq;
     int code, fv_slept;
+#endif
 
     AFS_STATCNT(afs_NewVCache);
 

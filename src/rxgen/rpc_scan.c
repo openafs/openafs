@@ -346,7 +346,7 @@ findstrconst(char **str, char **val)
 
     p = *str;
     do {
-	*p++;
+	p++;
     } while (*p && *p != '"');
     if (*p == 0) {
 	error("unterminated string constant");

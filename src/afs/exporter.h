@@ -62,7 +62,7 @@ struct exporterops {
     void (*export_rele) (struct afs_exporter *exp);
     int (*export_sysname) (struct afs_exporter *exp,
 		           char *inname,
-			   char **outname,
+			   char ***outname,
 			   int *num,
 			   int allpags);
     void (*export_garbagecollect) (struct afs_exporter *exp,
