@@ -2165,13 +2165,13 @@ rxi_FindService(osi_socket socket, u_short serviceId)
     return 0;
 }
 
-#ifdef DEBUG
+#ifdef RXDEBUG_PACKET
 #ifdef KDUMP_RX_LOCK
 static struct rx_call_rx_lock *rx_allCallsp = 0;
 #else
 static struct rx_call *rx_allCallsp = 0;
 #endif
-#endif /* DEBUG */
+#endif /* RXDEBUG_PACKET */
 
 /* Allocate a call structure, for the indicated channel of the
  * supplied connection.  The mode and state of the call must be set by
@@ -8084,7 +8084,6 @@ DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
     }
 }
 
-#ifdef AFS_NT40_ENV
 int rx_DumpCalls(FILE *outputFile, char *cookie)
 {
 #ifdef RXDEBUG_PACKET
@@ -8144,5 +8143,4 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
     return 0;
 }
 #endif /* AFS_NT40_ENV */
-#endif
 
