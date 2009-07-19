@@ -440,6 +440,13 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 #endif
 	dpf(("rxi_sendmsg failed, error %d\n", errno));
 	fflush(stdout);
+#ifndef AFS_NT40_ENV
+        if (errno > 0)
+          return -errno;
+#elif
+            if (WSAGetLastError() > 0)
+              return -WSAGetLastError();
+#endif
 	return -1;
     }
     return 0;
