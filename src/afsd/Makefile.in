@@ -109,11 +109,11 @@ dest: afsd vsys
 			${INSTALL_SCRIPT} ${srcdir}/afs.rc.hpux10 ${DEST}/root.client/usr/vice/etc/dkload/afs.rc ;;\
 		*linux* ) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.linux -m 755 ${DEST}/root.client/usr/vice/etc/afs.rc; \
+			${INSTALL_SCRIPT} -m 755 ${srcdir}/afs.rc.linux ${DEST}/root.client/usr/vice/etc/afs.rc; \
 			${INSTALL_DATA} ${srcdir}/afs.conf.linux ${DEST}/root.client/usr/vice/etc/afs.conf ;; \
 		*_darwin*) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc ; \
-			${INSTALL_SCRIPT} ${srcdir}/afs.rc.darwin -m 755 ${DEST}/root.client/usr/vice/etc/afs.rc ; \
+			${INSTALL_SCRIPT} -m 755 ${srcdir}/afs.rc.darwin ${DEST}/root.client/usr/vice/etc/afs.rc ; \
 			${INSTALL_DATA} ${srcdir}/afs.rc.darwin.plist ${DEST}/root.client/usr/vice/etc/StartupParameters.plist ;; \
 		*fbsd*) \
 			${INSTALL} -d ${DEST}/root.client/usr/vice/etc ; \
