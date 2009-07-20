@@ -31,6 +31,10 @@ extern afs_int32 FindByID(struct ubik_trans *trans, afs_uint32 volid,
 			  afs_int32 *error);
 extern afs_int32 FindByName(struct ubik_trans *trans, char *volname,
 			    struct nvlentry *tentry, afs_int32 *error);
+extern int EntryIDExists(struct ubik_trans *trans, const afs_uint32 *ids,
+			 afs_int32 ids_len, afs_int32 *error);
+extern afs_uint32 NextUnusedID(struct ubik_trans *trans, afs_uint32 maxvolid,
+			       afs_uint32 bump, afs_int32 *error);
 extern int HashNDump(struct ubik_trans *trans, int hashindex);
 extern int HashIdDump(struct ubik_trans *trans, int hashindex);
 extern int ThreadVLentry(struct ubik_trans *trans, afs_int32 blockindex,

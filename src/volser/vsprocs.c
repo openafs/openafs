@@ -731,14 +731,6 @@ UV_CreateVolume3(afs_int32 aserver, afs_int32 apart, char *aname,
     afs_int32 lastid;
     struct nvldbentry entry, storeEntry;	/*the new vldb entry */
     struct volintInfo tstatus;
-    afs_int32 alloc_roid = 0, alloc_bkid = 0;
-
-    if (aroid && *aroid == 0) {
-	alloc_roid = 1;
-    }
-    if (abkid && *abkid == 0) {
-	alloc_bkid = 1;
-    }
 
     tid = 0;
     aconn = (struct rx_connection *)0;
@@ -749,6 +741,13 @@ UV_CreateVolume3(afs_int32 aserver, afs_int32 apart, char *aname,
 
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
 
+    if (aroid && *aroid) {
+	VPRINT1("Using RO volume ID %d.\n", *aroid);
+    }
+    if (abkid && *abkid) {
+	VPRINT1("Using BK volume ID %d.\n", *abkid);
+    }
+
     if (*anewid) {
         vcode = VLDB_GetEntryByID(*anewid, -1, &entry);
 	if (!vcode) {
@@ -757,31 +756,27 @@ UV_CreateVolume3(afs_int32 aserver, afs_int32 apart, char *aname,
 	}
 	VPRINT1("Using volume ID %d.\n", *anewid);
     } else {
-	/* get the next 3 available ids from the VLDB */
-	int alloc_ids = 3;
-
-	/* if the RO or BK id are specified, we don't need to allocate as
-	 * many IDs */
-	if (!alloc_roid) {
-	    --alloc_ids;
-	}
-	if (!alloc_bkid) {
-	    --alloc_ids;
-	}
-	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, alloc_ids, anewid);
+	vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, anewid);
 	EGOTO1(cfail, vcode, "Could not get an Id for volume %s\n", aname);
+
+	if (aroid && *aroid == 0) {
+	    vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, aroid);
+	    EGOTO1(cfail, vcode, "Could not get an RO Id for volume %s\n", aname);
+	}
+
+	if (abkid && *abkid == 0) {
+	    vcode = ubik_VL_GetNewVolumeId(cstruct, 0, 1, abkid);
+	    EGOTO1(cfail, vcode, "Could not get a BK Id for volume %s\n", aname);
+	}
     }
 
     /* rw,ro, bk id are related in the default case */
+    /* If caller specified RW id, but not RO/BK ids, have them be RW+1 and RW+2 */
     lastid = *anewid;
-    if (aroid && *aroid) {
-	VPRINT1("Using RO volume ID %d.\n", aroid);
-    } else if (aroid) {
+    if (aroid && *aroid == 0) {
 	*aroid = ++lastid;
     }
-    if (abkid && *abkid) {
-	VPRINT1("Using backup volume ID %d.\n", abkid);
-    } else if (abkid) {
+    if (abkid && *abkid == 0) {
 	*abkid = ++lastid;
     }
 

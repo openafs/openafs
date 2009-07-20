@@ -655,6 +655,83 @@ FindByName(struct ubik_trans *trans, char *volname, struct nvlentry *tentry,
     return 0;			/* no such entry */
 }
 
+/**
+ * Returns whether or not any of the supplied volume IDs already exist
+ * in the vldb.
+ *
+ * @param trans    the ubik transaction
+ * @param ids      an array of volume IDs
+ * @param ids_len  the number of elements in the 'ids' array
+ * @param error    filled in with an error code in case of error
+ *
+ * @return whether any of the volume IDs are already used
+ *  @retval 1  at least one of the volume IDs is already used
+ *  @retval 0  none of the volume IDs are used, or an error occurred
+ */
+int
+EntryIDExists(struct ubik_trans *trans, const afs_uint32 *ids,
+	      afs_int32 ids_len, afs_int32 *error)
+{
+    afs_int32 typeindex;
+    struct nvlentry tentry;
+
+    *error = 0;
+
+    for (typeindex = 0; typeindex < ids_len; typeindex++) {
+	if (ids[typeindex]
+	    && FindByID(trans, ids[typeindex], -1, &tentry, error)) {
+
+	    return 1;
+	} else if (*error) {
+	    return 0;
+	}
+    }
+
+    return 0;
+}
+
+/**
+ * Finds the next range of unused volume IDs in the vldb.
+ *
+ * @param trans     the ubik transaction
+ * @param maxvolid  the current max vol ID, and where to start looking
+ *                  for an unused volume ID range
+ * @param bump      how many volume IDs we need to be unused
+ * @param error     filled in with an error code in case of error
+ *
+ * @return the next volume ID 'volid' such that the range
+ *         [volid, volid+bump) of volume IDs is unused, or 0 if there's
+ *         an error
+ */
+afs_uint32
+NextUnusedID(struct ubik_trans *trans, afs_uint32 maxvolid, afs_uint32 bump,
+	     afs_int32 *error)
+{
+    struct nvlentry tentry;
+    afs_uint32 id;
+    afs_uint32 nfree;
+
+    *error = 0;
+
+     /* we simply start at the given maxvolid, keep a running tally of
+      * how many free volume IDs we've seen in a row, and return when
+      * we've seen 'bump' unused IDs in a row */
+    for (id = maxvolid, nfree = 0; nfree < bump; ++id) {
+	if (FindByID(trans, id, -1, &tentry, error)) {
+	    nfree = 0;
+	} else if (*error) {
+	    return 0;
+	} else {
+	    ++nfree;
+	}
+    }
+
+    /* 'id' is now at the end of the [maxvolid,maxvolid+bump) range,
+     * but we need to return the first unused id, so subtract the
+     * number of current running free IDs to get the beginning */
+    return id - nfree;
+}
+
 int
 HashNDump(struct ubik_trans *trans, int hashindex)
 {
