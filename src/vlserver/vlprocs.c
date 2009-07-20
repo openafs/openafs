@@ -178,9 +178,8 @@ SVL_CreateEntry(rxcall, newentry)
     VLog(1,
 	 ("OCreate Volume %d %s\n", newentry->volumeId[RWVOL],
 	  rxinfo(rxcall)));
-    /* XXX shouldn't we check to see if the r/o volume is duplicated? */
-    if (newentry->volumeId[RWVOL]
-	&& FindByID(trans, newentry->volumeId[RWVOL], RWVOL, &tentry, &errorcode)) {	/* entry already exists, we fail */
+    if (EntryIDExists(trans, newentry->volumeId, MAXTYPES, &errorcode)) {
+	/* at least one of the specified IDs already exists; we fail */
 	errorcode = VL_IDEXIST;
 	goto abort;
     } else if (errorcode) {
@@ -253,9 +252,8 @@ SVL_CreateEntryN(rxcall, newentry)
     VLog(1,
 	 ("Create Volume %d %s\n", newentry->volumeId[RWVOL],
 	  rxinfo(rxcall)));
-    /* XXX shouldn't we check to see if the r/o volume is duplicated? */
-    if (newentry->volumeId[RWVOL]
-	&& FindByID(trans, newentry->volumeId[RWVOL], RWVOL, &tentry, &errorcode)) {	/* entry already exists, we fail */
+    if (EntryIDExists(trans, newentry->volumeId, MAXTYPES, &errorcode)) {
+	/* at least one of the specified IDs already exists; we fail */
 	errorcode = VL_IDEXIST;
 	goto abort;
     } else if (errorcode) {
@@ -570,7 +568,12 @@ SVL_GetNewVolumeId(rxcall, Maxvolidbump, newvolumeid)
     if (errorcode = Init_VLdbase(&trans, LOCKWRITE, this_op))
 	goto end;
 
-    *newvolumeid = maxvolumeid = ntohl(cheader.vital_header.MaxVolumeId);
+    *newvolumeid = maxvolumeid = NextUnusedID(trans,
+	ntohl(cheader.vital_header.MaxVolumeId), Maxvolidbump, &errorcode);
+    if (errorcode) {
+	goto abort;
+    }
+
     maxvolumeid += Maxvolidbump;
     VLog(1, ("GetNewVolid newmax=%d %s\n", maxvolumeid, rxinfo(rxcall)));
     cheader.vital_header.MaxVolumeId = htonl(maxvolumeid);
@@ -607,6 +610,7 @@ SVL_ReplaceEntry(rxcall, volid, voltype, newentry, releasetype)
     int hashnewname;
     int hashVol[MAXTYPES];
     struct nvlentry tentry;
+    afs_uint32 checkids[MAXTYPES];
 
     COUNT_REQ(VLREPLACEENTRY);
     for (typeindex = 0; typeindex < MAXTYPES; typeindex++)
@@ -638,6 +642,29 @@ SVL_ReplaceEntry(rxcall, volid, voltype, newentry, releasetype)
     /* check that we're not trying to change the RW vol ID */
     if (newentry->volumeId[RWVOL] != tentry.volumeId[RWVOL]) {
 	ABORT(VL_BADENTRY);
+    }
+
+    /* make sure none of the IDs we are changing to are already in use */
+    memset(&checkids, 0, sizeof(checkids));
+    for (typeindex = ROVOL; typeindex < MAXTYPES; typeindex++) {
+	if (tentry.volumeId[typeindex] != newentry->volumeId[typeindex]) {
+	    checkids[typeindex] = newentry->volumeId[typeindex];
+	}
+    }
+    if (EntryIDExists(trans, checkids, MAXTYPES, &errorcode)) {
+	ABORT(VL_IDEXIST);
+    } else if (errorcode) {
+	goto abort;
+    }
+
+    /* make sure the name we're changing to doesn't already exist */
+    if (strcmp(newentry->name, tentry.name)) {
+	struct nvlentry tmp_entry;
+	if (FindByName(trans, newentry->name, &tmp_entry, &errorcode)) {
+	    ABORT(VL_NAMEEXIST);
+	} else if (errorcode) {
+	    goto abort;
+	}
     }
 
     /* unhash volid entries if they're disappearing or changing.
@@ -2684,10 +2711,41 @@ get_vldbupdateentry(trans, blockindex, updateentry, VlEntry)
      struct nvlentry *VlEntry;
 {
     int i, j, errorcode, serverindex;
+    struct vldbentry checkentry;
+    afs_uint32 checkids[MAXTYPES];
+
+    /* check if any specified new IDs are already present in the db. Do
+     * this check before doing anything else, so we don't get a half-
+     * updated entry. */
+    memset(&checkids, 0, sizeof(checkids));
+    if (updateentry->Mask & VLUPDATE_RWID) {
+	checkids[RWVOL] = updateentry->spares3;	/* rw id */
+    }
+    if (updateentry->Mask & VLUPDATE_READONLYID) {
+	checkids[ROVOL] = updateentry->ReadOnlyId;
+    }
+    if (updateentry->Mask & VLUPDATE_BACKUPID) {
+	checkids[BACKVOL] = updateentry->BackupId;
+    }
+
+    if (EntryIDExists(trans, checkids, MAXTYPES, &errorcode)) {
+	return VL_IDEXIST;
+    } else if (errorcode) {
+	return errorcode;
+    }
 
     if (updateentry->Mask & VLUPDATE_VOLUMENAME) {
+	struct nvlentry tentry;
+
 	if (InvalidVolname(updateentry->name))
 	    return VL_BADNAME;
+
+	if (FindByName(trans, updateentry->name, &tentry, &errorcode)) {
+	    return VL_NAMEEXIST;
+	} else if (errorcode) {
+	    return errorcode;
+	}
+
 	if (errorcode = UnhashVolname(trans, blockindex, VlEntry))
 	    return errorcode;
 	strncpy(VlEntry->name, updateentry->name, sizeof(VlEntry->name));
