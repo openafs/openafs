@@ -47,7 +47,6 @@ EXEOBJS =\
 	$(OUT)\dsstub.obj \
 	$(OUT)\volstub.obj \
 	$(OUT)\commands.obj \
-	$(OUT)\regex.obj \
 	$(OUT)\server.obj \
 	$(OUT)\dsvs.obj \
 	$(OUT)\dump.obj \

@@ -121,13 +121,14 @@ extern char *vctime(const time_t * atime);
 /* Unbuffer output when Un*x would do line buffering. */
 #define setlinebuf(S) setvbuf(S, NULL, _IONBF, 0)
 
-/* regular expression parser for NT */
-     extern char *re_comp(char *sp);
-     extern int rc_exec(char *p);
-
 /* Abort on error, possibly trapping to debugger or dumping a trace. */
      void afs_NTAbort(void);
 #endif /* AFS_NT40_ENV */
+
+#ifndef HAVE_POSIX_REGEX
+extern char *re_comp(const char *sp);
+extern int re_exec(const char *p1);
+#endif
 
      typedef char b32_string_t[8];
 /* b64_string_t is 8 bytes, in stds.h */

@@ -16,9 +16,6 @@
 #define _REGEX_RE_COMP
 #endif
 #include <sys/types.h>
-#if defined(AFS_LINUX24_ENV)
-#include <regex.h>
-#endif
 #include <afs/cmd.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -29,6 +26,7 @@
 #endif
 #include <errno.h>
 #include <afs/com_err.h>
+#include <afs/afsutil.h>
 #include <afs/budb.h>
 #include <afs/butc.h>
 #include <afs/bubasics.h>	/* PA */
@@ -43,11 +41,13 @@
 #include <afs/tcdata.h>
 #include <afs/butx.h>
 #include <afs/vsutils_prototypes.h>
+#ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
+#include <regex.h>
+#endif
 #include "bc.h"
 #include "error_macros.h"
 #include "bucoord_internal.h"
 #include "bucoord_prototypes.h"
-#include "regex.h"
 
 extern struct bc_config *bc_globalConfig;
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
@@ -440,6 +440,10 @@ EvalVolumeSet1(struct bc_config *aconfig,
     int foundentry = 0;
     struct serversort *servers = 0, *ss = 0;
     struct partitionsort *ps = 0;
+#ifdef HAVE_POSIX_REGEX
+    regex_t re;
+    int need_regfree = 0;
+#endif
 
     *avols = (struct bc_volumeDump *)0;
     ctve = (struct bc_volumeEntry *)0;	/* no compiled entry */
@@ -486,6 +490,13 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		/* If the volume entry is not compiled, then compile it */
 		if (ctve != tve) {
 		    sprintf(patt, "^%s$", tve->name);
+#ifdef HAVE_POSIX_REGEX
+		    if (regcomp(&re, patt, REG_NOSUB) != 0) {
+		      afs_com_err(whoami, 0, "Can't compile regular expression '%s'", patt);
+		      return (-1);
+		    }
+		    need_regfree = 1;
+#else
 		    errm = (char *)re_comp(patt);
 		    if (errm) {
 			afs_com_err(whoami, 0,
@@ -493,6 +504,7 @@ EvalVolumeSet1(struct bc_config *aconfig,
 				patt, errm);
 			return (-1);
 		    }
+#endif
 		    ctve = tve;
 		}
 
@@ -502,8 +514,13 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		if (entry.serverFlags[srvpartpair] & ITSRWVOL) {
 		    if (entry.flags & RW_EXISTS) {
 			sprintf(patt, "%s", entry.name);
+#ifdef HAVE_POSIX_REGEX
+			code = regexec(&re, patt, 0, NULL, 0);
+			if (code == 0) {
+#else
 			code = re_exec(patt);
 			if (code == 1) {
+#endif
 			    found = 1;
 			    foundentry = srvpartpair;
 			    volType = RWVOL;
@@ -516,8 +533,13 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		     */
 		    if (entry.flags & BACK_EXISTS) {
 			sprintf(patt, "%s.backup", entry.name);
+#ifdef HAVE_POSIX_REGEX
+			code = regexec(&re, patt, 0, NULL, 0);
+			if (code == 0) {
+#else
 			code = re_exec(patt);
 			if (code == 1) {
+#endif
 			    found = 1;
 			    foundentry = srvpartpair;
 			    volType = BACKVOL;
@@ -533,8 +555,13 @@ EvalVolumeSet1(struct bc_config *aconfig,
 		else if (!found && (entry.serverFlags[srvpartpair] & ITSROVOL)
 			 && (entry.flags & RO_EXISTS)) {
 		    sprintf(patt, "%s.readonly", entry.name);
+#ifdef HAVE_POSIX_REGEX
+		    code = regexec(&re, patt, 0, NULL, 0);
+		    if (code == 0) {
+#else
 		    code = re_exec(patt);
 		    if (code == 1) {
+#endif
 			found = 1;
 			foundentry = srvpartpair;
 			volType = ROVOL;
@@ -596,6 +623,10 @@ EvalVolumeSet1(struct bc_config *aconfig,
 	    }			/*f */
 	}			/*ve */
     }				/*w */
+#ifdef HAVE_POSIX_REGEX
+    if (need_regfree)
+	regfree(&re);
+#endif
 
     /* Randomly link the volumedump entries together */
     randSPEntries(servers, avols);

@@ -48,12 +48,12 @@ btest: btest.o ${TOP_LIBDIR}/libbubasics.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/l
 
 btest.o: AFS_component_version_number.c
 
-BACKSRCS = main.c config.c dsstub.c volstub.c commands.c regex.c server.c \
+BACKSRCS = main.c config.c dsstub.c volstub.c commands.c server.c \
 	dsvs.c dump.c restore.c ubik_db_if.c 				  \
 	dump_sched.c vol_sets.c tape_hosts.c				  \
 	bc_status.c status.c dlq.c
 
-BACKOBJS = main.o config.o dsstub.o volstub.o commands.o regex.o server.o \
+BACKOBJS = main.o config.o dsstub.o volstub.o commands.o server.o \
 	dsvs.o dump.o restore.o ubik_db_if.o dump_sched.o vol_sets.o	\
 	tape_hosts.o bucoord_errs.o bc_status.o status.o dlq.o
 

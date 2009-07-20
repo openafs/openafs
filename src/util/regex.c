@@ -8,15 +8,6 @@
  */
 
 /*
- * regex.c -- regular expression patter matching functions
- * 
- */
-
-#include <afsconfig.h>
-#include <afs/param.h>
-
-
-/*
  * routines to do regular expression matching
  *
  * Entry points:
@@ -81,6 +72,9 @@
  *	    regular expression encountered.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
 /*
  * constants for re's
  */
@@ -102,19 +96,15 @@
 static char expbuf[ESIZE], *braslist[NBRA], *braelist[NBRA];
 static char circf;
 
-/* forward defs
-*/
-
-static int advance(register char *lp, register char *ep);
-static int backref(register int i, register char *lp);
-static int cclass(register char *set, register char c, int af);
-
+static int advance(char *, char *);
+static int backref(int i, char *);
+static int cclass(char *, char, int);
 
 /*
  * compile the regular expression argument into a dfa
  */
 char *
-re_comp(register char *sp)
+re_comp(const char *sp)
 {
     register int c;
     register char *ep = expbuf;
@@ -124,7 +114,7 @@ re_comp(register char *sp)
     char *bracketp = &bracket[0];
     static char *retoolong = "Regular expression too long";
 
-#define	comperr(msg) {expbuf[0] = 0; numbra = 0; return(msg); }
+#define	comerr(msg) {expbuf[0] = 0; numbra = 0; return(msg); }
 
     if (sp == 0 || *sp == '\0') {
 	if (*ep == 0)
@@ -138,10 +128,10 @@ re_comp(register char *sp)
 	circf = 0;
     for (;;) {
 	if (ep >= &expbuf[ESIZE - 10 /* fudge factor */])
-	    comperr(retoolong);
+	    comerr(retoolong);
 	if ((c = *sp++) == '\0') {
 	    if (bracketp != bracket)
-		comperr("unmatched \\(");
+		comerr("unmatched \\(");
 	    *ep++ = CEOF;
 	    *ep++ = 0;
 	    return (0);
@@ -176,7 +166,7 @@ re_comp(register char *sp)
 	    }
 	    do {
 		if (c == '\0')
-		    comperr("missing ]");
+		    comerr("missing ]");
 		if (c == '-' && ep[-1] != 0) {
 		    if ((c = *sp++) == ']') {
 			*ep++ = '-';
@@ -188,13 +178,13 @@ re_comp(register char *sp)
 			ep++;
 			cclcnt++;
 			if (ep >= &expbuf[ESIZE - 10 /* fudge factor */])
-			    comperr(retoolong);
+			    comerr(retoolong);
 		    }
 		}
 		*ep++ = c;
 		cclcnt++;
 		if (ep >= &expbuf[ESIZE - 10 /* fudge factor */])
-		    comperr(retoolong);
+		    comerr(retoolong);
 	    } while ((c = *sp++) != ']');
 	    lastep[1] = cclcnt;
 	    continue;
@@ -202,7 +192,7 @@ re_comp(register char *sp)
 	case '\\':
 	    if ((c = *sp++) == '(') {
 		if (numbra >= NBRA)
-		    comperr("too many \\(\\) pairs");
+		    comerr("too many \\(\\) pairs");
 		*bracketp++ = numbra;
 		*ep++ = CBRA;
 		*ep++ = numbra++;
@@ -210,7 +200,7 @@ re_comp(register char *sp)
 	    }
 	    if (c == ')') {
 		if (bracketp <= bracket)
-		    comperr("unmatched \\)");
+		    comerr("unmatched \\)");
 		*ep++ = CKET;
 		*ep++ = *--bracketp;
 		continue;
@@ -232,42 +222,29 @@ re_comp(register char *sp)
     }
 }
 
-/* 
- * match the argument string against the compiled re
- */
-int
-re_exec(register char *p1)
+static int
+cclass(char *set, char c, int af)
 {
-    register char *p2 = expbuf;
-    register int c;
-    int rv;
+    register int n;
 
-    for (c = 0; c < NBRA; c++) {
-	braslist[c] = 0;
-	braelist[c] = 0;
-    }
-    if (circf)
-	return ((advance(p1, p2)));
-    /*
-     * fast check for first character
-     */
-    if (*p2 == CCHR) {
-	c = p2[1];
-	do {
-	    if (*p1 != c)
-		continue;
-	    if ((rv = advance(p1, p2)))
-		return (rv);
-	} while (*p1++);
+    if (c == 0)
 	return (0);
-    }
-    /*
-     * regular algorithm
-     */
-    do
-	if ((rv = advance(p1, p2)))
-	    return (rv);
-    while (*p1++);
+    n = *set++;
+    while (--n)
+	if (*set++ == c)
+	    return (af);
+    return (!af);
+}
+
+static int
+backref(int i, char *lp)
+{
+    register char *bp;
+
+    bp = braslist[i];
+    while (*bp++ == *lp++)
+	if (bp >= braelist[i])
+	    return (1);
     return (0);
 }
 
@@ -275,7 +252,7 @@ re_exec(register char *p1)
  * try to match the next thing in the dfa
  */
 static int
-advance(register char *lp, register char *ep)
+advance(char *lp, char *ep)
 {
     register char *curlp;
     int ct, i;
@@ -317,11 +294,11 @@ advance(register char *lp, register char *ep)
 	    return (0);
 
 	case CBRA:
-	    braslist[*ep++] = lp;
+	    braslist[(int) *ep++] = lp;
 	    continue;
 
 	case CKET:
-	    braelist[*ep++] = lp;
+	    braelist[(int) *ep++] = lp;
 	    continue;
 
 	case CBACK:
@@ -337,7 +314,7 @@ advance(register char *lp, register char *ep)
 	    if (braelist[i = *ep++] == 0)
 		return (-1);
 	    curlp = lp;
-	    ct = (int)(braelist[i] - braslist[i]);
+	    ct = braelist[i] - braslist[i];
 	    while (backref(i, lp))
 		lp += ct;
 	    while (lp >= curlp) {
@@ -378,28 +355,42 @@ advance(register char *lp, register char *ep)
 	}
 }
 
-static int
-backref(register int i, register char *lp)
+/*
+ * match the argument string against the compiled re
+ */
+int
+re_exec(const char *p1)
 {
-    register char *bp;
+    register char *p2 = expbuf;
+    register int c;
+    int rv;
 
-    bp = braslist[i];
-    while (*bp++ == *lp++)
-	if (bp >= braelist[i])
-	    return (1);
+    for (c = 0; c < NBRA; c++) {
+	braslist[c] = 0;
+	braelist[c] = 0;
+    }
+    if (circf)
+	return ((advance(p1, p2)));
+    /*
+     * fast check for first character
+     */
+    if (*p2 == CCHR) {
+	c = p2[1];
+	do {
+	    if (*p1 != c)
+		continue;
+	    if ((rv = advance(p1, p2)))
+		return (rv);
+	} while (*p1++);
+	return (0);
+    }
+    /*
+     * regular algorithm
+     */
+    do
+	if ((rv = advance(p1, p2)))
+	    return (rv);
+    while (*p1++);
     return (0);
 }
 
-static int
-cclass(register char *set, register char c, int af)
-{
-    register int n;
-
-    if (c == 0)
-	return (0);
-    n = *set++;
-    while (--n)
-	if (*set++ == c)
-	    return (af);
-    return (!af);
-}
