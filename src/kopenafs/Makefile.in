@@ -41,7 +41,7 @@ ${TOP_LIBDIR}/libkopenafs.a: libkopenafs.a
 	${INSTALL_DATA} libkopenafs.a $@
 
 ${TOP_INCDIR}/kopenafs.h: kopenafs.h
-	${INSTALL_DATA} kopenafs.h $@
+	${INSTALL_DATA} $? $@
 
 glue.o: ${SYS}/glue.c ${SYS}/afssyscalls.h
 	${CCOBJ} ${CFLAGS} -c ${SYS}/glue.c

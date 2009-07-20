@@ -34,16 +34,16 @@ depinstall: ${TOP_INCDIR}/afs/keys.h \
 	${TOP_INCDIR}/afs/ktc.h
 
 ${TOP_INCDIR}/afs/keys.h: keys.h
-	${INSTALL_DATA} keys.h $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/cellconfig.h: cellconfig.h
 	${INSTALL_DATA} cellconfig.h $@
 
 ${TOP_INCDIR}/afs/auth.h: auth.h
-	${INSTALL_DATA} auth.h $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/ktc.h: ktc.h
-	${INSTALL_DATA} ktc.h $@
+	${INSTALL_DATA} $? $@
 
 ${TOP_LIBDIR}/libauth.a: libauth.a
 	${INSTALL_DATA} libauth.a $@

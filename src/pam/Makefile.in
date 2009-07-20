@@ -51,8 +51,8 @@ afs_util.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 afs_util_krb.o: afs_util.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/afs_util.c -o afs_util_krb.o
 
-ktc_krb.o: ${srcdir}/../auth/ktc.c ${srcdir}/../auth/cellconfig.h \
-		${srcdir}/../auth/auth.h ${srcdir}/../auth/keys.h \
+ktc_krb.o: ${srcdir}/../auth/ktc.c ${TOP_INCDIR}/afs/cellconfig.h \
+		${TOP_INCDIR}/afs/auth.h ${srcdir}/../auth/keys.h \
 		${TOP_INCDIR}/afs/vice.h
 	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/../auth/ktc.c -o $@
 
