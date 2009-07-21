@@ -18,7 +18,7 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
-
+#include "afs/afs_prototypes.h"
 
 int
 afs_xsetgroups(void)

@@ -22,9 +22,9 @@ afs_vrdwr(struct usr_vnode *avc, struct usr_uio *uio, int rw, int io,
     int rc;
 
     if (rw == UIO_WRITE) {
-	rc = afs_write(avc, uio, io, cred, 0);
+	rc = afs_write(VTOAFS(avc), uio, io, cred, 0);
     } else {
-	rc = afs_read(avc, uio, cred, 0, 0, 0);
+	rc = afs_read(VTOAFS(avc), uio, cred, 0, 0, 0);
     }
 
     return rc;

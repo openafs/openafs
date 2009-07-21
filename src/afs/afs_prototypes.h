@@ -575,7 +575,7 @@ extern int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp);
 extern int AddPag(afs_int32 aval, struct AFS_UCRED **credpp);
 #endif
 extern int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred);
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+#if defined(UKERNEL)
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
 #else
 #ifdef AFS_LINUX26_ONEGROUP_ENV
@@ -871,7 +871,9 @@ extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 
 /* afs_syscall.c */
 extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
-
+#ifdef UKERNEL
+extern int Afs_syscall(void);
+#endif
 
 /* UKERNEL/afs_usrops.c */
 #ifdef UKERNEL

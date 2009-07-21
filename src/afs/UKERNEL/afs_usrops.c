@@ -138,6 +138,7 @@ pthread_cond_t usr_sleep_cond;
 #endif /* !NETSCAPE_NSAPI */
 
 int call_syscall(long, long, long, long, long, long);
+int fork_syscall(long, long, long, long, long, long);
 
 
 /*
@@ -1683,21 +1684,21 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
      */
     if (afsd_debug)
 	printf("%s: Calling AFSOP_RXLISTENER_DAEMON\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_RXLISTENER_DAEMON, FALSE, FALSE, FALSE);
+    fork_syscall(AFSCALL_CALL, AFSOP_RXLISTENER_DAEMON, FALSE, FALSE, FALSE, 0);
 
     if (afsd_verbose)
 	printf("%s: Forking rx callback listener.\n", rn);
     /* Child */
     if (preallocs < cacheStatEntries + 50)
 	preallocs = cacheStatEntries + 50;
-    fork_syscall(AFSCALL_CALL, AFSOP_START_RXCALLBACK, preallocs);
+    fork_syscall(AFSCALL_CALL, AFSOP_START_RXCALLBACK, preallocs, 0, 0, 0);
 
     /*
      * Start the RX event handler.
      */
     if (afsd_debug)
 	printf("%s: Calling AFSOP_RXEVENT_DAEMON\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_RXEVENT_DAEMON, FALSE);
+    fork_syscall(AFSCALL_CALL, AFSOP_RXEVENT_DAEMON, FALSE, 0, 0, 0);
 
     /*
      * Set up all the kernel processes needed for AFS.
@@ -1804,16 +1805,16 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 
     if (afsd_verbose)
 	printf("%s: Forking AFS daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_AFS);
+    fork_syscall(AFSCALL_CALL, AFSOP_START_AFS, 0, 0, 0, 0);
 
     if (afsd_verbose)
 	printf("%s: Forking check server daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_CS);
+    fork_syscall(AFSCALL_CALL, AFSOP_START_CS, 0, 0, 0, 0);
 
     if (afsd_verbose)
 	printf("%s: Forking %d background daemons.\n", rn, nDaemons);
     for (i = 0; i < nDaemons; i++) {
-	fork_syscall(AFSCALL_CALL, AFSOP_START_BKG);
+	fork_syscall(AFSCALL_CALL, AFSOP_START_BKG, 0, 0, 0, 0);
     }
 
     if (afsd_verbose)
@@ -1889,7 +1890,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 
     if (afsd_verbose)
 	printf("%s: Forking trunc-cache daemon.\n", rn);
-    fork_syscall(AFSCALL_CALL, AFSOP_START_TRUNCDAEMON);
+    fork_syscall(AFSCALL_CALL, AFSOP_START_TRUNCDAEMON, 0, 0, 0, 0);
 
     /*
      * Mount the AFS filesystem
@@ -1996,8 +1997,8 @@ syscallThread(void *argp)
 }
 
 int
-fork_syscall(syscall, afscall, param1, param2, param3, param4)
-     long syscall, afscall, param1, param2, param3, param4;
+fork_syscall(long syscall, long afscall, long param1, long param2,
+	     long param3, long param4)
 {
     usr_thread_t tid;
     struct syscallThreadArgs *sysArgsP;
@@ -2018,8 +2019,8 @@ fork_syscall(syscall, afscall, param1, param2, param3, param4)
 }
 
 int
-call_syscall(syscall, afscall, param1, param2, param3, param4)
-     long syscall, afscall, param1, param2, param3, param4;
+call_syscall(long syscall, long afscall, long param1, long param2,
+	     long param3, long param4)
 {
     int code = 0;
     struct a {
