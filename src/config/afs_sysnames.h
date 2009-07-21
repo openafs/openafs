@@ -287,6 +287,16 @@
 #define SYS_NAME_ID_i386_dfbsd_22        3900
 #define SYS_NAME_ID_i386_dfbsd_23        3901
 
+#define SYS_NAME_ID_amd64_obsd36        4005
+#define SYS_NAME_ID_amd64_obsd37        4006
+#define SYS_NAME_ID_amd64_obsd38        4007
+#define SYS_NAME_ID_amd64_obsd39        4008
+#define SYS_NAME_ID_amd64_obsd40        4009
+#define SYS_NAME_ID_amd64_obsd41        4010
+#define SYS_NAME_ID_amd64_obsd42        4011
+#define SYS_NAME_ID_amd64_obsd43        4012
+#define SYS_NAME_ID_amd64_obsd44        4013
+#define SYS_NAME_ID_amd64_obsd45        4014
 #define SYS_NAME_ID_amd64_obsd45        4014
 
 /*

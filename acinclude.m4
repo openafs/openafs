@@ -548,10 +548,12 @@ else
 			AFS_SYSNAME="amd64_nbsd20"
 			;;
 		x86_64-*-netbsd*3.[[0-8]]*)
+# XXX AFS_PARAM_COMMON handled separately, redundant?
 			AFS_PARAM_COMMON=param.nbsd30.h
 			AFS_SYSNAME="amd64_nbsd30"
 			;;
 		x86_64-*-netbsd*4.[[0-8]]*)
+# XXX AFS_PARAM_COMMON handled separately, redundant?
 			AFS_PARAM_COMMON=param.nbsd40.h
 			AFS_SYSNAME="amd64_nbsd40"
 			;;
@@ -832,6 +834,21 @@ case $AFS_SYSNAME in
     *_nbsd21)   AFS_PARAM_COMMON=param.nbsd21.h  ;;
     *_nbsd30)   AFS_PARAM_COMMON=param.nbsd30.h  ;;
     *_nbsd40)   AFS_PARAM_COMMON=param.nbsd40.h  ;;
+    *_obsd31)   AFS_PARAM_COMMON=param.obsd31.h  ;;
+    *_obsd32)   AFS_PARAM_COMMON=param.obsd32.h  ;;
+    *_obsd33)   AFS_PARAM_COMMON=param.obsd33.h  ;;
+    *_obsd34)   AFS_PARAM_COMMON=param.obsd34.h  ;;
+    *_obsd35)   AFS_PARAM_COMMON=param.obsd35.h  ;;
+    *_obsd36)   AFS_PARAM_COMMON=param.obsd36.h  ;;
+    *_obsd37)   AFS_PARAM_COMMON=param.obsd37.h  ;;
+    *_obsd38)   AFS_PARAM_COMMON=param.obsd38.h  ;;
+    *_obsd39)   AFS_PARAM_COMMON=param.obsd39.h  ;;
+    *_obsd40)   AFS_PARAM_COMMON=param.obsd40.h  ;;
+    *_obsd41)   AFS_PARAM_COMMON=param.obsd41.h  ;;
+    *_obsd42)   AFS_PARAM_COMMON=param.obsd42.h  ;;
+    *_obsd43)   AFS_PARAM_COMMON=param.obsd43.h  ;;
+    *_obsd44)   AFS_PARAM_COMMON=param.obsd44.h  ;;
+    *_obsd45)   AFS_PARAM_COMMON=param.obsd45.h  ;;
     *_linux22)  AFS_PARAM_COMMON=param.linux22.h ;;
     *_linux24)  AFS_PARAM_COMMON=param.linux24.h ;;
     *_linux26)  AFS_PARAM_COMMON=param.linux26.h ;;
