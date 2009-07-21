@@ -19,8 +19,6 @@
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-RCSID
-    ("$Header$");
 
 #include <sys/param.h>
 #include <afs/kautils.h>

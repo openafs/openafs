@@ -14,9 +14,6 @@
 #endif
 #include <stdio.h>
 
-RCSID
-    ("$Header$");
-
 #include "bc.h"
 #include <afs/bubasics.h>
 

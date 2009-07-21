@@ -14,7 +14,6 @@
 /* Unsafe: conflicts with _KERNEL inclusion of headers below */
 /* #include <afs/param.h> */
 /* #include <afsconfig.h> */
-/* RCSID("$Header$"); */
 
 #define _KERNEL
 #include "sys/types.h"

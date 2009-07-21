@@ -35,10 +35,6 @@
 #include <config.h>
 #endif
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>

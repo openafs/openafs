@@ -18,9 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
-
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef	AFS_SUN5_ENV

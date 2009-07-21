@@ -47,10 +47,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 #define CONTENT_STRING "kaka"
 
 static FILE *verbose_fp = NULL;

@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <sys/param.h>
 #ifdef AFS_VFSINCL_ENV

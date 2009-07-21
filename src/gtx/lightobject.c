@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "gtxlightobj.h"	/*Interface for this module */
 #include <stdio.h>		/*Standard I/O stuff */

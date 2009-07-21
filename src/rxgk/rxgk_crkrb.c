@@ -38,8 +38,6 @@
 #include "rxgk_locl.h"
 #include <errno.h>
 
-RCSID("$Id$");
-
 struct _rxg_key_type {
     char *name;
     int enctype;

@@ -16,8 +16,6 @@
 #include <sys/param.h>
 #include <afsconfig.h>
 
-RCSID
-    ("$Header$");
 
 #include <stdio.h>
 #include <sys/time.h>

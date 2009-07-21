@@ -28,8 +28,6 @@
 #include <des.h>
 #include "des_prototypes.h"
 
-RCSID
-    ("$Header$");
 
 
 #define XPRT_CBC_ENCRYPT

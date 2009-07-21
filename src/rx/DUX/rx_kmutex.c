@@ -16,9 +16,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
-
 /*
  * Currently everything is implemented in rx_kmutex.h
  */

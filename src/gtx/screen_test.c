@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "gtxwindows.h"		/*Generalized window interface */
 #include "gtxcurseswin.h"	/*Curses window interface */

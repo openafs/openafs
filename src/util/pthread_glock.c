@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define AFS_GRMUTEX_DECLSPEC __declspec(dllexport)

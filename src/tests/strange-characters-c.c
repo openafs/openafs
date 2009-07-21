@@ -43,10 +43,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 static void
 creat_file(char *name)
 {

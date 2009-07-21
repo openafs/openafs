@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <stdio.h>
 #if !defined(AFS_NAMEI_ENV)

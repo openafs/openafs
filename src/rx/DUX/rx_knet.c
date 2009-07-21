@@ -10,9 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
-
 #ifdef AFS_DUX40_ENV
 #include "rx/rx_kcommon.h"
 

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 
 #ifdef AFS_SGI_XFS_IOPS_ENV

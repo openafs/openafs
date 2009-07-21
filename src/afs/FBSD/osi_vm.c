@@ -27,8 +27,6 @@
      vgonel(struct vnode *vp, struct thread *td);
 #endif
 
-RCSID
-    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */

@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 

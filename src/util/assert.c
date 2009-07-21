@@ -16,8 +16,6 @@
 #endif
 #include <string.h>
 
-RCSID
-    ("$Header$");
 
 #include <stdio.h>
 #include "afsutil.h"

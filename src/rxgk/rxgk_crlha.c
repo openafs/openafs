@@ -33,8 +33,6 @@
 
 #include "rxgk_locl.h"
 
-RCSID("$Id$");
-
 #include <openssl/md5.h>
 #include <openssl/des.h>
 

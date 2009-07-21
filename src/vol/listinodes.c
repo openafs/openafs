@@ -22,8 +22,6 @@
 
 #include <string.h>
 
-RCSID
-    ("$Header$");
 
 #ifndef AFS_NAMEI_ENV
 #if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)

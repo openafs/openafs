@@ -11,9 +11,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
-
-
 #include <string.h>
 
 #include "y.tab.h"

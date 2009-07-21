@@ -10,8 +10,6 @@
  */
 
 #include <afsconfig.h>
-RCSID
-    ("$Header$");
 
 #if 0
 #include <kerberosIV/mit-copyright.h>

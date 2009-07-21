@@ -10,9 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
-
 #include <string.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>

@@ -45,10 +45,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 #if !defined(NGROUPS) && defined(NGROUPS_MAX)
 #define NGROUPS NGROUPS_MAX
 #endif

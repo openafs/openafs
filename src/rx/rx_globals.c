@@ -25,8 +25,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 /* Enable data initialization when the header file is included */
 #define GLOBALSINIT(stuff) = stuff

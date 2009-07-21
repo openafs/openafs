@@ -30,8 +30,6 @@
 #include <afs/param.h>
 #include "rx.h"
 
-RCSID
-    ("$Header$");
 
 #ifndef	NeXT
 

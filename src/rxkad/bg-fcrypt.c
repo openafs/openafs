@@ -37,8 +37,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #define DEBUG 0
 #ifdef KERNEL

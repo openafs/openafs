@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "uss_vol.h"		/*Interface to this module */
 #include "uss_common.h"		/*Common definitions */

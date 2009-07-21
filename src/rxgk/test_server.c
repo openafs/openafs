@@ -17,8 +17,6 @@
 #include "rxgk_proto.ss.h"
 #include "test.ss.h"
 
-RCSID("$Id$");
-
 /*
  *
  */

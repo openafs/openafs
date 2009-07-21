@@ -14,8 +14,6 @@
 #endif
 #include <stdio.h>
 
-RCSID
-    ("$Header$");
 
 #include <sys/types.h>
 #include <sys/file.h>

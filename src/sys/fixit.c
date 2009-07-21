@@ -32,8 +32,6 @@ to the free list when the files are removed from lost+found
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <sys/types.h>
 #include <sys/file.h>

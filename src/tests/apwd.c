@@ -56,7 +56,6 @@
 #endif
 #endif
 
-RCSID("$Id$");
 
 static int verbose_flag;
 static FILE *verbose_fp = NULL;

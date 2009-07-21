@@ -45,7 +45,6 @@
 
 #include <agetarg.h>
 
-RCSID("$Id$");
 
 typedef struct {
     int style;

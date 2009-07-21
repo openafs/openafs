@@ -33,8 +33,6 @@
 
 #include "rxgk_locl.h"
 
-RCSID("$Id$");
-
 int32_t
 rxgk_GetServerInfo(struct rx_connection *con,
 		   rxgk_level *level,

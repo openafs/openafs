@@ -8,8 +8,6 @@
 
 #include "rxgk_locl.h"
 
-RCSID("$Id$");
-
 #include <errno.h>
 
 #include <rx/rx.h>

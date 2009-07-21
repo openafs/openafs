@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <string.h>
 #include <fsprobe.h>		/*Interface for fsprobe module */

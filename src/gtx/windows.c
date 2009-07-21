@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 /* On DUX "IN" is a variable in curses.h, so this can be a bit of a problem */
 #ifdef IN

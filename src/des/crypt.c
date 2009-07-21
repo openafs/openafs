@@ -37,8 +37,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>

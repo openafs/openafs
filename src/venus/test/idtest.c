@@ -11,8 +11,6 @@
 #include <afs/param.h>
 #include <stdio.h>
 
-RCSID
-    ("$Header$");
 
 main(argc, argv)
 {

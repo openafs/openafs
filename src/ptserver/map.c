@@ -31,8 +31,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #ifdef SUPERGROUPS
 #include <errno.h>

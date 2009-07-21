@@ -49,9 +49,6 @@ Generic install command.  Options are:
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
-
 #include <stdio.h>
 #include <pwd.h>
 #include <grp.h>

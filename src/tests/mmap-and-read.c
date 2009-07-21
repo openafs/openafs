@@ -46,10 +46,6 @@
 #include <sys/stat.h>
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)-1)
 #endif

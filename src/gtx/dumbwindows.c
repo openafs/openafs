@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include "gtxdumbwin.h"		/*Interface definition */
 #include <stdio.h>		/*Standard I/O package */

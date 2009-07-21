@@ -18,8 +18,6 @@
 #include <sys/time_impl.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL

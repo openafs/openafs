@@ -33,8 +33,6 @@
 
 #include "rxgk_locl.h"
 
-RCSID("$Id$");
-
 #include <errno.h>
 
 #include "rxgk_proto.ss.h"

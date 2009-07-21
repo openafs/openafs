@@ -33,8 +33,6 @@
  * SUCH DAMAGE.
  */
 
-#undef RCSID
-
 /* x86_64 Assembly
  *
  * By Harald Barth <haba@stacken.kth.se> after looking

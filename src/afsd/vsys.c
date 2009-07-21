@@ -17,8 +17,6 @@
 #include <unistd.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #include <afs/afs_args.h>
 

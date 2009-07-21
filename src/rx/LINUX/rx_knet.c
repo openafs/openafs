@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header$");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV

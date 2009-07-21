@@ -23,8 +23,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <itc.h>
 #include <stdio.h>

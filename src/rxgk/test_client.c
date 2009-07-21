@@ -18,8 +18,6 @@
 #include "rxgk_proto.cs.h"
 #include "test.cs.h"
 
-RCSID("$Id$");
-
 /*
  *
  */

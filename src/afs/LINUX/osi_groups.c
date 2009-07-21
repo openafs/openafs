@@ -19,8 +19,6 @@
 #include <linux/seq_file.h>
 #endif
 
-RCSID
-    ("$Header$");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

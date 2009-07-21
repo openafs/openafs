@@ -50,9 +50,6 @@ static int newVLDB = 1;
 #include <afs/param.h>
 #include <afs/afsutil.h>
 
-RCSID
-    ("$Header$");
-
 #include <sys/types.h>
 #include <stdio.h>
 #ifdef AFS_NT40_ENV

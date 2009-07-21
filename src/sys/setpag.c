@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header$");
 
 #include <afs/afs_args.h>
 #if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)

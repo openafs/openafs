@@ -43,10 +43,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id$");
-#endif
-
 int
 main(int argc, char *argv[])
 {
