@@ -91,7 +91,7 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
 	}
 	/* now relativeBlob is the page-relative first allocated blob,
 	 * or EPP (if there are none in this page). */
-	DRelease((struct buffer *)tpe, 0);
+	DRelease(tpe, 0);
 	if (i != EPP)
 	    return i + pageBlob;
 	ablob = pageBlob + EPP;	/* go around again */
@@ -763,7 +763,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 		*eofp = 1;	/* Set it properly */
 #endif
 	    if (ode)
-		DRelease((struct buffer *)ode, 0);
+		DRelease(ode, 0);
 	    goto dirend;
 	}
 	/* by here nde is set */
@@ -782,7 +782,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 	if (DIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
 #endif /* AFS_SGI53_ENV */
 	    /* No can do no more now; ya know... at this time */
-	    DRelease((struct buffer *)nde, 0);	/* can't use this one. */
+	    DRelease(nde, 0);	/* can't use this one. */
 	    if (len) {
 #ifdef	AFS_HPUX_ENV
 		sdirEntry->d_fileno =
@@ -830,7 +830,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 		code = EINVAL;
 	    }
 	    if (ode)
-		DRelease((struct buffer *)ode, 0);
+		DRelease(ode, 0);
 	    goto dirend;
 	}
 
@@ -880,12 +880,12 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 	len = DIRSIZ_LEN(o_slen = n_slen);
 #endif /* AFS_SGI53_ENV */
 	if (ode)
-	    DRelease((struct buffer *)ode, 0);
+	    DRelease(ode, 0);
 	ode = nde;
 	AFS_UIO_SETOFFSET(auio, (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5));
     }
     if (ode)
-	DRelease((struct buffer *)ode, 0);
+	DRelease(ode, 0);
 
   dirend:
     ReleaseReadLock(&tdc->lock);

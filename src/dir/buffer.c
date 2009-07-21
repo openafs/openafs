@@ -287,10 +287,12 @@ newslot(afs_int32 *afid, afs_int32 apage, register struct buffer *lp)
     return lp;
 }
 
+/* Release a buffer, specifying whether or not the buffer has been modified
+ * by the locker. */
 void
-DRelease(register struct buffer *bp, int flag)
+DRelease(void *loc, int flag)
 {
-    /* Release a buffer, specifying whether or not the buffer has been modified by the locker. */
+    struct buffer *bp = (struct buffer *)loc;
     register int index;
 
     if (!bp)

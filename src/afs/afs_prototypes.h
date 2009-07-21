@@ -26,7 +26,6 @@ extern void afs_FreeAllAxs(struct axscache **headp);
 /* afs_buffer.c */
 extern void DInit(int abuffers);
 extern void *DRead(register struct dcache * fid, register int page);
-extern void DRelease(register struct buffer *bp, int flag);
 extern int DVOffset(register void *ap);
 extern void DZap(struct dcache * fid);
 extern void DFlush(void);

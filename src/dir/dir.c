@@ -114,16 +114,17 @@ static struct DirEntry *FindItem(void *dir, char *ename,
 				 unsigned short **previtem);
 
 
+/* Find out how many entries are required to store a name. */
 int
 NameBlobs(char *name)
-{				/* Find out how many entries are required to store a name. */
+{
     register int i;
     i = strlen(name) + 1;
     return 1 + ((i + 15) >> 5);
 }
 
-/* Create an entry in a file.  Dir is a file representation, while entry is a string name. */
-
+/* Create an entry in a file.  Dir is a file representation, while entry is
+ * a string name. */
 int
 Create(void *dir, char *entry, void *voidfid)
 {
@@ -140,8 +141,8 @@ Create(void *dir, char *entry, void *voidfid)
     /* First check if file already exists. */
     ep = FindItem(dir, entry, &pp);
     if (ep) {
-	DRelease((struct buffer *)ep, 0);
-	DRelease((struct buffer *)pp, 0);
+	DRelease(ep, 0);
+	DRelease(pp, 0);
 	return EEXIST;
     }
     blobs = NameBlobs(entry);	/* number of entries required */
@@ -159,14 +160,14 @@ Create(void *dir, char *entry, void *voidfid)
     /* Now we just have to thread it on the hash table list. */
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp) {
-	DRelease((struct buffer *)ep, 1);
+	DRelease(ep, 1);
 	return EIO;
     }
     i = DirHash(entry);
     ep->next = dhp->hashTable[i];
     dhp->hashTable[i] = htons(firstelt);
-    DRelease((struct buffer *)dhp, 1);
-    DRelease((struct buffer *)ep, 1);
+    DRelease(dhp, 1);
+    DRelease(ep, 1);
     return 0;
 }
 
@@ -187,7 +188,7 @@ Length(void *dir)
 	    if (dhp->alloMap[i] != EPP)
 		ctr++;
     }
-    DRelease((struct buffer *)dhp, 0);
+    DRelease(dhp, 0);
     return ctr * AFS_PAGESIZE;
 }
 
@@ -202,10 +203,10 @@ Delete(void *dir, char *entry)
     if (firstitem == 0)
 	return ENOENT;
     *previtem = firstitem->next;
-    DRelease((struct buffer *)previtem, 1);
+    DRelease(previtem, 1);
     index = DVOffset(firstitem) / 32;
     nitems = NameBlobs(firstitem->name);
-    DRelease((struct buffer *)firstitem, 0);
+    DRelease(firstitem, 0);
     FreeBlobs(dir, index, nitems);
     return 0;
 }
@@ -247,7 +248,7 @@ FindBlobs(void *dir, int nblobs)
 	    }
 	    pp = (struct PageHeader *)DRead(dir, i);	/* read the page in. */
 	    if (!pp) {
-		DRelease((struct buffer *)dhp, 1);
+		DRelease(dhp, 1);
 		break;
 	    }
 	    for (j = 0; j <= EPP - nblobs; j++) {
@@ -266,17 +267,17 @@ FindBlobs(void *dir, int nblobs)
 		 * and free up any resources we've got allocated. */
 		if (i < MAXPAGES)
 		    dhp->alloMap[i] -= nblobs;
-		DRelease((struct buffer *)dhp, 1);
+		DRelease(dhp, 1);
 		for (k = 0; k < nblobs; k++)
 		    pp->freebitmap[(j + k) >> 3] |= 1 << ((j + k) & 7);
-		DRelease((struct buffer *)pp, 1);
+		DRelease(pp, 1);
 		return j + i * EPP;
 	    }
-	    DRelease((struct buffer *)pp, 0);	/* This dir page is unchanged. */
+	    DRelease(pp, 0);	/* This dir page is unchanged. */
 	}
     }
     /* If we make it here, the directory is full. */
-    DRelease((struct buffer *)dhp, 1);
+    DRelease(dhp, 1);
     return -1;
 }
 
@@ -294,7 +295,7 @@ AddPage(void *dir, int pageno)
     pp->freebitmap[0] = 0x01;
     for (i = 1; i < EPP / 8; i++)	/* It's a constant */
 	pp->freebitmap[i] = 0;
-    DRelease((struct buffer *)pp, 1);
+    DRelease(pp, 1);
 }
 
 /* Free a whole bunch of directory entries. */
@@ -313,13 +314,13 @@ FreeBlobs(void *dir, register int firstblob, int nblobs)
 	return;
     if (page < MAXPAGES)
 	dhp->alloMap[page] += nblobs;
-    DRelease((struct buffer *)dhp, 1);
+    DRelease(dhp, 1);
     pp = (struct PageHeader *)DRead(dir, page);
     if (pp)
 	for (i = 0; i < nblobs; i++)
 	    pp->freebitmap[(firstblob + i) >> 3] &=
 		~(1 << ((firstblob + i) & 7));
-    DRelease((struct buffer *)pp, 1);
+    DRelease(pp, 1);
 }
 
 /*
@@ -345,7 +346,7 @@ MakeDir(void *dir, afs_int32 * me, afs_int32 * parent)
 	dhp->alloMap[i] = EPP;
     for (i = 0; i < NHASHENT; i++)
 	dhp->hashTable[i] = 0;
-    DRelease((struct buffer *)dhp, 1);
+    DRelease(dhp, 1);
     Create(dir, ".", me);
     Create(dir, "..", parent);	/* Virtue is its own .. */
     return 0;
@@ -363,10 +364,10 @@ Lookup(void *dir, char *entry, void *voidfid)
     firstitem = FindItem(dir, entry, &previtem);
     if (firstitem == 0)
 	return ENOENT;
-    DRelease((struct buffer *)previtem, 0);
+    DRelease(previtem, 0);
     fid[1] = ntohl(firstitem->fid.vnode);
     fid[2] = ntohl(firstitem->fid.vunique);
-    DRelease((struct buffer *)firstitem, 0);
+    DRelease(firstitem, 0);
     return 0;
 }
 
@@ -382,12 +383,12 @@ LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
     firstitem = FindItem(dir, entry, &previtem);
     if (firstitem == 0)
 	return ENOENT;
-    DRelease((struct buffer *)previtem, 0);
+    DRelease(previtem, 0);
     fid[1] = ntohl(firstitem->fid.vnode);
     fid[2] = ntohl(firstitem->fid.vunique);
     if (offsetp)
 	*offsetp = DVOffset(firstitem);
-    DRelease((struct buffer *)firstitem, 0);
+    DRelease(firstitem, 0);
     return 0;
 }
 
@@ -419,7 +420,7 @@ EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
 	    if (!ep) {
 		if (DErrno) {
 		    /* we failed, return why */
-		    DRelease((struct buffer *)dhp, 0);
+		    DRelease(dhp, 0);
 		    return DErrno;
 		}
 		break;
@@ -428,12 +429,12 @@ EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
 	    num = ntohs(ep->next);
 	    code = (*hookproc) (hook, ep->name, ntohl(ep->fid.vnode),
 			 ntohl(ep->fid.vunique));
-	    DRelease((struct buffer *)ep, 0);
+	    DRelease(ep, 0);
 	    if (code)
 	    	break;
 	}
     }
-    DRelease((struct buffer *)dhp, 0);
+    DRelease(dhp, 0);
     return 0;
 }
 
@@ -457,15 +458,15 @@ IsEmpty(void *dir)
 	    if (!ep)
 		break;
 	    if (strcmp(ep->name, "..") && strcmp(ep->name, ".")) {
-		DRelease((struct buffer *)ep, 0);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(ep, 0);
+		DRelease(dhp, 0);
 		return 1;
 	    }
 	    num = ntohs(ep->next);
-	    DRelease((struct buffer *)ep, 0);
+	    DRelease(ep, 0);
 	}
     }
-    DRelease((struct buffer *)dhp, 0);
+    DRelease(dhp, 0);
     return 0;
 }
 
@@ -500,10 +501,16 @@ DirHash(register char *string)
     return tval;
 }
 
+
+/* Find a directory entry, given its name.  This entry returns a pointer
+ * to a locked buffer, and a pointer to a locked buffer (in previtem)
+ * referencing the found item (to aid the delete code).  If no entry is
+ * found, however, no items are left locked, and a null pointer is
+ * returned instead. */
+
 static struct DirEntry *
 FindItem(void *dir, char *ename, unsigned short **previtem)
 {
-    /* Find a directory entry, given its name.  This entry returns a pointer to a locked buffer, and a pointer to a locked buffer (in previtem) referencing the found item (to aid the delete code).  If no entry is found, however, no items are left locked, and a null pointer is returned instead. */
     register int i;
     register struct DirHeader *dhp;
     register unsigned short *lp;
@@ -514,12 +521,12 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 	return 0;
     if (dhp->hashTable[i] == 0) {
 	/* no such entry */
-	DRelease((struct buffer *)dhp, 0);
+	DRelease(dhp, 0);
 	return 0;
     }
     tp = GetBlob(dir, (u_short) ntohs(dhp->hashTable[i]));
     if (!tp) {
-	DRelease((struct buffer *)dhp, 0);
+	DRelease(dhp, 0);
 	return 0;
     }
     lp = &(dhp->hashTable[i]);
@@ -530,16 +537,16 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 	    *previtem = lp;
 	    return tp;
 	}
-	DRelease((struct buffer *)lp, 0);
+	DRelease(lp, 0);
 	lp = &(tp->next);
 	if (tp->next == 0) {
 	    /* The end of the line */
-	    DRelease((struct buffer *)lp, 0);	/* Release all locks. */
+	    DRelease(lp, 0);	/* Release all locks. */
 	    return 0;
 	}
 	tp = GetBlob(dir, (u_short) ntohs(tp->next));
 	if (!tp) {
-	    DRelease((struct buffer *)lp, 0);
+	    DRelease(lp, 0);
 	    return 0;
 	}
     }
@@ -569,20 +576,20 @@ FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
 	    while(tp) {
 		if (vnode == ntohl(tp->fid.vnode) 
 		    && unique == ntohl(tp->fid.vunique)) { 
-		    DRelease(dhp,0);
+		    DRelease(dhp, 0);
 		    return tp;
 		}
 		lp = &(tp->next);
 		if (tp->next == 0)
 		    break;
 		tp = GetBlob(dir,(u_short)ntohs(tp->next));
-		DRelease(lp,0);
+		DRelease(lp, 0);
 	    }
-	    DRelease(lp,0);
+	    DRelease(lp, 0);
 	}
     }
-    DRelease(dhp,0);
-    return (struct DirEntry *)0;
+    DRelease(dhp, 0);
+    return NULL;
 }
 
 int

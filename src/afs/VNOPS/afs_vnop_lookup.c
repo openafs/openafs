@@ -773,7 +773,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
 	/* dont copy more than we have room for */
 	if (fidIndex >= nentries) {
-	    DRelease((struct buffer *)dirEntryp, 0);
+	    DRelease(dirEntryp, 0);
 	    break;
 	}
 
@@ -814,7 +814,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	    }
 	    if (!tvcp)
 	    {
-		DRelease((struct buffer *)dirEntryp, 0);
+		DRelease(dirEntryp, 0);
 		ReleaseReadLock(&dcp->lock);
 		ReleaseReadLock(&adp->lock);
 		afs_PutDCache(dcp);
@@ -875,7 +875,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	 * used by this dir entry.
 	 */
 	temp = afs_dir_NameBlobs(dirEntryp->name) << 5;
-	DRelease((struct buffer *)dirEntryp, 0);
+	DRelease(dirEntryp, 0);
 	if (temp <= 0)
 	    break;
 	dirCookie += temp;

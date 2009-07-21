@@ -106,7 +106,7 @@ DirOK(void *file)
     /* Check magic number for first page */
     if (dhp->header.tag != htons(1234)) {
 	printf("Bad first pageheader magic number.\n");
-	DRelease((struct buffer *)dhp, 0);
+	DRelease(dhp, 0);
 	return 0;
     }
 
@@ -127,13 +127,13 @@ DirOK(void *file)
 		 * two must exist for "." and ".."
 		 */
 		printf("The dir header alloc map for page %d is bad.\n", i);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 	} else {
 	    if ((j < 0) || (j > EPP)) {
 		printf("The dir header alloc map for page %d is bad.\n", i);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 	}
@@ -144,7 +144,7 @@ DirOK(void *file)
 		printf
 		    ("A partially-full page occurs in slot %d, after the dir end.\n",
 		     i);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 	} else if (j == EPP) {	/* is this the last page */
@@ -162,7 +162,7 @@ DirOK(void *file)
     if (usedPages < up) {
 	printf
 	    ("Count of used directory pages does not match count in directory header\n");
-	DRelease((struct buffer *)dhp, 0);
+	DRelease(dhp, 0);
 	return 0;
     }
 
@@ -174,7 +174,7 @@ DirOK(void *file)
 	/* Read the page header */
 	pp = (struct PageHeader *)DRead(file, i);
 	if (!pp) {
-	    DRelease((struct buffer *)dhp, 0);
+	    DRelease(dhp, 0);
 	    if (DErrno != 0) {
 		/* couldn't read page, but not because it wasn't there permanently */
 		printf("Failed to read dir page %d (errno %d)\n", i, DErrno);
@@ -188,8 +188,8 @@ DirOK(void *file)
 	/* check the tag field */
 	if (pp->tag != htons(1234)) {
 	    printf("Directory page %d has a bad magic number.\n", i);
-	    DRelease((struct buffer *)pp, 0);
-	    DRelease((struct buffer *)dhp, 0);
+	    DRelease(pp, 0);
+	    DRelease(dhp, 0);
 	    return 0;
 	}
 
@@ -223,12 +223,12 @@ DirOK(void *file)
 	    printf
 		("Header alloMap count doesn't match count in freebitmap for page %d.\n",
 		 i);
-	    DRelease((struct buffer *)pp, 0);
-	    DRelease((struct buffer *)dhp, 0);
+	    DRelease(pp, 0);
+	    DRelease(dhp, 0);
 	    return 0;
 	}
 
-	DRelease((struct buffer *)pp, 0);
+	DRelease(pp, 0);
     }
 
     /* Initialize the in-memory freebit map for all pages. */
@@ -256,7 +256,7 @@ DirOK(void *file)
 	    /* Verify that the entry is within range */
 	    if (entry < 0 || entry >= maxents) {
 		printf("Out-of-range hash id %d in chain %d.\n", entry, i);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 
@@ -270,11 +270,11 @@ DirOK(void *file)
 		     */
 		    printf("Could not get dir blob %d (errno %d)\n", entry,
 			   DErrno);
-		    DRelease((struct buffer *)dhp, 0);
+		    DRelease(dhp, 0);
 		    Die("dirok3");
 		}
 		printf("Invalid hash id %d in chain %d.\n", entry, i);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 	    ne = ntohs(ep->next);
@@ -282,8 +282,8 @@ DirOK(void *file)
 	    /* There can't be more than maxents entries */
 	    if (++entcount >= maxents) {
 		printf("Directory's hash chain %d is circular.\n", i);
-		DRelease((struct buffer *)ep, 0);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(ep, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 
@@ -291,8 +291,8 @@ DirOK(void *file)
 	    if (ep->name[0] == '\000') {
 		printf("Dir entry %x in chain %d has bogus (null) name.\n",
 		       (int)ep, i);
-		DRelease((struct buffer *)ep, 0);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(ep, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 
@@ -300,8 +300,8 @@ DirOK(void *file)
 	    if (ep->flag != FFIRST) {
 		printf("Dir entry %x in chain %d has bogus flag field.\n", (int)ep,
 		       i);
-		DRelease((struct buffer *)ep, 0);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(ep, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 
@@ -310,8 +310,8 @@ DirOK(void *file)
 	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
 		printf("Dir entry %x in chain %d has too-long name.\n", (int)ep,
 		       i);
-		DRelease((struct buffer *)ep, 0);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(ep, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 
@@ -328,8 +328,8 @@ DirOK(void *file)
 		printf
 		    ("Dir entry %x should be in hash bucket %d but IS in %d.\n",
 		     (int)ep, j, i);
-		DRelease((struct buffer *)ep, 0);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(ep, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 
@@ -341,8 +341,8 @@ DirOK(void *file)
 		    printf
 			("Dir entry %x, index 13 has name '%s' should be '.'\n",
 			 (int)ep, ep->name);
-		    DRelease((struct buffer *)ep, 0);
-		    DRelease((struct buffer *)dhp, 0);
+		    DRelease(ep, 0);
+		    DRelease(dhp, 0);
 		    return 0;
 		}
 	    }
@@ -355,15 +355,15 @@ DirOK(void *file)
 		    printf
 			("Dir entry %x, index 14 has name '%s' should be '..'\n",
 			 (int)ep, ep->name);
-		    DRelease((struct buffer *)ep, 0);
-		    DRelease((struct buffer *)dhp, 0);
+		    DRelease(ep, 0);
+		    DRelease(dhp, 0);
 		    return 0;
 		}
 	    }
 
 	    /* CHECK FOR DUPLICATE NAMES? */
 
-	    DRelease((struct buffer *)ep, 0);
+	    DRelease(ep, 0);
 	}
     }
 
@@ -371,7 +371,7 @@ DirOK(void *file)
     if (!havedot || !havedotdot) {
 	printf
 	    ("Directory entry '.' or '..' does not exist or is in the wrong index.\n");
-	DRelease((struct buffer *)dhp, 0);
+	DRelease(dhp, 0);
 	return 0;
     }
 
@@ -385,7 +385,7 @@ DirOK(void *file)
 	    printf
 		("Failed on second attempt to read dir page %d (errno %d)\n",
 		 i, DErrno);
-	    DRelease((struct buffer *)dhp, 0);
+	    DRelease(dhp, 0);
 	    /* if DErrno is 0, then the dir is really bad, and we return dir *not* OK.
 	     * otherwise, we want to return true (1), meaning the dir isn't known
 	     * to be bad (we can't tell, since I/Os are failing.
@@ -402,17 +402,17 @@ DirOK(void *file)
 		printf
 		    ("Entry freebitmap error, page %d, map offset %d, %x should be %x.\n",
 		     i, j, pp->freebitmap[j], eaMap[count + j]);
-		DRelease((struct buffer *)pp, 0);
-		DRelease((struct buffer *)dhp, 0);
+		DRelease(pp, 0);
+		DRelease(dhp, 0);
 		return 0;
 	    }
 	}
 
-	DRelease((struct buffer *)pp, 0);
+	DRelease(pp, 0);
     }
 
     /* Finally cleanup and return. */
-    DRelease((struct buffer *)dhp, 0);
+    DRelease(dhp, 0);
     return 1;
 }
 
@@ -425,7 +425,7 @@ DirOK(void *file)
  * parent directory.
  */
 int
-DirSalvage(char *fromFile, char *toFile, afs_int32 vn, afs_int32 vu, 
+DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
 	   afs_int32 pvn, afs_int32 pvu)
 {
     /* First do a MakeDir on the target. */
@@ -479,7 +479,7 @@ DirSalvage(char *fromFile, char *toFile, afs_int32 vn, afs_int32 vu,
 		    printf
 			("can't continue down hash chain (entry %d, errno %d)\n",
 			 entry, DErrno);
-		    DRelease((struct buffer *)dhp, 0);
+		    DRelease(dhp, 0);
 		    return DErrno;
 		}
 		printf
@@ -500,15 +500,15 @@ DirSalvage(char *fromFile, char *toFile, afs_int32 vn, afs_int32 vu,
 		    printf
 			("Create of %s returned code %d, skipping to next hash chain.\n",
 			 tname, code);
-		    DRelease((struct buffer *)ep, 0);
+		    DRelease(ep, 0);
 		    break;
 		}
 	    }
-	    DRelease((struct buffer *)ep, 0);
+	    DRelease(ep, 0);
 	}
     }
 
     /* Clean up things. */
-    DRelease((struct buffer *)dhp, 0);
+    DRelease(dhp, 0);
     return 0;
 }
