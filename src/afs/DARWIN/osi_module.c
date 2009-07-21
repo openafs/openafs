@@ -46,6 +46,8 @@ afs_modload(struct kmod_info *ki, void *data)
 {
     osi_Init();
 #ifdef AFS_DARWIN80_ENV
+    MUTEX_SETUP();
+    afs_global_lock = lck_mtx_alloc_init(openafs_lck_grp, 0);
     memset(&afs_vfsentry, 0, sizeof(struct vfs_fsentry));
     strcpy(afs_vfsentry.vfe_fsname, "afs");
     afs_vfsentry.vfe_vfsops = &afs_vfsops;
@@ -55,6 +57,8 @@ afs_modload(struct kmod_info *ki, void *data)
     afs_vfsentry.vfe_flags = VFS_TBLTHREADSAFE|VFS_TBLNOTYPENUM;
     if (vfs_fsadd(&afs_vfsentry, &afs_vfstable)) {
 	printf("AFS: vfs_fsadd failed. aborting\n");
+	MUTEX_FINISH();
+	lck_mtx_free(afs_global_lock, openafs_lck_grp);
 	return KERN_FAILURE;
     }
     afs_cdev.d_open = &afs_cdev_nop_openclose;
@@ -64,6 +68,8 @@ afs_modload(struct kmod_info *ki, void *data)
     if (afs_cdev_major == -1) {
 	printf("AFS: cdevsw_add failed. aborting\n");
         vfs_fsremove(afs_vfstable);
+	MUTEX_FINISH();
+	lck_mtx_free(afs_global_lock, openafs_lck_grp);
 	return KERN_FAILURE;
     }
     afs_cdev_devfs_handle = devfs_make_node(makedev(afs_cdev_major, 0),
@@ -93,10 +99,6 @@ afs_modload(struct kmod_info *ki, void *data)
 #ifdef KERNEL_FUNNEL
     sysent[AFS_SYSCALL].sy_funnel = KERNEL_FUNNEL;
 #endif
-#endif
-#ifdef AFS_DARWIN80_ENV
-    MUTEX_SETUP();
-    afs_global_lock = lck_mtx_alloc_init(openafs_lck_grp, 0);
 #endif
     return KERN_SUCCESS;
 }
