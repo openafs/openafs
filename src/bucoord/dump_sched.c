@@ -34,6 +34,7 @@
 #include "bc.h"
 #include "error_macros.h"
 #include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
 
 /* code to manage dump schedules 
  * specific to the ubik database implementation

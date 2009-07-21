@@ -672,11 +672,11 @@ incPosition(struct butm_tapeInfo *info, usd_handle_t fid, afs_uint32 dataSize)
  */
 afs_int32 TapeBlockSize;
 afs_int32
-readData(usd_handle_t fid, char *data, afs_int32 totalSize, afs_int32 *errorP)
+readData(usd_handle_t fid, char *data, afs_uint32 totalSize, afs_int32 *errorP)
 {
     afs_int32 toread;		/* Number of bytes to read */
-    afs_int32 rSize;		/* Total bytes read so far */
-    afs_int32 tSize;		/* Temporary size */
+    afs_uint32 rSize;		/* Total bytes read so far */
+    afs_uint32 tSize;		/* Temporary size */
     afs_int32 rc;		/* return code */
 
     toread = totalSize;		/* First, try to read all the data */
@@ -775,7 +775,7 @@ WriteTapeBlock(struct butm_tapeInfo *info,
 	       afs_int32 blockType)
 {
     afs_int32 code = 0, rc = 0;
-    afs_int32 wsize;
+    afs_uint32 wsize;
     struct tapeLabel *label;
     struct fileMark *fmark;
     struct blockMark *bmark;

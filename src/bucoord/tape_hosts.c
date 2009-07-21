@@ -28,6 +28,7 @@
 #include "error_macros.h"
 #include <errno.h>
 #include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
     
 /* code to manage tape hosts
  * specific to the ubik database implementation

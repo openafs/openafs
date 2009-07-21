@@ -46,7 +46,7 @@ extern int tapemounted;
 extern char *opencallout;
 extern char *closecallout;
 extern char *whoami;
-extern char *extractDumpName();
+extern char *extractDumpName(char *);
 extern int BufferSize;		/* Size in B stored for header info */
 FILE *restoretofilefd;
 #ifdef xbsa

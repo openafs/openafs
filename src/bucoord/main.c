@@ -48,6 +48,7 @@
 #include <afs/vlserver.h>
 #include <afs/butm.h>
 #include <afs/butx.h>
+#include <afs/tcdata.h>
 
 #include "bc.h"			/*Backup Coordinator structs and defs */
 #include "bucoord_internal.h"
@@ -226,7 +227,7 @@ backupInit(void)
     }
     initd = 1;
 
-    code = bc_InitConfig(DefaultConfDir);
+    code = bc_InitConfig((char *)DefaultConfDir);
     if (code) {
 	afs_com_err(whoami, code,
 		"Can't initialize from config files in directory '%s'",

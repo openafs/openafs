@@ -7,6 +7,9 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#ifndef AFS_SRC_BUBASICS_BUTM_H
+#define AFS_SRC_BUBASICS_BUTM_H
+
 #include <afs/auth.h>
 #include <afs/bubasics.h>
 
@@ -149,3 +152,5 @@ struct butm_tapeLabel {
 #define butm_WriteEOT(i) (*((i)->ops.writeEOT))(i)
 #define butm_SetSize(i,s) (*((i)->ops.setSize))(i,s)
 #define butm_GetSize(i,s) (*((i)->ops.getSize))(i,s)
+
+#endif

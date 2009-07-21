@@ -57,6 +57,7 @@ extern int bc_AddTapeHost(struct bc_config *aconfig, char *aname,
 			  afs_int32 aport);
 extern int bc_DeleteTapeHost(struct bc_config *aconfig, char *aname,
 			     afs_int32 aport);
+extern int bc_InitConfig(char *apath);
 
 /* dsstub.c */
 extern char *tailCompPtr(char *pathNamePtr);
@@ -163,6 +164,13 @@ extern afs_int32 bcdb_LookupVolume(char *volumeName,
 				   afs_int32 maxa, afs_int32 *nEntries);
 extern int bcdb_FindTape(afs_int32 dumpid, char *tapeName,
 		         struct budb_tapeEntry *teptr);
+
+extern afs_int32 udbClientInit(int noAuthFlag, int localauth, char *cellName);
+
+struct ktc_token;
+extern int vldbClientInit(int noAuthFlag, int localauth, char *cellName,
+		          struct ubik_client **cstruct,
+                          struct ktc_token *ttoken);
 
 /* vol_sets.c */
 extern afs_int32 bc_UpdateVolumeSet(void);

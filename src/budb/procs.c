@@ -395,8 +395,9 @@ AddToReturnList(struct returnList *list, dbadr a, afs_int32 *to_skipP)
 }
 
 afs_int32
-FillVolEntry(struct ubik_trans *ut, dbadr va, struct budb_volumeEntry *vol)
+FillVolEntry(struct ubik_trans *ut, dbadr va, void *rock)
 {
+    struct budb_volumeEntry *vol = (struct budb_volumeEntry *) rock;
     struct dump d;
     struct tape t;
     struct volInfo vi;
@@ -431,8 +432,9 @@ FillVolEntry(struct ubik_trans *ut, dbadr va, struct budb_volumeEntry *vol)
 }
 
 afs_int32
-FillDumpEntry(struct ubik_trans *ut, dbadr da, struct budb_dumpEntry *dump)
+FillDumpEntry(struct ubik_trans *ut, dbadr da, void *rock)
 {
+    struct budb_dumpEntry *dump = (struct budb_dumpEntry *)rock;
     struct dump d, ad;
 
     if (dbread(ut, da, &d, sizeof(d)))
@@ -473,8 +475,9 @@ FillDumpEntry(struct ubik_trans *ut, dbadr da, struct budb_dumpEntry *dump)
 }
 
 afs_int32
-FillTapeEntry(struct ubik_trans *ut, dbadr ta, struct budb_tapeEntry *tape)
+FillTapeEntry(struct ubik_trans *ut, dbadr ta, void *rock)
 {
+    struct budb_tapeEntry *tape=(struct budb_tapeEntry *) rock;
     struct tape t;
     struct dump d;
     afs_int32 code;
@@ -517,7 +520,7 @@ static afs_int32
 SendReturnList(struct ubik_trans *ut,
 	       struct returnList *list,	/* list of elements to return */
 	       afs_int32(*FillProc) (struct ubik_trans *, dbadr da, 
-		       		     budb_dumpEntry *),	
+				     void *),
 	       				/* proc to fill entry */
 	       int e_size,		/* size of each element */
 	       afs_int32 index,		/* index from previous call */

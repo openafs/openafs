@@ -20,4 +20,7 @@ extern void tapeEntry_ntoh(struct budb_tapeEntry *, struct budb_tapeEntry *);
 extern void volumeEntry_ntoh(struct budb_volumeEntry *,
 			     struct budb_volumeEntry *);
 extern int default_tapeset(struct budb_tapeSet *, char *);
+extern void printDumpEntry(struct budb_dumpEntry *deptr);
+extern void printTapeEntry(struct budb_tapeEntry *teptr);
+extern void printVolumeEntry(struct budb_volumeEntry *veptr);
 #endif

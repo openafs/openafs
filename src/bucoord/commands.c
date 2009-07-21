@@ -28,6 +28,7 @@
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
 #include <afs/budb.h>
+#include <afs/budb_prototypes.h>
 #include <afs/butc.h>
 #include <afs/bubasics.h>	/* PA */
 #include <afs/volser.h>
@@ -2426,7 +2427,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
     char *timeString;
     budb_dumpsList dumps, flags;
     int i;
-    afs_int32 port = -1, dbonly = 0, force;
+    afs_int32 port = -1, force;
 
     /* Must specify at least one of -dumpid, -from, or -to */
     if (!as->parms[0].items && !as->parms[1].items && !as->parms[2].items

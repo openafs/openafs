@@ -254,7 +254,7 @@ ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht,
     int n;
     int i;
     int length;
-    dbadr ta = NULL;
+    dbadr ta = 0;
 
     if ((mht == 0)
 	|| ((ht = mht->ht) == 0)
