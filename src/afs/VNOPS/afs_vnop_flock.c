@@ -39,105 +39,120 @@ static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 static void DoLockWarning(void);
 
 /* int clid;  * non-zero on SGI, OSF, SunOS, Darwin, xBSD ** XXX ptr type */
+
+#if defined(AFS_SUN5_ENV)
 void
 lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 {
-#if	defined(AFS_SUN5_ENV)
-    register proc_t *procp = ttoproc(curthread);
-#else
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-#ifdef AFS_SGI_ENV
-    struct proc *procp = OSI_GET_CURRENT_PROCP();
-#else
-    struct proc *procp = u.u_procp;
-#endif /* AFS_SGI_ENV */
-#endif
-#endif
-#if defined(AFS_SGI65_ENV)
-    flid_t flid;
-    get_current_flid(&flid);
-#endif
+    proc_t *procp = ttoproc(curthread);
 
     if (slp) {
-#ifdef	AFS_AIX32_ENV
-#ifdef	AFS_AIX41_ENV
-	slp->sysid = 0;
-	slp->pid = getpid();
-#else
-	slp->sysid = u.u_sysid;
-	slp->pid = u.u_epid;
-#endif
-#else
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV)
-#ifdef	AFS_SUN53_ENV
+# ifdef AFS_SUN53_ENV
 	slp->sysid = 0;
 	slp->pid = procp->p_pid;
-#else
+# else
 	slp->sysid = procp->p_sysid;
 	slp->pid = procp->p_epid;
-#endif
-#else
-#if defined(AFS_SGI_ENV)
-#ifdef AFS_SGI65_ENV
-	slp->sysid = flid.fl_sysid;
-#else
-	slp->sysid = OSI_GET_CURRENT_SYSID();
-#endif
-	slp->pid = clid;
-#else
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	slp->pid = clid;
-#else
-#if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
-	slp->pid = getpid();
-#else
-	slp->pid = u.u_procp->p_pid;
-#endif
-#endif
-#endif /* AFS_AIX_ENV */
-#endif /* AFS_AIX32_ENV */
-#endif
+# endif
     } else {
-#if	defined(AFS_AIX32_ENV)
-#ifdef	AFS_AIX41_ENV
-	flock->l_sysid = 0;
-	flock->l_pid = getpid();
-#else
-	flock->l_sysid = u.u_sysid;
-	flock->l_pid = u.u_epid;
-#endif
-#else
-#if	defined(AFS_AIX_ENV)  || defined(AFS_SUN5_ENV)
-#ifdef	AFS_SUN53_ENV
+# ifdef AFS_SUN53_ENV
 	flock->l_sysid = 0;
 	flock->l_pid = procp->p_pid;
-#else
+# else
 	flock->l_sysid = procp->p_sysid;
 	flock->l_pid = procp->p_epid;
-#endif
-#else
-#if defined(AFS_SGI_ENV)
-#ifdef AFS_SGI65_ENV
-	flock->l_sysid = flid.fl_sysid;
-#else
-	flock->l_sysid = OSI_GET_CURRENT_SYSID();
-#endif
-	flock->l_pid = clid;
-#else
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-	flock->l_pid = clid;
-#else
-#if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
-	flock->l_pid = getpid();
-#else
-	flock->l_pid = u.u_procp->p_pid;
-#endif
-#endif
-#endif
-#endif /* AFS_AIX_ENV */
-#endif /* AFS_AIX32_ENV */
+# endif
     }
 }
+#elif defined(AFS_SGI_ENV)
+void
+lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
+{
+# if defined(AFS_SGI65_ENV)
+    flid_t flid;
+    get_current_flid(&flid);
+# else
+    struct proc *procp = OSI_GET_CURRENT_PROCP();
+# endif
+
+    if (slp) {
+# ifdef AFS_SGI65_ENV
+	slp->sysid = flid.fl_sysid;
+# else
+	slp->sysid = OSI_GET_CURRENT_SYSID();
+# endif
+	slp->pid = clid;
+    } else {
+# ifdef AFS_SGI65_ENV
+	flock->l_sysid = flid.fl_sysid;
+# else
+	flock->l_sysid = OSI_GET_CURRENT_SYSID();
+# endif
+	flock->l_pid = clid;
+    }
+}
+#elif defined(AFS_AIX_ENV)
+void
+lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
+{
+# if !defined(AFS_AIX32_ENV)
+    struct proc *procp = u.u_procp;
+# endif
+
+    if (slp) {
+# if defined(AFS_AIX41_ENV)
+	slp->sysid = 0;
+	slp->pid = getpid();
+# elif defined(AFS_AIX32_ENV)
+	slp->sysid = u.u_sysid;
+	slp->pid = u.u_epid;
+# else
+	slp->sysid = procp->p_sysid;
+	slp->pid = prcop->p_epid;
+# endif
+    } else {
+# if defined(AFS_AIX41_ENV)
+	flock->l_sysid = 0;
+	flock->l_pid = getpid();
+# elif defined(AFS_AIX32_ENV)
+	flock->l_sysid = u.u_sysid;
+	flock->l_pid = u.u_epid;
+# else
+	flock->l_sysid = procp->p_sysid;
+	flock->l_pid = procp->p_epid;
+# endif
+}
+#elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+void
+lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
+{
+    if (slp) {
+	slp->pid = clid;
+    } else {
+	flock->l_pid = clid;
+    }
+}
+#elif defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
+void
+lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
+{
+    if (slp) {
+	slp->pid = getpid();
+    } else {
+	flock->l_pid = getpid();
+    }
+}
+#else
+void
+lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
+{
+    if (slp) {
+	slp->pid = u.u_procp->p_pid;
+    } else {
+	flock->l_pid = u.u_procp->p_pid;
+    }
+}
+#endif
 
 /* return 1 (true) if specified flock does not match alp (if 
  * specified), or any of the slp structs (if alp == 0) 
