@@ -12,7 +12,8 @@ INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/butc.h ${TOP_INCDIR}/afs/bubasics.h ${TOP_INCDIR}/afs/butx.h
+all: ${TOP_LIBDIR}/libbubasics.a ${TOP_INCDIR}/afs/bumon.h ${TOP_INCDIR}/afs/butc.h ${TOP_INCDIR}/afs/bubasics.h ${TOP_INCDIR}/afs/butx.h \
+		${TOP_INCDIR}/afs/tcdata.h ${TOP_INCDIR}/afs/butm.h
 
 OBJS=butc.ss.o butc.cs.o butc.xdr.o bumon.ss.o bumon.cs.o bumon.xdr.o butc_errs.o butm_errs.o butx_errs.o
 
@@ -74,19 +75,21 @@ bumon.xdr.c: bumon.h
 bumon.ss.c: bumon.h
 bumon.cs.c: bumon.h
 
-butc_errs.c: ${TOP_INCDIR}/afs/tcdata.h
+butm.h: butm_errs.c
 
-butm_errs.c: ${TOP_INCDIR}/afs/butm.h
-
-butm_errs.c butm.h: butm_errs.et butm.p.h
+butm_errs.c: butm_errs.et butm.p.h
 	$(RM) -f butm.h butm_errs.c
 	${COMPILE_ET} -p ${srcdir} butm_errs -h butm
 
-butc_errs.c tcdata.h: butc_errs.et tcdata.p.h butm.h
+tcdata.h: butc_errs.c
+
+butc_errs.c: butc_errs.et tcdata.p.h butm.h
 	$(RM) -f tcdata.h butc_errs.c
 	${COMPILE_ET} -p ${srcdir} butc_errs -h tcdata
 
-butx_errs.c butx.h: butx_errs.et
+butx.h: butx_errs.c
+
+butx_errs.c: butx_errs.et
 	$(RM) -f butx.h butx_errs.c
 	${COMPILE_ET} -p ${srcdir} butx_errs -h butx
 
