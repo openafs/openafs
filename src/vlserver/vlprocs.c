@@ -95,9 +95,9 @@ rxinfo(struct rx_call *rxcall)
 {
     int code;
     register struct rx_connection *tconn;
-    char tname[64];
-    char tinst[64];
-    char tcell[64];
+    char tname[64] = "";
+    char tinst[64] = "";
+    char tcell[64] = "";
     afs_uint32 exp;
     struct in_addr hostAddr;
 
@@ -108,7 +108,10 @@ rxinfo(struct rx_call *rxcall)
 			    NULL);
     if (!code)
 	sprintf(rxinfo_str, "%s %s%s%s%s%s", inet_ntoa(hostAddr), tname,
-		tinst?".":"", tinst?tinst:"", tcell?"@":"", tcell?tcell:"");
+		(tinst[0] == '\0') ? "" : ".",
+		(tinst[0] == '\0') ? "" : tinst,
+		(tcell[0] == '\0') ? "" : "@",
+		(tcell[0] == '\0') ? "" : tcell);
     else
 	sprintf(rxinfo_str, "%s noauth", inet_ntoa(hostAddr));
     return (rxinfo_str);
