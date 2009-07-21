@@ -59,6 +59,8 @@ void put_ecs(void);
 void set_table_num(char *string);
 void set_table_fun(char *astring);
 
+extern int yylex (void);
+
 %}
 %union {
 	char *dynstr;

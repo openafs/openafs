@@ -54,7 +54,8 @@ et_mutex_once(void)
 
 #define LOCK_ET_LIST \
 	do { \
-	    (et_list_done || pthread_once(&et_list_once, et_mutex_once)); \
+	    if (!et_list_done) \
+		pthread_once(&et_list_once, et_mutex_once); \
 	    assert(pthread_mutex_lock(&et_list_mutex)==0); \
 	} while (0)
 #define UNLOCK_ET_LIST assert(pthread_mutex_unlock(&et_list_mutex)==0)
