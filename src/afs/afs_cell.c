@@ -55,6 +55,7 @@ afs_StopAFSDB()
     } else {
 	afsdb_handler_shutdown = 1;
 	afs_termState = AFSOP_STOP_RXEVENT;
+	afs_osi_Wakeup(&afs_termState);
     }
 }
 
