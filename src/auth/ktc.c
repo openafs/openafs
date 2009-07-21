@@ -928,13 +928,13 @@ ktc_curpag(void)
 {
     int code;
     struct ViceIoctl iob;
-    afs_int32 pag;
+    afs_uint32 pag;
 
     /* now setup for the pioctl */
     iob.in = NULL;
     iob.in_size = 0;
-    iob.out = &pag;
-    iob.out_size = sizeof(afs_int32);
+    iob.out = (caddr_t) &pag;
+    iob.out_size = sizeof(afs_uint32);
 
     code = PIOCTL(0, VIOC_GETPAG, &iob, 0);
     if (code < 0) {

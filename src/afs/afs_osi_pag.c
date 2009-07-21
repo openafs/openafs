@@ -407,7 +407,8 @@ int
 AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 #endif
 {
-    afs_int32 newpag, code;
+    afs_int32 code;
+    afs_uint32 newpag;
 
     AFS_STATCNT(AddPag);
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)

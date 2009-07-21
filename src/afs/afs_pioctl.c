@@ -1551,7 +1551,7 @@ DECL_PIOCTL(PSetTokens)
     i = tcell->cellNum;
     afs_PutCell(tcell, READ_LOCK);
     if (set_parent_pag) {
-	afs_int32 pag;
+	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_DARWIN_ENV)
 	struct proc *p = current_proc();	/* XXX */
