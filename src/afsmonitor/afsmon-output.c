@@ -253,11 +253,11 @@ Print_fs_OpTiming(int a_opIdx, struct fs_stats_opTimingData *a_opTimeP)
 {				/*Print_fs_OpTiming */
 
     fprintf(fs_outFD,
-	    "%15s: %d ops (%d OK); sum=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	    "%15s: %d ops (%d OK); sum=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	    fsOpNames[a_opIdx], a_opTimeP->numOps, a_opTimeP->numSuccesses,
-	    a_opTimeP->sumTime.tv_sec, a_opTimeP->sumTime.tv_usec,
-	    a_opTimeP->minTime.tv_sec, a_opTimeP->minTime.tv_usec,
-	    a_opTimeP->maxTime.tv_sec, a_opTimeP->maxTime.tv_usec);
+	    (long)a_opTimeP->sumTime.tv_sec, (long)a_opTimeP->sumTime.tv_usec,
+	    (long)a_opTimeP->minTime.tv_sec, (long)a_opTimeP->minTime.tv_usec,
+	    (long)a_opTimeP->maxTime.tv_sec, (long)a_opTimeP->maxTime.tv_usec);
 
 }				/*Print_fs_OpTiming */
 
@@ -287,11 +287,11 @@ Print_fs_XferTiming(int a_opIdx, struct fs_stats_xferData *a_xferP)
 {				/*Print_fs_XferTiming */
 
     fprintf(fs_outFD,
-	    "%s: %d xfers (%d OK), time sum=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	    "%s: %d xfers (%d OK), time sum=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	    xferOpNames[a_opIdx], a_xferP->numXfers, a_xferP->numSuccesses,
-	    a_xferP->sumTime.tv_sec, a_xferP->sumTime.tv_usec,
-	    a_xferP->minTime.tv_sec, a_xferP->minTime.tv_usec,
-	    a_xferP->maxTime.tv_sec, a_xferP->maxTime.tv_usec);
+	    (long)a_xferP->sumTime.tv_sec, (long)a_xferP->sumTime.tv_usec,
+	    (long)a_xferP->minTime.tv_sec, (long)a_xferP->minTime.tv_usec,
+	    (long)a_xferP->maxTime.tv_sec, (long)a_xferP->maxTime.tv_usec);
     fprintf(fs_outFD, "\t[bytes: sum=%d, min=%d, max=%d]\n",
 	    a_xferP->sumBytes, a_xferP->minBytes, a_xferP->maxBytes);
     fprintf(fs_outFD,
@@ -328,7 +328,7 @@ Print_fs_DetailedPerfInfo(struct fs_stats_DetailedStats *a_detP)
 
     int currIdx;		/*Loop variable */
 
-    fprintf(fs_outFD, "\t%10d epoch\n", a_detP->epoch);
+    fprintf(fs_outFD, "\t%10ld epoch\n", (long)a_detP->epoch.tv_sec);
 
     for (currIdx = 0; currIdx < FS_STATS_NUM_RPC_OPS; currIdx++)
 	Print_fs_OpTiming(currIdx, &(a_detP->rpcOpTimes[currIdx]));
@@ -736,11 +736,11 @@ Print_cm_OpTiming(int a_opIdx, char *a_opNames[],
 {				/*Print_cm_OpTiming */
 
     fprintf(cm_outFD,
-	    "%15s: %d ops (%d OK); sum=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	    "%15s: %d ops (%d OK); sum=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	    a_opNames[a_opIdx], a_opTimeP->numOps, a_opTimeP->numSuccesses,
-	    a_opTimeP->sumTime.tv_sec, a_opTimeP->sumTime.tv_usec,
-	    a_opTimeP->minTime.tv_sec, a_opTimeP->minTime.tv_usec,
-	    a_opTimeP->maxTime.tv_sec, a_opTimeP->maxTime.tv_usec);
+	    (long)a_opTimeP->sumTime.tv_sec, (long)a_opTimeP->sumTime.tv_usec,
+	    (long)a_opTimeP->minTime.tv_sec, (long)a_opTimeP->minTime.tv_usec,
+	    (long)a_opTimeP->maxTime.tv_sec, (long)a_opTimeP->maxTime.tv_usec);
 
 }				/*Print_cm_OpTiming */
 
@@ -771,11 +771,11 @@ Print_cm_XferTiming(int a_opIdx, char *a_opNames[],
 {				/*Print_cm_XferTiming */
 
     fprintf(cm_outFD,
-	    "%s: %d xfers (%d OK), time sum=%d.%06d, min=%d.%06d, max=%d.%06d\n",
+	    "%s: %d xfers (%d OK), time sum=%ld.%06ld, min=%ld.%06ld, max=%ld.%06ld\n",
 	    a_opNames[a_opIdx], a_xferP->numXfers, a_xferP->numSuccesses,
-	    a_xferP->sumTime.tv_sec, a_xferP->sumTime.tv_usec,
-	    a_xferP->minTime.tv_sec, a_xferP->minTime.tv_usec,
-	    a_xferP->maxTime.tv_sec, a_xferP->maxTime.tv_usec);
+	    (long)a_xferP->sumTime.tv_sec, (long)a_xferP->sumTime.tv_usec,
+	    (long)a_xferP->minTime.tv_sec, (long)a_xferP->minTime.tv_usec,
+	    (long)a_xferP->maxTime.tv_sec, (long)a_xferP->maxTime.tv_usec);
     fprintf(cm_outFD, "\t[bytes: sum=%d, min=%d, max=%d]\n",
 	    a_xferP->sumBytes, a_xferP->minBytes, a_xferP->maxBytes);
     fprintf(cm_outFD,
