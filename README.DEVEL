@@ -7,8 +7,8 @@ later you can reformat for this style with the following option:
 -npro -nbad -bap -nbc -bbo -br -ce -cdw -brs -ncdb -cp1 -ncs -di2 -ndj -nfc1
 -nfca -i4 -lp -npcs -nprs -psl -sc -nsob -ts8
 
-Do not use $< in any cross-platform dir as it requires a reasonable
-make that is not available on all systems.
+Do not use $< for non-pattern rules in any cross-platform dir as it
+requires a reasonable make that is not available on all systems.
 
 Do not have build rules that build multiple targets. Make doesn't seem able
 to handle this, and it interferes with -j builds. (In particular, build the
@@ -50,7 +50,8 @@ The declaration of the routines should be done in ANSI style. If at some
 later date, it is determined that prototypes don't work on some platform 
 properly, we can use ansi2knr during the compile.
 
-	rettype routine(argtype arg)
+	rettype 
+	routine(argtype arg)
 	{
 
 	}
