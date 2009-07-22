@@ -6959,6 +6959,60 @@ rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
     return rc;
 }
 
+afs_int32 
+rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
+		struct rx_debugPeer * peerStats)
+{
+	struct rx_peer *tp;
+	afs_int32 error = 1; /* default to "did not succeed" */
+	afs_uint32 hashValue = PEER_HASH(peerHost, peerPort);
+
+	MUTEX_ENTER(&rx_peerHashTable_lock);
+	for(tp = rx_peerHashTable[hashValue]; 
+	      tp != NULL; tp = tp->next) {
+		if (tp->host == peerHost)
+			break;
+	}
+
+	if (tp) {
+		error = 0;
+
+		peerStats->host = tp->host;
+		peerStats->port = tp->port;
+		peerStats->ifMTU = tp->ifMTU;
+		peerStats->idleWhen = tp->idleWhen;
+		peerStats->refCount = tp->refCount;
+		peerStats->burstSize = tp->burstSize;
+		peerStats->burst = tp->burst;
+		peerStats->burstWait.sec = tp->burstWait.sec;
+		peerStats->burstWait.usec = tp->burstWait.usec;
+		peerStats->rtt = tp->rtt;
+		peerStats->rtt_dev = tp->rtt_dev;
+		peerStats->timeout.sec = tp->timeout.sec;
+		peerStats->timeout.usec = tp->timeout.usec;
+		peerStats->nSent = tp->nSent;
+		peerStats->reSends = tp->reSends;
+		peerStats->inPacketSkew = tp->inPacketSkew;
+		peerStats->outPacketSkew = tp->outPacketSkew;
+		peerStats->rateFlag = tp->rateFlag;
+		peerStats->natMTU = tp->natMTU;
+		peerStats->maxMTU = tp->maxMTU;
+		peerStats->maxDgramPackets = tp->maxDgramPackets;
+		peerStats->ifDgramPackets = tp->ifDgramPackets;
+		peerStats->MTU = tp->MTU;
+		peerStats->cwind = tp->cwind;
+		peerStats->nDgramPackets = tp->nDgramPackets;
+		peerStats->congestSeq = tp->congestSeq;
+		peerStats->bytesSent.high = tp->bytesSent.high;
+		peerStats->bytesSent.low = tp->bytesSent.low;
+		peerStats->bytesReceived.high = tp->bytesReceived.high;
+		peerStats->bytesReceived.low = tp->bytesReceived.low;
+	}
+	MUTEX_EXIT(&rx_peerHashTable_lock);
+
+	return error;
+}
+
 void
 shutdown_rx(void)
 {

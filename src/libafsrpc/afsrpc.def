@@ -247,6 +247,7 @@ EXPORTS
         xdr_free                                @252
         RXAFS_FsCmd                             @253
         rxi_CallError                           @254
+        rx_GetLocalPeers			@255
 
 ; for performance testing
         rx_TSFPQGlobSize                        @2001 DATA

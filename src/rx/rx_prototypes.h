@@ -217,6 +217,8 @@ extern afs_int32 rx_GetServerPeers(osi_socket socket, afs_uint32 remoteAddr,
 				   afs_uint32 debugSupportedValues,
 				   struct rx_debugPeer *peer,
 				   afs_uint32 * supportedValues);
+extern afs_int32 rx_GetLocalPeers(afs_uint32 peerHost, afs_uint16 peerPort,
+				      struct rx_debugPeer * peerStats);
 extern void shutdown_rx(void);
 #ifndef osirx_AssertMine
 extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);

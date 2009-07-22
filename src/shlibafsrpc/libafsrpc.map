@@ -120,6 +120,7 @@
 	ucstring;
 	lcstring;
 	AssertionFailed;
+	rx_GetLocalPeers
 
     local:
 	*;
