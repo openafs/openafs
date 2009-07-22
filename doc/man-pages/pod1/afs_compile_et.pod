@@ -1,13 +1,13 @@
 =head1 NAME
 
-compile_et - Produce error text tables for compilation
+afs_compile_et - Produce error text tables for compilation
 
 =head1 SYNOPSIS
 
 =for html
 <div class="synopsis">
 
-B<compile_et> [B<-debug>] S<<< [B<-language> <I<lang>>] >>>
+B<afs_compile_et> [B<-debug>] S<<< [B<-language> <I<lang>>] >>>
     S<<< [B<-prefix> <I<prefix>>] >>> [B<-v> <I<version>>] <I<error_table>>
 
 =for html
@@ -15,7 +15,7 @@ B<compile_et> [B<-debug>] S<<< [B<-language> <I<lang>>] >>>
 
 =head1 DESCRIPTION
 
-The B<compile_et> command builds the error text tables for compilation.
+The B<afs_compile_et> command builds the error text tables for compilation.
 This includes both a header file that contains a set of mappings between
 error names and values and a F<.c> (or F<.msf>) file that provides a text
 table of descriptions.
@@ -29,7 +29,7 @@ named F<error_table.et>.
 
 This command is used internally within the build process for OpenAFS.
 Most users will access this information via L<translate_et(1)> rather than
-via B<compile_et>.
+via B<afs_compile_et>.
 
 This command does not use the standard AFS command-line parsing package.
 
@@ -65,11 +65,11 @@ files) or 2, for B<.msf> file generation.
 The following command generates the files F<pterror.h> and F<pterror.c>, 
 suitable for use with C programs:
 
-   % compile_et -p path/to/src/ptserver pterror
+   % afs_compile_et -p path/to/src/ptserver pterror
 
 The following command generates K&R style files instead:
 
-   % compile_et -p path/to/src/ptserver -lang 'k&r-c' pterror
+   % afs_compile_et -p path/to/src/ptserver -lang 'k&r-c' pterror
 
 =head1 SEE ALSO
 

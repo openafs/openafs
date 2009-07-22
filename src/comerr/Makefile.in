@@ -49,7 +49,7 @@ install: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
 	${INSTALL} -d ${DESTDIR}${bindir}
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
-	${INSTALL_PROGRAM} compile_et ${DESTDIR}${bindir}/compile_et
+	${INSTALL_PROGRAM} compile_et ${DESTDIR}${bindir}/afs_compile_et
 	${INSTALL_DATA} com_err.h ${DESTDIR}${includedir}/afs/com_err.h
 	${INSTALL_DATA} error_table.h ${DESTDIR}${includedir}/afs/error_table.h
 	${INSTALL_DATA} mit-sipb-cr.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h
@@ -59,7 +59,7 @@ dest: compile_et com_err.h error_table.h mit-sipb-cr.h libcom_err.a
 	${INSTALL} -d ${DEST}/bin
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL} -d ${DEST}/lib/afs
-	${INSTALL_PROGRAM} compile_et ${DEST}/bin/compile_et
+	${INSTALL_PROGRAM} compile_et ${DEST}/bin/afs_compile_et
 	${INSTALL_DATA} com_err.h ${DEST}/include/afs/com_err.h
 	${INSTALL_DATA} error_table.h ${DEST}/include/afs/error_table.h
 	${INSTALL_DATA} mit-sipb-cr.h ${DEST}/include/afs/mit-sipb-cr.h
