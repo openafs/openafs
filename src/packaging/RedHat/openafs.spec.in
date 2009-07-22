@@ -1195,9 +1195,8 @@ for f in bos fs kas klog klog.krb kpwvalid pts tokens tokens.krb udebug vos ; do
   rm -f $RPM_BUILD_ROOT%{_prefix}/afs/bin/$f
 done
 
-# compile_et is duplicated in e2fsprogs
 # the rest are not needed.
-for f in compile_et dlog dpass install knfs livesys xstat_cm_test xstat_fs_test ; do
+for f in dlog dpass install knfs livesys xstat_cm_test xstat_fs_test ; do
   rm -f $RPM_BUILD_ROOT%{_bindir}/$f
 done
 
@@ -1569,7 +1568,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_libdir}/librxstat.a
 %{_libdir}/libubik.a
 %{_mandir}/man1/rxgen.*
-%{_mandir}/man1/compile_et.*
+%{_mandir}/man1/afs_compile_et.*
 
 %if %{build_dkmspkg}
 %files -n dkms-%{name}

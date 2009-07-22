@@ -28,9 +28,9 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 #
 # Installation targets
 #
-install:  ${DESTDIR}${bindir}/compile_et ${DESTDIR}${includedir}/afs/com_err.h ${DESTDIR}${includedir}/afs/error_table.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h ${DESTDIR}${libdir}/afs/libcom_err.a
+install:  ${DESTDIR}${bindir}/afs_compile_et ${DESTDIR}${includedir}/afs/com_err.h ${DESTDIR}${includedir}/afs/error_table.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h ${DESTDIR}${libdir}/afs/libcom_err.a
 
-${DEST}/bin/compile_et: compile_et
+${DEST}/bin/afs_compile_et: compile_et
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/com_err.h: com_err.h
@@ -59,7 +59,7 @@ compile_et.o:  AFS_component_version_number.c
 error_table.o: et_lex.lex.c
 
 include ../config/Makefile.version
-${DESTDIR}${bindir}/compile_et: compile_et
+${DESTDIR}${bindir}/afs_compile_et: compile_et
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/com_err.h: com_err.h
@@ -86,5 +86,5 @@ ${DESTDIR}${libdir}/afs/libcom_err.a: libcom_err.a
 ${TOP_LIBDIR}/libcom_err.a: libcom_err.a
 	${INSTALL} $? $@
 
-dest:  ${DEST}/bin/compile_et ${DEST}/include/afs/com_err.h ${DEST}/include/afs/error_table.h ${DEST}/include/afs/mit-sipb-cr.h ${DEST}/lib/afs/libcom_err.a
+dest:  ${DEST}/bin/afs_compile_et ${DEST}/include/afs/com_err.h ${DEST}/include/afs/error_table.h ${DEST}/include/afs/mit-sipb-cr.h ${DEST}/lib/afs/libcom_err.a
 
