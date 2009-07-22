@@ -379,7 +379,7 @@ xstat_cm_LWP(void *unused)
 
 int
 xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
-	      int a_ProbeFreqInSecs, int (*a_ProbeHandler) (), int a_flags,
+	      int a_ProbeFreqInSecs, int (*a_ProbeHandler) (void), int a_flags,
 	      int a_numCollections, afs_int32 * a_collIDP)
 {
 
@@ -422,7 +422,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 		a_ProbeFreqInSecs);
 	arg_errfound = 1;
     }
-    if (a_ProbeHandler == (int (*)())0) {
+    if (a_ProbeHandler == NULL) {
 	fprintf(stderr, "[%s] Null probe handler function argument\n", rn);
 	arg_errfound = 1;
     }
@@ -474,7 +474,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	malloc(a_numServers * sizeof(struct xstat_cm_ConnectionInfo));
     if (xstat_cm_ConnInfo == (struct xstat_cm_ConnectionInfo *)0) {
 	fprintf(stderr,
-		"[%s] Can't allocate %d connection info structs (%d bytes)\n",
+		"[%s] Can't allocate %d connection info structs (%lu bytes)\n",
 		rn, a_numServers,
 		(a_numServers * sizeof(struct xstat_cm_ConnectionInfo)));
 	return (-1);		/*No cleanup needs to be done yet */

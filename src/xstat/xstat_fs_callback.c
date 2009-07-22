@@ -55,7 +55,7 @@ init_afs_cb(void)
 #else
     afs_uuid_create(&afs_cb_interface.uuid);
 #endif
-    count = rx_getAllAddr(&afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
+    count = rx_getAllAddr((afs_uint32 *)afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
     if (count <= 0)
 	afs_cb_interface.numberOfInterfaces = 0;
     else
