@@ -345,6 +345,7 @@ extern int afs_InitCacheFile(char *afile, ino_t ainode);
 
 /* afs_dynroot.c */
 extern int afs_IsDynrootFid(struct VenusFid *fid);
+extern int afs_IsDynrootAnyFid(struct VenusFid *fid);
 extern void afs_GetDynrootFid(struct VenusFid *fid);
 extern int afs_IsDynroot(struct vcache *avc);
 extern void afs_DynrootInvalidate(void);

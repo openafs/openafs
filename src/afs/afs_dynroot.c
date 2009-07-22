@@ -130,6 +130,13 @@ afs_IsDynrootFid(struct VenusFid *fid)
 	    && fid->Fid.Unique == AFS_DYNROOT_UNIQUE);
 }
 
+int
+afs_IsDynrootAnyFid(struct VenusFid *fid)
+{
+    return (afs_dynrootEnable && fid->Cell == afs_dynrootCell
+	    && fid->Fid.Volume == AFS_DYNROOT_VOLUME);
+}
+
 /*
  * Obtain the magic dynroot volume Fid.
  */
