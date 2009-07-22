@@ -343,7 +343,7 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 	call->curlen = tcurlen - nbytes;
 	call->nLeft = tnLeft - nbytes;
 
-        if (!call->nLeft) {
+        if (!call->nLeft && call->currentPacket != NULL) {
             /* out of packet.  Get another one. */
             NETPRI;
             MUTEX_ENTER(&call->lock);
