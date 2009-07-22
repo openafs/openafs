@@ -363,9 +363,12 @@ dump_ntoh(struct dump *netDumpPtr,
 {
     hostDumpPtr->id = ntohl(netDumpPtr->id);
     hostDumpPtr->idHashChain = ntohl(netDumpPtr->idHashChain);
-    strcpy(hostDumpPtr->dumpName, netDumpPtr->dumpName);
-    strcpy(hostDumpPtr->dumpPath, netDumpPtr->dumpPath);
-    strcpy(hostDumpPtr->volumeSet, netDumpPtr->volumeSet);
+    strlcpy(hostDumpPtr->dumpName, netDumpPtr->dumpName, 
+	    sizeof(hostDumpPtr->dumpName));
+    strlcpy(hostDumpPtr->dumpPath, netDumpPtr->dumpPath,
+	    sizeof(hostDumpPtr->dumpPath));
+    strlcpy(hostDumpPtr->volumeSet, netDumpPtr->volumeSet,
+	    sizeof(hostDumpPtr->volumeSet));
     hostDumpPtr->nameHashChain = ntohl(netDumpPtr->nameHashChain);
     hostDumpPtr->flags = ntohl(netDumpPtr->flags);
     hostDumpPtr->parent = ntohl(netDumpPtr->parent);
@@ -377,7 +380,7 @@ dump_ntoh(struct dump *netDumpPtr,
 
     hostDumpPtr->firstTape = ntohl(netDumpPtr->firstTape);
 
-    principal_ntoh(&netDumpPtr->dumper, &hostDumpPtr->dumper);
+    hostDumpPtr->dumper = netDumpPtr->dumper;
 }
 
 void
