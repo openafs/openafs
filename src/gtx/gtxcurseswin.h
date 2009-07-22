@@ -58,7 +58,7 @@ extern int gator_cursesgwin_init(int adebug);
 
 /*Curses window's creation routine*/
 
-extern struct gwin *gator_cursesgwin_create(struct gator_cursesgwin_params *);
+extern struct gwin *gator_cursesgwin_create(void *);
     /*
      * Summary:
      *    Create a curses window.

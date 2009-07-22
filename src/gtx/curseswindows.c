@@ -195,10 +195,10 @@ gator_cursesgwin_init(int adebug)
  *------------------------------------------------------------------------*/
 
 struct gwin *
-gator_cursesgwin_create(struct gator_cursesgwin_params *params)
-{				/*gator_cursesgwin_create */
-
+gator_cursesgwin_create(void * rock)
+{
     static char rn[] = "gator_cursesgwin_create";	/*Routine name */
+    struct gator_cursesgwin_params *params = (struct gator_cursesgwin_params *)rock;
     struct gwin *newgwin;	/*Ptr to new curses window */
     struct gator_cursesgwin *c_data;	/*Ptr to curses-specific data */
     WINDOW *newcursgwin;	/*Ptr to new curses window */
