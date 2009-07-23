@@ -32,6 +32,19 @@ if [ `grep /Network/afs cacheinfo` ]; then
     mv cacheinfo.new cacheinfo
 fi
 
+# if the installer plugin generated ThisCell and/or CellAlias
+# files, copy them in here
+tmpthiscell=/private/tmp/org.OpenAFS.Install.ThisCell.$USER
+tmpcellalias=/private/tmp/org.OpenAFS.Install.CellAlias.$USER
+if [ -f $tmpthiscell ]; then
+    cp $tmpthiscell ThisCell
+    rm -f $tmpthiscell
+fi
+if [ -f $tmpcellalias ]; then
+    cp $tmpcellalias CellAlias
+    rm -f $tmpcellalias
+fi
+
 if [ ! -f ThisCell -a -f ThisCell.sample ]; then
    cp ThisCell.sample ThisCell
 fi

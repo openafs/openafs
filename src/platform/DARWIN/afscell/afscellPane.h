@@ -9,7 +9,6 @@
 #import <Cocoa/Cocoa.h>
 #import <InstallerPlugins/InstallerPlugins.h>
 
-
 @interface afscellPane : InstallerPane {
 
 	IBOutlet NSTextField * ThisCell;
