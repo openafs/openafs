@@ -17,6 +17,9 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 all:
 	cd $(MKAFS_OSTYPE) && $(MAKE) all
 
+clean:
+	cd $(MKAFS_OSTYPE) && $(MAKE) clean
+
 dest:
 	cd $(MKAFS_OSTYPE) && $(MAKE) DEST=${DEST} dest
 
