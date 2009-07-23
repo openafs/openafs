@@ -111,7 +111,7 @@ send_key(afs_uuid_t uuid, char sessionKey[8])
 
     /* Encryption on by default */
     if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
-	if (!strcmpi(encrypt, "OFF"))
+	if (!_stricmp(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
     /* Protocol sequence is local by default */
@@ -184,7 +184,7 @@ receive_key(afs_uuid_t uuid, char sessionKey[8])
 
     /* Encryption on by default */
     if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
-	if (!strcmpi(encrypt, "OFF"))
+	if (!_stricmp(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
     /* Protocol sequence is local by default */

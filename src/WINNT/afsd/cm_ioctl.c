@@ -372,7 +372,7 @@ void cm_NormalizeAfsPathAscii(char *outpathp, long outlen, char *inpathp)
         outpathp[strlen(outpathp)-1] = 0;
     }
 
-    if (!strcmpi (outpathp, cm_mountRoot)) {
+    if (!_stricmp (outpathp, cm_mountRoot)) {
         StringCbCopy(outpathp, outlen, cm_mountRoot);
     }
 }

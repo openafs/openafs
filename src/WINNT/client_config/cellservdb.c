@@ -277,7 +277,7 @@ PCELLDBLINE CSDB_FindCell (PCELLSERVDB pCellServDB, const char *pszCell)
       CELLDBLINEINFO Info;
       if (!CSDB_CrackLine (&Info, pLine->szLine))
          continue;
-      if (!strcmpi (Info.szCell, pszCell))
+      if (!_stricmp (Info.szCell, pszCell))
          return pLine;
       }
    return NULL;
