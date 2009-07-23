@@ -10,7 +10,8 @@
 		<string>afscell.bundle</string>
 		<string>Target</string>
 		<string>PackageSelection</string>
-		<string>Install</string>		
+		<string>Install</string>
+		<string>Summary</string>	
 	</array>
 </dict>
 </plist>

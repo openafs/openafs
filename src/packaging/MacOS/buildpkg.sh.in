@@ -229,6 +229,23 @@ if [ $secondpass = yes ]; then
     fi
 
     rm -rf $PKGROOT $PKGRES
+
+    # here we want to build installer plugin and install
+    # for Tiger and later only
+    if [ $majorvers -ge 8 ]; then
+	AFSCELLBUNDLE=$BINDEST/installer/afscell.bundle
+	cd $CURDIR
+	if [ -d $AFSCELLBUNDLE -a -f $BINDEST/installer/InstallerSections.plist ]; then
+	    mkdir -p $CURDIR/OpenAFS.pkg/Contents/Plugins
+	    cp -R $AFSCELLBUNDLE $CURDIR/OpenAFS.pkg/Contents/Plugins
+	    cp $BINDEST/installer/InstallerSections.plist $CURDIR/OpenAFS.pkg/Contents/Plugins
+	else
+	    echo "afscell.bundle not built successfully"
+	    echo "... or InstallerSections.plist file not found"
+	    exit 1
+	fi
+    fi
+
     mkdir $CURDIR/dmg
     mv $CURDIR/OpenAFS.pkg $CURDIR/dmg
     rm -rf $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
