@@ -1377,7 +1377,7 @@ cm_UpdateVolumeStatusInt(cm_volume_t *volp, struct cm_vol_state *statep)
                     allBusy = 0;
                 }
             } else {
-                osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s online", 
+                osi_Log2(afsd_logp, "cm_UpdateVolumeStatusInt volume %d server reference %s down", 
                           statep->ID, osi_LogSaveString(afsd_logp,addr));
             }
             cm_PutServerNoLock(tsp);
