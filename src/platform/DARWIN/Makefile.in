@@ -13,7 +13,11 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 include ../../config/Makefile.version
 
-all: afssettings
+all: OpenAFS.prefPane afssettings
+
+OpenAFS.prefPane:
+	xcodebuild -project AFSPreference/OpenAFS.xcodeproj
+	mv AFSPreference/build/Release/OpenAFS.prefPane OpenAFS.prefPane
 
 afssettings: afssettings.m 
 	${CC} ${CFLAGS} -o afssettings afssettings.m -framework Foundation
@@ -31,4 +35,6 @@ ${DEST}/etc/afssettings: afssettings
 	${INSTALL} $? $@
 
 clean:
+	$(RM) -rf OpenAFS.prefPane
+	$(RM) -rf AFSPreference/build
 	$(RM) -f *.o core afssettings AFS_component_version_number.c 
