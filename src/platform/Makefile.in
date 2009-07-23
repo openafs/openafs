@@ -12,15 +12,15 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 include ../config/Makefile.version
 
 all:
-	cd $(MKAFS_OSTYPE) ; \
-	echo $(MAKE) all; \
-	$(MAKE) all
+	cd $(MKAFS_OSTYPE) && $(MAKE) all
+
+clean:
+	cd $(MKAFS_OSTYPE) && $(MAKE) clean
+
 dest:
-	cd $(MKAFS_OSTYPE) ; \
-	echo $(MAKE) DEST=${DEST} dest; \
-	$(MAKE) DEST=${DEST} dest
+	cd $(MKAFS_OSTYPE) && $(MAKE) dest
+
 install:
-	cd $(MKAFS_OSTYPE) ; \
-	echo $(MAKE) DESTDIR=${DESTDIR} install; \
-	$(MAKE) DESTDIR=${DESTDIR} install
+	cd $(MKAFS_OSTYPE) && $(MAKE) install
+
 
