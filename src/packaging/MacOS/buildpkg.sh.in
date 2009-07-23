@@ -249,10 +249,10 @@ if [ $secondpass = yes ]; then
     mkdir $CURDIR/dmg
     mv $CURDIR/OpenAFS.pkg $CURDIR/dmg
     rm -rf $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
-    cp Uninstall $CURDIR/dmg/Uninstall.command
-    cp DS_Store $CURDIR/dmg/.DS_Store
+    cp $RESSRC/Uninstall $CURDIR/dmg/Uninstall.command
+    cp $RESSRC/DS_Store $CURDIR/dmg/.DS_Store
     mkdir $CURDIR/dmg/.background
-    cp afslogo.jpg $CURDIR/dmg/.background
+    cp $RESSRC/afslogo.jpg $CURDIR/dmg/.background
 #    hdiutil create -srcfolder $CURDIR/dmg -volname OpenAFS -anyowners $CURDIR/OpenAFS.dmg
     hdiutil makehybrid -hfs -hfs-volume-name OpenAFS -hfs-openfolder $CURDIR/dmg $CURDIR/dmg -o $CURDIR/TMP.dmg
     hdiutil convert -format UDZO $CURDIR/TMP.dmg -o $CURDIR/OpenAFS-@VERSION@-$RELNAME.dmg
