@@ -52,7 +52,6 @@ AH_VERBATIM([OPENAFS_HEADER],
 #undef AFS_NAMEI_ENV
 #undef BITMAP_LATER
 #undef BOS_RESTRICTED_MODE
-#undef BOS_NEW_CONFIG
 #undef FAST_RESTART
 #undef FULL_LISTVOL_SWITCH
 #undef COMPLETION_H_EXISTS
@@ -111,11 +110,6 @@ AC_ARG_ENABLE([bos-restricted-mode],
          functionality])],
     , 
     [enable_bos_restricted_mode="no"])
-AC_ARG_ENABLE([bos-new-config],
-    [AS_HELP_STRING([--enable-bos-new-config],
-        [enable bosserver pickup of BosConfig.new on restarts])],
-    ,
-    [enable_bos_new_config="no"])
 AC_ARG_ENABLE([largefile-fileserver],
     [AS_HELP_STRING([--disable-largefile-fileserver],
         [disable large file support in fileserver])],
@@ -1467,10 +1461,6 @@ fi
 
 if test "$enable_bos_restricted_mode" = "yes"; then
 	AC_DEFINE(BOS_RESTRICTED_MODE, 1, [define if you want to want bos restricted mode])
-fi
-
-if test "$enable_bos_new_config" = "yes"; then
-	AC_DEFINE(BOS_NEW_CONFIG, 1, [define if you want to enable automatic renaming of BosConfig.new to BosConfig at startup])
 fi
 
 if test "$enable_largefile_fileserver" = "yes"; then

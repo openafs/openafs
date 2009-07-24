@@ -293,7 +293,6 @@ ReadBozoFile(char *aname)
 	    if (code < 0)
 		perror("bosconfig rename");
 	}
-#ifdef BOS_NEW_CONFIG
 	if (access(AFSDIR_SERVER_BOZCONFNEW_FILEPATH, 0) == 0) {
 	    code =
 		renamefile(AFSDIR_SERVER_BOZCONFNEW_FILEPATH,
@@ -301,7 +300,6 @@ ReadBozoFile(char *aname)
 	    if (code < 0)
 		perror("bosconfig rename");
 	}
-#endif
     }
 
     /* setup default times we want to do restarts */

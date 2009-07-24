@@ -51,6 +51,19 @@ issue commands from the B<bos> and B<vos> suites.
 
 =back
 
+The BOS Server is configured via the F<BosConfig> configuration file.
+Normally, this file is managed via the B<bos> command suite rather than
+edited directly.  See the L<BosConfig(5)> man page for the syntax of this
+file.
+
+The BOS Server will rewrite B<BosConfig> when shutting down, so changes
+made manually to it will be discarded.  Instead, to change the BOS Server
+configuration only for the next restart of B<bosserver>, create a file
+named F</usr/afs/local/BosConfig.new>.  If B<BosConfig.new> exists when
+B<bosserver> starts, it is renamed to F</usr/afs/local/BosConfig>,
+removing any existing file by that name, before B<bosserver> reads its
+configuration.
+
 The BOS Server logs a default set of important events in the file
 F</usr/afs/logs/BosLog>. To record the name of any user who performs a
 privileged B<bos> command (one that requires being listed in the
