@@ -185,40 +185,42 @@ GetConn(as, aencrypt)
     }
     memcpy(&addr, th->h_addr, sizeof(afs_int32));
 
-    /* get tokens for making authenticated connections */
-    localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
-    confdir =
-	(localauth ? AFSDIR_SERVER_ETC_DIRPATH : AFSDIR_CLIENT_ETC_DIRPATH);
-    tdir = afsconf_Open(confdir);
-    if (tdir) {
-	struct afsconf_cell info;
-	char *tname;
-
-	if (as->parms[ADDPARMOFFSET].items)
-	    tname = as->parms[ADDPARMOFFSET].items->data;
-	else
-	    tname = NULL;
-	/* next call expands cell name abbrevs for us and handles looking up
-	 * local cell */
-	code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
-	if (code) {
-	    afs_com_err("bos", code, "(can't find cell '%s' in cell database)",
-		    (tname ? tname : "<default>"));
-	    exit(1);
-	} else
-	    strcpy(sname.cell, info.name);
-    } else {
-	printf("bos: can't open cell database (%s)\n", confdir);
-	exit(1);
-    }
-    sname.instance[0] = 0;
-    strcpy(sname.name, "afs");
+    /* Start with no authentication */
     sc[0] = rxnull_NewClientSecurityObject();
     sc[1] = 0;
     sc[2] = 0;
     scIndex = 0;
 
     if (!as->parms[ADDPARMOFFSET + 1].items) {	/* not -noauth */
+        /* get tokens for making authenticated connections */
+        localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
+        confdir =
+            (localauth ? AFSDIR_SERVER_ETC_DIRPATH : AFSDIR_CLIENT_ETC_DIRPATH);
+        tdir = afsconf_Open(confdir);
+        if (tdir) {
+            struct afsconf_cell info;
+            char *tname;
+
+            if (as->parms[ADDPARMOFFSET].items)
+                tname = as->parms[ADDPARMOFFSET].items->data;
+            else
+                tname = NULL;
+            /* next call expands cell name abbrevs for us and handles looking up
+            * local cell */
+            code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
+            if (code) {
+                afs_com_err("bos", code, "(can't find cell '%s' in cell database)",
+                             (tname ? tname : "<default>"));
+                exit(1);
+            } else
+                strcpy(sname.cell, info.name);
+        } else {
+            printf("bos: can't open cell database (%s)\n", confdir);
+            exit(1);
+        }
+        sname.instance[0] = 0;
+        strcpy(sname.name, "afs");
+
 	if (as->parms[ADDPARMOFFSET + 2].items) {	/* -localauth */
 	    code = afsconf_GetLatestKey(tdir, 0, 0);
 	    if (code)
