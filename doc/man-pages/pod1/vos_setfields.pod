@@ -8,12 +8,12 @@ vos_setfields - Sets the quota or clear the access counter on a volume.
 <div class="synopsis">
 
 B<vos setfields> S<<< B<-id> <I<volume name or ID>> >>>
-    S<<< B<-maxquota> <I<quota (KB)>> >>> [B<-clearuse>]
+    S<<< B<-maxquota> <I<quota>> >>> [B<-clearuse>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-encrypt>] [b<-noresolve>] [B<-help>]
 
 B<vos se> S<<< B<-id> <I<volume name or ID>> >>>
-    S<<< B<-maxquota> <I<quota (KB)>> >>> [B<-clearuse>]
+    S<<< B<-maxquota> <I<quota>> >>> [B<-clearuse>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-encrypt>] [b<-noresolve>] [B<-help>]
 
@@ -43,13 +43,15 @@ This command is not effective on read-only or backup volumes.
 Identifies the volume on which to operate, either by its complete name or
 volume ID number.
 
-=item B<-maxquota> <I<cell name>>
+=item B<-maxquota> <I<quota>>
 
-Sets the maximum amount of file server disk space the volume can
-occupy. Specify the number of one-kilobyte blocks as a positive integer
-(C<1024> is one megabyte). A value of C<0> sets an unlimited quota, but
-the size of the disk partition that houses the volume places an absolute
-limit on the volume's size.
+Sets the maximum amount of file server disk space the volume can occupy.
+The quota should be a positive integer followed by an optional suffix:
+C<K> for kibibytes (1024 bytes, the default), C<M> for mebibytes (1024
+kibibytes), C<G> for gibibytes (1024 mebibytes), and C<T> for tebibytes
+(1024 gibibytes).  A value of C<0> sets an unlimited quota, but the size
+of the disk partition that houses the volume places an absolute limit on
+the volume's size.
 
 =item B<-clearuse>
 

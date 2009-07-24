@@ -10,9 +10,9 @@ fs_setquota - Sets the quota for the volume containing a file or directory
 B<fs setquota> S<<< [B<-path> <I<dir/file path>>] >>>
     S<<< B<-max> <I<max quota in kbytes>> >>> [B<-help>]
 
-B<fs setq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota in kbytes>> >>> [B<-h>]
+B<fs setq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota>> >>> [B<-h>]
 
-B<fs sq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota in kbytes>> >>> [B<-h>]
+B<fs sq> S<<< [B<-p> <I<dir/file path>>] >>> S<<< B<-m> <I<max quota>> >>> [B<-h>]
 
 =for html
 </div>
@@ -50,11 +50,13 @@ at the pathname's second level (for example, F</afs/.abc.com>). For
 further discussion of the concept of read/write and read-only paths
 through the filespace, see the B<fs mkmount> reference page.
 
-=item B<-max> <I<max quota in kbytes>>
+=item B<-max> <I<max quota>>
 
-Sets the maximum amount of file server disk space the volume can
-occupy. Specify the number of one-kilobyte blocks as a positive integer
-(C<1024> is one megabyte). A value of C<0> sets an unlimited quota, but
+Sets the maximum amount of file server disk space the volume can occupy.
+The quota value should be a positive integer followed by an optional
+suffix: C<K> for kibibytes (1024 bytes, the default), C<M> for mebibytes
+(1024 kibibytes), C<G> for gibibytes (1024 mebibytes), and C<T> for
+tebibytes (1024 gibibytes).  A value of C<0> sets an unlimited quota, but
 the size of the disk partition that houses the volume places an absolute
 limit on the volume's size.
 
