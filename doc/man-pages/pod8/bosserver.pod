@@ -65,6 +65,16 @@ with the settings listed in the following chart. A question mark indicates
 that the BOS Server initially turns off the bit (sets it to the hyphen),
 but does not check it at restart.
 
+   /usr/afs              drwxr?xr-x
+   /usr/afs/backup       drwx???---
+   /usr/afs/bin          drwxr?xr-x
+   /usr/afs/db           drwx???---
+   /usr/afs/etc          drwxr?xr-x
+   /usr/afs/etc/KeyFile  -rw????---
+   /usr/afs/etc/UserList -rw?????--
+   /usr/afs/local        drwx???---
+   /usr/afs/logs         drwxr?xr-x
+
 If the mode bits do not comply, the BOS Server writes the following
 warning to the F<BosLog> file:
 
