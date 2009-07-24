@@ -51,7 +51,6 @@ rs_state.ini
 /ID
 /TAGS
 /NTLang.bat
-/NTMakefile
 /golast.bat
 
 # Destination build directories
