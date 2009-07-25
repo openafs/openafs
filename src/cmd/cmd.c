@@ -76,6 +76,11 @@ FindType(register struct cmd_syndesc *as, register char *aname)
     int ambig;
     int best;
 
+    /* Allow --long-style options. */
+    if (aname[0] == '-' && aname[1] == '-' && aname[2] && aname[3]) {
+        aname++;
+    }
+
     cmdlen = strlen(aname);
     ambig = 0;
     best = -1;
