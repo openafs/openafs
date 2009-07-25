@@ -1,0 +1,88 @@
+# Including Makefile shall have set ARCH to one of:
+#
+# INTEL, X86_64, PPC, IA64, MIPS, SPARC, ALPHA
+#
+
+ifeq ($(SYS_NAME),i386_linux24)
+ARCH          := INTEL
+endif
+
+ifeq ($(SYS_NAME),i386_linux26)
+ARCH          := INTEL
+endif
+
+ifeq ($(SYS_NAME),amd64_linux24)
+ARCH          := X86_64
+endif
+
+ifeq ($(SYS_NAME),amd64_linux26)
+ARCH          := X86_64
+endif
+
+ifeq ($(SYS_NAME),sunx86_510)
+ARCH          := SOLARIS_X86_686
+endif
+
+#ifeq ($(SYS_NAME),sunx86_510)
+#ARCH          := SOLARIS_X86_AMD64
+#endif
+
+
+# TODO:  more platforms, or find alternate mechanism.  In particular,
+# sparc handling will be inadequate
+
+DEBUGGING := -DNDEBUG
+
+ifeq ($(ARCH),INTEL)
+CC          := gcc
+MCAS_CFLAGS      := -g -O0 -DINTEL -fomit-frame-pointer -march=i686
+LDFLAGS     := -lpthread
+endif
+
+ifeq ($(ARCH),X86_64)
+CC          := gcc
+MCAS_CFLAGS      := -g -O0 -DX86_64 -fomit-frame-pointer -march=athlon64
+LDFLAGS     := -lpthread
+endif
+
+ifeq ($(ARCH),SOLARIS_X86_686)
+MCAS_CFLAGS      := -KPIC -DSOLARIS_X86_686 -xarch=pentium_pro
+endif
+
+ifeq ($(ARCH),SOLARIS_X86_AMD64)
+MCAS_CFLAGS      := -KPIC -DSOLARIS_X86_AMD64 -xarch=amd64
+endif
+
+ifeq ($(ARCH),PPC)
+CC          := cc_r
+MCAS_CFLAGS      := -O3 -DPPC -q64 -w
+LDFLAGS     := -lpthread -q64
+ASFLAGS     := -a64
+endif
+
+ifeq ($(ARCH),IA64)
+CC          := gcc
+MCAS_CFLAGS      := -O3 -DIA64 -fomit-frame-pointer
+LDFLAGS     := -lpthread
+endif
+
+ifeq ($(ARCH),MIPS)
+CC          := gcc
+MCAS_CFLAGS      := -O3 -DMIPS -fomit-frame-pointer
+LDFLAGS     := -lpthread
+endif
+
+ifeq ($(ARCH),SPARC)
+CC          := /opt/SUNWspro/bin/cc
+MCAS_CFLAGS      := -xO3 -DSPARC sparc_mcas.il -xarch=v9b
+LDFLAGS     := -DSPARC sparc_mcas.il -xarch=v9b -lthread -lrt
+endif
+
+ifeq ($(ARCH),ALPHA)
+CC          := cc
+MCAS_CFLAGS      := -accept vaxc_keywords -O3 -DALPHA
+MCAS_CFLAGS      += -fomit-frame-pointer -DWEAK_MEM_ORDER
+LDFLAGS     := -lpthread 
+endif
+
+MCAS_CFLAGS      += $(DEBUGGING)

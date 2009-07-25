@@ -28,12 +28,25 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __SET_H__
-#define __SET_H__
+/******************************************************************************
+ * set_func.h
+ * 
+ * Matt Benjamin <matt@linuxbox.com>
+ *
+ * Adapts MCAS set interface to use a pointer-key and typed comparison
+ * function style (because often, your key isn't an integer).
+ *
+ * Caution, pointer values 0x0, 0x01, and 0x02 are reserved.  Fortunately,
+ * no real pointer is likely to have one of these values.
+ * 
+ */
+
+#ifndef __SET_ADT_H__
+#define __SET_ADT_H__
 
 
-typedef unsigned long setkey_t;
-typedef void         *setval_t;
+typedef void *setkey_t;
+typedef void *setval_t;
 
 
 #ifdef __SET_IMPLEMENTATION__
@@ -47,16 +60,9 @@ typedef void         *setval_t;
 
 
 /* Internal key values with special meanings. */
-#define INVALID_FIELD   (0)    /* Uninitialised field value.     */
-#define SENTINEL_KEYMIN ( 1UL) /* Key value of first dummy node. */
-#define SENTINEL_KEYMAX (~0UL) /* Key value of last dummy node.  */
-
-
-/*
- * Used internally be set access functions, so that callers can use
- * key values 0 and 1, without knowing these have special meanings.
- */
-#define CALLER_TO_INTERNAL_KEY(_k) ((_k) + 2)
+#define INVALID_FIELD   (0)	/* Uninitialised field value.     */
+#define SENTINEL_KEYMIN ( 1UL)	/* Key value of first dummy node. */
+#define SENTINEL_KEYMAX (~0UL)	/* Key value of last dummy node.  */
 
 
 /*
@@ -96,37 +102,47 @@ do {                                                            \
 #define KEY_MIN  ( 0U)
 #define KEY_MAX  ((~0U) - 3)
 
-typedef void set_t; /* opaque */
+typedef void set_t;		/* opaque */
 
+/* Set element comparison function */
+typedef int (*osi_set_cmp_func) (const void *lhs, const void *rhs);
+
+/* One-time initialize set adt package */
 void _init_set_subsystem(void);
 
 /*
  * Allocate an empty set.
+ *
+ * @cmpf - function to compare two keys, it must return an integer
+ *         less than, equal to, or greater than 0 if 1st argument
+ *         orders less than, equal to, or greater than the 2nd, as
+ *         in qsort(3)
  */
-set_t *set_alloc(void);
+set_t *set_alloc(osi_set_cmp_func cmpf);
 
 /*
  * Add mapping (@k -> @v) into set @s. Return previous mapped value if
  * one existed, or NULL if no previous mapping for @k existed.
- *
+ * 
  * If @overwrite is FALSE, then if a mapping already exists it is not
  * modified, and the existing value is returned unchanged. It is possible
  * to see if the value was changed by observing if the return value is NULL.
  */
-setval_t set_update(set_t *s, setkey_t k, setval_t v, int overwrite);
+setval_t set_update(set_t * s, setkey_t k, setval_t v, int overwrite);
 
 /*
  * Remove mapping for key @k from set @s. Return value associated with
  * removed mapping, or NULL is there was no mapping to delete.
  */
-setval_t set_remove(set_t *s, setkey_t k);
+setval_t set_remove(set_t * s, setkey_t k);
 
 /*
  * Look up mapping for key @k in set @s. Return value if found, else NULL.
  */
-setval_t set_lookup(set_t *s, setkey_t k);
+setval_t set_lookup(set_t * s, setkey_t k);
+
 
 #endif /* __SET_IMPLEMENTATION__ */
 
 
-#endif /* __SET_H__ */
+#endif /* __SET_ADT_H__ */

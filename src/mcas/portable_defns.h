@@ -1,12 +1,48 @@
+/*
+Copyright (c) 2003, Keir Fraser All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
+
+    * Redistributions of source code must retain the above copyright
+    * notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above
+    * copyright notice, this list of conditions and the following
+    * disclaimer in the documentation and/or other materials provided
+    * with the distribution.  Neither the name of the Keir Fraser
+    * nor the names of its contributors may be used to endorse or
+    * promote products derived from this software without specific
+    * prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef __PORTABLE_DEFNS_H__
 #define __PORTABLE_DEFNS_H__
 
-#define MAX_THREADS 128 /* Nobody will ever have more! */
+#define MAX_THREADS 256 /* Nobody will ever have more! */
 
 #if defined(SPARC)
 #include "sparc_defns.h"
+#elif defined(SOLARIS_X86_686)
+#include "solaris_x86_defns.h"
+#elif defined(SOLARIS_X86_AMD64)
+#include "solaris_amd64_defns.h"
 #elif defined(INTEL)
 #include "intel_defns.h"
+#elif defined(X86_64)
+#include "amd64_defns.h"
 #elif defined(PPC)
 #include "ppc_defns.h"
 #elif defined(IA64)
@@ -29,7 +65,6 @@
 
 typedef unsigned long int_addr_t;
 
-typedef int bool_t;
 #define FALSE 0
 #define TRUE  1
 
@@ -38,6 +73,34 @@ do {                                                                    \
     int __val = (_v), __newval;                                         \
     while ( (__newval = CASIO(&(_v),__val,__val+(_x))) != __val )       \
         __val = __newval;                                               \
+} while ( 0 )
+
+/* new 'returning' versions allow use of old value at the successful
+ * CAS update (Matt).  This allows an atomic inc to know if it was, for
+ * example, the operation which uniquely incremented _v from 0 to 1, and
+ * all equivalent threshold assertions */
+
+#define ADD_TO_RETURNING_OLD(_v,_x,_o)									\
+do {                                                                    \
+    int __val = (_v), __newval;                                         \
+    while ( (__newval = CASIO(&(_v),__val,__val+(_x))) != __val )       \
+        __val = __newval;                                               \
+	_o = __val;															\
+} while ( 0 )
+
+#define SUB_FROM(_v,_x)													\
+do {                                                                    \
+    int __val = (_v), __newval;                                         \
+    while ( (__newval = CASIO(&(_v),__val,__val-(_x))) != __val )       \
+        __val = __newval;												\
+} while ( 0 )
+
+#define SUB_FROM_RETURNING_OLD(_v,_x,_o)								\
+do {                                                                    \
+    int __val = (_v), __newval;                                         \
+    while ( (__newval = CASIO(&(_v),__val,__val-(_x))) != __val )       \
+        __val = __newval;                                               \
+	_o = __val;															\
 } while ( 0 )
 
 /*
@@ -99,6 +162,8 @@ do {                                                            \
 
 #endif
 
+#if !defined(INTEL) && !defined(SOLARIS_X86_686) && !defined(SOLARIS_X86_AMD64) && !defined(X86_64)
+
 /*
  * Strong LL/SC operations
  */
@@ -120,6 +185,8 @@ static _u32 strong_ll(_u64 *ptr, int p)
 
     return (_u32) (val_read >> 32);
 }
+#endif /* !INTEL */
+
 
 static int strong_vl(_u64 *ptr, int p) 
 {
@@ -132,6 +199,7 @@ static int strong_vl(_u64 *ptr, int p)
     return (val_read & flag);
 }
 
+#if !defined(INTEL) && !defined(X86_64)
 static int strong_sc(_u64 *ptr, int p, _u32 n) 
 {
     _u64 val_read;
@@ -155,6 +223,8 @@ static int strong_sc(_u64 *ptr, int p, _u32 n)
 
     return 0;
 }
+#endif /* !INTEL */
+
 
 static void s_store(_u64 *ptr, _u32 n) 
 {

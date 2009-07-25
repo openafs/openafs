@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unistd.h>
 #include "portable_defns.h"
 #include "gc.h"
+#include <afs/afsutil.h>
 
 /*#define MINIMAL_GC*/
 /*#define YIELD_TO_HELP_PROGRESS*/
@@ -51,8 +52,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define INVALID_BYTE 0
 #define INITIALISE_NODES(_p,_c) memset((_p), INVALID_BYTE, (_c));
 
-/* Number of unique block sizes we can deal with. */
-#define MAX_SIZES 20
+/* Number of unique block sizes we can deal with. Equivalently, the
+ * number of unique object caches which can be created. */
+#define MAX_SIZES 30
 
 #define MAX_HOOKS 4
 
@@ -107,6 +109,10 @@ static struct gc_global_st
     /* Exclusive access to gc_reclaim(). */
     VOLATILE unsigned int inreclaim;
     CACHE_PAD(2);
+
+
+    /* Allocator caches currently defined */
+    long n_allocators;
 
     /*
      * RUN-TIME CONSTANTS (to first approximation)
@@ -172,13 +178,15 @@ struct gc_st
     chunk_t *hook[NR_EPOCHS][MAX_HOOKS];
 };
 
+/* XXX generalize */
+#ifndef KERNEL
 
-#define MEM_FAIL(_s)                                                         \
-do {                                                                         \
+#define MEM_FAIL(_s) \
+do { \
     fprintf(stderr, "OUT OF MEMORY: %d bytes at line %d\n", (_s), __LINE__); \
-    exit(1);                                                                 \
+    abort(); \
 } while ( 0 )
-
+#endif
 
 /* Allocate more empty chunks from the heap. */
 #define CHUNKS_PER_ALLOC 1000
@@ -447,6 +455,11 @@ void *gc_alloc(ptst_t *ptst, int alloc_id)
     return ch->blk[--ch->i];
 }
 
+int
+gc_get_blocksize(int alloc_id)
+{
+    return (gc_global.blk_sizes[alloc_id]);
+}
 
 static chunk_t *chunk_from_cache(gc_t *gc)
 {
@@ -617,11 +630,25 @@ gc_t *gc_init(void)
 }
 
 
-int gc_add_allocator(int alloc_size)
+int
+gc_add_allocator(int alloc_size)
 {
-    int ni, i = gc_global.nr_sizes;
-    while ( (ni = CASIO(&gc_global.nr_sizes, i, i+1)) != i ) i = ni;
-    gc_global.blk_sizes[i]  = alloc_size;
+    int ni, i;
+
+    RMB();
+    FASPO(&gc_global.n_allocators, gc_global.n_allocators + 1);
+    if (gc_global.n_allocators > MAX_SIZES) {
+	/* critical error */
+#if !defined(KERNEL)
+	printf("MCAS gc max allocators exceeded, aborting\n");
+#endif
+	abort();
+    }
+
+    i = gc_global.nr_sizes;
+    while ((ni = CASIO(&gc_global.nr_sizes, i, i + 1)) != i)
+	i = ni;
+    gc_global.blk_sizes[i] = alloc_size;
     gc_global.alloc_size[i] = ALLOC_CHUNKS_PER_LIST;
     gc_global.alloc[i] = get_filled_chunks(ALLOC_CHUNKS_PER_LIST, alloc_size);
     return i;

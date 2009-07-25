@@ -28,22 +28,23 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef __SPARC_DEFNS_H__
-#define __SPARC_DEFNS_H__
+#ifndef __SOLARIS_X86_DEFNS_H__
+#define __SOLARIS_X86_DEFNS_H__
 
-#ifndef SPARC
-#define SPARC
+#ifndef SOLARIS_X86_686
+#define SOLARIS_X86_686
 #endif
 
 #include <sys/types.h>
 #include <sys/processor.h>
 #include <sys/procset.h>
+#include <sys/atomic.h>
 #include <sched.h>
 #include <alloca.h>
 
 #define CACHE_LINE_SIZE 64
 
-#if 1
+#if 0
 #include <thread.h>
 #define pthread_mutex_t mutex_t
 #define pthread_cond_t  cond_t
@@ -53,12 +54,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define pthread_join(_a,_b) thr_join(_a,NULL,NULL)
 #define pthread_key_create(_a,_b) thr_keycreate(_a,_b)
 #define pthread_setspecific(_a,_b) thr_setspecific(_a,_b)
-static void *pthread_getspecific(pthread_key_t _a)
+static void *
+pthread_getspecific(pthread_key_t _a)
 {
     void *__x;
-    thr_getspecific(_a,&__x);
+    thr_getspecific(_a, &__x);
     return __x;
 }
+
 #define pthread_setconcurrency(_x) thr_setconcurrency(_x)
 #define pthread_mutex_init(_a,_b) mutex_init(_a,USYNC_THREAD,NULL)
 #define pthread_mutex_lock(_a) mutex_lock(_a)
@@ -75,64 +78,77 @@ static void *pthread_getspecific(pthread_key_t _a)
  * I. Compare-and-swap.
  */
 
-typedef unsigned long long _u64;
+#define CAS(_a, _o, _n)\
+atomic_cas_32((_a), (_o), (_n))
 
-extern int CASIO_internal(int *, int, int);
-extern void * CASPO_internal(void *, void *, void *);
-extern _u64 CAS64O_internal(_u64 *, _u64, _u64);
-#define CASIO(_a,_o,_n) (CASIO_internal((int*)(_a),(int)(_o),(int)(_n)))
-#define CASPO(_a,_o,_n) (CASPO_internal((void*)(_a),(void*)(_o),(void*)(_n)))
-#define CAS32O(_a,_o,_n) (_u32)(CASIO_internal((int *)_a,(int)_o,(int)_n))
-#define CAS64O(_a,_o,_n) (CAS64O_internal((_u64 *)_a,(_u64)_o,(_u64)_n))
+#define FAS(_a, _n)\
+atomic_swap_32((_a), (uint32_t)(_n))
 
-static int FASIO(int *a, int n)
-{
-    int no, o = *a;
-    while ( (no = CASIO(a, o, n)) != o ) o = no;
-    return o;
-}
+/* Update Pointer location, return Old value. */
+#define FASPO(_a, _n)\
+atomic_swap_ptr((_a), (_n))
 
-static void *FASPO(void *a, void *n)
-{
-    void *no, *o = *(void **)a;
-    while ( (no = CASPO(a, o, n)) != o ) o = no;
-    return o;
-}
+#define CASPO(_a, _o, _n)\
+atomic_cas_ptr((_a), (void *) (_o), (void *) (_n))
+
+#define CAS64(_a, _o, _n)\
+(_u64) atomic_cas_64((volatile uint64_t *)(_a), (_o), (_n))
+
+/* Update Integer location, return Old value. */
+#define CASIO(_a, _o, _n)\
+atomic_cas_32((volatile uint32_t *)(_a), (_o), (_n))
+
+#define FASIO(_a, _n)\
+atomic_swap_32((volatile uint32_t *)(_a), (_n))
+
+/* Update 32/64-bit location, return Old value. */
+#define CAS32O CAS
+#define CAS64O CAS64
 
 
 /*
- * II. Memory barriers.
+ * II. Memory barriers. 
  *  WMB(): All preceding write operations must commit before any later writes.
  *  RMB(): All preceding read operations must commit before any later reads.
  *  MB():  All preceding memory accesses must commit before any later accesses.
- *
+ * 
  *  If the compiler does not observe these barriers (but any sane compiler
  *  will!), then VOLATILE should be defined as 'volatile'.
  */
 
-extern void MEMBAR_ALL(void);
-extern void MEMBAR_STORESTORE(void);
-extern void MEMBAR_LOADLOAD(void);
-#define MB()  MEMBAR_ALL()
-#define WMB() MEMBAR_STORESTORE()
-#define RMB() MEMBAR_LOADLOAD()
-#define VOLATILE /*volatile*/
+#define WMB() membar_producer
+#define RMB() membar_consumer
+#define MB()\
+(membar_enter(),membar_exit(),membar_producer(),membar_consumer())
 
+#define VOLATILE		volatile
+
+/* On Intel, CAS is a strong barrier, but not a compile barrier. */
+#define RMB_NEAR_CAS() WMB()
+#define WMB_NEAR_CAS() WMB()
+#define MB_NEAR_CAS()  WMB()
 
 /*
  * III. Cycle counter access.
  */
 
+#if 1 /* Sun Studio 12 */
+typedef unsigned long long tick_t;
+#define RDTICK() \
+    ({ tick_t __t; __asm__ __volatile__ ("rdtsc" : "=A" (__t)); __t; })
+#else
 typedef unsigned long tick_t;
 extern tick_t RDTICK(void);
+#endif
 
 
 /*
  * IV. Types.
  */
 
-typedef unsigned char      _u8;
-typedef unsigned short     _u16;
-typedef unsigned int       _u32;
+typedef unsigned char _u8;
+typedef unsigned short _u16;
+typedef unsigned int _u32;
+typedef unsigned long long _u64;
 
-#endif /* __SPARC_DEFNS_H__ */
+#endif /* __SOLARIS_X86_DEFNS_H__ */
