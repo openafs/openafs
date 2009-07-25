@@ -153,7 +153,11 @@ with the string "ptserver".
 
 =item B<-auditlog> <I<log path>>
 
-Turns on audit logging, and sets the path for the audit log.
+Turns on audit logging, and sets the path for the audit log.  The audit
+log shows one entry per RPC call. Each entry records the name of the RPC
+call, the host that submitted the call, the authenticated entity (user)
+that issued the call, the parameters for the call, and if the call
+succeeded or failed.
 
 =item B<-audit-interface> (file | sysvmq)
 
