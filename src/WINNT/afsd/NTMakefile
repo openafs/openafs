@@ -514,3 +514,26 @@ clean::
 	$(DEL) $(LOGON_DLLFILE)
 
 mkdir:
+
+############################################################################
+# Tests
+
+{test}.c{$(OUT)\}.obj:
+	$(C2OBJ) $<
+
+test::
+
+test:: btreetest
+
+btreetest: "$(OUT)\btreetest.exe"
+	"$(OUT)\btreetest.exe"
+
+$(OUT)\btreetest.exe: \
+		$(OUT)\btreetest.obj \
+		$(OUT)\cm_btree.obj \
+		$(OUT)\cm_nls.obj \
+		$(OUT)\cm_utils.obj \
+		$(DESTDIR)\lib\libosi.lib
+	$(EXECONLINK)
+	$(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
