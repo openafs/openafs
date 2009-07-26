@@ -29,7 +29,9 @@ LIBFILE = $(DESTDIR)\lib\afsauthent.dll
 
 RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
-AUDITBJS = $(OUT)\audit.obj
+AUDITOBJS = \
+        $(OUT)\audit.obj \
+        $(OUT)\audit-file.obj
 
 AUTHOBJS = \
 	$(OUT)\cellconfig.obj \
@@ -93,7 +95,7 @@ DLLOBJS =\
 	$(PTSERVEROBJS) \
 	$(SYSOBJS) \
 	$(WINNTAFSDOBJS) \
-	$(AUDITBJS) \
+	$(AUDITOBJS) \
 	$(OUT)\afsauthent.res
 
 $(RXOBJS): $(RX)\$$(@B).c
@@ -120,7 +122,7 @@ $(PTSERVEROBJS): $(PTSERVER)\$$(@B).c
 $(WINNTAFSDOBJS): $(WINNTAFSD)\$$(@B).c
 	$(C2OBJ) -I$(WINNTAFSD) $**
 
-$(AUDITBJS): $(AUDIT)\$$(@B).c
+$(AUDITOBJS): $(AUDIT)\$$(@B).c
 	$(C2OBJ) -I$(AUDIT) $**
 
 $(SYSOBJS): $(SYS)\$$(@B).c
