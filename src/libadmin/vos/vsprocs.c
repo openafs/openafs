@@ -36,7 +36,8 @@
 #include <io.h>
 #endif
 
-static afs_int32 GroupEntries();
+static afs_int32 GroupEntries(struct rx_connection *server, volintInfo * pntr, afs_int32 count,
+             struct qHead *myQueue, afs_int32 apart);
 
 struct release {
     afs_int32 time;
@@ -127,7 +128,7 @@ UV_NukeVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
 * back new vol id in <anewid>*/
 int
 UV_CreateVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
-		unsigned int partition, const char *volumeName,
+		unsigned int partition, char *volumeName,
 		unsigned int quota, afs_uint32 *volumeId, afs_status_p st)
 {
     int rc = 0;
@@ -986,7 +987,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
     int rc = 0;
     afs_status_t tst = 0, temp = 0;
     afs_int32 ttid = 0, btid = 0;
-    afs_int32 backupID;
+    afs_uint32 backupID;
     afs_int32 rcode = 0;
     char vname[VOLSER_MAXVOLNAME + 1];
     struct nvldbentry entry;
@@ -2283,7 +2284,7 @@ WriteData(struct rx_call *call, const char *filename)
  */
 int
 UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
-		 afs_int32 topart, afs_uint32 tovolid, const char *tovolname,
+		 afs_int32 topart, afs_uint32 tovolid, char *tovolname,
 		 int flags, const char *dumpFile, afs_status_p st)
 {
     int rc = 0;
@@ -3686,13 +3687,16 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
     return rc;
 }
 
-/*rename volume <oldname> to <newname>, changing the names of the related 
- *readonly and backup volumes. This operation is also idempotent.
- *salvager is capable of recovering from rename operation stopping halfway.
- *to recover run syncserver on the affected machines,it will force renaming to completion. name clashes should have been detected before calling this proc */
+/* rename volume <oldname> to <newname>, changing the names of the related
+ * readonly and backup volumes. This operation is also idempotent.
+ * salvager is capable of recovering from rename operation stopping halfway.
+ * to recover run syncserver on the affected machines,it will force
+ * renaming to completion. name clashes should have been detected before
+ * calling this proc
+ */
 int
 UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
-		const char *newname, afs_status_p st)
+		char *newname, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;

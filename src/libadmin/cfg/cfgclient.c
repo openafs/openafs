@@ -32,6 +32,7 @@
 
 #include <afs/dirpath.h>
 #include <afs/cellconfig.h>
+#include <afs/kautils.h>
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>

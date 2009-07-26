@@ -543,8 +543,8 @@ pts_GroupOwnerChange(const void *cellHandle, const char *targetGroup,
  */
 
 int ADMINAPI
-pts_GroupCreate(const void *cellHandle, const char *newGroup,
-		const char *newOwner, int *newGroupId, afs_status_p st)
+pts_GroupCreate(const void *cellHandle, char *newGroup,
+		char *newOwner, int *newGroupId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1552,7 +1552,7 @@ pts_GroupMemberRemove(const void *cellHandle, const char *userName,
 
 int ADMINAPI
 pts_GroupRename(const void *cellHandle, const char *oldName,
-		const char *newName, afs_status_p st)
+		char *newName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1789,7 +1789,7 @@ pts_GroupModify(const void *cellHandle, const char *groupName,
  */
 
 int ADMINAPI
-pts_UserCreate(const void *cellHandle, const char *userName, int *newUserId,
+pts_UserCreate(const void *cellHandle, char *userName, int *newUserId,
 	       afs_status_p st)
 {
     int rc = 0;
@@ -2141,7 +2141,7 @@ pts_UserGet(const void *cellHandle, const char *userName,
 
 int ADMINAPI
 pts_UserRename(const void *cellHandle, const char *oldName,
-	       const char *newName, afs_status_p st)
+	       char *newName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;

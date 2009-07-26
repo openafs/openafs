@@ -1785,6 +1785,7 @@ DoBosSalvage(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+#if 0
 static void
 Print_afs_RPCStatsState_p(afs_RPCStatsState_p state, const char *prefix)
 {
@@ -1798,6 +1799,7 @@ Print_afs_RPCStatsState_p(afs_RPCStatsState_p state, const char *prefix)
 	break;
     }
 }
+#endif
 
 void
 SetupBosAdminCmd(void)

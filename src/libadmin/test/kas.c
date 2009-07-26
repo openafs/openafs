@@ -497,9 +497,9 @@ Print_kas_serverStats_p(kas_serverStats_p stats, const char *prefix)
     printf("%sHost %x\n", prefix, stats->host);
     printf("%sServer start time %s\n", prefix, ctime(&stime));
     printf("%sUser time %ld secs %ld usec\n", prefix, stats->userTime.tv_sec,
-	   stats->userTime.tv_usec);
+	   (long) stats->userTime.tv_usec);
     printf("%sSystem time %ld secs %ld usec\n", prefix,
-	   stats->systemTime.tv_sec, stats->systemTime.tv_usec);
+	   stats->systemTime.tv_sec, (long) stats->systemTime.tv_usec);
     printf("%sData size %d\n", prefix, stats->dataSize);
     printf("%sStack size %d\n", prefix, stats->stackSize);
     printf("%sPage faults %d\n", prefix, stats->pageFaults);

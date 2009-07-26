@@ -53,7 +53,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include <ubik_int.h>
 
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxstat_get_process <cell> <host> <port>\n");
     exit(1);

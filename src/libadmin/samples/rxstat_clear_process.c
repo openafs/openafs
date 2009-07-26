@@ -35,8 +35,6 @@ pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
-extern int RXSTATS_ClearProcessRPCStats();
-
 void
 Usage(void)
 {

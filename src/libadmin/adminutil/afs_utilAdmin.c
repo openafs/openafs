@@ -2300,7 +2300,7 @@ util_CMClientConfig(struct rx_connection *conn, afs_ClientConfig_p config,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_int32 allocbytes;
+    afs_uint32 allocbytes;
     struct cacheConfig tconfig;
 
     if (conn == NULL) {

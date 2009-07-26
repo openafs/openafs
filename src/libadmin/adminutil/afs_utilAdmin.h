@@ -133,9 +133,9 @@ extern int ADMINAPI util_CMClientConfig(struct rx_connection *conn,
 typedef char rxdebugVersion_t[UTIL_MAX_RXDEBUG_VERSION_LEN],
     *rxdebugVersion_p;
 
-extern int ADMINAPI util_RXDebugVersionString(rxdebugHandle_p handle,
-					      rxdebugVersion_p version,
-					      afs_status_p st);
+extern int ADMINAPI util_RXDebugVersion(rxdebugHandle_p handle,
+					rxdebugVersion_p version,
+					afs_status_p st);
 
 extern int ADMINAPI util_RXDebugSupportedStats(rxdebugHandle_p handle,
 					       afs_uint32 * supportedStats,

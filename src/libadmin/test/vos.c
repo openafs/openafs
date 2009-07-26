@@ -71,7 +71,7 @@ GetVolumeIdFromString(const char *volume)
      * is a volume name
      */
     if (vos_VLDBGet
-	(cellHandle, 0, (const unsigned int *)0, volume, &entry, &st)) {
+	(cellHandle, 0, NULL, (char *)volume, &entry, &st)) {
 	return entry.volumeId[VOS_READ_WRITE_VOLUME];
     } else {
 	ERR_EXT("failed to convert specified volume to an id");
@@ -533,7 +533,7 @@ DoVosVLDBGet(struct cmd_syndesc *as, void *arock)
     afs_status_t st = 0;
     vos_vldbEntry_t entry;
     unsigned int volume_id;
-    const char *volume_name = NULL;
+    char *volume_name = NULL;
 
     if (as->parms[VOLUME].items) {
 	const char *volume = as->parms[VOLUME].items->data;
@@ -833,7 +833,7 @@ DoVosVolumeCreate(struct cmd_syndesc *as, void *arock)
     void *vos_server = NULL;
     unsigned int partition_id = 0;
     unsigned int volume_id;
-    const char *volume = NULL;
+    char *volume = NULL;
     unsigned int quota = 0;
 
     if (as->parms[SERVER].items) {
@@ -908,7 +908,7 @@ DoVosVolumeRename(struct cmd_syndesc *as, void *arock)
     typedef enum { OLDVOLUME, NEWVOLUME } DoVosVolumeRename_parm_t;
     afs_status_t st = 0;
     unsigned int old_volume = 0;
-    const char *new_volume = 0;
+    char *new_volume = NULL;
 
     if (as->parms[OLDVOLUME].items) {
 	const char *volume = as->parms[OLDVOLUME].items->data;
@@ -994,7 +994,7 @@ DoVosVolumeRestore(struct cmd_syndesc *as, void *arock)
     unsigned int volume_id;
     unsigned int *vol_ptr = NULL;
     const char *dumpfile = NULL;
-    const char *volume_name = NULL;
+    char *volume_name = NULL;
     vos_volumeRestoreType_t restore = VOS_RESTORE_INCREMENTAL;
 
     if (as->parms[SERVER].items) {
@@ -1725,7 +1725,7 @@ Print_vos_volintInfo(afs_uint32 server, afs_uint32 partition, volintInfo* pinfo,
     printf("%scopyDate\t%-9lu\n", prefix,
 	   afs_printable_uint32_lu(pinfo->copyDate));
 	    
-    printf("%sflags\t\t%#lx\t(Optional)\n",prefix, pinfo->flags);
+    printf("%sflags\t\t%#lx\t(Optional)\n",prefix, afs_printable_int32_ld(pinfo->flags));
     printf("%sdiskused\t%u\n",prefix, pinfo->size);
     printf("%smaxquota\t%u\n",prefix, pinfo->maxquota);
     printf("%sminquota\t%lu\t(Optional)\n",prefix,

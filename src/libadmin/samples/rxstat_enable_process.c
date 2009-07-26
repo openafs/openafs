@@ -24,14 +24,14 @@
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 
 #ifdef AFS_DARWIN_ENV
 pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
-
-extern int RXSTATS_EnableProcessRPCStats();
 
 void
 Usage(void)

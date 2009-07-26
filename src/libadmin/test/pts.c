@@ -122,8 +122,8 @@ DoPtsGroupCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { OWNER, GROUP } DoPtsGroupCreate_parm_t;
     afs_status_t st = 0;
-    const char *owner = as->parms[OWNER].items->data;
-    const char *group = as->parms[GROUP].items->data;
+    char *owner = as->parms[OWNER].items->data;
+    char *group = as->parms[GROUP].items->data;
     int new_group_id;
 
     if (!pts_GroupCreate(cellHandle, group, owner, &new_group_id, &st)) {
@@ -278,7 +278,7 @@ DoPtsGroupRename(struct cmd_syndesc *as, void *arock)
     typedef enum { GROUP, NEWNAME } DoPtsGroupRename_parm_t;
     afs_status_t st = 0;
     const char *group = as->parms[GROUP].items->data;
-    const char *new_name = as->parms[NEWNAME].items->data;
+    char *new_name = as->parms[NEWNAME].items->data;
 
     if (!pts_GroupRename(cellHandle, group, new_name, &st)) {
 	ERR_ST_EXT("pts_GroupRename", st);
@@ -325,7 +325,7 @@ DoPtsUserCreate(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { USER } DoPtsUserCreate_parm_t;
     afs_status_t st = 0;
-    const char *user = as->parms[USER].items->data;
+    char *user = as->parms[USER].items->data;
     int new_user_id;
 
     if (!pts_UserCreate(cellHandle, user, &new_user_id, &st)) {
@@ -403,7 +403,7 @@ DoPtsUserRename(struct cmd_syndesc *as, void *arock)
     typedef enum { USER, NEWNAME } DoPtsUserRename_parm_t;
     afs_status_t st = 0;
     const char *user = as->parms[USER].items->data;
-    const char *new_name = as->parms[NEWNAME].items->data;
+    char *new_name = as->parms[NEWNAME].items->data;
 
     if (!pts_UserRename(cellHandle, user, new_name, &st)) {
 	ERR_ST_EXT("pts_UserRename", st);

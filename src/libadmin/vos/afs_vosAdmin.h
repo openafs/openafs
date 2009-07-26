@@ -262,13 +262,13 @@ extern int ADMINAPI vos_ServerSync(const void *cellHandle,
 
 extern int ADMINAPI vos_FileServerAddressChange(const void *cellHandle,
 						vos_MessageCallBack_t
-						callBack, int oldAddress,
-						int newAddress,
+						callBack, unsigned int oldAddress,
+						unsigned int newAddress,
 						afs_status_p st);
 
 extern int ADMINAPI vos_FileServerAddressRemove(const void *cellHandle,
 						vos_MessageCallBack_t
-						callBack, int serverAddress,
+						callBack, unsigned int serverAddress,
 						afs_status_p st);
 
 extern int ADMINAPI vos_FileServerGetBegin(const void *cellHandle,
@@ -303,7 +303,7 @@ extern int ADMINAPI vos_ServerTransactionStatusGetDone(const void
 extern int ADMINAPI vos_VLDBGet(const void *cellHandle,
 				vos_MessageCallBack_t callBack,
 				const unsigned int *volumeId,
-				const char *volumeName,
+				char *volumeName,
 				vos_vldbEntry_p vldbEntry, afs_status_p st);
 
 extern int ADMINAPI vos_VLDBGetBegin(const void *cellHandle,
@@ -364,7 +364,7 @@ extern int ADMINAPI vos_VolumeCreate(const void *cellHandle,
 				     const void *serverHandle,
 				     vos_MessageCallBack_t callBack,
 				     unsigned int partition,
-				     const char *volumeName,
+				     char *volumeName,
 				     unsigned int quota,
 				     unsigned int *volumeId, afs_status_p st);
 
@@ -377,7 +377,7 @@ extern int ADMINAPI vos_VolumeDelete(const void *cellHandle,
 extern int ADMINAPI vos_VolumeRename(const void *cellHandle,
 				     vos_MessageCallBack_t callBack,
 				     unsigned int readWriteVolumeId,
-				     const char *newVolumeName,
+				     char *newVolumeName,
 				     afs_status_p st);
 
 extern int ADMINAPI vos_VolumeDump(const void *cellHandle,
@@ -393,7 +393,7 @@ extern int ADMINAPI vos_VolumeRestore(const void *cellHandle,
 				      vos_MessageCallBack_t callBack,
 				      unsigned int partition,
 				      unsigned int *volumeId,
-				      const char *volumeName,
+				      char *volumeName,
 				      const char *dumpFile,
 				      vos_volumeRestoreType_t dumpType,
 				      afs_status_p st);

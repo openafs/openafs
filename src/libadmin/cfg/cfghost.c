@@ -636,7 +636,7 @@ cfg_HostSetAfsPrincipal(void *hostHandle,	/* host config handle */
 int ADMINAPI
 cfg_HostSetAdminPrincipal(void *hostHandle,	/* host config handle */
 			  short isFirst,	/* first server in cell flag */
-			  const char *admin,	/* admin principal name */
+			  char *admin,		/* admin principal name */
 			  const char *passwd,	/* admin initial password */
 			  unsigned int afsUid,	/* admin AFS UID */
 			  afs_status_p st)

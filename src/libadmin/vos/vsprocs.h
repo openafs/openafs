@@ -50,7 +50,7 @@ extern int UV_NukeVolume(afs_cell_handle_p cellHandle,
 
 extern int UV_CreateVolume(afs_cell_handle_p cellHandle,
 			   struct rx_connection *server,
-			   unsigned int partition, const char *volumeName,
+			   unsigned int partition, char *volumeName,
 			   unsigned int quota, afs_uint32 *volumeId,
 			   afs_status_p st);
 
@@ -79,7 +79,7 @@ extern int UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 
 extern int UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 			    afs_int32 topart, afs_uint32 tovolid,
-			    const char *tovolname, int flags,
+			    char *tovolname, int flags,
 			    const char *dumpFile, afs_status_p st);
 
 extern int UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server,
@@ -132,5 +132,5 @@ extern int UV_SetVolume(struct rx_connection *server, afs_int32 partition,
 			afs_status_p st);
 
 extern int UV_RenameVolume(afs_cell_handle_p cellHandle,
-			   struct nvldbentry *entry, const char *newname,
+			   struct nvldbentry *entry, char *newname,
 			   afs_status_p st);
