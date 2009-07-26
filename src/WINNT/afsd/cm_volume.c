@@ -1789,3 +1789,15 @@ cm_VolumeStateByName(cm_volume_t *volp, char *volname)
     return statep;
 }
 
+afs_int32 
+cm_VolumeType(cm_volume_t *volp, afs_uint32 id)
+{
+    if (id == volp->vol[RWVOL].ID)
+        return(RWVOL);
+    else if (id == volp->vol[ROVOL].ID)
+        return(ROVOL);
+    else if (id == volp->vol[BACKVOL].ID)
+        return (BACKVOL);
+
+    return -1;
+}
