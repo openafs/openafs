@@ -1516,8 +1516,10 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	    afsi_SetServerIPRank(sa, ifa);
     }}
 #endif
-    end:
 #endif				/* USEIFADDR */
+#ifndef USEIFADDR
+    end:
+#endif
 #endif				/* AFS_SUN5_ENV */
 #endif				/* else AFS_USERSPACE_IP_ADDR */
     if (sa)
