@@ -20,7 +20,8 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afsaudit.lib
 
 LIBOBJS =\
-	$(OUT)\audit.obj
+	$(OUT)\audit.obj \
+        $(OUT)\audit-file.obj
 
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH)  

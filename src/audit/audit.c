@@ -18,8 +18,6 @@
 #include <sys/stat.h>
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
-#else
-#include <io.h>
 #endif
 #ifdef AFS_AIX32_ENV
 #include <sys/audit.h>
@@ -261,7 +259,7 @@ printbuf(int rec, char *audEvent, char *afsName, afs_int32 hostId,
 	    vaFids = va_arg(vaList, struct AFSCBFids *);
 
 	    if (vaFids) {
-                int i;
+                unsigned int i;
                 
                 vaFid = vaFids->AFSCBFids_val;
                 
