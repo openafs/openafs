@@ -299,7 +299,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             scp->mask &= ~CM_SCACHEMASK_LENGTH;
 
-        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, CM_MERGEFLAG_STOREDATA);
+        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     } else {
         if (code == CM_ERROR_SPACE)
             scp->flags |= CM_SCACHEFLAG_OUTOFSPACE;
@@ -423,7 +423,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
         if (LargeIntegerGreaterThanOrEqualTo(t, scp->length))
             scp->mask &= ~CM_SCACHEMASK_LENGTH;
-        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, CM_MERGEFLAG_STOREDATA);
+        cm_MergeStatus(NULL, scp, &outStatus, &volSync, userp, reqp, CM_MERGEFLAG_STOREDATA);
     }
 
     return code;
@@ -1724,7 +1724,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     cm_ReleaseBIOD(&biod, 0, code, 1);
 
     if (code == 0) 
-        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
+        cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
     
     return code;
 }

@@ -1783,7 +1783,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             lock_ReleaseMutex(&cm_Freelance_Lock);
 
             // Fetch the status info 
-            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
+            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
 
             // Indicate that the callback is not done
             lock_ObtainMutex(&cm_Freelance_Lock);
@@ -1847,7 +1847,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         lock_ObtainWrite(&scp->rw);
         if (code == 0) {
             cm_EndCallbackGrantingCall(scp, &cbr, &callback, 0);
-            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, 0);
+            cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
         } else {
             cm_EndCallbackGrantingCall(NULL, &cbr, NULL, 0);
         }

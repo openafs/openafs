@@ -1500,7 +1500,7 @@ void cm_SyncOpDone(cm_scache_t *scp, cm_buf_t *bufp, afs_uint32 flags)
 void cm_MergeStatus(cm_scache_t *dscp, 
 		    cm_scache_t *scp, AFSFetchStatus *statusp, 
 		    AFSVolSync *volsyncp,
-                    cm_user_t *userp, afs_uint32 flags)
+                    cm_user_t *userp, cm_req_t *reqp, afs_uint32 flags)
 {
     afs_uint64 dataVersion;
 
@@ -1576,12 +1576,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
         cellp = cm_FindCellByID(scp->fid.cell, 0);
         if (scp->cbServerp) {
             struct cm_volume *volp = NULL;
-            cm_req_t req;
-
-            cm_InitReq(&req);
-
             cm_FindVolumeByID(cellp, scp->fid.volume, userp,
-                              &req, CM_GETVOL_FLAG_CREATE, &volp);
+                              reqp, CM_GETVOL_FLAG_CREATE, &volp);
             osi_Log2(afsd_logp, "old data from server %x volume %s",
                       scp->cbServerp->addr.sin_addr.s_addr,
                       volp ? volp->namep : "(unknown)");
