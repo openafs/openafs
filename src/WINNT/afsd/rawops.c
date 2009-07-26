@@ -82,7 +82,7 @@ long ReadData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
             }
             lock_ReleaseWrite(&scp->rw);
 
-            code = buf_Get(scp, &thyper, &bufferp);
+            code = buf_Get(scp, &thyper, &req, &bufferp);
 
             lock_ObtainWrite(&scp->rw);
             if (code) goto done;
@@ -243,7 +243,7 @@ long WriteData(cm_scache_t *scp, osi_hyper_t offset, long count, char *op,
             }	
             lock_ReleaseWrite(&scp->rw);
 
-            code = buf_Get(scp, &thyper, &bufferp);
+            code = buf_Get(scp, &thyper, &req, &bufferp);
 
             lock_ObtainMutex(&bufferp->mx);
             lock_ObtainWrite(&scp->rw);

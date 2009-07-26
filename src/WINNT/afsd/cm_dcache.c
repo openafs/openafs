@@ -714,7 +714,7 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
             mxheld = 0;
         }
 
-        code = buf_Get(scp, &offset, &bp);
+        code = buf_Get(scp, &offset, &req, &bp);
         if (code)
             break;
 
@@ -1106,7 +1106,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
         if (LargeIntegerGreaterThanOrEqualTo(pageBase, fileSize)) 
             break;
 
-        code = buf_Get(scp, &pageBase, &tbp);
+        code = buf_Get(scp, &pageBase, reqp, &tbp);
         if (code) {
             lock_ObtainWrite(&scp->rw);
             cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);

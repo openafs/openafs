@@ -154,11 +154,11 @@ extern cm_buf_t *buf_FindLocked(struct cm_scache *, osi_hyper_t *);
 
 extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
 
-extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
+extern long buf_GetNewLocked(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 
-extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
+extern long buf_Get(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 
-extern long buf_GetNew(struct cm_scache *, osi_hyper_t *, cm_buf_t **);
+extern long buf_GetNew(struct cm_scache *, osi_hyper_t *, cm_req_t *, cm_buf_t **);
 
 extern afs_uint32 buf_CleanAsyncLocked(cm_buf_t *, cm_req_t *, afs_uint32 *);
 

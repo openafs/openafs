@@ -861,14 +861,11 @@ void buf_Recycle(cm_buf_t *bp)
  * space from the buffer pool.  In that case, the buffer will be returned
  * without being hashed into the hash table.
  */
-long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
+long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;	/* buffer we're dealing with */
     cm_buf_t *nextBp;	/* next buffer in file hash chain */
     afs_uint32 i;	/* temp */
-    cm_req_t req;
-
-    cm_InitReq(&req);	/* just in case */
 
 #ifdef TESTING
     buf_ValidateBufQueues();
@@ -969,7 +966,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
                  * have the WRITING flag set, so we won't get
                  * back here.
                  */
-                buf_CleanAsync(bp, &req, NULL);
+                buf_CleanAsync(bp, reqp, NULL);
 
                 /* now put it back and go around again */
                 buf_Release(bp);
@@ -1061,7 +1058,7 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bu
 /* get a page, returning it held but unlocked.  Doesn't fill in the page
  * with I/O, since we're going to write the whole thing new.
  */
-long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
+long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;
     long code;
@@ -1080,7 +1077,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         }
 
         /* otherwise, we have to create a page */
-        code = buf_GetNewLocked(scp, &pageOffset, &bp);
+        code = buf_GetNewLocked(scp, &pageOffset, reqp, &bp);
 
         /* check if the buffer was created in a race condition branch.
          * If so, go around so we can hold a reference to it. 
@@ -1113,7 +1110,7 @@ long buf_GetNew(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
 
 /* get a page, returning it held but unlocked.  Make sure it is complete */
 /* The scp must be unlocked when passed to this function */
-long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
+long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *reqp, cm_buf_t **bufpp)
 {
     cm_buf_t *bp;
     long code;
@@ -1147,7 +1144,7 @@ long buf_Get(struct cm_scache *scp, osi_hyper_t *offsetp, cm_buf_t **bufpp)
         }
 
         /* otherwise, we have to create a page */
-        code = buf_GetNewLocked(scp, &pageOffset, &bp);
+        code = buf_GetNewLocked(scp, &pageOffset, reqp, &bp);
 	/* bp->mx is now held */
 
         /* check if the buffer was created in a race condition branch.

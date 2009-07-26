@@ -351,7 +351,7 @@ long cm_CheckNTDelete(cm_scache_t *dscp, cm_scache_t *scp, cm_user_t *userp,
         return code;
 
     thyper.HighPart = 0; thyper.LowPart = 0;
-    code = buf_Get(scp, &thyper, &bufferp);
+    code = buf_Get(scp, &thyper, reqp, &bufferp);
     if (code)
         return code;
 
@@ -590,7 +590,7 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
                 bufferp = NULL;
             }
 
-            code = buf_Get(scp, &thyper, &bufferp);
+            code = buf_Get(scp, &thyper, reqp, &bufferp);
             if (code) {
                 /* if buf_Get() fails we do not have a buffer object to lock */
                 bufferp = NULL;
@@ -829,7 +829,7 @@ long cm_ReadMountPoint(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
         lock_ReleaseWrite(&scp->rw);
 
         thyper.LowPart = thyper.HighPart = 0;
-        code = buf_Get(scp, &thyper, &bufp);
+        code = buf_Get(scp, &thyper, reqp, &bufp);
 
         lock_ObtainWrite(&scp->rw);
         if (code)
@@ -1669,7 +1669,7 @@ long cm_HandleLink(cm_scache_t *linkScp, cm_user_t *userp, cm_req_t *reqp)
             /* read the link data from the file server*/
             lock_ReleaseWrite(&linkScp->rw);
             thyper.LowPart = thyper.HighPart = 0;
-            code = buf_Get(linkScp, &thyper, &bufp);
+            code = buf_Get(linkScp, &thyper, reqp, &bufp);
             lock_ObtainWrite(&linkScp->rw);
             if (code) 
                 return code;

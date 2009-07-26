@@ -1509,7 +1509,7 @@ cm_DirPrefetchBuffers(cm_dirOp_t * op)
                  offset.HighPart, offset.LowPart);
         lock_ReleaseWrite(&op->scp->rw);
 
-        code = buf_Get(op->scp, &offset, &bufferp);
+        code = buf_Get(op->scp, &offset, &op->req, &bufferp);
 
         lock_ObtainWrite(&op->scp->rw);
 
@@ -1657,7 +1657,7 @@ cm_DirGetPage(cm_dirOp_t * op,
             goto _has_buffer;
         }
 
-        code = buf_Get(op->scp, &bufferOffset, &bufferp);
+        code = buf_Get(op->scp, &bufferOffset, &op->req, &bufferp);
         if (code) {
             osi_Log1(afsd_logp, "    buf_Get returned code 0x%x", code);
             bufferp = NULL;
