@@ -684,6 +684,54 @@ cm_buf_t *buf_Find(struct cm_scache *scp, osi_hyper_t *offsetp)
     return bp;
 }       
 
+/* find a buffer, if any, for a particular file ID and offset.  Assumes
+ * that buf_globalLock is write locked when called.  Uses the all buffer
+ * list.
+ */
+cm_buf_t *buf_FindAllLocked(struct cm_scache *scp, osi_hyper_t *offsetp, afs_uint32 flags)
+{
+    cm_buf_t *bp;
+
+    if (flags == 0) {
+        for(bp = cm_data.buf_allp; bp; bp=bp->allp) {
+            if (cm_FidCmp(&scp->fid, &bp->fid) == 0
+                 && offsetp->LowPart == bp->offset.LowPart
+                 && offsetp->HighPart == bp->offset.HighPart) {
+                buf_HoldLocked(bp);
+                break;
+            }
+        }
+    } else {
+        for(bp = cm_data.buf_allp; bp; bp=bp->allp) {
+            if (cm_FidCmp(&scp->fid, &bp->fid) == 0) {
+                char * fileOffset;
+                
+                fileOffset = offsetp->QuadPart + cm_data.baseAddress;
+                if (fileOffset == bp->datap) {
+                    buf_HoldLocked(bp);
+                    break;
+                }
+            }
+        }
+    }
+    /* return whatever we found, if anything */
+    return bp;
+}
+
+/* find a buffer with offset *offsetp for vnode *scp.  Called
+ * with no locks held.  Use the all buffer list.
+ */
+cm_buf_t *buf_FindAll(struct cm_scache *scp, osi_hyper_t *offsetp, afs_uint32 flags)
+{
+    cm_buf_t *bp;
+
+    lock_ObtainRead(&buf_globalLock);
+    bp = buf_FindAllLocked(scp, offsetp, flags);
+    lock_ReleaseRead(&buf_globalLock);
+
+    return bp;
+}       
+
 /* start cleaning I/O on this buffer.  Buffer must be write locked, and is returned
  * write-locked.
  *
