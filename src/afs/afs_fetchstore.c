@@ -71,7 +71,6 @@ afs_int32
 rxfs_storeUfsRead(void *r, struct osi_file *tfile, afs_uint32 offset,
 		  afs_uint32 tlen, afs_uint32 *got)
 {
-    afs_int32 code;
     struct rxfs_storeVariables *v = (struct rxfs_storeVariables *)r;
 
     *got = afs_osi_Read(tfile, -1, v->tbuffer, tlen);

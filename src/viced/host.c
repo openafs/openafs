@@ -1210,7 +1210,6 @@ h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host)
 {
     int index;
     struct h_AddrHashChain *chain;
-    int found = 0;
     char hoststr[16], hoststr2[16];
 
     /* hash into proper bucket */

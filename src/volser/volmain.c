@@ -206,9 +206,9 @@ int
 volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
+#ifndef AFS_LINUX20_ENV
     void (*old) (int);
 
-#ifndef AFS_LINUX20_ENV
     old = signal(SIGSYS, SIG_IGN);
 #endif
     rcode =

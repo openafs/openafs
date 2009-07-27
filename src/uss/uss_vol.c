@@ -903,7 +903,9 @@ uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, char *a_servName,
 		  afs_int32 a_servID, char *a_partName, afs_int32  a_partID)
 {				/*uss_vol_DeleteVol */
 
+#ifdef USS_VOL_DB
     static char rn[] = "uss_vol_DeleteVol";	/*Routine name */
+#endif
     register afs_int32 code = 0;	/*Return code */
 
     /*

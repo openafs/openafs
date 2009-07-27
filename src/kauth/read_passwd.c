@@ -109,7 +109,6 @@ int
 read_pw_string(char *s, int max, char *prompt, int verify)
 {
     int ok = 0;
-    int len;			/* password length */
 
 #ifdef	BSDUNIX
     jmp_buf old_env;

@@ -6299,7 +6299,6 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     afs_int32 *vd, *addr;
     Error errorCode = 0;		/* return code to caller */
     struct client *client = 0;
-    struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     ViceLog(1, ("SRXAFS_FlushCPS\n"));
     FS_LOCK;

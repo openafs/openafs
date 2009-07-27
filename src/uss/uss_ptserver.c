@@ -68,7 +68,9 @@ static afs_int32
 InitThisModule(void)
 {				/*InitThisModule */
 
+#ifdef USS_PTSERVER_DB
     static char rn[] = "uss_ptserver:InitThisModule";	/*Routine name */
+#endif
     register afs_int32 code;	/*Return code */
 
     /*

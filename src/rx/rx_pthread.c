@@ -141,7 +141,6 @@ rxi_StartServerProc(void *(*proc) (void *), int stacksize)
 static void *
 event_handler(void *argp)
 {
-    struct clock rx_pthread_last_event_wait_time = { 0, 0 };
     unsigned long rx_pthread_n_event_expired = 0;
     unsigned long rx_pthread_n_event_waits = 0;
     long rx_pthread_n_event_woken = 0;

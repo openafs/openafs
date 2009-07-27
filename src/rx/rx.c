@@ -6697,7 +6697,6 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 #else
     afs_int32 rc = 0;
     struct rx_debugIn in;
-    afs_int32 *lp = (afs_int32 *) stat;
 
     *supportedValues = 0;
     in.type = htonl(RX_DEBUGI_GETSTATS);

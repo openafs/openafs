@@ -624,9 +624,11 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	 */
 
 	if (! do524) {
-	    char *p;
 	    char k4name[ANAME_SZ], k4inst[INST_SZ], k4realm[REALM_SZ];
+#ifdef HAVE_NO_KRB5_524
+	    char *p;
 	    int len;
+#endif
 
 	    if (dflag)
 	    	printf("Using Kerberos V5 ticket natively\n");

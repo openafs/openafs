@@ -385,9 +385,9 @@ int
 viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
+#ifndef AFS_LINUX20_ENV
     void (*old) (int);
 
-#ifndef AFS_LINUX20_ENV
     old = (void (*)(int))signal(SIGSYS, SIG_IGN);
 #endif
     rcode = syscall(AFS_SYSCALL, 28 /* AFSCALL_CALL */ , a3, a4, a5);

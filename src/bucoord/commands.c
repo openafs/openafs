@@ -426,7 +426,6 @@ EvalVolumeSet1(struct bc_config *aconfig,
 	       struct ubik_client *uclient)
 {				/*EvalVolumeSet1 */
     afs_int32 code;		/*Result of various calls */
-    char *errm;
     struct bc_volumeDump *tvd;	/*Ptr to new dump instance */
     struct bc_volumeEntry *tve, *ctve;	/*Ptr to new volume entry instance */
     char patt[256];		/*Composite regex; also, target string */
@@ -444,6 +443,8 @@ EvalVolumeSet1(struct bc_config *aconfig,
 #ifdef HAVE_POSIX_REGEX
     regex_t re;
     int need_regfree = 0;
+#else
+    char *errm;
 #endif
 
     *avols = (struct bc_volumeDump *)0;
