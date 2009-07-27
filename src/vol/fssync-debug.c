@@ -40,7 +40,6 @@
 #include <afs/afsint.h>
 #include <afs/assert.h>
 
-
 #include <fcntl.h>
 
 #ifndef AFS_NT40_ENV

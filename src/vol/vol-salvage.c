@@ -188,6 +188,8 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include "salvage.h"
 #include "volinodes.h"		/* header magic number, etc. stuff */
 #include "vol-salvage.h"
+#include "vol_internal.h"
+
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif
@@ -2413,9 +2415,10 @@ CopyAndSalvage(register struct DirSummary *dir)
 }
 
 int
-JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
-	   Unique unique)
+JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
+	   afs_int32 unique)
 {
+    struct DirSummary *dir = (struct DirSummary *)dirVal;
     struct VnodeEssence *vnodeEssence;
     afs_int32 dirOrphaned, todelete;
 

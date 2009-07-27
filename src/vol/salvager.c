@@ -119,7 +119,6 @@
 #include "salvsync.h"
 #include "viceinode.h"
 #include "salvage.h"
-#include "volinodes.h"		/* header magic number, etc. stuff */
 #include "vol-salvage.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>

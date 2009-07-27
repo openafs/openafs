@@ -72,7 +72,10 @@ typedef struct {
     char n_inode[NAMEI_LCOMP_LEN];
     char n_path[NAMEI_PATH_LEN];
 } namei_t;
+
 void namei_HandleToName(namei_t * name, IHandle_t * h);
+int namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId);
+int namei_replace_file_by_hardlink(IHandle_t *hLink, IHandle_t *hTarget);
 
 #endif /* AFS_NAMEI_ENV */
 

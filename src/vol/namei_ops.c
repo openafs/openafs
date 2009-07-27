@@ -1160,8 +1160,8 @@ namei_SetLinkCount(FdHandle_t * fdP, Inode ino, int count, int locked)
 
 /* ListViceInodes - write inode data to a results file. */
 static int DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
-		       int volid);
-static int DecodeVolumeName(char *name, int *vid);
+		       unsigned int volid);
+static int DecodeVolumeName(char *name, unsigned int *vid);
 static int namei_ListAFSSubDirs(IHandle_t * dirIH,
 				int (*write_fun) (FILE *,
 						  struct ViceInodeInfo *,
@@ -1504,11 +1504,11 @@ namei_ListAFSSubDirs(IHandle_t * dirIH,
 }
 
 static int
-DecodeVolumeName(char *name, int *vid)
+DecodeVolumeName(char *name, unsigned int *vid)
 {
     if (strlen(name) <= 2)
 	return -1;
-    *vid = (int)flipbase64_to_int64(name);
+    *vid = (unsigned int)flipbase64_to_int64(name);
     return 0;
 }
 
@@ -1519,7 +1519,8 @@ DecodeVolumeName(char *name, int *vid)
  * Get
  */
 static int
-DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
+DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info,
+	    unsigned int volid)
 {
     char fpath[512];
     struct afs_stat status;
@@ -1562,6 +1563,7 @@ DecodeInode(char *dpath, char *name, struct ViceInodeInfo *info, int volid)
  * this routine is called by namei_convertROtoRWvolume()
  */
 
+#ifdef FSSYNC_BUILD_CLIENT
 static afs_int32
 convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
 {
@@ -1593,6 +1595,7 @@ convertVolumeInfo(int fdr, int fdw, afs_uint32 vid)
     }
     return 0;
 }
+#endif
 
 /*
  * Convert a RO-volume into a RW-volume

@@ -150,8 +150,9 @@ ci_Destroy(struct clone_head *ah)
 }
 
 static int
-IDecProc(Inode adata, struct clone_rock *aparm)
+IDecProc(Inode adata, void *arock)
 {
+    struct clone_rock *aparm = (struct clone_rock *)arock;
     IH_DEC(aparm->h, adata, aparm->vol);
     DOPOLL;
     return 0;

@@ -75,8 +75,9 @@ struct ilist {
  * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
 static int
-NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid, struct ilist **allInodes)
+NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
 {
+    struct ilist **allInodes = (struct ilist **)arock;
     struct ilist *ti;
     register afs_int32 i;
 

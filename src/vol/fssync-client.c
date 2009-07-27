@@ -15,14 +15,6 @@
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
-#ifdef notdef
-
-/* All this is going away in early 1989 */
-int newVLDB;			/* Compatibility flag */
-
-#endif
-static int newVLDB = 1;
-
 
 #ifndef AFS_PTHREAD_ENV
 #define USUAL_PRIORITY (LWP_MAX_PRIORITY - 2)

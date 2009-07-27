@@ -187,4 +187,6 @@ extern afs_int32 FSYNC_VolOp(VolumeId volume, char *partName, int com, int reaso
 extern afs_int32 FSYNC_StatsOp(FSSYNC_StatsOp_hdr * scom, int command, int reason,
 			       SYNC_response * res_in);
 
+extern void FSYNC_fsInit(void);
+
 #endif /* __fssync_h_ */
