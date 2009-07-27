@@ -34,12 +34,11 @@
 #include <afs/com_err.h>
 #include <lwp.h>
 #include <des.h>
+#include <des_prototypes.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 #include <afs/auth.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <ubik.h>
 
 #include "kauth.h"
@@ -163,9 +162,9 @@ create_cipher(char *cipher, int *cipherLen,
 	printf("\n");
     }
 
-    if ((code = des_key_sched(key, schedule)))
+    if ((code = des_key_sched(ktc_to_cblock(key), schedule)))
 	printf("In KAAuthenticate: key_sched returned %d\n", code);
-    des_pcbc_encrypt(cipher, cipher, len, schedule, key, ENCRYPT);
+    des_pcbc_encrypt(cipher, cipher, len, schedule, ktc_to_cblockptr(key), ENCRYPT);
     *cipherLen = round_up_to_ebs(len);
 
     if (krb_udp_debug) {
@@ -223,8 +222,8 @@ check_auth(struct packet *pkt, char *auth, int authLen,
     afs_int32 time_sec;
     int byteOrder = pkt->byteOrder;
 
-    des_key_sched(key, schedule);
-    des_pcbc_encrypt(auth, auth, authLen, schedule, key, DECRYPT);
+    des_key_sched(ktc_to_cblock(key), schedule);
+    des_pcbc_encrypt(auth, auth, authLen, schedule, ktc_to_cblockptr(key), DECRYPT);
     packet = auth;
     if (strcmp(packet, name) != 0)
 	return KABADTICKET;
@@ -322,7 +321,7 @@ UDP_Authenticate(int ksoc, struct sockaddr_in *client, char *name,
 	}
 
 	/* make the ticket */
-	code = des_random_key(&sessionKey);
+	code = des_random_key(ktc_to_cblock(&sessionKey));
 	if (code) {
 	    code = KERB_ERR_NULL_KEY;	/* was KANOKEYS */
 	    goto abort;
@@ -535,7 +534,7 @@ UDP_GetTicket(int ksoc, struct packet *pkt, afs_int32 kvno,
     if (ntohl(server.flags) & KAFNOSEAL)
 	return KABADSERVER;
 
-    code = des_random_key(&sessionKey);
+    code = des_random_key(ktc_to_cblock(&sessionKey));
     if (code) {
 	code = KERB_ERR_NULL_KEY;	/* was KANOKEYS */
 	goto fail;

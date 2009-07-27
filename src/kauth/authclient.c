@@ -25,11 +25,12 @@
 #include "afs_usrops.h"
 #include "afs/stds.h"
 #include "afs/pthread_glock.h"
+#include "des.h"
+#include "des_prototypes.h"
 #include "rx/rxkad.h"
 #include "afs/cellconfig.h"
 #include "ubik.h"
 #include "afs/auth.h"
-#include "des/des.h"
 #include "afs/afsutil.h"
 
 #include "afs/kauth.h"
@@ -47,11 +48,13 @@
 #include <netinet/in.h>
 #endif
 #include <string.h>
+#include <stdio.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <afs/auth.h>
-#include <des.h>
 #include <afs/afsutil.h>
 #include "kauth.h"
 #include "kautils.h"
@@ -528,7 +531,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     int version;
 
     LOCK_GLOBAL_MUTEX;
-    if ((code = des_key_sched(key, schedule))) {
+    if ((code = des_key_sched(ktc_to_cblock(key), schedule))) {
 	UNLOCK_GLOBAL_MUTEX;
 	return KABADKEY;
     }
@@ -550,7 +553,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     arequest.SeqLen = sizeof(request);
     arequest.SeqBody = (char *)&request;
     des_pcbc_encrypt(arequest.SeqBody, arequest.SeqBody, arequest.SeqLen,
-		     schedule, key, ENCRYPT);
+		     schedule, ktc_to_cblockptr(key), ENCRYPT);
 
     oanswer.MaxSeqLen = sizeof(answer);
     oanswer.SeqLen = 0;
@@ -586,7 +589,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	return KAUBIKCALL;
     }
     des_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
-		     schedule, key, DECRYPT);
+		     schedule, ktc_to_cblockptr(key), DECRYPT);
 
     switch (version) {
     case 1:
@@ -662,7 +665,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     aticket.SeqLen = auth_token->ticketLen;
     aticket.SeqBody = auth_token->ticket;
 
-    code = des_key_sched(&auth_token->sessionKey, schedule);
+    code = des_key_sched(ktc_to_cblock(&auth_token->sessionKey), schedule);
     if (code) {
 	UNLOCK_GLOBAL_MUTEX;
 	return KABADKEY;
@@ -704,7 +707,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     }
 
     des_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
-		     schedule, &auth_token->sessionKey, DECRYPT);
+		     schedule, ktc_to_cblockptr(&auth_token->sessionKey), DECRYPT);
 
     switch (version) {
     case 1:

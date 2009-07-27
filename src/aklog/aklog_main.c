@@ -73,6 +73,10 @@
 #ifdef AFS_SUN5_ENV
 #include <sys/ioccom.h>
 #endif
+
+/* Prevent inclusion of des.h to avoid conflicts with des types */
+#define NO_DES_H_INCLUDE
+
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/vice.h>

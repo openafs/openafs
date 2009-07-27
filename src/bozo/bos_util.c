@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <stdio.h>
 
 #include <afs/stds.h>
 #include <afs/afsutil.h>
@@ -123,7 +124,7 @@ main(int argc, char **argv)
 	    printf("\nInput key mismatch\n");
 	    exit(1);
 	}
-	des_string_to_key(buf, &tkey);
+	des_string_to_key(buf, ktc_to_cblockptr(&tkey));
 	code = afsconf_AddKey(tdir, kvno, &tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);

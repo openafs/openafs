@@ -63,6 +63,9 @@
 #define USE_MS2MIT 1
 #define USE_LEASH 1
 
+/* Prevent inclusion of des.h to avoid conflicts with des types */
+#define NO_DES_H_INCLUDE
+
 #include "afskfw-int.h"
 #include "afskfw.h"
 #include <userenv.h>

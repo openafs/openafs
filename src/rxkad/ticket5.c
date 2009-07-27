@@ -68,7 +68,6 @@
 #include "../afs/stds.h"
 #include "../rx/xdr.h"
 #include "../rx/rx.h"
-#include "../des/des.h"
 #include "../afs/lifetimes.h"
 #include "../afs/rxkad.h"
 #else /* defined(UKERNEL) */
@@ -82,7 +81,6 @@
 #include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <des.h>
 #include "lifetimes.h"
 #include "rxkad.h"
 #endif /* defined(UKERNEL) */
@@ -101,6 +99,12 @@
  * find a need to change the services here, please consider opening a
  * bug with MIT by sending mail to krb5-bugs@mit.edu.
  */
+
+extern afs_int32 des_cbc_encrypt(void * in, void * out,
+                                 register afs_int32 length,
+                                 des_key_schedule key, des_cblock *iv,
+                                 int encrypt);
+extern int des_key_sched(register des_cblock k, des_key_schedule schedule);
 
 struct krb_convert {
     char *v4_str;
@@ -190,9 +194,9 @@ static int
 
 int
 tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
-		  int (*get_key) (char *, int, struct ktc_encryptionKey *),
+		  int (*get_key) (void *, int, struct ktc_encryptionKey *),
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
-		  char *cell, char *session_key, afs_int32 * host,
+		  char *cell, struct ktc_encryptionKey *session_key, afs_int32 * host,
 		  afs_int32 * start, afs_int32 * end, afs_int32 disableCheckdot)
 {
     char plain[MAXKRB5TICKETLEN];
@@ -446,7 +450,7 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
 
     cksum_func = NULL;
 
-    des_key_sched(key, &s);
+    des_key_sched(ktc_to_cblock(key), (struct des_ks_struct *)&s);
 
 #define CONFOUNDERSZ 8
 

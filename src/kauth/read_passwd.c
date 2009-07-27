@@ -15,9 +15,10 @@
 
 
 #include <mit-cpyright.h>
-#include <des.h>
 
 #include <stdio.h>
+#include <des.h>
+#include <des_prototypes.h>
 #ifdef	BSDUNIX
 #include <strings.h>
 #include <sys/ioctl.h>

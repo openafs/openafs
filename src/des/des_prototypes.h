@@ -17,6 +17,21 @@ extern void test_set(FILE * stream, const char *src, int testbit,
 #endif
 extern int des_debug;
 
+static_inline unsigned char *
+cblockptr_to_cblock(des_cblock *key) {
+    return (unsigned char *)key;
+}
+
+static_inline unsigned char *
+charptr_to_cblock(char *key) {
+    return (unsigned char *)key;
+}
+
+static_inline des_cblock *
+charptr_to_cblockptr(char *key) {
+    return (unsigned char (*)[])key;
+}
+
 /* cbc_encrypt.c */
 extern afs_int32 des_cbc_encrypt(void * in, void * out,
 				 register afs_int32 length,

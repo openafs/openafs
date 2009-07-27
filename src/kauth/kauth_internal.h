@@ -26,3 +26,18 @@ extern afs_int32 ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 			   struct ktc_encryptionKey *key);
 
 extern int name_instance_legal(char *name, char *instance);
+
+static inline unsigned char *
+EncryptionKey_to_cblock(EncryptionKey *key) {
+    return (unsigned char *)key;
+}
+
+static inline struct ktc_encryptionKey *
+EncryptionKey_to_ktc(EncryptionKey *key) {
+    return (struct ktc_encryptionKey *)key;
+}
+
+static inline EncryptionKey *
+ktc_to_EncryptionKey(struct ktc_encryptionKey *key) {
+    return (EncryptionKey *)key;
+}

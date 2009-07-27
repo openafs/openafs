@@ -35,7 +35,6 @@
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
 #include "afs/ptuser.h"
-#include "des.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <signal.h>
@@ -47,6 +46,7 @@
 #include <unistd.h>
 #endif
 #include <string.h>
+#include <stdio.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/ptint.h>
@@ -55,11 +55,11 @@
 #include <afs/ptserver.h>
 #include <afs/afsutil.h>
 #include <afs/sys_prototypes.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */
-#include <des.h>
-#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
 #endif /* defined(UKERNEL) */
@@ -205,7 +205,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
     if (flags & KA_USERAUTH_ONLY_VERIFY) {
 	code = ka_VerifyUserToken(name, instance, realm, &key);
 	if (code == KABADREQUEST) {
-	    des_string_to_key(password, &key);
+	    des_string_to_key(password, ktc_to_cblockptr(&key));
 	    code = ka_VerifyUserToken(name, instance, realm, &key);
 	}
     } else {
@@ -230,7 +230,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
 	    GetTickets(name, instance, realm, &key, lifetime,
 		       password_expires, dosetpag);
 	if (code == KABADREQUEST) {
-	    des_string_to_key(password, &key);
+	    des_string_to_key(password, ktc_to_cblockptr(&key));
 	    code =
 		GetTickets(name, instance, realm, &key, lifetime,
 			   password_expires, dosetpag);

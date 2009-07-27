@@ -26,6 +26,8 @@
 #include <lock.h>
 #include <ubik.h>
 #include <lwp.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rxkad.h>
@@ -35,8 +37,6 @@
 #include <netinet/in.h>
 #endif
 #include <string.h>
-#include <des.h>
-#include <des_prototypes.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/com_err.h>
@@ -149,12 +149,12 @@ get_time(Date *timeP,
 	if (to) {		/* check if auto cpw is disabled */
 	    if (!(ntohl(tentry.flags) & KAFNOCPW)) {
 		memcpy(&key, &random_value[0], sizeof(key));
-		des_fixup_key_parity(&key);
+		des_fixup_key_parity(ktc_to_cblock(&key));
 		code =
 		    set_password(tt, KA_ADMIN_NAME, KA_ADMIN_INST, &key, 0,
 				 0);
 		if (code == 0) {
-		    des_init_random_number_generator(&key);
+		    des_init_random_number_generator(ktc_to_cblock(&key));
 		    ka_ConvertBytes(buf, sizeof(buf), (char *)&key,
 				    sizeof(key));
 		    es_Report("New Admin key is %s\n", buf);
@@ -173,7 +173,7 @@ get_time(Date *timeP,
 	if (to) {		/* check if auto cpw is disabled */
 	    if (!(ntohl(tentry.flags) & KAFNOCPW)) {
 		memcpy(&key, &random_value[2], sizeof(key));
-		des_fixup_key_parity(&key);
+		des_fixup_key_parity(ktc_to_cblock(&key));
 		code = set_password(tt, KA_TGS_NAME, lrealm, &key, 0, 0);
 		if (code == 0) {
 		    ka_ConvertBytes(buf, sizeof(buf), (char *)&key,
@@ -220,14 +220,14 @@ initialize_database(struct ubik_trans *tt)
     int code;
 
     gettimeofday((struct timeval *)&key, 0);	/* this is just a cheap seed key */
-    des_fixup_key_parity(&key);
-    des_init_random_number_generator(&key);
-    if ((code = des_random_key(&key))
+    des_fixup_key_parity(ktc_to_cblock(&key));
+    des_init_random_number_generator(ktc_to_cblock(&key));
+    if ((code = des_random_key(ktc_to_cblock(&key)))
 	|| (code =
 	    create_user(tt, KA_ADMIN_NAME, KA_ADMIN_INST, &key, 0,
 			KAFNORMAL | KAFNOSEAL | KAFNOTGS)))
 	return code;
-    if ((code = des_random_key(&key))
+    if ((code = des_random_key(ktc_to_cblock(&key)))
 	|| (code =
 	    create_user(tt, KA_TGS_NAME, lrealm, &key, 0,
 			KAFNORMAL | KAFNOSEAL | KAFNOTGS)))
@@ -291,7 +291,7 @@ init_kaprocs(const char *lclpath, int initFlags)
 	     code);
 	return code;
     }
-    des_init_random_number_generator(&key);
+    des_init_random_number_generator(ktc_to_cblock(&key));
 
     code = ubik_EndTrans(tt);
     if (code) {
@@ -629,7 +629,7 @@ kamCreateUser(struct rx_call *call, char *aname, char *ainstance,
     afs_int32 caller;		/* Disk offset of caller's entry */
 
     COUNT_REQ(CreateUser);
-    if (!des_check_key_parity(&ainitpw) || des_is_weak_key(&ainitpw))
+    if (!des_check_key_parity(EncryptionKey_to_cblock(&ainitpw)) || des_is_weak_key(EncryptionKey_to_cblock(&ainitpw)))
 	return KABADKEY;
     if (!name_instance_legal(aname, ainstance))
 	return KABADNAME;
@@ -641,7 +641,7 @@ kamCreateUser(struct rx_call *call, char *aname, char *ainstance,
 	ubik_AbortTrans(tt);
 	return code;
     }
-    code = create_user(tt, aname, ainstance, &ainitpw, caller, KAFNORMAL);
+    code = create_user(tt, aname, ainstance, EncryptionKey_to_ktc(&ainitpw), caller, KAFNORMAL);
     if (code) {
 	COUNT_ABO;
 	ubik_AbortTrans(tt);
@@ -702,11 +702,11 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     }
 
     /* decrypt request w/ user password */
-    if ((code = des_key_sched(&tentry.key, user_schedule)))
+    if ((code = des_key_sched(ktc_to_cblock(&tentry.key), user_schedule)))
 	es_Report("In KAChangePassword: key_sched returned %d\n", code);
     des_pcbc_encrypt(arequest->SeqBody, &request,
 		     min(arequest->SeqLen, sizeof(request)), user_schedule,
-		     &tentry.key, DECRYPT);
+		     ktc_to_cblockptr(&tentry.key), DECRYPT);
 
     /* validate the request */
     request_time = ntohl(request.time);	/* reorder date */
@@ -719,7 +719,7 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     /* check to see if the new password was used before, or if there has
      * not been sufficient time since the last password change
      */
-    code = impose_reuse_limits(&request.newpw, &tentry);
+    code = impose_reuse_limits(ktc_to_EncryptionKey(&request.newpw), &tentry);
     if (code) {
 	goto abort;
     }
@@ -738,7 +738,7 @@ ChangePassWord(struct rx_call *call, char *aname, char *ainstance,
     memcpy(answer, KA_CPW_ANS_LABEL, KA_LABELSIZE);
 
     des_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, answer_len,
-		     user_schedule, &tentry.key, ENCRYPT);
+		     user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
 
     code = set_password(tt, aname, ainstance, &request.newpw, kvno, 0);
     if (code) {
@@ -889,7 +889,7 @@ kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
     COUNT_REQ(SetPassword);
     if (akvno > MAXKAKVNO)
 	return KABADARGUMENT;
-    if (!des_check_key_parity(&apassword) || des_is_weak_key(&apassword))
+    if (!des_check_key_parity(EncryptionKey_to_cblock(&apassword)) || des_is_weak_key(EncryptionKey_to_cblock(&apassword)))
 	return KABADKEY;
 
     if (!name_instance_legal(aname, ainstance))
@@ -900,7 +900,7 @@ kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
     if (code) {
 	goto abort;
     }
-    if ((code = karead(tt, caller, &tentry, sizeof(tentry)))) {
+    if ((code = karead(tt, caller, (char *)&tentry, sizeof(tentry)))) {
 	code = KAIO;
 	goto abort;
     }
@@ -913,10 +913,10 @@ kamSetPassword(struct rx_call *call, char *aname, char *ainstance,
 	    code = impose_reuse_limits(&apassword, &tentry);
 	    if (!code)
 		code =
-		    set_password(tt, aname, ainstance, &apassword, akvno, 0);
+		    set_password(tt, aname, ainstance, EncryptionKey_to_ktc(&apassword), akvno, 0);
 	}
     } else if (ntohl(tentry.flags) & KAFADMIN) {
-	code = set_password(tt, aname, ainstance, &apassword, akvno, caller);
+	code = set_password(tt, aname, ainstance, EncryptionKey_to_ktc(&apassword), akvno, caller);
     } else
 	code = KANOAUTH;
     if (code)
@@ -1100,11 +1100,11 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     save_principal(authPrincipal, aname, ainstance, 0);
 
     /* decrypt request w/ user password */
-    if ((code = des_key_sched(&tentry.key, user_schedule)))
+    if ((code = des_key_sched(ktc_to_cblock(&tentry.key), user_schedule)))
 	es_Report("In KAAuthenticate: key_sched returned %d\n", code);
     des_pcbc_encrypt(arequest->SeqBody, &request,
 		     min(arequest->SeqLen, sizeof(request)), user_schedule,
-		     &tentry.key, DECRYPT);
+		     ktc_to_cblockptr(&tentry.key), DECRYPT);
 
     request.time = ntohl(request.time);	/* reorder date */
     tgt = !strncmp(request.label, KA_GETTGT_REQ_LABEL, sizeof(request.label));
@@ -1166,7 +1166,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
     tgskvno = ntohl(server.key_version);
     memcpy(&tgskey, &server.key, sizeof(tgskey));
 
-    code = des_random_key(&sessionKey);
+    code = des_random_key(ktc_to_cblock(&sessionKey));
     if (code) {
 	code = KANOKEYS;
 	goto abort;
@@ -1244,7 +1244,7 @@ Authenticate(int version, struct rx_call *call, char *aname, char *ainstance,
 	goto abort;
     }
     des_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
-		     user_schedule, &tentry.key, ENCRYPT);
+		     user_schedule, ktc_to_cblockptr(&tentry.key), ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(aname, ainstance, sname, sinst, NULL, call->conn->peer->host,
 	  LOG_AUTHENTICATE);
@@ -1588,7 +1588,7 @@ kamGetEntry(struct rx_call *call,
 	code = KANOENT;
 	goto abort;
     } else {
-	if ((code = karead(tt, callerIndex, &caller, sizeof(caller)))) {
+	if ((code = karead(tt, callerIndex, (char *)&caller, sizeof(caller)))) {
 	    code = KAIO;
 	    goto abort;
 	}
@@ -1647,7 +1647,7 @@ kamGetEntry(struct rx_call *call,
     /* Now get entry of user who last modified this entry */
     if (ntohl(tentry.modification_id)) {
 	temp = ntohl(tentry.modification_id);
-	code = karead(tt, temp, &tentry, sizeof(tentry));
+	code = karead(tt, temp, (char *)&tentry, sizeof(tentry));
 	if (code) {
 	    code = KAIO;
 	    goto abort;
@@ -1800,7 +1800,7 @@ GetTicket(int version,
 	    code = KANOAUTH;
 	goto abort;
     }
-    code = des_key_sched(&authSessionKey, schedule);
+    code = des_key_sched(ktc_to_cblock(&authSessionKey), schedule);
     if (code) {
 	code = KANOAUTH;
 	goto abort;
@@ -1855,7 +1855,7 @@ GetTicket(int version,
     }
     save_principal(tgsServerPrincipal, sname, sinstance, 0);
 
-    code = des_random_key(&sessionKey);
+    code = des_random_key(ktc_to_cblock(&sessionKey));
     if (code) {
 	code = KANOKEYS;
 	goto abort;
@@ -1929,7 +1929,7 @@ GetTicket(int version,
 	goto abort;
     }
     des_pcbc_encrypt(oanswer->SeqBody, oanswer->SeqBody, oanswer->SeqLen,
-		     schedule, &authSessionKey, ENCRYPT);
+		     schedule, ktc_to_cblockptr(&authSessionKey), ENCRYPT);
     code = ubik_EndTrans(tt);
     KALOG(name, instance, sname, sinstance, (import ? authDomain : NULL),
 	  call->conn->peer->host, LOG_GETTICKET);
@@ -2145,7 +2145,7 @@ kamGetRandomKey(struct rx_call *call, EncryptionKey *key)
     COUNT_REQ(GetRandomKey);
     if ((code = AwaitInitialization()))
 	return code;
-    code = des_random_key(key);
+    code = des_random_key(EncryptionKey_to_cblock(key));
     if (code)
 	return KANOKEYS;
     return 0;
@@ -2304,7 +2304,7 @@ SKAM_LockStatus(struct rx_call *call,
 	goto abort;
 
     if (!noAuthenticationRequired && callerIndex) {
-	if (karead(tt, callerIndex, &caller, sizeof(caller))) {
+	if (karead(tt, callerIndex, (char *)&caller, sizeof(caller))) {
 	    code = KAIO;
 	    goto abort;
 	}

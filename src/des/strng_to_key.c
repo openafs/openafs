@@ -105,16 +105,16 @@ des_string_to_key(char *str, register des_cblock * key)
     }
 
     /* fix key parity */
-    des_fixup_key_parity(key);
+    des_fixup_key_parity(cblockptr_to_cblock(key));
 
     /* Now one-way encrypt it with the folded key */
-    (void)des_key_sched(key, key_sked);
-    (void)des_cbc_cksum((des_cblock *) in_str, key, length, key_sked, key);
+    des_key_sched(cblockptr_to_cblock(key), key_sked);
+    des_cbc_cksum(charptr_to_cblockptr(in_str), key, length, key_sked, key);
     /* erase key_sked */
     memset((char *)key_sked, 0, sizeof(key_sked));
 
     /* now fix up key parity again */
-    des_fixup_key_parity(key);
+    des_fixup_key_parity(cblockptr_to_cblock(key));
 
     if (des_debug)
 	fprintf(stdout, "\nResulting string_to_key = 0x%x 0x%x\n",

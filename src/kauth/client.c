@@ -30,7 +30,7 @@
 #include "afs/kautils.h"
 #include "afs/pthread_glock.h"
 #include "des/des.h"
-#include <des_prototypes.h>
+#include "des/des_prototypes.h"
 
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
@@ -48,6 +48,8 @@
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
+#include <des.h>
+#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
 #endif /* defined(UKERNEL) */
@@ -97,7 +99,7 @@ Andrew_StringToKey(char *str, char *cell,	/* cell for password */
 	    keybytes[i] = (unsigned char)(temp << 1);
 	}
     }
-    des_fixup_key_parity(key);
+    des_fixup_key_parity(ktc_to_cblock(key));
 }
 
 static void
@@ -105,7 +107,7 @@ StringToKey(char *str, char *cell,	/* cell for password */
 	    struct ktc_encryptionKey *key)
 {
     des_key_schedule schedule;
-    char temp_key[8];
+    unsigned char temp_key[8];
     char ivec[8];
     char password[BUFSIZ];
     int passlen;
@@ -120,14 +122,14 @@ StringToKey(char *str, char *cell,	/* cell for password */
     memcpy(temp_key, "kerberos", 8);
     des_fixup_key_parity(temp_key);
     des_key_sched(temp_key, schedule);
-    des_cbc_cksum(password, ivec, passlen, schedule, ivec);
+    des_cbc_cksum(charptr_to_cblockptr(password), charptr_to_cblockptr(ivec), passlen, schedule, charptr_to_cblockptr(ivec));
 
     memcpy(temp_key, ivec, 8);
     des_fixup_key_parity(temp_key);
     des_key_sched(temp_key, schedule);
-    des_cbc_cksum(password, key, passlen, schedule, ivec);
+    des_cbc_cksum(charptr_to_cblockptr(password), ktc_to_cblockptr(key), passlen, schedule, charptr_to_cblockptr(ivec));
 
-    des_fixup_key_parity(key);
+    des_fixup_key_parity(ktc_to_cblock(key));
 }
 
 void
