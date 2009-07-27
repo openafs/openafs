@@ -48,6 +48,7 @@
 #endif
 
 #include <afs/cmd.h>
+#include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 

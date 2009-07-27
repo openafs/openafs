@@ -17,6 +17,7 @@
 
 
 #include <afs/afs_args.h>
+#include <afs/sys_prototypes.h>
 #include <unistd.h>
 #include <stdio.h>
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 

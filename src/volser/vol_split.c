@@ -37,6 +37,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 
+#include <afs/dir.h>
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"

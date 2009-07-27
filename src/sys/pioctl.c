@@ -24,7 +24,11 @@
 #else
 #include <stdio.h>
 #endif
+#if defined(HAVE_UNISTD_H)
+#include <unistd.h>
+#endif
 #include "afssyscalls.h"
+#include "sys_prototypes.h"
 
 #ifdef AFS_AIX32_ENV
 /*

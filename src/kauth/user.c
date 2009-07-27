@@ -52,6 +52,7 @@
 #include <afs/ptuser.h>
 #include <afs/ptserver.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */

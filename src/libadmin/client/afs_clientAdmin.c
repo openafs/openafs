@@ -46,6 +46,7 @@
 #include <afs/ptserver.h>
 #include <afs/vlserver.h>
 #include <afs/pthread_glock.h>
+#include <afs/sys_prototypes.h>
 
 /*
  * AFS client administration functions.

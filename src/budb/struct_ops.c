@@ -21,6 +21,7 @@
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <afs/bubasics.h>
+#include <afs/afsutil.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <string.h>

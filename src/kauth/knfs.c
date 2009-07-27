@@ -30,6 +30,7 @@
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 
 /*
 Modifications:

@@ -15,6 +15,10 @@
 
 extern int line;
 extern int uss_perr;
+
+extern int yylex(void);
+extern int yyerror(char *);
+
 %}
 
 %union

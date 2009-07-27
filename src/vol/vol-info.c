@@ -33,6 +33,7 @@
 #include <sys/time.h>
 #endif
 #include <afs/cmd.h>
+#include <afs/dir.h>
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>

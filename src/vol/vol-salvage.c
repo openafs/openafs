@@ -165,6 +165,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/osi_inode.h>
 #endif
 #include <afs/cmd.h>
+#include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */

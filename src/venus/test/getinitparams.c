@@ -18,6 +18,7 @@
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
+#include <afs/sys_prototypes.h>
 #include <fcntl.h>
 #include <unistd.h>
 #ifdef AFS_AIX41_ENV

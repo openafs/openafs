@@ -46,6 +46,7 @@
 
 #include <afs/venus.h>
 #include <afs/sys_prototypes.h>
+#include <afs/afsutil.h>
 
 /* ************************************************************* */
 

@@ -50,6 +50,7 @@
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
+#include <afs/dir.h>
 #include <ubik.h>
 #include <fcntl.h>
 #include <sys/stat.h>

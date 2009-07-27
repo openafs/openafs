@@ -34,6 +34,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_GRP_H
+#include <grp.h>
+#endif
 #include <rx/xdr.h>
 #include "rmtsys.h"
 #include "sys_prototypes.h"

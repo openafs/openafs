@@ -34,6 +34,7 @@
 #include <afs/prs_fs.h>
 #include <stdlib.h>
 #include <string.h>
+#include <afs/sys_prototypes.h>
 
 #include "kkids.h"
 
