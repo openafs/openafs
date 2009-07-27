@@ -466,7 +466,7 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 #ifndef AFS_NT40_ENV
             if (errno > 0)
               return -errno;
-#elif
+#else
             if (WSAGetLastError() > 0)
               return -WSAGetLastError();
 #endif
