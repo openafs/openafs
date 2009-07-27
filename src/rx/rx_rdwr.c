@@ -313,19 +313,17 @@ rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
     char *tcurpos;
     SPLVAR;
 
-    /*
-     * Free any packets from the last call to ReadvProc/WritevProc.
-     * We do not need the lock because the receiver threads only
-     * touch the iovq when the RX_CALL_IOVEC_WAIT flag is set, and the
-     * RX_CALL_IOVEC_WAIT is always cleared before returning from
-     * ReadvProc/WritevProc.
-     */
+    /* Free any packets from the last call to ReadvProc/WritevProc */
+    NETPRI;
+    MUTEX_ENTER(&call->lock);
     if (!queue_IsEmpty(&call->iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
+    MUTEX_EXIT(&call->lock);
+    USERPRI;
 
     /*
      * Most common case, all of the data is in the current iovec.
@@ -373,19 +371,17 @@ rx_ReadProc32(struct rx_call *call, afs_int32 * value)
     char *tcurpos;
     SPLVAR;
 
-    /*
-     * Free any packets from the last call to ReadvProc/WritevProc.
-     * We do not need the lock because the receiver threads only
-     * touch the iovq when the RX_CALL_IOVEC_WAIT flag is set, and the
-     * RX_CALL_IOVEC_WAIT is always cleared before returning from
-     * ReadvProc/WritevProc.
-     */
+    /* Free any packets from the last call to ReadvProc/WritevProc */
+    NETPRI;
+    MUTEX_ENTER(&call->lock);
     if (!queue_IsEmpty(&call->iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
+    MUTEX_EXIT(&call->lock);
+    USERPRI;
 
     /*
      * Most common case, all of the data is in the current iovec.
@@ -880,19 +876,17 @@ rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
     char *tcurpos;
     SPLVAR;
 
-    /*
-     * Free any packets from the last call to ReadvProc/WritevProc.
-     * We do not need the lock because the receiver threads only
-     * touch the iovq when the RX_CALL_IOVEC_WAIT flag is set, and the
-     * RX_CALL_IOVEC_WAIT is always cleared before returning from
-     * ReadvProc/WritevProc.
-     */
+    /* Free any packets from the last call to ReadvProc/WritevProc */
+    NETPRI;
+    MUTEX_ENTER(&call->lock);
     if (queue_IsNotEmpty(&call->iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
+    MUTEX_EXIT(&call->lock);
+    USERPRI;
 
     /*
      * Most common case: all of the data fits in the current iovec.
@@ -930,19 +924,17 @@ rx_WriteProc32(struct rx_call *call, afs_int32 * value)
     char *tcurpos;
     SPLVAR;
 
-    /*
-     * Free any packets from the last call to ReadvProc/WritevProc.
-     * We do not need the lock because the receiver threads only
-     * touch the iovq when the RX_CALL_IOVEC_WAIT flag is set, and the
-     * RX_CALL_IOVEC_WAIT is always cleared before returning from
-     * ReadvProc/WritevProc.
-     */
+    /* Free any packets from the last call to ReadvProc/WritevProc */
+    NETPRI;
+    MUTEX_ENTER(&call->lock);
     if (queue_IsNotEmpty(&call->iovq)) {
 #ifdef RXDEBUG_PACKET
         call->iovqc -=
 #endif /* RXDEBUG_PACKET */
             rxi_FreePackets(0, &call->iovq);
     }
+    MUTEX_EXIT(&call->lock);
+    USERPRI;
 
     /*
      * Most common case: all of the data fits in the current iovec.
