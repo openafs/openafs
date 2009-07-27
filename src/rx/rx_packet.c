@@ -2283,10 +2283,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	     */
 	    if (call && 
 #ifdef AFS_NT40_ENV
-		code == -1 && WSAGetLastError() == WSAEHOSTUNREACH
-#elif defined(AFS_LINUX20_ENV) && defined(KERNEL)
+		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
+#elif defined(AFS_LINUX20_ENV)
 		code == -ENETUNREACH
-#elif defined(AFS_DARWIN_ENV) && defined(KERNEL)
+#elif defined(AFS_DARWIN_ENV)
 		code == EHOSTUNREACH
 #else
 		0
@@ -2473,10 +2473,10 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 	     */
 	    if (call && 
 #ifdef AFS_NT40_ENV
-		code == -1 && WSAGetLastError() == WSAEHOSTUNREACH
-#elif defined(AFS_LINUX20_ENV) && defined(KERNEL)
+		(code == -1 && WSAGetLastError() == WSAEHOSTUNREACH) || (code == -WSAEHOSTUNREACH)
+#elif defined(AFS_LINUX20_ENV)
 		code == -ENETUNREACH
-#elif defined(AFS_DARWIN_ENV) && defined(KERNEL)
+#elif defined(AFS_DARWIN_ENV)
 		code == EHOSTUNREACH
 #else
 		0
