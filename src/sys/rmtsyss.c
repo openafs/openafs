@@ -104,7 +104,7 @@ SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag,
     data.out = (caddr_t) blob;
     data.out_size = sizeof(blob);
     /* force local pioctl call */
-    error = lpioctl(0, _VICEIOCTL(PSetClientContext), (char *)&data, 1);
+    error = lpioctl(0, _VICEIOCTL(PSetClientContext), &data, 1);
     if (error) {
 	if (errno == PSETPAG) {
 	    *newpag = blob[0];	/* new pag value */
@@ -143,7 +143,7 @@ SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path,
     data.out = OutData->rmtbulk_val;
     data.out_size = OutData->rmtbulk_len;
     /* force local pioctl call */
-    error = lpioctl(pathp, _VICEIOCTL(PSetClientContext), (char *)&data, follow);
+    error = lpioctl(pathp, _VICEIOCTL(PSetClientContext), &data, follow);
     if (error) {
 	*errornumber = errno;
     } else {

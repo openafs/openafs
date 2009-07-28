@@ -51,7 +51,7 @@ k_hasafs(void)
     iob.in_size = 0;
     iob.out = NULL;
     iob.out_size = 0;
-    lpioctl(NULL, VIOCSETTOK, (char *) &iob, 0);
+    lpioctl(NULL, VIOCSETTOK, &iob, 0);
 
 #ifdef SIGSYS
     signal(SIGSYS, saved_func);
@@ -73,7 +73,7 @@ k_setpag(void)
 int
 k_pioctl(char *path, int cmd, struct ViceIoctl *cmarg, int follow)
 {
-    return lpioctl(path, cmd, (char *) cmarg, follow);
+    return lpioctl(path, cmd, cmarg, follow);
 }
 
 int
@@ -85,5 +85,5 @@ k_unlog(void)
     iob.in_size = 0;
     iob.out = NULL;
     iob.out_size = 0;
-    return lpioctl(NULL, VIOCUNLOG, (char *) &iob, 0);
+    return lpioctl(NULL, VIOCUNLOG, &iob, 0);
 }

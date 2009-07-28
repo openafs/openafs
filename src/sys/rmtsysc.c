@@ -225,7 +225,7 @@ pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
     if (!(conn = rx_connection(&errorcode, "pioctl"))) {
 	/* Remote call can't be performed for some reason.
 	 * Try the local 'pioctl' system call ... */
-	errorcode = lpioctl(path, cmd, (char *)data, follow);
+	errorcode = lpioctl(path, cmd, data, follow);
 	return errorcode;
     }
     (void)SetClientCreds(&creds, groups);

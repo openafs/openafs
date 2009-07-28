@@ -221,7 +221,8 @@ syscall(syscall, p1, p2, p3, p4, p5, p6)
 /*
  * lsetpag -	interface to afs_setpag().
  */
-lsetpag()
+int
+lsetpag(void)
 {
 
     AFS_STATCNT(lsetpag);
@@ -231,8 +232,8 @@ lsetpag()
 /*
  * lpioctl -	interface to pioctl()
  */
-lpioctl(path, cmd, cmarg, follow)
-     char *path, *cmarg;
+int
+lpioctl(char *path, int cmd, void *cmarg, int follow)
 {
 
     AFS_STATCNT(lpioctl);

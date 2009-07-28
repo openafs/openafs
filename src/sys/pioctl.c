@@ -42,7 +42,7 @@
 #pragma weak xlpioctl = lpioctl
 
 int
-lpioctl(char *path, int cmd, char *cmarg, int follow)
+lpioctl(char *path, int cmd, void *cmarg, int follow)
 {
     return (syscall(AFS_PIOCTL, path, cmd, cmarg, follow));
 }
@@ -50,7 +50,7 @@ lpioctl(char *path, int cmd, char *cmarg, int follow)
 #else /* AFS_SGI_ENV */
 
 int
-lpioctl(char *path, int cmd, char *cmarg, int follow)
+lpioctl(char *path, int cmd, void *cmarg, int follow)
 {
     int errcode, rval;
 #ifndef AFS_LINUX20_ENV

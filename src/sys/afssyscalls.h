@@ -145,7 +145,7 @@ extern char *PrintInode();
 
 /* Declarations for lsetpag and lpioctl */
 int     lsetpag(void);
-int     lpioctl(char *path, int cmd, char *cmarg, int follow);
+int     lpioctl(char *path, int cmd, void *cmarg, int follow);
 
 #endif /* AFS_NT40_ENV */
 

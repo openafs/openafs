@@ -19,7 +19,7 @@ extern int ioctl_afs_syscall(long, long, long, long, long, long, long, int *);
 #endif
 
 /* pioctl.c */
-extern int lpioctl(char *, int, char *, int);
+extern int lpioctl(char *, int, void *, int);
 
 /* rmtsys.ss.c */
 struct rx_call;
