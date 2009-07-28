@@ -96,7 +96,6 @@ struct vlentry_3 {
     afs_int32 nextIdHash[3];
     afs_int32 nextNameHash;
     char name[65];
-#define MAXSERVERS	13
     unsigned char serverNumber[MAXSERVERS];
     unsigned char serverPartition[MAXSERVERS];
     unsigned char serverFlags[MAXSERVERS];

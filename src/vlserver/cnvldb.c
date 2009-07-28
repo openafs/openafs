@@ -18,7 +18,6 @@
 #include <sys/file.h>
 #include <string.h>
 
-#include "cnvldb.h"		/* CHANGEME! */
 #include <netinet/in.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
@@ -26,6 +25,7 @@
 #include <afs/fileutil.h>
 
 #include "vlserver.h"
+#include "cnvldb.h"		/* CHANGEME! */
 
 #define MAXSIZE 2048		/* most I'll get back from PIOCTL */
 #define	BADSERVERID	255	/* XXX */

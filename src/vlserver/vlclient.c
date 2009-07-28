@@ -636,7 +636,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		       (netries == 1 ? "y" : "ies"));
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
-		    display_entry(&vllist->VldbEntry, 0);
+		    display_entry((struct vldbentry *)&vllist->VldbEntry, 0);
 		    free((char *)vllist);
 		}
 	    } else if (!strcmp(oper, "di")) {
@@ -724,12 +724,12 @@ handleit(struct cmd_syndesc *as, void *arock)
 		display_entry(&entry, code);
 		printf("return code is %d.\n", code);
 	    } else if (!strcmp(oper, "nv")) {
-		int newvolid;
+		unsigned int newvolid;
 		sscanf(&(*argp)[0], "%d", &id);
 		code =
 		    ubik_VL_GetNewVolumeId(cstruct, 0, id, &newvolid);
 		if (!code)
-		    printf("Current Max volid is (in hex):%X\n", newvolid);
+		    printf("Current Max volid is (in hex):0x%x\n", newvolid);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "gs")) {
 		vldstats stats;

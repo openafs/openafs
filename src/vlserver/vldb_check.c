@@ -1178,7 +1178,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		hash = NameHash(vlentry.name);
 		nextpp = &vlentry.nextNameHash;
 		which = "name";
-		sprintf(volidbuf, "");
+		volidbuf[0]='\0';
 		foundbad = 1;
 	    }
 
@@ -1218,7 +1218,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 		hash = NameHash(vlentry.name);
 		nextpp = &vlentry.nextNameHash;
 		which = "name";
-		sprintf(volidbuf, "");
+		volidbuf[0]='\0';
 		readentry(nextp, &vlentry2, &type);
 		nexthash = NameHash(vlentry2.name);
 		if (hash != nexthash)
