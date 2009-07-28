@@ -89,8 +89,12 @@ extern char *vctime(const time_t * atime);
 #define afs_ctime(C, B, L) (char*)ctime_r(C, B)
 #endif /* AFS_SUN5_ENV */
 #else /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
-#define afs_ctime(C, B, S) \
-	((void)strncpy(B, ctime(C), (S-1)), (B)[S-1] = '\0', (B))
+static_inline char *
+afs_ctime(const time_t *C, char *B, size_t S) {
+    strncpy(B, ctime(C), (S-1));
+    B[S-1] = '\0';
+    return B;
+}
 #endif /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
 
 

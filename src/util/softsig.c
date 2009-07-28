@@ -68,7 +68,7 @@ softsig_thread(void *arg)
 
     while (1) {
 	void (*h) (int);
-#if !defined(AFS_DARwiN60_ENV) && !defined(AFS_NBSD_ENV)
+#if !defined(AFS_DARWIN60_ENV) && !defined(AFS_NBSD_ENV)
 	int sigw;
 #endif
 

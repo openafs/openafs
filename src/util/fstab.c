@@ -104,7 +104,7 @@ fstabscan(void)
 struct fstab *
 getfsent(void)
 {
-    if (!_fs_buf && !setfsent() || !fstabscan())
+    if ((!_fs_buf && !setfsent()) || !fstabscan())
 	return ((struct fstab *)NULL);
     return (&_fs_fstab);
 }
