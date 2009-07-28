@@ -233,7 +233,7 @@ ReadVolumeHeader(afs_int32 count)
 	    break;
 
 	case 'v':
-	    ntohl(readvalue(4));	/* version stamp - ignore */
+	    (void)ntohl(readvalue(4));	/* version stamp - ignore */
 	    break;
 
 	case 'n':

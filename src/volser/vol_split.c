@@ -85,9 +85,9 @@ struct Msg {
 static afs_int32 
 ExtractVnodes(struct Msg *m, Volume *vol, afs_int32 class, 
 	      struct VnodeExtract **list,
-	      afs_int32 *length, afs_uint32 where, 
+	      afs_uint32 *length, afs_uint32 where,
 	      struct VnodeDiskObject *vd,
-	      afs_int32 *parent, struct VnodeDiskObject *parentvd)
+	      afs_uint32 *parent, struct VnodeDiskObject *parentvd)
 {
     afs_int32 code = 0;
     char buf[SIZEOF_LARGEDISKVNODE];
@@ -186,7 +186,7 @@ static afs_int32
 FindVnodes(struct Msg *m, afs_uint32 where, 
 	   struct VnodeExtract *list, afs_int32 length, 
 	   struct VnodeExtract *dlist, afs_int32 dlength, 
-	   afs_int32 *needed, afs_int32 class)
+	   afs_uint32 *needed, afs_int32 class)
 {
     afs_int32 i, j, found = 0;
     afs_int32 parent = 0;

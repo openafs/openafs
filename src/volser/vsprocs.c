@@ -165,14 +165,16 @@ do { \
 
 
 /* Protos for static routines */
+#if 0
 static afs_int32 CheckAndDeleteVolume(struct rx_connection *aconn,
 				      afs_int32 apart, afs_uint32 okvol,
 				      afs_uint32 delvol);
+#endif
 static int DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
 		  afs_int32 flags);
 static int GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 		    struct rx_connection **connPtr, afs_int32 * transPtr,
-		    afs_int32 * crtimePtr, afs_int32 * uptimePtr);
+		    afs_uint32 * crtimePtr, afs_uint32 * uptimePtr);
 static int SimulateForwardMultiple(struct rx_connection *fromconn,
 				   afs_int32 fromtid, afs_int32 fromdate,
 				   manyDests * tr, afs_int32 flags,
@@ -455,7 +457,7 @@ UV_Bind(afs_int32 aserver, afs_int32 port)
 static int 
 AFSVolCreateVolume_retry(struct rx_connection *z_conn,
 		       afs_int32 partition, char *name, afs_int32 type,
-		       afs_int32 parent, afs_int32 *volid, afs_int32 *trans)
+		       afs_int32 parent, afs_uint32 *volid, afs_int32 *trans)
 {
     afs_int32 code;
     int retries = 3;
@@ -495,6 +497,7 @@ AFSVolTransCreate_retry(struct rx_connection *z_conn,
     return code;
 }
 
+#if 0
 /* if <okvol> is allright(indicated by beibg able to
  * start a transaction, delete the <delvol> */
 static afs_int32
@@ -542,6 +545,8 @@ CheckAndDeleteVolume(struct rx_connection *aconn, afs_int32 apart,
 	return error;
     }
 }
+
+#endif
 
 /* called by EmuerateEntry, show vldb entry in a reasonable format */
 void
@@ -3148,7 +3153,7 @@ DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
 static int
 GetTrans(struct nvldbentry *vldbEntryPtr, afs_int32 index,
 	 struct rx_connection **connPtr, afs_int32 * transPtr,
-	 afs_int32 * crtimePtr, afs_int32 * uptimePtr)
+	 afs_uint32 * crtimePtr, afs_uint32 * uptimePtr)
 {
     afs_uint32 volid;
     struct volser_status tstatus;

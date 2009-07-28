@@ -177,7 +177,7 @@ iod_getc(register struct iod *iodp)
 	iodp->haveOldChar = 0;
 	return iodp->oldChar;
     }
-    if (iod_Read(iodp, &t, 1) == 1)
+    if (iod_Read(iodp, (char *) &t, 1) == 1)
 	return t;
     return EOF;
 }
@@ -1339,7 +1339,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	if (nbytes < size)
 	    size = nbytes;
 
-	if ((code = iod_Read(iodp, p, size)) != size) {
+	if ((code = iod_Read(iodp, (char *) p, size)) != size) {
 	    Log("1 Volser: WriteFile: Error reading dump file %d size=%llu nbytes=%u (%d of %u); restore aborted\n", vn, (afs_uintmax_t) filesize, nbytes, code, size);
 	    *status = 3;
 	    break;

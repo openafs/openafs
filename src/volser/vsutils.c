@@ -286,7 +286,8 @@ VLDB_IsSameAddrs(afs_int32 serv1, afs_int32 serv2, afs_int32 *errorp)
     register int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
-    afs_uint32 *addrp, nentries, unique, i, j, f1, f2;
+    afs_uint32 *addrp, i, j, f1, f2;
+    afs_int32 unique, nentries;
     afsUUID uuid;
     static int initcache = 0;
 
