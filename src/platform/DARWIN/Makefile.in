@@ -16,9 +16,12 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: OpenAFS.prefPane afssettings afscell
 
+AFSPreference/build/Release/OpenAFS.prefPane: OpenAFS.prefPane
+afscell/build/Release/afscell.bundle: afscell
+afscell/InstallerSections.plist: afscell 
+
 OpenAFS.prefPane:
 	xcodebuild -project AFSPreference/OpenAFS.xcodeproj
-	mv AFSPreference/build/Release/OpenAFS.prefPane OpenAFS.prefPane
 
 afscell:
 	cd afscell && xcodebuild
@@ -32,7 +35,8 @@ install: \
 dest: \
 	${DEST}/etc/afssettings \
 	${DEST}/installer/afscell.bundle \
-	${DEST}/installer/InstallerSections.plist
+	${DEST}/installer/InstallerSections.plist \
+	${DEST}/tools/OpenAFS.prefPane
 
 ${DESTDIR}${sbindir}/afssettings: afssettings
 	${INSTALL} $? $@
@@ -47,6 +51,11 @@ ${DEST}/installer/afscell.bundle: afscell/build/Release/afscell.bundle
 
 ${DEST}/installer/InstallerSections.plist: afscell/InstallerSections.plist
 	${INSTALL} $? $@
+
+${DEST}/tools/OpenAFS.prefPane: AFSPreference/build/Release/OpenAFS.prefPane
+	mkdir -p ${DEST}/tools
+	rm -rf ${DEST}/tools/OpenAFS.prefPane
+	cp -R $? $@
 
 clean:
 	$(RM) -rf OpenAFS.prefPane
