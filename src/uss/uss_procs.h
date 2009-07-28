@@ -169,4 +169,21 @@ extern int uss_procs_GetOwner(char *a_ownerStr);
      *    Owner's uid.
      */
 
+extern afs_int32 uss_procs_PickADir(char *path, char *cp);
+    /*
+     * Summary:
+     *    Tries to replace $AUTO by a subdir.  Subdirs are given by means
+     *    of "G" in the configuration file.  Each of the directories is
+     *    examined, and the one with the inimum number of entries is
+     *    picked.
+     *
+     * Args:
+     *    a_path : ???
+     *    a_cp   : ???
+     *
+     * Returns:
+     *    0 if everything went well,
+     *   -1 if there was a problem.
+     */
+
 #endif /* _USS_PROCS_H_ */

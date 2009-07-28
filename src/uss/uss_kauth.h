@@ -83,4 +83,8 @@ extern afs_int32 uss_kauth_CheckUserName(void);
      *    1 if the user name is not legal.
      */
 
+extern afs_int32 uss_kauth_SetFields(char *username, char *expirestring,
+				     char *reuse, char *failures,
+				     char *lockout);
+
 #endif /* _USS_KAUTH_H_ */

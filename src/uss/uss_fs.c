@@ -555,7 +555,7 @@ struct tokenInfo {
 int
 uss_fs_UnlogToken(char *celln)
 {
-    unsigned int count = 0, index, index2;
+    int count = 0, index, index2;
     afs_int32 code = 0, cnt = 0;
     struct ktc_principal serviceName;
     struct tokenInfo *tokenInfoP, *tp;

@@ -15,6 +15,7 @@
 
 #include "y.tab.h"
 #include "uss_common.h"
+#include "uss_procs.h"
 int line=1;
 #ifdef DEBUG
 #define dprint(x)	{fprintf(stderr, x); fflush(stderr);}
@@ -69,9 +70,7 @@ EOL	[\n]
  */
 
 void
-Replace(in, out)
-    char *in, *out;
-
+Replace(char *in, char *out)
 { /*Replace*/
 
     char *in_text, *in_var, *out_cp, VarNo;
@@ -196,7 +195,7 @@ Replace(in, out)
 
 } /*Replace*/
 
-yywrap()
+int yywrap(void)
 {
 return(1);
 }
