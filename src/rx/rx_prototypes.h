@@ -280,6 +280,9 @@ extern int clock_UnInit(void);
 #if !defined(clock_UpdateTime)
 extern void clock_UpdateTime(void);
 #endif
+#if defined(UKERNEL) && !defined(osi_GetTime)
+extern int osi_GetTime(struct timeval *tv);
+#endif
 
 /* rx_clock_nt.c */
 
@@ -438,6 +441,11 @@ extern struct afs_ifinfo afsifinfo[ADDRSPERSITE];
 #endif
 extern void osi_StopListener(void);
 extern int rxi_FindIfMTU(afs_uint32 addr);
+#if defined(UKERNEL)
+extern void rxi_ListenerProc(osi_socket usockp, int *tnop,
+			     struct rx_call **newcallp);
+#endif
+
 #ifndef RXK_LISTENER_ENV
 extern void rxk_init();
 #endif
@@ -569,7 +577,6 @@ extern void rxi_StartListener(void);
 extern int rxi_Listen(osi_socket sock);
 extern int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags);
 extern int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags);
-
 
 /* rx_rdwr.c */
 extern int rxi_ReadProc(struct rx_call *call, char *buf,

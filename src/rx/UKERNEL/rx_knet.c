@@ -24,6 +24,7 @@ struct usr_ifnet *usr_ifnet = NULL;
 struct usr_in_ifaddr *usr_in_ifaddr = NULL;
 
 void rxk_InitializeSocket(void);
+extern int afs_osi_CheckTimedWaits(void);
 
 void
 afs_rxevent_daemon(void)
@@ -200,7 +201,8 @@ rxk_InitializeSocket(void)
 #ifdef AFS_USR_AIX_ENV
     unsigned long len, optval, optval0, optlen;
 #else /* AFS_USR_AIX_ENV */
-    int len, optval, optval0, optlen;
+    socklen_t len, optlen;
+    int optval, optval0;
 #endif /* AFS_USR_AIX_ENV */
     struct usr_socket *usockp;
     struct sockaddr_in lcladdr;

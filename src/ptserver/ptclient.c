@@ -31,6 +31,7 @@
 #include <afs/cellconfig.h>
 #include "ptclient.h"
 #include "pterror.h"
+#include "display.h"
 #include <afs/afsutil.h>
 
 

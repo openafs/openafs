@@ -18,7 +18,7 @@
 #define rxi_ReScheduleEvents    0	/* Not needed by kernel */
 
 /* This is a no-op, because the kernel server procs are pre-allocated */
-#define rxi_StartServerProcs(x) 0
+#define rxi_StartServerProcs(x) (void)0
 
 /* Socket stuff */
 typedef struct socket *osi_socket;

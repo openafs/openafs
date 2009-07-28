@@ -34,6 +34,8 @@
 #include "afs/kauth.h"
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
+#include "afs/ptuser.h"
+#include "des.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <signal.h>

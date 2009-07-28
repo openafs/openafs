@@ -104,12 +104,13 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 				afs_int32 ahost, short aport,
 				afs_int32 istack);
 
-static int rxi_FreeDataBufsToQueue(struct rx_packet *p, 
-				   afs_uint32 first, 
-				   struct rx_queue * q);
 #ifdef RX_ENABLE_TSFPQ
 static int
 rxi_FreeDataBufsTSFPQ(struct rx_packet *p, afs_uint32 first, int flush_global);
+#else
+static int rxi_FreeDataBufsToQueue(struct rx_packet *p,
+				   afs_uint32 first,
+				   struct rx_queue * q);
 #endif
 
 /* some rules about packets:

@@ -28,6 +28,7 @@
 #include "afs/ptclient.h"
 #include "afs/ptuser.h"
 #include "afs/pterror.h"
+#include "afs/com_err.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <ctype.h>
@@ -69,7 +70,9 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     afs_int32 scIndex;
     static struct afsconf_cell info;
     afs_int32 i;
+#if !defined(UKERNEL)
     char cellstr[64];
+#endif
     afs_int32 gottdir = 0;
     afs_int32 refresh = 0;
 
