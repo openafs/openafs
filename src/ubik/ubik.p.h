@@ -441,11 +441,6 @@ extern void ubik_print(const char *format, ...);
 extern void ubik_dprint(const char *format, ...);
 /*\}*/
 
-/*! \name ubik_int.xg - rxgen really should prototype these for us ... */
-extern int VOTE_ExecuteRequest(register struct rx_call *);
-extern int DISK_ExecuteRequest(register struct rx_call *);
-/*\}*/
-
 #endif /* UBIK_INTERNALS */
 
 extern afs_int32 ubik_nBuffers;

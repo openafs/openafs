@@ -18,8 +18,6 @@
 
 #define N_SECURITY_OBJECTS 1
 
-extern TEST_ExecuteRequest();
-
 main()
 {
     struct rx_securityClass *(securityObjects[N_SECURITY_OBJECTS]);

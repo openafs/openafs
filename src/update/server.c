@@ -49,8 +49,6 @@
 #include "update.h"
 #include "global.h"
 
-extern int UPDATE_ExecuteRequest(struct rx_call *);
-
 static int AddObject(char **expPath, char *dir);
 static int PathInDirectory(char *dir, char *path);
 int update_SendFile(int, struct rx_call *, struct stat *);

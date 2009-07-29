@@ -10,9 +10,6 @@
 #ifndef _BUDB_PROTOTYPES_H
 #define _BUDB_PROTOTYPES_H
 
-/* budb.ss.c */
-int BUDB_ExecuteRequest(register struct rx_call *z_call);
-
 /* db_alloc.c */
 afs_int32 InitDBalloc(void);
 afs_int32 AllocStructure(struct ubik_trans *ut, char type, dbadr related,

@@ -28,6 +28,8 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include <osi.h>
 #include <afs/vldbint.h>
 #include <afs/afsint.h>
+#define FSINT_COMMON_XG
+
 #include <afs/prs_fs.h>
 
 #include "cm_config.h"

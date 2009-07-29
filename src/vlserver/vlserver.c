@@ -39,7 +39,6 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxstat.h>
-#include <rx/rxstat_prototypes.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/auth.h>

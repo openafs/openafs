@@ -10,9 +10,6 @@
 #ifndef _VLSERVER_INTERNAL_H
 #define _VLSERVER_INTERNAL_H
 
-/* vldbinit.ss.c */
-extern int VL_ExecuteRequest(struct rx_call *z_call);
-
 /* vlprocs.c */
 extern int Init_VLdbase(struct ubik_trans **trans, int locktype, int this_op);
 

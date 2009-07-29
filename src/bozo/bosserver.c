@@ -39,7 +39,6 @@
 #include "bosprototypes.h"
 #include <rx/rxkad.h>
 #include <rx/rxstat.h>
-#include <rx/rxstat_prototypes.h>
 #include <afs/keys.h>
 #include <afs/ktime.h>
 #include <afs/afsutil.h>

@@ -25,21 +25,11 @@
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
 #include <afs/afsutil.h>
-    
+
+#define FSINT_COMMON_XG
+#include <afs/afscbint.h>
+
 #define LWP_STACK_SIZE	(16 * 1024)
-
-/*
- * Routines we need that don't have explicit include file definitions.
- */
-extern int RXAFSCB_ExecuteRequest(struct rx_call *);	/*AFS callback dispatcher */
-
-/*
- * Help out the linker by explicitly importing the callback routines.
- */
-extern afs_int32 SRXAFSCB_CallBack(struct rx_call *, AFSCBFids *, AFSCBs *);
-extern afs_int32 SRXAFSCB_InitCallBackState2(struct rx_call *, 
-					     struct interfaceAddr *);
-extern afs_int32 SRXAFSCB_Probe(struct rx_call *);
 
 /*
  * Exported variables.

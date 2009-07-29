@@ -46,6 +46,7 @@
 #include <afs/volume.h>
 #include <afs/partition.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <rx/rx_globals.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
@@ -78,8 +79,6 @@ int GlobalVolType;
 int VolumeChanged;		/* XXXX */
 static char busyFlags[MAXHELPERS];
 struct volser_trans *QI_GlobalWriteTrans = 0;
-extern int AFSVolExecuteRequest(struct rx_call*);
-extern int RXSTATS_ExecuteRequest(struct rx_call*);
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;

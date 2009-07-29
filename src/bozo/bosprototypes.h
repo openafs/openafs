@@ -37,10 +37,6 @@ int bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName,
 int bnode_StopProc(struct bnode_proc *aproc, int asignal);
 int bnode_Deactivate(struct bnode *abnode);
 
-/* bosint.ss.c */
-struct rx_call;
-int BOZO_ExecuteRequest(register struct rx_call *z_call);
-
 /* bosserver.c */
 void bozo_Log(char *format, ... );
 int bozo_ReBozo(void);

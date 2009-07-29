@@ -21,6 +21,10 @@
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
+#include "rx/rxstat.h"
+
+#define FSINT_COMMON_XG
+#include "afs/afscbint.h"
 
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */

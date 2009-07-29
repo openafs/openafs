@@ -21,10 +21,6 @@ extern int ioctl_afs_syscall(long, long, long, long, long, long, long, int *);
 /* pioctl.c */
 extern int lpioctl(char *, int, void *, int);
 
-/* rmtsys.ss.c */
-struct rx_call;
-extern int RMTSYS_ExecuteRequest(struct rx_call *);
-
 /* rmtsysc.c */
 struct ViceIoctl;
 extern int pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, 

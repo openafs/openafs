@@ -27,9 +27,6 @@
 
 #define LWP_STACK_SIZE	(16 * 1024)
 
-/* This should really be in a header file */
-extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
-
 /*
  * Exported variables.
  */

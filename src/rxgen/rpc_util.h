@@ -141,6 +141,7 @@ extern int function_list_index;
 extern definition *get_definition(void);
 
 extern void er_Proc_CodeGeneration(void);
+extern void h_Proc_CodeGeneration(void);
 extern void h_opcode_stats(void);
 extern void generate_multi_macros(definition * defp);
 extern int IsRxgenToken(token * tokp);

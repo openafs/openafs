@@ -274,8 +274,6 @@ SAMPLE_Test(struct rx_connection *rxconn)
 
 #include "AFS_component_version_number.c"
 
-extern int SAMPLE_ExecuteRequest(struct rx_call *);
-		
 int
 main(int argc, char **argv)
 {

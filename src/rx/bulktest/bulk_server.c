@@ -23,7 +23,6 @@
 
 #define N_SECURITY_OBJECTS 1
 
-extern BULK_ExecuteRequest();
 
 InterruptSignal()
 {

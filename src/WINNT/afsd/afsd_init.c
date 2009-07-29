@@ -28,8 +28,10 @@
 #endif
 #include <rx\rx.h>
 #include <rx\rx_null.h>
+#include <rx\rxstat.h>
 #include <WINNT/syscfg.h>
 #include <WINNT/afsreg.h>
+#include <afs\afscbint.h>
 
 #include "smb.h"
 #include "cm_rpc.h"
@@ -39,9 +41,6 @@
 #ifdef DEBUG
 #include <crtdbg.h>
 #endif
-
-extern int RXAFSCB_ExecuteRequest(struct rx_call *z_call);
-extern int RXSTATS_ExecuteRequest(struct rx_call *z_call);
 
 extern afs_uint32 cryptall;
 extern afs_uint32 cm_anonvldb;

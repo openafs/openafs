@@ -22,7 +22,6 @@
 
 #define N_SECURITY_OBJECTS 1
 
-extern int BULK_ExecuteRequest(register struct rx_call *z_call);
 void Quit(char *msg);
 
 int

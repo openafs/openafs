@@ -115,7 +115,6 @@ statfile(char *path, char *cellname, afs_uint32 * server, struct AFSFid *f)
 }
 
 
-extern int RXAFSCB_ExecuteRequest();
 struct rx_securityClass *sc;
 
 extern int

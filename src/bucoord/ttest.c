@@ -20,8 +20,6 @@
 
 #include "bc.h"
 
-extern TC_ExecuteRequest();
-
 /* dump information */
 static afs_int32 transID = 1000;	/* dump or restore transaction id */
 static afs_int32 bytesDumped = 0;

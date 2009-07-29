@@ -34,6 +34,7 @@
 #include <lwp.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
@@ -168,10 +169,6 @@ main(int argc, char *argv[])
     struct rx_securityClass *scm[3];
 
     extern int rx_stackSize;
-    extern int KAA_ExecuteRequest(struct rx_call *);
-    extern int KAT_ExecuteRequest(struct rx_call *);
-    extern int KAM_ExecuteRequest(struct rx_call *);
-    extern int RXSTATS_ExecuteRequest(struct rx_call *);
 
 #ifdef	AFS_AIX32_ENV
     /*

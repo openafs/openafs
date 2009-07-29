@@ -68,6 +68,7 @@
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <afs/keys.h>
 #include <afs/afs_args.h>
 #include <afs/vlserver.h>
@@ -91,7 +92,6 @@
 #include "sys/lock.h"
 #endif
 #include <rx/rx_globals.h>
-#include <rx/rxstat_prototypes.h>
 
 #ifdef O_LARGEFILE
 #define afs_stat	stat64
@@ -114,9 +114,6 @@ static void PrintCounters(void);
 static void ResetCheckDescriptors(void);
 static void ResetCheckSignal(void);
 static void *CheckSignal(void *);
-
-extern int RXAFS_ExecuteRequest(struct rx_call *);
-extern int RXSTATS_ExecuteRequest(struct rx_call *);
 
 static afs_int32 Do_VLRegisterRPC(void);
 

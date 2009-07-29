@@ -2154,6 +2154,38 @@ er_TailofOldStyleProc_setup(void)
     f_print(fout, "\treturn z_result;\n}\n");
 }
 
+static void
+h_ProcMainBody_setup(void)
+{
+    f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
+	    prefix, PackagePrefix[PackageIndex]);
+}
+
+static void
+h_HeadofOldStyleProc_setup(void)
+{
+    f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
+	    prefix,
+	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+}
+
+void
+h_Proc_CodeGeneration(void)
+{
+    int temp;
+
+    temp = PackageIndex;
+    if (!combinepackages)
+        PackageIndex = 0;
+    for (; PackageIndex <= temp; PackageIndex++) {
+	if (combinepackages || opcode_holes_exist()) {
+	    h_HeadofOldStyleProc_setup();
+	} else {
+            h_ProcMainBody_setup();
+	}
+    }
+    PackageIndex = temp;
+}
 
 void
 h_opcode_stats(void)

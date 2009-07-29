@@ -15,7 +15,6 @@ INCFILEDIR = $(DESTDIR)\include
 
 INCFILES =\
 	$(INCFILEDIR)\rx\rxstat.h \
-	$(INCFILEDIR)\rx\rxstat_prototypes.h
 
 # Library component lists.
 
@@ -46,7 +45,6 @@ rxstat.h: rxstat.xg
 
 copyheader: rxstat.h
    $(COPY) rxstat.h $(INCFILEDIR)\rx\rxstat.h
-   $(COPY) rxstat_prototypes.h $(INCFILEDIR)\rx\rxstat_prototypes.h
 
 install: copyheader $(LIBFILE) $(INCFILES)
 

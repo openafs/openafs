@@ -19,7 +19,6 @@
 #include <afs/cellconfig.h>
 #include <afs/bosint.h>
 #include <rx/rxstat.h>
-#include <rx/rxstat_prototypes.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>

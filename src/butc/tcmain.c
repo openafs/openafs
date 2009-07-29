@@ -66,7 +66,6 @@
 #define CFG_PREFIX "CFG"
 
 struct ubik_client *cstruct;
-extern void TC_ExecuteRequest(struct rx_call *);
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
 char logFile[256];

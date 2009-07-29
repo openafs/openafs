@@ -10,11 +10,6 @@
 #ifndef _PTPROTOTYPES_H_
 #define _PTPROTOTYPES_H_
 
-
-
-/* ptint.ss.c */
-extern int PR_ExecuteRequest (struct rx_call *z_call);
-
 /* utils.c */
 #if defined(SUPERGROUPS)
 extern afs_int32 IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, 
