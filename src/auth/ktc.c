@@ -60,6 +60,9 @@
 #endif
 #endif
 #endif
+#ifdef AFS_DARWIN100_ENV
+#include <crt_externs.h>
+#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -1667,7 +1670,11 @@ afs_tf_dest_tkt(void)
 int
 ktc_newpag(void)
 {
-    extern char **environ;
+#ifdef AFS_DARWIN100_ENV
+#define environ (*_NSGetEnviron())
+#else
+extern char **environ;
+#endif
 
     afs_uint32 pag;
     struct stat sbuf;
