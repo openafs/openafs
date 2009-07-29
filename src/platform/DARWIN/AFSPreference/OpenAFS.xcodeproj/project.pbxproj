@@ -14,6 +14,12 @@
 		322884030C3E45C800E778CC /* InfoController.h in Headers */ = {isa = PBXBuildFile; fileRef = 322884010C3E45C800E778CC /* InfoController.h */; };
 		322884040C3E45C800E778CC /* InfoController.m in Sources */ = {isa = PBXBuildFile; fileRef = 322884020C3E45C800E778CC /* InfoController.m */; };
 		322884050C3E45C800E778CC /* InfoController.m in Sources */ = {isa = PBXBuildFile; fileRef = 322884020C3E45C800E778CC /* InfoController.m */; };
+		3228B9B01020526900DF98DA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3228B9AF1020526900DF98DA /* main.m */; };
+		3228B9B4102052A900DF98DA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
+		3228B9BE102052BE00DF98DA /* version.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3228B9BD102052BE00DF98DA /* version.plist */; };
+		3228B9D5102070A200DF98DA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3276591D10204E08004CA418 /* Info.plist */; };
+		3228BA1910207A4200DF98DA /* hasToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3228BA1810207A4200DF98DA /* hasToken.png */; };
+		3228BA1B10207A5200DF98DA /* noToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3228BA1A10207A5200DF98DA /* noToken.png */; };
 		322B90450C2F0A2D0068F99A /* start_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90430C2F0A2D0068F99A /* start_afs.sh */; };
 		322B90460C2F0A2D0068F99A /* stop_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90440C2F0A2D0068F99A /* stop_afs.sh */; };
 		322CEF600C211D220060D66D /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
@@ -40,6 +46,22 @@
 		327308D80C2AA369008C322B /* SecurityFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327308D20C2AA364008C322B /* SecurityFoundation.framework */; };
 		327309970C2AB433008C322B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
 		327309980C2AB434008C322B /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
+		3276592110204E4E004CA418 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
+		3276592210204E51004CA418 /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
+		3276592310204E51004CA418 /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
+		3276592410204EE0004CA418 /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
+		3276592510204EE1004CA418 /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
+		3276592610204EE2004CA418 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
+		3276592710204EE2004CA418 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
+		3276592810204EE3004CA418 /* NSString+search.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B565730D8FAF62005255F2 /* NSString+search.m */; };
+		3276592910204EE4004CA418 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
+		3276592A10204EE5004CA418 /* DialogUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B766440DCA47A50014A80F /* DialogUtility.m */; };
+		3276592E10204F8D004CA418 /* AFSBackounderMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */; };
+		3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */; };
+		3276594110204FFA004CA418 /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
+		3276594310204FFA004CA418 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4940075A0CE62EB500F40D0A /* CoreServices.framework */; };
+		3276594410204FFC004CA418 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
+		3276594510205003004CA418 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 493564E70CE711F300699A24 /* Carbon.framework */; };
 		327756270C3053A100C15D11 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
 		327756280C3053A100C15D11 /* TaskUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 327756250C3053A100C15D11 /* TaskUtil.h */; };
 		327756290C3053A100C15D11 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
@@ -179,6 +201,10 @@
 		3223836B0C32A96F00380547 /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = English; path = English.lproj/Localizable.strings; sourceTree = "<group>"; };
 		322884010C3E45C800E778CC /* InfoController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InfoController.h; sourceTree = "<group>"; };
 		322884020C3E45C800E778CC /* InfoController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InfoController.m; sourceTree = "<group>"; };
+		3228B9AF1020526900DF98DA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AFSBackgrounder/main.m; sourceTree = "<group>"; };
+		3228B9BD102052BE00DF98DA /* version.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = version.plist; path = AFSBackgrounder/resource/version.plist; sourceTree = "<group>"; };
+		3228BA1810207A4200DF98DA /* hasToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hasToken.png; sourceTree = "<group>"; };
+		3228BA1A10207A5200DF98DA /* noToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = noToken.png; sourceTree = "<group>"; };
 		322B90430C2F0A2D0068F99A /* start_afs.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; path = start_afs.sh; sourceTree = "<group>"; };
 		322B90440C2F0A2D0068F99A /* stop_afs.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; path = stop_afs.sh; sourceTree = "<group>"; };
 		322CEF5E0C211D220060D66D /* DBCellElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBCellElement.h; sourceTree = "<group>"; };
@@ -196,6 +222,11 @@
 		3273088C0C2A9B05008C322B /* FileUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileUtil.m; sourceTree = "<group>"; };
 		327308D20C2AA364008C322B /* SecurityFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SecurityFoundation.framework; path = /System/Library/Frameworks/SecurityFoundation.framework; sourceTree = "<absolute>"; };
 		327309620C2AB433008C322B /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = /System/Library/Frameworks/Security.framework; sourceTree = "<absolute>"; };
+		3276591B10204E08004CA418 /* AFSBackgrounder.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AFSBackgrounder.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3276591D10204E08004CA418 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = AFSBackgrounder/resource/Info.plist; sourceTree = "<group>"; };
+		3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = AFSBackounderMainMenu.xib; path = AFSBackgrounder/resource/AFSBackounderMainMenu.xib; sourceTree = "<group>"; };
+		3276592F10204F9E004CA418 /* AFSBackgrounderDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSBackgrounderDelegate.h; path = AFSBackgrounder/AFSBackgrounderDelegate.h; sourceTree = "<group>"; };
+		3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSBackgrounderDelegate.m; path = AFSBackgrounder/AFSBackgrounderDelegate.m; sourceTree = "<group>"; };
 		327756250C3053A100C15D11 /* TaskUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TaskUtil.h; sourceTree = "<group>"; };
 		327756260C3053A100C15D11 /* TaskUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TaskUtil.m; sourceTree = "<group>"; };
 		32B0AFDD0C01729400272348 /* AFSPropertyManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFSPropertyManager.h; sourceTree = "<group>"; };
@@ -244,6 +275,18 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3276591910204E08004CA418 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3276594110204FFA004CA418 /* Kerberos.framework in Frameworks */,
+				3276594310204FFA004CA418 /* CoreServices.framework in Frameworks */,
+				3276594410204FFC004CA418 /* Cocoa.framework in Frameworks */,
+				3276594510205003004CA418 /* Carbon.framework in Frameworks */,
+				3228B9B4102052A900DF98DA /* Security.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32CF01370C203C1800A8DC58 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -315,6 +358,7 @@
 				32CFFEF90C20314100A8DC58 /* Stand Alone Program */,
 				08FB77AFFE84173DC02AAC07 /* Classes */,
 				494BD47A0C43EDD400DB0A3A /* AFSMenuExtra */,
+				3276591010204DB4004CA418 /* AFSBackgrounder */,
 				32DBCFA10370C40200C91783 /* Other Sources */,
 				089C167CFE841241C02AAC07 /* Resources */,
 				089C1671FE841209C02AAC07 /* Frameworks and Libraries */,
@@ -397,6 +441,7 @@
 				49683EE40C3446380093C7C8 /* afshlp */,
 				494C74DE0C46052800D3A2D2 /* AFSMenuExtra.menu */,
 				4998A6860DC33BEC00146652 /* LoginTimeDaemon */,
+				3276591B10204E08004CA418 /* AFSBackgrounder.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -427,6 +472,18 @@
 				322884020C3E45C800E778CC /* InfoController.m */,
 			);
 			name = Info;
+			sourceTree = "<group>";
+		};
+		3228B9B21020527000DF98DA /* resource */ = {
+			isa = PBXGroup;
+			children = (
+				3228BA1810207A4200DF98DA /* hasToken.png */,
+				3228BA1A10207A5200DF98DA /* noToken.png */,
+				3276591D10204E08004CA418 /* Info.plist */,
+				3228B9BD102052BE00DF98DA /* version.plist */,
+				3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */,
+			);
+			name = resource;
 			sourceTree = "<group>";
 		};
 		322CEF6B0C211DAC0060D66D /* Afs Element */ = {
@@ -470,6 +527,17 @@
 				49B766440DCA47A50014A80F /* DialogUtility.m */,
 			);
 			name = Utility;
+			sourceTree = "<group>";
+		};
+		3276591010204DB4004CA418 /* AFSBackgrounder */ = {
+			isa = PBXGroup;
+			children = (
+				3228B9AF1020526900DF98DA /* main.m */,
+				3276592F10204F9E004CA418 /* AFSBackgrounderDelegate.h */,
+				3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */,
+				3228B9B21020527000DF98DA /* resource */,
+			);
+			name = AFSBackgrounder;
 			sourceTree = "<group>";
 		};
 		32B0AFB40C016E6900272348 /* English.lproj */ = {
@@ -572,6 +640,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		3276591A10204E08004CA418 /* AFSBackgrounder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3276592010204E08004CA418 /* Build configuration list for PBXNativeTarget "AFSBackgrounder" */;
+			buildPhases = (
+				3276591710204E08004CA418 /* Resources */,
+				3276591810204E08004CA418 /* Sources */,
+				3276591910204E08004CA418 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = AFSBackgrounder;
+			productName = AFSBackgrounder;
+			productReference = 3276591B10204E08004CA418 /* AFSBackgrounder.app */;
+			productType = "com.apple.product-type.application";
+		};
 		32CF01380C203C1800A8DC58 /* Test */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 32CF013C0C203C4900A8DC58 /* Build configuration list for PBXNativeTarget "Test" */;
@@ -686,11 +771,24 @@
 				49683EE30C3446380093C7C8 /* afshlp */,
 				494BD4680C43ED0C00DB0A3A /* AFSMenuExtra */,
 				4998A6850DC33BEC00146652 /* LoginTimeDaemon */,
+				3276591A10204E08004CA418 /* AFSBackgrounder */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		3276591710204E08004CA418 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3276592E10204F8D004CA418 /* AFSBackounderMainMenu.xib in Resources */,
+				3228B9BE102052BE00DF98DA /* version.plist in Resources */,
+				3228B9D5102070A200DF98DA /* Info.plist in Resources */,
+				3228BA1910207A4200DF98DA /* hasToken.png in Resources */,
+				3228BA1B10207A5200DF98DA /* noToken.png in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		494BD4650C43ED0C00DB0A3A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -756,6 +854,25 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		3276591810204E08004CA418 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				3276592110204E4E004CA418 /* AFSPropertyManager.m in Sources */,
+				3276592210204E51004CA418 /* DBCellElement.m in Sources */,
+				3276592310204E51004CA418 /* CellIp.m in Sources */,
+				3276592410204EE0004CA418 /* FileUtil.m in Sources */,
+				3276592510204EE1004CA418 /* AuthUtil.m in Sources */,
+				3276592610204EE2004CA418 /* TaskUtil.m in Sources */,
+				3276592710204EE2004CA418 /* ViewUtility.m in Sources */,
+				3276592810204EE3004CA418 /* NSString+search.m in Sources */,
+				3276592910204EE4004CA418 /* PListManager.m in Sources */,
+				3276592A10204EE5004CA418 /* DialogUtility.m in Sources */,
+				3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */,
+				3228B9B01020526900DF98DA /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		32CF01360C203C1800A8DC58 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -986,6 +1103,54 @@
 			};
 			name = Release;
 		};
+		3276591E10204E08004CA418 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = AFSBackgrounder/resource/Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = AFSBackgrounder;
+			};
+			name = Debug;
+		};
+		3276591F10204E08004CA418 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = AFSBackgrounder/resource/Info.plist;
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = AFSBackgrounder;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
 		32CF013D0C203C4900A8DC58 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1206,6 +1371,15 @@
 			buildConfigurations = (
 				1DBD214D08BA80EA00186707 /* Debug */,
 				1DBD214E08BA80EA00186707 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		3276592010204E08004CA418 /* Build configuration list for PBXNativeTarget "AFSBackgrounder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				3276591E10204E08004CA418 /* Debug */,
+				3276591F10204E08004CA418 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
