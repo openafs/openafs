@@ -189,6 +189,9 @@ static struct QueueHead pendingQueue;  /* volumes being salvaged */
  */
 static int partition_salvaging[VOLMAXPARTS+1];
 
+static int HandlerFD[MAXHANDLERS];
+static void (*HandlerProc[MAXHANDLERS]) (int);
+
 #define VSHASH_SIZE 64
 #define VSHASH_MASK (VSHASH_SIZE-1)
 #define VSHASH(vid) ((vid)&VSHASH_MASK)
@@ -292,6 +295,21 @@ SALVSYNC_salvInit(void)
     assert(pthread_create(&tid, &tattr, SALVSYNC_syncThread, NULL) == 0);
 }
 
+static void
+CleanFDs(void)
+{
+    int i;
+    for (i = 0; i < MAXHANDLERS; ++i) {
+	if (HandlerFD[i] >= 0) {
+	    SALVSYNC_Drop(HandlerFD[i]);
+	}
+    }
+
+    /* just in case we were in AcceptOff mode, and thus this fd wouldn't
+     * have a handler */
+    close(salvsync_server_state.fd);
+    salvsync_server_state.fd = -1;
+}
 
 static fd_set SALVSYNC_readfds;
 
@@ -303,6 +321,11 @@ SALVSYNC_syncThread(void * args)
     int numTries;
     int tid;
     SYNC_server_state_t * state = &salvsync_server_state;
+
+    /* when we fork, the child needs to close the salvsync server sockets,
+     * otherwise, it may get salvsync requests, instead of the parent
+     * salvageserver */
+    assert(pthread_atfork(NULL, NULL, CleanFDs) == 0);
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -362,6 +385,12 @@ SALVSYNC_com(osi_socket fd)
     SALVSYNC_command scom;
     SALVSYNC_response sres;
     SYNC_PROTO_BUF_DECL(buf);
+
+    memset(&com, 0, sizeof(com));
+    memset(&res, 0, sizeof(res));
+    memset(&scom, 0, sizeof(scom));
+    memset(&sres, 0, sizeof(sres));
+    memset(&sres_hdr, 0, sizeof(sres));
     
     com.payload.buf = (void *)buf;
     com.payload.len = SYNC_PROTO_MAX_LEN;
@@ -757,9 +786,6 @@ AcceptOff(void)
 }
 
 /* The multiple FD handling code. */
-
-static int HandlerFD[MAXHANDLERS];
-static void (*HandlerProc[MAXHANDLERS]) (int);
 
 static void
 InitHandler(void)

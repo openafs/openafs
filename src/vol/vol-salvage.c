@@ -3237,6 +3237,44 @@ AskOffline(VolumeId volumeId, char * partition)
 	Log("AskOffline:  request for fileserver to take volume offline failed; salvage aborting.\n");
 	Abort("Salvage aborted\n");
     }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* set inUse = programType in the volume header. We do this in case
+     * the fileserver restarts/crashes while we are salvaging.
+     * Otherwise, the fileserver could attach the volume again on
+     * startup while we are salvaging, which would be very bad, or
+     * schedule another salvage while we are salvaging, which would be
+     * annoying. */
+    if (!Testing) {
+	int fd;
+	IHandle_t *h;
+	char name[VMAXPATHLEN];
+	struct VolumeHeader header;
+	struct VolumeDiskHeader diskHeader;
+	struct VolumeDiskData volHeader;
+
+	afs_snprintf(name, sizeof(name), "%s/" VFORMAT, fileSysPathName,
+	    afs_printable_uint32_lu(volumeId));
+
+	fd = afs_open(name, O_RDONLY);
+	assert(fd >= 0);
+	assert(read(fd, &diskHeader, sizeof(diskHeader)) == sizeof(diskHeader));
+	assert(diskHeader.stamp.magic == VOLUMEHEADERMAGIC);
+	close(fd);
+
+	DiskToVolumeHeader(&header, &diskHeader);
+
+	IH_INIT(h, fileSysDevice, header.parent, header.volumeInfo);
+	assert(IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
+	assert(volHeader.stamp.magic == VOLUMEINFOMAGIC);
+
+	volHeader.inUse = programType;
+
+	assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
+
+	IH_RELEASE(h);
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 void

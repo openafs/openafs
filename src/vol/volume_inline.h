@@ -11,6 +11,26 @@
 #define _AFS_VOL_VOLUME_INLINE_H 1
 
 #include "volume.h"
+/**
+ * tell caller whether the given program type represents a salvaging
+ * program.
+ *
+ * @param type  program type enumeration
+ *
+ * @return whether program state is a salvager
+ *   @retval 0  type is a non-salvaging program
+ *   @retval 1  type is a salvaging program
+ */
+static_inline int
+VIsSalvager(ProgramType type)
+{
+    switch(type) {
+    case salvager:
+    case salvageServer:
+	return 1;
+    }
+    return 0;
+}
 
 /***************************************************/
 /* demand attach fs state machine routines         */

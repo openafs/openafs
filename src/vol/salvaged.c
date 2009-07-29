@@ -165,6 +165,9 @@ static int Reap_Child(char * prog, int * pid, int * status);
 static void * SalvageLogCleanupThread(void *);
 static int SalvageLogCleanup(int pid);
 
+static void * SalvageLogScanningThread(void *);
+static void ScanLogs(struct rx_queue *log_watch_queue);
+
 struct log_cleanup_node {
     struct rx_queue q;
     int pid;
@@ -524,6 +527,10 @@ SalvageServer(void)
 			  &attrs, 
 			  &SalvageLogCleanupThread,
 			  NULL) == 0);
+    assert(pthread_create(&tid,
+			  &attrs,
+			  &SalvageLogScanningThread,
+			  NULL) == 0);
 
     /* loop forever serving requests */
     while (1) {
@@ -744,4 +751,116 @@ SalvageLogCleanup(int pid)
     close(pidlog);
 
     return 0;
+}
+
+/* wake up every five minutes to see if a non-child salvage has finished */
+#define SALVAGE_SCAN_POLL_INTERVAL 300
+
+/**
+ * Thread to look for SalvageLog.$pid files that are not from our child
+ * worker salvagers, and notify SalvageLogCleanupThread to clean them
+ * up. This can happen if we restart during salvages, or the
+ * salvageserver crashes or something.
+ *
+ * @param arg  unused
+ *
+ * @return always NULL
+ */
+static void *
+SalvageLogScanningThread(void * arg)
+{
+    struct rx_queue log_watch_queue;
+    struct log_cleanup_node * cleanup;
+
+    queue_Init(&log_watch_queue);
+
+    {
+	DIR *dp;
+	struct dirent *dirp;
+	char prefix[AFSDIR_PATH_MAX];
+	size_t prefix_len;
+
+	afs_snprintf(prefix, sizeof(prefix), "%s.", AFSDIR_SLVGLOG_FILE);
+	prefix_len = strlen(prefix);
+
+	dp = opendir(AFSDIR_LOGS_DIR);
+	assert(dp);
+
+	while ((dirp = readdir(dp)) != NULL) {
+	    pid_t pid;
+	    struct log_cleanup_node *cleanup;
+	    int i;
+
+	    if (strncmp(dirp->d_name, prefix, prefix_len) != 0) {
+		/* not a salvage logfile; skip */
+		continue;
+	    }
+
+	    errno = 0;
+	    pid = strtol(dirp->d_name + prefix_len, NULL, 10);
+
+	    if (errno != 0) {
+		/* file is SalvageLog.<something> but <something> isn't
+		 * a pid, so skip */
+		 continue;
+	    }
+
+	    VOL_LOCK;
+	    for (i = 0; i < Parallel; ++i) {
+		if (pid == child_slot[i]) {
+		    break;
+		}
+	    }
+	    VOL_UNLOCK;
+	    if (i < Parallel) {
+		/* this pid is one of our children, so the reaper thread
+		 * will take care of it; skip */
+		continue;
+	    }
+
+	    cleanup =
+		(struct log_cleanup_node *) malloc(sizeof(struct log_cleanup_node));
+	    cleanup->pid = pid;
+
+	    queue_Append(&log_watch_queue, cleanup);
+	}
+
+	closedir(dp);
+    }
+
+    ScanLogs(&log_watch_queue);
+
+    while (queue_IsNotEmpty(&log_watch_queue)) {
+	sleep(SALVAGE_SCAN_POLL_INTERVAL);
+	ScanLogs(&log_watch_queue);
+    }
+
+    return NULL;
+}
+
+/**
+ * look through log_watch_queue, and if any processes are not still
+ * running, hand them off to the SalvageLogCleanupThread
+ *
+ * @param log_watch_queue  a queue of PIDs that we should clean up if
+ * that PID has died
+ */
+static void
+ScanLogs(struct rx_queue *log_watch_queue)
+{
+    struct log_cleanup_node *cleanup, *next;
+
+    assert(pthread_mutex_lock(&worker_lock) == 0);
+
+    for (queue_Scan(log_watch_queue, cleanup, next, log_cleanup_node)) {
+	/* if a process is still running, assume it's the salvage process
+	 * still going, and keep waiting for it */
+	if (kill(cleanup->pid, 0) < 0 && errno == ESRCH) {
+	    queue_Remove(cleanup);
+	    queue_Append(&log_cleanup_queue, cleanup);
+	    assert(pthread_cond_signal(&log_cleanup_queue.queue_change_cv) == 0);
+	}
+    }
+
+    assert(pthread_mutex_unlock(&worker_lock) == 0);
 }

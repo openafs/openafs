@@ -353,7 +353,6 @@ static void VVByPListWait_r(struct DiskPartition64 * dp);
 static int VCheckSalvage(register Volume * vp);
 static int VUpdateSalvagePriority_r(Volume * vp);
 static int VScheduleSalvage_r(Volume * vp);
-static int VCancelSalvage_r(Volume * vp, int reason);
 
 /* Volume hash table */
 static void VReorderHash_r(VolumeHashChainHead * head, Volume * pp, Volume * vp);
@@ -1344,9 +1343,10 @@ VShutdownVolume_r(Volume * vp)
     
     switch(V_attachState(vp)) {
     case VOL_STATE_SALVAGING:
-	/* make sure salvager knows we don't want
-	 * the volume back */
-	VCancelSalvage_r(vp, SALVSYNC_SHUTDOWN);
+	/* Leave salvaging volumes alone. Any in-progress salvages will
+	 * continue working after viced shuts down. This is intentional.
+	 */
+
     case VOL_STATE_PREATTACHED:
     case VOL_STATE_ERROR:
 	VChangeState_r(vp, VOL_STATE_UNATTACHED);
@@ -4008,6 +4008,35 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 	vp->salvage.requested = 1;
 	vp->salvage.reason = reason;
 	vp->stats.last_salvage = FT_ApproxTime();
+	if (VIsSalvager(V_inUse(vp))) {
+	    Log("VRequestSalvage: volume %u appears to be salvaging, but we\n", vp->hashid);
+	    Log("  didn't request a salvage. Forcing it offline waiting for the\n");
+	    Log("  salvage to finish; if you are sure no salvage is running,\n");
+	    Log("  run a salvage manually.\n");
+
+	    /* make sure neither VScheduleSalvage_r nor
+	     * VUpdateSalvagePriority_r try to schedule another salvage */
+	    vp->salvage.requested = vp->salvage.scheduled = 0;
+
+	    /* these stats aren't correct, but doing this makes them
+	     * slightly closer to being correct */
+	    vp->stats.salvages++;
+	    vp->stats.last_salvage_req = FT_ApproxTime();
+	    IncUInt64(&VStats.salvages);
+
+	    VChangeState_r(vp, VOL_STATE_ERROR);
+	    *ec = VSALVAGE;
+	    code = 1;
+
+	} else if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
+	    VChangeState_r(vp, VOL_STATE_SALVAGING);
+	    *ec = VSALVAGING;
+	} else {
+	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
+	    VChangeState_r(vp, VOL_STATE_ERROR);
+	    *ec = VSALVAGE;
+	    code = 1;
+	}
 	if (flags & VOL_SALVAGE_INVALIDATE_HEADER) {
 	    /* Instead of ReleaseVolumeHeader, we do FreeVolumeHeader() 
                so that the the next VAttachVolumeByVp_r() invocation 
@@ -4016,15 +4045,6 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
                it to the volume.             
 	    */
 	    FreeVolumeHeader(vp);
-	}
-	if (vp->stats.salvages < SALVAGE_COUNT_MAX) {
-	    VChangeState_r(vp, VOL_STATE_SALVAGING);
-	    *ec = VSALVAGING;
-	} else {
-	    Log("VRequestSalvage: volume %u online salvaged too many times; forced offline.\n", vp->hashid);
-	    VChangeState_r(vp, VOL_STATE_ERROR);
-	    *ec = VSALVAGE;
-	    code = 1;
 	}
     }
     return code;
@@ -4185,57 +4205,6 @@ VScheduleSalvage_r(Volume * vp)
 #endif /* SALVSYNC_BUILD_CLIENT */
     return ret;
 }
-
-/**
- * ask salvageserver to cancel a scheduled salvage operation.
- *
- * @param[in] vp      pointer to volume object
- * @param[in] reason  SALVSYNC protocol reason code
- *
- * @return operation status
- *    @retval 0 success
- *    @retval 1 request failed
- *
- * @pre VOL_LOCK is held.
- *
- * @post salvageserver is sent a request to cancel the volume salvage.
- *       volume is transitioned to a hard error state.
- *
- * @internal volume package internal use only.
- */
-static int
-VCancelSalvage_r(Volume * vp, int reason)
-{
-    int code, ret = 0;
-
-#ifdef SALVSYNC_BUILD_CLIENT
-    if (vp->salvage.scheduled) {
-	VChangeState_r(vp, VOL_STATE_SALVSYNC_REQ);
-	VOL_UNLOCK;
-
-	/* can't use V_id() since there's no guarantee
-	 * we have the disk data header at this point */
-	code = SALVSYNC_SalvageVolume(vp->hashid,
-				      VPartitionPath(vp->partition),
-				      SALVSYNC_CANCEL,
-				      reason,
-				      0,
-				      NULL);
-
-	VOL_LOCK;
-	VChangeState_r(vp, VOL_STATE_ERROR);
-
-	if (code == SYNC_OK) {
-	    vp->salvage.scheduled = 0;
-	    vp->salvage.requested = 0;
-	} else {
-	    ret = 1;
-	}
-    }
-#endif /* SALVSYNC_BUILD_CLIENT */
-    return ret;
-}
-
 
 #ifdef SALVSYNC_BUILD_CLIENT
 /**
