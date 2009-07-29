@@ -85,4 +85,8 @@ extern BOOL cm_TargetPerceivedAsDirectory(const fschar_t *target);
 
 extern HANDLE cm_LoadAfsdHookLib(void);
 
+extern BOOL cm_GetOSFileVersion(char *filename, LARGE_INTEGER *liVer);
+
+extern BOOL msftSMBRedirectorSupportsExtendedTimeouts(void);
+
 #endif /*  __CM_UTILS_H_ENV__ */

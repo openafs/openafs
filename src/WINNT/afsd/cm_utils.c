@@ -786,3 +786,180 @@ cm_LoadAfsdHookLib(void)
 
     return hLib;
 }
+
+/*
+ * Obtain the file info structure for the specified file.
+ * If a full path is not specified, the search order is the
+ * same as that used by LoadLibrary().
+ */
+BOOL
+cm_GetOSFileVersion (char *filename, LARGE_INTEGER *liVer)
+{
+    DWORD dwHandle;
+    DWORD dwSize;
+    char* pInfo = NULL;
+    BOOL  rc;
+    UINT uLen;
+    void *pbuf;
+    VS_FIXEDFILEINFO vsf;
+
+    dwSize = GetFileVersionInfoSizeA(filename,&dwHandle);
+    if (dwSize == 0) {
+        rc = FALSE;
+        goto done;
+    }
+    pInfo = (char*)malloc(dwSize);
+    if (!pInfo) {
+        rc = FALSE;
+        goto done;
+    }
+    rc = GetFileVersionInfoA(filename, dwHandle, dwSize, pInfo);
+    if (!rc)
+        goto done;
+    rc = VerQueryValueA(pInfo,"\\",&pbuf, &uLen);
+    if (!rc)
+        goto done;
+    memcpy(&vsf, pbuf, sizeof(VS_FIXEDFILEINFO));
+
+    liVer->LowPart = vsf.dwFileVersionLS;
+    liVer->HighPart = vsf.dwFileVersionMS;
+    rc = TRUE;
+
+  done:
+    if (pInfo)
+        free(pInfo);
+    return rc;
+}
+
+typedef BOOL (WINAPI *LPFN_ISWOW64PROCESS) (HANDLE, PBOOL);
+typedef BOOL (WINAPI *LPFN_DISABLEWOW64FSREDIRECTION) (PVOID *);
+typedef BOOL (WINAPI *LPFN_REVERTWOW64FSREDIRECTION) (PVOID);
+
+BOOL msftSMBRedirectorSupportsExtendedTimeouts(void) 
+{
+    static BOOL fChecked = FALSE;
+    static BOOL fSupportsExtendedTimeouts = FALSE;
+
+    if (!fChecked)
+    {
+        BOOL isWow64 = FALSE;
+        OSVERSIONINFOEX Version;
+        HANDLE h1 = NULL;
+        LPFN_ISWOW64PROCESS fnIsWow64Process = NULL;
+        LPFN_DISABLEWOW64FSREDIRECTION fnDisableWow64FsRedirection = NULL;
+        LPFN_REVERTWOW64FSREDIRECTION fnRevertWow64FsRedirection = NULL;
+        PVOID Wow64RedirectionState;
+        LARGE_INTEGER fvFile, fvHotFixMin;
+
+        h1 = GetModuleHandle("kernel32.dll"); /* no refcount increase */
+        /* 
+         * If we don't find the fnIsWow64Process function then we
+         * are not running in a Wow64 environment
+         */
+        fnIsWow64Process =
+            (LPFN_ISWOW64PROCESS)GetProcAddress(h1, "IsWow64Process");
+
+        memset (&Version, 0x00, sizeof(Version));
+        Version.dwOSVersionInfoSize = sizeof(Version);
+        GetVersionEx((OSVERSIONINFO *) &Version);
+
+        /* 
+         * Support is available as hot fixes / service packs on:
+         *   XP SP2
+         *   XP SP3
+         *   2003 and XP64 SP2
+         *   Vista and 2008 SP2
+         *   Win7 and 2008 R2
+         */
+        if (Version.dwPlatformId == VER_PLATFORM_WIN32_NT &&
+            Version.dwMajorVersion >= 5) {
+
+            /* 32-bit XP */
+            if (Version.dwMajorVersion == 5 &&
+                Version.dwMinorVersion == 1) {
+                
+                fvHotFixMin.HighPart = (5 << 16) | 1;
+
+                switch (Version.wServicePackMajor) {
+                case 3:
+                    fvHotFixMin.LowPart = (2600 << 16) | 5815;
+                    break;
+                case 2:
+                    fvHotFixMin.LowPart = (2600 << 16) | 3572;
+                    break;
+                default:
+                    fSupportsExtendedTimeouts = (Version.wServicePackMajor > 3);
+                    goto checked;
+                }
+            }
+
+            /* 64-bit XP and Server 2003 */
+            else if (Version.dwMajorVersion == 5 &&
+                     Version.dwMinorVersion == 2) {
+                
+                fvHotFixMin.HighPart = (5 << 16) | 2;
+
+                switch (Version.wServicePackMajor) {
+                case 2:
+                    fvHotFixMin.LowPart = (3790 << 16) | 4479;
+                    break;
+                case 1:
+                    fvHotFixMin.LowPart = (3790 << 16) | 3310;
+                    break;
+                default:
+                    fSupportsExtendedTimeouts = (Version.wServicePackMajor > 2);
+                    goto checked;
+                }
+            }
+
+            /* Vista and Server 2008 */
+            else if (Version.dwMajorVersion == 6 &&
+                     Version.dwMinorVersion == 0) {
+                
+                fvHotFixMin.HighPart = (6 << 16) | 0;
+
+                switch (Version.wServicePackMajor) {
+                case 2:
+                    fvHotFixMin.LowPart = (6002 << 16) | 18005;
+                    break;
+                default:
+                    fSupportsExtendedTimeouts = (Version.wServicePackMajor > 2);
+                    goto checked;
+                }
+            }
+
+            /* Windows 7 and Server 2008 R2 and beyond */
+            else if (Version.dwMajorVersion > 6 ||
+                     Version.dwMajorVersion == 6 &&
+                     Version.dwMinorVersion >= 1) {
+                fSupportsExtendedTimeouts = TRUE;
+                goto checked;
+            }
+
+            /* If wow64, disable wow64 redirection and preserve the existing state */
+            if (fnIsWow64Process && 
+                 fnIsWow64Process(GetCurrentProcess(), &isWow64) &&
+                 isWow64) {
+                fnDisableWow64FsRedirection =
+                    (LPFN_DISABLEWOW64FSREDIRECTION)GetProcAddress(h1, "Wow64DisableWow64FsRedirection");
+                fnRevertWow64FsRedirection =
+                    (LPFN_REVERTWOW64FSREDIRECTION)GetProcAddress(h1, "Wow64RevertWow64FsRedirection");
+                fnDisableWow64FsRedirection(&Wow64RedirectionState);
+            }
+            
+            if (cm_GetOSFileVersion("drivers\\mrxsmb.sys", &fvFile) ||
+                (fvFile.QuadPart >= fvHotFixMin.QuadPart))
+                fSupportsExtendedTimeouts = TRUE;
+
+            /* If wow64, restore the previous redirection state */
+            if (fnIsWow64Process && isWow64) {
+                fnRevertWow64FsRedirection(Wow64RedirectionState);
+            }            
+        }
+      checked:
+        fChecked = TRUE;
+    }
+
+    return fSupportsExtendedTimeouts;
+}
+

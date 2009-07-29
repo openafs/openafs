@@ -9692,7 +9692,7 @@ configureExtendedSMBSessionTimeouts(void)
         {
             dwType = REG_DWORD;
 	    dwSize = sizeof(dwValue);
-            dwValue = 600;      /* 10 minutes */
+            dwValue = 300;      /* 5 minutes */
             RegSetValueEx( hkLanMan, "ExtendedSessTimeout", 0, dwType, (const BYTE *)&dwValue, dwSize);
         }
         RegCloseKey(hkLanMan);
@@ -9997,7 +9997,10 @@ void smb_StartListeners(int locked)
     configureBackConnectionHostNames();
 
     /* Configure Extended SMB Session Timeouts */
-    configureExtendedSMBSessionTimeouts();
+    if (msftSMBRedirectorSupportsExtendedTimeouts()) {
+        afsi_log("Microsoft SMB Redirector supports Extended Timeouts");
+        configureExtendedSMBSessionTimeouts();
+    }
 
     smb_ListenerState = SMB_LISTENER_STARTED;
     cm_VolStatus_Network_Started(cm_NetbiosName

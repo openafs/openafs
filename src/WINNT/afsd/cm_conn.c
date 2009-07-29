@@ -30,6 +30,7 @@ unsigned short IdleDeadtimeout = CM_CONN_IDLEDEADTIME;
 
 #define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
 #define LANMAN_WKS_SESSION_TIMEOUT "SessTimeout"
+#define LANMAN_WKS_EXT_SESSION_TIMEOUT "ExtendedSessTimeout"
 
 afs_uint32 cryptall = 0;
 afs_uint32 cm_anonvldb = 0;
@@ -63,11 +64,36 @@ void cm_InitConn(void)
 			    0, KEY_QUERY_VALUE, &parmKey);
 	if (code == ERROR_SUCCESS)
         {
-	    dummyLen = sizeof(DWORD);
-	    code = RegQueryValueEx(parmKey, LANMAN_WKS_SESSION_TIMEOUT, NULL, NULL, 
-				   (BYTE *) &dwValue, &dummyLen);
-	    if (code == ERROR_SUCCESS)
-                RDRtimeout = dwValue;
+            BOOL extTimeouts = msftSMBRedirectorSupportsExtendedTimeouts();
+
+            if (extTimeouts) {
+                /* 
+                 * The default value is 1000 seconds.  However, this default
+                 * will not apply to "\\AFS" unless "AFS" is listed in 
+                 * ServersWithExtendedSessTimeout which we will add when we
+                 * create the ExtendedSessTimeout value in smb_Init()
+                 */
+                dummyLen = sizeof(DWORD);
+                code = RegQueryValueEx(parmKey, 
+                                       LANMAN_WKS_EXT_SESSION_TIMEOUT,
+                                        NULL, NULL,
+                                        (BYTE *) &dwValue, &dummyLen);
+                if (code == ERROR_SUCCESS) {
+                    RDRtimeout = dwValue;
+                    afsi_log("lanmanworkstation : ExtSessTimeout %u", RDRtimeout);
+                }
+            } 
+            if (!extTimeouts || code != ERROR_SUCCESS) {
+                dummyLen = sizeof(DWORD);
+                code = RegQueryValueEx(parmKey, 
+                                       LANMAN_WKS_SESSION_TIMEOUT,
+                                       NULL, NULL,
+                                       (BYTE *) &dwValue, &dummyLen);
+                if (code == ERROR_SUCCESS) {
+                    RDRtimeout = dwValue;
+                    afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
+                }
+            }
 	    RegCloseKey(parmKey);
         }
 
@@ -98,17 +124,27 @@ void cm_InitConn(void)
             RegCloseKey(parmKey);
 	}
 
-	afsi_log("lanmanworkstation : SessTimeout %u", RDRtimeout);
+        /* 
+         * If these values were not set via cpp macro or obtained 
+         * from the registry, we use a value that is derived from
+         * the smb redirector session timeout (RDRtimeout).
+         *
+         * The UNIX cache manager uses 120 seconds for the hard dead
+         * timeout and 50 seconds for the connection and idle timeouts.
+         *
+         * We base our values on those while making sure we leave 
+         * enough time for overhead.  
+         */
 	if (ConnDeadtimeout == 0) {
-	    ConnDeadtimeout = (unsigned short) (RDRtimeout / 2);
+	    ConnDeadtimeout = (unsigned short) ((RDRtimeout / 2) < 50 ? (RDRtimeout / 2) : 50);
             afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
         }
 	if (HardDeadtimeout == 0) {
-	    HardDeadtimeout = (unsigned short) RDRtimeout;
+	    HardDeadtimeout = (unsigned short) (RDRtimeout > 125 ? 120 : (RDRtimeout - 5));
             afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
         }
 	if (IdleDeadtimeout == 0) {
-	    IdleDeadtimeout = (unsigned short) RDRtimeout;
+	    IdleDeadtimeout = (unsigned short) ConnDeadtimeout;
             afsi_log("IdleDeadTimeout is %d", IdleDeadtimeout);
         }
 	osi_EndOnce(&once);
