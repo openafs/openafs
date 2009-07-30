@@ -15,6 +15,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"
 #include "rx/rx_globals.h"
+#include "rx/rxstat.h"
 #if !defined(UKERNEL) && !defined(AFS_LINUX20_ENV)
 #include "net/if.h"
 #ifdef AFS_SGI62_ENV
