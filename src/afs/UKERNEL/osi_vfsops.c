@@ -36,7 +36,7 @@ int afs_rootCellIndex = 0;
 #endif
 
 int
-afs_mount(struct vfs *path, char *data, struct vfs *afsp)
+afs_mount(struct vfs *afsp, char *path, void *data)
 {
     AFS_STATCNT(afs_mount);
 

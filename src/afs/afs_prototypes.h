@@ -750,7 +750,7 @@ extern void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp);
 #endif
 
 #ifdef UKERNEL
-extern int afs_mount(struct vfs *path, char *data, struct vfs *afsp);
+extern int afs_mount(struct vfs *afsp, char *path, void *data);
 extern int afs_root(OSI_VFS_DECL(afsp), struct vnode **avpp);
 extern int afs_unmount(struct vfs *afsp);
 #endif
