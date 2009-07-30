@@ -1,3 +1,127 @@
+Since 1.5.60
+ * If a file server becomes inaccessible while the cache manager has 
+   dirty buffers to write, the afsd_service buf_IncrSync thread can 
+   attempt to use 100% of the cpu.
+
+ * Fix the locking that protects the cm_cell_t lists 
+   (all, name, id, free).
+
+ * Remove cm_cell_t objects from the name and id hash tables before 
+   placing them on the free list.
+
+ * Fix "fs newcell" which was broken in 1.5.60.
+
+ * Do not attempt to synchronize dirty buffers if the associated 
+   volume is known to be unavailable.
+
+ * Log to the Windows Event Log dirty buffers that cannot be written 
+   during the shutdown process.
+
+ * Modify behavior of a Freelance mountpoint target that does not 
+   specify a cell.  Instead of assuming the target volume is in the 
+   Freelance.Local cell, use the workstation "Cell" specified in the 
+   registry. A mountpoint target of "#root.cell." will now mean the 
+   root.cell volume in the workstation cell for the current session.  
+   If the workstation cell changes from "athena.mit.edu" to 
+   "andrew.cmu.edu", the referenced volume will also change without 
+   requiring that the mount point targets be altered.
+
+ * Avoid false infinite loop errors when validating the cm_cell_t 
+   free list during startup.
+
+ * Fix two more locations where xdr_free() should be used instead of 
+   free() to permit a checked built of afsd_service.exe to work with 
+   release builds of afsrpc.dll.
+
+ * Add cm_FindServerByUuid().  Re-implement RXAFS_InitCallBackState3() 
+   to permit the server Uuid to be used to lookup the server object 
+   and from that determine the cell.  This permits callbacks that are 
+   received from alternate addresses to be processed with a known server 
+   object.  Previously a request from an unknown server would clear all 
+   callbacks from all cells.
+
+ * Fix a bug that prevented optimal performance when using a non-zero 
+   value for 'daemonCheckVolCBInterval'.  As a reminder, when 
+   "daemonCheckVolCBInterval" is set to a non-zero value, all .readonly 
+   volume callbacks are automatically renewed 90 minutes before their 
+   expiration.
+
+ * Fix automatic ranking of vldb servers whose values are obtained from 
+   the CellServDB file.
+
+ * Add logging for RX CALL DEAD errors which are generated if the remote 
+   host is unreachable.
+
+ * Add failover for RX CALL TIMEOUT errors when the volume is readonly 
+   or the call is to a vldb server.
+
+ * Add registry based cell search functionality to NetIdMgr, 
+   afs_config.exe, and klog.exe.
+
+ * afsconf_GetCellInfo() has been modified to perform gethostbyname() 
+   lookups on the host names in the CellServDB instead of using the 
+   specified IP addresses.  This provides aklog, pts, vos, etc. the same 
+   CellServDB behavior that the Windows Cache Manager uses.
+
+ * Completely a behind the scenes change.  The snprintf() routines have 
+   been completely rewritten.
+
+ * When updating the stat cache entry callback of a .readonly object 
+   from the volume group object, update the file server reference to 
+   ensure it matches the most update to date callback.
+
+ * Add proper support for processing callbacks from multi-homed file 
+   servers.  Instead of comparing servers by cm_server_t pointer, 
+   compare them by UUID when the UUID is known.
+
+ * During a shutdown short circuit the offline volume check daemon 
+   functionality.
+
+ * Properly track link counts during cm_Link and cm_Unlink operations.
+
+ * Return the error code of RXAFS_FetchData / RXAFS_StoreData in 
+   preference to an error code reported by rx_EndCall.
+
+ * Add "PerFileAccessCheck" registry value to permit testing against 
+   experimental file servers that include per-file acl support.  This 
+   value is intentionally undocumented.  It is not to be used by
+   production environment deployments.
+
+ * Log a warning to trace log if a volume group is marked as a DFS 
+   File Set.  The Windows OpenAFS client does not include DFS support.
+
+ * Fix a bug introduced in 1.5.60 that prevents the afs netidmgr 
+   provider from obtaining tokens when referrals are in play.
+
+ * Add "fs chown" and "fs chgrp" commands to permit the owner and 
+   group of objects stored in AFS to be set from Windows.
+
+ * Avoid performing background daemon operations when the machine is 
+   going into suspend mode.
+
+ * Perform offline volume checks in most recently used order.
+
+ * Prevent crash when a data version for a cache object goes backwards.
+
+ * fs setquota, fs setcachesize, vos setfields, and vos create now 
+   accept human readable orders of magnitude. (K, M, G)
+
+ * fs listquota fixed to permit large quota sizes to be displayed.
+
+ * rx packet resend and data packets sent counts were incorrect.
+
+ * Multi-thread safe library versions are now being generated and used.  
+   mtafsubik.lib, mtafsutil.lib, mtafsvldb.lib, mtafsvol.lib.
+
+ * Microsoft SMB Redirector (mrxsmb.sys) support for ExtendedSessTimeout
+   values are now available on XP through Windows 7.  Add functionality
+   to autodetect if such support is present on the machine.  If so,
+   configure it if necessary and dynamically adjust the AFS Rx timeout
+   values accordingly.
+
+ * Correct another race condition in the Rx library that could result
+   in an unexpected panic while freeing the Rx call iovq.
+
 Since 1.5.59
  * A fix to the pioctl library to support drive substitution 
    to UNC paths.  (SUBST <d:> <\\afs\cell\path>).
