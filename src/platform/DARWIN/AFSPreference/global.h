@@ -30,20 +30,25 @@
 
 
 // PREFERENCE KEY
-#define PREFERENCE_AFS_SYS_PAT			@"PREFERENCE_AFS_SYS_PAT"
-#define PREFERENCE_AFS_SYS_PAT_STATIC	@"/var/db/openafs"
-#define PREFERENCE_USE_AKLOG			@"PREFERENCE_USE_AKLOG"
-#define PREFERENCE_START_AFS_AT_STARTUP	@"PREFERENCE_START_AFS_AT_STARTUP"
+#define PREFERENCE_AFS_SYS_PAT				@"PREFERENCE_AFS_SYS_PAT"
+#define PREFERENCE_AFS_SYS_PAT_STATIC		@"/var/db/openafs"
+#define PREFERENCE_USE_AKLOG				@"PREFERENCE_USE_AKLOG"
+#define PREFERENCE_START_AFS_AT_STARTUP		@"PREFERENCE_START_AFS_AT_STARTUP"
+#define PREFERENCE_SHOW_STATUS_MENU			@"PREFERENCE_SHOW_STATUS_MENU"
+#define PREFERENCE_AKLOG_TOKEN_AT_LOGIN		@"PREFERENCE_AKLOG_TOKEN_AT_LOGIN"
 
 // AFSMENUEXTRA INFO
-#define kAFSMenuExtra			[NSURL fileURLWithPath:[[self bundle] pathForResource:@"AFSMenuExtra" ofType:@"menu" inDirectory:@""]]
+#define kAFSMenuExtra			[NSURL fileURLWithPath:[[self bundle] pathForResource:@"AFSBackgrounder" ofType:@"app" inDirectory:@""]]
 #define kMenuCrakerMenuExtra	[NSURL fileURLWithPath:[[self bundle] pathForResource:@"MenuCracker" ofType:@"menu" inDirectory:@""]]
-#define kAFSMenuExtraID			@"it.infn.lnf.network.AFSMenuExtra"
+
+//notification id
+
 #define kMenuCrakerMenuExtraID	@"net.sourceforge.menucracker2"
 
 
 //Application id
-#define afsCommanderID @"it.infn.lnf.network.openafs"
+#define kAFSMenuExtraID			@"it.infn.lnf.network.AFSBackgrounder"
+#define kAfsCommanderID			@"it.infn.lnf.network.openafs"
 // Changed preference notification key
 #define kPrefChangeNotification @"preference_changed"
 //KLog menuextra window close
@@ -54,4 +59,5 @@
 #define kMExtraClosedNotification @"preference_changed"
 // Update MenuExtra AfsState notification key
 #define kMExtraAFSStateChange @"menu_extra_afs_state_change"
-
+// Update MenuExtra for show menu notification key
+#define kMExtraAFSMenuChangeState @"kMExtraAFSMenuChangeState"

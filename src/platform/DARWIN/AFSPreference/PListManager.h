@@ -17,14 +17,14 @@
 #define AUTH_FILE_BK	@"/etc/authorization_bk"
 #define TMP_FILE		@"/tmp/authorization"
 
-#define HOME_LAUNCHD_AGENT_FOLDER		@"~/Library/LaunchAgents"
-#define AKLOG_LAUNCHD_CONTROL_FILE		@"~/Library/LaunchAgents/it.infn.lnf.afslogintimedaemon.plist"
-#define AKLOG_LAUNCHD_TMP_CONTROL_FILE	@"/tmp/it.infn.lnf.afslogintimedaemon.plist"
-#define LOGIN_TIME_DAEMON_NAME			@"LoginTimeDaemon"
+#define HOME_LAUNCHD_AGENT_FOLDER				@"~/Library/LaunchAgents"
+#define BACKGROUNDER_LAUNCHD_CONTROL_FILE		@"~/Library/LaunchAgents/it.infn.lnf.network.AFSBackgrounder.plist"
+#define BACKGROUNDER_LAUNCHD_TMP_CONTROL_FILE	@"/tmp/it.infn.lnf.network.AFSBackgrounder.plist"
+#define BACKGROUNDER_AGENT_NAME					@"AFSBackgrounder.app/Contents/MacOS/AFSBackgrounder"
 
 #define LAUNCHD_DAEMON_FOLDER			@"/Library/LaunchDaemons"
-#define AFS_STARTUP_TMP_CONTROL_FILE	@"/tmp/it.infn.lnf.afsstartup.plist"
-#define AFS_STARTUP_CONTROL_FILE		@"/Library/LaunchDaemons/it.infn.lnf.afsstartup.plist"
+#define AFS_STARTUP_TMP_CONTROL_FILE	@"/tmp/it.infn.lnf.network.afsstartup.plist"
+#define AFS_STARTUP_CONTROL_FILE		@"/Library/LaunchDaemons/it.infn.lnf.network.afsstartup.plist"
 
 /*!
     @class		 PListManager
@@ -54,13 +54,13 @@
  @abstract   Install the afs agent launchd config file
  @discussion <#(comprehensive description)#>
  */
-+(void) installLaunchdFile:(BOOL)install resourcePath:(NSString*) rsrcPath;
++(void) installBackgrounderLaunchdFile:(BOOL)install resourcePath:(NSString*) rsrcPath;
 /*!
  @method     checkAklogAtLoginTimeLaunchdEnable
  @abstract   check if the user has installed  or enabled the afs agent
  @discussion <#(comprehensive description)#>
  */
-+(BOOL) checkAklogAtLoginTimeLaunchdEnable;
++(BOOL) checkLoginTimeLaunchdBackgrounder;
 
 /*!
  @method     installAfsStartupLaunchdFile

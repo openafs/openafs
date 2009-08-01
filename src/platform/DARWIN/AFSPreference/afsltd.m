@@ -49,11 +49,11 @@ int main(int argc, char *argv[])
 void readPreferenceFile()
 {
 	// read the preference for afs path
-	afsSysPath = (NSString*)CFPreferencesCopyAppValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, (CFStringRef)afsCommanderID);
+	afsSysPath = (NSString*)CFPreferencesCopyAppValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, (CFStringRef)kAfsCommanderID);
 	
 	
 	// read the preference for aklog use
-	NSNumber *useAklogPrefValue = (NSNumber*)CFPreferencesCopyAppValue((CFStringRef)PREFERENCE_USE_AKLOG, (CFStringRef)afsCommanderID);
+	NSNumber *useAklogPrefValue = (NSNumber*)CFPreferencesCopyAppValue((CFStringRef)PREFERENCE_USE_AKLOG, (CFStringRef)kAfsCommanderID);
 	useAklog = [useAklogPrefValue boolValue];
 	
 }
