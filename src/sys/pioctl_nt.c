@@ -1186,8 +1186,8 @@ fs_GetFullPath(char *pathp, char *outPathp, long outSize)
     return 0;
 }
 
-static long
-pioctl_int(char *pathp, long opcode, struct ViceIoctl *blobp, int follow, int is_utf8)
+static int
+pioctl_int(char *pathp, afs_int32 opcode, struct ViceIoctl *blobp, afs_int32 follow, afs_int32 is_utf8)
 {
     fs_ioctlRequest_t preq;
     long code;
@@ -1274,14 +1274,14 @@ pioctl_int(char *pathp, long opcode, struct ViceIoctl *blobp, int follow, int is
     return 0;
 }
 
-long
-pioctl_utf8(char * pathp, long opcode, struct ViceIoctl * blobp, int follow)
+int
+pioctl_utf8(char * pathp, afs_int32 opcode, struct ViceIoctl * blobp, afs_int32 follow)
 {
     return pioctl_int(pathp, opcode, blobp, follow, TRUE);
 }
 
-long
-pioctl(char * pathp, long opcode, struct ViceIoctl * blobp, int follow)
+int
+pioctl(char * pathp, afs_int32 opcode, struct ViceIoctl * blobp, afs_int32 follow)
 {
     return pioctl_int(pathp, opcode, blobp, follow, FALSE);
 }
