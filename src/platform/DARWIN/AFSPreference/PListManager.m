@@ -129,30 +129,31 @@
 // -------------------------------------------------------------------------------
 //  installLaunchdFile:
 // -------------------------------------------------------------------------------
-+(void) installLaunchdFile:(BOOL)install resourcePath:(NSString*) rsrcPath {
++(void) installBackgrounderLaunchdFile:(BOOL)install resourcePath:(NSString*) rsrcPath {
 	NSData				*plistData = nil;
 	NSMutableDictionary *launchdDic = nil;
 	NSString			*error = nil;
-	NSString			*daemonPath = [[rsrcPath stringByAppendingString:@"/"] stringByAppendingString:LOGIN_TIME_DAEMON_NAME];
+	NSString			*backgrounderPath = [[rsrcPath stringByAppendingString:@"/"] stringByAppendingString:BACKGROUNDER_AGENT_NAME];
 	
 	
 	if(![[NSFileManager defaultManager] fileExistsAtPath:[HOME_LAUNCHD_AGENT_FOLDER stringByExpandingTildeInPath]]) {
 		@throw [NSException exceptionWithName:@"PListManager:installLaunchdFile" 
 									   reason:@"The folder ~/Library/LaunchAgent doesn't exist!"
-									 userInfo:[NSNumber numberWithInt:1]];
+									 userInfo:[NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] 
+																		  forKey:@"agent_folder_error"]];
 	}
 	
 	if(install) {
-		if(![[NSFileManager defaultManager] fileExistsAtPath:[AKLOG_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath]]) {
+		if(![[NSFileManager defaultManager] fileExistsAtPath:[BACKGROUNDER_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath]]) {
 			launchdDic = [[NSMutableDictionary alloc] init];
 			
-			[launchdDic setObject:@"it.infn.lnf.afslogintimedaemon" 
+			[launchdDic setObject:@"it.infn.lnf.network.AFSBackgrounder" 
 						   forKey:@"Label"];
 			
 			[launchdDic setObject:@"Aqua"
 						   forKey:@"LimitLoadToSessionType"];
 			
-			[launchdDic setObject:[NSArray arrayWithObject:daemonPath]
+			[launchdDic setObject:[NSArray arrayWithObject:backgrounderPath]
 						   forKey:@"ProgramArguments"];
 			
 			[launchdDic setObject:[NSNumber numberWithBool:YES] 
@@ -169,7 +170,7 @@
 				
 			}
 			
-			if(![plistData writeToFile:AKLOG_LAUNCHD_TMP_CONTROL_FILE atomically:NO]) {
+			if(![plistData writeToFile:BACKGROUNDER_LAUNCHD_TMP_CONTROL_FILE atomically:NO]) {
 				@throw [NSException exceptionWithName:@"PListManager:installLaunchdFile" 
 											   reason:@"Temp file write error"
 											 userInfo:nil];
@@ -177,11 +178,11 @@
 			}
 			
 			//now we can move the file
-			[TaskUtil executeTaskSearchingPath:@"mv" args:[NSArray arrayWithObjects:AKLOG_LAUNCHD_TMP_CONTROL_FILE, [HOME_LAUNCHD_AGENT_FOLDER stringByExpandingTildeInPath], nil]];
+			[TaskUtil executeTaskSearchingPath:@"mv" args:[NSArray arrayWithObjects:BACKGROUNDER_LAUNCHD_TMP_CONTROL_FILE, [BACKGROUNDER_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath], nil]];
 		}
 	} else {
 		// delete launchd configuration file
-		[TaskUtil executeTaskSearchingPath:@"rm" args:[NSArray arrayWithObjects:[AKLOG_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath], nil]];
+		[TaskUtil executeTaskSearchingPath:@"rm" args:[NSArray arrayWithObjects:[BACKGROUNDER_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath], nil]];
 	}
 	
 }
@@ -189,8 +190,8 @@
 // -------------------------------------------------------------------------------
 //  checkAklogAtLoginTimeLaunchdEnable:
 // -------------------------------------------------------------------------------
-+(BOOL) checkAklogAtLoginTimeLaunchdEnable {
-	BOOL result = [[NSFileManager defaultManager] fileExistsAtPath:[AKLOG_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath]];
++(BOOL) checkLoginTimeLaunchdBackgrounder {
+	BOOL result = [[NSFileManager defaultManager] fileExistsAtPath:[BACKGROUNDER_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath]];
 	return result;
 }
 
@@ -203,7 +204,6 @@
 						   afsdPath:(NSString*)afsdPath {
 	NSData				*plistData = nil;
 	NSMutableDictionary *launchdDic = nil;
-	NSMutableArray		*argDic = nil;
 	NSString			*error = nil;
 	OSErr				status = noErr;
 	

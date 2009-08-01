@@ -8,9 +8,13 @@
 
 #import "AFSMenuExtraView.h"
 #import "AFSPropertyManager.h"
+#import "global.h"
+
 @implementation AFSMenuExtraView
 
-- initWithFrame:(NSRect)myRect menuExtra:(AFSMenuExtra*)myExtra {
+- initWithFrame:(NSRect)myRect 
+   backgrounder:(AFSBackgrounderDelegate*)backgrounder  
+		   menu:(NSMenu*)menu{
 	
 	// Have super init
 	self = [super initWithFrame:myRect];
@@ -19,9 +23,10 @@
 	}
 	
 	// Store our extra
-	theMenuExtra = myExtra;
-
-	// Send it on back
+	backgrounderDelegator = backgrounder;
+	statusItem = [backgrounderDelegator statusItem];
+	statusItemMenu = menu;
+	isMenuVisible = NO;
     return self;
 	
 } // initWithFrame
@@ -38,18 +43,22 @@
 	int fontHeight = 0;
 	NSAttributedString *kerberosStringIndicator = nil;
 	
-	image = [theMenuExtra imageToRender];
+	//check if we nedd to simulate the background menu clicked
+	[statusItem drawStatusBarBackgroundInRect:[self bounds] 
+								withHighlight:isMenuVisible];
+	
+	image = [backgrounderDelegator imageToRender];
     if (image) {
 		// Live updating even when menu is down handled by making the extra
-		// draw the background if needed.
-		if ([theMenuExtra isMenuDown]) {
-			[theMenuExtra drawMenuBackground:YES];
-		}
+		// draw the background if needed.		
 		[image compositeToPoint:NSMakePoint(0, 0) operation:NSCompositeSourceOver];
 	}
 	
+
+
+	
 	//Draw, if necessary, the kerberos indicator for aklog usage for get token
-	if([theMenuExtra useAklogPrefValue] == NSOnState) {
+	if([backgrounderDelegator useAklogPrefValue] == NSOnState) {
 		kerberosStringIndicator = [[self makeKerberosIndicator:&fontHeight] autorelease];
 		if(kerberosStringIndicator) [kerberosStringIndicator drawAtPoint:NSMakePoint(0, kMenuBarHeight-fontHeight)];
 	}
@@ -68,5 +77,22 @@
 																	 attributes:attrsDictionary];
 	*fontHeight = [attrString size].height;
 	return attrString;
+}
+
+-(void)mouseDown:(NSEvent *)event {
+	[statusItemMenu setDelegate:self];
+	[statusItem popUpStatusItemMenu:statusItemMenu];
+	[self setNeedsDisplay:YES];
+}
+
+- (void)menuWillOpen:(NSMenu *)menu {
+    isMenuVisible = YES;
+    [self setNeedsDisplay:YES];
+}
+
+- (void)menuDidClose:(NSMenu *)menu {
+    isMenuVisible = NO;
+    [statusItemMenu setDelegate:nil];    
+    [self setNeedsDisplay:YES];
 }
 @end

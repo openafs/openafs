@@ -18,27 +18,20 @@
 		3228B9B4102052A900DF98DA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
 		3228B9BE102052BE00DF98DA /* version.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3228B9BD102052BE00DF98DA /* version.plist */; };
 		3228B9D5102070A200DF98DA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3276591D10204E08004CA418 /* Info.plist */; };
-		3228BA1910207A4200DF98DA /* hasToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3228BA1810207A4200DF98DA /* hasToken.png */; };
-		3228BA1B10207A5200DF98DA /* noToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3228BA1A10207A5200DF98DA /* noToken.png */; };
 		322B90450C2F0A2D0068F99A /* start_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90430C2F0A2D0068F99A /* start_afs.sh */; };
 		322B90460C2F0A2D0068F99A /* stop_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90440C2F0A2D0068F99A /* stop_afs.sh */; };
 		322CEF600C211D220060D66D /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
 		322CEF6E0C211DCC0060D66D /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
+		3231522010243E09005901AA /* AFSMenuCredentialContoller.m in Sources */ = {isa = PBXBuildFile; fileRef = 3231521A10243E09005901AA /* AFSMenuCredentialContoller.m */; };
+		3231522210243E09005901AA /* AFSMenuExtraView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3231521E10243E09005901AA /* AFSMenuExtraView.m */; };
+		3231522610243E10005901AA /* CredentialWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3231522510243E10005901AA /* CredentialWindowController.m */; };
+		3231522810243E21005901AA /* CredentialWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 3231522710243E21005901AA /* CredentialWindow.nib */; };
+		3231522B10243E2C005901AA /* hasToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3231522910243E2C005901AA /* hasToken.png */; };
+		3231522C10243E2C005901AA /* noToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 3231522A10243E2C005901AA /* noToken.png */; };
 		324D67FD0DA13194007E1561 /* OpenAFSPreference.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */; };
 		324D683D0DA133A3007E1561 /* IpPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D683B0DA133A3007E1561 /* IpPanel.xib */; };
 		324D684A0DA133CF007E1561 /* CredentialPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D68480DA133CF007E1561 /* CredentialPanel.xib */; };
-		325311AB0C44F38200FAF2F3 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
-		325311AF0C44F38D00FAF2F3 /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
-		325311B00C44F38D00FAF2F3 /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
-		325311B10C44F39200FAF2F3 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
-		325311B20C44F39300FAF2F3 /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
-		325311B30C44F39400FAF2F3 /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
 		325311D00C44F4B100FAF2F3 /* licenza.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 325311CF0C44F4B100FAF2F3 /* licenza.rtf */; };
-		325312190C44F7BD00FAF2F3 /* AFSMenuExtraView.m in Sources */ = {isa = PBXBuildFile; fileRef = 325312180C44F7BD00FAF2F3 /* AFSMenuExtraView.m */; };
-		325313520C45153400FAF2F3 /* SecurityFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327308D20C2AA364008C322B /* SecurityFoundation.framework */; };
-		325313550C45153500FAF2F3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
-		3253138D0C45157A00FAF2F3 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
-		325313B10C4516A900FAF2F3 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 325313B00C4516A900FAF2F3 /* Info.plist */; };
 		3273088D0C2A9B05008C322B /* FileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 3273088B0C2A9B05008C322B /* FileUtil.h */; };
 		3273088E0C2A9B05008C322B /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
 		327308C30C2AA2E1008C322B /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
@@ -69,37 +62,25 @@
 		32B0AFE00C01729400272348 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
 		32B565740D8FAF62005255F2 /* NSString+search.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B565720D8FAF62005255F2 /* NSString+search.h */; };
 		32B565750D8FAF62005255F2 /* NSString+search.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B565730D8FAF62005255F2 /* NSString+search.m */; };
-		32B565760D8FAF62005255F2 /* NSString+search.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B565730D8FAF62005255F2 /* NSString+search.m */; };
 		32C4A9580C268D9B009280A0 /* IpConfiguratorCommander.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C4A9570C268D9B009280A0 /* IpConfiguratorCommander.m */; };
 		32C4A9B80C26A0FA009280A0 /* IpConfiguratorCommander.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C4A9570C268D9B009280A0 /* IpConfiguratorCommander.m */; };
 		32C4A9B90C26A0FB009280A0 /* IpConfiguratorCommander.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C4A9560C268D9B009280A0 /* IpConfiguratorCommander.h */; };
 		32CF013F0C203C5600A8DC58 /* TestLib.m in Sources */ = {isa = PBXBuildFile; fileRef = 32CFFEFD0C20316B00A8DC58 /* TestLib.m */; };
 		32CF01460C203CA800A8DC58 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
 		32CF014C0C203CBD00A8DC58 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
-		32D45E070C4B4D9C00A1012D /* afshlp in Resources */ = {isa = PBXBuildFile; fileRef = 49683EE40C3446380093C7C8 /* afshlp */; };
 		32DE818C0DF573200069A05C /* LynkCreationController.h in Headers */ = {isa = PBXBuildFile; fileRef = 32DE818A0DF573200069A05C /* LynkCreationController.h */; };
 		32DE818D0DF573200069A05C /* LynkCreationController.m in Sources */ = {isa = PBXBuildFile; fileRef = 32DE818B0DF573200069A05C /* LynkCreationController.m */; };
 		32DE81BD0DF57BDA0069A05C /* SymLinkEdit.xib in Resources */ = {isa = PBXBuildFile; fileRef = 32DE81BC0DF57BDA0069A05C /* SymLinkEdit.xib */; };
+		32E299A3102491AA00D2C2E5 /* AFSBackgrounder.app in Resources */ = {isa = PBXBuildFile; fileRef = 3276591B10204E08004CA418 /* AFSBackgrounder.app */; };
 		492AFA860C51301D00AEDC93 /* TokenCredentialController.h in Headers */ = {isa = PBXBuildFile; fileRef = 3219259B0C339DAE00B55E86 /* TokenCredentialController.h */; };
 		492AFA870C51301E00AEDC93 /* TokenCredentialController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219259C0C339DAE00B55E86 /* TokenCredentialController.m */; };
-		492AFB280C51483600AEDC93 /* CredentialWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 492AFB270C51483600AEDC93 /* CredentialWindow.nib */; };
 		4934D4170DC38958000511D2 /* PListManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 498DCB420DC2240B00D143C8 /* PListManager.m */; };
 		493564E80CE711F300699A24 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 493564E70CE711F300699A24 /* Carbon.framework */; };
 		4940075B0CE62EB500F40D0A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4940075A0CE62EB500F40D0A /* CoreServices.framework */; };
-		4941F4C00C491D2D00B29A73 /* TokenCredentialController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3219259C0C339DAE00B55E86 /* TokenCredentialController.m */; };
-		4941F5100C4929C000B29A73 /* AFSMenuCredentialContoller.m in Sources */ = {isa = PBXBuildFile; fileRef = 4941F50F0C4929C000B29A73 /* AFSMenuCredentialContoller.m */; };
-		4941F6320C49379000B29A73 /* CredentialWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4941F6310C49379000B29A73 /* CredentialWindowController.m */; };
-		494435170DC35D4C00C7A333 /* LoginTimeDaemon in Resources */ = {isa = PBXBuildFile; fileRef = 4998A6860DC33BEC00146652 /* LoginTimeDaemon */; };
-		494BD4880C43EEA400DB0A3A /* SystemUIPlugin.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 494BD4870C43EEA400DB0A3A /* SystemUIPlugin.framework */; };
-		494BD48C0C43EEC300DB0A3A /* AFSMenuExtra.m in Sources */ = {isa = PBXBuildFile; fileRef = 494BD48B0C43EEC300DB0A3A /* AFSMenuExtra.m */; };
-		494C75110C4605C000D3A2D2 /* AFSMenuExtra.menu in Resources */ = {isa = PBXBuildFile; fileRef = 494C74DE0C46052800D3A2D2 /* AFSMenuExtra.menu */; };
-		49575BB50C53CBDB00B3BC32 /* hasToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 49575BB30C53CBDB00B3BC32 /* hasToken.png */; };
-		49575BB60C53CBDB00B3BC32 /* noToken.png in Resources */ = {isa = PBXBuildFile; fileRef = 49575BB40C53CBDB00B3BC32 /* noToken.png */; };
 		495B04400D219A2900F1E328 /* ViewUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 495B043E0D219A2900F1E328 /* ViewUtility.h */; };
 		495B04410D219A2900F1E328 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
 		495B04420D219A2900F1E328 /* ViewUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 495B043F0D219A2900F1E328 /* ViewUtility.m */; };
 		495C39470D81EA3C003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
-		495C39480D81EA3C003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
 		495C39490D81EA3C003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
 		495C39CC0D81F742003426FC /* Kerberos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 495C39460D81EA3C003426FC /* Kerberos.framework */; };
 		49683EEC0C3446600093C7C8 /* afshlp.m in Sources */ = {isa = PBXBuildFile; fileRef = 49683EEB0C3446600093C7C8 /* afshlp.m */; };
@@ -140,10 +121,7 @@
 		49B766450DCA47A50014A80F /* DialogUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 49B766430DCA47A50014A80F /* DialogUtility.h */; };
 		49B766460DCA47A50014A80F /* DialogUtility.m in Sources */ = {isa = PBXBuildFile; fileRef = 49B766440DCA47A50014A80F /* DialogUtility.m */; };
 		49E05CAD0C2674DA002AAEF2 /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8D202CF70486D31800D8A456 /* Info.plist */; };
-		49E43BA60C47D53F00084436 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 3223836A0C32A96F00380547 /* Localizable.strings */; };
 		49E43BE70C47D9EE00084436 /* global.h in Headers */ = {isa = PBXBuildFile; fileRef = 49E43BE60C47D9EE00084436 /* global.h */; };
-		49E43C730C47E0EA00084436 /* start_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90430C2F0A2D0068F99A /* start_afs.sh */; };
-		49E43C740C47E0EC00084436 /* stop_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90440C2F0A2D0068F99A /* stop_afs.sh */; };
 		49E43D2E0C480B8200084436 /* afshlp in Resources */ = {isa = PBXBuildFile; fileRef = 49683EE40C3446380093C7C8 /* afshlp */; };
 		49FFE7D20C2AED7200DF83CF /* AuthUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3213E9400C2ABFD200D3D2F6 /* AuthUtil.m */; };
 		8D202CEA0486D31800D8A456 /* AFSCommander_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32DBCFA20370C41700C91783 /* AFSCommander_Prefix.pch */; };
@@ -154,40 +132,21 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		3279B9800C451A63008FE3FA /* PBXContainerItemProxy */ = {
+		32E29A9810249A1200D2C2E5 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 494BD4680C43ED0C00DB0A3A;
-			remoteInfo = AFSMenuExtra;
-		};
-		494435680DC35D6F00C7A333 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 4998A6850DC33BEC00146652;
-			remoteInfo = LoginTimeDaemon;
-		};
-		49575C270C53CD9A00B3BC32 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 49683EE30C3446380093C7C8;
+			remoteGlobalIDString = 49683EE30C3446380093C7C8 /* afshlp */;
 			remoteInfo = afshlp;
 		};
-/* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		494D72C90C350BC400B1FD21 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = MenuCracker.menu;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
+		32E29A9A10249A1600D2C2E5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 089C1669FE841209C02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3276591A10204E08004CA418 /* AFSBackgrounder */;
+			remoteInfo = AFSBackgrounder;
 		};
-/* End PBXCopyFilesBuildPhase section */
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		089C1672FE841209C02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
@@ -203,21 +162,27 @@
 		322884020C3E45C800E778CC /* InfoController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InfoController.m; sourceTree = "<group>"; };
 		3228B9AF1020526900DF98DA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AFSBackgrounder/main.m; sourceTree = "<group>"; };
 		3228B9BD102052BE00DF98DA /* version.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = version.plist; path = AFSBackgrounder/resource/version.plist; sourceTree = "<group>"; };
-		3228BA1810207A4200DF98DA /* hasToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hasToken.png; sourceTree = "<group>"; };
-		3228BA1A10207A5200DF98DA /* noToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = noToken.png; sourceTree = "<group>"; };
 		322B90430C2F0A2D0068F99A /* start_afs.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; path = start_afs.sh; sourceTree = "<group>"; };
 		322B90440C2F0A2D0068F99A /* stop_afs.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; path = stop_afs.sh; sourceTree = "<group>"; };
 		322CEF5E0C211D220060D66D /* DBCellElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBCellElement.h; sourceTree = "<group>"; };
 		322CEF5F0C211D220060D66D /* DBCellElement.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DBCellElement.m; sourceTree = "<group>"; };
 		322CEF6C0C211DCC0060D66D /* CellIp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CellIp.h; sourceTree = "<group>"; };
 		322CEF6D0C211DCC0060D66D /* CellIp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CellIp.m; sourceTree = "<group>"; };
+		3231521910243E09005901AA /* AFSMenuCredentialContoller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSMenuCredentialContoller.h; path = AFSBackgrounder/AFSMenuCredentialContoller.h; sourceTree = "<group>"; };
+		3231521A10243E09005901AA /* AFSMenuCredentialContoller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSMenuCredentialContoller.m; path = AFSBackgrounder/AFSMenuCredentialContoller.m; sourceTree = "<group>"; };
+		3231521B10243E09005901AA /* AFSMenuExtra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSMenuExtra.h; path = AFSBackgrounder/AFSMenuExtra.h; sourceTree = "<group>"; };
+		3231521C10243E09005901AA /* AFSMenuExtra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSMenuExtra.m; path = AFSBackgrounder/AFSMenuExtra.m; sourceTree = "<group>"; };
+		3231521D10243E09005901AA /* AFSMenuExtraView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AFSMenuExtraView.h; path = AFSBackgrounder/AFSMenuExtraView.h; sourceTree = "<group>"; };
+		3231521E10243E09005901AA /* AFSMenuExtraView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AFSMenuExtraView.m; path = AFSBackgrounder/AFSMenuExtraView.m; sourceTree = "<group>"; };
+		3231522410243E10005901AA /* CredentialWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CredentialWindowController.h; sourceTree = "<group>"; };
+		3231522510243E10005901AA /* CredentialWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CredentialWindowController.m; sourceTree = "<group>"; };
+		3231522710243E21005901AA /* CredentialWindow.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = CredentialWindow.nib; path = AFSBackgrounder/resource/CredentialWindow.nib; sourceTree = "<group>"; };
+		3231522910243E2C005901AA /* hasToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = hasToken.png; path = AFSBackgrounder/resource/hasToken.png; sourceTree = "<group>"; };
+		3231522A10243E2C005901AA /* noToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = noToken.png; path = AFSBackgrounder/resource/noToken.png; sourceTree = "<group>"; };
 		324D67FC0DA13194007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/OpenAFSPreference.xib; sourceTree = "<group>"; };
 		324D683C0DA133A3007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/IpPanel.xib; sourceTree = "<group>"; };
 		324D68490DA133CF007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/CredentialPanel.xib; sourceTree = "<group>"; };
 		325311CF0C44F4B100FAF2F3 /* licenza.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = licenza.rtf; sourceTree = "<group>"; };
-		325312170C44F7BD00FAF2F3 /* AFSMenuExtraView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFSMenuExtraView.h; sourceTree = "<group>"; };
-		325312180C44F7BD00FAF2F3 /* AFSMenuExtraView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFSMenuExtraView.m; sourceTree = "<group>"; };
-		325313B00C4516A900FAF2F3 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = Info.plist; path = AfsMenuExtraResource/Info.plist; sourceTree = "<group>"; };
 		3273088B0C2A9B05008C322B /* FileUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtil.h; sourceTree = "<group>"; };
 		3273088C0C2A9B05008C322B /* FileUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileUtil.m; sourceTree = "<group>"; };
 		327308D20C2AA364008C322B /* SecurityFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SecurityFoundation.framework; path = /System/Library/Frameworks/SecurityFoundation.framework; sourceTree = "<absolute>"; };
@@ -241,20 +206,9 @@
 		32DE817D0DF571630069A05C /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/SymLinkEdit.xib; sourceTree = "<group>"; };
 		32DE818A0DF573200069A05C /* LynkCreationController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LynkCreationController.h; sourceTree = "<group>"; };
 		32DE818B0DF573200069A05C /* LynkCreationController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LynkCreationController.m; sourceTree = "<group>"; };
-		492AFB270C51483600AEDC93 /* CredentialWindow.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = CredentialWindow.nib; path = AfsMenuExtraResource/CredentialWindow.nib; sourceTree = "<group>"; };
 		493564E70CE711F300699A24 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		4940075A0CE62EB500F40D0A /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
-		4941F50E0C4929C000B29A73 /* AFSMenuCredentialContoller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFSMenuCredentialContoller.h; sourceTree = "<group>"; };
-		4941F50F0C4929C000B29A73 /* AFSMenuCredentialContoller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFSMenuCredentialContoller.m; sourceTree = "<group>"; };
-		4941F6300C49379000B29A73 /* CredentialWindowController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CredentialWindowController.h; sourceTree = "<group>"; };
-		4941F6310C49379000B29A73 /* CredentialWindowController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CredentialWindowController.m; sourceTree = "<group>"; };
 		494BD47B0C43EDF900DB0A3A /* SystemUIPlugin.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SystemUIPlugin.h; sourceTree = "<group>"; };
-		494BD4870C43EEA400DB0A3A /* SystemUIPlugin.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemUIPlugin.framework; path = /System/Library/PrivateFrameworks/SystemUIPlugin.framework; sourceTree = "<absolute>"; };
-		494BD48A0C43EEC300DB0A3A /* AFSMenuExtra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AFSMenuExtra.h; sourceTree = "<group>"; };
-		494BD48B0C43EEC300DB0A3A /* AFSMenuExtra.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AFSMenuExtra.m; sourceTree = "<group>"; };
-		494C74DE0C46052800D3A2D2 /* AFSMenuExtra.menu */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AFSMenuExtra.menu; sourceTree = BUILT_PRODUCTS_DIR; };
-		49575BB30C53CBDB00B3BC32 /* hasToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hasToken.png; sourceTree = "<group>"; };
-		49575BB40C53CBDB00B3BC32 /* noToken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = noToken.png; sourceTree = "<group>"; };
 		495B043E0D219A2900F1E328 /* ViewUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ViewUtility.h; sourceTree = "<group>"; };
 		495B043F0D219A2900F1E328 /* ViewUtility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ViewUtility.m; sourceTree = "<group>"; };
 		495C39460D81EA3C003426FC /* Kerberos.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Kerberos.framework; path = /System/Library/Frameworks/Kerberos.framework; sourceTree = "<absolute>"; };
@@ -295,18 +249,6 @@
 				327308D80C2AA369008C322B /* SecurityFoundation.framework in Frameworks */,
 				327309980C2AB434008C322B /* Security.framework in Frameworks */,
 				495C39490D81EA3C003426FC /* Kerberos.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		494BD4670C43ED0C00DB0A3A /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				494BD4880C43EEA400DB0A3A /* SystemUIPlugin.framework in Frameworks */,
-				325313520C45153400FAF2F3 /* SecurityFoundation.framework in Frameworks */,
-				325313550C45153500FAF2F3 /* Security.framework in Frameworks */,
-				3253138D0C45157A00FAF2F3 /* Cocoa.framework in Frameworks */,
-				495C39480D81EA3C003426FC /* Kerberos.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -357,7 +299,6 @@
 			children = (
 				32CFFEF90C20314100A8DC58 /* Stand Alone Program */,
 				08FB77AFFE84173DC02AAC07 /* Classes */,
-				494BD47A0C43EDD400DB0A3A /* AFSMenuExtra */,
 				3276591010204DB4004CA418 /* AFSBackgrounder */,
 				32DBCFA10370C40200C91783 /* Other Sources */,
 				089C167CFE841241C02AAC07 /* Resources */,
@@ -424,7 +365,6 @@
 		1058C7AEFEA557BF11CA2CBB /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				494BD4870C43EEA400DB0A3A /* SystemUIPlugin.framework */,
 				327309620C2AB433008C322B /* Security.framework */,
 				327308D20C2AA364008C322B /* SecurityFoundation.framework */,
 				089C1672FE841209C02AAC07 /* Foundation.framework */,
@@ -439,7 +379,6 @@
 				8D202CF80486D31800D8A456 /* OpenAFS.prefPane */,
 				32CF01390C203C1800A8DC58 /* Test */,
 				49683EE40C3446380093C7C8 /* afshlp */,
-				494C74DE0C46052800D3A2D2 /* AFSMenuExtra.menu */,
 				4998A6860DC33BEC00146652 /* LoginTimeDaemon */,
 				3276591B10204E08004CA418 /* AFSBackgrounder.app */,
 			);
@@ -477,8 +416,9 @@
 		3228B9B21020527000DF98DA /* resource */ = {
 			isa = PBXGroup;
 			children = (
-				3228BA1810207A4200DF98DA /* hasToken.png */,
-				3228BA1A10207A5200DF98DA /* noToken.png */,
+				3231522910243E2C005901AA /* hasToken.png */,
+				3231522A10243E2C005901AA /* noToken.png */,
+				3231522710243E21005901AA /* CredentialWindow.nib */,
 				3276591D10204E08004CA418 /* Info.plist */,
 				3228B9BD102052BE00DF98DA /* version.plist */,
 				3276592D10204F8D004CA418 /* AFSBackounderMainMenu.xib */,
@@ -497,15 +437,14 @@
 			name = "Afs Element";
 			sourceTree = "<group>";
 		};
-		325313A10C4515A700FAF2F3 /* Resource */ = {
+		3231522310243E10005901AA /* CredentialWindow */ = {
 			isa = PBXGroup;
 			children = (
-				49575BB30C53CBDB00B3BC32 /* hasToken.png */,
-				49575BB40C53CBDB00B3BC32 /* noToken.png */,
-				325313B00C4516A900FAF2F3 /* Info.plist */,
-				492AFB270C51483600AEDC93 /* CredentialWindow.nib */,
+				3231522510243E10005901AA /* CredentialWindowController.m */,
+				3231522410243E10005901AA /* CredentialWindowController.h */,
 			);
-			name = Resource;
+			name = CredentialWindow;
+			path = AFSBackgrounder/CredentialWindow;
 			sourceTree = "<group>";
 		};
 		327308880C2A99A1008C322B /* Utility */ = {
@@ -533,8 +472,15 @@
 			isa = PBXGroup;
 			children = (
 				3228B9AF1020526900DF98DA /* main.m */,
-				3276592F10204F9E004CA418 /* AFSBackgrounderDelegate.h */,
 				3276593010204F9E004CA418 /* AFSBackgrounderDelegate.m */,
+				3276592F10204F9E004CA418 /* AFSBackgrounderDelegate.h */,
+				3231521C10243E09005901AA /* AFSMenuExtra.m */,
+				3231521B10243E09005901AA /* AFSMenuExtra.h */,
+				3231521E10243E09005901AA /* AFSMenuExtraView.m */,
+				3231521D10243E09005901AA /* AFSMenuExtraView.h */,
+				3231521A10243E09005901AA /* AFSMenuCredentialContoller.m */,
+				3231521910243E09005901AA /* AFSMenuCredentialContoller.h */,
+				3231522310243E10005901AA /* CredentialWindow */,
 				3228B9B21020527000DF98DA /* resource */,
 			);
 			name = AFSBackgrounder;
@@ -584,30 +530,6 @@
 				32DE818B0DF573200069A05C /* LynkCreationController.m */,
 			);
 			name = "Lynk Creation";
-			sourceTree = "<group>";
-		};
-		4941F62F0C49377000B29A73 /* CredentialWindow */ = {
-			isa = PBXGroup;
-			children = (
-				4941F6300C49379000B29A73 /* CredentialWindowController.h */,
-				4941F6310C49379000B29A73 /* CredentialWindowController.m */,
-			);
-			name = CredentialWindow;
-			sourceTree = "<group>";
-		};
-		494BD47A0C43EDD400DB0A3A /* AFSMenuExtra */ = {
-			isa = PBXGroup;
-			children = (
-				494BD48A0C43EEC300DB0A3A /* AFSMenuExtra.h */,
-				494BD48B0C43EEC300DB0A3A /* AFSMenuExtra.m */,
-				325312170C44F7BD00FAF2F3 /* AFSMenuExtraView.h */,
-				325312180C44F7BD00FAF2F3 /* AFSMenuExtraView.m */,
-				4941F50E0C4929C000B29A73 /* AFSMenuCredentialContoller.h */,
-				4941F50F0C4929C000B29A73 /* AFSMenuCredentialContoller.m */,
-				4941F62F0C49377000B29A73 /* CredentialWindow */,
-				325313A10C4515A700FAF2F3 /* Resource */,
-			);
-			name = AFSMenuExtra;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -673,24 +595,6 @@
 			productReference = 32CF01390C203C1800A8DC58 /* Test */;
 			productType = "com.apple.product-type.tool";
 		};
-		494BD4680C43ED0C00DB0A3A /* AFSMenuExtra */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 494BD46C0C43ED0D00DB0A3A /* Build configuration list for PBXNativeTarget "AFSMenuExtra" */;
-			buildPhases = (
-				494BD4650C43ED0C00DB0A3A /* Resources */,
-				494BD4660C43ED0C00DB0A3A /* Sources */,
-				494BD4670C43ED0C00DB0A3A /* Frameworks */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				49575C280C53CD9A00B3BC32 /* PBXTargetDependency */,
-			);
-			name = AFSMenuExtra;
-			productName = AFSMenuExtra;
-			productReference = 494C74DE0C46052800D3A2D2 /* AFSMenuExtra.menu */;
-			productType = "com.apple.product-type.bundle";
-		};
 		49683EE30C3446380093C7C8 /* afshlp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 49683EE70C34465D0093C7C8 /* Build configuration list for PBXNativeTarget "afshlp" */;
@@ -732,14 +636,12 @@
 				8D202CF00486D31800D8A456 /* Sources */,
 				8D202CF20486D31800D8A456 /* Frameworks */,
 				8D202CF50486D31800D8A456 /* Rez */,
-				494D72C90C350BC400B1FD21 /* CopyFiles */,
-				3281A5B00CD7432A00907CF6 /* ShellScript */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				3279B9810C451A63008FE3FA /* PBXTargetDependency */,
-				494435690DC35D6F00C7A333 /* PBXTargetDependency */,
+				32E29A9910249A1200D2C2E5 /* PBXTargetDependency */,
+				32E29A9B10249A1600D2C2E5 /* PBXTargetDependency */,
 			);
 			name = OpenAFS;
 			productInstallPath = "$(HOME)/Library/PreferencePanes";
@@ -769,7 +671,6 @@
 				8D202CE80486D31800D8A456 /* OpenAFS */,
 				32CF01380C203C1800A8DC58 /* Test */,
 				49683EE30C3446380093C7C8 /* afshlp */,
-				494BD4680C43ED0C00DB0A3A /* AFSMenuExtra */,
 				4998A6850DC33BEC00146652 /* LoginTimeDaemon */,
 				3276591A10204E08004CA418 /* AFSBackgrounder */,
 			);
@@ -784,23 +685,9 @@
 				3276592E10204F8D004CA418 /* AFSBackounderMainMenu.xib in Resources */,
 				3228B9BE102052BE00DF98DA /* version.plist in Resources */,
 				3228B9D5102070A200DF98DA /* Info.plist in Resources */,
-				3228BA1910207A4200DF98DA /* hasToken.png in Resources */,
-				3228BA1B10207A5200DF98DA /* noToken.png in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		494BD4650C43ED0C00DB0A3A /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				325313B10C4516A900FAF2F3 /* Info.plist in Resources */,
-				49E43BA60C47D53F00084436 /* Localizable.strings in Resources */,
-				49E43C730C47E0EA00084436 /* start_afs.sh in Resources */,
-				49E43C740C47E0EC00084436 /* stop_afs.sh in Resources */,
-				32D45E070C4B4D9C00A1012D /* afshlp in Resources */,
-				492AFB280C51483600AEDC93 /* CredentialWindow.nib in Resources */,
-				49575BB50C53CBDB00B3BC32 /* hasToken.png in Resources */,
-				49575BB60C53CBDB00B3BC32 /* noToken.png in Resources */,
+				3231522810243E21005901AA /* CredentialWindow.nib in Resources */,
+				3231522B10243E2C005901AA /* hasToken.png in Resources */,
+				3231522C10243E2C005901AA /* noToken.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -814,13 +701,12 @@
 				322B90460C2F0A2D0068F99A /* stop_afs.sh in Resources */,
 				3223836C0C32A96F00380547 /* Localizable.strings in Resources */,
 				325311D00C44F4B100FAF2F3 /* licenza.rtf in Resources */,
-				494C75110C4605C000D3A2D2 /* AFSMenuExtra.menu in Resources */,
 				49E43D2E0C480B8200084436 /* afshlp in Resources */,
 				324D67FD0DA13194007E1561 /* OpenAFSPreference.xib in Resources */,
 				324D683D0DA133A3007E1561 /* IpPanel.xib in Resources */,
 				324D684A0DA133CF007E1561 /* CredentialPanel.xib in Resources */,
-				494435170DC35D4C00C7A333 /* LoginTimeDaemon in Resources */,
 				32DE81BD0DF57BDA0069A05C /* SymLinkEdit.xib in Resources */,
+				32E299A3102491AA00D2C2E5 /* AFSBackgrounder.app in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -835,23 +721,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXRezBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		3281A5B00CD7432A00907CF6 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			comments = "Copy the menucraker.menu into resources";
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\nif [ \"$ACTION\" = \"build\" ]\nthen\n\techo \"Start coping MenuCraker.menu\"\n\techo $SRCROOT/MenuCracker.menu\n\techo $TARGET_BUILD_DIR/$PRODUCT_NAME.prefPane/Resources/\t\n\tcp -R $SRCROOT/MenuCracker.menu $TARGET_BUILD_DIR/$PRODUCT_NAME.prefPane/Contents/Resources/MenuCracker.menu\nfi\n\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3276591810204E08004CA418 /* Sources */ = {
@@ -870,6 +739,9 @@
 				3276592A10204EE5004CA418 /* DialogUtility.m in Sources */,
 				3276593110204F9E004CA418 /* AFSBackgrounderDelegate.m in Sources */,
 				3228B9B01020526900DF98DA /* main.m in Sources */,
+				3231522010243E09005901AA /* AFSMenuCredentialContoller.m in Sources */,
+				3231522210243E09005901AA /* AFSMenuExtraView.m in Sources */,
+				3231522610243E10005901AA /* CredentialWindowController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -888,25 +760,6 @@
 				3219259D0C339DAE00B55E86 /* TokenCredentialController.m in Sources */,
 				322884050C3E45C800E778CC /* InfoController.m in Sources */,
 				495B04420D219A2900F1E328 /* ViewUtility.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		494BD4660C43ED0C00DB0A3A /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				494BD48C0C43EEC300DB0A3A /* AFSMenuExtra.m in Sources */,
-				325311AB0C44F38200FAF2F3 /* AFSPropertyManager.m in Sources */,
-				325311AF0C44F38D00FAF2F3 /* CellIp.m in Sources */,
-				325311B00C44F38D00FAF2F3 /* DBCellElement.m in Sources */,
-				325311B10C44F39200FAF2F3 /* TaskUtil.m in Sources */,
-				325311B20C44F39300FAF2F3 /* AuthUtil.m in Sources */,
-				325311B30C44F39400FAF2F3 /* FileUtil.m in Sources */,
-				325312190C44F7BD00FAF2F3 /* AFSMenuExtraView.m in Sources */,
-				4941F4C00C491D2D00B29A73 /* TokenCredentialController.m in Sources */,
-				4941F5100C4929C000B29A73 /* AFSMenuCredentialContoller.m in Sources */,
-				4941F6320C49379000B29A73 /* CredentialWindowController.m in Sources */,
-				32B565760D8FAF62005255F2 /* NSString+search.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -968,20 +821,15 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		3279B9810C451A63008FE3FA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 494BD4680C43ED0C00DB0A3A /* AFSMenuExtra */;
-			targetProxy = 3279B9800C451A63008FE3FA /* PBXContainerItemProxy */;
-		};
-		494435690DC35D6F00C7A333 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 4998A6850DC33BEC00146652 /* LoginTimeDaemon */;
-			targetProxy = 494435680DC35D6F00C7A333 /* PBXContainerItemProxy */;
-		};
-		49575C280C53CD9A00B3BC32 /* PBXTargetDependency */ = {
+		32E29A9910249A1200D2C2E5 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 49683EE30C3446380093C7C8 /* afshlp */;
-			targetProxy = 49575C270C53CD9A00B3BC32 /* PBXContainerItemProxy */;
+			targetProxy = 32E29A9810249A1200D2C2E5 /* PBXContainerItemProxy */;
+		};
+		32E29A9B10249A1600D2C2E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3276591A10204E08004CA418 /* AFSBackgrounder */;
+			targetProxy = 32E29A9A10249A1600D2C2E5 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1084,7 +932,9 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INSTALL_PATH = /Library/PreferencePanes;
 				PREBINDING = NO;
+				SKIP_INSTALL = NO;
 			};
 			name = Debug;
 		};
@@ -1193,66 +1043,6 @@
 				);
 				PREBINDING = NO;
 				PRODUCT_NAME = Test;
-				ZERO_LINK = NO;
-			};
-			name = Release;
-		};
-		494BD46D0C43ED0D00DB0A3A /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\"";
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
-				INFOPLIST_FILE = "AFSMenuExtra-Info.plist";
-				INSTALL_PATH = "$(HOME)/Library/Bundles";
-				OTHER_LDFLAGS = (
-					"-framework",
-					Foundation,
-					"-framework",
-					AppKit,
-				);
-				PREBINDING = NO;
-				PRODUCT_NAME = AFSMenuExtra;
-				WRAPPER_EXTENSION = menu;
-				ZERO_LINK = YES;
-			};
-			name = Debug;
-		};
-		494BD46E0C43ED0D00DB0A3A /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-				);
-				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks\"";
-				GCC_ENABLE_FIX_AND_CONTINUE = NO;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
-				INFOPLIST_FILE = "AFSMenuExtra-Info.plist";
-				INSTALL_PATH = "$(HOME)/Library/Bundles";
-				OTHER_LDFLAGS = (
-					"-framework",
-					Foundation,
-					"-framework",
-					AppKit,
-				);
-				PREBINDING = NO;
-				PRODUCT_NAME = AFSMenuExtra;
-				WRAPPER_EXTENSION = menu;
 				ZERO_LINK = NO;
 			};
 			name = Release;
@@ -1389,15 +1179,6 @@
 			buildConfigurations = (
 				32CF013D0C203C4900A8DC58 /* Debug */,
 				32CF013E0C203C4900A8DC58 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		494BD46C0C43ED0D00DB0A3A /* Build configuration list for PBXNativeTarget "AFSMenuExtra" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				494BD46D0C43ED0D00DB0A3A /* Debug */,
-				494BD46E0C43ED0D00DB0A3A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -25,6 +25,7 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 	//for check system version
 	int prefStartUp;
 	// Main View
+	BOOL startAFSAtLogin;
 	IBOutlet NSView *afsCommanderView;
 	IBOutlet NSSearchField *textSearchField;
 	IBOutlet NSTextField *afsDefaultCellLabel;
@@ -34,11 +35,19 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 	IBOutlet NSButton *installKRB5AuthAtLoginButton;
 	IBOutlet NSButton *useAklogCheck;
 	IBOutlet NSTextField *afsVersionLabel;
-	BOOL startAFSAtLogin;
 	IBOutlet NSButton *checkButtonAfsAtBootTime;
 	IBOutlet NSTextField *textFieldDevInfoLabel;
+	IBOutlet NSTextField *statCacheEntry;
+	IBOutlet NSTextField *dCacheDim;
+	IBOutlet NSTextField *cacheDimension;
+	IBOutlet NSTextField *daemonNumber;
+	IBOutlet NSTextField *afsRootMountPoint;
+	IBOutlet NSTextField *nVolEntry;
+	IBOutlet NSButton *dynRoot;
+	IBOutlet NSButton *afsDB;
+	IBOutlet NSButton *verbose;
+	IBOutlet NSBox *groupsBox;
 	
-	//NSString *appID;
 	//id installationPathTextField;
 	id startStopButton;
 	id cellList;
@@ -52,18 +61,6 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 	id tokensTable;
 	id afsMenucheckBox;
 		
-	//cache manager IBOutlet
-	IBOutlet NSTextField *statCacheEntry;
-	IBOutlet NSTextField *dCacheDim;
-	IBOutlet NSTextField *cacheDimension;
-	IBOutlet NSTextField *daemonNumber;
-	IBOutlet NSTextField *afsRootMountPoint;
-	IBOutlet NSTextField *nVolEntry;
-	IBOutlet NSButton *dynRoot;
-	IBOutlet NSButton *afsDB;
-	IBOutlet NSButton *verbose;
-	IBOutlet NSBox *groupsBox;
-	
 	//Configuration sheet
 	id ipConfigurationSheet;
 	id ipConfControllerCommander;
@@ -133,13 +130,14 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (void) manageButtonState:(int) rowSelected;
 - (void) setAfsStatus;
 - (void) refreshTokens:(NSTimer*)theTimer;
-- (BOOL) isAFSMenuExtraLoaded;
-- (void) addAFSMenuExtra;
-- (void) removeAFSMenuExtra;
 - (void) repairHelperTool;
 - (void) writePreferenceFile;
 - (void) readPreferenceFile;
-- (void) mextraChangeActivation:(NSNotification *)notification;
 - (void) refreshGui:(NSNotification *)notification;
 - (void) afsVolumeMountChange:(NSNotification *)notification;
 @end
+
+@interface AFSCommanderPref (NSTableDataSource)
+- (id) getTableTokensListValue:(int) colId row:(int)row;
+- (id) getTableCelListValue:(int) colId row:(int)row;
+@end;

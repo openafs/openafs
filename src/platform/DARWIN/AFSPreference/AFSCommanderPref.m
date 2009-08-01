@@ -51,7 +51,7 @@
 - (id)initWithBundle:(NSBundle *)bundle
 {
     if ( ( self = [super initWithBundle:bundle] ) != nil ) {
-        //appID = afsCommanderID;
+        //appID = kAfsCommanderID;
 		prefStartUp = 1;
     }
     return self;
@@ -66,8 +66,6 @@
 		SInt32 osxMnVers = 0;
 		if (Gestalt(gestaltSystemVersionMajor, &osxMJVers) == noErr && Gestalt(gestaltSystemVersionMinor, &osxMnVers) == noErr) {
 			if (osxMJVers == 10 && osxMnVers>= 5) {
-				// we are working on leopard
-				NSLog(@"Leopard AFSCommander adapting");
 				[afsCommanderView  setFrameSize:NSMakeSize(668, [afsCommanderView frame].size.height)];
                 prefStartUp = 0;
 			}
@@ -95,6 +93,28 @@
 // -------------------------------------------------------------------------------
 - (void) didSelect
 {
+	//try to install the launchd file for backgrounder
+	//Remove launchd ctrl file
+	@try {
+		[PListManager installBackgrounderLaunchdFile:YES 
+										resourcePath:[[self bundle] resourcePath]];
+	}
+	@catch (NSException * e) {
+		NSDictionary *excecptDic = [e userInfo];
+		NSNumber *keyNum = [excecptDic objectForKey:@"agent_folder_error"];
+		if(keyNum && [keyNum boolValue]) {
+			// the dir HOME_LAUNCHD_AGENT_FOLDER (PListManager.h) must be created
+			NSBeginAlertSheet([[NSString stringWithString:kDoYouWantCreateTheDirectory] stringByAppendingString:HOME_LAUNCHD_AGENT_FOLDER],
+							  @"Create", @"Cancel", nil,										
+							  [[self mainView] window],	self, @selector(credentialAtLoginTimeEventCreationLaunchAgentDir:returnCode:contextInfo:), NULL, 
+							  nil, @"", nil);
+		}
+	}
+	@finally {
+		
+	}
+	
+	
 	// Set Developer info
 	[textFieldDevInfoLabel setStringValue:kDevelopInfo];
 	// creating the lock
@@ -110,14 +130,14 @@
 	afsProperty = [[AFSPropertyManager alloc] init];
 	
 	// register preference pane to detect menuextra killed by user
-	[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
+/*	[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
 														selector:@selector(mextraChangeActivation:) 
-															name:afsCommanderID 
-														  object:kMExtraClosedNotification];
+															name:kAfsCommanderID 
+														  object:kMExtraClosedNotification];*/
 	 
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
 														selector:@selector(refreshGui:) 
-															name:afsCommanderID 
+															name:kAfsCommanderID 
 														  object:kMenuExtraEventOccured];
 	
 	//Register for mount/unmount afs volume
@@ -136,9 +156,6 @@
 	//check the afs state
 	[self setAfsStatus];
 	
-	// check the MenuExtra state
-	[self mextraChangeActivation:nil];
-
 	// let show the configuration after prefpane is open
 	[self refreshConfiguration:nil];
 	
@@ -148,6 +165,33 @@
 	//refresh table to reflect the NSSearchField contained text
 	[self searchCellTextEvent:nil];
 }
+
+// -------------------------------------------------------------------------------
+//  credentialAtLoginTimeEventCreationLaunchAgentDir:
+// -------------------------------------------------------------------------------
+- (void) credentialAtLoginTimeEventCreationLaunchAgentDir:(NSWindow*)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo {
+	[alert close];
+	switch (returnCode) {
+		case  1:
+			NSLog(@"Yes");
+			if([[NSFileManager defaultManager] createDirectoryAtPath:[HOME_LAUNCHD_AGENT_FOLDER stringByExpandingTildeInPath] 
+														  attributes:nil]) {
+				
+				//Create the file
+				[PListManager installBackgrounderLaunchdFile:YES
+												resourcePath:[[self bundle] resourcePath]];
+				[self showMessage:kDirectoryCreated];
+			} else {
+				[self showMessage:kErrorCreatingDirectory];
+			}
+			break;
+		case 0:
+			NSLog(@"No");
+			
+			break;
+	}
+}
+
 
 // -------------------------------------------------------------------------------
 //  willUnselect:
@@ -170,10 +214,10 @@
 	
 	// unregister preference pane to detect menuextra killed by user
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self 
-															   name:afsCommanderID 
+															   name:kAfsCommanderID 
 															 object:kMExtraClosedNotification];
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self 
-															   name:afsCommanderID 
+															   name:kAfsCommanderID 
 															 object:kMenuExtraEventOccured];
 	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self 
 																  name:NSWorkspaceDidMountNotification object:nil];
@@ -216,41 +260,37 @@
 {
 	
 	// read the preference for afs path
-	//NSString *afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;/*(NSString*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, (CFStringRef)afsCommanderID,  
+	//NSString *afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;/*(NSString*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, (CFStringRef)kAfsCommanderID,  
 															// kCFPreferencesAnyUser, kCFPreferencesAnyHost);*/
 	/*if(afsSysPath){
 		[((NSTextField*) installationPathTextField ) setStringValue:afsSysPath];
 	}*/
 	
 	// read the preference for aklog use
-	NSNumber *useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG, (CFStringRef)afsCommanderID,  
+	NSNumber *useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG, (CFStringRef)kAfsCommanderID,  
 																	kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	NSNumber *aklogTokenAtLogin = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AKLOG_TOKEN_AT_LOGIN, (CFStringRef)kAfsCommanderID,  
+																	kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	[useAklogCheck setState:[useAklogPrefValue intValue]];
 	if(useAklogPrefValue){
-		[useAklogCheck setState:[useAklogPrefValue intValue]];
-		[aklogCredentialAtLoginTime setEnabled:[useAklogPrefValue intValue]];
+		[aklogCredentialAtLoginTime setEnabled:[aklogTokenAtLogin boolValue]];
 	} else {
-		[useAklogCheck setState:NSOffState];
 		[aklogCredentialAtLoginTime setEnabled:NSOffState];
 		[aklogCredentialAtLoginTime setState:NSOffState];
-		[PListManager installLaunchdFile:NO
-							resourcePath:nil];
 	}
-	
-	//check if krb5 at startup is enable at system level
-	[installKRB5AuthAtLoginButton setState:[PListManager checkKrb5AtLoginTimeLaunchdEnable]];
-	
-	//check if the user has installed and enabled the afs agent
-	[aklogCredentialAtLoginTime setState:[PListManager checkAklogAtLoginTimeLaunchdEnable]];
 	
 	//check for AFS enable at startup
 	NSNumber *afsEnableStartupTime = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_START_AFS_AT_STARTUP, 
-																	   (CFStringRef)afsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+																	   (CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
 	if(afsEnableStartupTime) 
 		startAFSAtLogin = [afsEnableStartupTime boolValue];
 	else 
 		startAFSAtLogin = false;
 	//set the check button state
 	[checkButtonAfsAtBootTime setState:startAFSAtLogin];
+	
+	NSNumber *showStatusMenu =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU,  (CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	[(NSButton*)afsMenucheckBox setState: [showStatusMenu boolValue]];
 }
 
 // -------------------------------------------------------------------------------
@@ -261,24 +301,32 @@
 	//Set the preference for afs path
 	/*CFPreferencesSetValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, 
 						  (CFStringRef)[((NSTextField*) installationPathTextField ) stringValue], 
-						  (CFStringRef)afsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);*/
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);*/
 	
 	//Set the preference for aklog use
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_USE_AKLOG, 
 						  (CFNumberRef)[NSNumber numberWithInt:[useAklogCheck state]], 
-						  (CFStringRef)afsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-	
-	
-	// Notify
-	if ([self isAFSMenuExtraLoaded])  [[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kPrefChangeNotification];
-	
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+
 	//set AFS enable state at startup
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_START_AFS_AT_STARTUP, 
 						  (CFNumberRef)[NSNumber numberWithBool:startAFSAtLogin], 
-						  (CFStringRef)afsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);
 	
-	CFPreferencesSynchronize((CFStringRef)afsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
-	CFPreferencesSynchronize((CFStringRef)afsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	//set aklog at login
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_AKLOG_TOKEN_AT_LOGIN, 
+						  (CFNumberRef)[NSNumber numberWithBool:[aklogCredentialAtLoginTime state]], 
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	
+	//set aklog at login
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU, 
+						  (CFNumberRef)[NSNumber numberWithBool:[afsMenucheckBox state]], 
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kPrefChangeNotification];
 }
 
 // -------------------------------------------------------------------------------
@@ -649,7 +697,7 @@
 						   pwd:nil];
 		[self refreshTokens:nil];
 		//Inform afs menuextra to updata afs status
-		if ([self isAFSMenuExtraLoaded])  [[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kMExtraAFSStateChange];
+		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kMExtraAFSStateChange];
 
 	} else {
 		[NSBundle loadNibNamed:@"CredentialPanel" owner:self];
@@ -682,7 +730,7 @@
 	}
 	[self refreshTokens:nil];
 	//Inform afs menuextra to updata afs status
-	if ([self isAFSMenuExtraLoaded])  [[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kMExtraAFSStateChange];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kMExtraAFSStateChange];
 
 }
 
@@ -695,9 +743,6 @@
 	//afs menu extra is loaded inform it to read preference
 	@try {
 		if(![useAklogCheck state]) {
-			//Remove launchd ctrl file
-			[PListManager installLaunchdFile:NO resourcePath:[[self bundle] resourcePath]];
-			
 			//deselect the checkbox
 			[aklogCredentialAtLoginTime setState:NO];
 		}
@@ -720,30 +765,7 @@
 //  credentialAtLoginTimeEvent:
 // -------------------------------------------------------------------------------
 - (IBAction) credentialAtLoginTimeEvent:(id) sender {
-	@try {
-		[PListManager installLaunchdFile:[aklogCredentialAtLoginTime state] 
-							resourcePath:[[self bundle] resourcePath]];
-		
-		
-
-	}
-	@catch (NSException * e) {
-		if([e userInfo] != nil && [[e userInfo] isKindOfClass:[NSNumber class]]) {
-			if([((NSNumber*)[e userInfo]) intValue] == 1) {
-					// the dir HOME_LAUNCHD_AGENT_FOLDER (PListManager.h) must be created
-				NSBeginAlertSheet([[NSString stringWithString:kDoYouWantCreateTheDirectory] stringByAppendingString:HOME_LAUNCHD_AGENT_FOLDER],
-								  @"Create", @"Cancel", nil,										
-								  [[self mainView] window],	self, @selector(credentialAtLoginTimeEventCreationLaunchAgentDir:returnCode:contextInfo:), NULL, 
-								  nil, @"", nil);
-			}
-		} else {
-			[self showMessage:[e reason]];
-		}
-	}
-	@finally {
-		[aklogCredentialAtLoginTime setState:[PListManager checkAklogAtLoginTimeLaunchdEnable]];
-	}
-	
+	[self writePreferenceFile];
 }
 
 // -------------------------------------------------------------------------------
@@ -781,34 +803,6 @@
 	}
 }
 
-// -------------------------------------------------------------------------------
-//  credentialAtLoginTimeEventCreationLaunchAgentDir:
-// -------------------------------------------------------------------------------
-- (void) credentialAtLoginTimeEventCreationLaunchAgentDir:(NSWindow*)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo {
-	[alert close];
-	switch (returnCode) {
-		case  1:
-			NSLog(@"Yes");
-			if([[NSFileManager defaultManager] createDirectoryAtPath:[HOME_LAUNCHD_AGENT_FOLDER stringByExpandingTildeInPath] 
-														  attributes:nil]) {
-
-				//Create the file
-				[PListManager installLaunchdFile:YES
-									resourcePath:[[self bundle] resourcePath]];
-				
-				//refresh the check box
-				[aklogCredentialAtLoginTime setState:[PListManager checkAklogAtLoginTimeLaunchdEnable]];
-				[self showMessage:kDirectoryCreated];
-			} else {
-				[self showMessage:kErrorCreatingDirectory];
-			}
-			break;
-		case 0:
-			NSLog(@"No");
-			
-			break;
-	}
-}
 
 // -------------------------------------------------------------------------------
 //  afsMenuActivationEvent:
@@ -835,13 +829,15 @@
 // -------------------------------------------------------------------------------
 -(IBAction) afsMenuActivationEvent:(id) sender
 {
-	if([(NSButton*)afsMenucheckBox state] == NSOffState){
-		// must remove the menu
-		[self removeAFSMenuExtra];
-	} else {
-		// must add the menu
-		[self addAFSMenuExtra];
-	}
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU, 
+						  (CFNumberRef)[NSNumber numberWithBool:[afsMenucheckBox state]], 
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	
+	//notify the backgrounder
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kMExtraAFSMenuChangeState];
 }
 
 // -------------------------------------------------------------------------------
@@ -979,41 +975,6 @@
 	[tokensLock unlock];
 }
 
-
-// -------------------------------------------------------------------------------
-//  isExtraMenuLoaded:
-// -------------------------------------------------------------------------------
-- (BOOL) isAFSMenuExtraLoaded
-{
-	void		*menu;
-	if ((CoreMenuExtraGetMenuExtra((CFStringRef)kAFSMenuExtraID, &menu) == 0) && menu) {
-		return YES;
-	}
-	else {
-		return NO;
-	}
-}
-
-// -------------------------------------------------------------------------------
-//  isExtraMenuLoaded:
-// -------------------------------------------------------------------------------
-- (void)addAFSMenuExtra {
-	
-	void *menuCracker = 0L;
-	
-	//Check for MenuCracker
-	if ((CoreMenuExtraGetMenuExtra((CFStringRef)kMenuCrakerMenuExtraID, &menuCracker) != 0) || !menuCracker) {
-		NSLog(@"MenuCracker not present");
-		
-		// load the MenuCracker.menu menu extra
-		CoreMenuExtraAddMenuExtra((CFURLRef)kMenuCrakerMenuExtra, 0, 0, 0, 0, 0);
-	} else NSLog(@"MenuCracker alredy loaded");
-	
-	
-	//Load the AFSCommander menu extra
-	CoreMenuExtraAddMenuExtra((CFURLRef)kAFSMenuExtra, 0, 0, 0, 0, 0);
-}
-
 // -------------------------------------------------------------------------------
 //  removeExtra:
 // -------------------------------------------------------------------------------
@@ -1040,27 +1001,6 @@
 // -------------------------------------------------------------------------------
 - (IBAction) enableLink:(id) sender {
 	
-}
-
-
-// -------------------------------------------------------------------------------
-//  removeExtra:
-// -------------------------------------------------------------------------------
-- (void)removeAFSMenuExtra{
-	void		*menu;
-	if ((CoreMenuExtraGetMenuExtra((CFStringRef)kAFSMenuExtraID, &menu) == 0) && menu) {
-		CoreMenuExtraRemoveMenuExtra(menu, 0);
-	}
-} 
-
-
-// -------------------------------------------------------------------------------
-//  mextraChangeActivation:
-// -------------------------------------------------------------------------------
-- (void)mextraChangeActivation:(NSNotification *)notification
-{
-	// set the afsmenu check state
-	[(NSButton*)afsMenucheckBox setState: [self isAFSMenuExtraLoaded]?NSOnState:NSOffState];
 }
 @end
 
@@ -1248,7 +1188,7 @@
     [sheet orderOut:self];
 	[self refreshTokens:nil];
 	//Inform afs menuextra to updata afs status
-	if ([self isAFSMenuExtraLoaded])  [[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kMExtraAFSStateChange];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kMExtraAFSStateChange];
 
 }
 
