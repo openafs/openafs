@@ -167,3 +167,5 @@ RXAFS_DFSSymlink
 RXAFSCB_function_names
 RXAFS_FsCmd
 rx_GetLocalPeers
+xdr_free
+xdr_alloc

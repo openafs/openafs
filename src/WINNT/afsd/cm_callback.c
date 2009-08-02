@@ -1149,7 +1149,7 @@ GetCellCommon(afs_int32 a_cellnum, char **a_name, serverList *a_hosts)
           sn++, serverRefp = serverRefp->next);
 
     a_hosts->serverList_len = sn;
-    a_hosts->serverList_val = (afs_int32 *)osi_Alloc(sn * sizeof(afs_int32));
+    a_hosts->serverList_val = (afs_int32 *)xdr_alloc(sn * sizeof(afs_int32));
 
     for ( sn = 0, serverRefp = cellp->vlServersp; 
           sn < AFSMAXCELLHOSTS && serverRefp;
@@ -1246,7 +1246,7 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     lock_ReleaseRead(&cm_syscfgLock);
 
     dataBytes = 1 * sizeof(afs_uint32);
-    dataBuffP = (afs_uint32 *) osi_Alloc(dataBytes);
+    dataBuffP = (afs_uint32 *) xdr_alloc(dataBytes);
     dataBuffP[0] = CLIENT_CAPABILITY_ERRORTRANS;
     capabilities->Capabilities_len = dataBytes / sizeof(afs_uint32);
     capabilities->Capabilities_val = dataBuffP;

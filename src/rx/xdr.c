@@ -582,7 +582,13 @@ xdr_wrapstring(XDR * xdrs, char **cpp)
 }
 #endif
 
-void 
+void *
+xdr_alloc(afs_int32 size)
+{
+    return osi_alloc(size);
+}
+
+void
 xdr_free(void *x, afs_int32 size)
 {
     osi_free(x, size);
