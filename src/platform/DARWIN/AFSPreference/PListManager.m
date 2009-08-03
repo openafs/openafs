@@ -10,6 +10,8 @@
 #import "FileUtil.h"
 #import "TaskUtil.h"
 
+#define BACKGROUNDER_AGENT_NAME					@"AFSBackgrounder.app/Contents/MacOS/AFSBackgrounder"
+
 @implementation PListManager
 // -------------------------------------------------------------------------------
 //  krb5TiketAtLoginTime:
@@ -131,7 +133,8 @@
 // -------------------------------------------------------------------------------
 +(void) installBackgrounderLaunchdFile:(BOOL)install resourcePath:(NSString*) rsrcPath {
 	NSData				*plistData = nil;
-	NSMutableDictionary *launchdDic = nil;
+	NSMutableDictionary *launchdDic = nil;	
+	NSMutableDictionary *keepAliveDic = nil;
 	NSString			*error = nil;
 	NSString			*backgrounderPath = [[rsrcPath stringByAppendingString:@"/"] stringByAppendingString:BACKGROUNDER_AGENT_NAME];
 	
@@ -145,10 +148,17 @@
 	
 	if(install) {
 		if(![[NSFileManager defaultManager] fileExistsAtPath:[BACKGROUNDER_LAUNCHD_CONTROL_FILE stringByExpandingTildeInPath]]) {
-			launchdDic = [[NSMutableDictionary alloc] init];
+			launchdDic = [[[NSMutableDictionary alloc] init] autorelease];
+			keepAliveDic = [[[NSMutableDictionary alloc] init] autorelease];
 			
 			[launchdDic setObject:@"it.infn.lnf.network.AFSBackgrounder" 
 						   forKey:@"Label"];
+			
+			[keepAliveDic setObject:[NSNumber numberWithBool:NO]
+							 forKey:@"SuccessfulExit"];
+			
+			[launchdDic setObject:keepAliveDic 
+						   forKey:@"KeepAlive"];
 			
 			[launchdDic setObject:@"Aqua"
 						   forKey:@"LimitLoadToSessionType"];
@@ -222,15 +232,12 @@
 	if(enable) {
 		//Check first if the launchd configuration file for startup is present
 		if(![[NSFileManager defaultManager] fileExistsAtPath:[AFS_STARTUP_CONTROL_FILE stringByExpandingTildeInPath]]) {
-			launchdDic = [[NSMutableDictionary alloc] init];
+			launchdDic = [[[NSMutableDictionary alloc] init] autorelease];
 			//argDic = [[NSMutableArray alloc] init];
 			
 			[launchdDic setObject:@"it.infn.lnf.afsstartup" 
 						   forKey:@"Label"];
 			
-			//[argDic addObject:afsStartupScript];
-			//[argDic addObject:afsBasePath/*"/var/db/openafs"*/];
-			//[argDic addObject:afsdPath/*"/usr/sbin/afsd"*/];
 			
 			[launchdDic setObject:[NSArray arrayWithObjects:afsStartupScript, afsBasePath, afsdPath, nil]
 						   forKey:@"ProgramArguments"];
@@ -263,4 +270,46 @@
 	
 }
 
+// -------------------------------------------------------------------------------
+//  launchctlCommand:
+// -------------------------------------------------------------------------------
++(void) launchctlCommand:(BOOL)enable
+			  userDomain:(BOOL)userDomain
+					   option:(NSArray*)option 
+					plistName:(NSString*)plistName {
+	NSMutableArray *argument = [NSMutableArray array];
+	NSMutableString *commandPath = [NSMutableString stringWithCapacity:0];
+	NSUInteger searchDomain = userDomain?NSUserDomainMask:NSSystemDomainMask;
+	//
+	NSArray *libraryPath = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory, searchDomain,  YES);
+	//set the load unload
+	[argument addObject:enable?@"load":@"unload"];
+
+	//if there are load the user custo option
+	if(option) [argument addObjectsFromArray:option];
+		
+	//construct the path
+	[commandPath appendString:[libraryPath objectAtIndex:0]];
+	[commandPath appendFormat:@"/LaunchAgents/%@", plistName];
+	
+	[argument addObject:commandPath];
+	//exec the command
+	[TaskUtil executeTaskSearchingPath:@"launchctl"  
+								  args:argument];
+}
+
+// -------------------------------------------------------------------------------
+//  launchdJobState:
+// -------------------------------------------------------------------------------
++(BOOL) launchdJobState:(NSString*)jobName {
+	NSMutableArray *argument = [NSMutableArray array];
+	
+	//set the load unload
+	[argument addObject:@"list"];
+	[argument addObject:jobName];
+	//exec the command
+	NSString *taskResult =[TaskUtil executeTaskSearchingPath:@"launchctl"  
+														args:argument];
+	return taskResult && [taskResult rangeOfString:jobName].location != NSNotFound;
+}
 @end

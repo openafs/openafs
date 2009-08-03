@@ -17,10 +17,10 @@
 #define AUTH_FILE_BK	@"/etc/authorization_bk"
 #define TMP_FILE		@"/tmp/authorization"
 
+#define BACKGROUNDER_P_FILE						@"it.infn.lnf.network.AFSBackgrounder"
 #define HOME_LAUNCHD_AGENT_FOLDER				@"~/Library/LaunchAgents"
 #define BACKGROUNDER_LAUNCHD_CONTROL_FILE		@"~/Library/LaunchAgents/it.infn.lnf.network.AFSBackgrounder.plist"
 #define BACKGROUNDER_LAUNCHD_TMP_CONTROL_FILE	@"/tmp/it.infn.lnf.network.AFSBackgrounder.plist"
-#define BACKGROUNDER_AGENT_NAME					@"AFSBackgrounder.app/Contents/MacOS/AFSBackgrounder"
 
 #define LAUNCHD_DAEMON_FOLDER			@"/Library/LaunchDaemons"
 #define AFS_STARTUP_TMP_CONTROL_FILE	@"/tmp/it.infn.lnf.network.afsstartup.plist"
@@ -68,4 +68,18 @@
  @discussion <#(comprehensive description)#>
  */
 +(void) manageAfsStartupLaunchdFile:(BOOL)enable afsStartupScript:(NSString*)afsStartupScript afsBasePath:(NSString*)afsBasePath  afsdPath:(NSString*)afsdPath;
+
+/*!
+ @method     launchctlCommand
+ @abstract   exec the launchctl command on a particular plist job
+ @discussion <#(comprehensive description)#>
+*/ 
++(void) launchctlCommand:(BOOL)enable userDomain:(BOOL)userDomain option:(NSArray*)option plistName:(NSString*)plistName;
+
+/*!
+ @method     launchdJobState
+ @abstract   check is a job has been submitted to launchd
+ @discussion <#(comprehensive description)#>
+ */ 
++(BOOL) launchdJobState:(NSString*)jobName;
 @end

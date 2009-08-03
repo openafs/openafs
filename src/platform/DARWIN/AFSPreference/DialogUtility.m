@@ -22,5 +22,6 @@
 					  modalDelegate:delegator 
 					 didEndSelector:fSelector
 						contextInfo:nil];
+	return YES;
 }
 @end

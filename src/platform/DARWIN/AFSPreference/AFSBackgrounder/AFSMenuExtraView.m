@@ -95,4 +95,11 @@
     [statusItemMenu setDelegate:nil];    
     [self setNeedsDisplay:YES];
 }
+
+// -------------------------------------------------------------------------------
+//  - (void)menuNeedsUpdate:(NSMenu *)menu
+// -------------------------------------------------------------------------------
+- (void)menuNeedsUpdate:(NSMenu *)menu {
+	[backgrounderDelegator menuNeedsUpdate:menu];
+}
 @end

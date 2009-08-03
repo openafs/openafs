@@ -21,12 +21,14 @@
 	BOOL gotToken; //0-no 1-one o more token
 	
 @protected
+	AFSPropertyManager *afsMngr;
 	NSString *afsSysPath;
 	NSNumber *useAklogPrefValue;
 	NSNumber *showStatusMenu;
+	NSNumber *aklogTokenAtLogin;
 	//Icon for state visualization
-	NSImage			*hasTokenImage;
-	NSImage			*noTokenImage;
+	NSImage	*hasTokenImage;
+	NSImage	*noTokenImage;
 	
 	//credential windows mainWindow
 	AFSMenuCredentialContoller *credentialMenuController;
@@ -47,7 +49,7 @@
 - (void)chageMenuVisibility:(NSNotification *)notification;
 - (NSImage*)getImageFromBundle:(NSString*)fileName fileExt:(NSString*)ext;
 - (NSImage*)imageToRender;
-- (void)updateMenu;
+- (void)menuNeedsUpdate:(NSMenu *)menu;
 - (void)repairHelperTool;
 - (void) afsVolumeMountChange:(NSNotification *)notification;
 
