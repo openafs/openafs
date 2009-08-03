@@ -1782,6 +1782,7 @@ Do_VLRegisterRPC(void)
 	    ViceLog(0,
 		    ("VL_RegisterAddrs rpc failed; will retry periodically (code=%d, err=%d)\n",
 		     code, errno));
+	    FS_registered = 1;	/* Retry in the gc daemon */
 	}
     } else {
 	FS_registered = 2;	/* So we don't have to retry in the gc daemon */
