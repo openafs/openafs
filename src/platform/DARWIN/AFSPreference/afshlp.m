@@ -21,6 +21,7 @@
 #include <string.h>
 #include <asl.h>
 #include <sys/event.h>
+#include <mach-o/dyld.h>
 #import "TaskUtil.h"
 #import "AuthUtil.h"
 #import "PListManager.h"
@@ -179,7 +180,7 @@ void runWithSelfRepair(char *selfPath, int argc, char *argv[])
 	
       
 	// Make the qargs array for passing to child the same args of father
-    const char *arguments = {argv[1], argv[2], argv[3], "--self-repair", 0L};
+    const char *arguments[] = {argv[1], argv[2], argv[3], "--self-repair", 0L};
 	
 	// Get the privileged AuthorizationRef
     [[AuthUtil shared] autorize];

@@ -24,13 +24,13 @@
 @implementation AFSBackgrounderDelegate
 #pragma mark NSApp Delegate
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	NSLog(@"applicationDidFinishLaunching");
-	//Create the NSStatusBar and set its length
-    statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength] retain];
-    
-    //Used to detect where our files are
-    //NSBundle *bundle = [NSBundle mainBundle];
-    
+	NSLog(@"Init the afs manager");
+	afsMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath];
+	// allocate the lock for concurent afs check state
+	tokensLock = [[NSLock alloc] init];
+	
+	//remove the auto eanble on menu item
+	[backgrounderMenu setAutoenablesItems:NO];
     //Sets the images in our NSStatusItem
 	statusItem = nil;
 	
@@ -71,9 +71,15 @@
 															   name:NSWorkspaceDidUnmountNotification object:nil];
 	
 	//try to see if we need tho show the menu at startup
-	NSLog(@"showStatusMenu %d", [showStatusMenu intValue]);
+	
 	[self setStatusItem:[showStatusMenu boolValue]];
-
+	
+	NSLog(@"Check if we need to get token at login time %d", [aklogTokenAtLogin intValue]);
+	if([aklogTokenAtLogin boolValue] && afsState && !gotToken) {
+		NSLog(@"Proceed to get token");
+		//check if we must get the aklog at logint(first run of backgrounder
+		[self getToken:nil];
+	}	
 }
 
 - (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender {
@@ -96,6 +102,8 @@
 	// send notify that menuextra has closed
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID object:kPrefChangeNotification];
 	
+	if(tokensLock) [tokensLock release];
+	if(afsMngr) [afsMngr release];
 	return NSTerminateNow;
 }
 // -------------------------------------------------------------------------------
@@ -108,6 +116,8 @@
 		[afsSysPath release];
 		afsSysPath = nil;
 	}
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
 	afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;
 	
@@ -121,13 +131,18 @@
 													   (CFStringRef)kAfsCommanderID, 
 													   kCFPreferencesCurrentUser, 
 													   kCFPreferencesAnyHost);
+	
+	aklogTokenAtLogin = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AKLOG_TOKEN_AT_LOGIN, (CFStringRef)kAfsCommanderID,  
+																	kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+
 	//set the menu name
 	[self updateAfsStatus:nil];
 }
 
 // -------------------------------------------------------------------------------
-//  -(void) readPreferenceFile
+//  - (void)chageMenuVisibility:(NSNotification *)notification
 // -------------------------------------------------------------------------------
+/**/
 - (void)chageMenuVisibility:(NSNotification *)notification {
 	NSLog(@"chageMenuVisibility");
 	[self readPreferenceFile:nil];
@@ -150,10 +165,7 @@
 	
 	@try {
 		if(afsdPath == nil) return;
-		AFSPropertyManager *afsMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath];
 		currentAfsState = [afsMngr checkAfsStatus];
-		[afsMngr release];
-		
 		rootHelperApp = [[NSBundle mainBundle] pathForResource:@"afshlp" ofType:@""];
 		
 		//[startStopScript setString: resourcePath];
@@ -162,8 +174,6 @@
 		[self repairHelperTool];
 		
 		// make the parameter to call the root helper app
-		//NSLog(@"Path installazione afs: %s",[afsSysPath UTF8String]);
-		//NSLog(@"Path installazione afsd: %s", [afsdPath UTF8String]);
 		status = [[AuthUtil shared] autorize];
 		if(status == noErr){
 			if(currentAfsState){
@@ -212,7 +222,7 @@
 	[afsPropMngr loadConfiguration]; 
 	
 	
-	if([useAklogPrefValue intValue]==NSOnState ) {
+	if([useAklogPrefValue boolValue]) {
 		NSLog(@"Use Aklog");
 		[afsPropMngr getTokens:false 
 						   usr:nil 
@@ -240,9 +250,7 @@
 // -------------------------------------------------------------------------------
 - (void)releaseToken:(id)sender
 {
-	AFSPropertyManager *afsMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath];
 	[afsMngr unlog:nil];
-	[afsMngr release];
 	[self updateAfsStatus:nil];
 }
 
@@ -263,14 +271,11 @@
 	if(![tokensLock tryLock]) return;
 	
 	// check the afs state in esclusive mode
-	AFSPropertyManager *afsMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath];
 	afsState = [afsMngr checkAfsStatus];
 	
 	NSArray *tokens = [afsMngr getTokenList];
-	[afsMngr release];
 	gotToken = [tokens count] > 0;
 	[tokens release];
-	[self updateMenu];
 	
 	//unlock
 	[tokensLock unlock];
@@ -325,16 +330,18 @@
 }
 
 
-
-
 // -------------------------------------------------------------------------------
-//  -(void) updateMenu
+//  - (void)menuNeedsUpdate:(NSMenu *)menu
 // -------------------------------------------------------------------------------
-- (void)updateMenu{
-	[getReleaseTokenMenuItem setEnabled:afsState];
-	[startStopMenuItem setTitle:afsState?kAfsButtonShutdown:kAfsButtonStartup];
-	[[statusItem view] setNeedsDisplay:YES];
-
+- (void)menuNeedsUpdate:(NSMenu *)menu {
+	if (menu == backgrounderMenu)
+	{
+		[startStopMenuItem setTitle:afsState?@"Shutdown AFS":@"Startup AFS"];
+		[getReleaseTokenMenuItem setTitle:gotToken?@"Release token":@"Get New Token"];
+		[getReleaseTokenMenuItem setEnabled:afsState];
+		[[statusItem view] setNeedsDisplay:YES];
+		
+	}
 }
 
 
@@ -426,7 +433,8 @@
 		[statusItem setImage:noTokenImage];
 	} else {
 		if(!statusItem) return;
-		[statusItem release];
+		[[NSStatusBar systemStatusBar] removeStatusItem:statusItem];
+		[statusItem autorelease];
 		statusItem = nil;
 	}
 }

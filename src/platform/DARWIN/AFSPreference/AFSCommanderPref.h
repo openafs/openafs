@@ -46,6 +46,7 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 	IBOutlet NSButton *dynRoot;
 	IBOutlet NSButton *afsDB;
 	IBOutlet NSButton *verbose;
+	IBOutlet NSButton *backgrounderActivationCheck;
 	IBOutlet NSBox *groupsBox;
 	
 	//id installationPathTextField;
@@ -117,9 +118,10 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (IBAction) aklogSwitchEvent:(id) sender;
 - (IBAction) credentialAtLoginTimeEvent:(id) sender;
 - (IBAction) afsStartupSwitchEvent:(id) sender;
-- (void) credentialAtLoginTimeEventCreationLaunchAgentDir:(NSWindow*)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo;
 - (IBAction) krb5KredentialAtLoginTimeEvent:(id) sender;
 - (IBAction) searchCellTextEvent:(id) sender;
+- (IBAction) manageBackgrounderActivation:(id)sender;
+- (void) credentialAtLoginTimeEventCreationLaunchAgentDir:(NSWindow*)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo;
 - (void) clearCellServDBFiltering;
 - (void) filterCellServDB:(NSString*)textToFilter;
 - (DBCellElement*) getCurrentCellInDB;
@@ -135,6 +137,7 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (void) readPreferenceFile;
 - (void) refreshGui:(NSNotification *)notification;
 - (void) afsVolumeMountChange:(NSNotification *)notification;
+- (void)tabView:(NSTabView *)tabView willSelectTabViewItem: (NSTabViewItem *)tabViewItem;
 @end
 
 @interface AFSCommanderPref (NSTableDataSource)

@@ -15,14 +15,13 @@
 {
 	if(!parentView) return;
 	NSArray *views = [parentView subviews];
-	
 	for(int idx = 0; idx < [views count]; idx++)
 	{
 		NSObject *obj = [views objectAtIndex:idx];
-		if([obj respondsToSelector:@selector(setEnabled:)])
+		if([obj isKindOfClass:[NSButton class]])
 		{
-			//[obj setEnabled:controlState];
-			[obj performSelector:@selector(setEnabled:) withObject:controlState];
+			[(NSButton*)obj setEnabled:controlState];
+			//[obj performSelector:@selector(setEnabled:) withObject:controlState];
 		}
 	}
 	

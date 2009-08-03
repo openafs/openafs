@@ -35,7 +35,7 @@
 #define TAB_TOKENS 1
 #define TAB_CELL_SERV_DB 2
 #define TAB_CACHE 3
-#define TAB_GROUP 4
+#define TAB_LINK 4
 
 //CellServDB table id
 #define CELLSRVDB_TABLE_USR_DFLT_CHECK_COLUMN	0
@@ -259,26 +259,18 @@
 - (void) readPreferenceFile
 {
 	
-	// read the preference for afs path
-	//NSString *afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;/*(NSString*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, (CFStringRef)kAfsCommanderID,  
-															// kCFPreferencesAnyUser, kCFPreferencesAnyHost);*/
-	/*if(afsSysPath){
-		[((NSTextField*) installationPathTextField ) setStringValue:afsSysPath];
-	}*/
-	
 	// read the preference for aklog use
 	NSNumber *useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG, (CFStringRef)kAfsCommanderID,  
 																	kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	NSNumber *aklogTokenAtLogin = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AKLOG_TOKEN_AT_LOGIN, (CFStringRef)kAfsCommanderID,  
 																	kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	[useAklogCheck setState:[useAklogPrefValue intValue]];
-	if(useAklogPrefValue){
-		[aklogCredentialAtLoginTime setEnabled:[aklogTokenAtLogin boolValue]];
-	} else {
-		[aklogCredentialAtLoginTime setEnabled:NSOffState];
-		[aklogCredentialAtLoginTime setState:NSOffState];
-	}
-	
+	[aklogCredentialAtLoginTime setEnabled:useAklogPrefValue && [useAklogPrefValue boolValue]];
+	[aklogCredentialAtLoginTime setState:aklogTokenAtLogin && [aklogTokenAtLogin boolValue]];
+
+	//check krb5 at login time
+	[installKRB5AuthAtLoginButton setState:[PListManager checkKrb5AtLoginTimeLaunchdEnable]];
+
 	//check for AFS enable at startup
 	NSNumber *afsEnableStartupTime = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_START_AFS_AT_STARTUP, 
 																	   (CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
@@ -289,8 +281,11 @@
 	//set the check button state
 	[checkButtonAfsAtBootTime setState:startAFSAtLogin];
 	
-	NSNumber *showStatusMenu =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU,  (CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	NSNumber *showStatusMenu =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	[(NSButton*)afsMenucheckBox setState: [showStatusMenu boolValue]];
+	
+	//backgrounder state
+	[backgrounderActivationCheck setState:[PListManager launchdJobState:BACKGROUNDER_P_FILE]];
 }
 
 // -------------------------------------------------------------------------------
@@ -316,12 +311,12 @@
 	//set aklog at login
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_AKLOG_TOKEN_AT_LOGIN, 
 						  (CFNumberRef)[NSNumber numberWithBool:[aklogCredentialAtLoginTime state]], 
-						  (CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
 	//set aklog at login
 	CFPreferencesSetValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU, 
 						  (CFNumberRef)[NSNumber numberWithBool:[afsMenucheckBox state]], 
-						  (CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
 	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
 	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
@@ -760,7 +755,6 @@
 		
 }
 
-
 // -------------------------------------------------------------------------------
 //  credentialAtLoginTimeEvent:
 // -------------------------------------------------------------------------------
@@ -1002,6 +996,36 @@
 - (IBAction) enableLink:(id) sender {
 	
 }
+
+// -------------------------------------------------------------------------------
+//  removeExtra:
+// -------------------------------------------------------------------------------
+- (IBAction) manageBackgrounderActivation:(id)sender {
+	[PListManager launchctlCommand:[(NSButton*)sender state] 
+						userDomain:YES 
+							option:[NSArray arrayWithObjects:@"-S", @"Aqua", nil] 
+						 plistName:[NSString stringWithFormat:@"%@.plist", BACKGROUNDER_P_FILE]];
+	//re ad the status to check taht all is gone well
+	[backgrounderActivationCheck setState:[PListManager launchdJobState:BACKGROUNDER_P_FILE]];
+}
+
+
+// -------------------------------------------------------------------------------
+//  - (void)tabView:(NSTabView *)tabView willSelectTabViewItem: (NSTabViewItem *)tabViewItem
+// -------------------------------------------------------------------------------
+- (void)tabView:(NSTabView *)tabView willSelectTabViewItem: (NSTabViewItem *)tabViewItem 
+{
+	//check to see if the cache param tab is the tab that will be selected
+	if([((NSString*)[tabViewItem identifier]) intValue] == TAB_LINK)
+	{
+
+		//	[groupsBox setHidden:YES];
+		NSLog([tabViewItem label]);
+		[ViewUtility enbleDisableControlView:[tabViewItem view]
+								controlState:NO];
+	}
+}
+
 @end
 
 @implementation AFSCommanderPref (NSTableDataSource)
@@ -1131,8 +1155,6 @@
 	}	
 	return rowCount;  
 }
-
-
 @end
 
 
@@ -1208,25 +1230,5 @@
 {
 	NSLog(@"didEndSymlinkSheet");
 	[lyncCreationSheet orderOut:self];
-}
-@end
-
-// -------------------------------------------------------------------------------
-//  AFSCommanderPref(NSTabViewDelegator) - delegate for nstabview in 
-//  main preference view
-// -------------------------------------------------------------------------------
-@implementation  AFSCommanderPref(NSTabViewDelegator)
-- (void)tabView:(NSTabView *)tabView willSelectTabViewItem: (NSTabViewItem *)tabViewItem 
-{
-	//check to see if the cache param tab is the tab that will be selected
-	if([((NSString*)[tabViewItem identifier]) intValue] == TAB_GROUP)
-	{
-		//get
-		NSLog(@"cache param tab");
-	//	[groupsBox setHidden:YES];
-		NSLog([groupsBox title]);
-		[ViewUtility enbleDisableControlView:[groupsBox contentView]
-								controlState:NO];
-	}
 }
 @end

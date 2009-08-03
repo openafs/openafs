@@ -318,7 +318,7 @@
 									reason:kThisCellFOError 
 								  userInfo:nil];
 		}
-		NSLog(@"Cell found: %s", [cellName cString]);
+		NSLog(@"Cell found: %@", cellName);
 		
 		//read TheseCell file
 		[filePath setString: installationPath];
@@ -671,7 +671,7 @@
 {
 	NSString *tmpString = nil;
 	NSString *result = [TaskUtil executeTaskSearchingPath:@"fs" args:[NSArray arrayWithObjects:@"-version", nil]];
-	if(result) NSLog(@"fs -version return: %s", [result cString]);
+	if(result) NSLog(@"fs -version return: %@", result);
 	
 	
 	NSCharacterSet *endVersionCS = [NSCharacterSet characterSetWithCharactersInString:@"qwertyuiopasdfghjklzxcvbnmMNBVCXZLKJHGFDSAPOIUYTREWQ"];
@@ -832,7 +832,7 @@
 	
 	NSError *error = nil;
 	NSString *tmpStr = nil;
-	NSLog(@"Try to opening file: %s",[configFile cString] );
+	NSLog(@"Try to opening file: %@",configFile);
 	NSString * result = [NSString stringWithContentsOfFile:configFile
 												  encoding:NSASCIIStringEncoding
 													 error:&error];

@@ -48,15 +48,15 @@
 	[cellElement setCellName:[((NSControl*) textFieldCellName) stringValue]];
 	[cellElement setCellComment:[((NSControl*) textFieldComment) stringValue]];
 	
-	NSLog(@"Deleting:\n%s",[[bkIPArray description] cString]);
+	NSLog(@"Deleting:\n%@",[bkIPArray description]);
 	[bkIPArray removeAllObjects];
 	NSLog(@"deleted:\n");
-	NSLog(@"Coping:\n%s",[[workIPArray description] cString]);
+	NSLog(@"Coping:\n%@",[workIPArray description]);
 	[bkIPArray setArray:workIPArray];
-	NSLog(@"Copied:\n%s",[[workIPArray description] cString]);
-	NSLog(@"Releasing:\n%s",[[workIPArray description] cString]);
+	NSLog(@"Copied:\n%@",[workIPArray description]);
+	NSLog(@"Releasing:\n%@",[workIPArray description]);
 	[workIPArray release];
-	NSLog(@"Released:\n%s",[[workIPArray description] cString]);
+	NSLog(@"Released:\n%@",[workIPArray description]);
 }
 
 // -------------------------------------------------------------------------------
