@@ -94,7 +94,7 @@ struct CEBlock {		/* block of CESPERBLOCK file entries */
     struct client entry[CESPERBLOCK];
 };
 
-static void h_TossStuff_r(register struct host *host);
+void h_TossStuff_r(register struct host *host);
 
 /*
  * Make sure the subnet macros have been defined.
@@ -491,56 +491,6 @@ hpr_GetCPS(afs_int32 id, prlist *CPS)
 static short consolePort = 0;
 
 int
-h_Release(register struct host *host)
-{
-    H_LOCK;
-    h_Release_r(host);
-    H_UNLOCK;
-    return 0;
-}
-
-/**
- * If this thread does not have a hold on this host AND
- * if other threads also dont have any holds on this host AND
- * If either the HOSTDELETED or CLIENTDELETED flags are set
- * then toss the host
- */
-int
-h_Release_r(register struct host *host)
-{
-
-    if (!((host)->holds[h_holdSlot()] & ~h_holdbit())) {
-	if (!h_OtherHolds_r(host)) {
-	    /* must avoid masking this until after h_OtherHolds_r runs
-	     * but it should be run before h_TossStuff_r */
-	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
-	    if ((host->hostFlags & HOSTDELETED)
-		|| (host->hostFlags & CLIENTDELETED)) {
-		h_TossStuff_r(host);
-	    }
-	} else
-	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
-    } else
-	(host)->holds[h_holdSlot()] &= ~h_holdbit();
-
-    return 0;
-}
-
-int
-h_OtherHolds_r(register struct host *host)
-{
-    register int i, bit, slot;
-    bit = h_holdbit();
-    slot = h_holdSlot();
-    for (i = 0; i < h_maxSlots; i++) {
-	if (host->holds[i] != ((i == slot) ? bit : 0)) {
-	    return 1;
-	}
-    }
-    return 0;
-}
-
-int
 h_Lock_r(register struct host *host)
 {
     H_UNLOCK;
@@ -742,14 +692,12 @@ void
 h_flushhostcps(register afs_uint32 hostaddr, register afs_uint16 hport)
 {
     struct host *host;
-    int held = 0;
 
     H_LOCK;
-    h_Lookup_r(hostaddr, hport, &held, &host);
+    h_Lookup_r(hostaddr, hport, &host);
     if (host) {
 	host->hcpsfailed = 1;
-	if (!held)
-	    h_Release_r(host);
+	h_Release_r(host);
     }
     H_UNLOCK;
     return;
@@ -836,12 +784,14 @@ h_SetupCallbackConn_r(struct host * host)
     rx_SetConnHardDeadTime(host->callback_rxcon, AFS_HARDDEADTIME);
 }
 
-/* Lookup a host given an IP address and UDP port number. */
-/* hostaddr and hport are in network order */
-/* Note: host should be released by caller if 0 == *heldp and non-null */
-/* hostaddr and hport are in network order */
+/* h_Lookup_r
+ * Lookup a host given an IP address and UDP port number.
+ * hostaddr and hport are in network order
+ * hostaddr and hport are in network order
+ * On return, refCount is incremented.
+ */
 int
-h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp, struct host **hostp)
+h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, struct host **hostp)
 {
     afs_int32 now;
     struct host *host = NULL;
@@ -860,14 +810,11 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp, struct host **hostp)
 		*hostp = 0;
 		return VBUSY;
 	    }
-	    *heldp = h_Held_r(host);
-	    if (!*heldp)
-		h_Hold_r(host);
+	    h_Hold_r(host);
 	    h_Lock_r(host);
 	    if (host->hostFlags & HOSTDELETED) {
 		h_Unlock_r(host);
-		if (!*heldp)
-		    h_Release_r(host);
+		h_Release_r(host);
 		goto restart;
 	    }
 	    h_Unlock_r(host);
@@ -879,7 +826,7 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, int *heldp, struct host **hostp)
 		 * first time that the host is added to a group.  Also
 		 * here we also retry on previous legitimate hcps failures.
 		 *
-		 * If we get here we still have a host hold.
+		 * If we get here refCount is elevated.
 		 */
 		h_gethostcps_r(host, now);
 	    }
@@ -911,27 +858,18 @@ h_LookupUuid_r(afsUUID * uuidp)
 }				/*h_Lookup */
 
 
-/*
- * h_Hold_r: Establish a hold by the current LWP on this host--the host
- * or its clients will not be physically deleted until all holds have
- * been released.
- * NOTE: h_Hold_r is a macro defined in host.h.
- */
-
 /* h_TossStuff_r:  Toss anything in the host structure (the host or
  * clients marked for deletion.  Called from h_Release_r ONLY.
  * To be called, there must be no holds, and either host->deleted
  * or host->clientDeleted must be set.
  */
-static void
+void
 h_TossStuff_r(register struct host *host)
 {
     register struct client **cp, *client;
-    int i;
 
     /* if somebody still has this host held */
-    for (i = 0; (i < h_maxSlots) && (!(host)->holds[i]); i++);
-    if (i != h_maxSlots)
+    if (host->refCount > 0)
 	return;
 
     /* if somebody still has this host locked */
@@ -1031,18 +969,24 @@ h_TossStuff_r(register struct host *host)
 }				/*h_TossStuff_r */
 
 
+
 /* h_Enumerate: Calls (*proc)(host, held, param) for at least each host in the
  * system at the start of the enumeration (perhaps more).  Hosts may be deleted
- * (have delete flag set); ditto for clients.  (*proc) is always called with
- * host h_held().  The hold state of the host with respect to this lwp is passed
- * to (*proc) as the param held.  The proc should return 0 if the host should be
- * released, 1 if it should be held after enumeration.
+ * (have delete flag set); ditto for clients.  refCount is always incremented
+ * before (*proc) is called.  The param flags is passed to (*proc) as the
+ * param flags, permitting (*proc) to stop the enumeration (BAIL).
+ *
+ * Needed?  Why not always h_Hold_r and h_Release_r in (*proc), or even -never-
+ * h_Hold_r or h_Release_r in (*proc)?
+ *
+ * **The proc should return 0 if the host should be released, 1 if it should
+ * be held after enumeration.
  */
 void
 h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
 {
     register struct host *host, **list;
-    register int *held;
+    register int *flags;
     register int i, count;
 
     H_LOCK;
@@ -1052,18 +996,17 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     }
     list = (struct host **)malloc(hostCount * sizeof(struct host *));
     if (!list) {
-	ViceLog(0, ("Failed malloc in h_Enumerate\n"));
+	ViceLog(0, ("Failed malloc in h_Enumerate (list)\n"));
 	assert(0);
     }
-    held = (int *)malloc(hostCount * sizeof(int));
-    if (!held) {
-	ViceLog(0, ("Failed malloc in h_Enumerate\n"));
+    flags = (int *)malloc(hostCount * sizeof(int));
+    if (!flags) {
+	ViceLog(0, ("Failed malloc in h_Enumerate (flags)\n"));
 	assert(0);
     }
     for (count = 0, host = hostList; host; host = host->next, count++) {
 	list[count] = host;
-	if (!(held[count] = h_Held_r(host)))
-	    h_Hold_r(host);
+	h_Hold_r(host);
     }
     if (count != hostCount) {
 	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", count, hostCount));
@@ -1071,25 +1014,28 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
     assert(count <= hostCount);
     H_UNLOCK;
     for (i = 0; i < count; i++) {
-	held[i] = (*proc) (list[i], held[i], param);
-	if (!H_ENUMERATE_ISSET_HELD(held[i]))
-	    h_Release(list[i]);	/* this might free up the host */
+	flags[i] = (*proc) (list[i], flags[i], param);
+	h_Release_r(list[i]);
 	/* bail out of the enumeration early */
-	if (H_ENUMERATE_ISSET_BAIL(held[i]))
+	if (H_ENUMERATE_ISSET_BAIL(flags[i]))
 	    break;
     }
     free((void *)list);
-    free((void *)held);
-}				/*h_Enumerate */
+    free((void *)flags);
+}	/* h_Enumerate */
+
 
 /* h_Enumerate_r (revised):
- * Calls (*proc)(host, held, param) for each host in hostList, starting
- * at enumstart
- * Hosts may be deleted (have delete flag set); ditto for clients.
- * (*proc) is always called with
- * host h_held() and the global host lock (H_LOCK) locked.The hold state of the
- * host with respect to this lwp is passed to (*proc) as the param held.
- * The proc should return 0 if the host should be released, 1 if it should
+ * Calls (*proc)(host, flags, param) for each host in hostList, starting
+ * at enumstart. Called only under H_LOCK.  Hosts may be deleted (have
+ * delete flag set); ditto for clients.  refCount is always incremented
+ * before (*proc) is called.  The param flags is passed to (*proc) as the
+ * param flags, permitting (*proc) to stop the enumeration (BAIL).
+ *
+ * Needed?  Why not always h_Hold_r and h_Release_r in (*proc), or even -never-
+ * h_Hold_r or h_Release_r in (*proc)?
+ *
+ * **The proc should return 0 if the host should be released, 1 if it should
  * be held after enumeration.
  */
 void
@@ -1097,28 +1043,26 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
 	      struct host *enumstart, void *param)
 {
     register struct host *host, *next;
-    int held = 0;
-    int nheld = 0;
+    int flags = 0;
+    int nflags = 0;
 
     if (hostCount == 0) {
 	return;
     }
-    if (enumstart && !(held = h_Held_r(enumstart)))
-	h_Hold_r(enumstart); 
-    for (host = enumstart; host; host = next, held = nheld) {
+    h_Hold_r(enumstart);
+    for (host = enumstart; host; host = next, flags = nflags) {
 	next = host->next;
-	if (next && !(nheld = h_Held_r(next)) && !H_ENUMERATE_ISSET_BAIL(held))
+	if (next && !H_ENUMERATE_ISSET_BAIL(flags))
 	    h_Hold_r(next);
-	held = (*proc) (host, held, param);
-	if (!H_ENUMERATE_ISSET_HELD(held))
+	flags = (*proc) (host, flags, param);
+	if (H_ENUMERATE_ISSET_BAIL(flags)) {
 	    h_Release_r(host); /* this might free up the host */
-	if (H_ENUMERATE_ISSET_BAIL(held)) {
-	    if (!H_ENUMERATE_ISSET_HELD(nheld))
-		h_Release_r(next); /* this might free up the host */
 	    break;
 	}
+	h_Release_r(host); /* this might free up the host */
     }
-}				/*h_Enumerate_r */
+}	/*h_Enumerate_r */
+
 
 /* inserts a new HashChain structure corresponding to this UUID */
 void
@@ -1509,14 +1453,13 @@ h_threadquota(int waiting)
     return 0;
 }
 
-/* Host is returned held */
+/* If found, host is returned with refCount incremented */
 struct host *
 h_GetHost_r(struct rx_connection *tcon)
 {
     struct host *host;
     struct host *oldHost;
     int code;
-    int held;
     struct interfaceAddr interf;
     int interfValid = 0;
     struct Identity *identP = NULL;
@@ -1542,7 +1485,7 @@ h_GetHost_r(struct rx_connection *tcon)
     caps.Capabilities_len = 0;
 
     code = 0;
-    if (h_Lookup_r(haddr, hport, &held, &host))
+    if (h_Lookup_r(haddr, hport, &host))
 	return 0;
     identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
     if (host && !identP && !(host->Console & 1)) {
@@ -1552,7 +1495,6 @@ h_GetHost_r(struct rx_connection *tcon)
 	 */
 	if ((host->hostFlags & HWHO_INPROGRESS) && 
 	    h_threadquota(host->lock.num_waiting)) {
-	    if (!held)
 		h_Release_r(host);
 	    host = NULL;
 	    goto gethost_out;
@@ -1561,8 +1503,7 @@ h_GetHost_r(struct rx_connection *tcon)
 	if (!(host->hostFlags & ALTADDR)) {
 	    /* Another thread is doing initialization */
 	    h_Unlock_r(host);
-	    if (!held)
-		h_Release_r(host);
+	    h_Release_r(host);
 	    ViceLog(125,
 		    ("Host %" AFS_PTR_FMT " (%s:%d) starting h_Lookup again\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr),
@@ -1636,8 +1577,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    host->hostFlags |= HOSTDELETED;
 		    host->hostFlags &= ~HWHO_INPROGRESS;
 		    h_Unlock_r(host);
-		    if (!held)
-			h_Release_r(host);
+		    h_Release_r(host);
 		    host = NULL;
 		    goto retry;
 		}
@@ -1652,8 +1592,7 @@ h_GetHost_r(struct rx_connection *tcon)
                 host->hostFlags &= ~HWHO_INPROGRESS;
                 host->hostFlags |= ALTADDR;
                 h_Unlock_r(host);
-		if (!held)
-                    h_Release_r(host);
+		h_Release_r(host);
                 host = NULL;
                 goto retry;
 	    }
@@ -1673,11 +1612,10 @@ h_GetHost_r(struct rx_connection *tcon)
 	    if (!host->interface
 		|| !afs_uuid_equal(&interf.uuid, &host->interface->uuid)) {
 		if (cb_in) {
-                    ViceLog(25,
-			    ("Uuid doesn't match connection (%s:%d).\n",
-			     afs_inet_ntoa_r(haddr, hoststr), ntohs(hport)));
-		    
-                    removeAddress_r(host, haddr, hport);
+			ViceLog(25,
+					("Uuid doesn't match connection (%s:%d).\n",
+					 afs_inet_ntoa_r(haddr, hoststr), ntohs(hport)));
+			removeAddress_r(host, haddr, hport);
 		} else {
 		    ViceLog(25,
 			    ("Uuid doesn't match host %" AFS_PTR_FMT " (%s:%d).\n",
@@ -1688,8 +1626,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		host->hostFlags &= ~HWHO_INPROGRESS;
                 host->hostFlags |= ALTADDR;
 		h_Unlock_r(host);
-		if (!held)
-		    h_Release_r(host);
+		h_Release_r(host);
 		host = NULL;
 		goto retry;
 	    } else if (cb_in) {
@@ -1737,14 +1674,12 @@ h_GetHost_r(struct rx_connection *tcon)
                     cb_in = NULL;
 		    
                     if (rxconn) {
-                        struct client *client;
                         /*
-                         * If rx_DestroyConnection calls h_FreeConnection we will
-			 * deadlock on the host_glock_mutex. Work around the problem
-                         * by unhooking the client from the connection before
-                         * destroying the connection.
+                         * If rx_DestroyConnection calls h_FreeConnection we
+			 * will deadlock on the host_glock_mutex. Work around
+			 * the problem by unhooking the client from the
+			 * connection before destroying the connection.
                          */
-                        client = rx_GetSpecific(rxconn, rxcon_client_key);
                         rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
                         rx_DestroyConnection(rxconn);
 		    }
@@ -1763,8 +1698,7 @@ h_GetHost_r(struct rx_connection *tcon)
                 host->hostFlags &= ~HWHO_INPROGRESS;
                 host->hostFlags |= ALTADDR;
                 h_Unlock_r(host);
-                if (!held)
-                    h_Release_r(host);
+		h_Release_r(host);
                 host = NULL;
                 rx_DestroyConnection(cb_in);
 		cb_in = NULL;
@@ -1794,8 +1728,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		     ntohs(host->port)));
 	    h_Lock_r(host);
 	    h_Unlock_r(host);
-	    if (!held)
-		h_Release_r(host);
+	    h_Release_r(host);
 	    ViceLog(125,
 		    ("Host %" AFS_PTR_FMT " (%s:%d) starting h_Lookup again\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr),
@@ -1827,8 +1760,7 @@ h_GetHost_r(struct rx_connection *tcon)
             h_Lock_r(host);
 	    host->hostFlags |= HOSTDELETED;
 	    h_Unlock_r(host);
-	    if (!held)
-		h_Release_r(host);
+	    h_Release_r(host);
 	    goto retry;
 	}
     } else {
@@ -1901,8 +1833,7 @@ h_GetHost_r(struct rx_connection *tcon)
                 if (oldHost) {
                     int probefail = 0;
 
-		    if (!h_Held_r(oldHost))
-			h_Hold_r(oldHost);
+		    h_Hold_r(oldHost);
 		    h_Lock_r(oldHost);
 		    oldHost->hostFlags |= HWHO_INPROGRESS;
 
@@ -2205,8 +2136,8 @@ h_ID2Client(afs_int32 vid)
  * by one. The caller must call h_ReleaseClient_r when finished with
  * the client.
  *
- * the client->host is returned held.  h_ReleaseClient_r does not release
- * the hold on client->host.
+ * The refCount on client->host is returned incremented.  h_ReleaseClient_r
+ * does not decrement the refCount on client->host.
  */
 struct client *
 h_FindClient_r(struct rx_connection *tcon)
@@ -2298,7 +2229,7 @@ h_FindClient_r(struct rx_connection *tcon)
     }
 
     if (!client) { /* loop */
-	host = h_GetHost_r(tcon);	/* Returns it h_Held */
+	host = h_GetHost_r(tcon);	/* Returns with incremented refCount  */
 
 	if (!host) 
 	    return 0;
@@ -2561,7 +2492,7 @@ h_PrintStats(void)
 
 
 static int
-h_PrintClient(register struct host *host, int held, void *rock)
+h_PrintClient(register struct host *host, int flags, void *rock)
 {
     StreamHandle_t *file = (StreamHandle_t *)rock;
     register struct client *client;
@@ -2575,7 +2506,7 @@ h_PrintClient(register struct host *host, int held, void *rock)
     LastCall = host->LastCall;
     if (host->hostFlags & HOSTDELETED) {
 	H_UNLOCK;
-	return held;
+	return flags;
     }
     (void)afs_snprintf(tmpStr, sizeof tmpStr,
 		       "Host %s:%d down = %d, LastCall %s",
@@ -2613,7 +2544,7 @@ h_PrintClient(register struct host *host, int held, void *rock)
 	}
     }
     H_UNLOCK;
-    return held;
+    return flags;
 
 }				/*h_PrintClient */
 
@@ -2651,7 +2582,7 @@ h_PrintClients(void)
 
 
 static int
-h_DumpHost(register struct host *host, int held, void *rock)
+h_DumpHost(register struct host *host, int flags, void *rock)
 {
     StreamHandle_t *file = (StreamHandle_t *)rock;
     
@@ -2685,19 +2616,11 @@ h_DumpHost(register struct host *host, int held, void *rock)
 		     ntohs(host->interface->interface[i].port));
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
-    sprintf(tmpStr, "] holds: ");
-    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
-
-    for (i = 0; i < h_maxSlots; i++) {
-	sprintf(tmpStr, "%04x", host->holds[i]);
-	(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
-    }
-    sprintf(tmpStr, " slot/bit: %ld/%d\n", (long int) h_holdSlot(), 
-	    h_holdbit());
+    sprintf(tmpStr, "] refCount: %d\n", host->refCount);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     H_UNLOCK;
-    return held;
+    return flags;
 
 }				/*h_DumpHost */
 
@@ -2734,10 +2657,10 @@ h_DumpHosts(void)
 static int h_stateFillHeader(struct host_state_header * hdr);
 static int h_stateCheckHeader(struct host_state_header * hdr);
 static int h_stateAllocMap(struct fs_dump_state * state);
-static int h_stateSaveHost(struct host * host, int held, void *rock);
+static int h_stateSaveHost(struct host * host, int flags, void *rock);
 static int h_stateRestoreHost(struct fs_dump_state * state);
-static int h_stateRestoreIndex(struct host * h, int held, void *rock);
-static int h_stateVerifyHost(struct host * h, int held, void *rock);
+static int h_stateRestoreIndex(struct host * h, int flags, void *rock);
+static int h_stateVerifyHost(struct host * h, int flags, void *rock);
 static int h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 addr, afs_uint16 port);
 static int h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h);
 static void h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out);
@@ -2829,13 +2752,13 @@ h_stateRestoreIndices(struct fs_dump_state * state)
 }
 
 static int
-h_stateRestoreIndex(struct host * h, int held, void *rock)
+h_stateRestoreIndex(struct host * h, int flags, void *rock)
 {
     struct fs_dump_state *state = (struct fs_dump_state *)rock;
     if (cb_OldToNew(state, h->cblist, &h->cblist)) {
-	return H_ENUMERATE_BAIL(held);
+	return H_ENUMERATE_BAIL(flags);
     }
-    return held;
+    return flags;
 }
 
 int
@@ -2846,14 +2769,14 @@ h_stateVerify(struct fs_dump_state * state)
 }
 
 static int
-h_stateVerifyHost(struct host * h, int held, void* rock)
+h_stateVerifyHost(struct host * h, int flags, void* rock)
 {
     struct fs_dump_state *state = (struct fs_dump_state *)rock;
     int i;
 
     if (h == NULL) {
 	ViceLog(0, ("h_stateVerifyHost: error: NULL host pointer in linked list\n"));
-	return H_ENUMERATE_BAIL(held);
+	return H_ENUMERATE_BAIL(flags);
     }
 
     if (h->interface) {
@@ -2874,7 +2797,7 @@ h_stateVerifyHost(struct host * h, int held, void* rock)
 	state->bail = 1;
     }
 
-    return held;
+    return flags;
 }
 
 static int
@@ -3021,7 +2944,7 @@ h_stateAllocMap(struct fs_dump_state * state)
 
 /* function called by h_Enumerate to save a host to disk */
 static int
-h_stateSaveHost(struct host * host, int held, void* rock)
+h_stateSaveHost(struct host * host, int flags, void* rock)
 {
     struct fs_dump_state *state = (struct fs_dump_state *) rock;
     int if_len=0, hcps_len=0;
@@ -3087,9 +3010,9 @@ h_stateSaveHost(struct host * host, int held, void* rock)
     if (hcps)
 	free(hcps);
     if (state->bail) {
-	return H_ENUMERATE_BAIL(held);
+	return H_ENUMERATE_BAIL(flags);
     }
-    return held;
+    return flags;
 }
 
 /* restores a host from disk */
@@ -3481,7 +3404,7 @@ static struct AFSFid zerofid;
  */
 #if 0
 static int
-CheckHost(register struct host *host, int held, void *rock)
+CheckHost(register struct host *host, int flags, void *rock)
 {
     register struct client *client;
     struct rx_connection *cb_conn = NULL;
@@ -3492,7 +3415,7 @@ CheckHost(register struct host *host, int held, void *rock)
     FS_STATE_RDLOCK;
     if (fs_state.mode == FS_MODE_SHUTDOWN) {
 	FS_STATE_UNLOCK;
-	return H_ENUMERATE_BAIL(held);
+	return H_ENUMERATE_BAIL(flags);
     }
     FS_STATE_UNLOCK;
 #endif
@@ -3587,7 +3510,7 @@ CheckHost(register struct host *host, int held, void *rock)
 #endif
 
 int
-CheckHost_r(register struct host *host, int held, void *dummy)
+CheckHost_r(register struct host *host, int flags, void *dummy)
 {
     register struct client *client;
     struct rx_connection *cb_conn = NULL;
@@ -3598,7 +3521,7 @@ CheckHost_r(register struct host *host, int held, void *dummy)
     FS_STATE_RDLOCK;
     if (fs_state.mode == FS_MODE_SHUTDOWN) {
 	FS_STATE_UNLOCK;
-	return H_ENUMERATE_BAIL(held);
+	return H_ENUMERATE_BAIL(flags);
     }
     FS_STATE_UNLOCK;
 #endif
@@ -3683,7 +3606,7 @@ CheckHost_r(register struct host *host, int held, void *dummy)
 	}
 	h_Unlock_r(host);
     }
-    return held;
+    return flags;
 
 }				/*CheckHost_r */
 
