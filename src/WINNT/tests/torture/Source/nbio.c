@@ -86,6 +86,7 @@ int nb_unlink(char *fname)
     char    temp[512];
     char    FileName[128];
     pstring path;
+    DWORD   gle;
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
@@ -94,11 +95,12 @@ int nb_unlink(char *fname)
 
     StartFirstTimer();
     rc = DeleteFile(path);
+    gle = GetLastError();
     EndFirstTimer(CMD_UNLINK, 1);
     if (!rc)
     {
         LeaveThread(0, "", CMD_UNLINK);
-        sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", path, GetLastError());
+        sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", path, gle);
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -282,6 +284,7 @@ int nb_CreateFile(char *path, DWORD size)
     DWORD   BytesWritten;
     DWORD   BytesToWrite;
     BOOL    rc;
+    DWORD   gle;
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     if (strlen(path) == 0)
@@ -299,14 +302,13 @@ int nb_CreateFile(char *path, DWORD size)
                          CREATE_ALWAYS,
                          FILE_ATTRIBUTE_NORMAL,
                          NULL);
-
+    gle = GetLastError();
     if (fHandle == INVALID_HANDLE_VALUE)
     {
-        rc = GetLastError();
         EndFirstTimer(CMD_CREATEFILE, 0);
-        sprintf(temp, "Create file failed on \"%s\" GLE(0x%x)\n", NewPath, rc);
+        sprintf(temp, "Create file failed on \"%s\" GLE(0x%x)\n", NewPath, gle);
         LeaveThread(0, temp, CMD_CREATEFILE);
-        sprintf(temp, "ERROR: Thread %d - Create file failed on \"%s\" GLE(0x%x)\n", ProcessNumber, NewPath, rc);
+        sprintf(temp, "ERROR: Thread %d - Create file failed on \"%s\" GLE(0x%x)\n", ProcessNumber, NewPath, gle);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
         return(-1);
     }
@@ -637,6 +639,7 @@ int nb_readx(int handle, int offset, int size, int ret_size)
     ssize_t ret;
     char    FileName[128];
     char    temp[512];
+    DWORD   gle;
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
@@ -645,16 +648,16 @@ int nb_readx(int handle, int offset, int size, int ret_size)
 
     StartFirstTimer();
     ret = nb_read(ftable[i].fd, IoBuffer, offset, size);
-
+    gle = GetLastError();
     if ((ret != size) && (ret != ret_size))
     {
         EndFirstTimer(CMD_READX, 0);
         LeaveThread(0, "", CMD_READX);
         if (ret == 0)
             sprintf(temp, "File: read failed on index=%d, offset=%d ReadSize=%d ActualRead=%d handle=%p GLE(0x%x)\n",
-                    handle, offset, size, ret, ftable[i].fd, GetLastError());
+                    handle, offset, size, ret, ftable[i].fd, gle);
         if (ret == -1)
-            sprintf(temp, "File: %s. On read, cannot set file pointer GLE(0x%x)\n", ftable[i].name, GetLastError());
+            sprintf(temp, "File: %s. On read, cannot set file pointer GLE(0x%x)\n", ftable[i].name, gle);
         if (verbose)
             printf("%s", temp);
         nb_close(handle);
@@ -705,6 +708,7 @@ int nb_rmdir(char *fname)
     pstring path;
     char    FileName[128];
     char    temp[512];
+    DWORD   gle;
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
@@ -713,12 +717,13 @@ int nb_rmdir(char *fname)
 
     StartFirstTimer();
     rc = RemoveDirectory(path);
+    gle = GetLastError();
     EndFirstTimer(CMD_RMDIR, rc);
 
     if (!rc)
     {
         LeaveThread(0, "", CMD_RMDIR);
-        sprintf(temp, "Directory: RemoveDirectory %s failed GLE(0x%x)\n", fname, GetLastError());
+        sprintf(temp, "Directory: RemoveDirectory %s failed GLE(0x%x)\n", fname, gle);
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -734,6 +739,7 @@ int nb_rename(char *old, char *New)
     pstring npath;
     char    FileName[128];
     char    temp[512];
+    DWORD   gle;
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
@@ -744,12 +750,13 @@ int nb_rename(char *old, char *New)
 
     StartFirstTimer();
     rc = MoveFileEx(opath, npath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH);
+    gle = GetLastError();
     EndFirstTimer(CMD_RENAME, rc);
 
     if (!rc)
     {
         LeaveThread(0, "", CMD_RENAME);
-        sprintf(temp, "File: rename %s %s failed GLE(0x%x)\n", old, New, GetLastError());
+        sprintf(temp, "File: rename %s %s failed GLE(0x%x)\n", old, New, gle);
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -773,7 +780,7 @@ int nb_qpathinfo(char *fname, int Type)
     int     rc;
     char    FileName[128];
     char    temp[512];
-    DWORD   gle;
+    DWORD   gle = 0;
 
     if (Type == 1111) {
         EnforcePathInfoErrors = 1;
@@ -836,6 +843,7 @@ int nb_qfileinfo(int handle)
     int     rc;
     char    FileName[128];
     char    temp[512];
+    DWORD   gle;
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
@@ -844,12 +852,12 @@ int nb_qfileinfo(int handle)
 
     StartFirstTimer();
     rc = GetFileInfo(ftable[i].name, ftable[i].fd, NULL, NULL, NULL, NULL, NULL, NULL);
-
+    gle = GetLastError();
     if (!rc)
     {
         EndFirstTimer(CMD_QUERY_FILE_INFO, 0);
         LeaveThread(0, "", CMD_QUERY_FILE_INFO);
-        sprintf(temp, "File: qfileinfo failed for %s GLE(0x%x)\n", ftable[i].name, GetLastError());
+        sprintf(temp, "File: qfileinfo failed for %s GLE(0x%x)\n", ftable[i].name, gle);
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -873,6 +881,7 @@ int nb_qfsinfo(int level)
     ULARGE_INTEGER FreeBytesAvailable;
     ULARGE_INTEGER TotalNumberOfBytes;
     ULARGE_INTEGER TotalNumberOfFreeBytes;
+    DWORD   gle;
  
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
     sprintf(Path, "%s\\%s%05d", AfsLocker, HostName, LogID);
@@ -880,12 +889,13 @@ int nb_qfsinfo(int level)
     StartFirstTimer();
     rc = GetDiskFreeSpaceEx(Path, &FreeBytesAvailable, &TotalNumberOfBytes, &TotalNumberOfFreeBytes);
 //    rc = cli_dskattr(c, &bsize, &total, &avail);
+    gle = GetLastError();
 
     if (!rc)
     {
         EndFirstTimer(CMD_QUERY_FS_INFO, 0);
         LeaveThread(0, "", CMD_QUERY_FS_INFO);
-        sprintf(temp, "File: Disk free space failed GLE(0x%x)\n", GetLastError());
+        sprintf(temp, "File: Disk free space failed GLE(0x%x)\n", gle);
         if (verbose)
             printf("%s", temp);
         LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -952,6 +962,7 @@ void delete_fn(file_info *finfo, const char *name, void *state)
     char    temp[512];
     char    s[1024];
     char    FileName[128];
+    DWORD   gle;
 
     sprintf(FileName, "Thread_%05d.log", ProcessNumber);
 
@@ -966,10 +977,11 @@ void delete_fn(file_info *finfo, const char *name, void *state)
     else
     {
         rc = DeleteFile(name);
+        gle = GetLastError();
         if (!rc)
         {
             LeaveThread(0, "", CMD_UNLINK);
-            sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", name, GetLastError());
+            sprintf(temp, "FILE: DeleteFile %s failed GLE(0x%x)\n", name, gle);
             if (verbose)
                 printf("%s", temp);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
@@ -984,7 +996,7 @@ int nb_deltree(char *dname)
     int     rc;
     char    mask[1024];
     pstring path;
-
+    DWORD   gle;
 
     strcpy(path, AfsLocker);
     strcat(path, dname);
@@ -998,21 +1010,20 @@ int nb_deltree(char *dname)
 //    pstrcpy(path, AfsLocker);
 //    pstrcat(path, dname);
     rc = RemoveDirectory(path);
+    gle = GetLastError();
     EndFirstTimer(CMD_DELTREE, rc);
     if (!rc)
     {
         char FileName[256];
         char temp[512];
-        int  rc;
 
-        rc = GetLastError();
-        if ((rc != ERROR_FILE_NOT_FOUND) && (rc != ERROR_PATH_NOT_FOUND))
+        if ((gle != ERROR_FILE_NOT_FOUND) && (gle != ERROR_PATH_NOT_FOUND))
         {
-            SetLastError(rc);
             LeaveThread(0, "", CMD_DELTREE);
             sprintf(FileName, "Thread_%05d.log", ProcessNumber);
             sprintf(temp, "ERROR: Thread %d - Unable to remove %s.\n", ProcessNumber, path);
             LogMessage(ProcessNumber, HostName, FileName, temp, LogID);
+            SetLastError(gle);
             if (verbose)
                 printf(temp);
             return(-1);
