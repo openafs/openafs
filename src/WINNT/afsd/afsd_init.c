@@ -38,6 +38,7 @@
 #include "lanahelper.h"
 #include <strsafe.h>
 #include "cm_memmap.h"
+#include "msrpc.h"
 #ifdef DEBUG
 #include <crtdbg.h>
 #endif
@@ -1307,12 +1308,17 @@ int afsd_InitCM(char **reasonP)
     /* Initialize the RPC server for session keys */
     RpcInit();
 
+    /* Initialize the RPC server for pipe services */
+    MSRPC_Init();
+
     afsd_InitServerPreferences();
     return 0;
 }
 
 int afsd_ShutdownCM(void)
 {
+    MSRPC_Shutdown();
+
     cm_ReleaseSCache(cm_data.rootSCachep);
 
     cm_shutdown = 1;

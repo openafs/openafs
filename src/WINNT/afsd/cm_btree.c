@@ -2468,6 +2468,31 @@ cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
     }
 }
 
+long
+cm_BPlusDirPeekNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp)
+{	
+    if (enump == NULL || entrypp == NULL || enump->next >= enump->count) {
+	if (entrypp)
+	    *entrypp = NULL;
+	osi_Log0(afsd_logp, "cm_BPlusDirPeekNextEnumEntry invalid input");
+	return CM_ERROR_INVAL;
+    }
+
+    if (enump->fetchStatus && 
+        !(enump->entry[enump->next].flags & CM_DIRENUM_FLAG_GOT_STATUS))
+        cm_BPlusDirEnumBulkStatNext(enump);
+
+    *entrypp = &enump->entry[enump->next];
+    if ( enump->next == enump->count ) {
+	osi_Log0(afsd_logp, "cm_BPlusDirPeekNextEnumEntry STOPNOW");
+	return CM_ERROR_STOPNOW;
+    }
+    else {
+	osi_Log0(afsd_logp, "cm_BPlusDirPeekNextEnumEntry SUCCESS");
+	return 0;
+    }
+}
+
 long 
 cm_BPlusDirFreeEnumeration(cm_direnum_t *enump)
 {

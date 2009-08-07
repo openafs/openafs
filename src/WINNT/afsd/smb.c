@@ -462,7 +462,46 @@ char * myCrt_RapDispatch(int i)
     case 63:
         return "RAP(63)NetWkStaGetInfo";
     }
-}       
+}
+
+char * myCrt_NmpipeDispatch(int i)
+{
+    switch(i) {
+    case SMB_TRANS_SET_NMPIPE_STATE:
+	return "SET NMPIPE STATE";
+
+    case SMB_TRANS_RAW_READ_NMPIPE:
+	return "RAW READ NMPIPE";
+
+    case SMB_TRANS_QUERY_NMPIPE_STATE:
+	return "QUERY NMPIPE STATE";
+
+    case SMB_TRANS_QUERY_NMPIPE_INFO:
+	return "QUERY NMPIPE INFO";
+
+    case SMB_TRANS_PEEK_NMPIPE:
+	return "PEEK NMPIPE";
+
+    case SMB_TRANS_TRANSACT_NMPIPE:
+	return "TRANSACT NMPIPE";
+
+    case SMB_TRANS_RAW_WRITE_NMPIPE:
+	return "WRITE NMPIPE";
+
+    case SMB_TRANS_READ_NMPIPE:
+	return "READ NMPIPE";
+
+    case SMB_TRANS_WRITE_NMPIPE:
+	return "WRITE NMPIPE";
+
+    case SMB_TRANS_WAIT_NMPIPE:
+	return "WAIT NMPIPE";
+
+    case SMB_TRANS_CALL_NMPIPE:
+	return "CALL NMPIPE";
+    }
+    return "(Unknown)";
+}
 
 /* scache must be locked */
 unsigned int smb_Attributes(cm_scache_t *scp)
@@ -1795,7 +1834,10 @@ void smb_ReleaseFID(smb_fid_t *fidp)
                 if (ioctlp->ioctl.outAllocp)
                     free(ioctlp->ioctl.outAllocp);
                 free(ioctlp);
-            }       
+            }
+
+	    smb_CleanupRPCFid(fidp);
+
             lock_ReleaseMutex(&fidp->mx);
             lock_FinalizeMutex(&fidp->mx);
             free(fidp);
@@ -3272,14 +3314,193 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     }
     else if (code == CM_ERROR_LOCK_NOT_GRANTED) {
         NTStatus = 0xC0000055L; /* Lock Not Granted */
-    } else if (code == ENOMEM) {
+    }
+    else if (code == ENOMEM) {
         NTStatus = 0xC0000017L; /* Out of Memory */
-    } else {
+    }
+    else if (code == CM_ERROR_RPC_MOREDATA) {
+	NTStatus = 0x80000005L;	/* Buffer overflow */
+    }
+    else  {
         NTStatus = 0xC0982001L;	/* SMB non-specific error */
     }
 
     *NTStatusp = NTStatus;
     osi_Log2(smb_logp, "SMB SEND code %lX as NT %lX", code, NTStatus);
+}       
+
+/* 
+ * NTSTATUS <-> Win32 Error Translation 
+ * http://support.microsoft.com/kb/113996 
+ */
+void smb_MapWin32Error(long code, unsigned long *Win32Ep)
+{
+    unsigned long Win32E;
+
+    /* map CM_ERROR_* errors to Win32 32-bit error codes */
+    if (code == 0) {
+        Win32E = 0;
+    } 
+    else if (code == CM_ERROR_NOSUCHCELL) {
+        Win32E = ERROR_FILE_NOT_FOUND;	/* No such file */
+    }
+    else if (code == CM_ERROR_NOSUCHVOLUME) {
+        Win32E = ERROR_FILE_NOT_FOUND;	/* No such file */
+    }
+    else if (code == CM_ERROR_TIMEDOUT) {
+#ifdef COMMENT
+        Win32E = ERROR_SHARING_PAUSED;	/* Sharing Paused */
+#else
+        Win32E = ERROR_UNEXP_NET_ERR;   /* Timeout */
+#endif
+    }
+    else if (code == CM_ERROR_RETRY) {
+        Win32E = ERROR_RETRY;	        /* Retry */
+    }
+    else if (code == CM_ERROR_NOACCESS) {
+        Win32E = ERROR_ACCESS_DENIED;	/* Access denied */
+    }
+    else if (code == CM_ERROR_READONLY) {
+        Win32E = ERROR_WRITE_PROTECT;	/* Write protected */
+    }
+    else if (code == CM_ERROR_NOSUCHFILE ||
+             code == CM_ERROR_BPLUS_NOMATCH) {
+        Win32E = ERROR_FILE_NOT_FOUND;	/* No such file */
+    }
+    else if (code == CM_ERROR_NOSUCHPATH) {
+        Win32E = ERROR_PATH_NOT_FOUND;	/* Object path not found */
+    }		
+    else if (code == CM_ERROR_TOOBIG) {
+        Win32E = ERROR_BAD_EXE_FORMAT;	/* Invalid image format */
+    }
+    else if (code == CM_ERROR_INVAL) {
+        Win32E = ERROR_INVALID_PARAMETER;/* Invalid parameter */
+    }
+    else if (code == CM_ERROR_BADFD) {
+        Win32E = ERROR_INVALID_HANDLE;	/* Invalid handle */
+    }
+    else if (code == CM_ERROR_BADFDOP) {
+        Win32E = ERROR_ACCESS_DENIED;	/* Access denied */
+    }
+    else if (code == CM_ERROR_EXISTS) {
+        Win32E = ERROR_ALREADY_EXISTS;	/* Object name collision */
+    }
+    else if (code == CM_ERROR_NOTEMPTY) {
+        Win32E = ERROR_DIR_NOT_EMPTY;	/* Directory not empty */
+    }	
+    else if (code == CM_ERROR_CROSSDEVLINK) {
+        Win32E = ERROR_NOT_SAME_DEVICE;	/* Not same device */
+    }
+    else if (code == CM_ERROR_NOTDIR) {
+        Win32E = ERROR_DIRECTORY;	/* Not a directory */
+    }
+    else if (code == CM_ERROR_ISDIR) {
+        Win32E = ERROR_ACCESS_DENIED;	/* File is a directory */
+    }
+    else if (code == CM_ERROR_BADOP) {
+        Win32E = ERROR_NOT_SUPPORTED;   /* Not supported */
+    }
+    else if (code == CM_ERROR_BADSHARENAME) {
+        Win32E = ERROR_BAD_NETPATH;	/* Bad network path (server valid, share bad) */
+    }
+    else if (code == CM_ERROR_NOIPC) {
+#ifdef COMMENT
+        Win32E = ERROR_ACCESS_DENIED;	/* Access Denied */
+#else   
+        Win32E = ERROR_REM_NOT_LIST;    /* Remote Resources */
+#endif
+    }
+    else if (code == CM_ERROR_CLOCKSKEW) {
+        Win32E = ERROR_TIME_SKEW;	/* Time difference at DC */
+    }
+    else if (code == CM_ERROR_BADTID) {
+        Win32E = ERROR_FILE_NOT_FOUND;	/* SMB bad TID */
+    }
+    else if (code == CM_ERROR_USESTD) {
+        Win32E = ERROR_ACCESS_DENIED;	/* SMB use standard */
+    }
+    else if (code == CM_ERROR_QUOTA) {
+        Win32E = ERROR_NOT_ENOUGH_QUOTA;/* Quota exceeded */
+    }
+    else if (code == CM_ERROR_SPACE) {
+        Win32E = ERROR_DISK_FULL;	/* Disk full */
+    }
+    else if (code == CM_ERROR_ATSYS) {
+        Win32E = ERROR_INVALID_NAME;	/* Object name invalid */
+    }
+    else if (code == CM_ERROR_BADNTFILENAME) {
+        Win32E = ERROR_INVALID_NAME;	/* Object name invalid */
+    }
+    else if (code == CM_ERROR_WOULDBLOCK) {
+        Win32E = WAIT_TIMEOUT;	        /* Can't wait */
+    }
+    else if (code == CM_ERROR_SHARING_VIOLATION) {
+        Win32E = ERROR_SHARING_VIOLATION; /* Sharing violation */
+    }
+    else if (code == CM_ERROR_LOCK_CONFLICT) {
+        Win32E = ERROR_LOCK_VIOLATION;   /* Lock conflict */
+    }
+    else if (code == CM_ERROR_PARTIALWRITE) {
+        Win32E = ERROR_DISK_FULL;	/* Disk full */
+    }
+    else if (code == CM_ERROR_BUFFERTOOSMALL) {
+        Win32E = ERROR_INSUFFICIENT_BUFFER;	/* Buffer too small */
+    }
+    else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
+        Win32E = ERROR_ALREADY_EXISTS;	/* Object name collision */
+    }   
+    else if (code == CM_ERROR_BADPASSWORD) {
+        Win32E = ERROR_LOGON_FAILURE;   /* unknown username or bad password */
+    }
+    else if (code == CM_ERROR_BADLOGONTYPE) {
+        Win32E = ERROR_INVALID_LOGON_TYPE; /* logon type not granted */
+    }
+    else if (code == CM_ERROR_GSSCONTINUE) {
+        Win32E = ERROR_MORE_DATA;       /* more processing required */
+    }
+    else if (code == CM_ERROR_TOO_MANY_SYMLINKS) {
+#ifdef COMMENT
+        Win32E = ERROR_CANT_RESOLVE_FILENAME; /* reparse point not resolved */
+#else
+        Win32E = ERROR_ACCESS_DENIED;   /* Access Denied */
+#endif
+    }
+    else if (code == CM_ERROR_PATH_NOT_COVERED) {
+        Win32E = ERROR_HOST_UNREACHABLE; /* Path Not Covered */
+    } 
+    else if (code == CM_ERROR_ALLBUSY) {
+        Win32E = ERROR_RETRY;           /* Retry */
+    } 
+    else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
+        Win32E = ERROR_HOST_UNREACHABLE; /* Path not found */
+    } 
+    else if (code >= ERROR_TABLE_BASE_RXK && code < ERROR_TABLE_BASE_RXK + 256) {
+	Win32E = SEC_E_NO_KERB_KEY;     /* No Kerberos key */
+    } 
+    else if (code == CM_ERROR_BAD_LEVEL) {
+	Win32E = ERROR_INVALID_LEVEL;	/* Invalid Level */
+    } 
+    else if (code == CM_ERROR_RANGE_NOT_LOCKED) {
+	Win32E = ERROR_NOT_LOCKED;	/* Range Not Locked */
+    } 
+    else if (code == CM_ERROR_NOSUCHDEVICE) {
+        Win32E = ERROR_FILE_NOT_FOUND;  /* No Such Device */
+    }
+    else if (code == CM_ERROR_LOCK_NOT_GRANTED) {
+        Win32E = ERROR_LOCK_VIOLATION;  /* Lock Not Granted */
+    }
+    else if (code == ENOMEM) {
+        Win32E = ERROR_NOT_ENOUGH_MEMORY; /* Out of Memory */
+    }
+    else if (code == CM_ERROR_RPC_MOREDATA) {
+	Win32E = ERROR_MORE_DATA;	/* Buffer overflow */
+    }
+    else  {
+        Win32E = ERROR_GEN_FAILURE;	/* SMB non-specific error */
+    }
+
+    *Win32Ep = Win32E;
+    osi_Log2(smb_logp, "SMB SEND code %lX as Win32 %lX", code, Win32E);
 }       
 
 void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
@@ -6671,7 +6892,8 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
 
     if (!userp) {
 	lock_ObtainMutex(&fidp->mx);
-        if (!fidp->userp && !(fidp->flags & SMB_FID_IOCTL)) {
+        if (!fidp->userp && !(fidp->flags & (SMB_FID_IOCTL|
+					     SMB_FID_RPC))) {
 	    lock_ReleaseMutex(&fidp->mx);
             osi_Log0(smb_logp, "  No user specified.  Not closing fid");
 	    return CM_ERROR_BADFD;
@@ -7367,6 +7589,14 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	return code;
     }
 
+    if (fidp->flags & SMB_FID_RPC) {
+	lock_ReleaseMutex(&fidp->mx);
+        code = smb_RPCWrite(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	osi_Log1(smb_logp, "smb_ReceiveCoreWrite RPC code 0x%x", code);
+	return code;
+    }
+
     if (!fidp->scp) {
         lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
@@ -7771,6 +8001,13 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
         code = smb_IoctlRead(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
+    }
+
+    if (fidp->flags & SMB_FID_RPC) {
+	lock_ReleaseMutex(&fidp->mx);
+        code = smb_RPCRead(fidp, vcp, inp, outp);
 	smb_ReleaseFID(fidp);
 	return code;
     }

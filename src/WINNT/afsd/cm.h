@@ -101,6 +101,8 @@
 #define CM_ERROR_LOCK_NOT_GRANTED       (CM_ERROR_BASE+59)
 #define CM_ERROR_NOTINCACHE             (CM_ERROR_BASE+60)
 #define CM_ERROR_FORCE_DNS_LOOKUP       (CM_ERROR_BASE+61)
+#define CM_ERROR_BADFORMAT              (CM_ERROR_BASE+62)
+#define CM_ERROR_RPC_MOREDATA		(CM_ERROR_BASE+63)
 
 /* Used by cm_FollowMountPoint and cm_FindVolumeByName */
 /* And as an index in cm_volume_t */

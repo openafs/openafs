@@ -174,6 +174,7 @@ typedef struct cm_direnum {
 long cm_BPlusDirEnumerate(cm_scache_t *dscp, cm_user_t *userp, cm_req_t *reqp, 
                           afs_uint32 locked, clientchar_t *maskp, afs_uint32 fetchStatus, cm_direnum_t **enumpp);
 long cm_BPlusDirNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
+long cm_BPlusDirPeekNextEnumEntry(cm_direnum_t *enump, cm_direnum_entry_t **entrypp);
 long cm_BPlusDirFreeEnumeration(cm_direnum_t *enump);
 long cm_BPlusDirEnumTest(cm_scache_t * dscp, cm_user_t *userp, cm_req_t *reqp, afs_uint32 locked);
 long cm_BPlusDirEnumBulkStat(cm_direnum_t *enump);

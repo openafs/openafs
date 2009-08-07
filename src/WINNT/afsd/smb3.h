@@ -20,6 +20,7 @@ typedef struct smb_tran2Packet {
         int curParms;			/* current # of received parm bytes */
         int maxReturnData;		/* max # of returned data bytes */
         int maxReturnParms;		/* max # of returned parm bytes */
+    int setupCount;			/* setup count field */
         int opcode;			/* subopcode we're handling */
         long flags;			/* flags */
         smb_vc_t *vcp;			/* virtual circuit we're dealing with */
@@ -28,8 +29,14 @@ typedef struct smb_tran2Packet {
         unsigned short pid;		/* pid to remember */
         unsigned short uid;		/* uid to remember */
 	unsigned short res[6];		/* contains PidHigh */
+    unsigned int error_code;		/* CM error code for the packet */
         unsigned short *parmsp;		/* parms */
         unsigned char *datap;		/* data bytes */
+    int pipeCommand;			/* named pipe command code */
+    int pipeParam;			/* pipe parameter, if there is one */
+    clientchar_t *name;			/* contents of Name
+					   field. Only used for Named
+					   pipes */
         cm_space_t * stringsp;          /* decoded strings */
 } smb_tran2Packet_t;
 
@@ -292,6 +299,14 @@ extern smb_tran2Dispatch_t smb_tran2DispatchTable[SMB_TRAN2_NOPCODES];
 #define SMB_RAP_NOPCODES	64
 
 extern smb_tran2Dispatch_t smb_rapDispatchTable[SMB_RAP_NOPCODES];
+
+extern smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
+						     smb_tran2Packet_t *inp, smb_packet_t *outp,
+						     int totalParms, int totalData);
+
+extern void smb_FreeTran2Packet(smb_tran2Packet_t *t2p);
+
+extern void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp);
 
 extern long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 

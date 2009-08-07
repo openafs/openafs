@@ -41,6 +41,7 @@ INCFILES =\
 	$(INCFILEDIR)\smb3.h \
 	$(INCFILEDIR)\smb_iocons.h \
 	$(INCFILEDIR)\smb_ioctl.h \
+	$(INCFILEDIR)\smb_rpc.h \
 	$(INCFILEDIR)\afsrpc.h \
 !IFDEF OSICRASH
 	$(INCFILEDIR)\afsdcrash.h \
@@ -91,6 +92,18 @@ $(RXOBJS): $(RX)\$$(@B).c
 $(IDLFILES):afsrpc.idl
 	midl $(MIDL_FLAGS) $(AFSDEV_AUXMIDLFLAGS) /app_config $?
 
+ms-srvsvc.h ms-srvsvc_s.c: ms-srvsvc.idl
+	midl /Os ms-srvsvc.idl
+
+ms-wkssvc.h ms-wkssvc_s.c: ms-wkssvc.idl
+	midl /Os ms-wkssvc.idl
+
+$(OUT)\ms-srvsvc_s.obj: ms-srvsvc_s.c
+	$(C2OBJ) /FImsrpc.h /Fo$@ $**
+
+$(OUT)\ms-wkssvc_s.obj: ms-wkssvc_s.c
+	$(C2OBJ) /FImsrpc.h /Fo$@ $**
+
 AFSDOBJS=\
         $(OUT)\rawops.obj \
 	$(OUT)\afsd_init.obj \
@@ -114,6 +127,8 @@ AFSDOBJS=\
 	$(OUT)\smb.obj \
 	$(OUT)\smb3.obj \
 	$(OUT)\smb_ioctl.obj \
+	$(OUT)\smb_rpc.obj \
+	$(OUT)\msrpc.obj \
 	$(OUT)\cm_ioctl.obj \
 	$(OUT)\cm_daemon.obj \
 	$(OUT)\cm_aclent.obj \
@@ -129,7 +144,12 @@ AFSDOBJS=\
         $(OUT)\cm_freelance.obj \
         $(OUT)\afsd_eventlog.obj \
         $(OUT)\afsd_flushvol.obj \
-        $(OUT)\afsicf.obj
+        $(OUT)\afsicf.obj \
+	$(OUT)\ms-srvsvc_s.obj \
+	$(OUT)\ms-wkssvc_s.obj \
+	$(OUT)\rpc_wkssvc.obj \
+	$(OUT)\rpc_srvsvc.obj \
+        $(OUT)\AFS_component_version_number.obj
 
 $(AFSDOBJS):
 
@@ -268,7 +288,7 @@ $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
 install_objs: $(CONF_DLLFILE) $(LANAHELPERLIB) $(OUT)\afsicf.obj
      $(COPY) $(OUT)\afsicf.obj $(DESTDIR)\lib
 
-install_headers: $(IDLFILES) $(INCFILES)
+install_headers: $(IDLFILES) $(INCFILES) ms-wkssvc.h ms-srvsvc.h
 
 install: install_headers install_objs $(CONF_DLLFILE) \
 	$(EXEDIR)\klog.exe \

@@ -111,6 +111,19 @@ typedef struct smb {
 #define SMB_FIND_FILE_NAMES_INFO	  0x103
 #define SMB_FIND_FILE_BOTH_DIRECTORY_INFO 0x104
 
+/* SMB_COM_TRANSACTION Named pipe operations */
+#define SMB_TRANS_SET_NMPIPE_STATE	0x0001
+#define SMB_TRANS_RAW_READ_NMPIPE	0x0011
+#define SMB_TRANS_QUERY_NMPIPE_STATE	0x0021
+#define SMB_TRANS_QUERY_NMPIPE_INFO	0x0022
+#define SMB_TRANS_PEEK_NMPIPE		0x0023
+#define SMB_TRANS_TRANSACT_NMPIPE	0x0026
+#define SMB_TRANS_RAW_WRITE_NMPIPE	0x0031
+#define SMB_TRANS_READ_NMPIPE		0x0036
+#define SMB_TRANS_WRITE_NMPIPE		0x0037
+#define SMB_TRANS_WAIT_NMPIPE		0x0053
+#define SMB_TRANS_CALL_NMPIPE		0x0054
+
 /* more defines */
 #define SMB_NOPCODES		256	/* # of opcodes in the dispatch table */
 
@@ -323,6 +336,9 @@ typedef struct smb_pid {
 /* Defined in smb_ioctl.h */
 struct smb_ioctl;
 
+/* Defined in smb_rpc.h */
+struct smb_rpc;
+
 /* one per file ID; these are really file descriptors */
 typedef struct smb_fid {
     osi_queue_t q;
@@ -337,12 +353,16 @@ typedef struct smb_fid {
                                            the file if session is
                                            terminated) */
     osi_hyper_t offset;			/* our file pointer */
-    struct smb_ioctl *ioctlp;		/* ptr to ioctl structure */
+    struct smb_ioctl *ioctlp;           /* ptr to ioctl structure */
 					/* Under NT, we may need to know the
 					 * parent directory and pathname used
 					 * to open the file, either to delete
 					 * the file on close, or to do a
 					 * change notification */
+    struct smb_rpc   *rpcp;	        /* ptr to RPC structure.  Used
+					   to keep track of endpoint
+					   that was opened for the
+					   RPC. */
     struct cm_scache *NTopen_dscp;	/* parent directory (NT) */
     clientchar_t *NTopen_pathp;		/* path used in open (NT) */
     clientchar_t *NTopen_wholepathp;	/* entire path, not just last name */
@@ -374,6 +394,11 @@ typedef struct smb_fid {
 
 #define SMB_FID_SHARE_READ              0x1000
 #define SMB_FID_SHARE_WRITE             0x2000
+
+#define SMB_FID_RPC                     0x4000	/* open for MS RPC */
+#define SMB_FID_MESSAGEMODEPIPE		0x8000	/* message mode pipe */
+#define SMB_FID_BLOCKINGPIPE	       0x10000	/* blocking pipe */
+#define SMB_FID_RPC_INCALL	       0x20000	/* in an RPC call */
 
 #define SMB_FID_QLOCK_HIGH              0x7f000000
 #define SMB_FID_QLOCK_LOW               0x00000000
@@ -413,6 +438,22 @@ typedef struct smb_fid {
 #define LOCKING_ANDX_CHANGE_LOCKTYPE    0x04 /* Change lock type */
 #define LOCKING_ANDX_CANCEL_LOCK        0x08 /* Cancel outstanding request */
 #define LOCKING_ANDX_LARGE_FILES        0x10 /* Large file locking format */
+
+/* File type constants */
+#define SMB_FILETYPE_DISK		0x0000
+#define SMB_FILETYPE_BYTE_MODE_PIPE	0x0001
+#define SMB_FILETYPE_MESSAGE_MODE_PIPE	0x0002
+#define SMB_FILETYPE_PRINTER		0x0003
+#define SMB_FILETYPE_UNKNOWN		0xffff
+
+/* Device state constants */
+#define SMB_DEVICESTATE_READASBYTESTREAM    0x0000
+#define SMB_DEVICESTATE_READMSGFROMPIPE	    0x0100
+#define SMB_DEVICESTATE_BYTESTREAMPIPE	    0x0000
+#define SMB_DEVICESTATE_MESSAGEMODEPIPE	    0x0400
+#define SMB_DEVICESTATE_PIPECLIENTEND	    0x0000
+#define SMB_DEVICESTATE_PIPESERVEREND	    0x4000
+#define SMB_DEVICESTATE_BLOCKING	    0x8000
 
 /* for tracking in-progress directory searches */
 typedef struct smb_dirSearch {
@@ -689,6 +730,8 @@ extern void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 
 extern void smb_MapNTError(long code, unsigned long *NTStatusp);
 
+extern void smb_MapWin32Error(long code, unsigned long *Win32Ep);
+
 /* some globals, too */
 extern char *smb_localNamep;
 
@@ -753,6 +796,8 @@ extern char *myCrt_2Dispatch(int i);
 
 extern char *myCrt_RapDispatch(int i);
 
+extern char * myCrt_NmpipeDispatch(int i);
+
 extern unsigned int smb_Attributes(cm_scache_t *scp);
 
 extern int smb_ChainFID(int fid, smb_packet_t *inp);
@@ -799,6 +844,7 @@ extern void smb_InitReq(cm_req_t *reqp);
 #include "smb3.h"
 #include "smb_ioctl.h"
 #include "smb_iocons.h"
+#include "smb_rpc.h"
 
 cm_user_t *smb_FindOrCreateUser(smb_vc_t *vcp, clientchar_t *usern);
 

@@ -1265,7 +1265,11 @@ void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
             free(t2p->parmsp);
         if (t2p->datap)
             free(t2p->datap);
-    }       
+    }
+    if (t2p->name) {
+	free(t2p->name);
+	t2p->name = NULL;
+    }
     while (t2p->stringsp) {
         cm_space_t * ns;
 
@@ -1370,6 +1374,30 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
     smbp->uid = t2p->uid;
     smbp->res[0] = t2p->res[0];
 
+    if (t2p->error_code) {
+	if (vcp->flags & SMB_VCFLAG_STATUS32) {
+	    unsigned long NTStatus;
+
+	    smb_MapNTError(t2p->error_code, &NTStatus);
+
+	    smbp->rcls = (unsigned char) (NTStatus & 0xff);
+	    smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
+	    smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
+	    smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
+	    smbp->flg2 |= SMB_FLAGS2_32BIT_STATUS;
+	}
+	else {
+	    unsigned short errCode;
+	    unsigned char errClass;
+
+	    smb_MapCoreError(t2p->error_code, vcp, &errCode, &errClass);
+
+	    smbp->rcls = errClass;
+	    smbp->errLow = (unsigned char) (errCode & 0xff);
+	    smbp->errHigh = (unsigned char) ((errCode >> 8) & 0xff);
+	}
+    }
+
     totalLength = 1 + t2p->totalData + t2p->totalParms;
 
     /* now add the core parameters (tran2 info) to the packet */
@@ -1399,7 +1427,75 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
         
     /* next, send the datagram */
     smb_SendPacket(vcp, tp);
-}   
+}
+
+/* TRANS_SET_NMPIPE_STATE */
+long smb_nmpipeSetState(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
+{
+    smb_fid_t *fidp;
+    int fd;
+    int pipeState = 0x0100;	/* default */
+    smb_tran2Packet_t *outp = NULL;
+
+    fd = p->pipeParam;
+    if (p->totalParms > 0)
+	pipeState = p->parmsp[0];
+
+    osi_Log2(smb_logp, "smb_nmpipeSetState for fd[%d] with state[0x%x]", fd, pipeState);
+
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp)
+	return CM_ERROR_BADFD;
+
+    lock_ObtainMutex(&fidp->mx);
+    if (pipeState & 0x8000)
+	fidp->flags |= SMB_FID_BLOCKINGPIPE;
+    if (pipeState & 0x0100)
+	fidp->flags |= SMB_FID_MESSAGEMODEPIPE;
+    lock_ReleaseMutex(&fidp->mx);
+
+    outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, 0);
+    smb_SendTran2Packet(vcp, outp, op);
+    smb_FreeTran2Packet(outp);
+
+    smb_ReleaseFID(fidp);
+
+    return 0;
+}
+
+long smb_nmpipeTransact(smb_vc_t * vcp, smb_tran2Packet_t *p, smb_packet_t *op)
+{
+    smb_fid_t *fidp;
+    int fd;
+    int is_rpc = 0;
+
+    long code = 0;
+
+    fd = p->pipeParam;
+
+    osi_Log3(smb_logp, "smb_nmpipeTransact for fd[%d] %d bytes in, %d max bytes out",
+	     fd, p->totalData, p->maxReturnData);
+
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp)
+	return CM_ERROR_BADFD;
+
+    lock_ObtainMutex(&fidp->mx);
+    if (fidp->flags & SMB_FID_RPC) {
+	is_rpc = 1;
+    }
+    lock_ReleaseMutex(&fidp->mx);
+
+    if (is_rpc) {
+	code = smb_RPCNmpipeTransact(fidp, vcp, p, op);
+	smb_ReleaseFID(fidp);
+    } else {
+	/* We only deal with RPC pipes */
+	code = CM_ERROR_BADFD;
+    }
+
+    return code;
+}
 
 
 /* SMB_COM_TRANSACTION and SMB_COM_TRANSACTION_SECONDARY */
@@ -1448,11 +1544,26 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         dataOffset = smb_GetSMBParm(inp, 12);
         parmCount = smb_GetSMBParm(inp, 9);
         dataCount = smb_GetSMBParm(inp, 11);
+	asp->setupCount = smb_GetSMBParmByte(inp, 13);
         asp->maxReturnParms = smb_GetSMBParm(inp, 2);
         asp->maxReturnData = smb_GetSMBParm(inp, 3);
 
         osi_Log3(smb_logp, "SMB3 received Trans init packet total data %d, cur data %d, max return data %d",
                   totalData, dataCount, asp->maxReturnData);
+
+	if (asp->setupCount == 2) {
+	    clientchar_t * pname;
+
+	    asp->pipeCommand = smb_GetSMBParm(inp, 14);
+	    asp->pipeParam = smb_GetSMBParm(inp, 15);
+	    pname = smb_ParseString(inp, inp->wctp + 35, NULL, 0);
+	    if (pname) {
+		asp->name = cm_ClientStrDup(pname);
+	    }
+
+	    osi_Log2(smb_logp, "  Named Pipe command id [%d] with name [%S]",
+		     asp->pipeCommand, osi_LogSaveClientString(smb_logp, asp->name));
+	}
     }
     else {
         parmDisp = smb_GetSMBParm(inp, 4);
@@ -1464,7 +1575,7 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         osi_Log2(smb_logp, "SMB3 received Trans aux packet parms %d, data %d",
                  parmCount, dataCount);
-    }   
+    }
 
     /* now copy the parms and data */
     if ( asp->totalParms > 0 && parmCount != 0 )
@@ -1480,27 +1591,91 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     asp->curParms += parmCount;
 
     /* finally, if we're done, remove the packet from the queue and dispatch it */
-    if (asp->totalParms > 0 &&
-        asp->curParms > 0 &&
+    if (((asp->totalParms > 0 && asp->curParms > 0)
+	 || asp->setupCount == 2) &&
         asp->totalData <= asp->curData &&
         asp->totalParms <= asp->curParms) {
+
         /* we've received it all */
         lock_ObtainWrite(&smb_globalLock);
         osi_QRemove((osi_queue_t **) &smb_tran2AssemblyQueuep, &asp->q);
         lock_ReleaseWrite(&smb_globalLock);
 
-        /* now dispatch it */
-        rapOp = asp->parmsp[0];
+	switch(asp->setupCount) {
+	case 0:
+	    {			/* RAP */
+		rapOp = asp->parmsp[0];
 
-        if ( rapOp >= 0 && rapOp < SMB_RAP_NOPCODES && smb_rapDispatchTable[rapOp].procp) {
-            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP %s vcp[%p] lana[%d] lsn[%d]",myCrt_RapDispatch(rapOp),vcp,vcp->lana,vcp->lsn);
-            code = (*smb_rapDispatchTable[rapOp].procp)(vcp, asp, outp);
-            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP return  code 0x%x vcp[%x] lana[%d] lsn[%d]",code,vcp,vcp->lana,vcp->lsn);
-        }
-        else {
-            osi_Log4(smb_logp,"AFS Server - Dispatch-RAP [INVALID] op[%x] vcp[%p] lana[%d] lsn[%d]", rapOp, vcp, vcp->lana, vcp->lsn);
-            code = CM_ERROR_BADOP;
-        }
+		if ( rapOp >= 0 && rapOp < SMB_RAP_NOPCODES &&
+		     smb_rapDispatchTable[rapOp].procp) {
+
+		    osi_Log4(smb_logp,"AFS Server - Dispatch-RAP %s vcp[%p] lana[%d] lsn[%d]",
+			     myCrt_RapDispatch(rapOp),vcp,vcp->lana,vcp->lsn);
+
+		    code = (*smb_rapDispatchTable[rapOp].procp)(vcp, asp, outp);
+
+		    osi_Log4(smb_logp,"AFS Server - Dispatch-RAP return  code 0x%x vcp[%x] lana[%d] lsn[%d]",
+			     code,vcp,vcp->lana,vcp->lsn);
+		}
+		else {
+		    osi_Log4(smb_logp,"AFS Server - Dispatch-RAP [INVALID] op[%x] vcp[%p] lana[%d] lsn[%d]",
+			     rapOp, vcp, vcp->lana, vcp->lsn);
+
+		    code = CM_ERROR_BADOP;
+		}
+	    }
+	    break;
+
+	case 2:
+	    {			/* Named pipe operation */
+		osi_Log2(smb_logp, "Named Pipe: %s with name [%S]",
+			 myCrt_NmpipeDispatch(asp->pipeCommand),
+			 osi_LogSaveClientString(smb_logp, asp->name));
+
+		code = CM_ERROR_BADOP;
+
+		switch (asp->pipeCommand) {
+		case SMB_TRANS_SET_NMPIPE_STATE:
+		    code = smb_nmpipeSetState(vcp, asp, outp);
+		    break;
+
+		case SMB_TRANS_RAW_READ_NMPIPE:
+		    break;
+
+		case SMB_TRANS_QUERY_NMPIPE_STATE:
+		    break;
+
+		case SMB_TRANS_QUERY_NMPIPE_INFO:
+		    break;
+
+		case SMB_TRANS_PEEK_NMPIPE:
+		    break;
+
+		case SMB_TRANS_TRANSACT_NMPIPE:
+		    code = smb_nmpipeTransact(vcp, asp, outp);
+		    break;
+
+		case SMB_TRANS_RAW_WRITE_NMPIPE:
+		    break;
+
+		case SMB_TRANS_READ_NMPIPE:
+		    break;
+
+		case SMB_TRANS_WRITE_NMPIPE:
+		    break;
+
+		case SMB_TRANS_WAIT_NMPIPE:
+		    break;
+
+		case SMB_TRANS_CALL_NMPIPE:
+		    break;
+		}
+	    }
+	    break;
+
+	default:
+	    code = CM_ERROR_BADOP;
+	}
 
         /* if an error is returned, we're supposed to send an error packet,
          * otherwise the dispatched function already did the data sending.
@@ -2313,6 +2488,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     clientchar_t *tidPathp;
     cm_req_t req;
     int created = 0;
+    BOOL is_rpc = FALSE;
 
     smb_InitReq(&req);
 
@@ -2343,16 +2519,29 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
+    /* The 'is_rpc' assignment to TRUE is intentional */
     if (lastNamep && 
         (cm_ClientStrCmpI(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
-         cm_ClientStrCmpI(lastNamep,  _C("\\srvsvc")) == 0 ||
-         cm_ClientStrCmpI(lastNamep,  _C("\\wkssvc")) == 0 ||
-         cm_ClientStrCmpI(lastNamep,  _C("\\ipc$")) == 0)) {
+         ((cm_ClientStrCmpI(lastNamep,  _C("\\srvsvc")) == 0 ||
+	   cm_ClientStrCmpI(lastNamep,  _C("\\wkssvc")) == 0 ||
+	   cm_ClientStrCmpI(lastNamep,  _C("\\ipc$")) == 0) && (is_rpc = TRUE)))) {
+
+	unsigned short file_type = 0;
+	unsigned short device_state = 0;
+
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-        smb_SetupIoctlFid(fidp, spacep);
+
+	if (is_rpc) {
+	    code = smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
+	    osi_Log2(smb_logp, "smb_ReceiveTran2Open Creating RPC Fid [%d] code [%d]",
+                     fidp->fid, code);
+	} else {
+	    smb_SetupIoctlFid(fidp, spacep);
+	    osi_Log1(smb_logp, "smb_ReceiveTran2Open Creating IOCTL Fid [%d]", fidp->fid);
+	}
 
         /* copy out remainder of the parms */
         parmSlot = 0;
@@ -2364,8 +2553,8 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             outp->parmsp[parmSlot++] = 0;       /* len */
             outp->parmsp[parmSlot++] = 0x7fff;
             outp->parmsp[parmSlot++] = openMode;
-            outp->parmsp[parmSlot++] = 0;       /* file type 0 ==> normal file or dir */
-            outp->parmsp[parmSlot++] = 0;       /* IPC junk */
+            outp->parmsp[parmSlot++] = file_type;
+            outp->parmsp[parmSlot++] = device_state;
         }   
         /* and the final "always present" stuff */
         outp->parmsp[parmSlot++] = 1;           /* openAction found existing file */
@@ -5657,6 +5846,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     clientchar_t *tidPathp;
     cm_req_t req;
     int created = 0;
+    BOOL is_rpc = FALSE;
 
     smb_InitReq(&req);
 
@@ -5685,11 +5875,16 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
+    /* The 'is_rpc' assignment to TRUE is intentional */
     if (lastNamep && 
         (cm_ClientStrCmpIA(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
-         cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
-         cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
-         cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0)) {
+         ((cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
+	   cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
+	   cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)))) {
+
+	unsigned short file_type = 0;
+	unsigned short device_state = 0;
+
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
@@ -5698,7 +5893,13 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif
 
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-        smb_SetupIoctlFid(fidp, spacep);
+	if (is_rpc) {
+	    smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
+	    osi_Log1(smb_logp, "OpenAndX Setting up RPC on fid[%d]", fidp->fid);
+	} else {
+	    smb_SetupIoctlFid(fidp, spacep);
+	    osi_Log1(smb_logp, "OpenAndX Setting up IOCTL on fid[%d]", fidp->fid);
+	}
 
         /* set inp->fid so that later read calls in same msg can find fid */
         inp->fid = fidp->fid;
@@ -5713,9 +5914,9 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* len */
             smb_SetSMBParm(outp, parmSlot, 0x7fff); parmSlot++;
             smb_SetSMBParm(outp, parmSlot, openMode); parmSlot++;
-            smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* file type 0 ==> normal file or dir */
-            smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* IPC junk */
-        }   
+            smb_SetSMBParm(outp, parmSlot, file_type); parmSlot++;
+            smb_SetSMBParm(outp, parmSlot, device_state); parmSlot++;
+        }
         /* and the final "always present" stuff */
         smb_SetSMBParm(outp, parmSlot, /* openAction found existing file */ 1); parmSlot++;
         /* next write out the "unique" ID */
@@ -6514,6 +6715,13 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	return code;
     }
 
+    if (fidp->flags & SMB_FID_RPC) {
+	lock_ReleaseMutex(&fidp->mx);
+        code = smb_RPCV3Write(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
+    }
+
     if (!fidp->scp) {
         lock_ReleaseMutex(&fidp->mx);
         smb_ReleaseFID(fidp);
@@ -6615,8 +6823,8 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_key_t key;
     char *op;
         
-    fd = smb_GetSMBParm(inp, 2);
-    count = smb_GetSMBParm(inp, 5);
+    fd = smb_GetSMBParm(inp, 2); /* File ID */
+    count = smb_GetSMBParm(inp, 5); /* MaxCount */
     offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
 
     if (*inp->wctp == 12) {
@@ -6651,6 +6859,23 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     lock_ObtainMutex(&fidp->mx);
+
+    if (fidp->flags & SMB_FID_IOCTL) {
+	lock_ReleaseMutex(&fidp->mx);
+	inp->fid = fd;
+        code = smb_IoctlV3Read(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
+    }
+
+    if (fidp->flags & SMB_FID_RPC) {
+	lock_ReleaseMutex(&fidp->mx);
+	inp->fid = fd;
+        code = smb_RPCV3Read(fidp, vcp, inp, outp);
+	smb_ReleaseFID(fidp);
+	return code;
+    }
+
     if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
         lock_ReleaseMutex(&fidp->mx);
         smb_CloseFID(vcp, fidp, NULL, 0);
@@ -6666,6 +6891,7 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     scp = fidp->scp;
     cm_HoldSCache(scp);
+
     lock_ReleaseMutex(&fidp->mx);
 
     pid = smbp->pid;
@@ -6691,15 +6917,6 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* set inp->fid so that later read calls in same msg can find fid */
     inp->fid = fd;
-
-    lock_ObtainMutex(&fidp->mx);
-    if (fidp->flags & SMB_FID_IOCTL) {
-	lock_ReleaseMutex(&fidp->mx);
-        code = smb_IoctlV3Read(fidp, vcp, inp, outp);
-	smb_ReleaseFID(fidp);
-	return code;
-    }
-    lock_ReleaseMutex(&fidp->mx);
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
@@ -6815,6 +7032,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int prefetch = 0;
     int checkDoneRequired = 0;
     cm_lock_data_t *ldp = NULL;
+    BOOL is_rpc = FALSE;
 
     smb_InitReq(&req);
 
@@ -6886,17 +7104,29 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_Log4(smb_logp,"... da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
     osi_Log3(smb_logp,"... share=[%x] flags=[%x] lastNamep=[%S]", shareAccess, flags, osi_LogSaveClientString(smb_logp,(lastNamep?lastNamep:_C("null"))));
 
-	if (lastNamep && 
-            (cm_ClientStrCmpIA(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
-             cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
-             cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
-             cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0)) {
-        /* special case magic file name for receiving IOCTL requests
-         * (since IOCTL calls themselves aren't getting through).
-         */
+    /* The 'is_rpc' assignment to TRUE is intentional */
+    if (lastNamep &&
+	(((cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
+	   cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
+	   cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)) ||
+
+	 /* special case magic file name for receiving IOCTL requests
+	  * (since IOCTL calls themselves aren't getting through).
+	  */
+	 cm_ClientStrCmpIA(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0)) {
+
+	unsigned short file_type = 0;
+	unsigned short device_state = 0;
+
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-        smb_SetupIoctlFid(fidp, spacep);
-        osi_Log1(smb_logp,"NTCreateX Setting up IOCTL on fid[%d]",fidp->fid);
+
+	if (is_rpc) {
+	    smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
+	    osi_Log1(smb_logp, "NTCreateX Setting up RPC on fid[%d]", fidp->fid);
+	} else {
+	    smb_SetupIoctlFid(fidp, spacep);
+	    osi_Log1(smb_logp, "NTCreateX Setting up IOCTL on fid[%d]", fidp->fid);
+	}
 
         /* set inp->fid so that later read calls in same msg can find fid */
         inp->fid = fidp->fid;
@@ -6916,8 +7146,8 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         sz.HighPart = 0x7fff; sz.LowPart = 0;
         smb_SetSMBParmDouble(outp, parmSlot, (char *)&sz); parmSlot += 4; /* alen */
         smb_SetSMBParmDouble(outp, parmSlot, (char *)&sz); parmSlot += 4; /* len */
-        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
-        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* dev state */
+        smb_SetSMBParm(outp, parmSlot, file_type); parmSlot++;	/* filetype */
+        smb_SetSMBParm(outp, parmSlot, device_state); parmSlot++;	/* dev state */
         smb_SetSMBParmByte(outp, parmSlot, 0);	/* is a dir? */
         smb_SetSMBDataLength(outp, 0);
 

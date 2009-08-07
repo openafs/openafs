@@ -8,4 +8,9 @@
 /afsrpc.h
 /afsrpc_c.c
 /afsrpc_s.c
-
+/ms-srvsvc.h
+/ms-srvsvc_c.c
+/ms-srvsvc_s.c
+/ms-wkssvc.h
+/ms-wkssvc_c.c
+/ms-wkssvc_s.c
