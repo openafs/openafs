@@ -303,7 +303,10 @@ static void afsd_InitServerPreferences(void)
             tsp = cm_FindServer(&saddr, CM_SERVER_VLDB);
             if ( tsp )		/* an existing server - ref count increased */
             {
-                tsp->ipRank = (USHORT)dwRank; /* no need to protect by mutex*/
+                lock_ObtainMutex(&tsp->mx);
+                tsp->ipRank = (USHORT)dwRank;
+                tsp->flags |= CM_SERVERFLAG_PREF_SET;
+                lock_ReleaseMutex(&tsp->mx);
 
                 /* set preferences for an existing vlserver */
                 cm_ChangeRankCellVLServer(tsp);
@@ -312,7 +315,10 @@ static void afsd_InitServerPreferences(void)
             else	/* add a new server without a cell */
             {
                 tsp = cm_NewServer(&saddr, CM_SERVER_VLDB, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
+                lock_ObtainMutex(&tsp->mx);
                 tsp->ipRank = (USHORT)dwRank;
+                tsp->flags |= CM_SERVERFLAG_PREF_SET;
+                lock_ReleaseMutex(&tsp->mx);
             }
         }
 
@@ -370,7 +376,10 @@ static void afsd_InitServerPreferences(void)
             tsp = cm_FindServer(&saddr, CM_SERVER_FILE);
             if ( tsp )		/* an existing server - ref count increased */
             {
-                tsp->ipRank = (USHORT)dwRank; /* no need to protect by mutex*/
+                lock_ObtainMutex(&tsp->mx);
+                tsp->ipRank = (USHORT)dwRank;
+                tsp->flags |= CM_SERVERFLAG_PREF_SET;
+                lock_ReleaseMutex(&tsp->mx);
 
                 /* find volumes which might have RO copy 
                 /* on server and change the ordering of 
@@ -382,7 +391,10 @@ static void afsd_InitServerPreferences(void)
             else	/* add a new server without a cell */
             {
                 tsp = cm_NewServer(&saddr, CM_SERVER_FILE, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
+                lock_ObtainMutex(&tsp->mx);
                 tsp->ipRank = (USHORT)dwRank;
+                tsp->flags |= CM_SERVERFLAG_PREF_SET;
+                lock_ReleaseMutex(&tsp->mx);
             }
         }
 

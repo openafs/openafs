@@ -1753,30 +1753,35 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
         tsp = cm_FindServer(&tmp, type);
         if ( tsp )		/* an existing server - ref count increased */
         {
-            tsp->ipRank = rank; /* no need to protect by mutex*/
+            lock_ObtainMutex(&tsp->mx);
+            tsp->ipRank = rank;
+            tsp->flags |= CM_SERVERFLAG_PREF_SET;
+            lock_ReleaseMutex(&tsp->mx);
 
-            if (type == CM_SERVER_FILE)
-            {   /* fileserver */
-                /* find volumes which might have RO copy 
-                /* on server and change the ordering of 
+            switch (type) {
+            case CM_SERVER_FILE:
+                /*
+                 * find volumes which might have RO copy
+                 * on server and change the ordering of 
                  * their RO list 
                  */
                 cm_ChangeRankVolume(tsp);
-            }
-            else 	
-            {
+                break;
+            case CM_SERVER_VLDB:
                 /* set preferences for an existing vlserver */
                 cm_ChangeRankCellVLServer(tsp);
+                break;
             }
         }
         else	/* add a new server without a cell */
         {
             tsp = cm_NewServer(&tmp, type, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
+            lock_ObtainMutex(&tsp->mx);
+            tsp->ipRank = rank;
+            tsp->flags |= CM_SERVERFLAG_PREF_SET;
+            lock_ReleaseMutex(&tsp->mx);
             tsp->ipRank = rank;
         }
-	lock_ObtainMutex(&tsp->mx);
-	tsp->flags |= CM_SERVERFLAG_PREF_SET;
-	lock_ReleaseMutex(&tsp->mx);
 	cm_PutServer(tsp);  /* decrease refcount */
     }
     return 0;
