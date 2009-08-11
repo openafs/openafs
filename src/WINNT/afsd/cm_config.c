@@ -689,8 +689,16 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
 #ifdef CELLSERV_DEBUG
     osi_Log1(afsd_logp,"SearchCellDNS-Doing search for [%s]", osi_LogSaveString(afsd_logp,cellNamep));
 #endif
-    if ( IsWindowsModule(cellNamep) )
+    /*
+     * Do not perform a DNS lookup if the name is
+     * either a well-known Windows DLL or directory,
+     * or if the name does not contain a top-level
+     * domain.
+     */
+    if ( IsWindowsModule(cellNamep) ||
+         cm_FsStrChr(cellNamep, '.') == NULL)
 	return -1;
+
     rc = getAFSServer(cellNamep, cellHostAddrs, cellHostNames, ipRanks, &numServers, ttl);
     if (rc == 0 && numServers > 0) {     /* found the cell */
         for (i = 0; i < numServers; i++) {
