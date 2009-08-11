@@ -1983,6 +1983,8 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
     if (cm_ClientStrCmpIA(shareName, _C("IPC$")) == 0 ||
         cm_ClientStrCmpIA(shareName, _C("srvsvc")) == 0 ||
         cm_ClientStrCmpIA(shareName, _C("wkssvc")) == 0 ||
+        cm_ClientStrCmpIA(shareName, _C("spoolss")) == 0 ||
+        cm_ClientStrCmpIA(shareName, _C("winreg")) == 0 ||
         cm_ClientStrCmpIA(shareName, _C(SMB_IOCTL_FILENAME_NOSLASH)) == 0 ||
         cm_ClientStrCmpIA(shareName, _C("DESKTOP.INI")) == 0
         ) {

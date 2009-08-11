@@ -2524,7 +2524,9 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         (cm_ClientStrCmpI(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
          ((cm_ClientStrCmpI(lastNamep,  _C("\\srvsvc")) == 0 ||
 	   cm_ClientStrCmpI(lastNamep,  _C("\\wkssvc")) == 0 ||
-	   cm_ClientStrCmpI(lastNamep,  _C("\\ipc$")) == 0) && (is_rpc = TRUE)))) {
+           cm_ClientStrCmpI(lastNamep,  _C("\\spoolss")) == 0 ||
+           cm_ClientStrCmpI(lastNamep,  _C("\\winreg")) == 0 ||
+           cm_ClientStrCmpI(lastNamep,  _C("\\ipc$")) == 0) && (is_rpc = TRUE)))) {
 
 	unsigned short file_type = 0;
 	unsigned short device_state = 0;
@@ -4093,7 +4095,13 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             code = cm_NameI(cm_data.rootSCachep, &requestFileName[nbnLen+2],
                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD | CM_FLAG_DFS_REFERRAL,
                             userp, NULL, &req, &scp);
-            if (code == 0) {
+            if (code == 0 ||
+                code == CM_ERROR_ALLDOWN ||
+                code == CM_ERROR_ALLBUSY ||
+                code == CM_ERROR_ALLOFFLINE ||
+                code == CM_ERROR_NOSUCHCELL ||
+                code == CM_ERROR_NOSUCHVOLUME ||
+                code == CM_ERROR_NOACCESS) {
                 /* Yes it is. */
                 found = 1;
                 cm_ClientStrCpy(referralPath, lengthof(referralPath), requestFileName);
@@ -4204,6 +4212,8 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             for ( i=0;i<=refLen; i++ )
                 sp[i+idx] = referralPath[i];
 #endif
+        } else {
+            code = CM_ERROR_NOSUCHPATH;
         } 
     } else {
         code = CM_ERROR_NOSUCHPATH;
@@ -5880,7 +5890,9 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         (cm_ClientStrCmpIA(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
          ((cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
 	   cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
-	   cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)))) {
+           cm_ClientStrCmpIA(lastNamep,  _C("\\spoolss")) == 0 ||
+           cm_ClientStrCmpIA(lastNamep,  _C("\\winreg")) == 0 ||
+           cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)))) {
 
 	unsigned short file_type = 0;
 	unsigned short device_state = 0;
@@ -7108,7 +7120,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (lastNamep &&
 	(((cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
 	   cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
-	   cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)) ||
+           cm_ClientStrCmpIA(lastNamep,  _C("\\spoolss")) == 0 ||
+           cm_ClientStrCmpIA(lastNamep,  _C("\\winreg")) == 0 ||
+           cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)) ||
 
 	 /* special case magic file name for receiving IOCTL requests
 	  * (since IOCTL calls themselves aren't getting through).
