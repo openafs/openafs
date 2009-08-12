@@ -307,6 +307,7 @@ static void afsd_InitServerPreferences(void)
                 lock_ObtainMutex(&tsp->mx);
                 tsp->ipRank = (USHORT)dwRank;
                 tsp->flags |= CM_SERVERFLAG_PREF_SET;
+		tsp->adminRank = tsp->ipRank;
                 lock_ReleaseMutex(&tsp->mx);
 
                 /* set preferences for an existing vlserver */
@@ -319,6 +320,7 @@ static void afsd_InitServerPreferences(void)
                 lock_ObtainMutex(&tsp->mx);
                 tsp->ipRank = (USHORT)dwRank;
                 tsp->flags |= CM_SERVERFLAG_PREF_SET;
+		tsp->adminRank = tsp->ipRank;
                 lock_ReleaseMutex(&tsp->mx);
             }
         }
@@ -380,7 +382,8 @@ static void afsd_InitServerPreferences(void)
             {
                 lock_ObtainMutex(&tsp->mx);
                 tsp->ipRank = (USHORT)dwRank;
-                tsp->flags |= CM_SERVERFLAG_PREF_SET;
+		tsp->flags |= CM_SERVERFLAG_PREF_SET;
+		tsp->adminRank = tsp->ipRank;
                 lock_ReleaseMutex(&tsp->mx);
 
                 /* find volumes which might have RO copy 
@@ -396,6 +399,7 @@ static void afsd_InitServerPreferences(void)
                 lock_ObtainMutex(&tsp->mx);
                 tsp->ipRank = (USHORT)dwRank;
                 tsp->flags |= CM_SERVERFLAG_PREF_SET;
+		tsp->adminRank = tsp->ipRank;
                 lock_ReleaseMutex(&tsp->mx);
             }
         }

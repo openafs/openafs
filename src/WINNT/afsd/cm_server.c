@@ -22,6 +22,7 @@
 #include <WINNT/afsreg.h>
 #include <osi.h>
 #include <rx/rx.h>
+#include <math.h>
 
 osi_rwlock_t cm_serverLock;
 osi_rwlock_t cm_syscfgLock;
@@ -44,6 +45,47 @@ cm_ForceNewConnectionsAllServers(void)
         cm_PutServerNoLock(tsp);
     }
     lock_ReleaseRead(&cm_serverLock);
+}
+
+/*
+ * lock_ObtainMutex must be held prior to calling
+ * this function.
+ */
+afs_int32
+cm_RankServer(cm_server_t * tsp)
+{
+    afs_int32 code = 0; /* start with "success" */
+    struct rx_debugPeer tpeer;
+    afs_uint16 port;
+
+    switch(tsp->type) {
+	case CM_SERVER_VLDB:
+	    port = htons(7003);
+	    break;
+	case CM_SERVER_FILE:
+	    port = htons(7000);
+	    break;
+	default:
+	    return -1;
+    }
+
+    code = rx_GetLocalPeers(tsp->addr.sin_addr.s_addr, port, &tpeer);
+
+    /*check if rx_GetLocalPeers succeeded and if there is data for tsp */
+    if(code == 0 && (tpeer.rtt == 0 && tpeer.rtt_dev == 0))
+	code = -1;
+
+    if(code == 0) {
+	if((tsp->flags & CM_SERVERFLAG_PREF_SET))
+	    tsp->ipRank = tsp->adminRank + ((int)(623 * log(tpeer.rtt) / 10) *
+		    			10 + 5);
+	else /* rank has not been set by admin, derive rank from rtt */
+	    tsp->ipRank = (int)(7200 * log(tpeer.rtt) / 5000) * 5000 + 5000;
+
+	tsp->ipRank += (rand() & 0x000f); /* randomize */
+    }
+
+    return code;
 }
 
 void 
@@ -198,6 +240,30 @@ cm_PingServer(cm_server_t *tsp)
     else 
 	osi_Wakeup((LONG_PTR)tsp);
     lock_ReleaseMutex(&tsp->mx);
+}
+
+void
+cm_RankUpServers()
+{
+    cm_server_t * tsp;
+
+    lock_ObtainRead(&cm_serverLock);
+    for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
+	cm_GetServerNoLock(tsp);
+	lock_ReleaseRead(&cm_serverLock);
+
+	lock_ObtainMutex(&tsp->mx);
+
+        /* if the server is not down, rank the server */
+        if(!(tsp->flags & CM_SERVERFLAG_DOWN))
+	   cm_RankServer(tsp);
+
+	lock_ReleaseMutex(&tsp->mx);
+
+	lock_ObtainRead(&cm_serverLock);
+	cm_PutServerNoLock(tsp);
+    }
+    lock_ReleaseRead(&cm_serverLock);
 }
 
 static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)

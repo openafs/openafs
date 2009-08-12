@@ -35,6 +35,7 @@ long cm_daemonCheckLockInterval  = 60;
 long cm_daemonTokenCheckInterval = 180;
 long cm_daemonCheckOfflineVolInterval = 600;
 long cm_daemonPerformanceTuningInterval = 0;
+long cm_daemonRankServerInterval = 600;
 
 osi_rwlock_t cm_daemonLock;
 
@@ -336,6 +337,13 @@ cm_DaemonCheckInit(void)
     dummyLen = sizeof(DWORD);
     code = RegQueryValueEx(parmKey, "daemonPerformanceTuningInterval", NULL, NULL,
 			    (BYTE *) &dummy, &dummyLen);
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "daemonRankServerInterval", NULL, NULL,
+			    (BYTE *) &dummy, &dummyLen);
+    if (code == ERROR_SUCCESS && dummy)
+	cm_daemonRankServerInterval = dummy;
+    afsi_log("daemonRankServerInterval is %d", cm_daemonRankServerInterval);
+
     if (code == ERROR_SUCCESS)
 	cm_daemonPerformanceTuningInterval = dummy;
     afsi_log("daemonPerformanceTuningInterval is %d", cm_daemonPerformanceTuningInterval);
@@ -359,6 +367,7 @@ void cm_Daemon(long parm)
     time_t lastTokenCacheCheck;
     time_t lastBusyVolCheck;
     time_t lastPerformanceCheck;
+    time_t lastServerRankCheck;
     char thostName[200];
     unsigned long code;
     struct hostent *thp;
@@ -409,6 +418,7 @@ void cm_Daemon(long parm)
     lastBusyVolCheck = now - cm_daemonCheckOfflineVolInterval/2 * (rand() % cm_daemonCheckOfflineVolInterval);
     if (cm_daemonPerformanceTuningInterval)
         lastPerformanceCheck = now - cm_daemonPerformanceTuningInterval/2 * (rand() % cm_daemonPerformanceTuningInterval);
+    lastServerRankCheck = now - cm_daemonRankServerInterval/2 * (rand() % cm_daemonRankServerInterval);
 
     while (daemon_ShutdownFlag == 0) {
         if (powerStateSuspended) {
@@ -442,11 +452,11 @@ void cm_Daemon(long parm)
 	    default:
 		afsi_log("Unknown Windows Firewall Configuration error");
 	    }
-	} 
+	}
 
         /* find out what time it is */
         now = osi_Time();
-        
+
         /* Determine whether an address change took place that we need to respond to */
         if (bAddrChangeCheck)
             bAddrChangeCheck = 0;
@@ -501,6 +511,18 @@ void cm_Daemon(long parm)
                 break;
 	    now = osi_Time();
         }
+
+	/* Rank all up servers */
+	if ((now > lastServerRankCheck + cm_daemonRankServerInterval) &&
+	    daemon_ShutdownFlag == 0 &&
+	    powerStateSuspended == 0) {
+	    lastServerRankCheck = now;
+	    osi_Log0(afsd_logp, "cm_Daemon RankServer");
+	    cm_RankUpServers();
+	    if(daemon_ShutdownFlag == 1 || powerStateSuspended)
+		break;
+	    now = osi_Time();
+	}
 
         if (cm_daemonCheckVolCBInterval && 
             now > lastVolCBRenewalCheck + cm_daemonCheckVolCBInterval &&

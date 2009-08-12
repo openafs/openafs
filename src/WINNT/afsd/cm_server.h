@@ -38,6 +38,7 @@ typedef struct cm_server {
     cm_server_vols_t *  vols;           /* by mx */
     time_t downTime;                    /* by mx */
     afsUUID uuid;                       /* by mx */
+    unsigned short adminRank;		/* only set if admin sets a rank */
 } cm_server_t;
 
 enum repstate {srv_not_busy, srv_busy, srv_offline, srv_deleted};
@@ -105,6 +106,10 @@ extern void cm_InitServer(void);
 extern void cm_CheckServers(afs_uint32 flags, struct cm_cell *cellp);
 
 extern cm_server_t *cm_allServersp;
+
+extern afs_int32 cm_RankServer(cm_server_t * server);
+
+extern void cm_RankUpServers();
 
 extern void cm_SetServerPrefs(cm_server_t * serverp);
 

@@ -1768,6 +1768,7 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
             lock_ObtainMutex(&tsp->mx);
             tsp->ipRank = rank;
             tsp->flags |= CM_SERVERFLAG_PREF_SET;
+	    tsp->adminRank = tsp->ipRank;
             lock_ReleaseMutex(&tsp->mx);
 
             switch (type) {
@@ -1791,6 +1792,7 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
             lock_ObtainMutex(&tsp->mx);
             tsp->ipRank = rank;
             tsp->flags |= CM_SERVERFLAG_PREF_SET;
+	    tsp->adminRank = tsp->ipRank;
             lock_ReleaseMutex(&tsp->mx);
             tsp->ipRank = rank;
         }
