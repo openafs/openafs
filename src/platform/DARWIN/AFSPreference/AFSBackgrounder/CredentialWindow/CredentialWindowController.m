@@ -15,7 +15,6 @@
 // -------------------------------------------------------------------------------
 - (void)awakeFromNib
 {
-	NSLog(@"awakeFromNib");
 }
 
 // -------------------------------------------------------------------------------
@@ -39,7 +38,6 @@
 - (IBAction) closePanel:(id) sender
 {
 	taken = NO;
-	NSLog(@"closePanel");
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kLogWindowClosed];
 }
 

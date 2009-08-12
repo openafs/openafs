@@ -18,12 +18,10 @@
 	viewRect = rect;
 	credentialWindow = nil;
 	afsPropMngr = [afsPropManager retain];
-	NSLog(@"init AFSMenuCredentialContoller");
 	return 	[self init];
 }
 
 - (void)dealloc {
-	NSLog(@"dealloc AFSMenuCredentialContoller");
 	if(credentialWindow) [credentialWindow release];
     [super dealloc];
 	
@@ -33,27 +31,21 @@
 {	
 	// calculate the point where show the window
 	NSPoint topLeft = {viewRect.origin.x-160,[[NSScreen mainScreen] frame].size.height-kMenuBarHeight};
-	NSLog(@"viewRect.origin.x=%d, topLeft.x=%d", viewRect.origin.x, topLeft.x);
 	// load the bundle for
 	[NSBundle loadNibNamed:@"CredentialWindow.nib" owner:self];
-	NSLog(@"prepare to open window CredentialWindow");
 
 	credentialWindow = [[NSWindow alloc] initWithContentRect:[((NSView*) credentialView) frame]
 												   styleMask:NSTitledWindowMask /*| NSUtilityWindowMask*/
 													 backing:NSBackingStoreBuffered
 													   defer:YES screen:[NSScreen mainScreen]];
-	NSLog(@"Finestra");
 	[credentialWindow setTitle:@"Klog"];
 	[credentialWindow setFrameTopLeftPoint:topLeft];
 	[credentialWindow setContentView:credentialView];
 	[credentialWindow makeKeyAndOrderFront:self];
-	NSLog(@"creata");
-	
 }
 
 -(void) closeWindow
 {
-	NSLog(@"closeWindow");
 	if([(CredentialWindowController*)credWinController takenToken] && afsPropMngr) {
 		[afsPropMngr getTokens:true 
 						   usr:[(CredentialWindowController*)credWinController uName] 

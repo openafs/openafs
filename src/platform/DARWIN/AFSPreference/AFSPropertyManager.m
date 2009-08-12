@@ -88,9 +88,9 @@
 // -------------------------------------------------------------------------------
 -(void) dealloc
 {
-	if(installationPath){ [installationPath release]; NSLog(@"Released installationPath"); }
-	if(cellList) { NSLog(@"Released cellList");[cellList removeAllObjects];[cellList release];}
-	if(cellName) { NSLog(@"Released cellName");[cellName release];}
+	if(installationPath){ [installationPath release];}
+	if(cellList) {[cellList removeAllObjects];[cellList release];}
+	if(cellName) {[cellName release];}
 	if(futil) {
 		[futil endAutorization];
 		[futil release];
@@ -311,41 +311,32 @@
 		// read thiscell config file
 		[filePath setString:installationPath];
 		[filePath appendString: @"/etc/ThisCell"];
-		NSLog(@"Search for cell name.");
+
 		[self readCellInfo:filePath];
 		if(!cellName){
 			@throw [NSException exceptionWithName:@"readCellInfo" 
 									reason:kThisCellFOError 
 								  userInfo:nil];
 		}
-		NSLog(@"Cell found: %@", cellName);
-		
 		//read TheseCell file
 		[filePath setString: installationPath];
 		[filePath appendString: @"/etc/TheseCells"];
 		userDefaultCellArray = [self readTheseCell:filePath];
 		
 		//read cell serv db
-		NSLog(@"Scan for cell db");
 		[filePath setString: installationPath];
 		[filePath appendString: @"/etc/CellServDB"];
 		[self readCellDB:filePath];
-		NSLog(@"Server found: %d", [cellList count]);
-		
-		
 		
 		//Read cacheinfo
-		NSLog(@"Scan cacheinfo file");
 		[filePath setString: installationPath];
 		[filePath appendString: @"/etc/cacheinfo"];
 		[self readCacheInfo:filePath];
-		NSLog(@"End scan cacheinfo file");
 		
 		//Read config/afsd.options
 		[filePath setString: installationPath];
 		[filePath appendString: useAfsdConfVersion?AFSD_NEW_PREFERENCE_FILE:AFSD_OLD_PREFERENCE_FILE];
 		[self readAfsdOption:filePath];
-		
 	} @catch(NSException * e){
 		@throw e;
 	} @finally {
@@ -490,8 +481,6 @@
 	do{
 		[afsdOptionS scanUpToCharactersFromSet:space intoString:&tmpString];
 		if(!tmpString) continue;
-		
-		NSLog(tmpString);
 		//check parameter type
 		if([tmpString isEqualToString:@AFSD_OPTION_DAEMONS_KEY])
 		{
@@ -569,8 +558,8 @@
 			
 			//scann the line
 			
-			[lineScanner scanUpToString:@"\"" intoString:&paramValue]; NSLog(paramValue);[lineScanner scanUpToString:@"-" intoString:&paramValue];
-			[lineScanner scanUpToString:@"\"" intoString:&paramValue]; NSLog(paramValue);
+			[lineScanner scanUpToString:@"\"" intoString:&paramValue];[lineScanner scanUpToString:@"-" intoString:&paramValue];
+			[lineScanner scanUpToString:@"\"" intoString:&paramValue];
 			
 			// read the asfd option param line
 			[self readAFSDParamLineContent:paramValue];
@@ -671,11 +660,7 @@
 {
 	NSString *tmpString = nil;
 	NSString *result = [TaskUtil executeTaskSearchingPath:@"fs" args:[NSArray arrayWithObjects:@"-version", nil]];
-	if(result) NSLog(@"fs -version return: %@", result);
-	
-	
 	NSCharacterSet *endVersionCS = [NSCharacterSet characterSetWithCharactersInString:@"qwertyuiopasdfghjklzxcvbnmMNBVCXZLKJHGFDSAPOIUYTREWQ"];
-
 	NSCharacterSet *spaceCS = [NSCharacterSet characterSetWithCharactersInString:@" "];
 	NSScanner *versionS = [NSScanner  scannerWithString:result];
 	//go to  start of version
@@ -828,11 +813,8 @@
 //  readCellInfo:
 // -------------------------------------------------------------------------------
 -(void) readCellInfo:(NSString*) configFile {
-
-	
 	NSError *error = nil;
 	NSString *tmpStr = nil;
-	NSLog(@"Try to opening file: %@",configFile);
 	NSString * result = [NSString stringWithContentsOfFile:configFile
 												  encoding:NSASCIIStringEncoding
 													 error:&error];
@@ -843,7 +825,6 @@
 									 userInfo:nil];
 	}
 	NSScanner *scanner = [NSScanner scannerWithString:result];
-	
 	[scanner scanUpToString:@"\n" 
 				 intoString:&tmpStr];
 	
@@ -988,7 +969,6 @@
 		
 		
 		if(line >= 2){
-			NSLog(@"Token found %s", [tokenLine UTF8String]);
 			// add enteir row to result
 			[tokenList addObject:tokenLine];
 			// create the line scanner for all the row that contains token info

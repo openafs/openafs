@@ -173,7 +173,6 @@
 	[alert close];
 	switch (returnCode) {
 		case  1:
-			NSLog(@"Yes");
 			if([[NSFileManager defaultManager] createDirectoryAtPath:[HOME_LAUNCHD_AGENT_FOLDER stringByExpandingTildeInPath] 
 														  attributes:nil]) {
 				
@@ -186,8 +185,6 @@
 			}
 			break;
 		case 0:
-			NSLog(@"No");
-			
 			break;
 	}
 }
@@ -198,7 +195,6 @@
 // -------------------------------------------------------------------------------
 - (void)willUnselect
 {
-	NSLog(@"willUnselect");
 	// remove self as datasource
 	[((NSTableView*)cellList) setDataSource:nil];
 	[((NSTableView*)tokensTable) setDataSource:nil];
@@ -360,11 +356,9 @@
 - (IBAction) saveCacheManagerParam:(id) sender
 {
 	@try{
-		NSLog(@"Backing up the cache configuration file");
 		//Update the value form view to afs property manager class
 		[self updateCacheParamFromView];
 		[afsProperty saveCacheConfigurationFiles:YES];
-		NSLog(@"Cache configuration file backuped");
 		[self showMessage:kSavedCacheConfiguration];
 	}@catch(NSException *e){
 		[self showMessage:[e reason]];
@@ -378,9 +372,7 @@
 // -------------------------------------------------------------------------------
 - (IBAction) refreshConfiguration:(id) sender
 {
-	NSLog(@"refreshConfiguration");
 	NSString *afsBasePath = PREFERENCE_AFS_SYS_PAT_STATIC;
-	
 	@try{
 		// set the afs path
 		[afsProperty setPath:afsBasePath];
@@ -660,8 +652,6 @@
 // -------------------------------------------------------------------------------
 - (IBAction) info:(id) sender
 {
-	//NSLog(kDevelopInfo);
-	//[self showMessage:kDevelopInfo];
 	[((InfoController*) infoController) showHtmlResource:[[self bundle] pathForResource:@"licenza" ofType:@"rtf"]];
 
 	[NSApp beginSheet: infoSheet
@@ -874,11 +864,9 @@
 		// check if the element can be get
 		if(doFilter) {
 			//Get the CellServDB array enumerator
-			//NSLog(@"String for filtering: %s", [textToFilter UTF8String]);
 			NSRange rsltRng = [[[cellElement getCellName] lowercaseString] rangeOfString:textToFilter];
 		   if(rsltRng.location != NSNotFound) {
 			//we can add this cell to filtered
-			//NSLog(@"Element found during filter: %s", [[cellElement getCellName] UTF8String]);
 			[filteredCellDB addObject:[cellElement retain]];
 		   }
 		} else {
@@ -935,7 +923,6 @@
 -(void) setAfsStatus
 {
 	BOOL afsIsUp = [afsProperty checkAfsStatus];
-	NSLog(@"Afs is: %s", afsIsUp?"Up":"Down");
 	[((NSButton *)startStopButton) setTitle: (afsIsUp?kAfsButtonShutdown:kAfsButtonStartup)];
 	
 	NSMutableAttributedString *colorTitle =[[NSMutableAttributedString alloc] initWithAttributedString:[((NSButton *)startStopButton) attributedTitle]];
@@ -1018,9 +1005,6 @@
 	//check to see if the cache param tab is the tab that will be selected
 	if([((NSString*)[tabViewItem identifier]) intValue] == TAB_LINK)
 	{
-
-		//	[groupsBox setHidden:YES];
-		NSLog([tabViewItem label]);
 		[ViewUtility enbleDisableControlView:[tabViewItem view]
 								controlState:NO];
 	}
@@ -1186,12 +1170,10 @@
 // -------------------------------------------------------------------------------
 - (void)didEndSheet:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
-	NSLog(@"didEndSheet");
     [sheet orderOut:self];
 	//Filter the cellServDb and allocate filtered array
 	[self searchCellTextEvent:nil];
 	[((NSTableView*)cellList) reloadData];
-	NSLog(@"Has saved %s:", ([((IpConfiguratorCommander*) ipConfControllerCommander) saved])?"YES":"NO");
 }
 
 // -------------------------------------------------------------------------------
@@ -1199,7 +1181,6 @@
 // -------------------------------------------------------------------------------
 - (void)didEndCredentialSheet:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
-	NSLog(@"didEndCredentialSheet");
 	if([((TokenCredentialController*)credentialCommander) takenToken] == YES){
 		/*[AFSPropertyManager klog:[((TokenCredentialController*)credentialCommander) uName] 
 							uPwd:[((TokenCredentialController*)credentialCommander) uPwd] ];*/
@@ -1219,7 +1200,6 @@
 // -------------------------------------------------------------------------------
 - (void)didEndInfoSheet:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
-	NSLog(@"didEndInfoSheet");
 	[sheet orderOut:self];
 }
 
@@ -1228,7 +1208,6 @@
 // -------------------------------------------------------------------------------
 - (void)didEndSymlinkSheet:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
-	NSLog(@"didEndSymlinkSheet");
 	[lyncCreationSheet orderOut:self];
 }
 @end
