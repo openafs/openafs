@@ -162,20 +162,13 @@
 		afsSysPath = nil;
 	}
 	
-	afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;/*(NSString*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AFS_SYS_PAT, 
-												   (CFStringRef)afsCommanderID,  
-												   kCFPreferencesAnyUser, 
-												   kCFPreferencesAnyHost);*/
-	//NSLog(@"Path readed %s", (afsSysPath==nil?[afsSysPath UTF8String]:@" no path found "));
+	afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;
 		
 	// read the preference for aklog use
 	useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG, 
 														  (CFStringRef)afsCommanderID, 
 														  kCFPreferencesCurrentUser, 
 														  kCFPreferencesAnyHost);
-	//set the menu name
-	//NSLog(@"Preference readed for useAklogPrefValue %d", [useAklogPrefValue intValue]);
-	
 	[self updateAfsStatus:nil];
 }
 
@@ -184,7 +177,6 @@
 // -------------------------------------------------------------------------------
 - (void)startStopAfs:(id)sender
 {
-	NSLog(@"startStopAfs: %s",[afsSysPath UTF8String]);
 	if(!afsSysPath) return;
 	
 	OSStatus status = noErr;
@@ -199,31 +191,24 @@
 		[afsMngr release];
 		
 		rootHelperApp = [[self bundle] pathForResource:@"afshlp" ofType:@""];
-		
-		//[startStopScript setString: resourcePath];
-		//NSLog(@"LAunch repair HelperTool");
+
 		//Check helper app
 		[self repairHelperTool];
 		
 		// make the parameter to call the root helper app
-		//NSLog(@"Path installazione afs: %s",[afsSysPath UTF8String]);
-		//NSLog(@"Path installazione afsd: %s", [afsdPath UTF8String]);
 		status = [[AuthUtil shared] autorize];
 		if(status == noErr){
 			if(currentAfsState){
 				//shutdown afs
-				//NSLog(@"Shutting down afs");
 				NSMutableString *afsKextPath = [[NSMutableString alloc] initWithCapacity:256];
 				[afsKextPath setString:afsSysPath];
 				[afsKextPath appendString:@"/etc/afs.kext"];
 				
-				//NSLog(@"executeTaskWithAuth");
 				const char *stopAfsArgs[] = {"stop_afs", [afsKextPath  UTF8String], [afsdPath UTF8String], 0L};
 				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
 											  args:stopAfsArgs
 											output:nil];
 			} else {
-				//NSLog(@"Starting up afs");
 				const char *startAfsArgs[] = {[[[self bundle] pathForResource:@"start_afs" ofType:@"sh"]  UTF8String], [afsSysPath UTF8String], [afsdPath UTF8String], 0L};
 				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
 											  args:startAfsArgs
@@ -257,13 +242,11 @@
 	
 	
 	if([useAklogPrefValue intValue]==NSOnState ) {
-		NSLog(@"Use Aklog");
 		[afsPropMngr getTokens:false 
 						   usr:nil 
 						   pwd:nil];
 		[self klogUserEven:nil];
 	} else {
-		NSLog(@"Use Klog");
 		// register for user event
 		[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
 															selector:@selector(klogUserEven:) 
@@ -389,8 +372,7 @@
 {
 	struct stat st;
     int fdTool;
-	int status = 0;
-	NSLog(@"repairHelperTool"); 
+	int status = 0; 
 	NSString *afshlpPath = [[self bundle] pathForResource:@"afshlp" ofType:nil];
 	
 	
@@ -429,7 +411,6 @@
 	
     
     close(fdTool);
-    
     NSLog(@"Self-repair done.");
 	
 }@end

@@ -24,7 +24,6 @@
 @implementation AFSBackgrounderDelegate
 #pragma mark NSApp Delegate
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	NSLog(@"Init the afs manager");
 	afsMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath];
 	// allocate the lock for concurent afs check state
 	tokensLock = [[NSLock alloc] init];
@@ -112,7 +111,6 @@
 // -------------------------------------------------------------------------------
 - (void) readPreferenceFile:(NSNotification *)notification
 {
-	NSLog(@"Reading preference file");	
 	if(afsSysPath) {
 		[afsSysPath release];
 		afsSysPath = nil;
@@ -145,9 +143,7 @@
 // -------------------------------------------------------------------------------
 /**/
 - (void)chageMenuVisibility:(NSNotification *)notification {
-	NSLog(@"chageMenuVisibility");
 	[self readPreferenceFile:nil];
-	NSLog(@"showStatusMenu: %d", [showStatusMenu intValue]);
 	[self setStatusItem:[showStatusMenu boolValue]];
 }
 
@@ -156,7 +152,6 @@
 // -------------------------------------------------------------------------------
 - (void)startStopAfs:(id)sender
 {
-	NSLog(@"startStopAfs: %s",[afsSysPath UTF8String]);
 	if(!afsSysPath) return;
 	
 	OSStatus status = noErr;
@@ -168,9 +163,7 @@
 		if(afsdPath == nil) return;
 		currentAfsState = [afsMngr checkAfsStatus];
 		rootHelperApp = [[NSBundle mainBundle] pathForResource:@"afshlp" ofType:@""];
-		
-		//[startStopScript setString: resourcePath];
-		//NSLog(@"LAunch repair HelperTool");
+
 		//Check helper app
 		[self repairHelperTool];
 		
@@ -179,18 +172,15 @@
 		if(status == noErr){
 			if(currentAfsState){
 				//shutdown afs
-				//NSLog(@"Shutting down afs");
 				NSMutableString *afsKextPath = [[NSMutableString alloc] initWithCapacity:256];
 				[afsKextPath setString:afsSysPath];
 				[afsKextPath appendString:@"/etc/afs.kext"];
 				
-				//NSLog(@"executeTaskWithAuth");
 				const char *stopAfsArgs[] = {"stop_afs", [afsKextPath  UTF8String], [afsdPath UTF8String], 0L};
 				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
 											  args:stopAfsArgs
 											output:nil];
 			} else {
-				//NSLog(@"Starting up afs");
 				const char *startAfsArgs[] = {[[ [NSBundle mainBundle] pathForResource:@"start_afs" ofType:@"sh"]  UTF8String], [afsSysPath UTF8String], [afsdPath UTF8String], 0L};
 				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
 											  args:startAfsArgs
@@ -222,15 +212,12 @@
 	AFSPropertyManager *afsPropMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath ];
 	[afsPropMngr loadConfiguration]; 
 	
-	
 	if([useAklogPrefValue boolValue]) {
-		NSLog(@"Use Aklog");
 		[afsPropMngr getTokens:false 
 						   usr:nil 
 						   pwd:nil];
 		[self klogUserEven:nil];
 	} else {
-		NSLog(@"Use Klog");
 		// register for user event
 		[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
 															selector:@selector(klogUserEven:) 
@@ -364,8 +351,7 @@
 {
 	struct stat st;
     int fdTool;
-	int status = 0;
-	NSLog(@"repairHelperTool"); 
+	int status = 0; 
 	NSString *afshlpPath = [[NSBundle mainBundle] pathForResource:@"afshlp" ofType:nil];
 	
 	
@@ -400,11 +386,7 @@
 			[[AuthUtil shared] deautorize];
 		}
     } else  NSLog(@"st_uid = 0");
-    
-	
-    
     close(fdTool);
-    
     NSLog(@"Self-repair done.");
 	
 }

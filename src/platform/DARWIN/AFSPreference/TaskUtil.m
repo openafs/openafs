@@ -38,7 +38,6 @@
 //  executeTask:
 // -------------------------------------------------------------------------------
 +(NSString*) executeTask:(NSString*) taskName arguments:(NSArray *)args{
-	NSLog(taskName);
 	NSString *result = nil;
 	int status = 0;
 	NSFileHandle *file = nil;
@@ -56,7 +55,6 @@
 	[taskToRun waitUntilExit];
 	status = [taskToRun terminationStatus];
 	if (status == 0){
-		NSLog(@"Task succeeded.");
 		NSData *data = [file readDataToEndOfFile];
 		// remove the \n character from unix command
 		if([data length] > 0){
@@ -66,7 +64,6 @@
 			[taskToRun release];
 			result = [[NSString alloc] initWithData: realData 
 										   encoding: NSUTF8StringEncoding];
-			NSLog(result);
 		}
 	} else {
 		NSLog(@"Task failed.");
@@ -79,7 +76,6 @@
 //  executeTask:
 // -------------------------------------------------------------------------------
 +(int) executeTaskWithAuth:(NSString*) taskName arguments:(NSArray *)args authExtForm:(NSData*)auth {
-	NSLog(taskName);
 	NSString *result = nil;
 	int status = 0;
 	NSFileHandle *file = nil;
@@ -103,7 +99,6 @@
 	[taskToRun waitUntilExit];
 	status = [taskToRun terminationStatus];
 	if (status == 0){
-		NSLog(@"Task succeeded.");
 		NSData *data = [file readDataToEndOfFile];
 		// remove the \n character from unix command
 		if([data length] > 0){
@@ -113,11 +108,9 @@
 			[taskToRun release];
 			result = [[NSString alloc] initWithData: realData 
 										   encoding: NSUTF8StringEncoding];
-			NSLog(result);
 			[result release];
 		}
 	} else {
-		NSLog(@"Task failed.");
 	}
 	
 	return status;

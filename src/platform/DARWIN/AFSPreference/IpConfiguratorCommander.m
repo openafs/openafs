@@ -16,7 +16,6 @@
 // -------------------------------------------------------------------------------
 - (void)awakeFromNib
 {
-	NSLog(@"awakeFromNib");
 	[((NSTableView*)tableViewCellIP) setDelegate:self];
 	[((NSTableView*)tableViewCellIP) setDataSource:self];
 }
@@ -47,16 +46,9 @@
 	//store the cell name
 	[cellElement setCellName:[((NSControl*) textFieldCellName) stringValue]];
 	[cellElement setCellComment:[((NSControl*) textFieldComment) stringValue]];
-	
-	NSLog(@"Deleting:\n%@",[bkIPArray description]);
 	[bkIPArray removeAllObjects];
-	NSLog(@"deleted:\n");
-	NSLog(@"Coping:\n%@",[workIPArray description]);
 	[bkIPArray setArray:workIPArray];
-	NSLog(@"Copied:\n%@",[workIPArray description]);
-	NSLog(@"Releasing:\n%@",[workIPArray description]);
 	[workIPArray release];
-	NSLog(@"Released:\n%@",[workIPArray description]);
 }
 
 // -------------------------------------------------------------------------------
@@ -201,7 +193,6 @@
 - (void)tableView:(NSTableView *)aTable setObjectValue:(id)aData 
    forTableColumn:(NSTableColumn *)aCol row:(int)aRow
 {
-	NSLog([aData description]);
 	CellIp *ipElement =  (CellIp*)[workIPArray objectAtIndex:aRow];
 	switch([((NSNumber*)[aCol identifier]) intValue])
 	{
