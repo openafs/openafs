@@ -29,6 +29,7 @@
 #include <WINNT\afsreg.h>
 
 #include "smb.h"
+#include "msrpc.h"
 #include "lanahelper.h"
 
 #define STRSAFE_NO_DEPRECATE
@@ -1980,11 +1981,7 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         return 1;
     }
 
-    if (cm_ClientStrCmpIA(shareName, _C("IPC$")) == 0 ||
-        cm_ClientStrCmpIA(shareName, _C("srvsvc")) == 0 ||
-        cm_ClientStrCmpIA(shareName, _C("wkssvc")) == 0 ||
-        cm_ClientStrCmpIA(shareName, _C("spoolss")) == 0 ||
-        cm_ClientStrCmpIA(shareName, _C("winreg")) == 0 ||
+    if (MSRPC_IsWellKnownService(shareName) ||
         cm_ClientStrCmpIA(shareName, _C(SMB_IOCTL_FILENAME_NOSLASH)) == 0 ||
         cm_ClientStrCmpIA(shareName, _C("DESKTOP.INI")) == 0
         ) {

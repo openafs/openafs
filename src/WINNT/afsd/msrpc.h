@@ -245,3 +245,5 @@ extern void RPC_SRVSVC_Init(void);
 
 extern void RPC_SRVSVC_Shutdown(void);
 
+extern int
+MSRPC_IsWellKnownService(const clientchar_t * lastNamep);

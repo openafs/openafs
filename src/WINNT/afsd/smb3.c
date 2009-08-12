@@ -29,6 +29,7 @@
 #include <WINNT\afsreg.h>
 
 #include "smb.h"
+#include "msrpc.h"
 #include <strsafe.h>
 
 extern osi_hyper_t hzero;
@@ -2489,6 +2490,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     cm_req_t req;
     int created = 0;
     BOOL is_rpc = FALSE;
+    BOOL is_ipc = FALSE;
 
     smb_InitReq(&req);
 
@@ -2516,30 +2518,40 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     
     outp = smb_GetTran2ResponsePacket(vcp, p, op, 40, 0);
 
+    code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
+    if (code == CM_ERROR_TIDIPC) {
+	is_ipc = TRUE;
+        osi_Log0(smb_logp, "Tran2Open received IPC TID");
+    }
+
     spacep = cm_GetSpace();
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
-    /* The 'is_rpc' assignment to TRUE is intentional */
-    if (lastNamep && 
-        (cm_ClientStrCmpI(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
-         ((cm_ClientStrCmpI(lastNamep,  _C("\\srvsvc")) == 0 ||
-	   cm_ClientStrCmpI(lastNamep,  _C("\\wkssvc")) == 0 ||
-           cm_ClientStrCmpI(lastNamep,  _C("\\spoolss")) == 0 ||
-           cm_ClientStrCmpI(lastNamep,  _C("\\winreg")) == 0 ||
-           cm_ClientStrCmpI(lastNamep,  _C("\\ipc$")) == 0) && (is_rpc = TRUE)))) {
-
-	unsigned short file_type = 0;
-	unsigned short device_state = 0;
+    if (lastNamep &&
 
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
+        (cm_ClientStrCmpI(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
+
+	 /* Or an RPC endpoint (is_rpc = TRUE assignment is intentional)*/
+	 (is_ipc && MSRPC_IsWellKnownService(lastNamep) && (is_rpc = TRUE)))) {
+
+	unsigned short file_type = 0;
+	unsigned short device_state = 0;
+
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
 
 	if (is_rpc) {
 	    code = smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
 	    osi_Log2(smb_logp, "smb_ReceiveTran2Open Creating RPC Fid [%d] code [%d]",
                      fidp->fid, code);
+	    if (code) {
+		smb_ReleaseFID(fidp);
+		smb_FreeTran2Packet(outp);
+		osi_Log1(smb_logp, "smb_SetupRPCFid() failure code [%d]", code);
+		return code;
+	    }
 	} else {
 	    smb_SetupIoctlFid(fidp, spacep);
 	    osi_Log1(smb_logp, "smb_ReceiveTran2Open Creating IOCTL Fid [%d]", fidp->fid);
@@ -2581,6 +2593,14 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         return 0;
     }
 
+#ifndef DFS_SUPPORT
+    if (is_ipc) {
+        osi_Log0(smb_logp, "Tran2Open rejecting IPC TID");
+	smb_FreeTran2Packet(outp);
+	return CM_ERROR_BADFD;
+    }
+#endif
+
     if (!cm_IsValidClientString(pathp)) {
 #ifdef DEBUG
         clientchar_t * hexp;
@@ -2613,21 +2633,6 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         osi_Log1(smb_logp, "ReceiveTran2Open user [%d] not resolvable", p->uid);
         smb_FreeTran2Packet(outp);
         return CM_ERROR_BADSMB;
-    }
-
-    code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
-    if (code == CM_ERROR_TIDIPC) {
-        /* Attempt to use a TID allocated for IPC.  The client
-         * is probably looking for DCE RPC end points which we
-         * don't support OR it could be looking to make a DFS
-         * referral request. 
-         */
-        osi_Log0(smb_logp, "Tran2Open received IPC TID");
-#ifndef DFS_SUPPORT
-        cm_ReleaseUser(userp);
-        smb_FreeTran2Packet(outp);
-        return CM_ERROR_NOSUCHPATH;
-#endif
     }
 
     dscp = NULL;
@@ -5857,6 +5862,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     cm_req_t req;
     int created = 0;
     BOOL is_rpc = FALSE;
+    BOOL is_ipc = FALSE;
 
     smb_InitReq(&req);
 
@@ -5882,32 +5888,40 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!pathp)
         return CM_ERROR_BADSMB;
 
+    code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+    if (code) {
+	if (code == CM_ERROR_TIDIPC) {
+	    is_ipc = TRUE;
+	} else {
+	    return CM_ERROR_NOSUCHPATH;
+	}
+    }
+
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
-    /* The 'is_rpc' assignment to TRUE is intentional */
     if (lastNamep && 
-        (cm_ClientStrCmpIA(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
-         ((cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
-	   cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
-           cm_ClientStrCmpIA(lastNamep,  _C("\\spoolss")) == 0 ||
-           cm_ClientStrCmpIA(lastNamep,  _C("\\winreg")) == 0 ||
-           cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)))) {
-
-	unsigned short file_type = 0;
-	unsigned short device_state = 0;
 
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
          */
-#ifdef NOTSERVICE
-        osi_Log0(smb_logp, "IOCTL Open");
-#endif
+        (cm_ClientStrCmpIA(lastNamep,  _C(SMB_IOCTL_FILENAME)) == 0 ||
+
+	 /* Or an RPC endpoint (is_rpc = TRUE assignment is intentional) */
+         (is_ipc && MSRPC_IsWellKnownService(lastNamep) && (is_rpc = TRUE)))) {
+
+	unsigned short file_type = 0;
+	unsigned short device_state = 0;
 
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
 	if (is_rpc) {
-	    smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
+	    code = smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
 	    osi_Log1(smb_logp, "OpenAndX Setting up RPC on fid[%d]", fidp->fid);
+	    if (code) {
+		osi_Log1(smb_logp, "smb_SetupRPCFid failure code [%d]", code);
+		smb_ReleaseFID(fidp);
+		return code;
+	    }
 	} else {
 	    smb_SetupIoctlFid(fidp, spacep);
 	    osi_Log1(smb_logp, "OpenAndX Setting up IOCTL on fid[%d]", fidp->fid);
@@ -5942,6 +5956,13 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return 0;
     }
 
+#ifndef DFS_SUPPORT
+    if (is_ipc) {
+	osi_Log0(smb_logp, "NTOpenX rejecting IPC TID");
+	return CM_ERROR_BADFD;
+    }
+#endif
+
     if (!cm_IsValidClientString(pathp)) {
 #ifdef DEBUG
         clientchar_t * hexp;
@@ -5969,11 +5990,6 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     userp = smb_GetUserFromVCP(vcp, inp);
 
     dscp = NULL;
-    code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
-    if (code) {
-        cm_ReleaseUser(userp);
-        return CM_ERROR_NOSUCHPATH;
-    }
     code = cm_NameI(cm_data.rootSCachep, pathp,
                     CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                     userp, tidPathp, &req, &scp);
@@ -7045,6 +7061,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     int checkDoneRequired = 0;
     cm_lock_data_t *ldp = NULL;
     BOOL is_rpc = FALSE;
+    BOOL is_ipc = FALSE;
 
     smb_InitReq(&req);
 
@@ -7116,13 +7133,26 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     osi_Log4(smb_logp,"... da=[%x] ea=[%x] cd=[%x] co=[%x]", desiredAccess, extAttributes, createDisp, createOptions);
     osi_Log3(smb_logp,"... share=[%x] flags=[%x] lastNamep=[%S]", shareAccess, flags, osi_LogSaveClientString(smb_logp,(lastNamep?lastNamep:_C("null"))));
 
-    /* The 'is_rpc' assignment to TRUE is intentional */
+    if (baseFid == 0) {
+	baseFidp = NULL;
+        baseDirp = cm_data.rootSCachep;
+        code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
+        if (code == CM_ERROR_TIDIPC) {
+            /* Attempt to use a TID allocated for IPC.  The client
+             * is probably looking for DCE RPC end points which we
+             * don't support OR it could be looking to make a DFS
+             * referral request.
+             */
+            osi_Log0(smb_logp, "NTCreateX received IPC TID");
+	    is_ipc = TRUE;
+        }
+    }
+
+    osi_Log1(smb_logp, "NTCreateX tidPathp=[%S]", (tidPathp==NULL)?_C("null"): osi_LogSaveClientString(smb_logp,tidPathp));
+
     if (lastNamep &&
-	(((cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
-	   cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
-           cm_ClientStrCmpIA(lastNamep,  _C("\\spoolss")) == 0 ||
-           cm_ClientStrCmpIA(lastNamep,  _C("\\winreg")) == 0 ||
-           cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0) && (is_rpc = TRUE)) ||
+
+	((is_ipc && MSRPC_IsWellKnownService(lastNamep) && (is_rpc = TRUE)) ||
 
 	 /* special case magic file name for receiving IOCTL requests
 	  * (since IOCTL calls themselves aren't getting through).
@@ -7135,8 +7165,14 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
 
 	if (is_rpc) {
-	    smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
+	    code = smb_SetupRPCFid(fidp, lastNamep, &file_type, &device_state);
 	    osi_Log1(smb_logp, "NTCreateX Setting up RPC on fid[%d]", fidp->fid);
+	    if (code) {
+		osi_Log1(smb_logp, "smb_SetupRPCFid() failure code [%d]", code);
+		smb_ReleaseFID(fidp);
+		free(realPathp);
+		return code;
+	    }
 	} else {
 	    smb_SetupIoctlFid(fidp, spacep);
 	    osi_Log1(smb_logp, "NTCreateX Setting up IOCTL on fid[%d]", fidp->fid);
@@ -7171,6 +7207,14 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return 0;
     }
 
+#ifndef DFS_SUPPORT
+    if (is_ipc) {
+	osi_Log0(smb_logp, "NTCreateX rejecting IPC TID");
+	free(realPathp);
+	return CM_ERROR_BADFD;
+    }
+#endif
+
     if (!cm_IsValidClientString(realPathp)) {
 #ifdef DEBUG
         clientchar_t * hexp;
@@ -7179,7 +7223,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         osi_Log1(smb_logp, "NTCreateX rejecting invalid name. [%S]",
                  osi_LogSaveClientString(smb_logp, hexp));
         if (hexp)
-    	free(hexp);
+	    free(hexp);
 #else
         osi_Log0(smb_logp, "NTCreateX rejecting invalid name");
 #endif
@@ -7194,45 +7238,26 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     	return CM_ERROR_INVAL;
     }
 
-    if (baseFid == 0) {
-	baseFidp = NULL;
-        baseDirp = cm_data.rootSCachep;
-        code = smb_LookupTIDPath(vcp, ((smb_t *)inp)->tid, &tidPathp);
-        if (code == CM_ERROR_TIDIPC) {
-            /* Attempt to use a TID allocated for IPC.  The client
-             * is probably looking for DCE RPC end points which we
-             * don't support OR it could be looking to make a DFS
-             * referral request. 
-             */
-            osi_Log0(smb_logp, "NTCreateX received IPC TID");
-#ifndef DFS_SUPPORT
-            free(realPathp);
-            cm_ReleaseUser(userp);
-            return CM_ERROR_NOSUCHFILE;
-#endif /* DFS_SUPPORT */
-        }
-    } else {
+    if (baseFidp != 0) {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
             osi_Log1(smb_logp, "NTCreateX Invalid base fid [%d]", baseFid);
+	    cm_ReleaseUser(userp);
             free(realPathp);
-            cm_ReleaseUser(userp);
             return CM_ERROR_INVAL;
-        }       
+        }
 
         if (baseFidp->scp && (baseFidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
             free(realPathp);
-            cm_ReleaseUser(userp);
 	    smb_CloseFID(vcp, baseFidp, NULL, 0);
             smb_ReleaseFID(baseFidp);
+	    cm_ReleaseUser(userp);
             return CM_ERROR_NOSUCHPATH;
         }
 
         baseDirp = baseFidp->scp;
         tidPathp = NULL;
     }
-
-    osi_Log1(smb_logp, "NTCreateX tidPathp=[%S]", (tidPathp==NULL)?_C("null"): osi_LogSaveClientString(smb_logp,tidPathp));
 
     /* compute open mode */
     fidflags = 0;

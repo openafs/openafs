@@ -27,6 +27,7 @@
 #include "ms-srvsvc.h"
 #include "afsd.h"
 #include "cm_btree.h"
+#include "cm_nls.h"
 #include "msrpc.h"
 
 static void
@@ -1443,4 +1444,25 @@ MSRPC_Init(void) {
 void
 MSRPC_Shutdown(void) {
     RPC_SRVSVC_Shutdown();
+}
+
+int
+MSRPC_IsWellKnownService(const clientchar_t * lastNamep)
+{
+    return
+	cm_ClientStrCmpIA(lastNamep,  _C("\\srvsvc")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\wkssvc")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\spoolss")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\winreg")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\lsass")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\lsarpc")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\samr")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\netlogon")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\ntsvcs")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\eventlog")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\svcctl")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\browse")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\msgsvc")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("\\w32time")) == 0 ||
+	cm_ClientStrCmpIA(lastNamep,  _C("ipc$")) == 0;
 }
