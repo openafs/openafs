@@ -42,7 +42,8 @@
 	
 	noTokenImage = [self getImageFromBundle:@"noToken" 
 									fileExt:@"png"];
-
+	//get the sazi of the menu icon
+	menuSize = [hasTokenImage size];
 	//Start to read the afs path
 	[self readPreferenceFile:nil];	
 	[self startTimer];
@@ -277,6 +278,8 @@
 	gotToken = [tokens count] > 0;
 	[tokens release];
 	
+	//update the menu icon
+	[[statusItem view] setNeedsDisplay:YES];
 	//unlock
 	[tokensLock unlock];
 }
@@ -420,7 +423,7 @@
 -(void)setStatusItem:(BOOL)show {
 	if(show) {
 		if(statusItem) return;
-		statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength] retain];
+		statusItem = [[[NSStatusBar systemStatusBar] statusItemWithLength:menuSize.width] retain];
 		[statusItem setView:[[AFSMenuExtraView alloc] initWithFrame:[[statusItem view] frame]  
 													   backgrounder:self
 															   menu:backgrounderMenu]];

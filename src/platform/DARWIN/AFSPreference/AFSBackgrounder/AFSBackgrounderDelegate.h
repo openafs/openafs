@@ -19,6 +19,7 @@
 
 	BOOL afsState; //0-off 1-on
 	BOOL gotToken; //0-no 1-one o more token
+	NSSize menuSize;
 	
 @protected
 	AFSPropertyManager *afsMngr;
