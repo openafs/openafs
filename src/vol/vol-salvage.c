@@ -2716,8 +2716,16 @@ DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino, Unique * maxu)
 	    vep->owner = vnode->owner;
 	    vep->group = vnode->group;
 	    if (vnode->type == vDirectory) {
-		assert(class == vLarge);
-		vip->inodes[vnodeIndex] = VNDISK_GET_INO(vnode);
+		if (class != vLarge) {
+		    VnodeId vnodeNumber = bitNumberToVnodeNumber(vnodeIndex, class);
+		    vip->nAllocatedVnodes--;
+		    memset(vnode, 0, sizeof(vnode));
+		    IH_IWRITE(vnodeInfo[vSmall].handle,
+			      vnodeIndexOffset(vcp, vnodeNumber),
+			      (char *)&vnode, sizeof(vnode));
+		    VolumeChanged = 1;
+		} else
+		    vip->inodes[vnodeIndex] = VNDISK_GET_INO(vnode);
 	    }
 	}
     }
