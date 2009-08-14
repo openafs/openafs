@@ -226,6 +226,16 @@ static int
 copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 {
     int code;
+#if defined(AFS_DARWIN100_ENV)
+    struct afs_ioctl32 dst32;
+    
+    if (!proc_is64bit(current_proc())) {
+	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
+	if (!code)
+	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
+	return code;
+    }
+#endif
 #if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
     struct afs_ioctl32 dst32;
 

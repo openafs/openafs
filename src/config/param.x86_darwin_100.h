@@ -32,6 +32,7 @@
 #define AFS_NAMEI_ENV 1
 #define DARWIN_REFBASE 3
 #define AFS_CACHE_VNODE_PATH
+#define NEED_IOCTL32 
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
