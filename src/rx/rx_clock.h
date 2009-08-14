@@ -42,8 +42,8 @@ struct clock {
     afs_int32 usec;		/* Microseconds since clock_Init */
 };
 
-#ifndef	KERNEL
-#if defined(AFS_USE_GETTIMEOFDAY) || defined(AFS_PTHREAD_ENV)
+#if !defined(KERNEL) || defined(UKERNEL)
+#if defined(AFS_USE_GETTIMEOFDAY) || defined(AFS_PTHREAD_ENV) || defined(UKERNEL)
 #define clock_Init()
 #define clock_NewTime()
 #define clock_UpdateTime()
