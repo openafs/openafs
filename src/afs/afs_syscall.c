@@ -48,6 +48,16 @@ int
 copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 {
     int code;
+#if defined(AFS_DARWIN100_ENV)
+    struct afs_ioctl32 dst32;
+    
+    if (!proc_is64bit(current_proc())) {
+	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
+	if (!code)
+	    afs_ioctl32_to_afs_ioctl(&dst32, dst);
+	return code;
+    }
+#endif
 #if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
     struct afs_ioctl32 dst32;
 
@@ -322,7 +332,7 @@ struct iparam32 {
 };
 
 
-#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV))
+#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
@@ -343,6 +353,16 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 {
     int code;
 
+#if defined(AFS_DARWIN100_ENV)
+    struct iparam32 dst32;
+    
+    if (!proc_is64bit(current_proc())) {
+	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);
+	if (!code)
+	    iparam32_to_iparam(&dst32, dst);
+	return code;
+    }
+#endif
 #if defined(AFS_HPUX_64BIT_ENV)
     struct iparam32 dst32;
 

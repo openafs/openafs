@@ -53,8 +53,7 @@ afs_modload(struct kmod_info *ki, void *data)
     afs_vfsentry.vfe_vfsops = &afs_vfsops;
     afs_vfsentry.vfe_vopcnt = 2;
     afs_vfsentry.vfe_opvdescs = afs_vnodeop_opv_desc_list;
-    /* We may be 64bit ready too (VFS_TBL64BITREADY) */
-    afs_vfsentry.vfe_flags = VFS_TBLTHREADSAFE|VFS_TBLNOTYPENUM;
+    afs_vfsentry.vfe_flags = VFS_TBLTHREADSAFE|VFS_TBLNOTYPENUM|VFS_TBL64BITREADY;
     if (vfs_fsadd(&afs_vfsentry, &afs_vfstable)) {
 	printf("AFS: vfs_fsadd failed. aborting\n");
 	MUTEX_FINISH();
