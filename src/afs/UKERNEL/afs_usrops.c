@@ -3958,6 +3958,11 @@ uafs_readdir_r(usr_DIR * dirp)
     struct usr_dirent *direntP;
     struct min_direct *directP;
 
+    if (!dirp) {
+	errno = EBADF;
+	return NULL;
+    }
+
     /*
      * Make sure this is an open file
      */
@@ -4044,6 +4049,11 @@ uafs_closedir_r(usr_DIR * dirp)
 {
     int fd;
     int rc;
+
+    if (!dirp) {
+	errno = EBADF;
+	return -1;
+    }
 
     fd = dirp->dd_fd;
     afs_osi_Free((char *)dirp,
