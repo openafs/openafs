@@ -14,11 +14,16 @@ UOBJ	=../UAFS
 PICOBJ  =../UAFS.pic
 JUAFS	=../JUAFS
 WEBOBJ=../AFSWEB
+PERLUAFS = PERLUAFS
 AFS	=../afs
 RX	=../rx
 AFSINT=../afsint
 LIB	=../lib
 NS_INCL =SRC/../afsweb/netscape_includes
+SWIG_PERL_CFLAGS = -fPIC $(shell perl -MExtUtils::Embed -e ccopts)
+SWIG_PERL_LDFLAGS = -fPIC $(shell perl -MExtUtils::Embed -e ldopts)
+SWIG = @SWIG@
+LIBUAFS_BUILD_PERL = @LIBUAFS_BUILD_PERL@
 
 TOP_OBJ_AUTH = ${TOP_OBJDIR}/src/auth
 TOP_OBJ_FSINT = ${TOP_OBJDIR}/src/fsint
@@ -58,7 +63,7 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
 all: ${TOP_LIBDIR}/$(LIBJUAFS) ${TOP_LIBDIR}/$(LIBUAFS) \
-	${TOP_LIBDIR}/libuafs_pic.a linktest
+	${TOP_LIBDIR}/libuafs_pic.a linktest @LIBUAFS_BUILD_PERL@
 
 ${TOP_LIBDIR}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
 	${INSTALL_DATA} $? $@
@@ -75,11 +80,17 @@ ${TOP_LIBDIR}/libuafs_pic.a: UAFS.pic/libuafs_pic.a
 ${TOP_LIBDIR}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
 	${INSTALL_DATA} $? $@
 
-${TOP_LIBDIR}/perl/AFS/ukernel.so: PERLUAFS/ukernel.so
-	${INSTALL_DATA} $? $@
+setup_perllib:
+	${INSTALL} -d ${TOP_LIBDIR}/perl
+	${INSTALL} -d ${TOP_LIBDIR}/perl/AFS
 
-${TOP_LIBDIR}/perl/AFS/ukernel.pm: PERLUAFS/ukernel.pm
-	${INSTALL_DATA} $? $@
+${TOP_LIBDIR}/perl/ukernel.so: setup_perllib PERLUAFS/ukernel.so
+	${INSTALL_DATA} PERLUAFS/ukernel.so $@
+
+${TOP_LIBDIR}/perl/AFS/ukernel.pm: setup_perllib PERLUAFS/ukernel.pm
+	${INSTALL_DATA} PERLUAFS/ukernel.pm $@
+
+LIBUAFS_BUILD_PERL: ${TOP_LIBDIR}/perl/ukernel.so ${TOP_LIBDIR}/perl/AFS/ukernel.pm
 
 webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEB) \
@@ -2007,23 +2018,50 @@ $(JUAFS)/xdr_mem.o: $(TOP_SRC_RX)/xdr_mem.c
 $(JUAFS)/xdr_len.o: $(TOP_SRC_RX)/xdr_len.c
 	$(CRULE1)
 
+$(PERLUAFS)/ukernel.pm: $(PERLUAFS)/ukernel_swig_perl.c
+$(PERLUAFS)/ukernel_swig_perl.c: ${srcdir}/ukernel_swig.i
+	mkdir -p $(PERLUAFS)
+	$(SWIG) -perl5 -o $@ ${srcdir}/ukernel_swig.i
+
+$(PERLUAFS)/ukernel_swig_perl.o: $(PERLUAFS)/ukernel_swig_perl.c
+	${CC} -c ${CPPFLAGS} ${UAFS_CFLAGS} $(SWIG_PERL_CFLAGS) \
+		$(COMMON_INCLUDE) -DUKERNEL $(SHLIB_CFLAGS) -o $@ \
+		$(PERLUAFS)/ukernel_swig_perl.c
+
+$(PERLUAFS)/ukernel.so: $(PERLUAFS)/ukernel_swig_perl.o UAFS.pic/libuafs_pic.a
+	${TOP_OBJDIR}/src/config/shlib-build -d $(srcdir) -p -f $@ -- \
+		$(SWIG_PERL_LDFLAGS) $(LDFLAGS) \
+		$(PERLUAFS)/ukernel_swig_perl.o \
+		UAFS.pic/libuafs_pic.a ${TOP_LIBDIR}/libcmd_pic.a \
+		${TOP_LIBDIR}/libafsutil_pic.a $(LDFLAGS_roken) \
+		$(LDFLAGS_hcrypto) $(LIB_hcrypto) $(LIB_roken) $(LIB_crypt) \
+		$(XLIBS)
+
 clean:
-	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi afsd afs afsint config rx
+	-$(RM) -rf UAFS* JUAFS* AFSWEB* PERLUAFS nsapi afsd afs afsint config rx
 	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys linktest $(AFS_OS_CLEAN)
 
 
-install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS) UAFS.pic/libuafs_pic.a
+install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS) UAFS.pic/libuafs_pic.a \
+		@LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DESTDIR}${libdir}
 	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DESTDIR}${libdir}/$(LIBUAFS)
 	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DESTDIR}${libdir}/$(LIBJUAFS)
 	${INSTALL_DATA} UAFS.pic/libuafs_pic.a ${DESTDIR}${libdir}/libuafs_pic.a
+	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
+		${INSTALL} -d ${DESTDIR}${libdir}/perl; \
+		${INSTALL} -d ${DESTDIR}${libdir}/perl/AFS; \
+		${INSTALL_DATA} PERLUAFS/ukernel.so ${DESTDIR}${libdir}/perl/ukernel.so; \
+		${INSTALL_DATA} PERLUAFS/ukernel.pm ${DESTDIR}${libdir}/perl/AFS/ukernel.pm; \
+	fi;
 
 dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 		$(TOP_INCDIR)/afs/afs_sysnames.h \
 		$(TOP_INCDIR)/afs/afs_stats.h \
 		$(TOP_SRCDIR)/afs/sysincludes.h \
 		$(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
-		UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS) UAFS.pic/libuafs_pic.a
+		UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS) UAFS.pic/libuafs_pic.a \
+		@LIBUAFS_BUILD_PERL@
 	${INSTALL} -d ${DEST}/root.perf/include/afs
 	${INSTALL} -d ${DEST}/root.perf/lib
 	${INSTALL_DATA} $(TOP_INCDIR)/afs/param.h \
@@ -2041,6 +2079,12 @@ dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
 	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/$(LIBUAFS)
 	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DEST}/root.perf/lib/$(LIBJUAFS)
 	${INSTALL_DATA} UAFS.pic/libuafs_pic.a ${DEST}/root.perf/lib/libuafs_pic.a
+	if [ "x$(LIBUAFS_BUILD_PERL)" != "x" ] ; then \
+		${INSTALL} -d ${DEST}/root.perf/lib/perl; \
+		${INSTALL} -d ${DEST}/root.perf/lib/perl/AFS; \
+		${INSTALL_DATA} PERLUAFS/ukernel.so ${DEST}/root.perf/lib/perl/ukernel.so; \
+		${INSTALL_DATA} PERLUAFS/ukernel.pm ${DEST}/root.perf/lib/perl/AFS/ukernel.pm; \
+	fi;
 
 #
 # Common directory and other build targets
