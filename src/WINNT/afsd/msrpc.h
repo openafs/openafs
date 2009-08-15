@@ -27,6 +27,7 @@
 #include <Rpc.h>
 #include <RpcdceP.h>
 #include <RpcNdr.h>
+#include "cm_nls.h"
 
 #define I_RpcGetBuffer MSRPC_I_GetBuffer
 
