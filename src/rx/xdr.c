@@ -48,7 +48,7 @@
 
 #ifndef	NeXT
 
-#ifdef	KERNEL
+#if defined(KERNEL) && !defined(UKERNEL)
 #include <sys/param.h>
 #ifndef AFS_LINUX20_ENV
 #include <sys/systm.h>

@@ -338,7 +338,7 @@ pr_AddToGroup(char *user, char *group)
     idlist lids;
 
     lnames.namelist_len = 2;
-    lnames.namelist_val = (prname *) malloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = (prname *) xdr_alloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], group, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -357,9 +357,9 @@ pr_AddToGroup(char *user, char *group)
 		  lids.idlist_val[1]);
   done:
     if (lnames.namelist_val)
-	free(lnames.namelist_val);
+	xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
     if (lids.idlist_val)
-	free(lids.idlist_val);
+	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
     return code;
 }
 
@@ -371,7 +371,7 @@ pr_RemoveUserFromGroup(char *user, char *group)
     idlist lids;
 
     lnames.namelist_len = 2;
-    lnames.namelist_val = (prname *) malloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = (prname *) xdr_alloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], user, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], group, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -390,9 +390,9 @@ pr_RemoveUserFromGroup(char *user, char *group)
 		  lids.idlist_val[1]);
   done:
     if (lnames.namelist_val)
-	free(lnames.namelist_val);
+	xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
     if (lids.idlist_val)
-	free(lids.idlist_val);
+	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
     return code;
 
 }
@@ -419,16 +419,16 @@ pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
     lids.idlist_len = 0;
     lids.idlist_val = 0;
     lnames.namelist_len = 1;
-    lnames.namelist_val = (prname *) malloc(PR_MAXNAMELEN);
+    lnames.namelist_val = (prname *) xdr_alloc(PR_MAXNAMELEN);
     stolower(name);
     strncpy(lnames.namelist_val[0], name, PR_MAXNAMELEN);
     code = ubik_PR_NameToID(pruclient, 0, &lnames, &lids);
     if (lids.idlist_val) {
 	*id = *lids.idlist_val;
-	free(lids.idlist_val);
+	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
     }
     if (lnames.namelist_val)
-	free(lnames.namelist_val);
+	xdr_free(lnames.namelist_val, PR_MAXNAMELEN);
     return code;
 }
 
@@ -449,17 +449,17 @@ pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
     register afs_int32 code;
 
     lids.idlist_len = 1;
-    lids.idlist_val = (afs_int32 *) malloc(sizeof(afs_int32));
+    lids.idlist_val = (afs_int32 *) xdr_alloc(sizeof(afs_int32));
     *lids.idlist_val = id;
     lnames.namelist_len = 0;
     lnames.namelist_val = 0;
     code = ubik_PR_IDToName(pruclient, 0, &lids, &lnames);
     if (lnames.namelist_val) {
 	strncpy(name, lnames.namelist_val[0], PR_MAXNAMELEN);
-	free(lnames.namelist_val);
+	xdr_free(lnames.namelist_val, PR_MAXNAMELEN);
     }
     if (lids.idlist_val)
-	free(lids.idlist_val);
+	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
     return code;
 }
 
@@ -559,7 +559,7 @@ pr_ListOwned(afs_int32 oid, namelist *lnames, afs_int32 *moreP)
     if (code)
 	return code;
     if (alist.prlist_val)
-	free(alist.prlist_val);
+	xdr_free(alist.prlist_val, alist.prlist_len * sizeof(alist.prlist_val[0]));
     return PRSUCCESS;
 }
 
@@ -585,7 +585,7 @@ pr_IDListMembers(afs_int32 gid, namelist *lnames)
     if (code)
 	return code;
     if (alist.prlist_val)
-	free(alist.prlist_val);
+	xdr_free(alist.prlist_val, alist.prlist_len * sizeof(alist.prlist_val[0]));
     return PRSUCCESS;
 }
 
@@ -704,7 +704,7 @@ pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
     stolower(uname);
     stolower(gname);
     lnames.namelist_len = 2;
-    lnames.namelist_val = (prname *) malloc(2 * PR_MAXNAMELEN);
+    lnames.namelist_val = (prname *) xdr_alloc(2 * PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[0], uname, PR_MAXNAMELEN);
     strncpy(lnames.namelist_val[1], gname, PR_MAXNAMELEN);
     lids.idlist_val = 0;
@@ -712,18 +712,18 @@ pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
     code = pr_NameToId(&lnames, &lids);
     if (code) {
 	if (lnames.namelist_val)
-	    free(lnames.namelist_val);
+	    xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
 	if (lids.idlist_val)
-	    free(lids.idlist_val);
+	    xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
 	return code;
     }
     code =
 	ubik_PR_IsAMemberOf(pruclient, 0, lids.idlist_val[0],
 		  lids.idlist_val[1], flag);
     if (lnames.namelist_val)
-	free(lnames.namelist_val);
+	xdr_free(lnames.namelist_val, 2 * PR_MAXNAMELEN);
     if (lids.idlist_val)
-	free(lids.idlist_val);
+	xdr_free(lids.idlist_val, lids.idlist_len * sizeof(lids.idlist_val[0]));
     return code;
 }
 
