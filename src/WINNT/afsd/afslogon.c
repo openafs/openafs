@@ -359,8 +359,8 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     DWORD dwSize;
     DWORD dwType;
     DWORD dwDummy;
-    char computerName[MAX_COMPUTERNAME_LENGTH + 1];
-    char *effDomain;
+    char computerName[MAX_COMPUTERNAME_LENGTH + 1]="";
+    char *effDomain = NULL;
 
     memset(opt, 0, sizeof(LogonOptions_t));
 
@@ -368,17 +368,14 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     /* If the domain is the same as the Netbios computer name, we use the LOCALHOST domain name*/
     opt->flags = LOGON_FLAG_REMOTE;
     if(domain) {
-        dwSize = MAX_COMPUTERNAME_LENGTH;
+        dwSize = MAX_COMPUTERNAME_LENGTH + 1;
         if(GetComputerName(computerName, &dwSize)) {
             if(!cm_stricmp_utf8(computerName, domain)) {
                 effDomain = "LOCALHOST";
                 opt->flags = LOGON_FLAG_LOCAL;
             }
-            else
-                effDomain = domain;
         }
-    } else
-        effDomain = NULL;
+    }
 
     rv = RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, KEY_READ, &hkParm );
     if(rv != ERROR_SUCCESS) {
@@ -424,7 +421,7 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     rv = RegQueryValueEx(hkParm, REG_CLIENT_FAIL_SILENTLY_PARM, 0, &dwType, (LPBYTE) &dwDummy, &dwSize);
     if (rv != ERROR_SUCCESS)
         LOOKUPKEYCHAIN(dwDummy, REG_DWORD, DEFAULT_FAIL_SILENTLY, REG_CLIENT_FAIL_SILENTLY_PARM);
-    opt->failSilently = !!dwDummy;
+    opt->failSilently = dwDummy ? 1 :0;
 
     /* Retry interval */
     LOOKUPKEYCHAIN(opt->retryInterval, REG_DWORD, DEFAULT_RETRY_INTERVAL, REG_CLIENT_RETRY_INTERVAL_PARM);
@@ -432,29 +429,38 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
     /* Sleep interval */
     LOOKUPKEYCHAIN(opt->sleepInterval, REG_DWORD, DEFAULT_SLEEP_INTERVAL, REG_CLIENT_SLEEP_INTERVAL_PARM);
 
-    opt->logonScript = NULL;
-    opt->smbName = NULL;
-
     if(!ISLOGONINTEGRATED(opt->LogonOption)) {
+        DebugEvent0("Integrated logon disabled");
         goto cleanup; /* no need to lookup the logon script */
     }
 
     /* come up with SMB username */
     if(ISHIGHSECURITY(opt->LogonOption)) {
+        DebugEvent0("High Security Mode active");
         opt->smbName = malloc( MAXRANDOMNAMELEN );
+        if (opt->smbName == NULL)
+            goto cleanup;
         GenRandomName(opt->smbName);
     } else if (lpLogonId) {
         /* username and domain for logon session is not necessarily the same as
            username and domain passed into network provider. */
-        PSECURITY_LOGON_SESSION_DATA plsd;
-        char lsaUsername[MAX_USERNAME_LENGTH];
-        char lsaDomain[MAX_DOMAIN_LENGTH];
+        PSECURITY_LOGON_SESSION_DATA plsd=NULL;
+        char lsaUsername[MAX_USERNAME_LENGTH]="";
+        char lsaDomain[MAX_DOMAIN_LENGTH]="";
         size_t len, tlen;
+        NTSTATUS Status;
 
-        LsaGetLogonSessionData(lpLogonId, &plsd);
+        Status = LsaGetLogonSessionData(lpLogonId, &plsd);
+        if ( FAILED(Status) || plsd == NULL ) {
+            DebugEvent("LsaGetLogonSessionData failed [0x%x]", Status);
+            goto bad_strings;
+        }
         
-        UnicodeStringToANSI(plsd->UserName, lsaUsername, MAX_USERNAME_LENGTH);
-        UnicodeStringToANSI(plsd->LogonDomain, lsaDomain, MAX_DOMAIN_LENGTH);
+        if (!UnicodeStringToANSI(plsd->UserName, lsaUsername, MAX_USERNAME_LENGTH))
+            goto bad_strings;
+
+        if (!UnicodeStringToANSI(plsd->LogonDomain, lsaDomain, MAX_DOMAIN_LENGTH))
+            goto bad_strings;
 
         DebugEvent("PLSD username[%s] domain[%s]",lsaUsername,lsaDomain);
 
@@ -471,6 +477,8 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         len += 2;
 
         opt->smbName = malloc(len);
+        if (opt->smbName == NULL)
+            goto cleanup;
 
         StringCbCopy(opt->smbName, len, lsaDomain);
         StringCbCat(opt->smbName, len, "\\");
@@ -479,20 +487,24 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
         strlwr(opt->smbName);
 
       bad_strings:
-        LsaFreeReturnBuffer(plsd);
-    } else {
+        if (plsd)
+            LsaFreeReturnBuffer(plsd);
+    }
+    if (opt->smbName == NULL) {
         size_t len;
 
-        DebugEvent("No LUID given. Constructing username using [%s] and [%s]",
+        DebugEvent("Constructing username using [%s] and [%s]",
                    username, domain);
  
         len = strlen(username) + strlen(domain) + 2;
 
         opt->smbName = malloc(len);
+        if (opt->smbName == NULL)
+            goto cleanup;
 
-        StringCbCopy(opt->smbName, len, username);
+        StringCbCopy(opt->smbName, len, domain);
         StringCbCat(opt->smbName, len, "\\");
-        StringCbCat(opt->smbName, len, domain);
+        StringCbCat(opt->smbName, len, username);
 
         strlwr(opt->smbName);
     }
