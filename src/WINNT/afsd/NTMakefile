@@ -527,6 +527,10 @@ clean::
 	$(DEL) $(OUT)\*.res
 	$(DEL) afsrpc.h
 	$(DEL) afsrpc_?.*
+	$(DEL) ms-srvsvc.h
+	$(DEL) ms-srvsvc_?.*
+	$(DEL) ms-wkssvc.h
+	$(DEL) ms-wkssvc_?.*
         $(DEL) afsd_eventmessages.h
         $(DEL) afsd_eventmessages.rc
         $(DEL) MSG?????.bin
