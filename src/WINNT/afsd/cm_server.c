@@ -57,6 +57,7 @@ cm_RankServer(cm_server_t * tsp)
     afs_int32 code = 0; /* start with "success" */
     struct rx_debugPeer tpeer;
     afs_uint16 port;
+    afs_uint16 newRank;
 
     switch(tsp->type) {
 	case CM_SERVER_VLDB:
@@ -77,12 +78,33 @@ cm_RankServer(cm_server_t * tsp)
 
     if(code == 0) {
 	if((tsp->flags & CM_SERVERFLAG_PREF_SET))
-	    tsp->ipRank = tsp->adminRank + ((int)(623 * log(tpeer.rtt) / 10) *
-		    			10 + 5);
+	    newRank = tsp->adminRank +
+                ((int)(623 * log(tpeer.rtt) / 10) * 10 + 5);
 	else /* rank has not been set by admin, derive rank from rtt */
-	    tsp->ipRank = (int)(7200 * log(tpeer.rtt) / 5000) * 5000 + 5000;
+	    newRank = (int)(7200 * log(tpeer.rtt) / 5000) * 5000 + 5000;
 
-	tsp->ipRank += (rand() & 0x000f); /* randomize */
+	newRank += (rand() & 0x000f); /* randomize */
+
+        if (abs(newRank - tsp->ipRank) > 0xf) {
+            tsp->ipRank = newRank;
+
+            lock_ReleaseMutex(&tsp->mx);
+            switch (tsp->type) {
+            case CM_SERVER_FILE:
+                /*
+                 * find volumes which might have RO copy
+                 * on server and change the ordering of
+                 * their RO list
+                 */
+                cm_ChangeRankVolume(tsp);
+                break;
+            case CM_SERVER_VLDB:
+                /* set preferences for an existing vlserver */
+                cm_ChangeRankCellVLServer(tsp);
+                break;
+            }
+            lock_ObtainMutex(&tsp->mx);
+        }
     }
 
     return code;

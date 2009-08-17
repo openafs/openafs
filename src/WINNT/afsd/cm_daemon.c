@@ -519,7 +519,7 @@ void cm_Daemon(long parm)
 	    lastServerRankCheck = now;
 	    osi_Log0(afsd_logp, "cm_Daemon RankServer");
 	    cm_RankUpServers();
-	    if(daemon_ShutdownFlag == 1 || powerStateSuspended)
+	    if(daemon_ShutdownFlag == 1)
 		break;
 	    now = osi_Time();
 	}
