@@ -20,7 +20,9 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 /* check line of CellAlias provided for Cell name, if matches, returns alias in third parameter */
 - (BOOL)_cellInCellAliasLine:(NSString *)line cellName:(NSString *)cell intoAlias:(NSString **)alias
 {
-	NSCharacterSet *alphaNum = [NSCharacterSet alphanumericCharacterSet];
+	NSMutableCharacterSet *alphaNum = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
+	[alphaNum addCharactersInString:@"-"];
+
 	NSScanner *cellScanner = [NSScanner scannerWithString:line];
 	if (![cellScanner scanUpToString:cell intoString:nil])
 	{
@@ -108,7 +110,8 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 	}
 
 	/* make sure it's in internet domain style, i.e. alphanum.alphanum */
-	NSCharacterSet *alphaNum = [NSCharacterSet alphanumericCharacterSet];
+	NSMutableCharacterSet *alphaNum = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
+	[alphaNum addCharactersInString:@"-"];
 	NSScanner *cellScanner = [NSScanner scannerWithString:cellString];
 	
 	/* first 'word' */
@@ -141,7 +144,8 @@ NSString *fileWriteCellAlias=@"/private/tmp/org.OpenAFS.Install.CellAlias";
 	}
 
 	/* make sure it's alpha-numeric */
-	NSCharacterSet *alphaNum = [NSCharacterSet alphanumericCharacterSet];
+	NSMutableCharacterSet *alphaNum = [[NSCharacterSet alphanumericCharacterSet] mutableCopy];
+	[alphaNum addCharactersInString:@"-"];
 	NSScanner *aliasScanner = [NSScanner scannerWithString:aliasString];
 
 	if (![aliasScanner scanCharactersFromSet:alphaNum intoString:nil])
