@@ -596,7 +596,7 @@ afs_int32 afs_calc_inum (afs_int32 volume, afs_int32 vnode)
 	AFS_MD5_Update(&ct, &volume, 4);
 	AFS_MD5_Update(&ct, &vnode, 4);
 	AFS_MD5_Final(digest, &ct);
-	memcpy(&ino, digest, sizeof(ino_t));
+	memcpy(&ino, digest, sizeof(afs_int32));
 	ino ^= (ino ^ vno) & 1;
     } else {
 	ino = (volume << 16) + vnode;
