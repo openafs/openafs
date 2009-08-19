@@ -71,6 +71,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     osi_hyper_t truncPos;
     cm_bulkIO_t biod;		/* bulk IO descriptor */
     int require_64bit_ops = 0;
+    int call_was_64bit = 0;
 
     osi_assertx(userp != NULL, "null cm_user_t");
     osi_assertx(scp != NULL, "null cm_scache_t");
@@ -159,6 +160,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 
 #ifdef AFS_LARGEFILES
         if (SERVERHAS64BIT(connp)) {
+            call_was_64bit = 1;
+
             osi_Log4(afsd_logp, "CALL StartRXAFS_StoreData64 scp 0x%p, offset 0x%x:%08x, length 0x%x",
                      scp, biod.offset.HighPart, biod.offset.LowPart, nbytes);
 
@@ -171,6 +174,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 	    else
 		osi_Log0(afsd_logp, "CALL StartRXAFS_StoreData64 SUCCESS");
         } else {
+            call_was_64bit = 0;
+
             if (require_64bit_ops) {
                 osi_Log0(afsd_logp, "Skipping StartRXAFS_StoreData.  The operation requires large file support in the server.");
                 code = CM_ERROR_TOOBIG;
@@ -227,7 +232,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         }	/* if RPC started successfully */
 
         if (code == 0) {
-            if (SERVERHAS64BIT(connp)) {
+            if (call_was_64bit) {
                 code = EndRXAFS_StoreData64(rxcallp, &outStatus, &volSync);
                 if (code)
                     osi_Log2(afsd_logp, "EndRXAFS_StoreData64 FAILURE scp 0x%p code %lX", scp, code);
@@ -289,7 +294,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
          * so that we see updates made by other machines.
          */
 
-        if (SERVERHAS64BIT(connp)) {
+        if (call_was_64bit) {
             t.LowPart = outStatus.Length;
             t.HighPart = outStatus.Length_hi;
         } else {
@@ -328,6 +333,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     struct rx_call *rxcallp;
     struct rx_connection *rxconnp;
     int require_64bit_ops = 0;
+    int call_was_64bit = 0;
 
     /* Serialize StoreData RPC's; for rationale see cm_scache.c */
     (void) cm_SyncOp(scp, NULL, userp, reqp, 0,
@@ -368,9 +374,13 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 
 #ifdef AFS_LARGEFILES
         if (SERVERHAS64BIT(connp)) {
+            call_was_64bit = 1;
+
             code = StartRXAFS_StoreData64(rxcallp, &tfid, &inStatus,
                                           0, 0, truncPos.QuadPart);
         } else {
+            call_was_64bit = 0;
+
             if (require_64bit_ops) {
                 code = CM_ERROR_TOOBIG;
             } else {
@@ -384,7 +394,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
 #endif
 
         if (code == 0) {
-            if (SERVERHAS64BIT(connp))
+            if (call_was_64bit)
                 code = EndRXAFS_StoreData64(rxcallp, &outStatus, &volSync);
             else
                 code = EndRXAFS_StoreData(rxcallp, &outStatus, &volSync);
@@ -414,7 +424,7 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
          * For explanation of handling of CM_SCACHEMASK_LENGTH,
          * see cm_BufWrite().
          */
-        if (SERVERHAS64BIT(connp)) {
+        if (call_was_64bit) {
             t.HighPart = outStatus.Length_hi;
             t.LowPart = outStatus.Length;
         } else {
@@ -1356,6 +1366,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     int getroot;
     afs_int32 t1,t2;
     int require_64bit_ops = 0;
+    int call_was_64bit = 0;
 
     /* now, the buffer may or may not be filled with good data (buf_GetNew
      * drops lots of locks, and may indeed return a properly initialized
@@ -1507,6 +1518,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         nbytes = nbytes_hi = 0;
 
         if (SERVERHAS64BIT(connp)) {
+            call_was_64bit = 1;
+
             osi_Log4(afsd_logp, "CALL FetchData64 scp 0x%p, off 0x%x:%08x, size 0x%x",
                      scp, biod.offset.HighPart, biod.offset.LowPart, biod.length);
 
@@ -1523,6 +1536,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                     rxcallp = NULL;
                 }
             }
+        } else {
+            call_was_64bit = 0;
         }
 
         if (code == RXGEN_OPCODE || !SERVERHAS64BIT(connp)) {
@@ -1669,12 +1684,12 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         }
 
         if (code == 0) {
-            if (SERVERHAS64BIT(connp))
+            if (call_was_64bit)
                 code = EndRXAFS_FetchData64(rxcallp, &afsStatus, &callback, &volSync);
             else
                 code = EndRXAFS_FetchData(rxcallp, &afsStatus, &callback, &volSync);
         } else {
-            if (SERVERHAS64BIT(connp))
+            if (call_was_64bit)
                 osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData64 skipped due to error %d", code);
             else
                 osi_Log1(afsd_logp, "CALL EndRXAFS_FetchData skipped due to error %d", code);
