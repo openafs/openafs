@@ -27,6 +27,7 @@ $(EXEDIR)\Stress.exe: $(OBJS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 install: idirs $(EXEDIR)\Stress.exe
 

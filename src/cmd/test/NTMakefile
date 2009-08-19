@@ -26,6 +26,7 @@ $(ITEST_EXEFILE): $(ITEST_EXEOBJS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 #build ctest.exe
 CTEST_EXEOBJS =\
@@ -38,6 +39,7 @@ $(CTEST_EXEFILE): $(CTEST_EXEOBJS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 # build dtest.exe
 DTEST_EXEOBJS =\
@@ -50,6 +52,7 @@ $(DTEST_EXEFILE): $(DTEST_EXEOBJS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 all: test
 

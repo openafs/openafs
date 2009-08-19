@@ -72,6 +72,7 @@ $(DLLFILE): $(DLLOBJFILES) $(DLLRES)
 	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $** $(DLLLIBFILES)
         $(_VC_MANIFEST_EMBED_DLL)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 # instloop.exe
 
@@ -85,6 +86,7 @@ $(EXEFILE): $(EXEOBJFILES) $(EXERES)
         $(LINK) /OUT:$@ $** $(DLLLIBFILES)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 install:  $(DLLFILE) $(EXEFILE)
 

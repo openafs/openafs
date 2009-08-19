@@ -69,6 +69,7 @@ $(DLLFILE): $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # Definitions for generating versioninfo resources

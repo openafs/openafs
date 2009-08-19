@@ -84,6 +84,7 @@ $(AFSRM_EXEFILE): $(AFSRM_EXEOBJS) $(AFSRM_EXELIBS)
         $(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 
@@ -134,6 +135,7 @@ $(INSTALL_UTILS_DLLFILE) : $(OUT)\afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -142,6 +144,7 @@ $(SERVER_UNINST_DLLFILE) : $(OUT)\s_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -150,6 +153,7 @@ $(CLIENT_UNINST_DLLFILE) : $(OUT)\c_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -158,6 +162,7 @@ $(CC_UNINST_DLLFILE) : $(OUT)\cc_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -166,6 +171,7 @@ $(LIGHT_CLIENT_UNINST_DLLFILE) : $(OUT)\lc_afs_setup_utils.obj $(DLLOBJS) $(DLLL
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 
@@ -174,6 +180,7 @@ $(DOCS_UNINST_DLLFILE) : $(OUT)\d_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
     $(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
     $(COPY) $*.lib $(ILIBDIR)
     $(DEL) $*.lib $*.exp
 

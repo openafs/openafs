@@ -65,6 +65,7 @@ $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # Build cbd - not generally distributed debugging program
@@ -79,6 +80,7 @@ $(CBD): $(OUT)\cbd.obj $(CBDRES)
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # generate versioninfo resources

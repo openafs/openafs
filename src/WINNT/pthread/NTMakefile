@@ -32,6 +32,7 @@ $(PTHR_DLLFILE): $(PTHR_DLLOBJS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 	$(MAKECYGLIB) --input-def pthread.def
 
 install: $(PTHR_DLLFILE) $(LIBINCLUDES)

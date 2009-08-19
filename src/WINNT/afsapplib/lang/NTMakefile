@@ -47,6 +47,7 @@ $(DLLFILE) : $(DLLOBJS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 install : $(DLLFILE)
 

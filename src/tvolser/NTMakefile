@@ -100,6 +100,7 @@ $(VOLSERVER_EXEFILE): $(VOLSERVER_EXEOBJS) $(VOLSERVER_EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\vscommon.obj: $(VOLSER)\common.c
         $(C2OBJ) /Fo$(OUT)\vscommon.obj -I$(VOLSER) -I$(UTIL) $**

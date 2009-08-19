@@ -15,6 +15,7 @@ $(OUT)\elogtest.exe: $(OUT)\elogtest.obj \
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 mkdir:
 	

@@ -36,6 +36,7 @@ $(RXDEBUG): $(RXDOBJS) $(RXDLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 install: $(RXDEBUG)
 

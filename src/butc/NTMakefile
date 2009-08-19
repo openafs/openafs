@@ -62,6 +62,7 @@ $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # Install target; primary makefile target
@@ -83,6 +84,7 @@ $(OUT)\butc_test.exe: $(OUT)\test.obj
 	$(EXECONLINK)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 mkdir:
 	

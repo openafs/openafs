@@ -44,6 +44,7 @@ $(DLLFILE): $(DLLOBJS)
 	$(DLLRESLINK)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # Generate versioninfo resources

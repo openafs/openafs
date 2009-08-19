@@ -79,6 +79,7 @@ $(DLLFILE): $(DLLOBJS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 	$(MAKECYGLIB) --input-def libosi.def
 	$(COPY) $*.lib $(ILIBDIR)
 	$(DEL) $*.lib $*.exp
@@ -110,6 +111,7 @@ $(EXEFILE) : $(EXEOBJS)
 	$(EXEGUILINK) $(EXELIBS)
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 ############################################################################
 # midl on dbrpc.idl

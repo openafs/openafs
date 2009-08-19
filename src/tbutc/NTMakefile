@@ -98,6 +98,7 @@ $(BUTCEXE): $(BUTCOBJS) $(BUTCRES) $(BUTCLIBS)
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 .c.$(OUT)\obj:
 	$(C2OBJ) -I$(BUCOORD) $<

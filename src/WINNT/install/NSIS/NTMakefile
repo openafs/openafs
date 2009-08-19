@@ -26,6 +26,7 @@ $(EXEDIR)\Service.exe: $(OUT)\Service.obj $(OUT)\Service.res
       $(EXECONLINK) 
       $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\Killer.res: Killer.rc AFS_component_version_number.h
 
@@ -36,6 +37,7 @@ $(EXEDIR)\Killer.exe: $(OUT)\Killer.obj $(OUT)\Killer.res
       $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 $(OUT)\AdminGroup.res: AdminGroup.rc AFS_component_version_number.h
 
@@ -46,6 +48,7 @@ $(EXEDIR)\AdminGroup.exe: $(OUT)\AdminGroup.obj $(OUT)\AdminGroup.res
       $(EXECONLINK) 
         $(_VC_MANIFEST_EMBED_EXE)
         $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
 
 !IF ("$(AFSDEV_BUILDTYPE)"=="FREE")
 !IF ("$(CPU)" == "i386")
