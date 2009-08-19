@@ -77,7 +77,8 @@ entry.
 
 Set it to lowercase C<s> to permit the members of the
 system:administrators group to display a user, machine, or group entry,
-and the associated user to display a user entry.
+the associated user to display a user entry, and the owner or members of a
+group to display the group entry.
 
 =item *
 
