@@ -72,7 +72,14 @@ LIBACLOBJS=$(OUT)\aclprocs.obj $(OUT)\netprocs.obj
 
 DIROBJS=$(OUT)\buffer.obj $(OUT)\dir.obj $(OUT)\salvage.obj
 
-VOLSERVER_EXEOBJS = $(VOLSEROBJS) $(VLSERVEROBJS) $(LWPOBJS) $(LIBACLOBJS) $(DIROBJS) $(FSINTOBJS) $(OUT)\vscommon.obj
+VOLSERVER_EXEOBJS = $(VOLSEROBJS) \
+        $(VLSERVEROBJS) \
+        $(LWPOBJS) \
+        $(LIBACLOBJS) \
+        $(DIROBJS) \
+        $(FSINTOBJS) \
+        $(OUT)\vscommon.obj \
+        $(OUT)\volserver.res
 
 VOLSERVER_EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
