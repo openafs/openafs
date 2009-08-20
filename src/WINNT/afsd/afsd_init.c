@@ -438,7 +438,48 @@ is_wow64(void)
  * AFSD Initialization
  */
 
-int afsd_InitCM(char **reasonP)
+static int
+afsd_InitRoot(char **reasonP)
+{
+    long code;
+    cm_req_t req;
+
+    cm_InitReq(&req);
+
+    if (cm_freelanceEnabled) {
+        cm_FakeRootFid(&cm_data.rootFid);
+    } else {
+	int attempts = 10;
+
+        osi_Log0(afsd_logp, "Loading Root Volume from cell");
+	do {
+	    code = cm_FindVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
+				       &req, CM_GETVOL_FLAG_CREATE, &cm_data.rootVolumep);
+	    afsi_log("cm_FindVolumeByName code %x root vol %x", code,
+		      (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
+	} while (code && --attempts);
+        if (code != 0) {
+            *reasonP = "can't find root volume in root cell";
+            return -1;
+        }
+
+        /* compute the root fid */
+        cm_SetFid(&cm_data.rootFid, cm_data.rootCellp->cellID, cm_GetROVolumeID(cm_data.rootVolumep), 1, 1);
+    }
+
+    code = cm_GetSCache(&cm_data.rootFid, &cm_data.rootSCachep, cm_rootUserp, &req);
+    afsi_log("cm_GetSCache code %x scache %x", code,
+             (code ? (cm_scache_t *)-1 : cm_data.rootSCachep));
+    if (code != 0) {
+        *reasonP = "unknown error";
+        return -1;
+    }
+
+    return 0;
+}
+
+int
+afsd_InitCM(char **reasonP)
 {
     osi_uid_t debugID;
     afs_uint64 cacheBlocks;
@@ -1324,7 +1365,10 @@ int afsd_InitCM(char **reasonP)
     MSRPC_Init();
 
     afsd_InitServerPreferences();
-    return 0;
+
+    code = afsd_InitRoot(reasonP);
+
+    return code;
 }
 
 int afsd_ShutdownCM(void)
@@ -1340,44 +1384,6 @@ int afsd_ShutdownCM(void)
 
 int afsd_InitDaemons(char **reasonP)
 {
-    long code;
-    cm_req_t req;
-
-    cm_InitReq(&req);
-
-    /* this should really be in an init daemon from here on down */
-
-    if (!cm_freelanceEnabled) {
-	int attempts = 10;
-
-        osi_Log0(afsd_logp, "Loading Root Volume from cell");
-	do {
-	    code = cm_FindVolumeByName(cm_data.rootCellp, cm_rootVolumeName, cm_rootUserp,
-				       &req, CM_GETVOL_FLAG_CREATE, &cm_data.rootVolumep);
-	    afsi_log("cm_FindVolumeByName code %x root vol %x", code,
-		      (code ? (cm_volume_t *)-1 : cm_data.rootVolumep));
-	} while (code && --attempts);
-        if (code != 0) {
-            *reasonP = "can't find root volume in root cell";
-            return -1;
-        }
-    }
-
-    /* compute the root fid */
-    if (!cm_freelanceEnabled) {
-        cm_SetFid(&cm_data.rootFid, cm_data.rootCellp->cellID, cm_GetROVolumeID(cm_data.rootVolumep), 1, 1);
-    }
-    else
-        cm_FakeRootFid(&cm_data.rootFid);
-        
-    code = cm_GetSCache(&cm_data.rootFid, &cm_data.rootSCachep, cm_rootUserp, &req);
-    afsi_log("cm_GetSCache code %x scache %x", code,
-             (code ? (cm_scache_t *)-1 : cm_data.rootSCachep));
-    if (code != 0) {
-        *reasonP = "unknown error";
-        return -1;
-    }
-
     cm_InitDaemon(numBkgD);
     afsi_log("cm_InitDaemon complete");
 
