@@ -1,3 +1,11 @@
+openafs (1.4.11+dfsg-2) UNRELEASED; urgency=low
+
+  * Add armv5tel to debian/sysname, mapping it to arm_linux26.  Patch from
+    Daniel Bayer.  Also make the similar change for the module source
+    package.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 20 Aug 2009 14:41:44 -0700
+
 openafs (1.4.11+dfsg-1) unstable; urgency=low
 
   * New upstream release.
