@@ -141,6 +141,8 @@ extern int lock_GetMutexState(struct osi_mutex *);
 
 extern void osi_BaseInit(void);
 
+extern void osi_SetLockOrderValidation(int);
+
 /* and friendly macros */
 
 #define lock_AssertNone(x) osi_assertx(lock_GetRWLockState(x) == 0, "(OSI_RWLOCK_READHELD | OSI_RWLOCK_WRITEHELD)")
