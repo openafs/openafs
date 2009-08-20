@@ -490,7 +490,7 @@ long cm_InitLocalMountPoints() {
                          &ftLastWriteTime /* lpftLastWriteTime */
                          );
 
-        smb_UnixTimeFromLargeSearchTime(&FakeFreelanceModTime, &ftLastWriteTime);
+        cm_UnixTimeFromLargeSearchTime(&FakeFreelanceModTime, &ftLastWriteTime);
 
         if ( dwMountPoints == 0 ) {
             rootCellName[0] = '.';

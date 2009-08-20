@@ -89,4 +89,25 @@ extern BOOL cm_GetOSFileVersion(char *filename, LARGE_INTEGER *liVer);
 
 extern BOOL msftSMBRedirectorSupportsExtendedTimeouts(void);
 
+/* thread priority */
+extern void cm_UpdateServerPriority(void);
+
+extern void cm_SetRequestStartTime(void);
+
+extern void cm_ResetServerPriority(void);
+
+/* time related functions */
+
+extern void cm_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime);
+
+extern void cm_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep);
+
+extern void cm_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime);
+
+extern void cm_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime);
+
+extern void cm_utilsInit(void);
+
+extern void cm_utilsCleanup(void);
+
 #endif /*  __CM_UTILS_H_ENV__ */

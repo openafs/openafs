@@ -610,7 +610,7 @@ void buf_WaitIO(cm_scache_t * scp, cm_buf_t *bp)
         }
         osi_SleepM((LONG_PTR)bp, &bp->mx);
 
-	smb_UpdateServerPriority();
+	cm_UpdateServerPriority();
 
         lock_ObtainMutex(&bp->mx);
         osi_Log1(buf_logp, "buf_WaitIO conflict wait done for 0x%p", bp);

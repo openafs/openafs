@@ -33,6 +33,24 @@ cm_space_t *cm_spaceListp;
 
 static int et2sys[512];
 
+static DWORD cm_TlsRequestSlot = -1;
+
+void cm_utilsInit(void)
+{
+    if (osi_Once(&cm_utilsOnce)) {
+        lock_InitializeRWLock(&cm_utilsLock, "cm_utilsLock", LOCK_HIERARCHY_UTILS_GLOBAL);
+
+        cm_TlsRequestSlot = TlsAlloc();
+
+        osi_EndOnce(&cm_utilsOnce);
+    }
+}
+
+void cm_utilsCleanup(void)
+{
+    TlsFree(cm_TlsRequestSlot);
+}
+
 void
 init_et_to_sys_error(void)
 {
@@ -293,11 +311,8 @@ cm_space_t *cm_GetSpace(void)
 {
 	cm_space_t *tsp;
 
-	if (osi_Once(&cm_utilsOnce)) {
-		lock_InitializeRWLock(&cm_utilsLock, "cm_utilsLock", LOCK_HIERARCHY_UTILS_GLOBAL);
-		osi_EndOnce(&cm_utilsOnce);
-        }
-        
+        cm_utilsInit();
+
         lock_ObtainWrite(&cm_utilsLock);
 	if (tsp = cm_spaceListp) {
 		cm_spaceListp = tsp->nextp;
@@ -914,3 +929,109 @@ BOOL msftSMBRedirectorSupportsExtendedTimeouts(void)
     return fSupportsExtendedTimeouts;
 }
 
+void cm_ResetServerPriority()
+{
+    void * p = TlsGetValue(cm_TlsRequestSlot);
+    if (p) {
+	free(p);
+	TlsSetValue(cm_TlsRequestSlot, NULL);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+    }
+}
+
+void cm_SetRequestStartTime()
+{
+    time_t * tp = TlsGetValue(cm_TlsRequestSlot);
+    if (!tp)
+	tp = malloc(sizeof(time_t));
+    if (tp) {
+	*tp = osi_Time();
+
+	if (!TlsSetValue(cm_TlsRequestSlot, tp))
+	    free(tp);
+    }	
+}
+
+void cm_UpdateServerPriority()
+{	
+    time_t *tp = TlsGetValue(cm_TlsRequestSlot);
+
+    if (tp) {
+	time_t now = osi_Time();
+
+	/* Give one priority boost for each 15 seconds */
+	SetThreadPriority(GetCurrentThread(), (int)((now - *tp) / 15));
+    }
+}
+
+
+void cm_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = Int32x32To64(unixTime, 10000000) + 116444736000000000;
+    largeTimep->dwLowDateTime = (DWORD)(ll & 0xFFFFFFFF);
+    largeTimep->dwHighDateTime = (DWORD)(ll >> 32);
+}
+
+void cm_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
+{
+    // Note that LONGLONG is a 64-bit value
+    LONGLONG ll;
+
+    ll = largeTimep->dwHighDateTime;
+    ll <<= 32;
+    ll += largeTimep->dwLowDateTime;
+
+    ll -= 116444736000000000;
+    ll /= 10000000;
+
+    *unixTimep = (DWORD)ll;
+}
+
+void cm_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
+{
+    struct tm *ltp;
+    int dosDate;
+    int dosTime;
+    struct tm localJunk;
+    time_t t = unixTime;
+
+    ltp = localtime(&t);
+
+    /* if we fail, make up something */
+    if (!ltp) {
+        ltp = &localJunk;
+        localJunk.tm_year = 89 - 20;
+        localJunk.tm_mon = 4;
+        localJunk.tm_mday = 12;
+        localJunk.tm_hour = 0;
+        localJunk.tm_min = 0;
+        localJunk.tm_sec = 0;
+    }	
+
+    dosDate = ((ltp->tm_year-80)<<9) | ((ltp->tm_mon+1) << 5) | (ltp->tm_mday);
+    dosTime = (ltp->tm_hour<<11) | (ltp->tm_min << 5) | (ltp->tm_sec / 2);
+    *searchTimep = (dosDate<<16) | dosTime;
+}	
+
+void cm_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime)
+{
+    unsigned short dosDate;
+    unsigned short dosTime;
+    struct tm localTm;
+        
+    dosDate = (unsigned short) (searchTime & 0xffff);
+    dosTime = (unsigned short) ((searchTime >> 16) & 0xffff);
+
+    localTm.tm_year = 80 + ((dosDate>>9) & 0x3f);
+    localTm.tm_mon = ((dosDate >> 5) & 0xf) - 1;	/* January is 0 in localTm */
+    localTm.tm_mday = (dosDate) & 0x1f;
+    localTm.tm_hour = (dosTime>>11) & 0x1f;
+    localTm.tm_min = (dosTime >> 5) & 0x3f;
+    localTm.tm_sec = (dosTime & 0x1f) * 2;
+    localTm.tm_isdst = -1;				/* compute whether DST in effect */
+
+    *unixTimep = mktime(&localTm);
+}

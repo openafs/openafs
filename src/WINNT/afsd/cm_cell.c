@@ -177,7 +177,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, afs_uint32 flags)
     cm_cell_rock_t rock;
     size_t len;
 
-    if (namep == NULL || !namep[0] || !strcmp(namep,SMB_IOCTL_FILENAME_NOSLASH))
+    if (namep == NULL || !namep[0] || !strcmp(namep,CM_IOCTL_FILENAME_NOSLASH))
         return NULL;
 
     /* 

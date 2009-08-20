@@ -2746,7 +2746,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
         osi_assertx(dscp != NULL && scp == NULL, "null dsc || non-null sc");
         openAction = 2;	/* created file */
         setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-        smb_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
+        cm_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                           &req);
         if (code == 0) {
@@ -2852,7 +2852,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     lock_ObtainRead(&scp->rw);
     if (extraInfo) {
         outp->parmsp[parmSlot++] = smb_Attributes(scp);
-        smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
+        cm_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
         outp->parmsp[parmSlot++] = (unsigned short)(dosTime & 0xffff);
         outp->parmsp[parmSlot++] = (unsigned short)((dosTime>>16) & 0xffff);
         outp->parmsp[parmSlot++] = (unsigned short) (scp->length.LowPart & 0xffff);
@@ -3327,7 +3327,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         goto done;
     }
     else if (infoLevel == SMB_INFO_STANDARD || infoLevel == SMB_INFO_QUERY_EA_SIZE) {
-        smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
+        cm_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
 	qpi.u.QPstandardInfo.creationDateTime = dosTime;
 	qpi.u.QPstandardInfo.lastAccessDateTime = dosTime;
 	qpi.u.QPstandardInfo.lastWriteDateTime = dosTime;
@@ -3338,7 +3338,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	qpi.u.QPstandardInfo.eaSize = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         qpi.u.QPfileBasicInfo.creationTime = ft;
         qpi.u.QPfileBasicInfo.lastAccessTime = ft;
         qpi.u.QPfileBasicInfo.lastWriteTime = ft;
@@ -3375,7 +3375,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qpi.u.QPfileEaInfo.eaSize = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_ALL_INFO) {
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         qpi.u.QPfileAllInfo.creationTime = ft;
         qpi.u.QPfileAllInfo.lastAccessTime = ft;
         qpi.u.QPfileAllInfo.lastWriteTime = ft;
@@ -3586,7 +3586,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         attr.length.HighPart = 0;
 
 	if (spi->u.QPstandardInfo.lastWriteDateTime != 0) {
-	    smb_UnixTimeFromSearchTime(&attr.clientModTime, spi->u.QPstandardInfo.lastWriteDateTime);
+	    cm_UnixTimeFromSearchTime(&attr.clientModTime, spi->u.QPstandardInfo.lastWriteDateTime);
             attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
         }
 		
@@ -3722,7 +3722,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      * Marshall the output data.
      */
     if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         qfi.u.QFbasicInfo.creationTime = ft;
         qfi.u.QFbasicInfo.lastAccessTime = ft;
         qfi.u.QFbasicInfo.lastWriteTime = ft;
@@ -3897,7 +3897,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod)) && 
              lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
             attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
-            smb_UnixTimeFromLargeSearchTime(&attr.clientModTime, &lastMod);
+            cm_UnixTimeFromLargeSearchTime(&attr.clientModTime, &lastMod);
             fidp->flags |= SMB_FID_MTIMESETDONE;
         }
 		
@@ -4492,7 +4492,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
             smb_V3FileAttrsLong * fa = (smb_V3FileAttrsLong *) patchp->dptr;
 
             /* get filetime */
-            smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+            cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
 
             fa->creationTime = ft;
             fa->lastAccessTime = ft;
@@ -4527,7 +4527,7 @@ smb_ApplyV3DirListPatches(cm_scache_t *dscp, smb_dirListPatch_t **dirPatchespp,
             smb_V3FileAttrsShort * fa = (smb_V3FileAttrsShort *) patchp->dptr;
 
             /* get dos time */
-            smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
+            cm_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
 
             fa->creationDateTime = MAKELONG(HIWORD(dosTime), LOWORD(dosTime));
             fa->lastAccessDateTime = fa->creationDateTime;
@@ -6579,7 +6579,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
      * call provides the date first, not the time, as returned in the
      * searchTime variable.  So we take the high-order bits first.
      */
-    smb_SearchTimeFromUnixTime(&searchTime, scp->clientModTime);
+    cm_SearchTimeFromUnixTime(&searchTime, scp->clientModTime);
     smb_SetSMBParm(outp, 0, (searchTime >> 16) & 0xffff);	/* ctime */
     smb_SetSMBParm(outp, 1, searchTime & 0xffff);
     smb_SetSMBParm(outp, 2, (searchTime >> 16) & 0xffff);	/* atime */
@@ -6660,7 +6660,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     searchTime = smb_GetSMBParm(inp, 5) | (smb_GetSMBParm(inp, 6) << 16);
         
     if (searchTime != 0) {
-        smb_UnixTimeFromSearchTime(&unixTime, searchTime);
+        cm_UnixTimeFromSearchTime(&unixTime, searchTime);
 
         if ( unixTime != -1 ) {
             attrs.mask = CM_ATTRMASK_CLIENTMODTIME;
@@ -6669,7 +6669,7 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
             osi_Log1(smb_logp, "SMB receive V3SetAttributes [fid=%ld]", fid);
         } else {
-            osi_Log1(smb_logp, "**smb_UnixTimeFromSearchTime failed searchTime=%ld", searchTime);
+            osi_Log1(smb_logp, "**cm_UnixTimeFromSearchTime failed searchTime=%ld", searchTime);
         }
     }
     else 
@@ -7853,7 +7853,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
     smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
     smb_SetSMBParmLong(outp, parmSlot, openAction); parmSlot += 2;
-    smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+    cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
     smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
     smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
     smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
@@ -8565,7 +8565,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         *((USHORT *)outData) = fidp->fid; outData += 2;	/* fid */
         *((ULONG *)outData) = openAction; outData += 4;
         *((ULONG *)outData) = 0; outData += 4;	/* EA error offset */
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         *((FILETIME *)outData) = ft; outData += 8;	/* creation time */
         *((FILETIME *)outData) = ft; outData += 8;	/* last access time */
         *((FILETIME *)outData) = ft; outData += 8;	/* last write time */
@@ -8614,7 +8614,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         *((USHORT *)outData) = fidp->fid; outData += 2;	/* fid */
         *((ULONG *)outData) = openAction; outData += 4;
         *((ULONG *)outData) = 0; outData += 4;	/* EA error offset */
-        smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         *((FILETIME *)outData) = ft; outData += 8;	/* creation time */
         *((FILETIME *)outData) = ft; outData += 8;	/* last access time */
         *((FILETIME *)outData) = ft; outData += 8;	/* last write time */

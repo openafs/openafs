@@ -544,14 +544,6 @@ extern void smb_Init(osi_log_t *logp, int useV3,
         , void *aMBfunc
   );
 
-extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime);
-
-extern void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep);
-
-extern void smb_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime);
-
-extern void smb_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime);
-
 extern void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, time_t unixTime);
 
 extern void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosUTime);
@@ -824,9 +816,6 @@ extern char *smb_GetSharename(void);
 
 extern DWORD smb_ServerExceptionFilter(void);
 
-extern void smb_UpdateServerPriority(void);
-extern void smb_SetRequestStartTime(void);
-extern void smb_ResetServerPriority(void);
 extern void smb_RestartListeners(int);
 extern void smb_StopListeners(int);
 extern void smb_StopListener(NCB *ncbp, int lana, int wait);

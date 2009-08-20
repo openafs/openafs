@@ -68,10 +68,12 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define EDQUOT                  WSAEDQUOT
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
-#endif /* EWOULDBLOCK */
 
-/* New codes */
-#define AFS_NT_ERRNO_BASE  WSABASEERR + 1000
+/* 
+ * New codes 
+ * Highest known value is WSA_QOS_RESERVED_PETYPE (WSABASEERR + 1031)
+ */
+#define AFS_NT_ERRNO_BASE  WSABASEERR + 1100
 
 #define EOVERFLOW          (AFS_NT_ERRNO_BASE + 0)
 #define ENOMSG             (AFS_NT_ERRNO_BASE + 1)

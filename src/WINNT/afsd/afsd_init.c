@@ -523,6 +523,8 @@ afsd_InitCM(char **reasonP)
 
     init_et_to_sys_error();
 
+    cm_utilsInit();
+
     /* setup osidebug server at RPC slot 1000 */
     osi_LongToUID(1000, &debugID);
     code = osi_InitDebug(&debugID);
@@ -1376,6 +1378,8 @@ int afsd_ShutdownCM(void)
     MSRPC_Shutdown();
 
     cm_ReleaseSCache(cm_data.rootSCachep);
+
+    cm_utilsCleanup();
 
     cm_shutdown = 1;
 

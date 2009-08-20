@@ -154,13 +154,6 @@ int (_stdcall *smb_MBfunc)(HWND, LPCTSTR, LPCTSTR, UINT)
  */
 time_t smb_localZero = 0;
 
-#define USE_NUMERIC_TIME_CONV 1
-
-#ifndef USE_NUMERIC_TIME_CONV
-/* Time difference for converting to kludge-GMT */
-afs_uint32 smb_NowTZ;
-#endif /* USE_NUMERIC_TIME_CONV */
-
 char *smb_localNamep = NULL;
 
 smb_vc_t *smb_allVCsp;
@@ -169,8 +162,6 @@ smb_vc_t *smb_deadVCsp;
 smb_username_t *usernamesp = NULL;
 
 smb_waitingLockRequest_t *smb_allWaitingLocks;
-
-DWORD smb_TlsRequestSlot = -1;
 
 /* forward decl */
 void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
@@ -196,42 +187,6 @@ void smb_InitReq(cm_req_t *reqp)
     cm_InitReq(reqp);
     reqp->flags |= CM_REQ_SOURCE_SMB;
 }
-
-void smb_ResetServerPriority()
-{
-    void * p = TlsGetValue(smb_TlsRequestSlot);
-    if (p) {
-	free(p);
-	TlsSetValue(smb_TlsRequestSlot, NULL);
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-    }
-}
-
-void smb_SetRequestStartTime()
-{
-    time_t * tp = TlsGetValue(smb_TlsRequestSlot);
-    if (!tp)
-	tp = malloc(sizeof(time_t));
-    if (tp) {
-	*tp = osi_Time();
-
-	if (!TlsSetValue(smb_TlsRequestSlot, tp))
-	    free(tp);
-    }	
-}
-
-void smb_UpdateServerPriority()
-{	
-    time_t *tp = TlsGetValue(smb_TlsRequestSlot);
-
-    if (tp) {
-	time_t now = osi_Time();
-
-	/* Give one priority boost for each 15 seconds */
-	SetThreadPriority(GetCurrentThread(), (int)((now - *tp) / 15));
-    }
-}
-
 
 const char * ncb_error_string(int code)
 {
@@ -581,7 +536,7 @@ void ShowUnixTime(char *FuncName, time_t unixTime)
     FILETIME ft;
     WORD wDate, wTime;
 
-    smb_LargeSearchTimeFromUnixTime(&ft, unixTime);
+    cm_LargeSearchTimeFromUnixTime(&ft, unixTime);
 
     if (!FileTimeToDosDateTime(&ft, &wDate, &wTime))
         osi_Log1(smb_logp, "Failed to convert filetime to dos datetime: %d", GetLastError());
@@ -681,169 +636,6 @@ void CompensateForSmbClientLastWriteTimeBugs(afs_uint32 *pLastWriteTime)
     if (bias < 0)
         *pLastWriteTime -= (-bias * 60);        /* Convert bias to seconds */
 }	        	
-
-#ifndef USE_NUMERIC_TIME_CONV
-/*
- * Calculate the difference (in seconds) between local time and GMT.
- * This enables us to convert file times to kludge-GMT.
- */
-static void
-smb_CalculateNowTZ()
-{
-    time_t t;
-    struct tm gmt_tm, local_tm;
-    int days, hours, minutes, seconds;
-
-    t = time(NULL);
-    gmt_tm = *(gmtime(&t));
-    local_tm = *(localtime(&t));
-
-    days = local_tm.tm_yday - gmt_tm.tm_yday;
-    hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour;
-    minutes = 60 * hours + local_tm.tm_min - gmt_tm.tm_min; 
-    seconds = 60 * minutes + local_tm.tm_sec - gmt_tm.tm_sec;
-
-    smb_NowTZ = seconds;
-}
-#endif /* USE_NUMERIC_TIME_CONV */
-
-#ifdef USE_NUMERIC_TIME_CONV
-void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
-{
-    // Note that LONGLONG is a 64-bit value
-    LONGLONG ll;
-
-    ll = Int32x32To64(unixTime, 10000000) + 116444736000000000;
-    largeTimep->dwLowDateTime = (DWORD)(ll & 0xFFFFFFFF);
-    largeTimep->dwHighDateTime = (DWORD)(ll >> 32);
-}
-#else
-void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
-{
-    struct tm *ltp;
-    SYSTEMTIME stm;
-    struct tm localJunk;
-    time_t ersatz_unixTime;
-
-    /*
-     * Must use kludge-GMT instead of real GMT.
-     * kludge-GMT is computed by adding time zone difference to localtime.
-     *
-     * real GMT would be:
-     * ltp = gmtime(&unixTime);
-     */
-    ersatz_unixTime = unixTime - smb_NowTZ;
-    ltp = localtime(&ersatz_unixTime);
-
-    /* if we fail, make up something */
-    if (!ltp) {
-        ltp = &localJunk;
-        localJunk.tm_year = 89 - 20;
-        localJunk.tm_mon = 4;
-        localJunk.tm_mday = 12;
-        localJunk.tm_hour = 0;
-        localJunk.tm_min = 0;
-        localJunk.tm_sec = 0;
-    }
-
-    stm.wYear = ltp->tm_year + 1900;
-    stm.wMonth = ltp->tm_mon + 1;
-    stm.wDayOfWeek = ltp->tm_wday;
-    stm.wDay = ltp->tm_mday;
-    stm.wHour = ltp->tm_hour;
-    stm.wMinute = ltp->tm_min;
-    stm.wSecond = ltp->tm_sec;
-    stm.wMilliseconds = 0;
-
-    SystemTimeToFileTime(&stm, largeTimep);
-}
-#endif /* USE_NUMERIC_TIME_CONV */
-
-#ifdef USE_NUMERIC_TIME_CONV
-void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
-{
-    // Note that LONGLONG is a 64-bit value
-    LONGLONG ll;
-
-    ll = largeTimep->dwHighDateTime;
-    ll <<= 32;
-    ll += largeTimep->dwLowDateTime;
-
-    ll -= 116444736000000000;
-    ll /= 10000000;
-
-    *unixTimep = (DWORD)ll;
-}
-#else /* USE_NUMERIC_TIME_CONV */
-void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
-{
-    SYSTEMTIME stm;
-    struct tm lt;
-    long save_timezone;
-
-    FileTimeToSystemTime(largeTimep, &stm);
-
-    lt.tm_year = stm.wYear - 1900;
-    lt.tm_mon = stm.wMonth - 1;
-    lt.tm_wday = stm.wDayOfWeek;
-    lt.tm_mday = stm.wDay;
-    lt.tm_hour = stm.wHour;
-    lt.tm_min = stm.wMinute;
-    lt.tm_sec = stm.wSecond;
-    lt.tm_isdst = -1;
-
-    save_timezone = _timezone;
-    _timezone += smb_NowTZ;
-    *unixTimep = mktime(&lt);
-    _timezone = save_timezone;
-}       
-#endif /* USE_NUMERIC_TIME_CONV */
-
-void smb_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime)
-{
-    struct tm *ltp;
-    int dosDate;
-    int dosTime;
-    struct tm localJunk;
-    time_t t = unixTime;
-
-    ltp = localtime(&t);
-
-    /* if we fail, make up something */
-    if (!ltp) {
-        ltp = &localJunk;
-        localJunk.tm_year = 89 - 20;
-        localJunk.tm_mon = 4;
-        localJunk.tm_mday = 12;
-        localJunk.tm_hour = 0;
-        localJunk.tm_min = 0;
-        localJunk.tm_sec = 0;
-    }	
-
-    dosDate = ((ltp->tm_year-80)<<9) | ((ltp->tm_mon+1) << 5) | (ltp->tm_mday);
-    dosTime = (ltp->tm_hour<<11) | (ltp->tm_min << 5) | (ltp->tm_sec / 2);
-    *searchTimep = (dosDate<<16) | dosTime;
-}	
-
-void smb_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime)
-{
-    unsigned short dosDate;
-    unsigned short dosTime;
-    struct tm localTm;
-        
-    dosDate = (unsigned short) (searchTime & 0xffff);
-    dosTime = (unsigned short) ((searchTime >> 16) & 0xffff);
-
-    localTm.tm_year = 80 + ((dosDate>>9) & 0x3f);
-    localTm.tm_mon = ((dosDate >> 5) & 0xf) - 1;	/* January is 0 in localTm */
-    localTm.tm_mday = (dosDate) & 0x1f;
-    localTm.tm_hour = (dosTime>>11) & 0x1f;
-    localTm.tm_min = (dosTime >> 5) & 0x3f;
-    localTm.tm_sec = (dosTime & 0x1f) * 2;
-    localTm.tm_isdst = -1;				/* compute whether DST in effect */
-
-    *unixTimep = mktime(&localTm);
-}
 
 void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, time_t unixTime)
 {
@@ -4014,7 +3806,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
         smb_SetSMBParmLong(outp, 9, caps);
         time(&unixTime);
-        smb_SearchTimeFromUnixTime(&dosTime, unixTime);
+        cm_SearchTimeFromUnixTime(&dosTime, unixTime);
         smb_SetSMBParmLong(outp, 11, LOWORD(dosTime));/* server time */
         smb_SetSMBParmLong(outp, 13, HIWORD(dosTime));/* server date */
 
@@ -4074,7 +3866,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         smb_SetSMBParm(outp, 6, 1);	/* next 2: session key */
         smb_SetSMBParm(outp, 7, 1);
         time(&unixTime);
-        smb_SearchTimeFromUnixTime(&dosTime, unixTime);
+        cm_SearchTimeFromUnixTime(&dosTime, unixTime);
         smb_SetSMBParm(outp, 8, LOWORD(dosTime));	/* server time */
         smb_SetSMBParm(outp, 9, HIWORD(dosTime));	/* server date */
 
@@ -4189,9 +3981,6 @@ void smb_Daemon(void *parmp)
             myTime.tm_sec = 0;
             smb_localZero = mktime(&myTime);
 
-#ifndef USE_NUMERIC_TIME_CONV
-            smb_CalculateNowTZ();
-#endif /* USE_NUMERIC_TIME_CONV */
 #ifdef AFS_FREELANCE
             if ( smb_localZero != old_localZero )
                 cm_noteLocalMountPointChange();
@@ -4802,7 +4591,7 @@ smb_ApplyDirListPatches(cm_scache_t * dscp, smb_dirListPatch_t **dirPatchespp,
             *dptr++ = attr;
 
             /* get dos time */
-            smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
+            cm_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
                 
             /* copy out time */
             shortTemp = (unsigned short) (dosTime & 0xffff);
@@ -8996,7 +8785,7 @@ void smb_Server(VOID *parmp)
 	    vcp = NULL;
 	}
 
-	smb_ResetServerPriority();
+	cm_ResetServerPriority();
 
         code = thrd_WaitForMultipleObjects_Event(numNCBs, NCBreturns[myIdx],
                                                  FALSE, INFINITE);
@@ -9183,7 +8972,7 @@ void smb_Server(VOID *parmp)
             continue;
         }
 
-	smb_SetRequestStartTime();
+	cm_SetRequestStartTime();
 
         vcp->errorCount = 0;
         bufp = (struct smb_packet *) ncbp->ncb_buffer;
@@ -10366,8 +10155,6 @@ void smb_Init(osi_log_t *logp, int useV3,
     char eventName[MAX_PATH];
     int startListeners = 0;
 
-    smb_TlsRequestSlot = TlsAlloc();
-
     smb_MBfunc = aMBfunc;
 
     smb_useV3 = useV3;
@@ -10382,10 +10169,6 @@ void smb_Init(osi_log_t *logp, int useV3,
     myTime.tm_sec = 0;
     smb_localZero = mktime(&myTime);
 
-#ifndef USE_NUMERIC_TIME_CONV
-    /* Initialize kludge-GMT */
-    smb_CalculateNowTZ();
-#endif /* USE_NUMERIC_TIME_CONV */
 #ifdef AFS_FREELANCE_CLIENT
     /* Make sure the root.afs volume has the correct time */
     cm_noteLocalMountPointChange();
@@ -10832,7 +10615,6 @@ void smb_Shutdown(void)
     }
     lock_ReleaseWrite(&smb_rctLock);
     smb_FreeNCB(ncbp);
-    TlsFree(smb_TlsRequestSlot);
 }
 
 /* Get the UNC \\<servername>\<sharename> prefix. */
