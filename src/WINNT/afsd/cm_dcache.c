@@ -55,6 +55,9 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     long code, code1;
     cm_scache_t *scp = vscp;
     afs_int32 nbytes;
+#ifdef AFS_LARGEFILES
+    afs_int32 save_nbytes;
+#endif
     long temp;
     AFSFetchStatus outStatus;
     AFSStoreStatus inStatus;
@@ -148,6 +151,9 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     lock_ReleaseWrite(&scp->rw);
 
     /* now we're ready to do the store operation */
+#ifdef AFS_LARGEFILES
+    save_nbytes = nbytes;
+#endif
     do {
         code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
@@ -207,16 +213,20 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
             /* write the data from the the list of buffers */
             qdp = NULL;
             while(nbytes > 0) {
-                if (qdp == NULL)
+                afs_uint32 buf_offset;
+                if (qdp == NULL) {
                     qdp = biod.bufListEndp;
-                else
+                    buf_offset = offsetp->LowPart % cm_data.buf_blockSize;
+                } else {
                     qdp = (osi_queueData_t *) osi_QPrev(&qdp->q);
+                    buf_offset = 0;
+                }
                 osi_assertx(qdp != NULL, "null osi_queueData_t");
                 bufp = osi_GetQData(qdp);
-                bufferp = bufp->datap;
+                bufferp = bufp->datap + buf_offset;
                 wbytes = nbytes;
-                if (wbytes > cm_data.buf_blockSize) 
-                    wbytes = cm_data.buf_blockSize;
+                if (wbytes > cm_data.buf_blockSize - buf_offset)
+                    wbytes = cm_data.buf_blockSize - buf_offset;
 
                 /* write out wbytes of data from bufferp */
                 temp = rx_Write(rxcallp, bufferp, wbytes);
@@ -252,6 +262,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
 #ifdef AFS_LARGEFILES
         if ((code == RXGEN_OPCODE || code1 == RXGEN_OPCODE) && SERVERHAS64BIT(connp)) {
             SET_SERVERHASNO64BIT(connp);
+            qdp = NULL;
+            nbytes = save_nbytes;
             goto retry;
         }
 #endif
