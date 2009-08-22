@@ -209,7 +209,6 @@ install-stamp: build-stamp
 	dh install --after dh_install
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
-	chmod 700 debian/openafs-fileserver/etc/openafs/server
 	chmod 700 debian/openafs-fileserver/var/lib/openafs/local
 	touch $@
 

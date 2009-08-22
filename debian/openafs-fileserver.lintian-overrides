@@ -1,7 +1,3 @@
-# /etc/openafs/server contains the KeyFile for the server, so it's kept
-# locked down as an extra precaution.
-openafs-fileserver: non-standard-dir-perm etc/openafs/server/ 0700 != 0755
-
 # /var/lib/openafs/local contains the fssync.sock file used to coordinate
 # volume actions between the fileserver and the volserver so upstream
 # wants it to be locked down.  Probably doesn't matter on Linux, but if we

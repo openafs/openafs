@@ -11,6 +11,15 @@ openafs (1.5.61+dfsg-1) experimental; urgency=low
   Demand-attach is experimental.  Please only use this file server for
   testing.  It is not yet ready to run in a production environment.
 
+  As of this release, the default permissions for /etc/openafs/server are
+  now 0755, matching upstream.  The only file in that directory that needs
+  to be kept secure is KeyFile, which is created with 0600 permissions.
+  The directory permissions won't be changed on upgrade, so bosserver will
+  complain now that it is no longer patched to permit restrictive
+  permissions.  Once you're certain the per-file permissions of all files
+  in that directory are safe, chmod 755 /etc/openafs/server to make
+  bosserver happy.
+
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 23:51:35 -0700
 
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
