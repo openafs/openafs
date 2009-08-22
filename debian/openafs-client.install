@@ -18,6 +18,7 @@ debian/tmp/usr/bin/up                   usr/bin
 debian/tmp/usr/bin/xstat_cm_test        usr/bin
 debian/tmp/usr/bin/xstat_fs_test        usr/bin
 
+debian/tmp/usr/sbin/restorevol          usr/bin
 debian/tmp/usr/sbin/rxdebug             usr/bin
 debian/tmp/usr/sbin/vos                 usr/bin
 
@@ -247,3 +248,4 @@ debian/tmp/usr/share/man/man8/fstrace_lslog.8         usr/share/man/man8
 debian/tmp/usr/share/man/man8/fstrace_lsset.8         usr/share/man/man8
 debian/tmp/usr/share/man/man8/fstrace_setlog.8        usr/share/man/man8
 debian/tmp/usr/share/man/man8/fstrace_setset.8        usr/share/man/man8
+debian/tmp/usr/share/man/man8/restorevol.8            usr/share/man/man8
