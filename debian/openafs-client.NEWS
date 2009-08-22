@@ -1,3 +1,14 @@
+openafs (1.5.61+dfsg-1) experimental; urgency=low
+
+  This version of the OpenAFS client is built with experimental
+  disconnected support.  This support should not change the normal
+  operation of the client unless it is used.  If you wish to use it,
+  please be aware that it is an experimental feature, may not work
+  correctly, and may lose data.  Disconnected mode is configured through
+  the fs discon command, which is not yet documented.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 23:54:16 -0700
+
 openafs (1.4.10+dfsg1-1) unstable; urgency=high
 
   This release of OpenAFS contains security fixes in the kernel module.

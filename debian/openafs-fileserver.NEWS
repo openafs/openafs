@@ -1,3 +1,18 @@
+openafs (1.5.61+dfsg-1) experimental; urgency=low
+
+  This version of the OpenAFS file server is built with demand-attach.
+  Demand-attach completely changes how the file server shuts down and
+  starts up.  Instead of detaching all volumes on shutdown and reattaching
+  them on startup, the file server saves state to disk and restores state
+  when starting, enabling it to start far faster.  Volumes are only
+  attached when used and are detached again if they go unused for an
+  extended period.  Volumes can also be salvaged on demand.
+
+  Demand-attach is experimental.  Please only use this file server for
+  testing.  It is not yet ready to run in a production environment.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 23:51:35 -0700
+
 openafs (1.4.4.dfsg1-4) unstable; urgency=low
 
   The files previously located in /etc/openafs/server-local have been
