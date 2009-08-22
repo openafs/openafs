@@ -17,6 +17,7 @@ configure)
             echo ">$RET" >/etc/openafs/server/CellServDB
         fi
     fi
+    db_stop
 
     # Move the contents of the old /etc/openafs/server-local directory into
     # /var/lib/openafs/local.  Most of the files in this directory are
@@ -24,7 +25,7 @@ configure)
     #
     # Change the paths to upserver and upclient in BosConfig from older
     # versions that had the binaries in /usr/sbin.
-    if [ "x$2" != "x" ] && dpkg --compare-versions $2 lt 1.4.4.dfsg1-4 ; then
+    if [ x"$2" != x ] && dpkg --compare-versions "$2" lt 1.4.4.dfsg1-4 ; then
         for f in sysid sysid.old NetInfo NetRestrict ; do
             if [ -e "/etc/openafs/server-local/$f" ] ; then
                 cp "/etc/openafs/server-local/$f" "/var/lib/openafs/local/$f"
@@ -36,7 +37,6 @@ configure)
                        /etc/openafs/BosConfig
         fi
     fi
-    db_stop
 
     # Previous versions of the package set the permissions on
     # /var/lib/openafs/local to 755, but upstream prefers 700 to protect the
