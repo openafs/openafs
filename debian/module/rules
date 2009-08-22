@@ -58,6 +58,7 @@ configure-stamp:
 	sh debian/prep-modules $(KSRC)
 	sh configure --with-afs-sysname=$(SYS_NAME) \
 	    --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp \
+	    --with-linux-kernel-packaging --enable-disconnected \
 	    --enable-debug --enable-lwp-debug --enable-kernel-debug \
 	    $(DEBIAN_OPT_FLAGS) $(DEBIAN_KERN_FLAGS)
 	touch $@
@@ -83,8 +84,10 @@ install-stamp: build-stamp
 	dh_testdir
 	dh_testroot
 	dh_clean -k
+	cd src/libafs && make install
 	install -d -g root -o root -m 755 $(moduledir)
-	install -g root -o root -m 755 src/libafs/MODLOAD-*/*.ko $(moduledir)/
+	install -g root -o root -m 644 \
+	    debian/tmp/lib/modules/*/extra/openafs/*o $(moduledir)/
 	touch $@
 
 binary: binary-arch binary-indep

@@ -9,6 +9,10 @@ openafs (1.5.61+dfsg-1) UNRELEASED; urgency=low
     - NFS translator clients now work properly on Linux.
     - Client cache readahead.
     - Network performance improvements.
+  * Build OpenAFS with demand-attach enabled for the file server, bos
+    restricted mode enabled for bosserver, and disconnected mode enabled
+    for the client.  Except for demand-attach, these options don't change
+    the default behavior, just make new capabilities available.
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
