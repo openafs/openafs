@@ -160,7 +160,7 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance,
     struct ktc_encryptionKey key;
     afs_int32 code, dosetpag = 0;
 #if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_XBSD_ENV) || defined(AFS_FBSD_ENV)
-    sig_t old;
+    void (*old)(int);
 #endif
 
     if (reasonP)

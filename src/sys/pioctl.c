@@ -56,7 +56,7 @@ lpioctl(char *path, int cmd, void *cmarg, int follow)
 #ifndef AFS_LINUX20_ENV
     /* As kauth/user.c says, handle smoothly the case where no AFS system call
      * exists (yet). */
-    sig_t old = signal(SIGSYS, SIG_IGN);
+    void (*old)(int) = signal(SIGSYS, SIG_IGN);
 #endif
 
 #if defined(AFS_LINUX20_ENV)
