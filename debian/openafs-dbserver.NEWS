@@ -1,0 +1,20 @@
+openafs-dbserver (1.4.7.dfsg1-1) unstable; urgency=low
+
+  If you are upgrading from one of the 1.4.7 pre-releases, be aware that
+  there was a serious bug in those versions that could cause Ubik database
+  entries to be lost if all database servers were restarted at the same
+  time.  You should restart each database server in turn, one at a time,
+  to pick up the new 1.4.7 binaries before the next nightly restart.
+
+  Only 1.4.7 pre-releases were affected by this problem.  If you are
+  upgrading from an older version, you should not have to take special
+  precautions.
+
+  You may also want to turn off any general restart for your servers with:
+
+      bos setrestart -server <server> -time never -general
+
+  This was an old defense against memory leaks and is no longer needed.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 09 May 2008 10:24:48 -0700
+

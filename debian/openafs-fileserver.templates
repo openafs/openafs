@@ -1,0 +1,14 @@
+Template: openafs-fileserver/thiscell
+Type: string
+_Description: Cell this server serves files for:
+ AFS fileservers belong to a cell.  They have the key for that cell's
+ Kerberos service and serve volumes into that cell.  Normally, this cell is
+ the same cell as the workstation's client belongs to.
+
+Template: openafs-fileserver/alpha-broken
+Type: note
+_Description: OpenAFS file server probably does not work!
+ You are running the OpenAFS file server package on an alpha.  This
+ probably doesn't work; the DES code is flaky on the alpha, along with the
+ threaded file server.  Likely, the fileserver will simply fail to start,
+ but if it does load, data corruption may result.  You have been warned.

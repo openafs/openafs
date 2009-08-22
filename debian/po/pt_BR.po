@@ -1,0 +1,268 @@
+#
+#    Translators, if you are not familiar with the PO format, gettext
+#    documentation is worth reading, especially sections dedicated to
+#    this format, e.g. by running:
+#         info -n '(gettext)PO Files'
+#         info -n '(gettext)Header Entry'
+#
+#    Some information specific to po-debconf are available at
+#            /usr/share/doc/po-debconf/README-trans
+#         or http://www.debian.org/intl/l10n/po-debconf/README-trans
+#
+#    Developers do not need to manually edit POT or PO files.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: openafs\n"
+"Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
+"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"PO-Revision-Date: 2009-02-13 09:24-0800\n"
+"Last-Translator: André Luís Lopes <andrelop@debian.org>\n"
+"Language-Team: Debian-BR Project <debian-l10n-portuguese@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid "DB server host names for your home cell:"
+msgstr "Nomes de host do servidor DB para sua célula home :"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid ""
+"AFS uses the file /etc/openafs/CellServDB to hold the list of servers that "
+"should be contacted to find parts of a cell.  The cell you claim this "
+"workstation belongs to is not in that file.  Enter the host names of the "
+"database servers separated by spaces. IMPORTANT: If you are creating a new "
+"cell and this machine is to be a database server in that cell, only enter "
+"this machine's name; add the other servers later after they are functioning. "
+"Also, do not enable the AFS client to start at boot on this server until the "
+"cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
+"client to enable the client."
+msgstr ""
+"O AFS usa o arquivo /etc/openafs/CellServDB para armazenar a lista de "
+"servidores que deverão ser contactados para se encontrar partes de uma "
+"célula. A célula que você diz que essa estação de trabalho pertence não está "
+"nesse arquivo. Informe os nomes de hosts dos servidore de base de dados "
+"separados por espaços. IMPORTANTE : Caso você esteja criando uma nova célula "
+"e esta máquina será um servidor de base de dados na célula, somente informe "
+"o nome desta máquina. Adicione os outros servidores posteriormente depois "
+"que os mesmos estejam funcionando. Adicionalmente, não habilite o cliente "
+"AFS para inicialização em tempo de inicialização neste servidor até que a "
+"célula esteja configurada. Quando você estiver terminado você poderá editar "
+"o arquivo /etc/openafs/afs.conf.client para habilitar este cliente."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid "AFS cell this workstation belongs to:"
+msgstr "Célula AFS a qual esta estação de trabalho pertence :"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid ""
+"AFS filespace is organized into cells or administrative domains. Each "
+"workstation belongs to one cell.  Usually the cell is the DNS domain name of "
+"the site."
+msgstr ""
+"O espaço de arquivo AFS é organizado em células ou domínios administrativos. "
+"Cada estação de trabalho pertence a uma célula. Normalmente a célula é o "
+"nome de domínio DNS do site."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid "Size of AFS cache in kB:"
+msgstr "Tamanho do cache AFS em kB :"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid ""
+"AFS uses an area of the disk to cache remote files for faster access.  This "
+"cache will be mounted on /var/cache/openafs.  It is important that the cache "
+"not overfill the partition it is located on.  Often, people find it useful "
+"to dedicate a partition to their AFS cache."
+msgstr ""
+"O AFS usa uma àrea do disco para fazer cache de arquivos remotos para acesso "
+"mais rápido. Esse cache será montando em /var/cache/openafs. É importante "
+"que o cache não ocupe toda a partrição na qual está localizado. Geralmente, "
+"os usuários AFS acham útil dedicar uma partição para seus caches AFS."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid "Run Openafs client now and at boot?"
+msgstr "Executar o cliente OpenAFS agora e em tempo de inicialização ?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid ""
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
+msgstr ""
+"Normalmente, a maioria dos usuários que instalam o pacote openafs-client "
+"esperam que o AFS seja montado automaticamente na inicialização. Porém, caso "
+"você esteja planejando configurar uma nova célula ou esteja em um laptop, "
+"você pode não desejar que o AFS seja iniciado automaticamente no momento da "
+"inicialização da máquina. Caso você opte por não iniciar o AFS na "
+"inicialização da máquina, execute /etc/init.d/openafs-client force-start "
+"para iniciar o cliente quando desejar executá-lo."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid "Look up AFS cells in DNS?"
+msgstr "Procurar células AFS no DNS ?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid ""
+"In order to contact an AFS cell, you need the IP addresses of the cell's "
+"database servers.  Normally, this information is read from /etc/openafs/"
+"CellServDB.  However, if Openafs cannot find a cell in that file, it can use "
+"DNS to look for AFSDB records that contain the information."
+msgstr ""
+"Para poder contactar uma célula AFS, você precisa dos endereços IP dos "
+"servidores de base de dados da célula. Normalmente, esta informação é lida "
+"de /etc/openafs/CellServDB. Porém, caso o OpenAFS não possa encontrar uma "
+"célula nesse arquivo, o DNS poderá ser usado para pesquisar registros AFSDB "
+"que contenham a informação."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid "Encrypt authenticated traffic with AFS fileserver?"
+msgstr "Encriptar o tráfego autenticado com o servidor de arquivos AFS ?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid ""
+"AFS provides a weak form of encryption that can optionally be used between a "
+"client and the fileservers.  While this encryption is weaker than DES and "
+"thus is not sufficient for highly confidential data, it does provide some "
+"confidentiality and is likely to make the job of a casual attacker "
+"significantly more difficult."
+msgstr ""
+"O AFS fornece uma forma fraca de encriptação que pode ser opcionalmente "
+"usada entre o cliente e os servidor de arquivos. Enquanto esta encriptação é "
+"mais fraca do que DES e portanto não é suficiente para dados altamente "
+"confidenciais, essa encriptação fornece alguma confidencialidade e "
+"provavelmente torna o trabalho de um atacante casual mais difícil."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid "Dynamically generate the contents of /afs?"
+msgstr "Gerar dinamicamente o conteúdo de /afs ?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"/afs generally contains an entry for each cell that a client can talk to. "
+"Traditionally, these entries were generated by servers in the client's home "
+"cell.  However, OpenAFS clients can generate the contents of /afs "
+"dynamically based on the contents of /etc/openafs/CellServDB and DNS."
+msgstr ""
+"O /afs geralmente contém uma entrada para cada célula com a qual o cliente "
+"pode conversar. Tradicionalmente, essas entradas eram geradas por servidores "
+"no célula home do cliente. Porém, clientes OpenAFS podem gerar o conteúdo "
+"de /afs dinamicamente baseando-se no conteúdo de /etc/openafs/CellServDB e "
+"do DNS."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"If you generate /afs dynamically, you may need to create /etc/openafs/"
+"CellAlias to include aliases for common cells.  (The syntax of this file is "
+"one line per alias, with the cell name, a space, and then the alias for that "
+"cell.)"
+msgstr ""
+"Caso você gere o /afs dinamicamente, você pode precisar criar o /etc/openafs/"
+"CellAlias para incluir apelidos (aliases) para células comuns. (A sintaxe "
+"desse arquivo é uma linha por apelido, com o nome da célula, um espaço e "
+"depois o apelido para a célula.)"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid "Use fakestat to avoid hangs when listing /afs?"
+msgstr "Usar fakestat para evitar travadas na listagem do /afs ?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid ""
+"Because AFS is a global file space, operations on the /afs directory can "
+"generate significant network traffic.  If some AFS cells are unavailable "
+"then looking at /afs using ls or a graphical file browser may hang your "
+"machine for minutes.  AFS has an option to simulate answers to these "
+"operations locally to avoid these hangs.  You want this option under most "
+"circumstances."
+msgstr ""
+"Devido ao AFS ser um espaço de arquivos global, operações no diretório /afs "
+"podem gerar um tráfego de rede significativo. Caso algumas células AFS não "
+"estejam disponíveis, pesquisar o /afs usando o comando \"ls\" ou um "
+"gerenciador de arquivos gráfico pode travar sua máquina por alguns minutos. "
+"O AFS possui uma opção para simular respostas para essas operações "
+"localmente para evitar essas travadas. Você irá desejar usar esta opção na "
+"maioria dos casos."
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid "Cell this server serves files for:"
+msgstr "Célula para a qual este servidor serve arquivos :"
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid ""
+"AFS fileservers belong to a cell.  They have the key for that cell's "
+"Kerberos service and serve volumes into that cell.  Normally, this cell is "
+"the same cell as the workstation's client belongs to."
+msgstr ""
+"Servidor de arquivos AFS pertencem a uma célula. Eles possuem uma chave para "
+"cada serviço Kerberos da célula e servem volumes dentro da célula. "
+"Normalmente, essa célula é a mesma célula da qual a estação de trabalho faz "
+"parte."
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid "OpenAFS file server probably does not work!"
+msgstr "Servidor de Arquivos OpenAFS provavelmente não funciona !"
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid ""
+"You are running the OpenAFS file server package on an alpha.  This probably "
+"doesn't work; the DES code is flaky on the alpha, along with the threaded "
+"file server.  Likely, the fileserver will simply fail to start, but if it "
+"does load, data corruption may result.  You have been warned."
+msgstr ""
+"Você está executando o pacote do servidor de arquivos OpenAFS em uma máquina "
+"Alpha. Isso provavelmente não funcionará. O código DES é em conjunto com o "
+"servidor de arquivos com suporte a threads é problemático em máquinas Alpha. "
+"Provavelmente, o servidor de arquivos irá simplesmente falhar ao iniciar. "
+"Caso consiga ser iniciado, poderá causar corrupção de dados. Você foi "
+"avisado."
+
+#~ msgid "How large is your AFS cache (kB)?"
+#~ msgstr "Qual o tamanho de seu cache AFS (KB) ?"
+
+#~ msgid "50000"
+#~ msgstr "50000"

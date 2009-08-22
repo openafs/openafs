@@ -1,0 +1,246 @@
+# Swedish OpenAFS debconf
+# Copyright (C) 2008 Martin Bagge and the OpenAFS task force.
+# This file is distributed under the same license as the OpenAFS package.
+# Martin Bagge <brother@bsnet.se>, 2008.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: openafs\n"
+"Report-Msgid-Bugs-To: openafs@packages.debian.org\n"
+"POT-Creation-Date: 2009-02-13 09:22-0800\n"
+"PO-Revision-Date: 2009-02-13 09:24-0800\n"
+"Last-Translator: Martin Bagge <brother@bsnet.se>\n"
+"Language-Team: Swedish <debian-l10n-swedish@lists.debian.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Swedish\n"
+"X-Poedit-Country: Sweden\n"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid "DB server host names for your home cell:"
+msgstr "Värdnamn för DB-server för din hemmacell:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:1001
+msgid ""
+"AFS uses the file /etc/openafs/CellServDB to hold the list of servers that "
+"should be contacted to find parts of a cell.  The cell you claim this "
+"workstation belongs to is not in that file.  Enter the host names of the "
+"database servers separated by spaces. IMPORTANT: If you are creating a new "
+"cell and this machine is to be a database server in that cell, only enter "
+"this machine's name; add the other servers later after they are functioning. "
+"Also, do not enable the AFS client to start at boot on this server until the "
+"cell is configured.  When you are ready you can edit /etc/openafs/afs.conf."
+"client to enable the client."
+msgstr ""
+"AFS använder filer /etc/openafs/CellServDB för att hålla reda på listan av "
+"servrar som ska kontaktas för att hitta delar till en cell. Cellen du påstår "
+"att den här arbetsstationen tillhör finns inte i den filen. Ange värdnamnet "
+"på databasservrar, skilj med mellanslag. VIKTIGT: Om du håller på att skapa "
+"en ny cell och denna maskinen ska agera databas för den cellen anger du bara "
+"namnet på denna maskinen här. Lägg till de övriga servrarna när de är redo. "
+"Du ska heller inte ange att AFS-klienten ska starta vid systemets uppstart "
+"förrens cellen är helt konfigurerad. Redigera /etc/openafs/afs.conf.client "
+"för att aktivera klienten."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid "AFS cell this workstation belongs to:"
+msgstr "AFS-cell som denna arbetsstation tillhör:"
+
+# altså. det här med "the domain namne of the site" är helt menlöst att översätta.... /brother 31/7-08
+#. Type: string
+#. Description
+#: ../openafs-client.templates:2001
+msgid ""
+"AFS filespace is organized into cells or administrative domains. Each "
+"workstation belongs to one cell.  Usually the cell is the DNS domain name of "
+"the site."
+msgstr ""
+"Filsystemet i AFS är organiserat i celler eller administrativa domäner. "
+"Varje arbetsstation tillhör en cell, cellnamnet är vanligen samma som "
+"domännamnet."
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid "Size of AFS cache in kB:"
+msgstr "Storlek på AFS-cache i kB:"
+
+#. Type: string
+#. Description
+#: ../openafs-client.templates:3001
+msgid ""
+"AFS uses an area of the disk to cache remote files for faster access.  This "
+"cache will be mounted on /var/cache/openafs.  It is important that the cache "
+"not overfill the partition it is located on.  Often, people find it useful "
+"to dedicate a partition to their AFS cache."
+msgstr ""
+"AFS använder en del av disken för att mellanlagrar fjärrfiler för snabbare "
+"tillgång. Denna mellanlagring kommer att monteras som /var/cache/openafs. "
+"Det är viktigt att mellanlagringen inte tar större plats än partitionen som "
+"den huserar på. Det är vanligt att ha en dedikerad partition för AFS "
+"mellanlagring."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid "Run Openafs client now and at boot?"
+msgstr "Starta Openafsklienten nu och vid varje upstart?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:4001
+msgid ""
+"Normally, most users who install the openafs-client package expect AFS to be "
+"mounted automatically at boot.  However, if you are planning on setting up a "
+"new cell or are on a laptop, you may not want it started at boot time.  If "
+"you choose not to start AFS at boot, run /etc/init.d/openafs-client force-"
+"start to start the client when you wish to run it."
+msgstr ""
+"Vanligen monteras AFS automatiskt vid uppstart men om du håller på att sätta "
+"upp en ny cell eller arbetar med en bärbar dator kan det vara en idé att "
+"inte starta klienten automatiskt. Om du inte väljer att starta AFS vid "
+"uppstart ska du köra /etc/init.d/openafs-client force-start för att starta "
+"klienten när du vill ha tillgång till den."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid "Look up AFS cells in DNS?"
+msgstr "Slå upp AFS-celler i DNS?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:5001
+msgid ""
+"In order to contact an AFS cell, you need the IP addresses of the cell's "
+"database servers.  Normally, this information is read from /etc/openafs/"
+"CellServDB.  However, if Openafs cannot find a cell in that file, it can use "
+"DNS to look for AFSDB records that contain the information."
+msgstr ""
+"För att kontakta en AFS-cell så behöver du IP-adresser till cellens "
+"databasservrar. Vanligen kan dessa läsas från /etc/openafs/CellServDB men om "
+"cellen inte finns där kan DNS användas för att slå upp AFSDB-poster med "
+"korrekt information."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid "Encrypt authenticated traffic with AFS fileserver?"
+msgstr "Kryptera autentiseringstrafiken till AFS-filservern?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:6001
+msgid ""
+"AFS provides a weak form of encryption that can optionally be used between a "
+"client and the fileservers.  While this encryption is weaker than DES and "
+"thus is not sufficient for highly confidential data, it does provide some "
+"confidentiality and is likely to make the job of a casual attacker "
+"significantly more difficult."
+msgstr ""
+"AFS tillhandahåller en svag typ av kryptering som kan användas mellan "
+"klienten och filservrarna. Även om denna kryptering är svagare än DES och "
+"därmed inte särskilt lämplig för känslig information så kan den förhindra "
+"enklare attacker och försvåra vissa steg för en utomstående."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid "Dynamically generate the contents of /afs?"
+msgstr "Skapa innehåll i /afs dynamiskt?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"/afs generally contains an entry for each cell that a client can talk to. "
+"Traditionally, these entries were generated by servers in the client's home "
+"cell.  However, OpenAFS clients can generate the contents of /afs "
+"dynamically based on the contents of /etc/openafs/CellServDB and DNS."
+msgstr ""
+"/afs innehåller generellt sett en post för varje cell som klienten kan prata "
+"med. Dessa poster skapades tidigare av servrar i klientens hemmacell. Numera "
+"kan OpenAFS-klienter skapa innehållet i /afs dynamiskt med stöd av "
+"innehållet i /etc/openafs/CellServDB eller DNS."
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:7001
+msgid ""
+"If you generate /afs dynamically, you may need to create /etc/openafs/"
+"CellAlias to include aliases for common cells.  (The syntax of this file is "
+"one line per alias, with the cell name, a space, and then the alias for that "
+"cell.)"
+msgstr ""
+"Om /afs skapas dynamiskt så kan du behöva skapa /etc/openafs/CellAlias för "
+"de vanligare cellerna. (Direktivet skrivs med ett alias per rad. Cellnamnet, "
+"ett mellanslag och alias för den cellen)"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid "Use fakestat to avoid hangs when listing /afs?"
+msgstr "Ska fakestat användas för att undvika problem när /afs listas?"
+
+#. Type: boolean
+#. Description
+#: ../openafs-client.templates:8001
+msgid ""
+"Because AFS is a global file space, operations on the /afs directory can "
+"generate significant network traffic.  If some AFS cells are unavailable "
+"then looking at /afs using ls or a graphical file browser may hang your "
+"machine for minutes.  AFS has an option to simulate answers to these "
+"operations locally to avoid these hangs.  You want this option under most "
+"circumstances."
+msgstr ""
+"Då AFS är ett globalt filutrymme kan operationer på /afs skapa ganska mycket "
+"nätverkstrafik. Om några AFS-celler är onåbara så kan ls och grafiska "
+"filhanterare låsa maskinen i flera minuter om en eller flera celler är "
+"onåbara. AFS kan ställas in att simulera svar från de onåbara cellerna för "
+"att undvika låsningar. Det är mycket sällsynt att inte aktivera detta "
+"alternativ."
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid "Cell this server serves files for:"
+msgstr "Namn på cellen som denna server tillhandahåller filer för:"
+
+#. Type: string
+#. Description
+#: ../openafs-fileserver.templates:1001
+msgid ""
+"AFS fileservers belong to a cell.  They have the key for that cell's "
+"Kerberos service and serve volumes into that cell.  Normally, this cell is "
+"the same cell as the workstation's client belongs to."
+msgstr ""
+"AFS-filservrar tillhör en cell. De har en nyckel till cellens Kerberostjänst "
+"och tillhandahåller volymer i den cellen. Vanligen är denna cell samma cell "
+"som arbetsstationens klient tillhör."
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid "OpenAFS file server probably does not work!"
+msgstr "Filservern OpenAFS fungerar troligen inte!"
+
+#. Type: note
+#. Description
+#: ../openafs-fileserver.templates:2001
+msgid ""
+"You are running the OpenAFS file server package on an alpha.  This probably "
+"doesn't work; the DES code is flaky on the alpha, along with the threaded "
+"file server.  Likely, the fileserver will simply fail to start, but if it "
+"does load, data corruption may result.  You have been warned."
+msgstr ""
+"Du kör OpenAFS filservern på en Alpha. Det kommer förmodligen inte att "
+"fungera då DES-koden i kombination med den trådade filservern är instabil. "
+"Förmodligen kommer filservern helt enkelt att vägra starta, om den laddar så "
+"kan data skadas. Nu har du fått varningen, det är ditt beslut."

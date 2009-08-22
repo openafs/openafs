@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -e
+
+if [ "$1" = remove ] || [ "$1" = deconfigure ] ; then
+    update-alternatives --remove pagsh /usr/bin/pagsh.openafs
+    update-alternatives --remove klog /usr/bin/klog.afs
+fi
+
+#DEBHELPER#
+
+exit 0

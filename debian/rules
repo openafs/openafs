@@ -1,0 +1,236 @@
+#!/usr/bin/make -f
+# Based on the sample debian/rules that uses debhelper. 
+# GNU copyright 1997 by Joey Hess.
+
+# Uncomment this to turn on verbose mode. 
+#export DH_VERBOSE=1
+
+# Tell Autoconf the correct system types.
+DEB_HOST_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
+ifeq ($(DEB_BUILD_GNU_TYPE),$(DEB_HOST_GNU_TYPE))
+    SYSTEM = --build $(DEB_HOST_GNU_TYPE)
+else
+    SYSTEM = --build $(DEB_BUILD_GNU_TYPE) --host $(DEB_HOST_GNU_TYPE)
+endif
+
+# Determine whether we're building with optimization.  This doesn't really
+# work at the moment due to upstream problems.
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+    DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
+    DEBIAN_KERN_FLAGS = --disable-kernel-optimize
+else
+    DEBIAN_OPT_FLAGS =
+    DEBIAN_KERN_FLAGS =
+endif
+
+SYS_NAME  := $(shell sh debian/sysname)
+
+package    = openafs
+srcpkg     = openafs-modules-source
+dkmspkg    = openafs-modules-dkms
+DOCS       = $(CURDIR)/debian/openafs-doc/usr/share/doc/openafs-doc
+
+# The path to the XSLT used to generate HTML from the DocBook source files.
+# This path is specific to different Linux distributions, so we have to pass
+# it into configure.
+HTML_XSL   = /usr/share/xml/docbook/stylesheet/nwalsh/html/chunk.xsl
+
+# The /usr/share/doc directory for these packages should be a symlink to
+# /usr/share/doc/openafs-client.  Any package on this list must depend on
+# openafs-client.
+DOC_PACKAGES = libpam-openafs-kaserver openafs-dbserver openafs-fileserver \
+	openafs-kpasswd
+
+# These are files that we know we don't want to install.  List them so that we
+# can use dh_install --fail-missing and catch anything new that shows up.
+IGNORE = -XAuthLog -Xcompile_et -Xcopyauth -Xdlog -Xdpass -Xfms.log	\
+	-Xfs_cscpolicy.1 -Xfs_flushall.1 -Xfs_memdump.1 -Xfs_minidump.1	\
+	-Xfs_trace.1 -Xkadb_check -Xkaserver -Xkdb -Xkdump -Xkpwvalid	\
+	-Xlibafssetpag.so -Xlibafsrpc.so -Xlibafsauthent.so -Xpackage	\
+	-Xpagsh.krb -Xsymlink -Xtokens.krb -Xuss -Xvldb_convert -Xvsys	\
+	-Xxfs_size_check
+
+# Installed via other means since we have to rename them.
+IGNORE += -Xpam_afs
+
+# These will be useful in 1.5, but aren't useful yet.
+IGNORE += -Xknfs -Xrmtsysd
+
+# These variables are used by get-orig-source and to construct dkms.conf.
+DEBVERS  := $(shell dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 \
+		| cut -d- -f1)
+VERSION  := $(shell echo '$(DEBVERS)' | sed -e 's/[+-].*//' -e 's/~//g')
+UPSTREAM  = /afs/grand.central.org/software/openafs/$(VERSION)
+
+# Download the upstream source, merge in the doc tarball, and do the
+# repackaging that we have to do for DFSG reasons.  This assumes AFS is
+# mounted, as it's generally only used by the package maintainers.
+get-orig-source:
+	cp $(UPSTREAM)/openafs-$(VERSION)-src.tar.bz2 .
+	tar xjf openafs-$(VERSION)-src.tar.bz2
+	rm openafs-$(VERSION)-src.tar.bz2
+	cp $(UPSTREAM)/openafs-$(VERSION)-doc.tar.bz2 .
+	tar xjf openafs-$(VERSION)-doc.tar.bz2
+	rm openafs-$(VERSION)-doc.tar.bz2
+	rm -r openafs-$(VERSION)/src/packaging/MacOS
+	rm -r openafs-$(VERSION)/src/platform/DARWIN
+	rm -r openafs-$(VERSION)/src/WINNT
+	rm openafs-$(VERSION)/src/afs/sysctl.h
+	rm openafs-$(VERSION)/src/util/fstab.c
+	mv openafs-$(VERSION) openafs_$(DEBVERS).orig
+	tar cf openafs_$(DEBVERS).orig.tar openafs_$(DEBVERS).orig
+	rm -r openafs_$(DEBVERS).orig
+	gzip -9 openafs_$(DEBVERS).orig.tar
+
+# Handle the renaming of the up man page to afs-up here since the man pages
+# are generated from POD source by regen.sh.
+build: build-arch build-indep
+build-arch: build-stamp
+build-indep:
+build-stamp:
+	@if test x"$(SYS_NAME)" = x"UNKNOWN" ; then exit 1 ; fi
+	dh build --before configure
+	mv doc/man-pages/pod1/up.pod doc/man-pages/pod1/afs-up.pod
+	rm -f doc/man-pages/man1/up.1
+	sh regen.sh
+	afslogsdir=/var/log/openafs afslocaldir=/var/lib/openafs/local \
+	    sh configure \
+	    --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
+	    --prefix=/usr --mandir=\$${prefix}/share/man \
+	    --sysconfdir=/etc --libexecdir=/usr/lib \
+	    --localstatedir=/var/lib --with-krb5-conf=/usr/bin/krb5-config \
+	    --enable-supergroups --enable-largefile-fileserver \
+	    --enable-bos-new-config --with-xslt-processor=xsltproc \
+	    --with-html-xsl=$(HTML_XSL) --enable-debug --enable-lwp-debug \
+	    $(DEBIAN_OPT_FLAGS) $(SYSTEM)
+	chmod a+x config.sub src/libafs/make_kbuild_makefile.pl \
+	    src/config/make_vnode.pl
+	dh build --after configure
+	$(MAKE) libafs_tree
+	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
+	    $(MAKE) -C doc/xml/$$d all ; \
+	done
+	touch $@
+
+clean:
+	[ ! -f doc/man-pages/pod1/afs-up.pod ] \
+	    || mv doc/man-pages/pod1/afs-up.pod doc/man-pages/pod1/up.pod
+	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
+	    [ ! -f doc/xml/$$d/Makefile ] || $(MAKE) -C doc/xml/$$d clean ; \
+	done
+	dh clean
+
+install: install-stamp
+install-stamp: build-stamp
+	dh install --until dh_prep
+	mkdir -p $(CURDIR)/debian/tmp
+	$(MAKE) install_nolibafs DESTDIR=$(CURDIR)/debian/tmp
+	rm -f debian/tmp/usr/bin/klog.krb
+	rm -f debian/tmp/usr/share/man/man1/klog.krb.1
+	chmod +x debian/afs-rootvol debian/afs-newcell
+	dh_installdirs
+	dh_install --fail-missing $(IGNORE)
+	dh_installinit -popenafs-client -r -- defaults 25 20
+	dh_installinit -popenafs-fileserver -r
+
+	mkdir -p $(DOCS)/html
+	cp doc/xml/*.gif doc/xml/*.html $(DOCS)/html/
+	set -e; for d in AdminGuide QuickStartUnix UserGuide ; do \
+	    mkdir $(DOCS)/html/$$d ; \
+	    cp doc/xml/$$d/*.html $(DOCS)/html/$$d/ ; \
+	    cp doc/xml/$$d/*.pdf $(DOCS)/ ; \
+	done
+	cp doc/xml/AdminGuide/*.png $(DOCS)/html/AdminGuide/
+	mkdir $(DOCS)/html/arch-overview
+	cp doc/arch/arch-overview.h $(DOCS)/html/arch-overview
+	cd $(DOCS)/html/arch-overview && doxygen *.h && rm *.h && mv html/* . \
+	    && rm -r latex html
+	set -e; for h in doc/protocol/*.h ; do \
+	    mkdir $(DOCS)/html/`basename $$h .h` ; \
+	    cp $$h $(DOCS)/html/`basename $$h .h` ; \
+	    cd $(DOCS)/html/`basename $$h .h` && doxygen *.h && rm *.h \
+		&& mv html/* . && rm -r latex html && cd $(CURDIR) ; \
+	done
+
+	install -d debian/$(srcpkg)/usr/src/modules/$(package)
+	cd libafs_tree && find . -print | \
+	    cpio -admp $(CURDIR)/debian/$(srcpkg)/usr/src/modules/$(package)
+	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
+	cp debian/changelog debian/copyright debian/module/* \
+	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
+	chmod 755 debian/$(srcpkg)/usr/src/modules/$(package)/debian/rules
+	chown -R root.src debian/$(srcpkg)
+	find debian/$(srcpkg) -type d | xargs chmod 755
+	find debian/$(srcpkg) -type f -perm -100 | xargs chmod 755
+	find debian/$(srcpkg) -type f -not -perm -100 | xargs chmod 644
+	chmod 775 debian/$(srcpkg)/usr/src/modules
+	cd debian/$(srcpkg)/usr/src && tar cf $(package).tar modules
+	bzip2 debian/$(srcpkg)/usr/src/$(package).tar
+	chmod 644 debian/$(srcpkg)/usr/src/$(package).tar.bz2
+	install -d debian/$(dkmspkg)/usr/src
+	mv debian/$(srcpkg)/usr/src/modules/$(package) \
+	    debian/$(dkmspkg)/usr/src/openafs-$(VERSION)
+	rm -rf debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/debian
+	rmdir debian/$(srcpkg)/usr/src/modules
+	sed -e 's/[@]VERSION[@]/$(VERSION)/' debian/dkms.conf.in \
+	    > debian/$(dkmspkg)/usr/src/openafs-$(VERSION)/dkms.conf
+
+	set -e; for pkg in $(DOC_PACKAGES) ; do \
+	    ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
+	done
+
+	mv debian/openafs-client/usr/bin/pagsh \
+	    debian/openafs-client/usr/bin/pagsh.openafs
+	mv debian/openafs-client/usr/share/man/man1/pagsh.1 \
+	    debian/openafs-client/usr/share/man/man1/pagsh.openafs.1
+	mv debian/openafs-client/usr/bin/klog \
+	    debian/openafs-client/usr/bin/klog.afs
+	mv debian/openafs-client/usr/share/man/man1/klog.1 \
+	    debian/openafs-client/usr/share/man/man1/klog.afs.1
+	mv debian/openafs-client/usr/bin/up \
+	    debian/openafs-client/usr/bin/afs-up
+
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.so
+	install -m 644 -c debian/tmp/usr/lib/pam_afs.krb.so.1 \
+	    debian/libpam-openafs-kaserver/lib/security/pam_afs.krb.so
+
+	install -d debian/openafs-dbserver/usr/share/man/man8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
+	    afs-rootvol ) \
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
+	( cd debian && pod2man --section 8 --center "Debian GNU/Linux" \
+	    afs-newcell ) \
+	    >debian/openafs-dbserver/usr/share/man/man8/afs-newcell.8
+
+	install -d debian/$(srcpkg)/usr/share/doc/$(srcpkg)
+	install -m 644 debian/openafs-client.NEWS \
+	    debian/$(srcpkg)/usr/share/doc/$(srcpkg)/NEWS.Debian
+
+	dh install --after dh_install
+	chmod 700 debian/openafs-client/var/cache/openafs
+	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
+	chmod 700 debian/openafs-fileserver/etc/openafs/server
+	touch $@
+
+binary-indep: install-stamp
+	dh binary-indep
+
+# Only include debugging information for the servers installed into
+# /usr/lib/openafs rather than for all binaries.  The servers are where
+# debugging backtraces really matter, and a 10MB debugging package is
+# overkill.
+binary-arch: install-stamp
+	dh binary-arch --before dh_strip
+	dh_strip --dbg-package=openafs-dbg
+	rm -rf debian/openafs-dbg/usr/lib/debug/lib
+	rm -rf debian/openafs-dbg/usr/lib/debug/sbin
+	rm -rf debian/openafs-dbg/usr/lib/debug/usr/bin
+	rm -rf debian/openafs-dbg/usr/lib/debug/usr/sbin
+	dh binary-arch --remaining
+
+binary: binary-indep binary-arch
+
+.PHONY: binary binary-arch binary-indep build build-arch build-indep clean
+.PHONY: install
