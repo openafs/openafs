@@ -1,3 +1,17 @@
+openafs (1.5.61+dfsg-1) UNRELEASED; urgency=low
+
+  * New upstream testing release.
+    - New demand-attach file server support for greatly improved file
+      server restart times.
+    - Support for split readonly/read-write client caches.
+    - Better client handling of file server meltdowns.
+    - Experimental read-only client disconnected mode.
+    - NFS translator clients now work properly on Linux.
+    - Client cache readahead.
+    - Network performance improvements.
+
+ -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
+
 openafs (1.4.11+dfsg-2) unstable; urgency=low
 
   * Add armv5tel to debian/sysname, mapping it to arm_linux26.  Patch from
