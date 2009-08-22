@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/gtx/textobject.c,v 1.6.14.2 2007/11/26 21:08:42 shadow Exp $");
 
 #include "gtxtextobj.h"		/*Interface for this module */
 #include "gtxwindows.h"		/*Gator window interface */
@@ -66,10 +64,7 @@ static char mn[] = "gator_textobject";	/*Module name */
  *------------------------------------------------------------------------*/
 
 int
-gator_text_create(text_onp, params)
-     struct onode *text_onp;
-     struct onode_createparams *params;
-
+gator_text_create(struct onode *text_onp, struct onode_createparams *params)
 {				/*gator_text_create */
 
     static char rn[] = "gator_text_create";	/*Routine name */
@@ -80,7 +75,7 @@ gator_text_create(text_onp, params)
     text_params = (struct gator_textobj_params *)params;
     if (objects_debug) {
 	fprintf(stderr,
-		"[%s:%s] Private data passed to text object at 0x%x:\n", mn,
+		"[%s:%s] Private data passed to text object at %p:\n", mn,
 		rn, text_onp);
 	fprintf(stderr, "\tmaxEntries: %d, maxCharsPerEntry: %d\n",
 		text_params->maxEntries, text_params->maxCharsPerEntry);
@@ -91,12 +86,12 @@ gator_text_create(text_onp, params)
      */
     if (objects_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %d bytes for text object private data region\n",
+		"[%s:%s] Allocating %lu bytes for text object private data region\n",
 		mn, rn, sizeof(struct gator_textobj));
     text_data = (struct gator_textobj *)malloc(sizeof(struct gator_textobj));
     if (text_data == (struct gator_textobj *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %d bytes for text object private data region, errno is %d\n",
+		"[%s:%s] Can't allocate %lu bytes for text object private data region, errno is %d\n",
 		mn, rn, sizeof(struct gator_textobj), errno);
 	return (errno);
     }
@@ -159,9 +154,7 @@ gator_text_create(text_onp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_text_destroy(onp)
-     struct onode *onp;
-
+gator_text_destroy(struct onode *onp)
 {				/*gator_text_destroy */
 
     /*
@@ -192,9 +185,7 @@ gator_text_destroy(onp)
  *------------------------------------------------------------------------*/
 
 int
-gator_text_display(onp)
-     struct onode *onp;
-
+gator_text_display(struct onode *onp)
 {				/*gator_text_display */
 
     static char rn[] = "gator_text_display";	/*Routine name */
@@ -208,13 +199,13 @@ gator_text_display(onp)
     struct gator_textcb_entry *curr_ent;	/*Ptr to current entry */
 
     if (objects_debug)
-	fprintf(stderr, "[%s:%s] Displaying text object at 0x%x\n", mn, rn,
+	fprintf(stderr, "[%s:%s] Displaying text object at %p\n", mn, rn,
 		onp);
     text_data = (struct gator_textobj *)(onp->o_data);
     cbHdr = text_data->cbHdr;
     if (objects_debug)
 	fprintf(stderr,
-		"[%s:%s] Displaying text object at 0x%x, object-specific data at 0x%x\n",
+		"[%s:%s] Displaying text object at %p, object-specific data at %p\n",
 		mn, rn, onp, text_data);
 
     /*
@@ -229,7 +220,7 @@ gator_text_display(onp)
 
     if (objects_debug)
 	fprintf(stderr,
-		"[%s:%s] Drawing %d populated lines, starting with entry %d (index %d) at 0x%x\n",
+		"[%s:%s] Drawing %d populated lines, starting with entry %d (index %d) at %p",
 		mn, rn, currLinesUsed, currEnt, currIdx, curr_ent);
 
     strparams.x = onp->o_x;
@@ -311,9 +302,7 @@ gator_text_display(onp)
  *------------------------------------------------------------------------*/
 
 int
-gator_text_release(onp)
-     struct onode *onp;
-
+gator_text_release(struct onode *onp)
 {				/*gator_text_release */
 
     /*
@@ -347,11 +336,7 @@ gator_text_release(onp)
  *------------------------------------------------------------------------*/
 
 int
-gator_text_Scroll(onp, nlines, direction)
-     struct onode *onp;
-     int nlines;
-     int direction;
-
+gator_text_Scroll(struct onode *onp, int nlines, int direction)
 {				/*gator_text_Scroll */
 
     static char rn[] = "gator_text_Scroll";	/*Routine name */
@@ -428,13 +413,8 @@ gator_text_Scroll(onp, nlines, direction)
  *------------------------------------------------------------------------*/
 
 int
-gator_text_Write(onp, strToWrite, numChars, highlight, skip)
-     struct onode *onp;
-     char *strToWrite;
-     int numChars;
-     int highlight;
-     int skip;
-
+gator_text_Write(struct onode *onp, char *strToWrite, int numChars, 
+		 int highlight, int skip)
 {				/*gator_text_Write */
 
     static char rn[] = "gator_text_Write";	/*Routine name */
@@ -453,10 +433,10 @@ gator_text_Write(onp, strToWrite, numChars, highlight, skip)
      */
     if (objects_debug) {
 	fprintf(stderr,
-		"[%s:%s] Writing %d chars to text object at 0x%x (highlight=%d, skip=%d: '",
+		"[%s:%s] Writing %d chars to text object at %p (highlight=%d, skip=%d: '",
 		mn, rn, numChars, onp, highlight, skip);
 	for (i = 0; i < numChars; i++)
-	    fprintf(stderr, "%c", strToWrite + i);
+	    fprintf(stderr, "%c", strToWrite[i]);
 	fprintf(stderr, "\n");
     }
 
@@ -574,10 +554,7 @@ gator_text_Write(onp, strToWrite, numChars, highlight, skip)
  *------------------------------------------------------------------------*/
 
 int
-gator_text_BlankLine(onp, numBlanks)
-     struct onode *onp;
-     int numBlanks;
-
+gator_text_BlankLine(struct onode *onp, int numBlanks)
 {				/*gator_text_BlankLine */
 
     static char rn[] = "gator_text_BlankLine";	/*Routine name */
@@ -589,14 +566,14 @@ gator_text_BlankLine(onp, numBlanks)
      */
     if (objects_debug)
 	fprintf(stderr,
-		"[%s:%s] Writing %d blank lines to text object at 0x%x\n", mn,
+		"[%s:%s] Writing %d blank lines to text object at %p\n", mn,
 		rn, numBlanks, onp);
 
     text_data = (struct gator_textobj *)(onp->o_data);
     code = gator_textcb_BlankLine(text_data->cbHdr, numBlanks);
     if (code) {
 	fprintf(stderr,
-		"[%s:%s] Can't write %d blank lines to text object at 0x%x\n",
+		"[%s:%s] Can't write %d blank lines to text object at %p\n",
 		mn, rn, numBlanks, onp);
 	return (code);
     }

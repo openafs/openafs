@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.43.2.5 2008/05/23 14:25:15 shadow Exp $");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO
@@ -26,7 +24,9 @@ RCSID
 #include <sys/adspace.h>	/* for vm_att(), vm_det() */
 #endif
 
-
+#if defined(AFS_CACHE_BYPASS)
+#include "afs/afs_bypasscache.h"
+#endif// defined(AFS_CACHE_BYPASS)
 /* background request queue size */
 afs_lock_t afs_xbrs;		/* lock for brs */
 static int brsInit = 0;
@@ -39,6 +39,8 @@ static int afs_brs_count = 0;	/* request counter, to service reqs in order */
 static int rxepoch_checked = 0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
 	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
+
+extern int afsd_dynamic_vcaches;
 
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
@@ -134,13 +136,13 @@ afs_Daemon(void)
     struct afs_exporter *exporter;
     afs_int32 now;
     afs_int32 last3MinCheck, last10MinCheck, last60MinCheck, lastNMinCheck;
-    afs_int32 last1MinCheck;
+    afs_int32 last1MinCheck, last5MinCheck;
     afs_uint32 lastCBSlotBump;
     char cs_warned = 0;
 
     AFS_STATCNT(afs_Daemon);
     last1MinCheck = last3MinCheck = last60MinCheck = last10MinCheck =
-	lastNMinCheck = 0;
+    last5MinCheck = lastNMinCheck = 0;
 
     afs_rootFid.Fid.Volume = 0;
     while (afs_initState < 101)
@@ -166,6 +168,7 @@ afs_Daemon(void)
     last3MinCheck = now - 90 + ((afs_random() & 0x7fffffff) % 180);
     last60MinCheck = now - 1800 + ((afs_random() & 0x7fffffff) % 3600);
     last10MinCheck = now - 300 + ((afs_random() & 0x7fffffff) % 600);
+    last5MinCheck = now - 150 + ((afs_random() & 0x7fffffff) % 300);
     lastNMinCheck = now - 90 + ((afs_random() & 0x7fffffff) % 180);
 
     /* start off with afs_initState >= 101 (basic init done) */
@@ -209,6 +212,19 @@ afs_Daemon(void)
 					 * tickets */
 	    last3MinCheck = now;
 	}
+#ifdef AFS_MAXVCOUNT_ENV
+    if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
+        /* start with trying to drop us back to our base usage */
+        int anumber;
+        if (afs_maxvcount <= afs_cacheStats) 
+        anumber = VCACHE_FREE;
+        else
+        anumber = VCACHE_FREE + (afs_maxvcount - afs_cacheStats);
+
+        afs_ShakeLooseVCaches(anumber);
+        last5MinCheck = now;
+    }
+#endif
 	if (!afs_CheckServerDaemonStarted) {
 	    /* Do the check here if the correct afsd is not installed. */
 	    if (!cs_warned) {
@@ -340,7 +356,6 @@ afs_CheckRootVolume(void)
 	    afs_rootFid.Cell = localcell;
 	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
 		&& afs_globalVp) {
-		struct vcache *tvc = afs_globalVp;
 		/* If we had a root fid before and it changed location we reset
 		 * the afs_globalVp so that it will be reevaluated.
 		 * Just decrement the reference count. This only occurs during
@@ -516,6 +531,27 @@ BPrefetch(register struct brequest *ab)
     }
 }
 
+#if defined(AFS_CACHE_BYPASS)
+#if 1 /* XXX Matt debugging */
+static
+#endif
+void
+BPrefetchNoCache(register struct brequest *ab)
+{
+    struct vrequest treq;
+    afs_size_t len;
+	
+    if ((len = afs_InitReq(&treq, ab->cred)))
+	return;
+
+#ifndef UKERNEL
+    /* OS-specific prefetch routine */
+    afs_PrefetchNoCache(ab->vc, ab->cred, (struct nocache_read_request *) ab->ptr_parm[0]);
+#else
+#warning Cache-bypass code path not implemented in UKERNEL
+#endif
+}
+#endif
 
 static void
 BStore(register struct brequest *ab)
@@ -851,13 +887,13 @@ afs_BioDaemon(afs_int32 nbiods)
 	    if (vcp->v.v_gnode->gn_mwrcnt) {
 		afs_offs_t newlength =
 		    (afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
-		if (vcp->m.Length < newlength) {
+		if (vcp->f.m.Length < newlength) {
 		    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
 			       ICL_TYPE_STRING, __FILE__, ICL_TYPE_LONG,
 			       __LINE__, ICL_TYPE_OFFSET,
-			       ICL_HANDLE_OFFSET(vcp->m.Length),
+			       ICL_HANDLE_OFFSET(vcp->f.m.Length),
 			       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
-		    vcp->m.Length = newlength;
+		    vcp->f.m.Length = newlength;
 		}
 	    }
 	    ReleaseWriteLock(&vcp->lock);
@@ -979,6 +1015,10 @@ afs_BackgroundDaemon(void)
 		       tb->opcode);
 	    if (tb->opcode == BOP_FETCH)
 		BPrefetch(tb);
+#if defined(AFS_CACHE_BYPASS)		
+		else if (tb->opcode == BOP_FETCH_NOCACHE)
+		BPrefetchNoCache(tb);
+#endif		
 	    else if (tb->opcode == BOP_STORE)
 		BStore(tb);
 	    else if (tb->opcode == BOP_PATH)

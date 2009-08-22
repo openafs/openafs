@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/update/server.c,v 1.13.14.4 2007/10/30 15:16:47 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -51,10 +49,11 @@ RCSID
 #include "update.h"
 #include "global.h"
 
-extern int UPDATE_ExecuteRequest();
-
 static int AddObject(char **expPath, char *dir);
 static int PathInDirectory(char *dir, char *path);
+int update_SendFile(int, struct rx_call *, struct stat *);
+int update_SendDirInfo(char *, struct rx_call *, struct stat *,
+		       char *origDir);
 
 struct afsconf_dir *cdir;
 int nDirs;
@@ -62,7 +61,7 @@ char *dirName[MAXENTRIES];
 int dirLevel[MAXENTRIES];
 char *whoami;
 
-static int Quit();
+static int Quit(char *);
 
 int rxBind = 0;
 
@@ -167,7 +166,7 @@ AuthOkay(struct rx_call *call, char *name)
 }
 
 int
-osi_audit()
+osi_audit(void)
 {
 /* this sucks but it works for now.
 */
@@ -278,7 +277,6 @@ main(int argc, char *argv[])
 
     if (rxBind) {
 	afs_int32 ccode;
-#ifndef AFS_NT40_ENV
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
@@ -287,7 +285,6 @@ main(int argc, char *argv[])
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else 
-#endif	
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
@@ -404,10 +401,9 @@ UPDATE_FetchInfo(struct rx_call *call, char *name)
 }
 
 static int
-Quit(msg, a, b)
-     char *msg;
+Quit(char *msg)
 {
-    fprintf(stderr, msg, a, b);
+    fprintf(stderr, msg);
     exit(1);
 }
 

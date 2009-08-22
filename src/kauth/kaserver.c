@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaserver.c,v 1.19.2.6 2008/03/10 22:32:33 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -36,18 +34,21 @@ RCSID
 #include <lwp.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <rx/rxkad.h>
 #include <rx/rx_globals.h>
 #include <afs/cellconfig.h>
 #include <lock.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+#include <afs/audit.h>
 #include <ubik.h>
 #include <sys/stat.h>
 #include "kauth.h"
 #include "kautils.h"
 #include "kaserver.h"
-
+#include "kadatabase.h"
+#include "kaprocs.h"
 
 struct kadstats dynamic_statistics;
 struct ubik_dbase *KA_dbase;
@@ -74,8 +75,7 @@ static int debugOutput;
 
 /* check whether caller is authorized to manage RX statistics */
 int
-KA_rxstat_userok(call)
-     struct rx_call *call;
+KA_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(KA_conf, call, NULL);
 }
@@ -94,7 +94,7 @@ es_Report(char *fmt, ...)
 }
 
 static void
-initialize_dstats()
+initialize_dstats(void)
 {
     memset(&dynamic_statistics, 0, sizeof(dynamic_statistics));
     dynamic_statistics.start_time = time(0);
@@ -102,10 +102,8 @@ initialize_dstats()
 }
 
 static int
-convert_cell_to_ubik(cellinfo, myHost, serverList)
-     struct afsconf_cell *cellinfo;
-     afs_int32 *myHost;
-     afs_int32 *serverList;
+convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_int32 *myHost,
+		     afs_int32 *serverList)
 {
     int i;
     char hostname[64];
@@ -130,10 +128,7 @@ convert_cell_to_ubik(cellinfo, myHost, serverList)
 }
 
 static afs_int32
-kvno_admin_key(rock, kvno, key)
-     char *rock;
-     afs_int32 kvno;
-     struct ktc_encryptionKey *key;
+kvno_admin_key(void *rock, afs_int32 kvno, struct ktc_encryptionKey *key)
 {
     return ka_LookupKvno(0, KA_ADMIN_NAME, KA_ADMIN_INST, kvno, key);
 
@@ -149,9 +144,8 @@ kvno_admin_key(rock, kvno, key)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     afs_int32 code;
     char *whoami = argv[0];
@@ -168,20 +162,13 @@ main(argc, argv)
     afs_int32 i;
     char clones[MAXHOSTSPERCELL];
     afs_uint32 host = ntohl(INADDR_ANY);
+    char *auditFileName = NULL;
 
     struct rx_service *tservice;
     struct rx_securityClass *sca[1];
     struct rx_securityClass *scm[3];
 
-    extern int afsconf_ClientAuthSecure();
-    extern int afsconf_ServerAuth();
-    extern int afsconf_CheckAuth();
-
     extern int rx_stackSize;
-    extern int KAA_ExecuteRequest();
-    extern int KAT_ExecuteRequest();
-    extern int KAM_ExecuteRequest();
-    extern int RXSTATS_ExecuteRequest();
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -203,9 +190,9 @@ main(argc, argv)
     if (argc == 0) {
       usage:
 	printf("Usage: kaserver [-noAuth] [-fastKeys] [-database <dbpath>] "
-	       "[-auditlog <log path>] [-rxbind] "
-	       "[-localfiles <lclpath>] [-minhours <n>] [-servers <serverlist>] "
-	       "[-crossrealm]"
+	       "[-auditlog <log path>] [-audit-interface <file|sysvmq>] "
+	       "[-rxbind] [-localfiles <lclpath>] [-minhours <n>] "
+	       "[-servers <serverlist>] [-crossrealm] "
 	       /*" [-enable_peer_stats] [-enable_process_stats] " */
 	       "[-help]\n");
 	exit(1);
@@ -249,34 +236,16 @@ main(argc, argv)
 		lclpath = dbpath;
 	}
 	else if (strncmp(arg, "-auditlog", arglen) == 0) {
-	    int tempfd, flags;
-	    FILE *auditout;
-	    char oldName[MAXPATHLEN];
-	    char *fileName = argv[++a];
-	    
-#ifndef AFS_NT40_ENV
-	    struct stat statbuf;
-	    
-	    if ((lstat(fileName, &statbuf) == 0) 
-		&& (S_ISFIFO(statbuf.st_mode))) {
-		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
-#endif
-	    {
-		strcpy(oldName, fileName);
-		strcat(oldName, ".old");
-		renamefile(fileName, oldName);
-		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    auditFileName = argv[++a];
+
+	} else if (strncmp(arg, "-audit-interface", arglen) == 0) {
+	    char *interface = argv[++a];
+
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		exit(1);
 	    }
-	    tempfd = open(fileName, flags, 0666);
-	    if (tempfd > -1) {
-		auditout = fdopen(tempfd, "a");
-		if (auditout) {
-		    osi_audit_file(auditout);
-		} else
-		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    
 	} else if (strcmp(arg, "-localfiles") == 0)
 	    lclpath = argv[++a];
 	else if (strcmp(arg, "-servers") == 0)
@@ -318,7 +287,12 @@ main(argc, argv)
 	    goto usage;
 	}
     }
-    if (code = ka_CellConfig(cellservdb))
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
+    }
+
+    if ((code = ka_CellConfig(cellservdb)))
 	goto abort;
     cell = ka_LocalCell();
     KA_conf = afsconf_Open(cellservdb);
@@ -350,7 +324,7 @@ main(argc, argv)
 	afsconf_GetExtendedCellInfo(KA_conf, cell, AFSCONF_KAUTHSERVICE,
 				    &cellinfo, &clones);
     if (servers) {
-	if (code = ubik_ParseServerList(argc, argv, &myHost, serverList)) {
+	if ((code = ubik_ParseServerList(argc, argv, &myHost, serverList))) {
 	    afs_com_err(whoami, code, "Couldn't parse server list");
 	    exit(1);
 	}
@@ -390,7 +364,6 @@ main(argc, argv)
 
     if (rxBind) {
 	afs_int32 ccode;
-#ifndef AFS_NT40_ENV
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
@@ -399,7 +372,6 @@ main(argc, argv)
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else 
-#endif	
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
@@ -416,7 +388,7 @@ main(argc, argv)
     else
 	code =
 	    ubik_ServerInitByInfo(myHost, htons(AFSCONF_KAUTHPORT), &cellinfo,
-				  &clones, dbpath, &KA_dbase);
+				  clones, dbpath, &KA_dbase);
 
     if (code) {
 	afs_com_err(whoami, code, "Ubik init failed");
@@ -484,7 +456,7 @@ main(argc, argv)
     if (init_kaprocs(lclpath, initFlags))
 	return -1;
 
-    if (code = init_krb_udp()) {
+    if ((code = init_krb_udp())) {
 	ViceLog(0,
 		("Failed to initialize UDP interface; code = %d.\n", code));
 	ViceLog(0, ("Running without UDP access.\n"));

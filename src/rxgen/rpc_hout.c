@@ -35,8 +35,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_hout.c,v 1.10.4.3 2008/02/05 17:18:42 jaltman Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -101,6 +99,8 @@ print_datadef(definition * def)
 	break;
     case DEF_CONST:
 	pconstdef(def);
+	break;
+    default:
 	break;
     }
     if (def->def_kind != DEF_PROGRAM && def->def_kind != DEF_CONST
@@ -243,6 +243,8 @@ psproc1(definition * defp, int callTconnF, char *type, char *prefix,
 		break;
 	    case DEF_INOUTPARAM:
 		f_print(fout, ",\n\t/*I/O*/ ");
+		break;
+	    default:
 		break;
 	    }
 	    if (plist->pl.param_flag & OUT_STRING) {

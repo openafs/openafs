@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_util.c,v 1.28.2.8 2008/07/01 03:35:23 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -212,7 +210,7 @@ afs_CheckLocks(void)
 
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-                if (tvc->states & CVInit) continue;
+                if (tvc->f.states & CVInit) continue;
 #ifdef	AFS_OSF_ENV
 		if (VREFCOUNT(tvc) > 1)
 #else /* AFS_OSF_ENV */
@@ -244,7 +242,7 @@ afs_CheckLocks(void)
     {
 	struct srvAddr *sa;
 	struct server *ts;
-	struct conn *tc;
+	struct afs_conn *tc;
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)

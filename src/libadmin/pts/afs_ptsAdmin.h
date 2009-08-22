@@ -88,8 +88,8 @@ extern int ADMINAPI pts_GroupOwnerChange(const void *cellHandle,
 					 afs_status_p st);
 
 extern int ADMINAPI pts_GroupCreate(const void *cellHandle,
-				    const char *newGroup,
-				    const char *newOwner, int *newGroupId,
+				    char *newGroup,
+				    char *newOwner, int *newGroupId,
 				    afs_status_p st);
 
 extern int ADMINAPI pts_GroupGet(const void *cellHandle,
@@ -123,7 +123,7 @@ extern int ADMINAPI pts_GroupMemberRemove(const void *cellHandle,
 					  afs_status_p st);
 
 extern int ADMINAPI pts_GroupRename(const void *cellHandle,
-				    const char *oldName, const char *newName,
+				    const char *oldName, char *newName,
 				    afs_status_p st);
 
 extern int ADMINAPI pts_GroupModify(const void *cellHandle,
@@ -132,7 +132,7 @@ extern int ADMINAPI pts_GroupModify(const void *cellHandle,
 				    afs_status_p st);
 
 extern int ADMINAPI pts_UserCreate(const void *cellHandle,
-				   const char *userName, int *newUserId,
+				   char *userName, int *newUserId,
 				   afs_status_p st);
 
 extern int ADMINAPI pts_UserDelete(const void *cellHandle,
@@ -142,7 +142,7 @@ extern int ADMINAPI pts_UserGet(const void *cellHandle, const char *userName,
 				pts_UserEntry_p userP, afs_status_p st);
 
 extern int ADMINAPI pts_UserRename(const void *cellHandle,
-				   const char *oldName, const char *newName,
+				   const char *oldName, char *newName,
 				   afs_status_p st);
 
 extern int ADMINAPI pts_UserModify(const void *cellHandle,

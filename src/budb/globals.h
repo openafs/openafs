@@ -61,7 +61,7 @@ struct dumpSyncS {
     struct Lock ds_lock;	/* for this struct. */
     afs_int32 statusFlags;	/* 0, or 1 for dump in progress */
     int pipeFid[2];		/* pipe between threads */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
     pthread_mutex_t ds_writerStatus_mutex;
     pthread_mutex_t ds_readerStatus_mutex;
     pthread_cond_t ds_writerStatus_cond;

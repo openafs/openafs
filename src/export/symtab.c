@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/export/symtab.c,v 1.7 2003/07/15 23:15:06 shadow Exp $");
 
 #include "sys/types.h"
 #include "sym.h"

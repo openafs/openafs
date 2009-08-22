@@ -9,6 +9,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC=${MT_CC}
 CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../auth -I../kauth -I../ptserver -I../sys
@@ -23,7 +27,7 @@ RXKAD = ../rxkad
 PTSERVER = ../ptserver
 SYS = ../sys
 
-AUDITOBJS = audit.o
+AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
 
 AUTHOBJS = \
 	cellconfig.o \
@@ -60,6 +64,8 @@ UTILOBJS = \
 	dirpath.o \
 	serverLog.o \
 	snprintf.o \
+	strlcat.o \
+	strlcpy.o \
 	fileutil.o
 
 RXKADOBJS = \
@@ -72,7 +78,8 @@ SYSOBJS = \
 	afssyscalls.o \
 	rmtsysnet.o \
 	glue.o \
-	setpag.o
+	setpag.o \
+	pioctl.o
 
 PTSERVEROBJS = \
 	ptclient.o \
@@ -94,10 +101,8 @@ LIBOBJS = \
 
 all: ${TOP_LIBDIR}/libafsauthent.a
 
-install: ${DESTDIR}${libdir}/libafsauthent.a
-
-${DEST}/lib/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
+	${INSTALL_DATA} $? $@
 
 libafsauthent.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -105,6 +110,12 @@ libafsauthent.a: ${LIBOBJS}
 	$(RANLIB) $@
 
 audit.o: ${AUDIT}/audit.c
+	${CCRULE}
+
+audit-file.o: ${AUDIT}/audit-file.c
+	${CCRULE}
+
+audit-sysvmq.o: ${AUDIT}/audit-sysvmq.c
 	${CCRULE}
 
 cellconfig.o: ${AUTH}/cellconfig.c
@@ -188,6 +199,12 @@ serverLog.o: ${UTIL}/serverLog.c
 snprintf.o: ${UTIL}/snprintf.c
 	${CCRULE}
 
+strlcat.o: ${UTIL}/strlcat.c
+	${CCRULE}
+
+strlcpy.o: ${UTIL}/strlcpy.c
+	${CCRULE}
+
 fileutil.o: ${UTIL}/fileutil.c
 	${CCRULE}
 
@@ -252,14 +269,16 @@ glue.o: ${SYS}/glue.c
 setpag.o: ${SYS}/setpag.c
 	${CCRULE}
 
+pioctl.o: ${SYS}/pioctl.c
+	${CCRULE}
+
 clean:
 	$(RM) -f *.o *.a libafsauthent*
 
-${DESTDIR}${libdir}/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
+install: libafsauthent.a
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} libafsauthent.a ${DESTDIR}${libdir}/libafsauthent.a
 
-${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/libafsauthent.a
-
+dest: libafsauthent.a
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL_DATA} libafsauthent.a ${DEST}/lib/libafsauthent.a

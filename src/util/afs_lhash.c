@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/afs_lhash.c,v 1.10 2004/12/17 15:28:24 shadow Exp $");
 
 #include "afs_atomlist.h"
 #include "afs_lhash.h"

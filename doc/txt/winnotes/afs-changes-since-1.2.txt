@@ -1,3 +1,713 @@
+Since 1.5.60
+ * If a file server becomes inaccessible while the cache manager has 
+   dirty buffers to write, the afsd_service buf_IncrSync thread can 
+   attempt to use 100% of the cpu.
+
+ * Fix the locking that protects the cm_cell_t lists 
+   (all, name, id, free).
+
+ * Remove cm_cell_t objects from the name and id hash tables before 
+   placing them on the free list.
+
+ * Fix "fs newcell" which was broken in 1.5.60.
+
+ * Do not attempt to synchronize dirty buffers if the associated 
+   volume is known to be unavailable.
+
+ * Log to the Windows Event Log dirty buffers that cannot be written 
+   during the shutdown process.
+
+ * Modify behavior of a Freelance mountpoint target that does not 
+   specify a cell.  Instead of assuming the target volume is in the 
+   Freelance.Local cell, use the workstation "Cell" specified in the 
+   registry. A mountpoint target of "#root.cell." will now mean the 
+   root.cell volume in the workstation cell for the current session.  
+   If the workstation cell changes from "athena.mit.edu" to 
+   "andrew.cmu.edu", the referenced volume will also change without 
+   requiring that the mount point targets be altered.
+
+ * Avoid false infinite loop errors when validating the cm_cell_t 
+   free list during startup.
+
+ * Fix two more locations where xdr_free() should be used instead of 
+   free() to permit a checked built of afsd_service.exe to work with 
+   release builds of afsrpc.dll.
+
+ * Add cm_FindServerByUuid().  Re-implement RXAFS_InitCallBackState3() 
+   to permit the server Uuid to be used to lookup the server object 
+   and from that determine the cell.  This permits callbacks that are 
+   received from alternate addresses to be processed with a known server 
+   object.  Previously a request from an unknown server would clear all 
+   callbacks from all cells.
+
+ * Fix a bug that prevented optimal performance when using a non-zero 
+   value for 'daemonCheckVolCBInterval'.  As a reminder, when 
+   "daemonCheckVolCBInterval" is set to a non-zero value, all .readonly 
+   volume callbacks are automatically renewed 90 minutes before their 
+   expiration.
+
+ * Fix automatic ranking of vldb servers whose values are obtained from 
+   the CellServDB file.
+
+ * Add logging for RX CALL DEAD errors which are generated if the remote 
+   host is unreachable.
+
+ * Add failover for RX CALL TIMEOUT errors when the volume is readonly 
+   or the call is to a vldb server.
+
+ * Add registry based cell search functionality to NetIdMgr, 
+   afs_config.exe, and klog.exe.
+
+ * afsconf_GetCellInfo() has been modified to perform gethostbyname() 
+   lookups on the host names in the CellServDB instead of using the 
+   specified IP addresses.  This provides aklog, pts, vos, etc. the same 
+   CellServDB behavior that the Windows Cache Manager uses.
+
+ * Completely a behind the scenes change.  The snprintf() routines have 
+   been completely rewritten.
+
+ * When updating the stat cache entry callback of a .readonly object 
+   from the volume group object, update the file server reference to 
+   ensure it matches the most update to date callback.
+
+ * Add proper support for processing callbacks from multi-homed file 
+   servers.  Instead of comparing servers by cm_server_t pointer, 
+   compare them by UUID when the UUID is known.
+
+ * During a shutdown short circuit the offline volume check daemon 
+   functionality.
+
+ * Properly track link counts during cm_Link and cm_Unlink operations.
+
+ * Return the error code of RXAFS_FetchData / RXAFS_StoreData in 
+   preference to an error code reported by rx_EndCall.
+
+ * Add "PerFileAccessCheck" registry value to permit testing against 
+   experimental file servers that include per-file acl support.  This 
+   value is intentionally undocumented.  It is not to be used by
+   production environment deployments.
+
+ * Log a warning to trace log if a volume group is marked as a DFS 
+   File Set.  The Windows OpenAFS client does not include DFS support.
+
+ * Fix a bug introduced in 1.5.60 that prevents the afs netidmgr 
+   provider from obtaining tokens when referrals are in play.
+
+ * Add "fs chown" and "fs chgrp" commands to permit the owner and 
+   group of objects stored in AFS to be set from Windows.
+
+ * Avoid performing background daemon operations when the machine is 
+   going into suspend mode.
+
+ * Perform offline volume checks in most recently used order.
+
+ * Prevent crash when a data version for a cache object goes backwards.
+
+ * fs setquota, fs setcachesize, vos setfields, and vos create now 
+   accept human readable orders of magnitude. (K, M, G)
+
+ * fs listquota fixed to permit large quota sizes to be displayed.
+
+ * rx packet resend and data packets sent counts were incorrect.
+
+ * Multi-thread safe library versions are now being generated and used.  
+   mtafsubik.lib, mtafsutil.lib, mtafsvldb.lib, mtafsvol.lib.
+
+ * Microsoft SMB Redirector (mrxsmb.sys) support for ExtendedSessTimeout
+   values are now available on XP through Windows 7.  Add functionality
+   to autodetect if such support is present on the machine.  If so,
+   configure it if necessary and dynamically adjust the AFS Rx timeout
+   values accordingly.
+
+ * Correct another race condition in the Rx library that could result
+   in an unexpected panic while freeing the Rx call iovq.
+
+Since 1.5.59
+ * A fix to the pioctl library to support drive substitution 
+   to UNC paths.  (SUBST <d:> <\\afs\cell\path>).
+
+ * On April 9th Microsoft released a Hot Fix for Windows Server 2003 SP2 
+   that corrects a deadlock in the smb redirector and also adds new 
+   functionality that permits the AFS SMB server to be given a longer 
+   timeout than is normally the case.  New functionality has been added 
+   to configure these additional LanmanWorkstation\Parameter values.
+   (This functionality has been backported to XP SP3 and is scheduled
+   to be released on June 5th.)
+   
+ * The BackConnectionHostNames registry value configuration was broken 
+   when dynamic re-establishment of Netbios Name registrations was added.
+   Restore it.
+
+ * Hidden vos commands are revealed.
+
+ * If the "DisableLoopbackCheck" registry value is set, do not unset 
+   it during the same service session.
+
+ * Reorganize code that prevents multiple Store operations to the same 
+   File.
+
+ * Modify IsPathInAfs test in Explorer Shell Extension and fs.exe to 
+   permit broken symlinks to be treated as being in AFS.
+
+ * Fix vos commands that output 64-bit integer values.
+
+ * Cygwin Import Libraries are provided in the SDK for all OpenAFS DLLs.
+   Permits building cygwin applications against OpenAFS libraries. 
+
+ * OpenAFS Release Notes, Administrator Guide and User Guide now installed 
+   as Windows HTML Help (.CHM) files.  
+
+ * NSIS installer does a much better job of cleaning up files left 
+   over from previous installs.
+
+ * Fix RT#124787, a race condition between "fs flush <dir>", "fs flushvolume", 
+   or "fs flushall" and on-going directory operations that can result in 
+   afsd_service.exe crashing.
+
+ * Add support for DNS SRV records in place of AFSDB records.  
+   _afs3-vlserver._udp.<cellname>.Â  Priority field is used.  
+   Weight is currently ignored.
+
+ * Add a method of specifying Client CellServDB information within the 
+   registry that can be used to either override the CellServDB file or 
+   force the use of DNS lookups for a given cell.
+
+   The registry schema is as follows:
+
+     HKLM\SOFTWARE\OpenAFS\{Client,Server}\CellServDB\[cellname]\
+       "LinkedCell" REG_SZ "[cellname]"
+       "Description" REG_SZ "[comment]"
+       "ForceDNS" DWORD {0,1}
+
+     HKLM\SOFTWARE\OpenAFS\{Client,Server}\CellServDB\[cellname]\[servername]\
+       "HostName" REG_SZ "[hostname]"  Default: [servername]
+       "IPv4Address" REG_SZ "[address]"  Used only if gethostbyname() fails.
+       "IPv6Address" REG_SZ "[address]" <future>
+       "Comment" REG_SZ "[comment]"
+       "Rank" DWORD "0..65535"  Default: 0
+       "Clone" DWORD "{0,1}" <future: server only>
+       "vlserver" DWORD "7003" <future>
+       "ptserver" DWORD ... <future>
+
+   ForceDNS is implied non-zero if there are no [servername]
+   keys under the [cellname] key. Otherwise, ForceDNS is zero.
+   If [servername] keys are specified and none of them evaluate
+   to a valid server configuration, the return code is success.
+   This prevents failover to the CellServDB file or DNS.
+   
+   Only one of "HostName" or "IPv4Address" is required.  "HostName"
+   is optional if [servername] is the host name.
+
+ * Extend registry based CellServDB functionality to 
+   afsconf_GetCellInfo() interface used by aklog and many 
+   other command line utilities.
+
+ * libafsconf.dll moved from OpenAFS\Client\Program to OpenAFS\Common
+   as it is now used by both client and server components.
+
+Since 1.5.58
+ * PriorityClass of afsd_service.exe process raised to 
+   "High" to match the priority of the system services 
+   that are waiting for afsd_service.exe to respond.
+   Configurable using [TransarcAFSDaemon\Parameters]
+   DWORD "PriorityClass" value.  (use values from Win32
+   API)
+
+ * Change error reporting of CM_ERROR_BADSHARENAME to
+   use the correct error (NTSTATUS_BAD_NETWORK_PATH).
+   The error we were sending would cause the smb 
+   redirector to drop the connection.
+
+ * Change the error reporting of CM_ERROR_ALLOFFLINE
+   and CM_ERROR_ALLDOWN to return NTSTATUS_PATH_NOT_FOUND.
+   Previous we would return Bad Network Path which 
+   would cause the smb redirector to cancel all file
+   handles on the same "share".
+
+ * A debug version of afsd_service.exe can now be used
+   with a release version of afsrpc.dll (or vice versa).
+   afsrpc.dll now implements and exports xdr_free().
+
+ * Removed all unprotected OutputDebugString() calls as
+   those calls can block for up to 10 seconds if there 
+   is contention for the globally shared memory or if
+   the debugger fails to read data in a timely manner.
+
+ * Visual Studio 2008, WDK 6.1 and DDK 6.1 are now 
+   supported for builds.  The production releases still
+   use VS 2005.
+
+Since 1.5.57
+ * Discovered that XP/2003 supports a variant on recvmsg 
+   called WSARecvMsg.  The input parameters are mostly 
+   compatible with the Posix recvmsg.  This will save 
+   multiple memcpy() calls per received packet.
+
+ * Discovered that Vista/2008 supports a variant on 
+   sendmsg called WSASendMsg.  The input parameters 
+   are mostly compatible with the Posix sendmsg.  This 
+   will save multiple memcpy() calls per sent packet.
+
+ * Exporting rx_ReadProc32, rx_WriteProc32 from afsrpc.dll 
+   and utilizing rx_ReadProc32 from within the cache manager 
+   as part of the FetchData operations.  rx_ReadProc32 and 
+   rx_WriteProc32 are optimized versions of rx_ReadProc and 
+   rx_WriteProc for use when reading 32-bit integer values.
+
+ * The Network Identity Manager AFS provider now reports 
+   progress events.  These provide a better user experience 
+   with Network Identity Manager 2.0.
+
+ * [RT 124293] A race condition exists which permits the 
+   scp field of the an smb_fid_t object to become invalid 
+   after a request on the smb_fid_t has begun.  Remove the 
+   race by protecting all access to the scp field with the 
+   smb_fid_t mx mutex and obtaining a local reference on 
+   the cm_scache_t object for the length of the request.
+
+ * [RT 124276] If the vldb is out of sync with the contents 
+   of the file servers, afsd_service will retry too many 
+   times when a file server reports a volume as not being 
+   present.  Now if the list reported by the vldb is the 
+   same as the previously seen list, then the retry is 
+   aborted.
+
+ * [RT 124276] Read-only volume failover was broken in 
+   1.5.53 whenever accessing a volume results in VNOVOL or 
+   VMOVED.
+
+ * [RT 124276] Prior to 1.3.70 the volume server reference 
+   list was not reference counted and would be prematurely 
+   freed while in use.  When reference counting was added 
+   in 1.3.70 a bug was introduced that could result in 
+   service reference list corruption.
+
+ * Add Windows Application Event Log warning messages for 
+   "Client SMB MPX value too large" and 
+   "Client SMB Buffer Size too small".
+
+ * Renaming of files across directory boundaries would result 
+   in an invalid handle error when attempting to access the 
+   files after the move.
+
+ * Fix the handling of Tran2 Set Path Info RPCs.  Do not fail 
+   when a smb file descriptor cannot be found.  The whole point 
+   of using a Path Info function is because an smb file 
+   descriptor wasn't allocated.
+
+ * More edge cases in which dynamic addition of Freelance 
+   root.afs entries would get the wrong FID or where the 
+   root.afs directory would not be refreshed.
+
+ * Buffer overflow could occur if the workstation cell name was 
+   longer than 64 characters.  Crashes could occur in 
+   afscreds.exe, afslogon.dll, and afsd_service.exe.
+
+ * VNOSERVICE and VOFFLINE errors were leaking and were exposed 
+   to the smb client.
+
+ * Improve consistency of the bad data version value used for 
+   cm_scache fields.
+
+ * Log file server uuid values as part of the cm_server object 
+   when available.  Dump the cm_server object list in response 
+   to "fs memdump".
+
+ * Optimize the performance of resetting access control lists 
+   when tokens are set or removed.
+
+ * Fix vos.exe so that it can work with very large volume 
+   identifiers
+
+ * Remove symlink recursion tests and increase max symlink count 
+   to 64 from 16.
+
+Since 1.5.56
+ * Undo the "UAC manifest fix" applied to afs_config.exe.
+
+ * Fixed some additional race conditions in the Rx library
+
+ * Ensure that Freelance allocation of vnodes follow 
+   the AFS convention of odd vnodes are directories 
+   and everything else is an even vnode.
+
+ * Add Freelance logic to mount point and symlink 
+   evaluation functions.
+
+ * Enhance smb_ParseASCIIBlock() so that it can handle
+   all of the STRING formats defined by the CIFS Technical
+   Report 1.0.  
+
+ * Validate the output of smb_ParseASCIIBlock() in all
+   callers.  Return CM_ERROR_BADSMB if the STRING field
+   cannot be parsed.  CM_ERROR_BADSMB will cause the
+   contents of the packet to be logged.
+
+ * If multiple SMB Raw Write operations were taking 
+   place at the same time, there could be data corruption
+   because unique event objects were not generated for 
+   each Netbios receive operation.
+
+Since 1.5.55
+
+ * Fix a race in rxi_WriteProc which could result
+   in a freed or in use packet being passed to 
+   rxi_PrepareSendPacket if the call is currently
+   in a transmit wait state.  Passing a freed packet
+   will result in a panic.  Passing an in use packet
+   might result in a call failure or perhaps data
+   corruption.
+
+ * Kerberos referrals broke the NIM AFS provider 
+   logic for automated configuration of the workstation
+   cell with a new identity.  Now if a referrals 
+   response is returned, assume the cell belongs to the
+   new identify.
+
+ * The interface to buf_CleanAsync() and 
+   buf_CleanAsyncLocked() has been changed to permit 
+   errors to be propagated to the caller.  
+
+ * During an enumeration of a directory, if the btree
+   has not yet been generated, return an error.
+
+ * When mapping CM_ERROR values to NTSTATUS values
+   do not treat 0 as an error.
+
+ * Avoid a cm_scache_t object reference count underflow
+   when renaming via the SMB interface.
+
+ * smb_IsMask() can be called with a non-8.3 input buffer.
+   Separate smb_IsMask() into smb_Is8Dot3Mask() for 8.3
+   input buffers and smb_IsMask() for non-8.3 input buffers.
+
+ * Add cm_buf_t error state to the "fs memdump" output.
+
+ * pioctl drive mapping checks need to take into account
+   Global Drive Mappings and SUBST assignments.
+
+ * Rename operations should not be permitted if the 
+   destination name collides with an existing name that
+   differs only by case UNLESS the collision is the object
+   that is being renamed.
+
+ * Increase the maximum number of background daemon threads
+   to 64.  Leave the default at 4.
+
+ * Set the FILE_UNICODE_ON_DISK flag when reporting the 
+   file system characteristics.
+
+ * Report the maximum component name length as 255 even
+   for Unicode as part of the file system characteristics.
+
+ * Add RX debugging information to "fs memdump" output
+   in checked builds.
+
+ * Refcount the cm_server_t objects returned by
+   cm_FindServerByIP()
+
+ * Fix the UAC manifest applied to afs_config.exe
+
+ * rxdebug now indicates if any RX_CONN flag is set
+   not just some of them
+
+ * Change the mapping of CM_ERROR_WOULDBLOCK from 
+   NTSTATUS_LOCK_NOT_GRANTED to NTSTATUS_CANT_WAIT
+
+Since 1.5.54
+
+ * Includes #GCO Public CellServDB 07 Nov 2008
+
+ * Prevent separate cell entries from being created for
+   "foobar.org" and "foobar.org." which can happen if
+   an AFSDB record is found instead of a CellServDB 
+   record.
+
+ * Fix a panic when checking the SMB virtual circuit list.  
+   If a VC is destroyed while the list is being checked 
+   it is possible for the next object to become invalid.
+
+ * Increased logging to afsd_init.log of netbios name 
+   related errors.
+
+ * Fix a DNLC panic when a UTF-16 string that cannot be 
+   converted to a utf-8 string is provided as a filename.
+
+ * In the NSIS installer, delete old afslogon.dll/afscpcc.exe 
+   from %windir%\system32 and fix the WinLogon\Notify\AfsLogon 
+   location to refer directly to the new location in 
+   %programfiles%\openafs\client\program
+
+ * Be more aggressive about responding to Netbios 
+   NRC_BRIDGE/NRC_NOWILD errors.  Rebind the Netbios name to 
+   the LANA within the listener thread without performing a 
+   delete and reset.
+
+ * Use the WNet Enumeration of all connected drives as a filter 
+   in the pioctl GetIoctlHandle operation.  This should remove 
+   the last situations in which there was a delay when opening 
+   an Explorer Shell properties menu with the AFS Shell 
+   Extension.
+
+ * Fix the parsing of CellServDB in Windows to handle linked 
+   cells as is done on Unix.
+
+ * Add support for linked cells to the cache manager,
+   netidmgr afs provider, and aklog.  When two cells are
+   linked, a volume lookup that fails in one cell is looked
+   up in the other.  This can be used for construction of 
+   test cells that override specific volumes; cell renaming;
+   and cell splitting.
+
+ * Increase the length of cell and realm names that can 
+   be entered in the NIM AFS provider.
+
+ * Actively prevent a 32-bit afsd_service.exe from 
+   executing in the WOW64 environment.
+
+ * Protect against invalid IP address values in CellServDB
+   parsing.
+
+Since 1.5.53
+
+ * Fix an Rx panic caused by an attempt to double free
+   an rx_packet when an error occurs while writing the
+   packet.
+
+ * Fix an exception cause by a race condition when 
+   processing multiple file change notifications registered
+   by the Explorer Shell or other applications.
+
+ * Modify the Rx debug interface to use var_args and 
+   permit Rx debugging to be used on 64-bit Windows 
+   which previously had it disabled.
+
+Since 1.5.52
+
+ * Automated lock hierarchy enforcement added to the
+   osi base lock package.  This permits detection of lock
+   violations that might but often does not result in 
+   deadlocks.  Enabled by default in the checked builds.
+   May be activated in release builds via the registry
+   value "LockOrderValidation" in the TransarcAFSDaemon
+   Parameters key.
+
+   When a violation is detection an assertion is thrown
+   generating a dump file and a message indicating which
+   locks were obtained out of order is logged to the 
+   Windows Application Event Log.
+
+ * Attempt to ensure that a dump file will be generated
+   whenever the service panics.
+
+ * Removed unused lock cm_bufGetMutex
+
+ * Many out of order lock acquisitions were detected
+   using the lock order verifier and were corrected.
+
+ * A race condition within the function path cm_GetSCache() ->
+   cm_GetNewSCache() -> cm_RecycleSCache() permitted a 
+   cm_scache_t object to be issued simultaneously to two 
+   threads.   This would eventually result in a panic due 
+   to the resulting undercount.
+
+ * Fix interpretation of the empty string as the ioctl path
+   to mean the current directory.  "fs lsm", "symlink list", 
+   etc. now return a "not a ..." error instead of "does not
+   exist".
+
+ * Add SMB_STRF_SRCNULTERM flag to smb_ParseStringXXX functions.
+   to indicate that the input string is a nul terminated string.
+   Assign ti when input strings are nul terminated instead of 
+   length counted. (from 1.5.50)
+
+ * The CIFS protocol specification for handling NT_TRANSACT_CREATE
+   does not match the observed behavor.  The 'nameLength' is specified
+   in bytes, not in characters.  Fix the implementation to match
+   the observed behavior. (1.5.50)
+
+ * The cm_HaveAccessRights() attempt at deadlock avoidance by 
+   calling lock_TryRead() on the parent directory cm_scache_t rw-lock
+   does not avoid the deadlock.  Avoid the deadlock by enforcing the
+   lock order of the lowest vnode first.  Then remove the infinite 
+   loop avoidance in cm_SyncOp() that was returning an unwarranted
+   access denied error.
+
+ * File Server lock synchronization was not propertly enforced in 
+   smb_ReceiveNTCreateX() and smb_ReceiveNTTranCreate().
+
+ * Another change to the short name generator.  Plus and equal are 
+   not valid characters in a short name according to the 
+   RtlIsNameLegalDOS8Dot3() in kernel mode.  They have been replaced
+   with left and right brace in order to minimize the impact.
+
+ * Fix a race condition that can result in a heap overwrite error if
+   the number of known file servers or vldb servers increases during
+   the preparation phase of a cm_CheckServers() operation.
+
+ * If the SMB Authentication would fail, a LSA allocated memory 
+   buffer would be leaked.
+
+ * Rewrite the cm_cell_t allocation code to permit cell vldb server
+   lookups to fail without leaking cm_cell_t objects.
+
+ * Add "fs setcrypt auth" to permit the use of rxkad authentication
+   only mode.  Not documented.
+
+ * Initialize Rx mutex and lock objects once and only once as part of
+   the DLL load process.
+
+ * When reporting the Volume Name "AFS" do not include the terminating
+   NUL in the reported length.  
+ 
+ * Refresh Volume Location information upon receipt of a VNOVOL error
+   from the file server and avoid a race condition that prevented the
+   updated volume location information from being destroyed immediately
+   after it was acquired.
+
+ * In response to VNOVOL and VMOVED, remove the volume id from the server's
+   volume list so that the volume's up and down status is not affected 
+   when the machine is shutdown.
+
+ * Many fixes to the Rx stack related to packet allocation and deallocation;
+   Rx debugging; Rx packet tracking across queues; and Rx packet loss caused
+   by overwriting the rx_call currentPacket pointer when it was already 
+   referring to a packet.  
+
+ * Rx Jumbograms are now off by default.  To re-enable, add "RxJumbo" = "1"
+   in the TransarcAFSDeamon/Parameters key.
+
+ * "fs flush", "fs flushvolume", and "fs flushall" now destroy locally 
+   constructed directory B+ trees for flushed directory objects.
+
+ * When cached pages for directory objects have been locally modified, do
+   not permit the locally modified pages to be mixed with pages subsequently
+   obtained from the file server.  Doing so can result in directory 
+   corruption.
+
+ * If Ubix errors are received in response to VL_xxx operations record
+   the error on the server instance and permit the operation request to 
+   be retried in case another server is able to answer the query.  We have
+   seen at least one instance of a cell in which a VL server returned 
+   UNOQUORUM (possible database truncation) when the other servers were
+   responding successfully.
+
+Since 1.5.51
+ * Optimize the assignment of write errors to dirty 
+   buffers by applying the first error to all buffers 
+   belonging to the same object instead of trying each 
+   buffer in turn.
+
+ * Add resource version info to xstat_fs_test and xstat_cm_test
+ 
+ * Fix a delete vs delete[] usage problem in the WiX custom 
+   handler dll
+ 
+ * When creating a mount point, validate the volume name to 
+   make sure it exists.
+
+ * When processing a mount point, pay attention to VL_BADNAME 
+   errors.
+
+ * Remove a race condition from cm_volume_t recycling that could 
+   have resulted in two threads making use of the same object at 
+   the same time.
+
+ * Fix a reference count leak on smb_vc_t objects introduced in 
+   1.5.50.  Permit the objects to be freed once again.
+
+ * Fix the output of "fs memdump" for smb_vc_t objects that was 
+   broken in 1.5.50.
+
+ * Add routines for debugging smb refcount errors.
+
+ * When shutting down the cache manager, do not permit AFS 
+   callback requests to be processed. Doing so can result in 
+   invalid memory accesses.
+
+ * Do not recycle a deleted cm_scache_t object unless the 
+   refCount is 0.  Doing so can result in a deadlock and 
+   invalid memory access.
+
+ * Minimize the number of RPCs sent to the file server for 
+   directory bulk status requests. Only request status for 
+   objects that we are actually reporting on and only if we 
+   do not already have status for the object and then make 
+   sure that we return as much as we can at once via the SMB 
+   interface but not so much that it exceeds the RDR timeout
+
+ * Enable bos restricted operations
+
+ * Fix the creation of submounts used by the afscreds and afs_config 
+   drive mapping tabs.
+ 
+ * Avoid repeated retries when attempting to obtain access rights.  
+   If the access rights were obtained successfully but do not 
+   satisfy the request, fail the request.
+
+ * Fix error code reported when attempting delete a file on a 
+   readonly volume or one that is marked with the readonly DOS 
+   attribute.
+
+ * Fix a short name truncation bug.
+
+ * Fix a heap corruption error when reading the CellServDB file 
+   location.
+
+ * Fix directory listings when the directory has "lookup" permission 
+   only and the directory has never been previously accessed.
+
+ * Fix several tracking issues for cm_scache_t rw locks.
+
+ * Ensure that all buffers used to store cell names are the
+   correct length.
+
+ * Restore Windows 2000 support (broken in 1.5.50).   
+   LOCALE_INVARIANT was introduced in XP.
+
+ * Add RxUdpBufSize registry value.  Default is 256K.
+
+ * Avoid multiple deadlocks between cm_freelanceLock and cm_scacheLock
+
+ * Do not include trailing NULs when returning file names in 
+   a directory search response.
+
+ * Prevent RX from crashing the afsd_service by attempting
+   to allocate to many buffers at once when memory is fragmented.
+
+ * Avoid a deadlock when freeing cm_server_t objects
+
+ * Optimize search cell file.  Do not search to end of file
+   if the cell has already been found.
+
+ * Remove explorer shell extension delay on local disks.
+
+ * Automatically pre-allocate 64 Rx packets per thread
+
+ * Add smb lock requests and stat cache lock allocations to
+   the output from fs memdump.
+
+Since 1.5.50
+ * Fix Large File Support (broken in 1.5.50)
+
+ * Fix "fs setacl" (broken in 1.5.50)
+
+ * Fix pioctl path evaluation of drive letter
+   mapped paths. (broken in 1.5.50)
+
+ * Fix installation of VC8 Runtime library in the EXE
+   Retail installer. (broken in 1.5.50)
+
+ * Avoid a potential deadlock during Volume Location 
+   updates if all the file servers are unreachable at 
+   the time the VL update succeeds.
+
+ * Ensure that rx connection object is references 
+   during VL RPCs.
+
+ * Fix propagation of over quota errors during cm_FSync()
+   calls.
+
 Since 1.5.39 [1.5.50 released 16 July 2008]
  * There were no releases between 1.5.39 and 1.5.50.
 

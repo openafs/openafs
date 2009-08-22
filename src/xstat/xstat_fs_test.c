@@ -16,18 +16,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_fs_test.c,v 1.15.2.1 2007/10/30 15:16:59 shadow Exp $");
 
 #include "xstat_fs.h"		/*Interface for xstat_fs module */
 #include <cmd.h>		/*Command line interpreter */
 #include <time.h>
 #include <string.h>
-
-/*
- * External routines that don't have explicit include file definitions.
- */
-extern struct hostent *hostutil_GetHostByName();
+#include <afs/afsutil.h>
 
 /*
  * Command line parameter indices.
@@ -107,10 +101,8 @@ static char *xferOpNames[] = {
  *------------------------------------------------------------------------*/
 
 void
-PrintCallInfo()
+PrintCallInfo(void)
 {				/*PrintCallInfo */
-
-    static char rn[] = "PrintCallInfo";	/*Routine name */
     register int i;		/*Loop variable */
     int numInt32s;		/*# int32words returned */
     afs_int32 *currInt32;	/*Ptr to current afs_int32 value */
@@ -131,7 +123,7 @@ PrintCallInfo()
 	   printableTime);
 
     if (debugging_on)
-	printf("\n[%d entries returned at 0x%x]\n\n", numInt32s, currInt32);
+	printf("\n[%d entries returned at %" AFS_PTR_FMT "]\n\n", numInt32s, currInt32);
 
     for (i = 0; i < numInt32s; i++)
 	printf("%d ", *currInt32++);
@@ -408,10 +400,9 @@ PrintDetailedPerfInfo(struct fs_stats_DetailedStats *a_detP)
  *------------------------------------------------------------------------*/
 
 void
-PrintFullPerfInfo()
+PrintFullPerfInfo(void)
 {
 
-    static char rn[] = "PrintFullPerfInfo";	/*Routine name */
     static afs_int32 fullPerfInt32s = (sizeof(struct fs_stats_FullPerfStats) >> 2);	/*Correct # int32s to rcv */
     afs_int32 numInt32s;	/*# int32words received */
     struct fs_stats_FullPerfStats *fullPerfP;	/*Ptr to full perf stats */
@@ -462,9 +453,8 @@ PrintFullPerfInfo()
  *------------------------------------------------------------------------*/
 
 void
-PrintPerfInfo()
+PrintPerfInfo(void)
 {
-    static char rn[] = "PrintPerfInfo";	/*Routine name */
     static afs_int32 perfInt32s = (sizeof(struct afs_PerfStats) >> 2);	/*Correct # int32s to rcv */
     afs_int32 numInt32s;	/*# int32words received */
     struct afs_PerfStats *perfP;	/*Ptr to performance stats */
@@ -506,7 +496,7 @@ static char *CbCounterStrings[] = {
 
 
 void
-PrintCbCounters() {
+PrintCbCounters(void) {
     int numInt32s = sizeof(CbCounterStrings)/sizeof(char *);
     int i;
     afs_uint32 *val=xstat_fs_Results.data.AFS_CollData_val;
@@ -545,7 +535,7 @@ PrintCbCounters() {
  *------------------------------------------------------------------------*/
 
 int
-FS_Handler()
+FS_Handler(void)
 {
     static char rn[] = "FS_Handler";	/*Routine name */
 
@@ -660,7 +650,7 @@ CountListItems(struct cmd_item *a_firstItem)
  *------------------------------------------------------------------------*/
 
 int
-RunTheTest(struct cmd_syndesc *a_s)
+RunTheTest(struct cmd_syndesc *a_s, void *dummy)
 {
     static char rn[] = "RunTheTest";	/*Routine name */
     int code;			/*Return code */
@@ -789,7 +779,7 @@ RunTheTest(struct cmd_syndesc *a_s)
 	 * One-shot operation; just wait for the collection to be done.
 	 */
 	if (debugging_on)
-	    printf("[%s] Calling LWP_WaitProcess() on event 0x%x\n", rn,
+	    printf("[%s] Calling LWP_WaitProcess() on event %" AFS_PTR_FMT "\n", rn,
 		   &terminationEvent);
 	waitCode = LWP_WaitProcess(&terminationEvent);
 	if (debugging_on)

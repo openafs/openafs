@@ -1,0 +1,13 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/vl_errors.c
+/vlserver.h
+/volserver
+/vos
+/volerr.c
+/volerr.et
+/volint.h
+/volser.h
+/volser.p.h

@@ -1,0 +1,107 @@
+=head1 NAME
+
+fs_cscpolicy - Change client side caching policy for AFS shares [Windows only]
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs cscpolicy> S<<< [B<-share> I<sharename> [B<-manual>|B<-programs>|B<-documents>|B<-disable>] ] >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The fs cscpolicy command sets the client side caching policy for a
+particular AFS share, or displays a list of policies.
+
+This command can change the policy of only one share at a time.
+
+Only one of the policy options B<-manual>, B<-programs>, B<-documents>, or
+B<-disable>, may be selected.  The default policy is B<-manual>.
+
+After changing the policy for a share, you must close all applications
+that accessed files on this share, or restart AFS Client, for the change
+to take effect.
+
+=head1 CAUTIONS
+
+This command is only available on Windows.
+
+Use of this functionality is not recommended.  Windows Offline Folders do
+not work well with AFS since the AFS server is always present.  When this
+functionality was contributed and incorporated, it was believed to be safe
+for the AFS cache manager to return BADNETPATH errors when a single file
+server or volume was inaccessible.  It is now known that returning such
+errors causes the Microsoft SMB redirector to drop the connection to the
+AFS server resulting in serious side effects.
+
+This functionality is specific to use with the Microsoft SMB redirector.
+Client Side Caching (Offline Folders) is built into that driver and will
+not be present in the native AFS redirector, so this functionality will be
+removed at a future date.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-share> I<sharename>
+
+The name of the share whose policy is to be changed.  (If omitted, no
+share policy is changed.)
+
+=item B<-manual>
+
+Specifies manual caching of documents.
+
+=item B<-programs>
+
+Specifies automatic caching of programs and documents.
+
+=item B<-documents>
+
+Specifies automatic caching of documents.
+
+=item B<-disable>
+
+Disables caching.
+
+=back
+
+=head1 OUTPUT
+
+When changing the policy of a share, the output is:
+
+   CSC policy on share "share" changed to "policy".
+   Close all applications that accessed files on this share or restart AFS Client for the change to take effect.
+
+When displaying policies, the output is:
+
+   policyname = policy
+
+=head1 EXAMPLES
+
+The following command disables all caching on the share "AFS1":
+
+   % fs cscpolicy -share AFS1 -disable
+
+The following command displays all policies currently in effect:
+
+   % fs cscpolicy
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be have AFS Client Administrator access, either to display
+or to set policies.
+
+In addition, to change policies, the issuer must be a Windows
+Administrator, since policy information is stored in a protected area of
+the Windows Registry.
+
+=head1 COPYRIGHT
+
+This document was written by Mike Robinson, and is released under the IBM
+Public License Version 1.0.  Jeffrey Altman made several corrections,
+clarifications, and additions.

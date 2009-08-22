@@ -21,14 +21,13 @@
 
 #include "Internal.h"
 #include "org_openafs_jafs_FileInputStream.h"
+#include <errno.h>
 
 #include <fcntl.h>
 
 #ifdef DMALLOC
 #include "dmalloc.h"
 #endif
-
-extern int errno;
 
 /**
  * Be carefull with the memory management:

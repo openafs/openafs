@@ -11,7 +11,6 @@
  * attribute for AFS inode parameters. Check all the mounted /vicep partitions.
 #include <afsconfig.h>
 
-RCSID("$Header: /cvs/openafs/src/vol/xfs_size_check.c,v 1.6 2003/07/15 23:17:42 shadow Exp $");
 
  */
 #include <afs/param.h>
@@ -22,10 +21,8 @@ RCSID("$Header: /cvs/openafs/src/vol/xfs_size_check.c,v 1.6 2003/07/15 23:17:42 
 #include <dirent.h>
 #include <fcntl.h>
 #include <mntent.h>
+#include "ihandle.h"
 #include "partition.h"
-#ifdef AFS_SGI_EFS_IOPS_ENV
-#include "sgiefs/efs.h"
-#endif
 #include <afs/xfsattrs.h>
 
 char *prog = "xfs_size_check";

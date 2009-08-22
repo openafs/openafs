@@ -23,8 +23,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.41.2.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -40,6 +38,7 @@ extern struct vcache *afs_globalVp;
 extern struct vfs *afs_globalVFS;
 #endif
 
+
 /* copy out attributes from cache entry */
 int
 afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
@@ -53,14 +52,14 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 	fakedir = 1;
     attrs->va_type = fakedir ? VDIR : vType(avc);
 #if defined(AFS_SGI_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
-    attrs->va_mode = fakedir ? 0755 : (mode_t) (avc->m.Mode & 0xffff);
+    attrs->va_mode = fakedir ? 0755 : (mode_t) (avc->f.m.Mode & 0xffff);
 #else
-    attrs->va_mode = fakedir ? VDIR | 0755 : avc->m.Mode;
+    attrs->va_mode = fakedir ? VDIR | 0755 : avc->f.m.Mode;
 #endif
 
-    if (avc->m.Mode & (VSUID | VSGID)) {
+    if (avc->f.m.Mode & (VSUID | VSGID)) {
 	/* setuid or setgid, make sure we're allowed to run them from this cell */
-	tcell = afs_GetCell(avc->fid.Cell, 0);
+	tcell = afs_GetCell(avc->f.fid.Cell, 0);
 	if (tcell && (tcell->states & CNoSUID))
 	    attrs->va_mode &= ~(VSUID | VSGID);
     }
@@ -87,8 +86,8 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 	}
     }
 #endif /* AFS_DARWIN_ENV */
-    attrs->va_uid = fakedir ? 0 : avc->m.Owner;
-    attrs->va_gid = fakedir ? 0 : avc->m.Group;	/* yeah! */
+    attrs->va_uid = fakedir ? 0 : avc->f.m.Owner;
+    attrs->va_gid = fakedir ? 0 : avc->f.m.Group;	/* yeah! */
 #if defined(AFS_SUN56_ENV)
     attrs->va_fsid = avc->v.v_vfsp->vfs_fsid.val[0];
 #elif defined(AFS_OSF_ENV)
@@ -101,26 +100,26 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_fsid = 1;
 #endif 
     if (avc->mvstat == 2) {
-	tvp = afs_GetVolume(&avc->fid, 0, READ_LOCK);
+	tvp = afs_GetVolume(&avc->f.fid, 0, READ_LOCK);
 	/* The mount point's vnode. */
 	if (tvp) {
 	    attrs->va_nodeid =
 	      afs_calc_inum (tvp->mtpoint.Fid.Volume,
 			      tvp->mtpoint.Fid.Vnode);
-	    if (FidCmp(&afs_rootFid, &avc->fid) && !attrs->va_nodeid)
+	    if (FidCmp(&afs_rootFid, &avc->f.fid) && !attrs->va_nodeid)
 		attrs->va_nodeid = 2;
 	    afs_PutVolume(tvp, READ_LOCK);
 	} else
 	    attrs->va_nodeid = 2;
     } else
 	attrs->va_nodeid = 
-	      afs_calc_inum (avc->fid.Fid.Volume,
-			      avc->fid.Fid.Vnode);
+	      afs_calc_inum (avc->f.fid.Fid.Volume,
+			      avc->f.fid.Fid.Vnode);
     attrs->va_nodeid &= 0x7fffffff;	/* Saber C hates negative inode #s! */
-    attrs->va_nlink = fakedir ? 100 : avc->m.LinkCount;
-    attrs->va_size = fakedir ? 4096 : avc->m.Length;
+    attrs->va_nlink = fakedir ? 100 : avc->f.m.LinkCount;
+    attrs->va_size = fakedir ? 4096 : avc->f.m.Length;
     attrs->va_atime.tv_sec = attrs->va_mtime.tv_sec = attrs->va_ctime.tv_sec =
-	fakedir ? 0 : (int)avc->m.Date;
+	fakedir ? 0 : (int)avc->f.m.Date;
     /* set microseconds to be dataversion # so that we approximate NFS-style
      * use of mtime as a dataversion #.  We take it mod 512K because
      * microseconds *must* be less than a million, and 512K is the biggest
@@ -134,14 +133,14 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec = 0;
-    attrs->va_gen = hgetlo(avc->m.DataVersion);
+    attrs->va_gen = hgetlo(avc->f.m.DataVersion);
 #elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_OBSD_ENV)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec =
-	(hgetlo(avc->m.DataVersion) & 0x7ffff) * 1000;
+	(hgetlo(avc->f.m.DataVersion) & 0x7ffff) * 1000;
 #else
     attrs->va_atime.tv_usec = attrs->va_mtime.tv_usec =
-	attrs->va_ctime.tv_usec = (hgetlo(avc->m.DataVersion) & 0x7ffff);
+	attrs->va_ctime.tv_usec = (hgetlo(avc->f.m.DataVersion) & 0x7ffff);
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_OSF_ENV)
     attrs->va_flags = 0;
@@ -191,14 +190,13 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 {
     afs_int32 code;
     struct vrequest treq;
-    extern struct unixuser *afs_FindUser();
     struct unixuser *au;
     int inited = 0;
     OSI_VC_CONVERT(avc);
 
     AFS_STATCNT(afs_getattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_GETATTR, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
 
     if (afs_fakestat_enable && avc->mvstat == 1) {
 	struct afs_fakestat_state fakestat;
@@ -224,7 +222,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
     }
 #endif
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
-    if (avc->states & CUBCinit) {
+    if (avc->f.states & CUBCinit) {
 	code = afs_CopyOutAttrs(avc, attrs);
 	return code;
     }
@@ -239,7 +237,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
     if (afs_shuttingdown)
 	return EIO;
 
-    if (!(avc->states & CStatd)) {
+    if (!(avc->f.states & CStatd)) {
 	if (!(code = afs_InitReq(&treq, acred))) {
 	    code = afs_VerifyVCache2(avc, &treq);
 	    inited = 1;
@@ -352,7 +350,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 #elif	defined(AFS_AIX_ENV)
 /* Boy, was this machine dependent bogosity hard to swallow????.... */
     if (av->va_mode != -1) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MODE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MODE) {
@@ -363,7 +361,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 #endif
 	mask |= AFS_SETMODE;
 	as->UnixModeBits = av->va_mode & 0xffff;
-	if (avc->states & CForeign) {
+	if (avc->f.states & CForeign) {
 	    ObtainWriteLock(&avc->lock, 127);
 	    afs_FreeAllAxs(&(avc->Access));
 	    ReleaseWriteLock(&avc->lock);
@@ -371,7 +369,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if     defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_gid)) {
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_GID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_GID) {
@@ -391,7 +389,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if     defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_uid)) {
-#elif defined(AFS_LINUX22_ENV)
+#elif defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_UID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_UID) {
@@ -411,7 +409,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if     defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(av, va_modify_time)) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (av->va_mask & ATTR_MTIME) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MTIME) {
@@ -434,7 +432,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     return 0;
 }
 
-/* We don't set CDirty bit in avc->states because setattr calls WriteVCache
+/* We don't set CDirty bit in avc->f.states because setattr calls WriteVCache
  * synchronously, therefore, it's not needed.
  */
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
@@ -458,12 +456,12 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     afs_Trace4(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, attrs->va_mask, ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(attrs->va_size), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
 #else
     afs_Trace4(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, attrs->va_mode, ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(attrs->va_size), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
 #endif
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
@@ -475,7 +473,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     if (code)
 	goto done;
 
-    if (avc->states & CRO) {
+    if (avc->f.states & CRO) {
 	code = EROFS;
 	goto done;
     }
@@ -492,7 +490,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
      */
 #if	defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
@@ -509,7 +507,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	}
     }
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
         code = ENETDOWN;
         goto done;
     }
@@ -530,34 +528,56 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 #endif
 #if	defined(AFS_DARWIN80_ENV)
     if (VATTR_IS_ACTIVE(attrs, va_data_size)) {
-#elif	defined(AFS_LINUX22_ENV)
+#elif	defined(AFS_LINUX22_ENV) || defined(UKERNEL)
     if (attrs->va_mask & ATTR_SIZE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
 #elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
-#else
+#elif	defined(AFS_AIX41_ENV)
     if (attrs->va_size != -1) {
+#else
+    if (attrs->va_size != ~0) {
 #endif
 	afs_size_t tsize = attrs->va_size;
 	ObtainWriteLock(&avc->lock, 128);
-	avc->states |= CDirty;
-	code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
+	avc->f.states |= CDirty;
+
+        if (AFS_IS_DISCONNECTED && tsize >=avc->f.m.Length) {
+	    /* If we're growing the file, and we're disconnected, we need
+ 	     * to make the relevant dcache chunks appear ourselves. */
+	    code = afs_ExtendSegments(avc, tsize, &treq);
+	} else {
+	    code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
+	}
+#ifdef AFS_LINUX26_ENV
+	/* We must update the Linux kernel's idea of file size as soon as
+	 * possible, to avoid racing with delayed writepages delivered by
+	 * pdflush */
+	if (code == 0)
+	    i_size_write(AFSTOV(avc), tsize);
+#endif
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
 	if (!(astat.Mask & AFS_SETMODTIME)) {
 	    astat.Mask |= AFS_SETMODTIME;
 	    astat.ClientModTime = osi_Time();
 	}
+
 	if (code == 0) {
-	    if (((avc->execsOrWriters <= 0) && (avc->states & CCreating) == 0)
+	    if (((avc->execsOrWriters <= 0) && (avc->f.states & CCreating) == 0)
 		|| (avc->execsOrWriters == 1 && AFS_NFSXLATORREQ(acred))) {
-		code = afs_StoreAllSegments(avc, &treq, AFS_ASYNC);
-		if (!code)
-		    avc->states &= ~CDirty;
+
+		/* Store files now if not disconnected. */
+		/* XXX: AFS_IS_DISCON_RW handled. */
+		if (!AFS_IS_DISCONNECTED) {
+			code = afs_StoreAllSegments(avc, &treq, AFS_ASYNC);
+			if (!code)
+		    		avc->f.states &= ~CDirty;
+		}
 	    }
 	} else
-	    avc->states &= ~CDirty;
+	    avc->f.states &= ~CDirty;
 
 	ReleaseWriteLock(&avc->lock);
 	hzero(avc->flushDV);
@@ -573,16 +593,23 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
         if (code) {
 	    ObtainWriteLock(&afs_xcbhash, 487);
 	    afs_DequeueCallback(avc);
-	    avc->states &= ~CStatd;
+	    avc->f.states &= ~CStatd;
 	    ReleaseWriteLock(&afs_xcbhash);
-	    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+	    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 	        osi_dnlc_purgedp(avc);
 	    /* error?  erase any changes we made to vcache entry */
         }
+
+#if defined(AFS_DISCON_ENV)
     } else {
-        /* Must be logging - but not implemented yet ... */
-        code = ENETDOWN;
-    }
+
+	ObtainSharedLock(&avc->lock, 712);
+	/* Write changes locally. */
+	code = afs_WriteVCacheDiscon(avc, &astat, attrs);
+	ReleaseSharedLock(&avc->lock);
+#endif
+    }		/* if (!AFS_IS_DISCONNECTED) */
+
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (AFS_NFSXLATORREQ(acred)) {
 	avc->execsOrWriters--;

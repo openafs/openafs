@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: create-dirs.c,v 1.2 2003/07/15 23:16:56 shadow Exp $");
-#endif
-
 static int
 creat_dirs(int count)
 {

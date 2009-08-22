@@ -62,6 +62,10 @@
 #define SYS_NAME_ID_x86_darwin_80        509
 #define SYS_NAME_ID_ppc_darwin_90        510
 #define SYS_NAME_ID_x86_darwin_90        511
+#define SYS_NAME_ID_ppc_darwin_100       512
+#define SYS_NAME_ID_ppc64_darwin_100     513
+#define SYS_NAME_ID_x86_darwin_100       514
+#define SYS_NAME_ID_amd64_darwin_100     515
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602
@@ -73,6 +77,7 @@
 #define SYS_NAME_ID_rs_aix43		 705
 #define SYS_NAME_ID_rs_aix52		 706
 #define SYS_NAME_ID_rs_aix53		 707
+#define SYS_NAME_ID_rs_aix61		 708
 
 #define SYS_NAME_ID_sun3_411		 906
 #define SYS_NAME_ID_sun3x_411		 912
@@ -186,6 +191,8 @@
 #define SYS_NAME_ID_i386_fbsd_61        2113
 #define SYS_NAME_ID_i386_fbsd_62        2114
 #define SYS_NAME_ID_i386_fbsd_70        2115
+#define SYS_NAME_ID_i386_fbsd_71        2116
+#define SYS_NAME_ID_i386_fbsd_80        2117
 
 #define SYS_NAME_ID_ia64_linux2		2200
 #define SYS_NAME_ID_ia64_linux22	2201
@@ -242,6 +249,11 @@
 #define SYS_NAME_ID_i386_obsd38		2607
 #define SYS_NAME_ID_i386_obsd39		2608
 #define SYS_NAME_ID_i386_obsd40         2609
+#define SYS_NAME_ID_i386_obsd41         2610
+#define SYS_NAME_ID_i386_obsd42         2611
+#define SYS_NAME_ID_i386_obsd43         2612
+#define SYS_NAME_ID_i386_obsd44         2613
+#define SYS_NAME_ID_i386_obsd45         2614
 
 #define SYS_NAME_ID_amd64_linux2        2700
 #define SYS_NAME_ID_amd64_linux22       2701
@@ -259,6 +271,9 @@
 #define SYS_NAME_ID_ppc64_linux26	2903
 
 #define SYS_NAME_ID_amd64_fbsd_53        3008
+#define SYS_NAME_ID_amd64_fbsd_70        3009
+#define SYS_NAME_ID_amd64_fbsd_71        3010
+#define SYS_NAME_ID_amd64_fbsd_80        3011
 
 #define SYS_NAME_ID_amd64_w2k           3400
 
@@ -268,6 +283,21 @@
 #define SYS_NAME_ID_arm_linux22         3801
 #define SYS_NAME_ID_arm_linux24         3802
 #define SYS_NAME_ID_arm_linux26         3803
+
+#define SYS_NAME_ID_i386_dfbsd_22        3900
+#define SYS_NAME_ID_i386_dfbsd_23        3901
+
+#define SYS_NAME_ID_amd64_obsd36        4005
+#define SYS_NAME_ID_amd64_obsd37        4006
+#define SYS_NAME_ID_amd64_obsd38        4007
+#define SYS_NAME_ID_amd64_obsd39        4008
+#define SYS_NAME_ID_amd64_obsd40        4009
+#define SYS_NAME_ID_amd64_obsd41        4010
+#define SYS_NAME_ID_amd64_obsd42        4011
+#define SYS_NAME_ID_amd64_obsd43        4012
+#define SYS_NAME_ID_amd64_obsd44        4013
+#define SYS_NAME_ID_amd64_obsd45        4014
+#define SYS_NAME_ID_amd64_obsd45        4014
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
@@ -293,5 +323,5 @@
 #define	AFS_REALM_SZ		64
 #endif
 /* Specifies the number of equivalent local realm names */
-#define AFS_NUM_LREALMS         4
+#define AFS_NUM_LREALMS 4
 #endif /* __AFS_SYSNAMES_INCL_ENV_ */

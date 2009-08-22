@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/dir/dir.c,v 1.24.4.4 2007/10/30 15:16:39 shadow Exp $");
 
 #ifdef KERNEL
 #if !defined(UKERNEL)
@@ -53,8 +51,9 @@ RCSID
 
 /* afs_buffer.c */
 /* These are needed because afs_prototypes.h is not included here */
-extern void *DRead();
-extern void *DNew();
+struct dcache;
+extern void *DRead(struct dcache *adc, int page);
+extern void *DNew(struct dcache *adc, int page);
 
 #else /* !defined(UKERNEL) */
 #include "afs/stds.h"
@@ -62,15 +61,14 @@ extern void *DNew();
 
 /* afs_buffer.c */
 /* These are needed because afs_prototypes.h is not included here */
-extern void *DRead();
-extern void *DNew();
+extern void *DRead(register afs_int32 *fid, register int page);
+extern void *DNew(register afs_int32 *fid, register int page);
 
 #endif /* !defined(UKERNEL) */
 #include "afs/afs_osi.h"
 
 #include "afs/dir.h"
 
-#include "afs/longc_procs.h"
 #ifdef AFS_LINUX20_ENV
 #include "h/string.h"
 #endif
@@ -86,6 +84,12 @@ extern void *DNew();
 #define	LookupOffset	afs_dir_LookupOffset
 #define	EnumerateDir	afs_dir_EnumerateDir
 #define	IsEmpty		afs_dir_IsEmpty
+#define InverseLookup   afs_dir_InverseLookup
+
+#if defined(AFS_DISCON_ENV)
+#define ChangeFid	afs_dir_ChangeFid
+#endif
+
 #else /* KERNEL */
 
 # ifdef HAVE_UNISTD_H
@@ -110,16 +114,17 @@ static struct DirEntry *FindItem(void *dir, char *ename,
 				 unsigned short **previtem);
 
 
+/* Find out how many entries are required to store a name. */
 int
 NameBlobs(char *name)
-{				/* Find out how many entries are required to store a name. */
+{
     register int i;
     i = strlen(name) + 1;
     return 1 + ((i + 15) >> 5);
 }
 
-/* Create an entry in a file.  Dir is a file representation, while entry is a string name. */
-
+/* Create an entry in a file.  Dir is a file representation, while entry is
+ * a string name. */
 int
 Create(void *dir, char *entry, void *voidfid)
 {
@@ -388,17 +393,23 @@ LookupOffset(void *dir, char *entry, void *voidfid, long *offsetp)
 }
 
 int
-EnumerateDir(void *dir, int (*hookproc) (), void *hook)
+EnumerateDir(void *dir, int (*hookproc) (void *dir, char *name,
+				         afs_int32 vnode, afs_int32 unique), 
+	     void *hook)
 {
-    /* Enumerate the contents of a directory. */
+    /* Enumerate the contents of a directory.
+     * Break when hook function returns non 0.
+     */
     register int i;
     int num;
     register struct DirHeader *dhp;
     register struct DirEntry *ep;
+    int code = 0;
 
     dhp = (struct DirHeader *)DRead(dir, 0);
     if (!dhp)
 	return EIO;		/* first page should be there */
+
     for (i = 0; i < NHASHENT; i++) {
 	/* For each hash chain, enumerate everyone on the list. */
 	num = ntohs(dhp->hashTable[i]);
@@ -414,10 +425,13 @@ EnumerateDir(void *dir, int (*hookproc) (), void *hook)
 		}
 		break;
 	    }
+
 	    num = ntohs(ep->next);
-	    (*hookproc) (hook, ep->name, ntohl(ep->fid.vnode),
+	    code = (*hookproc) (hook, ep->name, ntohl(ep->fid.vnode),
 			 ntohl(ep->fid.vunique));
 	    DRelease(ep, 0);
+	    if (code)
+	    	break;
 	}
     }
     DRelease(dhp, 0);
@@ -487,10 +501,16 @@ DirHash(register char *string)
     return tval;
 }
 
+
+/* Find a directory entry, given its name.  This entry returns a pointer
+ * to a locked buffer, and a pointer to a locked buffer (in previtem)
+ * referencing the found item (to aid the delete code).  If no entry is
+ * found, however, no items are left locked, and a null pointer is
+ * returned instead. */
+
 static struct DirEntry *
 FindItem(void *dir, char *ename, unsigned short **previtem)
 {
-    /* Find a directory entry, given its name.  This entry returns a pointer to a locked buffer, and a pointer to a locked buffer (in previtem) referencing the found item (to aid the delete code).  If no entry is found, however, no items are left locked, and a null pointer is returned instead. */
     register int i;
     register struct DirHeader *dhp;
     register unsigned short *lp;
@@ -531,3 +551,103 @@ FindItem(void *dir, char *ename, unsigned short **previtem)
 	}
     }
 }
+
+static struct DirEntry *
+FindFid (void *dir, afs_uint32 vnode, afs_uint32 unique)
+{
+    /* Find a directory entry, given the vnode and uniquifier of a object.  
+     * This entry returns a pointer to a locked buffer.  If no entry is found,
+     * however, no items are left locked, and a null pointer is returned 
+     * instead. 
+     */
+    register int i;
+    register struct DirHeader *dhp;
+    register unsigned short *lp;
+    register struct DirEntry *tp;
+    dhp = (struct DirHeader *) DRead(dir,0);
+    if (!dhp) return 0;
+    for (i=0; i<NHASHENT; i++) {
+	if (dhp->hashTable[i] != 0) {
+	    tp = GetBlob(dir,(u_short)ntohs(dhp->hashTable[i]));
+	    if (!tp) { /* should not happen */
+		DRelease(dhp, 0);
+		return 0;
+	    }
+	    while(tp) {
+		if (vnode == ntohl(tp->fid.vnode) 
+		    && unique == ntohl(tp->fid.vunique)) { 
+		    DRelease(dhp, 0);
+		    return tp;
+		}
+		lp = &(tp->next);
+		if (tp->next == 0)
+		    break;
+		tp = GetBlob(dir,(u_short)ntohs(tp->next));
+		DRelease(lp, 0);
+	    }
+	    DRelease(lp, 0);
+	}
+    }
+    DRelease(dhp, 0);
+    return NULL;
+}
+
+int
+InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique, char *name, 
+	       afs_uint32 length)
+{
+    /* Look for the name pointing to given vnode and unique in a directory */
+    register struct DirEntry *entry;
+    int code = 0;
+    
+    entry = FindFid(dir, vnode, unique);
+    if (!entry)
+	return ENOENT;
+    if (strlen(entry->name) >= length)
+	code = E2BIG;
+    else
+	strcpy(name, entry->name);
+    DRelease(entry, 0);
+    return code;
+}
+
+#if defined(AFS_DISCON_ENV)
+/*!
+ * Change an entry fid.
+ *
+ * \param dir
+ * \param entry The entry name.
+ * \param old_fid The old find in MKFid format (host order).
+ * It can be omitted if you don't need a safety check...
+ * \param new_fid The new find in MKFid format (host order).
+ */
+int ChangeFid(void *dir,
+		char *entry,
+		afs_uint32 *old_fid,
+		afs_uint32 *new_fid)
+{
+    struct DirEntry *firstitem;
+    unsigned short *previtem;
+    struct MKFid *fid_old = (struct MKFid *) old_fid;
+    struct MKFid *fid_new = (struct MKFid *) new_fid;
+
+    /* Find entry. */
+    firstitem = FindItem(dir, entry, &previtem);
+    if (firstitem == 0) {
+	return ENOENT;
+    }
+    DRelease(previtem, 1);
+    /* Replace fid. */
+    if (!old_fid ||
+    	((htonl(fid_old->vnode) == firstitem->fid.vnode) &&
+    	(htonl(fid_old->vunique) == firstitem->fid.vunique))) {
+
+	firstitem->fid.vnode = htonl(fid_new->vnode);
+	firstitem->fid.vunique = htonl(fid_new->vunique);
+    }
+
+    DRelease(firstitem, 1);
+
+    return 0;
+}
+#endif

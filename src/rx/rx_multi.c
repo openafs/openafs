@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_multi.c,v 1.9.8.1 2008/02/08 21:21:07 shadow Exp $");
 
 #ifdef	KERNEL
 #include "afs/sysincludes.h"
@@ -26,12 +24,12 @@ RCSID
  */
 
 struct multi_handle *
-multi_Init(struct rx_connection **conns, register int nConns)
+multi_Init(struct rx_connection **conns, int nConns)
 {
-    register struct rx_call **calls;
-    register short *ready;
-    register struct multi_handle *mh;
-    register int i;
+    struct rx_call **calls;
+    short *ready;
+    struct multi_handle *mh;
+    int i;
 
     /*
      * Note: all structures that are possibly referenced by other
@@ -48,12 +46,13 @@ multi_Init(struct rx_connection **conns, register int nConns)
     mh->nextReady = mh->firstNotReady = mh->ready = ready;
     mh->nReady = 0;
     mh->nConns = nConns;
+
 #ifdef RX_ENABLE_LOCKS
     MUTEX_INIT(&mh->lock, "rx_multi_lock", MUTEX_DEFAULT, 0);
     CV_INIT(&mh->cv, "rx_multi_cv", CV_DEFAULT, 0);
 #endif /* RX_ENABLE_LOCKS */
     for (i = 0; i < nConns; i++) {
-	register struct rx_call *call;
+	struct rx_call *call;
 	call = mh->calls[i] = rx_NewCall(conns[i]);
 	rx_SetArrivalProc(call, multi_Ready, (void *) mh, i);
     }
@@ -62,7 +61,7 @@ multi_Init(struct rx_connection **conns, register int nConns)
 
 /* Return the user's connection index of the most recently ready call; that is, a call that has received at least one reply packet */
 int
-multi_Select(register struct multi_handle *mh)
+multi_Select(struct multi_handle *mh)
 {
     int index;
     SPLVAR;
@@ -95,10 +94,10 @@ multi_Select(register struct multi_handle *mh)
 
 /* Called by Rx when the first reply packet of a call is received, or the call is aborted. */
 void
-multi_Ready(register struct rx_call *call, register void *amh,
-	    register int index)
+multi_Ready(struct rx_call *call, void *amh,
+	    int index)
 {
-    register struct multi_handle *mh = (struct multi_handle *)amh;
+    struct multi_handle *mh = (struct multi_handle *)amh;
 #ifdef RX_ENABLE_LOCKS
     MUTEX_ENTER(&mh->lock);
 #endif /* RX_ENABLE_LOCKS */
@@ -114,12 +113,12 @@ multi_Ready(register struct rx_call *call, register void *amh,
 
 /* Called when the multi rx call is over, or when the user aborts it (by using the macro multi_Abort) */
 void
-multi_Finalize(register struct multi_handle *mh)
+multi_Finalize(struct multi_handle *mh)
 {
-    register int i;
-    register int nCalls = mh->nConns;
+    int i;
+    int nCalls = mh->nConns;
     for (i = 0; i < nCalls; i++) {
-	register struct rx_call *call = mh->calls[i];
+	struct rx_call *call = mh->calls[i];
 	if (call)
 	    rx_EndCall(call, RX_USER_ABORT);
     }
@@ -134,12 +133,12 @@ multi_Finalize(register struct multi_handle *mh)
 
 /* ignores all remaining multiRx calls */
 void
-multi_Finalize_Ignore(register struct multi_handle *mh)
+multi_Finalize_Ignore(struct multi_handle *mh)
 {
-    register int i;
-    register int nCalls = mh->nConns;
+    int i;
+    int nCalls = mh->nConns;
     for (i = 0; i < nCalls; i++) {
-	register struct rx_call *call = mh->calls[i];
+	struct rx_call *call = mh->calls[i];
 	if (call)
 	    rx_EndCall(call, 0);
     }

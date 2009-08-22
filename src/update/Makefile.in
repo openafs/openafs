@@ -7,6 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
@@ -45,19 +49,21 @@ update.h: update.xg
 	${RXGEN} -A -u -h -o $@ ${srcdir}/update.xg
 
 update.cs.c: update.h
-upcate.ss.c: update.h
+update.ss.c: update.h
 update.er.c: update.h
 
 #
 # Installation targets
 #
-install : ${DESTDIR}${afssrvlibexecdir}/upserver ${DESTDIR}${afssrvlibexecdir}/upclient
+install: upserver upclient
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL_PROGRAM} upserver ${DESTDIR}${afssrvlibexecdir}/upserver
+	${INSTALL_PROGRAM} upclient ${DESTDIR}${afssrvlibexecdir}/upclient
 
-${DEST}/root.server/usr/afs/bin/upserver: upserver
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/upclient: upclient
-	${INSTALL} $? $@
+dest: upserver upclient
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} upserver ${DEST}/root.server/usr/afs/bin/upserver
+	${INSTALL_PROGRAM} upclient ${DEST}/root.server/usr/afs/bin/upclient
 
 #
 # Misc. targets
@@ -67,12 +73,3 @@ clean:
 	AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${afssrvlibexecdir}/upserver: upserver
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvlibexecdir}/upclient: upclient
-	${INSTALL} $? $@
-
-dest: ${DEST}/root.server/usr/afs/bin/upserver ${DEST}/root.server/usr/afs/bin/upclient
-

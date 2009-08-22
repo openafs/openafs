@@ -8,8 +8,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/enc.c,v 1.5 2003/07/15 23:15:00 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <des.h>

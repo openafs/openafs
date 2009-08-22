@@ -8,8 +8,6 @@
 #include <afs/param.h>
 #include <afs/afsutil.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/comerr/et_name.c,v 1.5.14.1 2007/04/10 18:39:51 shadow Exp $");
 
 #include "error_table.h"
 #include "mit-sipb-cr.h"

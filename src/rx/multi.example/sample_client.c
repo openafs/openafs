@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/multi.example/sample_client.c,v 1.6 2003/07/15 23:16:32 shadow Exp $");
 
 #include <sys/types.h>
 #include <netdb.h>

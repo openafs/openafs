@@ -164,7 +164,6 @@ dirs="\
 	comerr \
 	comerr/test \
 	des \
-	des_stub \
 	cmd \
 	rxgen \
 	rxstat \

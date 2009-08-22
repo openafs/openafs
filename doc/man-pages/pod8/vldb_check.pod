@@ -8,7 +8,7 @@ vldb_check - Checks the integrity of the VLDB
 <div class="synopsis">
 
 B<vldb_check> S<<< B<-database> <I<vldb file>> >>> [B<-uheader>] [B<-vheader>]
-    [B<-servers>] [B<-entries>] [B<-verbose>] [B<-help>]
+    [B<-servers>] [B<-entries>] [B<-quiet> | B<-verbose>] [B<-help>]
 
 B<vldb_check> S<<< B<-d> <I<vldb file>> >>> [B<-u>] [B<-vh>] [B<-s>] [B<-e>]
     [B<-ve>] [B<-h>]
@@ -60,10 +60,15 @@ registered for each file server machine in the cell.
 Outputs every volume entry in the database. The information includes the
 volume's name and the volume ID number for each of its versions.
 
+=item B<-quiet>
+
+Blocks output from going to stdout. Output to stderr is not blocked. Cannot
+be used with -verbose, -uheader, -servers or -entries.
+
 =item B<-verbose>
 
 Reports additional information about the database, including the number of
-entries for each type of volume.
+entries for each type of volume. Cannot be used with -quiet.
 
 =item B<-help>
 
@@ -80,6 +85,16 @@ are provided, the output written to the standard output stream includes
 additional information as described for each option in L<OPTIONS>.  The
 output is intended for debugging purposes and is meaningful to someone
 familiar with the internal structure of the VLDB.
+
+The B<-quiet> option can be used to supress the standard output stream
+so that the command can be used more easily inside scripts. 
+
+The command exits with one of the following completion codes:
+
+0: No errors or warnings have been encountered.
+1: One or more warnings encountered.
+2: One or more warnings and/or errors encountered.
+4: A fatal or internal error has occurred and the program cannot proceed.
 
 =head1 PRIVILEGE REQUIRED
 

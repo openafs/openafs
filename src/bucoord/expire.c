@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/expire.c,v 1.6.14.1 2007/01/05 03:32:24 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -382,10 +380,8 @@ RelDatetoString(datePtr)
  */
 
 afs_int32
-bc_ParseExpiration(paramPtr, expType, expDate)
-     struct cmd_parmdesc *paramPtr;
-     afs_int32 *expType;
-     afs_int32 *expDate;
+bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType, 
+		   afs_int32 *expDate)
 {
     struct cmd_item *itemPtr, *tempPtr;
     struct ktime_date kt;

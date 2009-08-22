@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.56.2.8 2008/04/09 16:40:00 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -78,8 +76,8 @@ rxk_AddPort(u_short aport, char *arock)
 int
 rxk_DelPort(u_short aport)
 {
-    register int i;
-    register unsigned short *tsp;
+    int i;
+    unsigned short *tsp;
 
     for (i = 0, tsp = rxk_ports; i < MAXRXPORTS; i++, tsp++) {
 	if (*tsp == aport) {
@@ -126,17 +124,41 @@ rxi_GetUDPSocket(u_short port)
 
 #if !defined(AFS_LINUX26_ENV)
 void
-osi_Panic(msg, a1, a2, a3)
-     char *msg;
+#ifdef AFS_AIX_ENV
+osi_Panic(char *msg, void *a1, void *a2, void *a3)
+#else
+osi_Panic(char *msg, ...)
+#endif
 {
+#ifdef AFS_AIX_ENV
+    if (!msg)
+        msg = "Unknown AFS panic";
+    printf(msg, a1, a2, a3);
+    panic(msg);
+#elif (defined(AFS_DARWIN80_ENV) && !defined(AFS_DARWIN90_ENV)) || (defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX_26_ENV))
+    char buf[256];
+    va_list ap;
     if (!msg)
 	msg = "Unknown AFS panic";
 
-    printf(msg, a1, a2, a3);
-#ifdef AFS_LINUX20_ENV
-    * ((char *) 0) = 0; 
+    va_start(ap, msg);
+    vsnprintf(buf, sizeof(buf), msg, ap);
+    va_end(ap);
+    printf(buf);
+    panic(buf);
 #else
+    va_list ap;
+    if (!msg)
+	msg = "Unknown AFS panic";
+
+    va_start(ap, msg);
+    vprintf(msg, ap);
+    va_end(ap);
+# ifdef AFS_LINUX20_ENV
+    * ((char *) 0) = 0; 
+# else
     panic(msg);
+# endif
 #endif
 }
 
@@ -278,6 +300,7 @@ rx_ServerProc(void *unused)
 {
     int threadID;
 
+/* jaltman - rxi_dataQuota is protected by a mutex everywhere else */
     rxi_MorePackets(rx_maxReceiveWindow + 2);	/* alloc more packets */
     rxi_dataQuota += rx_initSendWindow;	/* Reserve some pkts for hard times */
     /* threadID is used for making decisions in GetCall.  Get it by bumping
@@ -316,9 +339,11 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 				 RX_PACKET_CLASS_RECV_CBUF)) {
 		rxi_FreePacket(tp);
 		tp = NULL;
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_stats.noPacketBuffersOnRead++;
-		MUTEX_EXIT(&rx_stats_mutex);
+                if (rx_stats_active) {
+                    MUTEX_ENTER(&rx_stats_mutex);
+                    rx_stats.noPacketBuffersOnRead++;
+                    MUTEX_EXIT(&rx_stats_mutex);
+                }
 	    }
 	}
     } else {
@@ -327,9 +352,11 @@ MyPacketProc(struct rx_packet **ahandle, int asize)
 	 * should do this at a higher layer and let other
 	 * end know we're losing.
 	 */
-	MUTEX_ENTER(&rx_stats_mutex);
-	rx_stats.bogusPacketOnRead++;
-	MUTEX_EXIT(&rx_stats_mutex);
+        if (rx_stats_active) {
+            MUTEX_ENTER(&rx_stats_mutex);
+            rx_stats.bogusPacketOnRead++;
+            MUTEX_EXIT(&rx_stats_mutex);
+        }
 	/* I DON"T LIKE THIS PRINTF -- PRINTFS MAKE THINGS VERY VERY SLOOWWW */
 	dpf(("rx: packet dropped: bad ulen=%d\n", asize));
 	tp = NULL;
@@ -377,19 +404,21 @@ rxi_StartListener(void)
 /* Called from rxi_FindPeer, when initializing a clear rx_peer structure,
   to get interesting information. */
 void
-rxi_InitPeerParams(register struct rx_peer *pp)
+rxi_InitPeerParams(struct rx_peer *pp)
 {
     u_short rxmtu;
-    afs_int32 i, mtu;
 
 #ifdef	ADAPT_MTU
+    afs_int32 mtu;
 #ifndef AFS_SUN5_ENV
 #ifdef AFS_USERSPACE_IP_ADDR
+    afs_int32 i;
+
     i = rxi_Findcbi(pp->host);
     if (i == -1) {
 	pp->timeout.sec = 3;
 	/* pp->timeout.usec = 0; */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
@@ -405,7 +434,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     } else {			/* couldn't find the interface, so assume the worst */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 #else /* AFS_USERSPACE_IP_ADDR */
     AFS_IFNET_T ifn;
@@ -437,7 +466,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     } else {			/* couldn't find the interface, so assume the worst */
 	pp->timeout.sec = 3;
 	/* pp->timeout.usec = 0; */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     }
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #else /* AFS_SUN5_ENV */
@@ -446,7 +475,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     if (mtu <= 0) {
 	pp->timeout.sec = 3;
 	/* pp->timeout.usec = 0; */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE, rx_MyMaxSendSize);
     } else {
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
@@ -462,7 +491,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
 		pp->ifMTU = rxmtu;
 	}
     } else {			/* couldn't find the interface, so assume the worst */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = MIN(RX_REMOTE_PACKET_SIZE,rx_MyMaxSendSize);
     }
 #endif /* AFS_SUN5_ENV */
 #else /* ADAPT_MTU */
@@ -475,7 +504,7 @@ rxi_InitPeerParams(register struct rx_peer *pp)
     pp->natMTU = MIN(pp->ifMTU, OLD_MAX_PACKET_SIZE);
     pp->ifDgramPackets =
 	MIN(rxi_nDgramPackets,
-	    rxi_AdjustDgramPackets(RX_MAX_FRAGS, pp->ifMTU));
+	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->maxDgramPackets = 1;
 
     /* Initialize slow start parameters */
@@ -500,7 +529,7 @@ static struct protosw parent_proto;	/* udp proto switch */
 void
 shutdown_rxkernel(void)
 {
-    register struct protosw *tpro, *last;
+    struct protosw *tpro, *last;
     last = inetdomain.dom_protoswNPROTOSW;
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++)
 	if (tpro->pr_protocol == IPPROTO_UDP) {
@@ -633,7 +662,7 @@ rxi_GetIFInfo(void)
     int i = 0;
     int different = 0;
 
-    register int rxmtu, maxmtu;
+    int rxmtu, maxmtu;
     afs_uint32 addrs[ADDRSPERSITE];
     int mtus[ADDRSPERSITE];
     afs_uint32 ifinaddr;
@@ -648,7 +677,7 @@ rxi_GetIFInfo(void)
     struct in_addr pin;
 #else
     struct ifaddr *ifad;	/* ifnet points to a if_addrlist of ifaddrs */
-    register struct ifnet *ifn;
+    struct ifnet *ifn;
 #endif
 
     memset(addrs, 0, sizeof(addrs));
@@ -849,7 +878,7 @@ rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp)
 osi_socket *
 rxk_NewSocketHost(afs_uint32 ahost, short aport)
 {
-    register afs_int32 code;
+    afs_int32 code;
 #ifdef AFS_DARWIN80_ENV
     socket_t newSocket;
 #else
@@ -992,10 +1021,12 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     }
     nam->m_len = sizeof(myaddr);
     memcpy(mtod(nam, caddr_t), &myaddr, sizeof(myaddr));
-#ifdef AFS_SGI65_ENV
+#if defined(AFS_SGI65_ENV)
     BHV_PDATA(&bhv) = (void *)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
+#elif defined(AFS_OBSD44_ENV)
+    code = sobind(newSocket, nam, osi_curproc());
 #else
     code = sobind(newSocket, nam);
 #endif
@@ -1032,7 +1063,7 @@ rxk_NewSocket(short aport)
 
 /* free socket allocated by rxk_NewSocket */
 int
-rxk_FreeSocket(register struct socket *asocket)
+rxk_FreeSocket(struct socket *asocket)
 {
     AFS_STATCNT(osi_FreeSocket);
 #if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
@@ -1114,7 +1145,7 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
     struct sockaddr_in from;
     int nbytes;
     afs_int32 rlen;
-    register afs_int32 tlen;
+    afs_int32 tlen;
     afs_int32 savelen;		/* was using rlen but had aliasing problems */
     rx_computelen(p, tlen);
     rx_SetDataSize(p, tlen);	/* this is the size of the user data area */
@@ -1164,10 +1195,12 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	p->length = nbytes - RX_HEADER_SIZE;;
 	if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	    if (nbytes <= 0) {
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_stats.bogusPacketOnRead++;
-		rx_stats.bogusHost = from.sin_addr.s_addr;
-		MUTEX_EXIT(&rx_stats_mutex);
+                if (rx_stats_active) {
+                    MUTEX_ENTER(&rx_stats_mutex);
+                    rx_stats.bogusPacketOnRead++;
+                    rx_stats.bogusHost = from.sin_addr.s_addr;
+                    MUTEX_EXIT(&rx_stats_mutex);
+                }
 		dpf(("B: bogus packet from [%x,%d] nb=%d",
 		     from.sin_addr.s_addr, from.sin_port, nbytes));
 	    }
@@ -1179,14 +1212,17 @@ rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 	    *host = from.sin_addr.s_addr;
 	    *port = from.sin_port;
 	    if (p->header.type > 0 && p->header.type < RX_N_PACKET_TYPES) {
-		MUTEX_ENTER(&rx_stats_mutex);
-		rx_stats.packetsRead[p->header.type - 1]++;
-		MUTEX_EXIT(&rx_stats_mutex);
+                if (rx_stats_active) {
+                    MUTEX_ENTER(&rx_stats_mutex);
+                    rx_stats.packetsRead[p->header.type - 1]++;
+                    MUTEX_EXIT(&rx_stats_mutex);
+                }
 	    }
 
+#ifdef RX_TRIMDATABUFS
 	    /* Free any empty packet buffers at the end of this packet */
 	    rxi_TrimDataBufs(p, 1);
-
+#endif
 	    return 0;
 	}
     } else

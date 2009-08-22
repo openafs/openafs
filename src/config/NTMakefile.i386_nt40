@@ -84,7 +84,7 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=5
-AFSPRODUCT_VER_PATCH=5000
+AFSPRODUCT_VER_PATCH=6100
 AFSPRODUCT_VER_BUILD=0
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -183,18 +183,36 @@ APPVER=5.0
 # Extend and/or supplement definitions in WIN32.MAK.
 
 # Command macros.
+!IF !DEFINED(COPY)
 COPY = -copy
+!ENDIF
+!IF !DEFINED(DEL)
 DEL = -del
-MKDIR = -mkdir
+!ENDIF
+!IF !DEFINED(MKDIR)
+MKDIR = -md
+!ENDIF
+!IF !DEFINED(REN)
 REN = ren
+!ENDIF
+!IF !DEFINED(ECHO)
 ECHO = echo
+!ENDIF
+!IF !DEFINED(CD)
 CD = cd
+!ENDIF
+!IF !DEFINED(MC)
 MC = mc -vcsU
+!ENDIF
+!IF !DEFINED(MAKECMD)
 MAKECMD = nmake.exe
+!ENDIF
+!IF !DEFINED(MIDL)
+MIDL  = midl
+!ENDIF
 
 COMPILE_ET = $(DESTDIR)\bin\compile_et
 RXGEN = $(DESTDIR)\bin\rxgen
-MIDL  = midl
 
 # Common clean target.
 clean::
@@ -455,3 +473,13 @@ AFSDEV_AUXMIDLFLAGS=$(AFSDEV_AUXMIDLFLAGS) /Oi
 LEX = flex -l
 YACC = bison
 
+######### Create Cygwin .a files
+# This macro should be invoked as a build step for a DLL target.
+!IFNDEF NOCYGWIN
+MAKECYGLIB=\
+	for %%C in (as.exe) do \
+	if exist %%~$$PATH:C \
+	dlltool --dllname $(@B).dll --output-lib $(@R).a --temp-prefix $(OUT) -S %%~$$PATH:C
+!ELSE
+MAKECYGLIB=echo Skipping Cygwin archive
+!ENDIF

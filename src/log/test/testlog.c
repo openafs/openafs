@@ -23,8 +23,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/log/test/testlog.c,v 1.6 2003/07/15 23:15:42 shadow Exp $");
 
 #include <itc.h>
 #include <stdio.h>

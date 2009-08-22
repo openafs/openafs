@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc_nt.c,v 1.20 2005/11/14 05:46:23 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -113,7 +111,7 @@ send_key(afs_uuid_t uuid, char sessionKey[8])
 
     /* Encryption on by default */
     if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
-	if (!strcmpi(encrypt, "OFF"))
+	if (!_stricmp(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
     /* Protocol sequence is local by default */
@@ -186,7 +184,7 @@ receive_key(afs_uuid_t uuid, char sessionKey[8])
 
     /* Encryption on by default */
     if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
-	if (!strcmpi(encrypt, "OFF"))
+	if (!_stricmp(encrypt, "OFF"))
 	    encryptionOff = TRUE;
 
     /* Protocol sequence is local by default */

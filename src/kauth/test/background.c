@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/background.c,v 1.5 2003/07/15 23:15:17 shadow Exp $");
 
 main(argc, argv)
      int argc;

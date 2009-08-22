@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/kaauxdb.c,v 1.9.14.1 2007/10/30 15:16:39 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <io.h>
@@ -27,6 +25,8 @@ RCSID
 #endif
 #include <string.h>
 #include <rx/rxkad.h>
+#define UBIK_INTERNALS
+#include <ubik.h>
 #include "ubik_int.h"
 #include "kauth.h"
 #include "kaserver.h"
@@ -170,7 +170,6 @@ kaux_inc(afs_int32 to, afs_uint32 locktime)
 int
 kaux_islocked(afs_int32 to, u_int attempts, u_int locktime)
 {
-    extern int ubeacon_Debug(), ubeacon_AmSyncSite();
     unsigned int nfailures, myshare;
     afs_uint32 lasttime;
     struct ubik_debug beaconinfo;

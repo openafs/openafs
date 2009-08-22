@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/hputil.c,v 1.6 2003/07/15 23:17:16 shadow Exp $");
 
 #ifdef AFS_HPUX_ENV
 #include <stdio.h>

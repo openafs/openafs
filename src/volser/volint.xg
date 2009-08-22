@@ -51,6 +51,15 @@ statindex 16
 #define     VOLGETSIZE          65537
 #define     VOLDUMPV2           65538
 #define     VOLDISKPART64       65539
+#define     VOLOSDSUPPORT       65540
+#define     VOLTRAVERSE         65541
+#define     VOLWIPECAND         65542
+#define     OLDVOLSALVAGE       65543
+#define     VOLARCHCANDold      65544
+#define     VOLSALVAGE          65545
+#define     VOLLISTOBJECTS      65546
+#define     VOLSPLIT            65547
+#define     VOLARCHCAND         65548
 
 /* Bits for flags for DumpV2 */
 %#define     VOLDUMPV2_OMITDIRS 1
@@ -58,13 +67,13 @@ statindex 16
 const SIZE = 1024;
 
 struct volser_status {
-	afs_int32 volID;		/* Volume id--unique over all systems */
+	afs_uint32 volID;		/* Volume id--unique over all systems */
 	afs_int32 nextUnique;		/* Next vnode uniquifier for this volume */
 	int type;			/* readwrite, etc. */
-	afs_int32 parentID;		/* Id of parent, if type==readonly or backup */
-	afs_int32 cloneID;		/* Latest read-only clone, if type==readwrite */
-	afs_int32 backupID;		/* Latest backup copy of this read write volume */
-	afs_int32 restoredFromID;	/* The id in a dump this volume was restored from--used simply
+	afs_uint32 parentID;		/* Id of parent, if type==readonly or backup */
+	afs_uint32 cloneID;		/* Latest read-only clone, if type==readwrite */
+	afs_uint32 backupID;		/* Latest backup copy of this read write volume */
+	afs_uint32 restoredFromID;	/* The id in a dump this volume was restored from--used simply
     				   to make sure that an incremental dump is not restored on top
 				   of something inappropriate:  Note:  this field itself is NEVER
 				   dumped!!! */
@@ -92,11 +101,11 @@ struct destServer {
 struct volintInfo {
 #define VNAMESIZE 32
     char name[VNAMESIZE];
-    afs_int32 volid;		/* volume's id */
+    afs_uint32 volid;		/* volume's id */
     afs_int32 type;		/* read-only, read-write, backup */
-    afs_int32 backupID;
-    afs_int32 parentID;
-    afs_int32 cloneID;
+    afs_uint32 backupID;
+    afs_uint32 parentID;
+    afs_uint32 cloneID;
     afs_int32 status;
     afs_int32 copyDate;
     unsigned char inUse;
@@ -151,11 +160,11 @@ const VOLINT_STATS_TIME_IDX_5 = 5;	/*Greater than 1 week*/
  */
 struct volintXInfo {
     char name[VNAMESIZE];
-    afs_int32 volid;			/*Volume's ID*/
+    afs_uint32 volid;			/*Volume's ID*/
     afs_int32 type;			/*RWVOL, ROVOL, BACKVOL*/
-    afs_int32 backupID;		/*Backup volume ID*/
-    afs_int32 parentID;		/*Parent volume ID*/
-    afs_int32 cloneID;		/*Clone volume ID*/
+    afs_uint32 backupID;		/*Backup volume ID*/
+    afs_uint32 parentID;		/*Parent volume ID*/
+    afs_uint32 cloneID;		/*Clone volume ID*/
     afs_int32 status;		/*Volume status*/
     afs_int32 copyDate;		/*Date when this volume INSTANCE created*/
     unsigned char inUse;	/*In use at time of last crash?*/
@@ -183,7 +192,7 @@ struct transDebugInfo {
 	afs_int32 time;	 /* time transaction was last active (for timeouts) */
     	afs_int32 creationTime;    /* time the transaction started */
     	afs_int32 returnCode;	    /* transaction error code */
-	afs_int32 volid;	/*sequence number of the next packet to be read*/ /* open volume's id */
+	afs_uint32 volid;	/*sequence number of the next packet to be read*/ /* open volume's id */
     	afs_int32 partition;	    /* open volume's partition */
 	short iflags;	    /* initial attach mode flags (IT*) */
     	char vflags;	    /* current volume status flags (VT*) */
@@ -223,8 +232,8 @@ struct diskPartition64 {
 struct restoreCookie {
 	char name[32];
 	afs_int32 type;
-	afs_int32 clone;
-	afs_int32 parent;
+	afs_uint32 clone;
+	afs_uint32 parent;
 };
 
 struct replica {
@@ -248,8 +257,8 @@ proc CreateVolume(
   IN afs_int32 partition,
   string name<>,
   IN afs_int32 type,
-  IN afs_int32 parent,
-  INOUT afs_int32 *volid,
+  IN afs_uint32 parent,
+  INOUT afs_uint32 *volid,
   OUT afs_int32 *trans
 ) = VOLCREATEVOLUME;
 
@@ -278,10 +287,10 @@ proc EndTrans(
 
 proc Clone(
   IN afs_int32 trans,
-  IN afs_int32 purgeVol,
+  IN afs_uint32 purgeVol,
   IN afs_int32 newType,
   IN string newName<>,
-  INOUT afs_int32 *newVol
+  INOUT afs_uint32 *newVol
 ) = VOLCLONE;
 
 proc SetFlags(
@@ -295,7 +304,7 @@ proc GetFlags(
 ) = VOLGETFLAGS;
 
 proc TransCreate(
-  IN afs_int32 volume,
+  IN afs_uint32 volume,
   IN afs_int32 partition,
   IN afs_int32 flags,
   OUT afs_int32 *trans
@@ -308,7 +317,7 @@ proc Dump(
 
 proc GetNthVolume(
   IN afs_int32 index,
-  OUT afs_int32 *volume,
+  OUT afs_uint32 *volume,
   OUT afs_int32 *partition
 ) = VOLGETNTHVOLUME;
 
@@ -330,8 +339,8 @@ proc GetStatus(
 proc SignalRestore(
   IN string name<>,
   int type,
-  afs_int32 pid,
-  afs_int32 cloneid
+  afs_uint32 pid,
+  afs_uint32 cloneid
 ) = VOLSIGRESTORE;
 
 proc ListPartitions(
@@ -348,9 +357,9 @@ proc SetIdsTypes(
   IN afs_int32 tId,
   string name<>,
   afs_int32 type,
-  afs_int32 pId,
-  afs_int32 cloneId,
-  afs_int32 backupId
+  afs_uint32 pId,
+  afs_uint32 cloneId,
+  afs_uint32 backupId
 ) = VOLSETIDSTYPES;
 
 proc Monitor(
@@ -364,18 +373,18 @@ proc PartitionInfo(
 
 proc ReClone(
   IN afs_int32 tid,
-  afs_int32 cloneID
+  afs_uint32 cloneID
 ) = VOLRECLONE;
 
 proc ListOneVolume(
   IN afs_int32 partID,
-  afs_int32 volid,
+  afs_uint32 volid,
   OUT volEntries *resultEntries
 ) = VOLLISTONEVOL;
 
 proc NukeVolume(
   IN afs_int32 partID,
-  afs_int32 volID
+  afs_uint32 volID
 ) = VOLNUKE;
 
 proc SetDate(
@@ -391,7 +400,7 @@ proc XListVolumes(
 
 proc XListOneVolume(
   IN afs_int32 partID,
-  afs_int32 volid,
+  afs_uint32 volid,
   OUT volXEntries *resultXEntries
 ) = VOLXLISTONEVOL;
 
@@ -415,7 +424,7 @@ proc ForwardMultiple(
 
 proc ConvertROtoRWvolume(
   IN afs_int32 partid,
-  IN afs_int32 volid
+  IN afs_uint32 volid
 ) = VOLCONVERTRO;
 
 proc GetSize(
@@ -434,3 +443,10 @@ proc PartitionInfo64(
     IN string name<>,
     OUT struct diskPartition64 *partition
 ) = VOLDISKPART64;
+
+proc SplitVolume (
+  IN afs_uint32 vid,
+  IN afs_uint32 newid,
+  IN afs_uint32 where,
+  IN afs_int32 verbose
+) split = VOLSPLIT;

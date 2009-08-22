@@ -110,7 +110,7 @@ typedef struct VnodeDiskObject {
 				 * backup purposes */
     afs_int32 group;		/* unix group */
     afs_int32 vn_ino_hi;	/* high part of 64 bit inode. */
-    bit32 reserved6;
+    bit32 vn_length_hi;         /* high part of 64 bit length */
     /* Missing:
      * archiving/migration
      * encryption key
@@ -222,10 +222,10 @@ typedef struct Vnode {
 
 
 #ifdef AFS_LARGEFILE_ENV
-#define VN_GET_LEN(N, V) FillInt64(N, (V)->disk.reserved6, (V)->disk.length)
-#define VNDISK_GET_LEN(N, V) FillInt64(N, (V)->reserved6, (V)->length)
-#define VN_SET_LEN(V, N) SplitInt64(N, (V)->disk.reserved6, (V)->disk.length)
-#define VNDISK_SET_LEN(V, N) SplitInt64(N, (V)->reserved6, (V)->length)
+#define VN_GET_LEN(N, V) FillInt64(N, (V)->disk.vn_length_hi, (V)->disk.length)
+#define VNDISK_GET_LEN(N, V) FillInt64(N, (V)->vn_length_hi, (V)->length)
+#define VN_SET_LEN(V, N) SplitInt64(N, (V)->disk.vn_length_hi, (V)->disk.length)
+#define VNDISK_SET_LEN(V, N) SplitInt64(N, (V)->vn_length_hi, (V)->length)
 #else /* !AFS_LARGEFILE_ENV */
 #define VN_GET_LEN(N, V) (N) = (V)->disk.length;
 #define VNDISK_GET_LEN(N, V) (N) = (V)->length;

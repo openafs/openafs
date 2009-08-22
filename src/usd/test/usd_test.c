@@ -13,8 +13,6 @@
  */
 #include <afsconfig.h>
 #include <afs/param.h>
-    RCSID
-    ("$Header: /cvs/openafs/src/usd/test/usd_test.c,v 1.5 2003/07/15 23:17:11 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/usd.h>

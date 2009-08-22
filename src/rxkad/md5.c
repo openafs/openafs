@@ -62,7 +62,6 @@
 #include "rxkad.h"
 #endif /* defined(UKERNEL) */
 
-RCSID("$Id: md5.c,v 1.2.8.2 2007/10/30 15:16:46 shadow Exp $");
 
 
 

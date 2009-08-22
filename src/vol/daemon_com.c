@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/daemon_com.c,v 1.3.4.8 2008/06/12 19:18:49 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -35,6 +33,7 @@ RCSID
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 #include <errno.h>
 #include <assert.h>
@@ -63,7 +62,7 @@ RCSID
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-int (*V_BreakVolumeCallbacks) ();
+int (*V_BreakVolumeCallbacks) (VolumeId);
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
@@ -129,10 +128,10 @@ SYNC_getAddr(SYNC_endpoint_t * endpoint, SYNC_sockaddr_t * addr)
  * @post socket of domain specified in endpoint structure is created and
  *       returned to caller.
  */
-int
+osi_socket
 SYNC_getSock(SYNC_endpoint_t * endpoint)
 {
-    int sd;
+    osi_socket sd;
     assert((sd = socket(endpoint->domain, SOCK_STREAM, 0)) >= 0);
     return sd;
 }
@@ -211,7 +210,6 @@ SYNC_disconnect(SYNC_client_state * state)
 afs_int32
 SYNC_closeChannel(SYNC_client_state * state)
 {
-    afs_int32 code;
     SYNC_command com;
     SYNC_response res;
     SYNC_PROTO_BUF_DECL(ores);
@@ -502,7 +500,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
  */
 afs_int32
 SYNC_getCom(SYNC_server_state_t * state,
-	    int fd,
+	    osi_socket fd,
 	    SYNC_command * com)
 {
     int n;
@@ -578,7 +576,7 @@ SYNC_getCom(SYNC_server_state_t * state,
  */
 afs_int32
 SYNC_putRes(SYNC_server_state_t * state, 
-	    int fd,
+	    osi_socket fd,
 	    SYNC_response * res)
 {
     int n;
@@ -631,7 +629,6 @@ SYNC_putRes(SYNC_server_state_t * state,
 int
 SYNC_verifyProtocolString(char * buf, size_t len)
 {
-    int ret = 0;
     size_t s_len;
 
     s_len = afs_strnlen(buf, len);

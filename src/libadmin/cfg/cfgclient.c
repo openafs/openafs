@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/cfg/cfgclient.c,v 1.6.14.2 2007/11/26 21:08:42 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -26,12 +24,15 @@ RCSID
 #include <string.h>
 #include <pthread.h>
 
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
 #include <afs/afs_utilAdmin.h>
 
 #include <afs/dirpath.h>
 #include <afs/cellconfig.h>
+#include <afs/kautils.h>
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
@@ -682,7 +683,10 @@ static int
 CacheManagerStart(unsigned timeout, afs_status_p st)
 {
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
+#endif
+    afs_status_t tst = 0;
 
 #ifdef AFS_NT40_ENV
     /* Windows - cache manager is a service */
@@ -719,7 +723,10 @@ static int
 CacheManagerStop(unsigned timeout, afs_status_p st)
 {
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
+#endif
+    afs_status_t tst = 0;
 
 #ifdef AFS_NT40_ENV
     /* Windows - cache manager is a service */

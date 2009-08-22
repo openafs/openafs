@@ -7,6 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
@@ -27,6 +31,15 @@ depinstall: \
 	${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/ubik_int.h
 
+${TOP_LIBDIR}/libubik.a: libubik.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/ubik.h: ubik.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/ubik_int.h: ubik_int.h
+	${INSTALL_DATA} $? $@
+
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a 
 	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a $(LIBS)
 
@@ -37,36 +50,36 @@ udebug: udebug.o libubik.a
 	${CC} ${CFLAGS} -o udebug udebug.o libubik.a $(LIBS)
 
 ubik_int.cs.c: ubik_int.xg
-	${RXGEN} -x -A -C -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -A -x -C -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.ss.c: ubik_int.xg
-	${RXGEN} -x -A -S -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.xdr.c: ubik_int.xg
-	${RXGEN} -x -A -c -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.h: ubik_int.xg
-	${RXGEN} -x -A -h -o $@ ${srcdir}/ubik_int.xg
+	${RXGEN} -A -x -h -o $@ ${srcdir}/ubik_int.xg
 
 ubik_int.cs.c: ubik_int.h
 ubik_int.ss.c: ubik_int.h
 ubik_int.xdr.c: ubik_int.h
 
 Kubik_int.cs.c: ubik_int.xg Kubik_int.h
-	${RXGEN} -x -k -A -C -o Kubik_int.cs.c ${srcdir}/ubik_int.xg
- 
+	${RXGEN} -A -x -k -C -o Kubik_int.cs.c ${srcdir}/ubik_int.xg
+
 Kubik_int.xdr.c: ubik_int.xg
-	${RXGEN} -x -k -A -c -o Kubik_int.xdr.c ${srcdir}/ubik_int.xg
- 
+	${RXGEN} -A -x -k -c -o Kubik_int.xdr.c ${srcdir}/ubik_int.xg
+
 Kubik_int.h: ubik_int.xg
-	${RXGEN} -x -k -A -h -o Kubik_int.h ${srcdir}/ubik_int.xg
+	${RXGEN} -A -x -k -h -o Kubik_int.h ${srcdir}/ubik_int.xg
 
 utst_int.ss.o: utst_int.ss.c utst_int.xdr.c
 utst_int.cs.o: utst_int.cs.c utst_int.xdr.c
 utst_int.xdr.o: utst_int.xdr.c utst_int.h
 
 utst_int.cs.c: utst_int.xg
-	${RXGEN} -A -C -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -C -u -o $@ ${srcdir}/utst_int.xg
 
 utst_int.ss.c: utst_int.xg
 	${RXGEN} -A -S -o $@ ${srcdir}/utst_int.xg
@@ -75,7 +88,7 @@ utst_int.xdr.c: utst_int.xg
 	${RXGEN} -A -c -o $@ ${srcdir}/utst_int.xg
 
 utst_int.h: utst_int.xg
-	${RXGEN} -A -h -o $@ ${srcdir}/utst_int.xg
+	${RXGEN} -A -h -u -o $@ ${srcdir}/utst_int.xg
 
 utst_int.cs.c: utst_int.h
 utst_int.ss.c: utst_int.h
@@ -121,24 +134,26 @@ utst_int.xdr.o: utst_int.xdr.c ${INCLS} utst_int.h
 #
 test: all
 
-install: \
-	${DESTDIR}${libdir}/libubik.a \
-	${DESTDIR}${includedir}/ubik.h \
-	${DESTDIR}${includedir}/ubik_int.h \
-	${DESTDIR}${bindir}/udebug \
-	${DESTDIR}${afssrvbindir}/udebug
+install: libubik.a ubik.h ubik_int.h udebug
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL} -d ${DESTDIR}${includedir}
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	${INSTALL_DATA} libubik.a ${DESTDIR}${libdir}/libubik.a
+	${INSTALL_DATA} ubik.h ${DESTDIR}${includedir}/ubik.h
+	${INSTALL_DATA} ubik_int.h ${DESTDIR}${includedir}/ubik_int.h
+	${INSTALL_PROGRAM} udebug ${DESTDIR}${bindir}/udebug
+	${INSTALL_PROGRAM} udebug ${DESTDIR}${afssrvbindir}/udebug
 
-${DEST}/bin/udebug ${DEST}/root.server/usr/afs/bin/udebug: udebug
-	${INSTALL} $? $@
-
-${DEST}/lib/libubik.a: libubik.a
-	${INSTALL} $? $@
-
-${DEST}/include/ubik.h: ubik.h
-	${INSTALL} $? $@
-
-${DEST}/include/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
+dest: libubik.a ubik.h ubik_int.h udebug
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL} -d ${DEST}/include
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_DATA} libubik.a ${DEST}/lib/libubik.a
+	${INSTALL_DATA} ubik.h ${DEST}/include/ubik.h
+	${INSTALL_DATA} ubik_int.h ${DEST}/include/ubik_int.h
+	${INSTALL_PROGRAM} udebug ${DEST}/bin/udebug
+	${INSTALL_PROGRAM} udebug ${DEST}/root.server/usr/afs/bin/udebug
 
 #
 # Misc. targets
@@ -148,36 +163,3 @@ clean:
 	$(RM) -f utst_int.h ubik_int.h uerrors.c ubik.h core AFS_component_version_number.c Kubik_int.h
 
 include ../config/Makefile.version
-
-
-${DESTDIR}${libdir}/libubik.a: libubik.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libubik.a: libubik.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/ubik.h: ubik.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/ubik.h: ubik.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/ubik_int.h: ubik_int.h
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/udebug: udebug
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvbindir}/udebug: udebug
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/lib/libubik.a \
-	${DEST}/include/ubik.h \
-	${DEST}/include/ubik_int.h \
-	${DEST}/bin/udebug \
-	${DEST}/root.server/usr/afs/bin/udebug
-

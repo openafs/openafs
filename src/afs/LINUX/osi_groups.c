@@ -19,8 +19,6 @@
 #include <linux/seq_file.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_groups.c,v 1.28.4.14 2008/06/09 03:39:16 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -51,7 +49,7 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     crset(*cr);
 
-#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
+#if defined(STRUCT_TASK_STRUCT_HAS_PARENT) && !defined(STRUCT_TASK_HAS_CRED)
     if (change_parent) {
 	old_info = current->parent->group_info;
 	get_group_info(group_info);
@@ -166,7 +164,9 @@ __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
          int change_parent)
 {
     struct group_info *group_info;
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     gid_t g0, g1;
+#endif
     struct group_info *tmp;
     int i;
 #ifdef AFS_LINUX26_ONEGROUP_ENV
@@ -229,7 +229,7 @@ extern struct key_type key_type_keyring __attribute__((weak));
 static struct key_type *__key_type_keyring = &key_type_keyring;
 
 static int
-install_session_keyring(struct task_struct *task, struct key *keyring)
+install_session_keyring(struct key *keyring)
 {
     struct key *old;
     char desc[20];
@@ -243,16 +243,21 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
 
 	/* create an empty session keyring */
 	not_in_quota = KEY_ALLOC_IN_QUOTA;
-	sprintf(desc, "_ses.%u", task->tgid);
+	sprintf(desc, "_ses.%u", current->tgid);
 
-#ifdef KEY_ALLOC_NEEDS_STRUCT_TASK
+#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
 	keyring = key_alloc(__key_type_keyring, desc,
-			    task->uid, task->gid, task,
+			    current_uid(), current_gid(), current,
+			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
+			    not_in_quota);
+#elif defined(KEY_ALLOC_NEEDS_CRED)
+	keyring = key_alloc(__key_type_keyring, desc,
+			    current_uid(), current_gid(), current_cred(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #else
 	keyring = key_alloc(__key_type_keyring, desc,
-			    task->uid, task->gid,
+			    current_uid(), current_gid(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
 			    not_in_quota);
 #endif
@@ -269,11 +274,11 @@ install_session_keyring(struct task_struct *task, struct key *keyring)
     }
 
     /* install the keyring */
-    spin_lock_irq(&task->sighand->siglock);
-    old = task->signal->session_keyring;
+    spin_lock_irq(&current->sighand->siglock);
+    old = task_session_keyring(current);
     smp_wmb();
-    task->signal->session_keyring = keyring;
-    spin_unlock_irq(&task->sighand->siglock);
+    task_session_keyring(current) = keyring;
+    spin_unlock_irq(&current->sighand->siglock);
 
     if (old)
 	    key_put(old);
@@ -335,24 +340,26 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 
 #ifdef LINUX_KEYRING_SUPPORT
     if (code == 0 && (*cr)->cr_rgid != NFSXLATOR_CRED) {
-	(void) install_session_keyring(current, NULL);
+	(void) install_session_keyring(NULL);
 
-	if (current->signal->session_keyring) {
+	if (current_session_keyring()) {
 	    struct key *key;
 	    key_perm_t perm;
 
 	    perm = KEY_POS_VIEW | KEY_POS_SEARCH;
 	    perm |= KEY_USR_VIEW | KEY_USR_SEARCH;
 
-#ifdef KEY_ALLOC_NEEDS_STRUCT_TASK
+#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
 	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current, perm, 1);
+#elif defined(KEY_ALLOC_NEEDS_CRED)
+	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current_cred(), perm, 1);
 #else
 	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, 1);
 #endif
 
 	    if (!IS_ERR(key)) {
 		key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
-					 current->signal->session_keyring, NULL);
+					 current_session_keyring(), NULL);
 		key_put(key);
 	    }
 	}
@@ -549,26 +556,28 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
 {
     int code;
     afs_uint32 *userpag, pag = NOPAG;
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     int g0, g1;
+#endif
 
     if (key->uid != 0 || key->gid != 0)
 	return -EPERM;
 
     code = -EINVAL;
-    get_group_info(current->group_info);
+    get_group_info(current_group_info());
 
     if (datalen != sizeof(afs_uint32) || !data)
 	goto error;
 
-    if (current->group_info->ngroups < NUMPAGGROUPS)
+    if (current_group_info()->ngroups < NUMPAGGROUPS)
 	goto error;
 
     /* ensure key being set matches current pag */
 #ifdef AFS_LINUX26_ONEGROUP_ENV
-    pag = afs_get_pag_from_groups(current->group_info);
+    pag = afs_get_pag_from_groups(current_group_info());
 #else
-    g0 = GROUP_AT(current->group_info, 0);
-    g1 = GROUP_AT(current->group_info, 1);
+    g0 = GROUP_AT(current_group_info(), 0);
+    g1 = GROUP_AT(current_group_info(), 1);
 
     pag = afs_get_pag_from_groups(g0, g1);
 #endif
@@ -584,7 +593,7 @@ static int afs_pag_instantiate(struct key *key, const void *data, size_t datalen
     code = 0;
 
 error:
-    put_group_info(current->group_info);
+    put_group_info(current_group_info());
     return code;
 }
 
@@ -626,6 +635,7 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 
 void osi_keyring_init(void)
 {
+#if !defined(EXPORTED_KEY_TYPE_KEYRING)
     struct task_struct *p;
 
     /* If we can't lock the tasklist, either with its explicit lock,
@@ -651,8 +661,8 @@ void osi_keyring_init(void)
 #else
 	p = find_task_by_vpid(1);
 #endif
-	if (p && p->user->session_keyring)
-	    __key_type_keyring = p->user->session_keyring->type;
+	if (p && task_user(p)->session_keyring)
+	    __key_type_keyring = task_user(p)->session_keyring->type;
 # ifdef EXPORTED_TASKLIST_LOCK
 	if (&tasklist_lock)
 	    read_unlock(&tasklist_lock);
@@ -664,6 +674,7 @@ void osi_keyring_init(void)
 	    rcu_read_unlock();
 # endif
     }
+#endif
 #endif
 
     register_key_type(&key_type_afs_pag);

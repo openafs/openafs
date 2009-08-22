@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: strange-characters,v 1.1 2002/01/14 07:49:18 shadow Exp $
+# $Id$
 for i in е д ц едц; do
   touch $i || exit 1
   test -f $i || exit 1

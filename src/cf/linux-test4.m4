@@ -486,7 +486,6 @@ AC_DEFUN([LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG], [
       ac_cv_linux_kernel_posix_lock_file_wait_arg=no)])
   AC_MSG_RESULT($ac_cv_linux_kernel_posix_lock_file_wait_arg)])
 
-
 AC_DEFUN([LINUX_KERNEL_SOCK_CREATE], [
   AC_MSG_CHECKING([for 5th argument in sock_create found in some SELinux kernels])
   AC_CACHE_VAL([ac_cv_linux_kernel_sock_create_v], [
@@ -781,16 +780,39 @@ request_key(NULL, NULL, NULL);
 AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_STRUCT_TASK], [
   AC_MSG_CHECKING([if key_alloc() takes a struct task *])
   AC_CACHE_VAL([ac_cv_key_alloc_needs_struct_task], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
     AC_TRY_KBUILD(
 [#include <linux/rwsem.h>
 #include <linux/key.h>
 ],
-[(void) key_alloc(NULL, NULL, 0, 0, NULL, 0, 0);],
+[struct task_struct *t=NULL;
+(void) key_alloc(NULL, NULL, 0, 0, t, 0, 0);],
       ac_cv_key_alloc_needs_struct_task=yes,
-      ac_cv_key_alloc_needs_struct_task=no)])
+      ac_cv_key_alloc_needs_struct_task=no)
+    CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_key_alloc_needs_struct_task)
   if test "x$ac_cv_key_alloc_needs_struct_task" = "xyes"; then
     AC_DEFINE([KEY_ALLOC_NEEDS_STRUCT_TASK], 1, [define if key_alloc takes a struct task *])
+  fi])
+
+AC_DEFUN([LINUX_KEY_ALLOC_NEEDS_CRED], [
+  AC_MSG_CHECKING([if key_alloc() takes credentials])
+  AC_CACHE_VAL([ac_cv_key_alloc_needs_cred], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror -Wno-pointer-arith"
+    AC_TRY_KBUILD(
+[#include <linux/rwsem.h>
+#include <linux/key.h>
+],
+[struct cred *c = NULL;
+(void) key_alloc(NULL, NULL, 0, 0, c, 0, 0);],
+      ac_cv_key_alloc_needs_cred=yes,
+      ac_cv_key_alloc_needs_cred=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_key_alloc_needs_cred)
+  if test "x$ac_cv_key_alloc_needs_cred" = "xyes"; then
+    AC_DEFINE([KEY_ALLOC_NEEDS_CRED], 1, [define if key_alloc takes credentials])
   fi])
 
 AC_DEFUN([LINUX_DO_SYNC_READ], [
@@ -823,6 +845,38 @@ AC_DEFUN([LINUX_GENERIC_FILE_AIO_READ], [
   AC_MSG_RESULT($ac_cv_linux_generic_file_aio_read)
   if test "x$ac_cv_linux_generic_file_aio_read" = "xyes"; then
     AC_DEFINE([GENERIC_FILE_AIO_READ], 1, [define if your kernel has generic_file_aio_read()])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_I_SIZE_READ], [
+  AC_MSG_CHECKING([for linux i_size_read()])
+  AC_CACHE_VAL([ac_cv_linux_i_size_read], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[i_size_read(NULL);],
+      ac_cv_linux_i_size_read=yes,
+      ac_cv_linux_i_size_read=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_i_size_read)
+  if test "x$ac_cv_linux_i_size_read" = "xyes"; then
+    AC_DEFINE([HAVE_LINUX_I_SIZE_READ], 1, [define if your kernel has i_size_read()])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_D_ALLOC_ANON], [
+  AC_MSG_CHECKING([for linux d_alloc_anon()])
+  AC_CACHE_VAL([ac_cv_linux_d_alloc_anon], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror-implicit-function-declaration"
+    AC_TRY_KBUILD(
+[#include <linux/dcache.h>],
+[d_alloc_anon(NULL);],
+      ac_cv_linux_d_alloc_anon=yes,
+      ac_cv_linux_d_alloc_anon=no)
+    CPPFLAGS="$save_CPPFLAGS"])
+  AC_MSG_RESULT($ac_cv_linux_d_alloc_anon)
+  if test "x$ac_cv_linux_d_alloc_anon" = "xyes"; then
+    AC_DEFINE([HAVE_LINUX_D_ALLOC_ANON], 1, [define if your kernel has d_alloc_anon()])
   fi])
 
 AC_DEFUN([LINUX_FREEZER_H_EXISTS], [
@@ -1079,3 +1133,134 @@ _eops.fh_to_parent(NULL, NULL, 0, 0);],
     AC_DEFINE([NEW_EXPORT_OPS], 1, [define if kernel uses new export ops])
   fi])
  
+AC_DEFUN([LINUX_SEMAPHORE_H_EXISTS], [
+  AC_MSG_CHECKING([for linux/semaphore.h existance])
+  AC_CACHE_VAL([ac_cv_linux_semaphore_h_exists], [
+    AC_TRY_KBUILD(
+[#include <linux/semaphore.h>],
+[return;],
+      ac_cv_linux_semaphore_h_exists=yes,
+      ac_cv_linux_semaphore_h_exists=no)])
+  AC_MSG_RESULT($ac_cv_linux_semaphore_h_exists)
+  if test "x$ac_cv_linux_semaphore_h_exists" = "xyes"; then
+    AC_DEFINE([LINUX_SEMAPHORE_H], 1, [define if linux/semaphore.h exists])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_BDI_INIT], [
+  AC_MSG_CHECKING([for linux bdi_init()])
+  AC_CACHE_VAL([ac_cv_linux_bdi_init], [
+    AC_TRY_KBUILD(
+[#include <linux/backing-dev.h>],
+[bdi_init(NULL);],
+      ac_cv_linux_bdi_init=yes,
+      ac_cv_linux_bdi_init=no)])
+  AC_MSG_RESULT($ac_cv_linux_bdi_init)
+  if test "x$ac_cv_linux_bdi_init" = "xyes"; then
+    AC_DEFINE([HAVE_BDI_INIT], 1, [define if your kernel has a bdi_init()])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
+  AC_MSG_CHECKING([for linux write_begin() address space op])
+  AC_CACHE_VAL([ac_cv_linux_write_begin], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[simple_write_begin(NULL, NULL, 0, 0, 0, NULL, NULL);],
+      ac_cv_linux_write_begin=yes,
+      ac_cv_linux_write_begin=no)])
+  AC_MSG_RESULT($ac_cv_linux_write_begin)
+  if test "x$ac_cv_linux_write_begin" = "xyes"; then
+    AC_DEFINE([HAVE_WRITE_BEGIN], 1, [define if your kernel has a write_begin() address space op])
+  fi])
+
+AC_DEFUN([LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], [
+  AC_MSG_CHECKING([for linux grab_cache_page_write_begin()])
+  AC_CACHE_VAL([ac_cv_linux_grab_cache_page_write_begin], [
+    AC_TRY_KBUILD(
+[#include <linux/pagemap.h>],
+[grab_cache_page_write_begin(NULL, 0, 0);],
+      ac_cv_linux_grab_cache_page_write_begin=yes,
+      ac_cv_linux_grab_cache_page_write_begin=no)])
+  AC_MSG_RESULT($ac_cv_linux_grab_cache_page_write_begin)
+  if test "x$ac_cv_linux_grab_cache_page_write_begin" = "xyes"; then
+    AC_DEFINE([HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], 1, [define if your kernel has grab_cache_page_write_begin()])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
+  AC_MSG_CHECKING([if struct task has cred])
+  AC_CACHE_VAL([ac_cv_linux_struct_task_has_cred], [
+    AC_TRY_KBUILD(
+[#include <linux/sched.h>
+#include <linux/cred.h>],
+[struct task_struct _t;
+uid_t _u;
+_u =_t.cred->uid ;],
+      ac_cv_linux_struct_task_has_cred=yes,
+      ac_cv_linux_struct_task_has_cred=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_task_has_cred)
+  if test "x$ac_cv_linux_struct_task_has_cred" = "xyes"; then
+    AC_DEFINE([STRUCT_TASK_HAS_CRED], 1, [define if struct task has a cred pointer])
+  fi])
+
+AC_DEFUN([LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER], [
+  AC_MSG_CHECKING([if struct proc_dir_entry_has_owner])
+  AC_CACHE_VAL([ac_cv_linux_struct_proc_dir_entry_has_owner], [
+    AC_TRY_KBUILD(
+[#include <linux/proc_fs.h>],
+[struct proc_dir_entry _p;
+_p.owner= "";],
+      ac_cv_linux_struct_proc_dir_entry_has_owner=yes,
+      ac_cv_linux_struct_proc_dir_entry_has_owner=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_proc_dir_entry_has_owner)
+  if test "x$ac_cv_linux_struct_proc_dir_entry_has_owner" = "xyes"; then
+    AC_DEFINE([STRUCT_PROC_DIR_ENTRY_HAS_OWNER], 1, [define if struct proc_dir_entry has an owner member])
+  fi])
+
+AC_DEFUN([LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT], [
+  AC_MSG_CHECKING([if posix_test_lock returns a struct file_lock])
+  AC_CACHE_VAL([ac_cv_linux_posix_test_lock_returns_conflict], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct file_lock *lock;
+ struct file * file;
+lock = posix_test_lock(file, lock);],
+      ac_cv_linux_posix_test_lock_returns_conflict=yes,
+      ac_cv_linux_posix_test_lock_returns_conflict=no)])
+  AC_MSG_RESULT($ac_cv_linux_posix_test_lock_returns_conflict)
+  if test "x$ac_cv_linux_posix_test_lock_returns_conflict" = "xyes"; then
+    AC_DEFINE([POSIX_TEST_LOCK_RETURNS_CONFLICT], 1, [define if posix_test_lock returns the conflicting lock])
+  fi])
+
+AC_DEFUN([LINUX_POSIX_TEST_LOCK_CONFLICT_ARG], [
+  AC_MSG_CHECKING([if posix_test_lock takes a conflict argument])
+  AC_CACHE_VAL([ac_cv_linux_posix_test_lock_conflict_arg], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[ struct file_lock *lock;
+  struct file *file;
+  posix_test_lock(file, lock, lock);],
+      ac_cv_linux_posix_test_lock_conflict_arg=yes,
+      ac_cv_lonuc_posix_test_lock_conflict_arg=no)])
+  AC_MSG_RESULT($ac_cv_linux_posix_test_lock_conflict_arg)
+  if test "x$ac_cv_linux_posix_test_lock_conflict_arg" = "xyes"; then
+    AC_DEFINE([POSIX_TEST_LOCK_CONFLICT_ARG], 1, [define if posix_test_lock takes a conflict argument])
+  fi])
+
+AC_DEFUN([LINUX_EXPORTS_KEY_TYPE_KEYRING], [
+  AC_MSG_CHECKING([for exported key_type_keyring])
+  AC_CACHE_VAL([ac_cv_linux_exports_key_type_keyring], [
+    AC_TRY_KBUILD(
+[
+#ifdef KEY_TYPE_H_EXISTS
+#include <linux/key-type.h>
+#endif
+#include <linux/key.h>],
+[
+printk("%s", key_type_keyring.name);
+],
+      ac_cv_linux_exports_key_type_keyring=yes,
+      ac_cv_linux_exports_key_type_keyring=no)])
+  AC_MSG_RESULT($ac_cv_linux_exports_key_type_keyring)
+  if test "x$ac_cv_linux_exports_key_type_keyring" = "xyes"; then
+    AC_DEFINE([EXPORTED_KEY_TYPE_KEYRING], 1, [define if key_type_keyring is exported])
+  fi])
+

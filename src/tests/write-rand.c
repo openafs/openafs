@@ -46,10 +46,6 @@
 #include <sys/stat.h>
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: write-rand.c,v 1.3 2003/07/15 23:17:02 shadow Exp $");
-#endif
-
 static char *
 write_random_file(int fd, size_t sz)
 {

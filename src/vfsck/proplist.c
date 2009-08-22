@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vfsck/proplist.c,v 1.6 2003/07/15 23:17:27 shadow Exp $");
 
 #define VICE			/* control whether AFS changes are present */
 

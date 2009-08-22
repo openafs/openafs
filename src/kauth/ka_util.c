@@ -19,8 +19,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/ka_util.c,v 1.3 2003/07/15 23:15:16 shadow Exp $");
 
 #include <lock.h>
 #include <netinet/in.h>

@@ -1,4 +1,4 @@
 #!/bin/sh
-# $Id: intr-read1,v 1.1 2002/01/14 07:49:17 shadow Exp $
+# $Id$
 $objdir/intr-read ${AFSROOT}/stacken.kth.se/ftp/pub/gnu/gnu-0.2 || exit 1
 exit 0

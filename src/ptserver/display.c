@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/display.c,v 1.9.14.2 2008/05/29 04:04:25 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -24,6 +22,7 @@ RCSID
 #include <stdio.h>
 #include "ptserver.h"
 
+#include "display.h"
 
 #ifdef PR_REMEMBER_TIMES
 

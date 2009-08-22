@@ -25,8 +25,6 @@ Creation date:
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/auth/test/testcellconf.c,v 1.7.14.1 2007/10/31 22:31:59 shadow Exp $");
 
 #include <sys/types.h>
 #include <stddef.h>
@@ -66,6 +64,12 @@ main(argc, argv)
     long i;
     register long code;
     char *dirName;
+
+#ifdef AFS_NT40_ENV
+    WSADATA WSAjunk;
+    /* Start up sockets */
+    WSAStartup(0x0101, &WSAjunk);
+#endif /* AFS_NT40_ENV */
 
     if (argc < 2) {
 	printf

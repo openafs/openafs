@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/lwp/test/test.c,v 1.6 2003/07/15 23:15:47 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/time.h>

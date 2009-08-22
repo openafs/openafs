@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/knfs.c,v 1.8.14.2 2007/10/31 04:09:30 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -32,6 +30,7 @@ RCSID
 #include <afs/cmd.h>
 #include <afs/auth.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 
 /*
 Modifications:
@@ -52,11 +51,8 @@ struct ClearToken {
 };
 
 
-static
-SetSysname(ahost, auid, sysname)
-     afs_int32 ahost;
-     afs_int32 auid;
-     char *sysname;
+static int
+SetSysname(afs_int32 ahost, afs_int32 auid, char *sysname)
 {
     afs_int32 code;
     afs_int32 pheader[6];
@@ -95,15 +91,13 @@ SetSysname(ahost, auid, sysname)
 }
 
 
-static
-GetTokens(ahost, auid)
-     afs_int32 ahost;
-     afs_int32 auid;
+static int
+GetTokens(afs_int32 ahost, afs_int32 auid)
 {
     struct ViceIoctl iob;
     afs_int32 pheader[6];
     char tbuffer[1024];
-    register afs_int32 code;
+    afs_int32 code = 0;
     int index, newIndex;
     char *stp;			/* secret token ptr */
     struct ClearToken ct;
@@ -231,10 +225,8 @@ GetTokens(ahost, auid)
 }
 
 
-static
-NFSUnlog(ahost, auid)
-     afs_int32 ahost;
-     afs_int32 auid;
+static int
+NFSUnlog(afs_int32 ahost, afs_int32 auid)
 {
     afs_int32 code;
     afs_int32 pheader[6];
@@ -265,10 +257,8 @@ NFSUnlog(ahost, auid)
 }
 
 /* Copy the AFS service token into the kernel for a particular host and user */
-static
-NFSCopyToken(ahost, auid)
-     afs_int32 ahost;
-     afs_int32 auid;
+static int
+NFSCopyToken(afs_int32 ahost, afs_int32 auid)
 {
     struct ktc_principal client, server;
     struct ktc_token theTicket;
@@ -435,9 +425,8 @@ cmdproc(register struct cmd_syndesc *as, void *arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     register afs_int32 code;

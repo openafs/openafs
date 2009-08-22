@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/test/nicreate.c,v 1.5 2003/07/15 23:17:46 shadow Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>

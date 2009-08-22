@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/dir/buffer.c,v 1.16 2003/12/08 06:03:58 shadow Exp $");
 
 #include <stdlib.h>
 #include <lock.h>
@@ -71,7 +69,24 @@ int nbuffers;
 int timecounter;
 static int calls = 0, ios = 0;
 
-struct buffer *newslot();
+struct buffer *newslot(afs_int32 *afid, afs_int32 apage, 
+		       struct buffer *lp);
+
+/* XXX - This sucks. The correct prototypes for these functions are ...
+ *
+ * extern void FidZero(DirHandle *);
+ * extern int  FidEq(DirHandle *a, DirHandle *b);
+ * extern int  ReallyRead(DirHandle *a, int block, char *data);
+ */
+
+extern void FidZero(afs_int32 *file);
+extern int FidEq(afs_int32 *a, afs_int32 *b);
+extern int ReallyRead(afs_int32 *file, int block, char *data);
+extern int ReallyWrite(afs_int32 *file, int block, char *data);
+extern void FidZap(afs_int32 *file);
+extern int  FidVolEq(afs_int32 *file, afs_int32 vid);
+extern void FidCpy(afs_int32 *tofile, afs_int32 *fromfile);
+extern void Die(char *msg);
 
 int
 DStat(int *abuffers, int *acalls, int *aios)
@@ -135,7 +150,7 @@ DRead(register afs_int32 *fid, register int page)
      * macros.  With the use of these LRU queues, the old one-cache is
      * probably obsolete.
      */
-    if (tb = phTable[pHash(fid)]) {	/* ASSMT HERE */
+    if ((tb = phTable[pHash(fid)])) {	/* ASSMT HERE */
 	if (bufmatch(tb)) {
 	    ObtainWriteLock(&tb->lock);
 	    tb->lockers++;
@@ -145,7 +160,7 @@ DRead(register afs_int32 *fid, register int page)
 	    return tb->data;
 	} else {
 	    bufhead = &(phTable[pHash(fid)]);
-	    while (tb2 = tb->hashNext) {
+	    while ((tb2 = tb->hashNext)) {
 		if (bufmatch(tb2)) {
 		    buf_Front(bufhead, tb, tb2);
 		    ObtainWriteLock(&tb2->lock);
@@ -155,7 +170,7 @@ DRead(register afs_int32 *fid, register int page)
 		    ReleaseWriteLock(&tb2->lock);
 		    return tb2->data;
 		}
-		if (tb = tb2->hashNext) {	/* ASSIGNMENT HERE! */
+		if ((tb = tb2->hashNext)) {	/* ASSIGNMENT HERE! */
 		    if (bufmatch(tb)) {
 			buf_Front(bufhead, tb2, tb);
 			ObtainWriteLock(&tb->lock);
@@ -272,10 +287,12 @@ newslot(afs_int32 *afid, afs_int32 apage, register struct buffer *lp)
     return lp;
 }
 
+/* Release a buffer, specifying whether or not the buffer has been modified
+ * by the locker. */
 void
-DRelease(register struct buffer *bp, int flag)
+DRelease(void *loc, int flag)
 {
-    /* Release a buffer, specifying whether or not the buffer has been modified by the locker. */
+    struct buffer *bp = (struct buffer *)loc;
     register int index;
 
     if (!bp)
@@ -369,7 +386,7 @@ DFlushEntry(register afs_int32 *fid)
 }
 
 int
-DFlush()
+DFlush(void)
 {
     /* Flush all the modified buffers. */
     register int i;

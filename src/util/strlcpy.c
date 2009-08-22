@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/strlcpy.c,v 1.2 2003/07/15 23:17:16 shadow Exp $");
 
 #ifndef HAVE_STRLCPY
 

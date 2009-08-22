@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.22.4.2 2008/03/05 21:53:30 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -35,6 +33,7 @@ RCSID
 #include <sys/time.h>
 #endif
 #include <afs/cmd.h>
+#include <afs/dir.h>
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -48,9 +47,9 @@ RCSID
 #include "volume.h"
 #include "partition.h"
 #include "viceinode.h"
-#include "volinodes.h"
 #include <afs/afssyscalls.h>
-
+#include <afs/afsutil.h>
+    
 #ifdef _AIX
 #include <time.h>
 #endif
@@ -106,7 +105,7 @@ date(time_t date)
 {
 #define MAX_DATE_RESULT	100
     static char results[8][MAX_DATE_RESULT];
-    static next;
+    static int next;
     struct tm *tm = localtime(&date);
     char buf[32];
 
@@ -221,7 +220,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     int err = 0;
-    int volumeId = 0;
+    afs_uint32 volumeId = 0;
     char *partName = 0;
     struct DiskPartition64 *partP = NULL;
 
@@ -322,7 +321,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    }
 	}
 	(void)afs_snprintf(name1, sizeof name1, VFORMAT,
-			   (unsigned long)volumeId);
+			   afs_printable_uint32_lu(volumeId));
 	if (dsizeOnly && !saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
@@ -334,7 +333,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 #ifdef AFS_NT40_ENV
 #include <direct.h>
 struct DiskPartition64 *
-FindCurrentPartition()
+FindCurrentPartition(void)
 {
     int dr = _getdrive();
     struct DiskPartition64 *dp;
@@ -351,7 +350,7 @@ FindCurrentPartition()
 }
 #else
 struct DiskPartition64 *
-FindCurrentPartition()
+FindCurrentPartition(void)
 {
     char partName[1024];
     char tmp = '\0';
@@ -413,11 +412,7 @@ HandlePart(struct DiskPartition64 *partP)
     char *p = VPartitionPath(partP);
 #endif
 
-    if (chdir(p) == -1) {
-	printf("Can't chdir to partition %s; giving up\n", p);
-	exit(1);
-    }
-    if ((dirp = opendir(".")) == NULL) {
+    if ((dirp = opendir(p)) == NULL) {
 	printf("Can't read directory %s; giving up\n", p);
 	exit(1);
     }

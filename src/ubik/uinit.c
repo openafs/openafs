@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ubik/uinit.c,v 1.7.8.3 2007/10/30 15:16:47 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
@@ -43,12 +41,13 @@ RCSID
 #include <afs/afsint.h>
 #include <afs/cmd.h>
 
-/*
-  Get the appropriate type of ubik client structure out from the system.
-*/
+/*!
+ * \brief Get the appropriate type of ubik client structure out from the system.
+ */
 afs_int32
 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
-	       struct ubik_client **uclientp, int (*secproc) (),
+	       struct ubik_client **uclientp, 
+	       int (*secproc) (struct rx_securityClass *, afs_int32),
 	       char *funcName, afs_int32 gen_rxkad_level, 
 	       afs_int32 maxservers, char *serviceid, afs_int32 deadtime,
 	       afs_uint32 server, afs_uint32 port, afs_int32 usrvid)

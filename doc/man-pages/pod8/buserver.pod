@@ -8,6 +8,7 @@ buserver - Initializes the Backup Server
 <div class="synopsis">
 
 B<buserver> S<<< [B<-database> <I<database directory>>] >>>
+    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
     S<<< [B<-cellservdb> <I<cell configuration directory>>] >>> [B<-resetdb>]
     [B<-noauth>] [B<-smallht>] [B<-servers> <I<list of ubik database servers>>+]
     [B<-enable_peer_stats>]  [B<-enable_process_stats>] [B<-rxbind>]
@@ -58,6 +59,19 @@ B<buserver> process is running.
 Specifies the pathname of an alternate directory for the Backup Database
 files, ending in a final slash (C</>). If this argument is not provided,
 the default is the F</usr/afs/db> directory.
+
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.  The audit
+log records information about RPC calls, including the name of the RPC
+call, the host that submitted the call, the authenticated entity (user)
+that issued the call, the parameters for the call, and if the call
+succeeded or failed.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
 
 =item B<-cellservdb> <I<cell configuration directory>>
 

@@ -16,8 +16,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.16.8.9 2007/12/13 18:53:52 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -29,6 +27,7 @@ RCSID
 #include "afs/venus.h"
 #include "afs/pthread_glock.h"
 #include "afs/dirpath.h"
+#include <ctype.h>
 
 #if !defined(min)
 #define min(a,b) ((a)<(b)?(a):(b))
@@ -56,15 +55,21 @@ RCSID
 #include <sys/lockf.h>
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
 #endif
+#endif
+#endif
+#ifdef AFS_DARWIN100_ENV
+#include <crt_externs.h>
 #endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#include "auth.h"
+#include <afs/auth.h>
 #include <afs/venus.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 
 #endif /* defined(UKERNEL) */
 
@@ -80,7 +85,7 @@ RCSID
 #ifdef AFS_KERBEROS_ENV
 #include <fcntl.h>
 #include <sys/file.h>
-#include "cellconfig.h"
+#include <afs/cellconfig.h>
 static char lcell[MAXCELLCHARS];
 
 #define TKT_ROOT "/tmp/tkt"
@@ -494,7 +499,7 @@ ktc_GetToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code;
+    register afs_int32 code = 0;
     int index;
     char *stp, *cellp;		/* secret token ptr */
     struct ClearToken ct;
@@ -698,7 +703,7 @@ ktc_ListTokens(int aprevIndex,
 {
     struct ViceIoctl iob;
     char tbuffer[MAXPIOCTLTOKENLEN];
-    register afs_int32 code;
+    register afs_int32 code = 0 ;
     register char *tp;
     afs_int32 temp, index;
 
@@ -916,6 +921,57 @@ ktc_OldPioctl(void)
 #endif
     UNLOCK_GLOBAL_MUTEX;
     return rc;
+}
+
+afs_uint32
+ktc_curpag(void)
+{
+    int code;
+    struct ViceIoctl iob;
+    afs_int32 pag;
+
+    /* now setup for the pioctl */
+    iob.in = NULL;
+    iob.in_size = 0;
+    iob.out = &pag;
+    iob.out_size = sizeof(afs_int32);
+
+    code = PIOCTL(0, VIOC_GETPAG, &iob, 0);
+    if (code < 0) {
+#if defined(AFS_AIX52_ENV)
+	code = getpagvalue("afs");
+	if (code < 0 && errno == EINVAL)
+	    code = 0;
+	return code;
+#elif defined(AFS_AIX51_ENV)
+	return -1;
+#else
+	gid_t groups[NGROUPS_MAX];
+	afs_uint32 g0, g1;
+	afs_uint32 h, l, ret;
+
+	if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
+	    return 0;
+
+	g0 = groups[0] & 0xffff;
+	g1 = groups[1] & 0xffff;
+	g0 -= 0x3f00;
+	g1 -= 0x3f00;
+	if (g0 < 0xc000 && g1 < 0xc000) {
+	    l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
+	    h = (g0 >> 14);
+	    h = (g1 >> 14) + h + h + h;
+	    ret = ((h << 28) | l);
+	    /* Additional testing */
+	    if (((ret >> 24) & 0xff) == 'A')
+		return ret;
+	    else
+		return -1;
+	}
+	return -1;
+#endif
+    }
+    return pag;
 }
 
 
@@ -1611,62 +1667,35 @@ afs_tf_dest_tkt(void)
     return 0;
 }
 
-static afs_uint32
-curpag(void)
-{
-#if defined(AFS_AIX51_ENV)
-    int code = getpagvalue("afs");
-    if (code < 0 && errno == EINVAL)
-	code = 0;
-    return code;
-#else
-    gid_t groups[NGROUPS_MAX];
-    afs_uint32 g0, g1;
-    afs_uint32 h, l, ret;
-
-    if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
-	return 0;
-
-    g0 = groups[0] & 0xffff;
-    g1 = groups[1] & 0xffff;
-    g0 -= 0x3f00;
-    g1 -= 0x3f00;
-    if (g0 < 0xc000 && g1 < 0xc000) {
-	l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
-	h = (g0 >> 14);
-	h = (g1 >> 14) + h + h + h;
-	ret = ((h << 28) | l);
-	/* Additional testing */
-	if (((ret >> 24) & 0xff) == 'A')
-	    return ret;
-	else
-	    return -1;
-    }
-    return -1;
-#endif
-}
-
 int
 ktc_newpag(void)
 {
-    extern char **environ;
+#ifdef AFS_DARWIN100_ENV
+#define environ (*_NSGetEnviron())
+#else
+extern char **environ;
+#endif
 
     afs_uint32 pag;
     struct stat sbuf;
     char fname[256], *prefix = "/ticket/";
+    char fname5[256], *prefix5 = "FILE:/ticket/krb5cc_";
     int numenv;
     char **newenv, **senv, **denv;
 
     LOCK_GLOBAL_MUTEX;
     if (stat("/ticket", &sbuf) == -1) {
 	prefix = "/tmp/tkt";
+	prefix5 = "FILE:/tmp/krb5cc_";
     }
 
-    pag = curpag() & 0xffffffff;
+    pag = ktc_curpag() & 0xffffffff;
     if (pag == -1) {
 	sprintf(fname, "%s%d", prefix, getuid());
+	sprintf(fname5, "%s%d", prefix5, getuid());
     } else {
-	sprintf(fname, "%sp%ld", prefix, (long int) pag);
+	sprintf(fname, "%sp%lu", prefix, afs_printable_uint32_lu(pag));
+	sprintf(fname5, "%sp%lud", prefix5, afs_printable_uint32_lu(pag));
     }
     ktc_set_tkt_string(fname);
 
@@ -1675,13 +1704,18 @@ ktc_newpag(void)
     newenv = (char **)malloc((numenv + 2) * sizeof(char *));
 
     for (senv = environ, denv = newenv; *senv; senv++) {
-	if (strncmp(*senv, "KRBTKFILE=", 10) != 0)
+	if (strncmp(*senv, "KRBTKFILE=", 10) != 0 &&
+	    strncmp(*senv, "KRB5CCNAME=", 11) != 0)
 	    *denv++ = *senv;
     }
 
-    *denv = (char *)malloc(10 + strlen(fname) + 1);
+    *denv = malloc(10+11 + strlen(fname) + strlen(fname5) + 2);
     strcpy(*denv, "KRBTKFILE=");
     strcat(*denv, fname);
+    *(denv+1) = *denv + strlen(*denv) + 1;
+    denv++;
+    strcpy(*denv, "KRB5CCNAME=");
+    strcat(*denv, fname5);
     *++denv = 0;
     environ = newenv;
     UNLOCK_GLOBAL_MUTEX;

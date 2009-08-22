@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bozo/bnode.c,v 1.19.2.7 2008/06/30 20:29:29 rra Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -33,6 +31,7 @@ RCSID
 
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <lwp.h>
+#include <rx/rx.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
@@ -59,6 +58,8 @@ static struct bnode_stats {
 #ifndef AFS_NT40_ENV
 extern char **environ;		/* env structure */
 #endif
+
+int hdl_notifier(struct bnode_proc *tp);
 
 /* Remember the name of the process, if any, that failed last */
 static void
@@ -113,7 +114,6 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
     if (code) {
         DIR *logdir;
         struct dirent *file;
-        char *p;
         size_t length;
         unsigned long pid;
 
@@ -144,10 +144,10 @@ SaveCore(register struct bnode *abnode, register struct bnode_proc
 
     bnode_CoreName(abnode, aproc->coreName, tbuffer);
 #ifdef BOZO_SAVE_CORES
-    TM_GetTimeOfDay(&Start, 0);
+    FT_GetTimeOfDay(&Start, 0);
     TimeFields = localtime(&Start.tv_sec);
     sprintf(FileName, "%s.%d%02d%02d%02d%02d%02d", tbuffer,
-	    TimeFields->tm_year, TimeFields->tm_mon + 1, TimeFields->tm_mday,
+	    TimeFields->tm_year + 1900, TimeFields->tm_mon + 1, TimeFields->tm_mday,
 	    TimeFields->tm_hour, TimeFields->tm_min, TimeFields->tm_sec);
     strcpy(tbuffer, FileName);
 #endif
@@ -204,7 +204,7 @@ bnode_HasCore(register struct bnode *abnode)
 
 /* wait for all bnodes to stabilize */
 int
-bnode_WaitAll()
+bnode_WaitAll(void)
 {
     register struct bnode *tb;
     register afs_int32 code;
@@ -288,7 +288,7 @@ bnode_SetFileGoal(register struct bnode *abnode, register int agoal)
 
 /* apply a function to all bnodes in the system */
 int
-bnode_ApplyInstance(int (*aproc) (), char *arock)
+bnode_ApplyInstance(int (*aproc) (struct bnode *tb, void *), void *arock)
 {
     register struct bnode *tb, *nb;
     register afs_int32 code;
@@ -700,15 +700,15 @@ SendNotifierData(register int fd, register struct bnode_proc *tp)
 	buf1 = "(null)";
     (void)sprintf(bufp, "coreName: %s\n", buf1);
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "pid: %ld\n", tp->pid);
+    (void)sprintf(bufp, "pid: %ld\n", afs_printable_int32_ld(tp->pid));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastExit: %ld\n", tp->lastExit);
+    (void)sprintf(bufp, "lastExit: %ld\n", afs_printable_int32_ld(tp->lastExit));
     bufp += strlen(bufp);
 #ifdef notdef
-    (void)sprintf(bufp, "lastSignal: %ld\n", tp->lastSignal);
+    (void)sprintf(bufp, "lastSignal: %ld\n", afs_printable_int32_ld(tp->lastSignal));
     bufp += strlen(bufp);
 #endif
-    (void)sprintf(bufp, "flags: %ld\n", tp->flags);
+    (void)sprintf(bufp, "flags: %ld\n", afs_printable_int32_ld(tp->flags));
     bufp += strlen(bufp);
     (void)sprintf(bufp, "END bnode_proc\n");
     bufp += strlen(bufp);
@@ -725,21 +725,21 @@ SendNotifierData(register int fd, register struct bnode_proc *tp)
     bufp += strlen(bufp);
     (void)sprintf(bufp, "name: %s\n", tb->name);
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "rsTime: %ld\n", tb->rsTime);
+    (void)sprintf(bufp, "rsTime: %ld\n", afs_printable_int32_ld(tb->rsTime));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "rsCount: %ld\n", tb->rsCount);
+    (void)sprintf(bufp, "rsCount: %ld\n", afs_printable_int32_ld(tb->rsCount));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "procStartTime: %ld\n", tb->procStartTime);
+    (void)sprintf(bufp, "procStartTime: %ld\n", afs_printable_int32_ld(tb->procStartTime));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "procStarts: %ld\n", tb->procStarts);
+    (void)sprintf(bufp, "procStarts: %ld\n", afs_printable_int32_ld(tb->procStarts));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastAnyExit: %ld\n", tb->lastAnyExit);
+    (void)sprintf(bufp, "lastAnyExit: %ld\n", afs_printable_int32_ld(tb->lastAnyExit));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "lastErrorExit: %ld\n", tb->lastErrorExit);
+    (void)sprintf(bufp, "lastErrorExit: %ld\n", afs_printable_int32_ld(tb->lastErrorExit));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "errorCode: %ld\n", tb->errorCode);
+    (void)sprintf(bufp, "errorCode: %ld\n", afs_printable_int32_ld(tb->errorCode));
     bufp += strlen(bufp);
-    (void)sprintf(bufp, "errorSignal: %ld\n", tb->errorSignal);
+    (void)sprintf(bufp, "errorSignal: %ld\n", afs_printable_int32_ld(tb->errorSignal));
     bufp += strlen(bufp);
 /*
     (void) sprintf(bufp, "lastErrorName: %s\n", tb->lastErrorName);
@@ -753,13 +753,14 @@ SendNotifierData(register int fd, register struct bnode_proc *tp)
     if (write(fd, buffer, len) < 0) {
 	return -1;
     }
+    return 0;
 }
 
 int
 hdl_notifier(struct bnode_proc *tp)
 {
 #ifndef AFS_NT40_ENV		/* NT notifier callout not yet implemented */
-    int code, pid, status;
+    int code, pid;
     struct stat tstat;
 
     if (stat(tp->bnode->notifier, &tstat)) {
@@ -827,12 +828,12 @@ bnode_Int(int asignal)
 
 /* intialize the whole system */
 int
-bnode_Init()
+bnode_Init(void)
 {
     PROCESS junk;
     register afs_int32 code;
     struct sigaction newaction;
-    static initDone = 0;
+    static int initDone = 0;
 
     if (initDone)
 	return 0;
@@ -882,7 +883,7 @@ int
 bnode_ParseLine(char *aline, struct bnode_token **alist)
 {
     char tbuffer[256];
-    register char *tptr;
+    register char *tptr = NULL;
     int inToken;
     struct bnode_token *first, *last;
     register struct bnode_token *ttok;
@@ -928,6 +929,7 @@ bnode_ParseLine(char *aline, struct bnode_token **alist)
 	    return 0;
 	}
     }
+    return 0;
 }
 
 #define	MAXVARGS	    128

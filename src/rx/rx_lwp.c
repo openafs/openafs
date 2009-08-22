@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.19.4.3 2008/05/20 21:59:02 shadow Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>
@@ -49,9 +47,6 @@ RCSID
 # include <lwp.h>
 
 #define MAXTHREADNAMELENGTH 64
-
-extern int (*registerProgram) ();
-extern int (*swapNameProgram) ();
 
 int debugSelectFailure;		/* # of times select failed */
 
@@ -138,7 +133,7 @@ rxi_StartListener(void)
     /* Priority of listener should be high, so it can keep conns alive */
 #define	RX_LIST_STACK	24000
     LWP_CreateProcess(rx_ListenerProc, RX_LIST_STACK, LWP_MAX_PRIORITY,
-		      (void *)0, "rx_Listener", &rx_listenerPid);
+		      NULL, "rx_Listener", &rx_listenerPid);
     if (registerProgram)
 	(*registerProgram) (rx_listenerPid, "listener");
 }
@@ -165,7 +160,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 {
     afs_uint32 host;
     u_short port;
-    register struct rx_packet *p = (struct rx_packet *)0;
+    struct rx_packet *p = (struct rx_packet *)0;
     osi_socket socket;
     struct clock cv;
     afs_int32 nextPollTime;	/* time to next poll FD before sleeping */
@@ -283,7 +278,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 			    rxi_FreePacket(p);
 			}
 			if (swapNameProgram) {
-			    (*swapNameProgram) (rx_listenerPid, &name, 0);
+			    (*swapNameProgram) (rx_listenerPid, name, 0);
 			    rx_listenerPid = 0;
 			}
 			return;
@@ -303,7 +298,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 			    rxi_FreePacket(p);
 			}
 			if (swapNameProgram) {
-			    (*swapNameProgram) (rx_listenerPid, &name, 0);
+			    (*swapNameProgram) (rx_listenerPid, name, 0);
 			    rx_listenerPid = 0;
 			}
 			return;
@@ -393,19 +388,11 @@ rxi_Listen(osi_socket sock)
      * Put the socket into non-blocking mode so that rx_Listener
      * can do a polling read before entering select
      */
-#ifndef AFS_DJGPP_ENV
     if (fcntl(sock, F_SETFL, FNDELAY) == -1) {
 	perror("fcntl");
 	(osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
 	return -1;
     }
-#else
-    if (__djgpp_set_socket_blocking_mode(sock, 1) < 0) {
-	perror("__djgpp_set_socket_blocking_mode");
-	(osi_Msg "rxi_Listen: unable to set non-blocking mode on socket\n");
-	return -1;
-    }
-#endif /* AFS_DJGPP_ENV */
 
     if (sock > FD_SETSIZE - 1) {
 	(osi_Msg "rxi_Listen: socket descriptor > (FD_SETSIZE-1) = %d\n",
@@ -473,6 +460,13 @@ rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 	{
 	    (osi_Msg "rx failed to send packet: ");
 	    perror("rx_sendmsg");
+#ifndef AFS_NT40_ENV
+            if (errno > 0)
+              return -errno;
+#else
+            if (WSAGetLastError() > 0)
+              return -WSAGetLastError();
+#endif
 	    return -1;
 	}
 	while ((err = select(socket + 1, 0, sfds, 0, 0)) != 1) {

@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/HPUX/osi_groups.c,v 1.8 2003/07/15 23:14:21 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

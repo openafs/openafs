@@ -12,8 +12,6 @@
 #include <afs/param.h>
 #include <afsconfig.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/secutil_nt.c,v 1.5 2003/07/15 23:17:16 shadow Exp $");
 
 #include <afs/stds.h>
 

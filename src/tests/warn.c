@@ -33,7 +33,6 @@
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
-RCSID("$Id: warn.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
 #endif
 
 #include "err.h"

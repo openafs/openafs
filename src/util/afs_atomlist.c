@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/afs_atomlist.c,v 1.7 2003/08/08 21:54:48 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs_atomlist.h"

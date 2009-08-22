@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/misc.c,v 1.8 2006/03/09 06:34:36 shadow Exp $");
 
 #include <mit-cpyright.h>
 #ifndef KERNEL
@@ -272,8 +270,8 @@ swap_long_bytes_bit_number(afs_uint32 x)
 
 #if !defined(KERNEL) && defined(AFS_DARWIN80_ENV)
 char *_darwin_whichstr[] = {
-    "#if defined(__ppc__)\n",
-    "#elif defined(__i386__)\n",
+    "#if defined(__ppc__) || defined(__ppc64__)\n",
+    "#elif defined(__i386__) || defined(__amd64__)\n",
     "#else\n#error architecture unsupported\n#endif\n"
 };
 int _darwin_which = 1;

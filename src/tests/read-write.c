@@ -46,10 +46,6 @@
 #include <sys/stat.h>
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: read-write.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
-#endif
-
 static char *
 write_random_file(int fd, size_t sz)
 {

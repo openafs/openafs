@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_file.c,v 1.13.14.3 2008/03/17 15:28:33 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -144,7 +142,7 @@ VnodeToSize(vnode_t * vp)
 }
 
 void *
-osi_VxfsOpen(afs_int32 ainode)
+osi_VxfsOpen(afs_dcache_id_t *ainode)
 {
     struct vnode *vp;
     register struct osi_file *afile = NULL;
@@ -152,7 +150,7 @@ osi_VxfsOpen(afs_int32 ainode)
     int dummy;
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-    code = (*vxfs_vx_vp_byino) (afs_cacheVfsp, &vp, (unsigned int)ainode);
+    code = (*vxfs_vx_vp_byino) (afs_cacheVfsp, &vp, (unsigned int)ainode->ufs);
     AFS_GLOCK();
     if (code) {
 	osi_FreeSmallSpace(afile);
@@ -162,51 +160,104 @@ osi_VxfsOpen(afs_int32 ainode)
     afile->size = VnodeToSize(afile->vnode);
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 #endif /* AFS_HAVE_VXFS */
 
-#if defined(AFS_SUN57_64BIT_ENV)
 void *
-osi_UfsOpen(ino_t ainode)
-#else
-void *
-osi_UfsOpen(afs_int32 ainode)
-#endif
+osi_UfsOpen(afs_dcache_id_t *ainode)
 {
+#ifdef AFS_CACHE_VNODE_PATH
+    struct vnode *vp;
+#else
     struct inode *ip;
+#endif
     register struct osi_file *afile = NULL;
     afs_int32 code = 0;
     int dummy;
+    char fname[1024];
+#ifdef AFS_CACHE_VNODE_PATH
+    char namebuf[1024];
+    struct pathname lookpn;
+#endif
+    struct osi_stat tstat;
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
+
+/*
+ * AFS_CACHE_VNODE_PATH can be used with any file system, including ZFS or tmpfs.
+ * The ainode is not an inode number but a signed index used to generate file names. 
+ */
+#ifdef AFS_CACHE_VNODE_PATH
+	switch (ainode->ufs) {
+	case AFS_CACHE_CELLS_INODE:
+	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CellItems");
+	    break;
+	case AFS_CACHE_ITEMS_INODE:
+	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "CacheItems");
+	    break;
+	case AFS_CACHE_VOLUME_INODE:
+	    snprintf(fname, 1024, "%s/%s", afs_cachebasedir, "VolumeItems");
+	    break;
+	default:
+	    dummy = ainode->ufs / afs_numfilesperdir;
+	    snprintf(fname, 1024, "%s/D%d/V%d", afs_cachebasedir, dummy, ainode->ufs);
+    }
+		
+	/* Can not use vn_open or lookupname, they use user's CRED() 
+     * We need to run as root So must use low level lookuppnvp 
+     * assume fname starts with /
+	 */
+
+	code = pn_get_buf(fname, AFS_UIOSYS, &lookpn, namebuf, sizeof(namebuf));
+    if (code != 0) 
+        osi_Panic("UfsOpen: pn_get_buf failed %ld %s %ld", code, fname, ainode->ufs);
+ 
+	VN_HOLD(rootdir); /* released in loopuppnvp */
+	code = lookuppnvp(&lookpn, NULL, FOLLOW, NULL, &vp, 
+           rootdir, rootdir, &afs_osi_cred); 
+    if (code != 0)  
+        osi_Panic("UfsOpen: lookuppnvp failed %ld %s %ld", code, fname, ainode->ufs);
+	
+#ifdef AFS_SUN511_ENV
+    code = VOP_OPEN(&vp, FREAD|FWRITE, &afs_osi_cred, NULL);
+#else
+    code = VOP_OPEN(&vp, FREAD|FWRITE, &afs_osi_cred);
+#endif
+
+    if (code != 0)
+        osi_Panic("UfsOpen: VOP_OPEN failed %ld %s %ld", code, fname, ainode->ufs);
+
+#else
     code =
-	igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode, &ip,
+	igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode->ufs, &ip,
 		  CRED(), &dummy);
+#endif
     AFS_GLOCK();
     if (code) {
 	osi_FreeSmallSpace(afile);
-	osi_Panic("UfsOpen: igetinode failed");
+	osi_Panic("UfsOpen: igetinode failed %ld %s %ld", code, fname, ainode->ufs);
     }
+#ifdef AFS_CACHE_VNODE_PATH
+	afile->vnode = vp;
+	code = afs_osi_Stat(afile, &tstat);
+	afile->size = tstat.size;
+#else
     afile->vnode = ITOV(ip);
     afile->size = VTOI(afile->vnode)->i_size;
+#endif
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 
 /**
   * In Solaris 7 we use 64 bit inode numbers
   */
-#if defined(AFS_SUN57_64BIT_ENV)
 void *
-osi_UFSOpen(ino_t ainode)
-#else
-void *
-osi_UFSOpen(afs_int32 ainode)
-#endif
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     extern int cacheDiskType;
     AFS_STATCNT(osi_UFSOpen);
@@ -304,12 +355,14 @@ void
 osi_DisableAtimes(struct vnode *avp)
 {
     if (afs_CacheFSType == AFS_SUN_UFS_CACHE) {
+#ifndef AFS_CACHE_VNODE_PATH 
 	struct inode *ip = VTOI(avp);
 	rw_enter(&ip->i_contents, RW_READER);
 	mutex_enter(&ip->i_tlock);
 	ip->i_flag &= ~IACC;
 	mutex_exit(&ip->i_tlock);
 	rw_exit(&ip->i_contents);
+#endif
     }
 }
 

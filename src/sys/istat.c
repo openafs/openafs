@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/istat.c,v 1.5 2003/07/15 23:16:54 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -1,21 +1,27 @@
 #!/bin/sh
 #
-# $Id: run-tests.in,v 1.5.20.2 2008/03/31 15:54:02 shadow Exp $
+# $Id$
 #
 
 # Directory paths configured during the build.
-if test -f dirpath.conf; then
-  . dirpath.conf
+if test -f ./OpenAFS/Dirpath.sh; then
+  . ./OpenAFS/Dirpath.sh
 else
-  echo "error: Missing dirpath.conf file, try make dirpath.conf"
+  echo "error: Missing file OpenAFS/Dirpath.sh. Run 'make all' first."
   exit 1
 fi
 
-if test -f run-tests.conf; then
-  . run-tests.conf
-else
-  echo "warning: Missing run-tests.conf, using default values."
+if ! test -f ./run-tests.conf; then
+  echo "warning: Creating run-tests.conf with default values."
+  echo "         Please edit run-tests.conf to match your test cell configuration."
+  echo "CELLNAME=testcell"                         > ./run-tests.conf
+  echo "PARTITION=a"                               >>./run-tests.conf
+  echo "ADMIN=admin"                               >>./run-tests.conf
+  echo "KERBEROS_TYPE=kaserver"                    >>./run-tests.conf
+  echo "KERBEROS_REALM=TESTCELL"                   >>./run-tests.conf
+  echo "KERBEROS_KEYTAB=${AFSCONFDIR}/krb5.keytab" >>./run-tests.conf
 fi  
+. ./run-tests.conf
 
 
 srcdir=@srcdir@
@@ -26,7 +32,7 @@ VERSION=@VERSION@
 PACKAGE=@PACKAGE@
 host=@host@
 RUNAS=
-FS=${afssrvbindir}/fs
+FS=${AFSSRVBINDIR}/fs
 CELLNAME=${CELLNAME-testcell}
 export FS
 export SHELL
@@ -327,7 +333,7 @@ do
   -help|--help) echo $usage; 
 	echo "tests available: $linebreak"; for a in "$ALL_TESTS"; do echo $a ; done;
 	exit 0;;
-  -version|--version) echo "$0 $Id: run-tests.in,v 1.5.20.2 2008/03/31 15:54:02 shadow Exp $"; exit 0;;
+  -version|--version) echo "$0 $Id$"; exit 0;;
   -*) echo "$0: Bad option $1"; echo $usage; exit 1;;
   *) break;;
   esac
@@ -378,7 +384,7 @@ export objdir
 # login
 if [ "$KERBEROS_TYPE" != "kaserver" ] ; then
   kinit -k -t $KERBEROS_KEYTAB $ADMIN || exit 1;
-  $afswsbindir/aklog -d -c $CELLNAME || exit 1;
+  ${AFSWSBINDIR}/aklog -d -c $CELLNAME || exit 1;
 fi
 
 echo "-------------------------------------------------"

@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/test/kas.c,v 1.8.14.1 2007/10/31 04:09:31 shadow Exp $");
 
 #include "kas.h"
 #include <time.h>
@@ -51,7 +49,6 @@ DoKasPrincipalCreate(struct cmd_syndesc *as, void *arock)
 	PASSWORD
     } DoKasPrincipalCreate_parm_t;
     afs_status_t st = 0;
-    const char *instance = NULL;
     kas_identity_t user;
     const char *password;
 
@@ -77,7 +74,6 @@ DoKasPrincipalDelete(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalGet_parm_t;
     afs_status_t st = 0;
-    const char *instance = NULL;
     kas_identity_t user;
 
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
@@ -164,7 +160,6 @@ DoKasPrincipalGet(struct cmd_syndesc *as, void *arock)
 {
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalGet_parm_t;
     afs_status_t st = 0;
-    const char *instance = NULL;
     kas_identity_t user;
     kas_principalEntry_t principal;
 
@@ -289,7 +284,6 @@ DoKasPrincipalUnlock(struct cmd_syndesc *as, void *arock)
     typedef enum { PRINCIPAL, INSTANCE } DoKasPrincipalUnlock_parm_t;
     afs_status_t st = 0;
     kas_identity_t user;
-    unsigned int lock_end_time = 0;
 
     strcpy(user.principal, as->parms[PRINCIPAL].items->data);
 
@@ -503,9 +497,9 @@ Print_kas_serverStats_p(kas_serverStats_p stats, const char *prefix)
     printf("%sHost %x\n", prefix, stats->host);
     printf("%sServer start time %s\n", prefix, ctime(&stime));
     printf("%sUser time %ld secs %ld usec\n", prefix, stats->userTime.tv_sec,
-	   stats->userTime.tv_usec);
+	   (long) stats->userTime.tv_usec);
     printf("%sSystem time %ld secs %ld usec\n", prefix,
-	   stats->systemTime.tv_sec, stats->systemTime.tv_usec);
+	   stats->systemTime.tv_sec, (long) stats->systemTime.tv_usec);
     printf("%sData size %d\n", prefix, stats->dataSize);
     printf("%sStack size %d\n", prefix, stats->stackSize);
     printf("%sPage faults %d\n", prefix, stats->pageFaults);

@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/samples/cm_list_cells.c,v 1.6 2003/10/24 06:26:10 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -34,7 +32,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: cm_list_cells <host> <port>\n");
     exit(1);

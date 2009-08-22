@@ -1,5 +1,5 @@
 /*
- * $Locker:  $
+ * $Locker$
  *
  * Copyright 1987 by the Student Information Processing Board
  * of the Massachusetts Institute of Technology
@@ -10,14 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.6.8.1 2007/04/10 18:39:51 shadow Exp $");
 
 #include "internal.h"
 #include <stdio.h>
 #include "error_table.h"
 #include "mit-sipb-cr.h"
 #include <afs/errors.h>
+#include <afs/afsutil.h>
 #include <string.h>
 #include "com_err.h"
 
@@ -55,7 +54,8 @@ et_mutex_once(void)
 
 #define LOCK_ET_LIST \
 	do { \
-	    (et_list_done || pthread_once(&et_list_once, et_mutex_once)); \
+	    if (!et_list_done) \
+		pthread_once(&et_list_once, et_mutex_once); \
 	    assert(pthread_mutex_lock(&et_list_mutex)==0); \
 	} while (0)
 #define UNLOCK_ET_LIST assert(pthread_mutex_unlock(&et_list_mutex)==0)
@@ -145,10 +145,10 @@ afs_error_message(afs_int32 code)
     }
   oops:
     UNLOCK_ET_LIST;
-    strcpy(buffer, "Unknown code ");
+    strlcpy(buffer, "Unknown code ", sizeof buffer);
     if (table_num) {
-	strcat(buffer, afs_error_table_name(table_num));
-	strcat(buffer, " ");
+	strlcat(buffer, afs_error_table_name(table_num), sizeof buffer);
+	strlcat(buffer, " ", sizeof buffer);
     }
     for (cp = buffer; *cp; cp++);
     if (offset >= 100) {

@@ -1,8 +1,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vfsops.c,v 1.21 2005/07/08 16:53:43 rees Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -98,6 +96,11 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     afs_globalVFS = mp;
     mp->vfs_bsize = 8192;
     vfs_getnewfsid(mp);
+#ifdef AFS_FBSD70_ENV /* XXX 70? */
+    MNT_ILOCK(mp);
+    mp->mnt_flag &= ~MNT_LOCAL;
+    mp->mnt_kern_flag |= MNTK_MPSAFE; /* solid steel */
+#endif
     mp->mnt_stat.f_iosize = 8192;
 
     if (path != NULL)
@@ -109,8 +112,12 @@ afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, "afs");
+#ifdef AFS_FBSD70_ENV
+    MNT_IUNLOCK(mp);
+#endif
     AFS_GUNLOCK();
     afs_statfs(mp, &mp->mnt_stat, p);
+
     return 0;
 }
 
@@ -140,7 +147,9 @@ afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
      * the root vnode (this is just a guess right now).
      * This has to be done outside the global lock.
      */
-#ifdef AFS_FBSD53_ENV
+#if defined(AFS_FBSD80_ENV)
+  /* do nothing */
+#elif defined(AFS_FBSD53_ENV)
     vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0, p);
 #else
     vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
@@ -179,17 +188,18 @@ afs_root(struct mount *mp, struct vnode **vpp)
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
     crhold(cr);
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
     } else {
 tryagain:
+#ifndef AFS_FBSD80_ENV
 	if (afs_globalVp) {
 	    afs_PutVCache(afs_globalVp);
 	    /* vrele() needed here or not? */
 	    afs_globalVp = NULL;
 	}
-
+#endif
 	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */

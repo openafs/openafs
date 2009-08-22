@@ -21,8 +21,6 @@
 #include <sys/time_impl.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.16 2005/04/03 19:53:43 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL

@@ -20,8 +20,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_inode.c,v 1.7 2004/04/05 22:39:53 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -29,19 +27,19 @@ RCSID
 #include "afs/afs_stats.h"	/* statistics stuff */
 
 int
-afs_syscall_icreate(void)
+afs_syscall_icreate(long a, long b, long c, long d, long e, long f)
 {
     return 0;
 }
 
 int
-afs_syscall_iopen(void)
+afs_syscall_iopen(int a, int b, int c)
 {
     return 0;
 }
 
 int
-afs_syscall_iincdec(void)
+afs_syscall_iincdec(int a, int v, int c, int d)
 {
     return 0;
 }

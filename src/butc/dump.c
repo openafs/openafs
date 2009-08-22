@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/dump.c,v 1.18.6.3 2008/05/02 00:59:38 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -33,13 +31,16 @@ RCSID
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>
+#include <afs/butm_prototypes.h>
 #include <afs/vldbint.h>
 #include <afs/ktime.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
 #include <afs/cellconfig.h>
+#include <afs/bucoord_prototypes.h>
 
+#include "butc_internal.h"
 #include "error_macros.h"
 #include "butc_xbsa.h"
 #include "afs/butx.h"
@@ -54,9 +55,6 @@ extern int forcemultiple;
 extern struct ubik_client *cstruct;
 dlqlinkT savedEntries;
 dlqlinkT entries_to_flush;
-
-afs_int32 flushSavedEntries(), finishDump(), finishTape(), useTape(),
-addVolume();
 
 extern struct rx_connection *UV_Bind();
 
@@ -138,6 +136,15 @@ struct dumpRock {
     struct dumpNode *node;
 };
 
+/* Forward declarations */
+
+int makeVolumeHeader(struct volumeHeader *, struct dumpRock *, int);
+int volumeHeader_hton(struct volumeHeader *, struct volumeHeader *);
+char retryPrompt(char *, afs_int32, afs_uint32);
+int getDumpTape(struct dumpRock *, int, afs_int32);
+int getXBSATape(struct dumpRock *);
+afs_int32 createDump(struct dumpRock *);
+
 /* configuration variables */
 #define HITEOT(code) ((code == BUTM_IO) || (code == BUTM_EOT) || (code == BUTM_IOCTL))
 extern int autoQuery;
@@ -152,7 +159,6 @@ afs_int32
 calcExpirationDate(afs_int32 expType, afs_int32 expDate, afs_int32 createTime)
 {
     struct ktime_date kd;
-    afs_int32 Add_RelDate_to_Time();
 
     switch (expType) {
     case BC_REL_EXPDATE:
@@ -357,6 +363,13 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 			toread = dataSize;
 		}
 	    }
+
+#ifdef xbsa
+	    /* Set aside space for the trailing volume header when using large buffers. */
+	    if (XBSAMAXBUFFER < toread + sizeof(hostVolumeHeader)) {
+		toread = XBSAMAXBUFFER - sizeof(hostVolumeHeader);
+	    }
+#endif
 
 	    /* Read some volume data. */
 	    if (fragmentvolume) {
@@ -849,7 +862,6 @@ dumpPass(struct dumpRock * dparamsPtr, int passNumber)
     int action, e;
     afs_int32 code = 0, tcode, dvcode;
     char ch;
-    char retryPrompt();
     struct vldbentry vldbEntry;
     struct sockaddr_in server;
     afs_int32 tapepos;
@@ -1143,7 +1155,6 @@ Dumper(void *param)
 
     extern struct deviceSyncNode *deviceLatch;
     extern struct tapeConfig globalTapeConfig;
-    extern afs_int32 createDump();
 
     taskId = nodePtr->taskID;	/* Get task Id */
     setStatus(taskId, DRIVE_WAIT);
@@ -1268,7 +1279,7 @@ Dumper(void *param)
     if (!CONF_XBSA) {
 	code = butm_WriteEOT(&tapeInfo);
 	if (code)
-	    TapeLog(taskId, code, tapeInfo.error,
+	    TapeLog(0, taskId, code, tapeInfo.error,
 		    "Warning: Can't write end-of-dump on tape\n");
     }
 
@@ -1353,14 +1364,14 @@ Dumper(void *param)
 	sprintf(line,
 		"%-5d  %02d/%02d/%04d %02d:%02d:%02d  "
 		"%02d/%02d/%04d %02d:%02d:%02d  " "%02d:%02d:%02d  "
-		"%s %d of %d volumes dumped (%ld KB)\n", taskId,
+		"%s %d of %d volumes dumped (%lu KB)\n", taskId,
 		tmstart.tm_mon + 1, tmstart.tm_mday, tmstart.tm_year + 1900,
 		tmstart.tm_hour, tmstart.tm_min, tmstart.tm_sec,
 		tmend.tm_mon + 1, tmend.tm_mday, tmend.tm_year + 1900,
 		tmend.tm_hour, tmend.tm_min, tmend.tm_sec, hrs, min, sec,
 		nodePtr->volumeSetName, dumpedvolumes,
 		dumpedvolumes + failedvolumes,
-		dparams.tapeInfoPtr->kBytes + 1);
+		afs_printable_uint32_lu(dparams.tapeInfoPtr->kBytes + 1));
 
 	fwrite(line, strlen(line), 1, centralLogIO);
 	fflush(centralLogIO);
@@ -1405,7 +1416,7 @@ retryPrompt(char *volumeName, afs_int32 volumeId, afs_uint32 taskId)
     printf("a - abort, the entire dump\n");
 
     while (1) {
-	FFlushInput(stdin);
+	FFlushInput();
 	putchar(BELLCHAR);
 	fflush(stdout);
 
@@ -1528,7 +1539,6 @@ getDumpTape(struct dumpRock *dparamsPtr, int interactiveFlag,
     afs_int32 tapepos, lastpos;
 
     extern struct tapeConfig globalTapeConfig;
-    extern struct udbHandleS udbHandle;
 
     askForTape = interactiveFlag;
     dparamsPtr->wroteLabel = 0;

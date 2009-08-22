@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptclient.c,v 1.12.14.4 2007/08/11 23:41:37 jaltman Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -33,6 +31,7 @@ RCSID
 #include <afs/cellconfig.h>
 #include "ptclient.h"
 #include "pterror.h"
+#include "display.h"
 #include <afs/afsutil.h>
 
 
@@ -64,9 +63,7 @@ osi_audit()
 #endif /* !AFS_PTHREAD_ENV */
 
 int
-GetToken(format, l)
-     char *format;
-     afs_int32 *l;
+GetToken(char *format, afs_int32 *l)
 {
     int c;
 
@@ -87,9 +84,7 @@ GetToken(format, l)
 #define GetXInt32(l) GetToken ("%x", l)
 
 int
-GetString(s, slen)
-     char *s;
-     int slen;
+GetString(char *s, int slen)
 {
     char *beg;
     int l;
@@ -123,8 +118,7 @@ GetString(s, slen)
 }
 
 int
-CodeOk(code)
-     afs_int32 code;
+CodeOk(afs_int32 code)
 {
     if (!ignoreExist)
 	return code;
@@ -132,10 +126,7 @@ CodeOk(code)
 }
 
 int
-PrintEntry(ea, e, indent)
-     afs_int32 ea;
-     struct prentry *e;
-     int indent;
+PrintEntry(afs_int32 ea, struct prentry *e, int indent)
 {
     /* handle screwed up versions of DumpEntry */
     if (e->flags & PRCONT) {
@@ -164,9 +155,8 @@ PrintEntry(ea, e, indent)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     char op[8];

@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/tviced/state_analyzer.c,v 1.1.4.3 2008/06/30 17:28:47 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -246,7 +244,7 @@ static struct {
 static void
 usage(char * prog)
 {
-    fprintf(stderr, "usage: %s [<state dump file>]\n");
+    fprintf(stderr, "usage: %s [<state dump file>]\n", prog);
 }
 
 int
@@ -786,8 +784,8 @@ print_cb_help(void)
 /* time */
 #define DPFT(T, name, var) \
     do { \
-        char * last; \
-        printf(T "%s = \"%s\"\n", name, strtok_r(ctime(&(var)), "\r\n", &last)); \
+        time_t t = var; \
+        printf(T "%s = \"%.24s\"\n", name, ctime(&t)); \
     } while(0)
 #define DPFT1(name, var) DPFT(DPFTB1, name, var)
 #define DPFT2(name, var) DPFT(DPFTB2, name, var)

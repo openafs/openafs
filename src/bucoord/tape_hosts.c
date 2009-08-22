@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/tape_hosts.c,v 1.7.14.4 2007/10/31 04:09:24 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -29,12 +27,13 @@ RCSID
 #include "bc.h"
 #include "error_macros.h"
 #include <errno.h>
-
+#include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
+    
 /* code to manage tape hosts
  * specific to the ubik database implementation
  */
 
-afs_int32 bc_UpdateHosts();
 extern struct bc_config *bc_globalConfig;
 extern struct udbHandleS udbHandle;
 extern char *whoami;
@@ -198,7 +197,8 @@ bc_ListHostsCmd(struct cmd_syndesc *as, void *arock)
  * ------------------------------------
  */
 
-bc_ClearHosts()
+int
+bc_ClearHosts(void)
 {
     register struct bc_hostEntry *tentry, *temp;
 
@@ -223,7 +223,7 @@ bc_ClearHosts()
  */
 
 int
-bc_ParseHosts()
+bc_ParseHosts(void)
 {
     char tbuffer[256];
     char hostName[256];
@@ -296,7 +296,8 @@ bc_ParseHosts()
  *	2) transmit to ubik server
  */
 
-bc_SaveHosts()
+int
+bc_SaveHosts(void)
 {
     register afs_int32 code = 0;
 
@@ -347,7 +348,7 @@ bc_SaveHosts()
 }
 
 afs_int32
-bc_UpdateHosts()
+bc_UpdateHosts(void)
 {
     struct udbHandleS *uhptr = &udbHandle;
     udbClientTextP ctPtr;

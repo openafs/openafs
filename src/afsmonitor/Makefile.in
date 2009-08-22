@@ -7,6 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/gtxwindows.h \
@@ -34,7 +38,7 @@ LIBS=${TOP_LIBDIR}/libxstat_fs.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/util.a
 
-EXTRA_LIBS=${TXLIBS} ${TOP_LIBDIR}/libtermlib.a  ${XLIBS}
+EXTRA_LIBS=${TXLIBS} ${XLIBS}
 
 all: afsmonitor
 
@@ -50,21 +54,15 @@ afsmon-parselog:  afsmon-parselog.o ${LIBS}
 	${CC} ${CFLAGS} -o afsmon-parselog afsmon-parselog.c \
 		${LIBS} ${EXTRA_LIBS}
 
-#
-# Misc others
-#
-install:  ${DESTDIR}${bindir}/afsmonitor
+install: afsmonitor
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL_PROGRAM} afsmonitor ${DESTDIR}${bindir}/afsmonitor
+
+dest: afsmonitor
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL_PROGRAM} afsmonitor ${DEST}/bin/afsmonitor
 
 clean:
 	$(RM) -f *.o afsmonitor AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DEST}/bin/afsmonitor: afsmonitor
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/afsmonitor: afsmonitor
-	${INSTALL} $? $@
-
-
-dest:  ${DEST}/bin/afsmonitor
-

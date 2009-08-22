@@ -43,10 +43,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: hardlink1.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
-#endif
-
 int
 main(int argc, char *argv[])
 {

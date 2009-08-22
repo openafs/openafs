@@ -37,8 +37,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_scan.c,v 1.10.4.1 2007/10/30 15:16:45 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -348,7 +346,7 @@ findstrconst(char **str, char **val)
 
     p = *str;
     do {
-	*p++;
+	p++;
     } while (*p && *p != '"');
     if (*p == 0) {
 	error("unterminated string constant");

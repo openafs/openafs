@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/volstub.c,v 1.6.14.3 2007/04/10 18:39:50 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -36,11 +34,8 @@ extern char *whoami;
 /* ********************************************************************* */
 
 afs_int32
-bc_GetEntryByID(uclient, volID, volType, vldbEntryPtr)
-     struct ubik_client *uclient;
-     afs_int32 volID;
-     afs_int32 volType;
-     struct vldbentry *vldbEntryPtr;
+bc_GetEntryByID(struct ubik_client *uclient, afs_int32 volID, 
+		afs_int32 volType, struct vldbentry *vldbEntryPtr)
 {
     afs_int32 code = 0;
 
@@ -60,12 +55,8 @@ bc_GetEntryByID(uclient, volID, volType, vldbEntryPtr)
  */
 
 afs_int32
-volImageTime(serv, part, volid, voltype, clDatePtr)
-     afs_int32 serv;
-     afs_int32 part;
-     afs_int32 volid;
-     afs_int32 voltype;
-     afs_int32 *clDatePtr;
+volImageTime(afs_int32 serv, afs_int32 part, afs_int32 volid, 
+	     afs_int32 voltype, afs_int32 *clDatePtr)
 {
     afs_int32 code = 0;
     struct volintInfo *viptr;

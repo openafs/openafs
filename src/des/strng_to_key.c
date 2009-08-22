@@ -24,8 +24,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/strng_to_key.c,v 1.12 2003/07/15 23:15:00 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -119,6 +117,6 @@ des_string_to_key(char *str, register des_cblock * key)
     des_fixup_key_parity(key);
 
     if (des_debug)
-	fprintf(stdout, "\nResulting string_to_key = 0x%lx 0x%lx\n",
+	fprintf(stdout, "\nResulting string_to_key = 0x%x 0x%x\n",
 		*((afs_uint32 *) key), *((afs_uint32 *) key + 1));
 }

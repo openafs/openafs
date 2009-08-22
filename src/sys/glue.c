@@ -14,17 +14,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/glue.c,v 1.1 2005/10/15 15:19:38 shadow Exp $");
 
 #include <afs/afs_args.h>
 #include <sys/file.h>
 #include <sys/ioctl.h>
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
 #include <unistd.h>
-#else
 #include <stdio.h>
-#endif
 #ifdef AFS_SUN5_ENV
 #include <fcntl.h>
 #endif
@@ -50,6 +45,33 @@ int proc_afs_syscall(long syscall, long param1, long param2, long param3,
 
   close(fd);
 
+  return 0;
+}
+#endif
+
+#if defined(AFS_DARWIN80_ENV)
+int ioctl_afs_syscall(long syscall, long param1, long param2, long param3, 
+		     long param4, long param5, long param6, int *rval) {
+  struct afssysargs syscall_data;
+  int code;
+  int fd = open(SYSCALL_DEV_FNAME, O_RDWR);
+  if(fd < 0)
+    return -1;
+
+  syscall_data.syscall = syscall;
+  syscall_data.param1 = param1;
+  syscall_data.param2 = param2;
+  syscall_data.param3 = param3;
+  syscall_data.param4 = param4;
+  syscall_data.param5 = param5;
+  syscall_data.param6 = param6;
+
+  code = ioctl(fd, VIOC_SYSCALL, &syscall_data);
+
+  close(fd);
+  if (code)
+     return code;
+  *rval=syscall_data.retval;
   return 0;
 }
 #endif

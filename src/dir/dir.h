@@ -17,7 +17,9 @@
 #define	BIGMAXPAGES 1023	/* new big max pages */
 #define EPP 64			/* dir entries per page */
 #define LEPP 6			/* log above */
-/* When this next field changs, it is crucial to modify MakeDir, since the latter is responsible for marking these entries as allocated.  Also change the salvager. */
+/* When this next field changs, it is crucial to modify MakeDir, since the
+ * latter is responsible for marking these entries as allocated.  Also
+ * change the salvager. */
 #define DHE 12			/* entries in a dir header above a pages header alone. */
 
 #define FFIRST 1
@@ -101,19 +103,28 @@ extern struct DirEntry *GetBlob(void *dir, afs_int32 blobno);
 extern int DirHash(register char *string);
 
 extern int DStat(int *abuffers, int *acalls, int *aios);
-extern void DRelease();
+extern void DRelease(void *loc, int flag);
 extern int DVOffset(register void *ap);
 extern int DFlushVolume(register afs_int32 vid);
 extern int DFlushEntry(register afs_int32 *fid);
+extern int InverseLookup (void *dir, afs_uint32 vnode, afs_uint32 unique,
+			  char *name, afs_uint32 length);
 
 /* The kernel uses different versions of these, and prototypes them
    in afs_prototypes.h */
 #ifndef KERNEL
 extern int DInit(int abuffers);
-extern void *DRead();
-extern int DFlush();
+extern void *DRead(register afs_int32 *fid, register int page);
+extern int DFlush(void);
 extern void *DNew(register afs_int32 *fid, register int page);
 extern void DZap(register afs_int32 *fid);
+
+/* salvage.c */
+
+extern int DirOK(void *);
+extern int DirSalvage(void *, void *, afs_int32, afs_int32,
+                      afs_int32, afs_int32);
+
 #endif
 
 #ifdef KERNEL
@@ -131,6 +142,10 @@ extern int afs_dir_EnumerateDir(void *dir,
 						 afs_int32 unique),
 				void *hook);
 extern int afs_dir_IsEmpty(void *dir);
+#ifdef AFS_DISCON_ENV
+extern int afs_dir_ChangeFid(void *dir, char *entry, afs_uint32 *old_fid,
+               		     afs_uint32 *new_fid);
+#endif
 extern struct DirEntry *afs_dir_GetBlob(void *dir, afs_int32 blobno);
 #endif
 

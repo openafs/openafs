@@ -31,8 +31,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/map.c,v 1.3.14.3 2008/01/15 06:09:14 shadow Exp $");
 
 #ifdef SUPERGROUPS
 #include <errno.h>
@@ -44,8 +42,8 @@ RCSID
 #endif
 
 #undef PRINT_MAP_ERROR
-/* #define MAP_DEBUG /**/
-/* #define NEED_READ_WRITE /**/
+/* #define MAP_DEBUG */
+/* #define NEED_READ_WRITE */
 
 #define LSHIFT 5
 #define MSHIFT 8		/* XXX make this 8 in the production version... */

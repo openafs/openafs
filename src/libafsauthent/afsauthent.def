@@ -54,7 +54,7 @@ EXPORTS
 	pthread_recursive_mutex_unlock			@53
 	grmutex						@54 DATA
 	initAFSDirPath					@55
-	renamefile					@56
+;     	renamefile					@56
 	opendir						@57
 	readdir						@58
 	closedir					@59
@@ -108,11 +108,34 @@ EXPORTS
         PR_UpdateEntry					@106
         PR_ListEntries					@107
         PR_ListSuperGroups				@108
-	ka_AuthSpecificServersConn			@109
-	ka_KeyCheckSum					@110
+;	ka_AuthSpecificServersConn			@109   /* duplicate */
+;	ka_KeyCheckSum					@110   /* duplicate */
 	rx_Finalize					@111
 	rx_InitHost					@112
 	VOTE_GetSyncSite				@113
 	ubik_RefreshConn				@114
         rx_SetSecurityConfiguration                     @115
         pioctl_utf8                                     @116
+        ubik_PR_INewEntry				@117
+        ubik_PR_WhereIsIt				@118
+        ubik_PR_DumpEntry				@119
+        ubik_PR_AddToGroup				@120
+        ubik_PR_NameToID				@121
+        ubik_PR_IDToName				@122
+        ubik_PR_Delete					@123
+        ubik_PR_RemoveFromGroup				@124
+        ubik_PR_GetCPS					@125
+        ubik_PR_NewEntry				@126
+        ubik_PR_ListMax					@127
+        ubik_PR_SetMax					@128
+        ubik_PR_ListEntry				@129
+        ubik_PR_ChangeEntry				@130
+        ubik_PR_ListElements				@131
+        ubik_PR_IsAMemberOf				@132
+        ubik_PR_SetFieldsEntry				@133
+        ubik_PR_ListOwned				@134
+        ubik_PR_GetCPS2					@135
+        ubik_PR_GetHostCPS				@136
+        ubik_PR_UpdateEntry				@137
+        ubik_PR_ListEntries				@138
+        ubik_PR_ListSuperGroups				@139

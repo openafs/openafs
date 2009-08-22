@@ -4,7 +4,7 @@
 #
 # Copyright:    Copyright (c) 2003 International Business Machines Corporation and others. All Rights Reserved.
 #
-# Header:       $Header: /cvs/openafs/src/packaging/HP-UX/psf-1.2.10-transarc-paths-11.11,v 1.2 2005/04/03 19:21:19 shadow Exp $
+# Header:       $Header$
 #
 # Description:  This PSF contains a valid product definition which includes
 #               all attributes for OpenAFS installation via software Distributor

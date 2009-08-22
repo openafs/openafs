@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/clone.c,v 1.19.2.8 2008/03/05 21:53:30 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -37,6 +35,7 @@ RCSID
 #else
 #include <sys/file.h>
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 #include <string.h>
 #include <errno.h>
@@ -53,10 +52,11 @@ RCSID
 #include "volume.h"
 #include "partition.h"
 #include "viceinode.h"
+#include "vol_prototypes.h"
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 
-int (*vol_PollProc) () = 0;	/* someone must init this */
+int (*vol_PollProc) (void) = 0;	/* someone must init this */
 
 #define ERROR_EXIT(code) {error = code; goto error_exit;}
 
@@ -80,8 +80,7 @@ struct clone_head {
     struct clone_items *last;
 };
 
-void CloneVolume();
-void CloneVolume_r();
+void CloneVolume(Error *, Volume *, Volume *, Volume *);
 
 static int
 ci_AddItem(struct clone_head *ah, Inode aino)
@@ -124,7 +123,7 @@ ci_InitHead(struct clone_head *ah)
 
 /* apply a function to all dudes in the set */
 int
-ci_Apply(struct clone_head *ah, int (*aproc) (), char *arock)
+ci_Apply(struct clone_head *ah, int (*aproc) (Inode,  void *), void *arock)
 {
     register struct clone_items *ti;
     register int i;
@@ -151,8 +150,9 @@ ci_Destroy(struct clone_head *ah)
 }
 
 static int
-IDecProc(Inode adata, struct clone_rock *aparm)
+IDecProc(Inode adata, void *arock)
 {
+    struct clone_rock *aparm = (struct clone_rock *)arock;
     IH_DEC(aparm->h, adata, aparm->vol);
     DOPOLL;
     return 0;
@@ -168,14 +168,15 @@ DoCloneIndex(Volume * rwvp, Volume * clvp, VnodeClass class, int reclone)
     char buf[SIZEOF_LARGEDISKVNODE], dbuf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *rwvnode = (struct VnodeDiskObject *)buf;
     struct VnodeDiskObject *clvnode = (struct VnodeDiskObject *)dbuf;
-    Inode rwinode, clinode;
+    Inode rwinode = 0;
+    Inode clinode;
     struct clone_head decHead;
     struct clone_rock decRock;
-    afs_int32 offset, dircloned, inodeinced;
+    afs_int32 offset = 0;
+    afs_int32 dircloned, inodeinced;
 
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     int ReadWriteOriginal = VolumeWriteable(rwvp);
-    Device device = rwvp->device;
 
     /* Open the RW volume's index file and seek to beginning */
     IH_COPY(rwH, rwvp->vnodeIndex[class].handle);

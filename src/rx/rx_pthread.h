@@ -34,7 +34,12 @@
 
 typedef pthread_mutex_t afs_kmutex_t;
 typedef pthread_cond_t afs_kcondvar_t;
-#define MUTEX_ISMINE
+#ifdef	RX_ENABLE_LOCKS
+#define MUTEX_ISMINE(l) (pthread_mutex_trylock(l) == EDEADLK)
+#else
+#define MUTEX_ISMINE(l) (1)
+#endif
+
 #define pthread_yield() Sleep(0)
 
 #else /* AFS_NT40_ENV */
@@ -108,6 +113,11 @@ extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 #undef CV_WAIT
 #endif
 #define CV_WAIT(cv, l) osi_Assert(pthread_cond_wait(cv, l) == 0)
+
+#ifdef CV_TIMEDWAIT
+#undef CV_TIMEDWAIT
+#endif
+#define CV_TIMEDWAIT(cv, l, t) pthread_cond_timedwait(cv, l, t)
 
 #ifdef CV_SIGNAL
 #undef CV_SIGNAL

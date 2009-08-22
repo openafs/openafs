@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/lockprocs.c,v 1.9.14.1 2007/10/30 15:16:41 shadow Exp $");
 
 #include "lockprocs.h"
 #include <string.h>

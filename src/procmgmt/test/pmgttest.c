@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/procmgmt/test/pmgttest.c,v 1.5 2003/07/15 23:16:01 shadow Exp $");
 
 #include <afs/stds.h>
 

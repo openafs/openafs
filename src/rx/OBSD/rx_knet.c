@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/OBSD/rx_knet.c,v 1.6 2003/07/15 23:16:25 shadow Exp $");
 
 #include "../rx/rx_kcommon.h"
 
@@ -42,7 +40,11 @@ osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
 
     if (haveGlock)
 	AFS_GUNLOCK();
-    code = soreceive(asocket, (addr ? &nam : NULL), &u, NULL, NULL, NULL);
+    code = soreceive(asocket, (addr ? &nam : NULL), &u, NULL, NULL, NULL
+#if defined(AFS_OBSD45_ENV)
+		     , 0
+#endif
+		     );
     if (haveGlock)
 	AFS_GLOCK();
 

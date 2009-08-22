@@ -7,6 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
@@ -39,7 +43,16 @@ LIBS=${TOP_LIBDIR}/librx.a \
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
 
-all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a ${TOP_INCDIR}/afs/bnode.h bos_util
+all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a bos_util
+
+${TOP_INCDIR}/afs/bosint.h: bosint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/bnode.h: bnode.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libbos.a: libbos.a
+	${INSTALL_DATA} $? $@
 
 $(OBJS) bosint.xdr.o bosint.cs.o boserr.o: $(INCLS)
 
@@ -63,7 +76,9 @@ bosint.cs.c: bosint.h
 bosint.ss.c: bosint.h
 bosint.xdr.c: bosint.h
 
-bnode.h boserr.c: bnode.p.h boserr.et
+bnode.h: boserr.c
+
+boserr.c: bnode.p.h boserr.et
 	$(RM) -f boserr.c bnode.h
 	${COMPILE_ET} -p ${srcdir} boserr -h bnode
 
@@ -80,7 +95,7 @@ bos.o: bos.c ${INCLS} AFS_component_version_number.o
 bos: bos.o $(LIBS) libbos.a
 	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS)  ${XLIBS}
 
-bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o
+bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o ${TOP_INCDIR}/afs/bnode.h
 
 bos_util: bos_util.o $(LIBS) 
 	${CC} ${CFLAGS} -o bos_util bos_util.o $(LIBS)  ${XLIBS}
@@ -100,35 +115,32 @@ bosserver: $(OBJS) $(LIBS)
 #
 # Install targets
 #
-install: \
-	${DESTDIR}${afssrvsbindir}/bosserver \
-	${DESTDIR}${includedir}/afs/bosint.h \
-	${DESTDIR}${bindir}/bos \
-	${DESTDIR}${afssrvbindir}/bos \
-	${DESTDIR}${afssrvsbindir}/bos_util \
-	${DESTDIR}${libdir}/afs/libbos.a \
-	${DESTDIR}${includedir}/afs/bnode.h
+install: bosserver bos bos_util libbos.a bosint.h bnode.h
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL_PROGRAM} bosserver ${DESTDIR}${afssrvsbindir}/bosserver
+	${INSTALL_DATA} bosint.h ${DESTDIR}${includedir}/afs/bosint.h
+	${INSTALL_PROGRAM} bos ${DESTDIR}${bindir}/bos
+	${INSTALL_PROGRAM} bos ${DESTDIR}${afssrvbindir}/bos
+	${INSTALL_PROGRAM} bos_util ${DESTDIR}${afssrvsbindir}/bos_util
+	${INSTALL_DATA} libbos.a ${DESTDIR}${libdir}/afs/libbos.a
+	${INSTALL_DATA} bnode.h ${DESTDIR}${includedir}/afs/bnode.h
 
-${DEST}/root.server/usr/afs/bin/bosserver: bosserver
-	${INSTALL} $? $@
-
-${DEST}/include/afs/bosint.h: bosint.h
-	${INSTALL} $? $@
-
-${DEST}/bin/bos: bos
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/bos: bos
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/bos_util: bos_util
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libbos.a: libbos.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/bnode.h: bnode.h
-	${INSTALL} $? $@
+dest: bosserver bos bos_util libbos.a bosint.h bnode.h
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_PROGRAM} bosserver ${DEST}/root.server/usr/afs/bin/bosserver
+	${INSTALL_DATA} bosint.h ${DEST}/include/afs/bosint.h
+	${INSTALL_PROGRAM} bos ${DEST}/bin/bos
+	${INSTALL_PROGRAM} bos ${DEST}/root.server/usr/afs/bin/bos
+	${INSTALL_PROGRAM} bos_util ${DEST}/root.server/usr/afs/bin/bos_util
+	${INSTALL_DATA} libbos.a ${DEST}/lib/afs/libbos.a
+	${INSTALL_DATA} bnode.h ${DEST}/include/afs/bnode.h
 
 #
 # Misc. targets
@@ -142,41 +154,4 @@ test:
 	cd test; $(MAKE) 
 
 include ../config/Makefile.version
-${DESTDIR}${afssrvsbindir}/bosserver: bosserver
-	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/bosint.h: bosint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/bosint.h: bosint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/bos: bos
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvbindir}/bos: bos
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvsbindir}/bos_util: bos_util
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libbos.a: libbos.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libbos.a: libbos.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/bnode.h: bnode.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/bnode.h: bnode.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/root.server/usr/afs/bin/bosserver \
-	${DEST}/include/afs/bosint.h \
-	${DEST}/bin/bos \
-	${DEST}/root.server/usr/afs/bin/bos \
-	${DEST}/root.server/usr/afs/bin/bos_util \
-	${DEST}/lib/afs/libbos.a \
-	${DEST}/include/afs/bnode.h

@@ -1,5 +1,5 @@
 dnl
-dnl $Id: aix-cc.m4,v 1.2 2004/06/03 05:13:29 shadow Exp $
+dnl $Id$
 dnl 
 
 dnl We do not quite know how the version number of the xlc

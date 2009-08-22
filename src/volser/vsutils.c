@@ -10,11 +10,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.18.8.5 2008/04/14 20:25:52 shadow Exp $");
 
 #include <afs/stds.h>
 #include <string.h>
+#include <ctype.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <winsock2.h>
@@ -128,7 +127,7 @@ VLDB_CreateEntry(struct nvldbentry *entryp)
 }
 
 int
-VLDB_GetEntryByID(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp)
+VLDB_GetEntryByID(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
     register int code;
@@ -179,7 +178,7 @@ VLDB_GetEntryByName(char *namep, struct nvldbentry *entryp)
 }
 
 int 
-VLDB_ReplaceEntry(afs_int32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
+VLDB_ReplaceEntry(afs_uint32 volid, afs_int32 voltype, struct nvldbentry *entryp, afs_int32 releasetype)
 {
     struct vldbentry oentry;
     register int code;
@@ -287,7 +286,8 @@ VLDB_IsSameAddrs(afs_int32 serv1, afs_int32 serv2, afs_int32 *errorp)
     register int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
-    afs_uint32 *addrp, nentries, unique, i, j, f1, f2;
+    afs_uint32 *addrp, i, j, f1, f2;
+    afs_int32 unique, nentries;
     afsUUID uuid;
     static int initcache = 0;
 
@@ -386,7 +386,8 @@ vsu_SetCrypt(int cryptflag)
 */
 afs_int32
 vsu_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
-               struct ubik_client **uclientp, int (*secproc)())
+               struct ubik_client **uclientp,
+	       int (*secproc)(struct rx_securityClass *, afs_int32))
 {
     return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, 
 			   secproc, "vsu_ClientInit", vsu_rxkad_level,

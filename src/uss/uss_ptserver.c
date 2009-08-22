@@ -18,12 +18,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_ptserver.c,v 1.7.14.1 2007/04/10 18:39:55 shadow Exp $");
 
 #include "uss_ptserver.h"	/*Module interface */
 #include <afs/ptclient.h>	/*Protection Server client interface */
 #include <afs/pterror.h>	/*Protection Server error codes */
+#include <afs/ptuser.h>
 #include <afs/com_err.h>	/*Error code xlation */
 
 
@@ -66,10 +65,12 @@ static int initDone = 0;	/*Module initialized? */
  *------------------------------------------------------------------------*/
 
 static afs_int32
-InitThisModule()
+InitThisModule(void)
 {				/*InitThisModule */
 
+#ifdef USS_PTSERVER_DB
     static char rn[] = "uss_ptserver:InitThisModule";	/*Routine name */
+#endif
     register afs_int32 code;	/*Return code */
 
     /*
@@ -113,10 +114,7 @@ InitThisModule()
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_ptserver_AddUser(a_user, a_uid)
-     char *a_user;
-     char *a_uid;
-
+uss_ptserver_AddUser(char *a_user, char *a_uid)
 {				/*uss_ptserver_AddUser */
 
     afs_int32 code;		/*Various return codes */
@@ -175,7 +173,7 @@ uss_ptserver_AddUser(a_user, a_uid)
 	     * ID known for the user name.
 	     */
 	    mappedUserID = id;
-	    if (code = pr_SNameToId(a_user, &mappedUserID)) {
+	    if ((code = pr_SNameToId(a_user, &mappedUserID))) {
 		afs_com_err(uss_whoami, code,
 			"while getting uid from Protection Server");
 		return (code);
@@ -226,9 +224,7 @@ uss_ptserver_AddUser(a_user, a_uid)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_ptserver_DelUser(a_name)
-     char *a_name;
-
+uss_ptserver_DelUser(char *a_name)
 {				/*uss_ptserver_DelUser */
 
     afs_int32 code;		/*Various return codes */
@@ -294,13 +290,11 @@ uss_ptserver_DelUser(a_name)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_ptserver_XlateUser(a_user, a_uidP)
-     char *a_user;
-     afs_int32 *a_uidP;
-
+uss_ptserver_XlateUser(char *a_user, afs_int32 *a_uidP)
 {				/*uss_ptserver_XlateUser */
-
+#ifdef USS_PTSERVER_DB
     static char rn[] = "uss_ptserver_XlateUser";	/*Routine name */
+#endif
     register afs_int32 code;	/*Various return codes */
 
     if (uss_verbose)

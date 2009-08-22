@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/volmain.c,v 1.22.2.11 2008/03/27 16:20:39 shadow Exp $");
 
 #include <sys/types.h>
 #include <string.h>
@@ -24,6 +22,7 @@ RCSID
 #include <sys/time.h>
 #include <sys/file.h>
 #include <netinet/in.h>
+#include <unistd.h>
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -47,10 +46,12 @@ RCSID
 #include <afs/volume.h>
 #include <afs/partition.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <rx/rx_globals.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
+#include <afs/dir.h>
 #include <ubik.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -59,6 +60,10 @@ RCSID
 #include <errno.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>
+#include <lwp.h>
+#include "volser.h"
+#include "volint.h"
+#include "volser_prototypes.h"
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 /*@printflike@*/ extern void Abort(const char *format, ...);
@@ -67,11 +72,6 @@ RCSID
 #define N_SECURITY_OBJECTS 3
 
 extern struct Lock localLock;
-extern struct volser_trans *TransList();
-#ifndef AFS_PTHREAD_ENV
-extern int (*vol_PollProc) ();
-extern int IOMGR_Poll();
-#endif
 char *GlobalNameHack = NULL;
 int hackIsIn = 0;
 afs_int32 GlobalVolCloneId, GlobalVolParentId;
@@ -79,11 +79,10 @@ int GlobalVolType;
 int VolumeChanged;		/* XXXX */
 static char busyFlags[MAXHELPERS];
 struct volser_trans *QI_GlobalWriteTrans = 0;
-extern void AFSVolExecuteRequest();
-extern void RXSTATS_ExecuteRequest();
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls = 0;
 int DoLogging = 0;
+int debuglevel = 0; 
 #define MAXLWP 128
 int lwps = 9;
 int udpBufSize = 0;		/* UDP buffer size for receive */
@@ -100,36 +99,36 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 		       }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (int)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
-static afs_int32
+static void
 MyBeforeProc(struct rx_call *acall)
 {
     VTRANS_LOCK;
     runningCalls++;
     VTRANS_UNLOCK;
-    return 0;
+    return;
 }
 
-static afs_int32
+static void
 MyAfterProc(struct rx_call *acall, afs_int32 code)
 {
     VTRANS_LOCK;
     runningCalls--;
     VTRANS_UNLOCK;
-    return 0;
+    return;
 }
 
 /* Called every GCWAKEUP seconds to try to unlock all our partitions,
  * if we're idle and there are no active transactions 
  */
 static void
-TryUnlock()
+TryUnlock(void)
 {
     /* if there are no running calls, and there are no active transactions, then
      * it should be safe to release any partition locks we've accumulated */
@@ -207,9 +206,9 @@ int
 volser_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
-    void (*old) ();
-
 #ifndef AFS_LINUX20_ENV
+    void (*old) (int);
+
     old = signal(SIGSYS, SIG_IGN);
 #endif
     rcode =
@@ -242,10 +241,11 @@ main(int argc, char **argv)
     int rxpackets = 100;
     char commandLine[150];
     int i;
-    int rxJumbograms = 1;	/* default is to send and receive jumbograms. */
+    int rxJumbograms = 0;	/* default is to send and receive jumbograms. */
     int rxMaxMTU = -1;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
     afs_uint32 host = ntohl(INADDR_ANY);
+    char *auditFileName = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -294,6 +294,13 @@ main(int argc, char **argv)
 	    rxBind = 1;
 	} else if (strcmp(argv[code], "-allow-dotted-principals") == 0) {
 	    rxkadDisableDotCheck = 1;
+	} else if (strcmp(argv[code], "-d") == 0) {
+	    if ((code + 1) >= argc) {
+		fprintf(stderr, "missing argument for -d\n"); 
+		return -1; 
+	    }
+	    debuglevel = atoi(argv[++code]);
+	    LogLevel = debuglevel;
 	} else if (strcmp(argv[code], "-p") == 0) {
 	    lwps = atoi(argv[++code]);
 	    if (lwps > MAXLWP) {
@@ -302,37 +309,19 @@ main(int argc, char **argv)
 		lwps = MAXLWP;
 	    }
 	} else if (strcmp(argv[code], "-auditlog") == 0) {
-	    int tempfd, flags;
-	    FILE *auditout;
-	    char oldName[MAXPATHLEN];
-	    char *fileName = argv[++code];
+	    auditFileName = argv[++code];
 
-#ifndef AFS_NT40_ENV
-	    struct stat statbuf;
-	    
-	    if ((lstat(fileName, &statbuf) == 0) 
-		&& (S_ISFIFO(statbuf.st_mode))) {
-		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
-#endif
-	    {
-		strcpy(oldName, fileName);
-		strcat(oldName, ".old");
-		renamefile(fileName, oldName);
-		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	} else if (strcmp(argv[code], "-audit-interface") == 0) {
+	    char *interface = argv[++code];
+
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		return -1;
 	    }
-	    tempfd = open(fileName, flags, 0666);
-	    if (tempfd > -1) {
-		auditout = fdopen(tempfd, "a");
-		if (auditout) {
-		    osi_audit_file(auditout);
-		    osi_audit(VS_StartEvent, 0, AUD_END);
-		} else
-		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	} else if (strcmp(argv[code], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
+	} else if (strcmp(argv[code], "-jumbo") == 0) {
+	    rxJumbograms = 1;
 	} else if (!strcmp(argv[code], "-rxmaxmtu")) {
 	    if ((code + 1) >= argc) {
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
@@ -341,7 +330,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d% invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		exit(1);
@@ -384,22 +373,27 @@ main(int argc, char **argv)
 	  usage:
 #ifndef AFS_NT40_ENV
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
+		   "[-auditlog <log path>] [-d <debug level>] "
+		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
-		   "[-auditlog <log path>] "
-		   "[-nojumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
+		   "[-auditlog <log path>] [-d <debug level>] "
+		   "[-nojumbo] [-jumbo] [-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
 		   "[-udpsize <size of socket buffer in bytes>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif
 	    VS_EXIT(1);
 	}
+    }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
+	osi_audit(VS_StartEvent, 0, AUD_END);
     }
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -440,7 +434,6 @@ main(int argc, char **argv)
 	rx_SetUdpBufSize(udpBufSize);	/* set the UDP buffer size for receive */
     if (rxBind) {
 	afs_int32 ccode;
-#ifndef AFS_NT40_ENV
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
@@ -449,7 +442,6 @@ main(int argc, char **argv)
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else 
-#endif	
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
@@ -483,7 +475,7 @@ main(int argc, char **argv)
 	assert(pthread_attr_init(&tattr) == 0);
 	assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
-	assert(pthread_create(&tid, &tattr, (void *)BKGLoop, NULL) == 0);
+	assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
 #else
 	PROCESS pid;
 	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);
@@ -517,16 +509,17 @@ main(int argc, char **argv)
     if (lwps < 4)
 	lwps = 4;
     rx_SetMaxProcs(service, lwps);
-#ifdef AFS_SGI_ENV
-    rx_SetStackSize(service, 49152);
+#if defined(AFS_XBSD_ENV)
+    rx_SetStackSize(service, (128 * 1024));
+#elif defined(AFS_SGI_ENV)
+    rx_SetStackSize(service, (48 * 1024));
 #else
-    rx_SetStackSize(service, 32768);
+    rx_SetStackSize(service, (32 * 1024));
 #endif
 
     if (rxkadDisableDotCheck) {
         rx_SetSecurityConfiguration(service, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
-                                    NULL);
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
     }
 
     service =

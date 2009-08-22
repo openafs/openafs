@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/tsalvaged/salvsync-debug.c,v 1.1.4.1 2007/10/31 04:09:38 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>

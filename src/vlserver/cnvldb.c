@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vlserver/cnvldb.c,v 1.9.14.4 2007/12/09 23:35:37 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -20,7 +18,6 @@ RCSID
 #include <sys/file.h>
 #include <string.h>
 
-#include "cnvldb.h"		/* CHANGEME! */
 #include <netinet/in.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
@@ -28,6 +25,7 @@ RCSID
 #include <afs/fileutil.h>
 
 #include "vlserver.h"
+#include "cnvldb.h"		/* CHANGEME! */
 
 #define MAXSIZE 2048		/* most I'll get back from PIOCTL */
 #define	BADSERVERID	255	/* XXX */
@@ -35,23 +33,28 @@ RCSID
 
 static char pn[] = "cnvldb";
 static char tempname[] = "XXnewvldb";
-static char space[MAXSIZE];
 static int MaxServers[3] = { 30, 254, 254 };	/* max server # permitted in this version */
 
-static afs_int32 Conv4to3();
+static afs_int32 Conv4to3(afs_int32 addr);
 
-static int convert_vlentry();
-static int rewrite_header();
+static void convert_vlentry(int, int, int, struct vlheader_1 *,
+			    struct vlheader_1 *, struct vlentry_1 *);
+static void rewrite_header(int, int, void *);
+static void readheader(int fd, int version, void *addr);
+static int readentry(int fd, int version, void *addr);
+static void printentry(int version, void *addr);
 
 static char tspace[1024];	/* chdir can't handle anything bigger, anyway */
 
 void read_mhentries(afs_uint32 mh_addr, int oldfd);
 void convert_mhentries(int oldfd, int newfd, struct vlheader_2 *header, int fromver, int tover);
 
+static int convert_header(int ofd, int fd, int fromv, int tov, void *fromaddr,
+			  void *toaddr);
+
 /* return a static pointer to a buffer */
 static char *
-Parent(apath)
-     char *apath;
+Parent(const char *apath)
 {
     register char *tp;
     strcpy(tspace, apath);
@@ -67,22 +70,19 @@ int oldpos = 0;
 int fromvers = 0, tovers = 0, showversion = 0;
 afs_uint32 mhaddr;
 afs_int32 dbsize;
-char *pathname = NULL;
+const char *pathname = NULL;
 const char *dbPath;
 
 static int
 handleit(struct cmd_syndesc *as, void *arock)
 {
-    register struct cmd_item *ti;
-    register afs_int32 code;
     int w, old, new, rc, dump = 0, fromv = 0;
-    short uvers;
     char ubik[80];		/* space for some ubik header */
     union {
 	struct vlheader_1 header1;
 	struct vlheader_2 header2;
 	struct vlheader_3 header3;
-    } oldheader, oldheader1, newheader;	/* large enough for either */
+    } oldheader, newheader;	/* large enough for either */
 
     union {
 	struct vlentry_1 entry1;
@@ -224,14 +224,17 @@ handleit(struct cmd_syndesc *as, void *arock)
 	rc = readentry(old, fromvers, &xvlentry);
 	if ((rc == 0) || (rc == EOF))
 	    break;
-	convert_vlentry(new, fromvers, tovers, &oldheader, &newheader,
-			&xvlentry);
+	convert_vlentry(new, fromvers, tovers,
+			(struct vlheader_1 *)&oldheader,
+			(struct vlheader_1 *)&newheader,
+			(struct vlentry_1 *)&xvlentry);
     }
 
     /* We have now finished sequentially reading and writing the database.
      * Now randomly offset into database and update multihome entries.
      */
-    convert_mhentries(old, new, &newheader, fromvers, tovers);
+    convert_mhentries(old, new, (struct vlheader_2 *)&newheader,
+		      fromvers, tovers);
     rewrite_header(new, tovers, &newheader);
 
     close(old);
@@ -247,10 +250,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 }
 
 
-readheader(fd, version, addr)
-     int fd;
-     int version;
-     char *addr;
+static void
+readheader(int fd, int version, void *addr)
 {
     int hdrsize, size = 0;
 
@@ -267,14 +268,13 @@ readheader(fd, version, addr)
     return;
 }
 
-readentry(fd, version, addr)
-     int fd;
-     int version;
-     char *addr;
+static int
+readentry(int fd, int version, void *addr)
 {
     int rc, rc1;
     struct vlentry_3 *vl3p = (struct vlentry_3 *)addr;
     int toread;
+    char *caddr = (char *)addr;
 
     toread =
 	((version ==
@@ -290,7 +290,7 @@ readentry(fd, version, addr)
 	if (!mhaddr)		/* Remember first mh block */
 	    mhaddr = oldpos - rc;
 
-	rc1 = read(fd, &addr[rc], VL_ADDREXTBLK_SIZE - rc);
+	rc1 = read(fd, &caddr[rc], VL_ADDREXTBLK_SIZE - rc);
 	if (rc1 != VL_ADDREXTBLK_SIZE - rc)
 	    printf("Partial read of mhblock at pos %u: %d\n", oldpos + rc,
 		   rc1);
@@ -303,9 +303,8 @@ readentry(fd, version, addr)
     return rc;
 }
 
-printentry(version, addr)
-     int version;
-     char *addr;
+static void
+printentry(int version, void *addr)
 {
     struct vlentry_2 *vl2p = (struct vlentry_2 *)addr;
     struct vlentry_3 *vl3p = (struct vlentry_3 *)addr;
@@ -320,7 +319,7 @@ printentry(version, addr)
 	printf("%s\t%5d [%10d:%10d:%10d]%8X%8d\n", vl2p->name, vl2p->spares3,
 	       vl2p->volumeId[0], vl2p->volumeId[1], vl2p->volumeId[2],
 	       vl2p->flags, vl2p->LockAfsId);
-	printf("\t%8d%8d%8d [%7d%7d%7d]%7d% [%4d%4d%4d%4d][%4d%4d%4d%4d]\n",
+	printf("\t%8d%8d%8d [%7d%7d%7d]%7d [%4d%4d%4d%4d][%4d%4d%4d%4d]\n",
 	       vl2p->LockTimestamp, vl2p->cloneId, vl2p->spares0,
 	       vl2p->nextIdHash[0], vl2p->nextIdHash[1], vl2p->nextIdHash[2],
 	       vl2p->nextNameHash, vl2p->serverNumber[0],
@@ -335,7 +334,7 @@ printentry(version, addr)
 
 	if (vl3p->flags == VLFREE)
 	    return;
-	printf("%s\tPos=%d NextIdHash=[%d:%d:%d] NextNameHash=%d\n",
+	printf("%s\tPos=%lu NextIdHash=[%d:%d:%d] NextNameHash=%d\n",
 	       vl3p->name, (oldpos - sizeof(struct vlentry_3)),
 	       vl3p->nextIdHash[0], vl3p->nextIdHash[1], vl3p->nextIdHash[2],
 	       vl3p->nextNameHash);
@@ -362,9 +361,7 @@ struct extentaddr *base[VL_MAX_ADDREXTBLKS];
  * If it's not good, then don't read the block in.
  */
 void
-read_mhentries(mh_addr, oldfd)
-     int oldfd;
-     afs_uint32 mh_addr;
+read_mhentries(afs_uint32 mh_addr, int oldfd)
 {
     afs_uint32 sit, a;
     afs_int32 code;
@@ -469,12 +466,9 @@ read_mhentries(mh_addr, oldfd)
  * Before this can be called, the routine read_mhentries must be called.
  */
 void
-convert_mhentries(oldfd, newfd, header, fromver, tover)
-     int oldfd, newfd;
-     struct vlheader_2 *header;
-     int fromver, tover;
+convert_mhentries(int oldfd, int newfd, struct vlheader_2 *header,
+		  int fromver, int tover)
 {
-    afs_uint32 sit;
     afs_int32 code;
     int i, j, modified = 0, w;
     afs_uint32 raddr, addr;
@@ -599,9 +593,9 @@ convert_mhentries(oldfd, newfd, header, fromver, tover)
 }
 
 
-convert_header(ofd, fd, fromv, tov, fromaddr, toaddr)
-     int ofd, fd, fromv, tov;
-     char *fromaddr, *toaddr;
+int
+convert_header(int ofd, int fd, int fromv, int tov, void *fromaddr,
+	       void *toaddr)
 {
     struct vlheader_1 *tvp1;
     struct vlheader_2 *tvp2;
@@ -749,8 +743,7 @@ convert_header(ofd, fd, fromv, tov, fromaddr, toaddr)
  * Before this can be called, the routine read_mhentries must be called.
  */
 static afs_int32
-Conv4to3(addr)
-     afs_int32 addr;
+Conv4to3(afs_int32 addr)
 {
     afs_int32 raddr;
     int i;
@@ -773,11 +766,10 @@ Conv4to3(addr)
  * aren't any more or any larger, so they match up pretty well.
 */
 
-static int
-convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
-     int new, fromvers, tovers;
-     struct vlheader_1 *oldheader, *newheader;	/* close enough */
-     struct vlentry_1 *vlentryp;	/* 1 and 2 are identical */
+static void
+convert_vlentry(int new, int fromvers, int tovers,
+		struct vlheader_1 *oldheader, struct vlheader_1 *newheader,
+		struct vlentry_1 *vlentryp)
 {
     int diff, i, s, w;
     struct vlentry_3 *vl3p = (struct vlentry_3 *)vlentryp;
@@ -795,7 +787,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 		exit(1);
 	    }
 	}
-	return 0;
+	return;
     }
 
     if (fromvers == 2 && tovers == 3) {
@@ -827,7 +819,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	    exit(1);
 	}
 
-	return 0;
+	return;
     } else if (fromvers == 3 && tovers == 2) {
 	struct vlentry_2 vl;
 	struct vlentry_3 *xnvlentry = (struct vlentry_3 *)vlentryp;
@@ -857,7 +849,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	    printf("Write of entry failed %d; error %u\n", w, errno);
 	    exit(1);
 	}
-	return 0;
+	return;
     } else if (fromvers == 3 && tovers == 1) {
 	struct vlentry_1 vl;
 	struct vlentry_3 *xnvlentry = (struct vlentry_3 *)vlentryp;
@@ -906,7 +898,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	    printf("Write of entry failed %d; error %u\n", w, errno);
 	    exit(1);
 	}
-	return 0;
+	return;
     } else if (fromvers == 4 && tovers == 3) {
 	struct vlentry_3 vl;
 	/* We are converting from version 4 to 3. In this conversion, mh info
@@ -924,7 +916,7 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
 	    printf("Write of entry failed %d; error %u\n", w, errno);
 	    exit(1);
 	}
-	return 0;
+	return;
     }
 
     if (tovers == 1) {
@@ -955,10 +947,8 @@ convert_vlentry(new, fromvers, tovers, oldheader, newheader, vlentryp)
     return;
 }
 
-static int
-rewrite_header(new, tovers, newheader)
-     int new, tovers;
-     char *newheader;
+static void
+rewrite_header(int new, int tovers, void *newheader)
 {
     int pos, w, towrite;
 
@@ -987,9 +977,8 @@ rewrite_header(new, tovers, newheader)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/afs_vosAdmin.c,v 1.11.4.2 2007/10/30 15:16:41 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -30,12 +28,24 @@ RCSID
 #endif
 #include "afs_vosAdmin.h"
 #include "../adminutil/afs_AdminInternal.h"
-#include <afs/afs_utilAdmin.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>
 #include <afs/volint.h>
+
+/* File descriptors are HANDLE's on NT. The following typedef helps catch
+ * type errors. Duplicated from vol/ihandle.h
+ */
+#ifdef AFS_NT40_ENV
+typedef HANDLE FD_t;
+#else
+typedef int FD_t;
+#endif
+#define INVALID_FD ((FD_t)-1)
+
 #include <afs/partition.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
+#include <afs/afs_utilAdmin.h>
 #include "vosutils.h"
 #include "vsprocs.h"
 #include "lockprocs.h"
@@ -1069,8 +1079,9 @@ vos_ServerSync(const void *cellHandle, const void *serverHandle,
 
 int ADMINAPI
 vos_FileServerAddressChange(const void *cellHandle,
-			    vos_MessageCallBack_t callBack, int oldAddress,
-			    int newAddress, afs_status_p st)
+			    vos_MessageCallBack_t callBack,
+			    unsigned int oldAddress,
+			    unsigned int newAddress, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1085,8 +1096,7 @@ vos_FileServerAddressChange(const void *cellHandle,
     }
 
     tst =
-	ubik_Call_New(VL_ChangeAddr, c_handle->vos, 0, oldAddress,
-		      newAddress);
+	ubik_VL_ChangeAddr(c_handle->vos, 0, oldAddress, newAddress);
     if (tst) {
 	goto fail_vos_FileServerAddressChange;
     }
@@ -1124,13 +1134,14 @@ vos_FileServerAddressChange(const void *cellHandle,
 
 int ADMINAPI
 vos_FileServerAddressRemove(const void *cellHandle,
-			    vos_MessageCallBack_t callBack, int serverAddress,
+			    vos_MessageCallBack_t callBack,
+			    unsigned int serverAddress,
 			    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    int dummyAddress = 0xffffffff;
+    unsigned int dummyAddress = 0xffffffff;
 
     /*
      * Validate arguments
@@ -1141,7 +1152,7 @@ vos_FileServerAddressRemove(const void *cellHandle,
     }
 
     tst =
-	ubik_Call_New(VL_ChangeAddr, c_handle->vos, 0, dummyAddress,
+	ubik_VL_ChangeAddr(c_handle->vos, 0, dummyAddress,
 		      serverAddress);
     if (tst) {
 	goto fail_vos_FileServerAddressRemove;
@@ -1362,7 +1373,7 @@ vos_FileServerGetBegin(const void *cellHandle, vos_MessageCallBack_t callBack,
 
     serv->vldb = c_handle->vos;
     tst =
-	ubik_Call_New(VL_GetAddrs, c_handle->vos, 0, 0, 0, &unused,
+	ubik_VL_GetAddrs(c_handle->vos, 0, 0, 0, &unused,
 		      &serv->total_addresses, &serv->addresses);
 
     if (tst) {
@@ -1937,7 +1948,7 @@ copyVLDBEntry(struct nvldbentry *source, vos_vldbEntry_p dest,
 
 int ADMINAPI
 vos_VLDBGet(const void *cellHandle, vos_MessageCallBack_t callBack,
-	    const unsigned int *volumeId, const char *volumeName,
+	    const unsigned int *volumeId, char *volumeName,
 	    vos_vldbEntry_p vldbEntry, afs_status_p st)
 {
     int rc = 0;
@@ -2867,7 +2878,7 @@ vos_VLDBSync(const void *cellHandle, const void *serverHandle,
 int ADMINAPI
 vos_VolumeCreate(const void *cellHandle, const void *serverHandle,
 		 vos_MessageCallBack_t callBack, unsigned int partition,
-		 const char *volumeName, unsigned int quota,
+		 char *volumeName, unsigned int quota,
 		 unsigned int *volumeId, afs_status_p st)
 {
     int rc = 0;
@@ -3039,7 +3050,7 @@ vos_VolumeDelete(const void *cellHandle, const void *serverHandle,
 
 int ADMINAPI
 vos_VolumeRename(const void *cellHandle, vos_MessageCallBack_t callBack,
-		 unsigned int readWriteVolumeId, const char *newVolumeName,
+		 unsigned int readWriteVolumeId, char *newVolumeName,
 		 afs_status_p st)
 {
     int rc = 0;
@@ -3209,7 +3220,7 @@ vos_VolumeDump(const void *cellHandle, const void *serverHandle,
 int ADMINAPI
 vos_VolumeRestore(const void *cellHandle, const void *serverHandle,
 		  vos_MessageCallBack_t callBack, unsigned int partition,
-		  unsigned int *volumeId, const char *volumeName,
+		  unsigned int *volumeId, char *volumeName,
 		  const char *dumpFile, vos_volumeRestoreType_t dumpType,
 		  afs_status_p st)
 {

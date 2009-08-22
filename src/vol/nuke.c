@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/nuke.c,v 1.17.2.1 2006/09/03 05:33:41 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -29,7 +27,12 @@ RCSID
 #else
 #include <strings.h>
 #endif
+#ifndef AFS_NT40_ENV
+#include <unistd.h>
+#endif
 
+#include <afs/afsutil.h>
+    
 #include <afs/assert.h>
 #include "nfs.h"
 #include "lwp.h"
@@ -54,7 +57,6 @@ RCSID
 
 
 struct Lock localLock;
-char *vol_DevName();
 
 #define MAXATONCE	100
 /* structure containing neatly packed set of inodes and the # of times we'll have
@@ -73,8 +75,9 @@ struct ilist {
  * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
 static int
-NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid, struct ilist **allInodes)
+NukeProc(struct ViceInodeInfo *ainfo, afs_uint32 avolid, void *arock)
 {
+    struct ilist **allInodes = (struct ilist **)arock;
     struct ilist *ti;
     register afs_int32 i;
 

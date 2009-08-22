@@ -19,8 +19,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/fcrypt.c,v 1.18.2.2 2007/10/30 15:16:46 shadow Exp $");
 
 #define DEBUG 0
 #ifdef KERNEL
@@ -40,8 +38,6 @@ RCSID
 #ifdef AFS_LINUX22_ENV
 #include <asm/byteorder.h>
 #endif
-
-#include "afs/longc_procs.h"
 
 #else /* KERNEL */
 
@@ -113,7 +109,7 @@ fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
 /* IN int encrypt; * 0 ==> decrypt, else encrypt */
 afs_int32
 fc_ecb_encrypt(void * clear, void * cipher,
-	       fc_KeySchedule schedule, int encrypt)
+	       const fc_KeySchedule schedule, int encrypt)
 {
     afs_uint32 L, R;
     volatile afs_uint32 S, P;
@@ -202,7 +198,7 @@ fc_ecb_encrypt(void * clear, void * cipher,
 */
 afs_int32
 fc_cbc_encrypt(void *input, void *output, afs_int32 length,
-	       fc_KeySchedule key, afs_uint32 * xor, int encrypt)
+	       const fc_KeySchedule key, afs_uint32 * xor, int encrypt)
 {
     afs_uint32 i, j;
     afs_uint32 t_input[2];

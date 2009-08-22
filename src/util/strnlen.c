@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/strnlen.c,v 1.1 2006/03/18 04:20:16 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdarg.h>

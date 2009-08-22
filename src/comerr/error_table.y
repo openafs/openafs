@@ -2,8 +2,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/comerr/error_table.y,v 1.7 2003/03/10 01:59:29 shadow Exp $");
-
 /*
  *
  * Copyright 1986, 1987 by the MIT Student Information Processing Board
@@ -60,6 +58,8 @@ void add_ec_val(const char *name, const char *val, const char *description);
 void put_ecs(void);
 void set_table_num(char *string);
 void set_table_fun(char *astring);
+
+extern int yylex (void);
 
 %}
 %union {

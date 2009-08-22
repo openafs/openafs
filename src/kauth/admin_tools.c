@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/admin_tools.c,v 1.19.8.2 2007/10/31 04:09:30 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/debug.h>
@@ -30,6 +28,7 @@ RCSID
 #include <stdio.h>
 #include <rx/rx.h>
 #include <lock.h>
+#define UBIK_LEGACY_CALLITER 1
 #include <ubik.h>
 #ifndef AFS_NT40_ENV
 #include <pwd.h>
@@ -39,10 +38,13 @@ RCSID
 #include <afs/cmd.h>
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
+#include <des.h>
+#include <des_prototypes.h>
 
 #include "kauth.h"
 #include "kautils.h"
 #include "kaport.h"
+#include "kkids.h"
 
 #define CMD_PARSER_AMBIG_FIX 1	/* allow ambiguous aliases */
 
@@ -57,7 +59,7 @@ static char myName[510];	/* almost like whoami save with path and without : */
 static int finished;
 static int zero_argc;
 static char **zero_argv;
-afs_uint32 ka_islocked();
+afs_uint32 ka_islocked(char *, char *, afs_uint32 *);
 
 afs_int32
 DefaultCell(void)
@@ -409,11 +411,11 @@ parse_flags(char *name, char *inst, char *str, afs_int32 * flags)
     str = lcstring(bitspec, str, sizeof(bitspec));
     if (isdigit(*str)) {
 	if (strncmp(str, "0x", 2) == 0)	/* 0x => hex */
-	    sscanf(str, "0x%lx", &f);
+	    sscanf(str, "0x%lx", (long unsigned int *) &f);
 	else if (*str == '0')	/* assume octal */
-	    sscanf(str, "%lo", &f);
+	    sscanf(str, "%lo", (long unsigned int *) &f);
 	else			/* just assume hex */
-	    sscanf(str, "%lx", &f);
+	    sscanf(str, "%lx", (long unsigned int *) &f);
     } else {
 	if (*str == '=') {
 	    str++;
@@ -750,7 +752,7 @@ StringToKey(struct cmd_syndesc *as, void *arock)
 	}
 	ucstring(realm, realm, sizeof(realm));
     } else {
-	if (code = DefaultCell())
+	if ((code = DefaultCell()))
 	    return code;
 	ucstring(realm, cell, sizeof(realm));
     }
@@ -963,7 +965,7 @@ ListTicket(struct ktc_principal *server, int verbose)
     return 0;
 }
 
-static
+static int
 GetTicket(struct cmd_syndesc *as, void *arock)
 {
     int code;
@@ -985,7 +987,7 @@ GetTicket(struct cmd_syndesc *as, void *arock)
 	return KABADCMD;
     }
     if (server.cell[0] == 0) {
-	if (code = DefaultCell())
+	if ((code = DefaultCell()))
 	    return code;
 	strcpy(server.cell, cell);
     } else {
@@ -1009,7 +1011,7 @@ GetTicket(struct cmd_syndesc *as, void *arock)
     return code;
 }
 
-static
+static int
 GetPassword(struct cmd_syndesc *as, void *arock)
 {
     int code;
@@ -1076,7 +1078,7 @@ GetRandomKey(struct cmd_syndesc *as, void *arock)
 	ka_PrintBytes((char *)&key, sizeof(key));
 	printf(" (");
 	for (i = 0; i < sizeof(key); i++) {
-	    printf("%0.2x", ((char *)&key)[i] & 0xff);
+	    printf("%.2x", ((char *)&key)[i] & 0xff);
 	    if (i == 3)
 		printf(" ");
 	    else if (i != 7)
@@ -1111,7 +1113,8 @@ Statistics(struct cmd_syndesc *as, void *arock)
     printf("Hash table utilization = %f%%\n",
 	   (double)dynamics.hashTableUtilization / 100.0);
     ka_timestr(dynamics.start_time, bob, KA_TIMESTR_LEN);
-    printf("From host %lx started at %s:\n", dynamics.host, bob);
+    printf("From host %lx started at %s:\n", 
+	   afs_printable_uint32_lu(dynamics.host), bob);
 
 #define print_stat(name) if (dynamics.name.requests) printf ("  of %d requests for %s, %d were aborted.\n", dynamics.name.requests, # name, dynamics.name.aborts)
     print_stat(Authenticate);
@@ -1201,7 +1204,8 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
 	     timeOffset, now - start);
     }
     ka_timestr(info.startTime, bob, KA_TIMESTR_LEN);
-    printf("From host %lx started %sat %s:\n", info.host,
+    printf("From host %lx started %sat %s:\n", 
+	   afs_printable_uint32_lu(info.host),
 	   (info.noAuth ? "w/o authorization " : ""), bob);
     ka_timestr(info.lastTrans, bob, KA_TIMESTR_LEN);
     printf("Last trans was %s at %s\n", info.lastOperation, bob);
@@ -1215,8 +1219,9 @@ DebugInfo(struct cmd_syndesc *as, void *arock)
     printf("Next autoCPW at %s or in %d updates.\n", bob,
 	   info.updatesRemaining);
     if (info.cheader_lock || info.keycache_lock)
-	printf("locks: cheader %08lx, keycache %08lx\n", info.cheader_lock,
-	       info.keycache_lock);
+	printf("locks: cheader %08lx, keycache %08lx\n", 
+		afs_printable_uint32_lu(info.cheader_lock),
+	        afs_printable_uint32_lu(info.keycache_lock));
     printf("Last authentication for %s, last admin user was %s\n",
 	   info.lastAuth, info.lastAdmin);
     printf("Last TGS op was a %s ticket was for %s\n", info.lastTGSServer,
@@ -1283,7 +1288,6 @@ NoAuth(struct cmd_syndesc *as, void *arock)
 static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
-    extern struct passwd *getpwuid();
     struct ktc_encryptionKey key;
     struct ktc_principal auth_server, auth_token, client;
     char realm[MAXKTCREALMLEN];
@@ -1538,7 +1542,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 
 /* These are some helpful command that deal with the cache managers tokens. */
 
-static
+static int
 ForgetTicket(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
@@ -1592,7 +1596,7 @@ ForgetTicket(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-static
+static int
 ListTickets(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code = 0;
@@ -1612,7 +1616,7 @@ ListTickets(struct cmd_syndesc *as, void *arock)
 	    return code;
 	}
 	if (server.cell[0] == 0) {
-	    if (code = DefaultCell())
+	    if ((code = DefaultCell()))
 		return code;
 	    strcpy(server.cell, cell);
 	} else {
@@ -1814,7 +1818,7 @@ ka_AdminInteractive(int cmd_argc, char *cmd_argv[])
 
     strcpy(whoami, "kas");
 
-    if (code = cmd_Dispatch(cmd_argc, cmd_argv)) {
+    if ((code = cmd_Dispatch(cmd_argc, cmd_argv))) {
 	return code;
     }
 

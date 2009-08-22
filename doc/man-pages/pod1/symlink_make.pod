@@ -1,6 +1,6 @@
 =head1 NAME
 
-symlink_make - Create a symbolic link
+symlink_make - Create a symbolic link [Windows only]
 
 =head1 SYNOPSIS
 

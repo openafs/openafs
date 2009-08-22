@@ -10,10 +10,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_trace.c,v 1.11.14.2 2007/11/26 21:08:43 shadow Exp $");
 
-#ifdef RXDEBUG
+#ifndef RXDEBUG
+char rxi_tracename[80] = "\0Tracing not compiled in";
+#ifdef DUMPTRACE
+int
+main(int argc, char **argv)
+{
+    return 0;
+}
+#endif
+#else
 #include <string.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
@@ -47,7 +54,7 @@ struct rx_trace {
 };
 
 void
-rxi_flushtrace()
+rxi_flushtrace(void)
 {
     if (rxi_logfd >= 0)
 	write(rxi_logfd, rxi_tracebuf, rxi_tracepos);
@@ -55,9 +62,7 @@ rxi_flushtrace()
 }
 
 void
-rxi_calltrace(event, call)
-     unsigned int event;
-     struct rx_call *call;
+rxi_calltrace(unsigned int event, struct rx_call *call)
 {
     struct clock now;
     struct rx_trace rxtinfo;
@@ -130,8 +135,7 @@ rxi_calltrace(event, call)
 #endif
 
 int
-main(argc, argv)
-     char **argv;
+main(int argc, char **argv)
 {
     struct rx_trace ip;
     int err = 0;
@@ -186,5 +190,4 @@ main(argc, argv)
 }
 
 #endif /* DUMPTRACE */
-
-#endif
+#endif /* RXDEBUG */

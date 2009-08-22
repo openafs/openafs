@@ -13,19 +13,11 @@
 #include <stdlib.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dlq.c,v 1.9.14.1 2007/01/05 03:32:24 shadow Exp $");
-
 #include "bc.h"
 #include <afs/bubasics.h>
+#include "bucoord_prototypes.h"
 
 /* protos */
-int dlqEmpty(dlqlinkP );
-int dlqInit(dlqlinkP headptr);
-int dlqLinkf(dlqlinkP, dlqlinkP );
-int dlqLinkb(dlqlinkP, dlqlinkP );
-void dlqUnlink( dlqlinkP );
-int dlqTraverseQueue(dlqlinkP,  int *(), int *());
 int dlqCount(dlqlinkP );
 void dlqMoveb( dlqlinkP, dlqlinkP);
 dlqlinkP dlqUnlinkb(dlqlinkP );
@@ -214,7 +206,7 @@ int dlqCount(dlqlinkP headptr)
     return (count);
 }
 
-int dlqTraverseQueue(dlqlinkP headptr, int (*fn1()), int (*fn2()))
+int dlqTraverseQueue(dlqlinkP headptr, int (*fn1)(void *), int (*fn2)(void *))
 {
     dlqlinkP ptr, oldPtr;
 

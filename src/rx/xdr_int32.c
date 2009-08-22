@@ -34,8 +34,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_int32.c,v 1.6 2004/12/01 23:36:49 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -51,7 +49,7 @@ RCSID
  * same as xdr_u_long - open coded to save a proc call!
  */
 bool_t
-xdr_afs_int32(register XDR * xdrs, afs_int32 * lp)
+xdr_afs_int32(XDR * xdrs, afs_int32 * lp)
 {
 
     if (xdrs->x_op == XDR_ENCODE)
@@ -71,7 +69,7 @@ xdr_afs_int32(register XDR * xdrs, afs_int32 * lp)
  * same as xdr_long - open coded to save a proc call!
  */
 bool_t
-xdr_afs_uint32(register XDR * xdrs, afs_uint32 * ulp)
+xdr_afs_uint32(XDR * xdrs, afs_uint32 * ulp)
 {
 
     if (xdrs->x_op == XDR_DECODE)

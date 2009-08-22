@@ -100,7 +100,7 @@ struct afs_osi_WaitHandle {
 #define	osi_GetFileRock(x)	((x)->rock)
 
 #ifdef	AFS_TEXT_ENV
-#define osi_FlushText(vp) if (hcmp((vp)->m.DataVersion, (vp)->flushDV) > 0) \
+#define osi_FlushText(vp) if (hcmp((vp)->f.m.DataVersion, (vp)->flushDV) > 0) \
 			    osi_FlushText_really(vp)
 #else
 #define osi_FlushText(vp)
@@ -117,7 +117,9 @@ struct afs_osi_WaitHandle {
 /*
  * Alloc declarations.
  */
+#if !defined(AFS_OBSD44_ENV)
 #define afs_osi_Alloc_NoSleep afs_osi_Alloc
+#endif
 
 /*
  * Vnode related macros
@@ -125,7 +127,7 @@ struct afs_osi_WaitHandle {
 #if defined(AFS_DARWIN80_ENV)
 #define vType(vc)               vnode_vtype(AFSTOV(vc))
 #define vSetVfsp(vc, vfsp)      
-#define vSetType(vc, type)      (vc)->m.Type = (type)
+#define vSetType(vc, type)      (vc)->f.m.Type = (type)
 extern int afs_vfs_typenum;
 #define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
 #define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)
@@ -277,7 +279,7 @@ typedef struct timeval osi_timeval_t;
  * and kernel space. Call these to avoid taking page faults while
  * holding the global lock.
  */
-#ifdef CAST_USER_ADDR_T
+#if defined(CAST_USER_ADDR_T) && !defined(UKERNEL)
 #define __U(X) CAST_USER_ADDR_T((X))
 #else
 #define __U(X) (X)

@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/flipbase64.c,v 1.11 2005/05/08 06:09:21 shadow Exp $");
 
 
 #if defined(AFS_NAMEI_ENV)

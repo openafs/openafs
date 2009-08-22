@@ -20,8 +20,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/cksum.c,v 1.11 2003/07/15 23:14:59 shadow Exp $");
 
 #include <mit-cpyright.h>
 #ifndef KERNEL

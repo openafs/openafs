@@ -25,10 +25,12 @@ B<afsd> [B<-afsdb>] [B<-backuptree>]
      [B<-nosettime>]
      S<<< [B<-prealloc> <I<number of 'small' preallocated blocks>>] >>>
      [B<-rmtsys>] S<<< [B<-rootvol> <I<name of AFS root volume>>] >>>
-     [B<-rxbind>] S<<< [B<-rxpck> value for rx_extraPackets ] >>>
+     [B<-rxbind>] S<<< [B<-rxmaxmtu> value for maximum MTU ] >>> 
+     S<<< [B<-rxpck> value for rx_extraPackets ] >>>
      [B<-settime>] [B<-shutdown>]
      S<<< [B<-splitcache> <I<RW/RO ratio>>] >>>
      S<<< [B<-stat> <I<number of stat entries>>] >>> [B<-verbose>]
+     [B<-disable-dynamic-vcaches>] 
      S<<< [B<-volumes> <I<number of volume entries>>] >>>
      [B<-waitclose>]
 
@@ -627,6 +629,13 @@ B<-dynroot> is given.
 
 Bind the Rx socket (one interface only).
 
+=item B<-rxmaxmtu> <I<value for maximum MTU>>
+
+Set a limit for the largest maximum transfer unit (network packet size) that
+the AFS client on this machine will be willing to transmit. This switch can
+be used where an artificial limit on the network precludes packets as large
+as the discoverable MTU from being transmitted successfully.
+
 =item B<-rxpck> <I<value for rx_extraPackets>>
 
 Set rx_extraPackets to this value. This sets the number of extra Rx
@@ -668,6 +677,13 @@ standard output stream.
 
 Specifies the number of memory structures to allocate for storing volume
 location information. The default value is C<50>.
+
+=item B<-disable-dynamic-vcaches>
+
+By default, dynamic vcache overrides the B<-stat> option by using the value of
+B<-stat> (or the default) as the initial size of the stat (or vcache) pool and
+increases the pool dynamically as needed on supported platforms. This flag will
+disable this new functionality and honor the '-stat' setting.
 
 =item B<-waitclose>
 

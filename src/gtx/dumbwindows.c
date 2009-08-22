@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/gtx/dumbwindows.c,v 1.7 2003/07/15 23:15:12 shadow Exp $");
 
 #include "gtxdumbwin.h"		/*Interface definition */
 #include <stdio.h>		/*Standard I/O package */
@@ -77,9 +75,7 @@ struct gwinbaseops gator_dumb_gwinbops = {
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_init(adebug)
-     int adebug;
-
+gator_dumbgwin_init(int adebug)
 {				/*gator_dumbgwin_init */
 
     static char rn[] = "gator_dumbgwin_init";	/*Routine name */
@@ -121,9 +117,7 @@ gator_dumbgwin_init(adebug)
  *------------------------------------------------------------------------*/
 
 struct gwin *
-gator_dumbgwin_create(params)
-     struct gator_dumbgwin_params *params;
-
+gator_dumbgwin_create(struct gator_dumbgwin_params *params)
 {				/*gator_dumbgwin_create */
 
     static char rn[] = "gator_dumbgwin_create";	/*Routine name */
@@ -159,9 +153,7 @@ gator_dumbgwin_create(params)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_cleanup(gwp)
-     struct gwin *gwp;
-
+gator_dumbgwin_cleanup(struct gwin *gwp)
 {				/*gator_dumbgwin_cleanup */
 
     static char rn[] = "gator_dumbgwin_cleanup";	/*Routine name */
@@ -198,9 +190,7 @@ gator_dumbgwin_cleanup(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_box(gwp)
-     struct gwin *gwp;
-
+gator_dumbgwin_box(struct gwin *gwp)
 {				/*gator_dumbgwin_box */
 
     static char rn[] = "gator_dumbgwin_box";	/*Routine name */
@@ -236,9 +226,7 @@ gator_dumbgwin_box(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_clear(gwp)
-     struct gwin *gwp;
-
+gator_dumbgwin_clear(struct gwin *gwp)
 {				/*gator_dumbgwin_clear */
 
     static char rn[] = "gator_dumbgwin_clear";	/*Routine name */
@@ -274,9 +262,7 @@ gator_dumbgwin_clear(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_destroy(gwp)
-     struct gwin *gwp;
-
+gator_dumbgwin_destroy(struct gwin *gwp)
 {				/*gator_dumbgwin_destroy */
 
     static char rn[] = "gator_dumbgwin_destroy";	/*Routine name */
@@ -309,9 +295,7 @@ gator_dumbgwin_destroy(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_display(gwp)
-     struct gwin *gwp;
-
+gator_dumbgwin_display(struct gwin *gwp)
 {				/*gator_dumbgwin_display */
 
     static char rn[] = "gator_dumbgwin_display";	/*Routine name */
@@ -350,10 +334,7 @@ gator_dumbgwin_display(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_drawline(gwp, params)
-     struct gwin *gwp;
-     struct gwin_lineparams *params;
-
+gator_dumbgwin_drawline(struct gwin *gwp, struct gwin_lineparams *params)
 {				/*gator_dumbgwin_drawline */
 
     static char rn[] = "gator_dumbgwin_drawline";	/*Routine name */
@@ -392,10 +373,7 @@ gator_dumbgwin_drawline(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_drawrectangle(gwp, params)
-     struct gwin *gwp;
-     struct gwin_rectparams *params;
-
+gator_dumbgwin_drawrectangle(struct gwin *gwp, struct gwin_rectparams *params)
 {				/*gator_dumbgwin_drawrectangle */
 
     static char rn[] = "gator_dumbgwin_drawrectangle";	/*Routine name */
@@ -434,10 +412,7 @@ gator_dumbgwin_drawrectangle(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_drawchar(gwp, params)
-     struct gwin *gwp;
-     struct gwin_charparams *params;
-
+gator_dumbgwin_drawchar(struct gwin *gwp, struct gwin_charparams *params)
 {				/*gator_dumbgwin_drawchar */
 
     static char rn[] = "gator_dumbgwin_drawchar";	/*Routine name */
@@ -475,10 +450,7 @@ gator_dumbgwin_drawchar(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_drawstring(gwp, params)
-     struct gwin *gwp;
-     struct gwin_strparams *params;
-
+gator_dumbgwin_drawstring(struct gwin *gwp, struct gwin_strparams *params)
 {				/*gator_dumbgwin_drawstring */
 
     static char rn[] = "gator_dumbgwin_drawstring";	/*Routine name */
@@ -516,10 +488,7 @@ gator_dumbgwin_drawstring(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_invert(gwp, params)
-     struct gwin *gwp;
-     struct gwin_invparams *params;
-
+gator_dumbgwin_invert(struct gwin *gwp, struct gwin_invparams *params)
 {				/*gator_dumbgwin_invert */
 
     static char rn[] = "gator_dumbgwin_invert";	/*Routine name */
@@ -556,9 +525,7 @@ gator_dumbgwin_invert(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_getchar(gwp)
-     struct gwin *gwp;
-
+gator_dumbgwin_getchar(struct gwin *gwp)
 {				/*gator_dumbgwin_getchar */
 
     static char rn[] = "gator_dumbgwin_getchar";	/*Routine name */
@@ -593,10 +560,7 @@ gator_dumbgwin_getchar(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_getdimensions(gwp, aparms)
-     struct gwin *gwp;
-     struct gwin_sizeparams *aparms;
-
+gator_dumbgwin_getdimensions(struct gwin *gwp, struct gwin_sizeparams *aparms)
 {				/*gator_dumbgwin_getdimensions */
 
     static char rn[] = "gator_dumbgwin_getdimensions";	/*Routine name */
@@ -630,9 +594,7 @@ gator_dumbgwin_getdimensions(gwp, aparms)
  *------------------------------------------------------------------------*/
 
 int
-gator_dumbgwin_wait(gwp)
-     struct gwin *gwp;
-
+gator_dumbgwin_wait(struct gwin *gwp)
 {				/*gator_dumbgwin_wait */
 
     static char rn[] = "gator_dumbgwin_wait";	/*Routine name */

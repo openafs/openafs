@@ -25,8 +25,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/lwp/lock.c,v 1.5.14.1 2008/03/10 22:32:33 shadow Exp $");
 
 #ifdef AFS_PTHREAD_ENV
 #include <afs/assert.h>

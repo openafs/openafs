@@ -137,7 +137,7 @@ struct dlqlink {
     struct dlqlink *dlq_next;
     struct dlqlink *dlq_prev;
     afs_int32 dlq_type;
-    char *dlq_structPtr;	/* enclosing structure */
+    void *dlq_structPtr;	/* enclosing structure */
 };
 
 typedef struct dlqlink dlqlinkT;
@@ -162,9 +162,9 @@ typedef dlqlinkT *dlqlinkP;
 	}
 
 /* function typing */
-extern dlqlinkP dlqFront();
-extern dlqlinkP dlqUnlinkb();
-extern dlqlinkP dlqUnlinkf();
+extern dlqlinkP dlqFront(dlqlinkP);
+extern dlqlinkP dlqUnlinkb(dlqlinkP);
+extern dlqlinkP dlqUnlinkf(dlqlinkP);
 
 /* -----------------------------
  * Status management

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/readgroup.c,v 1.10.14.3 2007/11/26 21:08:43 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -25,10 +23,12 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
+#include "ptprototypes.h"
 
 int verbose = 0;
-void skip();
+static void skip(char **);
 
 void
 report_error(afs_int32 code, char *name, char *gname)
@@ -46,7 +46,7 @@ report_error(afs_int32 code, char *name, char *gname)
 }
 
 int
-osi_audit()
+osi_audit(void)
 {
 /* OK, this REALLY sucks bigtime, but I can't tell who is calling
  * afsconf_CheckAuth easily, and only *SERVERS* should be calling osi_audit
@@ -209,7 +209,7 @@ main(int argc, char **argv)
     return 0;
 }
 
-void
+static void
 skip(char **s)
 {
     while (**s != ' ' && **s != '\t' && **s != '\0')

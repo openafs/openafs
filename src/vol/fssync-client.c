@@ -15,14 +15,6 @@
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
-#ifdef notdef
-
-/* All this is going away in early 1989 */
-int newVLDB;			/* Compatibility flag */
-
-#endif
-static int newVLDB = 1;
-
 
 #ifndef AFS_PTHREAD_ENV
 #define USUAL_PRIORITY (LWP_MAX_PRIORITY - 2)
@@ -43,8 +35,6 @@ static int newVLDB = 1;
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/fssync-client.c,v 1.1.4.4 2008/04/01 20:05:36 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>

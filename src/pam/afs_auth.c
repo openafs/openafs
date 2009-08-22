@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_auth.c,v 1.13 2005/05/30 03:35:52 shadow Exp $");
 
 #include <syslog.h>
 #include <stdlib.h>
@@ -177,8 +175,8 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     /* enhanced: use "ignore_uid <number>" to specify the largest uid
      * which should be ignored by this module
      */
-#if	defined(AFS_HPUX_ENV)
-#if     defined(AFS_HPUX110_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
@@ -190,8 +188,10 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 	RET(PAM_AUTH_ERR);
     }
 #else
-#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
+#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV)
     upwd = getpwnam(user);
+#elif   defined(_POSIX_PTHREAD_SEMANTICS) && defined(AFS_SUN5_ENV)
+    getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
 #endif

@@ -74,9 +74,13 @@ struct rxkad_cconn {
 struct rxkad_sprivate {
     rxkad_type type;		/* always server */
     rxkad_level level;		/* minimum security level of server */
-    char *get_key_rock;		/* rock for get_key function */
-    int (*get_key) ();		/* func. of kvno and server key ptr */
-    int (*user_ok) ();		/* func called with new client name */
+    void *get_key_rock;		/* rock for get_key function */
+    int (*get_key) (void *, int,
+		    struct ktc_encryptionKey *);
+				/* func. of kvno and server key ptr */
+    int (*user_ok) (char *, char *,
+		    char *, afs_int32);
+				/* func called with new client name */
     afs_uint32 flags;		/* configuration flags */
 };
 

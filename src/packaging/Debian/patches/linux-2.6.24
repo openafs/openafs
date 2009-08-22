@@ -109,8 +109,8 @@ Debian Bug#456258, Bug#458331
  /*
   * osi_sysctl.c: Linux sysctl interface to OpenAFS
   *
-- * $Id: linux-2.6.24,v 1.1.2.2 2008/02/20 21:36:31 shadow Exp $
-+ * $Id: linux-2.6.24,v 1.1.2.2 2008/02/20 21:36:31 shadow Exp $
+- * $Id$
++ * $Id$
   *
   * Written Jan 30, 2002 by Kris Van Hees (Sine Nomine Associates)
   */
@@ -204,8 +204,8 @@ Debian Bug#456258, Bug#458331
  #include "afs/param.h"
  
  RCSID
--    ("$Header: /cvs/openafs/src/packaging/Debian/patches/linux-2.6.24,v 1.1.2.2 2008/02/20 21:36:31 shadow Exp $");
-+    ("$Header: /cvs/openafs/src/packaging/Debian/patches/linux-2.6.24,v 1.1.2.2 2008/02/20 21:36:31 shadow Exp $");
+-    ("$Header$");
++    ("$Header$");
  
  #define __NO_VERSION__		/* don't define kernel_version in module.h */
  #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -240,8 +240,8 @@ Debian Bug#456258, Bug#458331
  #include "afs/param.h"
  
  RCSID
--    ("$Header: /cvs/openafs/src/packaging/Debian/patches/linux-2.6.24,v 1.1.2.2 2008/02/20 21:36:31 shadow Exp $");
-+    ("$Header: /cvs/openafs/src/packaging/Debian/patches/linux-2.6.24,v 1.1.2.2 2008/02/20 21:36:31 shadow Exp $");
+-    ("$Header$");
++    ("$Header$");
  
  #include "afs/sysincludes.h"
  #include "afsincludes.h"

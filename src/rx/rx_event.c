@@ -18,8 +18,6 @@
 #include <sys/time_impl.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.18.4.1 2008/03/17 15:38:28 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -109,9 +107,9 @@ afs_kmutex_t rxevent_lock;
  */
 
 #include <assert.h>
-pthread_mutex_t rx_event_mutex;
-#define LOCK_EV_INIT assert(pthread_mutex_lock(&rx_event_mutex)==0)
-#define UNLOCK_EV_INIT assert(pthread_mutex_unlock(&rx_event_mutex)==0)
+afs_kmutex_t rx_event_mutex;
+#define LOCK_EV_INIT MUTEX_ENTER(&rx_event_mutex)
+#define UNLOCK_EV_INIT MUTEX_EXIT(&rx_event_mutex)
 #else
 #define LOCK_EV_INIT
 #define UNLOCK_EV_INIT
@@ -181,11 +179,19 @@ rxepoch_Allocate(struct clock *when)
 	ep = (struct rxepoch *)rxi_Alloc(sizeof(struct rxepoch));
 	queue_Append(&rxepoch_free, &ep[0]), rxepoch_nFree++;
 #else
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+	ep = (struct rxepoch *)
+	    afs_osi_Alloc_NoSleep(sizeof(struct rxepoch) * rxepoch_allocUnit);
+	xsp = xfreemallocs;
+	xfreemallocs =
+	    (struct xfreelist *)afs_osi_Alloc_NoSleep(sizeof(struct xfreelist));
+#else
 	ep = (struct rxepoch *)
 	    osi_Alloc(sizeof(struct rxepoch) * rxepoch_allocUnit);
 	xsp = xfreemallocs;
 	xfreemallocs =
 	    (struct xfreelist *)osi_Alloc(sizeof(struct xfreelist));
+#endif
 	xfreemallocs->mem = (void *)ep;
 	xfreemallocs->size = sizeof(struct rxepoch) * rxepoch_allocUnit;
 	xfreemallocs->next = xsp;
@@ -206,11 +212,12 @@ rxepoch_Allocate(struct clock *when)
  * units. */
 
 static struct rxevent *
-_rxevent_Post(struct clock *when, struct clock *now, void (*func) (), 
+_rxevent_Post(struct clock *when, struct clock *now, 
+	      void (*func) (struct rxevent *, void *, void *, int), 
 	      void *arg, void *arg1, int arg2, int newargs)
 {
-    register struct rxevent *ev, *evqe, *evqpr;
-    register struct rxepoch *ep, *epqe, *epqpr;
+    struct rxevent *ev, *evqe, *evqpr;
+    struct rxepoch *ep, *epqe, *epqpr;
     int isEarliest = 0;
 
     MUTEX_ENTER(&rxevent_lock);
@@ -218,8 +225,13 @@ _rxevent_Post(struct clock *when, struct clock *now, void (*func) (),
     if (rx_Log_event) {
 	struct clock now1;
 	clock_GetTime(&now1);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %lp, %lp, %lp, %d)\n",
-		(int)now1.sec, (int)now1.usec, (int)when->sec, (int)when->usec,
+	fprintf(rx_Log_event, "%ld.%ld: rxevent_Post(%ld.%ld, "
+			      "%"AFS_PTR_FMT", %"AFS_PTR_FMT", "
+			      "%"AFS_PTR_FMT", %d)\n",
+		afs_printable_int32_ld(now1.sec),
+		afs_printable_int32_ld(now1.usec),
+		afs_printable_int32_ld(when->sec),
+		afs_printable_int32_ld(when->usec),
 		func, arg,
 		arg1, arg2);
     }
@@ -259,16 +271,25 @@ _rxevent_Post(struct clock *when, struct clock *now, void (*func) (),
     /* If we're short on free event entries, create a block of new ones and add
      * them to the free queue */
     if (queue_IsEmpty(&rxevent_free)) {
-	register int i;
+	int i;
 #if	defined(AFS_AIX32_ENV) && defined(KERNEL)
 	ev = (struct rxevent *)rxi_Alloc(sizeof(struct rxevent));
 	queue_Append(&rxevent_free, &ev[0]), rxevent_nFree++;
+#else
+
+#if defined(KERNEL) && !defined(UKERNEL) && defined(AFS_FBSD80_ENV)
+	ev = (struct rxevent *)afs_osi_Alloc_NoSleep(sizeof(struct rxevent) *
+					 rxevent_allocUnit);
+	xsp = xfreemallocs;
+	xfreemallocs =
+	    (struct xfreelist *)afs_osi_Alloc_NoSleep(sizeof(struct xfreelist));
 #else
 	ev = (struct rxevent *)osi_Alloc(sizeof(struct rxevent) *
 					 rxevent_allocUnit);
 	xsp = xfreemallocs;
 	xfreemallocs =
 	    (struct xfreelist *)osi_Alloc(sizeof(struct xfreelist));
+#endif
 	xfreemallocs->mem = (void *)ev;
 	xfreemallocs->size = sizeof(struct rxevent) * rxevent_allocUnit;
 	xfreemallocs->next = xsp;
@@ -284,7 +305,11 @@ _rxevent_Post(struct clock *when, struct clock *now, void (*func) (),
 
     /* Record user defined event state */
     ev->eventTime = *when;
-    ev->func = func;
+    if (newargs) {
+	ev->func.newfunc = func;
+    } else {
+	ev->func.oldfunc = (void (*)(struct rxevent *, void *, void*))func;
+    }
     ev->arg = arg;
     ev->arg1 = arg1;
     ev->arg2 = arg2;
@@ -319,16 +344,21 @@ _rxevent_Post(struct clock *when, struct clock *now, void (*func) (),
 }
 
 struct rxevent *
-rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
+rxevent_Post(struct clock *when, 
+	     void (*func) (struct rxevent *, void *, void *), 
+	     void *arg, void *arg1)
 {
     struct clock now;
     clock_Zero(&now);
-    return _rxevent_Post(when, &now, func, arg, arg1, 0, 0);
+    return _rxevent_Post(when, &now, 
+			 (void (*)(struct rxevent *, void *, void *, int))func,
+			 arg, arg1, 0, 0);
 }
 
 struct rxevent *
-rxevent_Post2(struct clock *when, void (*func) (), void *arg, void *arg1,
-	      int arg2)
+rxevent_Post2(struct clock *when, 
+	      void (*func) (struct rxevent *, void *, void *, int), 
+	      void *arg, void *arg1, int arg2)
 {
     struct clock now;
     clock_Zero(&now);
@@ -336,14 +366,18 @@ rxevent_Post2(struct clock *when, void (*func) (), void *arg, void *arg1,
 }
 
 struct rxevent *
-rxevent_PostNow(struct clock *when, struct clock *now, void (*func) (), 
+rxevent_PostNow(struct clock *when, struct clock *now, 
+		void (*func) (struct rxevent *, void *, void *), 
 		void *arg, void *arg1)
 {
-    return _rxevent_Post(when, now, func, arg, arg1, 0, 0);
+    return _rxevent_Post(when, now, 
+			 (void (*)(struct rxevent *, void *, void *, int))func,
+			 arg, arg1, 0, 0);
 }
 
 struct rxevent *
-rxevent_PostNow2(struct clock *when, struct clock *now, void (*func) (), 
+rxevent_PostNow2(struct clock *when, struct clock *now, 
+                 void (*func) (struct rxevent *, void *, void *, int), 
 		 void *arg, void *arg1, int arg2)
 {
     return _rxevent_Post(when, now, func, arg, arg1, arg2, 1);
@@ -362,16 +396,17 @@ int rxevent_Cancel_type = 0;
 #endif
 
 void
-rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
-		 register int type)
+rxevent_Cancel_1(struct rxevent *ev, struct rx_call *call,
+		 int type)
 {
 #ifdef RXDEBUG
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %lp, %lp)\n",
+	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %"
+		AFS_PTR_FMT ", %p" AFS_PTR_FMT ")\n",
 		(int)now.sec, (int)now.usec, (int)ev->eventTime.sec,
-		(int)ev->eventTime.usec, ev->func,
+		(int)ev->eventTime.usec, ev->func.newfunc,
 		ev->arg);
     }
 #endif
@@ -417,8 +452,8 @@ rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
 int
 rxevent_RaiseEvents(struct clock *next)
 {
-    register struct rxepoch *ep;
-    register struct rxevent *ev;
+    struct rxepoch *ep;
+    struct rxevent *ev;
     volatile struct clock now;
     MUTEX_ENTER(&rxevent_lock);
 
@@ -460,9 +495,9 @@ rxevent_RaiseEvents(struct clock *next)
 	    rxevent_nPosted--;
 	    MUTEX_EXIT(&rxevent_lock);
 	    if (ev->newargs) {
-		ev->func(ev, ev->arg, ev->arg1, ev->arg2);
+		ev->func.newfunc(ev, ev->arg, ev->arg1, ev->arg2);
 	    } else {
-		ev->func(ev, ev->arg, ev->arg1);
+		ev->func.oldfunc(ev, ev->arg, ev->arg1);
 	    }
 	    MUTEX_ENTER(&rxevent_lock);
 	    queue_Append(&rxevent_free, ev);

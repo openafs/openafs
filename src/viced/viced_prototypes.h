@@ -13,7 +13,18 @@
 extern int sendBufSize;
 afs_int32 sys_error_to_et(afs_int32 in);
 void init_sys_error_to_et(void);
-  
+
+/* afsfileprocs.c */
+extern int LogLevel;
+extern afs_int32 BlocksSpare;
+extern afs_int32 PctSpare;
+
+/* callback.c */
+extern int BreakVolumeCallBacks(afs_uint32);
+extern int InitCallBack(int);
+extern int BreakLaterCallBacks(void);
+extern int BreakVolumeCallBacksLater(afs_uint32);
+
 #ifdef AFS_DEMAND_ATTACH_FS
 /*
  * demand attach fs

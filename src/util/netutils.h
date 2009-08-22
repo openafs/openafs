@@ -7,10 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * RCSID("$Header")
- */
-
 #ifndef OPENAFS_NETUTILS_H
 #define OPENAFS_NETUTILS_H
 

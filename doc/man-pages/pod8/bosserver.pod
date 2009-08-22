@@ -8,7 +8,8 @@ bosserver - Initializes the BOS Server
 <div class="synopsis">
 
 B<bosserver> [B<-noauth>] [B<-log>] [B<-enable_peer_stats>]
-    [B<-enable_process_stats>] [B<-allow-dotted-principal>] [B<-help>]
+    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
+    [B<-enable_process_stats>] [B<-allow-dotted-principals>] [B<-help>]
 
 =for html
 </div>
@@ -64,6 +65,16 @@ with the settings listed in the following chart. A question mark indicates
 that the BOS Server initially turns off the bit (sets it to the hyphen),
 but does not check it at restart.
 
+   /usr/afs              drwxr?xr-x
+   /usr/afs/backup       drwx???---
+   /usr/afs/bin          drwxr?xr-x
+   /usr/afs/db           drwx???---
+   /usr/afs/etc          drwxr?xr-x
+   /usr/afs/etc/KeyFile  -rw????---
+   /usr/afs/etc/UserList -rw?????--
+   /usr/afs/local        drwx???---
+   /usr/afs/logs         drwxr?xr-x
+
 If the mode bits do not comply, the BOS Server writes the following
 warning to the F<BosLog> file:
 
@@ -92,6 +103,19 @@ Records in the F</usr/afs/logs/BosLog> file the names of all users who
 successfully issue a privileged B<bos> command (one that requires being
 listed in the F</usr/afs/etc/UserList> file).
 
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.  The audit
+log records information about RPC calls, including the name of the RPC
+call, the host that submitted the call, the authenticated entity (user)
+that issued the call, the parameters for the call, and if the call
+succeeded or failed.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
+
 =item B<-enable_peer_stats>
 
 Activates the collection of Rx statistics and allocates memory for their
@@ -108,7 +132,7 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
-=item B<-allow-dotted-principal>
+=item B<-allow-dotted-principals>
 
 By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid

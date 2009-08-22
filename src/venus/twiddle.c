@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/venus/twiddle.c,v 1.7.14.4 2007/10/31 04:09:41 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <sys/ioctl.h>
@@ -22,6 +20,7 @@ RCSID
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <afs/stds.h>
+#include <afs/com_err.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #ifdef	AFS_AIX32_ENV

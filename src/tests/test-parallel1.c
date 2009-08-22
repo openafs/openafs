@@ -45,10 +45,6 @@
 
 #include <fcntl.h>
 
-#ifdef RCSID
-RCSID("$Id: test-parallel1.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
-#endif
-
 #define WORKER_TIMES 100
 #define NUM_WORKER 10
 

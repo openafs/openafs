@@ -94,7 +94,9 @@ extern char terminationEvent;	/*One-shot termination event */
 /*
  * ------------------------ Exported functions ------------------------
  */
-extern int xstat_cm_Init();
+extern int xstat_cm_Init(int, struct sockaddr_in *, int,
+			 int (*a_ProbeHandler)(void),
+			 int, int, afs_int32 *);
     /*
      * Summary:
      *    Initialize the xstat_cm module: set up Rx connections to the
@@ -116,7 +118,7 @@ extern int xstat_cm_Init();
      *    Error value otherwise.
      */
 
-extern int xstat_cm_ForceProbeNow();
+extern int xstat_cm_ForceProbeNow(void);
     /*
      * Summary:
      *    Force an immediate probe to the connected Cache Managers.
@@ -129,7 +131,7 @@ extern int xstat_cm_ForceProbeNow();
      *    Error value otherwise.
      */
 
-extern int xstat_cm_Cleanup();
+extern int xstat_cm_Cleanup(int);
     /*
      * Summary:
      *    Clean up our memory and connection state.

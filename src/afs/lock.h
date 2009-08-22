@@ -31,7 +31,7 @@
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
-#define MAX_LOCK_NUMBER 700
+#define MAX_LOCK_NUMBER 780
 #endif
 
 struct afs_bozoLock {
@@ -68,7 +68,7 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define MReleaseWriteLock(lock)	ReleaseWriteLock(lock)
 #define MReleaseSharedLock(lock) ReleaseSharedLock(lock)
 
-#define	RWLOCK_INIT(lock, nm)	Lock_Init(lock)
+#define	AFS_RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
 #define	LOCK_INIT(lock, nm)	Lock_Init(lock)
 

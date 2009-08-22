@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/gtx/screen_test.c,v 1.7.14.1 2007/10/31 04:09:27 shadow Exp $");
 
 #include "gtxwindows.h"		/*Generalized window interface */
 #include "gtxcurseswin.h"	/*Curses window interface */

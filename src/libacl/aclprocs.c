@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libacl/aclprocs.c,v 1.14.2.1 2007/10/30 15:16:40 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -29,6 +27,7 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/ptclient.h>
+#include <afs/ptuser.h>
 #include "acl.h"
 
 #ifdef AFS_PTHREAD_ENV
@@ -36,9 +35,6 @@ RCSID
 #include <pthread.h>
 pthread_mutex_t acl_list_mutex;
 #endif /* AFS_PTHREAD_ENV */
-
-static int AddToList();
-static int GetFromList();
 
 struct freeListEntry {
     struct freeListEntry *next;
@@ -48,11 +44,16 @@ struct freeListEntry {
 
 struct freeListEntry *freeList;
 
+static int AddToList(struct freeListEntry **, struct freeListEntry *);
+static int GetFromList(struct freeListEntry **, struct freeListEntry **,
+		       afs_int32);
+
 /*todo: for sorting acls - make sure they work with new groups lists 10/5*/
 static int
-CmpPlus(a, b)
-     struct acl_accessEntry *a, *b;
+CmpPlus(const void *arg1, const void *arg2)
 {
+    const struct acl_accessEntry *a = (struct acl_accessEntry *) arg1;
+    const struct acl_accessEntry *b = (struct acl_accessEntry *) arg2;
     if (a->id < b->id)
 	return (-1);
     if (a->id == b->id)
@@ -61,9 +62,11 @@ CmpPlus(a, b)
 }
 
 static int
-CmpMinus(a, b)
-     struct acl_accessEntry *a, *b;
+CmpMinus(const void *arg1, const void *arg2)
 {
+    const struct acl_accessEntry *a = (struct acl_accessEntry *) arg1;
+    const struct acl_accessEntry *b = (struct acl_accessEntry *) arg2;
+		
     if (a->id > b->id)
 	return (-1);
     if (a->id == b->id)
@@ -72,8 +75,7 @@ CmpMinus(a, b)
 }
 
 static int
-CmpInt(x, y)
-     afs_int32 x, y;
+CmpInt(int x, int y)
 {
     if (x < y)
 	return (-1);
@@ -170,11 +172,15 @@ acl_FreeExternalACL(char **r)
 int
 acl_Externalize(struct acl_accessList *acl, char **elist)
 {
-    /* Converts the access list defined by acl into the external access list in elist.  Non-translatable id's are converted to their ASCII string representations.  Returns 0 on success, -1 if number of entries exceeds ACL_MAXENTRIES, or a failure code from the protection server if the problem occured there. */
+    /* Converts the access list defined by acl into the external access list 
+     * in elist.  Non-translatable id's are converted to their ASCII string 
+     * representations.  Returns 0 on success, -1 if number of entries 
+     * exceeds ACL_MAXENTRIES, or a failure code from the protection server 
+     * if the problem occured there. */
 
     register int i;
     register int j;
-    register code;
+    register int code;
     register char *nextc;
     idlist lids;
     namelist lnames;
@@ -228,7 +234,9 @@ acl_Externalize(struct acl_accessList *acl, char **elist)
 int
 acl_Internalize(char *elist, struct acl_accessList **acl)
 {
-    /* Converts the external access list elist into the access list acl.  Returns 0 on success, -1 if ANY name is not translatable, or if the number of entries exceeds al_maxExtEntries. */
+    /* Converts the external access list elist into the access list acl.  
+     * Returns 0 on success, -1 if ANY name is not translatable, or if 
+     * the number of entries exceeds al_maxExtEntries. */
     register int i;
     register int j;
     register char *nextc;
@@ -424,9 +432,7 @@ acl_IsAMember(afs_int32 aid, prlist *cps)
 
 
 static int
-AddToList(pflist, elem)
-     struct freeListEntry **pflist;
-     struct freeListEntry *elem;
+AddToList(struct freeListEntry **pflist, struct freeListEntry *elem)
 {
     /* Adds elem to the freelist flist;  returns 0 */
 #ifdef AFS_PTHREAD_ENV
@@ -441,12 +447,13 @@ AddToList(pflist, elem)
 }
 
 static int
-GetFromList(pflist, elem, minsize)
-     struct freeListEntry **pflist;
-     struct freeListEntry **elem;
-     afs_int32 minsize;
+GetFromList(struct freeListEntry **pflist, struct freeListEntry **elem, 
+	    afs_int32 minsize)
 {
-    /* Looks for an element whose body is at least minsize bytes in the freelist flist.  If found, unlinks it, puts its address in elem, and returns 0, else returns -1.  A trivial first-fit algorithm is used. */
+    /* Looks for an element whose body is at least minsize bytes in the 
+     * freelist flist.  If found, unlinks it, puts its address in elem, 
+     * and returns 0, else returns -1.  A trivial first-fit algorithm is 
+     * used. */
 
     struct freeListEntry *y, *z;
 

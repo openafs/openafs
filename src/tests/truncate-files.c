@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: truncate-files.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
-#endif
-
 static void do_dir(const char *);
 static void repeat_dir(const char *);
 

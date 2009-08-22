@@ -50,10 +50,6 @@
 #define MAP_FAILED ((void *)-1)
 #endif
 
-#ifdef RCSID
-RCSID("$Id: mmap-shared-write.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
-#endif
-
 static int
 doit(const char *filename)
 {

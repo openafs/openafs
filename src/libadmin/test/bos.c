@@ -14,8 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/test/bos.c,v 1.10.14.1 2007/10/31 04:09:31 shadow Exp $");
+#include <ctype.h>
 
 #include "bos.h"
 
@@ -63,7 +62,7 @@ static char *day[] = {
     "sat"
 };
 
-static
+static int
 LocalFreeTokens(struct token *alist)
 {
     register struct token *nlist;
@@ -75,7 +74,7 @@ LocalFreeTokens(struct token *alist)
     return 0;
 }
 
-static
+static int
 space(int x)
 {
     if (x == 0 || x == ' ' || x == '\t' || x == '\n')
@@ -84,11 +83,11 @@ space(int x)
 	return 0;
 }
 
-static
+static int
 LocalParseLine(char *aline, struct token **alist)
 {
     char tbuffer[256];
-    register char *tptr;
+    char *tptr = NULL;
     int inToken;
     struct token *first, *last;
     register struct token *ttok;
@@ -140,14 +139,17 @@ static struct ptemp {
     char *key;
     afs_int32 value;
 } ptkeys[] = {
-"sun", 0x10000, "mon", 0x10001, "tue", 0x10002, "wed", 0x10003, "thu",
-	0x10004, "fri", 0x10005, "sat", 0x10006, "sunday", 0x10000,
-	"monday", 0x10001, "tuesday", 0x10002, "wednesday", 0x10003,
-	"thursday", 0x10004, "thur", 0x10004, "friday", 0x10005,
-	"saturday", 0x10006, "am", 0x20000, "pm", 0x20001, "a.m.",
-	0x20000, "p.m.", 0x20001, 0, 0,};
+	{"sun", 0x10000}, {"mon", 0x10001}, {"tue", 0x10002},
+	{"wed", 0x10003}, {"thu", 0x10004}, {"fri", 0x10005},
+	{"sat", 0x10006},
+	{"sunday", 0x10000}, {"monday", 0x10001},
+	{"tuesday", 0x10002}, {"wednesday", 0x10003},
+	{"thursday", 0x10004}, {"thur", 0x10004},
+	{"friday", 0x10005}, {"saturday", 0x10006},
+	{"am", 0x20000}, {"pm", 0x20001},
+	{"a.m.", 0x20000}, {"p.m.", 0x20001}, {0, 0}};
 
-static
+static int
 ParseTime(bos_RestartTime_p ak, char *astr)
 {
     int field;
@@ -323,7 +325,7 @@ DoBosProcessCreate(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_ProcessCreate
-	(bos_server, process, process_type, binary, cron_time, notifier,
+	(bos_server, (char *)process, process_type, (char *)binary, (char *)cron_time, (char *)notifier,
 	 &st)) {
 	ERR_ST_EXT("bos_ProcessCreate", st);
     }
@@ -375,7 +377,7 @@ DoBosFSProcessCreate(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_FSProcessCreate
-	(bos_server, process, fileserver, volserver, salvager, notifier,
+	(bos_server, (char *)process, (char *)fileserver, (char *)volserver, (char *)salvager, (char *)notifier,
 	 &st)) {
 	ERR_ST_EXT("bos_FSProcessCreate", st);
     }
@@ -404,7 +406,7 @@ DoBosProcessDelete(struct cmd_syndesc *as, void *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessDelete(bos_server, process, &st)) {
+    if (!bos_ProcessDelete(bos_server, (char *)process, &st)) {
 	ERR_ST_EXT("bos_ProcessDelete", st);
     }
 
@@ -456,7 +458,7 @@ DoBosProcessExecutionStateGet(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_ProcessExecutionStateGet
-	(bos_server, process, &state, aux_status, &st)) {
+	(bos_server, (char *)process, &state, aux_status, &st)) {
 	ERR_ST_EXT("bos_ProcessExecutionStateGet", st);
     }
 
@@ -481,7 +483,7 @@ DoBosProcessExecutionStateSet(struct cmd_syndesc *as, void *arock)
     const char *process = NULL;
     int stop = 0;
     int run = 0;
-    bos_ProcessExecutionState_t state;
+    bos_ProcessExecutionState_t state = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -532,7 +534,7 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, void *arock)
     const char *process = NULL;
     int stop = 0;
     int run = 0;
-    bos_ProcessExecutionState_t state;
+    bos_ProcessExecutionState_t state = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -564,7 +566,7 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, void *arock)
     }
 
     if (!bos_ProcessExecutionStateSetTemporary
-	(bos_server, process, state, &st)) {
+	(bos_server, (char *)process, state, &st)) {
 	ERR_ST_EXT("bos_ProcessExecutionStateSetTemporary", st);
     }
 
@@ -683,7 +685,7 @@ DoBosProcessInfoGet(struct cmd_syndesc *as, void *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessInfoGet(bos_server, process, &type, &info, &st)) {
+    if (!bos_ProcessInfoGet(bos_server, (char *)process, &type, &info, &st)) {
 	ERR_ST_EXT("bos_ProcessInfoGet", st);
     }
 
@@ -926,7 +928,7 @@ DoBosAdminCreate(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, ADMIN } DoBosAdminCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *admin;
+    const char *admin = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -954,7 +956,7 @@ DoBosAdminDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, ADMIN } DoBosAdminDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *admin;
+    const char *admin = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1021,7 +1023,7 @@ DoBosKeyCreate(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, VERSIONNUMBER, KEY } DoBosKeyCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    int version_number;
+    int version_number = 0;
     kas_encryptionKey_t key = { {0, 0, 0, 0, 0, 0, 0, 0} };
     const char *cell;
 
@@ -1063,7 +1065,7 @@ DoBosKeyDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, VERSIONNUMBER } DoBosKeyDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    int version_number;
+    int version_number = 0;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1150,7 +1152,7 @@ DoBosCellSet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, CELL } DoBosCellSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *cell;
+    const char *cell = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1204,7 +1206,7 @@ DoBosHostCreate(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, HOST } DoBosHostCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *host;
+    const char *host = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1232,7 +1234,7 @@ DoBosHostDelete(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, HOST } DoBosHostDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *host;
+    const char *host = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1435,7 +1437,7 @@ DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, void *arock)
     } DoBosExecutableRestartTimeSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    bos_Restart_t type;
+    bos_Restart_t type = 0;
     int have_daily = 0;
     int have_weekly = 0;
     bos_RestartTime_t time;
@@ -1534,7 +1536,7 @@ DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, void *arock)
     } DoBosExecutableRestartTimeGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    bos_Restart_t type;
+    bos_Restart_t type = 0;
     int have_daily = 0;
     int have_weekly = 0;
     bos_RestartTime_t restart_time;
@@ -1583,7 +1585,7 @@ DoBosLogGet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, LOGFILE } DoBosLogGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *log_file;
+    const char *log_file = NULL;
     unsigned long buf_size = INITIAL_BUF_SIZE;
     char *buf = NULL;
 
@@ -1631,7 +1633,7 @@ DoBosAuthSet(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, REQUIREAUTH, DISABLEAUTH } DoBosAuthSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    bos_Auth_t auth;
+    bos_Auth_t auth = 0;
     int have_req = 0;
     int have_dis = 0;
 
@@ -1675,7 +1677,7 @@ DoBosCommandExecute(struct cmd_syndesc *as, void *arock)
     typedef enum { SERVER, COMMAND } DoBosCommandExecute_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
-    const char *command;
+    const char *command = NULL;
 
     if (as->parms[SERVER].items) {
 	if (!bos_ServerOpen
@@ -1783,6 +1785,7 @@ DoBosSalvage(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+#if 0
 static void
 Print_afs_RPCStatsState_p(afs_RPCStatsState_p state, const char *prefix)
 {
@@ -1796,6 +1799,7 @@ Print_afs_RPCStatsState_p(afs_RPCStatsState_p state, const char *prefix)
 	break;
     }
 }
+#endif
 
 void
 SetupBosAdminCmd(void)

@@ -108,13 +108,20 @@ struct xfs_inode_info {
 #include <linux/mm.h>
 #include <linux/slab.h>
 #include <linux/string.h>
+#if defined(LINUX_SEMAPHORE_H)
+#include <linux/semaphore.h>
+#else
 #include <asm/semaphore.h>
+#endif
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
 #include <linux/mutex.h>
 #endif
 #include <linux/errno.h>
 #ifdef COMPLETION_H_EXISTS
 #include <linux/completion.h>
+#endif
+#if defined(LINUX_USE_FH)
+#include <linux/exportfs.h>
 #endif
 
 #else /* AFS_LINUX22_ENV */
@@ -172,9 +179,6 @@ typedef unsigned short etap_event_t;
 #endif
 #endif /* AFS_SGI64_ENV */
 #include "fs/efs_inode.h"
-#ifdef AFS_SGI_EFS_IOPS_ENV
-#include "sgiefs/efs.h"
-#endif
 #include "sys/kmem.h"
 #include "sys/cred.h"
 #include "sys/resource.h"

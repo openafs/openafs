@@ -1,9 +1,9 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,1.5.50)
+AM_INIT_AUTOMAKE(openafs,1.5.61)
 AC_CONFIG_HEADER(src/config/afsconfig.h)
-MACOS_VERSION=1.5.50
-LINUX_PKGVER=1.5.50
-#LINUX_PKGREL=0.pre0
+MACOS_VERSION=1.5.61
+LINUX_PKGVER=1.5.61
+#LINUX_PKGREL=0.pre3
 LINUX_PKGREL=1.1
 
 AC_SUBST(MACOS_VERSION)
@@ -11,7 +11,7 @@ AC_SUBST(LINUX_PKGVER)
 AC_SUBST(LINUX_PKGREL)
 
 AC_PROG_CC
-AC_PATH_PROGS([PATH_CPP], [cpp], , [$PATH:/lib:/usr/ccs/lib])
+AC_PATH_PROGS([PATH_CPP], [cpp], [${CC-cc} -E], [$PATH:/lib:/usr/ccs/lib])
 AC_SUBST([PATH_CPP])
 OPENAFS_CONFIGURE_COMMON
 
@@ -20,10 +20,28 @@ if test -d 'doc/man-pages' ; then
 else
     MAN_MAKEFILE=
 fi
+if test -f 'doc/xml/AdminGuide/Makefile.in' ; then
+   ADMINGUIDE_MAKEFILE="doc/xml/AdminGuide/Makefile"
+else
+   ADMINGUIDE_MAKEFILE=
+fi
+if test -f 'doc/xml/QuickStartUnix/Makefile.in' ; then
+   QSUNIX_MAKEFILE="doc/xml/QuickStartUnix/Makefile"
+else
+   QSUNIX_MAKEFILE=
+fi
+if test -f 'doc/xml/UserGuide/Makefile.in' ; then
+   USERGUIDE_MAKEFILE="doc/xml/UserGuide/Makefile"
+else
+   USERGUIDE_MAKEFILE=
+fi
 
 AC_OUTPUT(             \
 Makefile               \
 ${MAN_MAKEFILE} \
+${ADMINGUIDE_MAKEFILE} \
+${QSUNIX_MAKEFILE} \
+${USERGUIDE_MAKEFILE} \
 src/afs/Makefile \
 src/afsd/Makefile \
 src/afsmonitor/Makefile \
@@ -47,11 +65,12 @@ src/comerr/Makefile \
 src/comerr/test/Makefile \
 src/config/Makefile \
 src/config/Makefile.config \
+src/config/Makefile.version-CML \
 src/config/Makefile.version-NOCML \
-src/dauth/Makefile \
+src/config/shlib-build \
+src/config/shlib-install \
 src/des/Makefile \
 src/des/test/Makefile \
-src/des_stub/Makefile \
 src/dir/Makefile \
 src/dir/test/Makefile \
 src/export/Makefile \
@@ -62,6 +81,7 @@ src/gtx/Makefile \
 src/JAVA/libjafs/Makefile \
 src/kauth/Makefile \
 src/kauth/test/Makefile \
+src/kopenafs/Makefile \
 src/libacl/Makefile \
 src/libacl/test/Makefile \
 src/libadmin/Makefile \
@@ -84,20 +104,14 @@ src/libuafs/Makefile.common \
 src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 src/log/Makefile \
 src/log/test/Makefile \
-src/login/Makefile \
 src/lwp/Makefile \
 src/lwp/test/Makefile \
-src/mpp/Makefile \
-src/null/Makefile \
-src/package/Makefile \
 src/packaging/Debian/rules \
 src/packaging/MacOS/OpenAFS.Info.plist \
 src/packaging/MacOS/OpenAFS.info \
 src/packaging/MacOS/buildpkg.sh \
 src/packaging/RedHat/openafs.spec \
 src/pam/Makefile \
-src/pinstall/Makefile \
-src/pinstall/test/Makefile \
 src/platform/Makefile \
 src/platform/${MKAFS_OSTYPE}/Makefile \
 src/procmgmt/Makefile \
@@ -119,7 +133,6 @@ src/scout/Makefile \
 src/sgistuff/Makefile \
 src/shlibafsauthent/Makefile \
 src/shlibafsrpc/Makefile \
-src/sia/Makefile \
 src/sys/Makefile \
 src/tbutc/Makefile \
 src/tests/Makefile \
@@ -145,7 +158,8 @@ src/tvlserver/Makefile \
 src/vol/Makefile \
 src/vol/test/Makefile \
 src/volser/Makefile \
-src/wsadmin.src/Makefile \
 src/xstat/Makefile \
-src/helper-splint.sh \
-)
+src/helper-splint.sh,
+
+[chmod a+x src/config/shlib-build
+ chmod a+x src/config/shlib-install])

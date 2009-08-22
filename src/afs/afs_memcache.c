@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_memcache.c,v 1.22.4.1 2007/06/23 15:29:36 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifndef AFS_LINUX22_ENV
@@ -89,21 +87,16 @@ afs_MemCacheClose(struct osi_file *file)
     return 0;
 }
 
-#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
 void *
-afs_MemCacheOpen(ino_t blkno)
-#else
-void *
-afs_MemCacheOpen(afs_int32 blkno)
-#endif
+afs_MemCacheOpen(afs_dcache_id_t *ainode)
 {
     struct memCacheEntry *mep;
 
-    if (blkno < 0 || blkno > memMaxBlkNumber) {
+    if (ainode->mem < 0 || ainode->mem > memMaxBlkNumber) {
 	osi_Panic("afs_MemCacheOpen: invalid block #");
     }
-    mep = (memCache + blkno);
-    afs_Trace3(afs_iclSetp, CM_TRACE_MEMOPEN, ICL_TYPE_INT32, blkno,
+    mep = (memCache + ainode->mem);
+    afs_Trace3(afs_iclSetp, CM_TRACE_MEMOPEN, ICL_TYPE_INT32, ainode->mem,
 	       ICL_TYPE_POINTER, mep, ICL_TYPE_POINTER, mep ? mep->data : 0);
     return (void *)mep;
 }
@@ -176,10 +169,10 @@ afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
 }
 
 int
-afs_MemReadUIO(ino_t blkno, struct uio *uioP)
+afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 {
     register struct memCacheEntry *mceP =
-	(struct memCacheEntry *)afs_MemCacheOpen(blkno);
+	(struct memCacheEntry *)afs_MemCacheOpen(ainode);
     int length = mceP->size - AFS_UIO_OFFSET(uioP);
     afs_int32 code;
 
@@ -280,10 +273,10 @@ afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 }
 
 int
-afs_MemWriteUIO(ino_t blkno, struct uio *uioP)
+afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 {
     register struct memCacheEntry *mceP =
-	(struct memCacheEntry *)afs_MemCacheOpen(blkno);
+	(struct memCacheEntry *)afs_MemCacheOpen(ainode);
     afs_int32 code;
 
     AFS_STATCNT(afs_MemWriteUIO);
@@ -345,194 +338,6 @@ afs_MemCacheTruncate(register struct osi_file *fP, int size)
 	mceP->size = size;
 
     MReleaseWriteLock(&mceP->afs_memLock);
-    return 0;
-}
-
-int
-afs_MemCacheStoreProc(register struct rx_call *acall,
-		      register struct osi_file *fP,
-		      register afs_int32 alen, struct vcache *avc,
-		      int *shouldWake, afs_size_t * abytesToXferP,
-		      afs_size_t * abytesXferredP)
-{
-    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
-
-    register afs_int32 code;
-    register int tlen;
-    int offset = 0;
-    struct iovec *tiov;		/* no data copying with iovec */
-    int tnio;			/* temp for iovec size */
-
-    AFS_STATCNT(afs_MemCacheStoreProc);
-#ifndef AFS_NOSTATS
-    /*
-     * In this case, alen is *always* the amount of data we'll be trying
-     * to ship here.
-     */
-    *(abytesToXferP) = alen;
-    *(abytesXferredP) = 0;
-#endif /* AFS_NOSTATS */
-
-    /* 
-     * We need to alloc the iovecs on the heap so that they are "pinned" rather than
-     * declare them on the stack - defect 11272
-     */
-    tiov =
-	(struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec) *
-					    RX_MAXIOVECS);
-    if (!tiov) {
-	osi_Panic
-	    ("afs_MemCacheStoreProc: osi_AllocSmallSpace for iovecs returned NULL\n");
-    }
-#ifdef notdef
-    /* do this at a higher level now -- it's a parameter */
-    /* for now, only do 'continue from close' code if file fits in one
-     * chunk.  Could clearly do better: if only one modified chunk
-     * then can still do this.  can do this on *last* modified chunk */
-    tlen = avc->m.Length - 1;	/* byte position of last byte we'll store */
-    if (shouldWake) {
-	if (AFS_CHUNK(tlen) != 0)
-	    *shouldWake = 0;
-	else
-	    *shouldWake = 1;
-    }
-#endif /* notdef */
-
-    while (alen > 0) {
-	tlen = (alen > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : alen);
-	RX_AFS_GUNLOCK();
-	code = rx_WritevAlloc(acall, tiov, &tnio, RX_MAXIOVECS, tlen);
-	RX_AFS_GLOCK();
-	if (code <= 0) {
-	    code = rx_Error(acall);
-	    osi_FreeSmallSpace(tiov);
-	    return code ? code : -33;
-	}
-	tlen = code;
-	code = afs_MemReadvBlk(mceP, offset, tiov, tnio, tlen);
-	if (code != tlen) {
-	    osi_FreeSmallSpace(tiov);
-	    return -33;
-	}
-	RX_AFS_GUNLOCK();
-	code = rx_Writev(acall, tiov, tnio, tlen);
-	RX_AFS_GLOCK();
-#ifndef AFS_NOSTATS
-	(*abytesXferredP) += code;
-#endif /* AFS_NOSTATS */
-	if (code != tlen) {
-	    code = rx_Error(acall);
-	    osi_FreeSmallSpace(tiov);
-	    return code ? code : -33;
-	}
-	offset += tlen;
-	alen -= tlen;
-	/* if file has been locked on server, can allow store to continue */
-	if (shouldWake && *shouldWake && (rx_GetRemoteStatus(acall) & 1)) {
-	    *shouldWake = 0;	/* only do this once */
-	    afs_wakeup(avc);
-	}
-    }
-    osi_FreeSmallSpace(tiov);
-    return 0;
-}
-
-int
-afs_MemCacheFetchProc(register struct rx_call *acall,
-		      register struct osi_file *fP, afs_size_t abase,
-		      struct dcache *adc, struct vcache *avc,
-		      afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
-		      afs_int32 lengthFound)
-{
-    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
-    register afs_int32 code;
-    afs_int32 length;
-    int moredata = 0;
-    struct iovec *tiov;		/* no data copying with iovec */
-    register int tlen, offset = 0;
-    int tnio;			/* temp for iovec size */
-
-    AFS_STATCNT(afs_MemCacheFetchProc);
-    length = lengthFound;
-    afs_Trace4(afs_iclSetp, CM_TRACE_MEMFETCH, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_POINTER, mceP, ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(abase), ICL_TYPE_INT32, length);
-#ifndef AFS_NOSTATS
-    (*abytesToXferP) = 0;
-    (*abytesXferredP) = 0;
-#endif /* AFS_NOSTATS */
-    /* 
-     * We need to alloc the iovecs on the heap so that they are "pinned" rather than
-     * declare them on the stack - defect 11272
-     */
-    tiov =
-	(struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec) *
-					    RX_MAXIOVECS);
-    if (!tiov) {
-	osi_Panic
-	    ("afs_MemCacheFetchProc: osi_AllocSmallSpace for iovecs returned NULL\n");
-    }
-    adc->validPos = abase;
-    do {
-	if (moredata) {
-	    RX_AFS_GUNLOCK();
-	    code = rx_Read(acall, (char *)&length, sizeof(afs_int32));
-	    length = ntohl(length);
-	    RX_AFS_GLOCK();
-	    if (code != sizeof(afs_int32)) {
-		code = rx_Error(acall);
-		osi_FreeSmallSpace(tiov);
-		return (code ? code : -1);	/* try to return code, not -1 */
-	    }
-	}
-	/*
-	 * The fetch protocol is extended for the AFS/DFS translator
-	 * to allow multiple blocks of data, each with its own length,
-	 * to be returned. As long as the top bit is set, there are more
-	 * blocks expected.
-	 *
-	 * We do not do this for AFS file servers because they sometimes
-	 * return large negative numbers as the transfer size.
-	 */
-	if (avc->states & CForeign) {
-	    moredata = length & 0x80000000;
-	    length &= ~0x80000000;
-	} else {
-	    moredata = 0;
-	}
-#ifndef AFS_NOSTATS
-	(*abytesToXferP) += length;
-#endif /* AFS_NOSTATS */
-	while (length > 0) {
-	    tlen = (length > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : length);
-	    RX_AFS_GUNLOCK();
-	    code = rx_Readv(acall, tiov, &tnio, RX_MAXIOVECS, tlen);
-	    RX_AFS_GLOCK();
-#ifndef AFS_NOSTATS
-	    (*abytesXferredP) += code;
-#endif /* AFS_NOSTATS */
-	    if (code <= 0) {
-		afs_Trace3(afs_iclSetp, CM_TRACE_FETCH64READ,
-			   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
-			   ICL_TYPE_INT32, length);
-		osi_FreeSmallSpace(tiov);
-		return -34;
-	    }
-	    tlen = code;
-	    afs_MemWritevBlk(mceP, offset, tiov, tnio, tlen);
-	    offset += tlen;
-	    abase += tlen;
-	    length -= tlen;
-	    adc->validPos = abase;
-	    if (afs_osi_Wakeup(&adc->validPos) == 0)
-		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE, ICL_TYPE_STRING,
-			   __FILE__, ICL_TYPE_INT32, __LINE__,
-			   ICL_TYPE_POINTER, adc, ICL_TYPE_INT32,
-			   adc->dflags);
-	}
-    } while (moredata);
-    /* max of two sizes */
-    osi_FreeSmallSpace(tiov);
     return 0;
 }
 

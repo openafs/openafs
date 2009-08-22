@@ -30,8 +30,6 @@
 #include <afs/param.h>
 #include "rx.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_array.c,v 1.12.4.2 2007/10/30 15:16:45 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -81,14 +79,14 @@ RCSID
 */
 
 bool_t
-xdr_array(register XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
+xdr_array(XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
 	  u_int elsize, xdrproc_t elproc)
 {
-    register u_int i;
-    register caddr_t target = *addrp;
-    register u_int c;		/* the actual element count */
-    register bool_t stat = TRUE;
-    register u_int nodesize;
+    u_int i;
+    caddr_t target = *addrp;
+    u_int c;		/* the actual element count */
+    bool_t stat = TRUE;
+    u_int nodesize;
 
     /* FIXME: this does not look correct: MSVC 6 computes -1 / elsize here */
     i = ((~0) >> 1) / elsize;

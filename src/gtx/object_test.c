@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/gtx/object_test.c,v 1.7.14.1 2007/10/31 04:09:27 shadow Exp $");
 
 #include "gtxscreenobj.h"	/*Gator screen object interface */
 #include "gtxtextobj.h"		/*Gator text object interface */

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/NBSD/osi_file.c,v 1.5.14.2 2007/12/13 19:18:33 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -26,7 +24,7 @@ extern struct mount *afs_cacheVfsp;
 
 
 void *
-osi_UFSOpen(afs_int32 ainode)
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct inode *ip;
     register struct osi_file *afile = NULL;
@@ -39,7 +37,7 @@ osi_UFSOpen(afs_int32 ainode)
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
     code =
-	igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode, &ip,
+	igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, ainode->ufs, &ip,
 		  &dummy);
     AFS_GLOCK();
     if (code) {
@@ -51,7 +49,7 @@ osi_UFSOpen(afs_int32 ainode)
     afile->size = VTOI(afile->vnode)->i_size;
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 

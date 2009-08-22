@@ -26,8 +26,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/lwp/fasttime.c,v 1.9 2004/07/19 15:25:16 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

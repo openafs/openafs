@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/budb/dbs_dump.c,v 1.11.14.3 2008/04/02 19:51:55 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -40,10 +38,13 @@ RCSID
 #include "budb.h"
 #include "budb_errs.h"
 #include "database.h"
+#include "budb_internal.h"
 #include "error_macros.h"
 #include "globals.h"
 #include "afs/audit.h"
 
+afs_int32 DumpDB(struct rx_call *, int, afs_int32, charListT *, afs_int32 *);
+afs_int32 RestoreDbHeader(struct rx_call *, struct DbHeader *);
 void *dumpWatcher(void *);
 
 /* dump ubik database - interface routines */
@@ -53,8 +54,7 @@ void *dumpWatcher(void *);
  */
 
 afs_int32
-badEntry(dbAddr)
-     afs_uint32 dbAddr;
+badEntry(afs_uint32 dbAddr)
 {
     /* return entry ok */
     return (0);
@@ -91,14 +91,9 @@ setupDbDump(void *param)
 }
 
 
-afs_int32 DumpDB(), RestoreDbHeader();
 afs_int32
-SBUDB_DumpDB(call, firstcall, maxLength, charListPtr, done)
-     struct rx_call *call;
-     int firstcall;
-     afs_int32 maxLength;
-     charListT *charListPtr;
-     afs_int32 *done;
+SBUDB_DumpDB(struct rx_call *call, int firstcall, afs_int32 maxLength, 
+	     charListT *charListPtr, afs_int32 *done)
 {
     afs_int32 code;
 
@@ -108,18 +103,16 @@ SBUDB_DumpDB(call, firstcall, maxLength, charListPtr, done)
 }
 
 afs_int32
-DumpDB(call, firstcall, maxLength, charListPtr, done)
-     struct rx_call *call;
-     int firstcall;		/* 1 - init.  0 - no init */
-     afs_int32 maxLength;
-     charListT *charListPtr;
-     afs_int32 *done;
+DumpDB(struct rx_call *call,
+       int firstcall,		/* 1 - init.  0 - no init */
+       afs_int32 maxLength,
+       charListT *charListPtr,
+       afs_int32 *done)
 {
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
     pthread_t dumperPid, watcherPid;
     pthread_attr_t dumperPid_tattr;
     pthread_attr_t watcherPid_tattr;
-
 #else
     PROCESS dumperPid, watcherPid;
 #endif
@@ -162,7 +155,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	if (code)
 	    ERROR(errno);
 
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	/* Initialize the condition variables and the mutexes we use
 	 * to signal and synchronize the reader and writer threads.
 	 */
@@ -189,7 +182,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	dumpSyncPtr->dumperPid = dumperPid;
 	dumpSyncPtr->timeToLive = time(0) + DUMP_TTL_INC;
 
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	/* Initialize the thread attributes and launch the thread */
 
 	assert(pthread_attr_init(&watcherPid_tattr) == 0);
@@ -217,7 +210,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	if (dumpSyncPtr->ds_writerStatus == DS_WAITING) {
 	    LogDebug(6, "wakup writer\n");
 	    dumpSyncPtr->ds_writerStatus = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cond_broadcast(&dumpSyncPtr->ds_writerStatus_cond) == 0);
 #else
 	    code = LWP_SignalProcess(&dumpSyncPtr->ds_writerStatus);
@@ -228,7 +221,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 	LogDebug(6, "wait for writer\n");
 	dumpSyncPtr->ds_readerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
         assert(pthread_mutex_lock(&dumpSyncPtr->ds_readerStatus_mutex) == 0);
         assert(pthread_cond_wait(&dumpSyncPtr->ds_readerStatus_cond, &dumpSyncPtr->ds_readerStatus_mutex) == 0);
         assert(pthread_mutex_unlock(&dumpSyncPtr->ds_readerStatus_mutex) == 0);
@@ -259,7 +252,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
     dumpSyncPtr->ds_bytes -= readSize;
     if (dumpSyncPtr->ds_writerStatus == DS_WAITING) {
 	dumpSyncPtr->ds_writerStatus = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	assert(pthread_cond_broadcast(&dumpSyncPtr->ds_writerStatus_cond) == 0);
 #else
 	code = LWP_SignalProcess(&dumpSyncPtr->ds_writerStatus);
@@ -276,9 +269,7 @@ DumpDB(call, firstcall, maxLength, charListPtr, done)
 }
 
 afs_int32
-SBUDB_RestoreDbHeader(call, header)
-     struct rx_call *call;
-     struct DbHeader *header;
+SBUDB_RestoreDbHeader(struct rx_call *call, struct DbHeader *header)
 {
     afs_int32 code;
 
@@ -288,9 +279,7 @@ SBUDB_RestoreDbHeader(call, header)
 }
 
 afs_int32
-RestoreDbHeader(call, header)
-     struct rx_call *call;
-     struct DbHeader *header;
+RestoreDbHeader(struct rx_call *call, struct DbHeader *header)
 {
     struct ubik_trans *ut = 0;
     afs_int32 code = 0;
@@ -359,7 +348,7 @@ dumpWatcher(void *unused)
 
 	    close(dumpSyncPtr->pipeFid[0]);
 	    close(dumpSyncPtr->pipeFid[1]);
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cancel(dumpSyncPtr->dumperPid) == 0);
 #else
 	    code = LWP_DestroyProcess(dumpSyncPtr->dumperPid);
@@ -378,7 +367,7 @@ dumpWatcher(void *unused)
 	}
 	/*i */
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	sleep(5);
 #else
 	IOMGR_Sleep(5);

@@ -10,10 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubikcmd.c,v 1.7.14.1 2007/10/30 15:16:47 shadow Exp $");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <time.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
@@ -22,24 +24,20 @@ RCSID
 #include <sys/param.h>
 #include <netdb.h>
 #endif
-#include <time.h>
 #include <lock.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
 
-/* This file contain useful subroutines for parsing command line args for ubik
- *   applications.
+/*! \file
+ * This file contain useful subroutines for parsing command line args for ubik
+ * applications.
  */
-
-ubik_ParseServerList(argc, argv, ahost, aothers)
-     int argc;
-     char **argv;
-     afs_int32 *ahost;
-     afs_int32 *aothers;
+int
+ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost, 
+		     afs_int32 *aothers)
 {
     register afs_int32 i;
     register char *tp;

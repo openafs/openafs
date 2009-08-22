@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/ihandle.c,v 1.19.8.4 2007/11/26 21:47:29 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -93,11 +91,12 @@ int fdInUseCount = 0;
 /* Hash table for inode handles */
 IHashBucket_t ihashTable[I_HANDLE_HASH_SIZE];
 
+void *ih_sync_thread(void *);
 
 #ifdef AFS_PTHREAD_ENV
 /* Initialize the global ihandle mutex */
 void
-ih_glock_init()
+ih_glock_init(void)
 {
     assert(pthread_mutex_init(&ih_glock_mutex, NULL) == 0);
 }
@@ -151,7 +150,6 @@ ih_Initialize(void)
     fdCacheSize = MIN(fdMaxCacheSize, FD_DEFAULT_CACHESIZE);
 
     {
-	void *ih_sync_thread();
 #ifdef AFS_PTHREAD_ENV
 	pthread_t syncer;
 	pthread_attr_t tattr;
@@ -507,7 +505,7 @@ stream_fdopen(FD_t fd)
 StreamHandle_t *
 stream_open(const char *filename, const char *mode)
 {
-    FD_t fd;
+    FD_t fd = INVALID_FD;
 
     if (strcmp(mode, "r") == 0) {
 	fd = OS_OPEN(filename, O_RDONLY, 0);
@@ -803,10 +801,32 @@ ih_reallyclose(IHandle_t * ihP)
 	return 0;
 
     IH_LOCK;
+    ihP->ih_refcnt++;   /* must not disappear over unlock */
+    if (ihP->ih_synced) {
+	FdHandle_t *fdP;
+	IH_UNLOCK;
+	
+	fdP = IH_OPEN(ihP);
+	if (fdP) { 
+	    OS_SYNC(fdP->fd_fd);
+	    FDH_CLOSE(fdP);
+	}
+	
+	IH_LOCK;
+    }
+
     assert(ihP->ih_refcnt > 0);
+    ihP->ih_synced = 0;
+
     ih_fdclose(ihP);
 
-    IH_UNLOCK;
+    if (ihP->ih_refcnt > 1) {
+	ihP->ih_refcnt--;
+	IH_UNLOCK;
+    } else {
+	IH_UNLOCK;
+	ih_release(ihP);
+    }
     return 0;
 }
 
@@ -865,7 +885,8 @@ ih_condsync(IHandle_t * ihP)
 }
 
 void
-ih_sync_all() {
+ih_sync_all(void) {
+
     int ihash;
 
     IH_LOCK;
@@ -884,8 +905,10 @@ ih_sync_all() {
 		IH_UNLOCK;
 
 		fdP = IH_OPEN(ihP);
-		if (fdP) OS_SYNC(fdP->fd_fd);
-		FDH_CLOSE(fdP);
+		if (fdP) { 
+		    OS_SYNC(fdP->fd_fd);
+		    FDH_CLOSE(fdP);
+		}
 
 	  	IH_LOCK;
 	    }
@@ -910,7 +933,7 @@ ih_sync_all() {
 }
 
 void *
-ih_sync_thread() {
+ih_sync_thread(void *dummy) {
     while(1) {
 
 #ifdef AFS_PTHREAD_ENV
@@ -924,6 +947,7 @@ ih_sync_thread() {
 #endif
         ih_sync_all();
     }
+    return NULL;
 }
 
 

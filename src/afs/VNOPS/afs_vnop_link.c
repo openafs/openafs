@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.19.8.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -33,19 +31,17 @@ extern afs_rwlock_t afs_xcbhash;
 
 int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-afs_link(OSI_VC_ARG(adp), avc, aname, acred)
+afs_link(OSI_VC_DECL(adp), struct vcache *avc, char *aname, 
+	 struct AFS_UCRED *acred)
 #else
-afs_link(avc, OSI_VC_ARG(adp), aname, acred)
+afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname, 
+	 struct AFS_UCRED *acred)
 #endif
-     OSI_VC_DECL(adp);
-     struct vcache *avc;
-     char *aname;
-     struct AFS_UCRED *acred;
 {
     struct vrequest treq;
     register struct dcache *tdc;
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     afs_size_t offset, len;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSVolSync tsync;
@@ -72,8 +68,8 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     if (code)
 	goto done;
 
-    if (avc->fid.Cell != adp->fid.Cell
-	|| avc->fid.Fid.Volume != adp->fid.Fid.Volume) {
+    if (avc->f.fid.Cell != adp->f.fid.Cell
+	|| avc->f.fid.Fid.Volume != adp->f.fid.Fid.Volume) {
 	code = EXDEV;
 	goto done;
     }
@@ -88,12 +84,12 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     /** If the volume is read-only, return error without making an RPC to the
       * fileserver
       */
-    if (adp->states & CRO) {
+    if (adp->f.states & CRO) {
 	code = EROFS;
 	goto done;
     }
     
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED) {
         code = ENETDOWN;
         goto done;
     }
@@ -101,13 +97,13 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 145);
     do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
+	tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
 	if (tc) {
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_LINK);
 	    RX_AFS_GUNLOCK();
 	    code =
-		RXAFS_Link(tc->id, (struct AFSFid *)&adp->fid.Fid, aname,
-			   (struct AFSFid *)&avc->fid.Fid, &OutFidStatus,
+		RXAFS_Link(tc->id, (struct AFSFid *)&adp->f.fid.Fid, aname,
+			   (struct AFSFid *)&avc->f.fid.Fid, &OutFidStatus,
 			   &OutDirStatus, &tsync);
 	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
@@ -115,7 +111,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_LINK,
+	     (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_LINK,
 	      SHARED_LOCK, NULL));
 
     if (code) {
@@ -124,7 +120,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	if (code < 0) {
 	    ObtainWriteLock(&afs_xcbhash, 492);
 	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
+	    adp->f.states &= ~CStatd;
 	    ReleaseWriteLock(&afs_xcbhash);
 	    osi_dnlc_purgedp(adp);
 	}
@@ -136,7 +132,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 290);
-	code = afs_dir_Create(tdc, aname, &avc->fid.Fid);
+	code = afs_dir_Create(tdc, aname, &avc->f.fid.Fid);
 	ReleaseWriteLock(&afs_xdcache);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- invalid value */
@@ -159,9 +155,9 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 
     ObtainWriteLock(&afs_xcbhash, 493);
     afs_DequeueCallback(avc);
-    avc->states &= ~CStatd;	/* don't really know new link count */
+    avc->f.states &= ~CStatd;	/* don't really know new link count */
     ReleaseWriteLock(&afs_xcbhash);
-    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 	osi_dnlc_purgedp(avc);
     ReleaseWriteLock(&avc->lock);
     code = 0;

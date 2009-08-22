@@ -10,10 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.23.4.5 2006/10/11 11:31:38 jaltman Exp $");
 
-#ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/types.h>
@@ -22,6 +19,7 @@ RCSID
 #include <net/if.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
+#include <string.h>
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include <sys/sysctl.h>
 #include <net/route.h>
@@ -45,20 +43,25 @@ RCSID
 
 #define NIFS		512
 
+#if defined(AFS_USR_DFBSD_ENV)
+#include <net/if.h>
+#include <sys/sockio.h>
+#endif
+
 #ifdef KERNEL
 /* only used for generating random noise */
 
-afs_int32 rxi_tempAddr = 0;	/* default attempt */
+afs_uint32 rxi_tempAddr = 0;	/* default attempt */
 
 /* set the advisory noise */
 void
-rxi_setaddr(afs_int32 x)
+rxi_setaddr(afs_uint32 x)
 {
     rxi_tempAddr = x;
 }
 
 /* get approx to net addr */
-afs_int32
+afs_uint32
 rxi_getaddr(void)
 {
     return rxi_tempAddr;
@@ -70,7 +73,7 @@ rxi_getaddr(void)
 
 /* to satisfy those who call setaddr */
 void
-rxi_setaddr(afs_int32 x)
+rxi_setaddr(afs_uint32 x)
 {
 }
 
@@ -87,10 +90,10 @@ rxi_setaddr(afs_int32 x)
 /* Return our internet address as a long in network byte order.  Returns zero
  * if it can't find one.
  */
-afs_int32
+afs_uint32
 rxi_getaddr(void)
 {
-    afs_int32 buffer[1024];
+    afs_uint32 buffer[1024];
     int count;
 
     count = rx_getAllAddr(buffer, 1024);
@@ -140,7 +143,7 @@ rt_xaddrs(caddr_t cp, caddr_t cplim, struct rt_addrinfo *rtinfo)
 */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
+rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 {
     size_t needed;
     int mib[6];
@@ -197,9 +200,11 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 	    /* Expand the compacted addresses */
 	    rt_xaddrs((char *)(ifam + 1), ifam->ifam_msglen + (char *)ifam,
 		      &info);
-	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
+	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET) {
+		addrcount--;
 		continue;
-	    a = info.rti_info[RTAX_IFA];
+	    }
+	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
 	    if (count >= maxSize)	/* no more space */
 		dpf(("Too many interfaces..ignoring 0x%x\n",
@@ -221,8 +226,8 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 }
 
 int
-rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
-		      afs_int32 mtuBuffer[], int maxSize)
+rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
+		     afs_uint32 mtuBuffer[], int maxSize)
 {
     int s;
 
@@ -233,7 +238,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
     struct sockaddr_dl *sdl;
     struct rt_addrinfo info;
     char *buf, *lim, *next;
-    int count = 0, addrcount = 0, i;
+    int count = 0, addrcount = 0;
 
     mib[0] = CTL_NET;
     mib[1] = PF_ROUTE;
@@ -284,9 +289,11 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 	    /* Expand the compacted addresses */
 	    rt_xaddrs((char *)(ifam + 1), ifam->ifam_msglen + (char *)ifam,
 		      &info);
-	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
+	    if (info.rti_info[RTAX_IFA]->sa_family != AF_INET) {
+		addrcount--;
 		continue;
-	    a = info.rti_info[RTAX_IFA];
+	    }
+	    a = (struct sockaddr_in *) info.rti_info[RTAX_IFA];
 
 	    if (a->sin_addr.s_addr != htonl(0x7f000001) ) {
 		if (count >= maxSize) {	/* no more space */
@@ -296,7 +303,7 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 		    struct ifreq ifr;
 		    
 		    addrBuffer[count] = a->sin_addr.s_addr;
-		    a = info.rti_info[RTAX_NETMASK];
+		    a = (struct sockaddr_in *) info.rti_info[RTAX_NETMASK];
 		    if (a)
 			maskBuffer[count] = a->sin_addr.s_addr;
 		    else
@@ -321,22 +328,23 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 
 
 int
-rx_getAllAddr(afs_int32 buffer[], int maxSize)
+rx_getAllAddr(afs_uint32 buffer[], int maxSize)
 {
     return rx_getAllAddr_internal(buffer, maxSize, 0);
 }
 /* this function returns the total number of interface addresses
 ** the buffer has to be passed in by the caller
 */
-#else
+#else /* UKERNEL indirectly, on DARWIN or XBSD */
 static int
-rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
+rx_getAllAddr_internal(afs_uint32 buffer[], int maxSize, int loopbacks)
 {
     int s;
     int i, len, count = 0;
     struct ifconf ifc;
     struct ifreq ifs[NIFS], *ifr;
     struct sockaddr_in *a;
+    /* can't ever be AFS_DARWIN_ENV or AFS_XBSD_ENV, no? */
 #if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     char *cp, *cplim, *cpnext;	/* used only for AIX 41 */
 #endif
@@ -406,7 +414,7 @@ rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 }
 
 int
-rx_getAllAddr(afs_int32 buffer[], int maxSize)
+rx_getAllAddr(afs_uint32 buffer[], int maxSize)
 {
     return rx_getAllAddr_internal(buffer, maxSize, 0);
 }
@@ -418,14 +426,17 @@ rx_getAllAddr(afs_int32 buffer[], int maxSize)
  * by afsi_SetServerIPRank().
  */
 int
-rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
-		      afs_int32 mtuBuffer[], int maxSize)
+rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
+                     afs_uint32 mtuBuffer[], int maxSize)
 {
-    int s;
-    int i, len, count = 0;
+    int i, count = 0;
+#if defined(AFS_USERSPACE_IP_ADDR)
+    int s, len;
     struct ifconf ifc;
     struct ifreq ifs[NIFS], *ifr;
     struct sockaddr_in *a;
+#endif
+
 #if     defined(AFS_AIX41_ENV) || defined(AFS_USR_AIX_ENV)
     char *cp, *cplim;		/* used only for AIX 41 */
 #endif
@@ -518,5 +529,3 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 
 #endif /* ! AFS_NT40_ENV */
 #endif /* !KERNEL || UKERNEL */
-
-#endif /* !AFS_DJGPP_ENV */

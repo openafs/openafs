@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/budb/ol_verify.c,v 1.13.14.3 2008/04/02 19:51:55 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -30,6 +28,7 @@ RCSID
 #include "database.h"
 #include "error_macros.h"
 #include "budb_errs.h"
+#include "budb_internal.h"
 #include <afs/cellconfig.h>
 #include "afs/audit.h"
 
@@ -168,10 +167,10 @@ int hashBlockType[HT_MAX_FUNCTION + 1] = {
 struct mapCompatability {
     short trigger;		/* these bits trigger this element */
 } mapC[] = {
-MAP_FREE, MAP_HTBLOCK, MAP_DUMPHASH | MAP_IDHASH,
-	MAP_TAPEHASH | MAP_TAPEONDUMP, MAP_VOLINFOONNAME,
-	MAP_VOLINFONAMEHEAD | MAP_VOLHASH,
-	MAP_VOLFRAGONTAPE | MAP_VOLFRAGONVOL, MAP_TEXTBLOCK};
+	{MAP_FREE}, {MAP_HTBLOCK}, {MAP_DUMPHASH | MAP_IDHASH},
+	{MAP_TAPEHASH | MAP_TAPEONDUMP}, {MAP_VOLINFOONNAME},
+	{MAP_VOLINFONAMEHEAD | MAP_VOLHASH},
+	{MAP_VOLFRAGONTAPE | MAP_VOLFRAGONVOL}, {MAP_TEXTBLOCK}};
 
 /* no. of entries in the mapC array */
 int NMAPCs = (sizeof(mapC) / sizeof(mapC[0]));
@@ -186,6 +185,11 @@ char *textName[TB_NUM] = {
 
 extern int sizeFunctions[];
 extern int nHTBuckets;
+
+afs_int32 DbVerify(struct rx_call *call, afs_int32 *status, 
+		   afs_int32 *orphans, afs_int32 *host);
+afs_int32 verifyTextChain(struct ubik_trans *ut, struct textBlock *tbPtr);
+	
 
 #define DBBAD BUDB_DATABASEINCONSISTENT
 
@@ -202,7 +206,7 @@ extern int nHTBuckets;
  */
 
 afs_int32
-BumpErrors()
+BumpErrors(void)
 {
     if (++miscData.errors >= miscData.maxErrors)
 	return (1);
@@ -221,11 +225,8 @@ BumpErrors()
  */
 
 afs_int32
-checkDiskAddress(address, type, blockIndexPtr, entryIndexPtr)
-     unsigned long address;
-     int type;
-     int *blockIndexPtr;
-     int *entryIndexPtr;
+checkDiskAddress(unsigned long address, int type, int *blockIndexPtr, 
+		 int *entryIndexPtr)
 {
     int index, offset;
 
@@ -269,10 +270,7 @@ checkDiskAddress(address, type, blockIndexPtr, entryIndexPtr)
  */
 
 afs_int32
-ConvertDiskAddress(address, blockIndexPtr, entryIndexPtr)
-     afs_uint32 address;
-     int *blockIndexPtr;
-     int *entryIndexPtr;
+ConvertDiskAddress(afs_uint32 address, int *blockIndexPtr, int *entryIndexPtr)
 {
     int index, type;
     afs_int32 code;
@@ -285,8 +283,7 @@ ConvertDiskAddress(address, blockIndexPtr, entryIndexPtr)
 }
 
 char *
-TypeName(index)
-     int index;
+TypeName(int index)
 {
     static char error[36];
 
@@ -322,12 +319,11 @@ getDumpID(struct ubik_trans *ut,
  *      to the dump.
  */
 afs_int32
-verifyDumpEntry(ut, dumpAddr, ai, ao, dumpPtr)
-     struct ubik_trans *ut;
-     afs_int32 dumpAddr;
-     int ai, ao;
-     struct dump *dumpPtr;
+verifyDumpEntry(struct ubik_trans *ut, afs_int32 dumpAddr, int ai, int ao,
+		void *param)
 {
+    struct dump *dumpPtr = (struct dump *)param;
+    
     struct tape tape;
     afs_int32 tapeAddr, tapeCount = 0, volCount = 0, appDumpCount = 0;
     afs_int32 appDumpAddr, appDumpIndex, appDumpOffset;
@@ -456,12 +452,10 @@ verifyDumpEntry(ut, dumpAddr, ai, ao, dumpPtr)
  *      they belong to the tape.
  */
 afs_int32
-verifyTapeEntry(ut, tapeAddr, ai, ao, tapePtr)
-     struct ubik_trans *ut;
-     afs_int32 tapeAddr;
-     int ai, ao;
-     struct tape *tapePtr;
+verifyTapeEntry(struct ubik_trans *ut, afs_int32 tapeAddr, int ai, int ao,
+     		void *param)
 {
+    struct tape *tapePtr = (struct tape *) param;
     int volCount = 0, ccheck = 1;
     afs_int32 volFragAddr;
     int blockIndex, entryIndex;
@@ -535,12 +529,10 @@ verifyTapeEntry(ut, tapeAddr, ai, ao, tapePtr)
  *      So no check is done agaist it.
  */
 afs_int32
-verifyVolFragEntry(ut, va, ai, ao, v)
-     struct ubik_trans *ut;
-     afs_int32 va;
-     int ai, ao;
-     struct volFragment *v;
+verifyVolFragEntry(struct ubik_trans *ut, afs_int32 va, int ai, int ao,
+		   void *param)
 {
+    /* struct volFragment *v = (struct volFragment *)param; */
     misc->nVolFrag++;
     return 0;
 }
@@ -552,12 +544,11 @@ verifyVolFragEntry(ut, va, ai, ao, v)
  *      also verify all entries are also on the chain.
  */
 afs_int32
-verifyVolInfoEntry(ut, volInfoAddr, ai, ao, volInfo)
-     struct ubik_trans *ut;
-     afs_int32 volInfoAddr;
-     int ai, ao;
-     struct volInfo *volInfo;
+verifyVolInfoEntry(struct ubik_trans *ut, afs_int32 volInfoAddr, int ai, 
+		   int ao, void *param)
 {
+    struct volInfo *volInfo = (struct volInfo *) param;
+    
     int volCount = 0, ccheck = 1;
     afs_int32 volFragAddr;
     int blockIndex, entryIndex;
@@ -683,8 +674,7 @@ verifyVolInfoEntry(ut, volInfoAddr, ai, ao, volInfo)
  *     blockMap array. Also check that the type of block is good.
  */
 afs_int32
-verifyBlocks(ut)
-     struct ubik_trans *ut;
+verifyBlocks(struct ubik_trans *ut)
 {
     struct block block;
     int blocktype;
@@ -740,14 +730,13 @@ int minvols, maxvols, ttlvols;
  *      entry and is not threaded on multiple lists.
  */
 afs_int32
-verifyHashTableBlock(ut, mhtPtr, htBlockPtr, old, length, index, mapBit)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mhtPtr;
-     struct htBlock *htBlockPtr;
-     int old;
-     afs_int32 length;		/* size of whole hash table */
-     int index;			/* base index of this block */
-     int mapBit;
+verifyHashTableBlock(struct ubik_trans *ut,
+		     struct memoryHashTable *mhtPtr,
+		     struct htBlock *htBlockPtr,
+		     int old,
+		     afs_int32 length,	/* size of whole hash table */
+		     int index,		/* base index of this block */
+     		     int mapBit)
 {
     int type;			/* hash table type */
     int entrySize;		/* hashed entry size */
@@ -843,10 +832,8 @@ verifyHashTableBlock(ut, mhtPtr, htBlockPtr, old, length, index, mapBit)
  *      the hash table.
  */
 afs_int32
-verifyHashTable(ut, mhtPtr, mapBit)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mhtPtr;
-     int mapBit;
+verifyHashTable(struct ubik_trans *ut, struct memoryHashTable *mhtPtr, 
+		int mapBit)
 {
     struct hashTable *htPtr = mhtPtr->ht;
 
@@ -944,8 +931,7 @@ verifyHashTable(ut, mhtPtr, mapBit)
  *	the integrity of each allocated structure.
  */
 afs_int32
-verifyEntryChains(ut)
-     struct ubik_trans *ut;
+verifyEntryChains(struct ubik_trans *ut)
 {
     afs_int32 code;
     afs_int32 offset;
@@ -955,7 +941,8 @@ verifyEntryChains(ut)
     int type;
     int nFree;
 
-    static afs_int32(*checkEntry[NBLOCKTYPES]) ()
+    static afs_int32(*checkEntry[NBLOCKTYPES]) (struct ubik_trans *, 
+		    				afs_int32, int, int, void *)
 	= {
 	/* FIXME: this list does not match typeName[] and may be incorrect */
 	0,			/* free block */
@@ -1013,7 +1000,7 @@ verifyEntryChains(ut)
 
 
 afs_int32
-verifyFreeLists()
+verifyFreeLists(void)
 {
     int i;
     afs_int32 addr;
@@ -1078,7 +1065,7 @@ verifyFreeLists()
  *	checking the bits for compatibility.
  */
 afs_int32
-verifyMapBits()
+verifyMapBits(void)
 {
     int blockIndex, entryIndex, i, entrySize, type, bits;
     afs_int32 offset;
@@ -1178,12 +1165,10 @@ verifyMapBits()
 }
 
 afs_int32
-verifyText(ut)
-     struct ubik_trans *ut;
+verifyText(struct ubik_trans *ut)
 {
     int i;
     afs_int32 code;
-    extern afs_int32 verifyTextChain();
 
     /* check each of the text types in use */
     for (i = 0; i < TB_NUM; i++) {
@@ -1199,9 +1184,7 @@ verifyText(ut)
  *	check the integrity of a text chain. Also checks the new chain.
  */
 afs_int32
-verifyTextChain(ut, tbPtr)
-     struct ubik_trans *ut;
-     struct textBlock *tbPtr;
+verifyTextChain(struct ubik_trans *ut, struct textBlock *tbPtr)
 {
     dbadr blockAddr;
     int blockIndex, entryIndex;
@@ -1262,16 +1245,14 @@ verifyTextChain(ut, tbPtr)
  */
 
 afs_int32
-verifyDatabase(ut, recreateFile)
-     struct ubik_trans *ut;
-     FILE *recreateFile;	/* not used */
+verifyDatabase(struct ubik_trans *ut,
+     	       FILE *recreateFile)	/* not used */
 {
     afs_int32 eof;
     int bmsize;
-    afs_int32 code = 0, tcode;
+    afs_int32 code = 0, tcode = 0;
 
     extern int nBlocks;		/* no. blocks in database */
-    extern struct ubik_dbase *BU_dbase;
 
     /* clear verification statistics */
     misc = &miscData;
@@ -1426,13 +1407,9 @@ verifyDatabase(ut, recreateFile)
  *	orphans - no. of orphan blocks
  *	host - address of host that did verification
  */
-afs_int32 DbVerify();
 afs_int32
-SBUDB_DbVerify(call, status, orphans, host)
-     struct rx_call *call;
-     afs_int32 *status;
-     afs_int32 *orphans;
-     afs_int32 *host;
+SBUDB_DbVerify(struct rx_call *call, afs_int32 *status, afs_int32 *orphans,
+	       afs_int32 *host)
 {
     afs_int32 code;
 
@@ -1442,11 +1419,8 @@ SBUDB_DbVerify(call, status, orphans, host)
 }
 
 afs_int32
-DbVerify(call, status, orphans, host)
-     struct rx_call *call;
-     afs_int32 *status;
-     afs_int32 *orphans;
-     afs_int32 *host;
+DbVerify(struct rx_call *call, afs_int32 *status, afs_int32 *orphans, 
+	 afs_int32 *host)
 {
     struct ubik_trans *ut = 0;
     afs_int32 code = 0, tcode;
@@ -1495,9 +1469,8 @@ DbVerify(call, status, orphans, host)
 /* check_header
  *	do a simple sanity check on the database header
  */
-
-check_header(callerst)
-     char *callerst;
+void
+check_header(char *callerst)
 {
     static int iteration_count = 0;
     afs_int32 eof;

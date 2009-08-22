@@ -35,10 +35,6 @@
 #include <config.h>
 #endif
 
-#ifdef RCSID
-RCSID("$Id: utime-file.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
-#endif
-
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>

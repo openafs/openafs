@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/salvaged.c,v 1.1.4.5 2008/03/05 21:53:30 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/iopen.c,v 1.5 2003/07/15 23:16:54 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -57,7 +55,7 @@ main(argc, argv)
 	perror("stat");
 	exit(1);
     }
-    printf("ino=%lld\n", ino);
+    printf("ino=%" AFS_INT64_FMT "\n", ino);
     printf("About to iopen(dev=(%d,%d), inode=%s, mode=%d\n",
 	   major(status.st_dev), minor(status.st_dev), PrintInode(NULL, ino),
 	   O_RDONLY);

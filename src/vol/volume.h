@@ -128,8 +128,9 @@ extern ProgramType programType;	/* The type of program using the package */
 
 /* Some initialization parameters for the volume package */
 /* Add new initialization parameters here */
-extern int (*V_BreakVolumeCallbacks) ();
-extern int (*vol_PollProc) ();
+extern int (*V_BreakVolumeCallbacks) (VolumeId);
+extern int (*vol_PollProc) (void);
+
 #define	DOPOLL	((vol_PollProc)? (*vol_PollProc)() : 0)
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -782,11 +783,14 @@ extern int VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes,
 			      afs_uint32 nSmallVnodes, int connect, afs_uint32 volcache);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
+extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
 extern void VTakeOffline_r(register Volume * vp);
 extern void VTakeOffline(register Volume * vp);
 extern Volume * VLookupVolume_r(Error * ec, VolId volumeId, Volume * hint);
 extern void VGetVolumePath(Error * ec, VolId volumeId, char **partitionp,
 			   char **namep);
+extern char *vol_DevName(dev_t adev, char *wpath);
+
 #ifdef AFS_DEMAND_ATTACH_FS
 extern Volume *VPreAttachVolumeByName(Error * ec, char *partition, char *name);
 extern Volume *VPreAttachVolumeByName_r(Error * ec, char *partition, char *name);
@@ -814,6 +818,8 @@ extern void VCancelReservation_r(Volume * vp);
 #endif /* AFS_DEMAND_ATTACH_FS */
 extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
+
+extern void VPurgeVolume(Error * ec, Volume * vp);
 
 
 /* Naive formula relating number of file size to number of 1K blocks in file */

@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/make_keyperm.c,v 1.8 2005/04/03 18:48:19 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

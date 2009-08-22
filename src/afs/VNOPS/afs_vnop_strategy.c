@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_strategy.c,v 1.22 2005/10/13 15:12:08 shadow Exp $");
 
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN80_ENV)
 
@@ -29,18 +27,14 @@ RCSID
 
 
 
-int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_ustrategy(abp, credp)
-     struct AFS_UCRED *credp;
+int afs_ustrategy(register struct buf *abp, struct AFS_UCRED *credp)
 #else
-afs_ustrategy(abp)
+int afs_ustrategy(register struct buf *abp)
 #endif
-     register struct buf *abp;
 {
     register afs_int32 code;
     struct uio tuio;
-    struct uio *tuiop = &tuio;
     struct iovec tiovec[1];
     register struct vcache *tvc = VTOAFS(abp->b_vp);
     register afs_int32 len = abp->b_bcount;
@@ -125,7 +119,7 @@ afs_ustrategy(abp)
 	     * to it, go ahead and write protect the page. This way we will detect
 	     * storing beyond EOF in the future
 	     */
-	    if (dbtob(abp->b_blkno) + abp->b_bcount > tvc->m.Length) {
+	    if (dbtob(abp->b_blkno) + abp->b_bcount > tvc->f.m.Length) {
 		if ((abp->b_flags & B_PFSTORE) == 0) {
 		    AFS_GUNLOCK();
 		    vm_protectp(tvc->segid, dbtob(abp->b_blkno) / PAGESIZE,
@@ -167,12 +161,12 @@ afs_ustrategy(abp)
 	 * XXX It this really right? Ideally we should always write block size multiple
 	 * and not any arbitrary size, right? XXX
 	 */
-	len = MIN(len, tvc->m.Length - dbtob(abp->b_blkno));
+	len = MIN(len, tvc->f.m.Length - dbtob(abp->b_blkno));
 #endif
 #ifdef AFS_OSF_ENV
 	len =
 	    MIN(abp->b_bcount,
-		(VTOAFS(abp->b_vp))->m.Length - dbtob(abp->b_blkno));
+		(VTOAFS(abp->b_vp))->f.m.Length - dbtob(abp->b_blkno));
 #endif /* AFS_OSF_ENV */
 	tuio.afsio_resid = len;
 #if defined(AFS_XBSD_ENV)

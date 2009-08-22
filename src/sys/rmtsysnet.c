@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/rmtsysnet.c,v 1.8.14.2 2007/11/26 21:08:44 shadow Exp $");
 
 #include <errno.h>
 #include <sys/param.h>
@@ -66,8 +64,7 @@ struct ClearToken {
 };
 
 char *
-RSkipLine(astr)
-     register char *astr;
+RSkipLine(register char *astr)
 {
     while (*astr != '\n')
 	astr++;
@@ -77,8 +74,7 @@ RSkipLine(astr)
 
 
 struct Acl *
-RParseAcl(astr)
-     char *astr;
+RParseAcl(char *astr)
 {
     int nplus, nminus, i, trights;
     char tname[MAXNAME];
@@ -131,7 +127,7 @@ RParseAcl(astr)
 }
 
 
-int
+void
 RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
 {
     char tstring[MAXSIZE];
@@ -147,12 +143,11 @@ RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
 	sprintf(tstring, "%s %d\n", tp->name, tp->rights);
 	strcat(mydata, tstring);
     }
-    return 0;
 }
 
 
 /* Free all malloced stuff */
-int
+void
 RCleanAcl(struct Acl *aa)
 {
     register struct AclEntry *te, *ne;
@@ -166,11 +161,10 @@ RCleanAcl(struct Acl *aa)
 	free(te);
     }
     free(aa);
-    return 0;
 }
 
 
-int
+void
 RFetchVolumeStatus_conversion(char *data, int ntoh_conv)
 {
     struct AFSFetchVolumeStatus *status = (AFSFetchVolumeStatus *) data;
@@ -208,10 +202,9 @@ RFetchVolumeStatus_conversion(char *data, int ntoh_conv)
 	status->PartBlocksAvail = htonl(status->PartBlocksAvail);
 	status->PartMaxBlocks = htonl(status->PartMaxBlocks);
     }
-    return 0;
 }
 
-int
+void
 RClearToken_convert(char *ptr, int ntoh_conv)
 {
     struct ClearToken *ticket = (struct ClearToken *)ptr;
@@ -227,10 +220,9 @@ RClearToken_convert(char *ptr, int ntoh_conv)
 	ticket->BeginTimestamp = htonl(ticket->BeginTimestamp);
 	ticket->EndTimestamp = htonl(ticket->EndTimestamp);
     }
-    return 0;
 }
 
-int
+void
 inparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 {
     struct Acl *acl;
@@ -338,11 +330,10 @@ inparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 	/* Note that new pioctls are supposed to be in network order! */
 	break;
     }
-    return 0;
 }
 
 
-int
+void
 outparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 {
     struct Acl *acl;
@@ -449,5 +440,4 @@ outparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 	/* Note that new pioctls are supposed to be in network order! */
 	break;
     }
-    return 0;
 }

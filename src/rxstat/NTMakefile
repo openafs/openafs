@@ -14,7 +14,7 @@ RELDIR=rxstat
 INCFILEDIR = $(DESTDIR)\include
 
 INCFILES =\
-	$(INCFILEDIR)\rx\rxstat.h
+	$(INCFILEDIR)\rx\rxstat.h \
 
 # Library component lists.
 

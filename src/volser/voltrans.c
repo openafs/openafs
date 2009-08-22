@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/voltrans.c,v 1.11.8.3 2007/10/30 15:16:59 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <afs/afsutil.h>
@@ -62,9 +60,9 @@ RCSID
 #include <afs/vnode.h>
 #include <afs/volume.h>
 
+#include "volint.h"
 #include "volser.h"
-
-/*@printflike@*/ extern void Log(const char *format, ...);
+#include "volser_prototypes.h"
 
 static struct volser_trans *allTrans = 0;
 static afs_int32 transCounter = 1;
@@ -74,20 +72,21 @@ struct volser_trans *
 NewTrans(afs_int32 avol, afs_int32 apart)
 {
     /* set volid, next, partition */
-    register struct volser_trans *tt;
+    struct volser_trans *tt, *newtt;
     struct timeval tp;
     struct timezone tzp;
 
+    newtt = (struct volser_trans *)malloc(sizeof(struct volser_trans));
     VTRANS_LOCK;
     /* don't allow the same volume to be attached twice */
     for (tt = allTrans; tt; tt = tt->next) {
 	if ((tt->volid == avol) && (tt->partition == apart)) {
 	    VTRANS_UNLOCK;
+	    free(newtt);
 	    return (struct volser_trans *)0;	/* volume busy */
 	}
     }
-    VTRANS_UNLOCK;
-    tt = (struct volser_trans *)malloc(sizeof(struct volser_trans));
+    tt = newtt;
     memset(tt, 0, sizeof(struct volser_trans));
     tt->volid = avol;
     tt->partition = apart;
@@ -97,7 +96,6 @@ NewTrans(afs_int32 avol, afs_int32 apart)
     gettimeofday(&tp, &tzp);
     tt->creationTime = tp.tv_sec;
     tt->time = FT_ApproxTime();
-    VTRANS_LOCK;
     tt->tid = transCounter++;
     tt->next = allTrans;
     allTrans = tt;
@@ -128,7 +126,7 @@ afs_int32
 DeleteTrans(register struct volser_trans *atrans, afs_int32 lock)
 {
     register struct volser_trans *tt, **lt;
-    afs_int32 error;
+    Error error;
 
     if (lock) VTRANS_LOCK;
     if (atrans->refCount > 1) {
@@ -188,7 +186,7 @@ TRELE(register struct volser_trans *at)
 #define	OLDTRANSWARN	    300	/* seconds */
 static int GCDeletes = 0;
 afs_int32
-GCTrans()
+GCTrans(void)
 {
     register struct volser_trans *tt, *nt;
     afs_int32 now;
@@ -219,7 +217,7 @@ GCTrans()
 
 /*return the head of the transaction list */
 struct volser_trans *
-TransList()
+TransList(void)
 {
     return (allTrans);
 }

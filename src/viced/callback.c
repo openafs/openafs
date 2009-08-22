@@ -84,8 +84,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/viced/callback.c,v 1.77.2.15 2008/02/18 19:20:53 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */
@@ -97,6 +95,7 @@ RCSID
 #else
 #include <sys/time.h>
 #include <sys/file.h>
+#include <unistd.h>
 #endif
 #include <afs/assert.h>
 
@@ -124,7 +123,10 @@ RCSID
 
 extern afsUUID FS_HostUUID;
 extern int hostCount;
+
+#ifndef INTERPRET_DUMP
 static int ShowProblems = 1;
+#endif
 
 struct cbcounters cbstuff;
 
@@ -153,7 +155,9 @@ static int TimeOuts[] = {
 };				/* Anything more: MinTimeOut */
 
 /* minimum time given for a call back */
+#ifndef INTERPRET_DUMP
 static int MinTimeOut = (7 * 60);
+#endif
 
 /* Heads of CB queues; a timeout index is 1+index into this array */
 static afs_uint32 timeout[CB_NUM_TIMEOUT_QUEUES];
@@ -168,6 +172,8 @@ struct object {
 
 /* Prototypes for static routines */
 static struct FileEntry *FindFE(register AFSFid * fid);
+
+#ifndef INTERPRET_DUMP
 static struct CallBack *iGetCB(register int *nused);
 static int iFreeCB(register struct CallBack *cb, register int *nused);
 static struct FileEntry *iGetFE(register int *nused);
@@ -188,11 +194,12 @@ static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 static int MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 				      struct VCBParams *parms, int deletefe);
 static int MultiBreakVolumeCallBack(struct host *host, int isheld,
-				    struct VCBParams *parms);
+				    void *rock);
 static int MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
-					 struct VCBParams *parms);
+					 void *rock);
 static int GetSomeSpace_r(struct host *hostp, int locked);
 static int ClearHostCallbacks_r(struct host *hp, int locked);
+#endif
 
 #define GetCB() ((struct CallBack *)iGetCB(&cbstuff.nCBs))
 #define GetFE() ((struct FileEntry *)iGetFE(&cbstuff.nFEs))
@@ -532,7 +539,7 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     struct FileEntry *fe;
     struct CallBack *cb = 0, *lastcb = 0;
     struct FileEntry *newfe = 0;
-    afs_uint32 time_out;
+    afs_uint32 time_out = 0;
     afs_uint32 *Thead = thead;
     struct CallBack *newcb = 0;
     int safety;
@@ -1157,9 +1164,10 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 ** isheld is 1 if the host is held in BreakVolumeCallBacks
 */
 static int
-MultiBreakVolumeCallBack(struct host *host, int isheld,
-			 struct VCBParams *parms)
+MultiBreakVolumeCallBack(struct host *host, int isheld, void *rock)
 {
+    struct VCBParams *parms = (struct VCBParams *) rock;
+    
     int retval;
     H_LOCK;
     retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 1);
@@ -1172,9 +1180,9 @@ MultiBreakVolumeCallBack(struct host *host, int isheld,
 ** isheld is 1 if the host is held in BreakVolumeCallBacks
 */
 static int
-MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
-			      struct VCBParams *parms)
+MultiBreakVolumeLaterCallBack(struct host *host, int isheld, void *rock)
 {
+    struct VCBParams *parms = (struct VCBParams *)rock;
     int retval;
     H_LOCK;
     retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 0);
@@ -1243,7 +1251,7 @@ BreakVolumeCallBacks(afs_uint32 volume)
     henumParms.fid = &fid;
     henumParms.thead = tthead;
     H_UNLOCK;
-    h_Enumerate(MultiBreakVolumeCallBack, (char *)&henumParms);
+    h_Enumerate(MultiBreakVolumeCallBack, &henumParms);
     H_LOCK;
     if (henumParms.ncbas) {	/* do left-overs */
 	struct AFSCBFids tf;
@@ -1343,7 +1351,7 @@ BreakLaterCallBacks(void)
 			 fe->volid));
 		fid.Volume = fe->volid;
 		*feip = fe->fnext;
-		fe->status &= ~FE_LATER;
+		fe->status &= ~FE_LATER; /* not strictly needed */
 		/* Works since volid is deeper than the largest pointer */
 		tmpfe = (struct object *)fe;
 		tmpfe->next = (struct object *)myfe;
@@ -1472,9 +1480,9 @@ static int lih_host_held;
  * are held by other threads.
  */
 static int
-lih0_r(register struct host *host, register int held,
-      register struct host *hostp)
+lih0_r(register struct host *host, register int held, void *rock)
 {
+    struct host *hostp = (struct host *) rock;
     if (host->cblist
 	&& (hostp && host != hostp) 
 	&& (!held && !h_OtherHolds_r(host))
@@ -1496,9 +1504,10 @@ lih0_r(register struct host *host, register int held,
  * prevent held hosts from being selected.
  */
 static int
-lih1_r(register struct host *host, register int held,
-      register struct host *hostp)
+lih1_r(register struct host *host, register int held, void *rock)
 {
+    struct host *hostp = (struct host *) rock;
+
     if (host->cblist
 	&& (hostp && host != hostp) 
 	&& (!lih_host || host->ActiveCall < lih_host->ActiveCall) 
@@ -1682,6 +1691,8 @@ PrintCallBackStats(void)
 }
 
 #define MAGIC 0x12345678	/* To check byte ordering of dump when it is read in */
+#define MAGICV2 0x12345679      /* To check byte ordering & version of dump when it is read in */
+
 
 #ifndef INTERPRET_DUMP
 
@@ -2654,7 +2665,7 @@ int
 DumpCallBackState(void)
 {
     int fd, oflag;
-    afs_uint32 magic = MAGIC, now = FT_ApproxTime(), freelisthead;
+    afs_uint32 magic = MAGICV2, now = (afs_int32) FT_ApproxTime(), freelisthead;
 
     oflag = O_WRONLY | O_CREAT | O_TRUNC;
 #ifdef AFS_NT40_ENV
@@ -2692,11 +2703,14 @@ DumpCallBackState(void)
 /* This is only compiled in for the callback analyzer program */
 /* Returns the time of the dump */
 time_t
-ReadDump(char *file)
+ReadDump(char *file, int timebits)
 {
     int fd, oflag;
     afs_uint32 magic, freelisthead;
     afs_uint32 now;
+#ifdef AFS_64BIT_ENV
+    afs_int64 now64;
+#endif
 
     oflag = O_RDONLY;
 #ifdef AFS_NT40_ENV
@@ -2708,15 +2722,25 @@ ReadDump(char *file)
 	exit(1);
     }
     read(fd, &magic, sizeof(magic));
-    if (magic != MAGIC) {
-	fprintf(stderr,
-		"Magic number of %s is invalid.  You might be trying to\n",
-		file);
-	fprintf(stderr,
-		"run this program on a machine type with a different byte ordering.\n");
-	exit(1);
+    if (magic == MAGICV2) {
+	timebits = 32;
+    } else {
+	if (magic != MAGIC) {
+	    fprintf(stderr,
+		    "Magic number of %s is invalid.  You might be trying to\n",
+		    file);
+	    fprintf(stderr,
+		    "run this program on a machine type with a different byte ordering.\n");
+	    exit(1);
+	}
     }
-    read(fd, &now, sizeof(now));
+#ifdef AFS_64BIT_ENV
+    if (timebits == 64) {
+	read(fd, &now64, sizeof(afs_int64));
+	now = (afs_int32) now64;
+    } else
+#endif
+	read(fd, &now, sizeof(afs_int32));
     read(fd, &cbstuff, sizeof(cbstuff));
     read(fd, TimeOuts, sizeof(TimeOuts));
     read(fd, timeout, sizeof(timeout));
@@ -2752,8 +2776,9 @@ main(int argc, char **argv)
     static AFSFid fid;
     register struct FileEntry *fe;
     register struct CallBack *cb;
-    time_t now;
-
+    afs_int32 now;
+    int timebits = 32;
+    
     memset(&fid, 0, sizeof(fid));
     argc--;
     argv++;
@@ -2785,6 +2810,19 @@ main(int argc, char **argv)
 	    all = 1;
 	} else if (!strcmp(*argv, "-raw")) {
 	    raw = 1;
+	} else if (!strcmp(*argv, "-timebits")) {
+	    if (argc < 1) {
+		err++;
+		break;
+	    }
+	    argc--;
+	    timebits = atoi(*++argv);
+	    if ((timebits != 32)
+#ifdef AFS_64BIT_ENV
+		&& (timebits != 64)
+#endif
+		) 
+		err++;
 	} else if (!strcmp(*argv, "-volume")) {
 	    if (argc < 1) {
 		err++;
@@ -2798,16 +2836,20 @@ main(int argc, char **argv)
     }
     if (err || argc != 1) {
 	fprintf(stderr,
-		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] [-all] callbackdumpfile\n");
+		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] [-all] [-timebits 32"
+#ifdef AFS_64BIT_ENV
+		"|64"
+#endif
+		"] callbackdumpfile\n");
 	fprintf(stderr,
 		"[cbid is shown for each host in the hosts.dump file]\n");
 	exit(1);
     }
-    now = ReadDump(*argv);
+    now = ReadDump(*argv, timebits);
     if (stats || noptions == 0) {
-	time_t uxtfirst = UXtime(tfirst);
-	printf("The time of the dump was %u %s", now, ctime(&now));
-	printf("The last time cleanup ran was %u %s", uxtfirst,
+	time_t uxtfirst = UXtime(tfirst), tnow = now;
+	printf("The time of the dump was %u %s", (unsigned int) now, ctime(&tnow));
+	printf("The last time cleanup ran was %u %s", (unsigned int) uxtfirst,
 	       ctime(&uxtfirst));
 	PrintCallBackStats();
     }
@@ -2818,7 +2860,7 @@ main(int argc, char **argv)
 	struct FileEntry *fe;
 
 	for (hash = 0; hash < FEHASH_SIZE; hash++) {
-	    for (feip = &HashTable[hash]; fe = itofe(*feip);) {
+	    for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
 		if (!vol || (fe->volid == vol)) {
 		    register struct CallBack *cbnext;
 		    for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
@@ -2871,7 +2913,7 @@ PrintCB(register struct CallBack *cb, afs_uint32 now)
     if (fe == NULL)
 	return;
 
-    printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %d secs at %s",
+    printf("vol=%u vn=%u cbs=%d hi=%d st=%d fest=%d, exp in %lu secs at %s",
 	   fe->volid, fe->vnode, fe->ncbs, cb->hhead, cb->status, fe->status,
 	   expires - now, ctime(&expires));
 }

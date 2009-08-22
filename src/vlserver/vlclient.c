@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlclient.c,v 1.16.2.3 2007/10/31 04:09:43 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -51,18 +49,17 @@ RCSID
 #include <lock.h>
 #include <ubik.h>
 #include "vlserver.h"
-#include "vlclient.h"
 
-void fill_listattributes_entry();
-void display_listattributes_entry();
-void display_entry();
-void display_entryN();
-void display_update_entry();
-void dump_stats();
-void GetArgs();
-void print_usage();
-void fill_entry();
-void fill_update_entry();
+void fill_listattributes_entry(struct VldbListByAttributes *, char **, int);
+void display_listattributes_entry(struct VldbListByAttributes *,int);
+void display_entry(struct vldbentry *, int);
+void display_entryN(struct nvldbentry *, int);
+void display_update_entry(struct VldbUpdateEntry *, int);
+void dump_stats(vldstats *, vital_vlheader *);
+void GetArgs(char *, char **, int *);
+void print_usage(void);
+void fill_entry(struct vldbentry *, char **, int);
+void fill_update_entry(struct VldbUpdateEntry *, char **, int);
 
 #define	VL_NUMBER_OPCODESX	34
 static char *opcode_names[VL_NUMBER_OPCODESX] = {
@@ -122,8 +119,7 @@ char confdir[AFSDIR_PATH_MAX];
 char *(args[50]);
 
 struct Vlent *
-GetVolume(vol, entry)
-     struct vldbentry *entry;
+GetVolume(int vol, struct vldbentry *entry)
 {
     register int i;
     register struct Vlent *vl;
@@ -191,18 +187,18 @@ handleit(struct cmd_syndesc *as, void *arock)
     register afs_int32 code, server = 0, sawserver = 0;
     afs_int32 id, voltype;
     struct vldbentry entry;
-    char *cmd = 0, *cellp = 0;
+    char *cellp = 0;
     struct VldbUpdateEntry updateentry;
     struct VldbListByAttributes listbyattributes;
     int noAuth = 1;		/* Default is authenticated connections */
 
-    if (ti = as->parms[0].items)	/* -cellpath <dir> */
+    if ((ti = as->parms[0].items))	/* -cellpath <dir> */
 	strcpy(confdir, ti->data);
     if (as->parms[1].items)	/* -server */
 	strcpy(confdir, AFSDIR_SERVER_ETC_DIRPATH);
     if (as->parms[2].items)	/* -noauth */
 	noAuth = 0;
-    if (ti = as->parms[3].items) {	/* -host */
+    if ((ti = as->parms[3].items)) {	/* -host */
 	server = GetServer(ti->data);
 	if (server == 0) {
 	    printf("server '%s' not found in host table\n", ti->data);
@@ -215,10 +211,10 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    ("Must also specify the -cell' option along with -host for authenticated conns\n");
 	exit(1);
     }
-    if (ti = as->parms[4].items) {	/* -cell */
+    if ((ti = as->parms[4].items)) {	/* -cell */
 	cellp = ti->data;
     }
-    if (code = vl_Initialize(noAuth, confdir, server, cellp)) {
+    if ((code = vl_Initialize(noAuth, confdir, server, cellp))) {
 	printf("Couldn't initialize vldb library (code=%d).\n", code);
 	exit(1);
     }
@@ -226,7 +222,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     if (as->parms[5].items) {	/* -gstats */
 	vldstats stats;
 	vital_vlheader vital_header;
-	code = ubik_Call(VL_GetStats, cstruct, 0, &stats, &vital_header);
+	code = ubik_VL_GetStats(cstruct, 0, &stats, &vital_header);
 	if (!code)
 	    dump_stats(&stats, &vital_header);
 	exit(0);
@@ -251,13 +247,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    if (!strcmp(oper, "cr")) {
 		fill_entry(&entry, argp, nargs);
 		display_entry(&entry, 0);
-		code = ubik_Call(VL_CreateEntry, cstruct, 0, &entry);
+		code = ubik_VL_CreateEntry(cstruct, 0, &entry);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "rm")) {
 		sscanf(&(*argp)[0], "%d", &id);
 		++argp, --nargs;
 		sscanf(&(*argp)[0], "%d", &voltype);
-		code = ubik_Call(VL_DeleteEntry, cstruct, 0, id, voltype);
+		code = ubik_VL_DeleteEntry(cstruct, 0, id, voltype);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "re")) {
 		sscanf(&(*argp)[0], "%d", &id);
@@ -269,7 +265,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 		fill_entry(&entry, argp, nargs);
 		display_entry(&entry, 0);
 		code =
-		    ubik_Call(VL_ReplaceEntry, cstruct, 0, id, voltype,
+		    ubik_VL_ReplaceEntry(
+                    cstruct, 0, id, voltype,
 			      &entry, releasetype);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "up")) {
@@ -282,7 +279,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		fill_update_entry(&updateentry, argp, nargs);
 		display_update_entry(&updateentry, 0);
 		code =
-		    ubik_Call(VL_UpdateEntry, cstruct, 0, id, voltype,
+		    ubik_VL_UpdateEntry(cstruct, 0, id, voltype,
 			      &updateentry, releasetype);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "ls")) {
@@ -290,7 +287,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (index = 0; 1; index = next_index) {
 		    memset(&entry, 0, sizeof(entry));
 		    code =
-			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+			ubik_VL_ListEntry(cstruct, 0, index, &count,
 				  &next_index, &entry);
 		    if (code) {
 			printf("VL_ListEntry returned code = %d\n", code);
@@ -314,7 +311,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (index = 0; 1; index = next_index) {
 		    memset(&entry, 0, sizeof(entry));
 		    code =
-			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+			ubik_VL_ListEntry(cstruct, 0, index, &count,
 				  &next_index, &entry);
 		    if (code) {
 			printf("VL_ListEntry returned code = %d\n", code);
@@ -323,21 +320,21 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    if (!next_index)
 			break;
 		    num++;
-		    if (vl1 = GetVolume(entry.volumeId[0], &entry)) {
+		    if ((vl1 = GetVolume(entry.volumeId[0], &entry))) {
 			num1++;
 			printf
 			    ("Duplicate entry is found for RW vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
 			     entry.volumeId[0], vl1->rwid, vl1->roid,
 			     vl1->baid, vl1->name);
 		    }
-		    if (vl1 = GetVolume(entry.volumeId[1], &entry)) {
+		    if ((vl1 = GetVolume(entry.volumeId[1], &entry))) {
 			num1++;
 			printf
 			    ("Duplicate entry is found for RO vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
 			     entry.volumeId[1], vl1->rwid, vl1->roid,
 			     vl1->baid, vl1->name);
 		    }
-		    if (vl1 = GetVolume(entry.volumeId[2], &entry)) {
+		    if ((vl1 = GetVolume(entry.volumeId[2], &entry))) {
 			num1++;
 			printf
 			    ("Duplicate entry is found for BA vol %u: [RW %u, RO %u, BA %u, name=%s]\n",
@@ -363,7 +360,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (index = 0; 1; index = next_index) {
 		    memset(&entry, 0, sizeof(entry));
 		    code =
-			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+			ubik_VL_ListEntry(cstruct, 0, index, &count,
 				  &next_index, &entry);
 		    if (code) {
 			printf("VL_ListEntry returned code = %d\n", code);
@@ -373,7 +370,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			break;
 		    num++;
 		    code =
-			ubik_Call(VL_GetEntryByNameO, cstruct, 0, entry.name,
+			ubik_VL_GetEntryByNameO(cstruct, 0, entry.name,
 				  &tentry);
 		    if (code == VL_NOENT) {
 			num1++;
@@ -381,7 +378,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			       entry.name, entry.volumeId[RWVOL]);
 		    }
 		    code =
-			ubik_Call(VL_GetEntryByID, cstruct, 0,
+			ubik_VL_GetEntryByID(cstruct, 0,
 				  entry.volumeId[RWVOL], RWVOL, &tentry);
 		    if (code == VL_NOENT) {
 			num2++;
@@ -390,7 +387,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    }
 		    if (entry.volumeId[BACKVOL]) {
 			code =
-			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+			    ubik_VL_GetEntryByID(cstruct, 0,
 				      entry.volumeId[BACKVOL], BACKVOL,
 				      &tentry);
 			num31++;
@@ -402,7 +399,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    }
 		    if (entry.volumeId[ROVOL]) {
 			code =
-			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+			    ubik_VL_GetEntryByID(cstruct, 0,
 				      entry.volumeId[ROVOL], ROVOL, &tentry);
 			num41++;
 			if (code == VL_NOENT) {
@@ -440,7 +437,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    int n1 = 0, n2 = 0, n3 = 0, n4 = 0;
 		    memset(&entry, 0, sizeof(entry));
 		    code =
-			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+			ubik_VL_ListEntry(cstruct, 0, index, &count,
 				  &next_index, &entry);
 		    if (code) {
 			printf("VL_ListEntry returned code = %d\n", code);
@@ -450,7 +447,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			break;
 		    num++;
 		    code =
-			ubik_Call(VL_GetEntryByNameO, cstruct, 0, entry.name,
+			ubik_VL_GetEntryByNameO(cstruct, 0, entry.name,
 				  &tentry);
 		    if (code == VL_NOENT) {
 			num1++;
@@ -459,7 +456,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			printf("\tVolume %s %d (not in namehash)\n",
 			       entry.name, entry.volumeId[RWVOL]);
 			code =
-			    ubik_Call(VL_UpdateEntry, cstruct, 0,
+			    ubik_VL_UpdateEntry(cstruct, 0,
 				      entry.volumeId[RWVOL], -1, &updateentry,
 				      0);
 			if (code) {
@@ -469,7 +466,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			}
 		    }
 		    code =
-			ubik_Call(VL_GetEntryByID, cstruct, 0,
+			ubik_VL_GetEntryByID(cstruct, 0,
 				  entry.volumeId[RWVOL], RWVOL, &tentry);
 		    if (code == VL_NOENT) {
 			num1++;
@@ -479,7 +476,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			printf("\tVolume %s %d (not in rw id hash)\n",
 			       entry.name, entry.volumeId[RWVOL]);
 			code =
-			    ubik_Call(VL_UpdateEntryByName, cstruct, 0,
+			    ubik_VL_UpdateEntryByName(cstruct, 0,
 				      entry.name, &updateentry, 0);
 			if (code) {
 			    printf("\tFailed to update volume %s (err=%d)\n",
@@ -490,7 +487,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    }
 		    if (entry.volumeId[BACKVOL] && !n2) {
 			code =
-			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+			    ubik_VL_GetEntryByID(cstruct, 0,
 				      entry.volumeId[BACKVOL], BACKVOL,
 				      &tentry);
 			if (code == VL_NOENT) {
@@ -501,7 +498,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			    printf("\tVolume %s %d (not in backup id hash)\n",
 				   entry.name, entry.volumeId[BACKVOL]);
 			    code =
-				ubik_Call(VL_UpdateEntry, cstruct, 0,
+				ubik_VL_UpdateEntry(cstruct, 0,
 					  entry.volumeId[RWVOL], -1,
 					  &updateentry, 0);
 			    if (code) {
@@ -514,7 +511,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    }
 		    if (entry.volumeId[ROVOL && !n2]) {
 			code =
-			    ubik_Call(VL_GetEntryByID, cstruct, 0,
+			    ubik_VL_GetEntryByID(cstruct, 0,
 				      entry.volumeId[ROVOL], ROVOL, &tentry);
 			if (code == VL_NOENT) {
 			    n4 = 1;
@@ -524,7 +521,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			    printf("\tVolume %s %d (not in RO id hash)\n",
 				   entry.name, entry.volumeId[ROVOL]);
 			    code =
-				ubik_Call(VL_UpdateEntry, cstruct, 0,
+				ubik_VL_UpdateEntry(cstruct, 0,
 					  entry.volumeId[RWVOL], -1,
 					  &updateentry, 0);
 			    if (code) {
@@ -548,7 +545,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		fill_listattributes_entry(&listbyattributes, argp, nargs);
 		display_listattributes_entry(&listbyattributes, 0);
 		code =
-		    ubik_Call(VL_ListAttributes, cstruct, 0,
+		    ubik_VL_ListAttributes(cstruct, 0,
 			      &listbyattributes, &nentries, &entries);
 		if (code) {
 		    printf("VL_ListAttributes returned code = %d\n", code);
@@ -581,7 +578,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    nentries = 0;
 		    memset(&entries, 0, sizeof(entries));
 		    code =
-			ubik_Call(VL_ListAttributesN2, cstruct, 0,
+			ubik_VL_ListAttributesN2(cstruct, 0,
 				  &listbyattributes, name, si, &nentries,
 				  &entries, &nsi);
 		    if (code) {
@@ -607,7 +604,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		display_listattributes_entry(&listbyattributes, 0);
 		memset(&linkedvldbs, 0, sizeof(vldb_list));
 		code =
-		    ubik_Call(VL_LinkedList, cstruct, 0, &listbyattributes,
+		    ubik_VL_LinkedList(cstruct, 0, &listbyattributes,
 			      &netries, &linkedvldbs);
 		if (code) {
 		    printf("VL_LinkedList returned code = %d\n", code);
@@ -617,8 +614,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 		       (netries == 1 ? "y" : "ies"));
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
-		    display_entry(&vllist->VldbEntry, 0);
-		    free((char *)vllist);
+		    display_entry((struct vldbentry *) &vllist->VldbEntry, 0);
+		    free(vllist);
 		}
 	    } else if (!strcmp(oper, "lnn")) {
 		int netries;
@@ -629,7 +626,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		display_listattributes_entry(&listbyattributes, 0);
 		memset(&linkedvldbs, 0, sizeof(vldb_list));
 		code =
-		    ubik_Call(VL_LinkedListN, cstruct, 0, &listbyattributes,
+		    ubik_VL_LinkedListN(cstruct, 0, &listbyattributes,
 			      &netries, &linkedvldbs);
 		if (code) {
 		    printf("VL_LinkedList returned code = %d\n", code);
@@ -639,7 +636,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		       (netries == 1 ? "y" : "ies"));
 		for (vllist = linkedvldbs.node; vllist; vllist = vllist1) {
 		    vllist1 = vllist->next_vldb;
-		    display_entry(&vllist->VldbEntry, 0);
+		    display_entry((struct vldbentry *)&vllist->VldbEntry, 0);
 		    free((char *)vllist);
 		}
 	    } else if (!strcmp(oper, "di")) {
@@ -647,7 +644,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		++argp, --nargs;
 		sscanf(&(*argp)[0], "%d", &voltype);
 		code =
-		    ubik_Call(VL_GetEntryByID, cstruct, 0, id, voltype,
+		    ubik_VL_GetEntryByID(cstruct, 0, id, voltype,
 			      &entry);
 		display_entry(&entry, code);
 		printf("return code is %d.\n", code);
@@ -656,7 +653,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		++argp, --nargs;
 		sscanf(&(*argp)[0], "%d", &voltype);
 		code =
-		    ubik_Call(VL_GetEntryByID, cstruct, 0, id, voltype,
+		    ubik_VL_GetEntryByID(cstruct, 0, id, voltype,
 			      &entry);
 		display_entry(&entry, code);
 		memset(&updateentry, 0, sizeof(updateentry));
@@ -664,7 +661,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		printf("\tRehashing namehash table for %s (%d)\n", entry.name,
 		       entry.volumeId[RWVOL]);
 		code =
-		    ubik_Call(VL_UpdateEntry, cstruct, 0,
+		    ubik_VL_UpdateEntry(cstruct, 0,
 			      entry.volumeId[RWVOL], -1, &updateentry, 0);
 		if (code) {
 		    printf("\tFailed to update volume %s (err=%d)\n",
@@ -686,7 +683,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		for (index = 0; 1; index = next_index) {
 		    memset(&entry, 0, sizeof(entry));
 		    code =
-			ubik_Call(VL_ListEntry, cstruct, 0, index, &count,
+			ubik_VL_ListEntry(cstruct, 0, index, &count,
 				  &next_index, &entry);
 		    if (code) {
 			printf("VL_ListEntry returned code = %d\n", code);
@@ -707,7 +704,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 				("\tUndeleting vldb entry for vol %d (%s)\n",
 				 id, entry.name);
 			    code =
-				ubik_Call(VL_UpdateEntry, cstruct, 0, id, -1,
+				ubik_VL_UpdateEntry(cstruct, 0, id, -1,
 					  &updateentry, 0);
 			    if (code) {
 				printf
@@ -723,22 +720,22 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    } else if (!strcmp(oper, "dn")) {
 		vname = &argp[0][0];
 		code =
-		    ubik_Call(VL_GetEntryByNameO, cstruct, 0, vname, &entry);
+		    ubik_VL_GetEntryByNameO(cstruct, 0, vname, &entry);
 		display_entry(&entry, code);
 		printf("return code is %d.\n", code);
 	    } else if (!strcmp(oper, "nv")) {
-		int newvolid;
+		unsigned int newvolid;
 		sscanf(&(*argp)[0], "%d", &id);
 		code =
-		    ubik_Call(VL_GetNewVolumeId, cstruct, 0, id, &newvolid);
+		    ubik_VL_GetNewVolumeId(cstruct, 0, id, &newvolid);
 		if (!code)
-		    printf("Current Max volid is (in hex):%X\n", newvolid);
+		    printf("Current Max volid is (in hex):0x%x\n", newvolid);
 		printf("return code is %d\n", code);
 	    } else if (!strcmp(oper, "gs")) {
 		vldstats stats;
 		vital_vlheader vital_header;
 		code =
-		    ubik_Call(VL_GetStats, cstruct, 0, &stats, &vital_header);
+		    ubik_VL_GetStats(cstruct, 0, &stats, &vital_header);
 		if (!code)
 		    dump_stats(&stats, &vital_header);
 		printf("return code is %d.\n", code);
@@ -750,7 +747,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 		addrs.bulkaddrs_val = 0;
 		addrs.bulkaddrs_len = 0;
-		code = ubik_Call(VL_GetAddrs, cstruct, 0, 0 /*Handle */ ,
+		code = ubik_VL_GetAddrs(cstruct, 0, 0 /*Handle */ ,
 				 0 /*spare2 */ , &vlcb,
 				 &nentries, &addrs);
 		if (code) {
@@ -775,7 +772,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 		addrs.bulkaddrs_val = 0;
 		addrs.bulkaddrs_len = 0;
-		code = ubik_Call(VL_GetAddrs, cstruct, 0, 0 /*Handle */ ,
+		code = ubik_VL_GetAddrs(cstruct, 0, 0 /*Handle */ ,
 				 0 /*spare2 */ , &vlcb,
 				 &nentries, &addrs);
 		if (code) {
@@ -800,7 +797,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			attrs.index = *addrp & 0x00ffffff;
 
 			code =
-			    ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid,
+			    ubik_VL_GetAddrsU(cstruct, 0, &attrs, &uuid,
 				      &unique, &mhnentries, &mhaddrs);
 			if (code) {
 			    printf("VL_GetAddrsU returned code = %d\n", code);
@@ -850,7 +847,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		addrs1.bulkaddrs_val = 0;
 		addrs1.bulkaddrs_len = 0;
 		code =
-		    ubik_Call(VL_GetAddrs, cstruct, 0, 0, 0, &vlcb,
+		    ubik_VL_GetAddrs(cstruct, 0, 0, 0, &vlcb,
 			      &nentries1, &addrs1);
 		if (code) {
 		    printf("VL_GetAddrs returned code = %d\n", code);
@@ -872,7 +869,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 			attrs.Mask = VLADDR_INDEX;
 			attrs.index = (base * VL_MHSRV_PERBLK) + index;
 			code =
-			    ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid,
+			    ubik_VL_GetAddrsU(cstruct, 0, &attrs, &uuid,
 				      &unique, &nentries2, &addrs2);
 			if (code) {
 			    printf("VL_GetAddrsU returned code = %d\n", code);
@@ -956,14 +953,13 @@ handleit(struct cmd_syndesc *as, void *arock)
 		    ++argp, --nargs;
 		}
 		code =
-		    ubik_Call(VL_RegisterAddrs, cstruct, 0, &uuid,
+		    ubik_VL_RegisterAddrs(cstruct, 0, &uuid,
 			      0 /*spare */ , &addrs);
 		if (code) {
 		    printf("VL_RegisterAddrs returned code = %d\n", code);
 		    continue;
 		}
 	    } else if (!strcmp(oper, "ca")) {
-		extern struct hostent *hostutil_GetHostByName();
 		struct hostent *h1, *h2;
 		afs_uint32 a1, a2;
 
@@ -988,7 +984,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 		printf("changing 0x%x to 0x%x\n", ntohl(a1), ntohl(a2));
 		code =
-		    ubik_Call(VL_ChangeAddr, cstruct, 0, ntohl(a1),
+		    ubik_VL_ChangeAddr(cstruct, 0, ntohl(a1),
 			      ntohl(a2));
 		if (code) {
 		    printf("VL_ChangeAddr returned code = %d\n", code);
@@ -1002,7 +998,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 		++argp, --nargs;
 		sscanf(&(*argp)[0], "%d", &a2);
 		printf(" to %d (0x%x)\n", a2, a2);
-		code = ubik_Call(VL_ChangeAddr, cstruct, 0, a1, a2);
+		code = ubik_VL_ChangeAddr(cstruct, 0, a1, a2);
 		if (code) {
 		    printf("VL_ChangeAddr returned code = %d\n", code);
 		    continue;
@@ -1021,9 +1017,8 @@ handleit(struct cmd_syndesc *as, void *arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
@@ -1048,10 +1043,7 @@ main(argc, argv)
 
 
 void
-fill_entry(entry, argp, nargs)
-     struct vldbentry *entry;
-     char **argp;
-     int nargs;
+fill_entry(struct vldbentry *entry, char **argp, int nargs)
 {
     char *name;
     int i;
@@ -1076,19 +1068,16 @@ fill_entry(entry, argp, nargs)
     }
     for (i = 0; i < MAXTYPES; i++) {
 	++argp, --nargs;
-	sscanf(&(*argp)[0], "%d", &entry->volumeId[i]);
+	sscanf(&(*argp)[0], "%u", &entry->volumeId[i]);
     }
     ++argp, --nargs;
     sscanf(&(*argp)[0], "%d", &entry->flags);
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->cloneId);
+    sscanf(&(*argp)[0], "%u", &entry->cloneId);
 }
 
 void
-fill_update_entry(entry, argp, nargs)
-     struct VldbUpdateEntry *entry;
-     char **argp;
-     int nargs;
+fill_update_entry(struct VldbUpdateEntry *entry, char **argp, int nargs)
 {
     int i, Mask;
     char *name;
@@ -1104,15 +1093,15 @@ fill_update_entry(entry, argp, nargs)
     if (entry->flags != -1)
 	entry->Mask |= VLUPDATE_FLAGS;
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->cloneId);
+    sscanf(&(*argp)[0], "%u", &entry->cloneId);
     if (entry->flags != -1)
 	entry->Mask |= VLUPDATE_CLONEID;
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->ReadOnlyId);
+    sscanf(&(*argp)[0], "%u", &entry->ReadOnlyId);
     if (entry->ReadOnlyId != -1)
 	entry->Mask |= VLUPDATE_READONLYID;
     ++argp, --nargs;
-    sscanf(&(*argp)[0], "%d", &entry->BackupId);
+    sscanf(&(*argp)[0], "%u", &entry->BackupId);
     if (entry->BackupId != -1)
 	entry->Mask |= VLUPDATE_BACKUPID;
     ++argp, --nargs;
@@ -1153,10 +1142,8 @@ fill_update_entry(entry, argp, nargs)
 }
 
 void
-fill_listattributes_entry(entry, argp, nargs)
-     struct VldbListByAttributes *entry;
-     char **argp;
-     int nargs;
+fill_listattributes_entry(struct VldbListByAttributes *entry, char **argp,
+			  int nargs)
 {
     entry->Mask = 0;
 
@@ -1190,9 +1177,7 @@ fill_listattributes_entry(entry, argp, nargs)
 }
 
 void
-display_listattributes_entry(entry, error)
-     struct VldbListByAttributes *entry;
-     int error;
+display_listattributes_entry(struct VldbListByAttributes *entry, int error)
 {
     if (error)
 	return;
@@ -1213,9 +1198,7 @@ display_listattributes_entry(entry, error)
 #define	volumetype_string(type) (type == RWVOL? "read/write":type == ROVOL? "readonly":type == BACKVOL? "backup":"unknown")
 
 void
-display_entry(entry, error)
-     struct vldbentry *entry;
-     int error;
+display_entry(struct vldbentry *entry, int error)
 {
     int i;
 
@@ -1234,9 +1217,7 @@ display_entry(entry, error)
 }
 
 void
-display_entryN(entry, error)
-     struct nvldbentry *entry;
-     int error;
+display_entryN(struct nvldbentry *entry, int error)
 {
     int i, et, ei;
 
@@ -1262,9 +1243,7 @@ display_entryN(entry, error)
 }
 
 void
-display_update_entry(entry, error)
-     struct VldbUpdateEntry *entry;
-     int error;
+display_update_entry(struct VldbUpdateEntry *entry, int error)
 {
     int i;
 
@@ -1278,19 +1257,19 @@ display_update_entry(entry, error)
     if (entry->Mask & VLUPDATE_CLONEID)
 	printf("\tNew CloneId: %X\n", entry->cloneId);
     if (entry->Mask & VLUPDATE_READONLYID)
-	printf("\tNew RO id: %D\n", entry->ReadOnlyId);
+	printf("\tNew RO id: %d\n", entry->ReadOnlyId);
     if (entry->Mask & VLUPDATE_BACKUPID)
-	printf("\tNew BACKUP id: %D\n", entry->BackupId);
+	printf("\tNew BACKUP id: %d\n", entry->BackupId);
     if (entry->Mask & VLUPDATE_REPSITES) {
 	printf("\tRepsites info:\n");
 	printf("\tFlag\tTServer\tTPart\tNServer\tNPart\tNFlag\n");
 	for (i = 0; i < entry->nModifiedRepsites; i++) {
-	    printf("\t%4x\t%7U\t%5d", entry->RepsitesMask[i],
+	    printf("\t%4x\t%7u\t%5d", entry->RepsitesMask[i],
 		   entry->RepsitesTargetServer[i],
 		   entry->RepsitesTargetPart[i]);
 	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD)
 		|| (entry->RepsitesMask[i] & VLUPDATE_REPS_MODSERV))
-		printf("\t%7U", entry->RepsitesNewServer[i]);
+		printf("\t%7u", entry->RepsitesNewServer[i]);
 	    else
 		printf("\t-------");
 	    if ((entry->RepsitesMask[i] & VLUPDATE_REPS_ADD)
@@ -1308,15 +1287,13 @@ display_update_entry(entry, error)
 }
 
 void
-dump_stats(stats, vital_header)
-     vldstats *stats;
-     vital_vlheader *vital_header;
+dump_stats(vldstats *stats, vital_vlheader *vital_header)
 {
     int i;
     char strg[30];
     time_t start_time = stats->start_time;
 
-    strncpy(strg, ctime(&start_time), sizeof(strg));
+    afs_ctime(&start_time, strg, sizeof(strg));
     strg[strlen(strg) - 1] = 0;
     printf("Dynamic statistics stats (starting time: %s):\n", strg);
     printf("OpcodeName\t# Requests\t# Aborts\n");
@@ -1334,10 +1311,7 @@ dump_stats(stats, vital_header)
 }
 
 void
-GetArgs(line, args, nargs)
-     register char *line;
-     register char **args;
-     register int *nargs;
+GetArgs(char *line, char **args, int *nargs)
 {
     *nargs = 0;
     while (*line) {
@@ -1355,7 +1329,7 @@ GetArgs(line, args, nargs)
 }
 
 void
-print_usage()
+print_usage(void)
 {
     printf("Valid Commands:\n");
 

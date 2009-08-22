@@ -61,8 +61,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/ticket5.c,v 1.10.2.3 2008/01/23 04:18:16 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"

@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.33.2.6 2008/06/12 19:18:49 shadow Exp $");
 
 #include <ctype.h>
 #include <string.h>
@@ -33,6 +31,7 @@ RCSID
 #else
 #include <sys/param.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #if AFS_HAVE_STATVFS || AFS_HAVE_STATVFS64
 #include <sys/statvfs.h>
@@ -271,7 +270,7 @@ VInitPartition_r(char *path, char *devname, Device dev)
     strncpy(dp->devName, devname, strlen(devname) + 1);
     dp->device = dev;
 #endif
-    dp->lock_fd = -1;
+    dp->lock_fd = INVALID_FD;
     dp->flags = 0;
     dp->f_files = 1;		/* just a default value */
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
@@ -350,7 +349,7 @@ VCheckPartition(char *part, char *devname)
 
 	dirp = opendir(part);
 	assert(dirp);
-	while (dp = readdir(dirp)) {
+	while ((dp = readdir(dirp))) {
 	    if (dp->d_name[0] == 'V') {
 		Log("This program is compiled with AFS_NAMEI_ENV, but partition %s seems to contain volumes which don't use the namei-interface; aborting\n", part);
 		closedir(dirp);
@@ -417,7 +416,7 @@ VIsAlwaysAttach(char *part)
  * partitions, in the NAMEI fileserver.
  */
 void
-VAttachPartitions2()
+VAttachPartitions2(void)
 {
 #ifdef AFS_NAMEI_ENV
     DIR *dirp;
@@ -628,7 +627,7 @@ VAttachPartitions(void)
 	exit(-1);
     }
 
-    while (fsent = getfsent()) {
+    while ((fsent = getfsent())) {
 	if (strcmp(fsent->fs_type, "rw") != 0)
 	    continue;
 
@@ -901,7 +900,7 @@ VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 void
 VSetPartitionDiskUsage_r(register struct DiskPartition64 *dp)
 {
-    int fd, bsize, code;
+    int bsize, code;
     afs_int64 totalblks, free, used, availblks;
     int reserved;
 #ifdef afs_statvfs
@@ -1094,15 +1093,15 @@ VLockPartition_r(char *name)
 
     if (!dp)
 	return;
-    if (dp->lock_fd == -1) {
+    if (dp->lock_fd == INVALID_FD) {
 	char path[64];
 	int rc;
 	(void)sprintf(path, "%s\\%s", VPartitionPath(dp), LOCKFILE);
 	dp->lock_fd =
-	    (int)CreateFile(path, GENERIC_WRITE,
+	    (FD_t)CreateFile(path, GENERIC_WRITE,
 			    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 			    CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
-	assert(dp->lock_fd != (int)INVALID_HANDLE_VALUE);
+	assert(dp->lock_fd != INVALID_FD);
 
 	memset((char *)&lap, 0, sizeof(lap));
 	rc = LockFileEx((HANDLE) dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1,
@@ -1123,7 +1122,7 @@ VUnlockPartition_r(char *name)
 
     UnlockFileEx((HANDLE) dp->lock_fd, 0, 1, 0, &lap);
     CloseHandle((HANDLE) dp->lock_fd);
-    dp->lock_fd = -1;
+    dp->lock_fd = INVALID_FD;
 }
 #else /* AFS_NT40_ENV */
 

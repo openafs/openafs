@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.55.2.17 2008/05/22 03:51:46 shadow Exp $");
 
 #include <sys/types.h>
 #include <string.h>
@@ -67,11 +65,11 @@ RCSID
 
 /* Local Prototypes */
 int PrintDiagnostics(char *astring, afs_int32 acode);
-int GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, 
+int GetVolumeInfo(afs_uint32 volid, afs_int32 *server, afs_int32 *part, 
                   afs_int32 *voltype, struct nvldbentry *rentry);
 
 struct tqElem {
-    afs_int32 volid;
+    afs_uint32 volid;
     struct tqElem *next;
 };
 
@@ -107,7 +105,7 @@ qInit(struct tqHead *ahead)
 
 
 static void
-qPut(struct tqHead *ahead, afs_int32 volid)
+qPut(struct tqHead *ahead, afs_uint32 volid)
 {
     struct tqElem *elem;
 
@@ -120,7 +118,7 @@ qPut(struct tqHead *ahead, afs_int32 volid)
 }
 
 static void
-qGet(struct tqHead *ahead, afs_int32 *volid)
+qGet(struct tqHead *ahead, afs_uint32 *volid)
 {
     struct tqElem *tmp;
 
@@ -315,9 +313,9 @@ SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
 /* function invoked by UV_RestoreVolume, reads the data from rx_trx_stream and
  * writes it out to the volume. */
 afs_int32
-WriteData(struct rx_call *call, char *rock)
+WriteData(struct rx_call *call, void *rock)
 {
-    char *filename;
+    char *filename = (char *) rock;
     usd_handle_t ufd;
     long blksize;
     afs_int32 error, code;
@@ -328,7 +326,6 @@ WriteData(struct rx_call *call, char *rock)
 
     error = 0;
 
-    filename = rock;
     if (!filename || !*filename) {
 	usd_StandardInput(&ufd);
 	blksize = 4096;
@@ -423,8 +420,9 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 }
 
 afs_int32
-DumpFunction(struct rx_call *call, char *filename)
+DumpFunction(struct rx_call *call, void *rock)
 {
+    char *filename = (char *)rock;
     usd_handle_t ufd;		/* default is to stdout */
     afs_int32 error = 0, code;
     afs_hyper_t size;
@@ -472,26 +470,13 @@ DumpFunction(struct rx_call *call, char *filename)
     return (error);
 }
 
-#if SIZEOF_TIME_T!=4
-static char *
-vos_ctime(afs_int32 *timep)
-{
-    time_t foo = *timep;
-    return ctime(&foo);
-}
-#else
-#define vos_ctime ctime
-#endif
-
 static void
-DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
-	      longlist, disp)
-     volintInfo *pntr;
-     afs_int32 server, part;
-     int *totalOK, *totalNotOK, *totalBusy;
-     int fast, longlist, disp;
+DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
+	      int *totalOK, int *totalNotOK, int *totalBusy, int fast,
+	      int longlist, int disp)
 {
     char pname[10];
+    time_t t;
 
     if (fast) {
 	fprintf(STDOUT, "%-10lu\n", (unsigned long)pntr->volid);
@@ -511,7 +496,7 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 		*totalOK += 1;
 	    } else {
 		fprintf(STDOUT, "Off-line");
-		*totalNotOK++;
+		*totalNotOK += 1;
 	    }
 	    if (pntr->needsSalvaged == 1)
 		fprintf(STDOUT, "**needs salvage**");
@@ -524,29 +509,35 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 		    (unsigned long)pntr->cloneID,
 		    (unsigned long)pntr->backupID);
 	    fprintf(STDOUT, "    MaxQuota %10d K \n", pntr->maxquota);
+	    t = pntr->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
-		    vos_ctime(& pntr->creationDate));
+		    ctime(&t));
 #ifdef FULL_LISTVOL_SWITCH
+	    t = pntr->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
-		    vos_ctime( & pntr->copyDate));
-	    if (!pntr->backupDate)
+		    ctime(&t));
+
+	    t = pntr->backupDate;
+	    if (!t)
 		fprintf(STDOUT, "    Backup      Never\n");
 	    else
 		fprintf(STDOUT, "    Backup      %s",
-			vos_ctime( & pntr->backupDate));
-	    if (pntr->accessDate)
+			ctime(&t));
+
+	    t = pntr->accessDate;
+	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
-			vos_ctime( & pntr->accessDate));
+			ctime(&t));
 #endif
-	    if (!pntr->updateDate)
+	    t = pntr->updateDate;
+	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
-	    else {
+	    else
 		fprintf(STDOUT, "    Last Update %s",
-			vos_ctime( & pntr->updateDate));
-		fprintf(STDOUT,
-			"    %d accesses in the past day (i.e., vnode references)\n",
-			pntr->dayUse);
-	    }
+			ctime(&t));
+	    fprintf(STDOUT,
+		    "    %d accesses in the past day (i.e., vnode references)\n",
+		    pntr->dayUse);
 	} else if (pntr->status == VBUSY) {
 	    *totalBusy += 1;
 	    qPut(&busyHead, pntr->volid);
@@ -626,20 +617,11 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
-	       a_totalBusyP, a_fast, a_int32, a_showProblems)
-     volintXInfo *a_xInfoP;
-     afs_int32 a_servID;
-     afs_int32 a_partID;
-     int *a_totalOKP;
-     int *a_totalNotOKP;
-     int *a_totalBusyP;
-     int a_fast;
-     int a_int32;
-     int a_showProblems;
-
+XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
+	       int *a_totalOKP, int *a_totalNotOKP, int *a_totalBusyP,
+	       int a_fast, int a_int32, int a_showProblems)
 {				/*XDisplayFormat */
-
+    time_t t;
     char pname[10];
 
     if (a_fast) {
@@ -681,29 +663,36 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 		    (unsigned long)a_xInfoP->cloneID,
 		    (unsigned long)a_xInfoP->backupID);
 	    fprintf(STDOUT, "    MaxQuota %10d K \n", a_xInfoP->maxquota);
+
+	    t = a_xInfoP->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
-		    vos_ctime( & a_xInfoP->creationDate));
+		    ctime(&t));
 #ifdef FULL_LISTVOL_SWITCH
+	    t = a_xInfoP->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
-		    vos_ctime( & a_xInfoP->copyDate));
-	    if (!a_xInfoP->backupDate)
+		    ctime(&t));
+
+	    t = a_xInfoP->backupDate;
+	    if (!t)
 		fprintf(STDOUT, "    Backup      Never\n");
 	    else
 		fprintf(STDOUT, "    Backup      %s",
-			vos_ctime( & a_xInfoP->backupDate));
-	    if (a_xInfoP->accessDate)
+			ctime(&t));
+
+	    t = a_xInfoP->accessDate;
+	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
-			vos_ctime( & a_xInfoP->accessDate));
+			ctime(&t));
 #endif
-	    if (!a_xInfoP->updateDate)
+	    t = a_xInfoP->updateDate;
+	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
-	    else {
+	    else
 		fprintf(STDOUT, "    Last Update %s",
-			vos_ctime( & a_xInfoP->updateDate));
-		fprintf(STDOUT,
-			"    %d accesses in the past day (i.e., vnode references)\n",
-			a_xInfoP->dayUse);
-	    }
+			ctime(&t));
+	    fprintf(STDOUT,
+		    "    %d accesses in the past day (i.e., vnode references)\n",
+		    a_xInfoP->dayUse);
 
 	    /*
 	     * Print all the read/write and authorship stats.
@@ -862,19 +851,11 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
-	       a_totalBusyP, a_fast, a_int32, a_showProblems)
-     volintXInfo *a_xInfoP;
-     afs_int32 a_servID;
-     afs_int32 a_partID;
-     int *a_totalOKP;
-     int *a_totalNotOKP;
-     int *a_totalBusyP;
-     int a_fast;
-     int a_int32;
-     int a_showProblems;
-
+XDisplayFormat2(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
+		int *a_totalOKP, int *a_totalNotOKP, int *a_totalBusyP,
+		int a_fast, int a_int32, int a_showProblems)
 {				/*XDisplayFormat */
+    time_t t;
     if (a_fast) {
 	/*
 	 * Short & sweet.
@@ -908,23 +889,16 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 		}
 
 		fprintf(STDOUT, "name\t\t%s\n", a_xInfoP->name);
-		fprintf(STDOUT, "id\t\t%lu\n", a_xInfoP->volid);
+		fprintf(STDOUT, "id\t\t%lu\n", afs_printable_uint32_lu(a_xInfoP->volid));
 		fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
 		fprintf(STDOUT, "part\t\t%s\n", pname);
-		switch (a_xInfoP->status) {
-		case VOK:
-			fprintf(STDOUT, "status\t\tOK\n");
-			break;
-		case VBUSY:
-			fprintf(STDOUT, "status\t\tBUSY\n");
-			return;
-		default:
-			fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
-			return;
-		}
-		fprintf(STDOUT, "backupID\t%lu\n", a_xInfoP->backupID);
-		fprintf(STDOUT, "parentID\t%lu\n", a_xInfoP->parentID);
-		fprintf(STDOUT, "cloneID\t\t%lu\n", a_xInfoP->cloneID);
+                fprintf(STDOUT, "status\t\tOK\n");
+		fprintf(STDOUT, "backupID\t%lu\n", 
+			afs_printable_uint32_lu(a_xInfoP->backupID));
+		fprintf(STDOUT, "parentID\t%lu\n", 
+			afs_printable_uint32_lu(a_xInfoP->parentID));
+		fprintf(STDOUT, "cloneID\t\t%lu\n", 
+			afs_printable_uint32_lu(a_xInfoP->cloneID));
 		fprintf(STDOUT, "inUse\t\t%s\n", a_xInfoP->inUse ? "Y" : "N");
 		switch (a_xInfoP->type) {
 		case 0:
@@ -940,16 +914,30 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 			fprintf(STDOUT, "type\t\t?\n");
 			break;
 		}
-		fprintf(STDOUT, "creationDate\t%-9lu\t%s", a_xInfoP->creationDate,
-			vos_ctime(&a_xInfoP->creationDate));
-		fprintf(STDOUT, "accessDate\t%-9lu\t%s", a_xInfoP->accessDate,
-			vos_ctime(&a_xInfoP->accessDate));
-		fprintf(STDOUT, "updateDate\t%-9lu\t%s", a_xInfoP->updateDate,
-			vos_ctime(&a_xInfoP->updateDate));
-		fprintf(STDOUT, "backupDate\t%-9lu\t%s", a_xInfoP->backupDate,
-			vos_ctime(&a_xInfoP->backupDate));
-		fprintf(STDOUT, "copyDate\t%-9lu\t%s", a_xInfoP->copyDate,
-			vos_ctime(&a_xInfoP->copyDate));
+		t = a_xInfoP->creationDate;
+		fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
+			afs_printable_uint32_lu(a_xInfoP->creationDate),
+			ctime(&t));
+
+		t = a_xInfoP->accessDate;
+		fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
+			afs_printable_uint32_lu(a_xInfoP->accessDate),
+			ctime(&t));
+
+		t = a_xInfoP->updateDate;
+		fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
+			afs_printable_uint32_lu(a_xInfoP->updateDate),
+			ctime(&t));
+
+		t = a_xInfoP->backupDate;
+		fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
+			afs_printable_uint32_lu(a_xInfoP->backupDate),
+			ctime(&t));
+
+		t = a_xInfoP->copyDate;
+		fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
+			afs_printable_uint32_lu(a_xInfoP->copyDate),
+			ctime(&t));
 		
 		fprintf(STDOUT, "diskused\t%u\n", a_xInfoP->size);
 		fprintf(STDOUT, "maxquota\t%u\n", a_xInfoP->maxquota);
@@ -1035,12 +1023,11 @@ XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 
 #ifdef FULL_LISTVOL_SWITCH
 static void
-DisplayFormat2(server, partition, pntr)
-     long server, partition;
-     volintInfo *pntr;
+DisplayFormat2(long server, long partition, volintInfo *pntr)
 {
     static long server_cache = -1, partition_cache = -1;
     static char hostname[256], address[32], pname[16];
+    time_t t;
 
     if (server != server_cache) {
 	struct in_addr s;
@@ -1054,8 +1041,12 @@ DisplayFormat2(server, partition, pntr)
 	MapPartIdIntoName(partition, pname);
 	partition_cache = partition;
     }
-    fprintf(STDOUT, "name\t\t%s\n", pntr->name);
-    fprintf(STDOUT, "id\t\t%lu\n", pntr->volid);
+
+    if (pntr->status == VOK)
+        fprintf(STDOUT, "name\t\t%s\n", pntr->name);
+
+    fprintf(STDOUT, "id\t\t%lu\n", 
+	    afs_printable_uint32_lu(pntr->volid));
     fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
     fprintf(STDOUT, "part\t\t%s\n", pname);
     switch (pntr->status) {
@@ -1069,9 +1060,12 @@ DisplayFormat2(server, partition, pntr)
 	fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
 	return;
     }
-    fprintf(STDOUT, "backupID\t%lu\n", pntr->backupID);
-    fprintf(STDOUT, "parentID\t%lu\n", pntr->parentID);
-    fprintf(STDOUT, "cloneID\t\t%lu\n", pntr->cloneID);
+    fprintf(STDOUT, "backupID\t%lu\n", 
+	    afs_printable_uint32_lu(pntr->backupID));
+    fprintf(STDOUT, "parentID\t%lu\n", 
+	    afs_printable_uint32_lu(pntr->parentID));
+    fprintf(STDOUT, "cloneID\t\t%lu\n", 
+	    afs_printable_uint32_lu(pntr->cloneID));
     fprintf(STDOUT, "inUse\t\t%s\n", pntr->inUse ? "Y" : "N");
     fprintf(STDOUT, "needsSalvaged\t%s\n", pntr->needsSalvaged ? "Y" : "N");
     /* 0xD3 is from afs/volume.h since I had trouble including the file */
@@ -1090,32 +1084,50 @@ DisplayFormat2(server, partition, pntr)
 	fprintf(STDOUT, "type\t\t?\n");
 	break;
     }
-    fprintf(STDOUT, "creationDate\t%-9lu\t%s", pntr->creationDate,
-	    vos_ctime(&pntr->creationDate));
-    fprintf(STDOUT, "accessDate\t%-9lu\t%s", pntr->accessDate,
-	    vos_ctime(&pntr->accessDate));
-    fprintf(STDOUT, "updateDate\t%-9lu\t%s", pntr->updateDate,
-	    vos_ctime(&pntr->updateDate));
-    fprintf(STDOUT, "backupDate\t%-9lu\t%s", pntr->backupDate,
-	    vos_ctime(&pntr->backupDate));
-    fprintf(STDOUT, "copyDate\t%-9lu\t%s", pntr->copyDate,
-	    vos_ctime(&pntr->copyDate));
-    fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", pntr->flags);
+    t = pntr->creationDate;
+    fprintf(STDOUT, "creationDate\t%-9lu\t%s", 
+	    afs_printable_uint32_lu(pntr->creationDate),
+	    ctime(&t));
+
+    t = pntr->accessDate;
+    fprintf(STDOUT, "accessDate\t%-9lu\t%s", 
+	    afs_printable_uint32_lu(pntr->accessDate),
+	    ctime(&t));
+
+    t = pntr->updateDate;
+    fprintf(STDOUT, "updateDate\t%-9lu\t%s", 
+	    afs_printable_uint32_lu(pntr->updateDate),
+	    ctime(&t));
+
+    t = pntr->backupDate;
+    fprintf(STDOUT, "backupDate\t%-9lu\t%s", 
+	    afs_printable_uint32_lu(pntr->backupDate),
+	    ctime(&t));
+
+    t = pntr->copyDate;
+    fprintf(STDOUT, "copyDate\t%-9lu\t%s", 
+	    afs_printable_uint32_lu(pntr->copyDate),
+	    ctime(&t));
+
+    fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", 
+	    afs_printable_uint32_lu(pntr->flags));
     fprintf(STDOUT, "diskused\t%u\n", pntr->size);
     fprintf(STDOUT, "maxquota\t%u\n", pntr->maxquota);
-    fprintf(STDOUT, "minquota\t%lu\t(Optional)\n", pntr->spare0);
+    fprintf(STDOUT, "minquota\t%lu\t(Optional)\n", 
+	    afs_printable_uint32_lu(pntr->spare0));
     fprintf(STDOUT, "filecount\t%u\n", pntr->filecount);
     fprintf(STDOUT, "dayUse\t\t%u\n", pntr->dayUse);
-    fprintf(STDOUT, "weekUse\t\t%lu\t(Optional)\n", pntr->spare1);
-    fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n", pntr->spare2);
-    fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n", pntr->spare3);
+    fprintf(STDOUT, "weekUse\t\t%lu\t(Optional)\n",
+	    afs_printable_uint32_lu(pntr->spare1));
+    fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n", 
+	    afs_printable_uint32_lu(pntr->spare2));
+    fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n", 
+	    afs_printable_uint32_lu(pntr->spare3));
     return;
 }
 
 static void
-DisplayVolumes2(server, partition, pntr, count)
-     volintInfo *pntr;
-     long server, partition, count;
+DisplayVolumes2(long server, long partition, volintInfo *pntr, long count)
 {
     long i;
 
@@ -1130,14 +1142,12 @@ DisplayVolumes2(server, partition, pntr, count)
 #endif /* FULL_LISTVOL_SWITCH */
 
 static void
-DisplayVolumes(server, part, pntr, count, longlist, fast, quiet)
-     afs_int32 server, part;
-     volintInfo *pntr;
-     afs_int32 count, longlist, fast;
-     int quiet;
+DisplayVolumes(afs_int32 server, afs_int32 part, volintInfo *pntr,
+	       afs_int32 count, afs_int32 longlist, afs_int32 fast,
+	       int quiet)
 {
     int totalOK, totalNotOK, totalBusy, i;
-    afs_int32 volid;
+    afs_uint32 volid = 0;
 
     totalOK = 0;
     totalNotOK = 0;
@@ -1198,23 +1208,16 @@ DisplayVolumes(server, part, pntr, count, longlist, fast, quiet)
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayVolumes(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
-		a_quiet)
-     afs_int32 a_servID;
-     afs_int32 a_partID;
-     volintXInfo *a_xInfoP;
-     afs_int32 a_count;
-     afs_int32 a_int32;
-     afs_int32 a_fast;
-     int a_quiet;
-
+XDisplayVolumes(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
+		afs_int32 a_count, afs_int32 a_int32, afs_int32 a_fast,
+		int a_quiet)
 {				/*XDisplayVolumes */
 
     int totalOK;		/*Total OK volumes */
     int totalNotOK;		/*Total screwed volumes */
     int totalBusy;		/*Total busy volumes */
     int i;			/*Loop variable */
-    afs_int32 volid;		/*Current volume ID */
+    afs_uint32 volid = 0;	/*Current volume ID */
 
     /*
      * Initialize counters and (global!!) queues.
@@ -1289,23 +1292,16 @@ XDisplayVolumes(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
  *------------------------------------------------------------------------*/
 
 static void
-XDisplayVolumes2(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
-		a_quiet)
-     afs_int32 a_servID;
-     afs_int32 a_partID;
-     volintXInfo *a_xInfoP;
-     afs_int32 a_count;
-     afs_int32 a_int32;
-     afs_int32 a_fast;
-     int a_quiet;
-
+XDisplayVolumes2(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
+		 afs_int32 a_count, afs_int32 a_int32, afs_int32 a_fast,
+		 int a_quiet)
 {				/*XDisplayVolumes */
 
     int totalOK;		/*Total OK volumes */
     int totalNotOK;		/*Total screwed volumes */
     int totalBusy;		/*Total busy volumes */
     int i;			/*Loop variable */
-    afs_int32 volid;		/*Current volume ID */
+    afs_uint32 volid = 0;	/*Current volume ID */
 
     /*
      * Initialize counters and (global!!) queues.
@@ -1361,11 +1357,8 @@ XDisplayVolumes2(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
 /* set <server> and <part> to the correct values depending on 
  * <voltype> and <entry> */
 static void
-GetServerAndPart(entry, voltype, server, part, previdx)
-     struct nvldbentry *entry;
-     afs_int32 *server, *part;
-     int voltype;
-     int *previdx;
+GetServerAndPart(struct nvldbentry *entry, int voltype, afs_int32 *server,
+		 afs_int32 *part, int *previdx)
 {
     int i, istart, vtype;
 
@@ -1430,13 +1423,8 @@ PostVolumeStats(struct nvldbentry *entry)
  *------------------------------------------------------------------------*/
 
 static void
-XVolumeStats(a_xInfoP, a_entryP, a_srvID, a_partID, a_volType)
-     volintXInfo *a_xInfoP;
-     struct nvldbentry *a_entryP;
-     afs_int32 a_srvID;
-     afs_int32 a_partID;
-     int a_volType;
-
+XVolumeStats(volintXInfo *a_xInfoP, struct nvldbentry *a_entryP,
+	     afs_int32 a_srvID, afs_int32 a_partID, int a_volType)
 {				/*XVolumeStats */
 
     int totalOK, totalNotOK, totalBusy;	/*Dummies - we don't really count here */
@@ -1470,7 +1458,8 @@ static int
 NukeVolume(register struct cmd_syndesc *as)
 {
     register afs_int32 code;
-    afs_int32 volID, err;
+    afs_uint32 volID;
+    afs_int32  err;
     afs_int32 partID;
     afs_int32 server;
     register char *tp;
@@ -1538,7 +1527,7 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
     afs_int32 vcode = 0;
     volintInfo *pntr = (volintInfo *) 0;
     volintXInfo *xInfoP = (volintXInfo *) 0;
-    afs_int32 volid;
+    afs_uint32 volid;
     afs_int32 code, err, error = 0;
     int voltype, foundserv = 0, foundentry = 0;
     afs_int32 aserver, apart;
@@ -1687,9 +1676,8 @@ static int
 SetFields(register struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
-    afs_int32 vcode = 0;
     volintInfo info;
-    afs_int32 volid;
+    afs_uint32 volid;
     afs_int32 code, err;
     afs_int32 aserver, apart;
     int previdx = -1;
@@ -1726,7 +1714,7 @@ SetFields(register struct cmd_syndesc *as, void *arock)
 
     if (as->parms[1].items) {
 	/* -max <quota> */
-	code = util_GetInt32(as->parms[1].items->data, &info.maxquota);
+	code = util_GetHumanInt32(as->parms[1].items->data, &info.maxquota);
 	if (code) {
 	    fprintf(STDERR, "invalid quota value\n");
 	    return code;
@@ -1770,7 +1758,8 @@ SetFields(register struct cmd_syndesc *as, void *arock)
 static int
 volOnline(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 server, partition, volid;
+    afs_int32 server, partition;
+    afs_uint32 volid;
     afs_int32 code, err = 0;
 
     server = GetServer(as->parms[0].items->data);
@@ -1829,7 +1818,8 @@ volOnline(register struct cmd_syndesc *as, void *arock)
 static int
 volOffline(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 server, partition, volid;
+    afs_int32 server, partition;
+    afs_uint32 volid;
     afs_int32 code, err = 0;
     afs_int32 transflag, sleeptime, transdone;
 
@@ -1881,10 +1871,14 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 pnum;
     char part[10];
-    afs_int32 volid, code;
+    afs_uint32 volid = 0, rovolid = 0, bkvolid = 0;
+    afs_uint32 *arovolid;
+    afs_int32 code;
     struct nvldbentry entry;
     afs_int32 vcode;
     afs_int32 quota;
+
+    arovolid = &rovolid;
 
     quota = 5000;
     tserver = GetServer(as->parms[0].items->data);
@@ -1934,22 +1928,48 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
     }
 
     if (as->parms[3].items) {
-	if (!IsNumeric(as->parms[3].items->data)) {
-	    fprintf(STDERR, "Initial quota %s should be numeric.\n",
-		    as->parms[3].items->data);
-	    return EINVAL;
-	}
-
-	code = util_GetInt32(as->parms[3].items->data, &quota);
+	code = util_GetHumanInt32(as->parms[3].items->data, &quota);
 	if (code) {
 	    fprintf(STDERR, "vos: bad integer specified for quota.\n");
 	    return code;
 	}
     }
 
+    if (as->parms[4].items) {
+	if (!IsNumeric(as->parms[4].items->data)) {
+	    fprintf(STDERR, "vos: Given volume ID %s should be numeric.\n",
+		    as->parms[4].items->data);
+	    return EINVAL;
+	}
+
+	code = util_GetInt32(as->parms[4].items->data, &volid);
+	if (code) {
+	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
+	    return code;
+	}
+    }
+
+    if (as->parms[5].items) {
+	if (!IsNumeric(as->parms[5].items->data)) {
+	    fprintf(STDERR, "vos: Given RO volume ID %s should be numeric.\n",
+		    as->parms[5].items->data);
+	    return EINVAL;
+	}
+
+	code = util_GetInt32(as->parms[5].items->data, &rovolid);
+	if (code) {
+	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
+	    return code;
+	}
+
+	if (rovolid == 0) {
+	    arovolid = NULL;
+	}
+    }
+
     code =
-	UV_CreateVolume2(tserver, pnum, as->parms[2].items->data, quota, 0,
-			 0, 0, 0, &volid);
+	UV_CreateVolume3(tserver, pnum, as->parms[2].items->data, quota, 0,
+			 0, 0, 0, &volid, arovolid, &bkvolid);
     if (code) {
 	PrintDiagnostics("create", code);
 	return code;
@@ -1961,12 +1981,13 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+#if 0
 static afs_int32
-DeleteAll(entry)
-     struct nvldbentry *entry;
+DeleteAll(struct nvldbentry *entry)
 {
     int i;
-    afs_int32 error, code, curserver, curpart, volid;
+    afs_int32 error, code, curserver, curpart;
+    afs_uint32 volid;
 
     MapHostToNetwork(entry);
     error = 0;
@@ -1984,12 +2005,14 @@ DeleteAll(entry)
     }
     return error;
 }
+#endif
 
 static int
 DeleteVolume(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 err, code = 0;
-    afs_int32 server = 0, partition = -1, volid;
+    afs_int32 server = 0, partition = -1;
+    afs_uint32 volid;
     char pname[10];
     afs_int32 idx, j;
 
@@ -2105,11 +2128,12 @@ DeleteVolume(struct cmd_syndesc *as, void *arock)
 }
 
 #define TESTM	0		/* set for move space tests, clear for production */
-static
+static int
 MoveVolume(register struct cmd_syndesc *as, void *arock)
 {
 
-    afs_int32 volid, fromserver, toserver, frompart, topart;
+    afs_uint32 volid;
+    afs_int32 fromserver, toserver, frompart, topart;
     afs_int32 flags, code, err;
     char fromPartName[10], toPartName[10];
 
@@ -2188,7 +2212,7 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     if (TESTM)
-	fprintf(STDOUT, "target partition %s free space %d\n", toPartName,
+	fprintf(STDOUT, "target partition %s free space %" AFS_INT64_FMT "\n", toPartName,
 		partition.free);
 
     p = (volintInfo *) 0;
@@ -2235,7 +2259,8 @@ MoveVolume(register struct cmd_syndesc *as, void *arock)
 static int
 CopyVolume(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 volid, fromserver, toserver, frompart, topart, code, err, flags;
+    afs_uint32 volid;
+    afs_int32 fromserver, toserver, frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
     struct nvldbentry entry;
     struct diskPartition64 partition;	/* for space check */
@@ -2339,7 +2364,7 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     if (TESTM)
-	fprintf(STDOUT, "target partition %s free space %d\n", toPartName,
+	fprintf(STDOUT, "target partition %s free space %" AFS_INT64_FMT "\n", toPartName,
 		partition.free);
 
     p = (volintInfo *) 0;
@@ -2381,7 +2406,8 @@ CopyVolume(register struct cmd_syndesc *as, void *arock)
 static int
 ShadowVolume(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 volid, fromserver, toserver, frompart, topart, tovolid;
+    afs_uint32 volid, tovolid;
+    afs_int32 fromserver, toserver, frompart, topart;
     afs_int32 code, err, flags;
     char fromPartName[10], toPartName[10], toVolName[32], *tovolume;
     struct diskPartition64 partition;	/* for space check */
@@ -2523,7 +2549,7 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
 	exit(1);
     }
     if (TESTM)
-	fprintf(STDOUT, "target partition %s free space %d\n", toPartName,
+	fprintf(STDOUT, "target partition %s free space %" AFS_INT64_FMT "\n", toPartName,
 		partition.free);
 
     /* Don't do this again if we did it above */
@@ -2576,7 +2602,8 @@ ShadowVolume(register struct cmd_syndesc *as, void *arock)
 static int
 CloneVolume(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 server, part, volid, cloneid, voltype;
+    afs_uint32 volid, cloneid;
+    afs_int32 server, part, voltype;
     char partName[10], *volname;
     afs_int32 code, err, flags;
     struct nvldbentry entry;
@@ -2689,10 +2716,12 @@ CloneVolume(register struct cmd_syndesc *as, void *arock)
 static int
 BackupVolume(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aserver, apart, vtype, code, err;
+    afs_uint32 avolid;
+    afs_int32 aserver, apart, vtype, code, err;
     struct nvldbentry entry;
 
-    afs_int32 buvolid, buserver, bupart, butype;
+    afs_uint32 buvolid;
+    afs_int32 buserver, bupart, butype;
     struct nvldbentry buentry;
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
@@ -2759,7 +2788,8 @@ ReleaseVolume(register struct cmd_syndesc *as, void *arock)
 {
 
     struct nvldbentry entry;
-    afs_int32 avolid, aserver, apart, vtype, code, err;
+    afs_uint32 avolid;
+    afs_int32 aserver, apart, vtype, code, err;
     int force = 0;
 
     if (as->parms[1].items)
@@ -2799,10 +2829,11 @@ ReleaseVolume(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-static
-DumpVolume(register struct cmd_syndesc *as, void *arock)
+static int
+DumpVolumeCmd(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i, flags;
+    afs_uint32 avolid;
+    afs_int32 aserver, apart, voltype, fromdate = 0, code, err, i, flags;
     char filename[MAXPATHLEN];
     struct nvldbentry entry;
 
@@ -2900,12 +2931,14 @@ retry_dump:
 #define TS_NEW	3
 
 static int
-RestoreVolume(register struct cmd_syndesc *as, void *arock)
+RestoreVolumeCmd(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aparentid, aserver, apart, code, vcode, err;
+    afs_uint32 avolid, aparentid;
+    afs_int32 aserver, apart, code, vcode, err;
     afs_int32 aoverwrite = ASK;
     afs_int32 acreation = 0, alastupdate = 0;
-    int restoreflags, readonly = 0, offline = 0, voltype = RWVOL;
+    int restoreflags = 0;
+    int readonly = 0, offline = 0, voltype = RWVOL;
     char prompt;
     char afilename[MAXPATHLEN], avolname[VOLSER_MAXVOLNAME + 1], apartName[10];
     char volname[VOLSER_MAXVOLNAME + 1];
@@ -3196,7 +3229,8 @@ RestoreVolume(register struct cmd_syndesc *as, void *arock)
 static int
 LockReleaseCmd(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, code, err;
+    afs_uint32 avolid;
+    afs_int32 code, err;
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
     if (avolid == 0) {
@@ -3221,7 +3255,8 @@ LockReleaseCmd(register struct cmd_syndesc *as, void *arock)
 static int
 AddSite(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aserver, apart, code, err, valid = 0;
+    afs_uint32 avolid;
+    afs_int32 aserver, apart, code, err, arovolid, valid = 0;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
     vsu_ExtractName(avolname, as->parms[2].items->data);;
@@ -3233,6 +3268,16 @@ AddSite(register struct cmd_syndesc *as, void *arock)
 	    fprintf(STDERR, "vos: can't find volume '%s'\n",
 		    as->parms[2].items->data);
 	exit(1);
+    }
+    arovolid = 0;
+    if (as->parms[3].items) {
+	vsu_ExtractName(avolname, as->parms[3].items->data);
+	arovolid = vsu_GetVolumeID(avolname, cstruct, &err);
+	if (!arovolid) {
+	    fprintf(STDERR, "vos: invalid ro volume id '%s'\n",
+		    as->parms[3].items->data);
+	    exit(1);
+	}
     }
     aserver = GetServer(as->parms[0].items->data);
     if (aserver == 0) {
@@ -3255,10 +3300,10 @@ AddSite(register struct cmd_syndesc *as, void *arock)
 		    as->parms[1].items->data);
 	exit(1);
     }
-    if (as->parms[3].items) {
+    if (as->parms[4].items) {
 	valid = 1;
     }
-    code = UV_AddSite(aserver, apart, avolid, valid);
+    code = UV_AddSite2(aserver, apart, avolid, arovolid, valid);
     if (code) {
 	PrintDiagnostics("addsite", code);
 	exit(1);
@@ -3273,7 +3318,8 @@ static int
 RemoveSite(register struct cmd_syndesc *as, void *arock)
 {
 
-    afs_int32 avolid, aserver, apart, code, err;
+    afs_uint32 avolid;
+    afs_int32 aserver, apart, code, err;
     char apartName[10], avolname[VOLSER_MAXVOLNAME + 1];
 
     vsu_ExtractName(avolname, as->parms[2].items->data);
@@ -3323,7 +3369,8 @@ RemoveSite(register struct cmd_syndesc *as, void *arock)
 static int
 ChangeLocation(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aserver, apart, code, err;
+    afs_uint32 avolid;
+    afs_int32 aserver, apart, code, err;
     char apartName[10];
 
     avolid = vsu_GetVolumeID(as->parms[2].items->data, cstruct, &err);
@@ -3408,8 +3455,7 @@ ListPartitions(register struct cmd_syndesc *as, void *arock)
 }
 
 static int
-CompareVolName(p1, p2)
-     char *p1, *p2;
+CompareVolName(const void *p1, const void *p2)
 {
     volintInfo *arg1, *arg2;
 
@@ -3442,9 +3488,7 @@ CompareVolName(p1, p2)
  *------------------------------------------------------------------------*/
 
 static int
-XCompareVolName(a_obj1P, a_obj2P)
-     char *a_obj1P, *a_obj2P;
-
+XCompareVolName(const void *a_obj1P, const void *a_obj2P)
 {				/*XCompareVolName */
 
     return (strcmp
@@ -3454,8 +3498,7 @@ XCompareVolName(a_obj1P, a_obj2P)
 }				/*XCompareVolName */
 
 static int
-CompareVolID(p1, p2)
-     char *p1, *p2;
+CompareVolID(const void *p1, const void *p2)
 {
     volintInfo *arg1, *arg2;
 
@@ -3493,9 +3536,7 @@ CompareVolID(p1, p2)
  *------------------------------------------------------------------------*/
 
 static int
-XCompareVolID(a_obj1P, a_obj2P)
-     char *a_obj1P, *a_obj2P;
-
+XCompareVolID(const void *a_obj1P, const void *a_obj2P)
 {				/*XCompareVolID */
 
     afs_int32 id1, id2;		/*Volume IDs we're comparing */
@@ -3531,16 +3572,18 @@ XCompareVolID(a_obj1P, a_obj2P)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static
+static int
 ListVolumes(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart, int32list, fast;
     afs_int32 aserver, code;
-    volintInfo *pntr, *oldpntr;
+    volintInfo *pntr;
+    volintInfo *oldpntr = NULL;
     afs_int32 count;
     int i;
     char *base;
-    volintXInfo *xInfoP, *origxInfoP;	/*Ptr to current/orig extended vol info */
+    volintXInfo *xInfoP;
+    volintXInfo *origxInfoP = NULL; /*Ptr to current/orig extended vol info */
     int wantExtendedInfo;	/*Do we want extended vol info? */
 
     char pname[10];
@@ -3823,9 +3866,8 @@ SyncServer(register struct cmd_syndesc *as, void *arock)
 
 }
 
-static
-VolumeInfoCmd(name)
-     char *name;
+static int
+VolumeInfoCmd(char *name)
 {
     struct nvldbentry entry;
     afs_int32 vcode;
@@ -3855,7 +3897,8 @@ static int
 VolumeZap(register struct cmd_syndesc *as, void *arock)
 {
     struct nvldbentry entry;
-    afs_int32 volid, code, server, part, zapbackupid = 0, backupid = 0, err;
+    afs_uint32 volid, zapbackupid = 0, backupid = 0;
+    afs_int32 code, server, part, err;
 
     if (as->parms[3].items) {
 	/* force flag is on, use the other version */
@@ -3944,6 +3987,7 @@ VolserStatus(register struct cmd_syndesc *as, void *arock)
     afs_int32 count;
     int i;
     char pname[10];
+    time_t t;
 
     server = GetServer(as->parms[0].items->data);
     if (!server) {
@@ -3966,8 +4010,9 @@ VolserStatus(register struct cmd_syndesc *as, void *arock)
     for (i = 0; i < count; i++) {
 	/*print out the relevant info */
 	fprintf(STDOUT, "--------------------------------------\n");
+	t = pntr->time;
 	fprintf(STDOUT, "transaction: %lu  created: %s",
-		(unsigned long)pntr->tid, vos_ctime( & pntr->time));
+		(unsigned long)pntr->tid, ctime(&t));
 	if (pntr->returnCode) {
 	    fprintf(STDOUT, "returnCode: %lu\n",
 		    (unsigned long)pntr->returnCode);
@@ -4088,7 +4133,7 @@ RenameVolume(register struct cmd_syndesc *as, void *arock)
 }
 
 int
-GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *voltype, 
+GetVolumeInfo(afs_uint32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *voltype, 
               struct nvldbentry *rentry)
 {
     afs_int32 vcode;
@@ -4150,8 +4195,8 @@ GetVolumeInfo(afs_int32 volid, afs_int32 *server, afs_int32 *part, afs_int32 *vo
 static int
 DeleteEntry(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 apart;
-    afs_int32 avolid;
+    afs_int32 apart = 0;
+    afs_uint32 avolid;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
@@ -4324,8 +4369,7 @@ DeleteEntry(register struct cmd_syndesc *as, void *arock)
 
 
 static int
-CompareVldbEntryByName(p1, p2)
-     char *p1, *p2;
+CompareVldbEntryByName(const void *p1, const void *p2)
 {
     struct nvldbentry *arg1, *arg2;
 
@@ -4335,8 +4379,7 @@ CompareVldbEntryByName(p1, p2)
 }
 
 /*
-static int CompareVldbEntry(p1,p2)
-char *p1,*p2;
+static int CompareVldbEntry(char *p1, char *p2)
 {
     struct nvldbentry *arg1,*arg2;
     int i;
@@ -4379,7 +4422,9 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
     struct nvldbentry *vllist, *tarray = 0, *ttarray;
-    afs_int32 centries, nentries = 0, tarraysize, parraysize;
+    afs_int32 centries, nentries = 0;
+    afs_int32 tarraysize = 0;
+    afs_int32 parraysize;
     int j;
     char pname[10];
     int quiet, sort, lock;
@@ -4543,7 +4588,8 @@ ListVLDB(struct cmd_syndesc *as, void *arock)
 static int
 BackSys(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 apart = 0, avolid;
+    afs_uint32 avolid;
+    afs_int32 apart = 0;
     afs_int32 aserver = 0, code, aserver1, apart1;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
@@ -4555,11 +4601,14 @@ BackSys(register struct cmd_syndesc *as, void *arock)
     int seenprefix, seenxprefix, exclude, ex, exp, noaction;
     afs_int32 totalBack = 0;
     afs_int32 totalFail = 0;
-    int previdx = -1, error, same;
-    int comp = 0;
+    int previdx = -1;
+    int error;
+    int same = 0;
     struct cmd_item *ti;
+    int match = 0;
+#ifndef HAVE_POSIX_REGEX
     char *ccode;
-    int match;
+#endif
 
     memset(&attributes, 0, sizeof(struct VldbListByAttributes));
     attributes.Mask = 0;
@@ -4873,14 +4922,15 @@ static int
 UnlockVLDB(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 apart;
-    afs_int32 aserver, code;
+    afs_int32 aserver = 0;
+    afs_int32 code;
     afs_int32 vcode;
     struct VldbListByAttributes attributes;
     nbulkentries arrayEntries;
     register struct nvldbentry *vllist;
     afs_int32 nentries;
     int j;
-    afs_int32 volid;
+    afs_uint32 volid;
     afs_int32 totalE;
     char pname[10];
 
@@ -5061,7 +5111,7 @@ PartitionInfo(register struct cmd_syndesc *as, void *arock)
 		exit(1);
 	    }
 	    fprintf(STDOUT,
-		    "Free space on partition %s: %lld K blocks out of total %lld\n",
+		    "Free space on partition %s: %" AFS_INT64_FMT " K blocks out of total %" AFS_INT64_FMT "\n",
 		    pname, partition.free, partition.minFree);
 	    sumPartitions++;
             AddUInt64(sumFree,partition.free,&sumFree);
@@ -5181,7 +5231,7 @@ print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_val = 0;
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
-		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, &m_uuid,
+		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, m_uuid,
 				      (afs_int32 *)&vlcb, &m_nentries, &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
@@ -5335,7 +5385,8 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 static int
 LockEntry(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, vcode, err;
+    afs_uint32 avolid;
+    afs_int32 vcode, err;
 
     avolid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
     if (avolid == 0) {
@@ -5362,15 +5413,16 @@ static int
 ConvertRO(register struct cmd_syndesc *as, void *arock)
 {
     afs_int32 partition = -1;
-    afs_int32 server, volid, code, i, same;
+    afs_uint32 volid;
+    afs_int32 server, code, i, same;
     struct nvldbentry entry, storeEntry;
     afs_int32 vcode;
-    afs_int32 rwindex;
+    afs_int32 rwindex = 0;
     afs_int32 rwserver = 0;
-    afs_int32 rwpartition;
-    afs_int32 roindex;
+    afs_int32 rwpartition = 0;
+    afs_int32 roindex = 0;
     afs_int32 roserver = 0;
-    afs_int32 ropartition;
+    afs_int32 ropartition = 0;
     int force = 0;
     struct rx_connection *aconn;
     char c, dc;
@@ -5525,7 +5577,8 @@ ConvertRO(register struct cmd_syndesc *as, void *arock)
 static int
 Sizes(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 avolid, aserver, apart, voltype, fromdate = 0, code, err, i;
+    afs_uint32 avolid;
+    afs_int32 aserver, apart, voltype, fromdate = 0, code, err, i;
     struct nvldbentry entry;
     volintSize vol_size;
 
@@ -5660,7 +5713,7 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 }
 
 int
-osi_audit()
+osi_audit(void)
 {
 /* this sucks but it works for now.
 */
@@ -5669,9 +5722,8 @@ osi_audit()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
 
@@ -5702,6 +5754,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "volume name");
     cmd_AddParm(ts, "-maxquota", CMD_SINGLE, CMD_OPTIONAL,
 		"initial quota (KB)");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "volume ID");
+    cmd_AddParm(ts, "-roid", CMD_SINGLE, CMD_OPTIONAL, "readonly volume ID");
 #ifdef notdef
     cmd_AddParm(ts, "-minquota", CMD_SINGLE, CMD_OPTIONAL, "");
 #endif
@@ -5795,7 +5849,7 @@ main(argc, argv)
 		"force a complete release");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("dump", DumpVolume, NULL, "dump a volume");
+    ts = cmd_CreateSyntax("dump", DumpVolumeCmd, NULL, "dump a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_OPTIONAL, "dump from time");
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "dump file");
@@ -5807,7 +5861,8 @@ main(argc, argv)
 		"omit unchanged directories from an incremental dump");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("restore", RestoreVolume, NULL, "restore a volume");
+    ts = cmd_CreateSyntax("restore", RestoreVolumeCmd, NULL,
+			  "restore a volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "name of volume to be restored");
@@ -5846,7 +5901,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0,
 		"partition name for new site");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
-    cmd_AddParm(ts, "-valid", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE, "publish as an up-to-date site in VLDB");
+    cmd_AddParm(ts, "-roid", CMD_SINGLE, CMD_OPTIONAL, "volume name or ID for RO");
+    cmd_AddParm(ts, "-valid", CMD_FLAG, CMD_OPTIONAL, "publish as an up-to-date site in VLDB");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("remsite", RemoveSite, NULL,
@@ -5912,7 +5968,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-clearVolUpCounter", CMD_FLAG, CMD_OPTIONAL, "clear volUpdateCounter");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("offline", volOffline, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("offline", volOffline, NULL, "force the volume status to offline");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "server name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
@@ -5920,7 +5976,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-busy", CMD_FLAG, CMD_OPTIONAL, "busy volume");
     COMMONPARMS;
 
-    ts = cmd_CreateSyntax("online", volOnline, NULL, (char *)CMD_HIDDEN);
+    ts = cmd_CreateSyntax("online", volOnline, NULL, "force the volume status to online");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "server name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, 0, "partition name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
@@ -5978,7 +6034,7 @@ main(argc, argv)
 		"prefix of the volume whose VLDB entry is to be deleted");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
-    cmd_AddParm(ts, "-noexecute", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
+    cmd_AddParm(ts, "-noexecute", CMD_FLAG, CMD_OPTIONAL,
 		"no execute");
     COMMONPARMS;
 

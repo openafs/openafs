@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 extern int LogLevel;
 extern int mrafsStyleLogs;
@@ -43,8 +44,8 @@ extern void vFSLog(const char *format, va_list args);
 extern void SetLogThreadNumProgram(int (*func) (void) );
 
 /*@printflike@*/ extern void FSLog(const char *format, ...);
-#define ViceLog(level, str)  if ((level) <= LogLevel) (FSLog str)
-#define vViceLog(level, str) if ((level) <= LogLevel) (vFSLog str)
+#define ViceLog(level, str)  do { if ((level) <= LogLevel) (FSLog str); } while (0)
+#define vViceLog(level, str) do { if ((level) <= LogLevel) (vFSLog str); } while (0)
 
 extern int OpenLog(const char *filename);
 extern int ReOpenLog(const char *fileName);
@@ -56,29 +57,44 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
     /*@requires maxSet(p) >= (avail-1)@ */
     /*@modifies p@ */ ;
 
-     extern /*@printflike@ */ int
-       afs_snprintf( /*@out@ */ char *p, size_t avail,
+extern /*@printflike@ */ int
+afs_snprintf( /*@out@ */ char *p, size_t avail,
 		    const char *fmt, ...)
     /*@requires maxSet(p) >= (avail-1)@ */
     /*@modifies p@ */ ;
 
+extern int
+afs_vasnprintf (char **ret, size_t max_sz, const char *format, va_list args);
+
+extern int
+afs_vasprintf (char **ret, const char *format, va_list args);
+
+extern int
+afs_asprintf (char **ret, const char *format, ...);
+
+extern int
+afs_asnprintf (char **ret, size_t max_sz, const char *format, ...);
 
 /* special version of ctime that clobbers a *different static variable, so
  * that ViceLog can call ctime and not cause buffer confusion.
  */
-     extern char *vctime(const time_t * atime);
+extern char *vctime(const time_t * atime);
 
 /* Need a thead safe ctime for pthread builds. Use std ctime for LWP */
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-#ifdef AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) && !defined(_POSIX_PTHREAD_SEMANTICS) && (_POSIX_C_SOURCE - 0 < 199506L)
 #define afs_ctime(C, B, L) ctime_r(C, B, L)
 #else
 /* Cast is for platforms which do not prototype ctime_r */
 #define afs_ctime(C, B, L) (char*)ctime_r(C, B)
 #endif /* AFS_SUN5_ENV */
 #else /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
-#define afs_ctime(C, B, S) \
-	((void)strncpy(B, ctime(C), (S-1)), (B)[S-1] = '\0', (B))
+static_inline char *
+afs_ctime(const time_t *C, char *B, size_t S) {
+    strncpy(B, ctime(C), (S-1));
+    B[S-1] = '\0';
+    return B;
+}
 #endif /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
 
 
@@ -109,17 +125,26 @@ afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 /* Unbuffer output when Un*x would do line buffering. */
 #define setlinebuf(S) setvbuf(S, NULL, _IONBF, 0)
 
-/* regular expression parser for NT */
-     extern char *re_comp(char *sp);
-     extern int rc_exec(char *p);
-
 /* Abort on error, possibly trapping to debugger or dumping a trace. */
      void afs_NTAbort(void);
-#endif /* NT40 */
+#endif /* AFS_NT40_ENV */
+
+#ifndef HAVE_POSIX_REGEX
+extern char *re_comp(const char *sp);
+extern int re_exec(const char *p1);
+#endif
 
      typedef char b32_string_t[8];
 /* b64_string_t is 8 bytes, in stds.h */
      typedef char lb64_string_t[12];
+
+#ifndef HAVE_STRLCAT
+extern size_t strlcat(char *dst, const char *src, size_t siz);
+#endif
+
+#ifndef HAVE_STRLCPY
+extern size_t strlcpy(char *dst, const char *src, size_t siz);
+#endif
 
 #ifndef UKERNEL
 #include "afs/ktime.h"

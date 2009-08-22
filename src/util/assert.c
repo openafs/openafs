@@ -16,8 +16,6 @@
 #endif
 #include <string.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/assert.c,v 1.13.4.2 2007/10/31 04:26:18 shadow Exp $");
 
 #include <stdio.h>
 #include "afsutil.h"
@@ -30,16 +28,19 @@ afs_NTAbort(void)
 }
 #endif
 
+#define TIMESTAMP_BUFFER_SIZE 26  /* including the null */
+#define TIMESTAMP_NEWLINE_POS 24  /* offset to the newline placed by ctime */
 
 void
 AssertionFailed(char *file, int line)
 {
-    char tdate[26];
+    char tdate[TIMESTAMP_BUFFER_SIZE];
     time_t when;
 
     time(&when);
-    (void)afs_ctime(&when, tdate, 25);
-    fprintf(stderr, "%s: Assertion failed! file %s, line %d.\n", tdate, file,
+    (void)afs_ctime(&when, tdate, sizeof(tdate));
+    tdate[TIMESTAMP_NEWLINE_POS] = ' ';
+    fprintf(stderr, "%sAssertion failed! file %s, line %d.\n", tdate, file,
 	    line);
     fflush(stderr);
 #ifdef AFS_NT40_ENV

@@ -10,12 +10,21 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/common.c,v 1.10.14.1 2007/04/10 18:39:56 shadow Exp $");
-
 #include <stdio.h>
+#include <stdlib.h>
+
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
+
+#ifndef AFS_PTHREAD_ENV
+#include <afs/kautils.h>
+#include <rx/rxkad.h>
+#include <afs/auth.h>
+#include <afs/cellconfig.h>+
+#include <afs/cmd.h>
+#include <afs/vlserver.h>
+#include "volser.h"
+#endif
 
 #ifndef AFS_PTHREAD_ENV
 /*@printflike@*/ void

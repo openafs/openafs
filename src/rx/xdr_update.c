@@ -9,8 +9,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_update.c,v 1.5 2003/07/15 23:16:13 shadow Exp $");
 
 #ifndef	NeXT
 #include "xdr.h"
@@ -43,7 +41,7 @@ RCSID
  *    
  */
 bool_t
-xdr_pointer(register XDR * xdrs, char **objpp, u_int obj_size,
+xdr_pointer(XDR * xdrs, char **objpp, u_int obj_size,
 	    xdrproc_t xdr_obj)
 {
 
@@ -71,11 +69,11 @@ xdr_pointer(register XDR * xdrs, char **objpp, u_int obj_size,
  * > xdr_elem: routine to XDR each element
  */
 bool_t
-xdr_vector(register XDR * xdrs, register char *basep, register u_int nelem,
-	   register u_int elemsize, register xdrproc_t xdr_elem)
+xdr_vector(XDR * xdrs, char *basep, u_int nelem,
+	   u_int elemsize, xdrproc_t xdr_elem)
 {
-    register u_int i;
-    register char *elptr;
+    u_int i;
+    char *elptr;
 
     elptr = basep;
     for (i = 0; i < nelem; i++) {

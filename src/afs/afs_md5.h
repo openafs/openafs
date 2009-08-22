@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: afs_md5.h,v 1.1.2.2 2006/07/31 21:27:38 shadow Exp $ */
+/* $Id$ */
 
 
 struct afs_md5 {

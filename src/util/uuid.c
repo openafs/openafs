@@ -49,8 +49,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/uuid.c,v 1.17.4.1 2007/10/30 15:16:48 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"

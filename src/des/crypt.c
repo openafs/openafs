@@ -37,8 +37,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/crypt.c,v 1.14.8.1 2006/07/25 14:47:41 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
@@ -119,13 +117,6 @@ RCSID
 #ifndef STATIC
 #define	STATIC	static
 #endif
-STATIC void init_des();
-STATIC void permute();
-STATIC void init_perm();
-
-STATIC int des_setkey(const char *key);
-STATIC int des_cipher(const char *in, char *out, long salt, int num_iter);
-
 #ifdef CRYPT_DEBUG
 STATIC prtab();
 #endif
@@ -314,11 +305,7 @@ typedef union {
 	{ C_block tblk; permute(cpp,&tblk,p,4); LOAD (d,d0,d1,tblk); }
 
 STATIC void
-permute(cp, out, p, chars_in)
-     unsigned char *cp;
-     C_block *out;
-     register C_block *p;
-     int chars_in;
+permute(unsigned char *cp, C_block *out, register C_block *p, int chars_in)
 {
     register DCL_BLOCK(D, D0, D1);
     register C_block *tp;
@@ -337,6 +324,13 @@ permute(cp, out, p, chars_in)
     STORE(D, D0, D1, *out);
 }
 #endif /* LARGEDATA */
+
+STATIC void init_des(void);
+STATIC void init_perm(C_block [64 / CHUNKBITS][1 << CHUNKBITS], 
+		      unsigned char [64], int, int);
+STATIC int des_setkey(const char *key);
+STATIC int des_cipher(const char *in, char *out, long salt, int num_iter);
+
 
 
 /* =====  (mostly) Standard DES Tables ==================== */
@@ -496,9 +490,7 @@ static char cryptresult[1 + 4 + 4 + 11 + 1];	/* encrypted result */
  * followed by an encryption produced by the "key" and "setting".
  */
 char *
-crypt(key, setting)
-     register const char *key;
-     register const char *setting;
+crypt(register const char *key, register const char *setting)
 {
     register char *encp;
     register long i;
@@ -611,8 +603,7 @@ static C_block KS[KS_SIZE];
  * Set up the key schedule from the key.
  */
 STATIC int
-des_setkey(key)
-     register const char *key;
+des_setkey(register const char *key)
 {
     register DCL_BLOCK(K, K0, K1);
     register C_block *ptabp;
@@ -646,11 +637,7 @@ des_setkey(key)
  * compiler and machine architecture.
  */
 STATIC int
-des_cipher(in, out, salt, num_iter)
-     const char *in;
-     char *out;
-     long salt;
-     int num_iter;
+des_cipher(const char *in, char *out, long salt, int num_iter)
 {
     /* variables that we want in registers, most important first */
 #if defined(pdp11)
@@ -779,7 +766,7 @@ des_cipher(in, out, salt, num_iter)
  * done at compile time, if the compiler were capable of that sort of thing.
  */
 STATIC void
-init_des()
+init_des(void)
 {
     register int i, j;
     register long k;
@@ -920,10 +907,8 @@ init_des()
  * "perm" must be all-zeroes on entry to this routine.
  */
 STATIC void
-init_perm(perm, p, chars_in, chars_out)
-     C_block perm[64 / CHUNKBITS][1 << CHUNKBITS];
-     unsigned char p[64];
-     int chars_in, chars_out;
+init_perm(C_block perm[64 / CHUNKBITS][1 << CHUNKBITS], 
+	  unsigned char p[64], int chars_in, int chars_out)
 {
     register int i, j, k, l;
 
@@ -998,10 +983,7 @@ encrypt(block, flag)
 
 #ifdef CRYPT_DEBUG
 STATIC
-prtab(s, t, num_rows)
-     char *s;
-     unsigned char *t;
-     int num_rows;
+prtab(char *s, unsigned char *t, int num_rows)
 {
     register int i, j;
 

@@ -31,7 +31,11 @@
   *	-confdir    The configuration directory .
   *	-nosettime  Don't keep checking the time to avoid drift (default).
   *     -settime    Keep checking the time to avoid drift.
+  *	-rxmaxmtu   Set the max mtu to help with VPN issues.
   *	-verbose     Be chatty.
+  *	-disable-dynamic-vcaches     Disable the use of -stat value as the starting size of
+  *                          the size of the vcache/stat cache pool, 
+  *                          but increase that pool dynamically as needed.
   *	-debug	   Print out additional debugging info.
   *	-kerndev    [OBSOLETE] The kernel device for AFS.
   *	-dontfork   [OBSOLETE] Don't fork off as a new process.
@@ -57,8 +61,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.60.2.10 2007/10/31 22:31:59 shadow Exp $");
 
 #define VFS 1
 
@@ -159,12 +161,13 @@ void set_staticaddrs(void);
 #include <sys/ioctl.h>
 #endif
 #include <mach/mach.h>
+#ifndef AFS_DARWIN100_ENV
 /* Symbols from the DiskArbitration framework */
 kern_return_t DiskArbStart(mach_port_t *);
 kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 							 char *);
 #define DISK_ARB_NETWORK_DISK_FLAG 8
-
+#endif
 #include <mach/mach_port.h>
 #include <mach/mach_interface.h>
 #include <mach/mach_init.h>
@@ -190,7 +193,6 @@ static io_connect_t root_port;
 static IONotificationPortRef notify;
 static io_object_t iterator;
 static CFRunLoopSourceRef source;
-static DNSSDState dnsstate;
 
 static int event_pid;
 
@@ -292,14 +294,21 @@ int createAndTrunc = O_CREAT | O_TRUNC;	/*Create & truncate on open */
 int ownerRWmode = 0600;		/*Read/write OK by owner */
 static int filesSet = 0;	/*True if number of files explicitly set */
 static int nFilesPerDir = 2048;	/* # files per cache dir */
-static int nDaemons = 2;	/* Number of background daemons */
+#if defined(AFS_CACHE_BYPASS)
+#define AFSD_NDAEMONS 4
+#else
+#define AFSD_NDAEMONS 2
+#endif
+static int nDaemons = AFSD_NDAEMONS;	/* Number of background daemons */
 static int chunkSize = 0;	/* 2^chunkSize bytes per chunk */
 static int dCacheSize;		/* # of dcache entries */
 static int vCacheSize = 200;	/* # of volume cache entries */
 static int rootVolSet = 0;	/*True if root volume name explicitly set */
 int addrNum;			/*Cell server address index being printed */
 static int cacheFlags = 0;	/*Flags to cache manager */
+#ifdef AFS_AIX32_ENV
 static int nBiods = 5;		/* AIX3.1 only */
+#endif
 static int preallocs = 400;	/* Def # of allocated memory blocks */
 static int enable_peer_stats = 0;	/* enable rx stats */
 static int enable_process_stats = 0;	/* enable rx stats */
@@ -314,9 +323,11 @@ static int enable_splitcache = 0;
 #ifdef notdef
 static int inodes = 60;		/* VERY conservative, but has to be */
 #endif
+int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
 int afsd_CloseSynch = 0;	/*Are closes synchronous or not? */
+int rxmaxmtu = 0;       /* Are we forcing a limit on the mtu? */
 
 #ifdef AFS_SGI62_ENV
 #define AFSD_INO_T ino64_t
@@ -334,7 +345,7 @@ int *dir_for_V = NULL;		/* Array: dir of each cache file.
 				 * -2: file exists in top-level
 				 * >=0: file exists in Dxxx
 				 */
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 AFSD_INO_T *inode_for_V;	/* Array of inodes for desired
 				 * cache files */
 #endif
@@ -344,15 +355,14 @@ int missing_CellInfoFile = 1;	/*Is the CELLINFOFILE missing? */
 int afsd_rmtsys = 0;		/* Default: don't support rmtsys */
 struct afs_cacheParams cparams;	/* params passed to cache manager */
 
-static int HandleMTab();
+static int HandleMTab(void);
+int PartSizeOverflow(char *path, int cs);
 
 #ifdef AFS_DARWIN_ENV
 static void
 afsd_sleep_callback(void * refCon, io_service_t service, 
 		    natural_t messageType, void * messageArgument )
 {
-    afs_int32 code;
-    
     switch (messageType) {
     case kIOMessageCanSystemSleep:
 	/* Idle sleep is about to kick in; can 
@@ -392,7 +402,7 @@ static void
 afsd_update_addresses(CFRunLoopTimerRef timer, void *info)
 {
     /* parse multihomed address files */
-    afs_int32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
+    afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	mtubuf[MAXIPADDRS];
     char reason[1024];
     afs_int32 code;
@@ -426,7 +436,6 @@ afsd_ipaddr_callback (SCDynamicStoreRef store, CFArrayRef changed_keys, void *in
 
 static void 
 afsd_event_cleanup(int signo) {
-    DNSSDState *query = &dnsstate;
 
     CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, kCFRunLoopDefaultMode);
     CFRelease (source);
@@ -438,7 +447,7 @@ afsd_event_cleanup(int signo) {
 }
 
 /* Adapted from "Living in a Dynamic TCP/IP Environment" technote. */
-static Boolean
+static void
 afsd_install_events(void)
 {
     SCDynamicStoreContext ctx = {0};
@@ -690,10 +699,7 @@ PartSizeOverflow(char *path, int cs)
   *---------------------------------------------------------------------------*/
 
 static int
-doGetXFileNumber(fname, filechar, maxNum)
-     char *fname;
-     char filechar;
-     int maxNum;
+doGetXFileNumber(char *fname, char filechar, int maxNum)
 {
     int computedVNumber;	/*The computed file number we return */
     int filenameLen;		/*Number of chars in filename */
@@ -731,17 +737,13 @@ doGetXFileNumber(fname, filechar, maxNum)
 }
 
 int
-GetVFileNumber(fname, maxFile)
-     char *fname;
-     int maxFile;
+GetVFileNumber(char *fname, int maxFile)
 {
     return doGetXFileNumber(fname, 'V', maxFile);
 }
 
 int
-GetDDirNumber(fname, maxDir)
-     char *fname;
-     int maxDir;
+GetDDirNumber(char *fname, int maxDir)
 {
     return doGetXFileNumber(fname, 'D', maxDir);
 }
@@ -771,9 +773,7 @@ GetDDirNumber(fname, maxDir)
   *---------------------------------------------------------------------------*/
 
 static int
-CreateCacheSubDir(basename, dirNum)
-     char *basename;
-     int dirNum;
+CreateCacheSubDir(char *basename, int dirNum)
 {
     static char rn[] = "CreateCacheSubDir";	/* Routine Name */
     char dir[1024];
@@ -800,9 +800,8 @@ CreateCacheSubDir(basename, dirNum)
 }
 
 static int
-MoveCacheFile(basename, fromDir, toDir, cacheFile, maxDir)
-     char *basename;
-     int fromDir, toDir, cacheFile, maxDir;
+MoveCacheFile(char *basename, int fromDir, int toDir, int cacheFile, 
+	      int maxDir)
 {
     static char rn[] = "MoveCacheFile";
     char from[1024], to[1024];
@@ -844,9 +843,7 @@ MoveCacheFile(basename, fromDir, toDir, cacheFile, maxDir)
 }
 
 int
-CreateCacheFile(fname, statp)
-     char *fname;
-     struct stat *statp;
+CreateCacheFile(char *fname, struct stat *statp)
 {
     static char rn[] = "CreateCacheFile";	/*Routine name */
     int cfd;			/*File descriptor to AFS cache file */
@@ -934,11 +931,10 @@ UnlinkUnwantedFile(char *rn, char *fullpn_FileToDelete, char *fileToDelete)
 
 
 static int
-doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
-     int *vFilesFound;
-     char *directory;		/* /path/to/cache/directory */
-     int dirNum;		/* current directory number */
-     int maxDir;		/* maximum directory number */
+doSweepAFSCache(int *vFilesFound, 
+     	        char *directory,	/* /path/to/cache/directory */
+		int dirNum,		/* current directory number */
+		int maxDir)		/* maximum directory number */
 {
     static char rn[] = "doSweepAFSCache";	/* Routine Name */
     char fullpn_FileToDelete[1024];	/*File to be deleted from cache */
@@ -986,8 +982,10 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	if (afsd_debug) {
 	    printf("%s: Current directory entry:\n", rn);
 #ifdef AFS_SGI62_ENV
-	    printf("\tinode=%lld, reclen=%d, name='%s'\n", currp->d_ino,
+	    printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
+#elif defined(AFS_DFBSD_ENV)
+	    printf("\tinode=%d, name='%s'\n", currp->d_ino, currp->d_name);
 #else
 	    printf("\tinode=%d, reclen=%d, name='%s'\n", currp->d_ino,
 		   currp->d_reclen, currp->d_name);
@@ -1009,7 +1007,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	     * file's inode, directory, and bump the number of files found
 	     * total and in this directory.
 	     */
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 	    inode_for_V[vFileNum] = currp->d_ino;
 #endif
 	    dir_for_V[vFileNum] = dirNum;	/* remember this directory */
@@ -1148,7 +1146,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 			   vFileNum);
 		else {
 		    struct stat statb;
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 		    assert(inode_for_V[vFileNum] == (AFSD_INO_T) 0);
 #endif
 		    sprintf(vFilePtr, "D%d/V%d", thisDir, vFileNum);
@@ -1161,7 +1159,7 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 		    if (CreateCacheFile(fullpn_VFile, &statb))
 			printf("%s: Can't create '%s'\n", rn, fullpn_VFile);
 		    else {
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
 			inode_for_V[vFileNum] = statb.st_ino;
 #endif
 			dir_for_V[vFileNum] = thisDir;
@@ -1263,6 +1261,7 @@ CheckCacheBaseDir(char *dir)
 	if (res != 0) {
 	    return "unable to statfs cache base directory";
 	}
+#if !defined(LINUX_USE_FH)
 	if (statfsbuf.f_type == 0x52654973) {	/* REISERFS_SUPER_MAGIC */
 	    return "cannot use reiserfs as cache partition";
 	} else if (statfsbuf.f_type == 0x58465342) {	/* XFS_SUPER_MAGIC */
@@ -1272,6 +1271,7 @@ CheckCacheBaseDir(char *dir)
         } else if (statfsbuf.f_type != 0xEF53) {
             return "must use ext2 or ext3 for cache partition";
 	}
+#endif
     }
 #endif
 
@@ -1336,8 +1336,7 @@ CheckCacheBaseDir(char *dir)
 }
 
 int
-SweepAFSCache(vFilesFound)
-     int *vFilesFound;
+SweepAFSCache(int *vFilesFound)
 {
     static char rn[] = "SweepAFSCache";	/*Routine name */
     int maxDir = (cacheFiles + nFilesPerDir - 1) / nFilesPerDir;
@@ -1422,7 +1421,7 @@ ConfigCell(struct afsconf_cell *aci, void *arock, struct afsconf_dir *adir)
     return 0;
 }
 
-static
+static int
 ConfigCellAlias(struct afsconf_cellalias *aca,
 		void *arock, struct afsconf_dir *adir)
 {
@@ -1432,8 +1431,8 @@ ConfigCellAlias(struct afsconf_cellalias *aca,
 }
 
 #ifdef AFS_AFSDB_ENV
-static
-AfsdbLookupHandler()
+static void
+AfsdbLookupHandler(void)
 {
     afs_int32 kernelMsg[64];
     char acellName[128];
@@ -1517,6 +1516,7 @@ AfsdbLookupHandler()
 #endif
 #endif
 
+int
 mainproc(struct cmd_syndesc *as, void *arock)
 {
     static char rn[] = "afsd";	/*Name of this routine */
@@ -1528,12 +1528,10 @@ mainproc(struct cmd_syndesc *as, void *arock)
     int cacheIteration;		/*How many times through cache verification */
     int vFilesFound;		/*How many data cache files were found in sweep */
     struct afsconf_dir *cdir;	/* config dir */
-    FILE *logfd;
     char *fsTypeMsg = NULL;
 #ifdef	AFS_SUN5_ENV
     struct stat st;
 #endif
-    afs_int32 vfs1_type = -1;
 #ifdef AFS_SGI65_ENV
     struct sched_param sp;
 #endif
@@ -1756,6 +1754,31 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    }
 	}
     }
+    if (as->parms[35].items) {
+#ifdef AFS_MAXVCOUNT_ENV
+       /* -disable-dynamic-vcaches */
+       afsd_dynamic_vcaches = FALSE;
+#else
+       printf("afsd: Error toggling flag, dynamically allocated vcaches not supported on your platform\n");
+       exit(1);
+#endif
+    }
+#ifdef AFS_MAXVCOUNT_ENV
+    else {
+       /* -dynamic-vcaches */
+       afsd_dynamic_vcaches = TRUE;
+    }
+
+    if (afsd_verbose)
+    printf("afsd: %s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
+#endif
+
+    /* set -rxmaxmtu */
+    if (as->parms[35].items) {
+        /* -rxmaxmtu */
+        rxmaxmtu = atoi(as->parms[35].items->data);
+    }
+
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
      * the cellular community we're willing to let our users see.
@@ -1931,7 +1954,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 		   cacheStatEntries);
     }
 
-#ifndef AFS_CACHE_VNODE_PATH
+#if !defined(AFS_CACHE_VNODE_PATH) && !defined(LINUX_USE_FH)
     /*
      * Create and zero the inode table for the desired cache files.
      */
@@ -1944,7 +1967,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
     memset(inode_for_V, '\0', (cacheFiles * sizeof(AFSD_INO_T)));
     if (afsd_debug)
-	printf("%s: %d inode_for_V entries at 0x%x, %d bytes\n", rn,
+	printf("%s: %d inode_for_V entries at 0x%x, %lu bytes\n", rn,
 	       cacheFiles, inode_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
 #endif
 
@@ -1979,7 +2002,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     /* initialize the rx random number generator from user space */
     {
 	/* parse multihomed address files */
-	afs_int32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
+	afs_uint32 addrbuf[MAXIPADDRS], maskbuf[MAXIPADDRS],
 	    mtubuf[MAXIPADDRS];
 	char reason[1024];
 	code =
@@ -2094,6 +2117,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     cparams.chunkSize = chunkSize;
     cparams.setTimeFlag = cacheSetTime;
     cparams.memCacheFlag = cacheFlags;
+    cparams.dynamic_vcaches = afsd_dynamic_vcaches;
 #ifdef notdef
     cparams.inodes = inodes;
 #endif
@@ -2174,6 +2198,14 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
 	       fullpn_CellInfoFile);
     call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+
+    if (rxmaxmtu) {
+    if (afsd_verbose)
+        printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
+    code = call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
+    if (code)
+        printf("%s: Error seting rxmaxmtu\n", rn);
+    }
 
     if (enable_dynroot) {
 	if (afsd_verbose)
@@ -2302,7 +2334,12 @@ mainproc(struct cmd_syndesc *as, void *arock)
 			 (afs_uint32) (inode_for_V[currVFile] >> 32),
 			 (afs_uint32) (inode_for_V[currVFile] & 0xffffffff));
 #else
+#if defined(LINUX_USE_FH)
+	    sprintf(fullpn_VFile, "%s/D%d/V%d", cacheBaseDir, dir_for_V[currVFile], currVFile);
+	    call_syscall(AFSOP_CACHEFILE, fullpn_VFile);
+#else
 	    call_syscall(AFSOP_CACHEINODE, inode_for_V[currVFile]);
+#endif
 #endif
 	}
 #endif
@@ -2399,7 +2436,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
 #include "AFS_component_version_number.c"
 
 
-
+int
 main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
@@ -2477,7 +2514,10 @@ main(int argc, char **argv)
 		"set rx_extraPackets to this value");
     cmd_AddParm(ts, "-splitcache", CMD_SINGLE, CMD_OPTIONAL,
 		"Percentage RW versus RO in cache (specify as 60/40)");
-
+    cmd_AddParm(ts, "-disable-dynamic-vcaches", CMD_FLAG, CMD_OPTIONAL, 
+		"disable stat/vcache cache growing as needed");
+    cmd_AddParm(ts, "-rxmaxmtu", CMD_SINGLE, CMD_OPTIONAL, "set rx max MTU to use");
+    
     return (cmd_Dispatch(argc, argv));
 }
 
@@ -2493,7 +2533,7 @@ main(int argc, char **argv)
 #endif
 
 static int
-HandleMTab()
+HandleMTab(void)
 {
 #if (defined (AFS_SUN_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)) && !defined(AFS_SUN58_ENV)
     FILE *tfilep;
@@ -2555,6 +2595,7 @@ HandleMTab()
 #endif /* AFS_SUN5_ENV */
 #endif /* unreasonable systems */
 #ifdef AFS_DARWIN_ENV
+#ifndef AFS_DARWIN100_ENV
     mach_port_t diskarb_port;
     kern_return_t status;
 
@@ -2567,14 +2608,16 @@ HandleMTab()
     }
 
     return status;
+#endif
 #endif /* AFS_DARWIN_ENV */
     return 0;
 }
 
 #if !defined(AFS_SGI_ENV) && !defined(AFS_AIX32_ENV)
 
-call_syscall(param1, param2, param3, param4, param5, param6, param7)
-     long param1, param2, param3, param4, param5, param6, param7;
+int
+call_syscall(long param1, long param2, long param3, long param4, long param5, 
+	     long param6, long  param7)
 {
     int error;
 #ifdef AFS_LINUX20_ENV
@@ -2625,7 +2668,7 @@ call_syscall(param1, param2, param3, param4, param5, param6, param7)
 #endif
 
     if (afsd_debug)
-	printf("SScall(%d, %d, %d)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
+	printf("SScall(%d, %d, %ld)=%d ", AFS_SYSCALL, AFSCALL_CALL, param1,
 	       error);
     return (error);
 }

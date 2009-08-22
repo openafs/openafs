@@ -14,8 +14,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.25.2.12 2008/02/04 17:53:43 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -30,6 +28,7 @@ RCSID
 #include "afs/ptclient.h"
 #include "afs/ptuser.h"
 #include "afs/pterror.h"
+#include "afs/com_err.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <ctype.h>
@@ -71,7 +70,9 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
     afs_int32 scIndex;
     static struct afsconf_cell info;
     afs_int32 i;
+#if !defined(UKERNEL)
     char cellstr[64];
+#endif
     afs_int32 gottdir = 0;
     afs_int32 refresh = 0;
 
@@ -201,6 +202,8 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
 	if (code) {
 	    afs_com_err(whoami, code, "(getting token)");
+	    if (secLevel > 1)
+		return code;
 	    scIndex = 0;
 	} else {
 	    if (ttoken.kvno >= 0 && ttoken.kvno <= 256)
@@ -213,7 +216,8 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 		scIndex = 2;
 	    }
 	    sc[2] =
-		rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
+		rxkad_NewClientSecurityObject((secLevel > 1) ? rxkad_crypt :
+					      rxkad_clear, &ttoken.sessionKey,
 					      ttoken.kvno, ttoken.ticketLen,
 					      ttoken.ticket);
 	}
@@ -247,7 +251,7 @@ pr_Initialize(IN afs_int32 secLevel, IN const char *confDir, IN char *cell)
 }
 
 int
-pr_End()
+pr_End(void)
 {
     int code = 0;
 

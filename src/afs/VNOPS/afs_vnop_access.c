@@ -22,8 +22,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_access.c,v 1.11.8.6 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -58,7 +56,7 @@ afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights,
 {
     AFS_STATCNT(afs_GetAccessBits);
     /* see if anyuser has the required access bits */
-    if ((arights & avc->anyAccess) == arights) {
+    if ((arights & avc->f.anyAccess) == arights) {
 	return arights;
     }
 
@@ -72,30 +70,34 @@ afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights,
 	}
     }
 
-    if (!(avc->states & CForeign)) {
+    if (!(avc->f.states & CForeign)) {
 	/* If there aren't any bits cached for this user (but the vnode
 	 * _is_ cached, obviously), make sure this user has valid tokens
 	 * before bothering with the RPC.  */
 	struct unixuser *tu;
-	extern struct unixuser *afs_FindUser();
-	tu = afs_FindUser(areq->uid, avc->fid.Cell, READ_LOCK);
+	tu = afs_FindUser(areq->uid, avc->f.fid.Cell, READ_LOCK);
 	if (!tu) {
-	    return (arights & avc->anyAccess);
+	    return (arights & avc->f.anyAccess);
 	}
 	if ((tu->vid == UNDEFVID) || !(tu->states & UHasTokens)
 	    || (tu->states & UTokensBad)) {
 	    afs_PutUser(tu, READ_LOCK);
-	    return (arights & avc->anyAccess);
+	    return (arights & avc->f.anyAccess);
 	} else {
 	    afs_PutUser(tu, READ_LOCK);
 	}
     }
 
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
+	/* If we get this far, we have to ask the network. But we can't, so
+	 * they're out of luck... */
+	return 0;
+    } else
     {				/* Ok, user has valid tokens, go ask the server. */
 	struct AFSFetchStatus OutStatus;
 	afs_int32 code;
 
-	code = afs_FetchStatus(avc, &avc->fid, areq, &OutStatus);
+	code = afs_FetchStatus(avc, &avc->f.fid, areq, &OutStatus);
 	return (code ? 0 : OutStatus.CallerAccess & arights);
     }
 }
@@ -116,7 +118,7 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 
     AFS_STATCNT(afs_AccessOK);
 
-    if ((vType(avc) == VDIR) || (avc->states & CForeign)) {
+    if ((vType(avc) == VDIR) || (avc->f.states & CForeign)) {
 	/* rights are just those from acl */
 	if (afs_InReadDir(avc)) {
 	    /* if we are already in readdir, then they may have read and
@@ -138,11 +140,11 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 	 * rights for free. These rights will then be restricted by
 	 * the access mask. */
 	dirBits = 0;
-	if (avc->parentVnode) {
-	    dirFid.Cell = avc->fid.Cell;
-	    dirFid.Fid.Volume = avc->fid.Fid.Volume;
-	    dirFid.Fid.Vnode = avc->parentVnode;
-	    dirFid.Fid.Unique = avc->parentUnique;
+	if (avc->f.parent.vnode) {
+	    dirFid.Cell = avc->f.fid.Cell;
+	    dirFid.Fid.Volume = avc->f.fid.Fid.Volume;
+	    dirFid.Fid.Vnode = avc->f.parent.vnode;
+	    dirFid.Fid.Unique = avc->f.parent.unique;
 	    /* Avoid this GetVCache call */
 	    tvc = afs_GetVCache(&dirFid, areq, NULL, NULL);
 	    if (tvc) {
@@ -174,10 +176,10 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 	     * NFS translator and we don't know if it's a read or execute
 	     * on the NFS client, but both need to read the data.
 	     */
-	    mask = (avc->m.Mode & 0700) >> 6;	/* file restrictions to use */
+	    mask = (avc->f.m.Mode & 0700) >> 6;	/* file restrictions to use */
 	    fileBits &= ~fileModeMap[mask];
 	    if (check_mode_bits & CMB_ALLOW_EXEC_AS_READ) {
-		if (avc->m.Mode & 0100)
+		if (avc->f.m.Mode & 0100)
 		    fileBits |= PRSFS_READ;
 	    }
 	}
@@ -204,7 +206,7 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     AFS_STATCNT(afs_access);
     afs_Trace3(afs_iclSetp, CM_TRACE_ACCESS, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, amode, ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     afs_InitFakeStat(&fakestate);
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
@@ -239,22 +241,22 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     }
 
     /* if we're looking for write access and we have a read-only file system, report it */
-    if ((amode & VWRITE) && (avc->states & CRO)) {
+    if ((amode & VWRITE) && (avc->f.states & CRO)) {
 	afs_PutFakeStat(&fakestate);
 	AFS_DISCON_UNLOCK();
 	return EROFS;
     }
     
     /* If we're looking for write access, and we're disconnected without logging, forget it */
-    if ((amode & VWRITE) && (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING)) {
+    if ((amode & VWRITE) && (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW)) {
         afs_PutFakeStat(&fakestate);
 	AFS_DISCON_UNLOCK();
-	/*printf("Network is down in afs_vnop_access\n");*/
+	printf("Network is down in afs_vnop_access\n");
         return ENETDOWN;
     }
     
     code = 1;			/* Default from here on in is access ok. */
-    if (avc->states & CForeign) {
+    if (avc->f.states & CForeign) {
 	/* In the dfs xlator the EXEC bit is mapped to LOOKUP */
 	if (amode & VEXEC)
 	    code = afs_AccessOK(avc, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS);
@@ -305,9 +307,9 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 		     */
 		    if (!((amode & VREAD) && AFS_NFSXLATORREQ(acred)))
 #endif
-			if ((avc->m.Mode & 0100) == 0)
+			if ((avc->f.m.Mode & 0100) == 0)
 			    code = 0;
-		} else if (avc->m.Mode & 0100)
+		} else if (avc->f.m.Mode & 0100)
 		    code = 1;
 	    }
 	    if (code && (amode & VWRITE)) {
@@ -321,7 +323,7 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 		 ** call returns failure. hence, we retry without any file 
 		 ** mode bit checking */
 		if (!code && AFS_NFSXLATORREQ(acred)
-		    && avc->m.Owner == ANONYMOUSID)
+		    && avc->f.m.Owner == ANONYMOUSID)
 		    code =
 			afs_AccessOK(avc, PRSFS_WRITE, &treq,
 				     DONT_CHECK_MODE_BITS);
@@ -355,7 +357,7 @@ afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights,
     struct vrequest treq;
     OSI_VC_CONVERT(avc);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	return code;
 
     code = afs_VerifyVCache(avc, &treq);

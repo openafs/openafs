@@ -10,10 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.9.2.4 2008/04/28 21:48:11 shadow Exp $");
 
 #include <sys/types.h>
+#include <stdarg.h>
+#include <string.h>
+#include <errno.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <io.h>
@@ -24,7 +26,7 @@ RCSID
 #endif
 #include <sys/stat.h>
 
-/* #if defined (AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV) */
+/* #ifdef AFS_PTHREAD_ENV */
 #if 0   /* temporary hack - klm */
 /* nothing */
 #else
@@ -32,14 +34,14 @@ RCSID
 #endif
 
 #include <lock.h>
-#include <errno.h>
-#include <string.h>
+#include <afs/afsutil.h>
 
 #define	UBIK_INTERNALS 1
 #include "ubik.h"
 
-/* these routines are called via the proc ptr in the ubik_dbase structure.  They provide access to
- * the physical disk, by converting the file numbers being processed (>= 0 for user data space, < 0
+/*! \file
+ * These routines are called via the proc ptr in the ubik_dbase structure.  They provide access to
+ * the physical disk, by converting the file numbers being processed ( >= 0 for user data space, < 0
  * for ubik system files, such as the log) to actual pathnames to open, read, write, truncate, sync,
  * etc.
  */
@@ -53,11 +55,12 @@ static struct fdcache {
 
 static char pbuffer[1024];
 
-/* beware, when using this function, of the header in front of most files */
+/*!
+ * \warning Beware, when using this function, of the header in front of most files.
+ */
 static int
 uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
 {
-    char temp[20];
     register int fd;
     static int initd;
     register int i;
@@ -115,7 +118,7 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
     }
     if (bestfd) {		/* found a usable slot */
 	tfd = bestfd;
-	if (tfd->fd >= 0)
+	if (tfd->fd >= 0) 
 	    close(tfd->fd);
 	tfd->fd = fd;
 	tfd->refCount = 1;	/* us */
@@ -126,7 +129,9 @@ uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
     return fd;
 }
 
-/* close the file, maintaining ref count in cache structure */
+/*!
+ * \brief Close the file, maintaining ref count in cache structure.
+ */
 int
 uphys_close(register int afd)
 {
@@ -137,10 +142,22 @@ uphys_close(register int afd)
 	return EBADF;
     tfd = fdcache;
     for (i = 0; i < MAXFDCACHE; i++, tfd++) {
-	if (tfd->fd == afd && tfd->fileID != -10000) {
-	    tfd->refCount--;
-	    return 0;
-	}
+	if (tfd->fd == afd) 
+	    if (tfd->fileID != -10000) {
+		tfd->refCount--;
+		return 0;
+	    } else {
+		if (tfd->refCount > 0) {
+		    tfd->refCount--;
+		    if (tfd->refCount == 0) {
+			close(tfd->fd);
+			tfd->fd = -1;
+		    }
+		    return 0;
+		}
+		tfd->fd = -1;
+		break;
+	    }
     }
     return close(afd);
 }
@@ -171,7 +188,7 @@ uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat)
 
 int
 uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
-	   register char *abuffer, afs_int32 apos, afs_int32 alength)
+	   register void *abuffer, afs_int32 apos, afs_int32 alength)
 {
     register int fd;
     register afs_int32 code;
@@ -191,7 +208,7 @@ uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
 
 int
 uphys_write(register struct ubik_dbase *adbase, afs_int32 afile,
-	    register char *abuffer, afs_int32 apos, afs_int32 alength)
+	    register void *abuffer, afs_int32 apos, afs_int32 alength)
 {
     register int fd;
     register afs_int32 code;
@@ -226,7 +243,11 @@ uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile,
     return code;
 }
 
-/* get number of dbase files */
+/*!
+ * \brief Get number of dbase files.
+ *
+ * \todo Really should scan dir for data.
+ */
 int
 uphys_getnfiles(register struct ubik_dbase *adbase)
 {
@@ -234,7 +255,9 @@ uphys_getnfiles(register struct ubik_dbase *adbase)
     return 1;
 }
 
-/* get database label, with aversion in host order */
+/*!
+ * \brief Get database label, with \p aversion in host order.
+ */
 int
 uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
 	       struct ubik_version *aversion)
@@ -256,7 +279,9 @@ uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
     return 0;
 }
 
-/* label database, with aversion in host order */
+/*!
+ * \brief Label database, with \p aversion in host order.
+ */
 int
 uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
 	       struct ubik_version *aversion)
@@ -300,8 +325,10 @@ uphys_invalidate(register struct ubik_dbase *adbase, afs_int32 afid)
     for (tfd = fdcache, i = 0; i < MAXFDCACHE; i++, tfd++) {
 	if (afid == tfd->fileID) {
 	    tfd->fileID = -10000;
-	    if (tfd->fd >= 0 && tfd->refCount == 0)
+	    if (tfd->fd >= 0 && tfd->refCount == 0) {
 		close(tfd->fd);
+		tfd->fd = -1;
+	    }
 	    return;
 	}
     }

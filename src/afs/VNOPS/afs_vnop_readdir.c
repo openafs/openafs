@@ -22,8 +22,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.33.4.1 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -38,12 +36,7 @@ RCSID
 #else
 #define DIRPAD 3
 #endif
-/**
- * A few definitions. This is until we have a proper header file
- * which ahs prototypes for all functions
- */
 
-extern struct DirEntry *afs_dir_GetBlob();
 /*
  * AFS readdir vnodeop and bulk stat support.
  */
@@ -98,7 +91,7 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
 	}
 	/* now relativeBlob is the page-relative first allocated blob,
 	 * or EPP (if there are none in this page). */
-	DRelease((struct buffer *)tpe, 0);
+	DRelease(tpe, 0);
 	if (i != EPP)
 	    return i + pageBlob;
 	ablob = pageBlob + EPP;	/* go around again */
@@ -234,18 +227,16 @@ int afs_rd_stash_i = 0;
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs_readdir_type(avc, ade)
-     struct DirEntry *ade;
-     struct vcache *avc;
+afs_readdir_type(struct vcache *avc, struct DirEntry *ade)
 {
     struct VenusFid tfid;
     struct vcache *tvc;
     int vtype;
-    tfid.Cell = avc->fid.Cell;
-    tfid.Fid.Volume = avc->fid.Fid.Volume;
+    tfid.Cell = avc->f.fid.Cell;
+    tfid.Fid.Volume = avc->f.fid.Fid.Volume;
     tfid.Fid.Vnode = ntohl(ade->fid.vnode);
     tfid.Fid.Unique = ntohl(ade->fid.vunique);
-    if ((avc->states & CForeign) == 0 && (ntohl(ade->fid.vnode) & 1)) {
+    if ((avc->f.states & CForeign) == 0 && (ntohl(ade->fid.vnode) & 1)) {
 	return DT_DIR;
     }
     ObtainReadLock(&afs_xvcache);
@@ -254,7 +245,7 @@ afs_readdir_type(avc, ade)
 	if (tvc->mvstat) {
 	    afs_PutVCache(tvc);
 	    return DT_DIR;
-	} else if (((tvc->states) & (CStatd | CTruth))) {
+	} else if (((tvc->f.states) & (CStatd | CTruth))) {
 	    /* CTruth will be set if the object has
 	     *ever* been statd */
 	    vtype = vType(tvc);
@@ -284,22 +275,19 @@ afs_readdir_type(avc, ade)
 #endif
 char bufofzeros[64];		/* gotta fill with something */
 
-int
-afs_readdir_move(de, vc, auio, slen, rlen, off)
-     struct DirEntry *de;
-     struct vcache *vc;
-     struct uio *auio;
-     int slen;
 #ifdef AFS_SGI65_ENV
-     ssize_t rlen;
+int
+afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio, 
+		 int slen, ssize_t rlen, afs_size_t off)
 #else
-     int rlen;
+int
+afs_readdir_move(struct DirEntry *de, struct vcache *vc, struct uio *auio, 
+		 int slen, int rlen, afs_size_t off)
 #endif
-     afs_size_t off;
 {
     int code = 0;
     struct volume *tvp;
-    afs_uint32 Volume = vc->fid.Fid.Volume;
+    afs_uint32 Volume = vc->f.fid.Fid.Volume;
     afs_uint32 Vnode  = de->fid.vnode;
 #if	defined(AFS_SUN56_ENV)
     struct dirent64 *direntp;
@@ -320,11 +308,11 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 	/* This is the '.' entry; if we are a volume root, we need to
 	 * ignore the directory and use the inum for the mount point.
 	 */
-	if (!FidCmp(&afs_rootFid, &vc->fid)) {
+	if (!FidCmp(&afs_rootFid, &vc->f.fid)) {
 	    Volume = 0;
 	    Vnode  = 2;
 	} else if (vc->mvstat == 2) {
-	    tvp = afs_GetVolume(&vc->fid, 0, READ_LOCK);
+	    tvp = afs_GetVolume(&vc->f.fid, 0, READ_LOCK);
 	    if (tvp) {
 		Volume = tvp->mtpoint.Fid.Volume;
 		Vnode  = tvp->mtpoint.Fid.Vnode;
@@ -337,7 +325,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 	 * because we might be a volume root (so our parent is in a
 	 * different volume), or our parent might be a volume root
 	 * (so we actually want the mount point) or BOTH! */
-	if (!FidCmp(&afs_rootFid, &vc->fid)) {
+	if (!FidCmp(&afs_rootFid, &vc->f.fid)) {
 	    /* We are the root of the AFS root, and thus our own parent */
 	    Volume = 0;
 	    Vnode  = 2;
@@ -368,7 +356,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 	} else if (de->fid.vnode == 1 && de->fid.vunique == 1) {
 	    /* XXX The above test is evil and probably breaks DFS */
 	    /* Parent directory is a volume root; use the right inum */
-	    tvp = afs_GetVolume(&vc->fid, 0, READ_LOCK);
+	    tvp = afs_GetVolume(&vc->f.fid, 0, READ_LOCK);
 	    if (tvp) {
 		if (tvp->cell == afs_rootFid.Cell
 		    && tvp->volume == afs_rootFid.Fid.Volume) {
@@ -550,9 +538,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
  */
 
 void
-afs_bulkstat_send(avc, req)
-     struct vcache *avc;
-     struct vrequest *req;
+afs_bulkstat_send(struct vcache *avc, struct vrequest *req)
 {
     afs_rd_stash_i = 0;
 }
@@ -564,18 +550,15 @@ afs_bulkstat_send(avc, req)
 
 int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_readdir(OSI_VC_ARG(avc), auio, acred, eofp)
-     int *eofp;
+afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred, 
+	    int *eofp)
 #else
 #if defined(AFS_HPUX100_ENV)
-afs_readdir2(OSI_VC_ARG(avc), auio, acred)
+afs_readdir2(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 #else
-afs_readdir(OSI_VC_ARG(avc), auio, acred)
+afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 #endif
 #endif
-     OSI_VC_DECL(avc);
-     struct uio *auio;
-     struct AFS_UCRED *acred;
 {
     struct vrequest treq;
     register struct dcache *tdc;
@@ -674,9 +657,9 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
      * 1. The cache data is being fetched by another process.
      * 2. The cache data is no longer valid
      */
-    while ((avc->states & CStatd)
+    while ((avc->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
 		   __FILE__, ICL_TYPE_INT32, __LINE__, ICL_TYPE_POINTER, tdc,
 		   ICL_TYPE_INT32, tdc->dflags);
@@ -686,8 +669,8 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	ObtainReadLock(&avc->lock);
 	ObtainReadLock(&tdc->lock);
     }
-    if (!(avc->states & CStatd)
-	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+    if (!(avc->f.states & CStatd)
+	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_PutDCache(tdc);
@@ -734,7 +717,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 		/* something to hand over. */
 #ifdef	AFS_HPUX_ENV
 		sdirEntry->d_fileno =
-		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
+		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
@@ -780,7 +763,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 		*eofp = 1;	/* Set it properly */
 #endif
 	    if (ode)
-		DRelease((struct buffer *)ode, 0);
+		DRelease(ode, 0);
 	    goto dirend;
 	}
 	/* by here nde is set */
@@ -799,11 +782,11 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	if (DIRSIZ_LEN(n_slen) >= (AFS_UIO_RESID(auio) - len)) {
 #endif /* AFS_SGI53_ENV */
 	    /* No can do no more now; ya know... at this time */
-	    DRelease((struct buffer *)nde, 0);	/* can't use this one. */
+	    DRelease(nde, 0);	/* can't use this one. */
 	    if (len) {
 #ifdef	AFS_HPUX_ENV
 		sdirEntry->d_fileno =
-		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
+		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
@@ -847,7 +830,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 		code = EINVAL;
 	    }
 	    if (ode)
-		DRelease((struct buffer *)ode, 0);
+		DRelease(ode, 0);
 	    goto dirend;
 	}
 
@@ -858,7 +841,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	if (len) {
 #ifdef	AFS_HPUX_ENV
 	    sdirEntry->d_fileno =
-		(avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
+		(avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 	    FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 	    sdirEntry->d_reclen = rlen = len;
 	    sdirEntry->d_namlen = o_slen;
@@ -897,12 +880,12 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	len = DIRSIZ_LEN(o_slen = n_slen);
 #endif /* AFS_SGI53_ENV */
 	if (ode)
-	    DRelease((struct buffer *)ode, 0);
+	    DRelease(ode, 0);
 	ode = nde;
 	AFS_UIO_SETOFFSET(auio, (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5));
     }
     if (ode)
-	DRelease((struct buffer *)ode, 0);
+	DRelease(ode, 0);
 
   dirend:
     ReleaseReadLock(&tdc->lock);
@@ -921,14 +904,13 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
 #ifdef	AFS_OSF_ENV
-afs1_readdir(avc, auio, acred, eofp)
-     int *eofp;
+int
+afs1_readdir(struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred, 
+	     int *eofp)
 #else
-afs1_readdir(avc, auio, acred)
+int
+afs1_readdir(struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred)
 #endif
-     struct vcache *avc;
-     struct uio *auio;
-     struct AFS_UCRED *acred;
 {
     struct vrequest treq;
     register struct dcache *tdc;
@@ -991,9 +973,9 @@ afs1_readdir(avc, auio, acred)
      * 1. The cache data is being fetched by another process.
      * 2. The cache data is no longer valid
      */
-    while ((avc->states & CStatd)
+    while ((avc->f.states & CStatd)
 	   && (tdc->dflags & DFFetching)
-	   && hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+	   && hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
 		   __FILE__, ICL_TYPE_INT32, __LINE__, ICL_TYPE_POINTER, tdc,
 		   ICL_TYPE_INT32, tdc->dflags);
@@ -1003,8 +985,8 @@ afs1_readdir(avc, auio, acred)
 	ObtainReadLock(&avc->lock);
 	ObtainReadLock(&tdc->lock);
     }
-    if (!(avc->states & CStatd)
-	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+    if (!(avc->f.states & CStatd)
+	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_PutDCache(tdc);
@@ -1027,7 +1009,7 @@ afs1_readdir(avc, auio, acred)
 		/* something to hand over. */
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
 		sdirEntry->d_fileno =
-		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
+		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
@@ -1084,7 +1066,7 @@ afs1_readdir(avc, auio, acred)
 	    if (len) {
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
 		sdirEntry->d_fileno =
-		    (avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
+		    (avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 		sdirEntry->d_reclen = rlen = AFS_UIO_RESID(auio);
 		sdirEntry->d_namlen = o_slen;
@@ -1136,7 +1118,7 @@ afs1_readdir(avc, auio, acred)
 	if (len) {
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
 	    sdirEntry->d_fileno =
-		(avc->fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
+		(avc->f.fid.Fid.Volume << 16) + ntohl(ode->fid.vnode);
 	    FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 	    sdirEntry->d_reclen = rlen = len;
 	    sdirEntry->d_namlen = o_slen;

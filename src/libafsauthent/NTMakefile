@@ -29,7 +29,9 @@ LIBFILE = $(DESTDIR)\lib\afsauthent.dll
 
 RXOBJS = $(OUT)\xdr_int32.obj $(OUT)\xdr_int64.obj
 
-AUDITBJS = $(OUT)\audit.obj
+AUDITOBJS = \
+        $(OUT)\audit.obj \
+        $(OUT)\audit-file.obj
 
 AUTHOBJS = \
 	$(OUT)\cellconfig.obj \
@@ -82,7 +84,6 @@ SYSOBJS = \
 	$(OUT)\pioctl_nt.obj
 
 WINNTAFSDOBJS =\
-	$(OUT)\cm_config.obj \
 	$(OUT)\afsrpc_c.obj
 
 DLLOBJS =\
@@ -94,9 +95,7 @@ DLLOBJS =\
 	$(PTSERVEROBJS) \
 	$(SYSOBJS) \
 	$(WINNTAFSDOBJS) \
-	$(AUDITBJS) \
-	$(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj \
+	$(AUDITOBJS) \
 	$(OUT)\afsauthent.res
 
 $(RXOBJS): $(RX)\$$(@B).c
@@ -123,7 +122,7 @@ $(PTSERVEROBJS): $(PTSERVER)\$$(@B).c
 $(WINNTAFSDOBJS): $(WINNTAFSD)\$$(@B).c
 	$(C2OBJ) -I$(WINNTAFSD) $**
 
-$(AUDITBJS): $(AUDIT)\$$(@B).c
+$(AUDITOBJS): $(AUDIT)\$$(@B).c
 	$(C2OBJ) -I$(AUDIT) $**
 
 $(SYSOBJS): $(SYS)\$$(@B).c
@@ -142,13 +141,15 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
         $(DESTDIR)\lib\afs\afsprocmgmt.lib \
         $(DESTDIR)\lib\afslwp.lib \
-        $(DESTDIR)\lib\lanahelper.lib
+        $(DESTDIR)\lib\lanahelper.lib \
+	$(DESTDIR)\lib\libafsconf.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
 	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib shell32.lib
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+	$(MAKECYGLIB) --input-def afsauthent.def
 
 # Definitions for generating versioninfo resources
 $(OUT)\afsauthent.res: AFS_component_version_number.h

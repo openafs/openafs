@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_interim_ktc.c,v 1.7.14.1 2007/04/10 18:39:52 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/com_err.h>

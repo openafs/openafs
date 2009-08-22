@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/samples/rxstat_query_process.c,v 1.6 2003/10/24 06:26:10 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -26,6 +24,8 @@ RCSID
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 
 #ifdef AFS_DARWIN_ENV
 pthread_mutex_t des_init_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -33,10 +33,8 @@ pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
-extern int RXSTATS_QueryProcessRPCStats();
-
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxstat_query_process <host> <port>\n");
     exit(1);

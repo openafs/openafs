@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_procs.c,v 1.9.14.1 2007/10/30 15:16:48 shadow Exp $");
 
 #include "uss_procs.h"		/*Module interface */
 #include "uss_common.h"		/*Common defs & operations */
@@ -34,7 +32,8 @@ RCSID
 #endif
 
 #include <string.h>
-
+#include <stdarg.h>
+    
 #include <afs/kautils.h> /*MAXKTCREALMLEN*/
 #undef USS_PROCS_DB
 #undef USS_PROCS_DB_INSTANCE
@@ -43,8 +42,8 @@ RCSID
 char temp[1000];
 extern int line;
 
-static int Copy();
-static int Echo();
+static int Copy(char *a_from, char *a_to, int a_mode);
+static int Echo(char *a_s, char *a_f, int a_mode);
 
 /*-----------------------------------------------------------------------
  * EXPORTED uss_procs_BuildDir
@@ -57,12 +56,7 @@ static int Echo();
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_procs_BuildDir(a_path, a_mode, a_owner, a_access)
-     char *a_path;
-     char *a_mode;
-     char *a_owner;
-     char *a_access;
-
+uss_procs_BuildDir(char *a_path, char *a_mode, char *a_owner, char *a_access)
 {				/*uss_procs_BuildDir */
 
     int m, o;
@@ -186,12 +180,7 @@ uss_procs_BuildDir(a_path, a_mode, a_owner, a_access)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_procs_CpFile(a_path, a_mode, a_owner, a_proto)
-     char *a_path;
-     char *a_mode;
-     char *a_owner;
-     char *a_proto;
-
+uss_procs_CpFile(char *a_path, char *a_mode, char *a_owner, char *a_proto)
 {				/*uss_procs_CpFile */
 
     int m, o;
@@ -288,12 +277,8 @@ uss_procs_CpFile(a_path, a_mode, a_owner, a_proto)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_procs_EchoToFile(a_path, a_mode, a_owner, a_content)
-     char *a_path;
-     char *a_mode;
-     char *a_owner;
-     char *a_content;
-
+uss_procs_EchoToFile(char *a_path, char *a_mode, char *a_owner, 
+		     char *a_content)
 {				/*uss_procs_EchoToFile */
 
     int m, o;
@@ -371,9 +356,7 @@ uss_procs_EchoToFile(a_path, a_mode, a_owner, a_content)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_procs_Exec(a_command)
-     char *a_command;
-
+uss_procs_Exec(char *a_command)
 {				/*uss_procs_Exec */
 
     if (uss_verbose)
@@ -409,11 +392,7 @@ uss_procs_Exec(a_command)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_procs_SetLink(a_path1, a_path2, a_type)
-     char *a_path1;
-     char *a_path2;
-     char a_type;
-
+uss_procs_SetLink(char *a_path1, char *a_path2, char a_type)
 {				/*uss_procs_SetLink */
 
     struct stat stbuf;
@@ -488,9 +467,7 @@ uss_procs_SetLink(a_path1, a_path2, a_type)
  *------------------------------------------------------------------------*/
 
 int
-uss_procs_GetOwner(a_ownerStr)
-     char *a_ownerStr;
-
+uss_procs_GetOwner(char *a_ownerStr)
 {				/*uss_procs_GetOwner */
 
     struct passwd *pw;		/*Ptr to password file entry */
@@ -535,11 +512,7 @@ uss_procs_GetOwner(a_ownerStr)
  *------------------------------------------------------------------------*/
 
 static int
-Copy(a_from, a_to, a_mode)
-     char *a_from;
-     char *a_to;
-     int a_mode;
-
+Copy(char *a_from, char *a_to, int a_mode)
 {				/*Copy */
 
     register int fd1, fd2;
@@ -585,7 +558,7 @@ Copy(a_from, a_to, a_mode)
 			   strerror(errno));
 	return (1);
     }
-    if (rc = close(fd2))
+    if ((rc = close(fd2)))
 	uss_procs_PrintErr(line, "Warning: Failed to close '%s': %s\n",
 			   a_from, strerror(errno));
     return (0);
@@ -615,11 +588,7 @@ Copy(a_from, a_to, a_mode)
  *------------------------------------------------------------------------*/
 
 static int
-Echo(a_s, a_f, a_mode)
-     char *a_s;
-     char *a_f;
-     int a_mode;
-
+Echo(char *a_s, char *a_f, int a_mode)
 {				/*Echo */
 
     register int fd;
@@ -686,15 +655,12 @@ Echo(a_s, a_f, a_mode)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_procs_PickADir(path, cp)
-     char *path;
-     char *cp;
-
+uss_procs_PickADir(char *path, char *cp)
 {				/*uss_procs_PickADir */
 
     char cd[300];		/*Current  directory for search */
 
-    int i, count, MinIndex, mina = 10000;
+    int i, count, MinIndex = 0, mina = 10000;
     struct dirent *dp;
     DIR *dirp;
     char dirname[300];
@@ -777,8 +743,7 @@ uss_procs_PickADir(path, cp)
  *------------------------------------------------------------------------*/
 
 int
-uss_procs_AddToDirPool(a_dirToAdd)
-     char *a_dirToAdd;
+uss_procs_AddToDirPool(char *a_dirToAdd)
 {
     if (uss_NumGroups > 99) {
 	return (-1);
@@ -798,9 +763,7 @@ uss_procs_AddToDirPool(a_dirToAdd)
  *------------------------------------------------------------------------*/
 
 FILE *
-uss_procs_FindAndOpen(a_fileToOpen)
-     char *a_fileToOpen;
-
+uss_procs_FindAndOpen(char *a_fileToOpen)
 {				/*uss_procs_FindAndOpen */
 
 #define NUM_TPL_PATHS 3
@@ -889,19 +852,13 @@ uss_procs_FindAndOpen(a_fileToOpen)
  *------------------------------------------------------------------------*/
 
 void
-uss_procs_PrintErr(a_lineNum, a_fmt, a_1, a_2, a_3, a_4, a_5)
-     int a_lineNum;
-     char *a_fmt;
-     char *a_1;
-     char *a_2;
-     char *a_3;
-     char *a_4;
-     char *a_5;
-
+uss_procs_PrintErr(int a_lineNum, char *a_fmt, ... )
 {				/*uss_procs_PrintErr */
-
+    va_list ap;
+    
+    va_start(ap, a_fmt);
     uss_syntax_err++;
     fprintf(stderr, "%s: Template file, line %d: ", uss_whoami, a_lineNum);
-    fprintf(stderr, a_fmt, a_1, a_2, a_3, a_4, a_5);
-
+    vfprintf(stderr, a_fmt, ap);
+    va_end(ap);
 }				/*uss_procs_PrintErr */

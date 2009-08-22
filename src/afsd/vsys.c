@@ -17,16 +17,13 @@
 #include <unistd.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/afsd/vsys.c,v 1.6.14.1 2007/10/30 15:16:33 shadow Exp $");
 
 #include <afs/afs_args.h>
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int 
+main(int argc, char **argv)
 {
     afs_int32 code;
     int i, counter;

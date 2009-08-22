@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_badtix.c,v 1.7.14.1 2007/04/10 18:39:52 shadow Exp $");
 
 #include <sys/types.h>
 #include <des.h>

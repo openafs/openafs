@@ -10,16 +10,17 @@
 /* Get CM initialization parameters. */
 #include <afsconfig.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/venus/test/getinitparams.c,v 1.5.14.1 2007/10/31 04:09:42 shadow Exp $");
 
 #include <afs/param.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
+#include <afs/sys_prototypes.h>
 #include <fcntl.h>
+#include <unistd.h>
 #ifdef AFS_AIX41_ENV
 #include <signal.h>
 #endif
@@ -39,9 +40,8 @@ GetInitParamsCmd(struct cmd_syndesc *as, void *arock)
     struct cm_initparams cm_initParams;
     struct ViceIoctl blob;
     int code;
-    int len;
     char *file = 0;
-    int fd;
+    int fd = 0;
 
     if (as->parms[0].items) {
 	file = as->parms[0].items->data;
@@ -92,10 +92,8 @@ GetInitParamsCmd(struct cmd_syndesc *as, void *arock)
     exit(0);
 }
 
-
-main(ac, av)
-     int ac;
-     char **av;
+int
+main(int ac, char **av)
 {
     int code;
     struct cmd_syndesc *ts;

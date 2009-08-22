@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_vnodeops.c,v 1.18 2006/01/20 05:05:35 shadow Exp $");
 
 #include "h/systm.h"
 #include "h/types.h"
@@ -277,7 +275,7 @@ afs_gn_open(struct vnode *vp,
 	}
 
 	if (flags & FNSHARE)
-	    tvp->states |= CNSHARE;
+	    tvp->f.states |= CNSHARE;
 
 	if (!error) {
 	    *vinfop = cred;	/* fp->f_vinfo is like fp->f_cred in suns */
@@ -378,9 +376,9 @@ afs_gn_rele(struct vnode *vp)
     if (vp->v_count == 0)
 	osi_Panic("afs_rele: zero v_count");
     if (--(vp->v_count) == 0) {
-	if (vcp->states & CPageHog) {
+	if (vcp->f.states & CPageHog) {
 	    vmPageHog--;
-	    vcp->states &= ~CPageHog;
+	    vcp->f.states &= ~CPageHog;
 	}
 	error = afs_inactive(vp, 0);
     }
@@ -401,7 +399,7 @@ afs_gn_close(struct vnode *vp,
     AFS_STATCNT(afs_gn_close);
 
     if (flags & FNSHARE) {
-	tvp->states &= ~CNSHARE;
+	tvp->f.states &= ~CNSHARE;
 	afs_osi_Wakeup(&tvp->opens);
     }
 
@@ -437,14 +435,14 @@ afs_gn_map(struct vnode *vp,
 #endif
     osi_FlushPages(vcp, cred);	/* XXX ensure old pages are gone XXX */
     ObtainWriteLock(&vcp->lock, 401);
-    vcp->states |= CMAPPED;	/* flag cleared at afs_inactive */
+    vcp->f.states |= CMAPPED;	/* flag cleared at afs_inactive */
     /*
      * We map the segment into our address space using the handle returned by vm_create.
      */
     if (!vcp->segid) {
-	afs_uint32 tlen = vcp->m.Length;
+	afs_uint32 tlen = vcp->f.m.Length;
 #ifdef AFS_64BIT_CLIENT
-	if (vcp->m.Length > afs_vmMappingEnd)
+	if (vcp->f.m.Length > afs_vmMappingEnd)
 	    tlen = afs_vmMappingEnd;
 #endif
 	/* Consider  V_INTRSEG too for interrupts */
@@ -812,7 +810,7 @@ afs_gn_rdwr(struct vnode *vp,
 	if (ubuf->afsio_offset < afs_vmMappingEnd) {
 #endif /* AFS_64BIT_CLIENT */
 	    ObtainWriteLock(&vcp->lock, 240);
-	    vcp->states |= CDirty;	/* Set the dirty bit */
+	    vcp->f.states |= CDirty;	/* Set the dirty bit */
 	    afs_FakeOpen(vcp);
 	    ReleaseWriteLock(&vcp->lock);
 #ifdef AFS_64BIT_CLIENT
@@ -880,7 +878,7 @@ afs_vm_rdwr(struct vnode *vp,
 	return 0;
 
     ObtainReadLock(&vcp->lock);
-    fileSize = vcp->m.Length;
+    fileSize = vcp->f.m.Length;
     if (rw == UIO_WRITE && (ioflag & IO_APPEND)) {	/* handle IO_APPEND mode */
 	uiop->afsio_offset = fileSize;
     }
@@ -953,9 +951,9 @@ afs_vm_rdwr(struct vnode *vp,
 #endif /* AFS_64BIT_CLIENT */
 
     if (!vcp->segid) {
-	afs_uint32 tlen = vcp->m.Length;
+	afs_uint32 tlen = vcp->f.m.Length;
 #ifdef AFS_64BIT_CLIENT
-	if (vcp->m.Length > afs_vmMappingEnd)
+	if (vcp->f.m.Length > afs_vmMappingEnd)
 	    tlen = afs_vmMappingEnd;
 #endif
 	/* Consider  V_INTRSEG too for interrupts */
@@ -1023,21 +1021,21 @@ afs_vm_rdwr(struct vnode *vp,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrSize));
     ReleaseReadLock(&vcp->lock);
     ObtainWriteLock(&vcp->lock, 400);
-    vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
+    vcp->f.m.Date = osi_Time();	/* Set file date (for ranlib) */
     /* extend file */
     /* un-protect last page. */
-    last_page = vcp->m.Length / PAGESIZE;
+    last_page = vcp->f.m.Length / PAGESIZE;
 #ifdef AFS_64BIT_CLIENT
-    if (vcp->m.Length > afs_vmMappingEnd)
+    if (vcp->f.m.Length > afs_vmMappingEnd)
 	last_page = afs_vmMappingEnd / PAGESIZE;
 #endif
     vm_protectp(vcp->segid, last_page, 1, FILEKEY);
     if (xfrSize + xfrOffset > fileSize) {
-	vcp->m.Length = xfrSize + xfrOffset;
+	vcp->f.m.Length = xfrSize + xfrOffset;
     }
-    if ((!(vcp->states & CPageHog)) && (xfrSize >= MIN_PAGE_HOG_SIZE)) {
+    if ((!(vcp->f.states & CPageHog)) && (xfrSize >= MIN_PAGE_HOG_SIZE)) {
 	vmPageHog++;
-	vcp->states |= CPageHog;
+	vcp->f.states |= CPageHog;
     }
     ReleaseWriteLock(&vcp->lock);
 
@@ -1094,10 +1092,10 @@ afs_vm_rdwr(struct vnode *vp,
 	     */
 	    if (counter > 0 && code == 0 && xfrOffset == offset) {
 		ObtainWriteLock(&vcp->lock, 403);
-		if (xfrOffset > vcp->m.Length)
-		    vcp->m.Length = xfrOffset;
+		if (xfrOffset > vcp->f.m.Length)
+		    vcp->f.m.Length = xfrOffset;
 		code = afs_DoPartialWrite(vcp, &treq);
-		vcp->states |= CDirty;
+		vcp->f.states |= CDirty;
 		ReleaseWriteLock(&vcp->lock);
 		if (code) {
 		    goto fail;
@@ -1164,7 +1162,7 @@ afs_vm_rdwr(struct vnode *vp,
     }
 
     ObtainWriteLock(&vcp->lock, 242);
-    if (code == 0 && (vcp->states & CDirty)) {
+    if (code == 0 && (vcp->f.states & CDirty)) {
 	code = afs_DoPartialWrite(vcp, &treq);
     }
     vm_protectp(vcp->segid, last_page, 1, RDONLY);
@@ -1221,7 +1219,7 @@ afs_direct_rdwr(struct vnode *vp,
 	return 0;
 
     ObtainReadLock(&vcp->lock);
-    fileSize = vcp->m.Length;
+    fileSize = vcp->f.m.Length;
     if (rw == UIO_WRITE && (ioflag & IO_APPEND)) {	/* handle IO_APPEND mode */
 	uiop->afsio_offset = fileSize;
     }
@@ -1244,10 +1242,10 @@ afs_direct_rdwr(struct vnode *vp,
     ReleaseReadLock(&vcp->lock);
     if (rw == UIO_WRITE) {
 	ObtainWriteLock(&vcp->lock, 400);
-	vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
+	vcp->f.m.Date = osi_Time();	/* Set file date (for ranlib) */
 	/* extend file */
 	if (xfrSize + xfrOffset > fileSize)
-	    vcp->m.Length = xfrSize + xfrOffset;
+	    vcp->f.m.Length = xfrSize + xfrOffset;
 	ReleaseWriteLock(&vcp->lock);
     }
     afs_Trace3(afs_iclSetp, CM_TRACE_DIRECTRDWR, ICL_TYPE_POINTER, vp,
@@ -1269,7 +1267,7 @@ afs_direct_rdwr(struct vnode *vp,
 	if (AFS_CHUNKBASE(uiop->afsio_offset) != AFS_CHUNKBASE(xfrOffset)) {
 	    ObtainWriteLock(&vcp->lock, 402);
 	    code = afs_DoPartialWrite(vcp, &treq);
-	    vcp->states |= CDirty;
+	    vcp->f.states |= CDirty;
 	    ReleaseWriteLock(&vcp->lock);
 	}
     }

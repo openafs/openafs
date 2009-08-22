@@ -18,8 +18,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.14 2006/03/02 22:42:56 rees Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -54,8 +52,6 @@ RCSID
 #include "rpc/xdr.h"
 #endif /* !UKERNEL */
 #include "rx/rx.h"
-
-#include "afs/longc_procs.h"
 
 #else /* KERNEL */
 #include <sys/types.h>
@@ -106,12 +102,12 @@ static bool_t xdrrx_putint64(AFS_XDRS_T axdrs, long *lp);
 #endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
 
 static bool_t xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp);
-static bool_t xdrrx_putint32(AFS_XDRS_T axdrs, register afs_int32 * lp);
-static bool_t xdrrx_getbytes(AFS_XDRS_T axdrs, register caddr_t addr,
-			     register u_int len);
-static bool_t xdrrx_putbytes(AFS_XDRS_T axdrs, register caddr_t addr,
-			     register u_int len);
-static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, register u_int len);
+static bool_t xdrrx_putint32(AFS_XDRS_T axdrs, afs_int32 * lp);
+static bool_t xdrrx_getbytes(AFS_XDRS_T axdrs, caddr_t addr,
+			     u_int len);
+static bool_t xdrrx_putbytes(AFS_XDRS_T axdrs, caddr_t addr,
+			     u_int len);
+static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, u_int len);
 
 
 /*
@@ -144,8 +140,8 @@ static struct xdr_ops xdrrx_ops = {
  * Call must have been returned by rx_MakeCall or rx_GetCall.
  */
 void
-xdrrx_create(register XDR * xdrs, register struct rx_call *call,
-	     register enum xdr_op op)
+xdrrx_create(XDR * xdrs, struct rx_call *call,
+	     enum xdr_op op)
 {
     xdrs->x_op = op;
     xdrs->x_ops = &xdrrx_ops;
@@ -162,7 +158,7 @@ static bool_t
 xdrrx_getint64(AFS_XDRS_T axdrs, long *lp)
 {
     XDR * xdrs = (XDR *)axdrs;
-    register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
+    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
     afs_int32 i;
 
     if (rx_Read32(call, &i) == sizeof(i)) {
@@ -177,7 +173,7 @@ xdrrx_putint64(AFS_XDRS_T axdrs, long *lp)
 {
     XDR * xdrs = (XDR *)axdrs;
     afs_int32 code, i = htonl(*lp);
-    register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
+    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 
     code = (rx_Write32(call, &i) == sizeof(i));
     return code;
@@ -189,7 +185,7 @@ xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 {
     afs_int32 l;
     XDR * xdrs = (XDR *)axdrs;
-    register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
+    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&l;
     saddr -= STACK_TO_PIN;
@@ -224,11 +220,11 @@ xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrrx_putint32(register AFS_XDRS_T axdrs, register afs_int32 * lp)
+xdrrx_putint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 {
     afs_int32 code, l = htonl(*lp);
     XDR * xdrs = (XDR *)axdrs;
-    register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
+    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
@@ -255,11 +251,11 @@ xdrrx_putint32(register AFS_XDRS_T axdrs, register afs_int32 * lp)
 }
 
 static bool_t
-xdrrx_getbytes(register AFS_XDRS_T axdrs, register caddr_t addr, register u_int len)
+xdrrx_getbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
 {
     afs_int32 code;
     XDR * xdrs = (XDR *)axdrs;
-    register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
+    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
@@ -287,11 +283,11 @@ xdrrx_getbytes(register AFS_XDRS_T axdrs, register caddr_t addr, register u_int 
 }
 
 static bool_t
-xdrrx_putbytes(register AFS_XDRS_T axdrs, register caddr_t addr, register u_int len)
+xdrrx_putbytes(AFS_XDRS_T axdrs, caddr_t addr, u_int len)
 {
     afs_int32 code;
     XDR * xdrs = (XDR *)axdrs;
-    register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
+    struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&code;
     saddr -= STACK_TO_PIN;
@@ -320,14 +316,14 @@ xdrrx_putbytes(register AFS_XDRS_T axdrs, register caddr_t addr, register u_int 
 
 #ifdef undef			/* not used */
 static u_int
-xdrrx_getpos(register XDR * xdrs)
+xdrrx_getpos(XDR * xdrs)
 {
     /* Not supported.  What error code should we return? (It doesn't matter:  it will never be called, anyway!) */
     return -1;
 }
 
 static bool_t
-xdrrx_setpos(register XDR * xdrs, u_int pos)
+xdrrx_setpos(XDR * xdrs, u_int pos)
 {
     /* Not supported */
     return FALSE;
@@ -335,7 +331,7 @@ xdrrx_setpos(register XDR * xdrs, u_int pos)
 #endif
 
 static AFS_RPC_INLINE_T *
-xdrrx_inline(AFS_XDRS_T axdrs, register u_int len)
+xdrrx_inline(AFS_XDRS_T axdrs, u_int len)
 {
     /* I don't know what this routine is supposed to do, but the stdio module returns null, so we will, too */
     return (0);

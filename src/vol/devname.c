@@ -10,8 +10,6 @@
 #include <sys/param.h>
 #include <afsconfig.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/devname.c,v 1.13.14.1 2007/10/30 15:16:57 shadow Exp $");
 
 #include <afs/param.h>
 #include <rx/xdr.h>
@@ -65,10 +63,6 @@ RCSID
 #if defined(AFS_SGI_ENV)
 #include <fcntl.h>
 #include <mntent.h>
-#ifdef AFS_SGI_EFS_IOPS_ENV
-#define ROOTINO EFS_ROOTINO
-#include "sgiefs/efs.h"
-#endif
 #else
 #ifdef AFS_LINUX22_ENV
 #include <mntent.h>
@@ -86,6 +80,7 @@ RCSID
 #ifndef ITIMER_REAL
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
+#include "ihandle.h"
 #include "partition.h"
 
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
@@ -96,7 +91,6 @@ vol_DevName(dev_t adev, char *wpath)
 {
     static char pbuffer[128];
     char pbuf[128], *ptr;
-    int code, i;
 #ifdef	AFS_SUN5_ENV
     struct mnttab mnt;
     FILE *mntfile;
@@ -242,7 +236,6 @@ afs_rawname(char *devfile)
 {
     static char rawname[100];
     struct stat statbuf;
-    char *p;
     int code, i;
 
     i = strlen(devfile);

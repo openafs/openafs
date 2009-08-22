@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libuafs/linktest.c,v 1.9 2004/03/11 06:05:54 shadow Exp $");
 
 #include <sys/socket.h>
 #include <sys/stat.h>

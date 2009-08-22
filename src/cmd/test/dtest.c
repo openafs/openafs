@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/cmd/test/dtest.c,v 1.6.14.1 2007/10/31 04:09:26 shadow Exp $");
 
 #include "cmd.h"
 #include <stdio.h>

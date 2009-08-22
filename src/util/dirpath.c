@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/dirpath.c,v 1.19.2.2 2008/02/02 02:48:14 jaltman Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -240,6 +238,11 @@ initDirPathArray(void)
 #endif
 	AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_CLIENT_ETC_DIR);
 #endif /* AFS_NT40_ENV */
+
+#ifndef AFS_NT40_ENV
+    pathp = dirPathArray[AFSDIR_CLIENT_DATA_DIRPATH_ID];
+    AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_DATA_DIR);
+#endif
 
     /* server file paths */
     pathp = dirPathArray[AFSDIR_SERVER_THISCELL_FILEPATH_ID];

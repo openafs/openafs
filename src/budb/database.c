@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/budb/database.c,v 1.7.14.4 2008/04/02 19:51:55 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -25,6 +23,7 @@ RCSID
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
+#include "budb_internal.h"
 #include "afs/audit.h"
 #include <string.h>
 
@@ -32,15 +31,14 @@ int pollCount;
 struct memoryDB db;		/* really allocate it here */
 
 void
-db_panic(reason)
-     char *reason;
+db_panic(char *reason)
 {
     LogError(0, "db_panic: %s\n", reason);
     BUDB_EXIT(-1);
 }
 
 afs_int32
-InitDB()
+InitDB(void)
 {
     afs_int32 code;
 
@@ -170,9 +168,8 @@ cdbread(struct ubik_trans *ut, int type, afs_int32 pos, void *buff, afs_int32 le
    manner, to avoid bogusly reinitializing the db.  */
 
 afs_int32
-CheckInit(ut, db_init)
-     struct ubik_trans *ut;
-     int (*db_init) ();		/* procedure to call if rebuilding DB */
+CheckInit(struct ubik_trans *ut, 
+	  int (*db_init) (struct ubik_trans *ut)) /* call if rebuilding DB */
 {
     register afs_int32 code;
 

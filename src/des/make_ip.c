@@ -11,8 +11,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/make_ip.c,v 1.8 2006/03/09 06:34:36 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

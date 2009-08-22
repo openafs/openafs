@@ -7,13 +7,15 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* This is the directory salvager.  It consists of two routines.  The first, DirOK, checks to see if the directory looks good.  If the directory does NOT look good, the approved procedure is to then call Salvage, which copies all the good entries from the damaged dir into a new directory. */
+/* This is the directory salvager.  It consists of two routines.  The first, 
+ * DirOK, checks to see if the directory looks good.  If the directory does 
+ * NOT look good, the approved procedure is to then call Salvage, which 
+ * copies all the good entries from the damaged dir into a new directory. 
+ */
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/dir/salvage.c,v 1.10.14.1 2007/10/30 15:16:39 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -26,18 +28,25 @@ RCSID
 #include <string.h>
 
 #include "dir.h"
+/* Defined in vol/vol-salvage.c */
+extern void Log(const char *format, ...);
+/* Defined in vol/physio.c */
+extern void Die(char *);
+    
 #define printf	Log		/* To make it work with volume salvager */
 
-/* This routine is called with one parameter, the id (the same thing that is passed to physio or the buffer package) of a directory to check.  It returns 1 if the directory looks good, and 0 otherwise. */
+/* This routine is called with one parameter, the id (the same thing that is 
+ * passed to physio or the buffer package) of a directory to check.  It 
+ * returns 1 if the directory looks good, and 0 otherwise. */
 
 #define MAXENAME 256
 
 extern afs_int32 DErrno;
 
-/* figure out how many pages in use in a directory, given ptr to its (locked) header */
-static
-ComputeUsedPages(dhp)
-     register struct DirHeader *dhp;
+/* figure out how many pages in use in a directory, given ptr to its (locked) 
+ * header */
+static int
+ComputeUsedPages(register struct DirHeader *dhp)
 {
     register afs_int32 usedPages, i;
 
@@ -63,8 +72,7 @@ ComputeUsedPages(dhp)
  * false if we *know* that the dir is bad.
  */
 int
-DirOK(file)
-     char *file;
+DirOK(void *file)
 {
     struct DirHeader *dhp;
     struct PageHeader *pp;
@@ -417,9 +425,8 @@ DirOK(file)
  * parent directory.
  */
 int
-DirSalvage(fromFile, toFile, vn, vu, pvn, pvu)
-     char *fromFile, *toFile;
-     afs_int32 vn, vu, pvn, pvu;
+DirSalvage(void *fromFile, void *toFile, afs_int32 vn, afs_int32 vu,
+	   afs_int32 pvn, afs_int32 pvu)
 {
     /* First do a MakeDir on the target. */
     afs_int32 dot[3], dotdot[3], lfid[3], code, usedPages;

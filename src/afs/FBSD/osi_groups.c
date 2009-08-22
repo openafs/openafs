@@ -21,8 +21,6 @@
 #include <sys/sysproto.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_groups.c,v 1.8 2003/07/15 23:14:19 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

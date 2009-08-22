@@ -37,8 +37,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/bg-fcrypt.c,v 1.7.4.3 2007/07/31 22:20:59 shadow Exp $");
 
 #define DEBUG 0
 #ifdef KERNEL
@@ -55,8 +53,6 @@ RCSID
 #ifdef AFS_LINUX22_ENV
 #include <asm/byteorder.h>
 #endif
-
-#include "afs/longc_procs.h"
 
 #else /* KERNEL */
 

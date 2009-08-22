@@ -17,8 +17,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/user.c,v 1.12.8.2 2007/10/30 15:16:39 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -36,6 +34,8 @@ RCSID
 #include "afs/kauth.h"
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
+#include "afs/ptuser.h"
+#include "des.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <signal.h>
@@ -44,17 +44,22 @@ RCSID
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#include <unistd.h>
 #endif
 #include <string.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
 #include <afs/ptint.h>
 #include <afs/pterror.h>
+#include <afs/ptuser.h>
 #include <afs/ptserver.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <rx/rxkad.h>		/* max ticket lifetime */
+#include <des.h>
+#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
 #endif /* defined(UKERNEL) */
@@ -66,7 +71,6 @@ GetTickets(char *name, char *instance, char *realm,
 	   afs_int32 * pwexpires, afs_int32 flags)
 {
     afs_int32 code;
-    struct ktc_token token;
 
     code = ka_GetAuthToken(name, instance, realm, key, lifetime, pwexpires);
     memset(key, 0, sizeof(*key));
@@ -147,13 +151,17 @@ ka_GetAFSTicket(char *name, char *instance, char *realm, Date lifetime,
 #endif
 
 afs_int32
-ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance, char *realm, char *password, Date lifetime, afs_int32 * password_expires,	/* days 'til, or don't change if not set */
+ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance, 
+			   char *realm, char *password, Date lifetime, 
+			   afs_int32 * password_expires,	/* days 'til, or don't change if not set */
 			   afs_int32 spare2, char **reasonP)
 {
     int remainingTime = 0;
     struct ktc_encryptionKey key;
     afs_int32 code, dosetpag = 0;
-    int (*old) ();
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_XBSD_ENV) || defined(AFS_FBSD_ENV)
+    sig_t old;
+#endif
 
     if (reasonP)
 	*reasonP = "";
@@ -185,9 +193,9 @@ ka_UserAuthenticateGeneral(afs_int32 flags, char *name, char *instance, char *re
     }
 #endif
 
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && (!defined(AFS_XBSD_ENV) || defined(AFS_FBSD_ENV))
     /* handle smoothly the case where no AFS system calls exists (yet) */
-    old = (int (*)())signal(SIGSYS, SIG_IGN);
+    old = signal(SIGSYS, SIG_IGN);
 #endif
 #ifdef	AFS_DECOSF_ENV
     (void)signal(SIGTRAP, SIG_IGN);

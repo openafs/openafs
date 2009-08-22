@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butm/file_tm.c,v 1.12.6.3 2007/11/26 21:08:42 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -31,6 +29,7 @@ RCSID
 #include <afs/butm.h>
 #include <afs/usd.h>
 #include "error_macros.h"
+#include "butm_prototypes.h"
 
 #ifdef O_LARGEFILE
 typedef off64_t osi_lloff_t;
@@ -511,7 +510,7 @@ ForkClose(usd_handle_t fd)
 		   errno);
 	} else if (status != 0) {
 	    printf
-		("butm: Unexpected exit status 0x04x from CLOSE  process. Error %d\n",
+		("butm: Unexpected exit status 0x%04x from CLOSE  process. Error %d\n",
 		 status, errno);
 	}
 
@@ -561,7 +560,7 @@ BackwardSpace(usd_handle_t fid, int count)
 }
 
 /* write end of file mark */
-static
+static int
 WriteEOF(usd_handle_t fid, int count)
 {
     POLL();
@@ -628,9 +627,7 @@ ShutdownAccess(usd_handle_t fid)
  */
 
 void
-incSize(info, dataSize)
-     struct butm_tapeInfo *info;
-     afs_uint32 dataSize;
+incSize(struct butm_tapeInfo *info, afs_uint32 dataSize)
 {
     info->nBytes += dataSize;
     info->kBytes += (info->nBytes / 1024);
@@ -650,10 +647,7 @@ incSize(info, dataSize)
  */
 
 void
-incPosition(info, fid, dataSize)
-     struct butm_tapeInfo *info;
-     usd_handle_t fid;
-     afs_uint32 dataSize;
+incPosition(struct butm_tapeInfo *info, usd_handle_t fid, afs_uint32 dataSize)
 {
     /* Add this to the amount of data written to the tape */
     incSize(info, dataSize);
@@ -678,15 +672,11 @@ incPosition(info, fid, dataSize)
  */
 afs_int32 TapeBlockSize;
 afs_int32
-readData(fid, data, totalSize, errorP)
-     usd_handle_t fid;
-     char *data;
-     afs_int32 totalSize;
-     afs_int32 *errorP;
+readData(usd_handle_t fid, char *data, afs_uint32 totalSize, afs_int32 *errorP)
 {
     afs_int32 toread;		/* Number of bytes to read */
-    afs_int32 rSize;		/* Total bytes read so far */
-    afs_int32 tSize;		/* Temporary size */
+    afs_uint32 rSize;		/* Total bytes read so far */
+    afs_uint32 tSize;		/* Temporary size */
     afs_int32 rc;		/* return code */
 
     toread = totalSize;		/* First, try to read all the data */
@@ -725,9 +715,7 @@ readData(fid, data, totalSize, errorP)
 }
 
 afs_int32
-SeekFile(info, count)
-     struct butm_tapeInfo *info;
-     int count;
+SeekFile(struct butm_tapeInfo *info, int count)
 {
     afs_int32 code = 0;
     struct progress *p;
@@ -769,8 +757,7 @@ SeekFile(info, count)
 
 /* Step to the next filemark if we are not at one already */
 afs_int32
-NextFile(info)
-     struct butm_tapeInfo *info;
+NextFile(struct butm_tapeInfo *info)
 {
     afs_int32 code;
 
@@ -782,14 +769,13 @@ NextFile(info)
 }
 
 static afs_int32
-WriteTapeBlock(info, buffer, length, blockType)
-     struct butm_tapeInfo *info;
-     char *buffer;		/* assumed to be 16384 bytes with data in it */
-     afs_int32 length;		/* amount data in buffer */
-     afs_int32 blockType;
+WriteTapeBlock(struct butm_tapeInfo *info, 
+	       char *buffer,     /* assumed to be 16384 bytes with data in it */
+	       afs_int32 length, /* amount data in buffer */
+	       afs_int32 blockType)
 {
     afs_int32 code = 0, rc = 0;
-    afs_int32 wsize;
+    afs_uint32 wsize;
     struct tapeLabel *label;
     struct fileMark *fmark;
     struct blockMark *bmark;
@@ -867,10 +853,9 @@ WriteTapeBlock(info, buffer, length, blockType)
 }
 
 static afs_int32
-ReadTapeBlock(info, buffer, blockType)
-     struct butm_tapeInfo *info;
-     char *buffer;		/* assumed to be 16384 bytes */
-     afs_int32 *blockType;
+ReadTapeBlock(struct butm_tapeInfo *info, 
+	      char *buffer, /* assumed to be 16384 bytes */
+	      afs_int32 *blockType)
 {
     afs_int32 code = 0;
     afs_int32 rsize, fmtype;
@@ -943,9 +928,8 @@ ReadTapeBlock(info, buffer, blockType)
  */
 
 static afs_int32
-check(info, write)
-     struct butm_tapeInfo *info;
-     int write;			/* write operation requested */
+check(struct butm_tapeInfo *info, 
+      int write) /* write operation requested */
 {
     struct progress *p;
 
@@ -968,8 +952,7 @@ check(info, write)
 }
 
 static afs_int32
-rewindFile(info)
-     struct butm_tapeInfo *info;
+rewindFile(struct butm_tapeInfo *info)
 {
     struct progress *p;
     afs_int32 code = 0;
@@ -1004,9 +987,7 @@ rewindFile(info)
  * ===================================================================== */
 
 static afs_int32
-file_Mount(info, tape)
-     struct butm_tapeInfo *info;
-     char *tape;
+file_Mount(struct butm_tapeInfo *info, char *tape)
 {
     struct progress *p;
     char filename[64];
@@ -1090,8 +1071,7 @@ file_Mount(info, tape)
 }
 
 static afs_int32
-file_Dismount(info)
-     struct butm_tapeInfo *info;
+file_Dismount(struct butm_tapeInfo *info)
 {
     struct progress *p;
     afs_int32 code = 0, error = 0;
@@ -1111,7 +1091,7 @@ file_Dismount(info)
     (void)ShutdownAccess(p->fid);	/* for NT */
 
     /* close the device */
-    if (error = ForkClose(p->fid)) {
+    if ((error = ForkClose(p->fid))) {
 	printf("butm: Tape close failed. Error %d\n", errno);
     }
 
@@ -1143,10 +1123,8 @@ file_Dismount(info)
  */
 
 static afs_int32
-file_WriteLabel(info, label, rewind)
-     struct butm_tapeInfo *info;
-     struct butm_tapeLabel *label;
-     afs_int32 rewind;
+file_WriteLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label, 
+		afs_int32 rewind)
 {
     afs_int32 code = 0;
     afs_int32 fcode;
@@ -1251,10 +1229,8 @@ file_WriteLabel(info, label, rewind)
 }
 
 static afs_int32
-file_ReadLabel(info, label, rewind)
-     struct butm_tapeInfo *info;
-     struct butm_tapeLabel *label;
-     afs_int32 rewind;
+file_ReadLabel(struct butm_tapeInfo *info, struct butm_tapeLabel *label, 
+	       afs_int32 rewind)
 {
     struct tapeLabel *tlabel;
     afs_int32 code = 0;
@@ -1321,11 +1297,9 @@ file_ReadLabel(info, label, rewind)
 }
 
 static afs_int32
-file_WriteFileBegin(info)
-     struct butm_tapeInfo *info;
+file_WriteFileBegin(struct butm_tapeInfo *info)
 {
     afs_int32 code = 0;
-    afs_int32 error = 0;
 
     if (info->debug)
 	printf("butm: Write filemark begin\n");
@@ -1347,8 +1321,7 @@ file_WriteFileBegin(info)
 }
 
 static afs_int32
-file_ReadFileBegin(info)
-     struct butm_tapeInfo *info;
+file_ReadFileBegin(struct butm_tapeInfo *info)
 {
     afs_int32 code = 0;
     afs_int32 blockType;
@@ -1385,11 +1358,7 @@ file_ReadFileBegin(info)
  * Assumes the data buffer has a space reserved at beginning for a blockMark.
  */
 static afs_int32
-file_WriteFileData(info, data, blocks, len)
-     struct butm_tapeInfo *info;
-     char *data;
-     afs_int32 blocks;
-     afs_int32 len;
+file_WriteFileData(struct butm_tapeInfo *info, char *data, afs_int32 blocks, afs_int32 len)
 {
     afs_int32 code = 0;
     int length;
@@ -1451,11 +1420,7 @@ file_WriteFileData(info, data, blocks, len)
  */
 
 static afs_int32
-file_ReadFileData(info, data, len, nBytes)
-     struct butm_tapeInfo *info;
-     char *data;
-     int len;
-     int *nBytes;
+file_ReadFileData(struct butm_tapeInfo *info, char *data, int len, int *nBytes)
 {
     struct blockMark *bmark;
     afs_int32 code = 0;
@@ -1500,8 +1465,7 @@ file_ReadFileData(info, data, len, nBytes)
 }
 
 static afs_int32
-file_WriteFileEnd(info)
-     struct butm_tapeInfo *info;
+file_WriteFileEnd(struct butm_tapeInfo *info)
 {
     afs_int32 code = 0;
 
@@ -1529,8 +1493,7 @@ file_WriteFileEnd(info)
  * missing with some 3.1 dumps).
  */
 static afs_int32
-file_ReadFileEnd(info)
-     struct butm_tapeInfo *info;
+file_ReadFileEnd(struct butm_tapeInfo *info)
 {
     afs_int32 code = 0;
     afs_int32 blockType;
@@ -1564,8 +1527,7 @@ file_ReadFileEnd(info)
  * Write the end-of-dump marker.
  */
 static afs_int32
-file_WriteEODump(info)
-     struct butm_tapeInfo *info;
+file_WriteEODump(struct butm_tapeInfo *info)
 {
     afs_int32 code = 0;
 
@@ -1592,9 +1554,7 @@ file_WriteEODump(info)
 }
 
 static afs_int32
-file_Seek(info, position)
-     struct butm_tapeInfo *info;
-     afs_int32 position;
+file_Seek(struct butm_tapeInfo *info, afs_int32 position)
 {
     afs_int32 code = 0;
     afs_int32 w;
@@ -1654,9 +1614,7 @@ file_Seek(info, position)
  * This is for tapes of version 4 or greater.
  */
 static afs_int32
-file_SeekEODump(info, position)
-     struct butm_tapeInfo *info;
-     afs_int32 position;
+file_SeekEODump(struct butm_tapeInfo *info, afs_int32 position)
 {
     afs_int32 code = 0;
     afs_int32 blockType;
@@ -1718,9 +1676,7 @@ file_SeekEODump(info, position)
 }
 
 static afs_int32
-file_SetSize(info, size)
-     struct butm_tapeInfo *info;
-     afs_uint32 size;
+file_SetSize(struct butm_tapeInfo *info, afs_uint32 size)
 {
     if (info->debug)
 	printf("butm: Set size of tape\n");
@@ -1734,9 +1690,7 @@ file_SetSize(info, size)
 }
 
 static afs_int32
-file_GetSize(info, size)
-     struct butm_tapeInfo *info;
-     afs_uint32 *size;
+file_GetSize(struct butm_tapeInfo *info, afs_uint32 *size)
 {
     if (info->debug)
 	printf("butm: Get size of tape\n");
@@ -1751,8 +1705,7 @@ file_GetSize(info, size)
  * ===================================================================== */
 
 static afs_int32
-file_Configure(file)
-     struct tapeConfig *file;
+file_Configure(struct tapeConfig *file)
 {
     if (!file) {
 	afs_com_err(whoami, BUTM_BADCONFIG, "device not specified");
@@ -1782,9 +1735,7 @@ file_Configure(file)
 
 /* This procedure instantiates a tape module of type file_tm. */
 afs_int32
-butm_file_Instantiate(info, file)
-     struct butm_tapeInfo *info;
-     struct tapeConfig *file;
+butm_file_Instantiate(struct butm_tapeInfo *info, struct tapeConfig *file)
 {
     extern int debugLevel;
     afs_int32 code = 0;

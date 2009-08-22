@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/simple.example/sample_server.c,v 1.5 2003/07/15 23:16:35 shadow Exp $");
 
 #include <sys/types.h>
 #include <netdb.h>
@@ -19,8 +17,6 @@ RCSID
 #include "sample.h"
 
 #define N_SECURITY_OBJECTS 1
-
-extern TEST_ExecuteRequest();
 
 main()
 {

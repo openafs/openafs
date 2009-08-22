@@ -16,13 +16,15 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.37.4.7 2008/06/12 17:24:38 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
+#include "rx/rxstat.h"
+
+#define FSINT_COMMON_XG
+#include "afs/afscbint.h"
 
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */
@@ -47,7 +49,11 @@ static struct vnode *volumeVnode;
 #endif
 #if defined(AFS_DISCON_ENV)
 afs_rwlock_t afs_discon_lock;
+extern afs_rwlock_t afs_disconDirtyLock;
 #endif
+
+/* This is the kernel side of the dynamic vcache setting */
+int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
@@ -85,7 +91,7 @@ static int afs_cacheinit_flag = 0;
 int
 afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	      afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk,
-	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers)
+	      afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers, afs_int32 dynamic_vcaches)
 {
     register afs_int32 i;
     register struct volume *tv;
@@ -102,6 +108,13 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     afs_stats_cmperf.sysName_ID = SYS_NAME_ID_UNDEFINED;
 #endif /* SYS_NAME_ID */
 
+#ifdef AFS_MAXVCOUNT_ENV
+	afsd_dynamic_vcaches = dynamic_vcaches;
+    printf("%s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
+#else
+	afsd_dynamic_vcaches = 0;
+#endif
+
     printf("Starting AFS cache scan...");
     if (afs_cacheinit_flag)
 	return 0;
@@ -112,9 +125,12 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     usedihint = 0;
 
     LOCK_INIT(&afs_ftf, "afs_ftf");
-    RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
+    AFS_RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
 #ifdef AFS_DISCON_ENV
-    RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
+    AFS_RWLOCK_INIT(&afs_discon_lock, "afs_discon_lock");
+    AFS_RWLOCK_INIT(&afs_disconDirtyLock, "afs_disconDirtyLock");
+    QInit(&afs_disconDirty);
+    QInit(&afs_disconShadow);
 #endif
     osi_dnlc_init();
 
@@ -211,23 +227,23 @@ afs_ComputeCacheParms(void)
 
 
 /*
- * LookupInodeByPath
+ * afs_LookupInodeByPath
  *
  * Look up inode given a file name.
  * Optionally return the vnode too.
  * If the vnode is not returned, we rele it.
  */
-static int
-LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
+int
+afs_LookupInodeByPath(char *filename, afs_ufs_dcache_id_t *inode, struct vnode **fvpp)
 {
     afs_int32 code;
 
-#ifdef AFS_LINUX22_ENV
+#if defined(AFS_LINUX22_ENV)
     struct dentry *dp;
     code = gop_lookupname(filename, AFS_UIOSYS, 0, &dp);
     if (code)
 	return code;
-    *inode = dp->d_inode->i_ino;
+    osi_get_fh(dp, inode);
     dput(dp);
 #else
     struct vnode *filevp;
@@ -240,7 +256,7 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
     else {
 	AFS_RELE(filevp);
     }
-#endif /* AFS_LINUX22_ENV */
+#endif
 
     return 0;
 }
@@ -248,15 +264,15 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
 int
 afs_InitCellInfo(char *afile)
 {
-    ino_t inode;
-    int code;
-
+    afs_dcache_id_t inode;
+    int code = 0;
+    
 #ifdef AFS_CACHE_VNODE_PATH
-    return afs_cellname_init(AFS_CACHE_CELLS_INODE, code);
+    inode.ufs = AFS_CACHE_CELLS_INODE;
 #else
-    code = LookupInodeByPath(afile, &inode, NULL);
-    return afs_cellname_init(inode, code);
+    code = afs_LookupInodeByPath(afile, &inode.ufs, NULL);
 #endif
+    return afs_cellname_init(&inode, code);
 }
 
 /*
@@ -278,7 +294,7 @@ afs_InitCellInfo(char *afile)
 int
 afs_InitVolumeInfo(char *afile)
 {
-    int code;
+    int code = 0;
     struct osi_file *tfile;
 
     AFS_STATCNT(afs_InitVolumeInfo);
@@ -296,15 +312,15 @@ afs_InitVolumeInfo(char *afile)
      * are things which try to get the volumeInode, and since we keep
      * it in the cache...
      */
-    code = LookupInodeByPath(afile, &volumeInode, &volumeVnode);
+    code = afs_LookupInodeByPath(afile, &volumeInode.ufs, &volumeVnode);
 #elif defined(AFS_CACHE_VNODE_PATH)
-    volumeInode = AFS_CACHE_VOLUME_INODE;
+    volumeInode.ufs = AFS_CACHE_VOLUME_INODE;
 #else
-    code = LookupInodeByPath(afile, &volumeInode, NULL);
+    code = afs_LookupInodeByPath(afile, &volumeInode.ufs, NULL);
 #endif
     if (code)
 	return code;
-    tfile = afs_CFileOpen(volumeInode);
+    tfile = afs_CFileOpen(&volumeInode);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;
@@ -415,10 +431,10 @@ afs_InitCacheInfo(register char *afile)
 #endif
     }
 #if defined(AFS_LINUX20_ENV)
-    cacheInode = filevp->i_ino;
+    cacheInode.ufs = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
 #elif defined(AFS_XBSD_ENV)
-    cacheInode = VTOI(filevp)->i_number;
+    cacheInode.ufs = VTOI(filevp)->i_number;
     cacheDev.mp = filevp->v_mount;
     cacheDev.held_vnode = filevp;
     vref(filevp);		/* Make sure mount point stays busy. XXX */
@@ -433,15 +449,15 @@ afs_InitCacheInfo(register char *afile)
 #ifndef AFS_DARWIN80_ENV
     afs_cacheVfsp = filevp->v_vfsp;
 #endif
-    cacheInode = afs_vnodeToInumber(filevp);
+    cacheInode.ufs = afs_vnodeToInumber(filevp);
 #else
-    cacheInode = AFS_CACHE_ITEMS_INODE;
+    cacheInode.ufs = AFS_CACHE_ITEMS_INODE;
 #endif
     cacheDev.dev = afs_vnodeToDev(filevp);
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
-    tfile = osi_UFSOpen(cacheInode);
+    tfile = osi_UFSOpen(&cacheInode);
     afs_osi_Stat(tfile, &tstat);
     cacheInfoModTime = tstat.mtime;
     code = afs_osi_Read(tfile, -1, &theader, sizeof(theader));
@@ -484,18 +500,18 @@ afs_ResourceInit(int preallocs)
     static struct rx_securityClass *secobj;
 
     AFS_STATCNT(afs_ResourceInit);
-    RWLOCK_INIT(&afs_xuser, "afs_xuser");
-    RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
-    RWLOCK_INIT(&afs_xserver, "afs_xserver");
-    RWLOCK_INIT(&afs_xsrvAddr, "afs_xsrvAddr");
-    RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
-    RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
+    AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
+    AFS_RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
+    AFS_RWLOCK_INIT(&afs_xserver, "afs_xserver");
+    AFS_RWLOCK_INIT(&afs_xsrvAddr, "afs_xsrvAddr");
+    AFS_RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
+    AFS_RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 #ifndef AFS_FBSD_ENV
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
     LOCK_INIT(&osi_flplock, "osi_flplock");
 #endif
-    RWLOCK_INIT(&afs_xconn, "afs_xconn");
+    AFS_RWLOCK_INIT(&afs_xconn, "afs_xconn");
 
     afs_CellInit();
     afs_InitCBQueue(1);		/* initialize callback queues */
@@ -666,8 +682,8 @@ shutdown_cache(void)
 	    cacheDev.held_vnode = NULL;
 	}
 #endif
-	cacheInode = volumeInode = (ino_t) 0;
-
+	afs_reset_inode(&cacheInode);
+	afs_reset_inode(&volumeInode);
 	cacheInfoModTime = 0;
 
 	afs_fsfragsize = 1023;
@@ -765,7 +781,7 @@ shutdown_AFS(void)
 	 */
 	{
 	    struct server *ts, *nts;
-	    struct conn *tc, *ntc;
+	    struct afs_conn *tc, *ntc;
 	    register struct afs_cbr *tcbrp, *tbrp;
 
 	    for (i = 0; i < NSERVERS; i++) {
@@ -782,7 +798,7 @@ shutdown_AFS(void)
 				AFS_GUNLOCK();
 				rx_DestroyConnection(tc->id);
 				AFS_GLOCK();
-				afs_osi_Free(tc, sizeof(struct conn));
+				afs_osi_Free(tc, sizeof(struct afs_conn));
 				tc = ntc;
 			    }
 			}
@@ -812,11 +828,11 @@ shutdown_AFS(void)
 	afs_waitForever = afs_waitForeverCount = 0;
 	afs_FVIndex = -1;
 	afs_server = (struct rx_service *)0;
-	RWLOCK_INIT(&afs_xconn, "afs_xconn");
+	AFS_RWLOCK_INIT(&afs_xconn, "afs_xconn");
 	memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
-	RWLOCK_INIT(&afs_xuser, "afs_xuser");
-	RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
-	RWLOCK_INIT(&afs_xserver, "afs_xserver");
+	AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
+	AFS_RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
+	AFS_RWLOCK_INIT(&afs_xserver, "afs_xserver");
 	LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 
 	shutdown_cell();

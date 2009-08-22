@@ -11,8 +11,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16.14.5 2007/10/31 04:09:32 shadow Exp $");
 
 /*
  *                      (3) Define a structure, idused, instead of an
@@ -56,10 +54,12 @@ RCSID
 #include "ptint.h"
 #include "pterror.h"
 #include "ptserver.h"
+#include "ptuser.h"
+#include "display.h"
 
 struct prheader cheader;
 int fd;
-char *pr_dbaseName;
+const char *pr_dbaseName;
 char *whoami = "db_verify";
 #define UBIK_HEADERSIZE 64
 
@@ -85,7 +85,7 @@ printheader(struct prheader *h)
 }
 
 static afs_int32
-pr_Read(afs_int32 pos, char *buff, afs_int32 len)
+pr_Read(afs_int32 pos, void *buff, afs_int32 len)
 {
     afs_int32 code;
 
@@ -110,7 +110,7 @@ pr_Read(afs_int32 pos, char *buff, afs_int32 len)
  */
 
 afs_int32
-ReadHeader()
+ReadHeader(void)
 {
     afs_int32 code;
 
@@ -138,14 +138,14 @@ IDHash(afs_int32 x)
 }
 
 static afs_int32
-NameHash(register unsigned char *aname)
+NameHash(register char *aname)
 {
     /* returns hash bucket for aname */
     register unsigned int hash = 0;
     register int i;
 /* stolen directly from the HashString function in the vol package */
     for (i = strlen(aname), aname += i - 1; i--; aname--)
-	hash = (hash * 31) + (*aname - 31);
+	hash = (hash * 31) + (*(unsigned char *)aname - 31);
     return (hash % HASHSIZE);
 }
 
@@ -211,7 +211,7 @@ readUbikHeader(struct misc_data *misc)
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	printf("error: read of %d bytes failed: %d %d\n", sizeof(uheader), r,
+	printf("error: read of %lu bytes failed: %d %d\n", sizeof(uheader), r,
 	       errno);
 	return (-1);
     }
@@ -395,8 +395,9 @@ WalkNextChain(char map[],		/* one byte per db entry */
     struct prentry c;		/* continuation entry */
     afs_int32 na;		/* next thread */
     int ni;
-    afs_int32 eid;
-    int count;			/* number of members */
+    afs_int32 eid = 0;
+    int count = 0;		/* number of members, set to > 9999 if */
+    				/* list ends early */
     int i;
     int noErrors = 1;
     int length;			/* length of chain */
@@ -410,7 +411,6 @@ WalkNextChain(char map[],		/* one byte per db entry */
 	head = ntohl(e->next);
 	eid = ntohl(e->id);
 	bit = MAP_CONT;
-	count = 0;		/* set to >9999 if list ends early */
 #if defined(SUPERGROUPS)
 	sgcount = 0;
 	sghead = ntohl(g->next);
@@ -713,7 +713,7 @@ WalkOwnedChain(char map[],		/* one byte per db entry */
     struct prentry c;		/* continuation entry */
     afs_int32 na;		/* next thread */
     int ni;
-    afs_int32 eid;
+    afs_int32 eid = 0;
     int length;			/* length of chain */
 
     if (e) {

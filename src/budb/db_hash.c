@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/budb/db_hash.c,v 1.8.14.2 2007/10/30 15:16:37 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -25,19 +23,21 @@ RCSID
 #include <afs/bubasics.h>
 #include "budb_errs.h"
 #include "database.h"
+#include "budb_internal.h"
 #include "error_macros.h"
 
 
 int sizeFunctions[HT_MAX_FUNCTION + 1];
 int nHTBuckets = NhtBucketS;	/* testing: we need small HT blocks */
 
+int ht_minHBlocks(struct memoryHashTable *mht);
+
 /* ht_TableSize - return the size of table necessary to represent a hashtable
  * of given length in memory.  It basically rounds the length up by the number
  * of buckets per block. */
 
 int
-ht_TableSize(length)
-     int length;
+ht_TableSize(int length)
 {
     int n;
     if (length == 0)
@@ -50,10 +50,7 @@ ht_TableSize(length)
  * It also resets the global variable nHTBuckets. */
 
 static void
-ht_ResetT(blocksP, sizeP, length)
-     struct memoryHTBlock ***blocksP;
-     int *sizeP;
-     int length;
+ht_ResetT(struct memoryHTBlock ***blocksP, int *sizeP, int length)
 {
     struct memoryHTBlock **b = *blocksP;
     int newsize;
@@ -87,10 +84,9 @@ ht_ResetT(blocksP, sizeP, length)
  */
 
 void
-ht_Reset(mht)
-     struct memoryHashTable *mht;
+ht_Reset(struct memoryHashTable *mht)
 {
-    struct hashTable *ht;
+    struct hashTable *ht = NULL;
 
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
@@ -106,7 +102,7 @@ ht_Reset(mht)
      test - initialization parameters: bit 4 is small ht. */
 
 afs_int32
-InitDBhash()
+InitDBhash(void)
 {
     sizeFunctions[0] = 0;
 
@@ -125,7 +121,7 @@ InitDBhash()
 /* ht_DBInit - When rebuilding database, this sets up the hash tables. */
 
 void
-ht_DBInit()
+ht_DBInit(void)
 {
     db.h.nHTBuckets = htonl(nHTBuckets);
 
@@ -158,11 +154,9 @@ ht_DBInit()
 }
 
 afs_int32
-ht_AllocTable(ut, mht)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
+ht_AllocTable(struct ubik_trans *ut, struct memoryHashTable *mht)
 {
-    struct hashTable *ht;
+    struct hashTable *ht = NULL;
     afs_int32 code;
     int len;
     int nb, mnb;		/* number of blocks for hashTable */
@@ -206,21 +200,19 @@ ht_AllocTable(ut, mht)
 	if (code)
 	    return code;
     }
-    if (code = set_word_addr(ut, 0, &db.h, &ht->table, htonl(b[0]->a)))
+    if ((code = set_word_addr(ut, 0, &db.h, &ht->table, htonl(b[0]->a))))
 	return code;
 
-    if (code = set_word_addr(ut, 0, &db.h, &ht->length, htonl(len)))
+    if ((code = set_word_addr(ut, 0, &db.h, &ht->length, htonl(len))))
 	return code;
     mht->length = len;
     return 0;
 }
 
 afs_int32
-ht_FreeTable(ut, mht)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
+ht_FreeTable(struct ubik_trans *ut, struct memoryHashTable *mht)
 {
-    struct hashTable *ht;
+    struct hashTable *ht = NULL;
     afs_int32 code;
     struct blockHeader bh;
     dbadr a, na;
@@ -238,7 +230,7 @@ ht_FreeTable(ut, mht)
 	    return BUDB_IO;
 	}
 	na = ntohl(bh.next);
-	if (code = FreeBlock(ut, &bh, a))
+	if ((code = FreeBlock(ut, &bh, a)))
 	    return code;
     }
     if (set_word_addr(ut, 0, &db.h, &ht->oldTable, 0)
@@ -250,15 +242,11 @@ ht_FreeTable(ut, mht)
 }
 
 afs_int32
-ht_GetTableBlock(ut, mht, hash, old, blockP, boP)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
-     afs_uint32 hash;
-     int old;
-     struct memoryHTBlock **blockP;
-     int *boP;
+ht_GetTableBlock(struct ubik_trans *ut, struct memoryHashTable *mht, 
+		 afs_uint32 hash, int old, struct memoryHTBlock **blockP, 
+		 int *boP)
 {
-    struct hashTable *ht;
+    struct hashTable *ht = NULL;
     struct memoryHTBlock **b;
     int hi, bi;
     struct memoryHTBlock ***blocksP;
@@ -266,7 +254,7 @@ ht_GetTableBlock(ut, mht, hash, old, blockP, boP)
     int n;
     int i;
     int length;
-    dbadr ta;
+    dbadr ta = 0;
 
     if ((mht == 0)
 	|| ((ht = mht->ht) == 0)
@@ -346,9 +334,7 @@ ht_GetTableBlock(ut, mht, hash, old, blockP, boP)
  */
 
 static afs_int32
-ht_MaybeAdjust(ut, mht)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
+ht_MaybeAdjust(struct ubik_trans *ut, struct memoryHashTable *mht)
 {
     struct hashTable *ht = mht->ht;
     int numberEntries = ntohl(ht->entries);
@@ -391,11 +377,8 @@ ht_MaybeAdjust(ut, mht)
 }
 
 dbadr
-ht_LookupBucket(ut, mht, hash, old)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
-     afs_uint32 hash;
-     int old;
+ht_LookupBucket(struct ubik_trans *ut, struct memoryHashTable *mht, 
+		afs_uint32 hash, int old)
 {
     struct memoryHTBlock *block;
     int bo;
@@ -413,8 +396,7 @@ ht_LookupBucket(ut, mht, hash, old)
  * from insufficient mixing of the hash information. */
 
 afs_uint32
-Old2StringHashFunction(str)
-     unsigned char *str;
+Old2StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     while (*str)
@@ -426,8 +408,7 @@ Old2StringHashFunction(str)
  * problem is that the hash needs to be mixed up not the incoming character. */
 
 afs_uint32
-Old3StringHashFunction(str)
-     unsigned char *str;
+Old3StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     while (*str)
@@ -440,8 +421,7 @@ Old3StringHashFunction(str)
  * It behaves especially badly for hash tables whose size is a power of two. */
 
 afs_uint32
-Old4StringHashFunction(str)
-     unsigned char *str;
+Old4StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     while (*str)
@@ -453,8 +433,7 @@ Old4StringHashFunction(str)
  * #3 with a hash table as big as 8200. */
 
 afs_uint32
-Old5StringHashFunction(str)
-     unsigned char *str;
+Old5StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     while (*str)
@@ -468,8 +447,7 @@ Old5StringHashFunction(str)
  * better than the random hash function. */
 
 afs_uint32
-Old6StringHashFunction(str)
-     unsigned char *str;
+Old6StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     while (*str)
@@ -483,8 +461,7 @@ Old6StringHashFunction(str)
  * well.  All these differences are fairly small, however. */
 
 afs_uint32
-Old7StringHashFunction(str)
-     unsigned char *str;
+Old7StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     while (*str)
@@ -497,8 +474,7 @@ Old7StringHashFunction(str)
  * multiplies, which may be faster on some architectures. */
 
 afs_uint32
-Old8StringHashFunction(str)
-     unsigned char *str;
+Old8StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     while (*str)
@@ -514,8 +490,7 @@ Old8StringHashFunction(str)
  * odd.  It behaves beeter than the random hash function. */
 
 afs_uint32
-StringHashFunction(str)
-     unsigned char *str;
+StringHashFunction(unsigned char *str)
 {
     afs_uint32 hash = 1000003;	/* big prime to make "" hash nicely */
     /* The multiplicative constant should be odd and have a goodly number of
@@ -526,8 +501,7 @@ StringHashFunction(str)
 }
 
 afs_uint32
-IdHashFunction(id)
-     afs_uint32 id;
+IdHashFunction(afs_uint32 id)
 {
     afs_uint32 l, r;
     id *= 81847;
@@ -541,8 +515,7 @@ IdHashFunction(id)
  * twice the number of buckets.
  */
 int
-ht_minHBlocks(mht)
-     struct memoryHashTable *mht;
+ht_minHBlocks(struct memoryHashTable *mht)
 {
     int retval;
 
@@ -562,14 +535,14 @@ ht_minHBlocks(mht)
 
     default:
 	db_panic("Illegal hash function type");
+	retval = -1; /* not reached */
     }
     return (retval);
 }
 
 afs_uint32
-ht_HashEntry(mht, e)
-     struct memoryHashTable *mht;
-     char *e;			/* entry's address (in b) */
+ht_HashEntry(struct memoryHashTable *mht, 
+	     char *e) 				/* entry's address (in b) */
 {
     int type = ntohl(mht->ht->functionType);
     afs_uint32 retval;
@@ -581,22 +554,23 @@ ht_HashEntry(mht, e)
 	break;
 
     case HT_dumpName_FUNCTION:
-	retval = StringHashFunction(((struct dump *)e)->dumpName);
+	retval = StringHashFunction((unsigned char *)((struct dump *)e)->dumpName);
 	LogDebug(5, "HashEntry: dumpname returns %d\n", retval);
 	break;
 
     case HT_tapeName_FUNCTION:
-	retval = StringHashFunction(((struct tape *)e)->name);
+	retval = StringHashFunction((unsigned char *)((struct tape *)e)->name);
 	LogDebug(5, "HashEntry: tapename returns %d\n", retval);
 	break;
 
     case HT_volName_FUNCTION:
-	retval = StringHashFunction(((struct volInfo *)e)->name);
+	retval = StringHashFunction((unsigned char *)((struct volInfo *)e)->name);
 	LogDebug(5, "HashEntry: volname returns %d\n", retval);
 	break;
 
     default:
 	db_panic("illegal hash function");
+	retval = -1; /* not reached */
     }
 
     return (retval);
@@ -609,9 +583,7 @@ ht_HashEntry(mht, e)
  */
 
 struct memoryHashTable *
-ht_GetType(type, e_sizeP)
-     int type;
-     int *e_sizeP;
+ht_GetType(int type, int *e_sizeP)
 {
     struct memoryHashTable *mht;
 
@@ -646,10 +618,7 @@ ht_GetType(type, e_sizeP)
 }
 
 static int
-ht_KeyMatch(type, key, e)
-     int type;
-     char *key;
-     char *e;
+ht_KeyMatch(int type, char *key, char *e)
 {
     switch (type) {
     case HT_dumpIden_FUNCTION:
@@ -679,14 +648,13 @@ ht_KeyMatch(type, key, e)
  */
 
 afs_int32
-ht_LookupEntry(ut, mht, key, eaP, e)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
-     char *key;			/* pointer to lookup key to match */
-     dbadr *eaP;		/* db addr of entry found or zero */
-     char *e;			/* contents of located entry */
+ht_LookupEntry(struct ubik_trans *ut, 
+	       struct memoryHashTable *mht, 
+	       void *key,	/* pointer to lookup key to match */
+	       dbadr *eaP, 	/* db addr of entry found or zero */
+	       void *e)		/* contents of located entry */
 {
-    struct hashTable *ht;
+    struct hashTable *ht = NULL;
     int type;
     int e_size;
     int old;
@@ -716,7 +684,7 @@ ht_LookupEntry(ut, mht, key, eaP, e)
 		*eaP = a;
 		return 0;
 	    }
-	    a = ntohl(*(dbadr *) (e + mht->threadOffset));
+	    a = ntohl(*(dbadr *) ((char *)e + mht->threadOffset));
 	}
 	if (old)
 	    return 0;
@@ -731,12 +699,8 @@ ht_LookupEntry(ut, mht, key, eaP, e)
  */
 
 static afs_int32
-ht_HashInList(ut, mht, opQuota, block, blockOffset)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
-     int *opQuota;
-     struct memoryHTBlock *block;
-     int blockOffset;
+ht_HashInList(struct ubik_trans *ut, struct memoryHashTable *mht, 
+	      int *opQuota, struct memoryHTBlock *block, int blockOffset)
 {
     struct hashTable *ht = mht->ht;
     afs_int32 code;
@@ -746,7 +710,7 @@ ht_HashInList(ut, mht, opQuota, block, blockOffset)
     int e_size = sizeFunctions[ntohl(ht->functionType)];
 
     if (mht->length == 0) {
-	if (code = ht_AllocTable(ut, mht)) {
+	if ((code = ht_AllocTable(ut, mht))) {
 	    Log("ht_HashInList: ht_AllocTable failed\n");
 	    return code;
 	}
@@ -825,9 +789,7 @@ ht_HashInList(ut, mht, opQuota, block, blockOffset)
  */
 
 static afs_int32
-ht_MoveEntries(ut, mht)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
+ht_MoveEntries(struct ubik_trans *ut, struct memoryHashTable *mht)
 {
     struct memoryHTBlock *block;
     afs_uint32 hash;
@@ -887,9 +849,7 @@ ht_MoveEntries(ut, mht)
 
 #ifdef notdef
 static afs_int32
-ht_MoveEntries(ut, mht)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
+ht_MoveEntries(struct ubik_trans *ut, struct memoryHashTable *mht)
 {
     afs_uint32 hash;
     int bo;
@@ -944,13 +904,12 @@ ht_MoveEntries(ut, mht)
 #endif /* notdef */
 
 afs_int32
-ht_HashIn(ut, mht, ea, e)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
-     dbadr ea;			/* block db address */
-     char *e;			/* entry's address (in b) */
+ht_HashIn(struct ubik_trans *ut,
+	  struct memoryHashTable *mht,
+	  dbadr ea,			/* block db address */
+	  void *e)			/* entry's address (in b) */
 {
-    struct hashTable *ht;
+    struct hashTable *ht = NULL;
     afs_uint32 hash;
     struct memoryHTBlock *block;
     int bo;
@@ -959,10 +918,10 @@ ht_HashIn(ut, mht, ea, e)
     if (!(mht && (ht = mht->ht)))
 	db_panic("some ht called with bad mht");
 
-    if (code = ht_MaybeAdjust(ut, mht))
+    if ((code = ht_MaybeAdjust(ut, mht)))
 	return code;
     if (mht->length == 0)
-	if (code = ht_AllocTable(ut, mht))
+	if ((code = ht_AllocTable(ut, mht)))
 	    return code;
 
     hash = ht_HashEntry(mht, e);
@@ -1002,17 +961,16 @@ ht_HashIn(ut, mht, ea, e)
  * but is not otherwise used. */
 
 afs_int32
-RemoveFromList(ut, ea, e, head, ta, t, thread)
-     struct ubik_trans *ut;
-     dbadr ea;			/* db addr of head structure */
-     char *e;			/* head structure */
-     dbadr *head;		/* address of head pointer */
-     dbadr ta;			/* db addr of strucure to be removed */
-     char *t;			/* structure being removed */
-     dbadr *thread;		/* pointer to thread pointer */
+RemoveFromList(struct ubik_trans *ut,
+	       dbadr ea,	/* db addr of head structure */
+	       void *e,		/* head structure */
+	       dbadr *head,	/* address of head pointer */
+	       dbadr ta,	/* db addr of strucure to be removed */
+	       void *t,		/* structure being removed */
+	       dbadr *thread)	/* pointer to thread pointer */
 {
     afs_int32 code;
-    int threadOffset = ((char *)thread - t);
+    int threadOffset = ((char *)thread - (char *)t);
     dbadr next_a;		/* db addr of next element in list */
     dbadr loop_a;		/* db addr of current list element */
 
@@ -1037,13 +995,8 @@ RemoveFromList(ut, ea, e, head, ta, t, thread)
 }
 
 afs_int32
-ht_HashOutT(ut, mht, hash, ea, e, old)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
-     afs_uint32 hash;
-     dbadr ea;
-     char *e;
-     int old;
+ht_HashOutT(struct ubik_trans *ut, struct memoryHashTable *mht,
+	    afs_uint32 hash, dbadr ea, char *e, int old)
 {
     struct memoryHTBlock *block;
     int bo;
@@ -1097,11 +1050,8 @@ ht_HashOutT(ut, mht, hash, ea, e, old)
 }
 
 afs_int32
-ht_HashOut(ut, mht, ea, e)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mht;
-     dbadr ea;
-     char *e;
+ht_HashOut(struct ubik_trans *ut, struct memoryHashTable *mht, dbadr ea,
+	   void *e) 
 {
     afs_uint32 hash;
     afs_int32 code;
@@ -1139,28 +1089,23 @@ ht_HashOut(ut, mht, ea, e)
 
 
 afs_int32
-scanHashTableBlock(ut, mhtPtr, htBlockPtr, old, length, index, selectFn,
-		   operationFn, rockPtr)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mhtPtr;
-     struct htBlock *htBlockPtr;
-     int old;
-     afs_int32 length;		/* size of whole hash table */
-     int index;			/* base index of this block */
-     int (*selectFn) ();
-     int (*operationFn) ();
-     char *rockPtr;
+scanHashTableBlock(struct ubik_trans *ut,
+		   struct memoryHashTable *mhtPtr,
+		   struct htBlock *htBlockPtr,
+		   int old,
+		   afs_int32 length,	/* size of whole hash table */
+		   int index, 		/* base index of this block */
+		   int (*selectFn) (dbadr, void *, void *),
+		   int (*operationFn) (dbadr, void *, void *),
+		   void *rockPtr)
 {
     int type;			/* hash table type */
     int entrySize;		/* hashed entry size */
-
-    afs_uint32 *mapEntryPtr = 0;	/* for status checks */
 
     char entry[sizeof(struct block)];
     dbadr entryAddr, nextEntryAddr;
 
     int i;
-    afs_int32 code = 0;
 
     type = ntohl(mhtPtr->ht->functionType);
     entrySize = sizeFunctions[type];
@@ -1200,12 +1145,10 @@ scanHashTableBlock(ut, mhtPtr, htBlockPtr, old, length, index, selectFn,
 }
 
 afs_int32
-scanHashTable(ut, mhtPtr, selectFn, operationFn, rockPtr)
-     struct ubik_trans *ut;
-     struct memoryHashTable *mhtPtr;
-     int (*selectFn) ();
-     int (*operationFn) ();
-     char *rockPtr;
+scanHashTable(struct ubik_trans *ut, struct memoryHashTable *mhtPtr,
+     	      int (*selectFn) (dbadr, void *, void *), 
+	      int (*operationFn) (dbadr, void *, void *), 
+	      void *rockPtr)
 {
     struct htBlock hashTableBlock;
     dbadr tableAddr;		/* disk addr of hash block */

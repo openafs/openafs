@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_rxkad_free.c,v 1.8.4.2 2007/10/31 04:09:31 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

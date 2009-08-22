@@ -14,8 +14,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/auth/authcon.c,v 1.14.8.2 2007/11/01 16:09:32 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -67,10 +65,11 @@ QuickAuth(struct rx_securityClass **astr, afs_int32 *aindex)
 #if !defined(UKERNEL)
 /* Return an appropriate security class and index */
 afs_int32
-afsconf_ServerAuth(register struct afsconf_dir *adir, 
+afsconf_ServerAuth(void *arock,
 		   struct rx_securityClass **astr, 
 		   afs_int32 *aindex)
 {
+    struct afsconf_dir *adir = (struct afsconf_dir *) arock;
     register struct rx_securityClass *tclass;
 
     LOCK_GLOBAL_MUTEX;
@@ -143,9 +142,10 @@ GenericAuth(struct afsconf_dir *adir,
  * appropriate security class and index
  */
 afs_int32
-afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
+afsconf_ClientAuth(void *arock, struct rx_securityClass ** astr,
 		   afs_int32 * aindex)
 {
+    struct afsconf_dir * adir = (struct afsconf_dir *) arock;
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;
@@ -159,10 +159,11 @@ afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
  * tells rxkad to encrypt the data, too.
  */
 afs_int32
-afsconf_ClientAuthSecure(struct afsconf_dir *adir, 
+afsconf_ClientAuthSecure(void *arock, 
 			 struct rx_securityClass **astr, 
 			 afs_int32 *aindex)
 {
+    struct afsconf_dir *adir = (struct afsconf_dir *) arock;
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX;

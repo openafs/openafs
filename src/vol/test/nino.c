@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/test/nino.c,v 1.6 2003/07/15 23:17:46 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

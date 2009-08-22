@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/budb/db_text.c,v 1.12.4.3 2007/11/26 21:08:41 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -29,6 +27,7 @@ RCSID
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
+#include "budb_internal.h"
 #include "afs/audit.h"
 #include <afs/afsutil.h>
 
@@ -43,18 +42,16 @@ RCSID
  *	routine mallocs storage for charListPtr, freed by stub
  */
 
-afs_int32 GetText(), GetTextVersion(), SaveText();
+afs_int32 GetText(struct rx_call *, afs_uint32, afs_int32, afs_int32, 
+		  afs_int32, afs_int32 *, charListT *);
+afs_int32 GetTextVersion(struct rx_call *, afs_int32, afs_uint32 *);
+afs_int32 SaveText(struct rx_call *, afs_uint32, afs_int32, afs_int32,
+		   afs_int32, charListT *);
 
 afs_int32
-SBUDB_GetText(call, lockHandle, textType, maxLength, offset, nextOffset,
-	      charListPtr)
-     struct rx_call *call;
-     afs_uint32 lockHandle;
-     afs_int32 textType;
-     afs_int32 maxLength;
-     afs_int32 offset;
-     afs_int32 *nextOffset;
-     charListT *charListPtr;
+SBUDB_GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType,
+	      afs_int32 maxLength, afs_int32 offset, afs_int32 *nextOffset,
+	      charListT *charListPtr)
 {
     afs_int32 code;
 
@@ -66,15 +63,9 @@ SBUDB_GetText(call, lockHandle, textType, maxLength, offset, nextOffset,
 }
 
 afs_int32
-GetText(call, lockHandle, textType, maxLength, offset, nextOffset,
-	charListPtr)
-     struct rx_call *call;
-     afs_uint32 lockHandle;
-     afs_int32 textType;
-     afs_int32 maxLength;
-     afs_int32 offset;
-     afs_int32 *nextOffset;
-     charListT *charListPtr;
+GetText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType, 
+	afs_int32 maxLength, afs_int32 offset, afs_int32 *nextOffset,
+	charListT *charListPtr)
 {
     struct ubik_trans *ut = 0;
     struct block block;
@@ -188,7 +179,7 @@ GetText(call, lockHandle, textType, maxLength, offset, nextOffset,
 	*nextOffset = -1;
     }
 
-  error_exit:
+  /* error_exit: */
     code = ubik_EndTrans(ut);
 /*  printf("in error exit, code=%ld\n", code); */
     return (code);
@@ -204,13 +195,12 @@ GetText(call, lockHandle, textType, maxLength, offset, nextOffset,
     return (code);
 }
 
-freeOldBlockChain(ut, diskAddr)
-     struct ubik_trans *ut;
-     dbadr diskAddr;
+int
+freeOldBlockChain(struct ubik_trans *ut, dbadr diskAddr)
 {
     struct blockHeader blockHeader;
     dbadr nextDiskAddr;
-    afs_int32 code;
+    afs_int32 code = 0;
 
     while (diskAddr != 0) {
 	/* read in the header */
@@ -233,10 +223,8 @@ freeOldBlockChain(ut, diskAddr)
  */
 
 afs_int32
-SBUDB_GetTextVersion(call, textType, tversion)
-     struct rx_call *call;
-     afs_int32 textType;
-     afs_uint32 *tversion;
+SBUDB_GetTextVersion(struct rx_call *call, afs_int32 textType, 
+		     afs_uint32 *tversion)
 {
     afs_int32 code;
 
@@ -246,10 +234,8 @@ SBUDB_GetTextVersion(call, textType, tversion)
 }
 
 afs_int32
-GetTextVersion(call, textType, tversion)
-     struct rx_call *call;
-     afs_int32 textType;
-     afs_uint32 *tversion;
+GetTextVersion(struct rx_call *call, afs_int32 textType, 
+	       afs_uint32 *tversion)
 {
     afs_int32 code;
     struct ubik_trans *ut;
@@ -280,13 +266,9 @@ GetTextVersion(call, textType, tversion)
  */
 
 afs_int32
-SBUDB_SaveText(call, lockHandle, textType, offset, flags, charListPtr)
-     struct rx_call *call;
-     afs_uint32 lockHandle;
-     afs_int32 textType;
-     afs_int32 offset;
-     afs_int32 flags;
-     charListT *charListPtr;
+SBUDB_SaveText(struct rx_call *call, afs_uint32 lockHandle, 
+	       afs_int32 textType, afs_int32 offset, afs_int32 flags,
+	       charListT *charListPtr)
 {
     afs_int32 code;
 
@@ -296,13 +278,8 @@ SBUDB_SaveText(call, lockHandle, textType, offset, flags, charListPtr)
 }
 
 afs_int32
-SaveText(call, lockHandle, textType, offset, flags, charListPtr)
-     struct rx_call *call;
-     afs_uint32 lockHandle;
-     afs_int32 textType;
-     afs_int32 offset;
-     afs_int32 flags;
-     charListT *charListPtr;
+SaveText(struct rx_call *call, afs_uint32 lockHandle, afs_int32 textType, 
+	 afs_int32 offset, afs_int32 flags, charListT *charListPtr)
 {
     struct ubik_trans *ut;
     struct block diskBlock;
@@ -473,7 +450,7 @@ SaveText(call, lockHandle, textType, offset, flags, charListPtr)
     if (code)
 	ABORT(code);
 
-  error_exit:
+/*error_exit: */
     code = ubik_EndTrans(ut);
     return (code);
 
@@ -484,10 +461,7 @@ SaveText(call, lockHandle, textType, offset, flags, charListPtr)
 
 /* debug support */
 void
-saveTextToFile(ut, tbPtr)
-     struct ubik_trans *ut;
-     struct textBlock *tbPtr;
-
+saveTextToFile(struct ubik_trans *ut, struct textBlock *tbPtr)
 {
     afs_int32 blockAddr;
     struct block block;
@@ -526,8 +500,7 @@ saveTextToFile(ut, tbPtr)
  */
 
 int
-mkstemp(st)
-     char *st;
+mkstemp(char *st)
 {
     int retval = -1;
 

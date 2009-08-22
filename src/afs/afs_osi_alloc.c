@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_alloc.c,v 1.11.6.6 2008/05/20 19:50:41 shadow Exp $");
 
 
 
@@ -19,7 +17,7 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-#ifndef AFS_FBSD_ENV
+
 
 #ifdef AFS_AIX41_ENV
 #include "sys/lockl.h"
@@ -113,6 +111,8 @@ afs_osi_Free(void *x, size_t asize)
     osi_linux_free(x);
 #elif defined(AFS_FBSD_ENV)
     osi_fbsd_free(x);
+#elif defined(AFS_OBSD44_ENV)
+    osi_obsd_Free(x, asize);
 #else
     AFS_KFREE((struct osimem *)x, asize);
 #endif
@@ -168,7 +168,7 @@ osi_AllocLargeSpace(size_t size)
 
     AFS_STATCNT(osi_AllocLargeSpace);
     if (size > AFS_LRALLOCSIZ)
-	osi_Panic("osi_AllocLargeSpace: size=%d\n", size);
+	osi_Panic("osi_AllocLargeSpace: size=%d\n", (int)size);
     afs_stats_cmperf.LargeBlocksActive++;
     if (!freePacketList) {
 	char *p;
@@ -202,7 +202,7 @@ osi_AllocSmallSpace(size_t size)
 
     AFS_STATCNT(osi_AllocSmallSpace);
     if (size > AFS_SMALLOCSIZ)
-	osi_Panic("osi_AllocSmallS: size=%d\n", size);
+	osi_Panic("osi_AllocSmallS: size=%d\n", (int)size);
 
     if (!freeSmallList) {
 	afs_stats_cmperf.SmallBlocksAlloced++;
@@ -257,4 +257,4 @@ shutdown_osinet(void)
 		 afs_stats_cmperf.SmallBlocksActive);
     }
 }
-#endif
+

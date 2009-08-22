@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/test/updateDirInode.c,v 1.6 2006/03/17 19:54:54 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>

@@ -7,8 +7,12 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
-CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS} -DRXDEBUG
+CFLAGS=${COMMON_CFLAGS} ${XCFLAGS} ${ARCHFLAGS}
 
 LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	       ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libafsutil.a
@@ -30,7 +34,13 @@ rxdebug: rxdebug.o ${LIBS}
 #
 # Install targets
 #
-install:  ${DESTDIR}${sbindir}/rxdebug
+install: rxdebug
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} rxdebug ${DESTDIR}${sbindir}/rxdebug
+
+dest: rxdebug
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} rxdebug ${DEST}/etc/rxdebug
 
 #
 # Misc. targets
@@ -39,11 +49,3 @@ clean:
 	$(RM) -f *.o *.a core *_component_version_number.c rxdumptrace rxdebug
 
 include ../config/Makefile.version
-
-dest: ${DEST}/etc/rxdebug
-
-${DESTDIR}${sbindir}/rxdebug: rxdebug
-	${INSTALL} $? $@
-
-${DEST}/etc/rxdebug: rxdebug
-	${INSTALL} $? $@

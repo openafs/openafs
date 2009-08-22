@@ -69,8 +69,7 @@ PTSERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsaudit.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj
+	$(DESTDIR)\lib\libafsconf.lib
 
 !IF (("$(SYS_NAME)"!="i386_win95" ) && ("$(SYS_NAME)"!="I386_WIN95" ))
 PTSERVER_EXELIBS =$(PTSERVER_EXELIBS) $(DESTDIR)\lib\afs\afsprocmgmt.lib
@@ -87,6 +86,7 @@ $(PTSERVER): $(PTSERVER_EXEOBJS) $(RXKADOBJS) $(PTSERVER_EXELIBS)
 
 PTS = $(DESTDIR)\bin\pts.exe
 PTCLIENT = $(DESTDIR)\bin\ptclient.exe
+PT_UTIL  = $(DESTDIR)\bin\pt_util.exe
 
 PTS_EXEOBJS =\
 	$(OUT)\pts.obj \
@@ -96,6 +96,14 @@ PTCLIENT_EXEOBJS =\
 	$(OUT)\ptclient.obj \
         $(OUT)\display.obj \
 	$(OUT)\ptclient.res
+
+PT_UTIL_EXEOBJS = \
+        $(OUT)\pt_util.obj \
+        $(OUT)\ptutils.obj \
+        $(OUT)\ubik.obj \
+        $(OUT)\utils.obj \
+        $(OUT)\map.obj \
+        $(OUT)\pt_util.res
 
 PTS_EXELIBS =\
 	$(DESTDIR)\lib\afsubik.lib \
@@ -111,8 +119,7 @@ PTS_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
-	$(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj
+	$(DESTDIR)\lib\libafsconf.lib
 
 $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS) 
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
@@ -121,6 +128,12 @@ $(PTS): $(PTS_EXEOBJS) $(PTS_EXELIBS)
         $(CODESIGN_USERLAND)
 
 $(PTCLIENT): $(PTCLIENT_EXEOBJS) $(PTS_EXELIBS)
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP) 
+        $(CODESIGN_USERLAND)
+
+$(PT_UTIL): $(PT_UTIL_EXEOBJS) $(PTS_EXELIBS)
 	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP) 
@@ -135,6 +148,8 @@ $(OUT)\ptserver.res: AFS_component_version_number.h
 $(OUT)\pts.res: AFS_component_version_number.h
 
 $(OUT)\ptclient.res: AFS_component_version_number.h
+
+$(OUT)\pt_util.res: AFS_component_version_number.h
 
 ############################################################################
 # rxgen on pting.xg
@@ -165,10 +180,11 @@ pterror.h pterror.c: pterror.et
 ############################################################################
 # install pts, ptserver and afsprot.lib
 
-install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(PTCLIENT) $(OUT)\readgroup.exe \
+install: $(INCFILES) ptint.ss.c ptint.cs.c ptint.xdr.c $(LIBFILE) $(PTSERVER) $(PTS) $(PTCLIENT) $(PT_UTIL) $(OUT)\readgroup.exe \
 	$(OUT)\readpwd.exe  $(OUT)\testpt.exe $(OUT)\db_verify.exe  \
 	$(DESTDIR)\root.server\usr\afs\bin\pts.exe \
 	$(DESTDIR)\root.server\usr\afs\bin\ptclient.exe \
+	$(DESTDIR)\root.server\usr\afs\bin\pt_util.exe \
 	$(INCFILEDIR)\afs\prserver.h $(INCFILEDIR)\afs\print.h \
 	$(INCFILEDIR)\afs\prerror.h $(INCFILEDIR)\afs\prclient.h
 
@@ -185,6 +201,9 @@ $(DESTDIR)\root.server\usr\afs\bin\pts.exe: $(PTS)
 
 $(DESTDIR)\root.server\usr\afs\bin\ptclient.exe: $(PTCLIENT)
 	$(COPY) $(PTCLIENT) $(DESTDIR)\root.server\usr\afs\bin\ptclient.exe
+
+$(DESTDIR)\root.server\usr\afs\bin\pt_util.exe: $(PT_UTIL)
+	$(COPY) $(PT_UTIL) $(DESTDIR)\root.server\usr\afs\bin\pt_util.exe
 
 $(INCFILEDIR)\afs\prserver.h: $(INCFILEDIR)\afs\ptserver.h
 	$(COPY)	$(INCFILEDIR)\afs\ptserver.h $(INCFILEDIR)\afs\prserver.h
@@ -206,7 +225,7 @@ clean::
 	$(DEL) ptint.cs.c ptint.ss.c ptint.xdr.c ptint.h
 	$(DEL) $(OUT)\readgroup.exe $(OUT)\readpwd.exe $(OUT)\db_verify.exe $(OUT)\testpt.exe 
 	$(DEL) pterror.h pterror.c
-	$(DEL) $(PTS) $(PTCLIENT)
+	$(DEL) $(PTS) $(PTCLIENT) $(PT_UTIL)
 
 ############################################################################
 # tests?

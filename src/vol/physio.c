@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/physio.c,v 1.12.14.1 2007/10/30 15:16:57 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -42,6 +40,7 @@ RCSID
 #include "salvage.h"
 #include "afs/assert.h"
 #include "afs/dir.h"
+#include "vol_internal.h"
 
 /* returns 0 on success, errno on failure */
 int
@@ -115,7 +114,7 @@ void
 SetSalvageDirHandle(DirHandle * dir, afs_int32 volume, Device device,
 		    Inode inode)
 {
-    static SalvageCacheCheck = 1;
+    static int SalvageCacheCheck = 1;
     memset(dir, 0, sizeof(DirHandle));
 
     dir->dirh_device = device;

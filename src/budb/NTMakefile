@@ -17,7 +17,8 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 INCFILES =\
 	$(INCFILEDIR)\budb.h \
 	$(INCFILEDIR)\budb_errs.h \
-	$(INCFILEDIR)\budb_client.h
+	$(INCFILEDIR)\budb_client.h \
+	$(INCFILEDIR)\budb_prototypes.h
 	
 
 
@@ -77,9 +78,7 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afseventlog.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
-	$(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj
-
+	$(DESTDIR)\lib\libafsconf.lib
 
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
 	$(EXECONLINK) dnsapi.lib iphlpapi.lib shell32.lib

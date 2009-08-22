@@ -46,10 +46,6 @@
 #include <sys/stat.h>
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: read-vs-mmap2.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
-#endif
-
 static void
 generate_random_file(const char *filename, size_t sz)
 {

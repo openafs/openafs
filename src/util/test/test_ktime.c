@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/test/test_ktime.c,v 1.5 2003/07/15 23:17:18 shadow Exp $");
 
 #include "ktime.h"
 
@@ -35,22 +33,24 @@ main(argc, argv)
      int argc;
      char *argv[];
 {
-    long code;
+    long code, temp;
     int errors;
-    long t;
+    time_t t;
     struct testTime *tt;
 
     /* should do timezone and daylight savings time correction so this program
      * work in other than EST */
 
     if (argc > 1) {
-	code = util_GetLong(argv[1], &t);
+	code = util_GetLong(argv[1], &temp);
+	t = temp;
 	if (code) {		/* assume its a date string */
-	    code = ktime_DateToLong(argv[1], &t);
-	    printf("The string %s gives %d; ctime yields %s", argv[1], t,
+	    code = ktime_DateToLong(argv[1], &temp);
+	    t = temp;
+	    printf("The string %s gives %d; ctime yields %s", argv[1], temp,
 		   ctime(&t));
 	} else {
-	    printf("The value %d is %s", t, ctime(&t));
+	    printf("The value %d is %s", temp, ctime(&t));
 	}
 	exit(0);
     }

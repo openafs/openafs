@@ -14,8 +14,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/fsint/afsaux.c,v 1.13 2005/04/03 18:09:29 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)

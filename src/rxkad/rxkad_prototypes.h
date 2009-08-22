@@ -29,9 +29,9 @@ extern afs_int32 rxkad_EncryptPacket(const struct rx_connection *conn,
 extern int fc_keysched(struct ktc_encryptionKey *key,
 		       fc_KeySchedule schedule);
 extern afs_int32 fc_ecb_encrypt(void * clear, void * cipher,
-				fc_KeySchedule schedule, int encrypt);
+				const fc_KeySchedule schedule, int encrypt);
 extern afs_int32 fc_cbc_encrypt(void *input, void *output, afs_int32 length,
-				fc_KeySchedule key, afs_uint32 * iv,
+				const fc_KeySchedule key, afs_uint32 * iv,
 				int encrypt);
 
 /* rxkad_client.c */
@@ -78,18 +78,19 @@ extern int rxkad_GetStats(struct rx_securityClass *aobj,
 extern rxkad_level rxkad_StringToLevel(char *string);
 extern char *rxkad_LevelToString(rxkad_level level);
 
+extern void rxkad_global_stats_init(void);
 
 /* rxkad_errs.c */
 
 /* rxkad_server.c */
 extern struct rx_securityClass *rxkad_NewServerSecurityObject(rxkad_level
-							      level, char
+							      level, void
 							      *get_key_rock,
 							      int (*get_key)
 
 
 							       
-							      (char
+							      (void
 							       *get_key_rock,
 							       int kvno,
 							       struct

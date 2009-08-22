@@ -192,7 +192,7 @@ extern int saneacls;
 
 #define MAX_FILESERVER_THREAD	128	/* max number of threads in fileserver, subject to system limits. match to FD_HANDLE_SETASIDE */
 
-#define FILESERVER_HELPER_THREADS 7	/* Listner, IOMGR, FiveMinute, 
+#define FILESERVER_HELPER_THREADS 8	/* Listner, IOMGR, FiveMinute, FsyncCk 
 					 * HostCheck, Signal, min 2 for RXSTATS */
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>

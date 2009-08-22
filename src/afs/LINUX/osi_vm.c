@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vm.c,v 1.17 2005/07/11 18:45:51 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -52,7 +50,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 	return EBUSY;
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    truncate_inode_pages(&ip->i_data, 0);
+    return vmtruncate(ip, 0);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
     truncate_inode_pages(ip, 0);
 #else
@@ -102,6 +100,9 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 {
     struct inode *ip = AFSTOV(avc);
 
+    if (avc->f.states & CPageWrite)
+	return; /* someone already writing */
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,5)
     /* filemap_fdatasync() only exported in 2.4.5 and above */
     ReleaseWriteLock(&avc->lock);
@@ -126,7 +127,7 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     struct inode *ip = AFSTOV(avc);
-
+    
     truncate_inode_pages(&ip->i_data, 0);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
     struct inode *ip = AFSTOV(avc);
@@ -147,9 +148,7 @@ void
 osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    struct inode *ip = AFSTOV(avc);
-
-    truncate_inode_pages(&ip->i_data, alen);
+    vmtruncate(AFSTOV(avc), alen);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
     struct inode *ip = AFSTOV(avc);
 

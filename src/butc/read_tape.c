@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/read_tape.c,v 1.7.14.3 2007/11/26 21:08:41 shadow Exp $");
 
 #include <afs/cmd.h>
 #include <lock.h>
@@ -50,12 +48,13 @@ struct fileMark {		/* also in file_tm.c */
     afs_uint32 nBytes;
 };
 
+/* Forward declarations */
+int writeData(char *data, afs_int32 size);
+
 /* Read a tape block of size 16K */
 afs_int32
-readblock(buffer)
-     char *buffer;
+readblock(char *buffer)
 {
-    static rerror = 0;
     u_int nread, total = 0;
     int rc, fmcount = 0;
 
@@ -83,8 +82,7 @@ readblock(buffer)
 }
 
 void
-printLabel(tapeLabelPtr)
-     struct tapeLabel *tapeLabelPtr;
+printLabel(struct tapeLabel *tapeLabelPtr)
 {
     tapeLabelPtr->label.dumpid = ntohl(tapeLabelPtr->label.dumpid);
     tapeLabelPtr->label.creationTime =
@@ -98,18 +96,23 @@ printLabel(tapeLabelPtr)
 
     fprintf(stderr, "\nDUMP       %u\n", tapeLabelPtr->label.dumpid);
     if (printlabels) {
+	time_t t;
+
 	fprintf(stderr, "   AFS Tape  Name   : %s\n",
 		tapeLabelPtr->label.AFSName);
 	fprintf(stderr, "   Permanent Name   : %s\n",
 		tapeLabelPtr->label.pName);
 	fprintf(stderr, "   Dump Id          : %u\n",
 		tapeLabelPtr->label.dumpid);
+	t = tapeLabelPtr->label.dumpid;
 	fprintf(stderr, "   Dump Id Time     : %.24s\n",
-		ctime(&(tapeLabelPtr->label.dumpid)));
+		ctime(&t));
+	t = tapeLabelPtr->label.creationTime;
 	fprintf(stderr, "   Date Created     : %.24s\n",
-		ctime(&(tapeLabelPtr->label.creationTime)));
+		ctime(&t));
+	t = tapeLabelPtr->label.expirationDate;
 	fprintf(stderr, "   Date Expires     : %.24s\n",
-		ctime(&(tapeLabelPtr->label.expirationDate)));
+		ctime(&t));
 	fprintf(stderr, "   Version Number   : %d\n",
 		tapeLabelPtr->label.structVersion);
 	fprintf(stderr, "   Tape Use Count   : %d\n",
@@ -132,11 +135,9 @@ printLabel(tapeLabelPtr)
 }
 
 void
-printHeader(headerPtr, isvolheader)
-     struct volumeHeader *headerPtr;
-     afs_int32 *isvolheader;
+printHeader(struct volumeHeader *headerPtr, afs_int32 *isvolheader)
 {
-    static volcount = 0;
+    static int volcount = 0;
 
     *isvolheader = 0;
     headerPtr->volumeID = ntohl(headerPtr->volumeID);
@@ -154,29 +155,37 @@ printHeader(headerPtr, isvolheader)
     headerPtr->cloneDate = ntohl(headerPtr->cloneDate);
 
     if (headerPtr->magic == TC_VOLBEGINMAGIC) {
+	time_t t;
+
 	*isvolheader = 1;
 	if (verbose)
 	    fprintf(stderr, "Volume header\n");
+	t = headerPtr->from;
 	fprintf(stderr,
-		"VOLUME %3d %s (%u) - %s dump from %.24s till %.24s\n",
+		"VOLUME %3d %s (%u) - %s dump from %.24s",
 		++volcount, headerPtr->volumeName, headerPtr->volumeID,
 		(headerPtr->level ? "Incr" : "Full"),
-		((headerPtr->from) ? (char *)ctime(&headerPtr->from) : "0"),
-		ctime(&(headerPtr->cloneDate)));
+		(t ? (char *)ctime(&t) : "0"));
+        /* do not include two ctime() calls in the same fprintf call as
+         * the same string buffer will be returned by each call. */
+	t = headerPtr->cloneDate;
+        fprintf(stderr, " till %.24s\n", ctime(&t));
 	if (printheaders) {
 	    fprintf(stderr, "   Volume Name    = %s\n",
 		    headerPtr->volumeName);
 	    fprintf(stderr, "   Volume ID      = %u\n", headerPtr->volumeID);
+	    t = headerPtr->cloneDate;
 	    fprintf(stderr, "   Clone Date     = %.24s\n",
-		    ctime(&headerPtr->cloneDate));
+		    ctime(&t));
 	    fprintf(stderr, "   Vol Fragment   = %d\n", headerPtr->frag);
 	    fprintf(stderr, "   Vol Continued  = 0x%x\n", headerPtr->contd);
 	    fprintf(stderr, "   DumpSet Name   = %s\n",
 		    headerPtr->dumpSetName);
 	    fprintf(stderr, "   Dump ID        = %u\n", headerPtr->dumpID);
 	    fprintf(stderr, "   Dump Level     = %d\n", headerPtr->level);
+	    t = headerPtr->from;
 	    fprintf(stderr, "   Dump Since     = %.24s\n",
-		    ctime(&headerPtr->from));
+		    ctime(&t));
 	    fprintf(stderr, "   parent Dump ID = %u\n", headerPtr->parentID);
 	}
     } else if (headerPtr->magic == TC_VOLENDMAGIC) {
@@ -188,15 +197,13 @@ printHeader(headerPtr, isvolheader)
 }
 
 int
-openOutFile(headerPtr)
-     struct volumeHeader *headerPtr;
+openOutFile(struct volumeHeader *headerPtr)
 {
     afs_int32 len;
     int ch;
     int rc;
     int oflag;
     int skip, first;
-    char rest[100];
     afs_hyper_t size;
 
     /* If we were asked to skip this volume, then skip it */
@@ -237,12 +244,11 @@ openOutFile(headerPtr)
 	    first = 0;
 	} while (ch != '\n');
 	if (skip) {
-	    printf("Will not restore volume %s\n", headerPtr->volumeName,
-		   headerPtr->volumeID);
+	    printf("Will not restore volume %s\n", headerPtr->volumeName);
 	    return 0;
 	}
     } else {
-	printf("Retreive volume %s (%u) to file %s\n", headerPtr->volumeName,
+	printf("Retrieve volume %s (%u) to file %s\n", headerPtr->volumeName,
 	       headerPtr->volumeID, filename);
     }
 
@@ -282,10 +288,10 @@ int
 writeLastBlocks(char *lastblock, char *lastblock2)
 {
     int rc;
-    struct volumeHeader vh;
     char trailer[12];
     struct blockMark *bmark, *bmark2;
-    char *data, *data2;
+    char *data;
+    char *data2 = NULL;
     int count, count2;
     int tlen, skip, pos;
 
@@ -353,7 +359,7 @@ writeLastBlocks(char *lastblock, char *lastblock2)
 }
 
 int
-closeOutFile()
+closeOutFile(void)
 {
     if (!ofdIsOpen)
 	return 0;
@@ -367,9 +373,7 @@ closeOutFile()
 }
 
 int
-writeData(data, size)
-     char *data;
-     afs_int32 size;
+writeData(char *data, afs_int32 size)
 {
     int rc;
     u_int nwritten;
@@ -396,7 +400,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     char *data;
     char *tblock;
     afs_int32 code;
-    struct volumeHeader *volheaderPtr;
+    struct volumeHeader *volheaderPtr = NULL;
     int eod = 1;
     int rc;
     char *nextblock;		/* We cycle through three tape blocks so we  */
@@ -543,12 +547,10 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
-    struct cmd_item *ti;
 
     setlinebuf(stdout);
 

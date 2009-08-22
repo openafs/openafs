@@ -40,8 +40,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/crc.c,v 1.3.14.1 2007/10/30 15:16:46 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"

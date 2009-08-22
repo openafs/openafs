@@ -52,9 +52,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #endif
-#if defined(EXPORTED_INIT_MM)
+#if defined(ENABLE_LINUX_SYSCALL_PROBING) && defined(EXPORTED_INIT_MM)
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#ifdef AFS_LINUX26_ENV
+#include <scsi/scsi.h> /* for scsi_command_size */
+#endif
 #ifndef OSI_PROBE_STANDALONE
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -68,9 +71,6 @@
 #include <linux/init.h>
 #include <linux/unistd.h>
 #include <linux/mm.h>
-#ifdef AFS_LINUX26_ENV
-#include <scsi/scsi.h> /* for scsi_command_size */
-#endif
 
 #if defined(AFS_PPC64_LINUX26_ENV)
 #include <asm/abs_addr.h>
@@ -1210,14 +1210,14 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
     if (probe_debug & 0x0001) {                                                              \
 	printk("<7>osi_probe: %s = 0x%016lx %s\n", P->symbol, (unsigned long)(x), (m)); \
     }                                                                                      \
-    if ((x)) {                                                                             \
+    if ((x) && ((int)(x)) != -ENOENT) {                                                    \
 	*method = (m);                                                                     \
         final_answer = (void *)(x);                                                        \
     }                                                                                      \
 } while (0)
 #else
 #define check_result(x,m) do {  \
-    if ((x)) {                  \
+    if ((x) && ((int)(x)) != -ENOENT) { \
         *method = (m);          \
         return (void *)(x);     \
     }                           \

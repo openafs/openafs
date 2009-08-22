@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/update/client.c,v 1.12.14.2 2007/10/30 15:16:47 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -54,6 +52,7 @@ RCSID
 #endif
 #include "update.h"
 #include "global.h"
+#include "update_internal.h"
 
 char *whoami;
 static int verbose;
@@ -64,6 +63,10 @@ static int GetFileFromUpServer(struct rx_connection *conn, char *filename,
 			       afs_int32 atime, afs_int32 mtime);
 static int RenameNewFiles(struct filestr *modFiles);
 static int PathsAreEquivalent(char *path1, char *path2);
+int FetchFile(struct rx_call *, char *, char *, int);
+int IsCompatible(char *, afs_int32, afs_int32);
+int NotOnHost(char *, struct filestr *);
+int update_ReceiveFile(int, struct rx_call *, struct stat *);
 
 afs_int32
 GetServer(char *aname)
@@ -82,7 +85,7 @@ GetServer(char *aname)
 
 
 int
-osi_audit()
+osi_audit(void)
 {
 /* this sucks but it works for now.
 */
@@ -449,7 +452,7 @@ FetchFile(struct rx_call *call, char *remoteFile, char *localFile, int dirFlag)
     if (fstat(fd, &status) < 0) {
 	afs_com_err(whoami, errno, "Could not stat %s", localFile);
 	close(fd);
-	printf("could not stast %s\n", localFile);
+	printf("could not stat %s\n", localFile);
 	return UPDATE_ERROR;
     }
     if (update_ReceiveFile(fd, call, &status))
@@ -676,6 +679,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
     if (errcode) {
 	printf("failed to fetch file %s \n", filename);
 	afs_com_err(whoami, errcode, "fetching file");
+        unlink(newfile);
 	return 1;
     }
 
@@ -686,6 +690,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
 	       (unsigned int)mode);
 	afs_com_err(whoami, errno, "could not change protection on %s to %u",
 		newfile, mode);
+        unlink(newfile);
 	return 1;
     }
 #ifdef AFS_NT40_ENV
@@ -713,6 +718,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
 	afs_com_err(whoami, errno,
 		"could not change access and modify times on %s to %u %u",
 		newfile, atime, mtime);
+        unlink(newfile);
 	return 1;
     }
 

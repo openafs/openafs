@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/kdb.c,v 1.8.8.2 2007/11/26 21:08:42 shadow Exp $");
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -27,7 +25,7 @@ RCSID
 
 #ifdef AUTH_DBM_LOG
 
-char *dbmfile;
+const char *dbmfile;
 
 static int
 cmdproc(register struct cmd_syndesc *as, void * arock)
@@ -35,7 +33,7 @@ cmdproc(register struct cmd_syndesc *as, void * arock)
     DBM *kdb;
     datum key, data;
     kalog_elt rdata;
-    register afs_int32 code = 0, cnt = 0;
+    afs_int32 cnt = 0;
     register struct cmd_item *ti;
 
     if (as->parms[0].items) {
@@ -64,16 +62,18 @@ cmdproc(register struct cmd_syndesc *as, void * arock)
 		if (! as->parms[3].items) {
 		    char *hostName;
 		    hostName = hostutil_GetNameByINet(rdata.host);
-		    printf("%s: last operation from host %s at %s", key.dptr, 
-			   hostName, ctime(&rdata.last_use));
+		    printf("%s: last operation from host %s at %s", 
+			   (char *)key.dptr, hostName, 
+			   ctime(&rdata.last_use));
 		} else {
 		    char *hostIP;
 		    hostIP = afs_inet_ntoa(rdata.host);
-		    printf("%s: last operation from host %s at %s", key.dptr, 
-			   hostIP, ctime(&rdata.last_use));
+		    printf("%s: last operation from host %s at %s", 
+			   (char *)key.dptr, hostIP, 
+			   ctime(&rdata.last_use));
 		}
             } else {
-		printf("\t%s\n", key.dptr);
+		printf("\t%s\n", (char *)key.dptr);
             }
 	}
 	printf("%d entries were found\n", cnt);

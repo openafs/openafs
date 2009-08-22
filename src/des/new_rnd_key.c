@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/new_rnd_key.c,v 1.16 2005/08/18 04:55:00 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -101,7 +99,7 @@ des_random_key(des_cblock key)
  *
  * Note: this routine calls des_set_random_generator_seed.
  */
-#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) 
 you lose ... (aka, you get to implement an analog of this for your system ...)
 #else
 
@@ -129,7 +127,7 @@ des_init_random_number_generator(des_cblock key)
      * use a host id and process id in generating the seed to ensure
      * that different servers have different streams:
      */
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
     seed.host_id = gethostid();
 #endif
     seed.process_id = getpid();

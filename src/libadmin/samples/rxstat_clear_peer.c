@@ -16,13 +16,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/samples/rxstat_clear_peer.c,v 1.6 2003/10/24 06:26:10 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <pthread.h>
 #endif
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
@@ -33,10 +35,8 @@ pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
-extern int RXSTATS_ClearPeerRPCStats();
-
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxstat_clear_peer <cell> <host> <port>\n");
     exit(1);

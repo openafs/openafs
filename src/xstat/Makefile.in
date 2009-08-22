@@ -10,6 +10,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 
@@ -28,6 +32,18 @@ all: \
 	xstat_fs_test \
 	xstat_cm_test
 
+${TOP_INCDIR}/afs/xstat_fs.h: xstat_fs.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/xstat_cm.h: xstat_cm.h
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libxstat_fs.a: libxstat_fs.a
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/libxstat_cm.a: libxstat_cm.a
+	${INSTALL_DATA} $? $@
+
 #
 # File Server data collection
 #
@@ -42,7 +58,7 @@ xstat_fs.o: xstat_fs.c ${FSINCLS}
 
 xstat_fs_callback.o: xstat_fs_callback.c ${FSINCLS}
 
-xstat_fs_test.: xstat_fs_test.c ${FSINCLS}
+xstat_fs_test.o: xstat_fs_test.c ${FSINCLS} AFS_component_version_number.c
 
 xstat_fs_test: xstat_fs_test.o libxstat_fs.a ${LIBS}
 	${CC} ${CFLAGS} -o xstat_fs_test xstat_fs_test.o libxstat_fs.a ${LIBS} ${XLIBS}
@@ -59,7 +75,7 @@ libxstat_cm.a: xstat_cm.o AFS_component_version_number.o
 
 xstat_cm.o: xstat_cm.c ${CMINCLS}
 
-xstat_cm_test.o: xstat_cm_test.c ${CMINCLS}
+xstat_cm_test.o: xstat_cm_test.c ${CMINCLS} AFS_component_version_number.c
 
 xstat_cm_test: xstat_cm_test.o libxstat_cm.a ${LIBS}
 	${CC} ${CFLAGS} -o xstat_cm_test xstat_cm_test.o libxstat_cm.a ${LIBS} ${XLIBS}
@@ -67,31 +83,29 @@ xstat_cm_test: xstat_cm_test.o libxstat_cm.a ${LIBS}
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${includedir}/afs/xstat_fs.h \
-	${DESTDIR}${includedir}/afs/xstat_cm.h \
-	${DESTDIR}${libdir}/afs/libxstat_fs.a \
-	${DESTDIR}${libdir}/afs/libxstat_cm.a \
-	${DESTDIR}${bindir}/xstat_fs_test \
-	${DESTDIR}${bindir}/xstat_cm_test
+install: xstat_fs.h xstat_cm.h libxstat_fs.a libxstat_cm.a xstat_fs_test \
+		xstat_cm_test
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL_DATA} xstat_fs.h ${DESTDIR}${includedir}/afs/xstat_fs.h
+	${INSTALL_DATA} xstat_cm.h ${DESTDIR}${includedir}/afs/xstat_cm.h
+	${INSTALL_DATA} libxstat_fs.a ${DESTDIR}${libdir}/afs/libxstat_fs.a
+	${INSTALL_DATA} libxstat_cm.a ${DESTDIR}${libdir}/afs/libxstat_cm.a
+	${INSTALL_PROGRAM} xstat_fs_test ${DESTDIR}${bindir}/xstat_fs_test
+	${INSTALL_PROGRAM} xstat_cm_test ${DESTDIR}${bindir}/xstat_cm_test
 
-${DEST}/include/afs/xstat_fs.h: xstat_fs.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/xstat_cm.h: xstat_cm.h
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libxstat_fs.a: libxstat_fs.a
-	${INSTALL} $? $@
-
-${DEST}/lib/afs/libxstat_cm.a: libxstat_cm.a
-	${INSTALL} $? $@
-
-${DEST}/bin/xstat_fs_test: xstat_fs_test
-	${INSTALL} $? $@
-
-${DEST}/bin/xstat_cm_test: xstat_cm_test
-	${INSTALL} $? $@
+dest: xstat_fs.h xstat_cm.h libxstat_fs.a libxstat_cm.a xstat_fs_test \
+		xstat_cm_test
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL_DATA} xstat_fs.h ${DEST}/include/afs/xstat_fs.h
+	${INSTALL_DATA} xstat_cm.h ${DEST}/include/afs/xstat_cm.h
+	${INSTALL_DATA} libxstat_fs.a ${DEST}/lib/afs/libxstat_fs.a
+	${INSTALL_DATA} libxstat_cm.a ${DEST}/lib/afs/libxstat_cm.a
+	${INSTALL_PROGRAM} xstat_fs_test ${DEST}/bin/xstat_fs_test
+	${INSTALL_PROGRAM} xstat_cm_test ${DEST}/bin/xstat_cm_test
 
 #
 # Misc targets
@@ -100,42 +114,3 @@ clean:
 	$(RM) -f *.o *.a xstat_fs_test xstat_cm_test core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${includedir}/afs/xstat_fs.h: xstat_fs.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/xstat_fs.h: xstat_fs.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/xstat_cm.h: xstat_cm.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/xstat_cm.h: xstat_cm.h
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libxstat_fs.a: libxstat_fs.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libxstat_fs.a: libxstat_fs.a
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libxstat_cm.a: libxstat_cm.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libxstat_cm.a: libxstat_cm.a
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/xstat_fs_test: xstat_fs_test
-	${INSTALL} $? $@
-
-${DESTDIR}${bindir}/xstat_cm_test: xstat_cm_test
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/include/afs/xstat_fs.h \
-	${DEST}/include/afs/xstat_cm.h \
-	${DEST}/lib/afs/libxstat_fs.a \
-	${DEST}/lib/afs/libxstat_cm.a \
-	${DEST}/bin/xstat_fs_test \
-	${DEST}/bin/xstat_cm_test
-

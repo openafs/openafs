@@ -19,8 +19,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/serverLog.c,v 1.33.4.4 2008/03/10 22:32:35 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -278,7 +276,7 @@ OpenLog(const char *fileName)
 
     if (mrafsStyleLogs) {
         time_t t;
-	TM_GetTimeOfDay(&Start, 0);
+	FT_GetTimeOfDay(&Start, 0);
         t = Start.tv_sec;	
 	TimeFields = localtime(&t);
 	if (fileName) {
@@ -311,11 +309,7 @@ OpenLog(const char *fileName)
     (void)freopen(fileName, "a", stdout);
     (void)freopen(fileName, "a", stderr);
 #ifdef HAVE_SETVBUF
-#ifdef SETVBUF_REVERSED
-    setvbuf(stderr, _IONBF, NULL, 0);
-#else
     setvbuf(stderr, NULL, _IONBF, 0);
-#endif
 #else
     setbuf(stderr, NULL);
 #endif

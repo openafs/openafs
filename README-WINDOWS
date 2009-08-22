@@ -1,0 +1,478 @@
+This software has been released under the terms of the IBM Public
+License.  For details, see the LICENSE file in the top-level source
+directory or on-line at http://www.openafs.org/dl/license10.html
+
+The document now provides a step by step procedure that takes the user 
+from a basic Windows 2000/XP/2003/Vista/2008 workstation to an OpenAFS 
+development environment.   Details are provided so that a 'beginning' 
+windows developer can build an OpenAFS installable package for Windows 
+2000/XP/2003/Vista/2008.
+
+NOTE 1:
+As of the OpenAFS 1.3 release series, Windows platforms released
+prior to Windows 2000 are no longer supported.	As of the OpenAFS 1.5
+series, the Windows 9x components are being removed from the source tree.
+
+
+****** Windows 2000/XP/2003/Vista/2008/Win7/2008-R2 Build Process ******
+
+Building OpenAFS for Windows requires configuring a Windows
+development system by installing compilation tools and header files.
+Open AFS Software development can be done on Windows 2000, XP, 2003, 
+or Vista.  The target system, where OpenAFS will be installed, can be 
+one of:
+
+ * Windows 2000
+ * Windows XP
+ * Windows XP SP2
+ * Windows 2003 
+ * Windows 2003 SP1
+ * Windows XP 64
+ * Windows 2003 64
+ * Windows 2003 R2 (32 or 64)
+ * Windows Vista (32 or 64)
+ * Windows 2008 (32 or 64)
+ * Windows 7 (32 or 64)
+ * Windows 2008 R2 (32 or 64)
+
+The build process is controlled by a nmake file that generates the 
+necessary binaries and binds them into an install package.
+
+The following steps describe how to configure the development environment:
+
+   A. Obtain a copy of the OpenAFS Source Tree
+   B. Install Compiler and Development tools.
+   C. Install SDK header files
+   D. Configure NTBUILD.BAT
+   E. Set program version Level
+   F. Build the binaries
+   G. Install NSIS 2.30
+   H. Build NSIS Install Package
+   I. Install Wix 2.0.5325
+   J. Build Wix MSI Install Package
+   K. Final Results
+   L. Optional Items
+   	
+The Microsoft development tools require anywhere from 660 MB to 1.8GB
+of storage depending on which compilers are selected.  The following 
+versions are supported:
+
+    Microsoft Visual Studio .NET 
+      available via a MSDN subscription
+
+    Microsoft Visual Studio .NET 2003
+      available via a MSDN subscription
+
+    Microsoft Visual Studio .NET 2005
+      available via a MSDN subscription
+      (used for OpenAFS.org distribution)
+
+    Microsoft Visual Studio 2008
+      available via a MSDN subscription
+
+One of the following Microsoft SDKs is required:
+
+    Microsoft Platform SDK for Windows Server 2003 SP1
+    Microsoft SDK for Windows 6.0/6.0a
+    Microsoft SDK for Windows 6.1
+
+One of the following Microsoft DDK/WDK is required:
+
+    Microsoft Windows Server 2003 SP1 DDK
+      available via a MSDN subscription or via free CD
+      http://www.microsoft.com/whdc/devtools/ddk/orderddkcd.mspx
+
+    Microsoft Windows Driver Kit 6.0
+    Microsoft Windows Driver Kit 6.1
+
+NOTE: Not all combinations of Visual Studio, SDK, and DDK/WDK are 
+known to work.  OpenAFS for Windows is packaged by Secure Endpoints Inc.
+using the following configurations:
+
+    32-bit Packages:
+        Built on Windows XP SP3
+        Visual Studio 2005
+        Windows [Platform] SDK 6.0
+        Windows DDK 6.0
+        Target: i386_w2k
+        APPVER: 5.0
+
+    64-bit Packages:
+        Built on Windows Vista 64-bit SP2
+        Visual Studio 2005
+        Windows [Platform] SDK 6.0
+        Windows DDK 6.0
+        Target: amd64_w2k
+        APPVER: 5.02
+
+These configurations are used because they are the last configurations 
+that still support building for Microsoft Windows 2000.
+
+The Microsoft HTML Help Workshop is required:
+
+    http://www.microsoft.com/downloads/details.aspx?familyid=00535334-c8a6-452f-9aa0-d597d16580cc&displaylang=en
+
+The Microsoft Internationalized Domain Names (IDN) Mitigation APIs 1.1 is required:
+
+    http://www.microsoft.com/downloads/details.aspx?FamilyId=AD6158D7-DDBA-416A-9109-07607425A815&displaylang=en
+
+ActiveState Perl 5.10 is required for man-page generation
+
+    http://www.activestate.com/activeperl/
+
+Cygwin is required for Docbook to HTML and Docbook to HTMLHelp conversion
+
+    http://cygwin.com/setup.exe
+
+Doxygen is required for Developer Documentation generation
+
+    http://www.stack.nl/~dimitri/doxygen/
+
+The NSIS installer requires about 14 MB of storage. The following 
+version is supported:
+
+    Nullsoft Scriptable Installation System 2.44
+      http://sourceforge.net/project/showfiles.php?group_id=22049&package_id=15374
+    (Be sure to use the strlen 8192 binaries)
+
+The WiX installer requires about 18 MB of storage.  The following 
+version is supported:
+
+    Wix 2.0.5325.0
+      http://prdownloads.sourceforge.net/wix/sources-2.0.5325.0.zip
+
+The OpenAFS Source directory requires about 360 MB storage. The Source
+directory size includes additional space for files that will be
+generated during the build process.   A full build of Free and Checked
+installers on 64-bit Windows will require up to 1GB of storage.
+
+
+STEP A. Obtain a copy of the Open AFS Source Tree.
+
+Transfer OpenAFS source tree onto your hardrive.  The source can be
+downloaded from the OpenAFS web site:
+	http://www.OpenAFS.org/release/snapindex.html.
+
+For this example, download source for version 1.5.61 using the
+following URL:
+http://www.openafs.org/dl/openafs/1.5.61/openafs-1.5.61-src.tar
+http://www.openafs.org/dl/openafs/1.5.61/openafs-1.5.61-doc.tar
+
+HINT: DailySnapShots are pre-release source trees and much more
+likely to have compilation errors. If this is your first attempt, do
+your build based on a release version of the source, e.g. 1.5.61. Once
+you have completed a build process successfully, you can experiment with
+other source trees.
+
+You will need an unzip utility that can expand compressed tar files.
+For example "Pkzip for Windows" from Pkware will uncompress tar files.
+(http://www.pkware.com/)
+
+Expand the downloaded tar files into target directory (c:\OpenAFS), 
+the unzip routine will expand the source into a subdirectory tree:
+    c:\OpenAFS\OpenAFS-1.5.61\ 
+
+Copy the files 'NTMakefile' and 'ntbuild.bat' from the 'src' 
+subdirectory to the OpenAFS base directory (aka %AFSROOT%):
+
+  From a DOS command prompt window, enter the following copy commands:
+
+    cd c:\OpenAFS\OpenAFS-1.5.61
+    copy src\ntbuild.bat .
+
+The OpenAFS base directory should look something like the following:
+
+  c:\OpenAFS\OpenAFS-1.5.61\
+    NTMakefile
+    ntbuild.bat
+    src
+    doc
+
+STEP B. Install compiler and development tools.
+
+Install a copy of Microsoft Visual Studio .NET, Visual Studio .NET 2003, 
+or Visual Studio .NET 2005.  Visual Studio 2008 can be used to produce
+builds but the resulting binaries cannot be used on Windows 2000.
+
+(1) You can reduce the installation size by selecting "Custom" install
+and remove all but the following Options:
+
+	Microsoft Visual C++
+	Data Access
+
+(2) When asked, Select to Register Environment Variables.
+
+
+STEP C. Install SDK header files.
+
+Files from Microsoft's Platform SDK for Windows Server 2003 SP1 are
+required to complete a build on Windows 2000/XP/2003.   At a minimum the
+following componets are known to be required: 
+
+  * Core
+  * Data Access
+  * Installer
+  * Windows Management Instrumentation
+  * Web Workshop (IE)
+
+It is advised that you install the entire SDK.  The SDK can be obtained
+from:
+
+  http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
+
+by using Internet Explorer 5.x or higher.  (Active X controls are required)
+
+The header files that are required from a Microsoft SDK/WDK are:
+
+   npapi.h    (Windows 2000,XP,2003 builds)
+   netcfgx.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
+   netcfgn.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
+   normalization.h (AFS Cache Manager)
+
+These files come from the following Microsoft DDKs/SDKs:
+
+   npapi.h:
+        Windows XP SP2 Platform SDK - include/
+
+   netcfgn.h, netcfgx.h:
+        Windows XP/2003 DDK - inc/wxp/
+
+   normalization.h:
+        Microsoft IDN Mitigation APIs 1.1 - include/
+
+STEP D. Configure NTBUILD.BAT.
+
+The NTBUILD.BAT file copied to the OpenAFS base directory must be 
+customized for use on your development system.  The provided NTBUILD.BAT
+was developed for use with Visual Studio 2003 and the Windows Server 2003
+Platform SDK.  It requires significant modification to construct a build
+environment for use with other tools.  
+
+The following variables must be defined to match your configuration:
+
+  AFSVER_CL: Set to 1200 if using MS Visual C++ 6.0
+             Set to 1300 if using MS Visual Studio .NET
+             Set to 1310 if using MS Visual Studio .NET 2003
+             Set to 1400 if using MS Visual Studio .NET 2005
+             Set to 1500 if using MS Visual Studio 2008
+
+  MSVCDIR: Set to the short name version of the directory into which
+           the visual C++ compiler was installed regardless of version
+
+  MSVCDIR64: On AMD64 systems, set to the 64-bit visual C++ compiler
+
+  MSSDKDIR: Set to the short name of the directory into which
+            the Platform SDK was installed
+
+  NTDDKDIR: Set to the short name of the INC\WNET DDK directory
+
+  NTDDKDIR2: Set to the short name of the INC\CRT DDK directory
+
+  MSIDNNLS: Set the the name of the Microsoft IDN Mitigation APIs 1.1
+            directory
+
+  AFSROOT: Set to the short name of the OpenAFS Base directory.  This
+           cannot be set to a UNC path.
+
+  SYS_NAME: One of "i386_w2k" or "amd64_w2k"
+
+  APPVER:   0x500 for Windows 2000 and above; 0x502 for AMD64 systems
+
+  _WIN32_IE: Must match APPVER
+
+  MSVCVer:  Set to 8.0 if using Visual Studio 8
+
+  CODESIGN_DESC: Product Name
+  
+  CODESIGN_TIMESTAMP: Time Stamp Service for Code Signing Certificate
+   
+  CODESIGN_URL: Support URL Displayed to End Users
+
+  CODESIGN_CROSS_CERT: Path to Microsoft Cross Signing Certificate
+                       (if you have one)
+
+
+STEP E. Set version and installation options (optional)
+
+Add a CellServDB file to install area. CellServDB contains the entries
+for the various cell names.  You can download a general purpose one
+from:
+	http://grand.central.org/dl/cellservdb/CellServDB
+then copy it to %AFSROOT%\src\WINNT\install\NSIS and name it afsdcell.ini
+
+Edit file %AFSROOT%\src\config\NTMakefile.i386_w2k or NTMakefile.amd64_w2k
+as appropriate:
+
+    AFSPRODUCT_VER_MAJOR - Version Major Number
+    AFSPRODUCT_VER_MINOR - Version Minor Number
+    AFSPRODUCT_VER_PATCH - Version Patch Number
+    AFSPRODUCT_VER_BUILD - Version Build Number
+    CELLSERVDB_INSTALL   - The default file name for the CellServDB
+                     	   included in the install Package.
+    CELLNAME_DEFAULT     - The default home cell name.
+    CELLSERVDB_WEB       - The default web address to obtain CellServDB
+
+For example: in the file %AFSROOT%\src\config\NTMakefile.i386_w2k you would
+see the following:
+
+   AFSPRODUCT_VER_MAJOR=1
+   AFSPRODUCT_VER_MINOR=5
+   AFSPRODUCT_VER_PATCH=6100
+   AFSPRODUCT_VER_BUILD=0
+   CELLNAME_DEFAULT=openafs.org
+   CELLSERVDB_INSTALL=CellServDB.GrandCentral
+   CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
+
+During the OpenAFS installation process the user will be presented
+with two choices for the CellServDB: Local copy (CELLSERVDB_INSTALL) and
+one that can be downloaded from the web (CELLSERVDB_WEB).
+
+IMPORTANT: When building your own binaries, you must set the AFSPRODUCT_VER_BUILD
+value to a number greater than 1023.  All values 0 to 1023 are reserved for use
+by official OpenAFS.org releases.  A failure to do so will result in Windows 
+Crash Reports for your binaries being delivered to OpenAFS.org for analysis.
+
+
+STEP F. Begin the build
+
+(1) From Windows 2000/XP/2003 open up a DOS prompt window.
+
+(2) Change to the %AFSROOT% directory
+
+(3) Configure the environment variables:
+
+    For a release build (SMB version):
+
+    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
+        Visual Studio environment you installed.
+
+    (b) Execute the SETENV.BAT file with the parameters "/2000 /RETAIL"
+
+    (c) Execute the NTBUILD.BAT file with the parameter "free"
+
+    For a debug build (SMB version):
+
+    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
+        Visual Studio environment you installed.
+
+    (b) Execute the SETENV.BAT file with the parameters "/2000 /DEBUG"
+
+    (c) Execute the NTBUILD.BAT file with the parameter "checked"
+
+(4) Build the complete Windows 2000/XP/2003 development environment.
+
+      nmake /f NTMakefile install
+
+While the build is running you will see many compile warnings. This
+behavior is normal; the build process is successful as long as the build
+process doesn't terminate with an error ("nmake.exe return code 0x2")
+and it displays 'Build Finished Successfully'.  Note that although the 
+the build target is "install", it does not install OpenAFS.
+
+(5) Before rebuilding you must clean the work area:
+
+    nmake /f NTMakefile clean
+
+
+STEP G. Install NSIS 2.44 (optional).
+
+Download the Nullsoft Scriptable Installation System (NSIS) 2.44 from
+
+    http://nsis.sourceforge.net/home/
+
+Run the nsis-2.33.exe installer and install to "C:\Program Files\NSIS".
+Then download the large strings build zip file and replace the installed 
+files with the versions from the zip file.  These versions increase 
+the maximum string length from 1024 characters to 8192 characters.  
+This is necessary for installation on systems with long PATH environment 
+strings.
+
+Note: The NSIS installer can only be used to produce 32-bit installers.
+
+STEP H.  Build OpenAFS NSIS install package
+
+From the %AFSROOT% directory execute:
+
+    nmake /f NTMakefile NSIS
+
+
+STEP I.  Install Wix MSI Installer
+
+Download the Wix 2.0.5325.0 installer from 
+
+    http://prdownloads.sourceforge.net/wix/sources-2.0.5325.0.zip
+
+
+STEP J.  Build Wix MSI install package
+
+From the %AFSROOT% directory execute:
+
+    nmake /f NTMakefile wix
+
+Make sure the binaries installed to \src\wix\release\ship are
+available in the PATH environment variable
+
+
+STEP K. Final Results
+
+The build process generates its binaries in %AFSROOT%\DEST. The subdirectory
+would look like the following:
+
+%AFSROOT%\DEST\{checked,free}\
+	bin
+	etc
+	include
+	lib
+	root.client
+	root.server
+	WinInstall
+
+    Bin - contains build utilities.
+    root.client - contains Open AFS binaries
+    root.server - contain Open AFS Server binaries
+    WinInstall\OpenAFSforWindows.exe - is the NSIS install package
+    WinInstall\openafs-en_US.msi - is the WiX MSI install package
+
+
+STEP L. Optional Items
+
+The build process has an error table that is compiled for many OpenAFS
+applications.  This table is generated by Unix based tools.  It is not
+normally necessary to modify this table so pre-generated source files
+are included in the OpenAFS source.  If you need to make modifications
+in these areas the Unix base tools that run on Windows can be found on
+the web. For example:
+
+	http://cygwin.com/
+
+Below is a short explanation how to update the error table.
+
+(1) Install flex and bison from a Unix based tool provider.
+
+(2) Make changes to the source files.
+
+There are two files in the source tree that are processed with lex
+and yacc on UNIX systems, src/comerr/et_lex.lex.l and
+src/comerr/error_table.y, that when processed produce the files
+et_lex.lex_nt.c, error_table_nt.c, and error_table_nt.h.
+
+Since NT does not include lex and yacc or any equivalent tools, we
+have provided the output files that lex and yacc produce (using Win32
+ports of flex and bison). This will allow builds to work for anyone
+who does not need to change the .l and .y files.
+
+If you do need to change et_lex.lex.l, then you will need to install
+Win32 port of flex on your system. Put flex.exe in a directory on the
+path and rebuild.
+
+If you do need to change error_table.y, then you will need to install
+a Win32 port of bison on your system. Put bison.exe in a directory on
+the path, configure bison as explained in step 5, and rebuild.
+
+You can also attempt to use other replacements for lex and yacc. This
+will require modifying the LEX and YACC settings in
+/config/NTMakefile.i386_nt40. If the replacements require different
+command line options than flex and bison, then you may also need to
+change src/comerr/NTMakefile.
+
+(3) Generate new OpenAFS binaries

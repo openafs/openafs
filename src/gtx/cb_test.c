@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/gtx/cb_test.c,v 1.5 2003/07/15 23:15:12 shadow Exp $");
 
 #include "gtxtextcb.h"		/*Module interface */
 

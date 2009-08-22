@@ -16,13 +16,7 @@
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
-#ifdef HAVE_STRING_H
 #include <string.h>
-#else
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
-#endif
 #include <errno.h>
 
 #include <lock.h>
@@ -82,7 +76,7 @@
 
 #define KLOGEXIT(code) rx_Finalize(); \
                        (exit(!!code))
-extern int CommandProc(struct cmd_syndesc *as, char *arock);
+static int CommandProc(struct cmd_syndesc *as, void *arock);
 
 static int zero_argc;
 static char **zero_argv;
@@ -114,7 +108,7 @@ main(int argc, char *argv[])
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+    ts = cmd_CreateSyntax(NULL, CommandProc, NULL,
 			  "obtain Kerberos authentication");
 
 #define aXFLAG 0
@@ -347,8 +341,8 @@ klog_prompter(krb5_context context,
     return 0;
 }
 
-int
-CommandProc(struct cmd_syndesc *as, char *arock)
+static int
+CommandProc(struct cmd_syndesc *as, void *arock)
 {
     krb5_principal princ = 0;
     char *cell, *pname, **hrealms, *service;
@@ -356,7 +350,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     krb5_creds incred[1], mcred[1], *outcred = 0, *afscred;
     krb5_ccache cc = 0;
     krb5_get_init_creds_opt gic_opts[1];
-    char *tofree, *outname;
+    char *tofree = NULL, *outname;
     int code;
     char *what;
     int i, dosetpag, evil, noprdb, id;
@@ -538,7 +532,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
 	    pass = passwd;
 	} else {
 	    pf = klog_prompter;
-	    pa = (char *)klog_arg;
+	    pa = klog_arg;
 	}
     }
 

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/errmap_nt.c,v 1.5 2003/07/15 23:17:16 shadow Exp $");
 
 #include <windows.h>
 #include <afs/errmap_nt.h>

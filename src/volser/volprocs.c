@@ -12,14 +12,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.42.2.16 2008/07/16 04:15:57 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
 #include <string.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV
+#include <stdlib.h>
 #include <fcntl.h>
 #include <winsock2.h>
 #else
@@ -61,18 +60,18 @@ RCSID
 #include <afs/acl.h>
 #include "afs/audit.h"
 #include <afs/dir.h>
+#include <afs/afsutil.h>
+#include <afs/vol_prototypes.h>
 
 #include "volser.h"
 #include "volint.h"
 
 #include "volser_prototypes.h"
+#include "physio.h"
+#include "dumpstuff.h"
 
 extern int DoLogging;
-extern struct volser_trans *FindTrans(), *NewTrans(), *TransList();
 extern struct afsconf_dir *tdir;
-
-/* Needed by Irix. Leave, or include a header */
-extern char *volutil_PartitionName();
 
 extern void LogError(afs_int32 errcode);
 
@@ -86,26 +85,60 @@ static int GetPartName(afs_int32 partid, char *pname);
 #endif
 
 afs_int32 localTid = 1;
-afs_int32 VolPartitionInfo(), VolNukeVolume(), VolCreateVolume(),
-VolDeleteVolume(), VolClone();
-afs_int32 VolReClone(), VolTransCreate(), VolGetNthVolume(), VolGetFlags(),
-VolForward(), VolDump();
-afs_int32 VolRestore(), VolEndTrans(), VolSetForwarding(), VolGetStatus(),
-VolSetInfo(), VolGetName();
-afs_int32 VolListPartitions(), VolListOneVolume(),
-VolXListOneVolume(), VolXListVolumes();
-afs_int32 VolListVolumes(), XVolListPartitions(), VolMonitor(),
-VolSetIdsTypes(), VolSetDate(), VolSetFlags();
+ 
+static afs_int32 VolPartitionInfo(struct rx_call *, char *pname,
+				  struct diskPartition64 *);
+static afs_int32 VolNukeVolume(struct rx_call *, afs_int32, afs_uint32);
+static afs_int32 VolCreateVolume(struct rx_call *, afs_int32, char *,
+				 afs_int32, afs_uint32, afs_uint32 *,
+				 afs_int32 *);
+static afs_int32 VolDeleteVolume(struct rx_call *, afs_int32);
+static afs_int32 VolClone(struct rx_call *, afs_int32, afs_uint32,
+			  afs_int32, char *, afs_uint32 *);
+static afs_int32 VolReClone(struct rx_call *, afs_int32, afs_int32);
+static afs_int32 VolTransCreate(struct rx_call *, afs_uint32, afs_int32,
+				afs_int32, afs_int32 *);
+static afs_int32 VolGetNthVolume(struct rx_call *, afs_int32, afs_uint32 *,
+				 afs_int32 *);
+static afs_int32 VolGetFlags(struct rx_call *, afs_int32, afs_int32 *);
+static afs_int32 VolSetFlags(struct rx_call *, afs_int32, afs_int32 );
+static afs_int32 VolForward(struct rx_call *, afs_int32, afs_int32,
+			    struct destServer *destination, afs_int32,
+			    struct restoreCookie *cookie);
+static afs_int32 VolDump(struct rx_call *, afs_int32, afs_int32, afs_int32);
+static afs_int32 VolRestore(struct rx_call *, afs_int32, afs_int32,
+			    struct restoreCookie *);
+static afs_int32 VolEndTrans(struct rx_call *, afs_int32, afs_int32 *);
+static afs_int32 VolSetForwarding(struct rx_call *, afs_int32, afs_int32);
+static afs_int32 VolGetStatus(struct rx_call *, afs_int32,
+			      struct volser_status *);
+static afs_int32 VolSetInfo(struct rx_call *, afs_int32, struct volintInfo *);
+static afs_int32 VolGetName(struct rx_call *, afs_int32, char **);
+static afs_int32 VolListPartitions(struct rx_call *, struct pIDs *);
+static afs_int32 XVolListPartitions(struct rx_call *, struct partEntries *);
+static afs_int32 VolListOneVolume(struct rx_call *, afs_int32, afs_uint32,
+				  volEntries *);
+static afs_int32 VolXListOneVolume(struct rx_call *, afs_int32, afs_uint32,
+				   volXEntries *);
+static afs_int32 VolListVolumes(struct rx_call *, afs_int32, afs_int32,
+				volEntries *);
+static afs_int32 VolXListVolumes(struct rx_call *, afs_int32, afs_int32,
+				volXEntries *);
+static afs_int32 VolMonitor(struct rx_call *, transDebugEntries *);
+static afs_int32 VolSetIdsTypes(struct rx_call *, afs_int32, char [],
+				afs_int32, afs_uint32, afs_uint32,
+				afs_uint32);
+static afs_int32 VolSetDate(struct rx_call *, afs_int32, afs_int32);
 
 /* this call unlocks all of the partition locks we've set */
 int 
-VPFullUnlock()
+VPFullUnlock(void)
 {
     register struct DiskPartition64 *tp;
     for (tp = DiskPartitionList; tp; tp = tp->next) {
-	if (tp->lock_fd != -1) {
+	if (tp->lock_fd != INVALID_FD) {
 	    close(tp->lock_fd);	/* releases flock held on this partition */
-	    tp->lock_fd = -1;
+	    tp->lock_fd = INVALID_FD;
 	}
     }
     return 0;
@@ -150,7 +183,7 @@ PartitionID(char *aname)
 }
 
 static int
-ConvertVolume(afs_int32 avol, char *aname, afs_int32 asize)
+ConvertVolume(afs_uint32 avol, char *aname, afs_int32 asize)
 {
     if (asize < 18)
 	return -1;
@@ -181,7 +214,7 @@ ConvertPartition(int apartno, char *aname, int asize)
 
 /* the only attach function that takes a partition is "...ByName", so we use it */
 struct Volume *
-XAttachVolume(afs_int32 *error, afs_int32 avolid, afs_int32 apartid, int amode)
+XAttachVolume(afs_int32 *error, afs_uint32 avolid, afs_int32 apartid, int amode)
 {
     char pbuf[30], vbuf[20];
     register struct Volume *tv;
@@ -230,9 +263,9 @@ ViceCreateRoot(Volume *vp)
     did.Vnode = (VnodeId) 1;
     did.Unique = 1;
 
-    assert(!(MakeDir(&dir, &did, &did)));
+    assert(!(MakeDir(&dir, (afs_int32 *)&did, (afs_int32 *)&did)));
     DFlush();			/* flush all modified dir buffers out */
-    DZap(&dir);			/* Remove all buffers for this dir */
+    DZap((afs_int32 *)&dir);			/* Remove all buffers for this dir */
     length = Length(&dir);	/* Remember size of this directory */
 
     FidZap(&dir);		/* Done with the dir handle obtained via SetSalvageDirHandle() */
@@ -330,7 +363,7 @@ VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
     if (dp) {
 	strncpy(partition->name, dp->name, 32);
 	strncpy(partition->devName, dp->devName, 32);
-	partition->lock_fd = dp->lock_fd;
+	partition->lock_fd = (int)dp->lock_fd;
 	partition->free = dp->free;
 	partition->minFree = dp->totalUsable;
 	return 0;
@@ -340,7 +373,7 @@ VolPartitionInfo(struct rx_call *acid, char *pname, struct diskPartition64
 
 /* obliterate a volume completely, and slowly. */
 afs_int32
-SAFSVolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
+SAFSVolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_uint32 avolID)
 {
     afs_int32 code;
 
@@ -349,11 +382,12 @@ SAFSVolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
     return code;
 }
 
-afs_int32
-VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
+static afs_int32
+VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_uint32 avolID)
 {
     char partName[50];
     afs_int32 error;
+    Error verror;
     register afs_int32 code;
     struct Volume *tvp;
     char caller[MAXKTCNAMELEN];
@@ -373,7 +407,7 @@ VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
     tvp = XAttachVolume(&error, avolID, apartID, V_VOLUPD);
     code = nuke(partName, avolID);
     if (tvp)
-	VDetachVolume(&error, tvp);
+	VDetachVolume(&verror, tvp);
     return code;
 }
 
@@ -385,7 +419,7 @@ VolNukeVolume(struct rx_call *acid, afs_int32 apartID, afs_int32 avolID)
  */
 afs_int32
 SAFSVolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname, 
-		    afs_int32 atype, afs_int32 aparent, afs_int32 *avolid, 
+		    afs_int32 atype, afs_uint32 aparent, afs_uint32 *avolid, 
 		    afs_int32 *atrans)
 {
     afs_int32 code;
@@ -398,15 +432,16 @@ SAFSVolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
     return code;
 }
 
-afs_int32
+static afs_int32
 VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname, 
-		    afs_int32 atype, afs_int32 aparent, afs_int32 *avolid, 
+		    afs_int32 atype, afs_uint32 aparent, afs_uint32 *avolid, 
 		    afs_int32 *atrans)
 {
-    afs_int32 error;
+    Error error;
     register Volume *vp;
-    afs_int32 junk;		/* discardable error code */
-    register afs_int32 volumeID, doCreateRoot = 1;
+    Error junk;		/* discardable error code */
+    afs_uint32 volumeID;
+    afs_int32 doCreateRoot = 1;
     register struct volser_trans *tt;
     char ppath[30];
     char caller[MAXKTCNAMELEN];
@@ -446,7 +481,7 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
 	return EIO;
     }
     V_uniquifier(vp) = 1;
-    V_creationDate(vp) = V_copyDate(vp);
+    V_updateDate(vp) = V_creationDate(vp) = V_copyDate(vp);
     V_inService(vp) = V_blessed(vp) = 1;
     V_type(vp) = atype;
     AssignVolumeName(&V_disk(vp), aname, 0);
@@ -485,11 +520,11 @@ SAFSVolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
 {
     register struct volser_trans *tt;
-    afs_int32 error;
+    Error error;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -519,17 +554,18 @@ VolDeleteVolume(struct rx_call *acid, afs_int32 atrans)
 
 /* make a clone of the volume associated with atrans, possibly giving it a new
  * number (allocate a new number if *newNumber==0, otherwise use *newNumber
- * for the clone's id).  The new clone is given the name newName.  Finally, due to
- * efficiency considerations, if purgeId is non-zero, we purge that volume when doing
- * the clone operation.  This may be useful when making new backup volumes, for instance
- * since the net result of a clone and a purge generally leaves many inode ref counts
- * the same, while doing them separately would result in far more iincs and idecs being
- * peformed (and they are slow operations).
+ * for the clone's id).  The new clone is given the name newName.  Finally,
+ * due to efficiency considerations, if purgeId is non-zero, we purge that
+ * volume when doing the clone operation.  This may be useful when making
+ * new backup volumes, for instance since the net result of a clone and a
+ * purge generally leaves many inode ref counts the same, while doing them
+ * separately would result in far more iincs and idecs being peformed
+ * (and they are slow operations).
  */
 /* for efficiency reasons, sometimes faster to piggyback a purge here */
 afs_int32
-SAFSVolClone(struct rx_call *acid, afs_int32 atrans, afs_int32 purgeId, 
-	     afs_int32 newType, char *newName, afs_int32 *newNumber)
+SAFSVolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId, 
+	     afs_int32 newType, char *newName, afs_uint32 *newNumber)
 {
     afs_int32 code;
 
@@ -540,11 +576,11 @@ SAFSVolClone(struct rx_call *acid, afs_int32 atrans, afs_int32 purgeId,
     return code;
 }
 
-afs_int32
-VolClone(struct rx_call *acid, afs_int32 atrans, afs_int32 purgeId, 
-	     afs_int32 newType, char *newName, afs_int32 *newNumber)
+static afs_int32
+VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId, 
+	     afs_int32 newType, char *newName, afs_uint32 *newNumber)
 {
-    VolumeId newId;
+    afs_uint32 newId;
     register struct Volume *originalvp, *purgevp, *newvp;
     Error error, code;
     register struct volser_trans *tt, *ttc;
@@ -581,7 +617,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_int32 purgeId,
     ttc = NewTrans(newId, tt->partition);
     if (!ttc) {			/* someone is messing with the clone already */
 	TRELE(tt);
-	return VBUSY;
+	return VOLSERVOLBUSY;
     }
     strcpy(tt->lastProcName, "Clone");
     tt->rxCallPtr = acid;
@@ -714,7 +750,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_int32 purgeId,
 
 /* reclone this volume into the specified id */
 afs_int32
-SAFSVolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
+SAFSVolReClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 cloneId)
 {
     afs_int32 code;
 
@@ -724,7 +760,7 @@ SAFSVolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 {
     register struct Volume *originalvp, *clonevp;
@@ -753,7 +789,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
     ttc = NewTrans(cloneId, tt->partition);
     if (!ttc) {			/* someone is messing with the clone already */
 	TRELE(tt);
-	return VBUSY;
+	return VOLSERVOLBUSY;
     }
     strcpy(tt->lastProcName, "ReClone");
     tt->rxCallPtr = acid;
@@ -888,7 +924,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
  * See volser.h for definition of iflags (the constants are named IT*).
  */
 afs_int32
-SAFSVolTransCreate(struct rx_call *acid, afs_int32 volume, afs_int32 partition,
+SAFSVolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
 		   afs_int32 iflags, afs_int32 *ttid)
 {
     afs_int32 code;
@@ -899,13 +935,14 @@ SAFSVolTransCreate(struct rx_call *acid, afs_int32 volume, afs_int32 partition,
     return code;
 }
 
-afs_int32
-VolTransCreate(struct rx_call *acid, afs_int32 volume, afs_int32 partition,
+static afs_int32
+VolTransCreate(struct rx_call *acid, afs_uint32 volume, afs_int32 partition,
 		   afs_int32 iflags, afs_int32 *ttid)
 {
     register struct volser_trans *tt;
     register Volume *tv;
-    afs_int32 error, code;
+    afs_int32 error;
+    Error code;
     afs_int32 mode;
     char caller[MAXKTCNAMELEN];
 
@@ -954,7 +991,7 @@ VolTransCreate(struct rx_call *acid, afs_int32 volume, afs_int32 partition,
  * Both the volume number and partition number (one-based) are returned.
  */
 afs_int32
-SAFSVolGetNthVolume(struct rx_call *acid, afs_int32 aindex, afs_int32 *avolume,
+SAFSVolGetNthVolume(struct rx_call *acid, afs_int32 aindex, afs_uint32 *avolume,
 		    afs_int32 *apart)
 {
     afs_int32 code;
@@ -964,8 +1001,8 @@ SAFSVolGetNthVolume(struct rx_call *acid, afs_int32 aindex, afs_int32 *avolume,
     return code;
 }
 
-afs_int32
-VolGetNthVolume(struct rx_call *acid, afs_int32 aindex, afs_int32 *avolume,
+static afs_int32
+VolGetNthVolume(struct rx_call *acid, afs_int32 aindex, afs_uint32 *avolume,
 		    afs_int32 *apart)
 {
     Log("1 Volser: GetNthVolume: Not yet implemented\n");
@@ -985,7 +1022,7 @@ SAFSVolGetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 *aflags)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolGetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 *aflags)
 {
     register struct volser_trans *tt;
@@ -1024,12 +1061,12 @@ SAFSVolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
 {
     register struct volser_trans *tt;
     register struct Volume *vp;
-    afs_int32 error;
+    Error error;
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(tdir, acid, caller))
@@ -1068,6 +1105,7 @@ VolSetFlags(struct rx_call *acid, afs_int32 atid, afs_int32 aflags)
     }
     VUpdateVolume(&error, vp);
     tt->vflags = aflags;
+    tt->rxCallPtr = (struct rx_call *)0;
     if (TRELE(tt) && !error)
 	return VOLSERTRELE_ERROR;
 
@@ -1092,7 +1130,7 @@ SAFSVolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
     return code;
 }
 
-afs_int32
+static afs_int32
 VolForward(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 	       struct destServer *destination, afs_int32 destTrans, 
 	       struct restoreCookie *cookie)
@@ -1317,7 +1355,8 @@ SAFSVolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate)
 }
 
 afs_int32
-SAFSVolDumpV2(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs_int32 flags)
+SAFSVolDumpV2(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
+	      afs_int32 flags)
 {
     afs_int32 code;
 
@@ -1326,8 +1365,9 @@ SAFSVolDumpV2(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs
     return code;
 }
 
-afs_int32
-VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs_int32 flags)
+static afs_int32
+VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
+	afs_int32 flags)
 {
     int code = 0;
     register struct volser_trans *tt;
@@ -1364,7 +1404,7 @@ VolDump(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate, afs_int32
  * Ha!  No more helper process!
  */
 afs_int32
-SAFSVolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags, 
+SAFSVolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
 	       struct restoreCookie *cookie)
 {
     afs_int32 code;
@@ -1374,9 +1414,9 @@ SAFSVolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
     return code;
 }
 
-afs_int32
-VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags, 
-	       struct restoreCookie *cookie)
+static afs_int32
+VolRestore(struct rx_call *acid, afs_int32 atrans, afs_int32 aflags,
+	   struct restoreCookie *cookie)
 {
     register struct volser_trans *tt;
     register afs_int32 code, tcode;
@@ -1416,7 +1456,7 @@ SAFSVolEndTrans(struct rx_call *acid, afs_int32 destTrans, afs_int32 *rcode)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolEndTrans(struct rx_call *acid, afs_int32 destTrans, afs_int32 *rcode)
 {
     register struct volser_trans *tt;
@@ -1445,7 +1485,7 @@ SAFSVolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 {
     register struct volser_trans *tt;
@@ -1477,7 +1517,7 @@ VolSetForwarding(struct rx_call *acid, afs_int32 atid, afs_int32 anewsite)
 }
 
 afs_int32
-SAFSVolGetStatus(struct rx_call *acid, afs_int32 atrans, 
+SAFSVolGetStatus(struct rx_call *acid, afs_int32 atrans,
 		 register struct volser_status *astatus)
 {
     afs_int32 code;
@@ -1487,9 +1527,9 @@ SAFSVolGetStatus(struct rx_call *acid, afs_int32 atrans,
     return code;
 }
 
-afs_int32
-VolGetStatus(struct rx_call *acid, afs_int32 atrans, 
-		 register struct volser_status *astatus)
+static afs_int32
+VolGetStatus(struct rx_call *acid, afs_int32 atrans,
+	     register struct volser_status *astatus)
 {
     register struct Volume *tv;
     register struct VolumeDiskData *td;
@@ -1539,7 +1579,7 @@ VolGetStatus(struct rx_call *acid, afs_int32 atrans,
 }
 
 afs_int32
-SAFSVolSetInfo(struct rx_call *acid, afs_int32 atrans, 
+SAFSVolSetInfo(struct rx_call *acid, afs_int32 atrans,
 	       register struct volintInfo *astatus)
 {
     afs_int32 code;
@@ -1549,15 +1589,15 @@ SAFSVolSetInfo(struct rx_call *acid, afs_int32 atrans,
     return code;
 }
 
-afs_int32
-VolSetInfo(struct rx_call *acid, afs_int32 atrans, 
+static afs_int32
+VolSetInfo(struct rx_call *acid, afs_int32 atrans,
 	       register struct volintInfo *astatus)
 {
     register struct Volume *tv;
     register struct VolumeDiskData *td;
     struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
-    afs_int32 error;
+    Error error;
 
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;	/*not a super user */
@@ -1610,7 +1650,7 @@ SAFSVolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
 {
     register struct Volume *tv;
@@ -1658,8 +1698,8 @@ VolGetName(struct rx_call *acid, afs_int32 atrans, char **aname)
 /*this is a handshake to indicate that the next call will be SAFSVolRestore
  * - a noop now !*/
 afs_int32
-SAFSVolSignalRestore(struct rx_call *acid, char volname[], int volType, 
-		     afs_int32 parentId, afs_int32 cloneId)
+SAFSVolSignalRestore(struct rx_call *acid, char volname[], int volType,
+		     afs_uint32 parentId, afs_uint32 cloneId)
 {
     return 0;
 }
@@ -1677,11 +1717,11 @@ SAFSVolListPartitions(struct rx_call *acid, struct pIDs *partIds)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolListPartitions(struct rx_call *acid, struct pIDs *partIds)
 {
     char namehead[9];
-    char i;
+    int i;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator */
 
@@ -1707,10 +1747,9 @@ SAFSVolXListPartitions(struct rx_call *acid, struct partEntries *pEntries)
     return code;
 }
 
-afs_int32
+static afs_int32
 XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 {
-    struct stat rbuf, pbuf;
     char namehead[9];
     struct partList partList;
     struct DiskPartition64 *dp;
@@ -1766,7 +1805,7 @@ ExtractVolId(char vname[])
 /*return the name of the next volume header in the directory associated with dirp and dp.
 *the volume id is  returned in volid, and volume header name is returned in volname*/
 int
-GetNextVol(DIR * dirp, char *volname, afs_int32 * volid)
+GetNextVol(DIR * dirp, char *volname, afs_uint32 * volid)
 {
     struct dirent *dp;
 
@@ -1831,9 +1870,9 @@ typedef struct {
  * fill in appropriate type of on-wire volume metadata structure.
  *
  * @param vp      pointer to volume object
- * @param hdr     pointer to volume disk data object
  * @param handle  pointer to wire format handle object
  *
+ * @pre vp object must contain header & pending_vol_op structurs (populate if from RPC)
  * @pre handle object must have a valid pointer and enumeration value
  *
  * @note passing a NULL value for vp means that the fileserver doesn't
@@ -1844,12 +1883,13 @@ typedef struct {
  *   @retval 1 failure
  */
 static int
-FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
+FillVolInfo(Volume * vp, volint_info_handle_t * handle)
 {
     unsigned int numStatBytes, now;
+    register struct VolumeDiskData *hdr = &vp->header->diskstuff;
 
     /*read in the relevant info */
-    strcpy(VOLINT_INFO_PTR(handle, name), hdr->name);
+    strcpy((char *)VOLINT_INFO_PTR(handle, name), hdr->name);
     VOLINT_INFO_STORE(handle, status, VOK);	/*its ok */
     VOLINT_INFO_STORE(handle, volid, hdr->id);
     VOLINT_INFO_STORE(handle, type, hdr->type);	/*if ro volume */
@@ -1880,16 +1920,35 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
      * along with the blessed and inService flags from the header.
      *   -- tkeiser 11/27/2007
      */
+
+    /* Conditions that offline status is based on: 
+		volume is unattached state
+		volume state is in (one of several error states)
+		volume not in service
+		volume is not marked as blessed (not on hold)
+		volume in salvage req. state
+		volume needsSalvaged 
+		next op would set volume offline
+		next op would not leave volume online (based on several conditions)
+    */
     if (!vp ||
 	(V_attachState(vp) == VOL_STATE_UNATTACHED) ||
 	VIsErrorState(V_attachState(vp)) ||
 	!hdr->inService ||
-	!hdr->blessed) {
+	!hdr->blessed || 
+	(V_attachState(vp) == VOL_STATE_SALVSYNC_REQ) ||
+	hdr->needsSalvaged ||
+	(vp->pending_vol_op && 
+		(vp->pending_vol_op->com.command == FSYNC_VOL_OFF || 
+		!VVolOpLeaveOnline_r(vp, vp->pending_vol_op) )
+	)
+	) {
 	VOLINT_INFO_STORE(handle, inUse, 0);
     } else {
 	VOLINT_INFO_STORE(handle, inUse, 1);
     }
 #else
+    /* offline status based on program type, where != fileServer enum (1) is offline */
     if (hdr->inUse == fileServer) {
 	VOLINT_INFO_STORE(handle, inUse, 1);
     } else {
@@ -1899,6 +1958,7 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
 
 
     switch(handle->volinfo_type) {
+	/* NOTE: VOLINT_INFO_STORE not used in this section because values are specific to one volinfo_type */
     case VOLINT_INFO_TYPE_BASE:
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1950,6 +2010,8 @@ FillVolInfo(Volume * vp, VolumeDiskData * hdr, volint_info_handle_t * handle)
     return 0;
 }
 
+#ifdef AFS_DEMAND_ATTACH_FS
+
 /**
  * get struct Volume out of the fileserver.
  *
@@ -1995,6 +2057,8 @@ GetVolObject(afs_uint32 volumeId, char * pname, Volume ** vp)
     return code;
 }
 
+#endif
+
 /**
  * mode of volume list operation.
  */
@@ -2028,19 +2092,30 @@ GetVolInfo(afs_uint32 partId,
 	   vol_info_list_mode_t mode)
 {
     int code = -1;
-    int reason;
-    afs_int32 error;
+    Error error;
     struct volser_trans *ttc = NULL;
-    struct Volume fs_tv_buf, *fs_tv = &fs_tv_buf, *tv = NULL;
+    struct Volume *fill_tv, *tv = NULL;
+#ifdef AFS_DEMAND_ATTACH_FS
+    struct Volume fs_tv_buf, *fs_tv = &fs_tv_buf; /* Create a structure, and a pointer to that structure */
+    SYNC_PROTO_BUF_DECL(fs_res_buf); /* Buffer for the pending_vol_op */
+    SYNC_response fs_res; /* Response handle for the pending_vol_op */
+    FSSYNC_VolOp_info pending_vol_op_res; /* Pending vol ops to full in volume */
+
+    /* Set up response handle for pending_vol_op */
+    fs_res.hdr.response_len = sizeof(fs_res.hdr);
+    fs_res.payload.buf = fs_res_buf;
+    fs_res.payload.len = SYNC_PROTO_MAX_LEN;
+#endif
 
     ttc = NewTrans(volumeId, partId);
     if (!ttc) {
 	code = -3;
-	VOLINT_INFO_STORE(handle, status, VBUSY);
+	VOLINT_INFO_STORE(handle, status, VOLSERVOLBUSY);
 	VOLINT_INFO_STORE(handle, volid, volumeId);
 	goto drop;
     }
 
+    /* Get volume from volserver */
     tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n", 
@@ -2074,23 +2149,40 @@ GetVolInfo(afs_uint32 partId,
 	/*this volume will be salvaged */
 	Log("1 Volser: GetVolInfo: Volume %u (%s:%s) needs to be salvaged\n", 
 	    volumeId, pname, volname);
-	goto drop;
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
+    /* If using DAFS, get volume from fsserver */
     if (GetVolObject(volumeId, pname, &fs_tv) != SYNC_OK) {
 	goto drop;
     }
+
+    /* fs_tv is a shallow copy, must populate certain structures before passing along */
+    if (FSYNC_VolOp(volumeId, pname, FSYNC_VOL_QUERY_VOP, 0, &fs_res) == SYNC_OK) { 
+	/* If we if the pending vol op */
+	memcpy(&pending_vol_op_res, fs_res.payload.buf, sizeof(FSSYNC_VolOp_info));
+	fs_tv->pending_vol_op=&pending_vol_op_res;
+    } else {
+	fs_tv->pending_vol_op=NULL;
+    }
+
+    /* populate the header from the volserver copy */
+    fs_tv->header=tv->header;
+
+    /* When using DAFS, use the fs volume info, populated with required structures */
+    fill_tv = fs_tv;
+#else 
+    /* When not using DAFS, just use the local volume info */
+    fill_tv = tv;
 #endif
 
     /* ok, we have all the data we need; fill in the on-wire struct */
-    code = FillVolInfo(fs_tv, &tv->header->diskstuff, handle);
-
+    code = FillVolInfo(fill_tv, handle);
 
  drop:
     if (code == -1) {
 	VOLINT_INFO_STORE(handle, status, 0);
-	strcpy(VOLINT_INFO_PTR(handle, name), volname);
+	strcpy((char *)VOLINT_INFO_PTR(handle, name), volname);
 	VOLINT_INFO_STORE(handle, volid, volumeId);
     }
     if (tv) {
@@ -2098,7 +2190,7 @@ GetVolInfo(afs_uint32 partId,
 	tv = NULL;
 	if (error) {
 	    VOLINT_INFO_STORE(handle, status, 0);
-	    strcpy(VOLINT_INFO_PTR(handle, name), volname);
+	    strcpy((char *)VOLINT_INFO_PTR(handle, name), volname);
 	    Log("1 Volser: GetVolInfo: Could not detach volume %u (%s:%s)\n",
 		volumeId, pname, volname);
 	}
@@ -2113,8 +2205,8 @@ GetVolInfo(afs_uint32 partId,
 
 /*return the header information about the <volid> */
 afs_int32
-SAFSVolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32 
-		     volumeId, volEntries *volumeInfo)
+SAFSVolListOneVolume(struct rx_call *acid, afs_int32 partid,  
+                     afs_uint32 volumeId, volEntries *volumeInfo)
 {
     afs_int32 code;
 
@@ -2123,24 +2215,24 @@ SAFSVolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
     return code;
 }
 
-afs_int32
-VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32 
-		     volumeId, volEntries *volumeInfo)
+static afs_int32
+VolListOneVolume(struct rx_call *acid, afs_int32 partid, 
+                 afs_uint32 volumeId, volEntries *volumeInfo)
 {
     volintInfo *pntr;
     struct DiskPartition64 *partP;
     char pname[9], volname[20];
-    afs_int32 error = 0;
     DIR *dirp;
-    afs_int32 volid;
+    afs_uint32 volid;
     int found = 0;
-    unsigned int now;
     int code;
     volint_info_handle_t handle;
 
     volumeInfo->volEntries_val = (volintInfo *) malloc(sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
 	return ENOMEM;
+    memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
+
     pntr = volumeInfo->volEntries_val;
     volumeInfo->volEntries_len = 1;
     if (GetPartName(partid, pname))
@@ -2213,7 +2305,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 
 afs_int32
 SAFSVolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID, 
-		      afs_int32 a_volID, volXEntries *a_volumeXInfoP)
+		      afs_uint32 a_volID, volXEntries *a_volumeXInfoP)
 {
     afs_int32 code;
 
@@ -2222,19 +2314,17 @@ SAFSVolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
     return code;
 }
 
-afs_int32
+static afs_int32
 VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID, 
-		      afs_int32 a_volID, volXEntries *a_volumeXInfoP)
+                  afs_uint32 a_volID, volXEntries *a_volumeXInfoP)
 {				/*SAFSVolXListOneVolume */
 
     volintXInfo *xInfoP;	/*Ptr to the extended vol info */
     struct DiskPartition64 *partP;	/*Ptr to partition */
     char pname[9], volname[20];	/*Partition, volume names */
-    afs_int32 error;		/*Error code */
     DIR *dirp;			/*Partition directory ptr */
-    afs_int32 currVolID;	/*Current volume ID */
+    afs_uint32 currVolID;	        /*Current volume ID */
     int found = 0;		/*Did we find the volume we need? */
-    unsigned int now;
     int code;
     volint_info_handle_t handle;
 
@@ -2246,6 +2336,8 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	(volintXInfo *) malloc(sizeof(volintXInfo));
     if (!a_volumeXInfoP->volXEntries_val)
 	return ENOMEM;
+    memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
+
     xInfoP = a_volumeXInfoP->volXEntries_val;
     a_volumeXInfoP->volXEntries_len = 1;
     code = ENODEV;
@@ -2334,7 +2426,7 @@ SAFSVolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     return code;
 }
 
-afs_int32
+static afs_int32
 VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags, 
 		   volEntries *volumeInfo)
 {
@@ -2342,10 +2434,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     struct DiskPartition64 *partP;
     afs_int32 allocSize = 1000;	/*to be changed to a larger figure */
     char pname[9], volname[20];
-    afs_int32 error = 0;
     DIR *dirp;
-    afs_int32 volid;
-    unsigned int now;
+    afs_uint32 volid;
     int code;
     volint_info_handle_t handle;
 
@@ -2353,6 +2443,8 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	(volintInfo *) malloc(allocSize * sizeof(volintInfo));
     if (!volumeInfo->volEntries_val)
 	return ENOMEM;
+    memset(volumeInfo->volEntries_val, 0, sizeof(volintInfo)); /* Clear structure */
+
     pntr = volumeInfo->volEntries_val;
     volumeInfo->volEntries_len = 0;
     if (GetPartName(partid, pname))
@@ -2394,7 +2486,6 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	    /*just volids are needed */
 	}
 
-      drop:
 	pntr++;
 	volumeInfo->volEntries_len += 1;
 	if ((allocSize - volumeInfo->volEntries_len) < 5) {
@@ -2460,7 +2551,7 @@ SAFSVolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
     return code;
 }
 
-afs_int32
+static afs_int32
 VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 		    afs_int32 a_flags, volXEntries *a_volumeXInfoP)
 {				/*SAFSVolXListVolumes */
@@ -2469,10 +2560,8 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
     struct DiskPartition64 *partP;	/*Ptr to partition */
     afs_int32 allocSize = 1000;	/*To be changed to a larger figure */
     char pname[9], volname[20];	/*Partition, volume names */
-    afs_int32 error = 0;	/*Return code */
     DIR *dirp;			/*Partition directory ptr */
-    afs_int32 volid;		/*Current volume ID */
-    unsigned int now;
+    afs_uint32 volid;		/*Current volume ID */
     int code;
     volint_info_handle_t handle;
 
@@ -2484,6 +2573,8 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	(volintXInfo *) malloc(allocSize * sizeof(volintXInfo));
     if (!a_volumeXInfoP->volXEntries_val)
 	return ENOMEM;
+    memset(a_volumeXInfoP->volXEntries_val, 0, sizeof(volintXInfo)); /* Clear structure */
+
     xInfoP = a_volumeXInfoP->volXEntries_val;
     a_volumeXInfoP->volXEntries_len = 0;
 
@@ -2547,7 +2638,6 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    xInfoP->volid = volid;
 	}
 
-      drop:
 	/*
 	 * Bump the pointer in the data area we're building, along with
 	 * the count of the number of entries it contains.
@@ -2606,7 +2696,7 @@ SAFSVolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 {
     transDebugInfo *pntr;
@@ -2663,7 +2753,9 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 }
 
 afs_int32
-SAFSVolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[], afs_int32 type, afs_int32 pId, afs_int32 cloneId, afs_int32 backupId)
+SAFSVolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
+		   afs_int32 type, afs_uint32 pId, afs_uint32 cloneId,
+		   afs_uint32 backupId)
 {
     afs_int32 code;
 
@@ -2674,11 +2766,13 @@ SAFSVolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[], afs_int32 
     return code;
 }
 
-afs_int32
-VolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[], afs_int32 type, afs_int32 pId, afs_int32 cloneId, afs_int32 backupId)
+static afs_int32
+VolSetIdsTypes(struct rx_call *acid, afs_int32 atid, char name[],
+	       afs_int32 type, afs_uint32 pId, afs_uint32 cloneId,
+	       afs_uint32 backupId)
 {
     struct Volume *tv;
-    afs_int32 error = 0;
+    Error error = 0;
     register struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
 
@@ -2733,11 +2827,11 @@ SAFSVolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
     return code;
 }
 
-afs_int32
+static afs_int32
 VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
 {
     struct Volume *tv;
-    afs_int32 error = 0;
+    Error error = 0;
     register struct volser_trans *tt;
     char caller[MAXKTCNAMELEN];
 
@@ -2777,7 +2871,7 @@ VolSetDate(struct rx_call *acid, afs_int32 atid, afs_int32 cdate)
 
 afs_int32
 SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
-			   afs_int32 volumeId)
+			   afs_uint32 volumeId)
 {
 #ifdef AFS_NT40_ENV
     return EXDEV;
@@ -2788,7 +2882,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
     char pname[16], volname[20];
     struct DiskPartition64 *partP;
     afs_int32 ret = ENODEV;
-    afs_int32 volid;
+    afs_uint32 volid;
 
     if (!afsconf_SuperUser(tdir, acid, caller))
 	return VOLSERBAD_ACCESS;	/*not a super user */
@@ -2814,7 +2908,7 @@ SAFSVolConvertROtoRWvolume(struct rx_call *acid, afs_int32 partId,
 #endif
             ttc = NewTrans(volumeId, partId);
             if (!ttc) {
-		return VBUSY;
+		return VOLSERVOLBUSY;
             }
 #ifdef AFS_NAMEI_ENV
 	    ret = namei_ConvertROtoRWvolume(pname, volumeId);
@@ -2862,6 +2956,91 @@ SAFSVolGetSize(struct rx_call *acid, afs_int32 fromTrans, afs_int32 fromDate,
 
 /*    osi_auditU(acid, VS_DumpEvent, code, AUD_LONG, fromTrans, AUD_END);  */
     return code;
+}
+
+afs_int32
+SAFSVolSplitVolume(struct rx_call *acall, afs_uint32 vid, afs_uint32 new,
+		   afs_uint32 where, afs_int32 verbose)
+{
+#if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
+    Error code, code2;
+    Volume *vol=0, *newvol=0;
+    struct volser_trans *tt = 0, *tt2 = 0;
+    char caller[MAXKTCNAMELEN];
+    char line[128];
+
+    if (!afsconf_SuperUser(tdir, acall, caller)) 
+        return EPERM;
+
+    vol = VAttachVolume(&code, vid, V_VOLUPD);
+    if (!vol) {
+        if (!code)
+            code = ENOENT;
+        return code;
+    }
+    newvol = VAttachVolume(&code, new, V_VOLUPD);
+    if (!newvol) {
+        VDetachVolume(&code2, vol);
+        if (!code)
+            code = ENOENT;
+        return code;
+    }
+    if (V_device(vol) != V_device(newvol) 
+	|| V_uniquifier(newvol) != 2) {
+        if (V_device(vol) != V_device(newvol)) {
+            sprintf(line, "Volumes %u and %u are not in the same partition, aborted.\n",
+		    vid, new);
+            rx_Write(acall, line, strlen(line));
+        }
+        if (V_uniquifier(newvol) != 2) {
+            sprintf(line, "Volume %u is not freshly created, aborted.\n", new);
+            rx_Write(acall, line, strlen(line));
+        }
+        line[0] = 0;
+        rx_Write(acall, line, 1);
+        VDetachVolume(&code2, vol);
+        VDetachVolume(&code2, newvol);
+        return EINVAL;
+    }
+    tt = NewTrans(vid, V_device(vol));
+    if (!tt) {
+        sprintf(line, "Couldn't create transaction for %u, aborted.\n", vid);
+        rx_Write(acall, line, strlen(line));
+        line[0] = 0;
+        rx_Write(acall, line, 1);
+        VDetachVolume(&code2, vol);
+        VDetachVolume(&code2, newvol);
+        return VOLSERVOLBUSY;
+    } 
+    tt->iflags = ITBusy;
+    tt->vflags = 0;
+    strcpy(tt->lastProcName, "SplitVolume");
+
+    tt2 = NewTrans(new, V_device(newvol));
+    if (!tt2) {
+        sprintf(line, "Couldn't create transaction for %u, aborted.\n", new);
+        rx_Write(acall, line, strlen(line));
+        line[0] = 0;
+        rx_Write(acall, line, 1);
+        DeleteTrans(tt, 1);
+        VDetachVolume(&code2, vol);
+        VDetachVolume(&code2, newvol);
+        return VOLSERVOLBUSY;
+    } 
+    tt2->iflags = ITBusy;
+    tt2->vflags = 0;
+    strcpy(tt2->lastProcName, "SplitVolume");
+
+    code = split_volume(acall, vol, newvol, where, verbose);
+
+    VDetachVolume(&code2, vol);
+    DeleteTrans(tt, 1);
+    VDetachVolume(&code2, newvol);
+    DeleteTrans(tt2, 1);
+    return code;
+#else
+    return VOLSERBADOP;
+#endif
 }
 
 /* GetPartName - map partid (a decimal number) into pname (a string)

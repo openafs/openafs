@@ -114,6 +114,7 @@ ConstructLocalLogPath(const char *cpath,
 #define AFSDIR_BIN_FILE_DIR  "@afslocaldir/migrate/bin_files"
 #define AFSDIR_BOSCONFIG_DIR "@afsbosconfigdir"
 #define AFSDIR_BOSSERVER_DIR "@afssrvsbindir"
+#define AFSDIR_DATA_DIR      "@afsdatadir"
 
 /* file names */ 
 #define AFSDIR_THISCELL_FILE    "ThisCell"
@@ -227,6 +228,7 @@ typedef enum afsdir_id {
       AFSDIR_SERVER_BACKUP_DIRPATH_ID,
       AFSDIR_CLIENT_VICE_DIRPATH_ID,
       AFSDIR_CLIENT_ETC_DIRPATH_ID,
+      AFSDIR_CLIENT_DATA_DIRPATH_ID,
       AFSDIR_SERVER_THISCELL_FILEPATH_ID,
       AFSDIR_SERVER_CELLSERVDB_FILEPATH_ID,
       AFSDIR_SERVER_NOAUTH_FILEPATH_ID,
@@ -302,6 +304,7 @@ const char *getDirPath(afsdir_id_t string_id);
 /* client subdir paths */
 #define AFSDIR_CLIENT_VICE_DIRPATH getDirPath(AFSDIR_CLIENT_VICE_DIRPATH_ID)
 #define AFSDIR_CLIENT_ETC_DIRPATH getDirPath(AFSDIR_CLIENT_ETC_DIRPATH_ID)
+#define AFSDIR_CLIENT_DATA_DIRPATH getDirPath(AFSDIR_CLIENT_DATA_DIRPATH_ID)
 #define AFSDIR_SERVER_BIN_FILE_DIRPATH getDirPath(AFSDIR_SERVER_BIN_FILE_DIRPATH_ID)
 
 /* server file paths */

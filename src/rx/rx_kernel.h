@@ -18,7 +18,7 @@
 #define rxi_ReScheduleEvents    0	/* Not needed by kernel */
 
 /* This is a no-op, because the kernel server procs are pre-allocated */
-#define rxi_StartServerProcs(x) 0
+#define rxi_StartServerProcs(x) (void)0
 
 /* Socket stuff */
 typedef struct socket *osi_socket;
@@ -37,6 +37,7 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #define osi_Assert(e) (void)((e) || (osi_AssertFailK(#e, __FILE__, __LINE__), 0))
 
 #define	osi_Msg printf)(
+#define osi_VMsg vprintf)(
 
 #define	osi_YieldIfPossible()
 #define	osi_WakeupAndYieldIfPossible(x)	    rx_Wakeup(x)
@@ -48,7 +49,5 @@ extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #else
 #define AFS_IFNET_T ifnet_t
 #endif
-
-#include "afs/longc_procs.h"
 
 #endif /* __RX_KERNEL_INCL_ */

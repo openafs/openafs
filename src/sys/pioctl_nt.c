@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.34.4.15 2008/07/05 15:51:22 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -397,14 +395,193 @@ GetLSAPrincipalName(char * szUser, DWORD *dwSize)
     return success;
 }
 
+//
+// Recursively evaluate drivestr to find the final
+// dos drive letter to which the source is mapped.
+//
+static BOOL
+DriveSubstitution(char *drivestr, char *subststr, size_t substlen)
+{
+    char device[MAX_PATH];
+
+    if ( QueryDosDevice(drivestr, device, MAX_PATH) )
+    {
+        if ( device[0] == '\\' &&
+             device[1] == '?' &&
+             device[2] == '?' &&
+             device[3] == '\\' &&
+             isalpha(device[4]) &&
+             device[5] == ':')
+        {
+            device[0] = device[4];
+            device[1] = ':';
+            device[2] = '\0';
+            if ( DriveSubstitution(device, subststr, substlen) )
+            {
+                return TRUE;
+            } else {
+                subststr[0] = device[0];
+                subststr[1] = ':';
+                subststr[2] = '\0';
+                return TRUE;
+            }
+        } else 
+        if ( device[0] == '\\' &&
+             device[1] == '?' &&
+             device[2] == '?' &&
+             device[3] == '\\' &&
+             device[4] == 'U' &&
+             device[5] == 'N' &&
+             device[6] == 'C' &&
+             device[7] == '\\')
+        {
+             subststr[0] = '\\';
+             strncpy(&subststr[1], &device[7], substlen-1);
+             subststr[substlen-1] = '\0';
+             return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+// 
+// drivestr - is "<drive-letter>:"
+//
+static BOOL
+DriveIsMappedToAFS(char *drivestr, char *NetbiosName)
+{
+    DWORD dwResult, dwResultEnum;
+    HANDLE hEnum;
+    DWORD cbBuffer = 16384;     // 16K is a good size
+    DWORD cEntries = -1;        // enumerate all possible entries
+    LPNETRESOURCE lpnrLocal;    // pointer to enumerated structures
+    DWORD i;
+    BOOL  bIsAFS = FALSE;
+    char  subststr[MAX_PATH];
+
+    //
+    // Handle drive letter substitution created with "SUBST <drive> <path>".
+    // If a substitution has occurred, use the target drive letter instead
+    // of the source.
+    //
+    if ( DriveSubstitution(drivestr, subststr, MAX_PATH) )
+    {
+        if (subststr[0] == '\\' &&
+            subststr[1] == '\\') 
+        {
+            if (_strnicmp( &subststr[2], NetbiosName, strlen(NetbiosName)) == 0)
+                return TRUE;
+            else
+                return FALSE;
+        }
+        drivestr = subststr;
+    }
+
+    //
+    // Call the WNetOpenEnum function to begin the enumeration.
+    //
+    dwResult = WNetOpenEnum(RESOURCE_CONNECTED,
+                            RESOURCETYPE_DISK,
+                            RESOURCEUSAGE_ALL,
+                            NULL,       // NULL first time the function is called
+                            &hEnum);    // handle to the resource
+
+    if (dwResult != NO_ERROR)
+        return FALSE;
+
+    //
+    // Call the GlobalAlloc function to allocate resources.
+    //
+    lpnrLocal = (LPNETRESOURCE) GlobalAlloc(GPTR, cbBuffer);
+    if (lpnrLocal == NULL)
+        return FALSE;
+
+    do {
+        //
+        // Initialize the buffer.
+        //
+        ZeroMemory(lpnrLocal, cbBuffer);
+        //
+        // Call the WNetEnumResource function to continue
+        //  the enumeration.
+        //
+        cEntries = -1;
+        dwResultEnum = WNetEnumResource(hEnum,          // resource handle
+                                        &cEntries,      // defined locally as -1
+                                        lpnrLocal,      // LPNETRESOURCE
+                                        &cbBuffer);     // buffer size
+        //
+        // If the call succeeds, loop through the structures.
+        //
+        if (dwResultEnum == NO_ERROR) {
+            for (i = 0; i < cEntries; i++) {
+                if (lpnrLocal[i].lpLocalName &&
+                    toupper(lpnrLocal[i].lpLocalName[0]) == toupper(drivestr[0])) {
+                    //
+                    // Skip the two backslashes at the start of the UNC device name
+                    //
+                    if ( _strnicmp( &(lpnrLocal[i].lpRemoteName[2]), NetbiosName, strlen(NetbiosName)) == 0 )
+                    {
+                        bIsAFS = TRUE;
+                        break;
+                    }
+                }
+            }
+        }
+        // Process errors.
+        //
+        else if (dwResultEnum != ERROR_NO_MORE_ITEMS)
+            break;
+    }
+    while (dwResultEnum != ERROR_NO_MORE_ITEMS);
+    
+    //
+    // Call the GlobalFree function to free the memory.
+    //
+    GlobalFree((HGLOBAL) lpnrLocal);
+    //
+    // Call WNetCloseEnum to end the enumeration.
+    //
+    dwResult = WNetCloseEnum(hEnum);
+
+    return bIsAFS;
+}
+
+static BOOL
+DriveIsGlobalAutoMapped(char *drivestr)
+{
+    DWORD dwResult;
+    HKEY hKey;
+    DWORD dwSubMountSize;
+    char szSubMount[260];
+    DWORD dwType;
+
+    dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                            AFSREG_CLT_SVC_PARAM_SUBKEY "\\GlobalAutoMapper", 
+                            0, KEY_QUERY_VALUE, &hKey);
+    if (dwResult != ERROR_SUCCESS)
+        return FALSE;
+
+    dwSubMountSize = sizeof(szSubMount);
+    dwType = REG_SZ;
+    dwResult = RegQueryValueEx(hKey, drivestr, 0, &dwType, szSubMount, &dwSubMountSize);
+    RegCloseKey(hKey);
+
+    if (dwResult == ERROR_SUCCESS && dwType == REG_SZ)
+        return TRUE;
+    else
+        return FALSE;
+}
+
 static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
-    char *drivep;
+    char *drivep = NULL;
     char netbiosName[MAX_NB_NAME_LENGTH];
     DWORD CurrentState = 0;
     char  HostName[64] = "";
-    char tbuffer[256]="";
+    char tbuffer[MAX_PATH]="";
     HANDLE fh;
     HKEY hk;
     char szUser[128] = "";
@@ -416,6 +593,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD gle;
     DWORD dwSize = sizeof(szUser);
     int saveerrno;
+    UINT driveType;
 
     memset(HostName, '\0', sizeof(HostName));
     gethostname(HostName, sizeof(HostName));
@@ -424,12 +602,32 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 	CurrentState != SERVICE_RUNNING)
 	return -1;
 
+    // Populate the Netbios Name
+    lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
         if (drivep && (drivep - fileNamep) >= 1) {
             tbuffer[0] = *(drivep - 1);
             tbuffer[1] = ':';
-            strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+            tbuffer[2] = '\0';
+
+            driveType = GetDriveType(tbuffer);
+            switch (driveType) {
+            case DRIVE_UNKNOWN:
+            case DRIVE_REMOTE:
+                if (DriveIsMappedToAFS(tbuffer, netbiosName) ||
+                    DriveIsGlobalAutoMapped(tbuffer))
+                    strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                else 
+                    return -1;
+                break;
+            default:
+                if (DriveIsGlobalAutoMapped(tbuffer))
+                    strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                else 
+                    return -1;
+            }
         } else if (fileNamep[0] == fileNamep[1] && 
 		   (fileNamep[0] == '\\' || fileNamep[0] == '/'))
         {
@@ -447,13 +645,30 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             tbuffer[i] = 0;
             strcat(tbuffer, SMB_IOCTL_FILENAME);
         } else {
-            char curdir[256]="";
+            char curdir[MAX_PATH]="";
 
             GetCurrentDirectory(sizeof(curdir), curdir);
             if ( curdir[1] == ':' ) {
                 tbuffer[0] = curdir[0];
                 tbuffer[1] = ':';
-                strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+                tbuffer[2] = '\0';
+
+                driveType = GetDriveType(tbuffer);
+                switch (driveType) {
+                case DRIVE_UNKNOWN:
+                case DRIVE_REMOTE:
+                    if (DriveIsMappedToAFS(tbuffer, netbiosName) ||
+                        DriveIsGlobalAutoMapped(tbuffer))
+                        strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                    else 
+                        return -1;
+                    break;
+                default:
+                    if (DriveIsGlobalAutoMapped(tbuffer))
+                        strcpy(&tbuffer[2], SMB_IOCTL_FILENAME);
+                    else 
+                        return -1;
+                }
             } else if (curdir[0] == curdir[1] &&
                        (curdir[0] == '\\' || curdir[0] == '/')) 
             {
@@ -475,7 +690,6 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     }
     if (!tbuffer[0]) {
         /* No file name starting with drive colon specified, use UNC name */
-        lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
 

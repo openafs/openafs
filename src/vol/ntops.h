@@ -37,8 +37,8 @@ extern int nt_unlink(char *name);
 
 /* Inode operations */
 extern Inode nt_MakeSpecIno(int type);
-extern Inode nt_icreate(IHandle_t * h, char *p, int p1, int p2, int p3,
-			int p4);
+extern Inode nt_icreate(IHandle_t * h, char *p, afs_uint32 p1, afs_uint32 p2, 
+                        afs_uint32 p3, afs_uint32 p4);
 extern FD_t nt_iopen(IHandle_t * h);
 extern int nt_irelease(IHandle_t * h);
 int nt_iread(IHandle_t * h, int offset, char *buf, int size);
@@ -49,11 +49,11 @@ extern int nt_GetLinkCount(FdHandle_t * h, Inode ino, int lockit);
 int nt_ListAFSFiles(char *dev,
 		    int (*write_fun) (FILE * fp, struct ViceInodeInfo *,
 				      char *dir, char *file), FILE * fp,
-		    int (*judge_fun) (struct ViceInodeInfo *, int vid, void *rock),
-		    int singleVolumeNumber, void *rock);
+		    int (*judge_fun) (struct ViceInodeInfo *, afs_uint32 vid, void *rock),
+		    afs_uint32 singleVolumeNumber, void *rock);
 int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-		   int (*judgeInode) (struct ViceInodeInfo * info, int vid, void *rock),
-		   int singleVolumeNumber, int *forcep, int forceR,
+		   int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
+		   afs_uint32 singleVolumeNumber, int *forcep, int forceR,
 		   char *wpath, void *rock);
 
 

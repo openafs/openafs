@@ -35,8 +35,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_cout.c,v 1.9.14.1 2007/10/30 15:16:45 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -91,6 +89,8 @@ emit(definition * def)
 	break;
     case DEF_TYPEDEF:
 	emit_typedef(def);
+	break;
+    default:
 	break;
     }
     print_trailer();
@@ -377,6 +377,8 @@ print_hout(declaration * dec)
 	    f_print(fout, "\tu_int %s_len;\n", dec->name);
 	    f_print(fout, "\t%s%s *%s_val;\n", prefix, dec->type, dec->name);
 	    f_print(fout, "} %s", dec->name);
+	    break;
+	default:
 	    break;
 	}
 	f_print(fout, ";\n");

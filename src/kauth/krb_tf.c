@@ -47,8 +47,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/krb_tf.c,v 1.6.14.3 2007/10/30 15:16:39 shadow Exp $");
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -222,8 +220,7 @@ static unsigned char align_rec_3[] = {
 #endif /* AFSLITTLE_ENDIAN */
 
 afs_int32
-krb_write_ticket_file(realm)
-     char *realm;
+krb_write_ticket_file(char *realm)
 {
     char ticket_file[AFSDIR_PATH_MAX];
     int fd;
@@ -247,7 +244,7 @@ krb_write_ticket_file(realm)
     /* Use the KRBTKFILE environment variable if it exists, otherwise fall
      * back upon /tmp/tkt(uid}. 
      */
-    if (tf_name = (char *)getenv("KRBTKFILE"))
+    if ((tf_name = (char *)getenv("KRBTKFILE")))
 	(void)sprintf(ticket_file, "%s", tf_name);
     else
 	(void)sprintf(ticket_file, "%s/tkt%d", gettmpdir(), getuid());

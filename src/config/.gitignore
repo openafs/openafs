@@ -1,0 +1,19 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/Makefile.*_*[0123456789]
+/Makefile.*_*[0123456789].in
+/Makefile.config
+/Makefile.version
+/Makefile.version-NOCML
+/Makefile.version-CML
+/afsconfig.h
+/afsconfig.h.in
+/config
+/mkvers
+/param.h.new
+/shlib-build
+/shlib-install
+/stamp-h1
+/NTMakefile.version

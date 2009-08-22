@@ -10,11 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/venus/test/idtest.c,v 1.5.14.1 2007/11/26 21:08:45 shadow Exp $");
-
-main(argc, argv)
+int
+main(int argc, char **argv)
 {
     int uid;
 

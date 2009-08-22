@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_ioctl.c,v 1.1.2.2 2006/07/31 21:27:39 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -126,7 +124,9 @@ osi_ioctl_init(void)
 
     entry = create_proc_entry(PROC_SYSCALL_NAME, 0666, openafs_procfs);
     entry->proc_fops = &afs_syscall_fops;
+#if defined(STRUCT_PROC_DIR_ENTRY_HAS_OWNER)
     entry->owner = THIS_MODULE;
+#endif
 
 #if defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
     if (register_ioctl32_conversion(VIOC_SYSCALL32, NULL) == 0) 

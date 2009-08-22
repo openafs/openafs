@@ -18,8 +18,6 @@
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_password.c,v 1.11 2005/05/30 03:35:52 shadow Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>
@@ -121,8 +119,8 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
      * and its uid==0, and "ignore_root" was given in pam.conf,
      * ignore the user.
      */
-#if	defined(AFS_HPUX_ENV)
-#if     defined(AFS_HPUX110_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_DARWIN100_ENV)
+#if     defined(AFS_HPUX110_ENV) || defined(AFS_DARWIN100_ENV)
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf), &upwd);
 #else /* AFS_HPUX110_ENV */
     i = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
@@ -134,7 +132,7 @@ pam_sm_chauthtok(pam_handle_t * pamh, int flags, int argc, const char **argv)
 	RET(PAM_AUTH_ERR);
     }
 #else
-#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
+#if     defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV)
     upwd = getpwnam(user);
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));

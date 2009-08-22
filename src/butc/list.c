@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/list.c,v 1.8.14.1 2006/07/01 05:02:49 shadow Exp $");
 
 #ifndef AFS_NT40_ENV
 #include <sys/time.h>
@@ -34,7 +32,7 @@ static afs_int32 maxTaskID;	/* the largest task Id allotted so far, this is neve
  *	allocate a dump (task) id
  */
 afs_int32
-allocTaskId()
+allocTaskId(void)
 {
     return (maxTaskID++);
 }

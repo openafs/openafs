@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/winsock_nt.c,v 1.6.4.2 2006/08/30 01:44:21 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

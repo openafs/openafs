@@ -28,7 +28,7 @@
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_kauth_InitAccountCreator();
+extern afs_int32 uss_kauth_InitAccountCreator(void);
     /*
      * Summary:
      *    Initialize the variable uss_AccountCreator().
@@ -41,7 +41,7 @@ extern afs_int32 uss_kauth_InitAccountCreator();
      *    1 if couldn't get user name from getpwuid().
      */
 
-extern afs_int32 uss_kauth_AddUser();
+extern afs_int32 uss_kauth_AddUser(char *, char *);
     /*
      * Summary:
      *    Register the given user with the Authentication Server.
@@ -56,7 +56,7 @@ extern afs_int32 uss_kauth_AddUser();
      *    Code returned from a lower-level call.
      */
 
-extern afs_int32 uss_kauth_DelUser();
+extern afs_int32 uss_kauth_DelUser(char *);
     /*
      * Summary:
      *    Delete the given user from the Authentication Database.
@@ -70,7 +70,7 @@ extern afs_int32 uss_kauth_DelUser();
      *    Code returned from a lower-level call.
      */
 
-extern afs_int32 uss_kauth_CheckUserName();
+extern afs_int32 uss_kauth_CheckUserName(void);
     /*
      * Summary:
      *    Make sure the parsed user name is a legal one.
@@ -82,5 +82,9 @@ extern afs_int32 uss_kauth_CheckUserName();
      *    0 if everything went well,
      *    1 if the user name is not legal.
      */
+
+extern afs_int32 uss_kauth_SetFields(char *username, char *expirestring,
+				     char *reuse, char *failures,
+				     char *lockout);
 
 #endif /* _USS_KAUTH_H_ */

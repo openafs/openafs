@@ -1,0 +1,84 @@
+#
+# This is the root .gitignore for OpenAFS.
+#
+# Please don't add files that are generated in specific subdirectories
+# here. This file should only contain rules for the entire tree, 
+# and entries specific to the top level directory.
+#
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+# General rules
+
+.*
+*.orig
+*.rej
+*.o
+*.a
+*.so
+*.sl
+*.so.*
+*.dylib.*
+*.xdr.c
+*.cs.c
+*.ss.c
+*~
+lex.yy.c
+y.tab.c
+y.tab.h
+Makefile
+RX_component_version_number.c
+AFS_component_version_number.c
+AFS_component_version_number.h
+vc*.pdb
+rs_state.ini
+
+!.gitignore
+!.cvsignore
+!.splintrc
+
+# Top level files
+/aclocal.m4
+/config.log
+/config.cache
+/config.status
+/configure
+/configure-libafs
+/include
+/lib
+/autom4te.cache
+/ID
+/TAGS
+/NTLang.bat
+/golast.bat
+
+# Destination build directories
+/alpha_nbsd*
+/alpha_dux*
+/amd64_linux*
+/amd64_fsbd*
+/amd64_nbsd*
+/hp_ux*
+/i386_dfbsd*
+/i386_fbsd*
+/i386_nbsd*
+/i386_obsd*
+/i386_linux*
+/i386_umlinux*
+/ia64_hpux*
+/ia64_linux*
+/parisc_linux*
+/ppc_darwin*
+/ppc_nbsd*
+/ppc64_linux*
+/rs_aix*
+/s390_linux*
+/s390x_linux*
+/sgi_65
+/sparc64_obsd*
+/sparc64_linux*
+/sun4_*
+/sun4x_*
+/sunx86_*
+/x86_darwin*

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/auth/userok.c,v 1.14.4.3 2008/02/29 15:13:06 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -24,13 +22,14 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <unistd.h>
 #endif
 #include <sys/stat.h>
 #include <stdlib.h>		/* for realpath() */
 #include <errno.h>
 #include <string.h>
 #include <ctype.h>
-
+    
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <stdio.h>
@@ -48,9 +47,9 @@ RCSID
 
 #if !defined(UKERNEL)
 int
-afsconf_CheckAuth(register struct afsconf_dir *adir, 
-		  register struct rx_call *acall)
+afsconf_CheckAuth(void *arock, struct rx_call *acall)
 {
+    struct afsconf_dir *adir = (struct afsconf_dir *) arock;
     int rc;
     LOCK_GLOBAL_MUTEX;
     rc = ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);

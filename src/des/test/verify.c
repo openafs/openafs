@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/test/verify.c,v 1.8 2003/12/07 22:49:25 jaltman Exp $");
 
 
 extern char *errmsg();

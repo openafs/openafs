@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.13.4.4 2008/03/10 22:32:33 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -32,7 +30,12 @@ RCSID
 #include <afs/tcdata.h>
 #include <afs/bubasics.h>
 #include <afs/budb.h>
+#include <afs/budb_client.h>
+#include <afs/budb_prototypes.h>
+#include <afs/butm_prototypes.h>
+#include <afs/bucoord_prototypes.h>
 #include "error_macros.h"
+#include "butc_internal.h"
 
 #define BELLCHAR 7		/* ascii for bell */
 
@@ -52,7 +55,13 @@ struct tapeScanInfo {
 extern struct tapeConfig globalTapeConfig;
 extern struct deviceSyncNode *deviceLatch;
 
-static readDump();
+static int readDump(afs_uint32, struct butm_tapeInfo *,
+		    struct tapeScanInfo *);
+afs_int32 getScanTape(afs_int32, struct butm_tapeInfo *, char *,
+		      afs_int32, int prompt, struct butm_tapeLabel *);
+afs_int32 RcreateDump(struct tapeScanInfo *, struct volumeHeader *);
+void copy_ktcPrincipal_to_budbPrincipal(struct ktc_principal *,
+					struct budb_principal *);
 
 /* PrintDumpLabel
  *	print out the tape (dump) label.
@@ -153,7 +162,9 @@ Ask(char *st)
 #define BIGCHUNK 102400
 
 static int
-scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr, afs_int32 tapeVersion, struct volumeHeader *volumeHeader, struct volumeHeader *volumeTrailer, afs_uint32 *bytesRead)
+scanVolData(afs_int32 taskId, struct butm_tapeInfo *curTapePtr,
+	    afs_int32 tapeVersion, struct volumeHeader *volumeHeader,
+	    struct volumeHeader *volumeTrailer, afs_uint32 *bytesRead)
 {
     afs_int32 headBytes, tailBytes;
     char *block = NULL;
@@ -322,10 +333,9 @@ nextTapeLabel(char *prevTapeName)
  *                      -1 don't know if last tape or not.
  */
 
-afs_int32 RcreateDump();
-
 static int
-readDump(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr, struct tapeScanInfo *scanInfoPtr)
+readDump(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr,
+	 struct tapeScanInfo *scanInfoPtr)
 {
     int moreTapes = 1;
     afs_int32 nbytes, flags, seq;
@@ -568,7 +578,8 @@ readDump(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr, struct tapeScanIn
  * The first tape label is the first dumpLabel.
  */
 int
-readDumps(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr, struct tapeScanInfo *scanInfoPtr)
+readDumps(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr,
+	  struct tapeScanInfo *scanInfoPtr)
 {
     afs_int32 code, c;
 
@@ -599,7 +610,8 @@ readDumps(afs_uint32 taskId, struct butm_tapeInfo *tapeInfoPtr, struct tapeScanI
 }
 
 afs_int32
-getScanTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr, char *tname, afs_int32 tapeId, int prompt, struct butm_tapeLabel *tapeLabelPtr)
+getScanTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr, char *tname,
+	    afs_int32 tapeId, int prompt, struct butm_tapeLabel *tapeLabelPtr)
 {
     afs_int32 code = 0;
     int tapecount = 1;
@@ -897,7 +909,8 @@ databaseTape(char *tapeName)
 }
 
 afs_int32
-RcreateDump(struct tapeScanInfo *tapeScanInfoPtr, struct volumeHeader *volHeaderPtr)
+RcreateDump(struct tapeScanInfo *tapeScanInfoPtr,
+	    struct volumeHeader *volHeaderPtr)
 {
     afs_int32 code;
     struct butm_tapeLabel *dumpLabelPtr = &tapeScanInfoPtr->dumpLabel;

@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_misc.c,v 1.7 2003/07/15 23:14:23 shadow Exp $");
 
 #ifdef	AFS_SGI62_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */

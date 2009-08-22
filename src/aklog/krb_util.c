@@ -10,8 +10,6 @@
  */
 
 #include <afsconfig.h>
-RCSID
-    ("$Header: /cvs/openafs/src/aklog/krb_util.c,v 1.4.4.2 2008/04/01 17:44:41 shadow Exp $");
 
 #if 0
 #include <kerberosIV/mit-copyright.h>

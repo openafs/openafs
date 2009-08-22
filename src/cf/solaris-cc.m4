@@ -1,5 +1,5 @@
 dnl
-dnl $Id: solaris-cc.m4,v 1.3 2004/06/03 05:13:30 shadow Exp $
+dnl $Id$
 dnl 
 
 dnl

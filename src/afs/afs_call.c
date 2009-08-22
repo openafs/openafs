@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.86.4.21 2008/04/30 19:08:04 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -86,7 +84,6 @@ extern int afs_vfs_mount();
 static int
 afs_InitSetup(int preallocs)
 {
-    extern void afs_InitStats();
     int code;
 
     if (afs_InitSetup_done)
@@ -415,8 +412,10 @@ afs_DaemonOp(long parm, long parm2, long parm3, long parm4, long parm5,
 {
     int code;
     DECLARE_COMPLETION(c);
-#if defined(AFS_LINUX26_ENV)
+#if defined(AFS_LINUX26_ENV) 
+#if defined(INIT_WORK_HAS_DATA)
     struct work_struct tq;
+#endif
 #else
     struct tq_struct tq;
 #endif
@@ -477,11 +476,8 @@ wait_for_cachedefs(void) {
 #endif
 }
 
-/* leaving as is, probably will barf if we add prototypes here since it's likely being called
-with partial list */
 int
-afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
-     long parm, parm2, parm3, parm4, parm5, parm6;
+afs_syscall_call(long parm, long parm2, long parm3, long parm4, long parm5, long parm6)
 {
     afs_int32 code = 0;
 #if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -796,7 +792,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	    afs_CacheInit(cparms.cacheScaches, cparms.cacheFiles,
 			  cparms.cacheBlocks, cparms.cacheDcaches,
 			  cparms.cacheVolumes, cparms.chunkSize,
-			  cparms.memCacheFlag, cparms.inodes, cparms.users);
+			  cparms.memCacheFlag, cparms.inodes, cparms.users, 
+			  cparms.dynamic_vcaches);
 
     } else if (parm == AFSOP_CACHEINODE) {
 	ino_t ainode = parm2;
@@ -1140,6 +1137,8 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
     } else if (parm == AFSOP_SET_RXPCK) {
 	rx_extraPackets = parm2;
 	afscall_set_rxpck_received = 1;
+    } else if (parm == AFSOP_SET_RXMAXMTU) {
+    rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = parm2;
     } else
 	code = EINVAL;
 

@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.16 2004/11/05 04:21:29 shadow Exp $");
 
 #ifdef	AFS_SGI62_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -320,7 +318,7 @@ OSI_VC_DECL(avc);
 	return EISDIR;
 
     if (ioflag & IO_APPEND)
-	uiop->uio_offset = avc->m.Length;
+	uiop->uio_offset = avc->f.m.Length;
 #ifdef AFS_SGI64_ENV
 #ifdef AFS_SGI65_ENV
     if (!(ioflag & IO_ISLOCKED))
@@ -434,7 +432,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 
     if (rw == UIO_WRITE) {
 	ObtainWriteLock(&avc->lock, 330);
-	avc->states |= CDirty;
+	avc->f.states |= CDirty;
 	ReleaseWriteLock(&avc->lock);
     }
 
@@ -473,7 +471,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	    /*
 	     * read/paging in a normal file
 	     */
-	    rem = avc->m.Length - uio->uio_offset;
+	    rem = avc->f.m.Length - uio->uio_offset;
 	    if (rem <= 0)
 		/* EOF */
 		break;
@@ -572,7 +570,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 		ObtainWriteLock(&avc->lock, 90);
 		error = afs_DoPartialWrite(avc, &treq);
 		if (error == 0)
-		    avc->states |= CDirty;
+		    avc->f.states |= CDirty;
 		ReleaseWriteLock(&avc->lock);
 		AFS_GUNLOCK();
 		if (error)
@@ -599,7 +597,7 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	    else
 		bp = chunkread(vp, bmv, 1, cr);
 
-	    avc->m.Date = osi_Time();	/* Set file date (for ranlib) */
+	    avc->f.m.Date = osi_Time();	/* Set file date (for ranlib) */
 	}
 	if (bp->b_flags & B_ERROR) {
 	    /*
@@ -638,10 +636,10 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	     * Make sure it is at least as high as the last byte we just wrote
 	     * into the buffer.
 	     */
-	    if (avc->m.Length < uio->uio_offset)  {
+	    if (avc->f.m.Length < uio->uio_offset)  {
 		AFS_GLOCK();
 		ObtainWriteLock(&avc->lock, 235);
-		avc->m.Length = uio->uio_offset;
+		avc->f.m.Length = uio->uio_offset;
 		ReleaseWriteLock(&avc->lock);
 		AFS_GUNLOCK();
 	    }
@@ -658,18 +656,18 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 	     * explanation
 	     */
 	    if (error) {
-		if (avc->m.LinkCount == 0)
+		if (avc->f.m.LinkCount == 0)
 		    cmn_err(CE_WARN,
 			    "AFS: Process pid %d write error %d writing to unlinked file.",
 			    OSI_GET_CURRENT_PID(), error);
 	    }
 	}
     } while (!error && uio->uio_resid > 0);
-    afs_chkpgoob(&avc->v, btoc(avc->m.Length));
+    afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
 
     AFS_GLOCK();
 
-    if (rw == UIO_WRITE && error == 0 && (avc->states & CDirty)) {
+    if (rw == UIO_WRITE && error == 0 && (avc->f.states & CDirty)) {
 	ObtainWriteLock(&avc->lock, 405);
 	error = afs_DoPartialWrite(avc, &treq);
 	ReleaseWriteLock(&avc->lock);
@@ -679,7 +677,11 @@ afsrwvp(register struct vcache *avc, register struct uio *uio, enum uio_rw rw,
 #ifdef AFS_SGI61_ENV
 	if (((ioflag & IO_SYNC) || (ioflag & IO_DSYNC)) && (rw == UIO_WRITE)
 	    && !AFS_NFSXLATORREQ(cr)) {
-	    error = afs_fsync(avc, 0, cr);
+	    error = afs_fsync(avc, 0, cr
+#ifdef AFS_SGI65_ENV
+	                      , 0, 0
+#endif
+	                      );
 	}
 #else /* AFS_SGI61_ENV */
 	if ((ioflag & IO_SYNC) && (rw == UIO_WRITE) && !AFS_NFSXLATORREQ(cr)) {
@@ -719,7 +721,7 @@ OSI_VC_DECL(avc);
     bmv->bn = BTOBBT(offset - off);
     bmv->offset = bmv->bn;
     bmv->pboff = off;
-    rem = avc->m.Length - offset;
+    rem = avc->f.m.Length - offset;
     if (rem <= 0)
 	cnt = 0;		/* EOF */
     else
@@ -811,7 +813,7 @@ OSI_VC_DECL(avc);
      */
     ObtainReadLock(&avc->lock);
     if (bp->b_flags & B_READ) {
-	if (BBTOB(bp->b_blkno) >= avc->m.Length) {
+	if (BBTOB(bp->b_blkno) >= avc->f.m.Length) {
 	    /* we are responsible for zero'ing the page */
 	    caddr_t c;
 	    c = bp_mapin(bp);
@@ -820,7 +822,7 @@ OSI_VC_DECL(avc);
 	    ReleaseReadLock(&avc->lock);
 	    return;
 	}
-    } else if ((avc->states & CWritingUFS) && (bp->b_flags & B_DELWRI)) {
+    } else if ((avc->f.states & CWritingUFS) && (bp->b_flags & B_DELWRI)) {
 	bp->b_ref = 3;
 	ReleaseReadLock(&avc->lock);
 	iodone(bp);
@@ -941,7 +943,7 @@ OSI_VC_DECL(avc);
 	/* on last mapping push back and remove our reference */
 	osi_Assert(avc->execsOrWriters > 0);
 	osi_Assert(avc->opens > 0);
-	if (avc->m.LinkCount == 0) {
+	if (avc->f.m.LinkCount == 0) {
 	    ObtainWriteLock(&avc->lock, 238);
 	    AFS_GUNLOCK();
 	    PTOSSVP(vp, (off_t) 0, (off_t) MAXLONG);
@@ -964,7 +966,7 @@ OSI_VC_DECL(avc);
 	    if (code == VNOVNODE)
 		code = 0;
 	    if (code) {
-		afs_StoreWarn(code, avc->fid.Fid.Volume,	/* /dev/console */
+		afs_StoreWarn(code, avc->f.fid.Fid.Volume,	/* /dev/console */
 			      1);
 	    }
 	    code = afs_CheckCode(code, &treq, 52);
@@ -1049,7 +1051,7 @@ OSI_VC_DECL(avc);
     AFS_RWLOCK(vp, VRWLOCK_WRITE);
     AFS_GUNLOCK();
     error =
-	fs_map_subr(vp, (off_t) avc->m.Length, (u_int) avc->m.Mode, off, prp,
+	fs_map_subr(vp, (off_t) avc->f.m.Length, (u_int) avc->f.m.Mode, off, prp,
 		    *addrp, len, prot, maxprot, flags, cr);
     AFS_GLOCK();
     AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
@@ -1112,9 +1114,9 @@ OSI_VC_DECL(avc);
 	AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
 	return VN_INACTIVE_CACHE;
     }
-    if (avc->states & CUnlinked) {
+    if (avc->f.states & CUnlinked) {
 	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache)) {
-	    avc->states |= CUnlinkedDel;
+	    avc->f.states |= CUnlinkedDel;
 	    ReleaseWriteLock(&avc->lock);
 	    AFS_RWUNLOCK(vp, VRWLOCK_WRITE);
 	} else {
@@ -1124,7 +1126,7 @@ OSI_VC_DECL(avc);
 	}
 	return VN_INACTIVE_CACHE;
     }
-    if ((avc->states & CDirty) || (avc->execsOrWriters > 0)) {
+    if ((avc->f.states & CDirty) || (avc->execsOrWriters > 0)) {
 	/* File either already has dirty chunks (CDirty) or was mapped at 
 	 * time in its life with the potential for being written into. 
 	 * Note that afs_close defers storebacks if the vnode's ref count
@@ -1147,9 +1149,9 @@ OSI_VC_DECL(avc);
 		if (mapcnt) {
 		    cmn_err(CE_WARN,
 			    "AFS: Failed to store FID (%x:%lu.%lu.%lu) in VOP_INACTIVE, error = %d\n",
-			    (int)(avc->fid.Cell) & 0xffffffff,
-			    avc->fid.Fid.Volume, avc->fid.Fid.Vnode,
-			    avc->fid.Fid.Unique, code);
+			    (int)(avc->f.fid.Cell) & 0xffffffff,
+			    avc->f.fid.Fid.Volume, avc->f.fid.Fid.Vnode,
+			    avc->f.fid.Fid.Unique, code);
 		}
 		afs_InvalidateAllSegments(avc);
 	    }
@@ -1167,7 +1169,7 @@ OSI_VC_DECL(avc);
     }
 #endif
 
-    osi_Assert((avc->states & (CCore | CMAPPED)) == 0);
+    osi_Assert((avc->f.states & (CCore | CMAPPED)) == 0);
 
     if (avc->cred) {
 	crfree(avc->cred);
@@ -1180,19 +1182,19 @@ OSI_VC_DECL(avc);
      * If someone unlinked a file and this is the last hurrah -
      * nuke all the pages.
      */
-    if (avc->m.LinkCount == 0) {
+    if (avc->f.m.LinkCount == 0) {
 	AFS_GUNLOCK();
 	PTOSSVP(vp, (off_t) 0, (off_t) MAXLONG);
 	AFS_GLOCK();
     }
 #ifndef AFS_SGI65_ENV
     osi_Assert(avc->mapcnt == 0);
-    afs_chkpgoob(&avc->v, btoc(avc->m.Length));
+    afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
 
-    avc->states &= ~CDirty;	/* Give up on store-backs */
-    if (avc->states & CUnlinked) {
+    avc->f.states &= ~CDirty;	/* Give up on store-backs */
+    if (avc->f.states & CUnlinked) {
 	if (CheckLock(&afs_xvcache) || CheckLock(&afs_xdcache)) {
-	    avc->states |= CUnlinkedDel;
+	    avc->f.states |= CUnlinkedDel;
 	} else {
 	    afs_remunlink(avc, 1);	/* ignore any return code */
 	}
@@ -1280,13 +1282,13 @@ afs_fid2(OSI_VC_DECL(avc), struct fid *fidp)
     osi_Assert(sizeof(fid_t) >= sizeof(afs_fid2_t));
     afid->af_len = sizeof(afs_fid2_t) - sizeof(afid->af_len);
 
-    tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
+    tcell = afs_GetCell(avc->f.fid.Cell, READ_LOCK);
     afid->af_cell = tcell->cellIndex & 0xffff;
     afs_PutCell(tcell, READ_LOCK);
 
-    afid->af_volid = avc->fid.Fid.Volume;
-    afid->af_vno = avc->fid.Fid.Vnode;
-    afid->af_uniq = avc->fid.Fid.Unique;
+    afid->af_volid = avc->f.fid.Fid.Volume;
+    afid->af_vno = avc->f.fid.Fid.Vnode;
+    afid->af_uniq = avc->f.fid.Fid.Unique;
 
     return 0;
 }
@@ -1911,19 +1913,6 @@ afs_InitDualFSCacheOps(struct vnode *vp)
     if (inited)
 	return;
     inited = 1;
-
-
-#ifdef AFS_SGI_EFS_IOPS_ENV
-    swp = vfs_getvfssw("efs");
-    if (swp) {
-	afs_efs_vnodeopsp = swp->vsw_vnodeops;
-	if (vp && vp->v_op == afs_efs_vnodeopsp) {
-	    afs_CacheFSType = AFS_SGI_EFS_CACHE;
-	    afs_IGetVnode = afs_EFSIGetVnode;
-	    found = 1;
-	}
-    }
-#endif /* AFS_SGI_EFS_IOPS_ENV */
 
     swp = vfs_getvfssw("xfs");
     if (swp) {

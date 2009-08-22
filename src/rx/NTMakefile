@@ -55,10 +55,7 @@ INCFILES  = \
 	$(INCFILEDIR)\rx_prototypes.h \
 	$(INCFILEDIR)\xdr.h
 
-LOCAL_HEADERS = \
-	rx_internal.h
-
-$(LIBOBJS): $(INCFILES) $(LOCAL_HEADERS)
+$(LIBOBJS): $(INCFILES)
 
 $(MULTIOBJS):  rx_multi.h 
 
@@ -70,9 +67,11 @@ $(LIBFILE): $(LIBOBJS)
 # Not yet
 #rxdumptrace.exe: rx_trace.c
 
-install: $(LIBFILE) $(INCFILES)
+install_headers:  $(INCFILES)
 
-install9x: $(LIBFILE) $(INCFILES)
+install: install_headers $(LIBFILE)
+
+install9x: install_headers $(LIBFILE)
 
 clean::
 	$(DEL) $(LIBFILE) $(INCFILES)

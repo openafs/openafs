@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/SOLARIS/rx_kmutex.c,v 1.4 2003/07/15 23:16:25 shadow Exp $");
 
 #if defined(AFS_SUN5_ENV) && defined(KERNEL)
 

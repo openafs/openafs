@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/vsprocs.c,v 1.13.4.3 2007/10/30 15:16:41 shadow Exp $");
 
 #include "vsprocs.h"
 #include "vosutils.h"
@@ -38,7 +36,8 @@ RCSID
 #include <io.h>
 #endif
 
-static afs_int32 GroupEntries();
+static afs_int32 GroupEntries(struct rx_connection *server, volintInfo * pntr, afs_int32 count,
+             struct qHead *myQueue, afs_int32 apart);
 
 struct release {
     afs_int32 time;
@@ -60,7 +59,7 @@ UV_Bind(afs_cell_handle_p cellHandle, afs_int32 aserver, afs_int32 port)
  * start a transaction, delete the <delvol> */
 static afs_int32
 CheckAndDeleteVolume(struct rx_connection *aconn, afs_int32 apart,
-		     afs_int32 okvol, afs_int32 delvol)
+		     afs_uint32 okvol, afs_uint32 delvol)
 {
     afs_int32 error, code, tid, rcode;
 
@@ -108,7 +107,7 @@ CheckAndDeleteVolume(struct rx_connection *aconn, afs_int32 apart,
 /* forcibly remove a volume.  Very dangerous call */
 int
 UV_NukeVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
-	      unsigned int partition, unsigned int volumeId, afs_status_p st)
+	      unsigned int partition, afs_uint32 volumeId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -129,8 +128,8 @@ UV_NukeVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
 * back new vol id in <anewid>*/
 int
 UV_CreateVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
-		unsigned int partition, const char *volumeName,
-		unsigned int quota, unsigned int *volumeId, afs_status_p st)
+		unsigned int partition, char *volumeName,
+		unsigned int quota, afs_uint32 *volumeId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -206,7 +205,7 @@ UV_CreateVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
  */
 int
 UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
-		unsigned int partition, unsigned int volumeId,
+		unsigned int partition, afs_uint32 volumeId,
 		afs_status_p st)
 {
     int rc = 0;
@@ -379,7 +378,7 @@ UV_DeleteVolume(afs_cell_handle_p cellHandle, struct rx_connection *server,
  */
 
 int
-UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
+UV_MoveVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 	      afs_int32 afromserver, afs_int32 afrompart, afs_int32 atoserver,
 	      afs_int32 atopart, afs_status_p st)
 {
@@ -394,7 +393,7 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
     afs_int32 rcode;
     afs_int32 fromDate;
     struct restoreCookie cookie;
-    afs_int32 newVol, volid, backupId;
+    afs_uint32 newVol, volid, backupId;
     struct volser_status tstatus;
     struct destServer destination;
 
@@ -983,12 +982,12 @@ UV_MoveVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 
 int
 UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
-		afs_int32 apart, afs_int32 avolid, afs_status_p st)
+		afs_int32 apart, afs_uint32 avolid, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0, temp = 0;
     afs_int32 ttid = 0, btid = 0;
-    afs_int32 backupID;
+    afs_uint32 backupID;
     afs_int32 rcode = 0;
     char vname[VOLSER_MAXVOLNAME + 1];
     struct nvldbentry entry;
@@ -1176,7 +1175,7 @@ UV_BackupVolume(afs_cell_handle_p cellHandle, afs_int32 aserver,
 }
 
 static int
-DelVol(struct rx_connection *conn, afs_int32 vid, afs_int32 part,
+DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
        afs_int32 flags)
 {
     afs_int32 acode, ccode, rcode, tid;
@@ -1199,7 +1198,7 @@ DelVol(struct rx_connection *conn, afs_int32 vid, afs_int32 part,
 #if 0				/* doesn't appear to be used, why compile it */
 static int
 CloneVol(afs_cell_handle_p cellHandle, struct rx_connection *conn,
-	 afs_int32 rwvid, afs_int32 part, afs_int32 * rovidp, int nottemp,
+	 afs_uint32 rwvid, afs_int32 part, afs_uint32 * rovidp, int nottemp,
 	 struct nvldbentry *entry, afs_int32 * vidCreateDate, afs_status_p st)
 {
     int rc = 0;
@@ -1310,7 +1309,7 @@ GetTrans(afs_cell_handle_p cellHandle, struct nvldbentry *vldbEntryPtr,
 {
     int rc = 0;
     afs_status_t tst = 0, etst = 0;
-    afs_int32 volid;
+    afs_uint32 volid;
     struct volser_status tstatus;
     int rcode;
 
@@ -1450,7 +1449,7 @@ VolumeExists(afs_cell_handle_p cellHandle, afs_int32 server,
  * sites if forceflag is 1.If its 0 complete the release if the previous
  * release aborted else start a new release */
 int
-UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
+UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 		 afs_int32 afromserver, afs_int32 afrompart, int forceflag,
 		 afs_status_p st)
 {
@@ -1459,7 +1458,7 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
 
     char vname[64];
     afs_int32 rcode;
-    afs_int32 cloneVolId, roVolId;
+    afs_uint32 cloneVolId, roVolId;
     struct replica *replicas = 0;
     struct nvldbentry entry;
     int i, volcount, m, fullrelease, vldbindex;
@@ -2086,7 +2085,7 @@ DumpFunction(struct rx_call *call, const char *filename)
 * DumpFunction does the real work behind the scenes after
 * extracting parameters from the rock  */
 int
-UV_DumpVolume(afs_cell_handle_p cellHandle, afs_int32 afromvol,
+UV_DumpVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
 	      afs_int32 afromserver, afs_int32 afrompart, afs_int32 fromdate,
 	      const char *filename, afs_status_p st)
 {
@@ -2285,7 +2284,7 @@ WriteData(struct rx_call *call, const char *filename)
  */
 int
 UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
-		 afs_int32 topart, afs_int32 tovolid, const char *tovolname,
+		 afs_int32 topart, afs_uint32 tovolid, char *tovolname,
 		 int flags, const char *dumpFile, afs_status_p st)
 {
     int rc = 0;
@@ -2297,7 +2296,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
     afs_int32 rxError = 0;
     struct volser_status tstatus;
     char partName[10];
-    afs_int32 pvolid;
+    afs_uint32 pvolid;
     afs_int32 temptid;
     int success;
     struct nvldbentry entry;
@@ -2592,7 +2591,7 @@ UV_RestoreVolume(afs_cell_handle_p cellHandle, afs_int32 toserver,
 *in vldb */
 int
 UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
-	   afs_int32 volid, afs_status_p st)
+	   afs_uint32 volid, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2672,7 +2671,7 @@ UV_AddSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
 /*removes <server> <part> as read only site for <volid> from the vldb */
 int
 UV_RemoveSite(afs_cell_handle_p cellHandle, afs_int32 server, afs_int32 part,
-	      afs_int32 volid, afs_status_p st)
+	      afs_uint32 volid, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2895,7 +2894,7 @@ UV_XListVolumes(struct rx_connection *server, afs_int32 a_partID, int a_all,
 
 int
 UV_XListOneVolume(struct rx_connection *server, afs_int32 a_partID,
-		  afs_int32 a_volID, struct volintXInfo **a_resultPP,
+		  afs_uint32 a_volID, struct volintXInfo **a_resultPP,
 		  afs_status_p st)
 {
     int rc = 0;
@@ -2956,10 +2955,10 @@ UV_XListOneVolume(struct rx_connection *server, afs_int32 a_partID,
  *------------------------------------------------------------------------*/
 
 int UV_ListOneVolume(struct rx_connection *server, afs_int32 a_partID,
-		  afs_int32 a_volID, struct volintInfo **a_resultPP,
+		  afs_uint32 a_volID, struct volintInfo **a_resultPP,
 		  afs_status_p st)
 {
-	int rc = 0;
+    int rc = 0;
     afs_status_t tst = 0;
     volEntries volumeInfo;	/*Area for returned info */
 
@@ -2998,8 +2997,10 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 	       struct rx_connection *server, afs_int32 apart, afs_int32 force)
 {
     struct aqueue elem;
-    int success, temp, temp1, temp2;
-    afs_int32 vcode, maxVolid = 0;
+    int success, temp;
+    afs_uint32 temp1, temp2;
+    afs_int32 vcode;
+    afs_uint32 maxVolid = 0;
     struct nvldbentry entry;
     int noError = 1, error, same;
     int totalC, totalU, totalCE, totalUE, totalG;
@@ -3036,11 +3037,8 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
 			  &maxVolid);
 	    maxVolid += temp2;
-
-
 	}
 	if (maxVolid <= elem.ids[ROVOL]) {
-
 	    temp1 = maxVolid;
 	    temp2 = elem.ids[ROVOL] - maxVolid + 1;
 	    maxVolid = 0;
@@ -3048,7 +3046,6 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
 			  &maxVolid);
 	    maxVolid += temp2;
-
 	}
 	if (maxVolid <= elem.ids[BACKVOL]) {
 	    temp1 = maxVolid;
@@ -3058,7 +3055,6 @@ ProcessEntries(afs_cell_handle_p cellHandle, struct qHead *myQueue,
 		ubik_VL_GetNewVolumeId(cellHandle->vos, 0, temp2,
 			  &maxVolid);
 	    maxVolid += temp2;
-
 	}
 	aVLDB_GetEntryByID(cellHandle, elem.ids[RWVOL], RWVOL, &entry, &tst);
 	if (tst && (tst != VL_NOENT)) {
@@ -3691,13 +3687,16 @@ UV_SyncServer(afs_cell_handle_p cellHandle, struct rx_connection *server,
     return rc;
 }
 
-/*rename volume <oldname> to <newname>, changing the names of the related 
- *readonly and backup volumes. This operation is also idempotent.
- *salvager is capable of recovering from rename operation stopping halfway.
- *to recover run syncserver on the affected machines,it will force renaming to completion. name clashes should have been detected before calling this proc */
+/* rename volume <oldname> to <newname>, changing the names of the related
+ * readonly and backup volumes. This operation is also idempotent.
+ * salvager is capable of recovering from rename operation stopping halfway.
+ * to recover run syncserver on the affected machines,it will force
+ * renaming to completion. name clashes should have been detected before
+ * calling this proc
+ */
 int
 UV_RenameVolume(afs_cell_handle_p cellHandle, struct nvldbentry *entry,
-		const char *newname, afs_status_p st)
+		char *newname, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -4064,7 +4063,7 @@ UV_VolserStatus(struct rx_connection *server, transDebugInfo ** rpntr,
 /*delete the volume without interacting with the vldb */
 int
 UV_VolumeZap(afs_cell_handle_p cellHandle, struct rx_connection *server,
-	     unsigned int partition, unsigned int volumeId, afs_status_p st)
+	     unsigned int partition, afs_uint32 volumeId, afs_status_p st)
 {
     afs_int32 rcode, ttid, error, code;
     int rc = 0;
@@ -4102,7 +4101,7 @@ UV_VolumeZap(afs_cell_handle_p cellHandle, struct rx_connection *server,
 
 int
 UV_SetVolume(struct rx_connection *server, afs_int32 partition,
-	     afs_int32 volid, afs_int32 transflag, afs_int32 setflag,
+	     afs_uint32 volid, afs_int32 transflag, afs_int32 setflag,
 	     unsigned int sleepTime, afs_status_p st)
 {
     int rc = 0;

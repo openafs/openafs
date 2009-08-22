@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/rmtsyss.c,v 1.10.14.2 2007/11/26 21:08:44 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -31,10 +29,10 @@ RCSID
 #include <errno.h>
 #include <signal.h>
 #include <string.h>
+#include <stdarg.h>
 /*#include <afs/cellconfig.h>*/
 #include "rmtsys.h"
-
-extern RMTSYS_ExecuteRequest();
+#include "sys_prototypes.h"
 
 #define	NFS_EXPORTER	    1	/* To probably handle more later */
 #define	PSETPAG		    110	/* Also defined in afs/afs_pioctl.c */
@@ -55,7 +53,8 @@ extern RMTSYS_ExecuteRequest();
 /* Main routine of the remote AFS system call server. The calling process will
  * never return; this is currently called from afsd (when "-rmtsys" is passed
  * as a parameter) */
-rmtsysd()
+void
+rmtsysd(void)
 {
 /*  void catchsig(int); */
     struct rx_securityClass *(securityObjects[N_SECURITY_OBJECTS]);
@@ -77,13 +76,12 @@ rmtsysd()
 	rx_NewService(0, RMTSYS_SERVICEID, AFSCONF_RMTSYSSERVICE,
 		      securityObjects, N_SECURITY_OBJECTS,
 		      RMTSYS_ExecuteRequest);
-    if (service == (struct rx_service *)0)
+    if (service == NULL)
 	rmt_Quit("rx_NewService");
     /* One may wish to tune some default RX params for better performance
      * at some point... */
     rx_SetMaxProcs(service, 2);
     rx_StartServer(1);		/* Donate this process to the server process pool */
-    return 0; /* not reached */
 }
 
 
@@ -91,10 +89,8 @@ rmtsysd()
  * here we also get back the new pag value; we need this so that the caller
  * can add it to its group list via setgroups() */
 afs_int32
-SRMTSYS_SetPag(call, creds, newpag, errornumber)
-     struct rx_call *call;
-     clientcred *creds;
-     afs_int32 *newpag, *errornumber;
+SRMTSYS_SetPag(struct rx_call *call, clientcred *creds, afs_int32 *newpag, 
+	       afs_int32 *errornumber)
 {
     afs_uint32 blob[PIOCTL_HEADER];
     struct ViceIoctl data;
@@ -121,12 +117,9 @@ SRMTSYS_SetPag(call, creds, newpag, errornumber)
 
 /* Implements the remote pioctl(2) call */
 afs_int32
-SRMTSYS_Pioctl(call, creds, path, cmd, follow, InData, OutData, errornumber)
-     struct rx_call *call;
-     clientcred *creds;
-     afs_int32 cmd, follow, *errornumber;
-     char *path;
-     rmtbulk *InData, *OutData;
+SRMTSYS_Pioctl(struct rx_call *call, clientcred *creds, char *path, 
+	       afs_int32 cmd, afs_int32 follow, rmtbulk *InData, 
+	       rmtbulk *OutData, afs_int32 *errornumber)
 {
     register afs_int32 error;
     struct ViceIoctl data;
@@ -165,9 +158,13 @@ SRMTSYS_Pioctl(call, creds, path, cmd, follow, InData, OutData, errornumber)
     return (0);
 }
 
-rmt_Quit(msg, a, b)
-     char *msg;
+void
+rmt_Quit(char *msg, ...)
 {
-    fprintf(stderr, msg, a, b);
+    va_list ap;
+    
+    va_start(ap, msg);
+    vfprintf(stderr, msg, ap);
+    va_end(ap);
     exit(1);
 }

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_vm.c,v 1.1.2.2 2006/07/31 21:27:38 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -25,7 +23,7 @@ osi_Active(register struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
 #if defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    if ((avc->opens > 0) || (avc->states & CMAPPED))
+    if ((avc->opens > 0) || (avc->f.states & CMAPPED))
 	return 1;		/* XXX: Warning, verify this XXX  */
 #elif defined(AFS_SGI_ENV)
     if ((avc->opens > 0) || AFS_VN_MAPPED(AFSTOV(avc)))
@@ -49,12 +47,25 @@ osi_Active(register struct vcache *avc)
 void
 osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 {
+#ifdef AFS_FBSD70_ENV
+    int vfslocked;
+#endif
     afs_hyper_t origDV;
+#if defined(AFS_CACHE_BYPASS)
+    /* The optimization to check DV under read lock below is identical a 
+     * change in CITI cache bypass work.  The problem CITI found in 1999 
+     * was that this code and background daemon doing prefetching competed 
+     * for the vcache entry shared lock.  It's not clear to me from the 
+     * tech report, but it looks like CITI fixed the general prefetch code
+     * path as a bonus when experimenting on prefetch for cache bypass, see
+     * citi-tr-01-3.
+     */
+#endif        
     ObtainReadLock(&avc->lock);
     /* If we've already purged this version, or if we're the ones
      * writing this version, don't flush it (could lose the
      * data we're writing). */
-    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0)
+    if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)
 	|| ((avc->execsOrWriters > 0) && afs_DirtyPages(avc))) {
 	ReleaseReadLock(&avc->lock);
 	return;
@@ -62,26 +73,36 @@ osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
     ReleaseReadLock(&avc->lock);
     ObtainWriteLock(&avc->lock, 10);
     /* Check again */
-    if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0)
+    if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)
 	|| ((avc->execsOrWriters > 0) && afs_DirtyPages(avc))) {
 	ReleaseWriteLock(&avc->lock);
 	return;
     }
     if (hiszero(avc->mapDV)) {
-	hset(avc->mapDV, avc->m.DataVersion);
+	hset(avc->mapDV, avc->f.m.DataVersion);
 	ReleaseWriteLock(&avc->lock);
 	return;
     }
 
     AFS_STATCNT(osi_FlushPages);
-    hset(origDV, avc->m.DataVersion);
+    hset(origDV, avc->f.m.DataVersion);
     afs_Trace3(afs_iclSetp, CM_TRACE_FLUSHPAGES, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->m.Length);
+	       ICL_TYPE_INT32, origDV.low, ICL_TYPE_INT32, avc->f.m.Length);
 
     ReleaseWriteLock(&avc->lock);
+#ifdef AFS_FBSD70_ENV
+    vfslocked = VFS_LOCK_GIANT(AFSTOV(avc)->v_mount);
+#endif
+#ifndef AFS_FBSD70_ENV
     AFS_GUNLOCK();
+#endif
     osi_VM_FlushPages(avc, credp);
+#ifndef AFS_FBSD70_ENV
     AFS_GLOCK();
+#endif
+#ifdef AFS_FBSD70_ENV
+    VFS_UNLOCK_GIANT(vfslocked);
+#endif
     ObtainWriteLock(&avc->lock, 88);
 
     /* do this last, and to original version, since stores may occur
@@ -106,11 +127,11 @@ osi_FlushText_really(register struct vcache *vp)
 
     AFS_STATCNT(osi_FlushText);
     /* see if we've already flushed this data version */
-    if (hcmp(vp->m.DataVersion, vp->flushDV) <= 0)
+    if (hcmp(vp->f.m.DataVersion, vp->flushDV) <= 0)
 	return;
 
     MObtainWriteLock(&afs_ftf, 317);
-    hset(fdv, vp->m.DataVersion);
+    hset(fdv, vp->f.m.DataVersion);
 
     /* why this disgusting code below?
      *    xuntext, called by xrele, doesn't notice when it is called
@@ -211,7 +232,7 @@ osi_VMDirty_p(struct vcache *avc)
 #endif /* AFS_AIX32_ENV */
 
 #if defined (AFS_SUN5_ENV)
-    if (avc->states & CMAPPED) {
+    if (avc->f.states & CMAPPED) {
 	struct page *pg;
 	for (pg = avc->v.v_s.v_Pages; pg; pg = pg->p_vpnext) {
 	    if (pg->p_mod) {

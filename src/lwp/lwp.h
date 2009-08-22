@@ -18,13 +18,39 @@
 #ifndef __LWP_INCLUDE_
 #define	__LWP_INCLUDE_	1
 
-#if !defined(KERNEL) && !defined(_KMEMUSER) && !defined(AFS_PTHREAD_ENV)
+#if !defined(KERNEL) && !defined(_KMEMUSER)
 #include <afs/param.h>
-#if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
-#include <ucontext.h>
-#else
-#include <setjmp.h>
+
+/* External function declarations. */
+#ifdef AFS_NT40_ENV
+#ifndef _MFC_VER		/*skip if doing Microsoft foundation class */
+#include <winsock2.h>
 #endif
+#elif defined(AFS_LINUX20_ENV)
+#include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
+#else
+# include <unistd.h>		/* select() prototype */
+# include <sys/types.h>		/* fd_set on older platforms */
+# include <sys/time.h>		/* struct timeval, select() prototype */
+# ifndef FD_SET
+#  include <sys/select.h>	/* fd_set on newer platforms */
+# endif
+#endif
+
+/* fasttime.c */
+extern int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz);
+extern int FT_Init(int printErrors, int notReally);
+extern int FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz);
+extern unsigned int FT_ApproxTime(void);
+
+#if !defined(AFS_PTHREAD_ENV)
+# if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
+#  include <ucontext.h>
+# else
+#  include <setjmp.h>
+# endif
 
 #define LWP_SUCCESS	0
 #define LWP_EBADPID	-1
@@ -46,9 +72,9 @@
 #define LWP_ENOROCKS	-15	/* all rocks are in use */
 #define LWP_EBADROCK	-16	/* the specified rock does not exist */
 
-#if	defined(USE_PTHREADS) || defined(USE_SOLARIS_THREADS)
-#ifdef	USE_SOLARIS_THREADS
-#include <thread.h>
+# if	defined(USE_PTHREADS) || defined(USE_SOLARIS_THREADS)
+#  ifdef	USE_SOLARIS_THREADS
+#   include <thread.h>
 typedef int pthread_t;
 typedef void *pthread_addr_t;
 typedef void *pthread_condattr_t;
@@ -99,10 +125,10 @@ typedef struct {
 } pthread_destructor_tab_t;
 define DTAB_SIZE(size) (sizeof(pthread_destructor_tab_t) +
 			(size) * sizeof(dest_slot_t))
-#else
-#include "pthread.h"
-#endif
-#include <assert.h>
+# else
+#  include "pthread.h"
+# endif
+# include <assert.h>
 
 #define LWP_MAX_PRIORITY	0
 #define LWP_NORMAL_PRIORITY	0
@@ -129,23 +155,23 @@ struct rock {			/* to hide things associated with this LWP under */
 
 #define DEBUGF 		0
 
-#ifndef BDE_THREADS
+# ifndef BDE_THREADS
 /*#define CMA_DEBUG 1*/
-#endif
+# endif
 
-#ifdef CMA_DEBUG
-#define LWP_CHECKSTUFF(msg)	lwp_checkstuff(msg)
-#else
-#define LWP_CHECKSTUFF(msg)
-#endif
+# ifdef CMA_DEBUG
+#  define LWP_CHECKSTUFF(msg)	lwp_checkstuff(msg)
+# else
+#  define LWP_CHECKSTUFF(msg)
+# endif
 
-#if DEBUGF
-#define debugf(m) printf m
-#else
-#define debugf(m)
-#endif
+# if DEBUGF
+#  define debugf(m) printf m
+# else
+#  define debugf(m)
+# endif
 
-#define IOMGR_Poll() LWP_DispatchProcess()
+# define IOMGR_Poll() LWP_DispatchProcess()
 
 /*
  * These two macros can be used to enter/exit the LWP context in a CMA
@@ -319,24 +345,6 @@ extern int lwp_MaxStackSeen;
 	LWP_CreateProcess((a), (b), (c), (d), (e), (f))
 #endif
 
-/* External function declarations. */
-#ifdef AFS_NT40_ENV
-#ifndef _MFC_VER		/*skip if doing Microsoft foundation class */
-#include <winsock2.h>
-#endif
-#elif defined(AFS_LINUX20_ENV)
-#include <unistd.h>
-#include <time.h>
-#include <sys/time.h>
-#else
-# include <unistd.h>		/* select() prototype */
-# include <sys/types.h>		/* fd_set on older platforms */
-# include <sys/time.h>		/* struct timeval, select() prototype */
-# ifndef FD_SET
-#  include <sys/select.h>	/* fd_set on newer platforms */
-# endif
-#endif
-
 #endif /* USE_PTHREADS */
 
 /* iomgr.c */
@@ -349,14 +357,6 @@ extern int IOMGR_Cancel(PROCESS pid);
 extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
 extern int IOMGR_SoftSig(void *(*aproc) (void *), void *arock);
-
-
-/* fasttime.c */
-extern int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz);
-extern int FT_Init(int printErrors, int notReally);
-extern int FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz);
-extern unsigned int FT_ApproxTime(void);
-
 
 extern int LWP_WaitForKeystroke(int seconds);	/* -1 => forever */
 extern int LWP_GetResponseKey(int seconds, char *key);
@@ -402,6 +402,7 @@ extern void returnto(struct lwp_context *savearea);
 /* max time we spend on a select in a Win95 DOS box */
 #define IOMGR_WIN95WAITTIME 5000	/* microseconds */
 
+#endif
 #endif /* __LWP_INCLUDE_ */
 
 #endif /* !KERNEL && !_KMEMUSER */

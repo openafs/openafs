@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_vm.c,v 1.9 2003/07/15 23:14:17 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -101,8 +99,8 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 	 * avc was "VN_HELD" and "crheld" when CCore was set in
 	 * afs_FakeClose
 	 */
-	if (avc->states & CCore) {
-	    avc->states &= ~CCore;
+	if (avc->f.states & CCore) {
+	    avc->f.states &= ~CCore;
 	    avc->opens--;
 	    avc->execsOrWriters--;
 	    AFS_RELE(AFSTOV(avc));

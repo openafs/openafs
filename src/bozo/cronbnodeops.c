@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bozo/cronbnodeops.c,v 1.10.14.2 2007/10/31 04:21:14 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -32,10 +30,16 @@ RCSID
 #include "bnode.h"
 #include "bosprototypes.h"
 
-static int cron_timeout(), cron_getstat(), cron_setstat(), cron_delete();
-static int cron_procexit(), cron_getstring(), cron_getparm(), cron_restartp();
-static int cron_hascore();
-struct bnode *cron_create();
+struct bnode *cron_create(char *, char *, char *, char *, char *, char *);
+static int cron_hascore(struct bnode *bnode);
+static int cron_restartp(struct bnode *bnode);
+static int cron_delete(struct bnode *bnode);
+static int cron_timeout(struct bnode *bnode);
+static int cron_getstat(struct bnode *bnode, afs_int32 *status);
+static int cron_setstat(struct bnode *bnode, afs_int32 status);
+static int cron_procexit(struct bnode *bnode, struct bnode_proc *proc);
+static int cron_getstring(struct bnode *bnode, char *abuffer, afs_int32 alen);
+static int cron_getparm(struct bnode *bnode, afs_int32, char *, afs_int32);
 
 #define	SDTIME		60	/* time in seconds given to a process to evaporate */
 
@@ -69,7 +73,7 @@ struct cronbnode {
 };
 
 static int
-cron_hascore(register struct ezbnode *abnode)
+cron_hascore(struct bnode *abnode)
 {
     char tbuffer[256];
 
@@ -93,7 +97,7 @@ ScheduleCronBnode(register struct cronbnode *abnode)
 
     /* If this proc is shutdown, tell bproc() to no longer run this job */
     if (abnode->b.goal == BSTAT_SHUTDOWN) {
-	bnode_SetTimeout(abnode, 0);
+	bnode_SetTimeout((struct bnode *)abnode, 0);
 	return 0;
     }
 
@@ -102,14 +106,14 @@ ScheduleCronBnode(register struct cronbnode *abnode)
 	/* one shot */
 	if (abnode->everRun) {
 	    /* once is enough */
-	    bnode_Delete(abnode);
+	    bnode_Delete((struct bnode *)abnode);
 	    return 0;
 	}
 	/* otherwise start it */
 	if (!abnode->running) {
 	    /* start up */
 	    abnode->lastStart = FT_ApproxTime();
-	    code = bnode_NewProc(abnode, abnode->command, NULL, &tp);
+	    code = bnode_NewProc((struct bnode *)abnode, abnode->command, NULL, &tp);
 	    if (code) {
 		bozo_Log("cron bnode %s failed to start (code %d)\n",
 			 abnode->b.name, code);
@@ -128,20 +132,21 @@ ScheduleCronBnode(register struct cronbnode *abnode)
 	temp = abnode->when - FT_ApproxTime();
 	if (temp < 1)
 	    temp = 1;		/* temp is when to start dude */
-	bnode_SetTimeout(abnode, temp);
+	bnode_SetTimeout((struct bnode *)abnode, temp);
     }
     return 0;
 }
 
 static int
-cron_restartp(register struct cronbnode *abnode)
+cron_restartp(struct bnode *abnode)
 {
     return 0;
 }
 
 static int
-cron_delete(struct cronbnode *abnode)
+cron_delete(struct bnode *bn) 
 {
+    struct cronbnode *abnode = (struct cronbnode *)bn;
     free(abnode->command);
     free(abnode->whenString);
     free(abnode);
@@ -149,12 +154,12 @@ cron_delete(struct cronbnode *abnode)
 }
 
 struct bnode *
-cron_create(char *ainstance, char *acommand, char *awhen)
+cron_create(char *ainstance, char *acommand, char *awhen,
+	    char *unused1, char *unused2, char *unused3)
 {
     struct cronbnode *te;
     afs_int32 code;
     char *cmdpath;
-    extern char *copystr();
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalBinPath(acommand, &cmdpath)) {
@@ -165,7 +170,7 @@ cron_create(char *ainstance, char *acommand, char *awhen)
     te = (struct cronbnode *)malloc(sizeof(struct cronbnode));
     memset(te, 0, sizeof(struct cronbnode));
     code = ktime_ParsePeriodic(awhen, &te->whenToRun);
-    if ((code < 0) || (bnode_InitBnode(te, &cronbnode_ops, ainstance) != 0)) {
+    if ((code < 0) || (bnode_InitBnode((struct bnode *)te, &cronbnode_ops, ainstance) != 0)) {
 	free(te);
 	free(cmdpath);
 	return NULL;
@@ -179,8 +184,9 @@ cron_create(char *ainstance, char *acommand, char *awhen)
 /* called to SIGKILL a process if it doesn't terminate normally.  In cron, also
     start up a process if it is time and not already running */
 static int
-cron_timeout(struct cronbnode *abnode)
+cron_timeout(struct bnode *bn)
 {
+    struct cronbnode *abnode = (struct cronbnode *)bn;
     register afs_int32 temp;
     register afs_int32 code;
     struct bnode_proc *tp;
@@ -191,8 +197,8 @@ cron_timeout(struct cronbnode *abnode)
 	/* not running, perhaps we should start it */
 	if (FT_ApproxTime() >= abnode->when) {
 	    abnode->lastStart = FT_ApproxTime();
-	    bnode_SetTimeout(abnode, 0);
-	    code = bnode_NewProc(abnode, abnode->command, NULL, &tp);
+	    bnode_SetTimeout((struct bnode *)abnode, 0);
+	    code = bnode_NewProc((struct bnode *)abnode, abnode->command, NULL, &tp);
 	    if (code) {
 		bozo_Log("cron failed to start bnode %s (code %d)\n",
 			 abnode->b.name, code);
@@ -206,7 +212,7 @@ cron_timeout(struct cronbnode *abnode)
 	    temp = abnode->when - FT_ApproxTime();
 	    if (temp < 1)
 		temp = 1;
-	    bnode_SetTimeout(abnode, temp);
+	    bnode_SetTimeout((struct bnode *)abnode, temp);
 	}
     } else {
 	if (!abnode->waitingForShutdown)
@@ -214,14 +220,15 @@ cron_timeout(struct cronbnode *abnode)
 	/* send kill and turn off timer */
 	bnode_StopProc(abnode->proc, SIGKILL);
 	abnode->killSent = 1;
-	bnode_SetTimeout(abnode, 0);
+	bnode_SetTimeout((struct bnode *)abnode, 0);
     }
     return 0;
 }
 
 static int
-cron_getstat(struct cronbnode *abnode, afs_int32 * astatus)
+cron_getstat(struct bnode *bn, afs_int32 * astatus)
 {
+    struct cronbnode *abnode = (struct cronbnode *)bn;
     register afs_int32 temp;
     if (abnode->waitingForShutdown)
 	temp = BSTAT_SHUTTINGDOWN;
@@ -239,8 +246,9 @@ cron_getstat(struct cronbnode *abnode, afs_int32 * astatus)
 }
 
 static int
-cron_setstat(register struct cronbnode *abnode, afs_int32 astatus)
+cron_setstat(struct bnode *bn, afs_int32 astatus)
 {
+    struct cronbnode *abnode = (struct cronbnode *)bn;
     if (abnode->waitingForShutdown)
 	return BZBUSY;
     if (astatus == BSTAT_SHUTDOWN) {
@@ -248,14 +256,14 @@ cron_setstat(register struct cronbnode *abnode, afs_int32 astatus)
 	    /* start shutdown */
 	    bnode_StopProc(abnode->proc, SIGTERM);
 	    abnode->waitingForShutdown = 1;
-	    bnode_SetTimeout(abnode, SDTIME);
+	    bnode_SetTimeout((struct bnode *)abnode, SDTIME);
 	    /* When shutdown is complete, bproc() calls BOP_PROCEXIT()
 	     * [cron_procexit()] which will tell bproc() to no longer
 	     * run this cron job.
 	     */
 	} else {
 	    /* Tell bproc() to no longer run this cron job */
-	    bnode_SetTimeout(abnode, 0);
+	    bnode_SetTimeout((struct bnode *)abnode, 0);
 	}
     } else if (astatus == BSTAT_NORMAL) {
 	/* start the cron job
@@ -268,8 +276,9 @@ cron_setstat(register struct cronbnode *abnode, afs_int32 astatus)
 }
 
 static int
-cron_procexit(struct cronbnode *abnode, struct bnode_proc *aproc)
+cron_procexit(struct bnode *bn, struct bnode_proc *aproc)
 {
+    struct cronbnode *abnode = (struct cronbnode *) bn;
     /* process has exited */
 
     /* log interesting errors for folks */
@@ -292,8 +301,9 @@ cron_procexit(struct cronbnode *abnode, struct bnode_proc *aproc)
 }
 
 static int
-cron_getstring(struct cronbnode *abnode, char *abuffer, afs_int32 alen)
+cron_getstring(struct bnode *bn, char *abuffer, afs_int32 alen)
 {
+    struct cronbnode *abnode = (struct cronbnode *)bn;
     if (abnode->running)
 	strcpy(abuffer, "running now");
     else if (abnode->when == 0)
@@ -304,9 +314,10 @@ cron_getstring(struct cronbnode *abnode, char *abuffer, afs_int32 alen)
 }
 
 static int
-cron_getparm(struct cronbnode *abnode, afs_int32 aindex, char *abuffer,
+cron_getparm(struct bnode *bn, afs_int32 aindex, char *abuffer,
 	     afs_int32 alen)
 {
+    struct cronbnode *abnode = (struct cronbnode *)bn;
     if (aindex == 0)
 	strcpy(abuffer, abnode->command);
     else if (aindex == 1) {

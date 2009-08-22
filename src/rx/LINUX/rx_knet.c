@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.32.2.7 2008/05/20 21:59:04 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -171,10 +169,11 @@ osi_NetSend(osi_socket sop, struct sockaddr_in *to, struct iovec *iovec,
 {
     KERNEL_SPACE_DECL;
     struct msghdr msg;
-    int code, sockerr;
+    int code;
+#ifdef ADAPT_PMTU
+    int sockerr;
     size_t esize;
 
-#ifdef ADAPT_PMTU
     while (1) {
 	sockerr=0;
 	esize = sizeof(sockerr);
@@ -230,8 +229,11 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *from, struct iovec *iov,
 {
     KERNEL_SPACE_DECL;
     struct msghdr msg;
-    int code, sockerr;
+    int code;
+#ifdef ADAPT_PMTU
+    int sockerr;
     size_t esize;
+#endif
     struct iovec tmpvec[RX_MAXWVECS + 2];
     struct socket *sop = (struct socket *)so;
 
@@ -314,8 +316,6 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 void
 osi_StopListener(void)
 {
-    struct task_struct *listener;
-    extern int rxk_ListenerPid;
     extern struct task_struct *rxk_ListenerTask;
 
     while (rxk_ListenerTask) {

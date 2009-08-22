@@ -20,7 +20,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/test/testlwp.c,v 1.5 2001/08/08 00:03:52 shadow Exp $");
 
 #define LWP_KERNEL
 #include "lwp.h"

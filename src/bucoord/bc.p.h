@@ -110,7 +110,7 @@ struct bc_dumpSchedule {
  * Private: represents a queued dump/restore item.
  */
 struct bc_dumpTask {
-    int (*callProc) ();
+    int (*callProc) (afs_int32);
     struct bc_config *config;
     struct bc_volumeDump *volumes;
     char *dumpName;		/*Dump name we're doing */
@@ -144,4 +144,4 @@ struct bc_dumpTask {
 #define	BC_MAXSIMDUMPS	    64
 #define BC_MAXPORTS	    128	/* max number of port offsets for volrestore */
 /* debugging support */
-#define	dprintf(x)
+#define	afs_dprintf(x)

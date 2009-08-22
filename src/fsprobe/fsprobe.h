@@ -106,7 +106,7 @@ extern struct fsprobe_ConnectionInfo *fsprobe_ConnInfo;	/*Ptr to connections */
 extern int numCollections;	/*Num data collections */
 extern struct fsprobe_ProbeResults fsprobe_Results;	/*Latest probe results */
 
-extern int fsprobe_Init();
+extern int fsprobe_Init(int, struct sockaddr_in *, int, int (*)(void), int );
     /*
      * Summary:
      *    Initialize the fsprobe module: set up Rx connections to the
@@ -125,7 +125,7 @@ extern int fsprobe_Init();
      *    Error value otherwise.
      */
 
-extern int fsprobe_ForceProbeNow();
+extern int fsprobe_ForceProbeNow(void);
     /*
      * Summary:
      *    Force an immediate probe to the connected FileServers.
@@ -138,7 +138,7 @@ extern int fsprobe_ForceProbeNow();
      *    Error value otherwise.
      */
 
-extern int fsprobe_Cleanup();
+extern int fsprobe_Cleanup(int);
     /*
      * Summary:
      *    Clean up our memory and connection state.

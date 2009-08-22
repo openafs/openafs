@@ -1,8 +1,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/comerr/test/test.c,v 1.6.14.1 2007/04/10 18:39:51 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>

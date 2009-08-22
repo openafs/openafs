@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/salvsync-client.c,v 1.1.4.4 2008/04/01 20:05:36 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>

@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/weak_key.c,v 1.9 2003/07/15 23:15:00 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>

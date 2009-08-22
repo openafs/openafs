@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: exit-wo-close.c,v 1.2 2003/07/15 23:16:59 shadow Exp $");
-#endif
-
 static int
 child(const char *filename)
 {

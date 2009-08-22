@@ -3,7 +3,7 @@
 # Subproduct: OPENAFS.Kernel
 # Fileset: OPENAFS-KRN32 | OPENAFS-KRN64
 # postinstall
-# @(#) $Revision: 1.1 $
+# @(#) $Revision$
 ##############
 #
 #  (c) Copyright 2003

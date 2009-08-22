@@ -10,10 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ubik/recovery.c,v 1.14.4.7 2008/04/28 21:48:11 shadow Exp $");
 
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <errno.h>
+#include <assert.h>
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <time.h>
@@ -23,36 +26,33 @@ RCSID
 #include <netinet/in.h>
 #include <sys/time.h>
 #endif
-#include <assert.h>
+
 #include <lock.h>
-#include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <errno.h>
 #include <afs/afsutil.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
 #include "ubik_int.h"
 
-/* This module is responsible for determining when the system has
+/*! \file
+ * This module is responsible for determining when the system has
  * recovered to the point that it can handle new transactions.  It
  * replays logs, polls to determine the current dbase after a crash,
  * and distributes the new database to the others.
- */
-
-/* The sync site associates a version number with each database.  It
+ *
+ * The sync site associates a version number with each database.  It
  * broadcasts the version associated with its current dbase in every
  * one of its beacon messages.  When the sync site send a dbase to a
  * server, it also sends the db's version.  A non-sync site server can
  * tell if it has the right dbase version by simply comparing the
- * version from the beacon message (uvote_dbVersion) with the version
- * associated with the database (ubik_dbase->version).  The sync site
+ * version from the beacon message \p uvote_dbVersion with the version
+ * associated with the database \p ubik_dbase->version.  The sync site
  * itself simply has one counter to keep track of all of this (again
- * ubik_dbase->version).
- */
-
-/* sync site: routine called when the sync site loses its quorum; this
+ * \p ubik_dbase->version).
+ *
+ * sync site: routine called when the sync site loses its quorum; this
  * procedure is called "up" from the beacon package.  It resyncs the
  * dbase and nudges the recovery daemon to try to propagate out the
  * changes.  It also resets the recovery daemon's state, since
@@ -61,39 +61,45 @@ RCSID
  * servers.
  */
 
-/* if this flag is set, then ubik will use only the primary address 
-** ( the address specified in the CellServDB) to contact other 
-** ubik servers. Ubik recovery will not try opening connections 
-** to the alternate interface addresses. 
-*/
+/*!
+ * if this flag is set, then ubik will use only the primary address 
+ * (the address specified in the CellServDB) to contact other 
+ * ubik servers. Ubik recovery will not try opening connections 
+ * to the alternate interface addresses. 
+ */
 int ubikPrimaryAddrOnly;
 
 int
 urecovery_ResetState(void)
 {
     urecovery_state = 0;
-#if !defined(AFS_PTHREAD_ENV) || !defined(UBIK_PTHREAD_ENV)
+#if !defined(AFS_PTHREAD_ENV)
     /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);
 #endif
     return 0;
 }
 
-/* sync site: routine called when a non-sync site server goes down; restarts recovery
+/*!
+ * \brief sync site
+ *
+ * routine called when a non-sync site server goes down; restarts recovery
  * process to send missing server the new db when it comes back up.
- * This routine should not do anything with variables used by non-sync site servers. 
+ *
+ * \note This routine should not do anything with variables used by non-sync site servers. 
  */
 int
 urecovery_LostServer(void)
 {
-#if !defined(AFS_PTHREAD_ENV) || !defined(UBIK_PTHREAD_ENV)
+#if !defined(AFS_PTHREAD_ENV)
     /*  No corresponding LWP_WaitProcess found anywhere for this -- klm */
     LWP_NoYieldSignal(&urecovery_state);
     return 0;
 #endif
 }
 
-/* return true iff we have a current database (called by both sync
+/*!
+ * return true iff we have a current database (called by both sync
  * sites and non-sync sites) How do we determine this?  If we're the
  * sync site, we wait until recovery has finished fetching and
  * re-labelling its dbase (it may still be trying to propagate it out
@@ -106,7 +112,7 @@ urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
 {
     register afs_int32 rcode;
 
-    ubik_dprint("allbetter checking\n");
+    ubik_dprint_25("allbetter checking\n");
     rcode = 0;
 
 
@@ -129,11 +135,13 @@ urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
 	rcode = 1;
     }
 
-    ubik_dprint("allbetter: returning %d\n", rcode);
+    ubik_dprint_25("allbetter: returning %d\n", rcode);
     return rcode;
 }
 
-/* abort all transactions on this database */
+/*!
+ * \brief abort all transactions on this database
+ */
 int
 urecovery_AbortAll(struct ubik_dbase *adbase)
 {
@@ -144,7 +152,9 @@ urecovery_AbortAll(struct ubik_dbase *adbase)
     return 0;
 }
 
-/* this routine aborts the current remote transaction, if any, if the tid is wrong */
+/*!
+ * \brief this routine aborts the current remote transaction, if any, if the tid is wrong
+ */
 int
 urecovery_CheckTid(register struct ubik_tid *atid)
 {
@@ -168,17 +178,20 @@ urecovery_CheckTid(register struct ubik_tid *atid)
     return 0;
 }
 
-/* log format is defined here, and implicitly in disk.c
+/*!
+ * \brief replay logs
+ *
+ * log format is defined here, and implicitly in disk.c
  *
  * 4 byte opcode, followed by parameters, each 4 bytes long.  All integers
  * are in logged in network standard byte order, in case we want to move logs
  * from machine-to-machine someday.
  *
- * Begin transaction: opcode
- * Commit transaction: opcode, version (8 bytes)
- * Truncate file: opcode, file number, length
- * Abort transaction: opcode
- * Write data: opcode, file, position, length, <length> data bytes
+ * Begin transaction: opcode \n
+ * Commit transaction: opcode, version (8 bytes) \n
+ * Truncate file: opcode, file number, length \n
+ * Abort transaction: opcode \n
+ * Write data: opcode, file, position, length, <length> data bytes \n
  *
  * A very simple routine, it just replays the log.  Note that this is a new-value only log, which
  * implies that no uncommitted data is written to the dbase: one writes data to the log, including
@@ -189,8 +202,6 @@ urecovery_CheckTid(register struct ubik_tid *atid)
  * abort and the remaining dbase on the disk is exactly the right dbase, without having to read
  * the log.
  */
-
-/* replay logs */
 static int
 ReplayLog(register struct ubik_dbase *adbase)
 {
@@ -349,7 +360,9 @@ ReplayLog(register struct ubik_dbase *adbase)
     return code;
 }
 
-/* Called at initialization to figure out version of the dbase we really have.
+/*! \brief
+ * Called at initialization to figure out version of the dbase we really have.
+ *
  * This routine is called after replaying the log; it reads the restored labels.
  */
 static int
@@ -369,7 +382,7 @@ InitializeDB(register struct ubik_dbase *adbase)
 	    adbase->version.counter = 0;
 	    (*adbase->setlabel) (adbase, 0, &adbase->version);
 	}
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	assert(pthread_cond_broadcast(&adbase->version_cond) == 0);
 #else
 	LWP_NoYieldSignal(&adbase->version);
@@ -378,7 +391,9 @@ InitializeDB(register struct ubik_dbase *adbase)
     return 0;
 }
 
-/* initialize the local dbase
+/*!
+ * \brief initialize the local ubik_dbase
+ *
  * We replay the logs and then read the resulting file to figure out what version we've really got.
  */
 int
@@ -393,12 +408,14 @@ urecovery_Initialize(register struct ubik_dbase *adbase)
     return code;
 }
 
-/* Main interaction loop for the recovery manager
+/*!
+ * \brief Main interaction loop for the recovery manager
+ *
  * The recovery light-weight process only runs when you're the
  * synchronization site.  It performs the following tasks, if and only
  * if the prerequisite tasks have been performed successfully (it
  * keeps track of which ones have been performed in its bit map,
- * urecovery_state).
+ * \p urecovery_state).
  *
  * First, it is responsible for probing that all servers are up.  This
  * is the only operation that must be performed even if this is not
@@ -442,7 +459,7 @@ urecovery_Interact(void *dummy)
 #ifndef OLD_URECOVERY
     char pbuffer[1028];
     int flen, fd = -1;
-    afs_int32 epoch, pass;
+    afs_int32 pass;
 #endif
 
     /* otherwise, begin interaction */
@@ -453,7 +470,7 @@ urecovery_Interact(void *dummy)
 	/* Run through this loop every 4 seconds */
 	tv.tv_sec = 4;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -592,7 +609,7 @@ urecovery_Interact(void *dummy)
 	    }
 #ifndef OLD_URECOVERY
 	    flen = length;
-	    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+	    afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 	    fd = open(pbuffer, O_CREAT | O_RDWR | O_TRUNC, 0600);
 	    if (fd < 0) {
 		code = errno;
@@ -605,6 +622,7 @@ urecovery_Interact(void *dummy)
 	    }
 #endif
 
+	    pass = 0;
 	    while (length > 0) {
 		tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
 #ifndef AFS_PTHREAD_ENV
@@ -652,27 +670,27 @@ urecovery_Interact(void *dummy)
 #ifdef OLD_URECOVERY
 		(*ubik_dbase->sync) (ubik_dbase, 0);	/* get data out first */
 #else
-		afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB0", ubik_dbase->pathName);
+		afs_snprintf(tbuffer, sizeof(tbuffer), "%s.DB%s%d", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #ifdef AFS_NT40_ENV
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 		code = unlink(pbuffer);
 		if (!code)
 		    code = rename(tbuffer, pbuffer);
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.TMP", ubik_dbase->pathName);
+		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.TMP", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 #endif
 		if (!code) 
 		    code = rename(pbuffer, tbuffer);
-		if (!code) 
-		    code = (*ubik_dbase->open) (ubik_dbase, 0);
-		if (!code)
+		if (!code) {
+		    (*ubik_dbase->open) (ubik_dbase, 0);
 #endif
-		/* after data is good, sync disk with correct label */
-		code =
-		    (*ubik_dbase->setlabel) (ubik_dbase, 0,
-					     &ubik_dbase->version);
+		    /* after data is good, sync disk with correct label */
+		    code =
+			(*ubik_dbase->setlabel) (ubik_dbase, 0,
+						 &ubik_dbase->version);
 #ifndef OLD_URECOVERY
+		}
 #ifdef AFS_NT40_ENV
-		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB0.OLD", ubik_dbase->pathName);
+		afs_snprintf(pbuffer, sizeof(pbuffer), "%s.DB%s%d.OLD", ubik_dbase->pathName, (file<0)?"SYS":"", (file<0)?-file:file);
 		unlink(pbuffer);
 #endif
 #endif
@@ -694,7 +712,7 @@ urecovery_Interact(void *dummy)
 		urecovery_state |= UBIK_RECHAVEDB;
 	    }
 	    udisk_Invalidate(ubik_dbase, 0);	/* data has changed */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
@@ -722,7 +740,7 @@ urecovery_Interact(void *dummy)
 	    code =
 		(*ubik_dbase->setlabel) (ubik_dbase, 0, &ubik_dbase->version);
 	    udisk_Invalidate(ubik_dbase, 0);	/* data may have changed */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	    assert(pthread_cond_broadcast(&ubik_dbase->version_cond) == 0);
 #else
 	    LWP_NoYieldSignal(&ubik_dbase->version);
@@ -755,7 +773,7 @@ urecovery_Interact(void *dummy)
 		while ((ubik_dbase->flags & DBWRITING) && (safety < 500)) {
 		    DBRELE(ubik_dbase);
 		    /* sleep for a little while */
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 		    select(0, 0, 0, 0, &tv);
 #else
 		    IOMGR_Select(0, 0, 0, 0, &tv);
@@ -837,10 +855,11 @@ urecovery_Interact(void *dummy)
     return NULL;
 }
 
-/*
-** send a Probe to all the network address of this server 
-** Return 0  if success, else return 1
-*/
+/*!
+ * \brief send a Probe to all the network address of this server 
+ * 
+ * \return 0 if success, else return 1
+ */
 int
 DoProbe(struct ubik_server *server)
 {

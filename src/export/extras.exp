@@ -1,6 +1,6 @@
 #!/unix
 *
-* $Locker:  $
+* $Locker$
 * This file contains all the exported symbols/functions from AIX extension that
 * are used by AFS. Since for some extensions (i.e. nfs) AIX doesn't provide an 
 * nfs.exp file we make a quick one here.

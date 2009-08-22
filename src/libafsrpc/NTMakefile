@@ -19,7 +19,7 @@ FSINT = ..\fsint
 COMERR = ..\comerr
 
 # Additional debugging flag for RX.
-AFSDEV_AUXCDEFINES = -DRXDEBUG -DAFS_PTHREAD_ENV
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DRXDEBUG -DAFS_PTHREAD_ENV
 
 LIBFILE = $(DESTDIR)\lib\afsrpc.dll
 
@@ -99,6 +99,7 @@ $(LIBFILE): $(DLLOBJS) $(DLLLIBS)
         $(_VC_MANIFEST_EMBED_DLL)
 	$(DLLPREP)
         $(CODESIGN_USERLAND)
+	$(MAKECYGLIB) --input-def afsrpc.def
 
 # Definitions for generating versioninfo resources
 $(OUT)\afsrpc.res: AFS_component_version_number.h

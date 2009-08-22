@@ -1,8 +1,0 @@
-AFS_component_version_number.c
-Makefile
-upclient
-update.cs.c
-update.h
-update.ss.c
-update.xdr.c
-upserver

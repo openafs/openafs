@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.31.2.6 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -58,11 +56,11 @@ RCSID
 #endif /* vlserver error base define */
 
 /* Exported variables */
-ino_t volumeInode;		/*Inode for VolumeItems file */
-afs_rwlock_t afs_xvolume;	/* allocation lock for volumes */
+afs_dcache_id_t volumeInode;	/* Inode for VolumeItems file */
+afs_rwlock_t afs_xvolume;	/** allocation lock for volumes */
 struct volume *afs_freeVolList;
 struct volume *afs_volumes[NVOLS];
-afs_int32 afs_volCounter = 1;	/* for allocating volume indices */
+afs_int32 afs_volCounter = 1;	/** for allocating volume indices */
 afs_int32 fvTable[NFENTRIES];
 
 /* Forward declarations */
@@ -74,7 +72,12 @@ static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 * vID,
 		     afs_int32 * cID);
 
 
-/* Convert a volume name to a #; return 0 if can't parse as a number */
+
+/**
+ * Convert a volume name to a number; 
+ * @param aname Volume name.
+ * @return return 0 if can't parse as a number.
+ */
 static int
 afs_vtoi(register char *aname)
 {
@@ -93,7 +96,7 @@ afs_vtoi(register char *aname)
 }				/*afs_vtoi */
 
 
-/*
+/**
  * All of the vol cache routines must be called with the afs_xvolume
  * lock held in exclusive mode, since they use static variables.
  * In addition, we don't want two people adding the same volume
@@ -103,8 +106,10 @@ afs_vtoi(register char *aname)
 static struct fvolume staticFVolume;
 afs_int32 afs_FVIndex = -1;
 
-/* UFS specific version of afs_GetVolSlot */
-
+/** 
+ * UFS specific version of afs_GetVolSlot 
+ * @return
+ */
 struct volume *
 afs_UFSGetVolSlot(void)
 {
@@ -152,7 +157,7 @@ afs_UFSGetVolSlot(void)
 	     * next chain
 	     */
 	    if (afs_FVIndex != tv->vtix) {
-		tfile = osi_UFSOpen(volumeInode);
+		tfile = osi_UFSOpen(&volumeInode);
 		code =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * tv->vtix,
 				 &staticFVolume, sizeof(struct fvolume));
@@ -169,7 +174,7 @@ afs_UFSGetVolSlot(void)
 	staticFVolume.dotdot = tv->dotdot;
 	staticFVolume.rootVnode = tv->rootVnode;
 	staticFVolume.rootUnique = tv->rootUnique;
-	tfile = osi_UFSOpen(volumeInode);
+	tfile = osi_UFSOpen(&volumeInode);
 	code =
 	    afs_osi_Write(tfile, sizeof(struct fvolume) * afs_FVIndex,
 			  &staticFVolume, sizeof(struct fvolume));
@@ -185,6 +190,11 @@ afs_UFSGetVolSlot(void)
 }				/*afs_UFSGetVolSlot */
 
 
+/**
+ *   Get an available volume list slot. If the list does not exist, 
+ * create one containing a single element.
+ * @return 
+ */
 struct volume *
 afs_MemGetVolSlot(void)
 {
@@ -205,9 +215,10 @@ afs_MemGetVolSlot(void)
 
 }				/*afs_MemGetVolSlot */
 
-/* afs_ResetVolumes()
- * Reset volume inforamation for all volume structs that
+/** 
+ *   Reset volume information for all volume structs that
  * point to a speicific server.
+ * @param srvp
  */
 void
 afs_ResetVolumes(struct server *srvp)
@@ -230,7 +241,10 @@ afs_ResetVolumes(struct server *srvp)
 }
 
 
-/* reset volume name to volume id mapping  cache */
+/** 
+ *   Reset volume name to volume id mapping cache.
+ * @param flags
+ */
 void
 afs_CheckVolumeNames(int flags)
 {
@@ -276,6 +290,7 @@ afs_CheckVolumeNames(int flags)
 		    continue;
 		}
 	    }
+	    /* ??? */
 	    if (flags & (AFS_VOLCHECK_BUSY | AFS_VOLCHECK_FORCE)) {
 		for (j = 0; j < MAXHOSTS; j++)
 		    tv->status[j] = not_busy;
@@ -301,25 +316,25 @@ loop:
 		if ((flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))
 		    || (tvc->mvid
 			&& inVolList(tvc->mvid, nvols, volumeID, cellID)))
-		    tvc->states &= ~CMValid;
+		    tvc->f.states &= ~CMValid;
 
 		/* If the volume that this file belongs to was reset earlier,
 		 * then we should remove its callback.
 		 * Again, if forced, always do it.
 		 */
-		if ((tvc->states & CRO)
-		    && (inVolList(&tvc->fid, nvols, volumeID, cellID)
+		if ((tvc->f.states & CRO)
+		    && (inVolList(&tvc->f.fid, nvols, volumeID, cellID)
 			|| (flags & AFS_VOLCHECK_FORCE))) {
 
-                    if (tvc->states & CVInit) {
+                    if (tvc->f.states & CVInit) {
                         ReleaseReadLock(&afs_xvcache);
-			afs_osi_Sleep(&tvc->states);
+			afs_osi_Sleep(&tvc->f.states);
                         goto loop;
                     }
 #ifdef AFS_DARWIN80_ENV
-                    if (tvc->states & CDeadVnode) {
+                    if (tvc->f.states & CDeadVnode) {
                         ReleaseReadLock(&afs_xvcache);
-			afs_osi_Sleep(&tvc->states);
+			afs_osi_Sleep(&tvc->f.states);
                         goto loop;
                     }
 		    tvp = AFSTOV(tvc);
@@ -340,9 +355,9 @@ loop:
 		    ObtainWriteLock(&afs_xcbhash, 485);
 		    /* LOCKXXX: We aren't holding tvc write lock? */
 		    afs_DequeueCallback(tvc);
-		    tvc->states &= ~CStatd;
+		    tvc->f.states &= ~CStatd;
 		    ReleaseWriteLock(&afs_xcbhash);
-		    if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
+		    if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 			osi_dnlc_purgedp(tvc);
 
 #ifdef AFS_DARWIN80_ENV
@@ -369,6 +384,14 @@ loop:
 }				/*afs_CheckVolumeNames */
 
 
+/**
+ * Check if volume is in the specified list.
+ * @param fid File FID.
+ * @param nvols Nomber of volumes???
+ * @param vID Array of volume IDs.
+ * @param cID Array of cache IDs.
+ * @return 1 - true, 0 - false.
+ */
 static int
 inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 * vID,
 	  afs_int32 * cID)
@@ -390,10 +413,12 @@ inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 * vID,
 /* afs_PutVolume is now a macro in afs.h */
 
 
-/* afs_FindVolume()
- *  return volume struct if we have it cached and it's up-to-date
- *
- *  Environment:  Must be called with afs_xvolume unlocked.
+/** 
+ *    Return volume struct if we have it cached and it's up-to-date.
+ *  Environment: Must be called with afs_xvolume unlocked.
+ *  @param afid Volume FID.
+ *  @param locktype
+ *  @return Volume or NULL if no result.
  */
 struct volume *
 afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
@@ -419,9 +444,13 @@ afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
 
 
 
-/*
- * Note that areq may be null, in which case we don't bother to set any
+/**
+ *   Note that areq may be null, in which case we don't bother to set any
  * request status information.
+ * @param afid Volume FID.
+ * @param areq Request type.
+ * @param locktype Lock to be used.
+ * @return Volume or NULL if no result.
  */
 struct volume *
 afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
@@ -433,6 +462,7 @@ afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 
     tv = afs_FindVolume(afid, locktype);
     if (!tv) {
+	/* Do a dynroot check and add dynroot volume if found. */
 	if (afs_IsDynrootAnyFid(afid)) {
 	    tv = afs_NewDynrootVolume(afid);
 	} else {
@@ -445,6 +475,17 @@ afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 
 
 
+/**
+ * 
+ * @param volid Volume ID. If it's 0, get it from the name.
+ * @param aname Volume name.
+ * @param ve Volume entry.
+ * @param tcell The cell containing this volume.
+ * @param agood 
+ * @param type Type of volume.
+ * @param areq Request.
+ * @return Volume or NULL if failure.
+ */
 static struct volume *
 afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 		afs_int32 agood, afs_int32 type, struct vrequest *areq)
@@ -477,9 +518,9 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 		volid = nve->volumeId[whichType];
 	    } else {
 		volid = ove->volumeId[whichType];
-	    }
-	}
-    }
+	    } 
+	} /* end of if (volid == 0) */
+    } /* end of if (!volid) */
 
 
     ObtainWriteLock(&afs_xvolume, 108);
@@ -495,14 +536,14 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	tv = afs_GetVolSlot();
 	memset((char *)tv, 0, sizeof(struct volume));
 	tv->cell = tcell->cellNum;
-	RWLOCK_INIT(&tv->lock, "volume lock");
+	AFS_RWLOCK_INIT(&tv->lock, "volume lock");
 	tv->next = afs_volumes[i];	/* thread into list */
 	afs_volumes[i] = tv;
 	tv->volume = volid;
 	for (j = fvTable[FVHash(tv->cell, volid)]; j != 0; j = tf->next) {
 	    if (afs_FVIndex != j) {
 		struct osi_file *tfile;
-		tfile = osi_UFSOpen(volumeInode);
+	        tfile = osi_UFSOpen(&volumeInode);
 		err =
 		    afs_osi_Read(tfile, sizeof(struct fvolume) * j,
 				 &staticFVolume, sizeof(struct fvolume));
@@ -556,6 +597,16 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 }
 
 
+/**
+ * Seek volume by it's name and attributes.
+ * If volume not found, try to add one.
+ * @param aname Volume name.
+ * @param acell Cell 
+ * @param agood
+ * @param areq
+ * @param locktype Type of lock to be used.
+ * @return 
+ */
 struct volume *
 afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
 		    struct vrequest *areq, afs_int32 locktype)
@@ -585,6 +636,11 @@ afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
     return (tv);
 }
 
+/**
+ *   Init a new dynroot volume.
+ * @param Volume FID. 
+ * @return Volume or NULL if not found.
+ */
 static struct volume *
 afs_NewDynrootVolume(struct VenusFid *fid)
 {
@@ -613,6 +669,15 @@ afs_NewDynrootVolume(struct VenusFid *fid)
 }
 
 int lastnvcode;
+
+/**
+ * @param aname Volume name.
+ * @param acell Cell id.
+ * @param agood 
+ * @param areq Request type.
+ * @param locktype Type of lock to be used.
+ * @return Volume or NULL if failure.
+ */
 static struct volume *
 afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 		    struct vrequest *areq, afs_int32 locktype)
@@ -624,7 +689,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
     struct uvldbentry *utve;
     struct cell *tcell;
     char *tbuffer, *ve;
-    struct conn *tconn;
+    struct afs_conn *tconn;
     struct vrequest treq;
 
     if (strlen(aname) > VL_MAXNAMELEN)	/* Invalid volume name */
@@ -759,7 +824,12 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 
 
 
-/* call this with the volume structure locked; used for new-style vldb requests */
+/** 
+ *   Call this with the volume structure locked; used for new-style vldb requests.
+ * @param av Volume 
+ * @param ve
+ * @param acell
+ */
 void
 InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 {
@@ -920,7 +990,7 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		    struct cell *tcell, struct vrequest *areq)
 {
     register struct server *ts;
-    struct conn *tconn;
+    struct afs_conn *tconn;
     struct cell *cellp;
     register int i, j;
     afs_uint32 serverid;
@@ -986,7 +1056,8 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		&& ts->addr) {
 		/* uuid, uniquifier, and portal are the same */
 	    } else {
-		afs_uint32 *addrp, nentries, code, unique;
+		afs_uint32 *addrp, code;
+		afs_int32 nentries, unique;
 		bulkaddrs addrs;
 		ListAddrByAttributes attrs;
 		afsUUID uuid;
@@ -1052,6 +1123,11 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 }				/*InstallVolumeEntry */
 
 
+/**
+ *   Reset volume info for the specified volume strecture. Mark volume 
+ * to be rechecked next time.
+ * @param tv 
+ */
 void
 afs_ResetVolumeInfo(struct volume *tv)
 {

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butm/butm_test.c,v 1.8.14.1 2007/04/10 18:39:51 shadow Exp $");
 
 #include <errno.h>
 #include <sys/types.h>

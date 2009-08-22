@@ -27,7 +27,6 @@ config     - build system OS-specific configuration
 dauth      - dlog - get a krb ticket for use with the AFS/DFS translator
              dpass - also part of the AFS/DFS migration kit
 des        - des library
-des_stub   - remnant of export restrictions on encryption code.
 dir        - afs directory handling library (client and server, internal format)
 export     - from the README:
         EXPORT is an aix3.1 kernel extension whose sole purpose in
@@ -58,10 +57,8 @@ log        - programs to show and forget tokens (and optionally forget tokens
 login      - afs aware login replacement, and optional replacement which
 	     gets kerberos tickets
 lwp        - lightweight process library
-mpp        - macro processor for use with package
 ntp        - out of date bundled NTP implementation
 null       - empty archive library
-package    - package system for local disk software maintenance
 pam        - pluggable authentication modules for afs authentication.
 pinstall   - "portable" install command
 procmgmt   - "portable" process management library.
@@ -76,7 +73,6 @@ rxkad      - kerberos security module for rx.
 rxstat     - rx statistics package
 scout      - monitoring tool for afs fileservers.
 sgistuff   - SGI authentication plugin for graphical login
-sia        - Digital UNIX authentication plugin
 sys        - local and remote system call interfaces. basic PAG-creation 
 	     and remote system call handling for NFS translator
 tbutc      - pthread version of butc.
@@ -95,8 +91,6 @@ viced      - fileserver.
 vlserver   - volume location server
 vol        - volume library for managing volumes on-disk.
 volser     - volume server package. includes volserver and vos client.
-wsadmin.src - sample package files
-wsadmin.lib - sample package files
 xstat      - extended statistics clients for cachemanagers and fileservers
 xinstall   - unused more modern install program
 tools      - contributed configuration/maintenance tools
@@ -105,5 +99,3 @@ include    - build-time include file install area; may be used in automake time
 cf         - autoconf config files
 afsinstall - leftovers from IBM AFS including installation notes and helper
 	     scripts
-
-

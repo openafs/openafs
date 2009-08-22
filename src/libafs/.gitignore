@@ -1,0 +1,27 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/MODLOAD
+/MODLOAD-*
+/MODLOAD32
+/MODLOAD64
+/Makefile.common
+/MakefileProto.*
+!/MakefileProto.*.in
+/afs
+/afs.x86_darwin_90.plist
+/afsint
+/asm
+/asm-generic
+/config
+/export.h
+/export.exp
+/export64.exp
+/h
+/linux
+/net
+/netinet
+/rpc
+/sys
+/rx

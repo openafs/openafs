@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/cfg/cfghost.c,v 1.6 2004/04/02 06:54:05 jaltman Exp $");
 
 #include <afs/stds.h>
 
@@ -38,6 +36,9 @@ RCSID
 #else
 #include <unistd.h>
 #endif /* AFS_NT40_ENV */
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
@@ -502,7 +503,7 @@ cfg_HostSetAfsPrincipal(void *hostHandle,	/* host config handle */
     if (tst == 0) {
 	kas_identity_t afsIdentity;
 	kas_encryptionKey_t afsKey;
-	int afsKvno;
+	int afsKvno = 0;
 
 	strcpy(afsIdentity.principal, "afs");
 	afsIdentity.instance[0] = '\0';
@@ -635,7 +636,7 @@ cfg_HostSetAfsPrincipal(void *hostHandle,	/* host config handle */
 int ADMINAPI
 cfg_HostSetAdminPrincipal(void *hostHandle,	/* host config handle */
 			  short isFirst,	/* first server in cell flag */
-			  const char *admin,	/* admin principal name */
+			  char *admin,		/* admin principal name */
 			  const char *passwd,	/* admin initial password */
 			  unsigned int afsUid,	/* admin AFS UID */
 			  afs_status_p st)
@@ -994,8 +995,11 @@ cfg_HostPartitionTableAddEntry(void *hostHandle,	/* host config handle */
 			       afs_status_p st)
 {				/* completion status */
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+    afs_status_t tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
     cfg_host_p cfg_host = (cfg_host_p) hostHandle;
+#endif
 
 #ifdef AFS_NT40_ENV
     /* validate parameters */
@@ -1065,8 +1069,11 @@ cfg_HostPartitionTableRemoveEntry(void *hostHandle,	/* host config handle */
 				  afs_status_p st)
 {				/* completion status */
     int rc = 1;
-    afs_status_t tst2, tst = 0;
+    afs_status_t tst = 0;
+#ifdef AFS_NT40_ENV
+    afs_status_t tst2;
     cfg_host_p cfg_host = (cfg_host_p) hostHandle;
+#endif
 
 #ifdef AFS_NT40_ENV
     /* validate parameters */

@@ -46,8 +46,9 @@
 #define	AFSOP_SET_THISCELL	 35	/* set the primary cell */
 #define AFSOP_BASIC_INIT	 36	/* used to be part of START_AFS */
 #define AFSOP_SET_BACKUPTREE	 37	/* enable backup tree support */
-#define AFSOP_SET_RXPCK		 38	/*set rx_extraPackets*/
+#define AFSOP_SET_RXPCK		 38	/* set rx_extraPackets*/
 #define AFSOP_BUCKETPCT          39     /* bucket percentage */
+#define AFSOP_SET_RXMAXMTU       40     /* set rx_MyMaxSendSize,rx_maxReceiveSizeUser,rx_maxReceiveSize */  
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20
@@ -142,6 +143,7 @@ struct afs_cacheParams {
     afs_int32 memCacheFlag;
     afs_int32 inodes;
     afs_int32 users;
+    afs_int32 dynamic_vcaches;
 };
 
 /*

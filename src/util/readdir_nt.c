@@ -19,8 +19,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/readdir_nt.c,v 1.7 2005/11/05 06:48:27 jaltman Exp $");
 
 #include <errno.h>
 #include <afs/errmap_nt.h>

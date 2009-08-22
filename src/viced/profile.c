@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/viced/profile.c,v 1.7 2003/07/15 23:17:32 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/file.h>

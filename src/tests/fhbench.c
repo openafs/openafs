@@ -54,7 +54,6 @@
 #include <atypes.h>
 #include <kafs.h>
 
-RCSID("$Id: fhbench.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 
 struct fhb_handle {
     char data[512];

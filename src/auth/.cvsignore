@@ -1,8 +1,0 @@
-AFS_component_version_number.c
-Makefile
-acfg_errors.c
-auth.h
-cellconfig.h
-copyauth
-ktc_errors.c
-setkey

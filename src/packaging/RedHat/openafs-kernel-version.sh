@@ -2,7 +2,7 @@
 #
 # investigate the name of the kernel
 #
-# $Revision: 1.2.2.2 $
+# $Revision$
 
 if [ "x$1" = "x" ] ; then
     kernvers=`uname -r`

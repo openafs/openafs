@@ -52,11 +52,7 @@
  */
 
 struct afs_cacheOps {
-#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
-    void *(*open) (ino_t ainode);
-#else
-    void *(*open) (afs_int32 ainode);
-#endif
+    void *(*open) (afs_dcache_id_t *ainode);
     int (*truncate) (struct osi_file * fp, afs_int32 len);
     int (*fread) (struct osi_file * fp, int offset, void *buf, afs_int32 len);
     int (*fwrite) (struct osi_file * fp, afs_int32 offset, void *buf,
@@ -95,7 +91,22 @@ struct afs_cacheOps {
 
 #define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered, length) \
           (*(afs_cacheType->FetchProc))(call, file, (afs_size_t)base, adc, avc, (afs_size_t *)toxfer, (afs_size_t *)xfered, length)
-#define	afs_CacheStoreProc(call, file, bytes, avc, wake, toxfer, xfered) \
-          (*(afs_cacheType->StoreProc))(call, file, bytes, avc, wake, toxfer, xfered)
+
+/* These memcpys should get optimised to simple assignments when afs_dcache_id_t 
+ * is simple */
+static_inline void afs_copy_inode(afs_dcache_id_t *dst, afs_dcache_id_t *src) {
+    memcpy(dst, src, sizeof(afs_dcache_id_t));
+}
+
+static_inline void afs_reset_inode(afs_dcache_id_t *i) {
+    memset(i, 0, sizeof(afs_dcache_id_t));
+}
+
+/* We need to have something we can output as the 'inode' for fstrace calls. 
+ * This is a hack */
+static_inline int afs_inode2trace(afs_dcache_id_t *i) {
+    return i->mem;
+}
+
 
 #endif /* AFS_CHUNKOPS */

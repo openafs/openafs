@@ -14,10 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_pag_module.c,v 1.1.2.8 2008/06/12 20:08:33 shadow Exp $");
-
-#if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -157,5 +153,3 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     return EINVAL;
 }
 #endif
-#endif /* AFS_NONFSTRANS */
-

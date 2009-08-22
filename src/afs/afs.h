@@ -121,6 +121,10 @@ struct sysname_info {
 #define	BOP_STORE	2	/* parm1 is chunk to store */
 #define	BOP_PATH	3	/* parm1 is path, parm2 is chunk to fetch */
 
+#if defined(AFS_CACHE_BYPASS)
+#define	BOP_FETCH_NOCACHE	4   /* parms are: vnode ptr, offset, segment ptr, addr, cred ptr */
+#endif
+
 #define	B_DONTWAIT	1	/* On failure return; don't wait */
 
 /* protocol is: refCount is incremented by user to take block out of free pool.
@@ -170,20 +174,58 @@ struct SmallFid {
 /* The actual number of bytes in the SmallFid, not the sizeof struct. */
 #define SIZEOF_SMALLFID 10
 
+/* Queues 
+ * ------
+ *
+ *  Circular queues, implemented with pointers. Structures may contain as many
+ *  queues as required, which may be located at any point within the structure,
+ *  providing the QEntry macro is used to translate between a queue pointer, and
+ *  the address of its containing structure
+ */
 
-/*
-  * Queues implemented with both pointers and short offsets into a disk file.
-  */
 struct afs_q {
     struct afs_q *next;
     struct afs_q *prev;
+};
+
+#define QZero(e)    ((e)->prev = (e)->next = NULL)
+#define	QInit(q)    ((q)->prev = (q)->next = (q))
+#define	QAdd(q,e)   ((e)->next = (q)->next, (e)->prev = (q), \
+			(q)->next->prev = (e), (q)->next = (e))
+#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next, (e)->prev = NULL, (e)->next = NULL)
+#define	QNext(e)    ((e)->next)
+#define QPrev(e)    ((e)->prev)
+#define QEmpty(q)   ((q)->prev == (q))
+/* this one takes q1 and sticks it on the end of q2 - that is, the other end, not the end
+ * that things are added onto.  q1 shouldn't be empty, it's silly */
+#define QCat(q1,q2) ((q2)->prev->next = (q1)->next, (q1)->next->prev=(q2)->prev, (q1)->prev->next=(q2), (q2)->prev=(q1)->prev, (q1)->prev=(q1)->next=(q1))
+
+/* Given a pointer to an afs_q within a structure, go back to the address of
+ * the parent structure
+ */
+
+#define QEntry(queue, structure, member) \
+	((structure *)((char *)(queue)-(char *)(&((structure *)NULL)->member)))
+
+/* And implement operations for individual lists in terms of the above macro */
+
+#define QTOV(e)	    QEntry(e, struct vcache, vlruq)
+#define QTOC(e)	    QEntry(e, struct cell, lruq)
+#define QTOVH(e)    QEntry(e, struct vcache, vhashq)
+
+/*!
+ * List of free slot numbers
+ */
+struct afs_slotlist {
+    afs_uint32 slot;
+    struct afs_slotlist *next;
 };
 
 struct vrequest {
     afs_int32 uid;		/* user id making the request */
     afs_int32 busyCount;	/* how many busies we've seen so far */
     afs_int32 flags;		/* things like O_SYNC, O_NONBLOCK go here */
-    char initd;			/* if non-zero, non-uid fields meaningful */
+    char initd;			/* if non-zero, Error fields meaningful */
     char accessError;		/* flags for overriding error return code */
     char volumeError;		/* encountered a missing or busy volume */
     char networkError;		/* encountered network problems */
@@ -294,9 +336,9 @@ struct unixuser {
     void *cellinfo;             /* pointer to cell info (PAG manager only) */
 };
 
-struct conn {
+struct afs_conn {
     /* Per-connection block. */
-    struct conn *next;		/* Next dude same server. */
+    struct afs_conn *next;		/* Next dude same server. */
     struct unixuser *user;	/* user validated with respect to. */
     struct rx_connection *id;	/* RPC connid. */
     struct srvAddr *srvr;	/* server associated with this conn */
@@ -314,35 +356,12 @@ struct conn {
     || (a)->Fid.Volume != (b)->Fid.Volume \
     || (a)->Cell != (b)->Cell)
 
-#define	FidMatches(afid,tvc) ((tvc)->fid.Fid.Vnode == (afid)->Fid.Vnode && \
-	(tvc)->fid.Fid.Volume == (afid)->Fid.Volume && \
-	(tvc)->fid.Cell == (afid)->Cell && \
-	( (tvc)->fid.Fid.Unique == (afid)->Fid.Unique || \
-	 (!(afid)->Fid.Unique && ((tvc)->states & CUnique))))
+#define	FidMatches(afid,tvc) ((tvc)->f.fid.Fid.Vnode == (afid)->Fid.Vnode && \
+	(tvc)->f.fid.Fid.Volume == (afid)->Fid.Volume && \
+	(tvc)->f.fid.Cell == (afid)->Cell && \
+	( (tvc)->f.fid.Fid.Unique == (afid)->Fid.Unique || \
+	 (!(afid)->Fid.Unique && ((tvc)->f.states & CUnique))))
 
-
-/*
-  * Operations on circular queues implemented with pointers.  Note: these queue
-  * objects are always located at the beginning of the structures they are linking.
-  */
-#define	QInit(q)    ((q)->prev = (q)->next = (q))
-#define	QAdd(q,e)   ((e)->next = (q)->next, (e)->prev = (q), \
-			(q)->next->prev = (e), (q)->next = (e))
-#define	QRemove(e)  ((e)->next->prev = (e)->prev, (e)->prev->next = (e)->next, (e)->prev = NULL, (e)->next = NULL)
-#define	QNext(e)    ((e)->next)
-#define QPrev(e)    ((e)->prev)
-#define QEmpty(q)   ((q)->prev == (q))
-/* this one takes q1 and sticks it on the end of q2 - that is, the other end, not the end
- * that things are added onto.  q1 shouldn't be empty, it's silly */
-#define QCat(q1,q2) ((q2)->prev->next = (q1)->next, (q1)->next->prev=(q2)->prev, (q1)->prev->next=(q2), (q2)->prev=(q1)->prev, (q1)->prev=(q1)->next=(q1))
-/*
- * Do lots of address arithmetic to go from vlruq to the base of the vcache
- * structure.  Don't move struct vnode, since we think of a struct vcache as
- * a specialization of a struct vnode
- */
-#define	QTOV(e)	    ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vlruq))) - ((char *)(e)))))
-#define	QTOC(e)	    ((struct cell *)((char *) (e)))
-#define	QTOVH(e)   ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->vhashq))) - ((char *)(e)))))
 
 #define	SRVADDR_MH	1
 #define	SRVADDR_ISDOWN	0x20	/* same as SRVR_ISDOWN */
@@ -351,7 +370,7 @@ struct srvAddr {
     struct srvAddr *next_bkt;	/* next item in hash bucket */
     struct srvAddr *next_sa;	/* another interface on same host */
     struct server *server;	/* back to parent */
-    struct conn *conns;		/* All user connections to this server */
+    struct afs_conn *conns;		/* All user connections to this server */
     afs_int32 sa_ip;		/* Host addr in network byte order */
     u_short sa_iprank;		/* indiv ip address priority */
     u_short sa_portal;		/* port addr in network byte order */
@@ -558,17 +577,60 @@ struct SimpleLocks {
 #define CUnlinkedDel	0x00040000
 #define CVFlushed	0x00080000
 #define CCore1		0x00100000	/* osf1 core file; not same as CCore above */
+#ifdef AFS_LINUX22_ENV
+#define CPageWrite      0x00200000      /* to detect vm deadlock - linux */
+#else
 #define CWritingUFS	0x00200000	/* to detect vm deadlock - used by sgi */
+#endif
 #define CCreating	0x00400000	/* avoid needless store after open truncate */
 #define CPageHog	0x00800000	/* AIX - dumping large cores is a page hog. */
 #define CDCLock		0x02000000	/* Vnode lock held over call to GetDownD */
 #define CBulkFetching	0x04000000	/* stats are being fetched by bulk stat */
 #define CExtendedFile	0x08000000	/* extended file via ftruncate call. */
 #define CVInit          0x10000000      /* being initialized */
+#define CMetaDirty	0x20000000	/* vnode meta-data needs to be flushed */
 
 /* vcache vstate bits */
 #define VRevokeWait   0x1
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
+
+#if defined(AFS_DISCON_ENV)
+
+/* Dirty disconnected vcache flags. */
+#define VDisconSetTime		0x00000001  	/* set time. */
+#define VDisconSetMode		0x00000002	/* set mode. */
+/* XXX: to be continued ? */
+#define VDisconTrunc		0x00000020	/* truncate file. */
+#define VDisconSetAttrMask	0x0000003F	/* Masks for setattr ops. */
+#define VDisconWriteClose	0x00000400	/* Write op on file close. */
+#define VDisconWriteFlush	0x00000800	/* Write op on normal fsync/flush. */
+#define VDisconWriteOsiFlush	0x00001000	/* Write op on osi flush. */
+
+#define VDisconRemove		0x00002000	/* Remove vnop. */
+#define VDisconCreate		0x00004000	/* Create vnop. */
+#define VDisconCreated		0x00008000	/* A file that was created during
+						   this resync operation */
+#define VDisconRename		0x00010000	/* Rename vnop. */
+#define VDisconRenameSameDir	0x00020000	/* Rename in same dir. */
+
+/*... to be continued ...  */
+#endif
+
+#if defined(AFS_CACHE_BYPASS)
+/* vcache (file) cachingStates bits */
+#define FCSDesireBypass   0x1	/* This file should bypass the cache */
+#define FCSBypass         0x2	/* This file is currently NOT being cached */
+#define FCSManuallySet    0x4	/* The bypass flags were set, or reset, manually (via pioctl)
+ 				 				   and should not be overridden by the file's name */
+
+/* Flag values used by the Transition routines */
+#define TRANSChangeDesiredBit		0x1	/* The Transition routine should set or 
+										 * reset the FCSDesireBypass bit */
+#define TRANSVcacheIsLocked			0x2	/* The Transition routine does not need to
+										 * lock vcache (it's already locked) */
+#define TRANSSetManualBit		0x4	/* The Transition routine should set FCSManuallySet so that
+									 * filename checking does not override pioctl requests */	
+#endif /* AFS_CACHE_BYPASS */
 
 #define	CPSIZE	    2
 #if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
@@ -618,6 +680,49 @@ extern afs_int32 vmPageHog;	/* counter for # of vnodes which are page hogs. */
 #define AFSTOV(V) (&(V)->v)
 #endif
 
+struct afs_vnuniq {
+    afs_uint32 vnode;
+    afs_uint32 unique;
+};
+
+/* VCache elements which are kept on disk, and in the kernel */
+struct fvcache {
+    struct VenusFid fid;
+    struct mstat {
+	afs_size_t Length;
+	afs_hyper_t DataVersion;
+	afs_uint32 Date;
+	afs_uint32 Owner;
+	afs_uint32 Group;
+	afs_uint16 Mode;	/* XXXX Should be afs_int32 XXXX */
+	afs_uint16 LinkCount;
+#ifdef AFS_DARWIN80_ENV
+        afs_uint16 Type;
+#else
+	/* vnode type is in v.v_type */
+#endif
+    } m;
+    struct afs_vnuniq parent;
+
+    /*! Truncate file to this position at the next store */
+    afs_size_t truncPos;
+
+    /*! System:AnyUser's access to this. */
+    afs_int32 anyAccess;
+
+    /*! state bits */
+    afs_uint32 states;
+
+#if defined(AFS_DISCON_ENV)
+    /*! Disconnected flags for this vcache element. */
+    afs_uint32 ddirty_flags;
+    /*! Shadow vnode + unique keep the shadow dir location. */
+    struct afs_vnuniq shadow;
+    /*! The old parent FID for renamed vnodes */
+    struct afs_vnuniq oldParent;
+#endif
+};
+    
 /* INVARIANTs: (vlruq.next != NULL) == (vlruq.prev != NULL)
  *             nextfree => !vlruq.next && ! vlruq.prev
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
@@ -634,21 +739,17 @@ struct vcache {
 #endif
     struct vcache *hnext;	/* Hash next */
     struct afs_q vhashq;	/* Hashed per-volume list */
-    struct VenusFid fid;
-    struct mstat {
-	afs_size_t Length;
-	afs_hyper_t DataVersion;
-	afs_uint32 Date;
-	afs_uint32 Owner;
-	afs_uint32 Group;
-	afs_uint16 Mode;	/* XXXX Should be afs_int32 XXXX */
-	afs_uint16 LinkCount;
-#ifdef AFS_DARWIN80_ENV
-        afs_uint16 Type;
-#else
-	/* vnode type is in v.v_type */
+#if defined(AFS_DISCON_ENV)
+    /*! Queue of dirty vcaches. Lock with afs_disconDirtyLock */
+    struct afs_q dirtyq;
+    /*! Queue of vcaches with shadow entries. Lock with afs_disconDirtyLock */
+    struct afs_q shadowq;
+    /*! Queue of vcaches with dirty metadata. Locked by afs_xvcdirty */
+    struct afs_q metadirty;
+    /*! Vcaches slot number in the disk backup. Protected by tvc->lock */
+    afs_uint32 diskSlot;
 #endif
-    } m;
+    struct fvcache f;
     afs_rwlock_t lock;		/* The lock on the vcache contents. */
 #if	defined(AFS_SUN5_ENV)
     /* Lock used to protect the activeV, multipage, and vstates fields.
@@ -681,20 +782,19 @@ struct vcache {
     struct lock__bsd__ rwlock;
 #endif
 #ifdef AFS_XBSD_ENV
+#if !defined(AFS_DFBSD_ENV)
     struct lock rwlock;
 #endif
-    afs_int32 parentVnode;	/* Parent dir, if a file. */
-    afs_int32 parentUnique;
+#endif
+
     struct VenusFid *mvid;	/* Either parent dir (if root) or root (if mt pt) */
     char *linkData;		/* Link data if a symlink. */
     afs_hyper_t flushDV;	/* data version last flushed from text */
     afs_hyper_t mapDV;		/* data version last flushed from map */
-    afs_size_t truncPos;	/* truncate file to this position at next store */
     struct server *callback;	/* The callback host, if any */
     afs_uint32 cbExpires;	/* time the callback expires */
     struct afs_q callsort;	/* queue in expiry order, sort of */
     struct axscache *Access;	/* a list of cached access bits */
-    afs_int32 anyAccess;	/* System:AnyUser's access to this. */
     afs_int32 last_looker;	/* pag/uid from last lookup here */
 #if	defined(AFS_SUN5_ENV)
     afs_int32 activeV;
@@ -705,7 +805,17 @@ struct vcache {
 				 * this file. */
     short flockCount;		/* count of flock readers, or -1 if writer */
     char mvstat;		/* 0->normal, 1->mt pt, 2->root. */
-    afs_uint32 states;		/* state bits */
+
+#if defined(AFS_CACHE_BYPASS)
+	char cachingStates;			/* Caching policies for this file */
+	afs_uint32 cachingTransitions;		/* # of times file has flopped between caching and not */
+#if defined(AFS_LINUX24_ENV)
+	off_t next_seq_offset;	/* Next sequential offset (used by prefetch/readahead) */
+#else
+	off_t next_seq_blk_offset; /* accounted in blocks for Solaris & IRIX */
+#endif
+#endif
+	
 #if	defined(AFS_SUN5_ENV)
     afs_uint32 vstates;		/* vstate bits */
 #endif				/* defined(AFS_SUN5_ENV) */
@@ -911,29 +1021,41 @@ struct afs_fheader {
     afs_int32 otherCSize;
 };
 
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
+#if defined(AFS_CACHE_VNODE_PATH) || defined(UKERNEL)
+typedef afs_int32 afs_ufs_dcache_id_t;
+#elif defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
 /* Using ino64_t here so that user level debugging programs compile
  * the size correctly.
  */
-#define afs_inode_t ino64_t
+typedef ino64_t afs_ufs_dcache_id_t;
+#elif defined(LINUX_USE_FH)
+#define MAX_FH_LEN 10
+typedef union {
+     struct fid fh;
+     __u32 raw[MAX_FH_LEN];
+} afs_ufs_dcache_id_t;
+extern int cache_fh_type;
+extern int cache_fh_len;
+#elif defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX24_ENV)
+typedef long afs_ufs_dcache_id_t;
+#elif defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)
+typedef ino_t afs_ufs_dcache_id_t;
 #else
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX24_ENV)
-#define afs_inode_t long
-#else
-#if defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)
-#define afs_inode_t ino_t
-#else
-#define afs_inode_t afs_int32
-#endif
-#endif
+typedef afs_int32 afs_ufs_dcache_id_t;
 #endif
 
+typedef afs_int32 afs_mem_dcache_id_t;
+
+typedef union {
+    afs_ufs_dcache_id_t ufs;
+    afs_mem_dcache_id_t mem;
+} afs_dcache_id_t;
 
 #ifdef KERNEL
 /* it does not compile outside kernel */
 struct buffer {
   afs_int32 fid;              /* is adc->index, the cache file number */
-  afs_inode_t inode;          /* is adc->f.inode, the inode number of the cac\
+  afs_dcache_id_t inode;          /* is adc->f.inode, the inode number of the cac\
 				 he file */
   afs_int32 page;
   afs_int32 accesstime;
@@ -954,7 +1076,7 @@ struct fcache {
     afs_int32 modTime;		/* last time this entry was modified */
     afs_hyper_t versionNo;	/* Associated data version number */
     afs_int32 chunk;		/* Relative chunk number */
-    afs_inode_t inode;		/* Unix inode for this chunk */
+    afs_dcache_id_t inode;		/* Unix inode for this chunk */
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
 };
@@ -1046,7 +1168,7 @@ struct memCacheEntry {
 #define afs_FakeClose(avc, acred) \
 { if (avc->execsOrWriters == 1) {  \
 	/* we're the last writer, just use CCore flag */   \
-	avc->states |= CCore;	/* causes close to be called later */ \
+	avc->f.states |= CCore;	/* causes close to be called later */ \
                                                                       \
 	/* The cred and vnode holds will be released in afs_FlushActiveVcaches */  \
 	VN_HOLD(AFSTOV(avc));	/* So it won't disappear */           \
@@ -1061,10 +1183,10 @@ struct memCacheEntry {
 
 #define	AFS_ZEROS   64		/* zero buffer */
 
-/*#define afs_DirtyPages(avc)	(((avc)->states & CDirty) || osi_VMDirty_p((avc)))*/
-#define	afs_DirtyPages(avc)	((avc)->states & CDirty)
+/*#define afs_DirtyPages(avc)	(((avc)->f.states & CDirty) || osi_VMDirty_p((avc)))*/
+#define	afs_DirtyPages(avc)	((avc)->f.states & CDirty)
 
-#define afs_InReadDir(avc) (((avc)->states & CReadDir) && (avc)->readdir_pid == MyPidxx)
+#define afs_InReadDir(avc) (((avc)->f.states & CReadDir) && (avc)->readdir_pid == MyPidxx2Pid(MyPidxx))
 
 /* The PFlush algorithm makes use of the fact that Fid.Unique is not used in
   below hash algorithms.  Change it if need be so that flushing algorithm
@@ -1112,11 +1234,11 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
  * expiration/breaking code */
 #ifdef AFS_DARWIN_ENV
 #define afs_VerifyVCache(avc, areq)  \
-  (((avc)->states & CStatd) ? (osi_VM_Setup(avc, 0), 0) : \
+  (((avc)->f.states & CStatd) ? (osi_VM_Setup(avc, 0), 0) : \
    afs_VerifyVCache2((avc),areq))
 #else
 #define afs_VerifyVCache(avc, areq)  \
-  (((avc)->states & CStatd) ? 0 : afs_VerifyVCache2((avc),areq))
+  (((avc)->f.states & CStatd) ? 0 : afs_VerifyVCache2((avc),areq))
 #endif
 
 #define DO_STATS 1		/* bits used by FindVCache */
@@ -1225,6 +1347,15 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 
 struct buf;
 #endif
+
+struct storeOps {
+    int (*prepare)(void *rock, afs_uint32 size, afs_uint32 *bytestoxfer);
+    int (*read)(void *rock, struct osi_file *tfile, afs_uint32 offset,
+        afs_uint32 tlen, afs_uint32 *bytesread);
+    int (*write)(void *rock, afs_uint32 tlen, afs_uint32 *byteswritten);
+    int (*status)(void *rock);
+    int (*destroy)(void **rock, afs_int32 error);
+};
 
 /* fakestat support: opaque storage for afs_EvalFakeStat to remember
  * what vcache should be released.

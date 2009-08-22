@@ -3,7 +3,7 @@
  * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
  * OpenBSD version by Jim Rees <rees@umich.edu>
  *
- * $Id: osi_vnodeops.c,v 1.20 2006/03/09 15:27:17 rees Exp $
+ * $Id$
  */
 
 /*
@@ -98,8 +98,6 @@ NONINFRINGEMENT.
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vnodeops.c,v 1.20 2006/03/09 15:27:17 rees Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -160,7 +158,11 @@ int afs_nbsd_advlock(void *);
 /* Global vfs data structures for AFS. */
 int (**afs_vnodeop_p) __P((void *));
 struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
+#ifdef AFS_OBSD44_ENV /* feel free to zero in on this */
+  {&vop_default_desc, eopnotsupp},
+#else
     {&vop_default_desc, vn_default_error},
+#endif
     {&vop_lookup_desc, afs_nbsd_lookup},	/* lookup */
     {&vop_create_desc, afs_nbsd_create},	/* create */
     {&vop_mknod_desc, afs_nbsd_mknod},		/* mknod */
@@ -207,11 +209,11 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 #define GETNAME()	\
     struct componentname *cnp = ap->a_cnp; \
     char *name; \
-    MALLOC(name, char *, cnp->cn_namelen+1, M_TEMP, M_WAITOK); \
+    BSD_KMALLOC(name, char *, cnp->cn_namelen+1, M_TEMP, M_WAITOK); \
     bcopy(cnp->cn_nameptr, name, cnp->cn_namelen); \
     name[cnp->cn_namelen] = '\0'
 
-#define DROPNAME() FREE(name, M_TEMP)
+#define DROPNAME() BSD_KFREE(name, M_TEMP)
 
 #ifdef AFS_OBSD36_ENV
 #define DROPCNP(cnp) pool_put(&namei_pool, (cnp)->cn_pnbuf)
@@ -687,10 +689,10 @@ afs_nbsd_rename(void *v)
     if ((code = vn_lock(fvp, LK_EXCLUSIVE | LK_RETRY, curproc)))
 	goto abortit;
 
-    MALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
+    BSD_KMALLOC(fname, char *, fcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
     bcopy(fcnp->cn_nameptr, fname, fcnp->cn_namelen);
     fname[fcnp->cn_namelen] = '\0';
-    MALLOC(tname, char *, tcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
+    BSD_KMALLOC(tname, char *, tcnp->cn_namelen + 1, M_TEMP, M_WAITOK);
     bcopy(tcnp->cn_nameptr, tname, tcnp->cn_namelen);
     tname[tcnp->cn_namelen] = '\0';
 
@@ -702,8 +704,8 @@ afs_nbsd_rename(void *v)
     AFS_GUNLOCK();
 
     VOP_UNLOCK(fvp, 0, curproc);
-    FREE(fname, M_TEMP);
-    FREE(tname, M_TEMP);
+    BSD_KFREE(fname, M_TEMP);
+    BSD_KFREE(tname, M_TEMP);
     if (code)
 	goto abortit;		/* XXX */
     if (tdvp == tvp)
@@ -920,6 +922,12 @@ afs_nbsd_reclaim(void *v)
 #endif
 }
 
+#ifdef AFS_OBSD42_ENV
+#define VP_INTERLOCK NULL
+#else
+#define VP_INTERLOCK (&vp->v_interlock)
+#endif
+
 int
 afs_nbsd_lock(void *v)
 {
@@ -933,8 +941,7 @@ afs_nbsd_lock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_lock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, &vp->v_interlock,
-		   ap->a_p);
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_CANRECURSE, VP_INTERLOCK, ap->a_p);
 }
 
 int
@@ -950,8 +957,7 @@ afs_nbsd_unlock(void *v)
 
     if (!vc)
 	panic("afs_nbsd_unlock: null vcache");
-    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
-		   ap->a_p);
+    return afs_osi_lockmgr(&vc->rwlock, ap->a_flags | LK_RELEASE, VP_INTERLOCK, ap->a_p);
 }
 
 int
@@ -968,7 +974,7 @@ afs_nbsd_bmap(void *v)
 
     AFS_STATCNT(afs_bmap);
     if (ap->a_bnp)
-	ap->a_bnp = (daddr_t *) (ap->a_bn * (8192 / DEV_BSIZE));
+	*ap->a_bnp = ap->a_bn * btodb(8192);
     if (ap->a_vpp)
 	*ap->a_vpp = (vcp) ? AFSTOV(vcp) : NULL;
     return 0;
@@ -994,15 +1000,14 @@ afs_nbsd_strategy(void *v)
     tuio.afsio_iovcnt = 1;
     tuio.afsio_seg = AFS_UIOSYS;
     tuio.afsio_resid = len;
-    tiovec[0].iov_base = abp->b_un.b_addr;
+    tiovec[0].iov_base = abp->b_data;
     tiovec[0].iov_len = len;
 
     AFS_GLOCK();
     if ((abp->b_flags & B_READ) == B_READ) {
 	code = afs_rdwr(tvc, &tuio, UIO_READ, 0, credp);
 	if (code == 0 && tuio.afsio_resid > 0)
-	    bzero(abp->b_un.b_addr + len - tuio.afsio_resid,
-		  tuio.afsio_resid);
+	    bzero(abp->b_data + len - tuio.afsio_resid, tuio.afsio_resid);
     } else
 	code = afs_rdwr(tvc, &tuio, UIO_WRITE, 0, credp);
     AFS_GUNLOCK();
@@ -1021,9 +1026,9 @@ afs_nbsd_print(void *v)
     struct vnode *vp = ap->a_vp;
     struct vcache *vc = VTOAFS(ap->a_vp);
 
-    printf("tag %d, fid: %d.%x.%x.%x, ", vp->v_tag, vc->fid.Cell,
-	   (int)vc->fid.Fid.Volume, (int)vc->fid.Fid.Vnode,
-	   (int)vc->fid.Fid.Unique);
+    printf("tag %d, fid: %d.%x.%x.%x, ", vp->v_tag, vc->f.fid.Cell,
+	   (int)vc->f.fid.Fid.Volume, (int)vc->f.fid.Fid.Vnode,
+	   (int)vc->f.fid.Fid.Unique);
     lockmgr_printinfo(&vc->rwlock);
     printf("\n");
     return 0;

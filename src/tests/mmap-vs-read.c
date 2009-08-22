@@ -46,10 +46,6 @@
 #include <sys/stat.h>
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: mmap-vs-read.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
-#endif
-
 static int debug = 0;
 
 static void

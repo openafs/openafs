@@ -16,8 +16,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/authclient.c,v 1.18.8.4 2007/11/26 20:39:46 shadow Exp $");
+
+#define UBIK_LEGACY_CALLITER 1
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -394,21 +394,26 @@ CheckTicketAnswer(ka_BBS * oanswer, afs_int32 challenge,
 	if ((field) && strcmp (field, strings)) return KABADPROTOCOL;\
 	strings += len+1
 
+#define chknostr() \
+	len = strlen(strings); \
+	if (len > MAXKTCNAMELEN) return KABADPROTOCOL; \
+	strings += len+1
+
 	if (caller) {
 	    chkstr(caller->name);
 	    chkstr(caller->instance);
 	    chkstr(caller->cell);
 	} else {
-	    chkstr(0);
-	    chkstr(0);
-	    chkstr(0);
+	    chknostr();
+	    chknostr();
+	    chknostr();
 	}
 	if (server) {
 	    chkstr(server->name);
 	    chkstr(server->instance);
 	} else {
-	    chkstr(0);
-	    chkstr(0);
+	    chknostr();
+	    chknostr();
 	}
 
 	if (oanswer->SeqLen -
@@ -563,7 +568,6 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	    ubik_Call(KAA_Authenticate, conn, 0, name, instance, start, end,
 		      &arequest, &oanswer, 0, 0);
 	if (code == RXGEN_OPCODE) {
-	    extern int KAA_Authenticate_old();
 	    oanswer.MaxSeqLen = sizeof(answer_old);
 	    oanswer.SeqBody = (char *)&answer_old;
 	    version = 0;
@@ -680,7 +684,6 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 	ubik_Call(KAT_GetTicket, conn, 0, auth_token->kvno, auth_domain,
 		  &aticket, name, instance, &atimes, &oanswer);
     if (code == RXGEN_OPCODE) {
-	extern int KAT_GetTicket_old();
 	oanswer.SeqLen = 0;	/* this may be set by first call */
 	oanswer.MaxSeqLen = sizeof(answer_old);
 	oanswer.SeqBody = (char *)&answer_old;

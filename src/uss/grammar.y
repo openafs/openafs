@@ -12,9 +12,16 @@
 #include <afs/param.h>
 #include <stdio.h>
 #include <string.h>
+#include "uss_procs.h"
+#include "uss_vol.h"
+#include "uss_kauth.h"
 
 extern int line;
 extern int uss_perr;
+
+extern int yylex(void);
+static int yyerror(char *);
+
 %}
 
 %union
@@ -123,8 +130,8 @@ accesslist :	/* empty */
 	;
 
 %%
-yyerror(s)
-char *s;
+static int
+yyerror(char *s)
 {
 fprintf(stderr,"%s. ",s);
 return 0;

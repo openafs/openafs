@@ -14,8 +14,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/kalocalcell.c,v 1.9.8.1 2007/10/30 15:16:39 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/pthread_glock.h"
@@ -56,12 +54,13 @@ static char cell_name[MAXCELLCHARS];
 int
 ka_CellConfig(const char *dir)
 {
-    int code;
 #ifdef UKERNEL
     conf = afs_cdir;
     strcpy(cell_name, afs_LclCellName);
     return 0;
 #else /* UKERNEL */
+    int code;
+
     LOCK_GLOBAL_MUTEX;
     if (conf)
 	afsconf_Close(conf);
@@ -79,7 +78,9 @@ ka_CellConfig(const char *dir)
 char *
 ka_LocalCell(void)
 {
-    int code;
+#ifndef UKERNEL
+    int code = 0;
+#endif
 
     LOCK_GLOBAL_MUTEX;
     if (conf) {
@@ -90,7 +91,7 @@ ka_LocalCell(void)
     conf = afs_cdir;
     strcpy(cell_name, afs_LclCellName);
 #else /* UKERNEL */
-    if (conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH)) {
+    if ((conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	code = afsconf_GetLocalCell(conf, cell_name, sizeof(cell_name));
 /* leave conf open so we can lookup other cells */
 /* afsconf_Close (conf); */
@@ -147,7 +148,7 @@ ka_ExpandCell(char *cell, char *fullCell, int *alocal)
 int
 ka_CellToRealm(char *cell, char *realm, int *local)
 {
-    int code;
+    int code = 0;
 
     LOCK_GLOBAL_MUTEX;
     code = ka_ExpandCell(cell, realm, local);

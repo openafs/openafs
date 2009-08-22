@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_inode.c,v 1.8 2005/10/13 15:12:07 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -233,22 +231,21 @@ iforget(vp)
 }
 #endif
 
-afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
-     long *retval;
-     long dev, near_inode, param1, param2, param3, param4;
+int
+afs_syscall_icreate(long dev, long near_inode, long param1, long param2, 
+		    long param3, long param4, long *retval)
 {
     return EOPNOTSUPP;
 }
 
-afs_syscall_iopen(dev, inode, usrmod, retval)
-     long *retval;
-     int dev, inode, usrmod;
+int
+afs_syscall_iopen(int dev, int inode, int usrmod, long *retval)
 {
     return EOPNOTSUPP;
 }
 
-afs_syscall_iincdec(dev, inode, inode_p1, amount)
-     int dev, inode, inode_p1, amount;
+int
+afs_syscall_iincdec(int dev, int inode, int inode_p1, int amount)
 {
     return EOPNOTSUPP;
 }

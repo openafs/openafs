@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ubik/vote.c,v 1.14.14.1 2007/10/30 15:16:47 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -20,108 +18,115 @@ RCSID
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
-#include <afs/afsutil.h>
 #include <lock.h>
 #include <string.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsutil.h>
 #include <time.h>
+#include <stdarg.h>
 
 #define UBIK_INTERNALS
 #include "ubik.h"
 #include "ubik_int.h"
 
-/*
-    General Ubik Goal:
-    The goal is to provide reliable operation among N servers, such that any
-    server can crash with the remaining servers continuing operation within a
-    short period of time.  While a *short* outage is acceptable, this time
-    should be order of 3 minutes or less.
-    
-    Theory of operation:
-    
-    Note: SMALLTIME and BIGTIME are essentially the same time value, separated
-    only by the clock skew, MAXSKEW.  In general, if you are making guarantees
-    for someone else, promise them no more than SMALLTIME seconds of whatever
-    invariant you provide.  If you are waiting to be sure some invariant is now
-    *false*, wait at least BIGTIME seconds to be sure that SMALLTIME seconds
-    has passed at the other site.
+/*! \file
+ * General Ubik Goal:
+ * The goal is to provide reliable operation among N servers, such that any
+ * server can crash with the remaining servers continuing operation within a
+ * short period of time.  While a \b short outage is acceptable, this time
+ * should be order of 3 minutes or less.
+ *
+ * Theory of operation:
+ *
+ * Note: #SMALLTIME and #BIGTIME are essentially the same time value, separated
+ * only by the clock skew, #MAXSKEW.  In general, if you are making guarantees
+ * for someone else, promise them no more than #SMALLTIME seconds of whatever
+ * invariant you provide.  If you are waiting to be sure some invariant is now
+ * \b false, wait at least #BIGTIME seconds to be sure that #SMALLTIME seconds
+ * has passed at the other site.
+ *
+ * Now, back to the design:
+ * One site in the collection is a special site, designated the \b sync site.
+ * The sync site sends periodic messages, which can be thought of as
+ * keep-alive messages.  When a non-sync site hears from the sync site, it
+ * knows that it is getting updates for the next #SMALLTIME seconds from that
+ * sync site.
+ *
+ * If a server does not hear from the sync site in #SMALLTIME seconds, it
+ * determines that it no longer is getting updates, and thus refuses to give
+ * out potentially out-of-date data.  If a sync site can not muster a majority
+ * of servers to agree that it is the sync site, then there is a possibility
+ * that a network partition has occurred, allowing another server to claim to
+ * be the sync site.  Thus, any time that the sync site has not heard from a
+ * majority of the servers in the last #SMALLTIME seconds, it voluntarily
+ * relinquishes its role as sync site.
+ * 
+ * While attempting to nominate a new sync site, certain rules apply.  First,
+ * a server can not reply "ok" (return 1 from ServBeacon) to two different
+ * hosts in less than #BIGTIME seconds; this allows a server that has heard
+ * affirmative replies from a majority of the servers to know that no other
+ * server in the network has heard enough affirmative replies in the last
+ * #BIGTIME seconds to become sync site, too.  The variables #ubik_lastYesTime
+ * and #lastYesHost are used by all servers to keep track of which host they
+ * have last replied affirmatively to, when queried by a potential new sync
+ * site.
+ *
+ * Once a sync site has become a sync site, it periodically sends beacon
+ * messages with a parameter of 1, indicating that it already has determined
+ * it is supposed to be the sync site.  The servers treat such a message as a
+ * guarantee that no other site will become sync site for the next #SMALLTIME
+ * seconds.  In the interim, these servers can answer a query concerning which
+ * site is the sync site without any communication with any server.  The
+ * variables #lastBeaconArrival and #lastBeaconHost are used by all servers to
+ * keep track of which sync site has last contacted them.
+ *
+ * One complication occurs while nominating a new sync site: each site may be
+ * trying to nominate a different site (based on the value of #lastYesHost),
+ * yet we must nominate the smallest host (under some order), to prevent this
+ * process from looping.  The process could loop by having each server give
+ * one vote to another server, but with no server getting a majority of the
+ * votes.  To avoid this, we try to withhold our votes for the server with the
+ * lowest internet address (an easy-to-generate order).  To this effect, we
+ * keep track (in #lowestTime and #lowestHost) of the lowest server trying to
+ * become a sync site.  We wait for this server unless there is already a sync
+ * site (indicated by ServBeacon's parameter being 1).
+ */
 
-    Now, back to the design:
-    One site in the collection is a special site, designated the *sync* site.
-    The sync site sends periodic messages, which can be thought of as
-    keep-alive messages.  When a non-sync site hears from the sync site, it
-    knows that it is getting updates for the next SMALLTIME seconds from that
-    sync site.
-    
-    If a server does not hear from the sync site in SMALLTIME seconds, it
-    determines that it no longer is getting updates, and thus refuses to give
-    out potentially out-of-date data.  If a sync site can not muster a majority
-    of servers to agree that it is the sync site, then there is a possibility
-    that a network partition has occurred, allowing another server to claim to
-    be the sync site.  Thus, any time that the sync site has not heard from a
-    majority of the servers in the last SMALLTIME seconds, it voluntarily
-    relinquishes its role as sync site.
-    
-    While attempting to nominate a new sync site, certain rules apply.  First,
-    a server can not reply "ok" (return 1 from ServBeacon) to two different
-    hosts in less than BIGTIME seconds; this allows a server that has heard
-    affirmative replies from a majority of the servers to know that no other
-    server in the network has heard enough affirmative replies in the last
-    BIGTIME seconds to become sync site, too.  The variables ubik_lastYesTime
-    and lastYesHost are used by all servers to keep track of which host they
-    have last replied affirmatively to, when queried by a potential new sync
-    site.
-    
-    Once a sync site has become a sync site, it periodically sends beacon
-    messages with a parameter of 1, indicating that it already has determined
-    it is supposed to be the sync site.  The servers treat such a message as a
-    guarantee that no other site will become sync site for the next SMALLTIME
-    seconds.  In the interim, these servers can answer a query concerning which
-    site is the sync site without any communication with any server.  The
-    variables lastBeaconArrival and lastBeaconHost are used by all servers to
-    keep track of which sync site has last contacted them.
-    
-    One complication occurs while nominating a new sync site: each site may be
-    trying to nominate a different site (based on the value of lastYesHost),
-    yet we must nominate the smallest host (under some order), to prevent this
-    process from looping.  The process could loop by having each server give
-    one vote to another server, but with no server getting a majority of the
-    votes.  To avoid this, we try to withhold our votes for the server with the
-    lowest internet address (an easy-to-generate order).  To this effect, we
-    keep track (in lowestTime and lowestHost) of the lowest server trying to
-    become a sync site.  We wait for this server unless there is already a sync
-    site (indicated by ServBeacon's parameter being 1).
-*/
+afs_int32 ubik_debugFlag = 0;	/*!< print out debugging messages? */
 
-afs_int32 ubik_debugFlag = 0;	/* print out debugging messages? */
-
-/* these statics are used by all sites in nominating new sync sites */
-afs_int32 ubik_lastYesTime = 0;	/* time we sent the last *yes* vote */
-static afs_uint32 lastYesHost = 0xffffffff;	/* host to which we sent *yes* vote */
-/* Next is time sync site began this vote: guarantees sync site until this + SMALLTIME */
+/*! \name these statics are used by all sites in nominating new sync sites */
+afs_int32 ubik_lastYesTime = 0;	/*!< time we sent the last \b yes vote */
+static afs_uint32 lastYesHost = 0xffffffff;	/*!< host to which we sent \b yes vote */
+/*\}*/
+/*! \name Next is time sync site began this vote: guarantees sync site until this + SMALLTIME */
 static afs_int32 lastYesClaim = 0;
-static int lastYesState = 0;	/* did last site we voted for claim to be sync site? */
+static int lastYesState = 0;	/*!< did last site we voted for claim to be sync site? */
+/*\}*/
 
-/* used to guarantee that nomination process doesn't loop */
+/*! \name used to guarantee that nomination process doesn't loop */
 static afs_int32 lowestTime = 0;
 static afs_uint32 lowestHost = 0xffffffff;
 static afs_int32 syncTime = 0;
 static afs_int32 syncHost = 0;
+/*\}*/
 
-/* used to remember which dbase version is the one at the sync site (for non-sync sites */
-struct ubik_version ubik_dbVersion;	/* sync site's dbase version */
-struct ubik_tid ubik_dbTid;	/* sync site's tid, or 0 if none */
+/*! \name used to remember which dbase version is the one at the sync site (for non-sync sites) */
+struct ubik_version ubik_dbVersion;	/*!< sync site's dbase version */
+struct ubik_tid ubik_dbTid;	/*!< sync site's tid, or 0 if none */
+/*\}*/
 
-/* decide if we should try to become sync site.  The basic rule is that we
+/*!
+ * \brief Decide if we should try to become sync site.
+ *
+ * The basic rule is that we
  * don't run if there is a valid sync site and it ain't us (we have to run if
  * it is us, in order to keep our votes).  If there is no sync site, then we
  * want to run if we're the lowest numbered host running, otherwise we defer to
  * the lowest host.  However, if the lowest host hasn't been heard from for a
  * while, then we start running again, in case he crashed.
  *
- * This function returns true if we should run, and false otherwise.
+ * \return true if we should run, and false otherwise.
  */
 int
 uvote_ShouldIRun(void)
@@ -139,17 +144,20 @@ uvote_ShouldIRun(void)
     return 1;
 }
 
-/* Return the current synchronization site, if any.  Simple approach: if the
+/*!
+ * \brief Return the current synchronization site, if any.
+ *
+ * Simple approach: if the
  * last guy we voted yes for claims to be the sync site, then we we're happy to
  * use that guy for a sync site until the time his mandate expires.  If the guy
  * does not claim to be sync site, then, of course, there's none.
  *
- * In addition, if we lost the sync, we set urecovery_syncSite to an invalid
+ * In addition, if we lost the sync, we set #urecovery_syncSite to an invalid
  * value, indicating that we no longer know which version of the dbase is the
  * one we should have.  We'll get a new one when we next hear from the sync
  * site.
  *
- * This function returns 0 or currently valid sync site.  It can return our own
+ * \return 0 or currently valid sync site.  It can return our own
  * address, if we're the sync site.
  */
 afs_int32
@@ -170,8 +178,11 @@ uvote_GetSyncSite(void)
     return code;
 }
 
-/* called by the sync site to handle vote beacons; if aconn is null, this is a
- * local call; returns 0 or time whe the vote was sent.  It returns 0 if we are
+/*!
+ * \brief called by the sync site to handle vote beacons; if aconn is null, this is a
+ * local call
+ *
+ * \returns 0 or time when the vote was sent.  It returns 0 if we are
  * not voting for this sync site, or the time we actually voted yes, if
  * non-zero.
  */
@@ -333,8 +344,11 @@ SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
     return vote;
 }
 
-/* handle per-server debug command, where 0 is the first server.  Basic network
-   debugging hooks. */
+/*!
+ * \brief Handle per-server debug command, where 0 is the first server.
+ *
+ * Basic network debugging hooks.
+ */
 afs_int32
 SVOTE_SDebug(struct rx_call * rxcall, afs_int32 awhich,
 	     register struct ubik_sdebug * aparm)
@@ -382,7 +396,9 @@ SVOTE_XDebug(struct rx_call * rxcall, register struct ubik_debug * aparm,
     return code;
 }
 
-/* handle basic network debug command.  This is the global state dumper */
+/*!
+ * \brief Handle basic network debug command.  This is the global state dumper.
+ */
 afs_int32
 SVOTE_Debug(struct rx_call * rxcall, register struct ubik_debug * aparm)
 {
@@ -466,7 +482,9 @@ SVOTE_SDebugOld(struct rx_call * rxcall, afs_int32 awhich,
 }
 
 
-/* handle basic network debug command.  This is the global state dumper */
+/*!
+ * \brief Handle basic network debug command.  This is the global state dumper.
+ */
 afs_int32
 SVOTE_DebugOld(struct rx_call * rxcall,
 	       register struct ubik_debug_old * aparm)
@@ -486,11 +504,11 @@ SVOTE_DebugOld(struct rx_call * rxcall,
     aparm->syncTime = syncTime;
 
     aparm->amSyncSite = ubik_amSyncSite;
-    ubeacon_Debug(aparm);
+    ubeacon_Debug((ubik_debug *)aparm);
 
-    udisk_Debug(aparm);
+    udisk_Debug((ubik_debug *)aparm);
 
-    ulock_Debug(aparm);
+    ulock_Debug((ubik_debug *)aparm);
 
     /* Get the recovery state. The label of the database may not have 
      * been written yet but set the flag so udebug behavior remains.
@@ -523,7 +541,9 @@ SVOTE_DebugOld(struct rx_call * rxcall,
 }
 
 
-/* get the sync site; called by remote servers to find where they should go */
+/*!
+ * \brief Get the sync site; called by remote servers to find where they should go.
+ */
 afs_int32
 SVOTE_GetSyncSite(register struct rx_call * rxcall,
 		  register afs_int32 * ahost)
@@ -535,23 +555,45 @@ SVOTE_GetSyncSite(register struct rx_call * rxcall,
     return 0;
 }
 
-int
-ubik_dprint(char *a, char *b, char *c, char *d, char *e, char *f, char *g,
-	    char *h)
+void
+ubik_dprint_25(const char *format, ...)
 {
-    ViceLog(5, (a, b, c, d, e, f, g, h));
-    return 0;
+    va_list ap;
+
+    va_start(ap, format);
+    vViceLog(25, (format, ap));
+    va_end(ap);
 }
 
-int
-ubik_print(char *a, char *b, char *c, char *d, char *e, char *f, char *g,
-	   char *h)
+void
+ubik_dprint(const char *format, ...)
 {
-    ViceLog(0, (a, b, c, d, e, f, g, h));
-    return 0;
+    va_list ap;
+
+    va_start(ap, format);
+    vViceLog(5, (format, ap));
+    va_end(ap);
 }
 
-/* called once/run to init the vote module */
+void
+ubik_vprint(const char *format, va_list ap)
+{
+    vViceLog(0, (format, ap));
+}
+
+void
+ubik_print(const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    ubik_vprint(format, ap);
+    va_end(ap);
+}
+
+/*!
+ * \brief Called once/run to init the vote module
+ */
 int
 uvote_Init(void)
 {

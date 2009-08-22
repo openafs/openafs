@@ -45,7 +45,6 @@
 
 #include <agetarg.h>
 
-RCSID("$Id: ga-test.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 
 typedef struct {
     int style;

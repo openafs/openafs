@@ -17,8 +17,6 @@ Created: 11/1/83, J. Rosenberg
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/lwp/rw.c,v 1.6 2003/07/15 23:15:45 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <malloc.h>

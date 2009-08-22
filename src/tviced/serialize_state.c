@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/tviced/serialize_state.c,v 1.1.4.4 2007/10/30 15:16:47 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>		/* for malloc() */

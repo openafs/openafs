@@ -57,27 +57,24 @@ COMMON_INCLUDE = -I. -I.. -I../nfs \
 
 all: ${TOP_LIBDIR}/$(LIBJUAFS) ${TOP_LIBDIR}/$(LIBUAFS) linktest
 
+${TOP_LIBDIR}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
+	${INSTALL_DATA} $? $@
+
+${TOP_LIBDIR}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
+	${INSTALL_DATA} $? $@
+
 webinstall: all \
 	${TOP_LIBDIR}/$(LIBAFSWEB) \
 	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
 linktest: UAFS/$(LIBUAFS) ${TOP_OBJDIR}/lib/libdes.a
 	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest ${srcdir}/linktest.c $(COMMON_INCLUDE) -DUKERNEL UAFS/$(LIBUAFS) ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libafsutil.a $(TEST_LIBS) $(XLIBS)
-
-install: \
-	${DESTDIR}${libdir}/$(LIBUAFS) \
-	${DESTDIR}${libdir}/$(LIBJUAFS)
-
-dest: \
-	${DEST}/root.perf/include/afs/param.h \
-	${DEST}/root.perf/include/afs/stds.h \
-	${DEST}/root.perf/include/afs/afs_sysnames.h \
-	${DEST}/root.perf/include/afs/afs_stats.h \
-	${DEST}/root.perf/include/afs/sysincludes.h \
-	${DEST}/root.perf/include/afs/afs_usrops.h \
-	${DEST}/root.perf/lib/libdes.a \
-	${DEST}/root.perf/lib/$(LIBUAFS) \
-	${DEST}/root.perf/lib/$(LIBJUAFS)
 
 
 CRULE1=	$(CC) $(COMMON_INCLUDE) $(OPTF) -DKERNEL $(LIBJUAFS_FLAGS) $(CFLAGS) -c $?
@@ -90,6 +87,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_error.o \
 	$(UOBJ)/afs_axscache.o  \
 	$(UOBJ)/afs_buffer.o	\
+	$(UOBJ)/afs_bypasscache.o \
 	$(UOBJ)/afs_callback.o	\
 	$(UOBJ)/afs_cbqueue.o    \
 	$(UOBJ)/afs_cell.o \
@@ -106,6 +104,7 @@ UAFSOBJ = \
 	$(UOBJ)/afs_mariner.o \
 	$(UOBJ)/afs_memcache.o	\
 	$(UOBJ)/afs_md5.o	\
+	$(UOBJ)/afs_fetchstore.o	\
 	$(UOBJ)/afs_osidnlc.o	\
 	$(UOBJ)/afs_osi_pag.o \
 	$(UOBJ)/afs_segments.o \
@@ -217,6 +216,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_error.o \
 	$(WEBOBJ)/afs_axscache.o \
 	$(WEBOBJ)/afs_buffer.o \
+	$(WEBOBJ)/afs_bypasscache.o \
 	$(WEBOBJ)/afs_callback.o \
 	$(WEBOBJ)/afs_cbqueue.o \
 	$(WEBOBJ)/afs_cell.o \
@@ -233,6 +233,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/afs_mariner.o \
 	$(WEBOBJ)/afs_memcache.o \
 	$(WEBOBJ)/afs_md5.o \
+	$(WEBOBJ)/afs_fetchstore.o \
 	$(WEBOBJ)/afs_osidnlc.o \
 	$(WEBOBJ)/afs_osi_pag.o \
 	$(WEBOBJ)/afs_segments.o \
@@ -345,6 +346,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_error.o \
 	$(WEBOBJ)/afs_axscache.o \
 	$(WEBOBJ)/afs_buffer.o \
+	$(WEBOBJ)/afs_bypasscache.o \
 	$(WEBOBJ)/afs_callback.o \
 	$(WEBOBJ)/afs_cbqueue.o \
 	$(WEBOBJ)/afs_cell.o \
@@ -361,6 +363,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/afs_mariner.o \
 	$(WEBOBJ)/afs_memcache.o \
 	$(WEBOBJ)/afs_md5.o \
+	$(WEBOBJ)/afs_fetchstore.o \
 	$(WEBOBJ)/afs_osidnlc.o \
 	$(WEBOBJ)/afs_osi_pag.o \
 	$(WEBOBJ)/afs_segments.o \
@@ -468,6 +471,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_error.o \
 	$(JUAFS)/afs_axscache.o  \
 	$(JUAFS)/afs_buffer.o	\
+	$(JUAFS)/afs_bypasscache.o \
 	$(JUAFS)/afs_callback.o	\
 	$(JUAFS)/afs_cbqueue.o    \
 	$(JUAFS)/afs_cell.o \
@@ -484,6 +488,7 @@ JUAFSOBJ = \
 	$(JUAFS)/afs_mariner.o \
 	$(JUAFS)/afs_memcache.o	\
 	$(JUAFS)/afs_md5.o \
+	$(JUAFS)/afs_fetchstore.o	\
 	$(JUAFS)/afs_osidnlc.o	\
 	$(JUAFS)/afs_osi_pag.o \
 	$(JUAFS)/afs_segments.o \
@@ -600,6 +605,8 @@ $(UOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE1)
 $(UOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
 	$(CRULE1)
+$(UOBJ)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
+	$(CRULE1)
 $(UOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE1)
 $(UOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
@@ -689,6 +696,8 @@ $(UOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 $(UOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 	$(CRULE1)
 $(UOBJ)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
+	$(CRULE1)
+$(UOBJ)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE1)
 $(UOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
@@ -861,6 +870,8 @@ $(WEBOBJ)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE2)
 $(WEBOBJ)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
 	$(CRULE2)
+$(WEBOBJ)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
+	$(CRULE2)
 $(WEBOBJ)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE2)
 $(WEBOBJ)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
@@ -950,6 +961,8 @@ $(WEBOBJ)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 $(WEBOBJ)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 	$(CRULE2)
 $(WEBOBJ)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
+	$(CRULE2)
+$(WEBOBJ)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE2)
 $(WEBOBJ)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE2)
@@ -1126,6 +1139,8 @@ $(JUAFS)/afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE1)
 $(JUAFS)/afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
 	$(CRULE1)
+$(JUAFS)/afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
+	$(CRULE1)
 $(JUAFS)/afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE1)
 $(JUAFS)/afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
@@ -1215,6 +1230,8 @@ $(JUAFS)/afs_lock.o: $(TOP_SRC_AFS)/afs_lock.c
 $(JUAFS)/afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 	$(CRULE1)
 $(JUAFS)/afs_md5.o: $(TOP_SRC_AFS)/afs_md5.c
+	$(CRULE1)
+$(JUAFS)/afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE1)
 $(JUAFS)/afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE1)
@@ -1377,64 +1394,35 @@ clean:
 	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest $(AFS_OS_CLEAN)
 
 
-${TOP_LIBDIR}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
-	${INSTALL} $? $@
+install: UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DESTDIR}${libdir}/$(LIBUAFS)
+	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DESTDIR}${libdir}/$(LIBJUAFS)
 
-${TOP_LIBDIR}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
-	${INSTALL} $? $@
-
-
-${DESTDIR}${libdir}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/$(LIBUAFS): UAFS/$(LIBUAFS)
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
-	${INSTALL} $? $@
-
-
-${DEST}/root.afsweb/usr/lib/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
-	${INSTALL} $? $@
-
-${DEST}/root.afsweb/usr/lib/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/param.h: $(TOP_INCDIR)/afs/param.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/stds.h: $(TOP_INCDIR)/afs/stds.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/afs_sysnames.h: $(TOP_INCDIR)/afs/afs_sysnames.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/afs_stats.h: $(TOP_INCDIR)/afs/afs_stats.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/sysincludes.h: $(TOP_SRCDIR)/afs/sysincludes.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/include/afs/afs_usrops.h: $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h
-	${INSTALL} $? $@
-
-${DEST}/root.perf/lib/libdes.a: ${TOP_OBJDIR}/lib/libdes.a
-	${INSTALL} $? $@
-
-${DEST}/root.perf/lib/$(LIBUAFS): UAFS/$(LIBUAFS)
-	${INSTALL} $? $@
-
-${DEST}/root.perf/lib/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
-	${INSTALL} $? $@
+dest: $(TOP_INCDIR)/afs/param.h $(TOP_INCDIR)/afs/stds.h \
+		$(TOP_INCDIR)/afs/afs_sysnames.h \
+		$(TOP_INCDIR)/afs/afs_stats.h \
+		$(TOP_SRCDIR)/afs/sysincludes.h \
+		$(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
+		${TOP_OBJDIR}/lib/libdes.a UAFS/$(LIBUAFS) JUAFS/$(LIBJUAFS)
+	${INSTALL} -d ${DEST}/root.perf/include/afs
+	${INSTALL} -d ${DEST}/root.perf/lib
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/param.h \
+		${DEST}/root.perf/include/afs/param.h
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/stds.h \
+		${DEST}/root.perf/include/afs/stds.h
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/afs_sysnames.h \
+		${DEST}/root.perf/include/afs/afs_sysnames.h
+	${INSTALL_DATA} $(TOP_INCDIR)/afs/afs_stats.h \
+		${DEST}/root.perf/include/afs/afs_stats.h
+	${INSTALL_DATA} $(TOP_SRCDIR)/afs/sysincludes.h \
+		${DEST}/root.perf/include/afs/sysincludes.h
+	${INSTALL_DATA} $(TOP_SRCDIR)/afs/UKERNEL/afs_usrops.h \
+		${DEST}/root.perf/include/afs/afs_usrops.h
+	${INSTALL_DATA} ${TOP_OBJDIR}/lib/libdes.a \
+		${DEST}/root.perf/lib/libdes.a
+	${INSTALL_DATA} UAFS/$(LIBUAFS) ${DEST}/root.perf/lib/$(LIBUAFS)
+	${INSTALL_DATA} JUAFS/$(LIBJUAFS) ${DEST}/root.perf/lib/$(LIBJUAFS)
 
 #
 # Common directory and other build targets
@@ -1476,23 +1464,23 @@ setup_nsafs: AFSWEB setup_common
 	ln -s ../Makefile.common AFSWEB/Makefile.common
 
 UAFS/$(LIBUAFS): setup_uafs
-	cd UAFS; \
-	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=; \
+	cd UAFS && \
+	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=&& \
 	$(RANLIB) $(LIBUAFS)
 
 JUAFS/$(LIBJUAFS): setup_juafs
-	cd JUAFS; \
-	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=-DAFS_WEB_ENHANCEMENTS; \
+	cd JUAFS && \
+	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=-DAFS_WEB_ENHANCEMENTS && \
 	$(RANLIB) $(LIBJUAFS)
 
 AFSWEB/$(LIBAFSWEB): setup_nsafs
-	cd AFSWEB; \
-	$(MAKE) $(LIBAFSWEB) DESTDIR=${DESTDIR}; \
+	cd AFSWEB && \
+	$(MAKE) $(LIBAFSWEB) DESTDIR=${DESTDIR} && \
 	$(RANLIB) $(LIBAFSWEB)
 
 AFSWEB/$(LIBAFSWEBKRB): setup_nsafs
-	cd AFSWEB; \
-	$(MAKE) $(LIBAFSWEBKRB) DESTDIR=${DESTDIR}; \
+	cd AFSWEB && \
+	$(MAKE) $(LIBAFSWEBKRB) DESTDIR=${DESTDIR} && \
 	$(RANLIB) $(LIBAFSWEBKRB)
 
 include ${TOP_OBJDIR}/src/config/Makefile.version

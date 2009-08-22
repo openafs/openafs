@@ -1,0 +1,65 @@
+=head1 NAME
+
+fs_rxstatproc - Manage per-process Rx statistics collection
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs rxstatproc> [B<-enable>] [B<-disable>] [B<-clear>]
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+This command enables or disables the updating of RPC statistics counters
+related to the entire RX process, or sets the accumulated counter values
+back to zero.
+
+=head1 OPTIONS
+
+One or more of the following options must be specified:
+
+=over 4
+
+=item B<-enable>
+
+Enable the collection of process RPC statistics
+
+=item B<-disable>
+
+Enable the collection of process RPC statistics
+
+=item B<-clear>
+
+Resets all trace counters to zero.
+
+=back
+
+=head1 OUTPUT
+
+This command produces no output other than error-messages.
+
+=head1 EXAMPLES
+
+The following command starts collecting statistics:
+
+   % fs rxstatproc -enable
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be logged in as the local superuser root.
+
+=head1 SEE ALSO
+
+L<fs(1)>,
+L<fs_rxstatpeer(1)>,
+L<rxdebug(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2008. This documentation is covered by the BSD License as
+written in the doc/LICENSE file. This man page was written by Mike
+Robinson (L<mike@endpoint.com>) for OpenAFS.

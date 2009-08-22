@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/NBSD/osi_vnodeops.c,v 1.6 2005/04/03 18:09:10 shadow Exp $");
 
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -372,10 +370,10 @@ mp_afs_page_read(avc, uio, acred)
     AFS_GLOCK();
     error = afs_rdwr(avc, uio, UIO_READ, 0, acred);
     afs_Trace3(afs_iclSetp, CM_TRACE_PAGE_READ, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, error, ICL_TYPE_INT32, avc->states);
+	       ICL_TYPE_INT32, error, ICL_TYPE_INT32, avc->f.states);
     if (error) {
 	error = EIO;
-    } else if ((avc->states) == 0) {
+    } else if ((avc->f.states) == 0) {
 	afs_InitReq(&treq, acred);
 	ObtainWriteLock(&avc->lock, 161);
 	afs_Wire(avc, &treq);
@@ -398,7 +396,7 @@ mp_afs_page_write(avc, uio, acred, pager, offset)
     AFS_GLOCK();
     error = afs_rdwr(avc, uio, UIO_WRITE, 0, acred);
     afs_Trace3(afs_iclSetp, CM_TRACE_PAGE_WRITE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, error, ICL_TYPE_INT32, avc->states);
+	       ICL_TYPE_INT32, error, ICL_TYPE_INT32, avc->f.states);
     if (error) {
 	error = EIO;
     }
@@ -458,9 +456,9 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
     ObtainWriteLock(&avc->lock, 162);
     /* adjust parameters when appending files */
     if ((ioflag & IO_APPEND) && uio->uio_rw == UIO_WRITE)
-	uio->uio_offset = avc->m.Length;	/* write at EOF position */
+	uio->uio_offset = avc->f.m.Length;	/* write at EOF position */
     if (uio->uio_rw == UIO_WRITE) {
-	avc->states |= CDirty;
+	avc->f.states |= CDirty;
 	afs_FakeOpen(avc);
 	didFakeOpen = 1;
 	/*
@@ -469,9 +467,9 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	 * the I/O.
 	 */
 	size = uio->afsio_resid + uio->afsio_offset;	/* new file size */
-	if (size > avc->m.Length)
-	    avc->m.Length = size;	/* file grew */
-	avc->m.Date = osi_Time();	/* Set file date (for ranlib) */
+	if (size > avc->f.m.Length)
+	    avc->f.m.Length = size;	/* file grew */
+	avc->f.m.Date = osi_Time();	/* Set file date (for ranlib) */
 	if (uio->afsio_resid > PAGE_SIZE)
 	    cnt = uio->afsio_resid / PAGE_SIZE;
 	save_resid = uio->afsio_resid;
@@ -496,8 +494,8 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	eof = 0;		/* flag telling us if we hit the EOF on the read */
 	if (uio->uio_rw == UIO_READ) {	/* we're doing a read operation */
 	    /* don't read past EOF */
-	    if (tsize + fileBase > avc->m.Length) {
-		tsize = avc->m.Length - fileBase;
+	    if (tsize + fileBase > avc->f.m.Length) {
+		tsize = avc->f.m.Length - fileBase;
 		eof = 1;	/* we did hit the EOF */
 		if (tsize < 0)
 		    tsize = 0;	/* better safe than sorry */
@@ -513,7 +511,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	if (uio->uio_rw == UIO_WRITE && counter > 0
 	    && AFS_CHUNKOFFSET(fileBase) == 0) {
 	    code = afs_DoPartialWrite(avc, &treq);
-	    avc->states |= CDirty;
+	    avc->f.states |= CDirty;
 	}
 
 	if (code) {
@@ -543,7 +541,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	    if ((uio->uio_rw == UIO_WRITE)
 		&&
 		((pageOffset == 0
-		  && (size == PAGE_SIZE || fileBase >= avc->m.Length)))) {
+		  && (size == PAGE_SIZE || fileBase >= avc->f.m.Length)))) {
 		struct vnode *vp = (struct vnode *)avc;
 		/* we're doing a write operation past eof; no need to read it */
 		newpage = 1;
@@ -644,7 +642,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
     }
     if (didFakeOpen)
 	afs_FakeClose(avc, cred);
-    if (uio->uio_rw == UIO_WRITE && code == 0 && (avc->states & CDirty)) {
+    if (uio->uio_rw == UIO_WRITE && code == 0 && (avc->f.states & CDirty)) {
 	code = afs_DoPartialWrite(avc, &treq);
     }
     ReleaseWriteLock(&avc->lock);
@@ -721,7 +719,7 @@ mp_afs_mmap(avc, offset, map, addrp, len, prot, maxprot, flags, cred)
     }
     osi_FlushPages(avc);	/* ensure old pages are gone */
     ObtainWriteLock(&avc->lock, 166);
-    avc->states |= CMAPPED;
+    avc->f.states |= CMAPPED;
     ReleaseWriteLock(&avc->lock);
     ap->a_offset = offset;
     ap->a_vaddr = addrp;
@@ -797,7 +795,7 @@ mp_afs_getpage(vop, offset, len, protp, pl, plsz, mape, addr, rw, cred)
 	    goto out;
 	}
 	if (flags & B_NOCACHE) {	/* if (page) */
-	    if ((rw & B_WRITE) && (offset + len >= avc->m.Length)) {
+	    if ((rw & B_WRITE) && (offset + len >= avc->f.m.Length)) {
 		struct vnode *vp = (struct vnode *)avc;
 		/* we're doing a write operation past eof; no need to read it */
 		AFS_GUNLOCK();
@@ -910,7 +908,7 @@ mp_afs_putpage(vop, pl, pcnt, flags, cred)
   done:
     ReleaseWriteLock(&avc->lock);
     afs_Trace2(afs_iclSetp, CM_TRACE_PAGEOUTDONE, ICL_TYPE_INT32, code,
-	       ICL_TYPE_INT32, avc->m.Length);
+	       ICL_TYPE_INT32, avc->f.m.Length);
     AFS_GUNLOCK();
     return code;
 }

@@ -1,7 +1,7 @@
 /*
  * osi_sysctl.c: Linux sysctl interface to OpenAFS
  *
- * $Id: osi_sysctl.c,v 1.9.2.6 2008/06/12 20:08:33 shadow Exp $
+ * $Id$
  *
  * Written Jan 30, 2002 by Kris Van Hees (Sine Nomine Associates)
  */

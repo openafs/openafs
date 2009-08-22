@@ -19,8 +19,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_misc.c,v 1.8 2004/07/29 03:13:41 shadow Exp $");
 
 #include "h/systm.h"
 #include "h/types.h"

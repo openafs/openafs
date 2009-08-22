@@ -56,7 +56,6 @@
 #endif
 #endif
 
-RCSID("$Id: apwd.c,v 1.2 2003/07/15 23:16:56 shadow Exp $");
 
 static int verbose_flag;
 static FILE *verbose_fp = NULL;

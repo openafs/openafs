@@ -511,15 +511,9 @@ my $username = $admin;
 $username=~s:/:.:g;   # convert kerberos separators to afs separators.
 
 #-----------------------------------------------------------------------------
-# Prereq: Save the paths and setup configuration in a form that is easily
+# Prereq: Save the setup configuration in a form that is easily
 # read by the shell scripts.
 #
-open(CONF, "> dirpath.conf") or die "error: Cannot open file dirpath.conf for writing: $!\n";
-my ($n, $v);
-while(($n,$v)=each(%{$path})) {
-  print CONF "$n=$v\n";
-}
-close CONF;
 open(CONF, "> run-tests.conf") or die "error: Cannot open file run-tests.conf for writing: $!\n";
   print CONF <<"__CONF__";
 CELLNAME=$cellname
@@ -584,6 +578,7 @@ if ($unwind) {
     unwind($os->command('remove', "$path->{'afsconfdir'}/ThisCell"));
     unwind($os->command('remove', "$path->{'afsconfdir'}/CellServDB"));
     unwind($os->command('remove', "$path->{'afsconfdir'}/UserList"));
+    unwind($os->command('remove', "$path->{'afsconfdir'}/KeyFile"));
     unwind($os->command('remove', "$path->{'afsbosconfigdir'}/BosConfig"));
     unwind($os->command('fileserver-stop'));
 }
@@ -680,7 +675,7 @@ print "debug: Starting the fileserver...\n" if $debug;
 if ($with_dafs) {
   run( "$bos create $server dafs dafs ".
        "-cmd \"$path->{'afssrvlibexecdir'}/fileserver $options_fileserver\" ".
-       "-cmd \"$path->{'afssrvlibexecdir'}/volserver $options_volserver\"".
+       "-cmd \"$path->{'afssrvlibexecdir'}/volserver $options_volserver\" ".
        "-cmd \"$path->{'afssrvlibexecdir'}/salvageserver $options_salvageserver\" ".
        "-cmd \"$path->{'afssrvlibexecdir'}/salvager $options_salvager\" ".
        "-noauth");

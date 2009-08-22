@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/budb/server.c,v 1.16.2.10 2008/05/29 04:04:25 jaltman Exp $");
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -47,6 +45,7 @@ RCSID
 #include "budb_errs.h"
 #include "database.h"
 #include "error_macros.h"
+#include "budb_internal.h"
 #include "globals.h"
 #include "afs/audit.h"
 
@@ -54,6 +53,8 @@ struct ubik_dbase *BU_dbase;
 struct afsconf_dir *BU_conf;	/* for getting cell info */
 
 int argHandler(struct cmd_syndesc *, void *);
+int truncateDatabase(void);
+int parseServerList(struct cmd_item *);
 
 char lcell[MAXKTCREALMLEN];
 afs_int32 myHost = 0;
@@ -88,17 +89,14 @@ threadNum(void)
 
 /* check whether caller is authorized to manage RX statistics */
 int
-BU_rxstat_userok(call)
-     struct rx_call *call;
+BU_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(BU_conf, call, NULL);
 }
 
 int
-convert_cell_to_ubik(cellinfo, myHost, serverList)
-     struct afsconf_cell *cellinfo;
-     afs_int32 *myHost;
-     afs_int32 *serverList;
+convert_cell_to_ubik(struct afsconf_cell *cellinfo, afs_int32 *myHost, 
+		     afs_int32 *serverList)
 {
     int i;
     char hostname[64];
@@ -139,7 +137,7 @@ MyBeforeProc(register struct cmd_syndesc *as, void *arock)
  */
 
 void
-initializeArgHandler()
+initializeArgHandler(void)
 {
     struct cmd_syndesc *cptr;
 
@@ -177,6 +175,8 @@ initializeArgHandler()
     cmd_AddParm(cptr, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"bind the Rx socket (primary interface only)");
 
+    cmd_AddParm(cptr, "-audit-interface", CMD_SINGLE, CMD_OPTIONAL,
+		"audit interface (file or sysvmq)");
 }
 
 int
@@ -228,35 +228,7 @@ argHandler(struct cmd_syndesc *as, void *arock)
     else
 	ubik_nBuffers = 0;
 
-    if (as->parms[7].items != 0) {
-	int tempfd, flags;
-	FILE *auditout;
-	char oldName[MAXPATHLEN];
-	char *fileName = as->parms[7].items->data;
-#ifndef AFS_NT40_ENV
-	struct stat statbuf;
-
-	if ((lstat(fileName, &statbuf) == 0) 
-	    && (S_ISFIFO(statbuf.st_mode))) {
-	    flags = O_WRONLY | O_NONBLOCK;
-	} else 
-#endif
-	{
-	    strcpy(oldName, fileName);
-	    strcat(oldName, ".old");
-	    renamefile(fileName, oldName);
-	    flags = O_WRONLY | O_TRUNC | O_CREAT;
-	}
-	tempfd = open(fileName, flags, 0666);
-	if (tempfd > -1) {
-	    auditout = fdopen(tempfd, "a");
-	    if (auditout) {
-		osi_audit_file(auditout);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	} else
-	    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-    }
+    /* param 7 (-auditlog) handled below */
 
     /* user provided the number of threads    */
     if (as->parms[8].items != 0) {
@@ -278,13 +250,32 @@ argHandler(struct cmd_syndesc *as, void *arock)
 	rxBind = 1;
     }
 
+    /* -audit-interface */
+    if (as->parms[10].items != 0) {
+	char *interface = as->parms[10].items->data;
+
+	if (osi_audit_interface(interface)) {
+	    printf("Invalid audit interface '%s'\n", interface);
+	    BUDB_EXIT(-1);
+	}
+    }
+
+    /* -auditlog */
+    /* needs to be after -audit-interface, so we osi_audit_interface
+     * before we osi_audit_file */
+    if (as->parms[7].items != 0) {
+	char *fileName = as->parms[7].items->data;
+
+        osi_audit_file(fileName);
+    }
+
     return 0;
 }
 
 /* --- */
 
-parseServerList(itemPtr)
-     struct cmd_item *itemPtr;
+int
+parseServerList(struct cmd_item *itemPtr)
 {
     struct cmd_item *save;
     char **serverArgs;
@@ -335,7 +326,8 @@ parseServerList(itemPtr)
  *	truncates just the database file.
  */
 
-truncateDatabase()
+int
+truncateDatabase(void)
 {
     char *path;
     afs_int32 code = 0;
@@ -372,9 +364,8 @@ truncateDatabase()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char **argv)
 {
     char *whoami = argv[0];
     char *dbNamePtr = 0;
@@ -388,11 +379,7 @@ main(argc, argv)
     struct rx_service *tservice;
     struct rx_securityClass *sca[3];
 
-    extern int afsconf_ServerAuth();
-    extern int afsconf_CheckAuth();
-
     extern int rx_stackSize;
-    extern int BUDB_ExecuteRequest();
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */
@@ -515,13 +502,13 @@ main(argc, argv)
 
     /* initialize ubik */
     ubik_CRXSecurityProc = afsconf_ClientAuth;
-    ubik_CRXSecurityRock = (char *)BU_conf;
+    ubik_CRXSecurityRock = BU_conf;
 
     ubik_SRXSecurityProc = afsconf_ServerAuth;
-    ubik_SRXSecurityRock = (char *)BU_conf;
+    ubik_SRXSecurityRock = BU_conf;
 
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-    ubik_CheckRXSecurityRock = (char *)BU_conf;
+    ubik_CheckRXSecurityRock = BU_conf;
 
     if (ubik_nBuffers == 0)
 	ubik_nBuffers = 400;
@@ -542,7 +529,6 @@ main(argc, argv)
 
     if (rxBind) {
 	afs_int32 ccode;
-#ifndef AFS_NT40_ENV
         if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
             AFSDIR_SERVER_NETINFO_FILEPATH) {
             char reason[1024];
@@ -551,7 +537,6 @@ main(argc, argv)
                                            AFSDIR_SERVER_NETINFO_FILEPATH,
                                            AFSDIR_SERVER_NETRESTRICT_FILEPATH);
         } else 
-#endif	
 	{
             ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
         }
@@ -564,7 +549,7 @@ main(argc, argv)
     code = ubik_ServerInitByInfo (globalConfPtr->myHost,
 				  htons(AFSCONF_BUDBPORT), 
 				  &cellinfo,
-				  &clones,              
+				  clones,              
 				  dbNamePtr,           /* name prefix */
 				  &BU_dbase);
 
@@ -622,7 +607,7 @@ main(argc, argv)
 }
 
 void
-consistencyCheckDb()
+consistencyCheckDb(void)
 {
     /* do consistency checks on structure sizes */
     if ((sizeof(struct htBlock) > BLOCKSIZE)
@@ -636,22 +621,23 @@ consistencyCheckDb()
     }
 }
 
- /*VARARGS*/
-LogDebug(level, a, b, c, d, e, f, g, h, i)
-     int level;
-     char *a, *b, *c, *d, *e, *f, *g, *h, *i;
+void
+LogDebug(int level, char *fmt, ... )
 {
+    va_list ap;
 
+    va_start(ap, fmt);
+	
     if (debugging >= level) {
 	/* log normally closed so can remove it */
 	globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
 	if (globalConfPtr->log != NULL) {
-	    fprintf(globalConfPtr->log, a, b, c, d, e, f, g, h, i);
+	    vfprintf(globalConfPtr->log, fmt, ap);
 	    fflush(globalConfPtr->log);
 	    fclose(globalConfPtr->log);
 	}
     }
-    return 0;
+    va_end(ap);
 }
 
 static char *
@@ -665,31 +651,32 @@ TimeStamp(time_t t)
     return timestamp;
 }
 
- /*VARARGS*/
-Log(a, b, c, d, e, f, g, h, i)
-     char *a, *b, *c, *d, *e, *f, *g, *h, *i;
+void
+Log(char *fmt, ...)
 {
+    va_list ap;
     time_t now;
 
+    va_start(ap, fmt);
     globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
     if (globalConfPtr->log != NULL) {
 	now = time(0);
 	fprintf(globalConfPtr->log, "%s ", TimeStamp(now));
 
-	fprintf(globalConfPtr->log, a, b, c, d, e, f, g, h, i);
+	vfprintf(globalConfPtr->log, fmt, ap);
 	fflush(globalConfPtr->log);
 	fclose(globalConfPtr->log);
     }
-    return 0;
+    va_end(ap);
 }
 
- /*VARARGS*/
-LogError(code, a, b, c, d, e, f, g, h, i)
-     long code;
-     char *a, *b, *c, *d, *e, *f, *g, *h, *i;
+void
+LogError(long code, char *fmt, ... )
 {
+    va_list ap;
     time_t now;
 
+    va_start(ap, fmt);
     globalConfPtr->log = fopen(AFSDIR_SERVER_BUDBLOG_FILEPATH, "a");
 
     if (globalConfPtr->log != NULL) {
@@ -699,11 +686,10 @@ LogError(code, a, b, c, d, e, f, g, h, i)
 	if (code)
 	    fprintf(globalConfPtr->log, "%s: %s\n", afs_error_table_name(code),
 		    afs_error_message(code));
-	fprintf(globalConfPtr->log, a, b, c, d, e, f, g, h, i);
+	vfprintf(globalConfPtr->log, fmt, ap );
 	fflush(globalConfPtr->log);
 	fclose(globalConfPtr->log);
     }
-    return 0;
 }
 
 
@@ -712,9 +698,8 @@ LogError(code, a, b, c, d, e, f, g, h, i)
  * ----------------
  */
 
-
-LogNetDump(dumpPtr)
-     struct dump *dumpPtr;
+void
+LogNetDump(struct dump *dumpPtr)
 {
     struct dump hostDump;
     extern buServerConfP globalConfPtr;
@@ -726,5 +711,5 @@ LogNetDump(dumpPtr)
 	printDump(globalConfPtr->log, &hostDump);
 	fclose(globalConfPtr->log);
     }
-    return 0;
 }
+

@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_user.c,v 1.24.4.4 2008/05/29 13:33:29 jaltman Exp $");
 
 # include <sys/types.h>
 # include <errno.h>
@@ -30,9 +28,10 @@ RCSID
 # include <sys/time.h>
 # include <net/if.h>
 # include <sys/ioctl.h>
+# include <unistd.h>
 #endif
 # include <fcntl.h>
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 
 # include <sys/syscall.h>
 #endif
 #include <afs/afs_args.h>
@@ -59,9 +58,9 @@ RCSID
  * Inited
  */
 
-pthread_mutex_t rx_if_init_mutex;
-#define LOCK_IF_INIT assert(pthread_mutex_lock(&rx_if_init_mutex)==0)
-#define UNLOCK_IF_INIT assert(pthread_mutex_unlock(&rx_if_init_mutex)==0)
+afs_kmutex_t rx_if_init_mutex;
+#define LOCK_IF_INIT MUTEX_ENTER(&rx_if_init_mutex)
+#define UNLOCK_IF_INIT MUTEX_EXIT(&rx_if_init_mutex)
 
 /*
  * The rx_if_mutex mutex protects the following global variables:
@@ -70,9 +69,9 @@ pthread_mutex_t rx_if_init_mutex;
  * myNetMasks
  */
 
-pthread_mutex_t rx_if_mutex;
-#define LOCK_IF assert(pthread_mutex_lock(&rx_if_mutex)==0)
-#define UNLOCK_IF assert(pthread_mutex_unlock(&rx_if_mutex)==0)
+afs_kmutex_t rx_if_mutex;
+#define LOCK_IF MUTEX_ENTER(&rx_if_mutex)
+#define UNLOCK_IF MUTEX_EXIT(&rx_if_mutex)
 #else
 #define LOCK_IF_INIT
 #define UNLOCK_IF_INIT
@@ -110,7 +109,7 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 #endif
 #endif
 
-#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_NT40_ENV) 
     if (ntohs(port) >= IPPORT_RESERVED && ntohs(port) < IPPORT_USERRESERVED) {
 /*	(osi_Msg "%s*WARNING* port number %d is not a reserved port number.  Use port numbers above %d\n", name, port, IPPORT_USERRESERVED);
 */ ;
@@ -128,6 +127,10 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	perror("socket");
 	goto error;
     }
+
+#ifdef AFS_NT40_ENV
+    rxi_xmit_init(socketFd);
+#endif /* AFS_NT40_ENV */
 
     taddr.sin_addr.s_addr = ahost;
     taddr.sin_family = AF_INET;
@@ -148,14 +151,13 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	(osi_Msg "%sbind failed\n", name);
 	goto error;
     }
-#if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_NT40_ENV) 
     /*
      * Set close-on-exec on rx socket 
      */
     fcntl(socketFd, F_SETFD, 1);
 #endif
 
-#ifndef AFS_DJGPP_ENV
     /* Use one of three different ways of getting a socket buffer expanded to
      * a reasonable size.
      */
@@ -165,15 +167,26 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 
 	len1 = 32766;
 	len2 = rx_UdpBufSize;
-	greedy =
-	    (setsockopt
-	     (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
-	      sizeof(len2)) >= 0);
-	if (!greedy) {
-	    len2 = 32766;	/* fall back to old size... uh-oh! */
-	}
 
-	greedy =
+        /* find the size closest to rx_UdpBufSize that will be accepted */
+        while (!greedy && len2 > len1) {
+            greedy =
+                (setsockopt
+                  (socketFd, SOL_SOCKET, SO_RCVBUF, (char *)&len2,
+                   sizeof(len2)) >= 0);
+            if (!greedy)
+                len2 /= 2;
+        }
+
+        /* but do not let it get smaller than 32K */ 
+        if (len2 < len1)
+            len2 = len1;
+
+        if (len1 < len2)
+            len1 = len2;
+
+
+        greedy =
 	    (setsockopt
 	     (socketFd, SOL_SOCKET, SO_SNDBUF, (char *)&len1,
 	      sizeof(len1)) >= 0)
@@ -184,11 +197,12 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
 	if (!greedy)
 	    (osi_Msg "%s*WARNING* Unable to increase buffering on socket\n",
 	     name);
-	MUTEX_ENTER(&rx_stats_mutex);
-	rx_stats.socketGreedy = greedy;
-	MUTEX_EXIT(&rx_stats_mutex);
+        if (rx_stats_active) {
+            MUTEX_ENTER(&rx_stats_mutex);
+            rx_stats.socketGreedy = greedy;
+            MUTEX_EXIT(&rx_stats_mutex);
+        }
     }
-#endif /* AFS_DJGPP_ENV */
 
 #ifdef AFS_LINUX22_ENV
     setsockopt(socketFd, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
@@ -221,11 +235,13 @@ rxi_GetUDPSocket(u_short port)
 }
 
 void
-osi_Panic(msg, a1, a2, a3) 
-     char *msg; 
+osi_Panic(char *msg, ...)
 {
+    va_list ap;
+    va_start(ap, msg);
     (osi_Msg "Fatal Rx error: ");
-    (osi_Msg msg, a1, a2, a3);
+    (osi_VMsg msg, ap);
+    va_end(ap);
     fflush(stderr);
     fflush(stdout);
     afs_abort();
@@ -277,7 +293,7 @@ static int myNetFlags[ADDRSPERSITE];
 static u_int rxi_numNetAddrs;
 static int Inited = 0;
 
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 int
 rxi_getaddr(void)
 {
@@ -300,26 +316,59 @@ rxi_getaddr(void)
 ** maxSize - max number of interfaces to return.
 */
 int
-rx_getAllAddr(afs_int32 * buffer, int maxSize)
+rx_getAllAddr(afs_uint32 * buffer, int maxSize)
 {
     int count = 0, offset = 0;
 
     /* The IP address list can change so we must query for it */
     rx_GetIFInfo();
 
-#ifndef AFS_NT40_ENV
+#ifdef AFS_DJGPP_ENV
     /* we don't want to use the loopback adapter which is first */
     /* this is a bad bad hack.
      * and doesn't hold true on Windows.
      */
     if ( rxi_numNetAddrs > 1 )
         offset = 1;
-#endif /* AFS_NT40_ENV */
+#endif /* AFS_DJGPP_ENV */
 
     for (count = 0; offset < rxi_numNetAddrs && maxSize > 0;
 	 count++, offset++, maxSize--)
 	buffer[count] = htonl(rxi_NetAddrs[offset]);
 
+    return count;
+}
+
+/* this function returns the total number of interface addresses
+ * the buffer has to be passed in by the caller. It also returns
+ * the matching interface mask and mtu.  All values are returned
+ * in network byte order.
+ */
+int
+rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[], afs_uint32 maskBuffer[],
+                     afs_uint32 mtuBuffer[], int maxSize)
+{
+    int count = 0, offset = 0;
+
+    /* The IP address list can change so we must query for it */
+    rx_GetIFInfo();
+
+#ifdef AFS_DJGPP_ENV
+    /* we don't want to use the loopback adapter which is first */
+    /* this is a bad bad hack.
+     * and doesn't hold true on Windows.
+     */
+    if ( rxi_numNetAddrs > 1 )
+        offset = 1;
+#endif /* AFS_DJGPP_ENV */
+
+    for (count = 0; 
+         offset < rxi_numNetAddrs && maxSize > 0;
+         count++, offset++, maxSize--) {
+	addrBuffer[count] = htonl(rxi_NetAddrs[offset]);
+	maskBuffer[count] = htonl(myNetMasks[offset]);
+	mtuBuffer[count]  = htonl(myNetMTUs[offset]);
+    }
     return count;
 }
 #endif
@@ -408,16 +457,16 @@ fudge_netmask(afs_uint32 addr)
 
 
 
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) 
 int
 rxi_syscall(a3, a4, a5)
      afs_uint32 a3, a4;
      void *a5;
 {
     afs_uint32 rcode;
-    void (*old) ();
+    void (*old) (int);
 
-    old = (void (*)())signal(SIGSYS, SIG_IGN);
+    old = signal(SIGSYS, SIG_IGN);
 
 #if defined(AFS_SGI_ENV)
     rcode = afs_syscall(a3, a4, a5);
@@ -437,7 +486,6 @@ rx_GetIFInfo(void)
 {
     int s;
     int i, j, len, res;
-#ifndef AFS_DJGPP_ENV
     struct ifconf ifc;
     struct ifreq ifs[ADDRSPERSITE];
     struct ifreq *ifr;
@@ -445,7 +493,6 @@ rx_GetIFInfo(void)
     char buf[BUFSIZ], *cp, *cplim;
 #endif
     struct sockaddr_in *a;
-#endif /* AFS_DJGPP_ENV */
 
     LOCK_IF_INIT;
     if (Inited) {
@@ -465,7 +512,6 @@ rx_GetIFInfo(void)
     if (s < 0)
 	return;
 
-#ifndef AFS_DJGPP_ENV
 #ifdef	AFS_AIX41_ENV
     ifc.ifc_len = sizeof(buf);
     ifc.ifc_buf = buf;
@@ -633,10 +679,6 @@ rx_GetIFInfo(void)
 	    rxi_MorePackets(npackets * (ncbufs + 1));
 	}
     }
-#else /* AFS_DJGPP_ENV */
-    close(s);
-    return;
-#endif /* AFS_DJGPP_ENV */
 }
 #endif /* AFS_NT40_ENV */
 
@@ -729,10 +771,10 @@ rxi_InitPeerParams(struct rx_peer *pp)
     pp->natMTU = MIN((int)pp->ifMTU, OLD_MAX_PACKET_SIZE);
     pp->maxDgramPackets =
 	MIN(rxi_nDgramPackets,
-	    rxi_AdjustDgramPackets(RX_MAX_FRAGS, pp->ifMTU));
+	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->ifDgramPackets =
 	MIN(rxi_nDgramPackets,
-	    rxi_AdjustDgramPackets(RX_MAX_FRAGS, pp->ifMTU));
+	    rxi_AdjustDgramPackets(rxi_nSendFrags, pp->ifMTU));
     pp->maxDgramPackets = 1;
     /* Initialize slow start parameters */
     pp->MTU = MIN(pp->natMTU, pp->maxMTU);

@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/DARWIN/rx_kmutex.c,v 1.6 2005/10/13 15:12:18 shadow Exp $");
 
 #ifndef AFS_DARWIN80_ENV
 /*

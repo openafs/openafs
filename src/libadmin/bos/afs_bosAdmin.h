@@ -140,26 +140,26 @@ extern int ADMINAPI bos_ServerClose(const void *serverHandle,
 				    afs_status_p st);
 
 extern int ADMINAPI bos_ProcessCreate(const void *serverHandle,
-				      const char *processName,
+				      char *processName,
 				      bos_ProcessType_t processType,
-				      const char *process,
-				      const char *cronTime,
-				      const char *notifier, afs_status_p st);
+				      char *process,
+				      char *cronTime,
+				      char *notifier, afs_status_p st);
 
 extern int ADMINAPI bos_FSProcessCreate(const void *serverHandle,
-					const char *processName,
-					const char *fileserverPath,
-					const char *volserverPath,
-					const char *salvagerPath,
-					const char *notifier,
+					char *processName,
+					char *fileserverPath,
+					char *volserverPath,
+					char *salvagerPath,
+					char *notifier,
 					afs_status_p st);
 
 extern int ADMINAPI bos_ProcessDelete(const void *serverHandle,
-				      const char *processName,
+				      char *processName,
 				      afs_status_p st);
 
 extern int ADMINAPI bos_ProcessExecutionStateGet(const void *serverHandle,
-						 const char *processName,
+						 char *processName,
 						 bos_ProcessExecutionState_p
 						 processStatusP,
 						 char *auxiliaryProcessStatus,
@@ -167,12 +167,12 @@ extern int ADMINAPI bos_ProcessExecutionStateGet(const void *serverHandle,
 
 extern int ADMINAPI bos_ProcessExecutionStateSet(const void *serverHandle,
 						 const char *processName,
-						 bos_ProcessExecutionState_t
+						 const bos_ProcessExecutionState_t
 						 processStatus,
 						 afs_status_p st);
 
 extern int ADMINAPI bos_ProcessExecutionStateSetTemporary(const void
-							  *serverHandle, const char
+							  *serverHandle, char
 							  *processName,
 							  bos_ProcessExecutionState_t
 							  processStatus,
@@ -190,7 +190,7 @@ extern int ADMINAPI bos_ProcessNameGetDone(const void *iterationId,
 					   afs_status_p st);
 
 extern int ADMINAPI bos_ProcessInfoGet(const void *serverHandle,
-				       const char *processName,
+				       char *processName,
 				       bos_ProcessType_p processTypeP,
 				       bos_ProcessInfo_p processInfoP,
 				       afs_status_p st);

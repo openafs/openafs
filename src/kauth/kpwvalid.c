@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/kpwvalid.c,v 1.6.14.2 2007/11/26 21:08:42 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -23,11 +21,12 @@ RCSID
 #include "AFS_component_version_number.c"
 
   /* returns 0 if the password is long enough, otherwise non-zero  */
+int
 main(int argc, char *argv[])
 {
     char oldpassword[512];
     char password[512];
-    int rc;
+    int rc = 1;
 
     if (fgets(oldpassword, 512, stdin))
 	while (fgets(password, 512, stdin)) {

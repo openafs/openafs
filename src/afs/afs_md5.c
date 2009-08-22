@@ -37,7 +37,6 @@
 #include "afsincludes.h"
 
 
-RCSID("$Id: afs_md5.c,v 1.1.2.3 2006/08/02 19:01:22 shadow Exp $");
 
 #include "afs_md5.h"
 

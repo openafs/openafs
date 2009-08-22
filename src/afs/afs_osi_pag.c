@@ -22,8 +22,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_pag.c,v 1.29.4.12 2008/01/04 18:38:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -378,7 +376,7 @@ afs_setpag_val(int pagval)
 
 #ifndef AFS_LINUX26_ONEGROUP_ENV
 int
-afs_getpag_val()
+afs_getpag_val(void)
 {
     int pagvalue;
     struct AFS_UCRED *credp = u.u_cred;
@@ -429,13 +427,22 @@ AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 int
 afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
+#if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     int code;
+#endif
+    int i = 0;
 
     AFS_STATCNT(afs_InitReq);
     memset(av, 0, sizeof(*av));
     if (afs_shuttingdown)
 	return EIO;
 
+    av->idleError = 0;
+    av->tokenError = 0;
+    while (i < MAXHOSTS) {
+      av->skipserver[i] = 0;
+      i++;
+    }
 #ifdef AFS_LINUX26_ENV
 #if !defined(AFS_NONFSTRANS)
     if (osi_linux_nfs_initreq(av, acred, &code))
@@ -513,7 +520,9 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 void
 afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 {
+#ifndef AFS_LINUX26_ONEGROUP_ENV
     unsigned short g0, g1;
+#endif
 
 
     AFS_STATCNT(afs_get_groups_from_pag);
@@ -535,10 +544,12 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 
 
 afs_int32
-PagInCred(const struct AFS_UCRED *cred)
+PagInCred(struct AFS_UCRED *cred)
 {
     afs_int32 pag;
+#if !defined(AFS_LINUX26_ONEGROUP_ENV)
     gid_t g0, g1;
+#endif
 #if defined(AFS_SUN510_ENV)
     const gid_t *gids;
     int ngroups;
@@ -601,7 +612,9 @@ PagInCred(const struct AFS_UCRED *cred)
 #else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
 #endif
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
 out:
+#endif
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
     if (pag == NOPAG && cred->cr_rgid != NFSXLATOR_CRED) {
 	struct key *key;

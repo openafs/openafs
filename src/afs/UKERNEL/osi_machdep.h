@@ -8,7 +8,7 @@
  */
 
 /*
- * Solaris OSI header file. Extends afs_osi.h.
+ * UKERNEL OSI header file. Extends afs_osi.h.
  *
  * afs_osi.h includes this file, which is the only way this file should
  * be included in a source file. This file can redefine macros declared in
@@ -40,8 +40,10 @@
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),(compvpp))
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
-#define	afs_suser(x)	    suser(x)
 
+#if 0
+#define	afs_suser(x)	    suser(x)
+#endif
 /*
  * Global lock support.
  */
@@ -66,5 +68,7 @@ extern usr_mutex_t afs_global_lock;
     do { if (!ISAFS_GLOCK()) { osi_Panic("afs global lock not held"); } } while(0)
 
 extern int afs_bufferpages;
+
+extern int afs_suser(void *credp);
 
 #endif /* _OSI_MACHDEP_H_ */

@@ -31,6 +31,7 @@ int ktc_GetToken(struct ktc_principal *, struct ktc_token *,
 int ktc_ListTokens(int, int *, struct ktc_principal *);
 int ktc_ForgetToken(struct ktc_principal *);
 int ktc_ForgetAllTokens(void);
+afs_uint32 ktc_curpag(void);
 
 #ifdef AFS_NT40_ENV
 

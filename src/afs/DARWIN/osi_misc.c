@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_misc.c,v 1.11.2.1 2007/10/23 17:39:19 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

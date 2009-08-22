@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.11.4.6 2008/07/01 05:57:35 rra Exp $ */
+/* $Id$ */
 
 /*
  *
@@ -12,24 +12,31 @@
  */
 
 #include <sys/types.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#include <sys/file.h>
+#else
+#include <fcntl.h>
+#include <io.h>
+#define L_SET SEEK_SET
+#endif
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
 #include <errno.h>
-#include <sys/file.h>
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/com_err.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pt_util.c,v 1.11.4.6 2008/07/01 05:57:35 rra Exp $");
 
 #include <afs/cmd.h>		/*Command line parsing */
 #include <afs/afsutil.h>
 #include <errno.h>
 #include <lock.h>
+#ifndef _WIN32
 #include <netinet/in.h>
+#endif
 #define UBIK_INTERNALS
 #include <ubik.h>
 #include <rx/xdr.h>
@@ -38,6 +45,7 @@ RCSID
 #include "ptint.h"
 #include "ptserver.h"
 #include "pterror.h"
+#include "ptprototypes.h"
 
 #define IDHash(x) (abs(x) % HASHSIZE)
 #define print_id(x) ( ((flags&DO_SYS)==0 && (x<-32767 || x>97536)) || \
@@ -47,15 +55,16 @@ extern char *optarg;
 extern int optind;
 
 int restricted = 0;
-int display_entry();
-void add_group();
-void display_groups();
-void display_group();
-void fix_pre();
-char *checkin();
-char *check_core();
-char *id_to_name();
-int CommandProc(struct cmd_syndesc *, void *);
+
+static int display_entry(int);
+static void add_group(long);
+static void display_groups(void);
+static void display_group(int);
+static void fix_pre(struct prentry *);
+static char *id_to_name(int);
+static char *checkin(struct prentry *);
+static char *check_core(int);
+static int CommandProc(struct cmd_syndesc *, void *);
 
 struct hash_entry {
     char h_name[PR_MAXNAMELEN];
@@ -129,16 +138,17 @@ main(int argc, char **argv)
 
 }
 
-int
+static int
 CommandProc(register struct cmd_syndesc *a_as, void *arock)
 {
     register int i;
-    register long code;
-    long cc, upos, gpos;
+    long code = 0;
+    long upos;
+    long gpos = 0;
     struct prentry uentry, gentry;
     struct ubik_hdr *uh;
     char *dfile = 0;
-    char *pbase = AFSDIR_SERVER_PRDB_FILEPATH;
+    const char *pbase = AFSDIR_SERVER_PRDB_FILEPATH;
     char *pfile = NULL;
     char pbuffer[1028];
     struct cmd_parmdesc *tparm;
@@ -365,11 +375,9 @@ CommandProc(register struct cmd_syndesc *a_as, void *arock)
     exit(0);
 }
 
-int
+static int
 display_entry(int offset)
 {
-    register int i;
-
     lseek(dbase_fd, offset + HDRSIZE, L_SET);
     read(dbase_fd, &pre, sizeof(struct prentry));
 
@@ -389,7 +397,7 @@ display_entry(int offset)
     return (nflag ? pre.nextName : pre.nextID);
 }
 
-void
+static void
 add_group(long id)
 {
     struct grp_list *g;
@@ -405,8 +413,8 @@ add_group(long id)
     g->groups[i] = id;
 }
 
-void
-display_groups()
+static void
+display_groups(void)
 {
     register int i, id;
     struct grp_list *g;
@@ -424,7 +432,7 @@ display_groups()
     }
 }
 
-void
+static void
 display_group(int id)
 {
     register int i, offset;
@@ -495,7 +503,7 @@ display_group(int id)
     }
 }
 
-void
+static void
 fix_pre(struct prentry *pre)
 {
     register int i;
@@ -522,7 +530,7 @@ fix_pre(struct prentry *pre)
     }
 }
 
-char *
+static char *
 id_to_name(int id)
 {
     register int offset;
@@ -549,7 +557,7 @@ id_to_name(int id)
     return 0;
 }
 
-char *
+static char *
 checkin(struct prentry *pre)
 {
     struct hash_entry *he, *last;
@@ -579,7 +587,7 @@ checkin(struct prentry *pre)
     return (he->h_name);
 }
 
-char *
+static char *
 check_core(register int id)
 {
     struct hash_entry *he;

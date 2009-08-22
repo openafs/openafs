@@ -9,8 +9,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/make_p_table.c,v 1.8 2003/07/15 23:15:00 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxdebug/rxdebug.c,v 1.6.8.3 2007/10/31 04:09:34 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -34,6 +32,7 @@ RCSID
 #endif
 #include <string.h>
 #include <sys/stat.h>
+#include <afs/afsutil.h>
 #include <afs/stds.h>
 #include <afs/cmd.h>
 
@@ -48,17 +47,14 @@ RCSID
 
 #define	TIMEOUT	    20
 
-extern struct hostent *hostutil_GetHostByName();
-
 static short
-PortNumber(aport)
-     register char *aport;
+PortNumber(char *aport)
 {
     register int tc;
     register short total;
 
     total = 0;
-    while (tc = *aport++) {
+    while ((tc = *aport++)) {
 	if (tc < '0' || tc > '9')
 	    return -1;		/* bad port number */
 	total *= 10;
@@ -68,8 +64,7 @@ PortNumber(aport)
 }
 
 static short
-PortName(aname)
-     register char *aname;
+PortName(char *aname)
 {
     register struct servent *ts;
     ts = getservbyname(aname, NULL);
@@ -106,6 +101,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     int withIdleThreads;
     int withWaited;
     int withPeers;
+    int withPackets;
     struct rx_debugStats tstats;
     char *portName, *hostName;
     char hoststr[20];
@@ -255,10 +251,16 @@ MainCommand(struct cmd_syndesc *as, void *arock)
     withIdleThreads = (supportedDebugValues & RX_SERVER_DEBUG_IDLE_THREADS);
     withWaited = (supportedDebugValues & RX_SERVER_DEBUG_WAITED_CNT);
     withPeers = (supportedDebugValues & RX_SERVER_DEBUG_ALL_PEER);
+    withPackets = (supportedDebugValues & RX_SERVER_DEBUG_PACKETS_CNT);
 
-    printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
-	   tstats.nFreePackets, tstats.packetReclaims, tstats.callsExecuted,
-	   tstats.usedFDs);
+    if (withPackets)
+        printf("Free packets: %d/%d, packet reclaims: %d, calls: %d, used FDs: %d\n",
+               tstats.nFreePackets, tstats.nPackets, tstats.packetReclaims, 
+               tstats.callsExecuted, tstats.usedFDs);
+    else
+        printf("Free packets: %d, packet reclaims: %d, calls: %d, used FDs: %d\n",
+               tstats.nFreePackets, tstats.packetReclaims, tstats.callsExecuted,
+               tstats.usedFDs);
     if (!tstats.waitingForPackets)
 	printf("not ");
     printf("waiting for packets.\n");
@@ -276,7 +278,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 	    fprintf(stderr,
 		    "WARNING: Server doesn't support retrieval of Rx statistics\n");
 	} else {
-	    struct rx_stats rxstats;
+	    struct rx_statistics rxstats;
 
 	    /* should gracefully handle the case where rx_stats grows */
 	    code =
@@ -402,6 +404,14 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		    printf(" DESTROYED");
 		if (tconn.flags & RX_CONN_USING_PACKET_CKSUM)
 		    printf(" pktCksum");
+                if (tconn.flags & RX_CONN_KNOW_WINDOW)
+                    printf(" knowWindow");
+                if (tconn.flags & RX_CONN_RESET)
+                    printf(" reset");
+                if (tconn.flags & RX_CONN_BUSY)
+                    printf(" busy");
+                if (tconn.flags & RX_CONN_ATTACHWAIT)
+                    printf(" attachWait");
 		printf(", ");
 	    }
 	    printf("security index %d, ", tconn.securityIndex);
@@ -580,9 +590,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 #include "AFS_component_version_number.c"
 #endif
 int
-main(argc, argv)
-     int argc;
-     char **argv;
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
 

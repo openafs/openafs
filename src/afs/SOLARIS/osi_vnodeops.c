@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.28.2.4 2008/03/17 15:28:33 shadow Exp $");
 
 /*
  * SOLARIS/osi_vnodeops.c
@@ -55,27 +53,6 @@ RCSID
 #include <sys/debug.h>
 #include <sys/fs_subr.h>
 
-/* 
- * XXX Temporary fix for problems with Solaris rw_tryupgrade() lock.
- * It isn't very persistent in getting the upgrade when others are
- * waiting for it and returns 0.  So the UpgradeSToW() macro that the
- * rw_tryupgrade used to map to wasn't good enough and we need to use
- * the following code instead.  Obviously this isn't the proper place
- * for it but it's only called from here for now
- * 
- */
-#ifndef	AFS_SUN54_ENV
-AFS_TRYUP(lock)
-     afs_rwlock_t *lock;
-{
-    if (!rw_tryupgrade(lock)) {
-	rw_exit(lock);
-	rw_enter(lock, RW_WRITER);
-    }
-}
-#endif
-
-
 /* Translate a faultcode_t as returned by some of the vm routines
  * into a suitable errno value.
  */
@@ -106,26 +83,18 @@ int afs_dump(), afs_cmp(), afs_realvp(), afs_GetOnePage();
 int afs_pvn_vptrunc;
 
 int
-afs_addmap(avp, offset, asp, addr, length, prot, maxprot, flags, credp)
-     register struct vnode *avp;
-     offset_t offset;
-     struct as *asp;
-     caddr_t addr;
-     int length, prot, maxprot, flags;
-     struct AFS_UCRED *credp;
+afs_addmap(register struct vnode *avp, offset_t offset, struct as *asp, 
+	   caddr_t addr, int length, int prot, int maxprot, int flags, 
+	   struct AFS_UCRED *credp)
 {
     /* XXX What should we do here?? XXX */
     return (0);
 }
 
 int
-afs_delmap(avp, offset, asp, addr, length, prot, maxprot, flags, credp)
-     register struct vnode *avp;
-     offset_t offset;
-     struct as *asp;
-     caddr_t addr;
-     int length, prot, maxprot, flags;
-     struct AFS_UCRED *credp;
+afs_delmap(register struct vnode *avp, offset_t offset, struct as *asp, 
+	   caddr_t addr, int length, int prot, int maxprot, int flags, 
+	   struct AFS_UCRED *credp)
 {
     /* XXX What should we do here?? XXX */
     return (0);
@@ -133,19 +102,12 @@ afs_delmap(avp, offset, asp, addr, length, prot, maxprot, flags, credp)
 
 #ifdef AFS_SUN510_ENV
 int
-afs_vmread(avp, auio, ioflag, acred, ct)
-     register struct vnode *avp;
-     struct uio *auio;
-     int ioflag;
-     struct AFS_UCRED *acred;
-     caller_context_t *ct;
+afs_vmread(register struct vnode *avp, struct uio *auio, int ioflag, 
+	   struct AFS_UCRED *acred, caller_context_t *ct)
 #else
 int
-afs_vmread(avp, auio, ioflag, acred)
-     register struct vnode *avp;
-     struct uio *auio;
-     int ioflag;
-     struct AFS_UCRED *acred;
+afs_vmread(register struct vnode *avp, struct uio *auio, int ioflag, 
+	   struct AFS_UCRED *acred)
 #endif
 {
     register int code;
@@ -161,19 +123,12 @@ afs_vmread(avp, auio, ioflag, acred)
 
 #ifdef AFS_SUN510_ENV
 int
-afs_vmwrite(avp, auio, ioflag, acred, ct)
-     register struct vnode *avp;
-     struct uio *auio;
-     int ioflag;
-     struct AFS_UCRED *acred;
-     caller_context_t *ct;
+afs_vmwrite(register struct vnode *avp, struct uio *auio, int ioflag, 
+	    struct AFS_UCRED *acred, caller_context_t *ct)
 #else
 int
-afs_vmwrite(avp, auio, ioflag, acred)
-     register struct vnode *avp;
-     struct uio *auio;
-     int ioflag;
-     struct AFS_UCRED *acred;
+afs_vmwrite(register struct vnode *avp, struct uio *auio, int ioflag, 
+	    struct AFS_UCRED *acred)
 #endif
 {
     register int code;
@@ -187,17 +142,9 @@ afs_vmwrite(avp, auio, ioflag, acred)
 }
 
 int
-afs_getpage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred)
-     struct vnode *vp;
-     u_int len;
-     u_int *protp;
-     struct page *pl[];
-     u_int plsz;
-     struct seg *seg;
-     offset_t off;
-     caddr_t addr;
-     enum seg_rw rw;
-     struct AFS_UCRED *acred;
+afs_getpage(struct vnode *vp, offset_t off, u_int len, u_int *protp, 
+	    struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
+	    enum seg_rw rw, struct AFS_UCRED *acred)
 {
     register afs_int32 code = 0;
     AFS_STATCNT(afs_getpage);
@@ -207,32 +154,25 @@ afs_getpage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred)
 
     AFS_GLOCK();
 
-#if	defined(AFS_SUN56_ENV)
     if (len <= PAGESIZE)
 	code =
-	    afs_GetOnePage(vp, off, len, protp, pl, plsz, seg, addr, rw,
-			   acred);
-#else
-    if (len <= PAGESIZE)
-	code =
-	    afs_GetOnePage(vp, (u_int) off, len, protp, pl, plsz, seg, addr,
-			   rw, acred);
+	    afs_GetOnePage(vp, 
+#if !defined(AFS_SUN56_ENV)
+			   (u_int)
 #endif
+			   off, len, protp, pl, plsz, seg, addr, rw, acred);
     else {
 	struct vcache *vcp = VTOAFS(vp);
 	ObtainWriteLock(&vcp->vlock, 548);
 	vcp->multiPage++;
 	ReleaseWriteLock(&vcp->vlock);
 	afs_BozonLock(&vcp->pvnLock, vcp);
-#if	defined(AFS_SUN56_ENV)
 	code =
-	    pvn_getpages(afs_GetOnePage, vp, off, len, protp, pl, plsz, seg,
-			 addr, rw, acred);
-#else
-	code =
-	    pvn_getpages(afs_GetOnePage, vp, (u_int) off, len, protp, pl,
-			 plsz, seg, addr, rw, acred);
+	    pvn_getpages(afs_GetOnePage, vp, 
+#if !defined(AFS_SUN56_ENV)
+			 (u_int)
 #endif
+			 off, len, protp, pl, plsz, seg, addr, rw, acred);
 	afs_BozonUnlock(&vcp->pvnLock, vcp);
 	ObtainWriteLock(&vcp->vlock, 549);
 	vcp->multiPage--;
@@ -244,21 +184,15 @@ afs_getpage(vp, off, len, protp, pl, plsz, seg, addr, rw, acred)
 
 /* Return all the pages from [off..off+len) in file */
 int
-afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
-     u_int alen;
-     struct vnode *vp;
 #if	defined(AFS_SUN56_ENV)
-     u_offset_t off;
+afs_GetOnePage(struct vnode *vp, u_offset_t off, u_int alen, u_int *protp, 
+	       struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
+	       enum seg_rw rw, struct AFS_UCRED *acred)
 #else
-     u_int off;
+afs_GetOnePage(struct vnode *vp, u_int off, u_int alen, u_int *protp, 
+	       struct page *pl[], u_int plsz, struct seg *seg, caddr_t addr, 
+	       enum seg_rw rw, struct AFS_UCRED *acred)
 #endif
-     u_int *protp;
-     struct page *pl[];
-     u_int plsz;
-     struct seg *seg;
-     caddr_t addr;
-     enum seg_rw rw;
-     struct AFS_UCRED *acred;
 {
     register struct page *page;
     register afs_int32 code = 0;
@@ -363,7 +297,7 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
     else
 	tdc = afs_GetDCache(avc, (afs_offs_t) off, &treq, &offset, &nlen, 1);
     if (!tdc)
-	return EINVAL;
+	return afs_CheckCode(EINVAL, &treq, 62);
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
 	afs_PutDCache(tdc);
@@ -406,8 +340,8 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
     ObtainReadLock(&tdc->lock);
 
     /* Check to see whether the cache entry is still valid */
-    if (!(avc->states & CStatd)
-	|| !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+    if (!(avc->f.states & CStatd)
+	|| !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 	ReleaseReadLock(&tdc->lock);
 	ReleaseReadLock(&avc->lock);
 	afs_BozonUnlock(&avc->pvnLock, avc);
@@ -544,12 +478,8 @@ afs_GetOnePage(vp, off, alen, protp, pl, plsz, seg, addr, rw, acred)
 }
 
 int
-afs_putpage(vp, off, len, flags, cred)
-     struct vnode *vp;
-     offset_t off;
-     u_int len;
-     int flags;
-     struct AFS_UCRED *cred;
+afs_putpage(struct vnode *vp, offset_t off, u_int len, int flags, 
+	    struct AFS_UCRED *cred)
 {
     struct vcache *avc;
     struct page *pages;
@@ -588,7 +518,7 @@ afs_putpage(vp, off, len, flags, cred)
     if (len) {
 	endPos = (afs_offs_t) off + len;	/* position we're supposed to write up to */
 	while ((afs_offs_t) toff < endPos
-	       && (afs_offs_t) toff < avc->m.Length) {
+	       && (afs_offs_t) toff < avc->f.m.Length) {
 	    /* If not invalidating pages use page_lookup_nowait to avoid reclaiming
 	     * them from the free list
 	     */
@@ -652,18 +582,16 @@ afs_putpage(vp, off, len, flags, cred)
 
 
 int
-afs_putapage(struct vnode *vp, struct page *pages,
-#if	defined(AFS_SUN56_ENV)
-	     u_offset_t * offp,
+#if defined(AFS_SUN58_ENV)
+afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
+	     size_t * lenp, int flags, struct AFS_UCRED *credp)
+#elif defined(AFS_SUN56_ENV)
+afs_putapage(struct vnode *vp, struct page *pages, u_offset_t * offp,
+	     u_int * lenp, int flags, struct AFS_UCRED *credp)
 #else
-	     u_int * offp,
+afs_putapage(struct vnode *vp, struct page *pages, u_int * offp,
+	     u_int * lenp, int flags, struct AFS_UCRED *credp)
 #endif
-#if    defined(AFS_SUN58_ENV)
-	     size_t * lenp,
-#else
-	     u_int * lenp,
-#endif
-	     int flags, struct AFS_UCRED *credp)
 {
     struct buf *tbuf;
     struct vcache *avc = VTOAFS(vp);
@@ -676,8 +604,8 @@ afs_putapage(struct vnode *vp, struct page *pages,
      * XXX Find a kluster that fits in one block (or page). We also
      * adjust the i/o if the file space is less than a while page. XXX
      */
-    if (off + tlen > avc->m.Length) {
-	tlen = avc->m.Length - off;
+    if (off + tlen > avc->f.m.Length) {
+	tlen = avc->f.m.Length - off;
     }
     /* can't call mapout with 0 length buffers (rmfree panics) */
     if (((tlen >> 24) & 0xff) == 0xff) {
@@ -717,12 +645,8 @@ afs_putapage(struct vnode *vp, struct page *pages,
 }
 
 int
-afs_nfsrdwr(avc, auio, arw, ioflag, acred)
-     register struct vcache *avc;
-     struct uio *auio;
-     enum uio_rw arw;
-     int ioflag;
-     struct AFS_UCRED *acred;
+afs_nfsrdwr(register struct vcache *avc, struct uio *auio, enum uio_rw arw,
+	    int ioflag, struct AFS_UCRED *acred)
 {
     register afs_int32 code;
     afs_int32 code2;
@@ -794,9 +718,9 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
     /* adjust parameters when appending files */
     if ((ioflag & IO_APPEND) && arw == UIO_WRITE) {
 #if defined(AFS_SUN56_ENV)
-	auio->uio_loffset = avc->m.Length;	/* write at EOF position */
+	auio->uio_loffset = avc->f.m.Length;	/* write at EOF position */
 #else
-	auio->uio_offset = avc->m.Length;	/* write at EOF position */
+	auio->uio_offset = avc->f.m.Length;	/* write at EOF position */
 #endif
     }
     if (auio->afsio_offset < 0 || (auio->afsio_offset + auio->uio_resid) < 0) {
@@ -859,19 +783,19 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	 * to hold the results (since afs_putpage will be called to force the I/O */
 	size = auio->afsio_resid + auio->afsio_offset;	/* new file size */
 	appendLength = size;
-	origLength = avc->m.Length;
-	if (size > avc->m.Length) {
+	origLength = avc->f.m.Length;
+	if (size > avc->f.m.Length) {
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->m.Length), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(size));
-	    avc->m.Length = size;	/* file grew */
+	    avc->f.m.Length = size;	/* file grew */
 	}
-	avc->states |= CDirty;	/* Set the dirty bit */
-	avc->m.Date = osi_Time();	/* Set file date (for ranlib) */
+	avc->f.states |= CDirty;	/* Set the dirty bit */
+	avc->f.m.Date = osi_Time();	/* Set file date (for ranlib) */
     } else {
 	mode = S_READ;		/* map-in read-only */
-	origLength = avc->m.Length;
+	origLength = avc->f.m.Length;
     }
 
     if (acred && AFS_NFSXLATORREQ(acred)) {
@@ -940,7 +864,7 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	    break;		/* nothing to transfer, we're done */
 	}
 	if (arw == UIO_WRITE)
-	    avc->states |= CDirty;	/* may have been cleared by DoPartialWrite */
+	    avc->f.states |= CDirty;	/* may have been cleared by DoPartialWrite */
 
 	/* Before dropping lock, hold the chunk (create it if necessary).  This
 	 * serves two purposes:  (1) Ensure Cache Truncate Daemon doesn't try
@@ -999,12 +923,12 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 		AFS_GLOCK();
 		dcp_newpage = afs_FindDCache(avc, pageBase);
 		if (dcp_newpage
-		    && hsame(avc->m.DataVersion, dcp_newpage->f.versionNo)) {
+		    && hsame(avc->f.m.DataVersion, dcp_newpage->f.versionNo)) {
 		    ObtainWriteLock(&avc->lock, 251);
 		    ObtainWriteLock(&avc->vlock, 576);
 		    ObtainReadLock(&dcp_newpage->lock);
 		    if ((avc->activeV == 0)
-			&& hsame(avc->m.DataVersion, dcp_newpage->f.versionNo)
+			&& hsame(avc->f.m.DataVersion, dcp_newpage->f.versionNo)
 			&& !(dcp_newpage->dflags & (DFFetching))) {
 			AFS_GUNLOCK();
 			segmap_pagecreate(segkmap, raddr, rsize, 1);
@@ -1051,7 +975,7 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
     if (didFakeOpen) {
 	afs_FakeClose(avc, acred);
     }
-    if (arw == UIO_WRITE && (avc->states & CDirty)) {
+    if (arw == UIO_WRITE && (avc->f.states & CDirty)) {
 	code2 = afs_DoPartialWrite(avc, &treq);
 	if (!code)
 	    code = code2;
@@ -1084,15 +1008,8 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
     return afs_CheckCode(code, &treq, 46);
 }
 
-afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
-     struct vnode *vp;
-     struct as *as;
-     offset_t off;
-     caddr_t *addr;
-     u_int len;
-     u_char prot, maxprot;
-     u_int flags;
-     struct AFS_UCRED *cred;
+int
+afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, u_int len, u_char prot, u_char maxprot, u_int flags, struct AFS_UCRED *cred)
 {
     struct segvn_crargs crargs;
     register afs_int32 code;
@@ -1134,7 +1051,7 @@ afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
     }
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, cred);	/* ensure old pages are gone */
-    avc->states |= CMAPPED;	/* flag cleared at afs_inactive */
+    avc->f.states |= CMAPPED;	/* flag cleared at afs_inactive */
     afs_BozonUnlock(&avc->pvnLock, avc);
 
     AFS_GUNLOCK();
@@ -1182,11 +1099,9 @@ afs_map(vp, off, as, addr, len, prot, maxprot, flags, cred)
  * For Now We use standard local kernel params for AFS system values. Change this
  * at some point.
  */
-afs_pathconf(vp, cmd, outdatap, credp)
-     register struct AFS_UCRED *credp;
-     struct vnode *vp;
-     int cmd;
-     u_long *outdatap;
+int
+afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap, 
+	     register struct AFS_UCRED *credp)
 {
     AFS_STATCNT(afs_cntl);
     switch (cmd) {
@@ -1211,38 +1126,30 @@ afs_pathconf(vp, cmd, outdatap, credp)
     return 0;
 }
 
-afs_ioctl(vnp, com, arg, flag, credp, rvalp)
-     struct vnode *vnp;
-     int com, arg, flag;
-     cred_t *credp;
-     int *rvalp;
+int
+afs_ioctl(struct vnode *vnp, int com, int arg, int flag, cred_t *credp, 
+	  int *rvalp)
 {
     return (ENOTTY);
 }
 
 void
-afs_rwlock(vnp, wlock)
-     struct vnode *vnp;
-     int wlock;
+afs_rwlock(struct vnode *vnp, int wlock)
 {
     rw_enter(&(VTOAFS(vnp))->rwlock, (wlock ? RW_WRITER : RW_READER));
 }
 
 
 void
-afs_rwunlock(vnp, wlock)
-     struct vnode *vnp;
-     int wlock;
+afs_rwunlock(struct vnode *vnp, int wlock)
 {
     rw_exit(&(VTOAFS(vnp))->rwlock);
 }
 
 
 /* NOT SUPPORTED */
-afs_seek(vnp, ooff, noffp)
-     struct vnode *vnp;
-     offset_t ooff;
-     offset_t *noffp;
+int
+afs_seek(struct vnode *vnp, offset_t ooff, offset_t *noffp)
 {
     register int code = 0;
 
@@ -1258,24 +1165,16 @@ afs_seek(vnp, ooff, noffp)
 }
 
 int
-afs_frlock(vnp, cmd, ap, flag, off,
 #ifdef AFS_SUN59_ENV
-	   flkcb,
-#endif
-	   credp)
-     struct vnode *vnp;
-     int cmd;
-#if	defined(AFS_SUN56_ENV)
-     struct flock64 *ap;
+afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
+	   offset_t off, struct flk_callback *flkcb, struct AFS_UCRED *credp)
+#elif defined(AFS_SUN56_ENV)
+afs_frlock(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
+	   offset_t off, struct AFS_UCRED *credp)
 #else
-     struct flock *ap;
+afs_frlock(struct vnode *vnp, int cmd, struct flock *ap, int flag, 
+	   offset_t off, struct AFS_UCRED *credp)
 #endif
-     int flag;
-     offset_t off;
-#ifdef AFS_SUN59_ENV
-     struct flk_callback *flkcb;
-#endif
-     struct AFS_UCRED *credp;
 {
     register afs_int32 code = 0;
     /*
@@ -1314,17 +1213,13 @@ afs_frlock(vnp, cmd, ap, flag, off,
 
 
 int
-afs_space(vnp, cmd, ap, flag, off, credp)
-     struct vnode *vnp;
-     int cmd;
 #if	defined(AFS_SUN56_ENV)
-     struct flock64 *ap;
+afs_space(struct vnode *vnp, int cmd, struct flock64 *ap, int flag, 
+	  offset_t off, struct AFS_UCRED *credp)
 #else
-     struct flock *ap;
+afs_space(struct vnode *vnp, int cmd, struct flock *ap, int flag, 
+	  offset_t off, struct AFS_UCRED *credp)
 #endif
-     int flag;
-     offset_t off;
-     struct AFS_UCRED *credp;
 {
     register afs_int32 code = EINVAL;
     struct vattr vattr;
@@ -1347,10 +1242,7 @@ afs_space(vnp, cmd, ap, flag, off, credp)
 }
 
 int
-afs_dump(vp, addr, i1, i2)
-     struct vnode *vp;
-     caddr_t addr;
-     int i1, i2;
+afs_dump(struct vnode *vp, caddr_t addr, int i1, int i2)
 {
     AFS_STATCNT(afs_dump);
     afs_warn("AFS_DUMP. MUST IMPLEMENT THIS!!!\n");
@@ -1359,8 +1251,8 @@ afs_dump(vp, addr, i1, i2)
 
 
 /* Nothing fancy here; just compare if vnodes are identical ones */
-afs_cmp(vp1, vp2)
-     struct vnode *vp1, *vp2;
+int
+afs_cmp(struct vnode *vp1, struct vnode *vp2)
 {
     AFS_STATCNT(afs_cmp);
     return (vp1 == vp2);
@@ -1376,27 +1268,18 @@ afs_realvp(struct vnode *vp, struct vnode **vpp)
 
 
 int
-afs_pageio(vp, pp, ui1, ui2, i1, credp)
-     struct vnode *vp;
-     struct page *pp;
-     u_int ui1, ui2;
-     int i1;
-     struct cred *credp;
+afs_pageio(struct vnode *vp, struct page *pp, u_int ui1, u_int ui2, int i1, 
+	   struct cred *credp)
 {
     afs_warn("afs_pageio: Not implemented\n");
     return EINVAL;
 }
 
 int
-afs_dumpctl(vp, i
 #ifdef AFS_SUN59_ENV
-	    , blkp
-#endif
-    )
-     struct vnode *vp;
-     int i;
-#ifdef AFS_SUN59_ENV
-     int *blkp;
+afs_dumpctl(struct vnode *vp, int i, int *blkp)
+#else
+afs_dumpctl(struct vnode *vp, int i)
 #endif
 {
     afs_warn("afs_dumpctl: Not implemented\n");
@@ -1424,31 +1307,20 @@ afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *cr
 }
 #else
 extern void
-afs_dispose(vp, p, fl, dn, cr)
-     struct vnode *vp;
-     struct page *p;
-     int fl, dn;
-     struct cred *cr;
+afs_dispose(struct vnode *vp, struct page *p, int fl, int dn, struct cred *cr)
 {
     fs_dispose(vp, p, fl, dn, cr);
 }
 
 int
-afs_setsecattr(vp, vsecattr, flag, creds)
-     struct vnode *vp;
-     vsecattr_t *vsecattr;
-     int flag;
-     struct cred *creds;
+afs_setsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, 
+	       struct cred *creds)
 {
     return ENOSYS;
 }
 
 int
-afs_getsecattr(vp, vsecattr, flag, creds)
-     struct vnode *vp;
-     vsecattr_t *vsecattr;
-     int flag;
-     struct cred *creds;
+afs_getsecattr(struct vnode *vp, vsecattr_t *vsecattr, int flag, struct cred *creds)
 {
     return fs_fab_acl(vp, vsecattr, flag, creds);
 }
@@ -1456,13 +1328,56 @@ afs_getsecattr(vp, vsecattr, flag, creds)
 #endif
 
 #ifdef	AFS_GLOBAL_SUNLOCK
-extern int gafs_open(), gafs_close(), afs_ioctl(), gafs_access();
-extern int gafs_getattr(), gafs_setattr(), gafs_lookup(), gafs_create();
-extern int gafs_remove(), gafs_link(), gafs_rename(), gafs_mkdir();
-extern int gafs_rmdir(), gafs_readdir(), gafs_fsync(), gafs_symlink();
-extern int gafs_fid(), gafs_readlink(), fs_setfl(), afs_pathconf();
-extern int afs_lockctl();
-extern void gafs_inactive();
+extern int gafs_open(register struct vcache **avcp, afs_int32 aflags, 
+		     struct AFS_UCRED *acred);
+extern int gafs_close(register struct vcache *avc, afs_int32 aflags, 
+		      int count, offset_t offset, struct AFS_UCRED *acred);
+extern int afs_ioctl(struct vnode *vnp, int com, int arg, int flag, 
+		     cred_t *credp, int *rvalp);
+extern int gafs_access(register struct vcache *avc, register afs_int32 amode,
+		       int flags, struct AFS_UCRED *acred);
+extern int gafs_getattr(register struct vcache *avc, 
+			register struct vattr *attrs, int flags, 
+			struct AFS_UCRED *acred);
+extern int gafs_setattr(register struct vcache *avc, 
+			register struct vattr *attrs, int flags, 
+			struct AFS_UCRED *acred);
+extern int gafs_lookup(register struct vcache *adp, char *aname, 
+		       register struct vcache **avcp, struct pathname *pnp,
+		       int flags, struct vnode *rdir, struct AFS_UCRED *acred);
+extern int gafs_remove(register struct vcache *adp, char *aname, 
+		       struct AFS_UCRED *acred);
+extern int gafs_link(register struct vcache *adp, register struct vcache *avc,
+		     char *aname, struct AFS_UCRED *acred);
+extern int gafs_rename(register struct vcache *aodp, char *aname1,
+		       register struct vcache *andp, char *aname2,
+		       struct AFS_UCRED *acred);
+extern int gafs_symlink(register struct vcache *adp, char *aname, 
+			struct vattr *attrs, register char *atargetName, 
+			struct AFS_UCRED *acred);
+extern int gafs_rmdir(register struct vcache *adp, char *aname, 
+		      struct vnode *cdirp, struct AFS_UCRED *acred);
+extern int gafs_mkdir(register struct vcache *adp, char *aname, 
+		      struct vattr *attrs, register struct vcache **avcp, 
+		      struct AFS_UCRED *acred);
+extern int
+#ifdef  AFS_SUN53_ENV
+gafs_fsync(register struct vcache *avc, int flag, struct AFS_UCRED *acred);
+#else
+gafs_fsync(register struct vcache *avc, struct AFS_UCRED *acred);
+#endif
+extern int gafs_readlink(register struct vcache *avc, struct uio *auio, 
+			 struct AFS_UCRED *acred);
+extern int gafs_readdir(register struct vcache *avc, struct uio *auio,
+			struct AFS_UCRED *acred, int *eofp);
+extern void gafs_inactive(register struct vcache *avc, 
+			  struct AFS_UCRED *acred);
+extern int gafs_fid(struct vcache *avc, struct fid **fidpp);
+extern int gafs_create(register struct vcache *adp, char *aname, 
+		       struct vattr *attrs, enum vcexcl aexcl, int amode, 
+		       struct vcache **avcp, struct AFS_UCRED *acred);
+extern int afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
+			register struct AFS_UCRED *credp);
 
 #if defined(AFS_SUN511_ENV)
 /* The following list must always be NULL-terminated */
@@ -1615,12 +1530,9 @@ struct vnodeops Afs_vnodeops = {
 struct vnodeops *afs_ops = &Afs_vnodeops;
 #endif
 
-
-
-gafs_open(avcp, aflags, acred)
-     register struct vcache **avcp;
-     afs_int32 aflags;
-     struct AFS_UCRED *acred;
+int
+gafs_open(register struct vcache **avcp, afs_int32 aflags, 
+	  struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1630,13 +1542,9 @@ gafs_open(avcp, aflags, acred)
     return (code);
 }
 
-
-gafs_close(avc, aflags, count, offset, acred)
-     offset_t offset;
-     int count;
-     register struct vcache *avc;
-     afs_int32 aflags;
-     struct AFS_UCRED *acred;
+int
+gafs_close(register struct vcache *avc, afs_int32 aflags, int count, 
+	   offset_t offset, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1646,12 +1554,9 @@ gafs_close(avc, aflags, count, offset, acred)
     return (code);
 }
 
-
-gafs_getattr(avc, attrs, flags, acred)
-     int flags;
-     register struct vcache *avc;
-     register struct vattr *attrs;
-     struct AFS_UCRED *acred;
+int
+gafs_getattr(register struct vcache *avc, register struct vattr *attrs, 
+	     int flags, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1662,11 +1567,9 @@ gafs_getattr(avc, attrs, flags, acred)
 }
 
 
-gafs_setattr(avc, attrs, flags, acred)
-     int flags;
-     register struct vcache *avc;
-     register struct vattr *attrs;
-     struct AFS_UCRED *acred;
+int
+gafs_setattr(register struct vcache *avc, register struct vattr *attrs, 
+	     int flags, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1677,11 +1580,9 @@ gafs_setattr(avc, attrs, flags, acred)
 }
 
 
-gafs_access(avc, amode, flags, acred)
-     int flags;
-     register struct vcache *avc;
-     register afs_int32 amode;
-     struct AFS_UCRED *acred;
+int
+gafs_access(register struct vcache *avc, register afs_int32 amode, int flags, 
+	    struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1692,13 +1593,10 @@ gafs_access(avc, amode, flags, acred)
 }
 
 
-gafs_lookup(adp, aname, avcp, pnp, flags, rdir, acred)
-     struct pathname *pnp;
-     int flags;
-     struct vnode *rdir;
-     register struct vcache *adp, **avcp;
-     char *aname;
-     struct AFS_UCRED *acred;
+int
+gafs_lookup(register struct vcache *adp, char *aname, 
+	    register struct vcache **avcp, struct pathname *pnp, int flags, 
+	    struct vnode *rdir, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1709,14 +1607,10 @@ gafs_lookup(adp, aname, avcp, pnp, flags, rdir, acred)
 }
 
 
-gafs_create(adp, aname, attrs, aexcl, amode, avcp, acred)
-     register struct vcache *adp;
-     char *aname;
-     struct vattr *attrs;
-     enum vcexcl aexcl;
-     int amode;
-     struct vcache **avcp;
-     struct AFS_UCRED *acred;
+int
+gafs_create(register struct vcache *adp, char *aname, struct vattr *attrs, 
+	    enum vcexcl aexcl, int amode, struct vcache **avcp, 
+	    struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1726,10 +1620,8 @@ gafs_create(adp, aname, attrs, aexcl, amode, avcp, acred)
     return (code);
 }
 
-gafs_remove(adp, aname, acred)
-     register struct vcache *adp;
-     char *aname;
-     struct AFS_UCRED *acred;
+int
+gafs_remove(register struct vcache *adp, char *aname, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1739,11 +1631,9 @@ gafs_remove(adp, aname, acred)
     return (code);
 }
 
-gafs_link(adp, avc, aname, acred)
-     register struct vcache *avc;
-     register struct vcache *adp;
-     char *aname;
-     struct AFS_UCRED *acred;
+int
+gafs_link(register struct vcache *adp, register struct vcache *avc, 
+	  char *aname, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1753,10 +1643,10 @@ gafs_link(adp, avc, aname, acred)
     return (code);
 }
 
-gafs_rename(aodp, aname1, andp, aname2, acred)
-     register struct vcache *aodp, *andp;
-     char *aname1, *aname2;
-     struct AFS_UCRED *acred;
+int
+gafs_rename(register struct vcache *aodp, char *aname1, 
+	    register struct vcache *andp, char *aname2, 
+	    struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1786,12 +1676,9 @@ gafs_rename(aodp, aname1, andp, aname2, acred)
     return (code);
 }
 
-gafs_mkdir(adp, aname, attrs, avcp, acred)
-     register struct vcache *adp;
-     register struct vcache **avcp;
-     char *aname;
-     struct vattr *attrs;
-     struct AFS_UCRED *acred;
+int
+gafs_mkdir(register struct vcache *adp, char *aname, struct vattr *attrs, 
+	   register struct vcache **avcp, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1801,12 +1688,9 @@ gafs_mkdir(adp, aname, attrs, avcp, acred)
     return (code);
 }
 
-
-gafs_rmdir(adp, aname, cdirp, acred)
-     struct vnode *cdirp;
-     register struct vcache *adp;
-     char *aname;
-     struct AFS_UCRED *acred;
+int
+gafs_rmdir(register struct vcache *adp, char *aname, struct vnode *cdirp, 
+	   struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1817,11 +1701,9 @@ gafs_rmdir(adp, aname, cdirp, acred)
 }
 
 
-gafs_readdir(avc, auio, acred, eofp)
-     int *eofp;
-     register struct vcache *avc;
-     struct uio *auio;
-     struct AFS_UCRED *acred;
+int
+gafs_readdir(register struct vcache *avc, struct uio *auio,
+	     struct AFS_UCRED *acred, int *eofp)
 {
     register int code;
 
@@ -1831,12 +1713,9 @@ gafs_readdir(avc, auio, acred, eofp)
     return (code);
 }
 
-gafs_symlink(adp, aname, attrs, atargetName, acred)
-     register struct vcache *adp;
-     register char *atargetName;
-     char *aname;
-     struct vattr *attrs;
-     struct AFS_UCRED *acred;
+int
+gafs_symlink(register struct vcache *adp, char *aname, struct vattr *attrs,
+	     register char *atargetName, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1847,10 +1726,8 @@ gafs_symlink(adp, aname, attrs, atargetName, acred)
 }
 
 
-gafs_readlink(avc, auio, acred)
-     register struct vcache *avc;
-     struct uio *auio;
-     struct AFS_UCRED *acred;
+int
+gafs_readlink(register struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred)
 {
     register int code;
 
@@ -1860,14 +1737,12 @@ gafs_readlink(avc, auio, acred)
     return (code);
 }
 
+int
 #ifdef	AFS_SUN53_ENV
-gafs_fsync(avc, flag, acred)
-     int flag;
+gafs_fsync(register struct vcache *avc, int flag, struct AFS_UCRED *acred)
 #else
-gafs_fsync(avc, acred)
+gafs_fsync(register struct vcache *avc, struct AFS_UCRED *acred)
 #endif
-     register struct vcache *avc;
-     struct AFS_UCRED *acred;
 {
     register int code;
 
@@ -1881,12 +1756,12 @@ gafs_fsync(avc, acred)
     return (code);
 }
 
-void
+int
 afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
 {
     struct vnode *vp = AFSTOV(avc);
     if (afs_shuttingdown)
-	return;
+	return 0;
 
     /*
      * In Solaris and HPUX s800 and HP-UX10.0 they actually call us with
@@ -1902,7 +1777,7 @@ afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
     vp->v_count--;
     if (vp->v_count > 0) {
 	mutex_exit(&vp->v_lock);
-	return;
+	return 0;
     }
     mutex_exit(&vp->v_lock);
 
@@ -1914,26 +1789,24 @@ afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
      * lose the open count for volume roots (mvstat 2), even though they
      * will get VOP_INACTIVE'd when released by afs_PutFakeStat().
      */
-    if (avc->opens > 0 && avc->mvstat == 0 && !(avc->states & CCore))
+    if (avc->opens > 0 && avc->mvstat == 0 && !(avc->f.states & CCore))
 	avc->opens = avc->execsOrWriters = 0;
 
     afs_InactiveVCache(avc, acred);
+    return 0;
 }
 
 void
-gafs_inactive(avc, acred)
-     register struct vcache *avc;
-     struct AFS_UCRED *acred;
+gafs_inactive(register struct vcache *avc, struct AFS_UCRED *acred)
 {
     AFS_GLOCK();
-    afs_inactive(avc, acred);
+    (void)afs_inactive(avc, acred);
     AFS_GUNLOCK();
 }
 
 
-gafs_fid(avc, fidpp)
-     struct vcache *avc;
-     struct fid **fidpp;
+int
+gafs_fid(struct vcache *avc, struct fid **fidpp)
 {
     register int code;
 

@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/bulk.example/bulk_client.c,v 1.7 2003/07/15 23:16:29 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>

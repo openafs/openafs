@@ -32,8 +32,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.43.4.7 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -275,7 +273,7 @@ afs_HaveCallBacksFrom(struct server *aserver)
 	     * from the required host
 	     */
 	    if (aserver == tvc->callback && tvc->cbExpires >= now
-		&& ((tvc->states & CRO) == 0))
+		&& ((tvc->f.states & CRO) == 0))
 		return 1;
 	}
     }
@@ -288,7 +286,7 @@ static void
 CheckVLServer(register struct srvAddr *sa, struct vrequest *areq)
 {
     register struct server *aserver = sa->server;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     register afs_int32 code;
 
     AFS_STATCNT(CheckVLServer);
@@ -489,7 +487,7 @@ afs_CountServers(void)
 
 
 void
-ForceAllNewConnections()
+ForceAllNewConnections(void)
 {
     int srvAddrCount;
     struct srvAddr **addrs;
@@ -531,7 +529,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     struct vrequest treq;
     struct server *ts;
     struct srvAddr *sa;
-    struct conn *tc;
+    struct afs_conn *tc;
     afs_int32 i, j;
     afs_int32 code;
     afs_int32 start, end = 0, delta;
@@ -540,7 +538,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     char tbuffer[CVBS];
     int srvAddrCount;
     struct srvAddr **addrs;
-    struct conn **conns;
+    struct afs_conn **conns;
     int nconns;
     struct rx_connection **rxconns;      
     afs_int32 *conntimer, *deltas, *results;
@@ -554,7 +552,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     if (AFS_IS_DISCONNECTED)
         return;
 
-    conns = (struct conn **)0;
+    conns = (struct afs_conn **)0;
     rxconns = (struct rx_connection **) 0;
     conntimer = 0;
     nconns = 0;
@@ -584,7 +582,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     ReleaseReadLock(&afs_xsrvAddr);
     ReleaseReadLock(&afs_xserver);
 
-    conns = (struct conn **)afs_osi_Alloc(j * sizeof(struct conn *));
+    conns = (struct afs_conn **)afs_osi_Alloc(j * sizeof(struct afs_conn *));
     rxconns = (struct rx_connection **)afs_osi_Alloc(j * sizeof(struct rx_connection *));
     conntimer = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
     deltas = (afs_int32 *)afs_osi_Alloc(j * sizeof (afs_int32));
@@ -643,7 +641,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     multi_Rx(rxconns,nconns)
       {
 	tv.tv_sec = tv.tv_usec = 0;
-	multi_RXAFS_GetTime(&tv.tv_sec, &tv.tv_usec);
+	multi_RXAFS_GetTime((afs_uint32 *)&tv.tv_sec, (afs_uint32 *)&tv.tv_usec);
 	tc = conns[multi_i];
 	sa = tc->srvr;
 	if (conntimer[multi_i] == 1)
@@ -752,7 +750,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     }
     
     afs_osi_Free(addrs, srvAddrCount * sizeof(*addrs));
-    afs_osi_Free(conns, j * sizeof(struct conn *));
+    afs_osi_Free(conns, j * sizeof(struct afs_conn *));
     afs_osi_Free(rxconns, j * sizeof(struct rx_connection *));
     afs_osi_Free(conntimer, j * sizeof(afs_int32));
     afs_osi_Free(deltas, j * sizeof(afs_int32));
@@ -1525,8 +1523,10 @@ static int afs_SetServerPrefs(struct srvAddr *sa) {
 	    afsi_SetServerIPRank(sa, ifa);
     }}
 #endif
-    end:
 #endif				/* USEIFADDR */
+#ifndef USEIFADDR
+    end:
+#endif
 #endif				/* AFS_SUN5_ENV */
 #endif				/* else AFS_USERSPACE_IP_ADDR */
     if (sa)
@@ -1852,14 +1852,12 @@ void afs_ActivateServer(struct srvAddr *sap) {
     }
 }
 
-#ifdef AFS_DISCON_ENV
-
-void afs_RemoveAllConns()
+void afs_RemoveAllConns(void)
 {
     int i;
     struct server *ts, *nts;
     struct srvAddr *sa;
-    struct conn *tc, *ntc;
+    struct afs_conn *tc, *ntc;
 
     ObtainReadLock(&afs_xserver);
     ObtainWriteLock(&afs_xconn, 1001);
@@ -1876,7 +1874,7 @@ void afs_RemoveAllConns()
                         AFS_GUNLOCK();
                         rx_DestroyConnection(tc->id);
                         AFS_GLOCK();
-                        afs_osi_Free(tc, sizeof(struct conn));
+                        afs_osi_Free(tc, sizeof(struct afs_conn));
                         tc = ntc;
                     }
                     sa->conns = NULL;
@@ -1891,9 +1889,26 @@ void afs_RemoveAllConns()
     
 }
 
-#endif /* AFS_DISCON_ENV */
+void afs_MarkAllServersUp(void)
+{
+    int i;
+    struct server *ts;
+    struct srvAddr *sa;
 
-void shutdown_server()
+    ObtainWriteLock(&afs_xserver, 721);
+    ObtainWriteLock(&afs_xsrvAddr, 722);
+    for (i = 0; i< NSERVERS; i++) {
+	for (ts = afs_servers[i]; ts; ts = ts->next) {
+	    for (sa = ts->addr; sa; sa = sa->next_sa) {
+		afs_MarkServerUpOrDown(sa, 0);
+	    }
+	}
+    }
+    ReleaseWriteLock(&afs_xsrvAddr);
+    ReleaseWriteLock(&afs_xserver);
+}
+
+void shutdown_server(void)
 {
     int i;
 

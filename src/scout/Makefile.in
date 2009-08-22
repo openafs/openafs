@@ -7,6 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 	${TOP_INCDIR}/afs/gtxwindows.h \
@@ -49,15 +53,18 @@ all: scout
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${TOP_LIBDIR}/libtermlib.a ${XLIBS}
+	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${XLIBS}
 
 #
 # Installation targets
 #
-install: ${DESTDIR}${bindir}/scout
+install: scout
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL_PROGRAM} scout ${DESTDIR}${bindir}/scout
 
-${DEST}/bin/scout: scout
-	${INSTALL} $? $@
+dest: scout
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL_PROGRAM} scout ${DEST}/bin/scout
 
 #
 # Misc targets
@@ -66,9 +73,3 @@ clean:
 	$(RM) -f *.o scout core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${bindir}/scout: scout
-	${INSTALL} $? $@
-
-dest: ${DEST}/bin/scout
-

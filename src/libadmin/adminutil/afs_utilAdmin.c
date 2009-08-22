@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.9.4.1 2007/04/10 18:39:53 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/afs_Admin.h>
@@ -19,7 +17,6 @@ RCSID
 #include <string.h>
 #include <afs/afs_Admin.h>
 #include "afs_AdminInternal.h"
-#include "afs_utilAdmin.h"
 #include <afs/pthread_glock.h>
 #include <afs/cellconfig.h>
 #include <afs/dirpath.h>
@@ -30,7 +27,7 @@ RCSID
 #include <afs/pterror.h>
 #include <afs/bnode.h>
 #include <afs/volser.h>
-#include <afs/afsint.h>
+#include <afs/afscbint.h>
 #include <rx/rx.h>
 #include <rx/rxstat.h>
 #ifdef AFS_NT40_ENV
@@ -42,6 +39,7 @@ RCSID
 #include <arpa/inet.h>
 #include <netdb.h>
 #endif
+#include "afs_utilAdmin.h"
 
 /*
  * AIX 4.2 has PTHREAD_CREATE_UNDETACHED and not PTHREAD_CREATE_JOINABLE
@@ -1321,7 +1319,11 @@ DestroyRPCStats(void *rpc_specific, afs_status_p st)
  */
 
 int ADMINAPI
-util_RPCStatsGetBegin(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsGetBegin(struct rx_connection *conn, 
+		      int (*rpc) (struct rx_connection *,
+				  afs_uint32, afs_uint32 *,
+				  afs_uint32 *, afs_uint32 *,
+				  afs_uint32 *, struct rpcStats *),
 		      void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
@@ -1515,7 +1517,9 @@ util_RPCStatsGetDone(const void *iterationId, afs_status_p st)
  */
 
 int ADMINAPI
-util_RPCStatsStateGet(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsStateGet(struct rx_connection *conn, 
+		      int (*rpc) (struct rx_connection *,
+			      	  afs_RPCStatsState_p),
 		      afs_RPCStatsState_p state, afs_status_p st)
 {
     int rc = 0;
@@ -1571,7 +1575,8 @@ util_RPCStatsStateGet(struct rx_connection *conn, int (*rpc) (),
  */
 
 int ADMINAPI
-util_RPCStatsStateEnable(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsStateEnable(struct rx_connection *conn, 
+		         int (*rpc) (struct rx_connection *),
 			 afs_status_p st)
 {
     int rc = 0;
@@ -1622,7 +1627,8 @@ util_RPCStatsStateEnable(struct rx_connection *conn, int (*rpc) (),
  */
 
 int ADMINAPI
-util_RPCStatsStateDisable(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsStateDisable(struct rx_connection *conn, 
+			  int (*rpc) (struct rx_connection *),
 			  afs_status_p st)
 {
     int rc = 0;
@@ -1676,7 +1682,9 @@ util_RPCStatsStateDisable(struct rx_connection *conn, int (*rpc) (),
  */
 
 int ADMINAPI
-util_RPCStatsClear(struct rx_connection *conn, int (*rpc) (),
+util_RPCStatsClear(struct rx_connection *conn, 
+		   int (*rpc) (struct rx_connection *,
+			       afs_RPCStatsClearFlag_t),
 		   afs_RPCStatsClearFlag_t flag, afs_status_p st)
 {
     int rc = 0;
@@ -1990,18 +1998,28 @@ ListCellsRPC(void *rpc_specific, int slot, int *last_item,
     afs_status_t tst = 0;
     cm_list_cell_get_p t = (cm_list_cell_get_p) rpc_specific;
     char *name;
+    serverList sl;
+    unsigned int n;
 
     /*
      * Get the next entry in the CellServDB.
      */
     name = t->cell[slot].cellname;
+    sl.serverList_len = 0;
+    sl.serverList_val = NULL;
+    memset(t->cell[slot].serverAddr, 0, sizeof(afs_int32)*UTIL_MAX_CELL_HOSTS);
     tst =
-	RXAFSCB_GetCellServDB(t->conn, t->index, &name,
-			      t->cell[slot].serverAddr);
+	RXAFSCB_GetCellServDB(t->conn, t->index, &name, &sl);
     if (tst) {
 	goto fail_ListCellsRPC;
     }
     strcpy(t->cell[slot].cellname, name);
+    if (sl.serverList_val) {
+        for (n=0; n<sl.serverList_len && n<UTIL_MAX_CELL_HOSTS; n++) {
+            t->cell[slot].serverAddr[n] = sl.serverList_val[n];
+        }
+        xdr_free(sl.serverList_val, sl.serverList_len);
+    }
 
     /*
      * See if we've processed all the entries
@@ -2282,7 +2300,7 @@ util_CMClientConfig(struct rx_connection *conn, afs_ClientConfig_p config,
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_int32 allocbytes;
+    afs_uint32 allocbytes;
     struct cacheConfig tconfig;
 
     if (conn == NULL) {
@@ -2508,7 +2526,7 @@ util_RXDebugBasicStats(rxdebugHandle_p handle, struct rx_debugStats *stats,
  */
 
 int ADMINAPI
-util_RXDebugRxStats(rxdebugHandle_p handle, struct rx_stats *stats,
+util_RXDebugRxStats(rxdebugHandle_p handle, struct rx_statistics *stats,
 		    afs_uint32 * supportedValues, afs_status_p st)
 {
     int rc = 0;

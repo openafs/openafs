@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ubik/utst_server.c,v 1.8.14.2 2008/04/02 19:51:57 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -29,16 +27,18 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <lock.h>
+#include <afs/afsutil.h>
 #include "ubik.h"
 #include "utst_int.h"
 
 
-/* useful globals */
+/*! \name useful globals */
 struct ubik_dbase *dbase;
 afs_int32 sleepTime;
+/*\}*/
 
-SAMPLE_Inc(rxconn)
-     struct rx_connection *rxconn;
+int
+SAMPLE_Inc(struct rx_connection *rxconn)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -62,7 +62,7 @@ SAMPLE_Inc(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -96,10 +96,8 @@ SAMPLE_Inc(rxconn)
     return code;
 }
 
-
-SAMPLE_Get(rxconn, gnumber)
-     struct rx_connection *rxconn;
-     afs_int32 *gnumber;
+int
+SAMPLE_Get(struct rx_connection *rxconn, afs_int32 *gnumber)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -122,7 +120,7 @@ SAMPLE_Get(rxconn, gnumber)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -143,10 +141,8 @@ SAMPLE_Get(rxconn, gnumber)
     return code;
 }
 
-
-SAMPLE_QGet(rxconn, gnumber)
-     struct rx_connection *rxconn;
-     afs_int32 *gnumber;
+int
+SAMPLE_QGet(struct rx_connection *rxconn, afs_int32 *gnumber)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -169,7 +165,7 @@ SAMPLE_QGet(rxconn, gnumber)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -190,9 +186,8 @@ SAMPLE_QGet(rxconn, gnumber)
     return code;
 }
 
-
-SAMPLE_Trun(rxconn)
-     struct rx_connection *rxconn;
+int
+SAMPLE_Trun(struct rx_connection *rxconn)
 {
     afs_int32 code;
     struct ubik_trans *tt;
@@ -213,7 +208,7 @@ SAMPLE_Trun(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -230,9 +225,8 @@ SAMPLE_Trun(rxconn)
     return code;
 }
 
-
-SAMPLE_Test(rxconn)
-     struct rx_connection *rxconn;
+int
+SAMPLE_Test(struct rx_connection *rxconn)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -258,7 +252,7 @@ SAMPLE_Test(rxconn)
     if (sleepTime) {
 	tv.tv_sec = sleepTime;
 	tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 	select(0, 0, 0, 0, &tv);
 #else
 	IOMGR_Select(0, 0, 0, 0, &tv);
@@ -280,16 +274,14 @@ SAMPLE_Test(rxconn)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code, i;
     afs_int32 serverList[MAXSERVERS];
     afs_int32 myHost;
     struct rx_service *tservice;
     struct rx_securityClass *sc[2];
-    extern int SAMPLE_ExecuteRequest();
     char dbfileName[128];
 
     if (argc == 1) {
@@ -332,7 +324,7 @@ main(argc, argv)
 
     if (code) {
 	printf("ubik init failed with code %d\n", code);
-	return;
+	exit(1);
     }
 
     sc[0] = rxnull_NewServerSecurityObject();
@@ -349,4 +341,6 @@ main(argc, argv)
     rx_SetMaxProcs(tservice, 3);
 
     rx_StartServer(1);		/* Why waste this idle process?? */
+    
+    return 0;
 }

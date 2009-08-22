@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: rm-rf.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
-#endif
-
 static void
   kill_one(const char *filename);
 

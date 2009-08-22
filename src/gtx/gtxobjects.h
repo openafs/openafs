@@ -50,9 +50,9 @@ struct onode {
  * slots.
  */
 struct onodeops {
-    int (*on_destroy) ();	/*Destroy an onode */
-    int (*on_display) ();	/*Display an onode */
-    int (*on_release) ();	/*Decrement an onode ref count */
+    int (*on_destroy) (struct onode *);	/*Destroy an onode */
+    int (*on_display) (struct onode *);	/*Display an onode */
+    int (*on_release) (struct onode *);	/*Decrement an onode ref count */
 };
 
 /*
@@ -90,7 +90,7 @@ struct onode_createparams {
   */
 extern int objects_debug;
 
-extern int gator_objects_init();
+extern int gator_objects_init(struct onode_initparams *);
     /*
      * Summary:
      *    Initialize the gator object package.
@@ -103,7 +103,7 @@ extern int gator_objects_init();
      *    Error value otherwise.
      */
 
-extern struct onode *gator_objects_create();
+extern struct onode *gator_objects_create(struct onode_createparams *params);
     /*
      * Summary:
      *    Create an onode of the given type.
@@ -116,7 +116,7 @@ extern struct onode *gator_objects_create();
      *    Null pointer otherwise.
      */
 
-extern struct onode *gator_objects_lookup();
+extern struct onode *gator_objects_lookup(char *);
     /*
      * Summary:
      *    Look up a gator onode by name.

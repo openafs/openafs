@@ -19,8 +19,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/test/treaddir.c,v 1.5 2003/07/15 23:17:18 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>

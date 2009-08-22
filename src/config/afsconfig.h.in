@@ -10,6 +10,9 @@
 /* define if you want to want search afsdb rr */
 #undef AFS_AFSDB_ENV
 
+/* define to activate cache bypassing Unix client */
+#undef AFS_CACHE_BYPASS
+
 /* define if you want support for disconnected operation */
 #undef AFS_DISCON_ENV
 
@@ -18,6 +21,9 @@
 
 /* define if you want to want namei fileserver */
 #undef AFS_NAMEI_ENV
+
+/* define to disable the nfs translator */
+#undef AFS_NONFSTRANS
 
 /* define if your aops.writepage takes a struct writeback_control argument */
 #undef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
@@ -59,6 +65,9 @@
 /* define if d_path() takes a struct path argument */
 #undef D_PATH_TAKES_STRUCT_PATH
 
+/* define to enable syscall table probes */
+#undef ENABLE_LINUX_SYSCALL_PROBING
+
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
 
@@ -68,14 +77,29 @@
 /* define if find_task_by_pid() is usable */
 #undef EXPORTED_FIND_TASK_BY_PID
 
+/* define if your linux kernel exports ia32_sys_call_table */
+#undef EXPORTED_IA32_SYS_CALL_TABLE
+
 /* define if your kernel exports init_mm */
 #undef EXPORTED_INIT_MM
+
+/* define if your linux kernel exports kallsyms address */
+#undef EXPORTED_KALLSYMS_ADDRESS
+
+/* define if your linux kernel exports kallsyms */
+#undef EXPORTED_KALLSYMS_SYMBOL
+
+/* define if key_type_keyring is exported */
+#undef EXPORTED_KEY_TYPE_KEYRING
 
 /* define if proc_root_fs is exported */
 #undef EXPORTED_PROC_ROOT_FS
 
 /* define if rcu_read_lock() is usable */
 #undef EXPORTED_RCU_READ_LOCK
+
+/* define if your linux kernel exports sys_call_table */
+#undef EXPORTED_SYS_CALL_TABLE
 
 /* define if your linux kernel exports sys_chdir */
 #undef EXPORTED_SYS_CHDIR
@@ -119,8 +143,11 @@
 /* Define to 1 if you have the `add_to_error_table' function. */
 #undef HAVE_ADD_TO_ERROR_TABLE
 
-/* define if you have connect */
-#undef HAVE_CONNECT
+/* define if arpa/nameser_compat.h exists */
+#undef HAVE_ARPA_NAMESER_COMPAT_H
+
+/* define if your kernel has a bdi_init() */
+#undef HAVE_BDI_INIT
 
 /* define if current_kernel_time() exists */
 #undef HAVE_CURRENT_KERNEL_TIME
@@ -147,17 +174,26 @@
 /* Define to 1 if you have the `flock' function. */
 #undef HAVE_FLOCK
 
+/* Define to 1 if the system has the type `fsblkcnt_t'. */
+#undef HAVE_FSBLKCNT_T
+
 /* define if compiler has __FUNCTION__ */
 #undef HAVE_FUNCTION_MACRO
+
+/* Define to 1 if you have the `getcwd' function. */
+#undef HAVE_GETCWD
 
 /* Define to 1 if you have the `getdtablesize' function. */
 #undef HAVE_GETDTABLESIZE
 
-/* define if you have gethostbyname */
-#undef HAVE_GETHOSTBYNAME
-
 /* Define to 1 if you have the `getprogname' function. */
 #undef HAVE_GETPROGNAME
+
+/* define if your kernel has grab_cache_page_write_begin() */
+#undef HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN
+
+/* Define to 1 if you have the <grp.h> header file. */
+#undef HAVE_GRP_H
 
 /* define if your kernel has iget */
 #undef HAVE_IGET
@@ -228,8 +264,14 @@
 /* define if krb5_prompt has type */
 #undef HAVE_KRB5_PROMPT_TYPE
 
+/* define if your kernel has d_alloc_anon() */
+#undef HAVE_LINUX_D_ALLOC_ANON
+
 /* Define to 1 if you have the <linux/errqueue.h> header file. */
 #undef HAVE_LINUX_ERRQUEUE_H
+
+/* define if your kernel has i_size_read() */
+#undef HAVE_LINUX_I_SIZE_READ
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
@@ -303,11 +345,11 @@
 /* Define to 1 if you have the <signal.h> header file. */
 #undef HAVE_SIGNAL_H
 
+/* Define to 1 if the system has the type `sig_t'. */
+#undef HAVE_SIG_T
+
 /* Define to 1 if you have the `snprintf' function. */
 #undef HAVE_SNPRINTF
-
-/* define if you have socket */
-#undef HAVE_SOCKET
 
 /* Define to 1 if you have the `srandom' function. */
 #undef HAVE_SRANDOM
@@ -342,6 +384,9 @@
 /* define if svc_add_in exists */
 #undef HAVE_SVC_ADDR_IN
 
+/* Define to 1 if you have the <sys/bitypes.h> header file. */
+#undef HAVE_SYS_BITYPES_H
+
 /* Define to 1 if you have the <sys/dir.h> header file, and it defines `DIR'.
    */
 #undef HAVE_SYS_DIR_H
@@ -358,6 +403,9 @@
 /* Define to 1 if you have the <sys/fs_types.h> header file. */
 #undef HAVE_SYS_FS_TYPES_H
 
+/* Define to 1 if you have the <sys/ipc.h> header file. */
+#undef HAVE_SYS_IPC_H
+
 /* Define to 1 if you have the <sys/mntent.h> header file. */
 #undef HAVE_SYS_MNTENT_H
 
@@ -371,8 +419,17 @@
    */
 #undef HAVE_SYS_NDIR_H
 
+/* Define to 1 if you have the <sys/pag.h> header file. */
+#undef HAVE_SYS_PAG_H
+
 /* Define to 1 if you have the <sys/param.h> header file. */
 #undef HAVE_SYS_PARAM_H
+
+/* Define to 1 if you have the <sys/statfs.h> header file. */
+#undef HAVE_SYS_STATFS_H
+
+/* Define to 1 if you have the <sys/statvfs.h> header file. */
+#undef HAVE_SYS_STATVFS_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
 #undef HAVE_SYS_STAT_H
@@ -431,6 +488,9 @@
 /* Define to 1 if you have the <winsock2.h> header file. */
 #undef HAVE_WINSOCK2_H
 
+/* define if your kernel has a write_begin() address space op */
+#undef HAVE_WRITE_BEGIN
+
 /* define if INIT_WORK takes a data (3rd) argument */
 #undef INIT_WORK_HAS_DATA
 
@@ -448,6 +508,9 @@
 
 /* define if irix has memcpy and friends */
 #undef IRIX_HAS_MEM_FUNCS
+
+/* define if key_alloc takes credentials */
+#undef KEY_ALLOC_NEEDS_CRED
 
 /* define if key_alloc takes a struct task * */
 #undef KEY_ALLOC_NEEDS_STRUCT_TASK
@@ -473,8 +536,95 @@
 /* define if your refrigerator takes PF_FREEZE */
 #undef LINUX_REFRIGERATOR_TAKES_PF_FREEZE
 
+/* define if linux/semaphore.h exists */
+#undef LINUX_SEMAPHORE_H
+
+/* define to use linux file handles for cache files */
+#undef LINUX_USE_FH
+
 /* define if kernel uses new export ops */
 #undef NEW_EXPORT_OPS
+
+#undef HAVE_RES_SEARCH
+#undef STRUCT_SOCKADDR_HAS_SA_LEN
+#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
+# if ENDIANESS_IN_SYS_PARAM_H
+#  ifndef KERNEL
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   if BYTE_ORDER == BIG_ENDIAN
+#   define WORDS_BIGENDIAN 1
+#   endif
+#  else
+#   if defined(AUTOCONF_FOUND_BIGENDIAN)
+#    define WORDS_BIGENDIAN 1
+#   else
+#    undef WORDS_BIGENDIAN
+#   endif
+#  endif
+# else
+#  if defined(AUTOCONF_FOUND_BIGENDIAN)
+#   define WORDS_BIGENDIAN 1
+#  else
+#   undef WORDS_BIGENDIAN
+#  endif
+# endif
+#else
+# if defined(__BIG_ENDIAN__)
+#  define WORDS_BIGENDIAN 1
+# else
+#  undef WORDS_BIGENDIAN
+# endif
+#endif
+#ifdef UKERNEL
+/*
+ * Always use 64-bit file offsets for UKERNEL code. Needed for UKERNEL stuff to
+ * play nice with some other interfaces like FUSE. We technically only would
+ * need to define this when building for such interfaces, but set it always to
+ * try and reduce potential confusion. 
+ */
+#define _FILE_OFFSET_BITS 64
+#endif
+
+#undef AFS_AFSDB_ENV
+#undef AFS_LARGEFILE_ENV
+#undef AFS_NAMEI_ENV
+#undef BITMAP_LATER
+#undef BOS_RESTRICTED_MODE
+#undef BOS_NEW_CONFIG
+#undef FAST_RESTART
+#undef FULL_LISTVOL_SWITCH
+#undef COMPLETION_H_EXISTS
+#undef DEFINED_FOR_EACH_PROCESS
+#undef DEFINED_PREV_TASK
+#undef EXPORTED_KALLSYMS_ADDRESS
+#undef EXPORTED_KALLSYMS_SYMBOL
+#undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_IA32_SYS_CALL_TABLE
+#undef EXPORTED_TASKLIST_LOCK
+#undef INODE_SETATTR_NOT_VOID
+#undef IRIX_HAS_MEM_FUNCS
+#undef RECALC_SIGPENDING_TAKES_VOID
+#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
+#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+#undef STRUCT_FS_HAS_FS_ROLLED
+#undef STRUCT_INODE_HAS_I_DEVICES
+#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_ALLOC_SEM
+#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
+#undef STRUCT_TASK_STRUCT_HAS_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_SIG
+#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
+#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
+#undef ssize_t
+#undef HAVE_STRUCT_BUF
+#undef HAVE_ARPA_NAMESER_COMPAT_H
+/* glue for RedHat kernel bug */
+#undef ENABLE_REDHAT_BUILDSYS
+#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
+#include "redhat-fix.h"
+#endif
 
 /* Name of package */
 #undef PACKAGE
@@ -497,8 +647,11 @@
 /* define if your linux kernel uses 3 arguments for posix_lock_file */
 #undef POSIX_LOCK_FILE_WAIT_ARG
 
-/* Define to 1 if the C compiler supports function prototypes. */
-#undef PROTOTYPES
+/* define if posix_test_lock takes a conflict argument */
+#undef POSIX_TEST_LOCK_CONFLICT_ARG
+
+/* define if posix_test_lock returns the conflicting lock */
+#undef POSIX_TEST_LOCK_RETURNS_CONFLICT
 
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
@@ -509,13 +662,11 @@
 /* Define as the return type of signal handlers (`int' or `void'). */
 #undef RETSIGTYPE
 
-/* Define to 1 if the `setvbuf' function takes the buffering type as its
-   second argument and the buffer pointer as the third, as on System V before
-   release 3. */
-#undef SETVBUF_REVERSED
-
 /* The size of `long', as computed by sizeof. */
 #undef SIZEOF_LONG
+
+/* define if solookup takes a sockparams** */
+#undef SOLOOKUP_TAKES_SOCKPARAMS
 
 /* define if your statfs takes a dentry argument */
 #undef STATFS_TAKES_DENTRY
@@ -577,11 +728,17 @@
 /* define if your struct nameidata has path */
 #undef STRUCT_NAMEIDATA_HAS_PATH
 
+/* define if struct proc_dir_entry has an owner member */
+#undef STRUCT_PROC_DIR_ENTRY_HAS_OWNER
+
 /* define if you struct sockaddr sa_len */
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
 
 /* define if your struct super_operations has alloc_inode */
 #undef STRUCT_SUPER_HAS_ALLOC_INODE
+
+/* define if struct task has a cred pointer */
+#undef STRUCT_TASK_HAS_CRED
 
 /* define if your struct task_struct has exit_state */
 #undef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
@@ -638,110 +795,24 @@
    `char[]'. */
 #undef YYTEXT_POINTER
 
-/* Define to 1 if on AIX 3.
-   System headers sometimes define this.
-   We just want to avoid a redefinition error message.  */
-#ifndef _ALL_SOURCE
-# undef _ALL_SOURCE
-#endif
-
-/* Define to 1 if on MINIX. */
-#undef _MINIX
-
-/* Define to 2 if the system does not provide POSIX.1 features except with
-   this defined. */
-#undef _POSIX_1_SOURCE
-
-/* Define to 1 if you need to in order for `stat' and other things to work. */
-#undef _POSIX_SOURCE
-
-/* Define like PROTOTYPES; this can be used by system headers. */
-#undef __PROTOTYPES
-
 /* Define to `int' if <sys/types.h> does not define. */
 #undef pid_t
+
+/* Define to int if <signal.h> does not define. */
+#undef sig_atomic_t
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
 
+/* the type of the last argument to getsockopt etc */
+#undef socklen_t
+
 /* Define to `int' if <sys/types.h> does not define. */
 #undef ssize_t
-#undef PACKAGE
-#undef VERSION
-#define RCSID(msg) \
-static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
-#undef HAVE_CONNECT
-#undef HAVE_GETHOSTBYNAME
-#undef HAVE_RES_SEARCH
-#undef HAVE_SOCKET
-#undef STRUCT_SOCKADDR_HAS_SA_LEN
-#if !defined(__BIG_ENDIAN__) && !defined(__LITTLE_ENDIAN__)
-# if ENDIANESS_IN_SYS_PARAM_H
-#  ifndef KERNEL
-#   include <sys/types.h>
-#   include <sys/param.h>
-#   if BYTE_ORDER == BIG_ENDIAN
-#   define WORDS_BIGENDIAN 1
-#   endif
-#  else
-#   if defined(AUTOCONF_FOUND_BIGENDIAN)
-#    define WORDS_BIGENDIAN 1
-#   else
-#    undef WORDS_BIGENDIAN
-#   endif
-#  endif
-# else
-#  if defined(AUTOCONF_FOUND_BIGENDIAN)
-#   define WORDS_BIGENDIAN 1
-#  else
-#   undef WORDS_BIGENDIAN
-#  endif
-# endif
-#else
-# if defined(__BIG_ENDIAN__)
-#  define WORDS_BIGENDIAN 1
-# else
-#  undef WORDS_BIGENDIAN
-# endif
-#endif
 
-#undef AFS_AFSDB_ENV
-#undef AFS_LARGEFILE_ENV
-#undef AFS_NAMEI_ENV
-#undef BITMAP_LATER
-#undef BOS_RESTRICTED_MODE
-#undef BOS_NEW_CONFIG
-#undef FAST_RESTART
-#undef FULL_LISTVOL_SWITCH
-#undef COMPLETION_H_EXISTS
-#undef DEFINED_FOR_EACH_PROCESS
-#undef DEFINED_PREV_TASK
-#undef EXPORTED_KALLSYMS_ADDRESS
-#undef EXPORTED_KALLSYMS_SYMBOL
-#undef EXPORTED_SYS_CALL_TABLE
-#undef EXPORTED_IA32_SYS_CALL_TABLE
-#undef EXPORTED_TASKLIST_LOCK
-#undef INODE_SETATTR_NOT_VOID
-#undef IRIX_HAS_MEM_FUNCS
-#undef RECALC_SIGPENDING_TAKES_VOID
-#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
-#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
-#undef STRUCT_FS_HAS_FS_ROLLED
-#undef STRUCT_INODE_HAS_I_DEVICES
-#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
-#undef STRUCT_INODE_HAS_I_ALLOC_SEM
-#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
-#undef STRUCT_TASK_STRUCT_HAS_PARENT
-#undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
-#undef STRUCT_TASK_STRUCT_HAS_SIG
-#undef STRUCT_TASK_STRUCT_HAS_SIGHAND
-#undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
-#undef ssize_t
-#undef SIZEOF_TIME_T
-#undef HAVE_STRUCT_BUF
-#undef HAVE_ARPA_NAMESER_COMPAT_H
-/* glue for RedHat kernel bug */
-#undef ENABLE_REDHAT_BUILDSYS
-#if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
-#include "redhat-fix.h"
+#ifndef HAVE_SIG_T
+#ifndef SIG_T_DEFINED
+#define SIG_T_DEFINED
+typedef RETSIGTYPE (*sig_t) ();
+#endif
 #endif

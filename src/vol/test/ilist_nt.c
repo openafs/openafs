@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/test/ilist_nt.c,v 1.5 2003/07/15 23:17:43 shadow Exp $");
 
 #include <stdio.h>
 #include <windows.h>

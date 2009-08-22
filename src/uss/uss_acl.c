@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_acl.c,v 1.6.14.2 2007/10/30 15:16:48 shadow Exp $");
 
 #include "uss_acl.h"
 #include "uss_common.h"
@@ -56,7 +54,7 @@ struct AclEntry {
     afs_int32 rights;
 };
 
-static int PruneList();
+static int PruneList(struct AclEntry **a_aclPP);
 
 
 /*------------------------------------------------------------------------
@@ -80,11 +78,8 @@ static int PruneList();
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static
-foldcmp(a_str1, a_str2)
-     register char *a_str1;
-     register char *a_str2;
-
+static int
+foldcmp(register char *a_str1, register char *a_str2)
 {				/*foldcmp */
 
     register char t, u;
@@ -126,9 +121,7 @@ foldcmp(a_str1, a_str2)
  *------------------------------------------------------------------------*/
 
 static afs_int32
-Convert(a_rights)
-     register char *a_rights;
-
+Convert(register char *a_rights)
 {				/*Convert */
 
     register int i, len;
@@ -201,10 +194,7 @@ Convert(a_rights)
  *------------------------------------------------------------------------*/
 
 static struct AclEntry *
-FindList(a_alist, a_name)
-     register struct AclEntry *a_alist;
-     char *a_name;
-
+FindList(register struct AclEntry *a_alist, char *a_name)
 {				/*FindList */
 
     while (a_alist) {
@@ -242,12 +232,8 @@ FindList(a_alist, a_name)
  *------------------------------------------------------------------------*/
 
 static void
-ChangeList(a_al, a_plus, a_name, a_rights)
-     struct Acl *a_al;
-     afs_int32 a_plus;
-     char *a_name;
-     afs_int32 a_rights;
-
+ChangeList(struct Acl *a_al, afs_int32 a_plus, char *a_name, 
+	   afs_int32 a_rights)
 {				/*ChangeList */
 
     struct AclEntry *tlist;
@@ -308,9 +294,7 @@ ChangeList(a_al, a_plus, a_name, a_rights)
  *------------------------------------------------------------------------*/
 
 static int
-PruneList(a_aclPP)
-     struct AclEntry **a_aclPP;
-
+PruneList(struct AclEntry **a_aclPP)
 {				/*PruneList */
 
     struct AclEntry **lPP;
@@ -356,9 +340,7 @@ PruneList(a_aclPP)
  *------------------------------------------------------------------------*/
 
 static char *
-SkipLine(a_str)
-     register char *a_str;
-
+SkipLine(register char *a_str)
 {				/*SkipLine */
 
     while (*a_str != '\n')
@@ -389,7 +371,7 @@ SkipLine(a_str)
  *------------------------------------------------------------------------*/
 
 static struct Acl *
-EmptyAcl()
+EmptyAcl(void)
 {				/*EmptyAcl */
 
     register struct Acl *tp;
@@ -423,9 +405,7 @@ EmptyAcl()
  *------------------------------------------------------------------------*/
 
 static struct Acl *
-ParseAcl(a_str)
-     char *a_str;
-
+ParseAcl(char *a_str)
 {				/*ParseAcl */
 
     int nplus, nminus, i, trights;
@@ -515,9 +495,7 @@ ParseAcl(a_str)
  *------------------------------------------------------------------------*/
 
 static char *
-AclToString(a_acl)
-     struct Acl *a_acl;
-
+AclToString(struct Acl *a_acl)
 {				/*AclToString */
 
     static char mydata[MAXSIZE];
@@ -562,15 +540,13 @@ AclToString(a_acl)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_acl_SetAccess(a_access, a_clear, a_negative)
-     char *a_access;
-     int a_clear;
-     int a_negative;
-
+uss_acl_SetAccess(char *a_access, int a_clear, int a_negative)
 {				/*uss_acl_SetAccess */
 
     register afs_int32 code;
+#ifdef USS_ACL_DB
     static char rn[] = "uss_acl_SetAccess";
+#endif
     struct Acl *ta;
     char *externalizedACL;
     int plusp;
@@ -587,7 +563,7 @@ uss_acl_SetAccess(a_access, a_clear, a_negative)
     tp = uss_common_FieldCp(path_field, a_access, ' ', sizeof(path_field),
 			    &overflow);
     if (overflow) {
-	fprintf(stderr, "%s: * Pathname field too long (max is %d chars)\n",
+	fprintf(stderr, "%s: * Pathname field too long (max is %lu chars)\n",
 		uss_whoami, sizeof(path_field));
 	return (-1);
     }
@@ -688,14 +664,13 @@ uss_acl_SetAccess(a_access, a_clear, a_negative)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_acl_SetDiskQuota(a_path, a_q)
-     char *a_path;
-     int a_q;
-
+uss_acl_SetDiskQuota(char *a_path, int a_q)
 {				/*uss_acl_SetDiskQuota */
 
     register afs_int32 code;
+#ifdef USS_ACL_DB
     static char rn[] = "uss_acl_SetDiskQuota";
+#endif
     uss_VolumeStatus_t *status;
     char *name, *motd, *offmsg;
     char *input;
@@ -743,10 +718,9 @@ uss_acl_SetDiskQuota(a_path, a_q)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_acl_CleanUp()
+uss_acl_CleanUp(void)
 {				/*uss_acl_CleanUp */
 
-    static char rn[] = "uss_acl_CleanUp";
     struct uss_subdir *t, *old_t = NULL;
     char tmp_str[uss_MAX_SIZE];
 

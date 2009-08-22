@@ -10,11 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/pts/afs_ptsAdmin.c,v 1.11.14.2 2007/10/30 15:16:40 shadow Exp $");
 
 #include <stdio.h>
+#include <ctype.h>
 #include <afs/stds.h>
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 #include "afs_ptsAdmin.h"
 #include "../adminutil/afs_AdminInternal.h"
 #include <afs/afs_AdminErrors.h>
@@ -542,8 +543,8 @@ pts_GroupOwnerChange(const void *cellHandle, const char *targetGroup,
  */
 
 int ADMINAPI
-pts_GroupCreate(const void *cellHandle, const char *newGroup,
-		const char *newOwner, int *newGroupId, afs_status_p st)
+pts_GroupCreate(const void *cellHandle, char *newGroup,
+		char *newOwner, int *newGroupId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1551,7 +1552,7 @@ pts_GroupMemberRemove(const void *cellHandle, const char *userName,
 
 int ADMINAPI
 pts_GroupRename(const void *cellHandle, const char *oldName,
-		const char *newName, afs_status_p st)
+		char *newName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1788,13 +1789,12 @@ pts_GroupModify(const void *cellHandle, const char *groupName,
  */
 
 int ADMINAPI
-pts_UserCreate(const void *cellHandle, const char *userName, int *newUserId,
+pts_UserCreate(const void *cellHandle, char *userName, int *newUserId,
 	       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_int32 userId = 0;
 
     /*
      * Validate arguments
@@ -2141,7 +2141,7 @@ pts_UserGet(const void *cellHandle, const char *userName,
 
 int ADMINAPI
 pts_UserRename(const void *cellHandle, const char *oldName,
-	       const char *newName, afs_status_p st)
+	       char *newName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;

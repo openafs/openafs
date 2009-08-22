@@ -1,4 +1,4 @@
-# $Id: buildpkg.sh,v 1.1 2004/03/11 22:35:45 rees Exp $
+# $Id$
 
 SRC=../../../../..
 umask 022

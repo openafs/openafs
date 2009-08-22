@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/viced/viced.c,v 1.75.2.23 2008/05/09 18:50:57 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -70,6 +68,7 @@ RCSID
 #include <afs/acl.h>
 #include <afs/prs_fs.h>
 #include <rx/rx.h>
+#include <rx/rxstat.h>
 #include <afs/keys.h>
 #include <afs/afs_args.h>
 #include <afs/vlserver.h>
@@ -78,6 +77,7 @@ RCSID
 #include <afs/ptuser.h>
 #include <afs/audit.h>
 #include <afs/partition.h>
+#include <afs/dir.h>
 #ifndef AFS_NT40_ENV
 #include <afs/netutils.h>
 #endif
@@ -105,20 +105,17 @@ RCSID
 #define afs_fopen	fopen
 #endif /* !O_LARGEFILE */
 
-extern int BreakVolumeCallBacks(), InitCallBack();
-extern int BreakVolumeCallBacks(), InitCallBack(), BreakLaterCallBacks();
-extern int BreakVolumeCallBacksLater();
-extern int LogLevel, etext;
-extern afs_int32 BlocksSpare, PctSpare;
+extern int etext;
 
 void *ShutDown(void *);
-static void ClearXStatValues(), NewParms(), PrintCounters();
-static void ResetCheckDescriptors(void), ResetCheckSignal(void);
+static void ClearXStatValues(void);
+static void NewParms(int);
+static void PrintCounters(void);
+static void ResetCheckDescriptors(void);
+static void ResetCheckSignal(void);
 static void *CheckSignal(void *);
-extern int GetKeysFromToken();
-extern int RXAFS_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
-afs_int32 Do_VLRegisterRPC();
+
+static afs_int32 Do_VLRegisterRPC(void);
 
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
@@ -162,7 +159,7 @@ int SawSpare;
 int SawPctSpare;
 int debuglevel = 0;
 int printBanner = 0;
-int rxJumbograms = 1;		/* default is to send and receive jumbograms. */
+int rxJumbograms = 0;		/* default is to not send and receive jumbograms. */
 int rxBind = 0;		/* don't bind */
 int rxkadDisableDotCheck = 0;      /* disable check for dot in principal name */ 
 int rxMaxMTU = -1;
@@ -200,6 +197,10 @@ struct timeval tp;
 pthread_key_t viced_uclient_key;
 #endif
 
+#ifdef AFS_PTHREAD_ENV
+pthread_key_t viced_uclient_key;
+#endif
+
 /*
  * FileServer's name and IP address, both network byte order and
  * host byte order.
@@ -213,7 +214,7 @@ afs_uint32 FS_HostAddrs[ADDRSPERSITE], FS_HostAddr_cnt = 0, FS_registered = 0;
 /* All addresses in FS_HostAddrs are in NBO */
 afsUUID FS_HostUUID;
 
-static void FlagMsg();
+static void FlagMsg(void);
 
 #ifdef AFS_DEMAND_ATTACH_FS
 /*
@@ -256,7 +257,8 @@ CheckDescriptors(void *unused)
     for (i = 0; i < tsize; i++) {
 	if (afs_fstat(i, &status) != -1) {
 	    printf("%d: dev %x, inode %u, length %u, type/mode %x\n", i,
-		   status.st_dev, status.st_ino, status.st_size,
+		   status.st_dev, status.st_ino, 
+		   (unsigned int) status.st_size,
 		   status.st_mode);
 	}
     }
@@ -269,37 +271,37 @@ CheckDescriptors(void *unused)
 
 #ifdef AFS_PTHREAD_ENV
 void
-CheckSignal_Signal(x)
+CheckSignal_Signal(int x)
 {
     CheckSignal(NULL);
 }
 
 void
-ShutDown_Signal(x)
+ShutDown_Signal(int x)
 {
     ShutDown(NULL);
 }
 
 void
-CheckDescriptors_Signal(x)
+CheckDescriptors_Signal(int x)
 {
     CheckDescriptors(NULL);
 }
 #else /* AFS_PTHREAD_ENV */
 void
-CheckSignal_Signal(x)
+CheckSignal_Signal(int x)
 {
     IOMGR_SoftSig(CheckSignal, 0);
 }
 
 void
-ShutDown_Signal(x)
+ShutDown_Signal(int x)
 {
     IOMGR_SoftSig(ShutDown, 0);
 }
 
 void
-CheckDescriptors_Signal(x)
+CheckDescriptors_Signal(int x)
 {
     IOMGR_SoftSig(CheckDescriptors, 0);
 }
@@ -347,16 +349,16 @@ ResetCheckDescriptors(void)
 }
 
 #if defined(AFS_PTHREAD_ENV)
-char *
+int
 threadNum(void)
 {
-    return pthread_getspecific(rx_thread_id_key);
+    return (int)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
 /* proc called by rxkad module to get a key */
 static int
-get_key(char *arock, register afs_int32 akvno, char *akey)
+get_key(void *arock, register afs_int32 akvno, struct ktc_encryptionKey *akey)
 {
     /* find the key */
     static struct afsconf_key tkey;
@@ -366,14 +368,13 @@ get_key(char *arock, register afs_int32 akvno, char *akey)
 	ViceLog(0, ("conf dir not open\n"));
 	return 1;
     }
-    code = afsconf_GetKey(confDir, akvno, tkey.key);
+    code = afsconf_GetKey(confDir, akvno, (struct ktc_encryptionKey *)tkey.key);
     if (code) {
 	ViceLog(0, ("afsconf_GetKey failure: kvno %d code %d\n", akvno, code));
 	return code;
     }
     memcpy(akey, tkey.key, sizeof(tkey.key));
     return 0;
-
 }				/*get_key */
 
 #ifndef AFS_NT40_ENV
@@ -381,10 +382,10 @@ int
 viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
-    void (*old) ();
-
 #ifndef AFS_LINUX20_ENV
-    old = (void (*)())signal(SIGSYS, SIG_IGN);
+    void (*old) (int);
+
+    old = (void (*)(int))signal(SIGSYS, SIG_IGN);
 #endif
     rcode = syscall(AFS_SYSCALL, 28 /* AFSCALL_CALL */ , a3, a4, a5);
 #ifndef AFS_LINUX20_ENV
@@ -403,7 +404,7 @@ viced_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 char adminName[MAXADMINNAME];
 
 static void
-CheckAdminName()
+CheckAdminName(void)
 {
     int fd = 0;
     struct afs_stat status;
@@ -650,7 +651,7 @@ FsyncCheckLWP(void *unused)
  *------------------------------------------------------------------------*/
 
 static void
-ClearXStatValues()
+ClearXStatValues(void)
 {				/*ClearXStatValues */
 
     struct fs_stats_opTimingData *opTimeP;	/*Ptr to timing struct */
@@ -697,9 +698,11 @@ ClearXStatValues()
 
 }				/*ClearXStatValues */
 
+int CopyOnWrite_calls = 0, CopyOnWrite_off0 = 0, CopyOnWrite_size0 = 0;
+afs_fsize_t CopyOnWrite_maxsize = 0;
 
 static void
-PrintCounters()
+PrintCounters(void)
 {
     int dirbuff, dircall, dirio;
     struct timeval tpl;
@@ -707,7 +710,7 @@ PrintCounters()
     int processSize = 0;
     char tbuffer[32];
 
-    TM_GetTimeOfDay(&tpl, 0);
+    FT_GetTimeOfDay(&tpl, 0);
     Statistics = 1;
     ViceLog(0,
 	    ("Vice was last started at %s\n",
@@ -725,6 +728,7 @@ PrintCounters()
 	    ("With %d directory buffers; %d reads resulted in %d read I/Os\n",
 	     dirbuff, dircall, dirio));
     rx_PrintStats(stderr);
+    audit_PrintStats(stderr);
     h_PrintStats();
     PrintCallBackStats();
 #ifdef AFS_NT40_ENV
@@ -740,6 +744,9 @@ PrintCounters()
     ViceLog(0,
 	    ("There are %d workstations, %d are active (req in < 15 mins), %d marked \"down\"\n",
 	     workstations, activeworkstations, delworkstations));
+    ViceLog(0, ("CopyOnWrite: calls %d off0 %d size0 %d maxsize 0x%llx\n",
+		CopyOnWrite_calls, CopyOnWrite_off0, CopyOnWrite_size0, CopyOnWrite_maxsize));
+
     Statistics = 0;
 
 }				/*PrintCounters */
@@ -863,72 +870,71 @@ ShutDown(void *unused)
 
 
 static void
-FlagMsg()
+FlagMsg(void)
 {
-    char buffer[2048];
-
     /* default supports help flag */
 
-    strcpy(buffer, "Usage: fileserver ");
-    strcpy(buffer, "[-auditlog <log path>] ");
-    strcat(buffer, "[-d <debug level>] ");
-    strcat(buffer, "[-p <number of processes>] ");
-    strcat(buffer, "[-spare <number of spare blocks>] ");
-    strcat(buffer, "[-pctspare <percentage spare>] ");
-    strcat(buffer, "[-b <buffers>] ");
-    strcat(buffer, "[-l <large vnodes>] ");
-    strcat(buffer, "[-s <small vnodes>] ");
-    strcat(buffer, "[-vc <volume cachesize>] ");
-    strcat(buffer, "[-w <call back wait interval>] ");
-    strcat(buffer, "[-cb <number of call backs>] ");
-    strcat(buffer, "[-banner (print banner every 10 minutes)] ");
-    strcat(buffer, "[-novbc (whole volume cbs disabled)] ");
-    strcat(buffer, "[-implicit <admin mode bits: rlidwka>] ");
-    strcat(buffer, "[-readonly (read-only file server)] ");
-    strcat(buffer,
-	   "[-hr <number of hours between refreshing the host cps>] ");
-    strcat(buffer, "[-busyat <redirect clients when queue > n>] ");
-    strcat(buffer, "[-nobusy <no VBUSY before a volume is attached>] ");
-    strcat(buffer, "[-rxpck <number of rx extra packets>] ");
-    strcat(buffer, "[-rxdbg (enable rx debugging)] ");
-    strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
-    strcat(buffer, "[-rxmaxmtu <bytes>] ");
-    strcat(buffer, "[-rxbind (bind the Rx socket to one address)] ");
-    strcat(buffer, "[-allow-dotted-principals (disable the rxkad principal name dot check)] ");
+    fputs("Usage: fileserver ", stdout);
+    fputs("[-auditlog <log path>] ", stdout);
+    fputs("[-audit-interface <file|sysvmq> (default is file)] ", stdout);
+    fputs("[-d <debug level>] ", stdout);
+    fputs("[-p <number of processes>] ", stdout);
+    fputs("[-spare <number of spare blocks>] ", stdout);
+    fputs("[-pctspare <percentage spare>] ", stdout);
+    fputs("[-b <buffers>] ", stdout);
+    fputs("[-l <large vnodes>] ", stdout);
+    fputs("[-s <small vnodes>] ", stdout);
+    fputs("[-vc <volume cachesize>] ", stdout);
+    fputs("[-w <call back wait interval>] ", stdout);
+    fputs("[-cb <number of call backs>] ", stdout);
+    fputs("[-banner (print banner every 10 minutes)] ", stdout);
+    fputs("[-novbc (whole volume cbs disabled)] ", stdout);
+    fputs("[-implicit <admin mode bits: rlidwka>] ", stdout);
+    fputs("[-readonly (read-only file server)] ", stdout);
+    fputs("[-hr <number of hours between refreshing the host cps>] ", stdout);
+    fputs("[-busyat <redirect clients when queue > n>] ", stdout);
+    fputs("[-nobusy <no VBUSY before a volume is attached>] ", stdout);
+    fputs("[-rxpck <number of rx extra packets>] ", stdout);
+    fputs("[-rxdbg (enable rx debugging)] ", stdout);
+    fputs("[-rxdbge (enable rxevent debugging)] ", stdout);
+    fputs("[-rxmaxmtu <bytes>] ", stdout);
+    fputs("[-rxbind (bind the Rx socket to one address)] ", stdout);
+    fputs("[-allow-dotted-principals (disable the rxkad principal name dot check)] ", stdout);
 #ifdef AFS_DEMAND_ATTACH_FS
-    strcat(buffer, "[-fs-state-dont-save (disable state save during shutdown)] ");
-    strcat(buffer, "[-fs-state-dont-restore (disable state restore during startup)] ");
-    strcat(buffer, "[-fs-state-verify <none|save|restore|both> (default is both)] ");
-    strcat(buffer, "[-vattachpar <max number of volume attach/shutdown threads> (default is 1)] ");
-    strcat(buffer, "[-vhashsize <log(2) of number of volume hash buckets> (default is 8)] ");
-    strcat(buffer, "[-vlrudisable (disable VLRU functionality)] ");
-    strcat(buffer, "[-vlruthresh <minutes before unused volumes become eligible for soft detach> (default is 2 hours)] ");
-    strcat(buffer, "[-vlruinterval <seconds between VLRU scans> (default is 2 minutes)] ");
-    strcat(buffer, "[-vlrumax <max volumes to soft detach in one VLRU scan> (default is 8)] ");
+    fputs("[-fs-state-dont-save (disable state save during shutdown)] ", stdout);
+    fputs("[-fs-state-dont-restore (disable state restore during startup)] ", stdout);
+    fputs("[-fs-state-verify <none|save|restore|both> (default is both)] ", stdout);
+    fputs("[-vattachpar <max number of volume attach/shutdown threads> (default is 1)] ", stdout);
+    fputs("[-vhashsize <log(2) of number of volume hash buckets> (default is 8)] ", stdout);
+    fputs("[-vlrudisable (disable VLRU functionality)] ", stdout);
+    fputs("[-vlruthresh <minutes before unused volumes become eligible for soft detach> (default is 2 hours)] ", stdout);
+    fputs("[-vlruinterval <seconds between VLRU scans> (default is 2 minutes)] ", stdout);
+    fputs("[-vlrumax <max volumes to soft detach in one VLRU scan> (default is 8)] ", stdout);
 #elif AFS_PTHREAD_ENV
-    strcat(buffer, "[-vattachpar <number of volume attach threads> (default is 1)] ");
+    fputs("[-vattachpar <number of volume attach threads> (default is 1)] ", stdout);
 #endif
 #ifdef	AFS_AIX32_ENV
-    strcat(buffer, "[-m <min percentage spare in partition>] ");
+    fputs("[-m <min percentage spare in partition>] ", stdout);
 #endif
 #if defined(AFS_SGI_ENV)
-    strcat(buffer, "[-lock (keep fileserver from swapping)] ");
+    fputs("[-lock (keep fileserver from swapping)] ", stdout);
 #endif
-    strcat(buffer, "[-L (large server conf)] ");
-    strcat(buffer, "[-S (small server conf)] ");
-    strcat(buffer, "[-k <stack size>] ");
-    strcat(buffer, "[-realm <Kerberos realm name>] ");
-    strcat(buffer, "[-udpsize <size of socket buffer in bytes>] ");
-    strcat(buffer, "[-sendsize <size of send buffer in bytes>] ");
-    strcat(buffer, "[-abortthreshold <abort threshold>] ");
-/*   strcat(buffer, "[-enable_peer_stats] "); */
-/*   strcat(buffer, "[-enable_process_stats] "); */
-    strcat(buffer, "[-help]\n");
+    fputs("[-L (large server conf)] ", stdout);
+    fputs("[-S (small server conf)] ", stdout);
+    fputs("[-k <stack size>] ", stdout);
+    fputs("[-realm <Kerberos realm name>] ", stdout);
+    fputs("[-udpsize <size of socket buffer in bytes>] ", stdout);
+    fputs("[-sendsize <size of send buffer in bytes>] ", stdout);
+    fputs("[-abortthreshold <abort threshold>] ", stdout);
+    fputs("[-nojumbo (disable jumbogram network packets - deprecated)] ", stdout);
+    fputs("[-jumbo (enable jumbogram network packets)] ", stdout);
+/*   fputs("[-enable_peer_stats] ", stdout); */
+/*   fputs("[-enable_process_stats] ", stdout); */
+    fputs("[-help]\n", stdout);
 /*
     ViceLog(0, ("%s", buffer));
 */
 
-    printf("%s", buffer);
     fflush(stdout);
 
 }				/*FlagMsg */
@@ -1036,6 +1042,7 @@ ParseArgs(int argc, char *argv[])
     int Sawbusy = 0;
     int i;
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
+    char *auditFileName = NULL;
 
     for (i = 1; i < argc; i++) {
 	if (!strcmp(argv[i], "-d")) {
@@ -1272,6 +1279,8 @@ ParseArgs(int argc, char *argv[])
 #endif
 	else if (!strcmp(argv[i], "-nojumbo")) {
 	    rxJumbograms = 0;
+	} else if (!strcmp(argv[i], "-jumbo")) {
+	    rxJumbograms = 1;
 	} else if (!strcmp(argv[i], "-rxbind")) {
 	    rxBind = 1;
 	} else if (!strcmp(argv[i], "-allow-dotted-principals")) {
@@ -1284,11 +1293,11 @@ ParseArgs(int argc, char *argv[])
 	    rxMaxMTU = atoi(argv[++i]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d%% invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d%% invalid; must be between %d-%lu\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
-	    }
+		}
 	} else if (!strcmp(argv[i], "-realm")) {
 	    extern char local_realms[AFS_NUM_LREALMS][AFS_REALM_SZ];
 	    extern int  num_lrealms;
@@ -1341,34 +1350,15 @@ ParseArgs(int argc, char *argv[])
 	    rx_enableProcessRPCStats();
 	}
 	else if (strcmp(argv[i], "-auditlog") == 0) {
-	    int tempfd, flags;
-	    FILE *auditout;
-	    char oldName[MAXPATHLEN];
-	    char *fileName = argv[++i];
-	    
-#ifndef AFS_NT40_ENV
-	    struct stat statbuf;
-	    
-	    if ((lstat(fileName, &statbuf) == 0) 
-		&& (S_ISFIFO(statbuf.st_mode))) {
-		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
-#endif
-	    {
-		strcpy(oldName, fileName);
-		strcat(oldName, ".old");
-		renamefile(fileName, oldName);
-		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	    auditFileName = argv[++i];
+	}
+	else if (strcmp(argv[i], "-audit-interface") == 0) {
+	    char *interface = argv[++i];
+
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		return -1;
 	    }
-	    tempfd = open(fileName, flags, 0666);
-	    if (tempfd > -1) {
-		auditout = fdopen(tempfd, "a");
-		if (auditout) {
-		    osi_audit_file(auditout);
-		} else
-		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	}
 #ifndef AFS_NT40_ENV
 	else if (strcmp(argv[i], "-syslog") == 0) {
@@ -1428,6 +1418,8 @@ ParseArgs(int argc, char *argv[])
     }
     if (!Sawbusy)
 	busy_threshold = 3 * rxpackets / 2;
+    if (auditFileName)
+	osi_audit_file(auditFileName);
 
     return (0);
 
@@ -1514,7 +1506,7 @@ Die(char *msg)
 
 
 afs_int32
-InitPR()
+InitPR(void)
 {
     int code;
 
@@ -1612,7 +1604,7 @@ vl_Initialize(const char *confDir)
 #define SYSIDVERSION	1
 
 afs_int32
-ReadSysIdFile()
+ReadSysIdFile(void)
 {
     afs_int32 fd, nentries, i;
     struct versionStamp vsn;
@@ -1694,7 +1686,7 @@ ReadSysIdFile()
 }
 
 afs_int32
-WriteSysIdFile()
+WriteSysIdFile(void)
 {
     afs_int32 fd, i;
     struct versionStamp vsn;
@@ -1762,12 +1754,11 @@ WriteSysIdFile()
  * and so we need to convert each of them into HBO which is what the extra 
  * array called FS_HostAddrs_HBO is used here.
  */
-afs_int32
-Do_VLRegisterRPC()
+static afs_int32
+Do_VLRegisterRPC(void)
 {
     register int code;
     bulkaddrs addrs;
-    extern int VL_RegisterAddrs();
     afs_uint32 FS_HostAddrs_HBO[ADDRSPERSITE];
     int i = 0;
 
@@ -1801,13 +1792,10 @@ Do_VLRegisterRPC()
 }
 
 afs_int32
-SetupVL()
+SetupVL(void)
 {
     afs_int32 code;
-    extern int rxi_numNetAddrs;
-    extern afs_uint32 rxi_NetAddrs[];
 
-#ifndef AFS_NT40_ENV
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
 	 * Find addresses we are supposed to register as per the netrestrict 
@@ -1825,7 +1813,6 @@ SetupVL()
 	}
 	FS_HostAddr_cnt = (afs_uint32) code;
     } else
-#endif
     {
 	FS_HostAddr_cnt = rx_getAllAddr(FS_HostAddrs, ADDRSPERSITE);
     }
@@ -1838,7 +1825,7 @@ SetupVL()
 }
 
 afs_int32
-InitVL()
+InitVL(void)
 {
     afs_int32 code;
 
@@ -2049,12 +2036,16 @@ main(int argc, char *argv[])
     rx_SetBusyThreshold(busy_threshold, VBUSY);
     rx_SetCallAbortThreshold(abort_threshold);
     rx_SetConnAbortThreshold(abort_threshold);
+#ifdef AFS_XBSD_ENV
+    stackSize = 128 * 1024;
+#else
     stackSize = lwps * 4000;
     if (stackSize < 32000)
 	stackSize = 32000;
     else if (stackSize > 44000)
 	stackSize = 44000;
-#if    defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI51_ENV)
+#endif
+#if defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV) || defined(AFS_SGI51_ENV) || defined(AFS_XBSD_ENV)
     rx_SetStackSize(1, stackSize);
 #endif
     if (udpBufSize)
@@ -2091,8 +2082,7 @@ main(int argc, char *argv[])
     }
     if (rxkadDisableDotCheck) {
         rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
-                                    NULL);
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
     }
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
@@ -2240,7 +2230,7 @@ main(int argc, char *argv[])
 	    (void *)&fiveminutes, "FsyncCheck", &serverPid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
 
-    TM_GetTimeOfDay(&tp, 0);
+    FT_GetTimeOfDay(&tp, 0);
 
 #ifndef AFS_QUIETFS_ENV
     if (console != NULL) { 

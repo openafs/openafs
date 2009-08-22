@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_groups.c,v 1.7 2005/11/29 04:58:49 shadow Exp $");
 
 /* We should be doing something better anyway */
 #ifdef AFS_DARWIN80_ENV

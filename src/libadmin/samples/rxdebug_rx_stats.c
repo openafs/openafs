@@ -16,14 +16,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/samples/rxdebug_rx_stats.c,v 1.7.14.1 2007/10/30 15:16:41 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <pthread.h>
 #endif
 #include <string.h>
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
+
 #include <afs/afs_Admin.h>
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
@@ -35,7 +37,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxdebug_rx_stats <host> <port>\n");
     exit(1);
@@ -68,7 +70,7 @@ main(int argc, char *argv[])
     rxdebugHandle_p handle;
     char *srvrName;
     long srvrPort;
-    struct rx_stats stats;
+    struct rx_statistics stats;
     afs_uint32 supportedStats;
     char tstr[32];
     int i;
@@ -100,7 +102,7 @@ main(int argc, char *argv[])
     }
 
     printf("\n");
-    printf("RX stats: host %s (port %d)\n", srvrName, srvrPort);
+    printf("RX stats: host %s (port %ld)\n", srvrName, srvrPort);
     printf("\n");
     printf("    packetRequests:              %d\n", stats.packetRequests);
     printf("    receivePktAllocFailures:     %d\n",

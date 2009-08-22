@@ -122,7 +122,7 @@ vnode_stop(afs_vnode * v, XFILE * X, void *refcon)
     int r;
 
     /* If the file is seekable, try to position so we can pick up later... */
-    if (phi->p->flags && DSFLAG_SEEK)
+    if (phi->p->flags & DSFLAG_SEEK)
 	if (r = xfseek(X, &v->offset))
 	    return r;
     return DSERR_DONE;

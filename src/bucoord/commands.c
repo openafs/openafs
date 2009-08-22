@@ -10,17 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.18.2.6 2007/11/26 21:08:41 shadow Exp $");
 
 #include <afs/stds.h>
 #if defined(AFS_LINUX24_ENV)
 #define _REGEX_RE_COMP
 #endif
 #include <sys/types.h>
-#if defined(AFS_LINUX24_ENV)
-#include <regex.h>
-#endif
 #include <afs/cmd.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -31,49 +26,57 @@ RCSID
 #endif
 #include <errno.h>
 #include <afs/com_err.h>
+#include <afs/afsutil.h>
 #include <afs/budb.h>
+#include <afs/budb_prototypes.h>
 #include <afs/butc.h>
 #include <afs/bubasics.h>	/* PA */
 #include <afs/volser.h>
 #include <afs/voldefs.h>	/* PA */
 #include <afs/vldbint.h>	/* PA */
 #include <afs/ktime.h>		/* PA */
+#include <ubik.h>
 #include <time.h>
-
 #include <lock.h>
 #include <afs/butc.h>
 #include <afs/tcdata.h>
 #include <afs/butx.h>
+#include <afs/vsutils_prototypes.h>
+#ifdef HAVE_POSIX_REGEX		/* use POSIX regexp library */
+#include <regex.h>
+#endif
 #include "bc.h"
 #include "error_macros.h"
-
+#include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
 
 extern struct bc_config *bc_globalConfig;
-extern struct bc_dumpSchedule *bc_FindDumpSchedule();
-extern struct bc_volumeSet *bc_FindVolumeSet(struct bc_config *cfg,
-					     char *name);
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 extern struct ubik_client *cstruct;
-extern int bc_Dumper();		/* function to do dumps */
-extern int bc_Restorer();	/* function to do restores */
 extern char *whoami;
 extern struct ktc_token ttoken;
-extern char *tailCompPtr();
-extern statusP createStatusNode();
 
 char *loadFile;
 extern afs_int32 lastTaskCode;
 
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
 
+static int EvalVolumeSet1(struct bc_config *aconfig, struct bc_volumeSet *avs,
+			  struct bc_volumeDump **avols,
+			  struct ubik_client *uclient);
+
+static int EvalVolumeSet2(struct bc_config *aconfig, struct bc_volumeSet *avs,
+			  struct bc_volumeDump **avols,
+			  struct ubik_client *uclient);
+static int DBLookupByVolume(char *volumeName);
+
 int
-bc_EvalVolumeSet(aconfig, avs, avols, uclient)
-     struct bc_config *aconfig;
-     register struct bc_volumeSet *avs;
-     struct bc_volumeDump **avols;
-     struct ubik_client *uclient;
+bc_EvalVolumeSet(struct bc_config *aconfig, 
+		 struct bc_volumeSet *avs, 
+		 struct bc_volumeDump **avols, 
+		 struct ubik_client *uclient)
 {				/*bc_EvalVolumeSet */
-    int code;
+    int code = -1;
     static afs_int32 use = 2;
 
     if (use == 2) {		/* Use EvalVolumeSet2() */
@@ -102,11 +105,10 @@ struct serversort {
 };
 
 afs_int32
-getSPEntries(server, partition, serverlist, ss, ps)
-     afs_uint32 server;
-     afs_int32 partition;
-     struct serversort **serverlist, **ss;
-     struct partitionsort **ps;
+getSPEntries(afs_uint32 server, afs_int32 partition, 
+	     struct serversort **serverlist, 
+	     struct serversort **ss, 
+	     struct partitionsort **ps)
 {
     if (!(*ss) || ((*ss)->ipaddr != server)) {
 	*ps = 0;
@@ -155,9 +157,8 @@ getSPEntries(server, partition, serverlist, ss, ps)
 }
 
 afs_int32
-randSPEntries(serverlist, avols)
-     struct serversort *serverlist;
-     struct bc_volumeDump **avols;
+randSPEntries(struct serversort *serverlist, 
+	      struct bc_volumeDump **avols)
 {
     struct serversort *ss, **pss;
     struct partitionsort *ps, **pps;
@@ -197,12 +198,11 @@ randSPEntries(serverlist, avols)
     return 0;
 }
 
-int
-EvalVolumeSet2(aconfig, avs, avols, uclient)
-     struct bc_config *aconfig;
-     struct bc_volumeSet *avs;
-     struct bc_volumeDump **avols;
-     struct ubik_client *uclient;
+static int
+EvalVolumeSet2(struct bc_config *aconfig, 
+	       struct bc_volumeSet *avs, 
+	       struct bc_volumeDump **avols, 
+	       struct ubik_client *uclient)
 {				/*EvalVolumeSet2 */
     struct bc_volumeEntry *tve;
     struct bc_volumeDump *tavols;
@@ -214,7 +214,7 @@ EvalVolumeSet2(aconfig, avs, avols, uclient)
     struct bc_volumeDump *tvd;
     afs_int32 code = 0, tcode;
     afs_int32 count = 0;
-    struct serversort *servers = 0, *lastserver = 0, *ss = 0;
+    struct serversort *servers = 0, *ss = 0;
     struct partitionsort *ps = 0;
 
     *avols = (struct bc_volumeDump *)0;
@@ -419,28 +419,33 @@ EvalVolumeSet2(aconfig, avs, avols, uclient)
  *	None.
  *-----------------------------------------------------------------------------
  */
-int
-EvalVolumeSet1(aconfig, avs, avols, uclient)
-     struct bc_config *aconfig;
-     struct bc_volumeSet *avs;
-     struct bc_volumeDump **avols;
-     struct ubik_client *uclient;
+static int
+EvalVolumeSet1(struct bc_config *aconfig, 
+	       struct bc_volumeSet *avs,
+	       struct bc_volumeDump **avols, 
+	       struct ubik_client *uclient)
 {				/*EvalVolumeSet1 */
     afs_int32 code;		/*Result of various calls */
-    char *errm;
     struct bc_volumeDump *tvd;	/*Ptr to new dump instance */
     struct bc_volumeEntry *tve, *ctve;	/*Ptr to new volume entry instance */
     char patt[256];		/*Composite regex; also, target string */
-    int volType;		/*Type of volume that worked */
+    int volType = 0;		/*Type of volume that worked */
     afs_int32 index;		/*Current VLDB entry index */
     afs_int32 count;		/*Needed by VL_ListEntry() */
     afs_int32 next_index;	/*Next index to list */
     struct vldbentry entry;	/*VLDB entry */
     int srvpartpair;		/*Loop counter: server/partition pair */
     afs_int32 total = 0;
-    int found, foundentry;
+    int found;
+    int foundentry = 0;
     struct serversort *servers = 0, *ss = 0;
     struct partitionsort *ps = 0;
+#ifdef HAVE_POSIX_REGEX
+    regex_t re;
+    int need_regfree = 0;
+#else
+    char *errm;
+#endif
 
     *avols = (struct bc_volumeDump *)0;
     ctve = (struct bc_volumeEntry *)0;	/* no compiled entry */
@@ -487,6 +492,13 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 		/* If the volume entry is not compiled, then compile it */
 		if (ctve != tve) {
 		    sprintf(patt, "^%s$", tve->name);
+#ifdef HAVE_POSIX_REGEX
+		    if (regcomp(&re, patt, REG_NOSUB) != 0) {
+		      afs_com_err(whoami, 0, "Can't compile regular expression '%s'", patt);
+		      return (-1);
+		    }
+		    need_regfree = 1;
+#else
 		    errm = (char *)re_comp(patt);
 		    if (errm) {
 			afs_com_err(whoami, 0,
@@ -494,6 +506,7 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 				patt, errm);
 			return (-1);
 		    }
+#endif
 		    ctve = tve;
 		}
 
@@ -503,8 +516,13 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 		if (entry.serverFlags[srvpartpair] & ITSRWVOL) {
 		    if (entry.flags & RW_EXISTS) {
 			sprintf(patt, "%s", entry.name);
+#ifdef HAVE_POSIX_REGEX
+			code = regexec(&re, patt, 0, NULL, 0);
+			if (code == 0) {
+#else
 			code = re_exec(patt);
 			if (code == 1) {
+#endif
 			    found = 1;
 			    foundentry = srvpartpair;
 			    volType = RWVOL;
@@ -517,8 +535,13 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 		     */
 		    if (entry.flags & BACK_EXISTS) {
 			sprintf(patt, "%s.backup", entry.name);
+#ifdef HAVE_POSIX_REGEX
+			code = regexec(&re, patt, 0, NULL, 0);
+			if (code == 0) {
+#else
 			code = re_exec(patt);
 			if (code == 1) {
+#endif
 			    found = 1;
 			    foundentry = srvpartpair;
 			    volType = BACKVOL;
@@ -534,8 +557,13 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 		else if (!found && (entry.serverFlags[srvpartpair] & ITSROVOL)
 			 && (entry.flags & RO_EXISTS)) {
 		    sprintf(patt, "%s.readonly", entry.name);
+#ifdef HAVE_POSIX_REGEX
+		    code = regexec(&re, patt, 0, NULL, 0);
+		    if (code == 0) {
+#else
 		    code = re_exec(patt);
 		    if (code == 1) {
+#endif
 			found = 1;
 			foundentry = srvpartpair;
 			volType = ROVOL;
@@ -597,6 +625,10 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
 	    }			/*f */
 	}			/*ve */
     }				/*w */
+#ifdef HAVE_POSIX_REGEX
+    if (need_regfree)
+	regfree(&re);
+#endif
 
     /* Randomly link the volumedump entries together */
     randSPEntries(servers, avols);
@@ -614,9 +646,7 @@ EvalVolumeSet1(aconfig, avs, avols, uclient)
  *	ptr to a string containing a representation of the date
  */
 char *
-compactDateString(date_long, string, size)
-     afs_int32 *date_long, size;
-     char *string;
+compactDateString(afs_uint32 *date_long, char *string, afs_int32 size)
 {
     struct tm *ltime;
 
@@ -635,8 +665,7 @@ compactDateString(date_long, string, size)
 }
 
 afs_int32
-bc_SafeATOI(anum)
-     char *anum;
+bc_SafeATOI(char *anum)
 {
     afs_int32 total = 0;
 
@@ -654,8 +683,7 @@ bc_SafeATOI(anum)
  *    Return the size in KBytes.
  */
 afs_int32
-bc_FloatATOI(anum)
-     char *anum;
+bc_FloatATOI(char *anum)
 {
     float total = 0;
     afs_int32 rtotal;
@@ -701,8 +729,7 @@ bc_FloatATOI(anum)
 
 /* make a copy of a string so that it can be freed later */
 char *
-bc_CopyString(astring)
-     char *astring;
+bc_CopyString(char *astring)
 {
     afs_int32 tlen;
     char *tp;
@@ -726,8 +753,7 @@ bc_CopyString(astring)
  */
 
 char *
-concatParams(itemPtr)
-     struct cmd_item *itemPtr;
+concatParams(struct cmd_item *itemPtr)
 {
     struct cmd_item *tempPtr;
     afs_int32 length = 0;
@@ -767,12 +793,11 @@ concatParams(itemPtr)
  */
  
 void
-printIfStatus(statusPtr)
-     struct tciStatusS *statusPtr;
+printIfStatus(struct tciStatusS *statusPtr)
 {
     printf("Task %d: %s: ", statusPtr->taskId, statusPtr->taskName);
     if (statusPtr->nKBytes)
-	printf("%ld Kbytes transferred", statusPtr->nKBytes);
+	printf("%ld Kbytes transferred", (long unsigned int) statusPtr->nKBytes);
     if (strlen(statusPtr->volumeName) != 0) {
 	if (statusPtr->nKBytes)
 	    printf(", ");
@@ -802,8 +827,7 @@ printIfStatus(statusPtr)
 }
 
 afs_int32
-getPortOffset(port)
-     char *port;
+getPortOffset(char *port)
 {
     afs_int32 portOffset;
 
@@ -887,11 +911,10 @@ extern struct Lock dispatchLock;
 /* bc_WaitForNoJobs
  *	wait for all jobs to terminate
  */
-bc_WaitForNoJobs()
+int
+bc_WaitForNoJobs(void)
 {
-    afs_int32 wcode = 0;
     int i;
-    int waitmsg = 1;
     int usefulJobRunning = 1;
 
     extern dlqlinkT statusHead;
@@ -950,7 +973,7 @@ bc_JobsCmd(struct cmd_syndesc *as, void *arock)
 	    if (statusPtr->dbDumpId)
 		printf(": DumpID %u", statusPtr->dbDumpId);
 	    if (statusPtr->nKBytes)
-		printf(", %ld Kbytes", statusPtr->nKBytes);
+		printf(", %ld Kbytes", afs_printable_int32_ld(statusPtr->nKBytes));
 	    if (strlen(statusPtr->volumeName) != 0)
 		printf(", volume %s", statusPtr->volumeName);
 
@@ -1047,8 +1070,6 @@ bc_KillCmd(struct cmd_syndesc *as, void *arock)
     statusP statusPtr;
 
     extern dlqlinkT statusHead;
-    extern statusP findStatus();
-
 
     tp = as->parms[0].items->data;
     if (strchr(tp, '.') == 0) {
@@ -1428,7 +1449,6 @@ bc_VolsetRestoreCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 *ports = NULL;
     afs_int32 portCount = 0;
     afs_int32 code = 0;
-    afs_int32 portoffset = 0;
     char *volsetName;
     struct bc_volumeSet *volsetPtr;	/* Ptr to list of generated volume info */
     struct bc_volumeDump *volsToRestore = (struct bc_volumeDump *)0;
@@ -1601,10 +1621,11 @@ int dontExecute;
 int
 bc_DumpCmd(struct cmd_syndesc *as, void *arock)
 {				/*bc_DumpCmd */
-    static char rn[] = "bc_DumpCmd";	/*Routine name */
-    char *dumpPath, *vsName;	/*Ptrs to various names */
-    struct bc_volumeSet *tvs;	/*Ptr to list of generated volume info */
-    struct bc_dumpSchedule *tds, *baseds;	/*Ptr to dump schedule node */
+    char *dumpPath = NULL;
+    char *vsName = NULL;      /*Ptrs to various names */
+    struct bc_volumeSet *tvs = NULL; /*Ptr to list of generated volume info */
+    struct bc_dumpSchedule *tds;
+    struct bc_dumpSchedule *baseds = NULL; /*Ptr to dump schedule node */
     struct bc_volumeDump *tve, *volsToDump;	/*Ptr to individual vols to be dumped */
     struct budb_dumpEntry dumpEntry, de, fde;	/* dump entry */
     afs_uint32 d;
@@ -1618,15 +1639,13 @@ bc_DumpCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 doAt, atTime;	/* Time a timed-dump is to start at */
     afs_int32 length;
     char *timeString;
-    int doAppend;		/* Append the dump to dump set */
+    int doAppend = 0;		/* Append the dump to dump set */
     afs_int32 code;		/* Return code */
     int loadfile;		/* whether to load a file or not */
 
     statusP statusPtr;
 
     extern struct bc_dumpTask bc_dumpTasks[];
-    extern afs_int32 bcdb_FindLastVolClone();
-    extern afs_int32 volImageTime();
 
     code = bc_UpdateDumpSchedule();
     if (code) {
@@ -2155,10 +2174,8 @@ bc_ScanDumpsCmd(struct cmd_syndesc *as, void *arock)
  */
 
 afs_int32
-bc_ParseExpiration(paramPtr, expType, expDate)
-     struct cmd_parmdesc *paramPtr;
-     afs_int32 *expType;
-     afs_int32 *expDate;
+bc_ParseExpiration(struct cmd_parmdesc *paramPtr, afs_int32 *expType, 
+		   afs_int32 *expDate)
 {
     struct cmd_item *itemPtr;
     struct ktime_date kt;
@@ -2294,10 +2311,10 @@ bc_dbVerifyCmd(struct cmd_syndesc *as, void *arock)
 /* deleteDump:
  * Delete a dump. If port is >= 0, it means try to delete from XBSA server
  */
-deleteDump(dumpid, port, force)
-     afs_uint32 dumpid;		/* The dumpid to delete */
-     afs_int32 port;		/* port==-1 means don't go to butc */
-     afs_int32 force;
+int
+deleteDump(afs_uint32 dumpid,		/* The dumpid to delete */
+	   afs_int32 port,		/* port==-1 means don't go to butc */
+	   afs_int32 force)
 {
     afs_int32 code = 0, tcode;
     struct budb_dumpEntry dumpEntry;
@@ -2411,7 +2428,7 @@ bc_deleteDumpCmd(struct cmd_syndesc *as, void *arock)
     char *timeString;
     budb_dumpsList dumps, flags;
     int i;
-    afs_int32 port = -1, dbonly = 0, force;
+    afs_int32 port = -1, force;
 
     /* Must specify at least one of -dumpid, -from, or -to */
     if (!as->parms[0].items && !as->parms[1].items && !as->parms[2].items
@@ -2703,8 +2720,8 @@ struct dumpedVol {
  *	volumeName - volume to lookup
  */
 
-DBLookupByVolume(volumeName)
-     char *volumeName;
+static int
+DBLookupByVolume(char *volumeName)
 {
     struct budb_dumpEntry dumpEntry;
     struct budb_volumeEntry volumeEntry[DBL_MAX_VOLUMES];
@@ -2839,9 +2856,7 @@ struct tapeLink {
  */
 
 afs_int32
-dumpInfo(dumpid, detailFlag)
-     afs_int32 dumpid;
-     afs_int32 detailFlag;
+dumpInfo(afs_int32 dumpid, afs_int32 detailFlag)
 {
     struct budb_dumpEntry dumpEntry;
     struct tapeLink *head = 0;
@@ -3047,8 +3062,7 @@ dumpInfo(dumpid, detailFlag)
 }
 
 int
-compareDump(ptr1, ptr2)
-     struct budb_dumpEntry *ptr1, *ptr2;
+compareDump(struct budb_dumpEntry *ptr1, struct budb_dumpEntry *ptr2)
 {
     if (ptr1->created < ptr2->created)
 	return (-1);
@@ -3058,8 +3072,7 @@ compareDump(ptr1, ptr2)
 }
 
 afs_int32
-printRecentDumps(ndumps)
-     int ndumps;
+printRecentDumps(int ndumps)
 {
     afs_int32 code = 0;
     afs_int32 nextindex, index = 0;
@@ -3070,7 +3083,6 @@ printRecentDumps(ndumps)
     char ds[50];
 
     extern struct udbHandleS udbHandle;
-    extern compareDump();
 
     do {			/* while (nextindex != -1) */
 	/* initialize the dump list */
@@ -3133,8 +3145,6 @@ bc_dumpInfoCmd(struct cmd_syndesc *as, void *arock)
     afs_int32 detailFlag;
     afs_int32 ndumps;
     afs_int32 code = 0;
-
-    afs_int32 dumpInfo();
 
     if (as->parms[0].items) {
 	if (as->parms[1].items) {

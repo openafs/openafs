@@ -11,8 +11,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/server.c,v 1.5 2003/07/15 23:14:47 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -22,10 +20,9 @@ RCSID
 #include <rx/rx.h>
 
 /* services available on incoming message port */
-BC_Print(acall, acode, aflags, amessage)
-     struct rx_call *acall;
-     afs_int32 acode, aflags;
-     char *amessage;
+int
+BC_Print(struct rx_call *acall, afs_int32 acode, afs_int32 aflags, 
+	 char *amessage)
 {
     struct rx_connection *tconn;
     struct rx_peer *tpeer;

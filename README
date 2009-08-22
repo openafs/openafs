@@ -43,8 +43,8 @@ A  Configuring
       i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
          i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
          i386_fbsd_52, i386_fbsd_53, i386_fbsd_60, i386_fbsd_61,
-         i386_fbsd_62, i386_fbsd_70
-         (client does not work)
+         i386_fbsd_62, i386_fbsd_70, i386_fbsd_80
+         (client may work on 70)
       i386_linux22, i386_linux24, i386_linux26
       i386_nbsd15, i386_nbsd16, i386_nbsd20, i386_nbsd21, i386_nbsd30,
          i386_nbsd40
@@ -60,7 +60,7 @@ A  Configuring
          ppc_darwin_70, ppc_darwin_80, ppc_darwin_90
       ppc_linux22, ppc_linux24, ppc_linux26
       ppc_nbsd16, ppc_nbsd20
-      rs_aix42, rs_aix51, rs_aix52, rs_aix53
+      rs_aix42, rs_aix51, rs_aix52, rs_aix53, rs_aix61
       s390_linux22, s390_linux24, s390_linux26
       s390x_linux24, s390x_linux26
       sgi_62, sgi_63, sgi_64, sgi_65 (file server not tested)
@@ -228,9 +228,9 @@ F  OpenBSD Notes
 
 G  FreeBSD Notes
 
-   The FreeBSD client does not currently work.  The remaining problems
-   mostly have to do with locking, vnode refcounting, and packaging.  The
-   server should work.
+   The FreeBSD client may now work; It is tested on 7.0 and on current
+   as of the commit date.
+
 
    You need kernel source installed to build OpenAFS.  Use the
    --with-bsd-kernel-headers= configure option if your kernel source is
@@ -238,14 +238,34 @@ G  FreeBSD Notes
 
    You also need access to your kernel build directory for the opt_global.h
    include file.  Use the --with-bsd-kernel-build= configure option if your
-   kernel build is not GENERIC in the standard place.
+   kernel build is not GENERIC in the standard place. If 
+   /usr/src/sys/${CPUARCH}/compile/GENERIC does not point to 
+   /usr/obj/usr/src/sys/GENERIC you may need to resolve that and retry the 
+   build.
 
    There is no server package, but I am told that "make install" will put
    server binaries in /usr/afs.
 
    You can't run arla and OpenAFS at the same time.
 
-H  Other configure options
+H  AIX notes
+
+   Make sure that your default build environment is 32bit, ie.
+   the OBJECT_MODE environment variable is either unset or set to "32".
+
+   Verify this before doing configure and make. For example, assuming ksh/bash:
+   export OBJECT_MODE=32
+
+   To build aklog (in order to be able to get tokens from your KRB5 ticket)
+   you have to supply --with-krb5 to configure, the following example is for
+   building on AIX 6.1 with the IBM Kerberos5 (krb5.client.rte and
+   krb5.toolkit.adt on the Expansion Pack):
+
+   ./configure --with-afs-sysname=rs_aix61 --enable-transarc-paths \
+	--enable-supergroups \
+	--with-krb5 KRB5CFLAGS=-I/usr/include KRB5LIBS=-lkrb5
+
+I  Other configure options
 
    AFS has a ton of other optional features that must be enabled using
    configure options.  Here is a summary:
@@ -295,14 +315,10 @@ H  Other configure options
        Forces the namei fileserver on platforms (like Solaris) where the
        inode fileserver is the default.
 
-   --enable-obsolete
-       Enables building and installation of mpp and package, utilities
-       that historically shipped with AFS but are not supported by OpenAFS
-       and will be removed entirely in a later release.
-
    --enable-pthreaded-ubik
        Enable the threaded version of Ubik and install the threaded
-       versions of Ubik servers.  (EXPERIMENTAL)
+       versions of Ubik servers.  See README.PTHREADED_UBIK for more
+       information.  (EXPERIMENTAL)
 
    --enable-supergroups
        Enables support of nested groups in the ptserver.  WARNING: Once

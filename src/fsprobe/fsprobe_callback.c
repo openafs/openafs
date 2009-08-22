@@ -24,12 +24,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/fsprobe/fsprobe_callback.c,v 1.13 2005/10/07 20:11:05 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>		/*Standard I/O stuff */
 #include <afs/afscbint.h>	/*Callback interface defs */
+#include <afs/afsutil.h>
 
 #define FSPROBE_CALLBACK_VERBOSE 0
 
@@ -37,17 +36,10 @@ int afs_cb_inited = 0;
 struct interfaceAddr afs_cb_interface;
 
 /*
- * Routines we need that don't have explicit include file definitions.
- */
-extern char *hostutil_GetNameByINet();	/*Host parsing utility */
-
-static char mn[] = "fsprobe_callback";	/*Module name */
-
-/*
  * Initialize the callback interface structure
  */
 static int
-init_afs_cb()
+init_afs_cb(void)
 {
     int count;
 
@@ -476,9 +468,6 @@ SRXAFSCB_InitCallBackState2(struct rx_call * rxcall,
 afs_int32
 SRXAFSCB_WhoAreYou(struct rx_call * rxcall, struct interfaceAddr * addr)
 {
-    int i;
-    int code = 0;
-    int count;
 
 #if FSPROBE_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_WhoAreYou";	/*Routine name */
@@ -732,10 +721,6 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
 			     struct interfaceAddr * addr,
 			     Capabilities * capabilities)
 {
-    int i;
-    int code = 0;
-    int count;
-
 #if FSPROBE_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_TellMeAboutYourself";	/*Routine name */
     char hostName[256];		/*Host name buffer */

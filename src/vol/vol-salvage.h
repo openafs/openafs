@@ -238,8 +238,8 @@ extern void DistilVnodeEssence(VolumeId vid, VnodeClass class, Inode ino,
 			       Unique * maxu);
 extern int GetInodeSummary(char *path, VolumeId singleVolumeNumber);
 extern void GetVolumeSummary(VolumeId singleVolumeNumber);
-extern void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
-		       Unique unique);
+extern int JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
+		      afs_int32 unique);
 extern void MaybeZapVolume(register struct InodeSummary *isp, char *message,
 			   int deleteMe, int check);
 extern void ObtainSalvageLock(void);

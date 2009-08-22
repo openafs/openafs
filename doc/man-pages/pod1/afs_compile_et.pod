@@ -1,0 +1,83 @@
+=head1 NAME
+
+afs_compile_et - Produce error text tables for compilation
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<afs_compile_et> [B<-debug>] S<<< [B<-language> <I<lang>>] >>>
+    S<<< [B<-prefix> <I<prefix>>] >>> [B<-v> <I<version>>] <I<error_table>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+The B<afs_compile_et> command builds the error text tables for compilation.
+This includes both a header file that contains a set of mappings between
+error names and values and a F<.c> (or F<.msf>) file that provides a text
+table of descriptions.
+
+The <I<error_table>> argument specifies which error table to generate.
+The error table specification should exist in the current working
+directory or in the directory specified with B<-prefix> and should be
+named F<error_table.et>.
+
+=head1 CAUTIONS
+
+This command is used internally within the build process for OpenAFS.
+Most users will access this information via L<translate_et(1)> rather than
+via B<afs_compile_et>.
+
+This command does not use the standard AFS command-line parsing package.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-debug>
+
+Does nothing.  It neither adds debugging information to the output nor
+provides additional information on its operation.
+
+=item B<-language> <I<lang>>
+
+Specifies the type of output to generate.  Currently, only ANSI C and K&R
+are supported values (via the B<c> and B<k&r-c> values, respectively).
+The default is ANSI C.  There is some support for C++ started, but that is
+not yet supported.
+
+=item B<-prefix <I<prefix>>
+
+Specifies the directory to search for the F<error_table.et> file.
+
+=item B<-v> <I<version>>
+
+Specified the type of output file: valid values are 1 (the default, for C
+files) or 2, for B<.msf> file generation.
+
+=back
+
+=head1 EXAMPLES
+
+The following command generates the files F<pterror.h> and F<pterror.c>, 
+suitable for use with C programs:
+
+   % afs_compile_et -p path/to/src/ptserver pterror
+
+The following command generates K&R style files instead:
+
+   % afs_compile_et -p path/to/src/ptserver -lang 'k&r-c' pterror
+
+=head1 SEE ALSO
+
+L<translate_et(1)>
+
+=head1 COPYRIGHT
+
+Copyright 2009 Steven Jenkins <steven@endpoint.com>
+
+This documentation is covered by the IBM Public License Version 1.0.  This
+man page was written by Steven Jenkins for OpenAFS.

@@ -19,8 +19,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/test/tableGen.c,v 1.5 2003/07/15 23:16:37 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>

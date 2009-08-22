@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afsweb/nsafs.c,v 1.6 2003/07/15 23:14:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>

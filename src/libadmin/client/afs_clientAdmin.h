@@ -136,7 +136,7 @@ extern int ADMINAPI afsclient_RPCStatOpen(const void *cellHandle,
 
 extern int ADMINAPI afsclient_RPCStatOpenPort(const void *cellHandle,
 					      const char *serverName,
-					      int serverPort,
+                                              const int serverPort,
 					      struct rx_connection
 					      **rpcStatHandleP,
 					      afs_status_p st);
@@ -151,7 +151,7 @@ extern int ADMINAPI afsclient_CMStatOpen(const void *cellHandle,
 
 extern int ADMINAPI afsclient_CMStatOpenPort(const void *cellHandle,
 					     const char *serverName,
-					     int serverPort,
+                                             const int serverPort,
 					     struct rx_connection
 					     **rpcStatHandleP,
 					     afs_status_p st);
@@ -165,7 +165,7 @@ extern int ADMINAPI afsclient_RXDebugOpen(const char *serverName,
 					  afs_status_p st);
 
 extern int ADMINAPI afsclient_RXDebugOpenPort(const char *serverName,
-					      int serverPort,
+                                              const int serverPort,
 					      rxdebugHandle_p *
 					      rxdebugHandleP,
 					      afs_status_p st);

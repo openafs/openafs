@@ -22,8 +22,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bozo/bos_util.c,v 1.4.14.1 2007/10/30 15:16:37 shadow Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -35,6 +33,9 @@ RCSID
 #include <rx/rxkad.h>
 #include <afs/keys.h>
 #include <afs/cellconfig.h>
+#include <afs/kautils.h>
+#include <des.h>
+#include <des_prototypes.h>
 
 int
 main(int argc, char **argv)
@@ -99,7 +100,6 @@ main(int argc, char **argv)
 	int kvno;
 	register afs_int32 code;
 	char buf[BUFSIZ], ver[BUFSIZ];
-	char *tcell = NULL;
 
 	if (argc != 3) {
 	    printf("bos_util adddes: usage is 'bos_util adddes <kvno>\n");
@@ -167,7 +167,7 @@ main(int argc, char **argv)
 	kvno = atoi(argv[2]);
 	code = afsconf_DeleteKey(tdir, kvno);
 	if (code) {
-	    printf("bos_util: failed to delete key %d, (code %d)\n", kvno,
+	    printf("bos_util: failed to delete key %ld, (code %d)\n", kvno,
 		   code);
 	    exit(1);
 	}
@@ -188,7 +188,7 @@ main(int argc, char **argv)
 		memcpy(tbuffer, tkeys.key[i].key, 8);
 		tbuffer[8] = 0;
 		printf("kvno %4d: key is '%s' '", tkeys.key[i].kvno, tbuffer);
-		strcpy(x, (char *)tbuffer);
+		strcpy((char *)x, (char *)tbuffer);
 		for (count = 0; count < 8; count++)
 		    printf("\\%03o", x[count]);
 		printf("'\n");

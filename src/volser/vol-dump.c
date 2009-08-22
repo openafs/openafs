@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/vol-dump.c,v 1.2.4.2 2008/03/05 21:53:31 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -50,6 +48,7 @@ RCSID
 #include "viceinode.h"
 #include <afs/afssyscalls.h>
 #include "acl.h"
+#include <afs/dir.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -90,11 +89,11 @@ int VolumeChanged;		/* needed by physio - leave alone */
 int verbose = 0;
 
 /* Forward Declarations */
-void HandleVolume(struct DiskPartition64 *partP, char *name, char *filename);
+void HandleVolume(struct DiskPartition64 *partP, char *name, char *filename, int fromtime);
 Volume *AttachVolume(struct DiskPartition64 *dp, char *volname,
 		     register struct VolumeHeader *header);
 static void DoMyVolDump(Volume * vp, struct DiskPartition64 *dp,
-			char *dumpfile);
+			char *dumpfile, int fromtime);
 
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
@@ -106,7 +105,6 @@ char name[VMAXPATHLEN];
 int
 ReadHdr1(IHandle_t * ih, char *to, int size, u_int magic, u_int version)
 {
-    int bad = 0;
     int code;
 
     code = IH_IREAD(ih, 0, to, size);
@@ -170,12 +168,14 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     int err = 0;
-    int volumeId = 0;
+    afs_uint32 volumeId = 0;
     char *partName = 0;
     char *fileName = NULL;
     struct DiskPartition64 *partP = NULL;
     char name1[128];
     char tmpPartName[20];
+    int fromtime = 0;
+    afs_int32 code;
 
 
 #ifndef AFS_NT40_ENV
@@ -190,11 +190,19 @@ handleit(struct cmd_syndesc *as, void *arock)
     if ((ti = as->parms[0].items))
 	partName = ti->data;
     if ((ti = as->parms[1].items))
-	volumeId = atoi(ti->data);
+	volumeId = (afs_uint32)atoi(ti->data);
     if ((ti = as->parms[2].items))
 	fileName = ti->data;
     if ((ti = as->parms[3].items))
 	verbose = 1;
+    if (as->parms[4].items && strcmp(as->parms[4].items->data, "0")) {
+	code = ktime_DateToInt32(as->parms[4].items->data, &fromtime);
+	if (code) {
+	    fprintf(STDERR, "failed to parse date '%s' (error=%d))\n",
+		as->parms[4].items->data, code);
+		return code;
+	}
+    }
 
     DInit(10);
 
@@ -232,19 +240,18 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     (void)afs_snprintf(name1, sizeof name1, VFORMAT, (unsigned long)volumeId);
-    HandleVolume(partP, name1, fileName);
+    HandleVolume(partP, name1, fileName, fromtime);
     return 0;
 }
 
 void
-HandleVolume(struct DiskPartition64 *dp, char *name, char *filename)
+HandleVolume(struct DiskPartition64 *dp, char *name, char *filename, int fromtime)
 {
     struct VolumeHeader header;
     struct VolumeDiskHeader diskHeader;
-    struct afs_stat status, stat;
+    struct afs_stat status;
     register int fd;
     Volume *vp;
-    IHandle_t *ih;
     char headerName[1024];
 
     afs_int32 n;
@@ -279,7 +286,7 @@ HandleVolume(struct DiskPartition64 *dp, char *name, char *filename)
 	exit(1);
     }
 
-    DoMyVolDump(vp, dp, filename);
+    DoMyVolDump(vp, dp, filename, fromtime);
 }
 
 
@@ -298,6 +305,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-file", CMD_LIST, CMD_OPTIONAL, "Dump filename");
     cmd_AddParm(ts, "-verbose", CMD_FLAG, CMD_OPTIONAL,
 		"Trace dump progress (very verbose)");
+    cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_OPTIONAL, "dump from time");
     code = cmd_Dispatch(argc, argv);
     return code;
 }
@@ -508,8 +516,6 @@ DumpVolumeHeader(int dumpfd, register Volume * vp)
 	code = DumpInt32(dumpfd, 'D', V_dayUseDate(vp));
     if (!code)
 	code = DumpInt32(dumpfd, 'Z', V_dayUse(vp));
-    if (!code)
-	code = DumpInt32(dumpfd, 'V', V_volUpCounter(vp));
     return code;
 }
 
@@ -543,13 +549,14 @@ static int
 DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v)
 {
     int code = 0, failed_seek = 0, failed_write = 0;
-    afs_int32 pad = 0, offset;
+    afs_int32 pad = 0;
+    afs_int32 offset = 0;
     afs_sfsize_t n, nbytes, howMany, howBig;
     byte *p;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
-    afs_sfsize_t size, tmpsize;
+    afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
     struct statfs tstatfs;
@@ -582,7 +589,8 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 
     if (verbose)
 	fprintf(stderr, "  howBig = %u, howMany = %u, fdh size = %u\n",
-		howBig, howMany, size);
+		(unsigned int) howBig, (unsigned int) howMany,
+		(unsigned int) size);
 
 #ifdef AFS_LARGEFILE_ENV
     {
@@ -833,17 +841,16 @@ DumpPartial(int dumpfd, register Volume * vp, afs_int32 fromtime,
 
 
 static void
-DoMyVolDump(Volume * vp, struct DiskPartition64 *dp, char *dumpfile)
+DoMyVolDump(Volume * vp, struct DiskPartition64 *dp, char *dumpfile, int fromtime)
 {
     int code = 0;
-    int fromtime = 0;
     int dumpAllDirs = 0;
     int dumpfd = 0;
 
     if (dumpfile) {
 	unlink(dumpfile);
 	dumpfd =
-	    open(dumpfile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
+	    afs_open(dumpfile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (dumpfd < 0) {
 	    fprintf(stderr, "Failed to open dump file! Exiting.\n");
 	    exit(1);

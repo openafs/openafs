@@ -36,11 +36,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/des.c,v 1.19.4.1 2007/07/03 04:23:12 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
+#include <string.h>
 #endif
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>

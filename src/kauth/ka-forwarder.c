@@ -2,52 +2,26 @@
  * COPYRIGHT NOTICE
  * Copyright (c) 1994 Carnegie Mellon University
  * All Rights Reserved.
- * 
- * See <cmu_copyright.h> for use and distribution information.
- */
-
-/*
- * HISTORY
- * $Log: ka-forwarder.c,v $
- * Revision 1.2.2.2  2007/08/19 22:15:29  rra
- * DELTA DEVEL15-ka-forwarder-20060731
- * AUTHOR rra@stanford.edu
  *
- * Add ka-forwarder.
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
  *
- * Revision 1.1  2006/07/31 17:34:26  rra
- * DELTA ka-forwarder-20060731
- * AUTHOR rra@stanford.edu
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
  *
- * Add ka-forwarder.
+ * Carnegie Mellon requests users of this software to return to
  *
- * Revision 1.1  1997/06/03 18:23:54  kenh
- * .
+ *  Software Distribution Coordinator  or  Software_Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
  *
- * Revision 1.4  1996/08/09  01:00:21  jhutz
- * 	When initializing the array of fakeka servers, remember to set
- * 	the address family of each server; otherwise SunOS complains.
- * 	[1996/08/09  00:58:46  jhutz]
- *
- * Revision 1.3  1996/08/09  00:17:19  jhutz
- * 	Merged in changes from Chuck Silvers:
- * 	- Support for more than one fakeka server
- * 	- Support for specifying ports for each fakeka server separately from the
- * 	  others, and from the port we listen on.
- * 
- * 	Plus a minor bug fix to Chuck's code.
- * 	Basically, this version is designed to provide both reliability and
- * 	load-balancing cheaply.  Basically, we forward packets to all of the
- * 	fakeka servers in round-robin fashion.  So, if a client is losing on
- * 	one server, its retry should go to a different one, if more than one
- * 	is specified.
- * 	[1996/08/03  02:13:36  jhutz]
- * 
- * Revision 1.2  1995/02/23  18:26:36  chs
- * 	Created.
- * 	[1995/02/23  18:26:03  chs]
- * 
- * $EndLog$
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
  */
 
 /*
@@ -87,8 +61,7 @@ struct sockaddr_in *servers;
 
 
 void
-perrorexit(str)
-char *str;
+perrorexit(char *str)
 {
     perror(str);
     exit(1);
@@ -96,9 +69,7 @@ char *str;
 
 
 void
-setup_servers(argc, argv)
-int argc;
-char **argv;
+setup_servers(int argc, char **argv)
 {
     int i;
     u_int fwdaddr;
@@ -153,8 +124,7 @@ char **argv;
 
 
 int
-setup_socket(port)
-u_short port;
+setup_socket(u_short port)
 {
     int s, rv;
     struct sockaddr_in sin;
@@ -176,8 +146,7 @@ u_short port;
 
 
 int
-packet_is_reply(from)
-struct sockaddr_in *from;
+packet_is_reply(struct sockaddr_in *from)
 {
     int i;
 
@@ -196,9 +165,7 @@ struct sockaddr_in *from;
 
 
 int
-main(argc, argv)
-int argc;
-char **argv;
+main(int argc, char **argv)
 {
     int c, s, rv;
     u_short port;
@@ -240,7 +207,7 @@ char **argv;
     for (;;) {
 	char buf[BUFFER_SIZE], *bufp, *sendptr;
 	struct sockaddr_in from, reply, *to;
-	int fromlen, sendlen;
+	size_t fromlen, sendlen;
 
 	bufp = buf + 8;
 	fromlen = sizeof(from);

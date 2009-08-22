@@ -20,8 +20,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/salvager.c,v 1.1.4.4 2008/03/05 21:53:30 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -100,6 +98,7 @@ RCSID
 #include <afs/osi_inode.h>
 #endif
 #include <afs/cmd.h>
+#include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
@@ -120,7 +119,6 @@ RCSID
 #include "salvsync.h"
 #include "viceinode.h"
 #include "salvage.h"
-#include "volinodes.h"		/* header magic number, etc. stuff */
 #include "vol-salvage.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
@@ -141,7 +139,12 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0, seenany = 0;
+    afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+   
+#ifdef FAST_RESTART
+    afs_int32  seenany = 0;
+#endif
+    
     struct DiskPartition64 *partP;
 
 #ifdef AFS_SGI_VNODE_GLUE

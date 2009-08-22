@@ -10,14 +10,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/pagsh.c,v 1.9.14.6 2007/12/13 21:22:39 shadow Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #ifdef AFS_AIX51_ENV
 #include <sys/cred.h>
+#ifdef HAVE_SYS_PAG_H
 #include <sys/pag.h>
+#endif
 #include <errno.h>
 #endif
 #endif
@@ -33,10 +33,10 @@ RCSID
 #include <sys/types.h>
 #include <sys/stat.h>
 #endif
+#include "rx/rx.h"
+#include "sys_prototypes.h"
 
 #include "AFS_component_version_number.c"
-
-extern afs_int32 setpag();
 
 int
 main(int argc, char *argv[])
@@ -81,93 +81,3 @@ main(int argc, char *argv[])
     fprintf(stderr, "No shell\n");
     exit(1);
 }
-
-
-#ifdef AFS_KERBEROS_ENV
-/* stolen from auth/ktc.c */
-
-static afs_uint32
-curpag(void)
-{
-#if defined(AFS_AIX51_ENV)
-    int code = getpagvalue("afs");
-    if (code < 0 && errno == EINVAL)
-	code = 0;
-    return code;
-#else
-    afs_uint32 groups[NGROUPS_MAX];
-    afs_uint32 g0, g1;
-    afs_uint32 h, l, ret;
-
-    if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
-	return 0;
-
-    g0 = groups[0] & 0xffff;
-    g1 = groups[1] & 0xffff;
-    g0 -= 0x3f00;
-    g1 -= 0x3f00;
-    if ((g0 < 0xc000) && (g1 < 0xc000)) {
-	l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
-	h = (g0 >> 14);
-	h = (g1 >> 14) + h + h + h;
-	ret = ((h << 28) | l);
-	/* Additional testing */
-	if (((ret >> 24) & 0xff) == 'A')
-	    return ret;
-	else
-	    return -1;
-    }
-    return -1;
-#endif
-}
-
-int
-ktc_newpag(void)
-{
-    extern char **environ;
-
-    afs_uint32 pag;
-    struct stat sbuf;
-    char fname[256], *prefix = "/ticket/";
-    char fname5[256], *prefix5 = "FILE:/ticket/krb5cc_";
-    int numenv;
-    char **newenv, **senv, **denv;
-
-    if (stat("/ticket", &sbuf) == -1) {
-	prefix = "/tmp/tkt";
-	prefix5 = "FILE:/tmp/krb5cc_";
-    }
-
-    pag = curpag() & 0xffffffff;
-    if (pag == -1) {
-	sprintf(fname, "%s%d", prefix, getuid());
-	sprintf(fname5, "%s%d", prefix5, getuid());
-    } else {
-	sprintf(fname, "%sp%ld", prefix, pag);
-	sprintf(fname5, "%sp%ld", prefix5, pag);
-    }
-/*    ktc_set_tkt_string(fname); */
-
-    for (senv = environ, numenv = 0; *senv; senv++)
-	numenv++;
-    newenv = (char **)malloc((numenv + 2) * sizeof(char *));
-
-    for (senv = environ, denv = newenv; *senv; *senv++) {
-	if (strncmp(*senv, "KRBTKFILE=", 10) != 0 &&
-		strncmp(*senv, "KRB5CCNAME=", 11) != 0)
-	    *denv++ = *senv;
-    }
-
-    *denv = malloc(10+11 + strlen(fname) + strlen(fname5) + 2);
-    strcpy(*denv, "KRBTKFILE=");
-    strcat(*denv, fname);
-    *(denv+1) = *denv + strlen(*denv) + 1;
-    denv++;
-    strcpy(*denv, "KRB5CCNAME=");
-    strcat(*denv, fname5);
-    *++denv = 0;
-    environ = newenv;
-    return 0;
-}
-
-#endif

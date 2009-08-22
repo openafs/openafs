@@ -25,8 +25,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_globals.c,v 1.9.8.3 2006/12/19 03:19:08 shadow Exp $");
 
 /* Enable data initialization when the header file is included */
 #define GLOBALSINIT(stuff) = stuff
@@ -47,3 +45,23 @@ RCSID
 #endif /* KERNEL */
 
 #include "rx_globals.h"
+
+#ifdef AFS_NT40_ENV
+
+void rx_SetRxDeadTime(int seconds)
+{
+    rx_connDeadTime = seconds;
+}
+
+int rx_GetMinUdpBufSize(void)
+{
+    return 64*1024;
+}
+
+void rx_SetUdpBufSize(int x)
+{
+    if (x > rx_GetMinUdpBufSize())
+        rx_UdpBufSize = x;
+}
+
+#endif /* AFS_NT40_ENV */

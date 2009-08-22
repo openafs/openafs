@@ -14,8 +14,6 @@
 #endif
 #include <stdio.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/venus/test/owntest.c,v 1.8.14.1 2007/11/26 21:08:45 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -23,11 +21,8 @@ RCSID
 #include <sys/time.h>
 #include <errno.h>
 
-extern int errno;
-
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct timeval tv[2];
     struct stat tstat;

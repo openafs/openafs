@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: strange-other-characters,v 1.1 2002/01/14 07:49:18 shadow Exp $
+# $Id$
 dir=$AFSROOT/stacken.kth.se/ftp/pub/arla/tests
 
 test -f $dir/едц || exit 1

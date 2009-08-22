@@ -17,7 +17,8 @@
 /*
  * ------------------------ Exported functions  -----------------------
  */
-extern afs_int32 uss_acl_SetAccess();
+extern afs_int32 uss_acl_SetAccess(char *a_access, int a_clear, 
+       				   int a_negative);
     /*
      * Summary:
      *    Set the value of the given ACL.
@@ -32,7 +33,7 @@ extern afs_int32 uss_acl_SetAccess();
      *    Lower-level code otherwise.
      */
 
-extern afs_int32 uss_acl_SetDiskQuota();
+extern afs_int32 uss_acl_SetDiskQuota(char *a_path, int a_q);
     /*
      * Summary:
      *    Set the initial disk quota for a user.
@@ -46,7 +47,7 @@ extern afs_int32 uss_acl_SetDiskQuota();
      *    Lower-level code otherwise.
      */
 
-extern afs_int32 uss_acl_CleanUp();
+extern afs_int32 uss_acl_CleanUp(void);
     /*
      * Summary:
      *    Remove the uss_AccountCreator from the various ACLs s/he

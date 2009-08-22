@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_file.c,v 1.11.2.1 2006/11/09 23:30:54 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -26,7 +24,7 @@ extern struct mount *afs_cacheVfsp;
 
 
 void *
-osi_UFSOpen(afs_int32 ainode)
+osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct osi_file *afile;
     struct vnode *vp;
@@ -38,7 +36,7 @@ osi_UFSOpen(afs_int32 ainode)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-    code = VFS_VGET(cacheDev.mp, (ino_t) ainode, &vp);
+    code = VFS_VGET(cacheDev.mp, ainode->ufs, &vp);
     AFS_GLOCK();
     if (code == 0 && vp->v_type == VNON)
 	code = ENOENT;
@@ -55,7 +53,7 @@ osi_UFSOpen(afs_int32 ainode)
 #endif
     afile->offset = 0;
     afile->proc = NULL;
-    afile->inum = ainode;	/* for hint validity checking */
+    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 
@@ -136,7 +134,7 @@ osi_DisableAtimes(struct vnode *avp)
 int
 afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Read);
@@ -164,8 +162,8 @@ afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 	afile->offset += code;
 	osi_DisableAtimes(afile->vnode);
     } else {
-	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
-		   ICL_TYPE_INT32, code);
+	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32,
+		   (unsigned int) resid, ICL_TYPE_INT32, code);
 	code = -1;
     }
     return code;
@@ -176,7 +174,7 @@ int
 afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    unsigned int resid;
+    size_t resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Write);

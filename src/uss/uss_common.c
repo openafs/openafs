@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_common.c,v 1.6.14.1 2007/10/30 15:16:48 shadow Exp $");
 
 #include "uss_common.h"		/*Interface definitions */
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN */
@@ -107,7 +105,7 @@ static int initDone = 0;	/*Have we been initialized? */
  *------------------------------------------------------------------------*/
 
 void
-uss_common_Init()
+uss_common_Init(void)
 {				/*uss_common_Init */
 
     extern int line;		/*Current template line */
@@ -147,7 +145,7 @@ uss_common_Init()
  *------------------------------------------------------------------------*/
 
 void
-uss_common_Reset()
+uss_common_Reset(void)
 {				/*uss_common_Reset */
 
     extern int line;		/*Current template line */
@@ -196,13 +194,8 @@ uss_common_Reset()
  *------------------------------------------------------------------------*/
 
 char *
-uss_common_FieldCp(a_to, a_from, a_separator, a_maxChars, a_overflowP)
-     char *a_to;
-     char *a_from;
-     char a_separator;
-     int a_maxChars;
-     int *a_overflowP;
-
+uss_common_FieldCp(char *a_to, char *a_from, char a_separator, 
+		   int a_maxChars, int *a_overflowP)
 {				/*uss_common_FieldCp */
 
     register int chars_read;	/*Number of chars read so far */

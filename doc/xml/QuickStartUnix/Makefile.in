@@ -1,0 +1,39 @@
+# Makefile to build the AFS QuickStart guide for Unix.
+#
+# This makefile assumes that various utilities are available on the system.
+# On Debian lenny, installing the packages:
+#
+#     dblatex
+#     docbook-xsl
+#     libxml2-utils
+#     xsltproc
+#
+# gave me all the utilities needed.
+#
+# HTML_XSL is specific to Debian and will need to be modified on other
+# systems until we have a better mechanism for finding the correct path.
+
+all: pdf html
+
+include @TOP_OBJDIR@/src/config/Makefile.config
+VERSFILE=version
+include @TOP_OBJDIR@/src/config/Makefile.version
+
+BOOK     = auqbg000.xml
+SRCS     = $(BOOK) auqbg003.xml auqbg004.xml auqbg005.xml auqbg006.xml \
+	   auqbg007.xml auqbg008.xml appendix.xml
+HTML_XSL = @HTML_XSL@
+XSLTPROC = @XSLTPROC@
+
+html: $(SRCS) $(VERSFILE).xml
+	$(XSLTPROC) --param navig.graphics 1 \
+	    --stringparam navig.graphics.path ../ $(HTML_XSL) $(BOOK)
+
+pdf: $(SRCS) $(VERSFILE).xml
+	dblatex $(BOOK)
+
+check:
+	xmllint --noout --valid $(BOOK)
+
+clean:
+	rm -f *.html *.pdf

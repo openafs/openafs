@@ -1,5 +1,5 @@
 /* 
- * $Id: aklog_main.c,v 1.12.2.15 2008/04/01 18:15:40 shadow Exp $
+ * $Id$
  *
  * Copyright 1990,1991 by the Massachusetts Institute of Technology
  * For distribution and copying rights, see the file "mit-copyright.h"
@@ -35,8 +35,7 @@
  */
 
 #include <afsconfig.h>
-RCSID
-     ("$Header: /cvs/openafs/src/aklog/aklog_main.c,v 1.12.2.15 2008/04/01 18:15:40 shadow Exp $");
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -324,17 +323,6 @@ static char *copy_cellinfo(cellinfo_t *cellinfo)
 }
 
 
-static char *copy_string(char *string)    
-{
-    char *new_string;
-
-    if ((new_string = (char *)calloc(strlen(string) + 1, sizeof(char))))
-	(void) strcpy(new_string, string);
-
-    return (new_string);
-}
-
-
 static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_cell, char *linkedcell)
 {
     int status = AKLOG_SUCCESS;
@@ -463,7 +451,27 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	retry = 1;
 	
 	while(retry) {
-	    
+
+	    /* This code tries principals in the following, much debated,
+	     * order:
+	     * 
+	     * If the realm is specified on the command line we do
+	     *    - afs/cell@COMMAND-LINE-REALM
+	     *    - afs@COMMAND-LINE-REALM
+	     * 
+	     * Otherwise, we do
+	     *    - afs/cell@REALM-FROM-USERS-PRINCIPAL
+	     *    - afs/cell@krb5_get_host_realm(db-server)
+	     *   Then, if krb5_get_host_realm(db-server) is non-empty
+	     *      - afs@ krb5_get_host_realm(db-server)
+	     *   Otherwise
+	     *      - afs/cell@ upper-case-domain-of-db-server
+	     *      - afs@ upper-case-domain-of-db-server
+	     * 
+	     * In all cases, the 'afs@' variant is only tried where the
+	     * cell and the realm match case-insensitively.
+	     */
+		
 	    /* Cell on command line - use that one */
 	    if (realm && realm[0]) {
 		realm_of_cell = realm;
@@ -528,8 +536,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 				    "%s.\n", progname, cell_to_use);
 			    exit(AKLOG_MISC);
 			}
-			printf("We've deduced that we need to authenticate to"
-			       " realm %s.\n", realm_of_cell);
+			if (dflag) {
+			    printf("We've deduced that we need to authenticate"
+			           " to realm %s.\n", realm_of_cell);
+			}
 		    }
 		    status = get_credv5(context, AFSKEY, cell_to_use, 
 				        realm_of_cell, &v5cred);
@@ -614,26 +624,43 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	 */
 
 	if (! do524) {
+	    char k4name[ANAME_SZ], k4inst[INST_SZ], k4realm[REALM_SZ];
+#ifdef HAVE_NO_KRB5_524
 	    char *p;
 	    int len;
+#endif
 
 	    if (dflag)
 	    	printf("Using Kerberos V5 ticket natively\n");
 
+#ifndef HAVE_NO_KRB5_524
+	    status = krb5_524_conv_principal (context, v5cred->client, &k4name, &k4inst, &k4realm);
+	    if (status) {
+		afs_com_err(progname, status, "while converting principal "
+			"to Kerberos V4 format");
+		return(AKLOG_KERBEROS);
+	    }
+	    strcpy (username, k4name);
+	    if (k4inst[0]) {
+		strcat (username, ".");
+		strcat (username, k4inst);
+	    }
+#else
 	    len = min(get_princ_len(context, v5cred->client, 0),
-	    	      second_comp(context, v5cred->client) ?
-					MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
+		      second_comp(context, v5cred->client) ?
+		      MAXKTCNAMELEN - 2 : MAXKTCNAMELEN - 1);
 	    strncpy(username, get_princ_str(context, v5cred->client, 0), len);
 	    username[len] = '\0';
-
+	    
 	    if (second_comp(context, v5cred->client)) {
-	    	strcat(username, ".");
+		strcat(username, ".");
 		p = username + strlen(username);
 		len = min(get_princ_len(context, v5cred->client, 1),
 			  MAXKTCNAMELEN - strlen(username) - 1);
 		strncpy(p, get_princ_str(context, v5cred->client, 1), len);
 		p[len] = '\0';
 	    }
+#endif
 
 	    memset(&atoken, 0, sizeof(atoken));
 	    atoken.kvno = RXKAD_TKT_TYPE_KERBEROS_V5;
@@ -1326,8 +1353,8 @@ void aklog(int argc, char *argv[])
 	else if (pmode) {
 	    /* Add this path to list of paths */
 	    if ((cur_node = ll_add_node(&paths, ll_tail))) {
-		char *new_path; 
-		if ((new_path = copy_string(path)))
+		char *new_path;
+		if ((new_path = strdup(path)))
 		    ll_add_data(cur_node, new_path);
 		else {
 		    fprintf(stderr, "%s: failure copying path name.\n",

@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/fsprobe/fsprobe.c,v 1.9.14.3 2008/03/10 22:32:33 shadow Exp $");
 
 
 #include <string.h>
@@ -26,21 +24,12 @@ RCSID
 #include <lwp.h>		/*Lightweight process package */
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
+#include <afs/afsutil.h>
+
+#define FSINT_COMMON_XG
+#include <afs/afscbint.h>
 
 #define LWP_STACK_SIZE	(16 * 1024)
-
-/*
- * Routines we need that don't have explicit include file definitions.
- */
-extern int RXAFSCB_ExecuteRequest();	/*AFS callback dispatcher */
-extern char *hostutil_GetNameByINet();	/*Host parsing utility */
-
-/*
- * Help out the linker by explicitly importing the callback routines.
- */
-extern afs_int32 SRXAFSCB_CallBack();
-extern afs_int32 SRXAFSCB_InitCallBackState2();
-extern afs_int32 SRXAFSCB_Probe();
 
 /*
  * Exported variables.
@@ -55,7 +44,7 @@ int fsprobe_ProbeFreqInSecs;	/*Probe freq. in seconds */
  */
 static int fsprobe_initflag = 0;	/*Was init routine called? */
 static int fsprobe_debug = 0;	/*Debugging output enabled? */
-static int (*fsprobe_Handler) ();	/*Probe handler routine */
+static int (*fsprobe_Handler) (void);	/*Probe handler routine */
 static PROCESS probeLWP_ID;	/*Probe LWP process ID */
 static int fsprobe_statsBytes;	/*Num bytes in stats block */
 static int fsprobe_probeOKBytes;	/*Num bytes in probeOK block */
@@ -90,7 +79,7 @@ static int fsprobe_probeOKBytes;	/*Num bytes in probeOK block */
  *------------------------------------------------------------------------*/
 
 static int
-fsprobe_CleanupInit()
+fsprobe_CleanupInit(void)
 {				/*fsprobe_CleanupInit */
 
     afs_int32 code;		/*Return code from callback stubs */
@@ -143,9 +132,7 @@ fsprobe_CleanupInit()
  *------------------------------------------------------------------------*/
 
 int
-fsprobe_Cleanup(a_releaseMem)
-     int a_releaseMem;
-
+fsprobe_Cleanup(int a_releaseMem)
 {				/*fsprobe_Cleanup */
 
     static char rn[] = "fsprobe_Cleanup";	/*Routine name */
@@ -395,10 +382,10 @@ fsprobe_LWP(void *unused)
 
 /*list all the partitions on <aserver> */
 static int newvolserver = 0;
-XListPartitions(aconn, ptrPartList, cntp)
-     struct rx_connection *aconn;
-     struct partList *ptrPartList;
-     afs_int32 *cntp;
+
+int
+XListPartitions(struct rx_connection *aconn, struct partList *ptrPartList,
+	       	afs_int32 *cntp)
 {
     struct pIDs partIds;
     struct partEntries partEnts;
@@ -487,14 +474,9 @@ XListPartitions(aconn, ptrPartList, cntp)
  *------------------------------------------------------------------------*/
 
 int
-fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
-	     a_debug)
-     int a_numServers;
-     struct sockaddr_in *a_socketArray;
-     int a_ProbeFreqInSecs;
-     int (*a_ProbeHandler) ();
-     int a_debug;
-
+fsprobe_Init(int a_numServers, struct sockaddr_in *a_socketArray, 
+	     int a_ProbeFreqInSecs, int (*a_ProbeHandler)(void),
+	     int a_debug)
 {				/*fsprobe_Init */
 
     static char rn[] = "fsprobe_Init";	/*Routine name */
@@ -566,7 +548,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 	malloc(a_numServers * sizeof(struct fsprobe_ConnectionInfo));
     if (fsprobe_ConnInfo == (struct fsprobe_ConnectionInfo *)0) {
 	fprintf(stderr,
-		"[%s] Can't allocate %d connection info structs (%d bytes)\n",
+		"[%s] Can't allocate %d connection info structs (%lu bytes)\n",
 		rn, a_numServers,
 		(a_numServers * sizeof(struct fsprobe_ConnectionInfo)));
 	return (-1);		/*No cleanup needs to be done yet */
@@ -672,7 +654,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 	if (fsprobe_debug) {
 	    fprintf(stderr, "[%s] Copying in the following socket info:\n",
 		    rn);
-	    fprintf(stderr, "[%s] IP addr 0x%lx, port %d\n", rn,
+	    fprintf(stderr, "[%s] IP addr 0x%x, port %d\n", rn,
 		    (a_socketArray + curr_srv)->sin_addr.s_addr,
 		    (a_socketArray + curr_srv)->sin_port);
 	}
@@ -683,7 +665,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 	    hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);
 	if (hostNameFound == NULL) {
 	    fprintf(stderr,
-		    "[%s] Can't map Internet address %lu to a string name\n",
+		    "[%s] Can't map Internet address %u to a string name\n",
 		    rn, curr_conn->skt.sin_addr.s_addr);
 	    curr_conn->hostName[0] = '\0';
 	} else {
@@ -698,7 +680,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 	 */
 	if (fsprobe_debug)
 	    fprintf(stderr,
-		    "[%s] Connecting to srv idx %d, IP addr 0x%lx, port %d, service 1\n",
+		    "[%s] Connecting to srv idx %d, IP addr 0x%x, port %d, service 1\n",
 		    rn, curr_srv, curr_conn->skt.sin_addr.s_addr,
 		    curr_conn->skt.sin_port);
 	curr_conn->rxconn = rx_NewConnection(curr_conn->skt.sin_addr.s_addr,	/*Server addr */
@@ -708,12 +690,12 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 					     0);	/*Number of above */
 	if (curr_conn->rxconn == (struct rx_connection *)0) {
 	    fprintf(stderr,
-		    "[%s] Can't create Rx connection to server %s (%lu)\n",
+		    "[%s] Can't create Rx connection to server %s (%u)\n",
 		    rn, curr_conn->hostName, curr_conn->skt.sin_addr.s_addr);
 	    conn_err = 1;
 	}
 	if (fsprobe_debug)
-	    fprintf(stderr, "[%s] New connection at 0x%lx\n", rn,
+	    fprintf(stderr, "[%s] New connection at %p\n", rn,
 		    curr_conn->rxconn);
 
 	/*
@@ -721,7 +703,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 	 */
 	if (fsprobe_debug)
 	    fprintf(stderr,
-		    "[%s] Connecting to srv idx %d, IP addr 0x%lx, port %d, service 1\n",
+		    "[%s] Connecting to srv idx %d, IP addr 0x%x, port %d, service 1\n",
 		    rn, curr_srv, curr_conn->skt.sin_addr.s_addr,
 		    htons(7005));
 	curr_conn->rxVolconn = rx_NewConnection(curr_conn->skt.sin_addr.s_addr,	/*Server addr */
@@ -731,7 +713,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 						0);	/*Number of above */
 	if (curr_conn->rxVolconn == (struct rx_connection *)0) {
 	    fprintf(stderr,
-		    "[%s] Can't create Rx connection to volume server %s (%lu)\n",
+		    "[%s] Can't create Rx connection to volume server %s (%u)\n",
 		    rn, curr_conn->hostName, curr_conn->skt.sin_addr.s_addr);
 	    conn_err = 1;
 	} else {
@@ -746,7 +728,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 	    }
 	}
 	if (fsprobe_debug)
-	    fprintf(stderr, "[%s] New connection at 0x%lx\n", rn,
+	    fprintf(stderr, "[%s] New connection at %p\n", rn,
 		    curr_conn->rxVolconn);
 
 
@@ -802,7 +784,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
 	return (code);
     }
     if (fsprobe_debug)
-	fprintf(stderr, "[%s] Probe LWP process structure located at 0x%x\n",
+	fprintf(stderr, "[%s] Probe LWP process structure located at %p\n",
 		rn, probeLWP_ID);
 
 #if 0
@@ -846,7 +828,7 @@ fsprobe_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
  *------------------------------------------------------------------------*/
 
 int
-fsprobe_ForceProbeNow()
+fsprobe_ForceProbeNow(void)
 {				/*fsprobe_ForceProbeNow */
 
     static char rn[] = "fsprobe_ForceProbeNow";	/*Routine name */

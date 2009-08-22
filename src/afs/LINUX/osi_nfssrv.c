@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_nfssrv.c,v 1.1.2.7 2008/07/01 03:35:23 shadow Exp $");
 
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -204,7 +202,7 @@ void osi_linux_nfssrv_init(void)
     int i;
 
     nfssrv_list = 0;
-    RWLOCK_INIT(&afs_xnfssrv, "afs_xnfssrv");
+    AFS_RWLOCK_INIT(&afs_xnfssrv, "afs_xnfssrv");
 
     if (authtab && !IS_ERR(authtab))
 	   afs_authtab = authtab;

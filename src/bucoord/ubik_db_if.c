@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/ubik_db_if.c,v 1.10.14.2 2007/04/10 18:39:50 shadow Exp $");
 
 #include <sys/types.h>
 #include <fcntl.h>
@@ -37,17 +35,8 @@ RCSID
 
 #include "bc.h"
 #include "error_macros.h"
-
-/* protos */
-afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *);
-afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *, afs_int32 );
-afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *) ;
-afs_int32 bcdb_deleteDump(afs_int32, afs_int32, afs_int32, budb_dumpsList *);
-/*note the pinter to the function comes from ubik/ubikclient ubik_Call function.*/
-afs_int32 bcdb_listDumps (int (), afs_int32,afs_int32,afs_int32, budb_dumpsList *,
- budb_dumpsList *);
-afs_int32 bcdb_DeleteVDP(char *, char *, afs_int32 );
-afs_int32 bcdb_FindClone(afs_int32, char *, afs_int32 *);
+#include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
 
 extern char *whoami;
 
@@ -67,7 +56,7 @@ afs_int32 bcdb_AddVolume(register struct budb_volumeEntry *veptr)
 {
     afs_int32 code;
 
-    code = ubik_Call(BUDB_AddVolume, udbHandle.uh_client, 0, veptr);
+    code = ubik_BUDB_AddVolume(udbHandle.uh_client, 0, veptr);
     return (code);
 }
 
@@ -78,7 +67,7 @@ afs_int32 bcdb_AddVolumes(register struct budb_volumeEntry *veptr, afs_int32 cou
 
     volumeList.budb_volumeList_len = count;
     volumeList.budb_volumeList_val = veptr;
-    code = ubik_Call(BUDB_AddVolumes, udbHandle.uh_client, 0, &volumeList);
+    code = ubik_BUDB_AddVolumes(udbHandle.uh_client, 0, &volumeList);
     return (code);
 }
 
@@ -87,7 +76,7 @@ afs_int32 bcdb_CreateDump(register struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
 
-    code = ubik_Call(BUDB_CreateDump, udbHandle.uh_client, 0, deptr);
+    code = ubik_BUDB_CreateDump(udbHandle.uh_client, 0, deptr);
     return (code);
 }
 
@@ -102,16 +91,18 @@ afs_int32 bcdb_deleteDump(afs_int32 dumpID, afs_int32 fromTime, afs_int32 toTime
     dumpsPtr = (dumps ? dumps : &dumpsList);
 
     code =
-	ubik_Call(BUDB_DeleteDump, udbHandle.uh_client, 0, dumpID, fromTime,
+	ubik_BUDB_DeleteDump(udbHandle.uh_client, 0, dumpID, fromTime,
 		  toTime, dumpsPtr);
     if (dumpsList.budb_dumpsList_val)
 	free(dumpsList.budb_dumpsList_val);
     return (code);
 }
 
-afs_int32 bcdb_listDumps (int (*sflags) (), afs_int32 groupId,afs_int32 fromTime, afs_int32 toTime,budb_dumpsList *dumps, budb_dumpsList *flags)
+afs_int32 bcdb_listDumps (afs_int32 sflags, afs_int32 groupId,
+			  afs_int32 fromTime, afs_int32 toTime,
+			  budb_dumpsList *dumps, budb_dumpsList *flags)
 {
-    afs_int32 code, sflag = 0;
+    afs_int32 code;
     budb_dumpsList dumpsList, *dumpsPtr;
     budb_dumpsList flagsList, *flagsPtr;
 
@@ -124,7 +115,7 @@ afs_int32 bcdb_listDumps (int (*sflags) (), afs_int32 groupId,afs_int32 fromTime
     flagsPtr = (flags ? flags : &flagsList);
 
     code =
-	ubik_Call(BUDB_ListDumps, udbHandle.uh_client, 0, sflags, "", groupId,
+	ubik_BUDB_ListDumps(udbHandle.uh_client, 0, sflags, "", groupId,
 		  fromTime, toTime, dumpsPtr, flagsPtr);
 
     if (dumpsList.budb_dumpsList_val)
@@ -140,7 +131,7 @@ afs_int32 bcdb_DeleteVDP(char *dumpSetName, char *dumpPath, afs_int32 dumpID)
     afs_int32 code;
 
     code =
-	ubik_Call(BUDB_DeleteVDP, udbHandle.uh_client, 0, dumpSetName,
+	ubik_BUDB_DeleteVDP(udbHandle.uh_client, 0, dumpSetName,
 		  dumpPath, dumpID);
     return (code);
 }
@@ -163,7 +154,7 @@ afs_int32 bcdb_FindClone(afs_int32 dumpID, char *volName, afs_int32 *clonetime)
 {
     afs_int32 code;
     code =
-	ubik_Call(BUDB_FindClone, udbHandle.uh_client, 0, dumpID, volName,
+	ubik_BUDB_FindClone(udbHandle.uh_client, 0, dumpID, volName,
 		  clonetime);
     return (code);
 }
@@ -185,14 +176,13 @@ afs_int32 bcdb_FindClone(afs_int32 dumpID, char *volName, afs_int32 *clonetime)
  *      the current multiple bcdb_ call algorithm.
  */
 
-bcdb_FindDump(volumeName, beforeDate, deptr)
-     char *volumeName;
-     afs_int32 beforeDate;
-     struct budb_dumpEntry *deptr;
+int
+bcdb_FindDump(char *volumeName, afs_int32 beforeDate, 
+	      struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
     code =
-	ubik_Call(BUDB_FindDump, udbHandle.uh_client, 0, volumeName,
+	ubik_BUDB_FindDump(udbHandle.uh_client, 0, volumeName,
 		  beforeDate, deptr);
     return (code);
 }
@@ -203,9 +193,8 @@ bcdb_FindDump(volumeName, beforeDate, deptr)
  *	dumpID - id to lookup
  * exit:
  */
-bcdb_FindDumpByID(dumpID, deptr)
-     afs_int32 dumpID;
-     register struct budb_dumpEntry *deptr;
+int
+bcdb_FindDumpByID(afs_int32 dumpID, struct budb_dumpEntry *deptr)
 {
     register afs_int32 code;
     afs_int32 nextindex;
@@ -217,7 +206,7 @@ bcdb_FindDumpByID(dumpID, deptr)
     dl.budb_dumpList_val = 0;
 
     /* outline algorithm */
-    code = ubik_Call(BUDB_GetDumps, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_DUMPID, "",	/* no name */
+    code = ubik_BUDB_GetDumps(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_DUMPID, "",	/* no name */
 		     dumpID,	/* start */
 		     0,		/* end */
 		     0,		/* index */
@@ -265,11 +254,8 @@ bcdb_FindDumpByID(dumpID, deptr)
  */
 
 afs_int32
-bcdb_FindLastVolClone(volSetName, dumpName, volName, clonetime)
-     char *volSetName;
-     char *dumpName;
-     char *volName;
-     afs_int32 *clonetime;
+bcdb_FindLastVolClone(char *volSetName, char *dumpName, char *volName, 
+		      afs_int32 *clonetime)
 {
     /* server notes
      * search by dumpName
@@ -296,14 +282,13 @@ bcdb_FindLastVolClone(volSetName, dumpName, volName, clonetime)
  *      Need new routine since params are two strings
  */
 
-bcdb_FindLatestDump(volSetName, dumpPath, deptr)
-     char *volSetName;
-     char *dumpPath;
-     struct budb_dumpEntry *deptr;
+int
+bcdb_FindLatestDump(char *volSetName, char *dumpPath, 
+		    struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
     code =
-	ubik_Call(BUDB_FindLatestDump, udbHandle.uh_client, 0, volSetName,
+	ubik_BUDB_FindLatestDump(udbHandle.uh_client, 0, volSetName,
 		  dumpPath, deptr);
     return (code);
 }
@@ -316,10 +301,9 @@ bcdb_FindLatestDump(volSetName, dumpPath, deptr)
  *	tapeName: name of tape
  */
 
-bcdb_FindTape(dumpid, tapeName, teptr)
-     afs_int32 dumpid;
-     char *tapeName;
-     struct budb_tapeEntry *teptr;
+int
+bcdb_FindTape(afs_int32 dumpid, char *tapeName, 
+	      struct budb_tapeEntry *teptr)
 {
     budb_tapeList tl;
     afs_int32 next;
@@ -331,7 +315,7 @@ bcdb_FindTape(dumpid, tapeName, teptr)
     tl.budb_tapeList_val = 0;
 
     code =
-	ubik_Call(BUDB_GetTapes, udbHandle.uh_client, 0, BUDB_MAJORVERSION,
+	ubik_BUDB_GetTapes(udbHandle.uh_client, 0, BUDB_MAJORVERSION,
 		  BUDB_OP_TAPENAME | BUDB_OP_DUMPID, tapeName, dumpid, 0, 0,
 		  &next, &dbTime, &tl);
 
@@ -349,10 +333,9 @@ bcdb_FindTape(dumpid, tapeName, teptr)
     return (code);
 }
 
-bcdb_FindTapeSeq(dumpid, tapeSeq, teptr)
-     afs_int32 dumpid;
-     afs_int32 tapeSeq;
-     struct budb_tapeEntry *teptr;
+int
+bcdb_FindTapeSeq(afs_int32 dumpid, afs_int32 tapeSeq, 
+		 struct budb_tapeEntry *teptr)
 {
     budb_tapeList tl;
     afs_int32 next;
@@ -364,7 +347,7 @@ bcdb_FindTapeSeq(dumpid, tapeSeq, teptr)
     tl.budb_tapeList_val = 0;
 
     code =
-	ubik_Call(BUDB_GetTapes, udbHandle.uh_client, 0, BUDB_MAJORVERSION,
+	ubik_BUDB_GetTapes(udbHandle.uh_client, 0, BUDB_MAJORVERSION,
 		  BUDB_OP_TAPESEQ | BUDB_OP_DUMPID, "", dumpid, tapeSeq, 0,
 		  &next, &dbTime, &tl);
     if (code)
@@ -395,14 +378,10 @@ bcdb_FindTapeSeq(dumpid, tapeSeq, teptr)
  */
 
 afs_int32
-bcdb_FindVolumes(dumpID, volumeName, returnArray, last, next, maxa, nEntries)
-     afs_int32 dumpID;
-     char *volumeName;
-     struct budb_volumeEntry *returnArray;
-     afs_int32 last;
-     afs_int32 *next;
-     afs_int32 maxa;
-     afs_int32 *nEntries;
+bcdb_FindVolumes(afs_int32 dumpID, char *volumeName, 
+		 struct budb_volumeEntry *returnArray, 
+		 afs_int32 last, afs_int32 *next, afs_int32 maxa, 
+		 afs_int32 *nEntries)
 {
     budb_volumeList vl;
     afs_int32 dbTime;
@@ -412,7 +391,7 @@ bcdb_FindVolumes(dumpID, volumeName, returnArray, last, next, maxa, nEntries)
     vl.budb_volumeList_val = returnArray;
 
     /* outline algorithm */
-    code = ubik_Call(BUDB_GetVolumes, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME | BUDB_OP_DUMPID, volumeName,	/* name */
+    code = ubik_BUDB_GetVolumes(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME | BUDB_OP_DUMPID, volumeName,	/* name */
 		     dumpID,	/* start */
 		     0,		/* end */
 		     last,	/* index */
@@ -423,20 +402,19 @@ bcdb_FindVolumes(dumpID, volumeName, returnArray, last, next, maxa, nEntries)
     return (code);
 }
 
-
-bcdb_FinishDump(deptr)
-     register struct budb_dumpEntry *deptr;
+int
+bcdb_FinishDump(register struct budb_dumpEntry *deptr)
 {
     afs_int32 code;
-    code = ubik_Call(BUDB_FinishDump, udbHandle.uh_client, 0, deptr);
+    code = ubik_BUDB_FinishDump(udbHandle.uh_client, 0, deptr);
     return (code);
 }
 
-bcdb_FinishTape(teptr)
-     register struct budb_tapeEntry *teptr;
+int
+bcdb_FinishTape(register struct budb_tapeEntry *teptr)
 {
     afs_int32 code;
-    code = ubik_Call(BUDB_FinishTape, udbHandle.uh_client, 0, teptr);
+    code = ubik_BUDB_FinishTape(udbHandle.uh_client, 0, teptr);
     return (code);
 
 }
@@ -445,13 +423,9 @@ bcdb_FinishTape(teptr)
  */
 
 afs_int32
-bcdb_LookupVolume(volumeName, returnArray, last, next, maxa, nEntries)
-     char *volumeName;
-     struct budb_volumeEntry *returnArray;
-     afs_int32 last;
-     afs_int32 *next;
-     afs_int32 maxa;
-     afs_int32 *nEntries;
+bcdb_LookupVolume(char *volumeName, struct budb_volumeEntry *returnArray, 
+		  afs_int32 last, afs_int32 *next, afs_int32 maxa, 
+		  afs_int32 *nEntries)
 {
     budb_volumeList vl;
     afs_int32 dbTime;
@@ -461,7 +435,7 @@ bcdb_LookupVolume(volumeName, returnArray, last, next, maxa, nEntries)
     vl.budb_volumeList_val = returnArray;
 
     /* outline algorithm */
-    code = ubik_Call(BUDB_GetVolumes, udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME, volumeName,	/* name */
+    code = ubik_BUDB_GetVolumes(udbHandle.uh_client, 0, BUDB_MAJORVERSION, BUDB_OP_VOLUMENAME, volumeName,	/* name */
 		     0,		/* start */
 		     0,		/* end */
 		     last,	/* index */
@@ -475,13 +449,11 @@ bcdb_LookupVolume(volumeName, returnArray, last, next, maxa, nEntries)
     return (0);
 }
 
-
-bcdb_UseTape(teptr, newFlag)
-     register struct budb_tapeEntry *teptr;
-     afs_int32 *newFlag;
+int
+bcdb_UseTape(struct budb_tapeEntry *teptr, afs_int32 *newFlag)
 {
     afs_int32 code;
-    code = ubik_Call(BUDB_UseTape, udbHandle.uh_client, 0, teptr, newFlag);
+    code = ubik_BUDB_UseTape(udbHandle.uh_client, 0, teptr, newFlag);
     return (code);
 }
 
@@ -500,6 +472,7 @@ bcdb_UseTape(teptr, newFlag)
  *	ctPtr - ptr to client structure with all the required information
  */
 
+int
 bcdb_GetTextFile(register udbClientTextP ctPtr)
 {
     afs_int32 bufferSize;
@@ -532,7 +505,7 @@ bcdb_GetTextFile(register udbClientTextP ctPtr)
 	offset = nextOffset;
 	charList.charListT_len = bufferSize;
 	code =
-	    ubik_Call(BUDB_GetText, udbHandle.uh_client, 0, ctPtr->lockHandle,
+	    ubik_BUDB_GetText(udbHandle.uh_client, 0, ctPtr->lockHandle,
 		      ctPtr->textType, bufferSize, offset, &nextOffset,
 		      &charList);
 
@@ -550,7 +523,7 @@ bcdb_GetTextFile(register udbClientTextP ctPtr)
 
     /* get text version */
     code =
-	ubik_Call(BUDB_GetTextVersion, udbHandle.uh_client, 0,
+	ubik_BUDB_GetTextVersion(udbHandle.uh_client, 0,
 		  ctPtr->textType, &ctPtr->textVersion);
     if (code)
 	ERROR(code);
@@ -579,14 +552,13 @@ bcdb_GetTextFile(register udbClientTextP ctPtr)
  *	filename - where to get the text from
  */
 
-bcdb_SaveTextFile(ctPtr)
-     udbClientTextP ctPtr;
+int
+bcdb_SaveTextFile(udbClientTextP ctPtr)
 {
     afs_int32 bufferSize;
     afs_int32 offset, chunkSize, fileSize;
     charListT charList;
     afs_int32 code = 0;
-    afs_int32 filesize();
 
     /* allocate a buffer */
     bufferSize = 1024;
@@ -601,7 +573,7 @@ bcdb_SaveTextFile(ctPtr)
 
     fileSize = (afs_int32) filesize(ctPtr->textStream);
 
-    dprintf(("filesize is %d\n", fileSize));
+    afs_dprintf(("filesize is %d\n", fileSize));
 
     rewind(ctPtr->textStream);
 
@@ -609,7 +581,7 @@ bcdb_SaveTextFile(ctPtr)
     if (fileSize == 0) {
 	charList.charListT_len = 0;
 	code =
-	    ubik_Call(BUDB_SaveText, udbHandle.uh_client, 0,
+	    ubik_BUDB_SaveText(udbHandle.uh_client, 0,
 		      ctPtr->lockHandle, ctPtr->textType, 0,
 		      BUDB_TEXT_COMPLETE, &charList);
 	goto error_exit;
@@ -629,7 +601,7 @@ bcdb_SaveTextFile(ctPtr)
 
 	charList.charListT_len = chunkSize;
 	code =
-	    ubik_Call(BUDB_SaveText, udbHandle.uh_client, 0,
+	    ubik_BUDB_SaveText(udbHandle.uh_client, 0,
 		      ctPtr->lockHandle, ctPtr->textType, offset,
 		      (chunkSize == fileSize) ? BUDB_TEXT_COMPLETE : 0,
 		      &charList);
@@ -648,24 +620,20 @@ bcdb_SaveTextFile(ctPtr)
     return (code);
 }
 
-bcdb_FindLastTape(dumpID, dumpEntry, tapeEntry, volEntry)
-     afs_int32 dumpID;
-     struct budb_dumpEntry *dumpEntry;
-     struct budb_tapeEntry *tapeEntry;
-     struct budb_volumeEntry *volEntry;
+int
+bcdb_FindLastTape(afs_int32 dumpID, struct budb_dumpEntry *dumpEntry,
+		  struct budb_tapeEntry *tapeEntry,
+		  struct budb_volumeEntry *volEntry)
 {
-    return (ubik_Call
-	    (BUDB_FindLastTape, udbHandle.uh_client, 0, dumpID, dumpEntry,
+    return (ubik_BUDB_FindLastTape(udbHandle.uh_client, 0, dumpID, dumpEntry,
 	     tapeEntry, volEntry));
 }
 
-bcdb_MakeDumpAppended(appendedDumpID, initialDumpID, startTapeSeq)
-     afs_int32 appendedDumpID;
-     afs_int32 initialDumpID;
-     afs_int32 startTapeSeq;
+int
+bcdb_MakeDumpAppended(afs_int32 appendedDumpID, afs_int32 initialDumpID,
+		      afs_int32 startTapeSeq)
 {
-    return (ubik_Call
-	    (BUDB_MakeDumpAppended, udbHandle.uh_client, 0, appendedDumpID,
+    return (ubik_BUDB_MakeDumpAppended(udbHandle.uh_client, 0, appendedDumpID,
 	     initialDumpID, startTapeSeq));
 }
 
@@ -676,8 +644,7 @@ bcdb_MakeDumpAppended(appendedDumpID, initialDumpID, startTapeSeq)
  */
 
 afs_int32
-filesize(stream)
-     FILE *stream;
+filesize(FILE *stream)
 {
     afs_int32 offset;
     afs_int32 size;
@@ -705,8 +672,8 @@ filesize(stream)
  *	n - fail
  */
 
-bc_LockText(ctPtr)
-     register udbClientTextP ctPtr;
+int
+bc_LockText(udbClientTextP ctPtr)
 {
     afs_int32 code;
     afs_int32 timeout, j = 0;
@@ -719,7 +686,7 @@ bc_LockText(ctPtr)
 
     while (1) {
 	code =
-	    ubik_Call(BUDB_GetLock, udbHandle.uh_client, 0,
+	    ubik_BUDB_GetLock(udbHandle.uh_client, 0,
 		      udbHandle.uh_instanceId, ctPtr->textType, timeout,
 		      &ctPtr->lockHandle);
 	if ((code != BUDB_LOCKED) && (code != BUDB_SELFLOCKED)) {
@@ -754,8 +721,8 @@ bc_LockText(ctPtr)
  *	n - fail
  */
 
-bc_UnlockText(ctPtr)
-     register udbClientTextP ctPtr;
+int
+bc_UnlockText(udbClientTextP ctPtr)
 {
     afs_int32 code = 0;
 
@@ -763,7 +730,7 @@ bc_UnlockText(ctPtr)
 	return (0);
 
     code =
-	ubik_Call(BUDB_FreeLock, udbHandle.uh_client, 0, ctPtr->lockHandle);
+	ubik_BUDB_FreeLock(udbHandle.uh_client, 0, ctPtr->lockHandle);
     ctPtr->lockHandle = 0;
 
     /* Don't try to analyse the error. Let the lock timeout */
@@ -776,8 +743,8 @@ bc_UnlockText(ctPtr)
  *	n - out of date or error
  */
 
-bc_CheckTextVersion(ctPtr)
-     register udbClientTextP ctPtr;
+int
+bc_CheckTextVersion(udbClientTextP ctPtr)
 {
     afs_int32 code;
     afs_uint32 tversion;
@@ -786,7 +753,7 @@ bc_CheckTextVersion(ctPtr)
 	return (BC_VERSIONMISMATCH);
 
     code =
-	ubik_Call(BUDB_GetTextVersion, udbHandle.uh_client, 0,
+	ubik_BUDB_GetTextVersion(udbHandle.uh_client, 0,
 		  ctPtr->textType, &tversion);
     if (code)
 	return (code);
@@ -803,16 +770,14 @@ bc_CheckTextVersion(ctPtr)
 /* vldbClientInit 
  *      Initialize a client for the vl ubik database.
  */
-vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
-     int noAuthFlag;
-     int localauth;
-     char *cellName;
-     struct ubik_client **cstruct;
-     struct ktc_token *ttoken;
+int
+vldbClientInit(int noAuthFlag, int localauth, char *cellName, 
+	       struct ubik_client **cstruct, 
+	       struct ktc_token *ttoken)
 {
     afs_int32 code = 0;
     struct afsconf_dir *acdir;
-    struct rc_securityClass *sc;
+    struct rx_securityClass *sc;
     afs_int32 i, scIndex = 0;	/* Index of Rx security object - noauth */
     struct afsconf_cell info;
     struct ktc_principal sname;
@@ -883,7 +848,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
 		afs_com_err(whoami, code, 0,
 			"; Can't get AFS tokens - running unauthenticated");
 	    } else {
-		if ((ttoken->kvno < 0) || (ttoken->kvno > 255))
+		if ((ttoken->kvno < 0) || (ttoken->kvno > 256))
 		    afs_com_err(whoami, 0,
 			    "Funny kvno (%d) in ticket, proceeding",
 			    ttoken->kvno);
@@ -952,10 +917,7 @@ vldbClientInit(noAuthFlag, localauth, cellName, cstruct, ttoken)
  */
 
 afs_int32
-udbClientInit(noAuthFlag, localauth, cellName)
-     int noAuthFlag;
-     int localauth;
-     char *cellName;
+udbClientInit(int noAuthFlag, int localauth, char *cellName)
 {
     struct ktc_principal principal;
     struct ktc_token token;
@@ -1026,7 +988,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
 		afs_com_err(whoami, code,
 			"; Can't get tokens - running unauthenticated");
 	    } else {
-		if ((token.kvno < 0) || (token.kvno > 255))
+		if ((token.kvno < 0) || (token.kvno > 256))
 		    afs_com_err(whoami, 0,
 			    "Unexpected kvno (%d) in ticket - proceeding",
 			    token.kvno);
@@ -1088,7 +1050,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
     for (i = 0; i < info.numServers; i++)
 	rx_SetConnDeadTime(udbHandle.uh_client->conns[i], 1);
     code =
-	ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
+	ubik_BUDB_GetInstanceId(udbHandle.uh_client, 0,
 		  &udbHandle.uh_instanceId);
 
     /* Reset dead time back up to default */
@@ -1098,7 +1060,7 @@ udbClientInit(noAuthFlag, localauth, cellName)
     /* If did not find a site on first quick pass, try again */
     if (code == -1)
 	code =
-	    ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
+	    ubik_BUDB_GetInstanceId(udbHandle.uh_client, 0,
 		      &udbHandle.uh_instanceId);
     if (code) {
 	afs_com_err(whoami, code, "; Can't access backup database");
@@ -1149,13 +1111,11 @@ static struct ubikCallState uServer;
  */
 
 afs_int32
-ubik_Call_SingleServer(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8,
-		       p9, p10, p11, p12, p13, p14, p15, p16)
-     register struct ubik_client *aclient;
-     int (*aproc) ();
-     afs_int32 aflags;
-     char *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8, *p9, *p10, *p11, *p12, *p13,
-	 *p14, *p15, *p16;
+ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient, 
+		       afs_int32 aflags, char *p1, char *p2, char *p3, 
+		       char *p4, char *p5, char *p6, char *p7, char *p8,
+		       char *p9, char *p10, char *p11, char *p12, char *p13, 
+		       char *p14, char *p15, char *p16)
 {
     register afs_int32 code;
     afs_int32 someCode, newHost, thisHost;
@@ -1296,7 +1256,8 @@ ubik_Call_SingleServer(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8,
  *	n - error.
  */
 
-udbLocalInit()
+int
+udbLocalInit(void)
 {
     afs_int32 serverList[MAXSERVERS];
     char hostname[256];
@@ -1340,7 +1301,7 @@ udbLocalInit()
     }
 
     code =
-	ubik_Call(BUDB_GetInstanceId, udbHandle.uh_client, 0,
+	ubik_BUDB_GetInstanceId(udbHandle.uh_client, 0,
 		  &udbHandle.uh_instanceId);
     if (code) {
 	afs_com_err(whoami, code, "; Can't estblish instance Id");
@@ -1390,7 +1351,7 @@ bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
 	ERROR(errno);
 #endif
 
-    dprintf(("file is %s\n", tmpFileName));
+    afs_dprintf(("file is %s\n", tmpFileName));
 
   normal_exit:
     return code;

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_gcpags.c,v 1.1.2.6 2007/04/03 18:54:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -232,19 +230,20 @@ extern rwlock_t tasklist_lock __attribute__((weak));
 void
 afs_osi_TraverseProcTable()
 {
-#if !defined(LINUX_KEYRING_SUPPORT)
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
     struct task_struct *p;
-#ifdef EXPORTED_TASKLIST_LOCK
-    if (&tasklist_lock)
-       read_lock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
-    else
-#endif
-	rcu_read_lock();
-#endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
+    if (&tasklist_lock)
+	read_lock(&tasklist_lock);
+#endif /* EXPORTED_TASKLIST_LOCK */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
+    else
+#endif /* EXPORTED_TASKLIST_LOCK && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
+	rcu_read_lock();
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
+    
 #ifdef DEFINED_FOR_EACH_PROCESS
     for_each_process(p) if (p->pid) {
 #ifdef STRUCT_TASK_STRUCT_HAS_EXIT_STATE
@@ -268,16 +267,16 @@ afs_osi_TraverseProcTable()
 	afs_GCPAGs_perproc_func(p);
     }
 #endif
-#ifdef EXPORTED_TASKLIST_LOCK
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
     if (&tasklist_lock)
-       read_unlock(&tasklist_lock);
-#endif
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16)
-#ifdef EXPORTED_TASKLIST_LOCK
+	read_unlock(&tasklist_lock);
+#endif /* EXPORTED_TASKLIST_LOCK */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) && defined(EXPORTED_TASKLIST_LOCK)
     else
-#endif
+#endif /* EXPORTED_TASKLIST_LOCK && LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18) */
 	rcu_read_unlock();
-#endif
+#endif /* LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,16) */
 #endif
 }
 #endif
@@ -498,6 +497,7 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return rv;
 }
 #elif defined(AFS_LINUX22_ENV)
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
 const struct AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
@@ -512,10 +512,15 @@ afs_osi_proc2cred(AFS_PROC * pr)
 	|| (pr->state == TASK_UNINTERRUPTIBLE)
 	|| (pr->state == TASK_STOPPED)) {
 	cr.cr_ref = 1;
-	cr.cr_uid = pr->uid;
+	cr.cr_uid = task_uid(pr);
 #if defined(AFS_LINUX26_ENV)
+#if defined(STRUCT_TASK_HAS_CRED)
+	get_group_info(pr->cred->group_info);
+	cr.cr_group_info = pr->cred->group_info;
+#else
 	get_group_info(pr->group_info);
 	cr.cr_group_info = pr->group_info;
+#endif
 #else
 	cr.cr_ngroups = pr->ngroups;
 	memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
@@ -525,6 +530,7 @@ afs_osi_proc2cred(AFS_PROC * pr)
 
     return rv;
 }
+#endif
 #else
 const struct AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)

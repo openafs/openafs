@@ -10,8 +10,6 @@
 #include "afs/param.h"
 #include <afsconfig.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/test/kctest.c,v 1.5 2003/07/15 23:16:37 shadow Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>

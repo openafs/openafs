@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vm.c,v 1.20 2006/01/28 18:02:42 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -130,8 +128,8 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
     size = ubc_getsize(vp);
     ubc_sync_range(vp, 0, size, UBC_INVALIDATE);
 	/* XXX what about when not CStatd */
-    if (avc->states & CStatd && size != avc->m.Length)
-       ubc_setsize(vp, avc->m.Length);
+    if (avc->f.states & CStatd && size != avc->f.m.Length)
+       ubc_setsize(vp, avc->f.m.Length);
 #else
     if (UBCINFOEXISTS(vp)) {
 	size = ubc_getsize(vp);
@@ -139,9 +137,9 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 	if (kret != 1)		/* Should be KERN_SUCCESS */
 	    printf("VMFlushPages: invalidate failed (error = %d)\n", kret);
 	/* XXX what about when not CStatd */
-	if (avc->states & CStatd && size != avc->m.Length)
+	if (avc->f.states & CStatd && size != avc->f.m.Length)
 	  if (UBCISVALID(vp))
-	    ubc_setsize(vp, avc->m.Length);
+	    ubc_setsize(vp, avc->f.m.Length);
     }
 #endif
 }
@@ -190,23 +188,23 @@ osi_VM_Setup(struct vcache *avc, int force)
     struct vnode *vp = AFSTOV(avc);
 
 #ifndef AFS_DARWIN80_ENV
-    if (UBCISVALID(vp) && ((avc->states & CStatd) || force)) {
+    if (UBCISVALID(vp) && ((avc->f.states & CStatd) || force)) {
 	if (!UBCINFOEXISTS(vp)) {
 	    osi_vnhold(avc, 0);
-	    avc->states |= CUBCinit;
+	    avc->f.states |= CUBCinit;
 	    AFS_GUNLOCK();
 	    if ((error = ubc_info_init(vp))) {
 		AFS_GLOCK();
-		avc->states &= ~CUBCinit;
+		avc->f.states &= ~CUBCinit;
 		AFS_RELE(vp);
 		return error;
 	    }
 	    AFS_GLOCK();
-	    avc->states &= ~CUBCinit;
+	    avc->f.states &= ~CUBCinit;
 	    AFS_RELE(vp);
 	}
 	if (UBCINFOEXISTS(vp) && UBCISVALID(vp)) {
-	    ubc_setsize(vp, avc->m.Length);
+	    ubc_setsize(vp, avc->f.m.Length);
 	}
     }
 #endif

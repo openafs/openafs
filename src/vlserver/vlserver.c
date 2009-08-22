@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vlserver/vlserver.c,v 1.22.2.9 2008/04/02 19:51:57 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -40,14 +38,16 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
+#include <rx/rxstat.h>
 #include <afs/cellconfig.h>
 #include <afs/keys.h>
 #include <afs/auth.h>
+#include <afs/audit.h>
 #include <lock.h>
 #include <ubik.h>
 #include <afs/afsutil.h>
 #include "vlserver.h"
-
+#include "vlserver_internal.h"
 
 #define MAXLWP 16
 const char *vl_dbaseName;
@@ -57,22 +57,21 @@ int lwps = 9;
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
 afs_uint32 HostAddress[MAXSERVERID + 1];
-extern int afsconf_CheckAuth();
-extern int afsconf_ServerAuth();
 
 static void *CheckSignal(void*);
 int LogLevel = 0;
 int smallMem = 0;
-int rxJumbograms = 1;		/* default is to send and receive jumbo grams */
+int rxJumbograms = 0;		/* default is to not send and receive jumbo grams */
 int rxMaxMTU = -1;
 afs_int32 rxBind = 0;
 int rxkadDisableDotCheck = 0;
+int debuglevel = 0;
 
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
 static void
-CheckSignal_Signal()
+CheckSignal_Signal(int unused)
 {
 #if defined(AFS_PTHREAD_ENV)
     CheckSignal(0);
@@ -87,8 +86,8 @@ CheckSignal(void *unused)
     register int i, errorcode;
     struct ubik_trans *trans;
 
-    if (errorcode =
-	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE))
+    if ((errorcode =
+	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
 	return (void *)errorcode;
     VLog(0, ("Dump name hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
@@ -104,7 +103,7 @@ CheckSignal(void *unused)
 
 /* Initialize the stats for the opcodes */
 void
-initialize_dstats()
+initialize_dstats(void)
 {
     int i;
 
@@ -117,8 +116,7 @@ initialize_dstats()
 
 /* check whether caller is authorized to manage RX statistics */
 int
-vldb_rxstat_userok(call)
-     struct rx_call *call;
+vldb_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(vldb_confdir, call, NULL);
 }
@@ -127,25 +125,22 @@ vldb_rxstat_userok(call)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     afs_int32 myHost;
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
-    extern int VL_ExecuteRequest();
-    extern int RXSTATS_ExecuteRequest();
     struct afsconf_dir *tdir;
     struct ktc_encryptionKey tkey;
     struct afsconf_cell info;
     struct hostent *th;
     char hostname[VL_MAXNAMELEN];
     int noAuth = 0, index, i;
-    extern int rx_extraPackets;
     char commandLine[150];
     char clones[MAXHOSTSPERCELL];
+    char *auditFileName = NULL;
     afs_uint32 host = ntohl(INADDR_ANY);
 
 #ifdef	AFS_AIX32_ENV
@@ -170,7 +165,6 @@ main(argc, argv)
     for (index = 1; index < argc; index++) {
 	if (strcmp(argv[index], "-noauth") == 0) {
 	    noAuth = 1;
-
 	} else if (strcmp(argv[index], "-p") == 0) {
 	    lwps = atoi(argv[++index]);
 	    if (lwps > MAXLWP) {
@@ -178,10 +172,17 @@ main(argc, argv)
 		       lwps, MAXLWP);
 		lwps = MAXLWP;
 	    }
-
+	} else if (strcmp(argv[index], "-d") == 0) {
+	    if ((index + 1) >= argc) {
+		fprintf(stderr, "missing argument for -d\n"); 
+		return -1; 
+	    }
+	    debuglevel = atoi(argv[++index]);
+	    LogLevel = debuglevel;
 	} else if (strcmp(argv[index], "-nojumbo") == 0) {
 	    rxJumbograms = 0;
-
+	} else if (strcmp(argv[index], "-jumbo") == 0) {
+	    rxJumbograms = 1;
 	} else if (strcmp(argv[index], "-rxbind") == 0) {
 	    rxBind = 1;
 	} else if (strcmp(argv[index], "-allow-dotted-principals") == 0) {
@@ -191,10 +192,10 @@ main(argc, argv)
 		fprintf(stderr, "missing argument for -rxmaxmtu\n"); 
 		return -1; 
 	    }
-	    rxMaxMTU = atoi(argv[++i]);
+	    rxMaxMTU = atoi(argv[++index]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;
@@ -207,35 +208,17 @@ main(argc, argv)
 	    extern char rxi_tracename[80];
 	    strcpy(rxi_tracename, argv[++index]);
 
-       } else if (strcmp(argv[index], "-auditlog") == 0) {
-	   int tempfd, flags;
-           FILE *auditout;
-           char oldName[MAXPATHLEN];
-           char *fileName = argv[++index];
+	} else if (strcmp(argv[index], "-auditlog") == 0) {
+	    auditFileName = argv[++index];
 
-#ifndef AFS_NT40_ENV
-           struct stat statbuf;
+	} else if (strcmp(argv[index], "-audit-interface") == 0) {
+	    char *interface = argv[++index];
 
-           if ((lstat(fileName, &statbuf) == 0) 
-               && (S_ISFIFO(statbuf.st_mode))) {
-               flags = O_WRONLY | O_NONBLOCK;
-           } else 
-#endif
-           {
-               strcpy(oldName, fileName);
-               strcat(oldName, ".old");
-               renamefile(fileName, oldName);
-               flags = O_WRONLY | O_TRUNC | O_CREAT;
-           }
-           tempfd = open(fileName, flags, 0666);
-           if (tempfd > -1) {
-               auditout = fdopen(tempfd, "a");
-               if (auditout) {
-                   osi_audit_file(auditout);
-               } else
-                   printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-           } else
-               printf("Warning: auditlog %s not writable, ignored.\n", fileName);
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		return -1;
+	    }
+
 	} else if (strcmp(argv[index], "-enable_peer_stats") == 0) {
 	    rx_enablePeerRPCStats();
 	} else if (strcmp(argv[index], "-enable_process_stats") == 0) {
@@ -253,20 +236,24 @@ main(argc, argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #else
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
 		   "[-rxmaxmtu <bytes>] [-rxbind] [-allow-dotted-principals] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-jumbo] [-d <debug level>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
 		   "[-help]\n");
 #endif
 	    fflush(stdout);
 	    exit(0);
 	}
+    }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
     }
 
     /* Initialize dirpaths */
@@ -311,7 +298,7 @@ main(argc, argv)
     }
     memcpy(&myHost, th->h_addr, sizeof(afs_int32));
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
     signal(SIGXCPU, CheckSignal_Signal);
 #endif
     /* get list of servers */
@@ -359,7 +346,7 @@ main(argc, argv)
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;
     ubik_CheckRXSecurityRock = (char *)tdir;
     code =
-	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, &clones,
+	ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info, clones,
 			      vl_dbaseName, &VL_dbase);
     if (code) {
 	printf("vlserver: Ubik init failed with code %d\n", code);
@@ -394,8 +381,7 @@ main(argc, argv)
 
     if (rxkadDisableDotCheck) {
         rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
-                                    NULL);
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
     }
 
     tservice =

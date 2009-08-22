@@ -167,4 +167,5 @@ extern int kaux_islocked(afs_int32 to, u_int attempts, u_int locktime);
 
 extern afs_int32 krb4_cross;
 
+extern afs_int32 es_Report(char *fmt, ...);
 #define LOCKPW

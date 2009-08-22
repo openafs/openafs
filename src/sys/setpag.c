@@ -15,14 +15,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/setpag.c,v 1.1 2005/10/15 15:19:38 shadow Exp $");
 
 #include <afs/afs_args.h>
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
+#include <afs/sys_prototypes.h>
 #include <unistd.h>
-#else
 #include <stdio.h>
+#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) 
+# include <sys/syscall.h>
 #endif
 #include "afssyscalls.h"
 
@@ -48,9 +47,11 @@ lsetpag(void)
 int
 lsetpag(void)
 {
-    int errcode, rval;
+    int errcode;
 
 #ifdef AFS_LINUX20_ENV
+    int rval;
+    
     rval = proc_afs_syscall(AFSCALL_SETPAG,0,0,0,0,&errcode);
     
     if(rval)

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/tsm41/aix_ktc.c,v 1.1.4.2 2006/07/13 17:23:29 shadow Exp $");
 
 #if defined(AFS_AIX41_ENV)
 #include <sys/types.h>

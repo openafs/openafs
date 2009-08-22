@@ -140,7 +140,7 @@ extern int ADMINAPI cfg_HostSetAfsPrincipal(void *hostHandle, short isFirst,
 					    afs_status_p st);
 
 extern int ADMINAPI cfg_HostSetAdminPrincipal(void *hostHandle, short isFirst,
-					      const char *admin,
+					      char *admin,
 					      const char *passwd,
 					      unsigned int afsUid,
 					      afs_status_p st);

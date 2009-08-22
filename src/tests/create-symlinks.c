@@ -47,10 +47,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: create-symlinks.c,v 1.2 2003/07/15 23:16:56 shadow Exp $");
-#endif
-
 #define CONTENT_STRING "kaka"
 
 static FILE *verbose_fp = NULL;

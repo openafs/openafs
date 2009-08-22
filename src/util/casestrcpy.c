@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/casestrcpy.c,v 1.6.14.2 2007/10/30 15:16:48 shadow Exp $");
 
 #include <string.h>
 #include <ctype.h>
@@ -61,7 +59,7 @@ ucstring(char *d, char *s, int n)
     return original_d;
 }
 
-int
+void
 stolower(char *s)
 {
   while (*s) {
@@ -69,10 +67,10 @@ stolower(char *s)
             *s = tolower(*s);
         s++;
     }
-    return 0;
+    return;
 }
 
-int
+void
 stoupper(char *s)
 {
   while (*s) {
@@ -80,7 +78,7 @@ stoupper(char *s)
             *s = toupper(*s);
         s++;
     }
-    return 0;
+    return;
 }
 
 /* strcompose - concatenate strings passed to it.

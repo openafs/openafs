@@ -14,8 +14,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/client.c,v 1.14.4.1 2007/10/30 15:16:39 shadow Exp $");
 
 #if defined(UKERNEL)
 #ifdef HAVE_UNISTD_H
@@ -32,6 +30,7 @@ RCSID
 #include "afs/kautils.h"
 #include "afs/pthread_glock.h"
 #include "des/des.h"
+#include <des_prototypes.h>
 
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
@@ -186,9 +185,7 @@ ka_ReadPassword(char *prompt, int verify, char *cell,
 /* This performs the backslash quoting defined by AC_ParseLoginName. */
 
 static char
-map_char(str, ip)
-     char *str;
-     int *ip;
+map_char(char *str, int *ip)
 {
     char c = str[*ip];
     if (c == '\\') {

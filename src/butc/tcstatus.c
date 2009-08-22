@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/tcstatus.c,v 1.6.14.1 2007/10/30 15:16:38 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -30,11 +28,13 @@ RCSID
 #include <afs/bubasics.h>
 #include <afs/tcdata.h>
 #include <afs/butc.h>
+#include <afs/budb_client.h>
+#include <afs/bucoord_prototypes.h>
+#include "butc_internal.h"
+
 #include "error_macros.h"
 #include "butc_xbsa.h"
-
 /* tape coordinator - task status management */
-extern statusP findStatus();
 extern afs_int32 xbsaType;
 
 dlqlinkT statusHead;
@@ -50,10 +50,8 @@ struct Lock cmdLineLock;
  */
 
 afs_int32
-STC_GetStatus(call, taskId, statusPtr)
-     struct rx_call *call;
-     afs_uint32 taskId;
-     struct tciStatusS *statusPtr;
+STC_GetStatus(struct rx_call *call, afs_uint32 taskId,
+	      struct tciStatusS *statusPtr)
 {
     statusP ptr;
     int retval = 0;
@@ -83,9 +81,7 @@ STC_GetStatus(call, taskId, statusPtr)
 }
 
 afs_int32
-STC_EndStatus(call, taskId)
-     struct rx_call *call;
-     afs_uint32 taskId;
+STC_EndStatus(struct rx_call *call, afs_uint32 taskId)
 {
     statusP ptr;
     int retval = 0;
@@ -106,9 +102,7 @@ STC_EndStatus(call, taskId)
 }
 
 afs_int32
-STC_RequestAbort(call, taskId)
-     struct rx_call *call;
-     afs_uint32 taskId;
+STC_RequestAbort(struct rx_call *call, afs_uint32 taskId)
 {
     statusP ptr;
     int retval = 0;
@@ -143,14 +137,10 @@ STC_RequestAbort(call, taskId)
  */
 
 afs_int32
-STC_ScanStatus(call, taskId, statusPtr, flags)
-     struct rx_call *call;
-     afs_uint32 *taskId;
-     struct tciStatusS *statusPtr;
-     afs_uint32 *flags;
+STC_ScanStatus(struct rx_call *call, afs_uint32 *taskId,
+	       struct tciStatusS *statusPtr, afs_uint32 *flags)
 {
     statusP ptr = 0;
-    statusP nextPtr = 0;
     dlqlinkP dlqPtr;
 
     if (callPermitted(call) == 0)
@@ -218,13 +208,11 @@ STC_ScanStatus(call, taskId, statusPtr, flags)
  *	n - abort requested
  */
 
-checkAbortByTaskId(taskId)
-     afs_uint32 taskId;
+int
+checkAbortByTaskId(afs_uint32 taskId)
 {
     statusP statusPtr;
     int retval = 0;
-
-    extern statusP findStatus();
 
     lock_Status();
     statusPtr = findStatus(taskId);
@@ -243,13 +231,10 @@ checkAbortByTaskId(taskId)
  */
 
 afs_uint32
-getStatusFlag(taskId, flag)
-     afs_uint32 taskId;
-     afs_uint32 flag;
+getStatusFlag(afs_uint32 taskId, afs_uint32 flag)
 {
     statusP statusPtr;
     int retval = 0;
-    extern statusP findStatus();
 
     lock_Status();
     statusPtr = findStatus(taskId);

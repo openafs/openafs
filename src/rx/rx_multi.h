@@ -25,9 +25,9 @@ struct multi_handle {
 
 #define multi_Rx(conns, nConns) \
     do {\
-	register struct multi_handle *multi_h;\
-	register int multi_i;\
-	register struct rx_call *multi_call;\
+	struct multi_handle *multi_h;\
+	int multi_i;\
+	struct rx_call *multi_call;\
 	multi_h = multi_Init(conns, nConns);\
 	for (multi_i = 0; multi_i < nConns; multi_i++)
 
@@ -37,7 +37,7 @@ struct multi_handle {
 	rx_FlushWrite(multi_call);\
 	}\
 	while ((multi_i = multi_Select(multi_h)) >= 0) {\
-	    register afs_int32 multi_error;\
+	    afs_int32 multi_error;\
 	    multi_call = multi_h->calls[multi_i];\
 	    multi_error = rx_EndCall(multi_call, endProc);\
 	    multi_h->calls[multi_i] = (struct rx_call *) 0

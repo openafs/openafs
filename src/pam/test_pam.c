@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/pam/test_pam.c,v 1.8 2005/05/30 03:35:52 shadow Exp $");
 
 #include <stdio.h>
 #include <security/pam_appl.h>
@@ -34,7 +32,7 @@ static const char *service = "afstest";
 static const char *new_envstring = "GOTHEREVIATESTPAM=1";
 static const char *new_homestring = "HOME=/tmp";
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_NBSD_ENV)
+#if defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DFBSD_ENV) || defined(AFS_NBSD_ENV)
 #define getpassphrase getpass
 #endif
 

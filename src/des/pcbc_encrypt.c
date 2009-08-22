@@ -23,14 +23,13 @@
 #include <mit-cpyright.h>
 #ifndef KERNEL
 #include <stdio.h>
+#include <string.h>
 #endif
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <des.h>
 #include "des_prototypes.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/pcbc_encrypt.c,v 1.10.8.1 2007/07/09 19:15:26 shadow Exp $");
 
 #include "des_internal.h"
 

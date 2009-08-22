@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/IRIX/rx_knet.c,v 1.15 2005/04/15 18:33:25 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 #include "h/tcp-param.h"

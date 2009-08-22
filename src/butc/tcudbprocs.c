@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/tcudbprocs.c,v 1.15.6.7 2008/04/18 13:57:13 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -40,10 +38,17 @@ RCSID
 #include <afs/keys.h>
 #include <ubik.h>
 #include <afs/acl.h>
+#include <afs/volser.h>
+#include <afs/vlserver.h>
 #include <afs/tcdata.h>
 #include <afs/budb.h>
 #include <afs/budb_client.h>
 #include <afs/bubasics.h>
+#include <afs/bucoord_prototypes.h>
+#include <afs/butm_prototypes.h>
+#include <afs/budb_prototypes.h>
+#include <afs/afsutil.h>
+#include "butc_internal.h"
 #include "error_macros.h"
 
 /* GLOBAL CONFIGURATION PARAMETERS */
@@ -52,9 +57,26 @@ RCSID
 extern int dump_namecheck;
 extern int autoQuery;
 
-static void initTapeBuffering();
-static writeDbDump();
-static restoreDbEntries();
+struct rstTapeInfo {
+    afs_int32 taskId;
+    afs_int32 tapeSeq;
+    afs_uint32 dumpid;
+};
+
+static void initTapeBuffering(void);
+static int writeDbDump(struct butm_tapeInfo *, afs_uint32, Date, afs_uint32);
+static int restoreDbEntries(struct butm_tapeInfo *, struct rstTapeInfo *);
+
+int getTapeData(struct butm_tapeInfo *, struct rstTapeInfo *, void *,
+		afs_int32);
+int restoreDbHeader(struct butm_tapeInfo *, struct rstTapeInfo *,
+		    struct structDumpHeader *);
+int restoreDbDump(struct butm_tapeInfo *, struct rstTapeInfo *,
+		  struct structDumpHeader *);
+int restoreText(struct butm_tapeInfo *, struct rstTapeInfo *,
+		struct structDumpHeader *);
+
+
 
 void * KeepAlive(void *);
 /* CreateDBDump
@@ -62,8 +84,7 @@ void * KeepAlive(void *);
  */
 
 afs_int32
-CreateDBDump(dumpEntryPtr)
-     struct budb_dumpEntry *dumpEntryPtr;
+CreateDBDump(struct budb_dumpEntry *dumpEntryPtr)
 {
     afs_int32 code = 0;
 
@@ -103,15 +124,9 @@ struct budb_dumpEntry lastDump;	/* the last dump of this volset */
  *      Leave the tape mounted.
  */
 afs_int32
-GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence, queryFlag,
-	  wroteLabel)
-     afs_int32 taskId;
-     Date expires;
-     struct butm_tapeInfo *tapeInfoPtr;
-     afs_uint32 dumpid;
-     afs_int32 sequence;
-     int queryFlag;
-     int *wroteLabel;
+GetDBTape(afs_int32 taskId, Date expires, struct butm_tapeInfo *tapeInfoPtr,
+	  afs_uint32 dumpid, afs_int32 sequence, int queryFlag,
+	  int *wroteLabel)
 {
     afs_int32 code = 0;
     int interactiveFlag;
@@ -124,7 +139,6 @@ GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence, queryFlag,
 
     struct butm_tapeLabel oldTapeLabel, newLabel;
     struct tapeEntryList *endList;
-    extern struct tapeConfig globalTapeConfig;
 
     /* construct the name of the tape */
     sprintf(tapeName, "%s.%-d", DUMP_TAPE_NAME, sequence);
@@ -308,7 +322,7 @@ GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence, queryFlag,
  */
 
 afs_int32
-freeTapeList()
+freeTapeList(void)
 {
     struct tapeEntryList *next;
 
@@ -329,8 +343,7 @@ freeTapeList()
  */
 
 afs_int32
-addTapesToDb(taskId)
-     afs_int32 taskId;
+addTapesToDb(afs_int32 taskId)
 {
     afs_int32 code = 0;
     afs_int32 i, new;
@@ -378,12 +391,9 @@ addTapesToDb(taskId)
  *	the blocksize on writes
  */
 
-static
-writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
-     struct butm_tapeInfo *tapeInfoPtr;
-     afs_uint32 taskId;
-     Date expires;
-     afs_uint32 dumpid;
+static int
+writeDbDump(struct butm_tapeInfo *tapeInfoPtr, afs_uint32 taskId,
+	    Date expires, afs_uint32 dumpid)
 {
     afs_int32 blockSize;
     afs_int32 writeBufNbytes = 0;
@@ -392,7 +402,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
     char *writeBufPtr;
     afs_int32 transferSize;
 
-    char *readBufPtr;
+    char *readBufPtr = NULL;
     afs_int32 maxReadSize;
 
     charListT charList;
@@ -747,20 +757,14 @@ saveDbToTape(void *param)
     return (void *)(code);
 }
 
-struct rstTapeInfo {
-    afs_int32 taskId;
-    afs_int32 tapeSeq;
-    afs_uint32 dumpid;
-};
 
 /* makeDbDumpEntry()
  *      Make a database dump entry given a tape label.
  */
 
 afs_int32
-makeDbDumpEntry(tapeEntPtr, dumpEntryPtr)
-     struct budb_tapeEntry *tapeEntPtr;
-     struct budb_dumpEntry *dumpEntryPtr;
+makeDbDumpEntry(struct budb_tapeEntry *tapeEntPtr,
+		struct budb_dumpEntry *dumpEntryPtr)
 {
     memset(dumpEntryPtr, 0, sizeof(struct budb_dumpEntry));
 
@@ -790,10 +794,8 @@ makeDbDumpEntry(tapeEntPtr, dumpEntryPtr)
  */
 
 afs_int32
-readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct rstTapeInfo *rstTapeInfoPtr;
-     int query;
+readDbTape(struct butm_tapeInfo *tapeInfoPtr,
+	   struct rstTapeInfo *rstTapeInfoPtr, int query)
 {
     afs_int32 code = 0;
     int interactiveFlag;
@@ -909,7 +911,7 @@ readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
 
 static afs_int32 nbytes = 0;	/* # bytes left in buffer */
 static void
-initTapeBuffering()
+initTapeBuffering(void)
 {
     nbytes = 0;
 }
@@ -921,10 +923,9 @@ initTapeBuffering()
  *	tape positioned after tape label
  */
 
-static
-restoreDbEntries(tapeInfoPtr, rstTapeInfoPtr)
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct rstTapeInfo *rstTapeInfoPtr;
+static int
+restoreDbEntries(struct butm_tapeInfo *tapeInfoPtr,
+		 struct rstTapeInfo *rstTapeInfoPtr)
 {
     struct structDumpHeader netItemHeader, hostItemHeader;
     afs_int32 more = 1;
@@ -1149,10 +1150,10 @@ KeepAlive(void *unused)
  *	restore special items in the header
  */
 
-restoreDbHeader(tapeInfo, rstTapeInfoPtr, nextHeader)
-     struct butm_tapeInfo *tapeInfo;
-     struct rstTapeInfo *rstTapeInfoPtr;
-     struct structDumpHeader *nextHeader;
+int
+restoreDbHeader(struct butm_tapeInfo *tapeInfo,
+		struct rstTapeInfo *rstTapeInfoPtr,
+		struct structDumpHeader *nextHeader)
 {
     struct structDumpHeader netItemHeader;
     struct DbHeader netDbHeader, hostDbHeader;
@@ -1205,10 +1206,10 @@ restoreDbHeader(tapeInfo, rstTapeInfoPtr, nextHeader)
  *	a database dump tree exists on the tape
  */
 
-restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
-     struct butm_tapeInfo *tapeInfo;
-     struct rstTapeInfo *rstTapeInfoPtr;
-     struct structDumpHeader *nextHeader;
+int
+restoreDbDump(struct butm_tapeInfo *tapeInfo,
+	      struct rstTapeInfo *rstTapeInfoPtr,
+	      struct structDumpHeader *nextHeader)
 {
     struct budb_dumpEntry netDumpEntry, hostDumpEntry;
     struct budb_tapeEntry netTapeEntry, hostTapeEntry;
@@ -1350,10 +1351,7 @@ restoreDbDump(tapeInfo, rstTapeInfoPtr, nextHeader)
  */
 
 afs_int32
-saveTextFile(taskId, textType, fileName)
-     afs_int32 taskId;
-     afs_int32 textType;
-     char *fileName;
+saveTextFile(afs_int32 taskId, afs_int32 textType, char *fileName)
 {
     udbClientTextP ctPtr = 0;
     afs_int32 code = 0;
@@ -1407,10 +1405,10 @@ saveTextFile(taskId, textType, fileName)
  * 	nextHeader - struct header for next item on the tape
  */
 
-restoreText(tapeInfo, rstTapeInfoPtr, nextHeader)
-     struct butm_tapeInfo *tapeInfo;
-     struct rstTapeInfo *rstTapeInfoPtr;
-     struct structDumpHeader *nextHeader;
+int
+restoreText(struct butm_tapeInfo *tapeInfo,
+	    struct rstTapeInfo *rstTapeInfoPtr,
+	    struct structDumpHeader *nextHeader)
 {
     char filename[64];
     afs_int32 nbytes;
@@ -1538,15 +1536,14 @@ static char *tapeReadBufferPtr = 0;	/* position in buffer */
  *	fn retn - 0, ok, n, error
  */
 
-getTapeData(tapeInfoPtr, rstTapeInfoPtr, buffer, requestedBytes)
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct rstTapeInfo *rstTapeInfoPtr;
-     char *buffer;
-     afs_int32 requestedBytes;
+int
+getTapeData(struct butm_tapeInfo *tapeInfoPtr,
+	    struct rstTapeInfo *rstTapeInfoPtr,
+	    void *out, afs_int32 requestedBytes)
 {
-    afs_int32 taskId, transferBytes, new;
+    char *buffer = (char *) out;
+    afs_int32 taskId, transferBytes;
     afs_int32 code = 0;
-    afs_uint32 dumpid;
 
     taskId = rstTapeInfoPtr->taskId;
 

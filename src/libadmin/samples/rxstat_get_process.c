@@ -16,14 +16,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/samples/rxstat_get_process.c,v 1.7.14.1 2007/10/30 15:16:41 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <pthread.h>
 #endif
 #include <string.h>
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
@@ -36,7 +37,6 @@ pthread_mutex_t des_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif /* AFS_DARWIN_ENV */
 
-#include <rx/rxstat.h>
 #include <afs/afsint.h>
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>
@@ -52,10 +52,8 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
 #include <ubik.h>
 #include <ubik_int.h>
 
-extern int RXSTATS_RetrieveProcessRPCStats();
-
 void
-Usage()
+Usage(void)
 {
     fprintf(stderr, "Usage: rxstat_get_process <cell> <host> <port>\n");
     exit(1);

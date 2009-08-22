@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/venus/cmdebug.c,v 1.19.4.7 2008/01/12 15:44:40 jaltman Exp $");
 
 
 #include <sys/types.h>
@@ -38,8 +36,6 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 
-extern struct hostent *hostutil_GetHostByName();
-
 static int print_ctime = 0;
 
 static int
@@ -62,7 +58,7 @@ PrintCacheConfig(struct rx_connection *aconn)
 	struct cm_initparams_v1 *c1;
 
 	if (c.cacheConfig_len != sizeof(*c1) / sizeof(afs_uint32)) {
-	    printf("cmdebug: configuration data size mismatch (%d != %d)\n",
+	    printf("cmdebug: configuration data size mismatch (%d != %lu)\n",
 		   c.cacheConfig_len, sizeof(*c1) / sizeof(afs_uint32));
 	    return 0;
 	}
@@ -266,7 +262,7 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
     struct AFSDBCacheEntry centry;
     char *cellname;
 
-    for (i = 0; i < 10000; i++) {
+    for (i = 0; i < 1000000; i++) {
 	code = RXAFSCB_GetCE(aconn, i, &centry);
 	if (code) {
 	    if (code == 1)
@@ -284,9 +280,9 @@ PrintCacheEntries32(struct rx_connection *aconn, int aint32)
 	    continue;
 	}
 
-	if (aint32 == 0 && !IsLocked(&centry.lock) ||
-            aint32 == 2 && centry.refCount == 0 ||
-            aint32 == 4 && centry.callback == 0)
+	if ((aint32 == 0 && !IsLocked(&centry.lock)) ||
+            (aint32 == 2 && centry.refCount == 0) ||
+            (aint32 == 4 && centry.callback == 0))
 	    continue;
 
 	/* otherwise print this entry */
@@ -361,9 +357,8 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
     register afs_int32 code;
     struct AFSDBCacheEntry64 centry;
     char *cellname;
-    int ce64 = 0;
 
-    for (i = 0; i < 10000; i++) {
+    for (i = 0; i < 1000000; i++) {
 	code = RXAFSCB_GetCE64(aconn, i, &centry);
 	if (code) {
 	    if (code == 1)
@@ -381,9 +376,9 @@ PrintCacheEntries64(struct rx_connection *aconn, int aint32)
 	    continue;
 	}
 
-	if (aint32 == 0 && !IsLocked(&centry.lock) ||
-            aint32 == 2 && centry.refCount == 0 ||
-            aint32 == 4 && centry.callback == 0)
+	if ((aint32 == 0 && !IsLocked(&centry.lock)) ||
+            (aint32 == 2 && centry.refCount == 0) ||
+            (aint32 == 4 && centry.callback == 0))
 	    continue;
 
 	/* otherwise print this entry */
@@ -477,7 +472,6 @@ PrintCacheEntries(struct rx_connection *aconn, int aint32)
 static int
 PrintCellServDBEntry(struct rx_connection *aconn, afs_int32 cellnum)
 {
-    static struct cell_cache *cache;
     int code;
     char *cellname;
     serverList sl;

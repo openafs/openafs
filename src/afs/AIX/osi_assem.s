@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# $Locker:  $
+# $Locker$
 #
 # misc.s -	miscellaneous assembler routines for the rs/6000
 #

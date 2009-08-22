@@ -45,8 +45,10 @@ pragma Off(Prototype_override_warnings);
 #endif */
 
 #define MAX_AFS_INT32 0x7FFFFFFF
+#define MIN_AFS_INT32 (-MAX_AFS_INT32 - 1)
 #define MAX_AFS_UINT32 0xFFFFFFFF
 #define MAX_AFS_INT64 0x7FFFFFFFFFFFFFFFL
+#define MIN_AFS_INT64 (-MAX_AFS_INT64 - 1)
 #define MAX_AFS_UINT64 0xFFFFFFFFFFFFFFFFL
 
 typedef short afs_int16;
@@ -79,8 +81,8 @@ typedef unsigned long long afs_uint64;
 #define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
 #define NonZeroInt64(a)                (a)
 #define Int64ToInt32(a)    (a) & MAX_AFS_UINT32
-#define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
-#define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & MAX_AFS_UINT32;
+#define FillInt64(t,h,l) (t) = ((afs_int64)(h) << 32) | (l);
+#define SplitInt64(t,h,l) (h) = ((afs_int64)t) >> 32; (l) = (t) & MAX_AFS_UINT32;
 #define RoundInt64ToInt32(a)    (a > MAX_AFS_UINT32) ? MAX_AFS_UINT32 : a;
 #define RoundInt64ToInt31(a)    (a > MAX_AFS_INT32) ? MAX_AFS_INT32 : a;
 #else /* AFS_64BIT_ENV */
@@ -231,7 +233,7 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
 
 #define SIGN 0x80000000
 #define hadd32(a,i) \
-    (((((a).low ^ (int)(i)) & SIGN) \
+    ((void)((((a).low ^ (int)(i)) & SIGN) \
       ? (((((a).low + (int)(i)) & SIGN) == 0) && (a).high++) \
       : (((a).low & (int)(i) & SIGN) && (a).high++)), \
      (a).low += (int)(i))
@@ -275,5 +277,42 @@ typedef struct afsUUID afsUUID;
 #if defined(DEMAND_ATTACH_ENABLE) && defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
 #define AFS_DEMAND_ATTACH_FS 1
 #endif
+
+/* A macro that can be used when printf'ing 64 bit integers, as Unix and 
+ * windows use a different format string
+ */
+#ifdef AFS_NT40_ENV
+#define AFS_INT64_FMT "I64d"
+#define AFS_PTR_FMT   "Ip"
+#define AFS_SIZET_FMT "Iu"
+#else
+#define AFS_INT64_FMT "lld"
+#define AFS_PTR_FMT   "p"
+#define AFS_SIZET_FMT "u"
+#endif
+
+/* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
+ * printf statemements with %ld and %lu
+ */
+#ifdef AFS_NT40_ENV
+#define static_inline __inline static
+#define hdr_static_inline(x) __inline static x
+#elif defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV)
+#define static_inline static __inline
+#define hdr_static_inline(x) static __inline x
+#elif defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)
+#define static_inline static
+#define hdr_static_inline(x) static x
+#elif defined(AFS_SGI_ENV) || defined(AFS_USR_SGI_ENV)
+#define static_inline static
+#define hdr_static_inline(x) x
+#else
+#define static_inline static inline
+#define hdr_static_inline(x) static inline x
+#endif
+
+hdr_static_inline(long) afs_printable_int32_ld(afs_int32 d) { return (long) d; }
+
+hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return (unsigned long) d; }
 
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

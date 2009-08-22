@@ -5,7 +5,7 @@
 #
 # Written by:  Derek Atkins <warlord@MIT.EDU>
 #
-# $Revision: 1.2.2.2 $
+# $Revision$
 
 kerndir=/usr/src/kernels
 

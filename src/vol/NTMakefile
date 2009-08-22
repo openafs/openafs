@@ -28,14 +28,15 @@ INCFILES =\
 	$(INCFILEDIR)\afs\volume.h \
         $(INCFILEDIR)\afs\volume_inline.h \
 	$(INCFILEDIR)\afs\voldefs.h \
-	$(INCFILEDIR)\afs\daemon_com.h
-
-
+	$(INCFILEDIR)\afs\daemon_com.h \
+        $(INCFILEDIR)\afs\vol_prototypes.h
 
 ############################################################################
 # Build afsvol.lib
 
 LIBFILE = $(DESTDIR)\lib\afs\afsvol.lib
+
+MT_LIBFILE = $(DESTDIR)\lib\afs\mtafsvol.lib
 
 LIBOBJS =\
 	$(OUT)\common.obj \
@@ -53,10 +54,57 @@ LIBOBJS =\
 	$(OUT)\ihandle.obj \
 	$(OUT)\AFS_component_version_number.obj	
 
+MT_LIBOBJS =\
+	$(OUT)\common.obj \
+	$(OUT)\clone_mt.obj \
+	$(OUT)\fssync-client_mt.obj \
+	$(OUT)\fssync-server_mt.obj \
+	$(OUT)\daemon_com_mt.obj \
+	$(OUT)\ntops.obj \
+	$(OUT)\nuke_mt.obj \
+	$(OUT)\partition_mt.obj \
+	$(OUT)\purge.obj \
+	$(OUT)\vnode_mt.obj \
+	$(OUT)\volume_mt.obj \
+	$(OUT)\vutil_mt.obj \
+	$(OUT)\ihandle_mt.obj \
+	$(OUT)\AFS_component_version_number.obj	
+
+$(OUT)\clone_mt.obj:clone.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\daemon_com_mt.obj:daemon_com.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\fssync-client_mt.obj:fssync-client.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\fssync-server_mt.obj:fssync-server.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\ihandle_mt.obj:ihandle.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\nuke_mt.obj:nuke.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\partition_mt.obj:partition.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\vnode_mt.obj:vnode.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\volume_mt.obj:volume.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
+$(OUT)\vutil_mt.obj:vutil.c
+	$(C2OBJ) $** -DAFS_PTHREAD_ENV
+
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
-
+$(MT_LIBFILE): $(MT_LIBOBJS)
+	$(LIBARCH)
 
 ############################################################################
 # External libraries
@@ -134,7 +182,7 @@ $(OUT)\volinfo.res: AFS_component_version_number.h
 
 ############################################################################
 # Install targets
-install: $(INCFILES) $(LIBFILE) $(SALVAGER) $(VOLINFO) 
+install: $(INCFILES) $(LIBFILE) $(MT_LIBFILE) $(SALVAGER) $(VOLINFO) 
 
 mkdir:
 	

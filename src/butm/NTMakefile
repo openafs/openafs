@@ -10,6 +10,11 @@ RELDIR=butm
 !INCLUDE ..\config\NTMakefile.version
 
 ############################################################################
+# install headers
+INCFILES =\
+	$(DESTDIR)\include\afs\butm_prototypes.h
+
+############################################################################
 # Definitions for building a static library
 
 LIBFILE = $(DESTDIR)\lib\afs\afsbutm.lib
@@ -21,11 +26,10 @@ LIBOBJS =\
 $(LIBFILE): $(LIBOBJS) 
 	$(LIBARCH) 
 
-
 ############################################################################
 # Install target; primary makefile target
 
-install: $(LIBFILE) $(OUT)\test_ftm.exe
+install: $(INCFILES) $(LIBFILE) $(OUT)\test_ftm.exe
 
 
 ############################################################################

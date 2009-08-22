@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_server.c,v 1.21.2.5 2008/01/23 04:18:16 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -42,7 +40,11 @@ RCSID
  * Currently only used by the AFS/DFS protocol translator to recognize
  * Kerberos V5 tickets. The actual code to do that is provided externally.
  */
-afs_int32(*rxkad_AlternateTicketDecoder) ();
+afs_int32(*rxkad_AlternateTicketDecoder) (afs_int32, char *, afs_int32, 
+		                          char *, char *, char *,
+					  struct ktc_encryptionKey *,
+					  afs_int32 *, afs_uint32 *,
+					  afs_uint32 *);
 
 static struct rx_securityOps rxkad_server_ops = {
     rxkad_Close,
@@ -127,8 +129,8 @@ get_random_int32(void)
 */
 
 struct rx_securityClass *
-rxkad_NewServerSecurityObject(rxkad_level level, char *get_key_rock,
-			      int (*get_key) (char *get_key_rock, int kvno,
+rxkad_NewServerSecurityObject(rxkad_level level, void *get_key_rock,
+			      int (*get_key) (void *get_key_rock, int kvno,
 					      struct ktc_encryptionKey *
 					      serverKey),
 			      int (*user_ok) (char *name, char *instance,

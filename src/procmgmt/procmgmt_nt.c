@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/procmgmt/procmgmt_nt.c,v 1.7.4.2 2007/06/29 23:52:54 jaltman Exp $");
 
 #include <afs/stds.h>
 

@@ -10,20 +10,19 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vfsck/dirutils.c,v 1.5.14.1 2007/10/30 15:16:48 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <dirent.h>
+#include <afs/ihandle.h>
 #include <afs/partition.h>
 
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
  * Overwrites abuffer with the corrected name.
  */
-EnsureDevice(abuffer)
-     char *abuffer;
+int
+EnsureDevice(char *abuffer)
 {
     struct dirent *dp;
     char pbuffer[128];

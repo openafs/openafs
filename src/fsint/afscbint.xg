@@ -15,10 +15,6 @@
 
 #include "common.xg"		/*Common structures & definitions*/
 
-%#ifdef KERNEL
-%#include "../afs/longc_procs.h"
-%#endif
-
 package RXAFSCB_
 prefix S
 statindex 6

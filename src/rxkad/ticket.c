@@ -14,8 +14,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/ticket.c,v 1.13.14.2 2007/10/30 15:16:46 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -228,7 +226,7 @@ tkt_MakeTicket(char *ticket, int *ticketLen, struct ktc_encryptionKey *key,
 	return -1;
 
     /* encrypt ticket */
-    if (code = key_sched(key, schedule.schedule)) {
+    if ((code = key_sched(key, schedule.schedule))) {
 	printf("In tkt_MakeTicket: key_sched returned %d\n", code);
 	return RXKADBADKEY;
     }

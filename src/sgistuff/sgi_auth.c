@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sgistuff/sgi_auth.c,v 1.6 2003/07/15 23:16:49 shadow Exp $");
 
 #if defined(AFS_SGI_ENV)
 

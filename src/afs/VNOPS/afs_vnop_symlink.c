@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.24.4.6 2008/06/09 03:30:30 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -39,20 +37,43 @@ extern afs_rwlock_t afs_xcbhash;
  * is just a performance hit.
  */
 
+#ifdef AFS_DISCON_ENV
+static int
+afs_DisconCreateSymlink(struct vcache *avc, char *aname, 
+		        struct vrequest *areq) {
+    struct dcache *tdc;
+    struct osi_file *tfile;
+    afs_size_t offset, len;
+
+    tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 0);
+    if (!tdc) {
+	printf("afs_DisconCreateSymlink: can't get new dcache for symlink.\n");
+	return ENOENT;
+    }
+
+    len = strlen(aname);
+    avc->f.m.Length = len;
+
+    ObtainWriteLock(&tdc->lock, 720);
+    afs_AdjustSize(tdc, len);
+    tdc->validPos = len;
+    tfile = afs_CFileOpen(&tdc->f.inode);
+    afs_CFileWrite(tfile, 0, aname, len);
+    afs_CFileClose(tfile);
+    ReleaseWriteLock(&tdc->lock);
+    return 0;
+}
+#endif
 
 /* don't set CDirty in here because RPC is called synchronously */
-int afs_symlink
-  (OSI_VC_ARG(adp), aname, attrs, atargetName, acred)
-     OSI_VC_DECL(adp);
-     char *atargetName;
-     char *aname;
-     struct vattr *attrs;
-     struct AFS_UCRED *acred;
+int 
+afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
+	    char *atargetName, struct AFS_UCRED *acred)
 {
     afs_uint32 now = 0;
     struct vrequest treq;
-    afs_int32 code;
-    struct conn *tc;
+    afs_int32 code = 0;
+    struct afs_conn *tc;
     struct VenusFid newFid;
     struct dcache *tdc;
     afs_size_t offset, len;
@@ -106,12 +127,12 @@ int afs_symlink
     /** If the volume is read-only, return error without making an RPC to the
       * fileserver
       */
-    if (adp->states & CRO) {
+    if (adp->f.states & CRO) {
 	code = EROFS;
 	goto done;
     }
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
         code = ENETDOWN;
         goto done;
     }
@@ -128,49 +149,58 @@ int afs_symlink
 	alen++;			/* add in the null */
     }
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
-    volp = afs_FindVolume(&adp->fid, READ_LOCK);	/*parent is also in same vol */
+    volp = afs_FindVolume(&adp->f.fid, READ_LOCK);	/*parent is also in same vol */
     ObtainWriteLock(&adp->lock, 156);
     if (tdc)
 	ObtainWriteLock(&tdc->lock, 636);
     ObtainSharedLock(&afs_xvcache, 17);	/* prevent others from creating this entry */
     /* XXX Pay attention to afs_xvcache around the whole thing!! XXX */
-    do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
-	if (tc) {
-	    hostp = tc->srvr->server;
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
-	    if (adp->states & CForeign) {
-		now = osi_Time();
-		RX_AFS_GUNLOCK();
-		code =
-		    RXAFS_DFSSymlink(tc->id, (struct AFSFid *)&adp->fid.Fid,
-				     aname, atargetName, &InStatus,
-				     (struct AFSFid *)&newFid.Fid,
-				     &OutFidStatus, &OutDirStatus, &CallBack,
-				     &tsync);
-		RX_AFS_GLOCK();
-	    } else {
-		RX_AFS_GUNLOCK();
-		code =
-		    RXAFS_Symlink(tc->id, (struct AFSFid *)&adp->fid.Fid,
-				  aname, atargetName, &InStatus,
-				  (struct AFSFid *)&newFid.Fid, &OutFidStatus,
-				  &OutDirStatus, &tsync);
-		RX_AFS_GLOCK();
-	    }
-	    XSTATS_END_TIME;
-	} else
-	    code = -1;
-    } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
-	      SHARED_LOCK, NULL));
+    if (!AFS_IS_DISCON_RW) {
+	do {
+	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
+	    if (tc) {
+		hostp = tc->srvr->server;
+		XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
+		if (adp->f.states & CForeign) {
+		    now = osi_Time();
+		    RX_AFS_GUNLOCK();
+		    code = 
+			RXAFS_DFSSymlink(tc->id, 
+					 (struct AFSFid *)&adp->f.fid.Fid,
+					 aname, atargetName, &InStatus,
+					 (struct AFSFid *)&newFid.Fid,
+					 &OutFidStatus, &OutDirStatus, 
+					 &CallBack, &tsync);
+		    RX_AFS_GLOCK();
+		} else {
+		    RX_AFS_GUNLOCK();
+		    code =
+			RXAFS_Symlink(tc->id, (struct AFSFid *)&adp->f.fid.Fid,
+				      aname, atargetName, &InStatus,
+				      (struct AFSFid *)&newFid.Fid, 
+				      &OutFidStatus, &OutDirStatus, &tsync);
+		    RX_AFS_GLOCK();
+	    	}
+		XSTATS_END_TIME;
+	    } else
+		code = -1;
+	} while (afs_Analyze
+		    (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_SYMLINK,
+		     SHARED_LOCK, NULL));
+    } else {
+#ifdef AFS_DISCON_ENV
+	newFid.Cell = adp->f.fid.Cell;
+	newFid.Fid.Volume = adp->f.fid.Fid.Volume;
+	afs_GenFakeFid(&newFid, VREG, 0);
+#endif
+    }
 
     UpgradeSToWLock(&afs_xvcache, 40);
     if (code) {
 	if (code < 0) {
 	    ObtainWriteLock(&afs_xcbhash, 499);
 	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
+	    adp->f.states &= ~CStatd;
 	    ReleaseWriteLock(&afs_xcbhash);
 	    osi_dnlc_purgedp(adp);
 	}
@@ -183,12 +213,12 @@ int afs_symlink
 	goto done;
     }
     /* otherwise, we should see if we can make the change to the dir locally */
-    if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 293);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
 	ReleaseWriteLock(&afs_xdcache);
-	if (code) {
+	if (code && !AFS_IS_DISCON_RW) {
 	    ZapDCE(tdc);	/* surprise error -- use invalid value */
 	    DZap(tdc);
 	}
@@ -197,8 +227,8 @@ int afs_symlink
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
-    newFid.Cell = adp->fid.Cell;
-    newFid.Fid.Volume = adp->fid.Fid.Volume;
+    newFid.Cell = adp->f.fid.Cell;
+    newFid.Fid.Volume = adp->f.fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
 
     /* now we're done with parent dir, create the link's entry.  Note that
@@ -213,11 +243,11 @@ int afs_symlink
     }
     ObtainWriteLock(&tvc->lock, 157);
     ObtainWriteLock(&afs_xcbhash, 500);
-    tvc->states |= CStatd;	/* have valid info */
-    tvc->states &= ~CBulkFetching;
+    tvc->f.states |= CStatd;	/* have valid info */
+    tvc->f.states &= ~CBulkFetching;
 
-    if (adp->states & CForeign) {
-	tvc->states |= CForeign;
+    if (adp->f.states & CForeign) {
+	tvc->f.states |= CForeign;
 	/* We don't have to worry about losing the callback since we're doing it 
 	 * under the afs_xvcache lock actually, afs_NewVCache may drop the 
 	 * afs_xvcache lock, if it calls afs_FlushVCache */
@@ -228,7 +258,25 @@ int afs_symlink
 	/* since it never expires, we don't have to queue the callback */
     }
     ReleaseWriteLock(&afs_xcbhash);
-    afs_ProcessFS(tvc, &OutFidStatus, &treq);
+
+    if (AFS_IS_DISCON_RW) {
+#ifdef AFS_DISCON_ENV
+	attrs->va_mode = InStatus.UnixModeBits;
+	afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VLNK);
+	code = afs_DisconCreateSymlink(tvc, atargetName, &treq);
+	if (code) {
+	    /* XXX - When this goes wrong, we need to tidy up the changes we made to
+	     * the parent, and get rid of the vcache we just created */
+	    ReleaseWriteLock(&tvc->lock);
+	    ReleaseWriteLock(&afs_xvcache);
+	    afs_PutVCache(tvc);
+	    goto done;
+	}
+	afs_DisconAddDirty(tvc, VDisconCreate, 0);
+#endif
+    } else {
+	afs_ProcessFS(tvc, &OutFidStatus, &treq);
+    }
 
     if (!tvc->linkData) {
 	tvc->linkData = (char *)afs_osi_Alloc(alen);
@@ -273,13 +321,13 @@ afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
 	    afs_PutDCache(tdc);
 	    return EFAULT;
 	}
-	if (avc->m.Mode & 0111)
+	if (avc->f.m.Mode & 0111)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */
 	rbuf = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	ObtainReadLock(&tdc->lock);
-	addr = afs_MemCacheOpen(tdc->f.inode);
+	addr = afs_MemCacheOpen(&tdc->f.inode);
 	tlen = len;
 	code = afs_MemReadBlk(addr, 0, rbuf, tlen);
 	afs_MemCacheClose(addr);
@@ -317,7 +365,7 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 	tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 0);
 	afs_Trace3(afs_iclSetp, CM_TRACE_UFSLINK, ICL_TYPE_POINTER, avc,
 		   ICL_TYPE_POINTER, tdc, ICL_TYPE_OFFSET,
-		   ICL_HANDLE_OFFSET(avc->m.Length));
+		   ICL_HANDLE_OFFSET(avc->f.m.Length));
 	if (!tdc) {
 	    if (AFS_IS_DISCONNECTED)
 	        return ENETDOWN;
@@ -329,14 +377,14 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 	    afs_PutDCache(tdc);
 	    return EFAULT;
 	}
-	if (avc->m.Mode & 0111)
+	if (avc->f.m.Mode & 0111)
 	    alen = len + 1;	/* regular link */
 	else
 	    alen = len;		/* mt point */
 	rbuf = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	tlen = len;
 	ObtainReadLock(&tdc->lock);
-	tfile = osi_UFSOpen(tdc->f.inode);
+	tfile = osi_UFSOpen(&tdc->f.inode);
 	code = afs_osi_Read(tfile, -1, rbuf, tlen);
 	osi_UFSClose(tfile);
 	ReleaseReadLock(&tdc->lock);
@@ -356,10 +404,7 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 }
 
 int
-afs_readlink(OSI_VC_ARG(avc), auio, acred)
-     OSI_VC_DECL(avc);
-     struct uio *auio;
-     struct AFS_UCRED *acred;
+afs_readlink(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 {
     register afs_int32 code;
     struct vrequest treq;

@@ -20,8 +20,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.50.2.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -49,8 +47,8 @@ afs_StoreOnLastReference(register struct vcache *avc,
      * ourselves now. If we're called by the CCore clearer, the CCore
      * flag will already be clear, so we don't have to worry about
      * clearing it twice. */
-    if (avc->states & CCore) {
-	avc->states &= ~CCore;
+    if (avc->f.states & CCore) {
+	avc->f.states &= ~CCore;
 #if defined(AFS_SGI_ENV)
 	osi_Assert(avc->opens > 0 && avc->execsOrWriters > 0);
 #endif
@@ -64,30 +62,38 @@ afs_StoreOnLastReference(register struct vcache *avc,
 	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
 	avc->linkData = NULL;
     }
-    /* Now, send the file back.  Used to require 0 writers left, but now do
-     * it on every close for write, since two closes in a row are harmless
-     * since first will clean all chunks, and second will be noop.  Note that
-     * this will also save confusion when someone keeps a file open 
-     * inadvertently, since with old system, writes to the server would never
-     * happen again. 
-     */
-    code = afs_StoreAllSegments(avc, treq, AFS_LASTSTORE /*!sync-to-disk */ );
-    /*
-     * We have to do these after the above store in done: in some systems like
-     * aix they'll need to flush all the vm dirty pages to the disk via the
-     * strategy routine. During that all procedure (done under no avc locks)
-     * opens, refcounts would be zero, since it didn't reach the afs_{rd,wr}
-     * routines which means the vcache is a perfect candidate for flushing!
-     */
+
+    if (!AFS_IS_DISCONNECTED) {
+	/* Connected. */
+
+	/* Now, send the file back.  Used to require 0 writers left, but now do
+	 * it on every close for write, since two closes in a row are harmless
+	 * since first will clean all chunks, and second will be noop.  Note that
+	 * this will also save confusion when someone keeps a file open
+	 * inadvertently, since with old system, writes to the server would never
+	 * happen again.
+	 */
+	code = afs_StoreAllSegments(avc, treq, AFS_LASTSTORE /*!sync-to-disk */ );
+	/*
+	 * We have to do these after the above store in done: in some systems
+	 * like aix they'll need to flush all the vm dirty pages to the disk via
+	 * the strategy routine. During that all procedure (done under no avc
+	 * locks) opens, refcounts would be zero, since it didn't reach the
+	 * afs_{rd,wr} routines which means the vcache is a perfect candidate
+	 * for flushing!
+	 */
+     } else if (AFS_IS_DISCON_RW) {
+	afs_DisconAddDirty(avc, VDisconWriteClose, 0);
+     }		/* if not disconnected */
+
 #if defined(AFS_SGI_ENV)
     osi_Assert(avc->opens > 0 && avc->execsOrWriters > 0);
 #endif
+
     avc->opens--;
     avc->execsOrWriters--;
     return code;
 }
-
-
 
 int
 afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
@@ -130,7 +136,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(totalLength), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     if (!noLock) {
 	afs_MaybeWakeupTruncateDaemon();
 	ObtainWriteLock(&avc->lock, 126);
@@ -144,8 +150,8 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	 * Since we are called via strategy, we need to trim the write to
 	 * the actual size of the file
 	 */
-	osi_Assert(filePos <= avc->m.Length);
-	diff = avc->m.Length - filePos;
+	osi_Assert(filePos <= avc->f.m.Length);
+	diff = avc->f.m.Length - filePos;
 	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
 	totalLength = AFS_UIO_RESID(auio);
     }
@@ -155,7 +161,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if	defined(AFS_SUN56_ENV)
 	auio->uio_loffset = 0;
 #endif
-	filePos = avc->m.Length;
+	filePos = avc->f.m.Length;
 	AFS_UIO_SETOFFSET(auio, filePos);
     }
 #endif
@@ -163,7 +169,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
      * Note that we use startDate rather than calling osi_Time() here.
      * This is to avoid counting lock-waiting time in file date (for ranlib).
      */
-    avc->m.Date = startDate;
+    avc->f.m.Date = startDate;
 
 #if	defined(AFS_HPUX_ENV)
 #if	defined(AFS_HPUX101_ENV)
@@ -189,71 +195,18 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #else
     afs_FakeOpen(avc);
 #endif
-    avc->states |= CDirty;
+    avc->f.states |= CDirty;
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
-	/* 
-	 *  The following line is necessary because afs_GetDCache with
-	 *  flag == 4 expects the length field to be filled. It decides
-	 *  from this whether it's necessary to fetch data into the chunk
-	 *  before writing or not (when the whole chunk is overwritten!).
-	 */
-	len = totalLength;	/* write this amount by default */
-	if (noLock) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 653);
-	} else if (afs_blocksUsed >
-		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc) {
-		ObtainWriteLock(&tdc->lock, 654);
-		if (!hsame(tdc->f.versionNo, avc->m.DataVersion)
-		    || (tdc->dflags & DFFetching)) {
-		    ReleaseWriteLock(&tdc->lock);
-		    afs_PutDCache(tdc);
-		    tdc = NULL;
-		}
-	    }
-	    if (!tdc) {
-		afs_MaybeWakeupTruncateDaemon();
-		while (afs_blocksUsed >
-		       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-		    ReleaseWriteLock(&avc->lock);
-		    if (afs_blocksUsed - afs_blocksDiscarded >
-			PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-			afs_WaitForCacheDrain = 1;
-			afs_osi_Sleep(&afs_WaitForCacheDrain);
-		    }
-		    afs_MaybeFreeDiscardedDCache();
-		    afs_MaybeWakeupTruncateDaemon();
-		    ObtainWriteLock(&avc->lock, 506);
-		}
-		avc->states |= CDirty;
-		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-		if (tdc)
-		    ObtainWriteLock(&tdc->lock, 655);
-	    }
-	} else {
-	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 656);
-	}
+	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
+					 noLock);
 	if (!tdc) {
 	    error = EIO;
 	    break;
 	}
-	if (!(afs_indexFlags[tdc->index] & IFDataMod)) {
-	    afs_stats_cmperf.cacheCurrDirtyChunks++;
-	    afs_indexFlags[tdc->index] |= IFDataMod;	/* so it doesn't disappear */
-	}
-	if (!(tdc->f.states & DWriting)) {
-	    /* don't mark entry as mod if we don't have to */
-	    tdc->f.states |= DWriting;
-	    tdc->dflags |= DFEntryMod;
-	}
+
 	len = totalLength;	/* write this amount by default */
 	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */
@@ -276,12 +229,12 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 #endif
 	AFS_UIO_SETOFFSET(tuiop, offset);
 
-	code = afs_MemWriteUIO(tdc->f.inode, tuiop);
+	code = afs_MemWriteUIO(&tdc->f.inode, tuiop);
 	if (code) {
 	    void *mep;		/* XXX in prototype world is struct memCacheEntry * */
 	    error = code;
 	    ZapDCE(tdc);	/* bad data */
-	    mep = afs_MemCacheOpen(tdc->f.inode);
+	    mep = afs_MemCacheOpen(&tdc->f.inode);
 	    afs_MemCacheTruncate(mep, 0);
 	    afs_MemCacheClose(mep);
 	    afs_stats_cmperf.cacheCurrDirtyChunks--;
@@ -306,14 +259,18 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	filePos += len;
 #if defined(AFS_SGI_ENV)
 	/* afs_xwrite handles setting m.Length */
-	osi_Assert(filePos <= avc->m.Length);
+	osi_Assert(filePos <= avc->f.m.Length);
 #else
-	if (filePos > avc->m.Length) {
+	if (filePos > avc->f.m.Length) {
+#if defined(AFS_DISCON_ENV)
+	    if (AFS_IS_DISCON_RW)
+   		afs_PopulateDCache(avc, filePos, &treq);
+#endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->m.Length), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(filePos));
-	    avc->m.Length = filePos;
+	    avc->f.m.Length = filePos;
 	}
 #endif
 	ReleaseWriteLock(&tdc->lock);
@@ -382,7 +339,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     if (avc->vc_error)
 	return avc->vc_error;
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING)
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW)
 	return ENETDOWN;
     
     startDate = osi_Time();
@@ -396,7 +353,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(totalLength), ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     if (!noLock) {
 	afs_MaybeWakeupTruncateDaemon();
 	ObtainWriteLock(&avc->lock, 556);
@@ -410,8 +367,8 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	 * Since we are called via strategy, we need to trim the write to
 	 * the actual size of the file
 	 */
-	osi_Assert(filePos <= avc->m.Length);
-	diff = avc->m.Length - filePos;
+	osi_Assert(filePos <= avc->f.m.Length);
+	diff = avc->f.m.Length - filePos;
 	AFS_UIO_SETRESID(auio, MIN(totalLength, diff));
 	totalLength = AFS_UIO_RESID(auio);
     }
@@ -421,15 +378,15 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #if     defined(AFS_SUN56_ENV)
 	auio->uio_loffset = 0;
 #endif
-	filePos = avc->m.Length;
-	AFS_UIO_SETOFFSET(auio, avc->m.Length);
+	filePos = avc->f.m.Length;
+	AFS_UIO_SETOFFSET(auio, avc->f.m.Length);
     }
 #endif
     /*
      * Note that we use startDate rather than calling osi_Time() here.
      * This is to avoid counting lock-waiting time in file date (for ranlib).
      */
-    avc->m.Date = startDate;
+    avc->f.m.Date = startDate;
 
 #if	defined(AFS_HPUX_ENV)
 #if 	defined(AFS_HPUX101_ENV)
@@ -455,73 +412,18 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 #else
     afs_FakeOpen(avc);
 #endif
-    avc->states |= CDirty;
+    avc->f.states |= CDirty;
 #ifndef AFS_DARWIN80_ENV
     tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
 #endif
     while (totalLength > 0) {
-	/* 
-	 *  The following line is necessary because afs_GetDCache with
-	 *  flag == 4 expects the length field to be filled. It decides
-	 *  from this whether it's necessary to fetch data into the chunk
-	 *  before writing or not (when the whole chunk is overwritten!).
-	 */
-	len = totalLength;	/* write this amount by default */
-	/* read the cached info */
-	if (noLock) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 657);
-	} else if (afs_blocksUsed >
-		   PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc) {
-		ObtainWriteLock(&tdc->lock, 658);
-		if (!hsame(tdc->f.versionNo, avc->m.DataVersion)
-		    || (tdc->dflags & DFFetching)) {
-		    ReleaseWriteLock(&tdc->lock);
-		    afs_PutDCache(tdc);
-		    tdc = NULL;
-		}
-	    }
-	    if (!tdc) {
-		afs_MaybeWakeupTruncateDaemon();
-		while (afs_blocksUsed >
-		       PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-		    ReleaseWriteLock(&avc->lock);
-		    if (afs_blocksUsed - afs_blocksDiscarded >
-			PERCENT(CM_WAITFORDRAINPCT, afs_cacheBlocks)) {
-			afs_WaitForCacheDrain = 1;
-			afs_osi_Sleep(&afs_WaitForCacheDrain);
-		    }
-		    afs_MaybeFreeDiscardedDCache();
-		    afs_MaybeWakeupTruncateDaemon();
-		    ObtainWriteLock(&avc->lock, 509);
-		}
-		avc->states |= CDirty;
-		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-		if (tdc)
-		    ObtainWriteLock(&tdc->lock, 659);
-	    }
-	} else {
-	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 4);
-	    if (tdc)
-		ObtainWriteLock(&tdc->lock, 660);
-	}
+	tdc = afs_ObtainDCacheForWriting(avc, filePos, totalLength, &treq, 
+					 noLock);
 	if (!tdc) {
 	    error = EIO;
 	    break;
 	}
-	if (!(afs_indexFlags[tdc->index] & IFDataMod)) {
-	    afs_stats_cmperf.cacheCurrDirtyChunks++;
-	    afs_indexFlags[tdc->index] |= IFDataMod;	/* so it doesn't disappear */
-	}
-	if (!(tdc->f.states & DWriting)) {
-	    /* don't mark entry as mod if we don't have to */
-	    tdc->f.states |= DWriting;
-	    tdc->dflags |= DFEntryMod;
-	}
-	tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
+	tfile = (struct osi_file *)osi_UFSOpen(&tdc->f.inode);
 	len = totalLength;	/* write this amount by default */
 	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */
@@ -577,11 +479,11 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 		("\n\n\n*** Cache partition is full - decrease cachesize!!! ***\n\n\n");
 #elif defined(AFS_SGI_ENV)
 	AFS_GUNLOCK();
-	avc->states |= CWritingUFS;
+	avc->f.states |= CWritingUFS;
 	AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_WRITE);
 	AFS_VOP_WRITE(tfile->vnode, &tuio, IO_ISLOCKED, afs_osi_credp, code);
 	AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_WRITE);
-	avc->states &= ~CWritingUFS;
+	avc->f.states &= ~CWritingUFS;
 	AFS_GLOCK();
 #elif defined(AFS_OSF_ENV)
 	{
@@ -612,6 +514,12 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
 	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
 	VOP_UNLOCK(tfile->vnode, 0, current_proc());
+	AFS_GLOCK();
+#elif defined(AFS_FBSD80_ENV)
+	AFS_GUNLOCK();
+	VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
+	code = VOP_WRITE(tfile->vnode, &tuio, 0, afs_osi_credp);
+	VOP_UNLOCK(tfile->vnode, 0);
 	AFS_GLOCK();
 #elif defined(AFS_FBSD50_ENV)
 	AFS_GUNLOCK();
@@ -659,14 +567,18 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
 	filePos += len;
 #if defined(AFS_SGI_ENV)
 	/* afs_xwrite handles setting m.Length */
-	osi_Assert(filePos <= avc->m.Length);
+	osi_Assert(filePos <= avc->f.m.Length);
 #else
-	if (filePos > avc->m.Length) {
+	if (filePos > avc->f.m.Length) {
+#if defined(AFS_DISCON_ENV)
+	    if (AFS_IS_DISCON_RW)
+		afs_PopulateDCache(avc, filePos, &treq);
+#endif
 	    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH, ICL_TYPE_STRING,
 		       __FILE__, ICL_TYPE_LONG, __LINE__, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->m.Length), ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(filePos));
-	    avc->m.Length = filePos;
+	    avc->f.m.Length = filePos;
 	}
 #endif
 	osi_UFSClose(tfile);
@@ -732,11 +644,13 @@ afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
     register afs_int32 code;
 
     if (afs_stats_cmperf.cacheCurrDirtyChunks <=
-	afs_stats_cmperf.cacheMaxDirtyChunks)
+	afs_stats_cmperf.cacheMaxDirtyChunks
+	|| AFS_IS_DISCONNECTED)
 	return 0;		/* nothing to do */
     /* otherwise, call afs_StoreDCache (later try to do this async, if possible) */
     afs_Trace2(afs_iclSetp, CM_TRACE_PARTIALWRITE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
+
 #if	defined(AFS_SUN5_ENV)
     code = afs_StoreAllSegments(avc, areq, AFS_ASYNC | AFS_VMSYNC_INVAL);
 #else
@@ -817,33 +731,21 @@ afs_closex(register struct file *afd)
 
 /* handle any closing cleanup stuff */
 int
-#ifdef	AFS_SGI_ENV
-afs_close(OSI_VC_ARG(avc), aflags, lastclose,
-#if !defined(AFS_SGI65_ENV)
-	  offset,
-#endif
-	  acred
-#if defined(AFS_SGI64_ENV) && !defined(AFS_SGI65_ENV)
-	  , flp
-#endif
-    )
-     lastclose_t lastclose;
-#if !defined(AFS_SGI65_ENV)
-     off_t offset;
-#if defined(AFS_SGI64_ENV)
-     struct flid *flp;
-#endif
-#endif
+#if defined(AFS_SGI65_ENV)
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
+	  struct AFS_UCRED *acred)
+#elif defined(AFS_SGI64_ENV)
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
+	  off_t offset, struct AFS_UCRED *acred, struct flid *flp)
+#elif defined(AFS_SGI_ENV)
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose
+	  off_t offset, struct AFS_UCRED *acred)
 #elif defined(AFS_SUN5_ENV)
-afs_close(OSI_VC_ARG(avc), aflags, count, offset, acred)
-     offset_t offset;
-     int count;
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, offset_t offset, 
+	 struct AFS_UCRED *acred)
 #else
-afs_close(OSI_VC_ARG(avc), aflags, acred)
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
 #endif
-     OSI_VC_DECL(avc);
-     afs_int32 aflags;
-     struct AFS_UCRED *acred;
 {
     register afs_int32 code;
     register struct brequest *tb;
@@ -866,6 +768,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	afs_PutFakeStat(&fakestat);
 	return code;
     }
+    AFS_DISCON_LOCK();
 #ifdef	AFS_SUN5_ENV
     if (avc->flockCount) {
 	HandleFlock(avc, LOCK_UN, &treq, 0, 1 /*onlymine */ );
@@ -874,6 +777,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #if defined(AFS_SGI_ENV)
     if (!lastclose) {
 	afs_PutFakeStat(&fakestat);
+        AFS_DISCON_UNLOCK();
 	return 0;
     }
     /* unlock any locks for pid - could be wrong for child .. */
@@ -891,11 +795,12 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     HandleFlock(avc, LOCK_UN, &treq, OSI_GET_CURRENT_PID(), 1 /*onlymine */ );
 #endif /* AFS_SGI65_ENV */
     /* afs_chkpgoob will drop and re-acquire the global lock. */
-    afs_chkpgoob(&avc->v, btoc(avc->m.Length));
+    afs_chkpgoob(&avc->v, btoc(avc->f.m.Length));
 #elif	defined(AFS_SUN5_ENV)
     if (count > 1) {
 	/* The vfs layer may call this repeatedly with higher "count"; only on the last close (i.e. count = 1) we should actually proceed with the close. */
 	afs_PutFakeStat(&fakestat);
+	AFS_DISCON_UNLOCK();
 	return 0;
     }
 #else /* AFS_SGI_ENV */
@@ -908,7 +813,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     }
 #endif /* AFS_SGI_ENV */
     if (aflags & (FWRITE | FTRUNC)) {
-	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred))) {
+	if (afs_BBusy() || (AFS_NFSXLATORREQ(acred)) || AFS_IS_DISCONNECTED) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 124);
 	    code = afs_StoreOnLastReference(avc, &treq);
@@ -949,6 +854,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #ifdef AFS_AIX32_ENV
 	    osi_ReleaseVM(avc, acred);
 #endif
+	    printf("avc->vc_error=%d\n", avc->vc_error);
 	    code = avc->vc_error;
 	    avc->vc_error = 0;
 	}
@@ -994,10 +900,11 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	ReleaseWriteLock(&avc->lock);
     }
 #ifdef	AFS_OSF_ENV
-    if ((VREFCOUNT(avc) <= 2) && (avc->states & CUnlinked)) {
+    if ((VREFCOUNT(avc) <= 2) && (avc->f.states & CUnlinked)) {
 	afs_remunlink(avc, 1);	/* ignore any return code */
     }
 #endif
+    AFS_DISCON_UNLOCK();
     afs_PutFakeStat(&fakestat);
     code = afs_CheckCode(code, &treq, 5);
     return code;
@@ -1036,7 +943,7 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
     afs_Trace1(afs_iclSetp, CM_TRACE_FSYNC, ICL_TYPE_POINTER, avc);
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
-
+    AFS_DISCON_LOCK();
 #if defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
     if (flag & FSYNC_INVAL)
@@ -1046,11 +953,25 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
     ObtainSharedLock(&avc->lock, 18);
     code = 0;
     if (avc->execsOrWriters > 0) {
-	/* put the file back */
-	UpgradeSToWLock(&avc->lock, 41);
-	code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
-	ConvertWToSLock(&avc->lock);
-    }
+
+    	if (!AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
+		/* Your average flush. */
+
+		/* put the file back */
+		UpgradeSToWLock(&avc->lock, 41);
+		code = afs_StoreAllSegments(avc, &treq, AFS_SYNC);
+		ConvertWToSLock(&avc->lock);
+
+#if defined(AFS_DISCON_ENV)
+	} else {
+
+	    UpgradeSToWLock(&avc->lock, 711);
+	    afs_DisconAddDirty(avc, VDisconWriteFlush, 1);
+	    ConvertWToSLock(&avc->lock);
+#endif
+    	}		/* if not disconnected */
+    }			/* if (avc->execsOrWriters > 0) */
+
 #if defined(AFS_SGI_ENV)
     AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);
     if (code == VNOVNODE) {
@@ -1060,7 +981,7 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
 	code = ENOENT;
     }
 #endif
-
+    AFS_DISCON_UNLOCK();
     code = afs_CheckCode(code, &treq, 33);
     ReleaseSharedLock(&avc->lock);
     return code;

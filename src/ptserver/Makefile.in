@@ -6,6 +6,10 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	${TOP_INCDIR}/lock.h  \
@@ -34,7 +38,6 @@ LIBS=${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libdes.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/libcom_err.a \
-	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libafsutil.a
 
@@ -53,6 +56,36 @@ depinstall: \
 	${TOP_INCDIR}/afs/pterror.h \
 	${TOP_INCDIR}/afs/ptint.h \
 	${TOP_INCDIR}/afs/ptserver.h
+
+${TOP_LIBDIR}/libprot.a: libprot.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/prclient.h: ptclient.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/prerror.h: pterror.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/print.h: ptint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/prserver.h: ptserver.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptclient.h: ptclient.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptuser.h: ptuser.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/pterror.h: pterror.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptint.h: ptint.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/ptserver.h: ptserver.h
+	${INSTALL_DATA} $? $@
 
 #
 # Build targets
@@ -75,29 +108,29 @@ ptint.cs.o: ptint.cs.c ptint.xdr.c ptint.xg
 ptint.xdr.o: ptint.xdr.c ptint.h ptint.xg
 
 ptint.cs.c: ptint.xg
-	${RXGEN} -x -C -A -u -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -A -x -C -u -o $@ ${srcdir}/ptint.xg
 
 ptint.ss.c: ptint.xg
-	${RXGEN} -x -S -A -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -A -x -S -o $@ ${srcdir}/ptint.xg
 
 ptint.xdr.c: ptint.xg
-	${RXGEN} -x -c -A -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -A -x -c -o $@ ${srcdir}/ptint.xg
 
 ptint.h: ptint.xg
-	${RXGEN} -x -h -A -u -o $@ ${srcdir}/ptint.xg
+	${RXGEN} -A -x -h -u -o $@ ${srcdir}/ptint.xg
 
 ptint.cs.c: ptint.h
 ptint.ss.c: ptint.h
 ptint.xdr.c: ptint.h
 
 Kptint.cs.c: ptint.xg Kptint.h
-	${RXGEN} -x -k -A -C -o Kptint.cs.c ${srcdir}/ptint.xg
- 
+	${RXGEN} -A -x -k -C -o Kptint.cs.c ${srcdir}/ptint.xg
+
 Kptint.xdr.c: ptint.xg
-	${RXGEN} -x -k -A -c -o Kptint.xdr.c ${srcdir}/ptint.xg
- 
+	${RXGEN} -A -x -k -c -o Kptint.xdr.c ${srcdir}/ptint.xg
+
 Kptint.h: ptint.xg
-	${RXGEN} -x -k -A -h -o Kptint.h ${srcdir}/ptint.xg
+	${RXGEN} -A -x -k -h -o Kptint.h ${srcdir}/ptint.xg
 
 display.o: display.c ${INCLS}
 
@@ -153,87 +186,58 @@ pt_util: pt_util.o ptutils.o ubik.o utils.o map.o libprot.a $(LIBS)
 ubik.o: ubik.c ${INCLS}
 
 prerror.h: pterror.h
-	${INSTALL} $? $@
+	${INSTALL_DATA} $? $@
 	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_PT' >> $@
 
 #
 # Installation targets
 #
-install: \
-	${DESTDIR}${afssrvlibexecdir}/ptserver \
-	${DESTDIR}${afssrvbindir}/pts \
-	${DESTDIR}${bindir}/pts \
-	${DESTDIR}${afssrvsbindir}/pt_util \
-	${DESTDIR}${afssrvsbindir}/prdb_check \
-	${DESTDIR}${libdir}/afs/libprot.a \
-	${DESTDIR}${includedir}/afs/prclient.h \
-	${DESTDIR}${includedir}/afs/prerror.h \
-	${DESTDIR}${includedir}/afs/print.h \
-	${DESTDIR}${includedir}/afs/prserver.h \
-	${DESTDIR}${includedir}/afs/ptclient.h \
-	${DESTDIR}${includedir}/afs/ptuser.h \
-	${DESTDIR}${includedir}/afs/pterror.h \
-	${DESTDIR}${includedir}/afs/ptint.h \
-	${DESTDIR}${includedir}/afs/ptserver.h
+install: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
+		ptint.h ptserver.h
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} -d ${DESTDIR}${afssrvbindir}
+	${INSTALL} -d ${DESTDIR}${afssrvsbindir}
+	${INSTALL} -d ${DESTDIR}${bindir}
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL_PROGRAM} ptserver ${DESTDIR}${afssrvlibexecdir}/ptserver
+	${INSTALL_PROGRAM} pts ${DESTDIR}${afssrvbindir}/pts
+	${INSTALL_PROGRAM} pts ${DESTDIR}${bindir}/pts
+	${INSTALL_PROGRAM} pt_util ${DESTDIR}${afssrvsbindir}/pt_util
+	${INSTALL_PROGRAM} db_verify ${DESTDIR}${afssrvsbindir}/prdb_check
+	${INSTALL_DATA} libprot.a ${DESTDIR}${libdir}/afs/libprot.a
+	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/prclient.h
+	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/prerror.h
+	${INSTALL_DATA} ptint.h ${DESTDIR}${includedir}/afs/print.h
+	${INSTALL_DATA} ptserver.h ${DESTDIR}${includedir}/afs/prserver.h
+	${INSTALL_DATA} ptclient.h ${DESTDIR}${includedir}/afs/ptclient.h
+	${INSTALL_DATA} ptuser.h ${DESTDIR}${includedir}/afs/ptuser.h
+	${INSTALL_DATA} pterror.h ${DESTDIR}${includedir}/afs/pterror.h
+	${INSTALL_DATA} ptint.h ${DESTDIR}${includedir}/afs/ptint.h
+	${INSTALL_DATA} ptserver.h ${DESTDIR}${includedir}/afs/ptserver.h
 
-${DEST}/root.server/usr/afs/bin/ptserver: ptserver
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install ptserver for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DEST}/bin/pts ${DEST}/root.server/usr/afs/bin/pts: pts
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install pts for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DEST}/root.server/usr/afs/bin/pt_util: pt_util
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install pt_util for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DEST}/lib/afs/libprot.a: libprot.a
-	${INSTALL} $? $@
-
-${DEST}/etc/prdb_check: db_verify
-	if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install db_verify for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-	${INSTALL} -f $? $@
-
-${DEST}/include/afs/prclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/prerror.h: pterror.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/print.h: ptint.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/prserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptint.h: ptint.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/pterror.h: pterror.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/ptuser.h: ptuser.h
-	${INSTALL} $? $@
+dest: ptserver pts pt_util db_verify libprot.a ptclient.h pterror.h \
+		ptint.h ptserver.h
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} -d ${DEST}/bin
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL_PROGRAM} ptserver ${DEST}/root.server/usr/afs/bin/ptserver
+	${INSTALL_PROGRAM} pts ${DEST}/root.server/usr/afs/bin/pts
+	${INSTALL_PROGRAM} pts ${DEST}/bin/pts
+	${INSTALL_PROGRAM} pt_util ${DEST}/root.server/usr/afs/bin/pt_util
+	${INSTALL_PROGRAM} db_verify ${DEST}/etc/prdb_check
+	${INSTALL_DATA} libprot.a ${DEST}/lib/afs/libprot.a
+	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/prclient.h
+	${INSTALL_DATA} pterror.h ${DEST}/include/afs/prerror.h
+	${INSTALL_DATA} ptint.h ${DEST}/include/afs/print.h
+	${INSTALL_DATA} ptserver.h ${DEST}/include/afs/prserver.h
+	${INSTALL_DATA} ptclient.h ${DEST}/include/afs/ptclient.h
+	${INSTALL_DATA} ptuser.h ${DEST}/include/afs/ptuser.h
+	${INSTALL_DATA} pterror.h ${DEST}/include/afs/pterror.h
+	${INSTALL_DATA} ptint.h ${DEST}/include/afs/ptint.h
+	${INSTALL_DATA} ptserver.h ${DEST}/include/afs/ptserver.h
 
 #
 # Misc. targets
@@ -244,114 +248,3 @@ clean:
 	core AFS_component_version_number.c Kptint.cs.c Kptint.h Kptint.xdr.c
 
 include ../config/Makefile.version
-${DESTDIR}${afssrvlibexecdir}/ptserver: ptserver
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install ptserver for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DESTDIR}${afssrvbindir}/pts: pts
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install pts for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DESTDIR}${bindir}/pts: pts
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install pts for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DESTDIR}${afssrvsbindir}/pt_util: pt_util
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install pt_util for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DESTDIR}${afssrvsbindir}/prdb_check: db_verify
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install db_verify for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} $? $@ ; \
-	fi
-
-${DESTDIR}${libdir}/afs/libprot.a: libprot.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libprot.a: libprot.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/prclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/prclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/prerror.h: pterror.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/prerror.h: pterror.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/print.h: ptint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/print.h: ptint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/prserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/prserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptuser.h: ptuser.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptclient.h: ptclient.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptuser.h: ptuser.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/pterror.h: pterror.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/pterror.h: pterror.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptint.h: ptint.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptint.h: ptint.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/ptserver.h: ptserver.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/ptserver.h: ptserver.h
-	${INSTALL} $? $@
-
-dest: \
-	${DEST}/root.server/usr/afs/bin/ptserver \
-	${DEST}/root.server/usr/afs/bin/pts \
-	${DEST}/bin/pts \
-	${DEST}/root.server/usr/afs/bin/pt_util \
-	${DEST}/etc/prdb_check \
-	${DEST}/lib/afs/libprot.a \
-	${DEST}/include/afs/prclient.h \
-	${DEST}/include/afs/prerror.h \
-	${DEST}/include/afs/print.h \
-	${DEST}/include/afs/prserver.h \
-	${DEST}/include/afs/ptclient.h \
-	${DEST}/include/afs/ptuser.h \
-	${DEST}/include/afs/pterror.h \
-	${DEST}/include/afs/ptint.h \
-	${DEST}/include/afs/ptserver.h

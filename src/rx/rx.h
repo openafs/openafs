@@ -48,6 +48,8 @@
 #endif
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #endif
 # include "rx_user.h"
 # include "rx_clock.h"
@@ -210,20 +212,6 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_EnableHotThread()		(rx_enable_hot_thread = 1)
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
-/* Macros to set max connection clones (each allows RX_MAXCALLS 
- * outstanding calls */
-
-#define rx_SetMaxCalls(v) \
-do {\
-	rx_SetCloneMax(v/4); \
-} while(0);
-
-#define rx_SetCloneMax(v) \
-do {\
-	if(v < RX_HARD_MAX_CLONES) \
-		rx_max_clones_per_connection = v; \
-} while(0);
-
 #define rx_PutConnection(conn) rx_DestroyConnection(conn)
 
 /* A connection is an authenticated communication path, allowing 
@@ -234,9 +222,7 @@ struct rx_connection_rx_lock {
     struct rx_peer_rx_lock *peer;
 #else
 struct rx_connection {
-    struct rx_connection *next;	/* on hash chain _or_ free list */
-    struct rx_connection *parent; /* primary connection, if this is a clone */
-    struct rx_connection *next_clone; /* next in list of clones */
+    struct rx_connection *next;	/*  on hash chain _or_ free list */
     struct rx_peer *peer;
 #endif
 #ifdef	RX_ENABLE_LOCKS
@@ -244,7 +230,6 @@ struct rx_connection {
     afs_kcondvar_t conn_call_cv;
     afs_kmutex_t conn_data_lock;	/* locks packet data */
 #endif
-    afs_uint32 nclones; /* count of clone connections (if not a clone) */
     afs_uint32 epoch;		/* Process start time of client side of connection */
     afs_uint32 cid;		/* Connection id (call channel is bottom bits) */
     afs_int32 error;		/* If this connection is in error, this is it */
@@ -444,7 +429,6 @@ struct rx_peer {
 #define RX_CONN_RESET		   16	/* connection is reset, remove */
 #define RX_CONN_BUSY               32	/* connection is busy; don't delete */
 #define RX_CONN_ATTACHWAIT	   64	/* attach waiting for peer->lastReach */
-#define RX_CLONED_CONNECTION	  128   /* connection is a clone */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0
@@ -514,7 +498,7 @@ struct rx_call {
     u_short nCwindAcks;		/* Number acks received at current cwind */
     u_short ssthresh;		/* The slow start threshold */
     u_short nDgramPackets;	/* Packets per AFS 3.5 jumbogram */
-    u_short nAcks;		/* The number of consecttive acks */
+    u_short nAcks;		/* The number of consecutive acks */
     u_short nNacks;		/* Number packets acked that follow the
 				 * first negatively acked packet */
     u_short nSoftAcks;		/* The number of delayed soft acks */
@@ -530,7 +514,7 @@ struct rx_call {
     u_int lastSendTime;		/* Last time a packet was sent on this call */
     u_int lastReceiveTime;	/* Last time a packet was received for this call */
     u_int lastSendData;		/* Last time a nonping was sent on this call */
-    void (*arrivalProc) (register struct rx_call * call, register void * mh, register int index);	/* Procedure to call when reply is received */
+    void (*arrivalProc) (struct rx_call * call, void * mh, int index);	/* Procedure to call when reply is received */
     void *arrivalProcHandle;	/* Handle to pass to replyFunc */
     int arrivalProcArg;         /* Additional arg to pass to reply Proc */
     afs_uint32 lastAcked;	/* last packet "hard" acked by receiver */
@@ -555,15 +539,37 @@ struct rx_call {
 #ifdef RX_REFCOUNT_CHECK
     short refCDebug[RX_CALL_REFCOUNT_MAX];
 #endif				/* RX_REFCOUNT_CHECK */
+
+    /* 
+     * iov, iovNBytes, iovMax, and iovNext are set in rxi_ReadvProc()
+     * and adjusted by rxi_FillReadVec().  iov does not own the buffers
+     * it refers to.  The buffers belong to the packets stored in iovq.
+     * Only one call to rx_ReadvProc() can be active at a time.
+     */
+
     int iovNBytes;		/* byte count for current iovec */
     int iovMax;			/* number elements in current iovec */
     int iovNext;		/* next entry in current iovec */
     struct iovec *iov;		/* current iovec */
+
     struct clock queueTime;	/* time call was queued */
     struct clock startTime;	/* time call was started */
     afs_hyper_t bytesSent;	/* Number bytes sent */
     afs_hyper_t bytesRcvd;	/* Number bytes received */
     u_short tqWaiters;
+
+#ifdef RXDEBUG_PACKET
+    u_short tqc;                /* packet count in tq */
+    u_short rqc;                /* packet count in rq */
+    u_short iovqc;              /* packet count in iovq */
+
+#ifdef KDUMP_RX_LOCK
+    struct rx_call_rx_lock *allNextp;
+#else
+    struct rx_call *allNextp;
+#endif
+    afs_uint32 call_id;
+#endif
 };
 
 #ifndef KDUMP_RX_LOCK
@@ -807,7 +813,7 @@ struct rx_securityClass {
  * Clearly we assume that ntohl will work on these structures so sizeof(int)
  * must equal sizeof(afs_int32). */
 
-struct rx_stats {		/* General rx statistics */
+struct rx_statistics {		/* General rx statistics */
     int packetRequests;		/* Number of packet allocation requests */
     int receivePktAllocFailures;
     int sendPktAllocFailures;
@@ -863,7 +869,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_BADTYPE     (-8)
 
 #define RX_DEBUGI_VERSION_MINIMUM ('L')	/* earliest real version */
-#define RX_DEBUGI_VERSION     ('R')	/* Latest version */
+#define RX_DEBUGI_VERSION     ('S')    /* Latest version */
     /* first version w/ secStats */
 #define RX_DEBUGI_VERSION_W_SECSTATS ('L')
     /* version M is first supporting GETALLCONN and RXSTATS type */
@@ -876,6 +882,7 @@ struct rx_debugIn {
 #define RX_DEBUGI_VERSION_W_NEWPACKETTYPES ('P')
 #define RX_DEBUGI_VERSION_W_GETPEER ('Q')
 #define RX_DEBUGI_VERSION_W_WAITED ('R')
+#define RX_DEBUGI_VERSION_W_PACKETS ('S')
 
 #define	RX_DEBUGI_GETSTATS	1	/* get basic rx stats */
 #define	RX_DEBUGI_GETCONN	2	/* get connection info */
@@ -894,7 +901,8 @@ struct rx_debugStats {
     afs_int32 nWaiting;
     afs_int32 idleThreads;	/* Number of server threads that are idle */
     afs_int32 nWaited;
-    afs_int32 spare2[7];
+    afs_int32 nPackets;
+    afs_int32 spare2[6];
 };
 
 struct rx_debugConn_vL {
@@ -1020,6 +1028,7 @@ extern int rx_callHoldType;
 #define RX_SERVER_DEBUG_NEW_PACKETS		0x40
 #define RX_SERVER_DEBUG_ALL_PEER		0x80
 #define RX_SERVER_DEBUG_WAITED_CNT              0x100
+#define RX_SERVER_DEBUG_PACKETS_CNT              0x200
 
 #define AFS_RX_STATS_CLEAR_ALL			0xffffffff
 #define AFS_RX_STATS_CLEAR_INVOCATIONS		0x1
@@ -1075,8 +1084,10 @@ typedef struct rx_interface_stat {
 #define RX_STATS_SERVICE_ID 409
 
 #ifdef AFS_NT40_ENV
+extern int rx_DumpCalls(FILE *outputFile, char *cookie);
+
 #define rx_MutexIncrement(object, mutex) InterlockedIncrement(&object)
-#define rx_MutexAdd(object, addend, mutex) InterlockedAdd(&object, addend)
+#define rx_MutexAdd(object, addend, mutex) InterlockedExchangeAdd(&object, addend)
 #define rx_MutexDecrement(object, mutex) InterlockedDecrement(&object)
 #define rx_MutexAdd1Increment2(object1, addend, object2, mutex) \
     do { \

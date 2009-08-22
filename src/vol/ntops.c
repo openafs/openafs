@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/ntops.c,v 1.10.8.1 2006/09/05 14:52:23 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
@@ -522,7 +520,7 @@ nt_MakeSpecIno(int type)
 }
 
 Inode
-nt_icreate(IHandle_t * h, char *part, int p1, int p2, int p3, int p4)
+nt_icreate(IHandle_t * h, char *part, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, afs_uint32 p4)
 {
     char filename[128];
     b32_string_t str1;
@@ -961,13 +959,13 @@ nt_SetLinkCount(FdHandle_t * h, Inode ino, int count, int locked)
 
 /* ListViceInodes - write inode data to a results file. */
 static int DecodeInodeName(char *name, int *p1, int *p2);
-static int DecodeVolumeName(char *name, int *vid);
+static int DecodeVolumeName(char *name, afs_uint32 *vid);
 static int nt_ListAFSSubDirs(IHandle_t * dirIH,
 			     int (*write_fun) (FILE *, struct ViceInodeInfo *,
 					       char *, char *), FILE * fp,
 			     int (*judgeFun) (struct ViceInodeInfo *,
-					      int vid, void *rock),
-			     int singleVolumeNumber, void *rock);
+					      afs_uint32 vid, void *rock),
+			     afs_uint32 singleVolumeNumber, void *rock);
 
 
 /* WriteInodeInfo
@@ -1003,8 +1001,8 @@ WriteInodeInfo(FILE * fp, struct ViceInodeInfo *info, char *dir, char *name)
  */
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (struct ViceInodeInfo * info, int vid, void *rock),
-	       int singleVolumeNumber, int *forcep, int forceR, char *wpath, 
+	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
+	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath, 
 	       void *rock)
 {
     FILE *fp = (FILE *) - 1;
@@ -1073,8 +1071,8 @@ int
 nt_ListAFSFiles(char *dev,
 		int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
 				 char *), FILE * fp,
-		int (*judgeFun) (struct ViceInodeInfo *, int, void *),
-		int singleVolumeNumber, void *rock)
+		int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
+		afs_uint32 singleVolumeNumber, void *rock)
 {
     IHandle_t h;
     char name[MAX_PATH];
@@ -1126,8 +1124,8 @@ static int
 nt_ListAFSSubDirs(IHandle_t * dirIH,
 		  int (*writeFun) (FILE *, struct ViceInodeInfo *, char *,
 				   char *), FILE * fp,
-		  int (*judgeFun) (struct ViceInodeInfo *, int, void *),
-		  int singleVolumeNumber, void *rock)
+		  int (*judgeFun) (struct ViceInodeInfo *, afs_uint32, void *),
+		  afs_uint32 singleVolumeNumber, void *rock)
 {
     int i;
     IHandle_t myIH = *dirIH;
@@ -1239,7 +1237,7 @@ nt_ListAFSSubDirs(IHandle_t * dirIH,
 
 /* The name begins with "Vol_" and ends with .data.  See nt_HandleToVolDir() */
 static int
-DecodeVolumeName(char *name, int *vid)
+DecodeVolumeName(char *name, afs_uint32 *vid)
 {
     char stmp[32];
     int len;

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/util/isathing.c,v 1.6 2003/07/15 23:17:16 shadow Exp $");
 
 #include <ctype.h>
 

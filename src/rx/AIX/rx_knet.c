@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/AIX/rx_knet.c,v 1.13 2005/10/15 14:23:23 shadow Exp $");
 
 #ifdef AFS_AIX41_ENV
 #include "rx/rx_kcommon.h"

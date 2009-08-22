@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_open.c,v 1.11.6.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -74,7 +72,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
 #ifdef AFS_DISCON_ENV
     if (AFS_IS_DISCONNECTED && (afs_DCacheMissingChunks(tvc) != 0)) {
        ReleaseReadLock(&tvc->lock);
-       /*printf("Network is down in afs_open: missing chunks\n");*/
+       printf("Network is down in afs_open: missing chunks\n");
        code = ENETDOWN;
        goto done;
     }
@@ -93,9 +91,10 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
 	    goto done;
 	} else {
 	    if (!afs_AccessOK
-		(tvc, ((tvc->states & CForeign) ? PRSFS_READ : PRSFS_LOOKUP),
+		(tvc, ((tvc->f.states & CForeign) ? PRSFS_READ : PRSFS_LOOKUP),
 		 &treq, CHECK_MODE_BITS)) {
 		code = EACCES;
+		printf("afs_Open: no access for dir\n");
 		goto done;
 	    }
 	}
@@ -152,8 +151,8 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     if (aflags & FTRUNC) {
 	/* this fixes touch */
 	ObtainWriteLock(&tvc->lock, 123);
-	tvc->m.Date = osi_Time();
-	tvc->states |= CDirty;
+	tvc->f.m.Date = osi_Time();
+	tvc->f.states |= CDirty;
 	ReleaseWriteLock(&tvc->lock);
     }
     ObtainReadLock(&tvc->lock);
@@ -170,7 +169,7 @@ afs_open(struct vcache **avcp, afs_int32 aflags, struct AFS_UCRED *acred)
     if ((afs_preCache != 0) && (writing == 0) && (vType(tvc) != VDIR) && 
 	(!afs_BBusy())) {
 	register struct dcache *tdc;
-	afs_size_t offset, len, totallen = 0;
+	afs_size_t offset, len;
 
 	tdc = afs_GetDCache(tvc, 0, &treq, &offset, &len, 1);
 

@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/test_budb.c,v 1.5.14.2 2007/02/09 01:00:20 shadow Exp $");
 
 #include <afs/budb_client.h>
 #include <afs/budb.h>

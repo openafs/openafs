@@ -1,4 +1,4 @@
 #!/bin/sh
-# $Id: kotest,v 1.1 2002/01/14 07:49:17 shadow Exp $
+# $Id$
 
 exec ${objdir}/../lib/ko/kotest

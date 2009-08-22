@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.74.2.9 2007/10/24 18:22:21 shadow Exp $");
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
@@ -66,7 +64,7 @@ init_module(void)
 #endif
 {
     int err;
-    RWLOCK_INIT(&afs_xosi, "afs_xosi");
+    AFS_RWLOCK_INIT(&afs_xosi, "afs_xosi");
 
 #if !defined(AFS_LINUX24_ENV)
     /* obtain PAGE_OFFSET value */
@@ -88,18 +86,24 @@ init_module(void)
 #endif
 #endif
 
+#ifndef LINUX_KEYRING_SUPPORT
     err = osi_syscall_init();
     if (err)
 	return err;
+#endif
     err = afs_init_inodecache();
     if (err) {
+#ifndef LINUX_KEYRING_SUPPORT
 	osi_syscall_clean();
+#endif
 	return err;
     }
     err = register_filesystem(&afs_fs_type);
     if (err) {
 	afs_destroy_inodecache();
+#ifndef LINUX_KEYRING_SUPPORT
 	osi_syscall_clean();
+#endif
 	return err;
     }
 
@@ -111,7 +115,9 @@ init_module(void)
     osi_proc_init();
     osi_ioctl_init();
 #endif
-
+#if defined(AFS_CACHE_BYPASS)
+    afs_warn("Cache bypass patched libafs module init.\n");
+#endif
     return 0;
 }
 
@@ -123,11 +129,16 @@ void
 cleanup_module(void)
 #endif
 {
+#if defined(AFS_CACHE_BYPASS)
+    afs_warn("Cache bypass patched libafs module cleaning up.\n");
+#endif
 #ifdef LINUX_KEYRING_SUPPORT
     osi_keyring_shutdown();
 #endif
     osi_sysctl_clean();
+#ifndef LINUX_KEYRING_SUPPORT
     osi_syscall_clean();
+#endif
     unregister_filesystem(&afs_fs_type);
 
     afs_destroy_inodecache();

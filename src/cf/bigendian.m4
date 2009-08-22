@@ -1,5 +1,5 @@
 dnl
-dnl $Id: bigendian.m4,v 1.3.14.2 2008/07/14 04:06:09 rra Exp $
+dnl $Id$
 dnl
 
 dnl check if this computer is little or big-endian

@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/gtx/curseswindows.c,v 1.10.14.2 2008/03/10 22:32:33 shadow Exp $");
 
 
 #if defined(AFS_HPUX110_ENV) && !defined(__HP_CURSES)
@@ -103,9 +101,7 @@ struct gwinbaseops gator_curses_gwinbops = {
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_init(adebug)
-     int adebug;
-
+gator_cursesgwin_init(int adebug)
 {				/*gator_cursesgwin_init */
 
     static char rn[] = "gator_cursesgwin_init";	/*Routine name */
@@ -125,13 +121,13 @@ gator_cursesgwin_init(adebug)
      */
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %d bytes for curses window private space in base window\n",
+		"[%s:%s] Allocating %lu bytes for curses window private space in base window\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
     c_data =
 	(struct gator_cursesgwin *)malloc(sizeof(struct gator_cursesgwin));
     if (c_data == (struct gator_cursesgwin *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %d bytes for curses window private space in base window\n",
+		"[%s:%s] Can't allocate %lu bytes for curses window private space in base window\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
 	return (-1);
     }
@@ -199,9 +195,7 @@ gator_cursesgwin_init(adebug)
  *------------------------------------------------------------------------*/
 
 struct gwin *
-gator_cursesgwin_create(params)
-     struct gator_cursesgwin_params *params;
-
+gator_cursesgwin_create(struct gator_cursesgwin_params *params)
 {				/*gator_cursesgwin_create */
 
     static char rn[] = "gator_cursesgwin_create";	/*Routine name */
@@ -211,12 +205,12 @@ gator_cursesgwin_create(params)
 
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %d bytes for new gwin structure\n", mn,
+		"[%s:%s] Allocating %lu bytes for new gwin structure\n", mn,
 		rn, sizeof(struct gwin));
     newgwin = (struct gwin *)malloc(sizeof(struct gwin));
     if (newgwin == NULL) {
 	fprintf(stderr,
-		"[%s:%s] Can't malloc() %d bytes for new gwin structure: Errno is %d\n",
+		"[%s:%s] Can't malloc() %lu bytes for new gwin structure: Errno is %d\n",
 		mn, rn, sizeof(struct gwin), errno);
 	return (NULL);
     }
@@ -232,13 +226,13 @@ gator_cursesgwin_create(params)
 
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %d bytes for curses window private space\n",
+		"[%s:%s] Allocating %lu bytes for curses window private space\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
     c_data =
 	(struct gator_cursesgwin *)malloc(sizeof(struct gator_cursesgwin));
     if (c_data == (struct gator_cursesgwin *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %d bytes for curses window private space\n",
+		"[%s:%s] Can't allocate %lu bytes for curses window private space\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
 	free(newgwin);
 	return (NULL);
@@ -301,9 +295,7 @@ gator_cursesgwin_create(params)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_cleanup(gwp)
-     struct gwin *gwp;
-
+gator_cursesgwin_cleanup(struct gwin *gwp)
 {				/*gator_cursesgwin_cleanup */
 
     static char rn[] = "gator_cursesgwin_cleanup";	/*Routine name */
@@ -316,7 +308,7 @@ gator_cursesgwin_cleanup(gwp)
      * want to clear the screen before we go.
      */
     if (curses_debug)
-	fprintf(stderr, "[%s:%s] Calling wclear() on window at 0x%x\n", mn,
+	fprintf(stderr, "[%s:%s] Calling wclear() on window at %p\n", mn,
 		rn, cwp->wp);
     wclear(cwp->wp);
     wrefresh(cwp->wp);
@@ -356,9 +348,7 @@ gator_cursesgwin_cleanup(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_box(gwp)
-     struct gwin *gwp;
-
+gator_cursesgwin_box(struct gwin *gwp)
 {				/*gator_cursesgwin_box */
 
     static char rn[] = "gator_cursesgwin_box";	/*Routine name */
@@ -366,7 +356,7 @@ gator_cursesgwin_box(gwp)
 
     cwp = (struct gator_cursesgwin *)(gwp->w_data);
     if (curses_debug)
-	fprintf(stderr, "[%s:%s] Calling box() on window at 0x%x\n", mn, rn,
+	fprintf(stderr, "[%s:%s] Calling box() on window at %p\n", mn, rn,
 		cwp->wp);
     box(cwp->wp, cwp->box_vertchar, cwp->box_horizchar);
 
@@ -395,9 +385,7 @@ gator_cursesgwin_box(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_clear(gwp)
-     struct gwin *gwp;
-
+gator_cursesgwin_clear(struct gwin *gwp)
 {				/*gator_cursesgwin_clear */
 
     static char rn[] = "gator_cursesgwin_clear";	/*Routine name */
@@ -408,7 +396,7 @@ gator_cursesgwin_clear(gwp)
      */
     cwp = (struct gator_cursesgwin *)(gwp->w_data);
     if (curses_debug)
-	fprintf(stderr, "[%s:%s] Calling wclear() on window at 0x%x\n", mn,
+	fprintf(stderr, "[%s:%s] Calling wclear() on window at %p\n", mn,
 		rn, cwp->wp);
     wclear(cwp->wp);
 
@@ -437,9 +425,7 @@ gator_cursesgwin_clear(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_destroy(gwp)
-     struct gwin *gwp;
-
+gator_cursesgwin_destroy(struct gwin *gwp)
 {				/*gator_cursesgwin_destroy */
 
     static char rn[] = "gator_cursesgwin_destroy";	/*Routine name */
@@ -447,7 +433,7 @@ gator_cursesgwin_destroy(gwp)
 
     cwp = (struct gator_cursesgwin *)(gwp->w_data);
     if (curses_debug)
-	fprintf(stderr, "[%s:%s] Calling delwin() on window at 0x%x\n", mn,
+	fprintf(stderr, "[%s:%s] Calling delwin() on window at %p\n", mn,
 		rn, cwp->wp);
     delwin(cwp->wp);
 
@@ -476,9 +462,7 @@ gator_cursesgwin_destroy(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_display(gwp)
-     struct gwin *gwp;
-
+gator_cursesgwin_display(struct gwin *gwp)
 {				/*gator_cursesgwin_display */
 
     struct gator_cursesgwin *cwp;	/*Curses private area ptr */
@@ -516,10 +500,7 @@ gator_cursesgwin_display(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_drawline(gwp, params)
-     struct gwin *gwp;
-     struct gwin_lineparams *params;
-
+gator_cursesgwin_drawline(struct gwin *gwp, struct gwin_lineparams *params)
 {				/*gator_cursesgwin_drawline */
 
     static char rn[] = "gator_cursesgwin_drawline";	/*Routine name */
@@ -555,10 +536,7 @@ gator_cursesgwin_drawline(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_drawrectangle(gwp, params)
-     struct gwin *gwp;
-     struct gwin_rectparams *params;
-
+gator_cursesgwin_drawrectangle(struct gwin *gwp, struct gwin_rectparams *params)
 {				/*gator_cursesgwin_drawrectangle */
 
     static char rn[] = "gator_cursesgwin_drawrectangle";	/*Routine name */
@@ -594,10 +572,7 @@ gator_cursesgwin_drawrectangle(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_drawchar(gwp, params)
-     struct gwin *gwp;
-     struct gwin_charparams *params;
-
+gator_cursesgwin_drawchar(struct gwin *gwp, struct gwin_charparams *params)
 {				/*gator_cursesgwin_drawchar */
 
     static char rn[] = "gator_cursesgwin_drawchar";	/*Routine name */
@@ -609,7 +584,7 @@ gator_cursesgwin_drawchar(gwp, params)
     curses_y = GATOR_MAP_Y_TO_LINE(cwp, params->y);
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Drawing char '%c' on window at 0x%x at (%d, %d) [line %d, column %d]%s\n",
+		"[%s:%s] Drawing char '%c' on window at %p at (%d, %d) [line %d, column %d]%s\n",
 		mn, rn, params->c, cwp->wp, params->x, params->y, curses_y,
 		curses_x, (params->highlight ? ", using standout mode" : ""));
     wmove(cwp->wp, curses_y, curses_x);
@@ -646,10 +621,7 @@ gator_cursesgwin_drawchar(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_drawstring(gwp, params)
-     struct gwin *gwp;
-     struct gwin_strparams *params;
-
+gator_cursesgwin_drawstring(struct gwin *gwp, struct gwin_strparams *params)
 {				/*gator_cursesgwin_drawstring */
 
     static char rn[] = "gator_cursesgwin_drawstring";	/*Routine name */
@@ -661,7 +633,7 @@ gator_cursesgwin_drawstring(gwp, params)
     curses_y = GATOR_MAP_Y_TO_LINE(cwp, params->y);
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Drawing string '%s' on window at 0x%x at (%d, %d) [line %d, column %d]%s\n",
+		"[%s:%s] Drawing string '%s' on window at %p at (%d, %d) [line %d, column %d]%s\n",
 		mn, rn, params->s, cwp->wp, params->x, params->y, curses_y,
 		curses_x, (params->highlight ? ", using standout mode" : ""));
     wmove(cwp->wp, curses_y, curses_x);
@@ -698,10 +670,7 @@ gator_cursesgwin_drawstring(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_invert(gwp, params)
-     struct gwin *gwp;
-     struct gwin_invparams *params;
-
+gator_cursesgwin_invert(struct gwin *gwp, struct gwin_invparams *params)
 {				/*gator_cursesgwin_invert */
 
     static char rn[] = "gator_cursesgwin_invert";	/*Routine name */
@@ -735,9 +704,7 @@ gator_cursesgwin_invert(gwp, params)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_getchar(gwp)
-     struct gwin *gwp;
-
+gator_cursesgwin_getchar(struct gwin *gwp)
 {				/*gator_cursesgwin_getchar */
 
     return (getc(stdin));
@@ -765,9 +732,7 @@ gator_cursesgwin_getchar(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_wait(gwp)
-     struct gwin *gwp;
-
+gator_cursesgwin_wait(struct gwin *gwp)
 {				/*gator_cursesgwin_wait */
 
     while (!LWP_WaitForKeystroke(-1));
@@ -798,10 +763,7 @@ gator_cursesgwin_wait(gwp)
  *------------------------------------------------------------------------*/
 
 int
-gator_cursesgwin_getdimensions(gwp, aparms)
-     struct gwin_sizeparams *aparms;
-     struct gwin *gwp;
-
+gator_cursesgwin_getdimensions(struct gwin *gwp, struct gwin_sizeparams *aparms)
 {				/*gator_cursesgwin_getdimensions */
 
     struct gator_cursesgwin *cwp;	/*Curses-specific data */
@@ -810,7 +772,7 @@ gator_cursesgwin_getdimensions(gwp, aparms)
 #if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN60_ENV)
     aparms->maxx = cwp->wp->maxx;
     aparms->maxy = cwp->wp->maxy;
-#elif defined(AFS_NBSD_ENV)
+#elif defined(AFS_NBSD_ENV) || defined(AFS_DARWIN100_ENV)
     aparms->maxx = getmaxx(cwp->wp);
     aparms->maxy = getmaxy(cwp->wp);
 #else

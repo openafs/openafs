@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bucoord/restore.c,v 1.10.6.7 2007/11/26 21:08:41 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -36,6 +34,8 @@ RCSID
 #include <afs/budb.h>
 #include <afs/vlserver.h>
 #include "error_macros.h"
+#include "bucoord_internal.h"
+#include "bucoord_prototypes.h"
 
 extern struct bc_dumpTask bc_dumpTasks[BC_MAXSIMDUMPS];
 extern char *whoami;
@@ -58,7 +58,7 @@ struct dumpinfo {
 };
 
 struct volinfo {
-    struct voli *next;
+    struct volinfo *next;
     char *volname;
     afs_int32 server;
     afs_int32 partition;
@@ -92,13 +92,12 @@ struct bc_tapeItem {
 };
 
 /* strip .backup from the end of a name */
-static
-StripBackup(aname)
-     register char *aname;
+static int
+StripBackup(char *aname)
 {
     int j;
 
-    if (j = BackupName(aname)) {
+    if ((j = BackupName(aname))) {
 	aname[j] = 0;
 	return 0;
     }
@@ -106,8 +105,7 @@ StripBackup(aname)
 }
 
 int
-BackupName(aname)
-     char *aname;
+BackupName(char *aname)
 {
     int j;
 
@@ -119,8 +117,8 @@ BackupName(aname)
     return 0;
 }
 
-extractTapeSeq(tapename)
-     char *tapename;
+int
+extractTapeSeq(char *tapename)
 {
     char *sptr;
 
@@ -132,8 +130,7 @@ extractTapeSeq(tapename)
 }
 
 void
-viceName(value)
-     long value;
+viceName(long value)
 {
     char *alph;
     int r;
@@ -151,8 +148,8 @@ viceName(value)
  * entry:
  *	aindex - index into bc_dumpTasks that describes this dump.
  */
-bc_Restorer(aindex)
-     afs_int32 aindex;
+int
+bc_Restorer(afs_int32 aindex)
 {
     struct bc_dumpTask *dumpTaskPtr;
 
@@ -164,7 +161,8 @@ bc_Restorer(aindex)
     afs_int32 tapedumpid, parent;
 
     afs_int32 nentries = 0;
-    afs_int32 last, next, ve, vecount;
+    afs_int32 last = 0;
+    afs_int32 next, ve, vecount;
     struct bc_tapeItem *ti, *pti, *nti;
     struct bc_tapeList *tapeList = (struct bc_tapeList *)0;
     struct bc_tapeList *tle, *ptle, *ntle;
@@ -183,7 +181,7 @@ bc_Restorer(aindex)
 
     struct dumpinfo *dumpinfolist = NULL;
     struct dumpinfo *pdi, *ndi, *di, *dlevels;
-    struct volinfo *pvi, *nvi, *vi;
+    struct volinfo *nvi, *vi;
     afs_int32 lvl, lv;
     int num_dlevels = 20;
 
@@ -193,9 +191,6 @@ bc_Restorer(aindex)
     long haddr;
     time_t did;
     int foundtape, c;
-
-    extern statusP createStatusNode();
-    extern statusP findStatus();
 
     dlevels = (struct dumpinfo *) malloc(num_dlevels * sizeof(*dlevels));
 

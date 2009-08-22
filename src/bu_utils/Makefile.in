@@ -7,13 +7,17 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: fms
 
 FMSLIBS=${TOP_LIBDIR}/libcmd.a \
 	${TXLIBS} \
         ${TOP_LIBDIR}/libusd.a \
-	${TOP_LIBDIR}/libtermlib.a ${XLIBS} \
+	${XLIBS} \
 	${TOP_LIBDIR}/util.a
 
 fms: fms.o
@@ -21,18 +25,15 @@ fms: fms.o
 
 fms.o:  fms.c AFS_component_version_number.o
 
-install: ${DESTDIR}${sbindir}/fms
+install: fms
+	${INSTALL} -d ${DESTDIR}${sbindir}
+	${INSTALL_PROGRAM} fms ${DESTDIR}${sbindir}/fms
 
-${DEST}/etc/fms: fms
-	${INSTALL} $? $@
+dest: fms
+	${INSTALL} -d ${DEST}/etc
+	${INSTALL_PROGRAM} fms ${DEST}/etc/fms
 
 clean:
 	$(RM) -f *.o fms AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${sbindir}/fms: fms
-	${INSTALL} $? $@
-
-dest: ${DEST}/etc/fms
-

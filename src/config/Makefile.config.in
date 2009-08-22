@@ -11,8 +11,11 @@ afssrvbindir=@afssrvbindir@
 afskerneldir=@afskerneldir@
 afssrvlibexecdir=@afssrvlibexecdir@
 afssrvsbindir=@afssrvsbindir@
+afsdatadir=@afsdatadir@
 bindir=@bindir@
 exec_prefix=@exec_prefix@
+datarootdir=@datarootdir@
+datadir=@datadir@
 includedir=@includedir@
 libdir=@libdir@
 libexecdir=@libexecdir@
@@ -48,8 +51,9 @@ LEX = @LEX@
 LIB_AFSDB = @LIB_AFSDB@
 LIBS = @LIBS@
 LINUX_KERNEL_PATH = @LINUX_KERNEL_PATH@
-LINUX_LIBAFS_NAME=@LINUX_LIBAFS_NAME@
-LINUX_KERNEL_PACKAGING=@LINUX_KERNEL_PACKAGING@
+LINUX_KERNEL_BUILD = @LINUX_KERNEL_BUILD@
+LINUX_LIBAFS_NAME = @LINUX_LIBAFS_NAME@
+LINUX_KERNEL_PACKAGING = @LINUX_KERNEL_PACKAGING@
 LINUX_VERSION = @LINUX_VERSION@
 LINUX_VERS = @LINUX_VERSION@
 LWP_OPTMZ = @LWP_OPTMZ@
@@ -61,17 +65,16 @@ MT_CFLAGS = @MT_CFLAGS@
 MT_LIBS = @MT_LIBS@
 MV = @MV@
 NO_STRIP_BIN = @NO_STRIP_BIN@
-NO_STRIP_KRB = @NO_STRIP_KRB@
 OPTMZ = @OPTMZ@
 PAM_CFLAGS = @PAM_CFLAGS@
 PAM_LIBS = @PAM_LIBS@
 PAM_OPTMZ = @PAM_OPTMZ@
 PAM_DBG = @PAM_DBG@
 PATH_CPP = @PATH_CPP@
-PINSTALL_LIBS = @PINSTALL_LIBS@
 RANLIB = @RANLIB@
 REGEX_OBJ = @REGEX_OBJ@
 RM = @RM@
+RXDEBUG = @RXDEBUG@
 SHLIB_CFLAGS = @SHLIB_CFLAGS@
 SHLIB_LDFLAGS = @SHLIB_LDFLAGS@
 SHLIB_LINKER = @SHLIB_LINKER@
@@ -96,14 +99,6 @@ YACC = @YACC@
 #
 # Special build targets
 #
-dest_FS_CONV_OSF40D = @dest_FS_CONV_OSF40D@
-install_FS_CONV_OSF40D = @install_FS_CONV_OSF40D@
-FS_CONV_OSF40D = @FS_CONV_OSF40D@
-
-dest_FS_CONV_SOL26 = @dest_FS_CONV_SOL26@
-install_FS_CONV_SOL26 = @install_FS_CONV_SOL26@
-FS_CONV_SOL26 = @FS_CONV_SOL26@
-
 dest_XFS_SIZE_CHECK = @dest_XFS_SIZE_CHECK@
 install_XFS_SIZE_CHECK = @install_XFS_SIZE_CHECK@
 XFS_SIZE_CHECK = @XFS_SIZE_CHECK@
@@ -121,8 +116,6 @@ KERNELDIR = ../libafs
 # Build helper apps
 #
 COMPILE_ET = ${TOP_OBJDIR}/src/comerr/compile_et
-INSTALL = ${TOP_OBJDIR}/src/pinstall/pinstall ${NO_STRIP_BIN}
-INSTALLex = ${INSTALL} -m 755
 RXGEN = ${TOP_OBJDIR}/src/rxgen/rxgen
 SHELL = /bin/sh
 

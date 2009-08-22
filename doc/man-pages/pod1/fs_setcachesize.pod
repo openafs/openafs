@@ -7,17 +7,13 @@ fs_setcachesize - Sets the size of the disk cache
 =for html
 <div class="synopsis">
 
-B<fs setcachesize> [B<-blocks> <I<size in 1K byte blocks (0 => reset)>>]
-    [B<-reset>] [B<-help>]
+B<fs setcachesize> [B<-blocks> <I<size (0 => reset)>>] [B<-reset>] [B<-help>]
 
-B<fs setca> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
-    [B<-r>] [B<-h>]
+B<fs setca> [B<-b> <I<size (0 => reset)>>] [B<-r>] [B<-h>]
 
-B<fs cachesize> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
-    [B<-r>] [B<-h>]
+B<fs cachesize> [B<-b> <I<size (0 => reset)>>] [B<-r>] [B<-h>]
 
-B<fs ca> [B<-b> <I<size in 1K byte blocks (0 => reset)>>]
-    [B<-r>] [B<-h>]
+B<fs ca> [B<-b> <I<size (0 => reset)>>] [B<-r>] [B<-h>]
 
 =for html
 </div>
@@ -57,11 +53,14 @@ implementation itself requires a small amount of space on the partition.
 
 =over 4
 
-=item B<-blocks> <I<size in 1K byte blocks>>
+=item B<-blocks> <I<size>>
 
-Specifies the number of one-kilobyte blocks of disk space available for
-the Cache Manager to devote to the cache. Provide a value of C<0> to set
-cache size to the default specified in the F<cacheinfo> file.
+Specifies the amount of disk space available for the Cache Manager to
+devote to the cache.  The size should be a positive integer followed by an
+optional suffix: C<K> for kibibytes (1024 bytes, the default), C<M> for
+mebibytes (1024 kibibytes), C<G> for gibibytes (1024 mebibytes), and C<T>
+for tebibytes (1024 gibibytes).  Provide a value of C<0> to set cache size
+to the default specified in the F<cacheinfo> file.
 
 =item B<-reset>
 

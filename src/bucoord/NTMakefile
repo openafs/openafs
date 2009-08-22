@@ -12,7 +12,9 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -DNOGDI -DWIN32_LEAN_AND_MEAN
 
 #########################################################################
 # install local include file
-INCFILES = bc.h
+INCFILES = \
+        bc.h \
+        $(DESTDIR)\include\afs\bucoord_prototypes.h
 
 ############################################################################
 # build afsbxdb.lib
@@ -45,7 +47,6 @@ EXEOBJS =\
 	$(OUT)\dsstub.obj \
 	$(OUT)\volstub.obj \
 	$(OUT)\commands.obj \
-	$(OUT)\regex.obj \
 	$(OUT)\server.obj \
 	$(OUT)\dsvs.obj \
 	$(OUT)\dump.obj \
@@ -88,8 +89,7 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-        $(DESTDIR)\lib\cm_dns.obj \
-        $(DESTDIR)\lib\cm_nls.obj
+	$(DESTDIR)\lib\libafsconf.lib
 	
 
 $(EXEFILE): $(EXEOBJS) $(EXERES) $(EXELIBS)

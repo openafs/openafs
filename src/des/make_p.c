@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/make_p.c,v 1.6 2006/03/09 06:34:36 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
@@ -40,12 +38,12 @@ gen(FILE * stream)
     fprintf(stream, "    P_temp_p = (unsigned char *) &P_temp;\n");
 
 #ifdef AFS_DARWIN80_ENV
-    fprintf(stream, "#if defined(__i386__)\n");
+    fprintf(stream, "#if defined(__i386__) || defined(__amd64__)\n");
     fprintf(stream, "    R2 = P_prime[0][*P_temp_p++];\n");
     fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");
     fprintf(stream, "    R2 |= P_prime[2][*P_temp_p++];\n");
     fprintf(stream, "    R2 |= P_prime[3][*P_temp_p];\n");
-    fprintf(stream, "#elif defined(__ppc__)\n");
+    fprintf(stream, "#elif defined(__ppc__) || defined(__ppc64__)\n");
     fprintf(stream, "    R2 = P_prime[3][*P_temp_p++];\n");
     fprintf(stream, "    R2 |= P_prime[2][*P_temp_p++];\n");
     fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");

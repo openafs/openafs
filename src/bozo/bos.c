@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/bozo/bos.c,v 1.23.2.3 2007/10/31 04:09:23 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdlib.h>
@@ -45,9 +43,14 @@ RCSID
 #include <afs/com_err.h>
 #include <ubik.h>
 #include <afs/ktime.h>
+#include <des.h>
+#include <des_prototypes.h>
+#include <afs/kautils.h>
+#include <afs/volser.h>
 
-static IStatServer();
-static DoStat();
+static int IStatServer(register struct cmd_syndesc *as, int int32p);
+static int DoStat(char *aname, register struct rx_connection *aconn, 
+		  int aint32p, int firstTime);
 
 #include "bosint.h"
 
@@ -79,15 +82,14 @@ struct MRAFSSalvageParms {
 
 /* dummy routine for the audit work.  It should do nothing since audits */
 /* occur at the server level and bos is not a server. */
-osi_audit()
+int osi_audit(void )
 {
     return 0;
 }
 
 /* keep those lines small */
 static char *
-em(acode)
-     afs_int32 acode;
+em(afs_int32 acode)
 {
     if (acode == -1)
 	return "communications failure (-1)";
@@ -98,9 +100,10 @@ em(acode)
 }
 
 /* get partition id from a name */
+/* XXX - unused code - could be removed? */
+#if 0
 static afs_int32
-GetPartitionID(aname)
-     char *aname;
+GetPartitionID(char *aname)
 {
     register char tc;
     char ascii[3];
@@ -138,11 +141,11 @@ GetPartitionID(aname)
 	return (ascii[0] - 'a') * 26 + (ascii[1] - 'a') + 26;
     }
 }
+#endif
 
 /* make ctime easier to use */
 static char *
-DateOf(atime)
-     afs_int32 atime;
+DateOf(afs_int32 atime)
 {
     static char tbuffer[30];
     register char *tp;
@@ -164,9 +167,7 @@ static int scIndex;
  * aencrypt is set if we want to encrypt the data on the wire.
  */
 static struct rx_connection *
-GetConn(as, aencrypt)
-     int aencrypt;
-     struct cmd_syndesc *as;
+GetConn(struct cmd_syndesc *as, int aencrypt)
 {
     struct hostent *th;
     char *hostname;
@@ -188,40 +189,42 @@ GetConn(as, aencrypt)
     }
     memcpy(&addr, th->h_addr, sizeof(afs_int32));
 
-    /* get tokens for making authenticated connections */
-    localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
-    confdir =
-	(localauth ? AFSDIR_SERVER_ETC_DIRPATH : AFSDIR_CLIENT_ETC_DIRPATH);
-    tdir = afsconf_Open(confdir);
-    if (tdir) {
-	struct afsconf_cell info;
-	char *tname;
-
-	if (as->parms[ADDPARMOFFSET].items)
-	    tname = as->parms[ADDPARMOFFSET].items->data;
-	else
-	    tname = NULL;
-	/* next call expands cell name abbrevs for us and handles looking up
-	 * local cell */
-	code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
-	if (code) {
-	    afs_com_err("bos", code, "(can't find cell '%s' in cell database)",
-		    (tname ? tname : "<default>"));
-	    exit(1);
-	} else
-	    strcpy(sname.cell, info.name);
-    } else {
-	printf("bos: can't open cell database (%s)\n", confdir);
-	exit(1);
-    }
-    sname.instance[0] = 0;
-    strcpy(sname.name, "afs");
+    /* Start with no authentication */
     sc[0] = rxnull_NewClientSecurityObject();
     sc[1] = 0;
     sc[2] = 0;
     scIndex = 0;
 
     if (!as->parms[ADDPARMOFFSET + 1].items) {	/* not -noauth */
+        /* get tokens for making authenticated connections */
+        localauth = (as->parms[ADDPARMOFFSET + 2].items != 0);
+        confdir =
+            (localauth ? AFSDIR_SERVER_ETC_DIRPATH : AFSDIR_CLIENT_ETC_DIRPATH);
+        tdir = afsconf_Open(confdir);
+        if (tdir) {
+            struct afsconf_cell info;
+            char *tname;
+
+            if (as->parms[ADDPARMOFFSET].items)
+                tname = as->parms[ADDPARMOFFSET].items->data;
+            else
+                tname = NULL;
+            /* next call expands cell name abbrevs for us and handles looking up
+            * local cell */
+            code = afsconf_GetCellInfo(tdir, tname, NULL, &info);
+            if (code) {
+                afs_com_err("bos", code, "(can't find cell '%s' in cell database)",
+                             (tname ? tname : "<default>"));
+                exit(1);
+            } else
+                strcpy(sname.cell, info.name);
+        } else {
+            printf("bos: can't open cell database (%s)\n", confdir);
+            exit(1);
+        }
+        sname.instance[0] = 0;
+        strcpy(sname.name, "afs");
+
 	if (as->parms[ADDPARMOFFSET + 2].items) {	/* -localauth */
 	    code = afsconf_GetLatestKey(tdir, 0, 0);
 	    if (code)
@@ -306,10 +309,8 @@ SetAuth(struct cmd_syndesc *as, void *arock)
 
 /* take a name (e.g. foo/bar, and a dir e.g. /usr/afs/bin, and construct
  * /usr/afs/bin/bar */
-static
-ComputeDestDir(aname, adir, aresult, alen)
-     char *aname, *adir, *aresult;
-     afs_int32 alen;
+static int
+ComputeDestDir(char *aname, char *adir, char *aresult, afs_int32 alen)
 {
     register char *tp;
 
@@ -327,10 +328,8 @@ ComputeDestDir(aname, adir, aresult, alen)
 }
 
 /* copy data from fd afd to rx call acall */
-static
-CopyBytes(afd, acall)
-     int afd;
-     register struct rx_call *acall;
+static int
+CopyBytes(int afd, register struct rx_call *acall)
 {
     register afs_int32 code;
     register afs_int32 len;
@@ -469,9 +468,7 @@ UnInstall(register struct cmd_syndesc *as, void *arock)
 }
 
 static afs_int32
-GetServerGoal(aconn, aname)
-     char *aname;
-     struct rx_connection *aconn;
+GetServerGoal(struct rx_connection *aconn, char *aname)
 {
     char buffer[500];
     char *tp;
@@ -622,13 +619,13 @@ GetRestartCmd(struct cmd_syndesc *as, void *arock)
     hostp = as->parms[0].items->data;	/* host name for messages */
     tconn = GetConn(as, 0);
 
-    code = BOZO_GetRestartTime(tconn, 1, &generalTime);
+    code = BOZO_GetRestartTime(tconn, 1, (struct bozo_netKTime *) &generalTime);
     if (code) {
 	printf("bos: failed to retrieve restart information (%s)\n",
 	       em(code));
 	return code;
     }
-    code = BOZO_GetRestartTime(tconn, 2, &newBinaryTime);
+    code = BOZO_GetRestartTime(tconn, 2, (struct bozo_netKTime *) &newBinaryTime);
     if (code) {
 	printf("bos: failed to retrieve restart information (%s)\n",
 	       em(code));
@@ -656,10 +653,10 @@ GetRestartCmd(struct cmd_syndesc *as, void *arock)
 static int
 SetRestartCmd(struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 count;
+    afs_int32 count = 0;
     register afs_int32 code;
     struct ktime restartTime;
-    afs_int32 type;
+    afs_int32 type = 0 ;
     struct rx_connection *tconn;
 
     count = 0;
@@ -679,13 +676,13 @@ SetRestartCmd(struct cmd_syndesc *as, void *arock)
     if (count == 0)
 	type = 1;		/* by default set general restart time */
 
-    if (code = ktime_ParsePeriodic(as->parms[1].items->data, &restartTime)) {
+    if ((code = ktime_ParsePeriodic(as->parms[1].items->data, &restartTime))) {
 	printf("bos: failed to parse '%s' as periodic restart time(%s)\n",
 	       as->parms[1].items->data, em(code));
 	return code;
     }
 
-    code = BOZO_SetRestartTime(tconn, type, &restartTime);
+    code = BOZO_SetRestartTime(tconn, type, (struct bozo_netKTime *) &restartTime);
     if (code) {
 	printf("bos: failed to set restart time at server (%s)\n", em(code));
 	return code;
@@ -1113,7 +1110,7 @@ CreateServer(register struct cmd_syndesc *as, void *arock)
     }
     name = as->parms[1].items->data;
     type = as->parms[2].items->data;
-    if (ti = as->parms[4].items) {
+    if ((ti = as->parms[4].items)) {
 	notifier = ti->data;
     }
     code =
@@ -1289,7 +1286,7 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	    printf("bos: command line too big\n");
 	    return (E2BIG);
 	}
-	strcat(tbuffer, " -f ");
+	strcat(tbuffer, " -force ");
 	strcat(tbuffer, partName);
     }
 
@@ -1360,13 +1357,14 @@ DoSalvage(struct rx_connection * aconn, char * aparm1, char * aparm2,
 	if (mrafsParm->OptDontAskFS)
 	    strcat(tbuffer, " -DontAskFS");
 	if (mrafsParm->OptLogLevel) {
-	    sprintf(pbuffer, " -LogLevel %ld", mrafsParm->OptLogLevel);
+	    sprintf(pbuffer, " -LogLevel %ld", afs_printable_int32_ld(mrafsParm->OptLogLevel));
 	    strcat(tbuffer, pbuffer);
 	}
 	if (mrafsParm->OptRxDebug)
 	    strcat(tbuffer, " -rxdebug");
 	if (mrafsParm->OptResidencies) {
-	    sprintf(pbuffer, " -Residencies %lu", mrafsParm->OptResidencies);
+	    sprintf(pbuffer, " -Residencies %lu", 
+		    afs_printable_uint32_lu(mrafsParm->OptResidencies));
 	    strcat(tbuffer, pbuffer);
 	}
     }
@@ -1489,18 +1487,18 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     tp = &tname[0];
 
     /* find out whether fileserver is running demand attach fs */
-    if (code = BOZO_GetInstanceParm(tconn, "dafs", 0, &tp) == 0) {
+    if ((code = BOZO_GetInstanceParm(tconn, "dafs", 0, &tp) == 0)) {
 	dafs = 1;
 	serviceName = "dafs";
 	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
 	/* XXX this should really be done some other way, potentially by RPC */
-	if (code = BOZO_GetInstanceParm(tconn, serviceName, 4, &tp) == 0)
+	if ((code = BOZO_GetInstanceParm(tconn, serviceName, 4, &tp) == 0))
 	    mrafs = 1;
     } else {
 	serviceName = "fs";
 	/* Find out whether fileserver is running MR-AFS (has a scanner instance) */
 	/* XXX this should really be done some other way, potentially by RPC */
-	if (code = BOZO_GetInstanceParm(tconn, serviceName, 3, &tp) == 0)
+	if ((code = BOZO_GetInstanceParm(tconn, serviceName, 3, &tp) == 0))
 	    mrafs = 1;
     }
 
@@ -1744,10 +1742,8 @@ SalvageCmd(struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
-static
-IStatServer(as, int32p)
-     int int32p;
-     register struct cmd_syndesc *as;
+static int
+IStatServer(register struct cmd_syndesc *as, int int32p)
 {
     register struct rx_connection *tconn;
     register struct cmd_item *ti;
@@ -1761,12 +1757,11 @@ IStatServer(as, int32p)
     return 0;
 }
 
-static
-DoStat(aname, aconn, aint32p, firstTime)
-     IN char *aname;
-     IN register struct rx_connection *aconn;
-     IN int aint32p;
-     IN int firstTime;		/* true iff first instance in cmd */
+static int
+DoStat(IN char *aname, 
+       IN register struct rx_connection *aconn, 
+       IN int aint32p, 
+       IN int firstTime) 	/* true iff first instance in cmd */
 {
     afs_int32 temp;
     char buffer[500];
@@ -1913,8 +1908,7 @@ SetRestrict(struct cmd_syndesc *as, void *arock)
 #endif
 
 static void
-add_std_args(ts)
-     register struct cmd_syndesc *ts;
+add_std_args(register struct cmd_syndesc *ts)
 {
     cmd_Seek(ts, ADDPARMOFFSET);
     /* + 0 */ cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
@@ -1926,9 +1920,8 @@ add_std_args(ts)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;

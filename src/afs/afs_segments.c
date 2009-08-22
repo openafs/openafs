@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.22.8.2 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -40,7 +38,7 @@ afs_uint32 afs_stampValue = 0;
 int
 afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 {
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
@@ -50,17 +48,19 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     XSTATS_DECLS;
     AFS_STATCNT(afs_StoreMini);
     afs_Trace2(afs_iclSetp, CM_TRACE_STOREMINI, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, avc->m.Length);
-    tlen = avc->m.Length;
-    if (avc->truncPos < tlen)
-	tlen = avc->truncPos;
-    avc->truncPos = AFS_NOTRUNC;
-    avc->states &= ~CExtendedFile;
+	       ICL_TYPE_INT32, avc->f.m.Length);
+    tlen = avc->f.m.Length;
+    if (avc->f.truncPos < tlen)
+	tlen = avc->f.truncPos;
+    avc->f.truncPos = AFS_NOTRUNC;
+    avc->f.states &= ~CExtendedFile;
 
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	tc = afs_Conn(&avc->f.fid, areq, SHARED_LOCK);
 	if (tc) {
+#ifdef AFS_64BIT_CLIENT
 	  retry:
+#endif
 	    RX_AFS_GUNLOCK();
 	    tcall = rx_NewCall(tc->id);
 	    RX_AFS_GLOCK();
@@ -73,11 +73,11 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	     * the proper store-data or store-status calls.
 	     */
 	    InStatus.Mask = AFS_SETMODTIME;
-	    InStatus.ClientModTime = avc->m.Date;
+	    InStatus.ClientModTime = avc->f.m.Date;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
 	    afs_Trace4(afs_iclSetp, CM_TRACE_STOREDATA64, ICL_TYPE_FID,
-		       &avc->fid.Fid, ICL_TYPE_OFFSET,
-		       ICL_HANDLE_OFFSET(avc->m.Length), ICL_TYPE_OFFSET,
+		       &avc->f.fid.Fid, ICL_TYPE_OFFSET,
+		       ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(xlen), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(tlen));
 	    RX_AFS_GUNLOCK();
@@ -85,26 +85,26 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	    if (!afs_serverHasNo64Bit(tc)) {
 		code =
 		    StartRXAFS_StoreData64(tcall,
-					   (struct AFSFid *)&avc->fid.Fid,
-					   &InStatus, avc->m.Length,
+					   (struct AFSFid *)&avc->f.fid.Fid,
+					   &InStatus, avc->f.m.Length,
 					   (afs_size_t) 0, tlen);
 	    } else {
 		afs_int32 l1, l2;
-		l1 = avc->m.Length;
+		l1 = avc->f.m.Length;
 		l2 = tlen;
-		if ((avc->m.Length > 0x7fffffff) ||
+		if ((avc->f.m.Length > 0x7fffffff) ||
 		    (tlen > 0x7fffffff) ||
-		    ((0x7fffffff - tlen) < avc->m.Length))
+		    ((0x7fffffff - tlen) < avc->f.m.Length))
 		    return EFBIG;
 		code =
 		    StartRXAFS_StoreData(tcall,
-					 (struct AFSFid *)&avc->fid.Fid,
+					 (struct AFSFid *)&avc->f.fid.Fid,
 					 &InStatus, l1, 0, l2);
 	    }
 #else /* AFS_64BIT_CLIENT */
 	    code =
-		StartRXAFS_StoreData(tcall, (struct AFSFid *)&avc->fid.Fid,
-				     &InStatus, avc->m.Length, 0, tlen);
+		StartRXAFS_StoreData(tcall, (struct AFSFid *)&avc->f.fid.Fid,
+				     &InStatus, avc->f.m.Length, 0, tlen);
 #endif /* AFS_64BIT_CLIENT */
 	    if (code == 0) {
 		code = EndRXAFS_StoreData(tcall, &OutStatus, &tsync);
@@ -121,7 +121,7 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
 	} else
 	    code = -1;
     } while (afs_Analyze
-	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_STOREDATA,
+	     (tc, code, &avc->f.fid, areq, AFS_STATS_FS_RPCIDX_STOREDATA,
 	      SHARED_LOCK, NULL));
 
     if (code == 0) {
@@ -149,7 +149,7 @@ unsigned int storeallmissing = 0;
  * Environment:
  *	Called with avc write-locked.
  */
-#if defined (AFS_HPUX_ENV) || defined(AFS_ULTRIX_ENV)
+#if defined (AFS_HPUX_ENV)
 int NCHUNKSATONCE = 3;
 #else
 int NCHUNKSATONCE = 64;
@@ -183,19 +183,19 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
     AFS_STATCNT(afs_StoreAllSegments);
 
-    hset(oldDV, avc->m.DataVersion);
-    hset(newDV, avc->m.DataVersion);
-    hash = DVHash(&avc->fid);
-    foreign = (avc->states & CForeign);
+    hset(oldDV, avc->f.m.DataVersion);
+    hset(newDV, avc->f.m.DataVersion);
+    hash = DVHash(&avc->f.fid);
+    foreign = (avc->f.states & CForeign);
     dcList = (struct dcache **)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     afs_Trace2(afs_iclSetp, CM_TRACE_STOREALL, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
 #if !defined(AFS_AIX32_ENV) && !defined(AFS_SGI65_ENV)
     /* In the aix vm implementation we need to do the vm_writep even
      * on the memcache case since that's we adjust the file's size
      * and finish flushing partial vm pages.
      */
-    if (cacheDiskType != AFS_FCACHE_TYPE_MEM)
+    if ((cacheDiskType != AFS_FCACHE_TYPE_MEM) || (sync & AFS_LASTSTORE))
 #endif /* !AFS_AIX32_ENV && !AFS_SGI65_ENV */
     {
 	/* If we're not diskless, reading a file may stress the VM
@@ -215,12 +215,10 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 #endif
 	    osi_VM_StoreAllSegments(avc);
     }
-    if (AFS_IS_DISCONNECTED) {
-        if (!AFS_IS_LOGGING) {
-            /* This will probably make someone sad ... */
-	    /*printf("Net down in afs_StoreSegments\n");*/
-            return ENETDOWN;
-        }
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
+	/* This will probably make someone sad ... */
+	/*printf("Net down in afs_StoreSegments\n");*/
+	return ENETDOWN;
     }
     ConvertWToSLock(&avc->lock);
 
@@ -246,7 +244,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     origCBs = afs_allCBs;
 
     maxStoredLength = 0;
-    tlen = avc->m.Length;
+    tlen = avc->f.m.Length;
     minj = 0;
 
     do {
@@ -261,10 +259,10 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 	for (j = 0; index != NULLIDX;) {
 	    if ((afs_indexFlags[index] & IFDataMod)
-		&& (afs_indexUnique[index] == avc->fid.Fid.Unique)) {
+		&& (afs_indexUnique[index] == avc->f.fid.Fid.Unique)) {
 		tdc = afs_GetDSlot(index, 0);	/* refcount+1. */
 		ReleaseReadLock(&tdc->tlock);
-		if (!FidCmp(&tdc->f.fid, &avc->fid) && tdc->f.chunk >= minj) {
+		if (!FidCmp(&tdc->f.fid, &avc->f.fid) && tdc->f.chunk >= minj) {
 		    off = tdc->f.chunk - minj;
 		    if (off < NCHUNKSATONCE) {
 			if (dcList[off])
@@ -311,7 +309,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    int nomore;
 	    unsigned int first = 0;
 	    int *shouldwake;
-	    struct conn *tc;
+	    struct afs_conn *tc;
 	    struct osi_file *tfile;
 	    struct rx_call *tcall;
 	    XSTATS_DECLS;
@@ -349,23 +347,25 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 		    dclist = &dcList[first];
 		    nchunks = 1 + j - first;
 		    nomore = !(moredata || (j != high));
-		    InStatus.ClientModTime = avc->m.Date;
+		    InStatus.ClientModTime = avc->f.m.Date;
 		    InStatus.Mask = AFS_SETMODTIME;
 		    if (sync & AFS_SYNC) {
 			InStatus.Mask |= AFS_FSYNC;
 		    }
-		    tlen = lmin(avc->m.Length, avc->truncPos);
+		    tlen = lmin(avc->f.m.Length, avc->f.truncPos);
 		    afs_Trace4(afs_iclSetp, CM_TRACE_STOREDATA64,
-			       ICL_TYPE_FID, &avc->fid.Fid, ICL_TYPE_OFFSET,
+			       ICL_TYPE_FID, &avc->f.fid.Fid, ICL_TYPE_OFFSET,
 			       ICL_HANDLE_OFFSET(base), ICL_TYPE_OFFSET,
 			       ICL_HANDLE_OFFSET(bytes), ICL_TYPE_OFFSET,
 			       ICL_HANDLE_OFFSET(tlen));
 
 		    do {
 			stored = 0;
-			tc = afs_Conn(&avc->fid, areq, 0);
+			tc = afs_Conn(&avc->f.fid, areq, 0);
 			if (tc) {
+#ifdef AFS_64BIT_CLIENT
 			  restart:
+#endif
 			    RX_AFS_GUNLOCK();
 			    tcall = rx_NewCall(tc->id);
 #ifdef AFS_64BIT_CLIENT
@@ -373,7 +373,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 				code =
 				    StartRXAFS_StoreData64(tcall,
 							   (struct AFSFid *)
-							   &avc->fid.Fid,
+							   &avc->f.fid.Fid,
 							   &InStatus, base,
 							   bytes, tlen);
 			    } else {
@@ -387,7 +387,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 				    code =
 					StartRXAFS_StoreData(tcall,
 							     (struct AFSFid *)
-							     &avc->fid.Fid,
+							     &avc->f.fid.Fid,
 							     &InStatus, t1,
 							     t2, t3);
 				}
@@ -396,7 +396,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			    code =
 				StartRXAFS_StoreData(tcall,
 						     (struct AFSFid *)&avc->
-						     fid.Fid, &InStatus, base,
+						     f.fid.Fid, &InStatus, base,
 						     bytes, tlen);
 #endif /* AFS_64BIT_CLIENT */
 			    RX_AFS_GLOCK();
@@ -406,7 +406,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			}
 			if (!code) {
 			    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
-			    avc->truncPos = AFS_NOTRUNC;
+			    avc->f.truncPos = AFS_NOTRUNC;
 			}
 			for (i = 0; i < nchunks && !code; i++) {
 			    tdc = dclist[i];
@@ -419,7 +419,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 				       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32,
 				       tdc->f.chunk, ICL_TYPE_INT32,
 				       tdc->index, ICL_TYPE_INT32,
-				       tdc->f.inode);
+				       afs_inode2trace(&tdc->f.inode));
 			    shouldwake = 0;
 			    if (nomore) {
 				if (avc->asynchrony == -1) {
@@ -432,7 +432,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 				    shouldwake = &nomore;
 				}
 			    }
-			    tfile = afs_CFileOpen(tdc->f.inode);
+			    tfile = afs_CFileOpen(&tdc->f.inode);
 #ifndef AFS_NOSTATS
 			    xferP =
 				&(afs_stats_cmfullperf.rpc.
@@ -577,7 +577,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 			}
 #endif /* AFS_64BIT_CLIENT */
 		    } while (afs_Analyze
-			     (tc, code, &avc->fid, areq,
+			     (tc, code, &avc->f.fid, areq,
 			      AFS_STATS_FS_RPCIDX_STOREDATA, SHARED_LOCK,
 			      NULL));
 
@@ -667,14 +667,14 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	 * Call StoreMini if we haven't written enough data to extend the
 	 * file at the fileserver to the client's notion of the file length.
 	 */
-	if ((avc->truncPos != AFS_NOTRUNC) || ((avc->states & CExtendedFile)
-					       && (maxStoredLength <
-						   avc->m.Length))) {
+	if ((avc->f.truncPos != AFS_NOTRUNC) 
+	    || ((avc->f.states & CExtendedFile)
+		&& (maxStoredLength < avc->f.m.Length))) {
 	    code = afs_StoreMini(avc, areq);
 	    if (code == 0)
 		hadd32(newDV, 1);	/* just bumped here, too */
 	}
-	avc->states &= ~CExtendedFile;
+	avc->f.states &= ~CExtendedFile;
     }
 
     /*
@@ -699,11 +699,11 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    for (j = 0, safety = 0, index = afs_dvhashTbl[hash];
 		 index != NULLIDX && safety < afs_cacheFiles + 2;) {
 
-		if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+		if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 		    tdc = afs_GetDSlot(index, 0);
 		    ReleaseReadLock(&tdc->tlock);
 
-		    if (!FidCmp(&tdc->f.fid, &avc->fid)
+		    if (!FidCmp(&tdc->f.fid, &avc->f.fid)
 			&& tdc->f.chunk >= minj) {
 			off = tdc->f.chunk - minj;
 			if (off < NCHUNKSATONCE) {
@@ -747,13 +747,13 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 		    && hcmp(tdc->f.versionNo, oldDV) >= 0) {
 
 		    if ((!(afs_dvhack || foreign)
-			 && hsame(avc->m.DataVersion, newDV))
+			 && hsame(avc->f.m.DataVersion, newDV))
 			|| ((afs_dvhack || foreign)
 			    && (origCBs == afs_allCBs))) {
 			/* no error, this is the DV */
 
 			UpgradeSToWLock(&tdc->lock, 678);
-			hset(tdc->f.versionNo, avc->m.DataVersion);
+			hset(tdc->f.versionNo, avc->f.m.DataVersion);
 			tdc->dflags |= DFEntryMod;
 			ConvertWToSLock(&tdc->lock);
 		    }
@@ -775,12 +775,12 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	 * invalidated. Also discard data if it's a permanent error from the
 	 * fileserver.
 	 */
-	if (areq->permWriteError || (avc->states & (CCore1 | CCore))) {
+	if (areq->permWriteError || (avc->f.states & (CCore1 | CCore))) {
 	    afs_InvalidateAllSegments(avc);
 	}
     }
     afs_Trace3(afs_iclSetp, CM_TRACE_STOREALLDONE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, avc->m.Length, ICL_TYPE_INT32, code);
+	       ICL_TYPE_INT32, avc->f.m.Length, ICL_TYPE_INT32, code);
     /* would like a Trace5, but it doesn't exist... */
     afs_Trace3(afs_iclSetp, CM_TRACE_AVCLOCKER, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, avc->lock.wait_states, ICL_TYPE_INT32,
@@ -798,10 +798,10 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
      * Turn off CDirty bit because the stored data is now in sync with server.
      */
     if (code == 0 && hcmp(avc->mapDV, oldDV) >= 0) {
-	if ((!(afs_dvhack || foreign) && hsame(avc->m.DataVersion, newDV))
+	if ((!(afs_dvhack || foreign) && hsame(avc->f.m.DataVersion, newDV))
 	    || ((afs_dvhack || foreign) && (origCBs == afs_allCBs))) {
 	    hset(avc->mapDV, newDV);
-	    avc->states &= ~CDirty;
+	    avc->f.states &= ~CDirty;
 	}
     }
     osi_FreeLargeSpace(dcList);
@@ -840,15 +840,15 @@ afs_InvalidateAllSegments(struct vcache *avc)
 
     AFS_STATCNT(afs_InvalidateAllSegments);
     afs_Trace2(afs_iclSetp, CM_TRACE_INVALL, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
-    hash = DVHash(&avc->fid);
-    avc->truncPos = AFS_NOTRUNC;	/* don't truncate later */
-    avc->states &= ~CExtendedFile;	/* not any more */
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length));
+    hash = DVHash(&avc->f.fid);
+    avc->f.truncPos = AFS_NOTRUNC;	/* don't truncate later */
+    avc->f.states &= ~CExtendedFile;	/* not any more */
     ObtainWriteLock(&afs_xcbhash, 459);
     afs_DequeueCallback(avc);
-    avc->states &= ~(CStatd | CDirty);	/* mark status information as bad, too */
+    avc->f.states &= ~(CStatd | CDirty);	/* mark status information as bad, too */
     ReleaseWriteLock(&afs_xcbhash);
-    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
+    if (avc->f.fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 	osi_dnlc_purgedp(avc);
     /* Blow away pages; for now, only for Solaris */
 #if	(defined(AFS_SUN5_ENV))
@@ -863,10 +863,10 @@ afs_InvalidateAllSegments(struct vcache *avc)
     dcListMax = 0;
 
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
-	if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetDSlot(index, 0);
 	    ReleaseReadLock(&tdc->tlock);
-	    if (!FidCmp(&tdc->f.fid, &avc->fid))
+	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
 		dcListMax++;
 	    afs_PutDCache(tdc);
 	}
@@ -877,10 +877,10 @@ afs_InvalidateAllSegments(struct vcache *avc)
     dcListCount = 0;
 
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
-	if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetDSlot(index, 0);
 	    ReleaseReadLock(&tdc->tlock);
-	    if (!FidCmp(&tdc->f.fid, &avc->fid)) {
+	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file? we'll zap it */
 		if (afs_indexFlags[index] & IFDataMod) {
 		    afs_stats_cmperf.cacheCurrDirtyChunks--;
@@ -916,6 +916,64 @@ afs_InvalidateAllSegments(struct vcache *avc)
     return 0;
 }
 
+/*! 
+ * 
+ * Extend a cache file
+ *
+ * \param avc pointer to vcache to extend data for
+ * \param alen Length to extend file to
+ * \param areq
+ *
+ * \note avc must be write locked. May release and reobtain avc and GLOCK
+ */
+int
+afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq) {
+    afs_size_t offset, toAdd;
+    struct osi_file *tfile;
+    afs_int32 code = 0;
+    struct dcache *tdc;
+    void *zeros;
+
+    zeros = (void *) afs_osi_Alloc(AFS_PAGESIZE);
+    if (zeros == NULL)
+	return ENOMEM;
+    memset(zeros, 0, AFS_PAGESIZE);
+
+    while (avc->f.m.Length < alen) {
+        tdc = afs_ObtainDCacheForWriting(avc, avc->f.m.Length, alen - avc->f.m.Length, areq, 0);
+        if (!tdc) {
+	    code = EIO;
+	    break;
+        }
+
+	toAdd = alen - avc->f.m.Length;
+
+        offset = avc->f.m.Length - AFS_CHUNKTOBASE(tdc->f.chunk);
+	if (offset + toAdd > AFS_CHUNKTOSIZE(tdc->f.chunk)) {
+	    toAdd = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;
+	}
+        tfile = afs_CFileOpen(&tdc->f.inode);
+	while(tdc->validPos < avc->f.m.Length + toAdd) {
+	     afs_size_t towrite;
+
+	     towrite = (avc->f.m.Length + toAdd) - tdc->validPos;
+	     if (towrite > AFS_PAGESIZE) towrite = AFS_PAGESIZE;
+
+	     code = afs_CFileWrite(tfile, 
+			           tdc->validPos - AFS_CHUNKTOBASE(tdc->f.chunk), 
+				   zeros, towrite);
+	     tdc->validPos += towrite;
+	}
+	afs_CFileClose(tfile);
+	afs_AdjustSize(tdc, offset + toAdd );
+	avc->f.m.Length += toAdd;
+	ReleaseWriteLock(&tdc->lock);
+	afs_PutDCache(tdc);
+    }
+
+    afs_osi_Free(zeros, AFS_PAGESIZE);
+    return code;
+}
 
 /*
  * afs_TruncateAllSegments
@@ -945,11 +1003,11 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     struct dcache **tdcArray;
 
     AFS_STATCNT(afs_TruncateAllSegments);
-    avc->m.Date = osi_Time();
+    avc->f.m.Date = osi_Time();
     afs_Trace3(afs_iclSetp, CM_TRACE_TRUNCALL, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->f.m.Length),
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(alen));
-    if (alen >= avc->m.Length) {
+    if (alen >= avc->f.m.Length) {
 	/*
 	 * Special speedup since Sun's vm extends the file this way;
 	 * we've never written to the file thus we can just set the new
@@ -959,8 +1017,8 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	 * should keep the ExtendedPos as well and clear this flag if we
 	 * truncate below that value before we store the file back.
 	 */
-	avc->states |= CExtendedFile;
-	avc->m.Length = alen;
+	avc->f.states |= CExtendedFile;
+	avc->f.m.Length = alen;
 	return 0;
     }
 #if	(defined(AFS_SUN5_ENV))
@@ -985,21 +1043,21 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 79);
 
-    avc->m.Length = alen;
+    avc->f.m.Length = alen;
 
-    if (alen < avc->truncPos)
-	avc->truncPos = alen;
-    code = DVHash(&avc->fid);
+    if (alen < avc->f.truncPos)
+	avc->f.truncPos = alen;
+    code = DVHash(&avc->f.fid);
 
     /* block out others from screwing with this table */
     MObtainWriteLock(&afs_xdcache, 287);
 
     dcCount = 0;
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
-	if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetDSlot(index, 0);
 	    ReleaseReadLock(&tdc->tlock);
-	    if (!FidCmp(&tdc->f.fid, &avc->fid))
+	    if (!FidCmp(&tdc->f.fid, &avc->f.fid))
 		dcCount++;
 	    afs_PutDCache(tdc);
 	}
@@ -1014,10 +1072,10 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     dcPos = 0;
 
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
-	if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
+	if (afs_indexUnique[index] == avc->f.fid.Fid.Unique) {
 	    tdc = afs_GetDSlot(index, 0);
 	    ReleaseReadLock(&tdc->tlock);
-	    if (!FidCmp(&tdc->f.fid, &avc->fid)) {
+	    if (!FidCmp(&tdc->f.fid, &avc->f.fid)) {
 		/* same file, and modified, we'll store it back */
 		if (dcPos < dcCount) {
 		    tdcArray[dcPos++] = tdc;
@@ -1045,7 +1103,7 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	ObtainSharedLock(&tdc->lock, 672);
 	if (newSize < tdc->f.chunkBytes) {
 	    UpgradeSToWLock(&tdc->lock, 673);
-	    tfile = afs_CFileOpen(tdc->f.inode);
+	    tfile = afs_CFileOpen(&tdc->f.inode);
 	    afs_CFileTruncate(tfile, newSize);
 	    afs_CFileClose(tfile);
 	    afs_AdjustSize(tdc, newSize);
@@ -1071,5 +1129,6 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     }
     ReleaseWriteLock(&avc->vlock);
 #endif
+
     return 0;
 }

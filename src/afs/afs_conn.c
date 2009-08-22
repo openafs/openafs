@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_conn.c,v 1.14.8.3 2008/05/23 14:25:15 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -52,13 +50,24 @@ afs_int32 cryptall = 0;		/* encrypt all communications */
 
 
 unsigned int VNOSERVERS = 0;
-struct conn *
+
+/**
+ * Try setting up a connection to the server containing the specified fid.
+ * Gets the volume, checks if it's up and does the connection by server address.
+ *
+ * @param afid 
+ * @param areq Request filled in by the caller.
+ * @param locktype Type of lock that will be used.
+ *
+ * @return The conn struct, or NULL.
+ */
+struct afs_conn *
 afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
 	 afs_int32 locktype)
 {
     u_short fsport = AFS_FSPORT;
     struct volume *tv;
-    struct conn *tconn = NULL;
+    struct afs_conn *tconn = NULL;
     struct srvAddr *lowp = NULL;
     struct unixuser *tu;
     int notbusy;
@@ -66,6 +75,7 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
     struct srvAddr *sa1p;
 
     AFS_STATCNT(afs_Conn);
+    /* Get fid's volume. */
     tv = afs_GetVolume(afid, areq, READ_LOCK);
     if (!tv) {
 	if (areq) {
@@ -132,12 +142,25 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
 }				/*afs_Conn */
 
 
-struct conn *
+/**
+ * Connects to a server by it's server address.
+ *
+ * @param sap Server address.
+ * @param aport Server port.
+ * @param acell
+ * @param tu Connect as this user.
+ * @param force_if_down
+ * @param create
+ * @param locktype Specifies type of lock to be used for this function.
+ *
+ * @return The new connection.
+ */
+struct afs_conn *
 afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	     struct unixuser *tu, int force_if_down, afs_int32 create,
 	     afs_int32 locktype)
 {
-    struct conn *tc = 0;
+    struct afs_conn *tc = 0;
     struct rx_securityClass *csec;	/*Security class object */
     int isec;			/*Security index */
     int service;
@@ -148,6 +171,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
     }
 
     ObtainSharedLock(&afs_xconn, 15);
+    /* Get conn by port and user. */
     for (tc = sap->conns; tc; tc = tc->next) {
 	if (tc->user == tu && tc->port == aport) {
 	    break;
@@ -155,11 +179,12 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
     }
 
     if (!tc && !create) {
+	/* Not found and can't create a new one. */
 	ReleaseSharedLock(&afs_xconn);
 	return NULL;
     }
     
-    if (AFS_IS_DISCONNECTED) {
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
         afs_warnuser("afs_ConnBySA: disconnected\n");
         ReleaseSharedLock(&afs_xconn);
         return NULL;
@@ -173,8 +198,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 * gets set, marking the time of its ``birth''.
 	 */
 	UpgradeSToWLock(&afs_xconn, 37);
-	tc = (struct conn *)afs_osi_Alloc(sizeof(struct conn));
-	memset((char *)tc, 0, sizeof(struct conn));
+	tc = (struct afs_conn *)afs_osi_Alloc(sizeof(struct afs_conn));
+	memset((char *)tc, 0, sizeof(struct afs_conn));
 
 	tc->user = tu;
 	tc->port = aport;
@@ -187,7 +212,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	afs_ActivateServer(sap);
 
 	ConvertWToSLock(&afs_xconn);
-    }
+    } /* end of if (!tc) */
     tc->refCount++;
 
     if (tu->states & UTokensBad) {
@@ -251,32 +276,39 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	if (csec)
 	    rxs_Release(csec);
 	ConvertWToSLock(&afs_xconn);
-    }
+    } /* end of if (tc->forceConnectFS)*/
 
     ReleaseSharedLock(&afs_xconn);
     return tc;
 }
 
-/*
- * afs_ConnByHost
- *
+/**
  * forceConnectFS is set whenever we must recompute the connection. UTokensBad
  * is true only if we know that the tokens are bad.  We thus clear this flag
  * when we get a new set of tokens..
  * Having force... true and UTokensBad true simultaneously means that the tokens
  * went bad and we're supposed to create a new, unauthenticated, connection.
+ *
+ * @param aserver Server to connect to.
+ * @param aport Connection port.
+ * @param acell The cell where all of this happens.
+ * @param areq The request.
+ * @param aforce Force connection?
+ * @param locktype Type of lock to be used.
+ *
+ * @return The established connection.
  */
-struct conn *
+struct afs_conn *
 afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 	       struct vrequest *areq, int aforce, afs_int32 locktype)
 {
     struct unixuser *tu;
-    struct conn *tc = 0;
+    struct afs_conn *tc = 0;
     struct srvAddr *sa = 0;
 
     AFS_STATCNT(afs_ConnByHost);
 
-    if (AFS_IS_DISCONNECTED) {
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
         afs_warnuser("afs_ConnByHost: disconnected\n");
         return NULL;
     }
@@ -313,13 +345,25 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
 }				/*afs_ConnByHost */
 
 
-struct conn *
+/**
+ * Connect by multiple hosts.
+ * Try to connect to one of the hosts from the ahosts array.
+ *
+ * @param ahosts Multiple hosts to connect to.
+ * @param aport Connection port.
+ * @param acell The cell where all of this happens.
+ * @param areq The request.
+ * @param locktype Type of lock to be used.
+ *
+ * @return The established connection or NULL.
+ */
+struct afs_conn *
 afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
 		 afs_int32 acell, register struct vrequest *areq,
 		 afs_int32 locktype)
 {
     register afs_int32 i;
-    register struct conn *tconn;
+    register struct afs_conn *tconn;
     register struct server *ts;
 
     /* try to find any connection from the set */
@@ -337,22 +381,30 @@ afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
 }				/*afs_ConnByMHosts */
 
 
+/**
+ * Decrement reference count to this connection.
+ * @param ac
+ * @param locktype
+ */
 void
-afs_PutConn(register struct conn *ac, afs_int32 locktype)
+afs_PutConn(register struct afs_conn *ac, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
 }				/*afs_PutConn */
 
 
-/* for multi homed clients, an RPC may timeout because of a
-client network interface going down. We need to reopen new 
-connections in this case
-*/
+/** 
+ * For multi homed clients, a RPC may timeout because of a 
+ * client network interface going down. We need to reopen new 
+ * connections in this case.
+ *
+ * @param sap Server address.
+ */
 void
 ForceNewConnections(struct srvAddr *sap)
 {
-    struct conn *tc = 0;
+    struct afs_conn *tc = 0;
 
     if (!sap)
 	return;			/* defensive check */

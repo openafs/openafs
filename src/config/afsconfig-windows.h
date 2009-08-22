@@ -192,9 +192,6 @@
 #undef PACKAGE
 #undef VERSION
 
-#define RCSID(msg) \
-static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
-
 #undef HAVE_CONNECT
 //#undef HAVE_GETHOSTBYNAME
 #undef HAVE_RES_SEARCH
@@ -213,7 +210,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 /*#undef AFS_AFSDB_ENV*/
 #define AFS_AFSDB_ENV 1
 #undef AFS_NAMEI_ENV
-#undef BOS_RESTRICTED_MODE
+#define BOS_RESTRICTED_MODE
 
 #undef FAST_RESTART
 #undef BITMAP_LATER
@@ -231,3 +228,6 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 /* include all of the vos listvol options */
 #define FULL_LISTVOL_SWITCH 1
+
+/* Windows does not provide socklen_t */
+typedef unsigned int socklen_t;

@@ -30,8 +30,6 @@
 #include <afs/param.h>
 #include "rx.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_refernce.c,v 1.7.4.1 2007/10/30 15:16:45 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -59,14 +57,13 @@ RCSID
  * proc is the routine to handle the referenced structure.
  */
 bool_t
-xdr_reference(xdrs, pp, size, proc)
-     register XDR *xdrs;
-     caddr_t *pp;		/* the pointer to work on */
-     u_int size;		/* size of the object pointed to */
-     xdrproc_t proc;		/* xdr routine to handle the object */
+xdr_reference(XDR *xdrs, 
+	      caddr_t *pp, /* the pointer to work on */
+	      u_int size, /* size of the object pointed to */
+	      xdrproc_t proc)  /* xdr routine to handle the object */
 {
-    register caddr_t loc = *pp;
-    register bool_t stat;
+    caddr_t loc = *pp;
+    bool_t stat;
 
     if (loc == NULL)
 	switch (xdrs->x_op) {
@@ -80,6 +77,8 @@ xdr_reference(xdrs, pp, size, proc)
 	    }
 	    memset(loc, 0, (int)size);
 	    break;
+	case XDR_ENCODE:
+	    break;
 	}
 
     stat = (*proc) (xdrs, loc, LASTUNSIGNED);
@@ -90,4 +89,4 @@ xdr_reference(xdrs, pp, size, proc)
     }
     return (stat);
 }
-#endif /* NeXT */
+#endif /* !NeXT */

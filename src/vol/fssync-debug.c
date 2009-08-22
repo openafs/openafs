@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/fssync-debug.c,v 1.1.4.5 2008/06/12 19:18:49 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -42,7 +40,6 @@ RCSID
 #include <afs/afsint.h>
 #include <afs/assert.h>
 
-
 #include <fcntl.h>
 
 #ifndef AFS_NT40_ENV
@@ -50,6 +47,7 @@ RCSID
 #endif
 
 #include <afs/cmd.h>
+#include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 
@@ -145,8 +143,6 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
-    int i;
-    extern char cml_version_number[];
 
     /* Initialize directory paths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -264,7 +260,6 @@ static int
 common_volop_prolog(struct cmd_syndesc * as, struct state * state)
 {
     register struct cmd_item *ti;
-    char pname[100], *temp;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
     assert(state->vop != NULL);
@@ -321,6 +316,9 @@ do_volop(struct state * state, afs_int32 command, SYNC_response * res)
 	    res->hdr.reason, reason_code_to_string(res->hdr.reason));
 
     VDisconnectFS();
+
+    return 0;
+
 }
 
 
@@ -658,7 +656,9 @@ VolQuery(struct cmd_syndesc * as, void * rock)
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Volume v;
+#ifdef AFS_DEMAND_ATTACH_FS
     int hi, lo;
+#endif
 
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
@@ -674,12 +674,12 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 
 	printf("volume = {\n");
 	printf("\thashid          = %u\n", v.hashid);
-	printf("\theader          = 0x%x\n", v.header);
+	printf("\theader          = %p\n", v.header);
 	printf("\tdevice          = %d\n", v.device);
-	printf("\tpartition       = 0x%x\n", v.partition);
-	printf("\tlinkHandle      = 0x%x\n", v.linkHandle);
+	printf("\tpartition       = %p\n", v.partition);
+	printf("\tlinkHandle      = %p\n", v.linkHandle);
 	printf("\tnextVnodeUnique = %u\n", v.nextVnodeUnique);
-	printf("\tdiskDataHandle  = 0x%x\n", v.diskDataHandle);
+	printf("\tdiskDataHandle  = %p\n", v.diskDataHandle);
 	printf("\tvnodeHashOffset = %u\n", v.vnodeHashOffset);
 	printf("\tshuttingDown    = %d\n", v.shuttingDown);
 	printf("\tgoingOffline    = %d\n", v.goingOffline);
@@ -690,14 +690,14 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	printf("\tupdateTime      = %u\n", v.updateTime);
 	
 	printf("\tvnodeIndex[vSmall] = {\n");
-        printf("\t\thandle       = 0x%x\n", v.vnodeIndex[vSmall].handle);
-        printf("\t\tbitmap       = 0x%x\n", v.vnodeIndex[vSmall].bitmap);
+        printf("\t\thandle       = %p\n", v.vnodeIndex[vSmall].handle);
+        printf("\t\tbitmap       = %p\n", v.vnodeIndex[vSmall].bitmap);
 	printf("\t\tbitmapSize   = %u\n", v.vnodeIndex[vSmall].bitmapSize);
 	printf("\t\tbitmapOffset = %u\n", v.vnodeIndex[vSmall].bitmapOffset);
 	printf("\t}\n");
 	printf("\tvnodeIndex[vLarge] = {\n");
-        printf("\t\thandle       = 0x%x\n", v.vnodeIndex[vLarge].handle);
-        printf("\t\tbitmap       = 0x%x\n", v.vnodeIndex[vLarge].bitmap);
+        printf("\t\thandle       = %p\n", v.vnodeIndex[vLarge].handle);
+        printf("\t\tbitmap       = %p\n", v.vnodeIndex[vLarge].bitmap);
 	printf("\t\tbitmapSize   = %u\n", v.vnodeIndex[vLarge].bitmapSize);
 	printf("\t\tbitmapOffset = %u\n", v.vnodeIndex[vLarge].bitmapOffset);
 	printf("\t}\n");
@@ -766,7 +766,7 @@ VolQuery(struct cmd_syndesc * as, void * rock)
 	    printf("\t}\n");
 
 	    /* volume op state */
-	    printf("\tpending_vol_op  = 0x%x\n", v.pending_vol_op);
+	    printf("\tpending_vol_op  = %p\n", v.pending_vol_op);
 	}
 #else /* !AFS_DEMAND_ATTACH_FS */
 	if (res.hdr.flags & SYNC_FLAG_DAFS_EXTENSIONS) {
@@ -863,7 +863,6 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     FSSYNC_VolOp_info vop;
-    int i;
 
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
@@ -897,7 +896,7 @@ VolOpQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\treason         = %d (%s)\n", 
 	       vop.com.reason, reason_code_to_string(vop.com.reason));
 	printf("\t\tcommand_len    = %u\n", vop.com.command_len);
-	printf("\t\tflags          = 0x%x\n", vop.com.flags);
+	printf("\t\tflags          = 0x%lux\n", afs_printable_uint32_lu(vop.com.flags));
 	printf("\t}\n");
 
 	printf("\tvop = {\n");
@@ -920,7 +919,6 @@ static int
 vn_prolog(struct cmd_syndesc * as, struct state * state)
 {
     register struct cmd_item *ti;
-    char pname[100], *temp;
 
     state->vop = (struct volop_state *) calloc(1, sizeof(struct volop_state));
     assert(state->vop != NULL);
@@ -996,7 +994,6 @@ VnQuery(struct cmd_syndesc * as, void * rock)
     SYNC_PROTO_BUF_DECL(res_buf);
     SYNC_response res;
     Vnode v;
-    int hi, lo;
 
     res.hdr.response_len = sizeof(res.hdr);
     res.payload.buf = res_buf;
@@ -1013,19 +1010,19 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 	printf("vnode = {\n");
 
 	printf("\tvid_hash = {\n");
-	printf("\t\tnext = 0x%lx\n", v.vid_hash.next);
-	printf("\t\tprev = 0x%lx\n", v.vid_hash.prev);
+	printf("\t\tnext = %p\n", v.vid_hash.next);
+	printf("\t\tprev = %p\n", v.vid_hash.prev);
 	printf("\t}\n");
 
-	printf("\thashNext        = 0x%lx\n", v.hashNext);
-	printf("\tlruNext         = 0x%lx\n", v.lruNext);
-	printf("\tlruPrev         = 0x%lx\n", v.lruPrev);
+	printf("\thashNext        = %p\n", v.hashNext);
+	printf("\tlruNext         = %p\n", v.lruNext);
+	printf("\tlruPrev         = %p\n", v.lruPrev);
 	printf("\thashIndex       = %hu\n", v.hashIndex);
 	printf("\tchanged_newTime = %u\n", (unsigned int) v.changed_newTime);
 	printf("\tchanged_oldTime = %u\n", (unsigned int) v.changed_oldTime);
 	printf("\tdelete          = %u\n", (unsigned int) v.delete);
 	printf("\tvnodeNumber     = %u\n", v.vnodeNumber);
-	printf("\tvolumePtr       = 0x%lx\n", v.volumePtr);
+	printf("\tvolumePtr       = %p\n", v.volumePtr);
 	printf("\tnUsers          = %u\n", v.nUsers);
 	printf("\tcacheCheck      = %u\n", v.cacheCheck);
 
@@ -1049,9 +1046,9 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 	}
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
-	printf("\twriter          = %u\n", v.writer);
-	printf("\tvcp             = 0x%lx\n", v.vcp);
-	printf("\thandle          = 0x%lx\n", v.handle);
+	printf("\twriter          = %u\n", (unsigned int) v.writer);
+	printf("\tvcp             = %p\n", v.vcp);
+	printf("\thandle          = %p\n", v.handle);
 
 	printf("\tdisk = {\n");
 	printf("\t\ttype              = %u\n", v.disk.type);
@@ -1076,7 +1073,7 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 	printf("\t\tserverModifyTime  = %u\n", v.disk.serverModifyTime);
 	printf("\t\tgroup             = %d\n", v.disk.group);
 	printf("\t\tvn_ino_hi         = %d\n", v.disk.vn_ino_hi);
-	printf("\t\treserved6         = %u\n", v.disk.reserved6);
+	printf("\t\tvn_length_hi      = %u\n", v.disk.vn_length_hi);
 	printf("\t}\n");
 
 	printf("}\n");
@@ -1216,7 +1213,9 @@ StatsQuery(struct cmd_syndesc * as, void * rock)
 static void
 print_vol_stats_general(VolPkgStats * stats)
 {
+#ifdef AFS_DEMAND_ATTACH_FS
     int i;
+#endif
     afs_uint32 hi, lo;
 
     printf("VolPkgStats = {\n");
@@ -1284,10 +1283,10 @@ static void
 print_vol_stats_viceP(struct DiskPartitionStats64 * stats)
 {
     printf("DiskPartitionStats64 = {\n");
-    printf("\tfree = %lld\n", stats->free);
-    printf("\tminFree = %lld\n", stats->minFree);
-    printf("\ttotalUsable = %lld\n", stats->totalUsable);
-    printf("\tf_files = %lld\n", stats->f_files);
+    printf("\tfree = %" AFS_INT64_FMT "\n", stats->free);
+    printf("\tminFree = %" AFS_INT64_FMT "\n", stats->minFree);
+    printf("\ttotalUsable = %" AFS_INT64_FMT "\n", stats->totalUsable);
+    printf("\tf_files = %" AFS_INT64_FMT "\n", stats->f_files);
 #ifdef AFS_DEMAND_ATTACH_FS
     printf("\tvol_list_len = %d\n", stats->vol_list_len);
 #endif
@@ -1297,7 +1296,9 @@ print_vol_stats_viceP(struct DiskPartitionStats64 * stats)
 static void
 print_vol_stats_hash(struct VolumeHashChainStats * stats)
 {
+#ifdef AFS_DEMAND_ATTACH_FS
     afs_uint32 hi, lo;
+#endif
 
     printf("DiskPartitionStats = {\n");
     printf("\ttable_size = %d\n", stats->table_size);

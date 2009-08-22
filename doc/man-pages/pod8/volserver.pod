@@ -8,9 +8,12 @@ volserver - Initializes the Volume Server component of the fs process
 <div class="synopsis">
 
 B<volserver> [B<-log>] S<<< [B<-p> <I<number of processes>>] >>>
+    S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
     S<<< [B<-udpsize> <I<size of socket buffer in bytes>>] >>>
+    S<<< [B<-d> <I<debug level>>] >>>
+    [B<-nojumbo>] [B<-jumbo>] 
     [B<-enable_peer_stats>] [B<-enable_process_stats>] 
-    [B<-allow-dotted-principal>] [B<-help>]
+    [B<-allow-dotted-principals>] [B<-help>]
 
 =for html
 </div>
@@ -45,6 +48,13 @@ suites. Provide the command name and all option names in full.
 
 =over 4
 
+=item B<-d> <I<debug level>>
+
+Sets the detail level for the debugging trace written to the
+F</usr/afs/logs/VolserLog> file. Provide one of the following values, each
+of which produces an increasingly detailed trace: C<0>, C<1>, C<5>, C<25>,
+and C<125>. 
+
 =item B<-log>
 
 Records in the /usr/afs/logs/VolserLog file the names of all users who
@@ -57,10 +67,35 @@ B<-f> flag.
 Sets the number of server lightweight processes (LWPs) to run.  Provide an
 integer between C<4> and C<16>. The default is C<9>.
 
+=item B<-auditlog> <I<log path>>
+
+Turns on audit logging, and sets the path for the audit log.  The audit
+log records information about RPC calls, including the name of the RPC
+call, the host that submitted the call, the authenticated entity (user)
+that issued the call, the parameters for the call, and if the call
+succeeded or failed.
+
+=item B<-audit-interface> (file | sysvmq)
+
+Specifies what audit interface to use. Defaults to C<file>. See
+L<fileserver(8)> for an explanation of each interface.
+
 =item B<-udpsize> <I<size of socket buffer>>
 
 Sets the size of the UDP buffer in bytes, which is 64 KB by
 default. Provide a positive integer, preferably larger than the default.
+
+=item B<-jumbo>
+
+Allows the server to send and receive jumbograms. A jumbogram is
+a large-size packet composed of 2 to 4 normal Rx data packets that share
+the same header. The volserver does not use jumbograms by default, as some
+routers are not capable of properly breaking the jumbogram into smaller
+packets and reassembling them.
+
+=item B<-nojumbo>
+
+Deprecated; jumbograms are disabled by default.
 
 =item B<-enable_peer_stats>
 
@@ -78,7 +113,7 @@ GetStatus, and so on) sent or received, aggregated over all connections to
 other machines. To display or otherwise access the records, use the Rx
 Monitoring API.
 
-=item B<-allow-dotted-principal>
+=item B<-allow-dotted-principals>
 
 By default, the RXKAD security layer will disallow access by Kerberos
 principals with a dot in the first component of their name. This is to avoid

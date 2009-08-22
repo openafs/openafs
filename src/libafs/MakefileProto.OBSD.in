@@ -9,10 +9,14 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
-KFLAGS= -Wall -nostdinc
+KFLAGS= -Wall -march=i486 -fno-builtin-printf -fno-builtin-log -nostdinc
 <i386_obsd33>
 KFLAGS+= -fno-stack-protector
 <all>
@@ -91,20 +95,14 @@ DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 libafs:	$(LIBAFSNONFS)
 	ls -l libafs.o
-install_libafs:	$(INST_LIBAFSNONFS)
-dest_libafs:	$(DEST_LIBAFSNONFS)
 
-$(INST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
+install_libafs:	$(LIBAFS)
+	${INSTALL} -d ${DESTDIR}${afskerneldir}
+	${INSTALL} -m 644 $(LIBAFS) $(INST_LIBAFSNONFS)
 
-$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFS): $(LIBAFS)
-	$(INSTALL) -f $? $@
-
-$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
-	$(INSTALL) -f $? $@
+dest_libafs: $(LIBAFS)
+	${INSTALL} -d ${DEST}/root.client/bin
+	$(INSTALL) -m 644 $(LIBAFS) $(DEST_LIBAFSNONFS)
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}

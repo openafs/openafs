@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_icl.c,v 1.1.2.4 2008/05/20 19:50:41 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -79,8 +77,8 @@ afs_icl_InitLogs(void)
 }
 
 
-struct afs_icl_log *afs_icl_FindLog();
-struct afs_icl_set *afs_icl_FindSet();
+struct afs_icl_log *afs_icl_FindLog(char *);
+struct afs_icl_set *afs_icl_FindSet(char *);
 
 
 int

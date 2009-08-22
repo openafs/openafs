@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Header: /cvs/openafs/src/afsweb/afswsNetscape_config.sh,v 1.2 2003/11/21 08:00:17 jaltman Exp $
+# $Header$
 #
 # Installation and Configuration script for AFS Web Security Pack
 #

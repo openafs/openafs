@@ -16,8 +16,6 @@
 #include <sys/param.h>
 #include <afsconfig.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/test/test_date.c,v 1.4 2003/07/15 23:15:18 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/time.h>

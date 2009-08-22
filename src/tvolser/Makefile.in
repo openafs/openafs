@@ -7,6 +7,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 HELPER_SPLINT=@HELPER_SPLINT@
 
 CC=${MT_CC}
@@ -25,7 +29,7 @@ FSINT=../fsint
 VOLSER=../volser
 RX=../rx
 
-VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o
+VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o vol_split.o
 
 VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o vl_errors.o
 
@@ -57,16 +61,19 @@ LIBS=	${TOP_LIBDIR}/libcmd.a          \
 	${TOP_LIBDIR}/libafsauthent.a   \
 	${TOP_LIBDIR}/libafsrpc.a       \
 	${TOP_LIBDIR}/libafsutil.a      \
-	${TOP_LIBDIR}/libubik_pthread.a \
 	${TOP_LIBDIR}/libusd.a
 
-all: volserver vos
+all: volserver 
+
+all_vos: vos
 
 COMPILE=${CC} ${CFLAGS} -c $?
 
 rx_pthread.o: ${RX}/rx_pthread.c
 	${COMPILE} -DDPF_FSLOG
 volmain.o: ${VOLSER}/volmain.c
+	${COMPILE}
+vol_split.o: ${VOLSER}/vol_split.c
 	${COMPILE}
 volprocs.o: ${VOLSER}/volprocs.c
 	${COMPILE}
@@ -220,30 +227,29 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 vos.o: ${VOLSER}/vos.c
 	${COMPILE}
 
-
-vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS}
-	${CC} ${LDFLAGS} -o vos vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${MT_LIBS} ${XLIBS}
+vos: vos.o  ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a
+	${CC} ${LDFLAGS} -o vos vos.o ${VOSOBJS} ${VLSERVEROBJS} ${LIBS} ${TOP_LIBDIR}/libubik_pthread.a ${MT_LIBS} ${XLIBS}
 
 volserver: ${objects} ${LIBS}
 	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MT_LIBS} ${XLIBS}
 
-${DEST}/root.server/usr/afs/bin/volserver: volserver
-	${INSTALL} -ns $? $@
+install: volserver
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL} volserver ${DESTDIR}${afssrvlibexecdir}/volserver
 
-${DEST}/root.server/usr/afs/bin/vos: vos
-	${INSTALL} -ns $? $@
+install_vos: vos
+	${INSTALL} vos ${DESTDIR}${afssrvsbindir}/vos
+	${INSTALL} vos ${DESTDIR}${sbindir}/vos
 
-install: ${DESTDIR}${afssrvlibexecdir}/volserver ${DESTDIR}${afssrvlibexecdir}/vos
+dest: volserver
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL} volserver ${DEST}/root.server/usr/afs/bin/volserver
+
+dest_vos: vos
+	${INSTALL} vos ${DEST}/root.server/usr/afs/bin/vos
+	${INSTALL} vos ${DEST}/etc/vos
+
 clean:
-	$(RM) -f *.o volserver vos core AFS_component_version_number.c
+	$(RM) -f *.o volserver core AFS_component_version_number.c
 
 include ../config/Makefile.version
-
-${DESTDIR}${afssrvlibexecdir}/volserver: volserver
-	${INSTALL} -ns $? $@
-
-${DESTDIR}${afssrvlibexecdir}/vos: vos
-	${INSTALL} -ns $? $@
-
-dest: ${DEST}/root.server/usr/afs/bin/volserver ${DEST}/root.server/usr/afs/bin/vos
-

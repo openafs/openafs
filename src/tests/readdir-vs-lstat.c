@@ -47,10 +47,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: readdir-vs-lstat.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
-#endif
-
 static int
 verify_inodes(const char *dirname)
 {

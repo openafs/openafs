@@ -1,0 +1,71 @@
+=head1 NAME
+
+fs_memdump - Dump AFS cache state and memory allocations [Windows only]
+
+=head1 SYNOPSIS
+
+=for html
+<div class="synopsis">
+
+B<fs memdump> S<<< [B<-begin>|B<-end>] >>>
+
+=for html
+</div>
+
+=head1 DESCRIPTION
+
+This command dumps the state of AFS cache manager objects and statistics.
+If a checked build of the C run-time library is in use, memory allocations
+will also be included.
+
+=head1 CAUTIONS
+
+This command is only available on Windows.
+
+=head1 OPTIONS
+
+(One of either B<-begin> or B<-end> must be specified.)
+
+=over 4
+
+=item B<-begin>
+
+Set a memory checkpoint.
+
+=item B<-end>
+
+Create a dump-file containing information about memory allocation that has
+taken place since the B<-begin> command was issued.
+
+=back
+
+=head1 OUTPUT
+
+If successful, the output of this command (for B<-begin> I<or> B<-end>)
+will be:
+
+   AFS memdump created
+
+If unsuccessful:
+
+   AFS memdump failed
+
+=head1 EXAMPLES
+
+The following command starts a memory allocation dump:
+
+   % fs memdump -begin
+
+The following command ends it:
+
+   % fs memdump -end
+
+=head1 PRIVILEGE REQUIRED
+
+The issuer must be have AFS Client Administrator access to issue this
+command.
+
+=head1 COPYRIGHT
+
+This document was written by Mike Robinson, and is released under the IBM
+Public License Version 1.0.

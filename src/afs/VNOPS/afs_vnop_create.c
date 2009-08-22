@@ -16,8 +16,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.23.4.4 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -45,7 +43,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
     register afs_int32 code;
-    register struct conn *tc;
+    register struct afs_conn *tc;
     struct VenusFid newFid;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
@@ -117,12 +115,12 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     /** If the volume is read-only, return error without making an RPC to the
       * fileserver
       */
-    if (adp->states & CRO) {
+    if (adp->f.states & CRO) {
 	code = EROFS;
 	goto done;
     }
 
-    if (AFS_IS_DISCONNECTED && !AFS_IS_LOGGING) {
+    if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
         code = ENETDOWN;
         goto done;
     }
@@ -136,8 +134,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
      * Make sure that the data in the cache is current. We may have
      * received a callback while we were waiting for the write lock.
      */
-    if (!(adp->states & CStatd)
-	|| (tdc && !hsame(adp->m.DataVersion, tdc->f.versionNo))) {
+    if (!(adp->f.states & CStatd)
+	|| (tdc && !hsame(adp->f.m.DataVersion, tdc->f.versionNo))) {
 	ReleaseWriteLock(&adp->lock);
 	if (tdc) {
 	    ReleaseSharedLock(&tdc->lock);
@@ -162,8 +160,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		goto done;
 	    }
 	    /* found the file, so use it */
-	    newFid.Cell = adp->fid.Cell;
-	    newFid.Fid.Volume = adp->fid.Fid.Volume;
+	    newFid.Cell = adp->f.fid.Cell;
+	    newFid.Fid.Volume = adp->f.fid.Fid.Volume;
 	    tvc = NULL;
 	    if (newFid.Fid.Unique == 0) {
 		tvc = afs_LookupVCache(&newFid, &treq, NULL, adp, aname);
@@ -196,8 +194,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 #endif
 		{
 		    /* needed for write access check */
-		    tvc->parentVnode = adp->fid.Fid.Vnode;
-		    tvc->parentUnique = adp->fid.Fid.Unique;
+		    tvc->f.parent.vnode = adp->f.fid.Fid.Vnode;
+		    tvc->f.parent.unique = adp->f.fid.Fid.Unique;
 		    /* need write mode for these guys */
 		    if (!afs_AccessOK
 			(tvc, PRSFS_WRITE, &treq, CHECK_MODE_BITS)) {
@@ -224,6 +222,8 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    VATTR_INIT(attrs);
 		    VATTR_SET_SUPPORTED(attrs, va_data_size);
 		    VATTR_SET_ACTIVE(attrs, va_data_size);
+#elif defined(UKERNEL)
+		    attrs->va_mask = ATTR_SIZE;
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 		    attrs->va_mask = AT_SIZE;
 #else
@@ -231,7 +231,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 #endif
 		    attrs->va_size = len;
 		    ObtainWriteLock(&tvc->lock, 136);
-		    tvc->states |= CCreating;
+		    tvc->f.states |= CCreating;
 		    ReleaseWriteLock(&tvc->lock);
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #if defined(AFS_SGI64_ENV)
@@ -245,7 +245,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		    code = afs_setattr(tvc, attrs, acred);
 #endif /* SUN5 || SGI */
 		    ObtainWriteLock(&tvc->lock, 137);
-		    tvc->states &= ~CCreating;
+		    tvc->f.states &= ~CCreating;
 		    ReleaseWriteLock(&tvc->lock);
 		    if (code) {
 			afs_PutVCache(tvc);
@@ -260,14 +260,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
     }
     
-    if (AFS_IS_DISCONNECTED) {
-        /* XXX - If we get here, logging must be enabled (as we bypassed the
-         * earlier check. So - do that logging thang, then return */
-    }       
-
     /* if we create the file, we don't do any access checks, since
      * that's how O_CREAT is supposed to work */
-    if (adp->states & CForeign) {
+    if (adp->f.states & CForeign) {
 	origCBs = afs_allCBs;
 	origZaps = afs_allZaps;
     } else {
@@ -296,74 +291,93 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		attrs->va_mode = 0x1b6;	/* XXX default mode: rw-rw-rw XXX */
 	}
     }
-    InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
-    do {
-	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
-	if (tc) {
-	    hostp = tc->srvr->server;	/* remember for callback processing */
-	    now = osi_Time();
-	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
-	    RX_AFS_GUNLOCK();
-	    code =
-		RXAFS_CreateFile(tc->id, (struct AFSFid *)&adp->fid.Fid,
+
+    if (!AFS_IS_DISCONNECTED) {
+	/* If not disconnected, connect to the server.*/
+
+    	InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
+    	do {
+	    tc = afs_Conn(&adp->f.fid, &treq, SHARED_LOCK);
+	    if (tc) {
+	    	hostp = tc->srvr->server;	/* remember for callback processing */
+	    	now = osi_Time();
+	    	XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
+	    	RX_AFS_GUNLOCK();
+	    	code =
+		    RXAFS_CreateFile(tc->id, (struct AFSFid *)&adp->f.fid.Fid,
 				 aname, &InStatus, (struct AFSFid *)
 				 &newFid.Fid, &OutFidStatus, &OutDirStatus,
 				 &CallBack, &tsync);
-	    RX_AFS_GLOCK();
-	    XSTATS_END_TIME;
-	    CallBack.ExpirationTime += now;
-	} else
-	    code = -1;
-    } while (afs_Analyze
-	     (tc, code, &adp->fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
-	      SHARED_LOCK, NULL));
+	    	RX_AFS_GLOCK();
+	    	XSTATS_END_TIME;
+	    	CallBack.ExpirationTime += now;
+	    } else
+	    	code = -1;
+    	} while (afs_Analyze
+	         (tc, code, &adp->f.fid, &treq, AFS_STATS_FS_RPCIDX_CREATEFILE,
+	          SHARED_LOCK, NULL));
 
-    if ((code == EEXIST || code == UAEEXIST) &&
+	if ((code == EEXIST || code == UAEEXIST) &&
 #ifdef AFS_SGI64_ENV
-    !(flags & VEXCL)
+    	!(flags & VEXCL)
 #else /* AFS_SGI64_ENV */
-    aexcl == NONEXCL
+    	aexcl == NONEXCL
 #endif
-    ) {
-	/* if we get an EEXIST in nonexcl mode, just do a lookup */
-	if (tdc) {
-	    ReleaseSharedLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	}
-	ReleaseWriteLock(&adp->lock);
+    	) {
+	    /* if we get an EEXIST in nonexcl mode, just do a lookup */
+	    if (tdc) {
+	    	ReleaseSharedLock(&tdc->lock);
+	    	afs_PutDCache(tdc);
+	    }
+	    ReleaseWriteLock(&adp->lock);
 #if !(defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV))
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #if defined(AFS_SGI64_ENV)
-	code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp, 
-			  NULL, 0, NULL, acred);
+	    code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t *) adp), aname, avcp,
+				  NULL, 0, NULL, acred);
 #else
-	code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
+	    code = afs_lookup(adp, aname, avcp, NULL, 0, NULL, acred);
 #endif /* AFS_SGI64_ENV */
 #else /* SUN5 || SGI */
-	code = afs_lookup(adp, aname, avcp, acred);
+#if defined(UKERNEL)
+	    code = afs_lookup(adp, aname, avcp, acred, 0);
+#else /* UKERNEL */
+	    code = afs_lookup(adp, aname, avcp, acred);
+#endif /* UKERNEL */
 #endif /* SUN5 || SGI */
 #endif /* !(AFS_OSF_ENV || AFS_DARWIN_ENV) */
 	goto done;
-    }
-    if (code) {
-	if (code < 0) {
-	    ObtainWriteLock(&afs_xcbhash, 488);
-	    afs_DequeueCallback(adp);
-	    adp->states &= ~CStatd;
-	    ReleaseWriteLock(&afs_xcbhash);
-	    osi_dnlc_purgedp(adp);
-	}
-	ReleaseWriteLock(&adp->lock);
-	if (tdc) {
-	    ReleaseSharedLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	}
+        }
+
+	if (code) {
+	    if (code < 0) {
+	    	ObtainWriteLock(&afs_xcbhash, 488);
+	    	afs_DequeueCallback(adp);
+	    	adp->f.states &= ~CStatd;
+	    	ReleaseWriteLock(&afs_xcbhash);
+	    	osi_dnlc_purgedp(adp);
+	    }
+	    ReleaseWriteLock(&adp->lock);
+	    if (tdc) {
+	    	ReleaseSharedLock(&tdc->lock);
+	    	afs_PutDCache(tdc);
+	    }
 	goto done;
-    }
+	}
+
+    } else {
+#if defined(AFS_DISCON_ENV)
+	/* Generate a fake FID for disconnected mode. */
+	newFid.Cell = adp->f.fid.Cell;
+	newFid.Fid.Volume = adp->f.fid.Fid.Volume;
+	afs_GenFakeFid(&newFid, VREG, 1);
+#endif
+    }				/* if (!AFS_IS_DISCON_RW) */
+
     /* otherwise, we should see if we can make the change to the dir locally */
     if (tdc)
 	UpgradeSToWLock(&tdc->lock, 631);
-    if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+    if (AFS_IS_DISCON_RW || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
 	ObtainWriteLock(&afs_xdcache, 291);
 	code = afs_dir_Create(tdc, aname, &newFid.Fid);
@@ -377,8 +391,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
-    newFid.Cell = adp->fid.Cell;
-    newFid.Fid.Volume = adp->fid.Fid.Volume;
+    if (AFS_IS_DISCON_RW)
+	adp->f.m.LinkCount++;
+
+    newFid.Cell = adp->f.fid.Cell;
+    newFid.Fid.Volume = adp->f.fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
     volp = afs_FindVolume(&newFid, READ_LOCK);
 
@@ -400,7 +417,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
      * would fail, since no call would be able to update the local vnode status after modifying
      * a file on a file server. */
     ObtainWriteLock(&afs_xvcache, 138);
-    if (adp->states & CForeign)
+    if (adp->f.states & CForeign)
 	finalZaps = afs_allZaps;	/* do this before calling newvcache */
     else
 	finalZaps = afs_evenZaps;	/* do this before calling newvcache */
@@ -419,26 +436,36 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	    ObtainWriteLock(&afs_xcbhash, 489);
 	    finalCBs = afs_evenCBs;
 	    /* add the callback in */
-	    if (adp->states & CForeign) {
-		tvc->states |= CForeign;
+	    if (adp->f.states & CForeign) {
+		tvc->f.states |= CForeign;
 		finalCBs = afs_allCBs;
 	    }
 	    if (origCBs == finalCBs && origZaps == finalZaps) {
-		tvc->states |= CStatd;	/* we've fake entire thing, so don't stat */
-		tvc->states &= ~CBulkFetching;
-		tvc->cbExpires = CallBack.ExpirationTime;
-		afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
+		tvc->f.states |= CStatd;	/* we've fake entire thing, so don't stat */
+		tvc->f.states &= ~CBulkFetching;
+		if (!AFS_IS_DISCON_RW) {
+		    tvc->cbExpires = CallBack.ExpirationTime;
+		    afs_QueueCallback(tvc, CBHash(CallBack.ExpirationTime), volp);
+		}
 	    } else {
 		afs_DequeueCallback(tvc);
-		tvc->states &= ~(CStatd | CUnique);
+		tvc->f.states &= ~(CStatd | CUnique);
 		tvc->callback = 0;
-		if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
+		if (tvc->f.fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 		    osi_dnlc_purgedp(tvc);
 	    }
 	    ReleaseWriteLock(&afs_xcbhash);
-	    afs_ProcessFS(tvc, &OutFidStatus, &treq);
-	    tvc->parentVnode = adp->fid.Fid.Vnode;
-	    tvc->parentUnique = adp->fid.Fid.Unique;
+	    if (AFS_IS_DISCON_RW) {
+#if defined(AFS_DISCON_ENV)
+		afs_DisconAddDirty(tvc, VDisconCreate, 0);
+		afs_GenDisconStatus(adp, tvc, &newFid, attrs, &treq, VREG);
+#endif
+	    } else {
+		afs_ProcessFS(tvc, &OutFidStatus, &treq);
+	    }
+
+	    tvc->f.parent.vnode = adp->f.fid.Fid.Vnode;
+	    tvc->f.parent.unique = adp->f.fid.Fid.Unique;
 	    ReleaseWriteLock(&tvc->lock);
 	    *avcp = tvc;
 	    code = 0;
@@ -472,7 +499,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
 #ifdef	AFS_OSF_ENV
     if (!code && !strcmp(aname, "core"))
-	tvc->states |= CCore1;
+	tvc->f.states |= CCore1;
 #endif
 
     afs_PutFakeStat(&fakestate);
@@ -504,8 +531,8 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
     hset64(avers, astat->dataVersionHigh, astat->DataVersion);
     /* this *is* the version number, no matter what */
     if (adc) {
-	ok = (hsame(avc->m.DataVersion, adc->f.versionNo) && avc->callback
-	      && (avc->states & CStatd) && avc->cbExpires >= osi_Time());
+	ok = (hsame(avc->f.m.DataVersion, adc->f.versionNo) && avc->callback
+	      && (avc->f.states & CStatd) && avc->cbExpires >= osi_Time());
     } else {
 	ok = 0;
     }
@@ -514,14 +541,14 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
 #endif
     /* The bulk status code used the length as a sequence number.  */
     /* Don't update the vcache entry unless the stats are current. */
-    if (avc->states & CStatd) {
-	hset(avc->m.DataVersion, avers);
+    if (avc->f.states & CStatd) {
+	hset(avc->f.m.DataVersion, avers);
 #ifdef AFS_64BIT_CLIENT
-	FillInt64(avc->m.Length, astat->Length_hi, astat->Length);
+	FillInt64(avc->f.m.Length, astat->Length_hi, astat->Length);
 #else /* AFS_64BIT_CLIENT */
-	avc->m.Length = astat->Length;
+	avc->f.m.Length = astat->Length;
 #endif /* AFS_64BIT_CLIENT */
-	avc->m.Date = astat->ClientModTime;
+	avc->f.m.Date = astat->ClientModTime;
     }
     if (ok) {
 	/* we've been tracking things correctly */
@@ -533,7 +560,7 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
 	    ZapDCE(adc);
 	    DZap(adc);
 	}
-	if (avc->states & CStatd) {
+	if (avc->f.states & CStatd) {
 	    osi_dnlc_purgedp(avc);
 	}
 	return 0;

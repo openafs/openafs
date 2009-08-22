@@ -1,6 +1,6 @@
 =head1 NAME
 
-symlink - Introduction to the symlink command suite
+symlink - Introduction to the symlink command suite [Windows only]
 
 =head1 DESCRIPTION
 

@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/cfg/cfgservers.c,v 1.6 2004/04/02 06:54:05 jaltman Exp $");
 
 #include <afs/stds.h>
 
@@ -36,6 +34,9 @@ RCSID
 #endif /* AFS_NT40_ENV */
 
 #include <pthread.h>
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 
 #include <afs/afs_Admin.h>
 #include <afs/afs_AdminErrors.h>
@@ -1792,13 +1793,13 @@ SimpleProcessStart(void *bosHandle, const char *instance,
 	}
 
 	if (!bos_ProcessCreate
-	    (bosHandle, instance, BOS_PROCESS_SIMPLE, cmd, NULL, NULL, &tst2)
+	    (bosHandle, (char *)instance, BOS_PROCESS_SIMPLE, cmd, NULL, NULL, &tst2)
 	    && tst2 != BZEXISTS) {
 	    /* failed to create instance (and not because existed) */
 	    tst = tst2;
 	} else
 	    if (!bos_ProcessExecutionStateSet
-		(bosHandle, instance, BOS_PROCESS_RUNNING, &tst2)) {
+		(bosHandle, (char *)instance, BOS_PROCESS_RUNNING, &tst2)) {
 	    /* failed to set instance state to running */
 	    tst = tst2;
 	}
@@ -1834,7 +1835,7 @@ FsProcessStart(void *bosHandle, const char *instance,
     afs_status_t tst2, tst = 0;
 
     if (!bos_FSProcessCreate
-	(bosHandle, instance, fileserverExe, volserverExe, salvagerExe, NULL,
+	(bosHandle, (char *)instance, (char *)fileserverExe, (char *)volserverExe, (char *)salvagerExe, NULL,
 	 &tst2) && tst2 != BZEXISTS) {
 	/* failed to create instance (and not because existed) */
 	tst = tst2;
@@ -1879,7 +1880,7 @@ BosProcessDelete(void *bosHandle, const char *instance, afs_status_p st)
 	/* failed to wait for process to stop */
 	tst = tst2;
 
-    } else if (!bos_ProcessDelete(bosHandle, instance, &tst2)) {
+    } else if (!bos_ProcessDelete(bosHandle, (char *)instance, &tst2)) {
 	/* failed to delete instance (or does not exist) */
 	if (tst2 != BZNOENT) {
 	    tst = tst2;
@@ -1938,7 +1939,8 @@ UpdateCommandParse(char *cmdString, short *hasSysPathP, short *hasBinPathP)
 
     if (dirp != NULL) {
 	/* check that not a portition of a larger path */
-	char oneBefore, oneAfter, twoAfter;
+	char oneBefore, oneAfter;
+	char twoAfter = 0;
 
 	oneBefore = *(dirp - 1);
 	oneAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_ETC_DIRPATH) - 1);
@@ -1962,7 +1964,8 @@ UpdateCommandParse(char *cmdString, short *hasSysPathP, short *hasBinPathP)
 
     if (dirp != NULL) {
 	/* check that not a portition of a larger path */
-	char oneBefore, oneAfter, twoAfter;
+	char oneBefore, oneAfter;
+	char twoAfter = 0;
 
 	oneBefore = *(dirp - 1);
 	oneAfter = *(dirp + sizeof(AFSDIR_CANONICAL_SERVER_BIN_DIRPATH) - 1);
@@ -2041,7 +2044,8 @@ UbikQuorumCheck(cfg_host_p cfg_host, const char *dbInstance, short *hasQuorum,
 		tst = tst2;
 		dbhostDone = 1;
 	    } else {
-		short isSyncSite, isWriteReady;
+		short isSyncSite = 0;
+	        short isWriteReady = 0;
 
 		/* ignore errors fetching Ubik vote status; there might be
 		 * an unreachable dbserver yet a reachable sync site.
@@ -2102,7 +2106,6 @@ UbikVoteStatusFetch(int serverAddr, unsigned short serverPort,
     } else {
 	int rpcCode;
 	struct ubik_debug udebugInfo;
-	extern int VOTE_Debug(), VOTE_DebugOld();
 
 	if ((rpcCode = VOTE_Debug(serverConn, &udebugInfo)) == 0) {
 	    /* talking to a 3.5 or later server */

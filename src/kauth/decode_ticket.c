@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/decode_ticket.c,v 1.6.14.1 2007/04/10 18:39:52 shadow Exp $");
 
 #include <des.h>
 #include <afs/com_err.h>

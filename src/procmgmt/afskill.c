@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/procmgmt/afskill.c,v 1.5 2003/07/15 23:15:58 shadow Exp $");
 
 #include <afs/stds.h>
 

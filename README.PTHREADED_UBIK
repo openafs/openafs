@@ -1,0 +1,51 @@
+NOTES FOR THE BETA VERSION OF PTHREADED UBIK
+
+This document describes how to build, and use, the new versions of ubik
+applications that have been modified to work with POSIX pthreads instead
+of LWP.
+
+Under the 'src' directory, contained herein, are 4 new directories that
+deal with pthreaded ubik applications.  They are, as follows:
+
+* tubik		- The pthreaded version of the ubik library.
+		  This is built from the source in the 'ubik'
+		  directory and, in its distributed form, contains
+		  only a Makefile.in
+
+* tptserver	- The pthreaded version of the ptserver program.
+		  This is built from the source in the 'ptserver'
+		  directory and, in its distributed form, contains
+		  only a Makefile.in
+
+* tvlserver	- The pthreaded version of the vlserver program.
+		  This is built from the source in the 'vlserver'
+		  directory and, in its distributed form, contains
+		  only a Makefile.in
+
+* tbudb		- The pthreaded version of the buserver program.
+		  This is built from the source in the 'budb'
+		  directory and, in its distributed form, contains
+		  only a Makefile.in
+
+By default, all of these are built when doing a configure / make of
+the OpenAFS package.
+
+A new option has been added to the 'configure' script to control the
+packaging and installation of these new pthreaded ubik applications.
+
+When the '--enable-pthreaded-ubik' option (off by default) is specified,
+these components will be installed into the dest tree when a 'make dest'
+is run.
+
+If you DO NOT use this option at 'configure' time, you can still utilize
+these new binaries as follows:
+
+Assuming that you are using transarc paths in your configuration, you
+should copy
+
+        ./src/tptserver/ptserver  to  /usr/afs/bin/ptserver
+        ./src/tvlserver/vlserver  to  /usr/afs/bin/vlserver
+        ./src/tbudb/budb_server   to  /usr/afs/bin/buserver
+
+after a successful build and install.
+

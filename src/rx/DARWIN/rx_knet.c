@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/DARWIN/rx_knet.c,v 1.12.4.1 2006/09/16 00:11:55 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -53,7 +51,6 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
 #ifdef AFS_DARWIN80_ENV
-#if 1
     resid = *alength;
     memset(&msg, 0, sizeof(struct msghdr));
     msg.msg_name = &ss;
@@ -73,32 +70,6 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
         }
     }
     mbuf_freem(m);
-#else
-    resid = *alength;
-    printf("Want to read %d bytes...", resid);
-    for (i=0; i < nvecs && resid; i++) {
-       if (resid < iov[i].iov_len)
-          iov[0].iov_len = resid;
-       resid -= iov[i].iov_len;
-    }
-    printf("Using %d/%d iovs\n", i, nvecs);
-    nvecs = i;
-    rlen = 0;
-    memset(&msg, 0, sizeof(struct msghdr));
-    msg.msg_name = &ss;
-    msg.msg_namelen = sizeof(struct sockaddr_storage);
-    msg.msg_iov = &iov[0];
-    msg.msg_iovlen = nvecs;
-    sa =(struct sockaddr_in *) &ss;
-    code = sock_receive(asocket, &msg, 0, &rlen);
-    resid = *alength;
-    if (resid != rlen)
-    printf("recieved %d bytes\n", rlen);
-    if (resid > rlen)
-       resid -= rlen;
-    else
-       resid = 0;
-#endif
 #else
 
     u.uio_iov = &iov[0];

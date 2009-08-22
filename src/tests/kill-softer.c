@@ -46,10 +46,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: kill-softer.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
-#endif
-
 static FILE *verbose;
 
 struct entry {

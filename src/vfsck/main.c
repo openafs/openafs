@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vfsck/main.c,v 1.10 2005/10/03 02:44:56 shadow Exp $");
 
 #define VICE			/* allow us to put our changes in at will */
 #include <stdio.h>

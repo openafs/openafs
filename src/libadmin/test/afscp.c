@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/test/afscp.c,v 1.7.14.1 2007/10/31 04:09:31 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -26,6 +24,9 @@ RCSID
 #include <errno.h>
 
 #include <pthread.h>
+
+#include <rx/rx.h>
+#include <rx/rxstat.h>
 
 #include <afs/afs_Admin.h>
 #include <afs/afs_utilAdmin.h>
@@ -63,7 +64,6 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     afs_status_t st = 0;
     int no_auth = 0;
-    int auth = 0;
     char auth_cell[MAXCELLCHARS];
     char exec_cell[MAXCELLCHARS];
 
@@ -180,7 +180,6 @@ main(int argc, char *argv[])
 {
     int code;
     afs_status_t st;
-    char *whoami = argv[0];
 
     /* perform client initialization */
 

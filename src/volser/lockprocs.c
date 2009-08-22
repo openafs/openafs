@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/lockprocs.c,v 1.8.14.4 2008/04/14 20:25:52 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -82,7 +80,6 @@ SetAValue(struct nvldbentry *entry, afs_int32 oserver, afs_int32 opart,
           afs_int32 nserver, afs_int32 npart, afs_int32 type)
 {
     int e;
-    afs_int32 error = 0;
 
     e = FindIndex(entry, oserver, opart, type);
     if (e == -1)

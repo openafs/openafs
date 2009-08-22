@@ -17,7 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.34.2.6 2008/03/13 13:42:19 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>

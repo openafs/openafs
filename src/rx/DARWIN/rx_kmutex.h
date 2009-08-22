@@ -18,6 +18,9 @@
 
 #ifdef AFS_DARWIN80_ENV
 #include <kern/locks.h>
+/* kernel private from osfmk/kern/locks.h ... sigh */
+extern boolean_t lck_mtx_try_lock(lck_mtx_t *lck);
+extern boolean_t lck_rw_try_lock(lck_rw_t *lck, lck_rw_type_t lck_rw_type);
 #else
 #include <sys/lock.h>
 #endif
@@ -52,9 +55,9 @@
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
 				osi_Assert((lck)->owner == current_thread()); \
 				(lck)->owner = (thread_t)0; \
-				lck_mtx_lock((lck)->meta); \
-				(lck)->waiters--; \
-				lck_mtx_unlock((lck)->meta); \
+				lck_mtx_lock((lck)->meta);  \
+                                (lck)->waiters--; \
+                                lck_mtx_unlock((lck)->meta); \
                                 msleep(cv, (lck)->lock, PDROP|PVFS, "afs_CV_WAIT", NULL); \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck); \
@@ -69,8 +72,8 @@
 				osi_Assert((lck)->owner == current_thread()); \
 				(lck)->owner = (thread_t)0; \
 				lck_mtx_lock((lck)->meta); \
-				(lck)->waiters--; \
-				lck_mtx_unlock((lck)->meta); \
+                                (lck)->waiters--; \
+                                lck_mtx_unlock((lck)->meta); \
                                 msleep(cv, (lck)->lock, PDROP|PVFS, "afs_CV_TIMEDWAIT", &ts); \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck);       \
@@ -137,52 +140,52 @@ extern lck_grp_t * openafs_lck_grp;
 #define MUTEX_FINISH() rx_kmutex_finish()
 #define LOCKINIT(a) \
     do { \
-        lck_attr_t *openafs_lck_attr = lck_attr_alloc_init(); \
+        lck_attr_t *openafs_lck_attr = lck_attr_alloc_init();	     \
         (a) = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
-        lck_attr_free(openafs_lck_attr); \
+        lck_attr_free(openafs_lck_attr);			     \
     } while(0)
 #define MUTEX_INIT(a,b,c,d) \
-    do { \
-        lck_attr_t *openafs_lck_attr = lck_attr_alloc_init(); \
-        (a)->meta = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
+    do {								\
+        lck_attr_t *openafs_lck_attr = lck_attr_alloc_init();		\
+	(a)->meta = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
         (a)->lock = lck_mtx_alloc_init(openafs_lck_grp, openafs_lck_attr); \
-        lck_attr_free(openafs_lck_attr); \
-	(a)->waiters = 0; \
-	(a)->owner = (thread_t)0; \
+        lck_attr_free(openafs_lck_attr);				\
+	(a)->waiters = 0;						\
+	(a)->owner = (thread_t)0;					\
     } while(0)
 #define MUTEX_DESTROY(a) \
     do { \
         lck_mtx_destroy((a)->lock, openafs_lck_grp); \
-        lck_mtx_destroy((a)->meta, openafs_lck_grp); \
+	lck_mtx_destroy((a)->meta, openafs_lck_grp); \
 	(a)->owner = (thread_t)-1; \
     } while(0)
 #define MUTEX_ENTER(a) \
     do { \
 	lck_mtx_lock((a)->meta); \
-	(a)->waiters++; \
-	lck_mtx_unlock((a)->meta); \
+        (a)->waiters++; \
+        lck_mtx_unlock((a)->meta); \
 	lck_mtx_lock((a)->lock); \
 	osi_Assert((a)->owner == (thread_t)0); \
 	(a)->owner = current_thread(); \
     } while(0)
 
 /* acquire main lock before releasing meta lock, so we don't race */
-#define MUTEX_TRYENTER(a) ({ \
-    int _ret; \
-    lck_mtx_lock((a)->meta); \
-    if ((a)->waiters) { \
-       lck_mtx_unlock((a)->meta); \
-       _ret = 0; \
-    } else { \
-       (a)->waiters++; \
-       lck_mtx_lock((a)->lock); \
-       lck_mtx_unlock((a)->meta); \
-       osi_Assert((a)->owner == (thread_t)0); \
-       (a)->owner = current_thread(); \
-       _ret = 1; \
-    } \
-    _ret; \
-})
+#define MUTEX_TRYENTER(a) ({			\
+	    int _ret;				\
+	    lck_mtx_lock((a)->meta); \
+	    if ((a)->waiters) { \
+		lck_mtx_unlock((a)->meta); \
+		_ret = 0; \
+	    } else { \
+		(a)->waiters++; \
+		lck_mtx_lock((a)->lock); \
+		lck_mtx_unlock((a)->meta); \
+		osi_Assert((a)->owner == (thread_t)0); \
+		(a)->owner = current_thread(); \
+		_ret = 1; \
+	    } \
+	    _ret; \
+	})
 
 #define MUTEX_EXIT(a) \
     do { \
@@ -190,8 +193,8 @@ extern lck_grp_t * openafs_lck_grp;
 	(a)->owner = (thread_t)0; \
 	lck_mtx_unlock((a)->lock); \
 	lck_mtx_lock((a)->meta); \
-	(a)->waiters--; \
-	lck_mtx_unlock((a)->meta); \
+        (a)->waiters--; \
+        lck_mtx_unlock((a)->meta); \
     } while(0)
 
 #undef MUTEX_ISMINE

@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_cm.c,v 1.10.2.3 2008/03/10 22:32:37 shadow Exp $");
 
 #include "xstat_cm.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
@@ -27,11 +25,6 @@ RCSID
 #include <string.h>
 
 #define LWP_STACK_SIZE	(16 * 1024)
-
-/*
- * Routines we need that don't have explicit include file definitions.
- */
-extern char *hostutil_GetNameByINet();	/*Host parsing utility */
 
 /*
  * Exported variables.
@@ -52,7 +45,7 @@ static int xstat_cm_ProbeFreqInSecs;	/*Probe freq. in seconds */
 static int xstat_cm_initflag = 0;	/*Was init routine called? */
 static int xstat_cm_debug = 0;	/*Debugging output enabled? */
 static int xstat_cm_oneShot = 0;	/*One-shot operation? */
-static int (*xstat_cm_Handler) ();	/*Probe handler routine */
+static int (*xstat_cm_Handler) (void);	/*Probe handler routine */
 static PROCESS probeLWP_ID;	/*Probe LWP process ID */
 static int xstat_cm_numCollections;	/*Number of desired collections */
 static afs_int32 *xstat_cm_collIDP;	/*Ptr to collection IDs desired */
@@ -80,7 +73,7 @@ static afs_int32 *xstat_cm_collIDP;	/*Ptr to collection IDs desired */
  *------------------------------------------------------------------------*/
 
 static int
-xstat_cm_CleanupInit()
+xstat_cm_CleanupInit(void)
 {
     xstat_cm_ConnInfo = (struct xstat_cm_ConnectionInfo *)0;
     xstat_cm_Results.probeNum = 0;
@@ -264,12 +257,12 @@ xstat_cm_LWP(void *unused)
 
 		    if (xstat_cm_debug) {
 			printf
-			    ("%s: Calling RXAFSCB_GetXStats, conn=0x%x, clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=0x%x, timeP=0x%x, dataP=0x%x\n",
+			    ("%s: Calling RXAFSCB_GetXStats, conn=%" AFS_PTR_FMT ", clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=%" AFS_PTR_FMT ", timeP=%" AFS_PTR_FMT ", dataP=%" AFS_PTR_FMT "\n",
 			     rn, curr_conn->rxconn, clientVersionNumber,
 			     *currCollIDP, &srvVersionNumber,
 			     &(xstat_cm_Results.probeTime),
 			     &(xstat_cm_Results.data));
-			printf("%s: [bufflen=%d, buffer at 0x%x]\n", rn,
+			printf("%s: [bufflen=%d, buffer at %" AFS_PTR_FMT "]\n", rn,
 			       xstat_cm_Results.data.AFSCB_CollData_len,
 			       xstat_cm_Results.data.AFSCB_CollData_val);
 		    }
@@ -321,7 +314,7 @@ xstat_cm_LWP(void *unused)
 	     * that we've finished our collection round.
 	     */
 	    if (xstat_cm_debug)
-		printf("[%s] Signalling main process at 0x%x\n", rn,
+		printf("[%s] Signalling main process at %" AFS_PTR_FMT "\n", rn,
 		       &terminationEvent);
 	    oneShotCode = LWP_SignalProcess(&terminationEvent);
 	    if (oneShotCode)
@@ -386,7 +379,7 @@ xstat_cm_LWP(void *unused)
 
 int
 xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
-	      int a_ProbeFreqInSecs, int (*a_ProbeHandler) (), int a_flags,
+	      int a_ProbeFreqInSecs, int (*a_ProbeHandler) (void), int a_flags,
 	      int a_numCollections, afs_int32 * a_collIDP)
 {
 
@@ -429,7 +422,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 		a_ProbeFreqInSecs);
 	arg_errfound = 1;
     }
-    if (a_ProbeHandler == (int (*)())0) {
+    if (a_ProbeHandler == NULL) {
 	fprintf(stderr, "[%s] Null probe handler function argument\n", rn);
 	arg_errfound = 1;
     }
@@ -481,7 +474,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	malloc(a_numServers * sizeof(struct xstat_cm_ConnectionInfo));
     if (xstat_cm_ConnInfo == (struct xstat_cm_ConnectionInfo *)0) {
 	fprintf(stderr,
-		"[%s] Can't allocate %d connection info structs (%d bytes)\n",
+		"[%s] Can't allocate %d connection info structs (%lu bytes)\n",
 		rn, a_numServers,
 		(a_numServers * sizeof(struct xstat_cm_ConnectionInfo)));
 	return (-1);		/*No cleanup needs to be done yet */
@@ -525,7 +518,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	 */
 	if (xstat_cm_debug) {
 	    printf("[%s] Copying in the following socket info:\n", rn);
-	    printf("[%s] IP addr 0s, port %d\n", rn,
+	    printf("[%s] IP addr 0s, port %d\n",
 		   afs_inet_ntoa_r((a_socketArray + curr_srv)->sin_addr.s_addr,hoststr),
 		   ntohs((a_socketArray + curr_srv)->sin_port));
 	}
@@ -566,7 +559,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	    conn_err = 1;
 	}
 	if (xstat_cm_debug)
-	    printf("[%s] New connection at 0x%lx\n", rn, curr_conn->rxconn);
+	    printf("[%s] New connection at %" AFS_PTR_FMT "\n", rn, curr_conn->rxconn);
 
 	/*
 	 * Bump the current xstat_cm connection to set up.
@@ -593,7 +586,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	return (code);
     }
     if (xstat_cm_debug)
-	printf("[%s] Probe LWP process structure located at 0x%x\n", rn,
+	printf("[%s] Probe LWP process structure located at %" AFS_PTR_FMT "\n", rn,
 	       probeLWP_ID);
 
     /*
@@ -627,7 +620,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
  *------------------------------------------------------------------------*/
 
 int
-xstat_cm_ForceProbeNow()
+xstat_cm_ForceProbeNow(void)
 {
     static char rn[] = "xstat_cm_ForceProbeNow";	/*Routine name */
 

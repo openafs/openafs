@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/test/stress_s.c,v 1.7 2003/07/15 23:16:47 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -33,9 +31,6 @@ RCSID
 
 #include "stress.h"
 #include "stress_internal.h"
-
-
-extern RXKST_ExecuteRequest();
 
 struct ktc_encryptionKey serviceKey =
     { 0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f };

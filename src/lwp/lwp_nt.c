@@ -19,7 +19,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/lwp_nt.c,v 1.8 2005/11/05 06:48:12 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>

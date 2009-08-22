@@ -45,10 +45,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: test-setpag.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
-#endif
-
 #if !defined(NGROUPS) && defined(NGROUPS_MAX)
 #define NGROUPS NGROUPS_MAX
 #endif

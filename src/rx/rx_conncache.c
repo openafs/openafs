@@ -18,8 +18,6 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_conncache.c,v 1.10 2004/08/19 00:41:54 kolya Exp $");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
@@ -47,9 +45,9 @@ static struct rx_queue rxi_connectionCache = { &rxi_connectionCache,
  * rxi_connectionCache
  */
 
-pthread_mutex_t rxi_connCacheMutex;
-#define LOCK_CONN_CACHE assert(pthread_mutex_lock(&rxi_connCacheMutex)==0)
-#define UNLOCK_CONN_CACHE assert(pthread_mutex_unlock(&rxi_connCacheMutex)==0)
+afs_kmutex_t rxi_connCacheMutex;
+#define LOCK_CONN_CACHE MUTEX_ENTER(&rxi_connCacheMutex)
+#define UNLOCK_CONN_CACHE MUTEX_EXIT(&rxi_connCacheMutex)
 #else
 #define LOCK_CONN_CACHE
 #define UNLOCK_CONN_CACHE

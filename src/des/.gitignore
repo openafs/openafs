@@ -1,0 +1,19 @@
+# After changing this file, please run
+#     git ls-files -i --exclude-standard
+# to check that you haven't inadvertently ignored any tracked files.
+
+/fp.c
+/ip.c
+/key_perm.h
+/make_fp
+/make_ip
+/make_keyperm
+/make_odd
+/make_p
+/make_p_table
+/make_s_table
+/odd.h
+/p.c
+/p_table.h
+/s_table.h
+/s.c

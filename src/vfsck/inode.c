@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vfsck/inode.c,v 1.6 2005/10/03 02:44:56 shadow Exp $");
 
 #define VICE			/* control whether AFS changes are present */
 #include <stdio.h>
@@ -451,6 +449,7 @@ pinode(ino)
     register char *p;
     struct passwd *pw;
     char *ctime();
+    time_t t;
 
     printf(" I=%u ", ino);
     if (ino < ROOTINO || ino > maxino)
@@ -492,11 +491,12 @@ pinode(ino)
     if (preen)
 	printf("%s: ", devname);
 #if	defined(AFS_SUN56_ENV)
-    printf("SIZE=%lld ", dp->di_size);
+    printf("SIZE=%" AFS_INT64_FMT " ", dp->di_size);
 #else
     printf("SIZE=%ld ", dp->di_size);
 #endif
-    p = ctime(&dp->di_mtime);
+    t = dp->di_mtime;
+    p = ctime(&t);
     printf("MTIME=%12.12s %4.4s ", p + 4, p + 20);
 }
 

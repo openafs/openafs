@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/util.c,v 1.9 2005/06/19 00:14:17 shadow Exp $");
 
 #include "mit-cpyright.h"
 #ifndef KERNEL

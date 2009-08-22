@@ -19,8 +19,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/kalog.c,v 1.6.14.1 2007/10/30 15:16:39 shadow Exp $");
 
 #include <stdio.h>
 #include <afs/afsutil.h>
@@ -42,7 +40,8 @@ extern afs_int32 verbose_track;
 
 DBM *kalog_db;
 
-kalog_Init()
+void
+kalog_Init(void)
 {
     OpenLog(AFSDIR_SERVER_KALOGDB_FILEPATH);	/* set up logging */
     SetupLogSignals();
@@ -54,9 +53,9 @@ kalog_Init()
 }
 
 /* log a ticket usage */
-kalog_log(principal, instance, sprincipal, sinstance, realm, hostaddr, type)
-     char *principal, *instance, *sprincipal, *sinstance, *realm;
-     int hostaddr, type;
+void
+kalog_log(char *principal, char *instance, char *sprincipal,
+	  char *sinstance, char *realm, int hostaddr, int type)
 {
     char keybuf[512];		/* not random! 63 . 63 , 63 . 63 max key */
     datum key, data;
@@ -108,6 +107,9 @@ kalog_log(principal, instance, sprincipal, sinstance, realm, hostaddr, type)
 	break;
     case LOG_GETTICKET:
 	strcat(keybuf, ":gtck");
+	break;
+    case LOG_TGTREQUEST:
+	strcat(keybuf, ":tgtreq");
 	break;
     default:
 	break;
@@ -181,6 +183,9 @@ ka_log(char *principal, char *instance, char *sprincipal, char *sinstance,
     case LOG_GETTICKET:
 	strcat(logbuf, ":gtck");
 	break;
+    case LOG_TGTREQUEST:
+        strcat(logbuf, ":tgtreq");
+        break;
     default:
 	break;
     }

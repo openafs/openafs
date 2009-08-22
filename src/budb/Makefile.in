@@ -8,6 +8,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 INCLS=\
 	${TOP_INCDIR}/lock.h \
@@ -45,7 +49,22 @@ COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o \
 	procs.o server.o budb_errs.o
 
-all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server
+all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_prototypes.h budb_server
+
+${TOP_LIBDIR}/libbudb.a: libbudb.a
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb.h: budb.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb_client.h: budb_client.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/budb_prototypes.h: budb_prototypes.h
+	${INSTALL_DATA} $? $@
 
 #
 # budb_errs.o actually depends on neither budb_client.h nor budb_errs.h
@@ -53,7 +72,9 @@ all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_err
 #
 budb_errs.o: budb_errs.c budb_client.h budb_errs.h
 
-budb_errs.c budb_client.h: budb_errs.et budb_client.p.h
+budb_client.h: budb_errs.c
+
+budb_errs.c: budb_errs.et budb_client.p.h
 	$(RM) -f budb_client.h budb_errs.c; ${COMPILE_ET} -p ${srcdir} budb_errs -h budb_client
 
 budb_errs.h: budb_errs.et
@@ -67,10 +88,10 @@ db_text.o:  db_text.c budb_errs.h ${INCLS}
 db_hash.o: db_hash.c budb_errs.h ${INCLS}
 ol_verify.o:	ol_verify.c budb_errs.h ${INCLS}
 procs.o: procs.c budb_errs.h globals.h ${INCLS}
-struct_ops.o: budb_errs.h
+struct_ops.o: budb_errs.h ${TOP_INCDIR}/afs/budb_client.h
 server.o: server.c budb_errs.h ${INCLS} AFS_component_version_number.c
 
-budb_server: $(SERVER_OBJS) ${LIBS}
+budb_server: $(SERVER_OBJS) ${LIBS} ${TOP_INCDIR}/afs/budb_client.h
 	${CC} ${LDFLAGS} -o budb_server $(SERVER_OBJS) ${LIBS} ${XLIBS}
 
 budb.cs.c: budb.rg
@@ -97,31 +118,25 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 #
 # Install targets
 #
-install: \
-	${DESTDIR}${libdir}/afs/libbudb.a \
-	${DESTDIR}${includedir}/afs/budb.h \
-	${DESTDIR}${includedir}/afs/budb_errs.h \
-	${DESTDIR}${includedir}/afs/budb_client.h \
-	${DESTDIR}${afssrvlibexecdir}/buserver
+install: libbudb.a budb.h budb_errs.h budb_client.h budb_server
+	${INSTALL} -d ${DESTDIR}${libdir}/afs
+	${INSTALL} -d ${DESTDIR}${includedir}/afs
+	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
+	${INSTALL_DATA} libbudb.a ${DESTDIR}${libdir}/afs/libbudb.a
+	${INSTALL_DATA} budb.h ${DESTDIR}${includedir}/afs/budb.h
+	${INSTALL_DATA} budb_errs.h ${DESTDIR}${includedir}/afs/budb_errs.h
+	${INSTALL_DATA} budb_client.h ${DESTDIR}${includedir}/afs/budb_client.h
+	${INSTALL_PROGRAM} budb_server ${DESTDIR}${afssrvlibexecdir}/buserver
 
-${DEST}/lib/afs/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${DEST}/include/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
-${DEST}/root.server/usr/afs/bin/buserver: budb_server
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install buserver for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} -f $? $@ ; \
-	fi
+dest: libbudb.a budb.h budb_errs.h budb_client.h budb_server
+	${INSTALL} -d ${DEST}/lib/afs
+	${INSTALL} -d ${DEST}/include/afs
+	${INSTALL} -d ${DEST}/root.server/usr/afs/bin
+	${INSTALL_DATA} libbudb.a ${DEST}/lib/afs/libbudb.a
+	${INSTALL_DATA} budb.h ${DEST}/include/afs/budb.h
+	${INSTALL_DATA} budb_errs.h ${DEST}/include/afs/budb_errs.h
+	${INSTALL_DATA} budb_client.h ${DEST}/include/afs/budb_client.h
+	${INSTALL_PROGRAM} budb_server ${DEST}/root.server/usr/afs/bin/buserver
 
 #
 # Misc targets
@@ -131,41 +146,3 @@ clean:
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libbudb.a: libbudb.a
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb.h: budb.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
-	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/budb_client.h: budb_client.h
-	${INSTALL} $? $@
-
-${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
-	@if test "@ENABLE_PTHREADED_UBIK@" = "yes"; then \
-	  echo "Don't install buserver for ${SYS_NAME}" ; \
-	else \
-	  ${INSTALL} -f $? $@ ; \
-	fi
-
-dest: \
-	${DEST}/lib/afs/libbudb.a \
-	${DEST}/include/afs/budb.h \
-	${DEST}/include/afs/budb_errs.h \
-	${DEST}/include/afs/budb_client.h \
-	${DEST}/root.server/usr/afs/bin/buserver
-

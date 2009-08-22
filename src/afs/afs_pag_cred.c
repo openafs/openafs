@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pag_cred.c,v 1.1.2.2 2006/07/31 21:27:38 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -363,7 +361,7 @@ int
 SPAGCB_GetSysName(struct rx_call *a_call, afs_int32 a_uid,
 		  SysNameList *a_sysnames)
 {
-    int i;
+    int i = 0;
 
     RX_AFS_GLOCK();
 

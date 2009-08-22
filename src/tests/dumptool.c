@@ -1,5 +1,5 @@
 /*
- * $Id: dumptool.c,v 1.5 2006/04/04 20:51:18 shadow Exp $
+ * $Id$
  *
  * dumptool - A tool to manage MR-AFS dump files
  *

@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_nfsclnt.c,v 1.13.6.7 2007/10/16 21:56:45 shadow Exp $");
 
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -46,10 +44,10 @@ struct nfsclientpag *afs_nfspags[NNFSCLIENTS];
 afs_lock_t afs_xnfspag /*, afs_xnfsreq */ ;
 extern struct afs_exporter *afs_nfsexporter;
 
-/* Creates an nfsclientpag structure for the (uid, host) pair if one doesn't exist. RefCount is incremented and it's time stamped. */
+/* Creates an nfsclientpag structure for the (uid, host) pair if one doesn't 
+ * exist. RefCount is incremented and it's time stamped. */
 static struct nfsclientpag *
-afs_GetNfsClientPag(uid, host)
-     register afs_int32 uid, host;
+afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
 {
     register struct nfsclientpag *np;
     register afs_int32 i, now;
@@ -107,10 +105,11 @@ afs_PutNfsClientPag(np)
 }
 
 
-/* Return the nfsclientpag structure associated with the (uid, host) or {pag, host} pair, if pag is nonzero. RefCount is incremented and it's time stamped. */
+/* Return the nfsclientpag structure associated with the (uid, host) or 
+ * {pag, host} pair, if pag is nonzero. RefCount is incremented and it's 
+ * time stamped. */
 static struct nfsclientpag *
-afs_FindNfsClientPag(uid, host, pag)
-     register afs_int32 uid, host, pag;
+afs_FindNfsClientPag(afs_int32 uid, afs_int32 host, afs_int32 pag)
 {
     register struct nfsclientpag *np;
     register afs_int32 i;
@@ -191,7 +190,10 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 
     afs_nfsexporter->exp_stats.calls++;
     if (!(afs_nfsexporter->exp_states & EXP_EXPORTED)) {
-	/* No afs requests accepted as long as EXPORTED flag is turned 'off'. Set/Reset via a pioctl call (fs exportafs). Note that this is on top of the /etc/exports nfs requirement (i.e. /afs must be exported to all or whomever there too!)
+	/* No afs requests accepted as long as EXPORTED flag is turned 'off'. 
+	 * Set/Reset via a pioctl call (fs exportafs). Note that this is on 
+	 * top of the /etc/exports nfs requirement (i.e. /afs must be 
+	 * exported to all or whomever there too!)
 	 */
 	afs_nfsexporter->exp_stats.rejectedcalls++;
 	return EINVAL;
@@ -239,7 +241,11 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     if ((afs_nfsexporter->exp_states & EXP_CLIPAGS))
        	pag = NOPAG;
     if (!np) {
-	/* Even if there is a "good" pag coming in we don't accept it if no nfsclientpag struct exists for the user since that would mean that the translator rebooted and therefore we ignore all older pag values */
+	/* Even if there is a "good" pag coming in we don't accept it if no 
+	 * nfsclientpag struct exists for the user since that would mean 
+	 * that the translator rebooted and therefore we ignore all older 
+	 * pag values 
+	 */
 #ifdef	AFS_OSF_ENV
 	if (code = setpag(u.u_procp, cred, -1, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
 #else
@@ -548,10 +554,10 @@ afs_nfsclient_GC(exporter, pag)
 
 
 int
-afs_nfsclient_stats(export)
-     register struct afs_exporter *export;
+afs_nfsclient_stats(register struct afs_exporter *export)
 {
-    /* Nothing much to do here yet since most important stats are collected directly in the afs_exporter structure itself */
+    /* Nothing much to do here yet since most important stats are collected 
+     * directly in the afs_exporter structure itself */
     AFS_STATCNT(afs_nfsclient_stats);
     return 0;
 }

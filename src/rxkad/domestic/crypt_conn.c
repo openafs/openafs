@@ -18,14 +18,12 @@
 #include <afs/param.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/crypt_conn.c,v 1.15.2.1 2007/10/30 15:16:46 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/stds.h"
 #ifndef UKERNEL
 #include "h/types.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
 #include "h/systm.h"
 #endif
 #include "rx/rx.h"
@@ -73,7 +71,7 @@ rxkad_DecryptPacket(const struct rx_connection *conn,
 	if (!data || !tlen)
 	    break;
 	tlen = MIN(len, tlen);
-	fc_cbc_encrypt(data, data, tlen, schedule, xor, DECRYPT);
+	fc_cbc_encrypt(data, data, tlen, *schedule, xor, DECRYPT);
 	len -= tlen;
     }
     /* Do this if packet checksums are ever enabled (below), but
@@ -114,7 +112,7 @@ rxkad_EncryptPacket(const struct rx_connection * conn,
 	if (!data || !tlen)
 	    break;
 	tlen = MIN(len, tlen);
-	fc_cbc_encrypt(data, data, tlen, schedule, xor, ENCRYPT);
+	fc_cbc_encrypt(data, data, tlen, *schedule, xor, ENCRYPT);
 	len -= tlen;
     }
     return 0;

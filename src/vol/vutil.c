@@ -17,8 +17,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.16.8.2 2008/04/04 18:17:35 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -57,6 +55,8 @@ RCSID
 #include "viceinode.h"
 
 #include "volinodes.h"
+#include "vol_prototypes.h"
+
 #ifdef	AFS_AIX_ENV
 #include <sys/lockf.h>
 #endif
@@ -73,12 +73,6 @@ RCSID
 #endif /* !O_LARGEFILE */
 
 /*@printflike@*/ extern void Log(const char *format, ...);
-
-void AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext);
-void AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext);
-void ClearVolumeStats(register VolumeDiskData * vol);
-void ClearVolumeStats_r(register VolumeDiskData * vol);
-
 
 #define nFILES	(sizeof (stuff)/sizeof(struct stuff))
 
@@ -171,7 +165,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     vol.stamp.magic = VOLUMEINFOMAGIC;
     vol.stamp.version = VOLUMEINFOVERSION;
     vol.destroyMe = DESTROY_ME;
-    (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, vol.id);
+    (void)afs_snprintf(headerName, sizeof headerName, VFORMAT, afs_printable_uint32_lu(vol.id));
     (void)afs_snprintf(volumePath, sizeof volumePath, "%s/%s",
 		       VPartitionPath(partition), headerName);
     fd = afs_open(volumePath, O_CREAT | O_EXCL | O_WRONLY, 0600);

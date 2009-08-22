@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_syscall.c,v 1.1.2.6 2008/04/21 18:59:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -223,7 +221,8 @@ syscall(syscall, p1, p2, p3, p4, p5, p6)
 /*
  * lsetpag -	interface to afs_setpag().
  */
-lsetpag()
+int
+lsetpag(void)
 {
 
     AFS_STATCNT(lsetpag);
@@ -233,8 +232,8 @@ lsetpag()
 /*
  * lpioctl -	interface to pioctl()
  */
-lpioctl(path, cmd, cmarg, follow)
-     char *path, *cmarg;
+int
+lpioctl(char *path, int cmd, void *cmarg, int follow)
 {
 
     AFS_STATCNT(lpioctl);
@@ -490,6 +489,7 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
     /* eparm is also used by AFSCALL_CALL in afsd.c */
 #else
 #if defined(UKERNEL)
+int
 Afs_syscall()
 {
     register struct a {
@@ -630,8 +630,8 @@ Afs_syscall()
 			       p->p_cred->pc_ucred);
 #else
 	code =
-	    afs_syscall_pioctl(uap->parm1, uap->parm2, uap->parm3,
-			       uap->parm4);
+	    afs_syscall_pioctl((char *)uap->parm1, (unsigned int)uap->parm2, (caddr_t)uap->parm3,
+			       (int) uap->parm4);
 #endif
 	AFS_GUNLOCK();
     } else if (uap->syscall == AFSCALL_ICREATE) {

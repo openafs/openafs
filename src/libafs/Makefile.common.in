@@ -59,7 +59,7 @@ dest:		all $(DESTDIRS)
 
 all:	setup $(COMPDIRS)
 
-single_compdir single_instdir single_destdir:
+single_compdir single_instdir single_destdir: setup
 	cd $(KOBJ) ; \
 	echo $(MAKE) DESTDIR=${DESTDIR} $@_libafs; \
 	$(MAKE) DESTDIR=${DESTDIR}  $@_libafs
@@ -77,6 +77,7 @@ AFSAOBJS = \
 	afs_analyze.o \
 	afs_axscache.o  \
 	afs_buffer.o	\
+	afs_bypasscache.o \
 	afs_callback.o	\
 	afs_cbqueue.o    \
 	afs_cell.o \
@@ -94,6 +95,7 @@ AFSAOBJS = \
 	afs_mariner.o \
 	afs_md5.o \
 	afs_memcache.o	\
+	afs_fetchstore.o	\
 	afs_osi.o		\
 	afs_osidnlc.o	\
 	afs_osi_alloc.o	\
@@ -242,6 +244,8 @@ afs_axscache.o: $(TOP_SRC_AFS)/afs_axscache.c
 	$(CRULE_OPT)
 afs_buffer.o: $(TOP_SRC_AFS)/afs_buffer.c
 	$(CRULE_OPT)
+afs_bypasscache.o: $(TOP_SRC_AFS)/afs_bypasscache.c
+	$(CRULE_OPT)
 afs_cell.o: $(TOP_SRC_AFS)/afs_cell.c
 	$(CRULE_OPT)
 afs_conn.o: $(TOP_SRC_AFS)/afs_conn.c
@@ -351,6 +355,8 @@ afs_memcache.o: $(TOP_SRC_AFS)/afs_memcache.c
 afs_pag_call.o: $(TOP_SRC_AFS)/afs_pag_call.c
 	$(CRULE_NOOPT)
 afs_pag_cred.o: $(TOP_SRC_AFS)/afs_pag_cred.c
+	$(CRULE_NOOPT)
+afs_fetchstore.o: $(TOP_SRC_AFS)/afs_fetchstore.c
 	$(CRULE_NOOPT)
 afs_stat.o: $(TOP_SRC_AFS)/afs_stat.c
 	$(CRULE_NOOPT)

@@ -1,5 +1,5 @@
 /* 
- * $Id: linked_list.c,v 1.2.4.1 2008/04/01 17:44:41 shadow Exp $
+ * $Id$
  * 
  * This file contains general linked list routines.
  * 
@@ -8,8 +8,6 @@
  */
 
 #include <afsconfig.h>
-RCSID
-    ("$Header: /cvs/openafs/src/aklog/linked_list.c,v 1.2.4.1 2008/04/01 17:44:41 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>

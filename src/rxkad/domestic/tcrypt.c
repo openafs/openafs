@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/tcrypt.c,v 1.6 2003/07/15 23:16:44 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

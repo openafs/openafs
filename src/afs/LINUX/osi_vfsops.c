@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.42.4.22 2008/07/01 03:35:23 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -146,6 +144,9 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+#if defined(HAVE_BDI_INIT)
+    bdi_init(&afs_backing_dev_info);
+#endif
 #if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     sb->s_export_op = &afs_export_ops;
 #endif
@@ -195,7 +196,7 @@ afs_root(struct super_block *afsp)
     register struct vcache *tvp = 0;
 
     AFS_STATCNT(afs_root);
-    if (afs_globalVp && (afs_globalVp->states & CStatd)) {
+    if (afs_globalVp && (afs_globalVp->f.states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	cred_t *credp = crref();
@@ -400,6 +401,9 @@ afs_put_super(struct super_block *sbp)
 #endif
 
     osi_linux_verify_alloced_memory();
+#if defined(HAVE_BDI_INIT)
+    bdi_destroy(&afs_backing_dev_info);
+#endif
     AFS_GUNLOCK();
 
     sbp->s_dev = 0;
@@ -476,7 +480,6 @@ struct super_operations afs_sops = {
 #endif
 };
 
-
 /************** Support routines ************************/
 
 /* vattr_setattr
@@ -539,7 +542,7 @@ vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_mode = vp->va_mode;
     ip->i_uid = vp->va_uid;
     ip->i_gid = vp->va_gid;
-    ip->i_size = vp->va_size;
+    i_size_write(ip, vp->va_size);
 #if defined(AFS_LINUX26_ENV)
     ip->i_atime.tv_sec = vp->va_atime.tv_sec;
     ip->i_atime.tv_nsec = 0;

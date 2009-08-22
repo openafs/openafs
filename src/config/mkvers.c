@@ -58,7 +58,8 @@ int nStamps = 0;
 enum {
     CF_DEFAULT,
     CF_VERINFO,
-    CF_TEXT
+    CF_TEXT,
+    CF_XML
 } cfgFormat = CF_DEFAULT;
 
 char *programName;
@@ -69,7 +70,7 @@ void
 Usage(void)
 {
     printf
-	("Usage: %s [-d directory] [-o output file name] [-c component] [-v | -t]\n",
+	("Usage: %s [-d directory] [-o output file name] [-c component] [-v | -t | -x]\n",
 	 programName);
     printf("%s creates the AFS_component_version_number.c file.\n",
 	   programName);
@@ -81,6 +82,7 @@ Usage(void)
 	("-c component - if not \"afs\" prefix for cml_version_number variable.\n");
     printf("-v generate NT versioninfo style declarations.\n");
     printf("-t generate text file style information.\n");
+    printf("-x generate XML revision information.\n");
     exit(1);
 }
 
@@ -148,6 +150,13 @@ main(int argc, char **argv)
 		printf("Specify only one alternative output format\n");
 		Usage();
 	    }
+	} else if (!strcmp("-x", argv[i])) {
+	    if (cfgFormat == CF_DEFAULT || cfgFormat == CF_XML) {
+		cfgFormat = CF_XML;
+	    } else {
+		printf("Specify only one alternative output format\n");
+		Usage();
+	    }
 	} else {
 	    printf("%s: Unknown argument.\n", argv[i]);
 	    Usage();
@@ -162,6 +171,8 @@ main(int argc, char **argv)
 	    strcat(outputFileBuf, ".h");
 	} else if (cfgFormat == CF_TEXT) {
 	    strcat(outputFileBuf, ".txt");
+	} else if (cfgFormat == CF_XML) {
+	    strcat(outputFileBuf, ".xml");
 	} else {
 	    strcat(outputFileBuf, ".c");
 	}
@@ -172,7 +183,7 @@ main(int argc, char **argv)
 
     if ((code = stat(outputFile, &sbuf)) < 0) {
 	reBuild = 1;
-	versTime = (time_t) 0;	/* inidicates no output file. */
+	versTime = (time_t) 0;	/* indicates no output file. */
     } else {
 	versTime = sbuf.st_mtime;
     }
@@ -289,6 +300,14 @@ PrintStamps(void)
 	    } else if (cfgFormat == CF_TEXT) {
 		fprintf(fpVers, "Base configuration %s\n",
 			stateDeltas[i].name);
+	    } else if (cfgFormat == CF_XML) {
+                fprintf(fpVers, 
+                        "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+                        "<revision>\n"
+                        "<revnumber>\n"
+                        "Base configuration %s\n"
+                        "</revnumber>\n",
+			stateDeltas[i].name);
 	    } else {
 		fprintf(fpVers, "%sBase configuration %s", cml_string,
 			stateDeltas[i].name);
@@ -307,6 +326,13 @@ PrintStamps(void)
 	    if (cfgFormat == CF_TEXT) {
 		fprintf(fpVers, "%c%s\n", stateDeltas[i].type,
 			stateDeltas[i].name);
+	    } else if (cfgFormat == CF_XML) {
+		fprintf(fpVers, 
+                        "<revremark>\n"
+                        ";%c%s"
+                         "</revremark>\n",
+                        stateDeltas[i].type,
+			stateDeltas[i].name);
 	    } else {
 		fprintf(fpVers, ";%c%s", stateDeltas[i].type,
 			stateDeltas[i].name);
@@ -322,6 +348,13 @@ PrintStamps(void)
 	    }
 	    if (cfgFormat == CF_TEXT) {
 		fprintf(fpVers, "%c%s\n", stateDeltas[i].type,
+			stateDeltas[i].name);
+	    } else if (cfgFormat == CF_XML) {
+		fprintf(fpVers, 
+                        "<revremark>\n"
+                        ";%c%s"
+                         "</revremark>\n",
+                        stateDeltas[i].type,
 			stateDeltas[i].name);
 	    } else {
 		fprintf(fpVers, ";%c%s", stateDeltas[i].type,
@@ -345,5 +378,7 @@ PrintStamps(void)
 	if (s)
 	    *s = '\0';
 	fprintf(fpVers, "%s%s\";\n", AFS_STRING, c ? c : "Unknown");
+    } else if (cfgFormat == CF_XML) {
+        fprintf(fpVers, "</revision>\n");
     }
 }

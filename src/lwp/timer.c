@@ -21,8 +21,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/lwp/timer.c,v 1.10 2005/06/18 23:20:45 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -212,11 +210,7 @@ TM_Rescan(struct TM_Elem *tlist)	/* head pointer of timer list */
     struct timeval time;
     register int expired;
 
-#ifndef AFS_DJGPP_ENV
     FT_AGetTimeOfDay(&time, 0);
-#else
-    FT_GetTimeOfDay(&time, 0);	/* we need a real time value */
-#endif
     expired = 0;
     FOR_ALL_ELTS(e, tlist, {
 		 if (!blocking(e)) {

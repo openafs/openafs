@@ -22,8 +22,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/lwp/threadname.c,v 1.10.14.1 2007/10/30 15:16:42 shadow Exp $");
 
 #include <string.h>
 

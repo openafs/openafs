@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/afsweb/apache_afs_cache.c,v 1.6 2003/07/15 23:14:33 shadow Exp $");
 
 #include "apache_afs_cache.h"
 

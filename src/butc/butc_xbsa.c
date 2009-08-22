@@ -12,8 +12,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/butc/butc_xbsa.c,v 1.8.14.2 2008/07/11 09:50:54 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/stds.h>

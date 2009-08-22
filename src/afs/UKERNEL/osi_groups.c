@@ -14,16 +14,14 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/osi_groups.c,v 1.7.14.1 2007/11/26 21:08:40 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
-
+#include "afs/afs_prototypes.h"
 
 int
-afs_xsetgroups()
+afs_xsetgroups(void)
 {
     usr_assert(0);
     return 0;
@@ -51,8 +49,6 @@ static int
 afs_setgroups(struct AFS_UCRED **cred, int ngroups, gid_t * gidset,
 	      int change_parent)
 {
-    int ngrps;
-    int i;
     gid_t *gp;
 
     AFS_STATCNT(afs_setgroups);

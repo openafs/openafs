@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sgistuff/ta-rauth.c,v 1.1 2005/08/16 17:58:27 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/param.h>

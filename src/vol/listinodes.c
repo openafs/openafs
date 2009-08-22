@@ -22,8 +22,6 @@
 
 #include <string.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/vol/listinodes.c,v 1.16.4.6 2008/03/05 21:53:30 shadow Exp $");
 
 #ifndef AFS_NAMEI_ENV
 #if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)
@@ -36,7 +34,7 @@ RCSID
  */
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       afs_uint32 (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     Log("ListViceInodes not implemented for this platform!\n");
@@ -193,7 +191,7 @@ struct dinode *ginode();
 
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     FILE *inodeFile = NULL;
@@ -469,207 +467,6 @@ ginode(inum)
 /* libefs.h includes <assert.h>, which we don't want */
 #define	__ASSERT_H__
 
-#ifdef AFS_SGI_EFS_IOPS_ENV
-#include "sgiefs/libefs.h"
-extern int Log();
-
-/* afs_efs_figet() replaces the SGI library routine because we are malloc'ing
- * memory for all the inodes on all the cylinder groups without releasing
- * it when we're done. Using afs_efs_figet ensures more efficient use of
- * memory.
- */
-struct efs_dinode *
-afs_efs_figet(EFS_MOUNT * mp, struct efs_dinode *dinodeBuf, int *last_cgno,
-	      ino_t inum)
-{
-    int cgno = EFS_ITOCG(mp->m_fs, inum);
-
-
-    if (cgno != *last_cgno) {
-	if (efs_readb
-	    (mp->m_fd, (char *)dinodeBuf, EFS_CGIMIN(mp->m_fs, cgno),
-	     mp->m_fs->fs_cgisize) != mp->m_fs->fs_cgisize) {
-	    Log("Unable to read inodes for cylinder group %d.\n", cgno);
-	    return NULL;
-	}
-	*last_cgno = cgno;
-    }
-
-    return dinodeBuf + (inum % (mp->m_fs->fs_cgisize * EFS_INOPBB));
-}
-
-
-int
-efs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-		   int (*judgeInode) (), int judgeParam, int *forcep,
-		   int forceR, char *wpath, void *rock)
-{
-    FILE *inodeFile = NULL;
-    char dev[50], rdev[51];
-    struct stat status;
-    struct efs_dinode *p;
-    struct ViceInodeInfo info;
-    int ninodes = 0, err = 0;
-    struct efs_dinode *dinodeBuf = NULL;
-    int last_cgno;
-    EFS_MOUNT *mp;
-    ino_t imax, inum;		/* total number of I-nodes in file system */
-
-    *forcep = 0;
-
-    partition = mountedOn;
-    sprintf(dev, "/dev/dsk/%s", devname);
-    sprintf(rdev, "/dev/rdsk/%s", devname);
-
-
-    /*
-     * open raw device
-     */
-    efs_init(Log);
-    if ((stat(rdev, &status) == -1)
-	|| ((mp = efs_mount(rdev, O_RDONLY)) == NULL)) {
-	sprintf(rdev, "/dev/r%s", devname);
-	mp = efs_mount(rdev, O_RDONLY);
-    }
-    if (mp == NULL) {
-	Log("Unable to open `%s' inode for reading\n", rdev);
-	return -1;
-    }
-
-    if (resultFile) {
-	inodeFile = fopen(resultFile, "w");
-	if (inodeFile == NULL) {
-	    Log("Unable to create inode description file %s\n", resultFile);
-	    goto out;
-	}
-    }
-
-    /* Allocate space for one cylinder group's worth of inodes. */
-    dinodeBuf = (struct efs_dinode *)malloc(mp->m_fs->fs_cgisize * BBSIZE);
-    if (!dinodeBuf) {
-	Log("Unable to malloc %lu bytes for inode buffer.\n",
-	    mp->m_fs->fs_cgisize * BBSIZE);
-	goto out;
-    }
-
-    /*
-     * calculate the maximum number of inodes possible
-     */
-    imax = mp->m_fs->fs_ncg * mp->m_fs->fs_ipcg;
-
-    last_cgno = -1;
-    for (inum = 2; inum < imax; ++inum) {
-	p = afs_efs_figet(mp, dinodeBuf, &last_cgno, inum);
-	if (!p) {
-	    Log("Unable to read all inodes from partition.\n");
-	    goto out;
-	}
-	if (!IS_DVICEMAGIC(p) || !((p->di_mode & IFMT) == IFREG)) {
-	    continue;
-	}
-#if defined(AFS_SGI_EXMAG)
-	/* volume ID */
-	info.u.param[0] =
-	    dmag(p, 0) << 24 | dmag(p, 1) << 16 | dmag(p, 2) << 8 | dmag(p,
-									 3) <<
-	    0;
-	if ((p)->di_version == EFS_IVER_AFSSPEC) {
-	    info.u.param[1] = INODESPECIAL;
-	    /* type */
-	    info.u.param[2] = dmag(p, 8);
-	    /* parentId */
-	    info.u.param[3] =
-		dmag(p, 4) << 24 | dmag(p, 5) << 16 | dmag(p,
-							   6) << 8 | dmag(p,
-									  7)
-		<< 0;
-	} else {
-	    /* vnode number */
-	    info.u.param[1] =
-		dmag(p, 4) << 16 | dmag(p, 5) << 8 | dmag(p, 6) << 0;
-	    /* disk uniqifier */
-	    info.u.param[2] =
-		dmag(p, 7) << 16 | dmag(p, 8) << 8 | dmag(p, 9) << 0;
-	    /* data version */
-	    info.u.param[3] =
-		dmag(p, 10) << 16 | dmag(p, 11) << 8 | (p)->di_spare;
-	}
-#else
-	BOMB ! !
-#endif
-	    info.inodeNumber = inum;
-	info.byteCount = p->di_size;
-	info.linkCount = p->di_nlink;
-#ifdef notdef
-	Log("Ino=%d, bytes=%d, linkCnt=%d, [%x,%x,%x,%x]\n", inum, p->di_size,
-	    p->di_nlink, info.u.param[0], info.u.param[1], info.u.param[2],
-	    info.u.param[3]);
-#endif
-	if (judgeInode && (*judgeInode) (&info, judgeParam, rock) == 0)
-	    continue;
-
-	if (inodeFile) {
-	    if (fwrite(&info, sizeof info, 1, inodeFile) != 1) {
-		Log("Error writing inode file for partition %s\n", partition);
-		goto out;
-	    }
-	}
-	++ninodes;
-    }
-
-    if (inodeFile) {
-	if (fflush(inodeFile) == EOF) {
-	    Log("Unable to successfully flush inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-	if (fsync(fileno(inodeFile)) == -1) {
-	    Log("Unable to successfully fsync inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-	if (fclose(inodeFile) == EOF) {
-	    Log("Unable to successfully close inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-
-	/*
-	 * Paranoia:  check that the file is really the right size
-	 */
-	if (stat(resultFile, &status) == -1) {
-	    Log("Unable to successfully stat inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
-	if (status.st_size != ninodes * sizeof(struct ViceInodeInfo)) {
-	    Log("Wrong size (%d instead of %d) in inode file for %s\n",
-		status.st_size, ninodes * sizeof(struct ViceInodeInfo),
-		partition);
-	    err = -2;
-	    goto out1;
-	}
-    }
-    efs_umount(mp);
-    if (dinodeBuf) {
-	free(dinodeBuf);
-    }
-    return 0;
-
-  out:
-    err = -1;
-  out1:
-    if (dinodeBuf) {
-	free(dinodeBuf);
-    }
-    efs_umount(mp);
-    if (inodeFile)
-	fclose(inodeFile);
-
-    return err;
-}
-#endif /* AFS_SGI_EFS_IOPS_ENV */
-
 #ifdef AFS_SGI_XFS_IOPS_ENV
 #include <dirent.h>
 #include <afs/xfsattrs.h>
@@ -861,7 +658,7 @@ xfs_RenameFiles(char *dir, xfs_Rename_t * renames, int n_renames)
 
 int
 xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-		   int (*judgeInode) (), int judgeParam, int *forcep,
+		   int (*judgeInode) (), afs_uint32 judgeParam, int *forcep,
 		   int forceR, char *wpath, void *rock)
 {
     FILE *inodeFile = NULL;
@@ -1006,7 +803,9 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	    }
 
 	    if (inodeFile) {
-		if (fwrite(&info.ili_info, sizeof(vice_inode_info_t), 1, inodeFile) != 1) {
+		if (fwrite
+		    (&info.ili_info, sizeof(vice_inode_info_t), 1, inodeFile)
+		    != 1) {
 		    Log("Error writing inode file for partition %s\n", mountedOn);
 		    goto err1_exit;
 		}
@@ -1028,7 +827,6 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     closedir(top_dirp);
     if (renames)
 	free((char *)renames);
-
     if (inodeFile) {
 	if (fflush(inodeFile) == EOF) {
 	    ("Unable to successfully flush inode file for %s\n", mountedOn);
@@ -1082,7 +880,7 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     FILE *inodeFile = NULL;
@@ -1094,9 +892,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     int ninodes = 0, err = 0;
     struct efs_dinode *dinodeBuf = NULL;
     int last_cgno;
-#ifdef AFS_SGI_EFS_IOPS_ENV
-    EFS_MOUNT *mp;
-#endif
     ino_t imax, inum;		/* total number of I-nodes in file system */
 
     *forcep = 0;
@@ -1114,12 +909,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 #ifdef AFS_SGI_XFS_IOPS_ENV
     if (!strcmp("xfs", root_inode.st_fstype)) {
 	return xfs_ListViceInodes(devname, mountedOn, resultFile, judgeInode,
-				  judgeParam, forcep, forceR, wpath, rock);
-    } else
-#endif
-#ifdef AFS_SGI_EFS_IOPS_ENV
-    if (root_inode.st_ino == EFS_ROOTINO) {
-	return efs_ListViceInodes(devname, mountedOn, resultFile, judgeInode,
 				  judgeParam, forcep, forceR, wpath, rock);
     } else
 #endif
@@ -1157,7 +946,7 @@ BUFAREA sblk;
 extern char *afs_rawname();
 int
 ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-	       int (*judgeInode) (), int judgeParam, int *forcep, int forceR,
+	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
     union {
@@ -1644,7 +1433,7 @@ getDevName(char *pbuffer, char *wpath)
 
 #ifdef FSSYNC_BUILD_CLIENT
 int
-inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
+inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 {
     char dir_name[512], oldpath[512], newpath[512];
     char volname[20];
@@ -1665,7 +1454,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
 
     memset(&specinos, 0, sizeof(specinos));
 	   
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, volumeId);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
     fd = open(oldpath, O_RDONLY);
     if (fd < 0) {
@@ -1768,7 +1557,7 @@ inode_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
     }
 #endif
 
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, h.id);
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(h.id));
     (void)afs_snprintf(newpath, sizeof newpath, "%s/%s", pname, headername);
     fd = open(newpath, O_CREAT | O_EXCL | O_RDWR, 0644);
     if (fd < 0) {

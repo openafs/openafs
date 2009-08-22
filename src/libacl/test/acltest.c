@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libacl/test/acltest.c,v 1.5 2003/07/15 23:15:19 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

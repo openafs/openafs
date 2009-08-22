@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: md4.h,v 1.2 2004/08/19 01:07:49 kolya Exp $ */
+/* $Id$ */
 
 #include <stdlib.h>
 #ifdef HAVE_SYS_TYPES_H

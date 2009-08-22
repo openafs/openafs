@@ -9,9 +9,8 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ubik/utst_client.c,v 1.7.14.2 2008/04/02 19:51:56 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -31,16 +30,12 @@ RCSID
 #include "ubik.h"
 #include "utst_int.h"
 
-extern int SAMPLE_Inc(), SAMPLE_Test(), SAMPLE_Get(), SAMPLE_Trun(),
-SAMPLE_QGet();
-
 /* main program */
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     struct ubik_client *cstruct = 0;
@@ -87,7 +82,7 @@ main(argc, argv)
     /* check code from init */
     if (code) {
 	printf("ubik client init failed with code %d\n", code);
-	return;
+	exit(1);
     }
 
     /* parse command line for our own operations */
@@ -95,19 +90,19 @@ main(argc, argv)
 	if (!strcmp(argv[i], "-inc")) {
 	    /* use ubik_Call to do the work, finding an up server and handling
 	     * the job of finding a sync site, if need be */
-	    code = ubik_Call(SAMPLE_Inc, cstruct, 0);
+	    code = ubik_SAMPLE_Inc(cstruct, 0);
 	    printf("return code is %d\n", code);
 	} else if (!strcmp(argv[i], "-try")) {
-	    code = ubik_Call(SAMPLE_Test, cstruct, 0);
+	    code = ubik_SAMPLE_Test(cstruct, 0);
 	    printf("return code is %d\n", code);
 	} else if (!strcmp(argv[i], "-qget")) {
-	    code = ubik_Call(SAMPLE_QGet, cstruct, 0, &temp);
+	    code = ubik_SAMPLE_QGet(cstruct, 0, &temp);
 	    printf("got quick value %d (code %d)\n", temp, code);
 	} else if (!strcmp(argv[i], "-get")) {
-	    code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+	    code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 	    printf("got value %d (code %d)\n", temp, code);
 	} else if (!strcmp(argv[i], "-trunc")) {
-	    code = ubik_Call(SAMPLE_Trun, cstruct, 0);
+	    code = ubik_SAMPLE_Trun(cstruct, 0);
 	    printf("return code is %d\n", code);
 	} else if (!strcmp(argv[i], "-minc")) {
 	    afs_int32 temp;
@@ -118,38 +113,44 @@ main(argc, argv)
 
 	    while (1) {
 		temp = 0;
-		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+		code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 		if (code != 0) {
-		    printf("SAMPLE_Inc #1 failed with code %ld\n", code);
+		    printf("SAMPLE_Get #1 failed with code %ld\n",
+			   afs_printable_int32_ld(code));
 		} else {
-		    printf("SAMPLE_Get #1 succeeded, got value %d\n", temp);
+		    printf("SAMPLE_Get #1 succeeded, got value %ld\n",
+			   afs_printable_int32_ld(temp));
 		}
 
 		temp = 0;
-		code = ubik_Call(SAMPLE_Inc, cstruct, 0);
+		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0) {
-		    printf("SAMPLE_Inc #1 failed with code %ld\n", code);
+		    printf("SAMPLE_Inc #1 failed with code %ld\n", 
+			   afs_printable_int32_ld(code));
 		} else {
 		    printf("SAMPLE_Inc #1 succeeded, incremented integer\n");
 		}
 		temp = 0;
-		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+		code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 		if (code != 0) {
-		    printf("SAMPLE_Get #2 failed with code %ld\n", code);
+		    printf("SAMPLE_Get #2 failed with code %ld\n",
+			   afs_printable_int32_ld(code));
 		} else {
-		    printf("SAMPLE_Get #2 succeeded, got value %d\n", temp);
+		    printf("SAMPLE_Get #2 succeeded, got value %ld\n",
+			   afs_printable_int32_ld(temp));
 		}
 
 		temp = 0;
-		code = ubik_Call(SAMPLE_Inc, cstruct, 0);
+		code = ubik_SAMPLE_Inc(cstruct, 0);
 		if (code != 0)
-		    printf("SAMPLE_Inc #2 failed with code %ld\n", code);
+		    printf("SAMPLE_Inc #2 failed with code %ld\n", 
+			   afs_printable_int32_ld(code));
 		else
 		    printf("SAMPLE_Inc #2 succeeded, incremented integer\n");
 
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 		select(0, 0, 0, 0, &tv);
 #else
 		IOMGR_Select(0, 0, 0, 0, &tv);
@@ -162,21 +163,21 @@ main(argc, argv)
 	    tv.tv_sec = 1;
 	    tv.tv_usec = 0;
 	    while (1) {
-		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+		code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 		printf("got value %d (code %d)\n", temp, code);
 
-		code = ubik_Call(SAMPLE_Inc, cstruct, 0);
+		code = ubik_SAMPLE_Inc(cstruct, 0);
 		printf("update return code is %d\n", code);
 
-		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+		code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 		printf("got value %d (code %d)\n", temp, code);
 
-		code = ubik_Call(SAMPLE_Get, cstruct, 0, &temp);
+		code = ubik_SAMPLE_Get(cstruct, 0, &temp);
 		printf("got value %d (code %d)\n", temp, code);
 
 		tv.tv_sec = 1;
 		tv.tv_usec = 0;
-#if defined(AFS_PTHREAD_ENV) && defined(UBIK_PTHREAD_ENV)
+#ifdef AFS_PTHREAD_ENV
 		select(0, 0, 0, 0, &tv);
 #else
 		IOMGR_Select(0, 0, 0, 0, &tv);
@@ -184,4 +185,5 @@ main(argc, argv)
 	    }
 	}
     }
+    return 0;
 }

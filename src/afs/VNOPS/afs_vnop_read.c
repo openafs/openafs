@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_read.c,v 1.34.2.4 2008/05/23 14:25:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -102,14 +100,14 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
     afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_INT32,
 	       totalLength, ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     error = 0;
     transferLength = 0;
     if (!noLock)
 	ObtainReadLock(&avc->lock);
 #if	defined(AFS_TEXT_ENV) && !defined(AFS_VM_RDWR_ENV)
     if (avc->flushDV.high == AFS_MAXDV && avc->flushDV.low == AFS_MAXDV) {
-	hset(avc->flushDV, avc->m.DataVersion);
+	hset(avc->flushDV, avc->f.m.DataVersion);
     }
 #endif
 
@@ -117,7 +115,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
      * Locks held:
      * avc->lock(R)
      */
-    if (filePos >= avc->m.Length) {
+    if (filePos >= avc->f.m.Length) {
 	if (len > AFS_ZEROS)
 	    len = sizeof(afs_zeros);	/* and in 0 buffer */
 	len = 0;
@@ -132,9 +130,9 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
 	AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, tuiop, code);
     }
 
-    while (avc->m.Length > 0 && totalLength > 0) {
+    while (avc->f.m.Length > 0 && totalLength > 0) {
 	/* read all of the cached info */
-	if (filePos >= avc->m.Length)
+	if (filePos >= avc->f.m.Length)
 	    break;		/* all done */
 	if (noLock) {
 	    if (tdc) {
@@ -189,7 +187,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
 	     * 2 requests never return a null dcache entry, btw.
 	     */
 	    if (!(tdc->dflags & DFFetching)
-		&& !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+		&& !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 		/* have cache entry, it is not coming in now,
 		 * and we'll need new data */
 	      tagain:
@@ -268,14 +266,14 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
 	    } else {
 		/* no longer fetching, verify data version 
 		 * (avoid new GetDCache call) */
-		if (hsame(avc->m.DataVersion, tdc->f.versionNo)
+		if (hsame(avc->f.m.DataVersion, tdc->f.versionNo)
 		    && ((len = tdc->validPos - filePos) > 0)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		} else {
 		    /* don't have current data, so get it below */
 		    afs_Trace3(afs_iclSetp, CM_TRACE_VERSIONNO,
 			       ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
-			       ICL_TYPE_HYPER, &avc->m.DataVersion,
+			       ICL_TYPE_HYPER, &avc->f.m.DataVersion,
 			       ICL_TYPE_HYPER, &tdc->f.versionNo);
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
@@ -318,7 +316,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
 	    len = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;	/* bytes left in chunk addr space */
 	    if (len > totalLength)
 		len = totalLength;	/* and still within xfr request */
-	    tlen = avc->m.Length - offset;	/* and still within file */
+	    tlen = avc->f.m.Length - offset;	/* and still within file */
 	    if (len > tlen)
 		len = tlen;
 	    if (len > AFS_ZEROS)
@@ -351,7 +349,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
 	    tuio.afsio_offset = offset;
 #endif
 
-	    code = afs_MemReadUIO(tdc->f.inode, tuiop);
+	    code = afs_MemReadUIO(&tdc->f.inode, tuiop);
 
 	    if (code) {
 		error = code;
@@ -433,7 +431,7 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
     offset = AFS_CHUNKTOBASE(offset);	/* base of next chunk */
     ObtainReadLock(&adc->lock);
     ObtainSharedLock(&adc->mflock, 662);
-    if (offset < avc->m.Length && !(adc->mflags & DFNextStarted)
+    if (offset < avc->f.m.Length && !(adc->mflags & DFNextStarted)
 	&& !afs_BBusy()) {
 	struct brequest *bp;
 
@@ -557,18 +555,18 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
     afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_INT32,
 	       totalLength, ICL_TYPE_OFFSET,
-	       ICL_HANDLE_OFFSET(avc->m.Length));
+	       ICL_HANDLE_OFFSET(avc->f.m.Length));
     error = 0;
     transferLength = 0;
     if (!noLock)
 	ObtainReadLock(&avc->lock);
 #if	defined(AFS_TEXT_ENV) && !defined(AFS_VM_RDWR_ENV)
     if (avc->flushDV.high == AFS_MAXDV && avc->flushDV.low == AFS_MAXDV) {
-	hset(avc->flushDV, avc->m.DataVersion);
+	hset(avc->flushDV, avc->f.m.DataVersion);
     }
 #endif
 
-    if (filePos >= avc->m.Length) {
+    if (filePos >= avc->f.m.Length) {
 	if (len > AFS_ZEROS)
 	    len = sizeof(afs_zeros);	/* and in 0 buffer */
 	len = 0;
@@ -583,9 +581,9 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, tuiop, code);
     }
 
-    while (avc->m.Length > 0 && totalLength > 0) {
+    while (avc->f.m.Length > 0 && totalLength > 0) {
 	/* read all of the cached info */
-	if (filePos >= avc->m.Length)
+	if (filePos >= avc->f.m.Length)
 	    break;		/* all done */
 	if (noLock) {
 	    if (tdc) {
@@ -636,7 +634,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
 #ifdef AFS_DISCON_ENV
 	    if (!tdc) {
-		/*printf("Network down in afs_read");*/
+		printf("Network down in afs_read");
 	        error = ENETDOWN;
 	        break;
 	    }
@@ -647,7 +645,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	     * data already coming, we don't need to do this, obviously.  Type
 	     * 2 requests never return a null dcache entry, btw. */
 	    if (!(tdc->dflags & DFFetching)
-		&& !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+		&& !hsame(avc->f.m.DataVersion, tdc->f.versionNo)) {
 		/* have cache entry, it is not coming in now, and we'll need new data */
 	      tagain:
 		if (trybusy && !afs_BBusy()) {
@@ -724,14 +722,14 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    } else {
 		/* no longer fetching, verify data version (avoid new
 		 * GetDCache call) */
-		if (hsame(avc->m.DataVersion, tdc->f.versionNo)
+		if (hsame(avc->f.m.DataVersion, tdc->f.versionNo)
 		    && ((len = tdc->validPos - filePos) > 0)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		} else {
 		    /* don't have current data, so get it below */
 		    afs_Trace3(afs_iclSetp, CM_TRACE_VERSIONNO,
 			       ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
-			       ICL_TYPE_HYPER, &avc->m.DataVersion,
+			       ICL_TYPE_HYPER, &avc->f.m.DataVersion,
 			       ICL_TYPE_HYPER, &tdc->f.versionNo);
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
@@ -772,7 +770,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    len = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;	/* bytes left in chunk addr space */
 	    if (len > totalLength)
 		len = totalLength;	/* and still within xfr request */
-	    tlen = avc->m.Length - offset;	/* and still within file */
+	    tlen = avc->f.m.Length - offset;	/* and still within file */
 	    if (len > tlen)
 		len = tlen;
 	    if (len > AFS_ZEROS)
@@ -806,8 +804,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 		usedihint++;
 	    } else
 #endif /* IHINT */
-
-		tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
+	    tfile = (struct osi_file *)osi_UFSOpen(&tdc->f.inode);
 #ifdef AFS_DARWIN80_ENV
 	    trimlen = len;
             tuiop = afsio_darwin_partialcopy(auio, trimlen);
@@ -902,6 +899,12 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
 	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);
 	    VOP_UNLOCK(tfile->vnode, 0, current_proc());
+	    AFS_GLOCK();
+#elif defined(AFS_FBSD80_ENV)
+	    AFS_GUNLOCK();
+	    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE);
+	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);
+	    VOP_UNLOCK(tfile->vnode, 0);
 	    AFS_GLOCK();
 #elif defined(AFS_FBSD50_ENV)
 	    AFS_GUNLOCK();

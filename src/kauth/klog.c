@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/klog.c,v 1.8.14.4 2007/10/31 04:09:30 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -217,7 +215,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    afs_com_err(rn, code, "Can't get local cell name!");
 	KLOGEXIT(code);
     }
-    if (code = ka_CellToRealm(lcell, lrealm, 0))
+    if ((code = ka_CellToRealm(lcell, lrealm, 0)))
 	goto nocell;
 
     strcpy(instance, "");
@@ -344,7 +342,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (!foundExplicitCell)
 	strcpy(realm, lcell);
-    if (code = ka_CellToRealm(realm, realm, &local)) {
+    if ((code = ka_CellToRealm(realm, realm, &local))) {
 	if (!Silent)
 	    afs_com_err(rn, code, "Can't convert cell to realm");
 	KLOGEXIT(code);

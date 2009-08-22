@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osidnlc.c,v 1.13.2.1 2007/10/19 20:39:07 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -25,7 +23,7 @@ RCSID
  *    look into interactions of dnlc and readdir.
  *    cache larger names, perhaps by using a better,longer key (SHA) and discarding
  *    the actual name itself.
- *    precompute a key and stuff for @sys, and combine the HandleAtName function with
+ *    precompute a key and stuff for \sys, and combine the HandleAtName function with
  *    this, since we're looking at the name anyway.  
  */
 
@@ -62,6 +60,14 @@ int dnlct;
 #define TRACE(e,s)		/* if (dnlct == 256) dnlct = 0; dnlctracetable[dnlct].event = e; dnlctracetable[dnlct++].slot = s; */
 
 #define dnlcHash(ts, hval) for (hval=0; *ts; ts++) { hval *= 173;  hval  += *ts;   }
+
+#if defined(AFS_FBSD80_ENV) && !defined(UKERNEL)
+#define ma_critical_enter critical_enter
+#define ma_critical_exit critical_exit
+#else
+#define ma_critical_enter() {}
+#define ma_critical_exit() {}
+#endif
 
 static struct nc *
 GetMeAnEntry(void)
@@ -145,7 +151,7 @@ osi_dnlc_enter(struct vcache *adp, char *aname, struct vcache *avc,
     ObtainWriteLock(&afs_xdnlc, 222);
 
     /* Only cache entries from the latest version of the directory */
-    if (!(adp->states & CStatd) || !hsame(*avno, adp->m.DataVersion)) {
+    if (!(adp->f.states & CStatd) || !hsame(*avno, adp->f.m.DataVersion)) {
 	ReleaseWriteLock(&afs_xdnlc);
 	return 0;
     }
@@ -201,12 +207,17 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
     vnode_t tvp;
 #endif
 
-    if (!afs_usednlc)
-	return 0;
+    ma_critical_enter();
+
+    if (!afs_usednlc) {
+      ma_critical_exit();
+      return 0;
+    }
 
     dnlcHash(ts, key);		/* leaves ts pointing at the NULL */
     if (ts - aname >= AFSNCNAMESIZE) {
-	return 0;
+      ma_critical_exit();
+      return 0;
     }
     skey = key & (NHSIZE - 1);
 
@@ -231,6 +242,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ReleaseReadLock(&afs_xdnlc);
 	    ReleaseReadLock(&afs_xvcache);
 	    osi_dnlc_purge();
+	    ma_critical_exit();
 	    return (0);
 	}
     }
@@ -242,15 +254,16 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	ReleaseReadLock(&afs_xvcache);
 	dnlcstats.misses++;
     } else {
-	if ((tvc->states & CVInit)
+	if ((tvc->f.states & CVInit)
 #ifdef  AFS_DARWIN80_ENV
-	    ||(tvc->states & CDeadVnode)
+	    ||(tvc->f.states & CDeadVnode)
 #endif
 	    )      
 	{
 	    ReleaseReadLock(&afs_xvcache);
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
+	    ma_critical_exit();
 	    return 0;
 	}
 #ifdef	AFS_OSF_ENV
@@ -262,6 +275,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ReleaseReadLock(&afs_xvcache);
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
+	    ma_critical_exit();
 	    return 0;
 	}
 	if (vnode_ref(tvp)) {
@@ -271,10 +285,18 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    AFS_GLOCK();
 	    dnlcstats.misses++;
 	    osi_dnlc_remove(adp, aname, tvc);
+	    ma_critical_exit();
 	    return 0;
 	}
 #else
+#ifdef AFS_FBSD50_ENV
+	/* can't sleep in a critical section */
+	ma_critical_exit();
 	osi_vnhold(tvc, 0);
+	ma_critical_enter();
+#else
+	osi_vnhold(tvc, 0);
+#endif /* AFS_FBSD80_ENV */
 #endif
 #endif
 	ReleaseReadLock(&afs_xvcache);
@@ -313,6 +335,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 #endif
     }
 
+    ma_critical_exit();
     return tvc;
 }
 
@@ -387,10 +410,15 @@ osi_dnlc_remove(struct vcache *adp, char *aname, struct vcache *avc)
     return 0;
 }
 
-/* remove anything pertaining to this directory.  I can invalidate
+/*! 
+ * Remove anything pertaining to this directory.  I can invalidate
  * things without the lock, since I am just looking through the array,
  * but to move things off the lists or into the freelist, I need the
- * write lock */
+ * write lock 
+ *
+ * \param adp vcache entry for the directory to be purged.
+ * \return 0
+ */
 int
 osi_dnlc_purgedp(struct vcache *adp)
 {
@@ -398,7 +426,7 @@ osi_dnlc_purgedp(struct vcache *adp)
     int writelocked;
 
 #ifdef AFS_DARWIN_ENV
-    if (!(adp->states & (CVInit | CVFlushed
+    if (!(adp->f.states & (CVInit | CVFlushed
 #ifdef AFS_DARWIN80_ENV
                         | CDeadVnode
 #endif
@@ -429,7 +457,12 @@ osi_dnlc_purgedp(struct vcache *adp)
     return 0;
 }
 
-/* remove anything pertaining to this file */
+/*! 
+ * Remove anything pertaining to this file 
+ *
+ * \param File vcache entry.
+ * \return 0
+ */
 int
 osi_dnlc_purgevp(struct vcache *avc)
 {
@@ -437,7 +470,7 @@ osi_dnlc_purgevp(struct vcache *avc)
     int writelocked;
 
 #ifdef AFS_DARWIN_ENV
-    if (!(avc->states & (CVInit | CVFlushed
+    if (!(avc->f.states & (CVInit | CVFlushed
 #ifdef AFS_DARWIN80_ENV
                         | CDeadVnode
 #endif

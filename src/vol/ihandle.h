@@ -144,7 +144,7 @@ typedef __int64 Inode;
 struct IHandle_s;
 
 /* File descriptors are HANDLE's on NT. The following typedef helps catch
- * type errors.
+ * type errors. duplicated in libadmin/vos/afs_vosAdmin.c
  */
 #ifdef AFS_NT40_ENV
 typedef HANDLE FD_t;
@@ -208,7 +208,7 @@ typedef struct StreamHandle_s {
 
 /* Inode handle */
 typedef struct IHandle_s {
-    int ih_vid;			/* Parent volume id. */
+    afs_uint32 ih_vid;		/* Parent volume id. */
     int ih_dev;			/* device id. */
     int ih_flags;		/* Flags */
     int ih_synced;		/* should be synced next time */

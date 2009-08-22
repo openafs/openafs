@@ -22,8 +22,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/lwp/waitkey.c,v 1.13.14.1 2007/10/30 15:16:42 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -160,23 +158,33 @@ LWP_WaitForKeystroke(int seconds)
     struct timeval twait;
     struct timeval *tp = NULL;
 
-#ifndef AFS_DJGPP_ENV
 #ifdef AFS_LINUX20_ENV
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DFBSD_ENV)
+    struct appx_sbuf {
+      unsigned char *_base;
+      int     _size;
+    };
+    struct APPX_FILE
+    {      
+      struct __FILE_public    pub;
+      struct  appx_sbuf _bf;     /* the buffer (at least 1 byte, if !NULL) */
+    };
+    struct APPX_FILE *appx_stdin = (struct APPX_FILE *) stdin;
+    if (appx_stdin->_bf._size > 0)
+	return 1;
+#else
     if (stdin->_bf._size > 0)
 	return 1;
+#endif
 #else
     if (stdin->_cnt > 0)
 	return 1;
 #endif
 #endif
-#else /* DJGPP */
-    if (stdin->_cnt > 0)
-	return 1;
-#endif /* DJGPP */
 
     FD_ZERO(&rdfds);
     FD_SET(fileno(stdin), &rdfds);

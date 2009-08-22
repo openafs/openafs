@@ -19,8 +19,6 @@
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/pam/afs_message.c,v 1.10 2003/07/15 23:15:56 shadow Exp $");
 
 #include <sys/param.h>
 #include <afs/kautils.h>

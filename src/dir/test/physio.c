@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/dir/test/physio.c,v 1.7 2003/07/15 23:15:04 shadow Exp $");
 
 #include <sys/param.h>
 #ifdef AFS_VFSINCL_ENV

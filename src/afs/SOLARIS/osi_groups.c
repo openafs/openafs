@@ -22,8 +22,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_groups.c,v 1.7.14.1 2006/12/20 20:08:33 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"

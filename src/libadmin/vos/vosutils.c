@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/libadmin/vos/vosutils.c,v 1.12.4.3 2007/10/30 15:16:41 shadow Exp $");
 
 #include "vosutils.h"
 #include "vsprocs.h"
@@ -127,7 +125,7 @@ VLDB_CreateEntry(afs_cell_handle_p cellHandle, struct nvldbentry *entryp,
 }
 
 int
-aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
+aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_uint32 volid,
 		  afs_int32 voltype, struct nvldbentry *entryp,
 		  afs_status_p st)
 {
@@ -165,7 +163,7 @@ aVLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
 }
 
 int
-aVLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
+aVLDB_GetEntryByName(afs_cell_handle_p cellHandle, char *namep,
 		    struct nvldbentry *entryp, afs_status_p st)
 {
     struct vldbentry oentry;
@@ -202,7 +200,7 @@ aVLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
 }
 
 int
-VLDB_ReplaceEntry(afs_cell_handle_p cellHandle, afs_int32 volid,
+VLDB_ReplaceEntry(afs_cell_handle_p cellHandle, afs_uint32 volid,
 		  afs_int32 voltype, struct nvldbentry *entryp,
 		  afs_int32 releasetype, afs_status_p st)
 {
@@ -328,7 +326,8 @@ VLDB_IsSameAddrs(afs_cell_handle_p cellHandle, afs_int32 serv1,
 
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
-    afs_uint32 *addrp, nentries, unique, i;
+    afs_uint32 *addrp;
+    afs_int32 nentries, unique, i;
     afsUUID uuid;
 
     *equal = 0;
@@ -398,7 +397,7 @@ VLDB_IsSameAddrs(afs_cell_handle_p cellHandle, afs_int32 serv1,
  */
 
 int
-GetVolumeInfo(afs_cell_handle_p cellHandle, unsigned int volid,
+GetVolumeInfo(afs_cell_handle_p cellHandle, afs_uint32 volid,
 	      struct nvldbentry *rentry, afs_int32 * server,
 	      afs_int32 * partition, afs_int32 * voltype, afs_status_p st)
 {

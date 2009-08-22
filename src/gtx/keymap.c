@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/gtx/keymap.c,v 1.7.14.1 2007/10/30 15:16:39 shadow Exp $");
 
 #include <string.h>
 #include <stdlib.h>
@@ -19,7 +17,7 @@ RCSID
 #include "gtxkeymap.h"
 
 struct keymap_map *
-keymap_Create()
+keymap_Create(void)
 {
     register struct keymap_map *tmap;
 
@@ -31,8 +29,7 @@ keymap_Create()
 
 /* make a copy of a string; generic utility */
 char *
-gtx_CopyString(aval)
-     register char *aval;
+gtx_CopyString(register char *aval)
 {
     register char *tp;
 
@@ -45,13 +42,7 @@ gtx_CopyString(aval)
 }
 
 static int
-BindIt(amap, aslot, atype, aproc, aname, arock)
-     struct keymap_map *amap;
-     char *arock;
-     int aslot;
-     int atype;
-     char *aproc;
-     char *aname;
+BindIt(struct keymap_map *amap, int aslot, int atype, void *aproc, char *aname, void *arock)
 {
     register char *tp;
     register struct keymap_entry *tentry;
@@ -60,7 +51,7 @@ BindIt(amap, aslot, atype, aproc, aname, arock)
 	return -1;
     tentry = &amap->entries[aslot];
     tentry->type = atype;
-    if (tp = tentry->name)
+    if ((tp = tentry->name))
 	free(tp);
     if (atype == KEYMAP_EMPTY) {
 	tentry->u.generic = NULL;
@@ -73,12 +64,10 @@ BindIt(amap, aslot, atype, aproc, aname, arock)
     return 0;
 }
 
-keymap_BindToString(amap, astring, aproc, aname, arock)
-     register struct keymap_map *amap;
-     char *astring;
-     char *arock;
-     int (*aproc) ();
-     char *aname;
+int
+keymap_BindToString(struct keymap_map *amap, char *astring, 
+		    int (*aproc)(void *, void *), 
+		    char *aname, void *arock)
 {
     register char *cptr;
     register int tc;
@@ -88,7 +77,7 @@ keymap_BindToString(amap, astring, aproc, aname, arock)
     cptr = astring;
     /* walk down string, building submaps if possible, until we get to function
      * at the end */
-    while (tc = *cptr++) {
+    while ((tc = *cptr++)) {
 	/* see if we should do submap or final function */
 	if (*cptr == 0) {	/* we're peeking: already skipped command char */
 	    /* last character, do final function */
@@ -96,8 +85,7 @@ keymap_BindToString(amap, astring, aproc, aname, arock)
 		code = BindIt(amap, tc, KEYMAP_EMPTY, NULL, NULL, NULL);
 	    else
 		code =
-		    BindIt(amap, tc, KEYMAP_PROC, (char *)aproc, aname,
-			   arock);
+		    BindIt(amap, tc, KEYMAP_PROC, aproc, aname, arock);
 	    if (code)
 		return code;
 	} else {
@@ -105,7 +93,7 @@ keymap_BindToString(amap, astring, aproc, aname, arock)
 	    if (amap->entries[tc].type != KEYMAP_SUBMAP) {
 		tmap = keymap_Create();
 		code =
-		    BindIt(amap, tc, KEYMAP_SUBMAP, (char *)tmap, NULL, NULL);
+		    BindIt(amap, tc, KEYMAP_SUBMAP, tmap, NULL, NULL);
 	    } else {
 		tmap = amap->entries[tc].u.submap;
 		code = 0;
@@ -120,8 +108,8 @@ keymap_BindToString(amap, astring, aproc, aname, arock)
 }
 
 /* delete a keymap and all of its recursively-included maps */
-keymap_Delete(amap)
-     register struct keymap_map *amap;
+int
+keymap_Delete(struct keymap_map *amap)
 {
     register int i;
     register struct keymap_entry *tentry;
@@ -137,9 +125,8 @@ keymap_Delete(amap)
     return 0;
 }
 
-keymap_InitState(astate, amap)
-     register struct keymap_state *astate;
-     struct keymap_map *amap;
+int
+keymap_InitState(struct keymap_state *astate, struct keymap_map *amap)
 {
     memset(astate, 0, sizeof(*astate));
     astate->initMap = amap;
@@ -147,10 +134,8 @@ keymap_InitState(astate, amap)
     return 0;
 }
 
-keymap_ProcessKey(astate, akey, arock)
-     register struct keymap_state *astate;
-     char *arock;
-     register int akey;
+int
+keymap_ProcessKey(struct keymap_state *astate, int akey, void *arock)
 {
     register struct keymap_entry *tentry;
     register afs_int32 code;
@@ -178,8 +163,8 @@ keymap_ProcessKey(astate, akey, arock)
     return code;
 }
 
-keymap_ResetState(astate)
-     register struct keymap_state *astate;
+int
+keymap_ResetState(struct keymap_state *astate)
 {
     return keymap_InitState(astate, astate->initMap);
 }

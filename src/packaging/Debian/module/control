@@ -1,0 +1,7 @@
+Source: openafs
+Section: net
+Priority: optional
+Maintainer: Sam Hartman <hartmans@debian.org>
+Uploaders: Russ Allbery <rra@debian.org>
+Build-Depends: debhelper (>= 5), flex, bison
+Standards-Version: 3.7.2

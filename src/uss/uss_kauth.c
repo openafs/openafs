@@ -18,8 +18,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/uss/uss_kauth.c,v 1.10.14.2 2007/10/30 15:16:48 shadow Exp $");
 
 #include "uss_kauth.h"		/*Module interface */
 #include "uss_common.h"		/*Common defs & operations */
@@ -31,6 +29,7 @@ RCSID
 #include <afs/com_err.h>
 #include <afs/kautils.h> /*MAXKTCREALMLEN*/
 #include <afs/kaport.h>		/* pack_long */
+#include <afs/kauth.h>
 #define uss_kauth_MAX_SIZE	2048
 #undef USS_KAUTH_DB
 /*
@@ -60,7 +59,7 @@ int doUnlog = 0;
  *-----------------------------------------------------------------------*/
 
 afs_int32
-uss_kauth_InitAccountCreator()
+uss_kauth_InitAccountCreator(void)
 {				/*uss_kauth_InitAccountCreator */
 
     char *name;
@@ -141,7 +140,7 @@ uss_kauth_InitAccountCreator()
 
 int Pipe = 0;
 static char *
-getpipepass()
+getpipepass(void)
 {
     static char gpbuf[BUFSIZ];
     /* read a password from stdin, stop on \n or eof */
@@ -158,12 +157,13 @@ getpipepass()
 
 
 afs_int32
-InitThisModule()
+InitThisModule(void)
 {				/*InitThisModule */
-
+#ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth:InitThisModule";
+#endif
     register afs_int32 code;
-    char *name, prompt[2 * MAXKTCNAMELEN + 20];
+    char prompt[2 * MAXKTCNAMELEN + 20];
     char *reasonString, longPassBuff[1024], shortPassBuff[9];
     struct ktc_encryptionKey key;
     struct ktc_token token, tok;
@@ -302,8 +302,8 @@ InitThisModule()
 	strcpy(Name.name, "afs");
 	Name.instance[0] = '\0';
 	strncpy(Name.cell, uss_Cell, sizeof(Name.cell));
-	if (code =
-	    ktc_GetToken(&Name, &token, sizeof(struct ktc_token), &tok)) {
+	if ((code =
+	    ktc_GetToken(&Name, &token, sizeof(struct ktc_token), &tok))) {
 	    code =
 		ka_UserAuthenticateLife(0, uss_AccountCreator,
 					CreatorInstance, uss_Cell,
@@ -335,14 +335,13 @@ InitThisModule()
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_kauth_AddUser(a_user, a_passwd)
-     char *a_user;
-     char *a_passwd;
-
+uss_kauth_AddUser(char *a_user, char *a_passwd)
 {				/*uss_kauth_AddUser */
-
+#ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_AddUser";	/*Routine name */
-    struct ktc_encryptionKey key;
+#endif
+    struct ktc_encryptionKey ktc_key;
+    EncryptionKey key;
     afs_int32 code;
 
     if (uss_SkipKaserver) {
@@ -372,8 +371,10 @@ uss_kauth_AddUser(a_user, a_passwd)
      * Given the (unencrypted) password and cell, generate a key to
      * pass to the AuthServer.
      */
-    ka_StringToKey(a_passwd, uss_Cell, &key);
+    ka_StringToKey(a_passwd, uss_Cell, &ktc_key);
 
+    memcpy(&key, &ktc_key, sizeof(key)); /* XXX - we could just cast */
+    
     if (!uss_DryRun) {
 	if (uss_verbose)
 	    fprintf(stderr, "Adding user '%s' to the Authentication DB\n",
@@ -384,8 +385,9 @@ uss_kauth_AddUser(a_user, a_passwd)
 		"%s: KAM_CreateUser: user='%s', CreatorInstance='%s', %d bytes\n",
 		rn, a_user, CreatorInstance, strlen(CreatorInstance));
 #endif /* USS_KAUTH_DB_INSTANCE */
-	code = ubik_Call(KAM_CreateUser, uconn_kauthP, 0, a_user, UserInstance,	/*set by CheckUsername() */
-			 key);
+	code = ubik_KAM_CreateUser(uconn_kauthP, 0, a_user, 
+			           UserInstance,	/*set by CheckUsername() */
+			 	   key);
 	if (code) {
 	    if (code == KAEXIST) {
 		if (uss_verbose)
@@ -425,12 +427,11 @@ uss_kauth_AddUser(a_user, a_passwd)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_kauth_DelUser(a_user)
-     char *a_user;
-
+uss_kauth_DelUser(char *a_user)
 {				/*uss_kauth_DelUser */
-
+#ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_DelUser";	/*Routine name */
+#endif
     register afs_int32 code;	/*Return code */
 
     if (uss_SkipKaserver) {
@@ -462,7 +463,7 @@ uss_kauth_DelUser(a_user)
 #endif /* USS_KAUTH_DB_INSTANCE */
 	if (uss_verbose)
 	    printf("Deleting user '%s' from Authentication DB\n", a_user);
-	code = ubik_Call(KAM_DeleteUser,	/*Procedure to call */
+	code = ubik_KAM_DeleteUser(
 			 uconn_kauthP,	/*Ubik client connection struct */
 			 0,	/*Flags */
 			 a_user,	/*User name to delete */
@@ -505,10 +506,11 @@ uss_kauth_DelUser(a_user)
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_kauth_CheckUserName()
+uss_kauth_CheckUserName(void)
 {				/*uss_kauth_CheckUserName */
-
+#ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_CheckUserName";	/*Routine name */
+#endif
     register afs_int32 code;	/*Return code */
 
     if (uss_SkipKaserver) {
@@ -583,14 +585,12 @@ uss_kauth_CheckUserName()
  */
 
 afs_int32
-uss_kauth_SetFields(username, expirestring, reuse, failures, lockout)
-     char *reuse;
-     char *username;
-     char *expirestring;
-     char *failures;
-     char *lockout;
+uss_kauth_SetFields(char *username, char *expirestring, char *reuse, 
+		    char *failures, char *lockout)
 {
+#ifdef USS_KAUTH_DB
     static char rn[] = "uss_kauth_SetFields";
+#endif
     afs_int32 code;
     char misc_auth_bytes[4];
     int i;

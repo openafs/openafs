@@ -42,8 +42,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/volser/restorevol.c,v 1.14.4.3 2007/11/26 21:08:46 shadow Exp $");
 
 #include <afs/afsint.h>
 #include <afs/nfs.h>
@@ -78,7 +76,7 @@ int inc_dump = 0;
 FILE *dumpfile;
 
 afs_int32
-readvalue(size)
+readvalue(int size)
 {
     afs_int32 value, s;
     int code;
@@ -101,11 +99,10 @@ readvalue(size)
 }
 
 char
-readchar()
+readchar(void)
 {
     char value;
     int code;
-    char *ptr;
 
     value = '\0';
     code = fread(&value, 1, 1, dumpfile);
@@ -119,9 +116,7 @@ readchar()
 char buf[BUFSIZE];
 
 void
-readdata(buffer, size)
-     char *buffer;
-     afs_sfsize_t size;
+readdata(char *buffer, afs_sfsize_t size)
 {
     int code;
     afs_int32 s;
@@ -140,7 +135,7 @@ readdata(buffer, size)
 	    if (code < 0)
 		fprintf(stderr, "Code = %d; Errno = %d\n", code, errno);
 	    else
-		fprintf(stderr, "Read %d bytes out of %lld\n", code, (afs_uintmax_t)size);
+		fprintf(stderr, "Read %d bytes out of %" AFS_INT64_FMT "\n", code, (afs_uintmax_t)size);
 	}
 	if ((code >= 0) && (code < BUFSIZE))
 	    buffer[size] = 0;	/* Add null char at end */
@@ -148,10 +143,9 @@ readdata(buffer, size)
 }
 
 afs_int32
-ReadDumpHeader(dh)
-     struct DumpHeader *dh;	/* Defined in dump.h */
+ReadDumpHeader(struct DumpHeader *dh)
 {
-    int code, i, done;
+    int i, done;
     char tag, c;
     afs_int32 magic;
 
@@ -222,11 +216,10 @@ struct volumeHeader {
 };
 
 afs_int32
-ReadVolumeHeader(count)
-     afs_int32 count;
+ReadVolumeHeader(afs_int32 count)
 {
     struct volumeHeader vh;
-    int code, i, done, entries;
+    int i, done;
     char tag, c;
 
 /*  memset(&vh, 0, sizeof(vh)); */
@@ -240,7 +233,7 @@ ReadVolumeHeader(count)
 	    break;
 
 	case 'v':
-	    ntohl(readvalue(4));	/* version stamp - ignore */
+	    (void)ntohl(readvalue(4));	/* version stamp - ignore */
 	    break;
 
 	case 'n':
@@ -345,8 +338,9 @@ ReadVolumeHeader(count)
 	case 'Z':
 	    vh.dayUse = ntohl(readvalue(4));
 	    break;
+
 	case 'V':
-            vh.volUpdateCounter = ntohl(readvalue(4));
+	    readvalue(4); /*volUpCounter*/
 	    break;
 
 	default:
@@ -391,12 +385,11 @@ struct vNode {
 #define MAXNAMELEN 256
 
 afs_int32
-ReadVNode(count)
-     afs_int32 count;
+ReadVNode(afs_int32 count)
 {
     struct vNode vn;
-    int code, i, done, entries;
-    char tag, c;
+    int code, i, done;
+    char tag;
     char dirname[MAXNAMELEN], linkname[MAXNAMELEN], lname[MAXNAMELEN];
     char parentdir[MAXNAMELEN], vflink[MAXNAMELEN];
     char filename[MAXNAMELEN], fname[MAXNAMELEN];
@@ -731,8 +724,7 @@ ReadVNode(count)
 		     * also be a mount point. If the volume is being restored to AFS, this
 		     * will become a mountpoint. If not, it becomes a symlink to no-where.
 		     */
-		int fid;
-		afs_int32 size, s;
+		afs_int32 s;
 
 		/* Check if its vnode-file-link exists and create pathname
 		 * of the symbolic link. If it doesn't exist,
@@ -795,12 +787,11 @@ ReadVNode(count)
 static int
 WorkerBee(struct cmd_syndesc *as, void *arock)
 {
-    int code = 0, c, len;
+    int code = 0, len;
     afs_int32 type, count, vcount;
     DIR *dirP, *dirQ;
     struct dirent *dirE, *dirF;
-    char fname[MAXNAMELEN], name[MAXNAMELEN], lname[MAXNAMELEN],
-	mname[MAXNAMELEN];
+    char name[MAXNAMELEN];
     char thisdir[MAXPATHLEN], *t;
     struct DumpHeader dh;	/* Defined in dump.h */
 #if 0/*ndef HAVE_GETCWD*/	/* XXX enable when autoconf happens */
@@ -968,12 +959,10 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
     return (code);
 }
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
-    struct cmd_item *ti;
 
     setlinebuf(stdout);
 

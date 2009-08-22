@@ -29,14 +29,13 @@
 #include <rpc.h>
 #endif
 
-RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_fs_callback.c,v 1.15.2.1 2007/10/30 15:16:59 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>		/*Standard I/O stuff */
 #include <string.h>
 
 #include <afs/afscbint.h>	/*Callback interface defs */
+#include <afs/afsutil.h>
 
 int afs_cb_inited = 0;
 struct interfaceAddr afs_cb_interface;
@@ -47,7 +46,7 @@ struct interfaceAddr afs_cb_interface;
  * Initialize the callback interface structure
  */
 static int
-init_afs_cb()
+init_afs_cb(void)
 {
     int count;
 
@@ -56,7 +55,7 @@ init_afs_cb()
 #else
     afs_uuid_create(&afs_cb_interface.uuid);
 #endif
-    count = rx_getAllAddr(&afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
+    count = rx_getAllAddr((afs_uint32 *)afs_cb_interface.addr_in, AFS_MAX_INTERFACE_ADDR);
     if (count <= 0)
 	afs_cb_interface.numberOfInterfaces = 0;
     else
@@ -65,12 +64,9 @@ init_afs_cb()
     return 0;
 }
 
-/*
- * Routines we need that don't have explicit include file definitions.
- */
-extern char *hostutil_GetNameByINet();	/*Host parsing utility */
-
+#if XSTAT_FS_CALLBACK_VERBOSE
 static char mn[] = "xstat_fs_callback";	/*Module name */
+#endif
 
 /*------------------------------------------------------------------------
  * SRXAFSCB_CallBack
@@ -490,10 +486,6 @@ SRXAFSCB_InitCallBackState2(struct rx_call * rxcall,
 afs_int32
 SRXAFSCB_WhoAreYou(struct rx_call * rxcall, struct interfaceAddr * addr)
 {
-    int i;
-    int code = 0;
-    int count;
-
 #if XSTAT_FS_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_WhoAreYou";	/*Routine name */
     char hostName[256];		/*Host name buffer */
@@ -753,10 +745,6 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
 			     struct interfaceAddr * addr,
 			     Capabilities * capabilites)
 {
-    int i;
-    int code = 0;
-    int count;
-
 #if XSTAT_FS_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_TellMeAboutYourself";	/*Routine name */
     char hostName[256];		/*Host name buffer */
@@ -783,14 +771,9 @@ SRXAFSCB_TellMeAboutYourself(struct rx_call * rxcall,
     return (0);
 }
 
-int SRXAFSCB_GetDE(a_call, a_index, addr, inode, flags, time, fileName)
-     struct rx_call *a_call;
-     afs_int32 a_index;
-     afs_int32 addr;
-     afs_int32 inode;
-     afs_int32 flags;
-     afs_int32 time;
-     char ** fileName;
+int SRXAFSCB_GetDE(struct rx_call *a_call, afs_int32 a_index, afs_int32 addr,
+		   afs_int32 inode, afs_int32 flags, afs_int32 time,
+		   char **fileName)
 {
     return RXGEN_OPCODE;
 }

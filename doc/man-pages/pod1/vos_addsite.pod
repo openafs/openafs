@@ -9,14 +9,17 @@ vos_addsite - Adds a read-only site definition to a volume's VLDB entry
 
 B<vos addsite> S<<< B<-server> <I<machine name for new site>> >>>
     S<<< B<-partition> <I<partition name for new site>> >>>
-    S<<< B<-id> <I<volume name or ID>> >>> S<<< B<-valid> <I<old volume id>> >>>
-    S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
+    S<<< B<-id> <I<volume name or ID>> >>>
+    S<<< [B<-roid> <I<readonly volume name or ID>>] >>>
+    [B<-valid>] S<<< [B<-cell> <I<cell name>>] >>>
+    [B<-noauth>] [B<-localauth>]
     [B<-verbose>] [B<-help>]
 
 B<vos ad> S<<< B<-s> <I<machine name for new site>> >>>
     S<<< B<-p> <I<partition name for new site>> >>>
-    S<<< B<-i> <I<volume name or ID>> >>> S<<< B<-valid> <I<old volume id>> >>>
-    S<<< [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
+    S<<< B<-i> <I<volume name or ID>> >>>
+    S<<< [B<-r> <I<readonly volume name or ID>>] >>>
+    [B<-va>] [B<-c> <I<cell name>>] >>> [B<-n>] [B<-l>] [B<-v>] [B<-h>]
 
 =for html
 </div>
@@ -69,14 +72,30 @@ L<vos(1)>.
 Specifies either the complete name or volume ID number of the read/write
 source volume.
 
-=item B<-valid> <I<volume ID>>
+=item B<-roid> <I<readonly volume name or ID>>
 
-Specifies the volume ID number of the existing release-equivalent
-volume that is not already marked as a replica. This is useful when an
-existing read-only volume is dumped and restored with the B<-readonly>
-flag at the new site. This option is available in OpenAFS clients
-1.4.7 or later and 1.5.31 and later. This option can be used with
-OpenAFS server versions later than 1.4.1 or 1.5.0.
+Specifies either the complete name or volume ID number of the readonly
+volume. This will only be honored if the source read/write volume does not
+already have a readonly volume ID associated with it. If the source
+read/write volume already has a readonly volume ID, the specified ID will
+be ignored, and a warning will be printed.
+
+If this is not specified and the source read/write volume does not already
+have a readonly volume ID, a volume ID for the readonly volume will be
+allocated for it when the B<vos release> command is run.
+
+The automatically allocated readonly volume IDs should be fine for almost
+all cases, so you should almost never need to specify this option.
+
+=item B<-valid>
+
+Marks the site as up-to-date in the VLDB. You should only do this if the
+new site already has a current readonly replica of the volume, but for
+some reason it is not in the VLDB as a replica site. This is useful when
+an existing read-only volume is dumped and restored with the B<-readonly>
+flag at the new site. This option is available in OpenAFS clients 1.4.7 or
+later and 1.5.31 and later. This option can be used with OpenAFS server
+versions later than 1.4.1 or 1.5.0.
 
 =item B<-cell> <I<cell name>>
 
@@ -88,7 +107,7 @@ with the B<-localauth> flag. For more details, see L<vos(1)>.
 Assigns the unprivileged identity anonymous to the issuer. Do not combine
 this flag with the B<-localauth> flag. For more details, see L<vos(1)>.
 
-=item -localauth
+=item B<-localauth>
 
 Constructs a server ticket using a key from the local
 F</usr/afs/etc/KeyFile> file. The B<vos> command interpreter presents it

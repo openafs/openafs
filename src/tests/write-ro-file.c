@@ -41,10 +41,6 @@
 
 #include <err.h>
 
-#ifdef RCSID
-RCSID("$Id: write-ro-file.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
-#endif
-
 int
 main(int argc, char *argv[])
 {

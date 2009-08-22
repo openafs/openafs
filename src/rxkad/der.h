@@ -31,7 +31,7 @@
  * SUCH DAMAGE. 
  */
 
-/* $Id: der.h,v 1.4 2003/07/15 23:16:42 shadow Exp $ */
+/* $Id$ */
 
 #ifndef __DER_H__
 #define __DER_H__

@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: fs-sa-la,v 1.1 2002/01/14 07:49:17 shadow Exp $
+# $Id$
 FS=${FS:-${objdir}/../appl/fs/fs}
 ${FS} sa . kalle-anka-nu rl 2>&4
 ${FS} la >&4 2>&4

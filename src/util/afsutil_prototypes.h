@@ -32,6 +32,8 @@ extern int base64_to_int(char *s);
 extern char *lcstring(char *d, char *s, int n);
 extern char *ucstring(char *d, char *s, int n);
 extern char *strcompose(char *buf, size_t len, ...);
+extern void stolower(char *s);
+extern void stoupper(char *s);
 
 /* daemon.c */
 #ifndef HAVE_DAEMON
@@ -195,9 +197,11 @@ extern int afsUUID_to_string(const afsUUID * uuid, char *str, size_t strsz);
 /* volparse.c */
 extern afs_int32 volutil_GetPartitionID(char *aname);
 extern char *volutil_PartitionName_r(int avalue, char *tbuffer, int buflen);
+extern afs_int32 volutil_PartitionName2_r(afs_int32 part, char *tbuffer, size_t buflen);
 extern char *volutil_PartitionName(int avalue);
 extern afs_int32 util_GetInt32(register char *as, afs_int32 * aval);
 extern afs_uint32 util_GetUInt32(register char *as, afs_uint32 * aval);
+extern afs_int32 util_GetHumanInt32(register char *as, afs_int32 * aval);
 
 /* winsock_nt.c */
 

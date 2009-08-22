@@ -35,8 +35,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/rxgen/rpc_parse.c,v 1.20.4.4 2007/11/01 16:02:29 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -933,7 +931,7 @@ static void
 handle_split_proc(definition * defp, int multi_flag)
 {
     char *startname = SplitStart, *endname = SplitEnd;
-    int numofparams;
+    int numofparams = 0;
 
     if (!startname)
 	startname = "Start";
@@ -1469,6 +1467,7 @@ ss_ProcParams_setup(definition * defp, int *somefrees)
 		    switch (defp1->pc.rel) {
 		    case REL_ARRAY:
 		    case REL_POINTER:
+		    default:
 			break;
 		    }
 		}
@@ -1527,6 +1526,8 @@ ss_ProcSpecial_setup(definition * defp, int *somefrees)
 		    case REL_POINTER:
 			f_print(fout, "\n\t%s = 0;", plist->pl.param_name);
 			plist->pl.string_name = NULL;
+			break;
+		    default:
 			break;
 		    }
 		}
@@ -1676,6 +1677,8 @@ ss_ProcTail_setup(definition * defp, int somefrees)
 			somefrees = 1;
 			f_print(fout, "\tif (!%s) goto fail1;\n",
 				plist->scode);
+			break;
+		    default:
 			break;
 		    }
 		}
@@ -2151,6 +2154,38 @@ er_TailofOldStyleProc_setup(void)
     f_print(fout, "\treturn z_result;\n}\n");
 }
 
+static void
+h_ProcMainBody_setup(void)
+{
+    f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
+	    prefix, PackagePrefix[PackageIndex]);
+}
+
+static void
+h_HeadofOldStyleProc_setup(void)
+{
+    f_print(fout,"\nextern int %s%sExecuteRequest(struct rx_call *);\n",
+	    prefix,
+	    (combinepackages ? MasterPrefix : PackagePrefix[PackageIndex]));
+}
+
+void
+h_Proc_CodeGeneration(void)
+{
+    int temp;
+
+    temp = PackageIndex;
+    if (!combinepackages)
+        PackageIndex = 0;
+    for (; PackageIndex <= temp; PackageIndex++) {
+	if (combinepackages || opcode_holes_exist()) {
+	    h_HeadofOldStyleProc_setup();
+	} else {
+            h_ProcMainBody_setup();
+	}
+    }
+    PackageIndex = temp;
+}
 
 void
 h_opcode_stats(void)

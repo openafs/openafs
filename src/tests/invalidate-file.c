@@ -52,7 +52,6 @@
 
 #include <err.h>
 
-RCSID("$Id: invalidate-file.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)-1)

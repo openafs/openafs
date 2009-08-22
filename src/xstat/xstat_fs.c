@@ -17,33 +17,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/xstat/xstat_fs.c,v 1.10.2.3 2008/03/10 22:32:37 shadow Exp $");
 
 #include "xstat_fs.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 
 #include <afs/afsutil.h>
+#include <afs/afscbint.h>
 #include <string.h>
 
 #define LWP_STACK_SIZE	(16 * 1024)
-
-/*
- * Routines we need that don't have explicit include file definitions.
- */
-extern int RXAFSCB_ExecuteRequest();	/*AFS callback dispatcher */
-extern char *hostutil_GetNameByINet();	/*Host parsing utility */
-
-/*
- * Help out the linker by explicitly importing the callback routines
- * File Servers may be lobbing at us.
- */
-extern afs_int32 SRXAFSCB_CallBack();
-extern afs_int32 SRXAFSCB_InitCallBackState3();
-extern afs_int32 SRXAFSCB_Probe();
-extern afs_int32 SRXAFSCB_ProbeUUID();
-extern afs_int32 SRXAFSCB_GetCE();
-extern afs_int32 SRXAFSCB_GetLock();
 
 /*
  * Exported variables.
@@ -64,7 +46,7 @@ static int xstat_fs_ProbeFreqInSecs;	/*Probe freq. in seconds */
 static int xstat_fs_initflag = 0;	/*Was init routine called? */
 static int xstat_fs_debug = 0;	/*Debugging output enabled? */
 static int xstat_fs_oneShot = 0;	/*One-shot operation? */
-static int (*xstat_fs_Handler) ();	/*Probe handler routine */
+static int (*xstat_fs_Handler) (void);	/*Probe handler routine */
 static PROCESS probeLWP_ID;	/*Probe LWP process ID */
 static int xstat_fs_numCollections;	/*Number of desired collections */
 static afs_int32 *xstat_fs_collIDP;	/*Ptr to collection IDs desired */
@@ -99,7 +81,7 @@ static afs_int32 *xstat_fs_collIDP;	/*Ptr to collection IDs desired */
  *------------------------------------------------------------------------*/
 
 static int
-xstat_fs_CleanupInit()
+xstat_fs_CleanupInit(void)
 {
     afs_int32 code;		/*Return code from callback stubs */
     struct rx_call *rxcall;	/*Bogus param */
@@ -252,8 +234,6 @@ xstat_fs_LWP(void *unused)
     afs_int32 numColls;		/*Number of collections to get */
     afs_int32 *currCollIDP;	/*Curr collection ID desired */
 
-    static afs_int32 xstat_VersionNumber;	/*Version # of server */
-
     /*
      * Set up some numbers we'll need.
      */
@@ -303,12 +283,12 @@ xstat_fs_LWP(void *unused)
 
 		    if (xstat_fs_debug) {
 			printf
-			    ("%s: Calling RXAFS_GetXStats, conn=0x%x, clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=0x%x, timeP=0x%x, dataP=0x%x\n",
+			    ("%s: Calling RXAFS_GetXStats, conn=%" AFS_PTR_FMT ", clientVersionNumber=%d, collectionNumber=%d, srvVersionNumberP=%" AFS_PTR_FMT ", timeP=%" AFS_PTR_FMT ", dataP=%" AFS_PTR_FMT "\n",
 			     rn, curr_conn->rxconn, clientVersionNumber,
 			     *currCollIDP, &srvVersionNumber,
 			     &(xstat_fs_Results.probeTime),
 			     &(xstat_fs_Results.data));
-			printf("%s: [bufflen=%d, buffer at 0x%x]\n", rn,
+			printf("%s: [bufflen=%d, buffer at %" AFS_PTR_FMT "]\n", rn,
 			       xstat_fs_Results.data.AFS_CollData_len,
 			       xstat_fs_Results.data.AFS_CollData_val);
 		    }
@@ -360,7 +340,7 @@ xstat_fs_LWP(void *unused)
 	     * that we've finished our collection round.
 	     */
 	    if (xstat_fs_debug)
-		printf("[%s] Signalling main process at 0x%x\n", rn,
+		printf("[%s] Signalling main process at %" AFS_PTR_FMT "\n", rn,
 		       &terminationEvent);
 	    oneShotCode = LWP_SignalProcess(&terminationEvent);
 	    if (oneShotCode)
@@ -426,7 +406,7 @@ xstat_fs_LWP(void *unused)
 
 int
 xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
-	      int a_ProbeFreqInSecs, int (*a_ProbeHandler) (), int a_flags,
+	      int a_ProbeFreqInSecs, int (*a_ProbeHandler) (void), int a_flags,
 	      int a_numCollections, afs_int32 * a_collIDP)
 {
     static char rn[] = "xstat_fs_Init";	/*Routine name */
@@ -523,7 +503,7 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	malloc(a_numServers * sizeof(struct xstat_fs_ConnectionInfo));
     if (xstat_fs_ConnInfo == (struct xstat_fs_ConnectionInfo *)0) {
 	fprintf(stderr,
-		"[%s] Can't allocate %d connection info structs (%d bytes)\n",
+		"[%s] Can't allocate %d connection info structs (%lu bytes)\n",
 		rn, a_numServers,
 		(a_numServers * sizeof(struct xstat_fs_ConnectionInfo)));
 	return (-1);		/*No cleanup needs to be done yet */
@@ -636,7 +616,7 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	    conn_err = 1;
 	}
 	if (xstat_fs_debug)
-	    printf("[%s] New connection at 0x%lx\n", rn, curr_conn->rxconn);
+	    printf("[%s] New connection at %" AFS_PTR_FMT "\n", rn, curr_conn->rxconn);
 
 	/*
 	 * Bump the current xstat_fs connection to set up.
@@ -690,7 +670,7 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	return (code);
     }
     if (xstat_fs_debug)
-	printf("[%s] Probe LWP process structure located at 0x%x\n", rn,
+	printf("[%s] Probe LWP process structure located at %" AFS_PTR_FMT "\n", rn,
 	       probeLWP_ID);
 
     /*
@@ -724,7 +704,7 @@ xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
  *------------------------------------------------------------------------*/
 
 int
-xstat_fs_ForceProbeNow()
+xstat_fs_ForceProbeNow(void)
 {
     static char rn[] = "xstat_fs_ForceProbeNow";	/*Routine name */
 

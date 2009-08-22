@@ -11,6 +11,10 @@
 
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 
 CC=${MT_CC}
@@ -35,7 +39,9 @@ SYSOBJS =\
 UTILOBJS =\
 	assert.o \
 	casestrcpy.o \
-	base64.o
+	base64.o \
+	strlcat.o \
+	strlcpy.o
 
 COMERROBJS =\
 	error_msg.o \
@@ -130,10 +136,8 @@ LIBOBJS = \
 
 all: ${TOP_LIBDIR}/libafsrpc.a
 
-install: ${DESTDIR}${libdir}/libafsrpc.a
-
-${DEST}/lib/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
+${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
+	${INSTALL_DATA} $? $@
 
 libafsrpc.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -273,7 +277,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.36.4.5 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision$
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -349,6 +353,12 @@ assert.o: ${UTIL}/assert.c
 base64.o: ${UTIL}/base64.c
 	${CCRULE} ${UTIL}/base64.c
 
+strlcat.o: ${UTIL}/strlcat.c
+	${CCRULE} ${UTIL}/strlcat.c
+
+strlcpy.o: ${UTIL}/strlcpy.c
+	${CCRULE} ${UTIL}/strlcpy.c
+
 fasttime.o: ${LWP}/fasttime.c
 	${CCRULE} ${LWP}/fasttime.c
 
@@ -402,14 +412,13 @@ afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 afsaux.o: ${FSINT}/afsaux.c
 	${CCRULE} ${FSINT}/afsaux.c
 
+install: libafsrpc.a
+	${INSTALL} -d ${DESTDIR}${libdir}
+	${INSTALL_DATA} libafsrpc.a ${DESTDIR}${libdir}/libafsrpc.a
+
+dest: libafsrpc.a
+	${INSTALL} -d ${DEST}/lib
+	${INSTALL_DATA} libafsrpc.a ${DEST}/lib/libafsrpc.a
+
 clean:
 	$(RM) -f *.o libafsrpc*
-
-${DESTDIR}${libdir}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
-
-${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/libafsrpc.a
-

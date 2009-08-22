@@ -1,4 +1,4 @@
-# $Id: postinstall,v 1.4 2006/04/21 14:58:38 rees Exp $
+# $Id$
 
 if [ `id -u` != "0" ]; then
   echo "Must be root; current id="`id -u`

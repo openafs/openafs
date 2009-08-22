@@ -15,8 +15,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/des/test/testit.c,v 1.8 2003/12/07 22:49:25 jaltman Exp $");
 
 
 #define MIN_ARGC	0	/* min # args, not incl flags */

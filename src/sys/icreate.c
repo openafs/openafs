@@ -14,8 +14,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/sys/icreate.c,v 1.5 2003/07/15 23:16:54 shadow Exp $");
 
 
 #include "AFS_component_version_number.c"

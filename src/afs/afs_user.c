@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_user.c,v 1.15.14.4 2006/12/20 20:08:33 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -65,7 +63,7 @@ RemoveUserConns(register struct unixuser *au)
     register int i;
     register struct server *ts;
     register struct srvAddr *sa;
-    register struct conn *tc, **lc;
+    register struct afs_conn *tc, **lc;
 
     AFS_STATCNT(RemoveUserConns);
     for (i = 0; i < NSERVERS; i++) {
@@ -78,7 +76,7 @@ RemoveUserConns(register struct unixuser *au)
 			AFS_GUNLOCK();
 			rx_DestroyConnection(tc->id);
 			AFS_GLOCK();
-			afs_osi_Free(tc, sizeof(struct conn));
+			afs_osi_Free(tc, sizeof(struct afs_conn));
 			break;	/* at most one instance per server */
 		    }		/*Found unreferenced connection for user */
 		}		/*For each connection on the server */
@@ -243,7 +241,7 @@ afs_ResetUserConns(register struct unixuser *auser)
 {
     int i;
     struct srvAddr *sa;
-    struct conn *tc;
+    struct afs_conn *tc;
 
     AFS_STATCNT(afs_ResetUserConns);
     ObtainReadLock(&afs_xsrvAddr);
@@ -593,6 +591,7 @@ static size_t afs_GCPAGs_cred_count = 0;
 /*
  * LOCKS: afs_GCPAGs_perproc_func requires write lock on afs_xuser
  */
+#if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
 void
 afs_GCPAGs_perproc_func(AFS_PROC * pproc)
 {
@@ -641,6 +640,7 @@ afs_GCPAGs_perproc_func(AFS_PROC * pproc)
 	}
     }
 }
+#endif
 
 /*
  * Go through the process table, find all unused PAGs 

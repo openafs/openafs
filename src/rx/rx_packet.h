@@ -9,10 +9,10 @@
 
 #ifndef _RX_PACKET_
 #define _RX_PACKET_
-#ifndef UKERNEL
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 #include "rx_xmit_nt.h"
 #endif
+#ifndef UKERNEL
 #ifndef AFS_NT40_ENV
 #include <sys/uio.h>
 #endif /* !AFS_NT40_ENV */
@@ -33,7 +33,7 @@
  */
 
 
-#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NT40_ENV) 
 #ifndef MIN
 #define MIN(a,b)  ((a)<(b)?(a):(b))
 #endif
@@ -41,7 +41,7 @@
 #define MAX(a,b)  ((a)>(b)?(a):(b))
 #endif
 #else /* AFS_NT40_ENV */
-#if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV) && !defined(AFS_USR_DFBSD_ENV) && !defined(AFS_LINUX20_ENV)
 #include <sys/sysmacros.h>	/* MIN, MAX on Solaris */
 #endif
 #include <sys/param.h>		/* MIN, MAX elsewhere */
@@ -173,7 +173,10 @@
  */
 #define	RX_PKTFLAG_ACKED	0x01
 #define	RX_PKTFLAG_FREE		0x02
-
+#define RX_PKTFLAG_TQ           0x04
+#define RX_PKTFLAG_RQ           0x08
+#define RX_PKTFLAG_IOVQ         0x10
+#define RX_PKTFLAG_CP           0x20
 
 /* The rx part of the header of a packet, in host form */
 struct rx_header {
@@ -253,7 +256,8 @@ struct rx_packet {
     afs_uint32 firstSerial;	/* Original serial number of this packet */
     struct clock firstSent;	/* When this packet was transmitted first */
     struct rx_header header;	/* The internal packet header */
-    unsigned int niovecs;
+    unsigned int niovecs;       /* # of iovecs that potentially have data */
+    unsigned int aiovecs;       /* # of allocated iovecs */
     struct iovec wirevec[RX_MAXWVECS + 1];	/* the new form of the packet */
 
     u_char flags;		/* Flags for local state of this packet */
@@ -264,10 +268,22 @@ struct rx_packet {
      * The jumbo datagram code also relies on the next two being
      * physically adjacent.
      * The Linux port uses this knowledge as well in osi_NetSend.
+     *
+     * The extradata field is padding in case the recvmsg implementation
+     * writes beyond the end of the final iovec buffer.  We do not know 
+     * what platforms had this problem so we are reluctant to remove it.
+     * the extradata must be adjacent to localdata.
+     * See rxk_ReadPacket and rxi_ReadPacket.
      */
     afs_uint32 wirehead[RX_HEADER_SIZE / sizeof(afs_int32)];
     afs_uint32 localdata[RX_CBUFFERSIZE / sizeof(afs_int32)];
     afs_uint32 extradata[RX_EXTRABUFFERSIZE / sizeof(afs_int32)];
+
+#ifdef RXDEBUG_PACKET
+    /* For debugging */
+    struct rx_packet *allNextp; /* A list of all packets */
+    afs_uint32  packetId;       /* An unique id number for debugging */
+#endif
 };
 
 /* Macro to convert continuation buffer pointers to packet pointers */
@@ -328,7 +344,7 @@ struct rx_packet {
     rx_SlowReadPacket(p, off, len, (char*)(out)) :             \
     ((memcpy((char *)(out), (char*)((p)->wirevec[1].iov_base)+(off), (len))),0))
 
-#define rx_computelen(p,l) { register int i; \
+#define rx_computelen(p,l) { int i; \
    for (l=0, i=1; i < p->niovecs; i++ ) l += p->wirevec[i].iov_len; }
 
 /* return what the actual contiguous space is: should be min(length,size) */
@@ -354,5 +370,10 @@ struct rx_packet {
  * security header */
 /* DEPRECATED */
 #define	rx_UserDataOf(conn, packet)	(((char *) (packet)->wirevec[1].iov_base) + (conn)->securityHeaderSize)
+
+#ifdef AFS_NT40_ENV
+/* Debugging for Windows Cache Manager - fs memdump */
+int rx_DumpPackets(FILE *outputFile, char *cookie);
+#endif /* AFS_NT40_ENV */
 
 #endif /* _RX_PACKET_ */

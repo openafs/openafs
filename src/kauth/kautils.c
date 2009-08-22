@@ -10,9 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/kauth/kautils.c,v 1.9.14.1 2007/10/30 15:16:39 shadow Exp $");
 
+#include <afs/afsutil.h>
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -29,6 +28,7 @@ RCSID
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <des.h>
+#include <des_prototypes.h>
 #include "kauth.h"
 #include "kautils.h"
 
@@ -49,14 +49,14 @@ ka_PrintUserID(char *prefix,	/* part to be output before userID */
 	if (isalnum(*c) || (ispunct(*c) && (*c != '.') && (*c != '@')))
 	    printf("%c", *c);
 	else
-	    printf("\\%0.3o", *c);
+	    printf("\\%.3o", *c);
     if (instance && strlen(instance)) {
 	printf(".");
 	for (c = (unsigned char *)instance; *c; c++)
 	    if (isalnum(*c) || (ispunct(*c) && (*c != '@')))
 		printf("%c", *c);
 	    else
-		printf("\\%0.3o", *c);
+		printf("\\%.3o", *c);
     }
     printf("%s", postfix);
 }
@@ -68,7 +68,7 @@ ka_PrintBytes(char bs[], int bl)
 
     for (i = 0; i < bl; i++) {
 	unsigned char c = bs[i];
-	printf("\\%0.3o", c);
+	printf("\\%.3o", c);
     }
 }
 

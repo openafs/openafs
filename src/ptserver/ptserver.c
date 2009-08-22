@@ -111,8 +111,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.25.2.8 2008/04/02 19:51:56 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -139,11 +137,12 @@ RCSID
 #include <afs/auth.h>
 #include <afs/keys.h>
 #include "ptserver.h"
+#include "ptprototypes.h"
 #include "error_macros.h"
 #include "afs/audit.h"
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
-
+#include <rx/rxstat.h>
 
 /* make	all of these into a structure if you want */
 struct prheader cheader;
@@ -154,12 +153,10 @@ struct afsconf_dir *prdir;
 extern afs_int32 depthsg;
 #endif
 
-extern int afsconf_ServerAuth();
-extern int afsconf_CheckAuth();
-
 int pr_realmNameLen;
 char *pr_realmName;
 
+int debuglevel = 0;
 int restricted = 0;
 int rxMaxMTU = -1;
 int rxBind = 0;
@@ -176,8 +173,7 @@ extern int prp_user_default;
 #include "AFS_component_version_number.c"
 
 int
-prp_access_mask(s)
-    char *s;
+prp_access_mask(char *s)
 {
     int r;
     if (*s >= '0' && *s <= '9') {
@@ -214,8 +210,6 @@ main(int argc, char **argv)
     char hostname[64];
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
-    extern int RXSTATS_ExecuteRequest();
-    extern int PR_ExecuteRequest();
 #if 0
     struct ktc_encryptionKey tkey;
 #endif
@@ -229,6 +223,8 @@ main(int argc, char **argv)
 
     int a;
     char arg[100];
+
+    char *auditFileName = NULL;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -277,7 +273,14 @@ main(int argc, char **argv)
 	int alen;
 	lcstring(arg, argv[a], sizeof(arg));
 	alen = strlen(arg);
-	if ((strncmp(arg, "-database", alen) == 0)
+	if (strcmp(argv[a], "-d") == 0) {
+	    if ((a + 1) >= argc) {
+		fprintf(stderr, "missing argument for -d\n"); 
+		return -1; 
+	    }
+	    debuglevel = atoi(argv[++a]);
+	    LogLevel = debuglevel;
+	} else if ((strncmp(arg, "-database", alen) == 0)
 	    || (strncmp(arg, "-db", alen) == 0)) {
 	    pr_dbaseName = argv[++a];	/* specify a database */
 	} else if (strncmp(arg, "-p", alen) == 0) {
@@ -327,35 +330,14 @@ main(int argc, char **argv)
 	}
 #endif
 	else if (strncmp(arg, "-auditlog", alen) == 0) {
-	    int tempfd, flags;
-	    FILE *auditout;
-	    char oldName[MAXPATHLEN];
-	    char *fileName = argv[++a];
+	    auditFileName = argv[++a];
 
-#ifndef AFS_NT40_ENV
-	    struct stat statbuf;
-
-	    if ((lstat(fileName, &statbuf) == 0) 
-		&& (S_ISFIFO(statbuf.st_mode))) {
-		flags = O_WRONLY | O_NONBLOCK;
-	    } else 
-#endif
-	    {
-		strcpy(oldName, fileName);
-		strcat(oldName, ".old");
-		renamefile(fileName, oldName);
-		flags = O_WRONLY | O_TRUNC | O_CREAT;
+	} else if (strncmp(arg, "-audit-interface", alen) == 0) {
+	    char *interface = argv[++a];
+	    if (osi_audit_interface(interface)) {
+		printf("Invalid audit interface '%s'\n", interface);
+		PT_EXIT(1);
 	    }
-	    tempfd = open(fileName, flags, 0666);
-	    if (tempfd > -1) {
-		auditout = fdopen(tempfd, "a");
-		if (auditout) {
-		    osi_audit_file(auditout);
-		    osi_audit(PTS_StartEvent, 0, AUD_END);
-		} else
-		    printf("Warning: auditlog %s not writable, ignored.\n", fileName);
-	    } else
-		printf("Warning: auditlog %s not writable, ignored.\n", fileName);
 	}
 	else if (!strncmp(arg, "-rxmaxmtu", alen)) {
 	    if ((a + 1) >= argc) {
@@ -365,7 +347,7 @@ main(int argc, char **argv)
 	    rxMaxMTU = atoi(argv[++a]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) ||
 		 (rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%d\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
 			rxMaxMTU, RX_MIN_PACKET_SIZE,
 			RX_MAX_PACKET_DATA_SIZE);
 		PT_EXIT(1);
@@ -378,7 +360,8 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
-		   "[-syslog[=FACILITY]] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
+		   "[-syslog[=FACILITY]] [-d <debug level>] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
@@ -389,6 +372,8 @@ main(int argc, char **argv)
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
+		   "[-d <debug level>] "
 		   "[-p <number of processes>] [-rebuild] [-rxbind] "
 		   "[-allow-dotted-principals] "
 		   "[-default_access default_user_access default_group_access] "
@@ -399,6 +384,8 @@ main(int argc, char **argv)
 #ifndef AFS_NT40_ENV
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-auditlog <log path>] "
+		   "[-audit-interface <file|sysvmq> (default is file)] "
+		   "[-d <debug level>] "
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
@@ -408,7 +395,7 @@ main(int argc, char **argv)
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
-		   "[-auditlog <log path>] "
+		   "[-auditlog <log path>] [-d <debug level>] "
 		   "[-default_access default_user_access default_group_access] "
 		   "[-restricted] [-rxmaxmtu <bytes>] [-rxbind] "
 		   "[-allow-dotted-principals] "
@@ -424,6 +411,11 @@ main(int argc, char **argv)
 	    fprintf(stderr, "Unrecognized arg: '%s' ignored!\n", arg);
 	}
 #endif
+    }
+
+    if (auditFileName) {
+	osi_audit_file(auditFileName);
+	osi_audit(PTS_StartEvent, 0, AUD_END);
     }
 
 #ifndef AFS_NT40_ENV
@@ -489,11 +481,11 @@ main(int argc, char **argv)
     if (kerberosKeys) {
 	/* initialize ubik */
 	ubik_CRXSecurityProc = afsconf_ClientAuth;
-	ubik_CRXSecurityRock = (char *)prdir;
+	ubik_CRXSecurityRock = prdir;
 	ubik_SRXSecurityProc = afsconf_ServerAuth;
-	ubik_SRXSecurityRock = (char *)prdir;
+	ubik_SRXSecurityRock = prdir;
 	ubik_CheckRXSecurityProc = afsconf_CheckAuth;
-	ubik_CheckRXSecurityRock = (char *)prdir;
+	ubik_CheckRXSecurityRock = prdir;
     }
     /* The max needed is when deleting an entry.  A full CoEntry deletion
      * required removal from 39 entries.  Each of which may refers to the entry
@@ -507,7 +499,6 @@ main(int argc, char **argv)
 
     if (rxBind) {
 	afs_int32 ccode;
-#ifndef AFS_NT40_ENV
 	if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || 
 	    AFSDIR_SERVER_NETINFO_FILEPATH) {
 	    char reason[1024];
@@ -516,7 +507,6 @@ main(int argc, char **argv)
 					   AFSDIR_SERVER_NETINFO_FILEPATH,
 					   AFSDIR_SERVER_NETRESTRICT_FILEPATH);
 	} else 
-#endif
 	{
 	    ccode = rx_getAllAddr(SHostAddrs, ADDRSPERSITE);
 	}
@@ -531,7 +521,7 @@ main(int argc, char **argv)
     }
 
     code =
-	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, &clones,
+	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, clones,
 			      pr_dbaseName, &dbase);
     if (code) {
 	afs_com_err(whoami, code, "Ubik init failed");
@@ -566,8 +556,7 @@ main(int argc, char **argv)
     rx_SetMaxProcs(tservice, lwps);
     if (rxkadDisableDotCheck) {
         rx_SetSecurityConfiguration(tservice, RXS_CONFIG_FLAGS,
-                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK,
-                                    NULL);
+                                    (void *)RXS_CONFIG_FLAGS_DISABLE_DOTCHECK);
     }
 
     tservice =

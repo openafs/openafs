@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/rx/UKERNEL/rx_knet.c,v 1.13.4.1 2008/03/10 22:32:34 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -25,7 +23,8 @@ unsigned short usr_rx_port = 0;
 struct usr_ifnet *usr_ifnet = NULL;
 struct usr_in_ifaddr *usr_in_ifaddr = NULL;
 
-void rxk_InitializeSocket();
+void rxk_InitializeSocket(void);
+extern int afs_osi_CheckTimedWaits(void);
 
 void
 afs_rxevent_daemon(void)
@@ -161,6 +160,7 @@ rx_ServerProc(void *unused)
 	/* assert(newcall != NULL); */
     }
     AFS_GLOCK();
+    return NULL;
 }
 
 /*
@@ -197,11 +197,12 @@ rxk_NewSocket(short aport)
 void
 rxk_InitializeSocket(void)
 {
-    int rc, sock, i;
+    int rc, sock;
 #ifdef AFS_USR_AIX_ENV
     unsigned long len, optval, optval0, optlen;
 #else /* AFS_USR_AIX_ENV */
-    int len, optval, optval0, optlen;
+    socklen_t len, optlen;
+    int optval, optval0;
 #endif /* AFS_USR_AIX_ENV */
     struct usr_socket *usockp;
     struct sockaddr_in lcladdr;
@@ -284,7 +285,6 @@ osi_NetSend(osi_socket sockp, struct sockaddr_in *addr, struct iovec *iov,
 {
     int rc;
     int i;
-    unsigned long tmp;
     struct usr_socket *usockp = (struct usr_socket *)sockp;
     struct msghdr msg;
     struct iovec tmpiov[64];

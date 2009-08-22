@@ -13,8 +13,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_analyze.c,v 1.22.14.8 2008/06/29 03:39:12 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -93,7 +91,7 @@ static int
 VLDB_Same(struct VenusFid *afid, struct vrequest *areq)
 {
     struct vrequest treq;
-    struct conn *tconn;
+    struct afs_conn *tconn;
     int i, type = 0;
     union {
 	struct vldbentry tve;
@@ -255,21 +253,22 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
 		    areq->skipserver[i] = 1;
 		}
 		if (tvp->serverHost[i] &&
-		    !(tvp->serverHost[i]->addr->sa_flags & 
+		    (tvp->serverHost[i]->addr->sa_flags & 
 		      SRVR_ISDOWN)) {
 		    areq->skipserver[i] = 1;
 		}
 	    }
 	    afs_PutVolume(tvp, READ_LOCK);
+	    for (i = 0; i < MAXHOSTS; i++) {
+	        if (tvp->serverHost[i] && areq->skipserver[i] == 0) {
+		    serversleft = 1;
+		    break;
+		}
+	    }
+	    return serversleft;
 	}
     }
-    for (i = 0; i < MAXHOSTS; i++) {
-	if (areq->skipserver[i] == 0) {
-	    serversleft = 1;
-	    break;
-	}
-    }
-    return serversleft;
+    return 1;
 }
 
 
@@ -306,7 +305,7 @@ afs_BlackListOnce(struct vrequest *areq, struct VenusFid *afid,
  *	if this is a temporary or permanent error.
  *------------------------------------------------------------------------*/
 int
-afs_Analyze(register struct conn *aconn, afs_int32 acode,
+afs_Analyze(register struct afs_conn *aconn, afs_int32 acode,
 	    struct VenusFid *afid, register struct vrequest *areq, int op,
 	    afs_int32 locktype, struct cell *cellp)
 {
@@ -320,8 +319,10 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
     afs_int32 markeddown;
 
  
-    if (AFS_IS_DISCONNECTED) {
-	/* SXW - This may get very tired after a while. We should try and
+ 
+    if (AFS_IS_DISCONNECTED && !AFS_IN_SYNC) {
+	/* On reconnection, act as connected. XXX: for now.... */
+        /* SXW - This may get very tired after a while. We should try and
 	 *       intercept all RPCs before they get here ... */
 	/*printf("afs_Analyze: disconnected\n");*/
 	afs_FinalizeReq(areq);
@@ -332,7 +333,7 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	}
 	return 0;
     }
-  
+    
     AFS_STATCNT(afs_Analyze);
     afs_Trace4(afs_iclSetp, CM_TRACE_ANALYZE, ICL_TYPE_INT32, op,
 	       ICL_TYPE_POINTER, aconn, ICL_TYPE_INT32, acode, ICL_TYPE_LONG,
@@ -382,7 +383,7 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	return shouldRetry;	/* should retry */
     }
 
-    if (!aconn) {
+    if (!aconn || !aconn->srvr) {
 	if (!areq->volumeError) {
 	    if (aerrP)
 		(aerrP->err_Network)++;

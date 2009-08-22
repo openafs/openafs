@@ -10,8 +10,6 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vm.c,v 1.8 2003/07/15 23:14:23 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -166,7 +164,7 @@ void
 osi_VM_FSyncInval(struct vcache *avc)
 {
     AFS_GUNLOCK();
-    PFLUSHINVALVP((vnode_t *) avc, (off_t) 0, (off_t) avc->m.Length);
+    PFLUSHINVALVP((vnode_t *) avc, (off_t) 0, (off_t) avc->f.m.Length);
     AFS_GLOCK();
 }
 
@@ -193,7 +191,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 	pdflush(AFSTOV(avc), 0);
     }
 
-    PFLUSHVP(AFSTOV(avc), (off_t) avc->m.Length, (off_t) 0, error);
+    PFLUSHVP(AFSTOV(avc), (off_t) avc->f.m.Length, (off_t) 0, error);
     AFS_GLOCK();
     if (error) {
 	/*
@@ -204,10 +202,10 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 	 * does what we want (we don't use this normally since
 	 * it also unhashes pages ..)
 	 */
-	PINVALFREE((vnode_t *) avc, avc->m.Length);
+	PINVALFREE((vnode_t *) avc, avc->f.m.Length);
     }
     ObtainWriteLock(&avc->lock, 121);
-    if (error && avc->m.LinkCount)
+    if (error && avc->f.m.LinkCount)
 	cmn_err(CE_WARN,
 		"AFS:Failed to push back pages for vnode 0x%x error %d (from afs_StoreOnLastReference)",
 		avc, error);
@@ -222,9 +220,9 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     vnode_t *vp = (vnode_t *) avc;
 
-    remapf(vp, /*avc->m.Length */ 0, 0);
+    remapf(vp, /*avc->f.m.Length */ 0, 0);
 
-    /* Used to grab locks and recheck avc->m.DataVersion and
+    /* Used to grab locks and recheck avc->f.m.DataVersion and
      * avc->execsOrWriters here, but we have to drop locks before calling
      * ptossvp() anyway, so why bother.
      */
