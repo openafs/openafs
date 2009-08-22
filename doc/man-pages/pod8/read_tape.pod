@@ -96,7 +96,7 @@ The issuer must have access to read and write to the specified tape device.
 =head1 SEE ALSO
 
 L<backup(8)>,
-L<restorevol(8)>,
+L<restorevol(1)>,
 L<vos_restore(1)>
 
 =head1 COPYRIGHT

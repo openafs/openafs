@@ -1139,6 +1139,7 @@ grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
 %{_bindir}/pagsh
 %{_bindir}/pagsh.krb
 %{_bindir}/pts
+%{_bindir}/restorevol
 %{_bindir}/scout
 %{_bindir}/sys
 %{_bindir}/tokens
@@ -1152,7 +1153,6 @@ grep -v "^#" >openafs-file-list <<EOF-openafs-file-list
 %{_sbindir}/fstrace
 %{_sbindir}/kas
 %{_sbindir}/read_tape
-%{_sbindir}/restorevol
 %{_sbindir}/rxdebug
 %{_sbindir}/uss
 %{_sbindir}/vos
@@ -1485,6 +1485,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_sbindir}/vldb_convert
 %{_sbindir}/voldump
 %{initdir}/openafs-server
+%{_mandir}/man1/restorevol.*
 %{_mandir}/man5/AuthLog.*
 %{_mandir}/man5/BackupLog.*
 %{_mandir}/man5/BosConfig.*
@@ -1517,7 +1518,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/prdb_check.*
 %{_mandir}/man8/ptserver.*
 %{_mandir}/man8/pt_util.*
-%{_mandir}/man8/restorevol.*
 %{_mandir}/man8/salvager.*
 %{_mandir}/man8/salvageserver.*
 %{_mandir}/man8/upclient.*

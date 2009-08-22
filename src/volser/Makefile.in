@@ -144,7 +144,7 @@ install: restorevol voldump volser.h volint.h vos volserver libvolser.a
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL} -d ${DESTDIR}${libdir}/afs
 	${INSTALL} -d ${DESTDIR}${afssrvlibexecdir}
-	${INSTALL_PROGRAM} restorevol ${DESTDIR}${sbindir}/restorevol
+	${INSTALL_PROGRAM} restorevol ${DESTDIR}${bindir}/restorevol
 	${INSTALL_PROGRAM} voldump ${DESTDIR}${sbindir}/voldump
 	${INSTALL_DATA} volser.h ${DESTDIR}${includedir}/afs/volser.h
 	${INSTALL_DATA} volint.h ${DESTDIR}${includedir}/afs/volint.h
