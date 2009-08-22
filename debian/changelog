@@ -17,6 +17,8 @@ openafs (1.5.61+dfsg-1) UNRELEASED; urgency=low
     conflicts on pre-1.5.61 openafs-client packages since the interface
     between afsd and the module has changed.  openafs-client now conflicts
     with openafs-modules2 and recommends openafs-modules3.
+  * Fix the second module control file for the standards version, section,
+    and maintainer update.
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
