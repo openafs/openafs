@@ -1,4 +1,4 @@
-Source: openafs
+Source: openafs-modules
 Section: kernel
 Priority: optional
 Maintainer: Russ Allbery <rra@debian.org>
