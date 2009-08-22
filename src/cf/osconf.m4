@@ -6,9 +6,8 @@ CFLAGS=
 XCFLAGS='${DBG} ${OPTMZ}'
 RXDEBUG="-DRXDEBUG"
 SHLIB_SUFFIX="so"
-CC="cc"
-CCOBJ="cc"
-MT_CC="cc"
+CCOBJ="$CC"
+MT_CC="$CC"
 XLIBS="${LIB_AFSDB} ${XBSA_XLIBS}"
 
 dnl debugging and optimization flag defaults
@@ -39,6 +38,9 @@ dnl TODO - need to disable STRIP if we are doing debugging in any user space cod
 
 case $AFS_SYSNAME in
 	alpha_dux40)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		LEX="lex"
 		CSTATIC="-non_shared"
 		DBG="-g3"
@@ -50,6 +52,9 @@ case $AFS_SYSNAME in
 		;;
 
 	alpha_dux50)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		LEX="flex -l"
 		DBG="-g3"
 		CSTATIC="-non_shared"
@@ -61,6 +66,9 @@ case $AFS_SYSNAME in
 		;;
 
 	alpha_dux51)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		LEX="flex -l"
 		DBG="-g3"
 		CSTATIC="-non_shared"
@@ -154,6 +162,7 @@ case $AFS_SYSNAME in
 	hp_ux102)
 		AS="/usr/ccs/bin/as"
 		CC="/opt/ansic/bin/cc -Ae"
+		CCOBJ="/opt/ansic/bin/cc -Ae"
 		DBM="/lib/libndbm.a"
 		LD="/bin/ld"
 		LEX="/opt/langtools/bin/lex"
@@ -363,9 +372,6 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux22)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -381,9 +387,6 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_linux*)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -402,9 +405,6 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux24)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -424,9 +424,6 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux26)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -477,6 +474,9 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_12)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		REGEX_OBJ="regex.o"
@@ -486,6 +486,9 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_13)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
@@ -496,6 +499,9 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_14)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
@@ -506,6 +512,9 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_60)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration"
 		LEX="lex -l"
 		LWP_OPTMZ="-O2"
@@ -517,6 +526,9 @@ case $AFS_SYSNAME in
 		;;
 
 	ppc_darwin_70)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS}'
@@ -532,6 +544,9 @@ case $AFS_SYSNAME in
 		;;
 
 	*_darwin_80)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
@@ -549,6 +564,9 @@ case $AFS_SYSNAME in
 		;;
 
 	*_darwin_90)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
@@ -567,6 +585,9 @@ case $AFS_SYSNAME in
 		;;
 
 	*_darwin_100)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
@@ -602,6 +623,8 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix42)
+		CC="cc"
+		CCOBJ="cc"
 		DBG=""
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
@@ -619,6 +642,8 @@ case $AFS_SYSNAME in
 
 
 	rs_aix51)
+		CC="cc"
+		CCOBJ="cc"
 		DBG=""
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
@@ -635,6 +660,8 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix52)	
+		CC="cc"
+		CCOBJ="cc"
 		DBG=""
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
@@ -651,6 +678,8 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix53)	
+		CC="cc"
+		CCOBJ="cc"
 		DBG="-g"
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
@@ -667,6 +696,8 @@ case $AFS_SYSNAME in
 		;;
 
 	rs_aix61)	
+		CC="cc"
+		CCOBJ="cc"
 		DBG="-g"
 		LEX="lex"
 		LIBSYS_AIX_EXP="afsl.exp"
@@ -683,8 +714,6 @@ case $AFS_SYSNAME in
 		;;
 
 	s390_linux22)
-		CC="gcc"
-		CCOBJ="gcc"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -703,8 +732,6 @@ case $AFS_SYSNAME in
 		;;
 
 	s390_linux24|s390_linux26)
-		CC="gcc"
-		CCOBJ="gcc"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -722,8 +749,7 @@ case $AFS_SYSNAME in
 		;;
 
 	s390x_linux24|s390x_linux26)
-		CC="gcc"
-		CCOBJ="gcc -fPIC"
+		CCOBJ="${CC} -fPIC"
 		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
@@ -742,6 +768,9 @@ case $AFS_SYSNAME in
 		;;
 
 	sgi_62)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
@@ -756,6 +785,9 @@ case $AFS_SYSNAME in
 		;;
 
 	sgi_63)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LIBS="/usr/lib/libdwarf.a /usr/lib/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
@@ -770,6 +802,9 @@ case $AFS_SYSNAME in
 		;;
 
 	sgi_64)
+		CC="cc"
+		CCOBJ="cc"
+		MT_CC="cc"
 		AFSD_LIBS="/usr/lib32/libdwarf.a /usr/lib32/libelf.a"
 		FSINCLUDES="-I/usr/include/sys/fs"
 		LEX="lex"
