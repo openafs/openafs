@@ -210,6 +210,7 @@ install-stamp: build-stamp
 	chmod 700 debian/openafs-client/var/cache/openafs
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
 	chmod 700 debian/openafs-fileserver/etc/openafs/server
+	chmod 700 debian/openafs-fileserver/var/lib/openafs/local
 	touch $@
 
 binary-indep: install-stamp
