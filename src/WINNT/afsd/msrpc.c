@@ -972,17 +972,19 @@ MSRPC_FreeConn(msrpc_conn * conn)
  */
 int
 MSRPC_WriteMessage(msrpc_conn * conn, BYTE * buffer, unsigned int len,
-		   cm_user_t * userp)
+                   cm_user_t * userp)
 {
     msrpc_call * call;
 
     if (len == 0)
 	return CM_ERROR_INVAL;
 
-    call = MSRPC_NewCall();
-
     if (len > MAX_RPC_MSG_SIZE)
 	return CM_ERROR_BUFFERTOOSMALL;
+
+    call = MSRPC_NewCall();
+    if (!call)
+        return ENOMEM;
 
     MSRPC_AllocBuffer(&call->in, len);
     memcpy(call->in.buf_data, buffer, len);
