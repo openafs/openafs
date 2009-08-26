@@ -57,6 +57,8 @@ typedef unsigned short etap_event_t;
 #endif
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
+#undef gop_lookupname_user
+#define gop_lookupname_user osi_lookupname_user
 
 #define FTRUNC 0
 
@@ -101,9 +103,17 @@ enum vcexcl { EXCL, NONEXCL };
 
 #define crref kauth_cred_get_with_ref
 #define crhold kauth_cred_ref
+#ifdef AFS_DARWIN100_ENV
+#define crfree(X) kauth_cred_unref(&X)
+#else
 #define crfree kauth_cred_rele
+#endif
 #define crdup kauth_cred_dup
-
+#ifdef AFS_DARWIN100_ENV
+#define ubc_msync_range(X,Y,Z,A) ubc_msync(X,Y,Z,NULL,A)
+#else
+#define ubc_msync_range(X,Y,Z,A) ubc_sync_range(X,Y,Z,A)
+#endif
 extern vfs_context_t afs_osi_ctxtp;
 extern int afs_osi_ctxtp_initialized;
 #endif

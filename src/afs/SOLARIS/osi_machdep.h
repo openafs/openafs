@@ -61,6 +61,8 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(ioflag),(ulimit),(cr),(aresid))
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) \
   lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) \
+  lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 
 
 #if defined(AFS_SUN510_ENV)

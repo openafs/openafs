@@ -1264,7 +1264,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
     register int i;
     register struct afs_conn *tc;
     register afs_int32 code;
-    register struct AFS_UCRED *cred = NULL;
+    struct AFS_UCRED *cred = NULL;
     struct vrequest treq, ureq;
     struct AFSVolSync tsync;
     int didCore;

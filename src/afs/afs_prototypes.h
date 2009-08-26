@@ -45,6 +45,11 @@ extern void shutdown_afstest(void);
 extern void afs_shutdown_BKG(void);
 extern int afs_syscall_call(long parm, long parm2, long parm3,
 			    long parm4, long parm5, long parm6);
+#if defined(AFS_DARWIN100_ENV)
+extern int afs_syscall64_call(user_addr_t parm, user_addr_t parm2,
+			      user_addr_t parm3, user_addr_t parm4,
+			      user_addr_t parm5, user_addr_t parm6);
+#endif
 
 
 /* afs_callback.c */
@@ -405,7 +410,10 @@ extern void afs_icl_AppendRecord(register struct afs_icl_log *logp,
 				 long p2, long p3, long p4);
 extern int Afscall_icl(long opcode, long p1, long p2, long p3, long p4,
 		       long *retval);
-
+#ifdef AFS_DARWIN100_ENV
+extern int Afscall64_icl(int opcode, user_addr_t p1, user_addr_t p2,
+		       user_addr_t p3, user_addr_t p4, int *retval);
+#endif
 
 /* afs_init.c */
 extern struct cm_initparams cm_initParams;
@@ -779,6 +787,11 @@ extern afs_int32 afs_waitForever;
 extern short afs_waitForeverCount;
 extern afs_int32 afs_showflags;
 extern int afs_defaultAsynchrony;
+#if defined(AFS_DARWIN100_ENV)
+extern int afs_syscall64_pioctl(user_addr_t path, unsigned int com,
+				user_addr_t cmarg, int follow, \
+				struct AFS_UCRED *credp);
+#endif
 #ifdef AFS_SUN5_ENV
 extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, 
 			      int follow, rval_t *rvp, struct AFS_UCRED *credp);
@@ -873,7 +886,11 @@ extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 #endif
 
 /* afs_syscall.c */
+#ifdef AFS_DARWIN100_ENV
+extern int copyin_afs_ioctl(user_addr_t cmarg, struct afs_ioctl *dst);
+#else
 extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
+#endif
 #ifdef UKERNEL
 extern int Afs_syscall(void);
 #endif

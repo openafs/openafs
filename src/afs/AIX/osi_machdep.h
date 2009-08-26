@@ -41,6 +41,10 @@ extern long time;
 #define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
 	lookupvp((fnamep), (followlink), (compvpp), &afs_osi_cred)
 
+#undef gop_lookupname_user
+#define	gop_lookupname_user(fnamep,segflg,followlink,compvpp) \
+	lookupvp((fnamep), (followlink), (compvpp), &afs_osi_cred)
+
 #undef afs_suser
 
 #undef setuerror

@@ -81,8 +81,28 @@ struct afs_icl_log *afs_icl_FindLog(char *);
 struct afs_icl_set *afs_icl_FindSet(char *);
 
 
+#ifdef AFS_DARWIN100_ENV
+#define AFSKPTR(X) k ## X
 int
 Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
+{
+    return Afscall64_icl(opcode,
+			 CAST_USER_ADDR_T((p1)),
+			 CAST_USER_ADDR_T((p2)),
+			 CAST_USER_ADDR_T((p3)),
+			 CAST_USER_ADDR_T((p4)),
+			 retval);
+}
+#else
+#define AFSKPTR(X) ((caddr_t)X)
+#endif
+
+int
+#ifdef AFS_DARWIN100_ENV
+Afscall64_icl(int opcode, user_addr_t kp1, user_addr_t kp2, user_addr_t kp3, user_addr_t kp4, int *retval)
+#else
+Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
+#endif
 {
     afs_int32 *lp, elts, flags;
     register afs_int32 code;
@@ -101,6 +121,12 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
     afs_int32 startCookie;
     afs_int32 allocated;
     struct afs_icl_log *tlp;
+#ifdef AFS_DARWIN100_ENV
+    afs_uint32 p1 = (afs_uint32)kp1;
+    afs_uint32 p2 = (afs_uint32)kp2;
+    afs_uint32 p3 = (afs_uint32)kp3;
+    afs_uint32 p4 = (afs_uint32)kp4;
+#endif
 
 #ifdef	AFS_SUN5_ENV
     if (!afs_suser(CRED())) {	/* only root can run this code */
@@ -124,12 +150,13 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	 * updates cookie to updated start (not end) if we had to
 	 * skip some records.
 	 */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
-	AFS_COPYIN((char *)p4, (char *)&startCookie, sizeof(afs_int32), code);
+	AFS_COPYIN(AFSKPTR(p4), (char *)&startCookie, sizeof(afs_int32), code);
 	if (code)
 	    return code;
+	afs_warn("looking for log %s\n", tname);
 	logp = afs_icl_FindLog(tname);
 	if (!logp)
 	    return ENOENT;
@@ -146,10 +173,10 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	    osi_FreeLargeSpace((struct osi_buffer *)lp);
 	    break;
 	}
-	AFS_COPYOUT((char *)lp, (char *)p2, elts * sizeof(afs_int32), code);
+	AFS_COPYOUT((char *)lp, AFSKPTR(p2), elts * sizeof(afs_int32), code);
 	if (code)
 	    goto done;
-	AFS_COPYOUT((char *)&startCookie, (char *)p4, sizeof(afs_int32),
+	AFS_COPYOUT((char *)&startCookie, AFSKPTR(p4), sizeof(afs_int32),
 		    code);
 	if (code)
 	    goto done;
@@ -177,9 +204,9 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	temp = strlen(tlp->name) + 1;
 	if (temp > p3)
 	    return EINVAL;
-	AFS_COPYOUT(tlp->name, (char *)p2, temp, code);
+	AFS_COPYOUT(tlp->name, AFSKPTR(p2), temp, code);
 	if (!code)		/* copy out size of log */
-	    AFS_COPYOUT((char *)&tlp->logSize, (char *)p4, sizeof(afs_int32),
+	    AFS_COPYOUT((char *)&tlp->logSize, AFSKPTR(p4), sizeof(afs_int32),
 			code);
 	break;
 
@@ -187,7 +214,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	/* enumerate logs: p1=setname, p2=index, p3=&name, p4=sizeof(name).
 	 * return 0 for success, otherwise error.
 	 */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
