@@ -82,7 +82,7 @@ StartService()
 # Start the AFS server processes if a bosserver exists
 #
 
-    if [ -x /usr/afs/bin/bosserver ]; then
+    if [ -x /usr/afs/bin/bosserver -a -f /usr/afs/local/BosConfig ]; then
 	echo "Starting AFS Server processes"
 	/usr/afs/bin/bosserver
 	AFSD_OPTIONS="$AFSD_OPTIONS -nosettime"
@@ -189,6 +189,12 @@ StopService()
 
 	echo "Unloading AFS kernel extensions"
 	kextunload $VICEETC/afs.kext 2>&1 > /dev/console
+    fi
+
+    if [ -x /usr/afs/bin/bosserver -a -f /usr/afs/local/BosConfig ]; then
+	echo "Stopping AFS Server processes"
+	/usr/afs/bin/bos shutdown localhost -local
+	killall bosserver
     fi
 }
 
