@@ -67,6 +67,7 @@ void runCommand(int argc, char *argv[])
 		NSLog(@"Start afs from helper");
 		setuid(0);
 		const char *startArgs[] = {argv[2], argv[3], 0L};
+		NSLog(@"%s, %s, %s", argv[1], argv[2], argv[3]);
 		[[AuthUtil shared] execUnixCommand:argv[1] 
 									  args:startArgs
 									output:nil];
@@ -80,9 +81,9 @@ void runCommand(int argc, char *argv[])
 		setuid(0);
 		NSLog(@"Manage start_afs_at_startup with option %s from helper", argv[2]);
 		[PListManager manageAfsStartupLaunchdFile:YES 
-								 afsStartupScript:[NSString stringWithCString:argv[2]]
-									  afsBasePath:[NSString stringWithCString:argv[4]]
-										 afsdPath:[NSString stringWithCString:argv[3]]];
+								 afsStartupScript:[NSString stringWithCString:argv[2] encoding:NSUTF8StringEncoding]
+									  afsBasePath:[NSString stringWithCString:argv[4] encoding:NSUTF8StringEncoding]
+										 afsdPath:[NSString stringWithCString:argv[3] encoding:NSUTF8StringEncoding]];
 	}
 }
 

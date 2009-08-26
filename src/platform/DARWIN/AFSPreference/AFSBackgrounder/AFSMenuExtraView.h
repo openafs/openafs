@@ -17,4 +17,8 @@
 }
 - initWithFrame:(NSRect)myRect backgrounder:(AFSBackgrounderDelegate*)backgrounder menu:(NSMenu*)menu;
 - (NSAttributedString*) makeKerberosIndicator:(int*)fontHeight;
+- (void)mouseDown:(NSEvent *)event;
+- (void)menuWillOpen:(NSMenu *)menu;
+- (void)menuDidClose:(NSMenu *)menu;
+- (void)menuNeedsUpdate:(NSMenu *)menu;
 @end

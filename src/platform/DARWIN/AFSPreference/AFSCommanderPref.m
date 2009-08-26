@@ -174,7 +174,9 @@
 	switch (returnCode) {
 		case  1:
 			if([[NSFileManager defaultManager] createDirectoryAtPath:[HOME_LAUNCHD_AGENT_FOLDER stringByExpandingTildeInPath] 
-														  attributes:nil]) {
+										 withIntermediateDirectories:NO
+														  attributes:nil
+															   error:nil]) {
 				
 				//Create the file
 				[PListManager installBackgrounderLaunchdFile:YES
@@ -505,7 +507,7 @@
 				do {
 					DBCellElement *cellElement =  (DBCellElement*)[filteredCellDB objectAtIndex:index];
 					[[afsProperty getCellList] removeObject:cellElement];
-				} while ((index = [selectedIndex indexGreaterThanIndex: index]) != NSNotFound);
+				} while ((index = [selectedIndex indexGreaterThanIndex:index]) != NSNotFound);
 			}
 		}
 		break;
@@ -631,7 +633,7 @@
 - (void) refreshGui:(NSNotification *)notification{
 	BOOL afsIsUp = [afsProperty checkAfsStatus];
 	[self setAfsStatus];
-	//[self refreshTokens:nil];
+	[self refreshTokens:nil];
 	[tokensButton setEnabled:afsIsUp];
 	[unlogButton setEnabled:afsIsUp];
 }

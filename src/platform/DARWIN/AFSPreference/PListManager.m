@@ -67,6 +67,7 @@
 			break;
 			
 		case 5:
+		case 6:
 			if(enable){
 				//remove
 				toRemove = DELETE_IN_10_5;
@@ -120,7 +121,9 @@
 +(BOOL) checkKrb5AtLoginTimeLaunchdEnable {
 	BOOL result = false;
 	NSString *authFileContent = nil;
-	authFileContent = [NSString stringWithContentsOfFile:AUTH_FILE];
+	authFileContent = [NSString stringWithContentsOfFile:AUTH_FILE 
+														  encoding:NSUTF8StringEncoding 
+															 error:nil];
 	if(authFileContent) {
 		result = [authFileContent rangeOfString:ADD_IN_PLIST].location != NSNotFound;	
 	}
