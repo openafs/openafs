@@ -1,3 +1,50 @@
+Since 1.5.61
+ * IMPORTANT: New support for DCE RPC Services: SRVSVC and WKSSVC.
+   No longer will browsing \\AFS produce truncated share names.
+
+ * Registry specified server preferences did not result in
+   the CM_SERVERFLAG_PREF_SET flag being applied to the
+   cm_server_t object.  
+
+ * Avoid unnecessary DNS lookups of share names as cells
+   when it is known that the name cannot be a cell name.
+   Any name that does not contain a dot is skipped.
+
+ * When processing Dfs Referral requests, do not return an
+   error if the server is down or busy; if the volume is
+   offline; the cell vldb cannot be reached; etc.
+   These paths are still \\AFS paths and so the client 
+   should not be sent to search elsewhere for resolution.
+
+ * CRITICAL: Prevent the cm_Daemon thread from terminating when
+   the machine enters the suspend state.  IF the cm_Daemon thread
+   dies, there is nothing to execute down server checks.
+
+ * Prevent use of smb_StartedLock before initialization which
+   can result in a panic in the lock package.
+
+ * Improve error checking in afslogon.dll in order to prevent
+   NULL pointer dereferences within GetLogonDomainOptions()
+   if the Lsa operations fail.
+
+ * Add support to the build system to automatically update
+   a Microsoft Symbol Store.
+
+ * Do not access the cm_conn_t after executing the cm_Analyze
+   loops.  Doing so can result in an access to memory that has
+   been freed.
+
+ * CRITICAL: If a StoreData request offset is not aligned on the 
+   buffer module blockSize, (offset % blockSize) bytes of dirty
+   data will not be written to the file server.
+
+ * CRITICAL: If a StoreData64 request is sent to a file server
+   that does not support large files (>2GB) and the client is 
+   unaware that the server has no large file support, the first 
+   chunksize worth of data will not be written to the file server.
+   This bug was introduced in 1.5.3.   It affects all IBM AFS file
+   servers and all OpenAFS file servers older than 1.4.0.
+
 Since 1.5.60
  * If a file server becomes inaccessible while the cache manager has 
    dirty buffers to write, the afsd_service buf_IncrSync thread can 
