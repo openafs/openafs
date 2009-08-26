@@ -146,7 +146,7 @@ static AuthUtil *sharedAuthUtil = nil;
 			if (bytesRead < 1) break;
 			//write (fileno (stdout), buff, bytesRead);
 			if(output) {
-				[output appendString:[NSString stringWithCString:buff length:bytesRead]];
+				[output appendString:[NSString stringWithCString:buff  encoding:NSUTF8StringEncoding]];
 			}
 		}
 	}

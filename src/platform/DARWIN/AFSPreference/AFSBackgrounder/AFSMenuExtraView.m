@@ -70,7 +70,7 @@
     @discussion Make a letter to render in menu view to inform the user if is enable aklog use
 */
 - (NSAttributedString*) makeKerberosIndicator:(int*)fontHeight  {
-	NSFont *font = [NSFont fontWithName:@"Palatino-Roman" size:9.0];
+	NSFont *font = [NSFont systemFontOfSize:9.0];
 	NSDictionary *attrsDictionary =	[NSDictionary dictionaryWithObject:font
 																forKey:NSFontAttributeName];
 	NSAttributedString *attrString = [[NSAttributedString alloc] initWithString:@"K"

@@ -467,7 +467,9 @@
 	NSString *afsdOptionStrData = [[NSString alloc] initWithData:fileHData
 														encoding:NSASCIIStringEncoding];*/
 	if(!filePath) return;
-	[self readAFSDParamLineContent:[[NSString stringWithContentsOfFile:filePath] stringByStandardizingPath]];
+	[self readAFSDParamLineContent:[[NSString stringWithContentsOfFile:filePath 
+															  encoding:NSUTF8StringEncoding 
+																 error:nil] stringByStandardizingPath]];
 }
 
 // -------------------------------------------------------------------------------
@@ -540,7 +542,9 @@
 	NSScanner *lineScanner = nil;
 	
 	//Get file content
-	NSString *newAFSDConfContent = [NSString stringWithContentsOfFile:filePath];
+	NSString *newAFSDConfContent = [NSString stringWithContentsOfFile:filePath 
+															 encoding:NSUTF8StringEncoding 
+																error:nil];
 	
 	//get lines in array
 	NSArray *confLines = [newAFSDConfContent componentsSeparatedByString:@"\n"];
@@ -996,19 +1000,25 @@
 //  +(void) aklog
 // -------------------------------------------------------------------------------
 -(void) aklog:(NSString*)theCell noKerberosCall:(BOOL)krb5CallEnable {
-	KLPrincipal  princ = nil;
-	KLStatus kstatus = noErr;
-	char *princName = malloc(255);
+	KLPrincipal		princ = nil;
+	KLStatus		kstatus = noErr;
+	char			*princName = 0L;
+	KLBoolean       outFoundValidTickets = false;
 	@try {
 		// trying to ket kerberos ticket
 		if(krb5CallEnable) {
-			kstatus =  KLAcquireInitialTickets (0L, 0L, &princ,  &princName);
-			if(kstatus != noErr && kstatus != klUserCanceledErr) @throw [NSException exceptionWithName:@"aklog" 
-																								reason:kPathNotEmpty 
-																							  userInfo:nil];
+			kstatus = KLCacheHasValidTickets(nil, nil, &outFoundValidTickets, nil, nil);
+			//kstatus =  KLAcquireInitialTickets (0L, 0L, &princ,  &princName);
+			if(!outFoundValidTickets) {
+				kstatus = KLAcquireNewInitialTickets(nil, nil, &princ, &princName);
+				if(kstatus != noErr && kstatus != klUserCanceledErr) @throw [NSException exceptionWithName:@"aklog" 
+																									reason:@"KLAcquireInitialTickets" 
+																								  userInfo:nil];
+			}
 		} else kstatus = klNoErr;
 		
-		 //ok to launch aklog
+		
+		//ok to launch aklog
 		if(kstatus == klNoErr) [TaskUtil executeTaskSearchingPath:@"aklog" 
 															 args:(theCell==nil?[NSArray arrayWithObjects:nil]:[NSArray arrayWithObjects:@"-c", theCell, nil])];
 		
@@ -1018,9 +1028,10 @@
 	}
 	@finally {
 		// destory the kerberos va
-		if(princName && princ != nil) 
-			KLDisposeString(princName);
-		else if(princName) free(princName);
+		if (kstatus == klNoErr) {
+			KLDisposeString (princName);
+			KLDisposePrincipal (princ);
+		}
 	}
 		
 }

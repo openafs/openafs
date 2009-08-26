@@ -231,6 +231,8 @@
 	
 	//Dispose afs manager
 	[afsPropMngr release];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID 
+																   object:kMenuExtraEventOccured];
 }
 
 // -------------------------------------------------------------------------------
@@ -240,6 +242,8 @@
 {
 	[afsMngr unlog:nil];
 	[self updateAfsStatus:nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID 
+																   object:kMenuExtraEventOccured];
 }
 
 
@@ -441,6 +445,9 @@
 }
 
 -(IBAction) getReleaseTokenEvent:(id)sender {
-	[self getToken:sender];
+	if(gotToken)
+		[self releaseToken:sender];
+	else
+		[self getToken:sender];
 }
 @end
