@@ -21,10 +21,10 @@ all: config mkvers \
 	${TOP_INCDIR}/afs/venus.h \
 	${TOP_INCDIR}/afs/debug.h
 
-Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
+Makefile.version: Makefile.version-CML Makefile.version-NOCML
 	$(RM) -f Makefile.version
 	if	[ -r @TOP_SRCDIR@/CML/state ] ; \
-	then	$(CP) ${srcdir}/Makefile.version-CML Makefile.version ; \
+	then	$(CP) Makefile.version-CML Makefile.version ; \
 	else	$(CP) Makefile.version-NOCML Makefile.version ; \
 	fi
 
