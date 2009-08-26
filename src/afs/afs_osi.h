@@ -277,7 +277,7 @@ typedef struct timeval osi_timeval_t;
  * and kernel space. Call these to avoid taking page faults while
  * holding the global lock.
  */
-#ifdef CAST_USER_ADDR_T
+#if defined(CAST_USER_ADDR_T) && !defined(UKERNEL) && !defined(AFS_DARWIN100_ENV)
 #define __U(X) CAST_USER_ADDR_T((X))
 #else
 #define __U(X) (X)
@@ -289,7 +289,7 @@ typedef struct timeval osi_timeval_t;
 	    int haveGlock = ISAFS_GLOCK();			\
 	    if (haveGlock)					\
 		AFS_GUNLOCK();					\
-	    CODE = copyin(__U((SRC)),(DST),(LEN));			\
+	    CODE = copyin(__U((SRC)),(DST),(LEN));	\
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)

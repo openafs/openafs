@@ -64,9 +64,10 @@ osi_lookupname_internal(char *aname, int followlink, struct vfsmount **mnt,
     }
     return code;
 }
+
 int
 osi_lookupname(char *aname, uio_seg_t seg, int followlink, 
-			struct dentry **dpp)
+	       struct dentry **dpp)
 {
     int code;
     char *tname;

@@ -50,6 +50,9 @@
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
+#undef gop_lookupname_user
+#define gop_lookupname osi_lookupname_user
+
 #undef afs_suser
 
 #define afs_strcat(s1, s2)	strcat((s1), (s2))

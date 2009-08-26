@@ -28,7 +28,7 @@ RXKAD = ../rxkad
 PTSERVER = ../ptserver
 SYS = ../sys
 
-AUDITOBJS = audit.o audit-file.o audit-sysvmq.o
+AUDITOBJS = audit.o
 
 AUTHOBJS = \
 	cellconfig.o \

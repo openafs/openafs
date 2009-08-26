@@ -109,7 +109,7 @@ int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		     register struct afs_ioctl *ablob, int afollow,
 		     struct AFS_UCRED **acred);
-static int Prefetch(char *apath, struct afs_ioctl *adata, int afollow,
+static int Prefetch(iparmtype apath, struct afs_ioctl *adata, int afollow,
 		    struct AFS_UCRED *acred);
 
 
@@ -223,7 +223,11 @@ afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
  */
 
 static int
+#ifdef AFS_DARWIN100_ENV
+copyin_afs_ioctl(user_addr_t cmarg, struct afs_ioctl *dst)
+#else
 copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
+#endif
 {
     int code;
 #if defined(AFS_DARWIN100_ENV)
@@ -386,7 +390,6 @@ HandleIoctl(register struct vcache *avc, register afs_int32 acom,
     }
     return code;		/* so far, none implemented */
 }
-
 
 #ifdef	AFS_AIX_ENV
 /* For aix we don't temporarily bypass ioctl(2) but rather do our
@@ -861,21 +864,18 @@ afs_pioctl(p, args, retval)
 
 int
 #ifdef	AFS_SUN5_ENV
-afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
-     rval_t *rvp;
-     struct AFS_UCRED *credp;
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, rval_t *rvp, struct AFS_UCRED *credp)
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_syscall_pioctl(path, com, cmarg, follow, credp)
-     struct AFS_UCRED *credp;
+#ifdef AFS_DARWIN100_ENV
+afs_syscall64_pioctl(user_addr_t path, unsigned int com, user_addr_t cmarg,
+		   int follow, struct AFS_UCRED *credp)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
+		   struct AFS_UCRED *credp)
 #else
-afs_syscall_pioctl(path, com, cmarg, follow)
+afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif
 #endif
-     char *path;
-     unsigned int com;
-     caddr_t cmarg;
-     int follow;
 {
     struct afs_ioctl data;
 #ifdef AFS_NEED_CLIENTCONTEXT
@@ -977,11 +977,11 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 		       foreigncreds ? foreigncreds : credp);
 #else
 #ifdef AFS_LINUX22_ENV
-	code = gop_lookupname(path, AFS_UIOUSER, follow, &dp);
+	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &dp);
 	if (!code)
 	    vp = (struct vnode *)dp->d_inode;
 #else
-	code = gop_lookupname(path, AFS_UIOUSER, follow, &vp);
+	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &vp);
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
@@ -1089,6 +1089,17 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     return (code);
 #endif
 }
+
+#ifdef AFS_DARWIN100_ENV
+int
+afs_syscall_pioctl(char * path, unsigned int com, caddr_t cmarg,
+		   int follow, struct AFS_UCRED *credp)
+{
+    return afs_syscall64_pioctl(CAST_USER_ADDR_T(path), com,
+				CAST_USER_ADDR_T((unsigned int)cmarg), follow,
+				credp);
+}
+#endif
 
 #define MAXPIOCTLTOKENLEN \
 (3*sizeof(afs_int32)+MAXKTCTICKETLEN+sizeof(struct ClearToken)+MAXKTCREALMLEN)
@@ -2087,7 +2098,7 @@ DECL_PIOCTL(PCheckAuth)
 }
 
 static int
-Prefetch(char *apath, struct afs_ioctl *adata, int afollow,
+Prefetch(iparmtype apath, struct afs_ioctl *adata, int afollow,
 	 struct AFS_UCRED *acred)
 {
     register char *tp;

@@ -20,6 +20,8 @@ extern afs_rwlock_t afs_xosi;
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 			  struct vnode **vpp);
+extern int osi_lookupname_user(user_addr_t aname, enum uio_seg seg,
+			       int followlink, struct vnode **vpp);
 extern int afs_suser(void *credp);
 extern void get_vfs_context(void);
 extern void put_vfs_context(void);

@@ -39,6 +39,8 @@ extern struct timeval time;
 
 #undef gop_lookupname
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+#undef gop_lookupname_user
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 
 #define osi_vnhold(avc,r)  do { \
        if ((avc)->vrefCount) { VN_HOLD((struct vnode *)(avc)); } \

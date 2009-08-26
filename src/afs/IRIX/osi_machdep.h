@@ -32,6 +32,9 @@ extern time_t time;
 #undef gop_lookupname
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp), NULL)
 
+#undef gop_lookupname_user
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp), NULL)
+
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 
 #undef afs_osi_Alloc_NoSleep

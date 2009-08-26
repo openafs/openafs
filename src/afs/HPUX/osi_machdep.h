@@ -32,6 +32,8 @@ extern struct timeval time;
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(aresid),0)
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) \
   lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+#define gop_lookupname_user(fnamep,segflg,followlink,compvpp) \
+  lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
 
 #undef	afs_suser
 

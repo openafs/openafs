@@ -217,17 +217,30 @@ struct afsprocdata32 {
 
 #ifdef AFS_DARWIN80_ENV
 struct afssysargs {
-     unsigned long syscall;
-     unsigned long param1;
-     unsigned long param2;
-     unsigned long param3;
-     unsigned long param4;
-     unsigned long param5;
-     unsigned long param6;
-     unsigned long retval;
+    unsigned int syscall;
+    unsigned int param1;
+    unsigned int param2;
+    unsigned int param3;
+    unsigned int param4;
+    unsigned int param5;
+    unsigned int param6;
+    unsigned int retval;
+};
+
+/* args reordered to avoid alignment issues */
+struct afssysargs64 {
+    user_addr_t param1;
+    user_addr_t param2;
+    user_addr_t param3;
+    user_addr_t param4;
+    user_addr_t param5;
+    user_addr_t param6;
+    unsigned int syscall;
+    unsigned int retval;
 };
 #define VIOC_SYSCALL_TYPE 'C' 
 #define VIOC_SYSCALL _IOWR(VIOC_SYSCALL_TYPE,1,struct afssysargs)
+#define VIOC_SYSCALL64 _IOWR(VIOC_SYSCALL_TYPE,2,struct afssysargs64)
 #define SYSCALL_DEV_FNAME "/dev/openafs_ioctl"
 #endif
 

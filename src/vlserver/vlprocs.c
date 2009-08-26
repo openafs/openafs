@@ -555,7 +555,7 @@ SVL_GetNewVolumeId(rxcall, Maxvolidbump, newvolumeid)
      afs_int32 Maxvolidbump;
      afs_int32 *newvolumeid;
 {
-    register afs_int32 errorcode, maxvolumeid;
+    afs_int32 errorcode, maxvolumeid;
     struct ubik_trans *trans;
 
     COUNT_REQ(VLGETNEWVOLUMEID);

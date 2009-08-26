@@ -16,6 +16,9 @@
  */
 #include <afsconfig.h>
 #include "afs/param.h"
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"	/* statistics */
 
 /* We should be doing something better anyway */
 #ifdef AFS_DARWIN80_ENV
@@ -27,12 +30,9 @@ setpag(proc, cred, pagvalue, newpag, change_parent)
      afs_uint32 *newpag;
      afs_uint32 change_parent;
 { 
-  return -1;
+    return EINVAL;
 }
 #else
-#include "afs/sysincludes.h"
-#include "afsincludes.h"
-#include "afs/afs_stats.h"	/* statistics */
 
 static int
   afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset);

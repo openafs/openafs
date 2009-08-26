@@ -121,6 +121,13 @@ extern int afs_CheckInit(void);
 extern void afs_shutdown(void);
 extern void shutdown_afstest(void);
 extern void afs_shutdown_BKG(void);
+extern int afs_syscall_call(long parm, long parm2, long parm3,
+			    long parm4, long parm5, long parm6);
+#if defined(AFS_DARWIN100_ENV)
+extern int afs_syscall64_call(user_addr_t parm, user_addr_t parm2,
+			      user_addr_t parm3, user_addr_t parm4,
+			      user_addr_t parm5, user_addr_t parm6);
+#endif
 
 
 /* afs_callback.c */
@@ -364,6 +371,7 @@ extern int afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred,
 /* afs_exporter.c */
 extern struct afs_exporter *root_exported;
 extern struct afs_exporter *exporter_find(int type);
+extern void shutdown_exporter(void);
 
 /* afs_init.c */
 extern struct cm_initparams cm_initParams;
@@ -676,7 +684,24 @@ extern afs_int32 afs_waitForever;
 extern short afs_waitForeverCount;
 extern afs_int32 afs_showflags;
 extern int afs_defaultAsynchrony;
-extern int afs_syscall_pioctl();
+#if defined(AFS_DARWIN100_ENV)
+extern int afs_syscall64_pioctl(user_addr_t path, unsigned int com,
+				user_addr_t cmarg, int follow, \
+				struct AFS_UCRED *credp);
+#endif
+#ifdef AFS_SUN5_ENV
+extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, 
+			      int follow, rval_t *rvp, struct AFS_UCRED *credp);
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, 
+			      int follow, struct AFS_UCRED *credp);
+#else
+extern int afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg,
+			      int follow);
+#endif
+extern int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
+		       struct afs_ioctl *adata);
+
 
 /* afs_segments.c */
 extern int afs_StoreMini(register struct vcache *avc, struct vrequest *areq);
@@ -754,7 +779,6 @@ extern void afs_GetCMStat(char **ptr, unsigned *size);
 #ifndef AFS_NOSTATS
 extern void afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
 #endif
-
 
 /* UKERNEL/afs_usrops.c */
 #ifdef UKERNEL

@@ -130,6 +130,10 @@ extern int afs_vget();
 #define	gop_lookupname(fnamep, segflg, followlink, compvpp) \
 	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
 
+#undef gop_lookupname_user
+#define	gop_lookupname_user(fnamep, segflg, followlink, compvpp) \
+	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (compvpp))
+
 #ifdef AFS_OBSD39_ENV
 #define afs_osi_lockmgr(l, f, i, p) lockmgr((l), (f), (i))
 #else
