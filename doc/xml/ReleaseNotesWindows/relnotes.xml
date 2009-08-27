@@ -19,7 +19,7 @@
     </revhistory>
     <abstract>
       <para>This document provides a series of usage notes regarding the OpenAFS for Windows
-      client, supported platforms, contribution information, debugging techniques, and 
+      client, supported platforms, contribution information, debugging techniques, and
       a reference to supported Windows registry values.
      </para>
     </abstract>
@@ -31,9 +31,9 @@
     <para>The AFS volume is a tree of files and sub-directories.  AFS volumes are created by administrators and are joined to an AFS cell via the use of a mount point.   Once a volume is created, users can create files and directories as well as mount points and symlinks within the volume without regard for the physical location of the volume.  Administrators can move the volume to another server as necessary without the need to notify users.   In fact, the volume move can occur while files in the volume are in use.  </para>
     <para>AFS volumes can be replicated to read-only copies.   When accessing files from a read-only replica, clients will read all of the data from a single replica.   If that replica becomes unavailable, the clients will failover to any replica that is reachable.  Users of the data are unaware of where the replicas are stored or which one is being accessed.   The contents of the replicas can be updated at any time by
       <emphasis>releasing</emphasis> the current contents of the source volume.
-  
-    
-    
+
+
+
     </para>
     <para>OpenAFS for Windows (OAFW) provides AFS client access Microsoft Windows operating systems.  It strives to maintain transparency such that the user is unaware of the distinction between the use of AFS and Microsoft Windows file shares.   OAFW can be part of a single sign-on solution by allowing credentials for a Kerberos principal to be obtained at logon and for that principal to be used to obtain AFS tokens for one or more cells.   Although OAFW is implemented as a locally installed SMB to AFS gateway, OAFW maintains the portability of file paths by its use of the \\AFS UNC server name.</para>
     <para>OpenAFS is the product of an open source development effort begun on October 31 2000.  OpenAFS is maintained and developed by a group of volunteers with the support of the user community.   If you use OpenAFS as part of your computing infrastructure please contribute to its continued growth.
@@ -49,7 +49,7 @@
         <listitem>
   a Windows Installer package (.msi) that is built using WiX and can be customized for organizations via the use of MSI Transforms (see
           <link linkend='MSI_Deployment_Guide'>MSI Deployment Guide</link>)
-  
+
         </listitem>
       </orderedlist>
     </para>
@@ -123,9 +123,9 @@
       <title id='Additional_Software_Packages'>2.3 Additional Software Packages</title>
       <para>
         <ulink url='http://web.mit.edu/kerberos/dist/index.html'>MIT Kerberos for Windows</ulink> 2.6.x or 3.x.x if Kerberos v5 authentication support is desired.  The recommended release is version 3.2.2.  For 64-bit Windows installations, the 64-bit version of Kerberos for Windows is required.  For 32-bit Windows installations, the 32-bit version of Kerberos for Windows is required.
-      
-      
-      
+
+
+
       </para>
     </section>
   </chapter>
@@ -135,16 +135,16 @@
       <title id='Unicode_Support'>3.1. Unicode Support</title>
       <para>Starting with the 1.5.50 release of OpenAFS for Windows, each of the AFS Client Service, the AFS Explorer Shell Extension, and the command-line tools are Unicode enabled.  No longer is OpenAFS restricted to accessing file system objects whose names can be represented in the locale specific OEM code page.  This has significant benefits for end users.  Most importantly it permits non-Western languages to now be used for file system object names in AFS from Microsoft Windows operating systems.  Now that Unicode names are supported,
         <ulink url='http://en.wikipedia.org/wiki/Roaming_user_profile'>Roaming User Profiles</ulink> and
-        <ulink url='http://en.wikipedia.org/wiki/Folder_redirection'>Folder Redirection</ulink> will no longer fail when a user attempts to store an object with a name that cannot be represented in the OEM code page.  
-      
-      
-      
+        <ulink url='http://en.wikipedia.org/wiki/Folder_redirection'>Folder Redirection</ulink> will no longer fail when a user attempts to store an object with a name that cannot be represented in the OEM code page.
+
+
+
       </para>
       <para>Unicode names are stored in AFS using UTF-8 encoding.  UTF-8 is supported as a locale on MacOS X, Linux, Solaris, and most other operating systems.  This permits non-Western object names to be exchanged between Microsoft Windows and other operating systems.  The OpenAFS for Windows client also implements
         <ulink url='http://en.wikipedia.org/wiki/Unicode_normalization'>Unicode Normalization</ulink> as part of the name lookup algorithm.  This is necessary because Unicode does not provide a unique representation for each input string.  The use of normalization permits a file system object name created on MacOS X to be matched with the same string entered on Microsoft Windows even though the operating system’s choice of representation may be different.
-      
-      
-      
+
+
+
       </para>
       <para>It is important to note that AFS file servers are not character set agnostic.  All file system object names are stored as octet strings without any character set tagging.  If a file system object is created using OEM Code Page 858 and then interpreted as UTF-8 it is likely that the object name will appear to be gibberish.  OpenAFS for Windows goes to great lengths to ensure that the object name is converted to a form that will permit the user to rename the object using Unicode.  Accessing UTF-8 names on UNIX systems that have the locale set to one of the ISO Latin character sets will result in the UTF-8 strings appearing to be gibberish.  </para>
       <para>Neither UNIX AFS nor Microsoft Windows 2000 systems can perform Unicode Normalization for string comparisons.  Although it is possible to store and read Unicode object names, it is possible that a user may not be able to open an object by typing the name of the object at the keyboard.  GUI point and click operations should permit any object to be accessed.</para>
@@ -152,17 +152,17 @@
     <section>
       <title id='Kerberos_v5_Requirements'>3.2. Requirements for Kerberos v5 Authentication</title>
       <para>The Kerberos v4 infrastructure on which the OpenAFS 1.2 series is reliant is no longer secure.  Cross-realm Kerberos is very important in the AFS context and most sites have or are migrating to Kerberos v5 environments.  The OpenAFS 1.4 series (and later) integrates with
-        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> 2.6.5 and above to support Kerberos v5 authentication including automatic renewal of AFS tokens and single sign-on via the Microsoft Windows Kerberos Logon Service.   
-      
-      
-      
+        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> 2.6.5 and above to support Kerberos v5 authentication including automatic renewal of AFS tokens and single sign-on via the Microsoft Windows Kerberos Logon Service.
+
+
+
       </para>
       <para>The recommended version of
         <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> is 3.2.2.  KFW 3.2.2 includes Network Identity Manager 1.3.1 which integrates with the
-        <link linkend='Network_Identity_Manager_Provider'>AFS Provider</link> installed as part of OpenAFS for Windows.  
-      
-      
-      
+        <link linkend='Network_Identity_Manager_Provider'>AFS Provider</link> installed as part of OpenAFS for Windows.
+
+
+
       </para>
       <para>When KFW is installed, the OpenAFS for Windows client will obtain Kerberos v5 tickets and use them as tokens without modification.  The OpenAFS client requires that all of the AFS Servers with which it communicates support the use of Kerberos v5 tickets as tokens. If Kerberos v5 based tokens are presented to an AFS server that does not support them, the server will be unable to communicate with the client when tokens are present. Kerberos v5 based tokens are supported by OpenAFS release 1.2.8 or later.  IBM Transarc servers do not support Kerberos v5.</para>
       <section>
@@ -170,9 +170,9 @@
         <para>Microsoft Windows Active Directory can be used as a Kerberos v5 KDC in conjunction with OpenAFS.  There are two things to consider when using an Active Directory as the Kerberos realm that issues the AFS service ticket.  First, the Kerberos v5 tickets issued by Active Directory can be quite large when compared to tickets issued by a traditional KDC due to the incorporation of authorization data (the Microsoft PAC).  If the issued tickets are larger than 344 bytes, the OpenAFS 1.2 servers will be unable to process them and will issue a RXKADBADTICKET error.  OpenAFS 1.4 (and beyond) servers can support the largest tickets that Active Directory can issue.  Second, the Kerberos v5 tickets issued by Windows 2003 Active Directory are encrypted with the DES-CBC-MD5 encryption type (enctype).  OpenAFS 1.2 servers only support the DES-CBC-CRC enctype.  As a result, OpenAFS 1.2 servers cannot process the resulting Kerberos v5 tokens.  Windows 2000 Active Directory issues tickets with the DES-CBC-CRC enctype.</para>
         <para>Microsoft has documented in
           <ulink url='http://support.microsoft.com/kb/832572/'>Knowledge Base article 832572</ulink> a new NO_AUTH_REQUIRED flag that can be set on the account mapped to the AFS service principal.  When this flag is set, the PAC authorization data will not be included in the ticket.  Setting this flag is recommended for all accounts that are associated with non-Windows services and that do not understand the authorization data stored in the PAC.  This flag cannot be used if AFS service tickets are obtained via cross-realm using an Active Directory user principal.
-        
-        
-        
+
+
+
         </para>
         <para>Note that an Active Directory computer object cannot be used for the afs service principal.</para>
       </section>
@@ -182,9 +182,9 @@
         <para>Another reason for using Kerberos v5 directly is because the krb524 service runs on a port (4444/udp) which has increasingly been blocked by ISPs.  The port was used to spread a worm which attacked Microsoft Windows in the summer of 2003.  When the port is blocked users find that they are unable to authenticate.</para>
         <para>Replacing the Kerberos v4 ticket with a Kerberos v5 ticket is a win in all situations except when the cell name does not match the realm name and the principal names placed into the ACL’s are not the principal names from the Kerberos v5 ticket.  To support this transition, OpenAFS for Windows 1.4 adds a new registry value,
           <link linkend='Value_Use524'>Use524</link>, to force the use of krb524d.  However, the availability of this option should only be used by individuals until such time as their organizations can provide a more permanent solution.
-        
-        
-        
+
+
+
         </para>
         <para>Note that the OpenAFS 1.4.x servers permit the use of a secondary realm name that can be treated as equivalent to the cell name for authentication.
         </para>
@@ -195,9 +195,9 @@
           <ulink url='https://www.secure-endpoints.com/'>Secure Endpoints Inc.</ulink>  Network Identity Manager is a multiple identity credential management tool that ships with
           <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> version 3.0 and above.  The OpenAFS plug-in requires
           <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> version 3.1 or above.  Version 3.2.2 is recommended for the best user experience.
-        
-        
-        
+
+
+
         </para>
         <para>
           <inlinemediaobject>
@@ -248,9 +248,6 @@
       </itemizedlist>
       <para>When the MLA is not installed the unique NETBIOS name published by OpenAFS SMB server is "
         <emphasis>MACHINE</emphasis>-AFS".  One of the benefits of using the MLA is that the NETBIOS name does not have to be published on any adapter other than the MLA.  Therefore the chosen name is no longer required to be unique.  Instead the NETBIOS name associated with the AFS Client Service is simply "AFS" and portable UNC paths of the form \\AFS\cellname\path can now be used on all machines.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -262,9 +259,9 @@
         <emphasis>read-write path </emphasis>mount point used to access the "root.cell" volume of the default AFS cell.  Any attempt to access a valid cell name will result in a new mount point being created in the fake "root.afs" volume.  If the cellname begins with a "." the mount point will be a
         <emphasis>read-write path</emphasis>; otherwise the mount point will be a
         <emphasis>regular path</emphasis>.  These mount points are preserved in the registry at key:
-      
-      
-      
+
+
+
       </para>
       <para>
         <link linkend='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance'>HKLM\SOFTWARE\OpenAFS\Client\Freelance</link>
@@ -282,9 +279,6 @@
       <para>The symlinks are stored in the registry at:</para>
       <para>
         <link linkend='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks'>HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks</link> 
-      
-      
-      
       </para>
     </section>
     <section>
@@ -299,17 +293,11 @@
       <para>When KFW is configured, Integrated Logon will use it to obtain tokens. Use of KFW for Integrated Logon can be disabled via the
         <link linkend='EnableKFW'>EnableKFW</link> registry value.  Use of the krb524 service can be configured via the
         <link linkend='Value_Use524'>Use524</link> registry value.
-      
-      
-      
       </para>
       <para>Integrated Logon will not transfer Kerberos v5 tickets into the user’s logon session credential cache. KFW 3.1 and above provides that functionality on its own.</para>
       <para>Integrated Logon does not have the ability to cache the user's username and password for the purpose of obtaining tokens if the Kerberos KDC is inaccessible at logon time.</para>
       <para>Integrated Logon supports the ability to obtain tokens for multiple cells.  For further information on how to configure this feature read about the
         <link linkend='Value_TheseCells'>TheseCells</link> value.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -353,9 +341,6 @@
       <para>By default afscreds.exe is configured by the OpenAFS.org installers to use &quot;-A -N -M -Q&quot; as startup options.  Currently, there is no user interface to change this selection after install time although these options may be altered via the registry on either per machine or per user basis.  See
         <link linkend='Value_AfscredsShortcutParams'>AfscredsShortcutParams</link> in
         <link linkend='appendix_a'>Appendix A</link>.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -403,9 +388,6 @@
       <para>The initial membership of the "AFS Client Admins" group when created by the installer is equivalent to the local "Administrators" group.  If a user is added to the "Administrators" group after the creation of the "AFS Client Admin" group, that user will not be an AFS Client Administrator.  Only users that are members of the "AFS Client Admins" group are AFS Client Administrators.  The local "SYSTEM" account is an implicit member of the "AFS Client Admins" group.</para>
       <para>Setting the default sysname for a machine should be done via the
         <link linkend='Value_SysName'>SysName registry value</link> and not via "fs sysname".
-      
-      
-      
       </para>
     </section>
     <section>
@@ -414,10 +396,8 @@
       <para>Power users that make extensive use of the command line shell, cmd.exe, should consider using JP Software's 4NT or Take Command command processors.  Unlike cmd.exe, the JPSoftware shells fully support UNC paths as the current directory.  JPSoftware added special recognition for OpenAFS to its command shells, 4NT 7.0 and Take Command 7.0.  AFS paths can be entered in UNIX notation (e.g., /afs/openafs.org/software), space utilization reports the output of the volume status for the specified path, and many AFS specific functions and variables have been added to the command language.</para>
       <para>JPSoftware's web site is
         <ulink url='http://www.jpsoft.com/'>http://www.jpsoft.com</ulink>.
-      
-      
-      
       </para>
+      <para>Microsoft PowerShell 1.0 and 2.0 will also support UNC paths as the current directory. </para>
     </section>
     <section>
       <title id='aklog.exe'>3.10. aklog.exe</title>
@@ -428,7 +408,7 @@
                  [[-p | -path] pathname]
                  [-noprdb] [-force]
                  [-5 [-m]| -4]
-    
+
                  -d = output debugging information.
                  cell = zero or more cells for which tokens will be obtained
                  krb_realm = the kerberos realm of the cell.
@@ -447,9 +427,6 @@
         <title id='OpenAFS_Server_Installation'>3.11.1. OpenAFS Server Installation</title>
         <para>When the OpenAFS Server is installed, the TransarcAFSServer service (bosctlsvc.exe) will be installed and configured.  The TransarcAFSServer service will auto-start the traditional AFS bos server.  The former AFS Server Configuration wizard makes assumptions that no longer hold true and it has therefore been disabled.  However, following the instructions for installing the AFS Servers on UNIX it is possible to properly configure the AFS Servers on Microsoft Windows.  The AFS Server binaries, configuration files, and log files are installed under %Program Files%\OpenAFS\Server.
           <ulink url='http://www.openafs.org/no-more-des.html'>kaserver has been deprecated and its use is strongly discouraged.</ulink>  Instead, Active Directory or some other Kerberos v5 KDC should be used in its place.
-        
-        
-        
         </para>
       </section>
       <section>
@@ -463,9 +440,6 @@
             <para>The AFS Server and related tools only support the built in kaserver (Kerberos IV).  If kaserver is being used,
               <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> should not be installed or must be disabled via the
               <link linkend='EnableKFW'>EnableKFW</link> registry value.
-        
-            
-            
             </para>
           </listitem>
           <listitem>
@@ -487,9 +461,9 @@
         <listitem>
           <para>whether or not
             <emphasis>fs trace</emphasis> logging is turned on by default (release: no, debug: yes)
-      
-          
-          
+
+
+
           </para>
         </listitem>
         <listitem>
@@ -511,13 +485,10 @@
       <para>When GSS SPNEGO attempts a Kerberos v5 authentication, the Windows SMB client will attempt to retrieve service tickets for "cifs/afs@REALM" (if the loopback adapter is in use) or "cifs/machine-afs@REALM" (if the loopback adapter is not being used).  It is extremely important that this service principal not exist in the KDC database as the Kerberos authentication must fail allowing automatic fallback to NTLM.  When NTLM is used a special local authentication mode will be used that does not require access to the user's password.  Instead, Windows will internally recognize the request as coming from a local logon session.</para>
     </section>
     <section>
-      <title id='No_More_INI_Files'>3.16. No More INI Files</title>
-      <para>Previous AFS clients for Windows stored configuration data in Windows .INI files.   The OpenAFS client does not use Windows .INI files for the storage of configuration data.   All settings are stored in the registry (see
-        <link linkend='appendix_a'>Appendix A</link>).  The CellServDB file is now stored in either the %ALLUSERSPROFILE%\Application Data\OpenAFS\Client directory or the %PROGRAMFILES%\OpenAFS\Client directory.   The
+      <title id='No_More_INI_Files'>3.16. INI Files Replaced By Windows Registry</title>
+      <para>IBM AFS and OpenAFS 1.2 Windows clients stored configuration data in Windows .INI files.   This OpenAFS client does not use Windows .INI files for the storage of configuration data.   All settings are stored in the registry (see
+        <link linkend='appendix_a'>Appendix A</link>).  The CellServDB file is now stored in either the %ALLUSERSPROFILE%\Application Data\OpenAFS\Client directory (aka \ProgramData\OpenAFS\Client on Vista\Win7\2008) or the %PROGRAMFILES%\OpenAFS\Client directory.   The
         <link linkend='Value_CellServDBDir'>CellServDBDir</link> registry value or the AFSCONF environment variable can be used to specify an alternative location.
-      
-      
-      
       </para>
       <para>For users converting from IBM AFS clients, during installation OpenAFS will relocate the contents of the &quot;afsdcell.ini&quot; file to the new CellServDB file.  OpenAFS will also import the contents of the &quot;afs_freelance.ini&quot; file to the Windows registry.   OpenAFS will not process the contents of the &quot;afsddbmt.ini&quot;.</para>
     </section>
@@ -525,9 +496,6 @@
       <title id='Windows_Internet_Connection_Firewall'>3.17. Microsoft Windows Internet Connection Firewall</title>
       <para>The OpenAFS Client is compatible with the Internet Connection Firewall that debuted with Windows XP SP2 and Windows 2003 SP1.  The Internet Connection Firewall will be automatically adjusted to allow the receipt of incoming callback messages from the AFS file server.  In addition, the appropriate
         <emphasis>Back Connection</emphasis> registry entries are added to allow SMB authentication to be performed across the Microsoft Loopback Adapter.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -540,9 +508,6 @@
       <para>Most Windows applications and Windows itself opens files in shared read mode. When this is done, a read lock is applied to the file.   This does not prevent shared read access across multiple machines but is used to ensure that no one writes to the file while it is in use.</para>
       <para>As the CIFS-AFS gateway server attempts to implement Windows lock semantics on top of AFS lock semantics it is important to understand how AFS file locks work.  In Windows there are no special privileges associated with obtaining file locks.  If you can read or execute a file, then you can obtain shared and exclusive locks.  In general, a Windows shared lock equates to an AFS read lock and a Windows exclusive lock equates to an AFS write lock.  In AFS if you can write to a file, then you can obtain a write lock.  However, in AFS if you can read a file it does not mean that you can obtain a read lock on it.   The ability to obtain read locks is granted only if you have the lock (or ‘k’) privilege.  This behavior is required in order to allow anonymous users to read files while preventing them from being able to deny access to the files to other users. 
         <emphasis>OpenAFS 1.4.0 and earlier as well as all IBM AFS file servers have an implementation bug that prevents users with write privileges from being able to obtain locks without the lock privilege.</emphasis>  When AFS serves data out of read-only volumes the file server will deny all requests for read and write locks because the contents of the volume cannot be changed by the client.
-      
-      
-      
       </para>
       <para>Since Microsoft Windows applications almost always attempt to obtain a temporary exclusive lock when accessing files the OpenAFS Client’s CIFS-AFS gateway implements the following semantics in order to reduce the inconvenience on end users.  </para>
       <itemizedlist mark='bullet'>
@@ -570,9 +535,6 @@
       </itemizedlist>
       <para>If you wish to disable the acquisition of locks from the file server, this can be performed using the
         <link linkend='Value_EnableServerLocks'>EnableServerLocks</link> registry value.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -581,9 +543,6 @@
       <para>If there is a need to disable this functionality, the
         <link linkend='Value_LogoffPreserveTokens'>LogoffPreserveTokens</link> registry value can be used. (see
         <link linkend='appendix_a'>Appendix A</link>.)
-      
-      
-      
       </para>
     </section>
     <section>
@@ -594,9 +553,6 @@
       <title id='Hidden_Dot_Files'>3.22. Hidden Dot Files</title>
       <para>AFS is a UNIX native file system.  The OpenAFS client attempts to treat the files stored in AFS as they would be on UNIX.  File and directory names beginning with a "." are automatically given the Hidden attribute so they will not normally be displayed.  This behavior can be altered via the
         <link linkend='Value_HideDotFiles'>HideDotFiles</link> registry value.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -604,9 +560,6 @@
       <para>The Status Cache (AFS Configuration Control Panel: Advanced Page) is defined to have a maximum number of entries.  Each entry represents a single file or directory entry accessed within the AFS file system.  When the maximum number of entries are allocated, entries will begin to be reused according to a least recently used (LRU) algorithm.  If the number of files or directories being accessed repeatedly by your applications is greater then the maximum number of entries, your host will begin to experience thrashing of the Status Cache and all requests will result in network operations.</para>
       <para>If you are experiencing poor performance try increasing the maximum number of Status Cache entries.  Each entry requires approximately 1.2K.  The default number of Status Cache entries is 10,000.  This can be adjusted using the
         <link linkend='Value_Stats'>Stats</link> registry value.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -619,14 +572,12 @@
       <para>
         <link linkend='appendix_a'>Appendix A</link> documents the "
         <link linkend='Value_VerifyServiceSignature'>VerifyServiceSignature</link>" registry value which can be used to disable the signature check.  The file version check cannot be disabled.
-      
-      
-      
       </para>
     </section>
     <section>
       <title id='Maximum_Cache_Size'>3.26. Maximum Size of the AFSCache File</title>
       <para>The maximum cache size on 32-bit Windows is approximately 1.3GB.  This is the largest contiguous block of memory in the 2GB process address space which can be used for constructing a memory mapped file.  Due to fragmentation of the process space caused by the loading of libraries required by the digital signature verification code, any attempt to specify a cache size greater then 700MB will result in the automatic disabling of the signature check.  Significantly larger cache sizes can be used on 64-bit Windows.</para>
+      <para>On 32-bit systems that have Apple Bonjour 1.0.6 installed, the maximum cache size is further constrained due design flaw in the Apple mdnsNSP.dll which is injected into all processes that use network services.  On these systems the maximum is approximately 512MB.</para>
     </section>
     <section>
       <title id='Filename_Character_Sets'>3.27. Filename Character Sets</title>
@@ -678,15 +629,9 @@
       <para> </para>
       <para>The pre-1.5.50 OpenAFS Client provided an optional registry value,
         <link linkend='Value_StoreAnsiFilenames'>StoreAnsiFilenames</link>, that could be set to instruct OpenAFS to store filenames using the ANSI Code Page instead of the OEM Code Page.  The ANSI Code Page is a compatible superset of Latin-1.  This setting is not the default setting because making this change would prevent OpenAFS for Windows from being able to access filenames containing the above characters which were created without this setting.
-      
-      
-      
       </para>
       <para>All versions of OpenAFS for Windows 1.5.50 and above exchange file names with Microsoft Windows using the Unicode character set. All file names are read from and stored to AFS file servers using the UTF-8 encoding of Unicode. As a result the
-        <link linkend='Value_StoreAnsiFilenames'>StoreAnsiFilenames</link> option is no longer supported. 
-      
-      
-      
+        <link linkend='Value_StoreAnsiFilenames'>StoreAnsiFilenames</link> option is no longer supported.
       </para>
     </section>
     <section>
@@ -722,6 +667,7 @@
     <section>
       <title id='Symlinks_to_AFS_UNC_Paths'>3.32. Symlinks to AFS UNC Paths</title>
       <para>In OpenAFS, symlinks to AFS UNC paths, \\AFS[\all]\..., are treated the same as symlinks to /afs/...  However, please use /afs/... as the Windows UNC form will not work on UNIX client.</para>
+      <para>The <emphasis>symlink make</emphasis> command will automatically translate \\AFS\... to /afs/... for you.</para>
     </section>
     <section>
       <title id='Cache_Manager_Debugging'>3.33. Cache Manager Debugging</title>
@@ -749,9 +695,6 @@
       <para>VLDB and File Server Preferences can now be provided initial values using registry keys.  This is useful for managed machines in a Windows domain which are centrally located (e.g., in a computing lab.)  See
         <link linkend='appendix_a'>Appendix A</link> for details on the "
         <link linkend='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences'>Server Preferences</link>" keys.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -780,36 +723,29 @@
       </para>
       <para>For lab environments that wish to erase all cached data on each restart, the
         <link linkend='Value_NonPersistentCaching'>NonPersistentCaching</link> option will disable the use of the persistent cache file. As a side effect, a new UUID will be generated for the AFS client service on each restart.
-      
-      
-      
       </para>
       <para>When a Windows system is cloned, the Microsoft Loopback Adapter will be disabled in the cloned system.  Administrators must re-install the Microsoft Loopback Adapter within the cloned environment.  This can be automated by using the OpenAFS &quot;
         <emphasis>instloop.exe</emphasis> –
         <emphasis>i</emphasis>&quot; command.  Instloop.exe can be extracted from the MSI installer by performing an administrative install via
         <emphasis>msiexec.exe /a</emphasis>.
-      
-      
-      
       </para>
     </section>
     <section>
       <title id='Delayed_Write_Errors'>3.40. Delayed Write Errors with Microsoft Office Applications</title>
       <para>Microsoft Office makes heavy use of asynchronous input/output methods for reading and writing to file streams.  This can result in hundreds of requests being simultaneously queued for service by the CIFS client with a fixed timeout period.  As the AFS CIFS server is local to the machine the Windows CIFS client believes that it can respond almost instantaneously to write requests as the actual writing to the AFS file server is performed by a background daemon thread.  When the actual network bandwidth to the AFS file server is slow and the file size is large it is possible for the CIFS client to time out the connection.  When this happens a &quot;delayed write error&quot; will be reported to the user and the application may crash.  The only workaround at the current time is to save first to a local disk and subsequently copy the file to AFS as copying a file with the explorer shell does not use asynchronous i/o. </para>
       <para>The CIFS session timeout defaults to 45 seconds and can be increased by modifying the
-        <link linkend='Value_ConnDeadTimeout'>ConnDeadTimeout registry value</link>. 
-      
-      
-      
+        <link linkend='Value_ConnDeadTimeout'>ConnDeadTimeout registry value</link>.
       </para>
       <para>Beginning with the 1.5.33 release, the performance characteristics of SMB Write Data operations can be adjusted.  In prior releases all writes were performed using a restricted asynchronous store model in which only one asynchronous store operation per file can be performed at a time.  The reason for this restriction is limit the amount of data the cache manager will accept without it having been written to the file server.  If too much unwritten data is accepted, the file close operation will block until all of the unwritten data is output and this could trigger a CIFS client disconnect.  </para>
       <para>Prior to 1.5.33 the size of the asynchronous store was always equal to the chunk size which was often too large for low bandwidth connections.  The asynchronous store size now defaults to 32KB and is configurable using the
         <link linkend='Value_SMBAsyncStoreSize'>SMBAsyncStoreSize</link> registry value.  Asynchronous store operations can also be disabled using the
         <link linkend='Value_EnableSMBAsyncStore'>EnableSMBAsyncStore</link> registry value in which case all writes received by the cache manager block until the Rx StoreData operation completes.
-      
-      
-      
       </para>
+      <para>During the first quarter of 2009 Microsoft added new functionality to the SMB Redirector which permits an extended timeout period to be used
+            for an enumerated list of Netbios server names.  This functionality was distributed in Service Pack 2 for Vista and 2008 and is incorporated
+            into the RTM releases of Windows 7 and Server 2008 R2.  Updates to Windows XP (KB916204), XP64 (KB969289), and Server 2003 (KB969289) were
+            made available as hot fixes.  When this support is available, the OpenAFS for Windows client 1.5.61 and above will raise the timeout period
+            from 45 seconds to 10 minutes.</para>
     </section>
     <section>
       <title id='Global_Drives'>3.41. Global Drives (aka Service Drive Letters) are no longer supported by Microsoft</title>
@@ -817,8 +753,15 @@
       <para>
         <ulink url='http://msdn.microsoft.com/library/en-us/dllproc/base/services_and_redirected_drives.asp'>http://msdn.microsoft.com/library/en-us/dllproc/base/services_and_redirected_drives.asp</ulink>
       </para>
-      <para>It says that services mounting drive letters are no longer supported by Microsoft and may act unpredictably.  The experience other users have had is that if the connection to the OpenAFS CIFS/SMB server is terminated by the Windows CIFS client, the drive mapping may not be re-established until the machine is rebooted.</para>
-      <para>OpenAFS supports UNC paths and whenever possible applications should be modified to use of \\AFS\&lt;cellname&gt;\&lt;path&gt; instead of drive letters.</para>
+      <para>The article says that services mounting drive letters are no longer supported by Microsoft and may act unpredictably. 
+            The experience other users have had is that if the connection to the OpenAFS CIFS/SMB server is terminated by the
+            Windows CIFS client, the drive mapping may not be re-established until the machine is rebooted.</para>
+      <para>OpenAFS supports UNC paths and whenever possible applications should be modified to use UNC form
+            \\AFS\&lt;cellname&gt;\&lt;path&gt; instead of drive letters.</para>
+      <para>Another problem with service mounted drive letters is that the drives are reported as local disk devices
+            and cannot be resolved as being mapped to the \\AFS name space.  As a result, AFS path ioctl operations will
+            fail.  The fs.exe and symlink.exe command line tools and the AFS Explorer Shell extension will not operate
+            on service mounted drive letters.</para>
     </section>
     <section>
       <title id='64-bit_Windows'>3.42. 64-bit Microsoft Windows Installations</title>
@@ -826,17 +769,20 @@
       <para>OpenAFS on 64-bit Windows benefits from the lifting of the 2GB process memory restriction that is present in 32-bit Windows.   Without this restriction the AFS Cache File can become arbitrarily large limited only by available disk space.</para>
     </section>
     <section>
-      <title id='Windows_Vista_Known_Issues'>3.43. Known Issues with Microsoft Windows Vista</title>
-      <para>OpenAFS for Windows works with Microsoft Windows Vista from both the command prompt and the Explorer Shell.  When performing an upgrade from earlier versions of Microsoft Windows the Microsoft Loopback Adapter (MSLA) will be uninstalled.   OpenAFS should be re-installed after the Microsoft Vista installation to restore the MSLA configuration.</para>
-      <para>Due to a feature change in Windows Vista’s Plug-n-Play network stack, during a standby/hibernate operation the MSLA is disabled just as any other hardware device would be.  This causes the OpenAFS Client’s network binding to be lost.  As a result, it takes anywhere from 30 to 90 seconds after the operating system is resumed for access to the OpenAFS Client and the AFS file space to become available.  Until the network bindings have been re-established, ticket managers and other tools will report that the AFS Client Service may not have been started.</para>
-      <para>Windows Vista implements
+      <title id='Windows_Vista_Known_Issues'>3.43. Known Issues with Microsoft Windows Vista, Windows 7, and Server 2008 [R2]</title>
+      <para>OpenAFS for Windows works with Microsoft Windows Vista, Windows 7 and Server 2008 [R2] from both the command prompt and the Explorer Shell.
+            When performing an upgrade from earlier versions of Microsoft Windows the Microsoft Loopback Adapter (MSLA) will be uninstalled.
+            OpenAFS should be re-installed after the Windows Upgrade installation to restore the MSLA configuration.</para>
+      <para>Due to a feature change in Windows Vista’s Plug-n-Play network stack, during a standby/hibernate operation the
+            MSLA is disabled just as any other hardware device would be.  This causes the OpenAFS Client’s network binding to be lost.
+            As a result, it takes anywhere from 30 to 90 seconds after the operating system is resumed for access to the OpenAFS Client
+            and the AFS file name space to be restored.  Until the network bindings have been re-established, ticket managers and other
+            tools will report that the &quot;AFS Client Service may not have been started&quot;.</para>
+      <para>Windows Vista, Windows 7, and Server 2008 [R2] implement
         <ulink url='http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx'>User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the &quot;Administrator&quot; access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require &quot;Administrator&quot; privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS System Tray tool and the AFS Control Panel will not work unless they are &quot;Run as Administrator&quot;.  When a Vista user account that is a member of the &quot;Administrators&quot; group is used to access the AFS Control Panel (afs_config.exe), the process must be &quot;Run as Administrator&quot;.   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista’s system file and registry virtualization feature.
-      
-      
-      
       </para>
       <para>The help files provided with OpenAFS are in .HLP format.
-        <ulink url='http://support.microsoft.com/kb/917607'>Windows Vista does not include a help engine for this format.</ulink>
+        <ulink url='http://support.microsoft.com/kb/917607'>Windows Vista, Windows 7, and Server 2008 [R2] do not include a help engine for this format.</ulink>
       </para>
     </section>
     <section>
@@ -851,17 +797,23 @@
     </section>
     <section>
       <title id='Differences_between_Windows_and_Unix'>3.45. Differences between Windows and UNIX &quot;fs examine&quot;</title>
-      <para>The OpenAFS for Windows version of &quot;fs examine&quot; provide two additional lines of output when compared to the UNIX implementation.  These lines include the owner and group information for the file as well as the volume status.  The Windows output will also indicate the type of object {File, Directory, Mountpoint, Symlink, ...} that was examined.</para>
+      <para>The OpenAFS for Windows version of &quot;fs examine&quot; provide two additional lines of output when compared to the
+        UNIX implementation.  These lines include the owner and group information for the file as well as the volume status.
+        The Windows output will also indicate the type of object {File, Directory, Mountpoint, Symlink, ...} that was examined.</para>
       <para>[C:\]fs examine \\afs\athena#user.jaltman</para>
       <para>Directory \\afs\athena#user.jaltman (537235559.1.1) contained in cell athena.mit.edu</para>
       <para>
-        <emphasis role='bold'>Owner jaltman (28180) Group 0</emphasis>
+        <emphasis role='bold'>Owner jaltman (28180) Group jaltman (28180)</emphasis>
       </para>
       <para>Volume status for vid = 537235559 named user.jaltman is</para>
       <para>Current disk quota is 1500000</para>
       <para>Current blocks used are 1244184</para>
       <para>The partition has 151945877 blocks available out of 511163724</para>
-      <para>Volume is online </para>
+      <para><emphasis role='bold'>Volume is online</emphasis></para>
+      <para></para>
+      <para>The object owner and group information is not available on Microsoft Windows via any other method.</para>
+      <para>To set the owner use <emphasis>fs chown -owner &lt;user name or id&gt; [-path &lt;dir/file path&gt;+] [-literal]</emphasis></para>
+      <para>To set the group use <emphasis>fs chgrp -group &lt;user name or id&gt; [-path &lt;dir/file path&gt;+] [-literal]</emphasis></para>
     </section>
     <section>
       <title id='fs_Command_Literal_Option'>3.46. Literal evaluation of AFS objects via fs commands</title>
@@ -871,9 +823,6 @@
         <emphasis>whereis</emphasis>, and
         <emphasis>whichcell</emphasis> provide a new command-line parameter,
         <emphasis>-literal</emphasis>.  When specified, if the evaluated object is a symlink or a mountpoint the resulting output will describe the specified object and not the object that is the target of the symlink or mountpoint.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -898,25 +847,36 @@
         </listitem>
       </itemizedlist>
       <para>Two cells are linked in the CellServDB file:</para>
-      <para>&gt;cell-one	cell-two	#Description
-...
-&gt;cell-two	cell-one	#Description
-...</para>
+      <para>
+        <programlisting>
+       &gt;cell-one	cell-two	#Description
+       ...
+       &gt;cell-two	cell-one	#Description
+       ...
+       </programlisting>
+      </para>
       <para>aklog and Network Identity Manager will automatically obtain tokens for the linked cell when tokens for the other cell is specified.
       </para>
     </section>
-    <section> 
+    <section>
     <title id="Registry_VLDB_Configuration">3.49 Registry Configuration for AFS Volume Database Servers</title>
     <para>Beginning with the 1.5.60 release, the <link linkend="Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB">[HKLM\SOFTWARE\OpenAFS\Client\CellServDB]</link>
     registry key can be used to distribute Volume Database Server location information either as a supplement to the <emphasis>CellServDB file</emphasis> or
     as a substitute for it.  The precedence order for lookups is: Registry, File, and then DNS.</para>
     </section>
-    <section> 
+    <section>
     <title id="HTMLHelp_Documentation">3.50 Documentation Converted to Windows HTML Help</title>
-    <para>Starting with the 1.5.60 release, this document, the OpenAFS Administrator Guide and the OpenAFS User Guide are provided in HTML Help format instead 
+    <para>Starting with the 1.5.60 release, this document, the OpenAFS Administrator Guide and the OpenAFS User Guide are provided in HTML Help format instead
     of raw HTML pages.</para>
     </section>
-
+    <section>
+      <title id='MSRPC_Services'>3.51. Support for Microsoft RPC Services: WKSSVC and SRVSVC</title>
+      <para>Beginning with the 1.5.62 release, the OpenAFS SMB Server supports named pipes and the Microsoft RPC Services
+        WKSSVC and SRVSVC.  This permits a significantly improved Netbios Server browsing experience with both the
+        <emphasis>NET VIEW \\AFS</emphasis> command and the Explorer Shell.  No longer will Windows display truncated
+        cell names as available network shares.  The network share properties will also include the object type and
+        and the target of symlinks and mount points.</para>
+    </section>
   </chapter>
   <chapter id='chap_4'>
     <title id='How_to_Debug_Problems'>How to Debug Problems with OpenAFS for Windows</title>
@@ -924,9 +884,6 @@
     <section>
       <title id='pioctl_debugging'>4.1. pioctl debugging (
         <link linkend='Value_IoctlDebug'>IoctlDebug</link> registry key)
-      
-      
-      
       </title>
       <para>pioctl (path-based ioctl) calls are used by various tools to communicate with the AFS Client Service.  Some of the operations performed include:</para>
       <itemizedlist>
@@ -966,18 +923,12 @@
       <para>Every time the AFS Client Service starts it appends data about its progress and configuration to a file.  This file provides information crucial to determining why the service cannot start when there are problems.  When the process terminates due to a panic condition it will write to this file the source code file and line number of the error.  In many cases the panic condition is due to a misconfiguration of the machine.  In other cases it might be due to a programming error in the software.  A quick review of the location in the source code will quickly reveal the reason for the termination.</para>
       <para>The
         <link linkend='Value_MaxLogSize'>MaxLogSize</link> registry value determines the maximum size of the %WINDIR%\TEMP\afsd_init.log file.  If the file is larger than this value when OpenAFS Client Service starts, the file will be reset to 0 bytes.  If value is set to 0, the file will be allowed to grow indefinitely.
-      
-      
-      
       </para>
     </section>
     <section>
       <title id='afsd_service_debug_log'>4.3. afsd_service debug logs (fs trace {-on, -off, -dump} -&gt;%WinDir%\TEMP\afsd.log)</title>
       <para>When attempting to debug the behavior of the SMB/CIFS Server and the Cache Manager it is often useful to examine a log of the operations being performed.  While running the AFS Client Service keeps an in memory log of many of its actions.   The default number of actions preserved at any one time is 5000.  This can be adjusted with the
         <link linkend='Value_TraceBufferSize'>TraceBufferSize registry value</link>:
-      
-      
-      
       </para>
       <para>  [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
       <para>  REG_DWORD  TraceBufferSize </para>
@@ -987,60 +938,39 @@
       <title id='Using_Sysinternals_Tools'>4.4. Using SysInternal’s Debug Viewer, Process Monitor and Process Explorer Tools</title>
       <para>An alternatve option to the use of "fs trace -dump" to capture internal OpenAFS Client Service events is to use a tool such as Sysinternal's
         <ulink url='http://technet.microsoft.com/en-us/sysinternals/bb896647.aspx'>Debug Viewer</ulink> to capture real-time debugging output.  When the OpenAFS Client Service starts and Bit 2 of the
-        <link linkend='Value_TraceOption'>TraceOption</link> value in the registry is set, all trace log events are output using the Windows Debug Monitor interface (OutputDebugString).  
-      
-      
-      
+        <link linkend='Value_TraceOption'>TraceOption</link> value in the registry is set, all trace log events are output using the Windows Debug Monitor interface (OutputDebugString). 
       </para>
       <para>  [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
       <para>REG_DWORD   TraceOption = 0x04</para>
       <para>Use &quot;fs trace –on&quot; and &quot;fs trace –off&quot; to toggle the generation of log messages. </para>
       <para>Sysinternal’s
-        <ulink url='http://technet.microsoft.com/en-us/sysinternals/bb896645.aspx'>Process Monitor</ulink> can be use to monitor the file operations requested by applications and their success or failure.   
-      
-      
-      
+        <ulink url='http://technet.microsoft.com/en-us/sysinternals/bb896645.aspx'>Process Monitor</ulink> can be use to monitor the file operations requested by applications and their success or failure.  
       </para>
       <para>In Process Monitor, set a filter to include only events on file paths that refer to the AFS name space. Be sure to include both the UNC path as well as any drive letters mapped to AFS. </para>
       <para>Turn on the
         <emphasis>Clock Time</emphasis> and
         <emphasis>Show Milliseconds</emphasis> options in both tools to make it easier to synchronize the application requests and the resulting OpenAFS Client Service operations.   The captured data can be stored to files for inclusion in
         <link linkend='Reporting_Bugs'>bug reports</link>.
-      
-      
-      
       </para>
       <para>Sysinternal's
         <ulink url='http://technet.microsoft.com/en-us/sysinternals/bb896653.aspx'>Process Explorer</ulink> is a replacement for the Windows Task Manager and so much more.  Process Explorer can be configured to use the DbgHelp.dll from "
         <ulink url='http://www.microsoft.com/whdc/devtools/debugging/default.mspx'>Microsoft Debugging Tools for Windows</ulink>" as well as the debug symbols shipped as an optional component of the OpenAFS for Windows installer.  (Options-&gt;Configure Symbols)   Once configured the "Threads" tab of the process properties dialog will permit the viewing of a fully documented stack for each displayed thread.  Hint: If there is a deadlock in the cache manager, two or more of the threads will be stuck in a call to osi_TWait().
-      
-      
-      
       </para>
     </section>
     <section>
-      <title id='Creating_Microsoft_Minidumps'>4.5. Creating Microsoft MiniDumps 
+      <title id='Creating_Microsoft_Minidumps'>4.5. Creating Microsoft MiniDumps
 (fs minidump -&gt; %WinDir%\TEMP\afsd.dmp)</title>
       <para>If the AFS Client Service become unresponsive to any form of communication there may be a serious error that can only be debugged by someone with access to the source code and a debugger.   The "fs minidump" command can be used to force the generation of a MiniDump file containing the state of all of the threads in the AFS Client Service process.  The most accurate MiniDump files will be produced after installing "
         <ulink url='http://www.microsoft.com/whdc/devtools/debugging/default.mspx'>Microsoft Debugging Tools for Windows</ulink>".
-      
-      
-      
       </para>
       <para>The
         <link linkend='Value_MiniDumpType'>MiniDumpType</link> registry value can be used to adjust the scope of the process information included within the dump file.  By default the MiniDump only contains the stacks of all threads and the values of all global variables.  A much more useful MiniDump is one that contains the contents of the heap.  Be warned, a MiniDump with heap will be as large as the cache file.  In addition, it will include all of the data stored within the cache.  If there are privacy concerns, do not produce a MiniDump with heap.
-      
-      
-      
       </para>
     </section>
     <section>
       <title id='Integrated_Logon_Debugging'>4.6. Single Sign-on (Integrated Logon) debugging</title>
       <para>If you are having trouble with the Integrated Logon operations it is often useful to be able to obtain a log of what it is attempting to do.   Setting Bit 0 of the
         <link linkend='Value_TraceOption'>TraceOption</link> registry value:
-      
-      
-      
       </para>
       <para>  [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
       <para>  REG_DWORD   TraceOption = 0x01</para>
@@ -1097,9 +1027,6 @@
         <emphasis>kinit.exe</emphasis> and
         <emphasis>aklog.exe</emphasis> (if you are using Kerberos v5.)  The aklog.exe
         <emphasis>–d</emphasis> option will be quite helpful in diagnosing Kerberos v5 related problems.
-      
-      
-      
       </para>
     </section>
   </chapter>
@@ -1107,9 +1034,6 @@
     <title id='Reporting_Bugs'>Reporting Bugs</title>
     <para>Bug reports should be sent to
       <ulink url='mailto:openafs-bugs@openafs.org?subject=Bug%20Report'>openafs-bugs@openafs.org</ulink>.  Please include as much information as possible about the issue.  If you are reporting a crash, please install the debugging symbols by re-running the installer.  If a dump file is available for the problem, %WINDIR%\TEMP\afsd.dmp, include it along with the AFS Client Trace file  %WINDIR%\TEMP\afsd.log.  The AFS Client startup log is %WINDIR%\TEMP\afsd_init.log.  Send the last continuous block of  log information from this file.
-    
-    
-    
     </para>
     <para>Configuring DrWatson to generate dump files for crashes:</para>
     <orderedlist>
@@ -1160,10 +1084,7 @@
     <section>
       <title id='USENIX_OpenAFS_Fund'>6.1. The USENIX OpenAFS Fund </title>
       <para>
-        <ulink url='http://www.usenix.org/'>USENIX</ulink>, a 501c3 non-profit corporation, has formed the USENIX OpenAFS Fund in order to accept tax deductible donations on behalf of the OpenAFS Elders. The donated funds will be allocated by the OpenAFS Elders to fund OpenAFS development, documentation, project management, and maintaining openafs.org. 
-      
-      
-      
+        <ulink url='http://www.usenix.org/'>USENIX</ulink>, a 501c3 non-profit corporation, has formed the USENIX OpenAFS Fund in order to accept tax deductible donations on behalf of the OpenAFS Elders. The donated funds will be allocated by the OpenAFS Elders to fund OpenAFS development, documentation, project management, and maintaining openafs.org.
       </para>
       <informaltable frame='none'>
         <tgroup rowsep='1' align='left' colsep='1' cols='1'>
@@ -1171,10 +1092,14 @@
           <tbody>
             <row>
               <entry>
-                <para>USENIX OpenAFS Fund
-USENIX Association 
-2560 Ninth St., Suite 215 
-Berkeley, CA 94710 </para>
+                <para>
+                  <programlisting>
+    USENIX OpenAFS Fund
+    USENIX Association
+    2560 Ninth St., Suite 215
+    Berkeley, CA 94710
+                  </programlisting>
+                </para>
               </entry>
             </row>
           </tbody>
@@ -1182,9 +1107,6 @@ Berkeley, CA 94710 </para>
       </informaltable>
       <para>Donations can be made by sending a check, drawn on a U.S. bank, made out to the USENIX OpenAFS Fund or by making a
         <ulink url='https://db.usenix.org/cgi-bin/openafs/openafs.cgi'>donation online</ulink>.
-      
-      
-      
       </para>
     </section>
     <section>
@@ -1192,16 +1114,10 @@ Berkeley, CA 94710 </para>
       <para>
         <ulink url='http://www.secure-endpoints.com/'>Secure Endpoints Inc.</ulink> provides development and support services for OpenAFS for Windows and
         <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink>.  Donations provided to Secure Endpoints Inc. for the development of OpenAFS are used to cover the OpenAFS gatekeeper responsibilities; providing support to the OpenAFS community via the OpenAFS mailing lists; and furthering development of desired features that are either too small to be financed by development contracts.
-      
-      
-      
       </para>
       <para>Secure Endpoints Inc. accepts software development agreements from organizations who wish to fund a well-defined set of bug fixes or new features. </para>
       <para>Secure Endpoints Inc. provides contract based support for the OpenAFS for Windows and the
-        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> products. 
-      
-      
-      
+        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> products.
       </para>
     </section>
     <section>
@@ -1212,18 +1128,12 @@ Berkeley, CA 94710 </para>
       <title id='OAFW_Mailing_Lists'>6.4. OpenAFS for Windows Mailing Lists</title>
       <para>If you wish to participate in OpenAFS for Windows development please join the
         <ulink url='mailto:openafs-win32-devel@openafs.org?subject=OpenAFS%20for%20Windows%20Development%20Contribution'>openafs-win32-devel@openafs.org</ulink> mailing list.
-      
-      
-      
       </para>
       <para>
         <emphasis role='bold'>https://lists.openafs.org/mailman/listinfo/openafs-win32-devel</emphasis>
       </para>
       <para>User questions should be sent to the
-        <ulink url='mailto:openafs-info@openafs.org?subject=OpenAFS%20for%20Windows%20User%20Question'>openafs-info@openafs.org</ulink> mailing list.  
-      
-      
-      
+        <ulink url='mailto:openafs-info@openafs.org?subject=OpenAFS%20for%20Windows%20User%20Question'>openafs-info@openafs.org</ulink> mailing list. 
       </para>
       <para>
         <emphasis role='bold'>https://lists.openafs.org/mailman/listinfo/openafs-info</emphasis>
@@ -1290,9 +1200,6 @@ Berkeley, CA 94710 </para>
       <title id='MSI_Configuration_Options'>7.2. Configuration Options</title>
       <para>The logic necessary to implement many of the settings described in
         <link linkend='appendix_a'>Appendix A</link> are present in the MSI.  Most of these can be controlled by setting the corresponding properties to the desired value.  Some settings may require modifying existing registry entries (though not recommended) or adding new resources (like files or registry keys).  Instructions for performing these tasks are below.
-      
-      
-      
       </para>
       <section>
         <title id='MSI_Configurable_Properties'>7.2.1 Configurable Properties</title>
@@ -1300,9 +1207,6 @@ Berkeley, CA 94710 </para>
         <para>When one of the configurable properties is set, the installer will use the property value to set the corresponding setting in the HKEY_LOCAL_MACHINE registry hive.  The HKEY_CURRENT_USER hive is not touched by the installer.</para>
         <para>For each property, the associated registry setting is referenced by the same text used in
           <link linkend='appendix_a'>Appendix A</link>.
-        
-        
-        
         </para>
         <para>Strings are quoted using single quotes (e.g. 'a string'). An empty string is denoted as ''.  Note that you can't author null values into the 'Property' table.</para>
         <para>Numeric values should be authored as decimal strings.</para>
@@ -1449,9 +1353,9 @@ Berkeley, CA 94710 </para>
                       <para>See
                         <link linkend='appendix_a'>Appendix A</link>
                         <link linkend='Domain_Specific_Configuration'>section 2.1 (Domain Specific Configuration keys for Network Provider)</link> for more details.
-                      
-                      
-                      
+
+
+
                       </para>
                     </entry>
                   </row>
@@ -1661,9 +1565,6 @@ Berkeley, CA 94710 </para>
               <listitem>
                 <para>In the Component table, locate the component you need to change ( Ctrl-F invokes the 'Find' dialog).  The component names are listed below in section
                   <link linkend='MSI_Configuration_File_Components'>7.2.3.1</link>.  For this example, the component name is 'elf_CellServDB'.
-        
-                
-                
                 </para>
               </listitem>
               <listitem>
@@ -1988,9 +1889,9 @@ Berkeley, CA 94710 </para>
         <para>Following is an example for adding domain specific registry keys.</para>
         <para>    Refer to
           <link linkend='appendix_a'>Appendix A</link> section 2.1 for more information.
-        
-        
-        
+
+
+
         </para>
         <para>    Columns that are unspecified should be left empty.</para>
         <para>    We create a new feature and component to hold the new registry keys.</para>
@@ -2585,7 +2486,7 @@ Variable: traceBufSize</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
-Default: &quot;x86_win32 i386_w2k i386_nt40&quot; (X86) 
+Default: &quot;x86_win32 i386_w2k i386_nt40&quot; (X86)
                   </para>
                   <para>
 &quot;amd64_win64 x86_win32 i386_w2k&quot; (AMD64)
@@ -2742,7 +2643,7 @@ Variable: rx_extra_process_stats</para>
                   <para>
                     <emphasis>Value: RxExtraPackets</emphasis>
                   </para>
-                  <para>Type: DWORD 
+                  <para>Type: DWORD
                   </para>
                   <para>
 Default: 120
@@ -3075,7 +2976,7 @@ Default: 1</para>
                   <para>
                     <emphasis>Value: PrefetchExecutableExtensions</emphasis>
                   </para>
-                  <para>Type: MULTI_SZ 
+                  <para>Type: MULTI_SZ
                   </para>
                   <para>
 Default: none specified</para>
@@ -3221,9 +3122,9 @@ Default: 0x0 (MiniDumpNormal)</para>
                   <para>This value is used to specify the type of minidump generated by afsd_service.exe either when the process crashes or when a user initiated is dump file is generated with the "fs.exe minidump" command.</para>
                   <para>Valid values are dependent on the version of DbgHelp.dll installed on the machine.  The best version to use is not the version that comes with the operating system but the version that is included in the most recent release of "
                     <ulink url='http://www.microsoft.com/whdc/devtools/debugging/default.mspx'>Microsoft Debugging Tools for Windows</ulink>".  See the Microsoft Developer Library for further information.
-                  
-                  
-                  
+
+
+
                   </para>
                   <simplelist type='Vert'>
                     <member>
@@ -3405,7 +3306,7 @@ Default: &lt;none&gt;</para>
 
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_Server'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;cellname&gt;\&lt;server&gt;]</title>
-        <para>The actual name of the <emphasis>&lt;server&gt;</emphasis> key may be a fully qualified domain name of the server whose configuration is being specified.  
+        <para>The actual name of the <emphasis>&lt;server&gt;</emphasis> key may be a fully qualified domain name of the server whose configuration is being specified.
         If a domain name is specified as the key name, all values become optional.
         </para>
         <informaltable frame='all'>
