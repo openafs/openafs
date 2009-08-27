@@ -442,7 +442,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	bytesToXfer = alen;
 	bytesXferred = 0;
 
-	GetuTime(&xferStartTime);
+	osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
 
 	while ( alen > 0 ) {
