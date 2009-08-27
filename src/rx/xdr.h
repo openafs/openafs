@@ -64,6 +64,8 @@
 #endif
 
 #if defined(AFS_AMD64_LINUX24_ENV) || defined(AFS_DARWIN_ENV) || (defined(KERNEL) && !defined(UKERNEL))
+#define xdr_alloc afs_xdr_alloc
+#define xdr_free afs_xdr_free
 #define xdr_void afs_xdr_void
 #define xdr_int afs_xdr_int
 #define xdr_u_int afs_xdr_u_int
