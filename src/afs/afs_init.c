@@ -468,6 +468,8 @@ afs_InitCacheInfo(register char *afile)
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
+    if (afs_fsfragsize < 1023)
+	afs_fsfragsize = 1023;
     tfile = osi_UFSOpen(cacheInode);
     afs_osi_Stat(tfile, &tstat);
     cacheInfoModTime = tstat.mtime;
