@@ -18,7 +18,10 @@ my $panic_file = "/Library/Logs/panic.log";
 my %crash_info;
 my $backtrace;
 my $kextload   = "/sbin/kextload";
+my $kextutil   = "/usr/bin/kextutil";
+my $kextprog;
 my $gdb        = "/usr/bin/gdb";
+my $gdbarch    = "";
 my $gdb_file   = "gdb.input";
 my $temp_dir   = tempdir( "afsdebugXXXXXX", DIR => File::Spec->tmpdir,
                         TMPDIR => 1, CLEANUP => 1 );
@@ -50,7 +53,7 @@ if ($option_help) {
 }
 
 # check for necessary programs & panic file
-for my $program ( $kextload, $gdb ) {
+for my $program ( $gdb, $kextload ) {
     if ( ! -x $program ) {
         if ( $option_quiet ) {
             exit 1;
@@ -58,6 +61,12 @@ for my $program ( $kextload, $gdb ) {
             croak "Can't find $program!\n"
         }
     }
+}
+
+if ( -x $kextutil ) {
+    $kextprog = $kextutil;
+} else {
+    $kextprog = $kextload;
 }
 
 croak "Can't find panic file: $panic_file!\n" if ( ! -r $panic_file );
@@ -68,7 +77,19 @@ generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir );
 
 write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" } );
 
-my $gdb_output = `$gdb /mach_kernel -batch -x $temp_dir/$gdb_file`;
+if ($crash_info{"kernel_version"} =~ /X86_64/ ) {
+    $gdbarch="-a x86_64";
+} else {
+    if ($crash_info{"kernel_version"} =~ /I386/ ) {
+	$gdbarch="-a i386";
+    } else {
+	if ($crash_info{"kernel_version"} =~ /PPC/ ) {
+	    $gdbarch="-a ppc";
+	}
+    }
+}
+
+my $gdb_output = `$gdb $gdbarch /mach_kernel -batch -x $temp_dir/$gdb_file`;
 croak "gdb failed!\n" if $CHILD_ERROR;
 
 write_dump_file( $dump_file, \%crash_info, $gdb_output );
@@ -185,10 +206,11 @@ sub generate_symbol_files {
     my $kernel_address   = shift;
     my $symbol_write_dir = shift;
 
-    system( "/sbin/kextload",
-            "-s",  $temp_dir,
-            "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
-            "-n", "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/" );
+    system( $kextprog,
+	    "-s",  $temp_dir,
+	    "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
+	    "-n", "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/" );
+    
     if ( $CHILD_ERROR ) {
         # error
         croak "kextload failed to run: $OS_ERROR\n";
@@ -285,13 +307,18 @@ Here is an example file that is fed to gdb:
    x/i 0x2ED1F7C0
    x/i 0x2ED0D1A4
 
+Panic logs can be found in /Library/Logs/panic.log in 10.4 (Tiger), 
+/Library/Logs/PanicReporter/YYYY-MM-DD-HHMMSS.panic in 10.5 (Leopard),
+and /Library/Logs/DiagnosticReports/Kernel_YYYY-MM-DD-HHMMSS.panic in 10.6
+(SnowLeopard).
+
 =head1 DEPENDENCIES
 
-This program needs gdb and kextload.
+This program needs gdb and kextload; Starting in SnowLeopard, it needs kextutil.
 
 =head1 BUGS AND LIMITATIONS
 
-It clobbers the output file.
+decode-panic clobbers the output file.
 
 =head1 AUTHOR
 
