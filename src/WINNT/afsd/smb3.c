@@ -3155,12 +3155,15 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         responseSize = sizeof(qpi.u.QPfileAllInfo);
     else if (infoLevel == SMB_QUERY_FILE_ALT_NAME_INFO) 
         responseSize = sizeof(qpi.u.QPfileAltNameInfo);
+    else if (infoLevel == SMB_QUERY_FILE_STREAM_INFO)
+        responseSize = sizeof(qpi.u.QPfileStreamInfo);
     else {
-        osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+        osi_Log2(smb_logp, "Bad Tran2QPathInfo op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
         return 0;
     }
+    memset(&qpi, 0, sizeof(qpi));
 
     pathp = smb_ParseStringT2Parm(p, (char *) (&p->parmsp[3]), NULL, SMB_STRF_ANSIPATH);
     osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path %S", infoLevel,
@@ -3172,7 +3175,6 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         outp->totalParms = 2;
     else
         outp->totalParms = 0;
-    outp->totalData = responseSize;
         
     /* now, if we're at infoLevel 6, we're only being asked to check
      * the syntax, so we just OK things now.  In particular, we're *not*
@@ -3317,14 +3319,12 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
         smb_UnparseString(opx, qpi.u.QPfileAltNameInfo.fileName, shortName, &len, SMB_STRF_IGNORENUL);
 	qpi.u.QPfileAltNameInfo.fileNameLength = len;
-
-        goto done;
+        responseSize = sizeof(unsigned long) + len;
     }
     else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
         smb_UnparseString(opx, qpi.u.QPfileNameInfo.fileName, lastComp, &len, SMB_STRF_IGNORENUL);
 	qpi.u.QPfileNameInfo.fileNameLength = len;
-
-        goto done;
+        responseSize = sizeof(unsigned long) + len;
     }
     else if (infoLevel == SMB_INFO_STANDARD || infoLevel == SMB_INFO_QUERY_EA_SIZE) {
         cm_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
@@ -3403,7 +3403,19 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
         smb_UnparseString(opx, qpi.u.QPfileAllInfo.fileName, lastComp, &len, SMB_STRF_IGNORENUL);
 	qpi.u.QPfileAllInfo.fileNameLength = len;
+        responseSize -= (sizeof(qpi.u.QPfileAllInfo.fileName) - len);
     }
+    else if (infoLevel == SMB_QUERY_FILE_STREAM_INFO) {
+        size_t len = 0;
+        /* For now we have no streams */
+        qpi.u.QPfileStreamInfo.nextEntryOffset = 0;
+        qpi.u.QPfileStreamInfo.streamSize = scp->length;
+        qpi.u.QPfileStreamInfo.streamAllocationSize = scp->length;
+        smb_UnparseString(opx, qpi.u.QPfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
+        qpi.u.QPfileStreamInfo.streamNameLength = len;
+        responseSize -= (sizeof(qpi.u.QPfileStreamInfo.fileName) - len);
+    }
+    outp->totalData = responseSize;
 
     /* send and free the packets */
   done:
@@ -3455,7 +3467,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     if (infoLevel != SMB_INFO_STANDARD && 
 	infoLevel != SMB_INFO_QUERY_EA_SIZE &&
 	infoLevel != SMB_INFO_QUERY_ALL_EAS) {
-        osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+        osi_Log2(smb_logp, "Bad Tran2SetPathInfo op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
         smb_SendTran2Error(vcp, p, opx, 
                            infoLevel == SMB_INFO_QUERY_ALL_EAS ? CM_ERROR_EAS_NOT_SUPPORTED : CM_ERROR_BAD_LEVEL);
@@ -3677,14 +3689,17 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         responseSize = sizeof(qfi.u.QFeaInfo);
     else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) 
         responseSize = sizeof(qfi.u.QFfileNameInfo);
+    else if (infoLevel == SMB_QUERY_FILE_STREAM_INFO)
+        responseSize = sizeof(qfi.u.QFfileStreamInfo);
     else {
-        osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+        osi_Log2(smb_logp, "Bad Tran2QFileInfo op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
         smb_ReleaseFID(fidp);
         return 0;
     }
     osi_Log2(smb_logp, "T2 QFileInfo type 0x%x fid %d", infoLevel, fid);
+    memset(&qfi, 0, sizeof(qfi));
 
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, responseSize);
 
@@ -3692,7 +3707,6 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         outp->totalParms = 2;
     else
         outp->totalParms = 0;
-    outp->totalData = responseSize;
 
     userp = smb_GetTran2User(vcp, p);
     if (!userp) {
@@ -3757,9 +3771,20 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	lock_ReleaseMutex(&fidp->mx);
 
         smb_UnparseString(opx, qfi.u.QFfileNameInfo.fileName, name, &len, SMB_STRF_IGNORENUL);
-        outp->totalData = len + 4;	/* this is actually what we want to return */
+        responseSize = len + 4;	/* this is actually what we want to return */
         qfi.u.QFfileNameInfo.fileNameLength = len;
     }
+    else if (infoLevel == SMB_QUERY_FILE_STREAM_INFO) {
+        size_t len = 0;
+        /* For now we have no streams */
+        qfi.u.QFfileStreamInfo.nextEntryOffset = 0;
+        qfi.u.QFfileStreamInfo.streamSize = scp->length;
+        qfi.u.QFfileStreamInfo.streamAllocationSize = scp->length;
+        smb_UnparseString(opx, qfi.u.QFfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
+        qfi.u.QFfileStreamInfo.streamNameLength = len;
+        responseSize -= (sizeof(qfi.u.QFfileStreamInfo.fileName) - len);
+    }
+    outp->totalData = responseSize;
 
     /* send and free the packets */
   done:
@@ -3807,7 +3832,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     infoLevel = p->parmsp[1];
     osi_Log2(smb_logp,"ReceiveTran2SetFileInfo type 0x%x fid %d", infoLevel, fid);
     if (infoLevel > SMB_SET_FILE_END_OF_FILE_INFO || infoLevel < SMB_SET_FILE_BASIC_INFO) {
-        osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
+        osi_Log2(smb_logp, "Bad Tran2SetFileInfo op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_BAD_LEVEL);
         smb_ReleaseFID(fidp);
@@ -7847,28 +7872,69 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* set inp->fid so that later read calls in same msg can find fid */
     inp->fid = fidp->fid;
 
-    /* out parms */
-    parmSlot = 2;
     lock_ObtainRead(&scp->rw);
-    smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
-    smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
-    smb_SetSMBParmLong(outp, parmSlot, openAction); parmSlot += 2;
-    cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
-    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-    smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
-    smb_SetSMBParmLong(outp, parmSlot, smb_ExtAttributes(scp));
-    parmSlot += 2;
-    smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
-    smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
-    smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
-    smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* dev state */
-    smb_SetSMBParmByte(outp, parmSlot,
-                        (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
-			 scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
-			 scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
-    smb_SetSMBDataLength(outp, 0);
+
+    /* check whether we are required to send an extended response */
+    if (!extendedRespRequired) {
+        /* out parms */
+        parmSlot = 2;
+        smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
+        smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
+        smb_SetSMBParmLong(outp, parmSlot, openAction); parmSlot += 2;
+        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmLong(outp, parmSlot, smb_ExtAttributes(scp));
+        parmSlot += 2;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
+        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
+        smb_SetSMBParm(outp, parmSlot, NO_REPARSETAG|NO_SUBSTREAMS|NO_EAS);
+        parmSlot++;	/* dev state */
+        smb_SetSMBParmByte(outp, parmSlot,
+                            (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+                              scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+                              scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
+        smb_SetSMBDataLength(outp, 0);
+    } else {
+        /* out parms */
+        parmSlot = 2;
+        smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
+        smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
+        smb_SetSMBParmLong(outp, parmSlot, openAction); parmSlot += 2;
+        cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&ft); parmSlot += 4;
+        smb_SetSMBParmLong(outp, parmSlot, smb_ExtAttributes(scp));
+        parmSlot += 2;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
+        smb_SetSMBParmDouble(outp, parmSlot, (char *)&scp->length); parmSlot += 4;
+        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* filetype */
+        smb_SetSMBParm(outp, parmSlot, NO_REPARSETAG|NO_SUBSTREAMS|NO_EAS);
+        parmSlot++;	/* dev state */
+        smb_SetSMBParmByte(outp, parmSlot,
+                            (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+                              scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+                              scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
+        /* Volume GUID Root */
+        smb_SetSMBParmLong(outp, parmSlot, 0x55b00e35); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, 0x07de428d); parmSlot += 2;
+        /* Volume ID */
+        smb_SetSMBParmLong(outp, parmSlot, scp->fid.cell); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, scp->fid.volume); parmSlot += 2;
+        /* File ID */
+        smb_SetSMBParmLong(outp, parmSlot, scp->fid.vnode); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, scp->fid.unique); parmSlot += 2;
+        /* Maxmimal access rights */
+        smb_SetSMBParmLong(outp, parmSlot, 0x001f01ff); parmSlot += 2;
+        /* Guest access rights */
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
+        smb_SetSMBDataLength(outp, 0);
+    }
 
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
         LargeIntegerGreaterThanZero(scp->length) && 
@@ -8574,7 +8640,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         *((LARGE_INTEGER *)outData) = scp->length; outData += 8; /* alloc sz */
         *((LARGE_INTEGER *)outData) = scp->length; outData += 8; /* EOF */
         *((USHORT *)outData) = 0; outData += 2;	/* filetype */
-        *((USHORT *)outData) = 0; outData += 2;	/* dev state */
+        *((USHORT *)outData) = NO_REPARSETAG|NO_SUBSTREAMS|NO_EAS;
+        outData += 2;	/* dev state */
         *((USHORT *)outData) = ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
 				scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 				scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
@@ -8623,12 +8690,20 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         *((LARGE_INTEGER *)outData) = scp->length; outData += 8; /* alloc sz */
         *((LARGE_INTEGER *)outData) = scp->length; outData += 8; /* EOF */
         *((USHORT *)outData) = 0; outData += 2;	/* filetype */
-        *((USHORT *)outData) = 0; outData += 2;	/* dev state */
+        *((USHORT *)outData) = NO_REPARSETAG|NO_SUBSTREAMS|NO_EAS;
+        outData += 2;	/* dev state */
         *((USHORT *)outData) = ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
 				scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 				scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
         outData += 1;	/* is a dir? */
-        memset(outData,0,24); outData += 24; /* Volume ID and file ID */
+        /* Volume GUID Root */
+        *((DWORD *)outData) = 0x55b00e35; outData += 4;
+        *((DWORD *)outData) = 0x07de428d; outData += 4;
+        *((DWORD *)outData) = scp->fid.cell; outData += 4;
+        *((DWORD *)outData) = scp->fid.volume; outData += 4;
+        /* File ID */
+        *((DWORD *)outData) = scp->fid.vnode; outData += 4;
+        *((DWORD *)outData) = scp->fid.unique; outData += 4;
         *((ULONG *)outData) = 0x001f01ffL; outData += 4; /* Maxmimal access rights */
         *((ULONG *)outData) = 0; outData += 4; /* Guest Access rights */
     }
@@ -8869,7 +8944,7 @@ long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         osi_Log0(smb_logp, "SMB NT Transact Set Quota - not implemented");
         break;
     }
-    return CM_ERROR_INVAL;
+    return CM_ERROR_BADOP;
 }
 
 /*

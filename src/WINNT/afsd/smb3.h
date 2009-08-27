@@ -214,6 +214,22 @@ typedef struct {
 	    unsigned long  fileNameLength;
 	    unsigned char  fileName[512];
 	} QFfileNameInfo;
+	struct {
+	    unsigned long  nextEntryOffset;
+	    unsigned long  streamNameLength;
+	    LARGE_INTEGER  streamSize;
+	    LARGE_INTEGER  streamAllocationSize;
+	    unsigned char  fileName[512]; /* STRING */
+	} QFfileStreamInfo;
+        struct {
+            LARGE_INTEGER  creationTime;
+	    LARGE_INTEGER  lastAccessTime;
+	    LARGE_INTEGER  lastWriteTime;
+	    LARGE_INTEGER  lastChangeTime;
+            LARGE_INTEGER  allocationSize;
+            LARGE_INTEGER  endOfFile;
+	    unsigned long  attributes;
+        } QFnetworkOpenInfo;
     } u;
 } smb_tran2QFileInfo_t;
 
@@ -423,4 +439,9 @@ extern void smb_NegotiateExtendedSecurity(void ** secBlob, int * secBlobLength);
 #define FILE_NOTIFY_CHANGE_STREAM_NAME  0x00000200
 #define FILE_NOTIFY_CHANGE_STREAM_SIZE  0x00000400
 #define FILE_NOTIFY_CHANGE_STREAM_WRITE 0x00000800
+
+/* NT Create Device Status bit flags */
+#define NO_REPARSETAG 0x0004
+#define NO_SUBSTREAMS 0x0002
+#define NO_EAS        0x0001
 #endif /*  __SMB3_H_ENV__ */
