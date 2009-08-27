@@ -6,6 +6,7 @@
 //  Copyright 2008 Infn. All rights reserved.
 //
 
+#import "portability.h"
 #import "PListManager.h"
 #import "FileUtil.h"
 #import "TaskUtil.h"
