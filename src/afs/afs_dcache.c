@@ -71,7 +71,7 @@ afs_int32 afs_cacheBlocks;	/*!< 1K blocks in cache */
 afs_int32 afs_cacheStats;	/*!< Stat entries in cache */
 afs_int32 afs_blocksUsed;	/*!< Number of blocks in use */
 afs_int32 afs_blocksDiscarded;	/*!<Blocks freed but not truncated */
-afs_int32 afs_fsfragsize = 1023;	/*!< Underlying Filesystem minimum unit 
+afs_int32 afs_fsfragsize = AFS_MIN_FRAGSIZE;	/*!< Underlying Filesystem minimum unit 
 					 *of disk allocation usually 1K
 					 *this value is (truefrag -1 ) to
 					 *save a bunch of subtracts... */

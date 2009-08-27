@@ -18,6 +18,14 @@
 #include "afs/afs_args.h"
 #endif
 
+/*
+ * afs_fsfragsize cannot be less than 1023, or some cache-tracking
+ * calculations will be incorrect (since we track cache usage in kb).
+ * Some filesystems have fundamental blocksizes less than 1k, and
+ * normally we would tune afs_fsfragsize to be fragsize-1, but we must
+ * make sure to check that afs_fsfragsize does not go below this value.
+ */
+#define AFS_MIN_FRAGSIZE 1023
 
 /* Upper bound on number of iovecs out uio routines will deal with. */
 #define	AFS_MAXIOVCNT	    16
