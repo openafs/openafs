@@ -308,7 +308,8 @@ _init_osi_cas_skip_subsystem(void)
     int i;
 
     for (i = 0; i < NUM_LEVELS; i++) {
-	gc_id[i] = gc_add_allocator(sizeof(node_t) + i * sizeof(node_t *));
+		gc_id[i] = gc_add_allocator(sizeof(node_t) + i * sizeof(node_t *),
+			"cas_skip_level");
     }
 }
 

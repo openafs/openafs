@@ -39,7 +39,7 @@ typedef struct gc_st gc_t;
 /* Initialise GC section of given per-thread state structure. */
 gc_t *gc_init(void);
 
-int gc_add_allocator(int alloc_size);
+int gc_add_allocator(int alloc_size, char *tag);
 void gc_remove_allocator(int alloc_id);
 
 /*
