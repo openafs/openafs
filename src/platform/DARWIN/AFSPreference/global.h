@@ -57,6 +57,8 @@
 #define kMenuExtraEventOccured @"menu_extra_event_occured"
 // Changed preference notification key
 #define kMExtraClosedNotification @"preference_changed"
+// Changed preference notification key
+#define kMExtraTokenOperation @"kMExtraTokenOperation"
 // Update MenuExtra AfsState notification key
 #define kMExtraAFSStateChange @"menu_extra_afs_state_change"
 // Update MenuExtra for show menu notification key

@@ -136,6 +136,7 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (void) writePreferenceFile;
 - (void) readPreferenceFile;
 - (void) refreshGui:(NSNotification *)notification;
+- (void) refreshTokensNotify:(NSNotification*)notification;
 - (void) afsVolumeMountChange:(NSNotification *)notification;
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem: (NSTabViewItem *)tabViewItem;
 @end

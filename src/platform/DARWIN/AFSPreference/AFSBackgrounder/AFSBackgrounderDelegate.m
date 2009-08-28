@@ -232,7 +232,7 @@
 	//Dispose afs manager
 	[afsPropMngr release];
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID 
-																   object:kMenuExtraEventOccured];
+																   object:kMExtraTokenOperation];
 }
 
 // -------------------------------------------------------------------------------
@@ -243,7 +243,7 @@
 	[afsMngr unlog:nil];
 	[self updateAfsStatus:nil];
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID 
-																   object:kMenuExtraEventOccured];
+																   object:kMExtraTokenOperation];
 }
 
 

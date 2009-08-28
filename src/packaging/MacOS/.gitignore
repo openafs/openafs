@@ -5,7 +5,7 @@
 /OpenAFS.Info.plist
 /OpenAFS.info
 /buildpkg.sh
-
+/CellServDB
 .DS_Store
 *.mode1v3
 *.pbxuser

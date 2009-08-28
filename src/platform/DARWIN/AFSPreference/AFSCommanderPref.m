@@ -130,10 +130,10 @@
 	afsProperty = [[AFSPropertyManager alloc] init];
 	
 	// register preference pane to detect menuextra killed by user
-/*	[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
-														selector:@selector(mextraChangeActivation:) 
-															name:kAfsCommanderID 
-														  object:kMExtraClosedNotification];*/
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self
+														selector:@selector(refreshTokensNotify:)
+															name:kAfsCommanderID
+														  object:kMExtraTokenOperation];
 	 
 	[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
 														selector:@selector(refreshGui:) 
@@ -211,11 +211,14 @@
 	[self writePreferenceFile];
 	
 	// unregister preference pane to detect menuextra killed by user
-	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self 
-															   name:kAfsCommanderID 
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self
+															   name:kAfsCommanderID
 															 object:kMExtraClosedNotification];
-	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self 
-															   name:kAfsCommanderID 
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self
+															   name:kAfsCommanderID
+															 object:kMExtraTokenOperation];
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self
+															   name:kAfsCommanderID
 															 object:kMenuExtraEventOccured];
 	[[[NSWorkspace sharedWorkspace] notificationCenter] removeObserver:self 
 																  name:NSWorkspaceDidMountNotification object:nil];
@@ -633,9 +636,15 @@
 - (void) refreshGui:(NSNotification *)notification{
 	BOOL afsIsUp = [afsProperty checkAfsStatus];
 	[self setAfsStatus];
-	[self refreshTokens:nil];
 	[tokensButton setEnabled:afsIsUp];
 	[unlogButton setEnabled:afsIsUp];
+}
+
+// -------------------------------------------------------------------------------
+//  -(void) refreshTokensNotify:(NSNotification*)notification
+// -------------------------------------------------------------------------------
+-(void) refreshTokensNotify:(NSNotification*)notification {
+	[self refreshTokens:nil];
 }
 
 // -------------------------------------------------------------------------------
