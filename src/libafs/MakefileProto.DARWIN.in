@@ -52,9 +52,9 @@ OBJ_ppc=$(shell echo "${ARCH_ppc}" | grep -q -w yes && echo "$@.ppc")
 OBJ_x86=$(shell echo "${ARCH_x86}" | grep -q -w yes && echo "$@.x86")
 OBJ_amd64=$(shell echo "${ARCH_amd64}" | grep -q -w yes && echo "$@.amd64")
 
-<ppc_darwin_90 x86_darwin_90 x86_darwin_100>
+<x86_darwin_100>
 MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(ARCHFLAGS) -Xlinker -kext
-<all -ppc_darwin_90 -x86_darwin_90 -x86_darwin_100>
+<all -x86_darwin_100>
 MODLD=$(CC) -static $(KOPTS_DBUG) -nostdlib $(ARCHFLAGS)
 <all>
 
