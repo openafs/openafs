@@ -3768,7 +3768,7 @@ afsmon_execute(void)
     }
 
     /* start the gtx input server */
-    code = (int) gtx_InputServer(afsmon_win);
+    code = (intptr_t)gtx_InputServer(afsmon_win);
     if (code) {
 	fprintf(stderr, "[ %s ] Failed to start input server \n", rn);
 	afsmon_Exit(140);

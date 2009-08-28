@@ -765,7 +765,7 @@ ScanDumps(void *param)
     free(ptr);
     setStatus(taskId, TASK_DONE);
     LeaveDeviceQueue(deviceLatch);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 

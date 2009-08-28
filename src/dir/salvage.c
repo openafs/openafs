@@ -290,7 +290,7 @@ DirOK(void *file)
 	    /* A null name is no good */
 	    if (ep->name[0] == '\000') {
 		printf("Dir entry %x in chain %d has bogus (null) name.\n",
-		       (int)ep, i);
+		       (intptr_t)ep, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -298,7 +298,7 @@ DirOK(void *file)
 
 	    /* The entry flag better be FFIRST */
 	    if (ep->flag != FFIRST) {
-		printf("Dir entry %x in chain %d has bogus flag field.\n", (int)ep,
+		printf("Dir entry %x in chain %d has bogus flag field.\n", (intptr_t)ep,
 		       i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
@@ -308,7 +308,7 @@ DirOK(void *file)
 	    /* Check the size of the name */
 	    j = strlen(ep->name);
 	    if (j >= MAXENAME) {	/* MAXENAME counts the null */
-		printf("Dir entry %x in chain %d has too-long name.\n", (int)ep,
+		printf("Dir entry %x in chain %d has too-long name.\n", (intptr_t)ep,
 		       i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
@@ -327,7 +327,7 @@ DirOK(void *file)
 	    if ((j = DirHash(ep->name)) != i) {
 		printf
 		    ("Dir entry %x should be in hash bucket %d but IS in %d.\n",
-		     (int)ep, j, i);
+		     (intptr_t)ep, j, i);
 		DRelease(ep, 0);
 		DRelease(dhp, 0);
 		return 0;
@@ -340,7 +340,7 @@ DirOK(void *file)
 		} else {
 		    printf
 			("Dir entry %x, index 13 has name '%s' should be '.'\n",
-			 (int)ep, ep->name);
+			 (intptr_t)ep, ep->name);
 		    DRelease(ep, 0);
 		    DRelease(dhp, 0);
 		    return 0;
@@ -354,7 +354,7 @@ DirOK(void *file)
 		} else {
 		    printf
 			("Dir entry %x, index 14 has name '%s' should be '..'\n",
-			 (int)ep, ep->name);
+			 (intptr_t)ep, ep->name);
 		    DRelease(ep, 0);
 		    DRelease(dhp, 0);
 		    return 0;

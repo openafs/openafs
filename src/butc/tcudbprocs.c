@@ -754,7 +754,7 @@ saveDbToTape(void *param)
 
     free(saveDbIfPtr);
     LeaveDeviceQueue(deviceLatch);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 
@@ -1021,7 +1021,7 @@ restoreDbEntries(struct butm_tapeInfo *tapeInfoPtr,
 void *
 restoreDbFromTape(void *param)
 {
-    afs_uint32 taskId = (afs_uint32) param;
+    afs_uint32 taskId = (intptr_t) param;
     afs_int32 code = 0;
     afs_int32 i;
     struct butm_tapeInfo tapeInfo;
@@ -1107,7 +1107,7 @@ restoreDbFromTape(void *param)
     LeaveDeviceQueue(deviceLatch);
     setStatus(taskId, TASK_DONE);
 
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 /* KeepAlive

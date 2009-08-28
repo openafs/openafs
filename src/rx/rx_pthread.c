@@ -248,7 +248,7 @@ static void *
 rx_ListenerProc(void *argp)
 {
     int threadID;
-    osi_socket sock = (osi_socket)argp;
+    osi_socket sock = (osi_socket)(intptr_t)argp;
     struct rx_call *newcall;
 
     while (1) {
@@ -258,7 +258,7 @@ rx_ListenerProc(void *argp)
 	/* assert(threadID != -1); */
 	/* assert(newcall != NULL); */
 	sock = OSI_NULLSOCKET;
-	assert(pthread_setspecific(rx_thread_id_key, (void *)threadID) == 0);
+	assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* assert(sock != OSI_NULLSOCKET); */
     }
@@ -302,7 +302,7 @@ rx_ServerProc(void * dummy)
 
     while (1) {
 	sock = OSI_NULLSOCKET;
-	assert(pthread_setspecific(rx_thread_id_key, (void *)threadID) == 0);
+	assert(pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)threadID) == 0);
 	rxi_ServerProc(threadID, newcall, &sock);
 	/* assert(sock != OSI_NULLSOCKET); */
 	newcall = NULL;
@@ -385,7 +385,7 @@ rxi_Listen(osi_socket sock)
     }
 
     AFS_SIGSET_CLEAR();
-    if (pthread_create(&thread, &tattr, rx_ListenerProc, (void *)sock) != 0) {
+    if (pthread_create(&thread, &tattr, rx_ListenerProc, (void *)(intptr_t)sock) != 0) {
 	dpf(("Unable to create socket listener thread\n"));
 	exit(1);
     }

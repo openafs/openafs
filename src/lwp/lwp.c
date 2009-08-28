@@ -20,6 +20,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <time.h>
 
 /* allocate externs here */
@@ -932,8 +933,8 @@ Dispatcher(void)
 	printf("stackcheck = %u: stack = %u \n", lwp_cpptr->stackcheck,
 	       *(int *)lwp_cpptr->stack);
 	printf("topstack = 0x%x: stackptr = 0x%x: stacksize = 0x%x\n",
-	       (unsigned int)lwp_cpptr->context.topstack, 
-	       (unsigned int)lwp_cpptr->stack,
+	       (uintptr_t)lwp_cpptr->context.topstack, 
+	       (uintptr_t)lwp_cpptr->stack,
 	       lwp_cpptr->stacksize);
 
 	switch (lwp_overflowAction) {

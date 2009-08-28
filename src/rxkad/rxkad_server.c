@@ -470,7 +470,7 @@ afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
         if (currentValue) {
             *((afs_uint32 *)currentValue) = private->flags;
         } else { 
-            private->flags = (afs_uint32) avalue;
+            private->flags = (intptr_t)avalue;
         }
         break;
     default:

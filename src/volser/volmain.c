@@ -102,7 +102,7 @@ afs_uint32 SHostAddrs[ADDRSPERSITE];
 int
 threadNum(void)
 {
-    return (int)pthread_getspecific(rx_thread_id_key);
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 

@@ -1937,7 +1937,7 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 			     &gxlistener_ID);	/*Returned LWP process ID */
 #endif /* 0 */
 
-    code = (int) gtx_InputServer(scout_gwin);
+    code = (int)(intptr_t)gtx_InputServer(scout_gwin);
     if (code) {
 	fprintf(stderr,
 		"[%s] Error exit from gtx_InputServer(), error is %d\n", rn,

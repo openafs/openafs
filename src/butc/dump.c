@@ -1381,7 +1381,7 @@ Dumper(void *param)
 
     FreeNode(taskId);		/* free the dump node */
     LeaveDeviceQueue(deviceLatch);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 #define BELLTIME 60		/* 60 seconds before a bell rings */

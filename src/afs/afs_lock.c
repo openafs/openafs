@@ -279,7 +279,7 @@ afs_BozonLock(struct afs_bozoLock *alock, struct vcache *avc)
 	    /* To shut up SGI compiler on remark(1413) warnings. */
 	    alock->proc = (char *)(long)MyPidxx;
 #else /* AFS_64BITPOINTER_ENV */
-	    alock->proc = (char *)MyPidxx;
+	    alock->proc = (char *)(intptr_t)MyPidxx;
 #endif /* AFS_64BITPOINTER_ENV */
 #endif
 	    alock->count = 1;
@@ -291,7 +291,7 @@ afs_BozonLock(struct afs_bozoLock *alock, struct vcache *avc)
 	    /* To shut up SGI compiler on remark(1413) warnings. */
 	} else if (alock->proc == (char *)(long)MyPidxx) {
 #else /* AFS_64BITPOINTER_ENV */
-	} else if (alock->proc == (char *)MyPidxx) {
+	} else if (alock->proc == (char *)(intptr_t)MyPidxx) {
 #endif /* AFS_64BITPOINTER_ENV */
 #endif
 	    /* lock is held, but by us, so we win anyway */
@@ -350,7 +350,7 @@ afs_CheckBozonLockBlocking(struct afs_bozoLock *alock)
 	/* To shut up SGI compiler on remark(1413) warnings. */
 	if (alock->proc != (char *)(long)MyPidxx)
 #else /* AFS_64BITPOINTER_ENV */
-	if (alock->proc != (char *)MyPidxx)
+	if (alock->proc != (char *)(intptr_t)MyPidxx)
 #endif /* AFS_64BITPOINTER_ENV */
 #endif
 	    return 1;

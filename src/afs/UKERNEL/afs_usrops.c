@@ -4178,7 +4178,7 @@ uafs_getcellstatus(char *cell, afs_int32 * status)
 	return -1;
     }
 
-    *status = (afs_int32) iob.out;
+    *status = (intptr_t)iob.out;
     return 0;
 }
 

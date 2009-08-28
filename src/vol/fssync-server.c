@@ -237,7 +237,7 @@ FSYNC_sync(void * args)
     MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
     tid = ++rxi_pthread_hinum;
     MUTEX_EXIT(&rx_stats_mutex);
-    pthread_setspecific(rx_thread_id_key, (void *)tid);
+    pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)tid);
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */
 

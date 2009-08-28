@@ -153,7 +153,7 @@ afs_random(void)
     if (!called_afs_random_once)
 	pthread_once(&random_once, afs_random_once);
 
-    state = (afs_uint32) pthread_getspecific(random_number_key);
+    state = (uintptr_t) pthread_getspecific(random_number_key);
 #else
     static afs_uint32 state = 0;
 #endif
@@ -168,7 +168,7 @@ afs_random(void)
 
     ranstage(state);
 #ifdef AFS_PTHREAD_ENV
-    pthread_setspecific(random_number_key, (const void *)state);
+    pthread_setspecific(random_number_key, (const void *)(uintptr_t)state);
 #endif
     return (state);
 

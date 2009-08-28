@@ -1600,6 +1600,8 @@ fi
 
 AC_TYPE_SOCKLEN_T
 AC_TYPE_SIGNAL
+AC_TYPE_INTPTR_T
+AC_TYPE_UINTPTR_T
 AC_CHECK_TYPE(ssize_t, int)
 AC_CHECK_TYPES(sig_t, , ,
   [#include <sys/types.h>

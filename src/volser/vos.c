@@ -283,12 +283,12 @@ SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
 #ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
 	fd_set in;
 	FD_ZERO(&in);
-	FD_SET((int)(ufd->handle), &in);
+	FD_SET((intptr_t)(ufd->handle), &in);
 	/* don't timeout if read blocks */
 #if defined(AFS_PTHREAD_ENV)
 	select(((int)(ufd->handle)) + 1, &in, 0, 0, 0);
 #else
-	IOMGR_Select(((int)(ufd->handle)) + 1, &in, 0, 0, 0);
+	IOMGR_Select(((intptr_t)(ufd->handle)) + 1, &in, 0, 0, 0);
 #endif
 #endif
 	error = USD_READ(ufd, buffer, blksize, &nbytes);
@@ -396,12 +396,12 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 #ifndef AFS_NT40_ENV		/* NT csn't select on non-socket fd's */
 	    fd_set out;
 	    FD_ZERO(&out);
-	    FD_SET((int)(ufd->handle), &out);
+	    FD_SET((intptr_t)(ufd->handle), &out);
 	    /* don't timeout if write blocks */
 #if defined(AFS_PTHREAD_ENV)
 	    select(((int)(ufd->handle)) + 1, &out, 0, 0, 0);
 #else
-	    IOMGR_Select(((int)(ufd->handle)) + 1, 0, &out, 0, 0);
+	    IOMGR_Select(((intptr_t)(ufd->handle)) + 1, 0, &out, 0, 0);
 #endif
 #endif
 	    error =

@@ -88,7 +88,7 @@ CheckSignal(void *unused)
 
     if ((errorcode =
 	Init_VLdbase(&trans, LOCKREAD, VLGETSTATS - VL_LOWEST_OPCODE)))
-	return (void *)errorcode;
+	return (void *)(intptr_t)errorcode;
     VLog(0, ("Dump name hash table out\n"));
     for (i = 0; i < HASHSIZE; i++) {
 	HashNDump(trans, i);
@@ -97,7 +97,7 @@ CheckSignal(void *unused)
     for (i = 0; i < HASHSIZE; i++) {
 	HashIdDump(trans, i);
     }
-    return ((void *)ubik_EndTrans(trans));
+    return ((void *)(intptr_t)ubik_EndTrans(trans));
 }				/*CheckSignal */
 
 

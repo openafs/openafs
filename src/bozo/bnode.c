@@ -819,9 +819,9 @@ void
 bnode_Int(int asignal)
 {
     if (asignal == SIGQUIT) {
-	IOMGR_SoftSig(bozo_ShutdownAndExit, (void *) asignal);
+	IOMGR_SoftSig(bozo_ShutdownAndExit, (void *)(intptr_t)asignal);
     } else {
-	IOMGR_SoftSig(bnode_SoftInt, (void *) asignal);
+	IOMGR_SoftSig(bnode_SoftInt, (void *)(intptr_t)asignal);
     }
 }
 

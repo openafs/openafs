@@ -352,7 +352,7 @@ ResetCheckDescriptors(void)
 int
 threadNum(void)
 {
-    return (int)pthread_getspecific(rx_thread_id_key);
+    return (intptr_t)pthread_getspecific(rx_thread_id_key);
 }
 #endif
 
@@ -430,7 +430,7 @@ setThreadId(char *s)
     /* set our 'thread-id' so that the host hold table works */
     MUTEX_ENTER(&rx_stats_mutex);	/* protects rxi_pthread_hinum */
     ++rxi_pthread_hinum;
-    pthread_setspecific(rx_thread_id_key, (void *)rxi_pthread_hinum);
+    pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)rxi_pthread_hinum);
     MUTEX_EXIT(&rx_stats_mutex);
     ViceLog(0,
 	    ("Set thread id %d for '%s'\n",

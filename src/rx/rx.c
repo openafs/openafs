@@ -537,7 +537,7 @@ rx_InitHost(u_int host, u_int port)
 #else
 	socklen_t addrlen = sizeof(addr);
 #endif
-	if (getsockname((int)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
+	if (getsockname((intptr_t)rx_socket, (struct sockaddr *)&addr, &addrlen)) {
 	    rx_Finalize();
 	    return -1;
 	}

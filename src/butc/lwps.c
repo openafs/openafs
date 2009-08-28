@@ -1927,7 +1927,7 @@ Restorer(void *param) {
 
     FreeNode(taskId);
     LeaveDeviceQueue(deviceLatch);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 /* this is just scaffolding, creates new tape label with name <tapeName> */
@@ -2276,7 +2276,7 @@ Labeller(void *param)
 
     free(labelIfPtr);
     LeaveDeviceQueue(deviceLatch);
-    return (void *)(code);
+    return (void *)(intptr_t)(code);
 }
 
 /* PrintTapeLabel

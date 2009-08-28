@@ -197,7 +197,7 @@ ForkIoctl(usd_handle_t fd, int op, int count)
 	/* note: as painful as it is, we have to reach under the covers of
 	 *       the usd package to implement this functionality.
 	 */
-	unixfd = (int)(fd->handle);
+	unixfd = (intptr_t)(fd->handle);
 
 	for (i = 3; i < _POSIX_OPEN_MAX; i++) {
 	    if (i != unixfd && i != pipefd[1]) {
@@ -448,7 +448,7 @@ ForkClose(usd_handle_t fd)
 	/* note: as painful as it is, we have to reach under the covers of
 	 *       the usd package to implement this functionality.
 	 */
-	unixfd = (int)(fd->handle);
+	unixfd = (intptr_t)(fd->handle);
 
 	for (i = 3; i < _POSIX_OPEN_MAX; i++) {
 	    if (i != unixfd && i != ctlpipe[0] && i != pipefd[1]) {

@@ -1562,7 +1562,7 @@ SBOZO_SetRestrictedMode(struct rx_call *acall, afs_int32 arestmode)
 void *
 bozo_ShutdownAndExit(void *param)
 {
-    int asignal = (int) param;
+    int asignal = (intptr_t)param;
     int code;
 
     bozo_Log

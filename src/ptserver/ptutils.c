@@ -915,7 +915,7 @@ DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
     }
 #endif /* SUPERGROUPS */
     nptr = tentry->next;
-    while (nptr != (afs_int32) NULL) {
+    while (nptr != 0) {
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	if (code != 0)
 	    return PRDBFAIL;
@@ -1036,7 +1036,7 @@ AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int3
     }
     last = 0;
     nptr = entry->next;
-    while (nptr != (afs_int32) NULL) {
+    while (nptr != 0) {
 	code = pr_ReadCoEntry(tt, 0, nptr, &nentry);
 	if (code != 0)
 	    return code;
@@ -1359,7 +1359,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
     }
 
     nptr = tentry->next;
-    while (nptr != (afs_uint32) NULL) {
+    while (nptr != 0) {
 	/* look through cont entries */
 	code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	if (code != 0)
@@ -1401,7 +1401,7 @@ GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2,
 
     if (!code) {
 	nptr = tentry2->next;
-	while (nptr != (afs_uint32) NULL) {
+	while (nptr != 0) {
 	    /* look through cont entries */
 	    code = pr_ReadCoEntry(at, 0, nptr, &centry);
 	    if (code != 0)
@@ -1747,7 +1747,7 @@ Initdb(void)
     }
     if ((ntohl(cheader.version) == PRDBVERSION)
 	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != (afs_uint32) NULL
+	&& ntohl(cheader.eofPtr) != 0
 	&& FindByID(tt, ANONYMOUSID) != 0) {
 	/* database exists, so we don't have to build it */
 	code = ubik_EndTrans(tt);
@@ -1797,7 +1797,7 @@ Initdb(void)
      */
     if ((ntohl(cheader.version) == PRDBVERSION)
 	&& ntohl(cheader.headerSize) == sizeof(cheader)
-	&& ntohl(cheader.eofPtr) != (afs_uint32) NULL
+	&& ntohl(cheader.eofPtr) != 0
 	&& FindByID(tt, ANONYMOUSID) != 0) {
 	/* database exists, so we don't have to build it */
 	code = ubik_EndTrans(tt);

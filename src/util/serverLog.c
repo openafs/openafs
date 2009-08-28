@@ -167,7 +167,7 @@ FSLog(const char *format, ...)
 static void*
 DebugOn(void *param)
 {
-    int loglevel = (int)param;
+    int loglevel = (intptr_t)param;
     if (loglevel == 0) {
 	ViceLog(0, ("Reset Debug levels to 0\n"));
     } else {
@@ -200,9 +200,9 @@ SetDebug_Signal(int signo)
     }
     printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
-    DebugOn((void *) LogLevel);
+    DebugOn((void *)(intptr_t)LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, (void *) LogLevel);
+    IOMGR_SoftSig(DebugOn, (void *)(intptr_t)LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, SetDebug_Signal);	/* on some platforms, this
@@ -218,9 +218,9 @@ ResetDebug_Signal(int signo)
     if (printLocks > 0)
 	--printLocks;
 #if defined(AFS_PTHREAD_ENV)
-    DebugOn((void *) LogLevel);
+    DebugOn((void *)(intptr_t)LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, (void *) LogLevel);
+    IOMGR_SoftSig(DebugOn, (void *)(intptr_t)LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     (void)signal(signo, ResetDebug_Signal);	/* on some platforms,
