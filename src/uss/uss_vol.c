@@ -1,7 +1,7 @@
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
- * 
+ *
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
@@ -610,7 +610,7 @@ CheckDoubleMount(char *a_mp, char *a_oldmp)
 
 afs_int32
 uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
-		  char *a_quota, char *a_mpoint, char *a_owner, 
+		  char *a_quota, char *a_mpoint, char *a_owner,
 		  char *a_acl)
 {				/*uss_vol_CreateVol */
 #ifdef USS_VOL_DB
@@ -899,7 +899,7 @@ uss_vol_CreateVol(char *a_volname, char *a_server, char *a_partition,
  *------------------------------------------------------------------------*/
 
 afs_int32
-uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, char *a_servName, 
+uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, char *a_servName,
 		  afs_int32 a_servID, char *a_partName, afs_int32  a_partID)
 {				/*uss_vol_DeleteVol */
 
@@ -964,7 +964,7 @@ uss_vol_DeleteVol(char *a_volName, afs_int32 a_volID, char *a_servName,
  *------------------------------------------------------------------------*/
 
 static afs_int32
-GetServerAndPart(struct vldbentry *a_vldbEntryP, afs_int32 *a_servIDP,
+GetServerAndPart(struct nvldbentry *a_vldbEntryP, afs_int32 *a_servIDP,
 		 afs_int32 *a_partIDP)
 {				/*GetServerAndPart */
 
@@ -980,10 +980,93 @@ GetServerAndPart(struct vldbentry *a_vldbEntryP, afs_int32 *a_servIDP,
 
 
 /*------------------------------------------------------------------------
+ * static ovlentry_to_nvlentry
+ *
+ * Description:
+ *	Converts a vldbentry to nvldbentry.
+ *
+ * Arguments:
+ *	oentryp   IN  : Ptr to vldbentry.
+ *	nentryp   OUT : Ptr to nvldbentry.
+ *
+ * Returns:
+ *      None
+ *
+ * Environment:
+ *	Nothing interesting.
+ *
+ * Side Effects:
+ *	None.
+ *------------------------------------------------------------------------*/
+
+static void
+ovlentry_to_nvlentry(struct vldbentry *oentryp,
+                     struct nvldbentry *nentryp)
+{
+    register int i;
+
+    memset(nentryp, 0, sizeof(struct nvldbentry));
+    strncpy(nentryp->name, oentryp->name, sizeof(nentryp->name));
+    for (i = 0; i < oentryp->nServers; i++) {
+	nentryp->serverNumber[i] = oentryp->serverNumber[i];
+	nentryp->serverPartition[i] = oentryp->serverPartition[i];
+	nentryp->serverFlags[i] = oentryp->serverFlags[i];
+    }
+    nentryp->nServers = oentryp->nServers;
+    for (i = 0; i < MAXTYPES; i++)
+	nentryp->volumeId[i] = oentryp->volumeId[i];
+    nentryp->cloneId = oentryp->cloneId;
+    nentryp->flags = oentryp->flags;
+}
+
+
+/*------------------------------------------------------------------------
+ * static uss_vol_GetEntryByID
+ *
+ * Description:
+ *	Obtains a nvldbentry whether new or old forms of
+ *      ubik_VL_GetEntryByID are required.
+ *
+ * Arguments:
+ *	cstruct      : Ptr to ubik_client.
+ *	volid        : Volume ID for which entry is being obtained.
+ *      voltype      : Required volume type
+ *	entryp       : Ptr to nvldbentry to receive the output on success.
+ *
+ * Returns:
+ *	0 if everything went well, or
+ *	ubik return code otherwise.
+ *
+ * Environment:
+ *	Nothing interesting.
+ *
+ * Side Effects:
+ *	None.
+ *------------------------------------------------------------------------*/
+
+static int
+uss_vol_GetEntryByID(ubik_client *cstruct, afs_uint32 volid,
+                     afs_int32 voltype, struct nvldbentry *entryp)
+{
+    struct vldbentry oentry;
+    int code;
+
+    code = ubik_VL_GetEntryByIDN(cstruct, 0, volid, voltype, entryp);
+    if (code == RXGEN_OPCODE) {
+        code =
+            ubik_VL_GetEntryByID(cstruct, 0, volid, voltype, &oentry);
+        if (!code)
+            ovlentry_to_nvlentry(&oentry, entryp);
+    }
+    return code;
+}
+
+
+/*------------------------------------------------------------------------
  * EXPORTED uss_vol_GetVolInfoFromMountPoint
  *
  * Environment:
- *	If the mountpoint path provided is not 
+ *	If the mountpoint path provided is not
  *
  * Side Effects:
  *	As advertised.
@@ -998,7 +1081,7 @@ uss_vol_GetVolInfoFromMountPoint(char *a_mountpoint)
     register afs_int32 code;	/*Return code */
     uss_VolumeStatus_t *statusP;	/*Ptr to returned status */
     afs_int32 volID;		/*Volume ID */
-    struct vldbentry vldbEntry;	/*VLDB entry for volume */
+    struct nvldbentry vldbEntry;	/*VLDB entry for volume */
     afs_int32 serverID;		/*Addr of host FileServer */
     afs_int32 partID;		/*Volume's partition ID */
 
@@ -1068,7 +1151,7 @@ uss_vol_GetVolInfoFromMountPoint(char *a_mountpoint)
 	if (code)
 	    return (code);
     }
-    code = ubik_VL_GetEntryByID( uconn_vldbP, 0, volID, -1, &vldbEntry);
+    code = uss_vol_GetEntryByID( uconn_vldbP, volID, -1, &vldbEntry);
     if (code) {
 	printf("%s: Can't fetch VLDB entry for volume ID %d\n", uss_whoami,
 	       volID);
