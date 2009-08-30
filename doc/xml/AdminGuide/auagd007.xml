@@ -829,8 +829,8 @@ user receives an AFS token when
 
       <para>You make your cell visible to others by advertising your cell name and database server machines. Just like client
       machines in the local cell, the Cache Manager on machines in foreign cells use the information to reach your cell's Volume
-      Location (VL) Servers when they need volume and file location information. Similarly, client-side authentication programs
-      running in foreign cells use the information to contact your cell's authentication service.</para>
+      Location (VL) Servers when they need volume and file location information. For authenticated access, foreign clients
+      must be configured with the necessary Kerberos v5 domain-to-realm mappings and Key Distribution Center location information for both the local and remote Kerberos v5 realms.</para>
 
       <para>There are two places you can make this information available: <itemizedlist>
           <indexterm>
@@ -840,19 +840,26 @@ user receives an AFS token when
           </indexterm>
 
           <indexterm>
-            <primary>CellServDB file maintained by AFS Product Support</primary>
+            <primary>CellServDB file maintained by the AFS Registrar</primary>
 
             <secondary>as global update source</secondary>
           </indexterm>
 
           <listitem>
-            <para>In the global <emphasis role="bold">CellServDB</emphasis> file maintained by the AFS Product Support group. This
-            file lists the name and database server machines of every cell that has agreed to make this information available to
-            other cells.</para>
+            <para>In the
+            global <emphasis role="bold">CellServDB</emphasis> file
+            maintained by the AFS Registrar. This file lists the name and
+            database server machines of every cell that has agreed to make
+            this information available to other cells. This file is
+            available
+            at <ulink url="http://grand.central.org/csdb.html">http://grand.central.org/csdb.html</ulink></para>
 
-            <para>To add or change your cell's listing in this file, have the official support contact at your site call or write to
-            AFS Product Support. Changes to the file are frequent enough that AFS Product Support does not announce each one. It is
-            a good policy to check the file for changes on a regular schedule.</para>
+            <para>To add or change your cell's listing in this file,
+              follow the instructions at
+              <ulink url="http://grand.central.org/csdb.html">http://grand.central.org/csdb.html</ulink>.
+              It is a good policy to check the file for changes on a
+              regular schedule. An updated copy of this file is included
+              with new releases of OpenAFS.</para>
 
             <indexterm>
               <primary>files</primary>
@@ -879,7 +886,7 @@ user receives an AFS token when
       linkend="HDRWQ406">Maintaining Knowledge of Database Server Machines</link>.</para>
 
       <para>Once you have advertised your database server machines, it can be difficult to make your cell invisible again. You can
-      remove the <emphasis role="bold">CellServDB.local</emphasis> file and ask AFS Product Support to remove your entry from the
+      remove the <emphasis role="bold">CellServDB.local</emphasis> file and ask the AFS Registrar to remove your entry from the
       global <emphasis role="bold">CellServDB</emphasis> file, but other cells probably have an entry for your cell in their local
       <emphasis role="bold">CellServDB</emphasis> files already. To make those entries invalid, you must change the names or IP
       addresses of your database server machines.</para>
