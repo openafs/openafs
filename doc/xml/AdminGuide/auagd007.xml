@@ -1010,7 +1010,7 @@ user receives an AFS token when
       these permissions are limited to the <emphasis role="bold">l</emphasis> (<emphasis role="bold">lookup</emphasis>) and
       <emphasis role="bold">r</emphasis> (<emphasis role="bold">read</emphasis>) permissions.</para>
 
-      <para>There are two ways to grant wider access to foreign users: <itemizedlist>
+      <para>There are three ways to grant wider access to foreign users: <itemizedlist>
           <listitem>
             <para>Grant additional permissions to the <emphasis role="bold">system:anyuser</emphasis> group on certain ACLs. Keep in
             mind, however, that all users can then access that directory in the indicated way (not just specific foreign users you
@@ -1018,9 +1018,26 @@ user receives an AFS token when
           </listitem>
 
           <listitem>
-            <para>Create a local authentication account for specific foreign users, by creating entries in the Protection and
-            Authentication Databases and local password file. It is not possible to place foreign usernames on ACLs, nor to
-            authenticate in a foreign cell without having an account in it.</para>
+            <para>Enable automatic registration for users in the foreign
+            cell. This may be done by creating a cross-realm trust in
+            the <emphasis role="bold">Kerberos Database</emphasis>. Then
+            add a PTS group
+            named <emphasis role="bold">system:authuser<replaceable>@FOREIGN.REALM</replaceable></emphasis>
+            and give it a group quota greater than the number of foreign
+            users expected to be registered. After the cross-realm trust
+            and the PTS group are created,
+            the <ulink url="http://docs.openafs.org/Reference/1/aklog.html">aklog</ulink>
+            command will automatically register foreign users as
+            needed. Consult the documentation for
+            your <emphasis role="bold">Kerberos Server</emphasis> for
+            instructions on how to establish a cross-realm trust.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>Create a local authentication account for specific
+            foreign users, by creating entries in the Protection Database,
+            the Kerberos Database, and the local password file.</para>
           </listitem>
         </itemizedlist></para>
 
