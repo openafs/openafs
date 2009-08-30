@@ -916,7 +916,11 @@ user receives an AFS token when
     <sect2 id="HDRWQ39">
       <title>Making Other Cells Visible in Your Cell</title>
 
-      <para>To make a foreign cell's filespace visible on a client machine in your cell, perform the following three steps:
+      <para>To make a foreign cell's filespace visible on a client machine
+      in your cell that is not configured
+      for <emphasis role="bold">Freelance Mode</emphasis>
+      or <emphasis role="bold">Dynamic Root</emphasis> mode, perform the
+      following three steps:
       <orderedlist>
           <listitem>
             <para>Mount the cell's <emphasis role="bold">root.cell</emphasis> volume at the second level in your cell's filespace
@@ -948,6 +952,30 @@ user receives an AFS token when
           </listitem>
         </orderedlist></para>
 
+      <para>Non-windows client machines may
+      enable <emphasis role="bold">Dynamic Root Mode</emphasis> by using
+      the <emphasis role="bold">-dynroot</emphasis> option
+      to <emphasis role="bold">afsd</emphasis>. When this option is
+      enabled, all cells listed in
+      the <emphasis role="bold">CellServDB</emphasis> file will appear in
+      the <emphasis role="bold">/afs</emphasis> directory. The contents of
+      the <emphasis role="bold">root.afs</emphasis> volume will be ignored.
+      </para>
+
+      <para>Windows client machines may
+      enable <emphasis role="bold">Freelance Mode</emphasis> during client
+      installation or by setting
+      the <emphasis role="bold">FreelanceClient</emphasis> setting
+      under <emphasis role="bold">Service Parameters</emphasis> in the
+      Windows Registry as mentioned in
+      the <ulink url="http://docs.openafs.org/ReleaseNotesWindows/">Release
+      Notes</ulink>.  When this option is enabled,
+      the <emphasis role="bold">root.afs</emphasis> volume is ignored and
+      a mounpoint for each cell is automatically created in the
+      the <emphasis role="bold">\\AFS</emphasis> directory when the
+      folder <emphasis role="bold">\\AFS\<replaceable>cellname</replaceable></emphasis>
+      is accessed and the foreign Volume Location servers can be reached.
+      </para>
       <para>Note that making a foreign cell visible to client machines does not guarantee that your users can access its filespace.
       The ACLs in the foreign cell must also grant them the necessary permissions.</para>
 
