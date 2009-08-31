@@ -2489,7 +2489,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	    Log("dir vnode %u: %s/%s (vnode %u): unique changed from %u to %u %s\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, vnodeEssence->unique, (!todelete ? "" : (Testing ? "-- would have deleted" : "-- deleted")));
 	}
 	if (!Testing) {
-	    ViceFid fid;
+	    AFSFid fid;
 	    fid.Vnode = vnodeNumber;
 	    fid.Unique = vnodeEssence->unique;
 	    CopyOnWrite(dir);
@@ -2503,7 +2503,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 
     if (strcmp(name, ".") == 0) {
 	if (dir->vnodeNumber != vnodeNumber || (dir->unique != unique)) {
-	    ViceFid fid;
+	    AFSFid fid;
 	    if (!Showmode)
 		Log("directory vnode %u.%u: bad '.' entry (was %u.%u); fixed\n", dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
@@ -2520,7 +2520,7 @@ JudgeEntry(void *dirVal, char *name, afs_int32 vnodeNumber,
 	}
 	dir->haveDot = 1;
     } else if (strcmp(name, "..") == 0) {
-	ViceFid pa;
+	AFSFid pa;
 	if (dir->parent) {
 	    struct VnodeEssence *dotdot;
 	    pa.Vnode = dir->parent;
@@ -2871,7 +2871,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
     afs_int32 v, pv;
     IHandle_t *h;
     afs_sfsize_t nBytes;
-    ViceFid pa;
+    AFSFid pa;
     VnodeId LFVnode, ThisVnode;
     Unique LFUnique, ThisUnique;
     char npath[128];
@@ -2955,7 +2955,7 @@ SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t * alinkH)
 		 * won't be visible there.
 		 */
 		if (class == vLarge) {
-		    ViceFid pa;
+		    AFSFid pa;
 		    DirHandle dh;
 
 		    /* Remove and recreate the ".." entry in this orphaned directory */

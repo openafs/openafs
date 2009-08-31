@@ -237,7 +237,7 @@ ViceCreateRoot(Volume *vp)
 {
     DirHandle dir;
     struct acl_accessList *ACL;
-    ViceFid did;
+    AFSFid did;
     Inode inodeNumber, nearInode;
     struct VnodeDiskObject *vnode;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[vLarge];
