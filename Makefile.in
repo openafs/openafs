@@ -98,6 +98,7 @@ install_dirs: force
 	mkdir -p ${DESTDIR}${afssrvbindir}
 	mkdir -p ${DESTDIR}${afssrvsbindir}
 	mkdir -p ${DESTDIR}${afssrvlibexecdir}
+	mkdir -p ${DESTDIR}${afsdatadir}/C
 
 dest_dirs: force
 	mkdir -p ${DEST}/bin
