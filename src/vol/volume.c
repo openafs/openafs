@@ -5018,6 +5018,7 @@ void
 VBumpVolumeUsage_r(register Volume * vp)
 {
     unsigned int now = FT_ApproxTime();
+    V_accessDate(vp) = now;
     if (now - V_dayUseDate(vp) > OneDay)
 	VAdjustVolumeStatistics_r(vp);
     /*
