@@ -1056,7 +1056,7 @@ CLEAN="make -C src/libafs clean"
 
 BUILT_MODULE_NAME[0]="\$PACKAGE_NAME"
 DEST_MODULE_LOCATION[0]="/kernel/3rdparty/\$PACKAGE_NAME/"
-
+STRIP[0]=no
 AUTOINSTALL=yes
 
 EOF
