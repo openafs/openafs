@@ -619,7 +619,8 @@ ParseCacheInfoFile(void)
 int
 PartSizeOverflow(char *path, int cs)
 {
-    int bsize = -1, totalblks, mint;
+  int bsize = -1;
+  afs_int64 totalblks, mint;
 #if AFS_HAVE_STATVFS
     struct statvfs statbuf;
 
@@ -654,7 +655,7 @@ PartSizeOverflow(char *path, int cs)
     bsize = statbuf.f_bsize;
 #endif
     if (bsize == -1)
-	return 0;		/* sucess */
+	return 0;		/* success */
 
     /* now free and totalblks are in fragment units, but we want them in 1K units */
     if (bsize >= 1024) {
