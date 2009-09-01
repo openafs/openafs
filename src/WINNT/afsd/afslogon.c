@@ -375,6 +375,8 @@ GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOpt
                 opt->flags = LOGON_FLAG_LOCAL;
             }
         }
+        if (effDomain == NULL)
+            effDomain = domain;
     }
 
     rv = RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, KEY_READ, &hkParm );
