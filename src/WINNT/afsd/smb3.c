@@ -3375,6 +3375,12 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         qpi.u.QPfileEaInfo.eaSize = 0;
     }
     else if (infoLevel == SMB_QUERY_FILE_ALL_INFO) {
+	smb_fid_t * fidp;
+
+        lock_ReleaseRead(&scp->rw);
+        scp_rw_held = 0;
+        fidp = smb_FindFIDByScache(vcp, scp);
+
         cm_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         qpi.u.QPfileAllInfo.creationTime = ft;
         qpi.u.QPfileAllInfo.lastAccessTime = ft;
@@ -3390,12 +3396,25 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	    ((scp->fileType == CM_SCACHETYPE_DIRECTORY ||
 	      scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 	      scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
-	qpi.u.QPfileAllInfo.indexNumber.HighPart = scp->fid.cell;
-	qpi.u.QPfileAllInfo.indexNumber.LowPart  = scp->fid.volume;
+	qpi.u.QPfileAllInfo.indexNumber.HighPart = scp->fid.vnode;
+	qpi.u.QPfileAllInfo.indexNumber.LowPart  = scp->fid.unique;
 	qpi.u.QPfileAllInfo.eaSize = 0;
-	qpi.u.QPfileAllInfo.accessFlags = 0;
-	qpi.u.QPfileAllInfo.indexNumber2.HighPart = scp->fid.vnode;
-	qpi.u.QPfileAllInfo.indexNumber2.LowPart  = scp->fid.unique;
+        qpi.u.QPfileAllInfo.accessFlags = 0;
+        if (fidp) {
+	    lock_ObtainMutex(&fidp->mx);
+            if (fidp->flags & SMB_FID_OPENDELETE)
+                qpi.u.QPfileAllInfo.accessFlags |= DELETE;
+            if (fidp->flags & SMB_FID_OPENREAD_LISTDIR)
+                qpi.u.QPfileAllInfo.accessFlags |= AFS_ACCESS_READ|AFS_ACCESS_EXECUTE;
+            if (fidp->flags & SMB_FID_OPENWRITE)
+                qpi.u.QPfileAllInfo.accessFlags |= AFS_ACCESS_WRITE;
+            if (fidp->flags & SMB_FID_DELONCLOSE)
+                qpi.u.QPfileAllInfo.deletePending = 1;
+	    lock_ReleaseMutex(&fidp->mx);
+	    smb_ReleaseFID(fidp);
+        }
+	qpi.u.QPfileAllInfo.indexNumber2.HighPart = scp->fid.cell;
+	qpi.u.QPfileAllInfo.indexNumber2.LowPart  = scp->fid.volume;
 	qpi.u.QPfileAllInfo.currentByteOffset.HighPart = 0;
 	qpi.u.QPfileAllInfo.currentByteOffset.LowPart = 0;
 	qpi.u.QPfileAllInfo.mode = 0;
@@ -7897,7 +7916,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                             (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
                               scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
                               scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
-        smb_SetSMBDataLength(outp, 0);
+        smb_SetSMBDataLength(outp, 70);
     } else {
         /* out parms */
         parmSlot = 2;
@@ -7920,20 +7939,18 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                             (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
                               scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
                               scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
-        /* Volume GUID Root */
-        smb_SetSMBParmLong(outp, parmSlot, 0x55b00e35); parmSlot += 2;
-        smb_SetSMBParmLong(outp, parmSlot, 0x07de428d); parmSlot += 2;
-        /* Volume ID */
-        smb_SetSMBParmLong(outp, parmSlot, scp->fid.cell); parmSlot += 2;
-        smb_SetSMBParmLong(outp, parmSlot, scp->fid.volume); parmSlot += 2;
-        /* File ID */
-        smb_SetSMBParmLong(outp, parmSlot, scp->fid.vnode); parmSlot += 2;
-        smb_SetSMBParmLong(outp, parmSlot, scp->fid.unique); parmSlot += 2;
+        /* Setting the GUID results in a failure with cygwin */
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
+        smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
         /* Maxmimal access rights */
         smb_SetSMBParmLong(outp, parmSlot, 0x001f01ff); parmSlot += 2;
         /* Guest access rights */
         smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
-        smb_SetSMBDataLength(outp, 0);
+        smb_SetSMBDataLength(outp, 105);
     }
 
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
@@ -8696,14 +8713,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 				scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
 				scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0);
         outData += 1;	/* is a dir? */
-        /* Volume GUID Root */
-        *((DWORD *)outData) = 0x55b00e35; outData += 4;
-        *((DWORD *)outData) = 0x07de428d; outData += 4;
-        *((DWORD *)outData) = scp->fid.cell; outData += 4;
-        *((DWORD *)outData) = scp->fid.volume; outData += 4;
-        /* File ID */
-        *((DWORD *)outData) = scp->fid.vnode; outData += 4;
-        *((DWORD *)outData) = scp->fid.unique; outData += 4;
+        /* Setting the GUID results in failures with cygwin */
+        memset(outData,0,24); outData += 24; /* GUID */
         *((ULONG *)outData) = 0x001f01ffL; outData += 4; /* Maxmimal access rights */
         *((ULONG *)outData) = 0; outData += 4; /* Guest Access rights */
     }
