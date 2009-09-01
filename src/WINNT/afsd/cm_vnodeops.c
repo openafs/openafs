@@ -2038,9 +2038,10 @@ long cm_NameI(cm_scache_t *rootSCachep, clientchar_t *pathp, long flags,
                     }
 
                     if (code == 0 && linkScp != NULL) {
-                        if (linkScp == cm_data.rootSCachep) 
+                        if (linkScp == cm_data.rootSCachep) {
                             fid_count = 0;
-                        else {
+                            i = 0;
+                        } else {
                             for ( i=0; i<fid_count; i++) {
                                 if ( !cm_FidCmp(&linkScp->fid, &fids[i]) ) {
                                     code = CM_ERROR_TOO_MANY_SYMLINKS;
