@@ -612,14 +612,12 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 #endif
 		code = rxfs_storeInit(avc, tc, length, bytes, base,
 					sync, &ops, &rock);
-		if ( code ) {
-		    osi_Panic(
-		    "afs_CacheStoreProc: rxfs_storeInit failed with %d", code);
-		}
+		if ( code )
+		    goto nocall;
 
 		code = afs_CacheStoreDCaches(avc, dclist, bytes, anewDV,
 			&doProcessFS, &OutStatus, nchunks, nomore, ops, rock);
-
+nocall:
 #ifdef AFS_64BIT_CLIENT
 		if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
 		    afs_serverSetNo64Bit(tc);
