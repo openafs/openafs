@@ -390,7 +390,7 @@ SALVSYNC_com(osi_socket fd)
     memset(&res, 0, sizeof(res));
     memset(&scom, 0, sizeof(scom));
     memset(&sres, 0, sizeof(sres));
-    memset(&sres_hdr, 0, sizeof(sres));
+    memset(&sres_hdr, 0, sizeof(sres_hdr));
     
     com.payload.buf = (void *)buf;
     com.payload.len = SYNC_PROTO_MAX_LEN;
