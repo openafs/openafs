@@ -268,7 +268,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
         }
 #endif
         /* Prefer StoreData error over rx_EndCall error */
-        if (code == 0 && code1 != 0)
+        if (code1 != 0)
             code = code1;
     } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync, NULL, NULL, code));
 
@@ -1282,7 +1282,7 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 /* release a bulk I/O structure that was setup by cm_SetupFetchBIOD or by
  * cm_SetupStoreBIOD
  */
-void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed, int scp_locked)
+void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
 {
     cm_scache_t *scp;		/* do not release; not held in biop */
     cm_buf_t *bufp;
@@ -1325,9 +1325,40 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, int failed, int scp_locked)
 		    osi_Log2(afsd_logp, "cm_ReleaseBIOD Waking [scp 0x%p] bp 0x%p", scp, bufp);
 		    osi_Wakeup((LONG_PTR) bufp);
 		}
-		if (failed)
+		if (code) {
 		    bufp->flags &= ~CM_BUF_WRITING;
-		else {
+                    switch (code) {
+                    case CM_ERROR_NOSUCHFILE:
+                    case CM_ERROR_BADFD:
+                    case CM_ERROR_NOACCESS:
+                    case CM_ERROR_QUOTA:
+                    case CM_ERROR_SPACE:
+                    case CM_ERROR_TOOBIG:
+                    case CM_ERROR_READONLY:
+                    case CM_ERROR_NOSUCHPATH:
+                        /*
+                         * Apply the fatal error to this buffer.
+                         */
+                        bufp->flags &= ~CM_BUF_DIRTY;
+                        bufp->flags |= CM_BUF_ERROR;
+                        bufp->dirty_offset = 0;
+                        bufp->dirty_length = 0;
+                        bufp->error = code;
+                        bufp->dataVersion = CM_BUF_VERSION_BAD;
+                        bufp->dirtyCounter++;
+                        break;
+                    case CM_ERROR_TIMEDOUT:
+                    case CM_ERROR_ALLDOWN:
+                    case CM_ERROR_ALLBUSY:
+                    case CM_ERROR_ALLOFFLINE:
+                    case CM_ERROR_CLOCKSKEW:
+                    default:
+                        /* do not mark the buffer in error state but do
+                        * not attempt to complete the rest either.
+                        */
+                        break;
+                    }
+		} else {
 		    bufp->flags &= ~(CM_BUF_WRITING | CM_BUF_DIRTY);
                     bufp->dirty_offset = bufp->dirty_length = 0;
                 }
@@ -1359,9 +1390,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                   cm_req_t *reqp)
 {
     long code, code1;
-    afs_int32 nbytes;			/* bytes in transfer */
-    afs_int32 nbytes_hi = 0;            /* high-order 32 bits of bytes in transfer */
-    afs_int64 length_found = 0;
+    afs_uint32 nbytes;			/* bytes in transfer */
+    afs_uint32 nbytes_hi = 0;            /* high-order 32 bits of bytes in transfer */
+    afs_uint64 length_found = 0;
     long rbytes;			/* bytes in rx_Read call */
     long temp;
     AFSFetchStatus afsStatus;
