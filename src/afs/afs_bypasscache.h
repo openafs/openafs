@@ -112,8 +112,8 @@ extern int cache_bypass_prefetch;
 extern int cache_bypass_strategy;
 extern int cache_bypass_threshold;
 
-void afs_TransitionToBypass(register struct vcache *, register struct AFS_UCRED *, int);
-void afs_TransitionToCaching(register struct vcache *, register struct AFS_UCRED *, int);
+void afs_TransitionToBypass(register struct vcache *, register AFS_UCRED *, int);
+void afs_TransitionToCaching(register struct vcache *, register AFS_UCRED *, int);
 
 /* Cache strategy permits vnode transition between caching and no-cache--
  * currently, this means LARGE_FILES_BYPASS_CACHE.  Currently, no pioctl permits
@@ -140,11 +140,11 @@ void afs_TransitionToCaching(register struct vcache *, register struct AFS_UCRED
 /* dispatch a no-cache read request */
 afs_int32
 afs_ReadNoCache(register struct vcache *avc, register struct nocache_read_request *bparms, 
-		struct AFS_UCRED *acred);
+		AFS_UCRED *acred);
 
 /* no-cache prefetch routine */
 afs_int32
-afs_PrefetchNoCache(register struct vcache *avc, register struct AFS_UCRED *acred,
+afs_PrefetchNoCache(register struct vcache *avc, register AFS_UCRED *acred,
 			struct nocache_read_request *bparms);
 
 

@@ -50,7 +50,7 @@ enum {
 
 afs_int32 afs_ConflictPolicy = SERVER_WINS;
 
-static void afs_DisconDiscardAllShadows(int, struct AFS_UCRED *);
+static void afs_DisconDiscardAllShadows(int, AFS_UCRED *);
 void afs_DbgListDirEntries(struct VenusFid *afid);
 
 
@@ -645,7 +645,7 @@ done:
  * - Reorder vhash and dcaches in their hashes, using the newly acquired fid.
  */
 int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
-			struct AFS_UCRED *acred)
+			AFS_UCRED *acred)
 {
     char *tname = NULL, *ttargetName = NULL;
     struct AFSStoreStatus InStatus;
@@ -1095,7 +1095,7 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
  * \note For now, it's the request from the PDiscon pioctl.
  *
  */
-int afs_ResyncDisconFiles(struct vrequest *areq, struct AFS_UCRED *acred)
+int afs_ResyncDisconFiles(struct vrequest *areq, AFS_UCRED *acred)
 {
     struct afs_conn *tc;
     struct vcache *tvc;
@@ -1297,7 +1297,7 @@ next_file:
  */
 
 static void
-afs_DisconDiscardAllShadows(int squash, struct AFS_UCRED *acred) {
+afs_DisconDiscardAllShadows(int squash, AFS_UCRED *acred) {
    struct vcache *tvc;
 
    while (!QEmpty(&afs_disconShadow)) {
@@ -1328,7 +1328,7 @@ afs_DisconDiscardAllShadows(int squash, struct AFS_UCRED *acred) {
  *
  */
 void 
-afs_DisconDiscardAll(struct AFS_UCRED *acred) {
+afs_DisconDiscardAll(AFS_UCRED *acred) {
     struct vcache *tvc;
 
     ObtainWriteLock(&afs_disconDirtyLock, 717);

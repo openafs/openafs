@@ -510,14 +510,14 @@ DoLockWarning(void)
 
 #ifdef	AFS_OSF_ENV
 int afs_lockctl(struct vcache * avc, struct eflock * af, int flag,
-		struct AFS_UCRED * acred, pid_t clid, off_t offset)
+		AFS_UCRED * acred, pid_t clid, off_t offset)
 #elif defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
-		struct AFS_UCRED * acred, pid_t clid)
+		AFS_UCRED * acred, pid_t clid)
 #else
 u_int clid = 0;
 int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
-		struct AFS_UCRED * acred)
+		AFS_UCRED * acred)
 #endif
 {
     struct vrequest treq;

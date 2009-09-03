@@ -32,8 +32,8 @@
 #define NFSSRV 		"/kernel/misc/nfssrv"
 #define NFSSRV_V9 	"/kernel/misc/sparcv9/nfssrv"
 
-#define AFS_UCRED cred
-#define AFS_PROC struct proc
+#define AFS_UCRED struct cred
+#define AFS_PROC  struct proc
 
 /* 
  * Time related macros

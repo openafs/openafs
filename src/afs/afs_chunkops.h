@@ -59,10 +59,10 @@ struct afs_cacheOps {
 		   afs_int32 len);
     int (*close) (struct osi_file * fp);
     int (*vread) (register struct vcache * avc, struct uio * auio,
-		  struct AFS_UCRED * acred, daddr_t albn, struct buf ** abpp,
+		  AFS_UCRED * acred, daddr_t albn, struct buf ** abpp,
 		  int noLock);
     int (*vwrite) (register struct vcache * avc, struct uio * auio, int aio,
-		   struct AFS_UCRED * acred, int noLock);
+		   AFS_UCRED * acred, int noLock);
     struct dcache *(*GetDSlot) (register afs_int32 aslot,
 				register struct dcache * tmpdc);
     struct volume *(*GetVolSlot) (void);

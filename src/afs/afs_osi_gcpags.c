@@ -287,13 +287,13 @@ afs_osi_TraverseProcTable()
  */
 
 #if defined(AFS_SGI65_ENV)
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * p)
 {
     return NULL;
 }
 #elif defined(AFS_HPUX_ENV)
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * p)
 {
     if (!p)
@@ -318,10 +318,10 @@ afs_osi_proc2cred(AFS_PROC * p)
  * around calls to this function.
  */
 
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pproc)
 {
-    struct AFS_UCRED *pcred = 0;
+    AFS_UCRED *pcred = 0;
 
     /*
      * pointer to process user structure valid in *our*
@@ -416,7 +416,7 @@ afs_osi_proc2cred(AFS_PROC * pproc)
     /* simple_unlock(&proc_tbl_lock); */
     if (xm == XMEM_SUCC) {
 
-	static struct AFS_UCRED cred;
+	static AFS_UCRED cred;
 
 	/*
 	 * What locking should we use to protect access to the user
@@ -437,10 +437,10 @@ afs_osi_proc2cred(AFS_PROC * pproc)
 }
 
 #elif defined(AFS_OSF_ENV)
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
-    struct AFS_UCRED *rv = NULL;
+    AFS_UCRED *rv = NULL;
 
     if (pr == NULL) {
 	return NULL;
@@ -453,11 +453,11 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return rv;
 }
 #elif defined(AFS_DARWIN80_ENV) 
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
-    struct AFS_UCRED *rv = NULL;
-    static struct AFS_UCRED cr;
+    AFS_UCRED *rv = NULL;
+    static AFS_UCRED cr;
     struct ucred *pcred;
 
     if (pr == NULL) {
@@ -472,11 +472,11 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return &cr;
 }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
-    struct AFS_UCRED *rv = NULL;
-    static struct AFS_UCRED cr;
+    AFS_UCRED *rv = NULL;
+    static AFS_UCRED cr;
 
     if (pr == NULL) {
 	return NULL;
@@ -498,11 +498,11 @@ afs_osi_proc2cred(AFS_PROC * pr)
 }
 #elif defined(AFS_LINUX22_ENV)
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
-    struct AFS_UCRED *rv = NULL;
-    static struct AFS_UCRED cr;
+    AFS_UCRED *rv = NULL;
+    static AFS_UCRED cr;
 
     if (pr == NULL) {
 	return NULL;
@@ -532,10 +532,10 @@ afs_osi_proc2cred(AFS_PROC * pr)
 }
 #endif
 #else
-const struct AFS_UCRED *
+const AFS_UCRED *
 afs_osi_proc2cred(AFS_PROC * pr)
 {
-    struct AFS_UCRED *rv = NULL;
+    AFS_UCRED *rv = NULL;
 
     if (pr == NULL) {
 	return NULL;

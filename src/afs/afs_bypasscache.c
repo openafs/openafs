@@ -130,7 +130,7 @@ extern afs_rwlock_t afs_xcbhash;
  * existing VM pages for the file.  We keep track of the number of
  * times we go back and forth from caching to bypass.
  */
-void afs_TransitionToBypass(register struct vcache *avc, register struct AFS_UCRED *acred, int aflags)
+void afs_TransitionToBypass(register struct vcache *avc, register AFS_UCRED *acred, int aflags)
 {
 
     afs_int32 code;
@@ -205,7 +205,7 @@ done:
  * throw out any existing VM pages for the file.  We keep track of
  * the number of times we go back and forth from caching to bypass.
  */
-void afs_TransitionToCaching(register struct vcache *avc, register struct AFS_UCRED *acred, int aflags)
+void afs_TransitionToCaching(register struct vcache *avc, register AFS_UCRED *acred, int aflags)
 {
     int resetDesire = 0;
     int setManual = 0;
@@ -449,7 +449,7 @@ done:
 afs_int32
 afs_ReadNoCache(register struct vcache *avc, 
 				register struct nocache_read_request *bparms, 
-				struct AFS_UCRED *acred)
+				AFS_UCRED *acred)
 {
     afs_int32 code;
     afs_int32 bcnt;
@@ -525,7 +525,7 @@ cleanup:
 /* Cannot have static linkage--called from BPrefetch (afs_daemons) */
 afs_int32
 afs_PrefetchNoCache(register struct vcache *avc, 
-					register struct AFS_UCRED *acred,
+					register AFS_UCRED *acred,
 					register struct nocache_read_request *bparms)
 {
     uio_t *auio;

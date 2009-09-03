@@ -596,7 +596,7 @@ void
 afs_GCPAGs_perproc_func(AFS_PROC * pproc)
 {
     afs_int32 pag, hash, uid;
-    const struct AFS_UCRED *pcred;
+    const AFS_UCRED *pcred;
 
     afs_GCPAGs_perproc_count++;
 

@@ -120,7 +120,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
  * be some pages around when we return, newly created by concurrent activity.
  */
 void
-osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+osi_VM_TryToSmush(struct vcache *avc, AFS_UCRED *acred, int sync)
 {
     if (avc->segid) {
 	ReleaseWriteLock(&avc->lock);
@@ -137,7 +137,7 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
  * Locking:  No lock is held, not even the global lock.
  */
 void
-osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
 {
     if (avc->segid) {
 	vm_flushp(avc->segid, 0, MAXFSIZE / PAGESIZE - 1);
@@ -155,7 +155,7 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+osi_VM_Truncate(struct vcache *avc, int alen, AFS_UCRED *acred)
 {
     if (avc->segid) {
 	int firstpage = (alen + PAGESIZE - 1) / PAGESIZE;

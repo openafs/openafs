@@ -28,7 +28,7 @@
 
 
 #if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-int afs_ustrategy(register struct buf *abp, struct AFS_UCRED *credp)
+int afs_ustrategy(register struct buf *abp, AFS_UCRED *credp)
 #else
 int afs_ustrategy(register struct buf *abp)
 #endif
@@ -42,7 +42,7 @@ int afs_ustrategy(register struct buf *abp)
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp;
 #else
-    struct AFS_UCRED *credp = u.u_cred;
+    AFS_UCRED *credp = u.u_cred;
 #endif
 #endif
 

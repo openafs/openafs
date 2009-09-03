@@ -50,7 +50,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
     if (!afs_osicred_initialized) {
 	/* valid for alpha_osf, SunOS, Ultrix */
-	memset((char *)&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
+	memset((char *)&afs_osi_cred, 0, sizeof(AFS_UCRED));
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }
@@ -109,7 +109,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
     if (!afs_osicred_initialized) {
 	/* valid for alpha_osf, SunOS, Ultrix */
-	memset((char *)&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
+	memset((char *)&afs_osi_cred, 0, sizeof(AFS_UCRED));
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }

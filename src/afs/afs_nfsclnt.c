@@ -174,7 +174,7 @@ afs_nfsclient_init(void)
  */
 int
 afs_nfsclient_reqhandler(struct afs_exporter *exporter,
-			 struct AFS_UCRED **cred,
+			 AFS_UCRED **cred,
 			 afs_int32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {
@@ -577,7 +577,7 @@ char *afs_nfs_id = "AFSNFSTRANS";
  */
 int
 afs_iauth_verify(long id, fsid_t * fsidp, long host, int uid,
-		 struct AFS_UCRED *credp, struct exportinfo *exp)
+		 AFS_UCRED *credp, struct exportinfo *exp)
 {
     int code;
     struct nfsclientpag *nfs_pag;

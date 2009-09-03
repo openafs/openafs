@@ -172,7 +172,7 @@ typedef struct afs_cred {		/* maps to task field: */
 #endif
     struct afs_cred *cr_next;
 } cred_t;
-#define AFS_UCRED afs_cred
+#define AFS_UCRED struct afs_cred
 #define AFS_PROC struct task_struct
 #if !defined(current_cred)
 #define current_gid() (current->gid)

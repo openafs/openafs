@@ -7,6 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#ifndef AFS_INCLUDES_H
+#define AFS_INCLUDES_H 1
+
+
 #ifdef UKERNEL
 #include <UKERNEL/afsincludes.h>
 #else
@@ -57,3 +61,5 @@
 #endif
 
 #endif
+
+#endif /* AFS_INCLUDES_H */

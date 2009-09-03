@@ -59,7 +59,7 @@ afs_StoreOnLastReference(register struct vcache *avc,
 	avc->opens--;
 	avc->execsOrWriters--;
 	AFS_RELE(AFSTOV(avc));	/* VN_HOLD at set CCore(afs_FakeClose) */
-	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
+	crfree((AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
 	avc->linkData = NULL;
     }
 
@@ -97,7 +97,7 @@ afs_StoreOnLastReference(register struct vcache *avc,
 
 int
 afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
-	     struct AFS_UCRED *acred, int noLock)
+	     AFS_UCRED *acred, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -309,7 +309,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 /* called on writes */
 int
 afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
-	     struct AFS_UCRED *acred, int noLock)
+	     AFS_UCRED *acred, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -733,18 +733,18 @@ afs_closex(register struct file *afd)
 int
 #if defined(AFS_SGI65_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
-	  struct AFS_UCRED *acred)
+	  AFS_UCRED *acred)
 #elif defined(AFS_SGI64_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose,
-	  off_t offset, struct AFS_UCRED *acred, struct flid *flp)
+	  off_t offset, AFS_UCRED *acred, struct flid *flp)
 #elif defined(AFS_SGI_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, lastclose_t lastclose
-	  off_t offset, struct AFS_UCRED *acred)
+	  off_t offset, AFS_UCRED *acred)
 #elif defined(AFS_SUN5_ENV)
 afs_close(OSI_VC_DECL(avc), afs_int32 aflags, int count, offset_t offset, 
-	 struct AFS_UCRED *acred)
+	 AFS_UCRED *acred)
 #else
-afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
+afs_close(OSI_VC_DECL(avc), afs_int32 aflags, AFS_UCRED *acred)
 #endif
 {
     register afs_int32 code;
@@ -913,16 +913,16 @@ afs_close(OSI_VC_DECL(avc), afs_int32 aflags, struct AFS_UCRED *acred)
 
 int
 #ifdef	AFS_OSF_ENV
-afs_fsync(OSI_VC_DECL(avc), int fflags, struct AFS_UCRED *acred, int waitfor)
+afs_fsync(OSI_VC_DECL(avc), int fflags, AFS_UCRED *acred, int waitfor)
 #else				/* AFS_OSF_ENV */
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN53_ENV)
-afs_fsync(OSI_VC_DECL(avc), int flag, struct AFS_UCRED *acred
+afs_fsync(OSI_VC_DECL(avc), int flag, AFS_UCRED *acred
 #ifdef AFS_SGI65_ENV
 	  , off_t start, off_t stop
 #endif /* AFS_SGI65_ENV */
     )
 #else /* !OSF && !SUN53 && !SGI */
-afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
+afs_fsync(OSI_VC_DECL(avc), AFS_UCRED *acred)
 #endif 
 #endif
 {

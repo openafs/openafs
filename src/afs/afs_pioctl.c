@@ -55,7 +55,7 @@ afs_int32 afs_in_sync = 0;
 
 #define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
 	char *ain, char *aout, afs_int32 ainSize, afs_int32 *aoutSize, \
-	struct AFS_UCRED **acred)
+	AFS_UCRED **acred)
 
 /* Prototypes for pioctl routines */
 DECL_PIOCTL(PGetFID);
@@ -134,20 +134,20 @@ DECL_PIOCTL(PSetCachingBlkSize);
 /* Prototypes for private routines */
 #ifdef AFS_NEED_CLIENTCONTEXT
 static int HandleClientContext(struct afs_ioctl *ablob, int *com,
-			       struct AFS_UCRED **acred,
-			       struct AFS_UCRED *credp);
+			       AFS_UCRED **acred,
+			       AFS_UCRED *credp);
 #endif
 int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 		struct afs_ioctl *adata);
 int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		     register struct afs_ioctl *ablob, int afollow,
-		     struct AFS_UCRED **acred);
+		     AFS_UCRED **acred);
 static int Prefetch(iparmtype apath, struct afs_ioctl *adata, int afollow,
-		    struct AFS_UCRED *acred);
+		    AFS_UCRED *acred);
 
 typedef int (*pioctlFunction) (struct vcache *, int, struct vrequest *,
 			       char *, char *, afs_int32, afs_int32 *,
-			       struct AFS_UCRED **);
+			       AFS_UCRED **);
 
 static pioctlFunction VpioctlSw[] = {
     PBogus,			/* 0 */
@@ -776,14 +776,14 @@ afs_pioctl(struct proc *p, void *args, int *retval)
 int
 #ifdef	AFS_SUN5_ENV
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
-		   rval_t *vvp, struct AFS_UCRED *credp)
+		   rval_t *vvp, AFS_UCRED *credp)
 #else
 #ifdef AFS_DARWIN100_ENV
 afs_syscall64_pioctl(user_addr_t path, unsigned int com, user_addr_t cmarg,
-		   int follow, struct AFS_UCRED *credp)
+		   int follow, AFS_UCRED *credp)
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
-		   struct AFS_UCRED *credp)
+		   AFS_UCRED *credp)
 #else
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif
@@ -791,10 +791,10 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 {
     struct afs_ioctl data;
 #ifdef AFS_NEED_CLIENTCONTEXT
-    struct AFS_UCRED *tmpcred = NULL;
+    AFS_UCRED *tmpcred = NULL;
 #endif
 #if defined(AFS_NEED_CLIENTCONTEXT) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    struct AFS_UCRED *foreigncreds = NULL;
+    AFS_UCRED *foreigncreds = NULL;
 #endif
     register afs_int32 code = 0;
     struct vnode *vp = NULL;
@@ -1009,7 +1009,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #ifdef AFS_DARWIN100_ENV
 int
 afs_syscall_pioctl(char * path, unsigned int com, caddr_t cmarg,
-		   int follow, struct AFS_UCRED *credp)
+		   int follow, AFS_UCRED *credp)
 {
     return afs_syscall64_pioctl(CAST_USER_ADDR_T(path), com,
 				CAST_USER_ADDR_T((unsigned int)cmarg), follow,
@@ -1023,7 +1023,7 @@ afs_syscall_pioctl(char * path, unsigned int com, caddr_t cmarg,
 int
 afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		 register struct afs_ioctl *ablob, int afollow,
-		 struct AFS_UCRED **acred)
+		 AFS_UCRED **acred)
 {
     struct vcache *avc;
     struct vrequest treq;
@@ -2290,7 +2290,7 @@ DECL_PIOCTL(PCheckAuth)
 
 static int
 Prefetch(iparmtype apath, struct afs_ioctl *adata, int afollow,
-	 struct AFS_UCRED *acred)
+	 AFS_UCRED *acred)
 {
     register char *tp;
     register afs_int32 code;
@@ -3970,13 +3970,13 @@ DECL_PIOCTL(PSetRxkcrypt)
 #define	PIOCTL_HEADER	6
 static int
 HandleClientContext(struct afs_ioctl *ablob, int *com,
-		    struct AFS_UCRED **acred, struct AFS_UCRED *credp)
+		    AFS_UCRED **acred, struct AFS_UCRED *credp)
 {
     char *ain, *inData;
     afs_uint32 hostaddr;
     afs_int32 uid, g0, g1, i, code, pag, exporter_type, isroot = 0;
     struct afs_exporter *exporter, *outexporter;
-    struct AFS_UCRED *newcred;
+    AFS_UCRED *newcred;
     struct unixuser *au;
     afs_uint32 comp = *com & 0xff00;
     afs_uint32 h, l;

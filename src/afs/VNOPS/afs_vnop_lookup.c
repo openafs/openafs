@@ -1197,13 +1197,13 @@ static int AFSDOBULK = 1;
 
 int
 #ifdef AFS_OSF_ENV
-afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED *acred, int opflag, int wantparent)
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, AFS_UCRED *acred, int opflag, int wantparent)
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct pathname *pnp, int flags, struct vnode *rdir, struct AFS_UCRED *acred)
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct pathname *pnp, int flags, struct vnode *rdir, AFS_UCRED *acred)
 #elif defined(UKERNEL)
-afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED *acred, int flags)
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, AFS_UCRED *acred, int flags)
 #else
-afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED *acred)
+afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, AFS_UCRED *acred)
 #endif
 {
     struct vrequest treq;

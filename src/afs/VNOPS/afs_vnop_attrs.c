@@ -182,10 +182,10 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 int
 afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags,
-	    struct AFS_UCRED *acred)
+	    AFS_UCRED *acred)
 #else
 int
-afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
+afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, AFS_UCRED *acred)
 #endif
 {
     afs_int32 code;
@@ -438,11 +438,11 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 int
 afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, int flags,
-	    struct AFS_UCRED *acred)
+	    AFS_UCRED *acred)
 #else
 int
 afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
-	    struct AFS_UCRED *acred)
+	    AFS_UCRED *acred)
 #endif
 {
     struct vrequest treq;

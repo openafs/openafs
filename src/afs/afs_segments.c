@@ -502,7 +502,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
     /* Blow away pages; for now, only for Solaris */
 #if	(defined(AFS_SUN5_ENV))
     if (WriteLocked(&avc->lock))
-	osi_ReleaseVM(avc, (struct AFS_UCRED *)0);
+	osi_ReleaseVM(avc, (AFS_UCRED *)0);
 #endif
     /*
      * Block out others from screwing with this table; is a read lock
@@ -641,7 +641,7 @@ afs_ExtendSegments(struct vcache *avc, afs_size_t alen, struct vrequest *areq) {
  */
 int
 afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
-			struct vrequest *areq, struct AFS_UCRED *acred)
+			struct vrequest *areq, AFS_UCRED *acred)
 {
     register struct dcache *tdc;
     register afs_int32 code;

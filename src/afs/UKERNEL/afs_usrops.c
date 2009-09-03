@@ -1030,7 +1030,7 @@ afs_osi_MapStrategy(int (*aproc) (struct usr_buf *), struct usr_buf *bp)
 }
 
 void
-osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
+osi_FlushPages(register struct vcache *avc, AFS_UCRED *credp)
 {
     ObtainSharedLock(&avc->lock, 555);
     if ((hcmp((avc->f.m.DataVersion), (avc->mapDV)) <= 0)

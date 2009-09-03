@@ -28,7 +28,7 @@ afs_xsetgroups(void)
 }
 
 static int
-afs_getgroups(struct AFS_UCRED *cred, gid_t * gidset)
+afs_getgroups(AFS_UCRED *cred, gid_t * gidset)
 {
     int ngrps, savengrps;
     gid_t *gp;
@@ -46,7 +46,7 @@ afs_getgroups(struct AFS_UCRED *cred, gid_t * gidset)
 
 
 static int
-afs_setgroups(struct AFS_UCRED **cred, int ngroups, gid_t * gidset,
+afs_setgroups(AFS_UCRED **cred, int ngroups, gid_t * gidset,
 	      int change_parent)
 {
     gid_t *gp;
@@ -56,7 +56,7 @@ afs_setgroups(struct AFS_UCRED **cred, int ngroups, gid_t * gidset,
     if (ngroups > NGROUPS_MAX)
 	return EINVAL;
     if (!change_parent)
-	*cred = (struct AFS_UCRED *)crcopy(*cred);
+	*cred = (AFS_UCRED *)crcopy(*cred);
     (*cred)->cr_ngroups = ngroups;
     gp = (*cred)->cr_groups;
     while (ngroups--)

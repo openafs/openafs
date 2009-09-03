@@ -87,7 +87,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
  * be some pages around when we return, newly created by concurrent activity.
  */
 void
-osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+osi_VM_TryToSmush(struct vcache *avc, AFS_UCRED *acred, int sync)
 {
     struct vnode *vp = AFSTOV(avc);
     void *object;
@@ -118,7 +118,7 @@ osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
    this, and also making sure that ubc's idea of the filesize is right more
    often */
 void
-osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
 {
     struct vnode *vp = AFSTOV(avc);
     void *object;
@@ -151,7 +151,7 @@ osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+osi_VM_Truncate(struct vcache *avc, int alen, AFS_UCRED *acred)
 {
     struct vnode *vp = AFSTOV(avc);
 #ifdef AFS_DARWIN80_ENV

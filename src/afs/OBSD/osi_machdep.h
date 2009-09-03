@@ -88,7 +88,7 @@ extern void osi_obsd_Free(void *p, size_t asize);
 
 /* proc, cred */
 #define	AFS_PROC	struct proc
-#define	AFS_UCRED	ucred
+#define	AFS_UCRED	struct ucred
 #define afs_suser(x)	afs_osi_suser(osi_curcred())
 #define getpid()	curproc
 #define osi_curcred()	(curproc->p_cred->pc_ucred)

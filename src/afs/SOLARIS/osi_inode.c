@@ -36,7 +36,7 @@ extern int (*ufs_iallocp) (), (*ufs_iupdatp) (), (*ufs_igetp) (),
 
 getinode(vfsp, dev, inode, ipp, credp, perror)
      struct vfs *vfsp;
-     struct AFS_UCRED *credp;
+     AFS_UCRED *credp;
      struct inode **ipp;
      dev_t dev;
      ino_t inode;
@@ -82,7 +82,7 @@ getinode(vfsp, dev, inode, ipp, credp, perror)
 
 /* get an existing inode.  Common code for iopen, iread/write, iinc/dec. */
 igetinode(vfsp, dev, inode, ipp, credp, perror)
-     struct AFS_UCRED *credp;
+     AFS_UCRED *credp;
      struct inode **ipp;
      struct vfs *vfsp;
      dev_t dev;
@@ -130,7 +130,7 @@ igetinode(vfsp, dev, inode, ipp, credp, perror)
 #ifdef AFS_SUN510_ENV
 	dnlc_enter(ITOV(ip), "a", ITOV(ip));
 #else
-	dnlc_enter(ITOV(ip), "a", ITOV(ip), (struct AFS_UCRED *)0);
+	dnlc_enter(ITOV(ip), "a", ITOV(ip), (AFS_UCRED *)0);
 #endif
     }
 
@@ -144,7 +144,7 @@ int CrSync = 1;
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
 		    credp)
      rval_t *rvp;
-     struct AFS_UCRED *credp;
+     AFS_UCRED *credp;
      long near_inode, param1, param2, param3, param4;
      dev_t dev;
 {
@@ -238,7 +238,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp,
 
 afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
      rval_t *rvp;
-     struct AFS_UCRED *credp;
+     AFS_UCRED *credp;
      int inode, usrmod;
      dev_t dev;
 {
@@ -308,7 +308,7 @@ int IncSync = 1;
 
 afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
      rval_t *rvp;
-     struct AFS_UCRED *credp;
+     AFS_UCRED *credp;
      int inode, inode_p1, amount;
      dev_t dev;
 {

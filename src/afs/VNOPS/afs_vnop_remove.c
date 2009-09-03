@@ -96,7 +96,7 @@ afs_IsWired(register struct vcache *avc)
 
 int
 afsremove(register struct vcache *adp, register struct dcache *tdc,
-	  register struct vcache *tvc, char *aname, struct AFS_UCRED *acred,
+	  register struct vcache *tvc, char *aname, AFS_UCRED *acred,
 	  struct vrequest *treqp)
 {
     register afs_int32 code = 0;
@@ -213,7 +213,7 @@ char *Tnam1;
 /* Note that we don't set CDirty here, this is OK because the unlink
  * RPC is called synchronously */
 int
-afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
+afs_remove(OSI_VC_DECL(adp), char *aname, AFS_UCRED *acred)
 {
     struct vrequest treq;
     register struct dcache *tdc;
@@ -479,7 +479,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
 int
 afs_remunlink(register struct vcache *avc, register int doit)
 {
-    struct AFS_UCRED *cred;
+    AFS_UCRED *cred;
     char *unlname;
     struct vcache *adp;
     struct vrequest treq;

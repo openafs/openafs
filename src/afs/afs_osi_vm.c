@@ -45,7 +45,7 @@ osi_Active(register struct vcache *avc)
    us, of course).
 */
 void
-osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
+osi_FlushPages(register struct vcache *avc, AFS_UCRED *credp)
 {
 #ifdef AFS_FBSD70_ENV
     int vfslocked;
@@ -261,7 +261,7 @@ osi_VMDirty_p(struct vcache *avc)
  * Locking:  the vcache entry lock is held.  It is dropped and re-obtained.
  */
 void
-osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred)
+osi_ReleaseVM(struct vcache *avc, AFS_UCRED *acred)
 {
 #ifdef	AFS_SUN5_ENV
     AFS_GUNLOCK();

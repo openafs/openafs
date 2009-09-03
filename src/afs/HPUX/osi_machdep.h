@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2000, International Business Machines Corporation and others.
  * All Rights Reserved.
@@ -24,7 +25,7 @@
 extern struct timeval time;
 #define osi_Time() (time.tv_sec)
 
-#define	AFS_UCRED	ucred
+#define	AFS_UCRED	struct ucred
 #define	AFS_PROC	proc_t
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)

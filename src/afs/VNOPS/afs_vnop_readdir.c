@@ -550,13 +550,13 @@ afs_bulkstat_send(struct vcache *avc, struct vrequest *req)
 
 int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred, 
+afs_readdir(OSI_VC_DECL(avc), struct uio *auio, AFS_UCRED *acred, 
 	    int *eofp)
 #else
 #if defined(AFS_HPUX100_ENV)
-afs_readdir2(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
+afs_readdir2(OSI_VC_DECL(avc), struct uio *auio, AFS_UCRED *acred)
 #else
-afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
+afs_readdir(OSI_VC_DECL(avc), struct uio *auio, AFS_UCRED *acred)
 #endif
 #endif
 {
@@ -905,11 +905,11 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, struct AFS_UCRED *acred)
 #if	defined(AFS_HPUX_ENV) || defined(AFS_OSF_ENV)
 #ifdef	AFS_OSF_ENV
 int
-afs1_readdir(struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred, 
+afs1_readdir(struct vcache *avc, struct uio *auio, AFS_UCRED *acred, 
 	     int *eofp)
 #else
 int
-afs1_readdir(struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred)
+afs1_readdir(struct vcache *avc, struct uio *auio, AFS_UCRED *acred)
 #endif
 {
     struct vrequest treq;

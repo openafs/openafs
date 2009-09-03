@@ -29,7 +29,7 @@
 #endif
 
 int afs_osicred_initialized = 0;
-struct AFS_UCRED afs_osi_cred;
+AFS_UCRED afs_osi_cred;
 
 void
 afs_osi_SetTime(osi_timeval_t * tvp)

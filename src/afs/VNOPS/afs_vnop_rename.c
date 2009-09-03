@@ -32,7 +32,7 @@ extern afs_rwlock_t afs_xcbhash;
 
 int
 afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
-	  char *aname2, struct AFS_UCRED *acred, struct vrequest *areq)
+	  char *aname2, AFS_UCRED *acred, struct vrequest *areq)
 {
     register struct afs_conn *tc;
     register afs_int32 code = 0;
@@ -444,9 +444,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 
 int
 #if defined(AFS_SGI_ENV)
-afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct pathname *npnp, struct AFS_UCRED *acred)
+afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct pathname *npnp, AFS_UCRED *acred)
 #else
-afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, struct AFS_UCRED *acred)
+afs_rename(OSI_VC_DECL(aodp), char *aname1, struct vcache *andp, char *aname2, AFS_UCRED *acred)
 #endif
 {
     register afs_int32 code;

@@ -363,11 +363,11 @@ int
 #ifdef	AFS_SUN5_ENV
 afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
      rval_t *rvp;
-     struct AFS_UCRED *credp;
+     AFS_UCRED *credp;
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_syscall_pioctl(path, com, cmarg, follow, credp)
-     struct AFS_UCRED *credp;
+     AFS_UCRED *credp;
 #else
 afs_syscall_pioctl(path, com, cmarg, follow)
 #endif

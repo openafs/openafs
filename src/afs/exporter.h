@@ -54,7 +54,7 @@ struct afs_exporter;
 
 struct exporterops {
     int (*export_reqhandler) (struct afs_exporter *exp,
-		    	      struct AFS_UCRED **cred,
+		    	      AFS_UCRED **cred,
 			      afs_uint32 host,
 			      afs_int32 pag,
 			      struct afs_exporter **expp);

@@ -17,7 +17,7 @@
 
 
 int afs_osicred_initialized = 0;
-struct AFS_UCRED afs_osi_cred;
+AFS_UCRED afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
@@ -87,7 +87,7 @@ osi_UFSClose(register struct osi_file *afile)
 int
 osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 {
-    struct AFS_UCRED *oldCred;
+    AFS_UCRED *oldCred;
     struct vattr tvattr;
     register afs_int32 code;
     struct osi_stat tstat;
@@ -130,7 +130,7 @@ int
 afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
-    struct AFS_UCRED *oldCred;
+    AFS_UCRED *oldCred;
     unsigned int resid;
     register afs_int32 code;
     register afs_int32 cnt1 = 0;
@@ -171,7 +171,7 @@ int
 afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    struct AFS_UCRED *oldCred;
+    AFS_UCRED *oldCred;
     unsigned int resid;
     register afs_int32 code;
     AFS_STATCNT(osi_Write);
