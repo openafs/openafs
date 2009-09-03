@@ -92,6 +92,7 @@ IsWindowsModule(const char * name)
     }
     p = strrchr(name, '.');
     if (p) {
+        /* as of 2009-09-04 these are not valid ICANN ccTLDs */
 	if (i == 1 && 
 	    (!cm_stricmp_utf8N(p,".dll") ||
 	     !cm_stricmp_utf8N(p,".exe") ||
@@ -693,10 +694,12 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
      * Do not perform a DNS lookup if the name is
      * either a well-known Windows DLL or directory,
      * or if the name does not contain a top-level
-     * domain.
+     * domain, or if the file prefix is the afs pioctl
+     * file name.
      */
     if ( IsWindowsModule(cellNamep) ||
-         cm_FsStrChr(cellNamep, '.') == NULL)
+         cm_FsStrChr(cellNamep, '.') == NULL ||
+         strncasecmp(cellNamep, CM_IOCTL_FILENAME_NOSLASH, strlen(CM_IOCTL_FILENAME_NOSLASH)) == 0)
 	return -1;
 
     rc = getAFSServer(cellNamep, cellHostAddrs, cellHostNames, ipRanks, &numServers, ttl);
