@@ -2525,6 +2525,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     }
 
     spacep = cm_GetSpace();
+    /* smb_StripLastComponent will strip "::$DATA" if present */
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     if (lastNamep &&
@@ -2682,6 +2683,9 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
             return code;
         }
     } else {
+        /* macintosh is expensive to program for it */
+        cm_FreeSpace(spacep);
+
 #ifdef DFS_SUPPORT
         if (scp->fileType == CM_SCACHETYPE_DFSLINK) {
             int pnc = cm_VolStatus_Notify_DFS_Mapping(scp, tidPathp, lastNamep);
@@ -2694,9 +2698,6 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
                 return CM_ERROR_NOSUCHPATH;
         }
 #endif /* DFS_SUPPORT */
-
-        /* macintosh is expensive to program for it */
-        cm_FreeSpace(spacep);
     }
         
     /* if we get here, if code is 0, the file exists and is represented by
@@ -3070,6 +3071,7 @@ long cm_GetShortName(clientchar_t *pathp, cm_user_t *userp, cm_req_t *reqp,
     osi_hyper_t thyper;
 
     spacep = cm_GetSpace();
+    /* smb_StripLastComponent will strip "::$DATA" if present */
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     code = cm_NameI(cm_data.rootSCachep, spacep->wdata,
@@ -3217,6 +3219,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      */
     if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         spacep = cm_GetSpace();
+        /* smb_StripLastComponent will strip "::$DATA" if present */
         smb_StripLastComponent(spacep->wdata, &lastComp, pathp);
 #ifndef SPECIAL_FOLDERS
         /* Make sure that lastComp is not NULL */
@@ -3533,6 +3536,7 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     */
     if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         spacep = cm_GetSpace();
+        /* smb_StripLastComponent will strip "::$DATA" if present */
         smb_StripLastComponent(spacep->wdata, &lastComp, pathp);
 #ifndef SPECIAL_FOLDERS
         /* Make sure that lastComp is not NULL */
@@ -4177,6 +4181,7 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                         cm_ReleaseSCache(scp);
                         scp = 0;
                     }
+                    /* smb_StripLastComponent will strip "::$DATA" if present */
                     smb_StripLastComponent(pathName, &lastComponent, temp);
 
                     code = cm_NameI(cm_data.rootSCachep, pathName,
@@ -4781,6 +4786,7 @@ long smb_T2SearchDirSingle(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op
 
     /* try to get the vnode for the path name next */
     spacep = cm_GetSpace();
+    /* smb_StripLastComponent will strip "::$DATA" if present */
     smb_StripLastComponent(spacep->wdata, NULL, pathp);
     code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
     if (code) {
@@ -5301,6 +5307,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         code = 0;
     } else {
         spacep = cm_GetSpace();
+        /* smb_StripLastComponent will strip "::$DATA" if present */
         smb_StripLastComponent(spacep->wdata, NULL, pathp);
         code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
         if (code) {
@@ -5942,6 +5949,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 
     spacep = inp->spacep;
+    /* smb_StripLastComponent will strip "::$DATA" if present */
     smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     if (lastNamep && 
@@ -7171,6 +7179,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     realPathp[nameLength/sizeof(clientchar_t)] = 0;
 
     spacep = inp->spacep;
+    /* smb_StripLastComponent will strip "::$DATA" if present */
     smb_StripLastComponent(spacep->wdata, &lastNamep, realPathp);
 
     osi_Log1(smb_logp,"NTCreateX for [%S]",osi_LogSaveClientString(smb_logp,realPathp));
@@ -8094,6 +8103,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     memcpy(realPathp, pathp, nameLength);
     realPathp[nameLength/sizeof(clientchar_t)] = 0;
     spacep = cm_GetSpace();
+    /* smb_StripLastComponent will strip "::$DATA" if present */
     smb_StripLastComponent(spacep->wdata, &lastNamep, realPathp);
 
     osi_Log1(smb_logp,"NTTranCreate %S",osi_LogSaveStringW(smb_logp,realPathp));

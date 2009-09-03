@@ -2520,11 +2520,34 @@ void smb_StripLastComponent(clientchar_t *outPathp, clientchar_t **lastComponent
                             clientchar_t *inPathp)
 {
     clientchar_t *lastSlashp;
-        
+    clientchar_t *streamp = NULL;
+    clientchar_t *typep = NULL;
+
     lastSlashp = cm_ClientStrRChr(inPathp, '\\');
-    if (lastComponentp)
+    if (lastComponentp) {
         *lastComponentp = lastSlashp;
+    }
     if (lastSlashp) {
+        /*
+         * If the name contains a stream name and a type
+         * and the stream name is the nul-string and the
+         * type is $DATA, then strip "::$DATA" from the
+         * last component string that is returned.
+         *
+         * Otherwise, return the full path name and allow
+         * the file name to be rejected because it contains
+         * a colon.
+         */
+        typep = cm_ClientStrRChr(lastSlashp, L':');
+        if (typep && cm_ClientStrCmpI(typep, L":$DATA") == 0) {
+            *typep = '\0';
+            streamp = cm_ClientStrRChr(lastSlashp, L':');
+            if (streamp && cm_ClientStrCmpI(streamp, L":") == 0)
+                *streamp = '\0';
+            else
+                *typep = ':';
+        }
+
         while (1) {
             if (inPathp == lastSlashp) 
                 break;
@@ -5578,6 +5601,13 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 #endif
 
+    share = smb_GetSMBParm(inp, 0);
+    attribute = smb_GetSMBParm(inp, 1);
+
+    spacep = inp->spacep;
+    /* smb_StripLastComponent will strip "::$DATA" if present */
+    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
+
     if (!cm_IsValidClientString(pathp)) {
 #ifdef DEBUG
         clientchar_t * hexp;
@@ -5593,11 +5623,6 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         return CM_ERROR_BADNTFILENAME;
     }
 
-    share = smb_GetSMBParm(inp, 0);
-    attribute = smb_GetSMBParm(inp, 1);
-
-    spacep = inp->spacep;
-    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
     if (lastNamep && cm_ClientStrCmp(lastNamep, _C(SMB_IOCTL_FILENAME)) == 0) {
         /* special case magic file name for receiving IOCTL requests
          * (since IOCTL calls themselves aren't getting through).
@@ -8036,6 +8061,10 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     if (!pathp)
         return CM_ERROR_BADSMB;
 
+    spacep = inp->spacep;
+    /* smb_StripLastComponent will strip "::$DATA" if present */
+    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
+
     if (!cm_IsValidClientString(pathp)) {
 #ifdef DEBUG
         clientchar_t * hexp;
@@ -8050,9 +8079,6 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif
         return CM_ERROR_BADNTFILENAME;
     }
-
-    spacep = inp->spacep;
-    smb_StripLastComponent(spacep->wdata, &lastNamep, pathp);
 
     userp = smb_GetUserFromVCP(vcp, inp);
 
