@@ -3431,11 +3431,19 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         size_t len = 0;
         /* For now we have no streams */
         qpi.u.QPfileStreamInfo.nextEntryOffset = 0;
-        qpi.u.QPfileStreamInfo.streamSize = scp->length;
-        qpi.u.QPfileStreamInfo.streamAllocationSize = scp->length;
-        smb_UnparseString(opx, qpi.u.QPfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
-        qpi.u.QPfileStreamInfo.streamNameLength = len;
-        responseSize -= (sizeof(qpi.u.QPfileStreamInfo.fileName) - len);
+        if (scp->fileType == CM_SCACHETYPE_FILE) {
+            qpi.u.QPfileStreamInfo.streamSize = scp->length;
+            qpi.u.QPfileStreamInfo.streamAllocationSize = scp->length;
+            smb_UnparseString(opx, qpi.u.QPfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
+            qpi.u.QPfileStreamInfo.streamNameLength = len;
+            responseSize -= (sizeof(qpi.u.QPfileStreamInfo.fileName) - len);
+        } else {
+            qpi.u.QPfileStreamInfo.streamSize.QuadPart = 0;
+            qpi.u.QPfileStreamInfo.streamAllocationSize.QuadPart = 0;
+            smb_UnparseString(opx, qpi.u.QPfileStreamInfo.fileName, L"", &len, SMB_STRF_IGNORENUL);
+            qpi.u.QPfileStreamInfo.streamNameLength = 0;
+            responseSize = 0;
+        }
     }
     outp->totalData = responseSize;
 
@@ -7902,8 +7910,12 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     lock_ObtainRead(&scp->rw);
 
-    /* check whether we are required to send an extended response */
-    if (!extendedRespRequired) {
+    /*
+     * Always send the standard response.  Sending the extended
+     * response results in the Explorer Shell being unable to
+     * access directories at random times.
+     */
+    if (1 /*!extendedRespRequired */) {
         /* out parms */
         parmSlot = 2;
         smb_SetSMBParmByte(outp, parmSlot, 0);	/* oplock */
@@ -7925,7 +7937,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                             (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
                               scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
                               scp->fileType == CM_SCACHETYPE_INVALID) ? 1 : 0); /* is a dir? */
-        smb_SetSMBDataLength(outp, 70);
+        smb_SetSMBDataLength(outp, 0);
     } else {
         /* out parms */
         parmSlot = 2;
@@ -7959,7 +7971,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         smb_SetSMBParmLong(outp, parmSlot, 0x001f01ff); parmSlot += 2;
         /* Guest access rights */
         smb_SetSMBParmLong(outp, parmSlot, 0); parmSlot += 2;
-        smb_SetSMBDataLength(outp, 105);
+        smb_SetSMBDataLength(outp, 0);
     }
 
     if ((fidp->flags & SMB_FID_EXECUTABLE) && 
