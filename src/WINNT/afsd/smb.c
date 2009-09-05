@@ -1971,20 +1971,25 @@ int smb_FindShareCSCPolicy(clientchar_t *shareName)
     HKEY hkCSCPolicy;
     int  retval = CSC_POLICY_MANUAL;
 
-    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                    AFSREG_CLT_OPENAFS_SUBKEY "\\CSCPolicy",
-                    0, 
-                    "AFS", 
-                    REG_OPTION_NON_VOLATILE,
-                    KEY_READ,
-                    NULL, 
-                    &hkCSCPolicy,
-                    NULL );
+    if (RegCreateKeyEx( HKEY_LOCAL_MACHINE,
+                        AFSREG_CLT_OPENAFS_SUBKEY "\\CSCPolicy",
+                        0,
+                        "AFS",
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ,
+                        NULL,
+                        &hkCSCPolicy,
+                        NULL ) != ERROR_SUCCESS)
+        retval = cm_ClientStrCmpIA(_C("all"),shareName) ? CSC_POLICY_MANUAL : CSC_POLICY_DISABLE;
 
     len = sizeof(policy);
     if ( RegQueryValueExW( hkCSCPolicy, shareName, 0, &dwType, (LPBYTE) policy, &len ) ||
          len == 0) {
         retval = cm_ClientStrCmpIA(_C("all"),shareName) ? CSC_POLICY_MANUAL : CSC_POLICY_DISABLE;
+    }
+    else if (cm_ClientStrCmpIA(policy, _C("manual")) == 0)
+    {
+        retval = CSC_POLICY_MANUAL;
     }
     else if (cm_ClientStrCmpIA(policy, _C("documents")) == 0)
     {
