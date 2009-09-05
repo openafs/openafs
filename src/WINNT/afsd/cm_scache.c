@@ -1507,13 +1507,20 @@ void cm_MergeStatus(cm_scache_t *dscp,
     // yj: i want to create some fake status for the /afs directory and the
     // entries under that directory
 #ifdef AFS_FREELANCE_CLIENT
-    if (cm_freelanceEnabled && scp == cm_data.rootSCachep) {
-        osi_Log0(afsd_logp,"cm_MergeStatus Freelance cm_data.rootSCachep");
+    if (cm_freelanceEnabled && scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
+        if (scp == cm_data.rootSCachep) {
+            osi_Log0(afsd_logp,"cm_MergeStatus Freelance cm_data.rootSCachep");
+            statusp->FileType = CM_SCACHETYPE_DIRECTORY;
+            statusp->Length = cm_fakeDirSize;
+            statusp->Length_hi = 0;
+        } else {
+            statusp->FileType = scp->fileType;
+            statusp->Length = scp->length.LowPart;
+            statusp->Length_hi = scp->length.HighPart;
+        }
         statusp->InterfaceVersion = 0x1;
-        statusp->FileType = CM_SCACHETYPE_DIRECTORY;
         statusp->LinkCount = scp->linkCount;
-        statusp->Length = cm_fakeDirSize;
-        statusp->Length_hi = 0;
         statusp->DataVersion = (afs_uint32)(cm_data.fakeDirVersion & 0xFFFFFFFF);
         statusp->Author = 0x1;
         statusp->Owner = 0x0;

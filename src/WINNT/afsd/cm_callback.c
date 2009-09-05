@@ -1772,31 +1772,41 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     // The case where a callback is needed on /afs is handled
     // specially. We need to fetch the status by calling
     // cm_MergeStatus and mark that cm_fakeDirCallback is 2
-    if (cm_freelanceEnabled) {
-        if (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-            scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {
+    if (cm_freelanceEnabled &&
+        (scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID)) {
+
+        code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                          CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
+        if (code)
+            goto done;
+        syncop_done = 1;
+
+        if (cm_fakeDirCallback != 2) {
             // Start by indicating that we're in the process
             // of fetching the callback
             lock_ObtainMutex(&cm_Freelance_Lock);
-            osi_Log0(afsd_logp,"cm_getGetCallback fakeGettingCallback=1");
+            osi_Log0(afsd_logp,"GetCallback Freelance fakeGettingCallback=1");
             cm_fakeGettingCallback = 1;
             lock_ReleaseMutex(&cm_Freelance_Lock);
+
+            memset(&afsStatus, 0, sizeof(afsStatus));
+            memset(&volSync, 0, sizeof(volSync));
 
             // Fetch the status info 
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
 
             // Indicate that the callback is not done
             lock_ObtainMutex(&cm_Freelance_Lock);
-            osi_Log0(afsd_logp,"cm_getGetCallback fakeDirCallback=2");
+            osi_Log0(afsd_logp,"GetCallback Freelance fakeDirCallback=2");
             cm_fakeDirCallback = 2;
 
             // Indicate that we're no longer fetching the callback
-            osi_Log0(afsd_logp,"cm_getGetCallback fakeGettingCallback=0");
+            osi_Log0(afsd_logp,"GetCallback Freelance fakeGettingCallback=0");
             cm_fakeGettingCallback = 0;
             lock_ReleaseMutex(&cm_Freelance_Lock);
-
-            return 0;
         }
+        goto done;
     }
 #endif /* AFS_FREELANCE_CLIENT */
 	
@@ -1857,6 +1867,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 	    break;
     }
 
+  done:
     if (syncop_done)
 	cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS | CM_SCACHESYNC_GETCALLBACK);
     
