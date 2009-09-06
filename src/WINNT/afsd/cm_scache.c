@@ -397,15 +397,21 @@ void cm_fakeSCacheInit(int newFile)
 {
     if ( newFile ) {
         memset(&cm_data.fakeSCache, 0, sizeof(cm_scache_t));
+        cm_data.fakeSCache.magic = CM_SCACHE_MAGIC;
         cm_data.fakeSCache.cbServerp = (struct cm_server *)(-1);
+        cm_data.fakeSCache.cbExpires = (time_t)-1;
         /* can leave clientModTime at 0 */
         cm_data.fakeSCache.fileType = CM_SCACHETYPE_FILE;
         cm_data.fakeSCache.unixModeBits = 0777;
         cm_data.fakeSCache.length.LowPart = 1000;
         cm_data.fakeSCache.linkCount = 1;
         cm_data.fakeSCache.refCount = 1;
+        cm_data.fakeSCache.serverLock = -1;
+        cm_data.fakeSCache.dataVersion = CM_SCACHE_VERSION_BAD;
     }
     lock_InitializeRWLock(&cm_data.fakeSCache.rw, "cm_scache_t rw", LOCK_HIERARCHY_SCACHE);
+    lock_InitializeRWLock(&cm_data.fakeSCache.bufCreateLock, "cm_scache_t bufCreateLock", LOCK_HIERARCHY_SCACHE_BUFCREATE);
+    lock_InitializeRWLock(&cm_data.fakeSCache.dirlock, "cm_scache_t dirlock", LOCK_HIERARCHY_SCACHE_DIRLOCK);
 }
 
 long
@@ -686,7 +692,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         
     hash = CM_SCACHE_HASH(fidp);
         
-    osi_assertx(fidp->cell != 0, "unassigned cell value");
+    if (fidp->cell == 0)
+        return CM_ERROR_INVAL;
 
 #ifdef AFS_FREELANCE_CLIENT
     special = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
