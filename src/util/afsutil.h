@@ -91,8 +91,15 @@ extern char *vctime(const time_t * atime);
 #else /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
 static_inline char *
 afs_ctime(const time_t *C, char *B, size_t S) {
+#if !defined(AFS_NT40_ENV) || (_MSC_VER < 1500)
     strncpy(B, ctime(C), (S-1));
     B[S-1] = '\0';
+#else
+    char buf[32];
+    if (ctime_s(buf, sizeof(buf), C) ||
+        strncpy_s(B, S, buf, _TRUNCATE)
+         B[0] = '\0';
+#endif
     return B;
 }
 #endif /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
