@@ -594,6 +594,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     DWORD dwSize = sizeof(szUser);
     int saveerrno;
     UINT driveType;
+    int sharingViolation;
 
     memset(HostName, '\0', sizeof(HostName));
     gethostname(HostName, sizeof(HostName));
@@ -695,11 +696,16 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 
     fflush(stdout);
     /* now open the file */
-    fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-		    FILE_FLAG_WRITE_THROUGH, NULL);
-
-	fflush(stdout);
+    sharingViolation = 0;
+    do {
+        if (sharingViolation)
+            Sleep(1);
+        fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                        FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                        FILE_FLAG_WRITE_THROUGH, NULL);
+        sharingViolation = 1;
+    } while (fh == INVALID_HANDLE_VALUE && GetLastError() == ERROR_SHARING_VIOLATION);
+    fflush(stdout);
 
     if (fh == INVALID_HANDLE_VALUE) {
         int  gonext = 0;
@@ -771,9 +777,15 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_lsa_principal;
 
-            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                             FILE_FLAG_WRITE_THROUGH, NULL);
+            sharingViolation = 0;
+            do {
+                if (sharingViolation)
+                    Sleep(1);
+                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                FILE_FLAG_WRITE_THROUGH, NULL);
+                sharingViolation = 1;
+            } while (fh == INVALID_HANDLE_VALUE && GetLastError() == ERROR_SHARING_VIOLATION);
             fflush(stdout);
             if (fh == INVALID_HANDLE_VALUE) {
                 gle = GetLastError();
@@ -841,9 +853,15 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             if (gonext)
                 goto try_sam_compat;
 
-            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                             FILE_FLAG_WRITE_THROUGH, NULL);
+            sharingViolation = 0;
+            do {
+                if (sharingViolation)
+                    Sleep(1);
+                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                FILE_FLAG_WRITE_THROUGH, NULL);
+                sharingViolation = 1;
+            } while (fh == INVALID_HANDLE_VALUE && GetLastError() == ERROR_SHARING_VIOLATION);
             fflush(stdout);
             if (fh == INVALID_HANDLE_VALUE) {
                 gle = GetLastError();
@@ -906,9 +924,15 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 return -1;
             }
 
-            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                             FILE_FLAG_WRITE_THROUGH, NULL);
+            sharingViolation = 0;
+            do {
+                if (sharingViolation)
+                    Sleep(1);
+                fh = CreateFile(tbuffer, FILE_READ_DATA | FILE_WRITE_DATA,
+                                FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                                FILE_FLAG_WRITE_THROUGH, NULL);
+                sharingViolation = 1;
+            } while (fh == INVALID_HANDLE_VALUE && GetLastError() == ERROR_SHARING_VIOLATION);
             fflush(stdout);
             if (fh == INVALID_HANDLE_VALUE) {
                 gle = GetLastError();
