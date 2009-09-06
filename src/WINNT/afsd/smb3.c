@@ -6772,7 +6772,7 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             osi_Log0(smb_logp, "smb_ReceiveV3WriteX offset requires largefile support");
             /* we shouldn't have received this op if we didn't specify
                largefile support */
-            return CM_ERROR_BADOP;
+            return CM_ERROR_INVAL;
         }
 #endif
     }

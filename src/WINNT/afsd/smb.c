@@ -1418,27 +1418,35 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
     smb_fid_t *fidp;
     int newFid = 0;
         
-    if (fid == 0 && !(flags & SMB_FLAG_CREATE))
-        return NULL;
-
-    lock_ObtainWrite(&smb_rctLock);
-    /* figure out if we need to allocate a new file ID */
     if (fid == 0) {
+        if (!(flags & SMB_FLAG_CREATE))
+            return NULL;
         newFid = 1;
-        fid = vcp->fidCounter;
     }
 
+    lock_ObtainWrite(&smb_rctLock);
+    if (newFid)
+        fid = vcp->fidCounter;
   retry:
+
     for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
 	if (fidp->refCount == 0 && fidp->deleteOk) {
 	    fidp->refCount++;
 	    lock_ReleaseWrite(&smb_rctLock);
 	    smb_ReleaseFID(fidp);
 	    lock_ObtainWrite(&smb_rctLock);
+            /*
+             * We dropped the smb_rctLock so the fid value we are using
+             * may now be used by another thread.  Start over with the
+             * current vcp->fidCounter.
+             */
+            if (newFid)
+                fid = vcp->fidCounter;
 	    goto retry;
 	}
         if (fid == fidp->fid) {
             if (newFid) {
+                osi_Log1(smb_logp, "smb_FindFID New Fid Requested.  fid %d found -- retrying ...", fid);
                 fid++;
                 if (fid == 0xFFFF) {
                     osi_Log1(smb_logp,
@@ -1455,6 +1463,12 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
     if (!fidp && (flags & SMB_FLAG_CREATE)) {
         char eventName[MAX_PATH];
         EVENT_HANDLE event;
+
+        if (!newFid)
+            osi_Log1(smb_logp, "smb_FindFID New Fid Not Requested, Fid %d Not Found and CREATE flag set.", fid);
+        else
+            osi_Log1(smb_logp, "smb_FindFID New Fid Requested.  Creating fid %d", fid);
+
         sprintf(eventName,"fid_t event vcp=%d fid=%d", vcp->vcID, fid);
         event = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
         if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
@@ -8419,7 +8433,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
             smbp = (smb_t *) inp;
 
             osi_Log5(smb_logp,"Dispatch %s mid 0x%x vcp 0x%p lana %d lsn %d",
-                      opName, smbp->mid, vcp,vcp->lana,vcp->lsn);
+                      opName, smbp->mid, vcp, vcp->lana, vcp->lsn);
             if (inp->inCom == 0x1d) {
                 /* Raw Write */
                 code = smb_ReceiveCoreWriteRaw (vcp, inp, outp, rwcp);
@@ -8427,7 +8441,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 code = (*(dp->procp)) (vcp, inp, outp);
             }   
             osi_Log5(smb_logp,"Dispatch return code 0x%x mid 0x%x vcp 0x%p lana %d lsn %d",
-                      code, smbp->mid, vcp,vcp->lana,vcp->lsn);
+                      code, smbp->mid, vcp, vcp->lana, vcp->lsn);
 
             newTime = GetTickCount();
             osi_Log3(smb_logp, "Dispatch %s mid 0x%x duration %d ms", 

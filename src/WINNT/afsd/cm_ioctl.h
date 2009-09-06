@@ -71,6 +71,7 @@ typedef struct cm_ioctl {
 #define CM_IOCTLFLAG_DATAIN	1	/* reading data from client to server */
 #define CM_IOCTLFLAG_LOGON	2	/* got tokens from integrated logon */
 #define CM_IOCTLFLAG_USEUTF8    4       /* this request is using UTF-8 strings */
+#define CM_IOCTLFLAG_DATAOUT    8       /* sending data from server to client */
 
 
 /* 
