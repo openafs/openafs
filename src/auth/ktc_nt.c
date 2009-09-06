@@ -249,6 +249,7 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 {
     struct ViceIoctl iob;
     char tbuffer[TBUFFERSIZE];
+    int len;
     char *tp;
     struct ClearToken ct;
     int temp;
@@ -270,10 +271,14 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
     /* ticket length */
     memcpy(tp, &token->ticketLen, sizeof(token->ticketLen));
     tp += sizeof(token->ticketLen);
+    len = sizeof(token->ticketLen);
 
     /* ticket */
+    if (len + token->ticketLen > TBUFFERSIZE)
+        return KTC_INVAL;
     memcpy(tp, token->ticket, token->ticketLen);
     tp += token->ticketLen;
+    len += token->ticketLen;
 
     /* clear token */
     ct.AuthHandle = token->kvno;
@@ -300,52 +305,70 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 	ct.BeginTimestamp++;	/* force lifetime to be even */
 
     /* size of clear token */
+    if (len + sizeof(temp) > TBUFFERSIZE)
+        return KTC_INVAL;
     temp = sizeof(struct ClearToken);
     memcpy(tp, &temp, sizeof(temp));
     tp += sizeof(temp);
+    len += sizeof(temp);
 
     /* clear token itself */
+    if (len + sizeof(ct) > TBUFFERSIZE)
+        return KTC_INVAL;
     memcpy(tp, &ct, sizeof(ct));
     tp += sizeof(ct);
+    len += sizeof(ct);
 
     /* flags; on NT there is no setpag flag, but there is an
      * integrated logon flag */
+    if (len + sizeof(temp) > TBUFFERSIZE)
+        return KTC_INVAL;
     temp = ((flags & AFS_SETTOK_LOGON) ? PIOCTL_LOGON : 0);
     memcpy(tp, &temp, sizeof(temp));
     tp += sizeof(temp);
+    len += sizeof(temp);
 
     /* cell name */
-    temp = (int)strlen(server->cell);
-    if (temp >= MAXKTCREALMLEN)
+    temp = (int)strlen(server->cell) + 1;
+    if (len + temp > TBUFFERSIZE ||
+        temp > MAXKTCREALMLEN)
 	return KTC_INVAL;
     strcpy(tp, server->cell);
-    tp += temp + 1;
+    tp += temp;
+    len += temp;
 
     /* user name */
-    temp = (int)strlen(client->name);
-    if (temp >= MAXKTCNAMELEN)
+    temp = (int)strlen(client->name) + 1;
+    if (len + temp > TBUFFERSIZE ||
+        temp > MAXKTCNAMELEN)
 	return KTC_INVAL;
     strcpy(tp, client->name);
-    tp += temp + 1;
+    tp += temp;
+    len += temp;
 
     /* we need the SMB user name to associate the tokens with in the
      * integrated logon case. */
     if (flags & AFS_SETTOK_LOGON) {
 	if (client->smbname == NULL)
-	    temp = 0;
+	    temp = 1;
 	else
-	    temp = (int)strlen(client->smbname);
-	if (temp == 0 || temp >= MAXKTCNAMELEN)
+	    temp = (int)strlen(client->smbname) + 1;
+	if (temp == 1 ||
+            len + temp > TBUFFERSIZE ||
+            temp > MAXKTCNAMELEN)
 	    return KTC_INVAL;
 	strcpy(tp, client->smbname);
-	tp += temp + 1;
+	tp += temp;
+        len += temp;
     }
 
     /* uuid */
+    if (len + sizeof(uuid) > TBUFFERSIZE)
+        return KTC_INVAL;
     status = UuidCreate((UUID *) & uuid);
     memcpy(tp, &uuid, sizeof(uuid));
     tp += sizeof(uuid);
-
+    len += sizeof(uuid);
 
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
@@ -414,6 +437,7 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 {
     struct ViceIoctl iob;
     char tbuffer[TBUFFERSIZE];
+    int len;
     char *tp, *cp;
     char *ticketP;
     int ticketLen, temp;
@@ -436,13 +460,15 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     }
 
     /* cell name */
+    len = strlen(server->cell) + 1;
     strcpy(tp, server->cell);
-    tp += strlen(server->cell) + 1;
+    tp += len;
 
     /* uuid */
     status = UuidCreate((UUID *) & uuid);
     memcpy(tp, &uuid, sizeof(uuid));
     tp += sizeof(uuid);
+    len += sizeof(uuid);
 
     iob.in = tbuffer;
     iob.in_size = (long)(tp - tbuffer);
@@ -507,28 +533,49 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     /* ticket length */
     memcpy(&ticketLen, cp, sizeof(ticketLen));
     cp += sizeof(ticketLen);
+    len = sizeof(ticketLen);
 
     /* remember where ticket is and skip over it */
+    if (len + ticketLen > TBUFFERSIZE ||
+        len + ticketLen > iob.out_size)
+        return KTC_ERROR;
     ticketP = cp;
     cp += ticketLen;
+    len += ticketLen;
 
     /* size of clear token */
+    if (len + sizeof(temp) > TBUFFERSIZE ||
+        len + sizeof(temp) > iob.out_size)
+        return KTC_ERROR;
     memcpy(&temp, cp, sizeof(temp));
     cp += sizeof(temp);
+    len += sizeof(temp);
     if (temp != sizeof(ct))
 	return KTC_ERROR;
 
     /* clear token */
+    if (len + temp > TBUFFERSIZE ||
+        len + temp > iob.out_size)
+        return KTC_ERROR;
     memcpy(&ct, cp, temp);
     cp += temp;
+    len += temp;
 
     /* skip over primary flag */
+    if (len + sizeof(temp) > TBUFFERSIZE ||
+        len + sizeof(temp) > iob.out_size)
+        return KTC_ERROR;
     cp += sizeof(temp);
+    len += sizeof(temp);
 
     /* remember cell name and skip over it */
     cellName = cp;
     cellNameSize = (int)strlen(cp);
+    if (len + cellNameSize + 1 > TBUFFERSIZE ||
+        len + cellNameSize + 1 > iob.out_size)
+        return KTC_ERROR;
     cp += cellNameSize + 1;
+    len += cellNameSize + 1;
 
     /* user name is here */
 
@@ -569,6 +616,7 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
 {
     struct ViceIoctl iob;
     char tbuffer[TBUFFERSIZE];
+    int len;
     char *tp, *cp;
     int newIter, ticketLen, temp;
     int code;
@@ -626,29 +674,47 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
     /* new iterator */
     memcpy(&newIter, cp, sizeof(newIter));
     cp += sizeof(newIter);
+    len = sizeof(newIter);
 
     /* ticket length */
+    if (len + sizeof(ticketLen) > TBUFFERSIZE ||
+        len + sizeof(ticketLen) > iob.out_size)
+        return KTC_ERROR;
     memcpy(&ticketLen, cp, sizeof(ticketLen));
     cp += sizeof(ticketLen);
+    len += sizeof(ticketLen);
 
     /* skip over ticket */
     cp += ticketLen;
+    len += ticketLen;
 
     /* clear token size */
+    if (len + sizeof(temp) > TBUFFERSIZE ||
+        len + sizeof(temp) > iob.out_size)
+        return KTC_ERROR;
     memcpy(&temp, cp, sizeof(temp));
     cp += sizeof(temp);
+    len += sizeof(temp);
     if (temp != sizeof(struct ClearToken))
 	return KTC_ERROR;
 
     /* skip over clear token */
     cp += sizeof(struct ClearToken);
+    len += sizeof(struct ClearToken);
 
     /* skip over primary flag */
     cp += sizeof(temp);
+    len += sizeof(temp);
+    if (len > TBUFFERSIZE ||
+        len > iob.out_size)
+        return KTC_ERROR;
 
     /* cell name is here */
 
     /* set return values */
+    if (len + temp > TBUFFERSIZE ||
+        temp > MAXKTCREALMLEN)
+        return KTC_ERROR;
     strcpy(server->cell, cp);
     server->instance[0] = '\0';
     strcpy(server->name, "afs");
