@@ -330,7 +330,7 @@ RPC_SRVSVC_Init(void)
 {
     lock_InitializeMutex(&shareEnum_mx, "NetrShareEnum", 0);
     shareEnumQ = NULL;
-#if _MSC_VER < 1500
+#if _MSC_VER < 1400
     srand((unsigned) time( NULL ));
     shareEnum_next_handle = rand();
 #else
