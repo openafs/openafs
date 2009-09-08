@@ -1896,13 +1896,13 @@ main(int argc, char *argv[])
     ClearXStatValues();
 
     code = InitVL();
-    if (code) {
+    if (code && code != VL_MULTIPADDR) {
 	ViceLog(0, ("Fatal error in library initialization, exiting!!\n"));
 	exit(1);
     }
 
     code = InitPR();
-    if (code) {
+    if (code && code != -1) {
 	ViceLog(0, ("Fatal error in protection initialization, exiting!!\n"));
 	exit(1);
     }
