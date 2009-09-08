@@ -1045,7 +1045,7 @@ ovlentry_to_nvlentry(struct vldbentry *oentryp,
  *------------------------------------------------------------------------*/
 
 static int
-uss_vol_GetEntryByID(ubik_client *cstruct, afs_uint32 volid,
+uss_vol_GetEntryByID(struct ubik_client *cstruct, afs_uint32 volid,
                      afs_int32 voltype, struct nvldbentry *entryp)
 {
     struct vldbentry oentry;
