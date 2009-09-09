@@ -431,7 +431,10 @@ SALVSYNC_com(osi_socket fd)
     if (com.hdr.command == SYNC_COM_CHANNEL_CLOSE) {
 	res.hdr.response = SYNC_OK;
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
-	goto respond;
+
+	/* don't respond, just drop; senders of SYNC_COM_CHANNEL_CLOSE
+	 * never wait for a response. */
+	goto done;
     }
 
     if (com.recv_len != (sizeof(com.hdr) + sizeof(SALVSYNC_command_hdr))) {
@@ -479,6 +482,8 @@ SALVSYNC_com(osi_socket fd)
 
  respond:
     SYNC_putRes(&salvsync_server_state, fd, &res);
+
+ done:
     if (res.hdr.flags & SYNC_FLAG_CHANNEL_SHUTDOWN) {
 	SALVSYNC_Drop(fd);
     }

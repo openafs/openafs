@@ -360,7 +360,10 @@ FSYNC_com(osi_socket fd)
     if (com.hdr.command == SYNC_COM_CHANNEL_CLOSE) {
 	res.hdr.response = SYNC_OK;
 	res.hdr.flags |= SYNC_FLAG_CHANNEL_SHUTDOWN;
-	goto respond;
+
+	/* don't respond, just drop; senders of SYNC_COM_CHANNEL_CLOSE
+	 * never wait for a response. */
+	goto done;
     }
 
     res.hdr.com_seq = com.hdr.com_seq;
@@ -400,6 +403,8 @@ FSYNC_com(osi_socket fd)
 
  respond:
     SYNC_putRes(&fssync_server_state, fd, &res);
+
+ done:
     if (res.hdr.flags & SYNC_FLAG_CHANNEL_SHUTDOWN) {
 	FSYNC_Drop(fd);
     }
