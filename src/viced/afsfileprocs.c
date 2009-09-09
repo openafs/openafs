@@ -3847,6 +3847,8 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     afs_int32 newanyrights;	/* rights for any user */
     int doDelete;		/* deleted the rename target (ref count now 0) */
     int code;
+    int updatefile = 0;		/* are we changing the renamed file? (we do this
+				 * if we need to update .. on a renamed dir) */
     struct client *t_client;	/* tmp ptr to client data */
     struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
@@ -4088,10 +4090,28 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
 	    assert(errorCode == 0);
 	}
     }
+
+    if (fileptr->disk.type == vDirectory) {
+	SetDirHandle(&filedir, fileptr);
+	if (oldvptr != newvptr) {
+	    /* we always need to update .. if we've moving fileptr to a
+	     * different directory */
+	    updatefile = 1;
+	} else {
+	    struct AFSFid unused;
+
+	    code = Lookup(&filedir, "..", &unused);
+	    if (code == ENOENT) {
+		/* only update .. if it doesn't already exist */
+		updatefile = 1;
+	    }
+	}
+    }
+
     /* Do the CopyonWrite first before modifying anything else. Copying is
-     *  required because we may have to change entries for .. 
+     * required when we have to change entries for ..
      */
-    if ((fileptr->disk.type == vDirectory) && (fileptr->disk.cloned)) {
+    if (updatefile && (fileptr->disk.cloned)) {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  target dir\n"));
 	if ((errorCode = CopyOnWrite(fileptr, volptr, 0, MAXFSIZE)))
 	    goto Bad_Rename;
@@ -4167,17 +4187,23 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     if (oldvptr == newvptr)
 	oldvptr->disk.dataVersion--;	/* Since it was bumped by 2! */
 
-    fileptr->disk.parent = newvptr->vnodeNumber;
-    fileptr->changed_newTime = 1;	/* status change of moved file */
+    if (fileptr->disk.parent != newvptr->vnodeNumber) {
+	fileptr->disk.parent = newvptr->vnodeNumber;
+	fileptr->changed_newTime = 1;
+    }
 
-    /* if we are dealing with a rename of a directory */
-    if (fileptr->disk.type == vDirectory) {
+    /* if we are dealing with a rename of a directory, and we need to
+     * update the .. entry of that directory */
+    if (updatefile) {
 	assert(!fileptr->disk.cloned);
-	SetDirHandle(&filedir, fileptr);
+
+	fileptr->changed_newTime = 1;	/* status change of moved file */
+
 	/* fix .. to point to the correct place */
 	Delete(&filedir, "..");	/* No assert--some directories may be bad */
 	assert(Create(&filedir, "..", NewDirFid) == 0);
 	fileptr->disk.dataVersion++;
+
 	/* if the parent directories are different the link counts have to be   */
 	/* changed due to .. in the renamed directory */
 	if (oldvptr != newvptr) {
@@ -4212,8 +4238,10 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     BreakCallBack(client->host, NewDirFid, 0);
     if (oldvptr != newvptr) {
 	BreakCallBack(client->host, OldDirFid, 0);
-	if (fileptr->disk.type == vDirectory)	/* if a dir moved, .. changed */
-	    BreakCallBack(client->host, &fileFid, 0);
+    }
+    if (updatefile) {
+	/* if a dir moved, .. changed */
+	BreakCallBack(client->host, &fileFid, 0);
     }
     if (newfileptr) {
 	/* Note:  it is not necessary to break the callback */
