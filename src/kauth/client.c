@@ -42,7 +42,9 @@
 #endif
 #include <string.h>
 #ifdef HAVE_UNISTD_H
+#if !defined(__USE_XOPEN)
 #define __USE_XOPEN
+#endif
 #include <unistd.h>
 #endif
 #include <afs/cellconfig.h>
