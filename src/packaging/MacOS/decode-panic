@@ -20,17 +20,20 @@ my $backtrace;
 my $kextload   = "/sbin/kextload";
 my $kextutil   = "/usr/bin/kextutil";
 my $kextprog;
+my $kernel     = "/mach_kernel";
 my $gdb        = "/usr/bin/gdb";
 my $gdbarch    = "";
+my $kextarch   = "";
 my $gdb_file   = "gdb.input";
 my $temp_dir   = tempdir( "afsdebugXXXXXX", DIR => File::Spec->tmpdir,
-                        TMPDIR => 1, CLEANUP => 1 );
+			  TMPDIR => 1, CLEANUP => 1 );
 my $dump_file  = "/var/db/openafs/logs/crash.dump";
 
 my $option_quiet;
 my $option_help;
 my $result = GetOptions ("input=s"  => \$panic_file,
                          "output=s" => \$dump_file,
+			 "kernel=s" => \$kernel,
                          "quiet"    => \$option_quiet,
                          "help"     => \$option_help
                      );
@@ -73,23 +76,26 @@ croak "Can't find panic file: $panic_file!\n" if ( ! -r $panic_file );
 
 read_panic( $panic_file, \%crash_info );
 
-generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir );
-
-write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" } );
-
 if ($crash_info{"kernel_version"} =~ /X86_64/ ) {
     $gdbarch="-a x86_64";
+    $kextarch="x86_64";
 } else {
     if ($crash_info{"kernel_version"} =~ /I386/ ) {
 	$gdbarch="-a i386";
+	$kextarch="i386";
     } else {
 	if ($crash_info{"kernel_version"} =~ /PPC/ ) {
 	    $gdbarch="-a ppc";
+	    $kextarch="ppc";
 	}
     }
 }
 
-my $gdb_output = `$gdb $gdbarch /mach_kernel -batch -x $temp_dir/$gdb_file`;
+generate_symbol_files( $crash_info{"afs_kernel_address"}, $temp_dir, $kextarch );
+
+write_gdb_input_file( $temp_dir, $gdb_file, $crash_info{ "backtrace" } );
+
+my $gdb_output = `$gdb $gdbarch $kernel -batch -x $temp_dir/$gdb_file`;
 croak "gdb failed!\n" if $CHILD_ERROR;
 
 write_dump_file( $dump_file, \%crash_info, $gdb_output );
@@ -152,7 +158,7 @@ sub read_panic {
         # ppc format panic
         while ( $line = <$panic_fh> ) {
             chomp $line;
-            last if $line !~ /^\s*(0x[0-9a-fA-F]{8})/;
+            last if $line !~ /^\s*(0x[0-9a-fA-F]+)/;
             my @memory_addresses = split /\s+/, $line;
 
             # add non-empty array elements to the list
@@ -163,7 +169,7 @@ sub read_panic {
         # intel format panic
         while ( $line = <$panic_fh> ) {
             chomp $line;
-            last if $line !~ /^\s*0x[0-9a-fA-F]{8} : (0x[0-9a-fA-F]*)/;
+            last if $line !~ /^\s*0x[0-9a-fA-F]+ : (0x[0-9a-fA-F]*)/;
             push @{ $hash_ref->{ "backtrace" } }, $1;
         }
     }
@@ -205,9 +211,12 @@ sub read_panic {
 sub generate_symbol_files {
     my $kernel_address   = shift;
     my $symbol_write_dir = shift;
+    my $kextarch = shift;
 
     system( $kextprog,
-	    "-s",  $temp_dir,
+	    "-k", $kernel,
+	    "-s", $temp_dir,
+	    "-arch", $kextarch,
 	    "-a", 'org.openafs.filesystems.afs@' . $kernel_address,
 	    "-n", "/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/" );
     
@@ -232,7 +241,7 @@ sub write_gdb_input_file {
     for my $symbol ( @symbol_files ) {
         print $fh "add-symbol-file $symbol\n";
     }
-
+    
     print $fh "set print asm-demangle on\n";
 
     for my $address ( @{ $backtrace_ref } ) {
@@ -283,12 +292,13 @@ This documentation refers to decode-panic version $Revision$
 
 =head1 SYNOPSIS
  
-   decode-panic [-i <input panic log>] [-o <output dump file>] [-q]
+   decode-panic [-i <input panic log>] [-o <output dump file>] [-k <kernel file>] [-q]
 
 =head1 OPTIONS
 
    -i The path to the panic log that should be read
    -o The path to where the decoded panic log should be written
+   -k The path to the kernel image corresponding to the panic
    -q Quiet mode - don't complain if there is a problem.
    -h print full help
 
