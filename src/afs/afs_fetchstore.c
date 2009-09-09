@@ -612,16 +612,20 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 #endif
 		code = rxfs_storeInit(avc, tc, length, bytes, base,
 					sync, &ops, &rock);
+		if ( code )
+		    goto nocall;
 
-		if (!code) 
-		    code = afs_CacheStoreDCaches(avc, dclist, bytes, anewDV,
-						 &doProcessFS, &OutStatus, 
-						 nchunks, nomore, ops, rock);
+		code = afs_CacheStoreDCaches(avc, dclist, bytes, anewDV,
+			&doProcessFS, &OutStatus, nchunks, nomore, ops, rock);
+
+nocall:
 #ifdef AFS_64BIT_CLIENT
 		if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
 		    afs_serverSetNo64Bit(tc);
 		    goto restart;
 		}
+#else
+		continue;	/* dummy, label before block end won't work */
 #endif /* AFS_64BIT_CLIENT */
 	    } while (afs_Analyze
 		     (tc, code, &avc->f.fid, areq,
@@ -824,14 +828,26 @@ rxfs_fetchMore(void *r, afs_uint32 *length, afs_uint32 *moredata)
     register struct rxfs_fetchVariables *v
 	    = (struct rxfs_fetchVariables *)r;
 
+    /*
+     * The fetch protocol is extended for the AFS/DFS translator
+     * to allow multiple blocks of data, each with its own length,
+     * to be returned. As long as the top bit is set, there are more
+     * blocks expected.
+     *
+     * We do not do this for AFS file servers because they sometimes
+     * return large negative numbers as the transfer size.
+     */
     RX_AFS_GUNLOCK();
     code = rx_Read(v->call, (void *)length, sizeof(afs_int32));
-    *length = ntohl(*length);
     RX_AFS_GLOCK();
+    *length = ntohl(*length);
     if (code != sizeof(afs_int32)) {
 	code = rx_Error(v->call);
+	*moredata = 0;
 	return (code ? code : -1);	/* try to return code, not -1 */
     }
+    *moredata = *length & 0x80000000;
+    *length &= ~0x80000000;
     return 0;
 }
 
@@ -855,7 +871,8 @@ struct fetchOps rxfs_fetchMemOps = {
 
 afs_int32
 rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
-		afs_uint32 size, afs_uint32 *alength, struct dcache *adc,
+		afs_uint32 size, afs_uint32 *alength, afs_uint32 *moredata,
+		struct dcache *adc,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
@@ -951,7 +968,22 @@ rxfs_fetchInit(register struct afs_conn *tc, struct vcache *avc,afs_offs_t base,
 	osi_FreeSmallSpace(v);
         return code;
     }
-
+    /*
+     * The fetch protocol is extended for the AFS/DFS translator
+     * to allow multiple blocks of data, each with its own length,
+     * to be returned. As long as the top bit is set, there are more
+     * blocks expected.
+     *
+     * We do not do this for AFS file servers because they sometimes
+     * return large negative numbers as the transfer size.
+     *
+     * Also omit if length > 2^32, as bit 31 is part of the number then.
+     * Known to never be the case ifndef AFS_64BIT_CLIENT.
+     */
+    if (avc->f.states & CForeign && !length_hi) {
+	*moredata = length & 0x80000000;
+	length &= ~0x80000000;
+    }
     if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	if (!v->tbuffer)
@@ -1018,7 +1050,8 @@ afs_CacheFetchProc(register struct afs_conn *tc,
 
     XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHDATA);
 
-    code = rxfs_fetchInit(tc, avc, abase, size, &length, adc, fP, &ops, &rock);
+    code = rxfs_fetchInit(
+		tc, avc, abase, size, &length, &moredata, adc, fP, &ops, &rock);
 
 #ifndef AFS_NOSTATS
     osi_GetuTime(&xferStartTime);
@@ -1027,25 +1060,10 @@ afs_CacheFetchProc(register struct afs_conn *tc,
     adc->validPos = abase;
 
     if ( !code ) do {
-	if (moredata) {
+	if ((avc->f.states & CForeign) && moredata && !length) {
 	    code = (*ops->more)(rock, &length, &moredata);
 	    if ( code )
 		break;
-	}
-	/*
-	 * The fetch protocol is extended for the AFS/DFS translator
-	 * to allow multiple blocks of data, each with its own length,
-	 * to be returned. As long as the top bit is set, there are more
-	 * blocks expected.
-	 *
-	 * We do not do this for AFS file servers because they sometimes
-	 * return large negative numbers as the transfer size.
-	 */
-	if (avc->f.states & CForeign) {
-	    moredata = length & 0x80000000;
-	    length &= ~0x80000000;
-	} else {
-	    moredata = 0;
 	}
 #ifndef AFS_NOSTATS
 	bytesToXfer += length;
