@@ -118,6 +118,7 @@ PODS = \
         pod1\pts_setmax.pod            \
         pod1\pts_sleep.pod             \
         pod1\pts_source.pod            \
+        pod1\restorevol.pod            \
         pod1\rxdebug.pod               \
         pod1\rxgen.pod                 \
         pod1\scout.pod                 \
@@ -317,7 +318,6 @@ PODS = \
         pod8\ptserver.pod              \
         pod8\pt_util.pod               \
         pod8\read_tape.pod             \
-        pod8\restorevol.pod            \
         pod8\rmtsysd.pod               \
         pod8\salvager.pod              \
         pod8\salvageserver.pod         \

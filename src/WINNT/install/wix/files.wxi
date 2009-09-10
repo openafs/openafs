@@ -441,6 +441,7 @@
                             <File Id="file_CmdRef_1_pts_setmax_html"  Name="pts_setm.htm"  LongName="pts_setmax.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_pts_sleep_html"  Name="pts_slee.htm"  LongName="pts_sleep.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_pts_source_html"  Name="pts_sour.htm"  LongName="pts_source.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_restorevol_html"  Name="restorev.htm"  LongName="restorevol.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_rxdebug_html"  Name="rxdebug.htm"  LongName="rxdebug.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_rxgen_html"  Name="rxgen.htm"  LongName="rxgen.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_scout_html"  Name="scout.htm"  LongName="scout.html"  DiskId="1"  />
@@ -647,7 +648,6 @@
                             <File Id="file_CmdRef_8_ptserver_html"  Name="ptserver.htm"  LongName="ptserver.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_pt_util_html"  Name="pt_util.htm"  LongName="pt_util.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_read_tape_html"  Name="read_tap.htm"  LongName="read_tape.html"  DiskId="1"  />
-                            <File Id="file_CmdRef_8_restorevol_html"  Name="restorev.htm"  LongName="restorevol.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_rmtsysd_html"  Name="rmtsysd.htm"  LongName="rmtsysd.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_salvager_html"  Name="salvager.htm"  LongName="salvager.html"  DiskId="1"  />
                             <File Id="file_CmdRef_8_salvageserver_html"  Name="salvages.htm"  LongName="salvageserver.html"  DiskId="1"  />
