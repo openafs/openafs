@@ -45,6 +45,11 @@ osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 
     for (i = 0; i < nvecs; i++)
 	iov[i] = dvec[i];
+
+    if ((afs_termState == AFSOP_STOP_RXK_LISTENER) ||
+	(afs_termState == AFSOP_STOP_COMPLETE))
+	return -1;
+
     if (haveGlock)
 	AFS_GUNLOCK();
 #if defined(KERNEL_FUNNEL)
@@ -178,8 +183,13 @@ osi_NetSend(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
 
     addr->sin_len = sizeof(struct sockaddr_in);
 
+    if ((afs_termState == AFSOP_STOP_RXK_LISTENER) ||
+	(afs_termState == AFSOP_STOP_COMPLETE))
+	return -1;
+
     if (haveGlock)
 	AFS_GUNLOCK();
+
 #if defined(KERNEL_FUNNEL)
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
