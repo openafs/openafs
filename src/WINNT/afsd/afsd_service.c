@@ -467,7 +467,7 @@ static DWORD __stdcall MountGlobalDrivesThread(void * notUsed)
 
             nr.dwScope = RESOURCE_GLOBALNET;              /* ignored parameter */
             nr.dwType=RESOURCETYPE_DISK;
-            nr.lpLocalName=szDriveToMapTo;
+            nr.lpLocalName=strlen(szDriveToMapTo) > 0 ? szDriveToMapTo : NULL;
             nr.lpRemoteName=szAfsPath;
             nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE; /* ignored parameter */
             nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;       /* ignored parameter */
