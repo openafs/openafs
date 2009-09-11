@@ -278,8 +278,9 @@ IsFreelanceRoot(char *apath)
     blob.out = space;
 
     code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code == 0)
-        return !cm_stricmp_utf8N("Freelance.Local.Root",space);
+    if (code == 0) {
+        return !cm_strnicmp_utf8N("Freelance.Local.Root",space, blob.out_size);
+    }
     return 1;   /* assume it is because it is more restrictive that way */
 }
 
@@ -1167,6 +1168,8 @@ GetCell(char *fname, char *cellname)
     blob.out = cellname;
 
     code = pioctl_utf8(fname, VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code == 0)
+        cellname[blob.out_size - 1] = '\0';
     return code;
 }
 
@@ -1626,7 +1629,8 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
@@ -1639,11 +1643,18 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
         blob.out = &filetype;
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
+        if (code || blob.out_size != sizeof(filetype)) {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
 
         blob.out_size = CELL_MAXNAMELEN;
         blob.out = cell;
 
         code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+        if (code == 0)
+            cell[blob.out_size-1] = '\0';
         printf("%s %s (%u.%u.%u) contained in cell %s\n",
                 filetypestr(filetype),
                 ti->data, fid.volume, fid.vnode, fid.unique,
@@ -1651,7 +1662,8 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 
 	blob.out_size = 2 * sizeof(afs_uint32);
         blob.out = (char *) &owner;
-	if (0 == pioctl_utf8(ti->data, VIOCGETOWNER, &blob, 1)) {
+	if (0 == pioctl_utf8(ti->data, VIOCGETOWNER, &blob, 1) &&
+            blob.out_size == 2 * sizeof(afs_uint32)) {
 	    char oname[PR_MAXNAMELEN] = "(unknown)";
 	    char gname[PR_MAXNAMELEN] = "(unknown)";
             char confDir[257];
@@ -1669,11 +1681,11 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 	blob.out_size = MAXSIZE;
 	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
 	if (code == 0) {
+            space[blob.out_size - 1] = '\0';
             status = (VolumeStatus *)space;
             name = (char *)status + sizeof(*status);
             offmsg = name + strlen(name) + 1;
             motd = offmsg + strlen(offmsg) + 1;
-
             PrintStatus(status, name, motd, offmsg);
         } else {
             Die(errno, ti->data);
@@ -1728,6 +1740,7 @@ ListQuotaCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
 	    continue;
 	}
+        space[blob.out_size - 1] = '\0';
 	status = (VolumeStatus *)space;
 	name = (char *)status + sizeof(*status);
 	QuickPrintStatus(status, name);
@@ -1768,7 +1781,8 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
         
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
@@ -1781,7 +1795,11 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
         blob.out = &filetype;
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
-
+        if (code || blob.out_size != sizeof(filetype)) {
+	    Die(errno, ti->data);
+            error = 1;
+	    continue;
+        }
         blob.out_size = MAXSIZE;
 	blob.out = space;
 	memset(space, 0, sizeof(space));
@@ -1791,7 +1809,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
 	    continue;
 	}
-	hosts = (afs_int32 *) space;
+        hosts = (afs_int32 *) space;
 	printf("%s %s is on host%s ", 
                 filetypestr(filetype),
                 ti->data,
@@ -1832,6 +1850,7 @@ DiskFreeCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
 	    continue;
 	}
+        space[blob.out_size - 1] = '\0';
 	status = (VolumeStatus *)space;
 	name = (char *)status + sizeof(*status);
 	QuickPrintSpace(status, name);
@@ -1856,7 +1875,7 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl_utf8(ti->data, VIOCGETVOLSTAT, &blob, 1);
-	if (code) {
+	if (code || blob.out_size != sizeof(*status)) {
 	    Die(errno, ti->data);
             error = 1;
 	    continue;
@@ -2006,10 +2025,11 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 	code = pioctl_utf8(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
 
 	if (code == 0) {
-	    printf("'%s' is a %smount point for volume '%s'\n",
+	    printf("'%s' is a %smount point for volume '%.*s'\n",
 		   ti->data,
 		   (thru_symlink ? "symbolic link, leading to a " : ""),
-		   space);
+                   blob.out_size,
+                   space);
 
 	} else {
 	    if (errno == EINVAL) {
@@ -2103,8 +2123,10 @@ MakeMountCmd(struct cmd_syndesc *as, void *arock)
 	    blob.out_size = sizeof(localCellName);
 	    blob.out = localCellName;
 	    code = pioctl_utf8(parent, VIOC_GET_WS_CELL, &blob, 1);
-	    if (!code)
+	    if (!code) {
+                localCellName[sizeof(localCellName) - 1] = '\0';
 		cellName = localCellName;
+            }
 	}
     } else {
 	if (!cellName) {
@@ -2477,7 +2499,7 @@ GetCacheParmsCmd(struct cmd_syndesc *as, void *arock)
     blob.out_size = sizeof(parms);
     blob.out = (char *) &parms;
     code = pioctl_utf8(0, VIOCGETCACHEPARMS, &blob, 1);
-    if (code) {
+    if (code || blob.out_size != sizeof(parms)) {
 	Die(errno, NULL);
         return 1;
     }
@@ -2526,7 +2548,7 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
 	    tp += sizeof(afs_int32);
 	}
 	printf("Cell %s on hosts", tp+maxa*sizeof(afs_int32));
-	for(j=0; j < maxa; j++) {
+	for(j=0; j < maxa && j*sizeof(afs_int32) < MAXSIZE; j++) {
             char *name, tbuffer[20];
 
 	    memcpy(&addr, tp + j*sizeof(afs_int32), sizeof(afs_int32));
@@ -2570,6 +2592,7 @@ ListAliasesCmd(struct cmd_syndesc *as, void *arock)
 	    Die(errno, 0);
 	    return 1;
 	}
+        space[blob.out_size - 1] = '\0';
 	tp = space;
 	aliasName = tp;
 	tp += strlen(aliasName) + 1;
@@ -2783,7 +2806,8 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
@@ -2796,7 +2820,11 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
         blob.out = &filetype;
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
-
+        if (code || blob.out_size != sizeof(filetype)) {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
         blob.out_size = CELL_MAXNAMELEN;
         blob.out = cell;
 
@@ -2809,6 +2837,7 @@ WhichCellCmd(struct cmd_syndesc *as, void *arock)
 	    error = 1;
 	    continue;
 	}
+        cell[CELL_MAXNAMELEN - 1] = '\0';
         printf("%s %s lives in cell '%s'\n",
                 filetypestr(filetype),
                 ti->data, cell);
@@ -2833,7 +2862,7 @@ WSCellCmd(struct cmd_syndesc *as, void *arock)
 	Die(errno, NULL);
         return 1;
     }
-
+    space[MAXSIZE - 1] = '\0';
     printf("This workstation belongs to cell '%s'\n", space);
     return 0;
 }
@@ -2890,7 +2919,7 @@ MonitorCmd(struct cmd_syndesc *as, void *arock)
     blob.in = (char *) &hostAddr;
     blob.out = (char *) &hostAddr;
     code = pioctl_utf8(0, VIOC_AFS_MARINER_HOST, &blob, 1);
-    if (code) {
+    if (code || blob.out_size != sizeof(afs_int32)) {
 	Die(errno, 0);
 	return 1;
     }
@@ -2969,7 +2998,7 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
         fprintf(stderr,"No sysname name value was found\n");
         return 1;
     } 
-    
+    space[blob.out_size - 1] = '\0';
     printf("Current sysname%s is", setp > 1 ? " list" : "");
     for (; setp > 0; --setp ) {
         printf(" \'%s\'", input);
@@ -3818,7 +3847,8 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
             options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             options.fid = fid;
         } else {
@@ -3831,11 +3861,17 @@ GetFidCmd(struct cmd_syndesc *as, void *arock)
         blob.out = &filetype;
 
         code = pioctl_utf8(ti->data, VIOC_GETFILETYPE, &blob, 1);
-
+        if (code || blob.out_size != sizeof(filetype)) {
+	    Die(errno, ti->data);
+	    error = 1;
+	    continue;
+        }
         blob.out_size = CELL_MAXNAMELEN;
         blob.out = cell;
 
         code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+        if (code == 0)
+            cell[CELL_MAXNAMELEN - 1] = '\0';
         printf("%s %s (%u.%u.%u) contained in cell %s\n",
                 filetypestr(filetype),
                 ti->data, fid.volume, fid.vnode, fid.unique,
@@ -3876,7 +3912,7 @@ UuidCmd(struct cmd_syndesc *asp, void *arock)
     blob.out = (char *) &outValue;
 
     code = pioctl_utf8(NULL, VIOC_UUIDCTL, &blob, 1);
-    if (code) {
+    if (code || blob.out_size != sizeof(outValue)) {
         Die(errno, NULL);
         return code;
     }
@@ -3935,7 +3971,7 @@ TraceCmd(struct cmd_syndesc *asp, void *arock)
     blob.out = (char *) &outValue;
         
     code = pioctl_utf8(NULL, VIOC_TRACECTL, &blob, 1);
-    if (code) {
+    if (code || blob.out_size != sizeof(long)) {
         Die(errno, NULL);
         return code;
     }
@@ -4111,7 +4147,7 @@ GetCryptCmd(struct cmd_syndesc *as, void *arock)
 
     code = pioctl_utf8(0, VIOC_GETRXKCRYPT, &blob, 1);
 
-    if (code) 
+    if (code || blob.out_size != sizeof(flag))
         Die(code, NULL);
     else {
       tp = space;
@@ -4158,7 +4194,7 @@ MemDumpCmd(struct cmd_syndesc *asp, void *arock)
     blob.out = (char *) &outValue;
 
     code = pioctl_utf8(NULL, VIOC_TRACEMEMDUMP, &blob, 1);
-    if (code) {
+    if (code || blob.out_size != sizeof(long)) {
         Die(errno, NULL);
         return code;
     }
@@ -4754,7 +4790,8 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
             inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             inData.options.fid = fid;
         } else {
@@ -4775,6 +4812,12 @@ ChOwnCmd(struct cmd_syndesc *as, void *arock)
             blob.out = cell;
 
             code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+            if (code) {
+                Die(errno, ti->data);
+                error = 1;
+                continue;
+            }
+            cell[CELL_MAXNAMELEN - 1] = '\0';
             /* 
              * We now know the cell for the target and we need to
              * convert the ownerStr to the Id for this user 
@@ -4845,7 +4888,8 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
 
         blob.out_size = sizeof(cm_fid_t);
         blob.out = (char *) &fid;
-        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1)) {
+        if (0 == pioctl_utf8(ti->data, VIOCGETFID, &blob, 1) &&
+            blob.out_size == sizeof(cm_fid_t)) {
             inData.options.field_flags |= CM_IOCTL_QOPTS_FIELD_FID;
             inData.options.fid = fid;
         } else {
@@ -4866,6 +4910,12 @@ ChGrpCmd(struct cmd_syndesc *as, void *arock)
             blob.out = cell;
 
             code = pioctl_utf8(ti->data, VIOC_FILE_CELL_NAME, &blob, 1);
+            if (code) {
+                Die(errno, ti->data);
+                error = 1;
+                continue;
+            }
+            cell[CELL_MAXNAMELEN - 1] = '\0';
             /* 
              * We now know the cell for the target and we need to
              * convert the groupStr to the Id for this user 

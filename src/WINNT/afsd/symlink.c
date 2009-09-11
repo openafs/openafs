@@ -91,7 +91,7 @@ IsFreelanceRoot(char *apath)
 
     code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
     if (code == 0)
-        return !stricmp("Freelance.Local.Root",space);
+        return !strnicmp("Freelance.Local.Root",space,blob.out_size);
     return 1;   /* assume it is because it is more restrictive that way */
 }
 
@@ -405,10 +405,11 @@ static ListLinkCmd(struct cmd_syndesc *as, void *arock)
 	code = pioctl_utf8(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
 
 	if (code == 0)
-	    printf("'%s' is a %ssymlink to '%s'\n",
+	    printf("'%s' is a %ssymlink to '%.*s'\n",
 		   ti->data,
 		   (thru_symlink ? "symbolic link, leading to a " : ""),
-		   space);
+		   blob.out_size,
+                   space);
 
 	else {
 	    error = 1;
