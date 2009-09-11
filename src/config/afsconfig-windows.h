@@ -33,6 +33,9 @@
 /* Define as the return type of signal handlers (int or void).  */
 #undef RETSIGTYPE
 
+/* The size of `long', as computed by sizeof. */
+#define SIZEOF_LONG 4
+
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 //#undef size_t unsigned int 
 
