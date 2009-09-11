@@ -1,3 +1,54 @@
+Since 1.5.62
+ * After 1.5.62 afslogon.dll would no longer crash but it 
+   also would not load "domain" specific configurations.
+   Fixed.
+
+ * An uninitialized variable was present in the symlink
+   recursion detection loop.
+
+ * Reverse addition of unique per file GUID during 
+   Create/Open responses. Inclusion of the GUID prevents 
+   Cygwin applications (and others) from accessing //afs.
+
+ * Treat "filename::$DATA" as a synonym for "filename".  
+   This addresses the recent report of roaming profiles 
+   failing to save back to the file server.
+
+ * When given a choice between an error from rx_Write() 
+   or RXAFS_EndStoreData(), use the rx_Write() error.  
+   This ensures that over quota and access denied errors 
+   are acted upon.
+
+ * If an error occurs during RXAFS_StoreData operations, 
+   apply that error to all of the buffers in the BIOD. 
+   This ensures that failures will not be retried if they 
+   will only fail again.
+
+ * Do not perform a DNS lookup for a cellname if the 
+   cellname prefix is _._AFS_IOCTL_._.  This will avoid 
+   DNS lookups when the query is for 
+   _._AFS_IOCTL_._.F7E5F580200909010061TTTTNT7TT.{10E39A49-4531-4496-A08E-842D4C440D20}.
+
+ * Fix Freelance root.afs volume object callback processing.  
+   Object synchronization and status merging bugs.
+
+ * Fix Explorer Shell "invalid parameter" bug introduced 
+   in 1.5.62.
+
+ * Log RXKAD errors to the trace log.
+
+ * Prevent simultaneous pioctl calls from multiple processes 
+   from stepping on each other's data.
+
+ * Prevent simultaneous pioctl calls from crashing the 
+   afsd_service.
+
+ * Add data validation to pioctl output processing in 
+   ktc_GetToken and ktc_ListTokens.
+
+ * Add data validation to pioctl output processing in 
+   fs.exe and symlink.exe.
+
 Since 1.5.61
  * IMPORTANT: New support for DCE RPC Services: SRVSVC and WKSSVC.
    No longer will browsing \\AFS produce truncated share names.
