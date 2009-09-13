@@ -694,7 +694,7 @@
       <title id='Initial_Server_Preferences'>3.35. Initial Server Preferences</title>
       <para>VLDB and File Server Preferences can now be provided initial values using registry keys.  This is useful for managed machines in a Windows domain which are centrally located (e.g., in a computing lab.)  See
         <link linkend='appendix_a'>Appendix A</link> for details on the "
-        <link linkend='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences'>Server Preferences</link>" keys.
+        <link linkend='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB'>Server Preferences</link>" keys.
       </para>
     </section>
     <section>
@@ -2194,46 +2194,32 @@
       <para>The service parameters primarily affect the behavior of the AFS client service (afsd_service.exe).</para>
       <section>
         <title id='Regkey_TransarcAFSDaemon_Parameters'>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='448pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: LANadapter</emphasis>
-                  </para>
-                  <para>Type: DWORD</para>
-                  <para>Default: -1</para>
-                  <para>Variable: LANadapter</para>
-                  <para>LAN adapter number to use.  This is the lana number of the LAN adapter that the SMB server should bind to.  If unspecified or set to -1, a LAN adapter with named 'AFS' or a loopback adapter will be selected.  If neither are present, then all available adapters will be bound to.  When binding to a non-loopback adapter, the NetBIOS name hostname%-AFS' will be used (where %hostname% is the NetBIOS name of the host truncated to 11 characters). Otherwise, the NetBIOS name will be 'AFS'.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <anchor id='Value_CacheSize' />
-                    <emphasis>Value: CacheSize</emphasis>
-                  </para>
-                  <para>Type: DWORD</para>
-                  <para>Default: 98304 (CM_CONFIGDEFAULT_CACHESIZE)</para>
-                  <para>Variable: cm_initParams.cacheSize</para>
-                  <para>Size of the AFS cache in 1k blocks.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: ChunkSize</emphasis>
-                  </para>
+        <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_LanAdapter'>Value: LanAdapter</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+            <para>Type: DWORD</para>
+            <para>Default: -1</para>
+            <para>Variable: LANadapter</para>
+            <para>LAN adapter number to use.  This is the lana number of the LAN adapter that the SMB server should bind to.  If unspecified or set to -1, a LAN adapter with named 'AFS' or a loopback adapter will be selected.  If neither are present, then all available adapters will be bound to.  When binding to a non-loopback adapter, the NetBIOS name hostname%-AFS' will be used (where %hostname% is the NetBIOS name of the host truncated to 11 characters). Otherwise, the NetBIOS name will be 'AFS'.</para>
+        </section>
+        <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_CacheSize'><anchor id='Value_CacheSize' />Value: CacheSize</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
+            <para>Type: DWORD</para>
+            <para>Default: 98304 (CM_CONFIGDEFAULT_CACHESIZE)</para>
+            <para>Variable: cm_initParams.cacheSize</para>
+            <para>Size of the AFS cache in 1k blocks.</para>
+        </section>
+        <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_ChunkSize'>Value: ChunkSize</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD</para>
                   <para>Default: 20 (CM_CONFIGDEFAULT_CHUNKSIZE)</para>
                   <para>Variable: cm_logChunkSize (cm_chunkSize = 1 &lt;&lt; cm_logChunkSize)</para>
                   <para>Size of chunk for reading and writing. Actual chunk size is 2^cm_logChunkSize. The default chunk size is therefore 1 MB.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
+                </section>
+                <section>
+                <title id='Regkey_TransarcAFSDaemon_Parameters_Daemons'>Value: Daemons</title>
                   <para>
                     <emphasis>Value: Daemons</emphasis>
                   </para>
@@ -2241,36 +2227,33 @@
                   <para>Default: 4 (CM_CONFIGDEFAULT_DAEMONS)</para>
                   <para>Variable: numBkgD</para>
                   <para>Number of background daemons (number of threads of cm_BkgDaemon). (see cm_BkgDaemon in cm_daemon.c)</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: ServerThreads</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_ServerThreads'>Value: ServerThreads</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD</para>
                   <para>Default: 25 (CM_CONFIGDEFAULT_SVTHREADS)</para>
                   <para>Variable: numSvThreads</para>
                   <para>Number of SMB server threads (number of threads of smb_Server). (see smb_Server in smb.c).</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_Stats'>Value: Stats</title>
                     <anchor id='Value_Stats' />
-                    <emphasis>Value: Stats</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD</para>
                   <para>Default: 10000 (CM_CONFIGDEFAULT_STATS)</para>
                   <para>Variable: cm_initParams.nStatCaches</para>
                   <para>Cache configuration.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: Volumes</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_Volumes'>Value: Volumes</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>
                        Type: DWORD
                   </para>
@@ -2282,13 +2265,12 @@ Variable: cm_initParams.nVolumes</para>
                   <para>
                     <emphasis>Cache configuration.</emphasis>
                   </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: Cells</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_Cells'>Value: Cells</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2299,26 +2281,24 @@ Variable: cm_initParams.nCells</para>
                   <para>
                     <emphasis>Cache configuration.</emphasis>
                   </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_LogoffPreserveTokens'>Value: LogoffPreserveTokens</title>
                     <anchor id='Value_LogoffPreserveTokens' />
-                    <emphasis>Value: LogoffPreserveTokens</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
 Default : 0</para>
                   <para>If enabled (set to 1), the Logoff Event handler will not attempt to delete the user's tokens  if the user's profile is stored outside of AFS.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: RootVolume</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_RootVolume'>Value: RootVolume</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -2327,14 +2307,13 @@ Default: "root.afs"
                   <para>
 Variable: cm_rootVolumeName</para>
                   <para>Root volume name.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_MountRoot'>Value: MountRoot</title>
                     <anchor id='Value_Mountroot' />
-                    <emphasis>Value: MountRoot</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -2343,14 +2322,13 @@ Default: "/afs"
                   <para>
 Variable: cm_mountRoot</para>
                   <para>Name of root mount point.  In symlinks, if a path starts with cm_mountRoot, it is assumed that the path is absolute (as opposed to relative) and is adjusted accordingly. Eg: if a path is specified as /afs/athena.mit.edu/foo/bar/baz and cm_mountRoot is "/afs", then the path is interpreted as \\afs\all\athena.mit.edu\foo\bar\baz.  If a path does not start with with cm_mountRoot, the path is assumed to be relative and suffixed to the reference directory (i.e. directory where the symlink exists)</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_CachePath'>Value: CachePath</title>
                     <anchor id='Value_CachePath' />
-                    <emphasis>Value: CachePath</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_SZ or REG_EXPAND_SZ
                   </para>
                   <para>
@@ -2359,14 +2337,13 @@ Default: "%TEMP%\AFSCache"
                   <para>
 Variable: cm_CachePath</para>
                   <para>Location of on-disk cache file.  The default is the SYSTEM account's TEMP directory.  The attributes assigned to the file are HIDDEN and SYSTEM.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_NonPersistentCaching'>Value: NonPersistentCaching</title>
                     <anchor id='Value_NonPersistentCaching' />
-                    <emphasis>Value: NonPersistentCaching</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD [0..1]
                   </para>
                   <para>
@@ -2375,13 +2352,12 @@ Default: 0
                   <para>
 Variable: buf_CacheType</para>
                   <para>When this registry value is set to a non-zero value, the CachePath value is ignored and the cache data is stored in the windows paging file.  This disables the use of persistent caching and the ability to maintain a single UUID for the AFS client service across restarts.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: ValidateCache</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_ValidateCache'>Value: ValidateCache</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD [0..2]
                   </para>
                   <para>
@@ -2397,13 +2373,12 @@ Variable: buf_CacheType</para>
                       <member>2 - Validation is performed at shutdown</member>
                     </simplelist>
                   </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: TrapOnPanic</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_TrapOnPanic'>Value: TrapOnPanic</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
@@ -2412,14 +2387,13 @@ Default: 0
                   <para>
 Variable: traceOnPanic</para>
                   <para>Issues a breakpoint in the event of a panic. (breakpoint: _asm int 3).</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_NetbiosName'>Value: NetbiosName</title>
                     <anchor id='Value_NetbiosName' />
-                    <emphasis>Value: NetbiosName</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_EXPAND_SZ
                   </para>
                   <para>
@@ -2428,13 +2402,12 @@ Default: "AFS"
                   <para>
 Variable: cm_NetbiosName</para>
                   <para>Specifies the NetBIOS name to be used when binding to a Loopback adapter.  To provide the old behavior specify a value of  "%COMPUTERNAME%-AFS".</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: IsGateway</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_IsGateway'>Value: IsGateway</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
@@ -2444,13 +2417,12 @@ Default: 0
 Variable: isGateway</para>
                   <para>Select whether or not this AFS client should act as a gateway.  If set and the NetBIOS name hostname-AFS is bound to a physical NIC, other machines in the subnet can access AFS via SMB connections to hostname-AFS.</para>
                   <para>When IsGateway is non-zero, the LAN adapter detection code will avoid binding to a loopback adapter.  This will ensure that the NetBIOS name will be of the form hostname-AFS instead of the value set by the "NetbiosName" registry value.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: ReportSessionStartups</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_ReportSessionStartups'>Value: ReportSessionStartups</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
@@ -2459,14 +2431,13 @@ Default: 0
                   <para>
 Variable: reportSessionStartups</para>
                   <para>If enabled, all SMB sessions created are recorded in the Application event log.  This also enables other events such as drive mappings or various error types to be logged.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_TraceBufferSize'>Value: TraceBufferSize</title>
                     <anchor id='Value_TraceBufferSize' />
-                    <emphasis>Value: TraceBufferSize</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2475,14 +2446,13 @@ Default: 10000 (CM_CONFIGDEFAULT_TRACEBUFSIZE)
                   <para>
 Variable: traceBufSize</para>
                   <para>Number of entries to keep in trace log.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_SysName'>Value: SysName</title>
                     <anchor id='Value_SysName' />
-                    <emphasis>Value: SysName</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -2494,14 +2464,13 @@ Default: &quot;x86_win32 i386_w2k i386_nt40&quot; (X86)
                   <para>
 Variable: cm_sysName</para>
                   <para>Provides an initial value for "fs sysname".  The string can contain one or more replacement values for @sys in order of preference separated by whitespace.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_SecurityLevel'>Value: SecurityLevel</title>
                     <anchor id='Value_SecurityLevel' />
-                    <emphasis>Value: SecurityLevel</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
@@ -2510,14 +2479,13 @@ Default: 0
                   <para>
 Variable: cryptall</para>
                   <para>Enables encryption on RX calls.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_UseDNS'>Value: UseDNS</title>
                     <anchor id='Value_UseDNS' />
-                    <emphasis>Value: UseDNS</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
@@ -2526,14 +2494,13 @@ Default: 1
                   <para>
 Variable: cm_dnsEnabled</para>
                   <para>Enables resolving volservers using AFSDB DNS queries.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_FreelanceClient'>Value: FreelanceClient</title>
                     <anchor id='Value_FreelanceClient' />
-                    <emphasis>Value: FreelanceClient</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
@@ -2542,14 +2509,13 @@ Default: 0
                   <para>
 Variable: cm_freelanceEnabled</para>
                   <para>Enables freelance client.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_HideDotFiles'>Value: HideDotFiles</title>
                     <anchor id='Value_HideDotFiles' />
-                    <emphasis>Value: HideDotFiles</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1,0}
                   </para>
                   <para>
@@ -2558,13 +2524,12 @@ Default: 1
                   <para>
 Variable: smb_hideDotFiles</para>
                   <para>Enables marking dotfiles with the hidden attribute.  Dot files are files whose name starts with a period (excluding "." and "..").</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: MaxMpxRequests</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_MaxMpxRequests'>Value: MaxMpxRequests</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2573,13 +2538,12 @@ Default: 50
                   <para>
 Variable: smb_maxMpxRequests</para>
                   <para>Maximum number of multiplexed SMB requests that can be made.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: MaxVCPerServer</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_MaxVCPerServer'>Value: MaxVCPerServer</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2588,14 +2552,13 @@ Default: 100
                   <para>
 Variable: smb_maxVCPerServer</para>
                   <para>Maximum number of SMB virtual circuits.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_Cell'>Value: Cell</title>
                     <anchor id='Value_Cell' />
-                    <emphasis>Value: Cell</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -2604,13 +2567,12 @@ Default: &lt;none&gt;
                   <para>
 Variable: rootCellName</para>
                   <para>Name of root cell (the cell from which root.afs should be mounted in \\afs\all).</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: RxEnablePeerStats</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_RxEnablePeerStats'>Value: RxEnablePeerStats</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -2620,13 +2582,12 @@ Default: 1
 Variable: rx_enable_peer_stats</para>
                   <para>When set to 1, the Rx library collects peer statistics.</para>
                   <para> </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: RxEnableProcessStats</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_RxEnableProcessStats'>Value: RxEnableProcessStats</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -2636,13 +2597,12 @@ Default: 1
 Variable: rx_extra_process_stats</para>
                   <para>When set to 1, the Rx library collects process statistics.</para>
                   <para> </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: RxExtraPackets</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_RxExtraPackets'>Value: RxExtraPackets</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2651,14 +2611,13 @@ Default: 120
                   <para>
 Variable: rx_extraPackets</para>
                   <para>When set, this number of extra Rx packets are allocated at startup.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_RxMaxMTU'>Value: RxMaxMTU</title>
                     <anchor id='Value_RxMaxMTU' />
-                    <emphasis>Value: RxMaxMTU</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2668,13 +2627,12 @@ Default: 0
 Variable: rx_mtu</para>
                   <para>If set to anything other than 0, that value is used as the maximum send and receive MTU supported by the RX interface.</para>
                   <para>In order to enable OpenAFS to operate across releases of the Cisco IPSec VPN client prior than 5.0, this value must be set to 1264 or smaller.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: RxNoJumbo</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_RxNoJumbo'>Value: RxNoJumbo</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0,1}
                   </para>
                   <para>
@@ -2683,14 +2641,13 @@ Default: 0
                   <para>
 Variable: rx_nojumbo</para>
                   <para>If enabled, does not send or indicate that we are able to send or receive RX jumbograms.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_ConnDeadTimeout'>Value: ConnDeadTimeout</title>
                     <anchor id='Value_ConnDeadTimeout' />
-                    <emphasis>Value: ConnDeadTimeout</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2699,13 +2656,12 @@ Default: 0 (seconds)
                   <para>
 Variable: ConnDeadtimeout</para>
                   <para>When the value is 0, this setting is configured to be one-half the HardDeadTimeout value.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: HardDeadTimeout</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_HardDeadTimeout'>Value: HardDeadTimeout</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
@@ -2722,14 +2678,13 @@ Variable: HardDeadtimeout</para>
                   <para>If the minimum SMB timeout is not specified the value is 45 seconds.  See
                     <ulink url='http://support.microsoft.com/support/kb/articles/Q102/0/67.asp'>http://support.microsoft.com:80/support/kb/articles/Q102/0/67.asp</ulink>
                   </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_TraceOption'>Value: TraceOption</title>
                     <anchor id='Value_TraceOption' />
-                    <emphasis>Value: TraceOption</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0-15}
                   </para>
                   <para>
@@ -2739,52 +2694,48 @@ Default: 0</para>
                   <para>Bit 1 enables logging of events captured by the AFS Client Service.</para>
                   <para>Bit 2 enables real-time viewing of "fs trace" logging with DbgView or similar tools.</para>
                   <para>Bit 3 enables "fs trace" logging on startup.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: AllSubmount</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_AllSubmount'>Value: AllSubmount</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
 Default: 1</para>
                   <para>Variable: allSubmount (smb.c)</para>
                   <para>By setting this value to 0, the "\\NetbiosName\all" mount point will not be created.  This allows the read-write versions of root.afs to be hidden.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_NoFindLanaByName'>Value: NoFindLanaByName</title>
                     <anchor id='Value_NoFindLanaByName' />
-                    <emphasis>Value: NoFindLanaByName</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
 Default: 0</para>
                   <para>Disables the attempt to identity the network adapter to use by looking for an adapter with a display name of "AFS".</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: MaxCPUs</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_MaxCPUs'>Value: MaxCPUs</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {1..32} or {1..64} depending on the architecture
                   </para>
                   <para>
 Default: &lt;no default&gt;</para>
                   <para>If this value is specified, afsd_service.exe will restrict itself to executing on the specified number of CPUs if there are a greater number installed in the machine.  </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_SmbAuthType'>Value: SmbAuthType</title>
                     <anchor id='Value_smbAuthType' />
-                    <emphasis>Value: smbAuthType</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0..2}
                   </para>
                   <para>
@@ -2804,135 +2755,124 @@ Default: 2</para>
                   </para>
                   <para>
 The default is Extended authentication</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_MaxLogSize'>Value: MaxLogSize</title>
                     <anchor id='Value_MaxLogSize' />
-                    <emphasis>Value: MaxLogSize</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0 .. MAXDWORD}
                   </para>
                   <para>
 Default: 100K</para>
                   <para>This entry determines the maximum size of the %WINDIR%\TEMP\afsd_init.log file.  If the file is larger than this value when afsd_service.exe starts the file will be reset to 0 bytes.  If this value is 0, it means the file should be allowed to grow indefinitely.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: FlushOnHibernate</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_FlushOnHibernate'>Value: FlushOnHibernate</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0,1}
                   </para>
                   <para>
 Default: 1</para>
                   <para>If set, flushes all volumes before the machine goes on hibernate or stand-by.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: daemonCheckDownInterval</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DaemonCheckDownInterval'>Value: DaemonCheckDownInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD (seconds)
                   </para>
                   <para>
 Default: 180</para>
                   <para>This value controls how frequently the AFS cache manager probes servers that are marked as &quot;down&quot;.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: daemonCheckUpInterval</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DaemonCheckUpInterval'>Value: DaemonCheckUpInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD (seconds)
                   </para>
                   <para>
 Default: 600</para>
                   <para>This value controls how frequently the AFS cache manager probes servers that are marked as &quot;up&quot;.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: daemonCheckVolInterval</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DaemonCheckVolInterval'>Value: DaemonCheckVolInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD (seconds)
                   </para>
                   <para>
 Default: 3600</para>
                   <para>This value controls how frequently the AFS cache manager forces a reset on the existing volume database information.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: daemonCheckCBInterval</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DaemonCheckCBInterval'>Value: DaemonCheckCBInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD (seconds)
                   </para>
                   <para>
 Default: 60</para>
                   <para>This value controls how frequently the AFS cache manager checks for callback invalidation.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: daemonCheckLockInterval</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DaemonCheckLockInterval'>Value: DaemonCheckLockInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD (seconds)
                   </para>
                   <para>
 Default: 60</para>
                   <para>This value controls how frequently the AFS cache manager checks for invalid file locks.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: daemonCheckTokenInterval</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DaemonCheckTokenInterval'>Value: DaemonCheckTokenInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD (seconds)
                   </para>
                   <para>
 Default: 180</para>
                   <para>This value controls how frequently the AFS cache manager checks for expired tokens.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: daemonCheckOfflineVolInterval</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DaemonCheckOfflineVolInterval'>Value: DaemonCheckOfflineVolInterval</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD (seconds)
                   </para>
                   <para>
 Default: 600</para>
                   <para>This value controls how frequently the AFS cache manager checks offline volumes to see if they have come back online.  At the same time volumes which were determined to be busy have their state reset to online.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: CallBackPort</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_CallBackPort'>Value: CallBackPort</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
 Default: 7001</para>
                   <para>This value specifies which port number should be used for receiving callbacks from the file server.  The standard AFS Callback port is 7001.  Alternative values can be useful if the client is behind a NAT and a permanent port mapping for the client is being configured.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_EnableServerLocks'>Value: EnableServerLocks</title>
                     <anchor id='Value_EnableServerLocks' />
-                    <emphasis>Value: EnableServerLocks</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1, 2}
                   </para>
                   <para>
@@ -2941,13 +2881,12 @@ Default: 1</para>
                   <para>0: never obtain server locks</para>
                   <para>1: obtain server locks unless the file server says not to</para>
                   <para>2: always obtain server locks</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: DeleteReadOnly</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_DeleteReadOnly'>Value: DeleteReadOnly</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -2955,13 +2894,12 @@ Default: 0</para>
                   <para>Determines whether or not the AFS Cache Manager will permit files marked with the &quot;Read Only&quot; DOS attribute to be deleted or not.  For compatibility with Explorer, the default is ‘no’.</para>
                   <para>0: do not permit &quot;Read Only&quot; files to be deleted.</para>
                   <para>1: delete files that have the &quot;Read Only&quot; attribute set without complaint.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: BPlusTrees</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_BPlusTrees'>Value: BPlusTrees</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -2969,25 +2907,23 @@ Default: 1</para>
                   <para>Determines whether or not the AFS Cache Manager uses locally constructed B+ Trees to speed up the performance of directory searches.  </para>
                   <para>0: do not use B+ Trees for directory lookups</para>
                   <para>1: use B+ Trees for directory lookups</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: PrefetchExecutableExtensions</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_PrefetchExecutableExtensions'>Value: PrefetchExecutableExtensions</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: MULTI_SZ
                   </para>
                   <para>
 Default: none specified</para>
                   <para>The AFS Cache Manager will pre-fetch the entire contents of any file whose name matches ends with one of the specified extensions.  This option is intended for use primarily with executables and dynamic link libraries that should be fully cached prior to a machine losing its connection with the file server.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: OfflineReadOnlyIsValid</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_OfflineReadOnlyIsValid'>Value: OfflineReadOnlyIsValid</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -2995,13 +2931,12 @@ Default: 0</para>
                   <para>Determines whether or not cached data from .readonly volumes is considered valid even if a callback cannot be registered with a file server.  This option is meant to be used by organizations for whom .readonly volume content very rarely changes (if ever.)</para>
                   <para>0: do not treat offline .readonly content as valid</para>
                   <para>1: treat offline .readonly content as valid</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: GiveUpAllCallBacks</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_GiveUpAllCallBacks'>Value: GiveUpAllCallBacks</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -3009,13 +2944,12 @@ Default: 0</para>
                   <para>Determines whether or not the AFS Cache Manager will give up all callbacks prior to the service being suspended or shutdown.  Doing so will have significant performance benefits for the file servers.  However, file servers older than 1.4.6 can become unstable if the GiveUpAllCallBacks RPC is executed.</para>
                   <para>0: do not perform GiveUpAllCallBacks RPCs</para>
                   <para>1: perform GiveUpAllCallBacks RPCs </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: FollowBackupPath</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_FollowBackupPath'>Value: FollowBackupPath</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -3023,98 +2957,74 @@ Default: 0</para>
                   <para>Determines whether or not the AFS Cache Manager will give preference to .backup volumes when following mount points that originate in a .backup volume.</para>
                   <para>0: do not prefer .backup volumes when the mount point originates in a .backup volume.</para>
                   <para>1: prefer .backup volumes when the mount point originates in a .backup volume.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: RxUdpBufSize</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_RxUdpBufSize'>Value: RxUdpBufSize</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD {bytes}
                   </para>
                   <para>
 Default: 262144</para>
                   <para>Specifies the UDP socket receive and send buffer sizes..</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='Regkey_TransarcAFSDaemon_Parameters_GlobalAutoMapper'>Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: &lt;Drive Letter:&gt; for example "G:"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_TransarcAFSDaemon_Parameters_GlobalAutoMapper_DriveLetter'>Value: &lt;DriveLetter&gt;</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]</para>
                   <para>Type: REG_SZ</para>
                   <para>Specifies the submount name to be mapped by afsd_service.exe at startup to the provided drive letter.</para>
                   <para>
                     <emphasis>This option is deprecated.</emphasis>
                   </para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDBDir'>Value: CellServDBDir</title>
                     <anchor id='Value_CellServDBDir' />
-                    <emphasis>Value: CellServDBDir</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 Default: &lt;not defined&gt;</para>
                   <para>Specifies the directory containing the CellServDB file.  When this value is not specified, the ProgramData directory is searched and if the CellServDB file is not found, the AFS Client install directory is used.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_VerifyServiceSignature'>Value: VerifyServiceSignature</title>
                     <anchor id='Value_VerifyServiceSignature' />
-                    <emphasis>Value: VerifyServiceSignature</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: 0x1</para>
                   <para>This value can be used to disable the runtime verification of the digital signatures applied to afsd_service.exe and the OpenAFS DLLs it loads.  This test is performed to verify that   the DLLs which are loaded by afsd_service.exe are from the same distribution as afsd_service.exe.  This is to prevent random errors caused when DLLs from one distribution of AFS are loaded by another one.  This is not a security test.  The reason for disabling this test is to free up additional memory which can be used for a large cache size.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_IoctlDebug'>Value: IoctlDebug</title>
                     <anchor id='Value_IoctlDebug' />
-                    <emphasis>Value: IoctlDebug</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: 0x0</para>
                   <para>This value can be used to debug the cause of pioctl() failures.  Set a non-zero value and the pioctl() library will output status information to stdout.  Executing command line tools such as tokens.exe, fs.exe, etc can then be used to determine why the pioctl() call is failing. </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_MiniDumpType'>Value: MiniDumpType</title>
                     <anchor id='Value_MiniDumpType' />
-                    <emphasis>Value: MiniDumpType</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
@@ -3122,9 +3032,6 @@ Default: 0x0 (MiniDumpNormal)</para>
                   <para>This value is used to specify the type of minidump generated by afsd_service.exe either when the process crashes or when a user initiated is dump file is generated with the "fs.exe minidump" command.</para>
                   <para>Valid values are dependent on the version of DbgHelp.dll installed on the machine.  The best version to use is not the version that comes with the operating system but the version that is included in the most recent release of "
                     <ulink url='http://www.microsoft.com/whdc/devtools/debugging/default.mspx'>Microsoft Debugging Tools for Windows</ulink>".  See the Microsoft Developer Library for further information.
-
-
-
                   </para>
                   <simplelist type='Vert'>
                     <member>
@@ -3173,74 +3080,59 @@ MiniDumpWithThreadInfo = 0x00001000
 MiniDumpWithCodeSegs = 0x00002000
       </member>
                   </simplelist>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_EnableSMBAsyncStore'>Value: EnableSMBAsyncStore</title>
                     <anchor id='Value_EnableSMBAsyncStore' />
-                    <emphasis>Value: EnableSMBAsyncStore</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: 0x1</para>
                   <para>This value can be used to disable the use of SMB Asynchronous Store operations. </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_SMBAsyncStoreSize'>Value: SMBAsyncStoreSize</title>
                     <anchor id='Value_SMBAsyncStoreSize' />
-                    <emphasis>Value: SMBAsyncStoreSize</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: 32</para>
                   <para>This value determines the size of SMB Asynchronous Store operations. This value can be used to increase the write performance on higher speed networks by increasing the value.  The value must be a multiple of the cache buffer block size and cannot be larger than the cache manager chunk size.  The specified value will be adjusted to enforce its compliance with these restrictions.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_StoreAnsiFilenames'>Value: StoreAnsiFilenames</title>
                     <anchor id='Value_StoreAnsiFilenames' />
-                    <emphasis>Value: StoreAnsiFilenames</emphasis>
-                  </para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: 0x0</para>
                   <para>This value can be used to force the AFS Client Service to store filenames using the Windows system's ANSI character set instead of the OEM Code Page character set which has traditionally been used by SMB file systems.  </para>
                   <para>Note: The use of ANSI characters will render access to files with 8-bit OEM file names inaccessible from Windows.  This option is of use primarily when you wish to allow file names produced on Windows to be accessible from Latin-1 UNIX systems and vice versa.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                  <para>This value is ignored now that all file names are processed as Unicode and stored on the file server as UTF-8.</para>
+                </section>
+
       </section>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CSCPolicy'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "smb/cifs share name"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CSCPolicy_'>Value: &lt;smb share name&gt;</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
                   <para>This key is used to map SMB/CIFS shares to Client Side Caching (off-line access) policies. For each share one of the following policies may be used: "manual", "programs", "documents", "disable".  </para>
                   <para>These values used to be stored in afsdsbmt.ini</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
 
       <section>
@@ -3258,37 +3150,29 @@ Default: &lt;none&gt;</para>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;cellname&gt;]</title>
         <para>The actual name of the <emphasis>&lt;cellname&gt;</emphasis> key is the full name of the cell whose configuration is being specified.  The <emphasis>&lt;cellname&gt;</emphasis> key contains both values and subkeys.  Each subkey represents a single host name or IP address.  When a host is to be known by more than one name or IP address, a separate subkey should be created for each.
         Unlike the &lt;cellname&gt; key name, the &lt;server&gt; key names do not have to be actual host names.</para>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "Description"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_Description'>Value: Description</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;Cell Name&gt;]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>Default: &lt;none&gt;</para>
                   <para>This value is used to store a description of the Cell appropriate for display in end user facing tools.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "ForceDNS"</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_ForceDNS'>Value: ForceDNS</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;Cell Name&gt;]</para>
                   <para>Type: REG_DWORD</para>
                   <para>Range: 0 or 1</para>
                   <para>Default: 0 if &lt;server&gt; subkeys exist; 1 otherwise</para>
                   <para>When set to 1 all server configuration provided in the registry or the <emphasis>CellServDB file</emphasis> is ignored and DNS AFSDB lookups are used instead.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "LinkedCell"</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_LinkedCell'>Value: LinkedCell</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;Cell Name&gt;]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>Default: &lt;none&gt;</para>
@@ -3297,11 +3181,8 @@ Default: &lt;none&gt;</para>
                   This functionality can be used for example to develop a test cell that is equivalent to a production cell with the exception that it substitutes test versions of volumes
                   for the production versions.  Another use is to assist in the transition from one cell name to another.</para>
                   <para>See also: <link linkend="Linked_Cells">Linked Cells</link>.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
+
       </section>
 
       <section>
@@ -3309,75 +3190,54 @@ Default: &lt;none&gt;</para>
         <para>The actual name of the <emphasis>&lt;server&gt;</emphasis> key may be a fully qualified domain name of the server whose configuration is being specified.
         If a domain name is specified as the key name, all values become optional.
         </para>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "HostName"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_Server_HostName'>Value: HostName</title>
                   <para>Type: REG_SZ
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;Cell Name&gt;\&lt;Server&gt;]</para>
                   </para>
                   <para>Default: &lt;none&gt;</para>
                   <para>This value is used to specify a fully qualified domain name appropriate that matches either a DNS A or DNS CNAME record.  If provided, this value supercedes
                   the name of the &lt;server&gt; key.  It is recommended that the value of this field be terminated with a period in order to avoid the use of domain substitution
                   during the gethostbyname() evaluation.
                   </para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "IPv4Address"</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_Server_IPv4Address'>Value: IPv4Address</title>
+             <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;Cell Name&gt;\&lt;Server&gt;]</para>
                   <para>Type: REG_SZ</para>
                   <para>Default: &lt;none&gt;</para>
                   <para>If the DNS host name lookup fails this value will be used as the IPv4 address for the server.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "Rank"</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_Server_Rank'>Value: Rank</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;Cell Name&gt;\&lt;Server&gt;]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>Range: 0..65535</para>
                   <para>Default: 0</para>
                   <para>This value specifies the default server preference.  A value of 0 indicates that no preference has been specified.  When non-zero values
                   are specified lower values indicate a stronger preference than higher values.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "Comment"</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_CellServDB_Cell_Server_Comment'>Value: Comment</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\CellServDB\&lt;Cell Name&gt;\&lt;Server&gt;]</para>
                   <para>Type: REG_SZ</para>
                   <para>Default: &lt;none&gt;</para>
                   <para>A text string that can be displayed to end users to describe the server.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
-
-
 
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "numeric value"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_NumericValue'>Value: &lt;numeric value&gt;</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -3386,23 +3246,13 @@ Default: &lt;none&gt;</para>
                   <para>"athena.mit.edu#athena.mit.edu:root.cell."</para>
                   <para>".athena.mit.edu%athena.mit.edu:root.cell."</para>
                   <para>These values used to be stored in afs_freelance.ini</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "numeric value"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance_Symlinks_NumericValue'>Value: &lt;numeric value&gt;</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -3412,11 +3262,7 @@ Default: &lt;none&gt;</para>
                   <para>"athena:athena.mit.edu."</para>
                   <para>"home:athena.mit.edu\user\j\a\jaltman."</para>
                   <para>"filename:path\file."</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Realms'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Realms]</title>
@@ -3425,77 +3271,48 @@ Default: &lt;none&gt;</para>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Realms_RealmName'>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Realms\&quot;Realm Name&quot;]</title>
         <para>In addition to the optional values, this key contains one subkey for each cell that is to be added to the AFS Provider configuration.  </para>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: </emphasis>
-                    <emphasis role='bold'>AFSEnabled</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Realms_RealmName_AFSEnabled'>Value: AFSEnabled</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Realms\&lt;Realm Name&gt;]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: 0x01</para>
                   <para>This key is used to specify whether the new identity should be configured to obtain AFS credentials.  In general, it is only specified when disabling the acquisition of AFS credentials is desired.  The default is to obtain AFS credentials.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Realms_RealmName_CellName'>Regkey:
 [HKLM\SOFTWARE\OpenAFS\Client\Realms\&quot;Realm Name&quot;\&quot;Cell Name&quot;]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='448pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value:</emphasis>
-                    <emphasis role='bold'> MethodName</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Realms_RealmName_CellName_MethodName'>Value: MethodName</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Realms\&lt;Realm Name&gt;\&lt;Cell Name&gt;]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
                   <para>This key is used to specify the token acquisition method to be used.  When unspecified, the AFS provider will automatically try Kerberos v5 and then Kerberos v5 (if available).  As of this writing valid method names include &quot;Auto&quot;, &quot;Kerberos5&quot;, &quot;Kerberos524&quot;, &quot;Kerberos4&quot;.</para>
                   <para>Note: Kerberos524 and Kerberos4 cannot be used with 64-bit Kerberos for Windows.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value:</emphasis>
-                    <emphasis role='bold'> Realm</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Realms_RealmName_CellName_Realm'>Value: Realm</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Realms\&lt;Realm Name&gt;\&lt;Cell Name&gt;]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
                   <para>This key is used to specify the realm to be used when acquiring AFS tokens.  If not specified, the realm will be determined by performing a domain to realm mapping on the domain of a random volume location database server for the cell.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
+
       </section>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Submounts'>Regkey:
 [HKLM\SOFTWARE\OpenAFS\Client\Submounts]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "submount name"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Submounts_SubmountName'>Value: &lt;Submount Name&gt;</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Submounts]</para>
                   <para>Type: REG_EXPAND_SZ
                   </para>
                   <para>
@@ -3503,57 +3320,34 @@ Default: &lt;none&gt;</para>
                   <para>This key is used to store mappings of UNIX style AFS paths to submount names which can be referenced as UNC paths.  For example the submount string &quot;/athena.mit.edu/user/j/a/jaltman" can be associated with the submount name "jaltman.home".  This can then be referenced as the UNC path \\AFS\jaltman.home.</para>
                   <para>These values used to be stored in afsdsbmt.ini</para>
                   <para>NOTE: Submounts should no longer be used with OpenAFS. Use the Windows Explorer to create drive mappings to AFS UNC paths instead of using the AFS Submount mechanism.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
+
       </section>
       <section>
-        <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences'>Regkey:
+        <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB'>Regkey:
 [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "hostname or ip address"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB_HostName'>Value: &lt;hostname or ip address&gt;</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\ServerPreferences\VLDB]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
                   <para>This key is used to specify a default set of VLDB server preferences. For each entry the value name will be either the IP address of a server or a fully qualified domain name.  The value will be the ranking.  The ranking will be adjusted by a random value between 0 and 256 prior to the preference being set.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_File'>Regkey:
 [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\File]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "hostname or ip address"</emphasis>
-                  </para>
+                <section>
+            <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_File_HostName'>Value: &lt;hostname or ip address&gt;</title>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\ServerPreferences\File]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
                   <para>This key is used to specify a default set of File server preferences. For each entry the value name will be either the IP address of a server or a fully qualified domain name.  The value will be the ranking.  The ranking will be adjusted by a random value between 0 and 256 prior to the preference being set.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
     </section>
     <section>
@@ -3561,120 +3355,95 @@ Default: &lt;none&gt;</para>
       <para>Affects the network provider (afslogon.dll).</para>
       <section>
         <title id='NP_Regkey_TransarcAFSDaemon_Parameters'>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: FailLoginsSilently</emphasis>
-                  </para>
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_Parameters_FailLoginsSilently'>Value: FailLoginsSilently</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
 Default: 0</para>
                   <para>Do not display message boxes if the login fails.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider'>Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: NoWarnings</emphasis>
-                  </para>
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider_NoWarnings'>Value: NoWarnings</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
 Default: 0</para>
                   <para>Disables visible warnings during logon.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: AuthentProviderPath</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider_AuthentProviderPath'>Value: AuthentProviderPath</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
                   <para>Specifies the install location of the authentication provider dll.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: Class</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider_Class'>Value: Class</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
                   <para>Type: DWORD
                   </para>
                   <para>
 NSIS: 0x02</para>
                   <para>Specifies the class of network provider</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: DependOnGroup</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider_DependOnGroup'>Value: DependOnGroup</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
                   <para>Type: REG_MULTI_SZ
                   </para>
                   <para>
 NSIS: PNP_TDI</para>
                   <para>Specifies the service groups upon which the AFS Client Service depends.  Windows should not attempt to start the AFS Client Service until all of the services within these groups have successfully started.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: DependOnService</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider_DependOnService'>Value: DependOnService</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
                   <para>Type: REG_MULTI_SZ
                   </para>
                   <para>
 NSIS: Tcpip NETBIOS RpcSs</para>
                   <para>Specifies a list of services upon which the AFS Client Service depends.  Windows should not attempt to start the AFS Client Service until all of the specified services have successfully started.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: Name</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider_Name'>Value: Name</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 NSIS: "OpenAFSDaemon"</para>
                   <para>Specifies the display name of the AFS Client Service</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: ProviderPath</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='NP_Regkey_TransarcAFSDaemon_NetworkProvider_ProviderPath'>Value: ProviderPath</title>
+            <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
                   <para>Specifies the DLL to use for the network provider</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
+
       </section>
     </section>
     <section>
@@ -3714,16 +3483,12 @@ NSIS: %WINDIR%\SYSTEM32\afslogon.dll</para>
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\"domain name"]
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</title>
-          <informaltable frame='all'>
-            <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-              <colspec colwidth='447pt' colname='c1' />
-              <tbody>
-                <row>
-                  <entry>
-                    <para>
+                  <section>
+            <title id='Domain_Specific_Regkeys_LogonOptions'>Value: LogonOptions</title>
                       <anchor id='Value_LogonOptions' />
-                      <emphasis>Value: LogonOptions</emphasis>
-                    </para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
                     <para>Type: DWORD
                   </para>
                     <para>
@@ -3746,13 +3511,14 @@ Default: 0x01</para>
                     </para>
                     <para>High Security Mode generates random SMB names for the creation of Drive Mappings.  This mode should not be used without Integrated Logon.</para>
                     <para>As of 1.3.65 the SMB server supports SMB authentication.  The High Security Mode should not be used when using SMB authentication (SMBAuthType setting is non zero).</para>
-                  </entry>
-                </row>
-                <row>
-                  <entry>
-                    <para>
-                      <emphasis>Value: FailLoginsSilentl</emphasis>
-                    </para>
+                  </section>
+
+
+                  <section>
+            <title id='Domain_Specific_Regkeys_FailLoginsSilently'>Value: FailLoginsSilently</title>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
                     <para>Type: DWORD (1|0)
                   </para>
                     <para>
@@ -3761,13 +3527,14 @@ Default: 0
                     <para>
 NSIS/WiX: (not set)</para>
                     <para>If true, does not display any visible warnings in the event of an error during the integrated login process.</para>
-                  </entry>
-                </row>
-                <row>
-                  <entry>
-                    <para>
-                      <emphasis>Value: LogonScript</emphasis>
-                    </para>
+                  </section>
+
+
+                  <section>
+            <title id='Domain_Specific_Regkeys_LogonScript'>Value: LogonScript</title>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
                     <para>Type: REG_SZ or REG_EXPAND_SZ
                   </para>
                     <para>
@@ -3776,13 +3543,14 @@ Default: (null)
                     <para>
 NSIS/WiX: (only value under NP key) &lt;install path&gt;\afscreds.exe -:%s -x -a -m -n -q</para>
                     <para>A logon script that will be scheduled to be run after the profile load is complete.  If using the REG_EXPAND_SZ type, you can use any system environment variable as "%varname%" which would be expanded at the time the network provider is run.  Optionally using a "%s" in the value would result in it being expanded into the AFS SMB username for the session.</para>
-                  </entry>
-                </row>
-                <row>
-                  <entry>
-                    <para>
-                      <emphasis>Value: LoginRetryInterval</emphasis>
-                    </para>
+                  </section>
+
+
+                  <section>
+            <title id='Domain_Specific_Regkeys_LoginRetryInterval'>Value: LoginRetryInterval</title>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
                     <para>Type: DWORD
                   </para>
                     <para>
@@ -3791,13 +3559,14 @@ Default: 30
                     <para>
 NSIS/WiX: (not set)</para>
                     <para>If the OpenAFS client service has not started yet, the network provider will wait for a maximum of "LoginRetryInterval" seconds while retrying every "LoginSleepInterval" seconds to check if the service is up.</para>
-                  </entry>
-                </row>
-                <row>
-                  <entry>
-                    <para>
-                      <emphasis>Value: LoginSleepInterval</emphasis>
-                    </para>
+                  </section>
+
+
+                  <section>
+            <title id='Domain_Specific_Regkeys_LoginSleepInterval'>Value: LoginSleepInterval</title>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
                     <para>Type: DWORD
                   </para>
                     <para>
@@ -3806,37 +3575,36 @@ Default: 5
                     <para>
 NSIS/WiX: (not set)</para>
                     <para>See description of LoginRetryInterval.</para>
-                  </entry>
-                </row>
-                <row>
-                  <entry>
-                    <para>
+                  </section>
+
+
+                  <section>
+            <title id='Domain_Specific_Regkeys_Realm'>Value: Realm</title>
                       <anchor id='Value_Realm' />
-                      <emphasis>Value: Realm</emphasis>
-                    </para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
                     <para>Type: REG_SZ
                   </para>
                     <para>
 NSIS: &lt;not set&gt;</para>
                     <para>When Kerberos v5 is being used, Realm specifies the Kerberos v5 realm that should be appended to the first component of the Domain logon username to construct the Kerberos v5 principal for which AFS tokens should be obtained.</para>
-                  </entry>
-                </row>
-                <row>
-                  <entry>
-                    <para>
+                  </section>
+
+
+                  <section>
+            <title id='Domain_Specific_Regkeys_TheseCells'>Value: TheseCells</title>
                       <anchor id='Value_TheseCells' />
-                      <emphasis>Value: TheseCells</emphasis>
-                    </para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\&lt;domain name&gt;]</para>
+                    <para>[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider\Domain\LOCALHOST]</para>
                     <para>Type: REG_MULTI_SZ
                   </para>
                     <para>
 NSIS: &lt;not set&gt;</para>
                     <para>When Kerberos v5 is being used, TheseCells provides a list of additional cells for which tokens should be obtained with the default Kerberos v5 principal.</para>
-                  </entry>
-                </row>
-              </tbody>
-            </tgroup>
-          </informaltable>
+                  </section>
+
         </section>
       </section>
       <section>
@@ -3867,15 +3635,9 @@ NSIS: &lt;not set&gt;</para>
       <section>
         <title id='AFSCreds_Regkey_TransarcAFSDaemon_Parameters'>Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: Gateway</emphasis>
-                  </para>
+                <section>
+            <title id='AFSCreds_Regkey_TransarcAFSDaemon_Parameters_Gateway'>Value: Gateway</title>
+                <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -3884,13 +3646,12 @@ Default: ""
                   <para>
 Function: GetGatewayName()</para>
                   <para>If the AFS client is utilizing a gateway to obtain AFS access, the name of the gateway is specified by this value.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: Cell</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='AFSCreds_Regkey_TransarcAFSDaemon_Parameters_Cell'>Value: Cell</title>
+                <para>Regkey: [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -3899,25 +3660,16 @@ Default: &lt;none&gt;
                   <para>
 Variable: IsServiceConfigured()</para>
                   <para>The value Cell is used to determine if the AFS Client Service has been properly configured or not.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='AFSCreds_Regkey_Software_OpenAFS_Client'>Regkey:
 [HKLM\SOFTWARE\OpenAFS\Client]
 [HKCU\SOFTWARE\OpenAFS\Client]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: ShowTrayIcon</emphasis>
-                  </para>
+                <section>
+            <title id='AFSCreds_Regkey_Software_OpenAFS_Client_ShowTrayIcon'>Value: ShowTrayIcon</title>
+                <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -3928,13 +3680,13 @@ Function: InitApp(), Main_OnCheckTerminate()</para>
                   <para>This value is used to determine whether or not a shortcut should be maintained in the user's Start Menu-&gt;Programs-&gt;Startup folder. </para>
                   <para>This value used to be stored at [HKLM\Software\TransarcCorporation\AFS Client\AfsCreds].</para>
                   <para>The current user value is checked first; if it does not exist the local machine value is checked.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para id='EnableKFW'>
-                    <emphasis>Value: EnableKFW</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='AFSCreds_Regkey_Software_OpenAFS_Client_EnableKFW'>Value: EnableKFW</title>
+                <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -3943,13 +3695,13 @@ Default: 1
                   <para>
 Function: KFW_is_available()</para>
                   <para>When MIT Kerberos for Windows can be loaded, Kerberos v5 will be used to obtain AFS credentials.  By setting this value to 0, the internal Kerberos v4 implementation will be used instead.  The current user value is checked first; if it does not exist the local machine value is checked.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: AcceptDottedPrincipalNames</emphasis>
-                  </para>
+                </section>
+
+
+                <section>
+            <title id='AFSCreds_Regkey_Software_OpenAFS_Client_AcceptDottedPrincipalNames'>Value: AcceptDottedPrincipalNames</title>
+                <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -3958,14 +3710,14 @@ Default: 1
                   <para>
 Function: KFW_accept_dotted_usernames()</para>
                   <para>Kerberos v5 principal names are traditionally mapped to Kerberos v4 names by the AFS servers before they can be looked up in the Protection database.  The mapping algorithm used permits collisions to occur.  Both of the Kerberos v5 names, "user.admin@REALM" and "user/admin@REALM" are interpreted as the same user identity within the cell.  To enable both names to be sent to the server by AFSCreds or Integrated Logon, set this value to 1.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='AFSCreds_Regkey_Software_OpenAFS_Client_Use524'>Value: Use524</title>
                     <anchor id='Value_Use524' />
-                    <emphasis>Value: Use524</emphasis>
-                  </para>
+                <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -3974,14 +3726,14 @@ Default: 0
                   <para>
 Function: KFW_use_krb524()</para>
                   <para>When MIT Kerberos for Windows can be loaded, Kerberos v5 will be used to obtain AFS credentials.  By setting this value to 1, the Kerberos v5 tickets will be converted to Kerberos v4 tokens via a call to the krb524 daemon.  The current user value is checked first; if it does not exist the local machine value is checked.</para>
-                </entry>
-              </row>
-              <row>
-                <entry>
-                  <para>
+                </section>
+
+
+                <section>
+            <title id='AFSCreds_Regkey_Software_OpenAFS_Client_AfscredsShortcutParams'>Value: AfscredsShortcutParams</title>
                     <anchor id='Value_AfscredsShortcutParams' />
-                    <emphasis>Value: AfscredsShortcutParams</emphasis>
-                  </para>
+                <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client]</para>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -4012,24 +3764,14 @@ Function: Shortcut_FixStartup</para>
 </member>
                     </simplelist>
                   </para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client'>Regkey:
 [HKCU\SOFTWARE\OpenAFS\Client]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: Authentication Cell</emphasis>
-                  </para>
+                <section>
+            <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client_AuthenticationCell'>Value: Authentication Cell</title>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
@@ -4038,24 +3780,15 @@ Default: &lt;none&gt;
                   <para>
 Function: Afscreds.exe GetDefaultCell()</para>
                   <para>This value allows the user to configure a different cell name to be used as the default cell when acquiring tokens in afscreds.exe.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
+
       </section>
       <section>
         <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client_Reminders'>Regkey:
 [HKCU\SOFTWARE\OpenAFS\Client\Reminders]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "afs cell name"</emphasis>
-                  </para>
+                <section>
+            <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client_Reminders_Cell'>Value: &lt;afs cell name&gt;</title>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client\Reminders]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
@@ -4065,74 +3798,44 @@ Default: &lt;none&gt;
 Function: LoadRemind(), SaveRemind()</para>
                   <para>These values are used to save and restore the state of the reminder flag for each cell for which the user has obtained tokens.</para>
                   <para>This value used to be stored at [HKLM\Software\TransarcCorporation\AFS Client\AfsCreds].</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
       <section>
         <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client_ActiveMaps'>Regkey:
 [HKCU\SOFTWARE\OpenAFS\Client\Active Maps]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "upper case drive letter"</emphasis>
-                  </para>
+                <section>
+            <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client_ActiveMaps_DriveLetter'>Value: &lt;upper case drive letter&gt;</title>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client\ActiveMaps]</para>
                   <para>Type: DWORD {0, 1}
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
                   <para>These values are used to store the persistence state of the AFS drive mappings as listed in the [...\Client\Mappings] key.</para>
                   <para>These values used to be stored in the afsdsbmt.ini file</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
+
       </section>
       <section>
         <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client_Mappings'>Regkey:
 [HKCU\SOFTWARE\OpenAFS\Client\Mappings]</title>
-        <informaltable frame='all'>
-          <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-            <colspec colwidth='447pt' colname='c1' />
-            <tbody>
-              <row>
-                <entry>
-                  <para>
-                    <emphasis>Value: "upper case drive letter"</emphasis>
-                  </para>
+                <section>
+            <title id='AFSCreds_Regkey_HKCU_Software_OpenAFS_Client_Mappings_DriveLetter'>Value: &lt;upper case drive letter&gt;</title>
+                <para>Regkey: [HKCU\SOFTWARE\OpenAFS\Client\Mappings]</para>
                   <para>Type: REG_SZ
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
                   <para>These values are used to store the AFS path in UNIX notation to which the drive letter is to be mapped.</para>
                   <para>These values used to be stored in the afsdsbmt.ini file.</para>
-                </entry>
-              </row>
-            </tbody>
-          </tgroup>
-        </informaltable>
+                </section>
       </section>
     </section>
 
 
     <section>
       <title id='OpenAFS_Service_Environment_Variables'>A.4 OpenAFS Client Service Environment Variables</title>
-      <informaltable frame='all'>
-        <tgroup rowsep='1' align='left' colsep='1' cols='1'>
-          <colspec colwidth='447pt' colname='c1' />
-          <tbody>
-            <row>
-              <entry>
-                <para>
-                  <emphasis>Variable: AFS_RPC_ENCRYPT</emphasis>
-                </para>
+              <section>
+            <title id='OpenAFS_Service_Environment_Variables_AFS_RPC_ENCRYPT'>Value: AFS_RPC_ENCRYPT</title>
                 <para>Values:
                   <simplelist>
                     <member> "OFF" disables the use of RPC encryption </member>
@@ -4142,13 +3845,11 @@ Default: &lt;none&gt;</para>
                 <para>
 Default: RPC encryption is on
                 </para>
-              </entry>
-            </row>
-            <row>
-              <entry>
-                <para>
-                  <emphasis>Variable: AFS_RPC_PROTSEQ</emphasis>
-                </para>
+              </section>
+
+
+              <section>
+            <title id='OpenAFS_Service_Environment_Variables_AFS_RPC_PROTSEQ'>Value: AFS_RPC_PROTSEQ</title>
                 <para>Values:
                   <simplelist>
                     <member>
@@ -4165,11 +3866,7 @@ Default: RPC encryption is on
                 <para>
 Default: local RPC
                 </para>
-              </entry>
-            </row>
-          </tbody>
-        </tgroup>
-      </informaltable>
+              </section>
       <para> </para>
     </section>
   </chapter>
