@@ -529,7 +529,8 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	}
 	XSTATS_END_TIME;
     }
-    code = (*ops->destroy)(&rock, code);
+    if (ops)
+	code = (*ops->destroy)(&rock, code);
     return code;
 }
 
@@ -1129,7 +1130,8 @@ afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
     } while (moredata);
     if (!code)
 	code = (*ops->close)(rock, avc, adc, tsmall);
-    (*ops->destroy)(&rock, code);
+    if (ops)
+	(*ops->destroy)(&rock, code);
 
 #ifndef AFS_NOSTATS
     FillStoreStats(code, AFS_STATS_FS_XFERIDX_FETCHDATA, &xferStartTime,
