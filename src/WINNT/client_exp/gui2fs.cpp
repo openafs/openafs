@@ -284,6 +284,7 @@ void WhichCell(CStringArray& files)
             } else
                 results.Add(GetAfsError(errno));
         } else {
+            space[MAXSIZE - 1] = '\0';
             results.Add(Utf8ToCString(space));
         }
     }       
@@ -1488,7 +1489,9 @@ BOOL ListMount(CStringArray& files)
         last_component.ReleaseBuffer();
 
         if (code == 0) {
-            int nPos = strlen(space) - 1;
+            int nPos;
+            space[MAXSIZE - 1] = '\0';
+            nPos = strlen(space) - 1;
             if (space[nPos] == '.')
                 space[nPos] = 0;
             mountPoints.Add(ParseMountPoint(StripPath(files[i]), Utf8ToCString(space)));
@@ -1796,7 +1799,7 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
     blob.out = space;
 
     code = pioctl_T(strFile, VIOCGETVOLSTAT, &blob, 1);
-    if (code) {
+    if (code || blob.out_size < sizeof(*status)) {
         volInfo.m_strErrorMsg = GetAfsError(errno, strFile);
         return FALSE;
     }
@@ -1855,7 +1858,7 @@ BOOL SetVolInfo(CVolInfo& volInfo)
 #endif
 
     code = pioctl_T(volInfo.m_strFilePath, VIOCSETVOLSTAT, &blob, 1);
-    if (code) {
+    if (code || blob.out_size < sizeof(*status)) {
         ShowMessageBox(IDS_SET_QUOTA_ERROR, MB_ICONERROR, IDS_SET_QUOTA_ERROR, GetAfsError(errno, volInfo.m_strName));
         return FALSE;
     }
@@ -2169,8 +2172,12 @@ BOOL ListSymlink(CStringArray& files)
         ustrLast.ReleaseBuffer();
 
         if (code == 0) {
-            CString syml = Utf8ToCString(space);
-            int len = syml.GetLength();
+            CString syml;
+            int len;
+
+            space[MAXSIZE - 1] = '\0';
+            syml = Utf8ToCString(space);
+            len = syml.GetLength();
 
             if (len > 0) {
                 if (syml[len - 1] == _T('.'))

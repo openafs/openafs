@@ -172,6 +172,7 @@ void Config_GetCellName (LPTSTR pszName)
 
 BOOL Config_ContactGateway (LPTSTR pszGateway, LPTSTR pszCell)
 {
+   // pszCell is MAX_PATH
    BOOL rc = FALSE;
 
    BYTE OutData[ PIOCTL_MAXSIZE ];
@@ -189,13 +190,14 @@ BOOL Config_ContactGateway (LPTSTR pszGateway, LPTSTR pszCell)
 
    ULONG status;
    if ((status = pioctl (0, VIOC_GET_WS_CELL, &IOInfo, 1)) == 0)
-      {
-      if (OutData[0])
-         {
-         lstrcpy (pszCell, (LPCTSTR)OutData);
-         rc = TRUE;
-         }
-      }
+   {
+       OutData[min(PIOCTL_MAXSIZE, MAX_PATH) - 1] = '\0';
+       if (OutData[0])
+       {
+           lstrcpy (pszCell, (LPCTSTR)OutData);
+           rc = TRUE;
+       }
+   }
 
    Config_SetGatewayName (szOldGateway);
 

@@ -786,8 +786,11 @@ void FreeDriveMapList (PDRIVEMAPLIST pList)
 }
 
 
+
 BOOL PathToSubmount (LPTSTR pszSubmount, LPTSTR pszMapping, LPTSTR pszSubmountReq, ULONG *pStatus)
 {
+   // pszSubmount is MAX_PATH in length
+
    if (pszSubmountReq && !IsValidSubmountName (pszSubmountReq))
       pszSubmountReq = NULL;
 
@@ -824,6 +827,8 @@ BOOL PathToSubmount (LPTSTR pszSubmount, LPTSTR pszMapping, LPTSTR pszSubmountRe
    if (status)
       return FALSE;
 
+
+   OutData[min(PIOCTL_MAXSIZE, MAX_PATH) - 1] = '\0';
    lstrcpy (pszSubmount, (LPCTSTR)OutData);
    return (pszSubmount[0] != TEXT('\0')) ? TRUE : FALSE;
 }
@@ -1424,9 +1429,12 @@ BOOL GlobalMountDrive()
 
 DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPersistent,const char * pUsername)
 {
+#ifdef AFSIFS
     DWORD err;
-	BOOL succ;
-	TCHAR szPath[MAX_PATH], szTokens[MAX_PATH], *tok;
+    BOOL succ;
+    TCHAR szTokens[MAX_PATH], *tok;
+#endif /* AFSIFS */
+    TCHAR szPath[MAX_PATH];
     TCHAR szClient[MAX_PATH];
     TCHAR szDrive[3] = TEXT("?:");
 
@@ -1504,8 +1512,9 @@ DWORD DisMountDOSDrive(const char *pSubmount,BOOL bForce)
 DWORD DisMountDOSDrive(const char chDrive,BOOL bForce)
 {
     TCHAR szPath[MAX_PATH];
+#ifdef AFSIFS
     DWORD succ;
-
+#endif
     sprintf(szPath,"%c:",chDrive);
 #ifdef AFSIFS
     succ = DefineDosDevice(DDD_REMOVE_DEFINITION, szPath, NULL);
