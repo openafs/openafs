@@ -363,7 +363,7 @@
                             <File Id="file_CmdRef_1_fs_checkservers_html"  Name="fs_chsrv.htm"  LongName="fs_checkservers.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_checkvolumes_html"  Name="fs_chvol.htm"  LongName="fs_checkvolumes.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_chgrp_html"  Name="fs_chgrp.htm"  LongName="fs_chgrp.html"  DiskId="1"  />
-                            <File Id="file_CmdRef_1_fs_chown_html"  Name="fs_chgrp.htm"  LongName="fs_chown.html"  DiskId="1"  />
+                            <File Id="file_CmdRef_1_fs_chown_html"  Name="fs_chown.htm"  LongName="fs_chown.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_cleanacl_html"  Name="fs_clean.htm"  LongName="fs_cleanacl.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_copyacl_html"  Name="fs_copya.htm"  LongName="fs_copyacl.html"  DiskId="1"  />
                             <File Id="file_CmdRef_1_fs_cscpolicy_html"  Name="fs_cscpo.htm"  LongName="fs_cscpolicy.html"  DiskId="1"  />
