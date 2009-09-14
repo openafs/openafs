@@ -431,19 +431,12 @@ afs_InitReq(register struct vrequest *av, AFS_UCRED *acred)
 #if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     int code;
 #endif
-    int i = 0;
 
     AFS_STATCNT(afs_InitReq);
     memset(av, 0, sizeof(*av));
     if (afs_shuttingdown)
 	return EIO;
 
-    av->idleError = 0;
-    av->tokenError = 0;
-    while (i < MAXHOSTS) {
-      av->skipserver[i] = 0;
-      i++;
-    }
 #ifdef AFS_LINUX26_ENV
 #if !defined(AFS_NONFSTRANS)
     if (osi_linux_nfs_initreq(av, acred, &code))
@@ -469,7 +462,6 @@ afs_InitReq(register struct vrequest *av, AFS_UCRED *acred)
 	av->uid = acred->cr_ruid;	/* default when no pag is set */
 #endif
     }
-    av->initd = 0;
     return 0;
 }
 
