@@ -1264,3 +1264,15 @@ printk("%s", key_type_keyring.name);
     AC_DEFINE([EXPORTED_KEY_TYPE_KEYRING], 1, [define if key_type_keyring is exported])
   fi])
 
+AC_DEFUN([LINUX_KEYS_HAVE_SESSION_TO_PARENT], [
+  AC_MSG_CHECKING([for KEYCTL_SESSION_TO_PARENT])
+  AC_CACHE_VAL([ac_cv_linux_have_session_to_parent], [
+    AC_TRY_KBUILD(
+[ #include <linux/keyctl.h>],
+[ int i = KEYCTL_SESSION_TO_PARENT;],
+      ac_cv_linux_have_session_to_parent=yes,
+      ac_cv_linux_have_session_to_parent=no)])
+  AC_MSG_RESULT($ac_cv_linux_have_session_to_parent)
+  if test "x$ac_cv_linux_have_session_to_parent" = "xyes"; then
+    AC_DEFINE([HAVE_SESSION_TO_PARENT], 1, [define if keyctl has the KEYCTL_SESSION_TO_PARENT function])
+  fi])
