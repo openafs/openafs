@@ -47,6 +47,7 @@
 - (void)releaseToken:(id)sender;
 - (void)updateAfsStatus:(NSTimer*)timer;
 - (void)klogUserEven:(NSNotification *)notification;
+- (void)switchHandler:(NSNotification*) notification;
 - (void)chageMenuVisibility:(NSNotification *)notification;
 - (NSImage*)getImageFromBundle:(NSString*)fileName fileExt:(NSString*)ext;
 - (NSImage*)imageToRender;
