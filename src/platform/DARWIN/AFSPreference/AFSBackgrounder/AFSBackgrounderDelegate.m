@@ -70,6 +70,16 @@
 														   selector:@selector(afsVolumeMountChange:) 
 															   name:NSWorkspaceDidUnmountNotification object:nil];
 	
+	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
+														   selector:@selector(switchHandler:)
+															   name:NSWorkspaceSessionDidBecomeActiveNotification
+															 object:nil];
+	
+    [[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
+														   selector:@selector(switchHandler:)
+															   name:NSWorkspaceSessionDidResignActiveNotification
+															 object:nil];
+	
 	//try to see if we need tho show the menu at startup
 	
 	[self setStatusItem:[showStatusMenu boolValue]];
@@ -92,6 +102,8 @@
 	if(noTokenImage) [noTokenImage release];
 	
 	// Unregister for preference change
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:NSWorkspaceSessionDidBecomeActiveNotification object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:NSWorkspaceSessionDidResignActiveNotification object:nil];
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:kAFSMenuExtraID object:kPrefChangeNotification];
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:kAFSMenuExtraID object:kMExtraAFSStateChange];
 	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:kAFSMenuExtraID object:kMExtraAFSMenuChangeState];
@@ -106,6 +118,7 @@
 	if(afsMngr) [afsMngr release];
 	return NSTerminateNow;
 }
+#pragma mark Notification Handler
 // -------------------------------------------------------------------------------
 //  -(void) readPreferenceFile
 // -------------------------------------------------------------------------------
@@ -141,12 +154,56 @@
 // -------------------------------------------------------------------------------
 //  - (void)chageMenuVisibility:(NSNotification *)notification
 // -------------------------------------------------------------------------------
-/**/
 - (void)chageMenuVisibility:(NSNotification *)notification {
 	[self readPreferenceFile:nil];
 	[self setStatusItem:[showStatusMenu boolValue]];
 }
 
+// -------------------------------------------------------------------------------
+// - (void) switchHandler:(NSNotification*) notification
+// -------------------------------------------------------------------------------
+- (void) switchHandler:(NSNotification*) notification
+{
+    if ([[notification name] isEqualToString:NSWorkspaceSessionDidResignActiveNotification])
+    {
+        // user has switched out
+    }
+    else
+    {
+		// user has switched in
+		NSLog(@"User has switch in again");
+		if([aklogTokenAtLogin boolValue] && afsState && !gotToken) {
+			NSLog(@"Proceed to get token");
+			//check if we must get the aklog at logint(first run of backgrounder
+			[self getToken:nil];
+		}
+    }
+}
+// -------------------------------------------------------------------------------
+//  -(void) afsVolumeMountChange - Track for mount unmount afs volume
+// -------------------------------------------------------------------------------
+- (void) afsVolumeMountChange:(NSNotification *)notification{
+	[self updateAfsStatus:nil];
+}
+
+
+// -------------------------------------------------------------------------------
+//  -(void) klogUserEven
+// -------------------------------------------------------------------------------
+-(void) klogUserEven:(NSNotification *)notification
+{
+	if(credentialMenuController) {
+		[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:kAFSMenuExtraID object:kLogWindowClosed];
+		[credentialMenuController closeWindow];
+		[credentialMenuController release];
+		credentialMenuController = nil;
+	}
+	//Send notification to PreferencePane
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID object:kMenuExtraEventOccured];
+	
+	[self updateAfsStatus:nil];
+}
+#pragma mark Action
 // -------------------------------------------------------------------------------
 //  - (void)startStopAfs:(id)sender
 // -------------------------------------------------------------------------------
@@ -248,13 +305,6 @@
 
 
 // -------------------------------------------------------------------------------
-//  -(void) afsVolumeMountChange - Track for mount unmount afs volume
-// -------------------------------------------------------------------------------
-- (void) afsVolumeMountChange:(NSNotification *)notification{
-	[self updateAfsStatus:nil];
-}
-
-// -------------------------------------------------------------------------------
 //  -(void) updateAfsStatus
 // -------------------------------------------------------------------------------
 - (void)updateAfsStatus:(NSTimer*)timer
@@ -275,23 +325,6 @@
 	[tokensLock unlock];
 }
 
-// -------------------------------------------------------------------------------
-//  -(void) klogUserEven
-// -------------------------------------------------------------------------------
--(void) klogUserEven:(NSNotification *)notification
-{
-	if(credentialMenuController) {
-		[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:kAFSMenuExtraID object:kLogWindowClosed];
-		[credentialMenuController closeWindow];
-		[credentialMenuController release];
-		credentialMenuController = nil;
-	}
-	//Send notification to PreferencePane
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID object:kMenuExtraEventOccured];
-	
-	[self updateAfsStatus:nil];
-}
-#pragma mark Operational Function
 // -------------------------------------------------------------------------------
 //  startTimer:
 // -------------------------------------------------------------------------------
