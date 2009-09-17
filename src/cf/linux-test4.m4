@@ -1289,3 +1289,18 @@ AC_DEFUN([LINUX_KEYS_HAVE_SESSION_TO_PARENT], [
   if test "x$ac_cv_linux_have_session_to_parent" = "xyes"; then
     AC_DEFINE([HAVE_SESSION_TO_PARENT], 1, [define if keyctl has the KEYCTL_SESSION_TO_PARENT function])
   fi])
+
+AC_DEFUN([LINUX_STRUCT_SUPER_BLOCK_HAS_S_BDI], [
+  AC_MSG_CHECKING([if struct super_block has s_bdi])
+  AC_CACHE_VAL([ac_cv_linux_struct_super_block_has_s_bdi], [
+    AC_TRY_KBUILD(
+[#include <linux/fs.h>],
+[struct super_block _sb;
+_sb.s_bdi= NULL;],
+      ac_cv_linux_struct_super_block_has_s_bdi=yes,
+      ac_cv_linux_struct_super_block_has_s_bdi=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_super_block_has_s_bdi)
+  if test "x$ac_cv_linux_struct_super_block_has_s_bdi" = "xyes"; then
+    AC_DEFINE([STRUCT_SUPER_BLOCK_HAS_S_BDI], 1, [define if struct super_block has an s_bdi member])
+  fi])
+

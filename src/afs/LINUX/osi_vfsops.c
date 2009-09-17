@@ -108,6 +108,11 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
 #if defined(HAVE_BDI_INIT)
     bdi_init(&afs_backing_dev_info);
 #endif
+#if defined (STRUCT_SUPER_BLOCK_HAS_S_BDI)
+    sb->s_bdi = &afs_backing_dev_info;
+    /* The name specified here will appear in the flushing thread name - flush-afs */
+    bdi_register(&afs_backing_dev_info, NULL, "afs");
+#endif
 #if !defined(AFS_NONFSTRANS)
     sb->s_export_op = &afs_export_ops;
 #endif
