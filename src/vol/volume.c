@@ -2905,7 +2905,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 	 */
         
          /* only valid before/during demand attachment */
-         assert(!vp->pending_vol_op || vp->pending_vol_op != FSSYNC_VolOpRunningUnknown);
+         assert(!vp->pending_vol_op || vp->pending_vol_op->vol_op_state != FSSYNC_VolOpRunningUnknown);
         
          /* deny getvolume due to running mutually exclusive vol op */
          if (vp->pending_vol_op && vp->pending_vol_op->vol_op_state==FSSYNC_VolOpRunningOffline) {
