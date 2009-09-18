@@ -31,6 +31,7 @@
 #include "ms-srvsvc.h"
 #include "msrpc.h"
 #include "afsd.h"
+#include "smb.h"
 #include <WINNT/afsreg.h>
 #define AFS_VERSION_STRINGS
 #include "AFS_component_version_number.h"
@@ -305,10 +306,11 @@ NetrIntGenerateSharePath(wchar_t *ServerName, cm_fid_t *fidp)
     else
         wcellname = L"";
 
+    for ( s=ServerName; *s == '\\' || *s == '/'; s++);
     hr = StringCchPrintfW( remark,
                            sizeof(remark)/sizeof(remark[0]),
-                           L"\\%s\\%s\\%u.%u.%u",
-                           ServerName, wcellname,
+                           L"\\\\%s\\%s\\%u.%u.%u",
+                           s, wcellname,
                            fidp->volume,
                            fidp->vnode, fidp->unique);
     if (hr == S_OK)
@@ -927,13 +929,15 @@ NET_API_STATUS NetrServerGetInfo(
     /* [in] */ DWORD Level,
     /* [switch_is][out] */ LPSERVER_INFO InfoStruct)
 {
+    wchar_t *s;
+
     osi_Log1(afsd_logp, "NetrServerGetInfo level %u", Level);
     /*
-    * How much space do we need and do we have that much room?
-    * For now, just assume we can return everything in one shot
-    * because the reality is that in this function call we do
-    * not know the max size of the RPC response.
-    */
+     * How much space do we need and do we have that much room?
+     * For now, just assume we can return everything in one shot
+     * because the reality is that in this function call we do
+     * not know the max size of the RPC response.
+     */
     switch (Level) {
     case 103:
         InfoStruct->ServerInfo103 = calloc(1, sizeof(SERVER_INFO_103));
@@ -953,6 +957,12 @@ NET_API_STATUS NetrServerGetInfo(
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
+    /*
+     * Remove any leading slashes since they are not part of the
+     * server name.
+     */
+    for ( s=ServerName; *s == '\\' || *s == '/'; s++);
+
     switch (Level) {
     case 103:
         InfoStruct->ServerInfo103->sv103_capabilities = 0;
@@ -969,13 +979,13 @@ NET_API_STATUS NetrServerGetInfo(
     case 101:
         InfoStruct->ServerInfo101->sv101_version_major = AFSPRODUCT_VERSION_MAJOR;
         InfoStruct->ServerInfo101->sv101_version_minor = AFSPRODUCT_VERSION_MINOR;
-        InfoStruct->ServerInfo101->sv101_type = SV_TYPE_SERVER_UNIX;
+        InfoStruct->ServerInfo101->sv101_type = SV_TYPE_WORKSTATION | SV_TYPE_SERVER | SV_TYPE_SERVER_UNIX;
         InfoStruct->ServerInfo101->sv101_comment = wcsdup(wAFSVersion);
         /* fall-through */
     case 100:
         InfoStruct->ServerInfo100->sv100_platform_id = SV_PLATFORM_ID_AFS;
         /* The Netbios Name */
-        InfoStruct->ServerInfo100->sv100_name = wcsdup(ServerName);
+        InfoStruct->ServerInfo100->sv100_name = _wcsupr(wcsdup(s));
         return 0;
     case 502:
     case 503:

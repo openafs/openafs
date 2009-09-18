@@ -38,14 +38,16 @@ unsigned long NetrWkstaGetInfo(
     /* [in] */ unsigned long Level,
     /* [switch_is][out] */ LPWKSTA_INFO WkstaInfo)
 {
+    wchar_t *s;
+
     osi_Log1(afsd_logp, "NetrWkstaGetInfo level %u", Level);
 
     /*
-    * How much space do we need and do we have that much room?
-    * For now, just assume we can return everything in one shot
-    * because the reality is that in this function call we do
-    * not know the max size of the RPC response.
-    */
+     * How much space do we need and do we have that much room?
+     * For now, just assume we can return everything in one shot
+     * because the reality is that in this function call we do
+     * not know the max size of the RPC response.
+     */
     switch (Level) {
     case 100:
         WkstaInfo->WkstaInfo100 = calloc(1, sizeof(WKSTA_INFO_100));
@@ -56,12 +58,19 @@ unsigned long NetrWkstaGetInfo(
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
+    /*
+     * Remove any leading slashes since they are not part of the
+     * server name.
+     */
+    for ( s=ServerName; *s == '\\' || *s == '/'; s++);
+
     switch (Level) {
     case  100:
+        WkstaInfo->WkstaInfo100->wki100_computername = _wcsupr(wcsdup(s));
+        WkstaInfo->WkstaInfo100->wki100_langroup = _wcsdup(L"AFS");
         WkstaInfo->WkstaInfo100->wki100_platform_id = PLATFORM_ID_AFS;
-        WkstaInfo->WkstaInfo100->wki100_computername = wcsdup(ServerName);
         WkstaInfo->WkstaInfo100->wki100_ver_major = AFSPRODUCT_VERSION_MAJOR;
-        WkstaInfo->WkstaInfo100->wki100_ver_major = AFSPRODUCT_VERSION_MINOR;
+        WkstaInfo->WkstaInfo100->wki100_ver_minor = AFSPRODUCT_VERSION_MINOR;
         return 0;
     case  502:
     case 1013:
