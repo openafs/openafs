@@ -25,6 +25,7 @@
 #include <windows.h>
 #include <lmcons.h>
 #include <stdlib.h>
+#include "afsd.h"
 #include "ms-wkssvc.h"
 #include "AFS_component_version_number.h"
 
@@ -37,6 +38,8 @@ unsigned long NetrWkstaGetInfo(
     /* [in] */ unsigned long Level,
     /* [switch_is][out] */ LPWKSTA_INFO WkstaInfo)
 {
+    osi_Log1(afsd_logp, "NetrWkstaGetInfo level %u", Level);
+
     /*
     * How much space do we need and do we have that much room?
     * For now, just assume we can return everything in one shot
@@ -75,6 +78,7 @@ unsigned long NetrWkstaSetInfo(
     /* [switch_is][in] */ LPWKSTA_INFO WkstaInfo,
     /* [unique][out][in] */ unsigned long *ErrorParameter)
 {
+    osi_Log0(afsd_logp, "NetrWkstaSetInfo not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -85,6 +89,7 @@ unsigned long NetrWkstaUserEnum(
     /* [out] */ unsigned long *TotalEntries,
     /* [unique][out][in] */ unsigned long *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrWkstaUserEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -95,6 +100,7 @@ unsigned long NetrWkstaTransportEnum(
     /* [out] */ unsigned long *TotalEntries,
     /* [unique][out][in] */ unsigned long *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrWkstaTransportEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -104,6 +110,7 @@ unsigned long NetrWkstaTransportAdd(
     /* [in] */ LPWKSTA_TRANSPORT_INFO_0 TransportInfo,
     /* [unique][out][in] */ unsigned long *ErrorParameter)
 {
+    osi_Log0(afsd_logp, "NetrWkstaTransportAdd not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -112,6 +119,7 @@ unsigned long NetrWkstaTransportDel(
     /* [unique][string][in] */ wchar_t *TransportName,
     /* [in] */ unsigned long ForceLevel)
 {
+    osi_Log0(afsd_logp, "NetrWkstaTransportDel not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -122,6 +130,7 @@ unsigned long NetrWorkstationStatisticsGet(
     /* [in] */ unsigned long Options,
     /* [out] */ LPSTAT_WORKSTATION_0 *Buffer)
 {
+    osi_Log0(afsd_logp, "NetrWorkstationStatisticsGet not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -130,6 +139,7 @@ unsigned long NetrGetJoinInformation(
     /* [string][out][in] */ wchar_t **NameBuffer,
     /* [out] */ PNETSETUP_JOIN_STATUS BufferType)
 {
+    osi_Log0(afsd_logp, "NetrGetJoinInformation not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -142,6 +152,7 @@ unsigned long NetrJoinDomain2(
     /* [unique][in] */ PJOINPR_ENCRYPTED_USER_PASSWORD Password,
     /* [in] */ unsigned long Options)
 {
+    osi_Log0(afsd_logp, "NetrJoinDomain2 not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -152,6 +163,7 @@ unsigned long NetrUnjoinDomain2(
     /* [unique][in] */ PJOINPR_ENCRYPTED_USER_PASSWORD Password,
     /* [in] */ unsigned long Options)
 {
+    osi_Log0(afsd_logp, "NetrUnjoinDomain2 not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -163,6 +175,7 @@ unsigned long NetrRenameMachineInDomain2(
     /* [unique][in] */ PJOINPR_ENCRYPTED_USER_PASSWORD Password,
     /* [in] */ unsigned long Options)
 {
+    osi_Log0(afsd_logp, "NetrRenameMachineInDomain2 not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -174,6 +187,7 @@ unsigned long NetrValidateName2(
     /* [unique][in] */ PJOINPR_ENCRYPTED_USER_PASSWORD Password,
     /* [in] */ NETSETUP_NAME_TYPE NameType)
 {
+    osi_Log0(afsd_logp, "NetrValidateName2 not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -186,6 +200,7 @@ unsigned long NetrGetJoinableOUs2(
     /* [out][in] */ unsigned long *OUCount,
     /* [size_is][size_is][string][out] */ wchar_t ***OUs)
 {
+    osi_Log0(afsd_logp, "NetrGetJoinableOUs2 not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -197,6 +212,7 @@ unsigned long NetrAddAlternateComputerName(
     /* [unique][in] */ PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword,
     /* [in] */ unsigned long Reserved)
 {
+    osi_Log0(afsd_logp, "NetrAddAlternateComputerName not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -208,6 +224,7 @@ unsigned long NetrRemoveAlternateComputerName(
     /* [unique][in] */ PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword,
     /* [in] */ unsigned long Reserved)
 {
+    osi_Log0(afsd_logp, "NetrRemoveAlternateComputerName not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -219,6 +236,7 @@ unsigned long NetrSetPrimaryComputerName(
     /* [unique][in] */ PJOINPR_ENCRYPTED_USER_PASSWORD EncryptedPassword,
     /* [in] */ unsigned long Reserved)
 {
+    osi_Log0(afsd_logp, "NetrSetPrimaryComputerName not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -228,6 +246,7 @@ unsigned long NetrEnumerateComputerNames(
     /* [in] */ unsigned long Reserved,
     /* [out] */ PNET_COMPUTER_NAME_ARRAY *ComputerNames)
 {
+    osi_Log0(afsd_logp, "NetrEnumerateComputerName not supported");
     return ERROR_NOT_SUPPORTED;
 }
 

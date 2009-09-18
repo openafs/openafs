@@ -98,6 +98,7 @@ NET_API_STATUS NetrConnectionEnum(
     /* [out] */ DWORD *TotalEntries,
     /* [unique][out][in] */ DWORD *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrConnectionEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -110,6 +111,7 @@ NET_API_STATUS NetrFileEnum(
     /* [out] */ DWORD *TotalEntries,
     /* [unique][out][in] */ DWORD *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrFileEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -119,6 +121,7 @@ NET_API_STATUS NetrFileGetInfo(
     /* [in] */ DWORD Level,
     /* [switch_is][out] */ LPFILE_INFO InfoStruct)
 {
+    osi_Log0(afsd_logp, "NetrFileGetInfo not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -126,6 +129,7 @@ NET_API_STATUS NetrFileClose(
     /* [unique][string][in] */ SRVSVC_HANDLE ServerName,
     /* [in] */ DWORD FileId)
 {
+    osi_Log0(afsd_logp, "NetrFileClose not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -138,6 +142,7 @@ NET_API_STATUS NetrSessionEnum(
     /* [out] */ DWORD *TotalEntries,
     /* [unique][out][in] */ DWORD *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrSessionEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -146,6 +151,7 @@ NET_API_STATUS NetrSessionDel(
     /* [unique][string][in] */ WCHAR *ClientName,
     /* [unique][string][in] */ WCHAR *UserName)
 {
+    osi_Log0(afsd_logp, "NetrSessionDel not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -155,6 +161,7 @@ NET_API_STATUS NetrShareAdd(
     /* [switch_is][in] */ LPSHARE_INFO InfoStruct,
     /* [unique][out][in] */ DWORD *ParmErr)
 {
+    osi_Log0(afsd_logp, "NetrShareAdd not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -457,6 +464,8 @@ NET_API_STATUS NetrShareEnum(
     size_t        space_available = 0;
     afs_uint32    first_entry = 1;
 
+    osi_Log1(afsd_logp, "NetrShareEnum level %u", InfoStruct->Level);
+
     cm_InitReq(&req);
 
     RPC_SRVSVC_ShareEnumAgeCheck();
@@ -710,6 +719,8 @@ NET_API_STATUS NetrShareGetInfo(
     clientchar_t pathstr[CELL_MAXNAMELEN + VL_MAXNAMELEN + 1 + CM_PREFIX_VOL_CCH];
     DWORD  cblen;
 
+    osi_Log1(afsd_logp, "NetrShareGetInfo level %u", Level);
+
     cm_InitReq(&req);
 
     /* Allocate the memory for the response */
@@ -880,6 +891,7 @@ NET_API_STATUS NetrShareSetInfo(
     /* [switch_is][in] */ LPSHARE_INFO ShareInfo,
     /* [unique][out][in] */ DWORD *ParmErr)
 {
+    osi_Log0(afsd_logp, "NetrShareSetInfo not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -888,6 +900,7 @@ NET_API_STATUS NetrShareDel(
     /* [string][in] */ WCHAR *NetName,
     /* [in] */ DWORD Reserved)
 {
+    osi_Log0(afsd_logp, "NetrShareDel not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -896,6 +909,7 @@ NET_API_STATUS NetrShareDelSticky(
     /* [string][in] */ WCHAR *NetName,
     /* [in] */ DWORD Reserved)
 {
+    osi_Log0(afsd_logp, "NetrShareDelSticky not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -904,6 +918,7 @@ NET_API_STATUS NetrShareCheck(
     /* [string][in] */ WCHAR *Device,
     /* [out] */ DWORD *Type)
 {
+    osi_Log0(afsd_logp, "NetrShareCheck not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -912,6 +927,7 @@ NET_API_STATUS NetrServerGetInfo(
     /* [in] */ DWORD Level,
     /* [switch_is][out] */ LPSERVER_INFO InfoStruct)
 {
+    osi_Log1(afsd_logp, "NetrServerGetInfo level %u", Level);
     /*
     * How much space do we need and do we have that much room?
     * For now, just assume we can return everything in one shot
@@ -1020,6 +1036,7 @@ NET_API_STATUS NetrServerSetInfo(
     /* [switch_is][in] */ LPSERVER_INFO ServerInfo,
     /* [unique][out][in] */ DWORD *ParmErr)
 {
+    osi_Log0(afsd_logp, "NetrServerSetInfo not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1031,6 +1048,7 @@ NET_API_STATUS NetrServerDiskEnum(
     /* [out] */ DWORD *TotalEntries,
     /* [unique][out][in] */ DWORD *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrServerDiskEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1041,6 +1059,7 @@ NET_API_STATUS NetrServerStatisticsGet(
     /* [in] */ DWORD Options,
     /* [out] */ LPSTAT_SERVER_0 *InfoStruct)
 {
+    osi_Log0(afsd_logp, "NetrServerStatisticsGet not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1049,6 +1068,7 @@ NET_API_STATUS NetrServerTransportAdd(
     /* [in] */ DWORD Level,
     /* [in] */ LPSERVER_TRANSPORT_INFO_0 Buffer)
 {
+    osi_Log0(afsd_logp, "NetrServerTransportAdd not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1059,6 +1079,7 @@ NET_API_STATUS NetrServerTransportEnum(
     /* [out] */ DWORD *TotalEntries,
     /* [unique][out][in] */ DWORD *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrServerTransportEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1067,6 +1088,7 @@ NET_API_STATUS NetrServerTransportDel(
     /* [in] */ DWORD Level,
     /* [in] */ LPSERVER_TRANSPORT_INFO_0 Buffer)
 {
+    osi_Log0(afsd_logp, "NetrServerTransportDel not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1074,6 +1096,7 @@ NET_API_STATUS NetrRemoteTOD(
     /* [unique][string][in] */ SRVSVC_HANDLE ServerName,
     /* [out] */ LPTIME_OF_DAY_INFO *BufferPtr)
 {
+    osi_Log0(afsd_logp, "NetrRemoteTOD not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1083,6 +1106,7 @@ NET_API_STATUS NetprPathType(
     /* [out] */ DWORD *PathType,
     /* [in] */ DWORD Flags)
 {
+    osi_Log0(afsd_logp, "NetprPathType not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1095,6 +1119,7 @@ NET_API_STATUS NetprPathCanonicalize(
     /* [out][in] */ DWORD *PathType,
     /* [in] */ DWORD Flags)
 {
+    osi_Log0(afsd_logp, "NetprPathCanonicalize not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1105,6 +1130,7 @@ long NetprPathCompare(
     /* [in] */ DWORD PathType,
     /* [in] */ DWORD Flags)
 {
+    osi_Log0(afsd_logp, "NetprPathCompare not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1114,6 +1140,7 @@ NET_API_STATUS NetprNameValidate(
     /* [in] */ DWORD NameType,
     /* [in] */ DWORD Flags)
 {
+    osi_Log0(afsd_logp, "NetprNameValidate not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1125,6 +1152,7 @@ NET_API_STATUS NetprNameCanonicalize(
     /* [in] */ DWORD NameType,
     /* [in] */ DWORD Flags)
 {
+    osi_Log0(afsd_logp, "NetprNameCanonicalize not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1135,6 +1163,7 @@ long NetprNameCompare(
     /* [in] */ DWORD NameType,
     /* [in] */ DWORD Flags)
 {
+    osi_Log0(afsd_logp, "NetprNameCompare not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1145,6 +1174,7 @@ NET_API_STATUS NetrShareEnumSticky(
     /* [out] */ DWORD *TotalEntries,
     /* [unique][out][in] */ DWORD *ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrShareEnumSticky not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1154,12 +1184,14 @@ NET_API_STATUS NetrShareDelStart(
     /* [in] */ DWORD Reserved,
     /* [out] */ PSHARE_DEL_HANDLE ContextHandle)
 {
+    osi_Log0(afsd_logp, "NetrShareDelStart not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
 NET_API_STATUS NetrShareDelCommit(
     /* [out][in] */ PSHARE_DEL_HANDLE ContextHandle)
 {
+    osi_Log0(afsd_logp, "NetrShareDelCommit not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1170,6 +1202,7 @@ DWORD NetrpGetFileSecurity(
     /* [in] */ SECURITY_INFORMATION RequestedInformation,
     /* [out] */ PADT_SECURITY_DESCRIPTOR *SecurityDescriptor)
 {
+    osi_Log0(afsd_logp, "NetprGetFileSecurity not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1180,6 +1213,7 @@ DWORD NetrpSetFileSecurity(
     /* [in] */ SECURITY_INFORMATION SecurityInformation,
     /* [in] */ PADT_SECURITY_DESCRIPTOR SecurityDescriptor)
 {
+    osi_Log0(afsd_logp, "NetprSetFileSecurity not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1188,6 +1222,7 @@ NET_API_STATUS NetrServerTransportAddEx(
     /* [in] */ DWORD Level,
     /* [switch_is][in] */ LPTRANSPORT_INFO Buffer)
 {
+    osi_Log0(afsd_logp, "NetrServerTransportAddEx not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1195,6 +1230,7 @@ NET_API_STATUS NetrDfsGetVersion(
     /* [unique][string][in] */ SRVSVC_HANDLE ServerName,
     /* [out] */ DWORD *Version)
 {
+    osi_Log0(afsd_logp, "NetrDfsGetVersion not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1207,6 +1243,7 @@ NET_API_STATUS NetrDfsCreateLocalPartition(
     /* [in] */ LPNET_DFS_ENTRY_ID_CONTAINER RelationInfo,
     /* [in] */ int Force)
 {
+    osi_Log0(afsd_logp, "NetrDfsCreateLocalPartition not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1215,6 +1252,7 @@ NET_API_STATUS NetrDfsDeleteLocalPartition(
     /* [in] */ GUID *Uid,
     /* [string][in] */ WCHAR *Prefix)
 {
+    osi_Log0(afsd_logp, "NetrDfsDeleteLocalPartition not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1224,6 +1262,7 @@ NET_API_STATUS NetrDfsSetLocalVolumeState(
     /* [string][in] */ WCHAR *Prefix,
     /* [in] */ unsigned long State)
 {
+    osi_Log0(afsd_logp, "NetrDfsSetLocalVolumeState not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1235,6 +1274,7 @@ NET_API_STATUS NetrDfsCreateExitPoint(
     /* [range][in] */ DWORD ShortPrefixLen,
     /* [size_is][string][out] */ WCHAR *ShortPrefix)
 {
+    osi_Log0(afsd_logp, "NetrDfsCreateExitPoint not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1244,6 +1284,7 @@ NET_API_STATUS NetrDfsDeleteExitPoint(
     /* [string][in] */ WCHAR *Prefix,
     /* [in] */ unsigned long Type)
 {
+    osi_Log0(afsd_logp, "NetrDfsDeleteExitPoint not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1252,6 +1293,7 @@ NET_API_STATUS NetrDfsModifyPrefix(
     /* [in] */ GUID *Uid,
     /* [string][in] */ WCHAR *Prefix)
 {
+    osi_Log0(afsd_logp, "NetrDfsModifyPrefix not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1266,6 +1308,7 @@ NET_API_STATUS NetrDfsFixLocalVolume(
     /* [in] */ LPNET_DFS_ENTRY_ID_CONTAINER RelationInfo,
     /* [in] */ unsigned long CreateDisposition)
 {
+    osi_Log0(afsd_logp, "NetrDfsFixLocalVolume not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1273,6 +1316,7 @@ NET_API_STATUS NetrDfsManagerReportSiteInfo(
     /* [unique][string][in] */ SRVSVC_HANDLE ServerName,
     /* [unique][out][in] */ LPDFS_SITELIST_INFO *ppSiteInfo)
 {
+    osi_Log0(afsd_logp, "NetrDfsManagerReportSiteInfo not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1281,6 +1325,7 @@ NET_API_STATUS NetrServerTransportDelEx(
     /* [in] */ DWORD Level,
     /* [switch_is][in] */ LPTRANSPORT_INFO Buffer)
 {
+    osi_Log0(afsd_logp, "NetrServerTransportDelEx not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1289,6 +1334,7 @@ NET_API_STATUS NetrServerAliasAdd(
     /* [in] */ DWORD Level,
     /* [switch_is][in] */ LPSERVER_ALIAS_INFO InfoStruct)
 {
+    osi_Log0(afsd_logp, "NetrServerAliasAdd not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1299,6 +1345,7 @@ NET_API_STATUS NetrServerAliasEnum(
     /* [out] */ LPDWORD TotalEntries,
     /* [unique][out][in] */ LPDWORD ResumeHandle)
 {
+    osi_Log0(afsd_logp, "NetrServerAliasEnum not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1307,6 +1354,7 @@ NET_API_STATUS NetrServerAliasDel(
     /* [in] */ DWORD Level,
     /* [switch_is][in] */ LPSERVER_ALIAS_INFO InfoStruct)
 {
+    osi_Log0(afsd_logp, "NetrServerAliasDel not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
@@ -1315,6 +1363,7 @@ NET_API_STATUS NetrShareDelEx(
     /* [in] */ DWORD Level,
     /* [switch_is][in] */ LPSHARE_INFO ShareInfo)
 {
+    osi_Log0(afsd_logp, "NetrShareDelEx not supported");
     return ERROR_NOT_SUPPORTED;
 }
 
