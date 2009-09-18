@@ -328,14 +328,31 @@ static DWORD         shareEnum_next_handle=1;
 void
 RPC_SRVSVC_Init(void)
 {
+#if _MSC_VER >= 1400
+    int hasRand_s = -1;
+    OSVERSIONINFO osInfo;
+
+    osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+    if (GetVersionEx(&osInfo)) {
+        if ((osInfo.dwMajorVersion > 5) ||
+             (osInfo.dwMajorVersion == 5) && (osInfo.dwMinorVersion >= 1))
+            hasRand_s = 1;
+        else
+            hasRand_s = 0;
+    }
+#endif
+
     lock_InitializeMutex(&shareEnum_mx, "NetrShareEnum", 0);
     shareEnumQ = NULL;
-#if _MSC_VER < 1400
-    srand((unsigned) time( NULL ));
-    shareEnum_next_handle = rand();
-#else
-    rand_s(&shareEnum_next_handle);
+#if _MSC_VER >= 1400
+    if (hasRand_s > 0) {
+        rand_s(&shareEnum_next_handle);
+    } else
 #endif
+    {
+        srand((unsigned) time( NULL ));
+        shareEnum_next_handle = rand();
+    }
 }
 
 void
