@@ -3168,7 +3168,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     memset(&qpi, 0, sizeof(qpi));
 
     pathp = smb_ParseStringT2Parm(p, (char *) (&p->parmsp[3]), NULL, SMB_STRF_ANSIPATH);
-    osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path %S", infoLevel,
+    osi_Log2(smb_logp, "T2 QPathInfo type 0x%x path \"%S\"", infoLevel,
               osi_LogSaveClientString(smb_logp, pathp));
 
     outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, responseSize);
@@ -3197,11 +3197,15 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
     code = smb_LookupTIDPath(vcp, p->tid, &tidPathp);
     if(code) {
+        osi_Log1(smb_logp, "ReceiveTran2QPathInfo tid path lookup failure 0x%x", code);
         cm_ReleaseUser(userp);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_NOSUCHPATH);
         smb_FreeTran2Packet(outp);
         return 0;
     }
+
+    osi_Log1(smb_logp, "T2 QPathInfo tidPathp \"%S\"",
+              osi_LogSaveClientString(smb_logp, tidPathp));
 
     /*
      * XXX Strange hack XXX
