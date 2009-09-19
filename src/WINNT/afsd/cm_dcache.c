@@ -232,7 +232,7 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
                 temp = rx_Write(rxcallp, bufferp, wbytes);
                 if (temp != wbytes) {
                     osi_Log3(afsd_logp, "rx_Write failed bp 0x%p, %d != %d",bufp,temp,wbytes);
-                    code = -1;
+                    code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
                     break;
                 } else {
                     osi_Log2(afsd_logp, "rx_Write succeeded bp 0x%p, %d",bufp,temp);
@@ -1609,10 +1609,13 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             if (temp == sizeof(afs_int32)) {
                 nbytes = ntohl(nbytes);
                 FillInt64(length_found, nbytes_hi, nbytes);
-                if (length_found > biod.length) 
-                    code = (rxcallp->error < 0) ? rxcallp->error : -1;
+                if (length_found > biod.length) {
+                    osi_Log0(afsd_logp, "cm_GetBuffer length_found > biod.length");
+                    code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                }
             } else {
-                code = (rxcallp->error < 0) ? rxcallp->error : -1;
+                osi_Log1(afsd_logp, "cm_GetBuffer rx_Read32 returns %d != 4", temp);
+                code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
             }
         }
         /* for the moment, nbytes_hi will always be 0 if code == 0
@@ -1629,11 +1632,15 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             temp  = rx_Read32(rxcallp, &nbytes);
             if (temp == sizeof(afs_int32)) {
                 nbytes = ntohl(nbytes);
-                if (nbytes > biod.length) 
-                    code = (rxcallp->error < 0) ? rxcallp->error : -1;
+                if (nbytes > biod.length) {
+                    osi_Log0(afsd_logp, "cm_GetBuffer length_found > biod.length");
+                    code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                }
             }
-            else 
-                code = (rxcallp->error < 0) ? rxcallp->error : -1;
+            else {
+                osi_Log1(afsd_logp, "cm_GetBuffer rx_Read32 returns %d != 4", temp);
+                code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+            }
         }
 #endif
 
@@ -1663,7 +1670,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 rbytes = (nbytes > cm_data.buf_blockSize? cm_data.buf_blockSize : nbytes);
                 temp = rx_Read(rxcallp, bufferp, rbytes);
                 if (temp < rbytes) {
-                    code = (rxcallp->error < 0) ? rxcallp->error : -1;
+                    code = (rxcallp->error < 0) ? rxcallp->error : RX_EOF;
                     break;
                 }
 
