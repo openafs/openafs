@@ -2996,10 +2996,10 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0;
     } 
     else if (code == CM_ERROR_NOSUCHCELL) {
-        NTStatus = 0xC000000FL;	/* No such file */
+        NTStatus = 0xC0000034L;	/* Name not found */
     }
     else if (code == CM_ERROR_NOSUCHVOLUME) {
-        NTStatus = 0xC000000FL;	/* No such file */
+        NTStatus = 0xC0000034L;	/* Name not found */
     }
     else if (code == CM_ERROR_TIMEDOUT) {
 #ifdef COMMENT
@@ -3019,7 +3019,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     }
     else if (code == CM_ERROR_NOSUCHFILE ||
              code == CM_ERROR_BPLUS_NOMATCH) {
-        NTStatus = 0xC000000FL;	/* No such file */
+        NTStatus = 0xC0000034L;	/* Name not found */
     }
     else if (code == CM_ERROR_NOSUCHPATH) {
         NTStatus = 0xC000003AL;	/* Object path not found */
