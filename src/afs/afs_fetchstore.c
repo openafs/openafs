@@ -494,24 +494,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	afs_CFileClose(tfile);
 	if ((tdc->f.chunkBytes < afs_OtherCSize)
 		&& (i < (nchunks - 1)) && code == 0) {
-	    int bsent, tlen, sbytes = afs_OtherCSize - tdc->f.chunkBytes;
-	    char *tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-
-	    while (sbytes > 0) {
-		tlen = (sbytes > AFS_LRALLOCSIZ ? AFS_LRALLOCSIZ : sbytes);
-		memset(tbuffer, 0, tlen);
-		RX_AFS_GUNLOCK();
-		bsent = rx_Write(
-			((struct rxfs_storeVariables*)rock)->call, tbuffer, tlen);
-		RX_AFS_GLOCK();
-
-		if (bsent != tlen) {
-		    code = -33;	/* XXX */
-		    break;
-		}
-		sbytes -= tlen;
-	    }
-	    osi_FreeLargeSpace(tbuffer);
+	    code = (*ops->padd)(rock, afs_OtherCSize - tdc->f.chunkBytes);
 	}
 	stored += tdc->f.chunkBytes;
 	/* ideally, I'd like to unlock the dcache and turn
