@@ -675,11 +675,12 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     }
     else if (errorCode >= -64 && errorCode < 0) {
         /* mark server as down */
-        sprintf(addr, "%d.%d.%d.%d",
-                ((serverp->addr.sin_addr.s_addr & 0xff)),
-                ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
-                ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
-                ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+        if (serverp)
+            sprintf(addr, "%d.%d.%d.%d",
+                    ((serverp->addr.sin_addr.s_addr & 0xff)),
+                    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+                    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+                    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
 
         if (errorCode == RX_CALL_DEAD)
             osi_Log2(afsd_logp, "cm_Analyze: Rx Call Dead addr[%s] forcedNew[%s]",
@@ -691,24 +692,26 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
                      osi_LogSaveString(afsd_logp,addr), 
                      (reqp->flags & CM_REQ_NEW_CONN_FORCED ? "yes" : "no"));
 
-        lock_ObtainMutex(&serverp->mx);
-	if (errorCode == RX_CALL_DEAD &&
-            (reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
-            if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
-                serverp->flags |= CM_SERVERFLAG_DOWN;
-                serverp->downTime = time(NULL);
-            }
-        } else {
-            if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
-                reqp->tokenIdleErrorServp = serverp;
-                reqp->tokenError = errorCode;
+        if (serverp) {
+            lock_ObtainMutex(&serverp->mx);
+            if (errorCode == RX_CALL_DEAD &&
+                (reqp->flags & CM_REQ_NEW_CONN_FORCED)) {
+                if (!(serverp->flags & CM_SERVERFLAG_DOWN)) {
+                    serverp->flags |= CM_SERVERFLAG_DOWN;
+                    serverp->downTime = time(NULL);
+                }
             } else {
-                reqp->flags |= CM_REQ_NEW_CONN_FORCED;
-                forcing_new = 1;
+                if (reqp->flags & CM_REQ_NEW_CONN_FORCED) {
+                    reqp->tokenIdleErrorServp = serverp;
+                    reqp->tokenError = errorCode;
+                } else {
+                    reqp->flags |= CM_REQ_NEW_CONN_FORCED;
+                    forcing_new = 1;
+                }
             }
-	}
-        lock_ReleaseMutex(&serverp->mx);
-	cm_ForceNewConnections(serverp);
+            lock_ReleaseMutex(&serverp->mx);
+            cm_ForceNewConnections(serverp);
+        }
         if ( timeLeft > 2 )
             retry = 1;
     }
