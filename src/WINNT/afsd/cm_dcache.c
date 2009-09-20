@@ -1389,7 +1389,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
 long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp,
                   cm_req_t *reqp)
 {
-    long code, code1;
+    long code=0, code1=0;
     afs_uint32 nbytes;			/* bytes in transfer */
     afs_uint32 nbytes_hi = 0;            /* high-order 32 bits of bytes in transfer */
     afs_uint64 length_found = 0;
