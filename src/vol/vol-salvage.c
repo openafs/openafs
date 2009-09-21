@@ -3265,19 +3265,36 @@ AskOffline(VolumeId volumeId, char * partition)
 	    afs_printable_uint32_lu(volumeId));
 
 	fd = afs_open(name, O_RDONLY);
-	assert(fd >= 0);
-	assert(read(fd, &diskHeader, sizeof(diskHeader)) == sizeof(diskHeader));
-	assert(diskHeader.stamp.magic == VOLUMEHEADERMAGIC);
+	if (fd < 0) {
+	    return;
+	}
+	if (read(fd, &diskHeader, sizeof(diskHeader)) != sizeof(diskHeader) ||
+	    diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
+
+	    close(fd);
+	    return;
+	}
 	close(fd);
 
 	DiskToVolumeHeader(&header, &diskHeader);
 
 	IH_INIT(h, fileSysDevice, header.parent, header.volumeInfo);
-	assert(IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
-	assert(volHeader.stamp.magic == VOLUMEINFOMAGIC);
+	if (IH_IREAD(h, 0, (char*)&volHeader, sizeof(volHeader)) != sizeof(volHeader) ||
+	    volHeader.stamp.magic != VOLUMEINFOMAGIC) {
+
+	    IH_RELEASE(h);
+	    return;
+	}
 
 	volHeader.inUse = programType;
 
+	/* If we can't re-write the header, bail out and error. We don't
+	 * assert when reading the header, since it's possible the
+	 * header isn't really there (when there's no data associated
+	 * with the volume; we just delete the vol header file in that
+	 * case). But if it's there enough that we can read it, but
+	 * somehow we cannot write to it to signify we're salvaging it,
+	 * we've got a big problem and we cannot continue. */
 	assert(IH_IWRITE(h, 0, (char*)&volHeader, sizeof(volHeader)) == sizeof(volHeader));
 
 	IH_RELEASE(h);
