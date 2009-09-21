@@ -1203,6 +1203,13 @@ afs_pathconf(vp, cmd, outdatap, credp)
     case _PC_NO_TRUNC:
 	*outdatap = 1;
 	break;
+    case _PC_FILESIZEBITS:
+#ifdef AFS_64BIT_CLIENT
+	*outdatap = 64;
+#else
+	*outdatap = 32;
+#endif
+	break;
     default:
 	return EINVAL;
     }
