@@ -874,10 +874,16 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 void
 DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp)
 {
+    char path[64];
+    sprintf(path, "%s/%s", fileSysPath, vsp->fileName);
+
     if (!Showmode)
-	Log("The volume header file %s is not associated with any actual data (%sdeleted)\n", vsp->fileName, (Testing ? "would have been " : ""));
-    if (!Testing)
-	unlink(vsp->fileName);
+	Log("The volume header file %s is not associated with any actual data (%sdeleted)\n", path, (Testing ? "would have been " : ""));
+    if (!Testing) {
+	if (unlink(path)) {
+	    Log("Unable to unlink %s (errno = %d)\n", path, errno);
+	}
+    }
     vsp->fileName = 0;
 }
 
@@ -3197,8 +3203,13 @@ MaybeZapVolume(register struct InodeSummary *isp, char *message, int deleteMe,
 		if (!Showmode)
 		    Log("it will be deleted instead.  It should be recloned.\n");
 	    }
-	    if (!Testing)
-		unlink(isp->volSummary->fileName);
+	    if (!Testing) {
+		char path[64];
+		sprintf(path, "%s/%s", fileSysPath, isp->volSummary->fileName);
+		if (unlink(path)) {
+		    Log("Unable to unlink %s (errno = %d)\n", path, errno);
+		}
+	    }
 	}
     } else if (!check) {
 	Log("%s salvage was unsuccessful: read-write volume %u\n", message,
