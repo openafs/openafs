@@ -905,7 +905,9 @@ FSYNC_com_VolMove(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	} else {
 	    res->hdr.reason = FSYNC_WRONG_PART;
 	}
+#ifndef AFS_DEMAND_ATTACH_FS
 	VPutVolume_r(vp);
+#endif /* !AFS_DEMAND_ATTACH_FS */
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
     }
@@ -1188,17 +1190,17 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		!(V_attachFlags(vp) & VOL_HDR_ATTACHED) ||
 		!(V_attachFlags(vp) & VOL_HDR_LOADED)) {
 		res->hdr.reason = FSYNC_HDR_NOT_ATTACHED;
-		goto done;
+		goto cleanup;
 	    }
 #else /* !AFS_DEMAND_ATTACH_FS */
 	    if (!vp || !vp->header) {
 		res->hdr.reason = FSYNC_HDR_NOT_ATTACHED;
-		goto done;
+		goto cleanup;
 	    }
 #endif /* !AFS_DEMAND_ATTACH_FS */
 	} else {
 	    res->hdr.reason = FSYNC_WRONG_PART;
-	    goto done;
+	    goto cleanup;
 	}
     } else {
 	res->hdr.reason = FSYNC_UNKNOWN_VOLID;
@@ -1207,10 +1209,12 @@ FSYNC_com_VolHdrQuery(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
     memcpy(res->payload.buf, &V_disk(vp), sizeof(VolumeDiskData));
     res->hdr.response_len += sizeof(VolumeDiskData);
+    code = SYNC_OK;
+
+ cleanup:
 #ifndef AFS_DEMAND_ATTACH_FS
     VPutVolume_r(vp);
 #endif
-    code = SYNC_OK;
 
  done:
     return code;
