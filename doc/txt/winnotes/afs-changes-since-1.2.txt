@@ -1,3 +1,23 @@
+Since 1.5.63
+ * Fix Windows 2000 compatibility.  Do not call rand_s() 
+   even if it is compatible with the C run time library
+   version.
+
+ * Fix a data consistency error between the output of 
+   NetWkstaGetInfo and NetServerGetInfo RPCs, specify the Lan 
+   workstation group name "AFS", and report server name as 
+   "AFS" instead of "\\AFS" when the caller asks for "\\AFS".
+
+ * Enable executables to be run from \\AFS on Windows 7.  
+   Return "Name not found" instead of "File not found" when 
+   a directory or file name cannot be found.
+
+ * Prevent cache manager from marking file server "down" when 
+   the data returned in response to either RXAFS_FetchData64 
+   or RXAFS_StoreData64 is invalid.
+
+ * Add pioctl data validation to the AFS Explorer Shell extension.
+
 Since 1.5.62
  * After 1.5.62 afslogon.dll would no longer crash but it 
    also would not load "domain" specific configurations.
