@@ -1761,170 +1761,169 @@ out:
 static int
 afs_linux_readpage(struct file *fp, struct page *pp)
 {
-	 afs_int32 code;
-	 cred_t *credp = crref();
+    afs_int32 code;
+    cred_t *credp = crref();
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-	 char *address;
-	 afs_offs_t offset = ((loff_t) pp->index) << PAGE_CACHE_SHIFT;
+    char *address;
+    afs_offs_t offset = ((loff_t) pp->index) << PAGE_CACHE_SHIFT;
 #else
-	 ulong address = afs_linux_page_address(pp);
-	 afs_offs_t offset = pageoff(pp);
+    ulong address = afs_linux_page_address(pp);
+    afs_offs_t offset = pageoff(pp);
 #endif
 #if defined(AFS_CACHE_BYPASS)
-	 afs_int32 bypasscache = 0; /* bypass for this read */
-	 struct nocache_read_request *ancr;
+    afs_int32 bypasscache = 0; /* bypass for this read */
+    struct nocache_read_request *ancr;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-	 afs_int32 isize;	
+    afs_int32 isize;
 #endif
 #endif
-	 uio_t *auio;
-	 struct iovec *iovecp;
-	 struct inode *ip = FILE_INODE(fp);
-	 afs_int32 cnt = page_count(pp);
-	 struct vcache *avc = VTOAFS(ip);
+    uio_t *auio;
+    struct iovec *iovecp;
+    struct inode *ip = FILE_INODE(fp);
+    afs_int32 cnt = page_count(pp);
+    struct vcache *avc = VTOAFS(ip);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-	 address = kmap(pp);
-	 ClearPageError(pp);
+    address = kmap(pp);
+    ClearPageError(pp);
 #else
-	 atomic_add(1, &pp->count);
-	 set_bit(PG_locked, &pp->flags);	/* other bits? See mm.h */
-	 clear_bit(PG_error, &pp->flags);
+    atomic_add(1, &pp->count);
+    set_bit(PG_locked, &pp->flags);	/* other bits? See mm.h */
+    clear_bit(PG_error, &pp->flags);
 #endif
 #if defined(AFS_CACHE_BYPASS)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-	 /* If the page is past the end of the file, skip it */
-	 isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
-	 if(pp->index > isize) {
-		  if(PageLocked(pp))
-			   UnlockPage(pp);
-		  goto done;
-	 }
+    /* If the page is past the end of the file, skip it */
+    isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
+    if(pp->index > isize) {
+	if(PageLocked(pp))
+	    UnlockPage(pp);
+	goto done;
+    }
 #endif
 #endif
-	 /* if bypasscache, receiver frees, else we do */
-	 auio = osi_Alloc(sizeof(uio_t));
-	 iovecp = osi_Alloc(sizeof(struct iovec));
-	
-	 setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
-			   AFS_UIOSYS);
+    /* if bypasscache, receiver frees, else we do */
+    auio = osi_Alloc(sizeof(uio_t));
+    iovecp = osi_Alloc(sizeof(struct iovec));
+
+    setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
+	      AFS_UIOSYS);
 
 #if defined(AFS_CACHE_BYPASS)
+    switch(cache_bypass_strategy) {
+	case NEVER_BYPASS_CACHE:
+	    break;
+	case ALWAYS_BYPASS_CACHE:
+	    bypasscache = 1;
+	    break;
+	case LARGE_FILES_BYPASS_CACHE:
+	    if(i_size_read(ip) > cache_bypass_threshold) {
+		bypasscache = 1;
+	    }
+	    break;
+	default:
+	    break;
+     }
 
-	 switch(cache_bypass_strategy) {
-	 case NEVER_BYPASS_CACHE:
-		  break;	
-	 case ALWAYS_BYPASS_CACHE:
-		  bypasscache = 1;
-		  break;
-	 case LARGE_FILES_BYPASS_CACHE:
-		  if(i_size_read(ip) > cache_bypass_threshold) {
-			   bypasscache = 1;
-		  }
-		  break;
-	 default:
-		  break;
-	 }
+    /* In the new incarnation of selective caching, a file's caching policy
+     * can change, eg because file size exceeds threshold, etc. */
+    trydo_cache_transition(avc, credp, bypasscache);
+	
+    if(bypasscache) {
+	if(address)
+	    kunmap(pp);
+	/* save the page for background map */
+	auio->uio_iov->iov_base = (void*) pp;
+	/* the background thread will free this */
+	ancr = osi_Alloc(sizeof(struct nocache_read_request));
+	ancr->auio = auio;
+	ancr->offset = offset;
+	ancr->length = PAGE_SIZE;
 
-	 /* In the new incarnation of selective caching, a file's caching policy 
-	  * can change, eg because file size exceeds threshold, etc. */
-	 trydo_cache_transition(avc, credp, bypasscache);
-		
-	 if(bypasscache) {
-		  if(address)
-			   kunmap(pp);
-		  /* save the page for background map */
-		  auio->uio_iov->iov_base = (void*) pp;
-		  /* the background thread will free this */
-		  ancr = osi_Alloc(sizeof(struct nocache_read_request));
-		  ancr->auio = auio;
-		  ancr->offset = offset;
-		  ancr->length = PAGE_SIZE;
-	
-		  maybe_lock_kernel();
-		  code = afs_ReadNoCache(avc, ancr, credp);
-		  maybe_unlock_kernel();
-	
-		  goto done; /* skips release page, doing it in bg thread */
-	 }
+	maybe_lock_kernel();
+	code = afs_ReadNoCache(avc, ancr, credp);
+	maybe_unlock_kernel();
+
+	goto done; /* skips release page, doing it in bg thread */
+    }
 #endif 
 		  
 #ifdef AFS_LINUX24_ENV
-	 maybe_lock_kernel();
+    maybe_lock_kernel();
 #endif
-	 AFS_GLOCK();
-	 AFS_DISCON_LOCK();
-	 afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip, ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32, 99999);	/* not a possible code value */
+    AFS_GLOCK();
+    AFS_DISCON_LOCK();
+    afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32,
+	       99999);	/* not a possible code value */
 
-	 code = afs_rdwr(avc, auio, UIO_READ, 0, credp);
+    code = afs_rdwr(avc, auio, UIO_READ, 0, credp);
 	
-	 afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
-				ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32,
-				code);
-	 AFS_DISCON_UNLOCK();
-	 AFS_GUNLOCK();
+    afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, cnt, ICL_TYPE_INT32,
+	       code);
+    AFS_DISCON_UNLOCK();
+    AFS_GUNLOCK();
 #ifdef AFS_LINUX24_ENV
-	 maybe_unlock_kernel();
+    maybe_unlock_kernel();
 #endif
-	 if (!code) {	
-		  /* XXX valid for no-cache also?  Check last bits of files... :) 
-		   * Cognate code goes in afs_NoCacheFetchProc.  */
-		  if (auio->uio_resid)	/* zero remainder of page */
-			   memset((void *)(address + (PAGE_SIZE - auio->uio_resid)), 0,
-					  auio->uio_resid);
+    if (!code) {
+	/* XXX valid for no-cache also?  Check last bits of files... :)
+	 * Cognate code goes in afs_NoCacheFetchProc.  */
+	if (auio->uio_resid)	/* zero remainder of page */
+	     memset((void *)(address + (PAGE_SIZE - auio->uio_resid)), 0,
+		    auio->uio_resid);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-		  flush_dcache_page(pp);
-		  SetPageUptodate(pp);
+	flush_dcache_page(pp);
+	SetPageUptodate(pp);
 #else
-		  set_bit(PG_uptodate, &pp->flags);
+	set_bit(PG_uptodate, &pp->flags);
 #endif
-	 } /* !code */
+    } /* !code */
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-	 kunmap(pp);
-	 UnlockPage(pp);
+    kunmap(pp);
+    UnlockPage(pp);
 #else
-	 clear_bit(PG_locked, &pp->flags);
-	 wake_up(&pp->wait);
-	 free_page(address);
+    clear_bit(PG_locked, &pp->flags);
+    wake_up(&pp->wait);
+    free_page(address);
 #endif
 
 #if defined(AFS_CACHE_BYPASS)
-
-/* do not call afs_GetDCache if cache is bypassed */
-	 if(bypasscache)
-		  goto done;
-	
+    /* do not call afs_GetDCache if cache is bypassed */
+    if(bypasscache)
+	goto done;
 #endif
 
-	 /* free if not bypassing cache */
-	 osi_Free(auio, sizeof(uio_t));
-	 osi_Free(iovecp, sizeof(struct iovec));
+    /* free if not bypassing cache */
+    osi_Free(auio, sizeof(uio_t));
+    osi_Free(iovecp, sizeof(struct iovec));
 
-	 if (!code && AFS_CHUNKOFFSET(offset) == 0) {
-		  struct dcache *tdc;
-		  struct vrequest treq;
+    if (!code && AFS_CHUNKOFFSET(offset) == 0) {
+	struct dcache *tdc;
+	struct vrequest treq;
 
-		  AFS_GLOCK();
-		  code = afs_InitReq(&treq, credp);
-		  if (!code && !NBObtainWriteLock(&avc->lock, 534)) {
-			   tdc = afs_FindDCache(avc, offset);
-			   if (tdc) {
-					if (!(tdc->mflags & DFNextStarted))
-						 afs_PrefetchChunk(avc, tdc, credp, &treq);
-					afs_PutDCache(tdc);
-			   }
-			   ReleaseWriteLock(&avc->lock);
-		  }
-		  AFS_GUNLOCK();
-	 }
+	AFS_GLOCK();
+	code = afs_InitReq(&treq, credp);
+	if (!code && !NBObtainWriteLock(&avc->lock, 534)) {
+	    tdc = afs_FindDCache(avc, offset);
+	    if (tdc) {
+		if (!(tdc->mflags & DFNextStarted))
+		    afs_PrefetchChunk(avc, tdc, credp, &treq);
+		    afs_PutDCache(tdc);
+	    }
+	    ReleaseWriteLock(&avc->lock);
+	}
+	AFS_GUNLOCK();
+    }
 
 #if defined(AFS_CACHE_BYPASS)
 done:
 #endif
-	 crfree(credp);
-	 return afs_convert_code(code);
+    crfree(credp);
+    return afs_convert_code(code);
 }
 
 
