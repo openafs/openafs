@@ -1100,8 +1100,13 @@ afs_map(struct vnode *vp, offset_t off, struct as *as, caddr_t *addr, u_int len,
  * at some point.
  */
 int
-afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap, 
+#ifdef AFS_SUN511_ENV
+afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
+	     register AFS_UCRED *credp, caller_context_t *ct)
+#else
+afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
 	     register AFS_UCRED *credp)
+#endif /* AFS_SUN511_ENV */
 {
     AFS_STATCNT(afs_cntl);
     switch (cmd) {
@@ -1128,7 +1133,11 @@ afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
 #endif
 	break;
     default:
-	return EINVAL;
+#ifdef AFS_SUN511_ENV
+	return fs_pathconf(vp, cmd, outdatap, credp, ct);
+#else
+	return fs_pathconf(vp, cmd, outdatap, credp);
+#endif /* AFS_SUN511_ENV */
     }
     return 0;
 }
@@ -1383,8 +1392,13 @@ extern int gafs_fid(struct vcache *avc, struct fid **fidpp);
 extern int gafs_create(register struct vcache *adp, char *aname, 
 		       struct vattr *attrs, enum vcexcl aexcl, int amode, 
 		       struct vcache **avcp, AFS_UCRED *acred);
+#ifdef AFS_SUN511_ENV
+extern int afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
+			register AFS_UCRED *credp, caller_context_t *ct);
+#else
 extern int afs_pathconf(struct vnode *vp, int cmd, u_long *outdatap,
 			register AFS_UCRED *credp);
+#endif /* AFS_SUN511_ENV */
 
 #if defined(AFS_SUN511_ENV)
 /* The following list must always be NULL-terminated */
