@@ -1605,6 +1605,21 @@ afs_linux_follow_link(struct dentry *dp, struct dentry *basep,
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
 
+static inline int
+afs_linux_can_bypass(struct inode *ip) {
+    switch(cache_bypass_strategy) {
+	case NEVER_BYPASS_CACHE:
+	    return 0;
+	case ALWAYS_BYPASS_CACHE:
+	    return 1;
+	case LARGE_FILES_BYPASS_CACHE:
+	    if(i_size_read(ip) > cache_bypass_threshold)
+		return 1;
+	default:
+     }
+     return 0;
+}
+
 /* The kernel calls readpages before trying readpage, with a list of 
  * pages.  The readahead algorithm expands num_pages when it thinks
  * the application will benefit.  Unlike readpage, the pages are not
@@ -1634,21 +1649,7 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     afs_int32 isize;
 	
     credp = crref();
-	
-    switch(cache_bypass_strategy) {
-    case NEVER_BYPASS_CACHE:
-	break;	
-    case ALWAYS_BYPASS_CACHE:
-	bypasscache = 1;
-	break;
-    case LARGE_FILES_BYPASS_CACHE:
-	if(i_size_read(ip) > cache_bypass_threshold) {
-	    bypasscache = 1;
-	}
-	break;
-    default:
-	break;
-    }
+    bypasscache = afs_linux_can_bypass(ip);
 	
     /* In the new incarnation of selective caching, a file's caching policy 
      *  can change, eg because file size exceeds threshold, etc. */
@@ -1810,20 +1811,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	      AFS_UIOSYS);
 
 #if defined(AFS_CACHE_BYPASS)
-    switch(cache_bypass_strategy) {
-	case NEVER_BYPASS_CACHE:
-	    break;
-	case ALWAYS_BYPASS_CACHE:
-	    bypasscache = 1;
-	    break;
-	case LARGE_FILES_BYPASS_CACHE:
-	    if(i_size_read(ip) > cache_bypass_threshold) {
-		bypasscache = 1;
-	    }
-	    break;
-	default:
-	    break;
-     }
+    bypasscache = afs_linux_can_bypass(ip);
 
     /* In the new incarnation of selective caching, a file's caching policy
      * can change, eg because file size exceeds threshold, etc. */
