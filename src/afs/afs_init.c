@@ -410,7 +410,17 @@ afs_InitCacheInfo(register char *afile)
 	if (!VFS_STATFS(filevp->v_vfsp, &st))
 #endif /* SGI... */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
-	    afs_fsfragsize = st.f_frsize - 1;
+	    if (strcmp("zfs", st.f_basetype) == 0) {
+		/*
+		 * Files in ZFS can take up to around the next
+		 * recordsize boundary after being truncated. recordsize
+		 * is reported in statvfs by f_bsize, so use that
+		 * instead.
+		 */
+		afs_fsfragsize = st.f_bsize - 1;
+	    } else {
+		afs_fsfragsize = st.f_frsize - 1;
+	    }
 #else
 	    afs_fsfragsize = st.f_bsize - 1;
 #endif
