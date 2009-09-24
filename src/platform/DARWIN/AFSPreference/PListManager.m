@@ -167,9 +167,10 @@
 			[launchdDic setObject:@"Aqua"
 						   forKey:@"LimitLoadToSessionType"];
 			
-			[launchdDic setObject:[NSArray arrayWithObject:backgrounderPath]
-						   forKey:@"ProgramArguments"];
-			
+			/*[launchdDic setObject:[NSArray arrayWithObject:backgrounderPath]
+						   forKey:@"ProgramArguments"];*/
+			[launchdDic setObject:backgrounderPath
+						   forKey:@"Program"];
 			[launchdDic setObject:[NSNumber numberWithBool:YES] 
 						   forKey:@"RunAtLoad"];
 			
