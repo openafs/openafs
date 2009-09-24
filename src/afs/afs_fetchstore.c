@@ -867,7 +867,7 @@ struct fetchOps rxfs_fetchMemOps = {
 
 afs_int32
 rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
-		afs_uint32 size, afs_uint32 *alength, afs_uint32 *moredata,
+		afs_uint32 size, afs_int32 *alength, afs_uint32 *moredata,
 		struct dcache *adc,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
@@ -945,7 +945,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 		   ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, code,
 		   ICL_TYPE_OFFSET,
 		   ICL_HANDLE_OFFSET(length64));
-	*alength = length64;
+	*alength = length;
 #else /* AFS_64BIT_CLIENT */
 	RX_AFS_GUNLOCK();
 	code = StartRXAFS_FetchData(v->call, (struct AFSFid *)&avc->f.fid.Fid,
@@ -1033,7 +1033,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
 		    struct afs_FetchOutput *tsmall)
 {
     afs_int32 code;
-    afs_uint32 length;
+    afs_int32 length;
     afs_uint32 bytesread, byteswritten;
     struct fetchOps *ops = NULL;
     void *rock = NULL;
@@ -1076,7 +1076,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
 #ifndef AFS_NOSTATS
 	bytesToXfer += length;
 #endif /* AFS_NOSTATS */
-	while (length) {
+	while (length > 0) {
 #ifdef RX_KERNEL_TRACE
 	    afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		       "before rx_Read");
