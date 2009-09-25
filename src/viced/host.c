@@ -1560,7 +1560,8 @@ h_GetHost_r(struct rx_connection *tcon)
 	    h_threadquota(host->lock.num_waiting)) {
 	    if (!held)
 		h_Release_r(host);
-	    return 0;
+	    host = NULL;
+	    goto gethost_out;
 	}
 	h_Lock_r(host);
 	if (!(host->hostFlags & ALTADDR)) {
@@ -1772,7 +1773,8 @@ h_GetHost_r(struct rx_connection *tcon)
                     h_Release_r(host);
                 host = NULL;
                 rx_DestroyConnection(cb_in);
-                return 0;
+		cb_in = NULL;
+		goto gethost_out;
 	    } else {
 		ViceLog(0,
 			("CB: WhoAreYou failed for host %" AFS_PTR_FMT " (%s:%d), error %d\n",
@@ -2060,10 +2062,16 @@ h_GetHost_r(struct rx_connection *tcon)
 	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     }
+
+ gethost_out:
     if (caps.Capabilities_val)
 	free(caps.Capabilities_val);
     caps.Capabilities_val = NULL;
     caps.Capabilities_len = 0;
+    if (cb_in) {
+        rx_DestroyConnection(cb_in);
+        cb_in = NULL;
+    }
     return host;
 
 }				/*h_GetHost_r */
