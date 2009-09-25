@@ -7027,8 +7027,9 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
 	Len = 0;
     }
 
-    if (Pos + Len > tlen)
-	Len = tlen - Pos;	/* get length we should send */
+    if (Pos + Len > tlen) /* get length we should send */
+	Len = ((tlen - Pos) < 0) ? 0 : tlen - Pos;
+
     (void)FDH_SEEK(fdP, Pos, 0);
     {
 	afs_int32 high, low;
