@@ -476,7 +476,7 @@ update_ReceiveFile(register int fd, register struct rx_call *call, register stru
     struct statfs tstatfs;
 #endif
 
-    len = rx_Read(call, &length, sizeof(afs_int32));
+    len = rx_Read(call, (char *)&length, sizeof(afs_int32));
     length = ntohl(length);
     if (len != sizeof(afs_int32))
 	return UPDATE_ERROR;

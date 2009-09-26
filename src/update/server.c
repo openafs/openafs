@@ -434,7 +434,7 @@ update_SendFile(register int fd, register struct rx_call *call, register struct 
 	return UPDATE_ERROR;
     }
     tlen = htonl(length);
-    rx_Write(call, &tlen, sizeof(afs_int32));	/* send length on fetch */
+    rx_Write(call, (char *)&tlen, sizeof(afs_int32));	/* send length on fetch */
     while (!error && length) {
 	register int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = read(fd, buffer, nbytes);
