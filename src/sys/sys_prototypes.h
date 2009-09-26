@@ -37,6 +37,7 @@ extern void outparam_conversion(afs_int32, char *, afs_int32);
 
 /* rmtsyss.c */
 extern void rmt_Quit(char *msg, ...);
+extern void rmtsysd(void);
 
 /* setpag.c */
 extern int lsetpag(void);

@@ -35,6 +35,7 @@
 #endif
 #include "rx/rx.h"
 #include "sys_prototypes.h"
+#include <afs/auth.h>
 
 #include "AFS_component_version_number.c"
 

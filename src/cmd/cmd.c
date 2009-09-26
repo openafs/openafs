@@ -232,7 +232,7 @@ PrintFlagHelp(register struct cmd_syndesc *as)
 {
     register int i;
     register struct cmd_parmdesc *tp;
-    size_t flag_width;
+    int flag_width;
     char *flag_prefix;
 
     /* find flag name length */

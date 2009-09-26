@@ -2933,7 +2933,7 @@ VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
 
-    code = ugen_ClientInit(noAuthFlag, AFSDIR_CLIENT_ETC_DIRPATH, 
+    code = ugen_ClientInit(noAuthFlag, (char *) AFSDIR_CLIENT_ETC_DIRPATH,
 			   info->name, 0, &uclient, 
                            NULL, pn, rxkad_clear,
                            VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,

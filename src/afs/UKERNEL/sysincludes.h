@@ -1278,7 +1278,7 @@ extern struct usr_mount *getmp(unsigned long);
 typedef long usr_whymountroot_t;
 
 struct usr_vfsops {
-    int (*vfs_mount) (struct vfs *, char *, struct vfs *);
+    int (*vfs_mount) (struct vfs *, char *, void *);
     int (*vfs_unmount) (struct vfs *);
     int (*vfs_root) (struct vfs *, struct vnode **);
     int (*vfs_statfs) (struct vfs *, struct statfs *);

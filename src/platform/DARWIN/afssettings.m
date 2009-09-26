@@ -146,7 +146,8 @@ walk(id obj, Setting *s, int level)
     }
 }
 
-main()
+int
+main(int argc, char **argv)
 {
     NSData *plistData;
     id plist;

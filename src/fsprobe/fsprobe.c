@@ -267,7 +267,7 @@ fsprobe_LWP(void *unused)
 		    RXAFS_GetStatistics64(curr_conn->rxconn, STATS64_VERSION, &stats64);
 		if (*curr_probeOK == RXGEN_OPCODE)
 		    *curr_probeOK =
-			RXAFS_GetStatistics(curr_conn->rxconn, curr_stats);
+			RXAFS_GetStatistics(curr_conn->rxconn, (ViceStatistics *)curr_stats);
 		else if (*curr_probeOK == 0) {
 		    curr_stats->CurrentTime = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_CURRENTTIME]);
 		    curr_stats->BootTime = RoundInt64ToInt32(stats64.ViceStatistics64_val[STATS64_BOOTTIME]);

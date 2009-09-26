@@ -28,8 +28,9 @@ VIsSalvager(ProgramType type)
     case salvager:
     case salvageServer:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /***************************************************/

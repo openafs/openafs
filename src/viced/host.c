@@ -31,6 +31,8 @@
 #include <lwp.h>
 #include <lock.h>
 #include <afs/afsint.h>
+#define FSINT_COMMON_XG
+#include <afs/afscbint.h>
 #include <afs/rxgen_consts.h>
 #include <afs/nfs.h>
 #include <afs/errors.h>
@@ -2278,7 +2280,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	afs_int32 kvno;
     
 	/* kerberos ticket */
-	code = rxkad_GetServerInfo(tcon, /*level */ 0, &expTime,
+	code = rxkad_GetServerInfo(tcon, /*level */ 0, (afs_uint32 *)&expTime,
 				   tname, tinst, tcell, &kvno);
 	if (code) {
 	    ViceLog(1, ("Failed to get rxkad ticket info\n"));

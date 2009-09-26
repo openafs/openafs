@@ -26,6 +26,8 @@
 #include "afs/keys.h"
 #include "afs/auth.h"
 #include "afs/pthread_glock.h"
+#include "des.h"
+#include "des_prototypes.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>

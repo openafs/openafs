@@ -138,6 +138,7 @@
 #include <ctype.h>
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
+#include <afs/sys_prototypes.h>
 
 #ifdef AFS_SGI61_ENV
 #include <unistd.h>
@@ -667,7 +668,7 @@ PartSizeOverflow(char *path, int cs)
     mint = totalblks / 100 * 95;
     if (cs > mint) {
 	printf
-	    ("Cache size (%d) must be less than 95%% of partition size (which is %d). Lower cache size\n",
+	    ("Cache size (%d) must be less than 95%% of partition size (which is %lld). Lower cache size\n",
 	     cs, mint);
 	return 1;
     }
@@ -1523,7 +1524,9 @@ mainproc(struct cmd_syndesc *as, void *arock)
     static char rn[] = "afsd";	/*Name of this routine */
     afs_int32 code;		/*Result of fork() */
     int i;
+#ifndef AFS_CACHE_VNODE_PATH
     int currVFile;		/*Current AFS cache file number passed in */
+#endif
     int mountFlags;		/*Flags passed to mount() */
     int lookupResult;		/*Result of GetLocalCellName() */
     int cacheIteration;		/*How many times through cache verification */
@@ -2647,8 +2650,9 @@ call_syscall(long param1, long param2, long param3, long param4, long param5,
     struct afssysargs syscall_data;
     void *ioctldata;
     int fd = open(SYSCALL_DEV_FNAME,O_RDWR);
-    int syscallnum, is64 = 0;
+    int syscallnum;
 #ifdef AFS_DARWIN100_ENV
+    int is64 = 0;
     struct afssysargs64 syscall64_data;
     if (sizeof(param1) == 8) {
 	syscallnum = VIOC_SYSCALL64;

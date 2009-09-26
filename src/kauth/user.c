@@ -35,6 +35,9 @@
 #include "afs/kautils.h"
 #include "afs/afsutil.h"
 #include "afs/ptuser.h"
+#include "des.h"
+#include "des_prototypes.h"
+#include "ktc.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
 #include <signal.h>
@@ -62,6 +65,7 @@
 #include <rx/rxkad.h>		/* max ticket lifetime */
 #include "kauth.h"
 #include "kautils.h"
+#include "ktc.h"
 #endif /* defined(UKERNEL) */
 
 

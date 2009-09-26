@@ -763,7 +763,7 @@ Afs_syscall()
 	    AFS_GLOCK();
 	    code =
 		Afscall_icl(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
-			    uap->parm5, retval);
+			    uap->parm5, (long *)retval);
 	    AFS_GUNLOCK();
 #ifdef AFS_LINUX20_ENV
 	    if (!code) {
