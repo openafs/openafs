@@ -564,9 +564,6 @@ case $AFS_SYSNAME in
 		;;
 
 	*_darwin_90)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
@@ -585,9 +582,6 @@ case $AFS_SYSNAME in
 		;;
 
 	*_darwin_100)
-		CC="cc"
-		CCOBJ="cc"
-		MT_CC="cc"
 		AFSD_LDFLAGS="-F/System/Library/PrivateFrameworks -framework DiskArbitration -framework SystemConfiguration -framework IOKit -framework CoreFoundation"
 		LEX="lex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -D_REENTRANT ${XCFLAGS} ${ARCHFLAGS}'
