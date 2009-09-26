@@ -40,14 +40,6 @@
 #include <rx/rx_pthread.h>
 #include <rx/rx_clock.h>
 
-/*
- * Number of times the event handling thread was signalled because a new
- * event was scheduled earlier than the lastest event.
- *
- * Protected by event_handler_mutex
- */
-static long rx_pthread_n_event_wakeups;
-
 /* Set rx_pthread_event_rescheduled if event_handler should just try
  * again instead of sleeping.
  *

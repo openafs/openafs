@@ -9,6 +9,8 @@
 
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
+/* rxi_syscall is currently not prototyped */
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -459,9 +461,7 @@ fudge_netmask(afs_uint32 addr)
 
 #if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) 
 int
-rxi_syscall(a3, a4, a5)
-     afs_uint32 a3, a4;
-     void *a5;
+rxi_syscall(afs_uint32 a3, afs_uint32 a4, void *a5)
 {
     afs_uint32 rcode;
     void (*old) (int);
