@@ -819,7 +819,7 @@ rxfs_fetchDestroy(void **r, afs_int32 error)
 }
 
 afs_int32
-rxfs_fetchMore(void *r, afs_uint32 *length, afs_uint32 *moredata)
+rxfs_fetchMore(void *r, afs_int32 *length, afs_uint32 *moredata)
 {
     afs_int32 code;
     struct rxfs_fetchVariables *v = (struct rxfs_fetchVariables *)r;
@@ -833,14 +833,16 @@ rxfs_fetchMore(void *r, afs_uint32 *length, afs_uint32 *moredata)
      * We do not do this for AFS file servers because they sometimes
      * return large negative numbers as the transfer size.
      */
-    RX_AFS_GUNLOCK();
-    code = rx_Read(v->call, (void *)length, sizeof(afs_int32));
-    RX_AFS_GLOCK();
-    *length = ntohl(*length);
-    if (code != sizeof(afs_int32)) {
-	code = rx_Error(v->call);
-	*moredata = 0;
-	return (code ? code : -1);	/* try to return code, not -1 */
+    if (*moredata) {
+	RX_AFS_GUNLOCK();
+	code = rx_Read(v->call, (void *)length, sizeof(afs_int32));
+	RX_AFS_GLOCK();
+	*length = ntohl(*length);
+	if (code != sizeof(afs_int32)) {
+	    code = rx_Error(v->call);
+	    *moredata = 0;
+	    return (code ? code : -1);	/* try to return code, not -1 */
+        }
     }
     *moredata = *length & 0x80000000;
     *length &= ~0x80000000;
@@ -867,8 +869,7 @@ struct fetchOps rxfs_fetchMemOps = {
 
 afs_int32
 rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
-		afs_uint32 size, afs_int32 *alength, afs_uint32 *moredata,
-		struct dcache *adc,
+		afs_uint32 size, afs_int32 *alength, struct dcache *adc,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
@@ -971,22 +972,6 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 	osi_FreeSmallSpace(v);
         return code;
     }
-    /*
-     * The fetch protocol is extended for the AFS/DFS translator
-     * to allow multiple blocks of data, each with its own length,
-     * to be returned. As long as the top bit is set, there are more
-     * blocks expected.
-     *
-     * We do not do this for AFS file servers because they sometimes
-     * return large negative numbers as the transfer size.
-     *
-     * Also omit if length > 2^32, as bit 31 is part of the number then.
-     * Known to never be the case ifndef AFS_64BIT_CLIENT.
-     */
-    if (avc->f.states & CForeign && !length_hi) {
-	*moredata = length & 0x80000000;
-	length &= ~0x80000000;
-    }
     if (cacheDiskType == AFS_FCACHE_TYPE_UFS) {
 	v->tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 	if (!v->tbuffer)
@@ -1057,7 +1042,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
      * adc->lock(W)
      */
     code = rxfs_fetchInit(
-		tc, avc, base, size, &length, &moredata, adc, fP, &ops, &rock);
+		tc, avc, base, size, &length, adc, fP, &ops, &rock);
 
 #ifndef AFS_NOSTATS
     osi_GetuTime(&xferStartTime);
@@ -1068,7 +1053,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
     }
 
     if ( !code ) do {
-	if ((avc->f.states & CForeign) && moredata && !length) {
+	if (avc->f.states & CForeign) {
 	    code = (*ops->more)(rock, &length, &moredata);
 	    if ( code )
 		break;
