@@ -2710,7 +2710,7 @@ h_DumpHost(register struct host *host, int held, void *rock)
 	sprintf(tmpStr, "%04x", host->holds[i]);
 	(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     }
-    sprintf(tmpStr, " slot/bit: %ld/%d\n", h_holdSlot(), h_holdbit());
+    sprintf(tmpStr, " slot/bit: %d/%d\n", h_holdSlot(), h_holdbit());
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     H_UNLOCK;

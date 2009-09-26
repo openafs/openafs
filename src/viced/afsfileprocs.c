@@ -1348,7 +1348,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 	SetDirHandle(&childdir, *targetptr);
 	if (IsEmpty(&childdir) != 0)
 	    return (EEXIST);
-	DZap(&childdir);
+	DZap((afs_int32 *) &childdir);
 	FidZap(&childdir);
 	(*targetptr)->delete = 1;
     } else if ((--(*targetptr)->disk.linkCount) == 0)
@@ -4810,7 +4810,7 @@ SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
 
     /* Actually create the New directory in the directory package */
     SetDirHandle(&dir, targetptr);
-    assert(!(MakeDir(&dir, OutFid, DirFid)));
+    assert(!(MakeDir(&dir, (afs_int32 *)OutFid, (afs_int32 *)DirFid)));
     DFlush();
     VN_SET_LEN(targetptr, (afs_fsize_t) Length(&dir));
 
@@ -7716,7 +7716,7 @@ sys_error_to_et(afs_int32 in)
 	return 0;
     if (in < 0 || in > 511)
 	return in;
-    if (in >= VICE_SPECIAL_ERRORS && in <= VIO || in == VRESTRICTED)
+    if ((in >= VICE_SPECIAL_ERRORS && in <= VIO) || in == VRESTRICTED)
 	return in;
     if (sys2et[in] != 0)
 	return sys2et[in];

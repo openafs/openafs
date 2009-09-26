@@ -255,6 +255,7 @@ extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern void h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host * host);
 extern void h_AddHostToUuidHashTable_r(afsUUID * uuid, struct host * host);
 extern int h_DeleteHostFromAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host);
+extern int h_DeleteHostFromUuidHashTable_r(struct host *host);
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
