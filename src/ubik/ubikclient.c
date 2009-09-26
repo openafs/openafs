@@ -150,7 +150,9 @@ afs_random(void)
 #ifdef AFS_PTHREAD_ENV
     afs_uint32 state;
 
-    (called_afs_random_once || pthread_once(&random_once, afs_random_once));
+    if (!called_afs_random_once)
+	pthread_once(&random_once, afs_random_once);
+
     state = (afs_uint32) pthread_getspecific(random_number_key);
 #else
     static afs_uint32 state = 0;

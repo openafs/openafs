@@ -439,6 +439,7 @@ extern int uvote_Init(void);
 extern void ubik_vprint(const char *format, va_list ap);
 extern void ubik_print(const char *format, ...);
 extern void ubik_dprint(const char *format, ...);
+extern void ubik_dprint_25(const char *format, ...);
 /*\}*/
 
 #endif /* UBIK_INTERNALS */
