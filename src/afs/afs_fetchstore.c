@@ -35,7 +35,7 @@ FillStoreStats(int code, int idx, osi_timeval_t *xferStartTime,
 {
     struct afs_stats_xferData *xferP;
     osi_timeval_t xferStopTime;
-    XSTATS_DECLS;
+    osi_timeval_t elapsedTime;
 
     xferP = &(afs_stats_cmfullperf.rpc.fsXferTimes[idx]);
     osi_GetuTime(&xferStopTime);
@@ -84,7 +84,7 @@ struct rxfs_storeVariables {
     struct rx_call *call;
     char *tbuffer;
     struct iovec *tiov;
-    afs_uint32 tnio;
+    afs_int32 tnio;
     afs_int32 hasNo64bit;
     struct AFSStoreStatus InStatus;
 };
@@ -454,7 +454,7 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 
 	while ( size > 0 ) {
 	    afs_uint32 tlen;
-	    afs_int32 bytesread, byteswritten;
+	    afs_uint32 bytesread, byteswritten;
 	    code = (*ops->prepare)(rock, size, &tlen);
 	    if ( code )
 		break;
@@ -692,7 +692,7 @@ struct rxfs_fetchVariables {
     struct rx_call *call;
     char *tbuffer;
     struct iovec *iov;
-    afs_uint32 nio;
+    afs_int32 nio;
     afs_int32 hasNo64bit;
     afs_int32 iovno;
     afs_int32 iovmax;
@@ -874,7 +874,10 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 {
     struct rxfs_fetchVariables *v;
     int code = 0, code1;
-    afs_uint32 length_hi = 0, length, bytes;
+#ifdef AFS_64BIT_CLIENT
+    afs_uint32 length_hi = 0;
+#endif
+    afs_uint32 length, bytes;
 
     v = (struct rxfs_fetchVariables *) osi_AllocSmallSpace(sizeof(struct rxfs_fetchVariables));
     if (!v)
@@ -1022,7 +1025,7 @@ afs_CacheFetchProc(struct afs_conn *tc, struct osi_file *fP, afs_size_t base,
     afs_uint32 bytesread, byteswritten;
     struct fetchOps *ops = NULL;
     void *rock = NULL;
-    int moredata = 0;
+    afs_uint32 moredata = 0;
     int offset = 0;
 
     XSTATS_DECLS;
