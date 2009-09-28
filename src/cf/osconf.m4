@@ -1180,9 +1180,18 @@ else
   NO_STRIP_BIN=
 fi
 
-if test "x$enable_warnings" = "xyes"; then
-  if test "x$GCC" = "xyes"; then
+CFLAGS_NOERROR=
+
+if test "x$GCC" = "xyes"; then
+  if test "x$enable_warnings" = "xyes"; then
     XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition"
+  fi
+  if test "x$enable_checking" != "xno"; then
+    XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option"
+    if test "x$enable_checking" != "xall"; then
+      CFLAGS_NOERROR="-Wno-error"
+      AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
+    fi
   fi
 fi
 
@@ -1235,6 +1244,7 @@ AC_SUBST(SHLIB_SUFFIX)
 AC_SUBST(TXLIBS)
 AC_SUBST(VFSCK_CFLAGS)
 AC_SUBST(XCFLAGS)
+AC_SUBST(CFLAGS_NOERROR)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLDFLAGS64)

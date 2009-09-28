@@ -12,6 +12,9 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+#endif
 
 #include <sys/types.h>
 #include <fcntl.h>

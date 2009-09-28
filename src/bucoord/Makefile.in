@@ -69,6 +69,21 @@ bucoord_errs.c bc.h:	bucoord_errs.et bc.p.h
 	${COMPILE_ET} -p ${srcdir} bucoord_errs -h bc
 
 #
+# Errors
+#
+ubik_db_if.o: ubik_db_if.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
+volstub.o: volstub.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
+commands.o: commands.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
+regex.o: regex.c
+	$(CC) $(CFLAGS) -c $<
+
+#
 # Install targets
 #
 

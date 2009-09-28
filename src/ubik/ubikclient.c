@@ -14,6 +14,9 @@
 #include <afs/param.h>
 #endif
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+#endif
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"

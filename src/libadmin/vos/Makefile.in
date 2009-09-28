@@ -85,7 +85,7 @@ afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
 	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
+	${CCRULE} @CFLAGS_NOERROR@
 
 clean:
 	$(RM) -f *.o libvosadmin*

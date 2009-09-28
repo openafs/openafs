@@ -152,7 +152,7 @@ client.o: ${KAUTH}/client.c
 	${CCRULE}
 
 authclient.o: ${KAUTH}/authclient.c
-	${CCRULE}
+	${CCRULE} @CFLAGS_NOERROR@
 
 token.o: ${KAUTH}/token.c
 	${CCRULE}

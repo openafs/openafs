@@ -75,6 +75,8 @@ Kubik_int.h: ubik_int.xg
 	${RXGEN} -A -x -k -h -o Kubik_int.h ${srcdir}/ubik_int.xg
 
 utst_int.ss.o: utst_int.ss.c utst_int.xdr.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
 utst_int.cs.o: utst_int.cs.c utst_int.xdr.c
 utst_int.xdr.o: utst_int.xdr.c utst_int.h
 
@@ -114,7 +116,12 @@ libubik.a: ${LIBOBJS} AFS_component_version_number.o
 disk.o: disk.c ${INCLS}
 uinit.o: uinit.c ${INCLS}
 remote.o: remote.c ${INCLS}
+
+# beacon.c uses signed and unsigned interchangably for IP addresses. Fixing
+# will require changing the Ubik API
 beacon.o: beacon.c ${INCLS}
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
 lock.o: lock.c ${INCLS}
 recovery.o: recovery.c ${INCLS}
 ubik.o: ubik.c ${INCLS}

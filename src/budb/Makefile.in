@@ -115,6 +115,10 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 	$(AR) crv $@ budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_number.o
 	$(RANLIB) $@
 
+# Errors
+server.o: server.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
 #
 # Install targets
 #

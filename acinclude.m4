@@ -252,6 +252,12 @@ AC_ARG_ENABLE([warnings],
          disabled)])],
     ,
     [enable_warnings="no"])
+AC_ARG_ENABLE([checking],
+    [AS_HELP_STRING([--enable-checking],
+	[turn compilation warnings into errors when building with gcc (defaults
+	 to disabled)])],
+    [enable_checking="$enableval"],
+    [enable_checking="no"])
 AC_ARG_ENABLE([debug-kernel],
     [AS_HELP_STRING([--enable-debug-kernel],
         [enable compilation of the kernel module with debugging information

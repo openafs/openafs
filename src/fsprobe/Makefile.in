@@ -46,6 +46,7 @@ libfsprobe.a: fsprobe.o fsprobe_callback.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 fsprobe.o: fsprobe.c ${INCLS} AFS_component_version_number.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 fsprobe_callback.o: fsprobe_callback.c ${INCLS}
 

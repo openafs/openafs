@@ -136,6 +136,12 @@ lockprocs.o: lockprocs.c ${VINCLS} ${INTINCLS} ${RINCLS}
 vol_split.o: vol_split.c ${VINCLS} ${INTINCLS} ${RINCLS}
 
 #
+# Errors
+#
+vos.o: vos.c
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
+#
 # Installation targets
 #
 install: restorevol voldump volser.h volint.h vos volserver libvolser.a

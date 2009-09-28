@@ -17,6 +17,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wformat"
+#endif
 
 #include <ctype.h>
 #include <errno.h>

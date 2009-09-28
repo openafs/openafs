@@ -60,7 +60,7 @@ uss_common.o : uss_common.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss_common.c
 
 uss_vol.o : uss_vol.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_vol.c
+	${CC} -c ${CFLAGS} @CFLAGS_NOERROR@ ${srcdir}/uss_vol.c
 
 uss_acl.o : uss_acl.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss_acl.c
@@ -69,13 +69,13 @@ uss_ptserver.o : uss_ptserver.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss_ptserver.c
 
 uss_kauth.o : uss_kauth.c
-	${CC} -c ${CFLAGS} ${srcdir}/uss_kauth.c
+	${CC} -c ${CFLAGS} @CFLAGS_NOERROR@ ${srcdir}/uss_kauth.c
 
 uss_fs.o : uss_fs.c
 	${CC} -c ${CFLAGS} ${srcdir}/uss_fs.c
 
 lex.yy.o : lex.yy.c y.tab.c
-	${CC} -c ${CFLAGS} lex.yy.c
+	${CC} -c ${CFLAGS} @CFLAGS_NOERROR@ lex.yy.c
 
 lex.yy.c : lex.l
 	${LEX} ${srcdir}/lex.l

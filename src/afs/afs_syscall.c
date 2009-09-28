@@ -10,6 +10,10 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wold-style-definition"
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+#endif
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */

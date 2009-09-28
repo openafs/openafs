@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wformat-extra-args"
+#endif
 
 #include <stdio.h>
 #include <sys/types.h>

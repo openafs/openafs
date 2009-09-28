@@ -52,7 +52,8 @@ libkasadmin.a: ${LIBOBJS}
 	$(AR) crv $@ ${LIBOBJS}
 	${RANLIB} $@
 
-afs_kasAdmin.o: afs_kasAdmin.h
+afs_kasAdmin.o: afs_kasAdmin.c afs_kasAdmin.h
+	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 kauth.cs.o: ../../kauth/kauth.cs.c
 	${CCRULE}
