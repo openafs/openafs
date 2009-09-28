@@ -1410,6 +1410,9 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     afs_int32 t1,t2;
     int require_64bit_ops = 0;
     int call_was_64bit = 0;
+    int fs_fetchdata_offset_bug = 0;
+    int first_read = 1;
+    int scp_locked = 1;
 
     /* now, the buffer may or may not be filled with good data (buf_GetNew
      * drops lots of locks, and may indeed return a properly initialized
@@ -1471,6 +1474,7 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     }
 
     lock_ReleaseWrite(&scp->rw);
+    scp_locked = 0;
 
     if (LargeIntegerGreaterThan(LargeIntegerAdd(biod.offset,
                                                 ConvertLongToLargeInteger(biod.length)),
@@ -1547,7 +1551,75 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
 #endif /* AFS_FREELANCE_CLIENT */
 
-	/* now make the call */
+    /*
+     * if the requested offset is greater than the file length,
+     * the file server will return zero bytes of data and the
+     * current status for the file which we already have since
+     * we have just obtained a callback.  Instead, we can avoid
+     * the network round trip by allocating zeroed buffers and
+     * faking the status info.
+     */
+    if (biod.offset.QuadPart >= scp->length.QuadPart) {
+        osi_Log5(afsd_logp, "SKIP FetchData64 scp 0x%p, off 0x%x:%08x > length 0x%x:%08x",
+                 scp, biod.offset.HighPart, biod.offset.LowPart,
+                 scp->length.HighPart, scp->length.LowPart);
+
+        // setup the status based upon the scp data
+        afsStatus.InterfaceVersion = 0x1;
+        switch (scp->fileType) {
+        case CM_SCACHETYPE_FILE:
+            afsStatus.FileType = File;
+            break;
+        case CM_SCACHETYPE_DIRECTORY:
+            afsStatus.FileType = Directory;
+            break;
+        case CM_SCACHETYPE_MOUNTPOINT:
+            afsStatus.FileType = SymbolicLink;
+            break;
+        case CM_SCACHETYPE_SYMLINK:
+        case CM_SCACHETYPE_DFSLINK:
+            afsStatus.FileType = SymbolicLink;
+            break;
+        default:
+            afsStatus.FileType = -1;    /* an invalid value */
+        }
+        afsStatus.LinkCount = scp->linkCount;
+        afsStatus.Length = scp->length.LowPart;
+        afsStatus.DataVersion = (afs_uint32)(scp->dataVersion & MAX_AFS_UINT32);
+        afsStatus.Author = 0x1;
+        afsStatus.Owner = scp->owner;
+        lock_ObtainWrite(&scp->rw);
+        scp_locked = 1;
+        if (cm_FindACLCache(scp, userp, &afsStatus.CallerAccess))
+             afsStatus.CallerAccess = scp->anyAccess;
+        afsStatus.AnonymousAccess = scp->anyAccess;
+        afsStatus.UnixModeBits = scp->unixModeBits;
+        afsStatus.ParentVnode = scp->parentVnode;
+        afsStatus.ParentUnique = scp->parentUnique;
+        afsStatus.ResidencyMask = 0;
+        afsStatus.ClientModTime = scp->clientModTime;
+        afsStatus.ServerModTime = scp->serverModTime;
+        afsStatus.Group = scp->group;
+        afsStatus.SyncCounter = 0;
+        afsStatus.dataVersionHigh = (afs_uint32)(scp->dataVersion >> 32);
+        afsStatus.lockCount = 0;
+        afsStatus.Length_hi = scp->length.HighPart;
+        afsStatus.errorCode = 0;
+
+        /* status info complete, fill pages with zeros */
+        for (qdp = biod.bufListEndp;
+             qdp;
+             qdp = (osi_queueData_t *) osi_QPrev(&qdp->q)) {
+            tbufp = osi_GetQData(qdp);
+            bufferp=tbufp->datap;
+            memset(bufferp, 0, cm_data.buf_blockSize);
+        }
+
+        /* no need to contact the file server */
+        goto fetchingcompleted;
+    }
+
+    /* now make the call */
     do {
         code = cm_ConnFromFID(&scp->fid, userp, reqp, &connp);
         if (code) 
@@ -1610,8 +1682,16 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 nbytes = ntohl(nbytes);
                 FillInt64(length_found, nbytes_hi, nbytes);
                 if (length_found > biod.length) {
+                    /*
+                     * prior to 1.4.12 and 1.5.65 the file server would return
+                     * (filesize - offset) if the requested offset was greater than
+                     * the filesize.  The correct return value would have been zero.
+                     * Force a retry by returning an RX_PROTOCOL_ERROR.  If the cause
+                     * is a race between two RPCs issues by this cache manager, the
+                     * correct thing will happen the second time.
+                     */
                     osi_Log0(afsd_logp, "cm_GetBuffer length_found > biod.length");
-                    code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                    fs_fetchdata_offset_bug = 1;
                 }
             } else {
                 osi_Log1(afsd_logp, "cm_GetBuffer rx_Read32 returns %d != 4", temp);
@@ -1631,10 +1711,18 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         if (code == 0) {
             temp  = rx_Read32(rxcallp, &nbytes);
             if (temp == sizeof(afs_int32)) {
-                nbytes = ntohl(nbytes);
-                if (nbytes > biod.length) {
+                length_found = ntohl(nbytes);
+                if (length_found > biod.length) {
+                    /*
+                     * prior to 1.4.12 and 1.5.65 the file server would return
+                     * (filesize - offset) if the requested offset was greater than
+                     * the filesize.  The correct return value would have been zero.
+                     * Force a retry by returning an RX_PROTOCOL_ERROR.  If the cause
+                     * is a race between two RPCs issues by this cache manager, the
+                     * correct thing will happen the second time.
+                     */
                     osi_Log0(afsd_logp, "cm_GetBuffer length_found > biod.length");
-                    code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
+                    fs_fetchdata_offset_bug = 1;
                 }
             }
             else {
@@ -1652,27 +1740,38 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             }
             else 
                 bufferp = NULL;
-            /* fill nbytes of data from the pipe into the pages.
+            /* fill length_found of data from the pipe into the pages.
              * When we stop, qdp will point at the last page we're
              * dealing with, and bufferp will tell us where we
              * stopped.  We'll need this info below when we clear
              * the remainder of the last page out (and potentially
              * clear later pages out, if we fetch past EOF).
              */
-            while (nbytes > 0) {
+            while (length_found > 0) {
                 /* assert that there are still more buffers;
-                 * our check above for nbytes being less than
+                 * our check above for length_found being less than
                  * biod.length should ensure this.
                  */
                 osi_assertx(bufferp != NULL, "null cm_buf_t");
 
                 /* read rbytes of data */
-                rbytes = (nbytes > cm_data.buf_blockSize? cm_data.buf_blockSize : nbytes);
+                rbytes = (afs_uint32)(length_found > cm_data.buf_blockSize ? cm_data.buf_blockSize : length_found);
                 temp = rx_Read(rxcallp, bufferp, rbytes);
                 if (temp < rbytes) {
-                    code = (rxcallp->error < 0) ? rxcallp->error : RX_EOF;
+                    /*
+                     * If the file server returned (filesize - offset),
+                     * then the first rx_Read will return zero octets of data.
+                     * If it does, do not treat it as an error.  Correct the
+                     * length_found and continue as if the file server said
+                     * it was sending us zero octets of data.
+                     */
+                    if (fs_fetchdata_offset_bug && first_read)
+                        length_found = 0;
+                    else
+                        code = (rxcallp->error < 0) ? rxcallp->error : RX_PROTOCOL_ERROR;
                     break;
                 }
+                first_read = 0;
 
                 /* allow read-while-fetching.
                  * if this is the last buffer, clear the
@@ -1693,10 +1792,10 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                 lock_ReleaseWrite(&scp->rw);
 
                 /* and adjust counters */
-                nbytes -= temp;
+                length_found -= temp;
 
                 /* and move to the next buffer */
-                if (nbytes != 0) {
+                if (length_found != 0) {
                     qdp = (osi_queueData_t *) osi_QPrev(&qdp->q);
                     if (qdp) {
                         tbufp = osi_GetQData(qdp);
@@ -1761,7 +1860,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
   fetchingcompleted:
     code = cm_MapRPCError(code, reqp);
 
-    lock_ObtainWrite(&scp->rw);
+    if (!scp_locked)
+        lock_ObtainWrite(&scp->rw);
     
     /* we know that no one else has changed the buffer, since we still have
      * the fetching flag on the buffers, and we have the scp locked again.
