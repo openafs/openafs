@@ -1765,7 +1765,7 @@ fs_refresh(int a_pageNum,	/* page to display */
 
 	    /* display the hostname , first names only please! */
 
-	    sprintf(printBuf, fsDataP->hostName);
+	    sprintf(printBuf, "%s", fsDataP->hostName);
 	    for (j = 0; j < strlen(printBuf); j++) {
 		if (printBuf[j] == '.') {
 		    printBuf[j] = '\0';
@@ -2548,7 +2548,7 @@ cm_refresh(int a_pageNum,		/* page to display */
 
 	    /* display the hostname , first names only please! */
 
-	    sprintf(printBuf, cmDataP->hostName);
+	    sprintf(printBuf, "%s", cmDataP->hostName);
 	    for (j = 0; j < strlen(printBuf); j++) {
 		if (printBuf[j] == '.') {
 		    printBuf[j] = '\0';
