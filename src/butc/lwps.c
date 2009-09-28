@@ -138,14 +138,11 @@ static struct TapeBlock tapeBlock;
 char tapeVolumeHT[sizeof(struct volumeHeader) + 2 * sizeof(char)];
 
 void
-PrintLog(log, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
-     FILE *log;
-     afs_int32 error1, error2;
-     char *str, *a, *b, *c, *d, *e, *f, *g, *h, *i, *j;
+PrintLogStr(FILE *log, afs_int32 error1, afs_int32 error2, char *str)
 {
     char *err1, *err2;
 
-    fprintf(log, str, a, b, c, d, e, f, g, h, i, j);
+    fprintf(log, str);
     if (error1) {
 	err2 = "vols";
 	switch (error1) {
@@ -199,10 +196,8 @@ PrintLog(log, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
 }
 
 void
-TapeLog(debug, task, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
-     int debug;
-     afs_int32 task, error1, error2;
-     char *str, *a, *b, *c, *d, *e, *f, *g, *h, *i, *j;
+TapeLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
+	   char *str)
 {
     time_t now;
     char tbuffer[32], *timestr;
@@ -214,35 +209,51 @@ TapeLog(debug, task, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
     fprintf(logIO, "%s: ", timestr);
     if (task)
 	fprintf(logIO, "Task %u: ", task);
-    PrintLog(logIO, error1, error2, str, a, b, c, d, e, f, g, h, i, j);
+    PrintLogStr(logIO, error1, error2, str);
 
     if (lastPass && lastLogIO) {
 	fprintf(lastLogIO, "%s: ", timestr);
 	if (task)
 	    fprintf(lastLogIO, "Task %u: ", task);
-	PrintLog(lastLogIO, error1, error2, str, a, b, c, d, e, f, g, h, i,
-		 j);
+	PrintLogStr(lastLogIO, error1, error2, str);
     }
 
     /* Now print to the screen if debug level requires */
     if (debug <= debugLevel)
-	PrintLog(stdout, error1, error2, str, a, b, c, d, e, f, g, h, i, j);
+	PrintLogStr(stdout, error1, error2, str);
 }
 
 void
-TLog(task, str, a, b, c, d, e, f, g, h, i, j)
-     afs_int32 task;
-     char *str, *a, *b, *c, *d, *e, *f, *g, *h, *i, *j;
+TapeLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
+	char *fmt, ...)
 {
-    /* Sends message to TapeLog and stdout */
-    TapeLog(0, task, 0, 0, str, a, b, c, d, e, f, g, h, i, j);
+    char tmp[1024];
+    va_list ap;
+
+    va_start(ap, fmt);
+    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    va_end(ap);
+
+    TapeLogStr(debug, task, error1, error2, tmp);
 }
 
 void
-ErrorLog(debug, task, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
-     int debug;
-     afs_int32 task, error1, error2;
-     char *str, *a, *b, *c, *d, *e, *f, *g, *h, *i, *j;
+TLog(afs_int32 task, char *fmt, ...)
+{
+    char tmp[1024];
+    va_list ap;
+
+    va_start(ap, fmt);
+    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    va_end(ap);
+
+    /* Sends message to TapeLog and stdout */
+    TapeLogStr(0, task, 0, 0, tmp);
+}
+
+void
+ErrorLogStr(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
+	    char *errStr)
 {
     time_t now;
     char tbuffer[32], *timestr;
@@ -255,18 +266,38 @@ ErrorLog(debug, task, error1, error2, str, a, b, c, d, e, f, g, h, i, j)
     /* Print the time and task number */
     if (task)
 	fprintf(ErrorlogIO, "Task %u: ", task);
-    PrintLog(ErrorlogIO, error1, error2, str, a, b, c, d, e, f, g, h, i, j);
 
-    TapeLog(debug, task, error1, error2, str, a, b, c, d, e, f, g, h, i, j);
+    PrintLogStr(ErrorlogIO, error1, error2, errStr);
+    TapeLogStr(debug, task, error1, error2, errStr);
 }
 
 void
-ELog(task, str, a, b, c, d, e, f, g, h, i, j)
-     afs_int32 task;
-     char *str, *a, *b, *c, *d, *e, *f, *g, *h, *i, *j;
+ErrorLog(int debug, afs_int32 task, afs_int32 error1, afs_int32 error2,
+	 char *fmt, ...)
 {
+    char tmp[1024];
+    va_list ap;
+
+    va_start(ap, fmt);
+    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    va_end(ap);
+
+    ErrorLogStr(debug, task, error1, error2, tmp);
+
+}
+
+void
+ELog(afs_int32 task, char *fmt, ...)
+{
+    char tmp[1024];
+    va_list ap;
+
+    va_start(ap, fmt);
+    afs_vsnprintf(tmp, sizeof(tmp), fmt, ap);
+    va_end(ap);
+
     /* Sends message to ErrorLog, TapeLog and stdout */
-    ErrorLog(0, task, 0, 0, str, a, b, c, d, e, f, g, h, i, j);
+    ErrorLog(0, task, 0, 0, tmp);
 }
 
 /* first proc called by anybody who intends to use the device */
