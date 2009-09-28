@@ -1046,7 +1046,7 @@ VnQuery(struct cmd_syndesc * as, void * rock)
 	}
 #endif /* !AFS_DEMAND_ATTACH_FS */
 
-	printf("\twriter          = %u\n", (uintptr_t)v.writer);
+	printf("\twriter          = %"AFS_PTR_FMT"\n", (uintptr_t)v.writer);
 	printf("\tvcp             = %p\n", v.vcp);
 	printf("\thandle          = %p\n", v.handle);
 

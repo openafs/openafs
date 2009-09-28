@@ -1290,7 +1290,8 @@ static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
     struct ktc_encryptionKey key;
-    struct ktc_principal auth_server, auth_token, client;
+    struct ktc_principal auth_server, client;
+    struct ktc_token auth_token;
     char realm[MAXKTCREALMLEN];
 
     struct ktc_token token, *pToken;

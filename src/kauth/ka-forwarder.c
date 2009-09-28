@@ -207,7 +207,8 @@ main(int argc, char **argv)
     for (;;) {
 	char buf[BUFFER_SIZE], *bufp, *sendptr;
 	struct sockaddr_in from, reply, *to;
-	size_t fromlen, sendlen;
+	size_t sendlen;
+	socklen_t fromlen;
 
 	bufp = buf + 8;
 	fromlen = sizeof(from);

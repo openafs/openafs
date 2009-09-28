@@ -268,7 +268,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     if ((ti = as->parms[18].items)) {	/* -datelogs */
-	TimeStampLogFile(AFSDIR_SERVER_SLVGLOG_FILEPATH);
+      TimeStampLogFile((char *)AFSDIR_SERVER_SLVGLOG_FILEPATH);
     }
 #endif
 
@@ -410,7 +410,7 @@ main(int argc, char **argv)
 	 * multiple salvagers appending to the log.
 	 */
 
-	CheckLogFile(AFSDIR_SERVER_SLVGLOG_FILEPATH);
+	CheckLogFile((char *)AFSDIR_SERVER_SLVGLOG_FILEPATH);
 #ifndef AFS_NT40_ENV
 #ifdef AFS_LINUX20_ENV
 	fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */

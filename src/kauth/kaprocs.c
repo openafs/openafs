@@ -299,7 +299,7 @@ init_kaprocs(const char *lclpath, int initFlags)
 	return code;
     }
 
-    kaux_opendb(lclpath);	/* aux database stores failure counters */
+    kaux_opendb((char *)lclpath);/* aux database stores failure counters */
     rebuildDatabase = 0;	/* only do this during init */
     kaprocsInited = 1;
     return 0;

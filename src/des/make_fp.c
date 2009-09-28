@@ -46,7 +46,7 @@ gen(FILE * stream)
 
 #ifdef AFS_DARWIN80_ENV
   for(j = 0;; j++) {
-    fprintf(stream, _darwin_whichstr[j]);
+    fprintf(stream, "%s", _darwin_whichstr[j]);
     if (j == 2)
 	break;
 #endif /* AFS_DARWIN80_ENV */

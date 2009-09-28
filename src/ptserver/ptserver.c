@@ -522,7 +522,7 @@ main(int argc, char **argv)
 
     code =
 	ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info, clones,
-			      pr_dbaseName, &dbase);
+			      (char *)pr_dbaseName, &dbase);
     if (code) {
 	afs_com_err(whoami, code, "Ubik init failed");
 	PT_EXIT(2);

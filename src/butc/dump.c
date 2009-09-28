@@ -299,9 +299,9 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	/* Create and Write the volume header */
 	makeVolumeHeader(&hostVolumeHeader, dparamsPtr, fragmentNumber);
 	hostVolumeHeader.contd = ((fragmentNumber == 1) ? 0 : TC_VOLCONTD);
-	volumeHeader_hton(&hostVolumeHeader, buffer);
+	volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)buffer);
 
-	rc = butm_WriteFileData(tapeInfoPtr, buffer, 1,
+	rc = butm_WriteFileData(tapeInfoPtr, (struct volumeHeader *)buffer, 1,
 				sizeof(hostVolumeHeader));
 	if (rc) {
 	    ErrorLog(1, taskId, rc, tapeInfoPtr->error,
@@ -644,10 +644,10 @@ xbsaDumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
     /* Create and Write the volume header */
     makeVolumeHeader(&hostVolumeHeader, dparamsPtr, 1);
     hostVolumeHeader.contd = 0;
-    volumeHeader_hton(&hostVolumeHeader, buffer);
+    volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)buffer);
 
-    rc = xbsa_WriteObjectData(&butxInfo, buffer, sizeof(struct volumeHeader),
-			      &bytesWritten);
+    rc = xbsa_WriteObjectData(&butxInfo, (struct volumeHeader *)buffer,
+			      sizeof(struct volumeHeader), &bytesWritten);
     if (rc != XBSA_SUCCESS) {
 	ErrorLog(1, taskId, rc, 0,
 		 "Unable to write VolumeHeader data to the server\n");

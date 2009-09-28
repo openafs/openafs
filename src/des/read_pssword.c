@@ -250,7 +250,7 @@ des_read_pw_string(char *s, int maxa, char *prompt, int verify)
 #endif
 #endif
     while (!ok) {
-	(void)printf(prompt);
+	(void)printf("%s", prompt);
 	(void)fflush(stdout);
 #ifdef	CROSSMSDOS
 	h19line(s, sizeof(s), 0);
