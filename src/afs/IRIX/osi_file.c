@@ -15,7 +15,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-struct  AFS_UCRED afs_osi_cred;
+AFS_UCRED afs_osi_cred;
 int afs_osicred_initialized = 0;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
