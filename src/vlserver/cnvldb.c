@@ -110,7 +110,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     read(old, &fromv, sizeof(int));
     fromv = ntohl(fromv);
     if ((fromv < 1) || (fromv > 4)) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Unrecognized VLDB version %d.\n", fromv);
 	exit(-1);
     }
@@ -167,9 +167,9 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     if ((fromvers < 1) || (fromvers > 4)) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": VLDB version %d is not supported.\n", fromvers);
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Only versions 1-4 are currently supported.\n");
 	exit(-1);
     }
@@ -178,15 +178,15 @@ handleit(struct cmd_syndesc *as, void *arock)
 	tovers = fromvers + 1;
 
     if (tovers < 1 || tovers > 4) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": VLDB version %d is not supported.\n", tovers);
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Only versions 1 - 4 are currently supported.\n");
 	exit(-1);
     }
 
     if (mhaddr && (tovers < 3)) {
-	fprintf(stderr, pn);
+	fprintf(stderr, "%s", pn);
 	fprintf(stderr, ": Cannot convert. VLDB contains multihome info.\n");
 	exit(-1);
     }
