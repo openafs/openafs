@@ -3811,13 +3811,21 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
     else if (infoLevel == SMB_QUERY_FILE_STREAM_INFO) {
         size_t len = 0;
-        /* For now we have no streams */
-        qfi.u.QFfileStreamInfo.nextEntryOffset = 0;
-        qfi.u.QFfileStreamInfo.streamSize = scp->length;
-        qfi.u.QFfileStreamInfo.streamAllocationSize = scp->length;
-        smb_UnparseString(opx, qfi.u.QFfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
-        qfi.u.QFfileStreamInfo.streamNameLength = len;
-        responseSize -= (sizeof(qfi.u.QFfileStreamInfo.fileName) - len);
+
+        if (scp->fileType == CM_SCACHETYPE_DIRECTORY ||
+            scp->fileType == CM_SCACHETYPE_MOUNTPOINT ||
+            scp->fileType == CM_SCACHETYPE_INVALID) {
+            /* Do not return the alternate streams for directories */
+            responseSize = 0;
+        } else {
+            /* For now we have no alternate streams */
+            qfi.u.QFfileStreamInfo.nextEntryOffset = 0;
+            qfi.u.QFfileStreamInfo.streamSize = scp->length;
+            qfi.u.QFfileStreamInfo.streamAllocationSize = scp->length;
+            smb_UnparseString(opx, qfi.u.QFfileStreamInfo.fileName, L"::$DATA", &len, SMB_STRF_IGNORENUL);
+            qfi.u.QFfileStreamInfo.streamNameLength = len;
+            responseSize -= (sizeof(qfi.u.QFfileStreamInfo.fileName) - len);
+        }
     }
     outp->totalData = responseSize;
 
