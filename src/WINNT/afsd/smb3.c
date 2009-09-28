@@ -1445,9 +1445,11 @@ long smb_nmpipeSetState(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     osi_Log2(smb_logp, "smb_nmpipeSetState for fd[%d] with state[0x%x]", fd, pipeState);
 
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_nmpipeSetState Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
 	return CM_ERROR_BADFD;
-
+    }
     lock_ObtainMutex(&fidp->mx);
     if (pipeState & 0x8000)
 	fidp->flags |= SMB_FID_BLOCKINGPIPE;
@@ -1478,9 +1480,11 @@ long smb_nmpipeTransact(smb_vc_t * vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 	     fd, p->totalData, p->maxReturnData);
 
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_nmpipeTransact Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
 	return CM_ERROR_BADFD;
-
+    }
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_RPC) {
 	is_rpc = 1;
@@ -1492,6 +1496,8 @@ long smb_nmpipeTransact(smb_vc_t * vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 	smb_ReleaseFID(fidp);
     } else {
 	/* We only deal with RPC pipes */
+        osi_Log2(smb_logp, "smb_nmpipeTransact Not a RPC vcp 0x%p fid %d",
+                 vcp, fd);
 	code = CM_ERROR_BADFD;
     }
 
@@ -2596,7 +2602,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
 #ifndef DFS_SUPPORT
     if (is_ipc) {
-        osi_Log0(smb_logp, "Tran2Open rejecting IPC TID");
+        osi_Log1(smb_logp, "Tran2Open rejecting IPC TID vcp %p", vcp);
 	smb_FreeTran2Packet(outp);
 	return CM_ERROR_BADFD;
     }
@@ -3701,6 +3707,8 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     fidp = smb_FindFID(vcp, fid, 0);
 
     if (fidp == NULL) {
+        osi_Log2(smb_logp, "Tran2QFileInfo Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADFD);
         return 0;
     }
@@ -3868,6 +3876,8 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
     fidp = smb_FindFID(vcp, fid, 0);
 
     if (fidp == NULL) {
+        osi_Log2(smb_logp, "Tran2SetFileInfo Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
         smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADFD);
         return 0;
     }
@@ -6325,9 +6335,11 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fid = smb_ChainFID(fid, inp);
 
     fidp = smb_FindFID(vcp, fid, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "V3LockingX Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
 	return CM_ERROR_BADFD;
-    
+    }
     lock_ObtainMutex(&fidp->mx);
     if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
         lock_ReleaseMutex(&fidp->mx);
@@ -6611,9 +6623,11 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     fid = smb_ChainFID(fid, inp);
         
     fidp = smb_FindFID(vcp, fid, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "V3GetAttributes Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
 	return CM_ERROR_BADFD;
-    
+    }
     lock_ObtainMutex(&fidp->mx);
     if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
         lock_ReleaseMutex(&fidp->mx);
@@ -6702,9 +6716,11 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     fid = smb_ChainFID(fid, inp);
         
     fidp = smb_FindFID(vcp, fid, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "V3SetAttributes Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
 	return CM_ERROR_BADFD;
-    
+    }
     lock_ObtainMutex(&fidp->mx);
     if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
         lock_ReleaseMutex(&fidp->mx);
@@ -6797,9 +6813,11 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveV3WriteX Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
         return CM_ERROR_BADFD;
-        
+    }
     lock_ObtainMutex(&fidp->mx);
     if (fidp->scp && (fidp->scp->flags & CM_SCACHEFLAG_DELETED)) {
         lock_ReleaseMutex(&fidp->mx);
@@ -6955,6 +6973,8 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveV3Read Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
         return CM_ERROR_BADFD;
     }
 
@@ -8183,7 +8203,8 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     } else {
         baseFidp = smb_FindFID(vcp, baseFid, 0);
         if (!baseFidp) {
-	    osi_Log1(smb_logp, "NTTranCreate Invalid fid [%d]", baseFid);
+            osi_Log2(smb_logp, "NTTranCreate Unknown SMB Fid vcp 0x%p fid %d",
+                      vcp, baseFid);
             free(realPathp);
             cm_ReleaseUser(userp);
             return CM_ERROR_BADFD;
@@ -8792,7 +8813,8 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp) {
-        osi_Log1(smb_logp, "ERROR: NotifyChange given invalid fid [%d]", fid);
+        osi_Log2(smb_logp, "NotifyChange Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
         return CM_ERROR_BADFD;
     }
 

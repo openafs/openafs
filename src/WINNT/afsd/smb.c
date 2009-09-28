@@ -2561,10 +2561,13 @@ void smb_StripLastComponent(clientchar_t *outPathp, clientchar_t **lastComponent
         if (typep && cm_ClientStrCmpI(typep, L":$DATA") == 0) {
             *typep = '\0';
             streamp = cm_ClientStrRChr(lastSlashp, L':');
-            if (streamp && cm_ClientStrCmpI(streamp, L":") == 0)
+            if (streamp && cm_ClientStrCmpI(streamp, L":") == 0) {
                 *streamp = '\0';
-            else
+            } else
                 *typep = ':';
+            osi_Log2(smb_logp, "smb_StripLastComponent found stream [%S] type [%S]",
+                     osi_LogSaveClientString(smb_logp,streamp),
+                     osi_LogSaveClientString(smb_logp,typep));
         }
 
         while (1) {
@@ -3583,9 +3586,11 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
              fd, offset.HighPart, offset.LowPart, count);
 
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveCoreReadRaw Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
         goto send1;
-
+    }
     lock_ObtainMutex(&fidp->mx);
     if (!fidp->scp) {
         lock_ReleaseMutex(&fidp->mx);
@@ -6609,9 +6614,11 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     fid = smb_ChainFID(fid, inp);
     fidp = smb_FindFID(vcp, fid, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveCoreFlush Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
         return CM_ERROR_BADFD;
-    
+    }
     userp = smb_GetUserFromVCP(vcp, inp);
 
     lock_ObtainMutex(&fidp->mx);
@@ -6928,6 +6935,8 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fid = smb_ChainFID(fid, inp);
     fidp = smb_FindFID(vcp, fid, 0);
     if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveCoreClose Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fid);
         return CM_ERROR_BADFD;
     }
         
@@ -7408,7 +7417,8 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
     if (!fidp) {
-	osi_Log0(smb_logp, "smb_ReceiveCoreWrite fid not found");
+        osi_Log2(smb_logp, "smb_ReceiveCoreWrite Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
         return CM_ERROR_BADFD;
     }
         
@@ -7668,9 +7678,11 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveCoreWriteRaw Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
         return CM_ERROR_BADFD;
-
+    }
     lock_ObtainMutex(&fidp->mx);
     if (!fidp->scp) {
         lock_ReleaseMutex(&fidp->mx);
@@ -7826,9 +7838,11 @@ long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveCoreRead Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
         return CM_ERROR_BADFD;
-
+    }
     lock_ObtainMutex(&fidp->mx);
     if (fidp->flags & SMB_FID_IOCTL) {
 	lock_ReleaseMutex(&fidp->mx);
@@ -8278,9 +8292,11 @@ long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* try to find the file descriptor */
     fd = smb_ChainFID(fd, inp);
     fidp = smb_FindFID(vcp, fd, 0);
-    if (!fidp)
+    if (!fidp) {
+        osi_Log2(smb_logp, "smb_ReceiveCoreSeek Unknown SMB Fid vcp 0x%p fid %d",
+                 vcp, fd);
 	return CM_ERROR_BADFD;
-
+    }
     lock_ObtainMutex(&fidp->mx);
     if (!fidp->scp || (fidp->flags & SMB_FID_IOCTL)) {
 	lock_ReleaseMutex(&fidp->mx);
