@@ -10,12 +10,12 @@ vos_setfields - Sets the quota or clear the access counter on a volume.
 B<vos setfields> S<<< B<-id> <I<volume name or ID>> >>>
     S<<< B<-maxquota> <I<quota>> >>> [B<-clearuse>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [b<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 B<vos se> S<<< B<-id> <I<volume name or ID>> >>>
     S<<< B<-maxquota> <I<quota>> >>> [B<-clearuse>]
     S<<< [B<-cell> <I<cell name>>] >>> [B<-noauth>] [B<-localauth>]
-    [B<-verbose>] [B<-encrypt>] [b<-noresolve>] [B<-help>]
+    [B<-verbose>] [B<-encrypt>] [B<-noresolve>] [B<-help>]
 
 =for html
 </div>
