@@ -315,4 +315,10 @@ hdr_static_inline(long) afs_printable_int32_ld(afs_int32 d) { return (long) d; }
 
 hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return (unsigned long) d; }
 
+#if !defined(__GNUC__) || __GNUC__ < 2
+#define AFS_UNUSED_FUNCTION
+#else
+#define AFS_UNUSED_FUNCTION __attribute__((unused))
+#endif
+
 #endif /* OPENAFS_CONFIG_AFS_STDS_H */

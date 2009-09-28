@@ -115,7 +115,7 @@ RegisterTag(afs_int32 section, unsigned char tag)
 }
 
 static void
-initNonStandardTags()
+initNonStandardTags(void)
 {
     RegisterTag(0, 'n');                /* volume name */
     RegisterTag(0, 't');                /* fromtime, V_backupDate */
@@ -313,7 +313,7 @@ ReadStandardTagLen(register struct iod *iodp, unsigned char tag, afs_int32 secti
             *length = len;
         else {
             len &= 0x7f;
-            if (code = iod_Read(iodp, buf, len) != len)
+            if ((code = iod_Read(iodp, (char *)buf, len)) != len)
                 return VOLSERDUMPERROR;
             *length = 0;
             p = (unsigned char *)&buf;
@@ -334,11 +334,11 @@ static afs_int32
 SkipData(register struct iod *iodp, afs_size_t length)
 {
     while (length > 256) {
-        if (iod_Read(iodp, &skipbuf, 256) != 256)
+        if (iod_Read(iodp, (char *)&skipbuf, 256) != 256)
             return 0;
         length -= 256;
     }
-    if (iod_Read(iodp, &skipbuf, length) != length)
+    if (iod_Read(iodp, (char *)&skipbuf, length) != length)
         return 0;
     return 1;
 }
@@ -346,10 +346,10 @@ SkipData(register struct iod *iodp, afs_size_t length)
 static char *secname[3] = {"ReadDumpHeader", "ReadVolumeHeader", "ReadVnodes"};
 
 static int
-HandleUnknownTag(struct iod *iodp, register tag, afs_int32 section, 
+HandleUnknownTag(struct iod *iodp, int tag, afs_int32 section,
 		afs_int32 critical)
 {
-    afs_size_t taglen;
+    afs_size_t taglen = 0;
     afs_uint32 trash;
 
     if (critical) {
@@ -667,6 +667,7 @@ DumpStandardTag(register struct iod *iodp, char tag, afs_uint32 section)
     return 0;
 }
 
+AFS_UNUSED_FUNCTION
 static afs_int32
 DumpStandardTagLen(register struct iod *iodp, char tag, afs_uint32 section,
                         afs_size_t length)
