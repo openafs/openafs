@@ -25,6 +25,7 @@
 #define AFS_DARWIN60_ENV
 #define AFS_DARWIN70_ENV
 #define AFS_DARWIN80_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define AFS_NAMEI_ENV 1
@@ -118,6 +119,7 @@
 #define AFS_USR_DARWIN60_ENV
 #define AFS_USR_DARWIN70_ENV
 #define AFS_USR_DARWIN80_ENV
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS
 #define AFS_SYSCALL             230
 #define DARWIN_REFBASE 0

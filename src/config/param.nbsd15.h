@@ -15,6 +15,7 @@
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_NBSD_ENV 1
 #define AFS_NBSD15_ENV 1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 #define AFS_KERBEROS_ENV 1
 #define FTRUNC O_TRUNC

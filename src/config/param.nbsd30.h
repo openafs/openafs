@@ -22,6 +22,7 @@
 #define AFS_NBSD16_ENV 1
 #define AFS_NBSD20_ENV 1
 #define AFS_NBSD30_ENV 1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS 1
 
 #define AFS_VFSINCL_ENV 1

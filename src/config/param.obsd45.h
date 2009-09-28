@@ -33,6 +33,7 @@
 #define AFS_OBSD43_ENV		1
 #define AFS_OBSD44_ENV		1
 #define AFS_OBSD45_ENV		1
+#undef  AFS_NONFSTRANS
 #define AFS_NONFSTRANS		1
 #define AFS_VM_RDWR_ENV		1
 #define AFS_VFS_ENV		1
