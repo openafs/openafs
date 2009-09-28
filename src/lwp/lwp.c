@@ -20,7 +20,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
+#endif
 #include <time.h>
 
 /* allocate externs here */
