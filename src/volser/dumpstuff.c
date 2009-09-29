@@ -667,7 +667,7 @@ DumpStandardTag(register struct iod *iodp, char tag, afs_uint32 section)
     return 0;
 }
 
-AFS_UNUSED_FUNCTION
+AFS_UNUSED
 static afs_int32
 DumpStandardTagLen(register struct iod *iodp, char tag, afs_uint32 section,
                         afs_size_t length)

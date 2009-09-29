@@ -2710,7 +2710,8 @@ h_DumpHost(register struct host *host, int held, void *rock)
 	sprintf(tmpStr, "%04x", host->holds[i]);
 	(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     }
-    sprintf(tmpStr, " slot/bit: %d/%d\n", h_holdSlot(), h_holdbit());
+    sprintf(tmpStr, " slot/bit: %ld/%d\n", (long int) h_holdSlot(), 
+	    h_holdbit());
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     H_UNLOCK;
@@ -2751,10 +2752,10 @@ h_DumpHosts(void)
 static int h_stateFillHeader(struct host_state_header * hdr);
 static int h_stateCheckHeader(struct host_state_header * hdr);
 static int h_stateAllocMap(struct fs_dump_state * state);
-static int h_stateSaveHost(register struct host * host, int held, struct fs_dump_state * state);
+static int h_stateSaveHost(struct host * host, int held, void *rock);
 static int h_stateRestoreHost(struct fs_dump_state * state);
-static int h_stateRestoreIndex(struct host * h, int held, struct fs_dump_state * state);
-static int h_stateVerifyHost(struct host * h, int held, struct fs_dump_state * state);
+static int h_stateRestoreIndex(struct host * h, int held, void *rock);
+static int h_stateVerifyHost(struct host * h, int held, void *rock);
 static int h_stateVerifyAddrHash(struct fs_dump_state * state, struct host * h, afs_uint32 addr, afs_uint16 port);
 static int h_stateVerifyUuidHash(struct fs_dump_state * state, struct host * h);
 static void h_hostToDiskEntry_r(struct host * in, struct hostDiskEntry * out);
@@ -2846,8 +2847,9 @@ h_stateRestoreIndices(struct fs_dump_state * state)
 }
 
 static int
-h_stateRestoreIndex(struct host * h, int held, struct fs_dump_state * state)
+h_stateRestoreIndex(struct host * h, int held, void *rock)
 {
+    struct fs_dump_state *state = (struct fs_dump_state *)rock;
     if (cb_OldToNew(state, h->cblist, &h->cblist)) {
 	return H_ENUMERATE_BAIL(held);
     }
@@ -2862,8 +2864,9 @@ h_stateVerify(struct fs_dump_state * state)
 }
 
 static int
-h_stateVerifyHost(struct host * h, int held, struct fs_dump_state * state)
+h_stateVerifyHost(struct host * h, int held, void* rock)
 {
+    struct fs_dump_state *state = (struct fs_dump_state *)rock;
     int i;
 
     if (h == NULL) {
@@ -2889,7 +2892,6 @@ h_stateVerifyHost(struct host * h, int held, struct fs_dump_state * state)
 	state->bail = 1;
     }
 
- done:
     return held;
 }
 
@@ -3005,6 +3007,7 @@ h_stateFillHeader(struct host_state_header * hdr)
 {
     hdr->stamp.magic = HOST_STATE_MAGIC;
     hdr->stamp.version = HOST_STATE_VERSION;
+    return 0;
 }
 
 /* check the contents of the host state header structure */
@@ -3036,9 +3039,10 @@ h_stateAllocMap(struct fs_dump_state * state)
 
 /* function called by h_Enumerate to save a host to disk */
 static int
-h_stateSaveHost(register struct host * host, int held, struct fs_dump_state * state)
+h_stateSaveHost(struct host * host, int held, void* rock)
 {
-    int i, if_len=0, hcps_len=0;
+    struct fs_dump_state *state = (struct fs_dump_state *) rock;
+    int if_len=0, hcps_len=0;
     struct hostDiskEntry hdsk;
     struct host_state_entry_header hdr;
     struct Interface * ifp = NULL;
@@ -3096,7 +3100,6 @@ h_stateSaveHost(register struct host * host, int held, struct fs_dump_state * st
 
     state->h_hdr->records++;
 
- done:
     if (ifp)
 	free(ifp);
     if (hcps)
@@ -3276,7 +3279,6 @@ h_OldToNew(struct fs_dump_state * state, afs_uint32 old, afs_uint32 * new)
 	*new = state->h_map.entries[old].new_idx;
     }
 
- done:
     return ret;
 }
 #endif /* AFS_DEMAND_ATTACH_FS */

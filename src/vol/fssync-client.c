@@ -88,7 +88,7 @@ static SYNC_client_state fssync_state =
 
 #ifdef AFS_PTHREAD_ENV
 static pthread_mutex_t vol_fsync_mutex;
-static volatile vol_fsync_mutex_init = 0;
+static volatile int vol_fsync_mutex_init = 0;
 #define VFSYNC_LOCK \
     assert(pthread_mutex_lock(&vol_fsync_mutex) == 0)
 #define VFSYNC_UNLOCK \

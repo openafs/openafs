@@ -67,8 +67,9 @@ VIsExclusiveState(VolState state)
     case VOL_STATE_VNODE_CLOSE:
     case VOL_STATE_VNODE_RELEASE:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /**
@@ -89,8 +90,9 @@ VIsErrorState(VolState state)
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /**
@@ -112,8 +114,9 @@ VIsOfflineState(VolState state)
     case VOL_STATE_ERROR:
     case VOL_STATE_SALVAGING:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /**

@@ -39,7 +39,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <afs/assert.h>
-
+#include <afs/dir.h>
 
 #include <fcntl.h>
 
@@ -95,7 +95,6 @@ static int do_salvop(struct state *, afs_int32 command, SYNC_response * res);
 static char * response_code_to_string(afs_int32);
 static char * command_code_to_string(afs_int32);
 static char * reason_code_to_string(afs_int32);
-static char * program_type_to_string(afs_int32);
 static char * state_code_to_string(afs_int32);
 
 
@@ -137,8 +136,6 @@ main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
-    int i;
-    extern char cml_version_number[];
 
     /* Initialize directory paths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
@@ -217,7 +214,6 @@ static int
 common_salv_prolog(struct cmd_syndesc * as, struct state * state)
 {
     register struct cmd_item *ti;
-    char pname[100], *temp;
 
     state->sop = (struct salv_state *) calloc(1, sizeof(struct salv_state));
     assert(state->sop != NULL);
@@ -293,6 +289,8 @@ do_salvop(struct state * state, afs_int32 command, SYNC_response * res)
     printf("}\n");
 
     VDisconnectSALV();
+
+    return 0;
 }
 
 static char *
@@ -356,6 +354,7 @@ reason_code_to_string(afs_int32 reason)
     }
 }
 
+#if 0
 static char *
 program_type_to_string(afs_int32 type)
 {
@@ -372,6 +371,7 @@ program_type_to_string(afs_int32 type)
 	return "**UNKNOWN**";
     }
 }
+#endif
 
 static char *
 state_code_to_string(afs_int32 state)

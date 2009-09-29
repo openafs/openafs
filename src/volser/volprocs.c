@@ -1753,7 +1753,7 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
     char namehead[9];
     struct partList partList;
     struct DiskPartition64 *dp;
-    int i, j = 0, k;
+    int i, j = 0;
 
     strcpy(namehead, "/vicep");	/*7 including null terminator */
 
@@ -1766,6 +1766,8 @@ XVolListPartitions(struct rx_call *acid, struct partEntries *pEntries)
 	    namehead[6] = i + 'a';
 	    namehead[7] = '\0';
 	} else {
+	    int k;
+
 	    k = i - 26;
 	    namehead[6] = 'a' + (k / 26);
 	    namehead[7] = 'a' + (k % 26);

@@ -26,6 +26,7 @@ private struct VolumeHeader tempHeader;
 #else
 #define NO_LINK_TABLE 1
 #endif
+AFS_UNUSED
 private struct stuff {
     struct versionStamp stamp;
     bit32 inodeType;

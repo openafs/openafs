@@ -187,7 +187,6 @@ static struct DiskPartition64 *DiskPartitionTable[VOLMAXPARTS+1];
 
 static struct DiskPartition64 * VLookupPartition_r(char * path);
 static void AddPartitionToTable_r(struct DiskPartition64 *);
-static void DeletePartitionFromTable_r(struct DiskPartition64 *);
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
@@ -1318,7 +1317,7 @@ VGetPartitionById_r(afs_int32 id, int abortp)
 struct DiskPartition64 *
 VGetPartitionById(afs_int32 id, int abortp)
 {
-    struct Diskpartition64 * dp;
+    struct DiskPartition64 * dp;
 
     VOL_LOCK;
     dp = VGetPartitionById_r(id, abortp);
@@ -1345,10 +1344,12 @@ AddPartitionToTable_r(struct DiskPartition64 *dp)
     DiskPartitionTable[dp->index] = dp;
 }
 
+#if 0
 static void 
 DeletePartitionFromTable_r(struct DiskPartition64 *dp)
 {
     assert(dp->index >= 0 && dp->index <= VOLMAXPARTS);
     DiskPartitionTable[dp->index] = NULL;
 }
+#endif
 #endif /* AFS_DEMAND_ATTACH_FS */

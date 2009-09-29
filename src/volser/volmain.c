@@ -169,6 +169,7 @@ BKGLoop(void *unused)
 
 /* Background daemon for sleeping so the volserver does not become I/O bound */
 afs_int32 TTsleep, TTrun;
+#ifndef AFS_PTHREAD_ENV
 static void *
 BKGSleep(void *unused)
 {
@@ -200,6 +201,7 @@ BKGSleep(void *unused)
     }
     return NULL;
 }
+#endif
 
 #ifndef AFS_NT40_ENV
 int

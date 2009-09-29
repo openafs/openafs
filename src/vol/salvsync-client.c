@@ -131,7 +131,6 @@ SALVSYNC_SalvageVolume(VolumeId volume, char *partName, int command, int reason,
     SYNC_response res_l, *res;
     SALVSYNC_command_hdr scom;
     SALVSYNC_response_hdr sres;
-    int n, tot;
 
     memset(&com, 0, sizeof(com));
     memset(&scom, 0, sizeof(scom));
@@ -174,7 +173,6 @@ SALVSYNC_LinkVolume(VolumeId parent,
     SYNC_response res_l, *res;
     SALVSYNC_command_hdr scom;
     SALVSYNC_response_hdr sres;
-    int n, tot;
 
     memset(&com, 0, sizeof(com));
     memset(&scom, 0, sizeof(scom));

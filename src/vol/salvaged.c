@@ -99,6 +99,7 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
+#include <afs/dir.h>
 #ifndef AFS_NT40_ENV
 #include <syslog.h>
 #endif
@@ -116,7 +117,6 @@
 #include "salvsync.h"
 #include "viceinode.h"
 #include "salvage.h"
-#include "volinodes.h"		/* header magic number, etc. stuff */
 #include "vol-salvage.h"
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
@@ -158,8 +158,6 @@ static int DoSalvageVolume(struct SalvageQueueNode * node, int slot);
 static void SalvageServer(void);
 static void SalvageClient(VolumeId vid, char * pname);
 
-static int ChildFailed(int status);
-
 static int Reap_Child(char * prog, int * pid, int * status);
 
 static void * SalvageLogCleanupThread(void *);
@@ -186,9 +184,7 @@ handleit(struct cmd_syndesc *as, void *arock)
 {
     register struct cmd_item *ti;
     char pname[100], *temp;
-    afs_int32 seenpart = 0, seenvol = 0, vid = 0, seenany = 0;
-    struct DiskPartition64 *partP;
-
+    afs_int32 seenpart = 0, seenvol = 0, vid = 0;
 
 #ifdef AFS_SGI_VNODE_GLUE
     if (afs_init_kernel_config(-1) < 0) {
@@ -264,7 +260,7 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     if ((ti = as->parms[15].items)) {	/* -datelogs */
-	TimeStampLogFile(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+	TimeStampLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
     }
 #endif
 
@@ -311,7 +307,6 @@ main(int argc, char **argv)
     int err = 0;
 
     int i;
-    extern char cml_version_number[];
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -477,7 +472,7 @@ SalvageServer(void)
      * multiple salvagers appending to the log.
      */
 
-    CheckLogFile(AFSDIR_SERVER_SALSRVLOG_FILEPATH);
+    CheckLogFile((char *)AFSDIR_SERVER_SALSRVLOG_FILEPATH);
 #ifndef AFS_NT40_ENV
 #ifdef AFS_LINUX20_ENV
     fcntl(fileno(logFile), F_SETFL, O_APPEND);	/* Isn't this redundant? */
@@ -582,7 +577,6 @@ static int
 DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 {
     char childLog[AFSDIR_PATH_MAX];
-    int ret;
     struct DiskPartition64 * partP;
 
     /* do not allow further forking inside salvager */
@@ -624,10 +618,8 @@ DoSalvageVolume(struct SalvageQueueNode * node, int slot)
 static void *
 SalvageChildReaperThread(void * args)
 {
-    int slot, pid, status, code, found;
-    struct SalvageQueueNode *qp, *nqp;
+    int slot, pid, status;
     struct log_cleanup_node * cleanup;
-    SALVSYNC_command_info info;
 
     assert(pthread_mutex_lock(&worker_lock) == 0);
 
@@ -770,7 +762,6 @@ static void *
 SalvageLogScanningThread(void * arg)
 {
     struct rx_queue log_watch_queue;
-    struct log_cleanup_node * cleanup;
 
     queue_Init(&log_watch_queue);
 

@@ -195,8 +195,9 @@ VnIsExclusiveState(VnState state)
     case VN_STATE_EXCLUSIVE:
     case VN_STATE_STORE:
 	return 1;
+    default: 
+	return 0;
     }
-    return 0;
 }
 
 /**
@@ -216,8 +217,9 @@ VnIsErrorState(VnState state)
     switch (state) {
     case VN_STATE_ERROR:
 	return 1;
+    default:
+	return 0;
     }
-    return 0;
 }
 
 /**

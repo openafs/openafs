@@ -508,7 +508,9 @@ static afs_int32
 FSYNC_com_VolOn(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 {
     afs_int32 code = SYNC_OK;
+#ifndef AFS_DEMAND_ATTACH_FS
     char tvolName[VMAXPATHLEN];
+#endif
     Volume * vp;
     Error error;
 
@@ -630,7 +632,6 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     Volume * vp;
     Error error;
 #ifdef AFS_DEMAND_ATTACH_FS
-    int reserved = 0;
     Volume *nvp;
 #endif
 

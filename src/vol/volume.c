@@ -352,7 +352,9 @@ static void VVByPListWait_r(struct DiskPartition64 * dp);
 /* online salvager */
 static int VCheckSalvage(register Volume * vp);
 static int VUpdateSalvagePriority_r(Volume * vp);
+#ifdef SALVSYNC_BUILD_CLIENT
 static int VScheduleSalvage_r(Volume * vp);
+#endif
 
 /* Volume hash table */
 static void VReorderHash_r(VolumeHashChainHead * head, Volume * pp, Volume * vp);
@@ -741,13 +743,12 @@ VAttachVolumesByPartition(struct DiskPartition64 *diskP, int * nAttached, int * 
  *   shutdown all remaining volumes
  */
 
+#ifdef AFS_DEMAND_ATTACH_FS
+
 void
 VShutdown_r(void)
 {
     int i;
-    register Volume *vp, *np;
-    register afs_int32 code;
-#ifdef AFS_DEMAND_ATTACH_FS
     struct DiskPartition64 * diskP;
     struct diskpartition_queue_t * dpq;
     vshutdown_thread_t params;
@@ -862,7 +863,16 @@ VShutdown_r(void)
     }
 
     Log("VShutdown:  complete.\n");
+}
+
 #else /* AFS_DEMAND_ATTACH_FS */
+
+void
+VShutdown_r(void)
+{
+    int i;
+    register Volume *vp, *np;
+    register afs_int32 code;
     Log("VShutdown:  shutting down on-line volumes...\n");
     for (i = 0; i < VolumeHashTable.Size; i++) {
 	/* try to hold first volume in the hash table */
@@ -879,8 +889,9 @@ VShutdown_r(void)
 	}
     }
     Log("VShutdown:  complete.\n");
-#endif /* AFS_DEMAND_ATTACH_FS */
 }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
 
 void
 VShutdown(void)
@@ -1006,7 +1017,7 @@ ShutdownCreateSchedule(vshutdown_thread_t * params)
     if (thr_left) {
 	/* try to assign any leftover threads to partitions that
 	 * had volume lengths closer to needing thread_target+1 */
-	int max_residue, max_id;
+	int max_residue, max_id = 0;
 
 	/* compute the residues */
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
@@ -1062,10 +1073,8 @@ ShutdownCreateSchedule(vshutdown_thread_t * params)
 static void *
 VShutdownThread(void * args)
 {
-    struct rx_queue *qp;
-    Volume * vp;
     vshutdown_thread_t * params;
-    int part, code, found, pass, schedule_version_save, count;
+    int found, pass, schedule_version_save, count;
     struct DiskPartition64 *diskP;
     struct diskpartition_queue_t * dpq;
     Device id;
@@ -1217,7 +1226,7 @@ VShutdownThread(void * args)
 int
 VShutdownByPartition_r(struct DiskPartition64 * dp)
 {
-    int pass, retVal;
+    int pass;
     int pass_stats[4];
     int total;
 
@@ -1242,7 +1251,7 @@ VShutdownByPartition_r(struct DiskPartition64 * dp)
     Log("VShutdownByPartition:  shut down %d volumes on %s (pass[0]=%d, pass[1]=%d, pass[2]=%d, pass[3]=%d)\n",
 	total, VPartitionPath(dp), pass_stats[0], pass_stats[1], pass_stats[2], pass_stats[3]);
 
-    return retVal;
+    return 0;
 }
 
 /* internal shutdown functionality
@@ -1364,6 +1373,8 @@ VShutdownVolume_r(Volume * vp)
 	    /* take the volume offline (drops reference count) */
 	    VOffline_r(vp, "File server was shut down");
 	}
+	break;
+    default:
 	break;
     }
     
@@ -2083,7 +2094,7 @@ VAttachVolumeByVp_r(Error * ec, Volume * vp, int mode)
     char path[64];
     int isbusy = 0;
     VolId volumeId;
-    Volume * nvp;
+    Volume * nvp = NULL;
     VolumeStats stats_save;
     *ec = 0;
 
@@ -2313,7 +2324,9 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
     }
 
 #ifdef AFS_DEMAND_ATTACH_FS
+# ifdef FSSYNC_BUILD_CLIENT
  disk_header_loaded:
+#endif
     if (!*ec) {
 
 	/* check for pending volume operations */
@@ -2348,6 +2361,8 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 		if (VVolOpSetVBusy_r(vp, vp->pending_vol_op)) {
 		    vp->specialStatus = VBUSY;
 		}
+	    default:
+		break;
 	    }
 	}
 
@@ -3141,8 +3156,10 @@ VForceOffline(Volume * vp)
 void
 VOffline_r(Volume * vp, char *message)
 {
+#ifndef AFS_DEMAND_ATTACH_FS
     Error error;
     VolumeId vid = V_id(vp);
+#endif
 
     assert(programType != volumeUtility);
     if (!V_inUse(vp)) {
@@ -4079,10 +4096,12 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
 static int
 VUpdateSalvagePriority_r(Volume * vp)
 {
-    int code, ret=0;
-    afs_uint32 now;
+    int ret=0;
 
 #ifdef SALVSYNC_BUILD_CLIENT
+    afs_uint32 now;
+    int code;
+
     vp->salvage.prio++;
     now = FT_ApproxTime();
 
@@ -4107,6 +4126,7 @@ VUpdateSalvagePriority_r(Volume * vp)
 }
 
 
+#ifdef SALVSYNC_BUILD_CLIENT
 /**
  * schedule a salvage with the salvage server.
  *
@@ -4129,8 +4149,8 @@ VUpdateSalvagePriority_r(Volume * vp)
 static int
 VScheduleSalvage_r(Volume * vp)
 {
-    int code, ret=0;
-#ifdef SALVSYNC_BUILD_CLIENT
+    int ret=0;
+    int code;
     VolState state_save;
     VThreadOptions_t * thread_opts;
     char partName[16];
@@ -4202,11 +4222,9 @@ VScheduleSalvage_r(Volume * vp)
 	    }
 	}
     }
-#endif /* SALVSYNC_BUILD_CLIENT */
     return ret;
 }
 
-#ifdef SALVSYNC_BUILD_CLIENT
 /**
  * connect to the salvageserver SYNC service.
  *
@@ -4271,11 +4289,10 @@ VConnectSALV_r(void)
 int
 VDisconnectSALV(void)
 {
-    int retVal;
     VOL_LOCK;
     VDisconnectSALV_r();
     VOL_UNLOCK;
-    return retVal;
+    return 0;
 }
 
 /**
@@ -5565,7 +5582,6 @@ VLRU_Delete_r(Volume * vp)
 static void
 VLRU_UpdateAccess_r(Volume * vp)
 {
-    afs_uint32 live_interval;
     Volume * rvp = NULL;
 
     if (!VLRU_enabled)
@@ -5677,8 +5693,6 @@ static void *
 VLRU_ScannerThread(void * args)
 {
     afs_uint32 now, min_delay, delay;
-    afs_uint32 next_scan[VLRU_GENERATIONS];
-    afs_uint32 next_promotion[VLRU_GENERATIONS];
     int i, min_idx, min_op, overdue, state;
 
     /* set t=0 for promotion cycle to be 
@@ -5821,7 +5835,7 @@ VLRU_Promote_r(int idx)
     int len, chaining, promote;
     afs_uint32 now, thresh;
     struct rx_queue *qp, *nqp;
-    Volume * vp, *start, *end;
+    Volume * vp, *start = NULL, *end = NULL;
 
     /* get exclusive access to two chains, and drop the glock */
     VLRU_Wait_r(&volume_LRU.q[idx]);
@@ -5884,7 +5898,7 @@ VLRU_Demote_r(int idx)
     int len, chaining, demote;
     afs_uint32 now, thresh;
     struct rx_queue *qp, *nqp;
-    Volume * vp, *start, *end;
+    Volume * vp, *start = NULL, *end = NULL;
     Volume ** salv_flag_vec = NULL;
     int salv_vec_offset = 0;
 
@@ -6161,6 +6175,8 @@ VSoftDetachVolume_r(Volume * vp, afs_uint32 thresh)
 	V_attachFlags(vp) &= ~(VOL_ON_VLRU);
 	VCancelReservation_r(vp);
 	return 0;
+    default:
+	break;
     }
 
     /* hold the volume and take it offline.
@@ -6284,7 +6300,7 @@ GetVolumeHeader(register Volume * vp)
     static int everLogged = 0;
 
 #ifdef AFS_DEMAND_ATTACH_FS
-    VolState vp_save, back_save;
+    VolState vp_save = 0, back_save = 0;
 
     /* XXX debug 9/19/05 we've apparently got
      * a ref counting bug somewhere that's
@@ -7232,7 +7248,7 @@ vlru_idx_to_string(int idx)
 void
 VPrintExtendedCacheStats_r(int flags)
 {
-    int i, j;
+    int i;
     afs_uint32 vol_sum = 0;
     struct stats {
 	double min;

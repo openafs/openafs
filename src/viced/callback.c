@@ -1929,7 +1929,6 @@ cb_stateVerify(struct fs_dump_state * state)
 	ret = 1;
     }
 
- done:
     return ret;
 }
 
@@ -1963,7 +1962,6 @@ cb_stateVerifyFEHash(struct fs_dump_state * state)
 	}
     }
 
- done:
     return ret;
 }
 
@@ -1983,7 +1981,6 @@ cb_stateVerifyFE(struct fs_dump_state * state, struct FileEntry * fe)
 	ret = 1;
     }
 
- done:
     return ret;
 }
 
@@ -2141,7 +2138,6 @@ cb_stateVerifyTimeoutQueues(struct fs_dump_state * state)
 	}
     }
 
- done:
     return ret;
 }
 
@@ -2426,7 +2422,6 @@ cb_stateRestoreFE(struct fs_dump_state * state)
     struct CBDiskEntry cbdsk[16];
     struct iovec iov[16];
     struct FileEntry * fe;
-    struct CallBack * cb;
 
     iov[0].iov_base = (char *)&hdr;
     iov[0].iov_len = sizeof(hdr);

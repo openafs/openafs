@@ -556,6 +556,7 @@ EXT int rxdebug_active;
 #define dpf(args) do { if (rxdebug_active) rxi_DebugPrint args; } while (0)
 #else
 #ifdef DPF_FSLOG
+#include <afs/afsutil.h>
 #define dpf(args) FSLog args
 #else
 #define dpf(args) do { if (rx_debugFile) rxi_DebugPrint args; } while (0)

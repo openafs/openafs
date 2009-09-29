@@ -11,9 +11,7 @@
 #define _VOLSER_PROTOTYPES_H
 
 /* common.c */
-#ifndef AFS_PTHREAD_ENV
 extern void Log(const char *, ...);
-#endif
 extern void InitErrTabs(void);
 
 /* vol_split.c */

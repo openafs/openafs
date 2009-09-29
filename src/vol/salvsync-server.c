@@ -108,7 +108,6 @@ static int AddToSalvageQueue(struct SalvageQueueNode * node);
 static void DeleteFromSalvageQueue(struct SalvageQueueNode * node);
 static void AddToPendingQueue(struct SalvageQueueNode * node);
 static void DeleteFromPendingQueue(struct SalvageQueueNode * node);
-static struct SalvageQueueNode * LookupPendingCommand(SALVSYNC_command_hdr * qry);
 static struct SalvageQueueNode * LookupPendingCommandByPid(int pid);
 static void UpdateCommandPrio(struct SalvageQueueNode * node);
 static void HandlePrio(struct SalvageQueueNode * clone, 
@@ -123,7 +122,6 @@ static struct SalvageQueueNode * LookupNode(VolumeId vid, char * partName,
 static struct SalvageQueueNode * LookupNodeByCommand(SALVSYNC_command_hdr * qry,
 						     struct SalvageQueueNode ** parent);
 static void AddNodeToHash(struct SalvageQueueNode * node);
-static void DeleteNodeFromHash(struct SalvageQueueNode * node);
 
 static afs_int32 SALVSYNC_com_Salvage(SALVSYNC_command * com, SALVSYNC_response * res);
 static afs_int32 SALVSYNC_com_Cancel(SALVSYNC_command * com, SALVSYNC_response * res);
@@ -250,6 +248,7 @@ AddNodeToHash(struct SalvageQueueNode * node)
     SalvageHashTable[idx].len++;
 }
 
+#if 0
 static void
 DeleteNodeFromHash(struct SalvageQueueNode * node)
 {
@@ -262,6 +261,7 @@ DeleteNodeFromHash(struct SalvageQueueNode * node)
     queue_Remove(&node->hash_chain);
     SalvageHashTable[idx].len--;
 }
+#endif
 
 void
 SALVSYNC_salvInit(void)
@@ -316,10 +316,7 @@ static fd_set SALVSYNC_readfds;
 static void *
 SALVSYNC_syncThread(void * args)
 {
-    int on = 1;
     int code;
-    int numTries;
-    int tid;
     SYNC_server_state_t * state = &salvsync_server_state;
 
     /* when we fork, the child needs to close the salvsync server sockets,
@@ -362,7 +359,9 @@ SALVSYNC_newconnection(int afd)
 #else  /* USE_UNIX_SOCKETS */
     struct sockaddr_in other;
 #endif
-    int junk, fd;
+    int fd;
+    socklen_t junk;
+
     junk = sizeof(other);
     fd = accept(afd, (struct sockaddr *)&other, &junk);
     if (fd == -1) {
@@ -1014,6 +1013,8 @@ HandlePrio(struct SalvageQueueNode * clone,
     case SALVSYNC_STATE_UNKNOWN:
 	node->command.sop.prio = 0;
 	break;
+    default:
+	break;
     }
 
     if (new_prio < clone->command.sop.prio) {
@@ -1099,6 +1100,7 @@ DeleteFromPendingQueue(struct SalvageQueueNode * node)
     }
 }
 
+#if 0
 static struct SalvageQueueNode *
 LookupPendingCommand(SALVSYNC_command_hdr * qry)
 {
@@ -1115,6 +1117,7 @@ LookupPendingCommand(SALVSYNC_command_hdr * qry)
 	np = NULL;
     return np;
 }
+#endif
 
 static struct SalvageQueueNode *
 LookupPendingCommandByPid(int pid)
@@ -1167,10 +1170,10 @@ UpdateCommandPrio(struct SalvageQueueNode * node)
 struct SalvageQueueNode * 
 SALVSYNC_getWork(void)
 {
-    int i, ret;
+    int i;
     struct DiskPartition64 * dp = NULL, * fdp;
     static afs_int32 next_part_sched = 0;
-    struct SalvageQueueNode *node = NULL, *np;
+    struct SalvageQueueNode *node = NULL;
 
     VOL_LOCK;
 
@@ -1249,7 +1252,6 @@ SALVSYNC_getWork(void)
 	}
     }
 
- bail:
     VOL_UNLOCK;
     return node;
 }

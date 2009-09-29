@@ -862,7 +862,6 @@ fs_stateSync(struct fs_dump_state * state)
 
     msync(state->mmap.map, state->mmap.size, MS_SYNC);
 
- done:
     return ret;
 }
 #else /* !FS_STATE_USE_MMAP */
@@ -1073,7 +1072,7 @@ fs_stateAlloc(struct fs_dump_state * state)
     int ret = 0;
     memset(state, 0, sizeof(struct fs_dump_state));
     state->fd = -1;
-    state->fn = AFSDIR_SERVER_FSSTATE_FILEPATH;
+    state->fn = (char *)AFSDIR_SERVER_FSSTATE_FILEPATH;
     state->hdr = (struct fs_state_header *)malloc(sizeof(struct fs_state_header));
     state->h_hdr = (struct host_state_header *)malloc(sizeof(struct host_state_header));
     state->cb_hdr = (struct callback_state_header *)malloc(sizeof(struct callback_state_header));

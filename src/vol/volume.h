@@ -815,6 +815,8 @@ extern int VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags);
 extern int VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VDeregisterVolOp_r(Volume * vp);
 extern void VCancelReservation_r(Volume * vp);
+extern int VChildProcReconnectFS_r(void);
+extern void VOfflineForVolOp_r(Error *ec, Volume *vp, char *message);
 #endif /* AFS_DEMAND_ATTACH_FS */
 extern int VVolOpLeaveOnline_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
