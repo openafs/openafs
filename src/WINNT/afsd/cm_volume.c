@@ -1727,9 +1727,13 @@ cm_VolumeRenewROCallbacks(void)
 {
     cm_volume_t * volp;
     time_t minexp = time(NULL) + 90 * 60;
+    extern int daemon_ShutdownFlag;
+    extern int powerStateSuspended;
 
     lock_ObtainRead(&cm_volumeLock);
-    for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp) {
+    for (volp = cm_data.allVolumesp;
+         volp && !daemon_ShutdownFlag && !powerStateSuspended;
+         volp=volp->allNextp) {
         if ( volp->cbExpiresRO > 0 && volp->cbExpiresRO < minexp) {
             cm_req_t      req;
             cm_fid_t      fid;
