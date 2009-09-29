@@ -125,10 +125,11 @@ EXT int rx_BusyError GLOBALSINIT(-1);
 				 * other packet. */
 
 EXT int rx_minWindow GLOBALSINIT(1);
+EXT int rx_maxWindow GLOBALSINIT(65535);        /* twind is u_short */
 EXT int rx_initReceiveWindow GLOBALSINIT(16);	/* how much to accept */
-EXT int rx_maxReceiveWindow GLOBALSINIT(64);	/* how much to accept */
+EXT int rx_maxReceiveWindow GLOBALSINIT(128);	/* how much to accept */
 EXT int rx_initSendWindow GLOBALSINIT(16);
-EXT int rx_maxSendWindow GLOBALSINIT(64);
+EXT int rx_maxSendWindow GLOBALSINIT(128);
 EXT int rx_nackThreshold GLOBALSINIT(3);	/* Number NACKS to trigger congestion recovery */
 EXT int rx_nDgramThreshold GLOBALSINIT(4);	/* Number of packets before increasing
 					 * packets per datagram */
@@ -147,8 +148,6 @@ EXT int rxi_SoftAckRate GLOBALSINIT(RX_FAST_ACK_RATE);
    but not absolutely necessary.  If it's smaller, than fast receivers will
    send a soft ack, immediately followed by a hard ack. */
 EXT int rxi_HardAckRate GLOBALSINIT(RX_FAST_ACK_RATE + 1);
-
-/* EXT int rx_maxWindow GLOBALSINIT(15);   Temporary HACK:  transmit/receive window */
 
 /* If window sizes become very variable (in terms of #packets), be
  * sure that the sender can get back a hard acks without having to wait for

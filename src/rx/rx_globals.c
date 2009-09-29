@@ -46,6 +46,32 @@
 
 #include "rx_globals.h"
 
+void rx_SetMaxReceiveWindow(int packets)
+{
+    if (packets > rx_maxWindow)
+	packets = rx_maxWindow;
+
+    rx_maxReceiveWindow = packets;
+}
+
+int rx_GetMaxReceiveWindow(void)
+{
+    return rx_maxReceiveWindow;
+}
+
+void rx_SetMaxSendWindow(int packets)
+{
+    if (packets > rx_maxWindow)
+	packets = rx_maxWindow;
+
+    rx_maxSendWindow = packets;
+}
+
+int rx_GetMaxSendWindow(void)
+{
+    return rx_maxSendWindow;
+}
+
 #ifdef AFS_NT40_ENV
 
 void rx_SetRxDeadTime(int seconds)

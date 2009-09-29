@@ -346,7 +346,10 @@ extern int rx_getAllAddrMaskMtu(afs_uint32 addrBuffer[],
 				 int maxSize);
 
 /* rx_globals.c */
-
+extern int rx_GetMaxReceiveWindow(void);
+extern int rx_GetMaxSendWindow(void);
+extern void rx_SetMaxReceiveWindow(int packets);
+extern void rx_SetMaxSendWindow(int packets);
 
 /* rx_kcommon.c */
 struct socket;
