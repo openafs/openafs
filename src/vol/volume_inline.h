@@ -66,6 +66,7 @@ VIsExclusiveState(VolState state)
     case VOL_STATE_VNODE_GET:
     case VOL_STATE_VNODE_CLOSE:
     case VOL_STATE_VNODE_RELEASE:
+    case VOL_STATE_VLRU_ADD:
 	return 1;
     default:
 	return 0;
