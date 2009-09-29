@@ -992,13 +992,19 @@ struct cm_initparams {
 
 #ifdef AFS_DARWIN100_ENV
 typedef user_addr_t iparmtype; /* 64 bit */
+typedef user_addr_t uparmtype; /* 64 bit */
 #else
-typedef char * iparmtype;
+typedef char * uparmtype;
+#ifdef AFS_SGI65_ENV
+typedef afs_uint32 iparmtype;
+#else
+typedef long iparmtype;
+#endif
 #endif
 
 struct afs_ioctl {
-    iparmtype in;		/* input buffer */
-    iparmtype out;		/* output buffer */
+    uparmtype in;		/* input buffer */
+    uparmtype out;		/* output buffer */
     short in_size;		/* Size of input buffer <= 2K */
     short out_size;		/* Maximum size of output buffer, <= 2K */
 };

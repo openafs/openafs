@@ -142,7 +142,7 @@ int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		     register struct afs_ioctl *ablob, int afollow,
 		     AFS_UCRED **acred);
-static int Prefetch(iparmtype apath, struct afs_ioctl *adata, int afollow,
+static int Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 		    AFS_UCRED *acred);
 
 typedef int (*pioctlFunction) (struct vcache *, int, struct vrequest *,
@@ -2289,7 +2289,7 @@ DECL_PIOCTL(PCheckAuth)
 }
 
 static int
-Prefetch(iparmtype apath, struct afs_ioctl *adata, int afollow,
+Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
 	 AFS_UCRED *acred)
 {
     register char *tp;
