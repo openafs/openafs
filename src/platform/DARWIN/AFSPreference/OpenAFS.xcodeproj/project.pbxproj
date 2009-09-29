@@ -30,7 +30,7 @@
 		324D67FD0DA13194007E1561 /* OpenAFSPreference.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */; };
 		324D683D0DA133A3007E1561 /* IpPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D683B0DA133A3007E1561 /* IpPanel.xib */; };
 		324D684A0DA133CF007E1561 /* CredentialPanel.xib in Resources */ = {isa = PBXBuildFile; fileRef = 324D68480DA133CF007E1561 /* CredentialPanel.xib */; };
-		325311D00C44F4B100FAF2F3 /* licenza.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 325311CF0C44F4B100FAF2F3 /* licenza.rtf */; };
+		325311D00C44F4B100FAF2F3 /* license.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 325311CF0C44F4B100FAF2F3 /* license.rtf */; };
 		3273088D0C2A9B05008C322B /* FileUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 3273088B0C2A9B05008C322B /* FileUtil.h */; };
 		3273088E0C2A9B05008C322B /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
 		327308C30C2AA2E1008C322B /* FileUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 3273088C0C2A9B05008C322B /* FileUtil.m */; };
@@ -175,7 +175,7 @@
 		324D67FC0DA13194007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/OpenAFSPreference.xib; sourceTree = "<group>"; };
 		324D683C0DA133A3007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/IpPanel.xib; sourceTree = "<group>"; };
 		324D68490DA133CF007E1561 /* English */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = English; path = English.lproj/CredentialPanel.xib; sourceTree = "<group>"; };
-		325311CF0C44F4B100FAF2F3 /* licenza.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = licenza.rtf; sourceTree = "<group>"; };
+		325311CF0C44F4B100FAF2F3 /* license.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = license.rtf; sourceTree = "<group>"; };
 		3273088B0C2A9B05008C322B /* FileUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtil.h; sourceTree = "<group>"; };
 		3273088C0C2A9B05008C322B /* FileUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FileUtil.m; sourceTree = "<group>"; };
 		327308D20C2AA364008C322B /* SecurityFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SecurityFoundation.framework; path = /System/Library/Frameworks/SecurityFoundation.framework; sourceTree = "<absolute>"; };
@@ -299,7 +299,7 @@
 		089C167CFE841241C02AAC07 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				325311CF0C44F4B100FAF2F3 /* licenza.rtf */,
+				325311CF0C44F4B100FAF2F3 /* license.rtf */,
 				322B90430C2F0A2D0068F99A /* start_afs.sh */,
 				322B90440C2F0A2D0068F99A /* stop_afs.sh */,
 				324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */,
@@ -662,7 +662,7 @@
 				322B90450C2F0A2D0068F99A /* start_afs.sh in Resources */,
 				322B90460C2F0A2D0068F99A /* stop_afs.sh in Resources */,
 				3223836C0C32A96F00380547 /* Localizable.strings in Resources */,
-				325311D00C44F4B100FAF2F3 /* licenza.rtf in Resources */,
+				325311D00C44F4B100FAF2F3 /* license.rtf in Resources */,
 				49E43D2E0C480B8200084436 /* afshlp in Resources */,
 				324D67FD0DA13194007E1561 /* OpenAFSPreference.xib in Resources */,
 				324D683D0DA133A3007E1561 /* IpPanel.xib in Resources */,

@@ -663,7 +663,7 @@
 // -------------------------------------------------------------------------------
 - (IBAction) info:(id) sender
 {
-	[((InfoController*) infoController) showHtmlResource:[[self bundle] pathForResource:@"licenza" ofType:@"rtf"]];
+	[((InfoController*) infoController) showHtmlResource:[[self bundle] pathForResource:@"license" ofType:@"rtf"]];
 
 	[NSApp beginSheet: infoSheet
 	   modalForWindow: [[self mainView] window]
