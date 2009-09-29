@@ -370,20 +370,20 @@ static void ShutdownCreateSchedule(vshutdown_thread_t * params);
 /* VLRU */
 static void VLRU_ComputeConstants(void);
 static void VInitVLRU(void);
-static void VLRU_Init_Node_r(volatile Volume * vp);
-static void VLRU_Add_r(volatile Volume * vp);
-static void VLRU_Delete_r(volatile Volume * vp);
-static void VLRU_UpdateAccess_r(volatile Volume * vp);
+static void VLRU_Init_Node_r(Volume * vp);
+static void VLRU_Add_r(Volume * vp);
+static void VLRU_Delete_r(Volume * vp);
+static void VLRU_UpdateAccess_r(Volume * vp);
 static void * VLRU_ScannerThread(void * args);
 static void VLRU_Scan_r(int idx);
 static void VLRU_Promote_r(int idx);
 static void VLRU_Demote_r(int idx);
-static void VLRU_SwitchQueues(volatile Volume * vp, int new_idx, int append);
+static void VLRU_SwitchQueues(Volume * vp, int new_idx, int append);
 
 /* soft detach */
-static int VCheckSoftDetach(volatile Volume * vp, afs_uint32 thresh);
-static int VCheckSoftDetachCandidate(volatile Volume * vp, afs_uint32 thresh);
-static int VSoftDetachVolume_r(volatile Volume * vp, afs_uint32 thresh);
+static int VCheckSoftDetach(Volume * vp, afs_uint32 thresh);
+static int VCheckSoftDetachCandidate(Volume * vp, afs_uint32 thresh);
+static int VSoftDetachVolume_r(Volume * vp, afs_uint32 thresh);
 
 
 pthread_key_t VThread_key;
@@ -5424,7 +5424,7 @@ VInitVLRU(void)
  * @internal volume package interal use only.
  */
 static void
-VLRU_Init_Node_r(volatile Volume * vp)
+VLRU_Init_Node_r(Volume * vp)
 {
     if (!VLRU_enabled)
 	return;
@@ -5461,7 +5461,7 @@ VLRU_Init_Node_r(volatile Volume * vp)
  * @internal volume package internal use only.
  */
 static void
-VLRU_Add_r(volatile Volume * vp)
+VLRU_Add_r(Volume * vp)
 {
     int idx;
     VolState state_save;
@@ -5516,7 +5516,7 @@ VLRU_Add_r(volatile Volume * vp)
  * @internal volume package internal use only.
  */
 static void
-VLRU_Delete_r(volatile Volume * vp)
+VLRU_Delete_r(Volume * vp)
 {
     int idx;
 
@@ -5563,7 +5563,7 @@ VLRU_Delete_r(volatile Volume * vp)
  * @internal volume package internal use only.
  */
 static void
-VLRU_UpdateAccess_r(volatile Volume * vp)
+VLRU_UpdateAccess_r(Volume * vp)
 {
     afs_uint32 live_interval;
     Volume * rvp = NULL;
@@ -5640,7 +5640,7 @@ VLRU_UpdateAccess_r(volatile Volume * vp)
  * @internal volume package internal use only.
  */
 static void
-VLRU_SwitchQueues(volatile Volume * vp, int new_idx, int append)
+VLRU_SwitchQueues(Volume * vp, int new_idx, int append)
 {
     if (queue_IsNotOnQueue(&vp->vlru))
 	return;
@@ -5984,7 +5984,7 @@ VLRU_Scan_r(int idx)
 {
     afs_uint32 now, thresh;
     struct rx_queue *qp, *nqp;
-    volatile Volume * vp;
+    Volume * vp;
     int i, locked = 1;
 
     assert(idx == VLRU_QUEUE_NEW || idx == VLRU_QUEUE_CANDIDATE);
@@ -6053,7 +6053,7 @@ VLRU_Scan_r(int idx)
 /* check whether volume is safe to soft detach
  * caller MUST NOT hold a ref count on vp */
 static int
-VCheckSoftDetach(volatile Volume * vp, afs_uint32 thresh)
+VCheckSoftDetach(Volume * vp, afs_uint32 thresh)
 {
     int ret=0;
 
@@ -6070,7 +6070,7 @@ VCheckSoftDetach(volatile Volume * vp, afs_uint32 thresh)
 /* check whether volume should be made a 
  * soft detach candidate */
 static int
-VCheckSoftDetachCandidate(volatile Volume * vp, afs_uint32 thresh)
+VCheckSoftDetachCandidate(Volume * vp, afs_uint32 thresh)
 {
     int idx, ret = 0;
     if (vp->nUsers || vp->nWaiters)
@@ -6125,7 +6125,7 @@ VLRU_Wait_r(struct VLRU_q * q)
  *
  * caller MUST NOT hold a ref count on vp */
 static int
-VSoftDetachVolume_r(volatile Volume * vp, afs_uint32 thresh)
+VSoftDetachVolume_r(Volume * vp, afs_uint32 thresh)
 {
     afs_uint32 ts_save;
     int ret = 0;
