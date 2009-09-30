@@ -1,3 +1,14 @@
+Since 1.5.64
+ * Short circuit background volume checks if a shutdown
+   or suspend request is received.
+
+ * Avoid contacting the file server in order to allocate
+   an empty buffer beyond the current length of the file.
+
+ * When a request for streams on a directory or mount 
+   point object is received, do not offer a default stream.
+   This was affecting the saving of roaming profiles.
+
 Since 1.5.63
  * Fix Windows 2000 compatibility.  Do not call rand_s() 
    even if it is compatible with the C run time library
