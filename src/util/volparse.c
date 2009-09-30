@@ -341,3 +341,92 @@ util_GetHumanInt32(register char *as, afs_int32 * aval)
 
     return 0;
 }
+
+afs_int64
+util_GetInt64(char *as, afs_int64 * aval)
+{
+    afs_int64 total;
+    int tc;
+    int base;
+    int negative;
+
+    total = 0; /* initialize things */
+    negative = 0;
+
+    /* skip over leading spaces */
+    while ((tc = *as)) {
+	if (tc != ' ' && tc != '\t')
+	    break;
+    }
+
+    /* compute sign */
+    if (*as == '-') {
+	negative = 1;
+	as++; /* skip over character */
+    }
+
+    /* compute the base */
+    if (*as == '0') {
+	as++;
+	if (*as == 'x' || *as == 'X') {
+	    base = 16;
+	    as++;
+	} else
+	    base = 8;
+    } else
+	base = 10;
+
+    /* compute the # itself */
+    while ((tc = *as)) {
+	if (!ismeta(tc, base))
+	    return -1;
+	total *= base;
+	total += getmeta(tc);
+	as++;
+    }
+
+    if (negative)
+	*aval = -total;
+    else
+	*aval = total;
+    return 0;
+}
+
+afs_uint64
+util_GetUInt64(char *as, afs_uint64 * aval)
+{
+    afs_uint64 total;
+    int tc;
+    int base;
+
+    total = 0; /* initialize things */
+
+    /* skip over leading spaces */
+    while ((tc = *as)) {
+	if (tc != ' ' && tc != '\t')
+	    break;
+    }
+
+    /* compute the base */
+    if (*as == '0') {
+	as++;
+	if (*as == 'x' || *as == 'X') {
+	    base = 16;
+	    as++;
+	} else
+	    base = 8;
+    } else
+	base = 10;
+
+    /* compute the # itself */
+    while ((tc = *as)) {
+	if (!ismeta(tc, base))
+	    return -1;
+	total *= base;
+	total += getmeta(tc);
+	as++;
+    }
+
+    *aval = total;
+    return 0;
+}
