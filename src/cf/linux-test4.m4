@@ -1185,6 +1185,19 @@ AC_DEFUN([LINUX_HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], [
     AC_DEFINE([HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN], 1, [define if your kernel has grab_cache_page_write_begin()])
   fi])
 
+AC_DEFUN([LINUX_HAVE_PAGEVEC_LRU_ADD_FILE], [
+  AC_MSG_CHECKING([for linux __pagevec_lru_add_file()])
+  AC_CACHE_VAL([ac_cv_linux_pagevec_add_file], [
+    AC_TRY_KBUILD(
+[#include <linux/pagevec.h>],
+[__pagevec_lru_add_file(NULL);],
+      ac_cv_linux_pagevec_add_file=yes,
+      ac_cv_linux_pagevec_add_file=no)])
+  AC_MSG_RESULT($ac_cv_linux_pagevec_add_file)
+  if test "x$ac_cv_linux_pagevec_add_file" = "xyes"; then
+    AC_DEFINE([HAVE_PAGEVEC_LRU_ADD_FILE], 1, [define if your kernel has __pagevec_lru_add_file()])
+  fi])
+
 AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
   AC_MSG_CHECKING([if struct task has cred])
   AC_CACHE_VAL([ac_cv_linux_struct_task_has_cred], [

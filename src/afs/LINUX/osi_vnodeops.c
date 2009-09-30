@@ -50,7 +50,7 @@
 #define pageoff(pp) pp->offset
 #endif
 
-#ifndef __pagevec_lru_add_file
+#ifndef HAVE_PAGEVEC_LRU_ADD_FILE
 #define __pagevec_lru_add_file __pagevec_lru_add
 #endif
 
