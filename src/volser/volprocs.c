@@ -2155,7 +2155,8 @@ GetVolInfo(afs_uint32 partId,
 
 #ifdef AFS_DEMAND_ATTACH_FS
     /* If using DAFS, get volume from fsserver */
-    if (GetVolObject(volumeId, pname, &fs_tv) != SYNC_OK) {
+    if (GetVolObject(volumeId, pname, &fs_tv) != SYNC_OK || fs_tv == NULL) {
+
 	goto drop;
     }
 
