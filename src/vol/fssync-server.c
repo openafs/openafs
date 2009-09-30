@@ -223,7 +223,15 @@ FSYNC_sync(void * args)
     SYNC_server_state_t * state = &fssync_server_state;
 #ifdef AFS_DEMAND_ATTACH_FS
     VThreadOptions_t * thread_opts;
-#endif
+    int min_vinit = 2;
+#else
+    /*
+     * For non-DAFS, only wait until we begin attaching volumes (instead
+     * of waiting until all volumes are attached), since it can take
+     * awhile until VInit == 2.
+     */
+    int min_vinit = 1;
+#endif /* AFS_DEMAND_ATTACH_FS */
 
     SYNC_getAddr(&state->endpoint, &state->addr);
     SYNC_cleanupSock(state);
@@ -241,9 +249,11 @@ FSYNC_sync(void * args)
     Log("Set thread id %d for FSYNC_sync\n", tid);
 #endif /* AFS_PTHREAD_ENV */
 
-    while (!VInit) {
-	/* Let somebody else run until level > 0.  That doesn't mean that 
-	 * all volumes have been attached. */
+    while (VInit < min_vinit) {
+	/* Let somebody else run until all volumes have been preattached
+	 * (DAFS), or we have started attaching volumes (non-DAFS). This
+	 * doesn't mean that all volumes have been attached.
+	 */
 #ifdef AFS_PTHREAD_ENV
 	pthread_yield();
 #else /* AFS_PTHREAD_ENV */
