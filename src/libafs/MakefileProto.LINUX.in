@@ -8,6 +8,12 @@
 srcdir=@srcdir@
 
 include @TOP_OBJDIR@/src/config/Makefile.config
+
+<linux24 linux_24 linux22 linux_22 linux20 linux_20>
+# Override for Linux 2.4 and older
+MKAFS_OSTYPE=LINUX24
+<all>
+
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -38,7 +44,9 @@ AFS_OS_OBJS = \
 	osi_proc.o \
 <all>
 	osi_vnodeops.o \
+<linux26 linux_26>
 	osi_pagecopy.o
+<all>
 
 AFS_OS_PAGOBJS = \
 	osi_alloc.o \
