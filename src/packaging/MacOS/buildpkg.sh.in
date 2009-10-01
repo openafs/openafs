@@ -113,20 +113,20 @@ if [ $firstpass = yes ]; then
     mkdir -p $PKGROOT/Library/OpenAFS/Tools
     (cd $BINDEST && pax -rw * $PKGROOT/Library/OpenAFS/Tools)
     cd $RESSRC
-    mkdir -p $PKGROOT/Library/StartupItems/OpenAFS
-    cp $BINDEST/root.client/usr/vice/etc/afs.rc  $PKGROOT/Library/StartupItems/OpenAFS/OpenAFS
-    chmod a+x $PKGROOT/Library/StartupItems/OpenAFS/OpenAFS
-    cp $BINDEST/root.client/usr/vice/etc/StartupParameters.plist  $PKGROOT/Library/StartupItems/OpenAFS/StartupParameters.plist
-    chown -R root${SEP}admin $PKGROOT/Library
+    mkdir -p $PKGROOT/Library/LaunchDaemons
     chmod -R o-w $PKGROOT/Library
-    chmod -R g+w $PKGROOT/Library
-    chown -R root${SEP}wheel $PKGROOT/Library/StartupItems
-    chmod -R og-w $PKGROOT/Library/StartupItems
+    chmod -R g-w $PKGROOT/Library
+    cp openafs.launchd.plist $PKGROOT/Library/LaunchDaemons/org.openafs.filesystems.afs.plist
+    chmod 644 $PKGROOT/Library/LaunchDaemons/org.openafs.filesystems.afs.plist
+    chown root${SEP}admin $PKGROOT/Library
+    chown -R root${SEP}wheel $PKGROOT/Library/LaunchDaemons
     chown -R root${SEP}wheel $PKGROOT/Library/OpenAFS/Tools
     chmod -R og-w $PKGROOT/Library/OpenAFS/Tools
 
     mkdir -p $PKGROOT/private/var/db/openafs/cache
     mkdir -p $PKGROOT/private/var/db/openafs/etc/config
+    cp openafs.launchdaemon $PKGROOT/private/var/db/openafs/etc/launchafs.sh
+    chmod 755 $PKGROOT/private/var/db/openafs/etc/launchafs.sh
     cp $CURDIR/CellServDB $PKGROOT/private/var/db/openafs/etc/CellServDB.master
     echo grand.central.org > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
     if [ $majorvers -ge 7 ]; then
