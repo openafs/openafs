@@ -155,8 +155,10 @@ install-stamp: build-stamp
 	cd libafs_tree && find . -print | \
 	    cpio -admp $(CURDIR)/debian/$(srcpkg)/usr/src/modules/$(package)
 	mkdir -p debian/$(srcpkg)/usr/src/modules/$(package)/debian
-	cp debian/changelog debian/copyright debian/module/* \
+	cp debian/copyright debian/module/* \
 	    debian/$(srcpkg)/usr/src/modules/$(package)/debian/
+	sed 's/^openafs /openafs-modules /' debian/changelog \
+	    > debian/$(srcpkg)/usr/src/modules/$(package)/debian/changelog
 	chmod 755 debian/$(srcpkg)/usr/src/modules/$(package)/debian/rules
 	chown -R root.src debian/$(srcpkg)
 	find debian/$(srcpkg) -type d | xargs chmod 755
