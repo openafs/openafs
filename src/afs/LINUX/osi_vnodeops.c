@@ -134,9 +134,6 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 {
     ssize_t code = 0;
     struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
-#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-    afs_size_t isize, offindex;
-#endif
 
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
@@ -145,14 +142,6 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     code = afs_linux_VerifyVCache(vcp, NULL);
 
     if (code == 0) {
-#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
-        offindex = *offp >> PAGE_CACHE_SHIFT;
-        if(offindex > isize) {
-            code=0;
-            goto done;
-        }
-#endif
 	/* Linux's FlushPages implementation doesn't ever use credp,
 	 * so we optimise by not using it */
 	osi_FlushPages(vcp, NULL);	/* ensure stale pages are gone */
@@ -168,9 +157,6 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
     afs_Trace4(afs_iclSetp, CM_TRACE_READOP, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_OFFSET, offp, ICL_TYPE_INT32, count, ICL_TYPE_INT32,
 	       code);
-#if defined(AFS_CACHE_BYPASS) && LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-done:
-#endif
     AFS_GUNLOCK();
     return code;
 }
@@ -1991,17 +1977,6 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     atomic_add(1, &pp->count);
     set_bit(PG_locked, &pp->flags);	/* other bits? See mm.h */
     clear_bit(PG_error, &pp->flags);
-#endif
-#if defined(AFS_CACHE_BYPASS)
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
-    /* If the page is past the end of the file, skip it */
-    isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
-    if(pp->index > isize) {
-	if(PageLocked(pp))
-	    UnlockPage(pp);
-	goto done;
-    }
-#endif
 #endif
     /* if bypasscache, receiver frees, else we do */
     auio = osi_Alloc(sizeof(uio_t));
