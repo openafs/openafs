@@ -38,6 +38,7 @@
 #include "afs/afs_bypasscache.h"
 #endif
 
+#include "osi_compat.h"
 #include "osi_pagecopy.h"
 
 #ifdef pgoff2loff
@@ -63,19 +64,18 @@ extern int afs_notify_change(struct dentry *dp, struct iattr *iattrp);
 /* Some uses of BKL are perhaps not needed for bypass or memcache--
  * why don't we try it out? */
 extern struct afs_cacheOps afs_UfsCacheOps;
-#define maybe_lock_kernel()			\
-    do {					       \
-	if(afs_cacheType == &afs_UfsCacheOps)	       \
-	    lock_kernel();			       \
-    } while(0);
 
+static inline void
+afs_maybe_lock_kernel(void) {
+    if(afs_cacheType == &afs_UfsCacheOps)
+        lock_kernel();
+}
 
-#define maybe_unlock_kernel()			\
-    do {					       \
-	if(afs_cacheType == &afs_UfsCacheOps)	       \
-	    unlock_kernel();			       \
-    } while(0);
-
+static inline void
+afs_maybe_unlock_kernel(void) {
+    if(afs_cacheType == &afs_UfsCacheOps)
+	unlock_kernel();
+}
 
 /* This function converts a positive error code from AFS into a negative
  * code suitable for passing into the Linux VFS layer. It checks that the
@@ -85,7 +85,8 @@ extern struct afs_cacheOps afs_UfsCacheOps;
  * this function before being returned to the kernel.
  */
 
-static inline int afs_convert_code(int code) {
+static inline int
+afs_convert_code(int code) {
     if ((code >= 0) && (code <= MAX_ERRNO))
 	return -code;
     else
@@ -96,7 +97,8 @@ static inline int afs_convert_code(int code) {
  * operation. This helper function avoids obtaining it for VerifyVCache calls
  */
 
-static inline int afs_linux_VerifyVCache(struct vcache *avc, cred_t **retcred) {
+static inline int
+afs_linux_VerifyVCache(struct vcache *avc, cred_t **retcred) {
     cred_t *credp = NULL;
     struct vrequest treq;
     int code;
@@ -138,11 +140,7 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 	 * so we optimise by not using it */
 	osi_FlushPages(vcp, NULL);	/* ensure stale pages are gone */
 	AFS_GUNLOCK();
-#ifdef DO_SYNC_READ
 	code = do_sync_read(fp, buf, count, offp);
-#else
-	code = generic_file_read(fp, buf, count, offp);
-#endif
 	AFS_GLOCK();
     }
 
@@ -178,11 +176,7 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     ReleaseWriteLock(&vcp->lock);
     if (code == 0) {
 	    AFS_GUNLOCK();
-#ifdef DO_SYNC_READ
 	    code = do_sync_write(fp, buf, count, offp);
-#else
-	    code = generic_file_write(fp, buf, count, offp);
-#endif
 	    AFS_GLOCK();
     }
 
@@ -226,7 +220,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     cred_t *credp = crref();
     struct afs_fakestat_state fakestat;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     AFS_STATCNT(afs_readdir);
 
@@ -378,7 +372,7 @@ out:
     afs_PutFakeStat(&fakestat);
 out1:
     AFS_GUNLOCK();
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     return code;
 }
 
@@ -430,11 +424,11 @@ afs_linux_open(struct inode *ip, struct file *fp)
     cred_t *credp = crref();
     int code;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     code = afs_open(&vcp, fp->f_flags, credp);
     AFS_GUNLOCK();
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
 
     crfree(credp);
     return afs_convert_code(code);
@@ -447,11 +441,11 @@ afs_linux_release(struct inode *ip, struct file *fp)
     cred_t *credp = crref();
     int code = 0;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     code = afs_close(vcp, fp->f_flags, credp);
     AFS_GUNLOCK();
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
 
     crfree(credp);
     return afs_convert_code(code);
@@ -464,11 +458,11 @@ afs_linux_fsync(struct file *fp, struct dentry *dp, int datasync)
     struct inode *ip = FILE_INODE(fp);
     cred_t *credp = crref();
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     code = afs_fsync(VTOAFS(ip), credp);
     AFS_GUNLOCK();
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     crfree(credp);
     return afs_convert_code(code);
 
@@ -482,11 +476,6 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     struct vcache *vcp = VTOAFS(FILE_INODE(fp));
     cred_t *credp = crref();
     struct AFS_FLOCK flock;
-#if defined(POSIX_TEST_LOCK_CONFLICT_ARG)
-    struct file_lock conflict;
-#elif defined(POSIX_TEST_LOCK_RETURNS_CONFLICT)
-    struct file_lock *conflict;
-#endif
     
     /* Convert to a lock format afs_lockctl understands. */
     memset((char *)&flock, 0, sizeof(flock));
@@ -512,12 +501,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 
     if ((code == 0 || flp->fl_type == F_UNLCK) && 
         (cmd == F_SETLK || cmd == F_SETLKW)) {
-#ifdef POSIX_LOCK_FILE_WAIT_ARG
-	code = posix_lock_file(fp, flp, 0);
-#else
-	flp->fl_flags &=~ FL_SLEEP;
-	code = posix_lock_file(fp, flp);
-#endif
+	code = afs_posix_lock_file(fp, flp);
 	if (code && flp->fl_type != F_UNLCK) {
 	    struct AFS_FLOCK flock2;
 	    flock2 = flock;
@@ -531,28 +515,12 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
      * kernel, as lockctl knows nothing about byte range locks
      */
     if (code == 0 && cmd == F_GETLK && flock.l_type == F_UNLCK) {
-#if defined(POSIX_TEST_LOCK_CONFLICT_ARG)
-        if (posix_test_lock(fp, flp, &conflict)) {
-            locks_copy_lock(flp, &conflict);
-            flp->fl_type = F_UNLCK;
-            crfree(credp);
-            return 0;
-        }
-#elif defined(POSIX_TEST_LOCK_RETURNS_CONFLICT)
-	if ((conflict = posix_test_lock(fp, flp))) {
-	    locks_copy_lock(flp, conflict);
-	    flp->fl_type = F_UNLCK;
-	    crfee(credp);
-	    return 0;
-	}
-#else
-        posix_test_lock(fp, flp);
+        afs_posix_test_lock(fp, flp);
         /* If we found a lock in the kernel's structure, return it */
         if (flp->fl_type != F_UNLCK) {
             crfree(credp);
             return 0;
         }
-#endif
     }
     
     /* Convert flock back to Linux's file_lock */
@@ -799,7 +767,7 @@ afs_linux_revalidate(struct dentry *dp)
     if (afs_shuttingdown)
 	return EIO;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
 
 #ifdef notyet
@@ -831,7 +799,7 @@ afs_linux_revalidate(struct dentry *dp)
         afs_fill_inode(AFSTOV(vcp), &vattr);
 
     AFS_GUNLOCK();
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
 
     return afs_convert_code(code);
 }
@@ -866,7 +834,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     int valid;
     struct afs_fakestat_state fakestate;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     afs_InitFakeStat(&fakestate);
 
@@ -970,7 +938,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	shrink_dcache_parent(dp);
 	d_drop(dp);
     }
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     return valid;
 
   bad_dentry:
@@ -991,11 +959,7 @@ afs_dentry_iput(struct dentry *dp, struct inode *ip)
 	(void) afs_InactiveVCache(vcp, NULL);
     }
     AFS_GUNLOCK();
-#ifdef DCACHE_NFSFS_RENAMED
-    spin_lock(&dp->d_lock);
-    dp->d_flags &= ~DCACHE_NFSFS_RENAMED;   
-    spin_unlock(&dp->d_lock);
-#endif
+    afs_linux_clear_nfsfs_renamed(dp);
 
     iput(ip);
 }
@@ -1045,7 +1009,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
     vattr.va_mode = mode;
     vattr.va_type = mode & S_IFMT;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     code = afs_create(VTOAFS(dip), (char *)name, &vattr, NONEXCL, mode,
 		      &vcp, credp);
@@ -1062,7 +1026,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
     }
     AFS_GUNLOCK();
 
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     crfree(credp);
     return afs_convert_code(code);
 }
@@ -1083,7 +1047,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     struct dentry *newdp = NULL;
     int code;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     code = afs_lookup(VTOAFS(dip), (char *)comp, &vcp, credp);
     
@@ -1093,13 +1057,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	ip = AFSTOV(vcp);
 	afs_getattr(vcp, &vattr, credp);
 	afs_fill_inode(ip, &vattr);
-	if (
-#ifdef HAVE_KERNEL_HLIST_UNHASHED
-	    hlist_unhashed(&ip->i_hash)
-#else
-	    ip->i_hash.pprev == NULL
-#endif
-	    )
+	if (hlist_unhashed(&ip->i_hash))
 	    insert_inode_hash(ip);
     }
     dp->d_op = &afs_dentry_operations;
@@ -1125,7 +1083,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
     }
     newdp = d_splice_alias(ip, dp);
 
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     crfree(credp);
 
     /* It's ok for the file to not be found. That's noted by the caller by
@@ -1166,7 +1124,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     const char *name = dp->d_name.name;
     struct vcache *tvc = VTOAFS(dp->d_inode);
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     if (VREFCOUNT(tvc) > 1 && tvc->opens > 0
 				&& !(tvc->f.states & CUnlinked)) {
 	struct dentry *__dp;
@@ -1199,11 +1157,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
             }
             tvc->uncred = credp;
 	    tvc->f.states |= CUnlinked;
-#ifdef DCACHE_NFSFS_RENAMED
-	    spin_lock(&dp->d_lock);
-	    dp->d_flags |= DCACHE_NFSFS_RENAMED;   
-	    spin_unlock(&dp->d_lock);
-#endif
+	    afs_linux_set_nfsfs_renamed(dp);
 	} else {
 	    osi_FreeSmallSpace(__name);	
 	}
@@ -1224,7 +1178,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     if (!code)
 	d_drop(dp);
 out:
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     crfree(credp);
     return afs_convert_code(code);
 }
@@ -1260,7 +1214,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     struct vattr vattr;
     const char *name = dp->d_name.name;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     VATTR_NULL(&vattr);
     vattr.va_mask = ATTR_MODE;
     vattr.va_mode = mode;
@@ -1279,7 +1233,7 @@ afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     }
     AFS_GUNLOCK();
 
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     crfree(credp);
     return afs_convert_code(code);
 }
@@ -1325,7 +1279,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     struct dentry *rehash = NULL;
 
     /* Prevent any new references during rename operation. */
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
 
     if (!d_unhashed(newdp)) {
 	d_drop(newdp);
@@ -1345,7 +1299,7 @@ afs_linux_rename(struct inode *oldip, struct dentry *olddp,
     if (rehash)
 	d_rehash(rehash);
 
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
 
     crfree(credp);
     return afs_convert_code(code);
@@ -1800,15 +1754,15 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	ancr->offset = offset;
 	ancr->length = PAGE_SIZE;
 
-	maybe_lock_kernel();
+	afs_maybe_lock_kernel();
 	code = afs_ReadNoCache(avc, ancr, credp);
-	maybe_unlock_kernel();
+	afs_maybe_unlock_kernel();
 
 	goto done; /* skips release page, doing it in bg thread */
     }
 #endif 
 		  
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     AFS_DISCON_LOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE, ICL_TYPE_POINTER, ip,
@@ -1822,7 +1776,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	       code);
     AFS_DISCON_UNLOCK();
     AFS_GUNLOCK();
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     if (!code) {
 	/* XXX valid for no-cache also?  Check last bits of files... :)
 	 * Cognate code goes in afs_NoCacheFetchProc.  */
@@ -1992,7 +1946,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     base = (((loff_t) pp->index) << PAGE_CACHE_SHIFT)  + offset;
 
     credp = crref();
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
@@ -2002,14 +1956,10 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     if (vcp->f.states & CPageWrite) {
 	ReleaseWriteLock(&vcp->lock);
 	AFS_GUNLOCK();
-	maybe_unlock_kernel();
+	afs_maybe_unlock_kernel();
 	crfree(credp);
 	kunmap(pp);
-#if defined(WRITEPAGE_ACTIVATE)
-	return WRITEPAGE_ACTIVATE;
-#else
 	return AOP_WRITEPAGE_ACTIVATE;
-#endif
     }
     vcp->f.states |= CPageWrite;
     ReleaseWriteLock(&vcp->lock);
@@ -2038,7 +1988,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 	       ICL_TYPE_INT32, code);
 
     AFS_GUNLOCK();
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
     crfree(credp);
     kunmap(pp);
 
@@ -2060,11 +2010,7 @@ afs_linux_writepage(struct page *pp)
     long status;
 
     if (PageReclaim(pp)) {
-#if defined(WRITEPAGE_ACTIVATE)
-	return WRITEPAGE_ACTIVATE;
-#else
 	return AOP_WRITEPAGE_ACTIVATE;
-#endif
     }
 
     inode = (struct inode *)mapping->host;
@@ -2081,11 +2027,7 @@ afs_linux_writepage(struct page *pp)
   do_it:
     status = afs_linux_writepage_sync(inode, pp, 0, offset);
     SetPageUptodate(pp);
-#if defined(WRITEPAGE_ACTIVATE)
-    if ( status != WRITEPAGE_ACTIVATE )
-#else
     if ( status != AOP_WRITEPAGE_ACTIVATE )
-#endif
 	UnlockPage(pp);
     if (status == offset)
 	return 0;
@@ -2164,11 +2106,7 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_CACHE_SHIFT;
-#if defined(HAVE_GRAB_CACHE_PAGE_WRITE_BEGIN)
     page = grab_cache_page_write_begin(mapping, index, flags);
-#else
-    page = __grab_cache_page(mapping, index);
-#endif
     *pagep = page;
 
     return 0;
@@ -2225,7 +2163,7 @@ afs_symlink_filler(struct file *file, struct page *page)
     char *p = (char *)kmap(page);
     int code;
 
-    maybe_lock_kernel();
+    afs_maybe_lock_kernel();
     AFS_GLOCK();
     code = afs_linux_ireadlink(ip, p, PAGE_SIZE, AFS_UIOSYS);
     AFS_GUNLOCK();
@@ -2233,7 +2171,7 @@ afs_symlink_filler(struct file *file, struct page *page)
     if (code < 0)
 	goto fail;
     p[code] = '\0';		/* null terminate? */
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
 
     SetPageUptodate(page);
     kunmap(page);
@@ -2241,7 +2179,7 @@ afs_symlink_filler(struct file *file, struct page *page)
     return 0;
 
   fail:
-    maybe_unlock_kernel();
+    afs_maybe_unlock_kernel();
 
     SetPageError(page);
     kunmap(page);

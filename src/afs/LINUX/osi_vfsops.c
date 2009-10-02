@@ -58,22 +58,18 @@ int afs_fill_super(struct super_block *sb, void *data, int silent);
  * dev, covered, s_rd_only, s_dirt, and s_type will be set by read_super.
  */
 #ifdef GET_SB_HAS_STRUCT_VFSMOUNT
-int
+static int
 afs_get_sb(struct file_system_type *fs_type, int flags,
-	   const char *dev_name, void *data, struct vfsmount *mnt)
+	   const char *dev_name, void *data, struct vfsmount *mnt) {
+    return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
+}
 #else
 static struct superblock *
 afs_get_sb(struct file_system_type *fs_type, int flags,
 	   const char *dev_name, void *data)
-#endif
-{
-#ifdef GET_SB_HAS_STRUCT_VFSMOUNT
-    return get_sb_nodev(fs_type, flags, data, afs_fill_super, mnt);
-#else
     return get_sb_nodev(fs_type, flags, data, afs_fill_super);
-#endif
 }
-
+#endif
 
 struct file_system_type afs_fs_type = {
     .owner = THIS_MODULE,
