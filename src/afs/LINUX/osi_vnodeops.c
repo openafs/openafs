@@ -1378,134 +1378,15 @@ out:
 #endif /* USABLE_KERNEL_PAGE_SYMLINK_CACHE */
 
 #if defined(AFS_CACHE_BYPASS)
-static inline int
-afs_linux_can_bypass(struct inode *ip) {
-    switch(cache_bypass_strategy) {
-	case NEVER_BYPASS_CACHE:
-	    return 0;
-	case ALWAYS_BYPASS_CACHE:
-	    return 1;
-	case LARGE_FILES_BYPASS_CACHE:
-	    if(i_size_read(ip) > cache_bypass_threshold)
-		return 1;
-	default:
-     }
-     return 0;
-}
-
-static int
-afs_linux_cache_bypass_read(struct file *fp, struct address_space *mapping,
-			    struct list_head *page_list, unsigned num_pages)
-{
-    afs_int32 page_ix;
-    uio_t *auio;
-    afs_offs_t offset;
-    struct iovec* iovecp;
-    struct nocache_read_request *ancr;
-    struct page *pp, *ppt;
-    struct pagevec lrupv;
-    afs_int32 code = 0;	
-
-    cred_t *credp;
-    struct inode *ip = FILE_INODE(fp);
-    struct vcache *avc = VTOAFS(ip);
-    afs_int32 bypasscache = 0; /* bypass for this read */
-    afs_int32 base_index = 0;
-    afs_int32 page_count = 0;
-    afs_int32 isize;
-	
-    /* background thread must free: iovecp, auio, ancr */
-    iovecp = osi_Alloc(num_pages * sizeof(struct iovec));
-
-    auio = osi_Alloc(sizeof(uio_t));
-    auio->uio_iov = iovecp;	
-    auio->uio_iovcnt = num_pages;
-    auio->uio_flag = UIO_READ;
-    auio->uio_seg = AFS_UIOSYS;
-    auio->uio_resid = num_pages * PAGE_SIZE;
-	
-    ancr = osi_Alloc(sizeof(struct nocache_read_request));
-    ancr->auio = auio;
-    ancr->offset = auio->uio_offset;
-    ancr->length = auio->uio_resid;
-	
-    pagevec_init(&lrupv, 0);	
-	
-    for(page_ix = 0; page_ix < num_pages; ++page_ix) {
-	
-	if(list_empty(page_list))
-	    break;
-
-	pp = list_entry(page_list->prev, struct page, lru);
-	/* If we allocate a page and don't remove it from page_list,
-	 * the page cache gets upset. */
-	list_del(&pp->lru);
-	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
-	if(pp->index > isize) {
-	    if(PageLocked(pp))
-		UnlockPage(pp);
-	    continue;
-	}
-
-	if(page_ix == 0) {
-	    offset = ((loff_t) pp->index) << PAGE_CACHE_SHIFT;
-	    auio->uio_offset = offset;
-	    base_index = pp->index;
-	}
-        iovecp[page_ix].iov_len = PAGE_SIZE;
-        code = add_to_page_cache(pp, mapping, pp->index, GFP_KERNEL);
-        if(base_index != pp->index) {   
-            if(PageLocked(pp))
-				 UnlockPage(pp);
-            page_cache_release(pp);
-	    iovecp[page_ix].iov_base = (void *) 0;
-	    base_index++;
-            continue;
-        }
-        base_index++;
-        if(code) {
-	    if(PageLocked(pp))
-		UnlockPage(pp);
-	    page_cache_release(pp);
-	    iovecp[page_ix].iov_base = (void *) 0;
-	} else {
-	    page_count++;
-	    if(!PageLocked(pp)) {
-		LockPage(pp);
-	    }	
-	    
-	    /* save the page for background map */
-            iovecp[page_ix].iov_base = (void*) pp;
-
-	    /* and put it on the LRU cache */
-	    if (!pagevec_add(&lrupv, pp))
-		__pagevec_lru_add(&lrupv);
-        }
-    }
-
-    /* If there were useful pages in the page list, make sure all pages
-     * are in the LRU cache, then schedule the read */
-    if(page_count) {
-        pagevec_lru_add(&lrupv);
-	credp = crref();
-        code = afs_ReadNoCache(avc, ancr, credp);
-	crfree(credp);
-    } else {
-        /* If there is nothing for the background thread to handle,
-         * it won't be freeing the things that we never gave it */
-        osi_Free(iovecp, num_pages * sizeof(struct iovec));
-        osi_Free(auio, sizeof(uio_t));
-        osi_Free(ancr, sizeof(struct nocache_read_request));
-    }
-    /* we do not flush, release, or unmap pages--that will be 
-     * done for us by the background thread as each page comes in
-     * from the fileserver */
-out:	
-    return afs_convert_code(code);
-}
-
 #endif /* defined(AFS_CACHE_BYPASS */
 
+/* Populate a page by filling it from the cache file pointed at by cachefp
+ * (which contains indicated chunk)
+ * If task is NULL, the page copy occurs syncronously, and the routine
+ * returns with page still locked. If task is non-NULL, then page copies
+ * may occur in the background, and the page will be unlocked when it is
+ * ready for use.
+ */
 static int
 afs_linux_read_cache(struct file *cachefp, struct page *page,
 		     int chunk, struct pagevec *lrupv,
@@ -1570,7 +1451,9 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	    copy_highpage(page, cachepage);
 	    flush_dcache_page(page);
 	    SetPageUptodate(page);
-	    UnlockPage(page);
+
+	    if (task)
+		UnlockPage(page);
         } else if (task) {
 	    afs_pagecopy_queue_page(task, cachepage, page);
 	} else {
@@ -1578,7 +1461,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	}
     }
 
-    if (code) {
+    if (code && task) {
         UnlockPage(page);
     }
 
@@ -1698,24 +1581,22 @@ afs_linux_readpage_fastpath(struct file *fp, struct page *pp, int *codep)
 }
 
 /* afs_linux_readpage
- * all reads come through here. A strategy-like read call.
+ *
+ * This function is split into two, because prepare_write/begin_write
+ * require a readpage call which doesn't unlock the resulting page upon
+ * success.
  */
 static int
-afs_linux_readpage(struct file *fp, struct page *pp)
+afs_linux_fillpage(struct file *fp, struct page *pp)
 {
     afs_int32 code;
     char *address;
-    afs_offs_t offset = ((loff_t) pp->index) << PAGE_CACHE_SHIFT;
-#if defined(AFS_CACHE_BYPASS)
-    afs_int32 bypasscache = 0; /* bypass for this read */
-    struct nocache_read_request *ancr;
-    afs_int32 isize;
-#endif
     uio_t *auio;
     struct iovec *iovecp;
     struct inode *ip = FILE_INODE(fp);
     afs_int32 cnt = page_count(pp);
     struct vcache *avc = VTOAFS(ip);
+    afs_offs_t offset = page_offset(pp);
     cred_t *credp;
 
     AFS_GLOCK();
@@ -1729,39 +1610,12 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     address = kmap(pp);
     ClearPageError(pp);
 
-    /* if bypasscache, receiver frees, else we do */
     auio = osi_Alloc(sizeof(uio_t));
     iovecp = osi_Alloc(sizeof(struct iovec));
 
     setup_uio(auio, iovecp, (char *)address, offset, PAGE_SIZE, UIO_READ,
-	      AFS_UIOSYS);
+              AFS_UIOSYS);
 
-#if defined(AFS_CACHE_BYPASS)
-    bypasscache = afs_linux_can_bypass(ip);
-
-    /* In the new incarnation of selective caching, a file's caching policy
-     * can change, eg because file size exceeds threshold, etc. */
-    trydo_cache_transition(avc, credp, bypasscache);
-	
-    if(bypasscache) {
-	if(address)
-	    kunmap(pp);
-	/* save the page for background map */
-	auio->uio_iov->iov_base = (void*) pp;
-	/* the background thread will free this */
-	ancr = osi_Alloc(sizeof(struct nocache_read_request));
-	ancr->auio = auio;
-	ancr->offset = offset;
-	ancr->length = PAGE_SIZE;
-
-	afs_maybe_lock_kernel();
-	code = afs_ReadNoCache(avc, ancr, credp);
-	afs_maybe_unlock_kernel();
-
-	goto done; /* skips release page, doing it in bg thread */
-    }
-#endif 
-		  
     afs_maybe_lock_kernel();
     AFS_GLOCK();
     AFS_DISCON_LOCK();
@@ -1789,22 +1643,27 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     } /* !code */
 
     kunmap(pp);
-    UnlockPage(pp);
 
-#if defined(AFS_CACHE_BYPASS)
-    /* do not call afs_GetDCache if cache is bypassed */
-    if(bypasscache)
-	goto done;
-#endif
-
-    /* free if not bypassing cache */
     osi_Free(auio, sizeof(uio_t));
     osi_Free(iovecp, sizeof(struct iovec));
 
-    if (!code && AFS_CHUNKOFFSET(offset) == 0) {
+    crfree(credp);
+    return afs_convert_code(code);
+}
+
+static int
+afs_linux_prefetch(struct file *fp, struct page *pp)
+{
+    int code = 0;
+    struct vcache *avc = VTOAFS(FILE_INODE(fp));
+    afs_offs_t offset = page_offset(pp);
+
+    if (AFS_CHUNKOFFSET(offset) == 0) {
 	struct dcache *tdc;
 	struct vrequest treq;
+	cred_t *credp;
 
+	credp = crref();
 	AFS_GLOCK();
 	code = afs_InitReq(&treq, credp);
 	if (!code && !NBObtainWriteLock(&avc->lock, 534)) {
@@ -1817,13 +1676,231 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	    ReleaseWriteLock(&avc->lock);
 	}
 	AFS_GUNLOCK();
+	crfree(credp);
     }
+    return afs_convert_code(code);
+
+}
 
 #if defined(AFS_CACHE_BYPASS)
-done:
-#endif
-    crfree(credp);
+
+static int
+afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
+			   struct list_head *page_list, unsigned num_pages)
+{
+    afs_int32 page_ix;
+    uio_t *auio;
+    afs_offs_t offset;
+    struct iovec* iovecp;
+    struct nocache_read_request *ancr;
+    struct page *pp, *ppt;
+    struct pagevec lrupv;
+    afs_int32 code = 0;
+
+    cred_t *credp;
+    struct inode *ip = FILE_INODE(fp);
+    struct vcache *avc = VTOAFS(ip);
+    afs_int32 base_index = 0;
+    afs_int32 page_count = 0;
+    afs_int32 isize;
+
+    /* background thread must free: iovecp, auio, ancr */
+    iovecp = osi_Alloc(num_pages * sizeof(struct iovec));
+
+    auio = osi_Alloc(sizeof(uio_t));
+    auio->uio_iov = iovecp;
+    auio->uio_iovcnt = num_pages;
+    auio->uio_flag = UIO_READ;
+    auio->uio_seg = AFS_UIOSYS;
+    auio->uio_resid = num_pages * PAGE_SIZE;
+
+    ancr = osi_Alloc(sizeof(struct nocache_read_request));
+    ancr->auio = auio;
+    ancr->offset = auio->uio_offset;
+    ancr->length = auio->uio_resid;
+
+    pagevec_init(&lrupv, 0);
+
+    for(page_ix = 0; page_ix < num_pages; ++page_ix) {
+
+	if(list_empty(page_list))
+	    break;
+
+	pp = list_entry(page_list->prev, struct page, lru);
+	/* If we allocate a page and don't remove it from page_list,
+	 * the page cache gets upset. */
+	list_del(&pp->lru);
+	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
+	if(pp->index > isize) {
+	    if(PageLocked(pp))
+		UnlockPage(pp);
+	    continue;
+	}
+
+	if(page_ix == 0) {
+	    offset = ((lof_t) pp->index) << PAGE_CACHE_SHIFT;
+	    auio->uio_offset = offset;
+	    base_index = pp->index;
+	}
+        iovecp[page_ix].iov_len = PAGE_SIZE;
+        code = add_to_page_cache(pp, mapping, pp->index, GFP_KERNEL);
+        if(base_index != pp->index) {
+            if(PageLocked(pp))
+				 UnlockPage(pp);
+            page_cache_release(pp);
+	    iovecp[page_ix].iov_base = (void *) 0;
+	    base_index++;
+            continue;
+        }
+        base_index++;
+        if(code) {
+	    if(PageLocked(pp))
+		UnlockPage(pp);
+	    page_cache_release(pp);
+	    iovecp[page_ix].iov_base = (void *) 0;
+	} else {
+	    page_count++;
+	    if(!PageLocked(pp)) {
+		LockPage(pp);
+	    }
+
+	    /* save the page for background map */
+            iovecp[page_ix].iov_base = (void*) pp;
+
+	    /* and put it on the LRU cache */
+	    if (!pagevec_add(&lrupv, pp))
+		__pagevec_lru_add(&lrupv);
+        }
+    }
+
+    /* If there were useful pages in the page list, make sure all pages
+     * are in the LRU cache, then schedule the read */
+    if(page_count) {
+        pagevec_lru_add(&lrupv);
+	credp = crref();
+        code = afs_ReadNoCache(avc, ancr, credp);
+	crfree(credp);
+    } else {
+        /* If there is nothing for the background thread to handle,
+         * it won't be freeing the things that we never gave it */
+        osi_Free(iovecp, num_pages * sizeof(struct iovec));
+        osi_Free(auio, sizeof(uio_t));
+        osi_Free(ancr, sizeof(struct nocache_read_request));
+    }
+    /* we do not flush, release, or unmap pages--that will be
+     * done for us by the background thread as each page comes in
+     * from the fileserver */
+out:
     return afs_convert_code(code);
+}
+
+
+static int
+afs_linux_bypass_readpage(struct file *fp, struct page *pp)
+{
+    cred_t *credp = NULL;
+    uio_t *auio;
+    struct iovec *iovecp;
+    struct nocache_read_request *ancr;
+    afs_int32 isize;
+
+    ClearPageError(pp);
+
+    /* If the page is past the end of the file, skip it */
+    isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
+    if(pp->index > isize) {
+	if (PageLocked(pp))
+	    UnlockPage(pp);
+	return 0;
+    }
+    /* receiver frees */
+    auio = osi_Alloc(sizeof(uio_t));
+    iovecp = osi_Alloc(sizeof(struct iovec));
+
+    /* address can be NULL, because we overwrite it with 'pp', below */
+    setup_uio(auio, iovecp, NULL, (pp->index << PAGE_CACHE_SHIFT),
+	      PAGE_SIZE, UIO_READ, AFS_UIOSYS);
+
+    /* save the page for background map */
+    /* XXX - Shouldn't we get a reference count here? */
+    auio->uio_iov->iov_base = (void*) pp;
+    /* the background thread will free this */
+    ancr = osi_Alloc(sizeof(struct nocache_read_request));
+    ancr->auio = auio;
+    ancr->offset = offset;
+    ancr->length = PAGE_SIZE;
+
+    credp = crref();
+    afs_maybe_lock_kernel();
+    code = afs_ReadNoCache(VTOAFS(FILE_INODE(fp)), ancr, credp);
+    afs_maybe_unlock_kernel();
+    crfree(credp);
+
+    return afs_convert_code(code);
+}
+
+static inline int
+afs_linux_can_bypass(struct inode *ip) {
+    switch(cache_bypass_strategy) {
+	case NEVER_BYPASS_CACHE:
+	    return 0;
+	case ALWAYS_BYPASS_CACHE:
+	    return 1;
+	case LARGE_FILES_BYPASS_CACHE:
+	    if(i_size_read(ip) > cache_bypass_threshold)
+		return 1;
+	default:
+     }
+     return 0;
+}
+
+/* Check if a file is permitted to bypass the cache by policy, and modify
+ * the cache bypass state recorded for that file */
+
+static inline int
+afs_linux_bypass_check(struct inode *ip) {
+    struct cred* credp;
+
+    int bypass = afs_linux_can_bypass(ip);
+
+    credp = crref();
+    trydo_cache_transition(VTOAFS(ip)), credp, bypass);
+    crfree(credp);
+
+    return bypass;
+}
+
+#else
+static inline int
+afs_linux_bypass_check(struct inode *ip) {
+    return 0;
+}
+static inline int
+afs_linux_bypass_readpage(struct file *fp, struct page *pp) {
+    return 0;
+}
+static inline int
+afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
+		    struct list_head *page_list, unsigned int num_pages) {
+    return 0;
+}
+#endif
+
+static int
+afs_linux_readpage(struct file *fp, struct page *pp)
+{
+    int code;
+
+    if (afs_linux_bypass_check(FILE_INODE(fp))) {
+	code = afs_linux_bypass_readpage(fp, pp);
+    } else {
+	code = afs_linux_fillpage(fp, pp);
+	if (!code)
+	    code = afs_linux_prefetch(fp, pp);
+	UnlockPage(pp);
+    }
+
+    return code;
 }
 
 /* Readpages reads a number of pages for a particular file. We use
@@ -1845,16 +1922,8 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     struct pagevec lrupv;
     struct afs_pagecopy_task *task;
 
-#if defined(AFS_CACHE_BYPASS)
-    bypasscache = afs_linux_can_bypass(ip);
-
-    /* In the new incarnation of selective caching, a file's caching policy
-     * can change, eg because file size exceeds threshold, etc. */
-    trydo_cache_transition(avc, credp, bypasscache);
-
-    if (bypasscache)
-	return afs_linux_cache_bypass_read(ip, mapping, page_list, num_pages);
-#endif
+    if (afs_linux_bypass_check(inode))
+	return afs_linux_bypass_readpages(fp, mapping, page_list, num_pages);
 
     AFS_GLOCK();
     if ((code = afs_linux_VerifyVCache(avc, NULL))) {
