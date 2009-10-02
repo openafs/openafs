@@ -1738,7 +1738,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 	}
 
 	if(page_ix == 0) {
-	    offset = ((lof_t) pp->index) << PAGE_CACHE_SHIFT;
+	    offset = page_offset(pp);
 	    auio->uio_offset = offset;
 	    base_index = pp->index;
 	}
@@ -1806,19 +1806,12 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
 
     ClearPageError(pp);
 
-    /* If the page is past the end of the file, skip it */
-    isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
-    if(pp->index > isize) {
-	if (PageLocked(pp))
-	    UnlockPage(pp);
-	return 0;
-    }
     /* receiver frees */
     auio = osi_Alloc(sizeof(uio_t));
     iovecp = osi_Alloc(sizeof(struct iovec));
 
     /* address can be NULL, because we overwrite it with 'pp', below */
-    setup_uio(auio, iovecp, NULL, (pp->index << PAGE_CACHE_SHIFT),
+    setup_uio(auio, iovecp, NULL, page_offset(pp),
 	      PAGE_SIZE, UIO_READ, AFS_UIOSYS);
 
     /* save the page for background map */
@@ -2012,7 +2005,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     int f_flags = 0;
 
     buffer = kmap(pp) + offset;
-    base = (((loff_t) pp->index) << PAGE_CACHE_SHIFT)  + offset;
+    base = page_offset(pp) + offset;
 
     credp = crref();
     afs_maybe_lock_kernel();
