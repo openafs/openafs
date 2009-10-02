@@ -25,14 +25,14 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include "h/mm.h"
+#include <linux/mm.h>
 #ifdef HAVE_MM_INLINE_H
-#include "h/mm_inline.h"
+#include <linux/mm_inline.h>
 #endif
-#include "h/pagemap.h"
-#include "h/smp_lock.h"
-#include "h/writeback.h"
-#include "h/pagevec.h"
+#include <linux/pagemap.h>
+#include <linux/smp_lock.h>
+#include <linux/writeback.h>
+#include <linux/pagevec.h>
 #if defined(AFS_CACHE_BYPASS)
 #include "afs/lock.h"
 #include "afs/afs_bypasscache.h"

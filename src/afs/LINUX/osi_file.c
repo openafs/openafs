@@ -11,14 +11,14 @@
 #include "afs/param.h"
 
 
-#include "h/module.h" /* early to avoid printf->printk mapping */
+#include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
-#include "h/smp_lock.h"
-#include "h/namei.h"
+#include <linux/smp_lock.h>
+#include <linux/namei.h>
 #if defined(LINUX_USE_FH)
-#include "h/exportfs.h"
+#include <linux/exportfs.h>
 int cache_fh_type = -1;
 int cache_fh_len = -1;
 #endif

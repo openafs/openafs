@@ -18,8 +18,8 @@
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "h/unistd.h"		/* For syscall numbers. */
-#include "h/mm.h"
+#include <linux/unistd.h>		/* For syscall numbers. */
+#include <linux/mm.h>
 
 #ifdef AFS_AMD64_LINUX20_ENV
 #include <asm/ia32_unistd.h>

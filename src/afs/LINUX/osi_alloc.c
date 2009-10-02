@@ -17,8 +17,8 @@
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "h/mm.h"
-#include "h/slab.h"
+#include <linux/mm.h>
+#include <linux/slab.h>
 
 #include "afs_atomlist.h"
 #include "afs_lhash.h"
@@ -49,7 +49,7 @@ unsigned int afs_linux_hash_verify_count = 0;	/* used by hash_verify */
 struct afs_lhash_stat afs_linux_lsb;	/* hash table statistics */
 unsigned int afs_linux_hash_bucket_dist[MAX_BUCKET_LEN];	/* bucket population distribution in our hash table */
 
-#include "h/vmalloc.h"
+#include <linux/vmalloc.h>
 
 /* Allocator support functions (static) */
 

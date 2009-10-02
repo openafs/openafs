@@ -21,7 +21,7 @@
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include "h/smp_lock.h"
+#include <linux/smp_lock.h>
 
 
 struct vcache *afs_globalVp = 0;

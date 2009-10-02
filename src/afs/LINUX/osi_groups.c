@@ -24,7 +24,7 @@
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs/nfsclient.h"
-#include "h/smp_lock.h"
+#include <linux/smp_lock.h>
 
 #ifdef AFS_LINUX26_ONEGROUP_ENV
 #define NUMPAGGROUPS 1

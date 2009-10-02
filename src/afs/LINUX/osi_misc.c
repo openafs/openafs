@@ -16,13 +16,13 @@
 
 
 #include <linux/module.h> /* early to avoid printf->printk mapping */
-#include "h/dcache.h"
-#include "h/namei.h"
-#include "h/kthread.h"
+#include <linux/dcache.h>
+#include <linux/namei.h>
+#include <linux/kthread.h>
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
-#include "h/smp_lock.h"
+#include <linux/smp_lock.h>
 
 int afs_osicred_initialized = 0;
 AFS_UCRED afs_osi_cred;
