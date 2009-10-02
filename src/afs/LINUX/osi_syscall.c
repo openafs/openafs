@@ -15,9 +15,7 @@
 #include "afs/param.h"
 
 
-#ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
-#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "h/unistd.h"		/* For syscall numbers. */
@@ -29,10 +27,8 @@
 
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #include <linux/init.h>
 #include <linux/sched.h>
-#endif
 
 #ifndef NR_syscalls
 #define NR_syscalls 222
@@ -70,9 +66,7 @@
     afs_sys_call_table[_S(SLOT)] = POINTER2SYSCALL FUNC;
 #endif 
 
-#if defined(AFS_S390X_LINUX24_ENV) && !defined(AFS_LINUX26_ENV)
-#define _S(x) ((x)<<1)
-#elif defined(AFS_IA64_LINUX20_ENV)
+#if defined(AFS_IA64_LINUX20_ENV)
 #define _S(x) ((x)-1024)
 #else
 #define _S(x) x
@@ -106,16 +100,9 @@ uint32_t syscall_jump_code[] = {
 extern long afs_xsetgroups(int gidsetsize, gid_t * grouplist);
 asmlinkage long (*sys_setgroupsp) (int gidsetsize, gid_t * grouplist);
 
-#ifdef AFS_LINUX24_ENV
 extern int afs_xsetgroups32(int gidsetsize, gid_t * grouplist);
 asmlinkage int (*sys_setgroups32p) (int gidsetsize,
 				    __kernel_gid32_t * grouplist);
-#endif
-
-#if !defined(AFS_LINUX24_ENV)
-asmlinkage int (*sys_settimeofdayp) (struct timeval * tv, struct timezone * tz);
-#endif
-
 
 /***** AMD64 *****/
 #ifdef AFS_AMD64_LINUX20_ENV
@@ -124,10 +111,8 @@ static SYSCALLTYPE ia32_ni_syscall = 0;
 
 extern int afs32_xsetgroups();
 asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
-#ifdef AFS_LINUX24_ENV
 extern int afs32_xsetgroups32();
 asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
-#endif /* __NR_ia32_setgroups32 */
 #endif /* AFS_AMD64_LINUX20_ENV */
 
 
@@ -156,38 +141,22 @@ static void sys32_setgroups_stub()
 	printf("*** error! sys32_setgroups_stub called\n");
 }
 
-#endif /* AFS_AMD64_LINUX20_ENV */
+#endif /* AFS_PPC64_LINUX26_ENV */
 
 
 /***** SPARC64 *****/
-#ifdef AFS_SPARC64_LINUX20_ENV
 #ifdef AFS_SPARC64_LINUX26_ENV
 static SYSCALLTYPE *afs_sys_call_table32;
-#else
-extern SYSCALLTYPE *afs_sys_call_table32;
-#endif
 static SYSCALLTYPE afs_ni_syscall32 = 0;
 
 extern int afs32_xsetgroups();
-#ifdef AFS_SPARC64_LINUX26_ENV
 asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
 				    __kernel_gid32_t * grouplist);
-#else
-asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
-				    __kernel_gid_t32 * grouplist);
-#endif
-#ifdef AFS_LINUX24_ENV
 /* This number is not exported for some bizarre reason. */
 #define __NR_setgroups32      82
 extern int afs32_xsetgroups32();
-#ifdef AFS_SPARC64_LINUX26_ENV
 asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
 				      __kernel_gid32_t * grouplist);
-#else
-asmlinkage int (*sys32_setgroups32p) (int gidsetsize,
-				      __kernel_gid_t32 * grouplist);
-#endif
-#endif
 
 asmlinkage int
 afs_syscall32(long syscall, long parm1, long parm2, long parm3, long parm4,
@@ -422,10 +391,6 @@ int osi_syscall_init(void)
     afs_sys_call_table = osi_find_syscall_table(0);
     if (afs_sys_call_table) {
 
-#if !defined(AFS_LINUX24_ENV)
-	/* XXX no sys_settimeofday on IA64? */
-#endif
-
 	/* check we aren't already loaded */
 	/* XXX this can't be right */
 	if (SYSCALL2POINTER afs_sys_call_table[_S(__NR_afs_syscall)]
@@ -502,10 +467,6 @@ int osi_syscall_init(void)
 
     afs_sys_call_table = osi_find_syscall_table(0);
     if (afs_sys_call_table) {
-#if !defined(AFS_LINUX24_ENV)
-	sys_settimeofdayp =
-	    SYSCALL2POINTER afs_sys_call_table[_S(__NR_settimeofday)];
-#endif /* AFS_LINUX24_ENV */
 
 	/* check we aren't already loaded */
 	if (SYSCALL2POINTER afs_sys_call_table[_S(__NR_afs_syscall)]
@@ -547,13 +508,11 @@ int osi_syscall_init(void)
 	afs_ia32_sys_call_table[__NR_ia32_setgroups] =
 	    POINTER2SYSCALL afs32_xsetgroups;
 
-#if AFS_LINUX24_ENV
 	/* setup setgroups32 for IA32 */
 	sys32_setgroups32p =
 	    SYSCALL2POINTER afs_ia32_sys_call_table[__NR_ia32_setgroups32];
 	afs_ia32_sys_call_table[__NR_ia32_setgroups32] =
 	    POINTER2SYSCALL afs32_xsetgroups32;
-#endif /* __NR_ia32_setgroups32 */
     }
 #endif /* AFS_AMD64_LINUX20_ENV */
 
@@ -570,13 +529,11 @@ int osi_syscall_init(void)
 	sys32_setgroupsp = SYSCALL2POINTER afs_sys_call_table32[__NR_setgroups];
 	afs_sys_call_table32[__NR_setgroups] = POINTER2SYSCALL afs32_xsetgroups;
 
-#ifdef AFS_LINUX24_ENV
 	/* setup setgroups32 for 32-bit SPARC */
 	sys32_setgroups32p =
 	    SYSCALL2POINTER afs_sys_call_table32[__NR_setgroups32];
 	afs_sys_call_table32[__NR_setgroups32] =
 	    POINTER2SYSCALL afs32_xsetgroups32;
-#endif
     }
 #endif /* AFS_SPARC64_LINUX20_ENV */
     return 0;
@@ -644,11 +601,9 @@ void osi_syscall_clean(void)
 	afs_ia32_sys_call_table[__NR_ia32_setgroups] =
 	    POINTER2SYSCALL sys32_setgroupsp;
 
-#ifdef AFS_LINUX24_ENV
 	/* put back setgroups32 for IA32 */
 	afs_ia32_sys_call_table[__NR_ia32_setgroups32] =
 	    POINTER2SYSCALL sys32_setgroups32p;
-#endif
     }
 #endif
 
@@ -663,11 +618,9 @@ void osi_syscall_clean(void)
 	afs_sys_call_table32[__NR_setgroups] =
 	    POINTER2SYSCALL sys32_setgroupsp;
 
-#ifdef AFS_LINUX24_ENV
 	/* put back setgroups32 for IA32 */
 	afs_sys_call_table32[__NR_setgroups32] =
 	    POINTER2SYSCALL sys32_setgroups32p;
-#endif
     }
 #endif
 }

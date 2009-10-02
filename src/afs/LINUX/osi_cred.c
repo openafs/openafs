@@ -42,9 +42,7 @@ crfree(cred_t * cr)
 	return;
     }
 
-#if defined(AFS_LINUX26_ENV)
     put_group_info(cr->cr_group_info);
-#endif
 
     kfree(cr);
 }
@@ -61,13 +59,8 @@ crdup(cred_t * cr)
     tmp->cr_gid = cr->cr_gid;
     tmp->cr_rgid = cr->cr_rgid;
 
-#if defined(AFS_LINUX26_ENV)
     get_group_info(cr->cr_group_info);
     tmp->cr_group_info = cr->cr_group_info;
-#else
-    memcpy(tmp->cr_groups, cr->cr_groups, NGROUPS * sizeof(gid_t));
-    tmp->cr_ngroups = cr->cr_ngroups;
-#endif
 
     return tmp;
 }
@@ -82,23 +75,19 @@ crref(void)
     cr->cr_gid = current_fsgid();
     cr->cr_rgid = current_gid();
 
-#if defined(AFS_LINUX26_ENV)
     task_lock(current);
     get_group_info(current_group_info());
     cr->cr_group_info = current_group_info();
     task_unlock(current);
-#else
-    memcpy(cr->cr_groups, current->groups, NGROUPS * sizeof(gid_t));
-    cr->cr_ngroups = current->ngroups;
-#endif
+
     return cr;
 }
-
 
 /* Set the cred info into the current task */
 void
 crset(cred_t * cr)
 {
+    struct group_info *old_info;
 #if defined(STRUCT_TASK_HAS_CRED)
     struct cred *new_creds;
 
@@ -119,9 +108,6 @@ crset(cred_t * cr)
     current->fsgid = cr->cr_gid;
     current->gid = cr->cr_rgid;
 #endif
-#if defined(AFS_LINUX26_ENV)
-{
-    struct group_info *old_info;
 
     /* using set_current_groups() will sort the groups */
     get_group_info(cr->cr_group_info);
@@ -138,9 +124,4 @@ crset(cred_t * cr)
     task_unlock(current);
 
     put_group_info(old_info);
-}
-#else
-    memcpy(current->groups, cr->cr_groups, NGROUPS * sizeof(gid_t));
-    current->ngroups = cr->cr_ngroups;
-#endif
 }

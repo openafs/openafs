@@ -49,13 +49,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
     if (avc->opens != 0)
 	return EBUSY;
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     return vmtruncate(ip, 0);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
-    truncate_inode_pages(ip, 0);
-#else
-    invalidate_inode_pages(ip);
-#endif
     return 0;
 }
 
@@ -73,11 +67,7 @@ osi_VM_TryToSmush(struct vcache *avc, AFS_UCRED *acred, int sync)
 {
     struct inode *ip = AFSTOV(avc);
 
-#if defined(AFS_LINUX26_ENV)
     invalidate_inode_pages(ip->i_mapping);
-#else
-    invalidate_inode_pages(ip);
-#endif
 }
 
 /* Flush and invalidate pages, for fsync() with INVAL flag
@@ -103,19 +93,13 @@ osi_VM_StoreAllSegments(struct vcache *avc)
     if (avc->f.states & CPageWrite)
 	return; /* someone already writing */
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,5)
     /* filemap_fdatasync() only exported in 2.4.5 and above */
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
-#if defined(AFS_LINUX26_ENV)
     filemap_fdatawrite(ip->i_mapping);
-#else
-    filemap_fdatasync(ip->i_mapping);
-#endif
     filemap_fdatawait(ip->i_mapping);
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock, 121);
-#endif
 }
 
 /* Purge VM for a file when its callback is revoked.
@@ -130,17 +114,9 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 void
 osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     struct inode *ip = AFSTOV(avc);
     
     truncate_inode_pages(&ip->i_data, 0);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
-    struct inode *ip = AFSTOV(avc);
-
-    truncate_inode_pages(ip, 0);
-#else
-    invalidate_inode_pages(AFSTOV(avc));
-#endif
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -152,13 +128,5 @@ osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
 void
 osi_VM_Truncate(struct vcache *avc, int alen, AFS_UCRED *acred)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     vmtruncate(AFSTOV(avc), alen);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
-    struct inode *ip = AFSTOV(avc);
-
-    truncate_inode_pages(ip, alen);
-#else
-    invalidate_inode_pages(AFSTOV(avc));
-#endif
 }

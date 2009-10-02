@@ -164,12 +164,7 @@ typedef struct afs_cred {		/* maps to task field: */
     uid_t cr_ruid;		/* uid */
     gid_t cr_gid;		/* egid */
     gid_t cr_rgid;		/* gid */
-#if defined(AFS_LINUX26_ENV)
     struct group_info *cr_group_info;
-#else
-    gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
-    int cr_ngroups;
-#endif
     struct afs_cred *cr_next;
 } cred_t;
 #define AFS_UCRED struct afs_cred
@@ -221,25 +216,11 @@ typedef struct uio {
 /* Get/set the inode in the osifile struct. */
 #define FILE_INODE(F) (F)->f_dentry->d_inode
 
-#ifdef AFS_LINUX26_ENV
 #define OSIFILE_INODE(a) FILE_INODE((a)->filp)
-#else
-#define OSIFILE_INODE(a) FILE_INODE(&(a)->file)
-#endif
 
 #if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
 #define NEED_IOCTL32
 #endif
-
-/* page offset is obtained and stored here during module initialization 
- * We need a variable to do this because, the PAGE_OFFSET macro defined in
- * include/asm/page.h can change from kernel to kernel and we cannot use
- * the hardcoded version.
- */
-extern unsigned long afs_linux_page_offset;
-
-/* function to help with the page offset stuff */
-#define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
 #if defined(__KERNEL__)
 #include <linux/version.h>

@@ -24,9 +24,7 @@
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs/nfsclient.h"
-#ifdef AFS_LINUX22_ENV
 #include "h/smp_lock.h"
-#endif
 
 #ifdef AFS_LINUX26_ONEGROUP_ENV
 #define NUMPAGGROUPS 1
@@ -34,7 +32,6 @@
 #define NUMPAGGROUPS 2
 #endif
 
-#if defined(AFS_LINUX26_ENV)
 static int
 afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 {
@@ -60,34 +57,9 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     return (0);
 }
-#else
-static int
-afs_setgroups(cred_t **cr, int ngroups, gid_t * gidset, int change_parent)
-{
-    int ngrps;
-    int i;
-    gid_t *gp;
-
-    AFS_STATCNT(afs_setgroups);
-
-    if (ngroups > NGROUPS)
-	return EINVAL;
-
-    gp = (*cr)->cr_groups;
-    if (ngroups < NGROUPS)
-	gp[ngroups] = (gid_t) NOGROUP;
-
-    for (i = ngroups; i > 0; i--) {
-	*gp++ = *gidset++;
-    }
-
-    (*cr)->cr_ngroups = ngroups;
-    crset(*cr);
-    return (0);
-}
-#endif
-
-#if defined(AFS_LINUX26_ENV)
+/* Returns number of groups. And we trust groups to be large enough to
+ * hold all the groups.
+ */
 static struct group_info *
 afs_getgroups(cred_t * cr)
 {
@@ -96,69 +68,7 @@ afs_getgroups(cred_t * cr)
     get_group_info(cr->cr_group_info);
     return cr->cr_group_info;
 }
-#else
-/* Returns number of groups. And we trust groups to be large enough to
- * hold all the groups.
- */
-static int
-afs_getgroups(cred_t *cr, gid_t *groups)
-{
-    int i;
-    int n;
-    gid_t *gp;
 
-    AFS_STATCNT(afs_getgroups);
-
-    gp = cr->cr_groups;
-    n = cr->cr_ngroups;
-
-    for (i = 0; (i < n) && (*gp != (gid_t) NOGROUP); i++)
-	*groups++ = *gp++;
-    return i;
-}
-#endif
-
-#if !defined(AFS_LINUX26_ENV)
-/* Only propogate the PAG to the parent process. Unix's propogate to 
- * all processes sharing the cred.
- */
-int
-set_pag_in_parent(int pag, int g0, int g1)
-{
-    int i;
-#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
-    gid_t *gp = current->parent->groups;
-    int ngroups = current->parent->ngroups;
-#else
-    gid_t *gp = current->p_pptr->groups;
-    int ngroups = current->p_pptr->ngroups;
-#endif
-
-    if ((ngroups < 2) || (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG)) {
-	/* We will have to shift grouplist to make room for pag */
-	if (ngroups + 2 > NGROUPS) {
-	    return EINVAL;
-	}
-	for (i = ngroups - 1; i >= 0; i--) {
-	    gp[i + 2] = gp[i];
-	}
-	ngroups += 2;
-    }
-    gp[0] = g0;
-    gp[1] = g1;
-    if (ngroups < NGROUPS)
-	gp[ngroups] = NOGROUP;
-
-#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
-    current->parent->ngroups = ngroups;
-#else
-    current->p_pptr->ngroups = ngroups;
-#endif
-    return 0;
-}
-#endif
-
-#if defined(AFS_LINUX26_ENV)
 int
 __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
          int change_parent)
@@ -288,46 +198,6 @@ out:
 }
 #endif /* LINUX_KEYRING_SUPPORT */
 
-#else
-int
-__setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
-         int change_parent)
-{
-    gid_t *gidset;
-    afs_int32 ngroups, code = 0;
-    int j;
-
-    gidset = (gid_t *) osi_Alloc(NGROUPS * sizeof(gidset[0]));
-    ngroups = afs_getgroups(*cr, gidset);
-
-    if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
-	/* We will have to shift grouplist to make room for pag */
-	if (ngroups + 2 > NGROUPS) {
-	    osi_Free((char *)gidset, NGROUPS * sizeof(int));
-	    return EINVAL;
-	}
-	for (j = ngroups - 1; j >= 0; j--) {
-	    gidset[j + 2] = gidset[j];
-	}
-	ngroups += 2;
-    }
-    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
-    afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
-    code = afs_setgroups(cr, ngroups, gidset, change_parent);
-
-    /* If change_parent is set, then we should set the pag in the parent as
-     * well.
-     */
-    if (change_parent && !code) {
-	code = set_pag_in_parent(*newpag, gidset[0], gidset[1]);
-    }
-
-    osi_Free((char *)gidset, NGROUPS * sizeof(int));
-    return code;
-}
-#endif
-
-
 int
 setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
        int change_parent)
@@ -403,7 +273,6 @@ afs_xsetgroups(int gidsetsize, gid_t * grouplist)
     return (-code);
 }
 
-#if defined(AFS_LINUX24_ENV)
 /* Intercept the standard uid32 system call. */
 extern asmlinkage long (*sys_setgroups32p) (int gidsetsize, gid_t * grouplist);
 asmlinkage long
@@ -437,7 +306,6 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
-#endif
 
 #if defined(AFS_PPC64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
@@ -507,7 +375,6 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     return (-code);
 }
 
-#ifdef AFS_LINUX24_ENV
 /* Intercept the uid32 system call as used by 32bit programs. */
 extern long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 asmlinkage long
@@ -540,7 +407,6 @@ afs32_xsetgroups32(int gidsetsize, gid_t * grouplist)
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }
-#endif
 #endif
 
 

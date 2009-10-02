@@ -55,29 +55,13 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
 #ifdef NEED_IOCTL32
-#ifdef AFS_LINUX26_ENV 
-#ifdef AFS_S390X_LINUX26_ENV
+# ifdef AFS_S390X_LINUX26_ENV
     if (test_thread_flag(TIF_31BIT))
-#elif AFS_AMD64_LINUX20_ENV
+# elif AFS_AMD64_LINUX20_ENV
     if (test_thread_flag(TIF_IA32))
-#else
+# else
     if (test_thread_flag(TIF_32BIT))
-#endif /* AFS_S390X_LINUX26_ENV */
-#else
-#ifdef AFS_SPARC64_LINUX24_ENV
-    if (current->thread.flags & SPARC_FLAG_32BIT)
-#elif defined(AFS_SPARC64_LINUX20_ENV)
-    if (current->tss.flags & SPARC_FLAG_32BIT)
-#elif defined(AFS_AMD64_LINUX20_ENV)
-    if (current->thread.flags & THREAD_IA32)
-#elif defined(AFS_PPC64_LINUX20_ENV)
-    if (current->thread.flags & PPC_FLAG_32BIT)
-#elif defined(AFS_S390X_LINUX20_ENV)
-    if (current->thread.flags & S390_FLAG_31BIT)
-#else
-#error Not done for this linux type
-#endif /* AFS_LINUX26_ENV */
-#endif /* NEED_IOCTL32 */
+# endif /* AFS_S390X_LINUX26_ENV */
     {
 	if (copy_from_user(&sysargs32, (void *)arg,
 			   sizeof(struct afsprocdata32)))
@@ -89,7 +73,7 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 			   (unsigned long)sysargs32.param3,
 			   (unsigned long)sysargs32.param4);
     } else
-#endif
+#endif /* NEED_IOCTL32 */
     {
 	if (copy_from_user(&sysargs, (void *)arg, sizeof(struct afsprocdata)))
 	    return -EFAULT;
