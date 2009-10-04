@@ -213,7 +213,7 @@ rxfs_storePadd(void *rock, afs_uint32 size)
 	    return -33;	/* XXX */
 	size -= tlen;
     }
-    return code;
+    return 0;
 }
 
 afs_int32
