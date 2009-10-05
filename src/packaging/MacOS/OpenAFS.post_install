@@ -123,5 +123,5 @@ elif [ -e config/afssettings ]; then
 fi
 
 #here we should run tools which configure the client, and then if it's enabled:
-#/Library/StartupItems/OpenAFS/OpenAFS start
+#start the new launchd daemon
 launchctl load -w /Library/LaunchDaemons/org.openafs.filesystems.afs.plist

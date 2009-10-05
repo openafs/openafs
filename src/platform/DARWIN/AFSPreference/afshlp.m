@@ -25,6 +25,10 @@
 #import "TaskUtil.h"
 #import "AuthUtil.h"
 #import "PListManager.h"
+
+#define AFS_DAEMON_STARTUPSCRIPT	"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.rc"
+#define AFS_DAEMON_PATH				"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist"
+
  void stopAfs(int argc, char *argv[]);
  void getPath(char **selfPathPtr);
  void selfRepair(char *selfPath);
@@ -58,32 +62,33 @@ int main(int argc, char *argv[])
 // 
 void runCommand(int argc, char *argv[])
 {
+	setuid(0);
 	NSString *cmdString = [NSString stringWithCString:(const char *)argv[1] encoding:NSUTF8StringEncoding];
 
-	if(argc == 4 && [cmdString rangeOfString:@"stop_afs"].location!=NSNotFound ){
+	if(argc == 2 && [cmdString rangeOfString:@"stop_afs"].location!=NSNotFound ){
 		NSLog(@"Stop afs from helper");
-		stopAfs(argc, argv);
-	} else 	if(argc == 4 && [cmdString rangeOfString:@"start_afs"].location!=NSNotFound){
+		const char *stopArgs[] = {"stop", 0L};
+		[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
+									  args:stopArgs
+									output:nil];
+
+	} else 	if(argc == 2 && [cmdString rangeOfString:@"start_afs"].location!=NSNotFound){
 		NSLog(@"Start afs from helper");
-		setuid(0);
-		const char *startArgs[] = {argv[2], argv[3], 0L};
-		NSLog(@"%s, %s, %s", argv[1], argv[2], argv[3]);
-		[[AuthUtil shared] execUnixCommand:argv[1] 
+		const char *startArgs[] = {"start", 0L};
+		[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
 									  args:startArgs
 									output:nil];
+
 	} else if(argc == 4 && [cmdString rangeOfString:@"enable_krb5_startup"].location!=NSNotFound) {
 		NSLog(@"Manage KRB5 at login time with option %s from helper", argv[2]);
-		setuid(0);
 		int arg2 = atoi(argv[2]);
 		[PListManager krb5TiketAtLoginTime:[[NSNumber numberWithInt:arg2] boolValue]];
-		
-	} else if(argc == 5 && [cmdString rangeOfString:@"start_afs_at_startup"].location!=NSNotFound){
-		setuid(0);
+	} else if(argc == 3 && [cmdString rangeOfString:@"start_afs_at_startup"].location!=NSNotFound){
+		BOOL enable = strcmp("enable", argv[2])==0;
 		NSLog(@"Manage start_afs_at_startup with option %s from helper", argv[2]);
-		[PListManager manageAfsStartupLaunchdFile:YES 
-								 afsStartupScript:[NSString stringWithCString:argv[2] encoding:NSUTF8StringEncoding]
-									  afsBasePath:[NSString stringWithCString:argv[4] encoding:NSUTF8StringEncoding]
-										 afsdPath:[NSString stringWithCString:argv[3] encoding:NSUTF8StringEncoding]];
+		[PListManager launchctlStringCommand:enable?@"load":@"unload"
+									  option:[NSArray arrayWithObjects:@"-w", nil]
+								   plistName:@AFS_DAEMON_PATH];
 	}
 }
 

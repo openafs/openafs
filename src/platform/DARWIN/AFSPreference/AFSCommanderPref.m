@@ -579,46 +579,18 @@
 // -------------------------------------------------------------------------------
 - (IBAction) startStopAfs:(id) sender
 {
-	OSStatus status = noErr;
-	NSString *afsdPath = [TaskUtil searchExecutablePath:@"afsd"];
-	//NSString *startStopScript = nil;
-	NSString *rootHelperApp = nil;
 	BOOL currentAfsState = NO;
-	
 	@try {
-		if(afsdPath == nil) return;
 		currentAfsState = [afsProperty checkAfsStatus];
-		rootHelperApp = [[self bundle] pathForResource:@"afshlp" ofType:@""];
-			
-		//[startStopScript setString: resourcePath];
-		NSLog(@"Launch repair HelperTool");
-		//Check helper app
-		[self repairHelperTool];
-		
 		// make the parameter to call the root helper app
-		status = [[AuthUtil shared] autorize];
-		if(status == noErr){
-			if(currentAfsState){
-				//shutdown afs
-				NSLog(@"Shutting down afs");
-				NSMutableString *afsKextPath = [[NSMutableString alloc] initWithCapacity:256];
-				[afsKextPath setString:[afsProperty path]];
-				[afsKextPath appendString:@"/etc/afs.kext"];
-				
-				//Make the array for arguments
-				NSLog(@"executeTaskWithAuth");
-				const char *stopAfsArgs[] = {"stop_afs", [afsKextPath  UTF8String], [afsdPath UTF8String], 0L};
-				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
-											  args:stopAfsArgs
-											output:nil];
-				
-			} else {
-				NSLog(@"Starting up afs");
-				const char *startAfsArgs[] = {[[[self bundle] pathForResource:@"start_afs" ofType:@"sh"]  UTF8String], [[afsProperty path]  UTF8String], [afsdPath UTF8String], 0L};
-				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
-											  args:startAfsArgs
-											output:nil];
-			}
+		if(currentAfsState){
+			//shutdown afs
+			NSLog(@"Shutting down afs");
+			[afsProperty shutdown];
+		} else {
+			//Start afs
+			NSLog(@"Starting up afs");
+			[afsProperty startup];
 		}
 		[self refreshGui:nil];
 	}
@@ -638,6 +610,7 @@
 	[self setAfsStatus];
 	[tokensButton setEnabled:afsIsUp];
 	[unlogButton setEnabled:afsIsUp];
+
 }
 
 // -------------------------------------------------------------------------------
@@ -769,32 +742,13 @@
 - (IBAction) afsStartupSwitchEvent:(id) sender {
 	NSString *rootHelperApp = [[self bundle] pathForResource:@"afshlp" ofType:@""];
 	//get the new state
-	NSString *afsdPath = [TaskUtil searchExecutablePath:@"afsd"];
-	NSString *afsStartupScriptPath = [[self bundle] pathForResource:@"start_afs" ofType:@"sh"];
 	startAFSAtLogin = [checkButtonAfsAtBootTime state];
-	const char			*startAfsArgs[] = {"load", "-w", [AFS_STARTUP_CONTROL_FILE UTF8String], 0L};
-	const char			*stopAfsArgs[] = {"unload", "-w", [AFS_STARTUP_CONTROL_FILE UTF8String], 0L};
-	const char			*launchctlExecutable = "/bin/launchctl";
-	/*	[PListManager manageAfsStartupLaunchdFile:startAFSAtLogin 
-	 afsStartupScript:afsStartupScriptPath 
-	 afsBasePath:[afsProperty path] afsdPath:afsdPath];
-	 */
-	const char *startupConfigureOption[] = {"start_afs_at_startup", [afsStartupScriptPath  UTF8String],  [afsdPath UTF8String], [[afsProperty path]  UTF8String], 0L};
+	const char *startupConfigureOption[] = {"start_afs_at_startup", startAFSAtLogin?"enable":"disable", 0L};
 	if([[AuthUtil shared] autorize] == noErr) {
-		if(startAFSAtLogin) {
-			[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
+			//now disable the launchd configuration
+			[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String]
 										  args:startupConfigureOption
 										output:nil];
-			
-			[[AuthUtil shared] execUnixCommand:launchctlExecutable 
-										  args:startAfsArgs
-										output:nil];
-		} else {
-			//now disable the launchd configuration
-			[[AuthUtil shared] execUnixCommand:launchctlExecutable
-										  args:stopAfsArgs
-										output:nil];
-		}
 	}
 }
 
@@ -934,6 +888,9 @@
 -(void) setAfsStatus
 {
 	BOOL afsIsUp = [afsProperty checkAfsStatus];
+	BOOL afsEnabledAtStartup = [afsProperty checkAfsStatusForStartup];
+
+
 	[((NSButton *)startStopButton) setTitle: (afsIsUp?kAfsButtonShutdown:kAfsButtonStartup)];
 	
 	NSMutableAttributedString *colorTitle =[[NSMutableAttributedString alloc] initWithAttributedString:[((NSButton *)startStopButton) attributedTitle]];
@@ -944,7 +901,7 @@
                        range:titleRange];
 	
     [((NSButton *)startStopButton) setAttributedTitle:colorTitle];
-	
+	[checkButtonAfsAtBootTime setState:afsEnabledAtStartup];
 	if(afsIsUp) {
 		[self startTimer];
 	} else {

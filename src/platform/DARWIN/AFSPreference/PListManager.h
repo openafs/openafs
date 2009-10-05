@@ -75,7 +75,14 @@
  @discussion <#(comprehensive description)#>
 */ 
 +(void) launchctlCommand:(BOOL)enable userDomain:(BOOL)userDomain option:(NSArray*)option plistName:(NSString*)plistName;
-
+/*!
+ @method     launchctlCommand
+ @abstract   exec the launchctl command on a particular plist job
+ @discussion <#(comprehensive description)#>
+ */
++(void) launchctlStringCommand:(NSString*)operation
+						option:(NSArray*)option
+					 plistName:(NSString*)plistName;
 /*!
  @method     launchdJobState
  @abstract   check is a job has been submitted to launchd
