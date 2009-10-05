@@ -72,24 +72,29 @@
 #include <rx/rx.h>
 #include <rx/rxkad.h>
 
+struct afsconf_servPair {
+    const char *name;
+    const char *ianaName;
+    int port;
+};
+
 static struct afsconf_servPair serviceTable[] = {
-    {"afs", 7000,},
-    {"afscb", 7001,},
-    {"afsprot", 7002,},
-    {"afsvldb", 7003,},
-    {"afskauth", 7004,},
-    {"afsvol", 7005,},
-    {"afserror", 7006,},
-    {"afsnanny", 7007,},
-    {"afsupdate", 7008,},
-    {"afsrmtsys", 7009,},
-    {"afsres", 7010,},		/* residency database for MR-AFS */
-    {"afsremio", 7011,},	/* remote I/O interface for MR-AFS */
-    {0, 0}			/* insert new services before this spot */
+    {"afs", "afs3-fileserver", 7000,},
+    {"afscb", "afs3-callback", 7001,},
+    {"afsprot", "afs3-prserver", 7002,},
+    {"afsvldb", "afs3-vlserver", 7003,},
+    {"afskauth", "afs3-kaserver", 7004,},
+    {"afsvol", "afs3-volserver", 7005,},
+    {"afserror", "afs3-errors", 7006,},
+    {"afsnanny", "afs3-bos", 7007,},
+    {"afsupdate", "afs3-update", 7008,},
+    {"afsrmtsys", "afs3-rmtsys", 7009,},
+    {"afsres", NULL, 7010,},/* residency database for MR-AFS */
+    {"afsremio", NULL, 7011,},	/* remote I/O interface for MR-AFS */
+    {0, 0, 0}			/* insert new services before this spot */
 };
 
 /* Prototypes */
-static afs_int32 afsconf_FindService(register const char *aname);
 static int TrimLine(char *abuffer, int abufsize);
 static int IsClientConfigDirectory(const char *path);
 #ifdef AFS_NT40_ENV
@@ -227,12 +232,15 @@ afsconf_fgets(char *s, int n, afsconf_FILE *iop)
 #endif /* AFS_SUN5_ENV && ! __sparcv9 */
 
 /* return port number in network byte order in the low 16 bits of a long; return -1 if not found */
-static afs_int32
-afsconf_FindService(register const char *aname)
+afs_int32
+afsconf_FindService(const char *aname)
 {
     /* lookup a service name */
     struct servent *ts;
-    register struct afsconf_servPair *tsp;
+    struct afsconf_servPair *tsp;
+
+    if (aname == NULL || aname[0] == '\0')
+	return -1;
 
 #if     defined(AFS_OSF_ENV) 
     ts = getservbyname(aname, "");
@@ -245,12 +253,30 @@ afsconf_FindService(register const char *aname)
     }
 
     /* not found in /etc/services, see if it is one of ours */
-    for (tsp = serviceTable;; tsp++) {
-	if (tsp->name == NULL)
-	    return -1;
-	if (!strcmp(tsp->name, aname))
+    for (tsp = serviceTable; tsp->port; tsp++) {
+	if ((tsp->name && (!strcmp(tsp->name, aname)))
+	    || (tsp->ianaName && (!strcmp(tsp->ianaName, aname))))
 	    return htons(tsp->port);
     }
+    return -1;
+}
+
+const char *
+afsconf_FindIANAName(const char *aname)
+{
+    /* lookup a service name */
+    struct afsconf_servPair *tsp;
+
+    if (aname == NULL || aname[0] == '\0')
+        return NULL;
+
+    /* see if it is one of ours */
+    for (tsp = serviceTable; tsp->port; tsp++) {
+	if ((tsp->name && (!strcmp(tsp->name, aname)))
+	    || (tsp->ianaName && (!strcmp(tsp->ianaName, aname))))
+	    return tsp->ianaName;
+    }
+    return NULL;
 }
 
 static int
