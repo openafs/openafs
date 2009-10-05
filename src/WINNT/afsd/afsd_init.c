@@ -68,6 +68,7 @@ DWORD cm_mountRootLen;
 clientchar_t cm_mountRootC[1024];
 DWORD cm_mountRootCLen;
 
+int cm_readonlyVolumeVersioning = 0;
 int cm_logChunkSize;
 int cm_chunkSize;
 
@@ -397,6 +398,21 @@ static void afsd_InitServerPreferences(void)
                 tsp->ipRank = (USHORT)dwRank;
                 tsp->flags |= CM_SERVERFLAG_PREF_SET;
                 lock_ReleaseMutex(&tsp->mx);
+            }
+
+            if (cm_readonlyVolumeVersioning) {
+                /* Add a matching vol server */
+                tsp = cm_FindServer(&saddr, CM_SERVER_VOL);
+                if ( tsp )		/* an existing server - ref count increased */
+                {
+                    tsp->ipRank = (USHORT)dwRank; /* no need to protect by mutex*/
+                    cm_PutServer(tsp);  /* decrease refcount */
+                }
+                else	/* add a new server without a cell */
+                {
+                    tsp = cm_NewServer(&saddr, CM_SERVER_VOL, NULL, NULL, CM_FLAG_NOPROBE); /* refcount = 1 */
+                    tsp->ipRank = (USHORT)dwRank;
+                }
             }
         }
 
@@ -1199,7 +1215,7 @@ afsd_InitCM(char **reasonP)
                            (BYTE *) &dwValue, &dummyLen);
     if (code == ERROR_SUCCESS) {
         cm_followBackupPath = (unsigned short) dwValue;
-    } 
+    }
     afsi_log("CM FollowBackupPath is %u", cm_followBackupPath);
 
     dummyLen = sizeof(DWORD);
@@ -1209,6 +1225,14 @@ afsd_InitCM(char **reasonP)
         cm_accessPerFileCheck = (int) dwValue;
     } 
     afsi_log("CM PerFileAccessCheck is %d", cm_accessPerFileCheck);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "ReadOnlyVolumeVersioning", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_readonlyVolumeVersioning = (unsigned short) dwValue;
+    }
+    afsi_log("CM ReadOnlyVolumeVersioning is %u", cm_readonlyVolumeVersioning);
 
     RegCloseKey (parmKey);
 

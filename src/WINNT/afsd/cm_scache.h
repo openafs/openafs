@@ -128,6 +128,9 @@ typedef struct cm_scache {
     afs_uint32 group;			/* file owning group */
     cm_user_t *creator;			/* user, if new file */
 
+    /* volume status */
+    time_t lastUpdateRO;                /* last update time for readonly volume */
+
     /* pseudo file status */
     osi_hyper_t serverLength;		/* length known to server */
 

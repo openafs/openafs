@@ -1074,6 +1074,11 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
             port = htons(7000);
         serviceID = 1;
         break;
+    case CM_SERVER_VOL:
+        if (port == 0)
+            port = htons(7005);
+        serviceID = 4;
+        break;
     default:
         osi_panic("unknown server type", __FILE__, __LINE__);
     }

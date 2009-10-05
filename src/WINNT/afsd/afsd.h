@@ -111,6 +111,7 @@ extern int cm_fakeGettingCallback;			// 1 if currently updating the fake root.af
 
 extern int cm_dnsEnabled;
 extern int cm_freelanceEnabled;
+extern int cm_readonlyVolumeVersioning;
 
 extern long rx_mtu;
 
