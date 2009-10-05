@@ -1082,32 +1082,14 @@
 // -------------------------------------------------------------------------------
 -(void) shutdown
 {
-	NSMutableString *filePath = [[NSMutableString alloc] initWithCapacity:256];
 	@try {
-		if([[AuthUtil shared] autorize] != noErr)
-			return;
-		
-		/*const char *args0[] = {"stop", 0L};
-		[[AuthUtil shared] execUnixCommand:"/Library/StartupItems/OpenAFS/OpenAFS_stop"
-									  args:args0 
-									output:0L];*/
-		
-		// unmount afs
-		const char *args1[] = {"-f", "/afs", 0L};
-		[[AuthUtil shared] execUnixCommand:"/sbin/umount"
-									  args:args1 
-									output:0L];
-		
-		const char *args2[] = {"-shutdown", 0L};
-		[[AuthUtil shared] execUnixCommand:"/usr/sbin/afsd"
-									  args:args2 
-									output:0L];
-				
-		const char *args3[] = {[filePath UTF8String], 0L};
-		[[AuthUtil shared] execUnixCommand:"/sbin/kextunload"
-									  args:args3 
-									output:0L];
-		
+		const char *stopArgs[] = {"stop", 0L};
+		if([[AuthUtil shared] autorize] == noErr) {
+			[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
+										  args:stopArgs
+										output:nil];
+		}
+
 	}
 	@catch (NSException * e) {
 		@throw e;
@@ -1119,6 +1101,30 @@
 	
 }
 
+
+// -------------------------------------------------------------------------------
+//  -(void) shutdown
+// -------------------------------------------------------------------------------
+-(void) startup
+{
+	@try {
+		const char *startArgs[] = {"start", 0L};
+		if([[AuthUtil shared] autorize] == noErr) {
+			[[AuthUtil shared] execUnixCommand:AFS_DAEMON_STARTUPSCRIPT
+										  args:startArgs
+										output:nil];
+		}
+
+	}
+	@catch (NSException * e) {
+		@throw e;
+	}
+	@finally {
+
+	}
+
+
+}
 // -------------------------------------------------------------------------------
 //  -(void) saveConfigurationFiles
 // -------------------------------------------------------------------------------
@@ -1347,6 +1353,7 @@
 		if(filePath) [filePath release];
 	}
 }
+
 // -------------------------------------------------------------------------------
 //  checkAfsStatus:[NSArray arrayWithObjects:@"checkserver", nil];
 // -------------------------------------------------------------------------------
@@ -1356,6 +1363,16 @@
 	NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"fs" args:[NSArray arrayWithObjects:@"checkserver", nil]];
 	result = (fsResult?([fsResult rangeOfString:@"All servers are running."].location != NSNotFound):NO);
 	return result;	
+}
+
+// -------------------------------------------------------------------------------
+//  checkAfsStatus:[NSArray arrayWithObjects:@"checkserver", nil];
+// -------------------------------------------------------------------------------
+-(BOOL) checkAfsStatusForStartup {
+	BOOL result = NO;
+	NSString *fsResult = [TaskUtil executeTaskSearchingPath:@"ps" args:[NSArray arrayWithObjects:@"-ef", nil]];
+	result = (fsResult?([fsResult rangeOfString:@AFS_DAEMON_LAUNCH_PATH].location != NSNotFound):NO);
+	return result;
 }
 
 // -------------------------------------------------------------------------------

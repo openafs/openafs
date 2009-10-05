@@ -17,8 +17,6 @@
 		3228B9B01020526900DF98DA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3228B9AF1020526900DF98DA /* main.m */; };
 		3228B9B4102052A900DF98DA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 327309620C2AB433008C322B /* Security.framework */; };
 		3228B9BE102052BE00DF98DA /* version.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3228B9BD102052BE00DF98DA /* version.plist */; };
-		322B90450C2F0A2D0068F99A /* start_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90430C2F0A2D0068F99A /* start_afs.sh */; };
-		322B90460C2F0A2D0068F99A /* stop_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90440C2F0A2D0068F99A /* stop_afs.sh */; };
 		322CEF600C211D220060D66D /* DBCellElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF5F0C211D220060D66D /* DBCellElement.m */; };
 		322CEF6E0C211DCC0060D66D /* CellIp.m in Sources */ = {isa = PBXBuildFile; fileRef = 322CEF6D0C211DCC0060D66D /* CellIp.m */; };
 		3231522010243E09005901AA /* AFSMenuCredentialContoller.m in Sources */ = {isa = PBXBuildFile; fileRef = 3231521A10243E09005901AA /* AFSMenuCredentialContoller.m */; };
@@ -58,8 +56,6 @@
 		327756280C3053A100C15D11 /* TaskUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 327756250C3053A100C15D11 /* TaskUtil.h */; };
 		327756290C3053A100C15D11 /* TaskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 327756260C3053A100C15D11 /* TaskUtil.m */; };
 		328014501025F503008E1060 /* afshlp in Resources */ = {isa = PBXBuildFile; fileRef = 49683EE40C3446380093C7C8 /* afshlp */; };
-		328014A71025FB2B008E1060 /* start_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90430C2F0A2D0068F99A /* start_afs.sh */; };
-		328014A81025FB2C008E1060 /* stop_afs.sh in Resources */ = {isa = PBXBuildFile; fileRef = 322B90440C2F0A2D0068F99A /* stop_afs.sh */; };
 		32B0AFDF0C01729400272348 /* AFSPropertyManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B0AFDD0C01729400272348 /* AFSPropertyManager.h */; };
 		32B0AFE00C01729400272348 /* AFSPropertyManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32B0AFDE0C01729400272348 /* AFSPropertyManager.m */; };
 		32B565740D8FAF62005255F2 /* NSString+search.h in Headers */ = {isa = PBXBuildFile; fileRef = 32B565720D8FAF62005255F2 /* NSString+search.h */; };
@@ -155,8 +151,6 @@
 		322884020C3E45C800E778CC /* InfoController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InfoController.m; sourceTree = "<group>"; };
 		3228B9AF1020526900DF98DA /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = AFSBackgrounder/main.m; sourceTree = "<group>"; };
 		3228B9BD102052BE00DF98DA /* version.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = version.plist; path = AFSBackgrounder/resource/version.plist; sourceTree = "<group>"; };
-		322B90430C2F0A2D0068F99A /* start_afs.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; path = start_afs.sh; sourceTree = "<group>"; };
-		322B90440C2F0A2D0068F99A /* stop_afs.sh */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.sh; path = stop_afs.sh; sourceTree = "<group>"; };
 		322CEF5E0C211D220060D66D /* DBCellElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DBCellElement.h; sourceTree = "<group>"; };
 		322CEF5F0C211D220060D66D /* DBCellElement.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DBCellElement.m; sourceTree = "<group>"; };
 		322CEF6C0C211DCC0060D66D /* CellIp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CellIp.h; sourceTree = "<group>"; };
@@ -300,8 +294,6 @@
 			isa = PBXGroup;
 			children = (
 				325311CF0C44F4B100FAF2F3 /* license.rtf */,
-				322B90430C2F0A2D0068F99A /* start_afs.sh */,
-				322B90440C2F0A2D0068F99A /* stop_afs.sh */,
 				324D67FB0DA13194007E1561 /* OpenAFSPreference.xib */,
 				32DE81BC0DF57BDA0069A05C /* SymLinkEdit.xib */,
 				324D68480DA133CF007E1561 /* CredentialPanel.xib */,
@@ -648,8 +640,6 @@
 				3231522B10243E2C005901AA /* hasToken.png in Resources */,
 				3231522C10243E2C005901AA /* noToken.png in Resources */,
 				328014501025F503008E1060 /* afshlp in Resources */,
-				328014A71025FB2B008E1060 /* start_afs.sh in Resources */,
-				328014A81025FB2C008E1060 /* stop_afs.sh in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -659,8 +649,6 @@
 			files = (
 				49AF1F480C25B52A006A046E /* InfoPlist.strings in Resources */,
 				49E05CAD0C2674DA002AAEF2 /* Info.plist in Resources */,
-				322B90450C2F0A2D0068F99A /* start_afs.sh in Resources */,
-				322B90460C2F0A2D0068F99A /* stop_afs.sh in Resources */,
 				3223836C0C32A96F00380547 /* Localizable.strings in Resources */,
 				325311D00C44F4B100FAF2F3 /* license.rtf in Resources */,
 				49E43D2E0C480B8200084436 /* afshlp in Resources */,

@@ -304,6 +304,28 @@
 }
 
 // -------------------------------------------------------------------------------
+//  launchctlCommand:
+// -------------------------------------------------------------------------------
++(void) launchctlStringCommand:(NSString*)operation
+				  option:(NSArray*)option
+			   plistName:(NSString*)plistName {
+	NSMutableArray *argument = [NSMutableArray array];
+
+	//set the load unload
+	[argument addObject:operation];
+
+	//if there are load the user custom option
+	if(option) [argument addObjectsFromArray:option];
+
+	//construct the path
+	[argument addObject: plistName];
+
+	//exec the command
+	[TaskUtil executeTaskSearchingPath:@"launchctl"
+								  args:argument];
+}
+
+// -------------------------------------------------------------------------------
 //  launchdJobState:
 // -------------------------------------------------------------------------------
 +(BOOL) launchdJobState:(NSString*)jobName {

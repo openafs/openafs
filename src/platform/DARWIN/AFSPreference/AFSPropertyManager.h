@@ -10,6 +10,10 @@
 #import "DBCellElement.h"
 #import "FileUtil.h"
 
+
+#define AFS_DAEMON_STARTUPSCRIPT	"/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.rc"
+#define AFS_DAEMON_PATH				"/Library/LaunchDaemons/org.openafs.filesystems.afs.plist"
+#define AFS_DAEMON_LAUNCH_PATH		"/private/var/db/openafs/etc/launchafs.sh"
 /*!
     @class		AFSPropertyManager
     @abstract   AFS Manage Class
@@ -379,7 +383,7 @@
     @abstract   Stop The AFS
 */
 -(void) shutdown;
-
+-(void) startup;
 -(void) scanIpForCell:(DBCellElement*) cellElement allIP:(NSString*)allIP;
 -(void) backupConfigurationFiles;
 -(void) backupFile:(NSString*)localAfsFilePath;
@@ -388,6 +392,7 @@
 -(void) installConfigurationFile:(NSString*)srcConfFile destPath:(NSString*) destPath;
 -(NSArray*) getTokenList;
 -(BOOL) checkAfsStatus;
+-(BOOL) checkAfsStatusForStartup;
 -(void) klog:(NSString*)uName uPwd:(NSString*)uPwd  cell:(NSString*)theCell;
 -(void) aklog:(NSString*)theCell noKerberosCall:(BOOL)krb5CallEnable;
 -(void) getTokens:(BOOL)klogAklogFlag usr:(NSString*)usr pwd:(NSString*)pwd;

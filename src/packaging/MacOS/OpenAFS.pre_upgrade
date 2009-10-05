@@ -1,4 +1,8 @@
 #!/bin/sh
+DAEMON=/private/var/db/openafs/etc/launchafs.sh
+DAEMON_LAUNCHD_SCRIPT=/Library/LaunchDaemons/org.openafs.filesystems.afs.plist
+DAEMON_UP=$(ps -ef | grep "$DAEMON_NAME" | grep -v grep | wc -l)
+PREFERENCE_PANE=/Library/PreferencePanes/OpenAFS.prefPane
 
 cd /var/db/openafs/etc
 # only do these checks if we're upgrading from a pre-1.2.7
@@ -27,6 +31,17 @@ if [ -f /Library/StartupItems/OpenAFS/OpenAFS ]; then
   /Library/StartupItems/OpenAFS/OpenAFS stop
 else
   if [ -f /Library/LaunchDaemons/org.openafs.filesystems.afs.plist ]; then
-    launchctl stop org.openafs.filesystems.afs
+	if ps ax | grep -v grep | grep $DAEMON > /dev/null
+	then
+		launchctl stop org.openafs.filesystems.afs
+	else
+		echo "$DAEMON is not running"
+	fi
+
+	launchctl unload -w $DAEMON_LAUNCHD_SCRIPT
   fi
+fi
+
+if [ -d /Library/PreferencePanes/OpenAFS.prefPane ]; then
+	rm -R /Library/PreferencePanes/OpenAFS.prefPane
 fi
