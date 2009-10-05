@@ -3525,8 +3525,11 @@ rxi_ComputePeerNetStats(struct rx_call *call, struct rx_packet *p,
 {
     struct rx_peer *peer = call->conn->peer;
 
-    /* Use RTT if not delayed by client. */
-    if (ap->reason != RX_ACK_DELAY)
+    /* Use RTT if not delayed by client and
+     * ignore packets that were retransmitted. */
+    if (!(p->flags & RX_PKTFLAG_ACKED) &&
+        ap->reason != RX_ACK_DELAY &&
+        clock_Eq(&p->timeSent, &p->firstSent))
 	rxi_ComputeRoundTripTime(p, &p->timeSent, peer);
 #ifdef ADAPT_WINDOW
     rxi_ComputeRate(peer, call, p, np, ap->reason);
@@ -3550,6 +3553,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
     afs_uint32 skew = 0;
     int nbytes;
     int missing;
+    int backedOff = 0;
     int acked;
     int nNacked = 0;
     int newAckCount = 0;
@@ -3616,9 +3620,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	if (tp->header.seq >= first)
 	    break;
 	call->tfirst = tp->header.seq + 1;
-	if (serial
-	    && (tp->header.serial == serial || tp->firstSerial == serial))
-	    rxi_ComputePeerNetStats(call, tp, ap, np);
+        rxi_ComputePeerNetStats(call, tp, ap, np);
 	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
 	}
@@ -3674,9 +3676,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	if (tp->header.seq >= first)
 #endif /* RX_ENABLE_LOCKS */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	    if (serial
-		&& (tp->header.serial == serial || tp->firstSerial == serial))
-		rxi_ComputePeerNetStats(call, tp, ap, np);
+            rxi_ComputePeerNetStats(call, tp, ap, np);
 
 	/* Set the acknowledge flag per packet based on the
 	 * information in the ack packet. An acknowlegded packet can
@@ -3710,13 +3710,28 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	    missing = 1;
 	}
 
+        /*
+         * Following the suggestion of Phil Kern, we back off the peer's
+         * timeout value for future packets until a successful response
+         * is received for an initial transmission.
+         */
+        if (missing && !backedOff) {
+            struct clock c = peer->timeout;
+            struct clock max_to = {3, 0};
+
+            clock_Add(&peer->timeout, &c);
+            if (clock_Gt(&peer->timeout, &max_to))
+                peer->timeout = max_to;
+            backedOff = 1;
+        }
+
 	/* If packet isn't yet acked, and it has been transmitted at least 
 	 * once, reset retransmit time using latest timeout 
 	 * ie, this should readjust the retransmit timer for all outstanding 
 	 * packets...  So we don't just retransmit when we should know better*/
 
 	if (!(tp->flags & RX_PKTFLAG_ACKED) && !clock_IsZero(&tp->retryTime)) {
-	    tp->retryTime = tp->timeSent;
+            tp->retryTime = tp->timeSent;
 	    clock_Add(&tp->retryTime, &peer->timeout);
 	    /* shift by eight because one quarter-sec ~ 256 milliseconds */
 	    clock_Addmsec(&(tp->retryTime), ((afs_uint32) tp->backoff) << 8);
@@ -5718,13 +5733,15 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 	 * srtt is stored as fixed point with 3 bits after the binary
 	 * point (i.e., scaled by 8). The following magic is
 	 * equivalent to the smoothing algorithm in rfc793 with an
-	 * alpha of .875 (srtt = rtt/8 + srtt*7/8 in fixed point).
-	 * srtt*8 = srtt*8 + rtt - srtt
-	 * srtt = srtt + rtt/8 - srtt/8
+	 * alpha of .875 (srtt' = rtt/8 + srtt*7/8 in fixed point).
+         * srtt'*8 = rtt + srtt*7
+	 * srtt'*8 = srtt*8 + rtt - srtt
+	 * srtt' = srtt + rtt/8 - srtt/8
+         * srtt' = srtt + (rtt - srtt)/8
 	 */
 
-	delta = MSEC(rttp) - (peer->rtt >> 3);
-	peer->rtt += delta;
+	delta = _8THMSEC(rttp) - peer->rtt;
+	peer->rtt += (delta >> 3);
 
 	/*
 	 * We accumulate a smoothed rtt variance (actually, a smoothed
@@ -5735,16 +5752,20 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 	 * rttvar is stored as
 	 * fixed point with 2 bits after the binary point (scaled by
 	 * 4).  The following is equivalent to rfc793 smoothing with
-	 * an alpha of .75 (rttvar = rttvar*3/4 + |delta| / 4).  This
-	 * replaces rfc793's wired-in beta.
+	 * an alpha of .75 (rttvar' = rttvar*3/4 + |delta| / 4).
+         *   rttvar'*4 = rttvar*3 + |delta|
+         *   rttvar'*4 = rttvar*4 + |delta| - rttvar
+         *   rttvar' = rttvar + |delta|/4 - rttvar/4
+         *   rttvar' = rttvar + (|delta| - rttvar)/4
+	 * This replaces rfc793's wired-in beta.
 	 * dev*4 = dev*4 + (|actual - expected| - dev)
 	 */
 
 	if (delta < 0)
 	    delta = -delta;
 
-	delta -= (peer->rtt_dev >> 2);
-	peer->rtt_dev += delta;
+	delta -= (peer->rtt_dev << 1);
+	peer->rtt_dev += (delta >> 3);
     } else {
 	/* I don't have a stored RTT so I start with this value.  Since I'm
 	 * probably just starting a call, and will be pushing more data down
@@ -5752,15 +5773,15 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 	 * little, and I set deviance to half the rtt.  In practice,
 	 * deviance tends to approach something a little less than
 	 * half the smoothed rtt. */
-	peer->rtt = (MSEC(rttp) << 3) + 8;
+	peer->rtt = _8THMSEC(rttp) + 8;
 	peer->rtt_dev = peer->rtt >> 2;	/* rtt/2: they're scaled differently */
     }
-    /* the timeout is RTT + 4*MDEV + 0.35 sec   This is because one end or
+    /* the timeout is RTT + 4*MDEV but no less than 350 msec   This is because one end or
      * the other of these connections is usually in a user process, and can
      * be switched and/or swapped out.  So on fast, reliable networks, the
      * timeout would otherwise be too short.  
      */
-    rtt_timeout = (peer->rtt >> 3) + peer->rtt_dev + 350;
+    rtt_timeout = MIN((peer->rtt >> 3) + peer->rtt_dev, 350);
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
 

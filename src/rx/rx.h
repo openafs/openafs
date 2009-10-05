@@ -367,15 +367,15 @@ struct rx_peer {
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    afs_uint32 refCount;		/* Reference count for this structure */
+    afs_uint32 refCount;	/* Reference count for this structure */
 
     /* Congestion control parameters */
     u_char burstSize;		/* Reinitialization size for the burst parameter */
     u_char burst;		/* Number of packets that can be transmitted right now, without pausing */
     struct clock burstWait;	/* Delay until new burst is allowed */
     struct rx_queue congestionQueue;	/* Calls that are waiting for non-zero burst value */
-    int rtt;			/* Round trip time, measured in milliseconds/8 */
-    int rtt_dev;		/* rtt smoothed error, in milliseconds/4 */
+    int rtt;			/* Smoothed round trip time, measured in milliseconds/8 */
+    int rtt_dev;		/* Smoothed rtt mean difference, in milliseconds/4 */
     struct clock timeout;	/* Current retransmission delay */
     int nSent;			/* Total number of distinct data packets sent, not including retransmissions */
     int reSends;		/* Total number of retransmissions for this peer, since this structure was created */
@@ -414,7 +414,6 @@ struct rx_peer {
     struct rx_queue rpcStats;	/* rpc statistic list */
     int lastReachTime;		/* Last time we verified reachability */
 };
-
 
 #ifndef KDUMP_RX_LOCK
 /* Flag bits for connection structure */
