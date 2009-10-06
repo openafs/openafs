@@ -1376,43 +1376,62 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
             error = 1;
             continue;
         }
-	switch (ta->dfs) {
-	  case 0:
-	    printf("Access list for %s is\n", ti->data);
-	    break;
-	  case 1:
-	    printf("DFS access list for %s is\n", ti->data);
-	    break;
-	  case 2:
-	    printf("DFS initial directory access list of %s is\n", ti->data);
-	    break;
-	  case 3:
-	    printf("DFS initial file access list of %s is\n", ti->data);
-	    break;
-	}
-	if (ta->dfs) {
-	    printf("  Default cell = %s\n", ta->cell);
-	}
-	separator = ta->dfs? DFS_SEPARATOR : ' ';
-	if (ta->nplus > 0) {
-	    if (!ta->dfs) 
-                printf("Normal rights:\n");
-	    for(te = ta->pluslist;te;te=te->next) {
-		printf("  %s%c", te->name, separator);
-		PRights(te->rights, ta->dfs);
-		printf("\n");
-	    }
-	}
-	if (ta->nminus > 0) {
-	    printf("Negative rights:\n");
-	    for(te = ta->minuslist;te;te=te->next) {
-		printf("  %s ", te->name);
-		PRights(te->rights, ta->dfs);
-		printf("\n");
-	    }
-	}
-	if (ti->next) 
+        if (as->parms[3].items) {                       /* -cmd */
+            printf("fs setacl -dir %s -acl ", ti->data);
+            if (ta->nplus > 0) {
+                for (te = ta->pluslist; te; te = te->next) {
+                    printf("  %s ", te->name);
+                    PRights(te->rights, ta->dfs);
+                }
+            }
             printf("\n");
+            if (ta->nminus > 0) {
+                printf("fs setacl -dir %s -acl ", ti->data);
+                for (te = ta->minuslist; te; te = te->next) {
+                    printf("  %s ", te->name);
+                    PRights(te->rights, ta->dfs);
+                }
+                printf(" -negative\n");
+            }
+        } else {
+            switch (ta->dfs) {
+            case 0:
+                printf("Access list for %s is\n", ti->data);
+                break;
+            case 1:
+                printf("DFS access list for %s is\n", ti->data);
+                break;
+            case 2:
+                printf("DFS initial directory access list of %s is\n", ti->data);
+                break;
+            case 3:
+                printf("DFS initial file access list of %s is\n", ti->data);
+                break;
+            }
+            if (ta->dfs) {
+                printf("  Default cell = %s\n", ta->cell);
+            }
+            separator = ta->dfs? DFS_SEPARATOR : ' ';
+            if (ta->nplus > 0) {
+                if (!ta->dfs)
+                    printf("Normal rights:\n");
+                for(te = ta->pluslist;te;te=te->next) {
+                    printf("  %s%c", te->name, separator);
+                    PRights(te->rights, ta->dfs);
+                    printf("\n");
+                }
+            }
+            if (ta->nminus > 0) {
+                printf("Negative rights:\n");
+                for(te = ta->minuslist;te;te=te->next) {
+                    printf("  %s ", te->name);
+                    PRights(te->rights, ta->dfs);
+                    printf("\n");
+                }
+            }
+            if (ti->next)
+                printf("\n");
+        }
         ZapAcl(ta);
     }
     return error;
@@ -5064,6 +5083,7 @@ int wmain(int argc, wchar_t **wargv)
     parm_listacl_id = ts->nParms;
     cmd_AddParm(ts, "-id", CMD_FLAG, CMD_OPTIONAL, "initial directory acl");
     cmd_AddParm(ts, "-if", CMD_FLAG, CMD_OPTIONAL, "initial file acl");
+    cmd_AddParm(ts, "-cmd", CMD_FLAG, CMD_OPTIONAL, "output as 'fs setacl' command");
     cmd_CreateAlias(ts, "la");
     
     ts = cmd_CreateSyntax("cleanacl", CleanACLCmd, NULL, "clean up access control list");
