@@ -1062,15 +1062,22 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     int secIndex;
     struct rx_securityClass *secObjp;
 
-    if (serverp->type == CM_SERVER_VLDB) {
-        port = htons(7003);
+    port = serverp->addr.sin_port;
+    switch (serverp->type) {
+    case CM_SERVER_VLDB:
+        if (port == 0)
+            port = htons(7003);
         serviceID = 52;
-    }
-    else {
-        osi_assertx(serverp->type == CM_SERVER_FILE, "incorrect server type");
-        port = htons(7000);
+        break;
+    case CM_SERVER_FILE:
+        if (port == 0)
+            port = htons(7000);
         serviceID = 1;
+        break;
+    default:
+        osi_panic("unknown server type", __FILE__, __LINE__);
     }
+
     if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
         secIndex = 2;
         switch (cryptall) {
@@ -1094,10 +1101,10 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     }
     osi_assertx(secObjp != NULL, "null rx_securityClass");
     tcp->rxconnp = rx_NewConnection(serverp->addr.sin_addr.s_addr,
-                                  port,
-                                  serviceID,
-                                  secObjp,
-                                  secIndex);
+                                    port,
+                                    serviceID,
+                                    secObjp,
+                                    secIndex);
     rx_SetConnDeadTime(tcp->rxconnp, ConnDeadtimeout);
     rx_SetConnHardDeadTime(tcp->rxconnp, HardDeadtimeout);
     rx_SetConnIdleDeadTime(tcp->rxconnp, IdleDeadtimeout);

@@ -306,6 +306,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                             continue;
                         memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr_list[i],
                                sizeof(long));
+                        vlSockAddr.sin_port = htons(7003);
                         vlSockAddr.sin_family = AF_INET;
                         /* sin_port supplied by connection code */
                         if (procp)
@@ -338,6 +339,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
                         *tp++ = c4;
                         memcpy(&vlSockAddr.sin_addr.s_addr, &ip_addr,
                                 sizeof(long));
+                        vlSockAddr.sin_port = htons(7003);
                         vlSockAddr.sin_family = AF_INET;
                         /* sin_port supplied by connection code */
                         if (procp)
@@ -369,7 +371,7 @@ long cm_SearchCellFileEx(char *cellNamep, char *newCellNamep,
  *   "Rank"          DWORD  "0..65535"
  *   "Clone"         DWORD  "{0,1}"
  *   "vlserver"      DWORD  "7003"        <future>
- *   "ptserver"      DWORD  ...           <future>
+ *   "ptserver"      DWORD  "7002"        <future>
  *
  * ForceDNS is implied non-zero if there are no [servername]
  * keys under the [cellname] key.  Otherwise, ForceDNS is zero.
@@ -385,8 +387,9 @@ long cm_SearchCellRegistry(afs_uint32 client,
     HKEY hkCellServDB = 0, hkCellName = 0, hkServerName = 0;
     DWORD dwType, dwSize;
     DWORD dwCells, dwServers, dwForceDNS;
-    DWORD dwIndex, dwRank;
+    DWORD dwIndex, dwRank, dwPort;
     unsigned short ipRank;
+    unsigned short vlPort;
     LONG code;
     FILETIME ftLastWriteTime;
     char szCellName[CELL_MAXNAMELEN];
@@ -576,10 +579,20 @@ long cm_SearchCellRegistry(afs_uint32 client,
             szAddr[0] = '\0';
         }
 
+        dwSize = sizeof(DWORD);
+        code = RegQueryValueEx(hkServerName, "vlserver", NULL, &dwType,
+                                (BYTE *) &dwPort, &dwSize);
+        if (code == ERROR_SUCCESS && dwType == REG_DWORD) {
+            vlPort = htons((unsigned short)dwPort);
+        } else {
+            vlPort = htons(7003);
+        }
+
         WSASetLastError(0);
         thp = gethostbyname(s);
         if (thp) {
             memcpy(&vlSockAddr.sin_addr.s_addr, thp->h_addr, sizeof(long));
+            vlSockAddr.sin_port = htons(7003);
             vlSockAddr.sin_family = AF_INET;
             /* sin_port supplied by connection code */
             if (procp)
@@ -602,6 +615,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
                 *tp++ = c4;
                 memcpy(&vlSockAddr.sin_addr.s_addr, &ip_addr,
                         sizeof(long));
+                vlSockAddr.sin_port = vlPort;
                 vlSockAddr.sin_family = AF_INET;
                 /* sin_port supplied by connection code */
                 if (procp)
@@ -622,7 +636,7 @@ long cm_SearchCellRegistry(afs_uint32 client,
 long cm_EnumerateCellRegistry(afs_uint32 client, cm_enumCellRegistryProc_t *procp, void *rockp)
 {
     HKEY hkCellServDB = 0;
-    DWORD dwType, dwSize;
+    DWORD dwSize;
     DWORD dwCells;
     DWORD dwIndex;
     LONG code;
@@ -684,6 +698,7 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     int  cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     unsigned short ipRanks[AFSMAXCELLHOSTS];
+    unsigned short ports[AFSMAXCELLHOSTS];
     int numServers;
     int i;
     struct sockaddr_in vlSockAddr;
@@ -702,13 +717,14 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
          strncasecmp(cellNamep, CM_IOCTL_FILENAME_NOSLASH, strlen(CM_IOCTL_FILENAME_NOSLASH)) == 0)
 	return -1;
 
-    rc = getAFSServer(cellNamep, cellHostAddrs, cellHostNames, ipRanks, &numServers, ttl);
+    rc = getAFSServer("afs3-vlserver", "udp", cellNamep, 7003,
+                      cellHostAddrs, cellHostNames, ports, ipRanks, &numServers, ttl);
     if (rc == 0 && numServers > 0) {     /* found the cell */
         for (i = 0; i < numServers; i++) {
             memcpy(&vlSockAddr.sin_addr.s_addr, &cellHostAddrs[i],
                    sizeof(long));
+            vlSockAddr.sin_port = ports[i];
             vlSockAddr.sin_family = AF_INET;
-            /* sin_port supplied by connection code */
             if (procp)
                 (*procp)(rockp, &vlSockAddr, cellHostNames[i], ipRanks[i]);
         }

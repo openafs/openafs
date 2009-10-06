@@ -971,7 +971,8 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
     lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
         if (tsp->type == type &&
-            tsp->addr.sin_addr.s_addr == addrp->sin_addr.s_addr) 
+            tsp->addr.sin_addr.s_addr == addrp->sin_addr.s_addr &&
+            (tsp->addr.sin_port == addrp->sin_port || tsp->addr.sin_port == 0))
             break;
     }       
 

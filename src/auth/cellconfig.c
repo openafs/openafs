@@ -1125,25 +1125,52 @@ int
 afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 		     struct afsconf_cell *acellInfo)
 {
-    register afs_int32 i;
-    int tservice;
+    afs_int32 i;
+    int tservice = afsconf_FindService(aservice);
+    const char *ianaName = afsconf_FindIANAName(aservice);
     struct afsconf_entry DNSce;
     afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     unsigned short ipRanks[AFSMAXCELLHOSTS];
+    unsigned short ports[AFSMAXCELLHOSTS];
     int numServers;
     int rc;
     int ttl;
 
+    if (tservice < 0) {
+        if (aservice)
+            return AFSCONF_NOTFOUND;
+        else
+            tservice = 0;       /* port will be assigned by caller */
+    }
+
+    if (ianaName == NULL)
+        ianaName = "afs3-vlserver";
+
     DNSce.cellInfo.numServers = 0;
     DNSce.next = NULL;
-    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, ipRanks, &numServers,
+
+    rc = getAFSServer(ianaName, "udp", acellName, tservice,
+                      cellHostAddrs, cellHostNames, ports, ipRanks, &numServers,
 		      &ttl);
     /* ignore the ttl here since this code is only called by transitory programs
      * like klog, etc. */
-    if (rc < 0)
-	return -1;
-    if (numServers == 0)
+
+    /* If we couldn't find an entry for the requested service
+     * and that service happens to be the prservice or kaservice
+     * then fallback to searching for afs3-vlserver and assigning
+     * the port number here. */
+    if (rc < 0 && tservice == 7002 || tservice == 7004) {
+        rc = getAFSServer("afs3-vlserver", "udp", acellName, tservice,
+                           cellHostAddrs, cellHostNames, ports, ipRanks, &numServers,
+                           &ttl);
+        if (rc >= 0) {
+            for (i = 0; i < numServers; i++)
+                ports[i] = tservice;
+        }
+    }
+
+    if (rc < 0 || numServers == 0)
 	return -1;
 
     for (i = 0; i < numServers; i++) {
@@ -1151,23 +1178,14 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	       sizeof(long));
 	memcpy(acellInfo->hostName[i], cellHostNames[i], MAXHOSTCHARS);
 	acellInfo->hostAddr[i].sin_family = AF_INET;
-
-	/* sin_port supplied by connection code */
+        if (aservice)
+            acellInfo->hostAddr[i].sin_port = ports[i];
+        else
+            acellInfo->hostAddr[i].sin_port = 0;
     }
 
     acellInfo->numServers = numServers;
     strlcpy(acellInfo->name, acellName, sizeof acellInfo->name);
-    if (aservice) {
-	LOCK_GLOBAL_MUTEX;
-	tservice = afsconf_FindService(aservice);
-	UNLOCK_GLOBAL_MUTEX;
-	if (tservice < 0) {
-	    return AFSCONF_NOTFOUND;	/* service not found */
-	}
-	for (i = 0; i < acellInfo->numServers; i++) {
-	    acellInfo->hostAddr[i].sin_port = tservice;
-	}
-    }
     acellInfo->linkedCell = NULL;	/* no linked cell */
     acellInfo->flags = 0;
     return 0;

@@ -483,7 +483,7 @@ void printReplyBuffer_AFSDB(PDNS_HDR replyBuff)
 };
 
 void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS], 
-                              unsigned short ipRanks[], int *numServers, int *ttl)
+                              unsigned short ports[], unsigned short ipRanks[], int *numServers, int *ttl)
   /*PAFS_SRV_LIST (srvList)*/
 {
   u_char *ptr = (u_char *) replyBuff;
@@ -537,6 +537,7 @@ void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHost
 	  strncpy(cellHostNames[srvCount], hostName, CELL_MAXNAMELEN);
 	  cellHostNames[srvCount][CELL_MAXNAMELEN-1] = '\0';
       ipRanks[srvCount] = 0;
+      ports[srvCount] = htons(7003);
       srvCount++;
     }
     else {
@@ -622,8 +623,11 @@ int DNSgetAddr(SOCKET commSock, char *hostName, struct in_addr *iNet)
 }
 #endif /* DNSAPI_ENV */
 
-int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS], 
-                 unsigned short ipRanks[], int *numServers, int *ttl)
+int getAFSServer(const char *service, const char *protocol, const char *cellName,
+                 unsigned short afsdbPort,
+                 int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
+                 unsigned short ports[], unsigned short ipRanks[],
+                 int *numServers, int *ttl)
 {
 #ifndef DNSAPI_ENV
     SOCKET commSock;
@@ -637,6 +641,9 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
     fprintf(stderr, "getAFSServer: cell %s, cm_dnsEnabled=%d\n", cellName, cm_dnsEnabled);
 #endif
 
+    *numServers = 0;
+    *ttl = 0;
+
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
     if (cm_dnsEnabled == -1) { /* not yet initialized, eg when called by klog */
         cm_InitDNS(1);         /* assume enabled */
@@ -644,10 +651,14 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
 #endif
     if (cm_dnsEnabled == 0) {  /* possibly we failed in cm_InitDNS above */
         fprintf(stderr, "DNS initialization failed, disabled\n");
-        *numServers = 0;
         return -1;
     }
   
+    if (service == NULL || protocol == NULL || cellName == NULL) {
+        fprintf(stderr, "invalid input\n");
+        return -1;
+    }
+
     sockAddr = setSockAddr(dns_addr, DNS_PORT);
   
     commSock = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -655,7 +666,6 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
     {
         /*afsi_log("socket() failed\n");*/
         fprintf(stderr, "getAFSServer: socket() failed, errno=%d\n", errno);
-        *numServers = 0;
         return (-1);
     } 
 
@@ -668,7 +678,6 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
     if (rc < 0) {
         closesocket(commSock);
         fprintf(stderr,"getAFSServer: send_DNS_AFSDB_Query failed\n");
-        *numServers = 0;
         return -1;
     }
     
@@ -676,9 +685,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
   
     /*printReplyBuffer_AFSDB(pDNShdr);*/
     if (pDNShdr)
-        processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, ipRanks, numServers, ttl);
-    else
-        *numServers = 0;
+        processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, ports, ipRanks, numServers, ttl);
 
     closesocket(commSock);
     if (*numServers == 0)
@@ -688,35 +695,36 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
 #else /* DNSAPI_ENV */
     PDNS_RECORD pDnsCell, pDnsIter, pDnsVol, pDnsVolIter, pDnsCIter;
     int i;
-    struct sockaddr_in vlSockAddr;
     char query[1024];
+
+    *numServers = 0;
+    *ttl = 0;
+
+    if (service == NULL || protocol == NULL || cellName == NULL)
+        return -1;
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( cm_stricmp_utf8N(cellName, "Freelance.Local.Root") == 0 )
         return -1;
 #endif /* AFS_FREELANCE_CLIENT */
 
-    *numServers = 0; 
-    *ttl = 0;
-
-    /* query the AFSDB records of cell */
-    StringCbCopyA(query, sizeof(query), cellName);
+    /* query the SRV _afs3-vlserver._udp records of cell */
+    StringCbPrintf(query, sizeof(query), "_%s._%s.%s", service, protocol, cellName);
     if (query[strlen(query)-1] != '.') {
         StringCbCatA(query, sizeof(query), ".");
     }
 
-    if (DnsQuery_A(query, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
-        memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
-
+    if (DnsQuery_A(query, DNS_TYPE_SRV, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
         /* go through the returned records */
         for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
-            /* if we find an AFSDB record with Preference set to 1, we found a afs3-vlserver */
-            if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
+            /* if we find an SRV record, we found the service */
+            if (pDnsIter->wType == DNS_TYPE_SRV) {
                 StringCbCopyA(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
-                              pDnsIter->Data.Afsdb.pNameExchange);
-                ipRanks[*numServers] = 0;
+                              pDnsIter->Data.SRV.pNameTarget);
+                ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
+                ports[*numServers] = pDnsIter->Data.SRV.wPort;
                 (*numServers)++;
-                
+
                 if (!*ttl) 
                     *ttl = pDnsIter->dwTtl;
                 if (*numServers == AFSMAXCELLHOSTS) 
@@ -730,7 +738,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
         /* now check if there are any A records in the results */
         for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
             if(pDnsIter->wType == DNS_TYPE_A)
-                /* check if its for one of the afs3-vlservers */
+                /* check if its for one of the service */
                 for (i=0;i<*numServers;i++)
                     if(cm_stricmp_utf8(pDnsIter->pName, cellHostNames[i]) == 0)
                         cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
@@ -760,7 +768,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
                             /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                         }
                     }
-                    /* we are done with the afs3-vlserver lookup */
+                    /* we are done with the service lookup */
                     DnsRecordListFree(pDnsVol, DnsFreeRecordListDeep);
                 }
             }
@@ -768,22 +776,21 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
         DnsRecordListFree(pDnsCell, DnsFreeRecordListDeep);
     }
     else {
-        /* query the SRV _afs3-vlserver._udp records of cell */
-        StringCbPrintf(query, sizeof(query), "_afs3-vlserver._udp.%s", cellName);
+        /* query the AFSDB records of cell */
+        StringCbCopyA(query, sizeof(query), cellName);
         if (query[strlen(query)-1] != '.') {
             StringCbCatA(query, sizeof(query), ".");
         }
-        
-        if (DnsQuery_A(query, DNS_TYPE_SRV, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
-            memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
 
+        if (DnsQuery_A(query, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
             /* go through the returned records */
             for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
-                /* if we find an SRV record, we found a afs3-vlserver */
-                if (pDnsIter->wType == DNS_TYPE_SRV) {
+                /* if we find an AFSDB record with Preference set to 1, we found a service instance */
+                if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
                     StringCbCopyA(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
-                                   pDnsIter->Data.SRV.pNameTarget);
-                    ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
+                                   pDnsIter->Data.Afsdb.pNameExchange);
+                    ipRanks[*numServers] = 0;
+                    ports[*numServers] = htons(afsdbPort);
                     (*numServers)++;
 
                     if (!*ttl) 
@@ -799,14 +806,14 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
             /* now check if there are any A records in the results */
             for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
                 if(pDnsIter->wType == DNS_TYPE_A)
-                    /* check if its for one of the afs3-vlservers */
+                    /* check if its for one of the service */
                     for (i=0;i<*numServers;i++)
                         if(cm_stricmp_utf8(pDnsIter->pName, cellHostNames[i]) == 0)
                             cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
             }
 
             for (i=0;i<*numServers;i++) {
-                /* if we don't have an IP yet, then we should try resolving the afs3-vlserver hostname
+                /* if we don't have an IP yet, then we should try resolving the service hostname
                 in a separate query. */
                 if (!cellHostAddrs[i]) {
                     if (DnsQuery_A(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL, &pDnsVol, NULL) == ERROR_SUCCESS) {
@@ -829,7 +836,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
                                 /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                             }
                         }
-                        /* we are done with the afs3-vlserver lookup */
+                        /* we are done with the service lookup */
                         DnsRecordListFree(pDnsVol, DnsFreeRecordListDeep);
                     }
                 }
@@ -845,42 +852,46 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
 #endif /* DNSAPI_ENV */
 }
 
-int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
+int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, const cm_unichar_t *cellName,
+                  unsigned short afsdbPort,
+                  int *cellHostAddrs,
                   cm_unichar_t cellHostNames[][MAXHOSTCHARS], 
+                  unsigned short ports[],
                   unsigned short ipRanks[],
                   int *numServers, int *ttl)
 {
 #ifdef DNSAPI_ENV
     PDNS_RECORDW pDnsCell, pDnsIter, pDnsVol,pDnsVolIter, pDnsCIter;
     int i;
-    struct sockaddr_in vlSockAddr;
     cm_unichar_t query[1024];
+
+    *numServers = 0;
+    *ttl = 0;
+
+    if (service == NULL || protocol == NULL || cellName == NULL)
+        return -1;
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( cm_stricmp_utf16(cellName, L"Freelance.Local.Root") == 0 )
         return -1;
 #endif /* AFS_FREELANCE_CLIENT */
 
-    *numServers = 0; 
-    *ttl = 0;
-
-    /* query the AFSDB records of cell */
-    StringCbCopyW(query, sizeof(query), cellName);
+    /* query the SRV _afs3-vlserver._udp records of cell */
+    StringCbPrintfW(query, sizeof(query), L"_%S._%S.%S", service, protocol, cellName);
     if (query[wcslen(query)-1] != L'.') {
         StringCbCatW(query, sizeof(query), L".");
     }
 
-    if (DnsQuery_W(query, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, (PDNS_RECORD *) &pDnsCell,
+    if (DnsQuery_W(query, DNS_TYPE_SRV, DNS_QUERY_STANDARD, NULL, (PDNS_RECORD *) &pDnsCell,
                    NULL) == ERROR_SUCCESS) {
-        memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
-
         /* go through the returned records */
-        for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
-            /* if we find an AFSDB record with Preference set to 1, we found a afs3-vlserver */
-            if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
+        for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
+            /* if we find an SRV record, we found a service instance */
+            if (pDnsIter->wType == DNS_TYPE_SRV) {
                 StringCbCopyW(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
-                              pDnsIter->Data.Afsdb.pNameExchange);
-                ipRanks[*numServers] = 0;
+                              pDnsIter->Data.SRV.pNameTarget);
+                ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
+                ports[*numServers] = pDnsIter->Data.SRV.wPort;
                 (*numServers)++;
                 
                 if (!*ttl) 
@@ -896,15 +907,15 @@ int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
         /* now check if there are any A records in the results */
         for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
             if(pDnsIter->wType == DNS_TYPE_A)
-                /* check if its for one of the afs3-vlservers */
+                /* check if its for one of the service instances */
                 for (i=0;i<*numServers;i++)
                     if(cm_stricmp_utf16(pDnsIter->pName, cellHostNames[i]) == 0)
                         cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
         }
 
         for (i=0;i<*numServers;i++) {
-            /* if we don't have an IP yet, then we should try resolving the afs3-vlserver hostname
-               in a separate query. */
+            /* if we don't have an IP yet, then we should try resolving the service hostname
+            in a separate query. */
             if (!cellHostAddrs[i]) {
                 if (DnsQuery_W(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL,
                                (PDNS_RECORD *) &pDnsVol, NULL) == ERROR_SUCCESS) {
@@ -927,7 +938,7 @@ int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
                             /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                         }
                     }
-                    /* we are done with the afs3-vlserver lookup */
+                    /* we are done with the service lookup */
                     DnsRecordListFree((PDNS_RECORD) pDnsVol, DnsFreeRecordListDeep);
                 }
             }
@@ -935,23 +946,22 @@ int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
         DnsRecordListFree((PDNS_RECORD) pDnsCell, DnsFreeRecordListDeep);
     }
     else {
-        /* query the SRV _afs3-vlserver._udp records of cell */
-        StringCbPrintfW(query, sizeof(query), L"_afs3-vlserver._udp.%S", cellName);
+        /* query the AFSDB records of cell */
+        StringCbCopyW(query, sizeof(query), cellName);
         if (query[wcslen(query)-1] != L'.') {
             StringCbCatW(query, sizeof(query), L".");
         }
 
-        if (DnsQuery_W(query, DNS_TYPE_SRV, DNS_QUERY_STANDARD, NULL, (PDNS_RECORD *) &pDnsCell,
-                        NULL) == ERROR_SUCCESS) {
-            memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
-
+        if (DnsQuery_W(query, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, (PDNS_RECORD *) &pDnsCell,
+                       NULL) == ERROR_SUCCESS) {
             /* go through the returned records */
-            for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
-                /* if we find an SRV record, we found a afs3-vlserver */
-                if (pDnsIter->wType == DNS_TYPE_SRV) {
+            for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
+                /* if we find an AFSDB record with Preference set to 1, we found a service instance */
+                if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
                     StringCbCopyW(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
-                                   pDnsIter->Data.SRV.pNameTarget);
-                    ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
+                                  pDnsIter->Data.Afsdb.pNameExchange);
+                    ipRanks[*numServers] = 0;
+                    ports[*numServers] = htons(afsdbPort);
                     (*numServers)++;
                 
                     if (!*ttl) 
@@ -967,18 +977,18 @@ int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
             /* now check if there are any A records in the results */
             for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
                 if(pDnsIter->wType == DNS_TYPE_A)
-                    /* check if its for one of the afs3-vlservers */
+                    /* check if its for one of the service instances */
                     for (i=0;i<*numServers;i++)
                         if(cm_stricmp_utf16(pDnsIter->pName, cellHostNames[i]) == 0)
                             cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
             }
 
             for (i=0;i<*numServers;i++) {
-                /* if we don't have an IP yet, then we should try resolving the afs3-vlserver hostname
+                /* if we don't have an IP yet, then we should try resolving the service hostname
                 in a separate query. */
                 if (!cellHostAddrs[i]) {
                     if (DnsQuery_W(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL,
-                                    (PDNS_RECORD *) &pDnsVol, NULL) == ERROR_SUCCESS) {
+                                   (PDNS_RECORD *) &pDnsVol, NULL) == ERROR_SUCCESS) {
                         for (pDnsVolIter = pDnsVol; pDnsVolIter; pDnsVolIter=pDnsVolIter->pNext) {
                             /* if we get an A record, keep it */
                             if (pDnsVolIter->wType == DNS_TYPE_A && cm_stricmp_utf16(cellHostNames[i], pDnsVolIter->pName)==0) {
@@ -998,7 +1008,7 @@ int getAFSServerW(cm_unichar_t *cellName, int *cellHostAddrs,
                                 /* TODO: if the additional section is missing, then do another lookup for the CNAME */
                             }
                         }
-                        /* we are done with the afs3-vlserver lookup */
+                        /* we are done with the service lookup */
                         DnsRecordListFree((PDNS_RECORD) pDnsVol, DnsFreeRecordListDeep);
                     }
                 }

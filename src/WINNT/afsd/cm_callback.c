@@ -1002,6 +1002,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
     if (connp && peerp) {
 	taddr.sin_family = AF_INET;
 	taddr.sin_addr.s_addr = rx_HostOf(rx_PeerOf(rx_ConnectionOf(callp)));
+	taddr.sin_port = rx_PortOf(rx_PeerOf(rx_ConnectionOf(callp)));
 
 	tsp = cm_FindServer(&taddr, CM_SERVER_FILE);
 

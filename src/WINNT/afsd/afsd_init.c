@@ -297,6 +297,7 @@ static void afsd_InitServerPreferences(void)
 
                 saddr.sin_addr.S_un.S_addr = *(unsigned long *)pEntry->h_addr;
             }
+            saddr.sin_port = htons(7003);
             saddr.sin_family = AF_INET;
             dwRank += (rand() & 0x000f);
 
@@ -370,6 +371,7 @@ static void afsd_InitServerPreferences(void)
 
                 saddr.sin_addr.S_un.S_addr = *(unsigned long *)pEntry->h_addr;
             }
+            saddr.sin_port = htons(7000);
             saddr.sin_family = AF_INET;
             dwRank += (rand() & 0x000f);
 

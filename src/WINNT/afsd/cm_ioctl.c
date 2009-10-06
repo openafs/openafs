@@ -1748,6 +1748,14 @@ cm_IoctlSetSPrefs(struct cm_ioctl *ioctlp, struct cm_user *userp)
         srvin          = &(spin->servers[i]);
         rank           = srvin->rank + (rand() & 0x000f);
         tmp.sin_addr   = srvin->host;
+        switch (type) {
+        case CM_SERVER_VLDB:
+            tmp.sin_port = htons(7003);
+            break;
+        case CM_SERVER_FILE:
+            tmp.sin_port = htons(7000);
+            break;
+        }
         tmp.sin_family = AF_INET;
 
         tsp = cm_FindServer(&tmp, type);

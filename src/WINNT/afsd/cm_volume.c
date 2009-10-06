@@ -500,6 +500,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
             tflags = serverFlags[i];
             if (tflags & VLSF_DONTUSE) 
                 continue;
+            tsockAddr.sin_port = htons(7000);
             tsockAddr.sin_family = AF_INET;
             tempAddr = htonl(serverNumber[i]);
             tsockAddr.sin_addr.s_addr = tempAddr;
