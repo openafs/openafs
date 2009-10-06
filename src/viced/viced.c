@@ -903,6 +903,9 @@ FlagMsg(void)
     fputs("[-rxmaxmtu <bytes>] ", stdout);
     fputs("[-rxbind (bind the Rx socket to one address)] ", stdout);
     fputs("[-allow-dotted-principals (disable the rxkad principal name dot check)] ", stdout);
+    fputs("[-vhandle-setaside (fds reserved for non-cache io [default 128])] ", stdout);
+    fputs("[-vhandle-max-cachesize (max open files [default 128])] ", stdout);
+    fputs("[-vhandle-initial-cachesize (fds reserved for cache io [default 128])] ", stdout);
 #ifdef AFS_DEMAND_ATTACH_FS
     fputs("[-fs-state-dont-save (disable state save during shutdown)] ", stdout);
     fputs("[-fs-state-dont-restore (disable state restore during startup)] ", stdout);
@@ -1036,6 +1039,9 @@ max_fileserver_thread(void)
     return MAX_FILESERVER_THREAD;
 }
 
+/* from ihandle.c */
+extern ih_init_params vol_io_params;
+
 static int
 ParseArgs(int argc, char *argv[])
 {
@@ -1122,6 +1128,24 @@ ParseArgs(int argc, char *argv[])
 	    }
 	    vol_attach_threads = atoi(argv[++i]);
 #endif /* AFS_PTHREAD_ENV */
+        } else if (!strcmp(argv[i], "-vhandle-setaside")) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "missing argument for %s\n", argv[i]);
+                return -1;
+	    }
+            vol_io_params.fd_handle_setaside = atoi(argv[++i]);
+        } else if (!strcmp(argv[i], "-vhandle-max-cachesize")) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "missing argument for %s\n", argv[i]);
+                return -1;
+            }
+            vol_io_params.fd_max_cachesize = atoi(argv[++i]);
+        } else if (!strcmp(argv[i], "-vhandle-initial-cachesize")) {
+            if ((i + 1) >= argc) {
+                fprintf(stderr, "missing argument for %s\n", argv[i]);
+                return -1;
+            }
+            vol_io_params.fd_initial_cachesize = atoi(argv[++i]);
 #ifdef AFS_DEMAND_ATTACH_FS
 	} else if (!strcmp(argv[i], "-fs-state-dont-save")) {
 	    fs_state.options.fs_state_save = 0;
@@ -1909,6 +1933,8 @@ main(int argc, char *argv[])
 #ifndef AFS_QUIETFS_ENV
     console = afs_fopen("/dev/console", "w");
 #endif
+    /* set ihandle package defaults prior to parsing args */
+    ih_PkgDefaults();
 
     if (ParseArgs(argc, argv)) {
 	FlagMsg();
@@ -2013,9 +2039,14 @@ main(int argc, char *argv[])
 	    lwps = curLimit;
 	else if (lwps > 16)
 	    lwps = 16;		/* default to a maximum of 16 threads */
+
+        /* tune the ihandle fd cache accordingly */
+        if (vol_io_params.fd_max_cachesize < curLimit)
+            vol_io_params.fd_max_cachesize = curLimit + 1;
+
 	ViceLog(0,
-		("The system supports a max of %d open files and we are starting %d threads\n",
-		 curLimit, lwps));
+		("The system supports a max of %d open files and we are starting %d threads (ihandle fd cache is %d)\n",
+		 curLimit, lwps, vol_io_params.fd_max_cachesize));
     }
 #ifndef AFS_PTHREAD_ENV
     assert(LWP_InitializeProcessSupport(LWP_MAX_PRIORITY - 2, &parentPid) ==

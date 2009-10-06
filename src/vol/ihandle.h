@@ -192,8 +192,34 @@ typedef struct StreamHandle_s {
 #define FD_HANDLE_MALLOCSIZE	((size_t)((4096/sizeof(FdHandle_t))))
 #define STREAM_HANDLE_MALLOCSIZE 1
 
+
+/* READ THIS.
+ *
+ * On modern platforms tuned for I/O intensive workloads, there may be
+ * thousands of file descriptors available (64K on 32-bit Solaris 7,
+ * for example), and threading in Solaris 9 and Linux 2.6 (NPTL) are
+ * tuned for (many) thousands of concurrent threads at peak.
+ *
+ * On these platforms, it makes sense to allow administrators to set
+ * appropriate limits for their hardware.  Clients may now set desired
+ * values in the exported vol_io_params, of type ih_init_params.
+ */
+
+typedef struct ih_init_params
+{
+    afs_uint32 fd_handle_setaside; /* for non-cached i/o, trad. was 128 */
+    afs_uint32 fd_initial_cachesize; /* what was 'default' */
+    afs_uint32 fd_max_cachesize; /* max open files if large-cache activated */
+} ih_init_params;
+
+
 /* Number of file descriptors needed for non-cached I/O */
 #define FD_HANDLE_SETASIDE	128 /* Match to MAX_FILESERVER_THREAD */
+
+/* Which systems have 8-bit fileno?  On GNU/Linux systems, the
+ * fileno member of FILE is an int.  On NetBSD 5, it's a short.
+ * Ditto for OpenBSD 4.5. Through Solaris 10 8/07 it's unsigned char.
+ */
 
 /* Don't try to have more than 256 files open at once if you are planning
  * to use fopen or fdopen. The FILE structure has an eight bit field for
@@ -205,6 +231,17 @@ typedef struct StreamHandle_s {
  * in the file table.
  */
 #define FD_MAX_CACHESIZE (2000 - FD_HANDLE_SETASIDE)
+
+/* On modern platforms, this is sized higher than the note implies.
+ * For HP, see http://forums11.itrc.hp.com/service/forums/questionanswer.do?admit=109447626+1242508538748+28353475&threadId=302950
+ * On AIX, it's said to be self-tuning (sar -v)
+ * On Solaris, http://www.princeton.edu/~unix/Solaris/troubleshoot/kerntune.html
+ * says stdio limit (FILE) may exist, but then backtracks and says the 64bit
+ * solaris and POLL (rather than select) io avoid the issue.  Solaris Internals
+ * states that Solaris 7 and above deal with up to 64K on 32bit.
+ * However, extended FILE must be enabled to use this. See
+ * enable_extended_FILE_stdio(3C)
+ */
 
 /* Inode handle */
 typedef struct IHandle_s {
@@ -224,7 +261,8 @@ typedef struct IHandle_s {
 #define IH_REALLY_CLOSED		1
 
 /* Hash function for inode handles */
-#define I_HANDLE_HASH_SIZE	1024	/* power of 2 */
+#define I_HANDLE_HASH_SIZE	2048	/* power of 2 */
+
 /* The casts to int's ensure NT gets the xor operation correct. */
 #define IH_HASH(D, V, I) ((int)(((D)^(V)^((int)(I)))&(I_HANDLE_HASH_SIZE-1)))
 
@@ -252,6 +290,7 @@ extern FILE *ih_fdopen(FdHandle_t * h, char *fdperms);
 /*
  * Prototypes for file descriptor cache routines
  */
+extern void ih_PkgDefaults(void);
 extern void ih_Initialize(void);
 extern void ih_UseLargeCache(void);
 extern IHandle_t *ih_init(int /*@alt Device@ */ dev, int /*@alt VolId@ */ vid,

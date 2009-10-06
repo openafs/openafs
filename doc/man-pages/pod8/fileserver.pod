@@ -50,6 +50,9 @@ B<fileserver> S<<< [B<-auditlog> <I<path to log file>>] >>>
     S<<< [B<-fs-state-dont-save>] >>>
     S<<< [B<-fs-state-dont-restore>] >>>
     S<<< [B<-fs-state-verify>] (none | save | restore | both)] >>>
+    S<<< [B<-vhandle-setaside> <I<fds reserved for non-cache io>>] >>>
+    S<<< [B<-vhandle-max-cachesize> <I<max open files>>] >>>
+    S<<< [B<-vhandle-initial-cachesize> <I<fds reserved for non-cache io>>] >>>
     S<<< [B<-vhashsize> <I<log(2) of number of volume hash buckets>>] >>>
     S<<< [B<-vlrudisable>] >>>
     S<<< [B<-vlruthresh> <I<minutes before eligibility for soft detach>>] >>>
@@ -541,6 +544,18 @@ prior to save and following a restore.
 The default is C<both>.
 
 This option is only supported by the demand-attach file server.
+
+=item B<-vhandle-setaside> <I<fds reserved for non-cache io>>
+
+Number of file handles set aside for I/O not in the cache. Defaults to 128.
+
+=item B<-vhandle-max-cachesize> <I<max open files>>
+
+Maximum number of available file handles.
+
+=item B<-vhandle-initial-cachesize> <I<initial open file cache>>
+
+Number of file handles set aside for I/O in the cache. Defaults to 128.
 
 =item B<-vhashsize <I<size>>
 
