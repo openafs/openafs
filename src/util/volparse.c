@@ -342,7 +342,7 @@ util_GetHumanInt32(register char *as, afs_int32 * aval)
     return 0;
 }
 
-afs_int64
+afs_int32
 util_GetInt64(char *as, afs_int64 * aval)
 {
     afs_int64 total;
@@ -392,7 +392,7 @@ util_GetInt64(char *as, afs_int64 * aval)
     return 0;
 }
 
-afs_uint64
+afs_uint32
 util_GetUInt64(char *as, afs_uint64 * aval)
 {
     afs_uint64 total;

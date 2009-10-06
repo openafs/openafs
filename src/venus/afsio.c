@@ -27,6 +27,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/stds.h>
 
 #include <stdio.h>
 #include <setjmp.h>
@@ -34,7 +35,17 @@
 #include <string.h>
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
+#include <windows.h>
+#include <winsock2.h>
+#define _CRT_RAND_S
+#include <stdlib.h>
+#include <process.h>
 #include <fcntl.h>
+#include <io.h>
+#include <afs/smb_iocons.h>
+#include <afs/afsd.h>
+#include <afs/cm_ioctl.h>
+#include <afs/pioctl_nt.h>
 #else
 #include <sys/param.h>
 #include <sys/file.h>
@@ -45,10 +56,15 @@
 #include <netdb.h>
 #include <string.h>
 #include <fcntl.h>
+#include <pwd.h>
+#include <afs/venus.h>
+#include <sys/time.h>
+#include <netdb.h>
+#include <afs/afsint.h>
+#define FSINT_COMMON_XG 1
 #endif
 #include <sys/stat.h>
 #include <errno.h>
-#include <pwd.h>
 #include <signal.h>
 #include <afs/vice.h>
 #include <afs/cmd.h>
@@ -57,10 +73,7 @@
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
-#include <afs/venus.h>
 #include <afs/afscbint.h>
-#define FSINT_COMMON_XG 1
-#include <afs/afsint.h>
 #include <afs/vldbint.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>
@@ -68,7 +81,6 @@
 #include <afs/dir.h>
 #include <afs/nfs.h>
 #include <afs/ihandle.h>
-#include <afs/namei_ops.h>
 #include <afs/vnode.h>
 #include <afs/com_err.h>
 #ifdef HAVE_DIRENT_H
@@ -77,8 +89,6 @@
 #ifdef HAVE_DIRECT_H
 #include <direct.h>
 #endif
-#include <sys/time.h>
-#include <netdb.h>
 #ifdef AFS_DARWIN_ENV
 #include <sys/malloc.h>
 #else
@@ -176,8 +186,8 @@ struct FsCmdOutputs PioctlOutputs;
 void
 printDatarate(void)
 {
-    seconds = now.tv_sec + now.tv_usec *.000001
-	-opentime.tv_sec - opentime.tv_usec *.000001;
+    seconds = (float)(now.tv_sec + now.tv_usec *.000001
+	-opentime.tv_sec - opentime.tv_usec *.000001);
     if ((seconds - oldseconds) > 30.) {
 	afs_int64 tmp;
 	tmp = xfered - oldxfered;
@@ -614,7 +624,7 @@ InitializeCBService(void)
 #define LWP_STACK_SIZE	(16 * 1024)
     afs_int32 code;
 #ifdef AFS_PTHREAD_ENV
-    pthread_t CBservicePid, parentPid;
+    pthread_t CBservicePid;
     pthread_attr_t tattr;
 #else
     PROCESS CBServiceLWP_ID, parentPid;
@@ -643,8 +653,13 @@ InitializeCBService(void)
     srand48(getpid());
     InitialCBPort = RESTOOL_CBPORT + lrand48() % 1000;
 #else /* AFS_HPUX_ENV */
+#if defined AFS_NT40_ENV
+    srand(_getpid());
+    InitialCBPort = RESTOOL_CBPORT + rand() % 1000;
+#else /* AFS_NT40_ENV */
     srand(getpid());
     InitialCBPort = RESTOOL_CBPORT + rand() % 1000;
+#endif /* AFS_NT40_ENV */
 #endif /* AFS_HPUX_ENV */
 #endif /* AFS_AIX_ENV || AFS_SUN_ENV || AFS_OSF_ENV || AFS_SGI_ENV */
 
@@ -1019,8 +1034,8 @@ readFile(struct cmd_syndesc *as, void *unused)
 #endif /* NO_AFS_CLIENT */
         gettimeofday(&opentime, &Timezone);
 	if (verbose) {
-            seconds = opentime.tv_sec + opentime.tv_usec *.000001
-		-starttime.tv_sec - starttime.tv_usec *.000001;
+            seconds = (float)(opentime.tv_sec + opentime.tv_usec *.000001
+		-starttime.tv_sec - starttime.tv_usec *.000001);
 	    fprintf(stderr,"Startup to find the file took %.3f sec.\n",
 		    seconds);
 	}
@@ -1034,9 +1049,9 @@ readFile(struct cmd_syndesc *as, void *unused)
             tcall = rx_NewCall(RXConn);
             code = StartAFS_FetchData64 (tcall, &Fid, Pos, Len);
             if (code == RXGEN_OPCODE) {
-	        afs_uint32 tmpPos,  tmpLen;
-	        tmpPos = Pos; tmpLen = Len;
-                code = StartAFS_FetchData (tcall, &Fid, Pos, Len);
+	        afs_int32 tmpPos,  tmpLen;
+	        tmpPos = (afs_int32)Pos; tmpLen = (afs_int32)Len;
+                code = StartAFS_FetchData (tcall, &Fid, tmpPos, tmpLen);
 	        bytes = rx_Read(tcall, (char *)&low, sizeof(afs_int32));
 		length = ntohl(low);
 	        if (bytes != 4) code = -3;
@@ -1062,7 +1077,7 @@ readFile(struct cmd_syndesc *as, void *unused)
 	    if (length > bufflen)
 		len = bufflen;
 	    else
-		len = length;
+		len = (afs_int32) length;
 	    buf = (char *)malloc(len);
 	    if (!buf) {
 	        fprintf(stderr, "couldn't allocate buffer\n");
@@ -1072,7 +1087,7 @@ readFile(struct cmd_syndesc *as, void *unused)
 	        if (length > bufflen)
 		    len = bufflen;
 	        else
-		    len = length;
+		    len = (afs_int32) length;
 	        bytes = rx_Read(tcall, (char *) buf, len);
 	        if (bytes != len) {
 		    code = -3;
@@ -1116,8 +1131,8 @@ readFile(struct cmd_syndesc *as, void *unused)
 		    htonl(md5int[2]), htonl(md5int[3]), p);
         }
 	if(verbose) {
-            seconds = readtime.tv_sec + readtime.tv_usec *.000001
-		-opentime.tv_sec - opentime.tv_usec *.000001;
+            seconds = (float)(readtime.tv_sec + readtime.tv_usec *.000001
+		-opentime.tv_sec - opentime.tv_usec *.000001);
             fprintf(stderr,"Transfer of %llu bytes took %.3f sec.\n",
 		    xfered, seconds);
             datarate = (xfered >> 20) / seconds;
@@ -1148,7 +1163,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     afs_int64 Pos;
     afs_int64 length, Len, synthlength = 0, offset = 0;
     u_char vnode = 0;
-    int bytes;
+    afs_int64 bytes;
     int worstCode = 0;
     int append = 0;
     int synthesize = 0;
@@ -1240,17 +1255,17 @@ writeFile(struct cmd_syndesc *as, void *unused)
 	memset(tbuf, 0, sizeof(struct wbuf));
 	tbuf->buflen = BUFFLEN;
 	if (synthesize) {
-	    afs_int32 ll, l = tbuf->buflen;
+	    afs_int64 ll, l = tbuf->buflen;
 	    if (l > synthlength)
 		l = synthlength;
 	    for (ll = 0; ll < l; ll += 4096) {
                 sprintf(&tbuf->buf[ll],"Offset (0x%x, 0x%x)\n",
-			(unsigned int)(offset >> 32),
-			(unsigned int)(offset & 0xffffffff) + ll);
+			(unsigned int)((offset + ll) >> 32),
+			(unsigned int)((offset + ll) & 0xffffffff));
 	    }
 	    offset += l;
 	    synthlength -= l;
-	    tbuf->used = l;
+	    tbuf->used = (afs_int32)l;
 	} else
 	    tbuf->used = read(0, &tbuf->buf, tbuf->buflen);
 	if (!tbuf->used) {
@@ -1265,8 +1280,8 @@ writeFile(struct cmd_syndesc *as, void *unused)
     }
     gettimeofday(&opentime, &Timezone);
     if (verbose) {
-        seconds = opentime.tv_sec + opentime.tv_usec *.000001
-	    -starttime.tv_sec - starttime.tv_usec *.000001;
+        seconds = (float) (opentime.tv_sec + opentime.tv_usec *.000001
+	    -starttime.tv_sec - starttime.tv_usec *.000001);
         fprintf(stderr,"Startup to find the file took %.3f sec.\n",
 		seconds);
     }
@@ -1279,8 +1294,8 @@ writeFile(struct cmd_syndesc *as, void *unused)
         code = StartAFS_StoreData64 (tcall, &Fid, &InStatus, Pos, Len, Pos+Len);
         if (code == RXGEN_OPCODE) {
 	    afs_uint32 tmpLen, tmpPos;
-	    tmpPos = Pos;
-	    tmpLen = Len;
+	    tmpPos = (afs_int32) Pos;
+	    tmpLen = (afs_int32) Len;
 	    if (Pos+Len > 0x7fffffff) {
 	        fprintf(stderr,"AFS fileserver does not support files >= 2 GB\n");
 	        return EFBIG;
@@ -1340,17 +1355,17 @@ writeFile(struct cmd_syndesc *as, void *unused)
             for (tbuf = bufchain; tbuf; tbuf=tbuf->next) {
 	        tbuf->offset = 0;
 		if (synthesize) {
-	    	    afs_int32 ll, l = tbuf->buflen;
+	    	    afs_int64 ll, l = tbuf->buflen;
 	    	    if (l > synthlength)
 			l = synthlength;
 	     	    for (ll = 0; ll < l; ll += 4096) {
-		      sprintf(&tbuf->buf[ll],"Offset (0x%x, 0x%x)\n",
-			      (unsigned int)(offset >> 32),
-			      (unsigned int)(offset & 0xffffffff) + ll);
+			sprintf(&tbuf->buf[ll],"Offset (0x%x, 0x%x)\n",
+				(unsigned int)((offset + ll) >> 32),
+				(unsigned int)((offset + ll) & 0xffffffff));
 	    	    }
 	    	    offset += l;
 	    	    synthlength -= l;
-	    	    tbuf->used = l;
+	    	    tbuf->used = (afs_int32) l;
 		} else
 	            tbuf->used = read(0, &tbuf->buf, tbuf->buflen);
 	        if (!tbuf->used)
@@ -1366,8 +1381,8 @@ writeFile(struct cmd_syndesc *as, void *unused)
     if (worstCode) {
 	fprintf(stderr,"%s failed with code %d\n", as->name, worstCode);
     } else if(verbose) {
-        seconds = writetime.tv_sec + writetime.tv_usec *.000001
-	    -opentime.tv_sec - opentime.tv_usec *.000001;
+        seconds = (float) (writetime.tv_sec + writetime.tv_usec *.000001
+	    -opentime.tv_sec - opentime.tv_usec *.000001);
         fprintf(stderr,"Transfer of %llu bytes took %.3f sec.\n",
 		xfered, seconds);
         datarate = (xfered >> 20) / seconds;

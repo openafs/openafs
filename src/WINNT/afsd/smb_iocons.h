@@ -97,6 +97,7 @@ struct sbstruct {
 #define VIOC_UNICODECTL                 0x33
 #define VIOC_SETOWNER                   0x34
 #define VIOC_SETGROUP                   0x35
+#define VIOC_FS_CMD                     0x36
 
 #define VIOC_VOLSTAT_TEST               0x3F
 

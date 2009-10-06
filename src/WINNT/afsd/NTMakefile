@@ -165,6 +165,11 @@ CMDBGOBJS=$(OUT)\cmdebug.obj
 $(CMDBGOBJS): $(AFSROOT)\src\venus\cmdebug.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
 
+AFSIOOBJS=$(OUT)\afsio.obj
+
+$(AFSIOOBJS): $(AFSROOT)\src\venus\afsio.c
+	$(C2OBJ) -DAFS_PTHREAD_ENV /Fo$@ $**
+
 SLOBJS=$(OUT)\symlink.obj $(OUT)\fs_utils.obj
 
 ILIBDIR = $(DESTDIR)\lib
@@ -302,7 +307,10 @@ install: install_headers install_objs $(CONF_DLLFILE) \
         $(EXEDIR)\afsdacl.exe \
 	$(LOGON_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
-	$(DESTDIR)\bin\kpasswd.exe $(EXEDIR)\cmdebug.exe $(EXEDIR)\afscpcc.exe
+	$(DESTDIR)\bin\kpasswd.exe \
+        $(EXEDIR)\cmdebug.exe \
+        $(EXEDIR)\afscpcc.exe \
+        $(EXEDIR)\afsio.exe
 
 install_libutils: install_headers $(CONF_DLLFILE) \
 	$(EXEDIR)\klog.exe \
@@ -350,6 +358,11 @@ EXELIBS2 = \
 	$(DESTDIR)\lib\afslwp.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib
+
+EXELIBS3 = \
+	$(DESTDIR)\lib\afs\afscmd.lib \
+	$(DESTDIR)\lib\afsrxkad.lib
+
 
 # klog.exe
 $(EXEDIR)\klog.exe: $(OUT)\cklog.obj $(OUT)\klog.res $(EXELIBS)
@@ -439,6 +452,14 @@ $(EXEDIR)\fs.exe: $(FSOBJS) $(OUT)\fs.res $(EXELIBS)
 # cmdebug.exe
 $(EXEDIR)\cmdebug.exe: $(CMDBGOBJS) $(OUT)\cmdebug.res $(EXELIBS2)
 	$(EXECONLINK) $(EXELIBS2) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib rpcrt4.lib
+        $(_VC_MANIFEST_EMBED_EXE)
+	$(EXEPREP)
+        $(CODESIGN_USERLAND)
+        $(SYMSTORE_IMPORT)
+
+# afsio.exe
+$(EXEDIR)\afsio.exe: $(AFSIOOBJS) $(OUT)\afsio.res $(RXOBJS) $(AFSD_EXELIBS) $(EXELIBS3)
+	$(EXECONLINK)  $(RXOBJS) $(AFSD_EXELIBS) $(EXELIBS3) dnsapi.lib mpr.lib iphlpapi.lib shell32.lib rpcrt4.lib
         $(_VC_MANIFEST_EMBED_EXE)
 	$(EXEPREP)
         $(CODESIGN_USERLAND)
