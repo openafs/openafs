@@ -68,7 +68,8 @@ kauth/kaprocs.c	     : all	     : XXX
 kauth/kaserver.c     : all	     : ExtendedCellInfo
 kauth/krb_udp.c      : all           : XXX
 kauth/admin_tools.c  : all           : ubik_Call nonsense
-kauth/authclient.c   : all           : ubik_Call nonsense
+kauth/authclient.c   : strict-proto  : ubik_Call nonsense
+                     : implicit-func : ubik_Call nonsense
 kauth/kas.c          : all           : XXX
 kauth/klog.c         : all           : XXX
 kauth/ka-forwarder.c : all           : XXX

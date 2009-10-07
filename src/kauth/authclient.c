@@ -16,6 +16,10 @@
 #include <afs/param.h>
 #endif
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#endif
 
 #define UBIK_LEGACY_CALLITER 1
 
@@ -456,11 +460,9 @@ CheckTicketAnswer(ka_BBS * oanswer, afs_int32 challenge,
  * this doesn't handle UNOTSYNC very well, should use ubik_Call if you care
  */
 static afs_int32
-kawrap_ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8)
-     struct ubik_client *aclient;
-     int (*aproc) ();
-     afs_int32 aflags;
-     void *p1, *p2, *p3, *p4, *p5, *p6, *p7, *p8;
+kawrap_ubik_Call(int (*aproc) (), struct ubik_client *aclient,
+                 afs_int32 aflags, void *p1, void *p2, void *p3, void *p4,
+                 void *p5, void *p6, void *p7, void *p8)
 {
     afs_int32 code, lcode;
     int count;
@@ -562,7 +564,7 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     version = 2;
     code =
 	kawrap_ubik_Call(KAA_AuthenticateV2, conn, 0, name, instance,
-			 start, end, &arequest, &oanswer, 0, 0);
+			 (void*)start, (void*)end, &arequest, &oanswer, 0, 0);
     if (code == RXGEN_OPCODE) {
 	oanswer.MaxSeqLen = sizeof(answer);
 	oanswer.SeqBody = (char *)&answer;
