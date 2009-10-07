@@ -61,6 +61,9 @@
 #include <afs/param.h>
 #endif
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#endif
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -197,7 +200,7 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 		  int (*get_key) (void *, int, struct ktc_encryptionKey *),
 		  char *get_key_rock, int serv_kvno, char *name, char *inst,
 		  char *cell, struct ktc_encryptionKey *session_key, afs_int32 * host,
-		  afs_int32 * start, afs_int32 * end, afs_int32 disableCheckdot)
+		  afs_uint32 * start, afs_uint32 * end, afs_int32 disableCheckdot)
 {
     char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
@@ -218,14 +221,14 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	return RXKADBADTICKET;	/* no ticket */
 
     if (serv_kvno == RXKAD_TKT_TYPE_KERBEROS_V5) {
-	code = decode_Ticket(ticket, ticket_len, &t5, &siz);
+	code = decode_Ticket((unsigned char *)ticket, ticket_len, &t5, &siz);
 	if (code != 0)
 	    goto cleanup;
 
 	if (t5.tkt_vno != 5)
 	    goto bad_ticket;
     } else {
-	code = decode_EncryptedData(ticket, ticket_len, &t5.enc_part, &siz);
+	code = decode_EncryptedData((unsigned char *)ticket, ticket_len, &t5.enc_part, &siz);
 	if (code != 0)
 	    goto cleanup;
     }
@@ -266,7 +269,7 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	goto bad_ticket;
 
     /* Decode ticket */
-    code = decode_EncTicketPart(plain, plainsiz, &decr_part, &siz);
+    code = decode_EncTicketPart((unsigned char *)plain, plainsiz, &decr_part, &siz);
     if (code != 0)
 	goto bad_ticket;
 

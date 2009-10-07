@@ -117,7 +117,7 @@ int
 tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 		 struct ktc_encryptionKey *key, char *name, char *inst,
 		 char *cell, struct ktc_encryptionKey *sessionKey, afs_int32 * host,
-		 afs_int32 * start, afs_int32 * end)
+		 afs_uint32 * start, afs_uint32 * end)
 {
     char clear_ticket[MAXKTCTICKETLEN];
     char *ticket;

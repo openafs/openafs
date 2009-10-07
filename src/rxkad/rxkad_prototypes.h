@@ -135,8 +135,8 @@ extern afs_int32 rxkad_SetConfiguration(struct rx_securityClass *aobj,
 extern int tkt_DecodeTicket(char *asecret, afs_int32 ticketLen,
 			    struct ktc_encryptionKey *key, char *name,
 			    char *inst, char *cell, struct ktc_encryptionKey *sessionKey,
-			    afs_int32 * host, afs_int32 * start,
-			    afs_int32 * end);
+			    afs_int32 * host, afs_uint32 * start,
+			    afs_uint32 * end);
 extern int tkt_MakeTicket(char *ticket, int *ticketLen,
 			  struct ktc_encryptionKey *key, char *name,
 			  char *inst, char *cell, afs_uint32 start,
@@ -154,8 +154,8 @@ extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 					     struct ktc_encryptionKey *),
 			     char *get_key_rock, int serv_kvno, char *name,
 			     char *inst, char *cell, struct ktc_encryptionKey *session_key,
-			     afs_int32 * host, afs_int32 * start,
-			     afs_int32 * end, afs_int32 disableDotCheck);
+			     afs_int32 * host, afs_uint32 * start,
+			     afs_uint32 * end, afs_int32 disableDotCheck);
 
 #if !defined(NO_DES_H_INCLUDE)
 static_inline unsigned char *
