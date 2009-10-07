@@ -1781,7 +1781,7 @@ execute_scout(int a_numservers, struct cmd_item *a_srvname, int a_pkg)
 
 	/*Debugging */
 	if (scout_debug)
-	    fprintf(scout_debugfd, "[%s] Scout label is '%s', %lu chars\n", rn,
+	    fprintf(scout_debugfd, "[%s] Scout label is '%s', %" AFS_SIZET_FMT " chars\n", rn,
 		    lightdata->label, strlen(lightdata->label));
     }
 

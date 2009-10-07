@@ -85,7 +85,7 @@ gator_light_create(struct onode *light_onp, struct onode_createparams *params)
 	(struct gator_lightobj *)malloc(sizeof(struct gator_lightobj));
     if (light_data == (struct gator_lightobj *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %lu bytes for light object private data region, errno is %d\n",
+		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for light object private data region, errno is %d\n",
 		mn, rn, sizeof(struct gator_lightobj), errno);
 	return (errno);
     }
@@ -94,7 +94,7 @@ gator_light_create(struct onode *light_onp, struct onode_createparams *params)
 	(struct gwin_strparams *)malloc(sizeof(struct gwin_strparams));
     if (light_strparams == (struct gwin_strparams *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %lu bytes for light object label in private data region, errno is %d\n",
+		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for light object label in private data region, errno is %d\n",
 		mn, rn, sizeof(struct gwin_strparams), errno);
 	free(light_data);
 	return (errno);

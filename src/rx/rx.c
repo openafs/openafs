@@ -6462,7 +6462,7 @@ rx_PrintTheseStats(FILE * file, struct rx_statistics *s, int size,
 
     if (size != sizeof(struct rx_statistics)) {
 	fprintf(file,
-		"Unexpected size of stats structure: was %d, expected %lud\n",
+		"Unexpected size of stats structure: was %d, expected %" AFS_SIZET_FMT "\n",
 		size, sizeof(struct rx_statistics));
     }
 

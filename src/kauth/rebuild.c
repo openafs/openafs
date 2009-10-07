@@ -63,7 +63,7 @@ readUbikHeader(void)
     /* now read the info */
     r = read(fd, &uheader, sizeof(uheader));
     if (r != sizeof(uheader)) {
-	printf("error: read of %lu bytes failed: %d %d\n", sizeof(uheader), r,
+	printf("error: read of %" AFS_SIZET_FMT " bytes failed: %d %d\n", sizeof(uheader), r,
 	       errno);
 	return (-1);
     }
@@ -331,7 +331,7 @@ CheckHeader(struct kaheader *header)
     if (header->headerSize != sizeof(struct kaheader)) {
 	code++;
 	fprintf(stderr,
-		"HEADER SIZE WRONG: file indicates %d, should be %lu\n",
+		"HEADER SIZE WRONG: file indicates %d, should be %" AFS_SIZET_FMT "\n",
 		header->headerSize, sizeof(struct kaheader));
     }
     if (header->hashsize != HASHSIZE) {
@@ -504,7 +504,7 @@ WorkerBee(struct cmd_syndesc *as, void *arock)
 	    i = NameHash(&entry);
 	    if (i != j) {
 		fprintf(stderr,
-			"Entry %lu, %s, found in hash chain %d (should be %d)\n",
+			"Entry %" AFS_SIZET_FMT ", %s, found in hash chain %d (should be %d)\n",
 			((index -
 			  sizeof(struct kaheader)) / sizeof(struct kaentry)),
 			EntryName(&entry), j, i);

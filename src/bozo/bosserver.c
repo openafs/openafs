@@ -835,7 +835,7 @@ main(int argc, char **argv, char **envp)
 	    rxMaxMTU = atoi(argv[++code]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d invalid; must be between %d-%lu\n",
+		printf("rxMaxMTU %d invalid; must be between %d-%" AFS_SIZET_FMT "\n",
 			rxMaxMTU, RX_MIN_PACKET_SIZE, 
 			RX_MAX_PACKET_DATA_SIZE);
 		exit(1);

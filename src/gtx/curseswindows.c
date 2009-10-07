@@ -121,13 +121,13 @@ gator_cursesgwin_init(int adebug)
      */
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %lu bytes for curses window private space in base window\n",
+		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for curses window private space in base window\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
     c_data =
 	(struct gator_cursesgwin *)malloc(sizeof(struct gator_cursesgwin));
     if (c_data == (struct gator_cursesgwin *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %lu bytes for curses window private space in base window\n",
+		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for curses window private space in base window\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
 	return (-1);
     }
@@ -205,12 +205,12 @@ gator_cursesgwin_create(void * rock)
 
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %lu bytes for new gwin structure\n", mn,
+		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for new gwin structure\n", mn,
 		rn, sizeof(struct gwin));
     newgwin = (struct gwin *)malloc(sizeof(struct gwin));
     if (newgwin == NULL) {
 	fprintf(stderr,
-		"[%s:%s] Can't malloc() %lu bytes for new gwin structure: Errno is %d\n",
+		"[%s:%s] Can't malloc() %" AFS_SIZET_FMT " bytes for new gwin structure: Errno is %d\n",
 		mn, rn, sizeof(struct gwin), errno);
 	return (NULL);
     }
@@ -226,13 +226,13 @@ gator_cursesgwin_create(void * rock)
 
     if (curses_debug)
 	fprintf(stderr,
-		"[%s:%s] Allocating %lu bytes for curses window private space\n",
+		"[%s:%s] Allocating %" AFS_SIZET_FMT " bytes for curses window private space\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
     c_data =
 	(struct gator_cursesgwin *)malloc(sizeof(struct gator_cursesgwin));
     if (c_data == (struct gator_cursesgwin *)0) {
 	fprintf(stderr,
-		"[%s:%s] Can't allocate %lu bytes for curses window private space\n",
+		"[%s:%s] Can't allocate %" AFS_SIZET_FMT " bytes for curses window private space\n",
 		mn, rn, sizeof(struct gator_cursesgwin));
 	free(newgwin);
 	return (NULL);

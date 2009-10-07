@@ -58,7 +58,7 @@ PrintCacheConfig(struct rx_connection *aconn)
 	struct cm_initparams_v1 *c1;
 
 	if (c.cacheConfig_len != sizeof(*c1) / sizeof(afs_uint32)) {
-	    printf("cmdebug: configuration data size mismatch (%d != %lu)\n",
+	    printf("cmdebug: configuration data size mismatch (%d != %" AFS_SIZET_FMT ")\n",
 		   c.cacheConfig_len, sizeof(*c1) / sizeof(afs_uint32));
 	    return 0;
 	}

@@ -257,7 +257,8 @@ CheckDescriptors(void *unused)
     for (i = 0; i < tsize; i++) {
 	if (afs_fstat(i, &status) != -1) {
 	    printf("%d: dev %x, inode %u, length %u, type/mode %x\n", i,
-		   status.st_dev, status.st_ino, 
+		   (unsigned int) status.st_dev,
+		   (unsigned int) status.st_ino,
 		   (unsigned int) status.st_size,
 		   status.st_mode);
 	}
@@ -1293,7 +1294,7 @@ ParseArgs(int argc, char *argv[])
 	    rxMaxMTU = atoi(argv[++i]);
 	    if ((rxMaxMTU < RX_MIN_PACKET_SIZE) || 
 		(rxMaxMTU > RX_MAX_PACKET_DATA_SIZE)) {
-		printf("rxMaxMTU %d%% invalid; must be between %d-%lu\n",
+		printf("rxMaxMTU %d%% invalid; must be between %d-%" AFS_SIZET_FMT "\n",
 		       rxMaxMTU, RX_MIN_PACKET_SIZE, 
 		       RX_MAX_PACKET_DATA_SIZE);
 		return -1;

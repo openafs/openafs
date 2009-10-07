@@ -563,7 +563,7 @@ uss_acl_SetAccess(char *a_access, int a_clear, int a_negative)
     tp = uss_common_FieldCp(path_field, a_access, ' ', sizeof(path_field),
 			    &overflow);
     if (overflow) {
-	fprintf(stderr, "%s: * Pathname field too long (max is %lu chars)\n",
+	fprintf(stderr, "%s: * Pathname field too long (max is %" AFS_SIZET_FMT " chars)\n",
 		uss_whoami, sizeof(path_field));
 	return (-1);
     }

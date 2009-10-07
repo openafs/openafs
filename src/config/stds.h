@@ -290,8 +290,12 @@ typedef struct afsUUID afsUUID;
 #define AFS_INT64_FMT "lld"
 #define AFS_UINT64_FMT "llu"
 #define AFS_PTR_FMT   "p"
+#ifdef AFS_64BITPOINTER_ENV
+#define AFS_SIZET_FMT "lu"
+#else
 #define AFS_SIZET_FMT "u"
-#endif
+#endif /* AFS_64BITPOINTER_ENV */
+#endif /* AFS_NT40_ENV */
 
 /* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
  * printf statemements with %ld and %lu

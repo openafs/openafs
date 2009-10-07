@@ -334,7 +334,7 @@ printentry(int version, void *addr)
 
 	if (vl3p->flags == VLFREE)
 	    return;
-	printf("%s\tPos=%lu NextIdHash=[%d:%d:%d] NextNameHash=%d\n",
+	printf("%s\tPos=%" AFS_SIZET_FMT " NextIdHash=[%d:%d:%d] NextNameHash=%d\n",
 	       vl3p->name, (oldpos - sizeof(struct vlentry_3)),
 	       vl3p->nextIdHash[0], vl3p->nextIdHash[1], vl3p->nextIdHash[2],
 	       vl3p->nextNameHash);

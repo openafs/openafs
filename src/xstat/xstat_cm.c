@@ -474,7 +474,7 @@ xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
 	malloc(a_numServers * sizeof(struct xstat_cm_ConnectionInfo));
     if (xstat_cm_ConnInfo == (struct xstat_cm_ConnectionInfo *)0) {
 	fprintf(stderr,
-		"[%s] Can't allocate %d connection info structs (%lu bytes)\n",
+		"[%s] Can't allocate %d connection info structs (%" AFS_SIZET_FMT " bytes)\n",
 		rn, a_numServers,
 		(a_numServers * sizeof(struct xstat_cm_ConnectionInfo)));
 	return (-1);		/*No cleanup needs to be done yet */
