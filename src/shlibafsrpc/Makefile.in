@@ -179,7 +179,7 @@ rx_pthread.o: ${RX}/rx_pthread.c
 	${CCRULE}
 
 rx.o: ${RX}/rx.c
-	${CCRULE}
+	${CCRULE} @CFLAGS_NOERROR@
 
 rx_conncache.o: ${RX}/rx_conncache.c
 	${CCRULE}
@@ -417,7 +417,7 @@ afsint.cs.o: ${FSINT}/afsint.cs.c
 	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
+	${CCRULE} @CFLAGS_NOERROR@
 
 afscbint.cs.o: ${FSINT}/afscbint.cs.c
 	${CCRULE}
