@@ -385,7 +385,7 @@ vsu_SetCrypt(int cryptflag)
   Get the appropriate type of ubik client structure out from the system.
 */
 afs_int32
-vsu_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
+vsu_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
                struct ubik_client **uclientp,
 	       int (*secproc)(struct rx_securityClass *, afs_int32))
 {

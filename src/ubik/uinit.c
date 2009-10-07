@@ -45,7 +45,7 @@
  * \brief Get the appropriate type of ubik client structure out from the system.
  */
 afs_int32
-ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
+ugen_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
 	       struct ubik_client **uclientp, 
 	       int (*secproc) (struct rx_securityClass *, afs_int32),
 	       char *funcName, afs_int32 gen_rxkad_level, 

@@ -11,7 +11,7 @@ extern int VLDB_ListAttributesN2(VldbListByAttributes *attrp, char *name, afs_in
            afs_int32 *nentriesp, nbulkentries *blkentriesp, afs_int32 *nextindexp);
 extern int VLDB_IsSameAddrs(afs_int32 serv1, afs_int32 serv2, afs_int32 *errorp);
 extern void vsu_SetCrypt(int cryptflag);
-extern afs_int32 vsu_ClientInit(int noAuthFlag, char *confDir, char *cellName, afs_int32 sauth,
+extern afs_int32 vsu_ClientInit(int noAuthFlag, const char *confDir, char *cellName, afs_int32 sauth,
                struct ubik_client **uclientp, int (*secproc)(struct rx_securityClass *, afs_int32));
 extern int vsu_ExtractName(char rname[], char name[]);
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);

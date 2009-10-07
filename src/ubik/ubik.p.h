@@ -512,8 +512,8 @@ extern int ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost,
 /* \name uinit.c */
 
 struct rx_securityClass;
-extern afs_int32 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName,
-				 afs_int32 sauth, 
+extern afs_int32 ugen_ClientInit(int noAuthFlag, const char *confDir,
+				 char *cellName, afs_int32 sauth,
 				 struct ubik_client **uclientp,
 				 int (*secproc) (struct rx_securityClass *sc,
 					 	 afs_int32 scIndex), 

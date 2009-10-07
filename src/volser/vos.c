@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#endif
 
 #include <sys/types.h>
 #include <string.h>
@@ -1942,7 +1945,7 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
 	    return EINVAL;
 	}
 
-	code = util_GetInt32(as->parms[4].items->data, &volid);
+	code = util_GetUInt32(as->parms[4].items->data, &volid);
 	if (code) {
 	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
 	    return code;
@@ -1956,7 +1959,7 @@ CreateVolume(register struct cmd_syndesc *as, void *arock)
 	    return EINVAL;
 	}
 
-	code = util_GetInt32(as->parms[5].items->data, &rovolid);
+	code = util_GetUInt32(as->parms[5].items->data, &rovolid);
 	if (code) {
 	    fprintf(STDERR, "vos: bad integer specified for volume ID.\n");
 	    return code;
@@ -5193,7 +5196,7 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
 }
 
 static void
-print_addrs(const bulkaddrs * addrs, const afsUUID * m_uuid, int nentries,
+print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 	    int print)
 {
     afs_int32 vcode;

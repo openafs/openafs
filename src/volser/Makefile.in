@@ -139,7 +139,7 @@ vol_split.o: vol_split.c ${VINCLS} ${INTINCLS} ${RINCLS}
 # Errors
 #
 vos.o: vos.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) -c $<
 
 #
 # Installation targets
