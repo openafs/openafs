@@ -258,7 +258,9 @@ extern char *cm_categories[];	/* cache manager data category names */
 
 
 
-#ifndef HAVE_STRCASESTR
+#ifdef HAVE_STRCASESTR
+extern char * strcasestr(const char *, const char *);
+#else
 /*	
         strcasestr(): Return first occurence of pattern s2 in s1, case 
 	insensitive. 
