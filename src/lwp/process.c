@@ -41,7 +41,7 @@ savecontext(void (*ep) (void), struct lwp_context *savearea, char *newsp)
     savearea->state = 0;
     getcontext(&savearea->ucontext);
 #if defined(AFS_LINUX20_ENV)
-    savearea->topstack = &stackvar;
+    savearea->topstack = (char *)&stackvar;
 #else
     savearea->topstack = savearea->ucontext.uc_stack.ss_sp;
 #endif
@@ -135,7 +135,7 @@ typedef int jmp_buf_type;
 #endif /*SGI*/
 
     static jmp_buf jmp_tmp;
-static void *(*EP) (void);
+static void (*EP) (void);
 static int rc;
 static jmp_buf_type *jmpBuffer;
 
