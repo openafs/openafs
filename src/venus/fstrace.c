@@ -1135,7 +1135,7 @@ afs_syscall(long call, long parm0, long parm1, long parm2, long parm3,
 #endif
     /* Linux can only handle 5 arguments in the actual syscall. */
     if (call == AFSCALL_ICL) {
-	rval = proc_afs_syscall(call, parm0, parm1, parm2, eparm, &code);
+	rval = proc_afs_syscall(call, parm0, parm1, parm2, (long)eparm, &code);
 	if (rval)
 	    code = syscall(AFS_SYSCALL, call, parm0, parm1, parm2, eparm);
     } else {
