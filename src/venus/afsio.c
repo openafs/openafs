@@ -885,30 +885,10 @@ get_file_cell(char *fn, char **cellp, afs_int32 hosts[MAXHOSTS], AFSFid *Fid,
 	        afs_com_err(pnp, code, (char *) 0);
 	    }
 	} else {
-	    afs_int32 saveCommand, saveVolume;
-
 	    Tmpafs_int32 = (afs_int32 *)buf;
 	    Fid->Volume = Tmpafs_int32[1];
 	    Fid->Vnode = Tmpafs_int32[2];
 	    Fid->Unique = Tmpafs_int32[3];
-	    status.in_size = sizeof(struct FsCmdInputs);
-	    status.out_size = sizeof(struct FsCmdOutputs);
-	    status.in = (char *) &PioctlInputs;
-	    status.out = (char *) &PioctlOutputs;
-	    saveCommand = PioctlInputs.command;
-	    saveVolume = PioctlInputs.fid.Volume;
-	    PioctlInputs.command = 0;
-	    PioctlInputs.fid.Volume = 0;
-	    if (!pioctl(fn, VIOC_FS_CMD, &status, 0))
-	        memcpy((char *)Status, &PioctlOutputs.status,
-		      sizeof(struct AFSFetchStatus));
-	    PioctlInputs.command = saveCommand;
-	    PioctlInputs.fid.Volume = saveVolume;
-	    if (create && (Status->Length || Status->Length_hi)) {
-                fprintf(stderr,"AFS file %s not empty, request aborted.\n",
-			fn);
-                exit(-5);
-	    }
 	}
     }
     return code;
@@ -1208,8 +1188,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     } else
         code = get_file_cell(fname, &cell, hosts, &Fid, &OutStatus, append ? 0 : 1);
     if (code) {
-      if (code != -5)
-            fprintf(stderr,"File or directory not found: %s\n",
+        fprintf(stderr,"File or directory not found: %s\n",
                     fname);
         return code;
     }
@@ -1230,6 +1209,17 @@ writeFile(struct cmd_syndesc *as, void *unused)
         fprintf(stderr,"rx_NewConnection failed to server 0x%X\n",
 		hosts[0]);
         return -1;
+    }
+    code = AFS_FetchStatus(RXConn, &Fid, &OutStatus, &CallBack, &tsync);
+    if (code) {
+        fprintf(stderr,"RXAFS_FetchStatus failed to server 0x%X for file %s, code was%d\n",
+                            useHost, fname, code);
+       return -1;
+    }
+    if (!append && (OutStatus.Length || OutStatus.Length_hi)) {
+        fprintf(stderr,"AFS file %s not empty, request aborted.\n", fname);
+	DestroyConnections();
+        return -5;
     }
     InStatus.Mask = AFS_SETMODE + AFS_FSYNC;
     InStatus.UnixModeBits = 0644;
