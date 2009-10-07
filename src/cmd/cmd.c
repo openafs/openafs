@@ -25,7 +25,7 @@ struct cmd_token {
     char *key;
 };
 
-static int dummy;		/* non-null ptr used for flag existence */
+static struct cmd_item dummy;		/* non-null ptr used for flag existence */
 static struct cmd_syndesc *allSyntax = 0;
 static int noOpcodes = 0;
 static int (*beforeProc) (struct cmd_syndesc * ts, void *beforeRock) = NULL;
@@ -800,7 +800,7 @@ cmd_Dispatch(int argc, char **argv)
 		return (CMD_INTERNALERROR);
 	    }
 	    if (ts->parms[j].type == CMD_FLAG) {
-		ts->parms[j].items = (struct cmd_item *)&dummy;
+		ts->parms[j].items = &dummy;
 	    } else {
 		positional = 0;
 		curType = j;

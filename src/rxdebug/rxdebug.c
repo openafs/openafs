@@ -278,19 +278,21 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 	    fprintf(stderr,
 		    "WARNING: Server doesn't support retrieval of Rx statistics\n");
 	} else {
-	    struct rx_statistics rxstats;
+	    union {
+		struct rx_statistics rxstats;
+		struct rx_debugIn debug;
+	    } packet;
 
 	    /* should gracefully handle the case where rx_stats grows */
 	    code =
-		rx_GetServerStats(s, host, port, &rxstats,
+		rx_GetServerStats(s, host, port, &packet.rxstats,
 				  &supportedStatValues);
 	    if (code < 0) {
 		printf("rxstats call failed with code %d\n", code);
 		exit(1);
 	    }
-	    if (code != sizeof(rxstats)) {
-		if ((((struct rx_debugIn *)(&rxstats))->type ==
-		     RX_DEBUGI_BADTYPE))
+	    if (code != sizeof(packet.rxstats)) {
+		if (packet.debug.type == RX_DEBUGI_BADTYPE)
 		    goto noRxStats;
 		printf
 		    ("WARNING: returned Rx statistics of unexpected size (got %d)\n",
@@ -298,7 +300,7 @@ MainCommand(struct cmd_syndesc *as, void *arock)
 		/* handle other versions?... */
 	    }
 
-	    rx_PrintTheseStats(stdout, &rxstats, sizeof(rxstats),
+	    rx_PrintTheseStats(stdout, &packet.rxstats, sizeof(packet.rxstats),
 			       tstats.nFreePackets, tstats.version);
 	}
     }
