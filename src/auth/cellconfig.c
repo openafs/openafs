@@ -991,58 +991,93 @@ afsconf_GetExtendedCellInfo(struct afsconf_dir *adir, char *acellName,
 #ifdef AFS_AFSDB_ENV
 #if !defined(AFS_NT40_ENV)
 int
-afsconf_GetAfsdbInfo(char *acellName, char *aservice,
-		     struct afsconf_cell *acellInfo)
+afsconf_LookupServer(const char *service, const char *protocol,
+		     const char *cellName, unsigned short afsdbPort,
+		     int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
+		     unsigned short ports[], unsigned short ipRanks[],
+		     int *numServers, int *ttl, char *realCellName)
 {
-    afs_int32 code;
-    int tservice, i, len;
+    int code = 0;
+    int len;
     unsigned char answer[1024];
     unsigned char *p;
     char *dotcellname;
-    int cellnamelength;
-    char realCellName[256];
+    int cellnamelength, fullnamelength;
     char host[256];
     int server_num = 0;
     int minttl = 0;
     int try_init = 0;
+    int dnstype = 0;
+    int pass = 0;
+    char *IANAname = (char *) afsconf_FindIANAName(service);
+    int tservice = afsconf_FindService(service);
 
-    /* The resolver isn't always MT-safe.. Perhaps this ought to be
-     * replaced with a more fine-grained lock just for the resolver
-     * operations.
-     */
+    realCellName = NULL;
+
+    *numServers = 0;
+    *ttl = 0;
+    if (tservice <= 0 || !IANAname)
+	return AFSCONF_NOTFOUND;	/* service not found */
+
+    if (strchr(cellName,'.'))
+	pass += 2;
+
+    cellnamelength=strlen(cellName); /* _ ._ . . \0 */
+    fullnamelength=cellnamelength+strlen(protocol)+strlen(IANAname)+6;
+    dotcellname=malloc(fullnamelength);
+    if (!dotcellname)
+	return AFSCONF_NOTFOUND;	/* service not found */
 
  retryafsdb:
-    if ( ! strchr(acellName,'.') ) {
-       cellnamelength=strlen(acellName);
-       dotcellname=malloc(cellnamelength+2);
-       memcpy(dotcellname,acellName,cellnamelength);
-       dotcellname[cellnamelength]='.';
-       dotcellname[cellnamelength+1]=0;
-       LOCK_GLOBAL_MUTEX;
-       len = res_search(dotcellname, C_IN, T_AFSDB, answer, sizeof(answer));
-       if ( len < 0 ) {
-          len = res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
-       }
-       UNLOCK_GLOBAL_MUTEX;
-       free(dotcellname);
-    } else {
-       LOCK_GLOBAL_MUTEX;
-       len = res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
-       UNLOCK_GLOBAL_MUTEX;
+    switch (pass) {
+    case 0:
+	dnstype = T_SRV;
+	code = snprintf(dotcellname, fullnamelength, "_%s._%s.%s.",
+		 IANAname, protocol, cellName);
+	break;
+    case 1:
+	dnstype = T_AFSDB;
+	code = snprintf(dotcellname, fullnamelength, "%s.",
+		 cellName);
+	break;
+    case 2:
+	dnstype = T_SRV;
+	code = snprintf(dotcellname, fullnamelength, "_%s._%s.%s",
+		 IANAname, protocol, cellName);
+	break;
+    case 3:
+	dnstype = T_AFSDB;
+	code = snprintf(dotcellname, fullnamelength, "%s",
+		 cellName);
+	break;
     }
+    if ((code < 0) || (code >= fullnamelength))
+	goto findservererror;
+    LOCK_GLOBAL_MUTEX;
+    len = res_search(dotcellname, C_IN, dnstype, answer, sizeof(answer));
+    UNLOCK_GLOBAL_MUTEX;
+
     if (len < 0) {
 	if (try_init < 1) {
 	    try_init++;
 	    res_init();
 	    goto retryafsdb;
 	}
-	return AFSCONF_NOTFOUND;
+	if (pass < 3) {
+	    pass++;
+	    goto retryafsdb;
+	} else {
+	    code = AFSCONF_NOTFOUND;
+	    goto findservererror;
+	}
     }
 
     p = answer + sizeof(HEADER);	/* Skip header */
     code = dn_expand(answer, answer + len, p, host, sizeof(host));
-    if (code < 0)
-	return AFSCONF_NOTFOUND;
+    if (code < 0) {
+	code = AFSCONF_NOTFOUND;
+	goto findservererror;
+    }
 
     p += code + QFIXEDSZ;	/* Skip name */
 
@@ -1050,8 +1085,10 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	int type, ttl, size;
 
 	code = dn_expand(answer, answer + len, p, host, sizeof(host));
-	if (code < 0)
-	    return AFSCONF_NOTFOUND;
+	if (code < 0) {
+	    code = AFSCONF_NOTFOUND;
+	    goto findservererror;
+	}
 
 	p += code;		/* Skip the name */
 	type = (p[0] << 8) | p[1];
@@ -1072,21 +1109,51 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 		 * right AFSDB type.  Write down the true cell name that
 		 * the resolver gave us above.
 		 */
-		strlcpy(realCellName, host, sizeof realCellName);
+		realCellName = strdup(host);
 	    }
 
 	    code = dn_expand(answer, answer + len, p + 2, host, sizeof(host));
-	    if (code < 0)
-		return AFSCONF_NOTFOUND;
+	    if (code < 0) {
+		code = AFSCONF_NOTFOUND;
+		goto findservererror;
+	    }
 
 	    if ((afsdb_type == 1) && (server_num < MAXHOSTSPERCELL) &&
 		/* Do we want to get TTL data for the A record as well? */
 		(he = gethostbyname(host))) {
 		afs_int32 ipaddr;
 		memcpy(&ipaddr, he->h_addr, he->h_length);
-		acellInfo->hostAddr[server_num].sin_addr.s_addr = ipaddr;
-		strncpy(acellInfo->hostName[server_num], host,
-			sizeof(acellInfo->hostName[server_num]));
+		cellHostAddrs[server_num] = ipaddr;
+		ports[server_num] = htons(afsdbPort);
+		ipRanks[server_num] = 0;
+		strncpy(cellHostNames[server_num], host,
+			sizeof(cellHostNames[server_num]));
+		server_num++;
+
+		if (!minttl || ttl < minttl)
+		    minttl = ttl;
+	    }
+	}
+	if (type == T_SRV) {
+	    struct hostent *he;
+
+	    code = dn_expand(answer, answer + len, p + 6, host, sizeof(host));
+	    if (code < 0) {
+		code = AFSCONF_NOTFOUND;
+		goto findservererror;
+	    }
+
+	    if ((server_num < MAXHOSTSPERCELL) &&
+		/* Do we want to get TTL data for the A record as well? */
+		(he = gethostbyname(host))) {
+		afs_int32 ipaddr;
+		memcpy(&ipaddr, he->h_addr, he->h_length);
+		cellHostAddrs[server_num] = ipaddr;
+		ipRanks[server_num] = (p[0] << 8) | p[1];
+		ports[server_num] = (p[4] << 8) | p[5];
+		/* weight = (p[2] << 8) | p[3]; */
+		strncpy(cellHostNames[server_num], host,
+			sizeof(cellHostNames[server_num]));
 		server_num++;
 
 		if (!minttl || ttl < minttl)
@@ -1097,28 +1164,74 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 	p += size;
     }
 
-    if (server_num == 0)	/* No AFSDB records */
-	return AFSCONF_NOTFOUND;
-
-    /* Convert the real cell name to lowercase */
-    for (p = (unsigned char *)realCellName; *p; p++)
-	*p = tolower(*p);
-
-    strncpy(acellInfo->name, realCellName, sizeof(acellInfo->name));
-    acellInfo->numServers = server_num;
-
-    if (aservice) {
-	tservice = afsconf_FindService(aservice);
-	if (tservice < 0)
-	    return AFSCONF_NOTFOUND;	/* service not found */
-	for (i = 0; i < acellInfo->numServers; i++) {
-	    acellInfo->hostAddr[i].sin_port = tservice;
-	}
+    if (server_num == 0) {	/* No AFSDB or SRV records */
+	code = AFSCONF_NOTFOUND;
+	goto findservererror;
     }
 
-    acellInfo->timeout = minttl ? (time(0) + minttl) : 0;
+    if (realCellName) {
+	/* Convert the real cell name to lowercase */
+	for (p = (unsigned char *)realCellName; *p; p++)
+	    *p = tolower(*p);
+    }
 
-    return 0;
+    *numServers = server_num;
+    *ttl = minttl ? (time(0) + minttl) : 0;
+
+    if ( *numServers > 0 )
+        code =  0;
+    else
+        code = AFSCONF_NOTFOUND;
+
+findservererror:
+    free(dotcellname);
+    return code;
+}
+
+int
+afsconf_GetAfsdbInfo(char *acellName, char *aservice,
+		     struct afsconf_cell *acellInfo)
+{
+    afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
+    char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
+    unsigned short ipRanks[AFSMAXCELLHOSTS];
+    unsigned short ports[AFSMAXCELLHOSTS];
+    char *realCellName = NULL;
+    int ttl, numServers, i;
+    char *service = aservice;
+    int code;
+    unsigned short afsdbport;
+    if (!service) {
+	service = "afs3-vlserver";
+	afsdbport = 7003;
+    } else {
+	service = aservice;
+	afsdbport = afsconf_FindService(service);
+    }
+    code = afsconf_LookupServer((const char *)service, "udp",
+				(const char *)acellName, afsdbport,
+				cellHostAddrs, cellHostNames,
+				ports, ipRanks, &numServers, &ttl,
+				realCellName);
+
+    if (code == 0) {
+	acellInfo->timeout = ttl;
+	acellInfo->numServers = numServers;
+	for (i = 0; i < numServers; i++) {
+	    memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHostAddrs[i],
+		   sizeof(afs_int32));
+	    memcpy(acellInfo->hostName[i], cellHostNames[i], MAXHOSTCHARS);
+	    acellInfo->hostAddr[i].sin_family = AF_INET;
+	    acellInfo->hostAddr[i].sin_port = ports[i];
+
+	    if (realCellName)
+		strlcpy(acellInfo->name, realCellName,
+			sizeof(acellInfo->name));
+	}
+	acellInfo->linkedCell = NULL;       /* no linked cell */
+	acellInfo->flags = 0;
+    }
+    return code;
 }
 #else /* windows */
 int

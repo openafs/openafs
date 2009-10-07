@@ -47,16 +47,15 @@ PrintOneCell(struct afsconf_cell *ainfo, void *arock, struct afsconf_dir *adir)
     printf("Cell %s:\n", ainfo->name);
     for (i = 0; i < ainfo->numServers; i++) {
 	memcpy(&temp, &ainfo->hostAddr[i].sin_addr, sizeof(long));
-	printf("    host %s at %x.%x\n", ainfo->hostName[i], temp,
+	printf("    host %s at %lx.%x\n", ainfo->hostName[i], temp,
 	       ainfo->hostAddr[i].sin_port);
     }
     return 0;
 }
 
 /*Main for testcellconfig*/
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     struct afsconf_dir *theDir;
     char tbuffer[1024];
@@ -87,7 +86,7 @@ main(argc, argv)
     /* get the cell */
     code = afsconf_GetLocalCell(theDir, tbuffer, sizeof(tbuffer));
     if (code != 0) {
-	printf("get local cell failed, code %d\n", code);
+	printf("get local cell failed, code %ld\n", code);
 	exit(1);
     }
     printf("Local cell is '%s'\n\n", tbuffer);
@@ -100,7 +99,7 @@ main(argc, argv)
 	printf("start of special test\n");
 	code = afsconf_GetCellInfo(theDir, NULL, "afsprot", &theCell);
 	if (code)
-	    printf("failed to find afsprot service (%d)\n", code);
+	    printf("failed to find afsprot service (%ld)\n", code);
 	else {
 	    printf("AFSPROT service:\n");
 	    PrintOneCell(&theCell, NULL, theDir);
@@ -117,7 +116,7 @@ main(argc, argv)
 	for (i = 2; i < argc; i++) {
 	    code = afsconf_GetCellInfo(theDir, argv[i], 0, &theCell);
 	    if (code) {
-		printf("Could not find info for cell '%s', code %d\n",
+		printf("Could not find info for cell '%s', code %ld\n",
 		       argv[i], code);
 	    } else
 		PrintOneCell(&theCell, NULL, theDir);
