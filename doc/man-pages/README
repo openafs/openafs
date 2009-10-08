@@ -93,6 +93,7 @@ Formatting Standards
    * <I<>> for user-provided arguments (note the surrounding <>).
    * I<> for terms being defined or titles of works.
    * C<> for command examples, ACL characters, and example arguments.
+   * S<<<>>> for text with non-breaking spaces (usually in synopsis).
 
   Also see the afs(1) man page for general rules about how OpenAFS man
   pages are formatted and for standard terminology to use when talking
@@ -229,8 +230,6 @@ Known Problems
   don't just report the deficiency again, but any contributions towards
   fixing it are greatly appreciated.
 
-   * Add -noresolve to the documentation of all the vos commands.
-
    * Some of the documentation in fs getserverprefs needs minor updates to
      reflect what happens in the dynroot case.
 
@@ -247,12 +246,6 @@ Known Problems
 
    * The salvager actually creates a bunch of SalvageLog files and then
      combines them, but the SalvageLog man page doesn't reflect this.
-
-   * In the suite introduction pages (pts, vos, etc.), each of the
-     subcommands in the initial list should be a link to the relevant
-     page in the HTML output.  This has been done for the fs intro page
-     and the same transform needs to be applied to the other pages.  See
-     the fs intro page for the details.
 
    * The references to the other OpenAFS manuals, such as the Quick Start
      guide and the Admin Guide, should be links, probably to the documents
@@ -284,6 +277,33 @@ Known Problems
    * Review the sections used for all man pages against what directories
      the commands are installed into.  (In some cases, it may be better to
      change the directory than the section of the man page.)
+
+   * Consider using M4 or similar to operate on POD text before output.
+     This would allow common options like vos -c,-noa,-l,-v,-e,-nor
+     to be documented once and automatically included in all vos_ reference
+     pages, much like the vos.c source includes those arguments as COMMONPARMS.
+
+   Changes needed to have vos suite commands completely up to date,
+   including the 1.5 branch:
+
+   * Document vos listaddrs -uuid / -host, and verify docs and example for
+     -printuuid
+
+   * Document vos offline -busy / -sleep
+
+   * Do vos online/offline support -bless/-unbless? By looking at the
+     source they dont, and according to Git log that goes back to 2000
+     they never did.
+     According to Derrick, there was a patch to support them that vanished.
+     Either the patch should be found, or bless/unbless removed from
+     vos online/offline.
+
+   * Document vos create -minquota which is available since 1.5.61
+
+   * Document vos restore -creation/-lastupdate and -nodelete
+
+   * Document vos delentry -noexecute. Should this option also be renamed
+     to -dryrun like others?
 
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we
