@@ -1140,6 +1140,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     struct AFSVolSync tsync;
     struct AFSFetchStatus OutStatus;
     struct AFSStoreStatus InStatus;
+    struct AFSCallBack CallBack;
     afs_int64 Pos;
     afs_int64 length, Len, synthlength = 0, offset = 0;
     u_char vnode = 0;
