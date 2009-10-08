@@ -7,6 +7,14 @@
 #
 # from the doc/man-pages directory, which will show any errors found in
 # any of the POD files.
+#
+# Extended by Davor Ocelic to support explicit list of POD files or
+# sections to check:
+#
+#     check-pod pod1/fs.pod
+#     check-pod pod5
+#     check-pod pod1 pod8/volserver.pod
+#
 
 use strict;
 use Test::More;
@@ -14,4 +22,14 @@ eval "use Test::Pod 1.00";
 
 plan skip_all => "Test::Pod 1.00 required for testing POD" if $@;
 my @poddirs = qw( pod1 pod5 pod8 );
-all_pod_files_ok( all_pod_files( @poddirs ) );
+
+my @list;
+for ( @ARGV ? @ARGV : @poddirs ) {
+	if ( -f ) {
+		push @list, $_
+	} elsif ( -d ) {
+		push @list, all_pod_files( $_ )
+	}
+}
+
+all_pod_files_ok( @list );
