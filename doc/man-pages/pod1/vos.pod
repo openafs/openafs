@@ -268,8 +268,6 @@ required.
 
 =head1 SEE ALSO
 
-L<CellServDB(5)>,
-L<UserList(5)>,
 L<vos_addsite(1)>,
 L<vos_apropos(1)>,
 L<vos_backup(1)>,
@@ -303,7 +301,9 @@ L<vos_syncserv(1)>,
 L<vos_syncvldb(1)>,
 L<vos_unlock(1)>,
 L<vos_unlockvldb(1)>,
-L<vos_zap(1)>
+L<vos_zap(1)>,
+L<CellServDB(5)>,
+L<UserList(5)>
 
 =head1 COPYRIGHT
 

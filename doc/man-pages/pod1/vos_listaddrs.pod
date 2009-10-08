@@ -108,7 +108,7 @@ Corporation cell:
    sv2.abc.com  afs2.abc.com
    sv6.abc.com
 
-The following command displays the VLDB server entry and uuid for
+The following command displays the VLDB server entry and UUID for
 host sv5.abc.com in the ABC Corporation cell:
 
    % vos listaddrs -p -ho sv5.abc.com

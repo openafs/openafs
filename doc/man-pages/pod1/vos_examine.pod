@@ -52,12 +52,12 @@ which can be read/write, read-only, or backup.
 
 =item B<-extended>
 
-Display statistics about read and write operations on files and
+Displays statistics about read and write operations on files and
 directories in the volume.
 
 =item B<-format>
 
-Show information in a format suitable for machine parsing.
+Shows information in a format suitable for machine parsing.
 
 =item B<-cell> <I<cell name>>
 
