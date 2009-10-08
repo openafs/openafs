@@ -8,12 +8,15 @@ backup_volsetrestore - Restores all volumes in a volume set
 <div class="synopsis">
 
 B<backup volsetrestore> S<<< [B<-name> <I<volume set name>>] >>>
-    S<<< [B<-file> <I<file name>>] >>> S<<< [B<-portoffset> <I<TC port offset>>+] >>>
+    S<<< [B<-file> <I<file name>>] >>>
+    S<<< [B<-portoffset> <I<TC port offset>>+] >>>
     S<<< [B<-extension> <I<new volume name extension>>] >>> [B<-n>]
     [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>> [B<-help>]
 
-B<backup vols> S<<< [B<-na> <I<volume set name>>] >>> S<<< [B<-f> <I<file name>>] >>>
-    S<<< [B<-p> <I<TC port offset>>+] >>> S<<< [B<-e> <I<new volume name extension>>] >>>
+B<backup vols> S<<< [B<-na> <I<volume set name>>] >>>
+    S<<< [B<-f> <I<file name>>] >>>
+    S<<< [B<-p> <I<TC port offset>>+] >>>
+    S<<< [B<-e> <I<new volume name extension>>] >>>
     [B<-n>] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
 
 =for html

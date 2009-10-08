@@ -7,12 +7,23 @@ backup_deletedump - Deletes one or more dump records from the Backup Database
 =for html
 <div class="synopsis">
 
-B<backup deletedump> S<<< [B<-dumpid> <I<dump id>>+] >>> S<<< [B<-from> <I<date time>>+] >>>
-    S<<< [B<-to> <I<date time>>+] >>> [B<-localauth>] S<<< [B<-cell> <I<cell name>>] >>>
+B<backup deletedump> S<<< [B<-dumpid> <I<dump id>>+] >>>
+    S<<< [B<-from> <I<date time>>+] >>>
+    S<<< [B<-to> <I<date time>>+] >>>
+    S<<< [B<-port> <I<TC port offset>>] >>>
+    S<<< [B<-groupid> <I<group ID>>] >>>
+    [B<-dbonly>] [B<-force>] [B<-noexecute>] [B<-localauth>]
+    S<<< [B<-cell> <I<cell name>>] >>>
     [B<-help>]
 
-B<backup dele> S<<< [B<-d> <I<dump id>>+] >>> S<<< [B<-f> <I<date time>>+] >>>
-    [-t <I<date time>>+] [B<-l>] S<<< [B<-c> <I<cell name>>] >>> [B<-h>]
+B<backup dele> S<<< [B<-d> <I<dump id>>+] >>>
+    S<<< [B<-fr> <I<date time>>+] >>>
+    [-t <I<date time>>+]
+    S<<< [B<-p> <I<TC port offset>>] >>>
+    S<<< [B<-g> <I<group ID>>] >>>
+    [B<-db>] [B<-fo>] [B<-n>] [B<-l>]
+    S<<< [B<-c> <I<cell name>>] >>>
+    [B<-h>]
 
 =for html
 </div>
