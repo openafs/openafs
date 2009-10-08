@@ -283,6 +283,8 @@ Known Problems
      to be documented once and automatically included in all vos_ reference
      pages, much like the vos.c source includes those arguments as COMMONPARMS.
 
+   * Check that suite intro pages mention all subcommands
+
    Changes needed to have vos suite commands completely up to date,
    including the 1.5 branch:
 
@@ -304,6 +306,27 @@ Known Problems
 
    * Document vos delentry -noexecute. Should this option also be renamed
      to -dryrun like others?
+
+   Man section 8 suite commands:
+
+   * Mention bos (un)blockscanner in bos.pod text, not just in See Also
+     at the end
+
+   * Update fstrace source to include option descriptions (for content,
+     use existing manpage information "condensed" to half line of text)
+
+   * Update backup source to include option descriptions (for content,
+     use existing manpage information "condensed" to half line of text)
+
+   * Document backup deletedump -port/-groupid/-dbonly/-force/-noexecute
+
+   * Replace backup diskrestore/dump -n option with -noexecute or -dryrun?
+
+   * Document backup help -admin
+
+   * Document backup volrestore -usedump. Also, s/-n/.../ as above?
+
+   * Replace backup volsetrestore -n option with -noexecute or -dryrun?
 
   If you notice other problems, please send them to the openafs-doc list
   even if you don't have time to fix them.  Someone else might, and we
