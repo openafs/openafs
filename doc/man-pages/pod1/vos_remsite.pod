@@ -1,4 +1,4 @@
-head1 NAME
+=head1 NAME
 
 vos_remsite - Removes a read-only site definition from a VLDB entry
 
