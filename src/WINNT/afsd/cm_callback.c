@@ -354,7 +354,7 @@ SRXAFSCB_CallBack(struct rx_call *callp, AFSCBFids *fidsArrayp, AFSCBs *cbsArray
         host = rx_HostOf(peerp);
         port = rx_PortOf(peerp);
 
-        tsp = cm_FindServerByIP(host, CM_SERVER_FILE);
+        tsp = cm_FindServerByIP(host, port, CM_SERVER_FILE);
         if (tsp) {
             cellp = tsp->cellp;
             cm_PutServer(tsp);
@@ -980,7 +980,7 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
             tsp = cm_FindServerByUuid(serverUuid, CM_SERVER_FILE);
         }
         if (!tsp)
-            tsp = cm_FindServerByIP(host, CM_SERVER_FILE);
+            tsp = cm_FindServerByIP(host, port, CM_SERVER_FILE);
         if (tsp) {
             cellp = tsp->cellp;
             cm_PutServer(tsp);

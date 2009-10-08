@@ -921,14 +921,15 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
 }
 
 cm_server_t *
-cm_FindServerByIP(afs_uint32 ipaddr, int type)
+cm_FindServerByIP(afs_uint32 ipaddr, unsigned short port, int type)
 {
     cm_server_t *tsp;
 
     lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
         if (tsp->type == type &&
-            tsp->addr.sin_addr.S_un.S_addr == ipaddr)
+            tsp->addr.sin_addr.S_un.S_addr == ipaddr &&
+            (tsp->addr.sin_port == port || tsp->addr.sin_port == 0))
             break;
     }
 
@@ -1361,9 +1362,9 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
         down = ctime(&tsp->downTime);
         down[strlen(down)-1] = '\0';
 
-        sprintf(output, "%s - tsp=0x%p cell=%s addr=%-15s uuid=%s type=%s caps=0x%x flags=0x%x waitCount=%u rank=%u downTime=\"%s\" refCount=%u\r\n",
-                 cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr, uuidstr, type, 
-                 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->ipRank, 
+        sprintf(output, "%s - tsp=0x%p cell=%s addr=%-15s port=%u uuid=%s type=%s caps=0x%x flags=0x%x waitCount=%u rank=%u downTime=\"%s\" refCount=%u\r\n",
+                 cookie, tsp, tsp->cellp ? tsp->cellp->name : "", tsp->addr.sin_port, hoststr, uuidstr, type,
+                 tsp->capabilities, tsp->flags, tsp->waitCount, tsp->ipRank,
                  (tsp->flags & CM_SERVERFLAG_DOWN) ?  down : "up",
                  tsp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
