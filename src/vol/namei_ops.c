@@ -1642,7 +1642,6 @@ namei_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
     struct ViceInodeInfo info;
     struct VolumeDiskHeader h;
     char headername[16];
-    afs_int32 error = 0;
 
     (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
