@@ -9,7 +9,7 @@ fstrace_apropos - Displays each help entry containing a keyword string
 
 B<fstrace apropos> S<<< B<-topic> <I<help string>> >>> [B<-help>]
 
-B<fstrace ap> S<<< B<-t> <I<help string>> >>> [B<-h>]
+B<fstrace a> S<<< B<-t> <I<help string>> >>> [B<-h>]
 
 =for html
 </div>

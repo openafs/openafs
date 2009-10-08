@@ -10,9 +10,8 @@ fstrace_setlog - Sets the size of a trace log
 B<fstrace setlog> S<<< [B<-log> <I<log name>>+] >>>
     S<<< B<-buffersize> <I<1-kilobyte units>> >>> [B<-help>]
 
-B<fstrace setl> S<<< [B<-l> <I<log name>>+] >>> S<<< B<-b> <I<1-kilobyte units>> >>> [B<-h>]
-
-B<fstrace sl> S<<< [B<-l> <I<log name>>+] >>> S<<< B<-b> <I<1-kilobyte units>> >>> [B<-h>]
+B<fstrace setl> S<<< [B<-l> <I<log name>>+] >>>
+    S<<< B<-b> <I<1-kilobyte units>> >>> [B<-h>]
 
 =for html
 </div>
