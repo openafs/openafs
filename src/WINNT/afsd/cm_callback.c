@@ -1401,7 +1401,7 @@ int SRXAFSCB_GetLocalCell(struct rx_call *callp, char **a_name)
     if (cm_data.rootCellp) {
         t_name = strdup(cm_data.rootCellp->name);
     } else {
-	t_name = (char *)malloc(1);
+	t_name = (char *)xdr_alloc(1);
 	t_name[0] = '\0';
     }
     *a_name = t_name;
@@ -1500,7 +1500,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *callp,
      * Currently only support version 1
      */
     allocsize = sizeof(cm_initparams_v1);
-    t_config = (afs_uint32 *)malloc(allocsize);
+    t_config = (afs_uint32 *)xdr_alloc(allocsize);
 
     afs_MarshallCacheConfig(callerVersion, &cm_initParams, t_config);
 
