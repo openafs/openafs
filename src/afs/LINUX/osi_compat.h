@@ -89,4 +89,51 @@ grab_cache_page_write_begin(struct address_space *mapping, pgoff_t index,
 }
 #endif
 
+#if defined(HAVE_KMEM_CACHE_T)
+#define afs_kmem_cache_t kmem_cache_t
+#else
+#define afs_kmem_cache_t struct kmem_cache
+#endif
+
+extern void init_once(void *);
+#if defined(HAVE_KMEM_CACHE_T)
+static inline void
+init_once_func(void * foo, kmem_cache_t * cachep, unsigned long flags) {
+#if defined(SLAB_CTOR_VERIFY)
+    if ((flags & (SLAB_CTOR_VERIFY|SLAB_CTOR_CONSTRUCTOR)) ==
+        SLAB_CTOR_CONSTRUCTOR)
+#endif
+    init_once(foo);
+}
+#elif defined(KMEM_CACHE_INIT)
+static inline void
+init_once_func(struct kmem_cache * cachep, void * foo) {
+    init_once(foo);
+}
+#elif !defined(KMEM_CACHE_CTOR_TAKES_VOID)
+static inline void
+init_once_func(void * foo, struct kmem_cache * cachep, unsigned long flags) {
+#if defined(SLAB_CTOR_VERIFY)
+    if ((flags & (SLAB_CTOR_VERIFY|SLAB_CTOR_CONSTRUCTOR)) ==
+        SLAB_CTOR_CONSTRUCTOR)
+#endif
+    init_once(foo);
+}
+#else
+static inline void
+init_once_func(void * foo) {
+    init_once(foo);
+}
+#endif
+
+#ifndef SLAB_RECLAIM_ACCOUNT
+#define SLAB_RECLAIM_ACCOUNT 0
+#endif
+
+#if defined(SLAB_KERNEL)
+#define KALLOC_TYPE SLAB_KERNEL
+#else
+#define KALLOC_TYPE GFP_KERNEL
+#endif
+
 #endif

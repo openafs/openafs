@@ -974,6 +974,24 @@ AC_DEFUN([LINUX_KMEM_CACHE_CREATE_TAKES_DTOR], [
       ac_cv_linux_kmem_cache_create_takes_dtor=no)])
   AC_MSG_RESULT($ac_cv_linux_kmem_cache_create_takes_dtor)])
 
+AC_DEFUN([LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID], [
+  AC_MSG_CHECKING([whether kmem_cache_create constructor function takes a void pointer argument])
+  AC_CACHE_VAL([ac_cv_linux_kmem_cache_create_ctor_takes_void], [
+    save_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS -Werror"
+    AC_TRY_KBUILD(
+[#include <linux/slab.h>],
+[void _ctor(void *v) { };
+kmem_cache_create(NULL, 0, 0, 0, _ctor);],
+      ac_cv_linux_kmem_cache_create_ctor_takes_void=yes,
+      ac_cv_linux_kmem_cache_create_ctor_takes_void=no)
+    CPPFLAGS="$save_CPPFLAGS"
+])
+  AC_MSG_RESULT($ac_cv_linux_kmem_cache_create_ctor_takes_void)
+  if test "x$ac_cv_linux_kmem_cache_create_ctor_takes_void" = "xyes"; then
+    AC_DEFINE([KMEM_CACHE_CTOR_TAKES_VOID], 1, [define if kmem_cache_create constructor function takes a single void pointer argument])
+  fi])
+
 AC_DEFUN([LINUX_FS_STRUCT_FOP_HAS_SENDFILE], [
   AC_MSG_CHECKING([for sendfile in struct file_operations])
   AC_CACHE_VAL([ac_cv_linux_fs_struct_fop_has_sendfile], [
