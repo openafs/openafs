@@ -1850,8 +1850,11 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         if (code1 == RXKADUNKNOWNKEY)
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
 
+        /* If we are avoiding a file server bug, ignore the error state */
+        if (fs_fetchdata_offset_bug && first_read && length_found == 0 && code == -451)
+            code = 0;
         /* Prefer the error value from FetchData over rx_EndCall */
-        if (code == 0 && code1 != 0)
+        else if (code == 0 && code1 != 0)
             code = code1;
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
