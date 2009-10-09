@@ -66,7 +66,7 @@
 #include "volser.h"
 #include "volint.h"
 
-#include "volser_prototypes.h"
+#include "volser_internal.h"
 #include "physio.h"
 #include "dumpstuff.h"
 

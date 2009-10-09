@@ -25,6 +25,8 @@
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>
 #include <afs/afsutil.h>
+#include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 
 #define FSINT_COMMON_XG
 #include <afs/afscbint.h>

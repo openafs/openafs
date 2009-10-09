@@ -63,7 +63,7 @@
 #include <lwp.h>
 #include "volser.h"
 #include "volint.h"
-#include "volser_prototypes.h"
+#include "volser_internal.h"
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 /*@printflike@*/ extern void Abort(const char *format, ...);

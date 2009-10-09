@@ -25,6 +25,8 @@
 #include "volser.h"
 #include "bc.h"
 #include <afs/volint.h>
+#include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 #include <afs/com_err.h>
 
 extern char *whoami;

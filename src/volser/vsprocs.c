@@ -62,6 +62,7 @@
 #include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <setjmp.h>
 
+#include "volser_internal.h"
 #include "volser_prototypes.h"
 #include "vsutils_prototypes.h"
 #include "lockprocs_prototypes.h"

@@ -29,6 +29,7 @@
 #include <afs/cellconfig.h>
 #include <ubik.h>
 #include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 #include <afs/afsutil.h>
 #include <afs/bubasics.h>
 #include <afs/budb_client.h>

@@ -73,7 +73,7 @@ dbentries.o: dbentries.c ${INCLS}
 tcprocs.o: tcprocs.c ${INCLS}
 test.o: test.c ${INCLS} AFS_component_version_number.c
 lwps.o: lwps.c ${INCLS}
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) -c $<
 list.o: list.c ${INCLS}
 recoverDb.o: recoverDb.c ${INCLS}
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<

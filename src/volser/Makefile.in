@@ -21,7 +21,7 @@ RINCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
        ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h \
 	${TOP_INCDIR}/ubik.h ${TOP_INCDIR}/afs/cmd.h
 
-INTINCLS=volint.h volser.h 
+INTINCLS=volint.h volser.h volser_prototypes.h volser_internal.h
 
 LIBS=\
 	${TOP_LIBDIR}/libaudit.a \
@@ -61,10 +61,14 @@ SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \
 all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volser.h \
 	${TOP_INCDIR}/afs/vsutils_prototypes.h \
+	${TOP_INCDIR}/afs/volser_prototypes.h \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
 
 ${TOP_INCDIR}/afs/vsutils_prototypes.h: vsutils_prototypes.h
+	${INSTALL_DATA} $? $@
+
+${TOP_INCDIR}/afs/volser_prototypes.h: volser_prototypes.h
 	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/volser.h: volser.h

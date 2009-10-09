@@ -58,6 +58,7 @@
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
+#include "volser_internal.h"
 #include "volser_prototypes.h"
 #include "vsutils_prototypes.h"
 #include "lockprocs_prototypes.h"

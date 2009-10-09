@@ -32,7 +32,9 @@
 #include <afs/bubasics.h>	/* PA */
 #include <afs/budb_client.h>
 #include <afs/bucoord_prototypes.h>
+#include <afs/butm_prototypes.h>
 #include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 #include <afs/com_err.h>
 #include "error_macros.h"
 #include <afs/afsutil.h>
@@ -1100,10 +1102,11 @@ GetRestoreTape(afs_int32 taskId, struct butm_tapeInfo *tapeInfoPtr,
 }
 
 afs_int32
-xbsaRestoreVolumeData(struct rx_call *call, struct restoreParams *rparamsPtr)
+xbsaRestoreVolumeData(struct rx_call *call, void *rock)
 {
     afs_int32 code = 0;
 #ifdef xbsa
+    struct restoreParams *rparamsPtr = (struct restoreParams *)rock;
     afs_int32 curChunk, rc;
     afs_uint32 totalWritten;
     afs_int32 headBytes, tailBytes, w;
@@ -1251,8 +1254,9 @@ xbsaRestoreVolumeData(struct rx_call *call, struct restoreParams *rparamsPtr)
  */
 
 afs_int32
-restoreVolumeData(struct rx_call *call, struct restoreParams *rparamsPtr)
+restoreVolumeData(struct rx_call *call, void *rock)
 {
+    struct restoreParams *rparamsPtr = (struct restoreParams *)rock;
     afs_int32 curChunk;
     afs_uint32 totalWritten = 0;
     afs_int32 code = 0;

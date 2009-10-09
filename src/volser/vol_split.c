@@ -53,7 +53,7 @@
 #include "volint.h"
 #include "volser.h"
 #include "physio.h"
-#include "volser_prototypes.h"
+#include "volser_internal.h"
 #ifdef AFS_RXOSD_SUPPORT
 #include "rxosd.h"
 #include "vol_osd.h"
