@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wstrict-prototypes"
+#endif
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -301,7 +304,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 	hostVolumeHeader.contd = ((fragmentNumber == 1) ? 0 : TC_VOLCONTD);
 	volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)buffer);
 
-	rc = butm_WriteFileData(tapeInfoPtr, (struct volumeHeader *)buffer, 1,
+	rc = butm_WriteFileData(tapeInfoPtr, buffer, 1,
 				sizeof(hostVolumeHeader));
 	if (rc) {
 	    ErrorLog(1, taskId, rc, tapeInfoPtr->error,
@@ -393,7 +396,7 @@ dumpVolume(struct tc_dumpDesc * curDump, struct dumpRock * dparamsPtr)
 		hostVolumeHeader.contd = (endofvolume ? 0 : TC_VOLCONTD);
 		hostVolumeHeader.magic = TC_VOLENDMAGIC;
 		hostVolumeHeader.endTime = (endofvolume ? time(0) : 0);
-		volumeHeader_hton(&hostVolumeHeader, &buffer[bytesread]);
+		volumeHeader_hton(&hostVolumeHeader, (struct volumeHeader *)&buffer[bytesread]);
 		bytesread += sizeof(hostVolumeHeader);
 	    }
 

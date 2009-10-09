@@ -10,6 +10,9 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
+#ifdef IGNORE_SOME_GCC_WARNINGS
+# pragma GCC diagnostic warning "-Wimplicit-function-declaration"
+#endif
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

@@ -76,7 +76,6 @@ lwps.o: lwps.c ${INCLS}
 	$(CC) $(CFLAGS) -c $<
 list.o: list.c ${INCLS}
 recoverDb.o: recoverDb.c ${INCLS}
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 tcudbprocs.o: tcudbprocs.c ${INCLS}
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 dump.o: dump.c ${INCLS}
