@@ -23,6 +23,7 @@
 #include "afs/afs_stats.h"
 #include <linux/smp_lock.h>
 
+#include "osi_compat.h"
 
 struct vcache *afs_globalVp = 0;
 struct vfs *afs_globalVFS = 0;
@@ -216,22 +217,14 @@ afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 
 
 #if defined(STRUCT_SUPER_HAS_ALLOC_INODE)
-#if defined(HAVE_KMEM_CACHE_T)
-static kmem_cache_t *afs_inode_cachep;
-#else
-struct kmem_cache *afs_inode_cachep;
-#endif
+static afs_kmem_cache_t *afs_inode_cachep;
 
 static struct inode *
 afs_alloc_inode(struct super_block *sb)
 {
     struct vcache *vcp;
 
-#if defined(SLAB_KERNEL)
-    vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, SLAB_KERNEL);
-#else
     vcp = (struct vcache *) kmem_cache_alloc(afs_inode_cachep, GFP_KERNEL);
-#endif
     if (!vcp)
 	return NULL;
 
@@ -244,14 +237,8 @@ afs_destroy_inode(struct inode *inode)
     kmem_cache_free(afs_inode_cachep, inode);
 }
 
-static void
-#if defined(HAVE_KMEM_CACHE_T)
-init_once(void * foo, kmem_cache_t * cachep, unsigned long flags)
-#elif defined(KMEM_CACHE_INIT)
-init_once(struct kmem_cache * cachep, void * foo)
-#else
-init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
-#endif
+void
+init_once(void * foo)
 {
     struct vcache *vcp = (struct vcache *) foo;
 
@@ -265,21 +252,9 @@ init_once(void * foo, struct kmem_cache * cachep, unsigned long flags)
 int
 afs_init_inodecache(void)
 {
-#ifndef SLAB_RECLAIM_ACCOUNT
-#define SLAB_RECLAIM_ACCOUNT 0
-#endif
-
-#if defined(KMEM_CACHE_TAKES_DTOR)
-    afs_inode_cachep = kmem_cache_create("afs_inode_cache",
-					 sizeof(struct vcache),
-					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
-					 init_once, NULL);
-#else
-    afs_inode_cachep = kmem_cache_create("afs_inode_cache",
-					 sizeof(struct vcache),
-					 0, SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT,
-					 init_once);
-#endif
+    afs_inode_cachep = afs_kmem_cache_create("afs_inode_cache",
+		sizeof(struct vcache), 0,
+		SLAB_HWCACHE_ALIGN | SLAB_RECLAIM_ACCOUNT, init_once_func);
     if (afs_inode_cachep == NULL)
 	return -ENOMEM;
     return 0;
