@@ -65,7 +65,7 @@ kauth/kaserver.c     : all	     : ExtendedCellInfo
 kauth/krb_udp.c      : all           : XXX
 kauth/admin_tools.c  : all           : ubik_Call nonsense
 kauth/authclient.c   : strict-proto  : ubik_Call nonsense
-                     : implicit-func : ubik_Call nonsense
+                     : all	     : ubik_Call nonsense
 kauth/kas.c          : all           : XXX
 kauth/klog.c         : all           : XXX
 kauth/ka-forwarder.c : all           : XXX
@@ -77,7 +77,7 @@ libadmin/samples/rxdebug_peers.c : format : struct clock vs unsigned int
 libadmin/test/client.c : all         : util_RPCStatsStateGet types
 ptserver/ptserver.c  : all	     : ExtendedCellInfo
 rxkad/rxkad_server.c : all           : Des key nonsense
-rxkad/ticket5.c      : implicit-func : CRC functions
+rxkad/ticket5.c      : all           : CRC functions
 rx/rx.c		     : all (pthread) : rxkad_global_stats_init not proto'd
 rx/xdr_rx.c          : all (ukernel) : Prototypes don't match due to AFS_XDR_T 
 				       not being used in the xdr header
@@ -92,7 +92,7 @@ uss/lex.yy.c         : all           : Unused symbols
 viced/fsprobe.c      : all	     : ubik_Call
 vlserver/vlserver.c  : all	     : GetExtendedCellInfo
 vol/salvager.c       : all           : consts & undefined variable from header
-volser/vos.c         : implicit-func : ubik_Call_New
+volser/vos.c         : all	     : ubik_Call_New
 volser/vol-dump.c    : format        : afs_sfsize_t
 volser/vsprocs.c     : format-extra  : The ONERROR macro needs to be rethought
 
