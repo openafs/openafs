@@ -173,9 +173,9 @@ int afspag_PSetTokens(char *ain, afs_int32 ainSize, AFS_UCRED **acred)
     if (set_parent_pag) {
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_DARWIN_ENV)
-	struct proc *p = current_proc();	/* XXX */
+	AFS_PROC *p = current_proc();	/* XXX */
 #else
-	struct proc *p = curproc;	/* XXX */
+	AFS_PROC *p = curproc;	/* XXX */
 #endif
 #ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",

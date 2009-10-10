@@ -28,6 +28,8 @@
 
 #define AFS_UCRED struct usr_ucred
 
+#define AFS_PROC struct usr_proc
+
 #define AFS_KALLOC(A)           afs_osi_Alloc(A)
 
 /* 

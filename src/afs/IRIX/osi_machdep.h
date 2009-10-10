@@ -29,6 +29,8 @@ extern time_t time;
 /* This gets redefined from ucred to cred in osi_vfs.h, just do it right */
 #define	AFS_UCRED	struct cred
 
+#define AFS_PROC        struct proc
+
 #undef gop_lookupname
 #define gop_lookupname(fnamep,segflg,followlink,compvpp) lookupname((fnamep),(segflg),(followlink),NULL,(compvpp), NULL)
 

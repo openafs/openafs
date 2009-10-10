@@ -569,7 +569,7 @@ extern void shutdown_osinet(void);
 #if defined(AFS_SUN5_ENV)
 extern int afs_setpag(AFS_UCRED **credpp);
 #elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern int afs_setpag(struct proc *p, void *args, int *retval);
+extern int afs_setpag(AFS_PROC *p, void *args, int *retval);
 #else
 extern int afs_setpag(void);
 #endif
@@ -577,7 +577,7 @@ extern int afs_setpag(void);
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern int AddPag(struct proc *p, afs_int32 aval, AFS_UCRED **credpp);
+extern int AddPag(AFS_PROC *p, afs_int32 aval, AFS_UCRED **credpp);
 #else
 extern int AddPag(afs_int32 aval, AFS_UCRED **credpp);
 #endif
@@ -697,7 +697,7 @@ extern int usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue,
 #else
 # if defined AFS_XBSD_ENV
 #  if !defined(AFS_DFBSD_ENV)
-extern int setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
+extern int setpag(AFS_PROC *proc, struct ucred **cred, afs_uint32 pagvalue,
 		  afs_uint32 * newpag, int change_parent);
 #  endif
 # endif

@@ -419,7 +419,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 {
 #elif defined(AFS_OSF_ENV)
 int 
-afs_xioctl(struct proc *p, void *args, long *retval)
+afs_xioctl(AFS_PROC *p, void *args, long *retval)
 {
     struct a {
 	long fd;
@@ -432,7 +432,7 @@ int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap, 
 	   register_t *retval)
 {
-    struct proc *p = td->td_proc;
+    AFS_PROC *p = td->td_proc;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 struct ioctl_args {
     int fd;
@@ -441,7 +441,7 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(struct proc *p, register struct ioctl_args *uap, register_t *retval)
+afs_xioctl(AFS_PROC *p, register struct ioctl_args *uap, register_t *retval)
 {
 #elif defined(AFS_LINUX22_ENV)
 struct afs_ioctl_sys {
@@ -712,7 +712,7 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
 }
 
 #elif defined(AFS_OSF_ENV)
-afs_pioctl(struct proc *p, void *args, int *retval)
+afs_pioctl(AFS_PROC *p, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -743,7 +743,7 @@ afs_pioctl(struct thread *td, void *args, int *retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs_pioctl(struct proc *p, void *args, int *retval)
+afs_pioctl(AFS_PROC *p, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -1567,9 +1567,9 @@ DECL_PIOCTL(PSetTokens)
 	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_DARWIN_ENV)
-	struct proc *p = current_proc();	/* XXX */
+	AFS_PROC *p = current_proc();	/* XXX */
 #else
-	struct proc *p = curproc;	/* XXX */
+	AFS_PROC *p = curproc;	/* XXX */
 #endif
 #ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",

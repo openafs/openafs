@@ -28,7 +28,7 @@
 void
 afs_osi_TraverseProcTable(void)
 {
-    struct proc *prp;
+    AFS_PROC *prp;
     for (prp = practive; prp != NULL; prp = prp->p_next) {
 	afs_GCPAGs_perproc_func(prp);
     }
@@ -99,7 +99,7 @@ SGI_ProcScanFunc(void *p, void *arg, int mode)
 static int
 SGI_ProcScanFunc(proc_t * p, void *arg, int mode)
 {
-    afs_int32(*perproc_func) (struct proc *) = arg;
+    afs_int32(*perproc_func) (AFS_PROC *) = arg;
     int code = 0;
     /* we pass in the function pointer for arg,
      * mode ==0 for startup call, ==1 for each valid proc,
@@ -126,7 +126,7 @@ afs_osi_TraverseProcTable(void)
 void
 afs_osi_TraverseProcTable(void)
 {
-    struct proc *p;
+    AFS_PROC *p;
     int i;
 
     /*
@@ -140,8 +140,8 @@ afs_osi_TraverseProcTable(void)
 #ifndef AFS_AIX51_ENV
     simple_lock(&proc_tbl_lock);
 #endif
-    for (p = (struct proc *)v.vb_proc, i = 0; p < max_proc;
-	 p = (struct proc *)((char *)p + afs_gcpags_procsize), i++) {
+    for (p = (AFS_PROC *)v.vb_proc, i = 0; p < max_proc;
+	 p = (AFS_PROC *)((char *)p + afs_gcpags_procsize), i++) {
 
 #ifdef AFS_AIX51_ENV
 	if (p->p_pvprocp->pv_stat == SNONE)
@@ -210,7 +210,7 @@ afs_osi_TraverseProcTable(void)
 void
 afs_osi_TraverseProcTable(void)
 {
-    struct proc *p;
+    AFS_PROC *p;
     LIST_FOREACH(p, &allproc, p_list) {
 	if (p->p_stat == SIDL)
 	    continue;

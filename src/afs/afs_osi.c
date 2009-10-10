@@ -59,7 +59,7 @@ struct lock__bsd__ afs_global_lock;
 
 #if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
 struct lock afs_global_lock;
-struct proc *afs_global_owner;
+AFS_PROC *afs_global_owner;
 #endif
 #ifdef AFS_FBSD50_ENV
 struct mtx afs_global_mtx;

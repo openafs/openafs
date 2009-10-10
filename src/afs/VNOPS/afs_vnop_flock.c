@@ -72,7 +72,7 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
     flid_t flid;
     get_current_flid(&flid);
 # else
-    struct proc *procp = OSI_GET_CURRENT_PROCP();
+    AFS_PROC *procp = OSI_GET_CURRENT_PROCP();
 # endif
 
     if (slp) {
@@ -96,7 +96,7 @@ void
 lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 {
 # if !defined(AFS_AIX32_ENV)
-    struct proc *procp = u.u_procp;
+    AFS_PROC *procp = u.u_procp;
 # endif
 
     if (slp) {
@@ -175,9 +175,9 @@ lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 #else
 #if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI64_ENV
-    struct proc *procp = curprocp;
+    AFS_PROC *procp = curprocp;
 #else /* AFS_SGI64_ENV */
-    struct proc *procp = u.u_procp;
+    AFS_PROC *procp = u.u_procp;
 #endif /* AFS_SGI64_ENV */
 #endif
 #endif
@@ -894,7 +894,7 @@ GetFlockCount(struct vcache *avc, struct vrequest *areq)
 extern struct fileops afs_fileops;
 
 int
-afs_xflock(struct proc *p, void *args, int *retval)
+afs_xflock(AFS_PROC *p, void *args, int *retval)
 #else /* AFS_OSF_ENV */
 int
 afs_xflock(void)

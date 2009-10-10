@@ -192,7 +192,7 @@ int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag(AFS_UCRED **credpp)
 #elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag(struct proc *p, void *args, int *retval)
+afs_setpag(AFS_PROC *p, void *args, int *retval)
 #else
 afs_setpag(void)
 #endif
@@ -294,7 +294,7 @@ int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag_val(AFS_UCRED **credpp, int pagval)
 #elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag_val(struct proc *p, void *args, int *retval, int pagval)
+afs_setpag_val(AFS_PROC *p, void *args, int *retval, int pagval)
 #else
 afs_setpag_val(int pagval)
 #endif
@@ -401,7 +401,7 @@ afs_getpag_val(void)
 /* Note - needs to be available on AIX, others can be static - rework this */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-AddPag(struct proc *p, afs_int32 aval, AFS_UCRED **credpp)
+AddPag(AFS_PROC *p, afs_int32 aval, AFS_UCRED **credpp)
 #else
 int
 AddPag(afs_int32 aval, AFS_UCRED **credpp)
