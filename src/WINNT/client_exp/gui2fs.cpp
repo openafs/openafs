@@ -1166,11 +1166,6 @@ BOOL IsPathInAfs(const CString & strPath)
 
     HOURGLASS hourglass;
 
-    CString debugBuf;
-
-    debugBuf.Format(_T("IsPathInAfs(%s)"), strPath);
-    OutputDebugString(debugBuf);
-
     memset(&options, 0, sizeof(options));
     options.size = sizeof(options);
     options.field_flags |= CM_IOCTL_QOPTS_FIELD_LITERAL;
@@ -1181,10 +1176,6 @@ BOOL IsPathInAfs(const CString & strPath)
     blob.out = (char *) &fid;
 
     code = pioctl_T(strPath, VIOCGETFID, &blob, 1);
-
-    debugBuf.Format(_T("VIOCGETFID=%d"), code);
-    OutputDebugString(debugBuf);
-
     if (code) {
 	if ((errno == EINVAL) || (errno == ENOENT))
         return FALSE;
@@ -1642,12 +1633,6 @@ BOOL IsSymlink(const CString& strName)
 
     HOURGLASS hourglass;
 
-    {
-        CString str;
-        str.Format(_T("IsSymlink(%s)"), strName);
-        OutputDebugString(str);
-    }
-
     CStringUtf8 ustrLast(LastComponent(strName));
     CString strParent = Parent(strName);
 
@@ -1675,26 +1660,10 @@ BOOL IsMountPoint(const CString& path)
 
     HOURGLASS hourglass;
 
-    {
-        CString str;
-        str.Format(_T("IsMountPoint(%s)"), path);
-        OutputDebugString(str);
-    }
-
     CString parent = Parent(path);
     FixNetbiosPath(parent);
 
     CStringUtf8 mountpoint(LastComponent(path));
-
-	    {
-        CString str;
-#ifdef UNICODE
-        str.Format(_T("last_component=%S"), mountpoint);
-#else
-        str.Format(_T("last_component=%s"), mountpoint);
-#endif
-        OutputDebugString(str);
-    }
 
     blob.in_size = mountpoint.GetLength() + 1;
     blob.in = mountpoint.GetBuffer();
@@ -2051,13 +2020,6 @@ UINT MakeSymbolicLink(const CString& strName, const CString& strTarget)
 
     CString strParent = Parent(strName);
     FixNetbiosPath(strParent);
-
-    {
-        CString str;
-        str.Format(_T("MakeSymbolicLink: name = %s target = %s parent = %s\n"),
-                   strName, strTarget, strParent);
-        OutputDebugString(str);
-    }
 
     if ( IsFreelanceRoot(strParent) && !IsAdmin() ) {
 	ShowMessageBox(IDS_NOT_AFS_CLIENT_ADMIN_ERROR, MB_ICONERROR, IDS_NOT_AFS_CLIENT_ADMIN_ERROR);
