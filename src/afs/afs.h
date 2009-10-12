@@ -146,7 +146,7 @@ struct sysname_info {
 #define	BUWAIT		4	/* someone is waiting for BUVALID */
 struct brequest {
     struct vcache *vc;		/* vnode to use, with vrefcount bumped */
-    AFS_UCRED *cred;	/* credentials to use for operation */
+    afs_ucred_t *cred;	/* credentials to use for operation */
     afs_size_t size_parm[BPARMS];	/* random parameters */
     void *ptr_parm[BPARMS];	/* pointer parameters */
     afs_int32 code;		/* return code */
@@ -850,7 +850,7 @@ struct vcache {
 #endif				/* AFS_SGI_ENV */
     afs_int32 vc_error;		/* stash write error for this vnode. */
     int xlatordv;		/* Used by nfs xlator */
-    AFS_UCRED *uncred;
+    afs_ucred_t *uncred;
     int asynchrony;		/* num kbytes to store behind */
 #ifdef AFS_SUN5_ENV
     short multiPage;		/* count of multi-page getpages in progress */

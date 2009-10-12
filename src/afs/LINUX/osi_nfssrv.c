@@ -94,7 +94,7 @@ svcauth_afs_accept(struct svc_rqst *rqstp, u32 *authp)
 {
     struct nfs_server_thread *ns;
     struct afs_exporter *outexp;
-    AFS_UCRED *credp;
+    afs_ucred_t *credp;
     struct sockaddr_in *addr;
     int code;
 
@@ -181,7 +181,7 @@ svcauth_afs_release(struct svc_rqst *rqstp)
 #endif
 
 
-int osi_linux_nfs_initreq(struct vrequest *av, AFS_UCRED *cr, int *code)
+int osi_linux_nfs_initreq(struct vrequest *av, afs_ucred_t *cr, int *code)
 {
     struct nfs_server_thread *ns;
 

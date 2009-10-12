@@ -28,7 +28,7 @@
 void
 afs_osi_TraverseProcTable(void)
 {
-    AFS_PROC *prp;
+    afs_proc_t *prp;
     for (prp = practive; prp != NULL; prp = prp->p_next) {
 	afs_GCPAGs_perproc_func(prp);
     }
@@ -99,7 +99,7 @@ SGI_ProcScanFunc(void *p, void *arg, int mode)
 static int
 SGI_ProcScanFunc(proc_t * p, void *arg, int mode)
 {
-    afs_int32(*perproc_func) (AFS_PROC *) = arg;
+    afs_int32(*perproc_func) (afs_proc_t *) = arg;
     int code = 0;
     /* we pass in the function pointer for arg,
      * mode ==0 for startup call, ==1 for each valid proc,
@@ -126,7 +126,7 @@ afs_osi_TraverseProcTable(void)
 void
 afs_osi_TraverseProcTable(void)
 {
-    AFS_PROC *p;
+    afs_proc_t *p;
     int i;
 
     /*
@@ -140,8 +140,8 @@ afs_osi_TraverseProcTable(void)
 #ifndef AFS_AIX51_ENV
     simple_lock(&proc_tbl_lock);
 #endif
-    for (p = (AFS_PROC *)v.vb_proc, i = 0; p < max_proc;
-	 p = (AFS_PROC *)((char *)p + afs_gcpags_procsize), i++) {
+    for (p = (afs_proc_t *)v.vb_proc, i = 0; p < max_proc;
+	 p = (afs_proc_t *)((char *)p + afs_gcpags_procsize), i++) {
 
 #ifdef AFS_AIX51_ENV
 	if (p->p_pvprocp->pv_stat == SNONE)
@@ -210,7 +210,7 @@ afs_osi_TraverseProcTable(void)
 void
 afs_osi_TraverseProcTable(void)
 {
-    AFS_PROC *p;
+    afs_proc_t *p;
     LIST_FOREACH(p, &allproc, p_list) {
 	if (p->p_stat == SIDL)
 	    continue;
@@ -282,19 +282,19 @@ afs_osi_TraverseProcTable()
 #endif
 
 /* return a pointer (sometimes a static copy ) to the cred for a
- * given AFS_PROC.
+ * given afs_proc_t.
  * subsequent calls may overwrite the previously returned value.
  */
 
 #if defined(AFS_SGI65_ENV)
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * p)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * p)
 {
     return NULL;
 }
 #elif defined(AFS_HPUX_ENV)
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * p)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * p)
 {
     if (!p)
 	return;
@@ -318,10 +318,10 @@ afs_osi_proc2cred(AFS_PROC * p)
  * around calls to this function.
  */
 
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pproc)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pproc)
 {
-    AFS_UCRED *pcred = 0;
+    afs_ucred_t *pcred = 0;
 
     /*
      * pointer to process user structure valid in *our*
@@ -416,7 +416,7 @@ afs_osi_proc2cred(AFS_PROC * pproc)
     /* simple_unlock(&proc_tbl_lock); */
     if (xm == XMEM_SUCC) {
 
-	static AFS_UCRED cred;
+	static afs_ucred_t cred;
 
 	/*
 	 * What locking should we use to protect access to the user
@@ -437,10 +437,10 @@ afs_osi_proc2cred(AFS_PROC * pproc)
 }
 
 #elif defined(AFS_OSF_ENV)
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    AFS_UCRED *rv = NULL;
+    afs_ucred_t *rv = NULL;
 
     if (pr == NULL) {
 	return NULL;
@@ -453,11 +453,11 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return rv;
 }
 #elif defined(AFS_DARWIN80_ENV) 
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    AFS_UCRED *rv = NULL;
-    static AFS_UCRED cr;
+    afs_ucred_t *rv = NULL;
+    static afs_ucred_t cr;
     struct ucred *pcred;
 
     if (pr == NULL) {
@@ -472,11 +472,11 @@ afs_osi_proc2cred(AFS_PROC * pr)
     return &cr;
 }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    AFS_UCRED *rv = NULL;
-    static AFS_UCRED cr;
+    afs_ucred_t *rv = NULL;
+    static afs_ucred_t cr;
 
     if (pr == NULL) {
 	return NULL;
@@ -498,11 +498,11 @@ afs_osi_proc2cred(AFS_PROC * pr)
 }
 #elif defined(AFS_LINUX22_ENV)
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    AFS_UCRED *rv = NULL;
-    static AFS_UCRED cr;
+    afs_ucred_t *rv = NULL;
+    static afs_ucred_t cr;
 
     if (pr == NULL) {
 	return NULL;
@@ -532,10 +532,10 @@ afs_osi_proc2cred(AFS_PROC * pr)
 }
 #endif
 #else
-const AFS_UCRED *
-afs_osi_proc2cred(AFS_PROC * pr)
+const afs_ucred_t *
+afs_osi_proc2cred(afs_proc_t * pr)
 {
-    AFS_UCRED *rv = NULL;
+    afs_ucred_t *rv = NULL;
 
     if (pr == NULL) {
 	return NULL;

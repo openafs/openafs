@@ -35,7 +35,7 @@ extern afs_rwlock_t afs_xcbhash;
 
 int
 afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
-     register struct vcache **avcp, AFS_UCRED *acred)
+     register struct vcache **avcp, afs_ucred_t *acred)
 {
     struct vrequest treq;
     register afs_int32 code;
@@ -256,9 +256,9 @@ int
 /* don't set CDirty in here because RPC is called synchronously */
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 afs_rmdir(OSI_VC_DECL(adp), char *aname, struct vnode *cdirp, 
-	  AFS_UCRED *acred)
+	  afs_ucred_t *acred)
 #else
-afs_rmdir(OSI_VC_DECL(adp), char *aname, AFS_UCRED *acred)
+afs_rmdir(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;

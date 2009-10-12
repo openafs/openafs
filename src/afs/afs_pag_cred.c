@@ -88,7 +88,7 @@ void afspag_SetPrimaryCell(char *acell)
 }
 
 
-int afspag_PUnlog(char *ain, afs_int32 ainSize, AFS_UCRED **acred)
+int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     register afs_int32 i;
     register struct unixuser *tu;
@@ -122,7 +122,7 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, AFS_UCRED **acred)
 }
 
 
-int afspag_PSetTokens(char *ain, afs_int32 ainSize, AFS_UCRED **acred)
+int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     afs_int32 i;
     register struct unixuser *tu;
@@ -173,9 +173,9 @@ int afspag_PSetTokens(char *ain, afs_int32 ainSize, AFS_UCRED **acred)
     if (set_parent_pag) {
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_DARWIN_ENV)
-	AFS_PROC *p = current_proc();	/* XXX */
+	afs_proc_t *p = current_proc();	/* XXX */
 #else
-	AFS_PROC *p = curproc;	/* XXX */
+	afs_proc_t *p = curproc;	/* XXX */
 #endif
 #ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
@@ -313,7 +313,7 @@ out:
 }
 
 
-int afspag_PSetSysName(char *ain, afs_int32 ainSize, AFS_UCRED **acred)
+int afspag_PSetSysName(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 {
     int setsysname, count, t;
     char *cp, *setp;

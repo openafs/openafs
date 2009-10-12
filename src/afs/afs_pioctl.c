@@ -55,7 +55,7 @@ afs_int32 afs_in_sync = 0;
 
 #define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
 	char *ain, char *aout, afs_int32 ainSize, afs_int32 *aoutSize, \
-	AFS_UCRED **acred)
+	afs_ucred_t **acred)
 
 /* Prototypes for pioctl routines */
 DECL_PIOCTL(PGetFID);
@@ -134,20 +134,20 @@ DECL_PIOCTL(PSetCachingBlkSize);
 /* Prototypes for private routines */
 #ifdef AFS_NEED_CLIENTCONTEXT
 static int HandleClientContext(struct afs_ioctl *ablob, int *com,
-			       AFS_UCRED **acred,
-			       AFS_UCRED *credp);
+			       afs_ucred_t **acred,
+			       afs_ucred_t *credp);
 #endif
 int HandleIoctl(register struct vcache *avc, register afs_int32 acom,
 		struct afs_ioctl *adata);
 int afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		     register struct afs_ioctl *ablob, int afollow,
-		     AFS_UCRED **acred);
+		     afs_ucred_t **acred);
 static int Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
-		    AFS_UCRED *acred);
+		    afs_ucred_t *acred);
 
 typedef int (*pioctlFunction) (struct vcache *, int, struct vrequest *,
 			       char *, char *, afs_int32, afs_int32 *,
-			       AFS_UCRED **);
+			       afs_ucred_t **);
 
 static pioctlFunction VpioctlSw[] = {
     PBogus,			/* 0 */
@@ -419,7 +419,7 @@ afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 {
 #elif defined(AFS_OSF_ENV)
 int 
-afs_xioctl(AFS_PROC *p, void *args, long *retval)
+afs_xioctl(afs_proc_t *p, void *args, long *retval)
 {
     struct a {
 	long fd;
@@ -432,7 +432,7 @@ int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap, 
 	   register_t *retval)
 {
-    AFS_PROC *p = td->td_proc;
+    afs_proc_t *p = td->td_proc;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 struct ioctl_args {
     int fd;
@@ -441,7 +441,7 @@ struct ioctl_args {
 };
 
 int
-afs_xioctl(AFS_PROC *p, register struct ioctl_args *uap, register_t *retval)
+afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 {
 #elif defined(AFS_LINUX22_ENV)
 struct afs_ioctl_sys {
@@ -712,7 +712,7 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
 }
 
 #elif defined(AFS_OSF_ENV)
-afs_pioctl(AFS_PROC *p, void *args, int *retval)
+afs_pioctl(afs_proc_t *p, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -743,7 +743,7 @@ afs_pioctl(struct thread *td, void *args, int *retval)
 
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-afs_pioctl(AFS_PROC *p, void *args, int *retval)
+afs_pioctl(afs_proc_t *p, void *args, int *retval)
 {
     struct a {
 	char *path;
@@ -776,14 +776,14 @@ afs_pioctl(AFS_PROC *p, void *args, int *retval)
 int
 #ifdef	AFS_SUN5_ENV
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
-		   rval_t *vvp, AFS_UCRED *credp)
+		   rval_t *vvp, afs_ucred_t *credp)
 #else
 #ifdef AFS_DARWIN100_ENV
 afs_syscall64_pioctl(user_addr_t path, unsigned int com, user_addr_t cmarg,
-		   int follow, AFS_UCRED *credp)
+		   int follow, afs_ucred_t *credp)
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow, 
-		   AFS_UCRED *credp)
+		   afs_ucred_t *credp)
 #else
 afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #endif
@@ -791,10 +791,10 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 {
     struct afs_ioctl data;
 #ifdef AFS_NEED_CLIENTCONTEXT
-    AFS_UCRED *tmpcred = NULL;
+    afs_ucred_t *tmpcred = NULL;
 #endif
 #if defined(AFS_NEED_CLIENTCONTEXT) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    AFS_UCRED *foreigncreds = NULL;
+    afs_ucred_t *foreigncreds = NULL;
 #endif
     register afs_int32 code = 0;
     struct vnode *vp = NULL;
@@ -1009,7 +1009,7 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #ifdef AFS_DARWIN100_ENV
 int
 afs_syscall_pioctl(char * path, unsigned int com, caddr_t cmarg,
-		   int follow, AFS_UCRED *credp)
+		   int follow, afs_ucred_t *credp)
 {
     return afs_syscall64_pioctl(CAST_USER_ADDR_T(path), com,
 				CAST_USER_ADDR_T((unsigned int)cmarg), follow,
@@ -1023,7 +1023,7 @@ afs_syscall_pioctl(char * path, unsigned int com, caddr_t cmarg,
 int
 afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 		 register struct afs_ioctl *ablob, int afollow,
-		 AFS_UCRED **acred)
+		 afs_ucred_t **acred)
 {
     struct vcache *avc;
     struct vrequest treq;
@@ -1567,9 +1567,9 @@ DECL_PIOCTL(PSetTokens)
 	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_DARWIN_ENV)
-	AFS_PROC *p = current_proc();	/* XXX */
+	afs_proc_t *p = current_proc();	/* XXX */
 #else
-	AFS_PROC *p = curproc;	/* XXX */
+	afs_proc_t *p = curproc;	/* XXX */
 #endif
 #ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
@@ -2290,7 +2290,7 @@ DECL_PIOCTL(PCheckAuth)
 
 static int
 Prefetch(uparmtype apath, struct afs_ioctl *adata, int afollow,
-	 AFS_UCRED *acred)
+	 afs_ucred_t *acred)
 {
     register char *tp;
     register afs_int32 code;
@@ -3970,13 +3970,13 @@ DECL_PIOCTL(PSetRxkcrypt)
 #define	PIOCTL_HEADER	6
 static int
 HandleClientContext(struct afs_ioctl *ablob, int *com,
-		    AFS_UCRED **acred, AFS_UCRED *credp)
+		    afs_ucred_t **acred, AFS_UCRED *credp)
 {
     char *ain, *inData;
     afs_uint32 hostaddr;
     afs_int32 uid, g0, g1, i, code, pag, exporter_type, isroot = 0;
     struct afs_exporter *exporter, *outexporter;
-    AFS_UCRED *newcred;
+    afs_ucred_t *newcred;
     struct unixuser *au;
     afs_uint32 comp = *com & 0xff00;
     afs_uint32 h, l;

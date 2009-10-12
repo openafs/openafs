@@ -34,9 +34,9 @@
 int
 #ifdef AFS_SGI64_ENV
 afs_open(bhv_desc_t * bhv, struct vcache **avcp, afs_int32 aflags,
-	 AFS_UCRED *acred)
+	 afs_ucred_t *acred)
 #else
-afs_open(struct vcache **avcp, afs_int32 aflags, AFS_UCRED *acred)
+afs_open(struct vcache **avcp, afs_int32 aflags, afs_ucred_t *acred)
 #endif
 {
     register afs_int32 code;

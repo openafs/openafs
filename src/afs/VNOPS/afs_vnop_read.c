@@ -44,11 +44,11 @@ extern afs_hyper_t afs_indexCounter;	/* Fake time for marking index */
 
 /* Forward declarations */
 void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
-		       AFS_UCRED *acred, struct vrequest *areq);
+		       afs_ucred_t *acred, struct vrequest *areq);
 
 int
 afs_MemRead(register struct vcache *avc, struct uio *auio,
-	    AFS_UCRED *acred, daddr_t albn, struct buf **abpp,
+	    afs_ucred_t *acred, daddr_t albn, struct buf **abpp,
 	    int noLock)
 {
     afs_size_t totalLength;
@@ -421,7 +421,7 @@ afs_MemRead(register struct vcache *avc, struct uio *auio,
  */
 void
 afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
-		  AFS_UCRED *acred, struct vrequest *areq)
+		  afs_ucred_t *acred, struct vrequest *areq)
 {
     register struct dcache *tdc;
     afs_size_t offset;
@@ -493,7 +493,7 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 
 int
 afs_UFSRead(register struct vcache *avc, struct uio *auio,
-	    AFS_UCRED *acred, daddr_t albn, struct buf **abpp,
+	    afs_ucred_t *acred, daddr_t albn, struct buf **abpp,
 	    int noLock)
 {
     afs_size_t totalLength;

@@ -115,7 +115,7 @@ module_exit(afspag_cleanup);
  * However, we need to define them in order to resolve the reference,
  * unless we want to move afs_InitReq out of afs_osi_pag.c.
  */
-int osi_linux_nfs_initreq(struct vrequest *av, AFS_UCRED *cr, int *code)
+int osi_linux_nfs_initreq(struct vrequest *av, afs_ucred_t *cr, int *code)
 {
     *code = EACCES;
     return 1;
@@ -123,7 +123,7 @@ int osi_linux_nfs_initreq(struct vrequest *av, AFS_UCRED *cr, int *code)
 
 int
 afs_nfsclient_reqhandler(struct afs_exporter *exporter,
-			 AFS_UCRED **cred,
+			 afs_ucred_t **cred,
 			 afs_int32 host, afs_int32 *pagparam,
 			 struct afs_exporter **outexporter)
 {

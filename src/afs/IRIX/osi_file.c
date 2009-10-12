@@ -15,7 +15,7 @@
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-AFS_UCRED afs_osi_cred;
+afs_ucred_t afs_osi_cred;
 int afs_osicred_initialized = 0;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
@@ -51,7 +51,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
     if (!afs_osicred_initialized) {
 	/* valid for alpha_osf, SunOS, Ultrix */
-	memset((char *)&afs_osi_cred, 0, sizeof(AFS_UCRED));
+	memset((char *)&afs_osi_cred, 0, sizeof(afs_ucred_t));
 	crhold(&afs_osi_cred);	/* don't let it evaporate, since it is static */
 	afs_osicred_initialized = 1;
     }
@@ -101,7 +101,7 @@ osi_UFSClose(register struct osi_file *afile)
 int
 osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 {
-    AFS_UCRED *oldCred;
+    afs_ucred_t *oldCred;
     struct vattr tvattr;
     register afs_int32 code;
     struct osi_stat tstat;
@@ -131,7 +131,7 @@ int
 afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
-    AFS_UCRED *oldCred;
+    afs_ucred_t *oldCred;
     ssize_t resid;
     register afs_int32 code;
     register afs_int32 cnt1 = 0;
@@ -171,7 +171,7 @@ int
 afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    AFS_UCRED *oldCred;
+    afs_ucred_t *oldCred;
     ssize_t resid;
     register afs_int32 code;
     AFS_STATCNT(osi_Write);

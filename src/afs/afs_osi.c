@@ -34,7 +34,7 @@ lock_t afs_event_lock;
 flid_t osi_flid;
 #endif
 
-AFS_UCRED *afs_osi_credp;
+afs_ucred_t *afs_osi_credp;
 
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 kmutex_t afs_global_lock;
@@ -59,7 +59,7 @@ struct lock__bsd__ afs_global_lock;
 
 #if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
 struct lock afs_global_lock;
-AFS_PROC *afs_global_owner;
+afs_proc_t *afs_global_owner;
 #endif
 #ifdef AFS_FBSD50_ENV
 struct mtx afs_global_mtx;
@@ -120,7 +120,7 @@ osi_Init(void)
 	/* Can't just invent one, must use crget() because of mutex */
 	afs_osi_credp = crdup(osi_curcred());
 #else
-	memset(&afs_osi_cred, 0, sizeof(AFS_UCRED));
+	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 #if defined(AFS_LINUX26_ENV)
         afs_osi_cred.cr_group_info = groups_alloc(0);
 #endif

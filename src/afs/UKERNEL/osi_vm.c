@@ -16,7 +16,7 @@
 #include "afs/afs_stats.h"	/* statistics */
 
 void
-osi_VM_Truncate(struct vcache *avc, int alen, AFS_UCRED *acred)
+osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred)
 {
     return;
 }
@@ -34,13 +34,13 @@ osi_VM_StoreAllSegments(struct vcache *avc)
 }
 
 void
-osi_VM_TryToSmush(struct vcache *avc, AFS_UCRED *acred, int sync)
+osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     return;
 }
 
 void
-osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
+osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
     return;
 }

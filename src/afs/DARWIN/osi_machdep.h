@@ -138,9 +138,8 @@ static inline time_t osi_Time(void) {
 extern int hz;
 #endif
 
-#define AFS_UCRED       struct ucred
-
-#define AFS_PROC        struct proc
+typedef struct ucred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 #define osi_vnhold(avc,r)       VN_HOLD(AFSTOV(avc))
 #define VN_HOLD(vp) darwin_vn_hold(vp)

@@ -26,9 +26,15 @@
 #define OSI_WAITHASH_SIZE       128	/* must be power of two */
 #define MAX_HOSTADDR            32
 
-#define AFS_UCRED struct usr_ucred
+/* XXX
+ *
+ * UKERNEL cannot trivially make use of typedef for afs_ucred_t and
+ * afs_proc_t, as in the present design, the types are already introduced
+ * with incorrect reference, so fall back to preprocessor for now
+ */
 
-#define AFS_PROC struct usr_proc
+#define afs_ucred_t struct usr_ucred
+#define afs_proc_t struct usr_proc
 
 #define AFS_KALLOC(A)           afs_osi_Alloc(A)
 

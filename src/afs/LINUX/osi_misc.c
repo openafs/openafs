@@ -25,7 +25,7 @@
 #include <linux/smp_lock.h>
 
 int afs_osicred_initialized = 0;
-AFS_UCRED afs_osi_cred;
+afs_ucred_t afs_osi_cred;
 
 void
 afs_osi_SetTime(osi_timeval_t * tvp)

@@ -789,7 +789,7 @@ afs_GetDynrootEnable(void)
  * Remove a temporary symlink entry from /afs.
  */
 int
-afs_DynrootVOPRemove(struct vcache *avc, AFS_UCRED *acred, char *aname)
+afs_DynrootVOPRemove(struct vcache *avc, afs_ucred_t *acred, char *aname)
 {
     struct afs_dynSymlink **tpps;
     struct afs_dynSymlink *tps;
@@ -833,7 +833,7 @@ afs_DynrootVOPRemove(struct vcache *avc, AFS_UCRED *acred, char *aname)
  * Create a temporary symlink entry in /afs.
  */
 int
-afs_DynrootVOPSymlink(struct vcache *avc, AFS_UCRED *acred,
+afs_DynrootVOPSymlink(struct vcache *avc, afs_ucred_t *acred,
 		      char *aname, char *atargetName)
 {
     struct afs_dynSymlink *tps;

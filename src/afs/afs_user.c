@@ -593,10 +593,10 @@ static size_t afs_GCPAGs_cred_count = 0;
  */
 #if !defined(LINUX_KEYRING_SUPPORT) && (!defined(STRUCT_TASK_HAS_CRED) || defined(EXPORTED_RCU_READ_LOCK))
 void
-afs_GCPAGs_perproc_func(AFS_PROC * pproc)
+afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 {
     afs_int32 pag, hash, uid;
-    const AFS_UCRED *pcred;
+    const afs_ucred_t *pcred;
 
     afs_GCPAGs_perproc_count++;
 

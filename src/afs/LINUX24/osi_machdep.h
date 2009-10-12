@@ -165,8 +165,10 @@ typedef struct afs_cred {		/* maps to task field: */
     int cr_ngroups;
     struct afs_cred *cr_next;
 } cred_t;
-#define AFS_UCRED struct afs_cred
-#define AFS_PROC struct task_struct
+
+typedef struct afs_cred afs_ucred_t;
+typedef struct task_struct afs_proc_t;
+
 #if !defined(current_cred)
 #define current_gid() (current->gid)
 #define current_uid() (current->uid)

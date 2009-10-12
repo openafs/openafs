@@ -68,7 +68,7 @@ afs_DisconCreateSymlink(struct vcache *avc, char *aname,
 /* don't set CDirty in here because RPC is called synchronously */
 int 
 afs_symlink(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, 
-	    char *atargetName, AFS_UCRED *acred)
+	    char *atargetName, afs_ucred_t *acred)
 {
     afs_uint32 now = 0;
     struct vrequest treq;
@@ -404,7 +404,7 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 }
 
 int
-afs_readlink(OSI_VC_DECL(avc), struct uio *auio, AFS_UCRED *acred)
+afs_readlink(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 {
     register afs_int32 code;
     struct vrequest treq;

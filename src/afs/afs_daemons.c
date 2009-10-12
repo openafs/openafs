@@ -629,7 +629,7 @@ afs_BBusy(void)
 
 struct brequest *
 afs_BQueue(register short aopcode, register struct vcache *avc,
-	   afs_int32 dontwait, afs_int32 ause, AFS_UCRED *acred,
+	   afs_int32 dontwait, afs_int32 ause, afs_ucred_t *acred,
 	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0)
 {
     register int i;
@@ -1031,7 +1031,7 @@ afs_BackgroundDaemon(void)
 	    }
 	    if (tb->cred) {
 		crfree(tb->cred);
-		tb->cred = (AFS_UCRED *)0;
+		tb->cred = (afs_ucred_t *)0;
 	    }
 	    afs_BRelease(tb);	/* this grabs and releases afs_xbrs lock */
 	    MObtainWriteLock(&afs_xbrs, 305);

@@ -31,8 +31,8 @@
 #define osi_Time()	time_second
 #define	afs_hz		hz
 
-#define	AFS_UCRED	struct ucred
-#define	AFS_PROC	struct proc
+typedef struct ucred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 #define afs_bufferpages bufpages
 #ifndef iodone

@@ -32,12 +32,12 @@
 #ifdef AFS_SGI64_ENV
 int
 afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, int flags,
-	   int amode, struct vcache **avcp, AFS_UCRED *acred)
+	   int amode, struct vcache **avcp, afs_ucred_t *acred)
 #else /* AFS_SGI64_ENV */
 int
 afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	   enum vcexcl aexcl, int amode, struct vcache **avcp,
-	   AFS_UCRED *acred)
+	   afs_ucred_t *acred)
 #endif				/* AFS_SGI64_ENV */
 {
     afs_int32 origCBs, origZaps, finalZaps;

@@ -294,7 +294,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
  * \param acred
  */
 void
-afs_InactiveVCache(struct vcache *avc, AFS_UCRED *acred)
+afs_InactiveVCache(struct vcache *avc, afs_ucred_t *acred)
 {
     AFS_STATCNT(afs_inactive);
     if (avc->f.states & CDirty) {
@@ -1264,7 +1264,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
     register int i;
     register struct afs_conn *tc;
     register afs_int32 code;
-    AFS_UCRED *cred = NULL;
+    afs_ucred_t *cred = NULL;
     struct vrequest treq, ureq;
     struct AFSVolSync tsync;
     int didCore;
@@ -1336,7 +1336,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		if (tvc->f.states & CCore) {
 		    tvc->f.states &= ~CCore;
 		    /* XXXX Find better place-holder for cred XXXX */
-		    cred = (AFS_UCRED *)tvc->linkData;
+		    cred = (afs_ucred_t *)tvc->linkData;
 		    tvc->linkData = NULL;	/* XXX */
 		    afs_InitReq(&ureq, cred);
 		    afs_Trace2(afs_iclSetp, CM_TRACE_ACTCCORE,
@@ -2865,7 +2865,7 @@ afs_PutVCache(register struct vcache *avc)
  * \note avc must be write locked on entry
  */
 void
-afs_ResetVCache(struct vcache *avc, AFS_UCRED *acred) {
+afs_ResetVCache(struct vcache *avc, afs_ucred_t *acred) {
     ObtainWriteLock(&afs_xcbhash, 456);
     afs_DequeueCallback(avc);
     avc->f.states &= ~(CStatd | CDirty);    /* next reference will re-stat */

@@ -63,7 +63,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
  * be some pages around when we return, newly created by concurrent activity.
  */
 void
-osi_VM_TryToSmush(struct vcache *avc, AFS_UCRED *acred, int sync)
+osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     struct inode *ip = AFSTOV(avc);
 
@@ -112,7 +112,7 @@ osi_VM_StoreAllSegments(struct vcache *avc)
  * then these callers should be updated.
  */
 void
-osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
+osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp)
 {
     struct inode *ip = AFSTOV(avc);
     
@@ -126,7 +126,7 @@ osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(struct vcache *avc, int alen, AFS_UCRED *acred)
+osi_VM_Truncate(struct vcache *avc, int alen, afs_ucred_t *acred)
 {
     vmtruncate(AFSTOV(avc), alen);
 }

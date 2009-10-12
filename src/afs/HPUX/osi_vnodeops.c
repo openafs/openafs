@@ -116,7 +116,7 @@ m_cpytoc(m, off, len, cp)
 afs_lockf(vp, flag, len, cred, fp, LB, UB)
      struct vnode *vp;
      int flag;
-     AFS_UCRED *cred;
+     afs_ucred_t *cred;
      struct file *fp;
      k_off_t len, LB, UB;
 {
@@ -289,7 +289,7 @@ afs_bmap(avc, abn, anvp, anbn)
 
 afs_inactive(avc, acred)
      register struct vcache *avc;
-     AFS_UCRED *acred;
+     afs_ucred_t *acred;
 {
     struct vnode *vp = AFSTOV(avc);
     ulong_t context;
@@ -320,7 +320,7 @@ afs_inactive(avc, acred)
 
 
 int
-mp_afs_open(register struct vnode **avcp, int aflags, AFS_UCRED *acred)
+mp_afs_open(register struct vnode **avcp, int aflags, afs_ucred_t *acred)
 {
     register int code;
 
@@ -331,7 +331,7 @@ mp_afs_open(register struct vnode **avcp, int aflags, AFS_UCRED *acred)
 }
 
 int
-mp_afs_close(register struct vnode *avcp, int aflags, AFS_UCRED *acred)
+mp_afs_close(register struct vnode *avcp, int aflags, afs_ucred_t *acred)
 {
     register int code;
 
@@ -343,7 +343,7 @@ mp_afs_close(register struct vnode *avcp, int aflags, AFS_UCRED *acred)
 
 int
 mp_afs_rdwr(register struct vnode *avcp, struct uio *uio, enum uio_rw arw,
-	    int aio, AFS_UCRED *acred)
+	    int aio, afs_ucred_t *acred)
 {
     register int code;
     long save_resid;
@@ -361,7 +361,7 @@ mp_afs_rdwr(register struct vnode *avcp, struct uio *uio, enum uio_rw arw,
 
 int
 mp_afs_getattr(register struct vnode *avcp, struct vattr *attrs,
-	       AFS_UCRED *acred, enum vsync unused1)
+	       afs_ucred_t *acred, enum vsync unused1)
 {
     register int code;
 
@@ -373,7 +373,7 @@ mp_afs_getattr(register struct vnode *avcp, struct vattr *attrs,
 
 int
 mp_afs_setattr(register struct vnode *avcp, register struct vattr *attrs,
-	       AFS_UCRED *acred, int unused1)
+	       afs_ucred_t *acred, int unused1)
 {
     register int code;
 
@@ -384,7 +384,7 @@ mp_afs_setattr(register struct vnode *avcp, register struct vattr *attrs,
 }
 
 int
-mp_afs_access(register struct vnode *avcp, int mode, AFS_UCRED *acred)
+mp_afs_access(register struct vnode *avcp, int mode, afs_ucred_t *acred)
 {
     register int code;
 
@@ -396,7 +396,7 @@ mp_afs_access(register struct vnode *avcp, int mode, AFS_UCRED *acred)
 
 int
 mp_afs_lookup(register struct vnode *adp, char *aname,
-	      register struct vnode **avcp, AFS_UCRED *acred,
+	      register struct vnode **avcp, afs_ucred_t *acred,
 	      struct vnode *unused1)
 {
     register int code;
@@ -410,7 +410,7 @@ mp_afs_lookup(register struct vnode *adp, char *aname,
 int
 mp_afs_create(register struct vnode *adp, char *aname, struct vattr *attrs,
 	      enum vcexcl aexcl, int amode, struct vnode **avcp,
-	      AFS_UCRED *acred)
+	      afs_ucred_t *acred)
 {
     register int code;
 
@@ -423,7 +423,7 @@ mp_afs_create(register struct vnode *adp, char *aname, struct vattr *attrs,
 
 int
 mp_afs_remove(register struct vnode *adp, char *aname,
-	      AFS_UCRED *acred)
+	      afs_ucred_t *acred)
 {
     register int code;
 
@@ -435,7 +435,7 @@ mp_afs_remove(register struct vnode *adp, char *aname,
 
 int
 mp_afs_link(register struct vnode *avc, register struct vnode *adp,
-	    char *aname, AFS_UCRED *acred)
+	    char *aname, afs_ucred_t *acred)
 {
     register int code;
 
@@ -448,7 +448,7 @@ mp_afs_link(register struct vnode *avc, register struct vnode *adp,
 int
 mp_afs_rename(register struct vnode *aodp, char *aname1,
 	      register struct vnode *andp, char *aname2,
-	      AFS_UCRED *acred)
+	      afs_ucred_t *acred)
 {
     register int code;
 
@@ -460,7 +460,7 @@ mp_afs_rename(register struct vnode *aodp, char *aname1,
 
 int
 mp_afs_mkdir(register struct vnode *adp, char *aname, struct vattr *attrs,
-	     register struct vnode **avcp, AFS_UCRED *acred)
+	     register struct vnode **avcp, afs_ucred_t *acred)
 {
     register int code;
 
@@ -472,7 +472,7 @@ mp_afs_mkdir(register struct vnode *adp, char *aname, struct vattr *attrs,
 
 
 int
-mp_afs_rmdir(register struct vnode *adp, char *aname, AFS_UCRED *acred)
+mp_afs_rmdir(register struct vnode *adp, char *aname, afs_ucred_t *acred)
 {
     register int code;
 
@@ -485,7 +485,7 @@ mp_afs_rmdir(register struct vnode *adp, char *aname, AFS_UCRED *acred)
 
 int
 mp_afs_readdir(register struct vnode *avc, struct uio *auio,
-	       AFS_UCRED *acred)
+	       afs_ucred_t *acred)
 {
     register int code;
 
@@ -497,7 +497,7 @@ mp_afs_readdir(register struct vnode *avc, struct uio *auio,
 
 int
 mp_afs_symlink(register struct vnode *adp, char *aname, struct vattr *attrs,
-	       char *atargetName, AFS_UCRED *acred)
+	       char *atargetName, afs_ucred_t *acred)
 {
     register int code;
 
@@ -510,7 +510,7 @@ mp_afs_symlink(register struct vnode *adp, char *aname, struct vattr *attrs,
 
 int
 mp_afs_readlink(register struct vnode *avc, struct uio *auio,
-		AFS_UCRED *acred)
+		afs_ucred_t *acred)
 {
     register int code;
 
@@ -521,7 +521,7 @@ mp_afs_readlink(register struct vnode *avc, struct uio *auio,
 }
 
 int
-mp_afs_fsync(register struct vnode *avc, AFS_UCRED *acred, int unused1)
+mp_afs_fsync(register struct vnode *avc, afs_ucred_t *acred, int unused1)
 {
     register int code;
 
@@ -556,7 +556,7 @@ mp_afs_brelse(register struct vnode *avc, struct buf *bp)
 
 
 int
-mp_afs_inactive(register struct vnode *avc, AFS_UCRED *acred)
+mp_afs_inactive(register struct vnode *avc, afs_ucred_t *acred)
 {
     register int code;
 
@@ -568,7 +568,7 @@ mp_afs_inactive(register struct vnode *avc, AFS_UCRED *acred)
 
 int
 mp_afs_lockctl(struct vnode *avc, struct flock *af, int cmd,
-	       AFS_UCRED *acred, struct file *unused1, off_t unused2,
+	       afs_ucred_t *acred, struct file *unused1, off_t unused2,
 	       off_t unused3)
 {
     register int code;
@@ -592,7 +592,7 @@ mp_afs_fid(struct vnode *avc, struct fid **fidpp)
 
 int
 mp_afs_readdir2(register struct vnode *avc, struct uio *auio,
-		AFS_UCRED *acred)
+		afs_ucred_t *acred)
 {
     register int code;
 

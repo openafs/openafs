@@ -17,7 +17,7 @@
 
 
 int afs_osicred_initialized = 0;
-AFS_UCRED afs_osi_cred;
+afs_ucred_t afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;

@@ -191,11 +191,11 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 #if defined(AFS_SUN5_ENV) || (defined(AFS_SGI_ENV) && !defined(AFS_SGI65_ENV))
 int
 afs_access(OSI_VC_DECL(avc), register afs_int32 amode, int flags,
-	   AFS_UCRED *acred)
+	   afs_ucred_t *acred)
 #else
 int
 afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
-	   AFS_UCRED *acred)
+	   afs_ucred_t *acred)
 #endif
 {
     register afs_int32 code;
@@ -351,7 +351,7 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
  */
 int
 afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights,
-	      AFS_UCRED *acred)
+	      afs_ucred_t *acred)
 {
     register afs_int32 code;
     struct vrequest treq;

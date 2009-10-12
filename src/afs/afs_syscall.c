@@ -485,7 +485,7 @@ struct afssysa64 {
     afs_int32 syscall;
 };
 int
-afs3_syscall(AFS_PROC *p, void *args, unsigned int *retval)
+afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval)
 {
     struct afssysa64 *uap64 = NULL;
     struct afssysa *uap = NULL;
@@ -495,7 +495,7 @@ afs3_syscall(p, args, retval)
 #ifdef AFS_FBSD50_ENV
      struct thread *p;
 #else
-     AFS_PROC *p;
+     afs_proc_t *p;
 #endif
      void *args;
      long *retval;

@@ -598,8 +598,8 @@ afs_ResourceInit(int preallocs)
 static void
 afs_procsize_init(void)
 {
-    AFS_PROC *p0;		/* pointer to process 0 */
-    AFS_PROC *pN;		/* pointer to process 0's first child */
+    afs_proc_t *p0;		/* pointer to process 0 */
+    afs_proc_t *pN;		/* pointer to process 0's first child */
 #ifdef AFS_AIX51_ENV
     struct pvproc *pV;
 #endif
@@ -607,7 +607,7 @@ afs_procsize_init(void)
     ptrdiff_t pN_offset;
     int procsize;
 
-    p0 = (AFS_PROC *)v.vb_proc;
+    p0 = (afs_proc_t *)v.vb_proc;
     if (!p0) {
 	afs_gcpags = AFS_GCPAGS_EPROC0;
 	return;

@@ -26,8 +26,8 @@
 extern long time;
 #define osi_Time() (time)
 
-#define	AFS_UCRED	struct ucred
-#define	AFS_PROC	struct proc
+typedef struct ucred afs_ucred_t;
+typedef struct proc afs_proc_t;
 
 #define afs_bufferpages v.v_bufhw
 

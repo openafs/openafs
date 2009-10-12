@@ -18,7 +18,7 @@
 
 
 int afs_osicred_initialized = 0;
-AFS_UCRED afs_osi_cred;
+afs_ucred_t afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
@@ -148,7 +148,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
     if (!afs_osicred_initialized) {
 	/* valid for alpha_osf, SunOS, Ultrix */
-	memset((char *)&afs_osi_cred, 0, sizeof(AFS_UCRED));
+	memset((char *)&afs_osi_cred, 0, sizeof(afs_ucred_t));
 	afs_osi_cred.cr_ref++;
 	afs_osi_cred.cr_ngroups = 1;
 	afs_osicred_initialized = 1;
@@ -257,7 +257,7 @@ osi_UFSClose(register struct osi_file *afile)
 int
 osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 {
-    AFS_UCRED *oldCred;
+    afs_ucred_t *oldCred;
     struct vattr tvattr;
     register afs_int32 code;
     struct osi_stat tstat;
@@ -319,7 +319,7 @@ int
 afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
-    AFS_UCRED *oldCred;
+    afs_ucred_t *oldCred;
     afs_size_t resid;
     register afs_int32 code;
 #ifdef AFS_DARWIN80_ENV
@@ -370,7 +370,7 @@ int
 afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    AFS_UCRED *oldCred;
+    afs_ucred_t *oldCred;
     afs_size_t resid;
     register afs_int32 code;
 #ifdef AFS_DARWIN80_ENV

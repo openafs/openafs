@@ -28,7 +28,7 @@ extern cred_t *crref(void);
 extern void crset(cred_t * cr);
 
 /* osi_nfssrv.c */
-extern int osi_linux_nfs_initreq(struct vrequest *av, AFS_UCRED *cr,
+extern int osi_linux_nfs_initreq(struct vrequest *av, afs_ucred_t *cr,
                                  int *code);
 extern void osi_linux_nfssrv_init(void);
 extern void osi_linux_nfssrv_shutdown(void);
@@ -71,13 +71,13 @@ extern void osi_sysctl_clean(void);
 
 /* osi_vm.c */
 extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
-extern void osi_VM_TryToSmush(struct vcache *avc, AFS_UCRED *acred,
+extern void osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred,
 			      int sync);
 extern void osi_VM_FSyncInval(struct vcache *avc);
 extern void osi_VM_StoreAllSegments(struct vcache *avc);
-extern void osi_VM_FlushPages(struct vcache *avc, AFS_UCRED *credp);
+extern void osi_VM_FlushPages(struct vcache *avc, afs_ucred_t *credp);
 extern void osi_VM_Truncate(struct vcache *avc, int alen,
-			    AFS_UCRED *acred);
+			    afs_ucred_t *acred);
 
 /* osi_vfsops.c */
 extern void vattr2inode(struct inode *ip, struct vattr *vp);

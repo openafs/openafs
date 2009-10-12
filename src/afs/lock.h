@@ -38,7 +38,7 @@ struct afs_bozoLock {
     short count;		/* count of excl locks */
     char flags;			/* bit 1: is anyone waiting? */
     char spare;			/* for later */
-    char *proc;			/* process holding the lock, really an AFS_PROC * */
+    char *proc;			/* process holding the lock, really an afs_proc_t * */
 };
 #ifndef	AFS_NOBOZO_LOCK
 typedef struct afs_bozoLock afs_bozoLock_t;
@@ -107,7 +107,7 @@ typedef struct kthread * afs_lock_tracker_t;
 #define MyPidxx (u.u_kthreadp)
 #define MyPidxx2Pid(x) (x ? kt_tid(x) : 0)
 #else
-typedef AFS_PROC * afs_lock_tracker_t;
+typedef afs_proc_t * afs_lock_tracker_t;
 #define MyPidxx (u.u_procp)
 #define MyPidxx2Pid(x) (x ? (afs_int32)p_pid(x) : 0)
 #endif

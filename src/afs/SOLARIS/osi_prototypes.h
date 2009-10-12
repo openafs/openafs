@@ -25,7 +25,7 @@ int afs_putapage(struct vnode *vp, struct page *pages,
 #else
 		 u_int * lenp,
 #endif
-		 int flags, AFS_UCRED *credp);
+		 int flags, afs_ucred_t *credp);
 
 
 

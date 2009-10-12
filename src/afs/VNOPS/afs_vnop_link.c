@@ -32,10 +32,10 @@ extern afs_rwlock_t afs_xcbhash;
 int
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 afs_link(OSI_VC_DECL(adp), struct vcache *avc, char *aname, 
-	 AFS_UCRED *acred)
+	 afs_ucred_t *acred)
 #else
 afs_link(struct vcache *avc, OSI_VC_DECL(adp), char *aname, 
-	 AFS_UCRED *acred)
+	 afs_ucred_t *acred)
 #endif
 {
     struct vrequest treq;

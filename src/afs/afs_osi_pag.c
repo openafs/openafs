@@ -146,7 +146,7 @@ static int afs_pag_sleepcnt = 0;
 static int afs_pag_timewarn = 0;
 
 static int
-afs_pag_sleep(AFS_UCRED **acred)
+afs_pag_sleep(afs_ucred_t **acred)
 {
     int rv = 0;
 
@@ -167,7 +167,7 @@ afs_pag_sleep(AFS_UCRED **acred)
 }
 
 static int
-afs_pag_wait(AFS_UCRED **acred)
+afs_pag_wait(afs_ucred_t **acred)
 {
     if (afs_pag_sleep(acred)) {
 	if (!afs_pag_sleepcnt) {
@@ -190,20 +190,20 @@ afs_pag_wait(AFS_UCRED **acred)
 
 int
 #if	defined(AFS_SUN5_ENV)
-afs_setpag(AFS_UCRED **credpp)
+afs_setpag(afs_ucred_t **credpp)
 #elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag(AFS_PROC *p, void *args, int *retval)
+afs_setpag(afs_proc_t *p, void *args, int *retval)
 #else
 afs_setpag(void)
 #endif
 {
 
 #if     defined(AFS_SUN5_ENV)
-    AFS_UCRED **acred = *credpp;
+    afs_ucred_t **acred = *credpp;
 #elif  defined(AFS_OBSD_ENV)
-    AFS_UCRED **acred = &p->p_ucred;
+    afs_ucred_t **acred = &p->p_ucred;
 #else
-    AFS_UCRED **acred = NULL;
+    afs_ucred_t **acred = NULL;
 #endif
 
     int code = 0;
@@ -248,19 +248,19 @@ afs_setpag(void)
     }
 #elif	defined(AFS_LINUX20_ENV)
     {
-	AFS_UCRED *credp = crref();
+	afs_ucred_t *credp = crref();
 	code = AddPag(genpag(), &credp);
 	crfree(credp);
     }
 #elif defined(AFS_DARWIN80_ENV)
     {
-	AFS_UCRED *credp = kauth_cred_proc_ref(p);
+	afs_ucred_t *credp = kauth_cred_proc_ref(p);
 	code = AddPag(p, genpag(), &credp);
 	crfree(credp);
     }
 #elif defined(AFS_DARWIN_ENV)
     {
-	AFS_UCRED *credp = crdup(p->p_cred->pc_ucred);
+	afs_ucred_t *credp = crdup(p->p_cred->pc_ucred);
 	code = AddPag(p, genpag(), &credp);
 	crfree(credp);
     }
@@ -292,20 +292,20 @@ afs_setpag(void)
  */
 int
 #if	defined(AFS_SUN5_ENV)
-afs_setpag_val(AFS_UCRED **credpp, int pagval)
+afs_setpag_val(afs_ucred_t **credpp, int pagval)
 #elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag_val(AFS_PROC *p, void *args, int *retval, int pagval)
+afs_setpag_val(afs_proc_t *p, void *args, int *retval, int pagval)
 #else
 afs_setpag_val(int pagval)
 #endif
 {
 
 #if     defined(AFS_SUN5_ENV)
-    AFS_UCRED **acred = *credp;
+    afs_ucred_t **acred = *credp;
 #elif  defined(AFS_OBSD_ENV)
-    AFS_UCRED **acred = &p->p_ucred;
+    afs_ucred_t **acred = &p->p_ucred;
 #else
-    AFS_UCRED **acred = NULL;
+    afs_ucred_t **acred = NULL;
 #endif
 
     int code = 0;
@@ -349,7 +349,7 @@ afs_setpag_val(int pagval)
     }
 #elif	defined(AFS_LINUX20_ENV)
     {
-	AFS_UCRED *credp = crref();
+	afs_ucred_t *credp = crref();
 	code = AddPag(pagval, &credp);
 	crfree(credp);
     }
@@ -379,7 +379,7 @@ int
 afs_getpag_val(void)
 {
     int pagvalue;
-    AFS_UCRED *credp = u.u_cred;
+    afs_ucred_t *credp = u.u_cred;
     gid_t gidset0, gidset1;
 #ifdef AFS_SUN510_ENV
     const gid_t *gids;
@@ -401,10 +401,10 @@ afs_getpag_val(void)
 /* Note - needs to be available on AIX, others can be static - rework this */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-AddPag(AFS_PROC *p, afs_int32 aval, AFS_UCRED **credpp)
+AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp)
 #else
 int
-AddPag(afs_int32 aval, AFS_UCRED **credpp)
+AddPag(afs_int32 aval, afs_ucred_t **credpp)
 #endif
 {
     afs_int32 code;
@@ -426,7 +426,7 @@ AddPag(afs_int32 aval, AFS_UCRED **credpp)
 
 
 int
-afs_InitReq(register struct vrequest *av, AFS_UCRED *acred)
+afs_InitReq(register struct vrequest *av, afs_ucred_t *acred)
 {
 #if defined(AFS_LINUX26_ENV) && !defined(AFS_NONFSTRANS)
     int code;
@@ -537,7 +537,7 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 
 
 afs_int32
-PagInCred(AFS_UCRED *cred)
+PagInCred(afs_ucred_t *cred)
 {
     afs_int32 pag;
 #if !defined(AFS_LINUX26_ONEGROUP_ENV)

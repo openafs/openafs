@@ -25,8 +25,8 @@
 extern struct timeval time;
 #define osi_Time() (time.tv_sec)
 
-#define	AFS_UCRED	struct ucred
-#define	AFS_PROC	proc_t
+typedef struct ucred afs_ucred_t;
+typedef proc_t afs_proc_t;
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 #define gop_rdwr(rw,gp,base,len,offset,segflg,unit,aresid) \

@@ -1264,7 +1264,7 @@ afs_PutDCache(register struct dcache *adc)
  *	Both pvnLock and lock are write held.
  */
 void
-afs_TryToSmush(register struct vcache *avc, AFS_UCRED *acred, int sync)
+afs_TryToSmush(register struct vcache *avc, afs_ucred_t *acred, int sync)
 {
     register struct dcache *tdc;
     register int index;
