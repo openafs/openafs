@@ -4701,6 +4701,10 @@ long cm_Lock(cm_scache_t *scp, unsigned char sLockType,
                  "cm_Lock Rejecting lock (code = 0x%x)", code);
     }
 
+    /* Convert from would block to lock not granted */
+    if (code == CM_ERROR_WOULDBLOCK)
+        code = CM_ERROR_LOCK_NOT_GRANTED;
+
     return code;
 }
 

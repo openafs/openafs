@@ -6454,7 +6454,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			    userp, &req, &lockp);
 	}
 
-        if (code == CM_ERROR_WOULDBLOCK && Timeout != 0) {
+        if (code == CM_ERROR_LOCK_NOT_GRANTED && Timeout != 0) {
             smb_waitingLock_t * wLock;
 
             /* Put on waiting list */
@@ -7894,7 +7894,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	    smb_CloseFID(vcp, fidp, NULL, 0);
 	    smb_ReleaseFID(fidp);
             free(realPathp);
-            return code;
+            return CM_ERROR_SHARING_VIOLATION;
         }
     }
 

@@ -235,6 +235,7 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
     scp->exclusiveLocks = 0;
     scp->sharedLocks = 0;
     scp->lockDataVersion = CM_SCACHE_VERSION_BAD;
+    scp->fsLockCount = 0;
 
     /* not locked, but there can be no references to this guy
      * while we hold the global refcount lock.
@@ -794,7 +795,8 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
         scp->group=0;
         scp->dataVersion=cm_data.fakeDirVersion;
         scp->bufDataVersionLow=cm_data.fakeDirVersion;
-        scp->lockDataVersion=-1; /* no lock yet */
+        scp->lockDataVersion=CM_SCACHE_VERSION_BAD; /* no lock yet */
+        scp->fsLockCount=0;
         lock_ReleaseWrite(&scp->rw);
         lock_ReleaseWrite(&cm_scacheLock);
 	*outScpp = scp;
@@ -1542,6 +1544,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
         statusp->Group = 0;
         statusp->SyncCounter = 0;
         statusp->dataVersionHigh = (afs_uint32)(cm_data.fakeDirVersion >> 32);
+        statusp->lockCount = 0;
         statusp->errorCode = 0;
     }
 #endif /* AFS_FREELANCE_CLIENT */
@@ -1565,6 +1568,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
 	scp->anyAccess = 0;
 	scp->dataVersion = CM_SCACHE_VERSION_BAD;
         scp->bufDataVersionLow = CM_SCACHE_VERSION_BAD;
+        scp->fsLockCount = 0;
 
 	if (dscp) {
             scp->parentVnode = dscp->fid.vnode;
@@ -1666,7 +1670,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
     /* and other stuff */
     scp->parentVnode = statusp->ParentVnode;
     scp->parentUnique = statusp->ParentUnique;
-        
+    scp->fsLockCount = statusp->lockCount;
+
     /* and merge in the private acl cache info, if this is more than the public
      * info; merge in the public stuff in any case.
      */
@@ -1958,10 +1963,10 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
   
     for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
     {
-        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) type=%d dv=%I64d len=0x%I64x mp='%s' Locks (server=0x%x shared=%d excl=%d clnt=%d) flags=0x%x cb=0x%x refCount=%u\r\n", 
+        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) type=%d dv=%I64d len=0x%I64x mp='%s' Locks (server=0x%x shared=%u excl=%u clnt=%u) lockCount=%d flags=0x%x cb=0x%x refCount=%u\r\n",
                 cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                 scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp, 
-                scp->serverLock, scp->sharedLocks, scp->exclusiveLocks, scp->clientLocks, 
+                scp->serverLock, scp->sharedLocks, scp->exclusiveLocks, scp->clientLocks, scp->fsLockCount,
                 scp->flags, (unsigned long)scp->cbExpires, scp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
