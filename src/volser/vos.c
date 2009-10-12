@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <io.h>
 #include <winsock2.h>
+#include <WINNT/afsreg.h>
 #else
 #include <sys/time.h>
 #include <sys/file.h>
@@ -5678,6 +5679,29 @@ PrintDiagnostics(char *astring, afs_int32 acode)
 }
 
 
+#ifdef AFS_NT40_ENV
+static DWORD
+win32_enableCrypt(void)
+{
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD cryptall = 0;
+    DWORD code;
+
+    /* Look up configuration parameters in Registry */
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                        0, (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS) {
+        dummyLen = sizeof(cryptall);
+        RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
+                        (BYTE *) &cryptall, &dummyLen);
+    }
+    RegCloseKey (parmKey);
+
+    return cryptall;
+}
+#endif /* AFS_NT40_ENV */
+
 static int
 MyBeforeProc(struct cmd_syndesc *as, void *arock)
 {
@@ -5695,7 +5719,11 @@ MyBeforeProc(struct cmd_syndesc *as, void *arock)
 	tcell = as->parms[12].items->data;
     if (as->parms[14].items)	/* -serverauth specified */
 	sauth = 1;
-    if (as->parms[16].items)	/* -crypt specified */
+    if (as->parms[16].items     /* -encrypt specified */
+#ifdef AFS_NT40_ENV
+        || win32_enableCrypt()
+#endif /* AFS_NT40_ENV */
+         )
 	vsu_SetCrypt(1);
     if ((code =
 	 vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
