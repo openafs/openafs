@@ -58,7 +58,7 @@ and L<B<pts setfields>|pts_setfields(1)>.
 
 Commands to set and examine the counters used when assigning IDs to users
 and groups:
-L<B<pts listmax|pts_listmax(1)>>
+L<B<pts listmax>|pts_listmax(1)>
 and L<B<pts setmax>|pts_setmax(1)>.
 
 =item *
@@ -76,7 +76,7 @@ L<B<pts source>|pts_source(1)>.
 =item *
 
 Commands to obtain help:
-L<B<pts apropos|pts_apropos(1)>>
+L<B<pts apropos>|pts_apropos(1)>
 and L<B<pts help>|pts_help(1)>.
 
 =back
