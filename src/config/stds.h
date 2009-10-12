@@ -282,19 +282,19 @@ typedef struct afsUUID afsUUID;
  * windows use a different format string
  */
 #ifdef AFS_NT40_ENV
-#define AFS_INT64_FMT "I64d"
-#define AFS_UINT64_FMT "I64u"
-#define AFS_PTR_FMT   "Ip"
-#define AFS_SIZET_FMT "Iu"
+# define AFS_INT64_FMT "I64d"
+# define AFS_UINT64_FMT "I64u"
+# define AFS_PTR_FMT   "Ip"
+# define AFS_SIZET_FMT "Iu"
 #else
-#define AFS_INT64_FMT "lld"
-#define AFS_UINT64_FMT "llu"
-#define AFS_PTR_FMT   "p"
-#ifdef AFS_64BITPOINTER_ENV
-#define AFS_SIZET_FMT "lu"
-#else
-#define AFS_SIZET_FMT "u"
-#endif /* AFS_64BITPOINTER_ENV */
+# define AFS_INT64_FMT "lld"
+# define AFS_UINT64_FMT "llu"
+# define AFS_PTR_FMT   "p"
+# ifdef PRINTF_TAKES_Z_LEN
+#  define AFS_SIZET_FMT "zu"
+# else
+#  define AFS_SIZET_FMT "lu"
+# endif /* PRINTF_TAKES_Z_LEN */
 #endif /* AFS_NT40_ENV */
 
 /* Functions to safely cast afs_int32 and afs_uint32 so they can be used in 
