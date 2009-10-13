@@ -1735,7 +1735,7 @@ namei_ConvertROtoRWvolume(char *pname, afs_int32 volumeId)
         return EIO;
     }
     close(fd);
-    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_printable_uint32_lu(volumeId));
+    (void)afs_snprintf(headername, sizeof headername, VFORMAT, afs_cast_uint32(volumeId));
     (void)afs_snprintf(oldpath, sizeof oldpath, "%s/%s", pname, headername);
     if (unlink(oldpath) < 0) {
         Log("1 namei_ConvertROtoRWvolume: Couldn't unlink RO header, error = %d\n", errno);
