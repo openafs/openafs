@@ -1722,11 +1722,7 @@ Afs_syscall()
        if (uap->syscall == AFSCALL_CALL) {
 	   code =
 	       afs_syscall_call(uap->parm1, uap->parm2, uap->parm3, uap->parm4,
-				uap->parm5, uap->parm6
-#ifdef	AFS_SUN5_ENV
-				, rvp, CRED()
-#endif
-		   );
+				uap->parm5, uap->parm6);
        } else if (uap->syscall == AFSCALL_SETPAG) {
 #ifdef	AFS_SUN5_ENV
 	   register proc_t *procp;
