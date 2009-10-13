@@ -1383,6 +1383,60 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore, long code, int scp_locked)
     biop->bufListEndp = NULL;
 }   
 
+static int
+cm_CloneStatus(cm_scache_t *scp, cm_user_t *userp, int scp_locked,
+               AFSFetchStatus *afsStatusp, AFSVolSync *volSyncp)
+{
+    // setup the status based upon the scp data
+    afsStatusp->InterfaceVersion = 0x1;
+    switch (scp->fileType) {
+    case CM_SCACHETYPE_FILE:
+        afsStatusp->FileType = File;
+        break;
+    case CM_SCACHETYPE_DIRECTORY:
+        afsStatusp->FileType = Directory;
+        break;
+    case CM_SCACHETYPE_MOUNTPOINT:
+        afsStatusp->FileType = SymbolicLink;
+        break;
+    case CM_SCACHETYPE_SYMLINK:
+    case CM_SCACHETYPE_DFSLINK:
+        afsStatusp->FileType = SymbolicLink;
+        break;
+    default:
+        afsStatusp->FileType = -1;    /* an invalid value */
+    }
+    afsStatusp->LinkCount = scp->linkCount;
+    afsStatusp->Length = scp->length.LowPart;
+    afsStatusp->DataVersion = (afs_uint32)(scp->dataVersion & MAX_AFS_UINT32);
+    afsStatusp->Author = 0x1;
+    afsStatusp->Owner = scp->owner;
+    if (!scp_locked) {
+        lock_ObtainWrite(&scp->rw);
+        scp_locked = 1;
+    }
+    if (cm_FindACLCache(scp, userp, &afsStatusp->CallerAccess))
+        afsStatusp->CallerAccess = scp->anyAccess;
+    afsStatusp->AnonymousAccess = scp->anyAccess;
+    afsStatusp->UnixModeBits = scp->unixModeBits;
+    afsStatusp->ParentVnode = scp->parentVnode;
+    afsStatusp->ParentUnique = scp->parentUnique;
+    afsStatusp->ResidencyMask = 0;
+    afsStatusp->ClientModTime = scp->clientModTime;
+    afsStatusp->ServerModTime = scp->serverModTime;
+    afsStatusp->Group = scp->group;
+    afsStatusp->SyncCounter = 0;
+    afsStatusp->dataVersionHigh = (afs_uint32)(scp->dataVersion >> 32);
+    afsStatusp->lockCount = 0;
+    afsStatusp->Length_hi = scp->length.HighPart;
+    afsStatusp->errorCode = 0;
+
+    memset(volSyncp, 0, sizeof(AFSVolSync));
+    volSyncp->spare1 = scp->lastUpdateRO;
+
+    return scp_locked;
+}
+
 /* Fetch a buffer.  Called with scp locked.
  * The scp is locked on return.
  */
@@ -1515,7 +1569,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
         afsStatus.lockCount = 0;
         afsStatus.Length_hi = 0;
         afsStatus.errorCode = 0;
-	
+	memset(&volSync, 0, sizeof(volSync));
+
         // once we're done setting up the status info,
         // we just fill the buffer pages with fakedata
         // from cm_FakeRootDir. Extra pages are set to
@@ -1564,47 +1619,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
                  scp, biod.offset.HighPart, biod.offset.LowPart,
                  scp->length.HighPart, scp->length.LowPart);
 
-        // setup the status based upon the scp data
-        afsStatus.InterfaceVersion = 0x1;
-        switch (scp->fileType) {
-        case CM_SCACHETYPE_FILE:
-            afsStatus.FileType = File;
-            break;
-        case CM_SCACHETYPE_DIRECTORY:
-            afsStatus.FileType = Directory;
-            break;
-        case CM_SCACHETYPE_MOUNTPOINT:
-            afsStatus.FileType = SymbolicLink;
-            break;
-        case CM_SCACHETYPE_SYMLINK:
-        case CM_SCACHETYPE_DFSLINK:
-            afsStatus.FileType = SymbolicLink;
-            break;
-        default:
-            afsStatus.FileType = -1;    /* an invalid value */
-        }
-        afsStatus.LinkCount = scp->linkCount;
-        afsStatus.Length = scp->length.LowPart;
-        afsStatus.DataVersion = (afs_uint32)(scp->dataVersion & MAX_AFS_UINT32);
-        afsStatus.Author = 0x1;
-        afsStatus.Owner = scp->owner;
-        lock_ObtainWrite(&scp->rw);
-        scp_locked = 1;
-        if (cm_FindACLCache(scp, userp, &afsStatus.CallerAccess))
-             afsStatus.CallerAccess = scp->anyAccess;
-        afsStatus.AnonymousAccess = scp->anyAccess;
-        afsStatus.UnixModeBits = scp->unixModeBits;
-        afsStatus.ParentVnode = scp->parentVnode;
-        afsStatus.ParentUnique = scp->parentUnique;
-        afsStatus.ResidencyMask = 0;
-        afsStatus.ClientModTime = scp->clientModTime;
-        afsStatus.ServerModTime = scp->serverModTime;
-        afsStatus.Group = scp->group;
-        afsStatus.SyncCounter = 0;
-        afsStatus.dataVersionHigh = (afs_uint32)(scp->dataVersion >> 32);
-        afsStatus.lockCount = 0;
-        afsStatus.Length_hi = scp->length.HighPart;
-        afsStatus.errorCode = 0;
+        /* Clone the current status info */
+        scp_locked = cm_CloneStatus(scp, userp, scp_locked, &afsStatus, &volSync);
 
         /* status info complete, fill pages with zeros */
         for (qdp = biod.bufListEndp;
@@ -1617,6 +1633,11 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
 
         /* no need to contact the file server */
         goto fetchingcompleted;
+    }
+
+    if (scp_locked) {
+        lock_ReleaseWrite(&scp->rw);
+        scp_locked = 0;
     }
 
     /* now make the call */
@@ -1851,10 +1872,16 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
             osi_Log0(afsd_logp, "CALL EndCall returns RXKADUNKNOWNKEY");
 
         /* If we are avoiding a file server bug, ignore the error state */
-        if (fs_fetchdata_offset_bug && first_read && length_found == 0 && code == -451)
+        if (fs_fetchdata_offset_bug && first_read && length_found == 0 && code == -451) {
+            /* Clone the current status info and clear the error state */
+            scp_locked = cm_CloneStatus(scp, userp, scp_locked, &afsStatus, &volSync);
+            if (scp_locked) {
+                lock_ReleaseWrite(&scp->rw);
+                scp_locked = 0;
+            }
             code = 0;
         /* Prefer the error value from FetchData over rx_EndCall */
-        else if (code == 0 && code1 != 0)
+        } else if (code == 0 && code1 != 0)
             code = code1;
         osi_Log0(afsd_logp, "CALL FetchData DONE");
 
