@@ -526,8 +526,10 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 }
             }
             if (!tsp) {
-                /* cm_NewServer will probe the server which in turn will
-                 * update the state on the volume group object */
+                /*
+                 * cm_NewServer will probe the file server which in turn will
+                 * update the state on the volume group object
+                 */
                 lock_ReleaseWrite(&volp->rw);
                 tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, &serverUUID[i], 0);
                 lock_ObtainWrite(&volp->rw);
@@ -937,6 +939,7 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         }
         volp->cbExpiresRO = 0;
         volp->cbServerpRO = NULL;
+        volp->creationDateRO = 0;
         cm_AddVolumeToNameHashTable(volp);
         lock_ReleaseWrite(&cm_volumeLock);
     }
@@ -1479,15 +1482,61 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
         lock_ObtainRead(&cm_volumeLock);
     }
   
-    sprintf(output, "%s - dumping volumes - cm_data.currentVolumes=%d, cm_data.maxVolumes=%d\r\n", cookie, cm_data.currentVolumes, cm_data.maxVolumes);
+    sprintf(output, "%s - dumping volumes - cm_data.currentVolumes=%d, cm_data.maxVolumes=%d\r\n",
+            cookie, cm_data.currentVolumes, cm_data.maxVolumes);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
-        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x refCount=%u\r\n", 
-                 cookie, volp, volp->cellp->name, volp->namep, volp->vol[RWVOL].ID, volp->vol[ROVOL].ID, volp->vol[BACKVOL].ID, volp->flags, 
+        time_t t;
+        char *srvStr = NULL;
+        afs_uint32 srvStrRpc = TRUE;
+        char *cbt = NULL;
+        char *cdrot = NULL;
+
+        if (volp->cbServerpRO) {
+            if (!((volp->cbServerpRO->flags & CM_SERVERFLAG_UUID) &&
+                UuidToString((UUID *)&volp->cbServerpRO->uuid, &srvStr) == RPC_S_OK)) {
+                afs_asprintf(&srvStr, "%.0I", volp->cbServerpRO->addr.sin_addr.s_addr);
+                srvStrRpc = FALSE;
+            }
+        }
+        if (volp->cbExpiresRO) {
+            t = volp->cbExpiresRO;
+            cbt = ctime(&t);
+            if (cbt) {
+                cbt = strdup(cbt);
+                cbt[strlen(cbt)-1] = '\0';
+            }
+        }
+        if (volp->creationDateRO) {
+            t = volp->creationDateRO;
+            cdrot = ctime(&t);
+            if (cdrot) {
+                cdrot = strdup(cdrot);
+                cdrot[strlen(cdrot)-1] = '\0';
+            }
+        }
+
+        sprintf(output,
+                "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x "
+                "cbServerpRO='%s' cbExpiresRO='%s' creationDateRO='%s' refCount=%u\r\n",
+                 cookie, volp, volp->cellp->name, volp->namep, volp->vol[RWVOL].ID,
+                 volp->vol[ROVOL].ID, volp->vol[BACKVOL].ID, volp->flags,
+                 srvStr ? srvStr : "<none>", cbt ? cbt : "<none>", cdrot ? cdrot : "<none>",
                  volp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+
+        if (srvStr) {
+            if (srvStrRpc)
+                RpcStringFree(&srvStr);
+            else
+                free(srvStr);
+        }
+        if (cbt)
+            free(cbt);
+        if (cdrot)
+            free(cdrot);
     }
     sprintf(output, "%s - Done dumping volumes.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);

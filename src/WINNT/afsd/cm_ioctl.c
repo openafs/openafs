@@ -396,6 +396,8 @@ cm_IoctlGetACL(cm_ioctl_t *ioctlp, cm_user_t *userp, cm_scache_t *scp, cm_req_t 
     int tlen;
     struct rx_connection * rxconnp;
 
+    memset(&volSync, 0, sizeof(volSync));
+
     /* now make the get acl call */
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {
@@ -492,6 +494,8 @@ cm_IoctlSetACL(struct cm_ioctl *ioctlp, struct cm_user *userp, cm_scache_t *scp,
     AFSVolSync volSync;
     AFSFid fid;
     struct rx_connection * rxconnp;
+
+    memset(&volSync, 0, sizeof(volSync));
 
 #ifdef AFS_FREELANCE_CLIENT
     if ( scp->fid.cell == AFS_FAKE_ROOT_CELL_ID && scp->fid.volume == AFS_FAKE_ROOT_VOL_ID ) {

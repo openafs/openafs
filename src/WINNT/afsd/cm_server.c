@@ -210,6 +210,7 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
     int doPing;
     int isDown;
     int isFS;
+    int isVLDB;
 
     lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
@@ -222,6 +223,7 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
         doPing = 0;
         isDown = tsp->flags & CM_SERVERFLAG_DOWN;
         isFS   = tsp->type == CM_SERVER_FILE;
+        isVLDB = tsp->type == CM_SERVER_VLDB;
 
         /* only do the ping if the cell matches the requested cell, or we're
          * matching all cells (cellp == NULL), and if we've requested to ping
@@ -231,7 +233,7 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
              ((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
                (!isDown && (flags & CM_FLAG_CHECKUPSERVERS))) &&
              ((!(flags & CM_FLAG_CHECKVLDBSERVERS) || 
-               !isFS && (flags & CM_FLAG_CHECKVLDBSERVERS)) &&
+               isVLDB && (flags & CM_FLAG_CHECKVLDBSERVERS)) &&
               (!(flags & CM_FLAG_CHECKFILESERVERS) || 
                  isFS && (flags & CM_FLAG_CHECKFILESERVERS)))) {
             doPing = 1;
@@ -837,7 +839,7 @@ void cm_SetServerPrefs(cm_server_t * serverp)
     }
 
     serverAddr = ntohl(serverp->addr.sin_addr.s_addr);
-    serverp->ipRank  = CM_IPRANK_LOW;	/* default setings */
+    serverp->ipRank  = CM_IPRANK_LOW;	/* default settings */
 
     for ( i=0; i < cm_noIPAddr; i++)
     {
@@ -1337,7 +1339,8 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
     if (lock)
         lock_ObtainRead(&cm_serverLock);
   
-    sprintf(output, "%s - dumping servers - cm_numFileServers=%d, cm_numVldbServers=%d\r\n", 
+    sprintf(output,
+            "%s - dumping servers - cm_numFileServers=%d, cm_numVldbServers=%d\r\n",
             cookie, cm_numFileServers, cm_numVldbServers);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
@@ -1362,8 +1365,11 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
         down = ctime(&tsp->downTime);
         down[strlen(down)-1] = '\0';
 
-        sprintf(output, "%s - tsp=0x%p cell=%s addr=%-15s port=%u uuid=%s type=%s caps=0x%x flags=0x%x waitCount=%u rank=%u downTime=\"%s\" refCount=%u\r\n",
-                 cookie, tsp, tsp->cellp ? tsp->cellp->name : "", tsp->addr.sin_port, hoststr, uuidstr, type,
+        sprintf(output,
+                 "%s - tsp=0x%p cell=%s addr=%-15s port=%u uuid=%s type=%s caps=0x%x "
+                 "flags=0x%x waitCount=%u rank=%u downTime=\"%s\" refCount=%u\r\n",
+                 cookie, tsp, tsp->cellp ? tsp->cellp->name : "", hoststr,
+                 ntohs(tsp->addr.sin_port), uuidstr, type,
                  tsp->capabilities, tsp->flags, tsp->waitCount, tsp->ipRank,
                  (tsp->flags & CM_SERVERFLAG_DOWN) ?  down : "up",
                  tsp->refCount);

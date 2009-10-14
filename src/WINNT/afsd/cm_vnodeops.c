@@ -1538,6 +1538,8 @@ long cm_Unlink(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t * cnamep,
     cm_scache_t *scp = NULL;
     int free_fnamep = FALSE;
 
+    memset(&volSync, 0, sizeof(volSync));
+
     if (fnamep == NULL) {
         code = -1;
 #ifdef USE_BPLUS
@@ -2297,6 +2299,8 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
     struct rx_connection * rxconnp;
     int inlinebulk = 0;		/* Did we use InlineBulkStatus RPC or not? */
         
+    memset(&volSync, 0, sizeof(volSync));
+
     /* otherwise, we may have one or more bulk stat's worth of stuff in bb;
      * make the calls to create the entries.  Handle AFSCBMAX files at a
      * time.
@@ -2348,7 +2352,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
          * much better on the next immediate call, either.
          */
         if (code) {
-            cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
+            cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
             break;
         }
 
@@ -2381,6 +2385,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
                          | CM_SCACHEFLAG_SIZESTORING))) {
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &bbp->callbacks[j],
+                                            &volSync,
                                             CM_CALLBACK_MAINTAINCOUNT);
                 cm_MergeStatus(dscp, scp, &bbp->stats[j], &volSync, userp, reqp, 0);
             }       
@@ -2389,7 +2394,7 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
         } /* all files in the response */
         /* now tell it to drop the count,
          * after doing the vnode processing above */
-        cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
+        cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
     }	/* while there are still more files to process */
 
     /* If we did the InlineBulk RPC pull out the return code and log it */
@@ -2592,6 +2597,8 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     AFSStoreStatus afsInStatus;
     struct rx_connection * rxconnp;
 
+    memset(&volSync, 0, sizeof(volSync));
+
     /* handle file length setting */
     if (attrp->mask & CM_ATTRMASK_LENGTH)
         return cm_SetLength(scp, &attrp->length, userp, reqp);
@@ -2668,6 +2675,8 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
     struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t * fnamep = NULL;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -2758,10 +2767,10 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
             lock_ObtainWrite(&scp->rw);
 	    scp->creator = userp;		/* remember who created it */
             if (!cm_HaveCallback(scp)) {
+                cm_EndCallbackGrantingCall(scp, &cbReq,
+                                           &newFileCallback, &volSync, 0);
                 cm_MergeStatus(dscp, scp, &newFileStatus, &volSync,
                                userp, reqp, 0);
-                cm_EndCallbackGrantingCall(scp, &cbReq,
-                                           &newFileCallback, 0);
                 didEnd = 1;     
             }       
             lock_ReleaseWrite(&scp->rw);
@@ -2770,7 +2779,7 @@ long cm_Create(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *a
 
     /* make sure we end things properly */
     if (!didEnd)
-        cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
+        cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
 
     if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
         cm_DirCreateEntry(&dirop, fnamep, &newFid);
@@ -2834,6 +2843,8 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
     struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t * fnamep = NULL;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     /* can't create names with @sys in them; must expand it manually first.
      * return "invalid request" if they try.
@@ -2922,10 +2933,10 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
         if (code == 0) {
             lock_ObtainWrite(&scp->rw);
             if (!cm_HaveCallback(scp)) {
+                cm_EndCallbackGrantingCall(scp, &cbReq,
+                                            &newDirCallback, &volSync, 0);
                 cm_MergeStatus(dscp, scp, &newDirStatus, &volSync,
                                 userp, reqp, 0);
-                cm_EndCallbackGrantingCall(scp, &cbReq,
-                                            &newDirCallback, 0);
                 didEnd = 1;             
             }
             lock_ReleaseWrite(&scp->rw);
@@ -2934,7 +2945,7 @@ long cm_MakeDir(cm_scache_t *dscp, clientchar_t *cnamep, long flags, cm_attr_t *
 
     /* make sure we end things properly */
     if (!didEnd)
-        cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
+        cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
 
     if (scp && cm_CheckDirOpForSingleChange(&dirop)) {
         cm_DirCreateEntry(&dirop, fnamep, &newFid);
@@ -2970,6 +2981,8 @@ long cm_Link(cm_scache_t *dscp, clientchar_t *cnamep, cm_scache_t *sscp, long fl
     struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t * fnamep = NULL;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     if (dscp->fid.cell != sscp->fid.cell ||
         dscp->fid.volume != sscp->fid.volume) {
@@ -3067,6 +3080,8 @@ long cm_SymLink(cm_scache_t *dscp, clientchar_t *cnamep, fschar_t *contentsp, lo
     struct rx_connection * rxconnp;
     cm_dirOp_t dirop;
     fschar_t *fnamep = NULL;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     /* before starting the RPC, mark that we're changing the directory data,
      * so that someone who does a chmod on the dir will wait until our
@@ -3191,6 +3206,8 @@ long cm_RemoveDir(cm_scache_t *dscp, fschar_t *fnamep, clientchar_t *cnamep, cm_
     cm_dirOp_t dirop;
     cm_scache_t *scp = NULL;
     int free_fnamep = FALSE;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     if (fnamep == NULL) {
         code = -1;
@@ -3352,6 +3369,8 @@ long cm_Rename(cm_scache_t *oldDscp, fschar_t *oldNamep, clientchar_t *cOldNamep
     fschar_t * newNamep = NULL;
     int free_oldNamep = FALSE;
     cm_scache_t *oldScp = NULL, *newScp = NULL;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     if (cOldNamep == NULL || cNewNamep == NULL ||
         cm_ClientStrLen(cOldNamep) == 0 ||
@@ -4175,6 +4194,8 @@ long cm_IntSetLock(cm_scache_t * scp, cm_user_t * userp, int lockType,
     AFSVolSync volSync;
     afs_uint32 reqflags = reqp->flags;
 
+    memset(&volSync, 0, sizeof(volSync));
+
     tfid.Volume = scp->fid.volume;
     tfid.Vnode = scp->fid.vnode;
     tfid.Unique = scp->fid.unique;
@@ -4219,6 +4240,8 @@ long cm_IntReleaseLock(cm_scache_t * scp, cm_user_t * userp,
     cm_conn_t * connp;
     struct rx_connection * rxconnp;
     AFSVolSync volSync;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     tfid.Volume = scp->fid.volume;
     tfid.Vnode = scp->fid.vnode;
@@ -5158,6 +5181,8 @@ void cm_CheckLocks()
     long code;
     struct rx_connection * rxconnp;
     cm_scache_t * scp;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     cm_InitReq(&req);
 

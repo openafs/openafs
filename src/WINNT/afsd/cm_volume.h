@@ -44,6 +44,7 @@ typedef struct cm_volume {
     afs_int32 refCount;		        /* by Interlocked operations */
     struct cm_server *cbServerpRO;      /* server granting RO callback; by cm_scacheLock */
     time_t cbExpiresRO;                 /* latest RO expiration time; by cm_scacheLock */
+    time_t creationDateRO;              /* latest volume creation date; 0 if unknown; by cm_scacheLock */
 } cm_volume_t;
 
 #define CM_VOLUMEFLAG_RESET	   1	/* reload this info on next use */

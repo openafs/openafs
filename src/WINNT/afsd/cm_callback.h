@@ -57,7 +57,7 @@ extern int cm_HaveCallback(struct cm_scache *);
 extern void cm_StartCallbackGrantingCall(struct cm_scache *, cm_callbackRequest_t *);
 
 extern void cm_EndCallbackGrantingCall(struct cm_scache *, cm_callbackRequest_t *,
-	struct AFSCallBack *, long);
+	struct AFSCallBack *, struct AFSVolSync *, long);
 
 extern long cm_GetCallback(struct cm_scache *, struct cm_user *,
 	struct cm_req * reqp, long flags);

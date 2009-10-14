@@ -79,6 +79,8 @@ long cm_BufWrite(void *vscp, osi_hyper_t *offsetp, long length, long flags,
     osi_assertx(userp != NULL, "null cm_user_t");
     osi_assertx(scp != NULL, "null cm_scache_t");
 
+    memset(&volSync, 0, sizeof(volSync));
+
     /* now, the buffer may or may not be filled with good data (buf_GetNew
      * drops lots of locks, and may indeed return a properly initialized
      * buffer, although more likely it will just return a new, empty, buffer.
@@ -346,6 +348,8 @@ long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     struct rx_connection *rxconnp;
     int require_64bit_ops = 0;
     int call_was_64bit = 0;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     /* Serialize StoreData RPC's; for rationale see cm_scache.c */
     (void) cm_SyncOp(scp, NULL, userp, reqp, 0,
@@ -1431,8 +1435,7 @@ cm_CloneStatus(cm_scache_t *scp, cm_user_t *userp, int scp_locked,
     afsStatusp->Length_hi = scp->length.HighPart;
     afsStatusp->errorCode = 0;
 
-    memset(volSyncp, 0, sizeof(AFSVolSync));
-    volSyncp->spare1 = scp->lastUpdateRO;
+    volSyncp->spare1 = scp->volumeCreationDate;
 
     return scp_locked;
 }
@@ -1467,6 +1470,8 @@ long cm_GetBuffer(cm_scache_t *scp, cm_buf_t *bufp, int *cpffp, cm_user_t *userp
     int fs_fetchdata_offset_bug = 0;
     int first_read = 1;
     int scp_locked = 1;
+
+    memset(&volSync, 0, sizeof(volSync));
 
     /* now, the buffer may or may not be filled with good data (buf_GetNew
      * drops lots of locks, and may indeed return a properly initialized

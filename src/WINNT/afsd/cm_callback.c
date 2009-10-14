@@ -210,6 +210,23 @@ void cm_RevokeCallback(struct rx_call *callp, cm_cell_t * cellp, AFSFid *fidp)
              fidp->Volume, fidp->Vnode, fidp->Unique);
 }
 
+static __inline void
+cm_callbackDiscardROVolumeByFID(cm_fid_t *fidp)
+{
+    cm_volume_t *volp = cm_GetVolumeByFID(fidp);
+    if (volp) {
+        cm_PutVolume(volp);
+        if (volp->cbExpiresRO) {
+            volp->cbExpiresRO = 0;
+            if (volp->cbServerpRO) {
+                cm_PutServer(volp->cbServerpRO);
+                volp->cbServerpRO = NULL;
+            }
+            volp->creationDateRO = 0;
+        }
+    }
+}
+
 /* called to revoke a volume callback, which is typically issued when a volume
  * is moved from one server to another.
  *
@@ -253,13 +270,8 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, cm_cell_t *cellp, AFSFid *fi
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
-                if (scp->flags & CM_SCACHEFLAG_PURERO) {
-                    cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
-                    if (volp) {
-                        volp->cbExpiresRO = 0;
-                        cm_PutVolume(volp);
-                    }
-                }
+                if (scp->flags & CM_SCACHEFLAG_PURERO)
+                    cm_callbackDiscardROVolumeByFID(&scp->fid);
             }
         }	/* search one hash bucket */
     }	/* search all hash buckets */
@@ -1063,14 +1075,8 @@ SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid)
                 lock_ObtainWrite(&cm_scacheLock);
                 cm_ReleaseSCacheNoLock(scp);
 
-                if (discarded && (scp->flags & CM_SCACHEFLAG_PURERO)) {
-                    cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
-                    if (volp) {
-                        if (volp->cbExpiresRO != 0)
-                            volp->cbExpiresRO = 0;
-                        cm_PutVolume(volp);
-                    }
-                }
+                if (discarded && (scp->flags & CM_SCACHEFLAG_PURERO))
+                    cm_callbackDiscardROVolumeByFID(&scp->fid);
 
             }	/* search one hash bucket */
 	}      	/* search all hash buckets */
@@ -1570,26 +1576,32 @@ int cm_HaveCallback(cm_scache_t *scp)
         return 0;
     }
 #endif
-
-    if (scp->cbServerp != NULL) {
-	return 1;
-    } else if (cm_OfflineROIsValid) {
+    if (scp->flags & CM_SCACHEFLAG_PURERO) {
         cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
         if (volp) {
-            switch (cm_GetVolumeStatus(volp, scp->fid.volume)) {
-            case vl_offline:
-            case vl_alldown:
-            case vl_unknown:
-                cm_PutVolume(volp);
-                return 1;
-            default:
-                cm_PutVolume(volp);
-                return 0;
+            int haveCB = 0;
+            if (cm_OfflineROIsValid) {
+                switch (cm_GetVolumeStatus(volp, scp->fid.volume)) {
+                case vl_offline:
+                case vl_alldown:
+                case vl_unknown:
+                    haveCB = 1;
+                    break;
+                }
             }
+            if (!haveCB &&
+                volp->creationDateRO == scp->volumeCreationDate &&
+                volp->cbServerpRO != NULL) {
+                haveCB = 1;
+            }
+            cm_PutVolume(volp);
+            return haveCB;
         }
-        return 1;
     }
-    return 0;
+    if (scp->cbServerp != NULL)
+	return 1;
+    else
+        return 0;
 }
 
 /* need to detect a broken callback that races with our obtaining a callback.
@@ -1628,7 +1640,7 @@ void cm_StartCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp)
  * this locking hierarchy.
  */
 void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
-                                AFSCallBack *cbp, long flags)
+                                AFSCallBack *cbp, AFSVolSync *volSyncp, long flags)
 {
     cm_racingRevokes_t *revp;		/* where we are */
     cm_racingRevokes_t *nrevp;		/* where we'll be next */
@@ -1701,14 +1713,9 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
                       cbrp->callbackCount, revp->callbackCount,
                       cm_callbackCount);
             discardScp = 1;
-            if ((scp->flags & CM_SCACHEFLAG_PURERO) && 
-                 (revp->flags & CM_RACINGFLAG_ALL)) {
-                cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
-                if (volp) {
-                    volp->cbExpiresRO = 0;
-                    cm_PutVolume(volp);
-                }
-            }
+            if ((scp->flags & CM_SCACHEFLAG_PURERO) &&
+                 (revp->flags & CM_RACINGFLAG_ALL))
+                cm_callbackDiscardROVolumeByFID(&scp->fid);
         }
         if (freeFlag) 
             free(revp);
@@ -1729,12 +1736,17 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
         if (scp && scp->flags & CM_SCACHEFLAG_PURERO) {
             cm_volume_t * volp = cm_GetVolumeByFID(&scp->fid);
             if (volp) {
-                volp->cbExpiresRO = scp->cbExpires;
-                if (volp->cbServerpRO != scp->cbServerp) {
-                    if (volp->cbServerpRO)
-                        cm_PutServer(volp->cbServerpRO);
-                    cm_GetServer(scp->cbServerp);
-                    volp->cbServerpRO = scp->cbServerp;
+                if (volSyncp) {
+                    lock_ObtainWrite(&cm_scacheLock);
+                    volp->cbExpiresRO = scp->cbExpires;
+                    volp->creationDateRO = volSyncp->spare1;
+                    if (volp->cbServerpRO != scp->cbServerp) {
+                        if (volp->cbServerpRO)
+                            cm_PutServer(volp->cbServerpRO);
+                        cm_GetServer(scp->cbServerp);
+                        volp->cbServerpRO = scp->cbServerp;
+                    }
+                    lock_ReleaseWrite(&cm_scacheLock);
                 }
                 cm_PutVolume(volp);
             }
@@ -1766,6 +1778,8 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
     struct rx_connection * rxconnp = NULL;
     int syncop_done = 0;
 
+    memset(&volSync, 0, sizeof(volSync));
+
     osi_Log4(afsd_logp, "GetCallback scp 0x%p cell %d vol %d flags %lX", 
              scp, scp->fid.cell, scp->fid.volume, flags);
 
@@ -1792,7 +1806,6 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
             lock_ReleaseMutex(&cm_Freelance_Lock);
 
             memset(&afsStatus, 0, sizeof(afsStatus));
-            memset(&volSync, 0, sizeof(volSync));
 
             // Fetch the status info 
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
@@ -1857,10 +1870,10 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 
         lock_ObtainWrite(&scp->rw);
         if (code == 0) {
-            cm_EndCallbackGrantingCall(scp, &cbr, &callback, 0);
+            cm_EndCallbackGrantingCall(scp, &cbr, &callback, &volSync, 0);
             cm_MergeStatus(NULL, scp, &afsStatus, &volSync, userp, reqp, 0);
         } else {
-            cm_EndCallbackGrantingCall(NULL, &cbr, NULL, 0);
+            cm_EndCallbackGrantingCall(NULL, &cbr, NULL, NULL, 0);
         }
 
         /* if we got an error, return to caller */
