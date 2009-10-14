@@ -126,7 +126,7 @@ procmgmt: config
 util: procmgmt des lwp_depinstall
 	+${COMPILE_PART1} util ${COMPILE_PART2}
 
-audit: util rx rxkad
+audit: util rx rxkad fsint
 	+${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
 comerr: util
