@@ -29,7 +29,6 @@ osi_rwlock_t cm_syscfgLock;
 cm_server_t *cm_allServersp;
 afs_uint32   cm_numFileServers = 0;
 afs_uint32   cm_numVldbServers = 0;
-afs_uint32   cm_numVolServers = 0;
 
 void
 cm_ForceNewConnectionsAllServers(void)
@@ -60,10 +59,6 @@ cm_PingServer(cm_server_t *tsp)
     char hoststr[16];
     cm_req_t req;
 
-    /* do not probe vol server (yet) */
-    if (tsp->type == CM_SERVER_VOL)
-        return;
-
     lock_ObtainMutex(&tsp->mx);
     if (tsp->flags & CM_SERVERFLAG_PINGING) {
 	tsp->waitCount++;
@@ -91,7 +86,7 @@ cm_PingServer(cm_server_t *tsp)
 
 	osi_Log4(afsd_logp, "cm_PingServer server %s (%s) was %s with caps 0x%x",
 		  osi_LogSaveString(afsd_logp, hoststr), 
-		  tsp->type == CM_SERVER_VLDB ? "vldb" : (tsp->type == CM_SERVER_FILE ? "file" : "vol"),
+		  tsp->type == CM_SERVER_VLDB ? "vldb" : "file",
 		  wasDown ? "down" : "up",
 		  tsp->capabilities);
 
@@ -215,14 +210,9 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
     int doPing;
     int isDown;
     int isFS;
-    int isVLDB;
 
     lock_ObtainRead(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
-        /* do not probe vol server (yet) */
-        if (tsp->type == CM_SERVER_VOL)
-            continue;
-
         cm_GetServerNoLock(tsp);
         lock_ReleaseRead(&cm_serverLock);
 
@@ -232,7 +222,6 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
         doPing = 0;
         isDown = tsp->flags & CM_SERVERFLAG_DOWN;
         isFS   = tsp->type == CM_SERVER_FILE;
-        isVLDB = tsp->type == CM_SERVER_VLDB;
 
         /* only do the ping if the cell matches the requested cell, or we're
          * matching all cells (cellp == NULL), and if we've requested to ping
@@ -242,7 +231,7 @@ static void cm_CheckServersSingular(afs_uint32 flags, cm_cell_t *cellp)
              ((isDown && (flags & CM_FLAG_CHECKDOWNSERVERS)) ||
                (!isDown && (flags & CM_FLAG_CHECKUPSERVERS))) &&
              ((!(flags & CM_FLAG_CHECKVLDBSERVERS) || 
-               isVLDB && (flags & CM_FLAG_CHECKVLDBSERVERS)) &&
+               !isFS && (flags & CM_FLAG_CHECKVLDBSERVERS)) &&
               (!(flags & CM_FLAG_CHECKFILESERVERS) || 
                  isFS && (flags & CM_FLAG_CHECKFILESERVERS)))) {
             doPing = 1;
@@ -848,7 +837,7 @@ void cm_SetServerPrefs(cm_server_t * serverp)
     }
 
     serverAddr = ntohl(serverp->addr.sin_addr.s_addr);
-    serverp->ipRank  = CM_IPRANK_LOW;	/* default settings */
+    serverp->ipRank  = CM_IPRANK_LOW;	/* default setings */
 
     for ( i=0; i < cm_noIPAddr; i++)
     {
@@ -919,14 +908,11 @@ cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cell
         case CM_SERVER_FILE:
             cm_numFileServers++;
             break;
-        case CM_SERVER_VOL:
-            cm_numVolServers++;
-            break;
         }
 
         lock_ReleaseWrite(&cm_serverLock); 	/* release server lock */
 
-        if ( !(flags & CM_FLAG_NOPROBE) && (type != CM_SERVER_VOL)) {
+        if ( !(flags & CM_FLAG_NOPROBE) ) {
             tsp->flags |= CM_SERVERFLAG_DOWN;	/* assume down; ping will mark up if available */
             cm_PingServer(tsp);	                /* Obtain Capabilities and check up/down state */
         }
@@ -1255,9 +1241,6 @@ void cm_FreeServer(cm_server_t* serverp)
             case CM_SERVER_FILE:
                 cm_numFileServers--;
                 break;
-            case CM_SERVER_VOL:
-                cm_numVolServers--;
-                break;
             }
 
 	    lock_FinalizeMutex(&serverp->mx);
@@ -1354,8 +1337,8 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
     if (lock)
         lock_ObtainRead(&cm_serverLock);
   
-    sprintf(output, "%s - dumping servers - cm_numFileServers=%d, cm_numVolServers=%d, cm_numVldbServers=%d\r\n",
-            cookie, cm_numFileServers, cm_numVolServers, cm_numVldbServers);
+    sprintf(output, "%s - dumping servers - cm_numFileServers=%d, cm_numVldbServers=%d\r\n", 
+            cookie, cm_numFileServers, cm_numVldbServers);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp)
@@ -1369,9 +1352,6 @@ int cm_DumpServers(FILE *outputFile, char *cookie, int lock)
             break;
         case CM_SERVER_FILE:
             type = "file";
-            break;
-        case CM_SERVER_VOL:
-            type = "vol";
             break;
         default:
             type = "unknown";

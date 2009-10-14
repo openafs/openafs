@@ -208,7 +208,6 @@ long cm_RecycleSCache(cm_scache_t *scp, afs_int32 flags)
         scp->cbServerp = NULL;
     }
     scp->cbExpires = 0;
-    scp->lastUpdateRO = 0;
 
     scp->fid.vnode = 0;
     scp->fid.volume = 0;
@@ -620,7 +619,6 @@ void cm_InitSCache(int newFile, long maxSCaches)
 #endif
                 scp->cbServerp = NULL;
                 scp->cbExpires = 0;
-                scp->lastUpdateRO = 0;
                 scp->fileLocksH = NULL;
                 scp->fileLocksT = NULL;
                 scp->serverLock = (-1);
@@ -1965,44 +1963,11 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
   
     for (scp = cm_data.allSCachesp; scp; scp = scp->allNextp) 
     {
-        time_t t;
-        char *srvStr = NULL;
-        afs_uint32 srvStrRpc = TRUE;
-        char *cbt = NULL;
-        char *lurot = NULL;
-
-        if (scp->cbServerp) {
-            if (!((scp->cbServerp->flags & CM_SERVERFLAG_UUID) &&
-                UuidToString((UUID *)&scp->cbServerp->uuid, &srvStr) == RPC_S_OK)) {
-                afs_asprintf(&srvStr, "%.0I", scp->cbServerp->addr.sin_addr.s_addr);
-                srvStrRpc = FALSE;
-            }
-        }
-        if (scp->cbExpires) {
-            t = scp->cbExpires;
-            cbt = ctime(&t);
-            if (cbt) {
-                cbt = strdup(cbt);
-                cbt[strlen(cbt)-1] = '\0';
-            }
-        }
-        if (scp->lastUpdateRO) {
-            t = scp->lastUpdateRO;
-            lurot = ctime(&t);
-            if (lurot) {
-                lurot = strdup(lurot);
-                lurot[strlen(lurot)-1] = '\0';
-            }
-        }
-        sprintf(output,
-                "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) type=%d dv=%I64d len=0x%I64x "
-                "mp='%s' Locks (server=0x%x shared=%d excl=%d clnt=%d) fsLockCount=%d linkCount=%d anyAccess=0x%x "
-                "flags=0x%x cbServer='%s' cbExpires='%s' lastUpdateRO='%s' refCount=%u\r\n",
-                cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique,
-                scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp,
+        sprintf(output, "%s scp=0x%p, fid (cell=%d, volume=%d, vnode=%d, unique=%d) type=%d dv=%I64d len=0x%I64x mp='%s' Locks (server=0x%x shared=%u excl=%u clnt=%u) lockCount=%d flags=0x%x cb=0x%x refCount=%u\r\n",
+                cookie, scp, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
+                scp->fileType, scp->dataVersion, scp->length.QuadPart, scp->mountPointStringp, 
                 scp->serverLock, scp->sharedLocks, scp->exclusiveLocks, scp->clientLocks, scp->fsLockCount,
-                scp->linkCount, scp->anyAccess, scp->flags, srvStr ? srvStr : "<none>", cbt ? cbt : "<none>",
-                lurot ? lurot : "<none>", scp->refCount);
+                scp->flags, (unsigned long)scp->cbExpires, scp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
 
         if (scp->fileLocksH) {
@@ -2011,41 +1976,27 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
 
             for (q = scp->fileLocksH; q; q = osi_QNext(q)) {
                 cm_file_lock_t * lockp = (cm_file_lock_t *)((char *) q - offsetof(cm_file_lock_t, fileq));
-                sprintf(output,
-                        "  %s lockp=0x%p scp=0x%p, cm_userp=0x%p offset=0x%I64x len=0x%08I64x type=0x%x "
-                        "key=0x%I64x flags=0x%x update=0x%I64u\r\n",
-                        cookie, lockp, lockp->scp, lockp->userp, lockp->range.offset, lockp->range.length,
-                        lockp->lockType, lockp->key, lockp->flags, (afs_uint64)lockp->lastUpdate);
+                sprintf(output, "  %s lockp=0x%p scp=0x%p, cm_userp=0x%p offset=0x%I64x len=0x%08I64x type=0x%x key=0x%I64x flags=0x%x update=0x%I64u\r\n", 
+                         cookie, lockp, lockp->scp, lockp->userp, lockp->range.offset, lockp->range.length, 
+                         lockp->lockType, lockp->key, lockp->flags, (afs_uint64)lockp->lastUpdate);
                 WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
             }       
 
             sprintf(output, "  %s - done dumping scp locks\r\n", cookie);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
-
-        if (srvStr) {
-            if (srvStrRpc)
-                RpcStringFree(&srvStr);
-            else
-                free(srvStr);
-        }
-        if (cbt)
-            free(cbt);
-        if (lurot)
-            free(lurot);
     }
   
     sprintf(output, "%s - Done dumping all scache.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-    sprintf(output, "%s - dumping cm_data.scacheHashTable - cm_data.scacheHashTableSize=%d\r\n",
-            cookie, cm_data.scacheHashTableSize);
+    sprintf(output, "%s - dumping cm_data.scacheHashTable - cm_data.scacheHashTableSize=%d\r\n", cookie, cm_data.scacheHashTableSize);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
   
     for (i = 0; i < cm_data.scacheHashTableSize; i++)
     {
         for(scp = cm_data.scacheHashTablep[i]; scp; scp=scp->nextp) 
         {
-            sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d)\r\n",
+            sprintf(output, "%s scp=0x%p, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d)\r\n", 
                     cookie, scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique);
             WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
         }
@@ -2059,11 +2010,9 @@ int cm_DumpSCache(FILE *outputFile, char *cookie, int lock)
 
     for (q = cm_allFileLocks; q; q = osi_QNext(q)) {
         cm_file_lock_t * lockp = (cm_file_lock_t *)q;
-        sprintf(output,
-                "%s filelockp=0x%p scp=0x%p, cm_userp=0x%p offset=0x%I64x len=0x%08I64x type=0x%x "
-                "key=0x%I64x flags=0x%x update=0x%I64u\r\n",
-                cookie, lockp, lockp->scp, lockp->userp, lockp->range.offset, lockp->range.length,
-                lockp->lockType, lockp->key, lockp->flags, (afs_uint64)lockp->lastUpdate);
+        sprintf(output, "%s filelockp=0x%p scp=0x%p, cm_userp=0x%p offset=0x%I64x len=0x%08I64x type=0x%x key=0x%I64x flags=0x%x update=0x%I64u\r\n", 
+                 cookie, lockp, lockp->scp, lockp->userp, lockp->range.offset, lockp->range.length, 
+                 lockp->lockType, lockp->key, lockp->flags, (afs_uint64)lockp->lastUpdate);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
     }       
 

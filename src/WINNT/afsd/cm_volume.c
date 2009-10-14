@@ -169,7 +169,7 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
     afs_uint32 j, k;
     cm_serverRef_t *tsrp;
     cm_server_t *tsp;
-    struct sockaddr_in tsockAddr, tsockAddr2;
+    struct sockaddr_in tsockAddr;
     long tflags;
     u_long tempAddr;
     struct vldbentry vldbEntry;
@@ -526,18 +526,9 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                 }
             }
             if (!tsp) {
-                lock_ReleaseWrite(&volp->rw);
-
-                if (cm_readonlyVolumeVersioning) {
-                    tsockAddr2 = tsockAddr;
-                    tsockAddr2.sin_port = htons(7005);
-                    /* Do not probe the volserver.  We will always use the file server's state. */
-                    tsp = cm_NewServer(&tsockAddr2, CM_SERVER_VOL, cellp, &serverUUID[i], CM_FLAG_NOPROBE);
-                    cm_PutServer(tsp); /* no longer need to vol server reference */
-                }
-
-                /* cm_NewServer will probe the file server which in turn will
+                /* cm_NewServer will probe the server which in turn will
                  * update the state on the volume group object */
+                lock_ReleaseWrite(&volp->rw);
                 tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE, cellp, &serverUUID[i], 0);
                 lock_ObtainWrite(&volp->rw);
             }
@@ -946,7 +937,6 @@ long cm_FindVolumeByName(struct cm_cell *cellp, char *volumeNamep,
         }
         volp->cbExpiresRO = 0;
         volp->cbServerpRO = NULL;
-        volp->lastUpdateRO = 0;
         cm_AddVolumeToNameHashTable(volp);
         lock_ReleaseWrite(&cm_volumeLock);
     }
@@ -1494,50 +1484,10 @@ int cm_DumpVolumes(FILE *outputFile, char *cookie, int lock)
   
     for (volp = cm_data.allVolumesp; volp; volp=volp->allNextp)
     {
-        time_t t;
-        char *srvStr = NULL;
-        afs_uint32 srvStrRpc = TRUE;
-        char *cbt = NULL;
-        char *lurot = NULL;
-
-        if (volp->cbServerpRO) {
-            if (!((volp->cbServerpRO->flags & CM_SERVERFLAG_UUID) &&
-                UuidToString((UUID *)&volp->cbServerpRO->uuid, &srvStr) == RPC_S_OK)) {
-                afs_asprintf(&srvStr, "%.0I", volp->cbServerpRO->addr.sin_addr.s_addr);
-                srvStrRpc = FALSE;
-            }
-        }
-        if (volp->cbExpiresRO) {
-            t = volp->cbExpiresRO;
-            cbt = ctime(&t);
-            if (cbt) {
-                cbt = strdup(cbt);
-                cbt[strlen(cbt)-1] = '\0';
-            }
-        }
-        if (volp->lastUpdateRO) {
-            t = volp->lastUpdateRO;
-            lurot = ctime(&t);
-            if (lurot) {
-                lurot = strdup(lurot);
-                lurot[strlen(lurot)-1] = '\0';
-            }
-        }
-
-        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x cbServerpRO='%s' cbExpiresRO='%s' lastUpdateRO='%s' refCount=%u\r\n",
-                 cookie, volp, volp->cellp->name, volp->namep, volp->vol[RWVOL].ID, volp->vol[ROVOL].ID, volp->vol[BACKVOL].ID, volp->flags,
-                 srvStr ? srvStr : "<none>", cbt ? cbt : "<none>", lurot ? lurot : "<none>", volp->refCount);
+        sprintf(output, "%s - volp=0x%p cell=%s name=%s rwID=%u roID=%u bkID=%u flags=0x%x refCount=%u\r\n", 
+                 cookie, volp, volp->cellp->name, volp->namep, volp->vol[RWVOL].ID, volp->vol[ROVOL].ID, volp->vol[BACKVOL].ID, volp->flags, 
+                 volp->refCount);
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
-        if (srvStr) {
-            if (srvStrRpc)
-                RpcStringFree(&srvStr);
-            else
-                free(srvStr);
-        }
-        if (cbt)
-            free(cbt);
-        if (lurot)
-            free(lurot);
     }
     sprintf(output, "%s - Done dumping volumes.\r\n", cookie);
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);

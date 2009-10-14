@@ -53,7 +53,6 @@ typedef struct cm_serverRef {
 /* types */
 #define CM_SERVER_VLDB		1	/* a VLDB server */
 #define CM_SERVER_FILE		2	/* a file server */
-#define CM_SERVER_VOL           3       /* a vol server */
 
 /* flags */
 #define CM_SERVERFLAG_DOWN	0x1	/* server is down */

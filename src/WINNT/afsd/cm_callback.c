@@ -24,8 +24,6 @@
 
 #include <WINNT/syscfg.h>
 #include <WINNT/afsreg.h>
-#include <afs/vldbint.h>
-#include <afs/volint.h>
 
 int
 SRXAFSCB_InitCallBackState3(struct rx_call *callp, afsUUID* serverUuid);
@@ -1731,60 +1729,6 @@ void cm_EndCallbackGrantingCall(cm_scache_t *scp, cm_callbackRequest_t *cbrp,
         if (scp && scp->flags & CM_SCACHEFLAG_PURERO) {
             cm_volume_t * volp = cm_GetVolumeByFID(&scp->fid);
             if (volp) {
-                /* If the volume has a valid callback from the same
-                 * server as issued this latest callback and we know
-                 * the last update time of the RO volume,
-                 * then the last update time of the RO volume
-                 * must not have changed.  Otherwise, we must obtain
-                 * the volume status info from the volserver that
-                 * matches the file server the callback was received
-                 * from.
-                 */
-                if (cm_readonlyVolumeVersioning &&
-                    (volp->cbExpiresRO == 0 || volp->cbServerpRO != scp->cbServerp)) {
-                    cm_server_t *volserverp;
-
-                    volserverp = cm_FindServer(&scp->cbServerp->addr, CM_SERVER_VOL);
-                    if (volserverp) {
-                        afs_int32 vcode = -1, code = -1;
-                        volEntries volumeInfo;
-                        struct nvldbentry entry;
-                        int i;
-                        afs_uint32 addr = volserverp->addr.sin_addr.s_addr;
-                        cm_cell_t *cellp;
-                        cm_conn_t *connp;
-                        struct rx_connection * rxconnp;
-                        cm_req_t req;
-
-                        cm_InitReq(&req);
-
-                        cellp = cm_FindCellByID(scp->fid.cell, 0);
-                        code = cm_ConnByMServers(cellp->vlServersp, cm_rootUserp, &req, &connp);
-                        if (code == 0) {
-                            rxconnp = cm_GetRxConn(connp);
-                            vcode = VL_GetEntryByIDN(rxconnp, scp->fid.volume, -1, &entry);
-                            rx_PutConnection(rxconnp);
-                        }
-                        if (vcode == 0) {
-                            for (i=0, code=-1; i < entry.nServers; i++) {
-                                if ( entry.serverNumber[i] == htonl(addr)) {
-                                    code = cm_ConnByServer(volserverp, cm_rootUserp, &connp);
-                                    if (code == 0) {
-                                        rxconnp = cm_GetRxConn(connp);
-                                        memset(&volumeInfo, 0, sizeof(volumeInfo));
-                                        code = AFSVolListOneVolume(rxconnp, entry.serverPartition[i], scp->fid.volume, &volumeInfo);
-                                        rx_PutConnection(rxconnp);
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        volp->lastUpdateRO = (vcode == 0 && code == 0 ? volumeInfo.volEntries_val->updateDate : 0);
-                        cm_PutServer(volserverp);
-                    }
-                }
-
-                scp->lastUpdateRO = volp->lastUpdateRO;
                 volp->cbExpiresRO = scp->cbExpires;
                 if (volp->cbServerpRO != scp->cbServerp) {
                     if (volp->cbServerpRO)
@@ -1997,22 +1941,8 @@ void cm_CheckCBExpiration(void)
             if (scp->flags & CM_SCACHEFLAG_PURERO) {
                 cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
                 if (volp) {
-                    /* In the case of a scp from a .readonly volume
-                     * we can automatically refresh the scp callback
-                     * state under one of two conditions:
-                     *
-                     *   - there is currently an unexpired callback
-                     *     and the callback is simply being extended
-                     *
-                     *   - the lastUpdateRO time for the scp and the
-                     *     volp are the same indicating that the
-                     *     .readonly has not changed
-                     */
                     if (volp->cbExpiresRO > scp->cbExpires &&
-                        (volp->cbServerpRO == scp->cbServerp &&
-                         scp->cbExpires > 0 ||
-                         volp->lastUpdateRO > 0 &&
-                         scp->lastUpdateRO == volp->lastUpdateRO))
+                        scp->cbExpires > 0) 
                     {
                         scp->cbExpires = volp->cbExpiresRO;
                         if (volp->cbServerpRO != scp->cbServerp) {
