@@ -18,8 +18,8 @@ INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
 
 INCFILES = \
 	$(INCFILEDIR)\volser_prototypes.h \
+	$(INCFILEDIR)\volser_internal.h \
 	$(INCFILEDIR)\vsutils_prototypes.h \
-	$(INCFILEDIR)\volser_prototypes.h \
 	$(INCFILEDIR)\lockprocs_prototypes.h \
 	$(INCFILEDIR)\volser.h \
 	$(INCFILEDIR)\volint.h
@@ -28,6 +28,7 @@ INCFILES = \
 LOCAL_INCFILES = \
 	volser.h \
 	volint.h
+
 
 ############################################################################
 # Build volser library.
