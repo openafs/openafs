@@ -71,7 +71,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct osi_file *afile = NULL;
     extern int cacheDiskType;
-    struct file *filp = NULL;
+
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
 	osi_Panic("UFSOpen called for non-UFS cache\n");
