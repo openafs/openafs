@@ -1775,9 +1775,12 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 	    if (error) {
 		if (!singleVolumeNumber) {
 		    if (!Showmode)
-			Log("%s/%s is not a legitimate volume header file; %sdeleted\n", fileSysPathName, dp->d_name, (Testing ? "it would have been " : ""));
-		    if (!Testing)
-			unlink(dp->d_name);
+			Log("%s is not a legitimate volume header file; %sdeleted\n", name, (Testing ? "it would have been " : ""));
+		    if (!Testing) {
+			if (unlink(name)) {
+			    Log("Unable to unlink %s (errno = %d)\n", name, errno);
+			}
+		    }
 		}
 	    } else {
 		char nameShouldBe[64];
@@ -1798,9 +1801,12 @@ GetVolumeSummary(VolumeId singleVolumeNumber)
 			AskOffline(vsp->header.id);
 		    if (strcmp(nameShouldBe, dp->d_name)) {
 			if (!Showmode)
-			    Log("Volume header file %s is incorrectly named; %sdeleted (it will be recreated later, if necessary)\n", dp->d_name, (Testing ? "it would have been " : ""));
-			if (!Testing)
-			    unlink(dp->d_name);
+			    Log("Volume header file %s is incorrectly named; %sdeleted (it will be recreated later, if necessary)\n", name, (Testing ? "it would have been " : ""));
+			if (!Testing) {
+			    if (unlink(name)) {
+				Log("Unable to unlink %s (errno = %d)\n", name, errno);
+			    }
+			}
 		    } else {
 			vsp->fileName = ToString(dp->d_name);
 			nVolumes++;
