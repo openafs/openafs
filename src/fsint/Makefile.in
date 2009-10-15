@@ -107,12 +107,7 @@ afsint.h: common.xg afsint.xg
 afscbint.h: common.xg afscbint.xg
 	${RXGEN} -A -x -h -o afscbint.h ${srcdir}/afscbint.xg
 
-# Files with warnings
-# rpcgen currently handles opaque vectors badly
-#     - it relies on char a[1]; &a == a; which leads to type errors
-
 afsint.xdr.o: afsint.xdr.c
-	$(CC) $(CFLAGS) -c @CFLAGS_NOERROR@ $<
 
 #
 # Installation targets
