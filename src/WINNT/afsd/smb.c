@@ -3007,8 +3007,12 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
     else if (code == CM_ERROR_TIMEDOUT) {
 #ifdef COMMENT
         NTStatus = 0xC00000CFL;	/* Sharing Paused */
-#else
+
+        /* Do not send Timeout to the SMB redirector.
+         * It causes the redirector to drop the connection */
         NTStatus = 0x00000102L; /* Timeout */
+#else
+        NTStatus = 0xC000022DL;	/* Retry */
 #endif
     }
     else if (code == CM_ERROR_RETRY) {
@@ -3037,6 +3041,9 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC0000008L;	/* Invalid handle */
     }
     else if (code == CM_ERROR_BADFDOP) {
+        NTStatus = 0xC0000022L;	/* Access denied */
+    }
+    else if (code == CM_ERROR_UNKNOWN) {
         NTStatus = 0xC0000022L;	/* Access denied */
     }
     else if (code == CM_ERROR_EXISTS) {
@@ -3072,7 +3079,8 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC000013DL; /* Remote Resources */
 #endif
     }
-    else if (code == CM_ERROR_CLOCKSKEW) {
+    else if (code == CM_ERROR_CLOCKSKEW ||
+             code == RXKADNOAUTH) {
         NTStatus = 0xC0000133L;	/* Time difference at DC */
     }
     else if (code == CM_ERROR_BADTID) {
@@ -3218,6 +3226,9 @@ void smb_MapWin32Error(long code, unsigned long *Win32Ep)
     else if (code == CM_ERROR_BADFDOP) {
         Win32E = ERROR_ACCESS_DENIED;	/* Access denied */
     }
+    else if (code == CM_ERROR_UNKNOWN) {
+        Win32E = ERROR_ACCESS_DENIED;	/* Access denied */
+    }
     else if (code == CM_ERROR_EXISTS) {
         Win32E = ERROR_ALREADY_EXISTS;	/* Object name collision */
     }
@@ -3246,7 +3257,8 @@ void smb_MapWin32Error(long code, unsigned long *Win32Ep)
         Win32E = ERROR_REM_NOT_LIST;    /* Remote Resources */
 #endif
     }
-    else if (code == CM_ERROR_CLOCKSKEW) {
+    else if (code == CM_ERROR_CLOCKSKEW ||
+             code == RXKADNOAUTH) {
         Win32E = ERROR_TIME_SKEW;	/* Time difference at DC */
     }
     else if (code == CM_ERROR_BADTID) {

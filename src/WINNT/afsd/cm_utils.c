@@ -208,8 +208,12 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
 
     error = et_to_sys_error(error);
 
-    if (error < 0) 
-        error = CM_ERROR_TIMEDOUT;
+    if (error == RX_CALL_DEAD ||
+        error == RX_CALL_TIMEOUT ||
+        error == RX_RESTARTING)
+        error = CM_ERROR_RETRY;
+    else if (error < 0)
+        error = CM_ERROR_UNKNOWN;
     else if (error == EROFS) 
         error = CM_ERROR_READONLY;
     else if (error == EACCES) 
@@ -264,8 +268,12 @@ long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)
 
     error = et_to_sys_error(error);
 
-    if (error < 0) 
-        error = CM_ERROR_TIMEDOUT;
+    if (error == RX_CALL_DEAD ||
+        error == RX_CALL_TIMEOUT ||
+        error == RX_RESTARTING)
+        error = CM_ERROR_RETRY;
+    else if (error < 0)
+        error = CM_ERROR_UNKNOWN;
     else if (error == EROFS) 
         error = CM_ERROR_READONLY;
     else if (error == ENOTDIR) 
@@ -300,8 +308,12 @@ long cm_MapVLRPCError(long error, cm_req_t *reqp)
 
     error = et_to_sys_error(error);
 
-    if (error < 0) 
-	error = CM_ERROR_TIMEDOUT;
+    if (error == RX_CALL_DEAD ||
+        error == RX_CALL_TIMEOUT ||
+        error == RX_RESTARTING)
+        error = CM_ERROR_RETRY;
+    else if (error < 0)
+        error = CM_ERROR_UNKNOWN;
     else if (error == VL_NOENT || error == VL_BADNAME) 
 	error = CM_ERROR_NOSUCHVOLUME;
     return error;
