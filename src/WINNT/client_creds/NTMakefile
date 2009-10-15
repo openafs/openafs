@@ -7,7 +7,7 @@
 
 # include the AFSD source tree on our inclusion path
 
-AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -I..\kfw\inc\krb5 
+AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) /D"_AFXDLL" -I..\afsd -I..\client_config -I..\kfw\inc\krb5 -DUAC_COMPATIBLE=1
 
 # include the primary makefile
 RELDIR=WINNT\client_creds

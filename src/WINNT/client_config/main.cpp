@@ -42,6 +42,34 @@ GLOBALS g;
  *
  */
 
+static BOOL Main_ShowMountTab(void)
+{
+    HKEY hk;
+    BOOL bShow = FALSE;
+    BOOL bSuccess = FALSE;
+
+    if (RegOpenKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, 0,
+                       (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(bShow);
+        DWORD dwType = REG_DWORD;
+        bSuccess = (RegQueryValueEx (hk, TEXT("ShowMountTab"), NULL, &dwType, (PBYTE)&bShow, &dwSize) == 0);
+        RegCloseKey (hk);
+    }
+
+    if (!bSuccess &&
+        RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(bShow);
+        DWORD dwType = REG_DWORD;
+        bSuccess = (RegQueryValueEx (hk, TEXT("ShowMountTab"), NULL, &dwType, (PBYTE)&bShow, &dwSize) == 0);
+        RegCloseKey (hk);
+    }
+
+    return bShow;
+}
+
 extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdShow)
 {
    TaLocale_LoadCorrespondingModule (hInst);
@@ -105,7 +133,8 @@ extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine,
       {
       PropSheet_AddTab (g.psh, 0, ((g.fIsWinNT) ? IDD_GENERAL_NT : IDD_GENERAL_95), (DLGPROC)GeneralTab_DlgProc, 0, TRUE);
 
-      PropSheet_AddTab (g.psh, 0, ((g.fIsWinNT) ? IDD_DRIVES_NT : IDD_DRIVES_95), (DLGPROC)DrivesTab_DlgProc, 0, TRUE);
+      if (Main_ShowMountTab())
+         PropSheet_AddTab (g.psh, 0, ((g.fIsWinNT) ? IDD_DRIVES_NT : IDD_DRIVES_95), (DLGPROC)DrivesTab_DlgProc, 0, TRUE);
 
       if (g.fIsWinNT)
          PropSheet_AddTab (g.psh, 0, IDD_PREFS_NT, (DLGPROC)PrefsTab_DlgProc, 0, TRUE);

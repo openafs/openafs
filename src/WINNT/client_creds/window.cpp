@@ -115,9 +115,12 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                break;
 
             case M_TERMINATE:
+#ifndef UAC_COMPATIBLE
                if (g.fIsWinNT && IsServiceRunning())
                   ModalDialog (IDD_TERMINATE, NULL, (DLGPROC)Terminate_DlgProc);
-               else if (g.fIsWinNT)
+               else
+#endif
+               if (g.fIsWinNT)
                   ModalDialog (IDD_TERMINATE_SMALL, NULL, (DLGPROC)Terminate_DlgProc);
                else // (!g.fIsWinNT)
                   ModalDialog (IDD_TERMINATE_SMALL_95, NULL, (DLGPROC)Terminate_DlgProc);
@@ -426,22 +429,25 @@ void Main_OnSelectTab (void)
 void Main_OnCheckTerminate (void)
 {
     HKEY hk;
+    BOOL bSuccess = FALSE;
 
     if (RegOpenKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, 0,
-                       (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        bSuccess = (RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize) == 0);
+        RegCloseKey (hk);
+    }
+
+    if (bSuccess &&
+        RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
     {
         DWORD dwSize = sizeof(g.fStartup);
         DWORD dwType = REG_DWORD;
         RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
         RegCloseKey (hk);
-    }
-    else if (RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, 0,
-                           (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
-    {
-      DWORD dwSize = sizeof(g.fStartup);
-      DWORD dwType = REG_DWORD;
-      RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
-      RegCloseKey (hk);
     }
 
     Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
@@ -484,6 +490,33 @@ HWND Main_CreateTabDialog (HWND hTab, size_t iTab)
    return hDlg;
 }
 
+static BOOL Main_ShowMountTab(void)
+{
+    HKEY hk;
+    BOOL bShow = FALSE;
+    BOOL bSuccess = FALSE;
+
+    if (RegOpenKeyEx (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, 0,
+                       (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(bShow);
+        DWORD dwType = REG_DWORD;
+        bSuccess = (RegQueryValueEx (hk, TEXT("ShowMountTab"), NULL, &dwType, (PBYTE)&bShow, &dwSize) == 0);
+        RegCloseKey (hk);
+    }
+
+    if (!bSuccess &&
+        RegOpenKeyEx (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, 0,
+                      (IsWow64()?KEY_WOW64_64KEY:0)|KEY_QUERY_VALUE, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(bShow);
+        DWORD dwType = REG_DWORD;
+        bSuccess = (RegQueryValueEx (hk, TEXT("ShowMountTab"), NULL, &dwType, (PBYTE)&bShow, &dwSize) == 0);
+        RegCloseKey (hk);
+    }
+
+    return bShow;
+}
 
 void Main_RepopulateTabs (BOOL fDestroyInvalid)
 {
@@ -564,15 +597,19 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
          }
       lock_ReleaseMutex(&g.credsLock);
 
-      if (REALLOC (aTabs, cTabs, 1+iTabOut, cREALLOC_TABS))
-         aTabs[ iTabOut++ ] = dwTABPARAM_MOUNT;
+      if (Main_ShowMountTab())
+         {
+         if (REALLOC (aTabs, cTabs, 1+iTabOut, cREALLOC_TABS))
+            aTabs[ iTabOut++ ] = dwTABPARAM_MOUNT;
+         }
 
+#ifndef UAC_COMPATIBLE
       if (g.fIsWinNT)
          {
          if (REALLOC (aTabs, cTabs, 1+iTabOut, cREALLOC_TABS))
             aTabs[ iTabOut++ ] = dwTABPARAM_ADVANCED;
          }
-
+#endif
       // Now erase the current tabs, and re-add new ones. Remember which tab is
       // currently selected, so we can try to go back to it later.
       //
