@@ -1301,7 +1301,10 @@ SweepAFSCache(int *vFilesFound)
     for (currp = readdir(cdirp); currp; currp = readdir(cdirp)) {
 	if (afsd_debug) {
 	    printf("%s: Current directory entry:\n", rn);
-#if defined(AFS_USR_DFBSD_ENV)
+#if defined(AFS_SGI62_ENV) || defined(AFS_USR_DARWIN100_ENV)
+            printf("\tinode=%" AFS_INT64_FMT ", reclen=%d, name='%s'\n",
+		   currp->d_ino, currp->d_reclen, currp->d_name);
+#elif defined(AFS_USR_DFBSD_ENV)
 	    printf("\tinode=%d, name='%s'\n", currp->d_ino,
 		   currp->d_name);
 #else
@@ -1509,7 +1512,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     afs_global_procp = (struct usr_proc *)
 	afs_osi_Alloc(sizeof(struct usr_proc));
     usr_assert(afs_global_procp != NULL);
-    afs_global_procp->p_pid = getpid();
+    afs_global_procp->p_pid = osi_getpid();
     afs_global_procp->p_ppid = (pid_t) 1;
     afs_global_procp->p_ucred = afs_global_ucredp;
 

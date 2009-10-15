@@ -638,7 +638,10 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	    	printf("Using Kerberos V5 ticket natively\n");
 
 #ifndef HAVE_NO_KRB5_524
-	    status = krb5_524_conv_principal (context, v5cred->client, &k4name, &k4inst, &k4realm);
+	    status = krb5_524_conv_principal (context, v5cred->client,
+					      (char *) &k4name,
+					      (char *) &k4inst,
+					      (char *) &k4realm);
 	    if (status) {
 		afs_com_err(progname, status, "while converting principal "
 			"to Kerberos V4 format");

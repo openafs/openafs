@@ -88,7 +88,7 @@
  *     of 100 digits.
  *  
  *   - The 'p' specifier for printing pointers is implemented using
- *     compile time knowledge.  (AFS_64BITPOINTER_ENV)
+ *     compile time knowledge.  (AFS_64BITUSERPOINTER_ENV)
  *
  *   - Floating-point specifier (%e, %f, %g) are implemented by
  *     calling the standard sprintf, and thus may be unsafe.
@@ -731,7 +731,7 @@ xyzprintf (struct snprintf_state *state, const char *char_format, va_list ap)
 		break;
 	    }
 	    case 'p' : {
-#ifdef AFS_64BITPOINTER_ENV
+#ifdef AFS_64BITUSERPOINTER_ENV
 		u_longest arg = (u_longest)va_arg(ap, void*);
 #else
                 u_longest arg = (unsigned long)va_arg(ap, void*);

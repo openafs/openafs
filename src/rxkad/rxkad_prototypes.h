@@ -148,6 +148,10 @@ extern afs_int32 ktohl(char flags, afs_int32 l);
 extern afs_uint32 life_to_time(afs_uint32 start, unsigned char life);
 extern unsigned char time_to_life(afs_uint32 start, afs_uint32 end);
 
+/* crc.c */
+extern void _rxkad_crc_init_table(void);
+extern afs_uint32 _rxkad_crc_update(const char *p, size_t len, afs_uint32 res);
+
 /* ticket5.c */
 extern int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 			     int (*get_key) (void *, int,

@@ -117,7 +117,7 @@ des_ecb_encrypt(void * clear, void * cipher,
 	abort();
     }
 #endif
-    if ((afs_uint32) clear & 3) {
+    if (afs_pointer_to_int(clear) & 3) {
 	memcpy((char *)(&L_save), (char *)clear, sizeof(L_save));
 	clear=((afs_uint32*)clear)+1;
 	memcpy((char *)(&R_save), (char *)clear, sizeof(R_save));
@@ -429,7 +429,7 @@ des_ecb_encrypt(void * clear, void * cipher,
      */
 
 #ifdef MUSTALIGN
-    if ((afs_int32) cipher & 3) {
+    if (afs_pointer_to_int(cipher) & 3) {
 	L_save = L2;		/* cant bcopy a reg */
 	R_save = R2;
 	memcpy((char *)cipher, (char *)&L_save, sizeof(L_save));

@@ -5170,7 +5170,7 @@ ChangeAddr(register struct cmd_syndesc *as, void *arock)
 	ip1 = 0xffffffff;
     }
 
-    vcode = ubik_Call_New(VL_ChangeAddr, cstruct, 0, ntohl(ip1), ntohl(ip2));
+    vcode = ubik_VL_ChangeAddr(cstruct, UBIK_CALL_NEW, ntohl(ip1), ntohl(ip2));
     if (vcode) {
 	if (remove) {
 	    fprintf(STDERR, "Could not remove server %s from the VLDB\n",
@@ -5237,7 +5237,8 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
 		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, m_uuid,
-				      (afs_int32 *)&vlcb, &m_nentries, &m_addrs);
+				      (afs_int32 *)&vlcb, &m_nentries,
+				      &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
 			    "vos: could not list the multi-homed server addresses\n");
@@ -5286,7 +5287,7 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 static int
 ListAddrs(register struct cmd_syndesc *as, void *arock)
 {
-    afs_int32 vcode;
+    afs_int32 vcode, m_uniq=0;
     afs_int32 i, printuuid = 0;
     struct VLCallBack vlcb;
     afs_int32 nentries;
@@ -5332,8 +5333,8 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
     m_addrs.bulkaddrs_len = 0;
 
     vcode =
-	ubik_Call_New(VL_GetAddrs, cstruct, 0, 0, 0, &vlcb, &nentries,
-		      &m_addrs);
+	ubik_VL_GetAddrs(cstruct, UBIK_CALL_NEW, 0, 0, &vlcb, &nentries,
+			 &m_addrs);
     if (vcode) {
 	fprintf(STDERR, "vos: could not list the server addresses\n");
 	PrintError("", vcode);
@@ -5348,8 +5349,8 @@ ListAddrs(register struct cmd_syndesc *as, void *arock)
 	m_attrs.index = i;
 
 	vcode =
-	    ubik_Call_New(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
-			  &vlcb, &m_nentries, &m_addrs);
+	    ubik_VL_GetAddrsU(cstruct, UBIK_CALL_NEW, &m_attrs, &m_uuid,
+			      &m_uniq, &m_nentries, &m_addrs);
 
 	if (vcode == VL_NOENT) {
   	    if (m_attrs.Mask == VLADDR_UUID) {

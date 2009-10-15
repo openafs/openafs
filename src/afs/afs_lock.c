@@ -272,28 +272,10 @@ afs_BozonLock(struct afs_bozoLock *alock, struct vcache *avc)
     while (1) {
 	if (alock->count == 0) {
 	    /* lock not held, we win */
-#ifdef	AFS_SUN5_ENV
-	    alock->proc = (char *)ttoproc(curthread);
-#else
-#ifdef AFS_64BITPOINTER_ENV
-	    /* To shut up SGI compiler on remark(1413) warnings. */
-	    alock->proc = (char *)(long)MyPidxx;
-#else /* AFS_64BITPOINTER_ENV */
-	    alock->proc = (char *)MyPidxx;
-#endif /* AFS_64BITPOINTER_ENV */
-#endif
+	    alock->proc = afs_int_to_pointer(MyPidxx2Pid(MyPidxx));
 	    alock->count = 1;
 	    return;
-#ifdef	AFS_SUN5_ENV
-	} else if (alock->proc == (char *)ttoproc(curthread)) {
-#else
-#ifdef AFS_64BITPOINTER_ENV
-	    /* To shut up SGI compiler on remark(1413) warnings. */
-	} else if (alock->proc == (char *)(long)MyPidxx) {
-#else /* AFS_64BITPOINTER_ENV */
-	} else if (alock->proc == (char *)MyPidxx) {
-#endif /* AFS_64BITPOINTER_ENV */
-#endif
+	} else if (alock->proc == afs_int_to_pointer(MyPidxx2Pid(MyPidxx))) {
 	    /* lock is held, but by us, so we win anyway */
 	    alock->count++;
 	    return;
@@ -343,16 +325,7 @@ afs_CheckBozonLockBlocking(struct afs_bozoLock *alock)
 {
     AFS_STATCNT(afs_CheckBozonLockBlocking);
     if (alock->count || (alock->flags & AFS_BOZONWAITING))
-#ifdef AFS_SUN5_ENV
-	if (alock->proc != (char *)ttoproc(curthread))
-#else
-#ifdef AFS_64BITPOINTER_ENV
-	/* To shut up SGI compiler on remark(1413) warnings. */
-	if (alock->proc != (char *)(long)MyPidxx)
-#else /* AFS_64BITPOINTER_ENV */
-	if (alock->proc != (char *)MyPidxx)
-#endif /* AFS_64BITPOINTER_ENV */
-#endif
+	if (alock->proc != afs_int_to_pointer(MyPidxx2Pid(MyPidxx)))
 	    return 1;
     return 0;
 }

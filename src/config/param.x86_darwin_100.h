@@ -16,7 +16,10 @@
 #error Unsupported architecture
 #endif
 #define AFS_VFSINCL_ENV		1
-
+#ifdef __amd64__
+#define AFS_64BITUSERPOINTER_ENV 1
+#endif
+#define AFS_64BIT_SIZEOF 1 /* seriously? */
 #include <afs/afs_sysnames.h>
 
 #define AFS_DARWIN_ENV
@@ -143,6 +146,9 @@
 #define AFS_X86_ENV		1
 #else
 #error Unsupported architecture
+#endif
+#ifdef __amd64__
+#define AFS_64BITUSERPOINTER_ENV 1
 #endif
 
 #include <afs/afs_sysnames.h>

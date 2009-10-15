@@ -26,6 +26,7 @@
 #define AFS_64BIT_CLIENT	1
 #if defined(__LP64__)
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
+#define AFS_64BITUSERPOINTER_ENV	1
 #endif
 
 #include <afs/afs_sysnames.h>

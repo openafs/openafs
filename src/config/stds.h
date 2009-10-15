@@ -321,6 +321,14 @@ hdr_static_inline(long) afs_printable_int32_ld(afs_int32 d) { return (long) d; }
 
 hdr_static_inline(unsigned long) afs_printable_uint32_lu(afs_uint32 d) { return (unsigned long) d; }
 
+#ifdef AFS_64BITUSERPOINTER_ENV
+#define afs_pointer_to_int(p)      ((afs_uint32)  (afs_uint64) (p))
+#define afs_int_to_pointer(i)     ((void *) (afs_uint64) (i))
+#else
+#define afs_pointer_to_int(p)      ((afs_uint32)   (p))
+#define afs_int_to_pointer(i)      ((void *)  (i))
+#endif
+
 #if !defined(__GNUC__) || __GNUC__ < 2
 #define AFS_UNUSED
 #else

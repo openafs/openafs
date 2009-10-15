@@ -403,7 +403,7 @@ UPDATE_FetchInfo(struct rx_call *call, char *name)
 static int
 Quit(char *msg)
 {
-    fprintf(stderr, msg);
+    fprintf(stderr, "%s", msg);
     exit(1);
 }
 

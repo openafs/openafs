@@ -57,6 +57,7 @@
 
 /*! \name ubik client flags */
 #define UPUBIKONLY 	    1	/*!< only check servers presumed functional */
+#define UBIK_CALL_NEW 	    2	/*!< use the semantics of ubik_Call_New */
 /*\}*/
 
 /*! \name RX services types */
@@ -500,8 +501,12 @@ extern afs_int32 ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
 			       long p3, long p4, long p5, long p6, long p7,
 			       long p8, long p9, long p10, long p11, long p12,
 			       long p13, long p14, long p15, long p16);
+extern afs_int32 ubik_Call_New(int (*aproc) (), register struct ubik_client
+			       *aclient, afs_int32 aflags, long p1, long p2,
+			       long p3, long p4, long p5, long p6, long p7,
+			       long p8, long p9, long p10, long p11, long p12,
+			       long p13, long p14, long p15, long p16);
 #endif
-
 /*\}*/
 
 /* \name ubikcmd.c */

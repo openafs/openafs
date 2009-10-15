@@ -88,7 +88,7 @@ des_pcbc_encrypt(void * in, void * out, register afs_int32 length,
 
     if (encrypt) {
 #ifdef MUSTALIGN
-	if ((afs_int32) ivec & 3) {
+	if (afs_pointer_to_int(ivec) & 3) {
 	    memcpy((char *)&xor_0, (char *)ivec++, sizeof(xor_0));
 	    memcpy((char *)&xor_1, (char *)ivec, sizeof(xor_1));
 	} else
@@ -101,7 +101,7 @@ des_pcbc_encrypt(void * in, void * out, register afs_int32 length,
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
 #ifdef MUSTALIGN
-	    if ((afs_int32) input & 3) {
+	    if (afs_pointer_to_int(input) & 3) {
 		memcpy((char *)&t_input[0], (char *)input,
 		       sizeof(t_input[0]));
 		memcpy((char *)&t_input[1], (char *)(input + 1),
@@ -134,7 +134,7 @@ des_pcbc_encrypt(void * in, void * out, register afs_int32 length,
 	     * case both input and output are the same space.
 	     */
 #ifdef MUSTALIGN
-	    if ((afs_int32) input & 3) {
+	    if (afs_pointer_to_int(input) & 3) {
 		memcpy((char *)&xor_0, (char *)input++, sizeof(xor_0));
 		xor_0 ^= t_output[0];
 		memcpy((char *)&xor_1, (char *)input++, sizeof(xor_1));
@@ -149,7 +149,7 @@ des_pcbc_encrypt(void * in, void * out, register afs_int32 length,
 
 	    /* copy temp output and save it for cbc */
 #ifdef MUSTALIGN
-	    if ((afs_int32) output & 3) {
+	    if (afs_pointer_to_int(output) & 3) {
 		memcpy((char *)output++, (char *)&t_output[0],
 		       sizeof(t_output[0]));
 		memcpy((char *)output++, (char *)&t_output[1],
@@ -178,7 +178,7 @@ des_pcbc_encrypt(void * in, void * out, register afs_int32 length,
     else {
 	/* decrypt */
 #ifdef MUSTALIGN
-	if ((afs_int32) ivec & 3) {
+	if (afs_pointer_to_int(ivec) & 3) {
 	    memcpy((char *)&xor_0, (char *)ivec++, sizeof(xor_0));
 	    memcpy((char *)&xor_1, (char *)ivec, sizeof(xor_1));
 	} else
@@ -191,7 +191,7 @@ des_pcbc_encrypt(void * in, void * out, register afs_int32 length,
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
 #ifdef MUSTALIGN
-	    if ((afs_int32) input & 3) {
+	    if (afs_pointer_to_int(input) & 3) {
 		memcpy((char *)&t_input[0], (char *)input++,
 		       sizeof(t_input[0]));
 		memcpy((char *)&t_input[1], (char *)input++,
@@ -223,7 +223,7 @@ des_pcbc_encrypt(void * in, void * out, register afs_int32 length,
 	    t_output[1] ^= xor_1;
 	    /* copy temp output */
 #ifdef MUSTALIGN
-	    if ((afs_int32) output & 3) {
+	    if (afs_pointer_to_int(output) & 3) {
 		memcpy((char *)output++, (char *)&t_output[0],
 		       sizeof(t_output[0]));
 		memcpy((char *)output++, (char *)&t_output[1],

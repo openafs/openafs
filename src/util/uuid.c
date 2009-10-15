@@ -274,6 +274,8 @@ afs_uuid_create(afsUUID * uuid)
 	seed ^= uuid_time.seed[3];
 #if defined(KERNEL) && defined(AFS_XBSD_ENV)
 	rand_irand += seed + (afs_uint32) curproc->p_pid;
+#elif defined(UKERNEL)
+	rand_irand += seed + (afs_uint32) osi_getpid();
 #else
 	rand_irand += seed + (afs_uint32) getpid();
 #endif

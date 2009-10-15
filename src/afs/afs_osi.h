@@ -191,9 +191,9 @@ typedef struct timeval32 osi_timeval_t;
 typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
 
+#ifndef UKERNEL
 #define osi_getpid() 		getpid()
-
-#define osi_getpid() 		getpid()
+#endif
 
 /*
  * osi_ThreadUnique() should yield a value that can be found in ps
@@ -204,12 +204,12 @@ typedef struct timeval osi_timeval_t;
 #ifdef AFS_FBSD50_ENV
 /* should use curthread, but 'ps' can't display it */
 #define osi_ThreadUnique()	curproc
-#else
-#ifdef AFS_LINUX_ENV
+#elif defined(AFS_LINUX_ENV)
 #define osi_ThreadUnique()	(current->pid)
+#elif defined(UKERNEL)
+#define osi_ThreadUnique()	osi_getpid()
 #else
 #define osi_ThreadUnique()	getpid()
-#endif
 #endif
 
 

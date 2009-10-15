@@ -425,7 +425,6 @@ vsu_ExtractName(char rname[], char name[])
     }
 }
 
-
 /* returns 0 if failed */
 afs_uint32
 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
@@ -441,7 +440,7 @@ vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp)
 	char *end;
 	afs_uint32 result;
 	result = strtoul(astring, &end, 10);
-	if (result != ULONG_MAX && *end == '\0')
+	if (result != UINT_MAX && *end == '\0')
 	    return result;
     }
 

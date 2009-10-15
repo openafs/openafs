@@ -75,7 +75,7 @@ des_cbc_cksum(des_cblock * in, des_cblock * out, register afs_int32 length,
     unsigned char *t_in_p = (unsigned char *)t_input;
 
 #ifdef MUSTALIGN
-    if ((afs_int32) ivec & 3) {
+    if (afs_pointer_to_int(ivec) & 3) {
 	memcpy((char *)&t_output[0], (char *)ivec++, sizeof(t_output[0]));
 	memcpy((char *)&t_output[1], (char *)ivec, sizeof(t_output[1]));
     } else
@@ -88,7 +88,7 @@ des_cbc_cksum(des_cblock * in, des_cblock * out, register afs_int32 length,
     for (i = 0; length > 0; i++, length -= 8) {
 	/* get input */
 #ifdef MUSTALIGN
-	if ((afs_int32) input & 3) {
+      if (afs_pointer_to_int(input) & 3) {
 	    memcpy((char *)&t_input[0], (char *)input++, sizeof(t_input[0]));
 	    memcpy((char *)&t_input[1], (char *)input++, sizeof(t_input[1]));
 	} else
@@ -125,7 +125,7 @@ des_cbc_cksum(des_cblock * in, des_cblock * out, register afs_int32 length,
     }
     /* copy temp output and save it for checksum */
 #ifdef MUSTALIGN
-    if ((afs_int32) output & 3) {
+    if (afs_pointer_to_int(output) & 3) {
 	memcpy((char *)output++, (char *)&t_output[0], sizeof(t_output[0]));
 	memcpy((char *)output, (char *)&t_output[1], sizeof(t_output[1]));
     } else

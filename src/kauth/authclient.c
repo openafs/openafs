@@ -570,15 +570,15 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	oanswer.SeqBody = (char *)&answer;
 	version = 1;
 	code =
-	    ubik_Call(KAA_Authenticate, conn, 0, name, instance, start, end,
-		      &arequest, &oanswer, 0, 0);
+	    ubik_KAA_Authenticate(conn, 0, name, instance, start, end,
+				  &arequest, &oanswer);
 	if (code == RXGEN_OPCODE) {
 	    oanswer.MaxSeqLen = sizeof(answer_old);
 	    oanswer.SeqBody = (char *)&answer_old;
 	    version = 0;
 	    code =
-		ubik_Call(KAA_Authenticate_old, conn, 0, name, instance,
-			  start, end, &arequest, &oanswer);
+		ubik_KAA_Authenticate_old(conn, 0, name, instance,
+					  start, end, &arequest, &oanswer);
 	}
 	if (code == RXGEN_OPCODE) {
 	    code = KAOLDINTERFACE;
@@ -686,7 +686,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 
     version = 1;
     code =
-	ubik_Call(KAT_GetTicket, conn, 0, auth_token->kvno, auth_domain,
+	ubik_KAT_GetTicket(conn, 0, auth_token->kvno, auth_domain,
 		  &aticket, name, instance, &atimes, &oanswer);
     if (code == RXGEN_OPCODE) {
 	oanswer.SeqLen = 0;	/* this may be set by first call */
@@ -694,7 +694,7 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 	oanswer.SeqBody = (char *)&answer_old;
 	version = 0;
 	code =
-	    ubik_Call(KAT_GetTicket_old, conn, 0, auth_token->kvno,
+	    ubik_KAT_GetTicket_old(conn, 0, auth_token->kvno,
 		      auth_domain, &aticket, name, instance, &atimes,
 		      &oanswer);
 	if (code == RXGEN_OPCODE) {
@@ -803,11 +803,10 @@ ka_ChangePassword(char *name, char *instance, struct ubik_client * conn,	/* Ubik
     LOCK_GLOBAL_MUTEX;
 #if defined(AFS_S390_LINUX20_ENV) && !defined(AFS_S390X_LINUX20_ENV)
     code =
-	ubik_Call_New(KAM_SetPassword, conn, 0, name, instance, 0, 0,
-		      *newkey);
+	ubik_KAM_SetPassword(conn, UBIK_CALL_NEW, name, instance, 0, 0, *(EncryptionKey *)newkey);
 #else
     code =
-	ubik_Call_New(KAM_SetPassword, conn, 0, name, instance, 0, *newkey);
+	ubik_KAM_SetPassword(conn, UBIK_CALL_NEW, name, instance, 0, *(EncryptionKey *)newkey);
 #endif
     UNLOCK_GLOBAL_MUTEX;
     return code;

@@ -379,7 +379,7 @@ SYNC_ask_internal(SYNC_client_state * state, SYNC_command * com, SYNC_response *
 #else
     com->hdr.pid = getpid();
 #ifdef AFS_PTHREAD_ENV
-    com->hdr.tid = (afs_int32)pthread_self();
+    com->hdr.tid = afs_pointer_to_int(pthread_self());
 #else
     {
 	PROCESS handle = LWP_ThreadId();

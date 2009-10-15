@@ -13,7 +13,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
 #include <mit-cpyright.h>
 
 #include <stdio.h>
@@ -164,7 +163,7 @@ read_pw_string(char *s, int max, char *prompt, int verify)
 #endif
 
     while (!ok) {
-	printf(prompt);
+	printf("%s", prompt);
 	fflush(stdout);
 #ifdef	CROSSMSDOS
 	h19line(s, sizeof(s), 0);

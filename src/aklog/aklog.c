@@ -5,10 +5,6 @@
  * For distribution and copying rights, see the file "mit-copyright.h"
  */
 
-#if !defined(lint) && !defined(SABER)
-static char *rcsid = "$Id$";
-#endif /* lint || SABER */
-
 #include <afs/stds.h>
 #include "aklog.h"
 

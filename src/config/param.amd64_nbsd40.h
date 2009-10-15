@@ -9,6 +9,7 @@
 #define SYS_NAME_ID    SYS_NAME_ID_amd64_nbsd40
 
 #define AFS_64BITPOINTER_ENV  1
+#define AFS_64BITUSERPOINTER_ENV	1
 #ifndef UKERNEL
 /* This section for kernel libafs compiles only */
 

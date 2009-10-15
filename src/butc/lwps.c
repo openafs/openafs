@@ -144,7 +144,7 @@ PrintLogStr(FILE *log, afs_int32 error1, afs_int32 error2, char *str)
 {
     char *err1, *err2;
 
-    fprintf(log, str);
+    fprintf(log, "%s", str);
     if (error1) {
 	err2 = "vols";
 	switch (error1) {
@@ -2455,7 +2455,9 @@ readVolumeHeader(char *buffer,		/* in - buffer to read header from */
 	/* Handle Case 1 */
 	memset(&vhptr, 0, sizeof(struct volumeHeader));
 	memcpy(&vhptr, buffer + bufloc, firstSplice);
-	memcpy(&vhptr + firstSplice, buffer + bufloc + firstSplice + padLen,
+	/* probably GCC bug 37060; however, no guarantee on length of buffer */
+	tempvhptr = (struct volumeHeader *)(buffer + firstSplice);
+	memcpy(tempvhptr, buffer + bufloc + firstSplice + padLen,
 	       nextSplice);
 	HEADER_CHECKS(vhptr, header);
 

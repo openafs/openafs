@@ -253,6 +253,7 @@ typedef unsigned int fsblkcnt_t;
 #define offset_t		usr_offset_t
 #define getpid()		usr_getpid()
 #define setpag(A,B,C,D)		usr_setpag((A),(B),(C),(D))
+#define osi_getpid()	        afs_pointer_to_int(usr_thread_self())
 #ifdef pid_t
 #undef pid_t
 #endif
@@ -840,7 +841,7 @@ enum usr_uio_rw { USR_UIO_READ, USR_UIO_WRITE };
 #endif
 #define NBPG			4096
 
-#define panic(S)		do{fprintf(stderr, S);assert(0);}while(0)
+#define panic(S)		do{fprintf(stderr, "%s", S);assert(0);}while(0)
 #define abort()			assert(0)
 #define usr_assert(A)		assert(A)
 

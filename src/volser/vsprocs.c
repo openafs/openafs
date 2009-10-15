@@ -225,7 +225,7 @@ yesprompt(char *str)
 int
 PrintError(char *msg, afs_int32 errcode)
 {
-    fprintf(STDERR, msg);
+    fprintf(STDERR, "%s", msg);
     /*replace by a big switch statement */
     switch (errcode) {
     case 0:
@@ -3143,6 +3143,7 @@ DelVol(struct rx_connection *conn, afs_uint32 vid, afs_int32 part,
 }
 
 #define ONERROR(ec, ep, es) if (ec) { fprintf(STDERR, (es), (ep)); error = (ec); goto rfail; }
+#define ONERROR0(ec, es) if (ec) { fprintf(STDERR, (es)); error = (ec); goto rfail; }
 #define ERROREXIT(ec) { error = (ec); goto rfail; }
 
 /* Get a "transaction" on this replica.  Create the volume 
@@ -3368,7 +3369,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_int32 afromserver,
     roclone = ((roindex == -1) ? 0 : 1);
     rwindex = Lp_GetRwIndex(&entry);
     if (rwindex < 0)
-	ONERROR(VOLSERNOVOL, 0, "There is no RW volume \n");
+	ONERROR0(VOLSERNOVOL, "There is no RW volume \n");
 
     /* Make sure we have a RO volume id to work with */
     if (entry.volumeId[ROVOL] == INVALID_BID) {
@@ -3620,7 +3621,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_int32 afromserver,
     results.manyResults_val =
 	(afs_int32 *) malloc(sizeof(afs_int32) * nservers + 1);
     if (!replicas || !times || !!!results.manyResults_val || !toconns)
-	ONERROR(ENOMEM, 0,
+	ONERROR0(ENOMEM,
 		"Failed to create transaction on the release clone\n");
 
     memset(replicas, 0, (sizeof(struct replica) * nservers + 1));
@@ -3635,7 +3636,7 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_int32 afromserver,
     if (!fullrelease && code)
 	ONERROR(VOLSERNOVOL, afromvol,
 		"Old clone is inaccessible. Try vos release -f %u.\n");
-    ONERROR(code, 0, "Failed to create transaction on the release clone\n");
+    ONERROR0(code, "Failed to create transaction on the release clone\n");
     VDONE;
 
     /* For each index in the VLDB */

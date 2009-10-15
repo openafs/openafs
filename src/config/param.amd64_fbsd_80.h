@@ -25,6 +25,7 @@
 #define AFS_64BIT_ENV 1
 #define AFS_64BIT_CLIENT 1
 #define AFS_64BITPOINTER_ENV 1
+#define AFS_64BITUSERPOINTER_ENV	1
 #define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_FBSD_ENV 1
 #define AFS_FBSD40_ENV 1
