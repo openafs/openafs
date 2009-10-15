@@ -10,14 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-
+#include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
-#endif
-#include <sys/types.h>
 #include <sys/wait.h>
+#endif
 #include <fcntl.h>
 #include <errno.h>
 #include <limits.h>
