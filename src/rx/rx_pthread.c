@@ -91,8 +91,7 @@ server_entry(void *argp)
     void (*server_proc) (void *) = (void (*)(void *))argp;
     server_proc(NULL);
     dpf(("rx_pthread.c: server_entry: Server proc returned unexpectedly\n"));
-    exit(1);
-    return NULL;
+    return (void *) -1; /* reused as return value, see pthread(3) */
 }
 
 /*
