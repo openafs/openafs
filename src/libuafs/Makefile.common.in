@@ -788,7 +788,7 @@ $(UOBJ)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 $(UOBJ)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULE1) @CFLAGS_NOERROR@
 $(UOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(UOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
 	$(CRULE1)
 $(UOBJ)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
@@ -1056,7 +1056,7 @@ $(WEBOBJ)/securehash.o: $(TOP_SRCDIR)/afsweb/securehash.c
 $(WEBOBJ)/nsafs.o: $(TOP_SRCDIR)/afsweb/nsafs.c
 	$(CRULE2)
 $(WEBOBJ)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
-	$(CRULE2) @CFLAGS_NOERROR@
+	$(CRULE2)
 $(WEBOBJ)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
 	$(CRULE2)
 $(WEBOBJ)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c
@@ -1318,7 +1318,7 @@ $(JUAFS)/osi_vfsops.o: $(TOP_SRC_AFS)/UKERNEL/osi_vfsops.c
 $(JUAFS)/ktc.o: 	$(TOP_SRCDIR)/auth/ktc.c
 	$(CRULE1) @CFLAGS_NOERROR@
 $(JUAFS)/ticket.o: $(TOP_SRCDIR)/rxkad/ticket.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(JUAFS)/rxkad_server.o: $(TOP_SRCDIR)/rxkad/rxkad_server.c
 	$(CRULE1)
 $(JUAFS)/ptint.cs.o: $(TOP_OBJDIR)/src/ptserver/ptint.cs.c

@@ -199,7 +199,7 @@ rxkad_common.o: ${RXKAD}/rxkad_common.c
 	${CCRULE} ${RXKAD}/rxkad_common.c
 
 ticket.o: ${RXKAD}/ticket.c
-	${CCRULE} @CFLAGS_NOERROR@ ${RXKAD}/ticket.c
+	${CCRULE} ${RXKAD}/ticket.c
 
 ticket5.o: ${RXKAD}/ticket5.c
 	${CCRULE} @CFLAGS_NOERROR@ ${RXKAD}/ticket5.c

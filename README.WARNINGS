@@ -72,7 +72,6 @@ libadmin/bos/afs_bosAdmin.c: all     : DES keys, time types, and const
 libadmin/kas/afs_kasAdmin.c: all     : Ubik_Call nonsense, DES keys
 libadmin/samples/rxstat_query_peer.c : all : util_RPCStatsStateGet types
 libadmin/samples/rxstat_query_process.c : all : util_RPCStatsStateGet types
-libadmin/samples/rxdebug_peers.c : format : struct clock vs unsigned int
 libadmin/test/client.c : all         : util_RPCStatsStateGet types
 ptserver/ptserver.c  : all	     : ExtendedCellInfo
 rxkad/rxkad_server.c : all           : Des key nonsense
@@ -88,10 +87,10 @@ ubik/ubikclient.c    : strict-protos : ubik_Call
 uss/uss_vol.c 	     : all             Format issues
 uss/uss_kauth.c      : all	     : Des keys, ubik_Call
 uss/lex.yy.c         : all           : Unused symbols
+viced/afsfileprocs.c : all (tviced)  : implicit definiton of hpr_*
 viced/fsprobe.c      : all	     : ubik_Call
 vlserver/vlserver.c  : all	     : GetExtendedCellInfo
 vol/salvager.c       : all           : consts & undefined variable from header
 volser/vos.c         : all	     : ubik_Call_New
 volser/vol-dump.c    : format        : afs_sfsize_t
-volser/vsprocs.c     : format-extra  : The ONERROR macro needs to be rethought
 

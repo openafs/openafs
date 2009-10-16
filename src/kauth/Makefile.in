@@ -101,7 +101,6 @@ kaprocs.o: kaprocs.c ${INCLS} kaport.h
 	${CC} ${CFLAGS} @CFLAGS_NOERROR@ -c $<
 
 authclient.o: authclient.c ${INCLS}
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 kaauxdb.o: kaauxdb.c
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<

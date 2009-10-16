@@ -68,7 +68,7 @@ afsfileprocs.o: ${VICED}/afsfileprocs.c
 	${CCRULE} @CFLAGS_NOERROR@
 
 host.o: ${VICED}/host.c
-	${CCRULE} @CFLAGS_NOERROR@
+	${CCRULE}
 
 physio.o: ${VICED}/physio.c
 	${CCRULE}
