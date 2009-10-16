@@ -252,14 +252,9 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
     /* if timeout - check that it did not exceed the HardDead timeout
      * and retry */
     
-    /* timeleft - get if from reqp the same way as cmXonnByMServers does */
+    /* timeleft - get it from reqp the same way as cm_ConnByMServers does */
     timeUsed = (GetTickCount() - reqp->startTime) / 1000;
-	    
-    /* leave 5 seconds margin for sleep */
-    if (reqp->flags & CM_REQ_NORETRY)
-        timeLeft = 0;
-    else
-        timeLeft = HardDeadtimeout - timeUsed;
+    timeLeft = HardDeadtimeout - timeUsed;
 
     /* get a pointer to the cell */
     if (errorCode) {
