@@ -52,6 +52,7 @@
 #include <afs/afssyscalls.h>
 #include "acl.h"
 #include <afs/dir.h>
+#include <afs/com_err.h>
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -855,7 +856,8 @@ DoMyVolDump(Volume * vp, struct DiskPartition64 *dp, char *dumpfile, int fromtim
 	dumpfd =
 	    afs_open(dumpfile, O_CREAT | O_WRONLY | O_TRUNC, S_IRUSR | S_IWUSR);
 	if (dumpfd < 0) {
-	    fprintf(stderr, "Failed to open dump file! Exiting.\n");
+	    fprintf(stderr, "Failed to open dump file: %s. Exiting.\n",
+	            afs_error_message(errno));
 	    exit(1);
 	}
     } else {

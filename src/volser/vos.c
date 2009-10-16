@@ -53,6 +53,7 @@
 #include <afs/ihandle.h>
 #include <afs/vnode.h>
 #include <afs/volume.h>
+#include <afs/com_err.h>
 #include "dump.h"
 #include "lockdata.h"
 
@@ -298,7 +299,8 @@ SendFile(usd_handle_t ufd, register struct rx_call *call, long blksize)
 #endif
 	error = USD_READ(ufd, buffer, blksize, &nbytes);
 	if (error) {
-	    fprintf(STDERR, "File system read failed\n");
+	    fprintf(STDERR, "File system read failed: %s\n",
+	            afs_error_message(error));
 	    break;
 	}
 	if (nbytes == 0) {
@@ -342,7 +344,8 @@ WriteData(struct rx_call *call, void *rock)
 	    code = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
 	}
 	if (code) {
-	    fprintf(STDERR, "Could not access file '%s'\n", filename);
+	    fprintf(STDERR, "Could not access file '%s': %s\n", filename,
+	            afs_error_message(code));
 	    error = VOLSERBADOP;
 	    goto wfail;
 	}
@@ -412,7 +415,8 @@ ReceiveFile(usd_handle_t ufd, struct rx_call *call, long blksize)
 	    error =
 		USD_WRITE(ufd, &buffer[bytesread - bytesleft], bytesleft, &w);
 	    if (error) {
-		fprintf(STDERR, "File system write failed\n");
+		fprintf(STDERR, "File system write failed: %s\n",
+		        afs_error_message(error));
 		ERROR_EXIT(-1);
 	    }
 	}
@@ -451,7 +455,8 @@ DumpFunction(struct rx_call *call, void *rock)
 	    code = USD_IOCTL(ufd, USD_IOCTL_GETBLKSIZE, &blksize);
 	}
 	if (code) {
-	    fprintf(STDERR, "Could not create file '%s'\n", filename);
+	    fprintf(STDERR, "Could not create file '%s': %s\n", filename,
+	            afs_error_message(code));
 	    ERROR_EXIT(VOLSERBADOP);
 	}
     }

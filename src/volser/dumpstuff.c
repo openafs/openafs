@@ -800,7 +800,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    /* Record the read error */
 	    if (n < 0) {
 		n = 0;
-		Log("1 Volser: DumpFile: Error %d reading inode %s for vnode %d\n", errno, PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
+		Log("1 Volser: DumpFile: Error reading inode %s for vnode %d: %s\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode, afs_error_message(errno));
 	    } else if (!pad) {
 		Log("1 Volser: DumpFile: Error reading inode %s for vnode %d\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
 	    }
@@ -819,7 +819,7 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	    lcode = FDH_SEEK(handleP, (size_t)((size - nbytes) + howMany), SEEK_SET);
 	    if (lcode != ((size - nbytes) + howMany)) {
 		if (lcode < 0) {
-		    Log("1 Volser: DumpFile: Error %d seeking in inode %s for vnode %d\n", errno, PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
+		    Log("1 Volser: DumpFile: Error seeking in inode %s for vnode %d: %s\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode, afs_error_message(errno));
 		} else {
 		    Log("1 Volser: DumpFile: Error seeking in inode %s for vnode %d\n", PrintInode(NULL, handleP->fd_ih->ih_ino), vnode);
 		    lcode = -1;
@@ -1468,12 +1468,14 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 	if (haveStuff) {
 	    FdHandle_t *fdP = IH_OPEN(vp->vnodeIndex[class].handle);
 	    if (fdP == NULL) {
-		Log("1 Volser: ReadVnodes: Error opening vnode index; restore aborted\n");
+		Log("1 Volser: ReadVnodes: Error opening vnode index: %s; restore aborted\n",
+		    afs_error_message(errno));
 		return VOLSERREAD_DUMPERROR;
 	    }
 	    if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, vnodeNumber), SEEK_SET) <
 		0) {
-		Log("1 Volser: ReadVnodes: Error seeking into vnode index; restore aborted\n");
+		Log("1 Volser: ReadVnodes: Error seeking into vnode index: %s; restore aborted\n",
+		    afs_error_message(errno));
 		FDH_REALLYCLOSE(fdP);
 		return VOLSERREAD_DUMPERROR;
 	    }
@@ -1487,12 +1489,14 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 	    vnode->vnodeMagic = vcp->magic;
 	    if (FDH_SEEK(fdP, vnodeIndexOffset(vcp, vnodeNumber), SEEK_SET) <
 		0) {
-		Log("1 Volser: ReadVnodes: Error seeking into vnode index; restore aborted\n");
+		Log("1 Volser: ReadVnodes: Error seeking into vnode index: %s; restore aborted\n",
+		    afs_error_message(errno));
 		FDH_REALLYCLOSE(fdP);
 		return VOLSERREAD_DUMPERROR;
 	    }
 	    if (FDH_WRITE(fdP, vnode, vcp->diskSize) != vcp->diskSize) {
-		Log("1 Volser: ReadVnodes: Error writing vnode index; restore aborted\n");
+		Log("1 Volser: ReadVnodes: Error writing vnode index: %s; restore aborted\n",
+		    afs_error_message(errno));
 		FDH_REALLYCLOSE(fdP);
 		return VOLSERREAD_DUMPERROR;
 	    }
@@ -1556,7 +1560,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	    size = nbytes;
 
 	if ((code = iod_Read(iodp, (char *) p, size)) != size) {
-	    Log("1 Volser: WriteFile: Error reading dump file %d size=%llu nbytes=%u (%d of %u); restore aborted\n", vn, (afs_uintmax_t) filesize, nbytes, code, size);
+	    Log("1 Volser: WriteFile: Error reading dump file %d size=%llu nbytes=%u (%d of %u): %s; restore aborted\n", vn, (afs_uintmax_t) filesize, nbytes, code, size, afs_error_message(errno));
 	    *status = 3;
 	    break;
 	}
@@ -1564,7 +1568,7 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 	if (lcode > 0)
 	    written += lcode;
 	if (lcode != size) {
-	    Log("1 Volser: WriteFile: Error writing (%d,%u) bytes to vnode %d; restore aborted\n", (int)(lcode>>32), (int)(lcode & 0xffffffff), vn);
+	    Log("1 Volser: WriteFile: Error writing (%d,%u) bytes to vnode %d: %s; restore aborted\n", (int)(lcode>>32), (int)(lcode & 0xffffffff), vn, afs_error_message(errno));
 	    *status = 4;
 	    break;
 	}
