@@ -28,6 +28,7 @@
 #include <afs/cmd.h>
 #include "kauth.h"
 #include "kautils.h"
+#include "kauth_internal.h"
 #include "assert.h"
 
 

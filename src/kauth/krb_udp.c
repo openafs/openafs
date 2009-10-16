@@ -43,6 +43,7 @@
 
 #include "kauth.h"
 #include "kautils.h"
+#include "kauth_internal.h"
 #include "kaserver.h"
 #include "prot.h"		/* protocol definitions */
 #include "kaport.h"
@@ -791,7 +792,7 @@ SocketListener(void *unused)
     fd_set rfds;
     struct timeval tv;
     struct packet packet;
-    int fromLen;
+    socklen_t fromLen;
     afs_int32 code;
 
     printf("Starting to listen for UDP packets\n");

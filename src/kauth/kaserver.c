@@ -45,6 +45,7 @@
 #include <ubik.h>
 #include <sys/stat.h>
 #include "kauth.h"
+#include "kauth_internal.h"
 #include "kautils.h"
 #include "kaserver.h"
 #include "kadatabase.h"

@@ -98,12 +98,11 @@ kadatabase.o: kadatabase.c ${INCLS}
 	${CC} ${CFLAGS} -c ${srcdir}/kadatabase.c 
 
 kaprocs.o: kaprocs.c ${INCLS} kaport.h
-	${CC} ${CFLAGS} @CFLAGS_NOERROR@ -c $<
+	${CC} ${CFLAGS} -c $<
 
 authclient.o: authclient.c ${INCLS}
 
 kaauxdb.o: kaauxdb.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 kaerrors.o: kaerrors.c
 
@@ -162,7 +161,7 @@ token.o: token.c ${INCLS}
 client.o: client.c ${INCLS} AFS_component_version_number.o
 
 kas.o: kas.c ${INCLS} AFS_component_version_number.o
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) $(CFLAGS) -c $<
 
 admin_tools.o: admin_tools.c ${INCLS} kaport.h
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
@@ -180,7 +179,6 @@ klog: AFS_component_version_number.o kauth.h kautils.h libkauth.a $(LIBS) \
 	${CC} ${LDFLAGS} -o klog klog.o libkauth.a ${LIBS} ${XLIBS}
 
 klog.o: klog.c kauth.h kautils.h AFS_component_version_number.o
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 klog.krb: kauth.h kautils.h libkauth.krb.a $(KLIBS) klog.o
 	${CC} ${LDFLAGS} -o klog.krb klog.o libkauth.krb.a ${KLIBS} ${XLIBS}
@@ -229,7 +227,6 @@ krb_udp: krb_udp.o libkauth.a $(KLIBS)
 	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a $(KLIBS)
 
 ka-forwarder.o: ka-forwarder.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 ka-forwarder: ka-forwarder.o
 	${CC} -o $@ ${CFLAGS} ka-forwarder.o ${LIBS} ${XLIBS}

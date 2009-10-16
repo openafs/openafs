@@ -1486,7 +1486,7 @@ kamDeleteUser(struct rx_call *call, char *aname, char *ainstance)
     afs_int32 caller;
     afs_int32 to;
     struct kaentry tentry;
-    int nfailures;
+    unsigned int nfailures;
     afs_uint32 locktime;
 
     COUNT_REQ(DeleteUser);
@@ -2083,8 +2083,7 @@ afs_int32
 kamGetPassword(struct rx_call *call, char *name, EncryptionKey *password)
 {
     int code = KANOAUTH;
-    COUNT_REQ(GetPassword);
-
+    AFS_UNUSED COUNT_REQ(GetPassword);
 #ifdef GETPASSWORD
     {
 	afs_int32 to;
@@ -2142,7 +2141,7 @@ kamGetRandomKey(struct rx_call *call, EncryptionKey *key)
 {
     int code;
 
-    COUNT_REQ(GetRandomKey);
+    AFS_UNUSED COUNT_REQ(GetRandomKey);
     if ((code = AwaitInitialization()))
 	return code;
     code = des_random_key(EncryptionKey_to_cblock(key));
