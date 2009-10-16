@@ -1514,6 +1514,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
                     cm_user_t *userp, cm_req_t *reqp, afs_uint32 flags)
 {
     afs_uint64 dataVersion;
+    struct cm_volume *volp = NULL;
+    struct cm_cell *cellp = NULL;
 
     // yj: i want to create some fake status for the /afs directory and the
     // entries under that directory
@@ -1579,7 +1581,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
             scp->parentVnode = 0;
             scp->parentUnique = 0;
 	}
-	return;
+	goto done;
     } else {
 	scp->flags &= ~CM_SCACHEFLAG_EACCESS;
     }
@@ -1591,18 +1593,14 @@ void cm_MergeStatus(cm_scache_t *dscp,
     if (!(flags & CM_MERGEFLAG_FORCE) && 
         dataVersion < scp->dataVersion &&
         scp->dataVersion != CM_SCACHE_VERSION_BAD) {
-        struct cm_cell *cellp;
 
         cellp = cm_FindCellByID(scp->fid.cell, 0);
         if (scp->cbServerp) {
-            struct cm_volume *volp = NULL;
             cm_FindVolumeByID(cellp, scp->fid.volume, userp,
                               reqp, CM_GETVOL_FLAG_CREATE, &volp);
             osi_Log2(afsd_logp, "old data from server %x volume %s",
                       scp->cbServerp->addr.sin_addr.s_addr,
                       volp ? volp->namep : "(unknown)");
-            if (volp)
-                cm_PutVolume(volp);
         }
         osi_Log3(afsd_logp, "Bad merge, scp %x, scp dv %d, RPC dv %d",
                   scp, scp->dataVersion, dataVersion);
@@ -1634,7 +1632,7 @@ void cm_MergeStatus(cm_scache_t *dscp,
          * infinite loop.  So we just grin and bear it.
          */
         if (!(scp->flags & CM_SCACHEFLAG_RO))
-            return;
+            goto done;
     }       
 
     scp->volumeCreationDate = volsyncp->spare1;       /* volume creation date */
@@ -1766,6 +1764,29 @@ void cm_MergeStatus(cm_scache_t *dscp,
      * have completed yet.
      */
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_FETCHSTATUS);
+
+    /*
+     * We just successfully merged status on the stat cache object.
+     * This means that the associated volume must be online.
+     */
+    if (!volp) {
+        if (!cellp)
+            cellp = cm_FindCellByID(scp->fid.cell, 0);
+        cm_FindVolumeByID(cellp, scp->fid.volume, userp, reqp, 0, &volp);
+    }
+    if (volp) {
+        cm_vol_state_t *statep = cm_VolumeStateByID(volp, scp->fid.volume);
+        if (statep->state != vl_online) {
+            lock_ObtainWrite(&volp->rw);
+            cm_VolumeStatusNotification(volp, statep->ID, statep->state, vl_online);
+            statep->state = vl_online;
+            lock_ReleaseWrite(&volp->rw);
+        }
+    }
+  done:
+    if (volp)
+        cm_PutVolume(volp);
+
 }
 
 /* note that our stat cache info is incorrect, so force us eventually
