@@ -109,6 +109,11 @@ L<B<vos status>|vos_status(1)>.
 
 =item *
 
+A command to end Volume Server transactions:
+L<B<vos endtrans>|vos_endtrans(1)>.
+
+=item *
+
 A command to change volume fields:
 L<B<vos setfields>|vos_setfields(1)>.
 
@@ -279,6 +284,7 @@ L<vos_copy(1)>,
 L<vos_create(1)>,
 L<vos_delentry(1)>,
 L<vos_dump(1)>,
+L<vos_endtrans(1)>,
 L<vos_examine(1)>,
 L<vos_help(1)>,
 L<vos_listaddrs(1)>,

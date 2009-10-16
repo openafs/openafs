@@ -5669,6 +5669,39 @@ Sizes(register struct cmd_syndesc *as, void *arock)
     return 0;
 }
 
+static int
+EndTrans(register struct cmd_syndesc *as, void *arock)
+{
+    afs_int32 server, code, tid, rcode;
+    struct rx_connection *aconn;
+
+    server = GetServer(as->parms[0].items->data);
+    if (!server) {
+	fprintf(STDERR, "vos: host '%s' not found in host table\n",
+		as->parms[0].items->data);
+	return EINVAL;
+    }
+
+    code = util_GetInt32(as->parms[1].items->data, &tid);
+    if (code) {
+	fprintf(STDERR, "vos: bad integer specified for transaction ID.\n");
+	return code;
+    }
+
+    aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
+    code = AFSVolEndTrans(aconn, tid, &rcode);
+    if (!code) {
+	code = rcode;
+    }
+
+    if (code) {
+	PrintDiagnostics("endtrans", code);
+	return 1;
+    }
+
+    return 0;
+}
+
 int
 PrintDiagnostics(char *astring, afs_int32 acode)
 {
@@ -6126,6 +6159,13 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-dump", CMD_FLAG, CMD_OPTIONAL,
 		"Obtain the size of the dump");
     cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_OPTIONAL, "dump from time");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("endtrans", EndTrans, NULL,
+			  "end a volserver transaction");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
+    cmd_AddParm(ts, "-transaction", CMD_SINGLE, 0,
+		"transaction ID");
     COMMONPARMS;
 
     code = cmd_Dispatch(argc, argv);
