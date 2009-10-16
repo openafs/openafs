@@ -2067,31 +2067,41 @@ afs_linux_writepage(struct page *pp)
 {
     struct address_space *mapping = pp->mapping;
     struct inode *inode;
-    unsigned long end_index;
-    unsigned offset = PAGE_CACHE_SIZE;
-    long status;
+    unsigned int to = PAGE_CACHE_SIZE;
+    loff_t isize;
+    int status = 0;
 
     if (PageReclaim(pp)) {
 	return AOP_WRITEPAGE_ACTIVATE;
+	/* XXX - Do we need to redirty the page here? */
     }
 
-    inode = (struct inode *)mapping->host;
-    end_index = i_size_read(inode) >> PAGE_CACHE_SHIFT;
+    page_cache_get(pp);
 
-    /* easy case */
-    if (pp->index < end_index)
-	goto do_it;
-    /* things got complicated... */
-    offset = i_size_read(inode) & (PAGE_CACHE_SIZE - 1);
-    /* OK, are we completely out? */
-    if (pp->index >= end_index + 1 || !offset)
-	return -EIO;
-  do_it:
-    status = afs_linux_writepage_sync(inode, pp, 0, offset);
+    inode = (struct inode *)mapping->host;
+    isize = i_size_read(inode);
+
+    /* Don't defeat an earlier truncate */
+    if (page_offset(pp) > isize)
+	goto done;
+
+    /* If this is the final page, then just write the number of bytes that
+     * are actually in it */
+    if ((isize - page_offset(pp)) < to )
+	to = isize - page_offset(pp);
+
+    status = afs_linux_writepage_sync(inode, pp, 0, to);
+
+done:
     SetPageUptodate(pp);
-    if ( status != AOP_WRITEPAGE_ACTIVATE )
+    if ( status != AOP_WRITEPAGE_ACTIVATE ) {
+	/* XXX - do we need to redirty the page here? */
 	UnlockPage(pp);
-    if (status == offset)
+    }
+
+    page_cache_release(pp);
+
+    if (status == to)
 	return 0;
     else
 	return status;
