@@ -593,28 +593,26 @@ afs_CacheStoreVCache(struct dcache **dcList, struct vcache *avc,
 		       ICL_HANDLE_OFFSET(base), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(bytes), ICL_TYPE_OFFSET,
 		       ICL_HANDLE_OFFSET(length));
-	    tc = afs_Conn(&avc->f.fid, areq, 0);
 
 	    do {
+	        tc = afs_Conn(&avc->f.fid, areq, 0);
+
 #ifdef AFS_64BIT_CLIENT
 	      restart:
 #endif
 		code = rxfs_storeInit(avc, tc, base, bytes, length,
-					sync, &ops, &rock);
-		if ( code )
-		    goto nocall;
+				      sync, &ops, &rock);
+		if ( !code ) {
+		    code = afs_CacheStoreDCaches(avc, dclist, bytes, anewDV,
+			                         &doProcessFS, &OutStatus,
+						 nchunks, nomore, ops, rock);
+		}
 
-		code = afs_CacheStoreDCaches(avc, dclist, bytes, anewDV,
-			&doProcessFS, &OutStatus, nchunks, nomore, ops, rock);
-
-nocall:
 #ifdef AFS_64BIT_CLIENT
 		if (code == RXGEN_OPCODE && !afs_serverHasNo64Bit(tc)) {
 		    afs_serverSetNo64Bit(tc);
 		    goto restart;
 		}
-#else
-		continue;	/* dummy, label before block end won't work */
 #endif /* AFS_64BIT_CLIENT */
 	    } while (afs_Analyze
 		     (tc, code, &avc->f.fid, areq,
