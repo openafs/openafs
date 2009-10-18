@@ -43,20 +43,15 @@
 	int fontHeight = 0;
 	NSAttributedString *kerberosStringIndicator = nil;
 	
-	//check if we nedd to simulate the background menu clicked
+	//check if we need to simulate the background menu clicked
 	[statusItem drawStatusBarBackgroundInRect:[self bounds] 
 								withHighlight:isMenuVisible];
-	
 	image = [backgrounderDelegator imageToRender];
     if (image) {
 		// Live updating even when menu is down handled by making the extra
 		// draw the background if needed.		
 		[image compositeToPoint:NSMakePoint(0, 0) operation:NSCompositeSourceOver];
 	}
-	
-
-
-	
 	//Draw, if necessary, the kerberos indicator for aklog usage for get token
 	if([backgrounderDelegator useAklogPrefValue] == NSOnState) {
 		kerberosStringIndicator = [[self makeKerberosIndicator:&fontHeight] autorelease];

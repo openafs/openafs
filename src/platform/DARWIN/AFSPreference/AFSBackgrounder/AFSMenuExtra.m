@@ -165,10 +165,14 @@
 	afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;
 		
 	// read the preference for aklog use
+	
+	useAklogPrefValue = [[NSUserDefaults standardUserDefaults] boolForKey:PREFERENCE_USE_AKLOG];
+	NSLog(@"NSUserDefaults:%d", useAklogPrefValue);
 	useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG, 
 														  (CFStringRef)afsCommanderID, 
 														  kCFPreferencesCurrentUser, 
 														  kCFPreferencesAnyHost);
+	NSLog(@"CFPreferencesCopyValue:%d", useAklogPrefValue);
 	[self updateAfsStatus:nil];
 }
 

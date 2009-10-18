@@ -20,11 +20,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#import <sys/xattr.h>
+
+#define LINK_ICON 'srvr'
 
 @implementation AFSBackgrounderDelegate
 #pragma mark NSApp Delegate
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-	afsMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath];
+	
+	linkCreationLock = [[NSLock alloc] init];
+	
+	afsMngr = [[AFSPropertyManager alloc] initWithAfsPath:PREFERENCE_AFS_SYS_PAT_STATIC];
+	
 	// allocate the lock for concurent afs check state
 	tokensLock = [[NSLock alloc] init];
 	
@@ -41,8 +48,12 @@
 	
 	noTokenImage = [self getImageFromBundle:@"noToken" 
 									fileExt:@"png"];
-	//get the sazi of the menu icon
+	//get the size of the menu icon
 	menuSize = [hasTokenImage size];
+	
+	//inizialize the local link mode status
+	currentLinkActivationStatus = NO;
+	
 	//Start to read the afs path
 	[self readPreferenceFile:nil];	
 	[self startTimer];
@@ -50,24 +61,27 @@
 	
 	
 	// Register for preference user change
-	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(readPreferenceFile:) 
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self
+														selector:@selector(readPreferenceFile:)
 															name:kAFSMenuExtraID object:kPrefChangeNotification];
 	
 	// Register for afs state change
-	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(afsVolumeMountChange:) 
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self
+														selector:@selector(afsVolumeMountChange:)
 															name:kAFSMenuExtraID object:kMExtraAFSStateChange];
 	
 	// Register for menu state change
-	[[NSDistributedNotificationCenter defaultCenter] addObserver:self selector:@selector(chageMenuVisibility:) 
+	[[NSDistributedNotificationCenter defaultCenter] addObserver:self
+														selector:@selector(chageMenuVisibility:)
 															name:kAFSMenuExtraID object:kMExtraAFSMenuChangeState];
 	
 	//Register for mount/unmount afs volume
-	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self 
-														   selector:@selector(afsVolumeMountChange:) 
+	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
+														   selector:@selector(afsVolumeMountChange:)
 															   name:NSWorkspaceDidMountNotification object:nil];
 	
-	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self 
-														   selector:@selector(afsVolumeMountChange:) 
+	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
+														   selector:@selector(afsVolumeMountChange:)
 															   name:NSWorkspaceDidUnmountNotification object:nil];
 	
 	[[[NSWorkspace sharedWorkspace] notificationCenter] addObserver:self
@@ -116,6 +130,7 @@
 	
 	if(tokensLock) [tokensLock release];
 	if(afsMngr) [afsMngr release];
+	if(linkCreationLock) [linkCreationLock release];
 	return NSTerminateNow;
 }
 #pragma mark Notification Handler
@@ -128,27 +143,123 @@
 		[afsSysPath release];
 		afsSysPath = nil;
 	}
-	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
-	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID, kCFPreferencesAnyUser, kCFPreferencesAnyHost);
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
 	afsSysPath = PREFERENCE_AFS_SYS_PAT_STATIC;
 	
 	// read the preference for aklog use
-	useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG, 
-														  (CFStringRef)kAfsCommanderID, 
-														  kCFPreferencesCurrentUser, 
+	useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG,
+														  (CFStringRef)kAfsCommanderID,
+														  kCFPreferencesCurrentUser,
 														  kCFPreferencesAnyHost);
 	
-	showStatusMenu = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU, 
-													   (CFStringRef)kAfsCommanderID, 
-													   kCFPreferencesCurrentUser, 
+	showStatusMenu = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_SHOW_STATUS_MENU,
+													   (CFStringRef)kAfsCommanderID,
+													   kCFPreferencesCurrentUser,
 													   kCFPreferencesAnyHost);
 	
-	aklogTokenAtLogin = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AKLOG_TOKEN_AT_LOGIN, (CFStringRef)kAfsCommanderID,  
-																	kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	aklogTokenAtLogin = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_AKLOG_TOKEN_AT_LOGIN, (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 
+	//get link configuration
+	NSData *prefData = (NSData*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_LINK_CONFIGURATION, (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	linkConfiguration = (NSMutableDictionary*)[NSPropertyListSerialization propertyListFromData:prefData
+																			   mutabilityOption:NSPropertyListMutableContainers
+																						 format:nil
+																			   errorDescription:nil];
+	
+	//get link enabled status
+	NSNumber *linkEnabledStatus =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_LINK, (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	[self updateLinkModeStatusWithpreferenceStatus:[linkEnabledStatus boolValue]];
+	
+	
 	//set the menu name
 	[self updateAfsStatus:nil];
+}
+
+// -------------------------------------------------------------------------------
+//  - (void) updateLinkModeStatusWithpreferenceStatus:(BOOL)status
+// -------------------------------------------------------------------------------
+- (void) updateLinkModeStatusWithpreferenceStatus:(BOOL)status {
+	//exec the link operation on thread
+		[NSThread detachNewThreadSelector:@selector(performLinkOpeartionOnThread:)
+							 toTarget:self
+						   withObject:[NSNumber numberWithBool:status]];
+}
+
+
+// -------------------------------------------------------------------------------
+//  - (void) performLinkOpenartionOnThread:(id)object
+// -------------------------------------------------------------------------------
+- (void) performLinkOpeartionOnThread:(id)object {
+	[linkCreationLock lock];
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+	NSError	 *error = nil;
+	NSString *key = nil;
+	NSString *linkDstPath = nil;
+	NSString *linkSrcPath = nil;
+	NSArray  *paths = NSSearchPathForDirectoriesInDomains(NSDesktopDirectory, NSUserDomainMask, YES);
+	NSString *documentFolderPath = [paths objectAtIndex:0];
+	NSNumber *number = (NSNumber*)object;
+	//NSString *fType = NSFileTypeForHFSTypeCode(LINK_ICON);
+	//NSImage  *picture = [[NSWorkspace sharedWorkspace] iconForFileType:fType];
+	
+	BOOL linkSourcePathExist = NO;
+	BOOL linkDestinationPathExist = NO;
+	
+	NSLog(@"updateLinkModeStatusWithpreferenceStatus %d", [number boolValue]);
+	NSEnumerator *keys = [linkConfiguration keyEnumerator];
+	while ((key = [keys nextObject])) {
+		//link path
+		linkSrcPath = [documentFolderPath  stringByAppendingPathComponent:key];
+		//afs destionation path
+		linkDstPath = [linkConfiguration objectForKey:key];
+		linkSourcePathExist = [[NSFileManager defaultManager] fileExistsAtPath:linkSrcPath];
+		linkDestinationPathExist = [[NSFileManager defaultManager] fileExistsAtPath:linkDstPath];
+		
+		if([number boolValue]) {
+			if(!linkSourcePathExist) {
+				if(linkDestinationPathExist) {
+					NSLog(@"Creating link \"%@\" to point to \"%@\"", linkSrcPath, linkDstPath);
+					[[NSFileManager defaultManager] createSymbolicLinkAtPath:linkSrcPath
+														 withDestinationPath:linkDstPath
+																	   error:&error];
+					if(!error) {
+						//Link has been created so i can chnge the icon
+					/*	[[NSWorkspace sharedWorkspace] setIcon:picture
+													   forFile:linkName
+													   options:0];*/
+						NSLog(@"Link \"%@\" created", linkSrcPath);
+					} else {
+						NSLog(@"Link Creation Error: %@", [error localizedDescription]);
+					}
+				} else {
+					NSLog(@"Deleting Link: %@", linkSrcPath);
+					[[NSFileManager defaultManager] removeItemAtPath:linkSrcPath
+															   error:&error];
+				}
+			} else {
+				//the lynk already exist check if the dest path is accesible
+				if(!linkSourcePathExist) {
+					NSLog(@"Deleting Link: %@", linkSrcPath);
+					[[NSFileManager defaultManager] removeItemAtPath:linkSrcPath
+															   error:&error];
+				}
+			}
+		} else {
+			//delete the link
+			NSLog(@"Deleting Link: %@", linkSrcPath);
+			[[NSFileManager defaultManager] removeItemAtPath:linkSrcPath
+													   error:&error];
+			
+		}
+	}
+	
+	//update the status
+	currentLinkActivationStatus = [number boolValue];
+	//release thread resource
+	[pool release];
+	[linkCreationLock unlock];
 }
 
 // -------------------------------------------------------------------------------
@@ -184,6 +295,7 @@
 // -------------------------------------------------------------------------------
 - (void) afsVolumeMountChange:(NSNotification *)notification{
 	[self updateAfsStatus:nil];
+	[self readPreferenceFile:nil];
 }
 
 
@@ -209,47 +321,22 @@
 // -------------------------------------------------------------------------------
 - (void)startStopAfs:(id)sender
 {
-	if(!afsSysPath) return;
-	
-	OSStatus status = noErr;
-	NSString *afsdPath = [TaskUtil searchExecutablePath:@"afsd"];
-	NSString *rootHelperApp = nil;
-	BOOL currentAfsState = NO;
-	
 	@try {
-		if(afsdPath == nil) return;
+		BOOL currentAfsState = NO;
 		currentAfsState = [afsMngr checkAfsStatus];
-		rootHelperApp = [[NSBundle mainBundle] pathForResource:@"afshlp" ofType:@""];
-
-		//Check helper app
-		[self repairHelperTool];
-		
 		// make the parameter to call the root helper app
-		status = [[AuthUtil shared] autorize];
-		if(status == noErr){
-			if(currentAfsState){
-				//shutdown afs
-				NSMutableString *afsKextPath = [[NSMutableString alloc] initWithCapacity:256];
-				[afsKextPath setString:afsSysPath];
-				[afsKextPath appendString:@"/etc/afs.kext"];
-				
-				const char *stopAfsArgs[] = {"stop_afs", [afsKextPath  UTF8String], [afsdPath UTF8String], 0L};
-				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
-											  args:stopAfsArgs
-											output:nil];
-			} else {
-				const char *startAfsArgs[] = {[[ [NSBundle mainBundle] pathForResource:@"start_afs" ofType:@"sh"]  UTF8String], [afsSysPath UTF8String], [afsdPath UTF8String], 0L};
-				[[AuthUtil shared] execUnixCommand:[rootHelperApp UTF8String] 
-											  args:startAfsArgs
-											output:nil];
-			}
+		if(currentAfsState){
+			//shutdown afs
+			NSLog(@"Shutting down afs");
+			[afsMngr shutdown];
+		} else {
+			//Start afs
+			NSLog(@"Starting up afs");
+			[afsMngr startup];
 		}
-	}
-	@catch (NSException * e) {
-		NSLog([e reason]);
-	}
-	@finally {
-		[[AuthUtil shared] deautorize];
+	}@catch (NSException * e) {
+		NSLog(@"error %@", [e reason]);
+	}@finally {
 		[self updateAfsStatus:nil];
 		//Send notification to preferencepane
 		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID object:kMenuExtraEventOccured];
@@ -262,33 +349,28 @@
 // -------------------------------------------------------------------------------
 - (void)getToken:(id)sender
 {
-	
 	NSRect globalRect;
-	globalRect.origin = [[[statusItem view] window] convertBaseToScreen:[[statusItem view] frame].origin];
-	globalRect.size = [[statusItem view] frame].size;
-	AFSPropertyManager *afsPropMngr = [[AFSPropertyManager alloc] initWithAfsPath:afsSysPath ];
-	[afsPropMngr loadConfiguration]; 
-	
 	if([useAklogPrefValue boolValue]) {
-		[afsPropMngr getTokens:false 
-						   usr:nil 
-						   pwd:nil];
+		[afsMngr getTokens:false
+					   usr:nil
+					   pwd:nil];
 		[self klogUserEven:nil];
 	} else {
+		globalRect.origin = [[[statusItem view] window] convertBaseToScreen:[[statusItem view] frame].origin];
+		globalRect.size = [[statusItem view] frame].size;
+		
 		// register for user event
-		[[NSDistributedNotificationCenter defaultCenter] addObserver:self 
-															selector:@selector(klogUserEven:) 
-																name:kAFSMenuExtraID 
+		[[NSDistributedNotificationCenter defaultCenter] addObserver:self
+															selector:@selector(klogUserEven:)
+																name:kAFSMenuExtraID
 															  object:kLogWindowClosed];
 		
-		credentialMenuController = [[AFSMenuCredentialContoller alloc] initWhitRec:globalRect 
-																	afsPropManager:afsPropMngr];
+		credentialMenuController = [[AFSMenuCredentialContoller alloc] initWhitRec:globalRect
+																	afsPropManager:afsMngr];
 		[credentialMenuController showWindow];
 	}
-	
 	//Dispose afs manager
-	[afsPropMngr release];
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID 
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAfsCommanderID
 																   object:kMExtraTokenOperation];
 }
 
@@ -311,6 +393,9 @@
 {
 	//Try to locking
 	if(![tokensLock tryLock]) return;
+	
+	//reload configuration
+	[afsMngr loadConfiguration];
 	
 	// check the afs state in esclusive mode
 	afsState = [afsMngr checkAfsStatus];

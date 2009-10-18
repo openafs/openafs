@@ -31,6 +31,7 @@
 
 #define TABLE_TOKENS_LIST 1
 #define TABLE_CELL_LIST 2
+#define TABLE_LINK_LIST 3
 
 #define TAB_TOKENS 1
 #define TAB_CELL_SERV_DB 2
@@ -42,6 +43,11 @@
 #define CELLSRVDB_TABLE_DFLT_CHECK_COLUMN		1
 #define CELLSRVDB_TABLE_NAME_COLUMN				2
 #define CELLSRVDB_TABLE_DESCRIPTION_COLUMN		3
+
+//Link Table
+#define TABLE_COLUMN_LINK_NAME	0
+#define TABLE_COLUMN_LINK_PATH	1
+
 
 @implementation AFSCommanderPref
 
@@ -150,9 +156,9 @@
 															   name:NSWorkspaceDidUnmountNotification object:nil];
 	
 	// set self as table data source
-	[((NSTableView*)cellList) setDataSource:self];
-	[((NSTableView*)tokensTable) setDataSource:self];
-	
+	[cellList setDataSource:self];
+	[tokensTable setDataSource:self];
+	//[tableViewLink setDataSource:self];
 	//check the afs state
 	[self setAfsStatus];
 	
@@ -259,7 +265,6 @@
 // -------------------------------------------------------------------------------
 - (void) readPreferenceFile
 {
-	
 	// read the preference for aklog use
 	NSNumber *useAklogPrefValue = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_AKLOG, (CFStringRef)kAfsCommanderID,  
 																	kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
@@ -273,9 +278,9 @@
 	[installKRB5AuthAtLoginButton setState:[PListManager checkKrb5AtLoginTimeLaunchdEnable]];
 
 	//check for AFS enable at startup
-	NSNumber *afsEnableStartupTime = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_START_AFS_AT_STARTUP, 
+	NSNumber *afsEnableStartupTime = (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_START_AFS_AT_STARTUP,
 																	   (CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
-	if(afsEnableStartupTime) 
+	if(afsEnableStartupTime)
 		startAFSAtLogin = [afsEnableStartupTime boolValue];
 	else 
 		startAFSAtLogin = false;
@@ -287,6 +292,18 @@
 	
 	//backgrounder state
 	[backgrounderActivationCheck setState:[PListManager launchdJobState:BACKGROUNDER_P_FILE]];
+	
+	//link enabled status
+	NSNumber *linkEnabledStatus =  (NSNumber*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_USE_LINK,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	[checkEnableLink setState:[linkEnabledStatus boolValue]];
+	
+	//link configuration
+	NSData *prefData = (NSData*)CFPreferencesCopyValue((CFStringRef)PREFERENCE_LINK_CONFIGURATION,  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	linkConfiguration = (NSMutableDictionary*)[NSPropertyListSerialization propertyListFromData:prefData
+																			   mutabilityOption:NSPropertyListMutableContainers
+																						 format:nil
+																			   errorDescription:nil];
+	
 }
 
 // -------------------------------------------------------------------------------
@@ -319,9 +336,13 @@
 						  (CFNumberRef)[NSNumber numberWithBool:[afsMenucheckBox state]], 
 						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
 	
+	//write preference for link
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_USE_LINK,
+						  (CFNumberRef)[NSNumber numberWithBool:[checkEnableLink state]], 
+						  (CFStringRef)kAfsCommanderID, kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	
 	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesAnyUser, kCFPreferencesAnyHost);
 	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
-	
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:kAFSMenuExtraID object:kPrefChangeNotification];
 }
 
@@ -875,14 +896,6 @@
 }
 
 // -------------------------------------------------------------------------------
-//  manageButtonState:
-// -------------------------------------------------------------------------------
--(void) manageButtonState:(int) rowSelected {
-	[((NSControl*) cellIpButton) setEnabled:rowSelected >= 0];
-	[((NSControl*) removeCellButton) setEnabled:rowSelected >= 0];
-}
-
-// -------------------------------------------------------------------------------
 //  setAfsStatus:
 // -------------------------------------------------------------------------------
 -(void) setAfsStatus
@@ -942,14 +955,40 @@
 //  removeExtra:
 // -------------------------------------------------------------------------------
 - (IBAction) removeLink:(id) sender {
+	if(!linkConfiguration) return;
+	int index = 0;
+	NSArray *keys = [linkConfiguration allKeys];
+	NSIndexSet *linkToRemove = [tableViewLink selectedRowIndexes];
+	if( [linkToRemove count] > 0) {
+		index = [linkToRemove firstIndex];
+		do {
+			[linkConfiguration removeObjectForKey:[keys objectAtIndex:index]];
+		} while ((index = [linkToRemove indexGreaterThanIndex:index]) != -1);
+	}
 	
+	//write the new configuration
+	NSData *prefData = nil;
+	if([linkConfiguration count] > 0) {
+		prefData = [NSPropertyListSerialization dataWithPropertyList:linkConfiguration
+															  format:NSPropertyListXMLFormat_v1_0
+															 options:0
+															   error:nil];
+	}
+	CFPreferencesSetValue((CFStringRef)PREFERENCE_LINK_CONFIGURATION,
+						  (CFDataRef)prefData,
+						  (CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	
+	CFPreferencesSynchronize((CFStringRef)kAfsCommanderID,  kCFPreferencesCurrentUser, kCFPreferencesAnyHost);
+	
+	//reload the new data
+	[tableViewLink reloadData];
 }
 
 // -------------------------------------------------------------------------------
 //  removeExtra:
 // -------------------------------------------------------------------------------
 - (IBAction) enableLink:(id) sender {
-	
+	[self writePreferenceFile];
 }
 
 // -------------------------------------------------------------------------------
@@ -964,6 +1003,12 @@
 	[backgrounderActivationCheck setState:[PListManager launchdJobState:BACKGROUNDER_P_FILE]];
 }
 
+// -------------------------------------------------------------------------------
+//  tableViewLinkPerformClick:
+// -------------------------------------------------------------------------------
+- (IBAction) tableViewLinkPerformClick:(id) sender {
+	NSLog(@"tableViewLinkPerformClick");
+}
 
 // -------------------------------------------------------------------------------
 //  - (void)tabView:(NSTabView *)tabView willSelectTabViewItem: (NSTabViewItem *)tabViewItem
@@ -973,8 +1018,7 @@
 	//check to see if the cache param tab is the tab that will be selected
 	if([((NSString*)[tabViewItem identifier]) intValue] == TAB_LINK)
 	{
-		[ViewUtility enbleDisableControlView:[tabViewItem view]
-								controlState:NO];
+		[tableViewLink reloadData];
 	}
 }
 
@@ -1038,6 +1082,11 @@
 			//We are refreshing cell db table
 			result = [self getTableCelListValue:[identifier intValue] row:rowIndex];
 			break;
+			
+		case TABLE_LINK_LIST:
+			result = [self getTableLinkValue:[identifier intValue] row:rowIndex];
+			break;
+
 		
 	}
 	return result;  
@@ -1088,6 +1137,26 @@
 }
 
 // -------------------------------------------------------------------------------
+//  getTableCelListValue:
+// -------------------------------------------------------------------------------
+- (id)getTableLinkValue:(int) colId row:(int)row
+{
+	id result = nil;
+	NSArray *allKey = [linkConfiguration allKeys];
+	switch(colId){
+		case TABLE_COLUMN_LINK_NAME:
+			result = [allKey objectAtIndex:row];
+			break;
+			
+		case TABLE_COLUMN_LINK_PATH:
+			result = [linkConfiguration objectForKey:[allKey objectAtIndex:row]];
+			break;
+	}
+	return result;
+}
+
+
+// -------------------------------------------------------------------------------
 //  numberOfRowsInTableView:
 // -------------------------------------------------------------------------------
 - (int)numberOfRowsInTableView:(NSTableView *)aTableView
@@ -1104,6 +1173,11 @@
 			if(filteredCellDB)  rowCount = [filteredCellDB count];
 			break;
 			
+		case TABLE_LINK_LIST:
+			if(linkConfiguration)  rowCount = [linkConfiguration count];
+			break;
+
+			
 	}	
 	return rowCount;  
 }
@@ -1116,7 +1190,21 @@
 // -------------------------------------------------------------------------------
 - (BOOL)selectionShouldChangeInTableView:(NSTableView *)aTable
 {
-	[self manageButtonState:[aTable selectedRow]];
+	switch([aTable tag]){
+		case TABLE_TOKENS_LIST:
+			
+			break;
+			
+		case TABLE_CELL_LIST:
+			[self tableViewCellmanageButtonState:[aTable selectedRow]];
+			break;
+			
+		case TABLE_LINK_LIST:
+			break;
+			
+			
+	}	
+	
 	return YES;
 }
 
@@ -1125,10 +1213,58 @@
 // -------------------------------------------------------------------------------
 - (BOOL)tableView:(NSTableView *)aTable shouldSelectRow:(int)aRow
 {
-	[self manageButtonState:aRow];
+	switch([aTable tag]){
+		case TABLE_TOKENS_LIST:
+			
+			break;
+			
+		case TABLE_CELL_LIST:
+			[self tableViewCellmanageButtonState:aRow];
+			break;
+			
+		case TABLE_LINK_LIST:
+			break;
+			
+			
+	}
+	
 	return YES;
 }
 
+// -------------------------------------------------------------------------------
+//  tableView:
+// -------------------------------------------------------------------------------
+- (void)tableViewSelectionDidChange:(NSNotification *)aNotification {
+	NSTableView *aTable = [aNotification object];
+	switch([aTable tag]){
+		case TABLE_TOKENS_LIST:
+			break;
+			
+		case TABLE_CELL_LIST:
+			break;
+			
+		case TABLE_LINK_LIST:
+			[self tableViewLinkmanageButtonState:[aTable selectedRowIndexes]];
+			break;
+			
+			
+	}
+}
+// -------------------------------------------------------------------------------
+//  manageButtonState:
+// -------------------------------------------------------------------------------
+-(void) tableViewCellmanageButtonState:(int) rowSelected  {
+	[((NSControl*) cellIpButton) setEnabled:rowSelected >= 0];
+	[((NSControl*) removeCellButton) setEnabled:rowSelected >= 0];
+}
+
+// -------------------------------------------------------------------------------
+//  manageButtonState:
+// -------------------------------------------------------------------------------
+-(void) tableViewLinkmanageButtonState:(NSIndexSet *) rowsSelectedIndex {
+	NSLog(@"link selected %d", [rowsSelectedIndex count]);
+	[buttonRemoveLink setEnabled:[rowsSelectedIndex count]>0];
+}
 @end
 
 
