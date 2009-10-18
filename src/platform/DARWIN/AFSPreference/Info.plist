@@ -21,7 +21,7 @@
 	<key>CFBundleSignature</key>
 	<string>INFN</string>
 	<key>CFBundleVersion</key>
-	<string>1.0b</string>
+	<string>1.0</string>
 	<key>NSMainNibFile</key>
 	<string>OpenAFSPreference</string>
 	<key>NSPrefPaneIconFile</key>

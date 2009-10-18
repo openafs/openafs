@@ -37,7 +37,9 @@
 	//NSTimer for tokens refresh
 	NSTimer *timerForCheckTokensList;
 	NSLock *tokensLock;
-	
+	bool currentLinkActivationStatus;
+	NSMutableDictionary *linkConfiguration;
+	NSLock *linkCreationLock;
 }
 - (void)startTimer;
 - (void)stopTimer;
@@ -54,7 +56,7 @@
 - (void)menuNeedsUpdate:(NSMenu *)menu;
 - (void)repairHelperTool;
 - (void) afsVolumeMountChange:(NSNotification *)notification;
-
+- (void) updateLinkModeStatusWithpreferenceStatus:(BOOL)status;
 -(NSStatusItem*)statusItem;
 -(void) setStatusItem:(BOOL)show;
 -(NSImage*)imageToRender;

@@ -50,17 +50,17 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 	IBOutlet NSBox *groupsBox;
 	
 	//id installationPathTextField;
-	id startStopButton;
-	id cellList;
+	IBOutlet NSButton *startStopButton;
+	IBOutlet NSTableView *cellList;
 	//id cellNameTextEdit;
-	id cellIpButton;
-	id addCellButton;
-	id removeCellButton;
+	IBOutlet NSControl *cellIpButton;
+	IBOutlet NSControl *addCellButton;
+	IBOutlet NSControl *removeCellButton;
 	//id refreshConfigurationButton;
-	id saveConfigurationButton;
+	IBOutlet NSControl *saveConfigurationButton;
 	id labelSaveResult;
-	id tokensTable;
-	id afsMenucheckBox;
+	IBOutlet NSTableView *tokensTable;
+	IBOutlet NSControl *afsMenucheckBox;
 		
 	//Configuration sheet
 	id ipConfigurationSheet;
@@ -83,7 +83,8 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 	IBOutlet NSButton					*checkEnableLink;
 	IBOutlet NSButton					*buttonAddLink;
 	IBOutlet NSButton					*buttonRemoveLink;
-	bool enableLink;
+	IBOutlet NSTableView				*tableViewLink;
+	NSMutableDictionary					*linkConfiguration;
 	
 	AFSPropertyManager *afsProperty;	//AFS Property managment class
 	NSMutableArray *filteredCellDB;		//Filtered CellServDB
@@ -121,6 +122,7 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (IBAction) krb5KredentialAtLoginTimeEvent:(id) sender;
 - (IBAction) searchCellTextEvent:(id) sender;
 - (IBAction) manageBackgrounderActivation:(id)sender;
+- (IBAction) tableViewLinkPerformClick:(id) sender;
 - (void) credentialAtLoginTimeEventCreationLaunchAgentDir:(NSWindow*)alert returnCode:(int)returnCode contextInfo:(void *)contextInfo;
 - (void) clearCellServDBFiltering;
 - (void) filterCellServDB:(NSString*)textToFilter;
@@ -129,7 +131,8 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 - (void) modifyCell:(DBCellElement*) cellElement;
 - (void) modifyCellByIDX:(int) idx;
 - (void) showMessage:(NSString*) message;
-- (void) manageButtonState:(int) rowSelected;
+- (void) tableViewCellmanageButtonState:(int) rowSelected;
+- (void) tableViewLinkmanageButtonState:(NSIndexSet *) rowsSelectedIndex;
 - (void) setAfsStatus;
 - (void) refreshTokens:(NSTimer*)theTimer;
 - (void) repairHelperTool;
@@ -144,4 +147,5 @@ int CoreMenuExtraRemoveMenuExtra(void *menuExtra, int whoCares);
 @interface AFSCommanderPref (NSTableDataSource)
 - (id) getTableTokensListValue:(int) colId row:(int)row;
 - (id) getTableCelListValue:(int) colId row:(int)row;
+- (id) getTableLinkValue:(int) colId row:(int)row;
 @end;
