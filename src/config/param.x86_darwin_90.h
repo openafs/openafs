@@ -92,7 +92,6 @@
 #define vfs_vnodecovered mnt_vnodecovered
 #define direct          dirent
 
-#define BIND_8_COMPAT
 
 #endif
 #endif /* AFS_PARAM_H */
@@ -181,7 +180,6 @@
 #define CMSERVERPREF
 #endif
 
-#define BIND_8_COMPAT
 #endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */

@@ -259,6 +259,8 @@ extern int h_DeleteHostFromUuidHashTable_r(struct host *host);
 extern int initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf);
 extern int addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
 extern int removeInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port);
+extern afs_int32 hpr_Initialize(struct ubik_client **);
+extern int hpr_End(struct ubik_client *);
 
 
 #ifdef AFS_DEMAND_ATTACH_FS
