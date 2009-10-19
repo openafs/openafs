@@ -185,6 +185,8 @@ static int get_user_realm(krb5_context, char *);
 #endif
 
 #if !defined(HAVE_KRB5_ENCRYPT_TKT_PART) && defined(HAVE_ENCODE_KRB5_ENC_TKT_PART) && defined(HAVE_KRB5_C_ENCRYPT) 
+extern krb5_error_code encode_krb5_enc_tkt_part (const krb5_enc_tkt_part *rep, krb5_data **code);
+
 krb5_error_code
 krb5_encrypt_tkt_part(krb5_context context,
 		      const krb5_keyblock *key,
