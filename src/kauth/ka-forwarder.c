@@ -30,6 +30,11 @@
  * running on an MIT kerberos server.
  */
 
+#include <afsconfig.h>
+#include <afs/param.h>
+
+#include <afs/stds.h>
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
@@ -249,7 +254,7 @@ main(int argc, char **argv)
 	    strcpy(a1, inet_ntoa(from.sin_addr));
 	    strcpy(a2, inet_ntoa(to->sin_addr));
 
-	    syslog(LOG_INFO, "forwarding %d bytes from %s/%d to %s/%d\n",
+	    syslog(LOG_INFO, "forwarding %"AFS_SIZET_FMT" bytes from %s/%d to %s/%d\n",
 		   sendlen, a1, htons(from.sin_port), a2, htons(to->sin_port));
 	}
 
