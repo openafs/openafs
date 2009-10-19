@@ -1262,7 +1262,6 @@
 //  manageButtonState:
 // -------------------------------------------------------------------------------
 -(void) tableViewLinkmanageButtonState:(NSIndexSet *) rowsSelectedIndex {
-	NSLog(@"link selected %d", [rowsSelectedIndex count]);
 	[buttonRemoveLink setEnabled:[rowsSelectedIndex count]>0];
 }
 @end
@@ -1313,5 +1312,8 @@
 - (void)didEndSymlinkSheet:(NSWindow *)sheet returnCode:(int)returnCode contextInfo:(void *)contextInfo
 {
 	[lyncCreationSheet orderOut:self];
+	[self readPreferenceFile];
+	[tableViewLink reloadData];
+	
 }
 @end
