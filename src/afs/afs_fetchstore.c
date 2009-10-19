@@ -871,7 +871,7 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 		struct osi_file *fP, struct fetchOps **ops, void **rock)
 {
     struct rxfs_fetchVariables *v;
-    int code = 0, code1;
+    int code = 0, code1 = 0;
 #ifdef AFS_64BIT_CLIENT
     afs_uint32 length_hi = 0;
 #endif
@@ -969,6 +969,10 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
 #endif /* AFS_64BIT_CLIENT */
     } else
 	code = -1;
+
+    if (!code && code1)
+	code = code1;
+
     if (code) {
 	osi_FreeSmallSpace(v);
         return code;
