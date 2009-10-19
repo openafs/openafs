@@ -304,8 +304,10 @@ typedef struct afsUUID afsUUID;
 #define static_inline __inline static
 #define hdr_static_inline(x) __inline static x
 #elif defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV)
-#define static_inline static __inline
-#define hdr_static_inline(x) static __inline x
+/* The HPUX compiler can segfault on 'static __inline', so fall back to
+ * just 'static' so we can at least compile */
+#define static_inline static
+#define hdr_static_inline(x) static x
 #elif defined(AFS_AIX_ENV) || defined(AFS_USR_AIX_ENV)
 #define static_inline static
 #define hdr_static_inline(x) static x
