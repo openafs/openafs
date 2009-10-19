@@ -27,18 +27,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "..\\..\\langres.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -126,7 +126,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_NC_AFS, DIALOG
     BEGIN
@@ -178,13 +178,17 @@ IDI_AFSPLUGIN           ICON                    "..\\..\\images\\OpenAFS.ico"
 IDI_NC_NEW              ICON                    "..\\..\\images\\nc_new.ico"
 IDI_NC_EXIST            ICON                    "..\\..\\images\\nc_exist.ico"
 IDI_NC_NOTOWNED         ICON                    "..\\..\\images\\nc_notowned.ico"
+IDI_CRED_BROKEN         ICON                    "..\\..\\images\\creds_broke.ico"
+IDI_CRED_NONE           ICON                    "..\\..\\images\\creds_none.ico"
+IDI_CRED_OK             ICON                    "..\\..\\images\\creds_ok.ico"
+IDI_CRED_SVCSTOP        ICON                    "..\\..\\images\\creds_stopped.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_AFS_SHORT_DESC      "AFS credentials"
     IDS_AFS_LONG_DESC       "AFS credentials"
@@ -199,15 +203,15 @@ BEGIN
     IDS_NC_REALM_AUTO       "(Automatic)"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_NC_TT_NO_CELL       "You have not specified an AFS cell to authenticate to."
     IDS_NC_TT_CANT_ADD      "Can't add a new token"
-    IDS_NC_TT_MALFORMED_CELL 
+    IDS_NC_TT_MALFORMED_CELL
                             "The cell name you specified contains invalid characters."
     IDS_NC_TT_NO_REALM      "You have not specified a Kerberos realm to use to obtain tokesn for the cell."
     IDS_NC_AUTO             "(Auto)"
-    IDS_NC_TT_MALFORMED_REALM 
+    IDS_NC_TT_MALFORMED_REALM
                             "The realm name you entered contains invalid characters."
     IDS_NC_TT_CANT_UPDATE   "Can't update token"
     IDS_AFS_CREDTEXT_DIS    "<p><a id=""SwitchPanel"" param=""AfsCred""><b>AFS</b></a><tab>: AFS is disabled. (click <a id=""AfsCred:Enable"">here</a> to enable)</p>"
@@ -221,7 +225,7 @@ BEGIN
     IDS_ATTR_CLIENT_PRINC_SHORT_DESC "Client Principal"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_ATTR_SERVER_PRINC_SHORT_DESC "Server Principal"
     IDS_DEF_LOCATION        "AFS Cache Manager"
@@ -241,7 +245,7 @@ BEGIN
     IDS_NC_TT_CONFLICTM     "Credentials for cell %s are already listed for identity %s.\nDo you want to keep the credentials for other identities as well as this one?"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_NC_TT_DETAILS       "Details about credential"
     IDS_NC_TT_CONFLICTD     "This credential already exists under a different identity."
@@ -256,6 +260,14 @@ BEGIN
     IDS_ERR_GENERAL         "Credentials could not be obtained for cell %1!S!."
     IDS_ACTION_AFS_HELP     "AFS"
     IDS_ACTION_AFS_HELP_TT  "Display documentation for the OpenAFS plug-in"
+    IDS_CRED_TT_NONE        "No AFS tokens"
+    IDS_CRED_TT_TOK         "Tokens for "
+    IDS_CRED_TT_NOS         "OpenAFS service has not been started."
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CRED_TT_SERR        "OpenAFS service cannot be reached."
 END
 
 #endif    // English (U.S.) resources

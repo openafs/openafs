@@ -77,11 +77,13 @@ DLLFILE=$(EXEDIR)\afscred.dll
 LIBFILE=$(LIBFILEDIR)\afscred.lib
 
 INCFILES=				\
+	AFS_component_version_number.h	\
 	afsp_version.h			\
 	$(INCFILEDIR)\afspext.h		\
 	$(INCFILEDIR)\afsp_version.h
 
 OBJFILES= 				\
+	$(OUT)\AFS_component_version_number.obj	\
 	$(OUT)\afsfuncs.obj 		\
 	$(OUT)\afsplugin.obj 		\
 	$(OUT)\main.obj 		\
@@ -90,6 +92,7 @@ OBJFILES= 				\
 	$(OUT)\afsnewcreds.obj		\
 	$(OUT)\afsext.obj		\
 	$(OUT)\afshelp.obj		\
+	$(OUT)\afsicon.obj		\
 	$(OUT)\dynimport.obj 		\
 	$(OUT)\krb5common.obj
 
@@ -136,6 +139,9 @@ $(OUT)\afsext.obj: afsext.c
 	$(PC2OBJ)
 
 $(OUT)\afshelp.obj: afshelp.c
+	$(PC2OBJ)
+
+$(OUT)\afsicon.obj: afsicon.c
 	$(PC2OBJ)
 
 $(OUT)\dynimport.obj: dynimport.c

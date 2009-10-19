@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by C:\work\openafs.1.5\src\Winnt\netidmgr_plugin\lang\en_us\langres.rc
+// Used by C:\work\openafs-git\src\Winnt\netidmgr_plugin\lang\en_us\langres.rc
 //
 #define IDS_AFS_SHORT_DESC              101
 #define IDS_AFS_LONG_DESC               102
@@ -24,9 +24,13 @@
 #define IDS_NC_REALM_AUTO               111
 #define IDI_NC_NOTOWNED                 111
 #define IDS_NC_TT_NO_CELL               112
+#define IDI_CRED_BROKEN                 112
 #define IDS_NC_TT_CANT_ADD              113
+#define IDI_CRED_NONE                   113
 #define IDS_NC_TT_MALFORMED_CELL        114
+#define IDI_CRED_OK                     114
 #define IDS_NC_TT_NO_REALM              115
+#define IDI_CRED_SVCSTOP                115
 #define IDS_NC_AUTO                     116
 #define IDS_NC_TT_MALFORMED_REALM       117
 #define IDS_NC_TT_CANT_UPDATE           118
@@ -68,6 +72,10 @@
 #define IDS_ERR_GENERAL                 154
 #define IDS_ACTION_AFS_HELP             155
 #define IDS_ACTION_AFS_HELP_TT          156
+#define IDS_CRED_TT_NONE                157
+#define IDS_CRED_TT_TOK                 158
+#define IDS_CRED_TT_NOS                 159
+#define IDS_CRED_TT_SERR                160
 #define IDC_NCAFS_OBTAIN                1001
 #define IDC_NCAFS_TOKENLIST             1002
 #define IDC_NCAFS_CELL                  1004
@@ -95,7 +103,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        112
+#define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1024
 #define _APS_NEXT_SYMED_VALUE           101

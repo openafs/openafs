@@ -79,26 +79,21 @@ afs_msg_ext(khm_int32 msg_subtype, khm_ui_4 uparam, void * vparam);
 HMODULE hm_netidmgr;
 
 /* declarations from version 7 of the API */
-KHMEXP void
+void
 (KHMAPI * pkhui_action_lock)(void);
 
-KHMEXP void
+void
 (KHMAPI * pkhui_action_unlock)(void);
 
-KHMEXP void
+void
 (KHMAPI * pkhui_refresh_actions)(void);
 
 typedef khm_int32
 (KHMAPI * khm_ui_callback)(HWND hwnd_main_wnd, void * rock);
 
-KHMEXP khm_int32
+khm_int32
 (KHMAPI * pkhui_request_UI_callback)(khm_ui_callback cb,
                                      void * rock);
-
-#define khui_action_lock         (*pkhui_action_lock)
-#define khui_action_unlock       (*pkhui_action_unlock)
-#define khui_refresh_actions     (*pkhui_refresh_actions)
-#define khui_request_UI_callback (*pkhui_request_UI_callback)
 
 #endif
 
@@ -250,6 +245,42 @@ afs_msg_system(khm_int32 msg_subtype,
 
     switch(msg_subtype) {
     case KMSG_SYSTEM_INIT:
+
+        /* If we are building against an older SDK, we should try to
+           load newer APIs if it's available at run-time. */
+#if KH_VERSION_API < 7
+        do {
+            khm_version libver;
+            khm_ui_4 apiver;
+
+            khm_get_lib_version(&libver, &apiver);
+
+            if (apiver < 7)
+                break;
+
+            hm_netidmgr = LoadLibrary(NIMDLLNAME);
+
+            if (hm_netidmgr == NULL)
+                break;
+
+            pkhui_action_lock = (void (KHMAPI *)(void))
+                GetProcAddress(hm_netidmgr, API_khui_action_lock);
+            pkhui_action_unlock = (void (KHMAPI *)(void))
+                GetProcAddress(hm_netidmgr, API_khui_action_unlock);
+            pkhui_refresh_actions = (void (KHMAPI *)(void))
+                GetProcAddress(hm_netidmgr, API_khui_refresh_actions);
+            pkhui_request_UI_callback = (khm_int32 (KHMAPI *)(khm_ui_callback, void *))
+                GetProcAddress(hm_netidmgr, API_khui_request_UI_callback);
+
+        } while (FALSE);
+#endif
+
+        /* Add the icon now.  On NIM v2.x, doing so after tokens were
+           reported may result in a deadlock as we try to switch to
+           the UI thread and the UI thread is blocked on a resource
+           request to this plug-in. */
+        afs_icon_set_state(AFSICON_SERVICE_STOPPED, NULL);
+
         /* Perform critical registrations and data structure
            initalization */
         {
@@ -546,37 +577,14 @@ afs_msg_system(khm_int32 msg_subtype,
                 wchar_t long_desc[KHUI_MAXCCH_LONG_DESC];
 
 #if KH_VERSION_API < 7
-
-                khm_version libver;
-                khm_ui_4 apiver;
-
-                khm_get_lib_version(&libver, &apiver);
-
-                if (apiver < 7)
-                    goto no_custom_help;
-
-                hm_netidmgr = LoadLibrary(L"nidmgr32.dll");
-
-                if (hm_netidmgr == NULL)
-                    goto no_custom_help;
-
-                pkhui_action_lock = (void (KHMAPI *)(void))
-                    GetProcAddress(hm_netidmgr, "_khui_action_lock@0");
-                pkhui_action_unlock = (void (KHMAPI *)(void))
-                    GetProcAddress(hm_netidmgr, "_khui_action_unlock@0");
-                pkhui_refresh_actions = (void (KHMAPI *)(void))
-                    GetProcAddress(hm_netidmgr, "_khui_refresh_actions@0");
-                pkhui_request_UI_callback = (khm_int32 (KHMAPI *)(khm_ui_callback, void *))
-                    GetProcAddress(hm_netidmgr, "_khui_request_UI_callback@8");
-
                 if (pkhui_action_lock == NULL ||
                     pkhui_action_unlock == NULL ||
                     pkhui_refresh_actions == NULL ||
                     pkhui_request_UI_callback == NULL)
 
                     goto no_custom_help;
-
 #endif
+
                 kmq_create_subscription(afs_plugin_cb, &h_sub);
 
                 LoadString(hResModule, IDS_ACTION_AFS_HELP,
@@ -657,6 +665,8 @@ afs_msg_system(khm_int32 msg_subtype,
         /* end of KMSG_SYSTEM_INIT */
 
     case KMSG_SYSTEM_EXIT:
+
+        afs_remove_icon();
 
         /* Try to remove the AFS plug-in action from Help menu if it
            was successfully registered.  Also, delete the action. */

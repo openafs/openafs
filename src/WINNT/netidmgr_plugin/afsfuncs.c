@@ -144,6 +144,14 @@ afs_list_tokens(void)
     r = afs_list_tokens_internal();
     kcdb_credset_collect(NULL, afs_credset, NULL, afs_credtype_id, NULL);
 
+    if (r == 0) {
+        afs_icon_set_state(AFSICON_REPORT_TOKENS, afs_credset);
+    } else if (r == -1) {
+        afs_icon_set_state(AFSICON_SERVICE_STOPPED, NULL);
+    } else {
+        afs_icon_set_state(AFSICON_SERVICE_ERROR, NULL);
+    }
+
     return r;
 }
 
@@ -332,7 +340,7 @@ afs_list_tokens_internal(void)
     FILETIME                ft;
 
     if (!afs_is_running())
-        return 0;
+        return -1;
 
     kcdb_credset_flush(afs_credset);
 
@@ -346,7 +354,7 @@ afs_list_tokens_internal(void)
         if (rc = ktc_ListTokens(cellNum, &cellNum, &aserver))
         {
             if (rc != KTC_NOENT)
-                return(0);
+                return(-2);
 
             if (BreakAtEnd == 1)
                 break;
@@ -356,7 +364,7 @@ afs_list_tokens_internal(void)
         if (rc = ktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient))
         {
             if (rc == KTC_ERROR)
-                return(0);
+                return(-3);
 
             continue;
         }
