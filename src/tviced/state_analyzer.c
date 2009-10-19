@@ -737,8 +737,8 @@ print_cb_help(void)
     do { \
         char * _p = (char *)addr; \
         char * _m = (char *)map; \
-        printf("loading structure from address %"AFS_PTR_FMT" (offset %u)\n", \
-               addr, _p-_m); \
+        printf("loading structure from address %"AFS_PTR_FMT" (offset %ld)\n", \
+               addr, (long)(_p-_m)); \
     } while (0)
 
 /* structs */
