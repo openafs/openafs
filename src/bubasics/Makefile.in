@@ -93,9 +93,6 @@ butx_errs.c: butx_errs.et
 	$(RM) -f butx.h butx_errs.c
 	${COMPILE_ET} -p ${srcdir} butx_errs -h butx
 
-bumon.ss.o: bumon.ss.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
-
 #
 # Installation targets
 #

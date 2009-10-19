@@ -49,7 +49,6 @@ bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
 bozo/bosoprocs.c     : all           : ExtendedCellInfo and des key types
 bozo/bos.c           : all           : DES key types & string consts 
 bozo/bos_util.c      : all           : DES key types
-bubasics/bumon.ss.c  : all	     : BC_Print collision betwen client & server
 bucoord/ubik_db_if.c : strict-proto  : Ubik_Call
 bucoord/commands.c   : all	     : Ubik_Call
 				     : signed vs unsigned for dates
