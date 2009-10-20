@@ -41,12 +41,6 @@
 #include "osi_compat.h"
 #include "osi_pagecopy.h"
 
-#ifdef pgoff2loff
-#define pageoff(pp) pgoff2loff((pp)->index)
-#else
-#define pageoff(pp) pp->offset
-#endif
-
 #ifndef HAVE_PAGEVEC_LRU_ADD_FILE
 #define __pagevec_lru_add_file __pagevec_lru_add
 #endif
