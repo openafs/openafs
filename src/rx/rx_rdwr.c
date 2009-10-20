@@ -984,7 +984,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     int nextio;
     /* Temporary values, real work is done in rxi_WritevProc */
     int tnFree;
-    int tcurvec;
+    unsigned int tcurvec;
     char *tcurpos;
     int tcurlen;
 
@@ -1021,7 +1021,7 @@ rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
     tcurpos = call->curpos;
     tcurlen = call->curlen;
     do {
-	unsigned int t;
+	int t;
 
 	if (tnFree == 0) {
 	    /* current packet is full, allocate a new one */

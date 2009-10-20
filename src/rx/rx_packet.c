@@ -189,17 +189,17 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
      * offset only applies to the first iovec.
      */
     r = resid;
-    while ((resid > 0) && (i < packet->niovecs)) {
-	j = MIN(resid, packet->wirevec[i].iov_len - (offset - l));
+    while ((r > 0) && (i < packet->niovecs)) {
+	j = MIN(r, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(out, (char *)(packet->wirevec[i].iov_base) + (offset - l), j);
-	resid -= j;
+	r -= j;
         out += j;
   	l += packet->wirevec[i].iov_len;
 	offset = l;
 	i++;
     }
 
-    return (resid ? (r - resid) : r);
+    return (r ? (resid - r) : resid);
 }
 
 
@@ -211,11 +211,11 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
 afs_int32
 rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
 {
-    int i, j, l, r;
+    unsigned int i, j, l, o, r;
     char *b;
 
-    for (l = 0, i = 1; i < packet->niovecs; i++) {
-	if (l + packet->wirevec[i].iov_len > offset) {
+    for (l = 0, i = 1, o = offset; i < packet->niovecs; i++) {
+	if (l + packet->wirevec[i].iov_len > o) {
 	    break;
 	}
 	l += packet->wirevec[i].iov_len;
@@ -227,22 +227,22 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
      * offset only applies to the first iovec.
      */
     r = resid;
-    while ((resid > 0) && (i <= RX_MAXWVECS)) {
+    while ((r > 0) && (i <= RX_MAXWVECS)) {
 	if (i >= packet->niovecs)
-	    if (rxi_AllocDataBuf(packet, resid, RX_PACKET_CLASS_SEND_CBUF) > 0)	/* ++niovecs as a side-effect */
+	    if (rxi_AllocDataBuf(packet, r, RX_PACKET_CLASS_SEND_CBUF) > 0)	/* ++niovecs as a side-effect */
 		break;
 
 	b = (char *)(packet->wirevec[i].iov_base) + (offset - l);
-	j = MIN(resid, packet->wirevec[i].iov_len - (offset - l));
+	j = MIN(r, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(b, in, j);
-	resid -= j;
+	r -= j;
         in += j;
 	l += packet->wirevec[i].iov_len;
 	offset = l;
 	i++;
     }
 
-    return (resid ? (r - resid) : r);
+    return (r ? (resid - r) : resid);
 }
 
 int
@@ -812,7 +812,7 @@ void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
     struct rx_ts_info_t * rx_ts_info;
-    dpf(("Free %lx\n", (unsigned long)p));
+    dpf(("Free %"AFS_PTR_FMT"\n", p));
 
     RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_CHECKIN(rx_ts_info,p);
@@ -824,7 +824,7 @@ rxi_FreePacketNoLock(struct rx_packet *p)
 void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
-    dpf(("Free %lx\n", (unsigned long)p));
+    dpf(("Free %"AFS_PTR_FMT"\n", p));
 
     RX_FPQ_MARK_FREE(p);
     rx_nFreePackets++;
@@ -837,7 +837,7 @@ void
 rxi_FreePacketTSFPQ(struct rx_packet *p, int flush_global)
 {
     struct rx_ts_info_t * rx_ts_info;
-    dpf(("Free %lx\n", (unsigned long)p));
+    dpf(("Free %"AFS_PTR_FMT"\n", p));
 
     RX_TS_INFO_GET(rx_ts_info);
     RX_TS_FPQ_CHECKIN(rx_ts_info,p);
@@ -973,7 +973,7 @@ int rxi_nBadIovecs = 0;
 void
 rxi_RestoreDataBufs(struct rx_packet *p)
 {
-    int i;
+    unsigned int i;
     struct iovec *iov = &p->wirevec[2];
 
     RX_PACKET_IOV_INIT(p);
@@ -1162,7 +1162,7 @@ rxi_AllocPacketNoLock(int class)
 
     RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
 
-    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -1220,7 +1220,7 @@ rxi_AllocPacketNoLock(int class)
     queue_Remove(p);
     RX_FPQ_MARK_USED(p);
 
-    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
 
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -1258,7 +1258,7 @@ rxi_AllocPacketTSFPQ(int class, int pull_global)
 
     RX_TS_FPQ_CHECKOUT(rx_ts_info,p);
 
-    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
+    dpf(("Alloc %"AFS_PTR_FMT", class %d\n", p, class));
 
     /* have to do this here because rx_FlushWrite fiddles with the iovs in
      * order to truncate outbound packets.  In the near future, may need 
@@ -1318,7 +1318,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 	    (void)rxi_AllocDataBuf(p, (want - p->length),
 				   RX_PACKET_CLASS_SEND_CBUF);
 
-	if ((unsigned)p->length > mud)
+	if (p->length > mud)
             p->length = mud;
 
 	if (delta >= p->length) {
@@ -1344,7 +1344,7 @@ rxi_AllocSendPacket(struct rx_call *call, int want)
 		(void)rxi_AllocDataBuf(p, (want - p->length),
 				       RX_PACKET_CLASS_SEND_CBUF);
 
-	    if ((unsigned)p->length > mud)
+	    if (p->length > mud)
 		p->length = mud;
 
 	    if (delta >= p->length) {
@@ -1421,9 +1421,9 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
 	       u_short * port)
 {
     struct sockaddr_in from;
-    int nbytes;
+    unsigned int nbytes;
     afs_int32 rlen;
-    afs_int32 tlen, savelen;
+    afs_uint32 tlen, savelen;
     struct msghdr msg;
     rx_computelen(p, tlen);
     rx_SetDataSize(p, tlen);	/* this is the size of the user data area */
@@ -1459,7 +1459,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     /* restore the vec to its correct state */
     p->wirevec[p->niovecs - 1].iov_len = savelen;
 
-    p->length = (nbytes - RX_HEADER_SIZE);
+    p->length = (u_short)(nbytes - RX_HEADER_SIZE);
     if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	if (nbytes < 0 && errno == EWOULDBLOCK) {
             if (rx_stats_active)
@@ -1839,7 +1839,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 
     case RX_DEBUGI_GETALLCONN:
     case RX_DEBUGI_GETCONN:{
-	    int i, j;
+            unsigned int i, j;
 	    struct rx_connection *tc;
 	    struct rx_call *tcall;
 	    struct rx_debugConn tconn;
@@ -1948,7 +1948,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	 */
 
     case RX_DEBUGI_GETPEER:{
-	    int i;
+	    unsigned int i;
 	    struct rx_peer *tp;
 	    struct rx_debugPeer tpeer;
 
@@ -2111,10 +2111,8 @@ rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
 		    afs_int32 ahost, short aport, afs_int32 istack)
 {
     struct sockaddr_in taddr;
-    int i;
-    int nbytes;
+    unsigned int i, nbytes, savelen = 0;
     int saven = 0;
-    size_t savelen = 0;
 #ifdef KERNEL
     int waslocked = ISAFS_GLOCK();
 #endif
@@ -2311,7 +2309,10 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 #endif
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%0.3d len %d",
+          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
+          ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
+          p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
     if (rx_stats_active)
         rx_MutexIncrement(rx_stats.packetsSent[p->header.type - 1], rx_stats_mutex);
@@ -2494,7 +2495,10 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host), ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %"AFS_PTR_FMT" resend %d.%0.3d len %d",
+          deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], ntohl(peer->host),
+          ntohs(peer->port), p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber,
+          p->header.seq, p->header.flags, p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
     if (rx_stats_active)
@@ -2648,8 +2652,8 @@ rxi_PrepareSendPacket(struct rx_call *call,
 		      struct rx_packet *p, int last)
 {
     struct rx_connection *conn = call->conn;
-    int i;
-    ssize_t len;		/* len must be a signed type; it can go negative */
+    unsigned int i;
+    afs_int32 len;		/* len must be a signed type; it can go negative */
 
     p->flags &= ~RX_PKTFLAG_ACKED;
     p->header.cid = (conn->cid | call->channel);
