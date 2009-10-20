@@ -13,6 +13,8 @@
 
 #include <afs/param.h>
 #include <afs/afsint.h>
+#define FSINT_COMMON_XG 1
+#include <afs/afscbint.h>
 #include <sys/ioctl.h>
 #include <afs/venus.h>
 #include <afs/cellconfig.h>
@@ -20,6 +22,7 @@
 
 /*#include <rx/rxkad.h>*/
 #include <rx/rx_null.h>
+#include <rx/rx_prototypes.h>
 
 /*#include <krb.h>*/
 #include <afs/com_err.h>
@@ -145,7 +148,7 @@ do_rx_Init(void)
     }
 
     len = sizeof(struct sockaddr_in);
-    if (getsockname(rx_socket, &s, &len)) {
+    if (getsockname(rx_socket, (struct sockaddr *)&s, (socklen_t *)&len)) {
 	perror("getsockname");
 	return 1;
     }
@@ -448,7 +451,7 @@ main(int argc, char **argv)
     if (slcl) {
 	bytesremaining = statbuf.st_size;
     } else {
-	rx_Read(scall, &bytesremaining, sizeof(afs_int32));
+	rx_Read(scall, (char *)&bytesremaining, sizeof(afs_int32));
 	bytesremaining = ntohl(bytesremaining);
     }
 
