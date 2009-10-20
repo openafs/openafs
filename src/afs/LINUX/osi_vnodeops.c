@@ -1983,15 +1983,43 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     return 0;
 }
 
+/* Prepare an AFS vcache for writeback. Should be called with the vcache
+ * locked */
+static inline int
+afs_linux_prepare_writeback(struct vcache *avc) {
+    if (avc->f.states & CPageWrite) {
+	return AOP_WRITEPAGE_ACTIVATE;
+    }
+    avc->f.states |= CPageWrite;
+    return 0;
+}
+
+static inline int
+afs_linux_dopartialwrite(struct vcache *avc, cred_t *credp) {
+    struct vrequest treq;
+    int code;
+
+    if (!afs_InitReq(&treq, credp))
+	code = afs_DoPartialWrite(avc, &treq);
+
+    return afs_convert_code(code);
+}
+
+static inline void
+afs_linux_complete_writeback(struct vcache *avc) {
+    avc->f.states &= ~CPageWrite;
+}
+
+/* Writeback a given page syncronously. Called with no AFS locks held */
 static int
-afs_linux_writepage_sync(struct inode *ip, struct page *pp,
-			 unsigned long offset, unsigned int count)
+afs_linux_page_writeback(struct inode *ip, struct page *pp,
+			 unsigned long offset, unsigned int count,
+			 cred_t *credp)
 {
     struct vcache *vcp = VTOAFS(ip);
     char *buffer;
     afs_offs_t base;
     int code = 0;
-    cred_t *credp;
     uio_t tuio;
     struct iovec iovec;
     int f_flags = 0;
@@ -1999,24 +2027,11 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     buffer = kmap(pp) + offset;
     base = page_offset(pp) + offset;
 
-    credp = crref();
     afs_maybe_lock_kernel();
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
-
-    ObtainWriteLock(&vcp->lock, 532);
-    if (vcp->f.states & CPageWrite) {
-	ReleaseWriteLock(&vcp->lock);
-	AFS_GUNLOCK();
-	afs_maybe_unlock_kernel();
-	crfree(credp);
-	kunmap(pp);
-	return AOP_WRITEPAGE_ACTIVATE;
-    }
-    vcp->f.states |= CPageWrite;
-    ReleaseWriteLock(&vcp->lock);
 
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
 
@@ -2025,17 +2040,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     i_size_write(ip, vcp->f.m.Length);
     ip->i_blocks = ((vcp->f.m.Length + 1023) >> 10) << 1;
 
-    ObtainWriteLock(&vcp->lock, 533);
-    if (!code) {
-	struct vrequest treq;
-
-	if (!afs_InitReq(&treq, credp))
-	    code = afs_DoPartialWrite(vcp, &treq);
-    }
     code = code ? afs_convert_code(code) : count - tuio.uio_resid;
-
-    vcp->f.states &= ~CPageWrite;
-    ReleaseWriteLock(&vcp->lock);
 
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
 	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
@@ -2043,12 +2048,49 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 
     AFS_GUNLOCK();
     afs_maybe_unlock_kernel();
-    crfree(credp);
     kunmap(pp);
 
     return code;
 }
 
+static int
+afs_linux_writepage_sync(struct inode *ip, struct page *pp,
+			 unsigned long offset, unsigned int count)
+{
+    int code;
+    struct vcache *vcp = VTOAFS(ip);
+    cred_t *credp;
+
+    /* Catch recursive writeback. This occurs if the kernel decides
+     * writeback is required whilst we are writing to the cache, or
+     * flushing to the server. */
+    AFS_GLOCK();
+    ObtainWriteLock(&vcp->lock, 532);
+    code = afs_linux_prepare_writeback(vcp);
+    if (code) {
+	ReleaseWriteLock(&vcp->lock);
+	AFS_GUNLOCK();
+	return code;
+    }
+    ReleaseWriteLock(&vcp->lock);
+    AFS_GUNLOCK();
+
+    credp = crref();
+    code = afs_linux_page_writeback(ip, pp, offset, count, credp);
+
+    afs_maybe_lock_kernel();
+    AFS_GLOCK();
+    ObtainWriteLock(&vcp->lock, 533);
+    if (code == 0)
+	code = afs_linux_dopartialwrite(vcp, credp);
+    afs_linux_complete_writeback(vcp);
+    ReleaseWriteLock(&vcp->lock);
+    AFS_GUNLOCK();
+    afs_maybe_unlock_kernel();
+    crfree(credp);
+
+    return code;
+}
 
 static int
 #ifdef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
