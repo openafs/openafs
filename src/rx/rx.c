@@ -5708,6 +5708,15 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
 	return;			/* somebody set the clock back, don't count this time. */
     }
     clock_Sub(rttp, sentp);
+    if (rttp->sec == 0 && rttp->usec == 0) {
+        /*
+         * The actual round trip time is shorter than the
+         * clock_GetTime resolution.  It is most likely 1ms or 100ns.
+         * Since we can't tell which at the moment we will assume 1ms.
+         */
+        rttp->usec = 1000;
+    }
+
     MUTEX_ENTER(&rx_stats_mutex);
     if (clock_Lt(rttp, &rx_stats.minRtt))
 	rx_stats.minRtt = *rttp;
@@ -5781,7 +5790,7 @@ rxi_ComputeRoundTripTime(register struct rx_packet *p,
      * be switched and/or swapped out.  So on fast, reliable networks, the
      * timeout would otherwise be too short.  
      */
-    rtt_timeout = MIN((peer->rtt >> 3) + peer->rtt_dev, 350);
+    rtt_timeout = MAX(((peer->rtt >> 3) + peer->rtt_dev), 350);
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
 
