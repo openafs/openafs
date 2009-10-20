@@ -57,7 +57,12 @@ softsig_thread(void *arg)
 #if defined(AFS_DARWIN60_ENV) || (defined(AFS_NBSD_ENV) && !defined(AFS_NBSD50_ENV))
     pthread_sigmask (SIG_BLOCK, &ss, NULL);
     sigdelset (&os, SIGUSR1);
-#else /* !defined(AFS_DARWIN60_ENV) && !defined(AFS_NBSD_ENV) */
+#elif !defined(AFS_HPUX_ENV)
+    /* On HPUX, don't wait for 'critical' signals, as things such as
+     * SEGV won't cause a core, then. Some non-HPUX platforms may need
+     * this, though, since apparently if we wait on some signals but not
+     * e.g. SEGV, the softsig thread will still wait around when the
+     * other threads were killed by the SEGV. */
     for (i = 0; i < NSIG; i++) {
 	if (!sigismember(&os, i) && i != SIGSTOP && i != SIGKILL) {
 	    sigaddset(&ss, i);
