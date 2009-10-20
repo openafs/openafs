@@ -49,8 +49,6 @@
 #define MAX_ERRNO 1000L
 #endif
 
-#define LockPage(pp) lock_page(pp)
-#define UnlockPage(pp) unlock_page(pp)
 extern struct backing_dev_info afs_backing_dev_info;
 
 extern struct vcache *afs_globalVp;
@@ -1447,7 +1445,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
 	    SetPageUptodate(page);
 
 	    if (task)
-		UnlockPage(page);
+		unlock_page(page);
         } else if (task) {
 	    afs_pagecopy_queue_page(task, cachepage, page);
 	} else {
@@ -1456,7 +1454,7 @@ afs_linux_read_cache(struct file *cachefp, struct page *page,
     }
 
     if (code && task) {
-        UnlockPage(page);
+        unlock_page(page);
     }
 
 out:
@@ -1727,7 +1725,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
 	isize = (i_size_read(fp->f_mapping->host) - 1) >> PAGE_CACHE_SHIFT;
 	if(pp->index > isize) {
 	    if(PageLocked(pp))
-		UnlockPage(pp);
+		unlock_page(pp);
 	    continue;
 	}
 
@@ -1740,7 +1738,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
         code = add_to_page_cache(pp, mapping, pp->index, GFP_KERNEL);
         if(base_index != pp->index) {
             if(PageLocked(pp))
-				 UnlockPage(pp);
+		 unlock_page(pp);
             page_cache_release(pp);
 	    iovecp[page_ix].iov_base = (void *) 0;
 	    base_index++;
@@ -1749,13 +1747,13 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
         base_index++;
         if(code) {
 	    if(PageLocked(pp))
-		UnlockPage(pp);
+		unlock_page(pp);
 	    page_cache_release(pp);
 	    iovecp[page_ix].iov_base = (void *) 0;
 	} else {
 	    page_count++;
 	    if(!PageLocked(pp)) {
-		LockPage(pp);
+		lock_page(pp);
 	    }
 
 	    /* save the page for background map */
@@ -1884,7 +1882,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 	code = afs_linux_fillpage(fp, pp);
 	if (!code)
 	    code = afs_linux_prefetch(fp, pp);
-	UnlockPage(pp);
+	unlock_page(pp);
     }
 
     return code;
@@ -2090,7 +2088,7 @@ done:
     SetPageUptodate(pp);
     if ( status != AOP_WRITEPAGE_ACTIVATE ) {
 	/* XXX - do we need to redirty the page here? */
-	UnlockPage(pp);
+	unlock_page(pp);
     }
 
     page_cache_release(pp);
@@ -2241,7 +2239,7 @@ afs_symlink_filler(struct file *file, struct page *page)
 
     SetPageUptodate(page);
     kunmap(page);
-    UnlockPage(page);
+    unlock_page(page);
     return 0;
 
   fail:
@@ -2249,7 +2247,7 @@ afs_symlink_filler(struct file *file, struct page *page)
 
     SetPageError(page);
     kunmap(page);
-    UnlockPage(page);
+    unlock_page(page);
     return code;
 }
 
