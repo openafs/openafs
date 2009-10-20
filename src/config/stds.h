@@ -284,7 +284,7 @@ typedef struct afsUUID afsUUID;
 #ifdef AFS_NT40_ENV
 # define AFS_INT64_FMT "I64d"
 # define AFS_UINT64_FMT "I64u"
-# define AFS_PTR_FMT   "Ip"
+# define AFS_PTR_FMT   "p"
 # define AFS_SIZET_FMT "Iu"
 #else
 # define AFS_INT64_FMT "lld"
