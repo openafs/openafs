@@ -5988,6 +5988,16 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
     clock_Sub(rttp, sentp);
     dpf(("rxi_ComputeRoundTripTime(call=%d packet=%"AFS_PTR_FMT" rttp=%d.%06d sec)\n",
           p->header.callNumber, p, rttp->sec, rttp->usec));
+
+    if (rttp->sec == 0 && rttp->usec == 0) {
+        /*
+         * The actual round trip time is shorter than the
+         * clock_GetTime resolution.  It is most likely 1ms or 100ns.
+         * Since we can't tell which at the moment we will assume 1ms.
+         */
+        rttp->usec = 1000;
+    }
+
     if (rx_stats_active) {
         MUTEX_ENTER(&rx_stats_mutex);
         if (clock_Lt(rttp, &rx_stats.minRtt))
@@ -6063,7 +6073,7 @@ rxi_ComputeRoundTripTime(struct rx_packet *p,
      * be switched and/or swapped out.  So on fast, reliable networks, the
      * timeout would otherwise be too short.  
      */
-    rtt_timeout = MIN((peer->rtt >> 3) + peer->rtt_dev, 350);
+    rtt_timeout = MAX(((peer->rtt >> 3) + peer->rtt_dev), 350);
     clock_Zero(&(peer->timeout));
     clock_Addmsec(&(peer->timeout), rtt_timeout);
 
