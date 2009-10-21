@@ -2127,23 +2127,39 @@ afs_linux_writepage(struct page *pp)
     isize = i_size_read(inode);
 
     /* Don't defeat an earlier truncate */
-    if (page_offset(pp) > isize)
+    if (page_offset(pp) > isize) {
+	set_page_writeback(pp);
+	unlock_page(pp);
 	goto done;
+    }
 
     AFS_GLOCK();
     ObtainWriteLock(&vcp->lock, 537);
     code = afs_linux_prepare_writeback(vcp);
-    if (code) {
+    if (code == AOP_WRITEPAGE_ACTIVATE) {
+	/* WRITEPAGE_ACTIVATE is the only return value that permits us
+	 * to return with the page still locked */
 	ReleaseWriteLock(&vcp->lock);
 	AFS_GUNLOCK();
 	return code;
     }
+
     /* Grab the creds structure currently held in the vnode, and
      * get a reference to it, in case it goes away ... */
     credp = vcp->cred;
     crhold(credp);
     ReleaseWriteLock(&vcp->lock);
     AFS_GUNLOCK();
+
+    set_page_writeback(pp);
+
+    SetPageUptodate(pp);
+
+    /* We can unlock the page here, because it's protected by the
+     * page_writeback flag. This should make us less vulnerable to
+     * deadlocking in afs_write and afs_DoPartialWrite
+     */
+    unlock_page(pp);
 
     /* If this is the final page, then just write the number of bytes that
      * are actually in it */
@@ -2171,12 +2187,7 @@ afs_linux_writepage(struct page *pp)
     afs_maybe_unlock_kernel();
 
 done:
-    SetPageUptodate(pp);
-    if ( code != AOP_WRITEPAGE_ACTIVATE ) {
-	/* XXX - do we need to redirty the page here? */
-	unlock_page(pp);
-    }
-
+    end_page_writeback(pp);
     page_cache_release(pp);
 
     if (code1)
