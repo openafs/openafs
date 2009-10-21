@@ -35,10 +35,11 @@
 
     <!-- Add/remove programs -->
     <Property Id="ARPCOMMENTS">$(var.ProductComments)</Property>
-    <Property Id="ARPCONTACT">openafs-info@openafs.org</Property>
-    <Property Id="ARPHELPLINK">http://openafs.org</Property>
-    <Property Id="ARPURLINFOABOUT">http://openafs.org</Property>
-    <Property Id="ComponentDownload">http://openafs.org</Property>
+    <Property Id="ARPCONTACT">openafs-bugs@openafs.org</Property>
+    <Property Id="ARPHELPLINK">http://www.openafs.org/support.html</Property>
+    <Property Id="ARPURLINFOABOUT">http://docs.openafs.org</Property>
+    <Property Id="ARPURLUPDATEINFO">http://www.openafs.org/windows.html</Property>
+    <Property Id="ComponentDownload">http://www.openafs.org/windows.html</Property>
 
     <!-- Install mode -->
     <Property Id="ALLUSERS">1</Property>
