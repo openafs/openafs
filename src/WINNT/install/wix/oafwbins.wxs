@@ -64,12 +64,18 @@
         
         <!-- User interface -->
         <?include lang\$(var.Language)\ui.wxi?>
-        
+
+        <CustomAction
+           Id="SetInstallLocation"
+           Property="ARPINSTALLLOCATION"
+           Value="[AFSDIR]" />
+
         <!-- Installation Sequences -->
         <AdvertiseExecuteSequence />
         <AdminExecuteSequence />
         <InstallExecuteSequence>
             <RemoveExistingProducts After="InstallValidate">(Not Installed) And (OPENAFSBIN_UPGRADE)</RemoveExistingProducts>
+            <Custom Action="SetInstallLocation" Before="RegisterProduct" />
         </InstallExecuteSequence>
 
         <!-- Related producs -->

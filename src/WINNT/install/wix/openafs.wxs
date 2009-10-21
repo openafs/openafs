@@ -213,6 +213,10 @@
 		 BinaryKey="BIN_afsCustom"
 		 DllEntry="AbortMsiImmediate"
 		 Execute="immediate" />
+                <CustomAction
+                   Id="SetInstallLocation"
+                   Property="ARPINSTALLLOCATION"
+                   Value="[AFSDIR]" />
 
         <!-- Installation Sequences -->
         <AdvertiseExecuteSequence />
@@ -241,6 +245,7 @@
 			<!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
 			<Custom Action="RollbackAFSAdminGroup" Before="CreateAFSAdminGroup">&amp;feaClient=3</Custom>
 			<Custom Action="CreateAFSAdminGroup" Before="CreateFolders">&amp;feaClient=3</Custom>
+                        <Custom Action="SetInstallLocation" Before="RegisterProduct" />
             <ScheduleReboot After="PublishProduct">&amp;feaClient=3 OR &amp;feaServer=3 OR &amp;feaClient=2 OR &amp;feaServer=2</ScheduleReboot>
         </InstallExecuteSequence>
 
