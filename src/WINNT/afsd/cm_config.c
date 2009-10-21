@@ -723,7 +723,7 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
         for (i = 0; i < numServers; i++) {
             memcpy(&vlSockAddr.sin_addr.s_addr, &cellHostAddrs[i],
                    sizeof(long));
-            vlSockAddr.sin_port = ports[i];
+            vlSockAddr.sin_port = htons(ports[i]);
             vlSockAddr.sin_family = AF_INET;
             if (procp)
                 (*procp)(rockp, &vlSockAddr, cellHostNames[i], ipRanks[i]);
