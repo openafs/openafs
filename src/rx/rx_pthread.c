@@ -106,13 +106,13 @@ rxi_StartServerProc(void *(*proc) (void *), int stacksize)
 
     if (pthread_attr_init(&tattr) != 0) {
 	dpf(("Unable to Create Rx server thread (pthread_attr_init)\n"));
-	exit(1);
+	assert(0);
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
 	dpf
 	    (("Unable to Create Rx server thread (pthread_attr_setdetachstate)\n"));
-	exit(1);
+	assert(0);
     }
 
     /*
@@ -121,7 +121,7 @@ rxi_StartServerProc(void *(*proc) (void *), int stacksize)
     AFS_SIGSET_CLEAR();
     if (pthread_create(&thread, &tattr, server_entry, (void *)proc) != 0) {
 	dpf(("Unable to Create Rx server thread\n"));
-	exit(1);
+	assert(0);
     }
     AFS_SIGSET_RESTORE();
 }
@@ -223,7 +223,7 @@ rxi_ListenerProc(osi_socket sock, int *tnop, struct rx_call **newcallp)
 	    if (!(p = rxi_AllocPacket(RX_PACKET_CLASS_RECEIVE))) {
 		/* Could this happen with multiple socket listeners? */
 		dpf(("rxi_Listener: no packets!"));	/* Shouldn't happen */
-		exit(1);
+		assert(0);
 	    }
 	}
 
@@ -334,20 +334,20 @@ rxi_StartListener(void)
     if (pthread_attr_init(&tattr) != 0) {
 	dpf
 	    (("Unable to create Rx event handling thread (pthread_attr_init)\n"));
-	exit(1);
+	assert(0);
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
 	dpf
 	    (("Unable to create Rx event handling thread (pthread_attr_setdetachstate)\n"));
-	exit(1);
+	assert(0);
     }
 
     AFS_SIGSET_CLEAR();
     if (pthread_create(&event_handler_thread, &tattr, event_handler, NULL) !=
 	0) {
 	dpf(("Unable to create Rx event handling thread\n"));
-	exit(1);
+	assert(0);
     }
     MUTEX_ENTER(&rx_pthread_mutex);
     ++rxi_pthread_hinum;
@@ -374,19 +374,19 @@ rxi_Listen(osi_socket sock)
     if (pthread_attr_init(&tattr) != 0) {
 	dpf
 	    (("Unable to create socket listener thread (pthread_attr_init)\n"));
-	exit(1);
+	assert(0);
     }
 
     if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) != 0) {
 	dpf
 	    (("Unable to create socket listener thread (pthread_attr_setdetachstate)\n"));
-	exit(1);
+	assert(0);
     }
 
     AFS_SIGSET_CLEAR();
     if (pthread_create(&thread, &tattr, rx_ListenerProc, (void *)(intptr_t)sock) != 0) {
 	dpf(("Unable to create socket listener thread\n"));
-	exit(1);
+	assert(0);
     }
     MUTEX_ENTER(&rx_pthread_mutex);
     ++rxi_pthread_hinum;
