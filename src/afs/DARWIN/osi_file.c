@@ -148,7 +148,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
     if (!afs_osicred_initialized) {
 	/* valid for alpha_osf, SunOS, Ultrix */
-	memset((char *)&afs_osi_cred, 0, sizeof(afs_ucred_t));
+	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 	afs_osi_cred.cr_ref++;
 	afs_osi_cred.cr_ngroups = 1;
 	afs_osicred_initialized = 1;

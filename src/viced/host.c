@@ -157,7 +157,7 @@ GetCE(void)
     entry = CEFree;
     CEFree = entry->next;
     CEs++;
-    memset((char *)entry, 0, CLIENT_TO_ZERO(entry));
+    memset(entry, 0, CLIENT_TO_ZERO(entry));
     return (entry);
 
 }				/*GetCE */
@@ -245,7 +245,7 @@ GetHT(void)
     entry = HTFree;
     HTFree = entry->next;
     HTs++;
-    memset((char *)entry, 0, HOST_TO_ZERO(entry));
+    memset(entry, 0, HOST_TO_ZERO(entry));
     return (entry);
 
 }				/*GetHT */
@@ -3720,7 +3720,7 @@ h_CheckHosts(void)
 {
     afs_uint32 now = FT_ApproxTime();
 
-    memset((char *)&zerofid, 0, sizeof(zerofid));
+    memset(&zerofid, 0, sizeof(zerofid));
     /*
      * Send a probe to the workstation if it hasn't been heard from in
      * 15 minutes

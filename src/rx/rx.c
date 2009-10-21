@@ -491,7 +491,7 @@ rx_InitHost(u_int host, u_int port)
     rxi_nCalls = 0;
     rx_connDeadTime = 12;
     rx_tranquil = 0;		/* reset flag */
-    memset((char *)&rx_stats, 0, sizeof(struct rx_statistics));
+    memset(&rx_stats, 0, sizeof(struct rx_statistics));
     htable = (char *)
 	osi_Alloc(rx_hashTableSize * sizeof(struct rx_connection *));
     PIN(htable, rx_hashTableSize * sizeof(struct rx_connection *));	/* XXXXX */

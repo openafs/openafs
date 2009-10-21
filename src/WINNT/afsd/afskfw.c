@@ -2873,7 +2873,7 @@ KFW_AFS_klog(
         if (code) goto skip_krb5_init;
     }
 
-    memset((char *)&increds, 0, sizeof(increds));
+    memset(&increds, 0, sizeof(increds));
 
     code = pkrb5_cc_get_principal(ctx, cc, &client_principal);
     if (code) {

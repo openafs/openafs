@@ -160,7 +160,7 @@ ubik_Read(struct ubik_trans *tt, void *buf, afs_int32 len)
 	return (1);
     }
     if (status < len)
-	memset((char *)buf + status, 0, len - status);
+	memset(buf + status, 0, len - status);
     return (0);
 }
 

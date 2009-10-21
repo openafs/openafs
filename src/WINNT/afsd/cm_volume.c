@@ -382,11 +382,11 @@ long cm_UpdateVolumeLocation(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *
                     ListAddrByAttributes attrs;
                     afsUUID uuid;
 
-                    memset((char *)&attrs, 0, sizeof(attrs));
+                    memset(&attrs, 0, sizeof(attrs));
                     attrs.Mask = VLADDR_UUID;
                     attrs.uuid = uvldbEntry.serverNumber[i];
-                    memset((char *)&uuid, 0, sizeof(uuid));
-                    memset((char *)&addrs, 0, sizeof(addrs));
+                    memset(&uuid, 0, sizeof(uuid));
+                    memset(&addrs, 0, sizeof(addrs));
 
                     do {
                         struct rx_connection *rxconnp;

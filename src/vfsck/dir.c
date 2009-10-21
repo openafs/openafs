@@ -119,7 +119,7 @@ descend(parentino, inumber)
     register struct dinode *dp;
     struct inodesc curino;
 
-    memset((char *)&curino, 0, sizeof(struct inodesc));
+    memset(&curino, 0, sizeof(struct inodesc));
     if (statemap[inumber] != DSTATE)
 	errexit("BAD INODE %d TO DESCEND", statemap[inumber]);
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
@@ -403,7 +403,7 @@ linkup(orphan, parentdir)
     char tempname[BUFSIZ];
     extern int pass4check();
 
-    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    memset(&idesc, 0, sizeof(struct inodesc));
     dp = ginode(orphan);
     lostdir = (dp->di_mode & IFMT) == IFDIR;
     pwarn("UNREF %s ", lostdir ? "DIR" : "FILE");
@@ -526,7 +526,7 @@ makeentry(parent, ino, name)
     if (parent < ROOTINO || parent >= maxino || ino < ROOTINO
 	|| ino >= maxino)
 	return (0);
-    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    memset(&idesc, 0, sizeof(struct inodesc));
     idesc.id_type = DATA;
     idesc.id_func = mkentry;
     idesc.id_number = parent;

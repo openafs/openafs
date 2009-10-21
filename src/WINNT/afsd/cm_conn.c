@@ -153,7 +153,7 @@ void cm_InitConn(void)
 
 void cm_InitReq(cm_req_t *reqp)
 {
-	memset((char *)reqp, 0, sizeof(cm_req_t));
+	memset(reqp, 0, sizeof(cm_req_t));
 	reqp->startTime = GetTickCount();
 }
 

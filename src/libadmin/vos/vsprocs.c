@@ -1484,8 +1484,8 @@ UV_ReleaseVolume(afs_cell_handle_p cellHandle, afs_uint32 afromvol,
     int releasecount = 0;
     struct volser_status volstatus;
 
-    memset((char *)remembertime, 0, sizeof(remembertime));
-    memset((char *)&results, 0, sizeof(results));
+    memset(remembertime, 0, sizeof(remembertime));
+    memset(&results, 0, sizeof(results));
 
     tst =
 	ubik_VL_SetLock(cellHandle->vos, 0, afromvol, RWVOL,

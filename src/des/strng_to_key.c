@@ -111,7 +111,7 @@ des_string_to_key(char *str, register des_cblock * key)
     des_key_sched(cblockptr_to_cblock(key), key_sked);
     des_cbc_cksum(charptr_to_cblockptr(in_str), key, length, key_sked, key);
     /* erase key_sked */
-    memset((char *)key_sked, 0, sizeof(key_sked));
+    memset(key_sked, 0, sizeof(key_sked));
 
     /* now fix up key parity again */
     des_fixup_key_parity(cblockptr_to_cblock(key));

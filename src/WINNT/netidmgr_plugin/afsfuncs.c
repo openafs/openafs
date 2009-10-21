@@ -847,7 +847,7 @@ afs_klog(khm_handle identity,
         if (!(r = khm_krb5_initialize(identity, &context, &k5cc))) {
             int i;
 
-            memset((char *)&increds, 0, sizeof(increds));
+            memset(&increds, 0, sizeof(increds));
 
             pkrb5_cc_get_principal(context, k5cc, &client_principal);
             i = krb5_princ_realm(context, client_principal)->length;

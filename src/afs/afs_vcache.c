@@ -988,11 +988,11 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     { 
 	afs_uint32 slot;
         slot = tvc->diskSlot;
-	memset((char *)tvc, 0, sizeof(struct vcache));
+	memset(tvc, 0, sizeof(struct vcache));
 	tvc->diskSlot = slot;
     }
 #else
-    memset((char *)tvc, 0, sizeof(struct vcache));
+    memset(tvc, 0, sizeof(struct vcache));
 #endif
 
 #else
@@ -1152,7 +1152,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     /* Don't forget to free the gnode space */
     tvc->v.v_gnode = gnodepnt =
 	(struct gnode *)osi_AllocSmallSpace(sizeof(struct gnode));
-    memset((char *)gnodepnt, 0, sizeof(struct gnode));
+    memset(gnodepnt, 0, sizeof(struct gnode));
 #endif
 #ifdef AFS_SGI64_ENV
     memset((void *)&(tvc->vc_bhv_desc), 0, sizeof(tvc->vc_bhv_desc));
@@ -1240,7 +1240,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #endif /* AFS_SGI_ENV */
     tvc->dchint = NULL;
     osi_dnlc_purgedp(tvc);	/* this may be overkill */
-    memset((char *)&(tvc->callsort), 0, sizeof(struct afs_q));
+    memset(&(tvc->callsort), 0, sizeof(struct afs_q));
     tvc->slocks = NULL;
     tvc->f.states &=~ CVInit;
     afs_osi_Wakeup(&tvc->f.states);
@@ -3239,7 +3239,7 @@ afs_vcacheInit(int astatSize)
 #if !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV)
     /* Allocate and thread the struct vcache entries */
     tvp = (struct vcache *)afs_osi_Alloc(astatSize * sizeof(struct vcache));
-    memset((char *)tvp, 0, sizeof(struct vcache) * astatSize);
+    memset(tvp, 0, sizeof(struct vcache) * astatSize);
 
     Initial_freeVCList = tvp;
     freeVCList = &(tvp[0]);

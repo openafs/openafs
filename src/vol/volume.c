@@ -1469,7 +1469,7 @@ void
 VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h)
 {
 
-    memset((char *)dh, 0, sizeof(VolumeDiskHeader_t));
+    memset(dh, 0, sizeof(VolumeDiskHeader_t));
     dh->stamp = h->stamp;
     dh->id = h->id;
     dh->parent = h->parent;
@@ -1504,7 +1504,7 @@ VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h)
 void
 DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh)
 {
-    memset((char *)h, 0, sizeof(VolumeHeader_t));
+    memset(h, 0, sizeof(VolumeHeader_t));
     h->stamp = dh->stamp;
     h->id = dh->id;
     h->parent = dh->parent;
@@ -2381,7 +2381,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	 * area and mark it as initialized.
 	 */
 	if (!(V_stat_initialized(vp))) {
-	    memset((char *)(V_stat_area(vp)), 0, VOL_STATS_BYTES);
+	    memset((V_stat_area(vp)), 0, VOL_STATS_BYTES);
 	    V_stat_initialized(vp) = 1;
 	}
 #endif /* OPENAFS_VOL_STATS */
@@ -5010,7 +5010,7 @@ VAdjustVolumeStatistics_r(register Volume * vp)
 	 * All we need to do is bzero the entire VOL_STATS_BYTES of
 	 * the detailed volume statistics area.
 	 */
-	memset((char *)(V_stat_area(vp)), 0, VOL_STATS_BYTES);
+	memset((V_stat_area(vp)), 0, VOL_STATS_BYTES);
 #endif /* OPENAFS_VOL_STATS */
     }
 

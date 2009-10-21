@@ -73,7 +73,7 @@ pass1b()
     struct inodesc idesc;
     ino_t inumber;
 
-    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    memset(&idesc, 0, sizeof(struct inodesc));
     idesc.id_type = ADDR;
     idesc.id_func = pass1bcheck;
     duphead = duplist;

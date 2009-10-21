@@ -2950,7 +2950,7 @@ void smb_SendPacket(smb_vc_t *vcp, smb_packet_t *inp)
         localNCB = 1;
     }
  
-    memset((char *)ncbp, 0, sizeof(NCB));
+    memset(ncbp, 0, sizeof(NCB));
 
     extra = 2 * (*inp->wctp);	/* space used by parms, in bytes */
     tp = inp->wctp + 1+ extra;	/* points to count of data bytes */
@@ -3683,7 +3683,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 
   send1:
     ncbp = outp->ncbp;
-    memset((char *)ncbp, 0, sizeof(NCB));
+    memset(ncbp, 0, sizeof(NCB));
 
     ncbp->ncb_length = (unsigned short) finalCount;
     ncbp->ncb_lsn = (unsigned char) vcp->lsn;
@@ -10590,7 +10590,7 @@ void smb_Shutdown(void)
     smbShutdownFlag = 1;
 
     /* Hang up all sessions */
-    memset((char *)ncbp, 0, sizeof(NCB));
+    memset(ncbp, 0, sizeof(NCB));
     for (i = 1; i < numSessions; i++)
     {
         if (dead_sessions[i])
@@ -10628,7 +10628,7 @@ void smb_Shutdown(void)
     }                                                                            
 
     /* Delete Netbios name */
-    memset((char *)ncbp, 0, sizeof(NCB));
+    memset(ncbp, 0, sizeof(NCB));
     for (i = 0; i < lana_list.length; i++) {
         if (lana_list.lana[i] == LANA_INVALID) continue;
         ncbp->ncb_command = NCBDELNAME;

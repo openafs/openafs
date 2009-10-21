@@ -689,7 +689,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
 	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset((char *)lip, 0, sizeof(*lip));
+	    memset(lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = (char *)malloc(strlen(tname) + 1);
@@ -707,7 +707,7 @@ icl_DumpKernel(FILE *outFilep, char *setname)
 	    if (dummy > bufferSize)	/* find biggest log */
 		bufferSize = dummy;
 	    lip = (struct logInfo *)malloc(sizeof(struct logInfo));
-	    memset((char *)lip, 0, sizeof(*lip));
+	    memset(lip, 0, sizeof(*lip));
 	    lip->nextp = allInfo;
 	    allInfo = lip;
 	    lip->name = (char *)malloc(strlen(tname) + 1);
@@ -1662,7 +1662,7 @@ GetBulkSetInfo(void)
 	    exit(1);
 	}
     }
-    memset((char *)setInfo, 0, infoSize);
+    memset(setInfo, 0, infoSize);
 
     return setInfo;
 }
@@ -1684,7 +1684,7 @@ GetBulkLogInfo(void)
 	}
     }
 
-    memset((char *)logInfo, 0, infoSize);
+    memset(logInfo, 0, infoSize);
     return logInfo;
 }
 

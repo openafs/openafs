@@ -77,7 +77,7 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
 	}
     }
     np = (struct nfsclientpag *)afs_osi_Alloc(sizeof(struct nfsclientpag));
-    memset((char *)np, 0, sizeof(struct nfsclientpag));
+    memset(np, 0, sizeof(struct nfsclientpag));
     /* Copy the necessary afs_exporter fields */
     memcpy((char *)np, (char *)afs_nfsexporter, sizeof(struct afs_exporter));
     np->next = afs_nfspags[i];

@@ -2052,7 +2052,7 @@ DECL_PIOCTL(PUnlog)
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
 	    /* security is not having to say you're sorry */
-	    memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
 	    /* We have to drop the lock over the call to afs_ResetUserConns, since
@@ -2510,7 +2510,7 @@ DECL_PIOCTL(PGetCacheSize)
 	return EINVAL;
     }
     
-    memset((char *)results, 0, sizeof(results));
+    memset(results, 0, sizeof(results));
     results[0] = afs_cacheBlocks;
     results[1] = afs_blocksUsed;
     results[2] = afs_cacheFiles;
@@ -3903,7 +3903,7 @@ crget(void)
 {
     cred_t *cr;
     cr = crdup(get_current_cred());
-    memset((char *)cr, 0, sizeof(cred_t));
+    memset(cr, 0, sizeof(cred_t));
 #if CELL || CELL_PREPARE
     cr->cr_id = -1;
 #endif
@@ -4798,7 +4798,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 		tu->vid = UNDEFVID;
 		tu->states &= ~UHasTokens;
 		/* security is not having to say you're sorry */
-		memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+		memset(&tu->ct, 0, sizeof(struct ClearToken));
 		tu->refCount++;
 		ReleaseWriteLock(&afs_xuser);
 		afs_ResetUserConns(tu);

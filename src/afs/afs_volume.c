@@ -534,7 +534,7 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 	struct fvolume *tf = 0;
 
 	tv = afs_GetVolSlot();
-	memset((char *)tv, 0, sizeof(struct volume));
+	memset(tv, 0, sizeof(struct volume));
 	tv->cell = tcell->cellNum;
 	AFS_RWLOCK_INIT(&tv->lock, "volume lock");
 	tv->next = afs_volumes[i];	/* thread into list */
@@ -1062,11 +1062,11 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 		ListAddrByAttributes attrs;
 		afsUUID uuid;
 
-		memset((char *)&attrs, 0, sizeof(attrs));
+		memset(&attrs, 0, sizeof(attrs));
 		attrs.Mask = VLADDR_UUID;
 		attrs.uuid = ve->serverNumber[i];
-		memset((char *)&uuid, 0, sizeof(uuid));
-		memset((char *)&addrs, 0, sizeof(addrs));
+		memset(&uuid, 0, sizeof(uuid));
+		memset(&addrs, 0, sizeof(addrs));
 		do {
 		    tconn =
 			afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,

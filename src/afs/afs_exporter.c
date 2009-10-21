@@ -36,7 +36,7 @@ exporter_add(afs_int32 size, struct exporterops *ops, afs_int32 state,
     }
     length = (size ? size : sizeof(struct afs_exporter));
     ex = (struct afs_exporter *)afs_osi_Alloc(length);
-    memset((char *)ex, 0, length);
+    memset(ex, 0, length);
     MObtainWriteLock(&afs_xexp, 308);
     for (op = root_exported; op; op = op->exp_next) {
 	if (!op->exp_next)

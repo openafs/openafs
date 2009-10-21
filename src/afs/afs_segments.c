@@ -238,7 +238,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     minj = 0;
 
     do {
-	memset((char *)dcList, 0, NCHUNKSATONCE * sizeof(struct dcache *));
+	memset(dcList, 0, NCHUNKSATONCE * sizeof(struct dcache *));
 	high = 0;
 	moredata = FALSE;
 
@@ -339,7 +339,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 	do {
 	    moredata = FALSE;
-	    memset((char *)dcList, 0,
+	    memset(dcList, 0,
 		   NCHUNKSATONCE * sizeof(struct dcache *));
 
 	    /* overkill, but it gets the lock in case GetDSlot needs it */

@@ -2300,7 +2300,7 @@ afsHash(int nbuckets)
 	osi_Panic("afs: cannot create SEMA Hashtable\n");
 
     /* initialize the hash table and associated locks */
-    memset((char *)hashTable, 0, sizeOfHashTable * sizeof(Bucket));
+    memset(hashTable, 0, sizeOfHashTable * sizeof(Bucket));
     for (i = 0; i < sizeOfHashTable; i++)
 	hashLockInit(hashTable[i].lock);
     hashLockInit(afsHashLock);
@@ -2366,7 +2366,7 @@ afsHashInsertFind(KEY key)
 	osi_Panic("afs: SEMA Hashtable cannot create new entry\n");
     /* create new entry */
     ptr->key = key;
-    memset((char *)&ptr->element, 0, sizeof(ptr->element));
+    memset(&ptr->element, 0, sizeof(ptr->element));
     ptr->refCnt = 1;		/* this guy */
 
     /* insert new entry in bucket */

@@ -1999,7 +1999,7 @@ FillVolInfo(Volume * vp, volint_info_handle_t * handle)
 	 * Copy out the stat fields in a single operation.
 	 */
 	if ((now - hdr->dayUseDate) > OneDay) {
-	    memset((char *)&(handle->volinfo_ptr.ext->stat_reads[0]),
+	    memset(&(handle->volinfo_ptr.ext->stat_reads[0]),
 		   0, numStatBytes);
 	} else {
 	    memcpy((char *)&(handle->volinfo_ptr.ext->stat_reads[0]),

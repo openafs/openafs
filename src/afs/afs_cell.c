@@ -918,7 +918,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	aflags &= ~CNoSUID;
     } else {
 	tc = (struct cell *)afs_osi_Alloc(sizeof(struct cell));
-	memset((char *)tc, 0, sizeof(*tc));
+	memset(tc, 0, sizeof(*tc));
 	tc->cellName = afs_strdup(acellName);
 	tc->fsport = AFS_FSPORT;
 	tc->vlport = AFS_VLPORT;
@@ -975,7 +975,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     tc->states |= aflags;
     tc->timeout = timeout;
     
-    memset((char *)tc->cellHosts, 0, sizeof(tc->cellHosts));
+    memset(tc->cellHosts, 0, sizeof(tc->cellHosts));
     for (i = 0; i < MAXCELLHOSTS; i++) {
 	/* Get server for each host and link this cell in.*/	
 	struct server *ts;

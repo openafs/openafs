@@ -716,7 +716,7 @@ send_to_kdc(pkt, rpkt)
     struct sockaddr_in to;
     int timeAvail, timePerIter, numIters;
 
-    memset((char *)&to, 0, sizeof(to));
+    memset(&to, 0, sizeof(to));
     if ((f = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 	if (krb_debug)
 	    fprintf(stderr, "%s: Can't open socket\n", prog);

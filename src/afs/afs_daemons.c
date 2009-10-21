@@ -966,7 +966,7 @@ afs_BackgroundDaemon(void)
     /* initialize subsystem */
     if (brsInit == 0) {
 	LOCK_INIT(&afs_xbrs, "afs_xbrs");
-	memset((char *)afs_brs, 0, sizeof(afs_brs));
+	memset(afs_brs, 0, sizeof(afs_brs));
 	brsInit = 1;
 #if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
 	/*
@@ -1055,8 +1055,8 @@ shutdown_daemons(void)
     if (afs_cold_shutdown) {
 	afs_brsDaemons = brsInit = 0;
 	rxepoch_checked = afs_nbrs = 0;
-	memset((char *)afs_brs, 0, sizeof(afs_brs));
-	memset((char *)&afs_xbrs, 0, sizeof(afs_lock_t));
+	memset(afs_brs, 0, sizeof(afs_brs));
+	memset(&afs_xbrs, 0, sizeof(afs_lock_t));
 	afs_brsWaiters = 0;
 #ifdef AFS_AIX41_ENV
 	lock_free(&afs_asyncbuf_lock);

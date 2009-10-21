@@ -662,9 +662,9 @@ ClearXStatValues(void)
     /*
      * Zero all xstat-related structures.
      */
-    memset((char *)(&afs_perfstats), 0, sizeof(struct afs_PerfStats));
+    memset((&afs_perfstats), 0, sizeof(struct afs_PerfStats));
 #if FS_STATS_DETAILED
-    memset((char *)(&afs_FullPerfStats), 0,
+    memset((&afs_FullPerfStats), 0,
 	   sizeof(struct fs_stats_FullPerfStats));
 
     /*

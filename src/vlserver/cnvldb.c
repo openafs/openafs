@@ -824,7 +824,7 @@ convert_vlentry(int new, int fromvers, int tovers,
 	struct vlentry_2 vl;
 	struct vlentry_3 *xnvlentry = (struct vlentry_3 *)vlentryp;
 
-	memset((char *)&vl, 0, sizeof(struct vlentry_2));
+	memset(&vl, 0, sizeof(struct vlentry_2));
 	vl.volumeId[0] = xnvlentry->volumeId[0];
 	vl.volumeId[1] = xnvlentry->volumeId[1];
 	vl.volumeId[2] = xnvlentry->volumeId[2];
@@ -859,7 +859,7 @@ convert_vlentry(int new, int fromvers, int tovers,
 	     1 ? sizeof(struct vlheader_1) : sizeof(struct vlheader_2))
 	    - (fromvers ==
 	       1 ? sizeof(struct vlheader_1) : sizeof(struct vlheader_2));
-	memset((char *)&vl, 0, sizeof(struct vlentry_1));
+	memset(&vl, 0, sizeof(struct vlentry_1));
 	vl.volumeId[0] = xnvlentry->volumeId[0];
 	vl.volumeId[1] = xnvlentry->volumeId[1];
 	vl.volumeId[2] = xnvlentry->volumeId[2];

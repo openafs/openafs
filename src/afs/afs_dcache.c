@@ -3065,20 +3065,20 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     /* Allocate and zero the pointer array to the dcache entries */
     afs_indexTable = (struct dcache **)
 	afs_osi_Alloc(sizeof(struct dcache *) * afiles);
-    memset((char *)afs_indexTable, 0, sizeof(struct dcache *) * afiles);
+    memset(afs_indexTable, 0, sizeof(struct dcache *) * afiles);
     afs_indexTimes =
 	(afs_hyper_t *) afs_osi_Alloc(afiles * sizeof(afs_hyper_t));
-    memset((char *)afs_indexTimes, 0, afiles * sizeof(afs_hyper_t));
+    memset(afs_indexTimes, 0, afiles * sizeof(afs_hyper_t));
     afs_indexUnique =
 	(afs_int32 *) afs_osi_Alloc(afiles * sizeof(afs_uint32));
-    memset((char *)afs_indexUnique, 0, afiles * sizeof(afs_uint32));
+    memset(afs_indexUnique, 0, afiles * sizeof(afs_uint32));
     afs_indexFlags = (u_char *) afs_osi_Alloc(afiles * sizeof(u_char));
-    memset((char *)afs_indexFlags, 0, afiles * sizeof(char));
+    memset(afs_indexFlags, 0, afiles * sizeof(char));
 
     /* Allocate and thread the struct dcache entries themselves */
     tdp = afs_Initial_freeDSList =
 	(struct dcache *)afs_osi_Alloc(aDentries * sizeof(struct dcache));
-    memset((char *)tdp, 0, aDentries * sizeof(struct dcache));
+    memset(tdp, 0, aDentries * sizeof(struct dcache));
 #ifdef	KERNEL_HAVE_PIN
     pin((char *)afs_indexTable, sizeof(struct dcache *) * afiles);	/* XXX */
     pin((char *)afs_indexTimes, sizeof(afs_hyper_t) * afiles);	/* XXX */

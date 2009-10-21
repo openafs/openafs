@@ -358,7 +358,7 @@ afs_InitCBQueue(int doLockInit)
 {
     register int i;
 
-    memset((char *)cbHashT, 0, CBHTSIZE * sizeof(struct bucket));
+    memset(cbHashT, 0, CBHTSIZE * sizeof(struct bucket));
     for (i = 0; i < CBHTSIZE; i++) {
 	QInit(&(cbHashT[i].head));
 	/* Lock_Init(&(cbHashT[i].lock)); only if you want lots of locks, which 

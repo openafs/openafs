@@ -591,7 +591,7 @@ getpathname(namebuf, curdir, ino)
 	strcpy(namebuf, "?");
 	return;
     }
-    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    memset(&idesc, 0, sizeof(struct inodesc));
     idesc.id_type = DATA;
     cp = &namebuf[BUFSIZ - 1];
     *cp = '\0';

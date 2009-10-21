@@ -105,7 +105,7 @@ static struct tqHead busyHead, notokHead;
 static void
 qInit(struct tqHead *ahead)
 {
-    memset((char *)ahead, 0, sizeof(struct tqHead));
+    memset(ahead, 0, sizeof(struct tqHead));
     return;
 }
 

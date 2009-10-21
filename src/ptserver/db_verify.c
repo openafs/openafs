@@ -1510,7 +1510,7 @@ void
 zeromap(struct idused *idmap)
 {
     while (idmap) {
-	memset((char *)idmap->idcount, 0, sizeof idmap->idcount);
+	memset(idmap->idcount, 0, sizeof idmap->idcount);
 	idmap = idmap->idnext;
     }
 }
@@ -1535,7 +1535,7 @@ inccount(struct idused **idmapp, int id)
 	    perror("idmap");
 	    exit(1);
 	}
-	memset((char *)idmap, 0, sizeof idmap);
+	memset(idmap, 0, sizeof idmap);
 	idmap->idstart = id & ~(IDCOUNT - 1);
 	idmap->idnext = *idmapp;
 	*idmapp = idmap;

@@ -1102,7 +1102,7 @@ VLockPartition_r(char *name)
 			    CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, NULL);
 	assert(dp->lock_fd != INVALID_FD);
 
-	memset((char *)&lap, 0, sizeof(lap));
+	memset(&lap, 0, sizeof(lap));
 	rc = LockFileEx((HANDLE) dp->lock_fd, LOCKFILE_EXCLUSIVE_LOCK, 0, 1,
 			0, &lap);
 	assert(rc);
@@ -1117,7 +1117,7 @@ VUnlockPartition_r(char *name)
 
     if (!dp)
 	return;			/* no partition, will fail later */
-    memset((char *)&lap, 0, sizeof(lap));
+    memset(&lap, 0, sizeof(lap));
 
     UnlockFileEx((HANDLE) dp->lock_fd, 0, 1, 0, &lap);
     CloseHandle((HANDLE) dp->lock_fd);

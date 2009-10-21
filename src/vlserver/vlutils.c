@@ -377,7 +377,7 @@ GetExtentBlock(register struct ubik_trans *trans, register afs_int32 base)
 	    if (!ex_addr[base])
 		ERROR_EXIT(VL_NOMEM);
 	}
-	memset((char *)ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
+	memset(ex_addr[base], 0, VL_ADDREXTBLK_SIZE);
 
 	/* Write the full extension block at end of vldb */
 	ex_addr[base]->ex_flags = htonl(VLCONTBLOCK);

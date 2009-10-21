@@ -700,8 +700,8 @@ shutdown_cache(void)
 	cacheInfoModTime = 0;
 
 	afs_fsfragsize = 1023;
-	memset((char *)&afs_stats_cmperf, 0, sizeof(afs_stats_cmperf));
-	memset((char *)&cacheDev, 0, sizeof(struct osi_dev));
+	memset(&afs_stats_cmperf, 0, sizeof(afs_stats_cmperf));
+	memset(&cacheDev, 0, sizeof(struct osi_dev));
 	osi_dnlc_shutdown();
     }
 }				/*shutdown_cache */
@@ -842,7 +842,7 @@ shutdown_AFS(void)
 	afs_FVIndex = -1;
 	afs_server = (struct rx_service *)0;
 	AFS_RWLOCK_INIT(&afs_xconn, "afs_xconn");
-	memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
+	memset(&afs_rootFid, 0, sizeof(struct VenusFid));
 	AFS_RWLOCK_INIT(&afs_xuser, "afs_xuser");
 	AFS_RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
 	AFS_RWLOCK_INIT(&afs_xserver, "afs_xserver");

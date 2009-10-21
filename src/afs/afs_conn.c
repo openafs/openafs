@@ -199,7 +199,7 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	 */
 	UpgradeSToWLock(&afs_xconn, 37);
 	tc = (struct afs_conn *)afs_osi_Alloc(sizeof(struct afs_conn));
-	memset((char *)tc, 0, sizeof(struct afs_conn));
+	memset(tc, 0, sizeof(struct afs_conn));
 
 	tc->user = tu;
 	tc->port = aport;

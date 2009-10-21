@@ -543,7 +543,7 @@ rxi_MorePackets(int apackets)
     osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
     RX_TS_INFO_GET(rx_ts_info);
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
@@ -597,7 +597,7 @@ rxi_MorePackets(int apackets)
     osi_Assert(p);
 
     PIN(p, getme);		/* XXXXX */
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
 
@@ -636,7 +636,7 @@ rxi_MorePacketsTSFPQ(int apackets, int flush_global, int num_keep_local)
     p = (struct rx_packet *)osi_Alloc(getme);
 
     PIN(p, getme);		/* XXXXX */
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
     RX_TS_INFO_GET(rx_ts_info);
 
     RX_TS_FPQ_LOCAL_ALLOC(rx_ts_info,apackets);
@@ -701,7 +701,7 @@ rxi_MorePacketsNoLock(int apackets)
             osi_Assert(apackets > 0);
         }
     } while(p == NULL);
-    memset((char *)p, 0, getme);
+    memset(p, 0, getme);
 
 #ifdef RX_ENABLE_TSFPQ
     RX_TS_INFO_GET(rx_ts_info);
@@ -1449,7 +1449,7 @@ rxi_ReadPacket(osi_socket socket, struct rx_packet *p, afs_uint32 * host,
     savelen = p->wirevec[p->niovecs - 1].iov_len;
     p->wirevec[p->niovecs - 1].iov_len += RX_EXTRABUFFERSIZE;
 
-    memset((char *)&msg, 0, sizeof(msg));
+    memset(&msg, 0, sizeof(msg));
     msg.msg_name = (char *)&from;
     msg.msg_namelen = sizeof(struct sockaddr_in);
     msg.msg_iov = p->wirevec;
@@ -1806,7 +1806,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    struct rx_debugStats tstat;
 
 	    /* get basic stats */
-	    memset((char *)&tstat, 0, sizeof(tstat));	/* make sure spares are zero */
+	    memset(&tstat, 0, sizeof(tstat));	/* make sure spares are zero */
 	    tstat.version = RX_DEBUGI_VERSION;
 #ifndef	RX_ENABLE_LOCKS
 	    tstat.waitingForPackets = rx_waitingForPackets;
@@ -1852,7 +1852,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    if (tl > 0)
 		return ap;
 
-	    memset((char *)&tconn, 0, sizeof(tconn));	/* make sure spares are zero */
+	    memset(&tconn, 0, sizeof(tconn));	/* make sure spares are zero */
 	    /* get N'th (maybe) "interesting" connection info */
 	    for (i = 0; i < rx_hashTableSize; i++) {
 #if !defined(KERNEL)
@@ -1959,7 +1959,7 @@ rxi_ReceiveDebugPacket(struct rx_packet *ap, osi_socket asocket,
 	    if (tl > 0)
 		return ap;
 
-	    memset((char *)&tpeer, 0, sizeof(tpeer));
+	    memset(&tpeer, 0, sizeof(tpeer));
 	    for (i = 0; i < rx_hashTableSize; i++) {
 #if !defined(KERNEL)
 		/* the time complexity of the algorithm used here
@@ -2599,7 +2599,7 @@ rxi_EncodePacketHeader(struct rx_packet *p)
 {
     afs_uint32 *buf = (afs_uint32 *) (p->wirevec[0].iov_base);	/* MTUXXX */
 
-    memset((char *)buf, 0, RX_HEADER_SIZE);
+    memset(buf, 0, RX_HEADER_SIZE);
     *buf++ = htonl(p->header.epoch);
     *buf++ = htonl(p->header.cid);
     *buf++ = htonl(p->header.callNumber);

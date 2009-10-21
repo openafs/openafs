@@ -496,7 +496,7 @@ smb_IoctlReadRaw(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp,
     }
 
     ncbp = outp->ncbp;
-    memset((char *)ncbp, 0, sizeof(NCB));
+    memset(ncbp, 0, sizeof(NCB));
 
     ncbp->ncb_length = (unsigned short) leftToCopy;
     ncbp->ncb_lsn = (unsigned char) vcp->lsn;

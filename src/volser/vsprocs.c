@@ -3325,8 +3325,8 @@ UV_ReleaseVolume(afs_uint32 afromvol, afs_int32 afromserver,
     struct volser_status volstatus;
     char hoststr[16];
 
-    memset((char *)remembertime, 0, sizeof(remembertime));
-    memset((char *)&results, 0, sizeof(results));
+    memset(remembertime, 0, sizeof(remembertime));
+    memset(&results, 0, sizeof(results));
 
     vcode = ubik_VL_SetLock(cstruct, 0, afromvol, RWVOL, VLOP_RELEASE);
     if (vcode != VL_RERELEASE)

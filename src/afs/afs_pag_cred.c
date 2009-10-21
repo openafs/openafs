@@ -107,7 +107,7 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 	    tu->vid = UNDEFVID;
 	    tu->states &= ~UHasTokens;
 	    /* security is not having to say you're sorry */
-	    memset((char *)&tu->ct, 0, sizeof(struct ClearToken));
+	    memset(&tu->ct, 0, sizeof(struct ClearToken));
 #ifdef UKERNEL
 	    /* set the expire times to 0, causes
 	     * afs_GCUserData to remove this entry

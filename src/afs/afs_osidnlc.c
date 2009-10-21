@@ -516,8 +516,8 @@ osi_dnlc_purge(void)
 	    nameCache[i].dirp = nameCache[i].vp = NULL;
     } else {			/* did get the lock */
 	ncfreelist = NULL;
-	memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
-	memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
+	memset(nameCache, 0, sizeof(struct nc) * NCSIZE);
+	memset(nameHash, 0, sizeof(struct nc *) * NHSIZE);
 	for (i = 0; i < NCSIZE; i++) {
 	    nameCache[i].next = ncfreelist;
 	    ncfreelist = &nameCache[i];
@@ -545,13 +545,13 @@ osi_dnlc_init(void)
     int i;
 
     Lock_Init(&afs_xdnlc);
-    memset((char *)&dnlcstats, 0, sizeof(dnlcstats));
-    memset((char *)dnlctracetable, 0, sizeof(dnlctracetable));
+    memset(&dnlcstats, 0, sizeof(dnlcstats));
+    memset(dnlctracetable, 0, sizeof(dnlctracetable));
     dnlct = 0;
     ObtainWriteLock(&afs_xdnlc, 223);
     ncfreelist = NULL;
-    memset((char *)nameCache, 0, sizeof(struct nc) * NCSIZE);
-    memset((char *)nameHash, 0, sizeof(struct nc *) * NHSIZE);
+    memset(nameCache, 0, sizeof(struct nc) * NCSIZE);
+    memset(nameHash, 0, sizeof(struct nc *) * NHSIZE);
     for (i = 0; i < NCSIZE; i++) {
 	nameCache[i].next = ncfreelist;
 	ncfreelist = &nameCache[i];

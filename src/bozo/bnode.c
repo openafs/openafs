@@ -846,7 +846,7 @@ bnode_Init(void)
 			     "bnode-manager", &bproc_pid);
     if (code)
 	return code;
-    memset((char *)&newaction, 0, sizeof(newaction));
+    memset(&newaction, 0, sizeof(newaction));
     newaction.sa_handler = bnode_Int;
     code = sigaction(SIGCHLD, &newaction, NULL);
     if (code)

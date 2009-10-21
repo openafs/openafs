@@ -440,7 +440,7 @@ static int get_v5cred(krb5_context context,
         client_principal = 0;
     }
 
-    memset((char *)&increds, 0, sizeof(increds));
+    memset(&increds, 0, sizeof(increds));
 
     if ((r = krb5_build_principal(context, &increds.server,
                                   (int)strlen(realm), realm,

@@ -2255,7 +2255,7 @@ save_FS_data_forDisplay(struct xstat_fs_ProbeResults *a_fsResults)
 	for (i = 0; i < numFS; i++) {
 	    curr_fsDataP->probeOK = 0;
 	    curr_fsDataP->ovfCount = 0;
-	    memset((char *)curr_fsDataP->data, 0, numBytes);
+	    memset(curr_fsDataP->data, 0, numBytes);
 	    curr_fsDataP++;
 	}
 
@@ -3067,7 +3067,7 @@ save_CM_data_forDisplay(struct xstat_cm_ProbeResults *a_cmResults)
 	for (i = 0; i < numCM; i++) {
 	    curr_cmDataP->probeOK = 0;
 	    curr_cmDataP->ovfCount = 0;
-	    memset((char *)curr_cmDataP->data, 0, numBytes);
+	    memset(curr_cmDataP->data, 0, numBytes);
 	    curr_cmDataP++;
 	}
 

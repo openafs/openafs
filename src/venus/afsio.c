@@ -816,7 +816,7 @@ get_file_cell(char *fn, char **cellp, afs_int32 hosts[MAXHOSTS], AFSFid *Fid,
     int j;
     afs_int32 *Tmpafs_int32;
 
-    memset((char *) Status, 0, sizeof(struct AFSFetchStatus));
+    memset( Status, 0, sizeof(struct AFSFetchStatus));
     memset(buf, 0, sizeof(buf));
     status.in_size = 0;
     status.out_size = sizeof(buf);

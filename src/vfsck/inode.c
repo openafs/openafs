@@ -609,7 +609,7 @@ freeino(ino)
     extern int pass4check();
     struct dinode *dp;
 
-    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    memset(&idesc, 0, sizeof(struct inodesc));
     idesc.id_type = ADDR;
     idesc.id_func = pass4check;
     idesc.id_number = ino;

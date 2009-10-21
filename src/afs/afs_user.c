@@ -479,7 +479,7 @@ afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.PAGCreations++;
 #endif /* AFS_NOSTATS */
-    memset((char *)tu, 0, sizeof(struct unixuser));
+    memset(tu, 0, sizeof(struct unixuser));
     tu->next = afs_users[i];
     afs_users[i] = tu;
     if (RmtUser) {

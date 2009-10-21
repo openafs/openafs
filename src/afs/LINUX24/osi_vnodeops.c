@@ -526,7 +526,7 @@ afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 #endif
     
     /* Convert to a lock format afs_lockctl understands. */
-    memset((char *)&flock, 0, sizeof(flock));
+    memset(&flock, 0, sizeof(flock));
     flock.l_type = flp->fl_type;
     flock.l_pid = flp->fl_pid;
     flock.l_whence = 0;
@@ -612,7 +612,7 @@ afs_linux_flock(struct file *fp, int cmd, struct file_lock *flp) {
     cred_t *credp = crref();
     struct AFS_FLOCK flock;
     /* Convert to a lock format afs_lockctl understands. */
-    memset((char *)&flock, 0, sizeof(flock));
+    memset(&flock, 0, sizeof(flock));
     flock.l_type = flp->fl_type;
     flock.l_pid = flp->fl_pid;
     flock.l_whence = 0;

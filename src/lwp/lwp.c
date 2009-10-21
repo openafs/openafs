@@ -1355,7 +1355,7 @@ lwp_alloc_process(char *name, pthread_startroutine_t ep, pthread_addr_t arg)
 {
     PROCESS lp;
     assert(lp = (PROCESS) malloc(sizeof(*lp)));
-    memset((char *)lp, 0, sizeof(*lp));
+    memset(lp, 0, sizeof(*lp));
     if (!name) {
 	char temp[100];
 	static procnum;

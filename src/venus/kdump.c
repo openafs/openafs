@@ -1423,7 +1423,7 @@ print_servers(int pnt)
     int chainCount[NSERVERS];
 
     if (pnt) {
-	memset((char *)chainCount, 0, sizeof(chainCount));
+	memset(chainCount, 0, sizeof(chainCount));
 	printf("\n\nPrinting 'afs_servers' structures...\n");
     }
     findsym("afs_servers", &symoff);
@@ -1461,7 +1461,7 @@ print_servers(int pnt)
 
     /* Verify against afs_totalServers. */
     if (pnt) {
-	memset((char *)chainCount, 0, sizeof(chainCount));
+	memset(chainCount, 0, sizeof(chainCount));
 	if (findsym("afs_totalServers", &symoff)) {
 	    kread(kmem, symoff, (char *)&afs_totalServers, sizeof(afs_int32));
 	    if (afs_totalServers != nServers) {

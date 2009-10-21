@@ -335,7 +335,7 @@ static int get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *loc
     struct afsconf_dir *configdir;
 
     memset(local_cell, 0, sizeof(local_cell));
-    memset((char *)cellconfig, 0, sizeof(*cellconfig));
+    memset(cellconfig, 0, sizeof(*cellconfig));
 
     if (!(configdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	fprintf(stderr, 
@@ -1870,7 +1870,7 @@ static krb5_error_code get_credv5(krb5_context context,
 	       ? "/" : "", inst ? inst : "", realm);
     }
     
-    memset((char *)&increds, 0, sizeof(increds));
+    memset(&increds, 0, sizeof(increds));
 /* ANL - instance may be ptr to a null string. Pass null then */
     if ((r = krb5_build_principal(context, &increds.server,
 				  strlen(realm), realm,

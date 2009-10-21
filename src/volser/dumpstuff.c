@@ -1183,7 +1183,7 @@ ProcessIndex(Volume * vp, VnodeClass class, afs_int32 ** Bufp, int *sizep,
 		FDH_CLOSE(fdP);
 		return -1;
 	    }
-	    memset((char *)Buf, 0, nVnodes * sizeof(afs_int32));
+	    memset(Buf, 0, nVnodes * sizeof(afs_int32));
 	    STREAM_SEEK(afile, offset = vcp->diskSize, 0);
 	    while (1) {
 		code = STREAM_READ(vnode, vcp->diskSize, 1, afile);
