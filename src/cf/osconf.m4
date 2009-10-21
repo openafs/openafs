@@ -1184,10 +1184,10 @@ CFLAGS_NOERROR=
 
 if test "x$GCC" = "xyes"; then
   if test "x$enable_warnings" = "xyes"; then
-    XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition"
+    XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Wpointer-arith"
   fi
   if test "x$enable_checking" != "xno"; then
-    XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option"
+    XCFLAGS="${XCFLAGS} -Wall -Wstrict-prototypes -Wold-style-definition -Werror -fdiagnostics-show-option -Wpointer-arith"
     if test "x$enable_checking" != "xall"; then
       CFLAGS_NOERROR="-Wno-error"
       AC_DEFINE(IGNORE_SOME_GCC_WARNINGS, 1, [define to disable some gcc warnings in warnings-as-errors mode])
