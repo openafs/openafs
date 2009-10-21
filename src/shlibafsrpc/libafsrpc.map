@@ -125,6 +125,8 @@
 	rx_GetMaxSendWindow;
 	rx_SetMaxReceiveWindow;
 	rx_SetMaxSendWindow;
+	rx_GetMinPeerTimeout;
+	rx_SetMinPeerTimeout;
 
     local:
 	*;

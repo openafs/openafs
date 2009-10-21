@@ -72,6 +72,17 @@ int rx_GetMaxSendWindow(void)
     return rx_maxSendWindow;
 }
 
+void rx_SetMinPeerTimeout(int timeo)
+{
+    if (timeo >= 1 && timeo < 1000)
+        rx_minPeerTimeout = timeo;
+}
+
+int rx_GetMinPeerTimeout(void)
+{
+    return rx_minPeerTimeout;
+}
+
 #ifdef AFS_NT40_ENV
 
 void rx_SetRxDeadTime(int seconds)
