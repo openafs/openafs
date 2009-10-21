@@ -763,7 +763,7 @@ rx_StartServer(int donateMe)
 	static int nProcs;
 #ifdef AFS_PTHREAD_ENV
 	pid_t pid;
-	pid = (pid_t) pthread_self();
+	pid = afs_pointer_to_int(pthread_self());
 #else /* AFS_PTHREAD_ENV */
 	PROCESS pid;
 	LWP_CurrentProcess(&pid);
