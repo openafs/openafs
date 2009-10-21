@@ -500,6 +500,9 @@ afsd_InitCM(char **reasonP)
     long maxcpus;
     long ltt, ltto;
     long rx_nojumbo;
+    int  rx_max_rwin_size;
+    int  rx_max_swin_size;
+    int  rx_min_peer_timeout;
     long virtualCache = 0;
     fschar_t rootCellName[256];
     struct rx_service *serverp;
@@ -1015,6 +1018,27 @@ afsd_InitCM(char **reasonP)
         smb_authType = SMB_AUTH_EXTENDED; /* default is to use extended authentication */
     }
     afsi_log("SMB authentication type is %s", ((smb_authType == SMB_AUTH_NONE)?"NONE":((smb_authType == SMB_AUTH_EXTENDED)?"EXTENDED":"NTLM")));
+
+    dummyLen = sizeof(rx_max_rwin_size);
+    code = RegQueryValueEx(parmKey, "RxMaxRecvWinSize", NULL, NULL,
+                           (BYTE *) &rx_max_rwin_size, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        rx_SetMaxReceiveWindow(rx_max_rwin_size);
+    afsi_log("Rx Maximum Receive Window Size is %d", rx_GetMaxReceiveWindow());
+
+    dummyLen = sizeof(rx_max_swin_size);
+    code = RegQueryValueEx(parmKey, "RxMaxSendWinSize", NULL, NULL,
+                           (BYTE *) &rx_max_swin_size, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        rx_SetMaxSendWindow(rx_max_swin_size);
+    afsi_log("Rx Maximum Send Window Size is %d", rx_GetMaxSendWindow());
+
+    dummyLen = sizeof(rx_min_peer_timeout);
+    code = RegQueryValueEx(parmKey, "RxMinPeerTimeout", NULL, NULL,
+                           (BYTE *) &rx_min_peer_timeout, &dummyLen);
+    if (code == ERROR_SUCCESS)
+        rx_SetMinPeerTimeout(rx_min_peer_timeout);
+    afsi_log("Rx Minimum Peer Timeout is %d ms", rx_GetMinPeerTimeout());
 
     dummyLen = sizeof(rx_nojumbo);
     code = RegQueryValueEx(parmKey, "RxNoJumbo", NULL, NULL,
