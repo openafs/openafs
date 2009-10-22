@@ -35,7 +35,7 @@ extern "C" {
 
 void Shortcut_Init (void)
 {
-   CoInitialize(0);
+   CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
 }
 
 

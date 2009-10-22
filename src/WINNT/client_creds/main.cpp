@@ -68,6 +68,7 @@ extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine,
    osi_LogEvent0("AFSCreds Main command line",pCmdLine);
    fs_utils_InitMountRoot();
 
+
    if (InitApp (pCmdLine))
       {
       MSG msg;

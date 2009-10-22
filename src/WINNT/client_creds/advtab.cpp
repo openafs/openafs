@@ -9,6 +9,8 @@
 
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <windows.h>
+#include <shellapi.h>
 
 extern "C" {
 #include <afs/param.h>
@@ -289,7 +291,14 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
 
 void Advanced_OnOpenCPL (HWND hDlg)
 {
-   WinExec ("afs_config.exe", SW_SHOW);
+    SHELLEXECUTEINFO shellExecInfo;
+
+    memset(&shellExecInfo, 0, sizeof(shellExecInfo));
+    shellExecInfo.cbSize = sizeof(shellExecInfo);
+    shellExecInfo.nShow = SW_SHOWNORMAL;
+    shellExecInfo.hwnd = hDlg;
+    shellExecInfo.lpFile = "afs_config.exe";
+    ShellExecuteEx(&shellExecInfo);
 }
 
 
