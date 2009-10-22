@@ -41,8 +41,8 @@
 # include <net/if.h>
 # include <sys/ioctl.h>
 # include <sys/time.h>
-# include <assert.h>
 #endif
+# include <assert.h>
 # include "rx.h"
 # include "rx_globals.h"
 # include <lwp.h>
