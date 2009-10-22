@@ -156,7 +156,6 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	AFS_COPYIN(AFSKPTR(p4), (char *)&startCookie, sizeof(afs_int32), code);
 	if (code)
 	    return code;
-	afs_warn("looking for log %s\n", tname);
 	logp = afs_icl_FindLog(tname);
 	if (!logp)
 	    return ENOENT;
