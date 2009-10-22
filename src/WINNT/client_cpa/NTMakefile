@@ -22,7 +22,7 @@ DLLOBJS =\
 DLLLIBS =\
 	$(DESTDIR)\lib\afs\TaLocale.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	comctl32.lib
+	comctl32.lib shell32.lib ole32.lib
 
 DEFFILE = afs_cpa.def
 

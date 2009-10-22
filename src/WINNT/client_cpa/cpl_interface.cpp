@@ -8,6 +8,8 @@
  */
 
 #include <windows.h>
+#include <objbase.h>
+#include <shellapi.h>
 #include <cpl.h>
 #include <WINNT/TaLocale.h>
 #include <WINNT/afsreg.h>
@@ -72,24 +74,25 @@ extern "C" LONG APIENTRY CPlApplet(HWND hwndCPl, UINT uMsg, LONG lParam1, LONG l
 {
     LPNEWCPLINFO lpNewCPlInfo;
     LPCPLINFO lpCPlInfo;
+    SHELLEXECUTEINFO shellExecInfo;
 
     switch (uMsg) {
         case CPL_INIT:      /* first message, sent once  */
             hinst = GetModuleHandle("afs_cpa.cpl");
             hinstResources = TaLocale_LoadCorrespondingModule (hinst);
+            CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
             return (hinst != 0);
 
         case CPL_GETCOUNT:  /* second message, sent once */
             return 1;
-            break;
 
         case CPL_INQUIRE:  /* in case we receive this we should indicate that we like NEWINQUIRE better. */
-			lpCPlInfo = (CPLINFO *) lParam2;
-			lpCPlInfo->idIcon = ((IsClientInstalled() || !IsWindowsNT())? IDI_AFSD : IDI_CCENTER);
-			lpCPlInfo->idName = CPL_DYNAMIC_RES;
-			lpCPlInfo->idInfo = CPL_DYNAMIC_RES;
-			lpCPlInfo->lData = 0;
-			break;
+            lpCPlInfo = (CPLINFO *) lParam2;
+            lpCPlInfo->idIcon = ((IsClientInstalled() || !IsWindowsNT())? IDI_AFSD : IDI_CCENTER);
+            lpCPlInfo->idName = CPL_DYNAMIC_RES;
+            lpCPlInfo->idInfo = CPL_DYNAMIC_RES;
+            lpCPlInfo->lData = 0;
+            break;
 
         case CPL_NEWINQUIRE: /* third message, sent once per app */
             lpNewCPlInfo = (LPNEWCPLINFO) lParam2;
@@ -108,14 +111,20 @@ extern "C" LONG APIENTRY CPlApplet(HWND hwndCPl, UINT uMsg, LONG lParam1, LONG l
             GetString (lpNewCPlInfo->szInfo, (!IsWindowsNT()) ? IDS_CPL_DESC_95 : (!IsClientInstalled()) ? IDS_CPL_DESC_CCENTER : IDS_CPL_DESC_NT);
             break;
 
-        case CPL_DBLCLK:		/* applet icon double-clicked */
-	    if (IsClientInstalled() || !IsWindowsNT())
-	        WinExec("afs_config.exe", SW_SHOW);
-	    else
-	        WinExec("afs_config.exe /c", SW_SHOW);
+    case CPL_DBLCLK:		/* applet icon double-clicked */
+            memset(&shellExecInfo, 0, sizeof(shellExecInfo));
+            shellExecInfo.cbSize = sizeof(shellExecInfo);
+            shellExecInfo.nShow = SW_SHOWNORMAL;
+            shellExecInfo.hwnd = hwndCPl;
+            shellExecInfo.lpFile = "afs_config.exe";
+	    if (!IsClientInstalled() && IsWindowsNT())
+                shellExecInfo.lpParameters = "/c";
+
+            ShellExecuteEx(&shellExecInfo);
             break;
 
-        case CPL_EXIT:
+    case CPL_EXIT:
+            CoUninitialize();
             if (hinstResources)
                 FreeLibrary (hinstResources);
             break;
