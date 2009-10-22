@@ -382,7 +382,7 @@ SBOZO_SetCellName(struct rx_call *acall, char *aname)
 
     code =
 	afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell,
-				    &clones);
+				    clones);
     if (code)
 	goto fail;
 
@@ -434,7 +434,7 @@ SBOZO_GetCellHost(struct rx_call *acall, afs_uint32 awhich, char **aname)
 
     code =
 	afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell,
-				    &clones);
+				    clones);
     if (code)
 	goto fail;
 
@@ -480,7 +480,7 @@ SBOZO_DeleteCellHost(struct rx_call *acall, char *aname)
 
     code =
 	afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell,
-				    &clones);
+				    clones);
     if (code)
 	goto fail;
 
@@ -529,7 +529,7 @@ SBOZO_AddCellHost(struct rx_call *acall, char *aname)
 
     code =
 	afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell,
-				    &clones);
+				    clones);
     if (code)
 	goto fail;
 

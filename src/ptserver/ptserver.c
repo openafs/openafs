@@ -452,7 +452,7 @@ main(int argc, char **argv)
 
     /* get list of servers */
     code =
-	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, &clones);
+	afsconf_GetExtendedCellInfo(prdir, NULL, "afsprot", &info, clones);
     if (code) {
 	afs_com_err(whoami, code, "Couldn't get server list");
 	PT_EXIT(2);

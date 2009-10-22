@@ -491,8 +491,8 @@ main(int argc, char **argv)
 
 	LogDebug(1, "Using server list from %s cell database.\n", lcell);
 
-	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo, 
-					    &clones); 
+	code = afsconf_GetExtendedCellInfo (BU_conf, lcell, 0, &cellinfo,
+					    clones);
 	code =
 	    convert_cell_to_ubik(&cellinfo, &globalConfPtr->myHost,
 				 globalConfPtr->serverList);

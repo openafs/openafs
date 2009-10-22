@@ -304,7 +304,7 @@ main(int argc, char **argv)
     /* get list of servers */
     code =
 	afsconf_GetExtendedCellInfo(tdir, NULL, AFSCONF_VLDBSERVICE, &info,
-				    &clones);
+				    clones);
     if (code) {
 	printf("vlserver: Couldn't get cell server list for 'afsvldb'.\n");
 	exit(2);
