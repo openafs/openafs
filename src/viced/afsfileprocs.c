@@ -4241,7 +4241,13 @@ SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
     }
     if (updatefile) {
 	/* if a dir moved, .. changed */
-	BreakCallBack(client->host, &fileFid, 0);
+	/* we do not give an AFSFetchStatus structure back to the
+	 * originating client, and the file's status has changed, so be
+	 * sure to send a callback break. In theory the client knows
+	 * enough to know that the callback could be broken implicitly,
+	 * but that may not be clear, and some client implementations
+	 * may not know to. */
+	BreakCallBack(client->host, &fileFid, 1);
     }
     if (newfileptr) {
 	/* Note:  it is not necessary to break the callback */
