@@ -1444,22 +1444,6 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
         if (host->host == addr && host->port == port)  {
             removeInterfaceAddr_r(host, addr, port);
 
-            rxconn = host->callback_rxcon;
-            host->callback_rxcon = NULL;
-
-            if (rxconn) {
-                struct client *client;
-                /*
-                 * If rx_DestroyConnection calls h_FreeConnection we will
-                 * deadlock on the host_glock_mutex. Work around the problem
-                 * by unhooking the client from the connection before
-                 * destroying the connection.
-                 */
-                client = rx_GetSpecific(rxconn, rxcon_client_key);
-                rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
-                rx_DestroyConnection(rxconn);
-            }
-
             for (i=0; i < host->interface->numberOfInterfaces; i++) {
                 if (host->interface->interface[i].valid) {
                     ViceLog(25,
@@ -1483,6 +1467,14 @@ removeAddress_r(struct host *host, afs_uint32 addr, afs_uint16 port)
                 host->host = 0;
                 host->port = 0;
             } else {
+                rxconn = host->callback_rxcon;
+                host->callback_rxcon = NULL;
+
+                if (rxconn) {
+                    rx_DestroyConnection(rxconn);
+                    rxconn = NULL;
+                }
+
                 if (!sc)
                     sc = rxnull_NewClientSecurityObject();
                 host->callback_rxcon =
@@ -2000,20 +1992,10 @@ h_GetHost_r(struct rx_connection *tcon)
 			oldHost->port = hport;
 			rxconn = oldHost->callback_rxcon;
 			oldHost->callback_rxcon = host->callback_rxcon;
-			host->callback_rxcon = NULL;
+			host->callback_rxcon = rxconn;
 			
-			if (rxconn) {
-			    struct client *client;
-			    /*
-			     * If rx_DestroyConnection calls h_FreeConnection we will
-			     * deadlock on the host_glock_mutex. Work around the problem
-			     * by unhooking the client from the connection before
-			     * destroying the connection.
-			     */
-			    client = rx_GetSpecific(rxconn, rxcon_client_key);
-			    rx_SetSpecific(rxconn, rxcon_client_key, (void *)0);
-			    rx_DestroyConnection(rxconn);
-			}
+                        /* don't destroy rxconn here; let h_TossStuff_r
+                         * take care of that via h_Release_r below */
 		    }
 		    host->hostFlags &= ~HWHO_INPROGRESS;
 		    h_Unlock_r(host);
