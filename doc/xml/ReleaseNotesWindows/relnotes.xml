@@ -26,14 +26,10 @@
   </bookinfo>
   <preface>
     <title id='Preface'>Preface</title>
-
     <para>The Andrew File System (AFS) is a location-independent file system that uses a local cache to increase its performance.  An AFS client accesses files anonymously or via a Kerberos authentication.  The global AFS is partitioned into cells.  The AFS cell is a collection of AFS volumes that are administered by a common entity.   AFS cells can be administered by a department even when the Kerberos realm used for local authentication is managed by a much larger organization.  AFS clients and servers take advantage of Kerberos cross realm authentication to enable authenticated access by entities located outside the local realm.  Authorization is enforced by the use of directory level access control lists which can consist of individual or group identities.  </para>
     <para>The AFS volume is a tree of files and sub-directories.  AFS volumes are created by administrators and are joined to an AFS cell via the use of a mount point.   Once a volume is created, users can create files and directories as well as mount points and symlinks within the volume without regard for the physical location of the volume.  Administrators can move the volume to another server as necessary without the need to notify users.   In fact, the volume move can occur while files in the volume are in use.  </para>
     <para>AFS volumes can be replicated to read-only copies.   When accessing files from a read-only replica, clients will read all of the data from a single replica.   If that replica becomes unavailable, the clients will failover to any replica that is reachable.  Users of the data are unaware of where the replicas are stored or which one is being accessed.   The contents of the replicas can be updated at any time by
       <emphasis>releasing</emphasis> the current contents of the source volume.
-
-
-
     </para>
     <para>OpenAFS for Windows (OAFW) provides AFS client access Microsoft Windows operating systems.  It strives to maintain transparency such that the user is unaware of the distinction between the use of AFS and Microsoft Windows file shares.   OAFW can be part of a single sign-on solution by allowing credentials for a Kerberos principal to be obtained at logon and for that principal to be used to obtain AFS tokens for one or more cells.   Although OAFW is implemented as a locally installed SMB to AFS gateway, OAFW maintains the portability of file paths by its use of the \\AFS UNC server name.</para>
     <para>OpenAFS is the product of an open source development effort begun on October 31 2000.  OpenAFS is maintained and developed by a group of volunteers with the support of the user community.   If you use OpenAFS as part of your computing infrastructure please contribute to its continued growth.
@@ -45,11 +41,11 @@
     <para>
       <orderedlist>
         <listitem>
-   an executable (.exe) that is built using the Nullsoft Scriptable Installation System, or</listitem>
+   an executable (.exe) that is built using the Nullsoft Scriptable Installation System, or
+        </listitem>
         <listitem>
   a Windows Installer package (.msi) that is built using WiX and can be customized for organizations via the use of MSI Transforms (see
           <link linkend='MSI_Deployment_Guide'>MSI Deployment Guide</link>)
-
         </listitem>
       </orderedlist>
     </para>
@@ -89,10 +85,10 @@
           <para>Microsoft Windows 2008 Server (32-bit and 64-bit Intel)</para>
         </listitem>
         <listitem>
-          <para>Microsoft Windows 7 RC (32-bit and 64-bit Intel)</para>
+          <para>Microsoft Windows 7 (32-bit and 64-bit Intel)</para>
         </listitem>
         <listitem>
-          <para>Microsoft Windows 2008 Server R2 RC (32-bit and 64-bit Intel)</para>
+          <para>Microsoft Windows 2008 Server R2 (32-bit and 64-bit Intel)</para>
         </listitem>
       </itemizedlist>
     </section>
@@ -128,9 +124,7 @@
     <indexterm><primary>kerberos for windows</primary></indexterm>
       <para>
         <ulink url='http://web.mit.edu/kerberos/dist/index.html'>MIT Kerberos for Windows</ulink> 2.6.x or 3.x.x if Kerberos v5 authentication support is desired.  The recommended release is version 3.2.2.  For 64-bit Windows installations, the 64-bit version of Kerberos for Windows is required.  For 32-bit Windows installations, the 32-bit version of Kerberos for Windows is required.
-
-
-
+        See <link linkend='Kerberos_v5_Requirements'>3.2 Kerberos v5 Requirements</link> for additional details.
       </para>
     </section>
   </chapter>
@@ -145,15 +139,9 @@
       <para>Starting with the 1.5.50 release of OpenAFS for Windows, each of the AFS Client Service, the AFS Explorer Shell Extension, and the command-line tools are Unicode enabled.  No longer is OpenAFS restricted to accessing file system objects whose names can be represented in the locale specific OEM code page.  This has significant benefits for end users.  Most importantly it permits non-Western languages to now be used for file system object names in AFS from Microsoft Windows operating systems.  Now that Unicode names are supported,
         <ulink url='http://en.wikipedia.org/wiki/Roaming_user_profile'>Roaming User Profiles</ulink> and
         <ulink url='http://en.wikipedia.org/wiki/Folder_redirection'>Folder Redirection</ulink> will no longer fail when a user attempts to store an object with a name that cannot be represented in the OEM code page.
-
-
-
       </para>
       <para>Unicode names are stored in AFS using UTF-8 encoding.  UTF-8 is supported as a locale on MacOS X, Linux, Solaris, and most other operating systems.  This permits non-Western object names to be exchanged between Microsoft Windows and other operating systems.  The OpenAFS for Windows client also implements
         <ulink url='http://en.wikipedia.org/wiki/Unicode_normalization'>Unicode Normalization</ulink> as part of the name lookup algorithm.  This is necessary because Unicode does not provide a unique representation for each input string.  The use of normalization permits a file system object name created on MacOS X to be matched with the same string entered on Microsoft Windows even though the operating system’s choice of representation may be different.
-
-
-
       </para>
       <para>It is important to note that AFS file servers are not character set agnostic.  All file system object names are stored as octet strings without any character set tagging.  If a file system object is created using OEM Code Page 858 and then interpreted as UTF-8 it is likely that the object name will appear to be gibberish.  OpenAFS for Windows goes to great lengths to ensure that the object name is converted to a form that will permit the user to rename the object using Unicode.  Accessing UTF-8 names on UNIX systems that have the locale set to one of the ISO Latin character sets will result in the UTF-8 strings appearing to be gibberish.  </para>
       <para>Neither UNIX AFS nor Microsoft Windows 2000 systems can perform Unicode Normalization for string comparisons.  Although it is possible to store and read Unicode object names, it is possible that a user may not be able to open an object by typing the name of the object at the keyboard.  GUI point and click operations should permit any object to be accessed.</para>
@@ -161,32 +149,23 @@
     <section>
     <indexterm><primary>kerberos for windows</primary></indexterm>
       <title id='Kerberos_v5_Requirements'>3.2. Requirements for Kerberos v5 Authentication</title>
-      <para>The Kerberos v4 infrastructure on which the OpenAFS 1.2 series is reliant is no longer secure.  Cross-realm Kerberos is very important in the AFS context and most sites have or are migrating to Kerberos v5 environments.  The OpenAFS 1.4 series (and later) integrates with
-        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> 2.6.5 and above to support Kerberos v5 authentication including automatic renewal of AFS tokens and single sign-on via the Microsoft Windows Kerberos Logon Service.
-
-
-
+      <para>The OpenAFS distribution ships with its own implementation of Kerberos v4 and although it is Kerberos v5 capable, it relies on third party Kerberos v5 libraries.  The OpenAFS 1.4 series (and later) integrates with
+        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> 2.6.5 and above.  OpenAFS Kerberos v5 capable functionality includes integrated logon, the AFS Authentication Tool, the Network Identity Manager AFS provider, and the aklog command.  These tools provide support for Kerberos v5 authentication including acquisition and automatic renewal of AFS tokens as well as support for single sign-on via the Microsoft Windows Kerberos Logon Service.
       </para>
         <indexterm><primary>network identity manager</primary></indexterm>
       <para>The recommended version of
-        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> is 3.2.2.  KFW 3.2.2 includes Network Identity Manager 1.3.1 which integrates with the
+        <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> is 3.2.2 as distributed by <ulink url='https://www.secure-endpoints.com/'>Secure Endpoints Inc.</ulink>.  As of this writing, the Secure Endpoints Inc. distribution provides 64-bit Windows support which is unavailable from MIT.  KFW 3.2.2 includes Network Identity Manager 1.3.1 which integrates with the
         <link linkend='Network_Identity_Manager_Provider'>AFS Provider</link> installed as part of OpenAFS for Windows.
-
-
-
       </para>
     <indexterm><primary>transarc afs</primary></indexterm>
-      <para>When KFW is installed, the OpenAFS for Windows client will obtain Kerberos v5 tickets and use them as tokens without modification.  The OpenAFS client requires that all of the AFS Servers with which it communicates support the use of Kerberos v5 tickets as tokens. If Kerberos v5 based tokens are presented to an AFS server that does not support them, the server will be unable to communicate with the client when tokens are present. Kerberos v5 based tokens are supported by OpenAFS release 1.2.8 or later.  IBM Transarc servers do not support Kerberos v5.</para>
+      <para>With Kerberos for Windows installed, the OpenAFS for Windows client can obtain Kerberos v5 service tickets for AFS cells for use as tokens.  When a Kerberos v5 derived AFS token is in use, all of the AFS Servers within the authenticated cell must support Kerberos v5 authentication.  If a Kerberos v5 based token is presented to an AFS server that does not support them, the server will be unable to communicate with the client.  Attempts to access AFS volumes stored on such a server will fail with a "No Kerberos Key" error.  Kerberos v5 based tokens are supported by OpenAFS revisions 1.2.8 or later.  IBM Transarc servers do not support Kerberos v5.</para>
       <section>
     <indexterm><primary>active directory</primary></indexterm>
     <indexterm><primary>des-cbc-crc encryption type</primary></indexterm>
         <title id='Active_Directory'>3.2.1. Active Directory</title>
-        <para>Microsoft Windows Active Directory can be used as a Kerberos v5 KDC in conjunction with OpenAFS.  There are two things to consider when using an Active Directory as the Kerberos realm that issues the AFS service ticket.  First, the Kerberos v5 tickets issued by Active Directory can be quite large when compared to tickets issued by a traditional KDC due to the incorporation of authorization data (the Microsoft PAC).  If the issued tickets are larger than 344 bytes, the OpenAFS 1.2 servers will be unable to process them and will issue a RXKADBADTICKET error.  OpenAFS 1.4 (and beyond) servers can support the largest tickets that Active Directory can issue.  Second, the Kerberos v5 tickets issued by Windows 2003 Active Directory are encrypted with the DES-CBC-MD5 encryption type (enctype).  OpenAFS 1.2 servers only support the DES-CBC-CRC enctype.  As a result, OpenAFS 1.2 servers cannot process the resulting Kerberos v5 tokens.  Windows 2000 Active Directory issues tickets with the DES-CBC-CRC enctype.</para>
+        <para>Microsoft Windows Active Directory can be used as a Kerberos v5 KDC in conjunction with OpenAFS.  There are two things to consider when using an Active Directory as the Kerberos realm that issues the AFS service ticket.  First, the Kerberos v5 tickets issued by Active Directory can be quite large when compared to tickets issued by a traditional UNIX KDCs due to the inclusion of Windows specific authorization data (the Microsoft PAC).  If the issued tickets are larger than 344 bytes, the OpenAFS 1.2 servers will be unable to process them and will issue a RXKADBADTICKET error.  OpenAFS 1.4 (and beyond) servers can support the largest tickets that Active Directory can issue.  Second, the Kerberos v5 tickets issued by Windows 2003 Active Directory are encrypted with the DES-CBC-MD5 encryption type (enctype).  OpenAFS 1.2 servers only support the DES-CBC-CRC enctype.  As a result, OpenAFS 1.2 servers cannot process the resulting Kerberos v5 tokens.  Windows 2000 Active Directory issues tickets with the DES-CBC-CRC enctype.  Windows Server 2008 R2 Active Directory domain by default disables use of DES-CBC-MD5 and it must be enabled.</para>
         <para>Microsoft has documented in
           <ulink url='http://support.microsoft.com/kb/832572/'>Knowledge Base article 832572</ulink> a new NO_AUTH_REQUIRED flag that can be set on the account mapped to the AFS service principal.  When this flag is set, the PAC authorization data will not be included in the ticket.  Setting this flag is recommended for all accounts that are associated with non-Windows services and that do not understand the authorization data stored in the PAC.  This flag cannot be used if AFS service tickets are obtained via cross-realm using an Active Directory user principal.
-
-
-
         </para>
         <para>Note that an Active Directory computer object cannot be used for the afs service principal.</para>
       </section>
@@ -195,15 +174,15 @@
        <indexterm><primary>port, 4444/udp</primary></indexterm>
        <indexterm><primary>registry value, Use524</primary></indexterm>
         <title id='Using_krb524_Service'>3.2.2. Using the krb524 Service</title>
-        <para>Some organizations have AFS cell names and Kerberos realm names which differ by more then just lower and upper case and rely on a modification to krb524d which maps a Kerberos v5 ticket from realm FOO to a Kerberos v4 ticket in realm BAR.  This allows user@FOO to appear to be user@bar for the purposes of accessing the AFS cell.  As of OpenAFS 1.2.8, support was added to allow the immediate use of Kerberos v5 tickets as AFS (2b) tokens. This is the first building block necessary to break away from the limitations of Kerberos v4 with AFS.  By using Kerberos v5 directly we avoid the security holes inherent in Kerberos v4 cross-realm.  We also gain access to cryptographically stronger algorithms for authentication and encryption. </para>
+        <para>Before there was native support for Kerberos v5 derived AFS tokens, the krb524 service was used to convert a Kerberos v5 service ticket into a Kerberos v4 service ticket that could in turn be used to construct an AFS authentication token.  As of OpenAFS 1.2.8, support was added to allow the immediate use of Kerberos v5 tickets as AFS (2b) tokens. This is the first building block necessary to break away from the limitations of Kerberos v4 with AFS.  By using Kerberos v5 directly we avoid the security holes inherent in Kerberos v4 cross-realm.  We also gain access to cryptographically stronger algorithms for authentication and encryption.</para>
         <para>Another reason for using Kerberos v5 directly is because the krb524 service runs on a port (4444/udp) which has increasingly been blocked by ISPs.  The port was used to spread a worm which attacked Microsoft Windows in the summer of 2003.  When the port is blocked users find that they are unable to authenticate.</para>
-        <para>Replacing the Kerberos v4 ticket with a Kerberos v5 ticket is a win in all situations except when the cell name does not match the realm name and the principal names placed into the ACL’s are not the principal names from the Kerberos v5 ticket.  To support this transition, OpenAFS for Windows 1.4 adds a new registry value,
-          <link linkend='Value_Use524'>Use524</link>, to force the use of krb524d.  However, the availability of this option should only be used by individuals until such time as their organizations can provide a more permanent solution.
-
-
-
+        <para></para>
+        <para>Replacing the Kerberos v4 ticket with a Kerberos v5 ticket is a win in all situations except when the cell name does not match the realm name and the principal names placed into the ACL’s are not the principal names from the Kerberos v5 ticket.  Unfortunately, some organizations have AFS cell names and Kerberos realm names which differ by more then just lower and upper case and rely on a modification to krb524d that maps a Kerberos v5 ticket from realm FOO to a Kerberos v4 ticket in realm BAR.  This allows user@FOO to appear to be user@bar for the purposes of accessing the AFS cell.        
         </para>
-        <para>Note that the OpenAFS 1.4.x servers permit the use of a secondary realm name that can be treated as equivalent to the cell name for authentication.
+        <para>To support this mode of operation OpenAFS for Windows 1.4 supports a registry value, 
+          <link linkend='Value_Use524'>Use524</link>, that forces the use of krb524d within the AFS Authentication Tool and integrated logon.  This option should only be used by individuals until such time as their organizations can transition away from the krb524 service.
+        </para>
+        <para>Note that the OpenAFS 1.4.x servers permit the use of a secondary realm name that can be treated as equivalent to the cell name for authentication.  This functionality can be used to avoid the need for the krb524 service if and only if both realms are managed by the same administrative entity.
         </para>
       </section>
       <section>
@@ -213,9 +192,6 @@
           <ulink url='https://www.secure-endpoints.com/'>Secure Endpoints Inc.</ulink>  Network Identity Manager is a multiple identity credential management tool that ships with
           <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> version 3.0 and above.  The OpenAFS plug-in requires
           <ulink url='http://web.mit.edu/kerberos/'>MIT Kerberos for Windows</ulink> version 3.1 or above.  Version 3.2.2 is recommended for the best user experience.
-
-
-
         </para>
         <para>
           <inlinemediaobject>
@@ -224,7 +200,7 @@
             </imageobject>
           </inlinemediaobject>
         </para>
-        <para>The Network Identity Manager replaces the former KFW ticket manager, Leash&quot;, and when combined with the OpenAFS Provider, it is intended to be used as a replacement for the AFS System Tray Tool (afscreds.exe).  Unlike both Leash and the AFS System Tray Tool, Network Identity Manager with the OpenAFS Provider can easily manage AFS tokens for multiple cells from one or more Kerberos v5 identities.</para>
+        <para>The Network Identity Manager replaces the former KFW ticket manager, &quot;Leash&quot;, and when combined with the OpenAFS Provider it can be used as a replacement for the AFS Authentication Tool (afscreds.exe).  Unlike both Leash and the AFS Authentication Tool, Network Identity Manager with the OpenAFS Provider can easily acquire and renew AFS tokens for multiple cells from one or more Kerberos v5 identities.</para>
         <para>
           <inlinemediaobject>
             <imageobject>
@@ -240,14 +216,20 @@
             </imageobject>
           </inlinemediaobject>
         </para>
-        <para>The OpenAFS Provider configuration panel can be used to check the status of the AFS Client Service and its version.  An optional checkbox is provided that will prevent the AFS System Tray Tool from being started by Windows after login.   A shortcut to the OpenAFS Control Panel is also provided.</para>
+        <para>The OpenAFS Provider configuration panel can be used to check the status of the AFS Client Service and its version.  An optional checkbox is provided that will prevent the AFS Authentication Tool from being started by Windows after login.   A shortcut to the OpenAFS Control Panel is also provided.</para>
+        <para>As of OpenAFS 1.5.66, the Network Identity Manager OpenAFS Provider displays the same AFS Lock notification icon generated by the AFS Authentication Tool.  The AFS Lock can be used to determine if:</para>
+        <itemizedlist>
+        <listitem><para>one or more AFS tokens are valid</para></listitem>
+        <llstitem><para>no AFS tokens are present but the AFS service is running</para></llstitem>
+        <listitem><para>the AFS Service is not running</para></listitem>
+        <listitem><para>the AFS Service is running but there is a communication error</para></listitem>
+        </itemizedlist>
       </section>
     </section>
     <section>
     <indexterm><primary>microsoft loopback adapter</primary></indexterm>
       <title id='Use_of_Microsoft_Loopback'>3.3. Use of the Microsoft Loopback Adapter by the AFS Client Service</title>
-      <para>By itself the OpenAFS Client Service does not provide robust behavior in a plug-n-play network environment.  Changes to the number of network adapters or their assigned IP addresses will cause the service to terminate unexpectedly.  To avoid this behavior OpenAFS for Windows installs a single instance of the Microsoft Loopback Adapter (MLA) on the machine.  With the MLA installed, the OpenAFS Client Service will not be affected by the configuration changes of other network adapters installed on the system.  </para>
-      <para>The MLA is installed with a name of "AFS" and a pre-assigned IP address in the 10.x.x.x range.  The MLA is bound to the &quot;Client for Microsoft Networks&quot; service and not bound to the &quot;File and Printer Sharing for Microsoft Networks&quot;.  If the MLA is unbound to "Client Microsoft Networks", the OpenAFS Client Service will become inaccessible when the machine is disconnected from the network.  If the MLA is bound to "File and Printer Sharing ..." there will be a service type collision between the name "AFS" and the name of the machine on the MLA's IP Address that will result in the OpenAFS client service becoming inaccessible and the "NET VIEW \\AFS" command will return a "System Error 52" message.  To correct the problem:</para>
+      <para>The Microsoft Loopback Adapter (MLA) is installed with a name "AFS" and a pre-assigned IP address of 10.254.254.253.  The MLA is bound to the &quot;Client for Microsoft Networks&quot; service and not bound to the &quot;File and Printer Sharing for Microsoft Networks&quot; service.  If the MLA is unbound to "Client Microsoft Networks", the OpenAFS Client Service will become inaccessible when the machine is disconnected from the network.  If the MLA is bound to "File and Printer Sharing ..." there will be a service type collision between the "AFS" SMB Service and the local machine's File Sharing Service.  This will result in the OpenAFS client service becoming inaccessible and the "NET VIEW \\AFS" command will return a "System Error 52" message.  To correct the problem:</para>
       <itemizedlist>
         <listitem>
           <para>stop the AFS Client Service</para>
@@ -259,14 +241,13 @@
           <para>unbind "File and Printer Sharing for Microsoft Networks" from the MLA</para>
         </listitem>
         <listitem>
-          <para>Disable and then re-enable the MLA</para>
+          <para>disable and then re-enable the MLA</para>
         </listitem>
         <listitem>
           <para>start the AFS Client Service</para>
         </listitem>
       </itemizedlist>
-      <para>When the MLA is not installed the unique NETBIOS name published by OpenAFS SMB server is "
-        <emphasis>MACHINE</emphasis>-AFS".  One of the benefits of using the MLA is that the NETBIOS name does not have to be published on any adapter other than the MLA.  Therefore the chosen name is no longer required to be unique.  Instead the NETBIOS name associated with the AFS Client Service is simply "AFS" and portable UNC paths of the form \\AFS\cellname\path can now be used on all machines.
+      <para>When the MLA is not installedNETBIOS name published by OpenAFS SMB server must be unique because it is published on the public network.  The unique name will take the form &quot;<emphasis>MACHINE</emphasis>-AFS&quot;.  One of the benefits of using the MLA is that the NETBIOS name does not have to be published on any adapter other than the MLA.  Therefore the chosen name is no longer required to be globally unique.  Instead the NETBIOS name associated with the AFS Client Service is simply "AFS" and portable UNC paths of the form \\AFS\cellname\path can now be used on all machines.
       </para>
     </section>
     <section>
@@ -282,9 +263,6 @@
         <emphasis>read-write path </emphasis>mount point used to access the "root.cell" volume of the default AFS cell.  Any attempt to access a valid cell name will result in a new mount point being created in the fake "root.afs" volume.  If the cellname begins with a "." the mount point will be a
         <emphasis>read-write path</emphasis>; otherwise the mount point will be a
         <emphasis>regular path</emphasis>.  These mount points are preserved in the registry at key:
-
-
-
       </para>
       <para>
         <link linkend='Regkey_HKLM_SOFTWARE_OpenAFS_Client_Freelance'>HKLM\SOFTWARE\OpenAFS\Client\Freelance</link>
@@ -308,7 +286,7 @@
     <indexterm><primary>dns, vldb lookups</primary></indexterm>
     <indexterm><primary>afsdb dns records</primary></indexterm>
       <title id='Locating_VLDB_via_DNS'>3.5. Locating AFS Volume Database Servers via DNS </title>
-      <para>The OpenAFS for Windows client will use DNS AFSDB records to discover the location of AFS Volume Database servers when entries for the cell are not present in the client's CellServDB file (\%PROGRAMFILES%\OpenAFS\Client\CellServDB).
+      <para>The OpenAFS for Windows client will use DNS SRV records and AFSDB records to discover the location of AFS Volume Database servers when entries for the cell are not present in the client's CellServDB file (\%PROGRAMFILES%\OpenAFS\Client\CellServDB).
       Also see <link linkend="Registry_VLDB_Configuration">Registry Configuration for AFS Volume Database Servers</link>.</para>
     </section>
     <section>
@@ -336,9 +314,9 @@
       <indexterm><primary>afscreds.exe</primary></indexterm>
       <indexterm><primary>system tray tool</primary></indexterm>
       <indexterm><primary>network identity manager</primary></indexterm>
-      <title id='AFS_System_Tray'>3.7. AFS System Tray Command Line Options</title>
-      <para>The AFS System Tray Tool (afscreds.exe) has been deprecated in favor of Network Identity Manager.  afscreds.exe will be removed from the OpenAFS in a future release.</para>
-      <para>The AFS System Tray tool (afscreds.exe) supports several command line options: </para>
+      <title id='AFS_System_Tray'>3.7. AFS Authentication Tool Command Line Options</title>
+      <para>The AFS Authentication Tool (afscreds.exe) has been deprecated in favor of Network Identity Manager.  afscreds.exe will be removed from the OpenAFS in a future release.</para>
+      <para>The AFS Authentication Tool (afscreds.exe) supports several command line options: </para>
       <itemizedlist>
         <listitem>
           <para>-A = autoinit </para>
@@ -350,7 +328,7 @@
           <para>-I = install startup shortcut</para>
         </listitem>
         <listitem>
-          <para>-M = renew drive maps </para>
+          <para>-M = renew drive maps (deprecated)</para>
         </listitem>
         <listitem>
           <para>-N = IP address change detection </para>
@@ -365,10 +343,10 @@
           <para>-U = uninstall startup shortcut</para>
         </listitem>
         <listitem>
-          <para>-X = test and do map share</para>
+          <para>-X = test and do map share (deprecated)</para>
         </listitem>
         <listitem>
-          <para> -Z = unmap drives</para>
+          <para> -Z = unmap drives (deprecated)</para>
         </listitem>
       </itemizedlist>
       <para>autoinit will result in automated attempts to acquire AFS tokens when afscreds.exe is started.  afscreds.exe will attempt to utilize tickets stored in the MSLSA credentials cache; any existing CCAPI credentials cache; and finally display an Obtain Tokens dialog to the user.  When used in combination with IP address change detection, afscreds.exe will attempt to acquire AFS tokens whenever the IP address list changes and the Kerberos KDC is accessible.</para>
@@ -376,6 +354,9 @@
       <para>By default afscreds.exe is configured by the OpenAFS.org installers to use &quot;-A -N -M -Q&quot; as startup options.  Currently, there is no user interface to change this selection after install time although these options may be altered via the registry on either per machine or per user basis.  See
         <link linkend='Value_AfscredsShortcutParams'>AfscredsShortcutParams</link> in
         <link linkend='appendix_a'>Appendix A</link>.
+      </para>
+      <para>
+      Due to conflicts with Vista and Windows 7 User Account Control, the Drive Letter Mount and Advanced tabs of the AFS Authentication Tool were disabled beginning with the 1.5.66 release.
       </para>
     </section>
     <section>
@@ -919,7 +900,7 @@
             and the AFS file name space to be restored.  Until the network bindings have been re-established, ticket managers and other
             tools will report that the &quot;AFS Client Service may not have been started&quot;.</para>
       <para>Windows Vista, Windows 7, and Server 2008 [R2] implement
-        <ulink url='http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx'>User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the &quot;Administrator&quot; access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require &quot;Administrator&quot; privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS System Tray tool and the AFS Control Panel will not work unless they are &quot;Run as Administrator&quot;.  When a Vista user account that is a member of the &quot;Administrators&quot; group is used to access the AFS Control Panel (afs_config.exe), the process must be &quot;Run as Administrator&quot;.   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista’s system file and registry virtualization feature.
+        <ulink url='http://www.microsoft.com/technet/windowsvista/library/0d75f774-8514-4c9e-ac08-4c21f5c6c2d9.mspx'>User Account Control</ulink> (UAC), a new security feature that implements least user privilege.  With UAC, applications only run with the minimum required privileges.  Even Administrator accounts run applications without the &quot;Administrator&quot; access control credentials.  One side effect of this is that existing applications that mix user and system configuration capabilities must be re-written to separate those functions that require &quot;Administrator&quot; privileges into a separate process space.  Future updates to OpenAFS will incorporate the necessary privilege separation, until that time some functions such as the Start and Stop Service features of the AFS Authentication Tool and the AFS Control Panel will not work unless they are &quot;Run as Administrator&quot;.  When a Vista user account that is a member of the &quot;Administrators&quot; group is used to access the AFS Control Panel (afs_config.exe), the process must be &quot;Run as Administrator&quot;.   Otherwise, attempts to modify the OpenAFS configuration will appear to succeed but in reality will have failed due to Vista’s system file and registry virtualization feature.
       </para>
       <para>The help files provided with OpenAFS are in .HLP format.
         <ulink url='http://support.microsoft.com/kb/917607'>Windows Vista, Windows 7, and Server 2008 [R2] do not include a help engine for this format.</ulink>
