@@ -1503,8 +1503,11 @@ h_GetHost_r(struct rx_connection *tcon)
 	    goto gethost_out;
 	}
 	h_Lock_r(host);
-	if (!(host->hostFlags & ALTADDR)) {
-	    /* Another thread is doing initialization */
+	if (!(host->hostFlags & ALTADDR) ||
+            (host->hostFlags & HOSTDELETED)) {
+	    /* Another thread is doing initialization
+             * or this host was deleted while we
+             * waited for the lock. */
 	    h_Unlock_r(host);
 	    ViceLog(125,
 		    ("Host %" AFS_PTR_FMT " (%s:%d) starting h_Lookup again\n",
@@ -1834,10 +1837,19 @@ h_GetHost_r(struct rx_connection *tcon)
 	    } else if (code == 0) {
 		oldHost = h_LookupUuid_r(&identP->uuid);
                 if (oldHost) {
-                    int probefail = 0;
-
 		    h_Hold_r(oldHost);
 		    h_Lock_r(oldHost);
+
+		    if (oldHost->hostFlags & HOSTDELETED) {
+			h_Unlock_r(oldHost);
+			h_Release_r(oldHost);
+			oldHost = NULL;
+		    }
+		}
+
+		if (oldHost) {
+		    int probefail = 0;
+
 		    oldHost->hostFlags |= HWHO_INPROGRESS;
 
                     if (oldHost->interface) {
@@ -2235,7 +2247,7 @@ h_FindClient_r(struct rx_connection *tcon)
 	host = h_GetHost_r(tcon);	/* Returns with incremented refCount  */
 
 	if (!host) 
-	    return 0;
+	    return NULL;
 
     retryfirstclient:
 	/* First try to find the client structure */
@@ -2253,6 +2265,11 @@ h_FindClient_r(struct rx_connection *tcon)
 	/* Still no client structure - get one */
 	if (!client) {
 	    h_Lock_r(host);
+            if (host->hostFlags & HOSTDELETED) {
+                h_Unlock_r(host);
+                h_Release_r(host);
+                return NULL;
+            }
 	    /* Retry to find the client structure */
 	    for (client = host->FirstClient; client; client = client->next) {
 		if (!client->deleted && (client->sid == rxr_CidOf(tcon))
@@ -2374,6 +2391,25 @@ h_FindClient_r(struct rx_connection *tcon)
     /* Avoid chaining in more than once. */
     if (created) {
 	h_Lock_r(host);
+
+        if (host->hostFlags & HOSTDELETED) {
+            h_Unlock_r(host);
+            h_Release_r(host);
+
+            host = NULL;
+            client->host = NULL;
+
+            if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
+                free(client->CPS.prlist_val);
+            client->CPS.prlist_val = NULL;
+            client->CPS.prlist_len = 0;
+
+            client->refCount--;
+            ReleaseWriteLock(&client->lock);
+            FreeCE(client);
+            return NULL;
+        }
+
 	client->next = host->FirstClient;
 	host->FirstClient = client;
 	h_Unlock_r(host);
@@ -3433,8 +3469,8 @@ CheckHost(register struct host *host, int flags, void *rock)
     }
     if (host->LastCall < checktime) {
 	h_Lock_r(host);
-	host->hostFlags |= HWHO_INPROGRESS;
 	if (!(host->hostFlags & HOSTDELETED)) {
+            host->hostFlags |= HWHO_INPROGRESS;
 	    cb_conn = host->callback_rxcon;
 	    rx_GetConnection(cb_conn);
 	    if (host->LastCall < clientdeletetime) {
@@ -3502,8 +3538,8 @@ CheckHost(register struct host *host, int flags, void *rock)
 	    rx_PutConnection(cb_conn);
 	    cb_conn=NULL;
 	    H_LOCK;
+            host->hostFlags &= ~HWHO_INPROGRESS;
 	}
-	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     }
     H_UNLOCK;

@@ -518,12 +518,13 @@ int
 AddCallBack1(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	     int locked)
 {
-    int retVal;
+    int retVal = 0;
     H_LOCK;
     if (!locked) {
 	h_Lock_r(host);
     }
-    retVal = AddCallBack1_r(host, fid, thead, type, 1);
+    if (!(host->hostFlags & HOSTDELETED))
+        retVal = AddCallBack1_r(host, fid, thead, type, 1);
 
     if (!locked) {
 	h_Unlock_r(host);
@@ -564,6 +565,11 @@ AddCallBack1_r(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     if (!locked) {
 	h_Lock_r(host);		/* this can yield, so do it before we get any */
 	/* fragile info */
+        if (host->hostFlags & HOSTDELETED) {
+            host->Console &= ~2;
+            h_Unlock_r(host);
+            return 0;
+        }
     }
 
     fe = FindFE(fid);
@@ -745,12 +751,14 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 
 			H_LOCK;
 			h_Lock_r(hp); 
-			hp->hostFlags |= VENUSDOWN;
-		/**
-		  * We always go into AddCallBack1_r with the host locked
-		  */
-			AddCallBack1_r(hp, afidp->AFSCBFids_val, itot(idx),
-				       CB_DELAYED, 1);
+                        if (!(hp->hostFlags & HOSTDELETED)) {
+                            hp->hostFlags |= VENUSDOWN;
+                            /**
+                             * We always go into AddCallBack1_r with the host locked
+                             */
+                            AddCallBack1_r(hp, afidp->AFSCBFids_val, itot(idx),
+                                           CB_DELAYED, 1);
+                        }
 			h_Unlock_r(hp); 
 			H_UNLOCK;
 		    }
@@ -885,6 +893,7 @@ DeleteCallBack(struct host *host, AFSFid * fid)
     cbstuff.DeleteCallBacks++;
 
     h_Lock_r(host);
+    /* do not care if the host has been HOSTDELETED */
     fe = FindFE(fid);
     if (!fe) {
 	h_Unlock_r(host);
@@ -1116,16 +1125,10 @@ MultiBreakVolumeCallBack_r(struct host *host, int isheld,
 
     if (host->hostFlags & VENUSDOWN) {
 	h_Lock_r(host);
-	if (host->hostFlags & HOSTDELETED) {
-	    h_Unlock_r(host);
-	    return 0;		/* Release hold */
-	}
-	ViceLog(8,
-		("BVCB: volume call back for Host %x (%s:%d) failed\n",
-                 host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
+        /* Do not care if the host is now HOSTDELETED */
 	if (ShowProblems) {
 	    ViceLog(0,
-		    ("CB: volume callback for Host %x (%s:%d) failed\n",
+		    ("BVCB: volume callback for Host %x (%s:%d) failed\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
 	}
@@ -1642,7 +1645,7 @@ ClearHostCallbacks_r(struct host *hp, int locked)
     DeleteAllCallBacks_r(hp, 1);
     if (hp->hostFlags & VENUSDOWN) {
 	hp->hostFlags &= ~RESETDONE;	/* remember that we must do a reset */
-    } else {
+    } else if (!(hp->hostFlags & HOSTDELETED)) {
 	/* host is up, try a call */
 	hp->hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
 	cb_conn = hp->callback_rxcon;
