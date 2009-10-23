@@ -274,6 +274,11 @@ handleit(struct cmd_syndesc *as, void *arock)
 	    vid = atoi(ti->data);
 	}
 
+	if (ShowLog) {
+	    printf("-showlog does not work with -client\n");
+	    exit(-1);
+	}
+
 	if (!seenpart || !seenvol) {
 	    printf("You must specify '-partition' and '-volumeid' with the '-client' option\n");
 	    exit(-1);

@@ -3563,8 +3563,10 @@ showlog(void)
     }
 #endif
 
-    rewind(logFile);
-    fclose(logFile);
+    if (logFile) {
+	rewind(logFile);
+	fclose(logFile);
+    }
 
     logFile = afs_fopen(AFSDIR_SERVER_SLVGLOG_FILEPATH, "r");
 
