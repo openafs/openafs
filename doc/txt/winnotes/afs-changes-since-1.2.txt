@@ -1,3 +1,72 @@
+Since 1.5.65
+ * Official support for Windows 7 and Server 2008 R2
+
+ * Improved Rx RTT computation following the lessons
+   learned by TCP.
+
+ * Prevent a file server bug (FetchData returning an
+   invalid length instead of zero) from causing an
+   "unexpected network error" when writing to files.
+
+ * Promote DNS SRV records as superior to DNS AFSDB
+   records.  Support arbitrary port numbers for vldb
+   servers.
+
+ * Add "fs listacl -cmd" support.
+
+ * Add AFSVolSync based .readonly "whole-volume callback"
+   support.  With this functionality, multiple objects from
+   a .readonly volume can have their status validated by
+   issuing a single RXAFS_FetchStatus RPC.
+
+ * Remove drive mapping functionality and service start/stop
+   from afscreds.exe.
+
+ * Remove drive mapping functionality from afs_config.exe.
+
+ * Adjust SMB error return codes to avoid returning 
+   STATUS_TIMEOUT which results in the SMB redirector
+   disconnecting.
+
+ * Network Identity Manager OpenAFS Provider now provides its
+   own "AFS lock" notification icon to report the status of
+   "have tokens, have no tokens, service not started, service
+   started but inaccessible".  Hovering over the icon lists the
+   cells for which tokens exist (if any) and the OpenAFS version
+   number.  Double-clicking executes the Network Identity Manager
+   default action.
+
+ * When merging the current status for an AFS object, ensure
+   that the volume status for that object is set to 'vl_online'.
+
+ * Permit cm_Analyze to request a retry even when the cm_req_t is
+   flagged CM_REQ_NORETRY if the RPC failed due to RX_CALL_DEAD.
+   The retry will force the use of a new connection.
+
+ * Add digital signatures to resource only dlls as required by
+   Windows 7.
+
+ * Prevent pioctl calls from retrying indefinitely when a sharing
+   violation error occurs.
+
+ * Add {HKLM,HKCU}\SOFTWARE\OpenAFS\Client  DWORD  "ShowMountTab"
+   to restore access to drive mapping functionality in afscreds.exe
+   and afs_config.exe.
+
+ * Permit Rx minimum peer timeout, maximum receive window size and
+   maximum send window size to be configured via the registry.
+
+ * The MSI installer now sets the ARPINSTALLLOCATION as required by
+   Windows 7.
+
+ * DNS lookups set the port numbers in network byte order within
+   the cache manager.
+
+ * Replace use of the 16-bit compatibility API WinExec with
+   ShellExecuteEx in afs_config.exe and afscreds.exe.  WinExec
+   is incompatible with Windows 7 / Server 2008 R2 UAC 
+   functionality.
+
 Since 1.5.64
  * Short circuit background volume checks if a shutdown
    or suspend request is received.
