@@ -2070,15 +2070,13 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 
     /* Catch recursive writeback. This occurs if the kernel decides
      * writeback is required whilst we are writing to the cache, or
-     * flushing to the server. */
+     * flushing to the server. When we're running syncronously (as
+     * opposed to from writepage) we can't actually do anything about
+     * this case - as we can't return AOP_WRITEPAGE_ACTIVATE to write()
+     */
     AFS_GLOCK();
     ObtainWriteLock(&vcp->lock, 532);
-    code = afs_linux_prepare_writeback(vcp);
-    if (code) {
-	ReleaseWriteLock(&vcp->lock);
-	AFS_GUNLOCK();
-	return code;
-    }
+    afs_linux_prepare_writeback(vcp);
     ReleaseWriteLock(&vcp->lock);
     AFS_GUNLOCK();
 
