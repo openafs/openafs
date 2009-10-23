@@ -1997,7 +1997,7 @@ afs_linux_prepare_writeback(struct vcache *avc) {
 static inline int
 afs_linux_dopartialwrite(struct vcache *avc, cred_t *credp) {
     struct vrequest treq;
-    int code;
+    int code = 0;
 
     if (!afs_InitReq(&treq, credp))
 	code = afs_DoPartialWrite(avc, &treq);
@@ -2058,6 +2058,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 			 unsigned long offset, unsigned int count)
 {
     int code;
+    int code1 = 0;
     struct vcache *vcp = VTOAFS(ip);
     cred_t *credp;
 
@@ -2081,13 +2082,16 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     afs_maybe_lock_kernel();
     AFS_GLOCK();
     ObtainWriteLock(&vcp->lock, 533);
-    if (code == 0)
-	code = afs_linux_dopartialwrite(vcp, credp);
+    if (code > 0)
+	code1 = afs_linux_dopartialwrite(vcp, credp);
     afs_linux_complete_writeback(vcp);
     ReleaseWriteLock(&vcp->lock);
     AFS_GUNLOCK();
     afs_maybe_unlock_kernel();
     crfree(credp);
+
+    if (code1)
+	return code1;
 
     return code;
 }
