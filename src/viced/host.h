@@ -211,7 +211,7 @@ extern void   hashInsert_r(afs_uint32 addr, afs_uint16 port,
 			   struct host* host);
 extern struct host *h_LookupUuid_r(afsUUID * uuidp);
 extern void h_Enumerate(int (*proc) (), char *param);
-extern struct host *h_GetHost_r(struct rx_connection *tcon);
+extern struct host *h_GetHost_r(struct rx_connection *tcon, int *heldp);
 extern struct client *h_FindClient_r(struct rx_connection *tcon);
 extern int h_ReleaseClient_r(struct client *client);
 extern struct client *h_ID2Client(afs_int32 vid);

@@ -1408,13 +1408,13 @@ h_threadquota(int waiting)
 }
 
 /* Host is returned held */
+/* host should be released by caller if 0 == *heldp and non-null */
 struct host *
-h_GetHost_r(struct rx_connection *tcon)
+h_GetHost_r(struct rx_connection *tcon, int *heldp)
 {
     struct host *host;
     struct host *oldHost;
     int code;
-    int held;
     struct interfaceAddr interf;
     int interfValid = 0;
     struct Identity *identP = NULL;
@@ -1440,7 +1440,7 @@ h_GetHost_r(struct rx_connection *tcon)
     caps.Capabilities_len = 0;
 
     code = 0;
-    if (h_Lookup_r(haddr, hport, &held, &host))
+    if (h_Lookup_r(haddr, hport, heldp, &host))
 	return 0;
     identP = (struct Identity *)rx_GetSpecific(tcon, rxcon_ident_key);
     if (host && !identP && !(host->Console & 1)) {
@@ -1450,20 +1450,23 @@ h_GetHost_r(struct rx_connection *tcon)
 	 */
 	if ((host->hostFlags & HWHO_INPROGRESS) && 
 	    h_threadquota(host->lock.num_waiting)) {
-	    if (!held)
+	    if (!*heldp)
 		h_Release_r(host);
 	    host = NULL;
 	    goto gethost_out;
 	}
 	h_Lock_r(host);
-	if (!(host->hostFlags & ALTADDR)) {
-	    /* Another thread is doing initialization */
+	if (!(host->hostFlags & ALTADDR) ||
+            (host->hostFlags & HOSTDELETED)) {
+	    /* Another thread is doing initialization
+             * or this host was deleted while we
+             * waited for the lock. */
 	    h_Unlock_r(host);
 	    ViceLog(125,
 		    ("Host %s:%d starting h_Lookup again\n",
 		     afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
-	    if (!held)
+	    if (!*heldp)
 		h_Release_r(host);
 	    goto retry;
 	}
@@ -1535,7 +1538,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    host->hostFlags &= ~HWHO_INPROGRESS;
 		    host->hostFlags |= ALTADDR;
 		    h_Unlock_r(host);
-		    if (!held)
+		    if (!*heldp)
 			h_Release_r(host);
 		    host = NULL;
 		    goto retry;
@@ -1551,7 +1554,7 @@ h_GetHost_r(struct rx_connection *tcon)
                 host->hostFlags &= ~HWHO_INPROGRESS;
 		host->hostFlags |= ALTADDR;
                 h_Unlock_r(host);
-		if (!held)
+		if (!*heldp)
 		    h_Release_r(host);
 		host = NULL;
 		goto retry;
@@ -1587,7 +1590,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		host->hostFlags &= ~HWHO_INPROGRESS;
 		host->hostFlags |= ALTADDR;
 		h_Unlock_r(host);
-		if (!held)
+		if (!*heldp)
 		    h_Release_r(host);
 		host = NULL;
 		goto retry;
@@ -1657,7 +1660,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		host->hostFlags &= ~HWHO_INPROGRESS;
 		host->hostFlags |= ALTADDR;
 		h_Unlock_r(host);
-		if (!held)
+		if (!*heldp)
 		    h_Release_r(host);
 		host = NULL;
 		rx_DestroyConnection(cb_in);
@@ -1692,7 +1695,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    ("Host %s:%d starting h_Lookup again\n",
 		     afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
-	    if (!held)
+	    if (!*heldp)
 		h_Release_r(host);
 	    goto retry;
 	}
@@ -1721,12 +1724,13 @@ h_GetHost_r(struct rx_connection *tcon)
             h_Lock_r(host);
 	    host->hostFlags |= HOSTDELETED;
 	    h_Unlock_r(host);
-	    if (!held)
+	    if (!*heldp)
 		h_Release_r(host);
 	    goto retry;
 	}
     } else {
 	host = h_Alloc_r(tcon);	/* returned held and locked */
+	*heldp = 0;
 	h_gethostcps_r(host, FT_ApproxTime());
 	if (!(host->Console & 1)) {
 	    int pident = 0;
@@ -1791,13 +1795,27 @@ h_GetHost_r(struct rx_connection *tcon)
 	        cb_conn=NULL;
 		H_LOCK;
 	    } else if (code == 0) {
-		oldHost = h_LookupUuid_r(&identP->uuid);
-                if (oldHost) {
-                    int probefail = 0;
+		int oldHeld = 1;
 
-		    if (!h_Held_r(oldHost))
+		oldHost = h_LookupUuid_r(&identP->uuid);
+
+                if (oldHost) {
+		    oldHeld = h_Held_r(oldHost);
+		    if (!oldHeld)
 			h_Hold_r(oldHost);
 		    h_Lock_r(oldHost);
+
+		    if (oldHost->hostFlags & HOSTDELETED) {
+			h_Unlock_r(oldHost);
+			if (!oldHeld)
+			    h_Release_r(oldHost);
+			oldHost = NULL;
+		    }
+		}
+
+		if (oldHost) {
+		    int probefail = 0;
+
 		    oldHost->hostFlags |= HWHO_INPROGRESS;
 
                     if (oldHost->interface) {
@@ -1889,6 +1907,7 @@ h_GetHost_r(struct rx_connection *tcon)
 		    /* release host because it was allocated by h_Alloc_r */
 		    h_Release_r(host);
 		    host = oldHost;
+		    *heldp = oldHeld;
 		    /* the new host is held and locked */
 		} else {
 		    /* This really is a new host */
@@ -2114,6 +2133,7 @@ h_FindClient_r(struct rx_connection *tcon)
     char tcell[MAXKTCREALMLEN];
     int fail = 0;
     int created = 0;
+    int held = 1;
 
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client && client->sid == rxr_CidOf(tcon) 
@@ -2185,10 +2205,10 @@ h_FindClient_r(struct rx_connection *tcon)
     }
 
     if (!client) { /* loop */
-	host = h_GetHost_r(tcon);	/* Returns it h_Held */
+	host = h_GetHost_r(tcon, &held);	/* Returns it h_Held */
 
 	if (!host) 
-	    return 0;
+	    return NULL;
 
     retryfirstclient:
 	/* First try to find the client structure */
@@ -2206,6 +2226,12 @@ h_FindClient_r(struct rx_connection *tcon)
 	/* Still no client structure - get one */
 	if (!client) {
 	    h_Lock_r(host);
+            if (host->hostFlags & HOSTDELETED) {
+                h_Unlock_r(host);
+		if (!held)
+                    h_Release_r(host);
+                return NULL;
+            }
 	    /* Retry to find the client structure */
 	    for (client = host->FirstClient; client; client = client->next) {
 		if (!client->deleted && (client->sid == rxr_CidOf(tcon))
@@ -2327,6 +2353,26 @@ h_FindClient_r(struct rx_connection *tcon)
     /* Avoid chaining in more than once. */
     if (created) {
 	h_Lock_r(host);
+
+        if (host->hostFlags & HOSTDELETED) {
+            h_Unlock_r(host);
+	    if (!held)
+                h_Release_r(host);
+
+            host = NULL;
+            client->host = NULL;
+
+            if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val)
+                free(client->CPS.prlist_val);
+            client->CPS.prlist_val = NULL;
+            client->CPS.prlist_len = 0;
+
+            client->refCount--;
+            ReleaseWriteLock(&client->lock);
+            FreeCE(client);
+            return NULL;
+        }
+
 	client->next = host->FirstClient;
 	host->FirstClient = client;
 	h_Unlock_r(host);
@@ -2839,8 +2885,8 @@ CheckHost(register struct host *host, int held)
     }
     if (host->LastCall < checktime) {
 	h_Lock_r(host);
-	host->hostFlags |= HWHO_INPROGRESS;
 	if (!(host->hostFlags & HOSTDELETED)) {
+            host->hostFlags |= HWHO_INPROGRESS;
 	    cb_conn = host->callback_rxcon;
 	    rx_GetConnection(cb_conn);
 	    if (host->LastCall < clientdeletetime) {
@@ -2908,8 +2954,8 @@ CheckHost(register struct host *host, int held)
 	    rx_PutConnection(cb_conn);
 	    cb_conn=NULL;
 	    H_LOCK;
+            host->hostFlags &= ~HWHO_INPROGRESS;
 	}
-	host->hostFlags &= ~HWHO_INPROGRESS;
 	h_Unlock_r(host);
     }
     H_UNLOCK;
