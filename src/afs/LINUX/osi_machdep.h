@@ -197,7 +197,7 @@ afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
 #else
 
 typedef struct afs_cred {
-    int cr_ref;
+    atomic_t cr_ref;
     uid_t cr_uid;
     uid_t cr_ruid;
     gid_t cr_gid;
@@ -222,7 +222,7 @@ afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
 #define task_user(task) (task->user)
 #define task_session_keyring(task) (task->signal->session_keyring)
 #define current_session_keyring() (current->signal->session_keyring)
-#define crhold(c) (c)->cr_ref++
+#define crhold(c) atomic_inc(&(c)->cr_ref)
 
 #endif /* defined(STRUCT_TASK_HAS_CRED) */
 

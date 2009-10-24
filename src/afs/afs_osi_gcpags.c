@@ -470,7 +470,10 @@ afs_osi_proc2cred(afs_proc_t * pr)
     if ((pr->state == TASK_RUNNING) || (pr->state == TASK_INTERRUPTIBLE)
 	|| (pr->state == TASK_UNINTERRUPTIBLE)
 	|| (pr->state == TASK_STOPPED)) {
-	cr.cr_ref = 1;
+	/* This is dangerous. If anyone ever crfree's the cred that's
+	 * returned from here, we'll go boom, because it's statically
+	 * allocated. */
+	atomic_set(&cr.cr_ref, 1);
 	afs_set_cr_uid(&cr, task_uid(pr));
 #if defined(AFS_LINUX26_ENV)
 #if defined(STRUCT_TASK_HAS_CRED)

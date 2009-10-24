@@ -45,7 +45,7 @@ crget(void)
 #if defined(STRUCT_TASK_HAS_CRED)
     get_cred(tmp);
 #else
-    tmp->cr_ref = 1;
+    atomic_set(&tmp->cr_ref, 1);
 #endif
     return tmp;
 }
@@ -56,12 +56,10 @@ crfree(cred_t * cr)
 #if defined(STRUCT_TASK_HAS_CRED)
     put_cred(cr);
 #else
-    if (cr->cr_ref > 1) {
-	cr->cr_ref--;
-	return;
+    if (atomic_dec_and_test(&cr->cr_ref)) {
+        put_group_info(afs_cr_group_info(cr));
+        kfree(cr);
     }
-    put_group_info(afs_cr_group_info(cr));
-    kfree(cr);
 #endif
 }
 
