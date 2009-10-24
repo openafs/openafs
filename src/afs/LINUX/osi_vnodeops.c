@@ -436,6 +436,12 @@ afs_linux_release(struct inode *ip, struct file *fp)
     afs_maybe_lock_kernel();
     AFS_GLOCK();
     code = afs_close(vcp, fp->f_flags, credp);
+    ObtainWriteLock(&vcp->lock, 807);
+    if (vcp->cred) {
+	crfree(vcp->cred);
+	vcp->cred = NULL;
+    }
+    ReleaseWriteLock(&vcp->lock);
     AFS_GUNLOCK();
     afs_maybe_unlock_kernel();
 
@@ -2105,9 +2111,12 @@ afs_linux_writepage(struct page *pp)
 {
     struct address_space *mapping = pp->mapping;
     struct inode *inode;
+    struct vcache *vcp;
+    cred_t *credp;
     unsigned int to = PAGE_CACHE_SIZE;
     loff_t isize;
-    int status = 0;
+    int code = 0;
+    int code1 = 0;
 
     if (PageReclaim(pp)) {
 	return AOP_WRITEPAGE_ACTIVATE;
@@ -2116,33 +2125,70 @@ afs_linux_writepage(struct page *pp)
 
     page_cache_get(pp);
 
-    inode = (struct inode *)mapping->host;
+    inode = mapping->host;
+    vcp = VTOAFS(inode);
     isize = i_size_read(inode);
 
     /* Don't defeat an earlier truncate */
     if (page_offset(pp) > isize)
 	goto done;
 
+    AFS_GLOCK();
+    ObtainWriteLock(&vcp->lock, 537);
+    code = afs_linux_prepare_writeback(vcp);
+    if (code) {
+	ReleaseWriteLock(&vcp->lock);
+	AFS_GUNLOCK();
+	return code;
+    }
+    /* Grab the creds structure currently held in the vnode, and
+     * get a reference to it, in case it goes away ... */
+    credp = vcp->cred;
+    crhold(credp);
+    ReleaseWriteLock(&vcp->lock);
+    AFS_GUNLOCK();
+
     /* If this is the final page, then just write the number of bytes that
      * are actually in it */
     if ((isize - page_offset(pp)) < to )
 	to = isize - page_offset(pp);
 
-    status = afs_linux_writepage_sync(inode, pp, 0, to);
+    code = afs_linux_page_writeback(inode, pp, 0, to, credp);
+
+    afs_maybe_lock_kernel();
+    AFS_GLOCK();
+    ObtainWriteLock(&vcp->lock, 538);
+
+    /* As much as we might like to ignore a file server error here,
+     * and just try again when we close(), unfortunately StoreAllSegments
+     * will invalidate our chunks if the server returns a permanent error,
+     * so we need to at least try and get that error back to the user
+     */
+    if (code == to)
+	code1 = afs_linux_dopartialwrite(vcp, credp);
+
+    afs_linux_complete_writeback(vcp);
+    ReleaseWriteLock(&vcp->lock);
+    crfree(credp);
+    AFS_GUNLOCK();
+    afs_maybe_unlock_kernel();
 
 done:
     SetPageUptodate(pp);
-    if ( status != AOP_WRITEPAGE_ACTIVATE ) {
+    if ( code != AOP_WRITEPAGE_ACTIVATE ) {
 	/* XXX - do we need to redirty the page here? */
 	unlock_page(pp);
     }
 
     page_cache_release(pp);
 
-    if (status == to)
+    if (code1)
+	return code1;
+
+    if (code == to)
 	return 0;
-    else
-	return status;
+
+    return code;
 }
 
 /* afs_linux_permission

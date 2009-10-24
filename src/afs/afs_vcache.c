@@ -1016,6 +1016,9 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     tvc->f.fid = *afid;
     tvc->asynchrony = -1;
     tvc->vc_error = 0;
+#if defined(AFS_LINUX26_ENV)
+    tvc->cred = NULL;
+#endif
 #ifdef AFS_TEXT_ENV
     tvc->flushDV.low = tvc->flushDV.high = AFS_MAXDV;
 #endif
