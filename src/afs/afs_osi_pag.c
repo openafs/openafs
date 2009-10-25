@@ -537,9 +537,9 @@ afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 
 
 afs_int32
-PagInCred(afs_ucred_t *cred)
+afs_get_group_pag(afs_ucred_t *cred)
 {
-    afs_int32 pag;
+    afs_int32 pag = NOPAG;
 #if !defined(AFS_LINUX26_ONEGROUP_ENV)
     gid_t g0, g1;
 #endif
@@ -548,18 +548,13 @@ PagInCred(afs_ucred_t *cred)
     int ngroups;
 #endif
 
-    AFS_STATCNT(PagInCred);
-    if (cred == NULL || cred == afs_osi_credp) {
-	return NOPAG;
-    }
 #if defined(AFS_SUN510_ENV)
     gids = crgetgroups(cred);
     ngroups = crgetngroups(cred);
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    if (cred == NOCRED || cred == FSCRED) {
+    if (cred == NOCRED || cred == FSCRED)
 	return NOPAG;
-    }
     if (cred->cr_ngroups < 3)
 	return NOPAG;
     /* gid is stored in cr_groups[0] */
@@ -567,22 +562,18 @@ PagInCred(afs_ucred_t *cred)
     g1 = cred->cr_groups[2];
 #else
 #if defined(AFS_AIX_ENV)
-    if (cred->cr_ngrps < 2) {
+    if (cred->cr_ngrps < 2)
 	return NOPAG;
-    }
 #elif defined(AFS_LINUX26_ENV)
-    if (afs_cr_group_info(cred)->ngroups < NUMPAGGROUPS) {
-	pag = NOPAG;
-	goto out;
-    }
+    if (afs_cr_group_info(cred)->ngroups < NUMPAGGROUPS)
+	return NOPAG;
 #elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_SUN510_ENV)
     if (ngroups < 2) {
 #else
     if (cred->cr_ngroups < 2) {
 #endif
-	pag = NOPAG;
-	goto out;
+	return NOPAG;
     }
 #endif
 #if defined(AFS_AIX51_ENV)
@@ -605,26 +596,33 @@ PagInCred(afs_ucred_t *cred)
 #else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
 #endif
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
-out:
+    return pag;
+}
+
+
+afs_int32
+PagInCred(afs_ucred_t *cred)
+{
+    afs_int32 pag = NOPAG;
+
+    AFS_STATCNT(PagInCred);
+    if (cred == NULL || cred == afs_osi_credp) {
+	return NOPAG;
+    }
+    /*
+     * If linux keyrings are in use and we carry the session keyring in our credentials
+     * structure, they should be the only criteria for determining
+     * if we're in a PAG.  Groups are updated for legacy reasons only for now,
+     * and should not be used to infer PAG membership
+     * With keyrings but no kernel credentials, look at groups first and fall back
+     * to looking at the keyrings.
+     */
+#if defined(AFS_LINUX26_ENV) && !defined(STRUCT_TASK_HAS_CRED)
+    pag = afs_get_group_pag(cred);
 #endif
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
-    if (pag == NOPAG && afs_cr_rgid(cred) != NFSXLATOR_CRED) {
-	struct key *key;
-	afs_uint32 upag, newpag;
-
-	key = request_key(&key_type_afs_pag, "_pag", NULL);
-	if (!IS_ERR(key)) {
-	    if (key_validate(key) == 0 && key->uid == 0) {	/* also verify in the session keyring? */
-		upag = (afs_uint32) key->payload.value;
-		if (((upag >> 24) & 0xff) == 'A') {
-		    __setpag(&cred, upag, &newpag, 0);
-		    pag = (afs_int32) upag;
-		}
-	    }
-	    key_put(key);
-	} 
-    }
+    if (pag == NOPAG)
+        pag = osi_get_keyring_pag(cred);
 #endif
     return pag;
 }

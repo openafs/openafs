@@ -551,6 +551,42 @@ void osi_keyring_shutdown(void)
     unregister_key_type(&key_type_afs_pag);
 }
 
+afs_int32
+osi_get_keyring_pag(afs_ucred_t *cred)
+{
+    struct key *key;
+    afs_uint32 newpag;
+    afs_int32 keyring_pag = NOPAG;
+
+    if (afs_cr_rgid(cred) != NFSXLATOR_CRED) {
+
+#if defined(STRUCT_TASK_HAS_CRED)
+	/* If we have a kernel cred, search the passed credentials */
+	key = key_ref_to_ptr(keyring_search(make_key_ref(cred->tgcred->session_keyring, 1),
+		&key_type_afs_pag, "_pag"));
+#else
+	/* Search the keyrings of the current process */
+	key = request_key(&key_type_afs_pag, "_pag", NULL);
+#endif
+	if (!IS_ERR(key)) {
+	    if (key_validate(key) == 0 && key->uid == 0) {      /* also verify in the session keyring? */
+		keyring_pag = key->payload.value;
+		/* Only set PAG in groups if needed, and the creds are from the current process */
+#if defined(STRUCT_TASK_HAS_CRED)
+		if (cred == current_cred() && ((keyring_pag >> 24) & 0xff) == 'A') {
+#else
+		if (((keyring_pag >> 24) & 0xff) == 'A') {
+#endif
+		    if (keyring_pag != afs_get_pag_from_groups(current_group_info()))
+			__setpag(&cred, keyring_pag, &newpag, 0);
+		}
+	    }
+	    key_put(key);
+	}
+    }
+    return keyring_pag;
+}
+
 #else
 void osi_keyring_init(void)
 {

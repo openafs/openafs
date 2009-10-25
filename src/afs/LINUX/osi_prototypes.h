@@ -94,6 +94,7 @@ extern void osi_keyring_shutdown(void);
 extern int __setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 		    int change_parent);
 #ifdef LINUX_KEYRING_SUPPORT
+extern afs_int32 osi_get_keyring_pag(afs_ucred_t *);
 extern struct key_type key_type_afs_pag;
 #endif /* LINUX_KEYRING_SUPPORT */
 
