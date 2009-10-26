@@ -1767,9 +1767,9 @@ mainproc(struct cmd_syndesc *as, void *arock)
 #endif
 
     /* set -rxmaxmtu */
-    if (as->parms[35].items) {
+    if (as->parms[36].items) {
         /* -rxmaxmtu */
-        rxmaxmtu = atoi(as->parms[35].items->data);
+        rxmaxmtu = atoi(as->parms[36].items->data);
     }
 
     /*
@@ -2190,11 +2190,11 @@ mainproc(struct cmd_syndesc *as, void *arock)
     call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
 
     if (rxmaxmtu) {
-    if (afsd_verbose)
-        printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
-    code = call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
-    if (code)
-        printf("%s: Error seting rxmaxmtu\n", rn);
+	if (afsd_verbose)
+            printf("%s: Setting rxmaxmtu in kernel = %d\n", rn, rxmaxmtu);
+	code = call_syscall(AFSOP_SET_RXMAXMTU, rxmaxmtu);
+        if (code)
+            printf("%s: Error seting rxmaxmtu\n", rn);
     }
 
     if (enable_dynroot) {
@@ -2432,6 +2432,8 @@ main(int argc, char **argv)
     struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
+
+    /* 0 - 10 */
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
 		"1024 byte blocks in cache");
     cmd_AddParm(ts, "-files", CMD_SINGLE, CMD_OPTIONAL, "files in cache");
@@ -2450,6 +2452,8 @@ main(int argc, char **argv)
 		"display lots of information");
     cmd_AddParm(ts, "-rmtsys", CMD_FLAG, CMD_OPTIONAL,
 		"start NFS rmtsysd program");
+
+    /* 11 - 20 */
     cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL, "display debug info");
     cmd_AddParm(ts, "-chunksize", CMD_SINGLE, CMD_OPTIONAL,
 		"log(2) of chunk size");
@@ -2459,7 +2463,6 @@ main(int argc, char **argv)
 		"number of volume entries");
     cmd_AddParm(ts, "-biods", CMD_SINGLE, CMD_OPTIONAL,
 		"number of bkg I/O daemons (aix vm)");
-
     cmd_AddParm(ts, "-prealloc", CMD_SINGLE, CMD_OPTIONAL,
 		"number of 'small' preallocated blocks");
     cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,
@@ -2470,6 +2473,7 @@ main(int argc, char **argv)
 		"make close calls synchronous");
     cmd_AddParm(ts, "-shutdown", CMD_FLAG, CMD_OPTIONAL,
 		"Shutdown all afs state");
+    /* 21 - 30 */
     cmd_AddParm(ts, "-enable_peer_stats", CMD_FLAG, CMD_OPTIONAL | CMD_HIDE,
 		"Collect rpc statistics by peer");
     cmd_AddParm(ts, "-enable_process_stats", CMD_FLAG,
@@ -2493,6 +2497,7 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
     cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
 		"Prefer backup volumes for mointpoints in backup volumes");
+    /* 31 - 40 */
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL,
 		"Bind the Rx socket (one interface only)");
     cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL, "set the time");
