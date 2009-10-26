@@ -46,11 +46,6 @@
   *     -dcache    The number of data cache entries.
   *     -biods     Number of bkg I/O daemons (AIX3.1 only)
   *	-prealloc  Number of preallocated "small" memory blocks
-  *     -pininodes Number of inodes which can be spared from inode[] for 
-  *                pointing at Vfiles.  If this is set too high, you may have
-  *                system problems, which can only be ameliorated by changing
-  *                NINODE (or equivalent) and rebuilding the kernel.
-  *		   This option is now disabled.
   *	-logfile   [OBSOLETE] Place where to put the logfile (default in
   *                <cache>/etc/AFSLog.
   *	-waitclose make close calls always synchronous (slows em down, tho)
@@ -324,9 +319,6 @@ static int enable_fakestat = 0;	/* enable fakestat support */
 static int enable_backuptree = 0;	/* enable backup tree support */
 static int enable_nomount = 0;	/* do not mount */
 static int enable_splitcache = 0;
-#ifdef notdef
-static int inodes = 60;		/* VERY conservative, but has to be */
-#endif
 int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
 int afsd_verbose = 0;		/*Are we being chatty? */
 int afsd_debug = 0;		/*Are we printing debugging info? */
@@ -1640,12 +1632,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	/* -prealloc */
 	preallocs = atoi(as->parms[16].items->data);
     }
-#ifdef notdef
-    if (as->parms[17].items) {
-	/* -pininodes */
-	inodes = atoi(as->parms[17].items->data);
-    }
-#endif
     strcpy(confDir, AFSDIR_CLIENT_ETC_DIRPATH);
     if (as->parms[17].items) {
 	/* -confdir */
@@ -2125,9 +2111,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
     cparams.setTimeFlag = cacheSetTime;
     cparams.memCacheFlag = cacheFlags;
     cparams.dynamic_vcaches = afsd_dynamic_vcaches;
-#ifdef notdef
-    cparams.inodes = inodes;
-#endif
     call_syscall(AFSOP_CACHEINIT, &cparams);
 
     /* do it before we init the cache inodes */
@@ -2479,10 +2462,6 @@ main(int argc, char **argv)
 
     cmd_AddParm(ts, "-prealloc", CMD_SINGLE, CMD_OPTIONAL,
 		"number of 'small' preallocated blocks");
-#ifdef notdef
-    cmd_AddParm(ts, "-pininodes", CMD_SINGLE, CMD_OPTIONAL,
-		"number of inodes to hog");
-#endif
     cmd_AddParm(ts, "-confdir", CMD_SINGLE, CMD_OPTIONAL,
 		"configuration directory");
     cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
