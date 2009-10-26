@@ -305,8 +305,7 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
     if (lp && (lp->lockers == 0)) {
 	lt = lp->accesstime;
     } else {
-	lp = 0;
-	lt = BUF_TIME_MAX;
+	lp = NULL;
     }
 
     /* timecounter might have wrapped, if machine is very very busy
@@ -336,7 +335,7 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 	tp = Buffers;
 	for (i = 0; i < nbuffers; i++, tp++) {
 	    if (tp->lockers == 0) {
-		if (tp->accesstime < lt) {
+		if (!lp || tp->accesstime < lt) {
 		    lp = tp;
 		    lt = tp->accesstime;
 		}
