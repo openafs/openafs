@@ -80,7 +80,6 @@ struct afs_q afs_vhashTV[VCSIZE];
 static struct afs_cbr *afs_cbrHashT[CBRSIZE];
 afs_int32 afs_bulkStatsLost;
 int afs_norefpanic = 0;
-extern int afsd_dynamic_vcaches;
 
 
 /* Disk backed vcache definitions 
@@ -643,23 +642,14 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
 	AFS_GLOCK();
     }
 
-    if (
-#ifdef AFS_MAXVCOUNT_ENV
-	afsd_dynamic_vcaches || /* Always run if dynamic vcaches are enabled. */
-#endif
-	afs_vcount >= afs_maxvcount
-	) {
+    if (afsd_dynamic_vcaches || afs_vcount >= afs_maxvcount) {
 	i = 0;
 	for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
 	    tvc = QTOV(tq);
 	    uq = QPrev(tq);
 	    if (tvc->f.states & CVFlushed) {
 		refpanic("CVFlushed on VLRU");
-	    } else if (
-#ifdef AFS_MAXVCOUNT_ENV
-	    ! afsd_dynamic_vcaches && 
-#endif
-	    i++ > afs_maxvcount) {
+	    } else if (!afsd_dynamic_vcaches && i++ > afs_maxvcount) {
 		refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
 	    } else if (QNext(uq) != tq) {
 		refpanic("VLRU inconsistent");
@@ -725,11 +715,7 @@ restart:
 	    if (tq == uq)
 		break;
 	}
-	if (
-#ifdef AFS_MAXVCOUNT_ENV
-        !afsd_dynamic_vcaches &&
-#endif
-        anumber == target) {
+	if (!afsd_dynamic_vcaches && anumber == target) {
 	    printf("afs_ShakeLooseVCaches: warning none freed, using %d of %d\n",
 		   afs_vcount, afs_maxvcount);
 	}
@@ -778,13 +764,13 @@ afs_AllocVCache(void)
 #endif
 
     afs_vcount++;
-#ifdef AFS_MAXVCOUNT_ENV
+
     /* track the peak */
     if (afsd_dynamic_vcaches && afs_maxvcount < afs_vcount) {
 	afs_maxvcount = afs_vcount;
 	/*printf("peak vnodes: %d\n", afs_maxvcount);*/
     }
-#endif
+
     afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
 #else
     /* none free, making one is better than a panic */
@@ -866,17 +852,13 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     afs_FlushReclaimedVcaches();
 
 #if defined(AFS_OSF_ENV) || defined(AFS_LINUX22_ENV)
-#ifdef AFS_MAXVCOUNT_ENV
     if(!afsd_dynamic_vcaches) {
-#endif
 	afs_ShakeLooseVCaches(anumber);
 	if (afs_vcount >= afs_maxvcount) {
 	    printf("afs_NewVCache - none freed\n");
 	    return NULL;
 	}
-#ifdef AFS_MAXVCOUNT_ENV
     }
-#endif
     tvc = afs_AllocVCache();
 #else /* AFS_OSF_ENV */
     /* pull out a free cache entry */

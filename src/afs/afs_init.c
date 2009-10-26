@@ -53,7 +53,9 @@ extern afs_rwlock_t afs_disconDirtyLock;
 #endif
 
 /* This is the kernel side of the dynamic vcache setting */
+#ifdef AFS_MAXVCOUNT_ENV
 int afsd_dynamic_vcaches = 0;	/* Enable dynamic-vcache support */
+#endif
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
@@ -109,10 +111,9 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 #endif /* SYS_NAME_ID */
 
 #ifdef AFS_MAXVCOUNT_ENV
-	afsd_dynamic_vcaches = dynamic_vcaches;
-    printf("%s dynamically allocated vcaches\n", ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
-#else
-	afsd_dynamic_vcaches = 0;
+    afsd_dynamic_vcaches = dynamic_vcaches;
+    printf("%s dynamically allocated vcaches\n",
+	   ( afsd_dynamic_vcaches ? "enabling" : "disabling" ));
 #endif
 
     printf("Starting AFS cache scan...");

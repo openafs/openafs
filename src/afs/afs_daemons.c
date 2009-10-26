@@ -40,8 +40,6 @@ static int rxepoch_checked = 0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
 	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
 
-extern int afsd_dynamic_vcaches;
-
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
 afs_int32 afs_gcpags = AFS_GCPAGS;
@@ -212,19 +210,19 @@ afs_Daemon(void)
 					 * tickets */
 	    last3MinCheck = now;
 	}
-#ifdef AFS_MAXVCOUNT_ENV
-    if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
-        /* start with trying to drop us back to our base usage */
-        int anumber;
-        if (afs_maxvcount <= afs_cacheStats) 
-        anumber = VCACHE_FREE;
-        else
-        anumber = VCACHE_FREE + (afs_maxvcount - afs_cacheStats);
 
-        afs_ShakeLooseVCaches(anumber);
-        last5MinCheck = now;
-    }
-#endif
+        if (afsd_dynamic_vcaches && (last5MinCheck + 300 < now)) {
+            /* start with trying to drop us back to our base usage */
+            int anumber;
+            if (afs_maxvcount <= afs_cacheStats)
+                anumber = VCACHE_FREE;
+            else
+                anumber = VCACHE_FREE + (afs_maxvcount - afs_cacheStats);
+
+            afs_ShakeLooseVCaches(anumber);
+            last5MinCheck = now;
+        }
+
 	if (!afs_CheckServerDaemonStarted) {
 	    /* Do the check here if the correct afsd is not installed. */
 	    if (!cs_warned) {

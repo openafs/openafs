@@ -1410,4 +1410,11 @@ struct afs_fakestat_state {
 };
 
 extern int afs_fakestat_enable;
+
+#ifdef AFS_MAXVCOUNT_ENV
+extern int afsd_dynamic_vcaches;
+#else
+#define afsd_dynamic_vcaches 0
+#endif
+
 #endif /* _AFS_H_ */
