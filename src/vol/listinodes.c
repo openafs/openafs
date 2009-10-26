@@ -1531,6 +1531,14 @@ inode_ConvertROtoRWvolume(char *pname, afs_uint32 volumeId)
 		
 	    FDH_CLOSE(fdP);
 	    FDH_CLOSE(fdP2);
+
+	    /* Unlink the old special inode; otherwise we will get duplicate
+	     * special inodes if we recreate the RO again */
+	    if (IH_DEC(ih, specinos[j].inodeNumber, volumeId) == -1) {
+		Log("IH_DEC failed: %x, %s, %u errno %d\n", ih,
+		    PrintInode(NULL, specinos[j].inodeNumber), volumeId, errno);
+	    }
+
 	    IH_RELEASE(ih);
 	    IH_RELEASE(ih2);
 	}
