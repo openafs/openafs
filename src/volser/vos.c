@@ -5206,9 +5206,8 @@ static void
 print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 	    int print)
 {
-    afs_int32 vcode;
+    afs_int32 vcode, m_uniq=0;
     afs_int32 i, j;
-    struct VLCallBack vlcb;
     afs_int32 *addrp;
     bulkaddrs m_addrs;
     ListAddrByAttributes m_attrs;
@@ -5242,7 +5241,7 @@ print_addrs(const bulkaddrs * addrs, afsUUID * m_uuid, int nentries,
 		m_addrs.bulkaddrs_len = 0;
 		vcode =
 		    ubik_VL_GetAddrsU(cstruct, 0, &m_attrs, m_uuid,
-				      (afs_int32 *)&vlcb, &m_nentries,
+				      &m_uniq, &m_nentries,
 				      &m_addrs);
 		if (vcode) {
 		    fprintf(STDERR,
