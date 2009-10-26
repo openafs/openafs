@@ -1692,38 +1692,143 @@ SalvageVolumeHeaderFile(register struct InodeSummary *isp,
     register struct ViceInodeInfo *ip;
     int allinodesobsolete = 1;
     struct VolumeDiskHeader diskHeader;
+    int *skip;
+
+    /* keeps track of special inodes that are probably 'good'; they are
+     * referenced in the vol header, and are included in the given inodes
+     * array */
+    struct {
+	int valid;
+	Inode inode;
+    } goodspecial[MAXINODETYPE];
 
     if (deleteMe)
 	*deleteMe = 0;
+
+    memset(goodspecial, 0, sizeof(goodspecial));
+
+    skip = malloc(isp->nSpecialInodes * sizeof(*skip));
+    if (skip) {
+	memset(skip, 0, isp->nSpecialInodes * sizeof(*skip));
+    } else {
+	Log("cannot allocate memory for inode skip array when salvaging "
+	    "volume %lu; not performing duplicate special inode recovery\n",
+	    afs_printable_uint32_lu(isp->volumeId));
+	/* still try to perform the salvage; the skip array only does anything
+	 * if we detect duplicate special inodes */
+    }
+
+    /*
+     * First, look at the special inodes and see if any are referenced by
+     * the existing volume header. If we find duplicate special inodes, we
+     * can use this information to use the referenced inode (it's more
+     * likely to be the 'good' one), and throw away the duplicates.
+     */
+    if (isp->volSummary && skip) {
+	/* use tempHeader, so we can use the stuff[] array to easily index
+	 * into the isp->volSummary special inodes */
+	memcpy(&tempHeader, &isp->volSummary->header, sizeof(struct VolumeHeader));
+
+	for (i = 0; i < isp->nSpecialInodes; i++) {
+	    ip = &inodes[isp->index + i];
+	    if (ip->u.special.type <= 0 || ip->u.special.type > MAXINODETYPE) {
+		/* will get taken care of in a later loop */
+		continue;
+	    }
+	    if (ip->inodeNumber == *(stuff[ip->u.special.type - 1].inode)) {
+		goodspecial[ip->u.special.type-1].valid = 1;
+		goodspecial[ip->u.special.type-1].inode = ip->inodeNumber;
+	    }
+	}
+    }
+
     memset(&tempHeader, 0, sizeof(tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;
     tempHeader.stamp.version = VOLUMEHEADERVERSION;
     tempHeader.id = isp->volumeId;
     tempHeader.parent = isp->RWvolumeId;
+
     /* Check for duplicates (inodes are sorted by type field) */
     for (i = 0; i < isp->nSpecialInodes - 1; i++) {
 	ip = &inodes[isp->index + i];
 	if (ip->u.special.type == (ip + 1)->u.special.type) {
-	    if (!Showmode)
-		Log("Duplicate special inodes in volume header; salvage of volume %u aborted\n", isp->volumeId);
-	    return -1;
+	    afs_ino_str_t stmp1, stmp2;
+
+	    if (ip->u.special.type <= 0 || ip->u.special.type > MAXINODETYPE) {
+		/* Will be caught in the loop below */
+		continue;
+	    }
+	    if (!Showmode) {
+		Log("Duplicate special %d inodes for volume %u found (%s, %s);\n",
+		    ip->u.special.type, isp->volumeId,
+		    PrintInode(stmp1, ip->inodeNumber),
+		    PrintInode(stmp2, (ip+1)->inodeNumber));
+	    }
+	    if (skip && goodspecial[ip->u.special.type-1].valid) {
+		Inode gi = goodspecial[ip->u.special.type-1].inode;
+
+		if (!Showmode) {
+		    Log("using special inode referenced by vol header (%s)\n",
+		        PrintInode(stmp1, gi));
+		}
+
+		/* the volume header references some special inode of
+		 * this type in the inodes array; are we it? */
+		if (ip->inodeNumber != gi) {
+		    skip[i] = 1;
+		} else if ((ip+1)->inodeNumber != gi) {
+		    /* in case this is the last iteration; we need to
+		     * make sure we check ip+1, too */
+		    skip[i+1] = 1;
+		}
+	    } else {
+		if (!Showmode)
+		    Log("cannot determine which is correct; salvage of volume %u aborted\n", isp->volumeId);
+		if (skip) {
+		    free(skip);
+		}
+		return -1;
+	    }
 	}
     }
     for (i = 0; i < isp->nSpecialInodes; i++) {
 	ip = &inodes[isp->index + i];
 	if (ip->u.special.type <= 0 || ip->u.special.type > MAXINODETYPE) {
 	    if (check) {
-		Log("Rubbish header inode\n");
+		Log("Rubbish header inode %s of type %d\n",
+		    PrintInode(NULL, ip->inodeNumber),
+		    ip->u.special.type);
+		if (skip) {
+		    free(skip);
+		}
 		return -1;
 	    }
-	    Log("Rubbish header inode; deleted\n");
+	    Log("Rubbish header inode %s of type %d; deleted\n",
+	        PrintInode(NULL, ip->inodeNumber),
+	        ip->u.special.type);
 	} else if (!stuff[ip->u.special.type - 1].obsolete) {
-	    *(stuff[ip->u.special.type - 1].inode) = ip->inodeNumber;
+	    if (skip && skip[i]) {
+		if (orphans == ORPH_REMOVE) {
+		    Log("Removing orphan special inode %s of type %d\n",
+		        PrintInode(NULL, ip->inodeNumber), ip->u.special.type);
+		    continue;
+		} else {
+		    Log("Ignoring orphan special inode %s of type %d\n",
+		        PrintInode(NULL, ip->inodeNumber), ip->u.special.type);
+		    /* fall through to the ip->linkCount--; line below */
+		}
+	    } else {
+		*(stuff[ip->u.special.type - 1].inode) = ip->inodeNumber;
+		allinodesobsolete = 0;
+	    }
 	    if (!check && ip->u.special.type != VI_LINKTABLE)
 		ip->linkCount--;	/* Keep the inode around */
-	    allinodesobsolete = 0;
 	}
     }
+    if (skip) {
+	free(skip);
+    }
+    skip = NULL;
 
     if (allinodesobsolete) {
 	if (deleteMe)
