@@ -291,7 +291,7 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 {
     /* Find a usable buffer slot */
     register afs_int32 i;
-    afs_int32 lt;
+    afs_int32 lt = 0;
     register struct buffer *tp;
     struct osi_file *tfile;
 
