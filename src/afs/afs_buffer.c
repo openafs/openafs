@@ -76,9 +76,23 @@ extern struct buf *geteblk();
 #ifdef AFS_FBSD_ENV
 #define timecounter afs_timecounter
 #endif
-/* The locks for individual buffer entries are now sometimes obtained while holding the
- * afs_bufferLock. Thus we now have a locking hierarchy: afs_bufferLock -> Buffers[].lock.
+
+/* A note on locking in 'struct buffer'
+ *
+ * afs_bufferLock protects the hash chain, and the 'lockers' field where that
+ * has a zero value. It must be held whenever lockers is incremented from zero.
+ *
+ * The individual buffer lock protects the contents of the structure, including
+ * the lockers field.
+ *
+ * For safety: afs_bufferLock and the individual buffer lock must be held
+ * when obtaining a reference on a structure. Only the individual buffer lock
+ * need be held when releasing a reference.
+ *
+ * The locking hierarchy is afs_bufferLock-> buffer.lock
+ *
  */
+
 static afs_lock_t afs_bufferLock;
 static struct buffer *phTable[PHSIZE];	/* page hash table */
 static int nbuffers;
@@ -170,8 +184,8 @@ DRead(register struct dcache *adc, register int page)
     if ((tb = phTable[pHash(adc->index, page)])) {
 	if (bufmatch(tb)) {
 	    MObtainWriteLock(&tb->lock, 257);
-	    ReleaseWriteLock(&afs_bufferLock);
 	    tb->lockers++;
+	    ReleaseWriteLock(&afs_bufferLock);
 	    tb->accesstime = timecounter++;
 	    AFS_STATS(afs_stats_cmperf.bufHits++);
 	    MReleaseWriteLock(&tb->lock);
@@ -183,8 +197,8 @@ DRead(register struct dcache *adc, register int page)
 		if (bufmatch(tb2)) {
 		    buf_Front(bufhead, tb, tb2);
 		    MObtainWriteLock(&tb2->lock, 258);
-		    ReleaseWriteLock(&afs_bufferLock);
 		    tb2->lockers++;
+		    ReleaseWriteLock(&afs_bufferLock);
 		    tb2->accesstime = timecounter++;
 		    AFS_STATS(afs_stats_cmperf.bufHits++);
 		    MReleaseWriteLock(&tb2->lock);
@@ -194,8 +208,8 @@ DRead(register struct dcache *adc, register int page)
 		    if (bufmatch(tb)) {
 			buf_Front(bufhead, tb2, tb);
 			MObtainWriteLock(&tb->lock, 259);
-			ReleaseWriteLock(&afs_bufferLock);
 			tb->lockers++;
+			ReleaseWriteLock(&afs_bufferLock);
 			tb->accesstime = timecounter++;
 			AFS_STATS(afs_stats_cmperf.bufHits++);
 			MReleaseWriteLock(&tb->lock);
@@ -220,8 +234,8 @@ DRead(register struct dcache *adc, register int page)
 	return NULL;
     }
     MObtainWriteLock(&tb->lock, 260);
-    MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
+    MReleaseWriteLock(&afs_bufferLock);
     if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
 	tb->fid = NULLIDX;
 	afs_reset_inode(&tb->inode);
@@ -555,8 +569,8 @@ DNew(register struct dcache *adc, register int page)
 	afs_WriteDCache(adc, 1);
     }
     MObtainWriteLock(&tb->lock, 265);
-    MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
+    MReleaseWriteLock(&afs_bufferLock);
     MReleaseWriteLock(&tb->lock);
     return tb->data;
 }
