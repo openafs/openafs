@@ -335,7 +335,7 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
 	 * seems extreme.  To the best of my knowledge, all the callers
 	 * of DRead are prepared to handle a zero return.  Some of them
 	 * just panic directly, but not all of them. */
-	afs_warn("all buffers locked");
+	afs_warn("afs: all buffers locked\n");
 	return 0;
     }
 
@@ -582,7 +582,7 @@ shutdown_bufferpackage(void)
 	    /* The following check shouldn't be necessary and it will be removed soon */
 	    if (!tp->bufp)
 		afs_warn
-		    ("shutdown_bufferpackage: bufp == 0!! Shouldn't happen\n");
+		    ("afs: shutdown_bufferpackage: bufp == 0!! Shouldn't happen\n");
 	    else {
 		brelse(tp->bufp);
 		tp->bufp = 0;
