@@ -1691,7 +1691,7 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     afs_offs_t offset;
     struct iovec* iovecp;
     struct nocache_read_request *ancr;
-    struct page *pp, *ppt;
+    struct page *pp;
     struct pagevec lrupv;
     afs_int32 code = 0;
 
@@ -1788,7 +1788,6 @@ afs_linux_bypass_readpages(struct file *fp, struct address_space *mapping,
     /* we do not flush, release, or unmap pages--that will be
      * done for us by the background thread as each page comes in
      * from the fileserver */
-out:
     return afs_convert_code(code);
 }
 
@@ -1800,7 +1799,7 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
     uio_t *auio;
     struct iovec *iovecp;
     struct nocache_read_request *ancr;
-    afs_int32 isize;
+    int code;
 
     ClearPageError(pp);
 
@@ -1818,7 +1817,7 @@ afs_linux_bypass_readpage(struct file *fp, struct page *pp)
     /* the background thread will free this */
     ancr = osi_Alloc(sizeof(struct nocache_read_request));
     ancr->auio = auio;
-    ancr->offset = offset;
+    ancr->offset = page_offset(pp);
     ancr->length = PAGE_SIZE;
 
     credp = crref();
@@ -1841,8 +1840,8 @@ afs_linux_can_bypass(struct inode *ip) {
 	    if(i_size_read(ip) > cache_bypass_threshold)
 		return 1;
 	default:
+	    return 0;
      }
-     return 0;
 }
 
 /* Check if a file is permitted to bypass the cache by policy, and modify
@@ -1850,12 +1849,12 @@ afs_linux_can_bypass(struct inode *ip) {
 
 static inline int
 afs_linux_bypass_check(struct inode *ip) {
-    struct cred* credp;
+    cred_t* credp;
 
     int bypass = afs_linux_can_bypass(ip);
 
     credp = crref();
-    trydo_cache_transition(VTOAFS(ip)), credp, bypass);
+    trydo_cache_transition(VTOAFS(ip), credp, bypass);
     crfree(credp);
 
     return bypass;
