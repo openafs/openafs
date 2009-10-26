@@ -2227,15 +2227,23 @@ afs_linux_permission(struct inode *ip, int mode)
     return afs_convert_code(code);
 }
 
-#if !defined(HAVE_WRITE_BEGIN)
 static int
 afs_linux_commit_write(struct file *file, struct page *page, unsigned offset,
 		       unsigned to)
 {
     int code;
+    struct inode *inode = FILE_INODE(file);
+    loff_t pagebase = page_offset(page);
 
-    code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,
-                                    offset, to - offset);
+    if (i_size_read(inode) < (pagebase + offset))
+	i_size_write(inode, pagebase + offset);
+
+    if (PageChecked(page)) {
+	SetPageUptodate(page);
+	ClearPageChecked(page);
+    }
+
+    code = afs_linux_writepage_sync(inode, page, offset, to - offset);
 
     return code;
 }
@@ -2244,20 +2252,47 @@ static int
 afs_linux_prepare_write(struct file *file, struct page *page, unsigned from,
 			unsigned to)
 {
+
+    /* http://kerneltrap.org/node/4941 details the expected behaviour of
+     * prepare_write. Essentially, if the page exists within the file,
+     * and is not being fully written, then we should populate it.
+     */
+
+    if (!PageUptodate(page)) {
+	loff_t pagebase = page_offset(page);
+	loff_t isize = i_size_read(page->mapping->host);
+
+	/* Is the location we are writing to beyond the end of the file? */
+	if (pagebase >= isize ||
+	    ((from == 0) && (pagebase + to) >= isize)) {
+	    zero_user_segments(page, 0, from, to, PAGE_CACHE_SIZE);
+	    SetPageChecked(page);
+	/* Are we we writing a full page */
+	} else if (from == 0 && to == PAGE_CACHE_SIZE) {
+	    SetPageChecked(page);
+	/* Is the page readable, if it's wronly, we don't care, because we're
+	 * not actually going to read from it ... */
+	} else if ((file->f_flags && O_ACCMODE) != O_WRONLY) {
+	    /* We don't care if fillpage fails, because if it does the page
+	     * won't be marked as up to date
+	     */
+	    afs_linux_fillpage(file, page);
+	}
+    }
     return 0;
 }
-#else
 
+#if defined(HAVE_WRITE_BEGIN)
 static int
 afs_linux_write_end(struct file *file, struct address_space *mapping,
                                 loff_t pos, unsigned len, unsigned copied,
                                 struct page *page, void *fsdata)
 {
     int code;
-    unsigned from = pos & (PAGE_CACHE_SIZE - 1);
+    unsigned int from = pos & (PAGE_CACHE_SIZE - 1);
 
-    code = afs_linux_writepage_sync(file->f_dentry->d_inode, page,
-                                    from, copied);
+    code = afs_linux_commit_write(file, page, from, from + len);
+
     unlock_page(page);
     page_cache_release(page);
     return code;
@@ -2270,10 +2305,19 @@ afs_linux_write_begin(struct file *file, struct address_space *mapping,
 {
     struct page *page;
     pgoff_t index = pos >> PAGE_CACHE_SHIFT;
+    unsigned int from = pos & (PAGE_CACHE_SIZE - 1);
+    int code;
+
     page = grab_cache_page_write_begin(mapping, index, flags);
     *pagep = page;
 
-    return 0;
+    code = afs_linux_prepare_write(file, page, from, from + len);
+    if (code) {
+	unlock_page(page);
+	page_cache_release(page);
+    }
+
+    return code;
 }
 #endif
 
