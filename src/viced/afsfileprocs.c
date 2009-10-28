@@ -427,9 +427,6 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
     if (thost->hostFlags & HERRORTRANS)
 	translate = 1;
     h_ReleaseClient_r(tclient);
-    held = h_Held_r(thost);
-    if (held)
-	h_Release_r(thost);
     if (ahost && ahost != thost) {
 	char hoststr[16], hoststr2[16];	
 	ViceLog(0, ("CallPostamble: ahost %s:%d (%x) != thost %s:%d (%x)\n",
@@ -444,6 +441,9 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 		afs_inet_ntoa_r(thost->host, hoststr), ntohs(thost->port),
 		thost));
     }
+    held = h_Held_r(thost);
+    if (held)
+	h_Release_r(thost);
  busyout:
     H_UNLOCK;
     return (translate ? sys_error_to_et(ret) : ret);
