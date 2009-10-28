@@ -27,6 +27,9 @@ afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfsmount *afs_cacheMnt;
 extern struct super_block *afs_cacheSBp;
+#if defined(STRUCT_TASK_HAS_CRED)
+extern struct cred *cache_creds;
+#endif
 
 struct file *
 afs_linux_raw_open(afs_dcache_id_t *ainode, ino_t *hint)
@@ -51,7 +54,8 @@ afs_linux_raw_open(afs_dcache_id_t *ainode, ino_t *hint)
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
 #if defined(STRUCT_TASK_HAS_CRED)
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
+    /* Use stashed credentials - prevent selinux/apparmor problems  */
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
 #else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
 #endif
