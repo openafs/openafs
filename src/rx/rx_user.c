@@ -46,6 +46,14 @@
 #define IPPORT_USERRESERVED 5000
 # endif
 
+#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
+#include <linux/types.h>
+#include <linux/errqueue.h>
+#ifndef IP_MTU
+#define IP_MTU 14
+#endif
+#endif
+
 #ifndef AFS_NT40_ENV
 # include <sys/time.h>
 #endif
@@ -101,13 +109,6 @@ rxi_GetHostUDPSocket(u_int ahost, u_short port)
     int recverr=1;
 #else
     int pmtu=IP_PMTUDISC_DONT;
-#endif
-#endif
-#if defined(HAVE_LINUX_ERRQUEUE_H) && defined(ADAPT_PMTU)
-#include <linux/types.h>
-#include <linux/errqueue.h>
-#ifndef IP_MTU
-#define IP_MTU 14
 #endif
 #endif
 
