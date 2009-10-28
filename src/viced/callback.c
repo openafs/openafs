@@ -1568,8 +1568,10 @@ GetSomeSpace_r(struct host *hostp, int locked)
                     h_Release_r(hp);
 		return 0;
 	    }
-	    if (lih_host_held2)
+            if (lih_host_held2) {
                 h_Release_r(hp);
+                hp = NULL;
+            }
 	    hp1 = hp;
 	    hp2 = hostList;
 	} else {

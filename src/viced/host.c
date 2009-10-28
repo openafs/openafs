@@ -815,6 +815,7 @@ h_Lookup_r(afs_uint32 haddr, afs_uint16 hport, struct host **hostp)
 	    if (host->hostFlags & HOSTDELETED) {
 		h_Unlock_r(host);
 		h_Release_r(host);
+		host = NULL;
 		goto restart;
 	    }
 	    h_Unlock_r(host);
@@ -1503,11 +1504,11 @@ h_GetHost_r(struct rx_connection *tcon)
 	if (!(host->hostFlags & ALTADDR)) {
 	    /* Another thread is doing initialization */
 	    h_Unlock_r(host);
-	    h_Release_r(host);
 	    ViceLog(125,
 		    ("Host %" AFS_PTR_FMT " (%s:%d) starting h_Lookup again\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
+	    h_Release_r(host);
 	    goto retry;
 	}
 	host->hostFlags |= HWHO_INPROGRESS;
@@ -1728,11 +1729,11 @@ h_GetHost_r(struct rx_connection *tcon)
 		     ntohs(host->port)));
 	    h_Lock_r(host);
 	    h_Unlock_r(host);
-	    h_Release_r(host);
 	    ViceLog(125,
 		    ("Host %" AFS_PTR_FMT " (%s:%d) starting h_Lookup again\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr),
 		     ntohs(host->port)));
+	    h_Release_r(host);
 	    goto retry;
 	}
 	/* We need to check whether the identity in the host structure

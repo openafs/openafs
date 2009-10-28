@@ -430,10 +430,6 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 	translate = 1;
     h_ReleaseClient_r(tclient);
 
-    /* return the reference taken in local h_FindClient_r--h_ReleaseClient_r
-     * does not decrement refcount on client->host */
-    h_Release_r(thost);
-
     if (ahost) {
 	    if (ahost != thost) {
 		    /* host/client recycle */
@@ -456,6 +452,10 @@ CallPostamble(register struct rx_connection *aconn, afs_int32 ret,
 			ntohs(thost->port),
 			thost));
     }
+
+    /* return the reference taken in local h_FindClient_r--h_ReleaseClient_r
+     * does not decrement refcount on client->host */
+    h_Release_r(thost);
 
  busyout:
     H_UNLOCK;
