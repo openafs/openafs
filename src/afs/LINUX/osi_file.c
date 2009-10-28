@@ -30,6 +30,9 @@ extern struct osi_dev cacheDev;
 extern struct vfsmount *afs_cacheMnt;
 #endif
 extern struct super_block *afs_cacheSBp;
+#if defined(STRUCT_TASK_HAS_CRED)
+extern struct cred *cache_creds;
+#endif
 
 #if defined(AFS_LINUX26_ENV) 
 void *
@@ -77,7 +80,8 @@ osi_UFSOpen(afs_int32 ainode)
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
 
 #if defined(STRUCT_TASK_HAS_CRED)
-    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());
+    /* Use stashed credentials - prevent selinux/apparmor problems  */
+    filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, cache_creds);
 #else
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR);
 #endif
