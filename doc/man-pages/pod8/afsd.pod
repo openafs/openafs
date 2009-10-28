@@ -440,9 +440,10 @@ F</usr/vice/etc/cacheinfo> file.
 =item B<-chunksize> <I<chunk size>>
 
 Sets the size of each cache chunk. The integer provided, which must be
-from the range C<0> to C<30>, is used as an exponent on the number 2. It
-overrides the default of 16 for a disk cache (2^16 is 64 KB) and 13 for a
-memory cache (2^13 is 8 KB). A value of C<0> or less, or greater than
+from the range C<0> to C<30>, is used as an exponent on the number 2. If not
+supplied, a default chunksize will be determined based on the cache type and
+cache size, and will range from C<13> (8KB) for memory cache and C<18> to
+C<20> (256 KB to 1MB) for disk cache. A value of C<0> or less, or greater than
 C<30>, sets chunk size to the appropriate default. Values less than C<10>
 (which sets chunk size to a 1 KB) are not recommended.  Combining this
 argument with the B<-dcache> argument is not recommended because it
@@ -665,8 +666,9 @@ and 25% to read-only.
 =item B<-stat> <I<number of stat entries>>
 
 Specifies the number of entries to allocate in the machine's memory for
-recording status information about the AFS files in the cache. This value
-overrides the default of C<300>.
+recording status information about the AFS files in the cache. If this value
+is not specified, the number of stat entires will be autotuned based on the
+size of the disk cache.
 
 =item B<-verbose>
 
@@ -676,7 +678,7 @@ standard output stream.
 =item B<-volumes> <I<number of volume entries>>
 
 Specifies the number of memory structures to allocate for storing volume
-location information. The default value is C<50>.
+location information. The default value is C<200>.
 
 =item B<-disable-dynamic-vcaches>
 
