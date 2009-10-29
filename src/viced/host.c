@@ -1005,14 +1005,16 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
 	ViceLog(0, ("Failed malloc in h_Enumerate (flags)\n"));
 	assert(0);
     }
-    for (count = 0, host = hostList; host; host = host->next, count++) {
+    for (count = 0, host = hostList; host && count < hostCount; host = host->next, count++) {
 	list[count] = host;
 	h_Hold_r(host);
     }
     if (count != hostCount) {
 	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", count, hostCount));
+    } else if (host != NULL) {
+	ViceLog(0, ("h_Enumerate found more than %d hosts\n", hostCount));
+	assert(0);
     }
-    assert(count <= hostCount);
     H_UNLOCK;
     for (i = 0; i < count; i++) {
 	flags[i] = (*proc) (list[i], flags[i], param);
