@@ -39,9 +39,9 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     AFS_STATCNT(afs_setgroups);
 
-    old_info = (*cr)->cr_group_info;
+    old_info = cr_group_info(*cr);
     get_group_info(group_info);
-    (*cr)->cr_group_info = group_info;
+    set_cr_group_info(*cr, group_info);
     put_group_info(old_info);
 
     crset(*cr);
@@ -65,8 +65,8 @@ afs_getgroups(cred_t * cr)
 {
     AFS_STATCNT(afs_getgroups);
 
-    get_group_info(cr->cr_group_info);
-    return cr->cr_group_info;
+    get_group_info(cr_group_info(cr));
+    return cr_group_info(cr);
 }
 
 int
@@ -209,7 +209,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
     code = __setpag(cr, pagvalue, newpag, change_parent);
 
 #ifdef LINUX_KEYRING_SUPPORT
-    if (code == 0 && (*cr)->cr_rgid != NFSXLATOR_CRED) {
+    if (code == 0 && cr_rgid(*cr) != NFSXLATOR_CRED) {
 	(void) install_session_keyring(NULL);
 
 	if (current_session_keyring()) {

@@ -455,11 +455,11 @@ afs_InitReq(register struct vrequest *av, afs_ucred_t *acred)
 	if (acred == NOCRED)
 	    av->uid = -2;	/* XXX nobody... ? */
 	else
-	    av->uid = acred->cr_uid;	/* bsd creds don't have ruid */
+	    av->uid = cr_uid(acred);	/* bsd creds don't have ruid */
 #elif defined(AFS_SUN510_ENV)
         av->uid = crgetruid(acred);
 #else
-	av->uid = acred->cr_ruid;	/* default when no pag is set */
+	av->uid = cr_uid(acred);	/* default when no pag is set */
 #endif
     }
     return 0;
@@ -571,7 +571,7 @@ PagInCred(afs_ucred_t *cred)
 	return NOPAG;
     }
 #elif defined(AFS_LINUX26_ENV)
-    if (cred->cr_group_info->ngroups < NUMPAGGROUPS) {
+    if (cr_group_info(cred)->ngroups < NUMPAGGROUPS) {
 	pag = NOPAG;
 	goto out;
     }
@@ -590,8 +590,8 @@ PagInCred(afs_ucred_t *cred)
     g1 = cred->cr_groupset.gs_union.un_groups[1];
 #elif defined(AFS_LINUX26_ONEGROUP_ENV)
 #elif defined(AFS_LINUX26_ENV)
-    g0 = GROUP_AT(cred->cr_group_info, 0);
-    g1 = GROUP_AT(cred->cr_group_info, 1);
+    g0 = GROUP_AT(cr_group_info(cred), 0);
+    g1 = GROUP_AT(cr_group_info(cred), 1);
 #elif defined(AFS_SUN510_ENV)
     g0 = gids[0];
     g1 = gids[1];
@@ -601,7 +601,7 @@ PagInCred(afs_ucred_t *cred)
 #endif
 #endif
 #if defined(AFS_LINUX26_ONEGROUP_ENV)
-    pag = (afs_int32) afs_get_pag_from_groups(cred->cr_group_info);
+    pag = (afs_int32) afs_get_pag_from_groups(cr_group_info(cred));
 #else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
 #endif
@@ -609,7 +609,7 @@ PagInCred(afs_ucred_t *cred)
 out:
 #endif
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
-    if (pag == NOPAG && cred->cr_rgid != NFSXLATOR_CRED) {
+    if (pag == NOPAG && cr_rgid(cred) != NFSXLATOR_CRED) {
 	struct key *key;
 	afs_uint32 upag, newpag;
 

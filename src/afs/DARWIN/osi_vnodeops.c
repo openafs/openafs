@@ -1423,7 +1423,7 @@ afs_vop_rename(ap)
 	 * run mv as the user, thus:
 	 */
 	printf("su %d -c /bin/mv /afs/.:mount/%d:%d:%d:%d/%s /afs/.:mount/%d:%d:%d:%d/%s\n",
-	       (cn_cred(tcnp))->cr_uid, fvc->f.fid.Cell, fvc->f.fid.Fid.Volume,
+	       cr_uid(cn_cred(tcnp)), fvc->f.fid.Cell, fvc->f.fid.Fid.Volume,
 	       fvc->f.fid.Fid.Vnode, fvc->f.fid.Fid.Unique, fname, 
 	       tvc->f.fid.Cell, tvc->f.fid.Fid.Volume, tvc->f.fid.Fid.Vnode, 
 	       tvc->f.fid.Fid.Unique, tname);

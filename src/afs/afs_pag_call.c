@@ -425,7 +425,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     /* Set up credentials */
     memset(&ccred, 0, sizeof(ccred));
     pag = PagInCred(credp);
-    ccred.uid = credp->cr_uid;
+    ccred.uid = cr_uid(credp);
     if (pag != NOPAG) {
 	 afs_get_groups_from_pag(pag, &g0, &g1);
 	 ccred.group0 = g0;

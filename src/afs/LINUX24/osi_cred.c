@@ -52,10 +52,10 @@ crdup(cred_t * cr)
 {
     cred_t *tmp = crget();
 
-    tmp->cr_uid = cr->cr_uid;
-    tmp->cr_ruid = cr->cr_ruid;
-    tmp->cr_gid = cr->cr_gid;
-    tmp->cr_rgid = cr->cr_rgid;
+    set_cr_uid(tmp, cr_uid(cr));
+    set_cr_ruid(tmp, cr_ruid(cr));
+    set_cr_gid(tmp, cr_gid(cr));
+    set_cr_rgid(tmp, cr_rgid(cr));
 
     memcpy(tmp->cr_groups, cr->cr_groups, NGROUPS * sizeof(gid_t));
     tmp->cr_ngroups = cr->cr_ngroups;
@@ -68,10 +68,10 @@ crref(void)
 {
     cred_t *cr = crget();
 
-    cr->cr_uid = current_fsuid();
-    cr->cr_ruid = current_uid();
-    cr->cr_gid = current_fsgid();
-    cr->cr_rgid = current_gid();
+    set_cr_uid(cr, current_fsuid());
+    set_cr_ruid(cr, current_uid());
+    set_cr_gid(cr, current_fsgid());
+    set_cr_rgid(cr, current_gid());
 
     memcpy(cr->cr_groups, current->groups, NGROUPS * sizeof(gid_t));
     cr->cr_ngroups = current->ngroups;
@@ -94,15 +94,15 @@ crset(cred_t * cr)
     if (current->cred != current->real_cred)
         return;
     new_creds = prepare_creds();
-    new_creds->fsuid = cr->cr_uid;
-    new_creds->uid = cr->cr_ruid;
-    new_creds->fsgid = cr->cr_gid;
-    new_creds->gid = cr->cr_rgid;
+    new_creds->fsuid = cr_uid(cr);
+    new_creds->uid = cr_ruid(cr);
+    new_creds->fsgid = cr_gid(cr);
+    new_creds->gid = cr_rgid(cr);
 #else
-    current->fsuid = cr->cr_uid;
-    current->uid = cr->cr_ruid;
-    current->fsgid = cr->cr_gid;
-    current->gid = cr->cr_rgid;
+    current->fsuid = cr_uid(cr);
+    current->uid = cr_ruid(cr);
+    current->fsgid = cr_gid(cr);
+    current->gid = cr_rgid(cr);
 #endif
     memcpy(current->groups, cr->cr_groups, NGROUPS * sizeof(gid_t));
     current->ngroups = cr->cr_ngroups;

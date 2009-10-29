@@ -99,7 +99,7 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = osi_Time();
     InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
-    InStatus.Group = (afs_int32) acred->cr_gid;
+    InStatus.Group = (afs_int32) cr_gid(acred);
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock, 153);
 

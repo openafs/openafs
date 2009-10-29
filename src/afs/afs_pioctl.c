@@ -3237,9 +3237,9 @@ DECL_PIOCTL(PSetSysName)
 	ain += t + 1;
 	num = count;
     }
-    if ((*acred)->cr_gid == RMTUSER_REQ ||
-	(*acred)->cr_gid == RMTUSER_REQ_PRIV) {	/* Handles all exporters */
-	if (allpags && (*acred)->cr_gid != RMTUSER_REQ_PRIV) {
+    if (cr_gid(*acred) == RMTUSER_REQ ||
+	cr_gid(*acred) == RMTUSER_REQ_PRIV) {	/* Handles all exporters */
+	if (allpags && cr_gid(*acred) != RMTUSER_REQ_PRIV) {
 	    return EPERM;
 	}
 	pag = PagInCred(*acred);
@@ -3977,21 +3977,21 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 #ifdef	AFS_AIX41_ENV
     setuerror(0);
 #endif
-    newcred->cr_gid = isroot ? RMTUSER_REQ_PRIV : RMTUSER_REQ;
+    set_cr_gid(newcred, isroot ? RMTUSER_REQ_PRIV : RMTUSER_REQ);
 #ifdef AFS_AIX51_ENV
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
 #ifdef AFS_LINUX26_ONEGROUP_ENV
-    newcred->cr_group_info = groups_alloc(1); /* not that anything sets this */
+    set_cr_group_info(newcred, groups_alloc(1)); /* not that anything sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
     h = ((g0-0x3f00) >> 14);
     h = ((g1-0x3f00) >> 14) + h + h + h;
-    GROUP_AT(newcred->cr_group_info, 0) = ((h << 28) | l);
+    GROUP_AT(cr_group_info(newcred), 0) = ((h << 28) | l);
 #else
-    newcred->cr_group_info = groups_alloc(2);
-    GROUP_AT(newcred->cr_group_info, 0) = g0;
-    GROUP_AT(newcred->cr_group_info, 1) = g1;
+    set_cr_group_info(newcred, groups_alloc(2));
+    GROUP_AT(cr_group_info(newcred), 0) = g0;
+    GROUP_AT(cr_group_info(newcred), 1) = g1;
 #endif
 #else
     newcred->cr_groups[0] = g0;
@@ -4013,15 +4013,15 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	return EINVAL;
     }
     if (exporter->exp_states & EXP_PWSYNC) {
-	if (uid != credp->cr_uid) {
+	if (uid != cr_uid(credp)) {
 	    crfree(newcred);
 	    return ENOEXEC;	/* XXX Find a better errno XXX */
 	}
     }
-    newcred->cr_uid = uid;	/* Only temporary  */
+    set_cr_uid(newcred, uid);	/* Only temporary  */
     code = EXP_REQHANDLER(exporter, &newcred, hostaddr, &pag, &outexporter);
     /* The client's pag is the only unique identifier for it */
-    newcred->cr_uid = pag;
+    set_cr_uid(newcred, pag);
     *acred = newcred;
     if (!code && *com == PSETPAG) {
 	/* Special case for 'setpag' */
@@ -4709,7 +4709,7 @@ DECL_PIOCTL(PNFSNukeCreds)
 	return EINVAL;
     memcpy(&addr, ain, sizeof(afs_int32));
 
-    if ((*acred)->cr_gid == RMTUSER_REQ_PRIV && !addr) {
+    if (cr_gid(*acred) == RMTUSER_REQ_PRIV && !addr) {
 	tu = afs_GetUser(areq->uid, -1, SHARED_LOCK);
 	if (!tu->exporter || !(addr = EXP_GETHOST(tu->exporter))) {
 	    afs_PutUser(tu, SHARED_LOCK);

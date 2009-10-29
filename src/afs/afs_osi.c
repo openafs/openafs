@@ -115,7 +115,7 @@ osi_Init(void)
 #else
 	memset(&afs_osi_cred, 0, sizeof(afs_ucred_t));
 #if defined(AFS_LINUX26_ENV)
-        afs_osi_cred.cr_group_info = groups_alloc(0);
+        set_cr_group_info(&afs_osi_cred, groups_alloc(0));
 #endif
 #if defined(AFS_DARWIN80_ENV)
         afs_osi_cred.cr_ref = 1; /* kauth_cred_get_ref needs 1 existing ref */

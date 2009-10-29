@@ -99,7 +99,7 @@ int afspag_PUnlog(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 	return EIO;		/* Inappropriate ioctl for device */
 
     pag = PagInCred(*acred);
-    uid = (pag == NOPAG) ? (*acred)->cr_uid : pag;
+    uid = (pag == NOPAG) ? cr_uid(*acred) : pag;
     i = UHash(uid);
     ObtainWriteLock(&afs_xuser, 823);
     for (tu = afs_users[i]; tu; tu = tu->next) {
@@ -187,7 +187,7 @@ int afspag_PSetTokens(char *ain, afs_int32 ainSize, afs_ucred_t **acred)
 #endif
     }
     pag = PagInCred(*acred);
-    uid = (pag == NOPAG) ? (*acred)->cr_uid : pag;
+    uid = (pag == NOPAG) ? cr_uid(*acred) : pag;
     /* now we just set the tokens */
     tu = afs_GetUser(uid, tcell->cellnum, WRITE_LOCK);
     if (!tu->cellinfo)

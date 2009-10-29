@@ -424,7 +424,7 @@ afs_osi_proc2cred(afs_proc_t * pr)
     }
     pcred = proc_ucred(pr);
     cr.cr_ref = 1;
-    cr.cr_uid = pcred->cr_uid;
+    set_cr_uid(&cr, cr_uid(pcred));
     cr.cr_ngroups = pcred->cr_ngroups;
     memcpy(cr.cr_groups, pcred->cr_groups,
            NGROUPS * sizeof(gid_t));
@@ -445,7 +445,7 @@ afs_osi_proc2cred(afs_proc_t * pr)
 	|| (pr->p_stat == SSTOP)) {
 	pcred_readlock(pr);
 	cr.cr_ref = 1;
-	cr.cr_uid = pr->p_cred->pc_ucred->cr_uid;
+	set_cr_uid(&cr, cr_uid(pr->p_cred->pc_ucred));
 	cr.cr_ngroups = pr->p_cred->pc_ucred->cr_ngroups;
 	memcpy(cr.cr_groups, pr->p_cred->pc_ucred->cr_groups,
 	       NGROUPS * sizeof(gid_t));
@@ -471,14 +471,14 @@ afs_osi_proc2cred(afs_proc_t * pr)
 	|| (pr->state == TASK_UNINTERRUPTIBLE)
 	|| (pr->state == TASK_STOPPED)) {
 	cr.cr_ref = 1;
-	cr.cr_uid = task_uid(pr);
+	set_cr_uid(&cr, task_uid(pr));
 #if defined(AFS_LINUX26_ENV)
 #if defined(STRUCT_TASK_HAS_CRED)
 	get_group_info(pr->cred->group_info);
-	cr.cr_group_info = pr->cred->group_info;
+	set_cr_group_info(&cr, pr->cred->group_info);
 #else
 	get_group_info(pr->group_info);
-	cr.cr_group_info = pr->group_info;
+	set_cr_group_info(&cr, pr->group_info);
 #endif
 #else
 	cr.cr_ngroups = pr->ngroups;

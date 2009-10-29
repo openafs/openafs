@@ -42,7 +42,7 @@ crfree(cred_t * cr)
 	return;
     }
 
-    put_group_info(cr->cr_group_info);
+    put_group_info(cr_group_info(cr));
 
     kfree(cr);
 }
@@ -54,13 +54,13 @@ crdup(cred_t * cr)
 {
     cred_t *tmp = crget();
 
-    tmp->cr_uid = cr->cr_uid;
-    tmp->cr_ruid = cr->cr_ruid;
-    tmp->cr_gid = cr->cr_gid;
-    tmp->cr_rgid = cr->cr_rgid;
+    set_cr_uid(tmp, cr_uid(cr));
+    set_cr_ruid(tmp, cr_ruid(cr));
+    set_cr_gid(tmp, cr_gid(cr));
+    set_cr_rgid(tmp, cr_rgid(cr));
 
-    get_group_info(cr->cr_group_info);
-    tmp->cr_group_info = cr->cr_group_info;
+    get_group_info(cr_group_info(cr));
+    set_cr_group_info(tmp, cr_group_info(cr));
 
     return tmp;
 }
@@ -70,14 +70,14 @@ crref(void)
 {
     cred_t *cr = crget();
 
-    cr->cr_uid = current_fsuid();
-    cr->cr_ruid = current_uid();
-    cr->cr_gid = current_fsgid();
-    cr->cr_rgid = current_gid();
+    set_cr_uid(cr, current_fsuid());
+    set_cr_ruid(cr, current_uid());
+    set_cr_gid(cr, current_fsgid());
+    set_cr_rgid(cr, current_gid());
 
     task_lock(current);
     get_group_info(current_group_info());
-    cr->cr_group_info = current_group_info();
+    set_cr_group_info(cr, current_group_info());
     task_unlock(current);
 
     return cr;
@@ -98,28 +98,28 @@ crset(cred_t * cr)
     if (current->cred != current->real_cred)
         return;
     new_creds = prepare_creds();
-    new_creds->fsuid = cr->cr_uid;
-    new_creds->uid = cr->cr_ruid;
-    new_creds->fsgid = cr->cr_gid;
-    new_creds->gid = cr->cr_rgid;
+    new_creds->fsuid = cr_uid(cr);
+    new_creds->uid = cr_ruid(cr);
+    new_creds->fsgid = cr_gid(cr);
+    new_creds->gid = cr_rgid(cr);
 #else
-    current->fsuid = cr->cr_uid;
-    current->uid = cr->cr_ruid;
-    current->fsgid = cr->cr_gid;
-    current->gid = cr->cr_rgid;
+    current->fsuid = cr_uid(cr);
+    current->uid = cr_ruid(cr);
+    current->fsgid = cr_gid(cr);
+    current->gid = cr_rgid(cr);
 #endif
 
     /* using set_current_groups() will sort the groups */
-    get_group_info(cr->cr_group_info);
+    get_group_info(cr_group_info(cr));
 
     task_lock(current);
 #if defined(STRUCT_TASK_HAS_CRED)
     old_info = current->cred->group_info;
-    new_creds->group_info = cr->cr_group_info;
+    new_creds->group_info = cr_group_info(cr);
     commit_creds(new_creds);
 #else
     old_info = current->group_info;
-    current->group_info = cr->cr_group_info;
+    current->group_info = cr_group_info(cr);
 #endif
     task_unlock(current);
 
