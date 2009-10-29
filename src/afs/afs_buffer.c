@@ -46,8 +46,14 @@
 #ifndef	BUF_TIME_MAX
 #define	BUF_TIME_MAX	0x7fffffff
 #endif
+#if defined(AFS_USEBUFFERS)
 /* number of pages per Unix buffer, when we're using Unix buffer pool */
-#define	NPB 4
+#define NPB 4
+#else
+#define NPB 8			/* must be a pwer of 2 */
+#endif
+static int afs_max_buffers;	/* should be an integral multiple of NPB */
+
 /* page size */
 #define AFS_BUFFER_PAGESIZE 2048
 /* log page size */
@@ -117,28 +123,30 @@ DInit(int abuffers)
     if (dinit_flag)
 	return;
     dinit_flag = 1;
-#if defined(AFS_USEBUFFERS)
     /* round up to next multiple of NPB, since we allocate multiple pages per chunk */
     abuffers = ((abuffers - 1) | (NPB - 1)) + 1;
+#if defined(AFS_USEBUFFERS)
+    afs_max_buffers = abuffers;
+#else
+    afs_max_buffers = abuffers << 2;		/* possibly grow up to 4 times as big */
 #endif
     LOCK_INIT(&afs_bufferLock, "afs_bufferLock");
     Buffers =
-	(struct buffer *)afs_osi_Alloc(abuffers * sizeof(struct buffer));
-#if !defined(AFS_USEBUFFERS)
-    BufferData = (char *)afs_osi_Alloc(abuffers * AFS_BUFFER_PAGESIZE);
-#endif
+	(struct buffer *)afs_osi_Alloc(afs_max_buffers * sizeof(struct buffer));
     timecounter = 1;
     afs_stats_cmperf.bufAlloced = nbuffers = abuffers;
     for (i = 0; i < PHSIZE; i++)
 	phTable[i] = 0;
     for (i = 0; i < abuffers; i++) {
-#if defined(AFS_USEBUFFERS)
 	if ((i & (NPB - 1)) == 0) {
 	    /* time to allocate a fresh buffer */
+#if defined(AFS_USEBUFFERS)
 	    tub = geteblk(AFS_BUFFER_PAGESIZE * NPB);
 	    BufferData = (char *)tub->b_un.b_addr;
-	}
+#else
+	    BufferData = (char *) afs_osi_Alloc(AFS_BUFFER_PAGESIZE * NPB);
 #endif
+	}
 	/* Fill in each buffer with an empty indication. */
 	tb = &Buffers[i];
 	tb->fid = NULLIDX;
@@ -150,10 +158,8 @@ DInit(int abuffers)
 	    tb->bufp = tub;
 	else
 	    tb->bufp = 0;
-	tb->data = &BufferData[AFS_BUFFER_PAGESIZE * (i & (NPB - 1))];
-#else
-	tb->data = &BufferData[AFS_BUFFER_PAGESIZE * i];
 #endif
+	tb->data = &BufferData[AFS_BUFFER_PAGESIZE * (i & (NPB - 1))];
 	tb->hashIndex = 0;
 	tb->dirty = 0;
 	AFS_RWLOCK_INIT(&tb->lock, "buffer lock");
@@ -344,12 +350,31 @@ afs_newslot(struct dcache *adc, afs_int32 apage, register struct buffer *lp)
     }
 
     if (lp == 0) {
-	/* There are no unlocked buffers -- this used to panic, but that
-	 * seems extreme.  To the best of my knowledge, all the callers
-	 * of DRead are prepared to handle a zero return.  Some of them
-	 * just panic directly, but not all of them. */
-	afs_warn("afs: all buffers locked\n");
-	return 0;
+	/* No unlocked buffers. If still possible, allocate a new increment */
+	if (nbuffers + NPB > afs_max_buffers) {
+	    /* There are no unlocked buffers -- this used to panic, but that
+	     * seems extreme.  To the best of my knowledge, all the callers
+	     * of DRead are prepared to handle a zero return.  Some of them
+	     * just panic directly, but not all of them. */
+	    afs_warn("afs: all buffers locked\n");
+	    return 0;
+	}
+
+	BufferData = (char *) afs_osi_Alloc(AFS_BUFFER_PAGESIZE * NPB);
+	for (i = 0; i< NPB; i++) {
+	    /* Fill in each buffer with an empty indication. */
+	    tp = &Buffers[i + nbuffers];
+	    tp->fid = NULLIDX;
+	    afs_reset_inode(&tp->inode);
+	    tp->accesstime = 0;
+	    tp->lockers = 0;
+	    tp->data = &BufferData[AFS_BUFFER_PAGESIZE * i];
+	    tp->hashIndex = 0;
+	    tp->dirty = 0;
+	    AFS_RWLOCK_INIT(&tp->lock, "buffer lock");
+	}
+	lp = &Buffers[nbuffers];
+	nbuffers += NPB;
     }
 
     if (lp->dirty) {
@@ -379,66 +404,53 @@ DRelease(void *loc, int flag)
      * modified by the locker. */
     register struct buffer *bp = (struct buffer *)loc;
     register int index;
-#if defined(AFS_USEBUFFERS)
     register struct buffer *tp;
-#endif
 
     AFS_STATCNT(DRelease);
     if (!bp)
 	return;
-#if defined(AFS_USEBUFFERS)
     /* look for buffer by scanning Unix buffers for appropriate address */
+    /* careful: despite the declaration above at this point bp is still simply
+     * an address inside the buffer, not a pointer to the buffer header */
     tp = Buffers;
     for (index = 0; index < nbuffers; index += NPB, tp += NPB) {
-	if ((afs_int32) bp >= (afs_int32) tp->data
-	    && (afs_int32) bp <
-	    (afs_int32) tp->data + AFS_BUFFER_PAGESIZE * NPB) {
+	if ( (char *) bp >= (char *) tp->data &&
+	     (char *) bp < (char *) tp->data + AFS_BUFFER_PAGESIZE * NPB) {
 	    /* we found the right range */
-	    index += ((afs_int32) bp - (afs_int32) tp->data) >> LOGPS;
+	    index += ((char *) bp - (char *) tp->data) >> LOGPS;
 	    break;
 	}
     }
-#else
-    index = (((char *)bp) - ((char *)BufferData)) >> LOGPS;
-#endif
-    bp = &(Buffers[index]);
-    ObtainWriteLock(&bp->lock, 261);
-    bp->lockers--;
+    tp = &(Buffers[index]);
+    MObtainWriteLock(&tp->lock, 261);
+    tp->lockers--;
     if (flag)
-	bp->dirty = 1;
-    ReleaseWriteLock(&bp->lock);
+	tp->dirty = 1;
+    MReleaseWriteLock(&tp->lock);
 }
 
 int
 DVOffset(register void *ap)
 {
     /* Return the byte within a file represented by a buffer pointer. */
-    register struct buffer *bp;
     register int index;
-#if defined(AFS_USEBUFFERS)
     register struct buffer *tp;
-#endif
     AFS_STATCNT(DVOffset);
-    bp = ap;
-#if defined(AFS_USEBUFFERS)
     /* look for buffer by scanning Unix buffers for appropriate address */
+    /* see comment in DRelease about the meaning of ap/bp */
     tp = Buffers;
     for (index = 0; index < nbuffers; index += NPB, tp += NPB) {
-	if ((afs_int32) bp >= (afs_int32) tp->data
-	    && (afs_int32) bp <
-	    (afs_int32) tp->data + AFS_BUFFER_PAGESIZE * NPB) {
+	if ( (char *) ap >= (char *) tp->data &&
+	     (char *) ap < (char *) tp->data + AFS_BUFFER_PAGESIZE * NPB) {
 	    /* we found the right range */
-	    index += ((afs_int32) bp - (afs_int32) tp->data) >> LOGPS;
+	    index += ((char *) ap - (char *) tp->data) >> LOGPS;
 	    break;
 	}
     }
-#else
-    index = (((char *)bp) - ((char *)BufferData)) >> LOGPS;
-#endif
     if (index < 0 || index >= nbuffers)
 	return -1;
-    bp = &(Buffers[index]);
-    return AFS_BUFFER_PAGESIZE * bp->page + (int)(((char *)ap) - bp->data);
+    tp = &(Buffers[index]);
+    return AFS_BUFFER_PAGESIZE * tp->page + (int)(((char *)ap) - tp->data);
 }
 
 /*! 
@@ -577,9 +589,7 @@ DNew(register struct dcache *adc, register int page)
 void
 shutdown_bufferpackage(void)
 {
-#if defined(AFS_USEBUFFERS)
     register struct buffer *tp;
-#endif
     int i;
 
     AFS_STATCNT(shutdown_bufferpackage);
@@ -587,11 +597,9 @@ shutdown_bufferpackage(void)
     DFlush();
     if (afs_cold_shutdown) {
 	dinit_flag = 0;
-#if !defined(AFS_USEBUFFERS)
-	afs_osi_Free(BufferData, nbuffers * AFS_BUFFER_PAGESIZE);
-#else
 	tp = Buffers;
 	for (i = 0; i < nbuffers; i += NPB, tp += NPB) {
+#if defined(AFS_USEBUFFERS)
 	    /* The following check shouldn't be necessary and it will be removed soon */
 	    if (!tp->bufp)
 		afs_warn
@@ -600,8 +608,10 @@ shutdown_bufferpackage(void)
 		brelse(tp->bufp);
 		tp->bufp = 0;
 	    }
-	}
+#else
+	    afs_osi_Free(tp->data, NPB * AFS_BUFFER_PAGESIZE);
 #endif
+	}
 	afs_osi_Free(Buffers, nbuffers * sizeof(struct buffer));
 	nbuffers = 0;
 	timecounter = 1;
