@@ -63,7 +63,8 @@ void afs_DbgListDirEntries(struct VenusFid *afid);
  *
  * \return The found dcache or NULL.
  */
-struct dcache *afs_FindDCacheByFid(struct VenusFid *afid)
+struct dcache *
+afs_FindDCacheByFid(struct VenusFid *afid)
 {
     afs_int32 i, index;
     struct dcache *tdc = NULL;
@@ -99,7 +100,8 @@ struct dcache *afs_FindDCacheByFid(struct VenusFid *afid)
  *
  * \return Mask of operations.
  */
-int afs_GenStoreStatus(struct vcache *avc, struct AFSStoreStatus *astat)
+int
+afs_GenStoreStatus(struct vcache *avc, struct AFSStoreStatus *astat)
 {
     if (!avc || !astat || !avc->f.ddirty_flags)
     	return 0;
@@ -129,10 +131,9 @@ int afs_GenStoreStatus(struct vcache *avc, struct AFSStoreStatus *astat)
  *
  * \param hdata The fid to be filled.
  */
-int get_parent_dir_fid_hook(void *hdata,
-				char *aname,
-				afs_int32 vnode,
-				afs_int32 unique)
+static int
+get_parent_dir_fid_hook(void *hdata, char *aname, afs_int32 vnode,
+			afs_int32 unique)
 {
     struct VenusFid *tfid = (struct VenusFid *) hdata;
 
@@ -154,7 +155,8 @@ int get_parent_dir_fid_hook(void *hdata,
  *
  * \return 0 on success, -1 on failure
  */
-int afs_GetParentDirFid(struct vcache *avc, struct VenusFid *afid)
+int
+afs_GetParentDirFid(struct vcache *avc, struct VenusFid *afid)
 {
     struct dcache *tdc;
 
@@ -203,10 +205,9 @@ struct NameAndFid {
  * \param hdata NameAndFid structure containin a pointer to a fid
  * and an allocate name. The name will be filled when hit.
  */
-int get_vnode_name_hook(void *hdata,
-				char *aname,
-				afs_int32 vnode,
-				afs_int32 unique)
+static int
+get_vnode_name_hook(void *hdata, char *aname, afs_int32 vnode,
+		    afs_int32 unique)
 {
     struct NameAndFid *nf = (struct NameAndFid *) hdata;
 
@@ -232,10 +233,9 @@ int get_vnode_name_hook(void *hdata,
  * \param deleted Has this file been deleted? If yes, use the shadow
  * dir for looking up the name.
  */
-int afs_GetVnodeName(struct vcache *avc,
-			struct VenusFid *afid,
-			char *aname,
-			int deleted)
+int
+afs_GetVnodeName(struct vcache *avc, struct VenusFid *afid, char *aname,
+		 int deleted)
 {
     int code = 0;
     struct dcache *tdc;
@@ -308,10 +308,9 @@ struct DirtyChildrenCount {
 /*!
  * Lookup dirty deleted vnodes in this dir.
  */
-int chk_del_children_hook(void *hdata,
-				char *aname,
-				afs_int32 vnode,
-				afs_int32 unique)
+static int
+chk_del_children_hook(void *hdata, char *aname, afs_int32 vnode,
+		      afs_int32 unique)
 {
     struct VenusFid tfid;
     struct DirtyChildrenCount *v = (struct DirtyChildrenCount *) hdata;
@@ -358,7 +357,8 @@ int chk_del_children_hook(void *hdata,
  *
  * \note afs_DDirtyVCListLock must be write locked.
  */
-int afs_CheckDeletedChildren(struct vcache *avc)
+int
+afs_CheckDeletedChildren(struct vcache *avc)
 {
     struct dcache *tdc;
     struct DirtyChildrenCount dcc;
@@ -389,10 +389,9 @@ int afs_CheckDeletedChildren(struct vcache *avc)
 /*!
  * Changes a file's parent fid references.
  */
-int fix_children_fids_hook(void *hdata,
-				char *aname,
-				afs_int32 vnode,
-				afs_int32 unique)
+static int
+fix_children_fids_hook(void *hdata, char *aname, afs_int32 vnode,
+		       afs_int32 unique)
 {
     struct VenusFid tfid;
     struct VenusFid *afid = (struct VenusFid *) hdata;
@@ -452,7 +451,8 @@ int fix_children_fids_hook(void *hdata,
  * \param old_fid The current dir's fid.
  * \param new_fid The new dir's fid.
  */
-void afs_FixChildrenFids(struct VenusFid *old_fid, struct VenusFid *new_fid)
+void
+afs_FixChildrenFids(struct VenusFid *old_fid, struct VenusFid *new_fid)
 {
     struct dcache *tdc;
 
@@ -465,13 +465,15 @@ void afs_FixChildrenFids(struct VenusFid *old_fid, struct VenusFid *new_fid)
     }
 }
 
-int list_dir_hook(void *hdata, char *aname, afs_int32 vnode, afs_int32 unique)
+static int
+list_dir_hook(void *hdata, char *aname, afs_int32 vnode, afs_int32 unique)
 {
     printf("list_dir_hook: %s v:%u u:%u\n", aname, vnode, unique);
     return 0;
 }
 
-void afs_DbgListDirEntries(struct VenusFid *afid)
+void
+afs_DbgListDirEntries(struct VenusFid *afid)
 {
     struct dcache *tdc;
 
@@ -543,7 +545,8 @@ end:
  * - Get the new name from the current dir.
  * - Old dir fid and new dir fid are collected along the way.
  * */
-int afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
+int
+afs_ProcessOpRename(struct vcache *avc, struct vrequest *areq)
 {
     struct VenusFid old_pdir_fid, new_pdir_fid;
     char *old_name = NULL, *new_name = NULL;
@@ -644,8 +647,9 @@ done:
  * - Handle errors.
  * - Reorder vhash and dcaches in their hashes, using the newly acquired fid.
  */
-int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
-			afs_ucred_t *acred)
+int
+afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
+		    afs_ucred_t *acred)
 {
     char *tname = NULL, *ttargetName = NULL;
     struct AFSStoreStatus InStatus;
@@ -703,7 +707,6 @@ int afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
 	afs_CFileClose(tfile);
 	ReleaseReadLock(&tdc->lock);
 	afs_PutDCache(tdc);
-	printf("Read target name as %s\n",ttargetName);
     }
 	
     /* Set status. */
@@ -901,7 +904,8 @@ end:
  *
  * \note avc must be write locked.
  */
-int afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
+int
+afs_ProcessOpRemove(struct vcache *avc, struct vrequest *areq)
 {
     char *tname = NULL;
     struct AFSFetchStatus OutDirStatus;
@@ -999,7 +1003,8 @@ end:
  *
  * \return 0 for success. On failure, other error codes.
  */
-int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
+int
+afs_SendChanges(struct vcache *avc, struct vrequest *areq)
 {
     struct afs_conn *tc;
     struct AFSStoreStatus sstat;
@@ -1095,7 +1100,8 @@ int afs_SendChanges(struct vcache *avc, struct vrequest *areq)
  * \note For now, it's the request from the PDiscon pioctl.
  *
  */
-int afs_ResyncDisconFiles(struct vrequest *areq, afs_ucred_t *acred)
+int
+afs_ResyncDisconFiles(struct vrequest *areq, afs_ucred_t *acred)
 {
     struct afs_conn *tc;
     struct vcache *tvc;
@@ -1354,7 +1360,8 @@ afs_DisconDiscardAll(afs_ucred_t *acred) {
  *
  * \note Call with afs_DDirtyVCListLock read locked.
  */
-void afs_DbgDisconFiles(void)
+void
+afs_DbgDisconFiles(void)
 {
     struct vcache *tvc;
     struct afs_q *q;
@@ -1389,7 +1396,8 @@ void afs_DbgDisconFiles(void)
  *
  * \note Don't forget to fill in afid with Cell and Volume.
  */
-void afs_GenShadowFid(struct VenusFid *afid)
+void
+afs_GenShadowFid(struct VenusFid *afid)
 {
     afs_uint32 i, index, max_unique = 1;
     struct vcache *tvc = NULL;
@@ -1435,7 +1443,8 @@ void afs_GenShadowFid(struct VenusFid *afid)
  *
  * \note The cell number must be completed somewhere else.
  */
-void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, int lock)
+void
+afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, int lock)
 {
     struct vcache *tvc;
     afs_uint32 max_unique = 0, i;
@@ -1478,9 +1487,10 @@ void afs_GenFakeFid(struct VenusFid *afid, afs_uint32 avtype, int lock)
  *
  * \note Call with avc write locked.
  */
-void afs_GenDisconStatus(struct vcache *adp, struct vcache *avc, 
-			 struct VenusFid *afid, struct vattr *attrs,
-			 struct vrequest *areq, int file_type)
+void
+afs_GenDisconStatus(struct vcache *adp, struct vcache *avc,
+		    struct VenusFid *afid, struct vattr *attrs,
+		    struct vrequest *areq, int file_type)
 {
     memcpy(&avc->f.fid, afid, sizeof(struct VenusFid));
     avc->f.m.Mode = attrs->va_mode;

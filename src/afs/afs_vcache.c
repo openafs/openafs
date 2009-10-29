@@ -3363,7 +3363,8 @@ shutdown_vcache(void)
 	QInit(&afs_vhashTV[i]);
 }
 
-void afs_DisconGiveUpCallbacks(void) {
+void
+afs_DisconGiveUpCallbacks(void) {
     int i;
     struct vcache *tvc;
     int nq=0;
@@ -3395,7 +3396,8 @@ void afs_DisconGiveUpCallbacks(void) {
  * disconnected mode to tidy up during reconnection
  *
  */
-void afs_ClearAllStatdFlag(void) {
+void
+afs_ClearAllStatdFlag(void) {
     int i;
     struct vcache *tvc;
    

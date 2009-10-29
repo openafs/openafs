@@ -3268,7 +3268,8 @@ afs_ObtainDCacheForWriting(struct vcache *avc, afs_size_t filePos,
  * \note The vcache entry must be write locked.
  * \note The dcache entry must be read locked.
  */
-int afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
+int
+afs_MakeShadowDir(struct vcache *avc, struct dcache *adc)
 {
     int i, code, ret_code = 0, written, trans_size;
     struct dcache *new_dc = NULL;
@@ -3387,7 +3388,8 @@ done:
  *
  * \note avc must be write locked.
  */
-void afs_DeleteShadowDir(struct vcache *avc)
+void
+afs_DeleteShadowDir(struct vcache *avc)
 {
     struct dcache *tdc;
     struct VenusFid shadow_fid;
@@ -3419,7 +3421,9 @@ void afs_DeleteShadowDir(struct vcache *avc)
  * \param alen  The new length of the file
  *
  */
-void afs_PopulateDCache(struct vcache *avc, afs_size_t apos, struct vrequest *areq) {
+void 
+afs_PopulateDCache(struct vcache *avc, afs_size_t apos, struct vrequest *areq)
+{
     struct dcache *tdc;
     afs_size_t len, offset;
     afs_int32 start, end;
