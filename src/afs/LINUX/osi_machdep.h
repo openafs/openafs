@@ -153,38 +153,65 @@ static inline long copyinstr(char *from, char *to, int count, int *length) {
 #define NGROUPS NGROUPS_SMALL
 #endif
 
-/* cred struct */
-typedef struct afs_cred {		/* maps to task field: */
-    int cr_ref;
-    uid_t cr_uid;		/* euid */
-    uid_t cr_ruid;		/* uid */
-    gid_t cr_gid;		/* egid */
-    gid_t cr_rgid;		/* gid */
-    struct group_info *cr_group_info;
-} cred_t;
-
-typedef struct afs_cred afs_ucred_t;
 typedef struct task_struct afs_proc_t;
 
-#define cr_group_info(cred) ((cred)->cr_group_info)
+/* Credentials.  For newer kernels we use the kernel structure directly. */
+#if defined(STRUCT_TASK_HAS_CRED)
+
+typedef struct cred afs_ucred_t;
+typedef struct cred cred_t;
+
+#define afs_cr_uid(cred) ((cred)->fsuid)
+#define afs_cr_gid(cred) ((cred)->fsgid)
+#define afs_cr_ruid(cred) ((cred)->uid)
+#define afs_cr_rgid(cred) ((cred)->gid)
+#define afs_cr_group_info(cred) ((cred)->group_info)
+#define crhold(c) (get_cred(c))
 static inline void
-set_cr_group_info(afs_ucred_t *cred, struct group_info *group_info) {
-    cred->cr_group_info = group_info;
+afs_set_cr_uid(cred_t *cred, uid_t uid) {
+    cred->fsuid = uid;
+}
+static inline void
+afs_set_cr_gid(cred_t *cred, gid_t gid) {
+    cred->fsgid = gid;
+}
+static inline void
+afs_set_cr_ruid(cred_t *cred, uid_t uid) {
+    cred->uid = uid;
+}
+static inline void
+afs_set_cr_rgid(cred_t *cred, gid_t gid) {
+    cred->gid = gid;
+}
+static inline void
+afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
+    cred->group_info = group_info;
 }
 
-#if !defined(current_cred)
-#define current_gid() (current->gid)
-#define current_uid() (current->uid)
-#define current_fsgid() (current->fsgid)
-#define current_fsuid() (current->fsuid)
-#endif
-#if defined(STRUCT_TASK_HAS_CRED)
 #define current_group_info() (current->cred->group_info)
 #define task_gid(task) (task->cred->gid)
 #define task_user(task) (task->cred->user)
 #define task_session_keyring(task) (task->cred->tgcred->session_keyring)
 #define current_session_keyring() (current->cred->tgcred->session_keyring)
+
 #else
+
+typedef struct afs_cred {
+    int cr_ref;
+    uid_t cr_uid;
+    uid_t cr_ruid;
+    gid_t cr_gid;
+    gid_t cr_rgid;
+    struct group_info *cr_group_info;
+} cred_t;
+
+typedef struct afs_cred afs_ucred_t;
+#define afs_cr_group_info(cred) ((cred)->cr_group_info)
+static inline void
+afs_set_cr_group_info(cred_t *cred, struct group_info *group_info) {
+    cred->cr_group_info = group_info;
+}
+
 #define current_group_info() (current->group_info)
 #if !defined(task_gid)
 #define task_gid(task) (task->gid)
@@ -195,8 +222,16 @@ set_cr_group_info(afs_ucred_t *cred, struct group_info *group_info) {
 #define task_user(task) (task->user)
 #define task_session_keyring(task) (task->signal->session_keyring)
 #define current_session_keyring() (current->signal->session_keyring)
-#endif
 #define crhold(c) (c)->cr_ref++
+
+#endif /* defined(STRUCT_TASK_HAS_CRED) */
+
+#if !defined(current_cred)
+#define current_gid() (current->gid)
+#define current_uid() (current->uid)
+#define current_fsgid() (current->fsgid)
+#define current_fsuid() (current->fsuid)
+#endif
 
 /* UIO manipulation */
 typedef enum { AFS_UIOSYS, AFS_UIOUSER } uio_seg_t;

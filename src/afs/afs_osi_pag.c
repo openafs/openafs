@@ -571,7 +571,7 @@ PagInCred(afs_ucred_t *cred)
 	return NOPAG;
     }
 #elif defined(AFS_LINUX26_ENV)
-    if (cr_group_info(cred)->ngroups < NUMPAGGROUPS) {
+    if (afs_cr_group_info(cred)->ngroups < NUMPAGGROUPS) {
 	pag = NOPAG;
 	goto out;
     }
@@ -590,8 +590,8 @@ PagInCred(afs_ucred_t *cred)
     g1 = cred->cr_groupset.gs_union.un_groups[1];
 #elif defined(AFS_LINUX26_ONEGROUP_ENV)
 #elif defined(AFS_LINUX26_ENV)
-    g0 = GROUP_AT(cr_group_info(cred), 0);
-    g1 = GROUP_AT(cr_group_info(cred), 1);
+    g0 = GROUP_AT(afs_cr_group_info(cred), 0);
+    g1 = GROUP_AT(afs_cr_group_info(cred), 1);
 #elif defined(AFS_SUN510_ENV)
     g0 = gids[0];
     g1 = gids[1];
@@ -601,7 +601,7 @@ PagInCred(afs_ucred_t *cred)
 #endif
 #endif
 #if defined(AFS_LINUX26_ONEGROUP_ENV)
-    pag = (afs_int32) afs_get_pag_from_groups(cr_group_info(cred));
+    pag = (afs_int32) afs_get_pag_from_groups(afs_cr_group_info(cred));
 #else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
 #endif

@@ -39,9 +39,9 @@ afs_setgroups(cred_t **cr, struct group_info *group_info, int change_parent)
 
     AFS_STATCNT(afs_setgroups);
 
-    old_info = cr_group_info(*cr);
+    old_info = afs_cr_group_info(*cr);
     get_group_info(group_info);
-    set_cr_group_info(*cr, group_info);
+    afs_set_cr_group_info(*cr, group_info);
     put_group_info(old_info);
 
     crset(*cr);
@@ -65,8 +65,8 @@ afs_getgroups(cred_t * cr)
 {
     AFS_STATCNT(afs_getgroups);
 
-    get_group_info(cr_group_info(cr));
-    return cr_group_info(cr);
+    get_group_info(afs_cr_group_info(cr));
+    return afs_cr_group_info(cr);
 }
 
 int
