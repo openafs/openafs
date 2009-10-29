@@ -163,7 +163,6 @@ typedef struct afs_cred {		/* maps to task field: */
     gid_t cr_rgid;		/* gid */
     gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
     int cr_ngroups;
-    struct afs_cred *cr_next;
 } cred_t;
 
 typedef struct afs_cred afs_ucred_t;

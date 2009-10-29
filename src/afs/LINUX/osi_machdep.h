@@ -165,7 +165,6 @@ typedef struct afs_cred {		/* maps to task field: */
     gid_t cr_gid;		/* egid */
     gid_t cr_rgid;		/* gid */
     struct group_info *cr_group_info;
-    struct afs_cred *cr_next;
 } cred_t;
 
 typedef struct afs_cred afs_ucred_t;
