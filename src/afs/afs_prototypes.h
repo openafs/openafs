@@ -116,6 +116,7 @@ extern int afs_icl_Event0(register struct afs_icl_set *setp,
 extern void afs_icl_AppendRecord(register struct afs_icl_log *logp,
 				 afs_int32 op, afs_int32 types, long p1,
 				 long p2, long p3, long p4);
+extern void shutdown_icl(void);
 
 extern int afs_CheckInit(void);
 extern void afs_shutdown(void);

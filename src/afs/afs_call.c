@@ -1975,6 +1975,20 @@ afs_shutdown(void)
     shutdown_bufferpackage();
     shutdown_cache();
     shutdown_osi();
+    /*
+     * Close file only after daemons which can write to it are stopped.
+     * Need to close before the osinet shutdown to avoid failing check
+     * for dangling memory allocations.
+     */
+    if (afs_cacheInodep) {	/* memcache won't set this */
+	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
+	afs_cacheInodep = 0;
+    }
+    /*
+     * Shutdown the ICL logs - needed to free allocated memory space and avoid
+     * warnings from shutdown_osinet
+     */
+    shutdown_icl();
     shutdown_osinet();
     shutdown_osifile();
     shutdown_vnodeops();
@@ -1991,12 +2005,6 @@ afs_shutdown(void)
     memset(&afs_stats_cmfullperf, 0, sizeof(struct afs_stats_CMFullPerf));
 */
     afs_warn(" ALL allocated tables\n");
-
-    /* Close file only after daemons which can write to it are stopped. */
-    if (afs_cacheInodep) {	/* memcache won't set this */
-	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
-	afs_cacheInodep = 0;
-    }
 
     afs_shuttingdown = 0;
 
@@ -3216,7 +3224,7 @@ afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     if (flags & ICL_CRSET_FLAG_PERSISTENT)
 	states |= ICL_SETF_PERSISTENT;
 
-    setp = (struct afs_icl_set *)afs_osi_Alloc(sizeof(struct afs_icl_set));
+    setp = (struct afs_icl_set *)osi_AllocSmallSpace(sizeof(struct afs_icl_set));
     memset((caddr_t) setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)
@@ -3520,4 +3528,32 @@ afs_icl_SetSetStat(struct afs_icl_set *setp, int op)
     }
     ReleaseWriteLock(&setp->lock);
     return code;
+}
+
+/* Function called at shutdown - zap everything */
+void
+shutdown_icl(void)
+{
+    struct afs_icl_log *logp;
+    struct afs_icl_set *setp;
+
+    setp = afs_icl_FindSet("cm");
+    if (setp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_SetFree(setp);
+	afs_icl_SetFree(setp);
+    }
+    setp = afs_icl_FindSet("cmlongterm");
+    if (setp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_SetFree(setp);
+	afs_icl_SetFree(setp);
+    }
+    logp = afs_icl_FindLog("cmfx");
+    if (logp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_LogFree(logp);
+	afs_icl_LogFree(logp);
+    }
+    return 0;
 }
