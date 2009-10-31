@@ -3011,12 +3011,20 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         /* Do not send Timeout to the SMB redirector.
          * It causes the redirector to drop the connection */
         NTStatus = 0x00000102L; /* Timeout */
-#else
+        /* do not send Retry to the SMB redirector.
+         * It believes the error comes from the transport
+         * layer not from the SMB server. */
         NTStatus = 0xC000022DL;	/* Retry */
+#else
+        NTStatus = 0xC00000B5L;	/* I/O Timeout */
 #endif
     }
     else if (code == CM_ERROR_RETRY) {
+#ifdef COMMENT
         NTStatus = 0xC000022DL;	/* Retry */
+#else
+        NTStatus = 0xC00000B5L; /* I/O Timeout */
+#endif
     }
     else if (code == CM_ERROR_NOACCESS) {
         NTStatus = 0xC0000022L;	/* Access denied */
@@ -3139,7 +3147,11 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
         NTStatus = 0xC0000257L; /* Path Not Covered */
     } 
     else if (code == CM_ERROR_ALLBUSY) {
+#ifdef COMMENT
         NTStatus = 0xC000022DL; /* Retry */
+#else
+        NTStatus = 0xC00000B5L; /* I/O Timeout */
+#endif
     } 
     else if (code == CM_ERROR_ALLOFFLINE || code == CM_ERROR_ALLDOWN) {
         NTStatus = 0xC000003AL; /* Path not found */
