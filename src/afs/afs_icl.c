@@ -57,6 +57,34 @@ afs_icl_Init(void)
     return 0;
 }
 
+/* Function called at shutdown - zap everything */
+int
+shutdown_icl(void)
+{
+    struct afs_icl_log *logp;
+    struct afs_icl_set *setp;
+
+    setp = afs_icl_FindSet("cm");
+    if (setp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_SetFree(setp);
+	afs_icl_SetFree(setp);
+    }
+    setp = afs_icl_FindSet("cmlongterm");
+    if (setp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_SetFree(setp);
+	afs_icl_SetFree(setp);
+    }
+    logp = afs_icl_FindLog("cmfx");
+    if (logp) {
+	/* Release the reference from Find, and the initial one */
+	afs_icl_LogFree(logp);
+	afs_icl_LogFree(logp);
+    }
+    return 0;
+}
+
 int
 afs_icl_InitLogs(void)
 {
@@ -1244,7 +1272,7 @@ afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp,
     if (flags & ICL_CRSET_FLAG_PERSISTENT)
 	states |= ICL_SETF_PERSISTENT;
 
-    setp = (struct afs_icl_set *)afs_osi_Alloc(sizeof(struct afs_icl_set));
+    setp = (struct afs_icl_set *)osi_AllocSmallSpace(sizeof(struct afs_icl_set));
     memset((caddr_t) setp, 0, sizeof(*setp));
     setp->refCount = 1;
     if (states & ICL_SETF_FREED)

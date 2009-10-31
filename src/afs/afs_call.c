@@ -1313,6 +1313,20 @@ afs_shutdown(void)
     shutdown_bufferpackage();
     shutdown_cache();
     shutdown_osi();
+    /*
+     * Close file only after daemons which can write to it are stopped.
+     * Need to close before the osinet shutdown to avoid failing check
+     * for dangling memory allocations.
+     */
+    if (afs_cacheInodep) {	/* memcache won't set this */
+	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
+	afs_cacheInodep = 0;
+    }
+    /*
+     * Shutdown the ICL logs - needed to free allocated memory space and avoid
+     * warnings from shutdown_osinet
+     */
+    shutdown_icl();
     shutdown_osinet();
     shutdown_osifile();
     shutdown_vnodeops();
@@ -1329,12 +1343,6 @@ afs_shutdown(void)
     memset(&afs_stats_cmfullperf, 0, sizeof(struct afs_stats_CMFullPerf));
 */
     afs_warn(" ALL allocated tables\n");
-
-    /* Close file only after daemons which can write to it are stopped. */
-    if (afs_cacheInodep) {	/* memcache won't set this */
-	osi_UFSClose(afs_cacheInodep);	/* Since we always leave it open */
-	afs_cacheInodep = 0;
-    }
 
     afs_shuttingdown = 0;
 

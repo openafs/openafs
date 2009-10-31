@@ -338,6 +338,7 @@ extern int afs_UFSCacheStoreProc(struct rx_call *, struct osi_file *,
 /* afs_icl.c */
 extern struct afs_icl_set *afs_icl_allSets;
 extern int afs_icl_InitLogs(void);
+extern int shutdown_icl(void);
 extern int afs_icl_CreateLog(char *name, afs_int32 logSize,
 			     struct afs_icl_log **outLogpp);
 extern int afs_icl_CreateLogWithFlags(char *name, afs_int32 logSize,
