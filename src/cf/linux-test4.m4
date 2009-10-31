@@ -1102,7 +1102,8 @@ AC_DEFUN([LINUX_HAVE_WRITE_BEGIN_AOP], [
   AC_CACHE_VAL([ac_cv_linux_write_begin], [
     AC_TRY_KBUILD(
 [#include <linux/fs.h>],
-[simple_write_begin(NULL, NULL, 0, 0, 0, NULL, NULL);],
+[struct address_space_operations _aop;
+_aop.write_begin = NULL;],
       ac_cv_linux_write_begin=yes,
       ac_cv_linux_write_begin=no)])
   AC_MSG_RESULT($ac_cv_linux_write_begin)
