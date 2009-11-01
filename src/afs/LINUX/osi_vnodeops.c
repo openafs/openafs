@@ -308,7 +308,9 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 		/* clean up from afs_FindVCache */
 		afs_PutVCache(tvc);
 	    }
+	    AFS_GUNLOCK();
 	    code = (*filldir) (dirbuf, de->name, len, offset, ino, type);
+	    AFS_GLOCK();
 	}
 #else
 	code = (*filldir) (dirbuf, de->name, len, offset, ino);
