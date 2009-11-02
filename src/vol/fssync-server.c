@@ -642,7 +642,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
     Volume * vp;
     Error error;
 #ifdef AFS_DEMAND_ATTACH_FS
-    Volume *nvp;
+    Volume *nvp, *rvp = NULL;
 #endif
 
     if (SYNC_verifyProtocolString(vcom->vop->partName, sizeof(vcom->vop->partName))) {
@@ -727,6 +727,12 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    }
 	}
 
+	/* wait for exclusive ops, so we have an accurate picture of the
+	 * vol attach state */
+	VCreateReservation_r(vp);
+	VWaitExclusiveState_r(vp);
+	rvp = vp;
+
 	/* filter based upon requestor
 	 *
 	 * volume utilities are not allowed to check out volumes
@@ -780,8 +786,34 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
 	/* convert to heavyweight ref */
 	nvp = VGetVolumeByVp_r(&error, vp);
+	VCancelReservation_r(rvp);
+	rvp = NULL;
 
 	if (!nvp) {
+            /*
+             * It's possible for VGetVolumeByVp_r to have dropped and
+             * re-acquired VOL_LOCK, so volume state may have changed
+             * back to one of the states we tested for above. Since
+             * GetVolume can return NULL in some of those states, just
+             * test for the states again here.
+             */
+            switch (V_attachState(vp)) {
+            case VOL_STATE_UNATTACHED:
+            case VOL_STATE_PREATTACHED:
+            case VOL_STATE_SALVAGING:
+            case VOL_STATE_ERROR:
+                /* register the volume operation metadata with the volume
+                 *
+                 * if the volume is currently pre-attached, attach2()
+                 * will evaluate the vol op metadata to determine whether
+                 * attaching the volume would be safe */
+                VRegisterVolOp_r(vp, &info);
+                vp->pending_vol_op->vol_op_state = FSSYNC_VolOpRunningUnknown;
+                goto done;
+            default:
+                break;
+            }
+
 	    Log("FSYNC_com_VolOff: failed to get heavyweight reference to volume %u\n",
 		vcom->vop->volume);
 	    res->hdr.reason = FSYNC_VOL_PKG_ERROR;
@@ -843,12 +875,18 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    vp = NULL;
 	}
     }
-
- done:
-    return code;
+    goto done;
 
  deny:
-    return SYNC_DENIED;
+    code = SYNC_DENIED;
+
+ done:
+#ifdef AFS_DEMAND_ATTACH_FS
+    if (rvp) {
+        VCancelReservation_r(rvp);
+    }
+#endif
+    return code;
 }
 
 /**
