@@ -763,6 +763,7 @@ extern Volume *VAttachVolumeByName(Error * ec, char *partition, char *name,
 extern Volume *VAttachVolumeByName_r(Error * ec, char *partition, char *name,
 				     int mode);
 extern void VShutdown(void);
+extern void VSetTranquil(void);
 extern void VUpdateVolume(Error * ec, Volume * vp);
 extern void VUpdateVolume_r(Error * ec, Volume * vp, int flags);
 extern void VAddToVolumeUpdateList(Error * ec, Volume * vp);

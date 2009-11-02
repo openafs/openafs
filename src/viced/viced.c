@@ -782,6 +782,8 @@ ShutDownAndCore(int dopanic)
      * are returned with an error code of RX_RESTARTING ( transient failure ) */
     rx_SetRxTranquil();		/* dhruba */
 
+    VSetTranquil();
+
 #ifdef AFS_DEMAND_ATTACH_FS
     FS_STATE_WRLOCK;
     fs_state.mode = FS_MODE_SHUTDOWN;

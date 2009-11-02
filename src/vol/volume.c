@@ -157,6 +157,12 @@ int vol_attach_threads = 1;
 
 #ifdef AFS_DEMAND_ATTACH_FS
 pthread_mutex_t vol_salvsync_mutex;
+
+/*
+ * Set this to 1 to disallow SALVSYNC communication in all threads; used
+ * during shutdown, since the salvageserver may have gone away.
+ */
+static volatile sig_atomic_t vol_disallow_salvsync = 0;
 #endif /* AFS_DEMAND_ATTACH_FS */
 
 #ifdef	AFS_OSF_ENV
@@ -899,6 +905,26 @@ VShutdown(void)
     VOL_LOCK;
     VShutdown_r();
     VOL_UNLOCK;
+}
+
+/**
+ * stop new activity (e.g. SALVSYNC) from occurring
+ *
+ * Use this to make the volume package less busy; for example, during
+ * shutdown. This doesn't actually shutdown/detach anything in the
+ * volume package, but prevents certain processes from ocurring. For
+ * example, preventing new SALVSYNC communication in DAFS. In theory, we
+ * could also use this to prevent new volume attachment, or prevent
+ * other programs from checking out volumes, etc.
+ */
+void
+VSetTranquil(void)
+{
+#ifdef AFS_DEMAND_ATTACH_FS
+    /* make sure we don't try to contact the salvageserver, since it may
+     * not be around anymore */
+    vol_disallow_salvsync = 1;
+#endif
 }
 
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -4170,7 +4196,7 @@ VScheduleSalvage_r(Volume * vp)
     if (thread_opts == NULL) {
 	thread_opts = &VThread_defaults;
     }
-    if (thread_opts->disallow_salvsync) {
+    if (thread_opts->disallow_salvsync || vol_disallow_salvsync) {
 	return 1;
     }
 
