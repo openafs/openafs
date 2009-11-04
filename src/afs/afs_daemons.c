@@ -127,6 +127,10 @@ afs_CheckServerDaemon(void)
 
 extern int vfs_context_ref;
 
+/* This function always holds the GLOCK whilst it is running. The caller
+ * gets the GLOCK before invoking it, and afs_osi_Sleep drops the GLOCK
+ * whilst we are sleeping, and regains it when we're woken up.
+ */
 void
 afs_Daemon(void)
 {
@@ -219,7 +223,9 @@ afs_Daemon(void)
             else
                 anumber = VCACHE_FREE + (afs_maxvcount - afs_cacheStats);
 
+	    ObtainWriteLock(&afs_xvcache, 734);
             afs_ShakeLooseVCaches(anumber);
+	    ReleaseWriteLock(&afs_xvcache);
             last5MinCheck = now;
         }
 

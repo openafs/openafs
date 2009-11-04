@@ -634,13 +634,6 @@ afs_ShakeLooseVCaches(afs_int32 anumber)
     struct afs_q *tq, *uq;
     int code, fv_slept;
     afs_int32 target = anumber;
-    int haveGlock = 1;
-
-    /* Should probably deal better */
-    if (!ISAFS_GLOCK()) {
-	haveGlock = 0;
-	AFS_GLOCK();
-    }
 
     if (afsd_dynamic_vcaches || afs_vcount >= afs_maxvcount) {
 	i = 0;
@@ -723,8 +716,6 @@ restart:
 /*
     printf("recycled %d entries\n", target-anumber);
 */
-    if (!haveGlock)
-	AFS_GUNLOCK();
 #endif
     return 0;
 }
