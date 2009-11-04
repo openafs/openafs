@@ -7,6 +7,13 @@ package=openafs-modules-dkms
 version=`dpkg-query -W -f='${Version}' "$package" \
     | sed -e 's/[+-].*//' -e 's/\.dfsg.*//' -e 's/~//g'`
 
+# If someone installed this package without the necessary kernel headers, the
+# postinst will fail.  If they then fix this problem, the postinst will keep
+# failing since the dkms add cannot be run twice.  Try to detect this
+# situation and remove and re-add the module.
+if [ -e "/var/lib/dkms/openafs/$version" ] ; then
+    dkms remove -m openafs -v "$version" --all || true
+fi
 dkms add -m openafs -v "$version"
 if [ "$1" = 'configure' ] ; then
     dkms build -m openafs -v "$version"
