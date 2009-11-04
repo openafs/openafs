@@ -3712,11 +3712,14 @@ VCheckOffline(register Volume * vp)
 	VCloseVolumeHandles_r(vp);
 
 	if (LogLevel) {
-	    Log("VOffline: Volume %u (%s) is now offline", V_id(vp),
-		V_name(vp));
-	    if (V_offlineMessage(vp)[0])
-		Log(" (%s)", V_offlineMessage(vp));
-	    Log("\n");
+	    if (V_offlineMessage(vp)[0]) {
+		Log("VOffline: Volume %lu (%s) is now offline (%s)\n",
+		    afs_printable_uint32_lu(V_id(vp)), V_name(vp),
+		    V_offlineMessage(vp));
+	    } else {
+		Log("VOffline: Volume %lu (%s) is now offline\n",
+		    afs_printable_uint32_lu(V_id(vp)), V_name(vp));
+	    }
 	}
 
 	/* invalidate the volume header cache entry */
