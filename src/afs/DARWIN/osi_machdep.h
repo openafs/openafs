@@ -238,6 +238,24 @@ uio_t afsio_darwin_partialcopy(uio_t auio, int size);
 #define ifaddr_withnet(x) ifa_ifwithnet(x)
 #endif
 
+/* Vnode related macros */
+
+#if defined(AFS_DARWIN80_ENV)
+extern int afs_vfs_typenum;
+# define vType(vc)               vnode_vtype(AFSTOV(vc))
+# define vSetVfsp(vc, vfsp)
+# define vSetType(vc, type)      (vc)->f.m.Type = (type)
+# define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
+# define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)
+#else
+extern int (**afs_vnodeop_p) ();
+# define vType(vc)               AFSTOV(vc)->v_type
+# define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
+# define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
+# define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
+# define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
+#endif
+
 #endif /* KERNEL */
 
 #endif /* _OSI_MACHDEP_H_ */

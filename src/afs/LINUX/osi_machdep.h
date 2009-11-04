@@ -113,14 +113,10 @@ static inline time_t osi_Time(void) {
 #define afs_suser(x) capable(CAP_SYS_ADMIN)
 #define wakeup afs_osi_Wakeup
 
-#undef vType
 #define vType(V) ((AFSTOV((V)))->i_mode & S_IFMT)
-#undef vSetType
 #define vSetType(V, type) AFSTOV((V))->i_mode = ((type) | (AFSTOV((V))->i_mode & ~S_IFMT))	/* preserve mode */
-
-#undef IsAfsVnode
+#define vSetVfsp(V, vfsp)				/* unused */
 #define IsAfsVnode(V) ((V)->i_sb == afs_globalVFS)	/* test superblock instead */
-#undef SetAfsVnode
 #define SetAfsVnode(V)					/* unnecessary */
 
 /* We often need to pretend we're in user space to get memory transfers

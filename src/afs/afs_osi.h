@@ -122,34 +122,17 @@ struct afs_osi_WaitHandle {
 #endif
 
 /*
- * Vnode related macros
+ * Default vnode related macros
+ *
+ * Darwin, all of the BSDs, and Linux have their own
  */
-#if defined(AFS_DARWIN80_ENV)
-#define vType(vc)               vnode_vtype(AFSTOV(vc))
-#define vSetVfsp(vc, vfsp)      
-#define vSetType(vc, type)      (vc)->f.m.Type = (type)
-extern int afs_vfs_typenum;
-#define SetAfsVnode(vn)         /* nothing; done in getnewvnode() */
-#define IsAfsVnode(v) (vfs_typenum(vnode_mount((v))) == afs_vfs_typenum)
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_LINUX22_ENV)
-#define vSetVfsp(vc, vfsp)      AFSTOV(vc)->v_mount = (vfsp)
-#define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
-#define vType(vc)               AFSTOV(vc)->v_type
-#else
-#define	vType(vc)	    (vc)->v.v_type
-#define	vSetType(vc,type)   (vc)->v.v_type = (type)
-#define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
-#endif
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern int (**afs_vnodeop_p) ();
-#define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
-#define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
-#else
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_LINUX20_ENV)
+# define	vType(vc)	    (vc)->v.v_type
+# define	vSetType(vc,type)   (vc)->v.v_type = (type)
+# define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
 extern struct vnodeops *afs_ops;
-#define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
-#define	SetAfsVnode(v)	    (v)->v_op = afs_ops
-#endif
+# define	IsAfsVnode(v)	    ((v)->v_op == afs_ops)
+# define	SetAfsVnode(v)	    (v)->v_op = afs_ops
 #endif
 
 /*

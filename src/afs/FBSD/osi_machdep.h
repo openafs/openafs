@@ -40,12 +40,18 @@ typedef struct proc afs_proc_t;
 #endif
 
 #define osi_vnhold(avc,r)	vref(AFSTOV(avc))
-#undef vSetVfsp
-#define vSetVfsp(vc, vfsp)	AFSTOV(vc)->v_mount = (vfsp)
-#undef vSetType
-#define vSetType(vc, type)	AFSTOV(vc)->v_type = (type)
-#undef vType
-#define	vType(vc)		AFSTOV(vc)->v_type
+
+#define vType(vc)               AFSTOV(vc)->v_type
+#define vSetVfsp(vc, vfsp) 	AFSTOV(vc)->v_mount = (vfsp)
+#define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
+#if defined(AFS_FBSD60_ENV) && defined(KERNEL)
+extern struct vop_vector afs_vnodeops;
+# define IsAfsVnode(v) ((v)->v_op == &afs_vnodeops)
+#else
+extern int (**afs_vnodeop_p) ();
+# define IsAfsVnode(v)           ((v)->v_op == afs_vnodeop_p)
+#endif
+#define SetAfsVnode(v)          /* nothing; done in getnewvnode() */
 
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
@@ -72,11 +78,7 @@ typedef struct proc afs_proc_t;
 #endif
 #define VN_HOLD(vp)		VREF(vp)
 
-#ifdef AFS_FBSD60_ENV
-#undef IsAfsVnode
-#define IsAfsVnode(v) ((v)->v_op == &afs_vnodeops)
-extern struct vop_vector afs_vnodeops;
-#endif
+
 
 #undef osi_getpid
 #if defined(AFS_FBSD50_ENV)
