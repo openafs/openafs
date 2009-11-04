@@ -1352,7 +1352,7 @@ extern long V;
 #endif /* UKERNEL */
 
 struct min_direct {
-#if defined(AFS_OFS_ENV) || defined(AFS_USR_OSF_ENV)
+#if defined(AFS_USR_OSF_ENV)
     unsigned int d_fileno;
 #else				/* AFS_OFS_ENV || AFS_USR_OSF_ENV */
     unsigned long d_fileno;

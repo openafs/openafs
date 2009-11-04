@@ -526,7 +526,7 @@ afs_syscall_call(long parm, long parm2, long parm3,
 #endif
 		    && (parm != AFSOP_GETMTU) && (parm != AFSOP_GETMASK)) {
 	/* only root can run this code */
-#if defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
+#if defined(AFS_SUN5_ENV) || defined(KERNEL_HAVE_UERROR)
 #if defined(KERNEL_HAVE_UERROR)
 	setuerror(EACCES);
 #endif
@@ -1331,7 +1331,7 @@ afs_shutdown(void)
     shutdown_osifile();
     shutdown_vnodeops();
     shutdown_memcache();
-#if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)) && !defined(AFS_OSF_ENV)
+#if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV))
     shutdown_exporter();
     shutdown_nfsclnt();
 #endif

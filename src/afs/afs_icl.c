@@ -32,7 +32,7 @@
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set *)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
 
-#if defined(AFS_OSF_ENV) || defined(AFS_SGI61_ENV)
+#if defined(AFS_SGI61_ENV)
 /* For SGI 6.2, this can is changed to 1 if it's a 32 bit kernel. */
 #if defined(AFS_SGI62_ENV) && defined(KERNEL) && !defined(_K64U64)
 int afs_icl_sizeofLong = 1;
@@ -541,16 +541,16 @@ afs_icl_AppendString(struct afs_icl_log *logp, char *astr)
         (lp)->logElements++; \
     MACRO_END
 
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_DARWIN_ENV) && defined(__amd64__)
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_DARWIN_ENV) && defined(__amd64__)
 #define ICL_APPENDLONG(lp, x) \
     MACRO_BEGIN \
 	ICL_APPENDINT32((lp), ((x) >> 32) & 0xffffffffL); \
 	ICL_APPENDINT32((lp), (x) & 0xffffffffL); \
     MACRO_END
 
-#else /* AFS_OSF_ENV */
+#else
 #define ICL_APPENDLONG(lp, x) ICL_APPENDINT32((lp), (x))
-#endif /* AFS_OSF_ENV */
+#endif
 
 /* routine to tell whether we're dealing with the address or the
  * object itself
@@ -695,10 +695,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p1)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t1 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p1);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p1);
     }
@@ -735,10 +735,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p2)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t2 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p2);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p2);
     }
@@ -775,10 +775,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p3)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t3 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p3);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p3);
     }
@@ -815,10 +815,10 @@ afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op,
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[2]);
 	    ICL_APPENDINT32(logp, (afs_int32) ((afs_int32 *) p4)[3]);
 	}
-#if defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	else if (t4 == ICL_TYPE_INT32)
 	    ICL_APPENDINT32(logp, (afs_int32) p4);
-#endif /* AFS_OSF_ENV */
+#endif
 	else
 	    ICL_APPENDLONG(logp, p4);
     }

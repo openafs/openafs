@@ -295,18 +295,6 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 	    if (amode & VEXEC) {
 		code = afs_AccessOK(avc, PRSFS_READ, &treq, CHECK_MODE_BITS);
 		if (code) {
-#ifdef	AFS_OSF_ENV
-		    /*
-		     * The nfs server in read operations for non-owner of a file
-		     * will also check the access with the VEXEC (along with VREAD)
-		     * because for them exec is the same as read over the net because of
-		     * demand loading. But this means if the mode bit is '-rw' the call
-		     * will fail below; so for this particular case where both modes are
-		     * specified (only in rfs_read so far) and from the xlator requests
-		     * we return succes.
-		     */
-		    if (!((amode & VREAD) && AFS_NFSXLATORREQ(acred)))
-#endif
 			if ((avc->f.m.Mode & 0100) == 0)
 			    code = 0;
 		} else if (avc->f.m.Mode & 0100)

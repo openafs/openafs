@@ -1894,7 +1894,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 #endif /* AFS_SGI_ENV */
 	if (AFS_CHUNKTOBASE(chunk) + adjustsize >= avc->f.m.Length &&
 #else /* defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV) */
-#if	defined(AFS_SUN5_ENV)  || defined(AFS_OSF_ENV)
+#if	defined(AFS_SUN5_ENV)
 	if ((doAdjustSize || (AFS_CHUNKTOBASE(chunk) >= avc->f.m.Length)) &&
 #else
 	if (AFS_CHUNKTOBASE(chunk) >= avc->f.m.Length &&

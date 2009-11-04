@@ -19,20 +19,15 @@
  * LICENSED MATERIALS - PROPERTY OF IBM
  */
 
-#if	(defined(AFS_SUN5_ENV)) || defined(AFS_OSF_ENV)
+#if	(defined(AFS_SUN5_ENV))
 #define	AFS_NOBOZO_LOCK
 #endif
 
-#if !defined(AFS_OSF20_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_OSF32_ENV)
-    /* We do not instrument locks on osf20 because the vcache structure
-     ** exceeds the maximim possible limit for a vnode.
-     */
 #define INSTRUMENT_LOCKS
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
 #define MAX_LOCK_NUMBER 780
-#endif
 
 struct afs_bozoLock {
     short count;		/* count of excl locks */

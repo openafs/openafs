@@ -215,14 +215,10 @@ afs_CheckLocks(void)
 	for (i = 0; i < VCSIZE; i++) {
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
                 if (tvc->f.states & CVInit) continue;
-#ifdef	AFS_OSF_ENV
-		if (VREFCOUNT(tvc) > 1)
-#else /* AFS_OSF_ENV */
 #ifdef AFS_DARWIN80_ENV
 		if (vnode_isinuse(AFSTOV(tvc), 0))
 #else
 		if (VREFCOUNT(tvc))
-#endif
 #endif
 		    afs_warn("Stat cache entry at %x is held\n", tvc);
 		if (CheckLock(&tvc->lock))
@@ -290,11 +286,7 @@ int
 afs_noop(void)
 {
     AFS_STATCNT(afs_noop);
-#ifdef	AFS_OSF30_ENV
-    return (EOPNOTSUPP);
-#else
     return EINVAL;
-#endif
 }
 
 int

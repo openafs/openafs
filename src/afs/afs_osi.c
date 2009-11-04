@@ -45,10 +45,6 @@ kmutex_t afs_rxglobal_lock;
 long afs_global_owner;
 #endif
 
-#if defined(AFS_OSF_ENV)
-simple_lock_data_t afs_global_lock;
-#endif
-
 #if defined(AFS_DARWIN_ENV) 
 #ifdef AFS_DARWIN80_ENV
 lck_mtx_t  *afs_global_lock;
@@ -65,9 +61,9 @@ afs_proc_t *afs_global_owner;
 struct mtx afs_global_mtx;
 #endif
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV)
 thread_t afs_global_owner;
-#endif /* AFS_OSF_ENV */
+#endif /* AFS_DARWIN_ENV */
 
 #if defined(AFS_AIX41_ENV)
 simple_lock_data afs_global_lock;
@@ -85,9 +81,6 @@ osi_Init(void)
 #if defined(AFS_GLOBAL_SUNLOCK)
 #if defined(AFS_SGI62_ENV)
     mutex_init(&afs_global_lock, MUTEX_DEFAULT, "afs_global_lock");
-#elif defined(AFS_OSF_ENV)
-    usimple_lock_init(&afs_global_lock);
-    afs_global_owner = (thread_t) 0;
 #elif defined(AFS_FBSD50_ENV)
 #if defined(AFS_FBSD80_ENV) && defined(WITNESS)
     /* "lock_initalized" (sic) can panic, checks a flag bit

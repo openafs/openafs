@@ -9,7 +9,7 @@
 
 /*
  *
- * DUX OSI header file. Extends afs_osi.h.
+ * NetBSD OSI header file. Extends afs_osi.h.
  *
  * afs_osi.h includes this file, which is the only way this file should
  * be included in a source file. This file can redefine macros declared in

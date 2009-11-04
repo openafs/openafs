@@ -266,10 +266,7 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ma_critical_exit();
 	    return 0;
 	}
-#ifdef	AFS_OSF_ENV
-	VN_HOLD((vnode_t *) tvc);
-#else
-#ifdef AFS_DARWIN80_ENV
+#if defined(AFS_DARWIN80_ENV)
 	tvp = AFSTOV(tvc);
 	if (vnode_get(tvp)) {
 	    ReleaseReadLock(&afs_xvcache);
@@ -288,16 +285,13 @@ osi_dnlc_lookup(struct vcache *adp, char *aname, int locktype)
 	    ma_critical_exit();
 	    return 0;
 	}
-#else
-#ifdef AFS_FBSD50_ENV
+#elif defined(AFS_FBSD50_ENV)
 	/* can't sleep in a critical section */
 	ma_critical_exit();
 	osi_vnhold(tvc, 0);
 	ma_critical_enter();
 #else
 	osi_vnhold(tvc, 0);
-#endif /* AFS_FBSD80_ENV */
-#endif
 #endif
 	ReleaseReadLock(&afs_xvcache);
 

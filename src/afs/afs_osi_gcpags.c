@@ -181,31 +181,6 @@ afs_osi_TraverseProcTable(void)
 }
 #endif
 
-#if defined(AFS_OSF_ENV)
-
-#ifdef AFS_DUX50_ENV
-extern struct pid_entry *pidtab;
-extern int npid; 
-#endif
-
-void
-afs_osi_TraverseProcTable(void)
-{
-    struct pid_entry *pe;
-#ifdef AFS_DUX50_ENV
-#define pidNPID (pidtab + npid)
-#define PID_LOCK()
-#define PID_UNLOCK()
-#endif
-    PID_LOCK();
-    for (pe = pidtab; pe < pidNPID; ++pe) {
-	if (pe->pe_proc != PROC_NULL)
-	    afs_GCPAGs_perproc_func(pe->pe_proc);
-    }
-    PID_UNLOCK();
-}
-#endif
-
 #if (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)) || defined(AFS_FBSD_ENV)
 void
 afs_osi_TraverseProcTable(void)
@@ -436,22 +411,6 @@ afs_osi_proc2cred(afs_proc_t * pproc)
     return pcred;
 }
 
-#elif defined(AFS_OSF_ENV)
-const afs_ucred_t *
-afs_osi_proc2cred(afs_proc_t * pr)
-{
-    afs_ucred_t *rv = NULL;
-
-    if (pr == NULL) {
-	return NULL;
-    }
-
-    if ((pr->p_stat == SSLEEP) || (pr->p_stat == SRUN)
-	|| (pr->p_stat == SSTOP))
-	rv = pr->p_rcred;
-
-    return rv;
-}
 #elif defined(AFS_DARWIN80_ENV) 
 const afs_ucred_t *
 afs_osi_proc2cred(afs_proc_t * pr)

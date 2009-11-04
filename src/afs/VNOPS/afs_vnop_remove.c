@@ -9,9 +9,7 @@
 
 /*
  * Implements:
- * afs_Wire (DUX)
  * FetchWholeEnchilada
- * afs_IsWired (DUX)
  * afsremove
  * afs_remove
  * afs_newname
@@ -33,19 +31,8 @@ extern afs_rwlock_t afs_xvcache;
 extern afs_rwlock_t afs_xcbhash;
 
 
-#ifdef	AFS_OSF_ENV
-/*
- *  Wire down file in cache: prefetch all data, and turn on CWired flag
- *  so that callbacks/callback expirations are (temporarily) ignored
- *  and cache file(s) are kept in cache. File will be unwired when
- *  afs_inactive is called (ie no one has VN_HOLD on vnode), or when
- *  afs_IsWired notices that the file is no longer Active.
- */
-afs_Wire(avc, areq)
-#else /* AFS_OSF_ENV */
 static void
 FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
-#endif
 {
     register afs_int32 nextChunk;
     register struct dcache *tdc;
@@ -56,43 +43,14 @@ FetchWholeEnchilada(register struct vcache *avc, struct vrequest *areq)
 	return;			/* don't know size */
     for (nextChunk = 0; nextChunk < 1024; nextChunk++) {	/* sanity check on N chunks */
 	pos = AFS_CHUNKTOBASE(nextChunk);
-#if	defined(AFS_OSF_ENV)
-	if (pos >= avc->f.m.Length)
-	    break;		/* all done */
-#else /* AFS_OSF_ENV */
 	if (pos >= avc->f.m.Length)
 	    return;		/* all done */
-#endif
 	tdc = afs_GetDCache(avc, pos, areq, &offset, &len, 0);
 	if (!tdc)
-#if	defined(AFS_OSF_ENV)
-	    break;
-#else /* AFS_OSF_ENV */
 	    return;
-#endif
 	afs_PutDCache(tdc);
     }
-#if defined(AFS_OSF_ENV)
-    avc->f.states |= CWired;
-#endif /* AFS_OSF_ENV */
 }
-
-#if	defined(AFS_OSF_ENV)
-/*
- *  Tests whether file is wired down, after unwiring the file if it
- *  is found to be inactive (ie not open and not being paged from).
- */
-afs_IsWired(register struct vcache *avc)
-{
-    if (avc->f.states & CWired) {
-	if (osi_Active(avc)) {
-	    return 1;
-	}
-	avc->f.states &= ~CWired;
-    }
-    return 0;
-}
-#endif /* AFS_OSF_ENV */
 
 int
 afsremove(register struct vcache *adp, register struct dcache *tdc,
@@ -228,14 +186,8 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_REMOVE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-#ifdef	AFS_OSF_ENV
-    tvc = (struct vcache *)ndp->ni_vp;	/* should never be null */
-#endif
 
     if ((code = afs_InitReq(&treq, acred))) {
-#ifdef  AFS_OSF_ENV
-	afs_PutVCache(tvc);
-#endif
 	return code;
     }
 
@@ -243,9 +195,6 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
     if (code) {
 	afs_PutFakeStat(&fakestate);
-#ifdef  AFS_OSF_ENV
-	afs_PutVCache(tvc);
-#endif
 	return code;
     }
 
@@ -253,9 +202,6 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
     if (afs_IsDynroot(adp)) {
 	code = afs_DynrootVOPRemove(adp, acred, aname);
 	afs_PutFakeStat(&fakestate);
-#ifdef  AFS_OSF_ENV
-	afs_PutVCache(tvc);
-#endif
 	return code;
     }
     if (afs_IsDynrootMount(adp)) {
@@ -264,36 +210,21 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);
-#ifdef  AFS_OSF_ENV
-	afs_PutVCache(tvc);
-#endif
 	return ENAMETOOLONG;
     }
   tagain:
     code = afs_VerifyVCache(adp, &treq);
-#ifdef	AFS_OSF_ENV
-    tvc = VTOAFS(ndp->ni_vp);	/* should never be null */
-    if (code) {
-	afs_PutVCache(tvc);
-	afs_PutFakeStat(&fakestate);
-	return afs_CheckCode(code, &treq, 22);
-    }
-#else /* AFS_OSF_ENV */
     tvc = NULL;
     if (code) {
 	code = afs_CheckCode(code, &treq, 23);
 	afs_PutFakeStat(&fakestate);
 	return code;
     }
-#endif
 
     /** If the volume is read-only, return error without making an RPC to the
       * fileserver
       */
     if (adp->f.states & CRO) {
-#ifdef  AFS_OSF_ENV
-	afs_PutVCache(tvc);
-#endif
 	code = EROFS;
 	afs_PutFakeStat(&fakestate);
 	return code;
@@ -301,9 +232,6 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 
     /* If we're running disconnected without logging, go no further... */
     if (AFS_IS_DISCONNECTED && !AFS_IS_DISCON_RW) {
-#ifdef  AFS_OSF_ENV
-        afs_PutVCache(tvc);
-#endif
         code = ENETDOWN;
         afs_PutFakeStat(&fakestate);
         return code;
@@ -391,11 +319,7 @@ afs_remove(OSI_VC_DECL(adp), char *aname, afs_ucred_t *acred)
 	if (tdc)
 	    ReleaseSharedLock(&tdc->lock);
 	ObtainWriteLock(&tvc->lock, 143);
-#if	defined(AFS_OSF_ENV)
-	afs_Wire(tvc, &treq);
-#else /* AFS_OSF_ENV */
 	FetchWholeEnchilada(tvc, &treq);
-#endif
 	ReleaseWriteLock(&tvc->lock);
 	ObtainWriteLock(&adp->lock, 144);
 	/* Technically I don't think we need this back, but let's hold it 

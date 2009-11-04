@@ -122,7 +122,7 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 	flock->l_pid = procp->p_epid;
 # endif
 }
-#elif defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 void
 lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 {
@@ -508,10 +508,7 @@ DoLockWarning(void)
 }
 
 
-#ifdef	AFS_OSF_ENV
-int afs_lockctl(struct vcache * avc, struct eflock * af, int flag,
-		afs_ucred_t * acred, pid_t clid, off_t offset)
-#elif defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 		afs_ucred_t * acred, pid_t clid)
 #else
@@ -522,9 +519,6 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 {
     struct vrequest treq;
     afs_int32 code;
-#ifdef	AFS_OSF_ENV
-    int acmd = 0;
-#endif
     struct afs_fakestat_state fakestate;
 
     AFS_STATCNT(afs_lockctl);
@@ -538,19 +532,6 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
     if (code) {
 	goto done;
     }
-#ifdef	AFS_OSF_ENV
-    if (flag & VNOFLCK) {
-	code = 0;
-	goto done;
-    }
-    if (flag & CLNFLCK) {
-	acmd = LOCK_UN;
-    } else if ((flag & GETFLCK) || (flag & RGETFLCK)) {
-	acmd = F_GETLK;
-    } else if ((flag & SETFLCK) || (flag & RSETFLCK)) {
-	acmd = F_SETLK;
-    }
-#endif
 #if (defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
     if ((acmd == F_GETLK) || (acmd == F_RGETLK)) {
 #else
@@ -560,9 +541,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 	    code = 0;
 	    goto done;
 	}
-#ifndef	AFS_OSF_ENV		/* getlock is a no-op for osf (for now) */
 	code = HandleGetLock(avc, af, &treq, clid);
-#endif
 	code = afs_CheckCode(code, &treq, 2);	/* defeat buggy AIX optimz */
 	goto done;
     } else if ((acmd == F_SETLK) || (acmd == F_SETLKW)
@@ -614,7 +593,7 @@ int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
 #endif
 	) && code != LOCK_UN)
 	code |= LOCK_NB;	/* non-blocking, s.v.p. */
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV)
     code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
 #elif defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
@@ -645,7 +624,6 @@ done:
  *    2. Asking for write lock, and only the current
  *       PID has the file read locked.
  */
-#ifndef	AFS_OSF_ENV		/* getlock is a no-op for osf (for now) */
 static int
 HandleGetLock(register struct vcache *avc, register struct AFS_FLOCK *af,
 	      register struct vrequest *areq, int clid)
@@ -885,125 +863,4 @@ GetFlockCount(struct vcache *avc, struct vrequest *areq)
 	return ((int)OutStatus.lockCount);
     }
 }
-#endif
 
-
-#if	!defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(UKERNEL) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
-/* Flock not support on System V systems */
-#ifdef AFS_OSF_ENV
-extern struct fileops afs_fileops;
-
-int
-afs_xflock(afs_proc_t *p, void *args, int *retval)
-#else /* AFS_OSF_ENV */
-int
-afs_xflock(void)
-#endif
-{
-    int code = 0;
-    struct a {
-	int fd;
-	int com;
-    } *uap;
-    struct file *fd;
-    struct vrequest treq;
-    struct vcache *tvc;
-    int flockDone;
-    struct afs_fakestat_state fakestate;
-
-    afs_InitFakeStat(&fakestate);
-    AFS_STATCNT(afs_xflock);
-    flockDone = 0;
-#ifdef AFS_OSF_ENV
-    uap = (struct a *)args;
-    getf(&fd, uap->fd, FILE_FLAGS_NULL, &u.u_file_state);
-#else /* AFS_OSF_ENV */
-    uap = (struct a *)u.u_ap;
-    fd = getf(uap->fd);
-#endif
-    if (!fd) {
-	afs_PutFakeStat(&fakestate);
-	return;
-    }
-
-    if (flockDone = afs_InitReq(&treq, u.u_cred)) {
-	afs_PutFakeStat(&fakestate);
-	return flockDone;
-    }
-
-    AFS_DISCON_LOCK();
-    
-    /* first determine whether this is any sort of vnode */
-    if (fd->f_type == DTYPE_VNODE) {
-	/* good, this is a vnode; next see if it is an AFS vnode */
-	tvc = VTOAFS(fd->f_data);	/* valid, given a vnode */
-	if (IsAfsVnode(AFSTOV(tvc))) {
-	    /* This is an AFS vnode, so do the work */
-	    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
-	    if (code) {
-		AFS_DISCON_UNLOCK();
-		afs_PutFakeStat(&fakestate);
-		return code;
-	    }
-	    if ((fd->f_flag & (FEXLOCK | FSHLOCK)) && !(uap->com & LOCK_UN)) {
-		/* First, if fd already has lock, release it for relock path */
-#if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
-		HandleFlock(tvc, LOCK_UN, &treq, u.u_procp->p_pid,
-			    0 /*!onlymine */ );
-#else
-		HandleFlock(tvc, LOCK_UN, &treq, 0, 0 /*!onlymine */ );
-#endif
-		fd->f_flag &= ~(FEXLOCK | FSHLOCK);
-	    }
-	    /* now try the requested operation */
-
-#if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
-	    code =
-		HandleFlock(tvc, uap->com, &treq, u.u_procp->p_pid,
-			    0 /*!onlymine */ );
-#else
-	    code = HandleFlock(tvc, uap->com, &treq, 0, 0 /*!onlymine */ );
-#endif
-#ifndef AFS_OSF_ENV
-	    u.u_error = code;
-#endif
-
-	    if (uap->com & LOCK_UN) {
-		/* gave up lock */
-		fd->f_flag &= ~(FEXLOCK | FSHLOCK);
-	    } else {
-#ifdef AFS_OSF_ENV
-		if (!code) {
-#else /* AFS_OSF_ENV */
-		if (!u.u_error) {
-#endif
-		    if (uap->com & LOCK_SH)
-			fd->f_flag |= FSHLOCK;
-		    else if (uap->com & LOCK_EX)
-			fd->f_flag |= FEXLOCK;
-		}
-	    }
-	    flockDone = 1;
-	    fd->f_ops = &afs_fileops;
-	}
-    }
-#ifdef	AFS_OSF_ENV
-    if (!flockDone)
-	code = flock(p, args, retval);
-#ifdef	AFS_OSF30_ENV
-    FP_UNREF_ALWAYS(fd);
-#else
-    FP_UNREF(fd);
-#endif
-    AFS_DISCON_UNLOCK();
-    afs_PutFakeStat(&fakestate);
-    return code;
-#else /* AFS_OSF_ENV */
-    if (!flockDone)
-	flock();
-    AFS_DISCON_UNLOCK();
-    afs_PutFakeStat(&fakestate);
-    return;
-#endif
-}
-#endif /* !defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(UKERNEL)  && !defined(AFS_LINUX20_ENV) */

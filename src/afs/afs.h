@@ -564,19 +564,15 @@ struct SimpleLocks {
 #define CNSHARE		0x00000100	/* support O_NSHARE semantics */
 #define CLied		0x00000200
 #define CTruth		0x00000400
-#ifdef	AFS_OSF_ENV
-#define CWired		0x00000800	/* OSF hack only */
-#else
-#ifdef AFS_DARWIN80_ENV
+
+#if defined(AFS_DARWIN80_ENV)
 #define CDeadVnode        0x00000800
-#else
-#ifdef AFS_DARWIN_ENV
+#elif defined(AFS_DARWIN_ENV)
 #define CUBCinit        0x00000800
 #else
 #define CWRITE_IGN	0x00000800	/* Next OS hack only */
 #endif
-#endif
-#endif
+
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
 #define CForeign	0x00002000	/* this is a non-afs vcache */
 #define CReadDir	0x00004000	/* readdir in progress */
@@ -1342,11 +1338,7 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToInumber(V) VnodeToIno(V)
 #else
-#ifdef AFS_DECOSF_ENV
-#define afs_vnodeToInumber(V) osi_vnodeToInumber(V)
-#else
 #define afs_vnodeToInumber(V) (VTOI(V)->i_number)
-#endif /* AFS_DECOSF_ENV */
 #endif /* AFS_SGI62_ENV */
 #endif
 
@@ -1354,18 +1346,8 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #ifndef afs_vnodeToDev
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
 #define afs_vnodeToDev(V) VnodeToDev(V)
-#elif defined(AFS_DECOSF_ENV)
-#define afs_vnodeToDev(V) osi_vnodeToDev(V)
 #else
 #define afs_vnodeToDev(V) (VTOI(V)->i_dev)
-#endif
-#endif
-
-
-/* Note: this should agree with the definition in kdump.c */
-#if     defined(AFS_OSF_ENV)
-#if     !defined(UKERNEL)
-#define AFS_USEBUFFERS  1
 #endif
 #endif
 

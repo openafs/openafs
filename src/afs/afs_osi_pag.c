@@ -191,7 +191,7 @@ afs_pag_wait(afs_ucred_t **acred)
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag(afs_ucred_t **credpp)
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif  defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_setpag(afs_proc_t *p, void *args, int *retval)
 #else
 afs_setpag(void)
@@ -220,7 +220,7 @@ afs_setpag(void)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(genpag(), credpp);
-#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
+#elif	defined(AFS_XBSD_ENV)
     code = AddPag(p, genpag(), &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
     {
@@ -293,7 +293,7 @@ afs_setpag(void)
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag_val(afs_ucred_t **credpp, int pagval)
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif  defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_setpag_val(afs_proc_t *p, void *args, int *retval, int pagval)
 #else
 afs_setpag_val(int pagval)
@@ -321,7 +321,7 @@ afs_setpag_val(int pagval)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(pagval, credpp);
-#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
+#elif	defined(AFS_XBSD_ENV)
     code = AddPag(p, pagval, &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
     {
@@ -399,7 +399,7 @@ afs_getpag_val(void)
 
 
 /* Note - needs to be available on AIX, others can be static - rework this */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 AddPag(afs_proc_t *p, afs_int32 aval, afs_ucred_t **credpp)
 #else
@@ -411,7 +411,7 @@ AddPag(afs_int32 aval, afs_ucred_t **credpp)
     afs_uint32 newpag;
 
     AFS_STATCNT(AddPag);
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((code = setpag(p, credpp, aval, &newpag, 0)))
 #else
     if ((code = setpag(credpp, aval, &newpag, 0)))
@@ -575,7 +575,7 @@ PagInCred(afs_ucred_t *cred)
 	pag = NOPAG;
 	goto out;
     }
-#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
 #if defined(AFS_SUN510_ENV)
     if (ngroups < 2) {
 #else
@@ -605,7 +605,7 @@ PagInCred(afs_ucred_t *cred)
 #else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
 #endif
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
 out:
 #endif
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)

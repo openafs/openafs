@@ -439,7 +439,7 @@ extern int afs_sinited;
  * to accomodate both, *long* is used instead of afs_int32
  */
 
-#ifdef AFS_SUN57_ENV
+# ifdef AFS_SUN57_ENV
 struct afssysa {
     long syscall;
     long parm1;
@@ -449,7 +449,7 @@ struct afssysa {
     long parm5;
     long parm6;
 };
-#else
+# else
 struct afssysa {
     afs_int32 syscall;
     afs_int32 parm1;
@@ -459,13 +459,12 @@ struct afssysa {
     afs_int32 parm5;
     afs_int32 parm6;
 };
-#endif
+# endif
 
 Afs_syscall(register struct afssysa *uap, rval_t * rvp)
 {
     int *retval = &rvp->r_val1;
-#else /* AFS_SUN5_ENV */
-#ifdef AFS_DARWIN100_ENV
+#elif defined(AFS_DARWIN100_ENV)
 struct afssysa {
     afs_int32 syscall;
     afs_int32 parm1;
@@ -489,14 +488,14 @@ afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval)
 {
     struct afssysa64 *uap64 = NULL;
     struct afssysa *uap = NULL;
-#elif	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
 afs3_syscall(p, args, retval)
-#ifdef AFS_FBSD50_ENV
+# ifdef AFS_FBSD50_ENV
      struct thread *p;
-#else
+# else
      afs_proc_t *p;
-#endif
+# endif
      void *args;
      long *retval;
 {
@@ -509,8 +508,7 @@ afs3_syscall(p, args, retval)
 	long parm5;
 	long parm6;
     } *uap = (struct a *)args;
-#else /* AFS_OSF_ENV */
-#ifdef AFS_LINUX20_ENV
+#elif defined(AFS_LINUX20_ENV)
 struct afssysargs {
     long syscall;
     long parm1;
@@ -528,12 +526,12 @@ afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4)
     long linux_ret = 0;
     long *retval = &linux_ret;
     long eparm[4];		/* matches AFSCALL_ICL in fstrace.c */
-#ifdef AFS_SPARC64_LINUX24_ENV
+# ifdef AFS_SPARC64_LINUX24_ENV
     afs_int32 eparm32[4];
-#endif
+# endif
     /* eparm is also used by AFSCALL_CALL in afsd.c */
 #else
-#if defined(UKERNEL)
+# if defined(UKERNEL)
 int
 Afs_syscall()
 {
@@ -546,7 +544,7 @@ Afs_syscall()
 	long parm5;
 	long parm6;
     } *uap = (struct a *)u.u_ap;
-#else /* UKERNEL */
+# else /* UKERNEL */
 int
 Afs_syscall()
 {
@@ -559,15 +557,13 @@ Afs_syscall()
 	long parm5;
 	long parm6;
     } *uap = (struct a *)u.u_ap;
-#endif /* UKERNEL */
-#if defined(AFS_HPUX_ENV)
+# endif /* UKERNEL */
+# if defined(AFS_HPUX_ENV)
     long *retval = &u.u_rval1;
-#else
+# else
     int *retval = &u.u_rval1;
+# endif
 #endif
-#endif /* AFS_LINUX20_ENV */
-#endif /* AFS_OSF_ENV */
-#endif /* AFS_SUN5_ENV */
     register int code = 0;
 
     AFS_STATCNT(afs_syscall);
@@ -679,9 +675,9 @@ Afs_syscall()
 	    AFS_GUNLOCK();
 #else
 	    AFS_GLOCK();
-#if	defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	    code = afs_setpag(p, args, retval);
-#else /* AFS_OSF_ENV */
+#else /* AFS_DARWIN_ENV || AFS_XBSD_ENV */
 	    code = afs_setpag();
 #endif
 	    AFS_GUNLOCK();
@@ -731,7 +727,7 @@ Afs_syscall()
 		    afs_syscall_icreate(uap->parm1, uap->parm2, iparams.param1,
 					iparams.param2, iparams.param3,
 					iparams.param4
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 					, retval
 #endif
 			);
@@ -744,7 +740,7 @@ Afs_syscall()
 				  CRED());
 #else
 	    code = afs_syscall_iopen(uap->parm1, uap->parm2, uap->parm3
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 				     , retval
 #endif
 		);

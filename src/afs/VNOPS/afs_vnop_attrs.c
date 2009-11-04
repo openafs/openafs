@@ -90,8 +90,6 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_gid = fakedir ? 0 : avc->f.m.Group;	/* yeah! */
 #if defined(AFS_SUN56_ENV)
     attrs->va_fsid = avc->v.v_vfsp->vfs_fsid.val[0];
-#elif defined(AFS_OSF_ENV)
-    attrs->va_fsid = avc->v.v_mount->m_stat.f_fsid.val[0];
 #elif defined(AFS_DARWIN80_ENV)
     VATTR_RETURN(attrs, va_fsid, vfs_statfs(vnode_mount(AFSTOV(avc)))->f_fsid.val[0]);
 #elif defined(AFS_DARWIN70_ENV)
@@ -142,7 +140,7 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_atime.tv_usec = attrs->va_mtime.tv_usec =
 	attrs->va_ctime.tv_usec = (hgetlo(avc->f.m.DataVersion) & 0x7ffff);
 #endif
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_OSF_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     attrs->va_flags = 0;
 #endif
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
@@ -160,7 +158,7 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.      
      */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     attrs->va_bytes = (attrs->va_size ? (attrs->va_size + 1023) : 1024);
 #ifdef	va_bytes_rsv
     attrs->va_bytes_rsv = -1;
@@ -494,7 +492,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     if (attrs->va_mask & ATTR_SIZE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
-#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
+#elif	defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
 #elif	defined(AFS_AIX41_ENV)
     if (attrs->va_size != -1) {
@@ -532,7 +530,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     if (attrs->va_mask & ATTR_SIZE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
-#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
+#elif	defined(AFS_XBSD_ENV)
     if (attrs->va_size != VNOVAL) {
 #elif	defined(AFS_AIX41_ENV)
     if (attrs->va_size != -1) {

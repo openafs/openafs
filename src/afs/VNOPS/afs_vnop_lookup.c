@@ -1196,9 +1196,7 @@ static int AFSDOBULK = 1;
 #endif
 
 int
-#ifdef AFS_OSF_ENV
-afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acred, int opflag, int wantparent)
-#elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct pathname *pnp, int flags, struct vnode *rdir, afs_ucred_t *acred)
 #elif defined(UKERNEL)
 afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acred, int flags)
@@ -1230,10 +1228,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     
     if ((code = afs_InitReq(&treq, acred)))
 	goto done;
-
-#ifdef	AFS_OSF_ENV
-    ndp->ni_dvp = AFSTOV(adp);
-#endif /* AFS_OSF_ENV */
 
     if (afs_fakestat_enable && adp->mvstat == 1) {
        if (strcmp(aname, ".directory") == 0)
@@ -1284,18 +1278,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     if (adp->mvstat == 2 && aname[0] == '.' && aname[1] == '.' && !aname[2]) {
 	/* looking up ".." in root via special hacks */
 	if (adp->mvid == (struct VenusFid *)0 || adp->mvid->Fid.Volume == 0) {
-#ifdef	AFS_OSF_ENV
-	    if (adp == afs_globalVp) {
-		struct vnode *rvp = AFSTOV(adp);
-/*
-		ndp->ni_vp = rvp->v_vfsp->vfs_vnodecovered;
-		ndp->ni_dvp = ndp->ni_vp;
-		VN_HOLD(*avcp);
-*/
-		code = ENODEV;
-		goto done;
-	    }
-#endif
 	    code = ENODEV;
 	    goto done;
 	}
@@ -1749,17 +1731,6 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
     if (tname != aname && tname)
 	osi_FreeLargeSpace(tname);
     if (code == 0) {
-#ifdef	AFS_OSF_ENV
-	/* Handle RENAME; only need to check rename "."  */
-	if (opflag == RENAME && wantparent && *ndp->ni_next == 0) {
-	    if (!FidCmp(&(tvc->f.fid), &(adp->f.fid))) {
-		afs_PutVCache(*avcp);
-		*avcp = NULL;
-		afs_PutFakeStat(&fakestate);
-		return afs_CheckCode(EISDIR, &treq, 18);
-	    }
-	}
-#endif /* AFS_OSF_ENV */
 
 	if (afs_mariner)
 	    afs_AddMarinerName(aname, tvc);

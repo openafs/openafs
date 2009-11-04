@@ -206,11 +206,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     uid = (*cred)->cr_uid;
 #endif
     /* Do this early, so pag management knows */
-#ifdef	AFS_OSF_ENV
-    (*cred)->cr_ruid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
-#else
     (*cred)->cr_rgid = NFSXLATOR_CRED;	/* Identify it as nfs xlator call */
-#endif
     if ((afs_nfsexporter->exp_states & EXP_CLIPAGS) && pag != NOPAG) {
 	uid = pag;
     } else if (pag != NOPAG) {
@@ -246,11 +242,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	 * that the translator rebooted and therefore we ignore all older 
 	 * pag values 
 	 */
-#ifdef	AFS_OSF_ENV
-	if (code = setpag(u.u_procp, cred, -1, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 	if ((code = setpag(cred, -1, &pag, 0))) {
-#endif
 	    if (au)
 		afs_PutUser(au, READ_LOCK);
 /*	    ReleaseWriteLock(&afs_xnfsreq);		*/
@@ -264,11 +256,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	np->client_uid = (*cred)->cr_uid;
     } else {
 	if (pag == NOPAG) {
-#ifdef	AFS_OSF_ENV
-	    if (code = setpag(u.u_procp, cred, np->pag, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 	    if ((code = setpag(cred, np->pag, &pag, 0))) {
-#endif
 		afs_PutNfsClientPag(np);
 /*		ReleaseWriteLock(&afs_xnfsreq);	*/
 #if defined(KERNEL_HAVE_UERROR)
@@ -281,11 +269,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	    tnp = (struct nfsclientpag *)au->exporter;
 	    if (tnp->uid && (tnp->uid != (afs_int32) - 2)) {	/* allow "root" initiators */
 		/* Pag doesn't belong to caller; treat it as an unpaged call too */
-#ifdef	AFS_OSF_ENV
-		if (code = setpag(u.u_procp, cred, np->pag, &pag, 0)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 		if ((code = setpag(cred, np->pag, &pag, 0))) {
-#endif
 		    afs_PutNfsClientPag(np);
 		    afs_PutUser(au, READ_LOCK);
 		    /*      ReleaseWriteLock(&afs_xnfsreq);     */

@@ -151,7 +151,7 @@ SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.pid_last_reader = 0;
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
-#endif /* AFS_OSF20_ENV */
+#endif /* INSTRUMENT_LOCKS */
 #ifdef AFS_64BIT_CLIENT
     a_result->Length = (afs_int32) tvc->f.m.Length & 0xffffffff;
 #else /* AFS_64BIT_CLIENT */
@@ -237,7 +237,7 @@ SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
     a_result->lock.pid_last_reader = 0;
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
-#endif /* AFS_OSF20_ENV */
+#endif /* INSTRUMENT_LOCKS */
 #if !defined(AFS_64BIT_ENV) 
     a_result->Length.high = 0;
     a_result->Length.low = tvc->f.m.Length;
@@ -464,7 +464,7 @@ loop1:
 			    goto loop1;
 			}
 #endif
-#if     defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+#if     defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 			VN_HOLD(AFSTOV(tvc));
 #else
 #ifdef AFS_DARWIN80_ENV
@@ -558,7 +558,7 @@ loop2:
 			goto loop2;
 		    }
 #endif
-#if     defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+#if     defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		    VN_HOLD(AFSTOV(tvc));
 #else
 #ifdef AFS_DARWIN80_ENV

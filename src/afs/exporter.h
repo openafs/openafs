@@ -34,7 +34,7 @@
   * up 2 bytes
   */
 
-#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_OSF_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR==64)) || defined(AFS_LINUX_64BIT_KERNEL)
+#if defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI61_ENV) && (_MIPS_SZPTR==64)) || defined(AFS_LINUX_64BIT_KERNEL)
 #define	AFS_XLATOR_MAGIC	0x8765	/* XXX */
 #else
 #define	AFS_XLATOR_MAGIC	0x87654321
@@ -43,11 +43,7 @@
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_NFSXLATORREQ(cred) 0
 #else
-#ifdef	AFS_OSF_ENV
-#define	AFS_NFSXLATORREQ(cred)    ((cred)->cr_ruid == NFSXLATOR_CRED)
-#else
 #define	AFS_NFSXLATORREQ(cred)    ((cred)->cr_rgid == NFSXLATOR_CRED)
-#endif
 #endif
 
 struct afs_exporter;

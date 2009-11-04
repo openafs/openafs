@@ -32,7 +32,7 @@
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */
 afs_int32 cacheInfoModTime;	/*Last time cache info modified */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 struct mount *afs_cacheVfsp = 0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
@@ -396,8 +396,6 @@ afs_InitCacheInfo(register char *afile)
 	struct k_statvfs st;
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
 	struct statvfs st;
-#elif defined(AFS_DUX40_ENV)
-	struct nstatfs st;
 #elif defined(AFS_DARWIN80_ENV)
 	struct vfsstatfs st;
 #else
@@ -413,12 +411,6 @@ afs_InitCacheInfo(register char *afile)
 #endif /* AFS_SGI65_ENV */
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_HPUX100_ENV)
 	if (!VFS_STATVFS(filevp->v_vfsp, &st))
-#elif defined(AFS_OSF_ENV)
-
-	VFS_STATFS(filevp->v_vfsp, code);
-	/* struct copy */
-	st = filevp->v_vfsp->m_stat;
-	if (code == 0)
 #elif defined(AFS_AIX41_ENV)
 	if (!VFS_STATFS(filevp->v_vfsp, &st, &afs_osi_cred))
 #elif defined(AFS_LINUX20_ENV)

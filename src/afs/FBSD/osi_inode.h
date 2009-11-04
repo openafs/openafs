@@ -10,7 +10,7 @@
 /*
  * osi_inode.h
  *
- * Inode information required for DUX servers and salvager.
+ * Inode information required for FreeBSD servers and salvager.
  */
 #ifndef _OSI_INODE_H_
 #define _OSI_INODE_H_

@@ -8,7 +8,7 @@
  */
 
 /*
- * osi_vfsops.c for DUX
+ * osi_vfsops.c for NetBSD
  */
 #include <afsconfig.h>
 #include "afs/param.h"

@@ -877,11 +877,6 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 			 code);
 	    AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_READ);
 	    AFS_GLOCK();
-#elif defined(AFS_OSF_ENV)
-	    tuio.uio_rw = UIO_READ;
-	    AFS_GUNLOCK();
-	    VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp, code);
-	    AFS_GLOCK();
 #elif defined(AFS_HPUX100_ENV)
 	    AFS_GUNLOCK();
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, afs_osi_credp);

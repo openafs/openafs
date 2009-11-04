@@ -83,7 +83,7 @@ afs_MarinerLogFetch(register struct vcache *avc, register afs_int32 off,
     taddr.sin_port = htons(2106);
 #ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(taddr);
-#endif /* AFS_OSF_ENV */
+#endif
     tp = tp1 = (char *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
     strcpy(tp, "fetch$Fetching ");
     tp += 15;			/* change it if string changes */
@@ -115,7 +115,7 @@ afs_MarinerLog(register char *astring, register struct vcache *avc)
     taddr.sin_port = htons(2106);
 #ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(taddr);
-#endif /* AFS_OSF_ENV */
+#endif
     tp = buf = (char *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
     strcpy(tp, astring);

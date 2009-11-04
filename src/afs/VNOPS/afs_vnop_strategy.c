@@ -27,7 +27,7 @@
 
 
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int afs_ustrategy(register struct buf *abp, afs_ucred_t *credp)
 #else
 int afs_ustrategy(register struct buf *abp)
@@ -38,12 +38,10 @@ int afs_ustrategy(register struct buf *abp)
     struct iovec tiovec[1];
     register struct vcache *tvc = VTOAFS(abp->b_vp);
     register afs_int32 len = abp->b_bcount;
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp;
-#else
+#elif !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
     afs_ucred_t *credp = u.u_cred;
-#endif
 #endif
 
     AFS_STATCNT(afs_ustrategy);
@@ -73,16 +71,16 @@ int afs_ustrategy(register struct buf *abp)
 	 */
 	tuio.afsio_iov = tiovec;
 	tuio.afsio_iovcnt = 1;
-#if	defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
-#ifdef AFS_64BIT_CLIENT
-#ifdef AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
+# ifdef AFS_64BIT_CLIENT
+#  ifdef AFS_SUN5_ENV
 	tuio.afsio_offset = (afs_offs_t) ldbtob(abp->b_lblkno);
-#else
+#  else
 	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
-#endif
-#else /* AFS_64BIT_CLIENT */
+#  endif
+# else /* AFS_64BIT_CLIENT */
 	tuio.afsio_offset = (u_int) dbtob(abp->b_blkno);
-#endif /* AFS_64BIT_CLIENT */
+# endif /* AFS_64BIT_CLIENT */
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
 #endif
@@ -132,7 +130,7 @@ int afs_ustrategy(register struct buf *abp)
     } else {
 	tuio.afsio_iov = tiovec;
 	tuio.afsio_iovcnt = 1;
-#if	defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV)
 #ifdef AFS_64BIT_CLIENT
 #ifdef AFS_SUN5_ENV
 	tuio.afsio_offset = (afs_offs_t) ldbtob(abp->b_lblkno);
@@ -163,11 +161,6 @@ int afs_ustrategy(register struct buf *abp)
 	 */
 	len = MIN(len, tvc->f.m.Length - dbtob(abp->b_blkno));
 #endif
-#ifdef AFS_OSF_ENV
-	len =
-	    MIN(abp->b_bcount,
-		(VTOAFS(abp->b_vp))->f.m.Length - dbtob(abp->b_blkno));
-#endif /* AFS_OSF_ENV */
 	tuio.afsio_resid = len;
 #if defined(AFS_XBSD_ENV)
 	tiovec[0].iov_base = abp->b_saveaddr;
@@ -184,7 +177,7 @@ int afs_ustrategy(register struct buf *abp)
 #endif
     }
 
-#if defined(AFS_DUX40_ENV) || defined (AFS_XBSD_ENV)
+#if defined (AFS_XBSD_ENV)
     if (code) {
 	abp->b_error = code;
 #if !defined(AFS_FBSD50_ENV)
@@ -195,15 +188,6 @@ int afs_ustrategy(register struct buf *abp)
 
 #if defined(AFS_AIX32_ENV)
     crfree(credp);
-#elif defined(AFS_DUX40_ENV)
-    biodone(abp);
-    if (code && !(abp->b_flags & B_READ)) {
-	/* prevent ubc from retrying writes */
-	AFS_GUNLOCK();
-	ubc_invalidate(AFSTOV(tvc)->v_object,
-		       (vm_offset_t) dbtob(abp->b_blkno), PAGE_SIZE, B_INVAL);
-	AFS_GLOCK();
-    }
 #elif defined(AFS_FBSD60_ENV)
     (*abp->b_iodone)(abp);
 #elif defined(AFS_FBSD50_ENV)

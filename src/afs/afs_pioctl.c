@@ -381,32 +381,32 @@ afs_ioctl(OSI_VN_DECL(tvc), int cmd, void *arg, int flag, cred_t * cr,
    */
 /* AFS_HPUX102 and up uses VNODE ioctl instead */
 #if !defined(AFS_HPUX102_ENV) && !defined(AFS_DARWIN80_ENV)
-#if !defined(AFS_SGI_ENV)
-#ifdef	AFS_AIX32_ENV
-#ifdef AFS_AIX51_ENV
-#ifdef __64BIT__
+# if !defined(AFS_SGI_ENV)
+#  ifdef	AFS_AIX32_ENV
+#   ifdef AFS_AIX51_ENV
+#    ifdef __64BIT__
 int
 kioctl(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
 	   caddr_t arg3)
-#else /* __64BIT__ */
+#    else /* __64BIT__ */
 int
 kioctl32(int fdes, int com, caddr_t arg, caddr_t ext, caddr_t arg2, 
 	     caddr_t arg3)
-#endif /* __64BIT__ */
-#else
+#    endif /* __64BIT__ */
+#   else
 int
 kioctl(int fdes, int com, caddr_t arg, caddr_t ext)
-#endif
+#   endif
 {
     struct a {
 	int fd, com;
 	caddr_t arg, ext;
-#ifdef AFS_AIX51_ENV
+#   ifdef AFS_AIX51_ENV
 	caddr_t arg2, arg3;
-#endif
+#   endif
     } u_uap, *uap = &u_uap;
-#else
-#if defined(AFS_SUN5_ENV)
+#  else
+#   if defined(AFS_SUN5_ENV)
 
 struct afs_ioctl_sys {
     int fd;
@@ -417,23 +417,14 @@ struct afs_ioctl_sys {
 int 
 afs_xioctl(struct afs_ioctl_sys *uap, rval_t *rvp)
 {
-#elif defined(AFS_OSF_ENV)
-int 
-afs_xioctl(afs_proc_t *p, void *args, long *retval)
-{
-    struct a {
-	long fd;
-	u_long com;
-	caddr_t arg;
-    } *uap = (struct a *)args;
-#elif defined(AFS_FBSD50_ENV)
-#define arg data
+#   elif defined(AFS_FBSD50_ENV)
+#    define arg data
 int
 afs_xioctl(struct thread *td, register struct ioctl_args *uap, 
 	   register_t *retval)
 {
     afs_proc_t *p = td->td_proc;
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#   elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 struct ioctl_args {
     int fd;
     u_long com;
@@ -443,7 +434,7 @@ struct ioctl_args {
 int
 afs_xioctl(afs_proc_t *p, register struct ioctl_args *uap, register_t *retval)
 {
-#elif defined(AFS_LINUX22_ENV)
+#   elif defined(AFS_LINUX22_ENV)
 struct afs_ioctl_sys {
     unsigned int com;
     unsigned long arg;
@@ -453,7 +444,7 @@ afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	   unsigned long arg)
 {
     struct afs_ioctl_sys ua, *uap = &ua;
-#else
+#   else
 int
 afs_xioctl(void)
 {
@@ -462,88 +453,84 @@ afs_xioctl(void)
 	int com;
 	caddr_t arg;
     } *uap = (struct a *)u.u_ap;
-#endif /* AFS_SUN5_ENV */
-#endif
-#if defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#   endif /* AFS_SUN5_ENV */
+#  endif
+#  if defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
     struct file *fd;
-#elif !defined(AFS_LINUX22_ENV)
+#  elif !defined(AFS_LINUX22_ENV)
     register struct file *fd;
-#endif
-#if defined(AFS_XBSD_ENV)
+#  endif
+#  if defined(AFS_XBSD_ENV)
     register struct filedesc *fdp;
-#endif
+#  endif
     register struct vcache *tvc;
     register int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
-#if defined(AFS_DARWIN_ENV)
+#  if defined(AFS_DARWIN_ENV)
     if ((code = fdgetf(p, uap->fd, &fd)))
 	return code;
-#elif defined(AFS_XBSD_ENV)
+#  elif defined(AFS_XBSD_ENV)
     fdp = p->p_fd;
     if ((u_int) uap->fd >= fdp->fd_nfiles
 	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
 	return EBADF;
     if ((fd->f_flag & (FREAD | FWRITE)) == 0)
 	return EBADF;
-#elif defined(AFS_LINUX22_ENV)
+#  elif defined(AFS_LINUX22_ENV)
     ua.com = com;
     ua.arg = arg;
-#elif defined(AFS_AIX32_ENV)
+#  elif defined(AFS_AIX32_ENV)
     uap->fd = fdes;
     uap->com = com;
     uap->arg = arg;
-#ifdef AFS_AIX51_ENV
+#   ifdef AFS_AIX51_ENV
     uap->arg2 = arg2;
     uap->arg3 = arg3;
-#endif
+#   endif
     if (setuerror(getf(uap->fd, &fd))) {
 	return -1;
     }
-#elif defined(AFS_OSF_ENV)
-    fd = NULL;
-    if (code = getf(&fd, uap->fd, FILE_FLAGS_NULL, &u.u_file_state))
-	return code;
-#elif defined(AFS_SUN5_ENV)
-# if defined(AFS_SUN57_ENV)
+#  elif defined(AFS_SUN5_ENV)
+#   if defined(AFS_SUN57_ENV)
     fd = getf(uap->fd);
     if (!fd)
 	return (EBADF);
-# elif defined(AFS_SUN54_ENV)
+#   elif defined(AFS_SUN54_ENV)
     fd = GETF(uap->fd);
     if (!fd)
 	return (EBADF);
-# else
+#   else
     if (code = getf(uap->fd, &fd)) {
 	return (code);
     }
-# endif	/* AFS_SUN57_ENV */
-#else
+#   endif	/* AFS_SUN57_ENV */
+#  else
     fd = getf(uap->fd);
     if (!fd)
 	return (EBADF);
-#endif
+#  endif
     /* first determine whether this is any sort of vnode */
-#if defined(AFS_LINUX22_ENV)
+#  if defined(AFS_LINUX22_ENV)
     tvc = VTOAFS(ip);
     {
-#else
-#ifdef AFS_SUN5_ENV
+#  else
+#   ifdef AFS_SUN5_ENV
     if (fd->f_vnode->v_type == VREG || fd->f_vnode->v_type == VDIR) {
-#else
+#   else
     if (fd->f_type == DTYPE_VNODE) {
-#endif
+#   endif
 	/* good, this is a vnode; next see if it is an AFS vnode */
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
+#   if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
 	tvc = VTOAFS(fd->f_vnode);	/* valid, given a vnode */
-#elif defined(AFS_OBSD_ENV)
+#   elif defined(AFS_OBSD_ENV)
 	tvc =
 	    IsAfsVnode((struct vnode *)fd->
 		       f_data) ? VTOAFS((struct vnode *)fd->f_data) : NULL;
-#else
+#   else
 	tvc = VTOAFS((struct vnode *)fd->f_data);	/* valid, given a vnode */
-#endif
-#endif /* AFS_LINUX22_ENV */
+#   endif
+#  endif /* AFS_LINUX22_ENV */
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
@@ -555,135 +542,102 @@ afs_xioctl(void)
 		if (code) {
 		    osi_FreeSmallSpace(datap);
 		    AFS_GUNLOCK();
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-		    return code;
-#else
-#if	defined(AFS_SUN5_ENV)
-#ifdef	AFS_SUN54_ENV
-		    releasef(uap->fd);
-#else
-		    releasef(fd);
-#endif
-		    return (EFAULT);
-#else
-#ifdef	AFS_OSF_ENV
-#ifdef	AFS_OSF30_ENV
-		    FP_UNREF_ALWAYS(fd);
-#else
-		    FP_UNREF(fd);
-#endif
-		    return code;
-#else /* AFS_OSF_ENV */
-#ifdef	AFS_AIX41_ENV
+#  if defined(AFS_AIX41_ENV)
 		    ufdrele(uap->fd);
-#endif
-#ifdef AFS_LINUX22_ENV
+#  elif defined(AFS_SUN54_ENV)
+		    releasef(uap->fd);
+#  elif defined(AFS_SUN5_ENV)
+		    releasef(fd);
+#  endif
+
+#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+		    return code;
+#  elif defined(AFS_SUN5_ENV)
+		    return (EFAULT);
+#  elif defined(AFS_LINUX22_ENV)
 		    return -code;
-#else
+#  else
 		    return (setuerror(code), code);
-#endif
-#endif
-#endif
-#endif
+#  endif
 		}
 		code = HandleIoctl(tvc, uap->com, datap);
 		osi_FreeSmallSpace(datap);
 		AFS_GUNLOCK();
 		ioctlDone = 1;
-#ifdef	AFS_AIX41_ENV
+#  if defined(AFS_AIX41_ENV)
 		ufdrele(uap->fd);
-#endif
-#ifdef	AFS_OSF_ENV
-#ifdef	AFS_OSF30_ENV
-		FP_UNREF_ALWAYS(fd);
-#else
-		FP_UNREF(fd);
-#endif
-#endif
+#  endif
 	    }
-#if defined(AFS_LINUX22_ENV)
+#  if defined(AFS_LINUX22_ENV)
 	    else
 		code = EINVAL;
-#endif
+#  endif
 	}
     }
 
     if (!ioctlDone) {
-#ifdef	AFS_AIX41_ENV
+#  if defined(AFS_AIX41_ENV)
 	ufdrele(uap->fd);
-#ifdef AFS_AIX51_ENV
-#ifdef __64BIT__
+#   ifdef AFS_AIX51_ENV
+#    ifdef __64BIT__
 	code = okioctl(fdes, com, arg, ext, arg2, arg3);
-#else /* __64BIT__ */
+#    else /* __64BIT__ */
 	code = okioctl32(fdes, com, arg, ext, arg2, arg3);
-#endif /* __64BIT__ */
-#else /* !AFS_AIX51_ENV */
+#    endif /* __64BIT__ */
+#   else /* !AFS_AIX51_ENV */
 	code = okioctl(fdes, com, arg, ext);
-#endif /* AFS_AIX51_ENV */
+#   endif /* AFS_AIX51_ENV */
 	return code;
-#else /* !AFS_AIX41_ENV */
-#ifdef	AFS_AIX32_ENV
+#  elif defined(AFS_AIX32_ENV)
 	okioctl(fdes, com, arg, ext);
-#elif defined(AFS_SUN5_ENV)
-#if defined(AFS_SUN57_ENV)
+#  elif defined(AFS_SUN5_ENV)
+#   if defined(AFS_SUN57_ENV)
 	releasef(uap->fd);
-#elif defined(AFS_SUN54_ENV)
+#   elif defined(AFS_SUN54_ENV)
 	RELEASEF(uap->fd);
-#else
+#   else
 	releasef(fd);
-#endif
+#   endif
 	code = ioctl(uap, rvp);
-#elif defined(AFS_FBSD50_ENV)
+#  elif defined(AFS_FBSD50_ENV)
 	return ioctl(td, uap);
-#elif defined(AFS_FBSD_ENV)
+#  elif defined(AFS_FBSD_ENV)
 	return ioctl(p, uap);
-#elif defined(AFS_OBSD_ENV)
+#  elif defined(AFS_OBSD_ENV)
 	code = sys_ioctl(p, uap, retval);
-#elif defined(AFS_DARWIN_ENV)
+#  elif defined(AFS_DARWIN_ENV)
 	return ioctl(p, uap, retval);
-#elif defined(AFS_OSF_ENV)
-	code = ioctl(p, args, retval);
-#ifdef	AFS_OSF30_ENV
-	FP_UNREF_ALWAYS(fd);
-#else
-	FP_UNREF(fd);
-#endif
-	return code;
-#elif !defined(AFS_LINUX22_ENV)
+#  elif !defined(AFS_LINUX22_ENV)
 	ioctl();
-#endif
-#endif
+#  endif
     }
-#ifdef	AFS_SUN5_ENV
+#  ifdef	AFS_SUN5_ENV
     if (ioctlDone)
-#ifdef	AFS_SUN54_ENV
+#   ifdef	AFS_SUN54_ENV
 	releasef(uap->fd);
-#else
+#   else
 	releasef(fd);
-#endif
+#   endif
     return (code);
-#else
-#ifdef AFS_LINUX22_ENV
+#  elif defined(AFS_LINUX22_ENV)
     return -code;
-#else
-#if defined(KERNEL_HAVE_UERROR)
+#  elif defined(KERNEL_HAVE_UERROR)
     if (!getuerror())
 	setuerror(code);
-#if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
+#   if defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
     return (getuerror()? -1 : u.u_ioctlrv);
-#else
+#   else
     return getuerror()? -1 : 0;
-#endif
-#endif
-#endif /* AFS_LINUX22_ENV */
-#endif /* AFS_SUN5_ENV */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#   endif
+#  endif
+
+#  if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     return (code);
-#else
+#  else
     return 0;
-#endif
+#  endif
 }
-#endif /* AFS_SGI_ENV */
+# endif /* AFS_SGI_ENV */
 #endif /* AFS_HPUX102_ENV */
 
 #if defined(AFS_SGI_ENV)
@@ -704,25 +658,11 @@ afs_pioctl(struct pioctlargs *uap, rval_t * rvp)
     AFS_GLOCK();
     code = afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow);
     AFS_GUNLOCK();
-#ifdef AFS_SGI64_ENV
+# ifdef AFS_SGI64_ENV
     return code;
-#else
+# else
     return u.u_error;
-#endif
-}
-
-#elif defined(AFS_OSF_ENV)
-afs_pioctl(afs_proc_t *p, void *args, int *retval)
-{
-    struct a {
-	char *path;
-	int cmd;
-	caddr_t cmarg;
-	int follow;
-    } *uap = (struct a *)args;
-
-    AFS_STATCNT(afs_pioctl);
-    return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow));
+# endif
 }
 
 #elif defined(AFS_FBSD50_ENV)
@@ -753,15 +693,15 @@ afs_pioctl(afs_proc_t *p, void *args, int *retval)
     } *uap = (struct a *)args;
 
     AFS_STATCNT(afs_pioctl);
-#ifdef AFS_DARWIN80_ENV
+# ifdef AFS_DARWIN80_ENV
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     kauth_cred_get()));
-#else
+# else
     return (afs_syscall_pioctl
 	    (uap->path, uap->cmd, uap->cmarg, uap->follow,
 	     p->p_cred->pc_ucred));
-#endif
+# endif
 }
 
 #endif
@@ -1566,22 +1506,18 @@ DECL_PIOCTL(PSetTokens)
     if (set_parent_pag) {
 	afs_uint32 pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_DARWIN_ENV)
+# if defined(AFS_DARWIN_ENV)
 	afs_proc_t *p = current_proc();	/* XXX */
-#else
+# else
 	afs_proc_t *p = curproc;	/* XXX */
-#endif
-#ifndef AFS_DARWIN80_ENV
+# endif
+# ifndef AFS_DARWIN80_ENV
 	uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
 		p->p_pid, p->p_comm);
-#endif
+# endif
 	if (!setpag(p, acred, -1, &pag, 1)) {
 #else
-#ifdef	AFS_OSF_ENV
-	if (!setpag(u.u_procp, acred, -1, &pag, 1)) {	/* XXX u.u_procp is a no-op XXX */
-#else
 	if (!setpag(acred, -1, &pag, 1)) {
-#endif
 #endif
 	    afs_InitReq(&treq, *acred);
 	    areq = &treq;
@@ -3050,10 +2986,9 @@ DECL_PIOCTL(PFlushVolumeData)
 		    goto loop;
 		}
 #endif
-#if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
-#else
-#ifdef AFS_DARWIN80_ENV
+#elif defined(AFS_DARWIN80_ENV)
 		vp = AFSTOV(tvc);
 		if (vnode_get(vp))
 		    continue;
@@ -3063,13 +2998,10 @@ DECL_PIOCTL(PFlushVolumeData)
 		    AFS_GLOCK();
 		    continue;
 		}
-#else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
 		VREFCOUNT_INC(tvc); /* AIX, apparently */
-#endif
-#endif
 #endif
 		ReleaseReadLock(&afs_xvcache);
 #ifdef AFS_BOZONLOCK_ENV
@@ -4074,9 +4006,6 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     for (i = 2; i < NGROUPS; i++)
 	newcred->cr_groups[i] = NOGROUP;
 #endif
-#endif
-#if	!defined(AFS_OSF_ENV) 
-    afs_nfsclient_init();	/* before looking for exporter, ensure one exists */
 #endif
     if (!(exporter = exporter_find(exporter_type))) {
 	/* Exporter wasn't initialized or an invalid exporter type */

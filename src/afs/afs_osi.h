@@ -311,7 +311,7 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 #else
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -358,20 +358,18 @@ typedef struct timeval osi_timeval_t;
 	    uio_setrw((UIO),(RW));				\
 	    CODE = uiomove((SRC),(LEN),(UIO));			\
 	} while(0)
-#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    (UIO)->uio_rw = (RW);				\
 	    CODE = uiomove((SRC),(LEN),(UIO));			\
 	} while(0)
-#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
+#else
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    CODE = uiomove((SRC),(LEN),(RW),(UIO));		\
 	} while(0)
-#endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
-#endif /* AFS_DARWIN80_ENV */
+#endif
 
 #endif /* AFS_GLOBAL_SUNLOCK */
 
