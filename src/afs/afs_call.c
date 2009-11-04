@@ -2198,12 +2198,12 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	temp = strlen(tlp->name) + 1;
 	if (temp > p4)
 	    return EINVAL;
-	AFS_COPYOUT(tlp->name, (char *)p3, temp, code);
+	AFS_COPYOUT(tlp->name, AFSKPTR(p3), temp, code);
 	break;
 
     case ICL_OP_CLRLOG:	/* clear specified log */
 	/* zero out the specified log: p1=logname */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	logp = afs_icl_FindLog(tname);
@@ -2215,7 +2215,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 
     case ICL_OP_CLRSET:	/* clear specified set */
 	/* zero out the specified set: p1=setname */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
@@ -2257,15 +2257,15 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 	temp = strlen(setp->name) + 1;
 	if (temp > p3)
 	    return EINVAL;
-	AFS_COPYOUT(setp->name, (char *)p2, temp, code);
+	AFS_COPYOUT(setp->name, AFSKPTR(p2), temp, code);
 	if (!code)		/* copy out size of log */
-	    AFS_COPYOUT((char *)&setp->states, (char *)p4, sizeof(afs_int32),
+	    AFS_COPYOUT((char *)&setp->states, AFSKPTR(p4), sizeof(afs_int32),
 			code);
 	break;
 
     case ICL_OP_SETSTAT:	/* set status on a set */
 	/* activate the specified set: p1=setname, p2=op */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
@@ -2296,7 +2296,7 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 
     case ICL_OP_SETLOGSIZE:	/* set size of log */
 	/* set the size of the specified log: p1=logname, p2=size (in words) */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	logp = afs_icl_FindLog(tname);
@@ -2308,30 +2308,30 @@ Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval)
 
     case ICL_OP_GETLOGINFO:	/* get size of log */
 	/* zero out the specified log: p1=logname, p2=&logSize, p3=&allocated */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	logp = afs_icl_FindLog(tname);
 	if (!logp)
 	    return ENOENT;
 	allocated = !!logp->datap;
-	AFS_COPYOUT((char *)&logp->logSize, (char *)p2, sizeof(afs_int32),
+	AFS_COPYOUT((char *)&logp->logSize, AFSKPTR(p2), sizeof(afs_int32),
 		    code);
 	if (!code)
-	    AFS_COPYOUT((char *)&allocated, (char *)p3, sizeof(afs_int32),
+	    AFS_COPYOUT((char *)&allocated, AFSKPTR(p3), sizeof(afs_int32),
 			code);
 	afs_icl_LogRele(logp);
 	break;
 
     case ICL_OP_GETSETINFO:	/* get state of set */
 	/* zero out the specified set: p1=setname, p2=&state */
-	AFS_COPYINSTR((char *)p1, tname, sizeof(tname), &temp, code);
+	AFS_COPYINSTR(AFSKPTR(p1), tname, sizeof(tname), &temp, code);
 	if (code)
 	    return code;
 	setp = afs_icl_FindSet(tname);
 	if (!setp)
 	    return ENOENT;
-	AFS_COPYOUT((char *)&setp->states, (char *)p2, sizeof(afs_int32),
+	AFS_COPYOUT((char *)&setp->states, AFSKPTR(p2), sizeof(afs_int32),
 		    code);
 	afs_icl_SetRele(setp);
 	break;
