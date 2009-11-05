@@ -152,6 +152,7 @@ pthread_mutex_t vol_glock_mutex;
 pthread_mutex_t vol_trans_mutex;
 pthread_cond_t vol_put_volume_cond;
 pthread_cond_t vol_sleep_cond;
+pthread_cond_t vol_init_attach_cond;
 int vol_attach_threads = 1;
 #endif /* AFS_PTHREAD_ENV */
 
@@ -419,6 +420,7 @@ int VInit;			/* 0 - uninitialized,
 				 * 3 - initialized, all volumes have been attached, and
 				 * VConnectFS() has completed. */
 
+static int vinit_attach_abort = 0;
 
 bit32 VolumeCacheCheck;		/* Incremented everytime a volume goes on line--
 				 * used to stamp volume headers and in-core
@@ -462,6 +464,7 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
     assert(pthread_mutex_init(&vol_trans_mutex, NULL) == 0);
     assert(pthread_cond_init(&vol_put_volume_cond, NULL) == 0);
     assert(pthread_cond_init(&vol_sleep_cond, NULL) == 0);
+    assert(pthread_cond_init(&vol_init_attach_cond, NULL) == 0);
 #else /* AFS_PTHREAD_ENV */
     IOMGR_Initialize();
 #endif /* AFS_PTHREAD_ENV */
@@ -510,7 +513,37 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
     if (errors)
 	return -1;
 
-    if (programType == fileServer) {
+    if (programType != fileServer) {
+        errors = VInitAttachVolumes(programType);
+        if (errors) {
+            return -1;
+        }
+    }
+
+#ifdef FSSYNC_BUILD_CLIENT
+    if (programType == volumeUtility && connect) {
+	if (!VConnectFS()) {
+	    Log("Unable to connect to file server; will retry at need\n");
+	    /*exit(1);*/
+	}
+    }
+#ifdef AFS_DEMAND_ATTACH_FS
+    else if (programType == salvageServer) {
+	if (!VConnectFS()) {
+	    Log("Unable to connect to file server; aborted\n");
+	    exit(1);
+	}
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+#endif /* FSSYNC_BUILD_CLIENT */
+    return 0;
+}
+
+int
+VInitAttachVolumes(ProgramType pt)
+{
+    assert(VInit==1);
+    if (pt == fileServer) {
 	struct DiskPartition64 *diskP;
 #ifdef AFS_PTHREAD_ENV
 	struct vinitvolumepackage_thread_t params;
@@ -549,9 +582,12 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 
 	    VOL_LOCK;
 	    for (i=0; i < threads; i++) {
+                AFS_SIGSET_DECL;
+                AFS_SIGSET_CLEAR();
 		assert(pthread_create
 		       (&tid, &attrs, &VInitVolumePackageThread,
 			&params) == 0);
+                AFS_SIGSET_RESTORE();
 	    }
 
 	    while(params.n_threads_complete < threads) {
@@ -586,24 +622,14 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 	}
 #endif /* AFS_PTHREAD_ENV */
     }
-
+    VOL_LOCK;
     VInit = 2;			/* Initialized, and all volumes have been attached */
-#ifdef FSSYNC_BUILD_CLIENT
-    if (programType == volumeUtility && connect) {
-	if (!VConnectFS()) {
-	    Log("Unable to connect to file server; will retry at need\n");
-	    /*exit(1);*/
-	}
-    }
-#ifdef AFS_DEMAND_ATTACH_FS
-    else if (programType == salvageServer) {
-	if (!VConnectFS()) {
-	    Log("Unable to connect to file server; aborted\n");
-	    exit(1);
-	}
-    }
-#endif /* AFS_DEMAND_ATTACH_FS */
-#endif /* FSSYNC_BUILD_CLIENT */
+#ifdef AFS_PTHREAD_ENV
+    assert(pthread_cond_broadcast(&vol_init_attach_cond) == 0);
+#else
+    LWP_NoYieldSignal(VInitAttachVolumes);
+#endif /* AFS_PTHREAD_ENV */
+    VOL_UNLOCK;
     return 0;
 }
 
@@ -623,6 +649,11 @@ VInitVolumePackageThread(void * args) {
     while (queue_IsNotEmpty(params)) {
         int nAttached = 0, nUnattached = 0;
 
+        if (vinit_attach_abort) {
+            Log("Aborting initialization\n");
+            goto done;
+        }
+
         dpq = queue_First(params,diskpartition_queue_t);
 	queue_Remove(dpq);
 	VOL_UNLOCK;
@@ -634,6 +665,7 @@ VInitVolumePackageThread(void * args) {
 	VOL_LOCK;
     }
 
+done:
     params->n_threads_complete++;
     pthread_cond_signal(&params->thread_done_cv);
     VOL_UNLOCK;
@@ -661,6 +693,12 @@ VAttachVolumesByPartition(struct DiskPartition64 *diskP, int * nAttached, int * 
   while ((dp = readdir(dirp))) {
     char *p;
     p = strrchr(dp->d_name, '.');
+
+    if (vinit_attach_abort) {
+      Log("Partition %s: abort attach volumes\n", diskP->name);
+      goto done;
+    }
+
     if (p != NULL && strcmp(p, VHDREXT) == 0) {
       Error error;
       Volume *vp;
@@ -687,6 +725,7 @@ VAttachVolumesByPartition(struct DiskPartition64 *diskP, int * nAttached, int * 
   }
 
   Log("Partition %s: attached %d volumes; %d volumes not attached\n", diskP->name, *nAttached, *nUnattached);
+done:
   closedir(dirp);
   return ret;
 }
@@ -762,6 +801,12 @@ VShutdown_r(void)
     pthread_attr_t attrs;
 
     memset(&params, 0, sizeof(vshutdown_thread_t));
+
+    if (VInit < 2) {
+        Log("VShutdown:  aborting attach volumes\n");
+        vinit_attach_abort = 1;
+        VOL_CV_WAIT(&vol_init_attach_cond);
+    }
 
     for (params.n_parts=0, diskP = DiskPartitionList;
 	 diskP; diskP = diskP->next, params.n_parts++);
@@ -879,6 +924,17 @@ VShutdown_r(void)
     int i;
     register Volume *vp, *np;
     register afs_int32 code;
+
+    if (VInit < 2) {
+        Log("VShutdown:  aborting attach volumes\n");
+        vinit_attach_abort = 1;
+#ifdef AFS_PTHREAD_ENV
+        VOL_CV_WAIT(&vol_init_attach_cond);
+#else
+        LWP_WaitProcess(VInitAttachVolumes);
+#endif /* AFS_PTHREAD_ENV */
+    }
+
     Log("VShutdown:  shutting down on-line volumes...\n");
     for (i = 0; i < VolumeHashTable.Size; i++) {
 	/* try to hold first volume in the hash table */
@@ -902,6 +958,7 @@ VShutdown_r(void)
 void
 VShutdown(void)
 {
+    assert(VInit>0);
     VOL_LOCK;
     VShutdown_r();
     VOL_UNLOCK;

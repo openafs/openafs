@@ -1971,6 +1971,9 @@ main(int argc, char *argv[])
 #endif
 #endif
     assert(DInit(buffs) == 0);
+#ifdef AFS_DEMAND_ATTACH_FS
+    FS_STATE_INIT;
+#endif
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -2188,6 +2191,22 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
+    /* Install handler to catch the shutdown signal;
+     * bosserver assumes SIGQUIT shutdown
+     */
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    softsig_signal(SIGQUIT, ShutDown_Signal);
+#else
+    (void)signal(SIGQUIT, ShutDown_Signal);
+#endif
+
+    if (VInitAttachVolumes(fileServer)) {
+	ViceLog(0,
+		("Shutting down: errors encountered initializing volume package\n"));
+	VShutdown();
+	exit(1);
+    }
+
 #ifdef AFS_DEMAND_ATTACH_FS
     if (fs_state.options.fs_state_restore) {
 	/*
@@ -2206,9 +2225,6 @@ main(int argc, char *argv[])
 
 #ifdef AFS_PTHREAD_ENV
     ViceLog(5, ("Starting pthreads\n"));
-#ifdef AFS_DEMAND_ATTACH_FS
-    FS_STATE_INIT;
-#endif
     assert(pthread_attr_init(&tattr) == 0);
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
 
@@ -2267,15 +2283,6 @@ main(int argc, char *argv[])
 		("FileServer %s has address %s (0x%x or 0x%x in host byte order)\n",
 		 FS_HostName, hoststr, FS_HostAddr_NBO, FS_HostAddr_HBO));
     }
-
-    /* Install handler to catch the shutdown signal;
-     * bosserver assumes SIGQUIT shutdown
-     */
-#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-    softsig_signal(SIGQUIT, ShutDown_Signal);
-#else
-    (void)signal(SIGQUIT, ShutDown_Signal);
-#endif
 
     t = tp.tv_sec;
     ViceLog(0,

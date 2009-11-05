@@ -782,6 +782,7 @@ extern struct DiskPartition64 *VGetPartition(char *name, int abortp);
 extern struct DiskPartition64 *VGetPartition_r(char *name, int abortp);
 extern int VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes,
 			      afs_uint32 nSmallVnodes, int connect, afs_uint32 volcache);
+extern int VInitAttachVolumes(ProgramType pt);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
 extern void AssignVolumeName(VolumeDiskData * vol, char *name, char *ext);
