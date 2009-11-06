@@ -57,7 +57,3 @@
 
 /* Pathname for server id definitions--the server id is used to allocate volume numbers */
 #define SERVERLISTPATH	"/vice/db/servers"
-
-/* Values for connect parameter to VInitVolumePackage */
-#define CONNECT_FS	1
-#define DONT_CONNECT_FS	0

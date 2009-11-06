@@ -140,11 +140,13 @@ handleit(struct cmd_syndesc *as, void *arock)
     register struct cmd_item *ti;
     char pname[100], *temp;
     afs_int32 seenpart = 0, seenvol = 0, vid = 0;
+    ProgramType pt;
    
 #ifdef FAST_RESTART
     afs_int32  seenany = 0;
 #endif
     
+    VolumePackageOptions opts;
     struct DiskPartition64 *partP;
 
 #ifdef AFS_SGI_VNODE_GLUE
@@ -314,8 +316,15 @@ handleit(struct cmd_syndesc *as, void *arock)
 	}
     }
 #endif
-    VInitVolumePackage(seenvol ? volumeUtility : salvager, 5, 5,
-		       DONT_CONNECT_FS, 0);
+
+    if (seenvol) {
+	pt = volumeSalvager;
+    } else {
+	pt = salvager;
+    }
+
+    VOptDefaults(pt, &opts);
+    VInitVolumePackage2(pt, &opts);
     DInit(10);
 #ifdef AFS_NT40_ENV
     if (myjob.cj_number != NOT_CHILD) {
@@ -435,7 +444,7 @@ main(int argc, char **argv)
 
 	/* Get and hold a lock for the duration of the salvage to make sure
 	 * that no other salvage runs at the same time.  The routine
-	 * VInitVolumePackage (called below) makes sure that a file server or
+	 * VInitVolumePackage2 (called below) makes sure that a file server or
 	 * other volume utilities don't interfere with the salvage.
 	 */
 	get_salvage_lock = 1;

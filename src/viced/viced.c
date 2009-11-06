@@ -1943,6 +1943,7 @@ main(int argc, char *argv[])
     int curLimit;
     time_t t;
     afs_uint32 rx_bindhost;
+    VolumePackageOptions opts;
 
 #ifdef	AFS_AIX32_ENV
     struct sigaction nsa;
@@ -2249,7 +2250,12 @@ main(int argc, char *argv[])
      * will be available "real soon now".  Worry about whether we can satisfy the 
      * calls in the volume package itself.
      */
-    if (VInitVolumePackage(fileServer, large, nSmallVns, 0, volcache)) {
+    VOptDefaults(fileServer, &opts);
+    opts.nLargeVnodes = large;
+    opts.nSmallVnodes = nSmallVns;
+    opts.volcache = volcache;
+
+    if (VInitVolumePackage2(fileServer, &opts)) {
 	ViceLog(0,
 		("Shutting down: errors encountered initializing volume package\n"));
 	VShutdown();

@@ -38,7 +38,10 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    VInitVolumePackage(1, 0, 0, 0, 0);
+    VolumePackageOptions opts;
+
+    VOptDefaults(1, &opts);
+    VInitVolumePackage2(1, &opts);
     VPrintDiskStats();
 
 }

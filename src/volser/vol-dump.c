@@ -299,8 +299,10 @@ main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     afs_int32 code;
+    VolumePackageOptions opts;
 
-    VInitVolumePackage(volumeUtility, 5, 5, DONT_CONNECT_FS, 0);
+    VOptDefaults(volumeUtility, &opts);
+    VInitVolumePackage2(volumeUtility, &opts);
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL,
 			  "Dump a volume to a 'vos dump' format file without using volserver");

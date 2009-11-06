@@ -420,8 +420,10 @@ SalvageClient(VolumeId vid, char * pname)
     afs_int32 code;
     SYNC_response res;
     SALVSYNC_response_hdr sres;
+    VolumePackageOptions opts;
 
-    VInitVolumePackage(volumeUtility, 5, 5, DONT_CONNECT_FS, 0);
+    VOptDefaults(volumeUtility, &opts);
+    VInitVolumePackage2(volumeUtility, &opts);
     SALVSYNC_clientInit();
     
     code = SALVSYNC_SalvageVolume(vid, pname, SALVSYNC_SALVAGE, SALVSYNC_OPERATOR, 0, NULL);
@@ -472,6 +474,7 @@ SalvageServer(void)
     pthread_t tid;
     pthread_attr_t attrs;
     int slot;
+    VolumePackageOptions opts;
 
     /* All entries to the log will be appended.  Useful if there are
      * multiple salvagers appending to the log.
@@ -492,7 +495,7 @@ SalvageServer(void)
     
     /* Get and hold a lock for the duration of the salvage to make sure
      * that no other salvage runs at the same time.  The routine
-     * VInitVolumePackage (called below) makes sure that a file server or
+     * VInitVolumePackage2 (called below) makes sure that a file server or
      * other volume utilities don't interfere with the salvage.
      */
     
@@ -505,10 +508,10 @@ SalvageServer(void)
     child_slot = (int *) malloc(Parallel * sizeof(int));
     assert(child_slot != NULL);
     memset(child_slot, 0, Parallel * sizeof(int));
-	    
+
     /* initialize things */
-    VInitVolumePackage(salvageServer, 5, 5,
-		       1, 0);
+    VOptDefaults(salvageServer, &opts);
+    VInitVolumePackage2(salvageServer, &opts);
     DInit(10);
     queue_Init(&pending_q);
     queue_Init(&log_cleanup_queue);

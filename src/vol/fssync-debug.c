@@ -223,6 +223,7 @@ static int
 common_prolog(struct cmd_syndesc * as, struct state * state)
 {
     register struct cmd_item *ti;
+    VolumePackageOptions opts;
 
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0) {
@@ -230,8 +231,8 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
     }
 #endif
 
-    VInitVolumePackage(debugUtility, 1, 1,
-		       DONT_CONNECT_FS, 0);
+    VOptDefaults(debugUtility, &opts);
+    VInitVolumePackage2(debugUtility, &opts);
     DInit(1);
 
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */
@@ -246,6 +247,10 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 	    programType = salvager;
 	} else if (!strcmp(ti->data, "salvageServer")) {
 	    programType = salvageServer;
+	} else if (!strcmp(ti->data, "volumeServer")) {
+	    programType = volumeServer;
+	} else if (!strcmp(ti->data, "volumeSalvager")) {
+	    programType = volumeSalvager;
 	} else {
 	    programType = (ProgramType) atoi(ti->data);
 	}

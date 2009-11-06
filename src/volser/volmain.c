@@ -251,6 +251,7 @@ main(int argc, char **argv)
     int bufSize = 0;		/* temp variable to read in udp socket buf size */
     afs_uint32 host = ntohl(INADDR_ANY);
     char *auditFileName = NULL;
+    VolumePackageOptions opts;
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -420,11 +421,12 @@ main(int argc, char **argv)
 	exit(1);
     }
 #endif
-    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage can
+    /* Open VolserLog and map stdout, stderr into it; VInitVolumePackage2 can
        log, so we need to do this here */
     OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
 
-    VInitVolumePackage(volumeUtility, 0, 0, CONNECT_FS, 0);
+    VOptDefaults(volumeServer, &opts);
+    VInitVolumePackage2(volumeServer, &opts);
     /* For nuke() */
     Lock_Init(&localLock);
     DInit(40);

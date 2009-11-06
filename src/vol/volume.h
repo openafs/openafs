@@ -119,11 +119,12 @@ extern pthread_t vol_glock_holder;
  */
 typedef enum {
     fileServer          = 1,    /**< the fileserver process */
-    volumeUtility       = 2,    /**< volserver, or a 
-				 *   single volume salvager (non-dafs) */
+    volumeUtility       = 2,    /**< any miscellaneous volume utility */
     salvager            = 3,    /**< standalone whole-partition salvager */
     salvageServer       = 4,    /**< dafs online salvager */
-    debugUtility        = 5     /**< fssync-debug or similar utility */
+    debugUtility        = 5,    /**< fssync-debug or similar utility */
+    volumeServer        = 6,    /**< the volserver process */
+    volumeSalvager      = 7,    /**< the standalone single-volume salvager */
 } ProgramType;
 extern ProgramType programType;	/* The type of program using the package */
 
@@ -237,6 +238,17 @@ extern VThreadOptions_t VThread_defaults;
 
 #endif /* AFS_DEMAND_ATTACH_FS */
 
+typedef struct VolumePackageOptions {
+    afs_uint32 nLargeVnodes;      /**< size of large vnode cache */
+    afs_uint32 nSmallVnodes;      /**< size of small vnode cache */
+    afs_uint32 volcache;          /**< size of volume header cache */
+
+    afs_int32 canScheduleSalvage; /**< can we schedule salvages? (DAFS) */
+				  /* (if 'no', we will just error out if we
+                                   * find a bad vol) */
+    afs_int32 canUseFSSYNC;       /**< can we use the FSSYNC channel? */
+    afs_int32 canUseSALVSYNC;     /**< can we use the SALVSYNC channel? (DAFS) */
+} VolumePackageOptions;
 
 /* Magic numbers and version stamps for each type of file */
 #define VOLUMEHEADERMAGIC	((bit32)0x88a1bb3c)
@@ -781,8 +793,8 @@ extern void VReleaseVnodeFiles_r(Volume * vp);
 extern void VCloseVnodeFiles_r(Volume * vp);
 extern struct DiskPartition64 *VGetPartition(char *name, int abortp);
 extern struct DiskPartition64 *VGetPartition_r(char *name, int abortp);
-extern int VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes,
-			      afs_uint32 nSmallVnodes, int connect, afs_uint32 volcache);
+extern void VOptDefaults(ProgramType pt, VolumePackageOptions * opts);
+extern int VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts);
 extern int VInitAttachVolumes(ProgramType pt);
 extern void DiskToVolumeHeader(VolumeHeader_t * h, VolumeDiskHeader_t * dh);
 extern void VolumeHeaderToDisk(VolumeDiskHeader_t * dh, VolumeHeader_t * h);
@@ -826,6 +838,9 @@ extern int VVolOpSetVBusy_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 
 extern void VPurgeVolume(Error * ec, Volume * vp);
 
+extern afs_int32 VCanScheduleSalvage(void);
+extern afs_int32 VCanUseFSSYNC(void);
+extern afs_int32 VCanUseSALVSYNC(void);
 
 /* Naive formula relating number of file size to number of 1K blocks in file */
 /* Note:  we charge 1 block for 0 length files so the user can't store

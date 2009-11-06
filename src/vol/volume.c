@@ -212,6 +212,7 @@ static int VolumeExternalName_r(VolumeId volumeId, char * name, size_t len);
 int LogLevel;			/* Vice loglevel--not defined as extern so that it will be
 				 * defined when not linked with vice, XXXX */
 ProgramType programType;	/* The type of program using the package */
+static VolumePackageOptions vol_opts;
 
 /* extended volume package statistics */
 VolPkgStats VStats;
@@ -436,14 +437,55 @@ bit32 VolumeCacheCheck;		/* Incremented everytime a volume goes on line--
 /***************************************************/
 /* Startup routines                                */
 /***************************************************/
+/**
+ * assign default values to a VolumePackageOptions struct.
+ *
+ * Always call this on a VolumePackageOptions struct first, then set any
+ * specific options you want, then call VInitVolumePackage2.
+ *
+ * @param[in]  pt   caller's program type
+ * @param[out] opts volume package options
+ */
+void
+VOptDefaults(ProgramType pt, VolumePackageOptions *opts)
+{
+    opts->nLargeVnodes = opts->nSmallVnodes = 5;
+    opts->volcache = 0;
+
+    opts->canScheduleSalvage = 0;
+    opts->canUseFSSYNC = 0;
+    opts->canUseSALVSYNC = 0;
+
+    switch (pt) {
+    case fileServer:
+	opts->canScheduleSalvage = 1;
+	opts->canUseSALVSYNC = 1;
+	break;
+
+    case salvageServer:
+	opts->canUseFSSYNC = 1;
+	break;
+
+    case volumeServer:
+	opts->nLargeVnodes = 0;
+	opts->nSmallVnodes = 0;
+
+	opts->canUseFSSYNC = 1;
+	break;
+
+    default:
+	/* noop */
+	break;
+    }
+}
 
 int
-VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVnodes,
-		   int connect, afs_uint32 volcache)
+VInitVolumePackage2(ProgramType pt, VolumePackageOptions * opts)
 {
     int errors = 0;		/* Number of errors while finding vice partitions. */
 
     programType = pt;
+    vol_opts = *opts;
 
     memset(&VStats, 0, sizeof(VStats));
     VStats.hdr_cache_size = 200;
@@ -493,18 +535,18 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
     }
 #endif
 #if defined(AFS_DEMAND_ATTACH_FS) && defined(SALVSYNC_BUILD_CLIENT)
-    if (programType == fileServer) {
+    if (VCanUseSALVSYNC()) {
 	/* establish a connection to the salvager at this point */
 	assert(VConnectSALV() != 0);
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
-    if (volcache > VStats.hdr_cache_size)
-	VStats.hdr_cache_size = volcache;
+    if (opts->volcache > VStats.hdr_cache_size)
+	VStats.hdr_cache_size = opts->volcache;
     VInitVolumeHeaderCache(VStats.hdr_cache_size);
 
-    VInitVnodes(vLarge, nLargeVnodes);
-    VInitVnodes(vSmall, nSmallVnodes);
+    VInitVnodes(vLarge, opts->nLargeVnodes);
+    VInitVnodes(vSmall, opts->nSmallVnodes);
 
 
     errors = VAttachPartitions();
@@ -519,20 +561,17 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
     }
 
 #ifdef FSSYNC_BUILD_CLIENT
-    if (programType == volumeUtility && connect) {
+    if (VCanUseFSSYNC()) {
 	if (!VConnectFS()) {
-	    Log("Unable to connect to file server; will retry at need\n");
-	    /*exit(1);*/
-	}
-    }
 #ifdef AFS_DEMAND_ATTACH_FS
-    else if (programType == salvageServer) {
-	if (!VConnectFS()) {
-	    Log("Unable to connect to file server; aborted\n");
-	    exit(1);
+	    if (programType == salvageServer) {
+		Log("Unable to connect to file server; aborted\n");
+		exit(1);
+	    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+	    Log("Unable to connect to file server; will retry at need\n");
 	}
     }
-#endif /* AFS_DEMAND_ATTACH_FS */
 #endif /* FSSYNC_BUILD_CLIENT */
     return 0;
 }
@@ -1861,7 +1900,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	goto done;
     }
 
-    if (programType == volumeUtility) {
+    if (VRequiresPartLock()) {
 	assert(VInit == 3);
 	VLockPartition_r(partition);
     } else if (programType == fileServer) {
@@ -2019,7 +2058,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 
     DiskToVolumeHeader(&iheader, &diskHeader);
 #ifdef FSSYNC_BUILD_CLIENT
-    if (programType == volumeUtility && mode != V_SECRETLY && mode != V_PEEK) {
+    if (VCanUseFSSYNC() && mode != V_SECRETLY && mode != V_PEEK) {
         VOL_LOCK;
 	if (FSYNC_VolOp(iheader.id, partition, FSYNC_VOL_NEEDVOLUME, mode, NULL)
 	    != SYNC_OK) {
@@ -2046,7 +2085,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
      * with vol_glock_mutex held */
     vp = attach2(ec, volumeId, path, &iheader, partp, vp, isbusy, mode);
 
-    if (programType == volumeUtility && vp) {
+    if (VCanUseFSSYNC() && vp) {
 	if ((mode == V_VOLUPD) || (VolumeWriteable(vp) && (mode == V_CLONE))) {
 	    /* mark volume header as in use so that volser crashes lead to a
 	     * salvage attempt */
@@ -2084,7 +2123,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
      * fix is for the server to allow the return of readonly volumes
      * that it doesn't think are really checked out. */
 #ifdef FSSYNC_BUILD_CLIENT
-    if (programType == volumeUtility && vp == NULL &&
+    if (VCanUseFSSYNC() && vp == NULL &&
 	mode != V_SECRETLY && mode != V_PEEK) {
 	FSYNC_VolOp(iheader.id, partition, FSYNC_VOL_ON, 0, NULL);
     } else 
@@ -2140,7 +2179,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     }
 
   done:
-    if (programType == volumeUtility) {
+    if (VRequiresPartLock()) {
 	VUnlockPartition_r(partition);
     }
     if (*ec) {
@@ -2504,7 +2543,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 #if defined(AFS_DEMAND_ATTACH_FS)
     if (*ec && ((*ec != VOFFLINE) || (V_attachState(vp) != VOL_STATE_UNATTACHED))) {
         VOL_LOCK;
-	if (programType == fileServer) {
+	if (VCanScheduleSalvage()) {
 	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	    vp->nUsers = 0;
 	} else {
@@ -2532,7 +2571,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	    vp->specialStatus = 0;
         VOL_LOCK;
 #if defined(AFS_DEMAND_ATTACH_FS)
-	if (programType == fileServer) {
+	if (VCanScheduleSalvage()) {
 	    VRequestSalvage_r(ec, vp, SALVSYNC_NEEDED, VOL_SALVAGE_INVALIDATE_HEADER);
 	    vp->nUsers = 0;
 	} else {
@@ -2548,7 +2587,7 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
     }
 
     VOL_LOCK;
-    if (programType == fileServer) {
+    if (VShouldCheckInUse(mode)) {
 #ifndef FAST_RESTART
 	if (V_inUse(vp) && VolumeWriteable(vp)) {
 	    if (!V_needsSalvaged(vp)) {
@@ -2567,7 +2606,15 @@ attach2(Error * ec, VolId volumeId, char *path, register struct VolumeHeader * h
 	}
 #endif /* FAST_RESTART */
 
-	if (V_destroyMe(vp) == DESTROY_ME) {
+	if (programType == fileServer && V_destroyMe(vp) == DESTROY_ME) {
+	    /* Only check destroyMe if we are the fileserver, since the
+	     * volserver et al sometimes need to work with volumes with
+	     * destroyMe set. Examples are 'temporary' volumes the
+	     * volserver creates, and when we create a volume (destroyMe
+	     * is set on creation; sometimes a separate volserver
+	     * transaction is created to clear destroyMe).
+	     */
+
 #if defined(AFS_DEMAND_ATTACH_FS)
 	    /* schedule a salvage so the volume goes away on disk */
 	    VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
@@ -2982,7 +3029,7 @@ GetVolume(Error * ec, Error * client_ec, VolId volumeId, Volume * hint, int flag
 		Log("Volume %u: couldn't reread volume header\n",
 		    vp->hashid);
 #ifdef AFS_DEMAND_ATTACH_FS
-	    if (programType == fileServer) {
+	    if (VCanScheduleSalvage()) {
 		VRequestSalvage_r(ec, vp, SALVSYNC_ERROR, VOL_SALVAGE_INVALIDATE_HEADER);
 	    } else {
 		FreeVolume(vp);
@@ -3242,7 +3289,7 @@ VOffline_r(Volume * vp, char *message)
     VolumeId vid = V_id(vp);
 #endif
 
-    assert(programType != volumeUtility);
+    assert(programType != volumeUtility && programType != volumeServer);
     if (!V_inUse(vp)) {
 	VPutVolume_r(vp);
 	return;
@@ -3355,7 +3402,7 @@ VDetachVolume_r(Error * ec, Volume * vp)
     int  useDone = FSYNC_VOL_ON;
 
     *ec = 0;			/* always "succeeds" */
-    if (programType == volumeUtility) {
+    if (VCanUseFSSYNC()) {
 	notifyServer = vp->needsPutBack;
 	if (V_destroyMe(vp) == DESTROY_ME)
 	    useDone = FSYNC_VOL_DONE;
@@ -3383,7 +3430,7 @@ VDetachVolume_r(Error * ec, Volume * vp)
      * is not technically detached until the refcounts reach zero
      */
 #ifdef FSSYNC_BUILD_CLIENT
-    if (programType == volumeUtility && notifyServer) {
+    if (VCanUseFSSYNC() && notifyServer) {
 	/* 
 	 * Note:  The server is not notified in the case of a bogus volume 
 	 * explicitly to make it possible to create a volume, do a partial 
@@ -3448,7 +3495,7 @@ VCloseVolumeHandles_r(Volume * vp)
 #endif
 
     /* Too time consuming and unnecessary for the volserver */
-    if (programType != volumeUtility) {
+    if (programType == fileServer) {
 	IH_CONDSYNC(vp->vnodeIndex[vLarge].handle);
 	IH_CONDSYNC(vp->vnodeIndex[vSmall].handle);
 	IH_CONDSYNC(vp->diskDataHandle);
@@ -3493,7 +3540,7 @@ VReleaseVolumeHandles_r(Volume * vp)
 #endif
 
     /* Too time consuming and unnecessary for the volserver */
-    if (programType != volumeUtility) {
+    if (programType == fileServer) {
 	IH_CONDSYNC(vp->vnodeIndex[vLarge].handle);
 	IH_CONDSYNC(vp->vnodeIndex[vSmall].handle);
 	IH_CONDSYNC(vp->diskDataHandle);
@@ -4099,7 +4146,7 @@ VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags)
      * (at some point in the future, we should consider
      *  making volser talk to salsrv)
      */
-    if (programType != fileServer) {
+    if (!VCanScheduleSalvage()) {
 	VChangeState_r(vp, VOL_STATE_ERROR);
 	*ec = VSALVAGE;
 	return 1;
@@ -4463,7 +4510,7 @@ VReconnectSALV_r(void)
 /***************************************************/
 
 /* This must be called by any volume utility which needs to run while the
-   file server is also running.  This is separated from VInitVolumePackage so
+   file server is also running.  This is separated from VInitVolumePackage2 so
    that a utility can fork--and each of the children can independently
    initialize communication with the file server */
 #ifdef FSSYNC_BUILD_CLIENT
@@ -5417,7 +5464,7 @@ static void VLRU_Wait_r(struct VLRU_q * q);
  * @param[in] option  tunable option to modify
  * @param[in] val     new value for tunable parameter
  *
- * @pre @c VInitVolumePackage has not yet been called.
+ * @pre @c VInitVolumePackage2 has not yet been called.
  *
  * @post tunable parameter is modified
  *
@@ -5814,7 +5861,7 @@ VLRU_ScannerThread(void * args)
     }
 
     /* don't start the scanner until VLRU_offline_thresh
-     * plus a small delay for VInitVolumePackage to finish
+     * plus a small delay for VInitVolumePackage2 to finish
      * has gone by */
 
     sleep(VLRU_offline_thresh + 60);
@@ -6661,7 +6708,7 @@ FreeVolumeHeader(register Volume * vp)
  *    @retval 0 success
  *    @retval -1 failure
  *
- * @pre MUST be called prior to VInitVolumePackage
+ * @pre MUST be called prior to VInitVolumePackage2
  *
  * @post Volume Hash Table will have 2^logsize buckets
  */
@@ -7623,3 +7670,21 @@ VPrintExtendedCacheStats(int flags)
     VOL_UNLOCK;
 }
 #endif /* AFS_DEMAND_ATTACH_FS */
+
+afs_int32
+VCanScheduleSalvage(void)
+{
+    return vol_opts.canScheduleSalvage;
+}
+
+afs_int32
+VCanUseFSSYNC(void)
+{
+    return vol_opts.canUseFSSYNC;
+}
+
+afs_int32
+VCanUseSALVSYNC(void)
+{
+    return vol_opts.canUseSALVSYNC;
+}
