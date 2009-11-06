@@ -72,6 +72,7 @@
 #include <afs/errors.h>
 #include "daemon_com.h"
 #include "fssync.h"
+#include "salvsync.h"
 #include "lwp.h"
 #include "lock.h"
 #include <afs/afssyscalls.h>
@@ -120,6 +121,23 @@ static SYNC_server_state_t fssync_server_state =
       "FSSYNC",                 /* protocol name string */
     };
 
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * a queue of volume pointers to salvage in the background.
+ */
+struct fsync_salv_node {
+    struct rx_queue q;
+    Volume *vp;                     /**< volume to salvage */
+    unsigned char update_salv_prio; /**< whether we should update the salvage priority or not */
+};
+static struct {
+    struct rx_queue head;
+    pthread_cond_t cv;
+} fsync_salv;
+
+static void * FSYNC_salvageThread(void *);
+static void FSYNC_backgroundSalvage(Volume *vp);
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 /* Forward declarations */
 static void * FSYNC_sync(void *);
@@ -203,6 +221,12 @@ FSYNC_fsInit(void)
 	   (FSYNC_sync, USUAL_STACK_SIZE, USUAL_PRIORITY, (void *)0,
 	    "FSYNC_sync", &pid) == LWP_SUCCESS);
 #endif /* AFS_PTHREAD_ENV */
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    queue_Init(&fsync_salv.head);
+    assert(pthread_cond_init(&fsync_salv.cv, NULL) == 0);
+    assert(pthread_create(&tid, &tattr, FSYNC_salvageThread, NULL) == 0);
+#endif /* AFS_DEMAND_ATTACH_FS */
 }
 
 #if defined(HAVE_POLL) && defined(AFS_PTHREAD_ENV)
@@ -305,6 +329,91 @@ FSYNC_sync(void * args)
     }
     return NULL; /* hush now, little gcc */
 }
+
+#ifdef AFS_DEMAND_ATTACH_FS
+/**
+ * thread for salvaging volumes in the background.
+ *
+ * Since FSSYNC handlers cannot issue SALVSYNC requests in order to avoid
+ * deadlock issues, this thread exists so code in the FSSYNC handler thread
+ * can hand off volumes to be salvaged in the background.
+ *
+ * @param[in] args  unused
+ *
+ * @note DEMAND_ATTACH_FS only
+ */
+static void *
+FSYNC_salvageThread(void * args)
+{
+    Volume *vp;
+    struct fsync_salv_node *node;
+
+    VOL_LOCK;
+
+    for (;;) {
+	while (queue_IsEmpty(&fsync_salv.head)) {
+	    VOL_CV_WAIT(&fsync_salv.cv);
+	}
+
+	node = queue_First(&fsync_salv.head, fsync_salv_node);
+	queue_Remove(node);
+
+	vp = node->vp;
+	if (node->update_salv_prio) {
+	    if (VUpdateSalvagePriority_r(vp)) {
+		ViceLog(0, ("FSYNC_salvageThread: unable to raise salvage priority "
+		            "for volume %lu\n", afs_printable_uint32_lu(vp->hashid)));
+	    }
+	}
+
+	free(node);
+	node = NULL;
+
+	VCancelReservation_r(vp);
+    }
+
+    VOL_UNLOCK;
+
+    return NULL;
+}
+
+/**
+ * salvage a volume in the background.
+ *
+ * Salvages cannot be scheduled directly from the main FSYNC thread, so
+ * instead call this function to schedule a salvage asynchronously in the
+ * FSYNC_salvageThread thread.
+ *
+ * @param[in] vp  volume to pointer to salvage
+ *
+ * @pre VOL_LOCK held
+ *
+ * @note DEMAND_ATTACH_FS only
+ */
+static void
+FSYNC_backgroundSalvage(Volume *vp)
+{
+    struct fsync_salv_node *node;
+    Error ec;
+
+    VCreateReservation_r(vp);
+
+    node = malloc(sizeof(struct fsync_salv_node));
+    node->vp = vp;
+
+    /* Save this value, to know if we should VUpdateSalvagePriority_r.
+     * We need to save it here, snce VRequestSalvage_r will change it. */
+    node->update_salv_prio = vp->salvage.requested;
+
+    if (VRequestSalvage_r(&ec, vp, SALVSYNC_ERROR, 0)) {
+	ViceLog(0, ("FSYNC_backgroundSalvage: unable to request salvage for volume %lu\n",
+	            afs_printable_uint32_lu(vp->hashid)));
+    }
+
+    queue_Append(&fsync_salv.head, node);
+    assert(pthread_cond_broadcast(&fsync_salv.cv) == 0);
+}
+#endif /* AFS_DEMAND_ATTACH_FS */
 
 static void
 FSYNC_newconnection(osi_socket afd)
@@ -699,6 +808,15 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	/* enforce mutual exclusion for volume ops */
 	if (vp->pending_vol_op) {
 	    if (vp->pending_vol_op->com.programType != type) {
+                if (vp->pending_vol_op->com.command == FSYNC_VOL_OFF &&
+                    vp->pending_vol_op->com.reason == FSYNC_SALVAGE) {
+
+                    Log("denying offline request for volume %lu; volume is salvaging\n",
+		        afs_printable_uint32_lu(vp->hashid));
+
+                    res->hdr.reason = FSYNC_SALVAGE;
+                    goto deny;
+                }
 		Log("volume %u already checked out\n", vp->hashid);
 		/* XXX debug */
 		Log("vp->vop = { com = { ver=%u, prog=%d, com=%d, reason=%d, len=%u, flags=0x%x }, vop = { vol=%u, part='%s' } }\n",
@@ -735,8 +853,8 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 
 	/* filter based upon requestor
 	 *
-	 * volume utilities are not allowed to check out volumes
-	 * which are in an error state
+	 * volume utilities / volserver are not allowed to check out
+	 * volumes which are in an error state
 	 *
 	 * unknown utility programs will be denied on principal
 	 */
@@ -752,12 +870,24 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	    break;
 
 	case volumeUtility:
+	case volumeServer:
+            if (V_attachState(vp) == VOL_STATE_SALVAGING ||
+	        vp->salvage.requested) {
+
+                Log("denying offline request for volume %lu; volume is in salvaging state\n",
+		    afs_printable_uint32_lu(vp->hashid));
+                res->hdr.reason = FSYNC_SALVAGE;
+
+		/* the volume hasn't been checked out yet by the salvager,
+		 * but we think the volume is salvaging; schedule a
+		 * a salvage to update the salvage priority */
+		FSYNC_backgroundSalvage(vp);
+
+		goto deny;
+            }
 	    if (VIsErrorState(V_attachState(vp))) {
 		goto deny;
 	    }
-            if (vp->salvage.requested) {
-                goto deny;
-            }
 	    break;
 
 	default:
@@ -839,6 +969,7 @@ FSYNC_com_VolOff(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 		    vcom->hdr->reason == V_CLONE ? "clone" : 
 		    vcom->hdr->reason == V_READONLY ? "readonly" : 
 		    vcom->hdr->reason == V_DUMP ? "dump" : 
+		    vcom->hdr->reason == FSYNC_SALVAGE ? "salvage" :
 		    "UNKNOWN");
 	    }
 #ifdef AFS_DEMAND_ATTACH_FS
@@ -1087,7 +1218,14 @@ FSYNC_com_VolError(FSSYNC_VolOp_command * vcom, SYNC_response * res)
 	if (FSYNC_partMatch(vcom, vp, 0)) {
 	    /* null out salvsync control state, as it's no longer relevant */
 	    memset(&vp->salvage, 0, sizeof(vp->salvage));
-	    VChangeState_r(vp, VOL_STATE_ERROR);
+            VDeregisterVolOp_r(vp);
+
+            if (vcom->hdr->reason == FSYNC_SALVAGE) {
+		FSYNC_backgroundSalvage(vp);
+            } else {
+	        VChangeState_r(vp, VOL_STATE_ERROR);
+            }
+
 	    code = SYNC_OK;
 	} else {
 	    res->hdr.reason = FSYNC_WRONG_PART;

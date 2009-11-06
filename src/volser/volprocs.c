@@ -62,6 +62,7 @@
 #include <afs/dir.h>
 #include <afs/afsutil.h>
 #include <afs/vol_prototypes.h>
+#include <afs/errors.h>
 
 #include "volser.h"
 #include "voltrans_inline.h"
@@ -213,12 +214,70 @@ ConvertPartition(int apartno, char *aname, int asize)
     return 0;
 }
 
+static struct Volume *
+VAttachVolumeByName_retry(Error *ec, char *partition, char *name, int mode)
+{
+    struct Volume *vp;
+
+    *ec = 0;
+    vp = VAttachVolumeByName(ec, partition, name, mode);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    {
+        int i;
+        /*
+         * The fileserver will take care of keeping track of how many
+         * demand-salvages have been performed, and will force the volume to
+         * ERROR if we've done too many. The limit on This loop is just a
+         * failsafe to prevent trying to salvage forever. We want to attempt
+         * attachment at least SALVAGE_COUNT_MAX times, since we want to
+         * avoid prematurely exiting this loop, if we can.
+         */
+        for (i = 0; i < SALVAGE_COUNT_MAX*2 && *ec == VSALVAGING; i++) {
+            sleep(SALVAGE_PRIO_UPDATE_INTERVAL);
+            vp = VAttachVolumeByName(ec, partition, name, mode);
+        }
+
+        if (*ec == VSALVAGING) {
+            *ec = VSALVAGE;
+        }
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    return vp;
+}
+
+static struct Volume *
+VAttachVolume_retry(Error *ec, afs_uint32 avolid, int amode)
+{
+    struct Volume *vp;
+
+    *ec = 0;
+    vp = VAttachVolume(ec, avolid, amode);
+
+#ifdef AFS_DEMAND_ATTACH_FS
+    {
+        int i;
+        /* see comment above in VAttachVolumeByName_retry */
+        for (i = 0; i < SALVAGE_COUNT_MAX*2 && *ec == VSALVAGING; i++) {
+            sleep(SALVAGE_PRIO_UPDATE_INTERVAL);
+            vp = VAttachVolume(ec, avolid, amode);
+        }
+
+        if (*ec == VSALVAGING) {
+            *ec = VSALVAGE;
+        }
+    }
+#endif /* AFS_DEMAND_ATTACH_FS */
+
+    return vp;
+}
+
 /* the only attach function that takes a partition is "...ByName", so we use it */
-struct Volume *
+static struct Volume *
 XAttachVolume(afs_int32 *error, afs_uint32 avolid, afs_int32 apartid, int amode)
 {
     char pbuf[30], vbuf[20];
-    register struct Volume *tv;
 
     if (ConvertPartition(apartid, pbuf, sizeof(pbuf))) {
 	*error = EINVAL;
@@ -228,8 +287,8 @@ XAttachVolume(afs_int32 *error, afs_uint32 avolid, afs_int32 apartid, int amode)
 	*error = EINVAL;
 	return NULL;
     }
-    tv = VAttachVolumeByName((Error *)error, pbuf, vbuf, amode);
-    return tv;
+
+    return VAttachVolumeByName_retry((Error *)error, pbuf, vbuf, amode);
 }
 
 /* Adapted from the file server; create a root directory for this volume */
@@ -626,7 +685,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_uint32 purgeId,
 
 
     if (purgeId) {
-	purgevp = VAttachVolume(&error, purgeId, V_VOLUPD);
+	purgevp = VAttachVolume_retry(&error, purgeId, V_VOLUPD);
 	if (error) {
 	    Log("1 Volser: Clone: Could not attach 'purge' volume %u; clone aborted\n", purgeId);
 	    goto fail;
@@ -809,7 +868,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	goto fail;
     }
 
-    clonevp = VAttachVolume(&error, cloneId, V_VOLUPD);
+    clonevp = VAttachVolume_retry(&error, cloneId, V_VOLUPD);
     if (error) {
 	Log("1 Volser: can't attach clone %d\n", cloneId);
 	goto fail;
@@ -2115,7 +2174,7 @@ GetVolInfo(afs_uint32 partId,
     }
 
     /* Get volume from volserver */
-    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
+    tv = VAttachVolumeByName_retry(&error, pname, volname, V_PEEK);
     if (error) {
 	Log("1 Volser: GetVolInfo: Could not attach volume %u (%s:%s) error=%d\n", 
 	    volumeId, pname, volname, error);

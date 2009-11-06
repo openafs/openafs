@@ -586,6 +586,18 @@ typedef struct VolumeStats {
     afs_uint32 last_vol_op;      /**< unix timestamp of last volume operation */
 } VolumeStats;
 
+
+#define SALVAGE_PRIO_UPDATE_INTERVAL 3      /**< number of seconds between prio updates */
+#define SALVAGE_COUNT_MAX 16                /**< number of online salvages we
+					     *   allow before moving the volume
+					     *   into a permanent error state
+					     *
+					     *   once this threshold is reached,
+					     *   the operator will have to manually
+					     *   issue a 'bos salvage' to bring
+					     *   the volume back online
+					     */
+
 /**
  * DAFS online salvager state.
  */
@@ -827,6 +839,7 @@ extern void VPrintExtendedCacheStats_r(int flags);
 extern void VLRU_SetOptions(int option, afs_uint32 val);
 extern int VSetVolHashSize(int logsize);
 extern int VRequestSalvage_r(Error * ec, Volume * vp, int reason, int flags);
+extern int VUpdateSalvagePriority_r(Volume * vp);
 extern int VRegisterVolOp_r(Volume * vp, FSSYNC_VolOp_info * vopinfo);
 extern int VDeregisterVolOp_r(Volume * vp);
 extern void VCancelReservation_r(Volume * vp);
