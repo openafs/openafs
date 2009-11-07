@@ -12,9 +12,13 @@
 
 #include <stdarg.h>
 
-extern void afs_com_err(const char *, afs_int32, const char *, ...);
+extern void afs_com_err(const char *, afs_int32, const char *, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 4);
+
 extern void afs_com_err_va(const char *whoami, afs_int32 code, const char *fmt,
-		       va_list args);
+		       va_list args)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 3, 0);
+
 extern const char *afs_error_table_name(afs_int32);
 extern const char *afs_error_message(afs_int32);
 extern

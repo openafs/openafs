@@ -706,8 +706,8 @@ uss_kauth_SetFields(char *username, char *expirestring, char *reuse,
 		    "Must specify one of the optional parameters. Continuing...\n");
 
 	if (code) {
-	    afs_com_err(uss_whoami, code, "calling KAM_SetFields for %s.%s",
-		    username, instance);
+	    afs_com_err(uss_whoami, code, "calling KAM_SetFields for %s",
+		    username);
 
 	    return (code);
 	}

@@ -520,7 +520,7 @@ ka_islocked(char *name, char *instance, afs_uint32 * when)
 			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (code) {
 	    if (seriouserror(code))
-		afs_com_err(whoami, code, "");
+		afs_com_err(whoami, code, NULL);
 	} else if (tempwhen) {	/* user is locked */
 	    if (!*when || tempwhen < *when) {
 		*when = tempwhen;

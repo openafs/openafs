@@ -404,7 +404,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     /* initialize_rx_error_table(); */
     if (!(tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH))) {
 	afs_com_err(rn, 0, "can't get afs configuration (afsconf_Open(%s))",
-	    rn, AFSDIR_CLIENT_ETC_DIRPATH);
+	    AFSDIR_CLIENT_ETC_DIRPATH);
 	KLOGEXIT(1);
     }
 
@@ -450,10 +450,10 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 
     if (as->parms[aKRBREALM].items) {
 	code = krb5_set_default_realm(k5context,
-		(const char *) as->parms[aKRBREALM].items);
+		as->parms[aKRBREALM].items->data);
 	if (code) {
 	    afs_com_err(rn, code, "Can't make <%s> the default realm",
-		as->parms[aKRBREALM].items);
+		as->parms[aKRBREALM].items->data);
 	    KLOGEXIT(code);
 	}
     }
@@ -623,7 +623,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    break;
 	Failed:
 	    if (code)
-		afs_com_err(rn, code, what);
+		afs_com_err(rn, code, "%s", what);
 	    if (writeTicketFile) {
 		if (cc) {
 		    krb5_cc_close(k5context, cc);
@@ -712,7 +712,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
 	    k5_to_k4_name(k5context, afscred->client, aclient);
 	    code = whoami(atoken, cellconfig, aclient, &viceid);
 	    if (code) {
-		afs_com_err(rn, code, "Can't get your viceid", cellconfig->name);
+		afs_com_err(rn, code, "Can't get your viceid for cell %s", cellconfig->name);
 		*aclient->name = 0;
 	    } else
 		snprintf(aclient->name, MAXKTCNAMELEN-1, "AFS ID %d", viceid);

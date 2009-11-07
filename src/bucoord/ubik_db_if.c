@@ -850,8 +850,8 @@ vldbClientInit(int noAuthFlag, int localauth, char *cellName,
 	    code =
 		ktc_GetToken(&sname, ttoken, sizeof(struct ktc_token), NULL);
 	    if (code) {
-		afs_com_err(whoami, code, 0,
-			"; Can't get AFS tokens - running unauthenticated");
+		afs_com_err(whoami, code,
+			    "; Can't get AFS tokens - running unauthenticated");
 	    } else {
 		if ((ttoken->kvno < 0) || (ttoken->kvno > 256))
 		    afs_com_err(whoami, 0,
@@ -1024,7 +1024,7 @@ udbClientInit(int noAuthFlag, int localauth, char *cellName)
     if (!udbHandle.uh_secobj) {
 	afs_com_err(whoami, 0,
 		"Can't create a security object with security index %d",
-		udbHandle.uh_secobj);
+		udbHandle.uh_scIndex);
 	ERROR(-1);
     }
 
