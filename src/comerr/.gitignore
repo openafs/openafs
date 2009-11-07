@@ -4,3 +4,4 @@
 
 /compile_et
 /et_lex.lex.c
+/error_table.c
