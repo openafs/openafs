@@ -11,7 +11,7 @@
 #define AFS_SRC_VOLSER_INTERNAL_H
 
 /* common.c */
-extern void Log(const char *, ...);
+extern void Log(const char *, ...) AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 extern void InitErrTabs(void);
 
 /* vol_split.c */
