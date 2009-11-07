@@ -1073,7 +1073,7 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 		dput(alias);
 	    } else {
 		iput(ip);
-		unlock_kernel();
+		afs_maybe_unlock_kernel();
 		crfree(credp);
 		return alias;
 	    }
