@@ -423,7 +423,7 @@ setThreadId(char *s)
     pthread_setspecific(rx_thread_id_key, (void *)(intptr_t)rxi_pthread_hinum);
     MUTEX_EXIT(&rx_stats_mutex);
     ViceLog(0,
-	    ("Set thread id %d for '%s'\n",
+	    ("Set thread id %p for '%s'\n",
 	     pthread_getspecific(rx_thread_id_key), s));
 #endif
 }
@@ -1499,8 +1499,8 @@ NewParms(int initializing)
 		ViceLog(0, ("Read on parms failed with errno = %d\n", errno));
 	    } else {
 		ViceLog(0,
-			("Read on parms failed; expected %d bytes but read %d\n",
-			 sbuf.st_size, i));
+			("Read on parms failed; expected %ld bytes but read %d\n",
+			 (long) sbuf.st_size, i));
 	    }
 	    free(parms);
 	    return;

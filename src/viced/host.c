@@ -289,7 +289,8 @@ hpr_Initialize(struct ubik_client **uclient)
     
     code = afsconf_GetCellInfo(tdir, cellstr, "afsprot", &info);
     if (code) {
-	ViceLog(0, ("hpr_Initialize: Could not locate cell %s in %s/%s", cellstr, confDir, AFSDIR_CELLSERVDB_FILE));
+	ViceLog(0, ("hpr_Initialize: Could not locate cell %s in %s/%s",
+		    cellstr, confDir->name, AFSDIR_CELLSERVDB_FILE));
 	afsconf_Close(tdir);
 	return code;
     }
@@ -659,12 +660,12 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
 	     */
 	    host->hcpsfailed = 1;
 	    ViceLog(0,
-		    ("Warning:  GetHostCPS failed (%d) for %x (%s:%d); will retry\n",
+		    ("Warning:  GetHostCPS failed (%d) for %p (%s:%d); will retry\n",
 		     code, host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	} else {
 	    host->hcpsfailed = 0;
 	    ViceLog(1,
-		    ("gethost:  GetHostCPS failed (%d) for %x (%s:%d); ignored\n",
+		    ("gethost:  GetHostCPS failed (%d) for %p (%s:%d); ignored\n",
 		     code, host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port)));
 	}
 	if (host->hcps.prlist_val)
@@ -892,7 +893,8 @@ h_TossStuff_r(register struct host *host)
 	    if (code < 0) {
 		char hoststr[16];
 		ViceLog(0,
-			("Warning: h_TossStuff_r failed: Host %" AFS_PTR_FMT " (%s:%d) client %x was locked.\n",
+			("Warning: h_TossStuff_r failed: Host %p (%s:%d) "
+			 "client %p was locked.\n",
 			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port), client));
 		return;
@@ -901,7 +903,8 @@ h_TossStuff_r(register struct host *host)
 	    if (client->refCount) {
 		char hoststr[16];
 		ViceLog(0,
-			("Warning: h_TossStuff_r failed: Host %" AFS_PTR_FMT " (%s:%d) client %x refcount %d.\n",
+			("Warning: h_TossStuff_r failed: Host %p (%s:%d) "
+			 "client %p refcount %d.\n",
 			 host, afs_inet_ntoa_r(host->host, hoststr),
 			 ntohs(host->port), client, client->refCount));
 		/* This is the same thing we do if the host is locked */
@@ -1117,9 +1120,9 @@ h_AddHostToUuidHashTable_r(struct afsUUID *uuid, struct host *host)
 	       return;
      afsUUID_to_string(uuid, uuid2, 127);
      ViceLog(125, 
-	     ("h_AddHostToUuidHashTable_r: host %" AFS_PTR_FMT " (%s:%d) added as uuid %s\n",
+	     ("h_AddHostToUuidHashTable_r: host %p (%s:%d) added as uuid %s\n",
 	      host, afs_inet_ntoa_r(chain->hostPtr->host, hoststr), 
-	      ntohs(chain->hostPtr->port), uuid));
+	      ntohs(chain->hostPtr->port), uuid2));
 }
 
 /* deletes a HashChain structure corresponding to this host */
@@ -1763,7 +1766,8 @@ h_GetHost_r(struct rx_connection *tcon)
 	    if (host->interface)
 		afsUUID_to_string(&host->interface->uuid, uuid2, 127);
 	    ViceLog(0,
-		    ("CB: new identity for host %" AFS_PTR_FMT " (%s:%d), deleting(%x %x %s %s)\n",
+		    ("CB: new identity for host %p (%s:%d), "
+		     "deleting(%x %p %s %s)\n",
 		     host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
 		     identP->valid, host->interface,
 		     identP->valid ? uuid1 : "no_uuid",
@@ -2106,13 +2110,13 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 	    if (*aval == AnonymousID) {
 		ViceLog(2,
 			("MapName: NameToId on %s returns anonymousID\n",
-			 lnames.namelist_val));
+			 lnames.namelist_val[0]));
 	    }
 	    free(lids.idlist_val);	/* return parms are not malloced in stub if server proc aborts */
 	} else {
 	    ViceLog(0,
 		    ("MapName: NameToId on '%s' is unknown\n",
-		     lnames.namelist_val));
+		     lnames.namelist_val[0]));
 	    code = -1;
 	}
     }
@@ -2371,7 +2375,8 @@ h_FindClient_r(struct rx_connection *tcon)
 	if (!oldClient->deleted) {
 	    /* if we didn't create it, it's not ours to put back */
 	    if (created) {
-		ViceLog(0, ("FindClient: stillborn client %x(%x); conn %x (host %s:%d) had client %x(%x)\n", 
+		ViceLog(0, ("FindClient: stillborn client %p(%x); "
+			    "conn %p (host %s:%d) had client %p(%x)\n",
 			    client, client->sid, tcon, 
 			    afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
 			    ntohs(rxr_PortOf(tcon)),
@@ -2394,7 +2399,8 @@ h_FindClient_r(struct rx_connection *tcon)
 	    H_LOCK;
 	    client = oldClient;
 	} else {
-	    ViceLog(0, ("FindClient: deleted client %x(%x) already had conn %x (host %s:%d), stolen by client %x(%x)\n", 
+	    ViceLog(0, ("FindClient: deleted client %p(%x) already had "
+			"conn %p (host %s:%d), stolen by client %p(%x)\n",
 			oldClient, oldClient->sid, tcon, 
 			afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
 			ntohs(rxr_PortOf(tcon)),
@@ -2463,7 +2469,7 @@ GetClient(struct rx_connection *tcon, struct client **cp)
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client == NULL) {
 	ViceLog(0,
-		("GetClient: no client in conn %x (host %s:%d), VBUSYING\n",
+		("GetClient: no client in conn %p (host %s:%d), VBUSYING\n",
 		 tcon, afs_inet_ntoa_r(rxr_HostOf(tcon), hoststr),
                  ntohs(rxr_PortOf(tcon))));
 	H_UNLOCK;
@@ -2471,7 +2477,7 @@ GetClient(struct rx_connection *tcon, struct client **cp)
     }
     if (rxr_CidOf(tcon) != client->sid || rxr_GetEpoch(tcon) != client->VenusEpoch) {
 	ViceLog(0,
-		("GetClient: tcon %x tcon sid %d client sid %d\n",
+		("GetClient: tcon %p tcon sid %d client sid %d\n",
 		 tcon, rxr_CidOf(tcon), client->sid));
 	H_UNLOCK;
 	return VBUSY;

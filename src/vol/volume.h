@@ -914,4 +914,10 @@ extern afs_int32 VCanUseSALVSYNC(void);
 #define V_pref(vp,nearInode)   nearInode = 0
 #endif /* NEARINODE_HINT */
 
+hdr_static_inline(unsigned int)
+afs_printable_VolumeId_u(VolumeId d) { return (unsigned int) d; }
+
+hdr_static_inline(unsigned int)
+afs_printable_VnodeId_u(VnodeId d) { return (unsigned int) d; }
+
 #endif /* __volume_h */
