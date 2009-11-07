@@ -268,7 +268,8 @@ extern afs_int32 rx_SetSecurityConfiguration(struct rx_service *service,
 					     void *value);
 
 void rxi_DebugInit(void);
-void rxi_DebugPrint(char *format, ...);
+void rxi_DebugPrint(char *format, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 
 /* rx_clock.c */
 #if !defined(clock_Init)
@@ -378,8 +379,9 @@ extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
 # elif defined(AFS_AIX61_ENV)
 /* No prototype. Deliberate, since there's no vprintf et al */
 # else
-extern void osi_Panic(char *fmt, ...);
-# endif
+extern void osi_Panic(char *fmt, ...)
+    AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+#endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern void shutdown_rxkernel(void);
