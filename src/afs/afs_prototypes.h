@@ -965,8 +965,10 @@ extern afs_int32 afs_data_pointer_to_int32(const void *p);
 extern void afs_warn();
 extern void afs_warnuser();
 #else
-extern void afs_warn(char *fmt, ...);
-extern void afs_warnuser(char *fmt, ...);
+extern void afs_warn(char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
+extern void afs_warnuser(char *fmt, ...)
+	AFS_ATTRIBUTE_FORMAT(__printf__, 1, 2);
 #endif
 
 /* afs_vcache.c */

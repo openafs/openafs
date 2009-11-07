@@ -243,8 +243,8 @@ afs_MemWriteUIO(afs_dcache_id_t *ainode, struct uio *uioP)
 	if (mceP->data == NULL) {	/* no available memory */
 	    mceP->data = oldData;	/* revert back change that was made */
 	    ReleaseWriteLock(&mceP->afs_memLock);
-	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
-		     AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP));
+	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%ld bytes)\n",
+		     (long)(AFS_UIO_RESID(uioP) + AFS_UIO_OFFSET(uioP)));
 	    return -ENOMEM;
 	}
 
