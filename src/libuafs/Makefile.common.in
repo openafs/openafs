@@ -146,6 +146,7 @@ UAFSOBJ = \
 	$(UOBJ)/osi_vm.o \
 	$(UOBJ)/osi_groups.o \
 	$(UOBJ)/osi_gcpags.o \
+	$(UOBJ)/osi_vcache.o \
 	$(UOBJ)/afsaux.o \
 	$(UOBJ)/Kvice.xdr.o \
 	$(UOBJ)/xdr_arrayn.o \
@@ -281,6 +282,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/osi_vm.o \
 	$(WEBOBJ)/osi_groups.o \
 	$(WEBOBJ)/osi_gcpags.o \
+	$(WEBOBJ)/osi_vcache.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
@@ -412,6 +414,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/osi_vm.o \
 	$(WEBOBJ)/osi_groups.o \
 	$(WEBOBJ)/osi_gcpags.o \
+	$(WEBOBJ)/osi_vcache.o \
 	$(WEBOBJ)/afsaux.o \
 	$(WEBOBJ)/Kvice.xdr.o \
 	$(WEBOBJ)/xdr_arrayn.o \
@@ -546,6 +549,7 @@ JUAFSOBJ = \
 	$(JUAFS)/osi_vm.o \
 	$(JUAFS)/osi_groups.o \
 	$(JUAFS)/osi_gcpags.o \
+	$(JUAFS)/osi_vcache.o \
 	$(JUAFS)/afsaux.o \
 	$(JUAFS)/Kvice.xdr.o \
 	$(JUAFS)/xdr_arrayn.o \
@@ -783,6 +787,8 @@ $(UOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 $(UOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE1)
 $(UOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+	$(CRULE1)
+$(UOBJ)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
 	$(CRULE1)
 $(UOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
@@ -1056,6 +1062,8 @@ $(WEBOBJ)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 $(WEBOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE2)
 $(WEBOBJ)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+	$(CRULE2)
+$(WEBOBJ)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
 	$(CRULE2)
 $(WEBOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE2)
@@ -1339,6 +1347,8 @@ $(JUAFS)/osi_vm.o: $(TOP_SRC_AFS)/UKERNEL/osi_vm.c
 $(JUAFS)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 	$(CRULE1)
 $(JUAFS)/osi_gcpags.o: $(TOP_SRC_AFS)/UKERNEL/osi_gcpags.c
+	$(CRULE1)
+$(JUAFS)/osi_vcache.o: $(TOP_SRC_AFS)/UKERNEL/osi_vcache.c
 	$(CRULE1)
 $(JUAFS)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)

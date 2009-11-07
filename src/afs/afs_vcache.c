@@ -40,9 +40,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-
-#include "afs/sysincludes.h"	/*Standard vendor system headers */
-#include "afsincludes.h"	/*AFS-based standard headers */
+#include "afs/sysincludes.h"   /*Standard vendor system headers */
+#include "afsincludes.h"       /*AFS-based standard headers */
 #include "afs/afs_stats.h"
 #include "afs/afs_cbqueue.h"
 #include "afs/afs_osidnlc.h"
@@ -230,6 +229,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     else
 	afs_evenZaps++;
 
+    afs_vcount--;
 #if !defined(AFS_LINUX22_ENV)
     /* put the entry in the free list */
     avc->nextfree = freeVCList;
@@ -240,7 +240,6 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     avc->f.states |= CVFlushed;
 #else
     /* This should put it back on the vnode free list since usecount is 1 */
-    afs_vcount--;
     vSetType(avc, VREG);
     if (VREFCOUNT_GT(avc,0)) {
 	AFS_RELE(AFSTOV(avc));
@@ -612,98 +611,75 @@ afs_FlushReclaimedVcaches(void)
 #endif
 }
 
+void
+afs_PostPopulateVCache(struct vcache *avc, struct VenusFid *afid, int seq)
+{
+    /*
+     * The proper value for mvstat (for root fids) is setup by the caller.
+     */
+    avc->mvstat = 0;
+    if (afid->Fid.Vnode == 1 && afid->Fid.Unique == 1)
+	avc->mvstat = 2;
+
+    if (afs_globalVFS == 0)
+	osi_Panic("afs globalvfs");
+
+    osi_PostPopulateVCache(avc);
+
+    avc->dchint = NULL;
+    osi_dnlc_purgedp(avc);	/* this may be overkill */
+    memset(&(avc->callsort), 0, sizeof(struct afs_q));
+    avc->slocks = NULL;
+    avc->f.states &=~ CVInit;
+    if (seq) {
+	avc->f.states |= CBulkFetching;
+	avc->f.m.Length = seq;
+    }
+    afs_osi_Wakeup(&avc->f.states);
+}
+
 int
 afs_ShakeLooseVCaches(afs_int32 anumber)
 {
-#if defined(AFS_LINUX22_ENV)
-    afs_int32 i;
+    afs_int32 i, loop;
     struct vcache *tvc;
     struct afs_q *tq, *uq;
-    int code, fv_slept;
+    int fv_slept;
     afs_int32 target = anumber;
 
-    if (afsd_dynamic_vcaches || afs_vcount >= afs_maxvcount) {
-	i = 0;
-	for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
-	    tvc = QTOV(tq);
-	    uq = QPrev(tq);
-	    if (tvc->f.states & CVFlushed) {
-		refpanic("CVFlushed on VLRU");
-	    } else if (!afsd_dynamic_vcaches && i++ > afs_maxvcount) {
-		refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
-	    } else if (QNext(uq) != tq) {
-		refpanic("VLRU inconsistent");
-	    } else if (!VREFCOUNT_GT(tvc,0)) {
-		refpanic("refcnt 0 on VLRU");
-	    }
+    i = 0;
+    loop = 0;
+    for (tq = VLRU.prev; tq != &VLRU && anumber > 0; tq = uq) {
+	tvc = QTOV(tq);
+	uq = QPrev(tq);
+	if (tvc->f.states & CVFlushed) {
+	    refpanic("CVFlushed on VLRU");
+	    /* In the other path, this was 2 * afs_cacheStats */
+	} else if (!afsd_dynamic_vcaches && i++ > afs_maxvcount) {
+	    refpanic("Exceeded pool of AFS vnodes(VLRU cycle?)");
+	} else if (QNext(uq) != tq) {
+	    refpanic("VLRU inconsistent");
+	}
 
-#if defined(AFS_LINUX22_ENV)
-	    if (tvc != afs_globalVp && VREFCOUNT(tvc) > 1 && tvc->opens == 0) {
-                struct dentry *dentry;
-                struct list_head *cur, *head;
-                AFS_GUNLOCK();
-#if defined(AFS_LINUX24_ENV)
-                spin_lock(&dcache_lock);
-#endif /* AFS_LINUX24_ENV */
-		head = &(AFSTOV(tvc))->i_dentry;
+	fv_slept = 0;
+	if (osi_TryEvictVCache(tvc, &fv_slept))
+	    anumber--;
 
-restart:
-                cur = head;
-                while ((cur = cur->next) != head) {
-                    dentry = list_entry(cur, struct dentry, d_alias);
-
-		    if (d_unhashed(dentry))
-			continue;
-
-		    dget_locked(dentry);
-
-#if defined(AFS_LINUX24_ENV)
-		    spin_unlock(&dcache_lock);
-#endif /* AFS_LINUX24_ENV */
-		    if (d_invalidate(dentry) == -EBUSY) {
-			dput(dentry);
-			/* perhaps lock and try to continue? (use cur as head?) */
-			goto inuse;
-		    }
-		    dput(dentry);
-#if defined(AFS_LINUX24_ENV)
-		    spin_lock(&dcache_lock);
-#endif /* AFS_LINUX24_ENV */
-		    goto restart;
-		}		    
-#if defined(AFS_LINUX24_ENV)
-		spin_unlock(&dcache_lock);
-#endif /* AFS_LINUX24_ENV */
-	    inuse:
-		AFS_GLOCK();
-	    }
-#endif /* AFS_LINUX22_ENV */
-
-	    if (VREFCOUNT_GT(tvc,0) && !VREFCOUNT_GT(tvc,1) &&
-		tvc->opens == 0
-		&& (tvc->f.states & CUnlinkedDel) == 0) {
-		code = afs_FlushVCache(tvc, &fv_slept);
-		if (code == 0) {
-		    anumber--;
-		}
-		if (fv_slept) {
-		    uq = VLRU.prev;
-		    i = 0;
-		    continue;	/* start over - may have raced. */
-		}
-	    }
-	    if (tq == uq)
+	if (fv_slept) {
+	    if (loop++ > 100)
 		break;
+	    uq = VLRU.prev;
+	    i = 0;
+	    continue;	/* start over - may have raced. */
 	}
-	if (!afsd_dynamic_vcaches && anumber == target) {
-	    afs_warn("afs_ShakeLooseVCaches: warning none freed, using %d of %d\n",
-		   afs_vcount, afs_maxvcount);
-	}
-    } /* finished freeing up space */
-/*
-    printf("recycled %d entries\n", target-anumber);
-*/
-#endif
+	if (tq == uq)
+	    break;
+    }
+    if (!afsd_dynamic_vcaches && anumber == target) {
+	afs_warn("afs_ShakeLooseVCaches: warning none freed, using %d of %d\n",
+	       afs_vcount, afs_maxvcount);
+    }
+
     return 0;
 }
 
@@ -713,21 +689,8 @@ static struct vcache *
 afs_AllocVCache(void) 
 {
     struct vcache *tvc;
-#if defined(AFS_LINUX22_ENV)
-    struct inode *ip;
 
-    AFS_GUNLOCK();
-    ip = new_inode(afs_globalVFS);
-    if (!ip)
- 	osi_Panic("afs_AllocVCache: no more inodes");
-    AFS_GLOCK();
-#if defined(STRUCT_SUPER_OPERATIONS_HAS_ALLOC_INODE)
-    tvc = VTOAFS(ip);
-#else
-    tvc = afs_osi_Alloc(sizeof(struct vcache));
-    ip->u.generic_ip = tvc;
-    tvc->v = ip;
-#endif
+    tvc = osi_NewVnode();
 
     afs_vcount++;
 
@@ -738,35 +701,7 @@ afs_AllocVCache(void)
     }
 
     afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
-#else
-    /* none free, making one is better than a panic */
-    afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
-    tvc = (struct vcache *)afs_osi_Alloc(sizeof(struct vcache));
-#if (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && !defined(UKERNEL)
-    tvc->v = NULL; /* important to clean this, or use memset 0 */
-#endif /* DARWIN || XBSD && !UKERNEL */
-#ifdef	KERNEL_HAVE_PIN
-    pin((char *)tvc, sizeof(struct vcache));	/* XXX */
-#endif
-#if defined(AFS_SGI_ENV)
-    {
-	char name[METER_NAMSZ];
-	memset(tvc, 0, sizeof(struct vcache));
-	tvc->v.v_number = ++afsvnumbers;
-	tvc->vc_rwlockid = OSI_NO_LOCKID;
-	initnsema(&tvc->vc_rwlock, 1,
-		  makesname(name, "vrw", tvc->v.v_number));
-#ifndef	AFS_SGI53_ENV
-	initnsema(&tvc->v.v_sync, 0,
-		  makesname(name, "vsy", tvc->v.v_number));
-#endif
-#ifndef AFS_SGI62_ENV
-	initnlock(&tvc->v.v_lock,
-		  makesname(name, "vlk", tvc->v.v_number));
-#endif
-    }
-#endif /* AFS_SGI_ENV */
-#endif
+
 #ifdef AFS_DISCON_ENV
     /* If we create a new inode, we either give it a new slot number,
      * or if one's available, use a slot number from the slot free list
@@ -784,6 +719,53 @@ afs_AllocVCache(void)
 #endif
 
     return tvc;
+}
+
+/* Pre populate a newly allocated vcache. On platforms where the actual
+ * vnode is attached to the vcache, this function is called before attachment,
+ * therefore it cannot perform any actions on the vnode itself */
+
+static void
+afs_PrePopulateVCache(struct vcache *avc, struct VenusFid *afid,
+		      struct server *serverp) {
+
+#if defined(AFS_DISCON_ENV)
+    afs_uint32 slot;
+    slot = avc->diskSlot;
+#endif
+
+    osi_PrePopulateVCache(avc);
+
+#if defined(AFS_DISCON_ENV)
+    avc->diskSlot = slot;
+    QZero(&avc->metadirty);
+#endif
+
+    AFS_RWLOCK_INIT(&avc->lock, "vcache lock");
+
+    avc->mvid = NULL;
+    avc->linkData = NULL;
+    avc->cbExpires = 0;
+    avc->opens = 0;
+    avc->execsOrWriters = 0;
+    avc->flockCount = 0;
+    avc->f.states = CVInit;
+    avc->last_looker = 0;
+    avc->f.fid = *afid;
+    avc->asynchrony = -1;
+    avc->vc_error = 0;
+
+    hzero(avc->mapDV);
+    avc->f.truncPos = AFS_NOTRUNC;   /* don't truncate until we need to */
+    hzero(avc->f.m.DataVersion);     /* in case we copy it into flushDV */
+    avc->Access = NULL;
+    avc->callback = serverp;         /* to minimize chance that clear
+				      * request is lost */
+
+#if defined(AFS_CACHE_BYPASS)
+    avc->cachingStates = 0;
+    avc->cachingTransitions = 0;
+#endif
 }
 
 /*!
@@ -806,13 +788,6 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     struct vcache *tvc;
     afs_int32 i, j;
     afs_int32 anumber = VCACHE_FREE;
-#ifdef	AFS_AIX_ENV
-    struct gnode *gnodepnt;
-#endif
-#if !defined(AFS_LINUX22_ENV)
-    struct afs_q *tq, *uq;
-    int code, fv_slept;
-#endif
 
     AFS_STATCNT(afs_NewVCache);
 
@@ -830,101 +805,8 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 #else /* AFS_LINUX22_ENV */
     /* pull out a free cache entry */
     if (!freeVCList) {
-        int loop = 0;
-	i = 0;
-	for (tq = VLRU.prev; (anumber > 0) && (tq != &VLRU); tq = uq) {
-	    tvc = QTOV(tq);
-	    uq = QPrev(tq);
-
-	    if (tvc->f.states & CVFlushed) {
-		refpanic("CVFlushed on VLRU");
-	    } else if (i++ > 2 * afs_cacheStats) {	/* even allowing for a few xallocs... */
-		refpanic("Increase -stat parameter of afsd(VLRU cycle?)");
-	    } else if (QNext(uq) != tq) {
-		refpanic("VLRU inconsistent");
-	    } else if (tvc->f.states & CVInit) {
-		continue;
-            }
-
-           if (!VREFCOUNT_GT(tvc,0)
-#if defined(AFS_DARWIN_ENV) && !defined(UKERNEL) && !defined(AFS_DARWIN80_ENV)
-               || ((VREFCOUNT(tvc) == 1) && 
-                   (UBCINFOEXISTS(AFSTOV(tvc))))
-#endif
-               && tvc->opens == 0 && (tvc->f.states & CUnlinkedDel) == 0) {
-#if defined (AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#ifdef AFS_DARWIN80_ENV
-	        vnode_t tvp = AFSTOV(tvc);
-		/* VREFCOUNT_GT only sees usecounts, not iocounts */
-		/* so this may fail to actually recycle the vnode now */
-		/* must call vnode_get to avoid races. */
-                fv_slept = 0;
-		if (vnode_get(tvp) == 0) {
-		    fv_slept=1;
-		    /* must release lock, since vnode_put will immediately
-		       reclaim if there are no other users */
-		    ReleaseWriteLock(&afs_xvcache);
-		    AFS_GUNLOCK();
-		    vnode_recycle(tvp);
-		    vnode_put(tvp);
-		    AFS_GLOCK();
-		    ObtainWriteLock(&afs_xvcache, 336);
-		}
-		/* we can't use the vnode_recycle return value to figure
-		 * this out, since the iocount we have to hold makes it
-		 * always "fail" */
-		if (AFSTOV(tvc) == tvp) {
-                    if (anumber > 0 && fv_slept) {
-                       QRemove(&tvc->vlruq);
-                       QAdd(&VLRU, &tvc->vlruq);
-                    }
-		    code = EBUSY;
-		} else
-		    code = 0;
-#else /* AFS_DARWIN80_ENV */
-                /*
-                 * vgone() reclaims the vnode, which calls afs_FlushVCache(),
-                 * then it puts the vnode on the free list.
-                 * If we don't do this we end up with a cleaned vnode that's
-                 * not on the free list.
-                 * XXX assume FreeBSD is the same for now.
-                 */
-                AFS_GUNLOCK();
-#if defined(AFS_FBSD80_ENV)
-                /* vgone() is correct, but v_usecount is assumed not
-                 * to be 0, and I suspect that currently our usage ensures that
-                 * in fact it will */
-                if (vrefcnt(AFSTOV(tvc)) < 1) {
-		    vref(AFSTOV(tvc));
-                }
-                vn_lock(AFSTOV(tvc), LK_EXCLUSIVE | LK_RETRY); /* !glocked */
-#endif
-                vgone(AFSTOV(tvc));
-#if defined(AFS_FBSD80_ENV)
-                VOP_UNLOCK(AFSTOV(tvc), 0);
-#endif
-                fv_slept = 0;
-                code = 0;
-                AFS_GLOCK();
-#endif
-#else /* AFS_DARWIN80_ENV || AFS_XBSD_ENV */
-                code = afs_FlushVCache(tvc, &fv_slept);
-#endif /* AFS_DARWIN80_ENV || AFS_XBSD_ENV */
-		if (code == 0) {
-		    anumber--;
-		}
-		if (fv_slept) {
-                    if (loop++ > 100)
-                       break;
-		    uq = VLRU.prev;
-		    i = 0;
-		    continue;	/* start over - may have raced. */
-		}
-	    }
-	    if (tq == uq)
-		break;
-	}
-    } /* end of if (!freeVCList) */
+	afs_ShakeLooseVCaches(anumber);
+    }
 
     if (!freeVCList) {
 	tvc = afs_AllocVCache();
@@ -941,57 +823,10 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
 	panic("afs_NewVCache(): free vcache with vnode attached");
 #endif
 
-#if !defined(AFS_SGI_ENV) && !defined(AFS_LINUX22_ENV)
+    /* Populate the vcache with as much as we can. */
+    afs_PrePopulateVCache(tvc, afid, serverp);
 
-#if defined(AFS_DISCON_ENV)
-    /* We need to preserve the slot that we're being stored into on
-     * disk */
-    { 
-	afs_uint32 slot;
-        slot = tvc->diskSlot;
-	memset(tvc, 0, sizeof(struct vcache));
-	tvc->diskSlot = slot;
-    }
-#else
-    memset(tvc, 0, sizeof(struct vcache));
-#endif
-
-#else
-    tvc->uncred = 0;
-    memset(&(tvc->f), 0, sizeof(struct fvcache));
-#endif
-
-    AFS_RWLOCK_INIT(&tvc->lock, "vcache lock");
-#if	defined(AFS_SUN5_ENV)
-    AFS_RWLOCK_INIT(&tvc->vlock, "vcache vlock");
-#endif /* defined(AFS_SUN5_ENV) */
-
-    tvc->mvid = NULL;
-    tvc->linkData = NULL;
-    tvc->cbExpires = 0;
-    tvc->opens = 0;
-    tvc->execsOrWriters = 0;
-    tvc->flockCount = 0;
-    tvc->f.states = CVInit;
-    tvc->last_looker = 0;
-    tvc->f.fid = *afid;
-    tvc->asynchrony = -1;
-    tvc->vc_error = 0;
-#if defined(AFS_LINUX26_ENV)
-    tvc->cred = NULL;
-#endif
-#ifdef AFS_TEXT_ENV
-    tvc->flushDV.low = tvc->flushDV.high = AFS_MAXDV;
-#endif
-    hzero(tvc->mapDV);
-    tvc->f.truncPos = AFS_NOTRUNC;        /* don't truncate until we need to */
-    hzero(tvc->f.m.DataVersion);  /* in case we copy it into flushDV */
-    tvc->Access = NULL;
-    tvc->callback = serverp;    /* to minimize chance that clear
-				 * request is lost */
-#if defined(AFS_DISCON_ENV)
-    QZero(&tvc->metadirty);
-#endif
+    /* Thread the vcache onto the VLRU */
 
     i = VCHash(afid);
     j = VCHashV(afid);
@@ -1014,69 +849,14 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
         refpanic("NewVCache VLRU inconsistent4");
     }
     vcachegen++;
-    /* it should now be safe to drop the xvcache lock */
-#if defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
-    ReleaseWriteLock(&afs_xvcache);
-    AFS_GUNLOCK();
-    afs_obsd_getnewvnode(tvc);	/* includes one refcount */
-    AFS_GLOCK();
-    ObtainWriteLock(&afs_xvcache,337);
-    lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
-#endif
-#ifdef AFS_DARWIN_ENV
-    ReleaseWriteLock(&afs_xvcache);
-    AFS_GUNLOCK();
-    afs_darwin_getnewvnode(tvc, seq ? 0 : 1);	/* includes one refcount */
-    AFS_GLOCK();
-    ObtainWriteLock(&afs_xvcache,338);
-#ifdef AFS_DARWIN80_ENV
-    LOCKINIT(tvc->rwlock);
-#else
-    lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
-#endif
-#endif
-#ifdef AFS_FBSD_ENV
-    {
-	struct vnode *vp;
 
-	ReleaseWriteLock(&afs_xvcache);
-	AFS_GUNLOCK();
-#if defined(AFS_FBSD60_ENV)
-	if (getnewvnode(MOUNT_AFS, afs_globalVFS, &afs_vnodeops, &vp))
-#elif defined(AFS_FBSD50_ENV)
-	if (getnewvnode(MOUNT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
-#else
-	if (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
-#endif
-	    panic("afs getnewvnode");	/* can't happen */
-#ifdef AFS_FBSD70_ENV
-	/* XXX verified on 80--TODO check on 7x */
-	if (!vp->v_mount) {
-	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
-	    insmntque(vp, afs_globalVFS);
-	    VOP_UNLOCK(vp, 0);
-	}
-#endif
-	AFS_GLOCK();
-	ObtainWriteLock(&afs_xvcache,339);
-	if (tvc->v != NULL) {
-	    /* I'd like to know if this ever happens...
-	     * We don't drop global for the rest of this function,
-	     * so if we do lose the race, the other thread should
-	     * have found the same vnode and finished initializing
-	     * the vcache entry.  Is it conceivable that this vcache
-	     * entry could be recycled during this interval?  If so,
-	     * then there probably needs to be some sort of additional
-	     * mutual exclusion (an Embryonic flag would suffice).
-	     * -GAW */
-	    afs_warn("afs_NewVCache: lost the race\n");
-	    return (tvc);
-	}
-	tvc->v = vp;
-	tvc->v->v_data = tvc;
-	lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
-    }
-#endif
+    /* it should now be safe to drop the xvcache lock - so attach an inode
+     * to this vcache, where necessary */
+    osi_AttachVnode(tvc, seq);
+
+    /* Get a reference count to hold this vcache for the VLRUQ. Note that
+     * we have to do this after attaching the vnode, because the reference
+     * count may be held in the vnode itself */
 
 #if defined(AFS_LINUX22_ENV)
     /* Hold it for the LRU (should make count 2) */
@@ -1085,127 +865,7 @@ afs_NewVCache_int(struct VenusFid *afid, struct server *serverp, int seq)
     VREFCOUNT_SET(tvc, 1);	/* us */
 #endif
 
-#ifdef	AFS_AIX32_ENV
-    LOCK_INIT(&tvc->pvmlock, "vcache pvmlock");
-    tvc->vmh = tvc->segid = NULL;
-    tvc->credp = NULL;
-#endif
-
-#if defined(AFS_CACHE_BYPASS)
-    tvc->cachingStates = 0;
-    tvc->cachingTransitions = 0;
-#endif
-
-#ifdef AFS_BOZONLOCK_ENV
-#if	defined(AFS_SUN5_ENV)
-    rw_init(&tvc->rwlock, "vcache rwlock", RW_DEFAULT, NULL);
-
-#if	defined(AFS_SUN55_ENV)
-    /* This is required if the kaio (kernel aynchronous io)
-     ** module is installed. Inside the kernel, the function
-     ** check_vp( common/os/aio.c) checks to see if the kernel has
-     ** to provide asynchronous io for this vnode. This
-     ** function extracts the device number by following the
-     ** v_data field of the vnode. If we do not set this field
-     ** then the system panics. The  value of the v_data field
-     ** is not really important for AFS vnodes because the kernel
-     ** does not do asynchronous io for regular files. Hence,
-     ** for the time being, we fill up the v_data field with the
-     ** vnode pointer itself. */
-    tvc->v.v_data = (char *)tvc;
-#endif /* AFS_SUN55_ENV */
-#endif
-    afs_BozonInit(&tvc->pvnLock, tvc);
-#endif
-
-    /* initialize vnode data, note vrefCount is v.v_count */
-#ifdef	AFS_AIX_ENV
-    /* Don't forget to free the gnode space */
-    tvc->v.v_gnode = gnodepnt =
-	(struct gnode *)osi_AllocSmallSpace(sizeof(struct gnode));
-    memset(gnodepnt, 0, sizeof(struct gnode));
-#endif
-#ifdef AFS_SGI64_ENV
-    memset((void *)&(tvc->vc_bhv_desc), 0, sizeof(tvc->vc_bhv_desc));
-    bhv_desc_init(&(tvc->vc_bhv_desc), tvc, tvc, &Afs_vnodeops);
-#ifdef AFS_SGI65_ENV
-    vn_bhv_head_init(&(tvc->v.v_bh), "afsvp");
-    vn_bhv_insert_initial(&(tvc->v.v_bh), &(tvc->vc_bhv_desc));
-#else
-    bhv_head_init(&(tvc->v.v_bh));
-    bhv_insert_initial(&(tvc->v.v_bh), &(tvc->vc_bhv_desc));
-#endif
-#ifdef AFS_SGI65_ENV
-    tvc->v.v_mreg = tvc->v.v_mregb = (struct pregion *)tvc;
-#ifdef VNODE_TRACING
-    tvc->v.v_trace = ktrace_alloc(VNODE_TRACE_SIZE, 0);
-#endif
-    init_bitlock(&tvc->v.v_pcacheflag, VNODE_PCACHE_LOCKBIT, "afs_pcache",
-		 tvc->v.v_number);
-    init_mutex(&tvc->v.v_filocksem, MUTEX_DEFAULT, "afsvfl", (long)tvc);
-    init_mutex(&tvc->v.v_buf_lock, MUTEX_DEFAULT, "afsvnbuf", (long)tvc);
-#endif
-    vnode_pcache_init(&tvc->v);
-#if defined(DEBUG) && defined(VNODE_INIT_BITLOCK)
-    /* Above define is never true except in SGI test kernels. */
-    init_bitlock(&(tvc->v.v_flag, VLOCK, "vnode", tvc->v.v_number));
-#endif
-#ifdef INTR_KTHREADS
-    AFS_VN_INIT_BUF_LOCK(&(tvc->v));
-#endif
-#else
-    SetAfsVnode(AFSTOV(tvc));
-#endif /* AFS_SGI64_ENV */
-    /*
-     * The proper value for mvstat (for root fids) is setup by the caller.
-     */
-    tvc->mvstat = 0;
-    if (afid->Fid.Vnode == 1 && afid->Fid.Unique == 1)
-	tvc->mvstat = 2;
-    if (afs_globalVFS == 0)
-	osi_Panic("afs globalvfs");
-#if !defined(AFS_LINUX22_ENV)
-    vSetVfsp(tvc, afs_globalVFS);
-#endif
-    vSetType(tvc, VREG);
-#ifdef	AFS_AIX_ENV
-    tvc->v.v_vfsnext = afs_globalVFS->vfs_vnodes;	/* link off vfs */
-    tvc->v.v_vfsprev = NULL;
-    afs_globalVFS->vfs_vnodes = &tvc->v;
-    if (tvc->v.v_vfsnext != NULL)
-	tvc->v.v_vfsnext->v_vfsprev = &tvc->v;
-    tvc->v.v_next = gnodepnt->gn_vnode;	/*Single vnode per gnode for us! */
-    gnodepnt->gn_vnode = &tvc->v;
-#endif
-#if defined(AFS_SGI_ENV)
-    VN_SET_DPAGES(&(tvc->v), (struct pfdat *)NULL);
-    osi_Assert((tvc->v.v_flag & VINACT) == 0);
-    tvc->v.v_flag = 0;
-    osi_Assert(VN_GET_PGCNT(&(tvc->v)) == 0);
-    osi_Assert(tvc->mapcnt == 0 && tvc->vc_locktrips == 0);
-    osi_Assert(tvc->vc_rwlockid == OSI_NO_LOCKID);
-    osi_Assert(tvc->v.v_filocks == NULL);
-#if !defined(AFS_SGI65_ENV)
-    osi_Assert(tvc->v.v_filocksem == NULL);
-#endif
-    osi_Assert(tvc->cred == NULL);
-#ifdef AFS_SGI64_ENV
-    vnode_pcache_reinit(&tvc->v);
-    tvc->v.v_rdev = NODEV;
-#endif
-    vn_initlist((struct vnlist *)&tvc->v);
-    tvc->lastr = 0;
-#endif /* AFS_SGI_ENV */
-    tvc->dchint = NULL;
-    osi_dnlc_purgedp(tvc);	/* this may be overkill */
-    memset(&(tvc->callsort), 0, sizeof(struct afs_q));
-    tvc->slocks = NULL;
-    tvc->f.states &=~ CVInit;
-    if (seq) {
-	tvc->f.states |= CBulkFetching;
-	tvc->f.m.Length = seq;
-    }
-    afs_osi_Wakeup(&tvc->f.states);
+    afs_PostPopulateVCache(tvc, afid, seq);
 
     return tvc;
 }				/*afs_NewVCache */
@@ -3165,14 +2825,10 @@ afs_vcacheInit(int astatSize)
     register struct vcache *tvp;
 #endif
     int i;
-#if defined(AFS_LINUX22_ENV)
     if (!afs_maxvcount) {
 	afs_maxvcount = astatSize;	/* no particular limit on linux? */
-	if (astatSize < afs_maxvcount) {
-	    afs_maxvcount = astatSize;
-	}
     }
-#else /* AFS_LINUX22_ENV */
+#if !defined(AFS_LINUX22_ENV)
     freeVCList = NULL;
 #endif
 

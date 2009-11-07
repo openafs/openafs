@@ -33,6 +33,7 @@ AFS_OS_OBJS = \
 	osi_sleep.o \
 	osi_syscall.o \
 	osi_sysctl.o \
+	osi_vcache.o \
 	osi_vfsops.o \
 	osi_vm.o \
 <ppc64_linux26>

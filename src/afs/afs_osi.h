@@ -138,6 +138,13 @@ extern struct vnodeops *afs_ops;
 # define	SetAfsVnode(v)	    (v)->v_op = afs_ops
 #endif
 
+struct vcache;
+extern int osi_TryEvictVCache(struct vcache *, int *);
+extern struct vcache *osi_NewVnode(void);
+extern void osi_PrePopulateVCache(struct vcache *);
+extern void osi_PostPopulateVCache(struct vcache *);
+extern void osi_AttachVnode(struct vcache *, int seq);
+
 /*
  * In IRIX 6.5 we cannot have DEBUG turned on since certain
  * system-defined structures are a different size with DEBUG on, the

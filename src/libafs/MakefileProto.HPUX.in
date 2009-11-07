@@ -22,6 +22,7 @@ AFS_OS_OBJS = \
 	osi_file.o \
 	osi_misc.o \
 	osi_sleep.o \
+	osi_vcache.o \
 	osi_vnodeops.o \
 	osi_vm.o
 
