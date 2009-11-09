@@ -1124,7 +1124,7 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		afs_int32 ipaddr;
 		memcpy(&ipaddr, he->h_addr, he->h_length);
 		cellHostAddrs[server_num] = ipaddr;
-		ports[server_num] = htons(afsdbPort);
+		ports[server_num] = afsdbPort;
 		ipRanks[server_num] = 0;
 		strncpy(cellHostNames[server_num], host,
 			sizeof(cellHostNames[server_num]));
@@ -1203,7 +1203,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     unsigned short afsdbport;
     if (!service) {
 	service = "afs3-vlserver";
-	afsdbport = 7003;
+	afsdbport = htons(7003);
     } else {
 	service = aservice;
 	afsdbport = afsconf_FindService(service);
