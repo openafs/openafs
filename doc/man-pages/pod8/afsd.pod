@@ -173,10 +173,11 @@ Sets the size of each cache I<chunk>, and by implication the amount of
 data that the Cache Manager requests at a time from the File Server (how
 much data per fetch RPC, since AFS uses partial file transfer).
 
-For a disk cache, a chunk is a F<VI<n>> file and this parameter
-sets the maximum size to which each one can expand; the default is 64
-KB. For a memory cache, each chunk is a collection of contiguous memory
-blocks; the default is size is 8 KB.
+For a disk cache, a chunk is a F<VI<n>> file and this parameter sets the
+maximum size to which each one can expand.  For a memory cache, each chunk
+is a collection of contiguous memory blocks. The default for a disk cache
+is between 256 KB and 1 MB depending on the size of the cache. The default
+for a memory cache is 8 KB.
 
 To override the default chunk size for either type of cache, use the
 B<-chunksize> argument to provide an integer to be used as an exponent of
@@ -235,8 +236,8 @@ calculate the cache size by multiplying this value by the chunk size.
 =item *
 
 Sets the number of I<stat> entries available in machine memory for caching
-status information about cached AFS files. The default is 300; use the
-B<-stat> argument to override the default.
+status information about cached AFS files. The default is based on the
+size of the cache. Use the B<-stat> argument to override the default.
 
 =item *
 
@@ -382,7 +383,8 @@ on an firewalls between the client and the server:
    reserved        7006/udp (for future use)
    bosserver       7007/udp
 
-Additionally, for B<klog> to work through the firewall you need to allow
+Clients will also need to be able to contact your Kerberos KDC to
+authenticate.  If you are using B<kaserver> and B<klog>, you need to allow
 inbound and outbound UDP on ports >1024 (probably 1024<port<2048 would
 suffice depending on the number of simultaneous B<klog>s).
 
