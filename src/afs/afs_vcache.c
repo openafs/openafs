@@ -212,14 +212,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
     vn_reinit(AFSTOV(avc));
 #endif
     afs_FreeAllAxs(&(avc->Access));
-
-    /* we can't really give back callbacks on RO files, since the
-     * server only tracks them on a per-volume basis, and we don't
-     * know whether we still have some other files from the same
-     * volume. */
-    if ((avc->f.states & CRO) == 0 && avc->callback) {
-	afs_QueueVCB(avc);
-    }
+    afs_QueueVCB(avc);
     ObtainWriteLock(&afs_xcbhash, 460);
     afs_DequeueCallback(avc);	/* remove it from queued callbacks list */
     avc->f.states &= ~(CStatd | CUnique);
@@ -491,23 +484,34 @@ afs_FlushVCBs(afs_int32 lockit)
  *	Called when the xvcache lock is already held.
  *
  * \param avc vcache entry
- * \return 0 for success < 0 otherwise.
+ * \return 1 if queued, 0 otherwise
  */
 
 static afs_int32
 afs_QueueVCB(struct vcache *avc)
 {
+    int queued = 0;
     struct server *tsp;
     struct afs_cbr *tcbp;
 
     AFS_STATCNT(afs_QueueVCB);
+
+    MObtainWriteLock(&afs_xvcb, 274);
+
+    /* we can't really give back callbacks on RO files, since the
+     * server only tracks them on a per-volume basis, and we don't
+     * know whether we still have some other files from the same
+     * volume. */
+    if (!((avc->f.states & CRO) == 0 && avc->callback)) {
+        goto done;
+    }
+
     /* The callback is really just a struct server ptr. */
     tsp = (struct server *)(avc->callback);
 
     /* we now have a pointer to the server, so we just allocate
      * a queue entry and queue it.
      */
-    MObtainWriteLock(&afs_xvcb, 274);
     tcbp = afs_AllocCBR();
     tcbp->fid = avc->f.fid.Fid;
 
@@ -519,10 +523,12 @@ afs_QueueVCB(struct vcache *avc)
     tcbp->pprev = &tsp->cbrs;
 
     afs_InsertHashCBR(tcbp);
+    queued = 1;
 
+ done:
     /* now release locks and return */
     MReleaseWriteLock(&afs_xvcb);
-    return 0;
+    return queued;
 }
 
 
@@ -3258,8 +3264,7 @@ afs_DisconGiveUpCallbacks(void) {
     /* Somehow, walk the set of vcaches, with each one coming out as tvc */
     for (i = 0; i < VCSIZE; i++) {
         for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-            if ((tvc->f.states & CRO) == 0 && tvc->callback) {
-                afs_QueueVCB(tvc);
+            if (afs_QueueVCB(tvc)) {
                 tvc->callback = NULL;
                 nq++;
             }
