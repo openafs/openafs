@@ -3265,11 +3265,10 @@ afs_DisconGiveUpCallbacks(void) {
             }
         }
     }
-    /*printf("%d callbacks to be discarded. queued ... ", nq);*/
-    afs_FlushVCBs(0);
-    
+
     ReleaseWriteLock(&afs_xvcache);
-    /*printf("gone\n");*/
+
+    afs_FlushVCBs(1);
 }
 
 /*!
