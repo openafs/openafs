@@ -219,7 +219,6 @@ check_auth(struct packet *pkt, char *auth, int authLen,
     char *packet;
     des_key_schedule schedule;
     afs_int32 cksum;
-    /* unsigned char time_msec; */
     afs_int32 time_sec;
     int byteOrder = pkt->byteOrder;
 
@@ -236,7 +235,8 @@ check_auth(struct packet *pkt, char *auth, int authLen,
 	return KABADTICKET;
     packet += strlen(packet) + 1;
     getint(cksum);
-    /* time_msec = */ *(unsigned char *)packet++;
+    /* Comments in the original IBM source suggest this byte was/is "time_msec" */
+    packet++;
     getint(time_sec);
     if ((packet - auth) > authLen)
 	return KABADTICKET;
