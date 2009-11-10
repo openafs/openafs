@@ -60,7 +60,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
     int set_expires = 0;	/* This option is only used in pam_set_cred() */
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
     char *user = NULL, *password = NULL;
-    long password_expires = -1;
+    afs_int32 password_expires = -1;
     int torch_password = 1;
     int i;
     struct pam_conv *pam_convp = NULL;
