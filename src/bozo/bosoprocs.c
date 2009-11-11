@@ -398,7 +398,7 @@ SBOZO_SetCellName(struct rx_call *acall, char *aname)
     strcpy(tcell.name, aname);
     code =
 	afsconf_SetExtendedCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH,
-				    &tcell, &clones);
+				    &tcell, clones);
 
   fail:
     osi_auditU(acall, BOS_SetCellEvent, code, AUD_STR, aname, AUD_END);
@@ -501,7 +501,7 @@ SBOZO_DeleteCellHost(struct rx_call *acall, char *aname)
     memset(tcell.hostName[which], 0, MAXHOSTCHARS);
     code =
 	afsconf_SetExtendedCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH,
-				    &tcell, &clones);
+				    &tcell, clones);
 
   fail:
     osi_auditU(acall, BOS_DeleteHostEvent, code, AUD_STR, aname, AUD_END);
@@ -582,7 +582,7 @@ SBOZO_AddCellHost(struct rx_call *acall, char *aname)
     clones[which] = isClone;
     code =
 	afsconf_SetExtendedCellInfo(bozo_confdir, AFSDIR_SERVER_ETC_DIRPATH,
-				    &tcell, &clones);
+				    &tcell, clones);
 
   fail:
     osi_auditU(acall, BOS_AddHostEvent, code, AUD_STR, aname, AUD_END);
