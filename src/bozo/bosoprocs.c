@@ -664,7 +664,7 @@ SBOZO_AddKey(struct rx_call *acall, afs_int32 an, struct bozo_key *akey)
     if (DoLogging)
 	bozo_Log("%s is executing AddKey\n", caller);
 
-    code = afsconf_AddKey(bozo_confdir, an, akey, 0);
+    code = afsconf_AddKey(bozo_confdir, an, akey->data, 0);
     if (code == AFSCONF_KEYINUSE)
 	code = BZKEYINUSE;	/* Unique code for afs rpc calls */
   fail:

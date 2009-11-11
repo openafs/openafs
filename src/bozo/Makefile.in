@@ -89,7 +89,6 @@ cronbnodeops.o: cronbnodeops.c ${INCLS}
 bnode.o: bnode.c ${INCLS}
 
 bosoprocs.o: bosoprocs.c ${INCLS}
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 bos.o: bos.c ${INCLS} AFS_component_version_number.o
 	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<

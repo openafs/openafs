@@ -46,7 +46,6 @@ afsd/afsd.c          : deprecated    : daemon() marked as deprecated on Darwin
 	             : all           : call_syscall missing prototype
 auth/ktc.c           : all (ukernel) : call_syscall doesn't have a prototype
 bozo/bosserver.c     : deprecated    : daemon() marked as deprecated on Darwin
-bozo/bosoprocs.c     : all           : ExtendedCellInfo and des key types
 bozo/bos.c           : all           : DES key types & string consts 
 bozo/bos_util.c      : all           : DES key types
 bucoord/ubik_db_if.c : strict-proto  : Ubik_Call
