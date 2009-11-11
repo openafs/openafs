@@ -88,7 +88,6 @@ kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kaut
 	${CC} ${LDFLAGS} -o kaserver kaserver.o kautils.o kalocalcell.o kadatabase.o krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o kaauxdb.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 kaserver.o: kaserver.c ${INCLS} AFS_component_version_number.o
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 kautils.o: kautils.c ${INCLS}
 

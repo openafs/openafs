@@ -41,6 +41,9 @@ extern afs_int32 ka_NewKey(struct ubik_trans *tt, afs_int32 tentryaddr,
 
 extern int name_instance_legal(char *name, char *instance);
 
+/* kalog.c */
+extern void kalog_Init(void);
+
 /* kaprocs.c */
 struct ubik_trans;
 extern afs_int32 InitAuthServ(struct ubik_trans **, int, int *);
