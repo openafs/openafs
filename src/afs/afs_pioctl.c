@@ -3896,17 +3896,11 @@ DECL_PIOCTL(PNewUuid)
  * \param[in] ain	not in use
  * \param[out] aout	PAG value or NOPAG
  *
- * \retval E2BIG	Error not enough space to copy out value
- *
  * \post get PAG value for the caller's cred
  */
 DECL_PIOCTL(PGetPAG)
 {
     afs_int32 pag;
-
-    if (*aoutSize < sizeof(afs_int32)) {
-	return E2BIG;
-    }
 
     pag = PagInCred(*acred);
 
