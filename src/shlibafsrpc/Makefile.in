@@ -417,7 +417,7 @@ afsint.cs.o: ${FSINT}/afsint.cs.c
 	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE} @CFLAGS_NOERROR@
+	${CCRULE}
 
 afscbint.cs.o: ${FSINT}/afscbint.cs.c
 	${CCRULE}

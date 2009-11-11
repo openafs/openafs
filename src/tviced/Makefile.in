@@ -198,7 +198,7 @@ afsint.ss.o: ${FSINT}/afsint.ss.c
 	${CCRULE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE} @CFLAGS_NOERROR@
+	${CCRULE}
 
 state_analyzer.o: state_analyzer.c
 	${CCRULE}

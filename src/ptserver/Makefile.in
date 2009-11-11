@@ -94,7 +94,6 @@ ptserver: ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o $(LIBS) 
 	$(CC) ${CFLAGS} -o ptserver ptserver.o ptutils.o ptprocs.o ptint.ss.o ptint.xdr.o utils.o map.o $(LIBS) ${XLIBS} ${TOP_LIBDIR}/libaudit.a
 
 ptserver.o: ptserver.c ${INCLS} AFS_component_version_number.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
 
 ptutils.o: ptutils.c ${INCLS}
 

@@ -193,7 +193,7 @@ rxkad_client.o: ${RXKAD}/rxkad_client.c
 	${CCRULE} ${RXKAD}/rxkad_client.c
 
 rxkad_server.o: ${RXKAD}/rxkad_server.c
-	${CCRULE} @CFLAGS_NOERROR@ ${RXKAD}/rxkad_server.c
+	${CCRULE} ${RXKAD}/rxkad_server.c
 
 rxkad_common.o: ${RXKAD}/rxkad_common.c
 	${CCRULE} ${RXKAD}/rxkad_common.c
@@ -202,7 +202,7 @@ ticket.o: ${RXKAD}/ticket.c
 	${CCRULE} ${RXKAD}/ticket.c
 
 ticket5.o: ${RXKAD}/ticket5.c
-	${CCRULE} @CFLAGS_NOERROR@ ${RXKAD}/ticket5.c
+	${CCRULE} ${RXKAD}/ticket5.c
 
 crc.o: ${RXKAD}/crc.c
 	${CCRULE} ${RXKAD}/crc.c
@@ -401,7 +401,7 @@ afsint.cs.o: ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 
 afsint.xdr.o: ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
-	${CCRULE} @CFLAGS_NOERROR@ ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
 
 afscbint.cs.o: ${TOP_OBJDIR}/src/fsint/afscbint.cs.c
 	${CCRULE} ${TOP_OBJDIR}/src/fsint/afscbint.cs.c

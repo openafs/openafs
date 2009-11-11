@@ -758,7 +758,7 @@ $(UOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 $(UOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
 $(UOBJ)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(UOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(CRULE1)
 $(UOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
@@ -806,7 +806,7 @@ $(UOBJ)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
 $(UOBJ)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
 	$(CRULE1)
 $(UOBJ)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(UOBJ)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
 	$(CRULE1)
 $(UOBJ)/client.o: $(TOP_SRCDIR)/kauth/client.c
@@ -1019,7 +1019,7 @@ $(WEBOBJ)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 $(WEBOBJ)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE2)
 $(WEBOBJ)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULE2) @CFLAGS_NOERROR@
+	$(CRULE2)
 $(WEBOBJ)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(CRULE2)
 $(WEBOBJ)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
@@ -1074,7 +1074,7 @@ $(WEBOBJ)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
 $(WEBOBJ)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
 	$(CRULE2)
 $(WEBOBJ)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
-	$(CRULE2) @CFLAGS_NOERROR@
+	$(CRULE2)
 $(WEBOBJ)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
 	$(CRULE2)
 $(WEBOBJ)/client.o: $(TOP_SRCDIR)/kauth/client.c
@@ -1290,7 +1290,7 @@ $(JUAFS)/osi_groups.o: $(TOP_SRC_AFS)/UKERNEL/osi_groups.c
 $(JUAFS)/Kcallback.ss.o: $(TOP_OBJ_FSINT)/Kcallback.ss.c
 	$(CRULE1)
 $(JUAFS)/Kvice.xdr.o: $(TOP_OBJ_FSINT)/Kvice.xdr.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(JUAFS)/Kvice.cs.o: $(TOP_OBJ_FSINT)/Kvice.cs.c
 	$(CRULE1)
 $(JUAFS)/afsaux.o: $(TOP_SRC_FSINT)/afsaux.c
@@ -1336,7 +1336,7 @@ $(JUAFS)/ubik_int.cs.o: $(TOP_OBJDIR)/src/ubik/ubik_int.cs.c
 $(JUAFS)/ubik_int.xdr.o: $(TOP_OBJDIR)/src/ubik/ubik_int.xdr.c
 	$(CRULE1)
 $(JUAFS)/authclient.o: $(TOP_SRCDIR)/kauth/authclient.c
-	$(CRULE1) @CFLAGS_NOERROR@
+	$(CRULE1)
 $(JUAFS)/kalocalcell.o: $(TOP_SRCDIR)/kauth/kalocalcell.c
 	$(CRULE1)
 $(JUAFS)/client.o: $(TOP_SRCDIR)/kauth/client.c
