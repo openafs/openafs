@@ -36,7 +36,6 @@ struct nvldbentry;
 extern int yesprompt(char *str);
 extern int PrintError(char *msg, afs_int32 errcode);
 extern void init_volintInfo(struct volintInfo *vinfo);
-extern struct rx_connection *UV_Bind(afs_int32 aserver, afs_int32 port);
 extern void SubEnumerateEntry(struct nvldbentry *entry);
 extern void EnumerateEntry(struct nvldbentry *entry);
 extern int UV_NukeVolume(afs_int32 server, afs_int32 partid, afs_uint32 volid);

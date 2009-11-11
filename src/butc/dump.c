@@ -10,10 +10,6 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-#ifdef IGNORE_SOME_GCC_WARNINGS
-# pragma GCC diagnostic warning "-Wstrict-prototypes"
-#endif
-
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -39,6 +35,7 @@
 #include <afs/ktime.h>
 #include <afs/vlserver.h>
 #include <afs/volser.h>
+#include <afs/volser_prototypes.h>
 #include <afs/volint.h>
 #include <afs/cellconfig.h>
 #include <afs/bucoord_prototypes.h>
@@ -47,7 +44,6 @@
 #include "error_macros.h"
 #include "butc_xbsa.h"
 #include "afs/butx.h"
-
 
 /* GLOBAL CONFIGURATION PARAMETERS */
 extern int dump_namecheck;
@@ -58,8 +54,6 @@ extern int forcemultiple;
 extern struct ubik_client *cstruct;
 dlqlinkT savedEntries;
 dlqlinkT entries_to_flush;
-
-extern struct rx_connection *UV_Bind();
 
 extern afs_int32 groupId;
 extern afs_int32 BufferSize;
