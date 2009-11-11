@@ -962,8 +962,21 @@ ktc_curpag(void)
 	gid_t groups[NGROUPS_MAX];
 	afs_uint32 g0, g1;
 	afs_uint32 h, l, ret;
+	int ngroups;
+	int i;
 
-	if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
+	ngroups = getgroups(sizeof groups / sizeof groups[0], groups);
+
+#ifdef AFS_LINUX26_ENV
+	/* check for AFS_LINUX26_ONEGROUP_ENV PAGs */
+	for (i = 0; i < ngroups; i++) {
+	    if (((groups[i] >> 24) & 0xff) == 'A') {
+		return groups[i];
+	    }
+	}
+#endif
+
+	if (ngroups < 2)
 	    return 0;
 
 	g0 = groups[0] & 0xffff;
