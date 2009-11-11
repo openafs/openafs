@@ -127,7 +127,7 @@ vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 	$(RM) -f vlserver.h vl_errors.c; ${COMPILE_ET} -p ${srcdir} vl_errors -h vlserver
 
 vlserver.o: vlserver.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+
 system: install
 
 install: vlserver cnvldb vldb_check libvldb.a vl_opcodes.h vlserver.h \

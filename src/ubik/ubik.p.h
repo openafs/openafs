@@ -455,10 +455,11 @@ extern afs_int32 ubik_nBuffers;
 struct afsconf_cell;
 extern int ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
 				 struct afsconf_cell *info, char clones[],
-				 char *pathName, struct ubik_dbase **dbase);
+				 const char *pathName,
+				 struct ubik_dbase **dbase);
 extern int ubik_ServerInit(afs_int32 myHost, short myPort, 
 			   afs_int32 serverList[],
-			   char *pathName, struct ubik_dbase **dbase);
+			   const char *pathName, struct ubik_dbase **dbase);
 extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
 			   afs_int32 transMode, struct ubik_trans **transPtr);
 extern int ubik_BeginTransReadAny(register struct ubik_dbase *dbase,

@@ -80,7 +80,6 @@ uss/uss_vol.c 	     : all             Format issues
 uss/uss_kauth.c      : all	     : Des keys, ubik_Call
 uss/lex.yy.c         : all           : Unused symbols
 viced/fsprobe.c      : all	     : ubik_Call
-vlserver/vlserver.c  : all	     : GetExtendedCellInfo
 vol/salvager.c       : all           : consts & undefined variable from header
 volser/vos.c         : all	     : ubik_Call_New
 volser/vol-dump.c    : format        : afs_sfsize_t
