@@ -25,6 +25,7 @@
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <ctype.h>
+#include <signal.h>
 #ifndef AFS_NT40_ENV
 #include <sys/param.h>
 #if !defined(AFS_SGI_ENV)
