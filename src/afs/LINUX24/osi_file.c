@@ -206,7 +206,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 {
     register afs_int32 code;
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi, 320);
+    ObtainWriteLock(&afs_xosi, 320);
     astat->size = i_size_read(OSIFILE_INODE(afile));
 #if defined(AFS_LINUX26_ENV)
     astat->mtime = OSIFILE_INODE(afile)->i_mtime.tv_sec;
@@ -216,7 +216,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     astat->atime = OSIFILE_INODE(afile)->i_atime;
 #endif
     code = 0;
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -269,7 +269,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     code = afs_osi_Stat(afile, &tstat);
     if (code || tstat.size <= asize)
 	return code;
-    MObtainWriteLock(&afs_xosi, 321);
+    ObtainWriteLock(&afs_xosi, 321);
     AFS_GUNLOCK();
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
     down_write(&inode->i_alloc_sem);
@@ -323,7 +323,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     up_write(&inode->i_alloc_sem);
 #endif
     AFS_GLOCK();
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

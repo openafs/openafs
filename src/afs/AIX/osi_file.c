@@ -66,7 +66,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     register afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi, 320);
+    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
     code = VNOP_GETATTR(afile->vnode, &tvattr, &afs_osi_cred);
     AFS_GLOCK();
@@ -75,7 +75,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -122,7 +122,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     code = afs_osi_Stat(afile, &tstat);
     if (code || tstat.size <= asize)
 	return code;
-    MObtainWriteLock(&afs_xosi, 321);
+    ObtainWriteLock(&afs_xosi, 321);
     /* 
      * If we're truncating an unopened file to a non-zero length,
      * we need to bind it to a vm segment    
@@ -134,7 +134,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     AFS_GUNLOCK();
     code = VNOP_FTRUNC(afile->vnode, mode, asize, (caddr_t) 0, &afs_osi_cred);
     AFS_GLOCK();
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

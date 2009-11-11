@@ -1560,7 +1560,7 @@ void afs_FlushServer(struct server *srvp) {
     if (srvp->cbrs) {
 	struct afs_cbr *cb, *cbnext;
 
-	  MObtainWriteLock(&afs_xvcb, 300);
+	  ObtainWriteLock(&afs_xvcb, 300);
 	for (cb = srvp->cbrs; cb; cb = cbnext) {
 	    cbnext = cb->next;
 	    afs_FreeCBR(cb);

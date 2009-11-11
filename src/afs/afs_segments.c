@@ -244,7 +244,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 	/* lock and start over from beginning of hash chain 
 	 * in order to avoid a race condition. */
-	MObtainWriteLock(&afs_xdcache, 284);
+	ObtainWriteLock(&afs_xdcache, 284);
 	index = afs_dvhashTbl[hash];
 
 	for (j = 0; index != NULLIDX;) {
@@ -282,7 +282,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    }
 	    index = afs_dvnextTbl[index];
 	}
-	MReleaseWriteLock(&afs_xdcache);
+	ReleaseWriteLock(&afs_xdcache);
 
 	/* this guy writes chunks, puts back dcache structs, and bumps newDV */
 	/* "moredata" just says "there are more dirty chunks yet to come".
@@ -343,7 +343,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 		   NCHUNKSATONCE * sizeof(struct dcache *));
 
 	    /* overkill, but it gets the lock in case GetDSlot needs it */
-	    MObtainWriteLock(&afs_xdcache, 285);
+	    ObtainWriteLock(&afs_xdcache, 285);
 
 	    for (j = 0, safety = 0, index = afs_dvhashTbl[hash];
 		 index != NULLIDX && safety < afs_cacheFiles + 2;) {
@@ -374,7 +374,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 
 		index = afs_dvnextTbl[index];
 	    }
-	    MReleaseWriteLock(&afs_xdcache);
+	    ReleaseWriteLock(&afs_xdcache);
 
 	    for (i = 0; i < j; i++) {
 		/* Iterate over the dcache entries we collected above */
@@ -508,7 +508,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
      * Block out others from screwing with this table; is a read lock
      * sufficient?
      */
-    MObtainWriteLock(&afs_xdcache, 286);
+    ObtainWriteLock(&afs_xdcache, 286);
     dcListMax = 0;
 
     for (index = afs_dvhashTbl[hash]; index != NULLIDX;) {
@@ -547,7 +547,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	}
 	index = afs_dvnextTbl[index];
     }
-    MReleaseWriteLock(&afs_xdcache);
+    ReleaseWriteLock(&afs_xdcache);
 
     for (i = 0; i < dcListCount; i++) {
 	tdc = dcList[i];
@@ -699,7 +699,7 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     code = DVHash(&avc->f.fid);
 
     /* block out others from screwing with this table */
-    MObtainWriteLock(&afs_xdcache, 287);
+    ObtainWriteLock(&afs_xdcache, 287);
 
     dcCount = 0;
     for (index = afs_dvhashTbl[code]; index != NULLIDX;) {
@@ -738,7 +738,7 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	index = afs_dvnextTbl[index];
     }
 
-    MReleaseWriteLock(&afs_xdcache);
+    ReleaseWriteLock(&afs_xdcache);
 
     /* Now we loop over the array of dcache entries and truncate them */
     for (index = 0; index < dcPos; index++) {

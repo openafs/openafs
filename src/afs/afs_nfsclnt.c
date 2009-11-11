@@ -58,12 +58,12 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
     AFS_STATCNT(afs_GetNfsClientPag);
     i = NHash(host);
     now = osi_Time();
-    MObtainWriteLock(&afs_xnfspag, 314);
+    ObtainWriteLock(&afs_xnfspag, 314);
     for (np = afs_nfspags[i]; np; np = np->next) {
 	if (np->uid == uid && np->host == host) {
 	    np->refCount++;
 	    np->lastcall = now;
-	    MReleaseWriteLock(&afs_xnfspag);
+	    ReleaseWriteLock(&afs_xnfspag);
 	    return np;
 	}
     }
@@ -72,7 +72,7 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
 	if (np->uid == NOPAG && np->host == host) {
 	    np->refCount++;
 	    np->lastcall = now;
-	    MReleaseWriteLock(&afs_xnfspag);
+	    ReleaseWriteLock(&afs_xnfspag);
 	    return np;
 	}
     }
@@ -86,7 +86,7 @@ afs_GetNfsClientPag(register afs_int32 uid, register afs_int32 host)
     np->host = host;
     np->refCount = 1;
     np->lastcall = now;
-    MReleaseWriteLock(&afs_xnfspag);
+    ReleaseWriteLock(&afs_xnfspag);
     return np;
 }
 
@@ -119,13 +119,13 @@ afs_FindNfsClientPag(afs_int32 uid, afs_int32 host, afs_int32 pag)
 #endif
     AFS_STATCNT(afs_FindNfsClientPag);
     i = NHash(host);
-    MObtainWriteLock(&afs_xnfspag, 315);
+    ObtainWriteLock(&afs_xnfspag, 315);
     for (np = afs_nfspags[i]; np; np = np->next) {
 	if (np->host == host) {
 	    if ((pag && pag == np->pag) || (!pag && (uid == np->uid))) {
 		np->refCount++;
 		np->lastcall = osi_Time();
-		MReleaseWriteLock(&afs_xnfspag);
+		ReleaseWriteLock(&afs_xnfspag);
 		return np;
 	    }
 	}
@@ -136,12 +136,12 @@ afs_FindNfsClientPag(afs_int32 uid, afs_int32 host, afs_int32 pag)
 	    if (np->uid == NOPAG) {
 		np->refCount++;
 		np->lastcall = osi_Time();
-		MReleaseWriteLock(&afs_xnfspag);
+		ReleaseWriteLock(&afs_xnfspag);
 		return np;
 	    }
 	}
     }
-    MReleaseWriteLock(&afs_xnfspag);
+    ReleaseWriteLock(&afs_xnfspag);
     return NULL;
 }
 
@@ -466,12 +466,12 @@ afs_nfsclient_sysname(register struct nfsclientpag *np, char *inname,
     if (allpags > 0) {
 	/* update every client, not just the one making the request */
 	i = NHash(np->host);
-	MObtainWriteLock(&afs_xnfspag, 315);
+	ObtainWriteLock(&afs_xnfspag, 315);
 	for (tnp = afs_nfspags[i]; tnp; tnp = tnp->next) {
 	    if (tnp != np && tnp->host == np->host)
 		afs_nfsclient_sysname(tnp, inname, outname, num, -1);
 	}
-	MReleaseWriteLock(&afs_xnfspag);
+	ReleaseWriteLock(&afs_xnfspag);
     }
     if (inname) {
 	    for(count=0; count < np->sysnamecount;++count) {
@@ -514,7 +514,7 @@ afs_nfsclient_GC(exporter, pag)
     osi_Assert(ISAFS_GLOCK());
 #endif
     AFS_STATCNT(afs_nfsclient_GC);
-    MObtainWriteLock(&afs_xnfspag, 316);
+    ObtainWriteLock(&afs_xnfspag, 316);
     for (i = 0; i < NNFSCLIENTS; i++) {
 	for (tnp = &afs_nfspags[i], np = *tnp; np; np = nnp) {
 	    nnp = np->next;
@@ -533,7 +533,7 @@ afs_nfsclient_GC(exporter, pag)
 	    }
 	}
     }
-    MReleaseWriteLock(&afs_xnfspag);
+    ReleaseWriteLock(&afs_xnfspag);
 }
 
 

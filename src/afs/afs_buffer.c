@@ -170,7 +170,7 @@ DRead(register struct dcache *adc, register int page)
     int code;
 
     AFS_STATCNT(DRead);
-    MObtainWriteLock(&afs_bufferLock, 256);
+    ObtainWriteLock(&afs_bufferLock, 256);
 
 #define bufmatch(tb) (tb->page == page && tb->fid == adc->index)
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
@@ -183,12 +183,12 @@ DRead(register struct dcache *adc, register int page)
      */
     if ((tb = phTable[pHash(adc->index, page)])) {
 	if (bufmatch(tb)) {
-	    MObtainWriteLock(&tb->lock, 257);
+	    ObtainWriteLock(&tb->lock, 257);
 	    tb->lockers++;
 	    ReleaseWriteLock(&afs_bufferLock);
 	    tb->accesstime = timecounter++;
 	    AFS_STATS(afs_stats_cmperf.bufHits++);
-	    MReleaseWriteLock(&tb->lock);
+	    ReleaseWriteLock(&tb->lock);
 	    return tb->data;
 	} else {
 	    register struct buffer **bufhead;
@@ -196,23 +196,23 @@ DRead(register struct dcache *adc, register int page)
 	    while ((tb2 = tb->hashNext)) {
 		if (bufmatch(tb2)) {
 		    buf_Front(bufhead, tb, tb2);
-		    MObtainWriteLock(&tb2->lock, 258);
+		    ObtainWriteLock(&tb2->lock, 258);
 		    tb2->lockers++;
 		    ReleaseWriteLock(&afs_bufferLock);
 		    tb2->accesstime = timecounter++;
 		    AFS_STATS(afs_stats_cmperf.bufHits++);
-		    MReleaseWriteLock(&tb2->lock);
+		    ReleaseWriteLock(&tb2->lock);
 		    return tb2->data;
 		}
 		if ((tb = tb2->hashNext)) {
 		    if (bufmatch(tb)) {
 			buf_Front(bufhead, tb2, tb);
-			MObtainWriteLock(&tb->lock, 259);
+			ObtainWriteLock(&tb->lock, 259);
 			tb->lockers++;
 			ReleaseWriteLock(&afs_bufferLock);
 			tb->accesstime = timecounter++;
 			AFS_STATS(afs_stats_cmperf.bufHits++);
-			MReleaseWriteLock(&tb->lock);
+			ReleaseWriteLock(&tb->lock);
 			return tb->data;
 		    }
 		} else
@@ -230,17 +230,17 @@ DRead(register struct dcache *adc, register int page)
      */
     tb = afs_newslot(adc, page, (tb ? tb : tb2));
     if (!tb) {
-	MReleaseWriteLock(&afs_bufferLock);
+	ReleaseWriteLock(&afs_bufferLock);
 	return NULL;
     }
-    MObtainWriteLock(&tb->lock, 260);
+    ObtainWriteLock(&tb->lock, 260);
     tb->lockers++;
-    MReleaseWriteLock(&afs_bufferLock);
+    ReleaseWriteLock(&afs_bufferLock);
     if (page * AFS_BUFFER_PAGESIZE >= adc->f.chunkBytes) {
 	tb->fid = NULLIDX;
 	afs_reset_inode(&tb->inode);
 	tb->lockers--;
-	MReleaseWriteLock(&tb->lock);
+	ReleaseWriteLock(&tb->lock);
 	return NULL;
     }
     tfile = afs_CFileOpen(&adc->f.inode);
@@ -252,12 +252,12 @@ DRead(register struct dcache *adc, register int page)
 	tb->fid = NULLIDX;
 	afs_reset_inode(&tb->inode);
 	tb->lockers--;
-	MReleaseWriteLock(&tb->lock);
+	ReleaseWriteLock(&tb->lock);
 	return NULL;
     }
     /* Note that findslot sets the page field in the buffer equal to
      * what it is searching for. */
-    MReleaseWriteLock(&tb->lock);
+    ReleaseWriteLock(&tb->lock);
     return tb->data;
 }
 
@@ -402,11 +402,11 @@ DRelease(void *loc, int flag)
     index = (((char *)bp) - ((char *)BufferData)) >> LOGPS;
 #endif
     bp = &(Buffers[index]);
-    MObtainWriteLock(&bp->lock, 261);
+    ObtainWriteLock(&bp->lock, 261);
     bp->lockers--;
     if (flag)
 	bp->dirty = 1;
-    MReleaseWriteLock(&bp->lock);
+    ReleaseWriteLock(&bp->lock);
 }
 
 int
@@ -460,18 +460,18 @@ DZap(struct dcache *adc)
     register struct buffer *tb;
 
     AFS_STATCNT(DZap);
-    MObtainReadLock(&afs_bufferLock);
+    ObtainReadLock(&afs_bufferLock);
 
     for (i = 0; i <= PHPAGEMASK; i++)
 	for (tb = phTable[pHash(adc->index, i)]; tb; tb = tb->hashNext)
 	    if (tb->fid == adc->index) {
-		MObtainWriteLock(&tb->lock, 262);
+		ObtainWriteLock(&tb->lock, 262);
 		tb->fid = NULLIDX;
 		afs_reset_inode(&tb->inode);
 		tb->dirty = 0;
-		MReleaseWriteLock(&tb->lock);
+		ReleaseWriteLock(&tb->lock);
 	    }
-    MReleaseReadLock(&afs_bufferLock);
+    ReleaseReadLock(&afs_bufferLock);
 }
 
 static void
@@ -519,12 +519,12 @@ DFlush(void)
 
     AFS_STATCNT(DFlush);
     tb = Buffers;
-    MObtainReadLock(&afs_bufferLock);
+    ObtainReadLock(&afs_bufferLock);
     for (i = 0; i < nbuffers; i++, tb++) {
 	if (tb->dirty) {
-	    MObtainWriteLock(&tb->lock, 263);
+	    ObtainWriteLock(&tb->lock, 263);
 	    tb->lockers++;
-	    MReleaseReadLock(&afs_bufferLock);
+	    ReleaseReadLock(&afs_bufferLock);
 	    if (tb->dirty) {
 		/* it seems safe to do this I/O without having the dcache
 		 * locked, since the only things that will update the data in
@@ -540,11 +540,11 @@ DFlush(void)
 		DFlushBuffer(tb);
 	    }
 	    tb->lockers--;
-	    MReleaseWriteLock(&tb->lock);
-	    MObtainReadLock(&afs_bufferLock);
+	    ReleaseWriteLock(&tb->lock);
+	    ObtainReadLock(&afs_bufferLock);
 	}
     }
-    MReleaseReadLock(&afs_bufferLock);
+    ReleaseReadLock(&afs_bufferLock);
 }
 
 void *
@@ -553,9 +553,9 @@ DNew(register struct dcache *adc, register int page)
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
     register struct buffer *tb;
     AFS_STATCNT(DNew);
-    MObtainWriteLock(&afs_bufferLock, 264);
+    ObtainWriteLock(&afs_bufferLock, 264);
     if ((tb = afs_newslot(adc, page, NULL)) == 0) {
-	MReleaseWriteLock(&afs_bufferLock);
+	ReleaseWriteLock(&afs_bufferLock);
 	return 0;
     }
     /* extend the chunk, if needed */
@@ -567,10 +567,10 @@ DNew(register struct dcache *adc, register int page)
 	afs_AdjustSize(adc, (page + 1) * AFS_BUFFER_PAGESIZE);
 	afs_WriteDCache(adc, 1);
     }
-    MObtainWriteLock(&tb->lock, 265);
+    ObtainWriteLock(&tb->lock, 265);
     tb->lockers++;
-    MReleaseWriteLock(&afs_bufferLock);
-    MReleaseWriteLock(&tb->lock);
+    ReleaseWriteLock(&afs_bufferLock);
+    ReleaseWriteLock(&tb->lock);
     return tb->data;
 }
 

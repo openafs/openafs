@@ -52,17 +52,6 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 
 #define	AFS_BOZONWAITING    1	/* someone is waiting for this lock */
 
-#undef MObtainWriteLock		/* Defined also in ../rx/rx_machdep.h" */
-#undef MReleaseWriteLock
-#define MObtainReadLock(lock)	ObtainReadLock(lock)
-#define MObtainWriteLock(lock,src)	ObtainWriteLock(lock,src)
-#define MObtainSharedLock(lock,src)	ObtainSharedLock(lock,src)
-#define MUpgradeSToWLock(lock,src)	UpgradeSToWLock(lock,src)
-#define MConvertWToSLock(lock)	ConvertWToSLock(lock)
-#define MReleaseReadLock(lock)	ReleaseReadLock(lock)
-#define MReleaseWriteLock(lock)	ReleaseWriteLock(lock)
-#define MReleaseSharedLock(lock) ReleaseSharedLock(lock)
-
 #define	AFS_RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
 #define	LOCK_INIT(lock, nm)	Lock_Init(lock)

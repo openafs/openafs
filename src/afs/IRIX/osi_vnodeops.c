@@ -1937,7 +1937,7 @@ VnodeToIno(vnode_t * vp)
     int code;
     struct vattr vattr;
 
-    MObtainWriteLock(&afs_xosi, 579);
+    ObtainWriteLock(&afs_xosi, 579);
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
     AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
@@ -1945,7 +1945,7 @@ VnodeToIno(vnode_t * vp)
     if (code) {
 	osi_Panic("VnodeToIno");
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return vattr.va_nodeid;
 }
 
@@ -1955,7 +1955,7 @@ VnodeToDev(vnode_t * vp)
     int code;
     struct vattr vattr;
 
-    MObtainWriteLock(&afs_xosi, 580);
+    ObtainWriteLock(&afs_xosi, 580);
     vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
     AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
@@ -1963,7 +1963,7 @@ VnodeToDev(vnode_t * vp)
     if (code) {
 	osi_Panic("VnodeToDev");
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return (dev_t) vattr.va_fsid;
 }
 
@@ -1973,7 +1973,7 @@ VnodeToSize(vnode_t * vp)
     int code;
     struct vattr vattr;
 
-    MObtainWriteLock(&afs_xosi, 581);
+    ObtainWriteLock(&afs_xosi, 581);
     vattr.va_mask = AT_SIZE;
     AFS_GUNLOCK();
     AFS_VOP_GETATTR(vp, &vattr, 0, OSI_GET_CURRENT_CRED(), code);
@@ -1981,7 +1981,7 @@ VnodeToSize(vnode_t * vp)
     if (code) {
 	osi_Panic("VnodeToSize");
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return vattr.va_size;
 }
 #endif /* 6.2 and dual fs cache */

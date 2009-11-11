@@ -130,7 +130,7 @@ osi_FlushText_really(register struct vcache *vp)
     if (hcmp(vp->f.m.DataVersion, vp->flushDV) <= 0)
 	return;
 
-    MObtainWriteLock(&afs_ftf, 317);
+    ObtainWriteLock(&afs_ftf, 317);
     hset(fdv, vp->f.m.DataVersion);
 
     /* why this disgusting code below?
@@ -159,7 +159,7 @@ osi_FlushText_really(register struct vcache *vp)
 	xrele(vp);
 
 	if (vp->v.v_flag & VTEXT) {	/* still has a text object? */
-	    MReleaseWriteLock(&afs_ftf);
+	    ReleaseWriteLock(&afs_ftf);
 	    return;
 	}
     }
@@ -170,7 +170,7 @@ osi_FlushText_really(register struct vcache *vp)
 
     /* finally, record that we've done it */
     hset(vp->flushDV, fdv);
-    MReleaseWriteLock(&afs_ftf);
+    ReleaseWriteLock(&afs_ftf);
 
 }
 #endif /* AFS_TEXT_ENV */

@@ -67,7 +67,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     register afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi, 320);
+    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
     code = VOP_GETATTR(afile->vnode, &tvattr, &afs_osi_cred, VSYNC);
     AFS_GLOCK();
@@ -76,7 +76,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -108,7 +108,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     code = afs_osi_Stat(afile, &tstat);
     if (code || tstat.size <= asize)
 	return code;
-    MObtainWriteLock(&afs_xosi, 321);
+    ObtainWriteLock(&afs_xosi, 321);
     VATTR_NULL(&tvattr);
     /* note that this credential swapping stuff is only necessary because
      * of ufs's references directly to u.u_cred instead of to
@@ -120,7 +120,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     code = VOP_SETATTR(afile->vnode, &tvattr, &afs_osi_cred, 0);
     AFS_GLOCK();
     set_p_cred(u.u_procp, oldCred);	/* restore */
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

@@ -386,7 +386,7 @@ afs_FlushVCBs(afs_int32 lockit)
     tfids = afs_osi_Alloc(sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
 
     if (lockit)
-	MObtainWriteLock(&afs_xvcb, 273);
+	ObtainWriteLock(&afs_xvcb, 273);
     ObtainReadLock(&afs_xserver);
     for (i = 0; i < NSERVERS; i++) {
 	for (safety1 = 0, tsp = afs_servers[i];
@@ -471,7 +471,7 @@ afs_FlushVCBs(afs_int32 lockit)
 
     ReleaseReadLock(&afs_xserver);
     if (lockit)
-	MReleaseWriteLock(&afs_xvcb);
+	ReleaseWriteLock(&afs_xvcb);
     afs_osi_Free(tfids, sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
     return 0;
 }
@@ -496,7 +496,7 @@ afs_QueueVCB(struct vcache *avc)
 
     AFS_STATCNT(afs_QueueVCB);
 
-    MObtainWriteLock(&afs_xvcb, 274);
+    ObtainWriteLock(&afs_xvcb, 274);
 
     /* we can't really give back callbacks on RO files, since the
      * server only tracks them on a per-volume basis, and we don't
@@ -527,7 +527,7 @@ afs_QueueVCB(struct vcache *avc)
 
  done:
     /* now release locks and return */
-    MReleaseWriteLock(&afs_xvcb);
+    ReleaseWriteLock(&afs_xvcb);
     return queued;
 }
 
@@ -551,7 +551,7 @@ afs_RemoveVCB(struct VenusFid *afid)
     struct afs_cbr *cbr, *ncbr;
 
     AFS_STATCNT(afs_RemoveVCB);
-    MObtainWriteLock(&afs_xvcb, 275);
+    ObtainWriteLock(&afs_xvcb, 275);
 
     slot = afs_HashCBRFid(&afid->Fid);
     ncbr = afs_cbrHashT[slot];
@@ -567,7 +567,7 @@ afs_RemoveVCB(struct VenusFid *afid)
 	}
     }
 
-    MReleaseWriteLock(&afs_xvcb);
+    ReleaseWriteLock(&afs_xvcb);
 }
 
 void 

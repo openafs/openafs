@@ -3032,7 +3032,7 @@ DECL_PIOCTL(PFlushVolumeData)
     ReleaseReadLock(&afs_xvcache);
 
 
-    MObtainWriteLock(&afs_xdcache, 328);	/* needed if you're going to flush any stuff */
+    ObtainWriteLock(&afs_xdcache, 328);	/* needed if you're going to flush any stuff */
     for (i = 0; i < afs_cacheFiles; i++) {
 	if (!(afs_indexFlags[i] & IFEverUsed))
 	    continue;		/* never had any data */
@@ -3056,7 +3056,7 @@ DECL_PIOCTL(PFlushVolumeData)
 	}
 	afs_PutDCache(tdc);	/* bumped by getdslot */
     }
-    MReleaseWriteLock(&afs_xdcache);
+    ReleaseWriteLock(&afs_xdcache);
 
     ObtainReadLock(&afs_xvolume);
     for (i = 0; i < NVOLS; i++) {

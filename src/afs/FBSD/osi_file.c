@@ -69,7 +69,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     register afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi, 320);
+    ObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
 #if defined(AFS_FBSD80_ENV)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
@@ -88,7 +88,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 	astat->mtime = tvattr.va_mtime.tv_sec;
 	astat->atime = tvattr.va_atime.tv_sec;
     }
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 
@@ -112,7 +112,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     register afs_int32 code, glocked;
     AFS_STATCNT(osi_Truncate);
 
-    MObtainWriteLock(&afs_xosi, 321);
+    ObtainWriteLock(&afs_xosi, 321);
     vp = afile->vnode;
     /*
      * This routine only shrinks files, and most systems
@@ -153,7 +153,7 @@ out:
 #endif
     if (glocked)
       AFS_GLOCK();
-    MReleaseWriteLock(&afs_xosi);
+    ReleaseWriteLock(&afs_xosi);
     return code;
 }
 

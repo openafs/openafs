@@ -612,13 +612,13 @@ afs_BRelease(register struct brequest *ab)
 {
 
     AFS_STATCNT(afs_BRelease);
-    MObtainWriteLock(&afs_xbrs, 294);
+    ObtainWriteLock(&afs_xbrs, 294);
     if (--ab->refCount <= 0) {
 	ab->flags = 0;
     }
     if (afs_brsWaiters)
 	afs_osi_Wakeup(&afs_brsWaiters);
-    MReleaseWriteLock(&afs_xbrs);
+    ReleaseWriteLock(&afs_xbrs);
 }
 
 /* return true if bkg fetch daemons are all busy */
@@ -640,7 +640,7 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
     register struct brequest *tb;
 
     AFS_STATCNT(afs_BQueue);
-    MObtainWriteLock(&afs_xbrs, 296);
+    ObtainWriteLock(&afs_xbrs, 296);
     while (1) {
 	tb = afs_brs;
 	for (i = 0; i < NBRS; i++, tb++) {
@@ -667,18 +667,18 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
 	    if (afs_brsDaemons > 0) {
 		afs_osi_Wakeup(&afs_brsDaemons);
 	    }
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    return tb;
 	}
 	if (dontwait) {
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    return NULL;
 	}
 	/* no free buffers, sleep a while */
 	afs_brsWaiters++;
-	MReleaseWriteLock(&afs_xbrs);
+	ReleaseWriteLock(&afs_xbrs);
 	afs_osi_Sleep(&afs_brsWaiters);
-	MObtainWriteLock(&afs_xbrs, 301);
+	ObtainWriteLock(&afs_xbrs, 301);
 	afs_brsWaiters--;
     }
 }
@@ -984,7 +984,7 @@ afs_BackgroundDaemon(void)
     }
     afs_nbrs++;
 
-    MObtainWriteLock(&afs_xbrs, 302);
+    ObtainWriteLock(&afs_xbrs, 302);
     while (1) {
 	int min_ts = 0;
 	struct brequest *min_tb = NULL;
@@ -992,7 +992,7 @@ afs_BackgroundDaemon(void)
 	if (afs_termState == AFSOP_STOP_BKG) {
 	    if (--afs_nbrs <= 0)
 		afs_termState = AFSOP_STOP_TRUNCDAEMON;
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Wakeup(&afs_termState);
 	    return;
 	}
@@ -1013,7 +1013,7 @@ afs_BackgroundDaemon(void)
 	if ((tb = min_tb)) {
 	    /* claim and process this request */
 	    tb->flags |= BSTARTED;
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    foundAny = 1;
 	    afs_Trace1(afs_iclSetp, CM_TRACE_BKG1, ICL_TYPE_INT32,
 		       tb->opcode);
@@ -1038,14 +1038,14 @@ afs_BackgroundDaemon(void)
 		tb->cred = (afs_ucred_t *)0;
 	    }
 	    afs_BRelease(tb);	/* this grabs and releases afs_xbrs lock */
-	    MObtainWriteLock(&afs_xbrs, 305);
+	    ObtainWriteLock(&afs_xbrs, 305);
 	}
 	if (!foundAny) {
 	    /* wait for new request */
 	    afs_brsDaemons++;
-	    MReleaseWriteLock(&afs_xbrs);
+	    ReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Sleep(&afs_brsDaemons);
-	    MObtainWriteLock(&afs_xbrs, 307);
+	    ObtainWriteLock(&afs_xbrs, 307);
 	    afs_brsDaemons--;
 	}
     }
