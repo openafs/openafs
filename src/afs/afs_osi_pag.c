@@ -455,11 +455,11 @@ afs_InitReq(register struct vrequest *av, afs_ucred_t *acred)
 	if (acred == NOCRED)
 	    av->uid = -2;	/* XXX nobody... ? */
 	else
-	    av->uid = cr_uid(acred);	/* bsd creds don't have ruid */
+	    av->uid = afs_cr_uid(acred);	/* bsd creds don't have ruid */
 #elif defined(AFS_SUN510_ENV)
         av->uid = crgetruid(acred);
 #else
-	av->uid = cr_uid(acred);	/* default when no pag is set */
+	av->uid = afs_cr_uid(acred);	/* default when no pag is set */
 #endif
     }
     return 0;
@@ -609,7 +609,7 @@ PagInCred(afs_ucred_t *cred)
 out:
 #endif
 #if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
-    if (pag == NOPAG && cr_rgid(cred) != NFSXLATOR_CRED) {
+    if (pag == NOPAG && afs_cr_rgid(cred) != NFSXLATOR_CRED) {
 	struct key *key;
 	afs_uint32 upag, newpag;
 

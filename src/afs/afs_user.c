@@ -608,11 +608,11 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 
     pag = PagInCred(pcred);
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD40_ENV) || defined(AFS_LINUX22_ENV)
-    uid = (pag != NOPAG ? pag : cr_uid(pcred));
+    uid = (pag != NOPAG ? pag : afs_cr_uid(pcred));
 #elif defined(AFS_SUN510_ENV)
     uid = (pag != NOPAG ? pag : crgetruid(pcred));
 #else
-    uid = (pag != NOPAG ? pag : cr_ruid(pcred);
+    uid = (pag != NOPAG ? pag : afs_cr_ruid(pcred);
 #endif
     hash = UHash(uid);
 

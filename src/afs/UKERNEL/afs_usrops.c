@@ -1493,12 +1493,12 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
 	afs_osi_Alloc(sizeof(struct usr_ucred));
     usr_assert(afs_global_ucredp != NULL);
     afs_global_ucredp->cr_ref = 1;
-    set_cr_uid(afs_global_ucredp, geteuid());
-    set_cr_gid(afs_global_ucredp, getegid());
-    set_cr_ruid(afs_global_ucredp, getuid());
-    set_cr_rgid(afs_global_ucredp, getgid());
-    afs_global_ucredp->cr_suid = cr_ruid(afs_global_ucredp);
-    afs_global_ucredp->cr_sgid = cr_rgid(afs_global_ucredp);
+    afs_set_cr_uid(afs_global_ucredp, geteuid());
+    afs_set_cr_gid(afs_global_ucredp, getegid());
+    afs_set_cr_ruid(afs_global_ucredp, getuid());
+    afs_set_cr_rgid(afs_global_ucredp, getgid());
+    afs_global_ucredp->cr_suid = afs_cr_ruid(afs_global_ucredp);
+    afs_global_ucredp->cr_sgid = afs_cr_rgid(afs_global_ucredp);
     st = getgroups(NGROUPS, &afs_global_ucredp->cr_groups[0]);
     usr_assert(st >= 0);
     afs_global_ucredp->cr_ngroups = (unsigned long)st;
@@ -1983,8 +1983,8 @@ syscallThread(void *argp)
      */
     u.u_viceid = getuid();
     crp = u.u_cred;
-    set_cr_uid(crp, getuid());
-    set_cr_ruid(crp, getuid());
+    afs_set_cr_uid(crp, getuid());
+    afs_set_cr_ruid(crp, getuid());
     crp->cr_suid = getuid();
     crp->cr_groups[0] = getgid();
     crp->cr_ngroups = 1;
@@ -2579,8 +2579,8 @@ uafs_mkdir_r(char *path, int mode)
     usr_vattr_null(&attrs);
     attrs.va_type = VREG;
     attrs.va_mode = mode;
-    attrs.va_uid = cr_uid(u.u_cred);
-    attrs.va_gid = cr_gid(u.u_cred);
+    attrs.va_uid = afs_cr_uid(u.u_cred);
+    attrs.va_gid = afs_cr_gid(u.u_cred);
     dirP = NULL;
     code = afs_mkdir(VTOAFS(parentP), nameP, &attrs, &dirP, u.u_cred);
     VN_RELE(parentP);
@@ -2678,8 +2678,8 @@ uafs_open_r(char *path, int flags, int mode)
 	    usr_vattr_null(&attrs);
 	    attrs.va_type = VREG;
 	    attrs.va_mode = mode;
-	    attrs.va_uid = cr_uid(u.u_cred);
-	    attrs.va_gid = cr_gid(u.u_cred);
+	    attrs.va_uid = afs_cr_uid(u.u_cred);
+	    attrs.va_gid = afs_cr_gid(u.u_cred);
 	    if (flags & O_TRUNC) {
 		attrs.va_size = 0;
 	    }
@@ -3505,8 +3505,8 @@ uafs_symlink_r(char *target, char *source)
     usr_vattr_null(&attrs);
     attrs.va_type = VLNK;
     attrs.va_mode = 0777;
-    attrs.va_uid = cr_uid(u.u_cred);
-    attrs.va_gid = cr_gid(u.u_cred);
+    attrs.va_uid = afs_cr_uid(u.u_cred);
+    attrs.va_gid = afs_cr_gid(u.u_cred);
     code = afs_symlink(VTOAFS(dirP), nameP, &attrs, target, u.u_cred);
     VN_RELE(dirP);
     if (code != 0) {

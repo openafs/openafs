@@ -1400,25 +1400,25 @@ extern int afsd_dynamic_vcaches;
 #endif
 
 /* Wrappers for access to credentials structure members */
-#define cr_uid(cred) ((cred)->cr_uid)
-#define cr_gid(cred) ((cred)->cr_gid)
-#define cr_ruid(cred) ((cred)->cr_ruid)
-#define cr_rgid(cred) ((cred)->cr_rgid)
+#define afs_cr_uid(cred) ((cred)->cr_uid)
+#define afs_cr_gid(cred) ((cred)->cr_gid)
+#define afs_cr_ruid(cred) ((cred)->cr_ruid)
+#define afs_cr_rgid(cred) ((cred)->cr_rgid)
 
 static_inline void
-set_cr_uid(afs_ucred_t *cred, uid_t uid) {
+afs_set_cr_uid(afs_ucred_t *cred, uid_t uid) {
     cred->cr_uid = uid;
 }
 static_inline void
-set_cr_gid(afs_ucred_t *cred, gid_t gid) {
+afs_set_cr_gid(afs_ucred_t *cred, gid_t gid) {
     cred->cr_gid = gid;
 }
 static_inline void
-set_cr_ruid(afs_ucred_t *cred, uid_t uid) {
+afs_set_cr_ruid(afs_ucred_t *cred, uid_t uid) {
     cred->cr_ruid = uid;
 }
 static_inline void
-set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
+afs_set_cr_rgid(afs_ucred_t *cred, gid_t gid) {
     cred->cr_rgid = gid;
 }
 #endif /* _AFS_H_ */

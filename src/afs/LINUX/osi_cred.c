@@ -54,10 +54,10 @@ crdup(cred_t * cr)
 {
     cred_t *tmp = crget();
 
-    set_cr_uid(tmp, cr_uid(cr));
-    set_cr_ruid(tmp, cr_ruid(cr));
-    set_cr_gid(tmp, cr_gid(cr));
-    set_cr_rgid(tmp, cr_rgid(cr));
+    afs_set_cr_uid(tmp, afs_cr_uid(cr));
+    afs_set_cr_ruid(tmp, afs_cr_ruid(cr));
+    afs_set_cr_gid(tmp, afs_cr_gid(cr));
+    afs_set_cr_rgid(tmp, afs_cr_rgid(cr));
 
     get_group_info(cr_group_info(cr));
     set_cr_group_info(tmp, cr_group_info(cr));
@@ -70,10 +70,10 @@ crref(void)
 {
     cred_t *cr = crget();
 
-    set_cr_uid(cr, current_fsuid());
-    set_cr_ruid(cr, current_uid());
-    set_cr_gid(cr, current_fsgid());
-    set_cr_rgid(cr, current_gid());
+    afs_set_cr_uid(cr, current_fsuid());
+    afs_set_cr_ruid(cr, current_uid());
+    afs_set_cr_gid(cr, current_fsgid());
+    afs_set_cr_rgid(cr, current_gid());
 
     task_lock(current);
     get_group_info(current_group_info());
@@ -98,15 +98,15 @@ crset(cred_t * cr)
     if (current->cred != current->real_cred)
         return;
     new_creds = prepare_creds();
-    new_creds->fsuid = cr_uid(cr);
-    new_creds->uid = cr_ruid(cr);
-    new_creds->fsgid = cr_gid(cr);
-    new_creds->gid = cr_rgid(cr);
+    new_creds->fsuid = afs_cr_uid(cr);
+    new_creds->uid = afs_cr_ruid(cr);
+    new_creds->fsgid = afs_cr_gid(cr);
+    new_creds->gid = afs_cr_rgid(cr);
 #else
-    current->fsuid = cr_uid(cr);
-    current->uid = cr_ruid(cr);
-    current->fsgid = cr_gid(cr);
-    current->gid = cr_rgid(cr);
+    current->fsuid = afs_cr_uid(cr);
+    current->uid = afs_cr_ruid(cr);
+    current->fsgid = afs_cr_gid(cr);
+    current->gid = afs_cr_rgid(cr);
 #endif
 
     /* using set_current_groups() will sort the groups */

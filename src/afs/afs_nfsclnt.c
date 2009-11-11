@@ -203,10 +203,10 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 #if defined(AFS_SUN510_ENV)
     uid = crgetuid(*cred);
 #else
-    uid = cr_uid(*cred);
+    uid = afs_cr_uid(*cred);
 #endif
     /* Do this early, so pag management knows */
-    set_cr_rgid(*cred, NFSXLATOR_CRED);	/* Identify it as nfs xlator call */
+    afs_set_cr_rgid(*cred, NFSXLATOR_CRED);	/* Identify it as nfs xlator call */
     if ((afs_nfsexporter->exp_states & EXP_CLIPAGS) && pag != NOPAG) {
 	uid = pag;
     } else if (pag != NOPAG) {
@@ -226,7 +226,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
     }
     np = afs_FindNfsClientPag(uid, host, 0);
     afs_Trace4(afs_iclSetp, CM_TRACE_NFSREQH, ICL_TYPE_INT32, pag,
-	       ICL_TYPE_LONG, cr_uid(*cred), ICL_TYPE_INT32, host,
+	       ICL_TYPE_LONG, afs_cr_uid(*cred), ICL_TYPE_INT32, host,
 	       ICL_TYPE_POINTER, np);
     /* If remote-pags are enabled, we are no longer interested in what PAG
      * they claimed, and from here on we should behave as if they claimed
@@ -253,7 +253,7 @@ afs_nfsclient_reqhandler(struct afs_exporter *exporter,
 	}
 	np = afs_GetNfsClientPag(uid, host);
 	np->pag = pag;
-	np->client_uid = cr_uid(*cred);
+	np->client_uid = afs_cr_uid(*cred);
     } else {
 	if (pag == NOPAG) {
 	    if ((code = setpag(cred, np->pag, &pag, 0))) {
@@ -590,12 +590,12 @@ afs_iauth_verify(long id, fsid_t * fsidp, long host, int uid,
 
     if (code) {
 	/* ensure anonymous cred. */
-	set_cr_uid(credp, (uid_t) -2;	/* anonymous */
-	set_cr_ruid(credp, (uid_t) -2;
+	afs_set_cr_uid(credp, (uid_t) -2;	/* anonymous */
+	afs_set_cr_ruid(credp, (uid_t) -2;
     }
 
     /* Mark this thread as an NFS translator thread. */
-    set_cr_rgid(credp, NFSXLATOR_CRED);
+    afs_set_cr_rgid(credp, NFSXLATOR_CRED);
 
     AFS_GUNLOCK();
     return 0;

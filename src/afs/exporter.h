@@ -43,7 +43,7 @@
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_NFSXLATORREQ(cred) 0
 #else
-#define	AFS_NFSXLATORREQ(cred)    (cr_rgid(cred) == NFSXLATOR_CRED)
+#define	AFS_NFSXLATORREQ(cred)    (afs_cr_rgid(cred) == NFSXLATOR_CRED)
 #endif
 
 struct afs_exporter;

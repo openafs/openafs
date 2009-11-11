@@ -798,7 +798,7 @@ afs_DynrootVOPRemove(struct vcache *avc, afs_ucred_t *acred, char *aname)
 #if defined(AFS_SUN510_ENV)
     if (crgetruid(acred))
 #else
-    if (cr_uid(acred))
+    if (afs_cr_uid(acred))
 #endif
 	return EPERM;
 
@@ -838,7 +838,7 @@ afs_DynrootVOPSymlink(struct vcache *avc, afs_ucred_t *acred,
 {
     struct afs_dynSymlink *tps;
 
-    if (cr_uid(acred))
+    if (afs_cr_uid(acred))
 	return EPERM;
     if (afs_CellOrAliasExists(aname))
 	return EEXIST;

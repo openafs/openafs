@@ -713,7 +713,7 @@ afs_ProcessOpCreate(struct vcache *avc, struct vrequest *areq,
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = avc->f.m.Date;
     InStatus.Owner = avc->f.m.Owner;
-    InStatus.Group = (afs_int32) cr_gid(acred);
+    InStatus.Group = (afs_int32) afs_cr_gid(acred);
     /* Only care about protection bits. */
     InStatus.UnixModeBits = avc->f.m.Mode & 0xffff;
 

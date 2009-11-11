@@ -271,7 +271,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     }
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE | AFS_SETGROUP;
     InStatus.ClientModTime = osi_Time();
-    InStatus.Group = (afs_int32) cr_gid(acred);
+    InStatus.Group = (afs_int32) afs_cr_gid(acred);
     if (AFS_NFSXLATORREQ(acred)) {
 	/*
 	 * XXX The following is mainly used to fix a bug in the HP-UX
