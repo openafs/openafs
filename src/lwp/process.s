@@ -12,6 +12,10 @@
 #include <afs/param.h>
 /*#endif /* AFS_DJGPP_ENV */
 
+#if defined(__linux__) && defined(__ELF__)
+	.section .note.GNU-stack,"",%progbits
+#endif
+
 #if defined(__arm32__) || defined(__arm__)
        /* register definitions */
        fp      .req    r11
