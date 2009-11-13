@@ -818,8 +818,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 		strcpy(aclient.instance, "");
 		strncpy(aclient.cell, realm_of_user, MAXKTCREALMLEN - 1);
 		if ((status = ktc_SetToken(&aserver, &atoken, &aclient, 0))) {
-		    fprintf(stderr, "%s: unable to obtain tokens for cell %s "
-			    "(status: %d).\n", progname, cell_to_use, status);
+		    afs_com_err(progname, status,
+				"while obtaining tokens for cell %s",
+		                cell_to_use);
 		    status = AKLOG_TOKEN;
 		}
 
@@ -877,9 +878,8 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
 	write(2,"",0); /* dummy write */
 #endif
 	if ((status = ktc_SetToken(&aserver, &atoken, &aclient, afssetpag))) {
-	    fprintf(stderr, 
-		    "%s: unable to obtain tokens for cell %s (status: %d).\n",
-		    progname, cell_to_use, status);
+	    afs_com_err(progname, status, "while obtaining tokens for cell %s",
+			cell_to_use);
 	    status = AKLOG_TOKEN;
 	}
     }
