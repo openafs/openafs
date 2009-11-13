@@ -64,6 +64,7 @@
 
 #include <afs/stds.h>
 #include <krb5.h>
+#include <com_err.h>
 
 #ifndef HAVE_KERBEROSV_HEIM_ERR_H
 #include <afs/com_err.h>
@@ -312,6 +313,33 @@ static char *client = NULL;     /* client principal for akimpersonate */
 static linked_list zsublist;	/* List of zephyr subscriptions */
 static linked_list hostlist;	/* List of host addresses */
 static linked_list authedcells;	/* List of cells already logged to */
+
+/* A com_error bodge. The idea here is that this routine lets us lookup
+ * things in the system com_err, if the AFS one just tells us the error
+ * is unknown
+ */
+
+void
+redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
+{
+    if (who) {
+	fputs(who, stderr);
+	fputs(": ", stderr);
+    }
+    if (code) {
+	const char *str = afs_error_message(code);
+	if (strncmp(str, "unknown", strlen("unknown")) == 0) {
+	    str = error_message(code);
+	}
+	fputs(str, stderr);
+	fputs(" ", stderr);
+    }
+    if (fmt) {
+	vfprintf(stderr, fmt, ap);
+    }
+    putc('\n', stderr);
+    fflush(stderr);
+}
 
 /* ANL - CMU lifetime convert routine */
 /* for K5.4.1 don't use this for now. Need to see if it is needed */
@@ -1215,7 +1243,7 @@ static void usage(void)
 
 void aklog(int argc, char *argv[])
 {
-	krb5_context context;
+    krb5_context context;
     int status = AKLOG_SUCCESS;
     int i;
     int somethingswrong = FALSE;
@@ -1257,6 +1285,7 @@ void aklog(int argc, char *argv[])
 
     krb5_init_context(&context);
     initialize_ktc_error_table ();
+    afs_set_com_err_hook(redirect_errors);
 
     /* Initialize list of cells to which we have authenticated */
     (void)ll_init(&authedcells);
