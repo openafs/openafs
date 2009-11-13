@@ -139,41 +139,43 @@ void cm_BkgDaemon(void * parm)
 	osi_Log2(afsd_logp,"cm_BkgDaemon (after) scp 0x%x ref %d",rp->scp, rp->scp->refCount);
 #endif
 
-        /* 
+        /*
          * Keep the following list synchronized with the
          * error code list in cm_BkgStore.  
          * cm_SyncOpDone(CM_SCACHESYNC_ASYNCSTORE) will be called there unless
          * one of these errors has occurred.
          */
-	switch ( code ) {
-	case CM_ERROR_TIMEDOUT:	/* or server restarting */
-	case CM_ERROR_RETRY:
-	case CM_ERROR_WOULDBLOCK:
-	case CM_ERROR_ALLBUSY:
-	case CM_ERROR_ALLDOWN:
-	case CM_ERROR_ALLOFFLINE:
-	case CM_ERROR_PARTIALWRITE:
-	    osi_Log2(afsd_logp,"cm_BkgDaemon re-queueing failed request 0x%p code 0x%x",
-		     rp, code);
-            lock_ObtainWrite(&cm_daemonLock);
-	    cm_bkgQueueCount++;
-	    osi_QAddT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **)&cm_bkgListEndp, &rp->q);
-	    break;
-	case 0:  /* success */
-	default: /* other error */
-	    if (code == 0)
+        switch ( code ) {
+        case CM_ERROR_TIMEDOUT:	/* or server restarting */
+        case CM_ERROR_RETRY:
+        case CM_ERROR_WOULDBLOCK:
+        case CM_ERROR_ALLBUSY:
+        case CM_ERROR_ALLDOWN:
+        case CM_ERROR_ALLOFFLINE:
+        case CM_ERROR_PARTIALWRITE:
+            if (rp->procp == cm_BkgStore) {
+                osi_Log2(afsd_logp,
+                         "cm_BkgDaemon re-queueing failed request 0x%p code 0x%x",
+                         rp, code);
+                lock_ObtainWrite(&cm_daemonLock);
+                cm_bkgQueueCount++;
+                osi_QAddT((osi_queue_t **) &cm_bkgListp, (osi_queue_t **)&cm_bkgListEndp, &rp->q);
+                break;
+            } /* otherwise fall through */
+        case 0:  /* success */
+        default: /* other error */
+            if (code == 0)
                 osi_Log1(afsd_logp,"cm_BkgDaemon SUCCESS: request 0x%p", rp);
             else
                 osi_Log2(afsd_logp,"cm_BkgDaemon FAILED: request dropped 0x%p code 0x%x",
-		     rp, code);
-	    cm_ReleaseUser(rp->userp);
-	    cm_ReleaseSCache(rp->scp);
-	    free(rp);
+                         rp, code);
+            cm_ReleaseUser(rp->userp);
+            cm_ReleaseSCache(rp->scp);
+            free(rp);
             lock_ObtainWrite(&cm_daemonLock);
-	}
+        }
     }
     lock_ReleaseWrite(&cm_daemonLock);
-
     thrd_SetEvent(cm_BkgDaemon_ShutdownEvent[daemonID]);
 }
 
