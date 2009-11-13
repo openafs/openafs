@@ -31,16 +31,16 @@ COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
 COMPILE_CLEAN  = ${COMPILE_PART2A} clean
 COMPILE_DEPINSTALL  = ${COMPILE_PART2A} depinstall
 
-all: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+all: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR}
 	$(MAKE) build
 
-all_nolibafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+all_nolibafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR}
 	$(MAKE) build TARGET=finale_nolibafs
 
-only_libafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+only_libafs: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR}
 	$(MAKE) build TARGET=libafs
 
-only_libafs_tree: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR}
+only_libafs_tree: force ${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR}
 	$(MAKE) build TARGET=libafs_tree
 
 install: all install_dirs
@@ -84,7 +84,7 @@ packages: dest
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
 
-${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_LIBDIR} ${TOP_JLIBDIR}:
+${TOP_INCDIR}/afs ${TOP_INCDIR}/rx ${TOP_INCDIR}/des ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -123,7 +123,7 @@ config: prelude
 procmgmt: config
 	+${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: procmgmt des lwp_depinstall
+util: procmgmt des lwp_depinstall rx_depinstall
 	+${COMPILE_PART1} util ${COMPILE_PART2}
 
 audit: util rx rxkad fsint

@@ -85,7 +85,7 @@
 #include "viced.h"
 #include "host.h"
 #ifdef AFS_PTHREAD_ENV
-#include "softsig.h"
+#include <afs/softsig.h>
 #endif
 #if defined(AFS_SGI_ENV)
 #include "sys/schedctl.h"

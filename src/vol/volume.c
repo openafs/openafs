@@ -130,7 +130,7 @@
 #endif /* AFS_PTHREAD_ENV */
 #include "vutils.h"
 #ifndef AFS_NT40_ENV
-#include <dir/dir.h>
+#include <afs/dir.h>
 #include <unistd.h>
 #endif
 

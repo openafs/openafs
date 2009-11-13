@@ -12,7 +12,7 @@ prefix S
 statindex 15
 
 #include	"vl_opcodes.h"
-%#include	"vl_opcodes.h"	/* directly to other places */
+%#include	<afs/vl_opcodes.h>	/* directly to other places */
 
 %#ifdef KERNEL
 %#define	afs_xdr_array(a,b,c,d,e,f)	afs_xdr_arrayN(a,b,c,d,e,f)

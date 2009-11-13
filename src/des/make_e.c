@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #include <stdio.h>
 #include "tables.h"
 

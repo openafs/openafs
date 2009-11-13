@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-#include <fsprobe.h>		/*Interface for this module */
+#include "fsprobe.h"		/*Interface for this module */
 #include <lwp.h>		/*Lightweight process package */
 #include <afs/cellconfig.h>
 #include <afs/afsint.h>

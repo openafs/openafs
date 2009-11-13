@@ -51,15 +51,15 @@
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 
-#include "nfs.h"
-#include "lwp.h"
-#include "lock.h"
-#include "ihandle.h"
-#include "vnode.h"
-#include "volume.h"
-#include "partition.h"
-#include "daemon_com.h"
-#include "salvsync.h"
+#include <afs/nfs.h>
+#include <lwp.h>
+#include <lock.h>
+#include <afs/ihandle.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
+#include <afs/partition.h>
+#include <afs/daemon_com.h>
+#include <afs/salvsync.h>
 #ifdef AFS_NT40_ENV
 #include <pthread.h>
 #endif

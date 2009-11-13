@@ -56,7 +56,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 
-#include "volser.h"
 #include <errno.h>
 #include <afs/audit.h>
 #include <afs/afsutil.h>

@@ -22,9 +22,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC=${MT_CC}
-INCLUDES=-I.. -I${srcdir}/../rx -I${srcdir}../des -I../des \
-	-I../rxkad -I${srcdir}/../rxkad -I../rxstat -I../fsint
-CFLAGS = ${COMMON_CFLAGS} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} ${SHLIB_CFLAGS}
+CFLAGS = ${COMMON_CFLAGS} -DRXDEBUG ${MT_CFLAGS} ${SHLIB_CFLAGS}
 SFLAGS=-P -I${TOP_INCDIR}
 
 RX = ../rx
@@ -221,7 +219,7 @@ ticket.o: ${RXKAD}/ticket.c
 	${CCRULE}
 
 ticket5.o: ${RXKAD}/ticket5.c
-	${CCRULE}
+	${CCRULE} -I../rxkad -I${RXKAD}
 
 crc.o: ${RXKAD}/crc.c
 	${CCRULE}
@@ -233,7 +231,7 @@ md5.o: ${RXKAD}/md5.c
 	${CCRULE}
 
 fcrypt.o: ${RXKAD}/domestic/fcrypt.c
-	${CCRULE}
+	${CCRULE} -I../rxkad -I${RXKAD}
 
 crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
 	${CCRULE}

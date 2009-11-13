@@ -19,23 +19,23 @@
 #include <stdio.h>
 #include <signal.h>
 #include <math.h>
-#include <cmd.h>
+#include <afs/cmd.h>
 #include <string.h>
 #undef IN
 #include <time.h>
 
-#include <gtxwindows.h>		/*Generic window package */
-#include <gtxobjects.h>		/*Object definitions */
-#include <gtxkeymap.h>
+#include <afs/gtxwindows.h>		/*Generic window package */
+#include <afs/gtxobjects.h>		/*Object definitions */
+#include <afs/gtxkeymap.h>
 #if 0
-#include <gtxtextcb.h>		/*Text object circular buffer interface */
-#include <gtxtextobj.h>		/*Text object interface */
+#include <afs/gtxtextcb.h>		/*Text object circular buffer interface */
+#include <afs/gtxtextobj.h>		/*Text object interface */
 #endif
-#include <gtxlightobj.h>	/*Light object interface */
-#include <gtxcurseswin.h>	/*Curses window package */
-#include <gtxdumbwin.h>		/*Dumb terminal window package */
-#include <gtxX11win.h>		/*X11 window package */
-#include <gtxframe.h>		/*Frame package */
+#include <afs/gtxlightobj.h>	/*Light object interface */
+#include <afs/gtxcurseswin.h>	/*Curses window package */
+#include <afs/gtxdumbwin.h>		/*Dumb terminal window package */
+#include <afs/gtxX11win.h>		/*X11 window package */
+#include <afs/gtxframe.h>		/*Frame package */
 
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>

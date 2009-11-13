@@ -14,8 +14,7 @@ INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 all: uss
 
-CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config \
-	-I${TOP_INCDIR} -I. ${XCFLAGS} ${ARCHFLAGS}
+CFLAGS=${DBUG} ${COMMON_INCL} ${XCFLAGS} ${ARCHFLAGS}
 
 #
 # Build targets

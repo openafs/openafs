@@ -31,7 +31,7 @@
  *
  * originally written by Steve Miller, MIT Project Athena
  */
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 
 #include <afsconfig.h>
 #include <afs/param.h>
@@ -44,7 +44,7 @@
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif /* AFS_PTHREAD_ENV */
-#include <des.h>
+#include "des.h"
 #include "des_internal.h"
 #include "s_table.h"
 #ifdef BIG

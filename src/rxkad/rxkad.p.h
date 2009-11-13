@@ -93,6 +93,6 @@ typedef char rxkad_level;
 
 extern int rxkad_EpochWasSet;	/* TRUE => we called rx_SetEpoch */
 
-#include "rxkad_prototypes.h"
+#include <rx/rxkad_prototypes.h>
 
 #endif /* OPENAFS_RXKAD_RXKAD_H */

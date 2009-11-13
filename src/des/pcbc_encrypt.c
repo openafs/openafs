@@ -20,14 +20,14 @@
  * spm 8/85	MIT project athena
  */
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
 #ifndef KERNEL
 #include <stdio.h>
 #include <string.h>
 #endif
 #include <afsconfig.h>
 #include <afs/param.h>
-#include <des.h>
+#include "des.h"
 #include "des_prototypes.h"
 
 

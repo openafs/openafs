@@ -87,7 +87,7 @@ flipbase64.o: ${UTIL}/flipbase64.c
 	${CCRULE}
 
 netutils.o: ${UTIL}/netutils.c
-	${CCRULE}
+	${CCRULE} -I ../util
 
 dirpath.o: ${UTIL}/dirpath.c
 	${CCRULE}

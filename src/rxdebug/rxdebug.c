@@ -38,11 +38,11 @@
 
 #include <stdio.h>
 
-#include "rx_user.h"
-#include "rx_clock.h"
-#include "rx_queue.h"
-#include "rx.h"
-#include "rx_globals.h"
+#include <rx/rx_user.h>
+#include <rx/rx_clock.h>
+#include <rx/rx_queue.h>
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
 
 
 #define	TIMEOUT	    20

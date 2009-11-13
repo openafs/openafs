@@ -15,7 +15,7 @@ INSTALL_PROGRAM = @INSTALL_PROGRAM@
 INSTALL_SCRIPT = @INSTALL_SCRIPT@
 
 CC=${MT_CC}
-CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS} -I../auth -I../kauth -I../ptserver -I../sys
+CFLAGS=${COMMON_CFLAGS} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 AUDIT= ../audit
@@ -119,19 +119,19 @@ audit-sysvmq.o: ${AUDIT}/audit-sysvmq.c
 	${CCRULE}
 
 cellconfig.o: ${AUTH}/cellconfig.c
-	${CCRULE}
+	${CCRULE} -I../auth
 
 ktc.o: ${AUTH}/ktc.c
 	${CCRULE}
 
 userok.o: ${AUTH}/userok.c
-	${CCRULE}
+	${CCRULE} -I../auth
 
 writeconfig.o: ${AUTH}/writeconfig.c
-	${CCRULE}
+	${CCRULE} -I../auth
 
 authcon.o: ${AUTH}/authcon.c
-	${CCRULE}
+	${CCRULE} -I../auth
 
 ktc_errors.o: ${AUTH}/ktc_errors.c
 	${CCRULE}
@@ -146,28 +146,28 @@ kauth.cs.o: ${KAUTH}/kauth.cs.c
 	${CCRULE}
 
 kaaux.o: ${KAUTH}/kaaux.c
-	${CCRULE}
+	${CCRULE} -I../kauth
 
 client.o: ${KAUTH}/client.c
-	${CCRULE}
+	${CCRULE} -I../kauth
 
 authclient.o: ${KAUTH}/authclient.c
-	${CCRULE}
+	${CCRULE} -I../kauth
 
 token.o: ${KAUTH}/token.c
-	${CCRULE}
+	${CCRULE} -I../kauth
 
 kautils.o: ${KAUTH}/kautils.c
-	${CCRULE}
+	${CCRULE} -I../kauth
 
 kalocalcell.o: ${KAUTH}/kalocalcell.c
-	${CCRULE}
+	${CCRULE} -I ../kauth
 
 kaerrors.o: ${KAUTH}/kaerrors.c
 	${CCRULE}
 
 user.o: ${KAUTH}/user.c
-	${CCRULE}
+	${CCRULE} -I ../kauth
 
 read_passwd.o: ${KAUTH}/read_passwd.c
 	${CCRULE}
@@ -215,7 +215,7 @@ rxkad_errs.o: ${RXKAD}/rxkad_errs.c
 	${CCRULE}
 
 ptclient.o: ${PTSERVER}/ptclient.c
-	${CCRULE}
+	${CCRULE} -I../ptserver
 
 # The special treatment of this file for hp_ux110 is because of a bug
 # in version A.11.01.00 of the HP C compiler.  This bug appears to be
@@ -228,16 +228,16 @@ ptuser.o: ${PTSERVER}/ptuser.c
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux11*) \
-		set X `echo ${CCRULE} | sed s/-g//`; shift; \
+		set X `echo ${CCRULE} -I../ptserver | sed s/-g//`; shift; \
 		"$$@" \
 		;; \
 	*) \
-		${CCRULE} \
+		${CCRULE} -I../ptserver\
 		;; \
 	esac
 
 display.o: ${PTSERVER}/display.c
-	${CCRULE}
+	${CCRULE} -I../ptserver
 
 ptint.cs.o: ${PTSERVER}/ptint.cs.c
 	${CCRULE}
@@ -249,7 +249,7 @@ pterror.o: ${PTSERVER}/pterror.c
 	${CCRULE}
 
 rmtsysc.o: ${SYS}/rmtsysc.c
-	${CCRULE}
+	${CCRULE} -I../sys
 
 rmtsys.xdr.o: ${SYS}/rmtsys.xdr.c
 	${CCRULE}
@@ -261,7 +261,7 @@ afssyscalls.o: ${SYS}/afssyscalls.c
 	${CCRULE}
 
 rmtsysnet.o: ${SYS}/rmtsysnet.c
-	${CCRULE}
+	${CCRULE} -I../sys
 
 glue.o: ${SYS}/glue.c
 	${CCRULE}

@@ -32,7 +32,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 #include <stdio.h>
-#include <aklog.h>
+#include "aklog.h"
 #include <krb5.h>
 #include "skipwrap.h"
 

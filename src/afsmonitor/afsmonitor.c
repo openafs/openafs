@@ -23,7 +23,7 @@
 #include <math.h>
 #include <string.h>
 #include <errno.h>
-#include <cmd.h>
+#include <afs/cmd.h>
 #include <signal.h>
 #undef IN
 #include <sys/types.h>
@@ -32,14 +32,14 @@
 #include <netdb.h>
 #include <ctype.h>
 
-#include <gtxwindows.h>		/*Generic window package */
-#include <gtxobjects.h>		/*Object definitions */
-#include <gtxlightobj.h>	/*Light object interface */
-#include <gtxcurseswin.h>	/*Curses window package */
-#include <gtxdumbwin.h>		/*Dumb terminal window package */
-#include <gtxX11win.h>		/*X11 window package */
-#include <gtxframe.h>		/*Frame package */
-#include <gtxinput.h>
+#include <afs/gtxwindows.h>		/*Generic window package */
+#include <afs/gtxobjects.h>		/*Object definitions */
+#include <afs/gtxlightobj.h>	/*Light object interface */
+#include <afs/gtxcurseswin.h>	/*Curses window package */
+#include <afs/gtxdumbwin.h>		/*Dumb terminal window package */
+#include <afs/gtxX11win.h>		/*X11 window package */
+#include <afs/gtxframe.h>		/*Frame package */
+#include <afs/gtxinput.h>
 
 #include <afs/xstat_fs.h>
 #include <afs/xstat_cm.h>

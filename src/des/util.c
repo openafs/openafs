@@ -16,7 +16,7 @@
 #include <stdio.h>
 #endif
 #include <sys/types.h>
-#include <des.h>
+#include "des.h"
 #include "des_prototypes.h"
 
 int

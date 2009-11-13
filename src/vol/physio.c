@@ -38,8 +38,8 @@
 #include "nfs.h"
 #include "ihandle.h"
 #include "salvage.h"
-#include "afs/assert.h"
-#include "afs/dir.h"
+#include <afs/dir.h>
+#include <assert.h>
 #include "vol_internal.h"
 
 /* returns 0 on success, errno on failure */

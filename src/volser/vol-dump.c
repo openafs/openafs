@@ -39,18 +39,18 @@
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
-#include "nfs.h"
+#include <afs/nfs.h>
 #include <afs/errors.h>
-#include "lock.h"
-#include "lwp.h"
+#include <lock.h>
+#include <lwp.h>
 #include <afs/afssyscalls.h>
-#include "ihandle.h"
-#include "vnode.h"
-#include "volume.h"
-#include "partition.h"
-#include "viceinode.h"
+#include <afs/ihandle.h>
+#include <afs/vnode.h>
+#include <afs/volume.h>
+#include <afs/partition.h>
+#include <afs/viceinode.h>
 #include <afs/afssyscalls.h>
-#include "acl.h"
+#include <afs/acl.h>
 #include <afs/dir.h>
 #include <afs/com_err.h>
 
@@ -72,9 +72,9 @@
 
 #include <dirent.h>
 
-#include "volser/volser.h"
-#include "volser/volint.h"
-#include "volser/dump.h"
+#include "volser.h"
+#include "volint.h"
+#include "dump.h"
 
 #define putint32(p, v)  *p++ = v>>24, *p++ = v>>16, *p++ = v>>8, *p++ = v
 #define putshort(p, v) *p++ = v>>8, *p++ = v

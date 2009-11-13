@@ -9,8 +9,8 @@
 #include <afs/param.h>
 
 
-#include <mit-cpyright.h>
-#include <des.h>
+#include "mit-cpyright.h"
+#include "des.h"
 #ifdef BSDUNIX
 #include <sys/file.h>
 #endif
