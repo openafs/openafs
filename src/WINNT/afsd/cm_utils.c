@@ -209,8 +209,7 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
     error = et_to_sys_error(error);
 
     if (error == RX_CALL_DEAD ||
-        error == RX_CALL_TIMEOUT ||
-        error == RX_RESTARTING)
+        error == RX_CALL_TIMEOUT)
         error = CM_ERROR_RETRY;
     else if (error < 0)
         error = CM_ERROR_UNKNOWN;
@@ -245,6 +244,8 @@ long cm_MapRPCError(long error, cm_req_t *reqp)
         error = CM_ERROR_BADFD;
     else if (error == VNOSERVICE || error == VSALVAGE || error == VOFFLINE)
         error = CM_ERROR_ALLOFFLINE;
+    else if (error == VBUSY || error == VRESTARTING)
+        error = CM_ERROR_ALLBUSY;
     else if (error == EISDIR)
         return CM_ERROR_ISDIR;
     return error;
