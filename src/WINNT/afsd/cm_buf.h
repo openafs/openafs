@@ -94,6 +94,8 @@ typedef struct cm_buf {
 #define CM_BUF_CMSTORING	2	/* storing this buffer */
 #define CM_BUF_CMFULLYFETCHED	4	/* read-while-fetching optimization */
 #define CM_BUF_CMWRITING        8       /* writing to this buffer */
+#define CM_BUF_CMBKGFETCH      16       /* background fetch queued by
+                                         * prefetch or redirector */
 /* waiting is done based on scp->flags.  Removing bits from cmFlags
    should be followed by waking the scp. */
 
@@ -101,7 +103,7 @@ typedef struct cm_buf {
 #define CM_BUF_WRITING	2	/* now writing buffer to the disk */
 #define CM_BUF_INHASH	4	/* in the hash table */
 #define CM_BUF_DIRTY	8	/* buffer is dirty */
-#define CM_BUF_INLRU	0x10	/* in lru queue */
+#define CM_BUF_INLRU	0x10	/* in lru queue (aka free list) */
 #define CM_BUF_ERROR	0x20	/* something went wrong on delayed write */
 #define CM_BUF_WAITING	0x40	/* someone's waiting for a flag to change */
 #define CM_BUF_INDL     0x80    /* in the dirty list */
