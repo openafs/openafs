@@ -1239,13 +1239,13 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 		     struct afsconf_cell *acellInfo)
 {
     afs_int32 i;
-    int tservice = afsconf_FindService(aservice);
+    int tservice = afsconf_FindService(aservice);   /* network byte order */
     const char *ianaName = afsconf_FindIANAName(aservice);
     struct afsconf_entry DNSce;
     afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     unsigned short ipRanks[AFSMAXCELLHOSTS];
-    unsigned short ports[AFSMAXCELLHOSTS];
+    unsigned short ports[AFSMAXCELLHOSTS];          /* network byte order */
     int numServers;
     int rc;
     int ttl;
@@ -1273,7 +1273,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
      * and that service happens to be the prservice or kaservice
      * then fallback to searching for afs3-vlserver and assigning
      * the port number here. */
-    if (rc < 0 && tservice == 7002 || tservice == 7004) {
+    if (rc < 0 && tservice == htons(7002) || tservice == htons(7004)) {
         rc = getAFSServer("afs3-vlserver", "udp", acellName, tservice,
                            cellHostAddrs, cellHostNames, ports, ipRanks, &numServers,
                            &ttl);

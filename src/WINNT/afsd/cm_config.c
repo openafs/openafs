@@ -698,7 +698,7 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     int  cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     unsigned short ipRanks[AFSMAXCELLHOSTS];
-    unsigned short ports[AFSMAXCELLHOSTS];
+    unsigned short ports[AFSMAXCELLHOSTS];      /* network byte order */
     int numServers;
     int i;
     struct sockaddr_in vlSockAddr;
@@ -717,13 +717,13 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
          strncasecmp(cellNamep, CM_IOCTL_FILENAME_NOSLASH, strlen(CM_IOCTL_FILENAME_NOSLASH)) == 0)
 	return -1;
 
-    rc = getAFSServer("afs3-vlserver", "udp", cellNamep, 7003,
+    rc = getAFSServer("afs3-vlserver", "udp", cellNamep, htons(7003),
                       cellHostAddrs, cellHostNames, ports, ipRanks, &numServers, ttl);
     if (rc == 0 && numServers > 0) {     /* found the cell */
         for (i = 0; i < numServers; i++) {
             memcpy(&vlSockAddr.sin_addr.s_addr, &cellHostAddrs[i],
                    sizeof(long));
-            vlSockAddr.sin_port = htons(ports[i]);
+            vlSockAddr.sin_port = ports[i];
             vlSockAddr.sin_family = AF_INET;
             if (procp)
                 (*procp)(rockp, &vlSockAddr, cellHostNames[i], ipRanks[i]);

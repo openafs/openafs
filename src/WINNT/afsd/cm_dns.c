@@ -624,9 +624,10 @@ int DNSgetAddr(SOCKET commSock, char *hostName, struct in_addr *iNet)
 #endif /* DNSAPI_ENV */
 
 int getAFSServer(const char *service, const char *protocol, const char *cellName,
-                 unsigned short afsdbPort,
+                 unsigned short afsdbPort,  /* network byte order */
                  int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
-                 unsigned short ports[], unsigned short ipRanks[],
+                 unsigned short ports[],    /* network byte order */
+                 unsigned short ipRanks[],
                  int *numServers, int *ttl)
 {
 #ifndef DNSAPI_ENV
@@ -722,7 +723,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                 StringCbCopyA(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                               pDnsIter->Data.SRV.pNameTarget);
                 ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
-                ports[*numServers] = pDnsIter->Data.SRV.wPort;
+                ports[*numServers] = htons(pDnsIter->Data.SRV.wPort);
                 (*numServers)++;
 
                 if (!*ttl) 
@@ -790,7 +791,7 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
                     StringCbCopyA(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                                    pDnsIter->Data.Afsdb.pNameExchange);
                     ipRanks[*numServers] = 0;
-                    ports[*numServers] = htons(afsdbPort);
+                    ports[*numServers] = afsdbPort;
                     (*numServers)++;
 
                     if (!*ttl) 
@@ -853,10 +854,10 @@ int getAFSServer(const char *service, const char *protocol, const char *cellName
 }
 
 int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, const cm_unichar_t *cellName,
-                  unsigned short afsdbPort,
+                  unsigned short afsdbPort, /* network byte order */
                   int *cellHostAddrs,
                   cm_unichar_t cellHostNames[][MAXHOSTCHARS], 
-                  unsigned short ports[],
+                  unsigned short ports[],   /* network byte order */
                   unsigned short ipRanks[],
                   int *numServers, int *ttl)
 {
@@ -891,7 +892,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                 StringCbCopyW(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                               pDnsIter->Data.SRV.pNameTarget);
                 ipRanks[*numServers] = pDnsIter->Data.SRV.wPriority;
-                ports[*numServers] = pDnsIter->Data.SRV.wPort;
+                ports[*numServers] = htons(pDnsIter->Data.SRV.wPort);
                 (*numServers)++;
                 
                 if (!*ttl) 
@@ -961,7 +962,7 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
                     StringCbCopyW(cellHostNames[*numServers], sizeof(cellHostNames[*numServers]),
                                   pDnsIter->Data.Afsdb.pNameExchange);
                     ipRanks[*numServers] = 0;
-                    ports[*numServers] = htons(afsdbPort);
+                    ports[*numServers] = afsdbPort;
                     (*numServers)++;
                 
                     if (!*ttl) 
