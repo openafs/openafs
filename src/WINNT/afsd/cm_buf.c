@@ -2000,7 +2000,7 @@ long buf_DirtyBuffersExist(cm_fid_t *fidp)
 
     i = BUF_FILEHASH(fidp);
 
-    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->allp, bcount++) {
+    for (bp = cm_data.buf_fileHashTablepp[i]; bp; bp=bp->fileHashp, bcount++) {
 	if (!cm_FidCmp(fidp, &bp->fid) && (bp->flags & CM_BUF_DIRTY))
 	    return 1;
     }
