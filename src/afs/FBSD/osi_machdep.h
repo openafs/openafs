@@ -76,8 +76,6 @@ extern int (**afs_vnodeop_p) ();
 
 #define afs_strcat(s1, s2)	strcat((s1), (s2))
 
-#ifdef KERNEL
-
 #undef afs_osi_Alloc_NoSleep
 #define afs_osi_Alloc_NoSleep(size) osi_fbsd_alloc((size), 0)
 
@@ -167,7 +165,6 @@ extern struct proc *afs_global_owner;
 #define NETPRI splvar=splnet()
 #undef USERPRI
 #define USERPRI splx(splvar)
-#endif /* KERNEL */
 
 #define ifnet_flags(x) (x?(x)->if_flags:0)
 

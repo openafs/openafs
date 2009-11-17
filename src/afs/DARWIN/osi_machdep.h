@@ -155,7 +155,6 @@ void darwin_vn_rele(struct vnode *vp);
 
 #undef afs_suser
 
-#ifdef KERNEL
 extern thread_t afs_global_owner;
 /* simple locks cannot be used since sleep can happen at any time */
 #ifdef AFS_DARWIN80_ENV
@@ -264,7 +263,5 @@ extern int (**afs_vnodeop_p) ();
 # define IsAfsVnode(v)      ((v)->v_op == afs_vnodeop_p)
 # define SetAfsVnode(v)     /* nothing; done in getnewvnode() */
 #endif
-
-#endif /* KERNEL */
 
 #endif /* _OSI_MACHDEP_H_ */

@@ -1069,7 +1069,6 @@ typedef union {
     afs_mem_dcache_id_t mem;
 } afs_dcache_id_t;
 
-#ifdef KERNEL
 /* it does not compile outside kernel */
 struct buffer {
   afs_int32 fid;              /* is adc->index, the cache file number */
@@ -1095,7 +1094,6 @@ struct fcache {
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
 };
-#endif
 
 /* magic numbers to specify the cache type */
 

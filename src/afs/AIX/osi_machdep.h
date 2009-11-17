@@ -53,7 +53,6 @@ typedef struct proc afs_proc_t;
 #include <ulimit.h>
 #define get_ulimit()		(ulimit(GET_FSIZE, 0) << UBSHIFT)
 
-#ifdef KERNEL
 #include <sys/lockl.h>
 #include <sys/lock_def.h>
 #include <sys/lock_alloc.h>
@@ -86,6 +85,5 @@ extern simple_lock_data afs_global_lock;
 #endif
 
 #define ifnet_flags(x) (x?(x)->if_flags:0)
-#endif
 
 #endif /* _OSI_MACHDEP_H_ */

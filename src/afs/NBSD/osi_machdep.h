@@ -51,7 +51,6 @@ typedef struct proc afs_proc_t;
 
 #undef afs_suser
 
-#ifdef KERNEL
 extern struct simplelock afs_global_lock;
 #if 0
 extern thread_t afs_global_owner;
@@ -99,7 +98,5 @@ extern int (**afs_vnodeop_p) ();
 #define vSetType(vc, type)      AFSTOV(vc)->v_type = (type)
 #define IsAfsVnode(v)           ((v)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(v)          /* nothing; done in getnewvnode() */
-
-#endif /* KERNEL */
 
 #endif /* _OSI_MACHDEP_H_ */

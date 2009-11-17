@@ -71,7 +71,6 @@ extern void *afs_osi_Alloc_NoSleep(size_t size);
 #define afs_suser(x)        suser(x)
 #endif
 
-#ifdef KERNEL
 /*
  * Global lock support. 
  */
@@ -128,5 +127,4 @@ struct afs_ifinfo {
   int         metric;
   ipaddr_t    dstaddr;
 };
-#endif
 #endif /* _OSI_MACHDEP_H_ */

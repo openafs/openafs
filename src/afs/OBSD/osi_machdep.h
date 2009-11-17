@@ -143,8 +143,6 @@ extern int afs_vget();
 #define afs_osi_lockmgr(l, f, i, p) lockmgr((l), (f), (i), (p))
 #endif
 
-#ifdef KERNEL
-
 #ifdef AFS_OBSD44_ENV
 /* Revert to classical, BSD locks */
 
@@ -224,7 +222,6 @@ extern struct lock afs_global_lock;
 #define NETPRI splvar=splnet()
 #undef USERPRI
 #define USERPRI splx(splvar)
-#endif /* KERNEL */
 
 #define osi_InitGlock() \
     do { \

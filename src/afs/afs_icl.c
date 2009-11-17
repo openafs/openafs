@@ -34,7 +34,7 @@ struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set *)0;
 
 #if defined(AFS_SGI61_ENV)
 /* For SGI 6.2, this can is changed to 1 if it's a 32 bit kernel. */
-#if defined(AFS_SGI62_ENV) && defined(KERNEL) && !defined(_K64U64)
+#if defined(AFS_SGI62_ENV) && !defined(_K64U64)
 int afs_icl_sizeofLong = 1;
 #else
 int afs_icl_sizeofLong = 2;

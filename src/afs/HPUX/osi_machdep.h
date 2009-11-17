@@ -44,7 +44,6 @@ typedef proc_t afs_proc_t;
 
 #define getppid()               (afs_uint32)p_ppid(u.u_procp)
 
-#ifdef KERNEL
 /*
  * Global lock support. 
  *
@@ -84,7 +83,6 @@ extern void afsHashRelease(tid_t key);
 #define SPLVAR      register ulong_t splvar
 #define NETPRI      NET_SPLNET(splvar)
 #define USERPRI     NET_SPLX(splvar)
-#endif /* KERNEL */
 
 #if !defined(AFS_HPUX110_ENV)
 /* 
