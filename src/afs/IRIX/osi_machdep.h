@@ -194,7 +194,13 @@ extern long afs_global_owner;
 
 #endif /* KERNEL  */
 
-
+#if defined(AFS_SGI62_ENV)
+# define osi_InitGlock() \
+	mutex_init(&afs_global_lock, MUTEX_DEFAULT, "afs_global_lock");
+#else
+# define osi_InitGlock() \
+        mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
+#endif
 
 #ifdef AFS_SGI64_ENV
 #define gop_rdwr(rw,gp,base,len,offset,segflg,ioflag,ulimit,cr,aresid) \

@@ -77,6 +77,11 @@ extern thread_t afs_global_owner;
     do { \
 	simple_unlock(&afs_global_lock); \
     } while(0)
+#define osi_InitGlock() \
+    do { \
+	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
+	afs_global_owner = 0; \
+    } while (0)
 #endif /* 0 */
 
 #undef SPLVAR

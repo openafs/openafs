@@ -269,6 +269,9 @@ do { \
     afs_global_owner = 0; \
     mutex_unlock(&afs_global_lock); \
 } while (0)
+
+#define osi_InitGlock()
+
 #else
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()

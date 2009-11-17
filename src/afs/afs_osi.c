@@ -74,33 +74,8 @@ osi_Init(void)
     static int once = 0;
     if (once++ > 0)		/* just in case */
 	return;
-#if	defined(AFS_HPUX_ENV)
+
     osi_InitGlock();
-#else /* AFS_HPUX_ENV */
-#if defined(AFS_GLOBAL_SUNLOCK)
-#if defined(AFS_SGI62_ENV)
-    mutex_init(&afs_global_lock, MUTEX_DEFAULT, "afs_global_lock");
-#elif defined(AFS_FBSD50_ENV)
-#if defined(AFS_FBSD80_ENV) && defined(WITNESS)
-    /* "lock_initalized" (sic) can panic, checks a flag bit
-     * is unset _before_ init */
-    memset(&afs_global_mtx, 0, sizeof(struct mtx));
-#endif
-    mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF);
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-#if !defined(AFS_DARWIN80_ENV)
-    lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0);
-#endif
-    afs_global_owner = 0;
-#elif defined(AFS_AIX41_ENV)
-    lock_alloc((void *)&afs_global_lock, LOCK_ALLOC_PIN, 1, 1);
-    simple_lock_init((void *)&afs_global_lock);
-#elif !defined(AFS_LINUX22_ENV)
-    /* Linux initialization in osi directory. Should move the others. */
-    mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL);
-#endif
-#endif /* AFS_GLOBAL_SUNLOCK */
-#endif /* AFS_HPUX_ENV */
 
     if (!afs_osicred_initialized) {
 #if defined(AFS_DARWIN80_ENV)

@@ -76,6 +76,8 @@ extern usr_mutex_t afs_global_lock;
     } while(0)
 #define AFS_ASSERT_GLOCK() \
     do { if (!ISAFS_GLOCK()) { osi_Panic("afs global lock not held"); } } while(0)
+#define osi_GlockInit() \
+    usr_mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
 
 extern int afs_bufferpages;
 

@@ -226,6 +226,12 @@ extern struct lock afs_global_lock;
 #define USERPRI splx(splvar)
 #endif /* KERNEL */
 
+#define osi_InitGlock() \
+    do { \
+	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
+	afs_global_owner = 0; \
+    } while (0)
+
 /* vnodes */
 extern int (**afs_vnodeop_p) ();
 #define vType(vc)               AFSTOV(vc)->v_type

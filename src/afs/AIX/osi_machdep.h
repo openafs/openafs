@@ -74,6 +74,17 @@ extern simple_lock_data afs_global_lock;
 			} while(0)
 #define ISAFS_GLOCK()	lock_mine((void *)&afs_global_lock)
 
+#if defined(AFS_AIX41_ENV)
+#define osi_InitGlock() \
+	do {								\
+	    lock_alloc((void *)&afs_global_lock, LOCK_ALLOC_PIN, 1, 1);	\
+	    simple_lock_init((void *)&afs_global_lock);			\
+	} while(0)
+#else
+#define osi_InitGlock() \
+	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
+#endif
+
 #define ifnet_flags(x) (x?(x)->if_flags:0)
 #endif
 

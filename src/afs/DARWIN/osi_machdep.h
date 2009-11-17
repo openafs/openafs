@@ -174,6 +174,10 @@ extern lck_mtx_t  *afs_global_lock;
 	afs_global_owner = 0; \
         lck_mtx_unlock(afs_global_lock); \
     } while(0)
+#define osi_InitGlock() \
+    do { \
+	afs_global_owner = 0; \
+    } while (0)
 #else
 /* Should probably use mach locks rather than bsd locks, since we use the
    mach thread control api's elsewhere (mach locks not used for consistency
@@ -192,6 +196,11 @@ extern struct lock__bsd__ afs_global_lock;
 	afs_global_owner = 0; \
         lockmgr(&afs_global_lock, LK_RELEASE, 0, current_proc()); \
     } while(0)
+#define osi_InitGlock() \
+    do { \
+	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
+	afs_global_owner = 0; \
+    } while (0)
 #endif
 #define ISAFS_GLOCK() (afs_global_owner == current_thread())
 

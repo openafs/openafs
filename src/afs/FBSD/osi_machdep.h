@@ -119,6 +119,19 @@ extern struct mtx afs_global_mtx;
 #define AFS_GLOCK() mtx_lock(&afs_global_mtx)
 #define AFS_GUNLOCK() mtx_unlock(&afs_global_mtx)
 #define ISAFS_GLOCK() (mtx_owned(&afs_global_mtx))
+#if defined(AFS_FBSD80_ENV) && defined(WITNESS)
+# define osi_InitGlock() \
+	do { \
+	    memset(&afs_global_mtx, 0, sizeof(struct mtx)); \
+	    mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF); \
+	    afs_global_owner = 0; \
+	} while(0)
+#else
+# define osi_InitGlock() \
+    do { \
+	mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF); \
+	afs_global_owner = 0; \
+    } while (0)
 #else /* FBSD50 */
 extern struct lock afs_global_lock;
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
@@ -141,6 +154,11 @@ extern struct proc *afs_global_owner;
         lockmgr(&afs_global_lock, LK_RELEASE, 0, curproc); \
     } while(0)
 #define ISAFS_GLOCK() (afs_global_owner == curproc && curproc)
+#define osi_InitGlock() \
+    do { \
+	lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0); \
+	afs_global_owner = 0; \
+    } while (0)
 #endif /* FBSD50 */
 
 #undef SPLVAR
