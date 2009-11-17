@@ -64,7 +64,11 @@
 
 #include <afs/stds.h>
 #include <krb5.h>
+#if defined(HAVE_ET_COM_ERR_H)
+#include <et/com_err.h>
+#else
 #include <com_err.h>
+#endif
 
 #ifndef HAVE_KERBEROSV_HEIM_ERR_H
 #include <afs/com_err.h>
