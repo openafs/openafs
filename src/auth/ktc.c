@@ -963,7 +963,9 @@ ktc_curpag(void)
 	afs_uint32 g0, g1;
 	afs_uint32 h, l, ret;
 	int ngroups;
+#ifdef AFS_LINUX26_ENV
 	int i;
+#endif
 
 	ngroups = getgroups(sizeof groups / sizeof groups[0], groups);
 
