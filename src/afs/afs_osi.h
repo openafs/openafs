@@ -68,7 +68,6 @@ struct osi_file {
 #endif
     int (*proc) (struct osi_file * afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
     char *rock;			/* rock passed to proc */
-    ino_t inum;			/* guarantee validity of hint */
 #if defined(UKERNEL)
     int fd;			/* file descriptor for user space files */
 #endif				/* defined(UKERNEL) */

@@ -1170,9 +1170,6 @@ extern int afs_open(struct vcache **avcp, afs_int32 aflags,
 
 
 /* VNOPS/afs_vnop_read.c */
-extern afs_int32 maxIHint;
-extern afs_int32 nihints;
-extern afs_int32 usedihint;
 extern int afs_MemRead(register struct vcache *avc, struct uio *auio,
 		       afs_ucred_t *acred, daddr_t albn,
 		       struct buf **abpp, int noLock);

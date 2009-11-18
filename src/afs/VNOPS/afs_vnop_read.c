@@ -30,11 +30,6 @@
 
 extern char afs_zeros[AFS_ZEROS];
 
-afs_int32 maxIHint;
-afs_int32 nihints;		/* # of above actually in-use */
-afs_int32 usedihint;
-
-
 /* Imported variables */
 extern afs_rwlock_t afs_xdcache;
 extern unsigned char *afs_indexFlags;
@@ -790,20 +785,6 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    }
 	} else {
 	    /* get the data from the file */
-#ifdef IHINT
-	    if (tfile = tdc->ihint) {
-		if (tdc->f.inode != tfile->inum) {
-		    afs_warn("afs_UFSRead: %x hint mismatch tdc %d inum %d\n",
-			     tdc, tdc->f.inode, tfile->inum);
-		    osi_UFSClose(tfile);
-		    tdc->ihint = tfile = 0;
-		    nihints--;
-		}
-	    }
-	    if (tfile != 0) {
-		usedihint++;
-	    } else
-#endif /* IHINT */
 	    tfile = (struct osi_file *)osi_UFSOpen(&tdc->f.inode);
 #ifdef AFS_DARWIN80_ENV
 	    trimlen = len;
@@ -916,14 +897,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 #else
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, afs_osi_credp);
 #endif
-
-#ifdef IHINT
-	    if (!tdc->ihint && nihints < maxIHint) {
-		tdc->ihint = tfile;
-		nihints++;
-	    } else
-#endif /* IHINT */
-		osi_UFSClose(tfile);
+	    osi_UFSClose(tfile);
 
 	    if (code) {
 		error = code;

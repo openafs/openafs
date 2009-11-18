@@ -36,7 +36,7 @@ extern struct super_block *afs_cacheSBp;
 
 #if defined(AFS_LINUX26_ENV) 
 struct file *
-afs_linux_raw_open(afs_dcache_id_t *ainode, ino_t *hint)
+afs_linux_raw_open(afs_dcache_id_t *ainode)
 {
     struct inode *tip = NULL;
     struct dentry *dp = NULL;
@@ -68,8 +68,6 @@ afs_linux_raw_open(afs_dcache_id_t *ainode, ino_t *hint)
 #else
 	osi_Panic("Can't open inode %d\n", (int) ainode->ufs);
 #endif
-    if (hint)
-	*hint = tip->i_ino;
     return filp;
 }
 
@@ -97,7 +95,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     }
     memset(afile, 0, sizeof(struct osi_file));
 
-    afile->filp = afs_linux_raw_open(ainode, &afile->inum);
+    afile->filp = afs_linux_raw_open(ainode);
     afile->size = i_size_read(FILE_INODE(afile->filp));
     AFS_GLOCK();
     afile->offset = 0;
@@ -152,7 +150,6 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode->ufs;	/* for hint validity checking */
     return (void *)afile;
 }
 #endif

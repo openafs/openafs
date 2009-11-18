@@ -198,7 +198,6 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->vnode = vp;
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    afile->inum = ainode->ufs;	/* for hint validity checking */
 #ifndef AFS_CACHE_VNODE_PATH
     afile->size = va.va_size;
 #else

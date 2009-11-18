@@ -731,7 +731,6 @@ osi_UFSOpen(afs_dcache_id_t *ino)
     }
     fp->size = st.st_size;
     fp->offset = 0;
-    fp->inum = ino->ufs;
     fp->vnode = (struct usr_vnode *)fp;
 
     AFS_GLOCK();

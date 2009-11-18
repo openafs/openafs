@@ -127,9 +127,6 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
 	return 0;
     afs_cacheinit_flag = 1;
     cacheInfoModTime = 0;
-    maxIHint = ninodes;
-    nihints = 0;
-    usedihint = 0;
 
     LOCK_INIT(&afs_ftf, "afs_ftf");
     AFS_RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
@@ -694,7 +691,7 @@ shutdown_cache(void)
 
 	afs_cacheStats = 0;
 	afs_cacheFiles = afs_cacheBlocks = 0;
-	pag_epoch = maxIHint = nihints = usedihint = 0;
+	pag_epoch = 0;
 	pagCounter = 0;
 #if defined(AFS_XBSD_ENV)
 	vrele(volumeVnode);	/* let it go, finally. */
