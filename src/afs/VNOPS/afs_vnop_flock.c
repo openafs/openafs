@@ -121,6 +121,7 @@ lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 	flock->l_sysid = procp->p_sysid;
 	flock->l_pid = procp->p_epid;
 # endif
+    }
 }
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 void
