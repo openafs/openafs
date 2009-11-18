@@ -184,13 +184,17 @@ BKGSleep(void *unused)
 #endif
 	    VTRANS_LOCK;
 	    for (tt = TransList(); tt; tt = tt->next) {
+                VTRANS_OBJ_LOCK(tt);
 		if ((strcmp(tt->lastProcName, "DeleteVolume") == 0)
 		    || (strcmp(tt->lastProcName, "Clone") == 0)
 		    || (strcmp(tt->lastProcName, "ReClone") == 0)
 		    || (strcmp(tt->lastProcName, "Forward") == 0)
 		    || (strcmp(tt->lastProcName, "Restore") == 0)
-		    || (strcmp(tt->lastProcName, "ForwardMulti") == 0))
+		    || (strcmp(tt->lastProcName, "ForwardMulti") == 0)) {
+                    VTRANS_OBJ_UNLOCK(tt);
 		    break;
+                }
+                VTRANS_OBJ_UNLOCK(tt);
 	    }
 	    if (tt) {
 	        VTRANS_UNLOCK;

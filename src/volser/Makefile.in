@@ -11,7 +11,8 @@ HELPER_SPLINT=@HELPER_SPLINT@
 
 
 VINCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
-	${TOP_INCDIR}/afs/vlserver.h vol.h dump.h volser.h  lockdata.h
+	${TOP_INCDIR}/afs/vlserver.h vol.h dump.h volser.h  lockdata.h \
+	voltrans_inline.h
 
 RINCLS=${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
        ${TOP_INCDIR}/afs/keys.h ${TOP_INCDIR}/afs/cellconfig.h \
