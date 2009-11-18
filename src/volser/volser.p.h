@@ -58,7 +58,7 @@ struct volser_trans {
     /* the fields below are useful for debugging */
     char lastProcName[30];	/* name of the last procedure which used transaction */
     struct rx_call *rxCallPtr;	/* pointer to latest associated rx_call */
-#ifdef AFS_PHTREAD_ENV
+#ifdef AFS_PTHREAD_ENV
     pthread_mutex_t lock;       /* per transaction lock */
 #endif
 
@@ -75,9 +75,9 @@ struct volser_dest {
     afs_int32 destSSID;
 };
 
-#ifdef AFS_PHTREAD_ENV
+#ifdef AFS_PTHREAD_ENV
 #define VTRANS_OBJ_LOCK_INIT(tt) \
-  assert(pthread_mutex_init(&((tt)->lock)) == 0)
+  assert(pthread_mutex_init(&((tt)->lock),NULL) == 0)
 #define VTRANS_OBJ_LOCK_DESTROY(tt) \
   assert(pthread_mutex_destroy(&((tt)->lock)) == 0)
 #define VTRANS_OBJ_LOCK(tt) \
