@@ -612,7 +612,7 @@ afs_GCPAGs_perproc_func(afs_proc_t * pproc)
 #elif defined(AFS_SUN510_ENV)
     uid = (pag != NOPAG ? pag : crgetruid(pcred));
 #else
-    uid = (pag != NOPAG ? pag : afs_cr_ruid(pcred);
+    uid = (pag != NOPAG ? pag : afs_cr_ruid(pcred));
 #endif
     hash = UHash(uid);
 
