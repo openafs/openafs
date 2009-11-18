@@ -105,8 +105,8 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <io.h>
 #include <WINNT/afsevent.h>
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
-#define WCOREDUMP(x)	(x & 0200)
+#ifndef WCOREDUMP
+#define WCOREDUMP(x)	((x) & 0200)
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>

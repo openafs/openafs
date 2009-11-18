@@ -69,6 +69,9 @@
 #include <sys/un.h>
 #endif
 
+#ifndef WCOREDUMP
+#define WCOREDUMP(x)    ((x) & 0200)
+#endif
 
 /*@printflike@*/ extern void Log(const char *format, ...);
 

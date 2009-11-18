@@ -38,9 +38,8 @@
 #include "bnode.h"
 #include "bosprototypes.h"
 
-#if defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
-/* All known versions of AIX lack WCOREDUMP but this works */
-#define WCOREDUMP(x) ((x) & 0x80)
+#ifndef WCOREDUMP
+#define WCOREDUMP(x) ((x) & 0200)
 #endif
 
 #define BNODE_LWP_STACKSIZE	(16 * 1024)

@@ -38,8 +38,8 @@
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN4_ENV)
-#define WCOREDUMP(x)	(x & 0200)
+#ifndef WCOREDUMP
+#define WCOREDUMP(x)	((x) & 0200)
 #endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
