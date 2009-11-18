@@ -47,10 +47,8 @@
 #include "afs/afs_cbqueue.h"
 #include "afs/afs_osidnlc.h"
 
-#if defined(AFS_LINUX22_ENV)
 afs_int32 afs_maxvcount = 0;	/* max number of vcache entries */
 afs_int32 afs_vcount = 0;	/* number of vcache in use now */
-#endif /* AFS_LINUX22_ENV */
 
 #ifdef AFS_SGI_ENV
 int afsvnumbers = 0;
