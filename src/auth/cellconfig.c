@@ -116,6 +116,9 @@ static int SaveKeys(struct afsconf_dir *adir);
 #ifndef T_AFSDB
 #define T_AFSDB 18		/* per RFC1183 section 1 */
 #endif
+#ifndef T_SRV
+#define T_SRV 33		/* RFC2782 */
+#endif
 
 /*
  * Basic Rule: we touch "<AFSCONF_DIR>/CellServDB" every time we change anything, so
