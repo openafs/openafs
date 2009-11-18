@@ -3599,12 +3599,12 @@ Default: &lt;none&gt;</para>
 [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</title>
                 <section>
             <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_VLDB_HostName'>Value: &lt;hostname or ip address&gt;</title>
-            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\ServerPreferences\VLDB]</para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
-                  <para>This key is used to specify a default set of VLDB server preferences. For each entry the value name will be either the IP address of a server or a fully qualified domain name.  The value will be the ranking.  The ranking will be adjusted by a random value between 0 and 256 prior to the preference being set.</para>
+                  <para>This key is used to specify a default set of VLDB server preferences. For each entry the value name will be either the IP address of a server or a fully qualified domain name.  The value will be the ranking.  The ranking will be adjusted by a random value between 0 and 15 prior to the preference being set.</para>
                 </section>
       </section>
       <section>
@@ -3612,12 +3612,12 @@ Default: &lt;none&gt;</para>
 [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\File]</title>
                 <section>
             <title id='Regkey_HKLM_SOFTWARE_OpenAFS_Client_ServerPreferences_File_HostName'>Value: &lt;hostname or ip address&gt;</title>
-            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\ServerPreferences\File]</para>
+            <para>Regkey: [HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\File]</para>
                   <para>Type: REG_DWORD
                   </para>
                   <para>
 Default: &lt;none&gt;</para>
-                  <para>This key is used to specify a default set of File server preferences. For each entry the value name will be either the IP address of a server or a fully qualified domain name.  The value will be the ranking.  The ranking will be adjusted by a random value between 0 and 256 prior to the preference being set.</para>
+                  <para>This key is used to specify a default set of File server preferences. For each entry the value name will be either the IP address of a server or a fully qualified domain name.  The value will be the ranking.  The ranking will be adjusted by a random value between 0 and 15 prior to the preference being set.</para>
                 </section>
       </section>
     </section>
