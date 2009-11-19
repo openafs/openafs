@@ -68,6 +68,7 @@ DWORD cm_mountRootLen;
 clientchar_t cm_mountRootC[1024];
 DWORD cm_mountRootCLen;
 
+int cm_readonlyVolumeVersioning = 0;
 int cm_logChunkSize;
 int cm_chunkSize;
 
@@ -1237,6 +1238,14 @@ afsd_InitCM(char **reasonP)
         cm_accessPerFileCheck = (int) dwValue;
     } 
     afsi_log("CM PerFileAccessCheck is %d", cm_accessPerFileCheck);
+
+    dummyLen = sizeof(DWORD);
+    code = RegQueryValueEx(parmKey, "ReadOnlyVolumeVersioning", NULL, NULL,
+                           (BYTE *) &dwValue, &dummyLen);
+    if (code == ERROR_SUCCESS) {
+        cm_readonlyVolumeVersioning = (unsigned short) dwValue;
+    }
+    afsi_log("CM ReadOnlyVolumeVersioning is %u", cm_readonlyVolumeVersioning);
 
     RegCloseKey (parmKey);
 

@@ -1576,7 +1576,8 @@ int cm_HaveCallback(cm_scache_t *scp)
         return 0;
     }
 #endif
-    if (scp->flags & CM_SCACHEFLAG_PURERO) {
+    if (cm_readonlyVolumeVersioning &&
+        (scp->flags & CM_SCACHEFLAG_PURERO)) {
         cm_volume_t *volp = cm_GetVolumeByFID(&scp->fid);
         if (volp) {
             int haveCB = 0;

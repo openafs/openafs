@@ -1635,7 +1635,8 @@ void cm_MergeStatus(cm_scache_t *dscp,
             goto done;
     }       
 
-    scp->volumeCreationDate = volsyncp->spare1;       /* volume creation date */
+    if (cm_readonlyVolumeVersioning)
+        scp->volumeCreationDate = volsyncp->spare1;       /* volume creation date */
 
     scp->serverModTime = statusp->ServerModTime;
 
@@ -1805,6 +1806,7 @@ void cm_DiscardSCache(cm_scache_t *scp)
 	scp->cbServerp = NULL;
     }
     scp->cbExpires = 0;
+    scp->volumeCreationDate = 0;
     scp->flags &= ~(CM_SCACHEFLAG_CALLBACK | CM_SCACHEFLAG_LOCAL);
     cm_dnlcPurgedp(scp);
     cm_dnlcPurgevp(scp);
