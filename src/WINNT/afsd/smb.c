@@ -6804,10 +6804,12 @@ long smb_CloseFID(smb_vc_t *vcp, smb_fid_t *fidp, cm_user_t *userp,
         (fidp->flags & (SMB_FID_OPENWRITE | SMB_FID_DELONCLOSE))
          == SMB_FID_OPENWRITE) {
         if (dosTime != 0 && dosTime != -1) {
+            lock_ObtainWrite(&fidp->scp->rw);
             scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
             /* This fixes defect 10958 */
             CompensateForSmbClientLastWriteTimeBugs(&dosTime);
             smb_UnixTimeFromDosUTime(&scp->clientModTime, dosTime);
+            lock_ReleaseWrite(&fidp->scp->rw);
         }
         if (smb_AsyncStore != 2) {
             lock_ReleaseMutex(&fidp->mx);
@@ -7536,8 +7538,10 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
      */
     lock_ObtainMutex(&fidp->mx);
     if ((fidp->flags & SMB_FID_MTIMESETDONE) != SMB_FID_MTIMESETDONE) {
+        lock_ObtainWrite(&fidp->scp->rw);
         fidp->scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
         fidp->scp->clientModTime = time(NULL);
+        lock_ReleaseWrite(&fidp->scp->rw);
     }
     lock_ReleaseMutex(&fidp->mx);
 
@@ -7764,8 +7768,10 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
      */
     lock_ObtainMutex(&fidp->mx);
     if ((fidp->flags & SMB_FID_LOOKSLIKECOPY) != SMB_FID_LOOKSLIKECOPY) {
+        lock_ObtainWrite(&fidp->scp->rw);
         fidp->scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
         fidp->scp->clientModTime = time(NULL);
+        lock_ReleaseWrite(&fidp->scp->rw);
     }
     lock_ReleaseMutex(&fidp->mx);
 

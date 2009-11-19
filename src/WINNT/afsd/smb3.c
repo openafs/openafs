@@ -6890,8 +6890,10 @@ long smb_ReceiveV3WriteX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
      */
     lock_ObtainMutex(&fidp->mx);
     if ((fidp->flags & SMB_FID_MTIMESETDONE) != SMB_FID_MTIMESETDONE) {
+        lock_ObtainWrite(&fidp->scp->rw);
         scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
         scp->clientModTime = time(NULL);
+        lock_ReleaseWrite(&fidp->scp->rw);
     }
     lock_ReleaseMutex(&fidp->mx);
 
