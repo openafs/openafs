@@ -339,4 +339,9 @@ extern int ADMINAPI bos_Salvage(const void *cellHandle,
 				bos_ForceBlockRead_t forceBlockRead,
 				afs_status_p st);
 
+static_inline struct bozo_key *
+kas_to_bozoptr(kas_encryptionKey_p key)
+{
+    return (struct bozo_key *)key;
+}
 #endif /* OPENAFS_BOS_ADMIN_H */

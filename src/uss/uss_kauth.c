@@ -166,8 +166,8 @@ InitThisModule(void)
     char prompt[2 * MAXKTCNAMELEN + 20];
     char *reasonString, longPassBuff[1024], shortPassBuff[9];
     struct ktc_encryptionKey key;
-    struct ktc_token token, tok;
-    struct ktc_principal Name;
+    struct ktc_token token;
+    struct ktc_principal Name, tok;
 
     /*
      * Only call this routine once.

@@ -1803,7 +1803,7 @@ kas_StringToKey(const char *cellName, const char *string,
     int rc = 0;
     afs_status_t tst = 0;
 
-    ka_StringToKey(string, cellName, (struct ktc_encryptionKey *)key);
+    ka_StringToKey((char *)string, (char *)cellName, (struct ktc_encryptionKey *)key);
     rc = 1;
 
     if (st != NULL) {

@@ -10,6 +10,8 @@
 #ifndef _BOSPROTOTYPES_H_
 #define _BOSPROTOTYPES_H_
 
+#include <rx/rxkad.h>
+
 /* bnode.c */
 int bnode_CoreName(struct bnode *abnode, char *acoreName, char *abuffer);
 int bnode_GetString(struct bnode *abnode, char *abuffer, afs_int32 alen);
@@ -53,5 +55,10 @@ char *copystr(char *a);
 
 /* bosoprocs.c */
 void *bozo_ShutdownAndExit(void *arock /* really int asignal */);
+
+static_inline struct bozo_key *
+ktc_to_bozoptr(struct ktc_encryptionKey *key) {
+    return (struct bozo_key *)key;
+}
 
 #endif

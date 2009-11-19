@@ -77,7 +77,7 @@ ticket.o: ticket.c lifetimes.h ${INCLS}
 	$(CC) $(CFLAGS) -c $<
 
 ticket5.o: ticket5.c v5gen.c v5der.c v5gen-rewrite.h ${INCLS}
-	$(CC) -I${srcdir} $(CFLAGS) @CFLAGS_NOERROR@ -c $<
+	$(CC) -I${srcdir} $(CFLAGS) -c $<
 
 crc.o: crc.c ${INCLS}
 

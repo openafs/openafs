@@ -53,6 +53,7 @@ static int DoStat(char *aname, register struct rx_connection *aconn,
 		  int aint32p, int firstTime);
 
 #include "bosint.h"
+#include "bosprototypes.h"
 
 /* command offsets for bos salvage command */
 #define MRAFS_OFFSET  10
@@ -906,7 +907,7 @@ AddKey(register struct cmd_syndesc *as, void *arock)
 	ka_StringToKey(buf, tcell, &tkey);
     }
     tconn = GetConn(as, 1);
-    code = BOZO_AddKey(tconn, temp, &tkey);
+    code = BOZO_AddKey(tconn, temp, ktc_to_bozoptr(&tkey));
     if (code) {
 	printf("bos: failed to set key %d (%s)\n", temp, em(code));
 	exit(1);
@@ -948,14 +949,14 @@ ListKeys(register struct cmd_syndesc *as, void *arock)
     tconn = GetConn(as, 1);
     everWorked = 0;
     for (i = 0;; i++) {
-	code = BOZO_ListKeys(tconn, i, &kvno, &tkey, &keyInfo);
+	code = BOZO_ListKeys(tconn, i, &kvno, ktc_to_bozoptr(&tkey), &keyInfo);
 	if (code)
 	    break;
 	everWorked = 1;
 	/* first check if key is returned */
-	if ((!ka_KeyIsZero(&tkey, sizeof(tkey))) && (as->parms[1].items)) {
+	if ((!ka_KeyIsZero(ktc_to_charptr(&tkey), sizeof(tkey))) && (as->parms[1].items)) {
 	    printf("key %d is '", kvno);
-	    ka_PrintBytes(&tkey, sizeof(tkey));
+	    ka_PrintBytes(ktc_to_charptr(&tkey), sizeof(tkey));
 	    printf("'\n");
 	} else {
 	    if (keyInfo.keyCheckSum == 0)	/* shouldn't happen */

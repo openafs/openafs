@@ -167,6 +167,11 @@ ktc_to_cblock(struct ktc_encryptionKey *key) {
     return (unsigned char *)key;
 }
 
+static_inline char *
+ktc_to_charptr(struct ktc_encryptionKey *key) {
+    return (char *)key;
+}
+
 static_inline des_cblock *
 ktc_to_cblockptr(struct ktc_encryptionKey *key) {
     return (des_cblock *)key;
