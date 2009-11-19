@@ -2641,7 +2641,7 @@ SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 			      &rights, &anyrights)))
 	    goto Bad_BulkStatus;
 	/* set volume synchronization information, but only once per call */
-	if (i == nfiles)
+	if (i == 0)
 	    SetVolumeSync(Sync, volptr);
 
 	/* Are we allowed to fetch Fid's status? */
@@ -2802,7 +2802,7 @@ SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
 	}
 
 	/* set volume synchronization information, but only once per call */
-	if (i == nfiles)
+	if (i == 0)
 	    SetVolumeSync(Sync, volptr);
 
 	/* Are we allowed to fetch Fid's status? */
