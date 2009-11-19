@@ -412,8 +412,6 @@ struct Lock vol_listLock;	/* Lock obtained when listing volumes:
 				 * list volumes */
 
 
-static int TimeZoneCorrection;	/* Number of seconds west of GMT */
-
 /* Common message used when the volume goes off line */
 char *VSalvageMessage =
     "Files in this volume are currently unavailable; call operations";
@@ -444,8 +442,6 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
 		   int connect, afs_uint32 volcache)
 {
     int errors = 0;		/* Number of errors while finding vice partitions. */
-    struct timeval tv;
-    struct timezone tz;
 
     programType = pt;
 
@@ -475,8 +471,6 @@ VInitVolumePackage(ProgramType pt, afs_uint32 nLargeVnodes, afs_uint32 nSmallVno
     Lock_Init(&vol_listLock);
 
     srandom(time(0));		/* For VGetVolumeInfo */
-    gettimeofday(&tv, &tz);
-    TimeZoneCorrection = tz.tz_minuteswest * 60;
 
 #ifdef AFS_DEMAND_ATTACH_FS
     assert(pthread_mutex_init(&vol_salvsync_mutex, NULL) == 0);
@@ -5053,7 +5047,34 @@ VolumeExternalName_r(VolumeId volumeId, char * name, size_t len)
 #define OneDay	(24*60*60)	/* 24 hours */
 #endif /* OPENAFS_VOL_STATS */
 
-#define Midnight(date) ((date-TimeZoneCorrection)/OneDay*OneDay+TimeZoneCorrection)
+static time_t
+Midnight(time_t t) {
+    struct tm local, *l;
+    time_t midnight;
+
+#ifdef AFS_PTHREAD_ENV
+    l = localtime_r(&t, &local);
+#else
+    l = localtime(&t);
+#endif
+
+    if (l != NULL) {
+	/* the following is strictly speaking problematic on the
+	   switching day to daylight saving time, after the switch,
+	   as tm_isdst does not match.  Similarly, on the looong day when
+	   switching back the OneDay check will not do what naively expected!
+	   The effects are minor, though, and more a matter of interpreting
+	   the numbers. */
+#ifndef AFS_PTHREAD_ENV
+	local = *l;
+#endif
+	local.tm_hour = local.tm_min=local.tm_sec = 0;
+	midnight = mktime(&local);
+	if (midnight != (time_t) -1) return(midnight);
+    }
+    return( (t/OneDay)*OneDay );
+
+}
 
 /*------------------------------------------------------------------------
  * [export] VAdjustVolumeStatistics
