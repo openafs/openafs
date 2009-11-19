@@ -2342,18 +2342,17 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
         } while (cm_Analyze(connp, userp, reqp, &dscp->fid,
                              &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
-        if (code)
-            osi_Log2(afsd_logp, "CALL %sBulkStatus FAILURE code 0x%x", 
-		      inlinebulk ? "Inline" : "", code);
-        else
-            osi_Log1(afsd_logp, "CALL %sBulkStatus SUCCESS", inlinebulk ? "Inline" : "");
 
         /* may as well quit on an error, since we're not going to do
          * much better on the next immediate call, either.
          */
         if (code) {
+            osi_Log2(afsd_logp, "CALL %sBulkStatus FAILURE code 0x%x",
+		      inlinebulk ? "Inline" : "", code);
             cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, NULL, 0);
             break;
+        } else {
+            osi_Log1(afsd_logp, "CALL %sBulkStatus SUCCESS", inlinebulk ? "Inline" : "");
         }
 
         /* otherwise, we should do the merges */
@@ -2377,12 +2376,16 @@ cm_TryBulkStatRPC(cm_scache_t *dscp, cm_bulkStat_t *bbp, cm_user_t *userp, cm_re
              *
              * Right now, be pretty conservative: if there's a
              * callback or a pending call, skip it.
+             * However, if the prior attempt to obtain status
+             * was refused access or the volume is .readonly,
+             * take the data in any case since we have nothing
+             * better for the in flight directory enumeration that
+             * resulted in this function being called.
              */
-            if ((scp->cbServerp == NULL || (scp->flags & CM_SCACHEFLAG_EACCESS))
-                 && !(scp->flags &
-                       (CM_SCACHEFLAG_FETCHING
-                         | CM_SCACHEFLAG_STORING
-                         | CM_SCACHEFLAG_SIZESTORING))) {
+            if ((scp->cbServerp == NULL &&
+                !(scp->flags & (CM_SCACHEFLAG_FETCHING | CM_SCACHEFLAG_STORING | CM_SCACHEFLAG_SIZESTORING))) ||
+                (scp->flags & CM_SCACHEFLAG_PURERO) ||
+                (scp->flags & CM_SCACHEFLAG_EACCESS)) {
                 cm_EndCallbackGrantingCall(scp, &cbReq,
                                             &bbp->callbacks[j],
                                             &volSync,
