@@ -204,6 +204,33 @@ void akexit(int exit_code)
     exit(exit_code);
 }
 
+/* A com_error bodge. The idea here is that this routine lets us lookup
+ * things in the system com_err, if the AFS one just tells us the error
+ * is unknown
+ */
+
+void
+redirect_errors(const char *who, afs_int32 code, const char *fmt, va_list ap)
+{
+    if (who) {
+        fputs(who, stderr);
+        fputs(": ", stderr);
+    }
+    if (code) {
+        const char *str = afs_error_message(code);
+        if (strncmp(str, "unknown", strlen(str)) == 0) {
+            str = error_message(code);
+        }
+        fputs(str, stderr);
+        fputs(" ", stderr);
+    }
+    if (fmt) {
+        vfprintf(stderr, fmt, ap);
+    }
+    putc('\n', stderr);
+    fflush(stderr);
+}
+
 long GetLocalCell(struct afsconf_dir **pconfigdir, char *local_cell)
 {
     if (!(*pconfigdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH)))
@@ -304,8 +331,9 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
             }
 
             if ((*status = ktc_SetToken(aserver, atoken, aclient, 0))) {
-                printf("%s: unable to set tokens for cell %s "
-                        "(status: %d).\n", progname, cell_to_use, *status);
+                afs_com_err(progname, *status,
+                             "while obtaining tokens for cell %s\n",
+                             cell_to_use);
                 *status = AKLOG_TOKEN;
                 return ;
             }
@@ -990,9 +1018,9 @@ static int auth_to_cell(krb5_context context, char *cell, char *realm)
         printf("Getting tokens.\n");
     if (status = ktc_SetToken(&aserver, &atoken, &aclient, 0))
     {
-        fprintf(stderr,
-                 "%s: unable to obtain tokens for cell %s (status: %d).\n",
-                 progname, cell_to_use, status);
+        afs_com_err(progname, status,
+                     "while obtaining tokens for cell %s\n",
+                     cell_to_use);
         status = AKLOG_TOKEN;
     }
 
@@ -1494,7 +1522,7 @@ int main(int argc, char *argv[])
             return(AKLOG_KERBEROS);
     } else 
         validate_krb4_availability();
-
+    afs_set_com_err_hook(redirect_errors);
 
     /* If nothing was given, log to the local cell. */
     if ((cells.nelements + paths.nelements) == 0)
