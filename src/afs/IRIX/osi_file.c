@@ -37,7 +37,7 @@ afs_XFSIGetVnode(afs_dcache_id_t *ainode)
 }
 
 /* Force to 64 bits, even for EFS filesystems. */
-void *
+struct osi_file *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct inode *ip;
@@ -62,7 +62,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->size = VnodeToSize(afile->vnode);
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    return (void *)afile;
+    return afile;
 }
 
 int

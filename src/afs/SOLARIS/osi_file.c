@@ -141,7 +141,7 @@ VnodeToSize(vnode_t * vp)
     return (afs_int32) (vattr.va_size);
 }
 
-void *
+struct osi_file *
 osi_VxfsOpen(afs_dcache_id_t *ainode)
 {
     struct vnode *vp;
@@ -160,11 +160,11 @@ osi_VxfsOpen(afs_dcache_id_t *ainode)
     afile->size = VnodeToSize(afile->vnode);
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    return (void *)afile;
+    return afile;
 }
 #endif /* AFS_HAVE_VXFS */
 
-void *
+struct osi_file *
 osi_UfsOpen(afs_dcache_id_t *ainode)
 {
 #ifdef AFS_CACHE_VNODE_PATH
@@ -248,13 +248,13 @@ osi_UfsOpen(afs_dcache_id_t *ainode)
 #endif
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    return (void *)afile;
+    return afile;
 }
 
 /**
   * In Solaris 7 we use 64 bit inode numbers
   */
-void *
+struct osi_file *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     extern int cacheDiskType;

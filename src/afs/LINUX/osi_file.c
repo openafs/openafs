@@ -68,7 +68,7 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
     return filp;
 }
 
-void *
+struct osi_file *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct osi_file *afile = NULL;
@@ -97,7 +97,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     AFS_GLOCK();
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    return (void *)afile;
+    return afile;
 }
 
 #if defined(LINUX_USE_FH)

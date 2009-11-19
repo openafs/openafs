@@ -130,7 +130,7 @@ VnodeToDev(vnode_t avp)
 #endif
 }
 
-void *
+struct osi_file *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct vnode *vp;
@@ -204,7 +204,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     code = afs_osi_Stat(afile, &tstat);
     afile->size = tstat.size;
 #endif
-    return (void *)afile;
+    return afile;
 }
 
 int

@@ -673,7 +673,7 @@ extern int afs_syscall_iincdec(int, int, int, int);
 
 /* ARCH/osi_file.c */
 extern int afs_osicred_initialized;
-extern void *osi_UFSOpen(afs_dcache_id_t *ainode);
+extern struct osi_file *osi_UFSOpen(afs_dcache_id_t *ainode);
 #if defined(AFS_LINUX22_ENV)
 extern void osi_get_fh(struct dentry *dp, afs_ufs_dcache_id_t *ainode);
 #endif

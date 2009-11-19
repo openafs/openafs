@@ -24,7 +24,7 @@ extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;
 
 
-void *
+struct osi_file *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct inode *ip;
@@ -57,7 +57,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
     afile->size = VTOI(afile->vnode)->i_size;
     afile->offset = 0;
     afile->proc = (int (*)())0;
-    return (void *)afile;
+    return afile;
 }
 
 int
