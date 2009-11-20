@@ -1356,6 +1356,16 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 struct buf;
 #endif
 
+struct rxfs_storeVariables {
+    struct rx_call *call;
+    struct vcache *vcache;
+    char *tbuffer;
+    struct iovec *tiov;
+    afs_int32 tnio;
+    afs_int32 hasNo64bit;
+    struct AFSStoreStatus InStatus;
+};
+
 struct storeOps {
     int (*prepare)(void *rock, afs_uint32 size, afs_uint32 *bytestoxfer);
     int (*read)(void *rock, struct osi_file *tfile, afs_uint32 offset,
@@ -1366,6 +1376,8 @@ struct storeOps {
     int (*close)(void *rock, struct AFSFetchStatus *OutStatus,
         afs_int32 *doProcessFS);
     int (*destroy)(void **rock, afs_int32 error);
+    int (*storeproc)(struct storeOps *, void *, struct dcache *, int *,
+		     afs_size_t *);
 };
 
 struct fetchOps {

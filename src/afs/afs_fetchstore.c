@@ -80,14 +80,7 @@ FillStoreStats(int code, int idx, osi_timeval_t *xferStartTime,
 
 /* rock and operations for RX_FILESERVER */
 
-struct rxfs_storeVariables {
-    struct rx_call *call;
-    char *tbuffer;
-    struct iovec *tiov;
-    afs_int32 tnio;
-    afs_int32 hasNo64bit;
-    struct AFSStoreStatus InStatus;
-};
+
 
 afs_int32
 rxfs_storeUfsPrepare(void *r, afs_uint32 size, afs_uint32 *tlen)
@@ -273,24 +266,24 @@ rxfs_storeDestroy(void **r, afs_int32 error)
 
 static
 struct storeOps rxfs_storeUfsOps = {
-    rxfs_storeUfsPrepare,
-    rxfs_storeUfsRead,
-    rxfs_storeUfsWrite,
-    rxfs_storeStatus,
-    rxfs_storePadd,
-    rxfs_storeClose,
-    rxfs_storeDestroy
+    .prepare = 	rxfs_storeUfsPrepare,
+    .read =	rxfs_storeUfsRead,
+    .write =	rxfs_storeUfsWrite,
+    .status =	rxfs_storeStatus,
+    .padd =	rxfs_storePadd,
+    .close =	rxfs_storeClose,
+    .destroy =	rxfs_storeDestroy,
 };
 
 static
 struct storeOps rxfs_storeMemOps = {
-    rxfs_storeMemPrepare,
-    rxfs_storeMemRead,
-    rxfs_storeMemWrite,
-    rxfs_storeStatus,
-    rxfs_storePadd,
-    rxfs_storeClose,
-    rxfs_storeDestroy
+    .prepare =	rxfs_storeMemPrepare,
+    .read = 	rxfs_storeMemRead,
+    .write = 	rxfs_storeMemWrite,
+    .status =	rxfs_storeStatus,
+    .padd =	rxfs_storePadd,
+    .close = 	rxfs_storeClose,
+    .destroy =	rxfs_storeDestroy
 };
 
 afs_int32
@@ -311,6 +304,7 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t base,
 
     v->InStatus.ClientModTime = avc->f.m.Date;
     v->InStatus.Mask = AFS_SETMODTIME;
+    v->vcache = avc;
     if (sync & AFS_SYNC)
         v->InStatus.Mask |= AFS_FSYNC;
     RX_AFS_GUNLOCK();
@@ -372,6 +366,55 @@ rxfs_storeInit(struct vcache *avc, struct afs_conn *tc, afs_size_t base,
     return 0;
 }
 
+afs_int32
+afs_GenericStoreProc(struct storeOps *ops, void *rock,
+		     struct dcache *tdc, int *shouldwake,
+		     afs_size_t *bytesXferred)
+{
+    struct rxfs_storeVariables *svar = rock;
+    afs_uint32 tlen, bytesread, byteswritten;
+    afs_int32 code;
+    int offset = 0;
+    afs_size_t size;
+    struct osi_file *tfile;
+
+    size = tdc->f.chunkBytes;
+
+    tfile = afs_CFileOpen(&tdc->f.inode);
+
+    while ( size > 0 ) {
+	code = (*ops->prepare)(rock, size, &tlen);
+	if ( code )
+	    break;
+
+	code = (*ops->read)(rock, tfile, offset, tlen, &bytesread);
+	if (code)
+	    break;
+
+	tlen = bytesread;
+	code = (*ops->write)(rock, tlen, &byteswritten);
+	if (code)
+	    break;
+#ifndef AFS_NOSTATS
+	*bytesXferred += byteswritten;
+#endif /* AFS_NOSTATS */
+
+	offset += tlen;
+	size -= tlen;
+	/*
+	 * if file has been locked on server, can allow
+	 * store to continue
+	 */
+	if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
+	    *shouldwake = 0;	/* only do this once */
+	    afs_wakeup(svar->vcache);
+	}
+    }
+    afs_CFileClose(tfile);
+
+    return code;
+}
+
 unsigned int storeallmissing = 0;
 /*!
  *	Called for each chunk upon store.
@@ -400,18 +443,16 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
     int *shouldwake = NULL;
     unsigned int i;
     afs_int32 code = 0;
+    afs_size_t bytesXferred;
 
 #ifndef AFS_NOSTATS
     osi_timeval_t xferStartTime;	/*FS xfer start time */
     afs_size_t bytesToXfer = 10000;	/* # bytes to xfer */
-    afs_size_t bytesXferred = 10000;	/* # bytes actually xferred */
 #endif /* AFS_NOSTATS */
     XSTATS_DECLS;
 
     for (i = 0; i < nchunks && !code; i++) {
 	int stored = 0;
-	struct osi_file *tfile;
-	int offset = 0;
 	struct dcache *tdc = dclist[i];
 	afs_int32 size = tdc->f.chunkBytes;
 	if (!tdc) {
@@ -431,7 +472,6 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	    else if ((afs_uint32) avc->asynchrony >= (bytes - stored))
 		shouldwake = &nomore;
 	}
-	tfile = afs_CFileOpen(&tdc->f.inode);
 
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
 		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
@@ -447,41 +487,18 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 	 * to ship here.
 	 */
 	bytesToXfer = size;
-	bytesXferred = 0;
 
 	osi_GetuTime(&xferStartTime);
 #endif /* AFS_NOSTATS */
+	bytesXferred = 0;
 
-	while ( size > 0 ) {
-	    afs_uint32 tlen;
-	    afs_uint32 bytesread, byteswritten;
-	    code = (*ops->prepare)(rock, size, &tlen);
-	    if ( code )
-		break;
+	if (ops->storeproc)
+	    code = (*ops->storeproc)(ops, rock, tdc, shouldwake,
+				     &bytesXferred);
+	else
+            code = afs_GenericStoreProc(ops, rock, tdc, shouldwake,
+					&bytesXferred);
 
-	    code = (*ops->read)(rock, tfile, offset, tlen, &bytesread);
-	    if (code)
-		break;
-
-	    tlen = bytesread;
-	    code = (*ops->write)(rock, tlen, &byteswritten);
-	    if (code)
-		break;
-#ifndef AFS_NOSTATS
-	    bytesXferred += byteswritten;
-#endif /* AFS_NOSTATS */
-
-	    offset += tlen;
-	    size -= tlen;
-	    /*
-	     * if file has been locked on server, can allow
-	     * store to continue
-	     */
-	    if (shouldwake && *shouldwake && ((*ops->status)(rock) == 0)) {
-		*shouldwake = 0;	/* only do this once */
-		afs_wakeup(avc);
-	    }
-	}
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
 		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
 		    ICL_HANDLE_OFFSET(avc->f.m.Length), ICL_TYPE_INT32, size);
@@ -491,7 +508,6 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 		    &xferStartTime, bytesToXfer, bytesXferred);
 #endif /* AFS_NOSTATS */
 
-	afs_CFileClose(tfile);
 	if ((tdc->f.chunkBytes < afs_OtherCSize)
 		&& (i < (nchunks - 1)) && code == 0) {
 	    code = (*ops->padd)(rock, afs_OtherCSize - tdc->f.chunkBytes);
