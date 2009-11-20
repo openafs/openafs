@@ -1217,6 +1217,19 @@ AC_DEFUN([LINUX_HAVE_PAGEVEC_LRU_ADD_FILE], [
     AC_DEFINE([HAVE_PAGEVEC_LRU_ADD_FILE], 1, [define if your kernel has __pagevec_lru_add_file()])
   fi])
 
+AC_DEFUN([LINUX_HAVE_SPLICE_DIRECT_TO_ACTOR], [
+  AC_MSG_CHECKING([for linux splice_direct_to_actor()])
+  AC_CACHE_VAL([ac_cv_linux_splice_direct_to_actor], [
+    AC_TRY_KBUILD(
+[#include <linux/splice.h>],
+[splice_direct_to_actor(NULL,NULL,NULL);],
+      ac_cv_linux_splice_direct_to_actor=yes,
+      ac_cv_linux_splice_direct_to_actor=no)])
+  AC_MSG_RESULT($ac_cv_linux_splice_direct_to_actor)
+  if test "x$ac_cv_linux_splice_direct_to_actor" = "xyes"; then
+    AC_DEFINE([HAVE_SPLICE_DIRECT_TO_ACTOR], 1, [define if your kernel has splice_direct_to_actor()])
+  fi])
+
 AC_DEFUN([LINUX_STRUCT_TASK_HAS_CRED], [
   AC_MSG_CHECKING([if struct task has cred])
   AC_CACHE_VAL([ac_cv_linux_struct_task_has_cred], [

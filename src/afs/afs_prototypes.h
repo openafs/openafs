@@ -610,6 +610,11 @@ extern void osi_ReleaseVM(struct vcache *avc, afs_ucred_t *acred);
 #endif
 
 
+/* LINUX/osi_fetchstore.c */
+#ifdef AFS_LINUX26_ENV
+extern int afs_linux_storeproc(struct storeOps *, void *, struct dcache *,
+			       int *, afs_size_t *);
+#endif
 
 /* ARCH/osi_misc.c */
 extern void afs_osi_SetTime(osi_timeval_t * atv);

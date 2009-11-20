@@ -273,6 +273,9 @@ struct storeOps rxfs_storeUfsOps = {
     .padd =	rxfs_storePadd,
     .close =	rxfs_storeClose,
     .destroy =	rxfs_storeDestroy,
+#ifdef AFS_LINUX26_ENV
+    .storeproc = afs_linux_storeproc
+#endif
 };
 
 static

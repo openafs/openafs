@@ -45,7 +45,8 @@ AFS_OS_OBJS = \
 <all>
 	osi_vnodeops.o \
 <linux26 linux_26>
-	osi_pagecopy.o
+	osi_pagecopy.o \
+	osi_fetchstore.o
 <all>
 
 AFS_OS_PAGOBJS = \
