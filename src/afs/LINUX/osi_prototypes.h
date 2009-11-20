@@ -38,7 +38,7 @@ extern afs_rwlock_t afs_xnfssrv;
 extern afs_rwlock_t afs_xosi;
 extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
-extern struct file *afs_linux_raw_open(afs_dcache_id_t *ainode, ino_t *hint);
+extern struct file *afs_linux_raw_open(afs_dcache_id_t *ainode);
 
 /* osi_ioctl.c */
 extern void osi_ioctl_init(void);
