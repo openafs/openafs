@@ -1013,7 +1013,7 @@ h_Enumerate(int (*proc) (struct host*, int, void *), void *param)
 	ViceLog(0, ("h_Enumerate found %d of %d hosts\n", count, hostCount));
     } else if (host != NULL) {
 	ViceLog(0, ("h_Enumerate found more than %d hosts\n", hostCount));
-	assert(0);
+	ShutDownAndCore(PANIC);
     }
     H_UNLOCK;
     for (i = 0; i < count; i++) {
@@ -1048,12 +1048,13 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
     register struct host *host, *next;
     int flags = 0;
     int nflags = 0;
+    int count;
 
     if (hostCount == 0) {
 	return;
     }
     h_Hold_r(enumstart);
-    for (host = enumstart; host; host = next, flags = nflags) {
+    for (count = 0, host = enumstart; host && count < hostCount; host = next, flags = nflags, count++) {
 	next = host->next;
 	if (next && !H_ENUMERATE_ISSET_BAIL(flags))
 	    h_Hold_r(next);
@@ -1063,6 +1064,10 @@ h_Enumerate_r(int (*proc) (struct host *, int, void *),
 	    break;
 	}
 	h_Release_r(host); /* this might free up the host */
+    }
+    if (host != NULL) {
+	ViceLog(0, ("h_Enumerate_r found more than %d hosts\n", hostCount));
+	ShutDownAndCore(PANIC);
     }
 }	/*h_Enumerate_r */
 
@@ -2125,9 +2130,10 @@ h_ID2Client(afs_int32 vid)
 {
     register struct client *client;
     register struct host *host;
+    int count;
 
     H_LOCK;
-    for (host = hostList; host; host = host->next) {
+    for (count = 0, host = hostList; host && count < hostCount; host = host->next, count++) {
 	if (host->hostFlags & HOSTDELETED)
 	    continue;
 	for (client = host->FirstClient; client; client = client->next) {
@@ -2138,6 +2144,12 @@ h_ID2Client(afs_int32 vid)
 		return client;
 	    }
 	}
+    }
+    if (count != hostCount) {
+	ViceLog(0, ("h_ID2Client found %d of %d hosts\n", count, hostCount));
+    } else if (host != NULL) {
+	ViceLog(0, ("h_ID2Client found more than %d hosts\n", hostCount));
+	ShutDownAndCore(PANIC);
     }
 
     H_UNLOCK;
@@ -3239,9 +3251,10 @@ h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
 {
     register struct host *host;
     register int num = 0, active = 0, del = 0;
+    int count;
 
     H_LOCK;
-    for (host = hostList; host; host = host->next) {
+    for (count = 0, host = hostList; host && count < hostCount; host = host->next, count++) {
 	if (!(host->hostFlags & HOSTDELETED)) {
 	    num++;
 	    if (host->ActiveCall > cutofftime)
@@ -3249,6 +3262,12 @@ h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
 	    if (host->hostFlags & VENUSDOWN)
 		del++;
 	}
+    }
+    if (count != hostCount) {
+	ViceLog(0, ("h_GetWorkStats found %d of %d hosts\n", count, hostCount));
+    } else if (host != NULL) {
+	ViceLog(0, ("h_GetWorkStats found more than %d hosts\n", hostCount));
+	ShutDownAndCore(PANIC);
     }
     H_UNLOCK;
     if (nump)
@@ -3404,6 +3423,7 @@ h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 
     register struct host *hostP;	/*Ptr to current host entry */
     register afs_uint32 currAddr_HBO;	/*Curr host addr, host byte order */
+    int count;
 
     /*
      * Clear out the storage pointed to by our parameters.
@@ -3414,7 +3434,7 @@ h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
     *a_diffNetworkP = (afs_int32) 0;
 
     H_LOCK;
-    for (hostP = hostList; hostP; hostP = hostP->next) {
+    for (count = 0, hostP = hostList; hostP && count < hostCount; hostP = hostP->next, count++) {
 	if (!(hostP->hostFlags & HOSTDELETED)) {
 	    /*
 	     * Bump the number of undeleted host entries found.
@@ -3428,6 +3448,12 @@ h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 			      a_diffNetworkP);
 	}			/*Only look at non-deleted hosts */
     }				/*For each host record hashed to this index */
+    if (count != hostCount) {
+	ViceLog(0, ("h_GetHostNetStats found %d of %d hosts\n", count, hostCount));
+    } else if (hostP != NULL) {
+	ViceLog(0, ("h_GetHostNetStats found more than %d hosts\n", hostCount));
+	ShutDownAndCore(PANIC);
+    }
     H_UNLOCK;
 }				/*h_GetHostNetStats */
 
