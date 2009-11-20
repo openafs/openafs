@@ -23,7 +23,7 @@ extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
 
 
-struct osi_file *
+void *
 osi_UFSOpen(afs_dcache_id_t *ainode)
 {
     struct osi_file *afile;
@@ -53,7 +53,7 @@ osi_UFSOpen(afs_dcache_id_t *ainode)
 #endif
     afile->offset = 0;
     afile->proc = NULL;
-    return afile;
+    return (void *)afile;
 }
 
 int

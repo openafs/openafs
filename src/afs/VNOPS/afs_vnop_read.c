@@ -785,7 +785,7 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    }
 	} else {
 	    /* get the data from the file */
-	    tfile = osi_UFSOpen(&tdc->f.inode);
+	    tfile = (struct osi_file *)osi_UFSOpen(&tdc->f.inode);
 #ifdef AFS_DARWIN80_ENV
 	    trimlen = len;
             tuiop = afsio_darwin_partialcopy(auio, trimlen);

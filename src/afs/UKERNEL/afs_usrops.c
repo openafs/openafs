@@ -698,7 +698,7 @@ lookupname(char *fnamep, int segflg, int followlink,
 /*
  * open a file given its i-node number
  */
-struct osi_file *
+void *
 osi_UFSOpen(afs_dcache_id_t *ino)
 {
     int rc;
