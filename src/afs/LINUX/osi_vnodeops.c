@@ -830,6 +830,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     struct vattr vattr;
     cred_t *credp = NULL;
     struct vcache *vcp, *pvcp, *tvc = NULL;
+    struct dentry *parent;
     int valid;
     struct afs_fakestat_state fakestate;
 
@@ -838,9 +839,7 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
     afs_InitFakeStat(&fakestate);
 
     if (dp->d_inode) {
-
 	vcp = VTOAFS(dp->d_inode);
-	pvcp = VTOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
 
 	if (vcp == afs_globalVp)
 	    goto good_dentry;
@@ -883,6 +882,9 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	}
 #endif
 
+	parent = dget_parent(dp);
+	pvcp = VTOAFS(parent->d_inode);
+
 	/* If the parent's DataVersion has changed or the vnode
 	 * is longer valid, we need to do a full lookup.  VerifyVCache
 	 * isn't enough since the vnode may have been renamed.
@@ -892,11 +894,15 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 
 	    credp = crref();
 	    afs_lookup(pvcp, (char *)dp->d_name.name, &tvc, credp);
-	    if (!tvc || tvc != vcp)
+	    if (!tvc || tvc != vcp) {
+		dput(parent);
 		goto bad_dentry;
+	    }
 
-	    if (afs_getattr(vcp, &vattr, credp))
+	    if (afs_getattr(vcp, &vattr, credp)) {
+		dput(parent);
 		goto bad_dentry;
+	    }
 
 	    vattr2inode(AFSTOV(vcp), &vattr);
 	    dp->d_time = hgetlo(pvcp->f.m.DataVersion);
@@ -905,9 +911,13 @@ afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 	/* should we always update the attributes at this point? */
 	/* unlikely--the vcache entry hasn't changed */
 
+	dput(parent);
     } else {
 #ifdef notyet
-	pvcp = VTOAFS(dp->d_parent->d_inode);		/* dget_parent()? */
+	/* If this code is ever enabled, we should use dget_parent to handle
+	 * getting the parent, and dput() to dispose of it. See above for an
+	 * example ... */
+	pvcp = VTOAFS(dp->d_parent->d_inode);
 	if (hgetlo(pvcp->f.m.DataVersion) > dp->d_time)
 	    goto bad_dentry;
 #endif
