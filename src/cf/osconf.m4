@@ -1195,6 +1195,12 @@ if test "x$GCC" = "xyes"; then
   fi
 fi
 
+if test "x$GCC" = "xyes"; then
+  CFLAGS_NOUNUSED="-Wno-unused"
+else
+  CFLAGS_NOUNUSED=
+fi
+
 dnl horribly cheating, assuming double / is ok.
 case $INSTALL in
   ./* ) 
@@ -1245,6 +1251,7 @@ AC_SUBST(TXLIBS)
 AC_SUBST(VFSCK_CFLAGS)
 AC_SUBST(XCFLAGS)
 AC_SUBST(CFLAGS_NOERROR)
+AC_SUBST(CFLAGS_NOUNUSED)
 AC_SUBST(XCFLAGS64)
 AC_SUBST(XLDFLAGS)
 AC_SUBST(XLDFLAGS64)
