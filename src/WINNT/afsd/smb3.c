@@ -115,10 +115,10 @@ unsigned long smb_ExtAttributes(cm_scache_t *scp)
      * turns out to be impolitic in NT.  See defect 10007.
      */
 #ifdef notdef
-    if ((scp->unixModeBits & 0222) == 0 || (scp->flags & CM_SCACHEFLAG_RO))
+    if ((scp->unixModeBits & 0200) == 0 || (scp->flags & CM_SCACHEFLAG_RO))
         attrs |= SMB_ATTR_READONLY;		/* Read-only */
 #else
-    if ((scp->unixModeBits & 0222) == 0)
+    if ((scp->unixModeBits & 0200) == 0)
         attrs |= SMB_ATTR_READONLY;		/* Read-only */
 #endif
 
@@ -3644,13 +3644,13 @@ long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         }
 		
         if (spi->u.QPstandardInfo.attributes != 0) {
-            if ((scp->unixModeBits & 0222)
+            if ((scp->unixModeBits & 0200)
                  && (spi->u.QPstandardInfo.attributes & SMB_ATTR_READONLY) != 0) {
                 /* make a writable file read-only */
                 attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
                 attr.unixModeBits = scp->unixModeBits & ~0222;
             }
-            else if ((scp->unixModeBits & 0222) == 0
+            else if ((scp->unixModeBits & 0200) == 0
                       && (spi->u.QPstandardInfo.attributes & SMB_ATTR_READONLY) == 0) {
                 /* make a read-only file writable */
                 attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
@@ -3981,13 +3981,13 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 		
         attribute = sfi->u.QFbasicInfo.attributes;
         if (attribute != 0) {
-            if ((scp->unixModeBits & 0222)
+            if ((scp->unixModeBits & 0200)
                  && (attribute & SMB_ATTR_READONLY) != 0) {
                 /* make a writable file read-only */
                 attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
                 attr.unixModeBits = scp->unixModeBits & ~0222;
             }
-            else if ((scp->unixModeBits & 0222) == 0
+            else if ((scp->unixModeBits & 0200) == 0
                       && (attribute & SMB_ATTR_READONLY) == 0) {
                 /* make a read-only file writable */
                 attr.mask |= CM_ATTRMASK_UNIXMODEBITS;

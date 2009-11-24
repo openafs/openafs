@@ -482,10 +482,10 @@ unsigned int smb_Attributes(cm_scache_t *scp)
      * turns out to be impolitic in NT.  See defect 10007.
      */
 #ifdef notdef
-    if ((scp->unixModeBits & 0222) == 0 || (scp->flags & CM_SCACHEFLAG_RO))
+    if ((scp->unixModeBits & 0200) == 0 || (scp->flags & CM_SCACHEFLAG_RO))
         attrs |= SMB_ATTR_READONLY;	/* turn on read-only flag */
 #else
-    if ((scp->unixModeBits & 0222) == 0)
+    if ((scp->unixModeBits & 0200) == 0)
         attrs |= SMB_ATTR_READONLY;	/* turn on read-only flag */
 #endif
 
@@ -5417,12 +5417,12 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
         smb_UnixTimeFromDosUTime(&attr.clientModTime, dosTime);
     }
-    if ((newScp->unixModeBits & 0222) && (attribute & SMB_ATTR_READONLY) != 0) {
+    if ((newScp->unixModeBits & 0200) && (attribute & SMB_ATTR_READONLY) != 0) {
         /* we're told to make a writable file read-only */
         attr.unixModeBits = newScp->unixModeBits & ~0222;
         attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
     }
-    else if ((newScp->unixModeBits & 0222) == 0 && (attribute & SMB_ATTR_READONLY) == 0) {
+    else if ((newScp->unixModeBits & 0200) == 0 && (attribute & SMB_ATTR_READONLY) == 0) {
         /* we're told to make a read-only file writable */
         attr.unixModeBits = newScp->unixModeBits | 0222;
         attr.mask |= CM_ATTRMASK_UNIXMODEBITS;
