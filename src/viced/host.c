@@ -2667,7 +2667,7 @@ h_DumpHost(register struct host *host, int flags, void *rock)
 		     ntohs(host->interface->interface[i].port));
 	    (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
-    sprintf(tmpStr, "] refCount: %d\n", host->refCount);
+    sprintf(tmpStr, "] refCount:%d hostFlags:%hu\n", host->refCount, host->hostFlags);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     H_UNLOCK;
