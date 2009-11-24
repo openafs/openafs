@@ -2621,7 +2621,7 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
 	sprintf(tmpStr, "%04x", host->holds[i]);
 	(void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     }
-    sprintf(tmpStr, " slot/bit: %d/%d\n", h_holdSlot(), h_holdbit());
+    sprintf(tmpStr, " slot/bit: %d/%d hostFlags:%hu\n", h_holdSlot(), h_holdbit(), host->hostFlags);
     (void)STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
     H_UNLOCK;
