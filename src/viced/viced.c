@@ -173,6 +173,12 @@ int SawLock;
 #endif
 time_t StartTime;
 
+/**
+ * seconds to wait until forcing a panic during ShutDownAndCore(PANIC)
+ * in case we get stuck.
+ */
+static int panic_timeout = 30 * 60;
+
 int rxpackets = 150;		/* 100 */
 int nSmallVns = 400;		/* 200 */
 int large = 400;		/* 200 */
@@ -639,11 +645,35 @@ CheckSignal(void *unused)
     return NULL;
 }				/*CheckSignal */
 
+static void *
+ShutdownWatchdogLWP(void *unused)
+{
+    sleep(panic_timeout);
+    ViceLog(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
+                "within %d seconds; forcing panic\n", panic_timeout));
+    assert(0);
+    return NULL;
+}
+
 void
 ShutDownAndCore(int dopanic)
 {
     time_t now = time(0);
     char tbuffer[32];
+
+    if (dopanic) {
+#ifdef AFS_PTHREAD_ENV
+	pthread_t watchdogPid;
+	pthread_attr_t tattr;
+	assert(pthread_attr_init(&tattr) == 0);
+	assert(pthread_create(&watchdogPid, &tattr, ShutdownWatchdogLWP, NULL) == 0);
+#else
+	PROCESS watchdogPid;
+	assert(LWP_CreateProcess
+	       (ShutdownWatchdogLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
+	        NULL, "ShutdownWatchdog", &watchdogPid) == LWP_SUCCESS);
+#endif
+    }
 
     ViceLog(0,
 	    ("Shutting down file server at %s",
