@@ -177,6 +177,16 @@ int SawLock;
 #endif
 time_t StartTime;
 
+/**
+ * seconds to wait until forcing a panic during ShutDownAndCore(PANIC)
+ * in case we get stuck.
+ */
+#ifdef AFS_DEMAND_ATTACH_FS
+static int panic_timeout = 2 * 60;
+#else
+static int panic_timeout = 30 * 60;
+#endif
+
 int rxpackets = 150;		/* 100 */
 int nSmallVns = 400;		/* 200 */
 int large = 400;		/* 200 */
@@ -772,11 +782,35 @@ CheckSignal(void *unused)
     return 0;
 }				/*CheckSignal */
 
+static void *
+ShutdownWatchdogLWP(void *unused)
+{
+    sleep(panic_timeout);
+    ViceLog(0, ("ShutdownWatchdogLWP: Failed to shutdown and panic "
+                "within %d seconds; forcing panic\n", panic_timeout));
+    assert(0);
+    return NULL;
+}
+
 void
 ShutDownAndCore(int dopanic)
 {
     time_t now = time(0);
     char tbuffer[32];
+
+    if (dopanic) {
+#ifdef AFS_PTHREAD_ENV
+	pthread_t watchdogPid;
+	pthread_attr_t tattr;
+	assert(pthread_attr_init(&tattr) == 0);
+	assert(pthread_create(&watchdogPid, &tattr, ShutdownWatchdogLWP, NULL) == 0);
+#else
+	PROCESS watchdogPid;
+	assert(LWP_CreateProcess
+	       (ShutdownWatchdogLWP, stack * 1024, LWP_MAX_PRIORITY - 2,
+	        NULL, "ShutdownWatchdog", &watchdogPid) == LWP_SUCCESS);
+#endif
+    }
 
     /* do not allows new reqests to be served from now on, all new requests
      * are returned with an error code of RX_RESTARTING ( transient failure ) */
