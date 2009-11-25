@@ -422,11 +422,11 @@ DRelease(void *loc, int flag)
 	}
     }
     tp = &(Buffers[index]);
-    MObtainWriteLock(&tp->lock, 261);
+    ObtainWriteLock(&tp->lock, 261);
     tp->lockers--;
     if (flag)
 	tp->dirty = 1;
-    MReleaseWriteLock(&tp->lock);
+    ReleaseWriteLock(&tp->lock);
 }
 
 int
