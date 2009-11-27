@@ -120,12 +120,7 @@ libubik.a: ${LIBOBJS} AFS_component_version_number.o
 disk.o: disk.c ${INCLS}
 uinit.o: uinit.c ${INCLS}
 remote.o: remote.c ${INCLS}
-
-# beacon.c uses signed and unsigned interchangably for IP addresses. Fixing
-# will require changing the Ubik API
 beacon.o: beacon.c ${INCLS}
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
-
 lock.o: lock.c ${INCLS}
 recovery.o: recovery.c ${INCLS}
 ubik.o: ubik.c ${INCLS}

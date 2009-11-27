@@ -156,7 +156,7 @@ CommandProc(struct cmd_syndesc *as, void *arock)
     char instance[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
     char realm[MAXKTCREALMLEN];
-    afs_int32 serverList[MAXSERVERS];
+    afs_uint32 serverList[MAXSERVERS];
     char *lcell;		/* local cellname */
     char lrealm[MAXKTCREALMLEN];	/* uppercase copy of local cellname */
     int code;

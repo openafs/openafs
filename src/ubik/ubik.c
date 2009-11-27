@@ -384,9 +384,9 @@ ContactQuorum_DISK_SetVersion(register struct ubik_trans *atrans, int aflags,
  * \see ubik_ServerInit(), ubik_ServerInitByInfo()
  */
 int
-ubik_ServerInitCommon(afs_int32 myHost, short myPort,
+ubik_ServerInitCommon(afs_uint32 myHost, short myPort,
 		      struct afsconf_cell *info, char clones[],
-		      afs_int32 serverList[], const char *pathName,
+		      afs_uint32 serverList[], const char *pathName,
 		      struct ubik_dbase **dbase)
 {
     register struct ubik_dbase *tdb;
@@ -569,7 +569,7 @@ ubik_ServerInitCommon(afs_int32 myHost, short myPort,
  * \see ubik_ServerInitCommon()
  */
 int
-ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
+ubik_ServerInitByInfo(afs_uint32 myHost, short myPort,
 		      struct afsconf_cell *info, char clones[],
 		      const char *pathName, struct ubik_dbase **dbase)
 {
@@ -585,7 +585,7 @@ ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
  * \see ubik_ServerInitCommon()
  */
 int
-ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[],
+ubik_ServerInit(afs_uint32 myHost, short myPort, afs_uint32 serverList[],
 		const char *pathName, struct ubik_dbase **dbase)
 {
     afs_int32 code;

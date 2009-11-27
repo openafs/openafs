@@ -1277,7 +1277,7 @@ int init = 0, noauth;
 char name[MAXKTCNAMELEN];
 char instance[MAXKTCNAMELEN];
 char newCell[MAXKTCREALMLEN];
-afs_int32 serverList[MAXSERVERS];
+afs_uint32 serverList[MAXSERVERS];
 
 int
 NoAuth(struct cmd_syndesc *as, void *arock)

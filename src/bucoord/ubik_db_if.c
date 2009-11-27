@@ -1146,7 +1146,7 @@ ubik_Call_SingleServer(int (*aproc) (), struct ubik_client *aclient,
 int
 udbLocalInit(void)
 {
-    afs_int32 serverList[MAXSERVERS];
+    afs_uint32 serverList[MAXSERVERS];
     char hostname[256];
     char *args[3];
     int i;

@@ -443,10 +443,10 @@ extern afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32 addr);
 struct afsconf_cell;
 extern void ubeacon_Debug(struct ubik_debug *aparm);
 extern int ubeacon_AmSyncSite(void);
-extern int ubeacon_InitServerListByInfo(afs_int32 ame, 
-					struct afsconf_cell *info, 
+extern int ubeacon_InitServerListByInfo(afs_uint32 ame,
+					struct afsconf_cell *info,
 					char clones[]);
-extern int ubeacon_InitServerList(afs_int32 ame, afs_int32 aservers[]);
+extern int ubeacon_InitServerList(afs_uint32 ame, afs_uint32 aservers[]);
 extern void *ubeacon_Interact(void *);
 /*\}*/
 
@@ -499,12 +499,12 @@ extern afs_int32 ubik_nBuffers;
 
 /*! \name ubik.c */
 struct afsconf_cell;
-extern int ubik_ServerInitByInfo(afs_int32 myHost, short myPort,
+extern int ubik_ServerInitByInfo(afs_uint32 myHost, short myPort,
 				 struct afsconf_cell *info, char clones[],
 				 const char *pathName,
 				 struct ubik_dbase **dbase);
-extern int ubik_ServerInit(afs_int32 myHost, short myPort, 
-			   afs_int32 serverList[],
+extern int ubik_ServerInit(afs_uint32 myHost, short myPort,
+			   afs_uint32 serverList[],
 			   const char *pathName, struct ubik_dbase **dbase);
 extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
 			   afs_int32 transMode, struct ubik_trans **transPtr);
@@ -541,7 +541,7 @@ extern int ubik_CheckCache(struct ubik_trans *atrans,
 
 /*! \name ubikclient.c */
 
-extern int ubik_ParseClientList(int argc, char **argv, afs_int32 * aothers);
+extern int ubik_ParseClientList(int argc, char **argv, afs_uint32 * aothers);
 extern unsigned int afs_random(void);
 extern int ubik_ClientInit(register struct rx_connection **serverconns,
 			   struct ubik_client **aclient);
@@ -562,8 +562,8 @@ extern afs_int32 ubik_Call_New(int (*aproc) (), register struct ubik_client
 /*\}*/
 
 /* \name ubikcmd.c */
-extern int ubik_ParseServerList(int argc, char **argv, afs_int32 *ahost, 
-				afs_int32 *aothers);
+extern int ubik_ParseServerList(int argc, char **argv, afs_uint32 *ahost,
+				afs_uint32 *aothers);
 /*\}*/
 
 /* \name uinit.c */

@@ -62,7 +62,7 @@ static int debug = 0;
    "explicit".  The cell can then be used to debug experimental servers. */
 
 void
-ka_ExplicitCell(char *cell, afs_int32 serverList[])
+ka_ExplicitCell(char *cell, afs_uint32 serverList[])
 {
     int i;
 

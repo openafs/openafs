@@ -205,7 +205,7 @@ int
 main(int argc, char **argv)
 {
     register afs_int32 code;
-    afs_int32 myHost;
+    afs_uint32 myHost;
     register struct hostent *th;
     char hostname[64];
     struct rx_service *tservice;
@@ -444,7 +444,7 @@ main(int argc, char **argv)
 	fprintf(stderr, "ptserver: couldn't get address of this host.\n");
 	PT_EXIT(1);
     }
-    memcpy(&myHost, th->h_addr, sizeof(afs_int32));
+    memcpy(&myHost, th->h_addr, sizeof(afs_uint32));
 
     /* get list of servers */
     code =

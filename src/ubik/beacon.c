@@ -54,10 +54,10 @@ int (*ubik_CRXSecurityProc) (void *rock, struct rx_securityClass **,
 void *ubik_CRXSecurityRock;
 afs_int32 ubikSecIndex;
 struct rx_securityClass *ubikSecClass;
-static int ubeacon_InitServerListCommon(afs_int32 ame,
+static int ubeacon_InitServerListCommon(afs_uint32 ame,
 					struct afsconf_cell *info,
 					char clones[],
-					afs_int32 aservers[]);
+					afs_uint32 aservers[]);
 static int verifyInterfaceAddress(afs_uint32 *ame, struct afsconf_cell *info,
 				  afs_uint32 aservers[]);
 static int updateUbikNetworkAddress(afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR]);
@@ -145,7 +145,7 @@ ubeacon_AmSyncSite(void)
  * \see ubeacon_InitServerListCommon()
  */
 int
-ubeacon_InitServerListByInfo(afs_int32 ame, struct afsconf_cell *info, 
+ubeacon_InitServerListByInfo(afs_uint32 ame, struct afsconf_cell *info,
 			     char clones[])
 {
     afs_int32 code;
@@ -161,7 +161,7 @@ ubeacon_InitServerListByInfo(afs_int32 ame, struct afsconf_cell *info,
  * \see ubeacon_InitServerListCommon()
  */
 int
-ubeacon_InitServerList(afs_int32 ame, register afs_int32 aservers[])
+ubeacon_InitServerList(afs_uint32 ame, register afs_uint32 aservers[])
 {
     afs_int32 code;
 
@@ -197,8 +197,8 @@ ubeacon_InitServerList(afs_int32 ame, register afs_int32 aservers[])
  * \see ubeacon_InitServerList(), ubeacon_InitServerListByInfo()
  */
 int
-ubeacon_InitServerListCommon(afs_int32 ame, struct afsconf_cell *info, 
-			     char clones[], register afs_int32 aservers[])
+ubeacon_InitServerListCommon(afs_uint32 ame, struct afsconf_cell *info,
+			     char clones[], register afs_uint32 aservers[])
 {
     register struct ubik_server *ts;
     afs_int32 me = -1;
