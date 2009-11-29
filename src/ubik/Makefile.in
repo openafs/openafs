@@ -75,8 +75,6 @@ Kubik_int.h: ubik_int.xg
 	${RXGEN} -A -x -k -h -o Kubik_int.h ${srcdir}/ubik_int.xg
 
 utst_int.ss.o: utst_int.ss.c utst_int.xdr.c
-	$(CC) $(CFLAGS) @CFLAGS_NOERROR@ -c $<
-
 utst_int.cs.o: utst_int.cs.c utst_int.xdr.c
 utst_int.xdr.o: utst_int.xdr.c utst_int.h
 

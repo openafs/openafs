@@ -38,7 +38,7 @@ afs_int32 sleepTime;
 /*\}*/
 
 int
-SAMPLE_Inc(struct rx_connection *rxconn)
+SSAMPLE_Inc(struct rx_call *call)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -97,7 +97,7 @@ SAMPLE_Inc(struct rx_connection *rxconn)
 }
 
 int
-SAMPLE_Get(struct rx_connection *rxconn, afs_int32 *gnumber)
+SSAMPLE_Get(struct rx_call *call, afs_int32 *gnumber)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -142,7 +142,7 @@ SAMPLE_Get(struct rx_connection *rxconn, afs_int32 *gnumber)
 }
 
 int
-SAMPLE_QGet(struct rx_connection *rxconn, afs_int32 *gnumber)
+SSAMPLE_QGet(struct rx_call *call, afs_int32 *gnumber)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;
@@ -187,7 +187,7 @@ SAMPLE_QGet(struct rx_connection *rxconn, afs_int32 *gnumber)
 }
 
 int
-SAMPLE_Trun(struct rx_connection *rxconn)
+SSAMPLE_Trun(struct rx_call *call)
 {
     afs_int32 code;
     struct ubik_trans *tt;
@@ -226,7 +226,7 @@ SAMPLE_Trun(struct rx_connection *rxconn)
 }
 
 int
-SAMPLE_Test(struct rx_connection *rxconn)
+SSAMPLE_Test(struct rx_call *call)
 {
     afs_int32 code, temp;
     struct ubik_trans *tt;

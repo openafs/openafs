@@ -65,7 +65,6 @@ rxkad/ticket5.c      : all           : CRC functions - maybe fixed (no errors in
 rx/rx.c		     : all (pthread) : rxkad_global_stats_init not proto'd
 rx/xdr_rx.c          : all (ukernel) : Prototypes don't match due to AFS_XDR_T 
 				       not being used in the xdr header
-ubik/utst_int_ss.c   : all           : Client / Server symbol collisions
 ubik/beacon.c        : all           : Ubik uses signed/unsigned 
 				       interchangably for IP addresses, a 
 				       fix will require API changes.
