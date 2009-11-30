@@ -6,6 +6,7 @@ set -e
 package=openafs-modules-dkms
 version=`dpkg-query -W -f='${Version}' "$package" \
     | sed -e 's/[+-].*//' -e 's/\.dfsg.*//' -e 's/~//g'`
+kernel=`uname -r`
 
 # If someone installed this package without the necessary kernel headers, the
 # postinst will fail.  If they then fix this problem, the postinst will keep
@@ -16,8 +17,19 @@ if [ -e "/var/lib/dkms/openafs/$version" ] ; then
 fi
 dkms add -m openafs -v "$version"
 if [ "$1" = 'configure' ] ; then
-    dkms build -m openafs -v "$version"
-    dkms install -m openafs -v "$version" --force
+    if [ -e "/lib/modules/$kernel/build/include" ] ; then
+        dkms build -m openafs -v "$version"
+        dkms install -m openafs -v "$version" --force
+    else
+        cat >&2 <<"EOF"
+
+The OpenAFS module build for the currently running kernel was skipped since
+the kernel headers for this kernel do not seem to be installed.  To build
+the kernel module, install the appropriate kernel headers package for your
+kernel (usually linux-headers-$kernel).
+
+EOF
+    fi
 fi
 
 #DEBHELPER#
