@@ -3555,5 +3555,4 @@ shutdown_icl(void)
 	afs_icl_LogFree(logp);
 	afs_icl_LogFree(logp);
     }
-    return 0;
 }
