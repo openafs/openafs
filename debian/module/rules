@@ -22,8 +22,8 @@ endif
 # Determine whether we're building with optimization.  This doesn't really
 # work at the moment due to upstream problems.
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-    DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
-    DEBIAN_KERN_FLAGS = --disable-kernel-optimize
+    DEBIAN_OPT_FLAGS = --disable-optimize --disable-optimize-lwp
+    DEBIAN_KERN_FLAGS = --disable-optimize-kernel
 else
     DEBIAN_OPT_FLAGS =
     DEBIAN_KERN_FLAGS =
@@ -59,7 +59,7 @@ configure-stamp:
 	sh configure --with-afs-sysname=$(SYS_NAME) \
 	    --with-linux-kernel-headers=$(KSRC) --prefix=`pwd`/debian/tmp \
 	    --with-linux-kernel-packaging --enable-disconnected \
-	    --enable-debug --enable-lwp-debug --enable-kernel-debug \
+	    --enable-debug --enable-debug-lwp --enable-debug-kernel \
 	    $(DEBIAN_OPT_FLAGS) $(DEBIAN_KERN_FLAGS)
 	touch $@
 

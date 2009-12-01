@@ -17,8 +17,8 @@ endif
 # Determine whether we're building with optimization.  This doesn't really
 # work at the moment due to upstream problems.
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-    DEBIAN_OPT_FLAGS = --disable-optimize --disable-lwp-optimize
-    DEBIAN_KERN_FLAGS = --disable-kernel-optimize
+    DEBIAN_OPT_FLAGS = --disable-optimize --disable-optimize-lwp
+    DEBIAN_KERN_FLAGS = --disable-optimize-kernel
 else
     DEBIAN_OPT_FLAGS =
     DEBIAN_KERN_FLAGS =
@@ -101,7 +101,7 @@ build-stamp:
 	    --enable-bos-new-config --enable-demand-attach-fs \
 	    --enable-bos-restricted-mode --enable-disconnected \
 	    --with-xslt-processor=xsltproc --with-html-xsl=$(HTML_XSL) \
-	    --enable-debug --enable-lwp-debug $(DEBIAN_OPT_FLAGS) $(SYSTEM)
+	    --enable-debug --enable-debug-lwp $(DEBIAN_OPT_FLAGS) $(SYSTEM)
 	chmod a+x config.sub src/libafs/make_kbuild_makefile.pl \
 	    src/config/make_vnode.pl
 	dh build --after configure
