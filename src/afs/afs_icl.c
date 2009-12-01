@@ -58,7 +58,7 @@ afs_icl_Init(void)
 }
 
 /* Function called at shutdown - zap everything */
-int
+void
 shutdown_icl(void)
 {
     struct afs_icl_log *logp;
@@ -82,7 +82,6 @@ shutdown_icl(void)
 	afs_icl_LogFree(logp);
 	afs_icl_LogFree(logp);
     }
-    return 0;
 }
 
 int
