@@ -1218,60 +1218,44 @@ VerifyDirPerms(char *path)
  * If the resultFile is NULL, then don't call the write routine.
  */
 int
-ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       int (*judgeInode) (struct ViceInodeInfo * info, afs_uint32 vid, void *rock),
 	       afs_uint32 singleVolumeNumber, int *forcep, int forceR, char *wpath, 
 	       void *rock)
 {
-    FILE *fp = (FILE *) - 1;
     int ninodes;
     struct afs_stat status;
 
     *forcep = 0; /* no need to salvage until further notice */
-
-    if (resultFile) {
-	fp = afs_fopen(resultFile, "w");
-	if (!fp) {
-	    Log("Unable to create inode description file %s\n", resultFile);
-	    return -1;
-	}
-    }
 
     /* Verify protections on directories. */
     mode_errors = 0;
     VerifyDirPerms(mountedOn);
 
     ninodes =
-	namei_ListAFSFiles(mountedOn, WriteInodeInfo, fp, judgeInode,
+	namei_ListAFSFiles(mountedOn, WriteInodeInfo, inodeFile, judgeInode,
 			   singleVolumeNumber, rock);
 
-    if (!resultFile)
+    if (!inodeFile)
 	return ninodes;
 
     if (ninodes < 0) {
-	fclose(fp);
 	return ninodes;
     }
 
-    if (fflush(fp) == EOF) {
+    if (fflush(inodeFile) == EOF) {
 	Log("Unable to successfully flush inode file for %s\n", mountedOn);
-	fclose(fp);
 	return -2;
     }
-    if (fsync(fileno(fp)) == -1) {
+    if (fsync(fileno(inodeFile)) == -1) {
 	Log("Unable to successfully fsync inode file for %s\n", mountedOn);
-	fclose(fp);
-	return -2;
-    }
-    if (fclose(fp) == EOF) {
-	Log("Unable to successfully close inode file for %s\n", mountedOn);
 	return -2;
     }
 
     /*
      * Paranoia:  check that the file is really the right size
      */
-    if (afs_stat(resultFile, &status) == -1) {
+    if (afs_fstat(fileno(inodeFile), &status) == -1) {
 	Log("Unable to successfully stat inode file for %s\n", mountedOn);
 	return -2;
     }

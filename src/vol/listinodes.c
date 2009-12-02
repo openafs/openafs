@@ -33,7 +33,7 @@
  * -2 - Unable to completely write temp file. Produces warning message in log.
  */
 int
-ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       afs_uint32 (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
@@ -190,11 +190,10 @@ struct dinode *ginode();
 
 
 int
-ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
-    FILE *inodeFile = NULL;
     char dev[50], rdev[51];
     struct stat status;
     struct dinode *p;
@@ -282,14 +281,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	return -1;
     }
 
-    if (resultFile) {
-	inodeFile = fopen(resultFile, "w");
-	if (inodeFile == NULL) {
-	    Log("Unable to create inode description file %s\n", resultFile);
-	    goto out;
-	}
-    }
-
     /*
      * calculate the maximum number of inodes possible
      */
@@ -351,16 +342,11 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	    err = -2;
 	    goto out1;
 	}
-	if (fclose(inodeFile) == EOF) {
-	    Log("Unable to successfully close inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
 
 	/*
 	 * Paranoia:  check that the file is really the right size
 	 */
-	if (stat(resultFile, &status) == -1) {
+	if (fstat(fileno(inodeFile), &status) == -1) {
 	    Log("Unable to successfully stat inode file for %s\n", partition);
 	    err = -2;
 	    goto out1;
@@ -381,8 +367,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
   out1:
     if (pfd >= 0)
 	close(pfd);
-    if (inodeFile)
-	fclose(inodeFile);
 
     return err;
 }
@@ -657,11 +641,10 @@ xfs_RenameFiles(char *dir, xfs_Rename_t * renames, int n_renames)
 
 
 int
-xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+xfs_ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 		   int (*judgeInode) (), afs_uint32 judgeParam, int *forcep,
 		   int forceR, char *wpath, void *rock)
 {
-    FILE *inodeFile = NULL;
     i_list_inode_t info;
     int info_size = sizeof(i_list_inode_t);
     int fd;
@@ -691,14 +674,6 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     if (stat64(mountedOn, &sdirbuf) < 0) {
 	perror("xfs_ListViceInodes: stat64");
 	return -1;
-    }
-
-    if (resultFile) {
-	inodeFile = fopen(resultFile, "w");
-	if (inodeFile == NULL) {
-	    Log("Unable to create inode description file %s\n", resultFile);
-	    return -1;
-	}
     }
 
     if ((top_dirp = opendir(mountedOn)) == NULL) {
@@ -830,22 +805,16 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     if (inodeFile) {
 	if (fflush(inodeFile) == EOF) {
 	    ("Unable to successfully flush inode file for %s\n", mountedOn);
-	    fclose(inodeFile);
 	    return errors ? -1 : -2;
 	}
 	if (fsync(fileno(inodeFile)) == -1) {
 	    Log("Unable to successfully fsync inode file for %s\n", mountedOn);
-	    fclose(inodeFile);
-	    return errors ? -1 : -2;
-	}
-	if (fclose(inodeFile) == EOF) {
-	    Log("Unable to successfully close inode file for %s\n", mountedOn);
 	    return errors ? -1 : -2;
 	}
 	/*
 	 * Paranoia:  check that the file is really the right size
 	 */
-	if (stat(resultFile, &status) == -1) {
+	if (fstat(fileno(inodeFile), &status) == -1) {
 	    Log("Unable to successfully stat inode file for %s\n", partition);
 	    return errors ? -1 : -2;
 	}
@@ -871,19 +840,16 @@ xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	closedir(top_dirp);
     if (renames)
 	free((char *)renames);
-    if (inodeFile)
-	fclose(inodeFile);
     return -1;
 }
 
 #endif
 
 int
-ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
-    FILE *inodeFile = NULL;
     char dev[50], rdev[51];
     struct stat status;
     struct efs_dinode *p;
@@ -908,7 +874,7 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     }
 #ifdef AFS_SGI_XFS_IOPS_ENV
     if (!strcmp("xfs", root_inode.st_fstype)) {
-	return xfs_ListViceInodes(devname, mountedOn, resultFile, judgeInode,
+	return xfs_ListViceInodes(devname, mountedOn, inodeFile, judgeInode,
 				  judgeParam, forcep, forceR, wpath, rock);
     } else
 #endif
@@ -945,7 +911,7 @@ BUFAREA sblk;
 
 extern char *afs_rawname();
 int
-ListViceInodes(char *devname, char *mountedOn, char *resultFile,
+ListViceInodes(char *devname, char *mountedOn, FILE *inodeFile,
 	       int (*judgeInode) (), afs_uint32 judgeParam, int *forcep, int forceR,
 	       char *wpath, void *rock)
 {
@@ -959,7 +925,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 #endif
     } super;
     int i, c, e, bufsize, code, err = 0;
-    FILE *inodeFile = NULL;
     char dev[50], rdev[100], err1[512], *ptr1;
     struct dinode *inodes = NULL, *einodes, *dptr;
     struct stat status;
@@ -1000,13 +965,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	goto out;
     }
 
-    if (resultFile) {
-	inodeFile = fopen(resultFile, "w");
-	if (inodeFile == NULL) {
-	    Log("Unable to create inode description file %s\n", resultFile);
-	    goto out;
-	}
-    }
 #ifdef	AFS_AIX_ENV
     /*
      * char *FSlabel(), *fslabel=0;
@@ -1286,16 +1244,11 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 	    err = -2;
 	    goto out1;
 	}
-	if (fclose(inodeFile) == EOF) {
-	    Log("Unable to successfully close inode file for %s\n", partition);
-	    err = -2;
-	    goto out1;
-	}
 	
 	/*
 	 * Paranoia:  check that the file is really the right size
 	 */
-	if (stat(resultFile, &status) == -1) {
+	if (fstat(fileno(inodeFile), &status) == -1) {
 	    Log("Unable to successfully stat inode file for %s\n", partition);
 	    err = -2;
 	    goto out1;
@@ -1315,8 +1268,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
     err = -1;
   out1:
     close(pfd);
-    if (inodeFile)
-	fclose(inodeFile);
     if (inodes)
 	free(inodes);
     return err;

@@ -713,10 +713,12 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 {
     char *name, *tdir;
     char inodeListPath[256];
+    FILE *inodeFile;
     static char tmpDevName[100];
     static char wpath[100];
     struct VolumeSummary *vsp, *esp;
     int i, j;
+    int code;
 
     fileSysPartition = partP;
     fileSysDevice = fileSysPartition->device;
@@ -785,9 +787,10 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
     snprintf(inodeListPath, 255, "%s/salvage.inodes.%s.%d", tdir, name,
 	     getpid());
 #endif
-    if (GetInodeSummary(inodeListPath, singleVolumeNumber) < 0) {
-	unlink(inodeListPath);
-	return;
+
+    inodeFile = fopen(inodeListPath, "w+b");
+    if (!inodeFile) {
+	Abort("Error %d when creating inode description file %s; not salvaged\n", errno, inodeListPath);
     }
 #ifdef AFS_NT40_ENV
     /* Using nt_unlink here since we're really using the delete on close
@@ -795,15 +798,22 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
      * mean to unlink the file at that point. Those places have been
      * modified to actually do that so that the NT crt can be used there.
      */
-    inodeFd =
-	_open_osfhandle((intptr_t)nt_open(inodeListPath, O_RDWR, 0), O_RDWR);
-    nt_unlink(inodeListPath);	/* NT's crt unlink won't if file is open. */
+    code = nt_unlink(inodeListPath);
 #else
-    inodeFd = afs_open(inodeListPath, O_RDONLY);
-    unlink(inodeListPath);
+    code = unlink(inodeListPath);
 #endif
+    if (code < 0) {
+	Log("Error %d when trying to unlink %s\n", errno, inodeListPath);
+    }
+
+    if (GetInodeSummary(inodeFile, singleVolumeNumber) < 0) {
+	fclose(inodeFile);
+	return;
+    }
+    inodeFd = fileno(inodeFile);
     if (inodeFd == -1)
 	Abort("Temporary file %s is missing...\n", inodeListPath);
+    afs_lseek(inodeFd, 0L, SEEK_SET);
     if (ListInodeOption) {
 	PrintInodeList();
 	return;
@@ -873,7 +883,7 @@ SalvageFileSys1(struct DiskPartition64 *partP, VolumeId singleVolumeNumber)
 		fileSysPartition->name, (Testing ? " (READONLY mode)" : ""));
     }
 
-    close(inodeFd);		/* SalvageVolumeGroup was the last which needed it. */
+    fclose(inodeFile);		/* SalvageVolumeGroup was the last which needed it. */
 }
 
 void
@@ -1045,10 +1055,11 @@ OnlyOneVolume(struct ViceInodeInfo *inodeinfo, afs_uint32 singleVolumeNumber, vo
  * be unlinked by the caller.
  */
 int
-GetInodeSummary(char *path, VolumeId singleVolumeNumber)
+GetInodeSummary(FILE *inodeFile, VolumeId singleVolumeNumber)
 {
     struct afs_stat status;
     int forceSal, err;
+    int code;
     struct ViceInodeInfo *ip;
     struct InodeSummary summary;
     char summaryFileName[50];
@@ -1065,23 +1076,22 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 
     /* This file used to come from vfsck; cobble it up ourselves now... */
     if ((err =
-	 ListViceInodes(dev, fileSysPath, path,
+	 ListViceInodes(dev, fileSysPath, inodeFile,
 			singleVolumeNumber ? OnlyOneVolume : 0,
 			singleVolumeNumber, &forceSal, forceR, wpath, NULL)) < 0) {
 	if (err == -2) {
-	    Log("*** I/O error %d when writing a tmp inode file %s; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n", errno, path, dev);
+	    Log("*** I/O error %d when writing a tmp inode file; Not salvaged %s ***\nIncrease space on partition or use '-tmpdir'\n", errno, dev);
 	    return -1;
 	}
-	unlink(path);
 	Abort("Unable to get inodes for \"%s\"; not salvaged\n", dev);
     }
     if (forceSal && !ForceSalvage) {
 	Log("***Forced salvage of all volumes on this partition***\n");
 	ForceSalvage = 1;
     }
-    inodeFd = afs_open(path, O_RDWR);
+    fseek(inodeFile, 0L, SEEK_SET);
+    inodeFd = fileno(inodeFile);
     if (inodeFd == -1 || afs_fstat(inodeFd, &status) == -1) {
-	unlink(path);
 	Abort("No inode description file for \"%s\"; not salvaged\n", dev);
     }
     tdir = (tmpdir ? tmpdir : part);
@@ -1094,18 +1104,29 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 #endif
     summaryFile = afs_fopen(summaryFileName, "a+");
     if (summaryFile == NULL) {
-	close(inodeFd);
-	unlink(path);
 	Abort("Unable to create inode summary file\n");
     }
+
+#ifdef AFS_NT40_ENV
+    /* Using nt_unlink here since we're really using the delete on close
+     * semantics of unlink. In most places in the salvager, we really do
+     * mean to unlink the file at that point. Those places have been
+     * modified to actually do that so that the NT crt can be used there.
+     */
+    code = nt_unlink(summaryFileName);
+#else
+    code = unlink(summaryFileName);
+#endif
+    if (code < 0) {
+	Log("Error %d when trying to unlink %s\n", errno, summaryFileName);
+    }
+
     if (!canfork || debug || Fork() == 0) {
 	int nInodes;
 	unsigned long st_size=(unsigned long) status.st_size;
 	nInodes = st_size / sizeof(struct ViceInodeInfo);
 	if (nInodes == 0) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(summaryFileName);
 	    if (!singleVolumeNumber)	/* Remove the FORCESALVAGE file */
 		RemoveTheForce(fileSysPath);
 	    else {
@@ -1126,27 +1147,18 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	ip = (struct ViceInodeInfo *)malloc(nInodes*sizeof(struct ViceInodeInfo));
 	if (ip == NULL) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Abort
 		("Unable to allocate enough space to read inode table; %s not salvaged\n",
 		 dev);
 	}
 	if (read(inodeFd, ip, st_size) != st_size) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Abort("Unable to read inode table; %s not salvaged\n", dev);
 	}
 	qsort(ip, nInodes, sizeof(struct ViceInodeInfo), CompareInodes);
 	if (afs_lseek(inodeFd, 0, SEEK_SET) == -1
 	    || write(inodeFd, ip, st_size) != st_size) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Abort("Unable to rewrite inode table; %s not salvaged\n", dev);
 	}
 	summary.index = 0;
@@ -1155,7 +1167,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	    if (fwrite(&summary, sizeof(summary), 1, summaryFile) != 1) {
 		Log("Difficulty writing summary file (errno = %d); %s not salvaged\n", errno, dev);
 		fclose(summaryFile);
-		close(inodeFd);
 		return -1;
 	    }
 	    summary.index += (summary.nInodes);
@@ -1166,7 +1177,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	if (fflush(summaryFile) == EOF || fsync(fileno(summaryFile)) == -1) {
 	    Log("Unable to write summary file (errno = %d); %s not salvaged\n", errno, dev);
 	    fclose(summaryFile);
-	    close(inodeFd);
 	    return -1;
 	}
 	if (canfork && !debug) {
@@ -1176,9 +1186,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     } else {
 	if (Wait("Inode summary") == -1) {
 	    fclose(summaryFile);
-	    close(inodeFd);
-	    unlink(path);
-	    unlink(summaryFileName);
 	    Exit(1);		/* salvage of this partition aborted */
 	}
     }
@@ -1196,8 +1203,6 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
     nVolumesInInodeFile =(unsigned long)(status.st_size) / sizeof(struct InodeSummary);
     Log("%d nVolumesInInodeFile %d \n",nVolumesInInodeFile,(unsigned long)(status.st_size));
     fclose(summaryFile);
-    close(inodeFd);
-    unlink(summaryFileName);
     return 0;
 }
 
