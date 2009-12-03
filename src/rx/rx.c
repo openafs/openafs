@@ -8197,20 +8197,30 @@ DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
 	return FALSE;
     }
 }
+#endif /* AFS_NT40_ENV */
 
 int rx_DumpCalls(FILE *outputFile, char *cookie)
 {
 #ifdef RXDEBUG_PACKET
-    int zilch;
 #ifdef KDUMP_RX_LOCK
     struct rx_call_rx_lock *c;
 #else
     struct rx_call *c;
 #endif
+#ifdef AFS_NT40_ENV
+    int zilch;
     char output[2048];
+#define RXDPRINTF sprintf
+#define RXDPRINTOUT output
+#else
+#define RXDPRINTF fprintf
+#define RXDPRINTOUT outputFile
+#endif
 
-    sprintf(output, "%s - Start dumping all Rx Calls - count=%u\r\n", cookie, rx_stats.nCallStructs);
+    RXDPRINTF(RXDPRINTOUT, "%s - Start dumping all Rx Calls - count=%u\r\n", cookie, rx_stats.nCallStructs);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 
     for (c = rx_allCallsp; c; c = c->allNextp) {
         u_short rqc, tqc, iovqc;
@@ -8221,7 +8231,7 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
         queue_Count(&c->tq, p, np, rx_packet, tqc);
         queue_Count(&c->iovq, p, np, rx_packet, iovqc);
 
-        sprintf(output, "%s - call=0x%p, id=%u, state=%u, mode=%u, conn=%p, epoch=%u, cid=%u, callNum=%u, connFlags=0x%x, flags=0x%x, "
+	RXDPRINTF(RXDPRINTOUT, "%s - call=0x%p, id=%u, state=%u, mode=%u, conn=%p, epoch=%u, cid=%u, callNum=%u, connFlags=0x%x, flags=0x%x, "
                 "rqc=%u,%u, tqc=%u,%u, iovqc=%u,%u, "
                 "lstatus=%u, rstatus=%u, error=%d, timeout=%u, "
                 "resendEvent=%d, timeoutEvt=%d, keepAliveEvt=%d, delayedAckEvt=%d, delayedAbortEvt=%d, abortCode=%d, abortCount=%d, "
@@ -8249,12 +8259,15 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
                 );
         MUTEX_EXIT(&c->lock);
 
+#ifdef AFS_NT40_ENV
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
     }
-    sprintf(output, "%s - End dumping all Rx Calls\r\n", cookie);
+    RXDPRINTF(RXDPRINTOUT, "%s - End dumping all Rx Calls\r\n", cookie);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 #endif /* RXDEBUG_PACKET */
     return 0;
 }
-#endif /* AFS_NT40_ENV */
 

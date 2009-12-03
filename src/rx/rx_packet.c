@@ -2762,7 +2762,7 @@ rxi_AdjustDgramPackets(int frags, int mtu)
     return (2 + (maxMTU / (RX_JUMBOBUFFERSIZE + RX_JUMBOHEADERSIZE)));
 }
 
-#ifdef AFS_NT40_ENV
+#ifndef KERNEL
 /* 
  * This function can be used by the Windows Cache Manager
  * to dump the list of all rx packets so that we can determine
@@ -2771,32 +2771,44 @@ rxi_AdjustDgramPackets(int frags, int mtu)
 int rx_DumpPackets(FILE *outputFile, char *cookie)
 {
 #ifdef RXDEBUG_PACKET
-    int zilch;
     struct rx_packet *p;
+#ifdef AFS_NT40_ENV
+    int zilch;
     char output[2048];
+#define RXDPRINTF sprintf
+#define RXDPRINTOUT output
+#else
+#define RXDPRINTF fprintf
+#define RXDPRINTOUT outputFile
+#endif
 
     NETPRI;
     MUTEX_ENTER(&rx_freePktQ_lock);
-    sprintf(output, "%s - Start dumping all Rx Packets - count=%u\r\n", cookie, rx_packet_id);
+    RXDPRINTF(RXDPRINTOUT, "%s - Start dumping all Rx Packets - count=%u\r\n", cookie, rx_packet_id);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 
     for (p = rx_mallocedP; p; p = p->allNextp) {
-        sprintf(output, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
+        RXDPRINTF(RXDPRINTOUT, "%s - packet=0x%p, id=%u, firstSent=%u.%08u, timeSent=%u.%08u, retryTime=%u.%08u, firstSerial=%u, niovecs=%u, flags=0x%x, backoff=%u, length=%u  header: epoch=%u, cid=%u, callNum=%u, seq=%u, serial=%u, type=%u, flags=0x%x, userStatus=%u, securityIndex=%u, serviceId=%u\r\n",
                 cookie, p, p->packetId, p->firstSent.sec, p->firstSent.usec, p->timeSent.sec, p->timeSent.usec, p->retryTime.sec, p->retryTime.usec, 
                 p->firstSerial, p->niovecs, (afs_uint32)p->flags, (afs_uint32)p->backoff, (afs_uint32)p->length,
                 p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.serial,
                 (afs_uint32)p->header.type, (afs_uint32)p->header.flags, (afs_uint32)p->header.userStatus, 
                 (afs_uint32)p->header.securityIndex, (afs_uint32)p->header.serviceId);
+#ifdef AFS_NT40_ENV
         WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
     }
 
-    sprintf(output, "%s - End dumping all Rx Packets\r\n", cookie);
+    RXDPRINTF(RXDPRINTOUT, "%s - End dumping all Rx Packets\r\n", cookie);
+#ifdef AFS_NT40_ENV
     WriteFile(outputFile, output, (DWORD)strlen(output), &zilch, NULL);
+#endif
 
     MUTEX_EXIT(&rx_freePktQ_lock);
     USERPRI;
 #endif /* RXDEBUG_PACKET */
     return 0;
 }
-#endif /* AFS_NT40_ENV */
-
+#endif
