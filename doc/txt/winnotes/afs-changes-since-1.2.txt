@@ -1,3 +1,47 @@
+Since 1.5.66
+ * Convert afsauthent.dll to use the xdr_alloc and xdr_free
+   routines from afsrpc.dll in place of malloc and free.
+   This permits the two libraries to be built with different
+   C runtime libraries without crashing.
+
+ * Set the DOS Readonly attribute on a file/directory 
+   whenever the unix mode combined with the mask 0200 
+   is true.  Previously there was a discrepency between
+   the mask used for testing for readonly behavior and
+   that used for setting the attribute.
+
+ * Disable AFSVolSync based .readonly "whole-volume callback"
+   support because the all file servers prior to 1.5.67
+   (and perhaps 1.4.12) do not properly assign a value to
+   the AFSVolSync structure in bulk status RPC responses.
+
+ * Improve the error output from aklog to output the value
+   from krb5 error_message() if the afs_com_err output
+   indicates an unknown value.
+
+ * Hold a lock on the cm_scache_t object when the smb
+   server is assigning a new clientModTime value.
+
+ * Permit custom build version numbers to be set
+   without modifying the src/config/NTMakefile.<platform>
+   files.
+
+ * Add support for binary code signing with cross-signed
+   certificates and arbitrary versions of signtool.exe.
+
+ * Convert VBUSY and VRESTARTING to CM_ERROR_ALLBUSY and
+   do not permit them to be exposed to the smb redirector.
+
+ * Convert STATUS_TIMEOUT responses to STATUS_IO_TIMEOUT
+   to avoid confusion within the smb redirector.
+
+ * Fix the byte order assigned to port numbers associated
+   with AFSDB record lookups.  They must be network byte 
+   order not host byte order.
+
+ * Add dynamic server ranking based on RPC round trip
+   time measurements.
+
 Since 1.5.65
  * Official support for Windows 7 and Server 2008 R2
 
