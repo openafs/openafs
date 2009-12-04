@@ -5052,7 +5052,7 @@ Midnight(time_t t) {
     struct tm local, *l;
     time_t midnight;
 
-#ifdef AFS_PTHREAD_ENV
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
     l = localtime_r(&t, &local);
 #else
     l = localtime(&t);
