@@ -8199,6 +8199,7 @@ DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
 }
 #endif /* AFS_NT40_ENV */
 
+#ifndef KERNEL
 int rx_DumpCalls(FILE *outputFile, char *cookie)
 {
 #ifdef RXDEBUG_PACKET
@@ -8270,4 +8271,4 @@ int rx_DumpCalls(FILE *outputFile, char *cookie)
 #endif /* RXDEBUG_PACKET */
     return 0;
 }
-
+#endif
