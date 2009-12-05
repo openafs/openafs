@@ -1068,24 +1068,31 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                         lock_ReleaseWrite(&scp->rw);
                         mxheld = 0;
                     }
-                    cm_BPlusDirBuildTree(scp, userp, reqp);
+                    code = cm_BPlusDirBuildTree(scp, userp, reqp);
                     if (!mxheld) {
                         lock_ObtainWrite(&scp->rw);
                         mxheld = 1;
                     }
-                    if (op->dataVersion != scp->dataVersion) {
-                        /* We lost the race, therefore we must update the
-                         * dirop state and retry to build the tree.
-                         */
-                        op->length = scp->length;
-                        op->newLength = op->length;
-                        op->dataVersion = scp->dataVersion;
-                        op->newDataVersion = op->dataVersion;
-                        goto repeat;
-                    }
+                    if (code) {
+                        bplus_free_tree++;
+                        freeBtree(scp->dirBplus);
+                        scp->dirBplus = NULL;
+                        scp->dirDataVersion = CM_SCACHE_VERSION_BAD;
+                    } else {
+                        if (op->dataVersion != scp->dataVersion) {
+                            /* We lost the race, therefore we must update the
+                             * dirop state and retry to build the tree.
+                            */
+                            op->length = scp->length;
+                            op->newLength = op->length;
+                            op->dataVersion = scp->dataVersion;
+                            op->newDataVersion = op->dataVersion;
+                            goto repeat;
+                        }
 
-                    if (scp->dirBplus)
-                        scp->dirDataVersion = scp->dataVersion;
+                         if (scp->dirBplus)
+                            scp->dirDataVersion = scp->dataVersion;
+                    }
                 }
             }
 
