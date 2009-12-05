@@ -2160,9 +2160,9 @@ cm_BPlusEnumAlloc(afs_uint32 entries)
     size_t	   size;
 
     if (entries == 0)
-	return NULL;
-
-    size = sizeof(cm_direnum_t)+(entries-1)*sizeof(cm_direnum_entry_t);
+        size = sizeof(cm_direnum_t);
+    else
+        size = sizeof(cm_direnum_t)+(entries-1)*sizeof(cm_direnum_entry_t);
     enump = (cm_direnum_t *)malloc(size);
     memset(enump, 0, size);
     enump->count = entries;
