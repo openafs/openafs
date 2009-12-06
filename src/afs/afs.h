@@ -1083,9 +1083,6 @@ struct buffer {
   char lockers;
   char dirty;
   char hashIndex;
-#if defined(AFS_USEBUFFERS)
-  struct buf *bufp;
-#endif
   afs_rwlock_t lock;          /* the lock for this structure */
 };
 

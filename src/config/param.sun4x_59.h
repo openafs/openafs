@@ -70,7 +70,6 @@
 /* sun definitions here */
 #define	AFS_UIOFMODE		1	/* Only in afs/afs_vnodeops.c (afs_ustrategy) */
 #define	AFS_SYSVLOCK		1	/* sys v locking supported */
-/*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov		uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_loffset
@@ -157,7 +156,6 @@
 #ifdef KERNEL
 #define	AFS_UIOFMODE		1	/* Only in afs/afs_vnodeops.c (afs_ustrategy) */
 #define	AFS_SYSVLOCK		1	/* sys v locking supported */
-/*#define	AFS_USEBUFFERS	1*/
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset

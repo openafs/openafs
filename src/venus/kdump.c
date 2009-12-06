@@ -2103,13 +2103,11 @@ print_allocs(int pnt)
     T += i;
     printf("%20s:\t%8d bytes\t[%d entries/%d bytes each]\n", "Buffer package",
 	   i, j, sizeof(struct buffer));
-#if	!AFS_USEBUFFERS
 #define	AFS_BUFFER_PAGESIZE 2048
     i = j * AFS_BUFFER_PAGESIZE;
     T += i;
     printf("%20s:\t%8d bytes\t[%d entries/%d bytes each]\n",
 	   "Xtra Buffer pkg area", i, j, AFS_BUFFER_PAGESIZE);
-#endif
 
     Sum_exps = 0;
     Sum_nfssysnames = 0;

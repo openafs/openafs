@@ -46,12 +46,7 @@
 #ifndef	BUF_TIME_MAX
 #define	BUF_TIME_MAX	0x7fffffff
 #endif
-#if defined(AFS_USEBUFFERS)
-/* number of pages per Unix buffer, when we're using Unix buffer pool */
-#define NPB 4
-#else
 #define NPB 8			/* must be a pwer of 2 */
-#endif
 static int afs_max_buffers;	/* should be an integral multiple of NPB */
 
 /* page size */
@@ -115,9 +110,6 @@ DInit(int abuffers)
     /* Initialize the venus buffer system. */
     register int i;
     register struct buffer *tb;
-#if defined(AFS_USEBUFFERS)
-    struct buf *tub;		/* unix buffer for allocation */
-#endif
 
     AFS_STATCNT(DInit);
     if (dinit_flag)
@@ -125,11 +117,7 @@ DInit(int abuffers)
     dinit_flag = 1;
     /* round up to next multiple of NPB, since we allocate multiple pages per chunk */
     abuffers = ((abuffers - 1) | (NPB - 1)) + 1;
-#if defined(AFS_USEBUFFERS)
-    afs_max_buffers = abuffers;
-#else
     afs_max_buffers = abuffers << 2;		/* possibly grow up to 4 times as big */
-#endif
     LOCK_INIT(&afs_bufferLock, "afs_bufferLock");
     Buffers =
 	(struct buffer *)afs_osi_Alloc(afs_max_buffers * sizeof(struct buffer));
@@ -140,12 +128,7 @@ DInit(int abuffers)
     for (i = 0; i < abuffers; i++) {
 	if ((i & (NPB - 1)) == 0) {
 	    /* time to allocate a fresh buffer */
-#if defined(AFS_USEBUFFERS)
-	    tub = geteblk(AFS_BUFFER_PAGESIZE * NPB);
-	    BufferData = (char *)tub->b_un.b_addr;
-#else
 	    BufferData = (char *) afs_osi_Alloc(AFS_BUFFER_PAGESIZE * NPB);
-#endif
 	}
 	/* Fill in each buffer with an empty indication. */
 	tb = &Buffers[i];
@@ -153,12 +136,6 @@ DInit(int abuffers)
 	afs_reset_inode(&tb->inode);
 	tb->accesstime = 0;
 	tb->lockers = 0;
-#if defined(AFS_USEBUFFERS)
-	if ((i & (NPB - 1)) == 0)
-	    tb->bufp = tub;
-	else
-	    tb->bufp = 0;
-#endif
 	tb->data = &BufferData[AFS_BUFFER_PAGESIZE * (i & (NPB - 1))];
 	tb->hashIndex = 0;
 	tb->dirty = 0;
@@ -599,18 +576,7 @@ shutdown_bufferpackage(void)
 	dinit_flag = 0;
 	tp = Buffers;
 	for (i = 0; i < nbuffers; i += NPB, tp += NPB) {
-#if defined(AFS_USEBUFFERS)
-	    /* The following check shouldn't be necessary and it will be removed soon */
-	    if (!tp->bufp)
-		afs_warn
-		    ("afs: shutdown_bufferpackage: bufp == 0!! Shouldn't happen\n");
-	    else {
-		brelse(tp->bufp);
-		tp->bufp = 0;
-	    }
-#else
 	    afs_osi_Free(tp->data, NPB * AFS_BUFFER_PAGESIZE);
-#endif
 	}
 	afs_osi_Free(Buffers, nbuffers * sizeof(struct buffer));
 	nbuffers = 0;
