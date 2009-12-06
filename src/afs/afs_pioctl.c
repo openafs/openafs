@@ -3896,7 +3896,7 @@ DECL_PIOCTL(PSetRxkcrypt)
 #define	PIOCTL_HEADER	6
 static int
 HandleClientContext(struct afs_ioctl *ablob, int *com,
-		    afs_ucred_t **acred, AFS_UCRED *credp)
+		    afs_ucred_t **acred, afs_ucred_t *credp)
 {
     char *ain, *inData;
     afs_uint32 hostaddr;
