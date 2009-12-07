@@ -1243,6 +1243,8 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, afs_ucred_t *acr
 	    tryEvalOnly = 1;
 	if (strcmp(aname, "Contents") == 0)
 	    tryEvalOnly = 1;
+	if (strncmp(aname, "._", 2) == 0)
+	    tryEvalOnly = 1;
     }
 #endif
 
