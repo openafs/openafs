@@ -2164,8 +2164,10 @@ cm_BPlusEnumAlloc(afs_uint32 entries)
     else
         size = sizeof(cm_direnum_t)+(entries-1)*sizeof(cm_direnum_entry_t);
     enump = (cm_direnum_t *)malloc(size);
-    memset(enump, 0, size);
-    enump->count = entries;
+    if (enump) {
+        memset(enump, 0, size);
+        enump->count = entries;
+    }
     return enump;
 }
 
@@ -2340,6 +2342,8 @@ cm_BPlusDirEnumBulkStat(cm_direnum_t *enump)
         return 0;
 
     bsp = malloc(sizeof(cm_bulkStat_t));
+    if (!bsp)
+        return ENOMEM;
     memset(bsp, 0, sizeof(cm_bulkStat_t));
 
     for ( count = 0; count < enump->count; count++ ) {
@@ -2400,6 +2404,8 @@ cm_BPlusDirEnumBulkStatNext(cm_direnum_t *enump)
         return 0;
 
     bsp = malloc(sizeof(cm_bulkStat_t));
+    if (!bsp)
+        return ENOMEM;
     memset(bsp, 0, sizeof(cm_bulkStat_t));
 
     for ( count = enump->next; count < enump->count; count++ ) {
