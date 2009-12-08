@@ -149,7 +149,7 @@ Don't do this until you read cautions, above.
 
 =head1 PRIVILEGE REQUIRED
 
-The issuer must be logged in as the superuser C<root> on a file server
+The issuer must be logged in as the superuser C<root> on a database server
 machine to use B<pt_util>.
 
 =head1 SEE ALSO
