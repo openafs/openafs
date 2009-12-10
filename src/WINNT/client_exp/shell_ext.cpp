@@ -15,6 +15,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/afs_consts.h>
 }
 
 #include <atlconv.h>
@@ -46,7 +47,6 @@ ULONG nICRefCount=0;
 ULONG nTPRefCount=0;
 ULONG nXPRefCount=0;
 
-#define MAXSIZE 2048 /* most I'll get back from PIOCTL */
 #define PCCHAR(str)	((char *)(const char *)str)
 static char space[MAXSIZE];
 

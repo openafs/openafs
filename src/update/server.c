@@ -465,7 +465,7 @@ update_SendDirInfo(char *name,		/* Name of dir to enumerate */
     struct dirent *dp;
     FILE *stream;
     struct stat tstatus;
-    char filename[MAXSIZE], dirInfoFile[MAXSIZE];
+    char filename[MAXFNSIZE], dirInfoFile[MAXFNSIZE];
     int fd, tfd, errcode, error, err;
 
     error = 0;
@@ -487,7 +487,7 @@ update_SendDirInfo(char *name,		/* Name of dir to enumerate */
 		goto fail;
 	    }
 	    if ((tstatus.st_mode & S_IFMT) != S_IFDIR) {	/* not a directory */
-		char dirEntry[MAXSIZE];
+		char dirEntry[MAXFNSIZE];
 
 		strcpy(dirEntry, origDir);
 		strcat(dirEntry, "/");

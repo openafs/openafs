@@ -111,7 +111,7 @@ main(int argc, char **argv)
 
     afs_uint32 mode;
     int error;
-    char hostname[MAXSIZE];
+    char hostname[MAXFNSIZE];
     FILE *stream;
     afs_int32 time, length, atime;
     struct filestr *df;
@@ -122,7 +122,7 @@ main(int argc, char **argv)
     int a, cnt;
     rxkad_level level;
 
-    char dirbuf[MAXSIZE], filename[MAXSIZE];
+    char dirbuf[MAXFNSIZE], filename[MAXFNSIZE];
     struct filestr *dirname, *ModFiles, *okhostfiles;
 #ifdef	AFS_AIX32_ENV
     /*
@@ -347,7 +347,7 @@ main(int argc, char **argv)
 	    {			/*delete all the redundant files on the client */
 		DIR *dirp;
 		struct dirent *dp;
-		char filename[MAXSIZE];
+		char filename[MAXFNSIZE];
 
 		dirp = opendir(curDir);
 		if (dirp == 0) {
@@ -602,7 +602,7 @@ NotOnHost(char *filename, struct filestr *okhostfiles)
 static int
 RenameNewFiles(struct filestr *modFiles)
 {
-    char newname[MAXSIZE];
+    char newname[MAXFNSIZE];
     char *fname;
     int errcode = 0;
     struct filestr *tf;
@@ -656,7 +656,7 @@ GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
 #else
     struct timeval tvp[2];
 #endif
-    char newfile[MAXSIZE];
+    char newfile[MAXFNSIZE];
 
     /* construct local path from canonical (wire-format) path */
     errcode = ConstructLocalPath(filename, "/", &lfile);

@@ -35,9 +35,9 @@
 #include <afs/afsint.h>
 #include <afs/prs_fs.h>
 #include <afs/com_err.h>
+#include <afs/afs_consts.h>
 
 #define MAXNAME 100
-#define	MAXSIZE	2048
 
 #undef USS_ACL_DB
 

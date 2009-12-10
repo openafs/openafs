@@ -73,6 +73,7 @@
 #include <afs/afsutil.h>
 #include <rx/rx.h>
 #include <rx/xdr.h>
+#include <afs/afs_consts.h>
 #include <afs/afscbint.h>
 #include <afs/vldbint.h>
 #include <afs/vlserver.h>
@@ -99,7 +100,6 @@
 #include <des_prototypes.h>
 #include <rx_prototypes.h>
 #include "../rxkad/md5.h"
-#define	MAXHOSTS 13
 #ifdef O_LARGEFILE
 #define afs_stat        stat64
 #define afs_fstat       fstat64

@@ -10,6 +10,7 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/com_err.h>
+#include <afs/afs_consts.h>
 
 #include <windows.h>
 #include <stdlib.h>
@@ -29,7 +30,6 @@
 #include "cmd.h"
 
 #define MAXNAME 100
-#define	MAXSIZE	2048
 #define MAXINSIZE 1300    /* pioctl complains if data is larger than this */
 
 static char space[MAXSIZE];

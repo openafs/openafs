@@ -35,11 +35,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <afs/sys_prototypes.h>
+#include <afs/afs_consts.h>
 
 #include "kkids.h"
 
 #define MAXNAME 100
-#define MAXSIZE 2048
 
 static int using_child = 0;
 static FILE *childin, *childout;	/* file pointers on pipe to kpwvalid */

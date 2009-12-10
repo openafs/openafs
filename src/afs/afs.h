@@ -14,8 +14,10 @@
  */
 #ifdef KDUMP_KERNEL
 #include <afs/afs_args.h>
+#include <afs/afs_consts.h>
 #else
 #include "afs/afs_args.h"
+#include "afs/afs_consts.h"
 #endif
 
 /*
@@ -69,9 +71,6 @@ extern int afs_shuttingdown;
 
 /* The basic defines for the Andrew file system
     better keep things powers of two so "& (foo-1)" hack works for masking bits */
-#define	MAXHOSTS	13	/* max hosts per single volume */
-#define	OMAXHOSTS	 8	/* backwards compatibility */
-#define MAXCELLHOSTS	 8	/* max vldb servers per cell */
 #define	NBRS		15	/* max number of queued daemon requests */
 #define	NUSERS		16	/* hash table size for unixuser table */
 #define	NSERVERS	16	/* hash table size for server table */

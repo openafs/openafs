@@ -9,7 +9,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
-
+#include <afs/afs_consts.h>
 
 #include <errno.h>
 #include <sys/param.h>
@@ -38,8 +38,6 @@
  */
 
 #define	MAXNAME		100
-#define	MAXSIZE		2048
-#define	MAXHOSTS	8	/* XXX HARD Limit limitation XXX */
 #define	MAXGCSIZE	16
 
 struct Acl {

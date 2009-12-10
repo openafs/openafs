@@ -23,6 +23,7 @@
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>
 #include <afs/auth.h>
+#include <afs/afs_consts.h>
 #include "kautils.h"
 
 
@@ -296,7 +297,6 @@ CheckAuth2(server)
 /* Stolen from the "fs" command. */
 
 #define MAXNAME 100
-#define	MAXSIZE	2048
 
 static void
 ListCellsCmd()

@@ -35,8 +35,8 @@
 #include <afs/cmd.h>
 #include <strings.h>
 #include <afs/com_err.h>
+#include <afs/afs_consts.h>
 
-#define	MAXSIZE	2048
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
 #define VMSGSIZE 128		/* size of msg buf in volume hdr */
 

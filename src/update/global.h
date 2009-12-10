@@ -15,7 +15,7 @@
 #endif
 
 #define TIMEOUT 	300	/*interval after which the files are resynch'ed */
-#define MAXSIZE 	1024	/*max size of filenames */
+#define MAXFNSIZE 	1024	/*max size of filenames */
 #define	MAXENTRIES	20
 #define UPDATEERR 	100
 

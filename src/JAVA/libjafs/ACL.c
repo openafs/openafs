@@ -31,6 +31,7 @@
 #include <afs/vice.h>
 #include <netinet/in.h>
 #include <afs/venus.h>
+#include <afs/afs_consts.h>
 #include <afs/afs_args.h>
 
 #include "GetNativeString.h"
@@ -40,10 +41,7 @@
 */
 
 /* just for debugging */
-#define	MAXHOSTS 13
-#define	OMAXHOSTS 8
 #define MAXNAME 100
-#define	MAXSIZE	2048
 #define MAXINSIZE 1300    /* pioctl complains if data is larger than this */
 #define VMSGSIZE 128      /* size of msg buf in volume hdr */
 

@@ -20,6 +20,7 @@
 #include <netinet/in.h>
 #include <afs/venus.h>
 #include <afs/cmd.h>
+#include <afs/afs_consts.h>
 
 #ifdef notdef
 #include <afs/vice.h>
@@ -32,7 +33,6 @@
 #endif
 #include <strings.h>
 
-#define MAXSIZE 2048		/* most I'll get back from PIOCTL */
 
 
 static char pn[] = "cnvldb";

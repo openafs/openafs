@@ -26,12 +26,12 @@
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/com_err.h>
+#include <afs/afs_consts.h>
 #include <afs/sys_prototypes.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
 
-#define	MAXSIZE	2048
 static char space[MAXSIZE];
 
 int

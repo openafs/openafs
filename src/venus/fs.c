@@ -11,6 +11,7 @@
 #include <afs/param.h>
 
 
+#include <afs/afs_consts.h>
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
 #include <sys/ioctl.h>
@@ -24,6 +25,7 @@
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/com_err.h>
+#include <afs/afs_consts.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
@@ -50,12 +52,8 @@
 #include <afs/ptuser.h>
 #include <afs/afsutil.h>
 #include <afs/sys_prototypes.h>
-    
-#define	MAXHOSTS 13
-#define	OMAXHOSTS 8
-#define MAXCELLHOSTS 8
+
 #define MAXNAME 100
-#define	MAXSIZE	2048
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
 #define VMSGSIZE 128		/* size of msg buf in volume hdr */
 

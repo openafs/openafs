@@ -20,7 +20,6 @@ extern "C" {
 #include "make_symbolic_link_dlg.h"
 #include "gui2fs.h"
 #include "msgs.h"
-#define MAXSIZE 2048 /* most I'll get back from PIOCTL */
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

@@ -24,6 +24,7 @@
 
 #include <osi.h>
 #include <afsint.h>
+#include <afs/afs_consts.h>
 #include <afs/cellconfig.h>
 #include <afs/ptserver.h>
 #include <afs/ptuser.h>
@@ -36,11 +37,7 @@
 #include "afsd.h"
 #include "cm_ioctl.h"
 
-#define	MAXHOSTS 13
-#define	OMAXHOSTS 8
-#define MAXCELLHOSTS 8
 #define MAXNAME 100
-#define	MAXSIZE	2048
 #define MAXINSIZE 1300    /* pioctl complains if data is larger than this */
 #define VMSGSIZE 128      /* size of msg buf in volume hdr */
 #define CELL_MAXNAMELEN		256

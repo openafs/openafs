@@ -41,6 +41,7 @@ afszcm.cat: afs_trace.msf
 	esac
 
 depinstall: afszcm.cat AFS_component_version_number.c \
+	${TOP_INCDIR}/afs/afs_consts.h \
 	${TOP_INCDIR}/afs/afs.h \
 	${TOP_INCDIR}/afs/osi_inode.h \
 	${TOP_INCDIR}/afs/afs_stats.h \
@@ -48,6 +49,9 @@ depinstall: afszcm.cat AFS_component_version_number.c \
 	${TOP_INCDIR}/afs/nfsclient.h \
 	${TOP_INCDIR}/afs/unified_afs.h \
 	${TOP_INCDIR}/afs/sysctl.h
+
+${TOP_INCDIR}/afs/afs_consts.h: afs_consts.h
+	${INSTALL_DATA} $? $@
 
 ${TOP_INCDIR}/afs/afs.h: afs.h
 	${INSTALL_DATA} $? $@
@@ -73,6 +77,7 @@ ${TOP_INCDIR}/afs/unified_afs.h: unified_afs.h
 install: unified_afs.h
 	${INSTALL} -d ${DESTDIR}${includedir}/afs
 	${INSTALL_DATA} afs.h ${DESTDIR}${includedir}/afs/afs.h
+	${INSTALL_DATA} afs_consts.h ${DESTDIR}${includedir}/afs/afs_consts.h
 	${INSTALL_DATA} afs_stats.h ${DESTDIR}${includedir}/afs/afs_stats.h
 	${INSTALL_DATA} exporter.h ${DESTDIR}${includedir}/afs/exporter.h
 	${INSTALL_DATA} nfsclient.h ${DESTDIR}${includedir}/afs/nfsclient.h
@@ -98,6 +103,7 @@ install: unified_afs.h
 dest: unified_afs.h
 	${INSTALL} -d ${DEST}/include/afs
 	${INSTALL_DATA} afs.h ${DEST}/include/afs/afs.h
+	${INSTALL_DATA} afs_consts.h ${DEST}/include/afs/afs_consts.h
 	${INSTALL_DATA} afs_stats.h ${DEST}/include/afs/afs_stats.h
 	${INSTALL_DATA} exporter.h ${DEST}/include/afs/exporter.h
 	${INSTALL_DATA} nfsclient.h ${DEST}/include/afs/nfsclient.h

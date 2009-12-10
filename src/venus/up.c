@@ -47,6 +47,7 @@
 #include <afs/venus.h>
 #include <afs/sys_prototypes.h>
 #include <afs/afsutil.h>
+#include <afs/afs_consts.h>
 
 /* ************************************************************* */
 
@@ -64,7 +65,6 @@ short setacl = 1;
 short oldAcl = 0;
 char file1[MAXPATHLEN], file2[MAXPATHLEN];
 
-#define	MAXSIZE	2048
 static char space[MAXSIZE];
 
 struct OldAcl {

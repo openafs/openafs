@@ -27,7 +27,6 @@
 #include "vlserver.h"
 #include "cnvldb.h"		/* CHANGEME! */
 
-#define MAXSIZE 2048		/* most I'll get back from PIOCTL */
 #define	BADSERVERID	255	/* XXX */
 
 
