@@ -28,10 +28,12 @@ static struct ctl_table_header *afs_sysctl = NULL;
 
 static ctl_table afs_sysctl_table[] = {
     {
+#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(SYSCTL_TABLE_CHECKING)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name 	= 1, 
+#endif
 #endif
 	.procname 	= "hm_retry_RO",
 	.data 		= &hm_retry_RO, 
@@ -40,10 +42,12 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(SYSCTL_TABLE_CHECKING)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
         .ctl_name 	= 2, 
+#endif
 #endif
         .procname 	= "hm_retry_RW",
         .data		= &hm_retry_RW,
@@ -52,10 +56,12 @@ static ctl_table afs_sysctl_table[] = {
      	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(SYSCTL_TABLE_CHECKING)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 3, 
+#endif
 #endif
 	.procname	= "hm_retry_int",
 	.data		= &hm_retry_int, 
@@ -64,10 +70,12 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(SYSCTL_TABLE_CHECKING)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 4, 
+#endif
 #endif
 	.procname	= "GCPAGs",
 	.data		= &afs_gcpags, 
@@ -76,10 +84,12 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler 	= &proc_dointvec
     },
     {
+#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(SYSCTL_TABLE_CHECKING)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 5, 
+#endif
 #endif
 	.procname	= "rx_deadtime",
 	.data		= &afs_rx_deadtime, 
@@ -88,10 +98,12 @@ static ctl_table afs_sysctl_table[] = {
 	.proc_handler	= &proc_dointvec
     },
     {
+#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(SYSCTL_TABLE_CHECKING)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 6, 
+#endif
 #endif
 	.procname	= "bkVolPref",
 	.data		= &afs_bkvolpref, 
@@ -104,10 +116,12 @@ static ctl_table afs_sysctl_table[] = {
 
 static ctl_table fs_sysctl_table[] = {
     {
+#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(SYSCTL_TABLE_CHECKING)
 	.ctl_name 	= CTL_UNNUMBERED, 
 #else
 	.ctl_name	= 1, 
+#endif
 #endif
 	.procname	= "afs", 
 	.mode		= 0555, 

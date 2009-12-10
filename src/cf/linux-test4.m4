@@ -1215,3 +1215,17 @@ AC_DEFUN([LINUX_POSIX_TEST_LOCK_CONFLICT_ARG], [
   if test "x$ac_cv_linux_posix_test_lock_conflict_arg" = "xyes"; then
     AC_DEFINE([POSIX_TEST_LOCK_CONFLICT_ARG], 1, [define if posix_test_lock takes a conflict argument])
   fi])
+
+AC_DEFUN([LINUX_STRUCT_CTL_TABLE_HAS_CTL_NAME], [
+  AC_MSG_CHECKING([if struct ctl_table has ctl_name])
+  AC_CACHE_VAL([ac_cv_linux_struct_ctl_table_has_ctl_name], [
+    AC_TRY_KBUILD(
+[#include <linux/sysctl.h>],
+[struct ctl_table _t;
+_t.ctl_name = 0;],
+      ac_cv_linux_struct_ctl_table_has_ctl_name=yes,
+      ac_cv_linux_struct_ctl_table_has_ctl_name=no)])
+  AC_MSG_RESULT($ac_cv_linux_struct_ctl_table_has_ctl_name)
+  if test "x$ac_cv_linux_struct_ctl_table_has_ctl_name" = "xyes"; then
+    AC_DEFINE([STRUCT_CTL_TABLE_HAS_CTL_NAME], 1, [define if struct ctl_table has a ctl_name member])
+  fi])
