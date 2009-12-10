@@ -975,6 +975,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_INIT_WORK_HAS_DATA
 		 LINUX_REGISTER_SYSCTL_TABLE_NOFLAG
 		 LINUX_SYSCTL_TABLE_CHECKING
+		 LINUX_STRUCT_CTL_TABLE_HAS_CTL_NAME
 		 LINUX_HAVE_IGET
 		 if test "x$ac_cv_linux_have_iget" = "xno"; then
 		   AC_DEFINE([LINUX_USE_FH], 1, [define to use linux file handles for cache files])
