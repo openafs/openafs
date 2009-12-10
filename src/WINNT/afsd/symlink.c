@@ -32,7 +32,7 @@
 #define MAXNAME 100
 #define MAXINSIZE 1300    /* pioctl complains if data is larger than this */
 
-static char space[MAXSIZE];
+static char space[AFS_PIOCTL_MAXSIZE];
 static char tspace[1024];
 
 #ifndef WIN32
@@ -68,7 +68,7 @@ static int InAFS(char *apath)
     afs_int32 code;
 
     blob.in_size = 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -86,7 +86,7 @@ IsFreelanceRoot(char *apath)
     afs_int32 code;
 
     blob.in_size = 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl_utf8(apath, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -398,9 +398,9 @@ static ListLinkCmd(struct cmd_syndesc *as, void *arock)
 	}
 	blob.in = last_component;
 	blob.in_size = (long)strlen(last_component)+1;
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.out = space;
-	memset(space, 0, MAXSIZE);
+	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
 	code = pioctl_utf8(parent_dir, VIOC_LISTSYMLINK, &blob, 1);
 

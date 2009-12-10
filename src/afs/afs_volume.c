@@ -229,7 +229,7 @@ afs_ResetVolumes(struct server *srvp)
     /* Find any volumes residing on this server and flush their state */
     for (j = 0; j < NVOLS; j++) {
 	for (vp = afs_volumes[j]; vp; vp = vp->next) {
-	    for (k = 0; k < MAXHOSTS; k++) {
+	    for (k = 0; k < AFS_MAXHOSTS; k++) {
 		if (!srvp || (vp->serverHost[k] == srvp)) {
 		    vp->serverHost[k] = 0;
 		    afs_ResetVolumeInfo(vp);
@@ -292,7 +292,7 @@ afs_CheckVolumeNames(int flags)
 	    }
 	    /* ??? */
 	    if (flags & (AFS_VOLCHECK_BUSY | AFS_VOLCHECK_FORCE)) {
-		for (j = 0; j < MAXHOSTS; j++)
+		for (j = 0; j < AFS_MAXHOSTS; j++)
 		    tv->status[j] = not_busy;
 	    }
 
@@ -768,7 +768,7 @@ afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
 	    int i;
 	    struct server *sp;
 	    struct srvAddr *sap;
-	    for (i = 0; i < MAXCELLHOSTS; i++) {
+	    for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 		if ((sp = tcell->cellHosts[i]) == NULL)
 		    break;
 		for (sap = sp->addr; sap; sap = sap->next_sa)
@@ -872,7 +872,7 @@ InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
      * struct, we don't deadlock trying to afs_ResetVolumeInfo()
      * this volume.
      */
-    for (j = 0; j < MAXHOSTS; j++) {
+    for (j = 0; j < AFS_MAXHOSTS; j++) {
 	av->serverHost[j] = 0;
     }
 
@@ -901,10 +901,10 @@ InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 	afs_PutServer(ts, WRITE_LOCK);
 	j++;
     }
-    if (j < MAXHOSTS) {
+    if (j < AFS_MAXHOSTS) {
 	av->serverHost[j++] = 0;
     }
-    afs_SortServers(av->serverHost, MAXHOSTS);
+    afs_SortServers(av->serverHost, AFS_MAXHOSTS);
 }				/*InstallVolumeEntry */
 
 
@@ -950,7 +950,7 @@ InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
      * struct, we don't deadlock trying to afs_ResetVolumeInfo()
      * this volume.
      */
-    for (j = 0; j < MAXHOSTS; j++) {
+    for (j = 0; j < AFS_MAXHOSTS; j++) {
 	av->serverHost[j] = 0;
     }
 
@@ -978,10 +978,10 @@ InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 	afs_PutServer(ts, WRITE_LOCK);
 	j++;
     }
-    if (j < MAXHOSTS) {
+    if (j < AFS_MAXHOSTS) {
 	av->serverHost[j++] = 0;
     }
-    afs_SortServers(av->serverHost, MAXHOSTS);
+    afs_SortServers(av->serverHost, AFS_MAXHOSTS);
 }				/*InstallNVolumeEntry */
 
 
@@ -1030,7 +1030,7 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
      * struct, we don't deadlock trying to afs_ResetVolumeInfo()
      * this volume.
      */
-    for (j = 0; j < MAXHOSTS; j++) {
+    for (j = 0; j < AFS_MAXHOSTS; j++) {
 	av->serverHost[j] = 0;
     }
 
@@ -1119,7 +1119,7 @@ InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
 	j++;
     }
 
-    afs_SortServers(av->serverHost, MAXHOSTS);
+    afs_SortServers(av->serverHost, AFS_MAXHOSTS);
 }				/*InstallVolumeEntry */
 
 
@@ -1136,7 +1136,7 @@ afs_ResetVolumeInfo(struct volume *tv)
     AFS_STATCNT(afs_ResetVolumeInfo);
     ObtainWriteLock(&tv->lock, 117);
     tv->states |= VRecheck;
-    for (i = 0; i < MAXHOSTS; i++)
+    for (i = 0; i < AFS_MAXHOSTS; i++)
 	tv->status[i] = not_busy;
     if (tv->name) {
 	afs_osi_Free(tv->name, strlen(tv->name) + 1);

@@ -106,7 +106,7 @@ afs_Conn(register struct VenusFid *afid, register struct vrequest *areq,
      * in this time).
      */
     for (notbusy = not_busy; (!lowp && (notbusy <= end_not_busy)); notbusy++) {
-	for (i = 0; i < MAXHOSTS && tv->serverHost[i]; i++) {
+	for (i = 0; i < AFS_MAXHOSTS && tv->serverHost[i]; i++) {
 	    if (((areq->tokenError > 0)||(areq->idleError > 0)) 
 		&& (areq->skipserver[i] == 1))
 		continue;
@@ -368,7 +368,7 @@ afs_ConnByMHosts(struct server *ahosts[], unsigned short aport,
 
     /* try to find any connection from the set */
     AFS_STATCNT(afs_ConnByMHosts);
-    for (i = 0; i < MAXCELLHOSTS; i++) {
+    for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	if ((ts = ahosts[i]) == NULL)
 	    break;
 	tconn = afs_ConnByHost(ts, aport, acell, areq, 0, locktype);

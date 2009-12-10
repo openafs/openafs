@@ -40,7 +40,7 @@ statfile(char *path, char *cellname, afs_uint32 * server, struct AFSFid *f)
 
     struct ViceIoctl v;
     struct VenusFid vf;
-    afs_int32 srvbuf[MAXHOSTS];
+    afs_int32 srvbuf[AFS_MAXHOSTS];
     int code;
 
     if (!strncmp(path, "@afs:", 5)) {

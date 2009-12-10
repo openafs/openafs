@@ -798,7 +798,7 @@ get_vnode_hosts(char *fname, char **cellp, afs_int32 *hosts, AFSFid *Fid,
             i++;
         }
     }
-    for (; i<MAXHOSTS; i++) *h++ = 0;
+    for (; i<AFS_MAXHOSTS; i++) *h++ = 0;
     return 0;
 }
 
@@ -807,7 +807,7 @@ get_vnode_hosts(char *fname, char **cellp, afs_int32 *hosts, AFSFid *Fid,
  *     offer it, and the FID.
  */
 afs_int32
-get_file_cell(char *fn, char **cellp, afs_int32 hosts[MAXHOSTS], AFSFid *Fid,
+get_file_cell(char *fn, char **cellp, afs_int32 hosts[AFS_MAXHOSTS], AFSFid *Fid,
 	      struct AFSFetchStatus *Status, afs_int32 create)
 {
     afs_int32 code;
@@ -865,7 +865,7 @@ get_file_cell(char *fn, char **cellp, afs_int32 hosts[MAXHOSTS], AFSFid *Fid,
 	        afs_com_err(pnp, code, (char *) 0);
 	} else {
 	    Tmpafs_int32 = (afs_int32 *)buf;
-	    for (j=0;j<MAXHOSTS;++j) {
+	    for (j=0;j<AFS_MAXHOSTS;++j) {
 		hosts[j] = Tmpafs_int32[j];
 		if (!Tmpafs_int32[j])
 		    break;
@@ -926,7 +926,7 @@ readFile(struct cmd_syndesc *as, void *unused)
     char *fname;
     char *cell = 0;
     afs_int32 code;
-    afs_int32 hosts[MAXHOSTS];
+    afs_int32 hosts[AFS_MAXHOSTS];
     AFSFid Fid;
     int i, j;
     struct rx_connection *RXConn;
@@ -977,7 +977,7 @@ readFile(struct cmd_syndesc *as, void *unused)
 	return ENOENT;
     }
     cl = FindCell(cell);
-    for (j=0;j<MAXHOSTS;++j) {
+    for (j=0;j<AFS_MAXHOSTS;++j) {
 	int useHost;
 
         if (first && as->parms[6].items) {
@@ -1130,7 +1130,7 @@ writeFile(struct cmd_syndesc *as, void *unused)
     char *fname = NULL;
     char *cell = 0;
     afs_int32 code, localcode = 0;
-    afs_int32 hosts[MAXHOSTS];
+    afs_int32 hosts[AFS_MAXHOSTS];
     afs_uint32 useHost;
     AFSFid Fid;
     int i;

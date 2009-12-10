@@ -89,7 +89,7 @@ static int c_show(struct seq_file *m, void *p)
 	seq_printf(m, ">%s #(%d/%d)\n", tc->cellName,
 		   tc->cellNum, tc->cellIndex);
 
-	for (j = 0; j < MAXCELLHOSTS; j++) {
+	for (j = 0; j < AFS_MAXCELLHOSTS; j++) {
 		afs_uint32 addr;
 
 		if (!tc->cellHosts[j]) break;
@@ -282,7 +282,7 @@ length)
             }
         }
 
-        for (cnt = 0; cnt < MAXCELLHOSTS; cnt++) {
+        for (cnt = 0; cnt < AFS_MAXCELLHOSTS; cnt++) {
             if (!tc->cellHosts[cnt]) break;
             pos += 90;
             if (pos <= offset) {

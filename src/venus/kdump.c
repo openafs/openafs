@@ -2565,7 +2565,7 @@ print_cell(int kmem, struct cell *clep, struct cell *ptr, int pnt)
 	    printf("\tlinked cellp %lx\n", clep->lcellp);
 #endif
 	printf("\tCell's servers: ");
-	for (i = 0; i < MAXCELLHOSTS; i++) {
+	for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	    if (pretty && (clep->cellHosts[i] == 0))
 		break;
 	    printf("[%lx] ", clep->cellHosts[i]);
@@ -2708,12 +2708,12 @@ print_volume(int kmem, struct volume *vep, struct volume *ptr, int pnt)
 	 vep->states);
 #endif
     printf("\tVolume's statuses: ");
-    for (i = 0; i < MAXHOSTS && vep->serverHost[i]; i++)
+    for (i = 0; i < AFS_MAXHOSTS && vep->serverHost[i]; i++)
 	printf("[%d] ", vep->status[i]);
     printf("\n");
 
     printf("\tVolume's servers: ");
-    for (i = 0; i < MAXHOSTS && vep->serverHost[i]; i++)
+    for (i = 0; i < AFS_MAXHOSTS && vep->serverHost[i]; i++)
 	printf("[%lx] ", vep->serverHost[i]);
     printf("\n");
 

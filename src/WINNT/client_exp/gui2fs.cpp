@@ -61,7 +61,7 @@ extern "C" {
 #define MAXHOSTCHARS		64
 #define MAXHOSTSPERCELL		8
 
-static char space[MAXSIZE];
+static char space[AFS_PIOCTL_MAXSIZE];
 static char tspace[1024];
 
 static struct ubik_client *uclient;
@@ -271,7 +271,7 @@ void WhichCell(CStringArray& files)
 
     for (int i = 0; i < files.GetSize(); i++) {
         blob.in_size = 0;
-        blob.out_size = MAXSIZE;
+        blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.out = space;
 
         code = pioctl_T(files[i], VIOC_FILE_CELL_NAME, &blob, 1);
@@ -282,7 +282,7 @@ void WhichCell(CStringArray& files)
             } else
                 results.Add(GetAfsError(errno));
         } else {
-            space[MAXSIZE - 1] = '\0';
+            space[AFS_PIOCTL_MAXSIZE - 1] = '\0';
             results.Add(Utf8ToCString(space));
         }
     }       
@@ -303,7 +303,7 @@ void WSCellCmd()
 
     blob.in_size = 0;
     blob.in = (char *) 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl((char *) 0, VIOC_GET_WS_CELL, &blob, 1);
@@ -363,7 +363,7 @@ void WhereIs(CStringArray& files)
     HOURGLASS hourglass;
 
     for (int i = 0; i < files.GetSize(); i++) {
-        blob.out_size = MAXSIZE;
+        blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.in_size = 0;
         blob.out = space;
         memset(space, 0, sizeof(space));
@@ -379,7 +379,7 @@ void WhereIs(CStringArray& files)
         BOOL bFirst = TRUE;
         str = "";
 
-        for (int j = 0; j < MAXHOSTS; j++) {
+        for (int j = 0; j < AFS_MAXHOSTS; j++) {
             if (hosts[j] == 0)
                 break;
             char *hostName = hostutil_GetNameByINet(hosts[j]);
@@ -606,8 +606,8 @@ CString GetRightsString(LONG arights, int dfs)
 
 char *AclToString(struct Acl *acl)
 {
-    static char mydata[MAXSIZE];
-    char tstring[MAXSIZE];
+    static char mydata[AFS_PIOCTL_MAXSIZE];
+    char tstring[AFS_PIOCTL_MAXSIZE];
     char dfsstring[30];
     struct AclEntry *tp;
     
@@ -807,7 +807,7 @@ void CleanACL(CStringArray& names)
     HOURGLASS hourglass;
 
     for (int i = 0; i < names.GetSize(); i++) {
-        blob.out_size = MAXSIZE;
+        blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.in_size = 0;
         blob.out = space;
 
@@ -861,7 +861,7 @@ BOOL GetRights(const CString& strDir, CStringArray& strNormal, CStringArray& str
 
     HOURGLASS hourglass;
 
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = idf;
     blob.in = blob.out = space;
 	
@@ -1057,7 +1057,7 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
     HOURGLASS hourglass;
 
     // Get ACL to copy to
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = idf;
     blob.in = blob.out = space;
 	
@@ -1188,7 +1188,7 @@ IsFreelanceRoot(const CString& apath)
     afs_int32 code;
 
     blob.in_size = 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl_T(apath, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -1469,9 +1469,9 @@ BOOL ListMount(CStringArray& files)
 
         blob.in_size = last_component.GetLength() + 1;
         blob.in = last_component.GetBuffer();
-        blob.out_size = MAXSIZE;
+        blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.out = space;
-        memset(space, 0, MAXSIZE);
+        memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
         code = pioctl_T(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
 
@@ -1479,7 +1479,7 @@ BOOL ListMount(CStringArray& files)
 
         if (code == 0) {
             int nPos;
-            space[MAXSIZE - 1] = '\0';
+            space[AFS_PIOCTL_MAXSIZE - 1] = '\0';
             nPos = strlen(space) - 1;
             if (space[nPos] == '.')
                 space[nPos] = 0;
@@ -1638,9 +1638,9 @@ BOOL IsSymlink(const CString& strName)
 
     blob.in_size = ustrLast.GetLength() + 1;
     blob.in = ustrLast.GetBuffer();
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
-    memset(space, 0, MAXSIZE);
+    memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
     code = pioctl_T(strParent, VIOC_LISTSYMLINK, &blob, 1);
 
@@ -1761,7 +1761,7 @@ BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo)
 	return TRUE;
      */
 
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = 0;
     blob.out = space;
 
@@ -1795,7 +1795,7 @@ BOOL SetVolInfo(CVolInfo& volInfo)
 
     HOURGLASS hourglass;
 
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = sizeof(*status) + 3;	/* for the three terminating nulls */
     blob.out = space;
     blob.in = space;
@@ -1855,7 +1855,7 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
     blob.in_size = sizeof(struct chservinfo);
     blob.in = (caddr_t)&checkserv;
 
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
     memset(space, 0, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
 
@@ -1891,7 +1891,7 @@ BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bF
     }
 
     CStringArray servers;
-    for (j = 0; j < MAXHOSTS; j++) {
+    for (j = 0; j < AFS_MAXHOSTS; j++) {
         memcpy(&temp, space + j * sizeof(LONG), sizeof(LONG));
         if (temp == 0)
             break;
@@ -2094,9 +2094,9 @@ void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
     }
     blob.in = last_component;
     blob.in_size = strlen(last_component)+1;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
-    memset(space, 0, MAXSIZE);
+    memset(space, 0, AFS_PIOCTL_MAXSIZE);
     if ((code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1)))
         strcpy(space,"???");
     ASSERT(strlen(space)<MAX_PATH);
@@ -2123,9 +2123,9 @@ BOOL ListSymlink(CStringArray& files)
 
         blob.in_size = ustrLast.GetLength() + 1;
         blob.in = ustrLast.GetBuffer();
-        blob.out_size = MAXSIZE;
+        blob.out_size = AFS_PIOCTL_MAXSIZE;
         blob.out = space;
-        memset(space, 0, MAXSIZE);
+        memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
         code = pioctl_T(strParent, VIOC_LISTSYMLINK, &blob, 1);
 
@@ -2135,7 +2135,7 @@ BOOL ListSymlink(CStringArray& files)
             CString syml;
             int len;
 
-            space[MAXSIZE - 1] = '\0';
+            space[AFS_PIOCTL_MAXSIZE - 1] = '\0';
             syml = Utf8ToCString(space);
             len = syml.GetLength();
 

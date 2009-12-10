@@ -65,7 +65,7 @@ short setacl = 1;
 short oldAcl = 0;
 char file1[MAXPATHLEN], file2[MAXPATHLEN];
 
-static char space[MAXSIZE];
+static char space[AFS_PIOCTL_MAXSIZE];
 
 struct OldAcl {
     int nplus;
@@ -751,9 +751,9 @@ isMountPoint(char *name, struct ViceIoctl *blob)
 
     blob->in = last_component;
     blob->in_size = strlen(last_component) + 1;
-    blob->out_size = MAXSIZE;
+    blob->out_size = AFS_PIOCTL_MAXSIZE;
     blob->out = space;
-    memset(space, 0, MAXSIZE);
+    memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
     code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, blob, 0);
 

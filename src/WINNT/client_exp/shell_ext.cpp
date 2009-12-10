@@ -48,7 +48,7 @@ ULONG nTPRefCount=0;
 ULONG nXPRefCount=0;
 
 #define PCCHAR(str)	((char *)(const char *)str)
-static char space[MAXSIZE];
+static char space[AFS_PIOCTL_MAXSIZE];
 
 static BOOL IsADir(const CString& strName)
 {

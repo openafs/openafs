@@ -212,7 +212,7 @@ afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato)
     if (!afrom->initd)
 	return;
     afs_FinalizeReq(ato);
-    while (i < MAXHOSTS) {
+    while (i < AFS_MAXHOSTS) {
 	ato->skipserver[i] = afrom->skipserver[i];
 	i++;
     }
@@ -238,7 +238,7 @@ afs_FinalizeReq(register struct vrequest *areq)
     AFS_STATCNT(afs_FinalizeReq);
     if (areq->initd)
 	return;
-    while (i < MAXHOSTS) {
+    while (i < AFS_MAXHOSTS) {
 	areq->skipserver[i] = 0;
 	i++;
     }

@@ -239,7 +239,7 @@ struct vrequest {
     char permWriteError;	/* fileserver returns permenent error. */
     char tokenError;            /* a token error other than expired. */
     char idleError;             /* the server idled too long */
-    char skipserver[MAXHOSTS];
+    char skipserver[AFS_MAXHOSTS];
 };
 #define VOLMISSING 1
 #define VOLBUSY 2
@@ -272,7 +272,7 @@ struct cell {
     char *cellName;		/* char string name of cell */
     afs_int32 cellIndex;	/* sequence number */
     afs_int32 cellNum;		/* semi-permanent cell number */
-    struct server *cellHosts[MAXCELLHOSTS];	/* volume *location* hosts */
+    struct server *cellHosts[AFS_MAXCELLHOSTS];	/* volume *location* hosts */
     struct cell *lcellp;	/* Associated linked cell */
     u_short fsport;		/* file server port */
     u_short vlport;		/* volume server port */
@@ -513,8 +513,8 @@ struct volume {
     afs_rwlock_t lock;		/* the lock for this structure */
     afs_int32 volume;		/* This volume's ID number. */
     char *name;			/* This volume's name, or 0 if unknown */
-    struct server *serverHost[MAXHOSTS];	/* servers serving this volume */
-    enum repstate status[MAXHOSTS];	/* busy, offline, etc */
+    struct server *serverHost[AFS_MAXHOSTS];	/* servers serving this volume */
+    enum repstate status[AFS_MAXHOSTS];	/* busy, offline, etc */
     struct VenusFid dotdot;	/* dir to access as .. */
     struct VenusFid mtpoint;	/* The mount point for this volume. */
     afs_int32 rootVnode, rootUnique;	/* Volume's root fid */

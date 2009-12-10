@@ -87,7 +87,7 @@ static int
 afs_dynrootCellInit(void)
 {
     if (!afs_dynrootCell) {
-	afs_int32 cellHosts[MAXCELLHOSTS];
+	afs_int32 cellHosts[AFS_MAXCELLHOSTS];
 	struct cell *tc;
 	int code;
 

@@ -75,7 +75,7 @@ int
 afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 {
     afs_int32 timeout, code;
-    afs_int32 cellHosts[MAXCELLHOSTS];
+    afs_int32 cellHosts[AFS_MAXCELLHOSTS];
 
     if (afsdb_handler_shutdown)
 	return -2;
@@ -91,7 +91,7 @@ afs_AFSDBHandler(char *acellName, int acellNameLen, afs_int32 * kernelMsg)
 	if (timeout)
 	    timeout += osi_Time();
 
-	for (i = 0; i < MAXCELLHOSTS; i++) {
+	for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	    if (i >= hostCount)
 		cellHosts[i] = 0;
 	    else
@@ -943,7 +943,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     /* we don't want to keep pinging old vlservers which were down,
      * since they don't matter any more.  It's easier to do this than
      * to remove the server from its various hash tables. */
-    for (i = 0; i < MAXCELLHOSTS; i++) {
+    for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	if (!tc->cellHosts[i])
 	    break;
 	tc->cellHosts[i]->flags &= ~SRVR_ISDOWN;
@@ -976,7 +976,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     tc->timeout = timeout;
     
     memset(tc->cellHosts, 0, sizeof(tc->cellHosts));
-    for (i = 0; i < MAXCELLHOSTS; i++) {
+    for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	/* Get server for each host and link this cell in.*/	
 	struct server *ts;
 	afs_uint32 temp = acellHosts[i];
@@ -989,7 +989,7 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	tc->cellHosts[i] = ts;
 	afs_PutServer(ts, WRITE_LOCK);
     }
-    afs_SortServers(tc->cellHosts, MAXCELLHOSTS);	/* randomize servers */
+    afs_SortServers(tc->cellHosts, AFS_MAXCELLHOSTS);	/* randomize servers */
 	
     /* New cell: Build and add to LRU cell queue. */
     if (newc) {
@@ -1100,7 +1100,7 @@ afs_RemoveCellEntry(struct server *srvp)
 
     /* Remove the server structure from the cell list - if there */
     ObtainWriteLock(&tc->lock, 200);
-    for (j = k = 0; j < MAXCELLHOSTS; j++) {
+    for (j = k = 0; j < AFS_MAXCELLHOSTS; j++) {
 	if (!tc->cellHosts[j])
 	    break;
 	if (tc->cellHosts[j] != srvp) {
@@ -1110,7 +1110,7 @@ afs_RemoveCellEntry(struct server *srvp)
     if (k == 0) {
 	/* What do we do if we remove the last one? */
     }
-    for (; k < MAXCELLHOSTS; k++) {
+    for (; k < AFS_MAXCELLHOSTS; k++) {
 	tc->cellHosts[k] = 0;
     }
     ReleaseWriteLock(&tc->lock);

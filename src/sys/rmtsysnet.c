@@ -128,7 +128,7 @@ RParseAcl(char *astr)
 void
 RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
 {
-    char tstring[MAXSIZE];
+    char tstring[AFS_PIOCTL_MAXSIZE];
     struct AclEntry *tp;
 
 /* No conversion needed since they're in network order in the first place */

@@ -212,7 +212,7 @@ afs_CheckCallbacks(unsigned int secs)
 		    tvc->cbExpires = tvp->expireTime;	/* XXX race here */
 		} else {
 		    int i;
-		    for (i = 0; i < MAXHOSTS && tvp->serverHost[i]; i++) {
+		    for (i = 0; i < AFS_MAXHOSTS && tvp->serverHost[i]; i++) {
 			if (!(tvp->serverHost[i]->flags & SRVR_ISDOWN)) {
 			    /* What about locking xvcache or vrefcount++ or
 			     * write locking tvc? */

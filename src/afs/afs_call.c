@@ -39,7 +39,7 @@
 #endif
 
 struct afsop_cell {
-    afs_int32 hosts[MAXCELLHOSTS];
+    afs_int32 hosts[AFS_MAXCELLHOSTS];
     char cellName[100];
 };
 

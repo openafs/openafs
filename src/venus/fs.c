@@ -57,7 +57,7 @@
 #define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
 #define VMSGSIZE 128		/* size of msg buf in volume hdr */
 
-static char space[MAXSIZE];
+static char space[AFS_PIOCTL_MAXSIZE];
 static char tspace[1024];
 static struct ubik_client *uclient;
 
@@ -289,7 +289,7 @@ InAFS(char *apath)
     afs_int32 code;
 
     blob.in_size = 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
@@ -705,8 +705,8 @@ QuickPrintSpace(VolumeStatus * status, char *name)
 static char *
 AclToString(struct Acl *acl)
 {
-    static char mydata[MAXSIZE];
-    char tstring[MAXSIZE];
+    static char mydata[AFS_PIOCTL_MAXSIZE];
+    char tstring[AFS_PIOCTL_MAXSIZE];
     char dfsstring[30];
     struct AclEntry *tp;
 
@@ -745,7 +745,7 @@ SetACLCmd(struct cmd_syndesc *as, void *arock)
 	clear = 0;
     plusp = !(as->parms[3].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
 	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
@@ -876,7 +876,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
 	clear = 1;
     else
 	clear = 0;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = idf;
     blob.in = blob.out = space;
     code = pioctl(as->parms[0].items->data, VIOCGETAL, &blob, 1);
@@ -887,7 +887,7 @@ CopyACLCmd(struct cmd_syndesc *as, void *arock)
     fa = ParseAcl(space);
     CleanAcl(fa, as->parms[0].items->data);
     for (ti = as->parms[1].items; ti; ti = ti->next) {
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
 	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
@@ -1051,7 +1051,7 @@ CleanACLCmd(struct cmd_syndesc *as, void *arock)
 
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
@@ -1138,7 +1138,7 @@ ListACLCmd(struct cmd_syndesc *as, void *arock)
 
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = idf;
 	blob.in = blob.out = space;
 	code = pioctl(ti->data, VIOCGETAL, &blob, 1);
@@ -1408,7 +1408,7 @@ SetVolCmd(struct cmd_syndesc *as, void *arock)
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = sizeof(*status) + 3;	/* for the three terminating nulls */
 	blob.out = space;
 	blob.in = space;
@@ -1474,7 +1474,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
 	struct VenusFid vfid;
 
 	/* once per file */
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
@@ -1515,7 +1515,7 @@ ListQuotaCmd(struct cmd_syndesc *as, void *arock)
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
@@ -1545,7 +1545,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	memset(space, 0, sizeof(space));
@@ -1558,7 +1558,7 @@ WhereIsCmd(struct cmd_syndesc *as, void *arock)
 	hosts = (afs_int32 *) space;
 	printf("File %s is on host%s ", ti->data,
 	       (hosts[0] && !hosts[1]) ? "" : "s");
-	for (j = 0; j < MAXHOSTS; j++) {
+	for (j = 0; j < AFS_MAXHOSTS; j++) {
 	    if (hosts[j] == 0)
 		break;
 	    tp = hostutil_GetNameByINet(hosts[j]);
@@ -1585,7 +1585,7 @@ DiskFreeCmd(struct cmd_syndesc *as, void *arock)
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
@@ -1614,7 +1614,7 @@ QuotaCmd(struct cmd_syndesc *as, void *arock)
     SetDotDefault(&as->parms[0].items);
     for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = 0;
 	blob.out = space;
 	code = pioctl(ti->data, VIOCGETVOLSTAT, &blob, 1);
@@ -1737,9 +1737,9 @@ ListMountCmd(struct cmd_syndesc *as, void *arock)
 
 	blob.in = last_component;
 	blob.in_size = strlen(last_component) + 1;
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.out = space;
-	memset(space, 0, MAXSIZE);
+	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_STAT_MT_PT, &blob, 1);
 
@@ -1814,7 +1814,7 @@ defect #3069
 
     if (!cellName) {
 	blob.in_size = 0;
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.out = space;
 	code =
 	    pioctl(Parent(as->parms[0].items->data), VIOC_FILE_CELL_NAME,
@@ -1934,7 +1934,7 @@ CheckServersCmd(struct cmd_syndesc *as, void *arock)
     blob.in_size = sizeof(struct chservinfo);
     blob.in = (caddr_t) & checkserv;
 
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
     memset(space, 0, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
 
@@ -2027,7 +2027,7 @@ MessagesCmd(struct cmd_syndesc *as, void *arock)
     memset(&gagflags, 0, sizeof(struct gaginfo));
     blob.in_size = sizeof(struct gaginfo);
     blob.in = (caddr_t) & gagflags;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
     memset(space, 0, sizeof(afs_int32));	/* so we assure zero when nothing is copied back */
 
@@ -2241,7 +2241,7 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
     for (i = 0;; i++) {
 	tp = space;
 	memcpy(tp, &i, sizeof(afs_int32));
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = sizeof(afs_int32);
 	blob.in = space;
 	blob.out = space;
@@ -2253,8 +2253,8 @@ ListCellsCmd(struct cmd_syndesc *as, void *arock)
 	    return 1;
 	}
 	tp = space;
-	printf("Cell %s on hosts", tp + MAXCELLHOSTS * sizeof(afs_int32));
-	for (j = 0; j < MAXCELLHOSTS; j++) {
+	printf("Cell %s on hosts", tp + AFS_MAXCELLHOSTS * sizeof(afs_int32));
+	for (j = 0; j < AFS_MAXCELLHOSTS; j++) {
 	    afs_int32 addr;
 	    char *name, tbuffer[20];
 
@@ -2287,7 +2287,7 @@ ListAliasesCmd(struct cmd_syndesc *as, void *arock)
     for (i = 0;; i++) {
 	tp = space;
 	memcpy(tp, &i, sizeof(afs_int32));
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 	blob.in_size = sizeof(afs_int32);
 	blob.in = space;
 	blob.out = space;
@@ -2389,8 +2389,8 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
 
     /* Yuck!
      * With the NEWCELL pioctl call, 3.4 clients take an array of
-     * MAXHOSTS (13) servers while 3.5 clients take an array of
-     * MAXCELLHOSTS (8) servers. To determine which we are talking to,
+     * AFS_MAXHOSTS (13) servers while 3.5 clients take an array of
+     * AFS_MAXCELLHOSTS (8) servers. To determine which we are talking to,
      * do a GETCELL pioctl and pass it a magic number. If an array of
      * 8 comes back, its a 3.5 client. If not, its a 3.4 client.
      * If we get back EDOM, there are no cells in the kernel yet,
@@ -2400,7 +2400,7 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
     lp = (afs_int32 *) tp;
     *lp++ = 0;			/* first cell entry */
     *lp = 0x12345678;		/* magic */
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = sizeof(afs_int32) + sizeof(afs_int32);
     blob.in = space;
     blob.out = space;
@@ -2410,11 +2410,11 @@ NewCellCmd(struct cmd_syndesc *as, void *arock)
 	return 1;
     }
     if (code < 1 && errno == EDOM) {
-	scount = MAXHOSTS;
+	scount = AFS_MAXHOSTS;
     } else {
 	tp = space;
-	cellname = tp + MAXCELLHOSTS * sizeof(afs_int32);
-	scount = ((cellname[0] != '\0') ? MAXCELLHOSTS : MAXHOSTS);
+	cellname = tp + AFS_MAXCELLHOSTS * sizeof(afs_int32);
+	scount = ((cellname[0] != '\0') ? AFS_MAXCELLHOSTS : AFS_MAXHOSTS);
     }
 
     /* Now setup and do the NEWCELL pioctl call */
@@ -2556,7 +2556,7 @@ WSCellCmd(struct cmd_syndesc *as, void *arock)
 
     blob.in_size = 0;
     blob.in = NULL;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.out = space;
 
     code = pioctl(NULL, VIOC_GET_WS_CELL, &blob, 1);
@@ -2651,13 +2651,13 @@ SysNameCmd(struct cmd_syndesc *as, void *arock)
     ti = as->parms[0].items;
     blob.in = space;
     blob.out = space;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
     blob.in_size = sizeof(afs_int32);
     input += sizeof(afs_int32);
     for (; ti; ti = ti->next) {
 	setp++;
 	blob.in_size += strlen(ti->data) + 1;
-	if (blob.in_size > MAXSIZE) {
+	if (blob.in_size > AFS_PIOCTL_MAXSIZE) {
 	    fprintf(stderr, "%s: sysname%s too long.\n", pn,
 		    setp > 1 ? "s" : "");
 	    return 1;
@@ -3072,7 +3072,7 @@ SetPrefCmd(struct cmd_syndesc *as, void *arock)
     gblob.in_size = ((char *)&(ssp->servers[0])) - (char *)ssp;
     gblob.in = space;
     gblob.out = space;
-    gblob.out_size = MAXSIZE;
+    gblob.out_size = AFS_PIOCTL_MAXSIZE;
 
 
     if (geteuid()) {
@@ -3198,10 +3198,10 @@ GetPrefCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = sizeof(struct sprefrequest);
 	blob.in = (char *)in;
 	blob.out = space;
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 
 	in->num_servers =
-	    (MAXSIZE - 2 * sizeof(short)) / sizeof(struct spref);
+	    (AFS_PIOCTL_MAXSIZE - 2 * sizeof(short)) / sizeof(struct spref);
 	in->flags = vlservers;
 
 	code = pioctl(0, VIOC_GETSPREFS, &blob, 1);
@@ -3880,10 +3880,10 @@ GetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
 	blob.in_size = sizeof(struct sprefrequest);
 	blob.in = (char *)in;
 	blob.out = space;
-	blob.out_size = MAXSIZE;
+	blob.out_size = AFS_PIOCTL_MAXSIZE;
 
 	in->num_servers =
-	    (MAXSIZE - 2 * sizeof(short)) / sizeof(struct spref);
+	    (AFS_PIOCTL_MAXSIZE - 2 * sizeof(short)) / sizeof(struct spref);
 	/* returns addr in network byte order */
 	code = pioctl(0, VIOC_GETCPREFS, &blob, 1);
 	if (code) {
@@ -3925,7 +3925,7 @@ SetClientAddrsCmd(struct cmd_syndesc *as, void *arock)
     ssp->num_servers = 0;
     blob.in = space;
     blob.out = space;
-    blob.out_size = MAXSIZE;
+    blob.out_size = AFS_PIOCTL_MAXSIZE;
 
     if (geteuid()) {
 	fprintf(stderr, "Permission denied: requires root access.\n");
@@ -4086,7 +4086,7 @@ FlushMountCmd(struct cmd_syndesc *as, void *arock)
 	blob.in = last_component;
 	blob.in_size = strlen(last_component) + 1;
 	blob.out_size = 0;
-	memset(space, 0, MAXSIZE);
+	memset(space, 0, AFS_PIOCTL_MAXSIZE);
 
 	code = pioctl(parent_dir, VIOC_AFS_FLUSHMOUNT, &blob, 1);
 

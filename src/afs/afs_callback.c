@@ -782,7 +782,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 
 	    for (i = 0; i < NVOLS; i++)
 		for (tv = afs_volumes[i]; tv; tv = tv->next) {
-		    for (j = 0; j < MAXHOSTS; j++)
+		    for (j = 0; j < AFS_MAXHOSTS; j++)
 			if (tv->serverHost[j] == ts)
 			    afs_ResetVolumeInfo(tv);
 		}

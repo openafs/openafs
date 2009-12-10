@@ -2282,14 +2282,14 @@ DECL_PIOCTL(PFindVolume)
     tvp = afs_GetVolume(&avc->f.fid, areq, READ_LOCK);
     if (tvp) {
 	cp = aout;
-	for (i = 0; i < MAXHOSTS; i++) {
+	for (i = 0; i < AFS_MAXHOSTS; i++) {
 	    ts = tvp->serverHost[i];
 	    if (!ts)
 		break;
 	    memcpy(cp, (char *)&ts->addr->sa_ip, sizeof(afs_int32));
 	    cp += sizeof(afs_int32);
 	}
-	if (i < MAXHOSTS) {
+	if (i < AFS_MAXHOSTS) {
 	    /* still room for terminating NULL, add it on */
 	    ainSize = 0;	/* reuse vbl */
 	    memcpy(cp, (char *)&ainSize, sizeof(afs_int32));
@@ -2553,7 +2553,7 @@ DECL_PIOCTL(PRemoveCallBack)
 DECL_PIOCTL(PNewCell)
 {
     /* create a new cell */
-    afs_int32 cellHosts[MAXCELLHOSTS], *lp, magic = 0;
+    afs_int32 cellHosts[AFS_MAXCELLHOSTS], *lp, magic = 0;
     char *newcell = 0, *linkedcell = 0, *tp = ain;
     register afs_int32 code, linkedstate = 0, ls;
     u_short fsport = 0, vlport = 0;
@@ -2571,16 +2571,16 @@ DECL_PIOCTL(PNewCell)
     if (magic != 0x12345678)
 	return EINVAL;
 
-    /* A 3.4 fs newcell command will pass an array of MAXCELLHOSTS
+    /* A 3.4 fs newcell command will pass an array of AFS_MAXCELLHOSTS
      * server addresses while the 3.5 fs newcell command passes
-     * MAXHOSTS. To figure out which is which, check if the cellname
+     * AFS_MAXHOSTS. To figure out which is which, check if the cellname
      * is good.
      */
-    newcell = tp + (MAXCELLHOSTS + 3) * sizeof(afs_int32);
-    scount = ((newcell[0] != '\0') ? MAXCELLHOSTS : MAXHOSTS);
+    newcell = tp + (AFS_MAXCELLHOSTS + 3) * sizeof(afs_int32);
+    scount = ((newcell[0] != '\0') ? AFS_MAXCELLHOSTS : AFS_MAXHOSTS);
 
-    /* MAXCELLHOSTS (=8) is less than MAXHOSTS (=13) */
-    memcpy((char *)cellHosts, tp, MAXCELLHOSTS * sizeof(afs_int32));
+    /* AFS_MAXCELLHOSTS (=8) is less than AFS_MAXHOSTS (=13) */
+    memcpy((char *)cellHosts, tp, AFS_MAXCELLHOSTS * sizeof(afs_int32));
     tp += (scount * sizeof(afs_int32));
 
     lp = (afs_int32 *) tp;
@@ -2655,15 +2655,15 @@ DECL_PIOCTL(PListCells)
     tcell = afs_GetCellByIndex(whichCell, READ_LOCK);
     if (tcell) {
 	cp = aout;
-	memset(cp, 0, MAXCELLHOSTS * sizeof(afs_int32));
-	for (i = 0; i < MAXCELLHOSTS; i++) {
+	memset(cp, 0, AFS_MAXCELLHOSTS * sizeof(afs_int32));
+	for (i = 0; i < AFS_MAXCELLHOSTS; i++) {
 	    if (tcell->cellHosts[i] == 0)
 		break;
 	    memcpy(cp, (char *)&tcell->cellHosts[i]->addr->sa_ip,
 		   sizeof(afs_int32));
 	    cp += sizeof(afs_int32);
 	}
-	cp = aout + MAXCELLHOSTS * sizeof(afs_int32);
+	cp = aout + AFS_MAXCELLHOSTS * sizeof(afs_int32);
 	strcpy(cp, tcell->cellName);
 	cp += strlen(tcell->cellName) + 1;
 	*aoutSize = cp - aout;
@@ -3340,7 +3340,7 @@ ReSortCells_cb(struct cell *cell, void *arg)
     for (i = 0; i < s; i++) {
 	if (l[i] == cell->cellNum) {
 	    ObtainWriteLock(&cell->lock, 690);
-	    afs_SortServers(cell->cellHosts, MAXCELLHOSTS);
+	    afs_SortServers(cell->cellHosts, AFS_MAXCELLHOSTS);
 	    ReleaseWriteLock(&cell->lock);
 	}
     }
@@ -3371,7 +3371,7 @@ ReSortCells(int s, afs_int32 * l, int vlonly)
 	    for (k = 0; k < s; k++)
 		if (j->cell == l[k]) {
 		    ObtainWriteLock(&j->lock, 233);
-		    afs_SortServers(j->serverHost, MAXHOSTS);
+		    afs_SortServers(j->serverHost, AFS_MAXHOSTS);
 		    ReleaseWriteLock(&j->lock);
 		    break;
 		}
