@@ -690,7 +690,7 @@ cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, osi_hyper_t *lengt
         bp = buf_Find(&scp->fid, &tbase);
         /* We cheat slightly by not locking the bp mutex. */
         if (bp) {
-            if ((bp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING | CM_BUF_CMBKGFETCH)) == 0
+            if ((bp->cmFlags & (CM_BUF_CMFETCHING | CM_BUF_CMSTORING)) == 0
                  && (bp->dataVersion < scp->bufDataVersionLow || bp->dataVersion > scp->dataVersion))
                 stop = 1;
             buf_Release(bp);
@@ -843,7 +843,6 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
                 lock_ObtainWrite(&scp->rw);
                 rxheld = 1;
             }
-            _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMBKGFETCH);
             buf_Release(bp);
             bp = NULL;
             continue;
@@ -858,7 +857,6 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
         if (code == 0)
             fetched = LargeIntegerAdd(fetched, tblocksize);
         buf_Release(bp);
-        _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMBKGFETCH);
     }
 
     if (!rxheld) {
@@ -866,17 +864,6 @@ cm_BkgPrefetch(cm_scache_t *scp, afs_uint32 p1, afs_uint32 p2, afs_uint32 p3, af
         rxheld = 1;
     }
 
-    /* Clear flag from any remaining buffers */
-    for ( ;
-          LargeIntegerLessThan(offset, end);
-          offset = LargeIntegerAdd(offset, tblocksize) )
-    {
-        bp = buf_Find(scp, &offset);
-        if (bp) {
-            _InterlockedAnd(&bp->cmFlags, ~CM_BUF_CMBKGFETCH);
-            buf_Release(bp);
-        }
-    }
     cm_ClearPrefetchFlag(LargeIntegerGreaterThanZero(fetched) ? 0 : code,
                          scp, &base, &fetched);
 
@@ -906,9 +893,7 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 coun
     osi_hyper_t readBase;
     osi_hyper_t readLength;
     osi_hyper_t readEnd;
-    osi_hyper_t offset;
     osi_hyper_t tblocksize;		/* a long long temp variable */
-    cm_buf_t    *bp;
 
     tblocksize = ConvertLongToLargeInteger(cm_data.buf_blockSize);
 
@@ -943,32 +928,6 @@ void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp, afs_uint32 coun
     }
 
     readEnd = LargeIntegerAdd(realBase, readLength);
-
-    /*
-     * Mark each buffer in the range as queued for a
-     * background fetch
-     */
-    for ( offset = realBase;
-          LargeIntegerLessThan(offset, readEnd);
-          offset = LargeIntegerAdd(offset, tblocksize) )
-    {
-        if (rwheld) {
-            lock_ReleaseWrite(&scp->rw);
-            rwheld = 0;
-        }
-
-        bp = buf_Find(scp, &offset);
-        if (!bp)
-            continue;
-
-        if (!rwheld) {
-            lock_ObtainWrite(&scp->rw);
-            rwheld = 1;
-        }
-
-        _InterlockedOr(&bp->cmFlags, CM_BUF_CMBKGFETCH);
-        buf_Release(bp);
-    }
 
     if (rwheld)
         lock_ReleaseWrite(&scp->rw);
