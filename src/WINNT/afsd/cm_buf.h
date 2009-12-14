@@ -95,8 +95,6 @@ typedef struct cm_buf {
 #define CM_BUF_CMSTORING	2	/* storing this buffer */
 #define CM_BUF_CMFULLYFETCHED	4	/* read-while-fetching optimization */
 #define CM_BUF_CMWRITING        8       /* writing to this buffer */
-#define CM_BUF_CMBKGFETCH      16       /* background fetch queued by
-                                         * prefetch or redirector */
 /* waiting is done based on scp->flags.  Removing bits from cmFlags
    should be followed by waking the scp. */
 
