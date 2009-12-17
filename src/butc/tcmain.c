@@ -64,6 +64,8 @@
 #define TL_PREFIX  "TL"
 #define CFG_PREFIX "CFG"
 
+extern int TC_ExecuteRequest(struct rx_call *);
+
 struct ubik_client *cstruct;
 FILE *logIO, *ErrorlogIO, *centralLogIO, *lastLogIO;
 char lFile[AFSDIR_PATH_MAX];
