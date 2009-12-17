@@ -989,6 +989,19 @@ rxfs_fetchInit(struct afs_conn *tc, struct vcache *avc, afs_offs_t base,
     } else
 	code = -1;
 
+    if (*alength > size) {
+	/* The fileserver told us it is going to send more data than we
+	 * requested. It shouldn't do that, and accepting that much data
+	 * can make us take up more cache space than we're supposed to,
+	 * so error. */
+	code = rx_Error(v->call);
+	RX_AFS_GUNLOCK();
+	code1 = rx_EndCall(v->call, code);
+	RX_AFS_GLOCK();
+	v->call = NULL;
+	code = EIO;
+    }
+
     if (!code && code1)
 	code = code1;
 
