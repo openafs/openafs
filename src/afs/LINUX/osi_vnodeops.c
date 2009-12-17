@@ -786,7 +786,8 @@ afs_linux_revalidate(struct dentry *dp)
      */
     if (vcp->f.states & CStatd &&
         (!afs_fakestat_enable || vcp->mvstat != 1) &&
-	!afs_nfsexporter) {
+	!afs_nfsexporter &&
+	(vType(vcp) == VDIR || vType(vcp) == VLNK)) {
 	code = afs_CopyOutAttrs(vcp, &vattr);
     } else {
         credp = crref();

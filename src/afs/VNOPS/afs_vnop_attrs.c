@@ -189,7 +189,6 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
     afs_int32 code;
     struct vrequest treq;
     struct unixuser *au;
-    int inited = 0;
     OSI_VC_CONVERT(avc);
 
     AFS_STATCNT(afs_getattr);
@@ -213,15 +212,23 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
 	afs_PutFakeStat(&fakestat);
 	return code;
     }
+
+#if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
 #if defined(AFS_SUN5_ENV)
-    if (flags & ATTR_HINT) {
-	code = afs_CopyOutAttrs(avc, attrs);
-	return code;
-    }
+	if (flags & ATTR_HINT)
+#else
+	if (avc->f.states & CUBCinit)
 #endif
-#if defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN80_ENV)
-    if (avc->f.states & CUBCinit) {
-	code = afs_CopyOutAttrs(avc, attrs);
+    {
+	if (!(code = afs_InitReq(&treq, acred))) {
+	    if (vType(avc) != VDIR && vType(avc) != VLNK
+	        !afs_AccessOK(avc, PRSFS_READ, &treq, DONT_CHECK_MODE_BITS)) {
+
+		code = EACCES;
+	    }
+	    if (!code)
+		code = afs_CopyOutAttrs(avc, attrs);
+	}
 	return code;
     }
 #endif
@@ -235,13 +242,11 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
     if (afs_shuttingdown)
 	return EIO;
 
-    if (!(avc->f.states & CStatd)) {
-	if (!(code = afs_InitReq(&treq, acred))) {
-	    code = afs_VerifyVCache2(avc, &treq);
-	    inited = 1;
-	}
-    } else
-	code = 0;
+    code = afs_InitReq(&treq, acred);
+
+    if (code == 0 && !(avc->f.states & CStatd)) {
+	code = afs_VerifyVCache2(avc, &treq);
+    }
 
 #ifdef AFS_BOZONLOCK_ENV
     if (code == 0)
@@ -249,17 +254,17 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, afs_ucred_t *acred)
     afs_BozonUnlock(&avc->pvnLock, avc);
 #endif
 
+    if (code == 0 && vType(avc) != VDIR && vType(avc) != VLNK &&
+        !afs_AccessOK(avc, PRSFS_READ, &treq, DONT_CHECK_MODE_BITS)) {
+
+	code = EACCES;
+    }
 
     if (code == 0) {
 	osi_FlushText(avc);	/* only needed to flush text if text locked last time */
 	code = afs_CopyOutAttrs(avc, attrs);
 
 	if (afs_nfsexporter) {
-	    if (!inited) {
-		if ((code = afs_InitReq(&treq, acred)))
-		    return code;
-		inited = 1;
-	    }
 	    if (AFS_NFSXLATORREQ(acred)) {
 		if ((vType(avc) != VDIR)
 		    && !afs_AccessOK(avc, PRSFS_READ, &treq,
