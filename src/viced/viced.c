@@ -848,22 +848,27 @@ ShutDownAndCore(int dopanic)
 	 * demand attach fs
 	 * save fileserver state to disk */
 
-	/* make sure background threads have finished all of their asynchronous 
-	 * work on host and callback structures */
-	FS_STATE_RDLOCK;
-	while (!fs_state.FiveMinuteLWP_tranquil ||
-	       !fs_state.HostCheckLWP_tranquil ||
-	       !fs_state.FsyncCheckLWP_tranquil) {
-	    FS_LOCK;
-	    FS_STATE_UNLOCK;
-	    ViceLog(0, ("waiting for background host/callback threads to quiesce before saving fileserver state...\n"));
-	    assert(pthread_cond_wait(&fs_state.worker_done_cv, &fileproc_glock_mutex) == 0);
-	    FS_UNLOCK;
-	    FS_STATE_RDLOCK;
-	}
+	if (dopanic) {
+	    ViceLog(0, ("Not saving fileserver state; abnormal shutdown\n"));
 
-	/* ok. it should now be fairly safe. let's do the state dump */
-	fs_stateSave();
+	} else {
+	    /* make sure background threads have finished all of their asynchronous
+	     * work on host and callback structures */
+	    FS_STATE_RDLOCK;
+	    while (!fs_state.FiveMinuteLWP_tranquil ||
+	           !fs_state.HostCheckLWP_tranquil ||
+	           !fs_state.FsyncCheckLWP_tranquil) {
+		FS_LOCK;
+		FS_STATE_UNLOCK;
+		ViceLog(0, ("waiting for background host/callback threads to quiesce before saving fileserver state...\n"));
+		assert(pthread_cond_wait(&fs_state.worker_done_cv, &fileproc_glock_mutex) == 0);
+		FS_UNLOCK;
+		FS_STATE_RDLOCK;
+	    }
+
+	    /* ok. it should now be fairly safe. let's do the state dump */
+	    fs_stateSave();
+	}
     }
 #endif /* AFS_DEMAND_ATTACH_FS */
 
