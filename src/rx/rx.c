@@ -1562,10 +1562,10 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 		if (!QuotaOK(service)) {
 		    continue;
 		}
-		MUTEX_ENTER(&rx_pthread_mutex);
+		MUTEX_ENTER(&rx_stats_mutex);
 		if (tno == rxi_fcfs_thread_num
 		    || !tcall->queue_item_header.next) {
-		    MUTEX_EXIT(&rx_pthread_mutex);
+		    MUTEX_EXIT(&rx_stats_mutex);
 		    /* If we're the fcfs thread , then  we'll just use 
 		     * this call. If we haven't been able to find an optimal 
 		     * choice, and we're at the end of the list, then use a 
@@ -1573,7 +1573,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 		    call = (choice2 ? choice2 : tcall);
 		    service = call->conn->service;
 		} else {
-		    MUTEX_EXIT(&rx_pthread_mutex);
+		    MUTEX_EXIT(&rx_stats_mutex);
 		    if (!queue_IsEmpty(&tcall->rq)) {
 			struct rx_packet *rp;
 			rp = queue_First(&tcall->rq, rx_packet);
@@ -1735,10 +1735,10 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 	for (queue_Scan(&rx_incomingCallQueue, tcall, ncall, rx_call)) {
 	    service = tcall->conn->service;
 	    if (QuotaOK(service)) {
-		MUTEX_ENTER(&rx_pthread_mutex);
+		MUTEX_ENTER(&rx_stats_mutex);
 		if (tno == rxi_fcfs_thread_num
 		    || !tcall->queue_item_header.next) {
-		    MUTEX_EXIT(&rx_pthread_mutex);
+		    MUTEX_EXIT(&rx_stats_mutex);
 		    /* If we're the fcfs thread, then  we'll just use 
 		     * this call. If we haven't been able to find an optimal 
 		     * choice, and we're at the end of the list, then use a 
@@ -1746,7 +1746,7 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
 		    call = (choice2 ? choice2 : tcall);
 		    service = call->conn->service;
 		} else {
-		    MUTEX_EXIT(&rx_pthread_mutex);
+		    MUTEX_EXIT(&rx_stats_mutex);
 		    if (!queue_IsEmpty(&tcall->rq)) {
 			struct rx_packet *rp;
 			rp = queue_First(&tcall->rq, rx_packet);
