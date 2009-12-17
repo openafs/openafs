@@ -344,10 +344,10 @@ struct iparam32 {
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
-    dst->param1 = src->param1;
-    dst->param2 = src->param2;
-    dst->param3 = src->param3;
-    dst->param4 = src->param4;
+    dst->param1 = (iparmtype)(uintptr_t)src->param1;
+    dst->param2 = (iparmtype)(uintptr_t)src->param2;
+    dst->param3 = (iparmtype)(uintptr_t)src->param3;
+    dst->param4 = (iparmtype)(uintptr_t)src->param4;
 }
 #endif
 
