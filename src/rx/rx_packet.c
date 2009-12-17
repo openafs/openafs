@@ -1776,7 +1776,6 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 #endif
 	    MUTEX_ENTER(&rx_serverPool_lock);
 	    tstat.nFreePackets = htonl(rx_nFreePackets);
-	    tstat.nPackets = htonl(rx_nPackets);
 	    tstat.callsExecuted = htonl(rxi_nCalls);
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
 	    tstat.usedFDs = CountFDs(64);
