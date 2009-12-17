@@ -303,7 +303,8 @@ static afs_int32
 afs_NoCacheFetchProc(register struct rx_call *acall, 
                      register struct vcache *avc, 
 					 register uio_t *auio, 
-                     afs_int32 release_pages)
+                     afs_int32 release_pages,
+		     afs_int32 size)
 {
     afs_int32 length;
     afs_int32 code;
@@ -336,6 +337,14 @@ afs_NoCacheFetchProc(register struct rx_call *acall,
 	    goto done;
 	} else
 	    length = ntohl(length);		
+
+	if (length > size) {
+	    result = EIO;
+	    afs_warn("Preread error. Got length %d, which is greater than size %d\n",
+	             length, size);
+	    unlock_pages(auio);
+	    goto done;
+	}
 					
 	/*
 	 * The fetch protocol is extended for the AFS/DFS translator
@@ -606,7 +615,8 @@ afs_PrefetchNoCache(register struct vcache *avc,
 #endif
 	    if (code == 0) {
 		code = afs_NoCacheFetchProc(tcall, avc, auio,
-				            1 /* release_pages */);
+				            1 /* release_pages */,
+					    bparms->length);
 	    } else {
 		afs_warn("BYPASS: StartRXAFS_FetchData failed: %d\n", code);
 		unlock_pages(auio);
