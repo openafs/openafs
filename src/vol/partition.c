@@ -468,6 +468,18 @@ VAttachPartitions(void)
 	if (VIsAlwaysAttach(mnt.mnt_mountp))
 	    continue;
 
+#ifndef AFS_NAMEI_ENV
+	if (hasmntopt(&mnt, "logging") != NULL) {
+	    Log("This program is compiled without AFS_NAMEI_ENV, and "
+	        "partition %s is mounted with the 'logging' option. "
+		"Using the inode fileserver backend with 'logging' UFS "
+		"partitions causes volume corruption, so please either "
+		"mount the partition without logging, or use the namei "
+		"fileserver backend. Aborting...\n", mnt.mnt_mountp);
+	    errors++;
+	}
+#endif /* !AFS_NAMEI_ENV */
+
 	if (VCheckPartition(mnt.mnt_mountp, mnt.mnt_special) < 0)
 	    errors++;
     }
