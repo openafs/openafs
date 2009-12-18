@@ -289,7 +289,7 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 }
 #endif
 
-extern int BlobScan(struct dcache * afile, afs_int32 ablob);
+extern int BlobScan(struct dcache * afile, afs_int32 ablob, afs_int32 *ablobOut);
 
 /* This is a complete rewrite of afs_readdir, since we can make use of
  * filldir instead of afs_readdir_move. Note that changes to vcache/dcache
@@ -307,7 +307,7 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     struct dcache *tdc;
     int code;
     int offset;
-    int dirpos;
+    afs_int32 dirpos;
     struct DirEntry *de;
     struct DirBuffer entry;
     ino_t ino;
@@ -385,8 +385,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     offset = (int) fp->f_pos;
 #endif
     while (1) {
-	dirpos = BlobScan(tdc, offset);
-	if (!dirpos)
+	code = BlobScan(tdc, offset, &dirpos);
+	if (code || !dirpos)
 	    break;
 
 	code = afs_dir_GetVerifiedBlob(tdc, dirpos, &entry);

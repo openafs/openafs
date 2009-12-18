@@ -42,21 +42,24 @@
  * AFS readdir vnodeop and bulk stat support.
  */
 
-/* BlobScan is supposed to ensure that the blob reference refers to a valid
-    directory entry.  It consults the allocation map in the page header
-    to determine whether a blob is actually in use or not.
-
-    More formally, BlobScan is supposed to return a new blob number which is just like
-    the input parameter, only it is advanced over header or free blobs.
-    
-    Note that BlobScan switches pages if necessary.  BlobScan may return
-    either 0 or an out-of-range blob number for end of file.
-
-    BlobScan is used by the Linux port in a separate file, so it should not
-    become static.
-*/
+/**
+ * Ensure that the blob reference refers to a valid directory entry.
+ * It consults the allocation map in the page header to determine
+ * whether a blob is actually in use or not.
+ *
+ * More formally, BlobScan is supposed to return a new blob number
+ * which is just like the input parameter, only it is advanced over
+ * header or free blobs.
+ *
+ * Note that BlobScan switches pages if necessary.  BlobScan may
+ * return either 0 for success or an error code.  Upon successful
+ * return, the new blob value is assigned to *ablobOut.
+ *
+ * BlobScan is used by the Linux port in a separate file, so it should not
+ * become static.
+ */
 int
-BlobScan(struct dcache * afile, afs_int32 ablob)
+BlobScan(struct dcache * afile, afs_int32 ablob, int *ablobOut)
 {
     afs_int32 relativeBlob;
     afs_int32 pageBlob;
@@ -71,7 +74,7 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
 	pageBlob = ablob & ~(EPP - 1);	/* base blob in same page */
 	code = afs_dir_GetBlob(afile, pageBlob, &headerbuf);
 	if (code)
-	    return 0;
+	    return code;
 	tpe = (struct PageHeader *)headerbuf.data;
 
 	relativeBlob = ablob - pageBlob;	/* relative to page's first blob */
@@ -92,8 +95,10 @@ BlobScan(struct dcache * afile, afs_int32 ablob)
 	/* now relativeBlob is the page-relative first allocated blob,
 	 * or EPP (if there are none in this page). */
 	DRelease(&headerbuf, 0);
-	if (i != EPP)
-	    return i + pageBlob;
+	if (i != EPP) {
+	    *ablobOut = i + pageBlob;
+	    return 0;
+	}
 	ablob = pageBlob + EPP;	/* go around again */
     }
     /* never get here */
@@ -588,7 +593,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
     struct DirBuffer oldEntry, nextEntry;
     struct DirEntry *ode = 0, *nde = 0;
     int o_slen = 0, n_slen = 0;
-    afs_uint32 us;
+    afs_int32 us;
     struct afs_fakestat_state fakestate;
 #if defined(AFS_SGI53_ENV)
     afs_int32 use64BitDirent, dirsiz;
@@ -732,9 +737,9 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	origOffset = AFS_UIO_OFFSET(auio);
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	us = BlobScan(tdc, (origOffset >> 5));
+	code = BlobScan(tdc, (origOffset >> 5), &us);
 
-	if (us)
+	if (code == 0 && us)
 	   code = afs_dir_GetVerifiedBlob(tdc, us, &nextEntry);
 
 	if (us == 0 || code != 0) {
@@ -910,7 +915,7 @@ afs_readdir(OSI_VC_DECL(avc), struct uio *auio, afs_ucred_t *acred)
 	DRelease(&oldEntry, 0);
 	oldEntry = nextEntry;
 	ode = nde;
-	AFS_UIO_SETOFFSET(auio, (afs_int32) ((us + afs_dir_NameBlobs(nde->name)) << 5));
+	AFS_UIO_SETOFFSET(auio, (us + afs_dir_NameBlobs(nde->name)) << 5);
     }
     
     DRelease(&oldEntry, 0);

@@ -648,7 +648,7 @@ afs_CheckBulkStatus(struct afs_conn *tc, int nFids, AFSBulkStats *statParm,
     return 0;
 }
 
-extern int BlobScan(struct dcache * afile, afs_int32 ablob);
+extern int BlobScan(struct dcache * afile, afs_int32 ablob, afs_int32 *ablobOut);
 
 /* called with an unlocked directory and directory cookie.  Areqp
  * describes who is making the call.
@@ -699,7 +699,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     int ftype[4] = {VNON, VREG, VDIR, VLNK}; /* verify type is as expected */
     afs_size_t statSeqNo = 0;	/* Valued of file size to detect races */
     int code;			/* error code */
-    long newIndex;		/* new index in the dir */
+    afs_int32 newIndex;		/* new index in the dir */
     struct DirBuffer entry;	/* Buffer for dir manipulation */
     struct DirEntry *dirEntryp;	/* dir entry we are examining */
     int i;
@@ -808,8 +808,8 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* look for first safe entry to examine in the directory.  BlobScan
 	 * looks for a the 1st allocated dir after the dirCookie slot.
 	 */
-	newIndex = BlobScan(dcp, (dirCookie >> 5));
-	if (newIndex == 0)
+	code = BlobScan(dcp, (dirCookie >> 5), &newIndex);
+	if (code || newIndex == 0)
 	    break;
 
 	/* remember the updated directory cookie */
