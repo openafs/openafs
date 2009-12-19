@@ -465,23 +465,7 @@ afs_InitReq(register struct vrequest *av, afs_ucred_t *acred)
     return 0;
 }
 
-
-#ifdef AFS_LINUX26_ONEGROUP_ENV
-afs_uint32
-afs_get_pag_from_groups(struct group_info *group_info)
-{
-    afs_uint32 g0 = 0;
-    afs_uint32 i;
-
-    AFS_STATCNT(afs_get_pag_from_groups);
-    for (i = 0; (i < group_info->ngroups && 
-		 (g0 = GROUP_AT(group_info, i)) != (gid_t) NOGROUP); i++) {
-	if (((g0 >> 24) & 0xff) == 'A')
-	    return g0;
-    }
-    return NOPAG;
-}
-#else
+#ifndef AFS_LINUX26_ONEGROUP_ENV
 afs_uint32
 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 {
@@ -498,51 +482,50 @@ afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 	h = (g0 >> 14);
 	h = (g1 >> 14) + h + h + h;
 	ret = ((h << 28) | l);
-#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+# if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
 	return ret;
-#else
+# else
 	/* Additional testing */
 	if (((ret >> 24) & 0xff) == 'A')
 	    return ret;
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+# endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
     }
     return NOPAG;
 }
-#endif
 
 void
 afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 {
-#ifndef AFS_LINUX26_ONEGROUP_ENV
     unsigned short g0, g1;
-#endif
-
 
     AFS_STATCNT(afs_get_groups_from_pag);
-#ifdef AFS_LINUX26_ONEGROUP_ENV
     *g0p = pag;
     *g1p = 0;
-#else
-#if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
+# if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
     pag &= 0x7fffffff;
-#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+# endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
     g0 = 0x3fff & (pag >> 14);
     g1 = 0x3fff & pag;
     g0 |= ((pag >> 28) / 3) << 14;
     g1 |= ((pag >> 28) % 3) << 14;
     *g0p = g0 + 0x3f00;
     *g1p = g1 + 0x3f00;
-#endif
 }
+#else
+void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
+{
+    AFS_STATCNT(afs_get_groups_from_pag);
+    *g0p = pag;
+    *g1p = 0;
+}
+#endif
 
-
-afs_int32
-afs_get_group_pag(afs_ucred_t *cred)
+#ifndef AFS_LINUX26_ENV
+static afs_int32
+osi_get_group_pag(afs_ucred_t *cred)
 {
     afs_int32 pag = NOPAG;
-#if !defined(AFS_LINUX26_ONEGROUP_ENV)
     gid_t g0, g1;
-#endif
 #if defined(AFS_SUN510_ENV)
     const gid_t *gids;
     int ngroups;
@@ -561,28 +544,24 @@ afs_get_group_pag(afs_ucred_t *cred)
     g0 = cred->cr_groups[1];
     g1 = cred->cr_groups[2];
 #else
-#if defined(AFS_AIX_ENV)
+# if defined(AFS_AIX_ENV)
     if (cred->cr_ngrps < 2)
 	return NOPAG;
-#elif defined(AFS_LINUX26_ENV)
+# elif defined(AFS_LINUX26_ENV)
     if (afs_cr_group_info(cred)->ngroups < NUMPAGGROUPS)
 	return NOPAG;
-#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
-#if defined(AFS_SUN510_ENV)
+# elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
+#  if defined(AFS_SUN510_ENV)
     if (ngroups < 2) {
-#else
+#  else
     if (cred->cr_ngroups < 2) {
-#endif
+#  endif
 	return NOPAG;
     }
-#endif
-#if defined(AFS_AIX51_ENV)
+# endif
+# if defined(AFS_AIX51_ENV)
     g0 = cred->cr_groupset.gs_union.un_groups[0];
     g1 = cred->cr_groupset.gs_union.un_groups[1];
-#elif defined(AFS_LINUX26_ONEGROUP_ENV)
-#elif defined(AFS_LINUX26_ENV)
-    g0 = GROUP_AT(afs_cr_group_info(cred), 0);
-    g1 = GROUP_AT(afs_cr_group_info(cred), 1);
 #elif defined(AFS_SUN510_ENV)
     g0 = gids[0];
     g1 = gids[1];
@@ -591,13 +570,10 @@ afs_get_group_pag(afs_ucred_t *cred)
     g1 = cred->cr_groups[1];
 #endif
 #endif
-#if defined(AFS_LINUX26_ONEGROUP_ENV)
-    pag = (afs_int32) afs_get_pag_from_groups(afs_cr_group_info(cred));
-#else
     pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
-#endif
     return pag;
 }
+#endif
 
 
 afs_int32
@@ -619,12 +595,12 @@ PagInCred(afs_ucred_t *cred)
      * to looking at the keyrings.
      */
 # if !defined(STRUCT_TASK_HAS_CRED)
-    pag = afs_get_group_pag(cred);
+    pag = osi_get_group_pag(cred);
 # endif
     if (pag == NOPAG)
 	pag = osi_get_keyring_pag(cred);
 #else
-    pag = afs_get_group_pag(cred);
+    pag = osi_get_group_pag(cred);
 #endif
     return pag;
 }
