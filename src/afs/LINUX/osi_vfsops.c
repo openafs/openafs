@@ -134,6 +134,7 @@ afs_fill_super(struct super_block *sb, void *data, int silent)
     code = afs_root(sb);
     if (code) {
 	afs_globalVFS = NULL;
+	osi_linux_free_inode_pages();
         module_put(THIS_MODULE);
     }
 
