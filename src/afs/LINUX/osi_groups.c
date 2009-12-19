@@ -24,6 +24,8 @@
 #include "afsincludes.h"
 #include "afs/afs_stats.h"	/* statistics */
 #include "afs/nfsclient.h"
+#include "osi_compat.h"
+
 #include <linux/smp_lock.h>
 
 #ifdef AFS_LINUX26_ONEGROUP_ENV
@@ -143,7 +145,6 @@ install_session_keyring(struct key *keyring)
 {
     struct key *old;
     char desc[20];
-    unsigned long not_in_quota;
     int code = -EINVAL;
 
     if (!__key_type_keyring)
@@ -152,25 +153,14 @@ install_session_keyring(struct key *keyring)
     if (!keyring) {
 
 	/* create an empty session keyring */
-	not_in_quota = KEY_ALLOC_IN_QUOTA;
 	sprintf(desc, "_ses.%u", current->tgid);
 
-#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
-	keyring = key_alloc(__key_type_keyring, desc,
-			    current_uid(), current_gid(), current,
-			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
-#elif defined(KEY_ALLOC_NEEDS_CRED)
-	keyring = key_alloc(__key_type_keyring, desc,
-			    current_uid(), current_gid(), current_cred(),
-			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
-#else
-	keyring = key_alloc(__key_type_keyring, desc,
+	keyring = afs_linux_key_alloc(
+			    __key_type_keyring, desc,
 			    current_uid(), current_gid(),
 			    (KEY_POS_ALL & ~KEY_POS_SETATTR) | KEY_USR_ALL,
-			    not_in_quota);
-#endif
+			    KEY_ALLOC_IN_QUOTA);
+
 	if (IS_ERR(keyring)) {
 	    code = PTR_ERR(keyring);
 	    goto out;
@@ -219,13 +209,7 @@ setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag,
 	    perm = KEY_POS_VIEW | KEY_POS_SEARCH;
 	    perm |= KEY_USR_VIEW | KEY_USR_SEARCH;
 
-#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current, perm, 1);
-#elif defined(KEY_ALLOC_NEEDS_CRED)
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, current_cred(), perm, 1);
-#else
-	    key = key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, 1);
-#endif
+	    key = afs_linux_key_alloc(&key_type_afs_pag, "_pag", 0, 0, perm, 1);
 
 	    if (!IS_ERR(key)) {
 		key_instantiate_and_link(key, (void *) newpag, sizeof(afs_uint32),
@@ -559,36 +543,16 @@ osi_get_keyring_pag(afs_ucred_t *cred)
     afs_int32 keyring_pag = NOPAG;
 
     if (afs_cr_rgid(cred) != NFSXLATOR_CRED) {
+	key = afs_linux_search_keyring(cred, &key_type_afs_pag);
 
-#if defined(STRUCT_TASK_HAS_CRED)
-	/* If we have a kernel cred, search the passed credentials */
-	if (cred->tgcred->session_keyring) {
-	    key_ref_t key_ref;
-
-	    key_ref = keyring_search(
-			  make_key_ref(cred->tgcred->session_keyring, 1),
-		          &key_type_afs_pag, "_pag");
-	    if (IS_ERR(key_ref))
-		key = ERR_CAST(key_ref);
-	    else
-		key = key_ref_to_ptr(key_ref);
-	} else {
-	    key = ERR_PTR(-ENOKEY);
-	}
-#else
-	/* Search the keyrings of the current process */
-	key = request_key(&key_type_afs_pag, "_pag", NULL);
-#endif
 	if (!IS_ERR(key)) {
 	    if (key_validate(key) == 0 && key->uid == 0) {      /* also verify in the session keyring? */
 		keyring_pag = key->payload.value;
-		/* Only set PAG in groups if needed, and the creds are from the current process */
-#if defined(STRUCT_TASK_HAS_CRED)
-		if (cred == current_cred() && ((keyring_pag >> 24) & 0xff) == 'A') {
-#else
-		if (((keyring_pag >> 24) & 0xff) == 'A') {
-#endif
-		    if (keyring_pag != afs_get_pag_from_groups(current_group_info()))
+		/* Only set PAG in groups if needed,
+		 * and the creds are from the current process */
+		if (afs_linux_cred_is_current(cred) &&
+                    ((keyring_pag >> 24) & 0xff) == 'A' &&
+		    keyring_pag != afs_get_pag_from_groups(current_group_info())) {
 			__setpag(&cred, keyring_pag, &newpag, 0);
 		}
 	    }

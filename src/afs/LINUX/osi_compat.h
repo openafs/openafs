@@ -136,4 +136,56 @@ init_once_func(void * foo) {
 #define KALLOC_TYPE GFP_KERNEL
 #endif
 
+static inline struct key *
+afs_linux_key_alloc(struct key_type *type, const char *desc, uid_t uid,
+		    gid_t gid, key_perm_t perm, unsigned long flags)
+{
+#if defined(KEY_ALLOC_NEEDS_STRUCT_TASK)
+    return key_alloc(type, desc, uid, gid, current, perm, flags);
+#elif defined(KEY_ALLOC_NEEDS_CRED)
+    return key_alloc(type, desc, uid, gid, current_cred(), perm, flags);
+#else
+    return key_alloc(type, desc, uid, gid, perm, flags);
+#endif
+}
+
+#if defined(STRUCT_TASK_HAS_CRED)
+static inline struct key*
+afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
+{
+    key_ref_t key_ref;
+
+    if (cred->tgcred->session_keyring) {
+	key_ref = keyring_search(
+		      make_key_ref(cred->tgcred->session_keyring, 1),
+		      type, "_pag");
+	if (IS_ERR(key_ref))
+	    return ERR_CAST(key_ref);
+
+	return key_ref_to_ptr(key_ref);
+    }
+
+    return ERR_PTR(-ENOKEY);
+}
+
+static inline int
+afs_linux_cred_is_current(afs_ucred_t *cred)
+{
+    return (cred == current_cred());
+}
+
+#else
+static inline struct key*
+afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
+{
+    return request_key(type, "_pag", NULL);
+}
+
+static inline int
+afs_linux_cred_is_current(afs_ucred_t *cred, cred)
+{
+    return 1;
+}
+#endif
+
 #endif
