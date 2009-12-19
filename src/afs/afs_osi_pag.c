@@ -609,6 +609,7 @@ PagInCred(afs_ucred_t *cred)
     if (cred == NULL || cred == afs_osi_credp) {
 	return NOPAG;
     }
+#if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
     /*
      * If linux keyrings are in use and we carry the session keyring in our credentials
      * structure, they should be the only criteria for determining
@@ -617,12 +618,13 @@ PagInCred(afs_ucred_t *cred)
      * With keyrings but no kernel credentials, look at groups first and fall back
      * to looking at the keyrings.
      */
-#if defined(AFS_LINUX26_ENV) && !defined(STRUCT_TASK_HAS_CRED)
+# if !defined(STRUCT_TASK_HAS_CRED)
     pag = afs_get_group_pag(cred);
-#endif
-#if defined(AFS_LINUX26_ENV) && defined(LINUX_KEYRING_SUPPORT)
+# endif
     if (pag == NOPAG)
-        pag = osi_get_keyring_pag(cred);
+	pag = osi_get_keyring_pag(cred);
+#else
+    pag = afs_get_group_pag(cred);
 #endif
     return pag;
 }
