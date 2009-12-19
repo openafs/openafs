@@ -562,8 +562,19 @@ osi_get_keyring_pag(afs_ucred_t *cred)
 
 #if defined(STRUCT_TASK_HAS_CRED)
 	/* If we have a kernel cred, search the passed credentials */
-	key = key_ref_to_ptr(keyring_search(make_key_ref(cred->tgcred->session_keyring, 1),
-		&key_type_afs_pag, "_pag"));
+	if (cred->tgcred->session_keyring) {
+	    key_ref_t key_ref;
+
+	    key_ref = keyring_search(
+			  make_key_ref(cred->tgcred->session_keyring, 1),
+		          &key_type_afs_pag, "_pag");
+	    if (IS_ERR(key_ref))
+		key = ERR_CAST(key_ref);
+	    else
+		key = key_ref_to_ptr(key_ref);
+	} else {
+	    key = ERR_PTR(-ENOKEY);
+	}
 #else
 	/* Search the keyrings of the current process */
 	key = request_key(&key_type_afs_pag, "_pag", NULL);
