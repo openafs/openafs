@@ -253,12 +253,10 @@ static ctl_table fs_sysctl_table[] = {
 int
 osi_sysctl_init()
 {
-#if defined(STRUCT_CTL_TABLE_HAS_CTL_NAME)
 #if defined(REGISTER_SYSCTL_TABLE_NOFLAG)
     afs_sysctl = register_sysctl_table(fs_sysctl_table);
 #else
     afs_sysctl = register_sysctl_table(fs_sysctl_table, 0);
-#endif
 #endif
     if (!afs_sysctl)
 	return -1;
