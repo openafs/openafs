@@ -228,33 +228,37 @@ case $system in
 		 else
 		   LINUX_KERNEL_BUILD=$LINUX_KERNEL_PATH
 		 fi
-               if test -f "$LINUX_KERNEL_BUILD/include/linux/utsrelease.h"; then
-		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
-		 LINUX_VERSION="$linux_kvers"
-               else
-		 if test -f "$LINUX_KERNEL_BUILD/include/linux/version.h"; then
-		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
-		  if test "x$linux_kvers" = "x"; then
-		    if test -f "$LINUX_KERNEL_BUILD/include/linux/version-up.h"; then
-		      linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
-		      if test "x$linux_kvers" = "x"; then
-
-		        AC_MSG_ERROR(Linux headers lack version definition [2])
-		        exit 1
-		      else
-		        LINUX_VERSION="$linux_kvers"
-                      fi
-                    else
-                      AC_MSG_ERROR(Linux headers lack version definition)
-		      exit 1
-		    fi
-		  else
-		    LINUX_VERSION="$linux_kvers"
-		  fi
+                 if test -f "$LINUX_KERNEL_BUILD/include/generated/utsrelease.h"; then
+		   linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/generated/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		   LINUX_VERSION="$linux_kvers"
 		 else
-                    enable_kernel_module="no"
-                 fi
-               fi
+                   if test -f "$LINUX_KERNEL_BUILD/include/linux/utsrelease.h"; then
+		     linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/utsrelease.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		     LINUX_VERSION="$linux_kvers"
+                   else
+		     if test -f "$LINUX_KERNEL_BUILD/include/linux/version.h"; then
+		       linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		       if test "x$linux_kvers" = "x"; then
+		         if test -f "$LINUX_KERNEL_BUILD/include/linux/version-up.h"; then
+		           linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_BUILD/include/linux/version-up.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -n 1`
+		           if test "x$linux_kvers" = "x"; then
+		             AC_MSG_ERROR(Linux headers lack version definition [2])
+		             exit 1
+		           else
+		             LINUX_VERSION="$linux_kvers"
+                           fi
+                         else
+                           AC_MSG_ERROR(Linux headers lack version definition)
+		           exit 1
+		         fi
+		       else
+		         LINUX_VERSION="$linux_kvers"
+		       fi
+		     else
+                       enable_kernel_module="no"
+                     fi
+                   fi
+		 fi
 		 if test ! -f "$LINUX_KERNEL_BUILD/include/linux/autoconf.h"; then
 		     enable_kernel_module="no"
 		 fi
