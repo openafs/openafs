@@ -370,7 +370,7 @@ int do_verify_test(void)
 
     printf("Verifying test data file [%s]\n", filename);
 
-    h_file = CreateFile(filename, GENERIC_READ, FILE_SHARE_WRITE, NULL,
+    h_file = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
                         OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (h_file == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Can't open file [%s] GLE=%d\n", filename, GetLastError());
@@ -460,8 +460,8 @@ int do_write_test(void)
 
     printf("Using N = %I64d and M = %I64d\n", N, M);
 
-    h_file = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_WRITE, NULL,
-                        CREATE_ALWAYS, FILE_FLAG_RANDOM_ACCESS, NULL);
+    h_file = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
+                        CREATE_ALWAYS, FILE_FLAG_SEQUENTIAL_SCAN, NULL);
     if (h_file == INVALID_HANDLE_VALUE) {
         fprintf(stderr, "Can't create file [%s] GLE=%d\n", filename, GetLastError());
         goto done;
@@ -524,6 +524,15 @@ int do_write_test(void)
 
     if (!FlushFileBuffers(h_file)) {
         fprintf(stderr, "Can't flush file. GLE=%d\n", GetLastError());
+        goto done;
+    }
+
+    CloseHandle(h_file);
+
+    h_file = CreateFile(filename, GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
+                        OPEN_ALWAYS, FILE_FLAG_RANDOM_ACCESS, NULL);
+    if (h_file == INVALID_HANDLE_VALUE) {
+        fprintf(stderr, "Can't create file [%s] GLE=%d\n", filename, GetLastError());
         goto done;
     }
 
