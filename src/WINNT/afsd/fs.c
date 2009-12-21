@@ -1630,7 +1630,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
     for(ti=as->parms[0].items; ti; ti=ti->next) {
         cm_fid_t fid;
         afs_uint32 filetype;
-	afs_uint32 owner[2];
+	afs_int32 owner[2];
 	char cell[CELL_MAXNAMELEN];
 
         /* once per file */
@@ -1690,7 +1690,7 @@ ExamineCmd(struct cmd_syndesc *as, void *arock)
             pr_Initialize(1, confDir, cell);
 	    pr_SIdToName(owner[0], oname);
 	    pr_SIdToName(owner[1], gname);
-	    printf("Owner %s (%u) Group %s (%u)\n", oname, owner[0], gname, owner[1]);
+	    printf("Owner %s (%d) Group %s (%d)\n", oname, owner[0], gname, owner[1]);
         }
 
 	blob.out = space;
