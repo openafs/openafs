@@ -16,7 +16,15 @@ done
 
 echo "Updating configuration..."
 echo "Running aclocal"
-aclocal -I src/cf
+if which aclocal > /dev/null 2>&1; then
+  aclocal -I src/cf
+elif which aclocal-1.10 > /dev/null 2>&1; then
+  aclocal-1.10 -I src/cf
+else
+  echo "No aclocal found on your system (looked for aclocal & aclocal-1.10)"
+  exit 1
+fi
+
 echo "Running autoconf"
 autoconf
 echo "Running autoconf for configure-libafs"
