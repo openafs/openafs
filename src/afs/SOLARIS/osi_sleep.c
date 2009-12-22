@@ -176,7 +176,11 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     clock_t ticks;
 
     ticks = (ams * afs_hz) / 1000;
+#if defined(AFS_SUN510_ENV)
+    ticks = ticks + ddi_get_lbolt();
+#else
     ticks = ticks + lbolt;
+#endif
 
     evp = afs_getevent(event);
 
