@@ -862,10 +862,10 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_55)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		SHLIB_CFLAGS="-KPIC"
@@ -880,10 +880,10 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_56)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -901,11 +901,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_57)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -923,11 +923,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_58)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -945,11 +945,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_59)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -967,11 +967,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_510)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -989,11 +989,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sun4x_511)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -1011,11 +1011,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sunx86_57)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -1032,11 +1032,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sunx86_58)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -1053,11 +1053,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sunx86_59)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -1074,11 +1074,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sunx86_510)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"
@@ -1095,11 +1095,11 @@ case $AFS_SYSNAME in
 		;;
 
 	sunx86_511)
-		CC="/opt/SUNWspro/bin/cc"
-		CCOBJ="/opt/SUNWspro/bin/cc"
+		CC=$SOLARISCC
+		CCOBJ=$SOLARISCC
 		LEX="lex"
 		LD="/usr/ccs/bin/ld"
-		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CC=$SOLARISCC
 		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread -lsocket"
 		PAM_CFLAGS="-KPIC"

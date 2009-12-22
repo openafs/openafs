@@ -421,6 +421,8 @@ case $system in
         *-solaris*)
 		MKAFS_OSTYPE=SOLARIS
                 AC_MSG_RESULT(sun4)
+	        AC_PATH_PROG(SOLARISCC, [cc], ,
+		    [/opt/SUNWspro/bin:/opt/SunStudioExpress/bin])
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_PROC_HAS_P_COREFILE
 		SOLARIS_FS_HAS_FS_ROLLED
