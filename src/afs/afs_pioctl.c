@@ -3906,6 +3906,9 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     struct unixuser *au;
     afs_uint32 comp = *com & 0xff00;
     afs_uint32 h, l;
+#if defined(AFS_SUN510_ENV)
+    gid_t gids[2];
+#endif
 
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
@@ -3976,30 +3979,34 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
     newcred->cr_groupset.gs_union.un_groups[0] = g0;
     newcred->cr_groupset.gs_union.un_groups[1] = g1;
 #elif defined(AFS_LINUX26_ENV)
-#ifdef AFS_LINUX26_ONEGROUP_ENV
+# ifdef AFS_LINUX26_ONEGROUP_ENV
     set_cr_group_info(newcred, groups_alloc(1)); /* not that anything sets this */
     l = (((g0-0x3f00) & 0x3fff) << 14) | ((g1-0x3f00) & 0x3fff);
     h = ((g0-0x3f00) >> 14);
     h = ((g1-0x3f00) >> 14) + h + h + h;
     GROUP_AT(cr_group_info(newcred), 0) = ((h << 28) | l);
-#else
+# else
     set_cr_group_info(newcred, groups_alloc(2));
     GROUP_AT(cr_group_info(newcred), 0) = g0;
     GROUP_AT(cr_group_info(newcred), 1) = g1;
-#endif
+# endif
+#elif defined(AFS_SUN510_ENV)
+    gids[0] = g0;
+    gids[1] = g1;
+    crsetgroups(newcred, 2, gids);
 #else
     newcred->cr_groups[0] = g0;
     newcred->cr_groups[1] = g1;
 #endif
 #ifdef AFS_AIX_ENV
     newcred->cr_ngrps = 2;
-#elif !defined(AFS_LINUX26_ENV)
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
+#elif !defined(AFS_LINUX26_ENV) && !defined(AFS_SUN510_ENV)
+# if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX22_ENV)
     newcred->cr_ngroups = 2;
-#else
+# else
     for (i = 2; i < NGROUPS; i++)
 	newcred->cr_groups[i] = NOGROUP;
-#endif
+# endif
 #endif
     if (!(exporter = exporter_find(exporter_type))) {
 	/* Exporter wasn't initialized or an invalid exporter type */
