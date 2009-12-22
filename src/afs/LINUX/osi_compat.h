@@ -182,7 +182,7 @@ afs_linux_search_keyring(afs_ucred_t *cred, struct key_type *type)
 }
 
 static inline int
-afs_linux_cred_is_current(afs_ucred_t *cred, cred)
+afs_linux_cred_is_current(afs_ucred_t *cred)
 {
     return 1;
 }
