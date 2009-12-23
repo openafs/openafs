@@ -110,7 +110,10 @@ struct vop_vector afs_vnodeops = {
 	.vop_getpages =		afs_vop_getpages,
 	.vop_inactive =		afs_vop_inactive,
 	.vop_ioctl =		afs_vop_ioctl,
+#if !defined(AFS_FBSD80_ENV)
+	/* removed at least temporarily (NFSv4 flux) */
 	.vop_lease =		VOP_NULL,
+#endif
 	.vop_link =		afs_vop_link,
 	.vop_lookup =		afs_vop_lookup,
 	.vop_mkdir =		afs_vop_mkdir,
@@ -315,7 +318,7 @@ afs_vop_unlock(ap)
     struct lock *lkp = vp->v_vnlock;
 
 #ifdef AFS_FBSD80_ENV
-    int code;
+    int code = 0;
     u_int op;
     op = ((ap->a_flags) | LK_RELEASE) & LK_TYPE_MASK;
     int glocked = ISAFS_GLOCK();
@@ -686,7 +689,11 @@ afs_vop_access(ap)
 {
     int code;
     AFS_GLOCK();
+#if defined(AFS_FBSD80_ENV)
+    code = afs_access(VTOAFS(ap->a_vp), ap->a_accmode, ap->a_cred);
+#else
     code = afs_access(VTOAFS(ap->a_vp), ap->a_mode, ap->a_cred);
+#endif
     AFS_GUNLOCK();
     return code;
 }
@@ -1556,7 +1563,7 @@ afs_vop_strategy(ap)
 {
     int error;
     AFS_GLOCK();
-    error = afs_ustrategy(ap->a_bp, osi_cred());
+    error = afs_ustrategy(ap->a_bp, osi_curcred());
     AFS_GUNLOCK();
     return error;
 }

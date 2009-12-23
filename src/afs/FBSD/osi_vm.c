@@ -235,9 +235,9 @@ osi_VM_TryToSmush(struct vcache *avc, afs_ucred_t *acred, int sync)
     }
 
     tries = 5;
-    code = vinvalbuf(vp, V_SAVE, curthread, PCATCH, 0);
+    code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
     while (code && (tries > 0)) {
-      code = vinvalbuf(vp, V_SAVE, curthread, PCATCH, 0);
+      code = osi_vinvalbuf(vp, V_SAVE, PCATCH, 0);
       --tries;
     }
     USERPRI;

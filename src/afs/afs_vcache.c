@@ -1943,7 +1943,7 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
 	    if (glocked)
 		AFS_GLOCK();
 	}
-	vinvalbuf(vp, V_SAVE, curthread, PINOD, 0);
+	vinvalbuf(vp, V_SAVE, PINOD, 0); /* changed late in 8.0-CURRENT */
 	if (!iheldthelock)
 	    VOP_UNLOCK(vp, 0);
 #elif defined(AFS_FBSD60_ENV)

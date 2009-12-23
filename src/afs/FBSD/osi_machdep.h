@@ -24,6 +24,10 @@
 #if defined(AFS_FBSD50_ENV)
 #include <sys/mutex.h>
 #endif
+#include <sys/vnode.h>
+#if defined(AFS_FBSD80_ENV)
+#include <sys/priv.h>
+#endif
 
 /* 
  * Time related macros
@@ -39,6 +43,9 @@ typedef struct proc afs_proc_t;
 #define iodone biodone
 #endif
 
+#define VSUID           S_ISUID
+#define VSGID           S_ISGID
+
 #define osi_vnhold(avc,r)	vref(AFSTOV(avc))
 
 #define vType(vc)               AFSTOV(vc)->v_type
@@ -53,13 +60,19 @@ extern int (**afs_vnodeop_p) ();
 #endif
 #define SetAfsVnode(v)          /* nothing; done in getnewvnode() */
 
+#if defined(AFS_FBSD80_ENV)
+#define osi_vinvalbuf(vp, flags, slpflag, slptimeo) \
+  vinvalbuf((vp), (flags), (slpflag), (slptimeo))
+#else
+#define osi_vinvalbuf(vp, flags, slpflag, slptimeo) \
+  vinvalbuf((vp), (flags), (curthread), (slpflag), (slptimeo))
+#endif
+
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
 
 #undef gop_lookupname_user
-#define gop_lookupname osi_lookupname_user
-
-#undef afs_suser
+#define gop_lookupname_user osi_lookupname
 
 #define afs_strcat(s1, s2)	strcat((s1), (s2))
 
@@ -78,7 +91,18 @@ extern int (**afs_vnodeop_p) ();
 #endif
 #define VN_HOLD(vp)		VREF(vp)
 
-
+#undef afs_suser
+#if defined(AFS_FBSD80_ENV)
+/* OpenAFS-specific privileges negotiated for FreeBSD, thanks due to
+ * Ben Kaduk */
+#define osi_suser_client_settings(x)   (!priv_check(curthread, PRIV_AFS_ADMIN))
+#define osi_suser_afs_daemon(x)   (!priv_check(curthread, PRIV_AFS_DAEMON))
+#define afs_suser(x) (osi_suser_client_settings((x)) && osi_suser_afs_daemon((x)))
+#elif defined(AFS_FBSD50_ENV)
+#define afs_suser(x)	(!suser(curthread))
+#else
+#define afs_suser(x)	(!suser(curproc))
+#endif
 
 #undef osi_getpid
 #if defined(AFS_FBSD50_ENV)
@@ -86,7 +110,6 @@ extern int (**afs_vnodeop_p) ();
 #define VROOT		VV_ROOT
 #define v_flag		v_vflag
 #define osi_curcred()	(curthread->td_ucred)
-#define afs_suser(x)	(!suser(curthread))
 #define osi_getpid()	(curthread->td_proc->p_pid)
 #define simple_lock(x)	mtx_lock(x)
 #define simple_unlock(x) mtx_unlock(x)
@@ -99,7 +122,6 @@ extern struct mtx afs_global_mtx;
 #else /* FBSD50 */
 extern struct lock afs_global_lock;
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
-#define afs_suser(x)	(!suser(curproc))
 #define osi_getpid()	(curproc->p_pid)
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)

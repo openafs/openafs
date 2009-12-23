@@ -72,7 +72,7 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     AFS_GUNLOCK();
 #if defined(AFS_FBSD80_ENV)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY);
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
     VOP_UNLOCK(afile->vnode, 0);
 #elif defined(AFS_FBSD50_ENV)
     vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curthread);
@@ -123,7 +123,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
       AFS_GUNLOCK();
 #if defined(AFS_FBSD80_ENV)
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY);
-    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp);
 #elif defined(AFS_FBSD50_ENV)
     vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
@@ -136,7 +136,9 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
-#if defined(AFS_FBSD50_ENV)
+#if defined(AFS_FBSD80_ENV)
+    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp);
+#elif defined(AFS_FBSD50_ENV)
     code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curthread);
 #else
     code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curproc);

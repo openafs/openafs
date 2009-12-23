@@ -392,7 +392,8 @@ syscall.o: ${SYS}/syscall.s
 		${AS} -o syscall.o syscall.i; \
 		$(RM) -f syscall.ss syscall.i;; \
 	 *fbsd* ) \
-		touch syscall.o ;; \
+		touch syscall.c ; \
+                ${CC} ${CFLAGS} -c syscall.c;; \
 	 *) \
 		$(PATH_CPP) ${SFLAGS} ${SYS}/syscall.s > syscall.ss; \
 		as -o syscall.o syscall.ss;		\
