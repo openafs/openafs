@@ -1447,15 +1447,23 @@ void *osi_find_syscall_table(int which)
     }
     answer = do_find_syscall_table(P, &method);
     if (!answer) {
+#if !defined(LINUX_KEYRING_SUPPORT)
 	printk("Warning: failed to find address of %s\n", P->desc);
 	printk("System call hooks will not be installed; proceeding anyway\n");
+#else
+	printk("Using keyrings, rather than hooking system calls\n");
+#endif
 	return 0;
     }
     printk("Found %s at 0x%lx (%s)\n", P->desc, (unsigned long)answer, method);
 #if defined(AFS_I386_LINUX26_ENV) || defined(AFS_AMD64_LINUX26_ENV)
     if (!check_access((unsigned long)answer, 1)) {
+#if !defined(LINUX_KEYRING_SUPPORT)
 	printk("Address 0x%lx is not writable.\n", (unsigned long)answer);
 	printk("System call hooks will not be installed; proceeding anyway\n");
+#else
+	printk("Using keyrings, rather than hooking system calls\n");
+#endif
 	return 0;
     }
 #endif
