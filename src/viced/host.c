@@ -1629,9 +1629,13 @@ h_GetHost_r(struct rx_connection *tcon, int *heldp)
 			       host, 
 			       afs_inet_ntoa_r(host->host, hoststr),
 			       ntohs(host->port),code2));
-		    
-                    removeInterfaceAddr_r(host, host->host, host->port);
+		    /*
+		     * make sure we add and then remove. otherwise, we
+		     * might end up with no valid interfaces after the
+		     * remove and the host will have been marked deleted.
+		     */
                     addInterfaceAddr_r(host, haddr, hport);
+                    removeInterfaceAddr_r(host, host->host, host->port);
                     host->host = haddr;
                     host->port = hport;
                     rxconn = host->callback_rxcon;
@@ -1870,6 +1874,11 @@ h_GetHost_r(struct rx_connection *tcon, int *heldp)
 				  ntohs(oldHost->port),
                                   afs_inet_ntoa_r(haddr, hoststr),
 				  ntohs(hport)));
+			/*
+			 * add then remove.  otherwise the host may get marked
+			 * deleted if we removed the only valid address.
+			 */
+			addInterfaceAddr_r(oldHost, haddr, hport);
 			if (probefail || oldHost->host == haddr) {
 			    /* The probe failed which means that the old address is 
 			     * either unreachable or is not the same host we were just
@@ -1896,7 +1905,6 @@ h_GetHost_r(struct rx_connection *tcon, int *heldp)
 				removeInterfaceAddr_r(oldHost, haddr, interface->interface[i].port);
 			    }
 			}
-			addInterfaceAddr_r(oldHost, haddr, hport);
                         hashInsert_r(haddr, hport, oldHost);
 			oldHost->host = haddr;
 			oldHost->port = hport;
