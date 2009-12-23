@@ -19,6 +19,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <afs/stds.h>
@@ -1302,10 +1303,9 @@ UuidCmd(struct cmd_syndesc *as, void *arock)
  */
  
 static int
-BypassThresholdCmd(struct cmd_syndesc *as, char *arock)
+BypassThresholdCmd(struct cmd_syndesc *as, void *arock)
 {
     afs_int32 code;
-    afs_int32 size;
     struct ViceIoctl blob;
     afs_int32 threshold_i, threshold_o;
     char *tp;	
