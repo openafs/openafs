@@ -1493,7 +1493,6 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
         code = cm_SearchCellRegistry(1, cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
         if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
             code = cm_SearchCellFileEx(cp->name, cp->name, cp->linkedName, cm_AddCellProc, &rock);
-#ifdef AFS_AFSDB_ENV
         if (code) {
             if (cm_dnsEnabled) {
                 int ttl;
@@ -1512,7 +1511,6 @@ cm_IoctlNewCell(struct cm_ioctl *ioctlp, struct cm_user *userp)
             cp->flags &= ~CM_CELLFLAG_DNS;
             lock_ReleaseMutex(&cp->mx);
         }
-#endif /* AFS_AFSDB_ENV */
         if (code) {
             lock_ObtainMutex(&cp->mx);
             cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;

@@ -1134,7 +1134,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	    AFS_COPYOUT((caddr_t) & mask, AFSKPTR(parm3),
 			sizeof(afs_int32), code);
     }
-#ifdef AFS_AFSDB_ENV
     else if (parm == AFSOP_AFSDB_HANDLER) {
 	int sizeArg = (int)parm4;
 	int kmsgLen = sizeArg & 0xffff;
@@ -1161,7 +1160,6 @@ afs_syscall_call(long parm, long parm2, long parm3,
 	afs_osi_Free(kmsg, kmsgLen);
 	afs_osi_Free(cellname, cellLen);
     }
-#endif
     else if (parm == AFSOP_SET_DYNROOT) {
 	code = afs_SetDynrootEnable(parm2);
     } else if (parm == AFSOP_SET_FAKESTAT) {
@@ -1269,12 +1267,10 @@ afs_shutdown(void)
 	afs_osi_Wakeup((char *)&afs_CacheTruncateDaemon);
 	afs_osi_Sleep(&afs_termState);
     }
-#ifdef AFS_AFSDB_ENV
     afs_warn("AFSDB... ");
     afs_StopAFSDB();
     while (afs_termState == AFSOP_STOP_AFSDB)
 	afs_osi_Sleep(&afs_termState);
-#endif
 #if	defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
     afs_warn("RxEvent... ");
     /* cancel rx event daemon */

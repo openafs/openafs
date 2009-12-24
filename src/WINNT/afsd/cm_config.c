@@ -21,10 +21,8 @@
 #include <afs/stds.h>
 #include <afs/cellconfig.h>
 
-#ifdef AFS_AFSDB_ENV
 #include "cm_dns.h"
 #include <afs/afsint.h>
-#endif
 
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
@@ -693,7 +691,6 @@ long cm_EnumerateCellRegistry(afs_uint32 client, cm_enumCellRegistryProc_t *proc
 long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
                         cm_configProc_t *procp, void *rockp)
 {
-#ifdef AFS_AFSDB_ENV
     int rc;
     int  cellHostAddrs[AFSMAXCELLHOSTS];
     char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
@@ -737,9 +734,6 @@ long cm_SearchCellByDNS(char *cellNamep, char *newCellNamep, int *ttl,
     }
     else
        return -1;  /* not found */
-#else
-    return -1;  /* not found */
-#endif /* AFS_AFSDB_ENV */
 }
 
 /* use cm_GetConfigDir() plus AFS_CELLSERVDB to 

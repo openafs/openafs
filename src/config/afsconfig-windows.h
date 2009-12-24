@@ -210,8 +210,6 @@
 # endif
 #endif
 
-/*#undef AFS_AFSDB_ENV*/
-#define AFS_AFSDB_ENV 1
 #undef AFS_NAMEI_ENV
 
 #undef FAST_RESTART

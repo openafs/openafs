@@ -6,8 +6,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifdef AFS_AFSDB_ENV
-
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/cellconfig.h>
@@ -1024,5 +1022,4 @@ int getAFSServerW(const cm_unichar_t *service, const cm_unichar_t *protocol, con
 #endif  /* DNSAPI_ENV */
         return -1;
 }
-#endif /* AFS_AFSDB_ENV */
 

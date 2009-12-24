@@ -47,7 +47,6 @@ AH_VERBATIM([OPENAFS_HEADER],
 #define _FILE_OFFSET_BITS 64
 #endif
 
-#undef AFS_AFSDB_ENV
 #undef AFS_NAMEI_ENV
 #undef BITMAP_LATER
 #undef FAST_RESTART
@@ -94,10 +93,6 @@ AC_ARG_WITH([afs-sysname],
     [AS_HELP_STRING([--with-afs-sysname=sys], [use sys for the afs sysname])])
 
 dnl General feature options.
-AC_ARG_ENABLE([afsdb],
-    [AS_HELP_STRING([--disable-afsdb], [disable AFSDB DNS RR support])],
-    ,
-    [enable_afsdb="yes"])
 AC_ARG_ENABLE([pam],
     [AS_HELP_STRING([--disable-pam], [disable PAM support])],
     ,
@@ -1337,7 +1332,7 @@ else
         fi
       done    
       if test "$ac_cv_func_res_search" = yes; then
-        LIB_res_search="-l$lib"       
+        LIB_AFSDB="-l$lib"
 	AC_DEFINE(HAVE_RES_SEARCH, 1, [])
         AC_MSG_RESULT([yes, in lib$lib])
       else
@@ -1492,11 +1487,6 @@ else
         else
 		VFSCK="vfsck"
 	fi
-fi
-
-if test "$enable_afsdb" = "yes"; then
-	LIB_AFSDB="$LIB_res_search"
-	AC_DEFINE(AFS_AFSDB_ENV, 1, [define if you want to want search afsdb rr])
 fi
 
 dnl check for tivoli

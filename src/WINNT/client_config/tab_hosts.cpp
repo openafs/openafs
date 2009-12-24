@@ -196,10 +196,8 @@ BOOL HostsTab_OnApply (HWND hDlg)
           code != CM_ERROR_FORCE_DNS_LOOKUP &&
           !CSDB_FindCell (&g.Configuration.CellServDB, szCell))
          {
-#ifdef AFS_AFSDB_ENV
              int ttl;
              if (cm_SearchCellByDNS(cellname, NULL, &ttl, NULL, NULL))
-#endif
              {
                  Message (MB_ICONASTERISK | MB_OK, GetErrorTitle(), IDS_BADCELL_DESC_CC);
                  return FALSE;

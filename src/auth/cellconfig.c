@@ -34,13 +34,11 @@
 #include <sys/file.h>
 #include <sys/time.h>
 #include <ctype.h>
-#ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #ifdef HAVE_ARPA_NAMESER_COMPAT_H
 #include <arpa/nameser_compat.h>
 #endif
 #include <resolv.h>
-#endif /* AFS_AFSDB_ENV */
 #endif /* AFS_NT40_ENV */
 #include <afs/afsint.h>
 #include <errno.h>
@@ -61,13 +59,11 @@
 #include "cellconfig.h"
 #include "keys.h"
 #ifdef AFS_NT40_ENV
-#ifdef AFS_AFSDB_ENV
 #include <cm.h>
 #include <cm_config.h>
 /* cm_dns.h depends on cellconfig.h */
 #include <cm_nls.h>
 #include <cm_dns.h>
-#endif /* AFS_AFSDB_ENV */
 #endif
 #include <rx/rx.h>
 #include <rx/rxkad.h>
@@ -991,7 +987,6 @@ afsconf_GetExtendedCellInfo(struct afsconf_dir *adir, char *acellName,
     return code;
 }
 
-#ifdef AFS_AFSDB_ENV
 #if !defined(AFS_NT40_ENV)
 int
 afsconf_LookupServer(const char *service, const char *protocol,
@@ -1310,7 +1305,6 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     return 0;
 }
 #endif /* windows */
-#endif /* AFS_AFSDB_ENV */
 
 int
 afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
@@ -1449,11 +1443,7 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	return 0;
     } else {
 	UNLOCK_GLOBAL_MUTEX;
-#ifdef AFS_AFSDB_ENV
 	return afsconf_GetAfsdbInfo(tcell, aservice, acellInfo);
-#else
-	return AFSCONF_NOTFOUND;
-#endif /* AFS_AFSDB_ENV */
     }
 }
 

@@ -681,13 +681,11 @@ BOOL fIsCellInCellServDB (LPCTSTR pszCell)
            fFound = TRUE;
        CSDB_FreeFile (&CellServDB);
    }
-#ifdef AFS_AFSDB_ENV
-    if ( fFound == FALSE ) {
-        int ttl;
-        fFound = !cm_SearchCellByDNS(cellname, NULL, &ttl, NULL, NULL);
-    }
-#endif
-     done:
+   if ( fFound == FALSE ) {
+       int ttl;
+       fFound = !cm_SearchCellByDNS(cellname, NULL, &ttl, NULL, NULL);
+   }
+   done:
 
    return fFound;
 }

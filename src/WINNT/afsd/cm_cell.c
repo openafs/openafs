@@ -86,10 +86,8 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
           && !(cp->flags & CM_CELLFLAG_FREELANCE)
 #endif
           ) || (time(0) > cp->timeout)
-#ifdef AFS_AFSDB_ENV
         || (cm_dnsEnabled && (cp->flags & CM_CELLFLAG_DNS) &&
          ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID)))
-#endif
             ) 
     {
         lock_ReleaseMutex(&cp->mx);
@@ -110,7 +108,6 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
 	    cp->timeout = time(0) + 7200;
             lock_ReleaseMutex(&cp->mx);
         }
-#ifdef AFS_AFSDB_ENV
         else {
             if (cm_dnsEnabled) {
                 int ttl;
@@ -135,7 +132,6 @@ cm_cell_t *cm_UpdateCell(cm_cell_t * cp, afs_uint32 flags)
                 }
 	    }
 	}
-#endif /* AFS_AFSDB_ENV */
     } else {
         lock_ReleaseMutex(&cp->mx);
     }

@@ -113,9 +113,7 @@ DWORD TraceOption = 0;
 
 HANDLE afsi_file;
 
-#ifdef AFS_AFSDB_ENV
 int cm_dnsEnabled = 1;
-#endif
 
 
 static int afsi_log_useTimestamp = 1;
@@ -951,7 +949,6 @@ afsd_InitCM(char **reasonP)
                             (BYTE *) &cm_anonvldb, &dummyLen);
     afsi_log("CM ForceAnonVLDB is %s", cm_anonvldb ? "on" : "off");
 
-#ifdef AFS_AFSDB_ENV
     dummyLen = sizeof(cm_dnsEnabled);
     code = RegQueryValueEx(parmKey, "UseDNS", NULL, NULL,
                             (BYTE *) &cm_dnsEnabled, &dummyLen);
@@ -963,9 +960,6 @@ afsd_InitCM(char **reasonP)
         cm_dnsEnabled = 1;   /* default on */
         afsi_log("Default to use DNS to find AFS cell servers");
     }
-#else /* AFS_AFSDB_ENV */
-    afsi_log("AFS not built with DNS support to find AFS cell servers");
-#endif /* AFS_AFSDB_ENV */
 
 #ifdef AFS_FREELANCE_CLIENT
     dummyLen = sizeof(cm_freelanceEnabled);
@@ -1298,12 +1292,10 @@ afsd_InitCM(char **reasonP)
         return -1;
     }
 
-#ifdef AFS_AFSDB_ENV
 #if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
     if (cm_InitDNS(cm_dnsEnabled) == -1)
         cm_dnsEnabled = 0;  /* init failed, so deactivate */
     afsi_log("cm_InitDNS %d", cm_dnsEnabled);
-#endif
 #endif
 
     /* Set RX parameters before initializing RX */

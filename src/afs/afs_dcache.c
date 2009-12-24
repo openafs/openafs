@@ -452,11 +452,7 @@ afs_CacheTruncateDaemon(void)
 	    afs_stats_AddTo(CTD_stats.CTD_sleepTime, CTD_tmpTime);
 	}
 	if (afs_termState == AFSOP_STOP_TRUNCDAEMON) {
-#ifdef AFS_AFSDB_ENV
 	    afs_termState = AFSOP_STOP_AFSDB;
-#else
-	    afs_termState = AFSOP_STOP_RXEVENT;
-#endif
 	    afs_osi_Wakeup(&afs_termState);
 	    break;
 	}

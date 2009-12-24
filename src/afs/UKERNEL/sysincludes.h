@@ -155,13 +155,11 @@
 typedef unsigned int fsblkcnt_t;
 #endif
 
-#ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #ifdef HAVE_ARPA_NAMESER_COMPAT_H
 #include <arpa/nameser_compat.h>
 #endif
 #include <resolv.h>
-#endif /* AFS_AFSDB_ENV */
 
 /* glibc 2.2 has pthread_attr_setstacksize */
 #if (defined(AFS_LINUX22_ENV) && !defined(AFS_USR_LINUX22_ENV)) || (defined(AFS_USR_LINUX22_ENV) && (__GLIBC_MINOR__ < 2))

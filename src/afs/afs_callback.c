@@ -60,10 +60,8 @@ static struct ltable {
       "afs_xsrvAddr", (char *)&afs_xsrvAddr},
     {
       "afs_xvreclaim", (char *)&afs_xvreclaim},
-#ifdef AFS_AFSDB_ENV
     { "afsdb_client_lock", (char *)&afsdb_client_lock},
     { "afsdb_req_lock", (char *)&afsdb_req_lock},
-#endif
 #ifdef AFS_DISCON_ENV
     { "afs_discon_lock", (char *)&afs_discon_lock},
     { "afs_disconDirtyLock", (char *)&afs_disconDirtyLock},

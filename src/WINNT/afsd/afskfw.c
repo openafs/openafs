@@ -3416,12 +3416,10 @@ KFW_AFS_get_cellconfig(char *cell, struct afsconf_cell *cellconfig, char *local_
     rc = cm_SearchCellRegistry(1, cell, newcell, linkedcell, get_cellconfig_callback, (void*)cellconfig);
     if (rc && rc != CM_ERROR_FORCE_DNS_LOOKUP)
         rc = cm_SearchCellFileEx(cell, newcell, linkedcell, get_cellconfig_callback, (void*)cellconfig);
-#ifdef AFS_AFSDB_ENV
     if (rc != 0) {
         int ttl;
         rc = cm_SearchCellByDNS(cell, newcell, &ttl, get_cellconfig_callback, (void*)cellconfig);
     }
-#endif
 
     if (rc == 0) {
         strcpy(cellconfig->name, newcell);

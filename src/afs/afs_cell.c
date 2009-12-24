@@ -33,7 +33,6 @@ afs_rwlock_t afs_xcell;		/* Export for cmdebug peeking at locks */
  * afs_LookupAFSDB: look up AFSDB for given cell name and create locally
  */
 
-#ifdef AFS_AFSDB_ENV
 afs_rwlock_t afsdb_client_lock;	/* Serializes client requests */
 afs_rwlock_t afsdb_req_lock;	/* Serializes client requests */
 static char afsdb_handler_running;	/* Protected by GLOCK */
@@ -181,7 +180,6 @@ afs_GetCellHostsAFSDB(char *acellName)
     } else
 	return ENOENT;
 }
-#endif
 
 
 /*! 
@@ -191,7 +189,6 @@ afs_GetCellHostsAFSDB(char *acellName)
 void
 afs_LookupAFSDB(char *acellName)
 {
-#ifdef AFS_AFSDB_ENV
     int code;
     char *cellName = afs_strdup(acellName);
 
@@ -199,7 +196,6 @@ afs_LookupAFSDB(char *acellName)
     afs_Trace2(afs_iclSetp, CM_TRACE_AFSDB, ICL_TYPE_STRING, cellName, 
                ICL_TYPE_INT32, code);
     afs_osi_FreeStr(cellName);
-#endif
 }
 
 /*
@@ -1040,10 +1036,8 @@ void
 afs_CellInit(void)
 {
     AFS_RWLOCK_INIT(&afs_xcell, "afs_xcell");
-#ifdef AFS_AFSDB_ENV
     AFS_RWLOCK_INIT(&afsdb_client_lock, "afsdb_client_lock");
     AFS_RWLOCK_INIT(&afsdb_req_lock, "afsdb_req_lock");
-#endif
     QInit(&CellLRU);
 
     afs_cellindex = 0;

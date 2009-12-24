@@ -311,9 +311,7 @@ static int nBiods = 5;		/* AIX3.1 only */
 static int preallocs = 400;	/* Def # of allocated memory blocks */
 static int enable_peer_stats = 0;	/* enable rx stats */
 static int enable_process_stats = 0;	/* enable rx stats */
-#ifdef AFS_AFSDB_ENV
 static int enable_afsdb = 0;	/* enable AFSDB support */
-#endif
 static int enable_dynroot = 0;	/* enable dynroot support */
 static int enable_fakestat = 0;	/* enable fakestat support */
 static int enable_backuptree = 0;	/* enable backup tree support */
@@ -1427,7 +1425,6 @@ ConfigCellAlias(struct afsconf_cellalias *aca,
     return 0;
 }
 
-#ifdef AFS_AFSDB_ENV
 static void
 AfsdbLookupHandler(void)
 {
@@ -1485,7 +1482,6 @@ AfsdbLookupHandler(void)
 #endif
     exit(1);
 }
-#endif
 
 #ifdef mac2
 #include <sys/ioctl.h>
@@ -1674,11 +1670,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
     if (as->parms[24].items) {
 	/* -afsdb */
-#ifdef AFS_AFSDB_ENV
 	enable_afsdb = 1;
-#else
-	printf("afsd: No AFSDB support; ignoring -afsdb");
-#endif
     }
     if (as->parms[25].items) {
 	/* -files_per_subdir */
@@ -2067,7 +2059,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
 #endif
 
-#ifdef AFS_AFSDB_ENV
     if (enable_afsdb) {
 	if (afsd_verbose)
 	    printf("%s: Forking AFSDB lookup handler.\n", rn);
@@ -2085,7 +2076,6 @@ mainproc(struct cmd_syndesc *as, void *arock)
 	    exit(1);
 	}
     }
-#endif
 
     code = call_syscall(AFSOP_BASIC_INIT, 1);
     if (code) {
@@ -2481,11 +2471,8 @@ main(int argc, char **argv)
 		"Collect rpc statistics for this process");
     cmd_AddParm(ts, "-mem_alloc_sleep", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDE),
 		"Allow sleeps when allocating memory cache");
-    cmd_AddParm(ts, "-afsdb", CMD_FLAG, (CMD_OPTIONAL
-#ifndef AFS_AFSDB_ENV
-					 | CMD_HIDE
-#endif
-		), "Enable AFSDB support");
+    cmd_AddParm(ts, "-afsdb", CMD_FLAG, (CMD_OPTIONAL),
+		"Enable AFSDB support");
     cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL,
 		"log(2) of the number of cache files per cache subdirectory");
     cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL,
