@@ -51,7 +51,6 @@ AH_VERBATIM([OPENAFS_HEADER],
 #undef AFS_LARGEFILE_ENV
 #undef AFS_NAMEI_ENV
 #undef BITMAP_LATER
-#undef BOS_RESTRICTED_MODE
 #undef FAST_RESTART
 #undef FULL_LISTVOL_SWITCH
 #undef COMPLETION_H_EXISTS
@@ -104,12 +103,6 @@ AC_ARG_ENABLE([pam],
     [AS_HELP_STRING([--disable-pam], [disable PAM support])],
     ,
     [enable_pam="yes"])
-AC_ARG_ENABLE([bos-restricted-mode],
-    [AS_HELP_STRING([--enable-bos-restricted-mode],
-        [enable bosserver restricted mode which disables certain bosserver
-         functionality])],
-    , 
-    [enable_bos_restricted_mode="no"])
 AC_ARG_ENABLE([largefile-fileserver],
     [AS_HELP_STRING([--disable-largefile-fileserver],
         [disable large file support in fileserver])],
@@ -1476,10 +1469,6 @@ if test "$enable_icmp_pmtu_discovery" = "yes"; then
    if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
 	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
    fi
-fi
-
-if test "$enable_bos_restricted_mode" = "yes"; then
-	AC_DEFINE(BOS_RESTRICTED_MODE, 1, [define if you want to want bos restricted mode])
 fi
 
 if test "$enable_largefile_fileserver" = "yes"; then

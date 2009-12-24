@@ -87,6 +87,9 @@ machine named by the B<-server> argument, or must be logged onto a server
 machine as the local superuser C<root> if the B<-localauth> flag is
 included.
 
+The B<bos delete> command cannot be run against servers which are in
+restricted mode.
+
 =head1 SEE ALSO
 
 L<BosConfig(5)>,

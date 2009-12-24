@@ -1876,7 +1876,6 @@ DoStat(IN char *aname,
     return 0;
 }
 
-#ifdef BOS_RESTRICTED_MODE
 static int
 GetRestrict(struct cmd_syndesc *as, void *arock)
 {
@@ -1906,7 +1905,6 @@ SetRestrict(struct cmd_syndesc *as, void *arock)
 	printf("bos: failed to set restricted mode (%s)\n", em(code));
     return 0;
 }
-#endif
 
 static void
 add_std_args(register struct cmd_syndesc *ts)
@@ -2135,11 +2133,13 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-newbinary", CMD_FLAG, CMD_OPTIONAL,
 		"set new binary restart time");
     add_std_args(ts);
+    cmd_CreateAlias(ts, "setr");
 
     ts = cmd_CreateSyntax("getrestart", GetRestartCmd, NULL,
 			  "get restart times");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     add_std_args(ts);
+    cmd_CreateAlias(ts, "getr");
 
     ts = cmd_CreateSyntax("salvage", SalvageCmd, NULL,
 			  "salvage partition or volumes");
@@ -2209,7 +2209,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "machine name");
     add_std_args(ts);
 
-#ifdef BOS_RESTRICTED_MODE
     ts = cmd_CreateSyntax("getrestricted", GetRestrict, NULL,
 			  "get restrict mode");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
@@ -2220,7 +2219,6 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "mode to set");
     add_std_args(ts);
-#endif
 #endif
 
     code = cmd_Dispatch(argc, argv);

@@ -78,7 +78,6 @@ int rxkadDisableDotCheck = 0;
 #define ADDRSPERSITE 16         /* Same global is in rx/rx_user.c */
 afs_uint32 SHostAddrs[ADDRSPERSITE];
 
-#ifdef BOS_RESTRICTED_MODE
 int bozo_isrestricted = 0;
 int bozo_restdisable = 0;
 
@@ -89,7 +88,6 @@ bozo_insecureme(int sig)
     bozo_isrestricted = 0;
     bozo_restdisable = 1;
 }
-#endif
 
 struct bztemp {
     FILE *file;
@@ -281,9 +279,7 @@ ReadBozoFile(char *aname)
     afs_int32 i, goal;
     struct bnode *tb;
     char *parms[MAXPARMS];
-#ifdef BOS_RESTRICTED_MODE
     int rmode;
-#endif
 
     /* rename BozoInit to BosServer for the user */
     if (!aname) {
@@ -367,7 +363,7 @@ ReadBozoFile(char *aname)
 	    bozo_nextDayKT.sec = ktsec;
 	    continue;
 	}
-#ifdef BOS_RESTRICTED_MODE
+
 	if (strncmp(tbuffer, "restrictmode", 12) == 0) {
 	    code = sscanf(tbuffer, "restrictmode %d", &rmode);
 	    if (code != 1) {
@@ -381,7 +377,6 @@ ReadBozoFile(char *aname)
 	    bozo_isrestricted = rmode;
 	    continue;
 	}
-#endif
 
 	if (strncmp("bnode", tbuffer, 5) != 0) {
 	    code = -1;
@@ -466,9 +461,8 @@ WriteBozoFile(char *aname)
     if (!tfile)
 	return -1;
     btemp.file = tfile;
-#ifdef BOS_RESTRICTED_MODE
+
     fprintf(tfile, "restrictmode %d\n", bozo_isrestricted);
-#endif
     fprintf(tfile, "restarttime %d %d %d %d %d\n", bozo_nextRestartKT.mask,
 	    bozo_nextRestartKT.day, bozo_nextRestartKT.hour,
 	    bozo_nextRestartKT.min, bozo_nextRestartKT.sec);
@@ -526,12 +520,11 @@ BozoDaemon(void *unused)
 	IOMGR_Sleep(60);
 	now = FT_ApproxTime();
 
-#ifdef BOS_RESTRICTED_MODE
 	if (bozo_restdisable) {
 	    bozo_Log("Restricted mode disabled by signal\n");
 	    bozo_restdisable = 0;
 	}
-#endif
+
 	if (bozo_newKTs) {	/* need to recompute restart times */
 	    bozo_newKTs = 0;	/* done for a while */
 	    nextRestart = ktime_next(&bozo_nextRestartKT, BOZO_MINSKIP);
@@ -753,9 +746,7 @@ main(int argc, char **argv, char **envp)
     sigaction(SIGABRT, &nsa, NULL);
 #endif
     osi_audit_init();
-#ifdef BOS_RESTRICTED_MODE
     signal(SIGFPE, bozo_insecureme);
-#endif
 
 #ifdef AFS_NT40_ENV
     /* Initialize winsock */
@@ -816,11 +807,9 @@ main(int argc, char **argv, char **envp)
 	} else if (strcmp(argv[code], "-enable_process_stats") == 0) {
 	    rx_enableProcessRPCStats();
 	}
-#ifdef BOS_RESTRICTED_MODE
 	else if (strcmp(argv[code], "-restricted") == 0) {
 	    bozo_isrestricted = 1;
 	}
-#endif
 	else if (strcmp(argv[code], "-rxbind") == 0) {
 	    rxBind = 1;
 	}

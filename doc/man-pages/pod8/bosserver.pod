@@ -9,7 +9,8 @@ bosserver - Initializes the BOS Server
 
 B<bosserver> [B<-noauth>] [B<-log>] [B<-enable_peer_stats>]
     S<<< [B<-auditlog> <I<log path>>] >>> [B<-audit-interface> (file | sysvmq)]
-    [B<-enable_process_stats>] [B<-allow-dotted-principals>] [B<-help>]
+    [B<-enable_process_stats>] [B<-allow-dotted-principals>]
+    [B<-restricted>] [B<-help>]
 
 =for html
 </div>
@@ -154,6 +155,15 @@ user.admin PTS entry. Sites whose Kerberos realms don't have these collisions
 between principal names may disable this check by starting the server
 with this option.
 
+=item B<-restricted>
+
+In normal operation, the bos server allows a super user to run any command.
+When the bos server is running in restricted mode (either due to this
+command line flag, or when configured by L<bos_setrestricted(8)>) a number
+of commands are unavailable. Note that this flag persists across reboots.
+Once a server has been placed in restricted mode, it can only be opened up
+by sending the SIGFPE signal.
+
 =item B<-help>
 
 Prints the online help for this command. All other valid options are
@@ -183,6 +193,7 @@ L<bos_exec(8)>,
 L<bos_getlog(8)>,
 L<bos_getrestart(8)>,
 L<bos_restart(8)>,
+L<bos_setrestricted(8)>,
 L<bos_shutdown(8)>,
 L<bos_start(8)>,
 L<bos_startup(8)>,

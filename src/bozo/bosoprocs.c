@@ -47,9 +47,7 @@ extern struct ktime bozo_nextRestartKT, bozo_nextDayKT;
 extern struct afsconf_dir *bozo_confdir;
 extern int bozo_newKTs;
 extern int DoLogging;
-#ifdef BOS_RESTRICTED_MODE
 extern int bozo_isrestricted;
-#endif
 
 afs_int32
 SBOZO_GetRestartTime(struct rx_call *acall, afs_int32 atype, struct bozo_netKTime *aktime)
@@ -125,12 +123,10 @@ SBOZO_Exec(struct rx_call *acall, char *acmd)
 	code = BZACCESS;
 	goto fail;
     }
-#ifdef BOS_RESTRICTED_MODE
     if (bozo_isrestricted) {
 	code = BZACCESS;
 	goto fail;
     }
-#endif
     if (DoLogging)
 	bozo_Log("%s is executing the shell command '%s'\n", caller, acmd);
 
@@ -192,13 +188,11 @@ SBOZO_UnInstall(struct rx_call *acall, register char *aname)
 	osi_auditU(acall, BOS_UnInstallEvent, code, AUD_STR, aname, AUD_END);
 	return code;
     }
-#ifdef BOS_RESTRICTED_MODE
     if (bozo_isrestricted) {
 	code = BZACCESS;
 	osi_auditU(acall, BOS_UnInstallEvent, code, AUD_STR, aname, AUD_END);
 	return code;
     }
-#endif
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalBinPath(aname, &filepath)) {
@@ -291,10 +285,8 @@ SBOZO_Install(struct rx_call *acall, char *aname, afs_int32 asize, afs_int32 mod
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller))
 	return BZACCESS;
-#ifdef BOS_RESTRICTED_MODE
     if (bozo_isrestricted)
 	return BZACCESS;
-#endif
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalBinPath(aname, &fpp)) {
@@ -782,7 +774,6 @@ SBOZO_CreateBnode(struct rx_call *acall, char *atype, char *ainstance,
 	code = BZACCESS;
 	goto fail;
     }
-#ifdef BOS_RESTRICTED_MODE
     if (bozo_isrestricted) {
 	if (strcmp(atype, "cron") || strcmp(ainstance, "salvage-tmp")
 	    || strcmp(ap2, "now")
@@ -792,7 +783,6 @@ SBOZO_CreateBnode(struct rx_call *acall, char *atype, char *ainstance,
 	    goto fail;
 	}
     }
-#endif
 
     code =
 	bnode_Create(atype, ainstance, &tb, ap1, ap2, ap3, ap4, ap5, notifier,
@@ -836,12 +826,10 @@ SBOZO_DeleteBnode(struct rx_call *acall, char *ainstance)
 	code = BZACCESS;
 	goto fail;
     }
-#ifdef BOS_RESTRICTED_MODE
     if (bozo_isrestricted) {
 	code = BZACCESS;
 	goto fail;
     }
-#endif
     if (DoLogging)
 	bozo_Log("%s is executing DeleteBnode '%s'\n", caller, ainstance);
 
@@ -1174,12 +1162,10 @@ SBOZO_Prune(struct rx_call *acall, afs_int32 aflags)
 	code = BZACCESS;
 	goto fail;
     }
-#ifdef BOS_RESTRICTED_MODE
     if (bozo_isrestricted) {
 	code = BZACCESS;
 	goto fail;
     }
-#endif
     if (DoLogging)
 	bozo_Log("%s is executing Prune (flags=%d)\n", caller, aflags);
 
@@ -1436,13 +1422,11 @@ SBOZO_GetLog(register struct rx_call *acall, char *aname)
 	code = BZACCESS;
 	goto fail;
     }
-#ifdef BOS_RESTRICTED_MODE
     if (bozo_isrestricted && strchr(aname, '/')
 	&& strcmp(aname, AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH)) {
 	code = BZACCESS;
 	goto fail;
     }
-#endif
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalLogPath(aname, &logpath)) {
@@ -1517,7 +1501,6 @@ SBOZO_GetInstanceStrings(struct rx_call *acall, char *abnodeName,
     return BZNOENT;
 }
 
-#ifdef BOS_RESTRICTED_MODE
 afs_int32
 SBOZO_GetRestrictedMode(struct rx_call *acall, afs_int32 *arestmode)
 {
@@ -1542,22 +1525,9 @@ SBOZO_SetRestrictedMode(struct rx_call *acall, afs_int32 arestmode)
     }
     bozo_isrestricted = arestmode;
     code = WriteBozoFile(0);
-  fail:
+
     return code;
 }
-#else
-afs_int32
-SBOZO_GetRestrictedMode(struct rx_call *acall, afs_int32 *arestmode)
-{
-    return RXGEN_OPCODE;
-}
-
-afs_int32
-SBOZO_SetRestrictedMode(struct rx_call *acall, afs_int32 arestmode)
-{
-    return RXGEN_OPCODE;
-}
-#endif
 
 void *
 bozo_ShutdownAndExit(void *param)

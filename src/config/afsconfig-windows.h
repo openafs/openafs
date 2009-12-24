@@ -213,7 +213,6 @@
 /*#undef AFS_AFSDB_ENV*/
 #define AFS_AFSDB_ENV 1
 #undef AFS_NAMEI_ENV
-#define BOS_RESTRICTED_MODE
 
 #undef FAST_RESTART
 #undef BITMAP_LATER
