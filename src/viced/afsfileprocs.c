@@ -2354,10 +2354,6 @@ SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
     afs_sfsize_t tPos, tLen;
 
 #ifdef AFS_64BIT_ENV
-#ifndef AFS_LARGEFILE_ENV
-    if (Pos + Len > 0x7fffffff)
-	return EFBIG;
-#endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_sfsize_t) Pos;
     tLen = (afs_sfsize_t) Len;
 #else /* AFS_64BIT_ENV */
@@ -3192,10 +3188,6 @@ SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
     afs_fsize_t tFileLength;
 
 #ifdef AFS_64BIT_ENV
-#ifndef AFS_LARGEFILE_ENV
-    if (FileLength > 0x7fffffff)
-	return EFBIG;
-#endif /* !AFS_LARGEFILE_ENV */
     tPos = (afs_fsize_t) Pos;
     tLength = (afs_fsize_t) Length;
     tFileLength = (afs_fsize_t) FileLength;
@@ -6283,7 +6275,7 @@ SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
     dataBytes = 1 * sizeof(afs_int32);
     dataBuffP = (afs_uint32 *) malloc(dataBytes);
     dataBuffP[0] = VICED_CAPABILITY_ERRORTRANS | VICED_CAPABILITY_WRITELOCKACL;
-#if defined(AFS_64BIT_ENV) && defined(AFS_LARGEFILE_ENV)
+#if defined(AFS_64BIT_ENV)
     dataBuffP[0] |= VICED_CAPABILITY_64BITFILES;
 #endif
     if (saneacls)

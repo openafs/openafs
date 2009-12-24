@@ -559,6 +559,7 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
     afs_int32 offset = 0;
     afs_sfsize_t n, nbytes, howMany, howBig;
     byte *p;
+    afs_uint32 hi, lo;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
@@ -598,19 +599,13 @@ DumpFile(int dumpfd, int vnode, FdHandle_t * handleP,  struct VnodeDiskObject *v
 		(unsigned int) howBig, (unsigned int) howMany,
 		(unsigned int) size);
 
-#ifdef AFS_LARGEFILE_ENV
-    {
-	afs_uint32 hi, lo;
-	SplitInt64(size, hi, lo);
-	if (hi == 0L) {
-	    code = DumpInt32(dumpfd, 'f', lo);
-	} else {
-	    code = DumpDouble(dumpfd, 'h', hi, lo);
-	}
+    SplitInt64(size, hi, lo);
+    if (hi == 0L) {
+	code = DumpInt32(dumpfd, 'f', lo);
+    } else {
+	code = DumpDouble(dumpfd, 'h', hi, lo);
     }
-#else /* !AFS_LARGEFILE_ENV */
-    code = DumpInt32(dumpfd, 'f', size);
-#endif /* !AFS_LARGEFILE_ENV */
+
     if (code) {
 	return VOLSERDUMPERROR;
     }

@@ -767,17 +767,9 @@ fs_stateTruncateFile(struct fs_dump_state * state)
 {
     int ret = 0;
 
-#ifdef AFS_LARGEFILE_ENV
     if (afs_ftruncate(state->fd, state->eof_offset) != 0) {
 	ret = 1;
     }
-#else
-    afs_uint32 hi, lo;
-    SplitInt64(state->eof_offset, hi, lo);
-    if (afs_ftruncate(state->fd, lo) != 0) {
-	ret = 1;
-    }
-#endif
 
     return ret;
 }
@@ -934,13 +926,7 @@ fs_stateSeek(struct fs_dump_state * state, afs_uint64 * offset)
     state->mmap.cursor = (void *) p;
 
     /* update offset */
-#ifdef AFS_LARGEFILE_ENV
     state->mmap.offset = *offset;
-#else
-    if (hi)
-	ret = 1;
-    state->mmap.offset = lo;
-#endif
 
     return ret;
 }
@@ -949,21 +935,10 @@ int
 fs_stateSeek(struct fs_dump_state * state, afs_uint64 * offset)
 {
     int ret = 0;
-#ifndef AFS_LARGEFILE_ENV
-    afs_uint32 high, low;
-    
-    SplitInt64(*offset, high, low);
-    if (high) {
-	ret = 1;
-	goto done;
-    }
-    
-    if (afs_lseek(state->fd, low, SEEK_SET) == -1)
-	ret = 1;
-#else
+
     if (afs_lseek(state->fd, *offset, SEEK_SET) == -1)
 	ret = 1;
-#endif
+
     return ret;
 }
 #endif /* !FS_STATE_USE_MMAP */

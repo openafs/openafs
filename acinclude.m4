@@ -48,7 +48,6 @@ AH_VERBATIM([OPENAFS_HEADER],
 #endif
 
 #undef AFS_AFSDB_ENV
-#undef AFS_LARGEFILE_ENV
 #undef AFS_NAMEI_ENV
 #undef BITMAP_LATER
 #undef FAST_RESTART
@@ -103,11 +102,6 @@ AC_ARG_ENABLE([pam],
     [AS_HELP_STRING([--disable-pam], [disable PAM support])],
     ,
     [enable_pam="yes"])
-AC_ARG_ENABLE([largefile-fileserver],
-    [AS_HELP_STRING([--disable-largefile-fileserver],
-        [disable large file support in fileserver])],
-    ,
-    [enable_largefile_fileserver="yes"])
 AC_ARG_ENABLE([namei-fileserver],
     [AS_HELP_STRING([--enable-namei-fileserver],
         [force compilation of namei fileserver in preference to inode
@@ -1469,10 +1463,6 @@ if test "$enable_icmp_pmtu_discovery" = "yes"; then
    if test "$ac_cv_setsockopt_iprecverr" = "yes"; then
 	AC_DEFINE(ADAPT_PMTU, 1, [define if you want to decode icmp unreachable packets to discover path mtu])
    fi
-fi
-
-if test "$enable_largefile_fileserver" = "yes"; then
-	AC_DEFINE(AFS_LARGEFILE_ENV, 1, [define if you want large file fileserver])
 fi
 
 if test "$enable_cache_bypass" = "yes"; then

@@ -711,17 +711,18 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     afs_sfsize_t n, nbytes, howMany, howBig;
     afs_foff_t lcode = 0;
     byte *p;
+    afs_uint32 hi, lo;
 #ifndef AFS_NT40_ENV
     struct afs_stat status;
 #endif
     afs_sfsize_t size;
 #ifdef	AFS_AIX_ENV
 #include <sys/statfs.h>
-#if defined(AFS_AIX52_ENV) && defined(AFS_LARGEFILE_ENV)
+#if defined(AFS_AIX52_ENV)
     struct statfs64 tstatfs;
-#else /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#else /* !AFS_AIX52_ENV */
     struct statfs tstatfs;
-#endif /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#endif /* !AFS_AIX52_ENV */
     int statfs_code;
 #endif
 
@@ -737,11 +738,11 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
     /* Unfortunately in AIX valuable fields such as st_blksize are 
      * gone from the stat structure.
      */
-#if defined(AFS_AIX52_ENV) && defined(AFS_LARGEFILE_ENV)
+#if defined(AFS_AIX52_ENV)
     statfs_code = fstatfs64(handleP->fd_fd, &tstatfs);
-#else /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#else /* !AFS_AIX52_ENV */
     statfs_code = fstatfs(handleP->fd_fd, &tstatfs);
-#endif /* !AFS_AIX52_ENV || !AFS_LARGEFILE_ENV */
+#endif /* !AFS_AIX52_ENV */
     if (statfs_code != 0) {
         Log("DumpFile: fstatfs returned error code %d on descriptor %d\n", errno, handleP->fd_fd);
 	return VOLSERDUMPERROR;
@@ -754,19 +755,12 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 
 
     size = FDH_SIZE(handleP);
-#ifdef AFS_LARGEFILE_ENV
-    {
-	afs_uint32 hi, lo;
-	SplitInt64(size, hi, lo);
-	if (hi == 0L) {
-	    code = DumpInt32(iodp, 'f', lo);
-	} else {
-	    code = DumpDouble(iodp, 'h', hi, lo);
-	}
+    SplitInt64(size, hi, lo);
+    if (hi == 0L) {
+	code = DumpInt32(iodp, 'f', lo);
+    } else {
+	code = DumpDouble(iodp, 'h', hi, lo);
     }
-#else /* !AFS_LARGEFILE_ENV */
-    code = DumpInt32(iodp, 'f', size);
-#endif /* !AFS_LARGEFILE_ENV */
     if (code) {
 	return VOLSERDUMPERROR;
     }
@@ -1400,9 +1394,7 @@ ReadVnodes(register struct iod *iodp, Volume * vp, int incremental,
 			       VAclDiskSize(vnode));
 		acl_NtohACL(VVnodeDiskACL(vnode));
 		break;
-#ifdef AFS_LARGEFILE_ENV
 	    case 'h':
-#endif
 	    case 'f':{
 		    Inode ino;
 		    Error error;
@@ -1530,14 +1522,12 @@ volser_WriteFile(int vn, struct iod *iodp, FdHandle_t * handleP, int tag,
 #ifdef AFS_64BIT_ENV
     {
 	afs_uint32 filesize_high = 0L, filesize_low = 0L;
-#ifdef AFS_LARGEFILE_ENV
 	if (tag == 'h') {
 	    if (!ReadInt32(iodp, &filesize_high)) {
 		*status = 1;
 		return 0;
 	    }
 	}
-#endif /* !AFS_LARGEFILE_ENV */
 	if (!ReadInt32(iodp, &filesize_low)) {
 	    *status = 1;
 	    return 0;

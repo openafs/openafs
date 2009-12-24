@@ -221,17 +221,10 @@ typedef struct Vnode {
 #define Vn_id(vnp)            ((vnp)->vnodeNumber)
 
 
-#ifdef AFS_LARGEFILE_ENV
 #define VN_GET_LEN(N, V) FillInt64(N, (V)->disk.vn_length_hi, (V)->disk.length)
 #define VNDISK_GET_LEN(N, V) FillInt64(N, (V)->vn_length_hi, (V)->length)
 #define VN_SET_LEN(V, N) SplitInt64(N, (V)->disk.vn_length_hi, (V)->disk.length)
 #define VNDISK_SET_LEN(V, N) SplitInt64(N, (V)->vn_length_hi, (V)->length)
-#else /* !AFS_LARGEFILE_ENV */
-#define VN_GET_LEN(N, V) (N) = (V)->disk.length;
-#define VNDISK_GET_LEN(N, V) (N) = (V)->length;
-#define VN_SET_LEN(V, N) (V)->disk.length = (N);
-#define VNDISK_SET_LEN(V, N) (V)->length = (N);
-#endif /* !AFS_LARGEFILE_ENV */
 
 #ifdef AFS_64BIT_IOPS_ENV
 #define VN_GET_INO(V) ((Inode)((V)->disk.vn_ino_lo | \

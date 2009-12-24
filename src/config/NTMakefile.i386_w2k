@@ -254,7 +254,6 @@ afscdefs =\
     	-DAFS_FREELANCE_CLIENT \
     	-DAFS_64BIT_ENV \
 	-DAFS_64BIT_CLIENT \
-	-DAFS_LARGEFILE_ENV \
 	 $(AFSDEV_AUXCDEFINES)
 
 # Compiler switches (except include paths and preprocessor defines)
