@@ -74,7 +74,6 @@ AH_VERBATIM([OPENAFS_HEADER],
 #undef STRUCT_TASK_STRUCT_HAS_SIGHAND
 #undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 #undef ssize_t
-#undef HAVE_STRUCT_BUF
 #undef HAVE_ARPA_NAMESER_COMPAT_H
 /* glue for RedHat kernel bug */
 #undef ENABLE_REDHAT_BUILDSYS
@@ -808,6 +807,13 @@ else
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
 
+case $AFS_SYSNAME in
+	*_darwin*)
+		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
+		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
+		;;
+esac
+
 dnl Some hosts have a separate common param file they should include.  Figure
 dnl out if we're on one of them now that we know the sysname.
 case $AFS_SYSNAME in
@@ -1241,41 +1247,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                 :
 		fi
 esac
-
-case $AFS_SYSNAME in
-	*_darwin*)
-		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
-		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
-                dnl the test below fails on darwin, even if the CPPFLAGS below
-                dnl are added. the headers from Kernel.framework must be used
-                dnl when KERNEL is defined.
-
-                dnl really, such a thing isn't guaranteed to work on any 
-                dnl platform until the kernel cflags from MakefileProto are
-                dnl known to configure
-	        AC_DEFINE(HAVE_STRUCT_BUF, 1, [define if you have a struct buf])
-		;;
-        *)
-AC_MSG_CHECKING(for definition of struct buf)
-dnl save_CPPFLAGS="$CPPFLAGS"
-dnl CPPFLAGS="$CPPFLAGS -DKERNEL -D_KERNEL -D__KERNEL -D__KERNEL__"
-AC_CACHE_VAL(ac_cv_have_struct_buf, [
-	ac_cv_have_struct_buf=no
-	AC_TRY_COMPILE(
-		[#include <sys/buf.h>],
-		[struct buf x;
-		printf("%d\n", sizeof(x));],
-		ac_cv_have_struct_buf=yes,)
-	]
-)
-dnl CPPFLAGS="$save_CPPFLAGS"
-AC_MSG_RESULT($ac_cv_have_struct_buf)
-if test "$ac_cv_have_struct_buf" = yes; then
-	AC_DEFINE(HAVE_STRUCT_BUF, 1, [define if you have a struct buf])
-fi
-;;
-esac
-
 
 AC_CACHE_VAL(ac_cv_sockaddr_len,
 [

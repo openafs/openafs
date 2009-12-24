@@ -1347,13 +1347,11 @@ extern struct brequest afs_brs[NBRS];	/* request structures */
 #endif
 #endif
 
-#if !defined(UKERNEL) && !defined(HAVE_STRUCT_BUF)
 /* declare something so that prototypes don't flip out */
 /* appears struct buf stuff is only actually passed around as a pointer, 
    except with libuafs, in which case it is actually defined */
 
 struct buf;
-#endif
 
 struct rxfs_storeVariables {
     struct rx_call *call;
