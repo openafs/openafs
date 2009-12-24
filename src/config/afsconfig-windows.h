@@ -226,8 +226,5 @@
 #include "redhat-fix.h"
 #endif
 
-/* include all of the vos listvol options */
-#define FULL_LISTVOL_SWITCH 1
-
 /* Windows does not provide socklen_t */
 typedef unsigned int socklen_t;

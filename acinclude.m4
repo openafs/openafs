@@ -50,7 +50,6 @@ AH_VERBATIM([OPENAFS_HEADER],
 #undef AFS_NAMEI_ENV
 #undef BITMAP_LATER
 #undef FAST_RESTART
-#undef FULL_LISTVOL_SWITCH
 #undef COMPLETION_H_EXISTS
 #undef DEFINED_FOR_EACH_PROCESS
 #undef DEFINED_PREV_TASK
@@ -139,11 +138,6 @@ AC_ARG_ENABLE([unix-sockets],
         [enable use of unix domain sockets for fssync])],
     ,
     [enable_unix_sockets="yes"])
-AC_ARG_ENABLE([full-vos-listvol-switch],
-    [AS_HELP_STRING([--disable-full-vos-listvol-switch],
-        [disable vos full listvol switch for formatted output])],
-    , 
-    [enable_full_vos_listvol_switch="yes"])
 AC_ARG_ENABLE([icmp-pmtu-discovery],
     [AS_HELP_STRING([--enable-icmp-pmtu-discovery],
         [enable path MTU discovery by decoding ICMP unreachable replies])],
@@ -1448,10 +1442,6 @@ if test "$enable_fast_restart" = "yes" &&
    test "$enable_demand_attach_fs" = "yes" ; then
 	AC_MSG_ERROR([The Demand Attach and Fast Restart extensions are mutually exclusive.  Demand Attach fileservers automatically salvage volumes in the background, thereby making Fast Restart pointless.])
 	exit 1
-fi
-
-if test "$enable_full_vos_listvol_switch" = "yes"; then
-	AC_DEFINE(FULL_LISTVOL_SWITCH, 1, [define if you want to want listvol switch])
 fi
 
 if test "$enable_icmp_pmtu_discovery" = "yes"; then

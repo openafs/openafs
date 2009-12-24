@@ -522,7 +522,6 @@ DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
 	    t = pntr->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
 		    ctime(&t));
-#ifdef FULL_LISTVOL_SWITCH
 	    t = pntr->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
 		    ctime(&t));
@@ -538,7 +537,7 @@ DisplayFormat(volintInfo *pntr, afs_int32 server, afs_int32 part,
 	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
 			ctime(&t));
-#endif
+
 	    t = pntr->updateDate;
 	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
@@ -677,7 +676,7 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 	    t = a_xInfoP->creationDate;
 	    fprintf(STDOUT, "    Creation    %s",
 		    ctime(&t));
-#ifdef FULL_LISTVOL_SWITCH
+
 	    t = a_xInfoP->copyDate;
 	    fprintf(STDOUT, "    Copy        %s",
 		    ctime(&t));
@@ -693,7 +692,7 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 	    if (t)
 		fprintf(STDOUT, "    Last Access %s",
 			ctime(&t));
-#endif
+
 	    t = a_xInfoP->updateDate;
 	    if (!t)
 		fprintf(STDOUT, "    Last Update Never\n");
@@ -832,7 +831,6 @@ XDisplayFormat(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
     }				/*Default listing */
 }				/*XDisplayFormat */
 
-#ifdef FULL_LISTVOL_SWITCH
 /*------------------------------------------------------------------------
  * PRIVATE XDisplayFormat2
  *
@@ -1029,9 +1027,7 @@ XDisplayFormat2(volintXInfo *a_xInfoP, afs_int32 a_servID, afs_int32 a_partID,
 	}			/*Screwed volume */
     }				/*Default listing */
 }				/*XDisplayFormat */
-#endif /*FULL_LISTVOL_SWITCH*/
 
-#ifdef FULL_LISTVOL_SWITCH
 static void
 DisplayFormat2(long server, long partition, volintInfo *pntr)
 {
@@ -1149,7 +1145,6 @@ DisplayVolumes2(long server, long partition, volintInfo *pntr, long count)
     }
     return;
 }
-#endif /* FULL_LISTVOL_SWITCH */
 
 static void
 DisplayVolumes(afs_int32 server, afs_int32 part, volintInfo *pntr,
@@ -1275,7 +1270,7 @@ XDisplayVolumes(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
     }
 
 }				/*XDisplayVolumes */
-#ifdef FULL_LISTVOL_SWITCH
+
 /*------------------------------------------------------------------------
  * PRIVATE XDisplayVolumes2
  *
@@ -1361,7 +1356,6 @@ XDisplayVolumes2(afs_int32 a_servID, afs_int32 a_partID, volintXInfo *a_xInfoP,
     }
 
 }				/*XDisplayVolumes2 */
-#endif /* FULL_LISTVOL_SWITCH */
 
 
 /* set <server> and <part> to the correct values depending on 
@@ -1630,13 +1624,10 @@ ExamineVolume(register struct cmd_syndesc *as, void *arock)
 	    foundserv = 1;
 	    if (wantExtendedInfo)
 		XVolumeStats(xInfoP, &entry, aserver, apart, voltype);
-	    else
-#ifdef FULL_LISTVOL_SWITCH
-	    if (as->parms[2].items) {
+	    else if (as->parms[2].items) {
 		DisplayFormat2(aserver, apart, pntr);
 		EnumerateEntry(&entry);
 	    } else
-#endif /* FULL_LISTVOL_SWITCH */
 		VolumeStats_int(pntr, &entry, aserver, apart, voltype);
 
 	    if ((voltype == BACKVOL) && !(entry.flags & BACK_EXISTS)) {
@@ -3711,24 +3702,20 @@ ListVolumes(register struct cmd_syndesc *as, void *arock)
 			as->parms[0].items->data, pname,
 			(unsigned long)count);
 	    if (wantExtendedInfo) {
-#ifdef FULL_LISTVOL_SWITCH
 		if (as->parms[6].items)
 		    XDisplayVolumes2(aserver, dummyPartList.partId[i], origxInfoP,
 				count, int32list, fast, quiet);
 		else
-#endif /* FULL_LISTVOL_SWITCH */
-		XDisplayVolumes(aserver, dummyPartList.partId[i], origxInfoP,
+		    XDisplayVolumes(aserver, dummyPartList.partId[i], origxInfoP,
 				count, int32list, fast, quiet);
 		if (xInfoP)
 		    free(xInfoP);
 		xInfoP = (volintXInfo *) 0;
 	    } else {
-#ifdef FULL_LISTVOL_SWITCH
 		if (as->parms[6].items)
 		    DisplayVolumes2(aserver, dummyPartList.partId[i], oldpntr,
 				    count);
 		else
-#endif /* FULL_LISTVOL_SWITCH */
 		    DisplayVolumes(aserver, dummyPartList.partId[i], oldpntr,
 				   count, int32list, fast, quiet);
 		if (pntr)
@@ -5997,10 +5984,8 @@ main(int argc, char **argv)
 		"generate minimal information");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
-#ifdef FULL_LISTVOL_SWITCH
     cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL,
 		"machine readable format");
-#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("syncvldb", SyncVldb, NULL,
@@ -6023,10 +6008,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
-#ifdef FULL_LISTVOL_SWITCH
     cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL,
 		"machine readable format");
-#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
     cmd_CreateAlias(ts, "volinfo");
 
