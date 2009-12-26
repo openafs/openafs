@@ -151,19 +151,6 @@ printk("%p\n", address);],
       ac_cv_linux_exports_sys_chdir=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_sys_chdir)])
 
-
-AC_DEFUN([LINUX_EXPORTS_SYS_CLOSE], [
-  AC_MSG_CHECKING([for exported sys_close])
-  AC_CACHE_VAL([ac_cv_linux_exports_sys_close], [
-    AC_TRY_KBUILD(
-[extern asmlinkage long sys_close(void) __attribute__((weak));],
-[void *address = &sys_close;
-printk("%p\n", address);],
-      ac_cv_linux_exports_sys_close=yes,
-      ac_cv_linux_exports_sys_close=no)])
-  AC_MSG_RESULT($ac_cv_linux_exports_sys_close)])
-
-
 AC_DEFUN([LINUX_EXPORTS_SYS_OPEN], [
   AC_MSG_CHECKING([for exported sys_open])
   AC_CACHE_VAL([ac_cv_linux_exports_sys_open], [
@@ -174,18 +161,6 @@ printk("%p\n", address);],
       ac_cv_linux_exports_sys_open=yes,
       ac_cv_linux_exports_sys_open=no)])
   AC_MSG_RESULT($ac_cv_linux_exports_sys_open)])
-
-
-AC_DEFUN([LINUX_EXPORTS_SYS_WAIT4], [
-  AC_MSG_CHECKING([for exported sys_wait4])
-  AC_CACHE_VAL([ac_cv_linux_exports_sys_wait4], [
-    AC_TRY_KBUILD(
-[extern asmlinkage long sys_wait4(void) __attribute__((weak));],
-[void *address = &sys_wait4;
-printk("%p\n", address);],
-      ac_cv_linux_exports_sys_wait4=yes,
-      ac_cv_linux_exports_sys_wait4=no)])
-  AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)])
 
 
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE], [
@@ -224,53 +199,6 @@ printk("%d\n", _inode.i_cdev);],
       ac_cv_linux_fs_struct_inode_has_i_cdev=yes,
       ac_cv_linux_fs_struct_inode_has_i_cdev=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_cdev)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DEVICES], [
-  AC_MSG_CHECKING([for i_devices in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_devices], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_devices);],
-      ac_cv_linux_fs_struct_inode_has_i_devices=yes,
-      ac_cv_linux_fs_struct_inode_has_i_devices=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_devices)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS], [
-  AC_MSG_CHECKING([for i_dirty_data_buffers in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_dirty_data_buffers);],
-      ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=yes,
-      ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK], [
-  AC_MSG_CHECKING([for inotify_lock in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_inotify_lock], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.inotify_lock);],
-      ac_cv_linux_fs_struct_inode_has_inotify_lock=yes,
-      ac_cv_linux_fs_struct_inode_has_inotify_lock=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_lock)])
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM], [
-  AC_MSG_CHECKING([for inotify_sem in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_inotify_sem], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%x\n", _inode.inotify_sem);],
-      ac_cv_linux_fs_struct_inode_has_inotify_sem=yes,
-      ac_cv_linux_fs_struct_inode_has_inotify_sem=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_inotify_sem)])
 
 
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD], [
@@ -319,18 +247,6 @@ printk("%d\n", _inode.i_security);],
       ac_cv_linux_fs_struct_inode_has_i_security=yes,
       ac_cv_linux_fs_struct_inode_has_i_security=no)])
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_security)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST], [
-  AC_MSG_CHECKING([for i_sb_list in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_sb_list], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-printk("%d\n", _inode.i_sb_list);],
-      ac_cv_linux_fs_struct_inode_has_i_sb_list=yes,
-      ac_cv_linux_fs_struct_inode_has_i_sb_list=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_sb_list)])
 
 
 AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE], [
@@ -523,17 +439,6 @@ AC_DEFUN([LINUX_KERNEL_HLIST_UNHASHED], [
     CPPFLAGS="$save_CPPFLAGS"])
   AC_MSG_RESULT($ac_cv_linux_kernel_hlist_unhashed)])
 
-AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], [
-  AC_MSG_CHECKING([for gfp_mask in struct address_space])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_address_space_has_gfp_mask], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct address_space _a;
-printk("%d\n", _a.gfp_mask);],
-      ac_cv_linux_fs_struct_address_space_has_gfp_mask=yes,
-      ac_cv_linux_fs_struct_address_space_has_gfp_mask=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_gfp_mask)])
-
 
 AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BYTES], [
   AC_MSG_CHECKING([for i_bytes in struct inode])
@@ -559,30 +464,6 @@ printk("%x\n", _i.i_alloc_sem);],
   AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_alloc_sem)])
 
 
-AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM], [
-  AC_MSG_CHECKING([for i_truncate_sem in struct inode])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_inode_has_i_truncate_sem], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _i;
-printk("%x\n", _i.i_truncate_sem);],
-      ac_cv_linux_fs_struct_inode_has_i_truncate_sem=yes,
-      ac_cv_linux_fs_struct_inode_has_i_truncate_sem=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_truncate_sem)])
-
-
-AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK], [
-  AC_MSG_CHECKING([for page_lock in struct address_space])
-  AC_CACHE_VAL([ac_cv_linux_fs_struct_address_space_has_page_lock], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct address_space _a_s;
-printk("%x\n", _a_s.page_lock);],
-      ac_cv_linux_fs_struct_address_space_has_page_lock=yes,
-      ac_cv_linux_fs_struct_address_space_has_page_lock=no)])
-  AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_page_lock)])
-
-
 AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE], [
   AC_MSG_CHECKING([for inode_setattr return type])
   AC_CACHE_VAL([ac_cv_linux_func_inode_setattr_returns_int], [
@@ -595,20 +476,6 @@ i = inode_setattr(&_inode, &_iattr);],
       ac_cv_linux_func_inode_setattr_returns_int=yes,
       ac_cv_linux_func_inode_setattr_returns_int=no)])
   AC_MSG_RESULT($ac_cv_linux_func_inode_setattr_returns_int)])
-
-
-AC_DEFUN([LINUX_WRITE_INODE_RETURN_TYPE], [
-  AC_MSG_CHECKING([for write_inode return type])
-  AC_CACHE_VAL([ac_cv_linux_func_write_inode_returns_int], [
-    AC_TRY_KBUILD(
-[#include <linux/fs.h>],
-[struct inode _inode;
-struct super_operations _sops;
-int i;
-i = _sops.write_inode(&_inode, 0);],
-      ac_cv_linux_func_write_inode_returns_int=yes,
-      ac_cv_linux_func_write_inode_returns_int=no)])
-  AC_MSG_RESULT($ac_cv_linux_func_write_inode_returns_int)])
 
 
 AC_DEFUN([LINUX_AOP_WRITEBACK_CONTROL], [

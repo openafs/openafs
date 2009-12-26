@@ -53,7 +53,6 @@ AH_VERBATIM([OPENAFS_HEADER],
 #undef COMPLETION_H_EXISTS
 #undef DEFINED_FOR_EACH_PROCESS
 #undef DEFINED_PREV_TASK
-#undef EXPORTED_KALLSYMS_ADDRESS
 #undef EXPORTED_KALLSYMS_SYMBOL
 #undef EXPORTED_SYS_CALL_TABLE
 #undef EXPORTED_IA32_SYS_CALL_TABLE
@@ -61,13 +60,8 @@ AH_VERBATIM([OPENAFS_HEADER],
 #undef INODE_SETATTR_NOT_VOID
 #undef IRIX_HAS_MEM_FUNCS
 #undef RECALC_SIGPENDING_TAKES_VOID
-#undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
-#undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 #undef STRUCT_FS_HAS_FS_ROLLED
-#undef STRUCT_INODE_HAS_I_DEVICES
-#undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 #undef STRUCT_INODE_HAS_I_ALLOC_SEM
-#undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 #undef STRUCT_TASK_STRUCT_HAS_PARENT
 #undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
 #undef STRUCT_TASK_STRUCT_HAS_SIG
@@ -299,7 +293,6 @@ dnl AC_MINIX
 dnl Various compiler setup.
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-COMPILER_HAS_FUNCTION_MACRO
 
 dnl Checks for programs.
 AC_PROG_INSTALL
@@ -399,7 +392,6 @@ case $system in
 	        AC_PATH_PROG(SOLARISCC, [cc], ,
 		    [/opt/SUNWspro/bin:/opt/SunStudioExpress/bin])
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
-		SOLARIS_PROC_HAS_P_COREFILE
 		SOLARIS_FS_HAS_FS_ROLLED
 		SOLARIS_SOLOOKUP_TAKES_SOCKPARAMS
                 ;;
@@ -884,7 +876,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
                  LINUX_STRUCT_TASK_HAS_CRED
 		 LINUX_STRUCT_PROC_DIR_ENTRY_HAS_OWNER
 		 LINUX_HAVE_KMEM_CACHE_T
-		 LINUX_KMEM_CACHE_CREATE_TAKES_DTOR
 		 LINUX_KMEM_CACHE_CREATE_CTOR_TAKES_VOID
 		 LINUX_D_PATH_TAKES_STRUCT_PATH
 		 LINUX_NEW_EXPORT_OPS
@@ -896,22 +887,12 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_DEFINES_PREV_TASK
 		 LINUX_FS_STRUCT_SUPER_HAS_ALLOC_INODE
 		 LINUX_STRUCT_SUPER_BLOCK_HAS_S_BDI
-	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
-	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_BLKBITS
 		 LINUX_FS_STRUCT_INODE_HAS_I_BLKSIZE
-		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
-		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
-		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
-		 LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED
 		 LINUX_FS_STRUCT_INODE_HAS_I_MUTEX
-		 LINUX_FS_STRUCT_INODE_HAS_I_SB_LIST
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
-		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_LOCK
-		 LINUX_FS_STRUCT_INODE_HAS_INOTIFY_SEM
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
-	  	 LINUX_WRITE_INODE_RETURN_TYPE
 	  	 LINUX_IOP_I_CREATE_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_LOOKUP_TAKES_NAMEIDATA
 	  	 LINUX_IOP_I_PERMISSION_TAKES_NAMEIDATA
@@ -922,12 +903,10 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_FOP_HAS_FLOCK
 		 LINUX_FS_STRUCT_FOP_HAS_SENDFILE
 		 LINUX_FS_STRUCT_FOP_HAS_SPLICE
-		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_LINUX_SEQ_FILE_H
 		 LINUX_KERNEL_POSIX_LOCK_FILE_WAIT_ARG
 		 LINUX_POSIX_TEST_LOCK_RETURNS_CONFLICT
 		 LINUX_POSIX_TEST_LOCK_CONFLICT_ARG
-		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
 		 LINUX_KERNEL_PAGE_FOLLOW_LINK
 		 LINUX_KERNEL_HLIST_UNHASHED
@@ -977,9 +956,7 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_NAMEIDATA_HAS_PATH
 	         LINUX_EXPORTS_INIT_MM
                  LINUX_EXPORTS_SYS_CHDIR
-                 LINUX_EXPORTS_SYS_CLOSE
                  LINUX_EXPORTS_SYS_OPEN
-                 LINUX_EXPORTS_SYS_WAIT4
 		 LINUX_EXPORTS_RCU_READ_LOCK
 		 if test "x$with_linux_kernel_packaging" = "xno" ; then
 		   LINUX_WHICH_MODULES
@@ -1020,20 +997,11 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
 		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
 	         fi
-		 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
-		  AC_DEFINE(HAVE_IN_SYSTM_H, 1, [define if you have in_systm.h header file])
-	         fi
 		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
 		 fi
 		 if test "x$ac_cv_linux_exports_sys_open" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_OPEN, 1, [define if your linux kernel exports sys_open])
-		 fi
-		 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
-		 fi
-		 if test "x$ac_cv_linux_exports_sys_wait4" = "xyes" ; then
-		  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
 		 fi
                  if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
                   AC_DEFINE(EXPORTED_SYS_CALL_TABLE, 1, [define if your linux kernel exports sys_call_table])
@@ -1068,20 +1036,8 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
 		  AC_DEFINE(INODE_SETATTR_NOT_VOID, 1, [define if your setattr return return non-void])
 		 fi
-		 if test "x$ac_cv_linux_func_write_inode_returns_int" = "xyes" ; then
-		  AC_DEFINE(WRITE_INODE_NOT_VOID, 1, [define if your sops.write_inode returns non-void])
-		 fi
 		 if test "x$ac_cv_linux_fs_struct_super_has_alloc_inode" = "xyes" ; then
 		  AC_DEFINE(STRUCT_SUPER_HAS_ALLOC_INODE, 1, [define if your struct super_operations has alloc_inode])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
-		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, 1, [define if your struct address_space has page_lock])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_address_space_has_gfp_mask" = "xyes"; then 
-		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_GFP_MASK, 1, [define if your struct address_space has gfp_mask])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_truncate_sem" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_TRUNCATE_SEM, 1, [define if your struct inode has truncate_sem])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_alloc_sem" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_ALLOC_SEM, 1, [define if your struct inode has alloc_sem])
@@ -1089,35 +1045,17 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_blksize" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_BLKSIZE, 1, [define if your struct inode has i_blksize])
 		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
-		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mutex" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_MUTEX, 1, [define if you struct inode has i_mutex])
 		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_sb_list" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_SB_LIST, 1, [define if you struct inode has i_sb_list])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_lock" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_LOCK, 1, [define if your struct inode has inotify_lock])
-		 fi
-		 if test "x$ac_cv_linux_fs_struct_inode_has_inotify_sem" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_INOTIFY_SEM, 1, [define if your struct inode has inotify_sem])
-		 fi
-		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
+		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
 		 fi
 		 if test "x$ac_cv_linux_kernel_posix_lock_file_wait_arg" = "xyes" ; then
 		  AC_DEFINE(POSIX_LOCK_FILE_WAIT_ARG, 1, [define if your linux kernel uses 3 arguments for posix_lock_file])
-		 fi
-		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
-		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
 		 fi
 		 if test "x$ac_cv_linux_kernel_sock_create_v" = "xyes" ; then
 		  AC_DEFINE(LINUX_KERNEL_SOCK_CREATE_V, 1, [define if your linux kernel uses 5 arguments for sock_create])
@@ -1127,9 +1065,6 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_kernel_hlist_unhashed" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_HLIST_UNHASHED, 1, [define if your linux kernel provides hlist_unhashed])
-		 fi
-		 if test "x$ac_linux_syscall" = "xyes" ; then
-		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
 		 fi
 		 if test "x$ac_linux_seq_file" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SEQ_FILE_H, 1, [define if your linux kernel has linux/seq_file.h])
@@ -1488,12 +1423,12 @@ dnl checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_HEADER_DIRENT
-AC_CHECK_HEADERS(stdlib.h string.h unistd.h poll.h fcntl.h sys/time.h sys/file.h grp.h)
+AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h grp.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h sys/fstyp.h)
-AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h poll.h sys/pag.h)
-AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h sys/ipc.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h regex.h values.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
+AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h sys/pag.h)
+AC_CHECK_HEADERS(windows.h direct.h sys/ipc.h)
+AC_CHECK_HEADERS(security/pam_modules.h ucontext.h regex.h sys/statvfs.h sys/statfs.h sys/bitypes.h)
 AC_CHECK_HEADERS(linux/errqueue.h,,,[#include <linux/types.h>])
 AC_CHECK_HEADERS(et/com_err.h)
 
@@ -1532,7 +1467,7 @@ else
 fi
 AC_SUBST(BUILD_LOGIN)
 
-AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec flock)
+AC_CHECK_FUNCS(snprintf strlcat strlcpy flock)
 AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror strcasestr)
 AC_CHECK_FUNCS(setvbuf vsyslog getcwd)
 AC_CHECK_FUNCS(regcomp regexec regerror)
@@ -1553,9 +1488,6 @@ AC_CHECK_SIZEOF(void *)
 AC_TYPE_INTPTR_T
 AC_TYPE_UINTPTR_T
 AC_CHECK_TYPE(ssize_t, int)
-AC_CHECK_TYPES(sig_t, , ,
-  [#include <sys/types.h>
-   #include <signal.h> ])
 AC_CHECK_TYPE([sig_atomic_t], ,
     [AC_DEFINE([sig_atomic_t], [int],
         [Define to int if <signal.h> does not define.])],

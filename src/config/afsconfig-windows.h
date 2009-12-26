@@ -48,20 +48,8 @@
 /* Define if you have the connect function.  */
 #undef HAVE_CONNECT
 
-/* Define if you have the getdtablesize function.  */
-#undef HAVE_GETDTABLESIZE
-
 /* Define if you have the gethostbyname function.  */
 #define HAVE_GETHOSTBYNAME
-
-/* Define if you have the random function.  */
-#define HAVE_RANDOM
-
-/* Define if you have the re_comp function.  */
-#undef HAVE_RE_COMP
-
-/* Define if you have the re_exec function.  */
-#undef HAVE_RE_EXEC
 
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
@@ -72,12 +60,6 @@
 /* Define if you have the socket function.  */
 #define HAVE_SOCKET
 
-/* Define if you have the srandom function.  */
-#undef HAVE_SRANDOM
-
-/* Define if you have the utimes function.  */
-#define HAVE_UTIMES
-
 /* Define if you have the <direct.h> header file.  */
 #undef HAVE_DIRECT_H
 
@@ -86,12 +68,6 @@
 
 /* Define if you have the <fcntl.h> header file.  */
 #define HAVE_FCNTL_H
-
-/* Define if you have the <io.h> header file.  */
-#define HAVE_IO_H
-
-/* Define if you have the <malloc.h> header file.  */
-#define HAVE_MALLOC_H
 
 /* Define if you have the <mntent.h> header file.  */
 #undef HAVE_MNTENT_H
@@ -107,9 +83,6 @@
 
 /* Define if you have the <security/pam_modules.h> header file.  */
 #undef HAVE_SECURITY_PAM_MODULES_H
-
-/* Define if you have the <siad.h> header file.  */
-#undef HAVE_SIAD_H
 
 /* Define if you have the <signal.h> header file.  */
 #define HAVE_SIGNAL_H
@@ -161,9 +134,6 @@
 
 /* Define if you have the <unistd.h> header file.  */
 #undef HAVE_UNISTD_H
-
-/* Define if you have the <usersec.h> header file.  */
-#undef HAVE_USERSEC_H
 
 /* Define if you have the <windows.h> header file.  */
 #define HAVE_WINDOWS_H
