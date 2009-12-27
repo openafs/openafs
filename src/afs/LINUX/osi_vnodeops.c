@@ -1115,6 +1115,66 @@ afs_linux_link(struct dentry *olddp, struct inode *dip, struct dentry *newdp)
     return afs_convert_code(code);
 }
 
+/* We have to have a Linux specific sillyrename function, because we
+ * also have to keep the dcache up to date when we're doing a silly
+ * rename - so we don't want the generic vnodeops doing this behind our
+ * back.
+ */
+
+static int
+afs_linux_sillyrename(struct inode *dir, struct dentry *dentry,
+		      cred_t *credp)
+{
+    struct vcache *tvc = VTOAFS(dentry->d_inode);
+    struct dentry *__dp = NULL;
+    char *__name = NULL;
+    int code;
+
+    do {
+	dput(__dp);
+
+	AFS_GLOCK();
+	if (__name)
+	    osi_FreeSmallSpace(__name);
+	__name = afs_newname();
+	AFS_GUNLOCK();
+
+	__dp = lookup_one_len(__name, dentry->d_parent, strlen(__name));
+
+	if (IS_ERR(__dp)) {
+	    osi_FreeSmallSpace(__name);
+	    return EBUSY;
+	}
+    } while (__dp->d_inode != NULL);
+
+    AFS_GLOCK();
+    code = afs_rename(VTOAFS(dir), (char *)dentry->d_name.name,
+		      VTOAFS(dir), (char *)__dp->d_name.name,
+		      credp);
+    if (!code) {
+	tvc->mvid = (void *) __name;
+	crhold(credp);
+	if (tvc->uncred) {
+	    crfree(tvc->uncred);
+	}
+	tvc->uncred = credp;
+	tvc->f.states |= CUnlinked;
+	afs_linux_set_nfsfs_renamed(dentry);
+    } else {
+	osi_FreeSmallSpace(__name);
+    }
+    AFS_GUNLOCK();
+
+    if (!code) {
+	__dp->d_time = hgetlo(VTOAFS(dir)->f.m.DataVersion);
+	d_move(dentry, __dp);
+    }
+    dput(__dp);
+
+    return code;
+}
+
+
 static int
 afs_linux_unlink(struct inode *dip, struct dentry *dp)
 {
@@ -1124,59 +1184,19 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     struct vcache *tvc = VTOAFS(dp->d_inode);
 
     afs_maybe_lock_kernel();
+
     if (VREFCOUNT(tvc) > 1 && tvc->opens > 0
 				&& !(tvc->f.states & CUnlinked)) {
-	struct dentry *__dp;
-	char *__name;
 
-	__dp = NULL;
-	__name = NULL;
-	do {
-	    dput(__dp);
-
-	    AFS_GLOCK();
-	    if (__name)
-		osi_FreeSmallSpace(__name);
-	    __name = afs_newname();
-	    AFS_GUNLOCK();
-
-	    __dp = lookup_one_len(__name, dp->d_parent, strlen(__name));
-		
-	    if (IS_ERR(__dp))
-		goto out;
-	} while (__dp->d_inode != NULL);
-
+	code = afs_linux_sillyrename(dip, dp, credp);
+    } else {
 	AFS_GLOCK();
-	code = afs_rename(VTOAFS(dip), (char *)dp->d_name.name, VTOAFS(dip), (char *)__dp->d_name.name, credp);
-	if (!code) {
-            tvc->mvid = (void *) __name;
-            crhold(credp);
-            if (tvc->uncred) {
-                crfree(tvc->uncred);
-            }
-            tvc->uncred = credp;
-	    tvc->f.states |= CUnlinked;
-	    afs_linux_set_nfsfs_renamed(dp);
-	} else {
-	    osi_FreeSmallSpace(__name);	
-	}
+	code = afs_remove(VTOAFS(dip), (char *)name, credp);
 	AFS_GUNLOCK();
-
-	if (!code) {
-	    __dp->d_time = hgetlo(VTOAFS(dip)->f.m.DataVersion);
-	    d_move(dp, __dp);
-	}
-	dput(__dp);
-
-	goto out;
+	if (!code)
+	    d_drop(dp);
     }
 
-    AFS_GLOCK();
-    code = afs_remove(VTOAFS(dip), (char *)name, credp);
-    AFS_GUNLOCK();
-    if (!code)
-	d_drop(dp);
-out:
     afs_maybe_unlock_kernel();
     crfree(credp);
     return afs_convert_code(code);
