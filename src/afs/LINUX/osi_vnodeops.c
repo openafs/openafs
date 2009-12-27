@@ -1130,6 +1130,9 @@ afs_linux_sillyrename(struct inode *dir, struct dentry *dentry,
     char *__name = NULL;
     int code;
 
+    if (afs_linux_nfsfs_renamed(dentry))
+	return EBUSY;
+
     do {
 	dput(__dp);
 

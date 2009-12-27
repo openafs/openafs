@@ -65,6 +65,12 @@ afs_linux_set_nfsfs_renamed(struct dentry *dp) {
     dp->d_flags |= DCACHE_NFSFS_RENAMED;
     spin_unlock(&dp->d_lock);
 }
+
+static inline int
+afs_linux_nfsfs_renamed(struct dentry *dp) {
+    return dp->d_flags & DCACHE_NFSFS_RENAMED;
+}
+
 #else
 static inline void afs_linux_clear_nfsfs_renamed(void) { return; }
 static inline void afs_linux_set_nfsfs_renamed(void) { return; }
