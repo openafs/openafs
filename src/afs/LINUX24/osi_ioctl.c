@@ -24,9 +24,6 @@
 #ifdef AFS_AMD64_LINUX20_ENV
 #include <asm/ia32_unistd.h>
 #endif
-#ifdef AFS_SPARC64_LINUX20_ENV
-#include <linux/ioctl32.h>
-#endif
 
 #include <linux/proc_fs.h>
 #include <linux/slab.h>

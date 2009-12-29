@@ -24,7 +24,8 @@
 #ifdef AFS_AMD64_LINUX20_ENV
 #include <asm/ia32_unistd.h>
 #endif
-#ifdef AFS_SPARC64_LINUX20_ENV
+
+#if defined(AFS_SPARC64_LINUX26_ENV) && defined(NEED_IOCTL32) && !defined(HAVE_COMPAT_IOCTL)
 #include <linux/ioctl32.h>
 #endif
 
