@@ -56,9 +56,9 @@ afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     if (cmd != VIOC_SYSCALL && cmd != VIOC_SYSCALL32) return -EINVAL;
 
 #ifdef NEED_IOCTL32
-# ifdef AFS_S390X_LINUX26_ENV
+# if defined(AFS_S390X_LINUX26_ENV)
     if (test_thread_flag(TIF_31BIT))
-# elif AFS_AMD64_LINUX20_ENV
+# elif defined(AFS_AMD64_LINUX20_ENV)
     if (test_thread_flag(TIF_IA32))
 # else
     if (test_thread_flag(TIF_32BIT))
