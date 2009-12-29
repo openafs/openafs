@@ -22,6 +22,7 @@ extern struct axscache *afs_SlowFindAxs(struct axscache **cachep,
 extern struct axscache *axs_Alloc(void);
 extern void afs_RemoveAxs(struct axscache **headp, struct axscache *axsp);
 extern void afs_FreeAllAxs(struct axscache **headp);
+extern void shutdown_xscache(void);
 
 /* afs_buffer.c */
 extern void DInit(int abuffers);

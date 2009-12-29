@@ -1331,6 +1331,7 @@ afs_shutdown(void)
     shutdown_osifile();
     shutdown_vnodeops();
     shutdown_memcache();
+    shutdown_xscache();
 #if (!defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV))
     shutdown_exporter();
     shutdown_nfsclnt();
