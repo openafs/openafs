@@ -1245,7 +1245,7 @@ static void usage(void)
     exit(AKLOG_USAGE);
 }
 
-void aklog(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     krb5_context context;
     int status = AKLOG_SUCCESS;
