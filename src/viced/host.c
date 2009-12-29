@@ -1264,28 +1264,29 @@ h_AddHostToAddrHashTable_r(afs_uint32 addr, afs_uint16 port, struct host *host)
 {
     int index;
     struct h_AddrHashChain *chain;
-    int found = 0;
-    char hoststr[16], hoststr2[16]; 
-  
+    char hoststr[16];
+
     /* hash into proper bucket */
     index = h_HashIndex(addr);
 
-    /* don't add the same entry multiple times */
+    /* don't add the same address:port pair entry multiple times */
     for (chain = hostAddrHashTable[index]; chain; chain = chain->next) {
-	if (chain->hostPtr == host) {
-	    if (chain->addr != addr || chain->port != port) {
-		ViceLog(0, 
-                       ("h_AddHostToAddrHashTable_r: host 0x%lx exists as %s:%d when adding %s:%d\n",
-                        (unsigned long) host, afs_inet_ntoa_r(chain->addr, hoststr),
-                        ntohs(chain->port), afs_inet_ntoa_r(addr, hoststr2), 
-                        ntohs(port)));
-	    } else
-		ViceLog(125, 
-                       ("h_AddHostToAddrHashTable_r: host 0x%lx (%s:%d) already hashed\n",
-                        (unsigned long) host, afs_inet_ntoa_r(chain->addr, hoststr),
-                        ntohs(chain->port)));
-           
-	    return;
+	if (chain->addr == addr && chain->port == port) {
+	    if (chain->hostPtr == host) {
+	        ViceLog(125,
+	                ("h_AddHostToAddrHashTable_r: host 0x%lx (%s:%d) already hashed\n",
+	                  host, afs_inet_ntoa_r(chain->addr, hoststr),
+	                  ntohs(chain->port)));
+	        return;
+	    }
+	    if (!(chain->hostPtr->hostFlags & HOSTDELETED)) {
+	        ViceLog(0,
+	                ("h_AddHostToAddrHashTable_r: refusing to hash host 0x%lx, 0x%lx "
+	                 "(%s:%d) already hashed\n",
+	                 host, chain->hostPtr, afs_inet_ntoa_r(chain->addr, hoststr),
+	                  ntohs(chain->port)));
+	        return;
+	    }
 	}
     }
 
