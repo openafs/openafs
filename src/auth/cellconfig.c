@@ -998,13 +998,14 @@ afsconf_LookupServer(const char *service, const char *protocol,
 		     const char *cellName, unsigned short afsdbPort,
 		     int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS],
 		     unsigned short ports[], unsigned short ipRanks[],
-		     int *numServers, int *ttl, char *realCellName)
+		     int *numServers, int *ttl, char **arealCellName)
 {
     int code = 0;
     int len;
     unsigned char answer[1024];
     unsigned char *p;
     char *dotcellname;
+    char *realCellName;
     int cellnamelength, fullnamelength;
     char host[256];
     int server_num = 0;
@@ -1178,6 +1179,8 @@ afsconf_LookupServer(const char *service, const char *protocol,
 	    *p = tolower(*p);
     }
 
+    *arealCellName = realCellName;
+
     *numServers = server_num;
     *ttl = minttl ? (time(0) + minttl) : 0;
 
@@ -1215,7 +1218,7 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
 				(const char *)acellName, afsdbport,
 				cellHostAddrs, cellHostNames,
 				ports, ipRanks, &numServers, &ttl,
-				realCellName);
+				&realCellName);
 
     if (code == 0) {
 	acellInfo->timeout = ttl;
