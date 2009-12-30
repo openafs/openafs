@@ -172,7 +172,7 @@ B<-noauth> flag. For more details, see L<vos(1)>.
 
 =item B<-verbose>
 
-Produces on the standard output stream a detailed trace of the command's
+Produces on the standard error stream a detailed trace of the command's
 execution. If this argument is omitted, only warnings and error messages
 appear.
 
