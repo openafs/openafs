@@ -775,10 +775,16 @@ SBOZO_CreateBnode(struct rx_call *acall, char *atype, char *ainstance,
 	goto fail;
     }
     if (bozo_isrestricted) {
+	const char *salvpath = AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH;
+	/* for DAFS, 'bos salvage' will pass "salvageserver -client" instead */
+	const char *salsrvpath = AFSDIR_CANONICAL_SERVER_SALSRV_FILEPATH " -client ";
+
+	/* still allow 'bos salvage' to work */
 	if (strcmp(atype, "cron") || strcmp(ainstance, "salvage-tmp")
 	    || strcmp(ap2, "now")
-	    || strncmp(ap1, AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH,
-		       strlen(AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH))) {
+	    || (strncmp(ap1, salvpath, strlen(salvpath))
+	        && strncmp(ap1, salsrvpath, strlen(salsrvpath)))) {
+
 	    code = BZACCESS;
 	    goto fail;
 	}
