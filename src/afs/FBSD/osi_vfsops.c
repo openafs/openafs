@@ -164,7 +164,9 @@ afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
 }
 
 int
-#if defined(AFS_FBSD60_ENV)
+#if defined(AFS_FBSD80_ENV)
+afs_root(struct mount *mp, int flags, struct vnode **vpp)
+#elif defined(AFS_FBSD60_ENV)
 afs_root(struct mount *mp, int flags, struct vnode **vpp, struct thread *td)
 #elif defined(AFS_FBSD53_ENV)
 afs_root(struct mount *mp, struct vnode **vpp, struct thread *td)
@@ -176,10 +178,10 @@ afs_root(struct mount *mp, struct vnode **vpp)
     struct vrequest treq;
     register struct vcache *tvp = 0;
 #ifdef AFS_FBSD50_ENV
-#ifndef AFS_FBSD53_ENV
+#if !defined(AFS_FBSD53_ENV) || defined(AFS_FBSD80_ENV)
     struct thread *td = curthread;
 #endif
-    struct ucred *cr = td->td_ucred;
+    struct ucred *cr = osi_curcred();
 #else
     struct proc *p = curproc;
     struct ucred *cr = p->p_cred->pc_ucred;
