@@ -1859,6 +1859,7 @@ ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs
     afs_int32 nextpos;
 #else
     afs_int32 nptr;
+    struct contentry centry;
 #endif
     struct prentry tentry, tent;
     afs_int32 loc;
