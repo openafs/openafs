@@ -1211,7 +1211,6 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
 {
     int i;
     int number;
-    int found;
     struct Interface *interface;
     char hoststr[16], hoststr2[16];
 
@@ -1223,35 +1222,41 @@ addInterfaceAddr_r(struct host *host, afs_uint32 addr, afs_uint16 port)
      * for this host.
      */
     number = host->interface->numberOfInterfaces;
-    for (i = 0, found = 0; i < number && !found; i++) {
+    for (i = 0; i < number; i++) {
 	if (host->interface->interface[i].addr == addr &&
             host->interface->interface[i].port == port) {
-	    found = 1;
-            host->interface->interface[i].valid = 1;
+	    ViceLog(125, ("addInterfaceAddr : host %x (%s:%d) addr %s:%d : found, valid: %d\n",
+			  host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+			  afs_inet_ntoa_r(addr, hoststr2), ntohs(port),
+			  host->interface->interface[i].valid));
+
+	    if (host->interface->interface[i].valid == 0) {
+		hashInsert_r(addr, port, host);
+		host->interface->interface[i].valid = 1;
+	    }
+	    return 0;
         }
     }
 
-    ViceLog(125, ("addInterfaceAddr : host %x (%s:%d) addr %s:%d : found:%d\n", 
-		   host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port), 
-		   afs_inet_ntoa_r(addr, hoststr2), ntohs(port), found));
+    ViceLog(125, ("addInterfaceAddr : host %x (%s:%d) addr %s:%d : not found, adding\n",
+		  host, afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
+		  afs_inet_ntoa_r(addr, hoststr2), ntohs(port)));
     
-    if (!found) {
-	interface = (struct Interface *)
-	    malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * number));
-	if (!interface) {
-	    ViceLog(0, ("Failed malloc in addInterfaceAddr_r\n"));
-	    assert(0);
-	}
-	interface->numberOfInterfaces = number + 1;
-	interface->uuid = host->interface->uuid;
-	for (i = 0; i < number; i++)
-	    interface->interface[i] = host->interface->interface[i];
-	interface->interface[number].addr = addr;
-	interface->interface[number].port = port;
-        interface->interface[number].valid = 1;
-	free(host->interface);
-	host->interface = interface;
+    interface = (struct Interface *)
+	malloc(sizeof(struct Interface) + (sizeof(struct AddrPort) * number));
+    if (!interface) {
+	ViceLog(0, ("Failed malloc in addInterfaceAddr_r\n"));
+	assert(0);
     }
+    interface->numberOfInterfaces = number + 1;
+    interface->uuid = host->interface->uuid;
+    for (i = 0; i < number; i++)
+	interface->interface[i] = host->interface->interface[i];
+    interface->interface[number].addr = addr;
+    interface->interface[number].port = port;
+    interface->interface[number].valid = 1;
+    free(host->interface);
+    host->interface = interface;
 
     return 0;
 }
@@ -1905,7 +1910,6 @@ h_GetHost_r(struct rx_connection *tcon, int *heldp)
 				removeInterfaceAddr_r(oldHost, haddr, interface->interface[i].port);
 			    }
 			}
-                        hashInsert_r(haddr, hport, oldHost);
 			oldHost->host = haddr;
 			oldHost->port = hport;
 			rxconn = oldHost->callback_rxcon;
