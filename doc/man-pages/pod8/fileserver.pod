@@ -666,7 +666,7 @@ represents a connection that's waiting for a file server thread.
 
 If the blocked connection count is ever above 0, the server is having
 problems replying to clients in a timely fashion.  If it gets above 10,
-roughly, there will be noticable slowness by the user.  The total number of
+roughly, there will be noticeable slowness by the user.  The total number of
 connections is a mostly irrelevant number that goes essentially
 monotonically for as long as the server has been running and then goes back
 down to zero when it's restarted.
