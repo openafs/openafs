@@ -855,7 +855,7 @@ Delete(struct rx_call *call, afs_int32 aid, afs_int32 *cid)
     {
 	struct prentryg *tentryg = (struct prentryg *)&tentry;
 	nptr = tentryg->nextsg;
-	while (nptr != NULL) {
+	while (nptr != 0) {
 	    struct contentry centry;
 	    int i;
 

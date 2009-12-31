@@ -34,6 +34,7 @@
 
 #ifdef SUPERGROUPS
 #include <errno.h>
+#include <string.h>
 #include "map.h"
 #ifdef STDLIB_HAS_MALLOC_PROTOS
 #include <stdlib.h>

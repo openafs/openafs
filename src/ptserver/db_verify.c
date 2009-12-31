@@ -402,7 +402,7 @@ WalkNextChain(char map[],		/* one byte per db entry */
     int noErrors = 1;
     int length;			/* length of chain */
 #if defined(SUPERGROUPS)
-    int sgcount;		/* number of sgentrys */
+    int sgcount = 0;		/* number of sgentrys */
     afs_int32 sghead;
 #define g (((struct prentryg *)e))
 #endif
@@ -412,7 +412,6 @@ WalkNextChain(char map[],		/* one byte per db entry */
 	eid = ntohl(e->id);
 	bit = MAP_CONT;
 #if defined(SUPERGROUPS)
-	sgcount = 0;
 	sghead = ntohl(g->next);
 #endif
 	for (i = 0; i < PRSIZE; i++) {
@@ -1524,7 +1523,7 @@ inccount(struct idused **idmapp, int id)
 	fprintf(stderr, "IDCOUNT must be power of 2!\n");
 	exit(1);
     }
-    while (idmap = *idmapp) {
+    while ((idmap = *idmapp) != NULL) {
 	if (idmap->idstart == (id & ~(IDCOUNT - 1)))
 	    break;
 	idmapp = &idmap->idnext;
@@ -1552,7 +1551,7 @@ idcount(struct idused **idmapp, int id)
 	fprintf(stderr, "IDCOUNT must be power of 2!\n");
 	exit(1);
     }
-    while (idmap = *idmapp) {
+    while ((idmap = *idmapp) != NULL) {
 	if (idmap->idstart == (id & ~(IDCOUNT - 1))) {
 	    return idmap->idcount[id & (IDCOUNT - 1)];
 	}
