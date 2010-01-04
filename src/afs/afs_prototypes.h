@@ -879,6 +879,17 @@ extern int copyin_afs_ioctl(user_addr_t cmarg, struct afs_ioctl *dst);
 #else
 extern int copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst);
 #endif
+
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#ifdef AFS_DARWIN100_ENV
+extern int afs3_syscall(afs_proc_t *p, void *args, unsigned int *retval);
+#elif defined(AFS_FBSD50_ENV)
+extern int afs3_syscall(struct thread *p, void *args, long *retval);
+#else
+extern int afs3_syscall(afs_proc_t *p, void *args, long *retval);
+#endif
+#endif
+
 #ifdef UKERNEL
 extern int Afs_syscall(void);
 #endif

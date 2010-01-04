@@ -202,8 +202,6 @@ afs_cdev_nop_openclose(dev_t dev, int flags, int devtype,struct proc *p)
     return 0;
 }
 
-extern int afs3_syscall(struct proc *p, void *data, unsigned int *retval);
-
 int
 afs_cdev_ioctl(dev_t dev, u_long cmd, caddr_t data, int fflag, struct proc *p) {
     unsigned int retval=0;

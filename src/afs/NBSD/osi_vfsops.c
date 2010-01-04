@@ -482,7 +482,7 @@ afs_configure(cfg_op_t op, caddr_t indata, size_t indata_size,
 int
 mp_Afs_init(void)
 {
-    extern int Afs_xsetgroups(), afs_xioctl(), afs3_syscall();
+    extern int Afs_xsetgroups(), afs_xioctl();
 
     AFS_GLOCK();
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;

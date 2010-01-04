@@ -23,7 +23,6 @@ int afs_pbuf_freecnt = -1;
 #define	THREAD_OR_PROC struct proc *p
 #endif
 
-extern int afs3_syscall();
 extern int Afs_xsetgroups();
 extern int afs_xioctl();
 
