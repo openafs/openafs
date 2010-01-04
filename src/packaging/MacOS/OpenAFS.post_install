@@ -122,6 +122,13 @@ elif [ -e config/afssettings ]; then
   chmod a-x config/afssettings
 fi
 
+# properly, we should acquire a certificate from a real CA and ship 
+# signed binaries. for now, make Application Firewall (Security prefs pane)
+# happy like this. See TN2206
+if [ -f /usr/bin/codesign ]; then
+  codesign -s - /usr/sbin/afsd
+fi
+
 #here we should run tools which configure the client, and then if it's enabled:
 #start the new launchd daemon
 launchctl load -w /Library/LaunchDaemons/org.openafs.filesystems.afs.plist
