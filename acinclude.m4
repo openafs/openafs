@@ -1419,6 +1419,10 @@ else
     AC_MSG_RESULT(no)
 fi
 	
+AC_CHECK_SIZEOF(void *)
+AC_CHECK_SIZEOF(unsigned long long)
+AC_CHECK_SIZEOF(unsigned long)
+AC_CHECK_SIZEOF(unsigned int)
 AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
 

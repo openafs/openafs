@@ -1396,13 +1396,22 @@ struct iparam32 {
 
 
 #if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)) || defined(NEED_IOCTL32)
+#if SIZEOF_VOID_P == SIZEOF_UNSIGNED_INT
+# define uintptrsz unsigned int
+#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG
+# define uintptrsz unsigned long
+#elif SIZEOF_VOID_P == SIZEOF_UNSIGNED_LONG_LONG
+# define uintptrsz unsigned long long
+#else
+# error "Unable to determine casting for pointers"
+#endif
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
-    dst->param1 = (iparmtype)(uintptr_t)src->param1;
-    dst->param2 = (iparmtype)(uintptr_t)src->param2;
-    dst->param3 = (iparmtype)(uintptr_t)src->param3;
-    dst->param4 = (iparmtype)(uintptr_t)src->param4;
+    dst->param1 = (iparmtype)(uintptrsz)src->param1;
+    dst->param2 = (iparmtype)(uintptrsz)src->param2;
+    dst->param3 = (iparmtype)(uintptrsz)src->param3;
+    dst->param4 = (iparmtype)(uintptrsz)src->param4;
 }
 #endif
 
