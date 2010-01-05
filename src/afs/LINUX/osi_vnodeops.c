@@ -2171,7 +2171,10 @@ afs_linux_writepage(struct page *pp)
     /* Grab the creds structure currently held in the vnode, and
      * get a reference to it, in case it goes away ... */
     credp = vcp->cred;
-    crhold(credp);
+    if (credp)
+	crhold(credp);
+    else
+	credp = crref();
     ReleaseWriteLock(&vcp->lock);
     AFS_GUNLOCK();
 
