@@ -1949,6 +1949,9 @@ afs_linux_readpages(struct file *fp, struct address_space *mapping,
     if (afs_linux_bypass_check(inode))
 	return afs_linux_bypass_readpages(fp, mapping, page_list, num_pages);
 
+    if (cacheDiskType == AFS_FCACHE_TYPE_MEM)
+	return 0;
+
     AFS_GLOCK();
     if ((code = afs_linux_VerifyVCache(avc, NULL))) {
 	AFS_GUNLOCK();
