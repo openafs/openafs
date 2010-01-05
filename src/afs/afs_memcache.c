@@ -169,42 +169,16 @@ afs_MemReadUIO(afs_dcache_id_t *ainode, struct uio *uioP)
     return code;
 }
 
-/*XXX: this extends a block arbitrarily to support big directories */
 int
 afs_MemWriteBlk(register struct osi_file *fP, int offset, void *src,
 		int size)
 {
     register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
-    AFS_STATCNT(afs_MemWriteBlk);
-    ObtainWriteLock(&mceP->afs_memLock, 560);
-    if (size + offset > mceP->dataSize) {
-	char *oldData = mceP->data;
+    struct iovec tiov;
 
-	mceP->data = afs_osi_Alloc(size + offset);
-	if (mceP->data == NULL) {	/* no available memory */
-	    mceP->data = oldData;	/* revert back change that was made */
-	    ReleaseWriteLock(&mceP->afs_memLock);
-	    afs_warn("afs: afs_MemWriteBlk mem alloc failure (%d bytes)\n",
-		     size + offset);
-	    return -ENOMEM;
-	}
-
-	/* may overlap, but this is OK */
-	AFS_GUNLOCK();
-	memcpy(mceP->data, oldData, mceP->size);
-	AFS_GLOCK();
-	afs_osi_Free(oldData, mceP->dataSize);
-	mceP->dataSize = size + offset;
-    }
-    AFS_GUNLOCK();
-    if (mceP->size < offset)
-	memset(mceP->data + mceP->size, 0, offset - mceP->size);
-    memcpy(mceP->data + offset, src, size);
-    AFS_GLOCK();
-    mceP->size = (size + offset < mceP->size) ? mceP->size : size + offset;
-
-    ReleaseWriteLock(&mceP->afs_memLock);
-    return size;
+    tiov.iov_base = src;
+    tiov.iov_len = size;
+    return afs_MemWritevBlk(mceP, offset, &tiov, 1, size);
 }
 
 /*XXX: this extends a block arbitrarily to support big directories */
