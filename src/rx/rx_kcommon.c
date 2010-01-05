@@ -1074,6 +1074,20 @@ rxk_FreeSocket(struct socket *asocket)
 #endif /* !SUN5 && !LINUX20 */
 
 #if defined(RXK_LISTENER_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_DARWIN80_ENV
+/* Shutting down should wake us up, as should an earlier event. */
+void
+rxi_ReScheduleEvents(void)
+{
+    /* needed to allow startup */
+    int glock = ISAFS_GLOCK();
+    if (!glock)
+	AFS_GLOCK();
+    osi_rxWakeup(&afs_termState);
+    if (!glock)
+        AFS_GUNLOCK();
+}
+#endif
 /*
  * Run RX event daemon every second (5 times faster than rest of systems)
  */
@@ -1097,7 +1111,12 @@ afs_rxevent_daemon(void)
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "before afs_osi_Wait()");
 #endif
+#ifdef AFS_DARWIN80_ENV
+	afs_osi_TimedSleep(&afs_termState, ((temp.sec * 1000) +
+					    (temp.usec / 1000)), 0);
+#else
 	afs_osi_Wait(500, NULL, 0);
+#endif
 #ifdef RX_KERNEL_TRACE
 	afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP, ICL_TYPE_STRING,
 		   "after afs_osi_Wait()");

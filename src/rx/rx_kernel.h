@@ -15,7 +15,9 @@
 #define osi_Alloc afs_osi_Alloc
 #define osi_Free  afs_osi_Free
 
+#ifndef AFS_DARWIN80_ENV
 #define rxi_ReScheduleEvents    0	/* Not needed by kernel */
+#endif
 
 /* This is a no-op, because the kernel server procs are pre-allocated */
 #define rxi_StartServerProcs(x) (void)0
