@@ -742,30 +742,91 @@ shutdown_vnodeops(void)
 }
 
 
+static void
+shutdown_server(void)
+{
+    int i;
+    struct afs_conn *tc, *ntc;
+    struct afs_cbr *tcbrp, *tbrp;
+    struct srvAddr *sa;
+
+    for (i = 0; i < NSERVERS; i++) {
+	struct server *ts, *next;
+
+        ts = afs_servers[i];
+        while(ts) {
+	    next = ts->next;
+	    for (sa = ts->addr; sa; sa = sa->next_sa) {
+		if (sa->conns) {
+		    /*
+		     * Free all server's connection structs
+		     */
+		    tc = sa->conns;
+		    while (tc) {
+			ntc = tc->next;
+#if 0
+			/* we should destroy all connections
+			   when shutting down Rx, not here */
+			AFS_GUNLOCK();
+			rx_DestroyConnection(tc->id);
+			AFS_GLOCK();
+#endif
+			afs_osi_Free(tc, sizeof(struct afs_conn));
+			tc = ntc;
+		    }
+		}
+	    }
+	    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {
+		/*
+		 * Free all server's callback structs
+		 */
+		tbrp = tcbrp->next;
+		afs_FreeCBR(tcbrp);
+	    }
+	    afs_osi_Free(ts, sizeof(struct server));
+	    ts = next;
+        }
+    }
+
+    for (i = 0; i < NSERVERS; i++) {
+	struct srvAddr *sa, *next;
+
+        sa = afs_srvAddrs[i];
+        while(sa) {
+	    next = sa->next_bkt;
+	    afs_osi_Free(sa, sizeof(struct srvAddr));
+	    sa = next;
+        }
+    }
+}
+
+static void
+shutdown_volume(void)
+{
+    struct volume *tv;
+    int i;
+
+    for (i = 0; i < NVOLS; i++) {
+	for (tv = afs_volumes[i]; tv; tv = tv->next) {
+	    if (tv->name) {
+		afs_osi_Free(tv->name, strlen(tv->name) + 1);
+		tv->name = 0;
+	    }
+	}
+	afs_volumes[i] = 0;
+    }
+}
+
 void
 shutdown_AFS(void)
 {
     int i;
-    register struct srvAddr *sa;
 
     AFS_STATCNT(shutdown_AFS);
     if (afs_cold_shutdown) {
 	afs_resourceinit_flag = 0;
-	/* 
-	 * Free Volumes table allocations 
-	 */
-	{
-	    struct volume *tv;
-	    for (i = 0; i < NVOLS; i++) {
-		for (tv = afs_volumes[i]; tv; tv = tv->next) {
-		    if (tv->name) {
-			afs_osi_Free(tv->name, strlen(tv->name) + 1);
-			tv->name = 0;
-		    }
-		}
-		afs_volumes[i] = 0;
-	    }
-	}
+
+	shutdown_volume();
 
 	/* 
 	 * Free FreeVolList allocations 
@@ -774,13 +835,11 @@ shutdown_AFS(void)
 		     afs_memvolumes * sizeof(struct volume));
 	afs_freeVolList = Initialafs_freeVolList = 0;
 
-	/* XXX HACK fort MEM systems XXX 
+	/* XXX HACK for MEM systems XXX
 	 *
 	 * For -memcache cache managers when we run out of free in memory volumes
 	 * we simply malloc more; we won't be able to free those additional volumes.
 	 */
-
-
 
 	/* 
 	 * Free Users table allocation 
@@ -800,45 +859,6 @@ shutdown_AFS(void)
 	    }
 	}
 
-	/* 
-	 * Free Servers table allocation 
-	 */
-	{
-	    struct server *ts, *nts;
-	    struct afs_conn *tc, *ntc;
-	    register struct afs_cbr *tcbrp, *tbrp;
-
-	    for (i = 0; i < NSERVERS; i++) {
-		for (ts = afs_servers[i]; ts; ts = nts) {
-		    nts = ts->next;
-		    for (sa = ts->addr; sa; sa = sa->next_sa) {
-			if (sa->conns) {
-			    /*
-			     * Free all server's connection structs
-			     */
-			    tc = sa->conns;
-			    while (tc) {
-				ntc = tc->next;
-				AFS_GUNLOCK();
-				rx_DestroyConnection(tc->id);
-				AFS_GLOCK();
-				afs_osi_Free(tc, sizeof(struct afs_conn));
-				tc = ntc;
-			    }
-			}
-		    }
-		    for (tcbrp = ts->cbrs; tcbrp; tcbrp = tbrp) {
-			/*
-			 * Free all server's callback structs
-			 */
-			tbrp = tcbrp->next;
-			afs_FreeCBR(tcbrp);
-		    }
-		    afs_osi_Free(ts, sizeof(struct server));
-		}
-		afs_servers[i] = 0;
-	    }
-	}
 	for (i = 0; i < NFENTRIES; i++)
 	    fvTable[i] = 0;
 	/* Reinitialize local globals to defaults */

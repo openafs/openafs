@@ -1230,9 +1230,9 @@ afs_shutdown(void)
 	return;
     afs_shuttingdown = 1;
     if (afs_cold_shutdown)
-	afs_warn("COLD ");
+	afs_warn("afs: COLD ");
     else
-	afs_warn("WARM ");
+	afs_warn("afs: WARM ");
     afs_warn("shutting down of: CB... ");
 
     afs_termState = AFSOP_STOP_RXCALLBACK;
@@ -1240,7 +1240,7 @@ afs_shutdown(void)
 #ifdef AFS_AIX51_ENV
     shutdown_rxkernel();
 #endif
-    /* shutdown_rxkernel(); */
+    /* close rx server connections here? */
     while (afs_termState == AFSOP_STOP_RXCALLBACK)
 	afs_osi_Sleep(&afs_termState);
 
@@ -1292,20 +1292,11 @@ afs_shutdown(void)
 #else
     afs_termState = AFSOP_STOP_COMPLETE;
 #endif
-    afs_warn("\n");
 
 #ifdef AFS_AIX51_ENV
     shutdown_daemons();
 #endif
-
-#ifdef notdef
     shutdown_CB();
-    shutdown_AFS();
-    shutdown_rxkernel();
-    shutdown_rxevent();
-    shutdown_rx();
-    afs_shutdown_BKG();
-#endif
     shutdown_bufferpackage();
     shutdown_cache();
     shutdown_osi();
@@ -1333,15 +1324,15 @@ afs_shutdown(void)
     shutdown_nfsclnt();
 #endif
     shutdown_afstest();
+    shutdown_AFS();
     /* The following hold the cm stats */
-/*
     memset(&afs_cmstats, 0, sizeof(struct afs_CMStats));
     memset(&afs_stats_cmperf, 0, sizeof(struct afs_stats_CMPerf));
     memset(&afs_stats_cmfullperf, 0, sizeof(struct afs_stats_CMFullPerf));
-*/
-    afs_warn(" ALL allocated tables\n");
+    afs_warn(" ALL allocated tables... ");
 
     afs_shuttingdown = 0;
+    afs_warn("done\n");
 
     return;			/* Just kill daemons for now */
 }
@@ -1356,12 +1347,4 @@ shutdown_afstest(void)
     if (afs_cold_shutdown) {
 	*afs_rootVolumeName = 0;
     }
-}
-
-
-/* In case there is a bunch of dynamically build bkg daemons to free */
-void
-afs_shutdown_BKG(void)
-{
-    AFS_STATCNT(shutdown_BKG);
 }

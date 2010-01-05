@@ -43,7 +43,6 @@ extern void afs_FlushCBs(void);
 extern int afs_CheckInit(void);
 extern void afs_shutdown(void);
 extern void shutdown_afstest(void);
-extern void afs_shutdown_BKG(void);
 extern int afs_syscall_call(long parm, long parm2, long parm3,
 			    long parm4, long parm5, long parm6);
 #if defined(AFS_DARWIN100_ENV)
@@ -843,7 +842,6 @@ void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
 #endif
 #endif
 extern int afs_HaveCallBacksFrom(struct server *aserver);
-extern void shutdown_server(void);
 extern void afs_RemoveAllConns(void);
 extern void afs_MarkAllServersUp(void);
 
@@ -1305,7 +1303,6 @@ extern struct volume *afs_GetVolumeByName(register char *aname,
 					  afs_int32 locktype);
 extern struct volume *afs_UFSGetVolSlot(void);
 extern void afs_CheckVolumeNames(int flags);
-
 
 /* Prototypes for generated files that aren't really in src/afs/ */
 
