@@ -262,7 +262,8 @@ main(int argc, char **argv)
 	|| (sizeof(struct prentryg) != ENTRYSIZE)) {
 	fprintf(stderr,
 		"The structures for the database records are different"
-		" sizes\n" "struct prentry = %d\n" "struct prentryg = %d\n"
+		" sizes\n" "struct prentry = %" AFS_SIZET_FMT "\n"
+                "struct prentryg = %" AFS_SIZET_FMT "\n"
 		"ENTRYSIZE = %d\n", sizeof(struct prentry),
 		sizeof(struct prentryg), ENTRYSIZE);
 	PT_EXIT(1);
