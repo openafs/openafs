@@ -836,6 +836,9 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 	    vp = (struct vnode *)dp->d_inode;
 #else
 	code = gop_lookupname_user(path, AFS_UIOUSER, follow, &vp);
+#if defined(AFS_FBSD80_ENV) /* XXX check on 7x */
+	VN_HOLD(vp);
+#endif /* AFS_FBSD80_ENV */
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
@@ -933,6 +936,10 @@ afs_syscall_pioctl(char *path, unsigned int com, caddr_t cmarg, int follow)
 #ifdef AFS_LINUX22_ENV
 	dput(dp);
 #else
+#if defined(AFS_FBSD80_ENV)
+    if (VOP_ISLOCKED(vp))
+	VOP_UNLOCK(vp, 0);
+#endif /* AFS_FBSD80_ENV */
 	AFS_RELE(vp);		/* put vnode back */
 #endif
     }

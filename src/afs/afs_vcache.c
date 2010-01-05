@@ -742,9 +742,9 @@ afs_AllocVCache(void)
     /* none free, making one is better than a panic */
     afs_stats_cmperf.vcacheXAllocs++;	/* count in case we have a leak */
     tvc = (struct vcache *)afs_osi_Alloc(sizeof(struct vcache));
-#if defined(AFS_DARWIN_ENV) && !defined(UKERNEL)
+#if (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && !defined(UKERNEL)
     tvc->v = NULL; /* important to clean this, or use memset 0 */
-#endif
+#endif /* DARWIN || XBSD && !UKERNEL */
 #ifdef	KERNEL_HAVE_PIN
     pin((char *)tvc, sizeof(struct vcache));	/* XXX */
 #endif
@@ -889,7 +889,19 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
                  * XXX assume FreeBSD is the same for now.
                  */
                 AFS_GUNLOCK();
+#if defined(AFS_FBSD80_ENV)
+                /* vgone() is correct, but v_usecount is assumed not
+                 * to be 0, and I suspect that currently our usage ensures that
+                 * in fact it will */
+                if (vrefcnt(AFSTOV(tvc)) < 1) {
+		    vref(AFSTOV(tvc));
+                }
+                vn_lock(AFSTOV(tvc), LK_EXCLUSIVE | LK_RETRY); /* !glocked */
+#endif
                 vgone(AFSTOV(tvc));
+#if defined(AFS_FBSD80_ENV)
+                VOP_UNLOCK(AFSTOV(tvc), 0);
+#endif
                 fv_slept = 0;
                 code = 0;
                 AFS_GLOCK();
@@ -1036,6 +1048,14 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	if (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
 #endif
 	    panic("afs getnewvnode");	/* can't happen */
+#ifdef AFS_FBSD70_ENV
+    /* XXX verified on 80--TODO check on 7x */
+    if (!vp->v_mount) {
+        vn_lock(vp, LK_EXCLUSIVE | LK_RETRY); /* !glocked */
+        insmntque(vp, afs_globalVFS);
+        VOP_UNLOCK(vp, 0);
+    }
+#endif
 	AFS_GLOCK();
 	ObtainWriteLock(&afs_xvcache,339);
 	if (tvc->v != NULL) {
@@ -1155,11 +1175,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	tvc->v.v_vfsnext->v_vfsprev = &tvc->v;
     tvc->v.v_next = gnodepnt->gn_vnode;	/*Single vnode per gnode for us! */
     gnodepnt->gn_vnode = &tvc->v;
-#endif
-#ifdef AFS_FBSD70_ENV
-#ifndef AFS_FBSD80_ENV /* yup.  they put it back. */
-    insmntque(AFSTOV(tvc), afs_globalVFS);
-#endif
 #endif
 #if defined(AFS_SGI_ENV)
     VN_SET_DPAGES(&(tvc->v), (struct pfdat *)NULL);
