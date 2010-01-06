@@ -55,7 +55,12 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
            osi_Panic("Can't get dentry\n");
     tip = dp->d_inode;
 #endif
+
+#if defined(S_NOATIME)
+    tip->i_flags |= S_NOATIME; /* Disable updating access times. */
+#else
     tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
+#endif
 
 #if defined(STRUCT_TASK_HAS_CRED)
     filp = dentry_open(dp, mntget(afs_cacheMnt), O_RDWR, current_cred());

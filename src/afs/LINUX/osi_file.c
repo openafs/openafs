@@ -51,7 +51,7 @@ afs_linux_raw_open(afs_dcache_id_t *ainode)
            osi_Panic("Can't get dentry\n");
     tip = dp->d_inode;
 #endif
-    tip->i_flags |= MS_NOATIME;	/* Disable updating access times. */
+    tip->i_flags |= S_NOATIME;	/* Disable updating access times. */
 
 #if defined(STRUCT_TASK_HAS_CRED)
     /* Use stashed credentials - prevent selinux/apparmor problems  */
