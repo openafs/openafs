@@ -2701,7 +2701,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 {
     transDebugInfo *pntr;
     afs_int32 allocSize = 50;
-    struct volser_trans *tt, *allTrans;
+    struct volser_trans *tt, *nt, *allTrans;
 
     transInfo->transDebugEntries_val =
 	(transDebugInfo *) malloc(allocSize * sizeof(transDebugInfo));
@@ -2714,8 +2714,9 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
     allTrans = TransList();
     if (allTrans == (struct volser_trans *)0)
 	goto done;		/*no active transactions */
-    for (tt = allTrans; tt; tt = tt->next) {	/*copy relevant info into pntr */
+    for (tt = allTrans; tt; tt = nt) {	/*copy relevant info into pntr */
         THOLD(tt);  /* do not delete tt while copying info */
+	nt = tt->next;
         VTRANS_UNLOCK;
         VTRANS_OBJ_LOCK(tt);
 	pntr->tid = tt->tid;
