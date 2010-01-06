@@ -515,12 +515,8 @@ afs_CacheStoreDCaches(struct vcache *avc, struct dcache **dclist,
 #endif /* AFS_NOSTATS */
 	bytesXferred = 0;
 
-	if (ops->storeproc)
-	    code = (*ops->storeproc)(ops, rock, tdc, shouldwake,
+	code = (*ops->storeproc)(ops, rock, tdc, shouldwake,
 				     &bytesXferred);
-	else
-            code = afs_GenericStoreProc(ops, rock, tdc, shouldwake,
-					&bytesXferred);
 
 	afs_Trace4(afs_iclSetp, CM_TRACE_STOREPROC, ICL_TYPE_POINTER, avc,
 		    ICL_TYPE_FID, &(avc->f.fid), ICL_TYPE_OFFSET,
