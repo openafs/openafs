@@ -92,6 +92,7 @@ afs_read_super(struct super_block *sb, void *data, int silent)
     MOD_INC_USE_COUNT;
 
     afs_globalVFS = sb;
+    sb->s_flags |= MS_NOATIME;
     sb->s_blocksize = 1024;
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
