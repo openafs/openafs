@@ -37,6 +37,10 @@ openafs (1.5.61+dfsg-1) UNRELEASED; urgency=low
     openafs-modules-source so that, should someone build a Debian source
     package from it, it won't have the same name as the main openafs
     source package.
+  * Add README.source explaining maintenance procedures and a
+    debian/import-upstream script to do a Git-aware merge of a new
+    upstream release that will allow us to cherry-pick upstream patches
+    and do proper merges.
 
  -- Russ Allbery <rra@debian.org>  Fri, 21 Aug 2009 22:19:03 -0700
 
