@@ -79,13 +79,7 @@ linux_alloc(unsigned int asize, int drop_glock)
     /*  if we can use kmalloc use it to allocate the required memory. */
     while (!new && max_retry) {
 	if (asize <= MAX_KMALLOC_SIZE) {
-	    new = (void *)(unsigned long)kmalloc(asize,
-#ifdef GFP_NOFS
-						 GFP_NOFS
-#else
-						 GFP_KERNEL
-#endif
-		);
+	    new = (void *)(unsigned long)kmalloc(asize, GFP_NOFS);
 	    if (new)		/* piggy back alloc type */
 		new = (void *)(KM_TYPE | (unsigned long)new);
 	} else {

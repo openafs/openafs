@@ -34,9 +34,6 @@ crget(void)
 {
     cred_t *tmp;
     
-#if !defined(GFP_NOFS)
-#define GFP_NOFS GFP_KERNEL
-#endif
     tmp = kmalloc(sizeof(cred_t), GFP_NOFS);
     memset(tmp, 0, sizeof(cred_t));
     if (!tmp)
