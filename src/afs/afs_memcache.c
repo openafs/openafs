@@ -22,7 +22,6 @@
 static struct memCacheEntry *memCache;
 static int memCacheBlkSize = 8192;
 static int memMaxBlkNumber = 0;
-static int memAllocMaySleep = 0;
 
 extern int cacheDiskType;
 
@@ -38,20 +37,13 @@ afs_InitMemCache(int blkCount, int blkSize, int flags)
     memMaxBlkNumber = blkCount;
     memCache = (struct memCacheEntry *)
 	afs_osi_Alloc(memMaxBlkNumber * sizeof(struct memCacheEntry));
-    if (flags & AFSCALL_INIT_MEMCACHE_SLEEP) {
-	memAllocMaySleep = 1;
-    }
 
     for (index = 0; index < memMaxBlkNumber; index++) {
 	char *blk;
 	(memCache + index)->size = 0;
 	(memCache + index)->dataSize = memCacheBlkSize;
 	LOCK_INIT(&((memCache + index)->afs_memLock), "afs_memLock");
-	if (memAllocMaySleep) {
-	    blk = afs_osi_Alloc(memCacheBlkSize);
-	} else {
-	    blk = afs_osi_Alloc_NoSleep(memCacheBlkSize);
-	}
+	blk = afs_osi_Alloc(memCacheBlkSize);
 	if (blk == NULL)
 	    goto nomem;
 	(memCache + index)->data = blk;
@@ -188,11 +180,7 @@ afs_MemWriteBlk(register struct osi_file *fP, int offset, void *src,
     if (size + offset > mceP->dataSize) {
 	char *oldData = mceP->data;
 
-	if (memAllocMaySleep) {
-	    mceP->data = afs_osi_Alloc(size + offset);
-	} else {
-	    mceP->data = afs_osi_Alloc_NoSleep(size + offset);
-	}
+	mceP->data = afs_osi_Alloc(size + offset);
 	if (mceP->data == NULL) {	/* no available memory */
 	    mceP->data = oldData;	/* revert back change that was made */
 	    ReleaseWriteLock(&mceP->afs_memLock);

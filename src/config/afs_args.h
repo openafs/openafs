@@ -99,8 +99,6 @@
 /* these are for initialization flags */
 
 #define AFSCALL_INIT_MEMCACHE 0x1
-#define AFSCALL_INIT_MEMCACHE_SLEEP 0x2	/* Use osi_Alloc to allocate memcache
-					 * instead of osi_Alloc_NoSleep */
 
 /* flags for rxstats pioctl */
 

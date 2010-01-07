@@ -1666,7 +1666,7 @@ mainproc(struct cmd_syndesc *as, void *arock)
     }
     if (as->parms[23].items) {
 	/* -mem_alloc_sleep */
-	cacheFlags |= AFSCALL_INIT_MEMCACHE_SLEEP;
+	printf("afsd: -mem_alloc_sleep is deprecated -- ignored\n");
     }
     if (as->parms[24].items) {
 	/* -afsdb */
