@@ -982,8 +982,8 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
     long code;
     int i, mxheld = 0, haveWrite = 0;
 
-    osi_Log3(afsd_logp, "Beginning dirOp[0x%p] for scp[0x%p], userp[0x%p]",
-             op, scp, userp);
+    osi_Log4(afsd_logp, "Beginning dirOp[0x%p] for scp[0x%p], userp[0x%p] lockType[0x%x]",
+             op, scp, userp, lockType);
 
     memset(op, 0, sizeof(*op));
 
@@ -1036,6 +1036,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
             default:
                 osi_assert(haveWrite);
             }
+            op->lockType = lockType;
         } else {
             if (!(scp->dirBplus && 
                   scp->dirDataVersion == scp->dataVersion)) 
@@ -1069,6 +1070,7 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                         mxheld = 0;
                     }
                     code = cm_BPlusDirBuildTree(scp, userp, reqp);
+                    osi_Log1(afsd_logp, "cm_BeginDirOp cm_BPlusDirBuildTree code 0x%x", code);
                     if (!mxheld) {
                         lock_ObtainWrite(&scp->rw);
                         mxheld = 1;
@@ -1096,18 +1098,20 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
                 }
             }
 
-            switch (lockType) {
-            case CM_DIRLOCK_NONE:
-                lock_ReleaseWrite(&scp->dirlock);
-                break;
-            case CM_DIRLOCK_READ:
-                lock_ConvertWToR(&scp->dirlock);
-                break;
-            case CM_DIRLOCK_WRITE:
-            default:
-                /* got it already */;
+            if (code == 0) {
+                switch (lockType) {
+                case CM_DIRLOCK_NONE:
+                    lock_ReleaseWrite(&scp->dirlock);
+                    break;
+                case CM_DIRLOCK_READ:
+                    lock_ConvertWToR(&scp->dirlock);
+                    break;
+                case CM_DIRLOCK_WRITE:
+                default:
+                    /* got it already */;
+                }
+                op->lockType = lockType;
             }
-            haveWrite = 0;
         }
 #else
         /* we know that haveWrite matches lockType at this point */
@@ -1125,18 +1129,21 @@ cm_BeginDirOp(cm_scache_t * scp, cm_user_t * userp, cm_req_t * reqp,
         default:
             osi_assert(haveWrite);
         }
-#endif
         op->lockType = lockType;
-        if (mxheld)
-            lock_ReleaseWrite(&scp->rw);
-    } else {
+#endif
+    }
+
+    if (mxheld)
+        lock_ReleaseWrite(&scp->rw);
+
+    if (code) {
         if (haveWrite)
             lock_ReleaseWrite(&scp->dirlock);
         else
             lock_ReleaseRead(&scp->dirlock);
-        if (mxheld)
-            lock_ReleaseWrite(&scp->rw);
         cm_EndDirOp(op);
+
+        osi_Log1(afsd_logp, "cm_BeginDirOp return code 0x%x", code);
     }
 
     return code;
@@ -1184,11 +1191,11 @@ cm_EndDirOp(cm_dirOp_t * op)
 {
     long code = 0;
 
+    osi_Log4(afsd_logp, "Ending dirOp[0x%p] scp[0x%p] lockType[0x%x] with %d dirty buffer releases",
+             op, op->scp, op->lockType, op->dirtyBufCount);
+
     if (op->scp == NULL)
         return 0;
-
-    osi_Log2(afsd_logp, "Ending dirOp 0x%p with %d dirty buffer releases",
-             op, op->dirtyBufCount);
 
     if (op->dirtyBufCount > 0) {
 #ifdef USE_BPLUS
@@ -1240,6 +1247,9 @@ cm_EndDirOp(cm_dirOp_t * op)
     op->userp = 0;
 
     osi_assertx(op->nBuffers == 0, "Buffer leak after dirOp termination");
+
+    if (code)
+        osi_Log1(afsd_logp, "cm_EndDirOp return code 0x%x", code);
 
     return code;
 }
@@ -1554,7 +1564,6 @@ cm_DirPrefetchBuffers(cm_dirOp_t * op)
         offset = LargeIntegerAdd(offset, ConvertLongToLargeInteger(cm_data.buf_blockSize));
     }
 
- done:
     lock_ReleaseWrite(&op->scp->rw);
 
     osi_Log1(afsd_logp, "cm_DirPrefetchBuffers returning code 0x%x", code);
