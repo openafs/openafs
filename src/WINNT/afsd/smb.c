@@ -10259,7 +10259,7 @@ void smb_Init(osi_log_t *logp, int useV3,
 {
     thread_t phandle;
     int lpid;
-    INT_PTR i;
+    UINT_PTR i;
     struct tm myTime;
     EVENT_HANDLE retHandle;
     char eventName[MAX_PATH];
