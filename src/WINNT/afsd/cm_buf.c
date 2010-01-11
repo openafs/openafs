@@ -896,6 +896,10 @@ void buf_Recycle(cm_buf_t *bp)
 
     /* make the fid unrecognizable */
     memset(&bp->fid, 0, sizeof(cm_fid_t));
+
+    /* clean up junk flags */
+    bp->flags &= ~(CM_BUF_EOF | CM_BUF_ERROR);
+    bp->dataVersion = CM_BUF_VERSION_BAD;	/* unknown so far */
 }       
 
 /* recycle a buffer, removing it from the free list, hashing in its new identity
@@ -1029,10 +1033,6 @@ long buf_GetNewLocked(struct cm_scache *scp, osi_hyper_t *offsetp, cm_req_t *req
              * the buffer lock out of order in the locking hierarchy.
              */
             buf_Recycle(bp);
-
-            /* clean up junk flags */
-            bp->flags &= ~(CM_BUF_EOF | CM_BUF_ERROR);
-            bp->dataVersion = CM_BUF_VERSION_BAD;	/* unknown so far */
 
             /* now hash in as our new buffer, and give it the
              * appropriate label, if requested.
