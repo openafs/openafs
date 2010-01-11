@@ -1945,10 +1945,12 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp,
         code = cm_SearchCellRegistry(1, cellname, ftemp, 0, 0, 0);
         if (code && code != CM_ERROR_FORCE_DNS_LOOKUP)
             code = cm_SearchCellFile(cellname, ftemp, 0, 0);
+#ifdef AFS_AFSDB_ENV
         if (code && cm_dnsEnabled) {
             int ttl;
             code = cm_SearchCellByDNS(cellname, ftemp, &ttl, 0, 0);
         }
+#endif /* AFS_AFSDB_ENV */
         if (cellname)
             free(cellname);
 
