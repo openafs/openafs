@@ -186,7 +186,13 @@ common_prolog(struct cmd_syndesc * as, struct state * state)
 #endif
 
     VOptDefaults(debugUtility, &opts);
-    VInitVolumePackage2(debugUtility, &opts);
+    if (VInitVolumePackage2(debugUtility, &opts)) {
+	/* VInitVolumePackage2 can fail on e.g. partition attachment errors,
+	 * but we don't really care, since all we're doing is trying to use
+	 * SALVSYNC */
+	fprintf(stderr, "errors encountered initializing volume package, but "
+	                "trying to continue anyway\n");
+    }
     DInit(1);
 
     if ((ti = as->parms[COMMON_PARMS_OFFSET].items)) {	/* -reason */

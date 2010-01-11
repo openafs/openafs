@@ -324,7 +324,10 @@ handleit(struct cmd_syndesc *as, void *arock)
     }
 
     VOptDefaults(pt, &opts);
-    VInitVolumePackage2(pt, &opts);
+    if (VInitVolumePackage2(pt, &opts)) {
+	Log("errors encountered initializing volume package; salvage aborted\n");
+	Exit(1);
+    }
     DInit(10);
 #ifdef AFS_NT40_ENV
     if (myjob.cj_number != NOT_CHILD) {

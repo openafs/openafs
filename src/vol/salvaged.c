@@ -423,7 +423,13 @@ SalvageClient(VolumeId vid, char * pname)
     VolumePackageOptions opts;
 
     VOptDefaults(volumeUtility, &opts);
-    VInitVolumePackage2(volumeUtility, &opts);
+    if (VInitVolumePackage2(volumeUtility, &opts)) {
+	/* VInitVolumePackage2 can fail on e.g. partition attachment errors,
+	 * but we don't really care, since all we're doing is trying to use
+	 * SALVSYNC */
+	fprintf(stderr, "errors encountered initializing volume package, but "
+	                "trying to continue anyway\n");
+    }
     SALVSYNC_clientInit();
     
     code = SALVSYNC_SalvageVolume(vid, pname, SALVSYNC_SALVAGE, SALVSYNC_OPERATOR, 0, NULL);
@@ -511,7 +517,10 @@ SalvageServer(void)
 
     /* initialize things */
     VOptDefaults(salvageServer, &opts);
-    VInitVolumePackage2(salvageServer, &opts);
+    if (VInitVolumePackage2(salvageServer, &opts)) {
+	Log("Shutting down: errors encountered initializing volume package\n");
+	Exit(1);
+    }
     DInit(10);
     queue_Init(&pending_q);
     queue_Init(&log_cleanup_queue);

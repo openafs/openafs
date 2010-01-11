@@ -426,7 +426,10 @@ main(int argc, char **argv)
     OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
 
     VOptDefaults(volumeServer, &opts);
-    VInitVolumePackage2(volumeServer, &opts);
+    if (VInitVolumePackage2(volumeServer, &opts)) {
+	Log("Shutting down: errors encountered initializing volume package\n");
+	exit(1);
+    }
     /* For nuke() */
     Lock_Init(&localLock);
     DInit(40);

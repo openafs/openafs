@@ -41,7 +41,10 @@ main(argc, argv)
     VolumePackageOptions opts;
 
     VOptDefaults(1, &opts);
-    VInitVolumePackage2(1, &opts);
+    if (VInitVolumePackage2(1, &opts)) {
+	printf("errors encountered initializing volume package\n");
+	exit(-1);
+    }
     VPrintDiskStats();
 
 }

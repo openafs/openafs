@@ -302,7 +302,10 @@ main(int argc, char **argv)
     VolumePackageOptions opts;
 
     VOptDefaults(volumeUtility, &opts);
-    VInitVolumePackage2(volumeUtility, &opts);
+    if (VInitVolumePackage2(volumeUtility, &opts)) {
+	fprintf(stderr, "errors encountered initializing volume package, but "
+	                "trying to continue anyway\n");
+    }
 
     ts = cmd_CreateSyntax(NULL, handleit, NULL,
 			  "Dump a volume to a 'vos dump' format file without using volserver");
