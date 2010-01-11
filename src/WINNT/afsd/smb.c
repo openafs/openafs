@@ -7171,6 +7171,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
     osi_hyper_t writeBackOffset;/* offset of region to write back when I/O is done */
     DWORD filter = 0;
     cm_req_t req;
+    int needSyncOpDone = 0;
 
     osi_Log3(smb_logp, "smb_WriteData fid %d, off 0x%x, size 0x%x",
               fidp->fid, offsetp->LowPart, count);
@@ -7246,10 +7247,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
 
     /* now, copy the data one buffer at a time, until we've filled the
      * request packet */
-    while (1) {
-        /* if we've copied all the data requested, we're done */
-        if (count <= 0) 
-            break;
+    while (count != 0) {
 
         /* handle over quota or out of space */
         if (scp->flags & (CM_SCACHEFLAG_OVERQUOTA | CM_SCACHEFLAG_OUTOFSPACE)) {
@@ -7264,6 +7262,13 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
         if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
             /* wrong buffer */
             if (bufferp) {
+                if (needSyncOpDone) {
+                    cm_SyncOpDone(scp, bufferp,
+                                  CM_SCACHESYNC_NEEDCALLBACK
+                                  | CM_SCACHESYNC_WRITE
+                                  | CM_SCACHESYNC_BUFLOCKED);
+                    needSyncOpDone = 0;
+                }
                 lock_ReleaseMutex(&bufferp->mx);
                 buf_Release(bufferp);
                 bufferp = NULL;
@@ -7279,18 +7284,17 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
             bufferOffset = thyper;
 
             /* now get the data in the cache */
-            while (1) {
-                code = cm_SyncOp(scp, bufferp, userp, &req, 0,
-                                  CM_SCACHESYNC_NEEDCALLBACK
-                                  | CM_SCACHESYNC_WRITE
-                                  | CM_SCACHESYNC_BUFLOCKED);
-                if (code) 
-                    goto done;
+            while (code == 0) {
+                if (!needSyncOpDone) {
+                    code = cm_SyncOp(scp, bufferp, userp, &req, 0,
+                                     CM_SCACHESYNC_NEEDCALLBACK
+                                     | CM_SCACHESYNC_WRITE
+                                     | CM_SCACHESYNC_BUFLOCKED);
+                    if (code)
+                        goto done;
 
-		cm_SyncOpDone(scp, bufferp, 
-			       CM_SCACHESYNC_NEEDCALLBACK 
-			       | CM_SCACHESYNC_WRITE 
-			       | CM_SCACHESYNC_BUFLOCKED);
+                    needSyncOpDone = 1;
+                }
 
                 /* If we're overwriting the entire buffer, or
                  * if we're writing at or past EOF, mark the
@@ -7304,7 +7308,16 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
                  * Use minLength instead of scp->length, since
                  * the latter has already been updated by this
                  * call.
+                 *
+                 * The scp lock has been dropped multiple times
+                 * so the minLength must be refreshed before it
+                 * is used.
                  */
+
+                minLength = scp->length;
+                if (LargeIntegerGreaterThan(minLength, scp->serverLength))
+                    minLength = scp->serverLength;
+
                 if (LargeIntegerGreaterThanOrEqualTo(bufferp->offset, minLength)
                      || LargeIntegerEqualTo(offset, bufferp->offset)
                      && (count >= cm_data.buf_blockSize
@@ -7321,20 +7334,21 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
                 if (cm_HaveBuffer(scp, bufferp, 1)) break;
 
                 /* otherwise, load the buffer and try again */
+		cm_SyncOpDone(scp, bufferp,
+			      CM_SCACHESYNC_NEEDCALLBACK
+			      | CM_SCACHESYNC_WRITE
+			      | CM_SCACHESYNC_BUFLOCKED);
+                needSyncOpDone = 0;
+
                 lock_ReleaseMutex(&bufferp->mx);
                 code = cm_GetBuffer(scp, bufferp, NULL, userp,
                                      &req);
                 lock_ReleaseWrite(&scp->rw);
                 lock_ObtainMutex(&bufferp->mx);
                 lock_ObtainWrite(&scp->rw);
-                if (code) break;
             }
-            if (code) {
-                lock_ReleaseMutex(&bufferp->mx);
-                buf_Release(bufferp);
-                bufferp = NULL;
+            if (code)
                 goto done;
-            }
         }	/* if (wrong buffer) ... */
 
         /* now we have the right buffer loaded.  Copy out the
@@ -7355,12 +7369,17 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, afs_uint32 count, char
         op += nbytes;
         count -= nbytes;
         written += nbytes;
-        thyper.LowPart = nbytes;
-        thyper.HighPart = 0;
-        offset = LargeIntegerAdd(thyper, offset);
-    } /* while 1 */
+        offset = LargeIntegerAdd(offset, ConvertLongToLargeInteger(nbytes));
+    } /* while count != 0 */
 
   done:
+    if (bufferp && needSyncOpDone) {
+        cm_SyncOpDone(scp, bufferp,
+                      CM_SCACHESYNC_NEEDCALLBACK
+                      | CM_SCACHESYNC_WRITE
+                      | CM_SCACHESYNC_BUFLOCKED);
+    }
+
     lock_ReleaseWrite(&scp->rw);
 
     if (bufferp) {
