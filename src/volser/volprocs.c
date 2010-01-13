@@ -2656,9 +2656,7 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
     if (allTrans == (struct volser_trans *)0)
 	goto done;		/*no active transactions */
     for (tt = allTrans; tt; tt = nt) {	/*copy relevant info into pntr */
-        THOLD(tt);  /* do not delete tt while copying info */
 	nt = tt->next;
-        VTRANS_UNLOCK;
         VTRANS_OBJ_LOCK(tt);
 	pntr->tid = tt->tid;
 	pntr->time = tt->time;
@@ -2695,8 +2693,6 @@ VolMonitor(struct rx_call *acid, transDebugEntries *transInfo)
 	    /*set pntr to right position */
 	}
 
-        TRELE(tt);
-        VTRANS_LOCK;
     }
 done:
     VTRANS_UNLOCK;
