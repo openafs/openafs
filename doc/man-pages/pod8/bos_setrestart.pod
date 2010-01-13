@@ -27,11 +27,11 @@ by the B<-server> argument performs two types of restarts:
 
 =item *
 
-A I<general restart>. By default, once per week the BOS Server restarts
-itself and then any AFS process marked with the C<Run> status flag in the
+A I<general restart>. The BOS Server will restart itself,
+and then any AFS process marked with the C<Run> status flag in the
 F<BosConfig> file (equivalent in effect to issuing the B<bos restart>
-command with the B<-bosserver> flag). The default setting is 4:00
-a.m. each Sunday morning.
+command with the B<-bosserver> flag) at this time each week. By default,
+in a new bos installation, general restarts are disabled.
 
 =item *
 

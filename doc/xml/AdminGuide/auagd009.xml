@@ -2614,12 +2614,14 @@
       <secondary>setting</secondary>
     </indexterm>
 
-    <para>The BOS Server by default restarts once a week, and the new instance restarts all processes marked with status flag
+    <para>The BOS Server by default has general restarts disabled. If you wish, it may be configured so that it
+    restarts once a week, and the new instance restarts all processes marked with status flag
     <computeroutput>Run</computeroutput> in the local <emphasis role="bold">/usr/afs/local/BosConfig</emphasis> file (this is
     equivalent to issuing the <emphasis role="bold">bos restart</emphasis> command with the <emphasis
-    role="bold">-bosserver</emphasis> flag). The default restart time is Sunday at 4:00 a.m. The weekly restart is designed to
-    minimize core leaks, which can develop as a process continues to allocate virtual memory but does not free it again. When the
-    memory is completely exhausted, the machine can no longer function correctly.</para>
+    role="bold">-bosserver</emphasis> flag). Historically, the default restart time was Sunday at 4:00 a.m - sites which have
+    been upgraded from earlier versions of OpenAFS may find that this value is still present. The weekly restart was designed to
+    minimize core leaks, which can develop as a process continues to allocate virtual memory but does not free it again. It is
+    believed that these leaks have been fixed in OpenAFS.</pare>
 
     <para>The BOS Server also by default checks once a day for any newly installed binary files. If it finds that the modification
     time stamp on a process's binary file in the <emphasis role="bold">/usr/afs/bin</emphasis> directory is more recent than the

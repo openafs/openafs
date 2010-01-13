@@ -301,11 +301,13 @@ ReadBozoFile(char *aname)
 	}
     }
 
-    /* setup default times we want to do restarts */
-    bozo_nextRestartKT.mask = KTIME_HOUR | KTIME_MIN | KTIME_DAY;
-    bozo_nextRestartKT.hour = 4;	/* 4 am */
+    /* don't do server restarts by default */
+    bozo_nextRestartKT.mask = KTIME_NEVER;
+    bozo_nextRestartKT.hour = 0;
     bozo_nextRestartKT.min = 0;
-    bozo_nextRestartKT.day = 0;	/* Sunday */
+    bozo_nextRestartKT.day = 0;
+
+    /* restart processes at 5am if their binaries have changed */
     bozo_nextDayKT.mask = KTIME_HOUR | KTIME_MIN;
     bozo_nextDayKT.hour = 5;
     bozo_nextDayKT.min = 0;

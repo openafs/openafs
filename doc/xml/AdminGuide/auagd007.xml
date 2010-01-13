@@ -1992,14 +1992,14 @@ user receives an AFS token when
       Reboot file server machines as infrequently as possible. For instructions, see <link linkend="HDRWQ139">Rebooting a Server
       Machine</link>.</para>
 
-      <para>By default, the BOS Server on each file server machine stops and immediately restarts all AFS server processes on the
-      machine (including itself) once a week, at 4:00 a.m. on Sunday. This reduces the potential for the core leaks that can develop
-      as any process runs for an extended time.</para>
-
-      <para>The BOS Server also checks each morning at 5:00 a.m. for any newly installed binary files in the <emphasis
+      <para>The BOS Server checks each morning at 5:00 a.m. for any newly installed binary files in the <emphasis
       role="bold">/usr/afs/bin</emphasis> directory. It compares the timestamp on each binary file to the time at which the
       corresponding process last restarted. If the timestamp on the binary is later, the BOS Server restarts the corresponding
       process to start using it.</para>
+
+      <para>The BOS server also supports performing a weekly restart of all AFS server processes, including itself. This functionality
+      is disabled on new installs, but historically it was set to 4:00am on Sunday. Administrators may find that installations predating
+      OpenAFS 1.6.0 have weekly restarts enabled.</para>
 
       <para>The default times are in the early morning hours when the outage that results from restarting a process is likely to
       disturb the fewest number of people. You can display the restart times for each machine with the <emphasis role="bold">bos
