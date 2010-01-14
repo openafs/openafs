@@ -106,7 +106,7 @@ pam_sm_setcred(pam_handle_t * pamh, int flags, int argc, const char **argv)
 		pam_afs_syslog(LOG_ERR, PAMAFS_OTHERCELL,
 			       "cell missing argument");
 	    } else {
-		cell_ptr = argv[i];
+		cell_ptr = (char *)argv[i];
 		pam_afs_syslog(LOG_INFO, PAMAFS_OTHERCELL, cell_ptr);
 	    }
 	} else if (strcasecmp(argv[i], "no_unlog") == 0) {

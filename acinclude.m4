@@ -1498,6 +1498,8 @@ AC_CHECK_TYPE([sig_atomic_t], ,
 #include <signal.h>])
 AC_SIZEOF_TYPE(long)
 
+AC_HEADER_PAM_CONST
+
 AC_CHECK_FUNCS(timegm)
 AC_CHECK_FUNCS(daemon)
 

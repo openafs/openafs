@@ -114,7 +114,7 @@ pam_sm_authenticate(pam_handle_t * pamh, int flags, int argc,
 		pam_afs_syslog(LOG_ERR, PAMAFS_OTHERCELL,
 			       "cell missing argument");
 	    } else {
-		cell_ptr = argv[i];
+		cell_ptr = (char *)argv[i];
 		pam_afs_syslog(LOG_INFO, PAMAFS_OTHERCELL, cell_ptr);
 	    }
 	} else if (strcasecmp(argv[i], "refresh_token") == 0) {
