@@ -84,6 +84,4 @@ extern simple_lock_data afs_global_lock;
 	mutex_init(&afs_global_lock, "afs_global_lock", MUTEX_DEFAULT, NULL)
 #endif
 
-#define ifnet_flags(x) (x?(x)->if_flags:0)
-
 #endif /* _OSI_MACHDEP_H_ */

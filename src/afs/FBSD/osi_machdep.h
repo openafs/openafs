@@ -166,6 +166,4 @@ extern struct proc *afs_global_owner;
 #undef USERPRI
 #define USERPRI splx(splvar)
 
-#define ifnet_flags(x) (x?(x)->if_flags:0)
-
 #endif /* _OSI_MACHDEP_H_ */

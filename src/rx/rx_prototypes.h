@@ -353,6 +353,7 @@ extern void rx_SetMaxSendWindow(int packets);
 extern int rx_GetMinPeerTimeout(void);
 extern void rx_SetMinPeerTimeout(int msecs);
 
+#ifdef KERNEL
 /* rx_kcommon.c */
 struct socket;
 extern int (*rxk_PacketArrivalProc) (struct rx_packet * ahandle,
@@ -367,59 +368,47 @@ extern int rxk_DelPort(u_short aport);
 extern void rxk_shutdownPorts(void);
 extern osi_socket rxi_GetUDPSocket(u_short port);
 extern osi_socket rxi_GetHostUDPSocket(u_int host, u_short port);
-#if defined(KERNEL) && defined(AFS_LINUX26_ENV)
-#define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
-#undef osi_Assert
-#define osi_Assert(expr) \
+# if defined(AFS_LINUX26_ENV)
+# define osi_Panic(msg...) do { printk(KERN_CRIT "openafs: " msg); BUG(); } while (0)
+# undef osi_Assert
+# define osi_Assert(expr) \
     do { if (!(expr)) { osi_AssertFailK(#expr, __FILE__, __LINE__); BUG(); } } while (0)
-#else
-#if defined(KERNEL) && (defined(AFS_AIX_ENV) && !defined(AFS_AIX61_ENV))
+# elif defined(AFS_AIX_ENV) && !defined(AFS_AIX61_ENV)
 extern void osi_Panic(char *fmt, void *a1, void *a2, void *a3);
-#else
-#ifdef AFS_AIX61_ENV
+# elif defined(AFS_AIX61_ENV)
 /* No prototype. Deliberate, since there's no vprintf et al */
-#else
+# else
 extern void osi_Panic(char *fmt, ...);
-#endif
-#endif
-#endif
+# endif
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 extern void rxi_InitPeerParams(struct rx_peer *pp);
 extern void shutdown_rxkernel(void);
-#ifdef AFS_USERSPACE_IP_ADDR
+# ifdef AFS_USERSPACE_IP_ADDR
 extern int rxi_GetcbiInfo(void);
 extern afs_int32 rxi_Findcbi(afs_uint32 addr);
-#else
+# else
 extern int rxi_GetIFInfo(void);
-#endif
-#ifndef UKERNEL
-#if 0
+# endif
+# ifndef UKERNEL
 extern int rxk_FreeSocket(struct socket *asocket);
-#endif
-#ifndef AFS_NT40_ENV
 extern osi_socket *rxk_NewSocket(short aport);
-#endif
-#endif
+# endif
 extern int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host,
 			  int *port);
-#ifdef UKERNEL
+# ifdef UKERNEL
 extern void *rx_ServerProc(void *);
-#endif
+# endif
 extern void osi_AssertFailK(const char *expr, const char *file, int line);
 extern void rxk_ListenerProc(void);
 extern void rxk_Listener(void);
-#ifndef UKERNEL
+# ifndef UKERNEL
 extern void afs_rxevent_daemon(void);
-#endif
-#if defined(AFS_DARWIN80_ENV) && defined(KERNEL)
-extern ifnet_t rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
-#else
-extern struct ifnet *rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
-#endif
+# endif
+extern rx_ifnet_t rxi_FindIfnet(afs_uint32 addr, afs_uint32 * maskp);
 extern void osi_StopListener(void);
 
 /* ARCH/rx_kmutex.c */
-#if defined(KERNEL) && defined(AFS_LINUX20_ENV)
+# if defined(AFS_LINUX20_ENV)
 extern void afs_mutex_init(afs_kmutex_t * l);
 extern void afs_mutex_enter(afs_kmutex_t * l);
 extern int afs_mutex_tryenter(afs_kmutex_t * l);
@@ -427,39 +416,39 @@ extern void afs_mutex_exit(afs_kmutex_t * l);
 extern int afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok);
 extern void afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l,
 			     int waittime);
-#endif
+# endif
 
 
 
 /* ARCH/rx_knet.c */
-#if defined(KERNEL) && !defined(AFS_SGI_ENV)
+# if !defined(AFS_SGI_ENV)
 extern int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 		       struct iovec *dvec, int nvecs, afs_int32 asize,
 		       int istack);
-#endif
+# endif
 extern int osi_NetReceive(osi_socket so, struct sockaddr_in *addr,
 			  struct iovec *dvec, int nvecs, int *lengthp);
-#if defined(KERNEL) && defined(AFS_SUN510_ENV)
+# if defined(AFS_SUN510_ENV)
 extern void osi_StartNetIfPoller(void);
 extern void osi_NetIfPoller(void);
 extern struct afs_ifinfo afsifinfo[ADDRSPERSITE];
-#endif
+# endif
 extern void osi_StopListener(void);
 extern int rxi_FindIfMTU(afs_uint32 addr);
-#if defined(UKERNEL)
+# if defined(UKERNEL)
 extern void rxi_ListenerProc(osi_socket usockp, int *tnop,
 			     struct rx_call **newcallp);
-#endif
+# endif
 
-#ifndef RXK_LISTENER_ENV
+# ifndef RXK_LISTENER_ENV
 extern void rxk_init();
-#endif
+# endif
 
 /* UKERNEL/rx_knet.c */
-#ifdef UKERNEL
+# ifdef UKERNEL
 extern void afs_rxevent_daemon(void);
+# endif
 #endif
-
 
 /* rx_lwp.c */
 extern void rxi_Sleep(void *addr);
@@ -630,6 +619,9 @@ extern void *osi_Alloc(afs_int32 x);
 extern void osi_Free(void *x, afs_int32 size);
 #endif
 #endif /* defined(AFS_AIX32_ENV) && !defined(KERNEL) */
+#ifndef KERNEL
+extern void osi_Panic(char *fmt, ...);
+#endif
 
 extern void rx_GetIFInfo(void);
 extern void rx_SetNoJumbo(void);

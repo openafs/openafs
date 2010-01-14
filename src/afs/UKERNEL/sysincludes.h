@@ -229,9 +229,9 @@ typedef unsigned int fsblkcnt_t;
 #define flock			usr_flock
 #define fid			usr_fid
 #define sysent			usr_sysent
+#define ifaddr                  usr_ifaddr
+#define ifnet                   usr_ifnet
 #define in_ifaddr		usr_in_ifaddr
-#define ifaddr			usr_ifaddr
-#define ifnet			usr_ifnet
 #define socket			usr_socket
 #define crget			usr_crget
 #define crcopy			usr_crcopy
