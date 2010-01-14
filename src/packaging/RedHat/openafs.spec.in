@@ -1455,7 +1455,6 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 %{_mandir}/man8/rmtsysd.*
 %{_mandir}/man8/vsys.*
 %{_mandir}/man5/CellAlias.*
-%{_mandir}/man5/afszcm.cat.*
 
 %files server
 %defattr(-,root,root)
@@ -1545,6 +1544,7 @@ dkms remove -m %{name} -v %{dkms_version} --rpm_safe_upgrade --all ||:
 
 %files devel
 %defattr(-,root,root)
+%{_bindir}/afs_compile_et
 %{_bindir}/rxgen
 %{_includedir}/afs
 %{_includedir}/des.h
