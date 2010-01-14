@@ -31,7 +31,7 @@ libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
 install:  ${DESTDIR}${bindir}/afs_compile_et ${DESTDIR}${includedir}/afs/com_err.h ${DESTDIR}${includedir}/afs/error_table.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h ${DESTDIR}${libdir}/afs/libcom_err.a
 
 ${DEST}/bin/afs_compile_et: compile_et
-	${INSTALL} $? $@
+	${INSTALL} -f $? $@
 
 ${DEST}/include/afs/com_err.h: com_err.h
 	${INSTALL} $? $@
