@@ -20,8 +20,98 @@
 #include "afsreg.h"
 #include "syscfg.h"
 
+#ifdef DEBUG
+#include <strsafe.h>
+#endif
+
 static int IsLoopback(char * guid);
 int syscfg_GetIFInfo_2000(int *count, int *addrs, int *masks, int *mtus, int *flags);
+
+DWORD GetMTUForAddress(PIP_ADAPTER_ADDRESSES cAddress)
+{
+    DWORD min_mtu = 0xFFFFFFFF;         /* Default */
+
+    HKEY hk_services = NULL;
+
+    HKEY hk_adapters = NULL;
+
+    HKEY hk_adapter = NULL;
+
+    char * ipconfig = NULL;
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SYSTEM\\CurrentControlSet\\Services", 0,
+                     KEY_READ, &hk_services) != ERROR_SUCCESS)
+        goto done;
+
+    if (RegOpenKeyEx(hk_services, "Tcpip\\Parameters\\Adapters", 0, KEY_READ,
+                     &hk_adapters)
+        != ERROR_SUCCESS)
+        goto done;
+
+    if (RegOpenKeyEx(hk_adapters, cAddress->AdapterName, 0, KEY_READ, &hk_adapter)
+        != ERROR_SUCCESS)
+        goto done;
+
+    {
+        DWORD cb_alloc = 0;
+        DWORD cb_ipc = 0;
+        DWORD type = 0;
+        char * this_ipc;
+
+        if (RegQueryValueEx(hk_adapter, "IpConfig", 0, NULL, NULL, &cb_ipc)
+            != ERROR_SUCCESS)
+            goto done;
+
+        cb_alloc = cb_ipc + sizeof(char) * 2;
+        ipconfig = malloc(cb_alloc);
+        if (ipconfig == NULL)
+            goto done;
+
+        if (RegQueryValueEx(hk_adapter, "IpConfig", 0, &type, ipconfig,
+                            &cb_ipc) != ERROR_SUCCESS) {
+            goto done;
+        }
+
+        if (cb_ipc < cb_alloc)
+            memset(ipconfig + cb_ipc / sizeof(char), 0,
+                   (cb_alloc - cb_ipc) / sizeof(char));
+
+        for (this_ipc = ipconfig; (this_ipc - ipconfig) < cb_alloc / sizeof(char) &&
+                 *this_ipc; this_ipc = this_ipc + (strlen(this_ipc) + 1)) {
+
+            HKEY hk_interface = NULL;
+            DWORD mtu = 0;
+            DWORD cb_mtu;
+
+            if (RegOpenKeyEx(hk_services, this_ipc, 0, KEY_READ,
+                             &hk_interface) != ERROR_SUCCESS)
+                continue;
+
+            cb_mtu = sizeof(mtu);
+            if (RegQueryValueEx(hk_interface, "MTU", NULL, NULL, &mtu,
+                                &cb_mtu) == ERROR_SUCCESS) {
+                min_mtu = min(min_mtu, mtu);
+            }
+
+            RegCloseKey(hk_interface);
+        }
+    }
+
+ done:
+    if (ipconfig)
+        free(ipconfig);
+
+    if (hk_services != NULL)
+        RegCloseKey(hk_services);
+
+    if (hk_adapters != NULL)
+        RegCloseKey(hk_adapters);
+
+    if (hk_adapter != NULL)
+        RegCloseKey(hk_adapter);
+
+    return min_mtu;
+}
 
 /* syscfg_GetIFInfo
  *
@@ -83,11 +173,11 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
         nConfig = -1;
         goto done;
     }
-    
+
     /* second pass to get the actual data */
     free(pIpTbl);
     pIpTbl = (PMIB_IPADDRTABLE) malloc(outBufLen);
-    
+
     dwRetVal = GetIpAddrTable(pIpTbl, &outBufLen, FALSE);
     if (dwRetVal != NO_ERROR) {
         free(pIpTbl);
@@ -95,9 +185,9 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
         nConfig = -1;
         goto done;
     }
-    
+
     pAddresses = (IP_ADAPTER_ADDRESSES*) malloc(sizeof(IP_ADAPTER_ADDRESSES));
-    
+
     /* first call gets required buffer size */
     if (pGetAdaptersAddresses(AF_INET, 
                               0, 
@@ -137,17 +227,28 @@ int syscfg_GetIFInfo(int *count, int *addrs, int *masks, int *mtus, int *flags)
                instance GUID, check if this is a MS loopback device */
             if (IsLoopback(cAddress->AdapterName))
                 continue;
-            
+
             /* ok. looks good.  Now fish out all the addresses from the
                address table corresponding to the interface, and add them
                to the list */
             for (i=0;i<pIpTbl->dwNumEntries;i++) {
                 if (pIpTbl->table[i].dwIndex == cAddress->IfIndex)
                 {
+                    DWORD if_mtu;
+
+                    if_mtu = GetMTUForAddress(cAddress);
+#ifdef DEBUG
+                    if (if_mtu < cAddress->Mtu) {
+                        char s[1024];
+                        StringCbPrintf(s, sizeof(s), "MTU from registry is less than MTU from adapter address (%d vs %d)\n", if_mtu, cAddress->Mtu);
+                        OutputDebugString(s);
+                    }
+#endif
+
                     if (n < maxCount) {
                         addrs[n] = ntohl(pIpTbl->table[i].dwAddr);
                         masks[n] = ntohl(pIpTbl->table[i].dwMask);
-                        mtus[n] = cAddress->Mtu;
+                        mtus[n] = min(cAddress->Mtu, if_mtu);
                         flags[n] = 0;
                         n++;
                     }
