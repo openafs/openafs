@@ -402,12 +402,14 @@ rx_GetIFInfo(void)
         maxsize =
             rxi_nRecvFrags * rxsize + (rxi_nRecvFrags - 1) * UDP_HDR_SIZE;
         maxsize = rxi_AdjustMaxMTU(rxsize, maxsize);
-        if (rx_maxReceiveSize < maxsize) {
+        if (rx_maxReceiveSize > maxsize) {
             rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxsize);
             rx_maxReceiveSize =
                 MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
         }
-
+        if (rx_MyMaxSendSize > maxsize) {
+            rx_MyMaxSendSize = MIN(RX_MAX_PACKET_SIZE, maxsize);
+        }
     }
     UNLOCK_IF;
 
