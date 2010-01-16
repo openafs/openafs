@@ -371,7 +371,7 @@ uss_vol_GetServer(char *a_name)
 
     register struct hostent *th;
     afs_int32 addr;
-    char b1, b2, b3, b4;
+    afs_int32 b1, b2, b3, b4;
     register afs_int32 code;
 
     code = sscanf(a_name, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
@@ -380,9 +380,7 @@ uss_vol_GetServer(char *a_name)
 	 * Parsed as 128.2.9.4, or similar; return it in network
 	 * byte order (128 in byte 0).
 	 */
-	addr =
-	    (((afs_int32) b1) << 24) | (((afs_int32) b2) << 16) |
-	    (((afs_int32) b3) << 8) | (afs_int32) b4;
+	addr = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
 	return htonl(addr);
     }
 
